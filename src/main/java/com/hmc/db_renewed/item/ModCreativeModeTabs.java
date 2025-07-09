@@ -22,16 +22,18 @@ public class ModCreativeModeTabs {
             .displayItems((params, output) -> {
                 output.accept(ModItems.SENZU_BEAN.get());
                 output.accept(ModItems.WARENAI_CRYSTAL.get());
-                output.accept(ModItems.DRAGON_BALL.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_DUST.get());
             })
             .build()
     );
 
     public static final Supplier<CreativeModeTab> CREATIVE_MODE_BLOCKS = CREATIVE_MODE_TAB.register("db_renewed_blocks_tab",
             () -> CreativeModeTab.builder()
-                    .title(Component.translatable("creativetab.db_renewed.items"))
+                    .title(Component.translatable("creativetab.db_renewed.blocks"))
                     .icon(() -> new ItemStack(ModBlocks.WARENAI_CRYSTAL_BLOCK.get()))
                     .displayItems((params, output) -> {
+                        output.accept(ModBlocks.DRAGON_BALL.get());
+                        output.accept(ModBlocks.NAMEK_DRAGON_BALL.get());
                         output.accept(ModBlocks.WARENAI_CRYSTAL_BLOCK.get());
                         output.accept(ModBlocks.WARENAI_CRYSTAL_ORE.get());
                         output.accept(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get());

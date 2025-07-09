@@ -2,7 +2,6 @@ package com.hmc.db_renewed.block;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.item.ModItems;
-import com.mojang.blaze3d.shaders.Uniform;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -53,6 +52,18 @@ public class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.DEEPSLATE)
                     .mapColor(MapColor.DEEPSLATE)));
+
+    public static final DeferredBlock<Block> NAMEK_DRAGON_BALL = registerBlock("namek_dragon_ball",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.1f,10f)
+                    .sound(SoundType.AMETHYST)
+                    .mapColor(MapColor.COLOR_ORANGE)));
+
+    public static final DeferredBlock<Block> DRAGON_BALL = registerBlock("dragon_ball",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.1f,10f)
+                    .sound(SoundType.AMETHYST)
+                    .mapColor(MapColor.COLOR_ORANGE)));
 
     public static void register(IEventBus eventBus) {
         MOD_BLOCKS.register(eventBus);

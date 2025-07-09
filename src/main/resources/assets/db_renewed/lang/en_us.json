@@ -1,8 +1,10 @@
 {
   "item.db_renewed.senzu_bean": "Senzu Bean",
   "item.db_renewed.warenai_crystal": "Warenai Crystal",
-  "item.db_renewed.dragon_ball":"Dragon Ball",
+  "item.db_renewed.warenai_crystal_dust": "Warenai Crystal Dust",
 
+  "block.db_renewed.dragon_ball":"Dragon Ball",
+  "block.db_renewed.namek_dragon_ball": "Namek Dragon Ball",
   "block.db_renewed.warenai_crystal_block": "Warenai Crystal Block",
   "block.db_renewed.warenai_crystal_ore": "Warenai Crystal Ore",
   "block.db_renewed.deepslate_warenai_crystal_ore": "Deepslate Warenai Crystal Ore",
