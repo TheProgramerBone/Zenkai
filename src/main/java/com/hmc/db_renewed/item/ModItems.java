@@ -12,6 +12,9 @@ public class ModItems {
     public static final DeferredItem<Item> SENZU_BEAN = ITEMS.registerItem("senzu_bean",
             Item::new,
             new Item.Properties());
+    public static final DeferredItem<Item> WARENAI_CRYSTAL = ITEMS.registerItem("warenai_crystal",
+            Item::new,
+            new Item.Properties());
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
