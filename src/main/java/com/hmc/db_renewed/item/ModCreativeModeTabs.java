@@ -22,6 +22,7 @@ public class ModCreativeModeTabs {
             .displayItems((params, output) -> {
                 output.accept(ModItems.SENZU_BEAN.get());
                 output.accept(ModItems.WARENAI_CRYSTAL.get());
+                output.accept(ModItems.DRAGON_BALL.get());
             })
             .build()
     );
@@ -31,8 +32,9 @@ public class ModCreativeModeTabs {
                     .title(Component.translatable("creativetab.db_renewed.items"))
                     .icon(() -> new ItemStack(ModBlocks.WARENAI_CRYSTAL_BLOCK.get()))
                     .displayItems((params, output) -> {
-                        output.accept(ModItems.SENZU_BEAN.get());
-                        output.accept(ModItems.WARENAI_CRYSTAL.get());
+                        output.accept(ModBlocks.WARENAI_CRYSTAL_BLOCK.get());
+                        output.accept(ModBlocks.WARENAI_CRYSTAL_ORE.get());
+                        output.accept(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get());
                     })
                     .build()
     );

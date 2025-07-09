@@ -9,6 +9,10 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(DragonBlockRenewed.MOD_ID);
 
+    public static final DeferredItem<Item> DRAGON_BALL = ITEMS.registerItem("dragon_ball",
+            Item::new,
+            new Item.Properties());
+
     public static final DeferredItem<Item> SENZU_BEAN = ITEMS.registerItem("senzu_bean",
             Item::new,
             new Item.Properties());

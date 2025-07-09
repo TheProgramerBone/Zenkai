@@ -2,9 +2,12 @@ package com.hmc.db_renewed.block;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.item.ModItems;
+import com.mojang.blaze3d.shaders.Uniform;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -33,8 +36,23 @@ public class ModBlocks {
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(2f,3f)
                     .requiresCorrectToolForDrops()
-                    .sound(SoundType.COPPER)
+                    .sound(SoundType.METAL)
                     .mapColor(MapColor.COLOR_BROWN)));
+
+    public static final DeferredBlock<Block> WARENAI_CRYSTAL_ORE = registerBlock("warenai_crystal_ore",
+            ()-> new DropExperienceBlock(UniformInt.of(2,4),
+                    BlockBehaviour.Properties.of()
+                    .strength(2f,3f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.STONE)));
+
+    public static final DeferredBlock<Block> DEEPSLATE_WARENAI_CRYSTAL_ORE = registerBlock("deepslate_warenai_crystal_ore",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,3f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.DEEPSLATE)
+                    .mapColor(MapColor.DEEPSLATE)));
 
     public static void register(IEventBus eventBus) {
         MOD_BLOCKS.register(eventBus);
