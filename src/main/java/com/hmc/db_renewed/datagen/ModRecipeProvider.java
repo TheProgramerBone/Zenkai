@@ -1,0 +1,118 @@
+package com.hmc.db_renewed.datagen;
+
+import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.item.ModItems;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.PackOutput;
+import net.minecraft.data.recipes.*;
+import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.level.ItemLike;
+import net.neoforged.neoforge.common.conditions.IConditionBuilder;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+public class ModRecipeProvider extends RecipeProvider implements IConditionBuilder {
+    public ModRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+        super(output, registries);
+    }
+
+    @Override
+    protected void buildRecipes(@NotNull RecipeOutput recipeOutput) {
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.DRAGON_BALL_1.get(), 1)
+                .requires(ModBlocks.DRAGON_BALL_7)
+                .unlockedBy("has_dragon_ball_7", has(ModBlocks.DRAGON_BALL_7)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.DRAGON_BALL_7.get(), 1)
+                .requires(ModBlocks.DRAGON_BALL_6)
+                .unlockedBy("has_dragon_ball_6", has(ModBlocks.DRAGON_BALL_6)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.DRAGON_BALL_6.get(), 1)
+                .requires(ModBlocks.DRAGON_BALL_5)
+                .unlockedBy("has_dragon_ball_5", has(ModBlocks.DRAGON_BALL_5)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.DRAGON_BALL_5.get(), 1)
+                .requires(ModBlocks.DRAGON_BALL_4)
+                .unlockedBy("has_dragon_ball_4", has(ModBlocks.DRAGON_BALL_4)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.DRAGON_BALL_4.get(), 1)
+                .requires(ModBlocks.DRAGON_BALL_3)
+                .unlockedBy("has_dragon_ball_3", has(ModBlocks.DRAGON_BALL_3)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.DRAGON_BALL_3.get(), 1)
+                .requires(ModBlocks.DRAGON_BALL_2)
+                .unlockedBy("has_dragon_ball_2", has(ModBlocks.DRAGON_BALL_2)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.DRAGON_BALL_2.get(), 1)
+                .requires(ModBlocks.DRAGON_BALL_1)
+                .unlockedBy("has_dragon_ball_1", has(ModBlocks.DRAGON_BALL_1)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.NAMEK_DRAGON_BALL_1.get(), 1)
+                .requires(ModBlocks.NAMEK_DRAGON_BALL_7)
+                .unlockedBy("has_namek_dragon_ball_7", has(ModBlocks.NAMEK_DRAGON_BALL_7)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.NAMEK_DRAGON_BALL_7.get(), 1)
+                .requires(ModBlocks.NAMEK_DRAGON_BALL_6)
+                .unlockedBy("has_namek_dragon_ball_6", has(ModBlocks.NAMEK_DRAGON_BALL_6)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.NAMEK_DRAGON_BALL_6.get(), 1)
+                .requires(ModBlocks.NAMEK_DRAGON_BALL_5)
+                .unlockedBy("has_namek_dragon_ball_5", has(ModBlocks.NAMEK_DRAGON_BALL_5)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.NAMEK_DRAGON_BALL_5.get(), 1)
+                .requires(ModBlocks.NAMEK_DRAGON_BALL_4)
+                .unlockedBy("has_namek_dragon_ball_4", has(ModBlocks.NAMEK_DRAGON_BALL_4)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.NAMEK_DRAGON_BALL_4.get(), 1)
+                .requires(ModBlocks.NAMEK_DRAGON_BALL_3)
+                .unlockedBy("has_namek_dragon_ball_3", has(ModBlocks.NAMEK_DRAGON_BALL_3)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.NAMEK_DRAGON_BALL_3.get(), 1)
+                .requires(ModBlocks.NAMEK_DRAGON_BALL_2)
+                .unlockedBy("has_namek_dragon_ball_2", has(ModBlocks.NAMEK_DRAGON_BALL_2)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.NAMEK_DRAGON_BALL_2.get(), 1)
+                .requires(ModBlocks.NAMEK_DRAGON_BALL_1)
+                .unlockedBy("has_namek_dragon_ball_1", has(ModBlocks.NAMEK_DRAGON_BALL_1)).save(recipeOutput);
+
+        List<ItemLike> WARENAI_SMELTABLES = List.of(ModItems.WARENAI_CRYSTAL_DUST,
+                ModBlocks.WARENAI_CRYSTAL_ORE, ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE);
+
+        oreSmelting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 200, "warenai");
+        oreBlasting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 100, "warenai");
+        
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.WARENAI_CRYSTAL_BLOCK.get(),1)
+                .pattern("WWW")
+                .pattern("WWW")
+                .pattern("WWW")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 9)
+                .requires(ModBlocks.WARENAI_CRYSTAL_BLOCK)
+                .unlockedBy("has_warenai_block", has(ModBlocks.WARENAI_CRYSTAL_BLOCK)).save(recipeOutput);
+
+    }
+
+    protected static void oreSmelting(@NotNull RecipeOutput recipeOutput, List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult,
+                                      float pExperience, int pCookingTIme, @NotNull String pGroup) {
+        oreCooking(recipeOutput, RecipeSerializer.SMELTING_RECIPE, SmeltingRecipe::new, pIngredients, pCategory, pResult,
+                pExperience, pCookingTIme, pGroup, "_from_smelting");
+    }
+
+    protected static void oreBlasting(@NotNull RecipeOutput recipeOutput, List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult,
+                                      float pExperience, int pCookingTime, @NotNull String pGroup) {
+        oreCooking(recipeOutput, RecipeSerializer.BLASTING_RECIPE, BlastingRecipe::new, pIngredients, pCategory, pResult,
+                pExperience, pCookingTime, pGroup, "_from_blasting");
+    }
+
+    protected static <T extends AbstractCookingRecipe> void oreCooking(@NotNull RecipeOutput recipeOutput, RecipeSerializer<T> pCookingSerializer, AbstractCookingRecipe.@NotNull Factory<T> factory,
+                                                                       List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult, float pExperience, int pCookingTime, @NotNull String pGroup, String pRecipeName) {
+        for(ItemLike itemlike : pIngredients) {
+            SimpleCookingRecipeBuilder.generic(Ingredient.of(itemlike), pCategory, pResult, pExperience, pCookingTime, pCookingSerializer, factory).group(pGroup).unlockedBy(getHasName(itemlike), has(itemlike))
+                    .save(recipeOutput, DragonBlockRenewed.MOD_ID + ":" + getItemName(pResult) + pRecipeName + "_" + getItemName(itemlike));
+        }
+    }
+}

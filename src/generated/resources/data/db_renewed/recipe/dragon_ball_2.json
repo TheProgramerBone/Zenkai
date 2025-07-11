@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "db_renewed:dragon_ball_1"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "db_renewed:dragon_ball_2"
+  }
+}

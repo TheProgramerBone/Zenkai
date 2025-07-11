@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "db_renewed:block/warenai_crystal_ore"
+  }
+}
