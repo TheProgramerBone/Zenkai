@@ -18,6 +18,8 @@ license="${mod_license}"
 
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory
+logoFile = "assets/db_renewed/banner.png"
+
 
 # The modid of the mod
 modId="${mod_id}" #mandatory
@@ -61,7 +63,7 @@ description='''${mod_description}'''
 [[dependencies.${mod_id}]] #optional
     # the modid of the dependency
     modId="neoforge" #mandatory
-    # The type of the dependency. Can be one of "required", "optional", "incompatible" or "discouraged" (case insensitive).
+    # The type of the dependency. Can be one of "required", "optional", "incompatible" or "discouraged" (case-insensitive).
     # 'required' requires the mod to exist, 'optional' does not
     # 'incompatible' will prevent the game from loading when the mod exists, and 'discouraged' will show a warning
     type="required" #mandatory
@@ -85,6 +87,8 @@ description='''${mod_description}'''
     ordering="NONE"
     side="BOTH"
 
+[modproperties.db_renewed]
+catalogueImageIcon = "assets/db_renewed/icon.png"
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.

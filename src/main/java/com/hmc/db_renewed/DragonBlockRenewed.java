@@ -25,9 +25,7 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 @Mod(DragonBlockRenewed.MOD_ID)
 public class DragonBlockRenewed
 {
-    // Define mod id in a common place for everything to reference
     public static final String MOD_ID = "db_renewed";
-    // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public DragonBlockRenewed(IEventBus modEventBus, ModContainer modContainer)

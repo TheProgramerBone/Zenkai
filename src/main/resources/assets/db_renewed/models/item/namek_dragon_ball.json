@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "db_renewed:item/namek_dragon_ball"
-  }
-}

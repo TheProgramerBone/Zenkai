@@ -1,5 +1,0 @@
-{
-  "type":"mekanism:smelting",
-  "input":{"count":1,"tag":"c:ores/warenai_crystal"},
-  "output":{"count":1,"id":"db_renewed:warenai_crystal"}
-}
