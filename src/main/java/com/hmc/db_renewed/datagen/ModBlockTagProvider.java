@@ -2,6 +2,7 @@ package com.hmc.db_renewed.datagen;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
@@ -28,5 +29,12 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.WARENAI_CRYSTAL_BLOCK.get())
                 .add(ModBlocks.WARENAI_CRYSTAL_ORE.get())
                 .add(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get());
+
+        tag(ModTags.Blocks.NEEDS_WARENAI_CRYSTAL_TOOL)
+                .addTag(BlockTags.NEEDS_IRON_TOOL);
+
+        tag(ModTags.Blocks.INCORRECT_FOR_WARENAI_CRYSTAL_TOOL)
+                .addTag(BlockTags.INCORRECT_FOR_IRON_TOOL)
+                .remove(ModTags.Blocks.NEEDS_WARENAI_CRYSTAL_TOOL);
     }
 }

@@ -10,7 +10,7 @@ public class ModFoodProperties {
             .nutrition(20)
             .alwaysEdible()
             .saturationModifier(1.0f)
-            .effect(()->new MobEffectInstance(MobEffects.HEAL,20,90),1.0f)
-            .effect(()->new MobEffectInstance(MobEffects.SATURATION,20,255),1.0f)
+            .effect(()->new MobEffectInstance(MobEffects.HEAL,1,90),1.0f)
+            .effect(()->new MobEffectInstance(MobEffects.SATURATION,1,255),1.0f)
             .build();
 }

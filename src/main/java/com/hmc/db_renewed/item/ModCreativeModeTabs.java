@@ -23,6 +23,15 @@ public class ModCreativeModeTabs {
                 output.accept(ModItems.SENZU_BEAN.get());
                 output.accept(ModItems.WARENAI_CRYSTAL.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_DUST.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_SWORD.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_PICKAXE.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_AXE.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_SHOVEL.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_HOE.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_HELMET.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_CHESTPLATE.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_LEGGINGS.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_BOOTS.get());
             })
             .build()
     );

@@ -6,6 +6,7 @@ import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
@@ -93,6 +94,74 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 9)
                 .requires(ModBlocks.WARENAI_CRYSTAL_BLOCK)
                 .unlockedBy("has_warenai_block", has(ModBlocks.WARENAI_CRYSTAL_BLOCK)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_SWORD.get(),1)
+                .pattern(" W ")
+                .pattern(" W ")
+                .pattern(" S ")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_PICKAXE.get(),1)
+                .pattern("WWW")
+                .pattern(" S ")
+                .pattern(" S ")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_SHOVEL.get(),1)
+                .pattern(" W ")
+                .pattern(" S ")
+                .pattern(" S ")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_AXE.get(),1)
+                .pattern("WW ")
+                .pattern("WS ")
+                .pattern(" S ")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_HOE.get(),1)
+                .pattern("WW ")
+                .pattern(" S ")
+                .pattern(" S ")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_HELMET.get(),1)
+                .pattern("WWW")
+                .pattern("W W")
+                .pattern("   ")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_CHESTPLATE.get(),1)
+                .pattern("W W")
+                .pattern("WWW")
+                .pattern("WWW")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_LEGGINGS.get(),1)
+                .pattern("WWW")
+                .pattern("W W")
+                .pattern("W W")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_BOOTS.get(),1)
+                .pattern("W W")
+                .pattern("W W")
+                .pattern("   ")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
 
     }
 
