@@ -1,11 +1,13 @@
 package com.hmc.db_renewed;
 
 import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.client.input.KeyBindings;
+import com.hmc.db_renewed.client.input.KeyInputHandler;
 import com.hmc.db_renewed.command.RaceCommand;
 import com.hmc.db_renewed.common.player.RaceDataEvents;
 import com.hmc.db_renewed.item.ModCreativeModeTabs;
 import com.hmc.db_renewed.item.ModItems;
-import net.minecraft.world.item.CreativeModeTabs;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -38,8 +40,11 @@ public class DragonBlockRenewed
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+
+
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modEventBus.addListener(ClientModEvents::onKeyMappingRegister);
     }
 
 
@@ -63,7 +68,11 @@ public class DragonBlockRenewed
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
+            NeoForge.EVENT_BUS.register(KeyInputHandler.class);
+        }
 
+        private static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {
+            KeyBindings.registerKeyMappings(event);
         }
     }
 }

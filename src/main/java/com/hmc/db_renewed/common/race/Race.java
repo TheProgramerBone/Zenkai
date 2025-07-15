@@ -4,6 +4,6 @@ public enum Race {
     HUMAN,
     SAIYAN,
     NAMEKIAN,
-    FREEZER,
+    COLD_DEMON,
     MAJIN
 }

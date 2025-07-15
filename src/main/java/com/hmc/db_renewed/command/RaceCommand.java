@@ -37,6 +37,17 @@ public class RaceCommand {
 
                                             return 1;
                                         })))
+                        .then(Commands.literal("list")
+                                .executes(ctx -> {
+                                    StringBuilder sb = new StringBuilder("Razas disponibles: ");
+                                    for (Race race : Race.values()) {
+                                        sb.append(race.name().toLowerCase()).append(", ");
+                                    }
+                                    // Elimina la coma final
+                                    String result = sb.substring(0, sb.length() - 2);
+                                    ctx.getSource().sendSuccess(() -> Component.literal(result), false);
+                                    return 1;
+                                }))
         );
     }
 }

@@ -32,5 +32,8 @@
   "block.db_renewed.deepslate_warenai_crystal_ore": "Deepslate Warenai Crystal Ore",
 
   "creativetab.db_renewed.items": "Dragon Block Renewed Items",
-  "creativetab.db_renewed.blocks": "Dragon Block Renewed Blocks"
+  "creativetab.db_renewed.blocks": "Dragon Block Renewed Blocks",
+
+  "key.categories.db_renewed": "Dragon Block Renewed",
+  "key.db_renewed.open_race_screen": "Open Menu"
 }
