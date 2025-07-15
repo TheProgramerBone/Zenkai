@@ -2,14 +2,19 @@ package com.hmc.db_renewed.client.gui;
 
 import com.hmc.db_renewed.common.player.RaceDataHandler;
 import com.hmc.db_renewed.common.race.Race;
+import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 public class RaceSelectionScreen extends Screen {
 
@@ -66,37 +71,83 @@ public class RaceSelectionScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
-
         super.render(graphics, mouseX, mouseY, partialTicks);
 
-        int modelX = centerX;
-        int modelY = centerY - 40;
+        int centerX = this.width / 2;
+        int centerY = this.height / 2 - 60;
         int scale = 50;
+        float offsetY = 0.0f;
 
-        float xRot = (float)(mouseX - modelX);
-        float yRot = (float)(mouseY - modelY);
+        float f = centerX;
+        float f1 = centerY;
+        float angleX = (float) Math.atan((f - mouseX) / 40.0F);
+        float angleY = (float) Math.atan((f1 - mouseY) / 40.0F);
 
-        InventoryScreen.renderEntityInInventoryFollowsMouse(
+        renderEntity(
                 graphics,
-                0, 0,
-                modelX, modelY,
+                centerX,
+                centerY+55,
                 scale,
-                0.0f,
-                xRot,
-                yRot,
+                offsetY,
+                angleX,
+                angleY,
                 this.player
         );
 
+        //Texto de Race:Human
         graphics.drawCenteredString(
                 this.font,
                 formatRaceName(selectedRace),
                 centerX,
-                centerY + 20,
+                centerY + 137,
                 0xFFFFFF
         );
     }
+
+    private void renderEntity(GuiGraphics graphics, int x, int y, float scale, float yOffset, float angleX, float angleY, Player entity) {
+        float bodyRot = entity.yBodyRot;
+        float yRot = entity.getYRot();
+        float xRot = entity.getXRot();
+        float headRot = entity.yHeadRot;
+        float headRotO = entity.yHeadRotO;
+
+        entity.yBodyRot = 180.0F + angleX * 20.0F;
+        entity.setYRot(180.0F + angleX * 40.0F);
+        entity.setXRot(-angleY * 20.0F);
+        entity.yHeadRot = entity.getYRot();
+        entity.yHeadRotO = entity.getYRot();
+
+        Quaternionf pose = new Quaternionf().rotateZ((float) Math.PI);
+        Quaternionf camera = new Quaternionf().rotateX(angleY * 20.0F * ((float) Math.PI / 180F));
+        pose.mul(camera);
+
+        Vector3f translation = new Vector3f(0.0F, entity.getBbHeight() / 2.0F + yOffset, 0.0F);
+        float adjustedScale = scale / entity.getScale();
+
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 50.0F);
+        graphics.pose().scale(adjustedScale, adjustedScale, -adjustedScale);
+        graphics.pose().translate(translation.x(), translation.y(), translation.z());
+        graphics.pose().mulPose(pose);
+
+        Lighting.setupForEntityInInventory();
+        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        dispatcher.overrideCameraOrientation(camera.conjugate(new Quaternionf()).rotateY((float) Math.PI));
+        dispatcher.setRenderShadow(false);
+        dispatcher.render(entity, 0.0, 0, 0.0, 0.0F, 1.0F, graphics.pose(), graphics.bufferSource(), 15728880);
+        graphics.flush();
+        dispatcher.setRenderShadow(true);
+        graphics.pose().popPose();
+        Lighting.setupFor3DItems();
+
+        entity.yBodyRot = bodyRot;
+        entity.setYRot(yRot);
+        entity.setXRot(xRot);
+        entity.yHeadRot = headRot;
+        entity.yHeadRotO = headRotO;
+    }
+
+
 
     @Override
     public boolean isPauseScreen() {
