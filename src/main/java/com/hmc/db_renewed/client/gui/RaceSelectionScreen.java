@@ -2,7 +2,6 @@ package com.hmc.db_renewed.client.gui;
 
 import com.hmc.db_renewed.common.player.RaceDataHandler;
 import com.hmc.db_renewed.common.race.Race;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -11,12 +10,10 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.opengl.GL11;
 
 public class RaceSelectionScreen extends Screen {
 
     private final Player player;
-
     private Race selectedRace = Race.HUMAN;
 
     public RaceSelectionScreen() {
@@ -25,70 +22,84 @@ public class RaceSelectionScreen extends Screen {
     }
 
     private String formatRaceName(Race race) {
-        String name = race.name().toLowerCase();
-        return "Race " + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+        String[] parts = race.name().toLowerCase().split("_");
+        StringBuilder builder = new StringBuilder("Race: ");
+        for (String part : parts) {
+            builder.append(Character.toUpperCase(part.charAt(0)))
+                    .append(part.substring(1))
+                    .append(" ");
+        }
+        return builder.toString().trim();
     }
 
     @Override
     protected void init() {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
-        int buttonWidth = 20;
-        int labelWidth = 100;
 
-        // Flecha izquierda
-        Button raceLeftButton = Button.builder(Component.literal("<"), btn -> {
-            int currentIndex = selectedRace.ordinal();
-            int newIndex = (currentIndex - 1 + Race.values().length) % Race.values().length;
-            selectedRace = Race.values()[newIndex];
-        }).pos(centerX - labelWidth / 2 - buttonWidth - 5, centerY).size(buttonWidth, 20).build();
+        int labelOffsetY = 70; // Texto está debajo del modelo
+        int buttonOffsetY = 100;
 
-        // Flecha derecha
-        Button raceRightButton = Button.builder(Component.literal(">"), btn -> {
-            int currentIndex = selectedRace.ordinal();
-            int newIndex = (currentIndex + 1) % Race.values().length;
-            selectedRace = Race.values()[newIndex];
-        }).pos(centerX + labelWidth / 2 + 5, centerY).size(buttonWidth, 20).build();
+        int labelWidth = 120;
+        int arrowWidth = 20;
+        int arrowSpacing = 5;
 
-        // Confirmar
-        Button confirmButton = Button.builder(Component.literal("Confirm"), btn -> {
-            RaceDataHandler.save(this.player, selectedRace, true);
-            this.player.sendSystemMessage(Component.literal("You have selected the " + formatRaceName(selectedRace)));
+        // Botón Izquierda
+        this.addRenderableWidget(Button.builder(Component.literal("<"), btn -> {
+            int index = (selectedRace.ordinal() - 1 + Race.values().length) % Race.values().length;
+            selectedRace = Race.values()[index];
+        }).pos(centerX - labelWidth / 2 - arrowWidth - arrowSpacing, centerY + labelOffsetY).size(arrowWidth, 20).build());
+
+        // Botón Derecha
+        this.addRenderableWidget(Button.builder(Component.literal(">"), btn -> {
+            int index = (selectedRace.ordinal() + 1) % Race.values().length;
+            selectedRace = Race.values()[index];
+        }).pos(centerX + labelWidth / 2 + arrowSpacing, centerY + labelOffsetY).size(arrowWidth, 20).build());
+
+        // Botón Confirmar
+        this.addRenderableWidget(Button.builder(Component.literal("Confirm"), btn -> {
+            RaceDataHandler.save(player, selectedRace, true);
+            player.sendSystemMessage(Component.literal("You have selected the " + formatRaceName(selectedRace)));
             this.onClose();
-        }).pos(centerX - 50, centerY + 40).size(100, 20).build();
-
-        this.addRenderableWidget(raceLeftButton);
-        this.addRenderableWidget(raceRightButton);
-        this.addRenderableWidget(confirmButton);
+        }).pos(centerX - 50, centerY + buttonOffsetY).size(100, 20).build());
     }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        int centerX = this.width / 2;
+        int centerY = this.height / 2;
 
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT, true);
+        super.render(graphics, mouseX, mouseY, partialTicks);
 
-        RenderSystem.disableDepthTest();
+        int modelX = centerX;
+        int modelY = centerY - 40;
+        int scale = 50;
 
-        graphics.fill(0, 0, this.width, this.height, 0xAA000000);
-
-        // Título
-        graphics.drawCenteredString(this.font, formatRaceName(selectedRace), this.width / 2, this.height / 2 - 20, 0xFFFFFF);
-
-        // Renderiza el modelo del jugador
-        int modelX = 160;      // Posición en X de la entidad
-        int modelY = 140;     // Posición en Y (altura base del modelo)
-        int scale = 50;       // Tamaño del modelo renderizado
+        float xRot = (float)(mouseX - modelX);
+        float yRot = (float)(mouseY - modelY);
 
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 graphics,
-                0, 0,                  // Coordenadas base GUI (puedes ajustar si usas contenedor)
-                modelX, modelY,               // Posición donde se dibuja el modelo
+                0, 0,
+                modelX, modelY,
                 scale,
-                0.0f,                  // yOffset (puedes ajustar para subir/bajar el modelo)
-                (float)(mouseX - modelX),     // Movimiento horizontal del mouse
-                (float)(mouseY - modelY),     // Movimiento vertical del mouse
+                0.0f,
+                xRot,
+                yRot,
                 this.player
         );
-        super.render(graphics, mouseX, mouseY, partialTicks);
+
+        graphics.drawCenteredString(
+                this.font,
+                formatRaceName(selectedRace),
+                centerX,
+                centerY + 20,
+                0xFFFFFF
+        );
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 }
