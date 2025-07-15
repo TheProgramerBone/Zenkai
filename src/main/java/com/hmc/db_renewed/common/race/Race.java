@@ -1,0 +1,9 @@
+package com.hmc.db_renewed.common.race;
+
+public enum Race {
+    HUMAN,
+    SAIYAN,
+    NAMEKIAN,
+    FREEZER,
+    MAJIN
+}

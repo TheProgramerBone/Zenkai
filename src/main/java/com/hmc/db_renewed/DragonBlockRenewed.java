@@ -1,6 +1,8 @@
 package com.hmc.db_renewed;
 
 import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.command.RaceCommand;
+import com.hmc.db_renewed.common.player.RaceDataEvents;
 import com.hmc.db_renewed.item.ModCreativeModeTabs;
 import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -32,6 +34,7 @@ public class DragonBlockRenewed
     {
         modEventBus.addListener(this::commonSetup);
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(RaceDataEvents.class);
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
@@ -50,7 +53,7 @@ public class DragonBlockRenewed
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-
+        RaceCommand.register(event.getServer().getCommands().getDispatcher());
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
