@@ -1,15 +1,15 @@
 package com.hmc.db_renewed.common.player;
 
-import com.hmc.db_renewed.common.race.Race;
-import com.hmc.db_renewed.common.race.RaceStats;
+import com.hmc.db_renewed.common.capability.StatAllocation;
+import com.hmc.db_renewed.common.race.ModRaces;
 
 public interface IRaceData {
-    Race getRace();
-    void setRace(Race race);
+    ModRaces getRace();
+    void setRace(ModRaces modRaces);
 
     boolean hasSelectedRace();
     void setSelectedRace(boolean selected);
 
-    RaceStats getStats();
-    void setStats(RaceStats stats);
+    StatAllocation getStats();
+    void setStats(StatAllocation stats);
 }

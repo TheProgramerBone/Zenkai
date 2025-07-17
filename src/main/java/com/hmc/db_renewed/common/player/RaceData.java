@@ -1,25 +1,25 @@
 package com.hmc.db_renewed.common.player;
 
+import com.hmc.db_renewed.common.capability.StatAllocation;
 import com.hmc.db_renewed.common.race.ModRaces;
-import com.hmc.db_renewed.common.race.Race;
-import com.hmc.db_renewed.common.race.RaceStats;
+import com.hmc.db_renewed.common.race.ModRacesStats;
 import net.minecraft.nbt.CompoundTag;
 
 public class RaceData implements IRaceData {
 
-    private Race race = Race.HUMAN;
+    private ModRaces modRaces = ModRaces.HUMAN;
     private boolean selected = false;
-    private RaceStats stats = ModRaces.DEFAULT_STATS.get(race);
+    private StatAllocation stats = ModRacesStats.DEFAULT_STATS.get(modRaces);
 
     @Override
-    public Race getRace() {
-        return race;
+    public ModRaces getRace() {
+        return modRaces;
     }
 
     @Override
-    public void setRace(Race race) {
-        this.race = race;
-        this.stats = ModRaces.DEFAULT_STATS.get(race);
+    public void setRace(ModRaces modRaces) {
+        this.modRaces = modRaces;
+        this.stats = ModRacesStats.DEFAULT_STATS.get(modRaces);
     }
 
     @Override
@@ -33,26 +33,26 @@ public class RaceData implements IRaceData {
     }
 
     @Override
-    public RaceStats getStats() {
+    public StatAllocation getStats() {
         return stats;
     }
 
     @Override
-    public void setStats(RaceStats stats) {
+    public void setStats(StatAllocation stats) {
         this.stats = stats;
     }
 
     public CompoundTag saveNBT() {
         CompoundTag tag = new CompoundTag();
-        tag.putString("Race", race.name());
+        tag.putString("Race", modRaces.name());
         tag.putBoolean("Selected", selected);
         // puedes extenderlo para guardar cada stat también si se modifican dinámicamente
         return tag;
     }
 
     public void loadNBT(CompoundTag tag) {
-        this.race = Race.valueOf(tag.getString("Race"));
+        this.modRaces = ModRaces.valueOf(tag.getString("Race"));
         this.selected = tag.getBoolean("Selected");
-        this.stats = ModRaces.DEFAULT_STATS.get(race);
+        this.stats = ModRacesStats.DEFAULT_STATS.get(modRaces);
     }
 }

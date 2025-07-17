@@ -1,44 +1,60 @@
 package com.hmc.db_renewed.common.player;
 
+import com.hmc.db_renewed.common.capability.StatAllocation;
 import com.hmc.db_renewed.common.race.ModRaces;
-import com.hmc.db_renewed.common.race.Race;
-import com.hmc.db_renewed.common.race.RaceStats;
+import com.hmc.db_renewed.common.style.CombatStyle;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.resources.ResourceLocation;
 
 public class RaceDataHandler {
-    private static final String TAG = "DragonBlockRace";
+    private ModRaces modRaces = ModRaces.HUMAN;
+    private CombatStyle style = CombatStyle.WARRIOR;
+    private final StatAllocation allocation = new StatAllocation(10,10,10,10,10,10);
 
-    public static void save(Player player, Race race, boolean selected) {
-        CompoundTag tag = player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
-        CompoundTag raceTag = new CompoundTag();
-
-        raceTag.putString("Race", race.name());
-        raceTag.putBoolean("Selected", selected);
-
-        tag.put(TAG, raceTag);
-        player.getPersistentData().put(Player.PERSISTED_NBT_TAG, tag);
+    public ModRaces getRace() {
+        return modRaces;
     }
 
-    public static Race loadRace(Player player) {
-        CompoundTag tag = player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
-        if (tag.contains(TAG)) {
-            String raceName = tag.getCompound(TAG).getString("Race");
-            try {
-                return Race.valueOf(raceName);
-            } catch (IllegalArgumentException e) {
-                return Race.HUMAN; // valor por defecto
-            }
+    public void setRace(ModRaces modRaces) {
+        this.modRaces = modRaces;
+    }
+
+    public CombatStyle getCombatStyle() {
+        return style;
+    }
+
+    public void setCombatStyle(CombatStyle style) {
+        this.style = style;
+    }
+
+    public StatAllocation getStatAllocation() {
+        return allocation;
+    }
+
+    public CompoundTag saveNBT() {
+        CompoundTag tag = new CompoundTag();
+        tag.putString("Race", modRaces.getSerializedName());
+        tag.putString("CombatStyle", style.getSerializedName());
+        tag.put("StatAllocation", allocation.saveNBT());
+        return tag;
+    }
+
+    public void loadNBT(CompoundTag tag) {
+        if (tag.contains("Race")) {
+            this.modRaces = ModRaces.byName(tag.getString("Race"));
         }
-        return Race.HUMAN;
+        if (tag.contains("CombatStyle")) {
+            this.style = CombatStyle.byName(tag.getString("CombatStyle"));
+        }
+        if (tag.contains("StatAllocation")) {
+            this.allocation.loadNBT(tag.getCompound("StatAllocation"));
+        }
     }
 
-    public static boolean wasRaceSelected(Player player) {
-        CompoundTag tag = player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
-        return tag.contains(TAG) && tag.getCompound(TAG).getBoolean("Selected");
-    }
+    public static final net.neoforged.neoforge.capabilities.EntityCapability<RaceDataHandler, Void> CAPABILITY =
+            net.neoforged.neoforge.capabilities.EntityCapability.createVoid(
+                    ResourceLocation.fromNamespaceAndPath("db_renewed", "race_data"),
+                    RaceDataHandler.class
+            );
 
-    public static RaceStats getStats(Player player) {
-        return ModRaces.DEFAULT_STATS.get(loadRace(player));
-    }
 }

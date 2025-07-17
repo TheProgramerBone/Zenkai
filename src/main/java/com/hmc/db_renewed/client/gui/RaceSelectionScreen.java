@@ -1,14 +1,12 @@
 package com.hmc.db_renewed.client.gui;
 
 import com.hmc.db_renewed.common.player.RaceDataHandler;
-import com.hmc.db_renewed.common.race.Race;
+import com.hmc.db_renewed.common.race.ModRaces;
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -19,15 +17,15 @@ import org.joml.Vector3f;
 public class RaceSelectionScreen extends Screen {
 
     private final Player player;
-    private Race selectedRace = Race.HUMAN;
+    private ModRaces selectedModRaces = ModRaces.HUMAN;
 
     public RaceSelectionScreen() {
         super(Component.literal("Select Your Race"));
         this.player = Minecraft.getInstance().player;
     }
 
-    private String formatRaceName(Race race) {
-        String[] parts = race.name().toLowerCase().split("_");
+    private String formatRaceName(ModRaces modRaces) {
+        String[] parts = modRaces.name().toLowerCase().split("_");
         StringBuilder builder = new StringBuilder("Race: ");
         for (String part : parts) {
             builder.append(Character.toUpperCase(part.charAt(0)))
@@ -51,20 +49,20 @@ public class RaceSelectionScreen extends Screen {
 
         // Botón Izquierda
         this.addRenderableWidget(Button.builder(Component.literal("<"), btn -> {
-            int index = (selectedRace.ordinal() - 1 + Race.values().length) % Race.values().length;
-            selectedRace = Race.values()[index];
+            int index = (selectedModRaces.ordinal() - 1 + ModRaces.values().length) % ModRaces.values().length;
+            selectedModRaces = ModRaces.values()[index];
         }).pos(centerX - labelWidth / 2 - arrowWidth - arrowSpacing, centerY + labelOffsetY).size(arrowWidth, 20).build());
 
         // Botón Derecha
         this.addRenderableWidget(Button.builder(Component.literal(">"), btn -> {
-            int index = (selectedRace.ordinal() + 1) % Race.values().length;
-            selectedRace = Race.values()[index];
+            int index = (selectedModRaces.ordinal() + 1) % ModRaces.values().length;
+            selectedModRaces = ModRaces.values()[index];
         }).pos(centerX + labelWidth / 2 + arrowSpacing, centerY + labelOffsetY).size(arrowWidth, 20).build());
 
         // Botón Confirmar
         this.addRenderableWidget(Button.builder(Component.literal("Confirm"), btn -> {
-            RaceDataHandler.save(player, selectedRace, true);
-            player.sendSystemMessage(Component.literal("You have selected the " + formatRaceName(selectedRace)));
+            RaceDataHandler handler = player.getCapability(RaceDataHandler.CAPABILITY, null);
+            player.sendSystemMessage(Component.literal("You have selected the " + formatRaceName(selectedModRaces)));
             this.onClose();
         }).pos(centerX - 50, centerY + buttonOffsetY).size(100, 20).build());
     }
@@ -78,10 +76,8 @@ public class RaceSelectionScreen extends Screen {
         int scale = 50;
         float offsetY = 0.0f;
 
-        float f = centerX;
-        float f1 = centerY;
-        float angleX = (float) Math.atan((f - mouseX) / 40.0F);
-        float angleY = (float) Math.atan((f1 - mouseY) / 40.0F);
+        float angleX = (float) Math.atan(((float) centerX - mouseX) / 40.0F);
+        float angleY = (float) Math.atan(((float) centerY - mouseY) / 40.0F);
 
         renderEntity(
                 graphics,
@@ -97,11 +93,17 @@ public class RaceSelectionScreen extends Screen {
         //Texto de Race:Human
         graphics.drawCenteredString(
                 this.font,
-                formatRaceName(selectedRace),
+                formatRaceName(selectedModRaces),
                 centerX,
                 centerY + 137,
                 0xFFFFFF
         );
+
+
+
+
+
+
     }
 
     private void renderEntity(GuiGraphics graphics, int x, int y, float scale, float yOffset, float angleX, float angleY, Player entity) {

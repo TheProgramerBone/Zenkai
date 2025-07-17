@@ -3,10 +3,17 @@ package com.hmc.db_renewed;
 import com.hmc.db_renewed.block.ModBlocks;
 import com.hmc.db_renewed.client.input.KeyBindings;
 import com.hmc.db_renewed.client.input.KeyInputHandler;
-import com.hmc.db_renewed.command.RaceCommand;
-import com.hmc.db_renewed.common.player.RaceDataEvents;
+import com.hmc.db_renewed.command.ModRaceCommand;
+import com.hmc.db_renewed.command.ModStatCommand;
+import com.hmc.db_renewed.command.ModStyleCommand;
+import com.hmc.db_renewed.common.attributes.ModAttributes;
+import com.hmc.db_renewed.common.capability.ModCapabilities;
+import com.hmc.db_renewed.common.capability.StatAllocation;
+import com.hmc.db_renewed.common.capability.StatAllocationCapability;
 import com.hmc.db_renewed.item.ModCreativeModeTabs;
 import com.hmc.db_renewed.item.ModItems;
+import com.mojang.brigadier.CommandDispatcher;
+import net.minecraft.commands.CommandSourceStack;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.slf4j.Logger;
 
@@ -22,10 +29,8 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
-// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(DragonBlockRenewed.MOD_ID)
 public class DragonBlockRenewed
 {
@@ -36,11 +41,12 @@ public class DragonBlockRenewed
     {
         modEventBus.addListener(this::commonSetup);
         NeoForge.EVENT_BUS.register(this);
-        NeoForge.EVENT_BUS.register(RaceDataEvents.class);
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
-
+        ModAttributes.ATTRIBUTES.register(modEventBus);
+        modEventBus.register(StatAllocationCapability.class);
+        modEventBus.addListener(ModCapabilities::register);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -50,15 +56,15 @@ public class DragonBlockRenewed
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
-
     }
-
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-        RaceCommand.register(event.getServer().getCommands().getDispatcher());
+        ModRaceCommand.register(event.getServer().getCommands().getDispatcher());
+        ModStatCommand.register(event.getServer().getCommands().getDispatcher());
+        ModStyleCommand.register(event.getServer().getCommands().getDispatcher());
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
