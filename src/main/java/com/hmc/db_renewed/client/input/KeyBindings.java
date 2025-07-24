@@ -7,15 +7,15 @@ import org.lwjgl.glfw.GLFW;
 
 public class KeyBindings {
 
-    public static KeyMapping openRaceScreen;
+    public static KeyMapping openRaceSelectionScreen;
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        openRaceScreen = new KeyMapping(
+        openRaceSelectionScreen = new KeyMapping(
                 "key.db_renewed.open_race_screen",
                 GLFW.GLFW_KEY_V,
                 "key.categories.db_renewed"
         );
-        event.register(openRaceScreen);
+        event.register(openRaceSelectionScreen);
     }
 }

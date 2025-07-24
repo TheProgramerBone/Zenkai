@@ -4,16 +4,15 @@ import com.hmc.db_renewed.block.ModBlocks;
 import com.hmc.db_renewed.client.input.KeyBindings;
 import com.hmc.db_renewed.client.input.KeyInputHandler;
 import com.hmc.db_renewed.command.ModRaceCommand;
+import com.hmc.db_renewed.command.ModResetCharacterCommand;
 import com.hmc.db_renewed.command.ModStatCommand;
 import com.hmc.db_renewed.command.ModStyleCommand;
-import com.hmc.db_renewed.common.attributes.ModAttributes;
 import com.hmc.db_renewed.common.capability.ModCapabilities;
-import com.hmc.db_renewed.common.capability.StatAllocation;
-import com.hmc.db_renewed.common.capability.StatAllocationCapability;
+import com.hmc.db_renewed.common.capability.PlayerStatDataImpl;
 import com.hmc.db_renewed.item.ModCreativeModeTabs;
 import com.hmc.db_renewed.item.ModItems;
-import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.world.entity.EntityType;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.slf4j.Logger;
 
@@ -44,13 +43,18 @@ public class DragonBlockRenewed
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
-        ModAttributes.ATTRIBUTES.register(modEventBus);
-        modEventBus.register(StatAllocationCapability.class);
-        modEventBus.addListener(ModCapabilities::register);
-
+        modEventBus.addListener(this::registerCapabilities);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         modEventBus.addListener(ClientModEvents::onKeyMappingRegister);
+    }
+
+    private void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerEntity(
+                ModCapabilities.PLAYER_STATS,
+                EntityType.PLAYER,
+                (player, ctx) -> new PlayerStatDataImpl()
+        );
     }
 
 
@@ -65,6 +69,7 @@ public class DragonBlockRenewed
         ModRaceCommand.register(event.getServer().getCommands().getDispatcher());
         ModStatCommand.register(event.getServer().getCommands().getDispatcher());
         ModStyleCommand.register(event.getServer().getCommands().getDispatcher());
+        ModResetCharacterCommand.register((event.getServer().getCommands().getDispatcher()));
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent

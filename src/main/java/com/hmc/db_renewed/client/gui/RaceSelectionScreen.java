@@ -1,7 +1,8 @@
 package com.hmc.db_renewed.client.gui;
 
-import com.hmc.db_renewed.common.player.RaceDataHandler;
+import com.hmc.db_renewed.common.capability.ModCapabilities;
 import com.hmc.db_renewed.common.race.ModRaces;
+import com.hmc.db_renewed.common.style.ModCombatStyles;
 import com.mojang.blaze3d.platform.Lighting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,26 +14,46 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import com.hmc.db_renewed.api.PlayerStatData;
+
+import java.util.List;
 
 public class RaceSelectionScreen extends Screen {
 
     private final Player player;
-    private ModRaces selectedModRaces = ModRaces.HUMAN;
+    private int currentBodyType = 0;
+    private int currentHairType = 0;
 
-    public RaceSelectionScreen() {
-        super(Component.literal("Select Your Race"));
-        this.player = Minecraft.getInstance().player;
-    }
+    private final int maxBodyType = 4;
+    private final int maxHairType = 4;
 
-    private String formatRaceName(ModRaces modRaces) {
-        String[] parts = modRaces.name().toLowerCase().split("_");
-        StringBuilder builder = new StringBuilder("Race: ");
+    private final List<String> raceIds = ModRaces.getAllRaceIds();
+    private final List<String> styleIds = ModCombatStyles.getAllStyleIds();
+
+    private int currentRaceIndex = 0;
+    private int currentStyleIndex = 0;
+
+    private Button confirmButton;
+
+    private float mouseX;
+    private float mouseY;
+
+    public static String formatId(String id) {
+        String[] parts = id.split("_");
+        StringBuilder builder = new StringBuilder();
         for (String part : parts) {
-            builder.append(Character.toUpperCase(part.charAt(0)))
-                    .append(part.substring(1))
-                    .append(" ");
+            if (!part.isEmpty()) {
+                builder.append(Character.toUpperCase(part.charAt(0)))
+                        .append(part.substring(1))
+                        .append(" ");
+            }
         }
         return builder.toString().trim();
+    }
+
+    public RaceSelectionScreen() {
+        super(Component.literal("Character Selection"));
+        this.player = Minecraft.getInstance().player;
     }
 
     @Override
@@ -40,71 +61,115 @@ public class RaceSelectionScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        int labelOffsetY = 70; // Texto está debajo del modelo
-        int buttonOffsetY = 100;
-
-        int labelWidth = 120;
         int arrowWidth = 20;
-        int arrowSpacing = 5;
+        int labelWidth = 100;
+        int spacing = 5;
 
-        // Botón Izquierda
-        this.addRenderableWidget(Button.builder(Component.literal("<"), btn -> {
-            int index = (selectedModRaces.ordinal() - 1 + ModRaces.values().length) % ModRaces.values().length;
-            selectedModRaces = ModRaces.values()[index];
-        }).pos(centerX - labelWidth / 2 - arrowWidth - arrowSpacing, centerY + labelOffsetY).size(arrowWidth, 20).build());
+        // === BODY TYPE ===
+        addRenderableWidget(Button.builder(Component.literal("<"), b -> {
+            currentBodyType = (currentBodyType - 1 + maxBodyType + 1) % (maxBodyType + 1);
+            updateCapability();
+        }).pos(centerX - 100, centerY + 20).size(20, 20).build());
 
-        // Botón Derecha
-        this.addRenderableWidget(Button.builder(Component.literal(">"), btn -> {
-            int index = (selectedModRaces.ordinal() + 1) % ModRaces.values().length;
-            selectedModRaces = ModRaces.values()[index];
-        }).pos(centerX + labelWidth / 2 + arrowSpacing, centerY + labelOffsetY).size(arrowWidth, 20).build());
+        addRenderableWidget(Button.builder(Component.literal(">"), b -> {
+            currentBodyType = (currentBodyType + 1) % (maxBodyType + 1);
+            updateCapability();
+        }).pos(centerX + 80, centerY + 20).size(20, 20).build());
 
-        // Botón Confirmar
-        this.addRenderableWidget(Button.builder(Component.literal("Confirm"), btn -> {
-            RaceDataHandler handler = player.getCapability(RaceDataHandler.CAPABILITY, null);
-            player.sendSystemMessage(Component.literal("You have selected the " + formatRaceName(selectedModRaces)));
+        // === HAIR TYPE ===
+        addRenderableWidget(Button.builder(Component.literal("<"), b -> {
+            currentHairType = (currentHairType - 1 + maxHairType + 1) % (maxHairType + 1);
+            updateCapability();
+        }).pos(centerX - 100, centerY + 45).size(20, 20).build());
+
+        addRenderableWidget(Button.builder(Component.literal(">"), b -> {
+            currentHairType = (currentHairType + 1) % (maxHairType + 1);
+            updateCapability();
+        }).pos(centerX + 80, centerY + 45).size(20, 20).build());
+
+        // === RAZA a la derecha ===
+        addRenderableWidget(Button.builder(Component.literal("<"), b -> {
+            currentRaceIndex = (currentRaceIndex - 1 + raceIds.size()) % raceIds.size();
+            updateCapability();
+        }).pos(centerX + 80, centerY - 10).size(arrowWidth, 20).build());
+
+        addRenderableWidget(Button.builder(Component.literal(">"), b -> {
+            currentRaceIndex = (currentRaceIndex + 1) % raceIds.size();
+            updateCapability();
+        }).pos(centerX + 80 + labelWidth + spacing, centerY - 10).size(arrowWidth, 20).build());
+
+        // === ESTILO a la izquierda ===
+        addRenderableWidget(Button.builder(Component.literal("<"), b -> {
+            currentStyleIndex = (currentStyleIndex - 1 + styleIds.size()) % styleIds.size();
+            updateCapability();
+        }).pos(centerX - 80 - labelWidth - spacing, centerY - 10).size(arrowWidth, 20).build());
+
+        addRenderableWidget(Button.builder(Component.literal(">"), b -> {
+            currentStyleIndex = (currentStyleIndex + 1) % styleIds.size();
+            updateCapability();
+        }).pos(centerX - 80, centerY - 10).size(arrowWidth, 20).build());
+
+        // === CONFIRMAR ===
+        confirmButton = Button.builder(Component.literal("Confirm"), b -> {
+            player.sendSystemMessage(Component.literal("Character created!"));
             this.onClose();
-        }).pos(centerX - 50, centerY + buttonOffsetY).size(100, 20).build());
+        }).pos(centerX - 50, centerY + 90).size(100, 20).build();
+
+        confirmButton.active = false;
+        addRenderableWidget(confirmButton);
+
+        updateCapability(); // Carga inicial
     }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.render(graphics, mouseX, mouseY, partialTicks);
 
+        this.mouseX = (float) mouseX;
+        this.mouseY = (float) mouseY;
+
         int centerX = this.width / 2;
         int centerY = this.height / 2 - 60;
-        int scale = 50;
-        float offsetY = 0.0f;
 
-        float angleX = (float) Math.atan(((float) centerX - mouseX) / 40.0F);
-        float angleY = (float) Math.atan(((float) centerY - mouseY) / 40.0F);
+        float angleX = (float) Math.atan((centerX - mouseX) / 40.0F);
+        float angleY = (float) Math.atan((centerY - mouseY) / 40.0F);
 
-        renderEntity(
-                graphics,
-                centerX,
-                centerY+55,
-                scale,
-                offsetY,
-                angleX,
-                angleY,
-                this.player
-        );
+        renderEntity(graphics, centerX, centerY + 55, 50, 0.0f, angleX, angleY, player);
 
-        //Texto de Race:Human
-        graphics.drawCenteredString(
-                this.font,
-                formatRaceName(selectedModRaces),
-                centerX,
-                centerY + 137,
-                0xFFFFFF
-        );
+        String selectedRaceId = raceIds.get(currentRaceIndex);
+        String selectedStyleId = styleIds.get(currentStyleIndex);
 
+        graphics.drawCenteredString(this.font,
+                "Race: " + formatId(selectedRaceId),
+                centerX + 145, centerY + 100, 0xFFFFFF);
 
+        graphics.drawCenteredString(this.font,
+                "Style: " + formatId(selectedStyleId),
+                centerX - 125, centerY + 100, 0xFFFFFF);
 
+        graphics.drawCenteredString(this.font,
+                "Body Type: " + currentBodyType,
+                centerX, centerY + 105, 0xFFFFFF);
 
-
-
+        graphics.drawCenteredString(this.font,
+                "Hair Type: " + currentHairType,
+                centerX, centerY + 120, 0xFFFFFF);
     }
+
+    private void updateCapability() {
+        String raceId = raceIds.get(currentRaceIndex);
+        String styleId = styleIds.get(currentStyleIndex);
+
+        PlayerStatData data = player.getCapability(ModCapabilities.PLAYER_STATS);
+        if (data != null) {
+            data.setRaceId(raceId);
+            data.setCombatStyleId(styleId);
+            data.setbodyType(currentBodyType);
+            data.sethairType(currentHairType);
+        }
+        confirmButton.active = raceId != null && styleId != null;
+    }
+
 
     private void renderEntity(GuiGraphics graphics, int x, int y, float scale, float yOffset, float angleX, float angleY, Player entity) {
         float bodyRot = entity.yBodyRot;
@@ -148,8 +213,6 @@ public class RaceSelectionScreen extends Screen {
         entity.yHeadRot = headRot;
         entity.yHeadRotO = headRotO;
     }
-
-
 
     @Override
     public boolean isPauseScreen() {
