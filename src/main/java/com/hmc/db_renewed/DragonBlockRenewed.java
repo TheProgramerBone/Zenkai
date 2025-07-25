@@ -1,14 +1,10 @@
 package com.hmc.db_renewed;
 
 import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.capability.PlayerStats;
+import com.hmc.db_renewed.capability.PlayerStatsProvider;
 import com.hmc.db_renewed.client.input.KeyBindings;
-import com.hmc.db_renewed.client.input.KeyInputHandler;
-import com.hmc.db_renewed.command.ModRaceCommand;
-import com.hmc.db_renewed.command.ModResetCharacterCommand;
-import com.hmc.db_renewed.command.ModStatCommand;
-import com.hmc.db_renewed.command.ModStyleCommand;
-import com.hmc.db_renewed.common.capability.ModCapabilities;
-import com.hmc.db_renewed.common.capability.PlayerStatDataImpl;
+import com.hmc.db_renewed.config.DefaultConfigGenerator;
 import com.hmc.db_renewed.item.ModCreativeModeTabs;
 import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.world.entity.EntityType;
@@ -24,7 +20,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -34,43 +29,44 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 public class DragonBlockRenewed
 {
     public static final String MOD_ID = "db_renewed";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public DragonBlockRenewed(IEventBus modEventBus, ModContainer modContainer)
     {
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(this::onRegisterCapabilities);
         NeoForge.EVENT_BUS.register(this);
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
-        modEventBus.addListener(this::registerCapabilities);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         modEventBus.addListener(ClientModEvents::onKeyMappingRegister);
     }
 
-    private void registerCapabilities(RegisterCapabilitiesEvent event) {
+    public void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
         event.registerEntity(
-                ModCapabilities.PLAYER_STATS,
+                PlayerStatsProvider.CAPABILITY,
                 EntityType.PLAYER,
-                (player, ctx) -> new PlayerStatDataImpl()
+                (player, ctx) -> new PlayerStats()
         );
     }
 
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
+        DefaultConfigGenerator.generateDefaultsIfMissing();
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-        ModRaceCommand.register(event.getServer().getCommands().getDispatcher());
-        ModStatCommand.register(event.getServer().getCommands().getDispatcher());
-        ModStyleCommand.register(event.getServer().getCommands().getDispatcher());
-        ModResetCharacterCommand.register((event.getServer().getCommands().getDispatcher()));
+        //ModRaceCommand.register(event.getServer().getCommands().getDispatcher());
+        //ModStatCommand.register(event.getServer().getCommands().getDispatcher());
+        //ModStyleCommand.register(event.getServer().getCommands().getDispatcher());
+        //ModResetCharacterCommand.register((event.getServer().getCommands().getDispatcher()));
     }
+
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
@@ -79,7 +75,7 @@ public class DragonBlockRenewed
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-            NeoForge.EVENT_BUS.register(KeyInputHandler.class);
+            //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
         }
 
         private static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {

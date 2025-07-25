@@ -4,16 +4,13 @@
       "model": "db_renewed:block/dragon_ball_1"
     },
     "facing=south": {
-      "model": "db_renewed:block/dragon_ball_1",
-      "y": 180
+      "model": "db_renewed:block/dragon_ball_1"
     },
     "facing=east": {
-      "model": "db_renewed:block/dragon_ball_1",
-      "y": 90
+      "model": "db_renewed:block/dragon_ball_1"
     },
     "facing=west": {
-      "model": "db_renewed:block/dragon_ball_1",
-      "y": 270
+      "model": "db_renewed:block/dragon_ball_1"
     }
   }
 }

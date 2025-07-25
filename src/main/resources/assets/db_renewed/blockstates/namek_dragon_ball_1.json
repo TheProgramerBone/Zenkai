@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "db_renewed:block/namek_dragon_ball_1"
+    },
+    "facing=south": {
+      "model": "db_renewed:block/namek_dragon_ball_1"
+    },
+    "facing=east": {
+      "model": "db_renewed:block/namek_dragon_ball_1"
+    },
+    "facing=west": {
+      "model": "db_renewed:block/namek_dragon_ball_1"
+    }
+  }
+}

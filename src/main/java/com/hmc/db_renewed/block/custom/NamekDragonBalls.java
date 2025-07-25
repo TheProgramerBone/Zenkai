@@ -14,11 +14,11 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-public class DragonBalls extends HorizontalDirectionalBlock {
-    public static final MapCodec<DragonBalls> CODEC = simpleCodec(DragonBalls::new);
-    private static final VoxelShape SHAPE = Block.box(4.0, 0.0, 4.0, 12.0, 8.0, 12.0);
+public class NamekDragonBalls extends HorizontalDirectionalBlock {
+    public static final MapCodec<NamekDragonBalls> CODEC = simpleCodec(NamekDragonBalls::new);
+    private static final VoxelShape SHAPE = Block.box(2.0, 0.0, 2.0, 14.0, 12.0, 14.0);
 
-    public DragonBalls(Properties properties) {
+    public NamekDragonBalls(Properties properties) {
         super(properties);
     }
 
