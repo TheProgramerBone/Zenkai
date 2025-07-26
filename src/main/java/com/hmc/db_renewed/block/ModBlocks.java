@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.block;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.block.custom.AllDragonBallsBlock;
 import com.hmc.db_renewed.block.custom.DragonBalls;
 import com.hmc.db_renewed.block.custom.NamekDragonBalls;
 import com.hmc.db_renewed.item.ModItems;
@@ -100,6 +101,14 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> DRAGON_BALL_7 = registerBlock("dragon_ball_7",
             ()-> new DragonBalls(BlockBehaviour.Properties.of()
+                    .lightLevel(state -> 15)
+                    .strength(0f,100f)
+                    .sound(SoundType.AMETHYST)
+                    .mapColor(MapColor.COLOR_ORANGE)));
+
+    public static final DeferredBlock<Block> ALL_DRAGON_BALLS = MOD_BLOCKS.register("all_dragon_balls",
+            () -> new AllDragonBallsBlock(BlockBehaviour.Properties.of()
+                    .noOcclusion()
                     .lightLevel(state -> 15)
                     .strength(0f,100f)
                     .sound(SoundType.AMETHYST)

@@ -1,12 +1,17 @@
 package com.hmc.db_renewed;
 
 import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.block.entity.ModBlockEntities;
+import com.hmc.db_renewed.block.entity.client.AllDragonBallsRenderer;
 import com.hmc.db_renewed.capability.PlayerStats;
 import com.hmc.db_renewed.capability.PlayerStatsProvider;
 import com.hmc.db_renewed.client.input.KeyBindings;
 import com.hmc.db_renewed.config.DefaultConfigGenerator;
 import com.hmc.db_renewed.item.ModCreativeModeTabs;
 import com.hmc.db_renewed.item.ModItems;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -24,6 +29,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import software.bernie.geckolib.GeckoLib;
 
 @Mod(DragonBlockRenewed.MOD_ID)
 public class DragonBlockRenewed
@@ -39,6 +45,7 @@ public class DragonBlockRenewed
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modEventBus.addListener(ClientModEvents::onKeyMappingRegister);
     }
@@ -76,6 +83,7 @@ public class DragonBlockRenewed
         public static void onClientSetup(FMLClientSetupEvent event)
         {
             //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
+            BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
         }
 
         private static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {
