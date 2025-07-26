@@ -86,8 +86,9 @@ public class DragonBlockRenewed
             BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
         }
 
-        private static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {
+        public static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {
             KeyBindings.registerKeyMappings(event);
         }
     }
+
 }

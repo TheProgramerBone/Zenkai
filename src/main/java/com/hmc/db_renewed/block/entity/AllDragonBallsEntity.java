@@ -1,18 +1,21 @@
 package com.hmc.db_renewed.block.entity;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animatable.instance.SingletonAnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class AllDragonBallsEntity extends BlockEntity implements GeoBlockEntity {
 
-    private final AnimatableInstanceCache cache = new SingletonAnimatableInstanceCache(this);
-    private boolean playSummonAnimation = false;
+    protected static final RawAnimation SUMMON_ANIM = RawAnimation.begin().thenPlay("summon").thenLoop("idle");
+
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public AllDragonBallsEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), pos, blockState);
@@ -20,26 +23,23 @@ public class AllDragonBallsEntity extends BlockEntity implements GeoBlockEntity 
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.CONTINUE)
-                .triggerableAnim("summon", RawAnimation.begin().then("summon", Animation.LoopType.PLAY_ONCE)));
-    }
-
-    private <T extends GeoAnimatable> PlayState predicate(AnimationState<T> state) {
-        if (playSummonAnimation) {
-            state.getController().setAnimation(RawAnimation.begin().then("summon", Animation.LoopType.PLAY_ONCE));
-            playSummonAnimation = false;
-        } else {
-            state.getController().setAnimation(RawAnimation.begin().then("idle", Animation.LoopType.LOOP));
-        }
-        return PlayState.CONTINUE;
+        controllers.add(new AnimationController<>(this, "controller", state -> PlayState.STOP)
+                .triggerableAnim("summon", SUMMON_ANIM));
     }
 
     public void triggerSummonAnimation() {
-        this.triggerAnim("controller","summon");
+        if (level instanceof ServerLevel serverLevel) {
+            triggerAnim("controller","summon");
+        }
     }
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
+    }
+
+    @Override
+    public double getTick(Object object) {
+        return this.level != null ? this.level.getGameTime() : 0;
     }
 }
