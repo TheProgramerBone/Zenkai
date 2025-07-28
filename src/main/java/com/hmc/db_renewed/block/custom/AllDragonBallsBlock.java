@@ -4,11 +4,14 @@ import com.hmc.db_renewed.block.ModBlocks;
 import com.hmc.db_renewed.block.entity.AllDragonBallsEntity;
 import com.hmc.db_renewed.block.entity.ModBlockEntities;
 import com.hmc.db_renewed.block.entity.client.AllDragonBallsRenderer;
+import com.hmc.db_renewed.sound.ModSounds;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
@@ -61,11 +64,12 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+        player.playNotifySound((ModSounds.DRAGON_BALL_USE.get()), SoundSource.BLOCKS,1f,1f);
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof AllDragonBallsEntity dragonBallsEntity) {
                 dragonBallsEntity.triggerSummonAnimation();
-                player.displayClientMessage(Component.literal("Come forth Shenron and grant my wish!"), true);
+                player.displayClientMessage(Component.translatable("messages.db.renewed.shenron_summon"), true);
             }
 
             long currentTime = serverLevel.getDayTime();

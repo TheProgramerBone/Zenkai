@@ -84,6 +84,15 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         oreSmelting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 200, "warenai");
         oreBlasting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 100, "warenai");
         
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.DRAGON_BALL_RADAR.get(),1)
+                .pattern("IBI")
+                .pattern("BWB")
+                .pattern("IBI")
+                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .define('I', Items.IRON_INGOT)
+                .define('B',ModItems.BASIC_CIRCUIT.get())
+                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.WARENAI_CRYSTAL_BLOCK.get(),1)
                 .pattern("WWW")
                 .pattern("WWW")

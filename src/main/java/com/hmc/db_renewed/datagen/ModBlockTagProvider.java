@@ -36,5 +36,22 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         tag(ModTags.Blocks.INCORRECT_FOR_WARENAI_CRYSTAL_TOOL)
                 .addTag(BlockTags.INCORRECT_FOR_IRON_TOOL)
                 .remove(ModTags.Blocks.NEEDS_WARENAI_CRYSTAL_TOOL);
+
+        tag(ModTags.Blocks.DRAGON_BALLS)
+                .add(ModBlocks.DRAGON_BALL_1.get())
+                .add(ModBlocks.DRAGON_BALL_2.get())
+                .add(ModBlocks.DRAGON_BALL_3.get())
+                .add(ModBlocks.DRAGON_BALL_4.get())
+                .add(ModBlocks.DRAGON_BALL_5.get())
+                .add(ModBlocks.DRAGON_BALL_6.get())
+                .add(ModBlocks.DRAGON_BALL_7.get())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_1.get())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_2.get())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_3.get())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_4.get())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_5.get())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_6.get())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_7.get())
+                .add(ModBlocks.ALL_DRAGON_BALLS.get());
     }
 }

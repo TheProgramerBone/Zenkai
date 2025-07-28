@@ -1,5 +1,0 @@
-// 1.21.1	2025-07-11T17:06:21.2442987	Tags for minecraft:block mod id db_renewed
-9f20d79a2ab8092d3ad8b13714f545f960affce7 data/db_renewed/tags/block/incorrect_for_warenai_crystal_tool.json
-32b13946c4cd1f944b029659ccce5fcb2adad4ff data/db_renewed/tags/block/needs_warenai_crystal_tool.json
-28041af71439488f20a7ea1779987fc8d36f1746 data/minecraft/tags/block/mineable/pickaxe.json
-28041af71439488f20a7ea1779987fc8d36f1746 data/minecraft/tags/block/needs_iron_tool.json

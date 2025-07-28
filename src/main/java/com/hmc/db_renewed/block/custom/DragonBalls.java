@@ -1,9 +1,13 @@
 package com.hmc.db_renewed.block.custom;
 
+import com.hmc.db_renewed.util.ModTags;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -16,6 +20,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 public class DragonBalls extends HorizontalDirectionalBlock {
     public static final MapCodec<DragonBalls> CODEC = simpleCodec(DragonBalls::new);
@@ -49,6 +54,12 @@ public class DragonBalls extends HorizontalDirectionalBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        DragonBallStructureDetector.tryFormStructure(level, pos);
+        DragonBallStructureGenerator.tryFormStructure(level, pos);
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        tooltipComponents.add(Component.translatable("tooltip.db_renewed.dragon_balls"));
+        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }

@@ -9,16 +9,12 @@ import com.hmc.db_renewed.client.input.KeyBindings;
 import com.hmc.db_renewed.config.DefaultConfigGenerator;
 import com.hmc.db_renewed.item.ModCreativeModeTabs;
 import com.hmc.db_renewed.item.ModItems;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.RenderType;
+import com.hmc.db_renewed.sound.ModSounds;
+import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -29,13 +25,14 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import software.bernie.geckolib.GeckoLib;
+import org.slf4j.Logger;
 
 @Mod(DragonBlockRenewed.MOD_ID)
 public class DragonBlockRenewed
 {
     public static final String MOD_ID = "db_renewed";
-    public static final Logger LOGGER = LogUtils.getLogger();
+    private static final Logger LOGGER = LogUtils.getLogger();
+
 
     public DragonBlockRenewed(IEventBus modEventBus, ModContainer modContainer)
     {
@@ -46,6 +43,7 @@ public class DragonBlockRenewed
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
+        ModSounds.register(modEventBus);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modEventBus.addListener(ClientModEvents::onKeyMappingRegister);
     }
@@ -82,10 +80,9 @@ public class DragonBlockRenewed
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-            //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
             BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
+            //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
         }
-
         public static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {
             KeyBindings.registerKeyMappings(event);
         }

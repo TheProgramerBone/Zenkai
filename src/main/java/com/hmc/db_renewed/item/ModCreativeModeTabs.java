@@ -21,6 +21,10 @@ public class ModCreativeModeTabs {
             .icon(() -> new ItemStack(ModItems.SENZU_BEAN.get()))
             .displayItems((params, output) -> {
                 output.accept(ModItems.SENZU_BEAN.get());
+                output.accept(ModItems.DRAGON_BALL_RADAR.get());
+                output.accept(ModItems.BASIC_CIRCUIT.get());
+                output.accept(ModItems.ADVANCED_CIRCUIT.get());
+                output.accept(ModItems.ULTIMATE_CIRCUIT.get());
                 output.accept(ModItems.WARENAI_CRYSTAL.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_DUST.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_SWORD.get());

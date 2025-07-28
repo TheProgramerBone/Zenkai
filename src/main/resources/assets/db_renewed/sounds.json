@@ -1,0 +1,26 @@
+{
+  "dragon_ball_radar_use": {
+    "subtitle": "sounds.db_renewed.dragon_ball_radar_use",
+    "sounds": [
+      "db_renewed:dragon_ball_radar_use"
+    ]
+  },
+  "dragon_ball_radar_searching": {
+    "subtitle": "sounds.db_renewed.dragon_ball_radar_searching",
+    "sounds": [
+      "db_renewed:dragon_ball_radar_searching"
+    ]
+  },
+  "dragon_ball_radar_close": {
+    "subtitle": "sounds.db_renewed.dragon_ball_radar_near",
+    "sounds": [
+      "db_renewed:dragon_ball_radar_near"
+    ]
+  },
+  "dragon_ball_use": {
+    "subtitle": "sounds.db_renewed.dragon_ball_use",
+    "sounds": [
+      "db_renewed:dragon_ball_use"
+    ]
+  }
+}

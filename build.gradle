@@ -10,7 +10,7 @@ tasks.named('wrapper', Wrapper).configure {
     // Switching this to Wrapper.DistributionType.ALL will download the full gradle sources that comes with
     // documentation attached on cursor hover of gradle classes and methods. However, this comes with increased
     // file size for Gradle. If you do switch this to ALL, run the Gradle wrapper task twice afterwards.
-    // (Verify by checking gradle/wrapper/gradle-wrapper.properties to see if distributionUrl now points to `-all`)
+    // (Verify by checking gradle/wrapper/gradle-wrapper.properties to see if distributionurl = now points to `-all`)
     distributionType = Wrapper.DistributionType.BIN
 }
 
@@ -21,7 +21,7 @@ group = mod_group_id
 repositories {
     maven {
         name = 'GeckoLib'
-        url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
         content {
             includeGroup("software.bernie.geckolib")
         }
@@ -180,7 +180,7 @@ publishing {
     }
     repositories {
         maven {
-            url "file://${project.projectDir}/repo"
+            url = "file://${project.projectDir}/repo"
         }
     }
 }

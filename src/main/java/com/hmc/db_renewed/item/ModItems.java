@@ -1,11 +1,19 @@
 package com.hmc.db_renewed.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.item.custom.DragonRadarItem;
 import com.hmc.db_renewed.item.custom.ModFoodProperties;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.*;
+import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import javax.annotation.Nullable;
 
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(DragonBlockRenewed.MOD_ID);
@@ -13,6 +21,24 @@ public class ModItems {
     public static final DeferredItem<Item> SENZU_BEAN = ITEMS.registerItem("senzu_bean",
             Item::new,
             new Item.Properties().food(ModFoodProperties.SENZU_BEAN));
+
+    public static final DeferredItem<Item> DRAGON_BALL_RADAR = ITEMS.registerItem("dragon_ball_radar",
+            DragonRadarItem::new,
+            new Item.Properties()
+                    .stacksTo(1)
+                    .rarity(Rarity.UNCOMMON));
+
+    public static final DeferredItem<Item> BASIC_CIRCUIT = ITEMS.registerItem("basic_circuit",
+            Item::new,
+            new Item.Properties());
+
+    public static final DeferredItem<Item> ADVANCED_CIRCUIT = ITEMS.registerItem("advanced_circuit",
+            Item::new,
+            new Item.Properties());
+
+    public static final DeferredItem<Item> ULTIMATE_CIRCUIT = ITEMS.registerItem("ultimate_circuit",
+            Item::new,
+            new Item.Properties());
 
     public static final DeferredItem<Item> WARENAI_CRYSTAL = ITEMS.registerItem("warenai_crystal",
             Item::new,

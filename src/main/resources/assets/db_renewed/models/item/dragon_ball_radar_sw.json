@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "db_renewed:item/dragon_ball_radar_sw"
+  }
+}
