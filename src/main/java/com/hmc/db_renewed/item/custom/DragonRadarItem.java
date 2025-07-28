@@ -50,7 +50,7 @@ public class DragonRadarItem extends Item {
             player.getCooldowns().addCooldown(this, ACTIVE_DURATION_TICKS);
         }
 
-        player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_USE.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+        player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_USE.get(), SoundSource.PLAYERS, 0.9F, 0.85F);
         return InteractionResultHolder.success(stack);
     }
 
@@ -83,10 +83,10 @@ public class DragonRadarItem extends Item {
             double distanceSqr = player.blockPosition().distToCenterSqr(nearest.getX(), nearest.getY(), nearest.getZ());
             if (distanceSqr <= NEAR_RADIUS_SQR) {
                 player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.db_renewed.dragon_ball_radar_near"), true);
-                player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_NEAR.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+                player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_NEAR.get(), SoundSource.PLAYERS, 0.85F, 1.0F);
             } else {
                 player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.db_renewed.dragon_ball_radar_searching"), true);
-                player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_SEARCHING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+                player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_SEARCHING.get(), SoundSource.PLAYERS, 0.85F, 1.0F);
             }
         } else {
             player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.db.renewed.dragon_ball_radar_not_in_range"), true);
