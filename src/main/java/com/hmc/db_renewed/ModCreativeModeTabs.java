@@ -1,7 +1,7 @@
-package com.hmc.db_renewed.item;
+package com.hmc.db_renewed;
 
-import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -62,6 +62,8 @@ public class ModCreativeModeTabs {
                         output.accept(ModBlocks.WARENAI_CRYSTAL_BLOCK.get());
                         output.accept(ModBlocks.WARENAI_CRYSTAL_ORE.get());
                         output.accept(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get());
+                        output.accept(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
+                        output.accept(ModBlocks.NAMEKIAN_DIRT_BLOCK.get());
                     })
                     .build()
     );

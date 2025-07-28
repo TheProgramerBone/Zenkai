@@ -163,6 +163,18 @@ public class ModBlocks {
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
 
+    public static final DeferredBlock<Block> NAMEKIAN_DIRT_BLOCK = registerBlock("namekian_dirt",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.5f)
+                    .sound(SoundType.GRAVEL)
+                    .mapColor(MapColor.DIRT)));
+
+    public static final DeferredBlock<Block> NAMEKIAN_GRASS_BLOCK = registerBlock("namekian_grass",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.5f)
+                    .sound(SoundType.GRAVEL)
+                    .mapColor(MapColor.DIRT)));
+
 
     public static void register(IEventBus eventBus) {
         MOD_BLOCKS.register(eventBus);

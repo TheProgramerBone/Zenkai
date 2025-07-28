@@ -17,6 +17,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.WARENAI_CRYSTAL_BLOCK);
         blockWithItem(ModBlocks.WARENAI_CRYSTAL_ORE);
         blockWithItem(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE);
+        blockWithItem(ModBlocks.NAMEKIAN_DIRT_BLOCK);
     }
 
     private void blockWithItem(DeferredBlock<?> deferredBlock) {

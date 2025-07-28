@@ -7,7 +7,6 @@ import com.hmc.db_renewed.capability.PlayerStats;
 import com.hmc.db_renewed.capability.PlayerStatsProvider;
 import com.hmc.db_renewed.client.input.KeyBindings;
 import com.hmc.db_renewed.config.DefaultConfigGenerator;
-import com.hmc.db_renewed.item.ModCreativeModeTabs;
 import com.hmc.db_renewed.item.ModItems;
 import com.hmc.db_renewed.sound.ModSounds;
 import com.mojang.logging.LogUtils;
