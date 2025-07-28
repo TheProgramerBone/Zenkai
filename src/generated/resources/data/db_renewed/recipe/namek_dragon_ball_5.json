@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "db_renewed:namek_dragon_ball_4"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "db_renewed:namek_dragon_ball_5"
+  }
+}

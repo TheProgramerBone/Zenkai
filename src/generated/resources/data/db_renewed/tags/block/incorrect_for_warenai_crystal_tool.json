@@ -1,0 +1,8 @@
+{
+  "remove": [
+    "#db_renewed:needs_warenai_crystal_tool"
+  ],
+  "values": [
+    "#minecraft:incorrect_for_iron_tool"
+  ]
+}
