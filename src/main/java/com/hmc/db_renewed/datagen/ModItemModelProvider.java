@@ -29,12 +29,14 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.BASIC_CIRCUIT.get());
         basicItem(ModItems.ADVANCED_CIRCUIT.get());
         basicItem(ModItems.ULTIMATE_CIRCUIT.get());
+        basicItem(ModItems.WARENAI_TEMPLATE.get());
 
         handheldItem(ModItems.WARENAI_CRYSTAL_SWORD);
         handheldItem(ModItems.WARENAI_CRYSTAL_PICKAXE);
         handheldItem(ModItems.WARENAI_CRYSTAL_AXE);
         handheldItem(ModItems.WARENAI_CRYSTAL_SHOVEL);
         handheldItem(ModItems.WARENAI_CRYSTAL_HOE);
+        handheldItem(ModItems.WARENAI_CRYSTAL_HAMMER);
 
         trimmedArmorItem(ModItems.WARENAI_CRYSTAL_HELMET);
         trimmedArmorItem(ModItems.WARENAI_CRYSTAL_CHESTPLATE);

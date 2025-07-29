@@ -3,9 +3,12 @@ package com.hmc.db_renewed.datagen;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.block.ModBlocks;
 import com.hmc.db_renewed.item.ModItems;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
@@ -104,74 +107,23 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .requires(ModBlocks.WARENAI_CRYSTAL_BLOCK)
                 .unlockedBy("has_warenai_block", has(ModBlocks.WARENAI_CRYSTAL_BLOCK)).save(recipeOutput);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_SWORD.get(),1)
-                .pattern(" W ")
-                .pattern(" W ")
-                .pattern(" S ")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .define('S', Items.STICK)
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_PICKAXE.get(),1)
-                .pattern("WWW")
-                .pattern(" S ")
-                .pattern(" S ")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .define('S', Items.STICK)
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_SHOVEL.get(),1)
-                .pattern(" W ")
-                .pattern(" S ")
-                .pattern(" S ")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .define('S', Items.STICK)
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_AXE.get(),1)
-                .pattern("WW ")
-                .pattern("WS ")
-                .pattern(" S ")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .define('S', Items.STICK)
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_HOE.get(),1)
-                .pattern("WW ")
-                .pattern(" S ")
-                .pattern(" S ")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .define('S', Items.STICK)
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_HELMET.get(),1)
-                .pattern("WWW")
-                .pattern("W W")
-                .pattern("   ")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_CHESTPLATE.get(),1)
-                .pattern("W W")
-                .pattern("WWW")
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.WARENAI_TEMPLATE.get(),2)
+                .pattern("WTW")
+                .pattern("WRW")
                 .pattern("WWW")
                 .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+                .define('R', ModBlocks.ROCKY_BLOCK.get())
+                .define('T',ModItems.WARENAI_TEMPLATE.get())
+                .unlockedBy("has_warenai",has(ModItems.WARENAI_TEMPLATE)).save(recipeOutput);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_LEGGINGS.get(),1)
-                .pattern("WWW")
-                .pattern("W W")
-                .pattern("W W")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL_BOOTS.get(),1)
-                .pattern("W W")
-                .pattern("W W")
-                .pattern("   ")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
-
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.WARENAI_CRYSTAL_HAMMER.get(),1)
+                .pattern(" WP")
+                .pattern(" SW")
+                .pattern("S  ")
+                .define('S', Items.STICK)
+                .define('W', ModItems.WARENAI_CRYSTAL)
+                .define('P', ModItems.WARENAI_CRYSTAL_PICKAXE)
+                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
     }
 
     protected static void oreSmelting(@NotNull RecipeOutput recipeOutput, List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult,
@@ -193,4 +145,5 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                     .save(recipeOutput, DragonBlockRenewed.MOD_ID + ":" + getItemName(pResult) + pRecipeName + "_" + getItemName(itemlike));
         }
     }
+
 }

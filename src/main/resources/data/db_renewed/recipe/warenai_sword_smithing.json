@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": {
+    "item": "db_renewed:warenai_crystal"
+  },
+  "base": {
+    "item": "minecraft:iron_sword"
+  },
+  "result": {
+    "count": 1,
+    "id": "db_renewed:warenai_crystal_sword"
+  },
+  "template": {
+    "item": "db_renewed:warenai_template"
+  }
+}

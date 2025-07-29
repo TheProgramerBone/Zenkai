@@ -1,19 +1,10 @@
 package com.hmc.db_renewed.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.item.custom.DragonRadarItem;
-import com.hmc.db_renewed.item.custom.ModFoodProperties;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.*;
-import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-
-import javax.annotation.Nullable;
 
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(DragonBlockRenewed.MOD_ID);
@@ -67,6 +58,16 @@ public class ModItems {
     public static final DeferredItem<HoeItem> WARENAI_CRYSTAL_HOE = ITEMS.register("warenai_crystal_hoe",
             () -> new HoeItem(ModToolTiers.WARENAI_CRYSTAL,
                     new Item.Properties().attributes(HoeItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,-2.5f,-1f))));
+
+    public static final DeferredItem<HammerItem> WARENAI_CRYSTAL_HAMMER = ITEMS.register("warenai_crystal_hammer",
+            () -> new HammerItem(ModToolTiers.WARENAI_CRYSTAL, new Item.Properties()
+                    .attributes(PickaxeItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,5.5f,-3.5f))
+                    .attributes(ShovelItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,5.5f,-3.5f))
+                    .attributes(AxeItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,5.5f,-3.5f))));
+
+    public static final DeferredItem<Item> WARENAI_TEMPLATE = ITEMS.registerItem("warenai_template",
+            Item::new,
+            new Item.Properties());
 
     public static final DeferredItem<ArmorItem> WARENAI_CRYSTAL_HELMET = ITEMS.register("warenai_crystal_helmet",
             () -> new ArmorItem(ModArmorMaterials.WARENAI_CRYSTAL_ARMOR_MATERIAL,ArmorItem.Type.HELMET,

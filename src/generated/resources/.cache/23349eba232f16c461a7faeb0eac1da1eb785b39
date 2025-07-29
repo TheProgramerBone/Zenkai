@@ -1,4 +1,4 @@
-// 1.21.1	2025-07-27T19:36:53.7207377	Item Models: db_renewed
+// 1.21.1	2025-07-28T16:05:25.9315851	Item Models: db_renewed
 a57b7dd76f3840d5b32cd0765f11b116ee046695 assets/db_renewed/models/item/advanced_circuit.json
 028d6979fbbdbbe5581f4ade0c111c6657ef5932 assets/db_renewed/models/item/basic_circuit.json
 20d68d6100acc54019915aa652f8ed2732e3db53 assets/db_renewed/models/item/senzu_bean.json
@@ -28,6 +28,7 @@ a7bedd7577ca8675df0f3b1de8eeaa373f0eba8d assets/db_renewed/models/item/warenai_c
 3a4945bfa2a1ea3814aa4f2f2dfd2b0a06b77f14 assets/db_renewed/models/item/warenai_crystal_chestplate_quartz_trim.json
 f0f1a0fa7079fa8687b32d6a54a81868045cd042 assets/db_renewed/models/item/warenai_crystal_chestplate_redstone_trim.json
 de424d780adf9d0a6c89d0edb528373152d0c8b0 assets/db_renewed/models/item/warenai_crystal_dust.json
+3d125983a5137f9239889ed9f22f76f6e19e828a assets/db_renewed/models/item/warenai_crystal_hammer.json
 3de86f76b90004e49e10fc57805f5a62de39c69b assets/db_renewed/models/item/warenai_crystal_helmet.json
 a350be76b77e9544e03756f17c94038d2cb7880b assets/db_renewed/models/item/warenai_crystal_helmet_amethyst_trim.json
 aa76ede32f805e9a47fb309566e2175043dc4422 assets/db_renewed/models/item/warenai_crystal_helmet_copper_trim.json
@@ -54,3 +55,4 @@ ac5dee1b154198da6e7a327bb08329f7e37ffea3 assets/db_renewed/models/item/warenai_c
 9d85962450ba9eca0d1b68ef84878c8637cceb6e assets/db_renewed/models/item/warenai_crystal_pickaxe.json
 2b892e2819a56864e8447b2a488b32dd22650dfe assets/db_renewed/models/item/warenai_crystal_shovel.json
 2168ebdeaed95206afbe5111b659e92788cbe04c assets/db_renewed/models/item/warenai_crystal_sword.json
+660180edb05cd281566a7c3c2752e2e007558f0d assets/db_renewed/models/item/warenai_template.json

@@ -27,11 +27,13 @@ public class ModCreativeModeTabs {
                 output.accept(ModItems.ULTIMATE_CIRCUIT.get());
                 output.accept(ModItems.WARENAI_CRYSTAL.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_DUST.get());
+                output.accept(ModItems.WARENAI_TEMPLATE.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_SWORD.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_PICKAXE.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_AXE.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_SHOVEL.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_HOE.get());
+                output.accept(ModItems.WARENAI_CRYSTAL_HAMMER.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_HELMET.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_CHESTPLATE.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_LEGGINGS.get());
@@ -64,6 +66,7 @@ public class ModCreativeModeTabs {
                         output.accept(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get());
                         output.accept(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
                         output.accept(ModBlocks.NAMEKIAN_DIRT_BLOCK.get());
+                        output.accept(ModBlocks.ROCKY_BLOCK.get());
                     })
                     .build()
     );

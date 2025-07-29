@@ -50,7 +50,8 @@ public class ModBlocks {
                     .mapColor(MapColor.STONE)));
 
     public static final DeferredBlock<Block> DEEPSLATE_WARENAI_CRYSTAL_ORE = registerBlock("deepslate_warenai_crystal_ore",
-            ()-> new Block(BlockBehaviour.Properties.of()
+            ()-> new DropExperienceBlock(UniformInt.of(3,5),
+                    BlockBehaviour.Properties.of()
                     .strength(3f,3f)
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.DEEPSLATE)
@@ -162,6 +163,12 @@ public class ModBlocks {
                     .strength(0f,100f)
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
+
+    public static final DeferredBlock<Block> ROCKY_BLOCK = registerBlock("rocky_block",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.5f)
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.SAND)));
 
     public static final DeferredBlock<Block> NAMEKIAN_DIRT_BLOCK = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()

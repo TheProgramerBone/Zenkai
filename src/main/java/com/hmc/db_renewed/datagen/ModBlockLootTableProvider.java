@@ -46,6 +46,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.ALL_DRAGON_BALLS.get());
         dropSelf(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
         dropSelf(ModBlocks.NAMEKIAN_DIRT_BLOCK.get());
+        dropSelf(ModBlocks.ROCKY_BLOCK.get());
 
         add(ModBlocks.WARENAI_CRYSTAL_ORE.get(),
                 block -> createMultipleOreDrops(ModBlocks.WARENAI_CRYSTAL_ORE.get(), ModItems.WARENAI_CRYSTAL.get(), 1, 4));

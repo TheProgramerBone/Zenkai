@@ -39,5 +39,10 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 .add(ModItems.WARENAI_CRYSTAL_LEGGINGS.get())
                 .add(ModItems.WARENAI_CRYSTAL_BOOTS.get());
 
+        this.tag(ItemTags.ARMOR_ENCHANTABLE)
+                .add(ModItems.WARENAI_CRYSTAL_HELMET.get())
+                .add(ModItems.WARENAI_CRYSTAL_CHESTPLATE.get())
+                .add(ModItems.WARENAI_CRYSTAL_LEGGINGS.get())
+                .add(ModItems.WARENAI_CRYSTAL_BOOTS.get());
     }
 }
