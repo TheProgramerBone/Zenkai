@@ -1,5 +1,6 @@
 package com.hmc.db_renewed.entity.saiyan_pod;
 
+import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.InteractionHand;
@@ -10,20 +11,21 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class SaiyanPodEntity extends Entity implements GeoEntity {
+public class SpacePodEntity extends Entity implements GeoEntity {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     private static final RawAnimation OPEN_ANIM = RawAnimation.begin().thenPlay("open");
     private static final RawAnimation CLOSE_ANIM = RawAnimation.begin().thenPlay("close");
 
-    public SaiyanPodEntity(EntityType<? extends SaiyanPodEntity> type, Level level) {
+    public SpacePodEntity(EntityType<? extends SpacePodEntity> type, Level level) {
         super(type, level);
         this.setNoGravity(true);
     }
@@ -41,11 +43,22 @@ public class SaiyanPodEntity extends Entity implements GeoEntity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+    protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
     }
-    
+
     @Override
-    public InteractionResult interact(Player player, InteractionHand hand) {
+    public void tick() {
+        super.tick();
+
+        if (!level().isClientSide()) {
+            if (getPassengers().isEmpty()) {
+                triggerOpenAnimation();
+            }
+        }
+    }
+
+    @Override
+    public @NotNull InteractionResult interact(Player player, @NotNull InteractionHand hand) {
         if (!player.isPassenger()) {
             player.startRiding(this);
 
@@ -56,11 +69,6 @@ public class SaiyanPodEntity extends Entity implements GeoEntity {
             return InteractionResult.sidedSuccess(level().isClientSide);
         }
 
-        if (!level().isClientSide()) {
-            if (getPassengers().isEmpty()) {
-                triggerOpenAnimation();
-            }
-        }
         return InteractionResult.PASS;
     }
 
@@ -78,10 +86,10 @@ public class SaiyanPodEntity extends Entity implements GeoEntity {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag tag) {}
+    protected void readAdditionalSaveData(@NotNull CompoundTag tag) {}
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag tag) {}
+    protected void addAdditionalSaveData(@NotNull CompoundTag tag) {}
 
     @Override
     public boolean canBeCollidedWith() {
@@ -94,21 +102,23 @@ public class SaiyanPodEntity extends Entity implements GeoEntity {
     }
 
     @Override
-    protected void removePassenger(Entity passenger) {
+    protected void removePassenger(@NotNull Entity passenger) {
         super.removePassenger(passenger);
     }
 
     @Override
-    public Vec3 getPassengerRidingPosition(Entity passenger) {
+    public @NotNull Vec3 getPassengerRidingPosition(@NotNull Entity passenger) {
         return this.position().add(0, 0.2, 0);
     }
 
     @Override
-    public boolean hurt(DamageSource source, float amount) {
+    public boolean hurt(@NotNull DamageSource source, float amount) {
         if (!this.isInvulnerableTo(source)) {
             this.kill();
+            this.spawnAtLocation(ModItems.SPACE_POD_ITEM.get());
             return true;
         }
+
         return false;
     }
 
@@ -118,7 +128,7 @@ public class SaiyanPodEntity extends Entity implements GeoEntity {
     }
 
     @Override
-    public void push(Entity entity) {}
+    public void push(@NotNull Entity entity) {}
 
     @Override
     protected void doWaterSplashEffect() {}

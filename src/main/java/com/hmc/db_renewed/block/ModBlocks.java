@@ -166,7 +166,8 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> ROCKY_BLOCK = registerBlock("rocky_block",
             ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(0.5f)
+                    .strength(3f)
+                    .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.SAND)));
 

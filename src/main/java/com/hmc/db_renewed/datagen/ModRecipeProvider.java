@@ -3,12 +3,9 @@ package com.hmc.db_renewed.datagen;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.block.ModBlocks;
 import com.hmc.db_renewed.item.ModItems;
-import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
@@ -123,6 +120,15 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('S', Items.STICK)
                 .define('W', ModItems.WARENAI_CRYSTAL)
                 .define('P', ModItems.WARENAI_CRYSTAL_PICKAXE)
+                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.SPACE_POD_ITEM.get(),1)
+                .pattern("WBW")
+                .pattern("BCB")
+                .pattern("WBW")
+                .define('W', ModItems.WARENAI_CRYSTAL)
+                .define('B', ModItems.BASIC_CIRCUIT)
+                .define('C', ModItems.ADVANCED_CIRCUIT)
                 .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
     }
 

@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.entity;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.entity.saiyan_pod.SaiyanPodEntity;
+import com.hmc.db_renewed.entity.saiyan_pod.SpacePodEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -14,9 +14,9 @@ public class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
             DeferredRegister.create(BuiltInRegistries.ENTITY_TYPE, DragonBlockRenewed.MOD_ID);
 
-    public static final Supplier<EntityType<SaiyanPodEntity>> SAIYAN_POD =
-            ENTITY_TYPES.register("saiyan_pod",() -> EntityType.Builder.of(SaiyanPodEntity::new, MobCategory.CREATURE)
-                    .sized(2f,2f).build("saiyan_pod"));
+    public static final Supplier<EntityType<SpacePodEntity>> SPACE_POD =
+            ENTITY_TYPES.register("space_pod",() -> EntityType.Builder.of(SpacePodEntity::new, MobCategory.CREATURE)
+                    .sized(1f,1f).build("space_pod"));
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);

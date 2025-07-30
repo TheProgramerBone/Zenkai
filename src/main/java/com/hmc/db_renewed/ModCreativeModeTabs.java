@@ -25,6 +25,7 @@ public class ModCreativeModeTabs {
                 output.accept(ModItems.BASIC_CIRCUIT.get());
                 output.accept(ModItems.ADVANCED_CIRCUIT.get());
                 output.accept(ModItems.ULTIMATE_CIRCUIT.get());
+                output.accept(ModItems.SPACE_POD_ITEM.get());
                 output.accept(ModItems.WARENAI_CRYSTAL.get());
                 output.accept(ModItems.WARENAI_CRYSTAL_DUST.get());
                 output.accept(ModItems.WARENAI_TEMPLATE.get());

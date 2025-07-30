@@ -8,7 +8,7 @@ import com.hmc.db_renewed.capability.PlayerStatsProvider;
 import com.hmc.db_renewed.client.input.KeyBindings;
 import com.hmc.db_renewed.config.DefaultConfigGenerator;
 import com.hmc.db_renewed.entity.ModEntities;
-import com.hmc.db_renewed.entity.saiyan_pod.SaiyanPodRenderer;
+import com.hmc.db_renewed.entity.saiyan_pod.SpacePodRenderer;
 import com.hmc.db_renewed.item.ModItems;
 import com.hmc.db_renewed.sound.ModSounds;
 import com.hmc.db_renewed.worldgen.ModSurfaceRules;
@@ -91,7 +91,7 @@ public class DragonBlockRenewed
         public static void onClientSetup(FMLClientSetupEvent event)
         {
             BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
-            EntityRenderers.register(ModEntities.SAIYAN_POD.get(), SaiyanPodRenderer::new);
+            EntityRenderers.register(ModEntities.SPACE_POD.get(), SpacePodRenderer::new);
             //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
             event.enqueueWork(() ->
             {

@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.item;
+package com.hmc.db_renewed.item.custom;
 
 import com.hmc.db_renewed.sound.ModSounds;
 import com.hmc.db_renewed.util.ModTags;
@@ -34,7 +34,7 @@ public class DragonRadarItem extends Item {
 
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+    public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext context, List<Component> tooltipComponents, @NotNull TooltipFlag tooltipFlag) {
         tooltipComponents.add(Component.translatable("tooltip.db_renewed.dragon_ball_radar"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
@@ -57,7 +57,7 @@ public class DragonRadarItem extends Item {
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity, int slot, boolean selected) {
+    public void inventoryTick(@NotNull ItemStack stack, Level level, net.minecraft.world.entity.@NotNull Entity entity, int slot, boolean selected) {
         if (level.isClientSide || !(entity instanceof Player player)) return;
 
         CustomData data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
@@ -79,7 +79,7 @@ public class DragonRadarItem extends Item {
         }
 
         if (player.tickCount % 20 != 0) return;
-        BlockPos nearest = findNearestDragonBall(level, player.blockPosition(), DETECTION_RADIUS);
+        BlockPos nearest = findNearestDragonBall(level, player.blockPosition());
         if (nearest != null) {
             updateRadarDirection(stack, player, slot, player.getX(), player.getZ(), nearest.getX(), nearest.getZ(), player.getYRot());
             double distanceSqr = player.blockPosition().distToCenterSqr(nearest.getX(), nearest.getY(), nearest.getZ());
@@ -118,17 +118,17 @@ public class DragonRadarItem extends Item {
         }
     }
 
-    private BlockPos findNearestDragonBall(Level level, BlockPos origin, int radius) {
+    private BlockPos findNearestDragonBall(Level level, BlockPos origin) {
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
         BlockPos nearest = null;
         double closestDistanceSqr = Double.MAX_VALUE;
 
-        int startX = origin.getX() - radius;
-        int endX = origin.getX() + radius;
-        int startY = Math.max(0, origin.getY() - radius);
-        int endY = Math.min(level.getMaxBuildHeight(), origin.getY() + radius);
-        int startZ = origin.getZ() - radius;
-        int endZ = origin.getZ() + radius;
+        int startX = origin.getX() - DragonRadarItem.DETECTION_RADIUS;
+        int endX = origin.getX() + DragonRadarItem.DETECTION_RADIUS;
+        int startY = Math.max(0, origin.getY() - DragonRadarItem.DETECTION_RADIUS);
+        int endY = Math.min(level.getMaxBuildHeight(), origin.getY() + DragonRadarItem.DETECTION_RADIUS);
+        int startZ = origin.getZ() - DragonRadarItem.DETECTION_RADIUS;
+        int endZ = origin.getZ() + DragonRadarItem.DETECTION_RADIUS;
 
         for (int x = startX; x <= endX; x++) {
             for (int y = startY; y <= endY; y++) {

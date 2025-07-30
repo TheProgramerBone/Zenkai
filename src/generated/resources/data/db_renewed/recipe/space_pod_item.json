@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "db_renewed:basic_circuit"
+    },
+    "C": {
+      "item": "db_renewed:advanced_circuit"
+    },
+    "W": {
+      "item": "db_renewed:warenai_crystal"
+    }
+  },
+  "pattern": [
+    "WBW",
+    "BCB",
+    "WBW"
+  ],
+  "result": {
+    "count": 1,
+    "id": "db_renewed:space_pod_item"
+  }
+}

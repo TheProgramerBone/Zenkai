@@ -1,6 +1,9 @@
 package com.hmc.db_renewed.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.item.custom.DragonRadarItem;
+import com.hmc.db_renewed.item.custom.HammerItem;
+import com.hmc.db_renewed.item.custom.SpacePodItem;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -85,6 +88,10 @@ public class ModItems {
             () -> new ArmorItem(ModArmorMaterials.WARENAI_CRYSTAL_ARMOR_MATERIAL,ArmorItem.Type.BOOTS,
                     new Item.Properties().durability(ArmorItem.Type.BOOTS.getDurability(25))));
 
+    public static final DeferredItem<Item> SPACE_POD_ITEM = ITEMS.registerItem("space_pod_item",
+            SpacePodItem::new,
+            new Item.Properties()
+                    .stacksTo(1));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

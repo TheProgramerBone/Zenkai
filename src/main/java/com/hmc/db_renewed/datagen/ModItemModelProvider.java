@@ -30,6 +30,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.ADVANCED_CIRCUIT.get());
         basicItem(ModItems.ULTIMATE_CIRCUIT.get());
         basicItem(ModItems.WARENAI_TEMPLATE.get());
+        basicItem(ModItems.SPACE_POD_ITEM.get());
 
         handheldItem(ModItems.WARENAI_CRYSTAL_SWORD);
         handheldItem(ModItems.WARENAI_CRYSTAL_PICKAXE);
