@@ -26,6 +26,11 @@ repositories {
             includeGroup("software.bernie.geckolib")
         }
     }
+
+    maven {//Terrablender
+        url = 'https://maven.minecraftforge.net/' }
+    maven {//Terrablender
+        url = 'https://repo.spongepowered.org/repository/maven-public/' }
 }
 
 base {
@@ -121,6 +126,8 @@ configurations {
 
 dependencies {
     implementation "software.bernie.geckolib:geckolib-neoforge-${"1.21.1"}:${"4.7.6"}"
+
+    implementation "com.github.glitchfiend:TerraBlender-neoforge:${"1.21.1"}-${"4.1.0.8"}"
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

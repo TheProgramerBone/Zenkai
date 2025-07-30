@@ -1,5 +1,6 @@
-package com.hmc.db_renewed.block.entity;
+package com.hmc.db_renewed.block.entity.AllDragonBalls;
 
+import com.hmc.db_renewed.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;

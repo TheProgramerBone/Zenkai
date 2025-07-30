@@ -1,7 +1,6 @@
-package com.hmc.db_renewed.block.entity.client;
+package com.hmc.db_renewed.block.entity.AllDragonBalls;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.block.entity.AllDragonBallsEntity;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.GeoModel;

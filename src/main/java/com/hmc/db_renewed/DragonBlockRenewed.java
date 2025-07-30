@@ -2,15 +2,21 @@ package com.hmc.db_renewed;
 
 import com.hmc.db_renewed.block.ModBlocks;
 import com.hmc.db_renewed.block.entity.ModBlockEntities;
-import com.hmc.db_renewed.block.entity.client.AllDragonBallsRenderer;
+import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsRenderer;
 import com.hmc.db_renewed.capability.PlayerStats;
 import com.hmc.db_renewed.capability.PlayerStatsProvider;
 import com.hmc.db_renewed.client.input.KeyBindings;
 import com.hmc.db_renewed.config.DefaultConfigGenerator;
+import com.hmc.db_renewed.entity.ModEntities;
+import com.hmc.db_renewed.entity.saiyan_pod.SaiyanPodRenderer;
 import com.hmc.db_renewed.item.ModItems;
 import com.hmc.db_renewed.sound.ModSounds;
+import com.hmc.db_renewed.worldgen.ModSurfaceRules;
+import com.hmc.db_renewed.worldgen.overworld.biomes.RockyWasteland;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -25,6 +31,9 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
+import terrablender.api.RegionType;
+import terrablender.api.Regions;
+import terrablender.api.SurfaceRuleManager;
 
 @Mod(DragonBlockRenewed.MOD_ID)
 public class DragonBlockRenewed
@@ -43,8 +52,10 @@ public class DragonBlockRenewed
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModSounds.register(modEventBus);
+        ModEntities.register(modEventBus);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modEventBus.addListener(ClientModEvents::onKeyMappingRegister);
+
     }
 
     public void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
@@ -80,7 +91,13 @@ public class DragonBlockRenewed
         public static void onClientSetup(FMLClientSetupEvent event)
         {
             BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
+            EntityRenderers.register(ModEntities.SAIYAN_POD.get(), SaiyanPodRenderer::new);
             //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
+            event.enqueueWork(() ->
+            {
+                Regions.register(new RockyWasteland(ResourceLocation.fromNamespaceAndPath(MOD_ID, "overworld"), RegionType.OVERWORLD,5));
+                SurfaceRuleManager.addSurfaceRules(SurfaceRuleManager.RuleCategory.OVERWORLD, MOD_ID, ModSurfaceRules.makeRules());
+            });
         }
         public static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {
             KeyBindings.registerKeyMappings(event);

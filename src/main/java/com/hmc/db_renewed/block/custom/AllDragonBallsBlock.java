@@ -1,20 +1,16 @@
 package com.hmc.db_renewed.block.custom;
 
 import com.hmc.db_renewed.block.ModBlocks;
-import com.hmc.db_renewed.block.entity.AllDragonBallsEntity;
-import com.hmc.db_renewed.block.entity.ModBlockEntities;
-import com.hmc.db_renewed.block.entity.client.AllDragonBallsRenderer;
+import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsEntity;
 import com.hmc.db_renewed.sound.ModSounds;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;

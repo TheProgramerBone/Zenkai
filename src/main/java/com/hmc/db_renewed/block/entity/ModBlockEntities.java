@@ -2,6 +2,7 @@ package com.hmc.db_renewed.block.entity;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;

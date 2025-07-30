@@ -1,6 +1,5 @@
-package com.hmc.db_renewed.block.entity.client;
+package com.hmc.db_renewed.block.entity.AllDragonBalls;
 
-import com.hmc.db_renewed.block.entity.AllDragonBallsEntity;
 import software.bernie.geckolib.renderer.GeoBlockRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
 
