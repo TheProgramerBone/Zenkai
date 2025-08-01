@@ -4,10 +4,10 @@
   "has_precipitation": false,
   "temperature_modifier": "none",
   "effects": {
-    "sky_color": 3183937,
-    "fog_color": 12638463,
-    "water_color": 4159204,
-    "water_fog_color": 329011,
+    "sky_color": 2555765,
+    "fog_color": 5963637,
+    "water_color": 2529116,
+    "water_fog_color": 6870166,
     "grass_color": 9879710,
     "foliage_color": 9879710
   },
