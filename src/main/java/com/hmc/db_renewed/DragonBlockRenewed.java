@@ -12,11 +12,10 @@ import com.hmc.db_renewed.entity.saiyan_pod.SpacePodRenderer;
 import com.hmc.db_renewed.item.ModItems;
 import com.hmc.db_renewed.sound.ModSounds;
 import com.hmc.db_renewed.worldgen.ModSurfaceRules;
-import com.hmc.db_renewed.worldgen.overworld.biomes.RockyWasteland;
+import com.hmc.db_renewed.worldgen.ModOverworldRegion;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -31,7 +30,6 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
-import terrablender.api.RegionType;
 import terrablender.api.Regions;
 import terrablender.api.SurfaceRuleManager;
 
@@ -95,7 +93,7 @@ public class DragonBlockRenewed
             //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
             event.enqueueWork(() ->
             {
-                Regions.register(new RockyWasteland(ResourceLocation.fromNamespaceAndPath(MOD_ID, "overworld"), RegionType.OVERWORLD,5));
+                Regions.register(new ModOverworldRegion());
                 SurfaceRuleManager.addSurfaceRules(SurfaceRuleManager.RuleCategory.OVERWORLD, MOD_ID, ModSurfaceRules.makeRules());
             });
         }

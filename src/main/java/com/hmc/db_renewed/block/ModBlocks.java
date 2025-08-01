@@ -171,17 +171,31 @@ public class ModBlocks {
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.SAND)));
 
-    public static final DeferredBlock<Block> NAMEKIAN_DIRT_BLOCK = registerBlock("namekian_dirt",
+    public static final DeferredBlock<Block> NAMEKIAN_DIRT = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5f)
                     .sound(SoundType.GRAVEL)
                     .mapColor(MapColor.DIRT)));
 
-    public static final DeferredBlock<Block> NAMEKIAN_GRASS_BLOCK = registerBlock("namekian_grass",
+    public static final DeferredBlock<Block> NAMEKIAN_GRASS = registerBlock("namekian_grass",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5f)
                     .sound(SoundType.GRAVEL)
                     .mapColor(MapColor.DIRT)));
+
+    public static final DeferredBlock<Block> NAMEKIAN_STONE = registerBlock("namekian_stone",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.SAND)));
+
+    public static final DeferredBlock<Block> NAMEKIAN_COBBLESTONE = registerBlock("namekian_cobblestone",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.SAND)));
 
 
     public static void register(IEventBus eventBus) {

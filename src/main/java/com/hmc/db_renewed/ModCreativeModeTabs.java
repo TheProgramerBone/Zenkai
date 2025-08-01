@@ -65,8 +65,8 @@ public class ModCreativeModeTabs {
                         output.accept(ModBlocks.WARENAI_CRYSTAL_BLOCK.get());
                         output.accept(ModBlocks.WARENAI_CRYSTAL_ORE.get());
                         output.accept(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get());
-                        output.accept(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
-                        output.accept(ModBlocks.NAMEKIAN_DIRT_BLOCK.get());
+                        output.accept(ModBlocks.NAMEKIAN_GRASS.get());
+                        output.accept(ModBlocks.NAMEKIAN_DIRT.get());
                         output.accept(ModBlocks.ROCKY_BLOCK.get());
                     })
                     .build()

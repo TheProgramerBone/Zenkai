@@ -24,6 +24,7 @@ public class SpacePodEntity extends Entity implements GeoEntity {
 
     private static final RawAnimation OPEN_ANIM = RawAnimation.begin().thenPlay("open");
     private static final RawAnimation CLOSE_ANIM = RawAnimation.begin().thenPlay("close");
+    private static final RawAnimation LAUNCH_ANIM = RawAnimation.begin().thenPlay("launch");
 
     public SpacePodEntity(EntityType<? extends SpacePodEntity> type, Level level) {
         super(type, level);
@@ -34,7 +35,8 @@ public class SpacePodEntity extends Entity implements GeoEntity {
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "controller", 0,this::predicate)
                 .triggerableAnim("open", OPEN_ANIM)
-                .triggerableAnim("close", CLOSE_ANIM));
+                .triggerableAnim("close", CLOSE_ANIM)
+                .triggerableAnim("launch", LAUNCH_ANIM));
     }
 
     private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> state) {
@@ -108,7 +110,7 @@ public class SpacePodEntity extends Entity implements GeoEntity {
 
     @Override
     public @NotNull Vec3 getPassengerRidingPosition(@NotNull Entity passenger) {
-        return this.position().add(0, 0.2, 0);
+        return this.position().add(0, 0.7, -0.5);
     }
 
     @Override

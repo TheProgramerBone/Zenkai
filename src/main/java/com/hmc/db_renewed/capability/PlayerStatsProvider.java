@@ -34,7 +34,7 @@ public class PlayerStatsProvider {
         stats.load(nbt);
     }
 
-    // ======= Método de fábrica que usaremos en el registro =======
+    // ======= Metodo de fábrica que usaremos en el registro =======
 
     public static @Nullable PlayerStats get(Entity entity) {
         return entity.getCapability(CAPABILITY, null);

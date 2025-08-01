@@ -17,9 +17,7 @@
   },
   "spawn_costs": {},
   "spawners": {},
-  "features": [
-    "minecraft:patch_grass_badlands"
-  ],
+  "features": [],
   "carvers": {},
   "starts": [],
   "player_spawn_friendly": false

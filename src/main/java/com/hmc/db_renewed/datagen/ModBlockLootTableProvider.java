@@ -43,8 +43,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_7.get());
         dropSelf(ModBlocks.WARENAI_CRYSTAL_BLOCK.get());
         dropSelf(ModBlocks.ALL_DRAGON_BALLS.get());
-        dropSelf(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
-        dropSelf(ModBlocks.NAMEKIAN_DIRT_BLOCK.get());
+        dropSelf(ModBlocks.NAMEKIAN_GRASS.get());
+        dropSelf(ModBlocks.NAMEKIAN_DIRT.get());
         dropSelf(ModBlocks.ROCKY_BLOCK.get());
 
         add(ModBlocks.WARENAI_CRYSTAL_ORE.get(),

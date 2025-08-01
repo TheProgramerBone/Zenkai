@@ -6,7 +6,7 @@ import net.minecraft.world.level.levelgen.SurfaceRules;
 
 public class ModSurfaceRules {
     public static SurfaceRules.RuleSource makeRules() {
-        Block rockyBlock = ModBlocks.ROCKY_BLOCK.get(); // Acceso en tiempo de ejecución, no en static
+        Block rockyBlock = ModBlocks.ROCKY_BLOCK.get();
         SurfaceRules.RuleSource rockySurface = SurfaceRules.state(rockyBlock.defaultBlockState());
 
         return SurfaceRules.sequence(
@@ -19,4 +19,16 @@ public class ModSurfaceRules {
                 )
         );
     }
+
+    public static final SurfaceRules.RuleSource NAMEK_SURFACE_BUILDER = SurfaceRules.sequence(
+            SurfaceRules.ifTrue(
+                    SurfaceRules.ON_FLOOR,
+                    SurfaceRules.state(ModBlocks.NAMEKIAN_GRASS.get().defaultBlockState())
+            ),
+            SurfaceRules.ifTrue(
+                    SurfaceRules.UNDER_FLOOR,
+                    SurfaceRules.state(ModBlocks.NAMEKIAN_DIRT.get().defaultBlockState())
+            ),
+            SurfaceRules.state(ModBlocks.NAMEKIAN_STONE.get().defaultBlockState())
+    );
 }

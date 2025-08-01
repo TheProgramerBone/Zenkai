@@ -1,7 +1,7 @@
-package com.hmc.db_renewed.worldgen.overworld.biomes;
+package com.hmc.db_renewed.worldgen;
 
 
-import com.hmc.db_renewed.worldgen.ModBiomes;
+import com.hmc.db_renewed.DragonBlockRenewed;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
@@ -16,10 +16,10 @@ import terrablender.api.VanillaParameterOverlayBuilder;
 import static terrablender.api.ParameterUtils.*;
 import java.util.function.Consumer;
 
-public class RockyWasteland extends Region {
+public class ModOverworldRegion extends Region {
 
-    public RockyWasteland(ResourceLocation name, RegionType type, int weight) {
-        super(name, type, weight);
+    public ModOverworldRegion() {
+        super(ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "overworld"), RegionType.OVERWORLD, 5);
     }
 
     @Override

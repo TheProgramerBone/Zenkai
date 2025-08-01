@@ -3,6 +3,7 @@ package com.hmc.db_renewed.item;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.item.custom.DragonRadarItem;
 import com.hmc.db_renewed.item.custom.HammerItem;
+import com.hmc.db_renewed.item.custom.SenzuBean;
 import com.hmc.db_renewed.item.custom.SpacePodItem;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
@@ -13,8 +14,8 @@ public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(DragonBlockRenewed.MOD_ID);
 
     public static final DeferredItem<Item> SENZU_BEAN = ITEMS.registerItem("senzu_bean",
-            Item::new,
-            new Item.Properties().food(ModFoodProperties.SENZU_BEAN));
+            SenzuBean::new,
+            new SenzuBean.Properties());
 
     public static final DeferredItem<Item> DRAGON_BALL_RADAR = ITEMS.registerItem("dragon_ball_radar",
             DragonRadarItem::new,

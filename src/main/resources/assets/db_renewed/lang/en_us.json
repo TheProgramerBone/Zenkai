@@ -8,7 +8,6 @@
   "item.db_renewed.warenai_crystal_dust": "Warenai Crystal Dust",
   "item.db_renewed.warenai_template": "Warenai Smithing Template",
   "item.db_renewed.space_pod_item": "Space Pod",
-
   "item.db_renewed.warenai_crystal_sword": "Warenai Crystal Sword",
   "item.db_renewed.warenai_crystal_pickaxe": "Warenai Crystal Pickaxe",
   "item.db_renewed.warenai_crystal_shovel": "Warenai Crystal Shovel",
@@ -19,6 +18,15 @@
   "item.db_renewed.warenai_crystal_leggings": "Warenai Crystal Leggings",
   "item.db_renewed.warenai_crystal_boots": "Warenai Crystal Boots",
   "item.db_renewed.warenai_crystal_hammer": "Warenai Crystal Hammer",
+
+  "block.db_renewed.namekian_grass": "Namekian Grass",
+  "block.db_renewed.namekian_dirt": "Namekian Dirt",
+  "block.db_renewed.namekian_stone": "Namekian Stone",
+  "block.db_renewed.namekian_cobblestone": "Namekian Cobblestone",
+  "block.db_renewed.warenai_crystal_block": "Warenai Crystal Block",
+  "block.db_renewed.warenai_crystal_ore": "Warenai Crystal Ore",
+  "block.db_renewed.deepslate_warenai_crystal_ore": "Deepslate Warenai Crystal Ore",
+  "block.db_renewed.rocky_block": "Rocky Block",
 
   "block.db_renewed.dragon_ball_1":"§6Dragon Ball 1 Star",
   "block.db_renewed.dragon_ball_2":"§6Dragon Ball 2 Star",
@@ -36,12 +44,6 @@
   "block.db_renewed.namek_dragon_ball_6": "§6Namek Dragon Ball 6 Star",
   "block.db_renewed.namek_dragon_ball_7": "§6Namek Dragon Ball 7 Star",
 
-  "block.db_renewed.namekian_grass": "Namekian Grass",
-  "block.db_renewed.namekian_dirt": "Namekian Dirt",
-  "block.db_renewed.warenai_crystal_block": "Warenai Crystal Block",
-  "block.db_renewed.warenai_crystal_ore": "Warenai Crystal Ore",
-  "block.db_renewed.deepslate_warenai_crystal_ore": "Deepslate Warenai Crystal Ore",
-  "block.db_renewed.rocky_block": "Rocky Block",
 
   "creativetab.db_renewed.items": "Dragon Block Renewed Items",
   "creativetab.db_renewed.blocks": "Dragon Block Renewed Blocks",
@@ -53,6 +55,7 @@
   "sounds.db_renewed.dragon_ball_radar_searching": "A Dragon Ball is in radius",
   "sounds.db_renewed.dragon_ball_radar_near": "A Dragon Ball Is Near",
   "sounds.db_renewed.dragon_ball_use": "Dragon Ball Use",
+  "sounds.db_renewed.senzu_eat": "Senzu Eaten",
 
   "tooltip.db_renewed.dragon_ball_radar": "Locate Dragon Balls in a radius of 128 blocks!",
   "tooltip.db_renewed.dragon_balls": "§oA mysterious sphere...",

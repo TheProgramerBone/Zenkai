@@ -22,5 +22,11 @@
     "sounds": [
       "db_renewed:dragon_ball_use"
     ]
+  },
+  "senzu_eat": {
+    "subtitle": "sounds.db_renewed.senzu_eat",
+    "sounds": [
+      "db_renewed:senzu_eat"
+    ]
   }
 }

@@ -16,7 +16,7 @@ public class ModEntities {
 
     public static final Supplier<EntityType<SpacePodEntity>> SPACE_POD =
             ENTITY_TYPES.register("space_pod",() -> EntityType.Builder.of(SpacePodEntity::new, MobCategory.CREATURE)
-                    .sized(1f,1f).build("space_pod"));
+                    .sized(2.45f,2.45f).build("space_pod"));
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);

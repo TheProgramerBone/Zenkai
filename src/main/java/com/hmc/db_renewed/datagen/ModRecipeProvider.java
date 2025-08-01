@@ -123,11 +123,12 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.SPACE_POD_ITEM.get(),1)
-                .pattern("WBW")
+                .pattern("IRI")
                 .pattern("BCB")
-                .pattern("WBW")
-                .define('W', ModItems.WARENAI_CRYSTAL)
+                .pattern("IRI")
+                .define('I', Items.IRON_INGOT)
                 .define('B', ModItems.BASIC_CIRCUIT)
+                .define('R', Items.RED_DYE)
                 .define('C', ModItems.ADVANCED_CIRCUIT)
                 .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
     }
