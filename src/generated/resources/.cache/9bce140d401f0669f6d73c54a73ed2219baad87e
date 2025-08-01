@@ -1,7 +1,7 @@
-// 1.21.1	2025-07-29T15:48:40.9920967	Tags for minecraft:block mod id db_renewed
+// 1.21.1	2025-07-31T21:50:32.3046342	Tags for minecraft:block mod id db_renewed
 4580dbd99c37e8b9a5b636e749c1acb5d04a061c data/db_renewed/tags/block/dragon_balls.json
 9f20d79a2ab8092d3ad8b13714f545f960affce7 data/db_renewed/tags/block/incorrect_for_warenai_crystal_tool.json
 32b13946c4cd1f944b029659ccce5fcb2adad4ff data/db_renewed/tags/block/needs_warenai_crystal_tool.json
 2a19f274a10fcfba2833e3b60279833c97aad731 data/minecraft/tags/block/dead_bush_may_place_on.json
-149509b79eca8eec37de209441b611a222afd699 data/minecraft/tags/block/mineable/pickaxe.json
+5f5dbc2f17324db1c2e85eeb954f48a9549cc9d8 data/minecraft/tags/block/mineable/pickaxe.json
 28041af71439488f20a7ea1779987fc8d36f1746 data/minecraft/tags/block/needs_iron_tool.json

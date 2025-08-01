@@ -80,7 +80,9 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 
         List<ItemLike> WARENAI_SMELTABLES = List.of(ModItems.WARENAI_CRYSTAL_DUST,
                 ModBlocks.WARENAI_CRYSTAL_ORE, ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE);
+        List<ItemLike> NAMEKIAN_COBBLESTONE = List.of(ModBlocks.NAMEKIAN_COBBLESTONE);
 
+        oreSmelting(recipeOutput, NAMEKIAN_COBBLESTONE, RecipeCategory.MISC, ModBlocks.NAMEKIAN_STONE.get(), 0.1f, 200, "namekian");
         oreSmelting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 200, "warenai");
         oreBlasting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 100, "warenai");
         
@@ -131,6 +133,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('R', Items.RED_DYE)
                 .define('C', ModItems.ADVANCED_CIRCUIT)
                 .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
     }
 
     protected static void oreSmelting(@NotNull RecipeOutput recipeOutput, List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult,

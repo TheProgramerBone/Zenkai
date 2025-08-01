@@ -24,7 +24,9 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.WARENAI_CRYSTAL_BLOCK.get())
                 .add(ModBlocks.WARENAI_CRYSTAL_ORE.get())
                 .add(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get())
-                .add(ModBlocks.ROCKY_BLOCK.get());
+                .add(ModBlocks.ROCKY_BLOCK.get())
+                .add(ModBlocks.NAMEKIAN_STONE.get())
+                .add(ModBlocks.NAMEKIAN_COBBLESTONE.get());
 
         tag(BlockTags.DEAD_BUSH_MAY_PLACE_ON)
                 .add(ModBlocks.ROCKY_BLOCK.get());

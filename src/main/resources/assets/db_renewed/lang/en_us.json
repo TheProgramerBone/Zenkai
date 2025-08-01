@@ -60,6 +60,10 @@
   "tooltip.db_renewed.dragon_ball_radar": "Locate Dragon Balls in a radius of 128 blocks!",
   "tooltip.db_renewed.dragon_balls": "§oA mysterious sphere...",
 
+  "biome.db_renewed.namek_mid": "Namek Mid Biome",
+  "biome.db_renewed.namek_plains": "Namek Plains Biome",
+  "biome.db_renewed.namek_hills": "Namek Hills Biome",
+
   "messages.db.renewed.shenron_summon": "§2§lCome forth Shenron and grant my wish!",
   "messages.db.renewed.dragon_ball_radar_not_in_range": "No §6Dragon Balls§f in radius",
   "messages.db_renewed.dragon_ball_radar_searching": "A §6Dragon Ball§f is in radius!",

@@ -3,6 +3,8 @@
     "db_renewed:warenai_crystal_block",
     "db_renewed:warenai_crystal_ore",
     "db_renewed:deepslate_warenai_crystal_ore",
-    "db_renewed:rocky_block"
+    "db_renewed:rocky_block",
+    "db_renewed:namekian_stone",
+    "db_renewed:namekian_cobblestone"
   ]
 }

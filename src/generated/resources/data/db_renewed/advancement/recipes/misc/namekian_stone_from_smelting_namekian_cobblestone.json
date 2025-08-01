@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_namekian_cobblestone": {
+      "conditions": {
+        "items": [
+          {
+            "items": "db_renewed:namekian_cobblestone"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "db_renewed:namekian_stone_from_smelting_namekian_cobblestone"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_namekian_cobblestone"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "db_renewed:namekian_stone_from_smelting_namekian_cobblestone"
+    ]
+  }
+}

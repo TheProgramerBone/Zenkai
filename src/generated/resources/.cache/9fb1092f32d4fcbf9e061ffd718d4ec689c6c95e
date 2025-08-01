@@ -1,4 +1,4 @@
-// 1.21.1	2025-07-29T22:17:20.3674737	Recipes
+// 1.21.1	2025-07-31T21:50:32.301623	Recipes
 c8b1444a4f835454775a936fcc7ba2162c41af0c data/db_renewed/advancement/recipes/misc/dragon_ball_1.json
 8589d948c73b9cbe314128dafa8e8aef6a6020c7 data/db_renewed/advancement/recipes/misc/dragon_ball_2.json
 32c94351494349f25579a4fdab0a9a67a8c6f235 data/db_renewed/advancement/recipes/misc/dragon_ball_3.json
@@ -7,6 +7,7 @@ d8d21f70fad8404b2e00a0f6087e8fc1d52cadd9 data/db_renewed/advancement/recipes/mis
 5240a06e0bc4370c6ce861cd2513e5703465259b data/db_renewed/advancement/recipes/misc/dragon_ball_6.json
 1fb0b1d7f4b87fb8cc5120171e5d3d7f8d54e2e2 data/db_renewed/advancement/recipes/misc/dragon_ball_7.json
 a47f844d1275d46e6c79d1d02c02b74f38f2a750 data/db_renewed/advancement/recipes/misc/dragon_ball_radar.json
+9909ae655d88319d27316c57704f8d7c902e45db data/db_renewed/advancement/recipes/misc/namekian_stone_from_smelting_namekian_cobblestone.json
 0734caa57abd85d5bdd4e6fffec02cb12e416aa2 data/db_renewed/advancement/recipes/misc/namek_dragon_ball_1.json
 865f81058841767230f41a3598757f3d0ff77db6 data/db_renewed/advancement/recipes/misc/namek_dragon_ball_2.json
 6175e5bafdc1b5b6babc56ab2444e2a8839035e5 data/db_renewed/advancement/recipes/misc/namek_dragon_ball_3.json
@@ -33,6 +34,7 @@ db1867e2a5244f8981d707871538478fff0d5725 data/db_renewed/recipe/dragon_ball_4.js
 fa05d833cc449a554eda22bafd04fc6c110d46a6 data/db_renewed/recipe/dragon_ball_6.json
 efcc0bf0e74e87fe09920f81af5a30fbcc1f3dcb data/db_renewed/recipe/dragon_ball_7.json
 bf14b093dbceb6a5380733eca422b0e4254c7210 data/db_renewed/recipe/dragon_ball_radar.json
+0378ff89c2a1e62c70f6171d4c8a740e7f8653fd data/db_renewed/recipe/namekian_stone_from_smelting_namekian_cobblestone.json
 5bdffb1ddc3f918d963e13bf7531ee20f0e99915 data/db_renewed/recipe/namek_dragon_ball_1.json
 7d19eaaf5550ce20947f0e19116e797484e42c9a data/db_renewed/recipe/namek_dragon_ball_2.json
 1f8ef124a22c5ea8c0a45e1665d25f5a63997ea8 data/db_renewed/recipe/namek_dragon_ball_3.json
@@ -40,7 +42,7 @@ df1cb8def4b224319ac2daf44dcc748f95305be1 data/db_renewed/recipe/namek_dragon_bal
 15a03508499b9ffd053ff831071c3d845b23ef25 data/db_renewed/recipe/namek_dragon_ball_5.json
 23572c59be69640d332b940755bdb5e75cbf87ac data/db_renewed/recipe/namek_dragon_ball_6.json
 aa715ba39ec6113bda7ba69502c587044c20bf42 data/db_renewed/recipe/namek_dragon_ball_7.json
-433ee983d2ab15604c9bc4d461cb9f202e6cecae data/db_renewed/recipe/space_pod_item.json
+4b1c9eb1876358a93b845ca0fc204ad259e17d80 data/db_renewed/recipe/space_pod_item.json
 132801ef24d27d3132eeb2e81ff465a290072845 data/db_renewed/recipe/warenai_crystal.json
 5107c4fe635a75bb984bc7c9044c7e2966528de3 data/db_renewed/recipe/warenai_crystal_block.json
 b5396d3071d3ff38ada4331d01577a645e684afc data/db_renewed/recipe/warenai_crystal_from_blasting_deepslate_warenai_crystal_ore.json

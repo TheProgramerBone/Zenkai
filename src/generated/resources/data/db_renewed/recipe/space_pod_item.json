@@ -8,14 +8,17 @@
     "C": {
       "item": "db_renewed:advanced_circuit"
     },
-    "W": {
-      "item": "db_renewed:warenai_crystal"
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "R": {
+      "item": "minecraft:red_dye"
     }
   },
   "pattern": [
-    "WBW",
+    "IRI",
     "BCB",
-    "WBW"
+    "IRI"
   ],
   "result": {
     "count": 1,
