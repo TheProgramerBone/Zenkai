@@ -1,12 +1,14 @@
 package com.hmc.db_renewed.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.item.custom.DragonRadarItem;
 import com.hmc.db_renewed.item.custom.HammerItem;
 import com.hmc.db_renewed.item.custom.SenzuBean;
 import com.hmc.db_renewed.item.custom.SpacePodItem;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -34,6 +36,11 @@ public class ModItems {
     public static final DeferredItem<Item> ULTIMATE_CIRCUIT = ITEMS.registerItem("ultimate_circuit",
             Item::new,
             new Item.Properties());
+
+    public static final DeferredItem<Item> SPACE_POD_ITEM = ITEMS.registerItem("space_pod_item",
+            SpacePodItem::new,
+            new Item.Properties()
+                    .stacksTo(1));
 
     public static final DeferredItem<Item> WARENAI_CRYSTAL = ITEMS.registerItem("warenai_crystal",
             Item::new,
@@ -89,10 +96,13 @@ public class ModItems {
             () -> new ArmorItem(ModArmorMaterials.WARENAI_CRYSTAL_ARMOR_MATERIAL,ArmorItem.Type.BOOTS,
                     new Item.Properties().durability(ArmorItem.Type.BOOTS.getDurability(25))));
 
-    public static final DeferredItem<Item> SPACE_POD_ITEM = ITEMS.registerItem("space_pod_item",
-            SpacePodItem::new,
-            new Item.Properties()
-                    .stacksTo(1));
+    public static final DeferredItem<Item> NAMEKIAN_WARRIOR_SPAWN_EGG = ITEMS.register("namekian_warrior_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN_WARRIOR,0x28ad1b ,0x26b9fe,
+                    new Item.Properties()));
+
+    public static final DeferredItem<Item> NAMEKIAN_SPAWN_EGG = ITEMS.register("namekian_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN,0x28ad1b ,0xfdfefe,
+                    new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

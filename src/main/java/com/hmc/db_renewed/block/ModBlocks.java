@@ -33,29 +33,12 @@ public class ModBlocks {
         ModItems.ITEMS.register(name,()->new BlockItem(block.get(),new Item.Properties()));
     }
 
-    //Bloques aquí:
-    public static final DeferredBlock<Block> WARENAI_CRYSTAL_BLOCK = registerBlock("warenai_crystal_block",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(2f,3f)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.METAL)
-                    .mapColor(MapColor.COLOR_BROWN)));
-
-    public static final DeferredBlock<Block> WARENAI_CRYSTAL_ORE = registerBlock("warenai_crystal_ore",
-            ()-> new DropExperienceBlock(UniformInt.of(2,4),
-                    BlockBehaviour.Properties.of()
-                    .strength(2f,3f)
-                    .requiresCorrectToolForDrops()
+    public static final DeferredBlock<Block> DRAGON_BALL_STONE = registerBlock("dragon_ball_stone",
+            ()-> new DragonBalls(BlockBehaviour.Properties.of()
+                    .noOcclusion()
+                    .strength(0f,100f)
                     .sound(SoundType.STONE)
-                    .mapColor(MapColor.STONE)));
-
-    public static final DeferredBlock<Block> DEEPSLATE_WARENAI_CRYSTAL_ORE = registerBlock("deepslate_warenai_crystal_ore",
-            ()-> new DropExperienceBlock(UniformInt.of(3,5),
-                    BlockBehaviour.Properties.of()
-                    .strength(3f,3f)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.DEEPSLATE)
-                    .mapColor(MapColor.DEEPSLATE)));
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)));
 
     public static final DeferredBlock<Block> DRAGON_BALL_1 = registerBlock("dragon_ball_1",
             ()-> new DragonBalls(BlockBehaviour.Properties.of()
@@ -115,6 +98,13 @@ public class ModBlocks {
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
 
+    public static final DeferredBlock<Block> NAMEK_DRAGON_BALL_STONE = registerBlock("namek_dragon_ball_stone",
+            ()-> new NamekDragonBalls(BlockBehaviour.Properties.of()
+                    .noOcclusion()
+                    .strength(0f,100f)
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)));
+
     public static final DeferredBlock<Block> NAMEK_DRAGON_BALL_1 = registerBlock("namek_dragon_ball_1",
             ()-> new NamekDragonBalls(BlockBehaviour.Properties.of()
                     .lightLevel(state -> 15)
@@ -164,6 +154,29 @@ public class ModBlocks {
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
 
+    public static final DeferredBlock<Block> WARENAI_CRYSTAL_BLOCK = registerBlock("warenai_crystal_block",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(2f,3f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.METAL)
+                    .mapColor(MapColor.COLOR_BROWN)));
+
+    public static final DeferredBlock<Block> WARENAI_CRYSTAL_ORE = registerBlock("warenai_crystal_ore",
+            ()-> new DropExperienceBlock(UniformInt.of(2,4),
+                    BlockBehaviour.Properties.of()
+                            .strength(2f,3f)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.STONE)
+                            .mapColor(MapColor.STONE)));
+
+    public static final DeferredBlock<Block> DEEPSLATE_WARENAI_CRYSTAL_ORE = registerBlock("deepslate_warenai_crystal_ore",
+            ()-> new DropExperienceBlock(UniformInt.of(3,5),
+                    BlockBehaviour.Properties.of()
+                            .strength(3f,3f)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.DEEPSLATE)
+                            .mapColor(MapColor.DEEPSLATE)));
+
     public static final DeferredBlock<Block> ROCKY_BLOCK = registerBlock("rocky_block",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f)
@@ -196,6 +209,13 @@ public class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.SAND)));
+
+    public static final DeferredBlock<Block> NAMEKIAN_STRUCTURE_BLOCK = registerBlock("namekian_structure_block",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.QUARTZ)));
 
 
     public static void register(IEventBus eventBus) {

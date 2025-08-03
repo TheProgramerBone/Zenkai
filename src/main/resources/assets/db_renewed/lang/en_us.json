@@ -18,16 +18,19 @@
   "item.db_renewed.warenai_crystal_leggings": "Warenai Crystal Leggings",
   "item.db_renewed.warenai_crystal_boots": "Warenai Crystal Boots",
   "item.db_renewed.warenai_crystal_hammer": "Warenai Crystal Hammer",
+  "item.db_renewed.namekian_warrior_spawn_egg": "Namekian Warrior Spawn Egg",
+  "item.db_renewed.namekian_spawn_egg": "Namekian Spawn Egg",
 
   "block.db_renewed.namekian_grass": "Namekian Grass",
   "block.db_renewed.namekian_dirt": "Namekian Dirt",
   "block.db_renewed.namekian_stone": "Namekian Stone",
   "block.db_renewed.namekian_cobblestone": "Namekian Cobblestone",
+  "block.db_renewed.namekian_structure_block": "Namekian Structure Block",
   "block.db_renewed.warenai_crystal_block": "Warenai Crystal Block",
   "block.db_renewed.warenai_crystal_ore": "Warenai Crystal Ore",
   "block.db_renewed.deepslate_warenai_crystal_ore": "Deepslate Warenai Crystal Ore",
   "block.db_renewed.rocky_block": "Rocky Block",
-
+  "block.db_renewed.dragon_ball_stone":"Dragon Ball Stone",
   "block.db_renewed.dragon_ball_1":"§6Dragon Ball 1 Star",
   "block.db_renewed.dragon_ball_2":"§6Dragon Ball 2 Star",
   "block.db_renewed.dragon_ball_3":"§6Dragon Ball 3 Star",
@@ -36,6 +39,7 @@
   "block.db_renewed.dragon_ball_6":"§6Dragon Ball 6 Star",
   "block.db_renewed.dragon_ball_7":"§6Dragon Ball 7 Star",
   "block.db_renewed.all_dragon_balls": "All 7 Dragon Balls",
+  "block.db_renewed.namek_dragon_ball_stone":"Namek Dragon Ball Stone",
   "block.db_renewed.namek_dragon_ball_1": "§6Namek Dragon Ball 1 Star",
   "block.db_renewed.namek_dragon_ball_2": "§6Namek Dragon Ball 2 Star",
   "block.db_renewed.namek_dragon_ball_3": "§6Namek Dragon Ball 3 Star",
@@ -45,8 +49,7 @@
   "block.db_renewed.namek_dragon_ball_7": "§6Namek Dragon Ball 7 Star",
 
 
-  "creativetab.db_renewed.items": "Dragon Block Renewed Items",
-  "creativetab.db_renewed.blocks": "Dragon Block Renewed Blocks",
+  "creativetab.db_renewed": "Dragon Block Renewed",
 
   "key.categories.db_renewed": "Dragon Block Renewed",
   "key.db_renewed.open_race_screen": "Open Menu",
@@ -69,5 +72,7 @@
   "messages.db_renewed.dragon_ball_radar_searching": "A §6Dragon Ball§f is in radius!",
   "messages.db_renewed.dragon_ball_radar_near": "A §6Dragon Ball§f is §nnear§r!",
 
-  "entity.db_renewed.space_pod": "Space Pod"
+  "entity.db_renewed.space_pod": "Space Pod",
+  "entity.db_renewed.namekian": "Namekian",
+  "entity.db_renewed.namekian_warrior": "Namekian Warrior"
 }

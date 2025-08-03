@@ -1,4 +1,4 @@
-// 1.21.1	2025-07-31T21:50:32.3007059	Loot Tables
+// 1.21.1	2025-08-02T22:04:57.4475534	Loot Tables
 c05cb40d8b6500c91959b7a3406129915b2e29e0 data/db_renewed/loot_table/blocks/all_dragon_balls.json
 dddfe2757d53943c26d79d6b2f46447487e76dd5 data/db_renewed/loot_table/blocks/deepslate_warenai_crystal_ore.json
 75c02db808c78fa80ecc455573b73dfcb3cdf731 data/db_renewed/loot_table/blocks/dragon_ball_1.json
@@ -8,10 +8,12 @@ ff767b2d8b9430c4ce86d94f65eda2aa9ffc60e3 data/db_renewed/loot_table/blocks/drago
 bd989aa298ec4c51753987b66f936f8da7e076a8 data/db_renewed/loot_table/blocks/dragon_ball_5.json
 ae005a4f26c8325ef63b46e74d2c198b89708435 data/db_renewed/loot_table/blocks/dragon_ball_6.json
 e9d7e5d324faccb90199e45f7f23e5ae437309a6 data/db_renewed/loot_table/blocks/dragon_ball_7.json
+22b59d38e7fb7c07948371d6104c9bc0a393e432 data/db_renewed/loot_table/blocks/dragon_ball_stone.json
 aae9215ded32e0abfa48e679b1770afc2f6d7f39 data/db_renewed/loot_table/blocks/namekian_cobblestone.json
 4876a72a4f1b5b190ab9b220577949de3e89bce0 data/db_renewed/loot_table/blocks/namekian_dirt.json
 706338fd13999ef837323a7a5e22d410cb200ead data/db_renewed/loot_table/blocks/namekian_grass.json
-d68da609e03c657b85358aebee6f6d8fdd3335fd data/db_renewed/loot_table/blocks/namekian_stone.json
+4ba5d15a786214d5c01380c3e46389c104b86957 data/db_renewed/loot_table/blocks/namekian_stone.json
+94a2dc2599bb226350f559f414bd355349d17b30 data/db_renewed/loot_table/blocks/namekian_structure_block.json
 ec3368ae6899c5d3735b3423aa6df1019f514f5b data/db_renewed/loot_table/blocks/namek_dragon_ball_1.json
 3ec3c77b412944560a70d1e5ffb41ad95f2d4332 data/db_renewed/loot_table/blocks/namek_dragon_ball_2.json
 227f2964fcb3b62e31292ed21432ed663034e50e data/db_renewed/loot_table/blocks/namek_dragon_ball_3.json
@@ -19,6 +21,7 @@ ec3368ae6899c5d3735b3423aa6df1019f514f5b data/db_renewed/loot_table/blocks/namek
 6768f21f62adcc6f949f1fd164cf79aa3b8a2a79 data/db_renewed/loot_table/blocks/namek_dragon_ball_5.json
 dda09e8ebd6e4c1a91cde17572f022d505adb843 data/db_renewed/loot_table/blocks/namek_dragon_ball_6.json
 7ed76bf91071121397446addff08cc7fb5232b8f data/db_renewed/loot_table/blocks/namek_dragon_ball_7.json
+31809e2a7c1ae7364fe7f75637b97d417f4d8073 data/db_renewed/loot_table/blocks/namek_dragon_ball_stone.json
 c803ddb1743f75ffc3f3ea2117209679754d02a3 data/db_renewed/loot_table/blocks/rocky_block.json
 eda31c91f70073f29424439a6efb6b2925e7d26a data/db_renewed/loot_table/blocks/warenai_crystal_block.json
 d0f9ec53b245910ffa6e613624da86ef12a82b24 data/db_renewed/loot_table/blocks/warenai_crystal_ore.json

@@ -26,7 +26,8 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get())
                 .add(ModBlocks.ROCKY_BLOCK.get())
                 .add(ModBlocks.NAMEKIAN_STONE.get())
-                .add(ModBlocks.NAMEKIAN_COBBLESTONE.get());
+                .add(ModBlocks.NAMEKIAN_COBBLESTONE.get())
+                .add(ModBlocks.NAMEKIAN_STRUCTURE_BLOCK.get());
 
         tag(BlockTags.DEAD_BUSH_MAY_PLACE_ON)
                 .add(ModBlocks.ROCKY_BLOCK.get());
@@ -43,7 +44,16 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .addTag(BlockTags.INCORRECT_FOR_IRON_TOOL)
                 .remove(ModTags.Blocks.NEEDS_WARENAI_CRYSTAL_TOOL);
 
+        tag(BlockTags.MINEABLE_WITH_SHOVEL)
+                .add(ModBlocks.NAMEKIAN_DIRT.get())
+                .add(ModBlocks.NAMEKIAN_DIRT.get());
+
+        tag(BlockTags.DIRT)
+                .add(ModBlocks.NAMEKIAN_DIRT.get())
+                .add(ModBlocks.NAMEKIAN_GRASS.get());
+
         tag(ModTags.Blocks.DRAGON_BALLS)
+                .add(ModBlocks.DRAGON_BALL_STONE.get())
                 .add(ModBlocks.DRAGON_BALL_1.get())
                 .add(ModBlocks.DRAGON_BALL_2.get())
                 .add(ModBlocks.DRAGON_BALL_3.get())
@@ -51,6 +61,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.DRAGON_BALL_5.get())
                 .add(ModBlocks.DRAGON_BALL_6.get())
                 .add(ModBlocks.DRAGON_BALL_7.get())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_STONE.get())
                 .add(ModBlocks.NAMEK_DRAGON_BALL_1.get())
                 .add(ModBlocks.NAMEK_DRAGON_BALL_2.get())
                 .add(ModBlocks.NAMEK_DRAGON_BALL_3.get())

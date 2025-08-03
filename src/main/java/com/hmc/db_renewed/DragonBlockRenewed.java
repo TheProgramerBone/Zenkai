@@ -8,6 +8,8 @@ import com.hmc.db_renewed.capability.PlayerStatsProvider;
 import com.hmc.db_renewed.client.input.KeyBindings;
 import com.hmc.db_renewed.config.DefaultConfigGenerator;
 import com.hmc.db_renewed.entity.ModEntities;
+import com.hmc.db_renewed.entity.namekian.NamekianRenderer;
+import com.hmc.db_renewed.entity.namekian.NamekianWarriorRenderer;
 import com.hmc.db_renewed.entity.saiyan_pod.SpacePodRenderer;
 import com.hmc.db_renewed.item.ModItems;
 import com.hmc.db_renewed.sound.ModSounds;
@@ -90,6 +92,8 @@ public class DragonBlockRenewed
         {
             BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
             EntityRenderers.register(ModEntities.SPACE_POD.get(), SpacePodRenderer::new);
+            EntityRenderers.register(ModEntities.NAMEKIAN.get(), NamekianRenderer::new);
+            EntityRenderers.register(ModEntities.NAMEKIAN_WARRIOR.get(), NamekianWarriorRenderer::new);
             //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
             event.enqueueWork(() ->
             {

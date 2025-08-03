@@ -11,13 +11,16 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Set;
 
 public class ModBlockLootTableProvider extends BlockLootSubProvider {
@@ -47,11 +50,35 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.NAMEKIAN_DIRT.get());
         dropSelf(ModBlocks.ROCKY_BLOCK.get());
         dropSelf(ModBlocks.NAMEKIAN_COBBLESTONE.get());
+        dropSelf(ModBlocks.NAMEKIAN_STRUCTURE_BLOCK.get());
+        add(ModBlocks.NAMEKIAN_STONE.get(),
+                createSingleItemTableWithSilkTouch(ModBlocks.NAMEKIAN_STONE.get(), ModBlocks.NAMEKIAN_COBBLESTONE));
+
 
         add(ModBlocks.WARENAI_CRYSTAL_ORE.get(),
                 block -> createMultipleOreDrops(ModBlocks.WARENAI_CRYSTAL_ORE.get(), ModItems.WARENAI_CRYSTAL.get(), 1, 4));
         add(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get(),
                 block -> createMultipleOreDrops(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get(), ModItems.WARENAI_CRYSTAL.get(), 1, 4));
+
+        addRandomDrops(ModBlocks.DRAGON_BALL_STONE.get(), List.of(
+                ModBlocks.DRAGON_BALL_1.get(),
+                ModBlocks.DRAGON_BALL_2.get(),
+                ModBlocks.DRAGON_BALL_3.get(),
+                ModBlocks.DRAGON_BALL_4.get(),
+                ModBlocks.DRAGON_BALL_5.get(),
+                ModBlocks.DRAGON_BALL_6.get(),
+                ModBlocks.DRAGON_BALL_7.get()
+        ));
+
+        addRandomDrops(ModBlocks.NAMEK_DRAGON_BALL_STONE.get(), List.of(
+                ModBlocks.DRAGON_BALL_1.get(),
+                ModBlocks.DRAGON_BALL_2.get(),
+                ModBlocks.DRAGON_BALL_3.get(),
+                ModBlocks.DRAGON_BALL_4.get(),
+                ModBlocks.DRAGON_BALL_5.get(),
+                ModBlocks.DRAGON_BALL_6.get(),
+                ModBlocks.DRAGON_BALL_7.get()
+        ));
 
     }
 
@@ -63,6 +90,16 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                         .apply(ApplyBonusCount.addOreBonusCount(registrylookup.getOrThrow(Enchantments.FORTUNE)))));
     }
 
+    private void addRandomDrops(Block block, List<Block> drops) {
+        LootPool.Builder pool = LootPool.lootPool()
+                .setRolls(ConstantValue.exactly(1));
+
+        for (Block block1 : drops) {
+            pool.add(LootItem.lootTableItem(block1).setWeight(1));
+        }
+
+        this.add(block, LootTable.lootTable().withPool(pool));
+    }
 
     @Override
     protected @NotNull Iterable<Block> getKnownBlocks() {

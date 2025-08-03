@@ -43,6 +43,9 @@ public class ModItemModelProvider extends ItemModelProvider {
         trimmedArmorItem(ModItems.WARENAI_CRYSTAL_CHESTPLATE);
         trimmedArmorItem(ModItems.WARENAI_CRYSTAL_LEGGINGS);
         trimmedArmorItem(ModItems.WARENAI_CRYSTAL_BOOTS);
+
+        withExistingParent(ModItems.NAMEKIAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
+        withExistingParent(ModItems.NAMEKIAN_WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
     }
 
     private void trimmedArmorItem(DeferredItem<ArmorItem> itemDeferredItem) {
