@@ -71,13 +71,13 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         ));
 
         addRandomDrops(ModBlocks.NAMEK_DRAGON_BALL_STONE.get(), List.of(
-                ModBlocks.DRAGON_BALL_1.get(),
-                ModBlocks.DRAGON_BALL_2.get(),
-                ModBlocks.DRAGON_BALL_3.get(),
-                ModBlocks.DRAGON_BALL_4.get(),
-                ModBlocks.DRAGON_BALL_5.get(),
-                ModBlocks.DRAGON_BALL_6.get(),
-                ModBlocks.DRAGON_BALL_7.get()
+                ModBlocks.NAMEK_DRAGON_BALL_1.get(),
+                ModBlocks.NAMEK_DRAGON_BALL_2.get(),
+                ModBlocks.NAMEK_DRAGON_BALL_3.get(),
+                ModBlocks.NAMEK_DRAGON_BALL_4.get(),
+                ModBlocks.NAMEK_DRAGON_BALL_5.get(),
+                ModBlocks.NAMEK_DRAGON_BALL_6.get(),
+                ModBlocks.NAMEK_DRAGON_BALL_7.get()
         ));
 
     }

@@ -1,20 +1,170 @@
 {
 	"format_version": "1.8.0",
 	"animations": {
-		"summon": {
-			"animation_length": 1,
+		"away": {
+			"animation_length": 4,
 			"bones": {
-				"Esferas": {
+				"esfera_1": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
 					"position": {
 						"0.0": {
 							"vector": [0, 0, 0]
 						},
-						"1.0": {
-							"vector": [0, 29, 0]
+						"1.5": {
+							"vector": [0, 0, 0]
+						},
+						"3.0": {
+							"vector": [0, 150, 0]
+						},
+						"4.0": {
+							"vector": [-350, 150, -350]
+						}
+					}
+				},
+				"esfera_2": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 0, 0]
+						},
+						"3.0": {
+							"vector": [0, 150, 0]
+						},
+						"4.0": {
+							"vector": [0, 150, -350]
+						}
+					}
+				},
+				"esfera_3": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 0, 0]
+						},
+						"3.0": {
+							"vector": [0, 150, 0]
+						},
+						"4.0": {
+							"vector": [350, 150, -350]
+						}
+					}
+				},
+				"esfera_4": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 0, 0]
+						},
+						"3.0": {
+							"vector": [0, 150, 0]
+						},
+						"4.0": {
+							"vector": [-350, 150, 0]
+						}
+					}
+				},
+				"esfera_5": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 0, 0]
+						},
+						"3.0": {
+							"vector": [0, 150, 0]
+						},
+						"4.0": {
+							"vector": [-350, 150, 350]
+						}
+					}
+				},
+				"esfera_6": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 0, 0]
+						},
+						"3.0": {
+							"vector": [0, 150, 0]
+						},
+						"4.0": {
+							"vector": [0, 150, 350]
+						}
+					}
+				},
+				"esfera_7": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 0, 0]
+						},
+						"3.0": {
+							"vector": [0, 150, 0]
+						},
+						"4.0": {
+							"vector": [350, 150, 350]
+						}
+					}
+				},
+				"Esferas": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 180, 0],
+							"easing": "linear"
+						},
+						"3.0": {
+							"vector": [0, 720, 0],
+							"easing": "linear"
+						}
+					},
+					"position": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [0, 150, 0]
+						},
+						"3.0": {
+							"vector": [0, 75, 0]
 						}
 					}
 				}
-			}
+			},
+			"particle_effects": {}
 		}
 	},
 	"geckolib_format_version": 2
