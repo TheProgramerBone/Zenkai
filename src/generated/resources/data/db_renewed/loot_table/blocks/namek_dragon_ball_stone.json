@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "db_renewed:dragon_ball_1"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "db_renewed:dragon_ball_2"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "db_renewed:dragon_ball_3"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "db_renewed:dragon_ball_4"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "db_renewed:dragon_ball_5"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "db_renewed:dragon_ball_6"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "db_renewed:dragon_ball_7"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "db_renewed:blocks/namek_dragon_ball_stone"
+}
