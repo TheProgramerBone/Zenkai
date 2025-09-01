@@ -1,7 +1,8 @@
-package com.hmc.db_renewed.block.custom;
+package com.hmc.db_renewed.block.entity.AllDragonBalls;
 
 import com.hmc.db_renewed.block.ModBlocks;
-import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsEntity;
+import com.hmc.db_renewed.entity.ModEntities;
+import com.hmc.db_renewed.entity.shenlong.ShenLongEntity;
 import com.hmc.db_renewed.sound.ModSounds;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
@@ -12,6 +13,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Interaction;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -20,6 +22,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -78,16 +81,24 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
                         ParticleTypes.ENCHANT,
                         pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5,
                         50,
-                        0.5, 0.5, 0.5, // dispersión
+                        0.5, 0.5, 0.5,
                         0.1
             );
             level.scheduleTick(pos, this, 20*4);
             summonShenron(level, pos);
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    BlockPos barrierPos = pos.offset(dx, 0, dz);
+                    BlockPos offsetPos = pos.offset(dx, 0, dz);
+
+                    LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(serverLevel);
+                    if (lightning != null) {
+                        lightning.moveTo(offsetPos.getX() + 5, offsetPos.getY(), offsetPos.getZ() + 5);
+                        lightning.setVisualOnly(true);
+                        serverLevel.addFreshEntity(lightning);
+                    }
+
                     Interaction barrier = new Interaction(EntityType.INTERACTION,level);
-                    barrier.setPos(barrierPos.getX() + 0.5, barrierPos.getY() - 0.2, barrierPos.getZ() + 0.5);
+                    barrier.setPos(offsetPos.getX() + 0.5, offsetPos.getY() - 0.2, offsetPos.getZ() + 0.5);
                     barrier.setInvulnerable(true);
                     barrier.setCustomNameVisible(false);
                     barrier.setNoGravity(true);
@@ -101,10 +112,11 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
     }
 
     private void summonShenron(Level level, BlockPos pos) {
-        EntityType<?> entityType = EntityType.ENDERMAN;
+        EntityType<?> entityType = ModEntities.SHENLONG.get();
         var entity = entityType.create(level);
         if (entity != null) {
             entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
+            entity.rotate(Rotation.CLOCKWISE_180);
             level.addFreshEntity(entity);
         }
     }
@@ -142,15 +154,21 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
                     }
                     return;
                 }
-
+                if (!ShenronSummoned) {
+                    List<Interaction> barriers = serverLevel.getEntitiesOfClass(Interaction.class,
+                            new AABB(pos).inflate(5),
+                            i -> i.getTags().contains("dragon_barrier"));
+                    for (Interaction barrier : barriers) {
+                        barrier.discard();
+                    }
+                }
                 boolean shenronNearby = !serverLevel.getEntitiesOfClass(
-                        net.minecraft.world.entity.monster.EnderMan.class,
-                        new net.minecraft.world.phys.AABB(pos).inflate(10)).isEmpty();
+                        ShenLongEntity.class,
+                        new AABB(pos).inflate(10)).isEmpty();
                 if (ShenronSummoned) {
                     if (!shenronNearby) {
                         ShenronSummoned = false;
                         entity.startAnimation(serverLevel);
-
                     }
                 }
             }

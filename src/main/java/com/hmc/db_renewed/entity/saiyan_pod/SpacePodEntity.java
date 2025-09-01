@@ -51,7 +51,6 @@ public class SpacePodEntity extends Entity implements GeoEntity {
     @Override
     public void tick() {
         super.tick();
-
         if (!level().isClientSide()) {
             if (getPassengers().isEmpty()) {
                 triggerOpenAnimation();

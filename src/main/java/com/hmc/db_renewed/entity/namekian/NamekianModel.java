@@ -3,13 +3,7 @@ package com.hmc.db_renewed.entity.namekian;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LivingEntity;
-import software.bernie.geckolib.animation.AnimationState;
-import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.loading.json.raw.Bone;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
-import software.bernie.geckolib.model.GeoModel;
 
 public class NamekianModel extends DefaultedEntityGeoModel<NamekianEntity> {
     public NamekianModel(ResourceLocation assetSubpath, boolean turnsHead) {

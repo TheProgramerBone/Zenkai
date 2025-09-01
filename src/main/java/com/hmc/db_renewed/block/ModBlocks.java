@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.block;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.block.custom.AllDragonBallsBlock;
+import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsBlock;
 import com.hmc.db_renewed.block.custom.DragonBalls;
 import com.hmc.db_renewed.block.custom.NamekDragonBalls;
 import com.hmc.db_renewed.item.ModItems;
