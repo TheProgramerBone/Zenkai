@@ -14,17 +14,16 @@ import com.hmc.db_renewed.entity.namekian.NamekianWarriorRenderer;
 import com.hmc.db_renewed.entity.saiyan_pod.SpacePodRenderer;
 import com.hmc.db_renewed.entity.shenlong.ShenLongRenderer;
 import com.hmc.db_renewed.gui.ModMenuTypes;
-import com.hmc.db_renewed.gui.StackWishScreen;
+import com.hmc.db_renewed.gui.wishes.StackWishScreen;
 import com.hmc.db_renewed.item.ModItems;
+import com.hmc.db_renewed.network.ModNetworking;
 import com.hmc.db_renewed.sound.ModSounds;
 import com.hmc.db_renewed.worldgen.ModSurfaceRules;
 import com.hmc.db_renewed.worldgen.ModOverworldRegion;
 import com.mojang.logging.LogUtils;
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.world.entity.EntityType;
-import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -54,6 +53,7 @@ public class DragonBlockRenewed
     {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::onRegisterCapabilities);
+        modEventBus.addListener(ModNetworking::register);
         NeoForge.EVENT_BUS.register(this);
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
@@ -62,6 +62,7 @@ public class DragonBlockRenewed
         ModSounds.register(modEventBus);
         ModEntities.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, WishConfig.SPEC);
+        modEventBus.addListener(WishConfig::onConfigLoad);
         ModMenuTypes.MENUS.register(modEventBus);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modEventBus.addListener(ClientModEvents::onKeyMappingRegister);

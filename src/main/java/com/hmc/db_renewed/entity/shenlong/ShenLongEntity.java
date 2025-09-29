@@ -1,21 +1,15 @@
 package com.hmc.db_renewed.entity.shenlong;
 
-import com.hmc.db_renewed.gui.ShenlongWishScreen;
-import net.minecraft.client.Minecraft;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.SynchedEntityData;
+import com.hmc.db_renewed.network.wishes.OpenWishScreenPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -40,10 +34,11 @@ public class ShenLongEntity extends Mob implements GeoEntity {
     }
 
     @Override
-    public InteractionResult interactAt(Player player, Vec3 vec, InteractionHand hand) {
-        if (!this.level().isClientSide) return InteractionResult.SUCCESS;
-        Minecraft.getInstance().setScreen(new ShenlongWishScreen());
-        return InteractionResult.SUCCESS;
+    protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (player instanceof ServerPlayer sp) {
+            PacketDistributor.sendToPlayer(sp, new OpenWishScreenPayload());
+        }
+        return InteractionResult.sidedSuccess(this.level().isClientSide);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -94,12 +89,7 @@ public class ShenLongEntity extends Mob implements GeoEntity {
 
     @Override
     public boolean isInvulnerable() {
-        return true;
-    }
-
-    @Override
-    public boolean hurt(DamageSource source, float amount) {
-        return true;
+        return false;
     }
 
     @Override

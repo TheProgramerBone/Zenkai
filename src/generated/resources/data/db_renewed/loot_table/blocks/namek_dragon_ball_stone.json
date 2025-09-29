@@ -6,31 +6,31 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "db_renewed:dragon_ball_1"
+          "name": "db_renewed:namek_dragon_ball_1"
         },
         {
           "type": "minecraft:item",
-          "name": "db_renewed:dragon_ball_2"
+          "name": "db_renewed:namek_dragon_ball_2"
         },
         {
           "type": "minecraft:item",
-          "name": "db_renewed:dragon_ball_3"
+          "name": "db_renewed:namek_dragon_ball_3"
         },
         {
           "type": "minecraft:item",
-          "name": "db_renewed:dragon_ball_4"
+          "name": "db_renewed:namek_dragon_ball_4"
         },
         {
           "type": "minecraft:item",
-          "name": "db_renewed:dragon_ball_5"
+          "name": "db_renewed:namek_dragon_ball_5"
         },
         {
           "type": "minecraft:item",
-          "name": "db_renewed:dragon_ball_6"
+          "name": "db_renewed:namek_dragon_ball_6"
         },
         {
           "type": "minecraft:item",
-          "name": "db_renewed:dragon_ball_7"
+          "name": "db_renewed:namek_dragon_ball_7"
         }
       ],
       "rolls": 1.0

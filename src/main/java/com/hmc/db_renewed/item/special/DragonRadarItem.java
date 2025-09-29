@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.item.custom;
+package com.hmc.db_renewed.item.special;
 
 import com.hmc.db_renewed.sound.ModSounds;
 import com.hmc.db_renewed.util.ModTags;
@@ -112,7 +112,6 @@ public class DragonRadarItem extends Item {
 
     private void resetRadarVisual(ItemStack stack, Player player, int slot) {
         stack.remove(DataComponents.CUSTOM_MODEL_DATA);
-
         if (player.getInventory().getItem(slot) == stack) {
             player.getInventory().setItem(slot, stack.copy());
         }
@@ -123,16 +122,19 @@ public class DragonRadarItem extends Item {
         BlockPos nearest = null;
         double closestDistanceSqr = Double.MAX_VALUE;
 
-        int startX = origin.getX() - DragonRadarItem.DETECTION_RADIUS;
-        int endX = origin.getX() + DragonRadarItem.DETECTION_RADIUS;
-        int startY = Math.max(0, origin.getY() - DragonRadarItem.DETECTION_RADIUS);
-        int endY = Math.min(level.getMaxBuildHeight(), origin.getY() + DragonRadarItem.DETECTION_RADIUS);
-        int startZ = origin.getZ() - DragonRadarItem.DETECTION_RADIUS;
-        int endZ = origin.getZ() + DragonRadarItem.DETECTION_RADIUS;
+        final int minY = level.getMinBuildHeight();
+        final int maxY = level.getMaxBuildHeight() - 1; // inclusive
+        int startX = origin.getX() - DETECTION_RADIUS;
+        int endX   = origin.getX() + DETECTION_RADIUS;
+        int startY = Math.max(minY, origin.getY() - DETECTION_RADIUS);
+        int endY   = Math.min(maxY, origin.getY() + DETECTION_RADIUS);
+        int startZ = origin.getZ() - DETECTION_RADIUS;
+        int endZ   = origin.getZ() + DETECTION_RADIUS;
 
         for (int x = startX; x <= endX; x++) {
-            for (int y = startY; y <= endY; y++) {
-                for (int z = startZ; z <= endZ; z++) {
+            for (int z = startZ; z <= endZ; z++) {
+
+                for (int y = startY; y <= endY; y++) {
                     mutable.set(x, y, z);
                     BlockState state = level.getBlockState(mutable);
                     if (state.is(ModTags.Blocks.DRAGON_BALLS)) {

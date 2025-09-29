@@ -1,5 +1,6 @@
 package com.hmc.db_renewed.gui;
 
+import com.hmc.db_renewed.network.wishes.OpenStackWishPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -21,13 +22,9 @@ public class ShenlongWishScreen extends Screen {
         this.addRenderableWidget(Button.builder(
                 Component.translatable("screen.db_renewed.option.stack"),
                 btn -> {
-                    Minecraft mc = Minecraft.getInstance();
-                    assert mc.player != null;
-                    mc.setScreen(new StackWishScreen(
-                            new StackWishMenu(0, mc.player.getInventory()),
-                            mc.player.getInventory(),
-                            Component.translatable("screen.db_renewed.option.stack")
-                    ));
+                    if (Minecraft.getInstance().getConnection() != null) {
+                        Minecraft.getInstance().getConnection().send(new OpenStackWishPayload());
+                    }
                 }
         ).bounds(centerX - 50, centerY - 10, 100, 20).build());
 

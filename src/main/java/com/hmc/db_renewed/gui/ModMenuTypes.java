@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.gui;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.gui.wishes.StackWishMenu;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;

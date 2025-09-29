@@ -1,16 +1,13 @@
-package com.hmc.db_renewed.block.custom;
+package com.hmc.db_renewed.block.special;
 
-import com.hmc.db_renewed.util.ModTags;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -22,11 +19,11 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class DragonBalls extends HorizontalDirectionalBlock {
-    public static final MapCodec<DragonBalls> CODEC = simpleCodec(DragonBalls::new);
-    private static final VoxelShape SHAPE = Block.box(4.0, 0.0, 4.0, 12.0, 8.0, 12.0);
+public class NamekDragonBalls extends HorizontalDirectionalBlock {
+    public static final MapCodec<NamekDragonBalls> CODEC = simpleCodec(NamekDragonBalls::new);
+    private static final VoxelShape SHAPE = Block.box(2.0, 0.0, 2.0, 14.0, 12.0, 14.0);
 
-    public DragonBalls(Properties properties) {
+    public NamekDragonBalls(Properties properties) {
         super(properties);
     }
 
@@ -49,12 +46,6 @@ public class DragonBalls extends HorizontalDirectionalBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
-    }
-
-    @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, placer, stack);
-        DragonBallStructureGenerator.tryFormStructure(level, pos);
     }
 
     @Override

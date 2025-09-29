@@ -5,7 +5,7 @@ import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.namekian.NamekianEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorEntity;
 import com.hmc.db_renewed.entity.shenlong.ShenLongEntity;
-import com.hmc.db_renewed.item.custom.HammerItem;
+import com.hmc.db_renewed.item.special.HammerItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

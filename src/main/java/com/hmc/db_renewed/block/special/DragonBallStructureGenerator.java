@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.block.custom;
+package com.hmc.db_renewed.block.special;
 
 import com.hmc.db_renewed.block.ModBlocks;
 import net.minecraft.core.BlockPos;

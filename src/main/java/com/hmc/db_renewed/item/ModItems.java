@@ -2,10 +2,10 @@ package com.hmc.db_renewed.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.entity.ModEntities;
-import com.hmc.db_renewed.item.custom.DragonRadarItem;
-import com.hmc.db_renewed.item.custom.HammerItem;
-import com.hmc.db_renewed.item.custom.SenzuBean;
-import com.hmc.db_renewed.item.custom.SpacePodItem;
+import com.hmc.db_renewed.item.special.DragonRadarItem;
+import com.hmc.db_renewed.item.special.HammerItem;
+import com.hmc.db_renewed.item.special.SenzuBean;
+import com.hmc.db_renewed.item.special.SpacePodItem;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;

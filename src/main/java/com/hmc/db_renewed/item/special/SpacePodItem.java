@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.item.custom;
+package com.hmc.db_renewed.item.special;
 
 import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.saiyan_pod.SpacePodEntity;

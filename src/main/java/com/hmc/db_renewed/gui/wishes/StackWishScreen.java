@@ -1,6 +1,8 @@
-package com.hmc.db_renewed.gui;
+package com.hmc.db_renewed.gui.wishes;
 
-import com.hmc.db_renewed.network.ConfirmWishPayload;
+import com.hmc.db_renewed.gui.ShenlongWishScreen;
+import com.hmc.db_renewed.network.wishes.ConfirmWishPayload;
+import com.hmc.db_renewed.network.wishes.SetGhostSlotPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -8,6 +10,8 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,15 +41,16 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
         this.addRenderableWidget(
                 Button.builder(
                         Component.translatable("screen.db_renewed.confirm"), btn -> {
-                            ItemStack chosen = this.menu.getChosenItem().copy();
-                            if (!chosen.isEmpty()) {
-                                if (Minecraft.getInstance().getConnection() != null) {
-                                    Minecraft.getInstance().getConnection().send(new ConfirmWishPayload(chosen));
-                                } else {
-                                    assert Minecraft.getInstance().player != null;
-                                    Minecraft.getInstance().player.displayClientMessage(Component.translatable("message.db_renewed.no_connection"), false);
-                                }
+                            if (Minecraft.getInstance().getConnection() != null) {
+                                ItemStack chosen = this.menu.getChosenItem().copy();
+                                Minecraft.getInstance().getConnection().send(new ConfirmWishPayload());
+                            } else {
+                                assert Minecraft.getInstance().player != null;
+                                Minecraft.getInstance().player.displayClientMessage(
+                                        Component.translatable("message.db_renewed.no_connection"), false
+                                );
                             }
+
                             assert Minecraft.getInstance().player != null;
                             Minecraft.getInstance().player.closeContainer();
                             this.onClose();
@@ -81,5 +86,22 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         guiGraphics.drawCenteredString(this.font, this.title, this.imageWidth / 2, 6, 0x404040);
         guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, this.imageHeight - 96 + 2, 0x404040, false);
+    }
+
+    @Override
+    protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType clickType) {
+        if (slotId == 0) {
+            // Tomamos la pila que el jugador tiene en el cursor (carried)
+            ItemStack cursor = this.menu.getCarried(); // método estándar en AbstractContainerMenu
+            if (cursor == null) cursor = ItemStack.EMPTY;
+
+            // Enviamos al servidor una copia (si vacía, limpiará el ghost)
+            if (Minecraft.getInstance().getConnection() != null) {
+                Minecraft.getInstance().getConnection().send(new SetGhostSlotPayload(cursor.copy()));
+            }
+            return; // evitamos que la lógica vanilla mueva/consuma el item
+        }
+
+        super.slotClicked(slot, slotId, mouseButton, clickType);
     }
 }
