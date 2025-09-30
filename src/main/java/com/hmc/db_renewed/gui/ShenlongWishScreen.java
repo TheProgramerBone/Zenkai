@@ -15,14 +15,14 @@ public class ShenlongWishScreen extends Screen {
         super(Component.translatable("screen.db_renewed.shenlong_wish"));
     }
 
-    private Button stackButton;
+    private Button stackWishButton;
 
     @Override
     protected void init() {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        this.stackButton = addRenderableWidget(Button.builder(
+        this.stackWishButton = addRenderableWidget(Button.builder(
                 Component.translatable("screen.db_renewed.option.stack"),
                 btn -> {
                     if (Minecraft.getInstance().getConnection() != null) {
@@ -34,20 +34,26 @@ public class ShenlongWishScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics, mouseX, mouseY, partialTick);
+    public void tick() {
+        super.tick();
         var mc = Minecraft.getInstance();
         boolean full = mc.player != null && mc.player.getInventory().getFreeSlot() == -1;
 
-        // Si el botón está bajo el mouse, ponemos/quitar el tooltip dinámico
-        if (this.stackButton.isHovered()) {
+        if (this.stackWishButton != null) {
+            this.stackWishButton.active = !full;
+
             if (full) {
-                this.stackButton.setTooltip(Tooltip.create(
+                this.stackWishButton.setTooltip(Tooltip.create(
                         Component.translatable("screen.db_renewed.need_inventory_space")));
             } else {
-                this.stackButton.setTooltip(null);
+                this.stackWishButton.setTooltip(null);
             }
         }
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
     }
