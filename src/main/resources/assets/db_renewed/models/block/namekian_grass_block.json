@@ -1,0 +1,8 @@
+{
+  "parent": "block/cube_bottom_top",
+  "textures": {
+    "top": "db_renewed:block/namekian_grass_block_top",
+    "bottom": "db_renewed:block/namekian_dirt",
+    "side": "db_renewed:block/namekian_grass_block_side"
+  }
+}

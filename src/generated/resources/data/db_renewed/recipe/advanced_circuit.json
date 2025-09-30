@@ -2,26 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
+    "C": {
       "tag": "c:circuits/basic"
     },
-    "C": {
-      "tag": "c:circuits/advanced"
+    "G": {
+      "item": "minecraft:gold_ingot"
     },
     "I": {
       "item": "minecraft:iron_ingot"
-    },
-    "R": {
-      "item": "minecraft:red_dye"
     }
   },
   "pattern": [
-    "IRI",
-    "BCB",
-    "IRI"
+    " G ",
+    "ICI",
+    " G "
   ],
   "result": {
     "count": 1,
-    "id": "db_renewed:space_pod_item"
+    "id": "db_renewed:advanced_circuit"
   }
 }

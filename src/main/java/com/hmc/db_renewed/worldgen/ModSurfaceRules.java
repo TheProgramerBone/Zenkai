@@ -23,7 +23,7 @@ public class ModSurfaceRules {
     public static final SurfaceRules.RuleSource NAMEK_SURFACE_BUILDER = SurfaceRules.sequence(
             SurfaceRules.ifTrue(
                     SurfaceRules.ON_FLOOR,
-                    SurfaceRules.state(ModBlocks.NAMEKIAN_GRASS.get().defaultBlockState())
+                    SurfaceRules.state(ModBlocks.NAMEKIAN_GRASS_BLOCK.get().defaultBlockState())
             ),
             SurfaceRules.ifTrue(
                     SurfaceRules.UNDER_FLOOR,

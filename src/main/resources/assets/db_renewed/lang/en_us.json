@@ -3,6 +3,7 @@
   "item.db_renewed.dragon_ball_radar": "Dragon Ball Radar",
   "item.db_renewed.basic_circuit": "Basic Circuit",
   "item.db_renewed.advanced_circuit": "Advanced Circuit",
+  "item.db_renewed.elite_circuit": "Elite Circuit",
   "item.db_renewed.ultimate_circuit": "Ultimate Circuit",
   "item.db_renewed.warenai_crystal": "Warenai Crystal",
   "item.db_renewed.warenai_crystal_dust": "Warenai Crystal Dust",
@@ -21,7 +22,7 @@
   "item.db_renewed.namekian_warrior_spawn_egg": "Namekian Warrior Spawn Egg",
   "item.db_renewed.namekian_spawn_egg": "Namekian Spawn Egg",
 
-  "block.db_renewed.namekian_grass": "Namekian Grass",
+  "block.db_renewed.namekian_grass_block": "Namekian Grass Block",
   "block.db_renewed.namekian_dirt": "Namekian Dirt",
   "block.db_renewed.namekian_stone": "Namekian Stone",
   "block.db_renewed.namekian_cobblestone": "Namekian Cobblestone",

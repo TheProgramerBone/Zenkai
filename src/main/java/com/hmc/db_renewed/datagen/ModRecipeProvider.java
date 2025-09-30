@@ -4,8 +4,12 @@ import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.block.ModBlocks;
 import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
@@ -85,15 +89,6 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         oreSmelting(recipeOutput, NAMEKIAN_COBBLESTONE, RecipeCategory.MISC, ModBlocks.NAMEKIAN_STONE.get(), 0.1f, 200, "namekian");
         oreSmelting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 200, "warenai");
         oreBlasting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 100, "warenai");
-        
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.DRAGON_BALL_RADAR.get(),1)
-                .pattern("IBI")
-                .pattern("BWB")
-                .pattern("IBI")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .define('I', Items.IRON_INGOT)
-                .define('B',ModItems.BASIC_CIRCUIT.get())
-                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.WARENAI_CRYSTAL_BLOCK.get(),1)
                 .pattern("WWW")
@@ -124,16 +119,61 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('P', ModItems.WARENAI_CRYSTAL_PICKAXE)
                 .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS,ModBlocks.NAMEKIAN_STRUCTURE_BLOCK.get(),8)
+                .pattern("SSS")
+                .pattern("SQS")
+                .pattern("SSS")
+                .define('S', ModBlocks.NAMEKIAN_STONE)
+                .define('Q',Items.QUARTZ)
+                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.DRAGON_BALL_RADAR.get(),1)
+                .pattern("ICI")
+                .pattern("ADA")
+                .pattern("ICI")
+                .define('D', Items.DIAMOND)
+                .define('I', Items.IRON_INGOT)
+                .define('A', Items.AMETHYST_SHARD)
+                .define('C', itemtag("c:circuits/advanced"))
+                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.SPACE_POD_ITEM.get(),1)
                 .pattern("IRI")
                 .pattern("BCB")
                 .pattern("IRI")
                 .define('I', Items.IRON_INGOT)
-                .define('B', ModItems.BASIC_CIRCUIT)
+                .define('B', itemtag("c:circuits/basic"))
                 .define('R', Items.RED_DYE)
-                .define('C', ModItems.ADVANCED_CIRCUIT)
+                .define('C', itemtag("c:circuits/advanced"))
                 .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.BASIC_CIRCUIT.get(),1)
+                .pattern(" C ")
+                .pattern("CRC")
+                .pattern(" C ")
+                .define('R', Items.REDSTONE)
+                .define('C', itemtag("c:ingots/copper"))
+                .unlockedBy("has_redstone",has(Items.REDSTONE)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.ADVANCED_CIRCUIT.get(),1)
+                .pattern(" G ")
+                .pattern("ICI")
+                .pattern(" G ")
+                .define('I', Items.IRON_INGOT)
+                .define('G', Items.GOLD_INGOT)
+                .define('C', itemtag("c:circuits/basic"))
+                .unlockedBy("has_basic",has(ModItems.BASIC_CIRCUIT)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.ELITE_CIRCUIT.get(),1)
+                .pattern(" L ")
+                .pattern("DCD")
+                .pattern(" L ")
+                .define('D', Items.DIAMOND)
+                .define('L', Items.LAPIS_LAZULI)
+                .define('C', itemtag("c:circuits/advanced"))
+                .unlockedBy("has_advanced",has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
     }
 
     protected static void oreSmelting(@NotNull RecipeOutput recipeOutput, List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult,
@@ -146,6 +186,11 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                                       float pExperience, int pCookingTime, @NotNull String pGroup) {
         oreCooking(recipeOutput, RecipeSerializer.BLASTING_RECIPE, BlastingRecipe::new, pIngredients, pCategory, pResult,
                 pExperience, pCookingTime, pGroup, "_from_blasting");
+    }
+
+    private static TagKey<Item> itemtag(String id) {
+        ResourceLocation rl = ResourceLocation.parse(id);
+        return TagKey.create(Registries.ITEM, rl);
     }
 
     protected static <T extends AbstractCookingRecipe> void oreCooking(@NotNull RecipeOutput recipeOutput, RecipeSerializer<T> pCookingSerializer, AbstractCookingRecipe.@NotNull Factory<T> factory,

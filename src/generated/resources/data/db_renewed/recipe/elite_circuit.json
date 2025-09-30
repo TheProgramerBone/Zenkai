@@ -2,26 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "A": {
-      "item": "minecraft:amethyst_shard"
-    },
     "C": {
       "tag": "c:circuits/advanced"
     },
     "D": {
       "item": "minecraft:diamond"
     },
-    "I": {
-      "item": "minecraft:iron_ingot"
+    "L": {
+      "item": "minecraft:lapis_lazuli"
     }
   },
   "pattern": [
-    "ICI",
-    "ADA",
-    "ICI"
+    " L ",
+    "DCD",
+    " L "
   ],
   "result": {
     "count": 1,
-    "id": "db_renewed:dragon_ball_radar"
+    "id": "db_renewed:elite_circuit"
   }
 }

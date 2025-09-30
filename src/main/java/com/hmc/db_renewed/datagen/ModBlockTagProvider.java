@@ -46,11 +46,11 @@ public class ModBlockTagProvider extends BlockTagsProvider {
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL)
                 .add(ModBlocks.NAMEKIAN_DIRT.get())
-                .add(ModBlocks.NAMEKIAN_DIRT.get());
+                .add(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
 
         tag(BlockTags.DIRT)
                 .add(ModBlocks.NAMEKIAN_DIRT.get())
-                .add(ModBlocks.NAMEKIAN_GRASS.get());
+                .add(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
 
         tag(ModTags.Blocks.DRAGON_BALLS)
                 .add(ModBlocks.DRAGON_BALL_STONE.get())

@@ -398,7 +398,7 @@
                           "then_run": {
                             "type": "minecraft:block",
                             "result_state": {
-                              "Name": "db_renewed:namekian_grass"
+                              "Name": "db_renewed:namekian_grass_block"
                             }
                           }
                         },
@@ -491,7 +491,7 @@
                           "then_run": {
                             "type": "minecraft:block",
                             "result_state": {
-                              "Name": "db_renewed:namekian_grass"
+                              "Name": "db_renewed:namekian_grass_block"
                             }
                           }
                         },

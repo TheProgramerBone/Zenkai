@@ -4,6 +4,7 @@ import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsBlock;
 import com.hmc.db_renewed.block.special.DragonBalls;
 import com.hmc.db_renewed.block.special.NamekDragonBalls;
+import com.hmc.db_renewed.block.special.NamekianGrassBlock;
 import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
@@ -190,11 +191,12 @@ public class ModBlocks {
                     .sound(SoundType.GRAVEL)
                     .mapColor(MapColor.DIRT)));
 
-    public static final DeferredBlock<Block> NAMEKIAN_GRASS = registerBlock("namekian_grass",
-            ()-> new Block(BlockBehaviour.Properties.of()
+    public static final DeferredBlock<Block> NAMEKIAN_GRASS_BLOCK = registerBlock("namekian_grass_block",
+            ()-> new NamekianGrassBlock(Block.Properties.of()
                     .strength(0.5f)
                     .sound(SoundType.GRAVEL)
-                    .mapColor(MapColor.DIRT)));
+                    .mapColor(MapColor.DIRT),
+                    ModBlocks.NAMEKIAN_DIRT));
 
     public static final DeferredBlock<Block> NAMEKIAN_STONE = registerBlock("namekian_stone",
             ()-> new Block(BlockBehaviour.Properties.of()

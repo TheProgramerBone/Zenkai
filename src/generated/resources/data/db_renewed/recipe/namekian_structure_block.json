@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "Q": {
+      "item": "minecraft:quartz"
+    },
+    "S": {
+      "item": "db_renewed:namekian_cobblestone"
+    }
+  },
+  "pattern": [
+    "SSS",
+    "SQS",
+    "SSS"
+  ],
+  "result": {
+    "count": 8,
+    "id": "db_renewed:namekian_structure_block"
+  }
+}

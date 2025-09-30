@@ -1,11 +1,11 @@
-// 1.21.1	2025-08-02T19:16:45.2998263	Item Models: db_renewed
+// 1.21.1	2025-09-29T22:14:11.4633503	Item Models: db_renewed
 a57b7dd76f3840d5b32cd0765f11b116ee046695 assets/db_renewed/models/item/advanced_circuit.json
 028d6979fbbdbbe5581f4ade0c111c6657ef5932 assets/db_renewed/models/item/basic_circuit.json
+103e0d09e3fe1db6e1e2f0d237590449015a8cb8 assets/db_renewed/models/item/elite_circuit.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/db_renewed/models/item/namekian_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/db_renewed/models/item/namekian_warrior_spawn_egg.json
 20d68d6100acc54019915aa652f8ed2732e3db53 assets/db_renewed/models/item/senzu_bean.json
 620ad9e19a7c63c05022581f3689171e98c4110d assets/db_renewed/models/item/space_pod_item.json
-03e7852c7032a33d4c18b77580b74d83cdedb91d assets/db_renewed/models/item/ultimate_circuit.json
 34d2f914892e69f016e76e16f0e7bf4fb3281b72 assets/db_renewed/models/item/warenai_crystal.json
 5bde42298f75613051a0069cc6be7be45bdafbff assets/db_renewed/models/item/warenai_crystal_axe.json
 14d36b79a73009e18fba7c050d9d69a667c59e66 assets/db_renewed/models/item/warenai_crystal_boots.json

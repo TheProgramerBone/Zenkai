@@ -28,7 +28,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.WARENAI_CRYSTAL_DUST.get());
         basicItem(ModItems.BASIC_CIRCUIT.get());
         basicItem(ModItems.ADVANCED_CIRCUIT.get());
-        basicItem(ModItems.ULTIMATE_CIRCUIT.get());
+        basicItem(ModItems.ELITE_CIRCUIT.get());
         basicItem(ModItems.WARENAI_TEMPLATE.get());
         basicItem(ModItems.SPACE_POD_ITEM.get());
 

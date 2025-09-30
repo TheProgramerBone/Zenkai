@@ -2,12 +2,15 @@ package com.hmc.db_renewed.entity.shenlong;
 
 import com.hmc.db_renewed.network.wishes.OpenWishScreenPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -88,12 +91,33 @@ public class ShenLongEntity extends Mob implements GeoEntity {
     }
 
     @Override
-    public boolean isInvulnerable() {
-        return false;
+    public boolean isInvulnerableTo(DamageSource source) {
+        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            return super.isInvulnerableTo(source);
+        }
+        Entity attacker = source.getEntity();
+        if (attacker instanceof Player) {
+            return true;
+        }
+        Entity direct = source.getDirectEntity();
+        if (direct instanceof Projectile proj && proj.getOwner() instanceof Player) {
+            return true;
+        }
+        return super.isInvulnerableTo(source);
     }
 
     @Override
     public boolean isPickable() {
         return true;
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (!source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            if (source.getEntity() instanceof Player) return false;
+            Entity direct = source.getDirectEntity();
+            if (direct instanceof Projectile proj && proj.getOwner() instanceof Player) return false;
+        }
+        return super.hurt(source, amount);
     }
 }

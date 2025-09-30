@@ -33,7 +33,7 @@ public class ModItems {
             Item::new,
             new Item.Properties());
 
-    public static final DeferredItem<Item> ULTIMATE_CIRCUIT = ITEMS.registerItem("ultimate_circuit",
+    public static final DeferredItem<Item> ELITE_CIRCUIT = ITEMS.registerItem("elite_circuit",
             Item::new,
             new Item.Properties());
 

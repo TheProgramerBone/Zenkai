@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_basic": {
+      "conditions": {
+        "items": [
+          {
+            "items": "db_renewed:basic_circuit"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "db_renewed:advanced_circuit"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_basic"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "db_renewed:advanced_circuit"
+    ]
+  }
+}
