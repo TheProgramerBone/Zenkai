@@ -1,5 +1,6 @@
 package com.hmc.db_renewed.block.special;
 
+import com.hmc.db_renewed.block.ModBlocks;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -33,6 +34,21 @@ public class NamekianGrassBlock extends SpreadingSnowyDirtBlock {
         if (!canStayGrass(level, pos)) {
             level.setBlockAndUpdate(pos, dirtBlock.get().defaultBlockState());
         }
+
+        if (level.getMaxLocalRawBrightness(pos.above()) >= 9) {
+            // Intenta unas cuantas veces por tick (4 es el número típico vanilla)
+            for (int i = 0; i < 4; ++i) {
+                BlockPos target = pos.offset(
+                        rng.nextInt(3) - 1,     // x: -1..1
+                        rng.nextInt(5) - 3,     // y: -3..1 (algo hacia abajo también)
+                        rng.nextInt(3) - 1      // z: -1..1
+                );
+
+                if (canSpreadTo(level, target)) {
+                    level.setBlockAndUpdate(target, this.defaultBlockState());
+                }
+            }
+        }
     }
 
     private static boolean canStayGrass(LevelReader level, BlockPos pos) {
@@ -46,5 +62,18 @@ public class NamekianGrassBlock extends SpreadingSnowyDirtBlock {
 
         int brightness = level.getMaxLocalRawBrightness(abovePos);
         return brightness >= 4;
+    }
+
+    private boolean canSpreadTo(LevelReader level, BlockPos targetPos) {
+        if (!level.getBlockState(targetPos).is(ModBlocks.NAMEKIAN_DIRT.get())) return false;
+
+        BlockPos abovePos = targetPos.above();
+        BlockState above = level.getBlockState(abovePos);
+
+        if (above.getFluidState().isSource()) return false;
+
+        if (above.getLightBlock(level, abovePos) >= level.getMaxLightLevel()) return false;
+
+        return level.getMaxLocalRawBrightness(abovePos) >= 4;
     }
 }

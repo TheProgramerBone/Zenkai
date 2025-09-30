@@ -78,10 +78,11 @@
   "messages.db_renewed.invalid_wish": "§2§lShenlong:§6 That wish it's not available",
   "messages.db_renewed.no_open_wish": "§2§lShenlong:§6 The wish it's not available",
   "messages.db_renewed.no_chosen_item": "§2§lShenlong:§6 You haven't chosen an item",
-  "screen.db_renewed.shenlong_wish": "State your wish",
-  "screen.db_renewed.option.stack": "I want a stack of...",
+  "screen.db_renewed.shenlong_wish": "§2§lState your wish",
+  "screen.db_renewed.option.stack": "I want more of...",
   "screen.db_renewed.back": "Back",
   "screen.db_renewed.confirm": "Confirm",
+  "screen.db_renewed.need_inventory_space": "You need space in your inventory for this wish!",
 
   "entity.db_renewed.shenlong": "Shenron",
   "entity.db_renewed.space_pod": "Space Pod",

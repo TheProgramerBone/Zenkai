@@ -18,19 +18,26 @@ public class WishConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> STACK_OVERRIDES_RAW =
-            BUILDER.comment("Overrides of stacks with this format: 'namespace:item=count'. Ex: minecraft:diamond=32")
+            BUILDER.comment("Overrides the amount of the item given with this format: 'namespace:item=count'. Ex: minecraft:diamond=32")
                     .defineListAllowEmpty("stack_overrides",
-                            List.of("minecraft:ender_pearl=16"),
+                            List.of("minecraft:ender_pearl=32"),
                             obj -> true // Acepta cualquier string
                     );
 
-    // Lista cruda de items baneados: puede contener cualquier string
     public static final ModConfigSpec.ConfigValue<List<? extends String>> BANNED_ITEMS_RAW =
-            BUILDER.comment("List of items banned from stack wish. Ex: minecraft:shulker_box")
+            BUILDER.comment("List of items banned from wishes. Ex: minecraft:shulker_box")
                     .defineListAllowEmpty("banned_items",
                             List.of("minecraft:shulker_box"),
                             obj -> true // Acepta cualquier string
                     );
+
+    public static final ModConfigSpec.BooleanValue ALLOW_ABOVE_MAX =
+            BUILDER.comment("Allow Overrides above max (ex: get 64 ender pearls instead of the max stack size of 16).")
+                    .define("allow_overrides_above_max", true);
+
+    public static final ModConfigSpec.IntValue GLOBAL_HARD_CAP =
+            BUILDER.comment("Global hard cap override (security).")
+                    .defineInRange("global_hard_cap", 4096, 1, 65535);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -44,7 +51,6 @@ public class WishConfig {
         Map<ResourceLocation, Integer> parsedOverrides = new HashMap<>();
         for (String line : STACK_OVERRIDES_RAW.get()) {
             if (line == null || !line.contains("=")) continue;
-
             String[] parts = line.split("=", 2);
             if (parts.length != 2) continue;
 
@@ -52,10 +58,11 @@ public class WishConfig {
                 ResourceLocation id = ResourceLocation.tryParse(parts[0].trim());
                 if (id == null || !BuiltInRegistries.ITEM.containsKey(id)) continue;
 
-                int count = Math.max(1, Math.min(64, Integer.parseInt(parts[1].trim())));
+                int raw = Integer.parseInt(parts[1].trim());
+                int count = Math.max(1, raw); // no limitamos aquí; el clamp final se hace en resolve
                 parsedOverrides.put(id, count);
             } catch (Exception ignored) {
-                // Ignorar errores de parseo sin crashear
+                // silencioso
             }
         }
         STACK_OVERRIDES = Collections.unmodifiableMap(parsedOverrides);
@@ -64,12 +71,9 @@ public class WishConfig {
         for (String rawId : BANNED_ITEMS_RAW.get()) {
             try {
                 ResourceLocation id = ResourceLocation.tryParse(rawId.trim());
-                // AHORA: solo aceptamos IDs que existan en el registry
-                if (id != null && BuiltInRegistries.ITEM.containsKey(id)) {
-                    parsedBanned.add(id);
-                }
+                if (id != null) parsedBanned.add(id);
             } catch (Exception ignored) {
-                // Silencioso
+                // silencioso
             }
         }
         BANNED_ITEMS = Collections.unmodifiableSet(parsedBanned);
@@ -87,18 +91,26 @@ public class WishConfig {
         return BANNED_ITEMS;
     }
 
+    // === LÓGICA FINAL: aplica overrides con las nuevas opciones ===
     public static ItemStack resolveWishStack(ItemStack chosen) {
         if (chosen == null || chosen.isEmpty()) return ItemStack.EMPTY;
 
         ResourceLocation id = BuiltInRegistries.ITEM.getKey(chosen.getItem());
         if (isBanned(id)) return ItemStack.EMPTY;
 
-        // El override aplica SIEMPRE, pero respetando maxStackSize
-        int desired = STACK_OVERRIDES.getOrDefault(id, chosen.getMaxStackSize());
-        int max = chosen.getMaxStackSize();
+        int override = STACK_OVERRIDES.getOrDefault(id, -1);
+        int desired = (override > 0) ? override : chosen.getMaxStackSize();
 
-        ItemStack copy = chosen.copy(); // preserva NBT (encantamientos, etc.)
-        copy.setCount(Math.max(1, Math.min(desired, max)));
+        // clamp final según config
+        int hardCap = Math.max(1, GLOBAL_HARD_CAP.get());
+        if (ALLOW_ABOVE_MAX.get()) {
+            desired = Math.min(desired, hardCap);
+        } else {
+            desired = Math.min(desired, Math.min(hardCap, chosen.getMaxStackSize()));
+        }
+
+        ItemStack copy = chosen.copy(); // copia NBT
+        copy.setCount(desired);
         return copy;
     }
 

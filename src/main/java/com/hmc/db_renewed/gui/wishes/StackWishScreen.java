@@ -37,12 +37,10 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
         int centerX = (this.width - this.imageWidth) / 2;
         int centerY = (this.height - this.imageHeight) / 2;
 
-        // Botón Confirmar
         this.addRenderableWidget(
                 Button.builder(
                         Component.translatable("screen.db_renewed.confirm"), btn -> {
                             if (Minecraft.getInstance().getConnection() != null) {
-                                ItemStack chosen = this.menu.getChosenItem().copy();
                                 Minecraft.getInstance().getConnection().send(new ConfirmWishPayload());
                             } else {
                                 assert Minecraft.getInstance().player != null;
@@ -84,22 +82,19 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawCenteredString(this.font, this.title, this.imageWidth / 2, 6, 0x404040);
+        guiGraphics.drawCenteredString(this.font, this.title, this.imageWidth / 2, 6, 0x00a135);
         guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, this.imageHeight - 96 + 2, 0x404040, false);
     }
 
     @Override
-    protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType clickType) {
+    protected void slotClicked(@NotNull Slot slot, int slotId, int mouseButton, @NotNull ClickType clickType) {
         if (slotId == 0) {
-            // Tomamos la pila que el jugador tiene en el cursor (carried)
-            ItemStack cursor = this.menu.getCarried(); // método estándar en AbstractContainerMenu
-            if (cursor == null) cursor = ItemStack.EMPTY;
+            ItemStack cursor = this.menu.getCarried();
 
-            // Enviamos al servidor una copia (si vacía, limpiará el ghost)
             if (Minecraft.getInstance().getConnection() != null) {
                 Minecraft.getInstance().getConnection().send(new SetGhostSlotPayload(cursor.copy()));
             }
-            return; // evitamos que la lógica vanilla mueva/consuma el item
+            return;
         }
 
         super.slotClicked(slot, slotId, mouseButton, clickType);
