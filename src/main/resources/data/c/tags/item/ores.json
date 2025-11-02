@@ -1,10 +1,10 @@
 {
   "values": [
     {
-      "id": "db_renewed:warenai_crystal_ore",
+      "id": "db_renewed:terragem_ore",
       "required": false
     },{
-      "id": "db_renewed:deepslate_warenai_crystal_ore",
+      "id": "db_renewed:deepslate_terragem_ore",
       "required": false
     }
   ]

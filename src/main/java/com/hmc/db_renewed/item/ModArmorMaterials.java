@@ -18,14 +18,14 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class ModArmorMaterials {
-    public static final Holder<ArmorMaterial> WARENAI_CRYSTAL_ARMOR_MATERIAL = register("warenai_crystal",
+    public static final Holder<ArmorMaterial> TERRAGEM_ARMOR_MATERIAL = register("terragem",
             Util.make(new EnumMap<>(ArmorItem.Type.class), attribute -> {
                 attribute.put(ArmorItem.Type.BOOTS, 2);
                 attribute.put(ArmorItem.Type.LEGGINGS, 5);
                 attribute.put(ArmorItem.Type.CHESTPLATE, 7);
                 attribute.put(ArmorItem.Type.HELMET, 2);
                 attribute.put(ArmorItem.Type.BODY, 10);
-            }), 15, 2f, 0.05f, ModItems.WARENAI_CRYSTAL);
+            }), 15, 2f, 0.05f, ModItems.TERRAGEM);
 
 
     private static Holder<ArmorMaterial> register(String name, EnumMap<ArmorItem.Type, Integer> typeProtection,

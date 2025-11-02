@@ -2,9 +2,9 @@ package com.hmc.db_renewed.block;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsBlock;
-import com.hmc.db_renewed.block.special.DragonBalls;
-import com.hmc.db_renewed.block.special.NamekDragonBalls;
-import com.hmc.db_renewed.block.special.NamekianGrassBlock;
+import com.hmc.db_renewed.block.dragonballs.DragonBalls;
+import com.hmc.db_renewed.block.dragonballs.NamekDragonBalls;
+import com.hmc.db_renewed.block.dragonballs.NamekianGrassBlock;
 import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
@@ -155,14 +155,14 @@ public class ModBlocks {
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
 
-    public static final DeferredBlock<Block> WARENAI_CRYSTAL_BLOCK = registerBlock("warenai_crystal_block",
+    public static final DeferredBlock<Block> TERRAGEM_BLOCK = registerBlock("terragem_block",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(2f,3f)
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.METAL)
                     .mapColor(MapColor.COLOR_BROWN)));
 
-    public static final DeferredBlock<Block> WARENAI_CRYSTAL_ORE = registerBlock("warenai_crystal_ore",
+    public static final DeferredBlock<Block> TERRAGEM_ORE = registerBlock("terragem_ore",
             ()-> new DropExperienceBlock(UniformInt.of(2,4),
                     BlockBehaviour.Properties.of()
                             .strength(2f,3f)
@@ -170,7 +170,7 @@ public class ModBlocks {
                             .sound(SoundType.STONE)
                             .mapColor(MapColor.STONE)));
 
-    public static final DeferredBlock<Block> DEEPSLATE_WARENAI_CRYSTAL_ORE = registerBlock("deepslate_warenai_crystal_ore",
+    public static final DeferredBlock<Block> DEEPSLATE_TERRAGEM_ORE = registerBlock("deepslate_terragem_ore",
             ()-> new DropExperienceBlock(UniformInt.of(3,5),
                     BlockBehaviour.Properties.of()
                             .strength(3f,3f)

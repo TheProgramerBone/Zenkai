@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "db_renewed:item/warenai_crystal_boots",
-    "layer1": "minecraft:trims/items/boots_trim_iron"
-  }
-}

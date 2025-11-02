@@ -1,7 +1,7 @@
 {
   "values": [
-    "db_renewed:warenai_crystal_block",
-    "db_renewed:warenai_crystal_ore",
-    "db_renewed:deepslate_warenai_crystal_ore"
+    "db_renewed:terragem_block",
+    "db_renewed:terragem_ore",
+    "db_renewed:deepslate_terragem_ore"
   ]
 }

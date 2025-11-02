@@ -44,7 +44,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_5.get());
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_6.get());
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_7.get());
-        dropSelf(ModBlocks.WARENAI_CRYSTAL_BLOCK.get());
+        dropSelf(ModBlocks.TERRAGEM_BLOCK.get());
         dropSelf(ModBlocks.ALL_DRAGON_BALLS.get());
         dropSelf(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
         dropSelf(ModBlocks.NAMEKIAN_DIRT.get());
@@ -57,10 +57,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                 createSingleItemTableWithSilkTouch(ModBlocks.NAMEKIAN_GRASS_BLOCK.get(), ModBlocks.NAMEKIAN_DIRT));
 
 
-        add(ModBlocks.WARENAI_CRYSTAL_ORE.get(),
-                block -> createMultipleOreDrops(ModBlocks.WARENAI_CRYSTAL_ORE.get(), ModItems.WARENAI_CRYSTAL.get(), 1, 4));
-        add(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get(),
-                block -> createMultipleOreDrops(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get(), ModItems.WARENAI_CRYSTAL.get(), 1, 4));
+        add(ModBlocks.TERRAGEM_ORE.get(),
+                block -> createMultipleOreDrops(ModBlocks.TERRAGEM_ORE.get(), ModItems.TERRAGEM.get(), 1, 4));
+        add(ModBlocks.DEEPSLATE_TERRAGEM_ORE.get(),
+                block -> createMultipleOreDrops(ModBlocks.DEEPSLATE_TERRAGEM_ORE.get(), ModItems.TERRAGEM.get(), 1, 4));
 
         addRandomDrops(ModBlocks.DRAGON_BALL_STONE.get(), List.of(
                 ModBlocks.DRAGON_BALL_1.get(),

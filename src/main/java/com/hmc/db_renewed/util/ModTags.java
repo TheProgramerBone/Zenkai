@@ -10,8 +10,8 @@ import net.minecraft.world.level.block.Block;
 
 public class ModTags {
     public static class Blocks {
-        public static final TagKey<Block> NEEDS_WARENAI_CRYSTAL_TOOL = createTag("needs_warenai_crystal_tool");
-        public static final TagKey<Block> INCORRECT_FOR_WARENAI_CRYSTAL_TOOL = createTag("incorrect_for_warenai_crystal_tool");
+        public static final TagKey<Block> NEEDS_TERRAGEM_TOOL = createTag("needs_terragem_tool");
+        public static final TagKey<Block> INCORRECT_FOR_TERRAGEM_TOOL = createTag("incorrect_for_terragem_tool");
         public static final TagKey<Block> DRAGON_BALLS = createTag("dragon_balls");
 
         private static TagKey<Block> createTag(String name) {

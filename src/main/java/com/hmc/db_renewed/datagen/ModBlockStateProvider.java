@@ -14,9 +14,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        blockWithItem(ModBlocks.WARENAI_CRYSTAL_BLOCK);
-        blockWithItem(ModBlocks.WARENAI_CRYSTAL_ORE);
-        blockWithItem(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE);
+        blockWithItem(ModBlocks.TERRAGEM_BLOCK);
+        blockWithItem(ModBlocks.TERRAGEM_ORE);
+        blockWithItem(ModBlocks.DEEPSLATE_TERRAGEM_ORE);
         blockWithItem(ModBlocks.NAMEKIAN_DIRT);
         blockWithItem(ModBlocks.NAMEKIAN_STONE);
         blockWithItem(ModBlocks.NAMEKIAN_COBBLESTONE);

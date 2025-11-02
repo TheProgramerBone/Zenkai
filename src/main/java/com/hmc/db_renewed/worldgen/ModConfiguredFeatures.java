@@ -19,17 +19,17 @@ import java.util.List;
 public class ModConfiguredFeatures {
     // CF -> PF -> BM
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> OVERWORLD_WARENAI_ORE_KEY = registerKey("warenai_crystal_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> OVERWORLD_TERRAGEM_ORE_KEY = registerKey("terragem_ore");
 
     public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
         RuleTest stoneReplaceables = new TagMatchTest(BlockTags.STONE_ORE_REPLACEABLES);
         RuleTest deepslateReplaceables = new TagMatchTest(BlockTags.DEEPSLATE_ORE_REPLACEABLES);
 
         List<OreConfiguration.TargetBlockState> overworldWarenaiOres = List.of(
-                OreConfiguration.target(stoneReplaceables, ModBlocks.WARENAI_CRYSTAL_ORE.get().defaultBlockState()),
-                OreConfiguration.target(deepslateReplaceables, ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get().defaultBlockState()));
+                OreConfiguration.target(stoneReplaceables, ModBlocks.TERRAGEM_ORE.get().defaultBlockState()),
+                OreConfiguration.target(deepslateReplaceables, ModBlocks.DEEPSLATE_TERRAGEM_ORE.get().defaultBlockState()));
 
-        register(context, OVERWORLD_WARENAI_ORE_KEY, Feature.ORE, new OreConfiguration(overworldWarenaiOres, 9));
+        register(context, OVERWORLD_TERRAGEM_ORE_KEY, Feature.ORE, new OreConfiguration(overworldWarenaiOres, 9));
 
     }
 

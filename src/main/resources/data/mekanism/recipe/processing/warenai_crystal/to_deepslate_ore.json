@@ -1,6 +1,0 @@
-{
-  "type":"mekanism:combining",
-  "extra_input":{"count":1,"tag":"c:cobblestones/deepslate"},
-  "main_input":{"count":5,"tag":"c:dusts/warenai_crystal"},
-  "output":{"count":1,"id":"db_renewed:deepslate_warenai_crystal_ore"}
-}

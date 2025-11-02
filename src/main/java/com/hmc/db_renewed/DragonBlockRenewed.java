@@ -1,7 +1,7 @@
 package com.hmc.db_renewed;
 
 import com.hmc.db_renewed.block.ModBlocks;
-import com.hmc.db_renewed.block.entity.ModBlockEntities;
+import com.hmc.db_renewed.block.ModBlockEntities;
 import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsRenderer;
 import com.hmc.db_renewed.capability.PlayerStats;
 import com.hmc.db_renewed.capability.PlayerStatsProvider;
@@ -61,7 +61,7 @@ public class DragonBlockRenewed
         ModBlockEntities.register(modEventBus);
         ModSounds.register(modEventBus);
         ModEntities.register(modEventBus);
-        modContainer.registerConfig(ModConfig.Type.COMMON, WishConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.SERVER, WishConfig.SPEC);
         modEventBus.addListener(WishConfig::onConfigLoad);
         ModMenuTypes.MENUS.register(modEventBus);
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us

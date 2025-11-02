@@ -1,8 +1,8 @@
-// 1.21.1	2025-07-28T19:27:55.109252	Tags for minecraft:item mod id db_renewed
-dc023917133cbdd3e32c717f34b1a4722e7beb1d data/minecraft/tags/item/axes.json
-c94ab5448204218ab3f2b5bf97310723c6665494 data/minecraft/tags/item/enchantable/armor.json
-598073c0bfcdb22f95c349f0292075dcb67be4a7 data/minecraft/tags/item/hoes.json
-c07940922b0e831d0caee71a9f11b16a44f13a28 data/minecraft/tags/item/pickaxes.json
-55b788253af30d77a3519c9d407c0be1e2b1ba0f data/minecraft/tags/item/shovels.json
-56fcbefdbcf8305d74b45162ea97e4834a7b7b88 data/minecraft/tags/item/swords.json
-c94ab5448204218ab3f2b5bf97310723c6665494 data/minecraft/tags/item/trimmable_armor.json
+// 1.21.1	2025-11-02T11:03:58.4303619	Tags for minecraft:item mod id db_renewed
+16597a62d932638a5693df4ad8da299bac20507d data/minecraft/tags/item/axes.json
+9098fffaa904949a06ec8c6690c4320754e72f5a data/minecraft/tags/item/enchantable/armor.json
+ec75e602a344de414e2673d74df31766f4f5390a data/minecraft/tags/item/hoes.json
+154132b7420449763f46efced1b8d8367e1bf07b data/minecraft/tags/item/pickaxes.json
+4a21b06528bbe105ad48662061fcb2d3115639d4 data/minecraft/tags/item/shovels.json
+6e2c8b0997f93ad92918be6e50ed77f7b6c66022 data/minecraft/tags/item/swords.json
+9098fffaa904949a06ec8c6690c4320754e72f5a data/minecraft/tags/item/trimmable_armor.json

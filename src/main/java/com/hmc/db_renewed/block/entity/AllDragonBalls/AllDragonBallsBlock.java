@@ -86,17 +86,12 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
             );
             level.scheduleTick(pos, this, 20*4);
             summonShenron(level, pos);
+            int spacing = 6;
+            int yOffset = 0;
+            spawnLightningGrid(serverLevel, pos, spacing, yOffset);
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     BlockPos offsetPos = pos.offset(dx, 0, dz);
-
-                    LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(serverLevel);
-                    if (lightning != null) {
-                        lightning.moveTo(offsetPos.getX() + 5, offsetPos.getY(), offsetPos.getZ() + 5);
-                        lightning.setVisualOnly(true);
-                        serverLevel.addFreshEntity(lightning);
-                    }
-
                     Interaction barrier = new Interaction(EntityType.INTERACTION,level);
                     barrier.setPos(offsetPos.getX() + 0.5, offsetPos.getY() - 0.2, offsetPos.getZ() + 0.5);
                     barrier.setInvulnerable(true);
@@ -110,6 +105,27 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
             }
         return InteractionResult.SUCCESS;
     }
+
+    private static void spawnLightningGrid(ServerLevel level, BlockPos center,
+                                           int spacing, int yOffset) {
+        // grid 3×3 centrado en 'center'
+        for (int gx = -1; gx <= 1; gx++) {
+            for (int gz = -1; gz <= 1; gz++) {
+                int dx = gx * spacing;
+                int dz = gz * spacing;
+                BlockPos p = center.offset(dx, 0, dz);
+
+                // Rayo visual
+                LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+                if (bolt != null) {
+                    bolt.moveTo(p.getX() + 0.5, p.getY() + yOffset, p.getZ() + 0.5);
+                    bolt.setVisualOnly(true);
+                    level.addFreshEntity(bolt);
+                }
+            }
+        }
+    }
+
 
     private void summonShenron(Level level, BlockPos pos) {
         EntityType<?> entityType = ModEntities.SHENLONG.get();

@@ -42,61 +42,61 @@ public class ModItems {
             new Item.Properties()
                     .stacksTo(1));
 
-    public static final DeferredItem<Item> WARENAI_CRYSTAL = ITEMS.registerItem("warenai_crystal",
+    public static final DeferredItem<Item> TERRAGEM = ITEMS.registerItem("terragem",
             Item::new,
             new Item.Properties());
 
-    public static final DeferredItem<Item> WARENAI_CRYSTAL_DUST = ITEMS.registerItem("warenai_crystal_dust",
+    public static final DeferredItem<Item> TERRAGEM_DUST = ITEMS.registerItem("terragem_dust",
             Item::new,
             new Item.Properties());
 
-    public static final DeferredItem<SwordItem> WARENAI_CRYSTAL_SWORD = ITEMS.register("warenai_crystal_sword",
-            () -> new SwordItem(ModToolTiers.WARENAI_CRYSTAL,
-            new Item.Properties().attributes(SwordItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,3,-2.4f))));
+    public static final DeferredItem<SwordItem> TERRAGEM_SWORD = ITEMS.register("terragem_sword",
+            () -> new SwordItem(ModToolTiers.TERRAGEM,
+            new Item.Properties().attributes(SwordItem.createAttributes(ModToolTiers.TERRAGEM,3,-2.4f))));
 
-    public static final DeferredItem<PickaxeItem> WARENAI_CRYSTAL_PICKAXE = ITEMS.register("warenai_crystal_pickaxe",
-            () -> new PickaxeItem(ModToolTiers.WARENAI_CRYSTAL,
-                    new Item.Properties().attributes(PickaxeItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,1,-2.8f))));
+    public static final DeferredItem<PickaxeItem> TERRAGEM_PICKAXE = ITEMS.register("terragem_pickaxe",
+            () -> new PickaxeItem(ModToolTiers.TERRAGEM,
+                    new Item.Properties().attributes(PickaxeItem.createAttributes(ModToolTiers.TERRAGEM,1,-2.8f))));
 
-    public static final DeferredItem<ShovelItem> WARENAI_CRYSTAL_SHOVEL = ITEMS.register("warenai_crystal_shovel",
-            () -> new ShovelItem(ModToolTiers.WARENAI_CRYSTAL,
-                    new Item.Properties().attributes(ShovelItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,1.5f,-3.0f))));
+    public static final DeferredItem<ShovelItem> TERRAGEM_SHOVEL = ITEMS.register("terragem_shovel",
+            () -> new ShovelItem(ModToolTiers.TERRAGEM,
+                    new Item.Properties().attributes(ShovelItem.createAttributes(ModToolTiers.TERRAGEM,1.5f,-3.0f))));
 
-    public static final DeferredItem<AxeItem> WARENAI_CRYSTAL_AXE = ITEMS.register("warenai_crystal_axe",
-            () -> new AxeItem(ModToolTiers.WARENAI_CRYSTAL,
-                    new Item.Properties().attributes(AxeItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,5f,-3.2f))));
+    public static final DeferredItem<AxeItem> TERRAGEM_AXE = ITEMS.register("terragem_axe",
+            () -> new AxeItem(ModToolTiers.TERRAGEM,
+                    new Item.Properties().attributes(AxeItem.createAttributes(ModToolTiers.TERRAGEM,5f,-3.2f))));
 
-    public static final DeferredItem<HoeItem> WARENAI_CRYSTAL_HOE = ITEMS.register("warenai_crystal_hoe",
-            () -> new HoeItem(ModToolTiers.WARENAI_CRYSTAL,
-                    new Item.Properties().attributes(HoeItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,-2.5f,-1f))));
+    public static final DeferredItem<HoeItem> TERRAGEM_HOE = ITEMS.register("terragem_hoe",
+            () -> new HoeItem(ModToolTiers.TERRAGEM,
+                    new Item.Properties().attributes(HoeItem.createAttributes(ModToolTiers.TERRAGEM,-2.5f,-1f))));
 
-    public static final DeferredItem<HammerItem> WARENAI_CRYSTAL_HAMMER = ITEMS.register("warenai_crystal_hammer",
-            () -> new HammerItem(ModToolTiers.WARENAI_CRYSTAL, new Item.Properties()
-                    .attributes(PickaxeItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,5.5f,-3.5f))
-                    .attributes(ShovelItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,5.5f,-3.5f))
-                    .attributes(AxeItem.createAttributes(ModToolTiers.WARENAI_CRYSTAL,5.5f,-3.5f))));
+    public static final DeferredItem<HammerItem> TERRAGEM_HAMMER = ITEMS.register("terragem_hammer",
+            () -> new HammerItem(ModToolTiers.TERRAGEM, new Item.Properties()
+                    .attributes(PickaxeItem.createAttributes(ModToolTiers.TERRAGEM,5.5f,-3.5f))
+                    .attributes(ShovelItem.createAttributes(ModToolTiers.TERRAGEM,5.5f,-3.5f))
+                    .attributes(AxeItem.createAttributes(ModToolTiers.TERRAGEM,5.5f,-3.5f))));
 
-    public static final DeferredItem<Item> WARENAI_TEMPLATE = ITEMS.registerItem("warenai_template",
+    public static final DeferredItem<Item> TERRAGEM_TEMPLATE = ITEMS.registerItem("terragem_template",
             Item::new,
             new Item.Properties());
 
-    public static final DeferredItem<ArmorItem> WARENAI_CRYSTAL_HELMET = ITEMS.register("warenai_crystal_helmet",
-            () -> new ArmorItem(ModArmorMaterials.WARENAI_CRYSTAL_ARMOR_MATERIAL,ArmorItem.Type.HELMET,
+    public static final DeferredItem<ArmorItem> TERRAGEM_HELMET = ITEMS.register("terragem_helmet",
+            () -> new ArmorItem(ModArmorMaterials.TERRAGEM_ARMOR_MATERIAL,ArmorItem.Type.HELMET,
                     new Item.Properties().durability(ArmorItem.Type.HELMET.getDurability(25))));
 
-    public static final DeferredItem<ArmorItem> WARENAI_CRYSTAL_CHESTPLATE = ITEMS.register("warenai_crystal_chestplate",
-            () -> new ArmorItem(ModArmorMaterials.WARENAI_CRYSTAL_ARMOR_MATERIAL,ArmorItem.Type.CHESTPLATE,
+    public static final DeferredItem<ArmorItem> TERRAGEM_CHESTPLATE = ITEMS.register("terragem_chestplate",
+            () -> new ArmorItem(ModArmorMaterials.TERRAGEM_ARMOR_MATERIAL,ArmorItem.Type.CHESTPLATE,
                     new Item.Properties().durability(ArmorItem.Type.CHESTPLATE.getDurability(25))));
 
-    public static final DeferredItem<ArmorItem> WARENAI_CRYSTAL_LEGGINGS = ITEMS.register("warenai_crystal_leggings",
-            () -> new ArmorItem(ModArmorMaterials.WARENAI_CRYSTAL_ARMOR_MATERIAL,ArmorItem.Type.LEGGINGS,
+    public static final DeferredItem<ArmorItem> TERRAGEM_LEGGINGS = ITEMS.register("terragem_leggings",
+            () -> new ArmorItem(ModArmorMaterials.TERRAGEM_ARMOR_MATERIAL,ArmorItem.Type.LEGGINGS,
                     new Item.Properties().durability(ArmorItem.Type.LEGGINGS.getDurability(25))));
 
-    public static final DeferredItem<ArmorItem> WARENAI_CRYSTAL_BOOTS = ITEMS.register("warenai_crystal_boots",
-            () -> new ArmorItem(ModArmorMaterials.WARENAI_CRYSTAL_ARMOR_MATERIAL,ArmorItem.Type.BOOTS,
+    public static final DeferredItem<ArmorItem> TERRAGEM_BOOTS = ITEMS.register("terragem_boots",
+            () -> new ArmorItem(ModArmorMaterials.TERRAGEM_ARMOR_MATERIAL,ArmorItem.Type.BOOTS,
                     new Item.Properties().durability(ArmorItem.Type.BOOTS.getDurability(25))));
 
-    public static final DeferredItem<Item> NAMEKIAN_WARRIOR_SPAWN_EGG = ITEMS.register("namekian_warrior_spawn_egg",
+    public static final DeferredItem<Item> WARRIOR_SPAWN_EGG = ITEMS.register("namekian_warrior_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN_WARRIOR,0x28ad1b ,0x26b9fe,
                     new Item.Properties()));
 

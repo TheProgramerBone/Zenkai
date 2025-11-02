@@ -1,5 +1,0 @@
-{
-  "type":"mekanism:crushing",
-  "input":{"count":1,"tag":"c:gems/warenai_crystal"},
-  "output":{"count":1,"id":"db_renewed:warenai_crystal_dust"}
-}

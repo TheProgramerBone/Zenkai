@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": {
+    "item": "db_renewed:terragem"
+  },
+  "base": {
+    "item": "minecraft:iron_chestplate"
+  },
+  "result": {
+    "count": 1,
+    "id": "db_renewed:terragem_chestplate"
+  },
+  "template": {
+    "item": "db_renewed:terragem_template"
+  }
+}

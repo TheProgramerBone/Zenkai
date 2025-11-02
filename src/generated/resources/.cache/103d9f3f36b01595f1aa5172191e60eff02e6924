@@ -1,4 +1,4 @@
-// 1.21.1	2025-07-28T20:49:57.4309599	Registries
-2cc610c9bf5df659de36d7a32b60ad11e3c266c4 data/db_renewed/neoforge/biome_modifier/add_warenai_crystal_ore.json
-6f9fb9411a2ce0a616e3a11989d6e980f1a66ed6 data/db_renewed/worldgen/configured_feature/warenai_crystal_ore.json
-2209e87a579adbeb022b55a7416d0a4842d7f077 data/db_renewed/worldgen/placed_feature/warenai_crystal_ore_placed.json
+// 1.21.1	2025-11-02T11:15:42.026594	Registries
+361eeec885bbe25f6531d25e6dc76d97204268e1 data/db_renewed/neoforge/biome_modifier/add_terragem_ore.json
+7c06158d198ad90d58d76fff49ecf46a33091cff data/db_renewed/worldgen/configured_feature/terragem_ore.json
+fe867213b371ebce2799e35a109e1437b7a3f1c5 data/db_renewed/worldgen/placed_feature/terragem_ore_placed.json

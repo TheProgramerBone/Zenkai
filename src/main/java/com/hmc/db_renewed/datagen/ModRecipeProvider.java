@@ -82,42 +82,42 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .requires(ModBlocks.NAMEK_DRAGON_BALL_1)
                 .unlockedBy("has_namek_dragon_ball_1", has(ModBlocks.NAMEK_DRAGON_BALL_1)).save(recipeOutput);
 
-        List<ItemLike> WARENAI_SMELTABLES = List.of(ModItems.WARENAI_CRYSTAL_DUST,
-                ModBlocks.WARENAI_CRYSTAL_ORE, ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE);
+        List<ItemLike> TERRAGEM_SMELTABLES = List.of(ModItems.TERRAGEM_DUST,
+                ModBlocks.TERRAGEM_ORE, ModBlocks.DEEPSLATE_TERRAGEM_ORE);
         List<ItemLike> NAMEKIAN_COBBLESTONE = List.of(ModBlocks.NAMEKIAN_COBBLESTONE);
 
         oreSmelting(recipeOutput, NAMEKIAN_COBBLESTONE, RecipeCategory.MISC, ModBlocks.NAMEKIAN_STONE.get(), 0.1f, 200, "namekian");
-        oreSmelting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 200, "warenai");
-        oreBlasting(recipeOutput, WARENAI_SMELTABLES, RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 0.25f, 100, "warenai");
+        oreSmelting(recipeOutput, TERRAGEM_SMELTABLES, RecipeCategory.MISC, ModItems.TERRAGEM.get(), 0.25f, 200, "terragem");
+        oreBlasting(recipeOutput, TERRAGEM_SMELTABLES, RecipeCategory.MISC, ModItems.TERRAGEM.get(), 0.25f, 100, "terragem");
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.WARENAI_CRYSTAL_BLOCK.get(),1)
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.TERRAGEM_BLOCK.get(),1)
                 .pattern("WWW")
                 .pattern("WWW")
                 .pattern("WWW")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
-                .unlockedBy("has_warenai", has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+                .define('W', ModItems.TERRAGEM.get())
+                .unlockedBy("has_terragem", has(ModItems.TERRAGEM)).save(recipeOutput);
 
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.WARENAI_CRYSTAL.get(), 9)
-                .requires(ModBlocks.WARENAI_CRYSTAL_BLOCK)
-                .unlockedBy("has_warenai_block", has(ModBlocks.WARENAI_CRYSTAL_BLOCK)).save(recipeOutput);
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.TERRAGEM.get(), 9)
+                .requires(ModBlocks.TERRAGEM_BLOCK)
+                .unlockedBy("has_terragem_block", has(ModBlocks.TERRAGEM_BLOCK)).save(recipeOutput);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.WARENAI_TEMPLATE.get(),2)
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.TERRAGEM_TEMPLATE.get(),2)
                 .pattern("WTW")
                 .pattern("WRW")
                 .pattern("WWW")
-                .define('W', ModItems.WARENAI_CRYSTAL.get())
+                .define('W', ModItems.TERRAGEM.get())
                 .define('R', ModBlocks.ROCKY_BLOCK.get())
-                .define('T',ModItems.WARENAI_TEMPLATE.get())
-                .unlockedBy("has_warenai",has(ModItems.WARENAI_TEMPLATE)).save(recipeOutput);
+                .define('T',ModItems.TERRAGEM_TEMPLATE.get())
+                .unlockedBy("has_terragem",has(ModItems.TERRAGEM_TEMPLATE)).save(recipeOutput);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.WARENAI_CRYSTAL_HAMMER.get(),1)
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.TERRAGEM_HAMMER.get(),1)
                 .pattern(" WP")
                 .pattern(" SW")
                 .pattern("S  ")
                 .define('S', Items.STICK)
-                .define('W', ModItems.WARENAI_CRYSTAL)
-                .define('P', ModItems.WARENAI_CRYSTAL_PICKAXE)
-                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+                .define('W', ModItems.TERRAGEM)
+                .define('P', ModItems.TERRAGEM_PICKAXE)
+                .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS,ModBlocks.NAMEKIAN_STRUCTURE_BLOCK.get(),8)
                 .pattern("SSS")
@@ -125,7 +125,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .pattern("SSS")
                 .define('S', ModBlocks.NAMEKIAN_STONE)
                 .define('Q',Items.QUARTZ)
-                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+                .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
 
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.DRAGON_BALL_RADAR.get(),1)
@@ -136,7 +136,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('I', Items.IRON_INGOT)
                 .define('A', Items.AMETHYST_SHARD)
                 .define('C', itemtag("c:circuits/advanced"))
-                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+                .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
 
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.SPACE_POD_ITEM.get(),1)
@@ -147,7 +147,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('B', itemtag("c:circuits/basic"))
                 .define('R', Items.RED_DYE)
                 .define('C', itemtag("c:circuits/advanced"))
-                .unlockedBy("has_warenai",has(ModItems.WARENAI_CRYSTAL)).save(recipeOutput);
+                .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.BASIC_CIRCUIT.get(),1)
                 .pattern(" C ")

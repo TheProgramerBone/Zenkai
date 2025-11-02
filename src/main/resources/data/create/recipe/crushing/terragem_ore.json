@@ -1,0 +1,27 @@
+{
+  "type": "create:crushing",
+  "ingredients": [
+    {
+      "item": "db_renewed:terragem_ore"
+    }
+  ],
+  "processing_time": 350,
+  "results": [
+    {
+      "count": 2,
+      "id": "db_renewed:terragem"
+    },
+    {
+      "chance": 0.75,
+      "id": "db_renewed:terragem_dust"
+    },
+    {
+      "chance": 0.75,
+      "id": "create:experience_nugget"
+    },
+    {
+      "chance": 0.125,
+      "id": "minecraft:cobblestone"
+    }
+  ]
+}

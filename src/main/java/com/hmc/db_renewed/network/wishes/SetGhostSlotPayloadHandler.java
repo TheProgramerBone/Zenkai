@@ -25,7 +25,7 @@ public class SetGhostSlotPayloadHandler {
             ResourceLocation id = BuiltInRegistries.ITEM.getKey(chosen.getItem());
             if (WishConfig.isBanned(id)) {
                 player.displayClientMessage(
-                        Component.translatable("message.db_renewed.item_banned"), false
+                        Component.translatable("messages.db_renewed.item_banned"), false
                 );
                 menu.clearChosenItem();
                 return;

@@ -1,5 +1,0 @@
-{
-  "type":"mekanism:enriching",
-  "input":{"count":1,"tag":"c:ores/warenai_crystal"},
-  "output":{"count":3,"id":"db_renewed:warenai_crystal"}
-}

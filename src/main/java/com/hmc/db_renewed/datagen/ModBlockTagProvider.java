@@ -21,9 +21,9 @@ public class ModBlockTagProvider extends BlockTagsProvider {
     @Override
     protected void addTags(HolderLookup.@NotNull Provider provider) {
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                .add(ModBlocks.WARENAI_CRYSTAL_BLOCK.get())
-                .add(ModBlocks.WARENAI_CRYSTAL_ORE.get())
-                .add(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get())
+                .add(ModBlocks.TERRAGEM_BLOCK.get())
+                .add(ModBlocks.TERRAGEM_ORE.get())
+                .add(ModBlocks.DEEPSLATE_TERRAGEM_ORE.get())
                 .add(ModBlocks.ROCKY_BLOCK.get())
                 .add(ModBlocks.NAMEKIAN_STONE.get())
                 .add(ModBlocks.NAMEKIAN_COBBLESTONE.get())
@@ -33,16 +33,16 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.ROCKY_BLOCK.get());
 
         tag(BlockTags.NEEDS_IRON_TOOL)
-                .add(ModBlocks.WARENAI_CRYSTAL_BLOCK.get())
-                .add(ModBlocks.WARENAI_CRYSTAL_ORE.get())
-                .add(ModBlocks.DEEPSLATE_WARENAI_CRYSTAL_ORE.get());
+                .add(ModBlocks.TERRAGEM_BLOCK.get())
+                .add(ModBlocks.TERRAGEM_ORE.get())
+                .add(ModBlocks.DEEPSLATE_TERRAGEM_ORE.get());
 
-        tag(ModTags.Blocks.NEEDS_WARENAI_CRYSTAL_TOOL)
+        tag(ModTags.Blocks.NEEDS_TERRAGEM_TOOL)
                 .addTag(BlockTags.NEEDS_IRON_TOOL);
 
-        tag(ModTags.Blocks.INCORRECT_FOR_WARENAI_CRYSTAL_TOOL)
+        tag(ModTags.Blocks.INCORRECT_FOR_TERRAGEM_TOOL)
                 .addTag(BlockTags.INCORRECT_FOR_IRON_TOOL)
-                .remove(ModTags.Blocks.NEEDS_WARENAI_CRYSTAL_TOOL);
+                .remove(ModTags.Blocks.NEEDS_TERRAGEM_TOOL);
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL)
                 .add(ModBlocks.NAMEKIAN_DIRT.get())

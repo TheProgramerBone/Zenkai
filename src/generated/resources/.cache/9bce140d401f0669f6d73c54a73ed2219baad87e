@@ -1,9 +1,9 @@
-// 1.21.1	2025-09-29T23:10:35.4306302	Tags for minecraft:block mod id db_renewed
+// 1.21.1	2025-11-02T11:18:51.386646	Tags for minecraft:block mod id db_renewed
 1475c9461d3cafb0b4d13ccf57c29faaf097fdf5 data/db_renewed/tags/block/dragon_balls.json
-9f20d79a2ab8092d3ad8b13714f545f960affce7 data/db_renewed/tags/block/incorrect_for_warenai_crystal_tool.json
-32b13946c4cd1f944b029659ccce5fcb2adad4ff data/db_renewed/tags/block/needs_warenai_crystal_tool.json
+a332bd3619bf496eee5d60b1d614509c972cdedd data/db_renewed/tags/block/incorrect_for_terragem_tool.json
+32b13946c4cd1f944b029659ccce5fcb2adad4ff data/db_renewed/tags/block/needs_terragem_tool.json
 2a19f274a10fcfba2833e3b60279833c97aad731 data/minecraft/tags/block/dead_bush_may_place_on.json
 09038c80a56fe54579f2c4ad3c260b7337719760 data/minecraft/tags/block/dirt.json
-30e4cd2cc86be75d3ec6c94291d712f59d14bace data/minecraft/tags/block/mineable/pickaxe.json
+5d061c5ea17635684a5134e47b0f4ed0e3d1b8a2 data/minecraft/tags/block/mineable/pickaxe.json
 09038c80a56fe54579f2c4ad3c260b7337719760 data/minecraft/tags/block/mineable/shovel.json
-28041af71439488f20a7ea1779987fc8d36f1746 data/minecraft/tags/block/needs_iron_tool.json
+bfe82b58a96e355053ac3b1e02353477d8ba1c58 data/minecraft/tags/block/needs_iron_tool.json

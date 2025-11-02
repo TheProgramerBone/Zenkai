@@ -24,28 +24,28 @@ public class ModItemModelProvider extends ItemModelProvider {
     @Override
     protected void registerModels() {
         basicItem(ModItems.SENZU_BEAN.get());
-        basicItem(ModItems.WARENAI_CRYSTAL.get());
-        basicItem(ModItems.WARENAI_CRYSTAL_DUST.get());
+        basicItem(ModItems.TERRAGEM.get());
+        basicItem(ModItems.TERRAGEM_DUST.get());
         basicItem(ModItems.BASIC_CIRCUIT.get());
         basicItem(ModItems.ADVANCED_CIRCUIT.get());
         basicItem(ModItems.ELITE_CIRCUIT.get());
-        basicItem(ModItems.WARENAI_TEMPLATE.get());
+        basicItem(ModItems.TERRAGEM_TEMPLATE.get());
         basicItem(ModItems.SPACE_POD_ITEM.get());
 
-        handheldItem(ModItems.WARENAI_CRYSTAL_SWORD);
-        handheldItem(ModItems.WARENAI_CRYSTAL_PICKAXE);
-        handheldItem(ModItems.WARENAI_CRYSTAL_AXE);
-        handheldItem(ModItems.WARENAI_CRYSTAL_SHOVEL);
-        handheldItem(ModItems.WARENAI_CRYSTAL_HOE);
-        handheldItem(ModItems.WARENAI_CRYSTAL_HAMMER);
+        handheldItem(ModItems.TERRAGEM_SWORD);
+        handheldItem(ModItems.TERRAGEM_PICKAXE);
+        handheldItem(ModItems.TERRAGEM_AXE);
+        handheldItem(ModItems.TERRAGEM_SHOVEL);
+        handheldItem(ModItems.TERRAGEM_HOE);
+        handheldItem(ModItems.TERRAGEM_HAMMER);
 
-        trimmedArmorItem(ModItems.WARENAI_CRYSTAL_HELMET);
-        trimmedArmorItem(ModItems.WARENAI_CRYSTAL_CHESTPLATE);
-        trimmedArmorItem(ModItems.WARENAI_CRYSTAL_LEGGINGS);
-        trimmedArmorItem(ModItems.WARENAI_CRYSTAL_BOOTS);
+        trimmedArmorItem(ModItems.TERRAGEM_HELMET);
+        trimmedArmorItem(ModItems.TERRAGEM_CHESTPLATE);
+        trimmedArmorItem(ModItems.TERRAGEM_LEGGINGS);
+        trimmedArmorItem(ModItems.TERRAGEM_BOOTS);
 
         withExistingParent(ModItems.NAMEKIAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
-        withExistingParent(ModItems.NAMEKIAN_WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
+        withExistingParent(ModItems.WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
     }
 
     private void trimmedArmorItem(DeferredItem<ArmorItem> itemDeferredItem) {

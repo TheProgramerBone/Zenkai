@@ -23,26 +23,26 @@ public class ModItemTagProvider extends ItemTagsProvider {
     @Override
     protected void addTags(HolderLookup.@NotNull Provider provider) {
         tag(ItemTags.SWORDS)
-                .add(ModItems.WARENAI_CRYSTAL_SWORD.get());
+                .add(ModItems.TERRAGEM_SWORD.get());
         tag(ItemTags.PICKAXES)
-                .add(ModItems.WARENAI_CRYSTAL_PICKAXE.get());
+                .add(ModItems.TERRAGEM_PICKAXE.get());
         tag(ItemTags.AXES)
-                .add(ModItems.WARENAI_CRYSTAL_AXE.get());
+                .add(ModItems.TERRAGEM_AXE.get());
         tag(ItemTags.SHOVELS)
-                .add(ModItems.WARENAI_CRYSTAL_SHOVEL.get());
+                .add(ModItems.TERRAGEM_SHOVEL.get());
         tag(ItemTags.HOES)
-                .add(ModItems.WARENAI_CRYSTAL_HOE.get());
+                .add(ModItems.TERRAGEM_HOE.get());
 
         this.tag(ItemTags.TRIMMABLE_ARMOR)
-                .add(ModItems.WARENAI_CRYSTAL_HELMET.get())
-                .add(ModItems.WARENAI_CRYSTAL_CHESTPLATE.get())
-                .add(ModItems.WARENAI_CRYSTAL_LEGGINGS.get())
-                .add(ModItems.WARENAI_CRYSTAL_BOOTS.get());
+                .add(ModItems.TERRAGEM_HELMET.get())
+                .add(ModItems.TERRAGEM_CHESTPLATE.get())
+                .add(ModItems.TERRAGEM_LEGGINGS.get())
+                .add(ModItems.TERRAGEM_BOOTS.get());
 
         this.tag(ItemTags.ARMOR_ENCHANTABLE)
-                .add(ModItems.WARENAI_CRYSTAL_HELMET.get())
-                .add(ModItems.WARENAI_CRYSTAL_CHESTPLATE.get())
-                .add(ModItems.WARENAI_CRYSTAL_LEGGINGS.get())
-                .add(ModItems.WARENAI_CRYSTAL_BOOTS.get());
+                .add(ModItems.TERRAGEM_HELMET.get())
+                .add(ModItems.TERRAGEM_CHESTPLATE.get())
+                .add(ModItems.TERRAGEM_LEGGINGS.get())
+                .add(ModItems.TERRAGEM_BOOTS.get());
     }
 }
