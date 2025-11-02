@@ -1,0 +1,5 @@
+{
+  "type":"mekanism:crushing",
+  "input":{"count":1,"tag":"c:gems/terragem"},
+  "output":{"count":1,"id":"db_renewed:terragem_dust"}
+}

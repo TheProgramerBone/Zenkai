@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_terragem_block": {
+      "conditions": {
+        "items": [
+          {
+            "items": "db_renewed:terragem_block"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "db_renewed:terragem"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_terragem_block"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "db_renewed:terragem"
+    ]
+  }
+}

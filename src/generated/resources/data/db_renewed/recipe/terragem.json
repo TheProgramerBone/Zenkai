@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "db_renewed:terragem_block"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "db_renewed:terragem"
+  }
+}

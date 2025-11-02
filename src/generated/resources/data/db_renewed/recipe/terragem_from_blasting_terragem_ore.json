@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 0.25,
+  "group": "terragem",
+  "ingredient": {
+    "item": "db_renewed:terragem_ore"
+  },
+  "result": {
+    "count": 1,
+    "id": "db_renewed:terragem"
+  }
+}
