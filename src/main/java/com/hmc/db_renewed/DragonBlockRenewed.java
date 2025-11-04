@@ -3,11 +3,10 @@ package com.hmc.db_renewed;
 import com.hmc.db_renewed.block.ModBlocks;
 import com.hmc.db_renewed.block.ModBlockEntities;
 import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsRenderer;
-import com.hmc.db_renewed.capability.PlayerStats;
-import com.hmc.db_renewed.capability.PlayerStatsProvider;
 import com.hmc.db_renewed.client.input.KeyBindings;
-import com.hmc.db_renewed.config.DefaultConfigGenerator;
+import com.hmc.db_renewed.config.StatsConfig;
 import com.hmc.db_renewed.config.WishConfig;
+import com.hmc.db_renewed.effect.ModEffects;
 import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.namekian.NamekianRenderer;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorRenderer;
@@ -17,15 +16,17 @@ import com.hmc.db_renewed.gui.ModMenuTypes;
 import com.hmc.db_renewed.gui.wishes.StackWishScreen;
 import com.hmc.db_renewed.item.ModItems;
 import com.hmc.db_renewed.network.ModNetworking;
+import com.hmc.db_renewed.network.stats.*;
 import com.hmc.db_renewed.sound.ModSounds;
+import com.hmc.db_renewed.worldgen.CommandsInit;
 import com.hmc.db_renewed.worldgen.ModSurfaceRules;
 import com.hmc.db_renewed.worldgen.ModOverworldRegion;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
-import net.minecraft.world.entity.EntityType;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -37,6 +38,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 import terrablender.api.Regions;
@@ -52,7 +54,6 @@ public class DragonBlockRenewed
     public DragonBlockRenewed(IEventBus modEventBus, ModContainer modContainer)
     {
         modEventBus.addListener(this::commonSetup);
-        modEventBus.addListener(this::onRegisterCapabilities);
         modEventBus.addListener(ModNetworking::register);
         NeoForge.EVENT_BUS.register(this);
         ModCreativeModeTabs.register(modEventBus);
@@ -61,28 +62,31 @@ public class DragonBlockRenewed
         ModBlockEntities.register(modEventBus);
         ModSounds.register(modEventBus);
         ModEntities.register(modEventBus);
+        ModEffects.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.SERVER, WishConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, StatsConfig.SPEC);
         modEventBus.addListener(WishConfig::onConfigLoad);
+        modEventBus.addListener(StatsConfig::onConfigLoad);
+        DataAttachments.REGISTER.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
-        // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modEventBus.addListener(ClientModEvents::onKeyMappingRegister);
-    }
+        modEventBus.addListener(DragonBlockRenewed::registerCapabilities);
 
-    public void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerEntity(
-                PlayerStatsProvider.CAPABILITY,
-                EntityType.PLAYER,
-                (player, ctx) -> new PlayerStats()
-        );
+        var forgeBus = net.neoforged.neoforge.common.NeoForge.EVENT_BUS;
+        forgeBus.register(ClientHooks.class);
+        forgeBus.register(FlyApplier.class);
+        forgeBus.register(CombatHooks.class);
+        forgeBus.register(TickHandlers.class);
+        forgeBus.register(PlayerLifeCycle.class);
+        forgeBus.register(CommandsInit.class);
+        forgeBus.register(StatsCommand.class);
     }
-
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
-        DefaultConfigGenerator.generateDefaultsIfMissing();
+
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
@@ -90,6 +94,18 @@ public class DragonBlockRenewed
         //ModStatCommand.register(event.getServer().getCommands().getDispatcher());
         //ModStyleCommand.register(event.getServer().getCommands().getDispatcher());
         //ModResetCharacterCommand.register((event.getServer().getCommands().getDispatcher()));
+    }
+
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent e) {
+            }
+
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+//        event.registerEntity(
+//                PlayerStatsProvider.PLAYER_STATS_CAPABILITY,
+//                EntityType.PLAYER,
+//                (player, ctx) -> new PlayerStats()
+//        );
     }
 
 
@@ -110,16 +126,22 @@ public class DragonBlockRenewed
             EntityRenderers.register(ModEntities.NAMEKIAN.get(), NamekianRenderer::new);
             EntityRenderers.register(ModEntities.NAMEKIAN_WARRIOR.get(), NamekianWarriorRenderer::new);
             EntityRenderers.register(ModEntities.SHENLONG.get(), ShenLongRenderer::new);
-            //NeoForge.EVENT_BUS.register(KeyInputHandler.class);
             event.enqueueWork(() ->
             {
                 Regions.register(new ModOverworldRegion());
                 SurfaceRuleManager.addSurfaceRules(SurfaceRuleManager.RuleCategory.OVERWORLD, MOD_ID, ModSurfaceRules.makeRules());
             });
         }
+        @SubscribeEvent
         public static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {
             KeyBindings.registerKeyMappings(event);
         }
+
+        @SubscribeEvent
+        public static void onKeyInput(InputEvent.Key event) {
+            KeyBindings.handleKeyInput(event);
+        }
+
     }
 
 }

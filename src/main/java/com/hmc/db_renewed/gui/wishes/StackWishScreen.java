@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.gui.wishes;
 
 import com.hmc.db_renewed.gui.ShenlongWishScreen;
-import com.hmc.db_renewed.network.wishes.ConfirmWishPayload;
+import com.hmc.db_renewed.network.wishes.StackWishPayload;
 import com.hmc.db_renewed.network.wishes.SetGhostSlotPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,9 +39,9 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
 
         this.addRenderableWidget(
                 Button.builder(
-                        Component.translatable("screen.db_renewed.confirm"), btn -> {
+                        Component.translatable("screen.db_renewed.gui.confirm"), btn -> {
                             if (Minecraft.getInstance().getConnection() != null) {
-                                Minecraft.getInstance().getConnection().send(new ConfirmWishPayload());
+                                Minecraft.getInstance().getConnection().send(new StackWishPayload());
                             } else {
                                 assert Minecraft.getInstance().player != null;
                                 Minecraft.getInstance().player.displayClientMessage(
@@ -58,7 +58,7 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
         // Botón Volver
         this.addRenderableWidget(
                 Button.builder(
-                        Component.translatable("screen.db_renewed.back"), btn -> {
+                        Component.translatable("screen.db_renewed.gui.back"), btn -> {
                             Minecraft.getInstance().setScreen(
                                     Objects.requireNonNullElseGet(this.parent, ShenlongWishScreen::new)
                             );

@@ -15,6 +15,9 @@ import java.util.*;
 public class WishConfig {
     private WishConfig() {}
 
+    public static int villagerBookBasePrice() { return 10; }
+    public static int villagerBookPricePerLevel() { return 5; }
+
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> STACK_OVERRIDES_RAW =

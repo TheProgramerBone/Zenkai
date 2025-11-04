@@ -19,4 +19,14 @@ public class ModDimensions {
             Registries.DIMENSION_TYPE,
             ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "namek")
     );
+
+    public static final ResourceKey<Level> OTHERWORLD_LEVEL = ResourceKey.create(
+            Registries.DIMENSION,
+            ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "otherworld")
+    );
+
+    public static final ResourceKey<DimensionType> OTHERWORLD_DIM_TYPE = ResourceKey.create(
+            Registries.DIMENSION_TYPE,
+            ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "otherworld")
+    );
 }

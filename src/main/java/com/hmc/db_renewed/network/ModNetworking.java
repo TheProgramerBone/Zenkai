@@ -3,7 +3,13 @@ package com.hmc.db_renewed.network;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.gui.ShenlongWishScreen;
 import com.hmc.db_renewed.gui.wishes.StackWishMenu;
+import com.hmc.db_renewed.network.stats.SpendTpPacket;
+import com.hmc.db_renewed.network.stats.SyncPlayerStatsPacket;
 import com.hmc.db_renewed.network.wishes.*;
+import com.hmc.db_renewed.network.wishes.StackWishPayloadHandler;
+import com.hmc.db_renewed.network.wishes.SetGhostSlotPayloadHandler;
+import com.hmc.db_renewed.network.wishes.WishImmortalPayloadHandler;
+import com.hmc.db_renewed.network.wishes.WishRevivePlayerPayloadHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,9 +24,9 @@ public class ModNetworking {
         PayloadRegistrar registrar = event.registrar(DragonBlockRenewed.MOD_ID).versioned("1");
 
         registrar.playToServer(
-                ConfirmWishPayload.TYPE,
-                ConfirmWishPayload.STREAM_CODEC,
-                ConfirmWishPayloadHandler::handle
+                StackWishPayload.TYPE,
+                StackWishPayload.STREAM_CODEC,
+                StackWishPayloadHandler::handle
         );
 
         registrar.playToClient(
@@ -53,5 +59,27 @@ public class ModNetworking {
                 SetGhostSlotPayloadHandler::handle
         );
 
+        registrar.playToServer(
+                WishImmortalPayload.TYPE,
+                WishImmortalPayload.STREAM_CODEC,
+                WishImmortalPayloadHandler::handle
+        );
+
+        registrar.playToServer(
+                WishRevivePlayerPayload.TYPE,
+                WishRevivePlayerPayload.STREAM_CODEC,
+                WishRevivePlayerPayloadHandler::handle
+        );
+
+        registrar.playToClient(
+                SyncPlayerStatsPacket.TYPE,
+                SyncPlayerStatsPacket.STREAM_CODEC,
+                SyncPlayerStatsPacket::handle
+        );
+
+        registrar.playToServer(
+                SpendTpPacket.TYPE,
+                SpendTpPacket.STREAM_CODEC,
+                SpendTpPacket::handle);
     }
 }

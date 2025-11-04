@@ -28,5 +28,11 @@
     "sounds": [
       "db_renewed:senzu_eat"
     ]
+  },
+  "wish_granted": {
+    "subtitle": "sounds.db_renewed.wish_granted",
+    "sounds": [
+      "db_renewed:wish_granted"
+    ]
   }
 }

@@ -1,17 +1,14 @@
 package com.hmc.db_renewed.network.wishes;
 
 import com.hmc.db_renewed.config.WishConfig;
-import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.gui.wishes.StackWishMenu;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public class ConfirmWishPayloadHandler {
-    public static void handle(final ConfirmWishPayload payload, final IPayloadContext ctx) {
+public class StackWishPayloadHandler {
+    public static void handle(final StackWishPayload payload, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             ServerPlayer player = (ServerPlayer) ctx.player();
 
@@ -37,18 +34,8 @@ public class ConfirmWishPayloadHandler {
             if (!player.getInventory().add(resolved.copy())) {
                 player.drop(resolved.copy(), false);
             }
-
-            // Cerrar GUI
-            player.closeContainer();
             menu.clearChosenItem();
-
-            // Matar únicamente a Shenlong cerca
-            EntityType<?> shenlongType = ModEntities.SHENLONG.get();
-            player.level().getEntitiesOfClass(
-                    Entity.class,
-                    player.getBoundingBox().inflate(32),
-                    e -> e.getType() == shenlongType
-            ).forEach(Entity::discard);
+            WishFinalizer.finalizeWish(player);
         });
     }
 }

@@ -49,6 +49,8 @@
   "block.db_renewed.namek_dragon_ball_6": "§6Namek Dragon Ball 6 Star",
   "block.db_renewed.namek_dragon_ball_7": "§6Namek Dragon Ball 7 Star",
 
+  "effect.db_renewed.immortality": "Immortality",
+
 
   "creativetab.db_renewed": "Dragon Block Renewed",
 
@@ -61,6 +63,7 @@
   "sounds.db_renewed.dragon_ball_radar_near": "A Dragon Ball Is Near",
   "sounds.db_renewed.dragon_ball_use": "Dragon Ball Use",
   "sounds.db_renewed.senzu_eat": "Senzu Eaten",
+  "sounds.db_renewed.wish_granted": "Wish Granted",
 
   "tooltip.db_renewed.dragon_ball_radar": "Locate Dragon Balls in a radius of 128 blocks!",
   "tooltip.db_renewed.dragon_balls": "§oA mysterious sphere...",
@@ -79,11 +82,25 @@
   "messages.db_renewed.no_open_wish": "§2§lShenlong:§6 The wish it's not available",
   "messages.db_renewed.no_chosen_item": "§2§lShenlong:§6 You haven't chosen an item",
   "messages.db_renewed.item_banned": "§2§lShenlong:§6 Sorry that item it's forbidden",
+  "messages.db_renewed.immortal": "You feel immortal!",
+  "messages.db_renewed.player_revived": "The player has been revived.",
+  "messages.db_renewed.player_revive_failed": "The player could not be revived.",
+  "messages.db_renewed.wish_granted": "§2§lShenlong:§6 Your wish was granted.",
+
   "screen.db_renewed.shenlong_wish": "§2§lShenlong:§6§l State your wish",
   "screen.db_renewed.option.stack": "I want more of...",
-  "screen.db_renewed.back": "Back",
-  "screen.db_renewed.confirm": "Confirm",
+  "screen.db_renewed.gui.back": "Back",
+  "screen.db_renewed.gui.confirm": "Confirm",
   "screen.db_renewed.need_inventory_space": "You need space in your inventory for this wish!",
+  "screen.db_renewed.wish.revive_pet": "I want to revive my pet!",
+  "screen.db_renewed.wish.revive_player": "I want to revive a player!",
+  "screen.db_renewed.wish.enchant_villager": "Summon Villager With an Enchanted Book...",
+  "screen.db_renewed.wish.immortal": "I want to be inmortal!",
+  "screen.db_renewed.wish.training_points": "I want to be more powerful!",
+  "screen.db_renewed.wish.immortal.desc": "You will be able to die if you receive more damage that you can take",
+  "screen.db_renewed.wish.revive_player.desc": "Enter the exact name of the player to revive.",
+  "screen.db_renewed.wish.revive_pet.empty": "There are no available pets.",
+
 
   "entity.db_renewed.shenlong": "Shenron",
   "entity.db_renewed.space_pod": "Space Pod",

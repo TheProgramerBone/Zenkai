@@ -5,12 +5,12 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record ConfirmWishPayload() implements CustomPacketPayload {
-    public static final Type<ConfirmWishPayload> TYPE =
+public record StackWishPayload() implements CustomPacketPayload {
+    public static final Type<StackWishPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath("db_renewed", "confirm_wish"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ConfirmWishPayload> STREAM_CODEC =
-            StreamCodec.unit(new ConfirmWishPayload());
+    public static final StreamCodec<RegistryFriendlyByteBuf, StackWishPayload> STREAM_CODEC =
+            StreamCodec.unit(new StackWishPayload());
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
