@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.entity;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.entity.ki_attacks.ki_blast.KiBlastEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorEntity;
 import com.hmc.db_renewed.entity.saiyan_pod.SpacePodEntity;
@@ -32,6 +33,10 @@ public class ModEntities {
     public static final Supplier<EntityType<NamekianEntity>> NAMEKIAN =
             ENTITY_TYPES.register("namekian",() -> EntityType.Builder.of(NamekianEntity::new, MobCategory.CREATURE)
                     .sized(1,2).build("namekian"));
+
+    public static final Supplier<EntityType<KiBlastEntity>> KI_BLAST =
+            ENTITY_TYPES.register("ki_blast",()-> EntityType.Builder.of(KiBlastEntity::new,MobCategory.MISC)
+                    .sized(1,1).build("ki_blast"));
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);

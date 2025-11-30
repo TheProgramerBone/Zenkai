@@ -36,6 +36,11 @@ repositories {
         name = "Illusive Soulworks maven"
         url = "https://maven.theillusivec4.top/"
     }
+
+    maven {
+        name "KosmX's maven"
+        url 'https://maven.kosmx.dev/'
+    }
 }
 
 base {
@@ -133,6 +138,8 @@ dependencies {
     implementation "software.bernie.geckolib:geckolib-neoforge-${"1.21.1"}:${"4.7.7"}"
 
     implementation "com.github.glitchfiend:TerraBlender-neoforge:${"1.21.1"}-${"4.1.0.8"}"
+
+    implementation "dev.kosmx.player-anim:player-animation-lib-forge:${"2.0.1"}+${"1.21.1"}"
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

@@ -56,7 +56,7 @@
 
   "key.categories.db_renewed": "Dragon Block Renewed",
   "key.db_renewed.open_race_screen": "Open Menu",
-
+  "key.db_renewed.open_stats": "Open Stats",
 
   "sounds.db_renewed.dragon_ball_radar_use": "Used Radar",
   "sounds.db_renewed.dragon_ball_radar_searching": "A Dragon Ball is in radius",
@@ -101,6 +101,25 @@
   "screen.db_renewed.wish.revive_player.desc": "Enter the exact name of the player to revive.",
   "screen.db_renewed.wish.revive_pet.empty": "There are no available pets.",
 
+  "screen.db_renewed.choose_race.title": "Elige tu raza",
+  "screen.db_renewed.race.human": "Humano",
+  "screen.db_renewed.race.human.desc": "Equilibrado en todas las estadísticas, sin puntos débiles claros.",
+  "screen.db_renewed.race.saiyan": "Saiyajin",
+  "screen.db_renewed.race.saiyan.desc": "Gran poder físico y transformaciones, pero consumo de Ki más alto.",
+  "screen.db_renewed.race.namekian": "Namekiano",
+  "screen.db_renewed.race.namekian.desc": "Excelente regeneración y Ki, cuerpo menos resistente.",
+  "screen.db_renewed.race.arcosian": "Arcosiano",
+  "screen.db_renewed.race.arcosian.desc": "Alta defensa y Ki, pero entrenamiento más exigente.",
+  "screen.db_renewed.race.majin": "Majin",
+  "screen.db_renewed.race.majin.desc": "Cuerpo muy resistente, control de Ki inestable.",
+
+  "screen.db_renewed.choose_style.title": "Elige tu estilo",
+  "screen.db_renewed.style.warrior": "Guerrero",
+  "screen.db_renewed.style.warrior.desc": "Especialista en daño físico y defensa, menos enfoque espiritual.",
+  "screen.db_renewed.style.martial_artist": "Artista Marcial",
+  "screen.db_renewed.style.martial_artist.desc": "Estilo balanceado entre cuerpo, velocidad y Ki.",
+  "screen.db_renewed.style.spiritualist": "Espiritualista",
+  "screen.db_renewed.style.spiritualist.desc": "Maestro del Ki y ataques a distancia, cuerpo más frágil.",
 
   "entity.db_renewed.shenlong": "Shenron",
   "entity.db_renewed.space_pod": "Space Pod",

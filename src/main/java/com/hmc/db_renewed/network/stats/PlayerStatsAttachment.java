@@ -1,36 +1,52 @@
 package com.hmc.db_renewed.network.stats;
 
 import com.hmc.db_renewed.config.StatsConfig;
+import com.hmc.db_renewed.network.ki.KiAttackDefinition;
+import com.hmc.db_renewed.network.ki.KiAttackType;
 import com.hmc.db_renewed.util.BalanceUtil;
 import com.hmc.db_renewed.util.MathUtil;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
 
 import net.minecraft.nbt.CompoundTag;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+
 
 public class PlayerStatsAttachment {
     // Campos principales
     private Race race = Race.HUMAN;
     private Style style = Style.MARTIAL_ARTIST;
 
+    private boolean raceChosen = false;
+
     private int tp = 0; // puntos libres
     private final EnumMap<Dbrattributes, Integer> attributes = new EnumMap<>(Dbrattributes.class);
-    private final EnumMap<Dbrattributes, Integer> invested = new EnumMap<>(Dbrattributes.class); // TP invertido por atributo (para coste creciente)
+    private final EnumMap<Dbrattributes, Integer> invested = new EnumMap<>(Dbrattributes.class); // TP invertido por atributo
 
     // Derivados / pools actuales
-    private int body;        // "HP interna" opcional (placeholder simple)
+    private int body;        // HP interna opcional (placeholder)
     private int bodyMax;
     private int stamina;
     private int staminaMax;
-    private int energy;
-    private int energyMax;
-    private double speed;    // stat (lineal)
-    private double flySpeed; // stat (lineal)
+    private int energy;      // KI actual
+    private int energyMax;   // KI máximo
+    private double speed;    // stat lineal
+    private double flySpeed; // stat lineal
+    private boolean flyEnabled;
+    private boolean chargingKi;
 
-    // Temp overrides (placeholder simple)
+    // === Sistema de Ki Attacks (mínimo necesario) ===
+    private final Map<String, KiAttackDefinition> kiAttacks = new HashMap<>(); // id -> definición
+    private String selectedKiAttackId = "";                                     // ataque seleccionado
+    private int auraColorRgb = 0x33CCFF;                                        // color de aura/por defecto
+
+    // Temp overrides (simple)
     private final Map<String, TempStat> tempStats = new HashMap<>();
 
     public PlayerStatsAttachment() {
@@ -38,22 +54,37 @@ public class PlayerStatsAttachment {
             attributes.put(a, 0);
             invested.put(a, 0);
         }
-        // Inicializar con base de raza
-        applyRaceStyle(); // setea bases y multipliers
+        applyRaceStyle(); // setea bases por raza
         recalcAll();      // deriva pools
         this.body = this.bodyMax;
         this.stamina = this.staminaMax;
         this.energy = this.energyMax;
+
+        // Semilla de un ataque básico por si el jugador aún no crea uno
+        if (!kiAttacks.containsKey("basic_blast")) {
+            kiAttacks.put("basic_blast", new KiAttackDefinition(
+                    "basic_blast", "Basic Blast", KiAttackType.BLAST,
+                    4.0,    // basePower
+                    1.0,    // speed (blocks/tick)
+                    20,     // cooldownTicks
+                    20,     // chargeTimeTicks (llega al 100% en 1s aprox)
+                    1,      // density
+                    0x33CCFF // color inicial
+            ));
+            selectedKiAttackId = "basic_blast";
+        }
     }
 
     // === Acceso estático seguro ===
     public static PlayerStatsAttachment get(Player p) {
-        return p.getData(DataAttachments.PLAYER_STATS);
+        // Usa el AttachmentType<...> registrado; la mayoría de implementaciones exponen .get()
+        return p.getData(DataAttachments.PLAYER_STATS.get());
     }
 
     // === Raza/estilo y multiplicadores ===
     public void setRace(Race r) {
         this.race = r;
+        this.raceChosen = true;
         applyRaceStyle();
         recalcAll();
     }
@@ -66,10 +97,7 @@ public class PlayerStatsAttachment {
     public Race getRace() { return race; }
     public Style getStyle() { return style; }
 
-    // Aplicar base de raza y reset opcional de atributos si es necesario
     public void applyRaceStyle() {
-        // Cargar bases por raza (default hardcoded guiado por config)
-        // Si quisieras 100% configurable, expón cada base/mult en el serverconfig con listas.
         switch (race) {
             case HUMAN -> BalanceUtil.setBase(attributes, 10,10,10,10,10,10);
             case SAIYAN -> BalanceUtil.setBase(attributes, 14,10,12,8,6,10);
@@ -77,7 +105,6 @@ public class PlayerStatsAttachment {
             case ARCOSIAN -> BalanceUtil.setBase(attributes, 8,8,10,12,12,10);
             case MAJIN -> BalanceUtil.setBase(attributes, 10,8,14,8,10,10);
         }
-        // Aplicar cap global
         capAll();
     }
 
@@ -135,6 +162,7 @@ public class PlayerStatsAttachment {
         double MND = attributes.get(Dbrattributes.MIND) * mMIND * sMIND;
 
         // Mapeos lineales a derivados
+        // (dejamos comentarios para claridad por si los usas luego)
         double melee = STR;              // Melee ← STRENGTH
         double defense = DEX;            // Defense ← DEXTERITY
         double bodyStat = CON;           // Body ← CON
@@ -147,12 +175,12 @@ public class PlayerStatsAttachment {
         double regenEnergy = SPI;        // RegenRateEnergy ← SPIRIT
         double flyStat = DEX;            // FlySpeed ← DEXTERITY
 
-        // Pools máximos (puedes ajustar fórmulas si quieres curvas)
-        this.bodyMax = (int)Math.max(1, Math.round(100 + bodyStat));      // base 100 + CON
+        // Pools máximos
+        this.bodyMax = (int)Math.max(1, Math.round(100 + bodyStat));
         this.staminaMax = (int)Math.max(1, Math.round(100 + staminaStat));
         this.energyMax  = (int)Math.max(1, Math.round(100 + kiPool));
 
-        // Stats de movimiento: guardamos stats lineales; el multiplicador se aplica en el tick
+        // Stats de movimiento (lineales)
         this.speed = speedStat;
         this.flySpeed = flyStat;
 
@@ -161,7 +189,7 @@ public class PlayerStatsAttachment {
         this.stamina = Math.min(this.stamina, this.staminaMax);
         this.energy = Math.min(this.energy, this.energyMax);
 
-        // Temp stats expirables (placeholder: limpieza ligera)
+        // Limpieza temp stats
         tempStats.values().removeIf(TempStat::expired);
     }
 
@@ -172,14 +200,10 @@ public class PlayerStatsAttachment {
         int inv = this.invested.get(attr);
         double coeff = StatsConfig.tpCoefficient();
 
-        // coste total sum_{k=0}^{points-1} (1 + (inv + k) * coeff)
         int totalCost = 0;
-        for (int k=0;k<points;k++) {
-            totalCost += (int)Math.ceil(1 + (inv + k) * coeff);
-        }
+        for (int k=0;k<points;k++) totalCost += (int)Math.ceil(1 + (inv + k) * coeff);
         if (have < totalCost) return false;
 
-        // Aplicar incremento respetando cap global
         int cap = StatsConfig.globalAttributeCap();
         int cur = attributes.get(attr);
         int add = Math.min(points, cap - cur);
@@ -187,7 +211,7 @@ public class PlayerStatsAttachment {
 
         attributes.put(attr, cur + add);
         invested.put(attr, inv + add);
-        this.tp = have - totalCost; // consume TP
+        this.tp = have - totalCost;
         recalcAll();
         return true;
     }
@@ -202,11 +226,7 @@ public class PlayerStatsAttachment {
     public int getAttribute(Dbrattributes a) { return attributes.getOrDefault(a, 0); }
 
     public void respec() {
-        // Devolver TP invertido (simple: suma de investidos) y reset a bases por raza
-        int refund = invested.values().stream().mapToInt(i -> {
-            // costo aproximado no lineal; para simplicidad devolvemos 1:1 puntos invertidos
-            return i;
-        }).sum();
+        int refund = invested.values().stream().mapToInt(i -> i).sum();
         this.tp += refund;
         invested.replaceAll((k,v)->0);
         applyRaceStyle();
@@ -215,11 +235,9 @@ public class PlayerStatsAttachment {
 
     // === Daño / defensa / consumo stamina ===
     public double getMeleeBonus() {
-        // Melee ← STR => aquí devolvemos STR multiplicado ya aplicado
-        return attributes.get(Dbrattributes.STRENGTH); // el bonus final lo computa BalanceUtil con mults
+        return attributes.get(Dbrattributes.STRENGTH);
     }
     public double computeMeleeFinal() {
-        // devolver el "Melee" final con multiplicadores de raza/estilo
         return BalanceUtil.computeStat(attributes.get(Dbrattributes.STRENGTH), race, style, Dbrattributes.STRENGTH);
     }
     public double computeDefenseFinal() {
@@ -232,16 +250,86 @@ public class PlayerStatsAttachment {
         return BalanceUtil.computeStat(attributes.get(Dbrattributes.DEXTERITY), race, style, Dbrattributes.DEXTERITY);
     }
 
+
+    /** Ki Power final (útil para escalar daño/costo de ataques). */
+    public double computeKiPowerFinal() {
+        return BalanceUtil.computeStat(
+                attributes.get(Dbrattributes.WILLPOWER),
+                race,
+                style,
+                Dbrattributes.WILLPOWER
+        );
+    }
+
+    public double computeKiPoolFinal() {
+        return BalanceUtil.computeStat(
+                attributes.get(Dbrattributes.SPIRIT),
+                race,
+                style,
+                Dbrattributes.SPIRIT
+        );
+    }
+
+    /**
+     * Calcula el coste de KI de un ataque dado su definición y el ratio de carga.
+     *
+     * @param def          Definición del ataque (basePower, chargeTime, etc.)
+     * @param chargeRatio  0.0 = sin cargar, 1.0 = carga al 100%, 2.0 = overcharge al 200%
+     * @return             Coste de KI en puntos (entero, ya redondeado)
+     */
+
+    public int computeKiAttackCost(KiAttackDefinition def, double chargeRatio) {
+        if (def == null) return 1;
+
+        // Aseguramos 0.0–2.0
+        double r = Math.max(0.0, Math.min(2.0, chargeRatio));
+
+        // KiPowerFinal = escala con WILLPOWER (puede ser grande)
+        double kiPower = computeKiPowerFinal(); // ya usa BalanceUtil
+
+        // Coste base según el ataque (muy bajo)
+        double base = 3.0 + def.basePower() * 0.3;   // blast más fuerte => un poquito más caro
+
+        // Penalización SUAVE por kiPower: usamos raíz para no explotar
+        double byPower = Math.sqrt(Math.max(0.0, kiPower)) * 0.5; // si kiPower=100 → ~5
+
+        // La carga (0–2) incrementa cost pero suave: 0→0.5, 1→1.25, 2→2.0
+        double byCharge = 0.5 + 0.75 * r;
+
+        double cost = base + byPower * byCharge;
+
+        // Coste siempre entre 1 y 80 (ajusta si quieres)
+        return MathUtil.clamp((int) Math.round(cost), 1, 80);
+    }
+
+    /**
+     * Ejemplo de cálculo de daño escalado con atributos y carga.
+     * Si ya tienes tu propia fórmula de daño en la entidad, puedes ignorar esto.
+     */
+    public float computeKiAttackDamage(KiAttackDefinition def, double chargeRatio) {
+        if (def == null) return 0f;
+
+        double r = Math.max(0.0, Math.min(2.0, chargeRatio)); // 0.0–2.0
+        double basePower = def.basePower();
+
+        double kiPower = computeKiPowerFinal();
+        // Escala suave con WILLPOWER
+        double scale = 1.0 + kiPower / 200.0; // si KiPower=100 → x1.5
+
+        // daño crece con la carga (0→0.5x, 1→2.0x, 2→3.5x) y con el kiPower
+        double dmg = basePower * (0.5 + 1.5 * r) * scale;
+
+        return (float) Math.max(0.5, dmg);
+    }
+
     // Stamina / Energy manipulación
     public int getStamina() { return stamina; }
     public int getStaminaMax() { return staminaMax; }
     public void addStamina(int delta) { stamina = MathUtil.clamp(stamina + delta, 0, staminaMax); }
-    public boolean consumeStamina(int amount) {
-        if (amount <= 0) return true;
-        if (stamina <= 0) return false;
+    public void consumeStamina(int amount) {
+        if (amount <= 0 || stamina <= 0) return;
         int use = Math.min(amount, stamina);
         stamina -= use;
-        return use == amount;
     }
 
     public int getEnergy() { return energy; }
@@ -265,7 +353,7 @@ public class PlayerStatsAttachment {
     }
     record TempStat(double value, long expireMs) { boolean expired(){ return System.currentTimeMillis()>expireMs; } }
 
-    // === Serialización NBT (para Attachment y red) ===
+    // === Serialización NBT (Attachment y red) ===
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         tag.putString("race", race.name());
@@ -288,7 +376,37 @@ public class PlayerStatsAttachment {
         tag.putInt("energyMax", energyMax);
         tag.putDouble("speed", speed);
         tag.putDouble("flySpeed", flySpeed);
+
+        // Flags
+        tag.putBoolean("flyEnabled", flyEnabled);
+        tag.putBoolean("chargingKi", chargingKi);
+        tag.putBoolean("raceChosen",raceChosen);
+
+        // Ki Attacks
+        ListTag list = getTags();
+        tag.put("kiAttacks", list);
+        tag.putString("selectedKiAttackId", selectedKiAttackId);
+        tag.putInt("auraColorRgb", auraColorRgb);
+
         return tag;
+    }
+
+    private @NotNull ListTag getTags() {
+        ListTag list = new ListTag();
+        for (var def : kiAttacks.values()) {
+            CompoundTag d = new CompoundTag();
+            d.putString("id", def.id());
+            d.putString("display", def.displayName());
+            d.putString("type", def.type().name());
+            d.putDouble("basePower", def.basePower());
+            d.putDouble("speed", def.speed());
+            d.putInt("cooldown", def.cooldownTicks());
+            d.putInt("chargeTime", def.chargeTimeTicks());
+            d.putInt("density", def.density());
+            d.putInt("rgb", def.rgbColor());
+            list.add(d);
+        }
+        return list;
     }
 
     public void load(CompoundTag tag) {
@@ -317,5 +435,139 @@ public class PlayerStatsAttachment {
         this.energyMax = tag.getInt("energyMax");
         this.speed = tag.getDouble("speed");
         this.flySpeed = tag.getDouble("flySpeed");
+
+        // Flags
+        this.flyEnabled = tag.getBoolean("flyEnabled");
+        this.chargingKi = tag.getBoolean("chargingKi");
+        this.raceChosen = tag.getBoolean("raceChosen");
+
+        // Ki Attacks
+        this.kiAttacks.clear();
+        if (tag.contains("kiAttacks", Tag.TAG_LIST)) {
+            ListTag list = tag.getList("kiAttacks", Tag.TAG_COMPOUND);
+            for (int i = 0; i < list.size(); i++) {
+                CompoundTag d = list.getCompound(i);
+                String id = d.getString("id");
+                KiAttackDefinition def = new KiAttackDefinition(
+                        id,
+                        d.getString("display"),
+                        safeType(d.getString("type")),
+                        d.getDouble("basePower"),
+                        d.getDouble("speed"),
+                        d.getInt("cooldown"),
+                        d.getInt("chargeTime"),
+                        d.getInt("density"),
+                        d.getInt("rgb")
+                );
+                kiAttacks.put(id, def);
+            }
+        }
+        this.selectedKiAttackId = tag.getString("selectedKiAttackId");
+        this.auraColorRgb = tag.contains("auraColorRgb", Tag.TAG_INT) ? tag.getInt("auraColorRgb") : this.auraColorRgb;
+    }
+
+    private static KiAttackType safeType(String name) {
+        try { return KiAttackType.valueOf(name); }
+        catch (Exception e) { return KiAttackType.BLAST; }
+    }
+
+    // === Vuelo / KI usando tus campos existentes ===
+    public boolean isFlyEnabled() { return flyEnabled; }
+    public void setFlyEnabled(boolean v) { this.flyEnabled = v; }
+
+    public boolean isChargingKi() { return chargingKi; }
+    public void setChargingKi(boolean v) { this.chargingKi = v; }
+
+    /** Añade/quita KI usando energy/energyMax (clamp). */
+    public void addKi(double delta) {
+        int newVal = (int)Math.round(this.energy + delta);
+        this.energy = MathUtil.clamp(newVal, 0, this.energyMax);
+    }
+
+    /** “Ki actual”. */
+    public int getKiCurrent() { return this.energy; }
+
+    /** “Ki pool”. */
+    public int getKiPool() { return this.energyMax; }
+
+    /** Stat lineal de vuelo ya es flySpeed. */
+    public double getFlySpeed() { return this.flySpeed; }
+
+    /** Multiplicador de vuelo vanilla: 1.0 + FlySpeed/100 con cap 2.0. */
+    public double getFlyMultiplier() {
+        double mult = 2.0 + (this.flySpeed / 100.0);
+        return Math.min(3.0, Math.max(0.0, mult));
+    }
+
+    /** (Opcional) Multiplicador de movimiento terrestre con cap 2.0. */
+    public double getMoveMultiplier() {
+        double mult = 1.0 + (this.speed / 100.0);
+        return Math.min(2.0, Math.max(0.0, mult));
+    }
+
+    /** Regeneración base de energía/ki por tick. Configurable si ya lo cableaste. */
+    public double getRegenEnergyPerTick() {
+        // return StatsConfig.REGEN_ENERGY_BASE_PER_TICK.get().doubleValue();
+        return 1.0;
+    }
+
+    // === API mínima de Ki Attacks (para UI/packets/servidor) ===
+
+    /** Devuelve la definición por id o null. */
+    public KiAttackDefinition getKiAttack(String id) {
+        return kiAttacks.get(id);
+    }
+
+    /** Añade o actualiza una definición (por id). */
+    public void addOrUpdateKiAttack(KiAttackDefinition def) {
+        if (def == null || def.id() == null || def.id().isEmpty()) return;
+        kiAttacks.put(def.id(), def);
+        if (selectedKiAttackId == null || selectedKiAttackId.isEmpty()) {
+            selectedKiAttackId = def.id();
+        }
+    }
+
+    /** Cambia solo el color del ataque (manteniendo el resto). */
+    public void setKiAttackColor(String id, int rgb) {
+        var old = kiAttacks.get(id);
+        if (old == null) return;
+        kiAttacks.put(id, new KiAttackDefinition(
+                old.id(), old.displayName(), old.type(),
+                old.basePower(), old.speed(), old.cooldownTicks(),
+                old.chargeTimeTicks(), old.density(), rgb
+        ));
+    }
+
+    /** Selecciona ataque actual (para disparar). */
+    public void setSelectedKiAttackId(String id) {
+        if (id != null && kiAttacks.containsKey(id)) {
+            this.selectedKiAttackId = id;
+        }
+    }
+
+    public String getSelectedKiAttackId() { return selectedKiAttackId; }
+
+    /** Color del aura configurable (y por defecto para ataques nuevos). */
+    public int getAuraColorRgb() { return auraColorRgb; }
+    public void setAuraColorRgb(int rgb) { this.auraColorRgb = rgb; }
+
+    /** Vista de solo-lectura de ataques (para UI). */
+    public Map<String, KiAttackDefinition> getKiAttacksReadonly() {
+        return Collections.unmodifiableMap(kiAttacks);
+    }
+
+    public boolean isRaceChosen() {
+        return raceChosen;
+    }
+
+    public void setRaceChosen(boolean raceChosen) {
+        this.raceChosen = raceChosen;
+    }
+
+    public void refillOnRespawn() {
+        this.body    = this.bodyMax;
+
+        this.stamina = this.staminaMax;
+        this.energy  = this.energyMax;
     }
 }

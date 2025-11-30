@@ -26,17 +26,18 @@ public final class StatsConfig {
             BUILDER.comment("Max fly multiplier (cap)")
                     .defineInRange("fly.multiplier_cap", 2.0D, 1.0D, 10.0D);
 
+    // NOTA: ahora los interpretamos como "% del máximo por segundo"
     private static final ModConfigSpec.IntValue REGEN_BODY_RAW =
-            BUILDER.comment("Base regen per tick for Body")
-                    .defineInRange("regen.base_per_tick.body", 1, 0, 1000);
+            BUILDER.comment("Body regen percent per second (1 = 1% of max per second)")
+                    .defineInRange("regen.base_per_second.body_percent", 1, 0, 100);
 
     private static final ModConfigSpec.IntValue REGEN_STAMINA_RAW =
-            BUILDER.comment("Base regen per tick for Stamina")
-                    .defineInRange("regen.base_per_tick.stamina", 1, 0, 1000);
+            BUILDER.comment("Stamina regen percent per second (1 = 1% of max per second)")
+                    .defineInRange("regen.base_per_second.stamina_percent", 1, 0, 100);
 
     private static final ModConfigSpec.IntValue REGEN_ENERGY_RAW =
-            BUILDER.comment("Base regen per tick for Energy/Ki")
-                    .defineInRange("regen.base_per_tick.energy", 1, 0, 1000);
+            BUILDER.comment("Energy/Ki regen percent per second (1 = 1% of max per second)")
+                    .defineInRange("regen.base_per_second.energy_percent", 1, 0, 100);
 
     private static final ModConfigSpec.DoubleValue MOVE_SCALING_RAW =
             BUILDER.comment("How DEX-derived Speed translates to move % per 100 points (1.0 => +100%)")
@@ -53,6 +54,7 @@ public final class StatsConfig {
     private static volatile int GLOBAL_ATTRIBUTE_CAP = 200;
     private static volatile double SPEED_MULT_CAP = 2.0D;
     private static volatile double FLY_MULT_CAP = 2.0D;
+    // ahora estos son "porcentaje por segundo"
     private static volatile int REGEN_BODY = 1, REGEN_STAMINA = 1, REGEN_ENERGY = 1;
     private static volatile double MOVE_SCALING = 1.0D, FLY_SCALING = 1.0D;
 
@@ -75,9 +77,12 @@ public final class StatsConfig {
     public static int globalAttributeCap()    { return GLOBAL_ATTRIBUTE_CAP; }
     public static double speedMultiplierCap() { return SPEED_MULT_CAP; }
     public static double flyMultiplierCap()   { return FLY_MULT_CAP; }
+
+    /** % del máximo por segundo (1 = 1%/s). */
     public static int baseRegenBody()         { return REGEN_BODY; }
     public static int baseRegenStamina()      { return REGEN_STAMINA; }
     public static int baseRegenEnergy()       { return REGEN_ENERGY; }
+
     public static double movementScaling()    { return MOVE_SCALING; }
     public static double flyScaling()         { return FLY_SCALING; }
 }

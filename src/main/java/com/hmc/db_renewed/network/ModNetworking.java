@@ -3,6 +3,7 @@ package com.hmc.db_renewed.network;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.gui.ShenlongWishScreen;
 import com.hmc.db_renewed.gui.wishes.StackWishMenu;
+import com.hmc.db_renewed.network.ki.*;
 import com.hmc.db_renewed.network.stats.SpendTpPacket;
 import com.hmc.db_renewed.network.stats.SyncPlayerStatsPacket;
 import com.hmc.db_renewed.network.wishes.*;
@@ -81,5 +82,32 @@ public class ModNetworking {
                 SpendTpPacket.TYPE,
                 SpendTpPacket.STREAM_CODEC,
                 SpendTpPacket::handle);
+
+        registrar.playToServer(ToggleFlyPacket.TYPE, ToggleFlyPacket.STREAM_CODEC, ToggleFlyPacket::handle);
+        registrar.playToServer(KiChargePacket.TYPE,  KiChargePacket.STREAM_CODEC,  KiChargePacket::handle);
+
+        registrar.playToServer(
+                UpdateKiAttackColorPacket.TYPE,
+                UpdateKiAttackColorPacket.CODEC,
+                UpdateKiAttackColorPacket::handle
+        );
+
+        registrar.playToServer(
+                ChargeKiAttackPacket.TYPE,
+                ChargeKiAttackPacket.STREAM_CODEC,
+                ChargeKiAttackPacket::handle
+        );
+
+        registrar.playToServer(
+                ChooseRacePacket.TYPE,
+                ChooseRacePacket.STREAM_CODEC,
+                ChooseRacePacket::handle
+        );
+
+        registrar.playToServer(
+                ChooseStylePacket.TYPE,
+                ChooseStylePacket.STREAM_CODEC,
+                ChooseStylePacket::handle
+        );
     }
 }

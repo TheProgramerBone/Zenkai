@@ -17,7 +17,6 @@ public class ShenlongWishScreen extends Screen {
     }
 
     private Button stackWishButton;
-    private Button revivePetButton;
     private Button revivePlayerButton;
     private Button enchantVillagerButton;
     private Button immortalButton;

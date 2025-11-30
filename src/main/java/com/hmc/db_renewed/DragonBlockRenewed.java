@@ -8,6 +8,7 @@ import com.hmc.db_renewed.config.StatsConfig;
 import com.hmc.db_renewed.config.WishConfig;
 import com.hmc.db_renewed.effect.ModEffects;
 import com.hmc.db_renewed.entity.ModEntities;
+import com.hmc.db_renewed.entity.ki_attacks.ki_blast.KiBlastRenderer;
 import com.hmc.db_renewed.entity.namekian.NamekianRenderer;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorRenderer;
 import com.hmc.db_renewed.entity.saiyan_pod.SpacePodRenderer;
@@ -16,9 +17,10 @@ import com.hmc.db_renewed.gui.ModMenuTypes;
 import com.hmc.db_renewed.gui.wishes.StackWishScreen;
 import com.hmc.db_renewed.item.ModItems;
 import com.hmc.db_renewed.network.ModNetworking;
+import com.hmc.db_renewed.network.ki.MouseHooks;
 import com.hmc.db_renewed.network.stats.*;
 import com.hmc.db_renewed.sound.ModSounds;
-import com.hmc.db_renewed.worldgen.CommandsInit;
+import com.hmc.db_renewed.network.stats.CommandsInit;
 import com.hmc.db_renewed.worldgen.ModSurfaceRules;
 import com.hmc.db_renewed.worldgen.ModOverworldRegion;
 import com.mojang.logging.LogUtils;
@@ -73,13 +75,13 @@ public class DragonBlockRenewed
         modEventBus.addListener(DragonBlockRenewed::registerCapabilities);
 
         var forgeBus = net.neoforged.neoforge.common.NeoForge.EVENT_BUS;
+        forgeBus.register(MouseHooks.class);
         forgeBus.register(ClientHooks.class);
         forgeBus.register(FlyApplier.class);
         forgeBus.register(CombatHooks.class);
         forgeBus.register(TickHandlers.class);
         forgeBus.register(PlayerLifeCycle.class);
         forgeBus.register(CommandsInit.class);
-        forgeBus.register(StatsCommand.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
@@ -126,6 +128,7 @@ public class DragonBlockRenewed
             EntityRenderers.register(ModEntities.NAMEKIAN.get(), NamekianRenderer::new);
             EntityRenderers.register(ModEntities.NAMEKIAN_WARRIOR.get(), NamekianWarriorRenderer::new);
             EntityRenderers.register(ModEntities.SHENLONG.get(), ShenLongRenderer::new);
+            EntityRenderers.register(ModEntities.KI_BLAST.get(), KiBlastRenderer::new);
             event.enqueueWork(() ->
             {
                 Regions.register(new ModOverworldRegion());

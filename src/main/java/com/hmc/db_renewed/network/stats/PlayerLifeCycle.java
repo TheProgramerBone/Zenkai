@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.network.stats;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -8,14 +9,17 @@ import net.neoforged.neoforge.network.PacketDistributor;
 public class PlayerLifeCycle {
 
     @SubscribeEvent
-    public static void onClone(PlayerEvent.Clone e) {
-        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
-        var newAtt = e.getEntity().getData(DataAttachments.PLAYER_STATS.get());
-        var oldAtt = e.getOriginal().getData(DataAttachments.PLAYER_STATS.get());
-        if (newAtt != null && oldAtt != null) {
-            newAtt.load(oldAtt.save());
-            sync(sp);
-        }
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent e) {
+        Player p = e.getEntity();
+        if (p.level().isClientSide()) return; // solo servidor
+
+        PlayerStatsAttachment att = p.getData(DataAttachments.PLAYER_STATS.get());
+
+        // Rellenar pools al respawn
+        att.refillOnRespawn();
+
+        // Sincronizar al cliente
+        syncIfServer(p);
     }
 
     @SubscribeEvent

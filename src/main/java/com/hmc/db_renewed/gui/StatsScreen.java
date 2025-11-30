@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.gui.stats;
+package com.hmc.db_renewed.gui;
 
 import com.hmc.db_renewed.config.StatsConfig;
 import com.hmc.db_renewed.network.stats.Dbrattributes;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DbrStatsScreen extends Screen {
+public class StatsScreen extends Screen {
     private static final int PAD = 8;
     private final Minecraft mc = Minecraft.getInstance();
     private PlayerStatsAttachment att;
@@ -27,8 +27,8 @@ public class DbrStatsScreen extends Screen {
             Dbrattributes.WILLPOWER, Dbrattributes.MIND, Dbrattributes.SPIRIT
     );
 
-    public DbrStatsScreen() {
-        super(Component.literal("DB Renewed - Stats"));
+    public StatsScreen() {
+        super(Component.literal("Your Stats"));
     }
 
     @Override
@@ -36,22 +36,19 @@ public class DbrStatsScreen extends Screen {
         if (mc.player != null) {
             att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
         }
-
         this.clearWidgets();
         int x = PAD + 10;
         int y = PAD + 30;
 
-        // Botones por atributo: +1 / +10
         for (Dbrattributes a : ORDER) {
             final String name = a.name();
             addRenderableWidget(Button.builder(Component.literal("+1"),
-                    b -> spend(name, 1)).bounds(x + 140, y - 4, 28, 18).build());
+                    b -> spend(name, 1)).bounds(x + 140, y + 32, 28, 18).build());
             addRenderableWidget(Button.builder(Component.literal("+10"),
-                    b -> spend(name, 10)).bounds(x + 172, y - 4, 34, 18).build());
+                    b -> spend(name, 10)).bounds(x + 172, y + 32, 34, 18).build());
             y += 18;
         }
 
-        // Cerrar
         addRenderableWidget(Button.builder(Component.literal("Close"),
                 b -> onClose()).bounds(width - 80 - PAD, height - 24 - PAD, 80, 20).build());
     }
@@ -67,7 +64,6 @@ public class DbrStatsScreen extends Screen {
         int left = PAD;
         int top = PAD;
 
-        // Título
         g.drawString(font, this.title, left, top, 0xFFFFFF);
 
         if (mc.player == null) {
@@ -76,10 +72,9 @@ public class DbrStatsScreen extends Screen {
         }
         att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
 
-        // Panel principal
-        int panelW = Math.min(260, width - PAD*2);
-        int panelH = Math.min(190, height - PAD*2 - 30);
-        g.fill(left, top + 12, left + panelW, top + 12 + panelH, 0xAA000000);
+        int panelW = Math.min(325, width - PAD*8);
+        int panelH = Math.min(145, height - PAD*8 - 30);
+        g.fill(left, top + 12, left + panelW, top + 36 + panelH, 0xAA000000);
 
         int x = left + 8;
         int y = top + 20;
@@ -101,7 +96,7 @@ public class DbrStatsScreen extends Screen {
         int ay = y;
         for (Dbrattributes a : ORDER) {
             String line = a.name() + ": " + att.getAttribute(a);
-            g.drawString(font, line, x, ay, 0xFFFFFF);
+            g.drawString(font, line, x, ay+5, 0xFFFFFF);
             ay += 18;
         }
 
@@ -122,7 +117,6 @@ public class DbrStatsScreen extends Screen {
         stats.add(String.format("Body: %s", body));
         stats.add(String.format("Stamina: %s", stam));
         stats.add(String.format("Ki: %s", ki));
-
         double moveMult = Math.min(1.0 + (speed/100.0)* StatsConfig.movementScaling(), StatsConfig.speedMultiplierCap());
         double flyMult  = Math.min(1.0 + (fly/100.0)* StatsConfig.flyScaling(),      StatsConfig.flyMultiplierCap());
         stats.add(String.format("Running: %d%%", (int)Math.round(moveMult*100)));
@@ -132,9 +126,7 @@ public class DbrStatsScreen extends Screen {
             g.drawString(font, s, sx, sy, 0xFFFFFF);
             sy += 10;
         }
-
-        // Línea de ayuda
-        g.drawString(font, Component.literal("Press O to open this screen").withStyle(ChatFormatting.GRAY),
+        g.drawString(font, Component.literal("Work in Progress").withStyle(ChatFormatting.GRAY),
                 left, height - 12 - PAD, 0xAAAAAA);
     }
 

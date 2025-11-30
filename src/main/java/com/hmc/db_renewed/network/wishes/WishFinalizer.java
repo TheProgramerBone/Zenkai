@@ -21,6 +21,5 @@ public final class WishFinalizer {
                 player.getBoundingBox().inflate(32),
                 e -> e.getType() == shenlongType
         ).forEach(Entity::discard);
-
     }
 }
