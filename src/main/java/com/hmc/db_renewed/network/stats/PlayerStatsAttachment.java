@@ -25,6 +25,8 @@ public class PlayerStatsAttachment {
 
     private boolean raceChosen = false;
 
+    private boolean isImmortal = false;
+
     private int tp = 0; // puntos libres
     private final EnumMap<Dbrattributes, Integer> attributes = new EnumMap<>(Dbrattributes.class);
     private final EnumMap<Dbrattributes, Integer> invested = new EnumMap<>(Dbrattributes.class); // TP invertido por atributo
@@ -351,6 +353,9 @@ public class PlayerStatsAttachment {
         TempStat t = tempStats.get(key);
         return (t == null || t.expired()) ? null : t.value;
     }
+
+
+
     record TempStat(double value, long expireMs) { boolean expired(){ return System.currentTimeMillis()>expireMs; } }
 
     // === Serialización NBT (Attachment y red) ===
@@ -381,6 +386,7 @@ public class PlayerStatsAttachment {
         tag.putBoolean("flyEnabled", flyEnabled);
         tag.putBoolean("chargingKi", chargingKi);
         tag.putBoolean("raceChosen",raceChosen);
+        tag.putBoolean("isImmortal",isImmortal);
 
         // Ki Attacks
         ListTag list = getTags();
@@ -440,6 +446,7 @@ public class PlayerStatsAttachment {
         this.flyEnabled = tag.getBoolean("flyEnabled");
         this.chargingKi = tag.getBoolean("chargingKi");
         this.raceChosen = tag.getBoolean("raceChosen");
+        this.isImmortal = tag.getBoolean("isImmortal");
 
         // Ki Attacks
         this.kiAttacks.clear();
@@ -518,7 +525,7 @@ public class PlayerStatsAttachment {
         return kiAttacks.get(id);
     }
 
-    /** Añade o actualiza una definición (por id). */
+    /** Añade o actualiza una definición (por ID). */
     public void addOrUpdateKiAttack(KiAttackDefinition def) {
         if (def == null || def.id() == null || def.id().isEmpty()) return;
         kiAttacks.put(def.id(), def);
@@ -557,11 +564,19 @@ public class PlayerStatsAttachment {
     }
 
     public boolean isRaceChosen() {
-        return raceChosen;
+        return !raceChosen;
     }
 
     public void setRaceChosen(boolean raceChosen) {
         this.raceChosen = raceChosen;
+    }
+
+    public boolean isImmortal() {
+        return isImmortal;
+    }
+
+    public void setImmortal(boolean isImmortal) {
+        this.isImmortal = isImmortal;
     }
 
     public void refillOnRespawn() {

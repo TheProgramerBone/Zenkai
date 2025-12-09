@@ -72,21 +72,16 @@ public final class KiAttackServerLogic {
         Level level = sp.level();
         if (level.isClientSide) return;
 
-        sp.sendSystemMessage(Component.literal("[SERVER] releaseCharging: inicio"));
-
         ActiveCharge active = ACTIVE.remove(sp.getUUID());
         if (active == null) {
-            sp.sendSystemMessage(Component.literal("[SERVER] releaseCharging: NO había blast activo, cancelando."));
             return;
         }
         if (!(level instanceof ServerLevel sl)) {
-            sp.sendSystemMessage(Component.literal("[SERVER] releaseCharging: level NO es ServerLevel."));
             return;
         }
 
         Entity e = sl.getEntity(active.entityId());
         if (!(e instanceof KiBlastEntity blast)) {
-            sp.sendSystemMessage(Component.literal("[SERVER] releaseCharging: entidad no es KiBlast, cancelando."));
             return;
         }
 
@@ -114,9 +109,6 @@ public final class KiAttackServerLogic {
 
 // Si tampoco existe basic_blast, lo creamos AQUÍ y lo guardamos en los stats
         if (def == null) {
-            sp.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "[SERVER] releaseCharging: no había ataques, creando basic_blast por defecto."
-            ));
 
             def = new KiAttackDefinition(
                     "basic_blast",
@@ -138,15 +130,7 @@ public final class KiAttackServerLogic {
         int kiCost = stats.computeKiAttackCost(def, chargeRatio);
         int currentKi = stats.getKiCurrent();
 
-        sp.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                String.format("[SERVER] DBG: chargeTicks=%d (clamped=%d), ratio=%.2f, KI=%d, cost=%d",
-                        ticksCharged, clampedTicks, chargeRatio, currentKi, kiCost)
-        ));
-
         if (currentKi < kiCost) {
-            sp.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "No tienes KI suficiente. KI=" + currentKi + " / Coste requerido=" + kiCost
-            ));
             blast.discard();
             return;
         }
@@ -165,10 +149,6 @@ public final class KiAttackServerLogic {
 
         Vec3 look = sp.getLookAngle();
         Vec3 vel  = look.scale(speed);
-
-        sp.sendSystemMessage(Component.literal(
-                String.format("[SERVER] releaseCharging: disparando blast con damage=%.2f, speed=%.2f", damage, speed)
-        ));
 
         blast.setNoGravity(true);
         blast.setDeltaMovement(vel);

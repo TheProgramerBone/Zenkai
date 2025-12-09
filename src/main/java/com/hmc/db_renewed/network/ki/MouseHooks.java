@@ -2,8 +2,8 @@ package com.hmc.db_renewed.network.ki;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.client.input.KeyBindings;
+import com.hmc.db_renewed.network.stats.PlayerStatsAttachment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -29,8 +29,14 @@ public final class MouseHooks {
      */
     @SubscribeEvent
     public static void onMouseButton(InputEvent.MouseButton.Pre e) {
+
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
+
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
+        if (att.isRaceChosen()) {
+            return;
+        }
 
         int button = e.getButton();
         int action = e.getAction();
@@ -54,9 +60,6 @@ public final class MouseHooks {
                         clientChargeStartTick = 0L;
                     }
 
-                    // DEBUG CLIENTE
-                    mc.player.sendSystemMessage(Component.literal("[CLIENT] Start KiCharge: enviando packet(true)"));
-
                     PacketDistributor.sendToServer(new ChargeKiAttackPacket(true));
                 }
                 e.setCanceled(true);
@@ -70,9 +73,6 @@ public final class MouseHooks {
         if (action == GLFW.GLFW_RELEASE) {
             if (wasChargingKiAttack) {
                 wasChargingKiAttack = false;
-
-                // DEBUG CLIENTE
-                mc.player.sendSystemMessage(Component.literal("[CLIENT] Stop KiCharge: enviando packet(false)"));
 
                 PacketDistributor.sendToServer(new ChargeKiAttackPacket(false));
                 e.setCanceled(true);

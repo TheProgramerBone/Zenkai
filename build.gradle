@@ -32,12 +32,12 @@ repositories {
     maven {//Terrablender
         url = 'https://repo.spongepowered.org/repository/maven-public/' }
 
-    maven {
+    maven {//PlayerAnimator
         name = "Illusive Soulworks maven"
         url = "https://maven.theillusivec4.top/"
     }
 
-    maven {
+    maven {//PlayerAnimator
         name "KosmX's maven"
         url 'https://maven.kosmx.dev/'
     }

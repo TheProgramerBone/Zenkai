@@ -17,7 +17,6 @@ import org.lwjgl.glfw.GLFW;
 public final class KeyBindings {
     private KeyBindings() {}
 
-    public static KeyMapping OPEN_RACE_SCREEN;
     public static KeyMapping OPEN_STATS;
     public static KeyMapping TOGGLE_FLY;
     public static KeyMapping CHARGE_KI;
@@ -66,7 +65,7 @@ public final class KeyBindings {
 
             PlayerStatsAttachment att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
 
-            if (!att.isRaceChosen()) {
+            if (att.isRaceChosen()) {
                 // Primera vez / aún no eligió raza → abrir selección
                 mc.setScreen(new RaceSelectionScreen());
             } else {

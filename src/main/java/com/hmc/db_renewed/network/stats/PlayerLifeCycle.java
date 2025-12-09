@@ -15,6 +15,8 @@ public class PlayerLifeCycle {
 
         PlayerStatsAttachment att = p.getData(DataAttachments.PLAYER_STATS.get());
 
+        att.setImmortal(false);
+
         // Rellenar pools al respawn
         att.refillOnRespawn();
 

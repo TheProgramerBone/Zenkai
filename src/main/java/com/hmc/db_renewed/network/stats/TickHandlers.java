@@ -2,7 +2,9 @@ package com.hmc.db_renewed.network.stats;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.config.StatsConfig;
+import com.hmc.db_renewed.effect.ModEffects;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -20,6 +22,16 @@ public class TickHandlers {
         Player p = e.getEntity();
         PlayerStatsAttachment att = p.getData(DataAttachments.PLAYER_STATS.get());
 
+        if (att.isImmortal()) {
+            p.addEffect(new MobEffectInstance(
+                    ModEffects.IMMORTALITY,
+                    MobEffectInstance.INFINITE_DURATION, 0, true, false, false
+            ));
+        }
+        if (att.isRaceChosen()) return;
+
+
+
         if (!p.level().isClientSide()) {
             if (att.getBody() > 0 && !p.isDeadOrDying()) {
                 float max = p.getMaxHealth();
@@ -28,6 +40,8 @@ public class TickHandlers {
                 }
             }
         }
+
+
 
         // ================================
         //  HABILIDAD DE VOLAR (server)

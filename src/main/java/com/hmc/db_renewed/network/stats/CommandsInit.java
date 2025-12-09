@@ -271,6 +271,8 @@ public class CommandsInit {
         }
 
         att.setRaceChosen(false);
+        att.setFlyEnabled(false);
+        att.setImmortal(false);
 
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(
