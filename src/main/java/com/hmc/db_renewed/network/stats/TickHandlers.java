@@ -41,8 +41,6 @@ public class TickHandlers {
             }
         }
 
-
-
         // ================================
         //  HABILIDAD DE VOLAR (server)
         // ================================
@@ -84,18 +82,28 @@ public class TickHandlers {
         if (p.tickCount % 20 == 0) {
             var food = p.getFoodData();
 
-            // No regenerar si está sin hambre "real" (opcional)
-            // Puedes quitar este check si quieres que siempre regenere pero gaste hambre.
-            if (!p.isCreative() && food.getFoodLevel() > 0) {
+            // ¿Permitimos regenerar este segundo?
+            boolean canRegen = true;
+
+            if (!p.isCreative()) {
+                // En survival: solo regenera si tiene algo de comida
+                canRegen = food.getFoodLevel() > 0;
+            }
+
+            if (canRegen) {
+                boolean didBody    = false;
+                boolean didStamina = false;
+                // (Ki no cuenta para hambre, así que no necesitamos bandera para él)
 
                 // --- BODY (vida del mod) ---
                 int bodyCur = att.getBody();
                 int bodyMax = att.getBodyMax();
                 if (bodyCur > 0 && bodyCur < bodyMax) {
-                    double pct = StatsConfig.baseRegenBody() / 100.0; // 1 => 0.01
+                    double pct = StatsConfig.baseRegenBody() / 100.0;
                     int regen = (int) Math.round(bodyMax * pct);
-                    if (regen <= 0) regen = 1; // mínimo 1 si la config es >0
+                    if (regen <= 0) regen = 1;
                     att.addBody(regen);
+                    didBody = true;
                 }
 
                 // --- STAMINA ---
@@ -106,9 +114,10 @@ public class TickHandlers {
                     int regen = (int) Math.round(stMax * pct);
                     if (regen <= 0) regen = 1;
                     att.addStamina(regen);
+                    didStamina = true;
                 }
 
-                // --- ENERGY / KI ---
+                // --- ENERGY / KI (NO consume comida) ---
                 int kiCur = att.getEnergy();
                 int kiMax = att.getEnergyMax();
                 if (kiCur < kiMax) {
@@ -118,9 +127,17 @@ public class TickHandlers {
                     att.addEnergy(regen);
                 }
 
-                // --- COSTE DE HAMBRE ---
-                // Ajusta el valor de exhaustion al gusto (0.1F es suave, 0.5F más notorio)
-                food.addExhaustion(0.5F);
+                // --- COSTE DE HAMBRE (solo survival y según qué regeneró) ---
+                if (!p.isCreative()) {
+                    // Body gasta MÁS comida
+                    if (didBody) {
+                        food.addExhaustion(2.4F);
+                    }
+                    // Stamina gasta POCA comida
+                    if (didStamina) {
+                        food.addExhaustion(0.6F);
+                    }
+                }
             }
         }
 
@@ -142,16 +159,6 @@ public class TickHandlers {
                     AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             ));
         }
-
-        // ----------------------------
-        // Vuelo: multiplicador efímero para HUD/cliente
-        // ----------------------------
-        double flyStat = att.computeFlyFinal();
-        double flyMult = Math.min(
-                1.0 + (flyStat / 100.0) * StatsConfig.flyScaling(),
-                StatsConfig.flyMultiplierCap()
-        );
-        att.setTempStat("clientFlyMult", flyMult, 5);
 
         // Sync solo en servidor
         PlayerLifeCycle.syncIfServer(p);

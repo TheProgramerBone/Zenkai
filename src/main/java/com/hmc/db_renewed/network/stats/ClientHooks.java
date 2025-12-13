@@ -1,73 +1,114 @@
 package com.hmc.db_renewed.network.stats;
 
+import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.network.ki.MouseHooks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
 public class ClientHooks {
+
+    // Textura del HUD (pon tu ruta real)
+    private static final ResourceLocation HUD_TEX =
+            ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "textures/gui/hud.png");
+
+    // Constantes de tamaño (ajusta a tu sprite)
+    private static final int PANEL_W = 150;
+    private static final int PANEL_H = 40;
+
+    private static final int BAR_W = 120;
+    private static final int BAR_H = 8;
+
+    private static final int ICON_SIZE = 16;
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        // Si el jugador tiene F1 (hideGui) activado, NO dibujamos nuestro HUD
+        // F1: ocultar HUD vanilla → también ocultar el tuyo
         if (mc.options.hideGui) return;
 
         PlayerStatsAttachment att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
 
-        // Si todavía no ha elegido raza, no mostramos nada del HUD del mod
+        // Si NO ha elegido raza, no mostramos nada de HUD del mod
         if (att.isRaceChosen()) {
             return;
         }
 
         GuiGraphics g = e.getGuiGraphics();
-        int x = 10, y = 10;
+        int x = 10;
+        int y = 10;
 
-        // --- Barra de VIDA (usando salud vanilla) ---
-        // --- Barra de VIDA del sistema del mod (body) ---
+        // ========================
+        // 1) FONDO DEL PANEL
+        // ========================
+        // Supón que el fondo está en (0,0) de la textura
+        g.blit(HUD_TEX, x, y, 0, 0, PANEL_W, PANEL_H);
+
+        // Offset interno dentro del panel
+        int barX = x + 20;     // dejar espacio a la izquierda para iconos o marco
+        int barY = y + 5;
+
+        // ========================
+        // 2) BARRA BODY
+        // ========================
         int bCur = att.getBody();
         int bMax = att.getBodyMax();
-        drawBar(g, x, y, 100, 8, bCur, bMax, 0xFFFF5555,
-                "Body: " + bCur + "/" + bMax);
+        drawHudBar(g, barX, barY, bCur, bMax,
+                /*uEmpty*/0, 40,
+                /*uFill*/0, 48);
 
-        // Luego movemos las demás barras hacia abajo
-        int sCur = att.getStamina(), sMax = att.getStaminaMax();
-        drawBar(g, x, y + 12, 100, 8, sCur, sMax, 0xFF00FF00,
-                "Stamina: " + sCur + "/" + sMax);
+        // ========================
+        // 3) BARRA STAMINA
+        // ========================
+        barY += 10; // separación entre barras
+        int sCur = att.getStamina();
+        int sMax = att.getStaminaMax();
+        drawHudBar(g, barX, barY, sCur, sMax,
+                /*uEmpty*/0, 40,
+                /*uFill*/0, 56);
 
-        int kCur = att.getEnergy(), kMax = att.getEnergyMax();
-        drawBar(g, x, y + 24, 100, 8, kCur, kMax, 0xFF00AAFF,
-                "Ki: " + kCur + "/" + kMax);
+        // ========================
+        // 4) BARRA KI
+        // ========================
+        barY += 10;
+        int kCur = att.getEnergy();
+        int kMax = att.getEnergyMax();
+        drawHudBar(g, barX, barY, kCur, kMax,
+                /*uEmpty*/0, 40,
+                /*uFill*/128, 40); // por ejemplo, otra franja de color para Ki
 
-        int textY = y + 36;
+        // ========================
+        // 5) ICONOS DE ESTADO
+        // ========================
+        int iconX = x + 2;
+        int iconY = y + 2;
 
-        // Multiplicador de vuelo (si lo tienes seteado)
-        Double flyMult = att.getTempStat("clientFlyMult");
-        if (flyMult != null) {
-            g.drawString(mc.font,
-                    Component.literal(String.format("Fly x%.2f", flyMult)),
-                    x, textY, 0xFFFFFF);
-            textY += 12;
+        // Icono de vuelo (ejemplo u=200,v=0)
+        if (att.isFlyEnabled()) {
+            g.blit(HUD_TEX, iconX, iconY, 200, 0, ICON_SIZE, ICON_SIZE);
+            iconY += ICON_SIZE + 2;
         }
 
-        // Estados varios
-        String flyState = att.isFlyEnabled() ? "On" : "Off";
-        g.drawString(mc.font, Component.literal("Fly: " + flyState), x, textY, 0xFFFFFF);
-        textY += 12;
+        // Icono cargando Ki (ejemplo u=216,v=0)
+        if (att.isChargingKi()) {
+            g.blit(HUD_TEX, iconX, iconY, 216, 0, ICON_SIZE, ICON_SIZE);
+            iconY += ICON_SIZE + 2;
+        }
 
-        String kiCharging = att.isChargingKi() ? "On" : "Off";
-        g.drawString(mc.font, Component.literal("Charging Ki: " + kiCharging), x, textY, 0xFFFFFF);
-        textY += 12;
+        // Icono ataque de Ki cargándose (usar mismo icono o diferente)
+        if (MouseHooks.wasChargingKiAttack) {
+            g.blit(HUD_TEX, iconX, iconY, 232, 0, ICON_SIZE, ICON_SIZE);
+            iconY += ICON_SIZE + 2;
+        }
 
-        String chargingKiAttack = MouseHooks.wasChargingKiAttack ? "On" : "Off";
-        g.drawString(mc.font, Component.literal("Charging KiAttack: " + chargingKiAttack), x, textY, 0xFFFFFF);
-        textY += 12;
-
-        // Porcentaje de carga del ataque de ki (0–200 %)
+        // ========================
+        // 6) % de carga del Ki Blast
+        // ========================
         if (MouseHooks.wasChargingKiAttack && mc.level != null) {
             long now = mc.level.getGameTime();
             long ticks = Math.max(0L, now - MouseHooks.clientChargeStartTick);
@@ -90,19 +131,37 @@ public class ClientHooks {
 
             g.drawString(
                     mc.font,
-                    Component.literal("Ki Attack: " + percent + "%"),
-                    x,
-                    textY,
+                    Component.literal("Ki " + percent + "%"),
+                    barX,
+                    y + PANEL_H + 4,  // justo debajo del panel
                     0xFFFFAA00
             );
         }
     }
 
-    private static void drawBar(GuiGraphics g, int x, int y, int w, int h,
-                                int cur, int max, int color, String label) {
-        int fill = (int) (w * (max <= 0 ? 0 : (cur / (double) max)));
-        g.fill(x, y, x + w, y + h, 0x88000000);
-        g.fill(x, y, x + fill, y + h, color);
-        g.drawString(Minecraft.getInstance().font, label, x + w + 6, y, 0xFFFFFF);
+    /**
+     * Dibuja una barra: primero el fondo vacío, luego la parte llena según cur/max.
+     * Asume que empty y fill tienen el mismo tamaño (BAR_W x BAR_H).
+     */
+    private static void drawHudBar(
+            GuiGraphics g,
+            int x, int y,
+            int cur, int max,
+            int uEmpty, int vEmpty,
+            int uFill, int vFill
+    ) {
+        if (max <= 0) return;
+
+        float pct = cur / (float) max;
+        pct = Math.max(0f, Math.min(1f, pct));
+        int filled = (int) (BAR_W * pct);
+
+        // Barra vacía completa
+        g.blit(HUD_TEX, x, y, uEmpty, vEmpty, BAR_W, BAR_H);
+
+        // Parte llena recortada horizontalmente
+        if (filled > 0) {
+            g.blit(HUD_TEX, x, y, uFill, vFill, filled, BAR_H);
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.entity.saiyan_pod;
+package com.hmc.db_renewed.entity.space_pod;
 
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;

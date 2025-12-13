@@ -4,7 +4,7 @@ import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.entity.ki_attacks.ki_blast.KiBlastEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorEntity;
-import com.hmc.db_renewed.entity.saiyan_pod.SpacePodEntity;
+import com.hmc.db_renewed.entity.space_pod.SpacePodEntity;
 import com.hmc.db_renewed.entity.shenlong.ShenLongEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;

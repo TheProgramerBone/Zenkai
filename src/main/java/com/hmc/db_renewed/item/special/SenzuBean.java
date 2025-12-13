@@ -1,5 +1,8 @@
 package com.hmc.db_renewed.item.special;
 
+import com.hmc.db_renewed.network.stats.DataAttachments;
+import com.hmc.db_renewed.network.stats.PlayerLifeCycle;
+import com.hmc.db_renewed.network.stats.PlayerStatsAttachment;
 import com.hmc.db_renewed.sound.ModSounds;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -12,6 +15,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 public class SenzuBean extends Item {
     public SenzuBean(Properties properties) {
@@ -19,34 +23,69 @@ public class SenzuBean extends Item {
     }
 
     @Override
-    public int getUseDuration(ItemStack stack, LivingEntity entity) {
+    public int getUseDuration(@NotNull ItemStack stack, @NotNull LivingEntity entity) {
+        // instantáneo
         return 1;
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
         player.startUsingItem(hand);
         return InteractionResultHolder.consume(itemstack);
     }
 
     @Override
-    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+    public @NotNull ItemStack finishUsingItem(@NotNull ItemStack stack, @NotNull Level level, @NotNull LivingEntity entity) {
         if (entity instanceof Player player) {
-            player.getCooldowns().addCooldown(this, 20 * 7); // cooldown de 7 segundos
+            // cooldown de 7 segundos
+            player.getCooldowns().addCooldown(this, 20 * 7);
 
             if (!level.isClientSide) {
+                // Sonido custom
                 level.playSound(
                         null,
                         player.getX(),
                         player.getY(),
                         player.getZ(),
-                        ModSounds.SENZU_EAT.get(), // tu sonido personalizado
+                        ModSounds.SENZU_EAT.get(),
                         SoundSource.PLAYERS,
                         1.0F,
                         1.0F
                 );
-                player.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, 90));
+
+                // === Integración con sistema de stats (body / stamina / ki) ===
+                PlayerStatsAttachment att = player.getData(DataAttachments.PLAYER_STATS.get());
+
+                // Curar body al máximo
+                int bodyMissing = att.getBodyMax() - att.getBody();
+                if (bodyMissing > 0) {
+                    att.addBody(bodyMissing);
+                }
+
+                // Rellenar stamina al máximo
+                int stamMissing = att.getStaminaMax() - att.getStamina();
+                if (stamMissing > 0) {
+                    att.addStamina(stamMissing);
+                }
+
+                // Rellenar ki al máximo
+                int kiMissing = att.getEnergyMax() - att.getEnergy();
+                if (kiMissing > 0) {
+                    att.addEnergy(kiMissing);
+                }
+
+                // Opcional: también sincronizar al cliente
+                PlayerLifeCycle.syncIfServer(player);
+
+                // === Ajuste vanilla para que sea consistente
+                // Vida vanilla al máximo (por si acaso)
+                player.setHealth(player.getMaxHealth());
+                // Hambre y saturación como en DBC (lleno total)
+                player.getFoodData().eat(20, 1.0F);
+
+                // Puedes mantener los efectos si quieres partículas/cross-compat
+                player.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, 0));
                 player.addEffect(new MobEffectInstance(MobEffects.SATURATION, 1, 255));
             }
 
@@ -58,7 +97,7 @@ public class SenzuBean extends Item {
     }
 
     @Override
-    public UseAnim getUseAnimation(ItemStack stack) {
+    public @NotNull UseAnim getUseAnimation(@NotNull ItemStack stack) {
         return UseAnim.BLOCK;
     }
 }

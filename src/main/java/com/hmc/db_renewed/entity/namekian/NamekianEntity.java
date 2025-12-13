@@ -1,10 +1,11 @@
 package com.hmc.db_renewed.entity.namekian;
 
+import com.hmc.db_renewed.entity.CommonAnimations;
 import com.hmc.db_renewed.entity.ModVillagerTrades;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -16,8 +17,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
@@ -33,9 +34,11 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new PanicGoal(this, 1D));
+        this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 8.0F));
     }
 
     @Override
@@ -67,22 +70,13 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
     }
 
     @Override
-    public @Nullable AgeableMob getBreedOffspring(ServerLevel serverLevel, AgeableMob ageableMob) {
+    public @Nullable AgeableMob getBreedOffspring(@NotNull ServerLevel serverLevel, @NotNull AgeableMob ageableMob) {
         return null;
     }
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this,"controller",0,this::predicate));
-    }
-
-    private PlayState predicate(AnimationState<GeoAnimatable> animationState) {
-        if (animationState.isMoving()) {
-            animationState.getController().setAnimation(RawAnimation.begin().then("walk", Animation.LoopType.LOOP));
-        }
-        else {
-        animationState.getController().setAnimation(RawAnimation.begin().then("idle", Animation.LoopType.LOOP));}
-        return PlayState.CONTINUE;
+        controllers.add(CommonAnimations.genericWalkIdleController(this));
     }
 
     @Override
@@ -93,5 +87,10 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
     @Override
     public boolean showProgressBar() {
         return false;
+    }
+
+    @Override
+    public boolean hurt(@NotNull DamageSource source, float amount) {
+        return super.hurt(source, amount);
     }
 }

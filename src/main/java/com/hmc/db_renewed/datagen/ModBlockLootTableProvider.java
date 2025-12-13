@@ -51,6 +51,24 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.ROCKY_BLOCK.get());
         dropSelf(ModBlocks.NAMEKIAN_COBBLESTONE.get());
         dropSelf(ModBlocks.NAMEKIAN_STRUCTURE_BLOCK.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_BLACK.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_BLUE.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_BROWN.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_CYAN.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_GRAY.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_LIGHT_BLUE.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_LIGHT_GRAY.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_DARK_GREEN.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_RED.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_YELLOW.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_MAGENTA.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_WHITE.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_PURPLE.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_GREEN.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_PINK.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_ORANGE.get());
+        dropSelf(ModBlocks.TERRAGEM_CONCRETE_DARK_RED.get());
+
         add(ModBlocks.NAMEKIAN_STONE.get(),
                 createSingleItemTableWithSilkTouch(ModBlocks.NAMEKIAN_STONE.get(), ModBlocks.NAMEKIAN_COBBLESTONE));
         add(ModBlocks.NAMEKIAN_GRASS_BLOCK.get(),
@@ -81,7 +99,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                 ModBlocks.NAMEK_DRAGON_BALL_6.get(),
                 ModBlocks.NAMEK_DRAGON_BALL_7.get()
         ));
-
     }
 
     protected LootTable.Builder createMultipleOreDrops(Block pBlock, Item item, float minDrops, float maxDrops) {

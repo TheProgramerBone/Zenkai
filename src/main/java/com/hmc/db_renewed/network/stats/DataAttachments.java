@@ -17,16 +17,32 @@ public class DataAttachments {
     public static final Codec<PlayerStatsAttachment> PLAYER_STATS_CODEC = CompoundTag.CODEC.xmap(
             tag -> {
                 PlayerStatsAttachment att = new PlayerStatsAttachment();
-                att.load(tag); // de NBT a objeto
+                att.load(tag);
                 return att;
             },
             PlayerStatsAttachment::save // de objeto a NBT
+    );
+
+    public static final Codec<PlayerVisualAttachment> PLAYER_VISUAL_CODEC = CompoundTag.CODEC.xmap(
+            tag -> {
+                PlayerVisualAttachment att = new PlayerVisualAttachment();
+                att.load(tag);
+                return att;
+            },
+            PlayerVisualAttachment::save // de objeto a NBT
     );
 
     public static final Supplier<AttachmentType<PlayerStatsAttachment>> PLAYER_STATS =
             REGISTER.register("player_stats", () ->
                     AttachmentType.builder(PlayerStatsAttachment::new)
                             .serialize(PLAYER_STATS_CODEC)
+                            .copyOnDeath()
+                            .build());
+
+    public static final Supplier<AttachmentType<PlayerVisualAttachment>> PLAYER_VISUAL =
+            REGISTER.register("player_visual", () ->
+                    AttachmentType.builder(PlayerVisualAttachment::new)
+                            .serialize(PLAYER_VISUAL_CODEC)
                             .copyOnDeath()
                             .build());
 }

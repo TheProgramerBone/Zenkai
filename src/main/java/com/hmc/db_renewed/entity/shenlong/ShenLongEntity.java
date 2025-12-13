@@ -1,5 +1,6 @@
 package com.hmc.db_renewed.entity.shenlong;
 
+import com.hmc.db_renewed.entity.CommonAnimations;
 import com.hmc.db_renewed.network.wishes.OpenWishScreenPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
@@ -13,12 +14,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.PlayState;
-import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class ShenLongEntity extends Mob implements GeoEntity {
@@ -30,14 +30,12 @@ public class ShenLongEntity extends Mob implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0, state -> {
-            state.setAnimation(RawAnimation.begin().thenLoop("idle"));
-            return PlayState.CONTINUE;
-        }));
+        controllers.add(CommonAnimations.getSpawnController(this, AnimationState::getController,2*20));
+        controllers.add(CommonAnimations.genericIdleController(this));
     }
 
     @Override
-    protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+    protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (player instanceof ServerPlayer sp) {
             PacketDistributor.sendToPlayer(sp, new OpenWishScreenPayload());
         }
@@ -81,7 +79,6 @@ public class ShenLongEntity extends Mob implements GeoEntity {
 
     @Override
     protected void pushEntities() {
-        // No hace nada
     }
 
     @Override
@@ -92,7 +89,13 @@ public class ShenLongEntity extends Mob implements GeoEntity {
 
     @Override
     public boolean isInvulnerableTo(DamageSource source) {
-        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) ||
+            source.is(DamageTypeTags.IS_EXPLOSION) ||
+            source.is(DamageTypeTags.IS_FREEZING) ||
+            source.is(DamageTypeTags.IS_FALL) ||
+            source.is(DamageTypeTags.IS_LIGHTNING) ||
+            source.is(DamageTypeTags.IS_FIRE))
+        {
             return super.isInvulnerableTo(source);
         }
         Entity attacker = source.getEntity();

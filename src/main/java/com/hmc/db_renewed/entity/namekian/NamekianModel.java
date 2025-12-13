@@ -22,7 +22,7 @@ public class NamekianModel extends DefaultedEntityGeoModel<NamekianEntity> {
 
     @Override
     public ResourceLocation getAnimationResource(NamekianEntity animatable) {
-        return ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID,"animations/namekian.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID,"animations/namekian_default.animation.json");
     }
 
     @Override

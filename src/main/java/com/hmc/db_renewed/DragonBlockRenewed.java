@@ -11,7 +11,7 @@ import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.ki_attacks.ki_blast.KiBlastRenderer;
 import com.hmc.db_renewed.entity.namekian.NamekianRenderer;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorRenderer;
-import com.hmc.db_renewed.entity.saiyan_pod.SpacePodRenderer;
+import com.hmc.db_renewed.entity.space_pod.SpacePodRenderer;
 import com.hmc.db_renewed.entity.shenlong.ShenLongRenderer;
 import com.hmc.db_renewed.gui.ModMenuTypes;
 import com.hmc.db_renewed.gui.wishes.StackWishScreen;
@@ -20,7 +20,7 @@ import com.hmc.db_renewed.network.ModNetworking;
 import com.hmc.db_renewed.network.ki.MouseHooks;
 import com.hmc.db_renewed.network.stats.*;
 import com.hmc.db_renewed.sound.ModSounds;
-import com.hmc.db_renewed.network.stats.CommandsInit;
+import com.hmc.db_renewed.network.stats.StatsCommand;
 import com.hmc.db_renewed.worldgen.ModSurfaceRules;
 import com.hmc.db_renewed.worldgen.ModOverworldRegion;
 import com.mojang.logging.LogUtils;
@@ -81,7 +81,7 @@ public class DragonBlockRenewed
         forgeBus.register(CombatHooks.class);
         forgeBus.register(TickHandlers.class);
         forgeBus.register(PlayerLifeCycle.class);
-        forgeBus.register(CommandsInit.class);
+        forgeBus.register(StatsCommand.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

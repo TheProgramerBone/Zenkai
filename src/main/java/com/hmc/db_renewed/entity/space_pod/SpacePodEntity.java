@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.entity.saiyan_pod;
+package com.hmc.db_renewed.entity.space_pod;
 
 import com.hmc.db_renewed.item.ModItems;
 import net.minecraft.nbt.CompoundTag;

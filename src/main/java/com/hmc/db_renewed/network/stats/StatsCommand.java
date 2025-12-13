@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
-public class CommandsInit {
+public class StatsCommand {
 
     @SubscribeEvent
     public static void register(RegisterCommandsEvent e) {
@@ -129,19 +129,6 @@ public class CommandsInit {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> resetFull(ctx, EntityArgument.getPlayer(ctx, "player")))))
         );
-
-        // ========== /dbr_stat temp (igual que antes) ==========
-        root.register(Commands.literal("dbr_stat").requires(cs -> cs.hasPermission(2))
-                .then(Commands.literal("temp")
-                        .then(Commands.argument("player", EntityArgument.player())
-                                .then(Commands.argument("stat", StringArgumentType.string())
-                                        .then(Commands.argument("value", IntegerArgumentType.integer())
-                                                .then(Commands.argument("duration", IntegerArgumentType.integer(1))
-                                                        .executes(ctx -> tempStat(ctx,
-                                                                EntityArgument.getPlayer(ctx, "player"),
-                                                                StringArgumentType.getString(ctx, "stat"),
-                                                                IntegerArgumentType.getInteger(ctx, "value"),
-                                                                IntegerArgumentType.getInteger(ctx, "duration")))))))));
     }
 
     // ========================= IMPLEMENTACIONES =========================
@@ -261,35 +248,18 @@ public class CommandsInit {
 
         att.setRace(Race.HUMAN);
         att.setStyle(Style.MARTIAL_ARTIST);
-
-        // Deja atributos en base de raza/estilo y devuelve TP invertido
         att.respec();
-        // Poner TP total a 0 (usando la API existente)
         int currentTp = att.getTP();
         if (currentTp > 0) {
             att.addTP(-currentTp);
         }
-
         att.setRaceChosen(false);
         att.setFlyEnabled(false);
         att.setImmortal(false);
-
         PlayerLifeCycle.sync(sp);
+
         ctx.getSource().sendSuccess(
                 () -> Component.literal("Full reset (race, style, stats, TP) for " + sp.getGameProfile().getName()),
-                true
-        );
-        return 1;
-    }
-
-    private static int tempStat(CommandContext<CommandSourceStack> ctx,
-                                ServerPlayer sp, String stat, int value, int duration) {
-        var att = sp.getData(DataAttachments.PLAYER_STATS.get());
-        att.setTempStat(stat, value, duration);
-        PlayerLifeCycle.sync(sp);
-        ctx.getSource().sendSuccess(
-                () -> Component.literal("Temp stat " + stat + "=" + value +
-                        " for " + duration + " ticks on " + sp.getGameProfile().getName()),
                 true
         );
         return 1;

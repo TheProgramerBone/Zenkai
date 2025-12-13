@@ -4,6 +4,7 @@ import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.ki_attacks.ki_blast.KiBlastEntity;
 import com.hmc.db_renewed.network.stats.PlayerLifeCycle;
 import com.hmc.db_renewed.network.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.network.stats.PlayerVisualAttachment;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -109,6 +110,16 @@ public final class KiAttackServerLogic {
 
 // Si tampoco existe basic_blast, lo creamos AQUÍ y lo guardamos en los stats
         if (def == null) {
+            PlayerVisualAttachment vis = PlayerVisualAttachment.get(sp);
+            // 1) Color base de aura desde visual attachment si existe
+            int auraColor = vis.getAuraColorRgb();
+            try {
+
+                 // Fallback por compatibilidad
+                auraColor = vis.getAuraColorRgb();
+            } catch (Exception ignored) {
+                // En caso de que todavía no esté registrado el attachment
+            }
 
             def = new KiAttackDefinition(
                     "basic_blast",
@@ -119,7 +130,7 @@ public final class KiAttackServerLogic {
                     20,      // cooldownTicks
                     20,      // chargeTimeTicks
                     1,       // density
-                    stats.getAuraColorRgb()  // usa el color de aura actual
+                    auraColor  // ahora sale del sistema visual
             );
 
             // Lo guardamos para futuros disparos

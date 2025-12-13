@@ -5,6 +5,7 @@ import com.hmc.db_renewed.gui.wishes.StackWishMenu;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class StackWishPayloadHandler {
@@ -23,7 +24,6 @@ public class StackWishPayloadHandler {
                 return;
             }
 
-            // Resolver con config (conserva NBT si resolveWishStack lo hace así)
             ItemStack resolved = WishConfig.resolveWishStack(chosen);
 
             if (resolved.isEmpty()) {
@@ -31,9 +31,11 @@ public class StackWishPayloadHandler {
                 return;
             }
 
-            if (!player.getInventory().add(resolved.copy())) {
-                player.drop(resolved.copy(), false);
-            }
+            ItemHandlerHelper.giveItemToPlayer(player, resolved.copy());
+
+            player.inventoryMenu.broadcastChanges();
+            player.containerMenu.broadcastChanges();
+
             menu.clearChosenItem();
             WishFinalizer.finalizeWish(player);
         });

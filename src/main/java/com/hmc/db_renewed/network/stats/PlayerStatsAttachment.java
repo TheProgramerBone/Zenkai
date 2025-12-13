@@ -46,17 +46,13 @@ public class PlayerStatsAttachment {
     // === Sistema de Ki Attacks (mínimo necesario) ===
     private final Map<String, KiAttackDefinition> kiAttacks = new HashMap<>(); // id -> definición
     private String selectedKiAttackId = "";                                     // ataque seleccionado
-    private int auraColorRgb = 0x33CCFF;                                        // color de aura/por defecto
-
-    // Temp overrides (simple)
-    private final Map<String, TempStat> tempStats = new HashMap<>();
 
     public PlayerStatsAttachment() {
         for (Dbrattributes a : Dbrattributes.values()) {
             attributes.put(a, 0);
             invested.put(a, 0);
         }
-        applyRaceStyle(); // setea bases por raza
+        applyRaceBaseAttributes(); // setea bases por raza
         recalcAll();      // deriva pools
         this.body = this.bodyMax;
         this.stamina = this.staminaMax;
@@ -87,7 +83,7 @@ public class PlayerStatsAttachment {
     public void setRace(Race r) {
         this.race = r;
         this.raceChosen = true;
-        applyRaceStyle();
+        applyRaceBaseAttributes();
         recalcAll();
     }
 
@@ -99,14 +95,21 @@ public class PlayerStatsAttachment {
     public Race getRace() { return race; }
     public Style getStyle() { return style; }
 
-    public void applyRaceStyle() {
-        switch (race) {
-            case HUMAN -> BalanceUtil.setBase(attributes, 10,10,10,10,10,10);
-            case SAIYAN -> BalanceUtil.setBase(attributes, 14,10,12,8,6,10);
-            case NAMEKIAN -> BalanceUtil.setBase(attributes, 8,8,10,11,13,10);
-            case ARCOSIAN -> BalanceUtil.setBase(attributes, 8,8,10,12,12,10);
-            case MAJIN -> BalanceUtil.setBase(attributes, 10,8,14,8,10,10);
-        }
+    public void applyRaceBaseAttributes() {
+        // Stats base configurables desde StatsConfig
+        // Orden: [STR, DEX, CON, WIL, SPI, MND]
+        int[] base = StatsConfig.raceBaseAttributes(this.race);
+
+        // BalanceUtil.setBase(EnumMap, int...) ya espera 6 ints en el orden original
+        BalanceUtil.setBase(
+                attributes,
+                base[0], // STR
+                base[1], // DEX
+                base[2], // CON
+                base[3], // WIL
+                base[4], // SPI
+                base[5]  // MND
+        );
         capAll();
     }
 
@@ -119,104 +122,106 @@ public class PlayerStatsAttachment {
 
     // === Recalcular derivados ===
     public void recalcAll() {
-        // Multiplicadores por raza
-        double mSTR = switch (race) {
-            case HUMAN -> 1.0; case SAIYAN -> 1.3; case NAMEKIAN -> 0.8; case ARCOSIAN -> 0.9; case MAJIN -> 0.9;
-        };
-        double mCON = switch (race) {
-            case HUMAN -> 1.0; case SAIYAN -> 1.0; case NAMEKIAN -> 0.9; case ARCOSIAN -> 0.9; case MAJIN -> 1.3;
-        };
-        double mDEX = switch (race) {
-            case HUMAN -> 1.0; case SAIYAN -> 1.2; case NAMEKIAN -> 0.9; case ARCOSIAN -> 1.0; case MAJIN -> 0.9;
-        };
-        double mWIL = switch (race) {
-            case HUMAN -> 1.0; case SAIYAN -> 0.8; case NAMEKIAN -> 1.1; case ARCOSIAN -> 1.2; case MAJIN -> 1.1;
-        };
-        double mSPI = switch (race) {
-            case HUMAN -> 1.0; case SAIYAN -> 0.7; case NAMEKIAN -> 1.3; case ARCOSIAN -> 1.1; case MAJIN -> 0.8;
-        };
-        double mMIND = 1.0;
+        // === Multiplicadores por raza/estilo desde config ===
+        // raceMult: [mSTR, mCON, mDEX, mWIL, mSPI, mMND]
+        double[] r = StatsConfig.raceMultipliers(this.race);
+        double mSTR = r[0];
+        double mCON = r[1];
+        double mDEX = r[2];
+        double mWIL = r[3];
+        double mSPI = r[4];
+        double mMND = r[5];
 
-        // Multiplicadores por estilo
-        double sSTR = switch (style) {
-            case WARRIOR -> 1.2; case MARTIAL_ARTIST -> 1.1; case SPIRITUALIST -> 0.9;
-        };
-        double sCON = switch (style) {
-            case WARRIOR -> 1.1; case MARTIAL_ARTIST -> 1.0; case SPIRITUALIST -> 0.9;
-        };
-        double sDEX = switch (style) {
-            case WARRIOR -> 1.3; case MARTIAL_ARTIST -> 1.0; case SPIRITUALIST -> 0.9;
-        };
-        double sWIL = switch (style) {
-            case WARRIOR -> 0.8; case MARTIAL_ARTIST -> 1.1; case SPIRITUALIST -> 1.3;
-        };
-        double sSPI = switch (style) {
-            case WARRIOR -> 0.8; case MARTIAL_ARTIST -> 1.0; case SPIRITUALIST -> 1.2;
-        };
-        double sMIND = 1.0;
+        // styleMult: [sSTR, sCON, sDEX, sWIL, sSPI, sMND]
+        double[] s = StatsConfig.styleMultipliers(this.style);
+        double sSTR = s[0];
+        double sCON = s[1];
+        double sDEX = s[2];
+        double sWIL = s[3];
+        double sSPI = s[4];
+        double sMND = s[5];
 
         // Estadística = Atributo × MultRaza × MultEstilo
-        double STR = attributes.get(Dbrattributes.STRENGTH) * mSTR * sSTR;
+        double STR = attributes.get(Dbrattributes.STRENGTH)     * mSTR * sSTR;
         double CON = attributes.get(Dbrattributes.CONSTITUTION) * mCON * sCON;
-        double DEX = attributes.get(Dbrattributes.DEXTERITY) * mDEX * sDEX;
-        double WIL = attributes.get(Dbrattributes.WILLPOWER) * mWIL * sWIL;
-        double SPI = attributes.get(Dbrattributes.SPIRIT) * mSPI * sSPI;
-        double MND = attributes.get(Dbrattributes.MIND) * mMIND * sMIND;
+        double DEX = attributes.get(Dbrattributes.DEXTERITY)    * mDEX * sDEX;
+        double WIL = attributes.get(Dbrattributes.WILLPOWER)    * mWIL * sWIL;
+        double SPI = attributes.get(Dbrattributes.SPIRIT)       * mSPI * sSPI;
+        double MND = attributes.get(Dbrattributes.MIND)         * mMND * sMND;
 
-        // Mapeos lineales a derivados
-        // (dejamos comentarios para claridad por si los usas luego)
-        double melee = STR;              // Melee ← STRENGTH
-        double defense = DEX;            // Defense ← DEXTERITY
-        double bodyStat = CON;           // Body ← CON
-        double staminaStat = CON;        // Stamina ← CON
-        double kiPower = WIL;            // KiPower ← WILLPOWER
-        double kiPool = SPI;             // KiPool ← SPIRIT
-        double speedStat = DEX;          // Speed ← DEXTERITY
-        double regenBody = CON;          // RegenRateBody ← CON
-        double regenStamina = CON;       // RegenRateStamina ← CON
-        double regenEnergy = SPI;        // RegenRateEnergy ← SPIRIT
-        double flyStat = DEX;            // FlySpeed ← DEXTERITY
-
-        // Pools máximos
-        this.bodyMax = (int)Math.max(1, Math.round(100 + bodyStat));
-        this.staminaMax = (int)Math.max(1, Math.round(100 + staminaStat));
-        this.energyMax  = (int)Math.max(1, Math.round(100 + kiPool));
+        // Pools máximos (puedes parametrizar estos +10/+90 si luego quieres)
+        this.bodyMax    = (int) Math.max(1, Math.round(10 + CON));
+        this.staminaMax = (int) Math.max(1, Math.round(90 + CON));
+        this.energyMax  = (int) Math.max(1, Math.round(90 + SPI));
 
         // Stats de movimiento (lineales)
-        this.speed = speedStat;
-        this.flySpeed = flyStat;
+        this.speed    = DEX;
+        this.flySpeed = DEX;
 
-        // Clamps de pools actuales
-        this.body = Math.min(this.body, this.bodyMax);
+        // Clamp de pools actuales
+        this.body    = Math.min(this.body,    this.bodyMax);
         this.stamina = Math.min(this.stamina, this.staminaMax);
-        this.energy = Math.min(this.energy, this.energyMax);
-
-        // Limpieza temp stats
-        tempStats.values().removeIf(TempStat::expired);
+        this.energy  = Math.min(this.energy,  this.energyMax);
     }
+
 
     // === TP / progresión ===
     public boolean spendTP(Dbrattributes attr, int points) {
         if (points <= 0) return false;
-        int have = this.tp;
-        int inv = this.invested.get(attr);
-        double coeff = StatsConfig.tpCoefficient();
 
-        int totalCost = 0;
-        for (int k=0;k<points;k++) totalCost += (int)Math.ceil(1 + (inv + k) * coeff);
-        if (have < totalCost) return false;
+        int have = this.tp;
+        double coeff = StatsConfig.tpCoefficient(); // 1.5 por ejemplo
+
+        // Puntos ya invertidos GLOBALMENTE (todas las stats)
+        int totalInv = this.invested.values().stream().mapToInt(Integer::intValue).sum();
 
         int cap = StatsConfig.globalAttributeCap();
-        int cur = attributes.get(attr);
+        int cur = this.attributes.get(attr);
+
+        // Cuántos puntos *realmente* puedes subir en este atributo (por el cap)
         int add = Math.min(points, cap - cur);
         if (add <= 0) return false;
 
-        attributes.put(attr, cur + add);
-        invested.put(attr, inv + add);
+        // Coste total usando el contador global de puntos invertidos
+        int totalCost = 0;
+        for (int k = 0; k < add; k++) {
+            totalCost += (int) Math.ceil(1 + (totalInv + k) * coeff);
+        }
+
+        if (have < totalCost) return false;
+
+        // Aplicar cambios
+        this.attributes.put(attr, cur + add);
+
+        this.invested.compute(attr, (k, invAttr) -> invAttr + add);
+
         this.tp = have - totalCost;
         recalcAll();
         return true;
     }
+
+    public int previewTpCost(Dbrattributes attr, int points) {
+        if (points <= 0) return 0;
+
+        double coeff = StatsConfig.tpCoefficient();
+
+        // Puntos ya invertidos GLOBALMENTE
+        int totalInv = this.invested.values().stream().mapToInt(Integer::intValue).sum();
+
+        int cap = StatsConfig.globalAttributeCap();
+        int cur = this.attributes.get(attr);
+
+        int add = Math.min(points, cap - cur);
+        if (add <= 0) return 0;
+
+        int totalCost = 0;
+        for (int k = 0; k < add; k++) {
+            totalCost += (int) Math.ceil(1 + (totalInv + k) * coeff);
+        }
+        return totalCost;
+    }
+
+
 
     public void addTP(int amount) { this.tp = Math.max(0, this.tp + amount); }
     public int getTP() { return tp; }
@@ -225,13 +230,14 @@ public class PlayerStatsAttachment {
         attributes.put(a, MathUtil.clamp(v, 0, StatsConfig.globalAttributeCap()));
         recalcAll();
     }
+
     public int getAttribute(Dbrattributes a) { return attributes.getOrDefault(a, 0); }
 
     public void respec() {
         int refund = invested.values().stream().mapToInt(i -> i).sum();
         this.tp += refund;
         invested.replaceAll((k,v)->0);
-        applyRaceStyle();
+        applyRaceBaseAttributes();
         recalcAll();
     }
 
@@ -251,7 +257,6 @@ public class PlayerStatsAttachment {
     public double computeFlyFinal() {
         return BalanceUtil.computeStat(attributes.get(Dbrattributes.DEXTERITY), race, style, Dbrattributes.DEXTERITY);
     }
-
 
     /** Ki Power final (útil para escalar daño/costo de ataques). */
     public double computeKiPowerFinal() {
@@ -345,16 +350,6 @@ public class PlayerStatsAttachment {
     public double getSpeedStat() { return speed; }
     public double getFlySpeedStat() { return flySpeed; }
 
-    // === Temp stats (simple) ===
-    public void setTempStat(String key, double value, int ticks) {
-        tempStats.put(key, new TempStat(value, System.currentTimeMillis() + ticks * 50L));
-    }
-    public Double getTempStat(String key) {
-        TempStat t = tempStats.get(key);
-        return (t == null || t.expired()) ? null : t.value;
-    }
-
-
 
     record TempStat(double value, long expireMs) { boolean expired(){ return System.currentTimeMillis()>expireMs; } }
 
@@ -392,7 +387,6 @@ public class PlayerStatsAttachment {
         ListTag list = getTags();
         tag.put("kiAttacks", list);
         tag.putString("selectedKiAttackId", selectedKiAttackId);
-        tag.putInt("auraColorRgb", auraColorRgb);
 
         return tag;
     }
@@ -470,7 +464,6 @@ public class PlayerStatsAttachment {
             }
         }
         this.selectedKiAttackId = tag.getString("selectedKiAttackId");
-        this.auraColorRgb = tag.contains("auraColorRgb", Tag.TAG_INT) ? tag.getInt("auraColorRgb") : this.auraColorRgb;
     }
 
     private static KiAttackType safeType(String name) {
@@ -500,10 +493,9 @@ public class PlayerStatsAttachment {
     /** Stat lineal de vuelo ya es flySpeed. */
     public double getFlySpeed() { return this.flySpeed; }
 
-    /** Multiplicador de vuelo vanilla: 1.0 + FlySpeed/100 con cap 2.0. */
     public double getFlyMultiplier() {
-        double mult = 2.0 + (this.flySpeed / 100.0);
-        return Math.min(3.0, Math.max(0.0, mult));
+        double mult = 1.0 + (this.flySpeed / 100.0);
+        return Math.min(StatsConfig.flyMultiplierCap(), Math.max(0.0, mult));
     }
 
     /** (Opcional) Multiplicador de movimiento terrestre con cap 2.0. */
@@ -554,9 +546,6 @@ public class PlayerStatsAttachment {
 
     public String getSelectedKiAttackId() { return selectedKiAttackId; }
 
-    /** Color del aura configurable (y por defecto para ataques nuevos). */
-    public int getAuraColorRgb() { return auraColorRgb; }
-    public void setAuraColorRgb(int rgb) { this.auraColorRgb = rgb; }
 
     /** Vista de solo-lectura de ataques (para UI). */
     public Map<String, KiAttackDefinition> getKiAttacksReadonly() {

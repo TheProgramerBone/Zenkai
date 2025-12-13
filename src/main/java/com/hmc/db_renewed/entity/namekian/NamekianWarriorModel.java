@@ -31,7 +31,7 @@ public class NamekianWarriorModel extends DefaultedEntityGeoModel<NamekianWarrio
 
     @Override
     public ResourceLocation getAnimationResource(NamekianWarriorEntity animatable) {
-        return ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID,"animations/namekian_warrior.animation.json");
+        return ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID,"animations/namekian_default.animation.json");
     }
 
     @Override

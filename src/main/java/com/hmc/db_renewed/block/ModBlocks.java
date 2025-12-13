@@ -178,6 +178,126 @@ public class ModBlocks {
                             .sound(SoundType.DEEPSLATE)
                             .mapColor(MapColor.DEEPSLATE)));
 
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_BLACK = registerBlock("terragem_concrete_black",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_BLACK)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_BLUE = registerBlock("terragem_concrete_blue",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_BLUE)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_BROWN = registerBlock("terragem_concrete_brown",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_BROWN)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_CYAN = registerBlock("terragem_concrete_cyan",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_CYAN)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_DARK_GREEN = registerBlock("terragem_concrete_dark_green",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.TERRACOTTA_GREEN)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_DARK_RED = registerBlock("terragem_concrete_dark_red",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.NETHER)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_GRAY = registerBlock("terragem_concrete_gray",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_GRAY)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_GREEN = registerBlock("terragem_concrete_green",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_GREEN)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_LIGHT_BLUE = registerBlock("terragem_concrete_light_blue",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_LIGHT_GRAY = registerBlock("terragem_concrete_light_gray",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_LIGHT_GRAY)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_MAGENTA = registerBlock("terragem_concrete_magenta",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_MAGENTA)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_ORANGE = registerBlock("terragem_concrete_orange",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_ORANGE)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_PINK = registerBlock("terragem_concrete_pink",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_PINK)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_PURPLE = registerBlock("terragem_concrete_purple",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_PURPLE)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_RED = registerBlock("terragem_concrete_red",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_RED)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_WHITE = registerBlock("terragem_concrete_white",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.TERRACOTTA_WHITE)));
+
+    public static final DeferredBlock<Block> TERRAGEM_CONCRETE_YELLOW = registerBlock("terragem_concrete_yellow",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f,100f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_YELLOW)));
+
     public static final DeferredBlock<Block> ROCKY_BLOCK = registerBlock("rocky_block",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f)
