@@ -17,6 +17,16 @@ tasks.named('wrapper', Wrapper).configure {
 version = mod_version
 group = mod_group_id
 
+configurations.configureEach {
+    resolutionStrategy {
+        force 'com.google.code.gson:gson:2.10.1'
+        force 'org.slf4j:slf4j-api:2.0.16'
+        force 'it.unimi.dsi:fastutil:8.5.15'
+        force 'io.netty:netty-buffer:4.1.115.Final'
+        force 'io.netty:netty-common:4.1.115.Final'
+    }
+}
+
 //Dependencias
 repositories {
     maven {
@@ -32,14 +42,16 @@ repositories {
     maven {//Terrablender
         url = 'https://repo.spongepowered.org/repository/maven-public/' }
 
-    maven {//PlayerAnimator
-        name = "Illusive Soulworks maven"
-        url = "https://maven.theillusivec4.top/"
+    repositories {//Curious
+        maven {
+            name = "Illusive Soulworks maven"
+            url = "https://maven.theillusivec4.top/"
+        }
     }
 
-    maven {//PlayerAnimator
-        name "KosmX's maven"
-        url 'https://maven.kosmx.dev/'
+    maven {//PAL
+        name = "RedlanceMinecraft"
+        url = "https://repo.redlance.org/public"
     }
 }
 
@@ -139,7 +151,7 @@ dependencies {
 
     implementation "com.github.glitchfiend:TerraBlender-neoforge:${"1.21.1"}-${"4.1.0.8"}"
 
-    implementation "dev.kosmx.player-anim:player-animation-lib-forge:${"2.0.1"}+${"1.21.1"}"
+    implementation "com.zigythebird.playeranim:PlayerAnimationLibNeo:$project.pal_version"
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

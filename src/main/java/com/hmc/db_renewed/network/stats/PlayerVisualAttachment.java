@@ -16,124 +16,30 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PlayerVisualAttachment {
 
-    // ========================
-    //  COLORES BÁSICOS
-    // ========================
+    // ====== Colores básicos (RGB) ======
+    private int hairColorRgb = 0xF4D03F;  // rubio tipo SSJ por defecto
+    private int eyeColorRgb  = 0x2E86C1;  // azul
+    private int auraColorRgb = 0x33CCFF;  // mismo default que usas en stats
 
-    /** Color de pelo en RGB (0xRRGGBB). */
-    private int hairColorRgb = 0xCCAA66;
+    // ====== IDs de estilos/modelos ======
+    // Puedes mapear estos IDs a assets/animaciones concretas
+    private String hairStyleId = "base";      // p.ej. "base", "saiyan_spiky_1", "saiyan_long"
+    private String auraStyleId = "none";      // p.ej. "none", "basic", "flame", "god"
+    private String outfitId    = "gi_default"; // futura ropa
 
-    /** Color de ojos en RGB (0xRRGGBB). */
-    private int eyeColorRgb = 0x00FF00;
+    // ====== Forma / transformación ======
+    // 0 = base, 1 = primera forma, 2 = SSJ, etc.
+    private int formStage = 0;
 
-    /**
-     * Color de aura en RGB (0xRRGGBB).
-     * Ojo: tienes un auraColorRgb en PlayerStatsAttachment, la idea
-     * es ir migrándolo poco a poco a este attachment.
-     */
-    private int auraColorRgb = 0x33CCFF;
+    public PlayerVisualAttachment() {
+    }
 
-    // ========================
-    //  ESTILOS / IDS LÓGICOS
-    // ========================
-
-    /**
-     * ID lógico del estilo de peinado.
-     * Ejemplos: "saiyan_base_1", "saiyan_spiky_2", "namekian_antennae".
-     */
-    private String hairStyleId = "base";
-
-    /**
-     * ID lógico del estilo de aura.
-     * Ejemplos: "ki_base", "ssj_flare", "god_flame".
-     */
-    private String auraStyleId = "base";
-
-    /**
-     * ID lógico del outfit/ropa principal.
-     * Ejemplos: "gi_orange", "armor_saiyan", "cloak_namekian".
-     */
-    private String outfitId = "gi_orange";
-
-    /**
-     * Forma/transformación actual.
-     * Ejemplos: "base", "ssj1", "ssj2", "golden", "majin".
-     */
-    private String formId = "base";
-
-    /**
-     * Si la cola del saiyan (u otra parte) debe renderizarse visible.
-     * Esto lo puede leer GeckoLib para mostrar/ocultar el modelo correspondiente.
-     */
-    private boolean tailVisible = false;
-
-    // ========================
-    //  CONSTRUCTOR / ACCESO
-    // ========================
-
-    public PlayerVisualAttachment() {}
-
-    /**
-     * Acceso estático como en PlayerStatsAttachment.
-     * Requiere que registres DataAttachments.PLAYER_VISUAL.
-     */
-    public static PlayerVisualAttachment get(Player player) {
+    // ---------- Acceso estático (igual que PlayerStatsAttachment) ----------
+    public static PlayerVisualAttachment get(@NotNull Player player) {
         return player.getData(DataAttachments.PLAYER_VISUAL.get());
     }
 
-    // ========================
-    //  SERIALIZACIÓN NBT
-    // ========================
-
-    public @NotNull CompoundTag save() {
-        CompoundTag tag = new CompoundTag();
-
-        tag.putInt("hairColorRgb", this.hairColorRgb);
-        tag.putInt("eyeColorRgb",  this.eyeColorRgb);
-        tag.putInt("auraColorRgb", this.auraColorRgb);
-
-        tag.putString("hairStyleId", this.hairStyleId);
-        tag.putString("auraStyleId", this.auraStyleId);
-        tag.putString("outfitId",    this.outfitId);
-        tag.putString("formId",      this.formId);
-
-        tag.putBoolean("tailVisible", this.tailVisible);
-
-        return tag;
-    }
-
-    public void load(CompoundTag tag) {
-        if (tag.contains("hairColorRgb", Tag.TAG_INT)) {
-            this.hairColorRgb = tag.getInt("hairColorRgb");
-        }
-        if (tag.contains("eyeColorRgb", Tag.TAG_INT)) {
-            this.eyeColorRgb = tag.getInt("eyeColorRgb");
-        }
-        if (tag.contains("auraColorRgb", Tag.TAG_INT)) {
-            this.auraColorRgb = tag.getInt("auraColorRgb");
-        }
-
-        if (tag.contains("hairStyleId", Tag.TAG_STRING)) {
-            this.hairStyleId = tag.getString("hairStyleId");
-        }
-        if (tag.contains("auraStyleId", Tag.TAG_STRING)) {
-            this.auraStyleId = tag.getString("auraStyleId");
-        }
-        if (tag.contains("outfitId", Tag.TAG_STRING)) {
-            this.outfitId = tag.getString("outfitId");
-        }
-        if (tag.contains("formId", Tag.TAG_STRING)) {
-            this.formId = tag.getString("formId");
-        }
-
-        if (tag.contains("tailVisible", Tag.TAG_BYTE)) {
-            this.tailVisible = tag.getBoolean("tailVisible");
-        }
-    }
-
-    // ========================
-    //  GETTERS / SETTERS
-    // ========================
+    // ---------- Getters / setters simples ----------
 
     public int getHairColorRgb() {
         return hairColorRgb;
@@ -164,7 +70,9 @@ public class PlayerVisualAttachment {
     }
 
     public void setHairStyleId(String hairStyleId) {
-        this.hairStyleId = hairStyleId;
+        if (hairStyleId != null && !hairStyleId.isEmpty()) {
+            this.hairStyleId = hairStyleId;
+        }
     }
 
     public String getAuraStyleId() {
@@ -172,7 +80,9 @@ public class PlayerVisualAttachment {
     }
 
     public void setAuraStyleId(String auraStyleId) {
-        this.auraStyleId = auraStyleId;
+        if (auraStyleId != null && !auraStyleId.isEmpty()) {
+            this.auraStyleId = auraStyleId;
+        }
     }
 
     public String getOutfitId() {
@@ -180,22 +90,59 @@ public class PlayerVisualAttachment {
     }
 
     public void setOutfitId(String outfitId) {
-        this.outfitId = outfitId;
+        if (outfitId != null && !outfitId.isEmpty()) {
+            this.outfitId = outfitId;
+        }
     }
 
-    public String getFormId() {
-        return formId;
+    public int getFormStage() {
+        return formStage;
     }
 
-    public void setFormId(String formId) {
-        this.formId = formId;
+    public void setFormStage(int formStage) {
+        this.formStage = Math.max(0, formStage);
     }
 
-    public boolean isTailVisible() {
-        return tailVisible;
+    // ---------- Serialización NBT (para AttachmentType.serializable) ----------
+
+    public CompoundTag save() {
+        CompoundTag tag = new CompoundTag();
+
+        tag.putInt("hairColor", hairColorRgb);
+        tag.putInt("eyeColor", eyeColorRgb);
+        tag.putInt("auraColor", auraColorRgb);
+
+        tag.putString("hairStyleId", hairStyleId);
+        tag.putString("auraStyleId", auraStyleId);
+        tag.putString("outfitId", outfitId);
+
+        tag.putInt("formStage", formStage);
+
+        return tag;
     }
 
-    public void setTailVisible(boolean tailVisible) {
-        this.tailVisible = tailVisible;
+    public void load(CompoundTag tag) {
+        if (tag.contains("hairColor")) {
+            hairColorRgb = tag.getInt("hairColor");
+        }
+        if (tag.contains("eyeColor")) {
+            eyeColorRgb = tag.getInt("eyeColor");
+        }
+        if (tag.contains("auraColor")) {
+            auraColorRgb = tag.getInt("auraColor");
+        }
+
+        if (tag.contains("hairStyleId")) {
+            hairStyleId = tag.getString("hairStyleId");
+        }
+        if (tag.contains("auraStyleId")) {
+            auraStyleId = tag.getString("auraStyleId");
+        }
+        if (tag.contains("outfitId")) {
+            outfitId = tag.getString("outfitId");
+        }
+
+        formStage = tag.getInt("formStage");
+        if (formStage < 0) formStage = 0;
     }
 }

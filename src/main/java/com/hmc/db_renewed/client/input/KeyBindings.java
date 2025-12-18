@@ -15,6 +15,7 @@ import org.lwjgl.glfw.GLFW;
 
 
 public final class KeyBindings {
+
     private KeyBindings() {}
 
     public static KeyMapping OPEN_STATS;
@@ -24,6 +25,8 @@ public final class KeyBindings {
 
     private static boolean REGISTERED = false;
     private static boolean lastChargeSent = false;
+
+    // Capa de animación reutilizable solo para la transformación
 
     // Llamado SOLO desde ClientModEvents.onKeyMappingRegister
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
@@ -61,6 +64,10 @@ public final class KeyBindings {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
+
+        // ==========================
+        // 2) OPEN_STATS (V)
+        // ==========================
         if (OPEN_STATS != null && OPEN_STATS.consumeClick()) {
 
             PlayerStatsAttachment att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
@@ -74,12 +81,19 @@ public final class KeyBindings {
             }
         }
 
+        // 3) TOGGLE_FLY (G)
         if (TOGGLE_FLY != null && TOGGLE_FLY.consumeClick()) {
             PacketDistributor.sendToServer(new ToggleFlyPacket());
         }
 
+        // 4) CHARGE_KI (C sin ALT)
         if (CHARGE_KI != null) {
             boolean now = CHARGE_KI.isDown();
+            // Si ALT está presionado, ya manejamos ese caso arriba (transformación),
+            // así que aquí NO enviamos paquetes de carga de Ki.
+            if (SPECIAL != null && SPECIAL.isDown()) {
+                return;
+            }
             if (now != lastChargeSent) {
                 lastChargeSent = now;
                 PacketDistributor.sendToServer(new KiChargePacket(now));

@@ -122,7 +122,7 @@ public class DragonBlockRenewed
         }
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event){
-
+            //DbrPlayerAnimations.init();
             BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
             EntityRenderers.register(ModEntities.SPACE_POD.get(), SpacePodRenderer::new);
             EntityRenderers.register(ModEntities.NAMEKIAN.get(), NamekianRenderer::new);

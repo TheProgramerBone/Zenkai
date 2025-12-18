@@ -13,7 +13,6 @@ public class DataAttachments {
     public static final DeferredRegister<AttachmentType<?>> REGISTER =
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, DragonBlockRenewed.MOD_ID);
 
-    // Codec: NBT <-> PlayerStatsAttachment
     public static final Codec<PlayerStatsAttachment> PLAYER_STATS_CODEC = CompoundTag.CODEC.xmap(
             tag -> {
                 PlayerStatsAttachment att = new PlayerStatsAttachment();
