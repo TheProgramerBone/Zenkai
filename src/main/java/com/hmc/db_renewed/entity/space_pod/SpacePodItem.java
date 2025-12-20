@@ -1,7 +1,6 @@
-package com.hmc.db_renewed.item.special;
+package com.hmc.db_renewed.entity.space_pod;
 
 import com.hmc.db_renewed.entity.ModEntities;
-import com.hmc.db_renewed.entity.space_pod.SpacePodEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;

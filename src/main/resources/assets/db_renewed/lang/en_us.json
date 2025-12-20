@@ -9,6 +9,8 @@
   "item.db_renewed.terragem_dust": "Terragem Dust",
   "item.db_renewed.terragem_template": "Terragem Smithing Template",
   "item.db_renewed.space_pod_item": "Space Pod",
+  "item.db_renewed.kintoun_item": "Flying Nimbus",
+  "item.db_renewed.kintoun_shadow_item": "Shadow Flying Nimbus",
   "item.db_renewed.terragem_sword": "Terragem Sword",
   "item.db_renewed.terragem_pickaxe": "Terragem Pickaxe",
   "item.db_renewed.terragem_shovel": "Terragem Shovel",
@@ -47,7 +49,6 @@
   "block.db_renewed.terragem_concrete_red": "Terragem Red Concrete",
   "block.db_renewed.terragem_concrete_white": "Terragem White Concrete",
   "block.db_renewed.terragem_concrete_yellow": "Terragem Yellow Concrete",
-
   "block.db_renewed.rocky_block": "Rocky Block",
   "block.db_renewed.dragon_ball_stone":"Dragon Ball Stone",
   "block.db_renewed.dragon_ball_1":"§6Dragon Ball 1 Star",
@@ -68,7 +69,6 @@
   "block.db_renewed.namek_dragon_ball_7": "§6Namek Dragon Ball 7 Star",
 
   "effect.db_renewed.immortality": "Immortality",
-
 
   "creativetab.db_renewed": "Dragon Block Renewed",
 
@@ -174,6 +174,8 @@
 
   "entity.db_renewed.shenlong": "Shenron",
   "entity.db_renewed.space_pod": "Space Pod",
+  "entity.db_renewed.kintoun": "Flying Nimbus",
+  "entity.db_renewed.kintoun_shadow": "Shadow Flying Nimbus",
   "entity.db_renewed.namekian": "Namekian",
   "entity.db_renewed.namekian_warrior": "Namekian Warrior"
 }

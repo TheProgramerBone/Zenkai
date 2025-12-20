@@ -2,8 +2,10 @@ package com.hmc.db_renewed.entity;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.entity.ki_attacks.ki_blast.KiBlastEntity;
+import com.hmc.db_renewed.entity.kintoun.ShadowKintounEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorEntity;
+import com.hmc.db_renewed.entity.kintoun.KintounEntity;
 import com.hmc.db_renewed.entity.space_pod.SpacePodEntity;
 import com.hmc.db_renewed.entity.shenlong.ShenLongEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -21,6 +23,14 @@ public class ModEntities {
     public static final Supplier<EntityType<SpacePodEntity>> SPACE_POD =
             ENTITY_TYPES.register("space_pod",() -> EntityType.Builder.of(SpacePodEntity::new, MobCategory.CREATURE)
                     .sized(2.45f,2.5f).build("space_pod"));
+
+    public static final Supplier<EntityType<KintounEntity>> KINTOUN =
+            ENTITY_TYPES.register("kintoun",() -> EntityType.Builder.of(KintounEntity::new, MobCategory.CREATURE)
+                    .sized(2.45f,2.5f).build("kintoun"));
+
+    public static final Supplier<EntityType<ShadowKintounEntity>> SHADOW_KINTOUN =
+            ENTITY_TYPES.register("kintoun_shadow",() -> EntityType.Builder.of(ShadowKintounEntity::new, MobCategory.CREATURE)
+                    .sized(2.45f,2.5f).build("kintoun_shadow"));
 
     public static final Supplier<EntityType<ShenLongEntity>> SHENLONG =
             ENTITY_TYPES.register("shenlong",() -> EntityType.Builder.of(ShenLongEntity::new, MobCategory.MISC)

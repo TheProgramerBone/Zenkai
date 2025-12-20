@@ -1,5 +1,6 @@
-package com.hmc.db_renewed.entity.space_pod;
+package com.hmc.db_renewed.entity.kintoun;
 
+import com.hmc.db_renewed.entity.CommonAnimations;
 import com.hmc.db_renewed.item.ModItems;
 import com.hmc.db_renewed.network.VerticalControlVehicle;
 import net.minecraft.core.BlockPos;
@@ -19,31 +20,24 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class SpacePodEntity extends Animal implements GeoEntity, VerticalControlVehicle {
+public class KintounEntity extends Animal implements GeoEntity, VerticalControlVehicle {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
-
-    private static final RawAnimation OPEN_ANIM   = RawAnimation.begin().thenPlay("open");
-    private static final RawAnimation CLOSE_ANIM  = RawAnimation.begin().thenPlay("close");
-    private static final RawAnimation LAUNCH_ANIM = RawAnimation.begin().thenPlay("launch");
 
     // Ajustes
     private static final float  HORIZONTAL_SPEED = 1f;
     private static final double VERTICAL_SPEED   = 1.5f;   // subir/bajar (input)
-    private static final double INPUT_DEADZONE   = 1.0E-3;
+    private static final double INPUT_DEADLINE = 1.0E-3;
 
-    // Input vertical (lo setea tu packet en servidor)
     private boolean inputUp;
     private boolean inputDown;
 
-    public SpacePodEntity(EntityType<? extends SpacePodEntity> type, Level level) {
+    public KintounEntity(EntityType<? extends KintounEntity> type, Level level) {
         super(type, level);
         this.setNoGravity(true);
         this.setNoAi(true);
@@ -56,7 +50,6 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
                 .add(Attributes.MOVEMENT_SPEED, 1.0);
     }
 
-    /** Llamar desde tu handler de packet (SERVER) */
     @Override
     public void setVerticalInput(boolean up, boolean down) {
         this.inputUp = up;
@@ -65,15 +58,7 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0, this::predicate)
-                .triggerableAnim("open", OPEN_ANIM)
-                .triggerableAnim("close", CLOSE_ANIM)
-                .triggerableAnim("launch", LAUNCH_ANIM));
-    }
-
-    private <E extends GeoAnimatable> PlayState predicate(AnimationState<E> state) {
-        state.setAnimation(OPEN_ANIM);
-        return PlayState.CONTINUE;
+        controllers.add(CommonAnimations.genericWalkIdleController(this));
     }
 
     // -------------------------
@@ -89,7 +74,6 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
     public @NotNull InteractionResult mobInteract(Player player, @NotNull InteractionHand hand) {
         if (!player.isPassenger() && this.getPassengers().isEmpty()) {
             player.startRiding(this, true);
-            if (!this.level().isClientSide()) triggerCloseAnimation();
             return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
         return InteractionResult.PASS;
@@ -132,9 +116,9 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
             if (inputDown) upDown -= 1.0;
 
             // Anti-drift: si no hay input, frena fuerte
-            if (Math.abs(strafe) < INPUT_DEADZONE
-                    && Math.abs(forward) < INPUT_DEADZONE
-                    && Math.abs(upDown) < INPUT_DEADZONE) {
+            if (Math.abs(strafe) < INPUT_DEADLINE
+                    && Math.abs(forward) < INPUT_DEADLINE
+                    && Math.abs(upDown) < INPUT_DEADLINE) {
 
                 Vec3 dm = this.getDeltaMovement().multiply(0.5, 0.5, 0.5);
                 if (dm.lengthSqr() < 1.0E-5) dm = Vec3.ZERO;
@@ -217,10 +201,6 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
 
         // Con rider: sin gravedad (vuelo). Sin rider: con gravedad (cae) + tu travel también baja suave.
         this.setNoGravity(hasRider);
-
-        if (!hasRider && !this.level().isClientSide()) {
-            triggerOpenAnimation();
-        }
     }
 
     // -------------------------
@@ -235,7 +215,7 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
     @Override
     public void die(@NotNull DamageSource source) {
         if (!this.level().isClientSide) {
-            this.spawnAtLocation(ModItems.SPACE_POD_ITEM.get());
+            this.spawnAtLocation(ModItems.KINTOUN_ITEM.get());
         }
         super.die(source);
     }
@@ -264,9 +244,6 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
     // GeckoLib helpers
     // -------------------------
 
-    public void triggerCloseAnimation() { triggerAnim("controller", "close"); }
-    public void triggerOpenAnimation()  { triggerAnim("controller", "open");  }
-    public void triggerLaunchAnimation(){ triggerAnim("controller", "launch"); }
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {

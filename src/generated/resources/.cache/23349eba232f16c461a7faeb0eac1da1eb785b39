@@ -1,7 +1,9 @@
-// 1.21.1	2025-11-02T11:03:58.4353597	Item Models: db_renewed
+// 1.21.1	2025-12-20T15:43:06.7924105	Item Models: db_renewed
 a57b7dd76f3840d5b32cd0765f11b116ee046695 assets/db_renewed/models/item/advanced_circuit.json
 028d6979fbbdbbe5581f4ade0c111c6657ef5932 assets/db_renewed/models/item/basic_circuit.json
 103e0d09e3fe1db6e1e2f0d237590449015a8cb8 assets/db_renewed/models/item/elite_circuit.json
+07e52708a5469c9af541d1223fc6e27863919027 assets/db_renewed/models/item/kintoun_item.json
+d39304334c78e64cc3fe58b79441ec800014d3fd assets/db_renewed/models/item/kintoun_shadow_item.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/db_renewed/models/item/namekian_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/db_renewed/models/item/namekian_warrior_spawn_egg.json
 20d68d6100acc54019915aa652f8ed2732e3db53 assets/db_renewed/models/item/senzu_bean.json

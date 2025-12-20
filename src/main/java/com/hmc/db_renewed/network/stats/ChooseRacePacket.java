@@ -1,8 +1,6 @@
-package com.hmc.db_renewed.network;
+package com.hmc.db_renewed.network.stats;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.network.stats.PlayerStatsAttachment;
-import com.hmc.db_renewed.network.stats.Race;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;

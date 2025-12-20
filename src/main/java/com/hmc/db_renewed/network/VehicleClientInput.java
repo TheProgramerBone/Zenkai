@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.entity.space_pod;
+package com.hmc.db_renewed.network;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import net.minecraft.client.Minecraft;

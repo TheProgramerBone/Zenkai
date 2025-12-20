@@ -9,6 +9,8 @@ import com.hmc.db_renewed.config.WishConfig;
 import com.hmc.db_renewed.effect.ModEffects;
 import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.ki_attacks.ki_blast.KiBlastRenderer;
+import com.hmc.db_renewed.entity.kintoun.KintounRenderer;
+import com.hmc.db_renewed.entity.kintoun.ShadowKintounRenderer;
 import com.hmc.db_renewed.entity.namekian.NamekianRenderer;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorRenderer;
 import com.hmc.db_renewed.entity.space_pod.SpacePodRenderer;
@@ -134,6 +136,8 @@ public class DragonBlockRenewed
         public static void onClientSetup(FMLClientSetupEvent event){
             BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
             EntityRenderers.register(ModEntities.SPACE_POD.get(), SpacePodRenderer::new);
+            EntityRenderers.register(ModEntities.KINTOUN.get(), KintounRenderer::new);
+            EntityRenderers.register(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounRenderer::new);
             EntityRenderers.register(ModEntities.NAMEKIAN.get(), NamekianRenderer::new);
             EntityRenderers.register(ModEntities.NAMEKIAN_WARRIOR.get(), NamekianWarriorRenderer::new);
             EntityRenderers.register(ModEntities.SHENLONG.get(), ShenLongRenderer::new);

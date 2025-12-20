@@ -4,10 +4,10 @@ import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.namekian.NamekianEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorEntity;
+import com.hmc.db_renewed.entity.kintoun.KintounEntity;
 import com.hmc.db_renewed.entity.shenlong.ShenLongEntity;
 import com.hmc.db_renewed.entity.space_pod.SpacePodEntity;
 import com.hmc.db_renewed.item.special.HammerItem;
-import com.hmc.db_renewed.network.NetCodecs;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,10 +18,8 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -35,7 +33,7 @@ public class ModEvents {
         event.put(ModEntities.NAMEKIAN.get(), NamekianEntity.createAttributes().build());
         event.put(ModEntities.SHENLONG.get(), ShenLongEntity.createAttributes().build());
         event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
-        event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
+        event.put(ModEntities.KINTOUN.get(), KintounEntity.createAttributes().build());
     }
 
     private static final Set<BlockPos> HARVESTED_BLOCKS = new HashSet<>();

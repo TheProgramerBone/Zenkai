@@ -31,6 +31,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.ELITE_CIRCUIT.get());
         basicItem(ModItems.TERRAGEM_TEMPLATE.get());
         basicItem(ModItems.SPACE_POD_ITEM.get());
+        basicItem(ModItems.KINTOUN_ITEM.get());
+        basicItem(ModItems.SHADOW_KINTOUN_ITEM.get());
 
         handheldItem(ModItems.TERRAGEM_SWORD);
         handheldItem(ModItems.TERRAGEM_PICKAXE);

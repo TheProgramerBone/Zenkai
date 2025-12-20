@@ -2,7 +2,9 @@ package com.hmc.db_renewed.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.entity.ModEntities;
+import com.hmc.db_renewed.entity.kintoun.KintounItem;
 import com.hmc.db_renewed.entity.race.NamekainRaceArmorItem;
+import com.hmc.db_renewed.entity.space_pod.SpacePodItem;
 import com.hmc.db_renewed.item.special.*;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
@@ -39,6 +41,16 @@ public class ModItems {
 
     public static final DeferredItem<Item> SPACE_POD_ITEM = ITEMS.registerItem("space_pod_item",
             SpacePodItem::new,
+            new Item.Properties()
+                    .stacksTo(1));
+
+    public static final DeferredItem<Item> KINTOUN_ITEM = ITEMS.registerItem("kintoun_item",
+            KintounItem::new,
+            new Item.Properties()
+                    .stacksTo(1));
+
+    public static final DeferredItem<Item> SHADOW_KINTOUN_ITEM = ITEMS.registerItem("kintoun_shadow_item",
+            KintounItem::new,
             new Item.Properties()
                     .stacksTo(1));
 
