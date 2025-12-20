@@ -20,7 +20,7 @@ public class ModEntities {
 
     public static final Supplier<EntityType<SpacePodEntity>> SPACE_POD =
             ENTITY_TYPES.register("space_pod",() -> EntityType.Builder.of(SpacePodEntity::new, MobCategory.CREATURE)
-                    .sized(2.45f,2.45f).build("space_pod"));
+                    .sized(2.45f,2.5f).build("space_pod"));
 
     public static final Supplier<EntityType<ShenLongEntity>> SHENLONG =
             ENTITY_TYPES.register("shenlong",() -> EntityType.Builder.of(ShenLongEntity::new, MobCategory.MISC)

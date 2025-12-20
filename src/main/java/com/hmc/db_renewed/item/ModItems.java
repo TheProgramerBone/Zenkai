@@ -2,15 +2,15 @@ package com.hmc.db_renewed.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.entity.ModEntities;
-import com.hmc.db_renewed.item.special.DragonRadarItem;
-import com.hmc.db_renewed.item.special.HammerItem;
-import com.hmc.db_renewed.item.special.SenzuBean;
-import com.hmc.db_renewed.item.special.SpacePodItem;
+import com.hmc.db_renewed.entity.race.NamekainRaceArmorItem;
+import com.hmc.db_renewed.item.special.*;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.function.Supplier;
 
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(DragonBlockRenewed.MOD_ID);
@@ -103,6 +103,22 @@ public class ModItems {
     public static final DeferredItem<Item> NAMEKIAN_SPAWN_EGG = ITEMS.register("namekian_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN,0x28ad1b ,0xfdfefe,
                     new Item.Properties()));
+
+    public static final Supplier<NamekainRaceArmorItem> NAMEKIAN_RACE_HELMET = ITEMS.register("namekian_race_helmet",
+            () -> new NamekainRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.HELMET,new Item.Properties()));
+
+    public static final Supplier<NamekainRaceArmorItem> NAMEKIAN_RACE_CHESTPLATE = ITEMS.register("namekian_race_chestplate",
+            () -> new NamekainRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+
+    public static final Supplier<NamekainRaceArmorItem> NAMEKIAN_RACE_LEGGINGS = ITEMS.register("namekian_race_leggings",
+            () -> new NamekainRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.LEGGINGS, new Item.Properties()));
+
+    public static final Supplier<NamekainRaceArmorItem> NAMEKIAN_RACE_BOOTS = ITEMS.register("namekian_race_boots",
+            () -> new NamekainRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.BOOTS, new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

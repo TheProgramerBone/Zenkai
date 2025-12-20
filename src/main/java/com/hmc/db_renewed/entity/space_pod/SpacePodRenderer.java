@@ -7,5 +7,6 @@ public class SpacePodRenderer extends GeoEntityRenderer<SpacePodEntity> {
 
     public SpacePodRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new SpacePodModel());
+        this.shadowRadius = 1f;
     }
 }

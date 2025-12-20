@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.block.ModBlocks;
 import net.minecraft.Util;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -26,6 +27,15 @@ public class ModArmorMaterials {
                 attribute.put(ArmorItem.Type.HELMET, 2);
                 attribute.put(ArmorItem.Type.BODY, 10);
             }), 15, 2f, 0.05f, ModItems.TERRAGEM);
+
+    public static final Holder<ArmorMaterial> RACE_ARMOR_MATERIAL = register("race",
+            Util.make(new EnumMap<>(ArmorItem.Type.class), attribute -> {
+                attribute.put(ArmorItem.Type.BOOTS, 0);
+                attribute.put(ArmorItem.Type.LEGGINGS, 0);
+                attribute.put(ArmorItem.Type.CHESTPLATE, 0);
+                attribute.put(ArmorItem.Type.HELMET, 0);
+                attribute.put(ArmorItem.Type.BODY, 0);
+            }), 0, 0, 0, ModItems.SENZU_BEAN);
 
 
     private static Holder<ArmorMaterial> register(String name, EnumMap<ArmorItem.Type, Integer> typeProtection,

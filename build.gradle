@@ -147,6 +147,7 @@ configurations {
 }
 
 dependencies {
+
     implementation "software.bernie.geckolib:geckolib-neoforge-${"1.21.1"}:${"4.7.7"}"
 
     implementation "com.github.glitchfiend:TerraBlender-neoforge:${"1.21.1"}-${"4.1.0.8"}"

@@ -5,6 +5,7 @@ import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.namekian.NamekianEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorEntity;
 import com.hmc.db_renewed.entity.shenlong.ShenLongEntity;
+import com.hmc.db_renewed.entity.space_pod.SpacePodEntity;
 import com.hmc.db_renewed.item.special.HammerItem;
 import com.hmc.db_renewed.network.NetCodecs;
 import net.minecraft.core.BlockPos;
@@ -28,36 +29,13 @@ import java.util.Set;
 @EventBusSubscriber(modid = DragonBlockRenewed.MOD_ID)
 public class ModEvents {
 
-//    @SubscribeEvent
-//    public static void onLogin(PlayerEvent.PlayerLoggedInEvent e){
-//        if (e.getEntity() instanceof ServerPlayer sp){
-//            var att = PlayerStatsAttachment.get(sp);
-//            att.recalcAll(sp.serverLevel());
-//            NetCodecs.sendFull(sp, att);
-//        }
-//    }
-//
-//    @SubscribeEvent
-//    public static void onDimChange(PlayerEvent.PlayerChangedDimensionEvent e){
-//        if (e.getEntity() instanceof ServerPlayer sp){
-//            NetCodecs.sendFull(sp, PlayerStatsAttachment.get(sp));
-//        }
-//    }
-//
-//    @SubscribeEvent
-//    public static void onTick(PlayerTickEvent.Post e){
-//        if (e.getEntity() instanceof ServerPlayer sp){
-//            var att = PlayerStatsAttachment.get(sp);
-//            int mask = att.consumeDirtyMask();
-//            if (mask != 0) NetCodecs.sendDelta(sp, att, mask);
-//        }
-//    }
-
     @SubscribeEvent
     public static void onEntityAttributeCreation(EntityAttributeCreationEvent event) {
         event.put(ModEntities.NAMEKIAN_WARRIOR.get(), NamekianWarriorEntity.createAttributes().build());
         event.put(ModEntities.NAMEKIAN.get(), NamekianEntity.createAttributes().build());
         event.put(ModEntities.SHENLONG.get(), ShenLongEntity.createAttributes().build());
+        event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
+        event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
     }
 
     private static final Set<BlockPos> HARVESTED_BLOCKS = new HashSet<>();

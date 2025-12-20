@@ -32,10 +32,8 @@ public class SpacePodItem extends Item {
             assert player != null;
             pod.moveTo(spawnPos, player.getYRot(), 0.0F);
             level.addFreshEntity(pod);
+            stack.shrink(1);
 
-            if (!player.isCreative()) {
-                stack.shrink(1);
-            }
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide());

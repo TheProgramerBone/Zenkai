@@ -26,6 +26,18 @@ import com.hmc.db_renewed.worldgen.ModOverworldRegion;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.core.Holder;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -46,12 +58,14 @@ import org.slf4j.Logger;
 import terrablender.api.Regions;
 import terrablender.api.SurfaceRuleManager;
 
+import java.util.ServiceLoader;
+import java.util.function.Supplier;
+
 @Mod(DragonBlockRenewed.MOD_ID)
 public class DragonBlockRenewed
 {
     public static final String MOD_ID = "db_renewed";
     private static final Logger LOGGER = LogUtils.getLogger();
-
 
     public DragonBlockRenewed(IEventBus modEventBus, ModContainer modContainer)
     {
@@ -92,10 +106,6 @@ public class DragonBlockRenewed
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-        //ModRaceCommand.register(event.getServer().getCommands().getDispatcher());
-        //ModStatCommand.register(event.getServer().getCommands().getDispatcher());
-        //ModStyleCommand.register(event.getServer().getCommands().getDispatcher());
-        //ModResetCharacterCommand.register((event.getServer().getCommands().getDispatcher()));
     }
 
     @SubscribeEvent
@@ -122,7 +132,6 @@ public class DragonBlockRenewed
         }
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event){
-            //DbrPlayerAnimations.init();
             BlockEntityRenderers.register(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), AllDragonBallsRenderer::new);
             EntityRenderers.register(ModEntities.SPACE_POD.get(), SpacePodRenderer::new);
             EntityRenderers.register(ModEntities.NAMEKIAN.get(), NamekianRenderer::new);
@@ -146,5 +155,8 @@ public class DragonBlockRenewed
         }
 
     }
+
+
+
 
 }

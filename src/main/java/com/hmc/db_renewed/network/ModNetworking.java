@@ -1,11 +1,13 @@
 package com.hmc.db_renewed.network;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.entity.space_pod.VehicleControlPayload;
 import com.hmc.db_renewed.gui.ShenlongWishScreen;
 import com.hmc.db_renewed.gui.wishes.StackWishMenu;
 import com.hmc.db_renewed.network.ki.*;
 import com.hmc.db_renewed.network.stats.SpendTpPacket;
 import com.hmc.db_renewed.network.stats.SyncPlayerStatsPacket;
+import com.hmc.db_renewed.network.stats.SyncPlayerVisualPacket;
 import com.hmc.db_renewed.network.wishes.*;
 import com.hmc.db_renewed.network.wishes.StackWishPayloadHandler;
 import com.hmc.db_renewed.network.wishes.SetGhostSlotPayloadHandler;
@@ -78,6 +80,12 @@ public class ModNetworking {
                 SyncPlayerStatsPacket::handle
         );
 
+        registrar.playToClient(
+                SyncPlayerVisualPacket.TYPE,
+                SyncPlayerVisualPacket.STREAM_CODEC,
+                SyncPlayerVisualPacket::handle
+        );
+
         registrar.playToServer(
                 SpendTpPacket.TYPE,
                 SpendTpPacket.STREAM_CODEC,
@@ -108,6 +116,12 @@ public class ModNetworking {
                 ChooseStylePacket.TYPE,
                 ChooseStylePacket.STREAM_CODEC,
                 ChooseStylePacket::handle
+        );
+
+        registrar.playToServer(
+                VehicleControlPayload.TYPE,
+                VehicleControlPayload.STREAM_CODEC,
+                VehicleControlPayload::handle
         );
     }
 }

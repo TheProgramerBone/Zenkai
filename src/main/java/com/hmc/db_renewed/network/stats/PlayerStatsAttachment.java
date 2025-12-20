@@ -19,7 +19,6 @@ import java.util.Map;
 
 
 public class PlayerStatsAttachment {
-    // Campos principales
     private Race race = Race.HUMAN;
     private Style style = Style.MARTIAL_ARTIST;
 

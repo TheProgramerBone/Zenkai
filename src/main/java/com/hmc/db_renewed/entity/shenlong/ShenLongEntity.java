@@ -55,12 +55,12 @@ public class ShenLongEntity extends Mob implements GeoEntity {
 
     @Override
     public boolean shouldPlayAnimsWhileGamePaused() {
-        return GeoEntity.super.shouldPlayAnimsWhileGamePaused();
+        return true;
     }
 
     @Override
     public double getTick(Object entity) {
-        return GeoEntity.super.getTick(entity);
+        return this.tickCount;
     }
 
     @Override
