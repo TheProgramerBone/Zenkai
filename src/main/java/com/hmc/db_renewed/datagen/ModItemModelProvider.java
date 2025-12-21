@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.datagen;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.item.ModItems;
+import com.hmc.db_renewed.content.item.ModItems;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

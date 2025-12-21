@@ -1,6 +1,6 @@
 package com.hmc.db_renewed.worldgen;
 
-import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.content.block.ModBlocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.SurfaceRules;
 

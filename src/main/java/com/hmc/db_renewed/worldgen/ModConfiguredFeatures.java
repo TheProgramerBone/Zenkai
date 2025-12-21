@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.worldgen;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.content.block.ModBlocks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;

@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.datagen;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.content.block.ModBlocks;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;

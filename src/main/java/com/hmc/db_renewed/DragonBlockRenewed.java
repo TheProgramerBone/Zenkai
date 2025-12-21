@@ -1,45 +1,35 @@
 package com.hmc.db_renewed;
 
-import com.hmc.db_renewed.block.ModBlocks;
-import com.hmc.db_renewed.block.ModBlockEntities;
-import com.hmc.db_renewed.block.entity.AllDragonBalls.AllDragonBallsRenderer;
+import com.hmc.db_renewed.client.ClientHooks;
+import com.hmc.db_renewed.client.CombatHooks;
+import com.hmc.db_renewed.content.block.ModBlocks;
+import com.hmc.db_renewed.content.blockentity.ModBlockEntities;
+import com.hmc.db_renewed.client.render_and_model.blockentity.AllDragonBallsRenderer;
 import com.hmc.db_renewed.client.input.KeyBindings;
-import com.hmc.db_renewed.config.StatsConfig;
-import com.hmc.db_renewed.config.WishConfig;
-import com.hmc.db_renewed.effect.ModEffects;
-import com.hmc.db_renewed.entity.ModEntities;
-import com.hmc.db_renewed.entity.ki_attacks.ki_blast.KiBlastRenderer;
-import com.hmc.db_renewed.entity.kintoun.KintounRenderer;
-import com.hmc.db_renewed.entity.kintoun.ShadowKintounRenderer;
-import com.hmc.db_renewed.entity.namekian.NamekianRenderer;
-import com.hmc.db_renewed.entity.namekian.NamekianWarriorRenderer;
-import com.hmc.db_renewed.entity.space_pod.SpacePodRenderer;
-import com.hmc.db_renewed.entity.shenlong.ShenLongRenderer;
-import com.hmc.db_renewed.gui.ModMenuTypes;
-import com.hmc.db_renewed.gui.wishes.StackWishScreen;
-import com.hmc.db_renewed.item.ModItems;
-import com.hmc.db_renewed.network.ModNetworking;
-import com.hmc.db_renewed.network.ki.MouseHooks;
-import com.hmc.db_renewed.network.stats.*;
-import com.hmc.db_renewed.sound.ModSounds;
-import com.hmc.db_renewed.network.stats.StatsCommand;
+import com.hmc.db_renewed.core.config.StatsConfig;
+import com.hmc.db_renewed.core.config.WishConfig;
+import com.hmc.db_renewed.content.effect.ModEffects;
+import com.hmc.db_renewed.content.entity.ModEntities;
+import com.hmc.db_renewed.client.render_and_model.entity.KiBlastRenderer;
+import com.hmc.db_renewed.client.render_and_model.entity.KintounRenderer;
+import com.hmc.db_renewed.client.render_and_model.entity.ShadowKintounRenderer;
+import com.hmc.db_renewed.client.render_and_model.entity.NamekianRenderer;
+import com.hmc.db_renewed.client.render_and_model.entity.NamekianWarriorRenderer;
+import com.hmc.db_renewed.client.render_and_model.entity.SpacePodRenderer;
+import com.hmc.db_renewed.client.render_and_model.entity.ShenLongRenderer;
+import com.hmc.db_renewed.client.gui.ModMenuTypes;
+import com.hmc.db_renewed.client.gui.screens.wishes.StackWishScreen;
+import com.hmc.db_renewed.content.item.ModItems;
+import com.hmc.db_renewed.core.network.ModNetworking;
+import com.hmc.db_renewed.core.network.feature.ki.MouseHooks;
+import com.hmc.db_renewed.core.network.feature.stats.*;
+import com.hmc.db_renewed.content.sound.ModSounds;
+import com.hmc.db_renewed.core.ModCommands;
 import com.hmc.db_renewed.worldgen.ModSurfaceRules;
 import com.hmc.db_renewed.worldgen.ModOverworldRegion;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
-import net.minecraft.core.Holder;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.item.ArmorMaterial;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -59,9 +49,6 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 import terrablender.api.Regions;
 import terrablender.api.SurfaceRuleManager;
-
-import java.util.ServiceLoader;
-import java.util.function.Supplier;
 
 @Mod(DragonBlockRenewed.MOD_ID)
 public class DragonBlockRenewed
@@ -97,7 +84,7 @@ public class DragonBlockRenewed
         forgeBus.register(CombatHooks.class);
         forgeBus.register(TickHandlers.class);
         forgeBus.register(PlayerLifeCycle.class);
-        forgeBus.register(StatsCommand.class);
+        forgeBus.register(ModCommands.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

@@ -1,11 +1,11 @@
 package com.hmc.db_renewed.client.input;
 
-import com.hmc.db_renewed.gui.RaceSelectionScreen;
-import com.hmc.db_renewed.gui.StatsScreen;
-import com.hmc.db_renewed.network.ki.KiChargePacket;
-import com.hmc.db_renewed.network.ki.ToggleFlyPacket;
-import com.hmc.db_renewed.network.stats.DataAttachments;
-import com.hmc.db_renewed.network.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.client.gui.screens.RaceSelectionScreen;
+import com.hmc.db_renewed.client.gui.screens.StatsScreen;
+import com.hmc.db_renewed.core.network.feature.ki.KiChargePacket;
+import com.hmc.db_renewed.core.network.feature.ki.ToggleFlyPacket;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
+import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.client.event.InputEvent;

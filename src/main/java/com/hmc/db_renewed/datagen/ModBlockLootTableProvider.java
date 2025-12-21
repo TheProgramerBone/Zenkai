@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.datagen;
 
-import com.hmc.db_renewed.block.ModBlocks;
-import com.hmc.db_renewed.item.ModItems;
+import com.hmc.db_renewed.content.block.ModBlocks;
+import com.hmc.db_renewed.content.item.ModItems;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;

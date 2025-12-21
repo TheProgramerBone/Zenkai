@@ -1,6 +1,6 @@
 package com.hmc.db_renewed;
 
-import com.hmc.db_renewed.item.ModItems;
+import com.hmc.db_renewed.content.item.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;

@@ -1,9 +1,9 @@
 package com.hmc.db_renewed.util;
 
-import com.hmc.db_renewed.config.StatsConfig;
-import com.hmc.db_renewed.network.stats.Dbrattributes;
-import com.hmc.db_renewed.network.stats.Race;
-import com.hmc.db_renewed.network.stats.Style;
+import com.hmc.db_renewed.core.config.StatsConfig;
+import com.hmc.db_renewed.core.network.feature.Dbrattributes;
+import com.hmc.db_renewed.core.network.feature.Race;
+import com.hmc.db_renewed.core.network.feature.Style;
 
 import java.util.EnumMap;
 

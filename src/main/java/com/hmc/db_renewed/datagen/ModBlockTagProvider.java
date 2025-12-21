@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.datagen;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.block.ModBlocks;
+import com.hmc.db_renewed.content.block.ModBlocks;
 import com.hmc.db_renewed.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
