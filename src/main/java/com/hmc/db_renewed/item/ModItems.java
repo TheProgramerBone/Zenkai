@@ -3,6 +3,8 @@ package com.hmc.db_renewed.item;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.entity.ModEntities;
 import com.hmc.db_renewed.entity.kintoun.KintounItem;
+import com.hmc.db_renewed.entity.kintoun.ShadowKintounEntity;
+import com.hmc.db_renewed.entity.kintoun.ShadowKintounItem;
 import com.hmc.db_renewed.entity.race.NamekainRaceArmorItem;
 import com.hmc.db_renewed.entity.space_pod.SpacePodItem;
 import com.hmc.db_renewed.item.special.*;
@@ -50,7 +52,7 @@ public class ModItems {
                     .stacksTo(1));
 
     public static final DeferredItem<Item> SHADOW_KINTOUN_ITEM = ITEMS.registerItem("kintoun_shadow_item",
-            KintounItem::new,
+            ShadowKintounItem::new,
             new Item.Properties()
                     .stacksTo(1));
 

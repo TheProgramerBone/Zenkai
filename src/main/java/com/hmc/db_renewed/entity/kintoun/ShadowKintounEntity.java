@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalControlVehicle {
@@ -30,9 +29,13 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     // Ajustes
-    private static final float  HORIZONTAL_SPEED = 1f;
+    private static final float  HORIZONTAL_SPEED = 2f;
     private static final double VERTICAL_SPEED   = 1.5f;   // subir/bajar (input)
-    private static final double INPUT_DEADLINE = 1.0E-3;
+    private static final double INPUT_DEADLINE   = 1.0E-3;
+
+    // Asientos (offsets locales en el modelo)
+    private static final Vec3 SEAT_DRIVER = new Vec3(0, 0.8, 0.25);
+    private static final Vec3 SEAT_REAR   = new Vec3(0.0, 0.70,  -0.25);
 
     private boolean inputUp;
     private boolean inputDown;
@@ -57,8 +60,8 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
     }
 
     @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(CommonAnimations.genericWalkIdleController(this));
+    public void registerControllers(software.bernie.geckolib.animation.AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(CommonAnimations.genericIdleController(this));
     }
 
     // -------------------------
@@ -67,12 +70,15 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
 
     @Override
     protected boolean canAddPassenger(@NotNull Entity passenger) {
-        return this.getPassengers().isEmpty() && passenger instanceof Player;
+        // 2 puestos: conductor + copiloto
+        // Permitimos LivingEntity (Player u otra entidad montable)
+        return this.getPassengers().size() < 2 && passenger instanceof LivingEntity;
     }
 
     @Override
     public @NotNull InteractionResult mobInteract(Player player, @NotNull InteractionHand hand) {
-        if (!player.isPassenger() && this.getPassengers().isEmpty()) {
+        // Deja subir si aún hay cupo
+        if (!player.isPassenger() && this.getPassengers().size() < 2) {
             player.startRiding(this, true);
             return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
@@ -146,7 +152,7 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
 
         // Sin pasajero: baja suave si no está en el piso
         if (!this.isVehicle() || this.getControllingPassenger() == null) {
-            double y = this.onGround() ? 0.0 : -0.05;
+            double y = this.onGround() ? 0.0 : -0.1;
 
             this.setDeltaMovement(0.0, y, 0.0);
             this.fallDistance = 0;
@@ -184,6 +190,7 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
     @Override
     @Nullable
     public LivingEntity getControllingPassenger() {
+        // El primero que se sube controla (tu requisito)
         Entity p = this.getFirstPassenger();
         return p instanceof LivingEntity le ? le : null;
     }
@@ -215,7 +222,7 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
     @Override
     public void die(@NotNull DamageSource source) {
         if (!this.level().isClientSide) {
-            this.spawnAtLocation(ModItems.KINTOUN_ITEM.get());
+            this.spawnAtLocation(ModItems.SHADOW_KINTOUN_ITEM.get());
         }
         super.die(source);
     }
@@ -230,20 +237,25 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
     }
 
     // -------------------------
-    // Asiento
+    // Asientos (2 puestos)
     // -------------------------
 
     @Override
     public @NotNull Vec3 getPassengerRidingPosition(@NotNull Entity passenger) {
-        Vec3 off = new Vec3(0, 0.7, -0.5);
-        off = off.yRot(-this.getYRot() * Mth.DEG_TO_RAD);
-        return this.position().add(off);
+        // 0 = conductor (primero), 1 = segundo puesto
+        int idx = this.getPassengers().indexOf(passenger);
+
+        Vec3 local = (idx == 1) ? SEAT_REAR : SEAT_DRIVER;
+
+        // rota el offset con el yaw para que quede alineado al vehículo
+        Vec3 rotated = local.yRot(-this.getYRot() * Mth.DEG_TO_RAD);
+
+        return this.position().add(rotated);
     }
 
     // -------------------------
-    // GeckoLib helpers
+    // GeckoLib
     // -------------------------
-
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {

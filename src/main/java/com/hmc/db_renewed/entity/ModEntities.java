@@ -26,11 +26,11 @@ public class ModEntities {
 
     public static final Supplier<EntityType<KintounEntity>> KINTOUN =
             ENTITY_TYPES.register("kintoun",() -> EntityType.Builder.of(KintounEntity::new, MobCategory.CREATURE)
-                    .sized(2.45f,2.5f).build("kintoun"));
+                    .sized(2.3f,0.8f).build("kintoun"));
 
     public static final Supplier<EntityType<ShadowKintounEntity>> SHADOW_KINTOUN =
             ENTITY_TYPES.register("kintoun_shadow",() -> EntityType.Builder.of(ShadowKintounEntity::new, MobCategory.CREATURE)
-                    .sized(2.45f,2.5f).build("kintoun_shadow"));
+                    .sized(2.3f,0.8f).build("kintoun_shadow"));
 
     public static final Supplier<EntityType<ShenLongEntity>> SHENLONG =
             ENTITY_TYPES.register("shenlong",() -> EntityType.Builder.of(ShenLongEntity::new, MobCategory.MISC)

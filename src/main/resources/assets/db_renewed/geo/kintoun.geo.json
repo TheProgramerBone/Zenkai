@@ -6,26 +6,48 @@
 				"identifier": "geometry.unknown",
 				"texture_width": 128,
 				"texture_height": 128,
-				"visible_bounds_width": 3,
-				"visible_bounds_height": 1.5,
-				"visible_bounds_offset": [0, 0.25, 0]
+				"visible_bounds_width": 4,
+				"visible_bounds_height": 2.5,
+				"visible_bounds_offset": [0, 0.75, 0]
 			},
 			"bones": [
 				{
 					"name": "nube",
-					"pivot": [0, 4, 0],
+					"pivot": [0, 3.5, 0]
+				},
+				{
+					"name": "centro",
+					"parent": "nube",
+					"pivot": [0, 4.5, -7],
 					"cubes": [
-						{"origin": [-7, 1, -7], "size": [14, 6, 14], "uv": [0, 0]},
-						{"origin": [-6, 0, -6], "size": [12, 1, 12], "uv": [0, 20]},
-						{"origin": [-6, 7, -6], "size": [12, 1, 12], "uv": [0, 33]},
-						{"origin": [-6, 2, 7], "size": [12, 4, 1], "uv": [52, 44]},
-						{"origin": [-5, 3, 8], "size": [10, 2, 1], "uv": [52, 54]},
-						{"origin": [-5, 3, -9], "size": [10, 2, 1], "uv": [56, 0]},
-						{"origin": [-9, 3, -5], "size": [1, 2, 10], "uv": [48, 20]},
-						{"origin": [8, 3, -5], "size": [1, 2, 10], "uv": [48, 32]},
-						{"origin": [7, 2, -6], "size": [1, 4, 12], "uv": [0, 46]},
-						{"origin": [-8, 2, -6], "size": [1, 4, 12], "uv": [26, 46]},
-						{"origin": [-6, 2, -8], "size": [12, 4, 1], "uv": [52, 49]}
+						{"origin": [-8, 6.5, -10], "size": [14, 5, 14], "uv": [0, 0]},
+						{"origin": [-6, 5.5, 0], "size": [10, 5, 12], "uv": [56, 21]},
+						{"origin": [-5, 4.5, 8], "size": [8, 5, 10], "uv": [40, 72]},
+						{"origin": [-5, 4.5, -16], "size": [8, 5, 10], "uv": [0, 76]}
+					]
+				},
+				{
+					"name": "izquierda",
+					"parent": "nube",
+					"pivot": [5, 1.5, -8],
+					"cubes": [
+						{"origin": [-3, 2.5, -11], "size": [14, 5, 14], "uv": [0, 19]},
+						{"origin": [-1, 1, -1], "size": [10, 5, 12], "uv": [56, 38]},
+						{"origin": [0, 0.5, 7], "size": [8, 5, 10], "uv": [76, 72]},
+						{"origin": [0, 3.5, -17], "size": [8, 5, 10], "uv": [36, 87]},
+						{"origin": [2, 6.5, -8], "size": [5, 3, 16], "uv": [0, 57]}
+					]
+				},
+				{
+					"name": "derecha",
+					"parent": "nube",
+					"pivot": [-4, 2.5, -5],
+					"cubes": [
+						{"origin": [-12, 1.75, -8], "size": [14, 5, 14], "uv": [0, 38]},
+						{"origin": [-10, 2.5, 2], "size": [10, 5, 12], "uv": [56, 55]},
+						{"origin": [-9, 3.5, 10], "size": [8, 5, 10], "uv": [72, 87]},
+						{"origin": [-10, 0, -14], "size": [8, 5, 10], "uv": [0, 91]},
+						{"origin": [-9, 0.5, -13], "size": [9, 6, 15], "uv": [56, 0]}
 					]
 				}
 			]

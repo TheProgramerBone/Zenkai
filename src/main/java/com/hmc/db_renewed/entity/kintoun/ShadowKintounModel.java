@@ -12,7 +12,7 @@ public class ShadowKintounModel extends GeoModel<ShadowKintounEntity> {
 
     @Override
     public ResourceLocation getTextureResource(ShadowKintounEntity animatable) {
-        return ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID,"textures/entity/kintoun.png");
+        return ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID,"textures/entity/kintoun_shadow.png");
     }
 
     @Override

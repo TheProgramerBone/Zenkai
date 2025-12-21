@@ -2,6 +2,7 @@ package com.hmc.db_renewed.event;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.entity.ModEntities;
+import com.hmc.db_renewed.entity.kintoun.ShadowKintounEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianEntity;
 import com.hmc.db_renewed.entity.namekian.NamekianWarriorEntity;
 import com.hmc.db_renewed.entity.kintoun.KintounEntity;
@@ -34,6 +35,7 @@ public class ModEvents {
         event.put(ModEntities.SHENLONG.get(), ShenLongEntity.createAttributes().build());
         event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
         event.put(ModEntities.KINTOUN.get(), KintounEntity.createAttributes().build());
+        event.put(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounEntity.createAttributes().build());
     }
 
     private static final Set<BlockPos> HARVESTED_BLOCKS = new HashSet<>();
