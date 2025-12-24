@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.core.network.feature.race;
 
 import com.hmc.db_renewed.content.item.ModItems;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.db_renewed.core.network.feature.Race;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;

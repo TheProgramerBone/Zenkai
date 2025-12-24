@@ -1,8 +1,11 @@
-package com.hmc.db_renewed.core.network.feature.stats;
+package com.hmc.db_renewed.core.network;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.core.config.StatsConfig;
 import com.hmc.db_renewed.content.effect.ModEffects;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
+import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;

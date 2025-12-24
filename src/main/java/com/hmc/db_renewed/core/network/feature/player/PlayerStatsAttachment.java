@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.core.network.feature.stats;
+package com.hmc.db_renewed.core.network.feature.player;
 
 import com.hmc.db_renewed.core.config.StatsConfig;
 import com.hmc.db_renewed.core.network.feature.Dbrattributes;
@@ -6,6 +6,7 @@ import com.hmc.db_renewed.core.network.feature.Race;
 import com.hmc.db_renewed.core.network.feature.Style;
 import com.hmc.db_renewed.core.network.feature.ki.KiAttackDefinition;
 import com.hmc.db_renewed.core.network.feature.KiAttackType;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import com.hmc.db_renewed.util.BalanceUtil;
 import com.hmc.db_renewed.util.MathUtil;
 import net.minecraft.nbt.ListTag;

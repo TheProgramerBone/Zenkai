@@ -1,14 +1,14 @@
 package com.hmc.db_renewed.core.network.feature.stats;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import net.minecraft.client.Minecraft;
+import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 public record TransformHoldPacket(boolean transforming) implements CustomPacketPayload {
 

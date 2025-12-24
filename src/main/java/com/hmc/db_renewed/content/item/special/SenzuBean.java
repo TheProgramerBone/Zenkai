@@ -1,8 +1,8 @@
 package com.hmc.db_renewed.content.item.special;
 
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerLifeCycle;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.db_renewed.content.sound.ModSounds;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;

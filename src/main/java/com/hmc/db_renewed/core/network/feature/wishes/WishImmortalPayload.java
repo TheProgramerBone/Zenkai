@@ -2,7 +2,7 @@ package com.hmc.db_renewed.core.network.feature.wishes;
 
 import com.hmc.db_renewed.content.effect.ModEffects;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;

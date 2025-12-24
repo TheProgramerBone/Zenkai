@@ -1,6 +1,6 @@
 package com.hmc.db_renewed.core.network.feature.race;
 
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.model.HumanoidModel;

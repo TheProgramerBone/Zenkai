@@ -2,8 +2,8 @@ package com.hmc.db_renewed.client;
 
 import com.hmc.db_renewed.content.entity.ki_attacks.KiBlastEntity;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerLifeCycle;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;

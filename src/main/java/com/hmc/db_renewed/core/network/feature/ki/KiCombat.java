@@ -1,6 +1,6 @@
 package com.hmc.db_renewed.core.network.feature.ki;
 
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;

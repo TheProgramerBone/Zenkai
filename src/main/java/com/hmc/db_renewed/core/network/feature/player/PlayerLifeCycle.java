@@ -1,6 +1,9 @@
-package com.hmc.db_renewed.core.network.feature.stats;
+package com.hmc.db_renewed.core.network.feature.player;
 
 import com.hmc.db_renewed.content.effect.ModEffects;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
+import com.hmc.db_renewed.core.network.feature.stats.SyncPlayerStatsPacket;
+import com.hmc.db_renewed.core.network.feature.stats.SyncPlayerVisualPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;

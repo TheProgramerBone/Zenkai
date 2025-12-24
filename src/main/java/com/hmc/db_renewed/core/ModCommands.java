@@ -5,7 +5,7 @@ import com.hmc.db_renewed.core.network.feature.Dbrattributes;
 import com.hmc.db_renewed.core.network.feature.Race;
 import com.hmc.db_renewed.core.network.feature.Style;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerLifeCycle;
+import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;

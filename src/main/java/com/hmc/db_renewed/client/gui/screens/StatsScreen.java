@@ -4,6 +4,7 @@ import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.client.gui.button.PlusIconButton;
 import com.hmc.db_renewed.core.config.StatsConfig;
 import com.hmc.db_renewed.core.network.feature.Dbrattributes;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.db_renewed.core.network.feature.stats.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;

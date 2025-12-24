@@ -3,7 +3,7 @@ package com.hmc.db_renewed.client;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.core.network.feature.ki.MouseHooks;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;

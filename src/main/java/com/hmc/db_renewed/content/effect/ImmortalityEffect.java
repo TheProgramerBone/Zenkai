@@ -5,8 +5,8 @@ import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerLifeCycle;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 
 
 public class ImmortalityEffect extends MobEffect {

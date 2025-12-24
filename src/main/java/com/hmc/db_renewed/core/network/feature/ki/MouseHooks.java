@@ -2,7 +2,7 @@ package com.hmc.db_renewed.core.network.feature.ki;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.client.input.KeyBindings;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;

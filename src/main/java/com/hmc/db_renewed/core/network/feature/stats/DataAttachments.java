@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.core.network.feature.stats;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.mojang.serialization.Codec;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.attachment.AttachmentType;
