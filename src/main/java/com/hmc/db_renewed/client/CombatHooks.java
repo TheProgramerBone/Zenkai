@@ -22,7 +22,7 @@ public class CombatHooks {
         DamageSource src = e.getSource();
         PlayerStatsAttachment att = player.getData(DataAttachments.PLAYER_STATS.get());
 
-        if (att.isRaceChosen()) return;
+        if (!att.isRaceChosen()) return;
 
         // Daño bruto recibido
         double raw = e.getAmount();
@@ -81,7 +81,7 @@ public class CombatHooks {
 
         PlayerStatsAttachment att = player.getData(DataAttachments.PLAYER_STATS.get());
 
-        if (att.isRaceChosen()) return;
+        if (!att.isRaceChosen()) return;
 
         // 1) Stat de melee del MOD: este es el daño "propio" del jugador
         double meleeStat = att.computeMeleeFinal(); // p.ej. 500

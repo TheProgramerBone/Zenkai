@@ -1,7 +1,9 @@
 package com.hmc.db_renewed;
 
 import com.hmc.db_renewed.client.ClientHooks;
+import com.hmc.db_renewed.client.ClientPalTick;
 import com.hmc.db_renewed.client.CombatHooks;
+import com.hmc.db_renewed.client.DbPalLayers;
 import com.hmc.db_renewed.content.block.ModBlocks;
 import com.hmc.db_renewed.content.blockentity.ModBlockEntities;
 import com.hmc.db_renewed.client.render_and_model.blockentity.AllDragonBallsRenderer;
@@ -28,6 +30,9 @@ import com.hmc.db_renewed.core.ModCommands;
 import com.hmc.db_renewed.worldgen.ModSurfaceRules;
 import com.hmc.db_renewed.worldgen.ModOverworldRegion;
 import com.mojang.logging.LogUtils;
+import com.zigythebird.playeranim.animation.PlayerAnimationController;
+import com.zigythebird.playeranim.api.PlayerAnimationFactory;
+import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.neoforged.fml.config.ModConfig;
@@ -85,6 +90,7 @@ public class DragonBlockRenewed
         forgeBus.register(TickHandlers.class);
         forgeBus.register(PlayerLifeCycle.class);
         forgeBus.register(ModCommands.class);
+        forgeBus.register(ClientPalTick.class);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
@@ -134,7 +140,18 @@ public class DragonBlockRenewed
                 Regions.register(new ModOverworldRegion());
                 SurfaceRuleManager.addSurfaceRules(SurfaceRuleManager.RuleCategory.OVERWORLD, MOD_ID, ModSurfaceRules.makeRules());
             });
+            event.enqueueWork(() -> {
+                // Prioridad alta para gameplay (transformación)
+                // (doc: 1500+ para animaciones importantes) :contentReference[oaicite:4]{index=4}
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        DbPalLayers.TRANSFORM_LAYER,
+                        1600,
+                        player -> new PlayerAnimationController(player, (controller, state, animSetter) -> PlayState.STOP)
+                );
+            });
         }
+
+
         @SubscribeEvent
         public static void onKeyMappingRegister(RegisterKeyMappingsEvent event) {
             KeyBindings.registerKeyMappings(event);
@@ -146,8 +163,4 @@ public class DragonBlockRenewed
         }
 
     }
-
-
-
-
 }

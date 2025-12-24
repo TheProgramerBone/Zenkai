@@ -4,10 +4,7 @@ import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.client.gui.screens.ShenlongWishScreen;
 import com.hmc.db_renewed.client.gui.StackWishMenu;
 import com.hmc.db_renewed.core.network.feature.ki.*;
-import com.hmc.db_renewed.core.network.feature.stats.ChooseRacePacket;
-import com.hmc.db_renewed.core.network.feature.stats.SpendTpPacket;
-import com.hmc.db_renewed.core.network.feature.stats.SyncPlayerStatsPacket;
-import com.hmc.db_renewed.core.network.feature.stats.SyncPlayerVisualPacket;
+import com.hmc.db_renewed.core.network.feature.stats.*;
 import com.hmc.db_renewed.core.network.feature.wishes.*;
 import com.hmc.db_renewed.core.network.vehicle.VehicleControlPayload;
 import net.minecraft.client.Minecraft;
@@ -119,6 +116,12 @@ public class ModNetworking {
                 VehicleControlPayload.TYPE,
                 VehicleControlPayload.STREAM_CODEC,
                 VehicleControlPayload::handle
+        );
+
+        registrar.playBidirectional(
+                TransformHoldPacket.TYPE,
+                TransformHoldPacket.STREAM_CODEC,
+                TransformHoldPacket::handle
         );
     }
 }

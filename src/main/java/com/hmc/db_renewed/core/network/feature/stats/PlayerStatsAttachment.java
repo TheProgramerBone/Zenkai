@@ -384,6 +384,8 @@ public class PlayerStatsAttachment {
         tag.putBoolean("chargingKi", chargingKi);
         tag.putBoolean("raceChosen",raceChosen);
         tag.putBoolean("isImmortal",isImmortal);
+        tag.putBoolean("transforming", transforming);
+
 
         // Ki Attacks
         ListTag list = getTags();
@@ -443,6 +445,7 @@ public class PlayerStatsAttachment {
         this.chargingKi = tag.getBoolean("chargingKi");
         this.raceChosen = tag.getBoolean("raceChosen");
         this.isImmortal = tag.getBoolean("isImmortal");
+        this.transforming = tag.getBoolean("transforming");
 
         // Ki Attacks
         this.kiAttacks.clear();
@@ -555,7 +558,7 @@ public class PlayerStatsAttachment {
     }
 
     public boolean isRaceChosen() {
-        return !raceChosen;
+        return raceChosen;
     }
 
     public void setRaceChosen(boolean raceChosen) {
@@ -575,4 +578,16 @@ public class PlayerStatsAttachment {
         this.stamina = this.staminaMax;
         this.energy  = this.energyMax;
     }
+
+    // PlayerStatsAttachment.java
+    private boolean transforming = false;
+
+    public boolean isTransforming() {
+        return transforming;
+    }
+
+    public void setTransforming(boolean v) {
+        this.transforming = v;
+    }
+
 }

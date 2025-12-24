@@ -34,9 +34,7 @@ public final class MouseHooks {
         if (mc.player == null) return;
 
         PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
-        if (att.isRaceChosen()) {
-            return;
-        }
+        if (!att.isRaceChosen()) return;
 
         int button = e.getButton();
         int action = e.getAction();

@@ -21,7 +21,6 @@ public record ChooseRacePacket(Race race) implements CustomPacketPayload {
     // --- codec ---
 
     public static void encode(FriendlyByteBuf buf, ChooseRacePacket pkt) {
-        // puedes guardar por nombre o por ordinal; por nombre es más robusto
         buf.writeEnum(pkt.race());
     }
 
@@ -35,8 +34,6 @@ public record ChooseRacePacket(Race race) implements CustomPacketPayload {
         return TYPE;
     }
 
-    // --- handler ---
-
     public static void handle(ChooseRacePacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer sp)) return;
@@ -45,6 +42,7 @@ public record ChooseRacePacket(Race race) implements CustomPacketPayload {
 
             // Aplicar raza seleccionada
             att.setRace(pkt.race());
+            att.setRaceChosen(true);
             // Aquí puedes dejar hooks / TODO para personalización inicial
             // (color de aura, pelo, etc.)
 

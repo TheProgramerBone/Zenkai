@@ -37,7 +37,7 @@ public class ClientHooks {
         PlayerStatsAttachment att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
 
         // Si NO ha elegido raza, no mostramos nada de HUD del mod
-        if (att.isRaceChosen()) {
+        if (!att.isRaceChosen()) {
             return;
         }
 
