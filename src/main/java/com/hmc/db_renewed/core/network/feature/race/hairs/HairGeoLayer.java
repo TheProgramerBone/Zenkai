@@ -14,13 +14,13 @@ import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class SaiyanHairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
+public class HairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
     private final HumanoidArmorLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>, HumanoidModel<AbstractClientPlayer>> armorLayer;
 
-    public SaiyanHairGeoLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent,
-                              EntityModelSet models,
-                              ModelManager modelManager) {
+    public HairGeoLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent,
+                        EntityModelSet models,
+                        ModelManager modelManager) {
         super(parent);
 
         HumanoidModel<AbstractClientPlayer> inner =

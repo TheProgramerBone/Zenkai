@@ -5,6 +5,7 @@ import com.hmc.db_renewed.content.entity.ModEntities;
 import com.hmc.db_renewed.core.network.feature.race.arcosian.ArcosianRaceArmorItem;
 import com.hmc.db_renewed.core.network.feature.race.hairs.hair1.Hair1ArmorItem;
 import com.hmc.db_renewed.core.network.feature.race.hairs.hair1.SSJHair1ArmorItem;
+import com.hmc.db_renewed.core.network.feature.race.human.HumanRaceArmorItem;
 import com.hmc.db_renewed.core.network.feature.race.namekian.NamekianRaceArmorItem;
 import com.hmc.db_renewed.content.item.special.*;
 import net.minecraft.world.item.*;
@@ -117,6 +118,8 @@ public class ModItems {
             () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN,0x28ad1b ,0xfdfefe,
                     new Item.Properties()));
 
+    //Razas
+
     public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_HELMET = ITEMS.register("namekian_race_helmet",
             () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
                     ArmorItem.Type.HELMET,new Item.Properties()));
@@ -131,6 +134,22 @@ public class ModItems {
 
     public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_BOOTS = ITEMS.register("namekian_race_boots",
             () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.BOOTS, new Item.Properties()));
+
+    public static final Supplier<HumanRaceArmorItem> HUMAN_RACE_HELMET = ITEMS.register("human_race_helmet",
+            () -> new HumanRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.HELMET,new Item.Properties()));
+
+    public static final Supplier<HumanRaceArmorItem> HUMAN_RACE_CHESTPLATE = ITEMS.register("human_race_chestplate",
+            () -> new HumanRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+
+    public static final Supplier<HumanRaceArmorItem> HUMAN_RACE_LEGGINGS = ITEMS.register("human_race_leggings",
+            () -> new HumanRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.LEGGINGS, new Item.Properties()));
+
+    public static final Supplier<HumanRaceArmorItem> HUMAN_RACE_BOOTS = ITEMS.register("human_race_boots",
+            () -> new HumanRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
                     ArmorItem.Type.BOOTS, new Item.Properties()));
 
     public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_HELMET = ITEMS.register("arcosian_race_helmet",

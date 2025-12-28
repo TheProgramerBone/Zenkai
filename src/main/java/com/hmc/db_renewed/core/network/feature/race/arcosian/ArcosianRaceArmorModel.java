@@ -13,7 +13,7 @@ public class ArcosianRaceArmorModel extends GeoModel<ArcosianRaceArmorItem> {
 
     @Override
     public ResourceLocation getTextureResource(ArcosianRaceArmorItem animatable) {
-        return ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "textures/models/races/arcosian_final_form.png");
+        return ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "textures/models/races/arcosian_final_form_player.png");
     }
 
     @Override

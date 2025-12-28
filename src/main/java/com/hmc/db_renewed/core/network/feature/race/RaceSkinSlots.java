@@ -13,11 +13,7 @@ public final class RaceSkinSlots {
     public static ItemStack getVirtualRaceArmor(Player player, EquipmentSlot slot) {
         Race race = PlayerStatsAttachment.get(player).getRace();
 
-        // HUMAN -> no usamos este sistema
-        if (race == Race.HUMAN) return ItemStack.EMPTY;
-
-        // Por ahora solo NAMEKIAN (tú ya tienes estos items)
-        if (race == Race.NAMEKIAN || race == Race.SAIYAN) {
+        if (race == Race.NAMEKIAN) {
             return switch (slot) {
                 case HEAD  -> ModItems.NAMEKIAN_RACE_HELMET.get().getDefaultInstance();
                 case CHEST -> ModItems.NAMEKIAN_RACE_CHESTPLATE.get().getDefaultInstance();
@@ -26,6 +22,18 @@ public final class RaceSkinSlots {
                 default    -> ItemStack.EMPTY;
             };
         }
+
+        if (race == Race.SAIYAN || race == Race.HUMAN){
+            return switch (slot) {
+                case HEAD  -> ModItems.HUMAN_RACE_HELMET.get().getDefaultInstance();
+                case CHEST -> ModItems.HUMAN_RACE_CHESTPLATE.get().getDefaultInstance();
+                case LEGS  -> ModItems.HUMAN_RACE_LEGGINGS.get().getDefaultInstance();
+                case FEET  -> ModItems.HUMAN_RACE_BOOTS.get().getDefaultInstance();
+                default    -> ItemStack.EMPTY;
+            };
+        }
+
+
 
         if (race == Race.ARCOSIAN) {
             return switch (slot) {

@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.core.network.feature.race;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.core.network.feature.race.hairs.SaiyanHairGeoLayer;
+import com.hmc.db_renewed.core.network.feature.race.hairs.HairGeoLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -56,7 +56,7 @@ public final class RaceSkinRenderHooks {
 
             // 3) Agregar layer de pelo Saiyan (también debajo de la armadura vanilla)
             //    (Solo renderiza cuando aplica; en otros casos hace return)
-            renderer.addLayer(new SaiyanHairGeoLayer(
+            renderer.addLayer(new HairGeoLayer(
                     renderer,
                     event.getEntityModels(),
                     mc.getModelManager()
