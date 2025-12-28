@@ -72,9 +72,13 @@
 
   "creativetab.db_renewed": "Dragon Block Renewed",
 
-  "key.categories.db_renewed": "Dragon Block Renewed",
-  "key.db_renewed.open_race_screen": "Open Menu",
+  "key.db_renewed.transform_modifier": "Transform Modifier (with C)",
+  "key.db_renewed.detransform_modifier": "Detransform Modifier (with C)",
+  "key.db_renewed.charge_ki": "Charge Ki",
   "key.db_renewed.open_stats": "Open Stats",
+  "key.db_renewed.toggle_fly": "Toggle Flight",
+  "key.categories.db_renewed": "Dragon Block Renewed",
+  
 
   "sounds.db_renewed.dragon_ball_radar_use": "Used Radar",
   "sounds.db_renewed.dragon_ball_radar_searching": "A Dragon Ball is in radius",

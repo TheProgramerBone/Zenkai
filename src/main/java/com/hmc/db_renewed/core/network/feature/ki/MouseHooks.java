@@ -45,7 +45,7 @@ public final class MouseHooks {
         //   PRESIONAR (START)
         // ==========================
         if (action == GLFW.GLFW_PRESS) {
-            boolean altDown       = KeyBindings.SPECIAL != null && KeyBindings.SPECIAL.isDown();
+            boolean altDown       = KeyBindings.TRANSFORM_MOD != null && KeyBindings.TRANSFORM_MOD.isDown();
             boolean emptyMainHand = mc.player.getMainHandItem().isEmpty();
 
             if (altDown && emptyMainHand) {

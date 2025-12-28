@@ -1,8 +1,6 @@
-package com.hmc.db_renewed.core.network.feature.race;
+package com.hmc.db_renewed.core.network.feature.race.hairs;
 
-import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.EntityModelSet;
@@ -13,25 +11,16 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.resources.model.ModelManager;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
 
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
-
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Set<UUID> LOGGED = ConcurrentHashMap.newKeySet();
+public class SaiyanHairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
     private final HumanoidArmorLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>, HumanoidModel<AbstractClientPlayer>> armorLayer;
 
-    public RaceSkinGeoArmorLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent,
-                                 EntityModelSet models,
-                                 ModelManager modelManager) {
+    public SaiyanHairGeoLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent,
+                              EntityModelSet models,
+                              ModelManager modelManager) {
         super(parent);
 
         HumanoidModel<AbstractClientPlayer> inner =
@@ -44,36 +33,35 @@ public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, Pla
 
     @Override
     public void render(@NotNull PoseStack poseStack, @NotNull MultiBufferSource buffer, int packedLight,
-                       AbstractClientPlayer player,
+                       @NotNull AbstractClientPlayer player,
                        float limbSwing, float limbSwingAmount, float partialTick,
                        float ageInTicks, float netHeadYaw, float headPitch) {
 
-        if (LOGGED.add(player.getUUID())) {
-            LOGGER.info("[DBR] RaceSkinGeoArmorLayer activo para {} race={}",
-                    player.getGameProfile().getName(),
-                    PlayerStatsAttachment.get(player).getRace()
-            );
-        }
+        ItemStack hair = HairResolver.resolveHairHead(player);
+        if (hair.isEmpty()) return;
 
-        // 4 stacks reales (para restaurar)
+        // Regla recomendada: si tiene casco real, no renderizar pelo (para evitar clipping)
+        ItemStack realHelmet = player.getInventory().getArmor(3);
+        if (!realHelmet.isEmpty()) return;
+
         var inv = player.getInventory();
 
+        // backup
         ItemStack oldHead  = inv.getArmor(3);
         ItemStack oldChest = inv.getArmor(2);
         ItemStack oldLegs  = inv.getArmor(1);
         ItemStack oldFeet  = inv.getArmor(0);
 
-        // Inyectar virtual race armor (SIEMPRE, aunque tenga armadura real)
-        inv.armor.set(3, RaceBodyResolver.resolve(player, EquipmentSlot.HEAD));
-        inv.armor.set(2, RaceBodyResolver.resolve(player, EquipmentSlot.CHEST));
-        inv.armor.set(1, RaceBodyResolver.resolve(player, EquipmentSlot.LEGS));
-        inv.armor.set(0, RaceBodyResolver.resolve(player, EquipmentSlot.FEET));
+        // inyectar SOLO hair
+        inv.armor.set(3, hair);
+        inv.armor.set(2, ItemStack.EMPTY);
+        inv.armor.set(1, ItemStack.EMPTY);
+        inv.armor.set(0, ItemStack.EMPTY);
 
-        // Renderizar “como armadura” (aquí GeckoLib entra porque tu item implementa GeoItem)
         armorLayer.render(poseStack, buffer, packedLight, player,
                 limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
 
-        // Restaurar stacks reales
+        // restore
         inv.armor.set(3, oldHead);
         inv.armor.set(2, oldChest);
         inv.armor.set(1, oldLegs);

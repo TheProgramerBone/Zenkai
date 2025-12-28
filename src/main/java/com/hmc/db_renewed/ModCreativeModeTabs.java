@@ -30,7 +30,13 @@ public class ModCreativeModeTabs {
                                 ModItems.NAMEKIAN_RACE_HELMET.get(),
                                 ModItems.NAMEKIAN_RACE_CHESTPLATE.get(),
                                 ModItems.NAMEKIAN_RACE_LEGGINGS.get(),
-                                ModItems.NAMEKIAN_RACE_BOOTS.get()
+                                ModItems.NAMEKIAN_RACE_BOOTS.get(),
+                                ModItems.ARCOSIAN_RACE_HELMET.get(),
+                                ModItems.ARCOSIAN_RACE_CHESTPLATE.get(),
+                                ModItems.ARCOSIAN_RACE_LEGGINGS.get(),
+                                ModItems.ARCOSIAN_RACE_BOOTS.get(),
+                                ModItems.HAIR_1.get(),
+                                ModItems.SSJ1_HAIR1.get()
                         ));
 
                         ModItems.ITEMS.getEntries().forEach(supplier -> {

@@ -580,7 +580,6 @@ public class PlayerStatsAttachment {
         this.energy  = this.energyMax;
     }
 
-    // PlayerStatsAttachment.java
     private boolean transforming = false;
 
     public boolean isTransforming() {

@@ -32,6 +32,8 @@ public class TickHandlers {
      *
      * En cliente NO se debe llamar (evita zoom/jitter). El cliente bloquea input en ClientPalTick.
      */
+
+
     private static void applyTransformLockServer(Player p, boolean lock) {
         AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
 
@@ -70,6 +72,9 @@ public class TickHandlers {
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         Player p = e.getEntity();
         PlayerStatsAttachment att = p.getData(DataAttachments.PLAYER_STATS.get());
+        var stats = p.getData(DataAttachments.PLAYER_STATS.get());
+        var form  = p.getData(DataAttachments.PLAYER_FORM.get());
+        var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
 
         // ================================
         // SOLO SERVIDOR desde aquí
@@ -96,6 +101,8 @@ public class TickHandlers {
         if (!att.isRaceChosen()) {
             att.setChargingKi(false);
             att.setTransforming(false);
+            stats.setChargingKi(false);
+            form.resetAll();
 
             // Limpia modifiers por si quedaron de antes
             AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
@@ -135,18 +142,24 @@ public class TickHandlers {
         }
 
         // ================================
-        // Transformación: lock + NO tocar speed_mult
-        // (evita pulso de FOV/zoom)
+        // Transformación (SERVER)
         // ================================
-        if (att.isTransforming()) {
+
+        // 1) Tick de lógica de forms (HOLD 100 ticks, completar, drain, etc.)
+        boolean formDirty = form.serverTick(p, stats, visual);
+
+        // 1.1) Si cambió algo importante (completó / canceló), sync inmediato
+        if (formDirty) {
+            PlayerLifeCycle.syncFormIfServer(p); // o syncFormToTrackersAndSelf si prefieres explícito
+        }
+
+        // 2) Si está en proceso (cargando transformación), lock + NO speed_mult
+        if (form.isTransforming()) {
             applyTransformLockServer(p, true);
 
             AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
-            if (moveAttr != null) {
-                moveAttr.removeModifier(MOVE_MOD_ID);
-            }
+            if (moveAttr != null) moveAttr.removeModifier(MOVE_MOD_ID);
 
-            PlayerLifeCycle.syncIfServer(p);
             return;
         } else {
             applyTransformLockServer(p, false);

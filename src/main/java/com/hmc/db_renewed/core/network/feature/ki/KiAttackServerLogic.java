@@ -5,7 +5,7 @@ import com.hmc.db_renewed.content.entity.ki_attacks.KiBlastEntity;
 import com.hmc.db_renewed.core.network.feature.KiAttackType;
 import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.db_renewed.core.network.feature.stats.PlayerVisualAttachment;
+import com.hmc.db_renewed.core.network.feature.player.PlayerVisualAttachment;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;

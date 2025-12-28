@@ -1,5 +1,6 @@
-package com.hmc.db_renewed.core.network.feature.race;
+package com.hmc.db_renewed.core.network.feature.race.arcosian;
 
+import com.hmc.db_renewed.content.entity.CommonAnimations;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -12,11 +13,12 @@ import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
-public class NamekainRaceArmorItem extends ArmorItem implements GeoItem {
-    public NamekainRaceArmorItem(Holder<ArmorMaterial> material, Type type, Properties properties) {
+public class ArcosianRaceArmorItem extends ArmorItem implements GeoItem {
+    public ArcosianRaceArmorItem(Holder<ArmorMaterial> material, Type type, Properties properties) {
         super(material, type, properties);
     }
 
@@ -24,17 +26,18 @@ public class NamekainRaceArmorItem extends ArmorItem implements GeoItem {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        CommonAnimations.genericIdleController(this);
     }
 
     @Override
     public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
         consumer.accept(new GeoRenderProvider() {
-            private NamekianRaceArmorRenderer renderer;
+            private ArcosianRaceArmorRenderer renderer;
 
             @Override
             public <T extends LivingEntity> HumanoidModel<?> getGeoArmorRenderer(@Nullable T livingEntity, ItemStack itemStack, @Nullable EquipmentSlot equipmentSlot, @Nullable HumanoidModel<T> original) {
                 if (this.renderer == null)
-                    this.renderer = new NamekianRaceArmorRenderer();
+                    this.renderer = new ArcosianRaceArmorRenderer();
                 return this.renderer;
             }
         });

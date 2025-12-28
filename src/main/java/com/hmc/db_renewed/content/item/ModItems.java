@@ -2,7 +2,10 @@ package com.hmc.db_renewed.content.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.content.entity.ModEntities;
-import com.hmc.db_renewed.core.network.feature.race.NamekainRaceArmorItem;
+import com.hmc.db_renewed.core.network.feature.race.arcosian.ArcosianRaceArmorItem;
+import com.hmc.db_renewed.core.network.feature.race.hairs.hair1.Hair1ArmorItem;
+import com.hmc.db_renewed.core.network.feature.race.hairs.hair1.SSJHair1ArmorItem;
+import com.hmc.db_renewed.core.network.feature.race.namekian.NamekianRaceArmorItem;
 import com.hmc.db_renewed.content.item.special.*;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
@@ -114,21 +117,47 @@ public class ModItems {
             () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN,0x28ad1b ,0xfdfefe,
                     new Item.Properties()));
 
-    public static final Supplier<NamekainRaceArmorItem> NAMEKIAN_RACE_HELMET = ITEMS.register("namekian_race_helmet",
-            () -> new NamekainRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+    public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_HELMET = ITEMS.register("namekian_race_helmet",
+            () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
                     ArmorItem.Type.HELMET,new Item.Properties()));
 
-    public static final Supplier<NamekainRaceArmorItem> NAMEKIAN_RACE_CHESTPLATE = ITEMS.register("namekian_race_chestplate",
-            () -> new NamekainRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+    public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_CHESTPLATE = ITEMS.register("namekian_race_chestplate",
+            () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
                     ArmorItem.Type.CHESTPLATE, new Item.Properties()));
 
-    public static final Supplier<NamekainRaceArmorItem> NAMEKIAN_RACE_LEGGINGS = ITEMS.register("namekian_race_leggings",
-            () -> new NamekainRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+    public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_LEGGINGS = ITEMS.register("namekian_race_leggings",
+            () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
                     ArmorItem.Type.LEGGINGS, new Item.Properties()));
 
-    public static final Supplier<NamekainRaceArmorItem> NAMEKIAN_RACE_BOOTS = ITEMS.register("namekian_race_boots",
-            () -> new NamekainRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+    public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_BOOTS = ITEMS.register("namekian_race_boots",
+            () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
                     ArmorItem.Type.BOOTS, new Item.Properties()));
+
+    public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_HELMET = ITEMS.register("arcosian_race_helmet",
+            () -> new ArcosianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.HELMET,new Item.Properties()));
+
+    public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_CHESTPLATE = ITEMS.register("arcosian_race_chestplate",
+            () -> new ArcosianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+
+    public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_LEGGINGS = ITEMS.register("arcosian_race_leggings",
+            () -> new ArcosianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.LEGGINGS, new Item.Properties()));
+
+    public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_BOOTS = ITEMS.register("arcosian_race_boots",
+            () -> new ArcosianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.BOOTS, new Item.Properties()));
+
+    //Cabellos Común
+    public static final Supplier<Hair1ArmorItem> HAIR_1 = ITEMS.register("hair_1",
+            () -> new Hair1ArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.HELMET, new Item.Properties()));
+
+    //Transformaciones Saiyan
+    public static final Supplier<SSJHair1ArmorItem> SSJ1_HAIR1 = ITEMS.register("ssj_hair1",
+            () -> new SSJHair1ArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
+                    ArmorItem.Type.HELMET, new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

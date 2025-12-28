@@ -17,12 +17,22 @@ public final class RaceSkinSlots {
         if (race == Race.HUMAN) return ItemStack.EMPTY;
 
         // Por ahora solo NAMEKIAN (tú ya tienes estos items)
-        if (race == Race.NAMEKIAN) {
+        if (race == Race.NAMEKIAN || race == Race.SAIYAN) {
             return switch (slot) {
                 case HEAD  -> ModItems.NAMEKIAN_RACE_HELMET.get().getDefaultInstance();
                 case CHEST -> ModItems.NAMEKIAN_RACE_CHESTPLATE.get().getDefaultInstance();
                 case LEGS  -> ModItems.NAMEKIAN_RACE_LEGGINGS.get().getDefaultInstance();
                 case FEET  -> ModItems.NAMEKIAN_RACE_BOOTS.get().getDefaultInstance();
+                default    -> ItemStack.EMPTY;
+            };
+        }
+
+        if (race == Race.ARCOSIAN) {
+            return switch (slot) {
+                case HEAD  -> ModItems.ARCOSIAN_RACE_HELMET.get().getDefaultInstance();
+                case CHEST -> ModItems.ARCOSIAN_RACE_CHESTPLATE.get().getDefaultInstance();
+                case LEGS  -> ModItems.ARCOSIAN_RACE_LEGGINGS.get().getDefaultInstance();
+                case FEET  -> ModItems.ARCOSIAN_RACE_BOOTS.get().getDefaultInstance();
                 default    -> ItemStack.EMPTY;
             };
         }

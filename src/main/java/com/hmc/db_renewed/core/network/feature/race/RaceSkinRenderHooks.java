@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.core.network.feature.race;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.core.network.feature.race.hairs.SaiyanHairGeoLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -10,12 +11,13 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.resources.PlayerSkin;
 import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @EventBusSubscriber(modid = DragonBlockRenewed.MOD_ID, value = Dist.CLIENT)
 public final class RaceSkinRenderHooks {
@@ -24,15 +26,19 @@ public final class RaceSkinRenderHooks {
 
     @SubscribeEvent
     public static void onAddLayers(EntityRenderersEvent.AddLayers event) {
+        var mc = Minecraft.getInstance();
+
         for (PlayerSkin.Model skin : PlayerSkin.Model.values()) {
             PlayerRenderer renderer = event.getSkin(skin);
             if (renderer == null) continue;
 
-            // 1) Capturar y remover armor layer vanilla
+            // 1) Capturar la lista real de layers y remover armor layer vanilla
             List<RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>> layers = getLayers(renderer);
             if (layers == null) continue;
 
             List<RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>> removedArmor = new ArrayList<>();
+
+            // Remueve todas las HumanoidArmorLayer para reinsertarlas al final
             layers.removeIf(l -> {
                 if (l instanceof HumanoidArmorLayer<?, ?, ?>) {
                     removedArmor.add(l);
@@ -41,24 +47,30 @@ public final class RaceSkinRenderHooks {
                 return false;
             });
 
-            // 2) Agregar nuestra layer de raza (debajo)
+            // 2) Agregar layer de body racial (debajo de la armadura vanilla)
             renderer.addLayer(new RaceSkinGeoArmorLayer(
                     renderer,
                     event.getEntityModels(),
-                    Minecraft.getInstance().getModelManager()
+                    mc.getModelManager()
             ));
 
-            // 3) Re-agregar armor layer vanilla (encima)
-            for (var armorLayer : removedArmor) {
+            // 3) Agregar layer de pelo Saiyan (también debajo de la armadura vanilla)
+            //    (Solo renderiza cuando aplica; en otros casos hace return)
+            renderer.addLayer(new SaiyanHairGeoLayer(
+                    renderer,
+                    event.getEntityModels(),
+                    mc.getModelManager()
+            ));
+
+            // 4) Re-agregar armor layer vanilla (encima)
+            for (RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> armorLayer : removedArmor) {
                 renderer.addLayer(armorLayer);
             }
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static List<RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>> getLayers(
-            PlayerRenderer renderer
-    ) {
+    private static List<RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>> getLayers(PlayerRenderer renderer) {
         try {
             Field f = LivingEntityRenderer.class.getDeclaredField("layers");
             f.setAccessible(true);

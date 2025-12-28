@@ -1,6 +1,7 @@
-package com.hmc.db_renewed.core.network.feature.stats;
+package com.hmc.db_renewed.core.network.feature.player;
 
 import com.hmc.db_renewed.core.network.feature.Race;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;

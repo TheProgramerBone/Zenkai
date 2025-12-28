@@ -1,7 +1,7 @@
-package com.hmc.db_renewed.core.network.feature.stats;
+package com.hmc.db_renewed.core.network.feature.player;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

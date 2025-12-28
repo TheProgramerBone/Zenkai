@@ -4,6 +4,9 @@ import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.client.gui.screens.ShenlongWishScreen;
 import com.hmc.db_renewed.client.gui.StackWishMenu;
 import com.hmc.db_renewed.core.network.feature.ki.*;
+import com.hmc.db_renewed.core.network.feature.player.SyncPlayerFormPacket;
+import com.hmc.db_renewed.core.network.feature.player.SyncPlayerStatsPacket;
+import com.hmc.db_renewed.core.network.feature.player.SyncPlayerVisualPacket;
 import com.hmc.db_renewed.core.network.feature.stats.*;
 import com.hmc.db_renewed.core.network.feature.wishes.*;
 import com.hmc.db_renewed.core.network.vehicle.VehicleControlPayload;
@@ -75,6 +78,12 @@ public class ModNetworking {
         );
 
         registrar.playToClient(
+                SyncPlayerFormPacket.TYPE,
+                SyncPlayerFormPacket.STREAM_CODEC,
+                SyncPlayerFormPacket::handle
+        );
+
+        registrar.playToClient(
                 SyncPlayerVisualPacket.TYPE,
                 SyncPlayerVisualPacket.STREAM_CODEC,
                 SyncPlayerVisualPacket::handle
@@ -118,7 +127,7 @@ public class ModNetworking {
                 VehicleControlPayload::handle
         );
 
-        registrar.playBidirectional(
+        registrar.playToServer(
                 TransformHoldPacket.TYPE,
                 TransformHoldPacket.STREAM_CODEC,
                 TransformHoldPacket::handle

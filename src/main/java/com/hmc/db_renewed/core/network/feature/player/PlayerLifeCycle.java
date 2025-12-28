@@ -2,8 +2,6 @@ package com.hmc.db_renewed.core.network.feature.player;
 
 import com.hmc.db_renewed.content.effect.ModEffects;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
-import com.hmc.db_renewed.core.network.feature.stats.SyncPlayerStatsPacket;
-import com.hmc.db_renewed.core.network.feature.stats.SyncPlayerVisualPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -109,4 +107,21 @@ public class PlayerLifeCycle {
         PacketDistributor.sendToPlayer(target, pkt);
         PacketDistributor.sendToPlayersTrackingEntity(target, pkt);
     }
+
+    public static void syncForm(ServerPlayer sp) {
+        var pkt = SyncPlayerFormPacket.from(sp);
+        PacketDistributor.sendToPlayer(sp, pkt);
+        PacketDistributor.sendToPlayersTrackingEntity(sp, pkt);
+    }
+
+    public static void syncFormIfServer(Player p) {
+        if (p instanceof ServerPlayer sp) syncForm(sp);
+    }
+
+    public static void syncFormToTrackersAndSelf(ServerPlayer target) {
+        var pkt = SyncPlayerFormPacket.from(target);
+        PacketDistributor.sendToPlayer(target, pkt);
+        PacketDistributor.sendToPlayersTrackingEntity(target, pkt);
+    }
+
 }

@@ -3,6 +3,7 @@ package com.hmc.db_renewed.core.network.feature.stats;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.race.forms.FormIds;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -10,7 +11,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record TransformHoldPacket(boolean transforming) implements CustomPacketPayload {
+public record TransformHoldPacket(Action action, boolean active) implements CustomPacketPayload {
+
+    public enum Action {
+        TRANSFORM_HOLD, // ALT + C (hold)
+        DETRANSFORM     // SHIFT + C (tap o hold, da igual)
+    }
 
     public static final Type<TransformHoldPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "transform_hold"));
@@ -18,12 +24,15 @@ public record TransformHoldPacket(boolean transforming) implements CustomPacketP
     public static final StreamCodec<FriendlyByteBuf, TransformHoldPacket> STREAM_CODEC =
             StreamCodec.of(TransformHoldPacket::encode, TransformHoldPacket::decode);
 
-    public static void encode(FriendlyByteBuf buf, TransformHoldPacket pkt) {
-        buf.writeBoolean(pkt.transforming());
+    private static void encode(FriendlyByteBuf buf, TransformHoldPacket pkt) {
+        buf.writeEnum(pkt.action());
+        buf.writeBoolean(pkt.active());
     }
 
-    public static TransformHoldPacket decode(FriendlyByteBuf buf) {
-        return new TransformHoldPacket(buf.readBoolean());
+    private static TransformHoldPacket decode(FriendlyByteBuf buf) {
+        Action a = buf.readEnum(Action.class);
+        boolean v = buf.readBoolean();
+        return new TransformHoldPacket(a, v);
     }
 
     @Override
@@ -35,23 +44,27 @@ public record TransformHoldPacket(boolean transforming) implements CustomPacketP
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
 
-            PlayerStatsAttachment att = sp.getData(DataAttachments.PLAYER_STATS.get());
+            var stats  = sp.getData(DataAttachments.PLAYER_STATS.get());
+            var form   = sp.getData(DataAttachments.PLAYER_FORM.get());
 
-            // Gate: si no eligió raza, nunca puede transformarse
-            if (!att.isRaceChosen()) {
-                if (att.isTransforming()) {
-                    att.setTransforming(false);
-                }
-                PlayerLifeCycle.sync(sp);
+            if (!stats.isRaceChosen()) {
+                form.resetAll();
+                PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
                 return;
             }
 
-            // Aplicar estado
-            att.setTransforming(pkt.transforming());
+            if (pkt.action() == Action.DETRANSFORM) {
+                // Solo si está transformado
+                if (!FormIds.BASE.equals(form.getFormId())) {
+                    form.forceBase(); // lo creamos abajo
+                }
+                PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
+                return;
+            }
 
-            // Sync inmediato a self + trackers (tu método sync() ya hace ambos)
-            PlayerLifeCycle.sync(sp);
+            // Acción normal: hold transformación (ALT + C)
+            form.setTransformHeld(pkt.active());
+            PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
         });
     }
-
 }
