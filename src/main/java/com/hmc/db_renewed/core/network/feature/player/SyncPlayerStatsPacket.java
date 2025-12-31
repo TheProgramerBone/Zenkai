@@ -26,6 +26,10 @@ public record SyncPlayerStatsPacket(CompoundTag data) implements CustomPacketPay
             var mc = Minecraft.getInstance();
             if (mc.player == null || pkt.data == null) return;
             PlayerStatsAttachment att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
+            if (mc.player == null) return;
+            if (mc.screen instanceof com.hmc.db_renewed.client.gui.screens.RaceAppearanceScreen) {
+                return;
+            }
             att.load(pkt.data);
         });
     }

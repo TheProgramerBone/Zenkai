@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.core.network.feature.race;
 
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.model.HumanoidModel;
@@ -24,9 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Set<UUID> LOGGED = ConcurrentHashMap.newKeySet();
-
     private final HumanoidArmorLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>, HumanoidModel<AbstractClientPlayer>> armorLayer;
 
     public RaceSkinGeoArmorLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent,
@@ -47,13 +45,23 @@ public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, Pla
                        AbstractClientPlayer player,
                        float limbSwing, float limbSwingAmount, float partialTick,
                        float ageInTicks, float netHeadYaw, float headPitch) {
+        var stats  = player.getData(DataAttachments.PLAYER_STATS.get());
+        var visual = player.getData(DataAttachments.PLAYER_VISUAL.get());
 
-        if (LOGGED.add(player.getUUID())) {
-            LOGGER.info("[DBR] RaceSkinGeoArmorLayer activo para {} race={}",
-                    player.getGameProfile().getName(),
-                    PlayerStatsAttachment.get(player).getRace()
-            );
-        }
+        // Si está en modo "My Skin" (vanilla), NO inyectar nada.
+        if (!visual.shouldRenderRaceSkin()) return;
+
+        // Si no eligió raza aún, no renderizamos body racial
+        if (!stats.isRaceChosen()) return;
+
+        // Resolver stacks que se van a “simular” como armadura
+        ItemStack head  = RaceBodyResolver.resolve(player, EquipmentSlot.HEAD);
+        ItemStack chest = RaceBodyResolver.resolve(player, EquipmentSlot.CHEST);
+        ItemStack legs  = RaceBodyResolver.resolve(player, EquipmentSlot.LEGS);
+        ItemStack feet  = RaceBodyResolver.resolve(player, EquipmentSlot.FEET);
+
+        // Si no hay nada que renderizar, cortar.
+        if (head.isEmpty() && chest.isEmpty() && legs.isEmpty() && feet.isEmpty()) return;
 
         // 4 stacks reales (para restaurar)
         var inv = player.getInventory();
@@ -63,13 +71,13 @@ public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, Pla
         ItemStack oldLegs  = inv.getArmor(1);
         ItemStack oldFeet  = inv.getArmor(0);
 
-        // Inyectar virtual race armor (SIEMPRE, aunque tenga armadura real)
-        inv.armor.set(3, RaceBodyResolver.resolve(player, EquipmentSlot.HEAD));
-        inv.armor.set(2, RaceBodyResolver.resolve(player, EquipmentSlot.CHEST));
-        inv.armor.set(1, RaceBodyResolver.resolve(player, EquipmentSlot.LEGS));
-        inv.armor.set(0, RaceBodyResolver.resolve(player, EquipmentSlot.FEET));
+        // Inyectar virtual
+        inv.armor.set(3, head);
+        inv.armor.set(2, chest);
+        inv.armor.set(1, legs);
+        inv.armor.set(0, feet);
 
-        // Renderizar “como armadura” (aquí GeckoLib entra porque tu item implementa GeoItem)
+        // Renderizar “como armadura”
         armorLayer.render(poseStack, buffer, packedLight, player,
                 limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
 

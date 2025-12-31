@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.client.gui.button;
+package com.hmc.db_renewed.client.gui.buttons;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import net.minecraft.client.gui.GuiGraphics;

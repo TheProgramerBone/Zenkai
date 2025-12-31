@@ -44,6 +44,11 @@ public record SyncPlayerVisualPacket(int entityId, CompoundTag data) implements 
     @OnlyIn(Dist.CLIENT)
     private static void applyClient(SyncPlayerVisualPacket msg) {
         Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null
+                && mc.player.getId() == msg.entityId()
+                && mc.screen instanceof com.hmc.db_renewed.client.gui.screens.RaceAppearanceScreen) {
+            return;
+        }
         if (mc.level == null) return;
 
         Entity e = mc.level.getEntity(msg.entityId());

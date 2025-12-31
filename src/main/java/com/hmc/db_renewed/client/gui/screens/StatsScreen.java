@@ -1,7 +1,7 @@
 package com.hmc.db_renewed.client.gui.screens;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.client.gui.button.PlusIconButton;
+import com.hmc.db_renewed.client.gui.buttons.PlusIconButton;
 import com.hmc.db_renewed.core.config.StatsConfig;
 import com.hmc.db_renewed.core.network.feature.Dbrattributes;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
@@ -27,11 +27,11 @@ public class StatsScreen extends Screen {
 
     // Fondo del menú de stats
     private static final ResourceLocation BG_TEX =
-            ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "textures/gui/stats_bg.png");
+            ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "textures/gui/common_screen.png");
 
     // Tamaño del panel (ajusta a tu textura)
     private static final int BG_W = 256;
-    private static final int BG_H = 228;
+    private static final int BG_H = 256;
 
     // posición calculada en init()
     private int panelLeft;

@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.core.network;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.db_renewed.core.network.feature.Style;
 import net.minecraft.network.FriendlyByteBuf;
@@ -44,14 +45,9 @@ public record ChooseStylePacket(Style style) implements CustomPacketPayload {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer sp)) return;
 
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-
-            // Aplicar estilo seleccionado
             att.setStyle(pkt.style());
-
-            // Aquí puedes añadir TODOs para:
-            // - regen TP/atributos base
-            // - recalcular stats visualmente
-            // - marcar flag de “estilo elegido” si tienes uno
+            att.setStyleChosen(true);
+            PlayerLifeCycle.sync(sp);
         });
     }
 }

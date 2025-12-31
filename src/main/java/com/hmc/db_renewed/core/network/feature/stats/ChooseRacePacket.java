@@ -2,6 +2,7 @@ package com.hmc.db_renewed.core.network.feature.stats;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.core.network.feature.Race;
+import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -41,14 +42,12 @@ public record ChooseRacePacket(Race race) implements CustomPacketPayload {
 
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
 
-            // Aplicar raza seleccionada
             att.setRace(pkt.race());
             att.setRaceChosen(true);
-            // Aquí puedes dejar hooks / TODO para personalización inicial
-            // (color de aura, pelo, etc.)
+            att.setStyleChosen(false);
+            PlayerLifeCycle.sync(sp);
+            PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
 
-            // Si tienes un SyncPlayerStatsPacket, podrías mandarlo aquí.
-            // ModNetworking.syncPlayerStats(sp);
         });
     }
 }

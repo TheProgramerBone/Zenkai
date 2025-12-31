@@ -132,5 +132,11 @@ public class ModNetworking {
                 TransformHoldPacket.STREAM_CODEC,
                 TransformHoldPacket::handle
         );
+
+        registrar.playToServer(
+                UpdatePlayerVisualPacket.TYPE,
+                UpdatePlayerVisualPacket.STREAM_CODEC,
+                UpdatePlayerVisualPacket::handle
+        );
     }
 }

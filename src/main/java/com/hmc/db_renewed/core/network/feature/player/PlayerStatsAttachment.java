@@ -85,10 +85,14 @@ public class PlayerStatsAttachment {
     // === Raza/estilo y multiplicadores ===
     public void setRace(Race r) {
         this.race = r;
-        this.raceChosen = true;
         applyRaceBaseAttributes();
         recalcAll();
     }
+
+    private boolean styleChosen = false;
+
+    public boolean isStyleChosen() { return styleChosen; }
+    public void setStyleChosen(boolean v) { this.styleChosen = v; }
 
     public void setStyle(Style s) {
         this.style = s;
@@ -386,6 +390,7 @@ public class PlayerStatsAttachment {
         tag.putBoolean("raceChosen",raceChosen);
         tag.putBoolean("isImmortal",isImmortal);
         tag.putBoolean("transforming", transforming);
+        tag.putBoolean("styleChosen", styleChosen);
 
 
         // Ki Attacks
@@ -447,6 +452,7 @@ public class PlayerStatsAttachment {
         this.raceChosen = tag.getBoolean("raceChosen");
         this.isImmortal = tag.getBoolean("isImmortal");
         this.transforming = tag.getBoolean("transforming");
+        this.styleChosen = tag.getBoolean("styleChosen");
 
         // Ki Attacks
         this.kiAttacks.clear();

@@ -1,7 +1,8 @@
 package com.hmc.db_renewed.client.input;
 
-import com.hmc.db_renewed.client.gui.screens.RaceSelectionScreen;
+import com.hmc.db_renewed.client.gui.screens.RaceAppearanceScreen;
 import com.hmc.db_renewed.client.gui.screens.StatsScreen;
+import com.hmc.db_renewed.client.gui.screens.StyleSelectionScreen;
 import com.hmc.db_renewed.core.network.feature.ki.KiChargePacket;
 import com.hmc.db_renewed.core.network.feature.ki.ToggleFlyPacket;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
@@ -95,8 +96,13 @@ public final class KeyBindings {
 
         // OPEN_STATS (V)
         if (OPEN_STATS != null && OPEN_STATS.consumeClick()) {
-            if (!hasRace) mc.setScreen(new RaceSelectionScreen());
-            else mc.setScreen(new StatsScreen());
+            if (!stats.isRaceChosen()) {
+                mc.setScreen(new RaceAppearanceScreen()); // nuevo “RaceScreen real”
+            } else if (!stats.isStyleChosen()) {
+                mc.setScreen(new StyleSelectionScreen(null)); // ya tiene raza, falta estilo
+            } else {
+                mc.setScreen(new StatsScreen());
+            }
             return;
         }
 
