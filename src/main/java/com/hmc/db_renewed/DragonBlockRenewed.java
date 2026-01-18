@@ -24,6 +24,7 @@ import com.hmc.db_renewed.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.db_renewed.content.item.ModItems;
 import com.hmc.db_renewed.core.network.ModNetworking;
 import com.hmc.db_renewed.core.network.TickHandlers;
+import com.hmc.db_renewed.core.network.feature.forms.FormRegistry;
 import com.hmc.db_renewed.core.network.feature.ki.MouseHooks;
 import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.db_renewed.core.network.feature.stats.*;
@@ -56,6 +57,7 @@ import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 import terrablender.api.Regions;
 import terrablender.api.SurfaceRuleManager;
+
 
 @Mod(DragonBlockRenewed.MOD_ID)
 public class DragonBlockRenewed
@@ -97,7 +99,7 @@ public class DragonBlockRenewed
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
-
+        event.enqueueWork(FormRegistry::bootstrap);
     }
 
     @SubscribeEvent
@@ -107,7 +109,7 @@ public class DragonBlockRenewed
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent e) {
-            }
+    }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
 //        event.registerEntity(
@@ -143,8 +145,6 @@ public class DragonBlockRenewed
                 SurfaceRuleManager.addSurfaceRules(SurfaceRuleManager.RuleCategory.OVERWORLD, MOD_ID, ModSurfaceRules.makeRules());
             });
             event.enqueueWork(() -> {
-                // Prioridad alta para gameplay (transformación)
-                // (doc: 1500+ para animaciones importantes) :contentReference[oaicite:4]{index=4}
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         DbPalLayers.TRANSFORM_LAYER,
                         1600,

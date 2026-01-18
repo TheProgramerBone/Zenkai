@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.core.network.feature.race.forms;
+package com.hmc.db_renewed.core.network.feature.forms;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import net.minecraft.resources.ResourceLocation;

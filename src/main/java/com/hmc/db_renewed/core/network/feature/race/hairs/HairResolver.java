@@ -5,7 +5,7 @@ import com.hmc.db_renewed.core.network.feature.Race;
 import com.hmc.db_renewed.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.db_renewed.core.network.feature.player.PlayerVisualAttachment;
-import com.hmc.db_renewed.core.network.feature.race.forms.FormIds;
+import com.hmc.db_renewed.core.network.feature.forms.FormIds;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;

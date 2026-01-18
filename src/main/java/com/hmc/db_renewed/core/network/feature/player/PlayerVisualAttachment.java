@@ -10,16 +10,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Attachment SOLO para datos visuales/cosméticos del jugador.
- * No debe afectar directamente el cálculo de daño, TP, etc.
- *
- * Uso:
- *  - “Race Skin” tipo armadura GeckoLib (slot virtual, NO ocupa slots reales).
- *  - Colores (pelo/ojos/aura).
- *  - IDs de estilos (pelo/aura/outfit).
- *  - formStage (para futuro, sin lógica de stats aquí).
- */
 public class PlayerVisualAttachment {
 
     // =========================================================
@@ -167,22 +157,20 @@ public class PlayerVisualAttachment {
     }
 
     public void load(CompoundTag tag) {
-        // Race skin
         this.raceSkinItemId = tag.getString("raceSkinItemId");
-        this.renderRaceSkin = tag.getBoolean("renderRaceSkin");
-        this.hideVanillaBody = tag.getBoolean("hideVanillaBody");
 
-        // Colores (si no existen, se quedan en defaults)
+        if (tag.contains("renderRaceSkin")) this.renderRaceSkin = tag.getBoolean("renderRaceSkin");
+        if (tag.contains("hideVanillaBody")) this.hideVanillaBody = tag.getBoolean("hideVanillaBody");
+
         if (tag.contains("hairColor")) this.hairColorRgb = tag.getInt("hairColor");
         if (tag.contains("eyeColor"))  this.eyeColorRgb  = tag.getInt("eyeColor");
         if (tag.contains("auraColor")) this.auraColorRgb = tag.getInt("auraColor");
 
-        // IDs
         if (tag.contains("hairStyleId")) this.hairStyleId = tag.getString("hairStyleId");
         if (tag.contains("auraStyleId")) this.auraStyleId = tag.getString("auraStyleId");
         if (tag.contains("outfitId"))    this.outfitId    = tag.getString("outfitId");
 
-        // Forma
-        this.formStage = Math.max(0, tag.getInt("formStage"));
+        if (tag.contains("formStage")) this.formStage = Math.max(0, tag.getInt("formStage"));
     }
+
 }

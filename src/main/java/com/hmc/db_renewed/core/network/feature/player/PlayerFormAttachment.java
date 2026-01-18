@@ -1,30 +1,20 @@
 package com.hmc.db_renewed.core.network.feature.player;
 
 import com.hmc.db_renewed.core.network.feature.Race;
-import com.hmc.db_renewed.core.network.feature.race.forms.FormIds;
+import com.hmc.db_renewed.core.network.feature.forms.FormDefinition;
+import com.hmc.db_renewed.core.network.feature.forms.FormIds;
+import com.hmc.db_renewed.core.network.feature.forms.FormRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.NotNull;
 
 public class PlayerFormAttachment {
 
-    // Input hold (ALT+C)
     private boolean transformHeld = false;
-
-    // Estado del “proceso” (lock / anim charge)
     private boolean transforming = false;
-
-    // Progreso del hold
     private int holdTicks = 0;
-
-    // Forma actual (ResourceLocation)
     private ResourceLocation formId = FormIds.BASE;
-
-    // Anti-spam
     private int cooldownTicks = 0;
-
-    public static final int HOLD_REQUIRED_TICKS = 100; // 5 segundos
 
     // ---------------- Getters ----------------
     public boolean isTransformHeld() { return transformHeld; }
@@ -37,7 +27,6 @@ public class PlayerFormAttachment {
     public void setTransformHeld(boolean held) {
         this.transformHeld = held;
         if (!held) {
-            // si suelta, se corta el proceso
             this.transforming = false;
             this.holdTicks = 0;
         }
@@ -57,14 +46,11 @@ public class PlayerFormAttachment {
 
     /**
      * Tick SOLO SERVIDOR.
-     * - Carga hold 100 ticks
-     * - Completa BASE->SSJ1 para Saiyan
-     * - (Luego aquí metes drain configurable por forma)
+     * @return dirty si cambió algo importante y conviene sync inmediato.
      */
     public boolean serverTick(Player p, PlayerStatsAttachment stats, PlayerVisualAttachment visual) {
         boolean dirty = false;
 
-        // cooldown
         if (cooldownTicks > 0) cooldownTicks--;
 
         // Gate: si no está holdeando o en cooldown, limpiar proceso
@@ -77,9 +63,22 @@ public class PlayerFormAttachment {
             return dirty;
         }
 
-        // Decidir target de transformación según raza + forma actual
-        ResourceLocation target = getTargetForm(stats.getRace(), formId);
+        // Resolver target via registry (y validación por raza)
+        ResourceLocation target = resolveNextForm(stats.getRace(), formId);
         if (target == null) {
+            // NO hay transformación configurada para esta raza/forma
+            if (transforming || holdTicks != 0) {
+                transforming = false;
+                holdTicks = 0;
+                dirty = true;
+            }
+            return dirty;
+        }
+
+        // Hold requerido es el de la forma DESTINO
+        int required = FormRegistry.get(target).holdTicksRequired();
+        if (required <= 0) {
+            // Si por error la forma destino no tiene hold válido, no hacemos nada.
             if (transforming || holdTicks != 0) {
                 transforming = false;
                 holdTicks = 0;
@@ -92,22 +91,19 @@ public class PlayerFormAttachment {
         transforming = true;
         holdTicks++;
 
-        // (Opcional) si quieres UI/anim más fluida puedes sync cada X ticks:
+        // Si quieres UI ultra fluida: cada X ticks puedes dirty=true para sync “progress”
         // if (holdTicks % 5 == 0) dirty = true;
 
-        if (holdTicks >= HOLD_REQUIRED_TICKS) {
-            // Aplicar forma
+        if (holdTicks >= required) {
             setFormId(target);
-            dirty = true; // <-- CLAVE: avisar al caller para sync inmediato
+            dirty = true;
 
-            // Reset proceso: cortar anim aunque siga holdeando teclas
             transforming = false;
             holdTicks = 0;
 
-            // Obligarlo a soltar para evitar encadenar
+            // obligar a soltar para evitar chain infinito
             transformHeld = false;
 
-            // Cooldown pequeño por lag
             cooldownTicks = 10;
         }
 
@@ -115,14 +111,24 @@ public class PlayerFormAttachment {
     }
 
     /**
-     * MVP: Solo Saiyan BASE -> SSJ1.
-     * Luego aquí metes ssj1->ssj2, freezer forms, kaioken, rutas, etc.
+     * Devuelve la siguiente forma para esta raza/forma actual, o null si no aplica.
      */
-    private ResourceLocation getTargetForm(Race race, ResourceLocation current) {
-        if (race == Race.SAIYAN && FormIds.BASE.equals(current)) {
-            return FormIds.SSJ1;
-        }
-        return null;
+    private static ResourceLocation resolveNextForm(Race race, ResourceLocation current) {
+        FormDefinition curDef = FormRegistry.get(current);
+        ResourceLocation next = curDef.nextFormId();
+        if (next == null) return null;
+
+        FormDefinition nextDef = FormRegistry.get(next);
+        if (nextDef == null) return null;
+
+        return nextDef.allowedRaces().contains(race) ? next : null;
+    }
+
+    /**
+     * Helper útil para el CLIENTE: saber si existe transform posible desde el estado actual.
+     */
+    public static boolean canTransformFrom(Race race, ResourceLocation current) {
+        return resolveNextForm(race, current) != null;
     }
 
     // ---------------- NBT ----------------
@@ -156,7 +162,6 @@ public class PlayerFormAttachment {
         transformHeld = false;
         transforming = false;
         holdTicks = 0;
-        cooldownTicks = 10; // opcional para evitar spam
+        cooldownTicks = 10;
     }
-
 }

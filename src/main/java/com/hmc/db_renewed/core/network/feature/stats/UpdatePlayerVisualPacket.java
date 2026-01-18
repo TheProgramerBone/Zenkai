@@ -31,13 +31,25 @@ public record UpdatePlayerVisualPacket(CompoundTag data) implements CustomPacket
 
     public static void handle(UpdatePlayerVisualPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            if (!(ctx.player() instanceof ServerPlayer sp)) return;
             if (pkt.data == null) return;
 
-            var visual = sp.getData(DataAttachments.PLAYER_VISUAL.get());
-            visual.load(pkt.data);
+            // Si lo recibe el SERVIDOR (cliente -> servidor)
+            if (ctx.player() instanceof ServerPlayer sp) {
+                var visual = sp.getData(DataAttachments.PLAYER_VISUAL.get());
+                visual.load(pkt.data);
 
-            PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
+                // Re-broadcast a self + trackers (server -> clients)
+                PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
+                return;
+            }
+
+            // Si lo recibe el CLIENTE (server -> client)
+            // ctx.player() aquí es LocalPlayer
+            var p = ctx.player();
+
+            var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
+
+            visual.load(pkt.data);
         });
     }
 }

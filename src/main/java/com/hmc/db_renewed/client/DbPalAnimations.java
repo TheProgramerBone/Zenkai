@@ -9,7 +9,6 @@ import net.minecraft.resources.ResourceLocation;
 public final class DbPalAnimations {
     private DbPalAnimations() {}
 
-    // IDs dentro del JSON
     public static final ResourceLocation TRANSFORMATION_1 =
             ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "db.transformation1");
     public static final ResourceLocation TRANSFORMATION_2 =
