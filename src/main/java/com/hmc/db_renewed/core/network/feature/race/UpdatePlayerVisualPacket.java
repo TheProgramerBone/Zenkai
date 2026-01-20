@@ -1,8 +1,9 @@
-package com.hmc.db_renewed.core.network.feature.stats;
+package com.hmc.db_renewed.core.network.feature.race;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.db_renewed.core.network.feature.player.PlayerVisualAttachment;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

@@ -5,7 +5,7 @@ import com.hmc.db_renewed.client.gui.buttons.ArrowIconButton;
 import com.hmc.db_renewed.core.network.feature.Race;
 import com.hmc.db_renewed.core.network.feature.stats.ChooseRacePacket;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
-import com.hmc.db_renewed.core.network.feature.stats.UpdatePlayerVisualPacket;
+import com.hmc.db_renewed.core.network.feature.race.UpdatePlayerVisualPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

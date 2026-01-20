@@ -1,9 +1,10 @@
 package com.hmc.db_renewed.client;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
+import com.hmc.db_renewed.core.network.feature.Race;
 import com.hmc.db_renewed.core.network.feature.ki.MouseHooks;
-import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -11,73 +12,66 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
+import java.lang.reflect.Method;
+
 public final class ClientHooks {
 
     private ClientHooks() {}
 
     // =========================
-    // Texturas
+    // Icons atlas
     // =========================
-
-    /** HUD base 256x128 */
-    private static final ResourceLocation HUD_TEX =
-            ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "textures/gui/hud.png");
-
-    /** Atlas de iconos 270x270 (celdas 18x18) */
     private static final ResourceLocation ICONS_TEX =
             ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "textures/gui/icons.png");
-
-    private static final int HUD_TEX_W = 256;
-    private static final int HUD_TEX_H = 128;
 
     private static final int ICONS_TEX_W = 270;
     private static final int ICONS_TEX_H = 270;
 
+    // OJO: esto está como lo tienes actualmente
+    private static final int ICON_CELL = 20;     // tamaño real de celda en el atlas
+    private static final int ICON_DRAW = 20;     // tamaño al dibujar el icono
+    private static final int BADGE_SIZE = 20;    // cuadrito contenedor
+    private static final int BADGE_PAD = 2;
+
     // =========================
-    // Layout (ajusta a gusto)
+    // Layout HUD
     // =========================
-
-    private static final int PANEL_W = 150;
-    private static final int PANEL_H = 40;
-
-    private static final int BAR_W = 120;
-    private static final int BAR_H = 8;
-
-    private static final int ICON_SIZE = 20;
-
-    // Posición HUD
     private static final int PANEL_X = 10;
     private static final int PANEL_Y = 10;
 
+    private static final int BAR_W = 120;
+    private static final int BAR_H = 8;
+    private static final int BAR_GAP = 10;
+
+    private static final int TEXT_PAD = 6;
+
+    // Colores (ARGB)
+    private static final int C_PANEL_BG   = 0xAA000000;
+    private static final int C_PANEL_EDGE = 0x55FFFFFF;
+
+    private static final int C_BAR_BG     = 0x66000000;
+    private static final int C_BAR_EDGE   = 0x55FFFFFF;
+
+    private static final int C_BODY_FILL  = 0xFFCC3333;
+    private static final int C_STAM_FILL  = 0xFF33CC66;
+    private static final int C_KI_FILL    = 0xFF33A0FF;
+
+    // Badges (cuadritos)
+    private static final int C_BADGE_BG   = 0xAA000000;
+    private static final int C_BADGE_EDGE = 0x55FFFFFF;
+
     // =========================
-    // UVs HUD (rellena según tu png 256x128)
+    // Íconos existentes
     // =========================
-
-    // Fondo del panel en hud.png
-    private static final int U_PANEL = 0;
-    private static final int V_PANEL = 0;
-
-    // Barras “vacías” (mismo sprite, distinto fill)
-    // NOTA: aquí debes poner los UV reales de tu hud.png
-    private static final int U_BAR_EMPTY = 0;
-    private static final int V_BAR_EMPTY = 40;
-
-    private static final int U_BAR_BODY_FILL = 0;
-    private static final int V_BAR_BODY_FILL = 48;
-
-    private static final int U_BAR_STAMINA_FILL = 0;
-    private static final int V_BAR_STAMINA_FILL = 56;
-
-    private static final int U_BAR_KI_FILL = 0;
-    private static final int V_BAR_KI_FILL = 64;
-
-    // =========================
-    // Iconos (atlas icons.png 270x270)
-    // =========================
-    // Tú ya tienes el atlas; aquí defines el grid por (col, row).
     private static final IconUV ICON_FLY = IconUV.grid(3, 0);
     private static final IconUV ICON_KI_CHARGE = IconUV.grid(2, 0);
     private static final IconUV ICON_KI_ATTACK = IconUV.grid(1, 0);
+
+    private static final IconUV ICON_TRANSFORMING = IconUV.grid(7, 0);
+    private static final IconUV ICON_DIVINE = IconUV.grid(4, 0);
+    private static final IconUV ICON_MAJIN = IconUV.grid(5, 0);
+    private static final IconUV ICON_IMMORTAL = IconUV.grid(3, 0);
+    private static final IconUV ICON_LEGENDARY = IconUV.grid(9, 0);
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
@@ -92,87 +86,181 @@ public final class ClientHooks {
 
         GuiGraphics g = e.getGuiGraphics();
 
-        final int x = PANEL_X;
-        final int y = PANEL_Y;
+        // ========================
+        // PANEL simple (sin textura)
+        // ========================
+        int panelW = 10 + BAR_W + 70; // barra + texto cur/max
+        int panelH = (BAR_H * 3) + (BAR_GAP * 2); // padding + gaps
 
-        // ========================
-        // 1) FONDO DEL PANEL (HUD)
-        // ========================
-        blitHud(g, x, y, U_PANEL, V_PANEL, PANEL_W, PANEL_H);
+        drawPanel(g, PANEL_X, PANEL_Y, panelW, panelH);
 
         // Layout interno
-        int barX = x + 20;
-        int barY = y + 5;
+        int barX = PANEL_X + 25;
+        int barY = PANEL_Y + 8;
 
         // ========================
-        // 2) BODY
+        // 1) BODY
         // ========================
-        drawBar(g, barX, barY,
+        drawBarWithNumbers(
+                g,
+                barX, barY,
+                BAR_W, BAR_H,
                 stats.getBody(), stats.getBodyMax(),
-                U_BAR_EMPTY, V_BAR_EMPTY,
-                U_BAR_BODY_FILL, V_BAR_BODY_FILL);
+                C_BODY_FILL,
+                "HP"
+        );
 
         // ========================
-        // 3) STAMINA
+        // 2) STAMINA
         // ========================
-        barY += 10;
-        drawBar(g, barX, barY,
+        barY += BAR_GAP;
+        drawBarWithNumbers(
+                g,
+                barX, barY,
+                BAR_W, BAR_H,
                 stats.getStamina(), stats.getStaminaMax(),
-                U_BAR_EMPTY, V_BAR_EMPTY,
-                U_BAR_STAMINA_FILL, V_BAR_STAMINA_FILL);
+                C_STAM_FILL,
+                "STM"
+        );
 
         // ========================
-        // 4) KI/ENERGY
+        // 3) KI
         // ========================
-        barY += 10;
-        drawBar(g, barX, barY,
+        barY += BAR_GAP;
+        drawBarWithNumbers(
+                g,
+                barX, barY,
+                BAR_W, BAR_H,
                 stats.getEnergy(), stats.getEnergyMax(),
-                U_BAR_EMPTY, V_BAR_EMPTY,
-                U_BAR_KI_FILL, V_BAR_KI_FILL);
+                C_KI_FILL,
+                "KI"
+        );
 
         // ========================
-        // 5) ICONOS (debajo del panel, en fila)
+        // TODOS LOS ICONOS EN UNA SOLA LINEA (debajo del panel)
         // ========================
-        int iconX = x + 2;
-        int iconY = y + PANEL_H + 2; // <-- debajo del panel
+        int iconX = PANEL_X;
+        int iconY = PANEL_Y + panelH + 4;
 
-        int iconPad = 2;
+        // --- Estados “especiales” (antes de acciones, misma altura) ---
+        if (safeBool(stats, "isTransforming")) {
+            drawBadge(g, iconX, iconY, ICON_TRANSFORMING);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
 
+        if (safeBool(stats, "isDivine")) {
+            drawBadge(g, iconX, iconY, ICON_DIVINE);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        if (stats.getRace() == Race.MAJIN) {
+            drawBadge(g, iconX, iconY, ICON_MAJIN);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        if (safeBool(stats, "isImmortal")) {
+            drawBadge(g, iconX, iconY, ICON_IMMORTAL);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        if (safeBool(stats, "isLegendary")) {
+            drawBadge(g, iconX, iconY, ICON_LEGENDARY);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        // --- Acciones (misma altura) ---
         if (stats.isFlyEnabled()) {
-            blitIcon(g, iconX, iconY, ICON_FLY);
-            iconX += ICON_SIZE + iconPad;
+            drawBadge(g, iconX, iconY, ICON_FLY);
+            iconX += BADGE_SIZE + BADGE_PAD;
         }
 
         if (stats.isChargingKi()) {
-            blitIcon(g, iconX, iconY, ICON_KI_CHARGE);
-            iconX += ICON_SIZE + iconPad;
+            drawBadge(g, iconX, iconY, ICON_KI_CHARGE);
+            iconX += BADGE_SIZE + BADGE_PAD;
         }
 
         if (MouseHooks.wasChargingKiAttack) {
-            blitIcon(g, iconX, iconY, ICON_KI_ATTACK);
-            iconX += ICON_SIZE + iconPad;
+            drawBadge(g, iconX, iconY, ICON_KI_ATTACK);
+            iconX += BADGE_SIZE + BADGE_PAD;
         }
 
-        // ========================
-        // 6) TEXTO % KI BLAST
-        // ========================
+        // Texto % KI attack
         if (MouseHooks.wasChargingKiAttack && mc.level != null) {
             int percent = computeKiAttackPercent(mc);
-
             g.drawString(
                     mc.font,
                     Component.literal("Ki " + percent + "%"),
-                    barX,
-                    y + PANEL_H + 4,
+                    iconX + 4,
+                    iconY + 6,
                     0xFFFFAA00
             );
         }
     }
 
     // =========================================================
-    // Helpers
+    // Helpers (Barras / Panel / Badges)
     // =========================================================
 
+    private static void drawPanel(GuiGraphics g, int x, int y, int w, int h) {
+        g.fill(x, y, x + w, y + h, C_PANEL_BG);
+        g.fill(x, y, x + w, y + 1, C_PANEL_EDGE);
+        g.fill(x, y + h - 1, x + w, y + h, C_PANEL_EDGE);
+        g.fill(x, y, x + 1, y + h, C_PANEL_EDGE);
+        g.fill(x + w - 1, y, x + w, y + h, C_PANEL_EDGE);
+    }
+
+    private static void drawBarWithNumbers(
+            GuiGraphics g,
+            int x, int y,
+            int w, int h,
+            int cur, int max,
+            int fillColor,
+            String label
+    ) {
+        Minecraft mc = Minecraft.getInstance();
+        g.drawString(mc.font, Component.literal(label), x-20, y, 0xFFFFFFFF);
+
+        // bar bg
+        g.fill(x, y, x + w, y + h, C_BAR_BG);
+
+        // fill
+        if (max > 0) {
+            float pct = Math.max(0f, Math.min(1f, cur / (float) max));
+            int filled = (int) (w * pct);
+            if (filled > 0) {
+                g.fill(x, y, x + filled, y + h, fillColor);
+            }
+        }
+
+        // borde
+        g.fill(x, y, x + w, y + 1, C_BAR_EDGE);
+        g.fill(x, y + h - 1, x + w, y + h, C_BAR_EDGE);
+        g.fill(x, y, x + 1, y + h, C_BAR_EDGE);
+        g.fill(x + w - 1, y, x + w, y + h, C_BAR_EDGE);
+
+        // texto cur/max
+        String txt = cur + "/" + max;
+        g.drawString(mc.font, Component.literal(txt), x + w + TEXT_PAD, y - 1, 0xFFFFFFFF);
+    }
+
+    private static void drawBadge(GuiGraphics g, int x, int y, IconUV icon) {
+        // cuadrito
+        g.fill(x, y, x + BADGE_SIZE, y + BADGE_SIZE, C_BADGE_BG);
+        g.fill(x, y, x + BADGE_SIZE, y + 1, C_BADGE_EDGE);
+        g.fill(x, y + BADGE_SIZE - 1, x + BADGE_SIZE, y + BADGE_SIZE, C_BADGE_EDGE);
+        g.fill(x, y, x + 1, y + BADGE_SIZE, C_BADGE_EDGE);
+        g.fill(x + BADGE_SIZE - 1, y, x + BADGE_SIZE, y + BADGE_SIZE, C_BADGE_EDGE);
+
+        // icon centrado
+        int ix = x + (BADGE_SIZE - ICON_DRAW) / 2;
+        int iy = y + (BADGE_SIZE - ICON_DRAW) / 2;
+
+        g.blit(ICONS_TEX, ix, iy, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_TEX_W, ICONS_TEX_H);
+    }
+
+    // =========================================================
+    // Helpers (Ki attack %)
+    // =========================================================
     private static int computeKiAttackPercent(Minecraft mc) {
         long now = mc.level.getGameTime();
         long ticks = Math.max(0L, now - MouseHooks.clientChargeStartTick);
@@ -193,49 +281,20 @@ public final class ClientHooks {
         return (int) Math.round(factor * 100.0); // 0–200%
     }
 
-    /** blit contra la textura hud.png (256x128) */
-    private static void blitHud(GuiGraphics g, int x, int y, int u, int v, int w, int h) {
-        g.blit(HUD_TEX, x, y, u, v, w, h, HUD_TEX_W, HUD_TEX_H);
-    }
-
-    /** blit contra atlas icons.png (270x270) */
-    private static void blitIcon(GuiGraphics g, int x, int y, IconUV icon) {
-        g.blit(ICONS_TEX, x, y, icon.u(), icon.v(), ICON_SIZE, ICON_SIZE, ICONS_TEX_W, ICONS_TEX_H);
-    }
-
-    /**
-     * Dibuja una barra: vacío completo + fill recortado.
-     * Usa sprites de tamaño BAR_W x BAR_H dentro del hud.png.
-     */
-    private static void drawBar(
-            GuiGraphics g,
-            int x, int y,
-            int cur, int max,
-            int uEmpty, int vEmpty,
-            int uFill, int vFill
-    ) {
-        if (max <= 0) return;
-
-        float pct = cur / (float) max;
-        pct = Math.max(0f, Math.min(1f, pct));
-        int filled = (int) (BAR_W * pct);
-
-        // vacío
-        blitHud(g, x, y, uEmpty, vEmpty, BAR_W, BAR_H);
-
-        // fill recortado
-        if (filled > 0) {
-            blitHud(g, x, y, uFill, vFill, filled, BAR_H);
+    private static boolean safeBool(Object obj, String methodName) {
+        if (obj == null) return false;
+        try {
+            Method m = obj.getClass().getMethod(methodName);
+            Object r = m.invoke(obj);
+            return (r instanceof Boolean b) && b;
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 
-    /**
-     * UV helper para atlas de iconos 18x18.
-     * Tu atlas es 270x270 => 15 columnas (270/18 = 15).
-     */
     private record IconUV(int u, int v) {
         static IconUV grid(int col, int row) {
-            return new IconUV(col * ICON_SIZE, row * ICON_SIZE);
+            return new IconUV(col * ICON_CELL, row * ICON_CELL);
         }
     }
 }

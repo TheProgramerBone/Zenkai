@@ -7,6 +7,7 @@ import com.hmc.db_renewed.core.network.feature.ki.*;
 import com.hmc.db_renewed.core.network.feature.player.SyncPlayerFormPacket;
 import com.hmc.db_renewed.core.network.feature.player.SyncPlayerStatsPacket;
 import com.hmc.db_renewed.core.network.feature.player.SyncPlayerVisualPacket;
+import com.hmc.db_renewed.core.network.feature.race.UpdatePlayerVisualPacket;
 import com.hmc.db_renewed.core.network.feature.stats.*;
 import com.hmc.db_renewed.core.network.feature.wishes.*;
 import com.hmc.db_renewed.core.network.vehicle.VehicleControlPayload;

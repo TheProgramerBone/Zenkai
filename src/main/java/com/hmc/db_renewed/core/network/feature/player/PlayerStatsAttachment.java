@@ -30,6 +30,12 @@ public class PlayerStatsAttachment {
 
     private boolean isImmortal = false;
 
+    private boolean isDivine = false;
+
+    private boolean isMajin = false;
+
+    private boolean isLegendary = false;
+
     private int tp = 0; // puntos libres
     private final EnumMap<Dbrattributes, Integer> attributes = new EnumMap<>(Dbrattributes.class);
     private final EnumMap<Dbrattributes, Integer> invested = new EnumMap<>(Dbrattributes.class); // TP invertido por atributo
@@ -389,6 +395,9 @@ public class PlayerStatsAttachment {
         tag.putBoolean("chargingKi", chargingKi);
         tag.putBoolean("raceChosen",raceChosen);
         tag.putBoolean("isImmortal",isImmortal);
+        tag.putBoolean("isDivine",isDivine);
+        tag.putBoolean("isLegendary",isLegendary);
+        tag.putBoolean("isMajin",isMajin);
         tag.putBoolean("transforming", transforming);
         tag.putBoolean("styleChosen", styleChosen);
 
@@ -451,6 +460,9 @@ public class PlayerStatsAttachment {
         this.chargingKi = tag.getBoolean("chargingKi");
         this.raceChosen = tag.getBoolean("raceChosen");
         this.isImmortal = tag.getBoolean("isImmortal");
+        this.isMajin = tag.getBoolean("isMajin");
+        this.isDivine = tag.getBoolean("isDivine");
+        this.isLegendary = tag.getBoolean("isLegendary");
         this.transforming = tag.getBoolean("transforming");
         this.styleChosen = tag.getBoolean("styleChosen");
 
@@ -578,6 +590,30 @@ public class PlayerStatsAttachment {
 
     public void setImmortal(boolean isImmortal) {
         this.isImmortal = isImmortal;
+    }
+
+    public boolean isDivine() {
+        return isDivine;
+    }
+
+    public void setDivine(boolean isDivine) {
+        this.isDivine = isDivine;
+    }
+
+    public boolean isMajin() {
+        return isMajin;
+    }
+
+    public void setMajin(boolean isMajin) {
+        this.isMajin = isMajin;
+    }
+
+    public boolean isLegendary() {
+        return isLegendary;
+    }
+
+    public void setLegendary(boolean isLegendary) {
+        this.isLegendary = isLegendary;
     }
 
     public void refillOnRespawn() {
