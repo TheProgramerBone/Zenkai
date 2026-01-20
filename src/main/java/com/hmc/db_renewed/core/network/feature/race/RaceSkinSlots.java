@@ -34,7 +34,6 @@ public final class RaceSkinSlots {
         }
 
 
-
         if (race == Race.ARCOSIAN) {
             return switch (slot) {
                 case HEAD  -> ModItems.ARCOSIAN_RACE_HELMET.get().getDefaultInstance();
@@ -45,7 +44,6 @@ public final class RaceSkinSlots {
             };
         }
 
-        // TODO: cuando crees Saiyan/Arcosian/Majin -> agregas aquí
         return ItemStack.EMPTY;
     }
 }

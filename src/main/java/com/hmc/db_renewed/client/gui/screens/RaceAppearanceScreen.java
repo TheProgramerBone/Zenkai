@@ -23,9 +23,8 @@ public class RaceAppearanceScreen extends Screen {
             ResourceLocation.fromNamespaceAndPath(DragonBlockRenewed.MOD_ID, "textures/gui/common_screen.png");
 
     private static final int BG_W = 256;
-    private static final int BG_H = 128;
+    private static final int BG_H = 256;
 
-    // Igual que StatsScreen: posición calculada en init()
     private int panelLeft;
     private int panelTop;
 
@@ -35,12 +34,16 @@ public class RaceAppearanceScreen extends Screen {
     private final Race[] races = new Race[]{ Race.HUMAN, Race.SAIYAN, Race.NAMEKIAN, Race.ARCOSIAN, Race.MAJIN };
     private int raceIndex = 0;
 
-    // “Custom Skin” vs Vanilla
     private boolean useCustomSkin = true;
 
-    // Para Saiyan: hair0/hair1 (ajusta a tus ids reales)
+    // hair0 = calvo, hair1 = pelo 1 (ajusta a tus ids reales)
     private final String[] hairIds = new String[]{ "hair0", "hair1" };
     private int hairIndex = 0;
+
+    // ====== Widgets (opción PRO: ocultar/mostrar sin reconstruir) ======
+    private ArrowIconButton raceLeft, raceRight;
+    private ArrowIconButton hairLeft, hairRight;
+    private ArrowIconButton skinLeft, skinRight;
 
     public RaceAppearanceScreen() {
         super(Component.translatable("screen." + DragonBlockRenewed.MOD_ID + ".appearance.title"));
@@ -48,12 +51,11 @@ public class RaceAppearanceScreen extends Screen {
 
     @Override
     protected void init() {
-        var mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
         this.clearWidgets();
 
-        // calcular panel como StatsScreen
         this.panelLeft = (this.width - BG_W) / 2;
         this.panelTop  = (this.height - BG_H) / 2;
 
@@ -73,7 +75,7 @@ public class RaceAppearanceScreen extends Screen {
         // init toggles desde visual
         useCustomSkin = visual.shouldRenderRaceSkin();
 
-        // hair
+        // hair init
         String hs = visual.getHairStyleId();
         for (int i = 0; i < hairIds.length; i++) {
             if (hairIds[i].equalsIgnoreCase(hs)) { hairIndex = i; break; }
@@ -82,54 +84,57 @@ public class RaceAppearanceScreen extends Screen {
         int left = panelLeft;
         int top  = panelTop;
 
-        // Flechas de raza (arriba derecha como la imagen)
+        // ====== Flechas de raza ======
         int rx = left + BG_W - 62;
         int ry = top + 10;
 
-        addRenderableWidget(new ArrowIconButton(rx, ry, ArrowIconButton.Dir.LEFT, () -> {
+        raceLeft = new ArrowIconButton(rx, ry, ArrowIconButton.Dir.LEFT, () -> {
             raceIndex = (raceIndex - 1 + races.length) % races.length;
             applyPreview();
-        }));
-
-        addRenderableWidget(new ArrowIconButton(rx + 46, ry, ArrowIconButton.Dir.RIGHT, () -> {
+        });
+        raceRight = new ArrowIconButton(rx + 46, ry, ArrowIconButton.Dir.RIGHT, () -> {
             raceIndex = (raceIndex + 1) % races.length;
             applyPreview();
-        }));
+        });
+        addRenderableWidget(raceLeft);
+        addRenderableWidget(raceRight);
 
-        // Hair (solo si Saiyan) (posición ejemplo)
+        // ====== Hair (solo Human/Saiyan) ======
         int hx = left + BG_W - 62;
         int hy = top + 32;
 
-        addRenderableWidget(new ArrowIconButton(hx, hy, ArrowIconButton.Dir.LEFT, () -> {
+        hairLeft = new ArrowIconButton(hx, hy, ArrowIconButton.Dir.LEFT, () -> {
             hairIndex = (hairIndex - 1 + hairIds.length) % hairIds.length;
             applyPreview();
-        }));
-
-        addRenderableWidget(new ArrowIconButton(hx + 46, hy, ArrowIconButton.Dir.RIGHT, () -> {
+        });
+        hairRight = new ArrowIconButton(hx + 46, hy, ArrowIconButton.Dir.RIGHT, () -> {
             hairIndex = (hairIndex + 1) % hairIds.length;
             applyPreview();
-        }));
+        });
+        addRenderableWidget(hairLeft);
+        addRenderableWidget(hairRight);
 
-        // Toggle Custom Skin (flechas al lado)
+        // ====== Toggle Custom/Vanilla (solo Human/Saiyan) ======
         int cx = left + BG_W - 34;
         int cy = top + 52;
 
-        addRenderableWidget(new ArrowIconButton(cx, cy, ArrowIconButton.Dir.LEFT, () -> {
+        skinLeft = new ArrowIconButton(cx, cy, ArrowIconButton.Dir.LEFT, () -> {
             useCustomSkin = !useCustomSkin;
             applyPreview();
-        }));
-        addRenderableWidget(new ArrowIconButton(cx + 14, cy, ArrowIconButton.Dir.RIGHT, () -> {
+        });
+        skinRight = new ArrowIconButton(cx + 14, cy, ArrowIconButton.Dir.RIGHT, () -> {
             useCustomSkin = !useCustomSkin;
             applyPreview();
-        }));
+        });
+        addRenderableWidget(skinLeft);
+        addRenderableWidget(skinRight);
 
-        // Botón X (abajo izquierda)
+        // ====== Botones ======
         addRenderableWidget(Button.builder(Component.literal("X"), b -> {
             restoreSnapshots();
             mc.setScreen(null);
         }).bounds(left + 6, top + BG_H - 24, 20, 20).build());
 
-        // Botón Next (abajo derecha)
         addRenderableWidget(Button.builder(Component.literal("Next"), b -> confirmAndNext())
                 .bounds(left + BG_W - 48, top + BG_H - 24, 42, 20)
                 .build());
@@ -137,8 +142,32 @@ public class RaceAppearanceScreen extends Screen {
         applyPreview();
     }
 
+    private static void setWidgetVisible(ArrowIconButton w, boolean v) {
+        if (w == null) return;
+        w.visible = v;
+        w.active = v;
+    }
+
+    private void refreshWidgetVisibility() {
+        Race r = races[raceIndex];
+        boolean humanSaiyan = (r == Race.HUMAN || r == Race.SAIYAN);
+
+        // ocultar custom/vanilla en Namekian/Arcosian/Majin
+        setWidgetVisible(skinLeft, humanSaiyan);
+        setWidgetVisible(skinRight, humanSaiyan);
+
+        // ocultar hair también si no es Human/Saiyan
+        setWidgetVisible(hairLeft, humanSaiyan);
+        setWidgetVisible(hairRight, humanSaiyan);
+
+        // si cambia a raza no-humana, forzamos custom (así no “recuerda” vanilla raro)
+        if (!humanSaiyan) {
+            useCustomSkin = true;
+        }
+    }
+
     private void applyPreview() {
-        var mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
         var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
@@ -146,28 +175,39 @@ public class RaceAppearanceScreen extends Screen {
 
         Race r = races[raceIndex];
 
-        // Preview local
+        // ====== PRO TIP: forzar raceChosen LOCAL para que tus layers no se apaguen en preview ======
+        // Esto NO se guarda (snapshot revierte al salir / servidor manda lo real al confirmar)
+        stats.setRaceChosen(true);
+
+        // Preview local: cambiar race (esto alimenta RaceSkinSlots y cualquier resolver)
         stats.setRace(r);
 
-        // Custom skin vs vanilla
-        // Custom skin vs vanilla
-        if (r == Race.HUMAN || r == Race.SAIYAN) {
+        // Visibilidad de flechas
+        refreshWidgetVisibility();
+
+        boolean humanSaiyan = (r == Race.HUMAN || r == Race.SAIYAN);
+
+        if (humanSaiyan) {
+            // Hair id (incluye hair0=calvo)
             visual.setHairStyleId(hairIds[hairIndex]);
-            visual.setRenderRaceSkin(useCustomSkin);
-            visual.setHideVanillaBody(useCustomSkin);
+
+            // Custom/Vanilla coherente
+            if (useCustomSkin) {
+                visual.setRenderRaceSkin(true);
+                visual.setHideVanillaBody(true);
+            } else {
+                visual.setRenderRaceSkin(false);
+                visual.setHideVanillaBody(false);
+            }
         } else {
             // razas no-humanas: siempre gecko
             visual.setRenderRaceSkin(true);
             visual.setHideVanillaBody(true);
         }
-
-        if (!visual.shouldRenderRaceSkin()) {
-            visual.setHideVanillaBody(false);
-        }
     }
 
     private void restoreSnapshots() {
-        var mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
         var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
@@ -178,7 +218,7 @@ public class RaceAppearanceScreen extends Screen {
     }
 
     private void confirmAndNext() {
-        var mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
         var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
@@ -192,87 +232,65 @@ public class RaceAppearanceScreen extends Screen {
 
     @Override
     public void removed() {
-        // si cierra con ESC: revertir
         restoreSnapshots();
         super.removed();
     }
 
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Fondo
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         g.blit(BG, panelLeft, panelTop, 0, 0, BG_W, BG_H);
-
-        // Preview del jugador (debajo de widgets)
-        var mc = Minecraft.getInstance();
-        if (mc.player != null) {
-            int px = panelLeft + 60;
-            int py = panelTop + 95;
-            int scale = 40;
-
-            // Estos dos floats suelen ser "cómo rota" con el mouse
-            float relX = (float) (px - mouseX);
-            float relY = (float) (py - mouseY);
-
-            // Firma típica (si tu mapeo cambia, me dices y lo ajusto)
-            InventoryScreen.renderEntityInInventoryFollowsMouse(
-                    g,
-                    px, py,
-                    scale,
-                    (int) relX, (int) relY,     // mouse deltas
-                    0.0F, 0.0F, 0.0F, // rot extra (déjalo en 0 por ahora)
-                    mc.player
-            );
-        }
     }
 
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) {
+            super.render(g, mouseX, mouseY, partialTick);
+            return;
+        }
+
+        // 1) BG (como StatsScreen)
         this.renderBackground(g, mouseX, mouseY, partialTick);
 
-        int left = (width - BG_W) / 2;
-        int top  = (height - BG_H) / 2;
+        // 2) Player preview
+        int px = panelLeft + 70;
+        int py = panelTop + 190;
+        int scale = 70;
 
-        // BG del menú
-        g.blit(BG, left, top, 0, 0, BG_W, BG_H);
+        int relX = px - mouseX;
+        int relY = py - mouseY;
 
-        var mc = Minecraft.getInstance();
-        if (mc.player != null) {
-            Race r = races[raceIndex];
+        InventoryScreen.renderEntityInInventoryFollowsMouse(
+                g,
+                px, py,
+                scale,
+                relX, relY,
+                0.0F, 0.0F, 0.0F,
+                mc.player
+        );
 
-            g.drawString(mc.font, Component.literal(r.name()), left + BG_W - 105, top + 14, 0xFFFFFFFF);
+        // 3) Labels
+        Race r = races[raceIndex];
+
+        g.drawString(mc.font, Component.literal(r.name()), panelLeft + BG_W - 105, panelTop + 14, 0xFFFFFFFF);
+
+        boolean humanSaiyan = (r == Race.HUMAN || r == Race.SAIYAN);
+
+        if (humanSaiyan) {
             g.drawString(mc.font,
-                    Component.literal(useCustomSkin ? "Custom Skin" : "Vanilla Skin"),
-                    left + BG_W - 130, top + 56, 0xFFFFFFFF
+                    Component.literal("Hair: " + hairIds[hairIndex]),
+                    panelLeft + BG_W - 130, panelTop + 36, 0xFFFFFFFF
             );
 
-            // Humanos también tienen pelo (igual que Saiyan)
-            if (r == Race.SAIYAN || r == Race.HUMAN) {
-                g.drawString(mc.font, Component.literal("Hair: " + hairIds[hairIndex]),
-                        left + BG_W - 130, top + 36, 0xFFFFFFFF);
-            }
-
-            // Preview del jugador
-            int px = left + 60;
-            int py = top + 95;
-            int scale = 40;
-
-            int relX = px - mouseX;
-            int relY = py - mouseY;
-
-            InventoryScreen.renderEntityInInventoryFollowsMouse(
-                    g,
-                    px, py,
-                    scale,
-                    relX, relY,
-                    0.0F, 0.0F, 0.0F,
-                    mc.player
+            g.drawString(mc.font,
+                    Component.literal(useCustomSkin ? "Custom Skin" : "Vanilla Skin"),
+                    panelLeft + BG_W - 130, panelTop + 56, 0xFFFFFFFF
             );
         }
 
-        // Widgets al final (encima del BG y del preview)
+        // 4) Widgets encima
         super.render(g, mouseX, mouseY, partialTick);
     }
-
 
     @Override
     public boolean isPauseScreen() {

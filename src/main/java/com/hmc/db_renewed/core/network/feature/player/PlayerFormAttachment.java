@@ -16,6 +16,9 @@ public class PlayerFormAttachment {
     private ResourceLocation formId = FormIds.BASE;
     private int cooldownTicks = 0;
 
+    // (Opcional) habilita sync de progreso cada N ticks (si quieres barra/anim más “en vivo”)
+    private static final int PROGRESS_SYNC_EVERY = 0; // 0 = off, ej: 5 = cada 5 ticks
+
     // ---------------- Getters ----------------
     public boolean isTransformHeld() { return transformHeld; }
     public boolean isTransforming() { return transforming; }
@@ -27,8 +30,11 @@ public class PlayerFormAttachment {
     public void setTransformHeld(boolean held) {
         this.transformHeld = held;
         if (!held) {
-            this.transforming = false;
-            this.holdTicks = 0;
+            // si suelta, se corta el proceso
+            if (this.transforming || this.holdTicks != 0) {
+                this.transforming = false;
+                this.holdTicks = 0;
+            }
         }
     }
 
@@ -46,11 +52,19 @@ public class PlayerFormAttachment {
 
     /**
      * Tick SOLO SERVIDOR.
+     * Reglas:
+     * - Si NO hay transformación configurada para esa raza (o no hay next desde el estado actual),
+     *   NO se marca transforming, NO progresa hold, NO hay anim/FOV si el cliente depende de eso.
+     *
      * @return dirty si cambió algo importante y conviene sync inmediato.
      */
     public boolean serverTick(Player p, PlayerStatsAttachment stats, PlayerVisualAttachment visual) {
         boolean dirty = false;
 
+        // Asegura que el registry exista (por si no se llamó en commonSetup)
+        FormRegistry.bootstrap();
+
+        // cooldown
         if (cooldownTicks > 0) cooldownTicks--;
 
         // Gate: si no está holdeando o en cooldown, limpiar proceso
@@ -63,10 +77,12 @@ public class PlayerFormAttachment {
             return dirty;
         }
 
-        // Resolver target via registry (y validación por raza)
-        ResourceLocation target = resolveNextForm(stats.getRace(), formId);
+        // Resolver target según raza + forma actual
+        Race race = stats.getRace();
+        ResourceLocation target = resolveNextForm(race, formId);
+
+        // Si no hay transformación configurada -> NO hacemos nada (y NO mantenemos anim)
         if (target == null) {
-            // NO hay transformación configurada para esta raza/forma
             if (transforming || holdTicks != 0) {
                 transforming = false;
                 holdTicks = 0;
@@ -75,10 +91,12 @@ public class PlayerFormAttachment {
             return dirty;
         }
 
-        // Hold requerido es el de la forma DESTINO
-        int required = FormRegistry.get(target).holdTicksRequired();
+        // Hold requerido: el de la FORMA DESTINO
+        FormDefinition targetDef = FormRegistry.get(target);
+        int required = (targetDef == null) ? 0 : targetDef.holdTicksRequired();
+
         if (required <= 0) {
-            // Si por error la forma destino no tiene hold válido, no hacemos nada.
+            // Forma destino mal configurada -> no transformar
             if (transforming || holdTicks != 0) {
                 transforming = false;
                 holdTicks = 0;
@@ -87,23 +105,27 @@ public class PlayerFormAttachment {
             return dirty;
         }
 
-        // Cargar
+        // Progreso de hold
         transforming = true;
         holdTicks++;
 
-        // Si quieres UI ultra fluida: cada X ticks puedes dirty=true para sync “progress”
-        // if (holdTicks % 5 == 0) dirty = true;
+        if (PROGRESS_SYNC_EVERY > 0 && (holdTicks % PROGRESS_SYNC_EVERY == 0)) {
+            dirty = true;
+        }
 
+        // Completa
         if (holdTicks >= required) {
             setFormId(target);
             dirty = true;
 
+            // Reset proceso: cortar anim aunque siga holdeando teclas
             transforming = false;
             holdTicks = 0;
 
-            // obligar a soltar para evitar chain infinito
+            // Obligar a soltar para evitar encadenar
             transformHeld = false;
 
+            // Cooldown pequeño anti spam
             cooldownTicks = 10;
         }
 
@@ -112,22 +134,35 @@ public class PlayerFormAttachment {
 
     /**
      * Devuelve la siguiente forma para esta raza/forma actual, o null si no aplica.
+     * REGLAS:
+     * - Si current == BASE => usa firstFormFor(race)
+     * - Si current != BASE => usa def(current).nextFormId()
+     * - Siempre valida allowedRaces del destino
      */
     private static ResourceLocation resolveNextForm(Race race, ResourceLocation current) {
+        if (race == null) return null;
+        if (current == null) current = FormIds.BASE;
+
+        // BASE -> first form por raza
+        if (FormIds.BASE.equals(current)) {
+            ResourceLocation first = FormRegistry.firstFormFor(race);
+            if (first == null) return null;
+            return FormRegistry.isAllowed(race, first) ? first : null;
+        }
+
+        // Non-base -> next form por cadena
         FormDefinition curDef = FormRegistry.get(current);
-        ResourceLocation next = curDef.nextFormId();
+        ResourceLocation next = (curDef == null) ? null : curDef.nextFormId();
         if (next == null) return null;
 
-        FormDefinition nextDef = FormRegistry.get(next);
-        if (nextDef == null) return null;
-
-        return nextDef.allowedRaces().contains(race) ? next : null;
+        return FormRegistry.isAllowed(race, next) ? next : null;
     }
 
     /**
-     * Helper útil para el CLIENTE: saber si existe transform posible desde el estado actual.
+     * Helper útil (CLIENTE/UI): saber si existe transform posible desde el estado actual.
      */
     public static boolean canTransformFrom(Race race, ResourceLocation current) {
+        FormRegistry.bootstrap();
         return resolveNextForm(race, current) != null;
     }
 
@@ -155,6 +190,10 @@ public class PlayerFormAttachment {
         }
 
         this.cooldownTicks = tag.getInt("cooldownTicks");
+
+        // Safety: si quedó en una forma no permitida (cambio de configs), vuelve a base
+        // (Opcional, pero recomendado)
+        // Race no está en NBT aquí; se valida en runtime al transformarse.
     }
 
     public void forceBase() {

@@ -1,11 +1,14 @@
 package com.hmc.db_renewed.core.network;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.core.config.StatsConfig;
 import com.hmc.db_renewed.content.effect.ModEffects;
-import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
+import com.hmc.db_renewed.core.config.StatsConfig;
+import com.hmc.db_renewed.core.network.feature.forms.FormDefinition;
+import com.hmc.db_renewed.core.network.feature.forms.FormIds;
+import com.hmc.db_renewed.core.network.feature.forms.FormRegistry;
 import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -29,11 +32,7 @@ public class TickHandlers {
      * - Quita sprint
      * - Ancla X/Z al tick anterior (xo/zo)
      * - Corta delta horizontal
-     *
-     * En cliente NO se debe llamar (evita zoom/jitter). El cliente bloquea input en ClientPalTick.
      */
-
-
     private static void applyTransformLockServer(Player p, boolean lock) {
         AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
 
@@ -71,17 +70,16 @@ public class TickHandlers {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         Player p = e.getEntity();
-        PlayerStatsAttachment att = p.getData(DataAttachments.PLAYER_STATS.get());
-        var stats = p.getData(DataAttachments.PLAYER_STATS.get());
-        var form  = p.getData(DataAttachments.PLAYER_FORM.get());
-        var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
 
         // ================================
-        // SOLO SERVIDOR desde aquí
+        // SOLO SERVIDOR
         // ================================
-        if (p.level().isClientSide()) {
-            return;
-        }
+        if (p.level().isClientSide()) return;
+
+        PlayerStatsAttachment att = p.getData(DataAttachments.PLAYER_STATS.get());
+        var stats  = p.getData(DataAttachments.PLAYER_STATS.get());
+        var form   = p.getData(DataAttachments.PLAYER_FORM.get());
+        var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
 
         // ================================
         // Inmortalidad (server)
@@ -104,7 +102,6 @@ public class TickHandlers {
             stats.setChargingKi(false);
             form.resetAll();
 
-            // Limpia modifiers por si quedaron de antes
             AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
             if (moveAttr != null) {
                 moveAttr.removeModifier(MOVE_MOD_ID);
@@ -145,12 +142,39 @@ public class TickHandlers {
         // Transformación (SERVER)
         // ================================
 
-        // 1) Tick de lógica de forms (HOLD 100 ticks, completar, drain, etc.)
+        // 1) Tick de lógica de forms (hold / completar / etc.)
         boolean formDirty = form.serverTick(p, stats, visual);
 
         // 1.1) Si cambió algo importante (completó / canceló), sync inmediato
         if (formDirty) {
-            PlayerLifeCycle.syncFormIfServer(p); // o syncFormToTrackersAndSelf si prefieres explícito
+            PlayerLifeCycle.syncFormIfServer(p);
+        }
+
+        // ================================
+        // KI DRAIN (SERVER) - NUEVO
+        // ================================
+        // Drena Ki si la forma actual tiene costo por tick.
+        // Si Ki llega a 0 -> vuelve a BASE automáticamente.
+        {
+            ResourceLocation currentFormId = form.getFormId();
+            if (currentFormId != null && !FormIds.BASE.equals(currentFormId)) {
+                FormDefinition def = FormRegistry.get(currentFormId);
+
+                // (por seguridad) solo si la raza actual está permitida
+                if (def != null && def.allowedRaces().contains(att.getRace())) {
+                    double drain = def.kiDrainPerTick();
+                    if (drain > 0.0) {
+                        int before = att.getKiCurrent();
+                        att.addKi(-drain);
+
+                        // Si se quedó sin Ki -> forzar base + sync
+                        if (before > 0 && att.getKiCurrent() <= 0) {
+                            form.forceBase();
+                            PlayerLifeCycle.syncFormIfServer(p);
+                        }
+                    }
+                }
+            }
         }
 
         // 2) Si está en proceso (cargando transformación), lock + NO speed_mult
