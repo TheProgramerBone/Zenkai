@@ -98,7 +98,6 @@ public class TickHandlers {
         // ================================
         if (!att.isRaceChosen()) {
             att.setChargingKi(false);
-            att.setTransforming(false);
             stats.setChargingKi(false);
             form.resetAll();
 

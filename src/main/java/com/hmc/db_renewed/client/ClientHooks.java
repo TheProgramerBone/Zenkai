@@ -3,6 +3,7 @@ package com.hmc.db_renewed.client;
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.core.network.feature.Race;
 import com.hmc.db_renewed.core.network.feature.ki.MouseHooks;
+import com.hmc.db_renewed.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
@@ -81,6 +82,8 @@ public final class ClientHooks {
         // F1: ocultar HUD vanilla → también ocultar el tuyo
         if (mc.options.hideGui) return;
 
+        PlayerFormAttachment form = mc.player.getData(DataAttachments.PLAYER_FORM.get());
+
         PlayerStatsAttachment stats = mc.player.getData(DataAttachments.PLAYER_STATS.get());
         if (!stats.isRaceChosen()) return;
 
@@ -143,7 +146,7 @@ public final class ClientHooks {
         int iconY = PANEL_Y + panelH + 4;
 
         // --- Estados “especiales” (antes de acciones, misma altura) ---
-        if (safeBool(stats, "isTransforming")) {
+        if (form.isTransforming()) {
             drawBadge(g, iconX, iconY, ICON_TRANSFORMING);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
@@ -244,18 +247,7 @@ public final class ClientHooks {
     }
 
     private static void drawBadge(GuiGraphics g, int x, int y, IconUV icon) {
-        // cuadrito
-        g.fill(x, y, x + BADGE_SIZE, y + BADGE_SIZE, C_BADGE_BG);
-        g.fill(x, y, x + BADGE_SIZE, y + 1, C_BADGE_EDGE);
-        g.fill(x, y + BADGE_SIZE - 1, x + BADGE_SIZE, y + BADGE_SIZE, C_BADGE_EDGE);
-        g.fill(x, y, x + 1, y + BADGE_SIZE, C_BADGE_EDGE);
-        g.fill(x + BADGE_SIZE - 1, y, x + BADGE_SIZE, y + BADGE_SIZE, C_BADGE_EDGE);
-
-        // icon centrado
-        int ix = x + (BADGE_SIZE - ICON_DRAW) / 2;
-        int iy = y + (BADGE_SIZE - ICON_DRAW) / 2;
-
-        g.blit(ICONS_TEX, ix, iy, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_TEX_W, ICONS_TEX_H);
+        g.blit(ICONS_TEX, x, y, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_TEX_W, ICONS_TEX_H);
     }
 
     // =========================================================

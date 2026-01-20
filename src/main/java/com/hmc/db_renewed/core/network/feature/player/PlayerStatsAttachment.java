@@ -398,7 +398,6 @@ public class PlayerStatsAttachment {
         tag.putBoolean("isDivine",isDivine);
         tag.putBoolean("isLegendary",isLegendary);
         tag.putBoolean("isMajin",isMajin);
-        tag.putBoolean("transforming", transforming);
         tag.putBoolean("styleChosen", styleChosen);
 
 
@@ -463,7 +462,6 @@ public class PlayerStatsAttachment {
         this.isMajin = tag.getBoolean("isMajin");
         this.isDivine = tag.getBoolean("isDivine");
         this.isLegendary = tag.getBoolean("isLegendary");
-        this.transforming = tag.getBoolean("transforming");
         this.styleChosen = tag.getBoolean("styleChosen");
 
         // Ki Attacks
@@ -621,15 +619,4 @@ public class PlayerStatsAttachment {
         this.stamina = this.staminaMax;
         this.energy  = this.energyMax;
     }
-
-    private boolean transforming = false;
-
-    public boolean isTransforming() {
-        return transforming;
-    }
-
-    public void setTransforming(boolean v) {
-        this.transforming = v;
-    }
-
 }

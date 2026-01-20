@@ -58,6 +58,14 @@ public class PlayerFormAttachment {
      *
      * @return dirty si cambió algo importante y conviene sync inmediato.
      */
+    /**
+     * Tick SOLO SERVIDOR.
+     * Reglas:
+     * - Si NO hay transformación configurada para esa raza (o no hay next desde el estado actual),
+     *   NO se marca transforming, NO progresa hold, NO hay anim/FOV si el cliente depende de eso.
+     *
+     * @return dirty si cambió algo importante y conviene sync inmediato.
+     */
     public boolean serverTick(Player p, PlayerStatsAttachment stats, PlayerVisualAttachment visual) {
         boolean dirty = false;
 
@@ -105,15 +113,26 @@ public class PlayerFormAttachment {
             return dirty;
         }
 
+        // =========================
         // Progreso de hold
+        // =========================
+        boolean wasTransforming = transforming;
+
         transforming = true;
         holdTicks++;
 
+        if (!wasTransforming) {
+            dirty = true;
+        }
+
+        // (Opcional) sync de progreso cada N ticks (si quieres UI/barra/anim “en vivo”)
         if (PROGRESS_SYNC_EVERY > 0 && (holdTicks % PROGRESS_SYNC_EVERY == 0)) {
             dirty = true;
         }
 
+        // =========================
         // Completa
+        // =========================
         if (holdTicks >= required) {
             setFormId(target);
             dirty = true;
