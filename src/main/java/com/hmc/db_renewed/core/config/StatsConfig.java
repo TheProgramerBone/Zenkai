@@ -139,7 +139,6 @@ public final class StatsConfig {
                     .defineList("race.majin.mult",
                             doubles(MAJIN_MULT_DEFAULT),
                             o -> o instanceof Number);
-
     // -------------------------------------------------
     // === NEW === MULTIPLICADORES POR ESTILO
     // -------------------------------------------------
@@ -168,6 +167,11 @@ public final class StatsConfig {
                             doubles(SPIRITUALIST_MULT_DEFAULT),
                             o -> o instanceof Number);
 
+    private static final ModConfigSpec.DoubleValue MIN_DAMAGE_PERCENT_RAW =
+            BUILDER.comment("If (vanillaFinalDamage - modDefense) <= 0, deal at least this % of vanilla final damage. 0.01 = 1%")
+                    .defineInRange("combat.min_damage_percent", 0.01D, 0.0D, 1.0D);
+
+
     // -------------------------------------------------
     // BUILD
     // -------------------------------------------------
@@ -180,6 +184,7 @@ public final class StatsConfig {
     private static volatile double FLY_MULT_CAP = 2.0D;
     private static volatile int REGEN_BODY = 1, REGEN_STAMINA = 1, REGEN_ENERGY = 1;
     private static volatile double MOVE_SCALING = 1.0D, FLY_SCALING = 1.0D;
+    private static volatile double MIN_DAMAGE_PERCENT = 0.01D;
 
     // === NEW: cachés para race/style ===
     private static final EnumMap<Race, int[]> RACE_BASES = new EnumMap<>(Race.class);
@@ -216,6 +221,8 @@ public final class StatsConfig {
         RACE_MULTS.put(Race.ARCOSIAN, toDoubleArray(ARCOSIAN_MULT_RAW.get(), ARCOSIAN_MULT_DEFAULT));
         RACE_MULTS.put(Race.MAJIN,    toDoubleArray(MAJIN_MULT_RAW.get(),    MAJIN_MULT_DEFAULT));
 
+        MIN_DAMAGE_PERCENT = MIN_DAMAGE_PERCENT_RAW.get();
+
         // === NEW: cargar style multipliers ===
         STYLE_MULTS.clear();
         STYLE_MULTS.put(Style.WARRIOR,        toDoubleArray(WARRIOR_MULT_RAW.get(),        WARRIOR_MULT_DEFAULT));
@@ -228,6 +235,7 @@ public final class StatsConfig {
     public static int globalAttributeCap()    { return GLOBAL_ATTRIBUTE_CAP; }
     public static double speedMultiplierCap() { return SPEED_MULT_CAP; }
     public static double flyMultiplierCap()   { return FLY_MULT_CAP; }
+    public static double minDamagePercent() { return MIN_DAMAGE_PERCENT; }
 
     public static int baseRegenBody()         { return REGEN_BODY; }
     public static int baseRegenStamina()      { return REGEN_STAMINA; }

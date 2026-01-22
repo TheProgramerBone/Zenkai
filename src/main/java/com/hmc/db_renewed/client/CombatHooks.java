@@ -1,6 +1,7 @@
 package com.hmc.db_renewed.client;
 
 import com.hmc.db_renewed.content.entity.ki_attacks.KiBlastEntity;
+import com.hmc.db_renewed.core.config.StatsConfig;
 import com.hmc.db_renewed.core.network.feature.stats.DataAttachments;
 import com.hmc.db_renewed.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.db_renewed.core.network.feature.player.PlayerStatsAttachment;
@@ -9,58 +10,55 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-
 
 public class CombatHooks {
 
     @SubscribeEvent
-    public static void onIncomingDamage(LivingIncomingDamageEvent e) {
+    public static void onFinalDamage(LivingDamageEvent.Pre e) {
         if (!(e.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
 
         DamageSource src = e.getSource();
         PlayerStatsAttachment att = player.getData(DataAttachments.PLAYER_STATS.get());
-
         if (!att.isRaceChosen()) return;
 
-        // Daño bruto recibido
-        double raw = e.getAmount();
-        if (raw <= 0.0) return;
+        // ESTE ya es el daño FINAL (armadura/pociones/absorción ya aplicaron)
+        float vanillaFinal = e.getNewDamage();
+        if (vanillaFinal <= 0f) return;
 
-        // Defensa del sistema
         double defense = att.computeDefenseFinal();
-        double finalDmg = Math.max(0.0, raw - defense);
-        if (finalDmg <= 0.01) {
-            // Daño insignificante → cancelamos
-            e.setAmount(0.0F);
-            e.setCanceled(true);
+
+        // Aplicar defensa del mod SOBRE el daño ya mitigado por vanilla
+        double afterDefense = vanillaFinal - defense;
+
+        // Si la defensa supera el daño, aplica mínimo % configurable (evita inmortalidad)
+        if (afterDefense <= 0.0) {
+            double minPct = StatsConfig.minDamagePercent();
+            afterDefense = vanillaFinal * Math.max(0.0, minPct);
+        }
+
+        // Convertir a daño entero para BODY
+        int dmgInt = (int) Math.ceil(afterDefense);
+        if (dmgInt <= 0) {
+            // si quedara 0 por redondeos/config, no tocamos
+            e.setNewDamage(0f);
             return;
         }
 
-        int dmgInt = (int) Math.ceil(finalDmg);
-
-        int bodyBefore = att.getBody();
-        int bodyMax    = att.getBodyMax();
-
-        // Aplicar daño a BODY
-        att.addBody(-dmgInt); // clamp 0..bodyMax
+        // Aplicar a BODY
+        att.addBody(-dmgInt);
         int bodyAfter = att.getBody();
 
-        // Si todavía tenemos BODY > 0
         if (bodyAfter > 0) {
-            // Dejamos un daño vanilla pequeño (por ejemplo 1f) SOLO para animación/knockback.
-            // NO cancelamos el evento.
-            e.setAmount(1.0F);
+            // No queremos que baje vida vanilla; el “tanqueo” es BODY
+            e.setNewDamage(0.0F);
         } else {
-            // BODY llegó a 0 → muerte real
+            // BODY = 0 -> muerte real
             if (!player.isDeadOrDying()) {
                 player.setHealth(0.0F);
                 player.die(src);
             }
-            // Cancelamos este daño para que no vuelva a procesarse
-            e.setAmount(0.0F);
-            e.setCanceled(true);
+            e.setNewDamage(0.0F);
         }
 
         PlayerLifeCycle.syncIfServer(player);
