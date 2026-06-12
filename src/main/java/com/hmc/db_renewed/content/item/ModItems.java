@@ -2,11 +2,7 @@ package com.hmc.db_renewed.content.item;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
 import com.hmc.db_renewed.content.entity.ModEntities;
-import com.hmc.db_renewed.core.network.feature.race.arcosian.ArcosianRaceArmorItem;
-import com.hmc.db_renewed.core.network.feature.race.hairs.hair1.Hair1ArmorItem;
-import com.hmc.db_renewed.core.network.feature.race.hairs.hair1.SSJHair1ArmorItem;
-import com.hmc.db_renewed.core.network.feature.race.human.HumanRaceArmorItem;
-import com.hmc.db_renewed.core.network.feature.race.namekian.NamekianRaceArmorItem;
+import com.hmc.db_renewed.core.network.feature.race.GeoLayerArmorItem;
 import com.hmc.db_renewed.content.item.special.*;
 import net.minecraft.world.item.*;
 import net.neoforged.bus.api.IEventBus;
@@ -120,63 +116,133 @@ public class ModItems {
 
     //Razas
 
-    public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_HELMET = ITEMS.register("namekian_race_helmet",
-            () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.HELMET,new Item.Properties()));
+    public static final DeferredItem<GeoLayerArmorItem> NAMEKIAN_RACE_HELMET =
+            ITEMS.register("namekian_race_helmet", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/races/namekian_player.geo.json",
+                            "textures/models/races/namekian_player.png",
+                            "animations/namekian_default.animation.json"
+                    ));
 
-    public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_CHESTPLATE = ITEMS.register("namekian_race_chestplate",
-            () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE =
+            ITEMS.register("namekian_race_chestplate", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/races/namekian_player.geo.json",
+                            "textures/models/races/namekian_player.png",
+                            "animations/namekian_default.animation.json"
+                    ));
 
-    public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_LEGGINGS = ITEMS.register("namekian_race_leggings",
-            () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.LEGGINGS, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_LEGGINGS =
+            ITEMS.register("namekian_race_leggings", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/races/namekian_player.geo.json",
+                            "textures/models/races/namekian_player.png",
+                            "animations/namekian_default.animation.json"
+                    ));
 
-    public static final Supplier<NamekianRaceArmorItem> NAMEKIAN_RACE_BOOTS = ITEMS.register("namekian_race_boots",
-            () -> new NamekianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.BOOTS, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_BOOTS =
+            ITEMS.register("namekian_race_boots", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/races/namekian_player.geo.json",
+                            "textures/models/races/namekian_player.png",
+                            "animations/namekian_default.animation.json"
+                    ));
 
-    public static final Supplier<HumanRaceArmorItem> HUMAN_RACE_HELMET = ITEMS.register("human_race_helmet",
-            () -> new HumanRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.HELMET,new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET =
+            ITEMS.register("human_race_helmet", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/races/human_player.geo.json",
+                            "textures/models/races/human_player.png",
+                            "animations/namekian_default.animation.json"
+                    ));
 
-    public static final Supplier<HumanRaceArmorItem> HUMAN_RACE_CHESTPLATE = ITEMS.register("human_race_chestplate",
-            () -> new HumanRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE =
+            ITEMS.register("human_race_chestplate", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/races/human_player.geo.json",
+                            "textures/models/races/human_player.png",
+                            "animations/namekian_default.animation.json"
+                    ));
 
-    public static final Supplier<HumanRaceArmorItem> HUMAN_RACE_LEGGINGS = ITEMS.register("human_race_leggings",
-            () -> new HumanRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.LEGGINGS, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS =
+            ITEMS.register("human_race_leggings", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/races/human_player.geo.json",
+                            "textures/models/races/human_player.png",
+                            "animations/namekian_default.animation.json"
+                    ));
 
-    public static final Supplier<HumanRaceArmorItem> HUMAN_RACE_BOOTS = ITEMS.register("human_race_boots",
-            () -> new HumanRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.BOOTS, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS =
+            ITEMS.register("human_race_boots", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/races/human_player.geo.json",
+                            "textures/models/races/human_player.png",
+                            "animations/namekian_default.animation.json"
+                    ));
 
-    public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_HELMET = ITEMS.register("arcosian_race_helmet",
-            () -> new ArcosianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.HELMET,new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_HELMET =
+            ITEMS.register("arcosian_race_helmet", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/races/arcosian_final_form_player.geo.json",
+                            "textures/models/races/arcosian_final_form_player.png",
+                            "animations/arcosian_default.animation.json"
+                    ));
 
-    public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_CHESTPLATE = ITEMS.register("arcosian_race_chestplate",
-            () -> new ArcosianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.CHESTPLATE, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_CHESTPLATE =
+            ITEMS.register("arcosian_race_chestplate", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/races/arcosian_final_form_player.geo.json",
+                            "textures/models/races/arcosian_final_form_player.png",
+                            "animations/arcosian_default.animation.json"
+                    ));
 
-    public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_LEGGINGS = ITEMS.register("arcosian_race_leggings",
-            () -> new ArcosianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.LEGGINGS, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_LEGGINGS =
+            ITEMS.register("arcosian_race_leggings", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/races/arcosian_final_form_player.geo.json",
+                            "textures/models/races/arcosian_final_form_player.png",
+                            "animations/arcosian_default.animation.json"
+                    ));
 
-    public static final Supplier<ArcosianRaceArmorItem> ARCOSIAN_RACE_BOOTS = ITEMS.register("arcosian_race_boots",
-            () -> new ArcosianRaceArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.BOOTS, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_BOOTS =
+            ITEMS.register("arcosian_race_boots", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/races/arcosian_final_form_player.geo.json",
+                            "textures/models/races/arcosian_final_form_player.png",
+                            "animations/arcosian_default.animation.json"
+                    ));
 
     //Cabellos Común
-    public static final Supplier<Hair1ArmorItem> HAIR_1 = ITEMS.register("hair_1",
-            () -> new Hair1ArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.HELMET, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> HAIR_1 =
+            ITEMS.register("hair_1",() ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/hairs/hair1/hair_1.geo.json",
+                            "textures/hairs/hair1/hair_1.png",
+                            "" //No hay animaciones aún
+                    ));
 
     //Transformaciones Saiyan
-    public static final Supplier<SSJHair1ArmorItem> SSJ1_HAIR1 = ITEMS.register("ssj_hair1",
-            () -> new SSJHair1ArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL,
-                    ArmorItem.Type.HELMET, new Item.Properties()));
+    public static final Supplier<GeoLayerArmorItem> SSJ1_HAIR1 =
+            ITEMS.register("ssj_hair1",() ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/hairs/hair1/ssj_hair_1.geo.json",
+                            "textures/hairs/hair1/ssj_hair_1.png",
+                            "" //No hay animaciones aún
+                    ));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

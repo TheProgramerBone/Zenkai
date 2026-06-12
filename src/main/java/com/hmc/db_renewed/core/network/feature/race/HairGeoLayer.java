@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.core.network.feature.race.hairs;
+package com.hmc.db_renewed.core.network.feature.race;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.HumanoidModel;
@@ -16,18 +16,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class HairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
-    private final HumanoidArmorLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>, HumanoidModel<AbstractClientPlayer>> armorLayer;
+    private final HumanoidArmorLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>,
+            HumanoidModel<AbstractClientPlayer>> armorLayer;
 
     public HairGeoLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent,
                         EntityModelSet models,
                         ModelManager modelManager) {
         super(parent);
-
         HumanoidModel<AbstractClientPlayer> inner =
                 new HumanoidModel<>(models.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR));
         HumanoidModel<AbstractClientPlayer> outer =
                 new HumanoidModel<>(models.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR));
-
         this.armorLayer = new HumanoidArmorLayer<>(parent, inner, outer, modelManager);
     }
 
@@ -37,22 +36,21 @@ public class HairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
                        float limbSwing, float limbSwingAmount, float partialTick,
                        float ageInTicks, float netHeadYaw, float headPitch) {
 
+        // Si tiene casco real equipado, no renderizar pelo
+        if (!player.getInventory().getArmor(3).isEmpty()) return;
+
         ItemStack hair = HairResolver.resolveHairHead(player);
         if (hair.isEmpty()) return;
 
-        // Regla recomendada: si tiene casco real, no renderizar pelo (para evitar clipping)
-        ItemStack realHelmet = player.getInventory().getArmor(3);
-        if (!realHelmet.isEmpty()) return;
-
         var inv = player.getInventory();
 
-        // backup
+        // Backup
         ItemStack oldHead  = inv.getArmor(3);
         ItemStack oldChest = inv.getArmor(2);
         ItemStack oldLegs  = inv.getArmor(1);
         ItemStack oldFeet  = inv.getArmor(0);
 
-        // inyectar SOLO hair
+        // Inyectar solo el pelo en HEAD, limpiar el resto
         inv.armor.set(3, hair);
         inv.armor.set(2, ItemStack.EMPTY);
         inv.armor.set(1, ItemStack.EMPTY);
@@ -61,7 +59,7 @@ public class HairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         armorLayer.render(poseStack, buffer, packedLight, player,
                 limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
 
-        // restore
+        // Restore
         inv.armor.set(3, oldHead);
         inv.armor.set(2, oldChest);
         inv.armor.set(1, oldLegs);

@@ -169,7 +169,7 @@ public final class StatsConfig {
 
     private static final ModConfigSpec.DoubleValue MIN_DAMAGE_PERCENT_RAW =
             BUILDER.comment("If (vanillaFinalDamage - modDefense) <= 0, deal at least this % of vanilla final damage. 0.01 = 1%")
-                    .defineInRange("combat.min_damage_percent", 0.01D, 0.0D, 1.0D);
+                    .defineInRange("combat.min_damage_percent", 0.05D, 0.0D, 1.0D);
 
 
     // -------------------------------------------------

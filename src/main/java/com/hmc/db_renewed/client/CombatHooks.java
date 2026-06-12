@@ -13,107 +13,123 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
 public class CombatHooks {
 
+    // DAÑO RECIBIDO POR EL JUGADOR
+    //
+    // Flujo:
+    //   1. Si el jugador no eligió raza → combat vanilla, no tocamos nada.
+    //   2. Si eligió raza → la armadura vanilla se ignora (ya cancelamos su
+    //      efecto poniendo el daño de vuelta al valor pre-armadura si hace
+    //      falta, o simplemente trabajamos sobre el daño final del evento).
+    //   3. Comparamos el daño con la DEX (defensa) del jugador:
+    //        - daño <= defensa → el jugador recibe el 5% del daño original
+    //        - daño >  defensa → daño final = daño - defensa
+    //   4. Aplicamos ese daño final a BODY (no a los corazones vanilla).
+    //      Los corazones solo bajan si BODY llega a 0.
+
     @SubscribeEvent
-    public static void onFinalDamage(LivingDamageEvent.Pre e) {
+    public static void onPlayerReceiveDamage(LivingDamageEvent.Pre e) {
+        // Solo aplica si quien recibe el golpe es un jugador
         if (!(e.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
 
-        DamageSource src = e.getSource();
-        PlayerStatsAttachment att = player.getData(DataAttachments.PLAYER_STATS.get());
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(player);
+
+        // Sin raza elegida → vanilla se encarga, no tocamos nada
         if (!att.isRaceChosen()) return;
 
-        // ESTE ya es el daño FINAL (armadura/pociones/absorción ya aplicaron)
-        float vanillaFinal = e.getNewDamage();
-        if (vanillaFinal <= 0f) return;
+        // El daño que llegó al evento ya pasó por armadura vanilla.
+        // Como ignoramos la armadura vanilla para jugadores con raza,
+        // trabajamos directamente sobre este valor.
+        float incomingDamage = e.getNewDamage();
+        if (incomingDamage <= 0f) return;
 
-        double defense = att.computeDefenseFinal();
+        double defense = att.computeDefenseFinal(); // basado en DEX
 
-        // Aplicar defensa del mod SOBRE el daño ya mitigado por vanilla
-        double afterDefense = vanillaFinal - defense;
+        double finalDamage;
 
-        // Si la defensa supera el daño, aplica mínimo % configurable (evita inmortalidad)
-        if (afterDefense <= 0.0) {
-            double minPct = StatsConfig.minDamagePercent();
-            afterDefense = vanillaFinal * Math.max(0.0, minPct);
-        }
-
-        // Convertir a daño entero para BODY
-        int dmgInt = (int) Math.ceil(afterDefense);
-        if (dmgInt <= 0) {
-            // si quedara 0 por redondeos/config, no tocamos
-            e.setNewDamage(0f);
-            return;
-        }
-
-        // Aplicar a BODY
-        att.addBody(-dmgInt);
-        int bodyAfter = att.getBody();
-
-        if (bodyAfter > 0) {
-            // No queremos que baje vida vanilla; el “tanqueo” es BODY
-            e.setNewDamage(0.0F);
+        if (incomingDamage <= defense) {
+            // El jugador absorbió el golpe → recibe solo el 5% como daño residual
+            finalDamage = incomingDamage * StatsConfig.minDamagePercent(); // 0.05 por defecto
         } else {
-            // BODY = 0 -> muerte real
+            // El golpe superó la defensa → resta simple
+            finalDamage = incomingDamage - defense;
+        }
+
+        // Nunca puede ser negativo ni cero si hay daño real
+        finalDamage = Math.max(finalDamage, 0.0);
+
+        // Aplicar a BODY (sistema interno del mod)
+        int dmgInt = (int) Math.ceil(finalDamage);
+        att.addBody(-dmgInt);
+
+        if (att.getBody() <= 0) {
+            // BODY agotado → muerte real
             if (!player.isDeadOrDying()) {
                 player.setHealth(0.0F);
-                player.die(src);
+                player.die(e.getSource());
             }
-            e.setNewDamage(0.0F);
         }
+
+        // Cancelamos el daño vanilla: los corazones no bajan, solo baja BODY
+        e.setNewDamage(0.0F);
 
         PlayerLifeCycle.syncIfServer(player);
     }
 
-    /**
-     * Aplica melee + consumo de stamina SOLO para golpes cuerpo a cuerpo del jugador.
-     * No afecta a KiBlastEntity (para que no gaste stamina al impactar).
-     */
+    // DAÑO DADO POR EL JUGADOR (melee)
+    //
+    // Flujo:
+    //   1. Si el daño viene de un KiBlast → no tocamos (lo maneja KiBlastEntity).
+    //   2. Si el jugador no eligió raza → vanilla se encarga.
+    //   3. Daño final = STR del jugador + bonus del arma vanilla.
+    //   4. El daño está limitado por la stamina disponible:
+    //        - Sin stamina → no hay daño en absoluto.
+    //        - Con stamina → el daño por STR se clampea a la stamina restante.
+    //          El bonus del arma suma encima sin coste de stamina.
+    //   5. Se consume stamina igual al daño de STR aplicado.
     @SubscribeEvent
-    public static void onDealDamage(LivingDamageEvent.Pre e) {
+    public static void onPlayerDealDamage(LivingDamageEvent.Pre e) {
+        // Solo aplica si quien golpea es un jugador
         if (!(e.getSource().getEntity() instanceof Player player)) return;
 
-        // Si el daño viene de un KiBlast, no tocamos stamina ni daño aquí
-        if (e.getSource().getDirectEntity() instanceof KiBlastEntity) {
-            return;
-        }
+        // Los Ki Blasts se manejan solos, no tocar aquí
+        if (e.getSource().getDirectEntity() instanceof KiBlastEntity) return;
 
-        PlayerStatsAttachment att = player.getData(DataAttachments.PLAYER_STATS.get());
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(player);
 
+        // Sin raza elegida → vanilla se encarga
         if (!att.isRaceChosen()) return;
 
-        // 1) Stat de melee del MOD: este es el daño "propio" del jugador
-        double meleeStat = att.computeMeleeFinal(); // p.ej. 500
+        // Daño base de la estadística STR del mod
+        double strDamage = att.computeMeleeFinal();
 
-        // 2) Bonus del arma (vanilla): NO afecta al costo de stamina
+        // Bonus del arma vanilla (espada, hacha, etc.) — no consume stamina
         double weaponBonus = 0.0;
         var attr = player.getAttribute(Attributes.ATTACK_DAMAGE);
-        if (attr != null) {
-            weaponBonus = attr.getValue(); // puño ~1, espada ~7–10, etc.
-        }
+        if (attr != null) weaponBonus = attr.getValue();
 
-        int stamina = att.getStamina();
-        double meleeDamage;   // daño que viene del stat
-        double finalDamage;   // daño total = melee + arma
+        int currentStamina = att.getStamina();
 
-        if (stamina <= 0) {
-            // Sin stamina no hay daño (ni de arma)
-            meleeDamage = 0.0;
-            finalDamage = 0.0;
+        double strApplied;   // cuánto STR se aplica realmente
+        double totalDamage;  // daño total que recibe la entidad
+
+        if (currentStamina <= 0) {
+            // Sin stamina: no hay daño, ni siquiera el del arma
+            strApplied  = 0.0;
+            totalDamage = 0.0;
         } else {
-            // El daño por stat está limitado por la stamina disponible
-            meleeDamage = Math.min(meleeStat, stamina);
-            // El arma suma GRATIS en términos de stamina
-            finalDamage = meleeDamage + weaponBonus;
+            // El daño de STR está limitado por la stamina disponible
+            strApplied  = Math.min(strDamage, currentStamina);
+            totalDamage = strApplied + weaponBonus;
         }
 
-        // 3) Consumir stamina SOLO por el daño de melee (no por el arma)
-        int staminaUsed = (int) Math.ceil(meleeDamage);
-        if (staminaUsed > 0) {
-            att.consumeStamina(staminaUsed);
+        // Consumir stamina proporcional al STR aplicado
+        int staminaCost = (int) Math.ceil(strApplied);
+        if (staminaCost > 0) {
+            att.consumeStamina(staminaCost);
         }
 
-        // 4) Aplicar el daño calculado al evento
-        e.setNewDamage((float) finalDamage);
+        e.setNewDamage((float) totalDamage);
 
         PlayerLifeCycle.syncIfServer(player);
     }

@@ -1,7 +1,6 @@
 package com.hmc.db_renewed.core.network.feature.race;
 
 import com.hmc.db_renewed.DragonBlockRenewed;
-import com.hmc.db_renewed.core.network.feature.race.hairs.HairGeoLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -14,13 +13,10 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-
-import static software.bernie.geckolib.GeckoLibConstants.LOGGER;
 
 @EventBusSubscriber(modid = DragonBlockRenewed.MOD_ID, value = Dist.CLIENT)
 public final class RaceSkinRenderHooks {

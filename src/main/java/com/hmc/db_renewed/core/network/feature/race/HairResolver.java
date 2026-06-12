@@ -1,4 +1,4 @@
-package com.hmc.db_renewed.core.network.feature.race.hairs;
+package com.hmc.db_renewed.core.network.feature.race;
 
 import com.hmc.db_renewed.content.item.ModItems;
 import com.hmc.db_renewed.core.network.feature.Race;
@@ -34,7 +34,7 @@ public final class HairResolver {
 
         // 2) Solo soportamos hair1 por ahora
         boolean isHair1 = "hair1".equalsIgnoreCase(hairStyle);
-        if (!isHair1) return ModItems.HAIR_1.get().getDefaultInstance();
+        if (!isHair1) return ItemStack.EMPTY;
 
         // 3) Resolver por forma
         if (FormIds.SSJ1.equals(formId)) {
