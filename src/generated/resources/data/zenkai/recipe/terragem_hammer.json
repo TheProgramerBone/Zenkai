@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "item": "zenkai:terragem_pickaxe"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "W": {
+      "item": "zenkai:terragem"
+    }
+  },
+  "pattern": [
+    " WP",
+    " SW",
+    "S  "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:terragem_hammer"
+  }
+}

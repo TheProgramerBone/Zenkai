@@ -1,0 +1,36 @@
+{
+  "type": "zenkai:namek_type",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "zenkai:namek_noise",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+          "biomes": [
+            {
+              "biome": "zenkai:namek_plains",
+              "parameters": {
+                "temperature": 0.5,
+                "humidity": 0.5,
+                "continentalness": 0.3,
+                "erosion": 0.5,
+                "depth": 0.0,
+                "weirdness": 0.5,
+                "offset": 0.0
+              }
+            },
+            {
+              "biome": "zenkai:namek_hills",
+              "parameters": {
+                "temperature": 0.6,
+                "humidity": 0.4,
+                "continentalness": 0.7,
+                "erosion": 0.3,
+                "depth": 0.3,
+                "weirdness": 0.8,
+                "offset": 0.0
+              }
+            }
+          ]
+        }
+  }
+}

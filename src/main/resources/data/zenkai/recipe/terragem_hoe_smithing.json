@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": {
+    "item": "zenkai:terragem"
+  },
+  "base": {
+    "item": "minecraft:iron_hoe"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:terragem_hoe"
+  },
+  "template": {
+    "item": "zenkai:terragem_template"
+  }
+}

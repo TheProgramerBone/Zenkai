@@ -1,11 +1,11 @@
 {
   "values": [
-    "db_renewed:terragem_block",
-    "db_renewed:terragem_ore",
-    "db_renewed:deepslate_terragem_ore",
-    "db_renewed:rocky_block",
-    "db_renewed:namekian_stone",
-    "db_renewed:namekian_cobblestone",
-    "db_renewed:namekian_structure_block"
+    "zenkai:terragem_block",
+    "zenkai:terragem_ore",
+    "zenkai:deepslate_terragem_ore",
+    "zenkai:rocky_block",
+    "zenkai:namekian_stone",
+    "zenkai:namekian_cobblestone",
+    "zenkai:namekian_structure_block"
   ]
 }

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "addition": {
+    "item": "zenkai:terragem"
+  },
+  "base": {
+    "item": "minecraft:iron_helmet"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:terragem_helmet"
+  },
+  "template": {
+    "item": "zenkai:terragem_template"
+  }
+}

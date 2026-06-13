@@ -1,0 +1,8 @@
+// 1.21.1	2026-06-12T21:11:02.2342185	Tags for minecraft:item mod id zenkai
+bc1c8630810639acf3b6c830e48ea4a2367ddc77 data/minecraft/tags/item/axes.json
+b059aedfc662d77aac2804619e91866ee9cf4ecc data/minecraft/tags/item/enchantable/armor.json
+fe6536c3d36f31cf01d7dc10cf4c8ec5e59a4f91 data/minecraft/tags/item/hoes.json
+d7db6457ffd848ca21aaf9c4d3ba6644eced4cfa data/minecraft/tags/item/pickaxes.json
+074574c8d827ad3c25c8c505ab46e2bc0efc7c81 data/minecraft/tags/item/shovels.json
+49608cfb38c6b9bcc97695d8cfcb75db8e722bf7 data/minecraft/tags/item/swords.json
+b059aedfc662d77aac2804619e91866ee9cf4ecc data/minecraft/tags/item/trimmable_armor.json

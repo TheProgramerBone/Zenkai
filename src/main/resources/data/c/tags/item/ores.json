@@ -1,10 +1,10 @@
 {
   "values": [
     {
-      "id": "db_renewed:terragem_ore",
+      "id": "zenkai:terragem_ore",
       "required": false
     },{
-      "id": "db_renewed:deepslate_terragem_ore",
+      "id": "zenkai:deepslate_terragem_ore",
       "required": false
     }
   ]

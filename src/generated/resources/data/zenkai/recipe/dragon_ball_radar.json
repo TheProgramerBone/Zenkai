@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "C": {
+      "tag": "c:circuits/advanced"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "pattern": [
+    "ICI",
+    "ADA",
+    "ICI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:dragon_ball_radar"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "values": [
-    "db_renewed:terragem_block",
-    "db_renewed:terragem_ore",
-    "db_renewed:deepslate_terragem_ore"
+    "zenkai:terragem_block",
+    "zenkai:terragem_ore",
+    "zenkai:deepslate_terragem_ore"
   ]
 }

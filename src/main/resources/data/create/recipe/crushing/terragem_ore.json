@@ -2,18 +2,18 @@
   "type": "create:crushing",
   "ingredients": [
     {
-      "item": "db_renewed:terragem_ore"
+      "item": "zenkai:terragem_ore"
     }
   ],
   "processing_time": 350,
   "results": [
     {
       "count": 2,
-      "id": "db_renewed:terragem"
+      "id": "zenkai:terragem"
     },
     {
       "chance": 0.75,
-      "id": "db_renewed:terragem_dust"
+      "id": "zenkai:terragem_dust"
     },
     {
       "chance": 0.75,

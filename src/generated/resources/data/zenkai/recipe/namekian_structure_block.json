@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "Q": {
+      "item": "minecraft:quartz"
+    },
+    "S": {
+      "item": "zenkai:namekian_stone"
+    }
+  },
+  "pattern": [
+    "SSS",
+    "SQS",
+    "SSS"
+  ],
+  "result": {
+    "count": 8,
+    "id": "zenkai:namekian_structure_block"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "W": {
+      "item": "zenkai:terragem"
+    }
+  },
+  "pattern": [
+    "WWW",
+    "WWW",
+    "WWW"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:terragem_block"
+  }
+}

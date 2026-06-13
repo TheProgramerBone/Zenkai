@@ -1,4 +1,4 @@
-// 1.21.1	2025-11-02T11:15:42.026594	Registries
-361eeec885bbe25f6531d25e6dc76d97204268e1 data/db_renewed/neoforge/biome_modifier/add_terragem_ore.json
-7c06158d198ad90d58d76fff49ecf46a33091cff data/db_renewed/worldgen/configured_feature/terragem_ore.json
-fe867213b371ebce2799e35a109e1437b7a3f1c5 data/db_renewed/worldgen/placed_feature/terragem_ore_placed.json
+// 1.21.1	2026-06-12T21:11:02.2342185	Registries
+3b81c73c058ea99ddd8e13ca2bbf973d03040d66 data/zenkai/neoforge/biome_modifier/add_terragem_ore.json
+3b4dcf94c46edd29f48828c4b8b84953de79c0a7 data/zenkai/worldgen/configured_feature/terragem_ore.json
+48356b45ccc3316cab43ef26d5335eb7bcfaab55 data/zenkai/worldgen/placed_feature/terragem_ore_placed.json

@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "db_renewed:block/terragem_concrete_green"
-  }
-}

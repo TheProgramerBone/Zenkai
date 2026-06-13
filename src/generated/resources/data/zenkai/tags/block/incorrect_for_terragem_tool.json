@@ -1,0 +1,8 @@
+{
+  "remove": [
+    "#zenkai:needs_terragem_tool"
+  ],
+  "values": [
+    "#minecraft:incorrect_for_iron_tool"
+  ]
+}

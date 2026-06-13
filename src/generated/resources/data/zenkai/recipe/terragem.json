@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "zenkai:terragem_block"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "zenkai:terragem"
+  }
+}

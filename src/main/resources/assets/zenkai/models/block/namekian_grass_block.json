@@ -1,0 +1,8 @@
+{
+  "parent": "block/cube_bottom_top",
+  "textures": {
+    "top": "zenkai:block/namekian_grass_block_top",
+    "bottom": "zenkai:block/namekian_dirt",
+    "side": "zenkai:block/namekian_grass_block_side"
+  }
+}

@@ -2,5 +2,5 @@
   "type":"mekanism:combining",
   "extra_input":{"count":1,"tag":"c:cobblestones/normal"},
   "main_input":{"count":5,"tag":"c:dusts/terragem"},
-  "output":{"count":1,"id":"db_renewed:terragem_ore"}
+  "output":{"count":1,"id":"zenkai:terragem_ore"}
 }
