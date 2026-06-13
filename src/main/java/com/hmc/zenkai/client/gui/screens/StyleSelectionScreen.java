@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.core.network.ChooseStylePacket;
 import com.hmc.zenkai.core.network.feature.Style;
+import com.hmc.zenkai.core.network.feature.stats.ChooseRacePacket;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.network.feature.race.UpdatePlayerVisualPacket;
 import net.minecraft.client.Minecraft;
@@ -11,6 +12,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -19,22 +22,34 @@ import org.jetbrains.annotations.Nullable;
 
 public class StyleSelectionScreen extends Screen {
 
-    // ── Assets ───────────────────────────────────────────────────────────────
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+    private static final int BG_W = 256;
+    private static final int BG_H = 256;
 
-    private static final int BG_W = 320;
-    private static final int BG_H = 240;
+    private static final int PAD         = 10;
+    private static final int ROW_STYLE_Y = 14;
+    private static final int DIV1_Y      = 34;
+    private static final int DESC_Y      = 40;
+    private static final int DIV2_Y      = 110;
+    private static final int COLOR_LBL_Y = 118;
+    private static final int HEX_LBL_Y  = 134;
+    private static final int HEX_BOX_Y  = 144;
+    private static final int COLOR_BOX_W = 55;
+    private static final int COLOR_BOX_H = 48;
+    private static final int PREVIEW_SIZE = 30;
 
-    // Layout interno
-    // Columna izquierda: info del estilo (x: 10–180)
-    // Columna derecha:   color del Ki   (x: 195–310)
-    private static final int COL_LEFT  = 12;
-    private static final int COL_RIGHT = 195;
-    private static final int COLOR_BOX = 60;
+    private static final int COLOR_LABEL = 0xC8A96E;
+    private static final int COLOR_VALUE = 0xFFDDAA;
+    private static final int COLOR_DESC  = 0xCCCCCC;
 
-    // ── Estado ───────────────────────────────────────────────────────────────
-    @Nullable private final Screen back;
+    @Nullable private final RaceAppearanceScreen raceScreen;
+    private final CompoundTag statsSnapshot;
+    private final CompoundTag visualSnapshot;
+
+    private boolean confirmed = false;
+    private boolean goingBack = false;
+
     private int leftPos, topPos;
 
     private final Style[] styles = Style.values();
@@ -43,9 +58,15 @@ public class StyleSelectionScreen extends Screen {
     private EditBox hexBox;
     private int rgbValue = 0x33CCFF;
 
-    public StyleSelectionScreen(@Nullable Screen back) {
-        super(Component.translatable("screen.db_renewed.choose_style.title"));
-        this.back = back;
+    public StyleSelectionScreen(
+            @Nullable RaceAppearanceScreen raceScreen,
+            @Nullable CompoundTag statsSnapshot,
+            @Nullable CompoundTag visualSnapshot
+    ) {
+        super(Component.translatable("screen.zenkai.choose_style.title"));
+        this.raceScreen    = raceScreen;
+        this.statsSnapshot  = statsSnapshot;
+        this.visualSnapshot = visualSnapshot;
     }
 
     @Override
@@ -56,153 +77,171 @@ public class StyleSelectionScreen extends Screen {
         this.leftPos = (this.width  - BG_W) / 2;
         this.topPos  = (this.height - BG_H) / 2;
 
-        // Tomar color actual del visual attachment
         var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
         this.rgbValue = visual.getAuraColorRgb() & 0xFFFFFF;
 
-        // Inicializar styleIndex si ya eligió estilo
         var stats = mc.player.getData(DataAttachments.PLAYER_STATS.get());
-        Style current = stats.getStyle();
+        Style cur = stats.getStyle();
         for (int i = 0; i < styles.length; i++) {
-            if (styles[i] == current) { styleIndex = i; break; }
+            if (styles[i] == cur) { styleIndex = i; break; }
         }
 
-        // ── Flechas de estilo ────────────────────────────────────────────────
-        int arrowY = topPos + 48;
+        int lp = leftPos;
+        int tp = topPos;
+
         addRenderableWidget(new ArrowIconButton(
-                leftPos + COL_LEFT, arrowY,
+                lp + PAD, tp + ROW_STYLE_Y,
                 ArrowIconButton.Dir.LEFT,
                 () -> styleIndex = (styleIndex - 1 + styles.length) % styles.length
         ));
         addRenderableWidget(new ArrowIconButton(
-                leftPos + COL_LEFT + 150, arrowY,
+                lp + BG_W - PAD - 14, tp + ROW_STYLE_Y,
                 ArrowIconButton.Dir.RIGHT,
                 () -> styleIndex = (styleIndex + 1) % styles.length
         ));
 
-        // ── HEX input ────────────────────────────────────────────────────────
-        hexBox = new EditBox(
-                this.font,
-                leftPos + COL_RIGHT,
-                topPos + 80,
-                70, 16,
-                Component.empty()
-        );
+        // HEX input alineado a la izquierda de la zona de color
+        hexBox = new EditBox(this.font, lp + PAD, tp + HEX_BOX_Y, 80, 16, Component.empty());
         hexBox.setMaxLength(7);
         hexBox.setValue(String.format("#%06X", rgbValue));
         hexBox.setResponder(s -> {
             Integer parsed = parseHex(s);
-            if (parsed != null) {
-                rgbValue = parsed;
-                applyColorPreview();
-            }
+            if (parsed != null) { rgbValue = parsed; applyColorPreview(); }
         });
         addRenderableWidget(hexBox);
 
-        // ── Botones de acción ────────────────────────────────────────────────
         addRenderableWidget(Button.builder(
-                Component.translatable("screen.db_renewed.back"),
-                b -> { if (back != null) mc.setScreen(back); else mc.setScreen(null); }
-        ).bounds(leftPos + 8, topPos + BG_H - 26, 50, 20).build());
+                Component.translatable("screen.zenkai.back"),
+                b -> {
+                    goingBack = true;
+                    if (raceScreen != null) mc.setScreen(raceScreen);
+                    else mc.setScreen(null);
+                }
+        ).bounds(lp + PAD, tp + BG_H - 26, 50, 20).build());
 
         addRenderableWidget(Button.builder(
-                Component.translatable("screen.db_renewed.confirm"),
+                Component.translatable("screen.zenkai.confirm"),
                 b -> onConfirm()
-        ).bounds(leftPos + BG_W - 60, topPos + BG_H - 26, 52, 20).build());
+        ).bounds(lp + BG_W - PAD - 52, tp + BG_H - 26, 52, 20).build());
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g, mouseX, mouseY, partialTick);
-
         Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+
         Style s = styles[styleIndex];
-        String styleKey = "screen.db_renewed.style." + s.name().toLowerCase();
+        String styleKey = "screen.zenkai.style." + s.name().toLowerCase();
+        int lp = leftPos;
+        int tp = topPos;
 
-        // ── Columna izquierda: estilo ─────────────────────────────────────────
-        int lx = leftPos + COL_LEFT;
+        // 1) Overlay oscuro
+        super.renderBackground(g, mouseX, mouseY, partialTick);
 
-        // Título de sección
+        // 2) Textura del panel
+        g.blit(BG, lp, tp, 0, 0, BG_W, BG_H);
+
+        // 3) Textos y formas
+
+        // Fila estilo
         g.drawString(mc.font,
-                Component.translatable("screen.db_renewed.label.style"),
-                lx, topPos + 14, 0xAAAAAA);
-
-        // Nombre del estilo (grande, centrado entre flechas)
+                Component.translatable("screen.zenkai.label.style"),
+                lp + PAD, tp + ROW_STYLE_Y - 1, COLOR_LABEL, false);
         g.drawCenteredString(mc.font,
                 Component.translatable(styleKey),
-                leftPos + COL_LEFT + 82, topPos + 52, 0xFFDDAA);
+                lp + BG_W / 2, tp + ROW_STYLE_Y, COLOR_VALUE);
 
-        // Descripción (hasta ~160px de ancho, puede necesitar wrap manual)
-        String[] descLines = getDescLines(styleKey + ".desc");
-        for (int i = 0; i < descLines.length; i++) {
-            g.drawString(mc.font,
-                    Component.literal(descLines[i]),
-                    lx, topPos + 75 + i * 11, 0xCCCCCC);
+        g.fill(lp + PAD, tp + DIV1_Y, lp + BG_W - PAD, tp + DIV1_Y + 1, 0x44FFFFFF);
+
+        // Descripción
+        String[] lines = wrapText(
+                Component.translatable(styleKey + ".desc").getString(),
+                mc.font, BG_W - PAD * 2
+        );
+        for (int i = 0; i < lines.length; i++) {
+            g.drawString(mc.font, Component.literal(lines[i]),
+                    lp + PAD, tp + DESC_Y + i * 10, COLOR_DESC, false);
         }
 
-        // Divisor vertical
-        g.fill(leftPos + COL_RIGHT - 8, topPos + 10,
-                leftPos + COL_RIGHT - 7, topPos + BG_H - 10,
-                0x88FFFFFF);
+        g.fill(lp + PAD, tp + DIV2_Y, lp + BG_W - PAD, tp + DIV2_Y + 1, 0x44FFFFFF);
 
-        // ── Columna derecha: color de Ki ──────────────────────────────────────
-        int rx = leftPos + COL_RIGHT;
-
+        // Labels de color
         g.drawString(mc.font,
-                Component.translatable("screen.db_renewed.label.ki_color"),
-                rx, topPos + 14, 0xAAAAAA);
-
+                Component.translatable("screen.zenkai.label.ki_color"),
+                lp + PAD, tp + COLOR_LBL_Y, COLOR_LABEL, false);
         g.drawString(mc.font,
-                Component.translatable("screen.db_renewed.label.hex"),
-                rx, topPos + 68, 0xFFFFFF);
+                Component.translatable("screen.zenkai.label.hex"),
+                lp + PAD, tp + HEX_LBL_Y, 0xFFFFFF, false);
 
-        // Cuadro de preview del color
-        int boxY = topPos + 105;
-        g.fill(rx - 1,           boxY - 1,
-                rx + COLOR_BOX + 1, boxY + COLOR_BOX + 1,
-                0xFFFFFFFF); // borde blanco
-        g.fill(rx, boxY,
-                rx + COLOR_BOX, boxY + COLOR_BOX,
-                0xFF000000 | currentRgb()); // color actual
-
-        // Valor hex debajo del cuadro
+        // Cuadro de color (derecha, alineado con el HEX input)
+        int boxX = lp + BG_W - PAD - COLOR_BOX_W;
+        int boxY = tp + HEX_BOX_Y - 2;
+        g.fill(boxX - 1, boxY - 1, boxX + COLOR_BOX_W + 1, boxY + COLOR_BOX_H + 1, 0xFFFFFFFF);
+        g.fill(boxX, boxY, boxX + COLOR_BOX_W, boxY + COLOR_BOX_H, 0xFF000000 | currentRgb());
         g.drawString(mc.font,
                 Component.literal(String.format("#%06X", currentRgb())),
-                rx, boxY + COLOR_BOX + 6, 0x888888);
+                boxX, boxY + COLOR_BOX_H + 4, 0x666666, false);
 
+        // 4) Preview del jugador — zona inferior izquierda
+        int previewX1 = lp + PAD;
+        int previewY1 = tp + HEX_BOX_Y + 20;
+        int previewX2 = lp + PAD + 70;
+        int previewY2 = tp + BG_H - 32;
+        InventoryScreen.renderEntityInInventoryFollowsMouse(
+                g,
+                previewX1, previewY1, previewX2, previewY2,
+                PREVIEW_SIZE,
+                0.0625f,
+                (float) mouseX, (float) mouseY,
+                mc.player
+        );
+
+        // 5) Widgets encima (siempre al final)
         super.render(g, mouseX, mouseY, partialTick);
     }
 
     @Override
     public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.renderBackground(g, mouseX, mouseY, partialTick);
-        g.blit(BG, leftPos, topPos, 0, 0, BG_W, BG_H);
+        // Vacío — el overlay se dibuja en render() para controlar el orden exacto
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /**
-     * Divide la descripción en líneas de máximo ~22 caracteres para que
-     * quepan en la columna izquierda sin salirse del panel.
-     */
-    private String[] getDescLines(String key) {
-        String raw = Component.translatable(key).getString();
-        if (raw.length() <= 28) return new String[]{ raw };
-
-        // Corte simple por palabras
-        String[] words = raw.split(" ");
-        StringBuilder line = new StringBuilder();
-        java.util.List<String> lines = new java.util.ArrayList<>();
-        for (String w : words) {
-            if (line.length() + w.length() > 26) {
-                lines.add(line.toString().trim());
-                line = new StringBuilder();
+    @Override
+    public void removed() {
+        if (!confirmed && !goingBack) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null) {
+                var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
+                var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+                if (statsSnapshot  != null) stats.load(statsSnapshot);
+                if (visualSnapshot != null) visual.load(visualSnapshot);
             }
-            line.append(w).append(" ");
         }
-        if (!line.isEmpty()) lines.add(line.toString().trim());
-        return lines.toArray(new String[0]);
+        super.removed();
+    }
+
+    private void onConfirm() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+
+        var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
+        var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+
+        visual.setAuraColorRgb(currentRgb());
+
+        PacketDistributor.sendToServer(new ChooseRacePacket(stats.getRace()));
+        PacketDistributor.sendToServer(UpdatePlayerVisualPacket.from(visual));
+        PacketDistributor.sendToServer(new ChooseStylePacket(styles[styleIndex]));
+
+        confirmed = true;
+        if (raceScreen != null) raceScreen.markConfirmed();
+
+        mc.setScreen(null);
+    }
+
+    private void applyColorPreview() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        mc.player.getData(DataAttachments.PLAYER_VISUAL.get()).setAuraColorRgb(currentRgb());
     }
 
     private int currentRgb() {
@@ -213,12 +252,6 @@ public class StyleSelectionScreen extends Screen {
         return rgbValue & 0xFFFFFF;
     }
 
-    private void applyColorPreview() {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
-        mc.player.getData(DataAttachments.PLAYER_VISUAL.get()).setAuraColorRgb(currentRgb());
-    }
-
     private static Integer parseHex(String s) {
         if (s == null) return null;
         String t = s.trim().replaceFirst("^#", "");
@@ -227,14 +260,21 @@ public class StyleSelectionScreen extends Screen {
         catch (Exception e) { return null; }
     }
 
-    private void onConfirm() {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
-        var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
-        visual.setAuraColorRgb(currentRgb());
-        PacketDistributor.sendToServer(UpdatePlayerVisualPacket.from(visual));
-        PacketDistributor.sendToServer(new ChooseStylePacket(styles[styleIndex]));
-        mc.setScreen(null);
+    private String[] wrapText(String text, net.minecraft.client.gui.Font font, int maxWidth) {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        String[] words = text.split(" ");
+        StringBuilder line = new StringBuilder();
+        for (String w : words) {
+            String test = line.isEmpty() ? w : line + " " + w;
+            if (font.width(test) > maxWidth && !line.isEmpty()) {
+                lines.add(line.toString());
+                line = new StringBuilder(w);
+            } else {
+                line = new StringBuilder(test);
+            }
+        }
+        if (!line.isEmpty()) lines.add(line.toString());
+        return lines.toArray(new String[0]);
     }
 
     @Override

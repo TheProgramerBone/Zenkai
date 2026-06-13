@@ -20,7 +20,7 @@ import java.util.Objects;
 
 public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
     private static final ResourceLocation BG_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath("db_renewed", "textures/gui/stack_wish.png");
+            ResourceLocation.fromNamespaceAndPath("zenkai", "textures/gui/stack_wish.png");
 
     private final ShenlongWishScreen parent;
 
@@ -40,13 +40,13 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
 
         this.addRenderableWidget(
                 Button.builder(
-                        Component.translatable("screen.db_renewed.gui.confirm"), btn -> {
+                        Component.translatable("screen.zenkai.gui.confirm"), btn -> {
                             if (Minecraft.getInstance().getConnection() != null) {
                                 Minecraft.getInstance().getConnection().send(new StackWishPayload());
                             } else {
                                 assert Minecraft.getInstance().player != null;
                                 Minecraft.getInstance().player.displayClientMessage(
-                                        Component.translatable("message.db_renewed.no_connection"), false
+                                        Component.translatable("message.zenkai.no_connection"), false
                                 );
                             }
 
@@ -59,7 +59,7 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
         // Botón Volver
         this.addRenderableWidget(
                 Button.builder(
-                        Component.translatable("screen.db_renewed.gui.back"), btn -> {
+                        Component.translatable("screen.zenkai.gui.back"), btn -> {
                             Minecraft.getInstance().setScreen(
                                     Objects.requireNonNullElseGet(this.parent, ShenlongWishScreen::new)
                             );

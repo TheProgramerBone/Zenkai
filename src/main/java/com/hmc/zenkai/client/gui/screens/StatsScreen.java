@@ -71,7 +71,7 @@ public class StatsScreen extends Screen {
     private final List<AttrArea> attrAreas = new ArrayList<>();
 
     public StatsScreen() {
-        super(Component.translatable("screen.db_renewed.stats_screen.title"));
+        super(Component.translatable("screen.zenkai.stats_screen.title"));
     }
 
     @Override
@@ -145,26 +145,26 @@ public class StatsScreen extends Screen {
 
         // ======= Cabecera Race / Style / TP =======
         g.drawString(font,
-                Component.translatable("screen.db_renewed.stats_screen.race")
+                Component.translatable("screen.zenkai.stats_screen.race")
                         .append(Component.translatable(att.getRace().name()).withStyle(ChatFormatting.AQUA)),
                 x, y, 0xFFFFFF);
         y += 10;
         g.drawString(font,
-                Component.translatable("screen.db_renewed.stats_screen.style")
+                Component.translatable("screen.zenkai.stats_screen.style")
                         .append(Component.translatable(att.getStyle().name()).withStyle(ChatFormatting.AQUA)),
                 x, y, 0xFFFFFF);
         y += 10;
 
         g.drawString(font,
-                Component.translatable("screen.db_renewed.stats_screen.tp")
+                Component.translatable("screen.zenkai.stats_screen.tp")
                         .append(Component.literal(String.valueOf(att.getTP())).withStyle(ChatFormatting.GOLD)),
                 x, y, 0xFFFFFF);
         y += 12;
 
         // ======= Encabezados columnas =======
-        g.drawString(font, Component.translatable("screen.db_renewed.stats_screen.attributes"), x, y, 0xFFD0D0);
+        g.drawString(font, Component.translatable("screen.zenkai.stats_screen.attributes"), x, y, 0xFFD0D0);
         int statsXHeader = x + 130;
-        g.drawString(font, Component.translatable("screen.db_renewed.stats_screen.stats"), statsXHeader, y, 0xFFD0D0);
+        g.drawString(font, Component.translatable("screen.zenkai.stats_screen.stats"), statsXHeader, y, 0xFFD0D0);
         y += 10;
 
         // ======= Atributos (izquierda) =======
@@ -209,19 +209,19 @@ public class StatsScreen extends Screen {
         double kiPower = att.computeKiPowerFinal();
 
         List<Component> stats = new ArrayList<>();
-        stats.add(Component.translatable("screen.db_renewed.stats_screen.stat.melee",
+        stats.add(Component.translatable("screen.zenkai.stats_screen.stat.melee",
                 String.format(java.util.Locale.ROOT, "%.1f", melee)));
-        stats.add(Component.translatable("screen.db_renewed.stats_screen.stat.defense",
+        stats.add(Component.translatable("screen.zenkai.stats_screen.stat.defense",
                 String.format(java.util.Locale.ROOT, "%.1f", defense)));
-        stats.add(Component.translatable("screen.db_renewed.stats_screen.stat.body", body));
-        stats.add(Component.translatable("screen.db_renewed.stats_screen.stat.stamina", stam));
-        stats.add(Component.translatable("screen.db_renewed.stats_screen.stat.ki", ki));
+        stats.add(Component.translatable("screen.zenkai.stats_screen.stat.body", body));
+        stats.add(Component.translatable("screen.zenkai.stats_screen.stat.stamina", stam));
+        stats.add(Component.translatable("screen.zenkai.stats_screen.stat.ki", ki));
 
-        stats.add(Component.translatable("screen.db_renewed.stats_screen.stat.ki_power",
+        stats.add(Component.translatable("screen.zenkai.stats_screen.stat.ki_power",
                 String.format(java.util.Locale.ROOT, "%.1f", kiPower)));
 
-        stats.add(Component.translatable("screen.db_renewed.stats_screen.stat.running", runningPct));
-        stats.add(Component.translatable("screen.db_renewed.stats_screen.stat.flying", flyingPct));
+        stats.add(Component.translatable("screen.zenkai.stats_screen.stat.running", runningPct));
+        stats.add(Component.translatable("screen.zenkai.stats_screen.stat.flying", flyingPct));
 
         for (Component c : stats) {
             g.drawString(font, c, sx, sy, 0xFFFFFF);
@@ -230,7 +230,7 @@ public class StatsScreen extends Screen {
 
         // ======= Texto TPC: xN =======
         Component tpcText = Component.translatable(
-                "screen.db_renewed.stats_screen.tpx",
+                "screen.zenkai.stats_screen.tpx",
                 getCurrentTpStep()
         );
         g.drawString(font, tpcText, tpcLabelX, tpcLabelY, 0xFFFFFF);
@@ -240,13 +240,13 @@ public class StatsScreen extends Screen {
         int costY = tpcLabelY + font.lineHeight + 4; // un renglón debajo
 
         Component costText = Component.translatable(
-                "screen.db_renewed.stats_screen.cost",
+                "screen.zenkai.stats_screen.cost",
                 cost
         );
         g.drawString(font, costText, tpcLabelX, costY, 0xFFFFFF);
 
         g.drawString(font,
-                Component.translatable("screen.db_renewed.stats_screen.wip").withStyle(ChatFormatting.GRAY),
+                Component.translatable("screen.zenkai.stats_screen.wip").withStyle(ChatFormatting.GRAY),
                 panelLeft + 150,
                 panelTop + BG_H - 12 - PAD,
                 0xAAAAAA);
@@ -285,7 +285,7 @@ public class StatsScreen extends Screen {
                 mouseY >= tpcLabelY && mouseY < tpcLabelY + tpcLabelH) {
 
             Component tip = Component.translatable(
-                    "screen.db_renewed.stats_screen.tp_des"
+                    "screen.zenkai.stats_screen.tp_des"
             );
             g.renderTooltip(this.font, tip, mouseX, mouseY);
         }
@@ -304,12 +304,12 @@ public class StatsScreen extends Screen {
 
     private Component getAttributeLabel(Dbrattributes attr, int value) {
         return switch (attr) {
-            case STRENGTH     -> Component.translatable("attribute.db_renewed.str", value);
-            case DEXTERITY    -> Component.translatable("attribute.db_renewed.dex", value);
-            case CONSTITUTION -> Component.translatable("attribute.db_renewed.con", value);
-            case WILLPOWER    -> Component.translatable("attribute.db_renewed.wil", value);
-            case MIND         -> Component.translatable("attribute.db_renewed.mnd", value);
-            case SPIRIT       -> Component.translatable("attribute.db_renewed.spi", value);
+            case STRENGTH     -> Component.translatable("attribute.zenkai.str", value);
+            case DEXTERITY    -> Component.translatable("attribute.zenkai.dex", value);
+            case CONSTITUTION -> Component.translatable("attribute.zenkai.con", value);
+            case WILLPOWER    -> Component.translatable("attribute.zenkai.wil", value);
+            case MIND         -> Component.translatable("attribute.zenkai.mnd", value);
+            case SPIRIT       -> Component.translatable("attribute.zenkai.spi", value);
         };
     }
 
@@ -317,12 +317,12 @@ public class StatsScreen extends Screen {
      * Texto de descripción por atributo (simplificado) con “+x por punto”,
      * usando los keys:
      *
-     *  "tooltip.db_renewed.attr.str"
-     *  "tooltip.db_renewed.attr.con"
-     *  "tooltip.db_renewed.attr.dex"
-     *  "tooltip.db_renewed.attr.wil"
-     *  "tooltip.db_renewed.attr.spi"
-     *  "tooltip.db_renewed.attr.mnd"
+     *  "tooltip.zenkai.attr.str"
+     *  "tooltip.zenkai.attr.con"
+     *  "tooltip.zenkai.attr.dex"
+     *  "tooltip.zenkai.attr.wil"
+     *  "tooltip.zenkai.attr.spi"
+     *  "tooltip.zenkai.attr.mnd"
      */
     private Component getAttributeDescription(Dbrattributes attr, PlayerStatsAttachment att) {
         // Usamos SIEMPRE los multiplicadores de StatsConfig para evitar desincronizar
@@ -352,37 +352,37 @@ public class StatsScreen extends Screen {
                 // 1 punto de STR → cuánto aporta al stat de melee
                 perPoint = mSTR * sSTR;
                 formatted = String.format(java.util.Locale.ROOT, "%.1f", perPoint);
-                yield Component.translatable("tooltip.db_renewed.attr.str", formatted);
+                yield Component.translatable("tooltip.zenkai.attr.str", formatted);
             }
             case CONSTITUTION -> {
                 // CON en tu sistema afecta body/stamina, por eso sigues usando *2.0
                 perPoint = mCON * sCON * 2.0;
                 formatted = String.format(java.util.Locale.ROOT, "%.1f", perPoint);
-                yield Component.translatable("tooltip.db_renewed.attr.con", formatted);
+                yield Component.translatable("tooltip.zenkai.attr.con", formatted);
             }
             case DEXTERITY -> {
                 // DEX → velocidad terrestre y de vuelo
                 perPoint = mDEX * sDEX;
                 formatted = String.format(java.util.Locale.ROOT, "%.1f", perPoint);
-                yield Component.translatable("tooltip.db_renewed.attr.dex", formatted);
+                yield Component.translatable("tooltip.zenkai.attr.dex", formatted);
             }
             case WILLPOWER -> {
                 // WIL → Ki Power
                 perPoint = mWIL * sWIL;
                 formatted = String.format(java.util.Locale.ROOT, "%.1f", perPoint);
-                yield Component.translatable("tooltip.db_renewed.attr.wil", formatted);
+                yield Component.translatable("tooltip.zenkai.attr.wil", formatted);
             }
             case SPIRIT -> {
                 // SPI → Ki Pool
                 perPoint = mSPI * sSPI;
                 formatted = String.format(java.util.Locale.ROOT, "%.1f", perPoint);
-                yield Component.translatable("tooltip.db_renewed.attr.spi", formatted);
+                yield Component.translatable("tooltip.zenkai.attr.spi", formatted);
             }
             case MIND -> {
                 // MND → de momento neutro, pero ya quedas sincronizado con config
                 perPoint = mMND * sMND;
                 formatted = String.format(java.util.Locale.ROOT, "%.1f", perPoint);
-                yield Component.translatable("tooltip.db_renewed.attr.mnd", formatted);
+                yield Component.translatable("tooltip.zenkai.attr.mnd", formatted);
             }
         };
     }

@@ -99,7 +99,7 @@ public final class KeyBindings {
             if (!stats.isRaceChosen()) {
                 mc.setScreen(new RaceAppearanceScreen()); // nuevo “RaceScreen real”
             } else if (!stats.isStyleChosen()) {
-                mc.setScreen(new StyleSelectionScreen(null)); // ya tiene raza, falta estilo
+                mc.setScreen(new StyleSelectionScreen(null,null,null)); // ya tiene raza, falta estilo
             } else {
                 mc.setScreen(new StatsScreen());
             }
