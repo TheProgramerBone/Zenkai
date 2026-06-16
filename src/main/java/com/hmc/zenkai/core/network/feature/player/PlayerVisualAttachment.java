@@ -12,159 +12,157 @@ import org.jetbrains.annotations.NotNull;
 
 public class PlayerVisualAttachment {
 
-    // =========================================================
-    //  Race Skin (armadura GeckoLib virtual)
-    // =========================================================
-
-    /** Item id del “skin racial” (armadura geckolib que renderizas encima). Ej: "db_renewed:namekian_race_skin" */
-    private String raceSkinItemId = "";
-
-    /** Renderizar el skin racial (layer). */
-    private boolean renderRaceSkin = true;
-
-    /** Ocultar el cuerpo vanilla (piel/modelo base), dejando raceSkin + armadura real. */
+    // ── Race Skin ─────────────────────────────────────────────────────────────
+    private String  raceSkinItemId  = "";
+    private boolean renderRaceSkin  = true;
     private boolean hideVanillaBody = true;
 
-    // =========================================================
-    //  Colores básicos (RGB)
-    // =========================================================
-    private int hairColorRgb = 0xF4D03F;  // rubio tipo SSJ por defecto
-    private int eyeColorRgb  = 0x2E86C1;  // azul
-    private int auraColorRgb = 0x33CCFF;  // mismo default que usas en stats
+    // ── Colores ───────────────────────────────────────────────────────────────
+    private int skinColorRgb   = 0xD5A07A; // piel humana por defecto
+    private int hairColorRgb   = 0xF4D03F; // rubio SSJ
+    private int eyeColorRgb    = 0x2E86C1; // azul
+    private int auraColorRgb   = 0x33CCFF; // ki azul
+    private int detailColorRgb = 0x9B59B6; // detalles Arcosian (puntos morados)
 
-    // =========================================================
-    //  IDs de estilos/modelos
-    // =========================================================
-    private String hairStyleId = "base";       // "base", "saiyan_spiky_1", etc.
-    private String auraStyleId = "none";       // "none", "basic", "flame", etc.
-    private String outfitId    = "gi_default"; // futura ropa
+    // ── Índices de forma (apuntan a CustomizationAssets) ─────────────────────
+    private int eyeIndex   = 0; // 0 = ninguno
+    private int hairIndex  = 0; // 0 = calvo
+    private int mouthIndex = 0; // 0 = ninguna
+    private int noseIndex  = 0; // 0 = ninguna
 
-    // =========================================================
-    //  Forma / transformación (futuro)
-    // =========================================================
-    private int formStage = 0; // 0=base
+    // ── IDs de estilo (legacy / futuro) ──────────────────────────────────────
+    private String hairStyleId = "base";
+    private String auraStyleId = "none";
+    private String outfitId    = "gi_default";
+
+    // ── Transformación ───────────────────────────────────────────────────────
+    private int formStage = 0;
 
     public PlayerVisualAttachment() {}
 
-    // ---------- Acceso estático (igual que PlayerStatsAttachment) ----------
+    // ── Acceso estático ───────────────────────────────────────────────────────
     public static PlayerVisualAttachment get(@NotNull Player player) {
         return player.getData(DataAttachments.PLAYER_VISUAL.get());
     }
 
-    // =========================================================
-    //  Race Skin API
-    // =========================================================
-
-    public String getRaceSkinItemId() { return raceSkinItemId; }
-
-    public void setRaceSkinItemId(String id) {
-        this.raceSkinItemId = (id == null) ? "" : id;
-    }
-
-    public boolean shouldRenderRaceSkin() { return renderRaceSkin; }
-    public void setRenderRaceSkin(boolean v) { this.renderRaceSkin = v; }
-
-    public boolean shouldHideVanillaBody() { return hideVanillaBody; }
-    public void setHideVanillaBody(boolean v) { this.hideVanillaBody = v; }
+    // ── Race Skin API ─────────────────────────────────────────────────────────
+    public String  getRaceSkinItemId()           { return raceSkinItemId; }
+    public boolean shouldRenderRaceSkin()        { return renderRaceSkin; }
+    public boolean shouldHideVanillaBody()       { return hideVanillaBody; }
+    public void setRaceSkinItemId(String id)     { this.raceSkinItemId  = (id == null) ? "" : id; }
+    public void setRenderRaceSkin(boolean v)     { this.renderRaceSkin  = v; }
+    public void setHideVanillaBody(boolean v)    { this.hideVanillaBody = v; }
 
     public boolean hasRaceSkin() {
         return raceSkinItemId != null && !raceSkinItemId.isEmpty();
     }
 
-    /** Stack virtual SOLO para render (NO se equipa en slots reales). */
     public ItemStack getRaceSkinStack() {
         if (!hasRaceSkin()) return ItemStack.EMPTY;
-
         ResourceLocation rl = ResourceLocation.tryParse(raceSkinItemId);
         if (rl == null) return ItemStack.EMPTY;
-
         Item item = BuiltInRegistries.ITEM.get(rl);
         if (item == null) return ItemStack.EMPTY;
-
         return new ItemStack(item);
     }
 
-    /** Helper opcional: defaults por raza (ajusta ids a los reales). */
     public void applyDefaultsForRace(Race race) {
         switch (race) {
-            case NAMEKIAN -> setRaceSkinItemId("db_renewed:namekian_race_skin");
-            case SAIYAN   -> setRaceSkinItemId("db_renewed:saiyan_race_skin");
-            case ARCOSIAN -> setRaceSkinItemId("db_renewed:arcosian_race_skin");
-            case MAJIN    -> setRaceSkinItemId("db_renewed:majin_race_skin");
+            case NAMEKIAN -> setRaceSkinItemId("zenkai:namekian_race_skin");
+            case SAIYAN   -> setRaceSkinItemId("zenkai:saiyan_race_skin");
+            case ARCOSIAN -> setRaceSkinItemId("zenkai:arcosian_race_skin");
+            case MAJIN    -> setRaceSkinItemId("zenkai:majin_race_skin");
             case HUMAN    -> setRaceSkinItemId("");
         }
     }
 
-    // =========================================================
-    //  Cosméticos API
-    // =========================================================
+    // ── Colores API ───────────────────────────────────────────────────────────
+    public int  getSkinColorRgb()              { return skinColorRgb; }
+    public void setSkinColorRgb(int rgb)       { this.skinColorRgb   = rgb & 0xFFFFFF; }
 
-    public int getHairColorRgb() { return hairColorRgb; }
-    public void setHairColorRgb(int rgb) { this.hairColorRgb = rgb; }
+    public int  getHairColorRgb()              { return hairColorRgb; }
+    public void setHairColorRgb(int rgb)       { this.hairColorRgb   = rgb & 0xFFFFFF; }
 
-    public int getEyeColorRgb() { return eyeColorRgb; }
-    public void setEyeColorRgb(int rgb) { this.eyeColorRgb = rgb; }
+    public int  getEyeColorRgb()               { return eyeColorRgb; }
+    public void setEyeColorRgb(int rgb)        { this.eyeColorRgb    = rgb & 0xFFFFFF; }
 
-    public int getAuraColorRgb() { return auraColorRgb; }
-    public void setAuraColorRgb(int rgb) { this.auraColorRgb = rgb; }
+    public int  getAuraColorRgb()              { return auraColorRgb; }
+    public void setAuraColorRgb(int rgb)       { this.auraColorRgb   = rgb & 0xFFFFFF; }
 
-    public String getHairStyleId() { return hairStyleId; }
-    public void setHairStyleId(String id) {
-        if (id != null && !id.isEmpty()) this.hairStyleId = id;
-    }
+    public int  getDetailColorRgb()            { return detailColorRgb; }
+    public void setDetailColorRgb(int rgb)     { this.detailColorRgb = rgb & 0xFFFFFF; }
 
-    public String getAuraStyleId() { return auraStyleId; }
-    public void setAuraStyleId(String id) {
-        if (id != null && !id.isEmpty()) this.auraStyleId = id;
-    }
+    // ── Índices de forma API ──────────────────────────────────────────────────
+    public int  getEyeIndex()                  { return eyeIndex; }
+    public void setEyeIndex(int i)             { this.eyeIndex   = Math.max(0, i); }
 
-    public String getOutfitId() { return outfitId; }
-    public void setOutfitId(String id) {
-        if (id != null && !id.isEmpty()) this.outfitId = id;
-    }
+    public int  getHairIndex()                 { return hairIndex; }
+    public void setHairIndex(int i)            { this.hairIndex  = Math.max(0, i); }
 
-    public int getFormStage() { return formStage; }
-    public void setFormStage(int formStage) {
-        this.formStage = Math.max(0, formStage);
-    }
+    public int  getMouthIndex()                { return mouthIndex; }
+    public void setMouthIndex(int i)           { this.mouthIndex = Math.max(0, i); }
 
-    // =========================================================
-    //  NBT (para AttachmentType.serialize con tu Codec)
-    // =========================================================
+    public int  getNoseIndex()                 { return noseIndex; }
+    public void setNoseIndex(int i)            { this.noseIndex  = Math.max(0, i); }
 
+    // ── IDs de estilo (legacy) ────────────────────────────────────────────────
+    public String getHairStyleId()             { return hairStyleId; }
+    public void   setHairStyleId(String id)    { if (id != null && !id.isEmpty()) this.hairStyleId = id; }
+
+    public String getAuraStyleId()             { return auraStyleId; }
+    public void   setAuraStyleId(String id)    { if (id != null && !id.isEmpty()) this.auraStyleId = id; }
+
+    public String getOutfitId()                { return outfitId; }
+    public void   setOutfitId(String id)       { if (id != null && !id.isEmpty()) this.outfitId    = id; }
+
+    // ── Transformación ───────────────────────────────────────────────────────
+    public int  getFormStage()                 { return formStage; }
+    public void setFormStage(int v)            { this.formStage = Math.max(0, v); }
+
+    // ── NBT ──────────────────────────────────────────────────────────────────
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
 
-        // Race skin
-        tag.putString("raceSkinItemId", raceSkinItemId == null ? "" : raceSkinItemId);
-        tag.putBoolean("renderRaceSkin", renderRaceSkin);
+        tag.putString("raceSkinItemId",  raceSkinItemId == null ? "" : raceSkinItemId);
+        tag.putBoolean("renderRaceSkin",  renderRaceSkin);
         tag.putBoolean("hideVanillaBody", hideVanillaBody);
 
-        // Colores
-        tag.putInt("hairColor", hairColorRgb);
-        tag.putInt("eyeColor", eyeColorRgb);
-        tag.putInt("auraColor", auraColorRgb);
+        tag.putInt("skinColor",   skinColorRgb);
+        tag.putInt("hairColor",   hairColorRgb);
+        tag.putInt("eyeColor",    eyeColorRgb);
+        tag.putInt("auraColor",   auraColorRgb);
+        tag.putInt("detailColor", detailColorRgb);
 
-        // IDs
-        tag.putString("hairStyleId", hairStyleId == null ? "base" : hairStyleId);
-        tag.putString("auraStyleId", auraStyleId == null ? "none" : auraStyleId);
-        tag.putString("outfitId", outfitId == null ? "gi_default" : outfitId);
+        tag.putInt("eyeIndex",   eyeIndex);
+        tag.putInt("hairIndex",  hairIndex);
+        tag.putInt("mouthIndex", mouthIndex);
+        tag.putInt("noseIndex",  noseIndex);
 
-        // Forma
+        tag.putString("hairStyleId", hairStyleId == null ? "base"       : hairStyleId);
+        tag.putString("auraStyleId", auraStyleId == null ? "none"       : auraStyleId);
+        tag.putString("outfitId",    outfitId    == null ? "gi_default" : outfitId);
+
         tag.putInt("formStage", formStage);
 
         return tag;
     }
 
     public void load(CompoundTag tag) {
-        this.raceSkinItemId = tag.getString("raceSkinItemId");
+        this.raceSkinItemId  = tag.getString("raceSkinItemId");
 
-        if (tag.contains("renderRaceSkin")) this.renderRaceSkin = tag.getBoolean("renderRaceSkin");
+        if (tag.contains("renderRaceSkin"))  this.renderRaceSkin  = tag.getBoolean("renderRaceSkin");
         if (tag.contains("hideVanillaBody")) this.hideVanillaBody = tag.getBoolean("hideVanillaBody");
 
-        if (tag.contains("hairColor")) this.hairColorRgb = tag.getInt("hairColor");
-        if (tag.contains("eyeColor"))  this.eyeColorRgb  = tag.getInt("eyeColor");
-        if (tag.contains("auraColor")) this.auraColorRgb = tag.getInt("auraColor");
+        if (tag.contains("skinColor"))   this.skinColorRgb   = tag.getInt("skinColor");
+        if (tag.contains("hairColor"))   this.hairColorRgb   = tag.getInt("hairColor");
+        if (tag.contains("eyeColor"))    this.eyeColorRgb    = tag.getInt("eyeColor");
+        if (tag.contains("auraColor"))   this.auraColorRgb   = tag.getInt("auraColor");
+        if (tag.contains("detailColor")) this.detailColorRgb = tag.getInt("detailColor");
+
+        if (tag.contains("eyeIndex"))   this.eyeIndex   = Math.max(0, tag.getInt("eyeIndex"));
+        if (tag.contains("hairIndex"))  this.hairIndex  = Math.max(0, tag.getInt("hairIndex"));
+        if (tag.contains("mouthIndex")) this.mouthIndex = Math.max(0, tag.getInt("mouthIndex"));
+        if (tag.contains("noseIndex"))  this.noseIndex  = Math.max(0, tag.getInt("noseIndex"));
 
         if (tag.contains("hairStyleId")) this.hairStyleId = tag.getString("hairStyleId");
         if (tag.contains("auraStyleId")) this.auraStyleId = tag.getString("auraStyleId");
@@ -172,5 +170,4 @@ public class PlayerVisualAttachment {
 
         if (tag.contains("formStage")) this.formStage = Math.max(0, tag.getInt("formStage"));
     }
-
 }

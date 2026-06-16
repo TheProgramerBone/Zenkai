@@ -229,8 +229,8 @@ public class ModItems {
             ITEMS.register("hair_1",() ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/hairs/hair1/hair_1.geo.json",
-                            "textures/hairs/hair1/hair_1.png",
+                            "geo/hair/hair_1.geo.json",
+                            "textures/customization/hair/hair_1.png",
                             "" //No hay animaciones aún
                     ));
 
@@ -239,8 +239,8 @@ public class ModItems {
             ITEMS.register("ssj_hair1",() ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/hairs/hair1/ssj_hair_1.geo.json",
-                            "textures/hairs/hair1/ssj_hair_1.png",
+                            "geo/hair/ssj_hair_1.geo.json",
+                            "textures/customization/hair/ssj_hair_1.png",
                             "" //No hay animaciones aún
                     ));
 

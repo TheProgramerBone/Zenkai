@@ -1,6 +1,7 @@
 package com.hmc.zenkai.core.network.feature.player;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +28,7 @@ public record SyncPlayerStatsPacket(CompoundTag data) implements CustomPacketPay
             if (mc.player == null || pkt.data == null) return;
             PlayerStatsAttachment att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
             if (mc.player == null) return;
-            if (mc.screen instanceof com.hmc.zenkai.client.gui.screens.RaceAppearanceScreen) {
+            if (mc.screen instanceof RaceSelectionScreen) {
                 return;
             }
             att.load(pkt.data);
