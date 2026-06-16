@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.input;
 
-import com.hmc.zenkai.client.gui.screens.RaceAppearanceScreen;
+import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.client.gui.screens.StatsScreen;
 import com.hmc.zenkai.client.gui.screens.StyleSelectionScreen;
 import com.hmc.zenkai.core.network.feature.ki.KiChargePacket;
@@ -97,7 +97,7 @@ public final class KeyBindings {
         // OPEN_STATS (V)
         if (OPEN_STATS != null && OPEN_STATS.consumeClick()) {
             if (!stats.isRaceChosen()) {
-                mc.setScreen(new RaceAppearanceScreen()); // nuevo “RaceScreen real”
+                mc.setScreen(new RaceSelectionScreen()); // nuevo “RaceScreen real”
             } else if (!stats.isStyleChosen()) {
                 mc.setScreen(new StyleSelectionScreen(null,null,null)); // ya tiene raza, falta estilo
             } else {

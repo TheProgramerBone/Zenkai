@@ -1,6 +1,7 @@
 package com.hmc.zenkai.core.network.feature.player;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -46,7 +47,7 @@ public record SyncPlayerVisualPacket(int entityId, CompoundTag data) implements 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null
                 && mc.player.getId() == msg.entityId()
-                && mc.screen instanceof com.hmc.zenkai.client.gui.screens.RaceAppearanceScreen) {
+                && mc.screen instanceof RaceSelectionScreen) {
             return;
         }
         if (mc.level == null) return;

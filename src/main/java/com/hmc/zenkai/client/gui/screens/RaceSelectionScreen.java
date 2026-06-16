@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-public class RaceAppearanceScreen extends Screen {
+public class RaceSelectionScreen extends Screen {
 
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
@@ -23,11 +23,10 @@ public class RaceAppearanceScreen extends Screen {
 
     private static final int PAD           = 10;
     private static final int ROW_RACE_Y    = 12;
-    private static final int DIV1_Y        = 32;
-    private static final int ROW_HAIR_Y    = 38;
-    private static final int ROW_SKIN_Y    = 60;
-    private static final int DIV2_Y        = 80;
-    private static final int PREVIEW_SIZE  = 30;
+    private static final int DIV1_Y        = 30;
+    private static final int ROW_SKIN_Y    = 38;
+    private static final int DIV2_Y        = 56;
+    private static final int PREVIEW_SIZE  = 40;
 
     private static final int COLOR_LABEL     = 0xC8A96E;
     private static final int COLOR_VALUE     = 0xFFFFFF;
@@ -40,20 +39,14 @@ public class RaceAppearanceScreen extends Screen {
     private boolean confirmed = false;
     private boolean goingNext = false;
 
-    private final Race[]   races     = Race.values();
-    private int            raceIndex = 0;
-
-    private final String[] hairIds    = { "hair0", "hair1" };
-    private final String[] hairLabels = { "Bald", "Hair 1" };
-    private int            hairIndex  = 0;
-
-    private boolean useCustomSkin = true;
+    private final Race[] races     = Race.values();
+    private int          raceIndex = 0;
+    private boolean      useCustomSkin = true;
 
     private ArrowIconButton raceLeft, raceRight;
-    private ArrowIconButton hairLeft, hairRight;
     private ArrowIconButton skinLeft, skinRight;
 
-    public RaceAppearanceScreen() {
+    public RaceSelectionScreen() {
         super(Component.translatable("screen.zenkai.appearance.title"));
     }
 
@@ -79,14 +72,11 @@ public class RaceAppearanceScreen extends Screen {
             if (races[i] == cur) { raceIndex = i; break; }
         }
         useCustomSkin = visual.shouldRenderRaceSkin();
-        String hs = visual.getHairStyleId();
-        for (int i = 0; i < hairIds.length; i++) {
-            if (hairIds[i].equalsIgnoreCase(hs)) { hairIndex = i; break; }
-        }
 
         int pl = panelLeft;
         int pt = panelTop;
 
+        // ── Selector de raza ──────────────────────────────────────────────────
         raceLeft  = new ArrowIconButton(pl + PAD, pt + ROW_RACE_Y,
                 ArrowIconButton.Dir.LEFT,  () -> { raceIndex = (raceIndex - 1 + races.length) % races.length; applyPreview(); });
         raceRight = new ArrowIconButton(pl + BG_W - PAD - 14, pt + ROW_RACE_Y,
@@ -94,13 +84,7 @@ public class RaceAppearanceScreen extends Screen {
         addRenderableWidget(raceLeft);
         addRenderableWidget(raceRight);
 
-        hairLeft  = new ArrowIconButton(pl + PAD, pt + ROW_HAIR_Y,
-                ArrowIconButton.Dir.LEFT,  () -> { hairIndex = (hairIndex - 1 + hairIds.length) % hairIds.length; applyPreview(); });
-        hairRight = new ArrowIconButton(pl + BG_W - PAD - 14, pt + ROW_HAIR_Y,
-                ArrowIconButton.Dir.RIGHT, () -> { hairIndex = (hairIndex + 1) % hairIds.length; applyPreview(); });
-        addRenderableWidget(hairLeft);
-        addRenderableWidget(hairRight);
-
+        // ── Selector de skin mode (solo Human/Saiyan) ─────────────────────────
         skinLeft  = new ArrowIconButton(pl + PAD, pt + ROW_SKIN_Y,
                 ArrowIconButton.Dir.LEFT,  () -> { useCustomSkin = !useCustomSkin; applyPreview(); });
         skinRight = new ArrowIconButton(pl + BG_W - PAD - 14, pt + ROW_SKIN_Y,
@@ -108,22 +92,15 @@ public class RaceAppearanceScreen extends Screen {
         addRenderableWidget(skinLeft);
         addRenderableWidget(skinRight);
 
+        // ── Botones ───────────────────────────────────────────────────────────
         addRenderableWidget(Button.builder(
                 Component.translatable("screen.zenkai.cancel"),
-                b -> {
-                    confirmed = false;
-                    goingNext = false;
-                    restoreSnapshots();
-                    mc.setScreen(null);
-                }
+                b -> { confirmed = false; goingNext = false; restoreSnapshots(); mc.setScreen(null); }
         ).bounds(pl + PAD, pt + BG_H - 26, 50, 20).build());
 
         addRenderableWidget(Button.builder(
                 Component.translatable("screen.zenkai.next"),
-                b -> {
-                    goingNext = true;
-                    mc.setScreen(new StyleSelectionScreen(this, statsSnapshot, visualSnapshot));
-                }
+                b -> { goingNext = true; mc.setScreen(new AppearanceScreen(this, statsSnapshot, visualSnapshot)); }
         ).bounds(pl + BG_W - PAD - 52, pt + BG_H - 26, 52, 20).build());
 
         applyPreview();
@@ -139,56 +116,45 @@ public class RaceAppearanceScreen extends Screen {
         Race r = races[raceIndex];
         boolean humanSaiyan = (r == Race.HUMAN || r == Race.SAIYAN);
 
-        // 1) Overlay oscuro
         super.renderBackground(g, mouseX, mouseY, partialTick);
-
-        // 2) Textura del panel
         g.blit(BG, pl, pt, 0, 0, BG_W, BG_H);
 
-        // 3) Labels y valores
+        // ── Fila de raza ──────────────────────────────────────────────────────
         g.drawString(mc.font, Component.translatable("screen.zenkai.label.race"),
-                pl + PAD, pt + ROW_RACE_Y, COLOR_LABEL, false);
+                pl + PAD + 16, pt + ROW_RACE_Y + 2, COLOR_LABEL, false);
         g.drawCenteredString(mc.font,
                 Component.translatable("screen.zenkai.race." + r.name().toLowerCase()),
-                pl + BG_W / 2, pt + ROW_RACE_Y, COLOR_VALUE);
+                pl + BG_W / 2, pt + ROW_RACE_Y + 2, COLOR_VALUE);
 
         g.fill(pl + PAD, pt + DIV1_Y, pl + BG_W - PAD, pt + DIV1_Y + 1, 0x44FFFFFF);
 
+        // ── Fila de skin mode (solo Human/Saiyan) ─────────────────────────────
         if (humanSaiyan) {
-            g.drawString(mc.font, Component.translatable("screen.zenkai.label.hair"),
-                    pl + PAD + 16, pt + ROW_HAIR_Y, COLOR_LABEL, false);
-            g.drawCenteredString(mc.font,
-                    Component.literal(hairLabels[hairIndex]),
-                    pl + BG_W / 2, pt + ROW_HAIR_Y, COLOR_VALUE);
-
             g.drawString(mc.font, Component.translatable("screen.zenkai.label.skin"),
-                    pl + PAD + 16, pt + ROW_SKIN_Y, COLOR_LABEL, false);
+                    pl + PAD + 16, pt + ROW_SKIN_Y + 2, COLOR_LABEL, false);
             g.drawCenteredString(mc.font,
                     Component.translatable(useCustomSkin
                             ? "screen.zenkai.skin.custom"
                             : "screen.zenkai.skin.vanilla"),
-                    pl + BG_W / 2, pt + ROW_SKIN_Y, COLOR_VALUE);
+                    pl + BG_W / 2, pt + ROW_SKIN_Y + 2, COLOR_VALUE);
         }
 
         g.fill(pl + PAD, pt + DIV2_Y, pl + BG_W - PAD, pt + DIV2_Y + 1, 0x44FFFFFF);
 
-        // 4) Preview del jugador — bounding box izquierda de la zona inferior
+        // ── Preview del jugador ───────────────────────────────────────────────
         int previewX1 = pl + PAD;
-        int previewY1 = pt + DIV2_Y + 4;
-        int previewX2 = pl + PAD + 70;
-        int previewY2 = pt + BG_H - 32;
+        int previewY1 = pt + DIV2_Y + 6;
+        int previewX2 = pl + PAD + 75;
+        int previewY2 = pt + BG_H - 34;
         InventoryScreen.renderEntityInInventoryFollowsMouse(
-                g,
-                previewX1, previewY1, previewX2, previewY2,
-                PREVIEW_SIZE,
-                0.0625f,
-                (float) mouseX, (float) mouseY,
-                mc.player
+                g, previewX1, previewY1, previewX2, previewY2,
+                PREVIEW_SIZE, 0.0625f,
+                (float) mouseX, (float) mouseY, mc.player
         );
 
-        // 5) Descripción de raza — derecha del preview
-        int descX = pl + PAD + 75;
-        int descY = pt + DIV2_Y + 6;
+        // ── Descripción de la raza ────────────────────────────────────────────
+        int descX = pl + PAD + 80;
+        int descY = pt + DIV2_Y + 8;
         g.drawString(mc.font,
                 Component.translatable("screen.zenkai.race." + r.name().toLowerCase()),
                 descX, descY, COLOR_RACE_NAME, false);
@@ -201,14 +167,11 @@ public class RaceAppearanceScreen extends Screen {
                     descX, descY + 12 + i * 10, COLOR_DESC, false);
         }
 
-        // 6) Widgets encima (siempre al final)
         super.render(g, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Vacío — el overlay se dibuja en render() para controlar el orden exacto
-    }
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
 
     public void markConfirmed() { this.confirmed = true; }
 
@@ -229,14 +192,12 @@ public class RaceAppearanceScreen extends Screen {
         stats.setRaceChosen(true);
         stats.setRace(r);
 
-        setVisible(hairLeft,  humanSaiyan);
-        setVisible(hairRight, humanSaiyan);
+        // Skin mode solo aplica a Human/Saiyan
         setVisible(skinLeft,  humanSaiyan);
         setVisible(skinRight, humanSaiyan);
         if (!humanSaiyan) useCustomSkin = true;
 
         if (humanSaiyan) {
-            visual.setHairStyleId(hairIds[hairIndex]);
             visual.setRenderRaceSkin(useCustomSkin);
             visual.setHideVanillaBody(useCustomSkin);
         } else {
