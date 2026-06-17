@@ -2,11 +2,11 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
+import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.nbt.CompoundTag;
@@ -18,6 +18,9 @@ public class RaceSelectionScreen extends Screen {
 
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+
+    private static final ResourceLocation TEX_BTN =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_wide.png");
 
     // ── Dimensiones exactas de la textura ────────────────────────────────────
     private static final int BG_W = 256;
@@ -47,9 +50,11 @@ public class RaceSelectionScreen extends Screen {
     private static final int DIV2_Y     = B2_VALUE_Y + 14;
     private static final int PREVIEW_SIZE = 50;
 
-    // ── Colores ───────────────────────────────────────────────────────────────
-    // Todo el texto usa el color secundario (blanco con sombra).
-    private static final int COLOR_TEXT = 0xFFFFFF;
+    // ── Colores de texto ──────────────────────────────────────────────────────
+    private static final int COLOR_TITLE   = 0x4A3726; // marrón oscuro → título de campo (Race, Skin Mode)
+    private static final int COLOR_VALUE   = 0xFFFFFF; // blanco+sombra → valor seleccionado (Human, Custom Skin)
+    private static final int COLOR_SECTION = 0xB5401A; // naranja-rojo  → nombre de raza sobre la descripción
+    private static final int COLOR_DESC    = 0x5A4636; // marrón medio  → cuerpo de la descripción
 
     // ── Estado ───────────────────────────────────────────────────────────────
     private int panelLeft, panelTop;
@@ -111,16 +116,18 @@ public class RaceSelectionScreen extends Screen {
         addRenderableWidget(skinLeft);
         addRenderableWidget(skinRight);
 
-        // Botones en la barra inferior
-        addRenderableWidget(Button.builder(
+        // Botones en la barra inferior (solo texto, sin fondo gris de vanilla)
+        addRenderableWidget(new TextOnlyButton(
+                pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.cancel"),
-                b -> { confirmed = false; goingNext = false; restoreSnapshots(); mc.setScreen(null); }
-        ).bounds(pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20).build());
+                TEX_BTN, null,
+                () -> { confirmed = false; goingNext = false; restoreSnapshots(); mc.setScreen(null); }));
 
-        addRenderableWidget(Button.builder(
+        addRenderableWidget(new TextOnlyButton(
+                pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.next"),
-                b -> { goingNext = true; mc.setScreen(new AppearanceScreen(this, statsSnapshot, visualSnapshot)); }
-        ).bounds(pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20).build());
+                TEX_BTN, null,
+                () -> { goingNext = true; mc.setScreen(new AppearanceScreen(this, statsSnapshot, visualSnapshot)); }));
 
         applyPreview();
     }
@@ -140,22 +147,22 @@ public class RaceSelectionScreen extends Screen {
         g.blit(BG, pl, pt, 0, 0, BG_W, BG_H);
 
         // Bloque raza — título arriba, valor (entre flechas) debajo
-        g.drawCenteredString(mc.font, Component.translatable("screen.zenkai.label.race"),
-                cx, pt + B1_TITLE_Y, COLOR_TEXT);
+        drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.race"),
+                cx, pt + B1_TITLE_Y, COLOR_TITLE);
         g.drawCenteredString(mc.font,
                 Component.translatable("screen.zenkai.race." + r.name().toLowerCase()),
-                cx, pt + B1_VALUE_Y, COLOR_TEXT);
+                cx, pt + B1_VALUE_Y, COLOR_VALUE);
 
         g.fill(pl + IN_X1 + PAD, pt + DIV1_Y, pl + IN_X2 - PAD, pt + DIV1_Y + 1, 0x44FFFFFF);
 
         if (humanSaiyan) {
-            g.drawCenteredString(mc.font, Component.translatable("screen.zenkai.label.skin"),
-                    cx, pt + B2_TITLE_Y, COLOR_TEXT);
+            drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.skin"),
+                    cx, pt + B2_TITLE_Y, COLOR_TITLE);
             g.drawCenteredString(mc.font,
                     Component.translatable(useCustomSkin
                             ? "screen.zenkai.skin.custom"
                             : "screen.zenkai.skin.vanilla"),
-                    cx, pt + B2_VALUE_Y, COLOR_TEXT);
+                    cx, pt + B2_VALUE_Y, COLOR_VALUE);
         }
 
         g.fill(pl + IN_X1 + PAD, pt + DIV2_Y, pl + IN_X2 - PAD, pt + DIV2_Y + 1, 0x44FFFFFF);
@@ -168,19 +175,19 @@ public class RaceSelectionScreen extends Screen {
                 PREVIEW_SIZE, 0.0625f,
                 (float) mouseX, (float) mouseY, mc.player);
 
-        // Descripción raza (nombre + texto)
+        // Descripción raza (nombre de sección + cuerpo)
         int descX = pl + IN_X1 + PAD + 2;
         int descY = pt + IN_Y2 - 48;
         g.drawString(mc.font,
                 Component.translatable("screen.zenkai.race." + r.name().toLowerCase()),
-                descX, descY, COLOR_TEXT, true);
+                descX, descY, COLOR_SECTION, false);
 
         String[] lines = wrapText(
                 Component.translatable("screen.zenkai.race." + r.name().toLowerCase() + ".desc").getString(),
                 mc.font, IN_X2 - IN_X1 - PAD * 2);
         for (int i = 0; i < lines.length; i++) {
             g.drawString(mc.font, Component.literal(lines[i]),
-                    descX, descY + 12 + i * 10, COLOR_TEXT, true);
+                    descX, descY + 12 + i * 10, COLOR_DESC, false);
         }
 
         super.render(g, mouseX, mouseY, partialTick);
@@ -188,6 +195,12 @@ public class RaceSelectionScreen extends Screen {
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
     public void markConfirmed() { this.confirmed = true; }
+
+    /** Texto centrado sin sombra — para colores oscuros que se leen limpios sobre el beige. */
+    private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
+        var font = Minecraft.getInstance().font;
+        g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
+    }
 
     @Override
     public void removed() {

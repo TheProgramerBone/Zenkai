@@ -7,10 +7,6 @@ import net.minecraft.network.chat.Component;
 
 import java.util.function.Supplier;
 
-/**
- * Recuadro clickeable que muestra el color actual del canal.
- * No dibuja el fondo gris de vanilla — solo el color y un borde.
- */
 public class ColorBoxButton extends AbstractWidget {
 
     private final Supplier<Integer> colorSupplier; // devuelve el color ARGB actual
