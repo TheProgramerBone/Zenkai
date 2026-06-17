@@ -35,7 +35,7 @@ public class DragonRadarItem extends Item {
 
     @Override
     public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext context, List<Component> tooltipComponents, @NotNull TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.translatable("tooltip.db_renewed.dragon_ball_radar"));
+        tooltipComponents.add(Component.translatable("tooltip.zenkai.dragon_ball_radar"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 
@@ -84,10 +84,10 @@ public class DragonRadarItem extends Item {
             updateRadarDirection(stack, player, slot, player.getX(), player.getZ(), nearest.getX(), nearest.getZ(), player.getYRot());
             double distanceSqr = player.blockPosition().distToCenterSqr(nearest.getX(), nearest.getY(), nearest.getZ());
             if (distanceSqr <= NEAR_RADIUS_SQR) {
-                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.db_renewed.dragon_ball_radar_near"), true);
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.zenkai.dragon_ball_radar_near"), true);
                 player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_NEAR.get(), SoundSource.PLAYERS, 0.85F, 1.0F);
             } else {
-                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.db_renewed.dragon_ball_radar_searching"), true);
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.zenkai.dragon_ball_radar_searching"), true);
                 player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_SEARCHING.get(), SoundSource.PLAYERS, 0.85F, 1.0F);
             }
         } else {

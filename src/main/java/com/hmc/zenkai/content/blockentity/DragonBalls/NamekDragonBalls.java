@@ -50,7 +50,7 @@ public class NamekDragonBalls extends HorizontalDirectionalBlock {
 
     @Override
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.translatable("tooltip.db_renewed.dragon_balls"));
+        tooltipComponents.add(Component.translatable("tooltip.zenkai.dragon_balls"));
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
     }
 }
