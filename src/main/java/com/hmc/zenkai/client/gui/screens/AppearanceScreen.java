@@ -3,13 +3,13 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.customization.CustomizationAssets;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
+import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.nbt.CompoundTag;
@@ -22,6 +22,9 @@ public class AppearanceScreen extends Screen {
 
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+
+    private static final ResourceLocation TEX_BTN =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_wide.png");
 
     private static final int BG_W = 256;
     private static final int BG_H = 256;
@@ -49,8 +52,10 @@ public class AppearanceScreen extends Screen {
     private static final int PREVIEW_W    = 80;
     private static final int PREVIEW_SIZE = 45;
 
-    // Todo el texto usa el color secundario (blanco con sombra).
-    private static final int COLOR_TEXT = 0xFFFFFF;
+    // ── Colores de texto ──────────────────────────────────────────────────────
+    private static final int COLOR_TITLE  = 0x4A3726; // marrón oscuro → título de campo (Eyes, Hair, Mouth, Nose)
+    private static final int COLOR_VALUE  = 0xFFFFFF; // blanco+sombra → valor seleccionado (None, hair_1, ...)
+    private static final int COLOR_SWATCH = 0x8A6A1E; // bronce/dorado → etiqueta de swatch (Skin Color, Detail Color)
 
     @Nullable private final RaceSelectionScreen raceScreen;
     private final CompoundTag statsSnapshot;
@@ -141,16 +146,18 @@ public class AppearanceScreen extends Screen {
                     () -> togglePicker(ColorChannel.DETAIL)));
         }
 
-        // Botones en la barra inferior de la textura
-        addRenderableWidget(Button.builder(
+        // Botones en la barra inferior de la textura (solo texto, sin fondo gris de vanilla)
+        addRenderableWidget(new TextOnlyButton(
+                pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
-                b -> { goingBack = true; if (raceScreen != null) mc.setScreen(raceScreen); else mc.setScreen(null); }
-        ).bounds(pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20).build());
+                TEX_BTN, null,
+                () -> { goingBack = true; if (raceScreen != null) mc.setScreen(raceScreen); else mc.setScreen(null); }));
 
-        addRenderableWidget(Button.builder(
+        addRenderableWidget(new TextOnlyButton(
+                pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.next"),
-                b -> goToStyle()
-        ).bounds(pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20).build());
+                TEX_BTN, null,
+                this::goToStyle));
     }
 
     /** Añade las flechas (y swatch opcional) de un campo apilado y devuelve el Y del siguiente bloque. */
@@ -237,9 +244,9 @@ public class AppearanceScreen extends Screen {
                 (float) mouseX, (float) mouseY, mc.player);
 
         // Labels skin/detail — derecha zona inferior
-        g.drawCenteredString(mc.font, Component.literal("Skin Color"), skinAreaCX, bottomZoneY, COLOR_TEXT);
+        drawCenteredNoShadow(g, Component.literal("Skin Color"), skinAreaCX, bottomZoneY, COLOR_SWATCH);
         if (race == Race.ARCOSIAN)
-            g.drawCenteredString(mc.font, Component.literal("Detail Color"), skinAreaCX, bottomZoneY + SWATCH_ROW_H, COLOR_TEXT);
+            drawCenteredNoShadow(g, Component.literal("Detail Color"), skinAreaCX, bottomZoneY + SWATCH_ROW_H, COLOR_SWATCH);
 
         super.render(g, mouseX, mouseY, partialTick);
     }
@@ -247,9 +254,15 @@ public class AppearanceScreen extends Screen {
     /** Dibuja un campo apilado (título centrado + valor centrado) y devuelve el Y del siguiente bloque. */
     private int renderField(GuiGraphics g, Minecraft mc, int pl, int blockTop, String label, String value) {
         int cx = pl + BG_W / 2;
-        g.drawCenteredString(mc.font, Component.literal(label), cx, blockTop, COLOR_TEXT);
-        g.drawCenteredString(mc.font, Component.literal(value), cx, blockTop + TITLE_H, COLOR_TEXT);
+        drawCenteredNoShadow(g, Component.literal(label), cx, blockTop, COLOR_TITLE);          // título
+        g.drawCenteredString(mc.font, Component.literal(value), cx, blockTop + TITLE_H, COLOR_VALUE); // valor
         return blockTop + BLOCK_H;
+    }
+
+    /** Texto centrado sin sombra — para colores oscuros que se leen limpios sobre el beige. */
+    private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
+        var font = Minecraft.getInstance().font;
+        g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
     }
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}

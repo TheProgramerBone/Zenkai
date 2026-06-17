@@ -2,6 +2,7 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
+import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.core.network.ChooseStylePacket;
@@ -11,7 +12,6 @@ import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.network.feature.race.UpdatePlayerVisualPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.nbt.CompoundTag;
@@ -25,6 +25,9 @@ public class StyleSelectionScreen extends Screen {
 
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+
+    private static final ResourceLocation TEX_BTN =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_wide.png");
 
     private static final int BG_W = 256;
     private static final int BG_H = 256;
@@ -52,8 +55,11 @@ public class StyleSelectionScreen extends Screen {
     private static final int PREVIEW_W = 70;
     private static final int PREVIEW_SIZE = 45;
 
-    // Todo el texto usa el color secundario (blanco con sombra).
-    private static final int COLOR_TEXT = 0xFFFFFF;
+    // ── Colores de texto ──────────────────────────────────────────────────────
+    private static final int COLOR_TITLE  = 0x4A3726; // marrón oscuro → título de campo (Fighting Style)
+    private static final int COLOR_VALUE  = 0xFFFFFF; // blanco+sombra → valor seleccionado (Martial Artist, ...)
+    private static final int COLOR_DESC   = 0x5A4636; // marrón medio  → cuerpo de la descripción
+    private static final int COLOR_SWATCH = 0x8A6A1E; // bronce/dorado → etiqueta de swatch (Ki Color)
 
     @Nullable private final AppearanceScreen appearanceScreen;
     private final CompoundTag statsSnapshot;
@@ -120,16 +126,18 @@ public class StyleSelectionScreen extends Screen {
         addRenderableWidget(new ColorBoxButton(kiBoxX, kiBoxY, COLOR_BOX_W, COLOR_BOX_H,
                 () -> kiColor & 0xFFFFFF, () -> kiPickerOpen, this::toggleKiPicker));
 
-        // Botones en la barra inferior
-        addRenderableWidget(Button.builder(
+        // Botones en la barra inferior (solo texto, sin fondo gris de vanilla)
+        addRenderableWidget(new TextOnlyButton(
+                lp + IN_X1, tp + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
-                b -> { goingBack = true; if (appearanceScreen != null) mc.setScreen(appearanceScreen); else mc.setScreen(null); }
-        ).bounds(lp + IN_X1, tp + BTN_BAR_Y, BTN_W, 20).build());
+                TEX_BTN, null,
+                () -> { goingBack = true; if (appearanceScreen != null) mc.setScreen(appearanceScreen); else mc.setScreen(null); }));
 
-        addRenderableWidget(Button.builder(
+        addRenderableWidget(new TextOnlyButton(
+                lp + IN_X2 - BTN_W, tp + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.confirm"),
-                b -> onConfirm()
-        ).bounds(lp + IN_X2 - BTN_W, tp + BTN_BAR_Y, BTN_W, 20).build());
+                TEX_BTN, null,          // ← textura normal, y null = sin versión hover
+                this::onConfirm));
     }
 
     private void toggleKiPicker() {
@@ -172,10 +180,10 @@ public class StyleSelectionScreen extends Screen {
         g.blit(BG, lp, tp, 0, 0, BG_W, BG_H);
 
         // Bloque estilo — título arriba, valor (entre flechas) debajo
-        g.drawCenteredString(mc.font, Component.translatable("screen.zenkai.label.style"),
-                cx, tp + S_TITLE_Y, COLOR_TEXT);
+        drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.style"),
+                cx, tp + S_TITLE_Y, COLOR_TITLE);
         g.drawCenteredString(mc.font, Component.translatable(styleKey),
-                cx, tp + S_VALUE_Y, COLOR_TEXT);
+                cx, tp + S_VALUE_Y, COLOR_VALUE);
 
         g.fill(lp + IN_X1 + PAD, tp + DIV1_Y, lp + IN_X2 - PAD, tp + DIV1_Y + 1, 0x44FFFFFF);
 
@@ -184,7 +192,7 @@ public class StyleSelectionScreen extends Screen {
                 mc.font, IN_W - PAD * 2);
         for (int i = 0; i < lines.length; i++) {
             g.drawString(mc.font, Component.literal(lines[i]),
-                    lp + IN_X1 + PAD, tp + DESC_Y + i * 11, COLOR_TEXT, true);
+                    lp + IN_X1 + PAD, tp + DESC_Y + i * 11, COLOR_DESC, false);
         }
 
         g.fill(lp + IN_X1 + PAD, tp + DIV2_Y, lp + IN_X2 - PAD, tp + DIV2_Y + 1, 0x44FFFFFF);
@@ -198,12 +206,18 @@ public class StyleSelectionScreen extends Screen {
                 (float) mouseX, (float) mouseY, mc.player);
 
         // Label "Ki Color" encima del swatch
-        g.drawCenteredString(mc.font, Component.literal("Ki Color"), kiAreaCX, tp + DIV2_Y + 8, COLOR_TEXT);
+        drawCenteredNoShadow(g, Component.literal("Ki Color"), kiAreaCX, tp + DIV2_Y + 8, COLOR_SWATCH);
 
         super.render(g, mouseX, mouseY, partialTick);
     }
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
+
+    /** Texto centrado sin sombra — para colores oscuros que se leen limpios sobre el beige. */
+    private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
+        var font = Minecraft.getInstance().font;
+        g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
+    }
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
