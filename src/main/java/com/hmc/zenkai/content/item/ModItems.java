@@ -26,43 +26,32 @@ public class ModItems {
                     .rarity(Rarity.UNCOMMON));
 
     public static final DeferredItem<Item> BASIC_CIRCUIT = ITEMS.registerItem("basic_circuit",
-            Item::new,
-            new Item.Properties());
+            Item::new, new Item.Properties());
 
     public static final DeferredItem<Item> ADVANCED_CIRCUIT = ITEMS.registerItem("advanced_circuit",
-            Item::new,
-            new Item.Properties());
+            Item::new, new Item.Properties());
 
     public static final DeferredItem<Item> ELITE_CIRCUIT = ITEMS.registerItem("elite_circuit",
-            Item::new,
-            new Item.Properties());
+            Item::new, new Item.Properties());
 
     public static final DeferredItem<Item> SPACE_POD_ITEM = ITEMS.registerItem("space_pod_item",
-            SpacePodItem::new,
-            new Item.Properties()
-                    .stacksTo(1));
+            SpacePodItem::new, new Item.Properties().stacksTo(1));
 
     public static final DeferredItem<Item> KINTOUN_ITEM = ITEMS.registerItem("kintoun_item",
-            KintounItem::new,
-            new Item.Properties()
-                    .stacksTo(1));
+            KintounItem::new, new Item.Properties().stacksTo(1));
 
     public static final DeferredItem<Item> SHADOW_KINTOUN_ITEM = ITEMS.registerItem("kintoun_shadow_item",
-            ShadowKintounItem::new,
-            new Item.Properties()
-                    .stacksTo(1));
+            ShadowKintounItem::new, new Item.Properties().stacksTo(1));
 
     public static final DeferredItem<Item> TERRAGEM = ITEMS.registerItem("terragem",
-            Item::new,
-            new Item.Properties());
+            Item::new, new Item.Properties());
 
     public static final DeferredItem<Item> TERRAGEM_DUST = ITEMS.registerItem("terragem_dust",
-            Item::new,
-            new Item.Properties());
+            Item::new, new Item.Properties());
 
     public static final DeferredItem<SwordItem> TERRAGEM_SWORD = ITEMS.register("terragem_sword",
             () -> new SwordItem(ModToolTiers.TERRAGEM,
-            new Item.Properties().attributes(SwordItem.createAttributes(ModToolTiers.TERRAGEM,3,-2.4f))));
+                    new Item.Properties().attributes(SwordItem.createAttributes(ModToolTiers.TERRAGEM,3,-2.4f))));
 
     public static final DeferredItem<PickaxeItem> TERRAGEM_PICKAXE = ITEMS.register("terragem_pickaxe",
             () -> new PickaxeItem(ModToolTiers.TERRAGEM,
@@ -87,8 +76,7 @@ public class ModItems {
                     .attributes(AxeItem.createAttributes(ModToolTiers.TERRAGEM,5.5f,-3.5f))));
 
     public static final DeferredItem<Item> TERRAGEM_TEMPLATE = ITEMS.registerItem("terragem_template",
-            Item::new,
-            new Item.Properties());
+            Item::new, new Item.Properties());
 
     public static final DeferredItem<ArmorItem> TERRAGEM_HELMET = ITEMS.register("terragem_helmet",
             () -> new ArmorItem(ModArmorMaterials.TERRAGEM_ARMOR_MATERIAL,ArmorItem.Type.HELMET,
@@ -107,12 +95,10 @@ public class ModItems {
                     new Item.Properties().durability(ArmorItem.Type.BOOTS.getDurability(25))));
 
     public static final DeferredItem<Item> WARRIOR_SPAWN_EGG = ITEMS.register("namekian_warrior_spawn_egg",
-            () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN_WARRIOR,0x28ad1b ,0x26b9fe,
-                    new Item.Properties()));
+            () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN_WARRIOR,0x28ad1b ,0x26b9fe, new Item.Properties()));
 
     public static final DeferredItem<Item> NAMEKIAN_SPAWN_EGG = ITEMS.register("namekian_spawn_egg",
-            () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN,0x28ad1b ,0xfdfefe,
-                    new Item.Properties()));
+            () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN,0x28ad1b ,0xfdfefe, new Item.Properties()));
 
     //Razas
 
@@ -123,7 +109,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             "animations/namekian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE =
             ITEMS.register("namekian_race_chestplate", () ->
@@ -132,7 +118,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             "animations/namekian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_LEGGINGS =
             ITEMS.register("namekian_race_leggings", () ->
@@ -141,7 +127,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             "animations/namekian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_BOOTS =
             ITEMS.register("namekian_race_boots", () ->
@@ -150,7 +136,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             "animations/namekian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET =
             ITEMS.register("human_race_helmet", () ->
@@ -159,7 +145,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player.png",
                             "animations/namekian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE =
             ITEMS.register("human_race_chestplate", () ->
@@ -168,7 +154,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player.png",
                             "animations/namekian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS =
             ITEMS.register("human_race_leggings", () ->
@@ -177,7 +163,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player.png",
                             "animations/namekian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS =
             ITEMS.register("human_race_boots", () ->
@@ -186,7 +172,43 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player.png",
                             "animations/namekian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET_COLORABLE =
+            ITEMS.register("human_race_helmet_colorable", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/races/human_player.geo.json",
+                            "textures/models/races/human_player_colorable.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_COLORABLE =
+            ITEMS.register("human_race_chestplate_colorable", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/races/human_player.geo.json",
+                            "textures/models/races/human_player_colorable.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_COLORABLE =
+            ITEMS.register("human_race_leggings_colorable", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/races/human_player.geo.json",
+                            "textures/models/races/human_player_colorable.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_COLORABLE =
+            ITEMS.register("human_race_boots_colorable", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/races/human_player.geo.json",
+                            "textures/models/races/human_player_colorable.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_HELMET =
             ITEMS.register("arcosian_race_helmet", () ->
@@ -195,7 +217,7 @@ public class ModItems {
                             "geo/races/arcosian_final_form_player.geo.json",
                             "textures/models/races/arcosian_final_form_player.png",
                             "animations/arcosian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_CHESTPLATE =
             ITEMS.register("arcosian_race_chestplate", () ->
@@ -204,7 +226,7 @@ public class ModItems {
                             "geo/races/arcosian_final_form_player.geo.json",
                             "textures/models/races/arcosian_final_form_player.png",
                             "animations/arcosian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_LEGGINGS =
             ITEMS.register("arcosian_race_leggings", () ->
@@ -213,7 +235,7 @@ public class ModItems {
                             "geo/races/arcosian_final_form_player.geo.json",
                             "textures/models/races/arcosian_final_form_player.png",
                             "animations/arcosian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_BOOTS =
             ITEMS.register("arcosian_race_boots", () ->
@@ -222,7 +244,7 @@ public class ModItems {
                             "geo/races/arcosian_final_form_player.geo.json",
                             "textures/models/races/arcosian_final_form_player.png",
                             "animations/arcosian_default.animation.json"
-                    ));
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     //Cabellos Común
     public static final Supplier<GeoLayerArmorItem> HAIR_1 =
@@ -231,8 +253,8 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/hair/hair_1.geo.json",
                             "textures/customization/hair/hair_1.png",
-                            "" //No hay animaciones aún
-                    ));
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.HAIR));
 
     //Transformaciones Saiyan
     public static final Supplier<GeoLayerArmorItem> SSJ1_HAIR1 =
@@ -241,8 +263,8 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/hair/ssj_hair_1.geo.json",
                             "textures/customization/hair/ssj_hair_1.png",
-                            "" //No hay animaciones aún
-                    ));
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.HAIR));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

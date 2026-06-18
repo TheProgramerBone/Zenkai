@@ -35,6 +35,10 @@ public class PlayerVisualAttachment {
     private String auraStyleId = "none";
     private String outfitId    = "gi_default";
 
+    // ── Piel: modo y preset ───────────────────────────────────────────────────
+    private boolean customSkinColor = false; // Human/Saiyan/Majin: false=natural, true=color custom (tinte)
+    private int     skinPreset      = 0;     // Namekian/Arcosian: índice de textura preset
+
     // ── Transformación ───────────────────────────────────────────────────────
     private int formStage = 0;
 
@@ -92,6 +96,13 @@ public class PlayerVisualAttachment {
     public int  getDetailColorRgb()            { return detailColorRgb; }
     public void setDetailColorRgb(int rgb)     { this.detailColorRgb = rgb & 0xFFFFFF; }
 
+    // ── Piel: modo y preset API ───────────────────────────────────────────────
+    public boolean isCustomSkinColor()         { return customSkinColor; }
+    public void    setCustomSkinColor(boolean v) { this.customSkinColor = v; }
+
+    public int  getSkinPreset()                { return skinPreset; }
+    public void setSkinPreset(int i)           { this.skinPreset = Math.max(0, i); }
+
     // ── Índices de forma API ──────────────────────────────────────────────────
     public int  getEyeIndex()                  { return eyeIndex; }
     public void setEyeIndex(int i)             { this.eyeIndex   = Math.max(0, i); }
@@ -144,6 +155,9 @@ public class PlayerVisualAttachment {
 
         tag.putInt("formStage", formStage);
 
+        tag.putBoolean("customSkinColor", customSkinColor);
+        tag.putInt("skinPreset", skinPreset);
+
         return tag;
     }
 
@@ -169,5 +183,8 @@ public class PlayerVisualAttachment {
         if (tag.contains("outfitId"))    this.outfitId    = tag.getString("outfitId");
 
         if (tag.contains("formStage")) this.formStage = Math.max(0, tag.getInt("formStage"));
+
+        if (tag.contains("customSkinColor")) this.customSkinColor = tag.getBoolean("customSkinColor");
+        if (tag.contains("skinPreset"))      this.skinPreset      = Math.max(0, tag.getInt("skinPreset"));
     }
 }

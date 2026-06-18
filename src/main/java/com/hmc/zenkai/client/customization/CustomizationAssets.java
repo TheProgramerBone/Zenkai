@@ -119,7 +119,13 @@ public final class CustomizationAssets {
                 )
                 .keySet()
                 .stream()
-                .filter(rl -> rl.toString().startsWith(fullPrefix))
+                .filter(rl -> {
+                    String s = rl.toString();
+                    if (!s.startsWith(fullPrefix) || !s.endsWith(".png")) return false;
+                    // Solo "tipo_N.png" (N = dígitos). Excluye variantes como eyes_1_iris.png / _overlay.png.
+                    String mid = s.substring(fullPrefix.length(), s.length() - 4);
+                    return !mid.isEmpty() && mid.chars().allMatch(Character::isDigit);
+                })
                 .sorted(Comparator.comparing(rl -> extractNumber(rl.getPath(), prefix)))
                 .collect(java.util.stream.Collectors.toList());
     }

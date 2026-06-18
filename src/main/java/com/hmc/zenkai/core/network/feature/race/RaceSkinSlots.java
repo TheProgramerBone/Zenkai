@@ -2,6 +2,7 @@ package com.hmc.zenkai.core.network.feature.race;
 
 import com.hmc.zenkai.content.item.ModItems;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.core.network.feature.Race;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -23,16 +24,17 @@ public final class RaceSkinSlots {
             };
         }
 
-        if (race == Race.SAIYAN || race == Race.HUMAN){
+        // Human / Saiyan (y Majin): color custom → item colorable (tinte); natural → item normal
+        if (race == Race.SAIYAN || race == Race.HUMAN) {
+            boolean custom = PlayerVisualAttachment.get(player).isCustomSkinColor();
             return switch (slot) {
-                case HEAD  -> ModItems.HUMAN_RACE_HELMET.get().getDefaultInstance();
-                case CHEST -> ModItems.HUMAN_RACE_CHESTPLATE.get().getDefaultInstance();
-                case LEGS  -> ModItems.HUMAN_RACE_LEGGINGS.get().getDefaultInstance();
-                case FEET  -> ModItems.HUMAN_RACE_BOOTS.get().getDefaultInstance();
+                case HEAD  -> (custom ? ModItems.HUMAN_RACE_HELMET_COLORABLE     : ModItems.HUMAN_RACE_HELMET).get().getDefaultInstance();
+                case CHEST -> (custom ? ModItems.HUMAN_RACE_CHESTPLATE_COLORABLE : ModItems.HUMAN_RACE_CHESTPLATE).get().getDefaultInstance();
+                case LEGS  -> (custom ? ModItems.HUMAN_RACE_LEGGINGS_COLORABLE   : ModItems.HUMAN_RACE_LEGGINGS).get().getDefaultInstance();
+                case FEET  -> (custom ? ModItems.HUMAN_RACE_BOOTS_COLORABLE      : ModItems.HUMAN_RACE_BOOTS).get().getDefaultInstance();
                 default    -> ItemStack.EMPTY;
             };
         }
-
 
         if (race == Race.ARCOSIAN) {
             return switch (slot) {
