@@ -20,9 +20,9 @@ public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TAB =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Zenkai.MOD_ID);
 
-    public static final Supplier<CreativeModeTab> CREATIVE_MODE_ITEMS = CREATIVE_MODE_TAB.register("db_renewed_tab",
+    public static final Supplier<CreativeModeTab> CREATIVE_MODE_ITEMS = CREATIVE_MODE_TAB.register("zenkai_tab",
             () -> CreativeModeTab.builder()
-                    .title(Component.translatable("creativetab.db_renewed"))
+                    .title(Component.translatable("creativetab.zenkai"))
                     .icon(() -> new ItemStack(ModItems.SENZU_BEAN.get()))
                     .displayItems((params, output) -> {
 
