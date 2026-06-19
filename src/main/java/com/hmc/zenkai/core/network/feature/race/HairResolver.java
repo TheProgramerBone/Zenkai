@@ -16,7 +16,9 @@ public final class HairResolver {
     private HairResolver() {}
 
     public static ItemStack resolveHairHead(Player player) {
-        Race race = PlayerStatsAttachment.get(player).getRace();
+        PlayerStatsAttachment stats = PlayerStatsAttachment.get(player);
+        if (!stats.isRaceChosen()) return ItemStack.EMPTY; // sin personaje creado aún → sin pelo
+        Race race = stats.getRace();
         if (race != Race.SAIYAN && race != Race.HUMAN) return ItemStack.EMPTY;
 
         PlayerFormAttachment form = player.getData(DataAttachments.PLAYER_FORM.get());

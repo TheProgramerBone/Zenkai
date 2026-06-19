@@ -18,7 +18,7 @@ public final class FormSkinResolver {
      * Si la forma NO cambia body en ese slot, retorna ItemStack.EMPTY.
      *
      * Nota: Aquí NO deberías meter pelo/halo/aura. Solo "body" (cuerpo gecko por forma),
-     * especialmente para razas tipo Arcosian (Freezer) donde cambia todo el modelo.
+     * especialmente para razas tipo Arcosian (Freezer) donde cambia el modelo.
      */
     public static ItemStack resolveBodyOverride(Player player, EquipmentSlot slot) {
         Race race = PlayerStatsAttachment.get(player).getRace();

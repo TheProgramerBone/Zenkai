@@ -74,7 +74,7 @@ public final class ModGameRules {
      */
     public static void init() {
         // Las constantes ya se registran al cargar la clase.
-        // Este método existe solo para provocar esa carga de forma explícita
+        // Este sistema existe solo para provocar esa carga de forma explícita
         // y documentada, evitando que el JVM la retrase.
     }
 

@@ -23,6 +23,9 @@ public class AppearanceScreen extends Screen {
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
 
+    private static final ResourceLocation TEX_BTN =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_wide.png");
+
     private static final int BG_W = 256;
     private static final int BG_H = 256;
     private static final int IN_X1 = 10;
@@ -148,11 +151,13 @@ public class AppearanceScreen extends Screen {
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
+                TEX_BTN, null,
                 () -> { goingBack = true; if (raceScreen != null) mc.setScreen(raceScreen); else mc.setScreen(null); }));
 
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.next"),
+                TEX_BTN, null,
                 this::goToStyle));
     }
 

@@ -19,19 +19,19 @@ public class PlayerVisualAttachment {
 
     // ── Colores ───────────────────────────────────────────────────────────────
     private int skinColorRgb   = 0xD5A07A; // piel humana por defecto
-    private int hairColorRgb   = 0xF4D03F; // rubio SSJ
-    private int eyeColorRgb    = 0x2E86C1; // azul
+    private int hairColorRgb   = 0x000000; // negro por defecto
+    private int eyeColorRgb    = 0x000000; // negro por defecto
     private int auraColorRgb   = 0x33CCFF; // ki azul
     private int detailColorRgb = 0x9B59B6; // detalles Arcosian (puntos morados)
 
     // ── Índices de forma (apuntan a CustomizationAssets) ─────────────────────
-    private int eyeIndex   = 0; // 0 = ninguno
-    private int hairIndex  = 0; // 0 = calvo
-    private int mouthIndex = 0; // 0 = ninguna
-    private int noseIndex  = 0; // 0 = ninguna
+    private int eyeIndex   = 1; // 1 = primer set por defecto (0 = ninguno)
+    private int hairIndex  = 1; // 1 = primer pelo por defecto (0 = calvo)
+    private int mouthIndex = 1; // 1 = primera boca por defecto (0 = ninguna)
+    private int noseIndex  = 1; // 1 = primera nariz por defecto (0 = ninguna)
 
     // ── IDs de estilo (legacy / futuro) ──────────────────────────────────────
-    private String hairStyleId = "base";
+    private String hairStyleId = "hair1";
     private String auraStyleId = "none";
     private String outfitId    = "gi_default";
 

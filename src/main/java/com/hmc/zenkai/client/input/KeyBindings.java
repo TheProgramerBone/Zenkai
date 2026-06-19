@@ -129,7 +129,7 @@ public final class KeyBindings {
         PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
         boolean hasRace = stats.isRaceChosen();
 
-        // Gate: sin raza, cortar todo
+        // Gate: sin raza, cortar
         if (!hasRace) {
             stopChargeIfNeeded();
             stopTransformHoldIfNeeded();
