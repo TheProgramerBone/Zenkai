@@ -38,7 +38,7 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
                     return;
                 }
 
-                // TODO: integra tu capability/flag isDead (si existe)
+                // Integra tu capability/flag isDead (si existe)
                 // Example:
                 // target.getCapability(DeathCapProvider.CAP).ifPresent(cap -> cap.setDead(false));
 

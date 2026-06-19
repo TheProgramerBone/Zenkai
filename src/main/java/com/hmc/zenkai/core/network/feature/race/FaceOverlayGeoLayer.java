@@ -22,7 +22,7 @@ import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
  *  · Ojos: dos pasadas estilo armadura de cuero →
  *        eyes_N.png       (esclerótica/contorno, iris transparente) SIN tinte
  *        eyes_N_iris.png  (solo iris, en gris)                      CON tinte de color de ojos
- *    Si no existe el _iris, se tiñe todo el ojo (fallback).
+ *    Si no existe el _iris, se tiñe el ojo (fallback).
  *
  * ⚠ API específica de GeckoLib 4.8.4 — verificar al compilar:
  *   firma de render(...) de GeoRenderLayer · getRenderer() · getCurrentEntity() ·
@@ -69,7 +69,7 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
                                 bufferSource, partialTick, packedLight, packedOverlay); // iris tintado
                     } else {
                         drawPass(base, eyeArgb, poseStack, bakedModel, animatable,
-                                bufferSource, partialTick, packedLight, packedOverlay); // sin _iris: tiñe todo
+                                bufferSource, partialTick, packedLight, packedOverlay); // sin _iris: tiñe
                     }
                 }
             }
