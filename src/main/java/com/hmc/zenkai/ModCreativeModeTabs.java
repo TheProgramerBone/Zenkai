@@ -39,6 +39,14 @@ public class ModCreativeModeTabs {
                                 ModItems.HUMAN_RACE_CHESTPLATE.get(),
                                 ModItems.HUMAN_RACE_LEGGINGS.get(),
                                 ModItems.HUMAN_RACE_BOOTS.get(),
+                                ModItems.HUMAN_RACE_HELMET_COLORABLE.get(),
+                                ModItems.HUMAN_RACE_CHESTPLATE_COLORABLE.get(),
+                                ModItems.HUMAN_RACE_LEGGINGS_COLORABLE.get(),
+                                ModItems.HUMAN_RACE_BOOTS_COLORABLE.get(),
+                                ModItems.HUMAN_RACE_HELMET_COLORABLE_FEMALE.get(),
+                                ModItems.HUMAN_RACE_CHESTPLATE_COLORABLE_FEMALE.get(),
+                                ModItems.HUMAN_RACE_LEGGINGS_COLORABLE_FEMALE.get(),
+                                ModItems.HUMAN_RACE_BOOTS_COLORABLE_FEMALE.get(),
                                 ModItems.HAIR_1.get(),
                                 ModItems.SSJ1_HAIR1.get()
                         ));

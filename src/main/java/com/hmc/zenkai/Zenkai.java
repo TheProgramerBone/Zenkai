@@ -57,7 +57,7 @@ import terrablender.api.SurfaceRuleManager;
 public class Zenkai {
 
     public static final String MOD_ID = "zenkai";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public Zenkai(IEventBus modEventBus, ModContainer modContainer) {
 
