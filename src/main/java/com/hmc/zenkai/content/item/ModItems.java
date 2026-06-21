@@ -210,6 +210,79 @@ public class ModItems {
                             "animations/namekian_default.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
+    // ── Human/Saiyan FEMENINO (modelo + textura femeninos) ─────────────────────
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET_FEMALE =
+            ITEMS.register("human_race_helmet_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/races/human_player_female.geo.json",
+                            "textures/models/races/human_player_female.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_FEMALE =
+            ITEMS.register("human_race_chestplate_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/races/human_player_female.geo.json",
+                            "textures/models/races/human_player_female.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_FEMALE =
+            ITEMS.register("human_race_leggings_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/races/human_player_female.geo.json",
+                            "textures/models/races/human_player_female.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_FEMALE =
+            ITEMS.register("human_race_boots_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/races/human_player_female.geo.json",
+                            "textures/models/races/human_player_female.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET_COLORABLE_FEMALE =
+            ITEMS.register("human_race_helmet_colorable_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/races/human_player_female.geo.json",
+                            "textures/models/races/human_player_female_colorable.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_COLORABLE_FEMALE =
+            ITEMS.register("human_race_chestplate_colorable_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/races/human_player_female.geo.json",
+                            "textures/models/races/human_player_female_colorable.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_COLORABLE_FEMALE =
+            ITEMS.register("human_race_leggings_colorable_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/races/human_player_female.geo.json",
+                            "textures/models/races/human_player_female_colorable.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+
+    public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_COLORABLE_FEMALE =
+            ITEMS.register("human_race_boots_colorable_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/races/human_player_female.geo.json",
+                            "textures/models/races/human_player_female_colorable.png",
+                            "animations/namekian_default.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_HELMET =
             ITEMS.register("arcosian_race_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,

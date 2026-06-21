@@ -7,6 +7,7 @@ import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.core.network.feature.Race;
+import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -43,6 +44,10 @@ public class AppearanceScreen extends Screen {
     private static final int COLOR_BOX_W  = 20;
     private static final int COLOR_BOX_H  = 12;
 
+    // ⬇ Posición vertical de TODA la sección inferior derecha (Skin Color + Gender).
+    //   Súbelo/bájalo a gusto para mover el bloque completo. (px respecto a bottomZoneY)
+    private static final int SKIN_SECTION_DY = 12;
+
     // Flechas — siempre al mismo X
     private static final int ARROW_LX            = IN_X1 + PAD;
     private static final int ARROW_RX_NO_COLOR   = IN_X2 - PAD - ARROW_W;
@@ -77,6 +82,9 @@ public class AppearanceScreen extends Screen {
     private int hairColor = 0xFF1A1A1A, detailColor = 0xFF9B59B6;
     private boolean customSkinColor = false; // Human/Saiyan/Majin: false=natural, true=tinte custom/preset
     private int     skinPreset      = 0;     // Namekian/Arcosian: índice de textura preset
+    private boolean genderFemale    = false; // Human/Saiyan/Majin
+    private boolean showGender       = false; // se activa en buildSkinSection para razas de tinte
+    private int     genderTitleY, genderValueY;
 
     private enum ColorChannel { SKIN, EYE, HAIR, DETAIL }
     @Nullable private ColorChannel    activeChannel = null;
@@ -115,6 +123,7 @@ public class AppearanceScreen extends Screen {
         noseIndex   = visual.getNoseIndex();
         customSkinColor = visual.isCustomSkinColor();
         skinPreset      = visual.getSkinPreset();
+        genderFemale    = visual.getGender() == PlayerVisualAttachment.Gender.FEMALE;
 
         CustomizationAssets.reload();
 
@@ -209,7 +218,7 @@ public class AppearanceScreen extends Screen {
         boolean tint  = isTintRace(race);
         int perRow = 4, gap = 4;
         int total  = presets.length + (tint ? 1 : 0); // +1 = swatch "Custom" en razas de tinte
-        int gridY  = bottomZoneY + 12;
+        int gridY  = bottomZoneY + SKIN_SECTION_DY + 12;
 
         for (int i = 0; i < total; i++) {
             int row = i / perRow, col = i % perRow;
@@ -240,13 +249,24 @@ public class AppearanceScreen extends Screen {
             }
         }
 
+        showGender = tint;
         if (tint) {
             int rows = (total + perRow - 1) / perRow;
             int naturalY = gridY + rows * (COLOR_BOX_H + gap) + 2;
             addRenderableWidget(new TextOnlyButton(skinAreaCX - 30, naturalY, 60, 14,
-                    Component.literal("Default"),
+                    Component.literal("Natural"),
                     () -> { customSkinColor = false; closePicker(); applyPreview(); })
                     .textColors(0x4A3726, 0x8A6A1E, 0xA0A0A0)); // dark/bronce, legible sobre beige
+
+            // Selector de género (debajo de Skin Color)
+            genderTitleY = naturalY + 16;
+            genderValueY = genderTitleY + 11;
+            int gw = 84;                       // ancho de la fila ← Male/Female →
+            int arrowY = genderValueY - 1;
+            addRenderableWidget(new ArrowIconButton(skinAreaCX - gw / 2, arrowY,
+                    ArrowIconButton.Dir.LEFT,  () -> { genderFemale = !genderFemale; applyPreview(); }));
+            addRenderableWidget(new ArrowIconButton(skinAreaCX + gw / 2 - ARROW_W, arrowY,
+                    ArrowIconButton.Dir.RIGHT, () -> { genderFemale = !genderFemale; applyPreview(); }));
         }
     }
 
@@ -312,7 +332,14 @@ public class AppearanceScreen extends Screen {
 
         // Label de la sección de piel — derecha zona inferior
         drawCenteredNoShadow(g, Component.literal(isTintRace(race) ? "Skin Color" : "Skin Preset"),
-                skinAreaCX, bottomZoneY, COLOR_SWATCH);
+                skinAreaCX, bottomZoneY + SKIN_SECTION_DY, COLOR_SWATCH);
+
+        // Selector de género (Human/Saiyan/Majin) — debajo de Skin Color
+        if (showGender) {
+            drawCenteredNoShadow(g, Component.literal("Gender"), skinAreaCX, genderTitleY, COLOR_SWATCH);
+            g.drawCenteredString(mc.font, Component.literal(genderFemale ? "Female" : "Male"),
+                    skinAreaCX, genderValueY, COLOR_VALUE);
+        }
 
         super.render(g, mouseX, mouseY, partialTick);
     }
@@ -361,6 +388,8 @@ public class AppearanceScreen extends Screen {
         visual.setHairStyleId(hairIndex == 0 ? "hair0" : "hair" + hairIndex);
         visual.setCustomSkinColor(customSkinColor);
         visual.setSkinPreset(skinPreset);
+        visual.setGender(genderFemale ? PlayerVisualAttachment.Gender.FEMALE
+                : PlayerVisualAttachment.Gender.MALE);
     }
 
     private void goToStyle() {

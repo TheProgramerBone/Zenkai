@@ -39,6 +39,10 @@ public class PlayerVisualAttachment {
     private boolean customSkinColor = false; // Human/Saiyan/Majin: false=natural, true=color custom (tinte)
     private int     skinPreset      = 0;     // Namekian/Arcosian: índice de textura preset
 
+    // ── Género (Human/Saiyan/Majin): cambia modelo + textura ───────────────────
+    public enum Gender { MALE, FEMALE }
+    private Gender gender = Gender.MALE;
+
     // ── Transformación ───────────────────────────────────────────────────────
     private int formStage = 0;
 
@@ -103,6 +107,9 @@ public class PlayerVisualAttachment {
     public int  getSkinPreset()                { return skinPreset; }
     public void setSkinPreset(int i)           { this.skinPreset = Math.max(0, i); }
 
+    public Gender getGender()                  { return gender; }
+    public void   setGender(Gender g)          { if (g != null) this.gender = g; }
+
     // ── Índices de forma API ──────────────────────────────────────────────────
     public int  getEyeIndex()                  { return eyeIndex; }
     public void setEyeIndex(int i)             { this.eyeIndex   = Math.max(0, i); }
@@ -157,6 +164,7 @@ public class PlayerVisualAttachment {
 
         tag.putBoolean("customSkinColor", customSkinColor);
         tag.putInt("skinPreset", skinPreset);
+        tag.putString("gender", gender.name());
 
         return tag;
     }
@@ -186,5 +194,8 @@ public class PlayerVisualAttachment {
 
         if (tag.contains("customSkinColor")) this.customSkinColor = tag.getBoolean("customSkinColor");
         if (tag.contains("skinPreset"))      this.skinPreset      = Math.max(0, tag.getInt("skinPreset"));
+        if (tag.contains("gender")) {
+            try { this.gender = Gender.valueOf(tag.getString("gender")); } catch (IllegalArgumentException ignored) {}
+        }
     }
 }
