@@ -25,10 +25,10 @@ public class PlayerVisualAttachment {
     private int detailColorRgb = 0x9B59B6; // detalles Arcosian (puntos morados)
 
     // ── Índices de forma (apuntan a CustomizationAssets) ─────────────────────
-    private int eyeIndex   = 1; // 1 = primer set por defecto (0 = ninguno)
-    private int hairIndex  = 1; // 1 = primer pelo por defecto (0 = calvo)
-    private int mouthIndex = 1; // 1 = primera boca por defecto (0 = ninguna)
-    private int noseIndex  = 1; // 1 = primera nariz por defecto (0 = ninguna)
+    private int eyeIndex   = 1;
+    private int hairIndex  = 1;
+    private int mouthIndex = 1;
+    private int noseIndex  = 0;
 
     // ── IDs de estilo (legacy / futuro) ──────────────────────────────────────
     private String hairStyleId = "hair1";
@@ -82,6 +82,14 @@ public class PlayerVisualAttachment {
             case MAJIN    -> setRaceSkinItemId("zenkai:majin_race_skin");
             case HUMAN    -> setRaceSkinItemId("");
         }
+    }
+
+    public static int defaultSkinColorFor(Race race) {
+        return switch (race) {
+            case NAMEKIAN -> 0x6FA84E; // verde Namek (ajústalo)
+            case ARCOSIAN -> 0xEDEDED; // blanco Arcosian (cuerpo)
+            default        -> 0xD5A07A; // piel humana
+        };
     }
 
     // ── Colores API ───────────────────────────────────────────────────────────

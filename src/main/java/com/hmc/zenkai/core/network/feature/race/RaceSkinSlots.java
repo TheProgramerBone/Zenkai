@@ -17,11 +17,12 @@ public final class RaceSkinSlots {
         Race race = PlayerStatsAttachment.get(player).getRace();
 
         if (race == Race.NAMEKIAN) {
+            boolean custom = PlayerVisualAttachment.get(player).isCustomSkinColor();
             return switch (slot) {
-                case HEAD  -> ModItems.NAMEKIAN_RACE_HELMET.get().getDefaultInstance();
-                case CHEST -> ModItems.NAMEKIAN_RACE_CHESTPLATE.get().getDefaultInstance();
-                case LEGS  -> ModItems.NAMEKIAN_RACE_LEGGINGS.get().getDefaultInstance();
-                case FEET  -> ModItems.NAMEKIAN_RACE_BOOTS.get().getDefaultInstance();
+                case HEAD  -> (custom ? ModItems.NAMEKIAN_RACE_HELMET_COLORABLE     : ModItems.NAMEKIAN_RACE_HELMET).get().getDefaultInstance();
+                case CHEST -> (custom ? ModItems.NAMEKIAN_RACE_CHESTPLATE_COLORABLE : ModItems.NAMEKIAN_RACE_CHESTPLATE).get().getDefaultInstance();
+                case LEGS  -> (custom ? ModItems.NAMEKIAN_RACE_LEGGINGS_COLORABLE   : ModItems.NAMEKIAN_RACE_LEGGINGS).get().getDefaultInstance();
+                case FEET  -> (custom ? ModItems.NAMEKIAN_RACE_BOOTS_COLORABLE      : ModItems.NAMEKIAN_RACE_BOOTS).get().getDefaultInstance();
                 default    -> ItemStack.EMPTY;
             };
         }

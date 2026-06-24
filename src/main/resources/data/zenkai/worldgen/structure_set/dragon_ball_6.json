@@ -1,0 +1,15 @@
+{
+  "structures": [
+    {
+      "structure": "zenkai:dragon_ball_6",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 1658742481,
+    "spacing": 32,
+    "separation": 8,
+    "spread_type": "linear"
+  }
+}

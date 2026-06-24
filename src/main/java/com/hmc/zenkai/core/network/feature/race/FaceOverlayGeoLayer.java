@@ -75,12 +75,14 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
             }
             case MOUTH -> {
                 ResourceLocation t = CustomizationAssets.getMouth(vis.getMouthIndex());
-                if (t != null) drawPass(t, 0xFFFFFFFF, poseStack, bakedModel, animatable,
+                int skinArgb = 0xFF000000 | (vis.getSkinColorRgb() & 0xFFFFFF); // tinte multiplicativo = color de piel
+                if (t != null) drawPass(t, skinArgb, poseStack, bakedModel, animatable,
                         bufferSource, partialTick, packedLight, packedOverlay);
             }
             case NOSE -> {
                 ResourceLocation t = CustomizationAssets.getNose(vis.getNoseIndex());
-                if (t != null) drawPass(t, 0xFFFFFFFF, poseStack, bakedModel, animatable,
+                int skinArgb = 0xFF000000 | (vis.getSkinColorRgb() & 0xFFFFFF); // tinte multiplicativo = color de piel
+                if (t != null) drawPass(t, skinArgb, poseStack, bakedModel, animatable,
                         bufferSource, partialTick, packedLight, packedOverlay);
             }
         }
