@@ -51,7 +51,6 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
      */
     @Override
     public net.minecraft.resources.ResourceLocation getTextureLocation(GeoLayerArmorItem animatable) {
-        // ⚠ VERIFICAR en GeckoLib 4.8.4: accesor del portador (mismo que en getRenderColor).
         Entity wearer = getCurrentEntity();
         int preset = (wearer instanceof Player player)
                 ? player.getData(DataAttachments.PLAYER_VISUAL.get()).getSkinPreset()

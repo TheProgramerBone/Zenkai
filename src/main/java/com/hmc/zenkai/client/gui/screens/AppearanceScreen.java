@@ -254,7 +254,7 @@ public class AppearanceScreen extends Screen {
             int rows = (total + perRow - 1) / perRow;
             int naturalY = gridY + rows * (COLOR_BOX_H + gap) + 2;
             addRenderableWidget(new TextOnlyButton(skinAreaCX - 30, naturalY, 60, 14,
-                    Component.literal("Natural"),
+                    Component.literal("Default"),
                     () -> { customSkinColor = false; closePicker(); applyPreview(); })
                     .textColors(0x4A3726, 0x8A6A1E, 0xA0A0A0)); // dark/bronce, legible sobre beige
 

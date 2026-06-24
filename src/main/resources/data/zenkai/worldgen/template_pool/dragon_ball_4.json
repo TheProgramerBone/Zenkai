@@ -1,0 +1,15 @@
+{
+  "name": "zenkai:dragon_ball_4",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "zenkai:dragon_ball_4_star_structure",
+        "processors": "minecraft:empty",
+        "projection": "rigid"
+      }
+    }
+  ]
+}

@@ -91,7 +91,7 @@ public class DragonRadarItem extends Item {
                 player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_SEARCHING.get(), SoundSource.PLAYERS, 0.85F, 1.0F);
             }
         } else {
-            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.db.renewed.dragon_ball_radar_not_in_range"), true);
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.zenkai.dragon_ball_radar_not_in_range"), true);
             resetRadarVisual(stack, player, slot);
         }
     }
