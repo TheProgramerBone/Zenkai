@@ -1,6 +1,7 @@
 package com.hmc.zenkai.content.entity;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.entity.isaac.IsaacEntity;
 import com.hmc.zenkai.content.entity.ki_attacks.KiBlastEntity;
 import com.hmc.zenkai.content.entity.kintoun.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namekian.NamekianEntity;
@@ -43,6 +44,10 @@ public class ModEntities {
     public static final Supplier<EntityType<NamekianEntity>> NAMEKIAN =
             ENTITY_TYPES.register("namekian",() -> EntityType.Builder.of(NamekianEntity::new, MobCategory.CREATURE)
                     .sized(1,2).build("namekian"));
+
+    public static final Supplier<EntityType<IsaacEntity>> ISAAC =
+            ENTITY_TYPES.register("isaac", () -> EntityType.Builder.of(IsaacEntity::new, MobCategory.CREATURE)
+                    .sized(0.6f, 1.8f).build("isaac"));
 
     public static final Supplier<EntityType<KiBlastEntity>> KI_BLAST =
             ENTITY_TYPES.register("ki_blast",()-> EntityType.Builder.of(KiBlastEntity::new,MobCategory.MISC)
