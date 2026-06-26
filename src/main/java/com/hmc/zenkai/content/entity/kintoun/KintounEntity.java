@@ -9,6 +9,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -208,6 +210,38 @@ public class KintounEntity extends Animal implements GeoEntity, VerticalControlV
 
         // Con rider: sin gravedad (vuelo). Sin rider: con gravedad (cae) + tu travel también baja suave.
         this.setNoGravity(hasRider);
+    }
+
+    // -------------------------
+    // Inmunidades (#2): no se ahoga ni muere por pociones
+    // -------------------------
+
+    /** Inmune a TODOS los efectos de poción (veneno, wither, etc.). */
+    @Override
+    public boolean canBeAffected(@NotNull MobEffectInstance effect) {
+        return false;
+    }
+
+    /** Inmune a ahogo, asfixia en bloque y daño mágico/pociones (harming/veneno/wither). */
+    @Override
+    public boolean isInvulnerableTo(@NotNull DamageSource source) {
+        if (source.is(DamageTypes.DROWN)
+                || source.is(DamageTypes.IN_WALL)
+                || source.is(DamageTypes.MAGIC)
+                || source.is(DamageTypes.INDIRECT_MAGIC)
+                || source.is(DamageTypes.WITHER)) {
+            return true;
+        }
+        return super.isInvulnerableTo(source);
+    }
+
+    // -------------------------
+    // Colisión sólida (#5): el jugador puede pararse encima
+    // -------------------------
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
     }
 
     // -------------------------

@@ -63,16 +63,16 @@ public class PlayerLifeCycle {
         Entity target = e.getTarget();
         if (target instanceof ServerPlayer targetPlayer) {
             // tracker ahora puede verlo -> mandarle su data
-            PacketDistributor.sendToPlayer(tracker, SyncPlayerStatsPacket.from(targetPlayer.getData(DataAttachments.PLAYER_STATS.get())));
+            PacketDistributor.sendToPlayer(tracker, SyncPlayerStatsPacket.from(targetPlayer));
             PacketDistributor.sendToPlayer(tracker, SyncPlayerVisualPacket.from(targetPlayer));
         }
     }
 
 
     public static void sync(ServerPlayer sp) {
-        PlayerStatsAttachment att = sp.getData(DataAttachments.PLAYER_STATS.get());
-        PacketDistributor.sendToPlayer(sp, SyncPlayerStatsPacket.from(att));
-        PacketDistributor.sendToPlayersTrackingEntity(sp, SyncPlayerStatsPacket.from(att));
+        var pkt = SyncPlayerStatsPacket.from(sp);
+        PacketDistributor.sendToPlayer(sp, pkt);
+        PacketDistributor.sendToPlayersTrackingEntity(sp, pkt);
     }
 
     public static void syncIfServer(Player p) {

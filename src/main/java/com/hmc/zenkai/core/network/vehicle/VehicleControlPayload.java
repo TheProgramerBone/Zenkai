@@ -5,6 +5,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +32,9 @@ public record VehicleControlPayload(boolean up, boolean down) implements CustomP
     public static void handle(VehicleControlPayload msg, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             Player p = (Player) ctx.player();
-            if (p.getVehicle() instanceof VerticalControlVehicle vehicle) {
+            Entity v = p.getVehicle();
+            // Solo el CONDUCTOR (primer pasajero) puede controlar subida/bajada.
+            if (v instanceof VerticalControlVehicle vehicle && v.getControllingPassenger() == p) {
                 vehicle.setVerticalInput(msg.up(), msg.down());
             }
         });

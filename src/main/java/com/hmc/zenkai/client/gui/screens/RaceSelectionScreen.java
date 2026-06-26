@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.core.network.feature.Race;
+import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -22,26 +23,19 @@ public class RaceSelectionScreen extends Screen {
     private static final ResourceLocation TEX_BTN =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_wide.png");
 
-    // ── Dimensiones exactas de la textura ────────────────────────────────────
     private static final int BG_W = 256;
     private static final int BG_H = 256;
-
-    // Área utilizable del panel beige
     private static final int IN_X1 = 10;
     private static final int IN_Y1 = 10;
     private static final int IN_X2 = 245;
     private static final int IN_Y2 = 240;
-
-    // Barra de botones
     private static final int BTN_BAR_Y = 260;
     private static final int BTN_W     = 60;
 
-    // ── Layout interno ────────────────────────────────────────────────────────
     private static final int PAD     = 8;
     private static final int ARROW_W = 12;
-    private static final int TITLE_H = 11; // separación título → fila de valor
+    private static final int TITLE_H = 11;
 
-    // Bloque 1: Race          Bloque 2: Skin Mode
     private static final int B1_TITLE_Y = IN_Y1 + 8;
     private static final int B1_VALUE_Y = B1_TITLE_Y + TITLE_H;
     private static final int DIV1_Y     = B1_VALUE_Y + 14;
@@ -50,13 +44,11 @@ public class RaceSelectionScreen extends Screen {
     private static final int DIV2_Y     = B2_VALUE_Y + 14;
     private static final int PREVIEW_SIZE = 50;
 
-    // ── Colores de texto ──────────────────────────────────────────────────────
-    private static final int COLOR_TITLE   = 0x4A3726; // marrón oscuro → título de campo (Race, Skin Mode)
-    private static final int COLOR_VALUE   = 0xFFFFFF; // blanco+sombra → valor seleccionado (Human, Custom Skin)
-    private static final int COLOR_SECTION = 0xB5401A; // naranja-rojo  → nombre de raza sobre la descripción
-    private static final int COLOR_DESC    = 0x5A4636; // marrón medio  → cuerpo de la descripción
+    private static final int COLOR_TITLE   = 0x4A3726;
+    private static final int COLOR_VALUE   = 0xFFFFFF;
+    private static final int COLOR_SECTION = 0xB5401A;
+    private static final int COLOR_DESC    = 0x5A4636;
 
-    // ── Estado ───────────────────────────────────────────────────────────────
     private int panelLeft, panelTop;
     private CompoundTag statsSnapshot, visualSnapshot;
     private boolean confirmed = false;
@@ -65,6 +57,9 @@ public class RaceSelectionScreen extends Screen {
     private final Race[] races = Race.values();
     private int raceIndex = 0;
     private boolean useCustomSkin = true;
+
+    // Recuerda la última raza aplicada para no resetear colores en cada repintado.
+    private Race lastAppliedRace = null;
 
     private ArrowIconButton raceLeft, raceRight;
     private ArrowIconButton skinLeft, skinRight;
@@ -98,7 +93,6 @@ public class RaceSelectionScreen extends Screen {
         int pl = panelLeft;
         int pt = panelTop;
 
-        // Fila raza (flechas a los lados de la fila de valor)
         int raceArrowY = pt + B1_VALUE_Y - 2;
         raceLeft  = new ArrowIconButton(pl + IN_X1 + PAD, raceArrowY,
                 ArrowIconButton.Dir.LEFT,  () -> { raceIndex = (raceIndex - 1 + races.length) % races.length; applyPreview(); });
@@ -107,7 +101,6 @@ public class RaceSelectionScreen extends Screen {
         addRenderableWidget(raceLeft);
         addRenderableWidget(raceRight);
 
-        // Fila skin mode
         int skinArrowY = pt + B2_VALUE_Y - 2;
         skinLeft  = new ArrowIconButton(pl + IN_X1 + PAD, skinArrowY,
                 ArrowIconButton.Dir.LEFT,  () -> { useCustomSkin = !useCustomSkin; applyPreview(); });
@@ -116,7 +109,6 @@ public class RaceSelectionScreen extends Screen {
         addRenderableWidget(skinLeft);
         addRenderableWidget(skinRight);
 
-        // Botones en la barra inferior (solo texto, sin fondo gris de vanilla)
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.cancel"),
@@ -146,7 +138,6 @@ public class RaceSelectionScreen extends Screen {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         g.blit(BG, pl, pt, 0, 0, BG_W, BG_H);
 
-        // Bloque raza — título arriba, valor (entre flechas) debajo
         drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.race"),
                 cx, pt + B1_TITLE_Y, COLOR_TITLE);
         g.drawCenteredString(mc.font,
@@ -167,7 +158,6 @@ public class RaceSelectionScreen extends Screen {
 
         g.fill(pl + IN_X1 + PAD, pt + DIV2_Y, pl + IN_X2 - PAD, pt + DIV2_Y + 1, 0x44FFFFFF);
 
-        // Preview jugador — centrado
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 g,
                 cx - 50, pt + DIV2_Y + 6,
@@ -175,7 +165,6 @@ public class RaceSelectionScreen extends Screen {
                 PREVIEW_SIZE, 0.0625f,
                 (float) mouseX, (float) mouseY, mc.player);
 
-        // Descripción raza (nombre de sección + cuerpo)
         int descX = pl + IN_X1 + PAD + 2;
         int descY = pt + IN_Y2 - 48;
         g.drawString(mc.font,
@@ -196,7 +185,6 @@ public class RaceSelectionScreen extends Screen {
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
     public void markConfirmed() { this.confirmed = true; }
 
-    /** Texto centrado sin sombra — para colores oscuros que se leen limpios sobre el beige. */
     private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
         var font = Minecraft.getInstance().font;
         g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
@@ -217,6 +205,18 @@ public class RaceSelectionScreen extends Screen {
         boolean humanSaiyan = (r == Race.HUMAN || r == Race.SAIYAN);
         stats.setRaceChosen(true);
         stats.setRace(r);
+
+        // Al CAMBIAR de raza, fija los colores por defecto de ESA raza (cada raza tiene su look base).
+        // Esto también arregla el tinte de boca/nariz (que usa skinColorRgb).
+        if (r != lastAppliedRace) {
+            lastAppliedRace = r;
+            visual.setSkinColorRgb(PlayerVisualAttachment.defaultSkinColorFor(r));
+            visual.setDetailColorRgb(PlayerVisualAttachment.defaultDetailColorFor(r));
+            visual.setLineColorRgb(PlayerVisualAttachment.defaultLineColorFor(r));
+            // Namek/Arcosian = tinte multicapa (siempre coloreable); Human/Saiyan/Majin arrancan natural.
+            visual.setCustomSkinColor(r == Race.NAMEKIAN || r == Race.ARCOSIAN);
+        }
+
         setVisible(skinLeft, humanSaiyan);
         setVisible(skinRight, humanSaiyan);
         if (!humanSaiyan) useCustomSkin = true;

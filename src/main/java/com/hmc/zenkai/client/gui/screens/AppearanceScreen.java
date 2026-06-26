@@ -39,16 +39,16 @@ public class AppearanceScreen extends Screen {
 
     private static final int PAD          = 8;
     private static final int ARROW_W      = 12;
-    private static final int TITLE_H      = 11; // separación título → fila de valor
-    private static final int BLOCK_H      = 27; // alto total de un campo (título + valor)
+    private static final int TITLE_H      = 11;
+    private static final int BLOCK_H      = 27;
     private static final int COLOR_BOX_W  = 20;
     private static final int COLOR_BOX_H  = 12;
 
-    // ⬇ Posición vertical de TODA la sección inferior derecha (Skin Color + Gender).
-    //   Súbelo/bájalo a gusto para mover el bloque completo. (px respecto a bottomZoneY)
     private static final int SKIN_SECTION_DY = 12;
 
-    // Flechas — siempre al mismo X
+    // Paso vertical entre capas de color de Namek (label + fila de presets). Ajústalo si se solapan.
+    private static final int NAMEK_LAYER_DY = 24;
+
     private static final int ARROW_LX            = IN_X1 + PAD;
     private static final int ARROW_RX_NO_COLOR   = IN_X2 - PAD - ARROW_W;
     private static final int ARROW_RX_WITH_COLOR = IN_X2 - PAD - ARROW_W - COLOR_BOX_W - 4;
@@ -56,18 +56,17 @@ public class AppearanceScreen extends Screen {
     private static final int PREVIEW_W    = 80;
     private static final int PREVIEW_SIZE = 45;
 
-    // ── Colores de texto ──────────────────────────────────────────────────────
-    private static final int COLOR_TITLE  = 0x4A3726; // marrón oscuro → título de campo (Eyes, Hair, Mouth, Nose)
-    private static final int COLOR_VALUE  = 0xFFFFFF; // blanco+sombra → valor seleccionado (None, hair_1, ...)
-    private static final int COLOR_SWATCH = 0x8A6A1E; // bronce/dorado → etiqueta de la sección de piel
+    private static final int COLOR_TITLE  = 0x4A3726;
+    private static final int COLOR_VALUE  = 0xFFFFFF;
+    private static final int COLOR_SWATCH = 0x8A6A1E;
 
-    // Presets de piel.
-    //  · Razas de tinte (Human/Saiyan/Majin): son COLORES aplicados por multiplicado al item colorable.
-    //  · Razas con textura (Namekian/Arcosian): el color es solo representativo del swatch; el índice = skinPreset
-    //    y DEBE coincidir con el nº de texturas .presets(...) registradas en ModItems para esa raza.
     private static final int[] SKIN_TONES       = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
-    private static final int[] NAMEKIAN_PRESETS = { 0x4CAF50, 0x2E7D32, 0x66BB6A };
     private static final int[] ARCOSIAN_PRESETS = { 0xFFFFFF, 0xE1BEE7, 0xFFE0B2 };
+
+    // Presets de Namek por capa. El PRIMERO de cada lista = color por defecto de esa capa.
+    private static final int[] NAMEK_SKIN_PRESETS   = { 0x6FA84E, 0x4CAF50, 0x81C784 };
+    private static final int[] NAMEK_DETAIL_PRESETS = { 0xF1A0C0, 0xBA68C8, 0xE57373 };
+    private static final int[] NAMEK_LINE_PRESETS   = { 0x2E7D32, 0x1B5E20, 0x33691E };
 
     @Nullable private final RaceSelectionScreen raceScreen;
     private final CompoundTag statsSnapshot;
@@ -80,13 +79,17 @@ public class AppearanceScreen extends Screen {
     private int eyeIndex = 0, hairIndex = 0, mouthIndex = 0, noseIndex = 0;
     private int skinColor = 0xFFD5A07A, eyeColor = 0xFF2E86C1;
     private int hairColor = 0xFF1A1A1A, detailColor = 0xFF9B59B6;
-    private boolean customSkinColor = false; // Human/Saiyan/Majin: false=natural, true=tinte custom/preset
-    private int     skinPreset      = 0;     // Namekian/Arcosian: índice de textura preset
-    private boolean genderFemale    = false; // Human/Saiyan/Majin
-    private boolean showGender       = false; // se activa en buildSkinSection para razas de tinte
+    private int lineColor = 0xFF2E7D32; // Namek capa 3 (líneas)
+    private boolean customSkinColor = false;
+    private int     skinPreset      = 0;
+    private boolean genderFemale    = false;
+    private boolean showGender       = false;
     private int     genderTitleY, genderValueY;
 
-    private enum ColorChannel { SKIN, EYE, HAIR, DETAIL }
+    // Y de las etiquetas de las 3 capas de Namek (para render)
+    private int namekLabelSkinY, namekLabelDetailY, namekLabelLineY;
+
+    private enum ColorChannel { SKIN, EYE, HAIR, DETAIL, LINE }
     @Nullable private ColorChannel    activeChannel = null;
     @Nullable private ColorPickerWidget picker      = null;
     private Race race = Race.HUMAN;
@@ -117,6 +120,7 @@ public class AppearanceScreen extends Screen {
         eyeColor    = visual.getEyeColorRgb()    | 0xFF000000;
         hairColor   = visual.getHairColorRgb()   | 0xFF000000;
         detailColor = visual.getDetailColorRgb() | 0xFF000000;
+        lineColor   = visual.getLineColorRgb()   | 0xFF000000;
         eyeIndex    = visual.getEyeIndex();
         hairIndex   = visual.getHairIndex();
         mouthIndex  = visual.getMouthIndex();
@@ -149,14 +153,12 @@ public class AppearanceScreen extends Screen {
                 () -> noseIndex = (noseIndex - 1 + CustomizationAssets.noseCount()) % CustomizationAssets.noseCount(),
                 () -> noseIndex = (noseIndex + 1) % CustomizationAssets.noseCount());
 
-        // Zona inferior — calculada dinámicamente
         this.divY        = blockTop + 2;
         this.bottomZoneY = divY + 8;
         this.skinAreaCX  = pl + IN_X1 + PAD + PREVIEW_W + (IN_W - PAD * 2 - PREVIEW_W) / 2;
 
         buildSkinSection();
 
-        // Botones en la barra inferior de la textura (solo texto, sin fondo gris de vanilla)
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
@@ -170,7 +172,6 @@ public class AppearanceScreen extends Screen {
                 this::goToStyle));
     }
 
-    /** Añade las flechas (y swatch opcional) de un campo apilado y devuelve el Y del siguiente bloque. */
     private int addField(int pl, int blockTop, @Nullable ColorChannel channel,
                          Runnable onLeft, Runnable onRight) {
         int arrowY = blockTop + TITLE_H - 1;
@@ -195,29 +196,29 @@ public class AppearanceScreen extends Screen {
         return blockTop + BLOCK_H;
     }
 
-    /** Razas con color de piel custom (tinte). El resto usa presets de textura. */
     private boolean isTintRace(Race r) {
         return r == Race.HUMAN || r == Race.SAIYAN || r == Race.MAJIN;
     }
 
+    /** Namek = tinte multicapa (piel + detalles + líneas). */
+    private boolean isMultiTintRace(Race r) {
+        return r == Race.NAMEKIAN;
+    }
+
     private int[] presetColorsFor(Race r) {
         return switch (r) {
-            case NAMEKIAN -> NAMEKIAN_PRESETS;
             case ARCOSIAN -> ARCOSIAN_PRESETS;
             default       -> SKIN_TONES; // Human / Saiyan / Majin
         };
     }
 
-    /**
-     * Sección Skin Color (zona inferior derecha):
-     *  · Razas de tinte: paleta de presets de color + swatch "Custom" (picker) + botón "Natural".
-     *  · Razas con textura: paleta de presets que fijan skinPreset (sin picker).
-     */
     private void buildSkinSection() {
+        if (isMultiTintRace(race)) { buildNamekColorSections(); return; }
+
         int[] presets = presetColorsFor(race);
         boolean tint  = isTintRace(race);
         int perRow = 4, gap = 4;
-        int total  = presets.length + (tint ? 1 : 0); // +1 = swatch "Custom" en razas de tinte
+        int total  = presets.length + (tint ? 1 : 0);
         int gridY  = bottomZoneY + SKIN_SECTION_DY + 12;
 
         for (int i = 0; i < total; i++) {
@@ -229,7 +230,6 @@ public class AppearanceScreen extends Screen {
             int y = gridY + row * (COLOR_BOX_H + gap);
 
             if (tint && i == presets.length) {
-                // Swatch "Custom" → abre el picker; muestra el color actual
                 addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
                         () -> skinColor & 0xFFFFFF,
                         () -> activeChannel == ColorChannel.SKIN,
@@ -256,17 +256,65 @@ public class AppearanceScreen extends Screen {
             addRenderableWidget(new TextOnlyButton(skinAreaCX - 30, naturalY, 60, 14,
                     Component.literal("Default"),
                     () -> { customSkinColor = false; closePicker(); applyPreview(); })
-                    .textColors(0x4A3726, 0x8A6A1E, 0xA0A0A0)); // dark/bronce, legible sobre beige
+                    .textColors(0x4A3726, 0x8A6A1E, 0xA0A0A0));
 
-            // Selector de género (debajo de Skin Color)
             genderTitleY = naturalY + 16;
             genderValueY = genderTitleY + 11;
-            int gw = 84;                       // ancho de la fila ← Male/Female →
+            int gw = 84;
             int arrowY = genderValueY - 1;
             addRenderableWidget(new ArrowIconButton(skinAreaCX - gw / 2, arrowY,
                     ArrowIconButton.Dir.LEFT,  () -> { genderFemale = !genderFemale; applyPreview(); }));
             addRenderableWidget(new ArrowIconButton(skinAreaCX + gw / 2 - ARROW_W, arrowY,
                     ArrowIconButton.Dir.RIGHT, () -> { genderFemale = !genderFemale; applyPreview(); }));
+        }
+    }
+
+    /** Namek: 3 capas de color apiladas (piel / detalles / líneas), cada una presets + Custom (picker). */
+    private void buildNamekColorSections() {
+        showGender = false;
+        customSkinColor = true; // Namek siempre coloreable
+        int startY = bottomZoneY + SKIN_SECTION_DY + 12;
+
+        namekLabelSkinY   = startY;
+        buildColorRow(ColorChannel.SKIN,   NAMEK_SKIN_PRESETS,   startY + 10);
+
+        namekLabelDetailY = startY + NAMEK_LAYER_DY;
+        buildColorRow(ColorChannel.DETAIL, NAMEK_DETAIL_PRESETS, startY + NAMEK_LAYER_DY + 10);
+
+        namekLabelLineY   = startY + 2 * NAMEK_LAYER_DY;
+        buildColorRow(ColorChannel.LINE,   NAMEK_LINE_PRESETS,   startY + 2 * NAMEK_LAYER_DY + 10);
+    }
+
+    /** Una fila: N presets de color + 1 swatch "Custom" (abre el picker de ese canal). */
+    private void buildColorRow(ColorChannel ch, int[] presets, int y) {
+        int gap = 4;
+        int total = presets.length + 1;
+        int rowW   = total * COLOR_BOX_W + (total - 1) * gap;
+        int startX = skinAreaCX - rowW / 2;
+        for (int i = 0; i < total; i++) {
+            int x = startX + i * (COLOR_BOX_W + gap);
+            if (i == presets.length) {
+                addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
+                        () -> colorForChannel(ch) & 0xFFFFFF,
+                        () -> activeChannel == ch,
+                        () -> togglePicker(ch)));
+            } else {
+                final int c = presets[i];
+                addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
+                        () -> c,
+                        () -> (colorForChannel(ch) & 0xFFFFFF) == c,
+                        () -> { setChannelColor(ch, 0xFF000000 | c); customSkinColor = true; closePicker(); applyPreview(); }));
+            }
+        }
+    }
+
+    private void setChannelColor(ColorChannel ch, int argb) {
+        switch (ch) {
+            case SKIN   -> skinColor = argb;
+            case EYE    -> eyeColor = argb;
+            case HAIR   -> hairColor = argb;
+            case DETAIL -> detailColor = argb;
+            case LINE   -> lineColor = argb;
         }
     }
 
@@ -278,10 +326,11 @@ public class AppearanceScreen extends Screen {
     private void openPicker(ColorChannel channel) {
         closePicker();
         activeChannel = channel;
-        if (channel == ColorChannel.SKIN) customSkinColor = true; // abrir el picker = modo custom
+        if (channel == ColorChannel.SKIN) customSkinColor = true;
         String label = switch (channel) {
             case SKIN -> "Skin Color"; case EYE -> "Eye Color";
             case HAIR -> "Hair Color"; case DETAIL -> "Detail Color";
+            case LINE -> "Line Color";
         };
         int pickerX = panelLeft + BG_W + 8;
         if (pickerX + ColorPickerWidget.TOTAL_W > this.width - 4)
@@ -290,7 +339,9 @@ public class AppearanceScreen extends Screen {
             switch (channel) {
                 case SKIN -> { skinColor = argb; customSkinColor = true; }
                 case EYE -> eyeColor = argb;
-                case HAIR -> hairColor = argb; case DETAIL -> detailColor = argb;
+                case HAIR -> hairColor = argb;
+                case DETAIL -> detailColor = argb;
+                case LINE -> lineColor = argb;
             }
             applyPreview();
         });
@@ -322,7 +373,6 @@ public class AppearanceScreen extends Screen {
 
         g.fill(pl + IN_X1 + PAD, divY, pl + IN_X2 - PAD, divY + 1, 0x44FFFFFF);
 
-        // Preview jugador — izquierda zona inferior, dentro del panel
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 g,
                 pl + IN_X1 + PAD,              bottomZoneY,
@@ -330,11 +380,15 @@ public class AppearanceScreen extends Screen {
                 PREVIEW_SIZE, 0.0625f,
                 (float) mouseX, (float) mouseY, mc.player);
 
-        // Label de la sección de piel — derecha zona inferior
-        drawCenteredNoShadow(g, Component.literal(isTintRace(race) ? "Skin Color" : "Skin Preset"),
-                skinAreaCX, bottomZoneY + SKIN_SECTION_DY, COLOR_SWATCH);
+        if (isMultiTintRace(race)) {
+            drawCenteredNoShadow(g, Component.literal("Skin"),   skinAreaCX, namekLabelSkinY,   COLOR_SWATCH);
+            drawCenteredNoShadow(g, Component.literal("Detail"), skinAreaCX, namekLabelDetailY, COLOR_SWATCH);
+            drawCenteredNoShadow(g, Component.literal("Lines"),  skinAreaCX, namekLabelLineY,   COLOR_SWATCH);
+        } else {
+            drawCenteredNoShadow(g, Component.literal(isTintRace(race) ? "Skin Color" : "Skin Preset"),
+                    skinAreaCX, bottomZoneY + SKIN_SECTION_DY, COLOR_SWATCH);
+        }
 
-        // Selector de género (Human/Saiyan/Majin) — debajo de Skin Color
         if (showGender) {
             drawCenteredNoShadow(g, Component.literal("Gender"), skinAreaCX, genderTitleY, COLOR_SWATCH);
             g.drawCenteredString(mc.font, Component.literal(genderFemale ? "Female" : "Male"),
@@ -344,15 +398,13 @@ public class AppearanceScreen extends Screen {
         super.render(g, mouseX, mouseY, partialTick);
     }
 
-    /** Dibuja un campo apilado (título centrado + valor centrado) y devuelve el Y del siguiente bloque. */
     private int renderField(GuiGraphics g, Minecraft mc, int pl, int blockTop, String label, String value) {
         int cx = pl + BG_W / 2;
-        drawCenteredNoShadow(g, Component.literal(label), cx, blockTop, COLOR_TITLE);          // título
-        g.drawCenteredString(mc.font, Component.literal(value), cx, blockTop + TITLE_H, COLOR_VALUE); // valor
+        drawCenteredNoShadow(g, Component.literal(label), cx, blockTop, COLOR_TITLE);
+        g.drawCenteredString(mc.font, Component.literal(value), cx, blockTop + TITLE_H, COLOR_VALUE);
         return blockTop + BLOCK_H;
     }
 
-    /** Texto centrado sin sombra — para colores oscuros que se leen limpios sobre el beige. */
     private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
         var font = Minecraft.getInstance().font;
         g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
@@ -371,8 +423,11 @@ public class AppearanceScreen extends Screen {
     }
 
     private int colorForChannel(ColorChannel ch) {
-        return switch (ch) { case SKIN -> skinColor; case EYE -> eyeColor;
-            case HAIR -> hairColor; case DETAIL -> detailColor; };
+        return switch (ch) {
+            case SKIN -> skinColor; case EYE -> eyeColor;
+            case HAIR -> hairColor; case DETAIL -> detailColor;
+            case LINE -> lineColor;
+        };
     }
 
     private void applyPreview() {
@@ -383,6 +438,7 @@ public class AppearanceScreen extends Screen {
         visual.setEyeColorRgb(eyeColor & 0xFFFFFF);
         visual.setHairColorRgb(hairColor & 0xFFFFFF);
         visual.setDetailColorRgb(detailColor & 0xFFFFFF);
+        visual.setLineColorRgb(lineColor & 0xFFFFFF);
         visual.setEyeIndex(eyeIndex); visual.setHairIndex(hairIndex);
         visual.setMouthIndex(mouthIndex); visual.setNoseIndex(noseIndex);
         visual.setHairStyleId(hairIndex == 0 ? "hair0" : "hair" + hairIndex);

@@ -22,7 +22,8 @@ public class PlayerVisualAttachment {
     private int hairColorRgb   = 0x000000; // negro por defecto
     private int eyeColorRgb    = 0x000000; // negro por defecto
     private int auraColorRgb   = 0x33CCFF; // ki azul
-    private int detailColorRgb = 0x9B59B6; // detalles Arcosian (puntos morados)
+    private int detailColorRgb = 0x9B59B6; // detalles del cuerpo (Arcosian / Namek capa 2)
+    private int lineColorRgb   = 0x2E7D32; // líneas de detalle del cuerpo (Namek capa 3)
 
     // ── Índices de forma (apuntan a CustomizationAssets) ─────────────────────
     private int eyeIndex   = 1;
@@ -92,6 +93,23 @@ public class PlayerVisualAttachment {
         };
     }
 
+    /** Color por defecto de la capa "detalles del cuerpo" (Namek capa 2 / Arcosian placas). */
+    public static int defaultDetailColorFor(Race race) {
+        return switch (race) {
+            case NAMEKIAN -> 0xF1A0C0; // rosa de los detalles Namek (ajústalo)
+            case ARCOSIAN -> 0x9B59B6; // morado biogems Arcosian
+            default        -> 0x9B59B6;
+        };
+    }
+
+    /** Color por defecto de la capa "líneas de detalle" (Namek capa 3). */
+    public static int defaultLineColorFor(Race race) {
+        return switch (race) {
+            case NAMEKIAN -> 0x2E7D32; // verde oscuro de las líneas Namek (ajústalo)
+            default        -> 0x2E7D32;
+        };
+    }
+
     // ── Colores API ───────────────────────────────────────────────────────────
     public int  getSkinColorRgb()              { return skinColorRgb; }
     public void setSkinColorRgb(int rgb)       { this.skinColorRgb   = rgb & 0xFFFFFF; }
@@ -107,6 +125,9 @@ public class PlayerVisualAttachment {
 
     public int  getDetailColorRgb()            { return detailColorRgb; }
     public void setDetailColorRgb(int rgb)     { this.detailColorRgb = rgb & 0xFFFFFF; }
+
+    public int  getLineColorRgb()              { return lineColorRgb; }
+    public void setLineColorRgb(int rgb)       { this.lineColorRgb   = rgb & 0xFFFFFF; }
 
     // ── Piel: modo y preset API ───────────────────────────────────────────────
     public boolean isCustomSkinColor()         { return customSkinColor; }
@@ -158,6 +179,7 @@ public class PlayerVisualAttachment {
         tag.putInt("eyeColor",    eyeColorRgb);
         tag.putInt("auraColor",   auraColorRgb);
         tag.putInt("detailColor", detailColorRgb);
+        tag.putInt("lineColor",   lineColorRgb);
 
         tag.putInt("eyeIndex",   eyeIndex);
         tag.putInt("hairIndex",  hairIndex);
@@ -188,6 +210,7 @@ public class PlayerVisualAttachment {
         if (tag.contains("eyeColor"))    this.eyeColorRgb    = tag.getInt("eyeColor");
         if (tag.contains("auraColor"))   this.auraColorRgb   = tag.getInt("auraColor");
         if (tag.contains("detailColor")) this.detailColorRgb = tag.getInt("detailColor");
+        if (tag.contains("lineColor"))   this.lineColorRgb   = tag.getInt("lineColor");
 
         if (tag.contains("eyeIndex"))   this.eyeIndex   = Math.max(0, tag.getInt("eyeIndex"));
         if (tag.contains("hairIndex"))  this.hairIndex  = Math.max(0, tag.getInt("hairIndex"));
