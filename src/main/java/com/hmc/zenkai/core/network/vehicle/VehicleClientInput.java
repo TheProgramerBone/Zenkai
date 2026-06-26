@@ -2,6 +2,7 @@ package com.hmc.zenkai.core.network.vehicle;
 
 import com.hmc.zenkai.Zenkai;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -19,8 +20,15 @@ public final class VehicleClientInput {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
 
-        // Aquí ya no amarras a SpacePodEntity
-        if (!(mc.player.getVehicle() instanceof VerticalControlVehicle vehicle)) return;
+        Entity v = mc.player.getVehicle();
+        if (!(v instanceof VerticalControlVehicle vehicle)) return;
+
+        // Solo el CONDUCTOR predice/envía el control vertical; el copiloto no controla.
+        if (v.getControllingPassenger() != mc.player) {
+            lastUp = false;
+            lastDown = false;
+            return;
+        }
 
         boolean up = mc.options.keyJump.isDown();      // SPACE
         boolean down = mc.options.keySprint.isDown();  // CTRL

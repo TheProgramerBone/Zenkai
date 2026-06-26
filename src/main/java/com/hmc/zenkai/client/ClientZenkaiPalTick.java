@@ -8,38 +8,57 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public final class ClientZenkaiPalTick {
 
-    private static boolean lastHeld = false;
-    private static int chainTicks = 0;
+    /** Estado de animación por jugador (antes era global -> por eso solo animaba al local). */
+    private static final class AnimState {
+        boolean lastHeld = false;
+        int chainTicks = 0;
+    }
+
+    private static final Map<UUID, AnimState> STATES = new HashMap<>();
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         KeyBindings.handleClientTick();
 
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
+        if (mc.player == null || mc.level == null) return;
 
-        var form = mc.player.getData(DataAttachments.PLAYER_FORM.get());
-        var stats = mc.player.getData(DataAttachments.PLAYER_STATS.get());
+        // Recorremos TODOS los jugadores visibles para reproducir la animación de cada uno
+        // según SU estado de transformación (que ya llega sincronizado por SyncPlayerFormPacket).
+        for (AbstractClientPlayer p : mc.level.players()) {
+            tickPlayer(mc, p);
+        }
+
+        // Limpieza: descartar estados de jugadores que ya no están en el nivel.
+        STATES.keySet().removeIf(uuid -> mc.level.getPlayerByUUID(uuid) == null);
+    }
+
+    private static void tickPlayer(Minecraft mc, AbstractClientPlayer p) {
+        var form  = p.getData(DataAttachments.PLAYER_FORM.get());
+        var stats = p.getData(DataAttachments.PLAYER_STATS.get());
+
+        AnimState st = STATES.computeIfAbsent(p.getUUID(), k -> new AnimState());
 
         boolean heldNow = form.isTransformHeld();
-
         boolean canTransform = PlayerFormAttachment.canTransformFrom(stats.getRace(), form.getFormId());
 
         if (!canTransform) {
-            if (lastHeld) {
-                lastHeld = false;
-                chainTicks = 0;
-                if (mc.player instanceof AbstractClientPlayer cp) {
-                    DbPalAnimations.controller(cp).stopTriggeredAnimation();
-                }
+            if (st.lastHeld) {
+                st.lastHeld = false;
+                st.chainTicks = 0;
+                DbPalAnimations.controller(p).stopTriggeredAnimation();
             }
             return;
         }
 
-        // Desde aquí: solo si sí existe transformación configurada
-        if (heldNow) {
+        // El bloqueo de input SOLO aplica al jugador local (los demás no tienen input local aquí).
+        if (heldNow && p == mc.player) {
             mc.player.input.forwardImpulse = 0;
             mc.player.input.leftImpulse = 0;
             mc.player.input.jumping = false;
@@ -47,26 +66,22 @@ public final class ClientZenkaiPalTick {
             mc.player.setSprinting(false);
         }
 
-        if (heldNow && !lastHeld) {
-            lastHeld = true;
-            if (mc.player instanceof AbstractClientPlayer cp) {
-                DbPalAnimations.playTransformStart(cp);
-                chainTicks = 10; // 0.5s
-            }
+        if (heldNow && !st.lastHeld) {
+            st.lastHeld = true;
+            DbPalAnimations.playTransformStart(p);
+            st.chainTicks = 10; // 0.5s
         }
 
-        if (!heldNow && lastHeld) {
-            lastHeld = false;
-            chainTicks = 0;
-            if (mc.player instanceof AbstractClientPlayer cp) {
-                DbPalAnimations.controller(cp).stopTriggeredAnimation();
-            }
+        if (!heldNow && st.lastHeld) {
+            st.lastHeld = false;
+            st.chainTicks = 0;
+            DbPalAnimations.controller(p).stopTriggeredAnimation();
         }
 
-        if (heldNow && chainTicks > 0) {
-            chainTicks--;
-            if (chainTicks == 0 && mc.player instanceof AbstractClientPlayer cp) {
-                DbPalAnimations.playTransformLoop(cp);
+        if (heldNow && st.chainTicks > 0) {
+            st.chainTicks--;
+            if (st.chainTicks == 0) {
+                DbPalAnimations.playTransformLoop(p);
             }
         }
     }
