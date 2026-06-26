@@ -66,6 +66,17 @@ public final class ModGameRules {
                     GameRules.BooleanValue.create(true)
             );
 
+    /**
+     * Si false, el bloque de las 7 esferas no invoca a Shenlong.
+     * El resto del sistema de deseos queda inerte porque no hay dragón.
+     */
+    public static final GameRules.Key<GameRules.BooleanValue> ENABLE_SHENLONG_SUMMON =
+            GameRules.register(
+                    "zenkai_enableSummon",
+                    GameRules.Category.PLAYER,
+                    GameRules.BooleanValue.create(true)
+            );
+
     // ── Init ─────────────────────────────────────────────────────────────────
 
     /**
@@ -94,5 +105,9 @@ public final class ModGameRules {
 
     public static boolean enableTransformations(MinecraftServer server) {
         return server.getGameRules().getBoolean(ENABLE_TRANSFORMATIONS);
+    }
+
+    public static boolean enableShenlongSummon(MinecraftServer server) {
+        return server.getGameRules().getBoolean(ENABLE_SHENLONG_SUMMON);
     }
 }

@@ -28,6 +28,9 @@ public class PlayerStatsAttachment {
     private final PlayerKiAttacks     kiAttacks = new PlayerKiAttacks();
     private final PlayerStateFlags    flags     = new PlayerStateFlags();
 
+    /** Último tick (gameTime) en que este jugador invocó a Shenlong. Cooldown por jugador. */
+    private long lastSummonTick = Long.MIN_VALUE;
+
     public PlayerStatsAttachment() {
         // Calcular los máximos iniciales y llenar los pools
         applyRecalc();
@@ -156,6 +159,11 @@ public class PlayerStatsAttachment {
     // ── Ciclo de vida ────────────────────────────────────────────────────────
     public void refillOnRespawn() { pools.refillAll(); }
 
+    // ── Cooldown de invocación (por jugador) ─────────────────────────────────
+    /** Long.MIN_VALUE => nunca ha invocado (sin cooldown). */
+    public long getLastSummonTick()       { return lastSummonTick; }
+    public void setLastSummonTick(long t) { this.lastSummonTick = t; }
+
     // ── Recalc interno ───────────────────────────────────────────────────────
     /** Propaga los máximos calculados por PlayerRaceStats a PlayerResourcePools. */
     private void applyRecalc() {
@@ -175,6 +183,7 @@ public class PlayerStatsAttachment {
         tag.put("pools",     pools.save());
         tag.put("kiAttacks", kiAttacks.save());
         tag.put("flags",     flags.save());
+        tag.putLong("lastSummonTick", lastSummonTick);
         return tag;
     }
 
@@ -183,6 +192,7 @@ public class PlayerStatsAttachment {
         if (tag.contains("pools"))     pools.load(tag.getCompound("pools"));
         if (tag.contains("kiAttacks")) kiAttacks.load(tag.getCompound("kiAttacks"));
         if (tag.contains("flags"))     flags.load(tag.getCompound("flags"));
+        lastSummonTick = tag.contains("lastSummonTick") ? tag.getLong("lastSummonTick") : Long.MIN_VALUE;
         // Recalc por si los atributos cambiaron al cargar
         applyRecalc();
     }

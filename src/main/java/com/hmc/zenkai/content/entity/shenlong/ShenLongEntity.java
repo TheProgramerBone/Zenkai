@@ -1,7 +1,9 @@
 package com.hmc.zenkai.content.entity.shenlong;
 
 import com.hmc.zenkai.content.entity.CommonAnimations;
+import com.hmc.zenkai.core.config.WishConfig;
 import com.hmc.zenkai.core.network.feature.wishes.OpenWishScreenPayload;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
@@ -23,6 +25,9 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class ShenLongEntity extends Mob implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    /** Pool de deseos compartido de esta invocación. Se agota; al llegar a 0 el dragón desaparece. */
+    private int wishesRemaining = WishConfig.shenlongWishCount();
 
     public ShenLongEntity(EntityType<? extends Mob> entityType, Level level) {
         super(entityType, level);
@@ -46,6 +51,33 @@ public class ShenLongEntity extends Mob implements GeoEntity {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 1000.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.0);
+    }
+
+    // ── Pool de deseos ────────────────────────────────────────────────────────
+    public int getWishesRemaining()        { return wishesRemaining; }
+    public void setWishesRemaining(int n)  { this.wishesRemaining = n; }
+
+    /**
+     * Consume un deseo del pool compartido.
+     * @return true si el dragón debe desaparecer (pool agotado).
+     */
+    public boolean consumeWish() {
+        wishesRemaining--;
+        return wishesRemaining <= 0;
+    }
+
+    @Override
+    public void addAdditionalSaveData(@NotNull CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putInt("wishesRemaining", wishesRemaining);
+    }
+
+    @Override
+    public void readAdditionalSaveData(@NotNull CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.contains("wishesRemaining")) {
+            wishesRemaining = tag.getInt("wishesRemaining");
+        }
     }
 
     @Override
@@ -90,11 +122,11 @@ public class ShenLongEntity extends Mob implements GeoEntity {
     @Override
     public boolean isInvulnerableTo(DamageSource source) {
         if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) ||
-            source.is(DamageTypeTags.IS_EXPLOSION) ||
-            source.is(DamageTypeTags.IS_FREEZING) ||
-            source.is(DamageTypeTags.IS_FALL) ||
-            source.is(DamageTypeTags.IS_LIGHTNING) ||
-            source.is(DamageTypeTags.IS_FIRE))
+                source.is(DamageTypeTags.IS_EXPLOSION) ||
+                source.is(DamageTypeTags.IS_FREEZING) ||
+                source.is(DamageTypeTags.IS_FALL) ||
+                source.is(DamageTypeTags.IS_LIGHTNING) ||
+                source.is(DamageTypeTags.IS_FIRE))
         {
             return super.isInvulnerableTo(source);
         }
