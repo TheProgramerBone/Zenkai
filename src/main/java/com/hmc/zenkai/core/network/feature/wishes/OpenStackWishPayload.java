@@ -7,7 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public record OpenStackWishPayload() implements CustomPacketPayload {
     public static final Type<OpenStackWishPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath("db_renewed", "open_stack_wish"));
+            new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai", "open_stack_wish"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, OpenStackWishPayload> STREAM_CODEC =
             StreamCodec.unit(new OpenStackWishPayload());

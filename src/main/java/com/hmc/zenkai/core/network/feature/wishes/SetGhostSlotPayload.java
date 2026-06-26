@@ -14,7 +14,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record SetGhostSlotPayload(ItemStack chosen) implements CustomPacketPayload {
     public static final Type<SetGhostSlotPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath("db_renewed", "set_ghost_slot"));
+            new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai", "set_ghost_slot"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SetGhostSlotPayload> STREAM_CODEC =
             StreamCodec.composite(
@@ -41,10 +41,8 @@ public record SetGhostSlotPayload(ItemStack chosen) implements CustomPacketPaylo
 
                 // Validación server-side: no permitir banned items
                 ResourceLocation id = BuiltInRegistries.ITEM.getKey(chosen.getItem());
-                if (WishConfig.isBanned(id)) {
-                    player.displayClientMessage(
-                            Component.translatable("messages.db_renewed.item_banned"), false
-                    );
+                if (!WishConfig.isAllowedByWhitelist(id)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.item_not_allowed"), false);
                     menu.clearChosenItem();
                     return;
                 }

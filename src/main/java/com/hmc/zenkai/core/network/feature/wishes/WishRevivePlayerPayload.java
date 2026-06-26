@@ -13,7 +13,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record WishRevivePlayerPayload(String targetName) implements CustomPacketPayload {
     public static final Type<WishRevivePlayerPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath("db_renewed","wish_revive_player"));
+            new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai","wish_revive_player"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, WishRevivePlayerPayload> STREAM_CODEC =
             StreamCodec.composite(
@@ -28,13 +28,13 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
                 ServerPlayer invoker = (ServerPlayer) ctx.player();
                 String targetName = payload.targetName() == null ? "" : payload.targetName().trim();
                 if (targetName.isEmpty()) {
-                    invoker.displayClientMessage(Component.translatable("messages.db_renewed.player_revive_failed"), false);
+                    invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revive_failed"), false);
                     return;
                 }
 
                 ServerPlayer target = invoker.server.getPlayerList().getPlayerByName(targetName);
                 if (target == null) {
-                    invoker.displayClientMessage(Component.translatable("messages.db_renewed.player_revive_failed"), false);
+                    invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revive_failed"), false);
                     return;
                 }
 
@@ -60,7 +60,7 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
                         target.getXRot());
 
                 // Feedback para quien pidió el deseo
-                invoker.displayClientMessage(Component.translatable("messages.db_renewed.player_revived"), false);
+                invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
 
                 // Final común (cerrar GUI, quitar Shenlong, etc.)
                 WishFinalizer.finalizeWish(invoker);

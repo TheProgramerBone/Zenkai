@@ -10,7 +10,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 public class StackWishProvider implements MenuProvider {
     @Override
     public Component getDisplayName() {
-        return Component.translatable("screen.db_renewed.option.stack");
+        return Component.translatable("screen.zenkai.option.stack");
     }
 
     @Override

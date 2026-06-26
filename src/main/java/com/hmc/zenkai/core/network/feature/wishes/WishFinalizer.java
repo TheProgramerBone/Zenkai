@@ -14,7 +14,7 @@ public final class WishFinalizer {
     public static void finalizeWish(ServerPlayer player) {
         player.closeContainer();
         player.playNotifySound(ModSounds.WISH_GRANTED.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
-        player.displayClientMessage(Component.translatable("messages.db_renewed.wish_granted"), false);
+        player.displayClientMessage(Component.translatable("messages.zenkai.wish_granted"), false);
         EntityType<?> shenlongType = ModEntities.SHENLONG.get();
         player.level().getEntitiesOfClass(
                 Entity.class,

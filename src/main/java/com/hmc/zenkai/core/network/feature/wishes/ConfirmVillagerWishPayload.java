@@ -1,5 +1,7 @@
 package com.hmc.zenkai.core.network.feature.wishes;
 
+import com.hmc.zenkai.core.config.WishConfig;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -14,7 +16,6 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.item.EnchantedBookItem;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
@@ -27,9 +28,9 @@ import java.util.Optional;
 
 public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) implements CustomPacketPayload {
     public static final Type<ConfirmVillagerWishPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath("db_renewed", "confirm_villager_wish"));
+            new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai", "confirm_villager_wish"));
 
-    public static final StreamCodec<?, ConfirmVillagerWishPayload> STREAM_CODEC =
+    public static final StreamCodec<ByteBuf, ConfirmVillagerWishPayload> STREAM_CODEC =
             ResourceLocation.STREAM_CODEC.map(ConfirmVillagerWishPayload::new, ConfirmVillagerWishPayload::enchantmentId);
 
     @Override
@@ -45,46 +46,58 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
                 if (!(ctx.player() instanceof ServerPlayer player)) return;
                 if (!(player.level() instanceof ServerLevel level)) return;
 
+                // Toggle de config (seguridad server-side).
+                if (!WishConfig.isEnabled(WishConfig.WishType.ENCHANT_VILLAGER)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
+                    return;
+                }
+
                 // 1) Resolver Holder<Enchantment> desde el ResourceLocation recibido
                 ResourceLocation id = payload.enchantmentId();
                 var reg = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                 var key = ResourceKey.create(Registries.ENCHANTMENT, id);
-                Holder<Enchantment> holder = reg.get(key).orElse(null);
+                Holder<Enchantment> holder = reg.get(key).map(h -> (Holder<Enchantment>) h).orElse(null);
 
                 if (holder == null) {
-                    player.displayClientMessage(Component.translatable("messages.db_renewed.enchant_not_found", id.toString()), false);
+                    player.displayClientMessage(Component.translatable("messages.zenkai.enchant_not_found", id.toString()), false);
                     return;
                 }
 
-                // 2) Calcular nivel y costo
-                int maxLevel = holder.value().getMaxLevel(); // típico 1–5
-                int levelChosen = maxLevel;                  // según tu requisito: siempre el nivel máximo
-                int price = Math.min(64, 8 + levelChosen * 12); // coste simple; ajusta a gusto
+                // 2) Nivel máximo y precio (desde WishConfig)
+                int levelChosen = Math.max(1, holder.value().getMaxLevel());
+                int base = Math.max(1, WishConfig.villagerBookBasePrice());
+                int perLevel = Math.max(0, WishConfig.villagerBookPricePerLevel());
+                int price = Math.min(64, Math.max(1, base + perLevel * (levelChosen - 1)));
 
-                // 3) Crear libro encantado
-                ItemStack book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(holder, levelChosen));
+                // 3) Libro encantado
+                var book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(holder, levelChosen));
 
-                // 4) Crear oferta: (esmeraldas) + (libro normal) -> (libro encantado)
+                // 4) Oferta: (esmeraldas x price) + (libro) -> (libro encantado)
+                //    FIX: antes se pasaba .getItem() sin count => siempre costaba 1 esmeralda.
                 MerchantOffer offer = new MerchantOffer(
-                        new ItemCost(new ItemStack(Items.EMERALD, price).getItem()),
-                        Optional.of(new ItemCost(new ItemStack(Items.BOOK, 1).getItem())),
+                        new ItemCost(Items.EMERALD, price),
+                        Optional.of(new ItemCost(Items.BOOK, 1)),
                         book.copy(),
-                        999_999, // maxUses (prácticamente infinito)
-                        0,       // XP para el aldeano por trade
+                        999_999, // maxUses
+                        0,       // XP para el aldeano
                         0.05F    // priceMult
                 );
 
                 // 5) Spawnear aldeano bibliotecario y fijar oferta
                 Villager villager = EntityType.VILLAGER.create(level);
                 if (villager == null) {
-                    player.displayClientMessage(Component.literal("No se pudo crear el aldeano."), false);
+                    player.displayClientMessage(Component.translatable("messages.zenkai.villager_spawn_failed"), false);
                     return;
                 }
 
                 villager.moveTo(player.getX() + 1.0, player.getY(), player.getZ() + 1.0, player.getYRot(), 0);
                 villager.setPersistenceRequired();
-                villager.setVillagerData(new VillagerData(villager.getVillagerData().getType(), VillagerProfession.LIBRARIAN, 1));
-                villager.setCustomName(Component.translatable("entity.db_renewed.wish_librarian"));
+                villager.setVillagerData(new VillagerData(
+                        villager.getVillagerData().getType(), VillagerProfession.LIBRARIAN, 1));
+                // XP > 0: marca el oficio como "asentado" para que el brain NO lo devuelva a desempleado
+                // (sin esto, un aldeano con XP 0 y sin atril pierde la profesión y los trades al primer tick).
+                villager.setVillagerXp(1);
+                villager.setCustomName(Component.translatable("entity.zenkai.wish_librarian"));
                 villager.setCustomNameVisible(true);
 
                 MerchantOffers offers = new MerchantOffers();
@@ -93,7 +106,10 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
 
                 level.addFreshEntity(villager);
 
-                player.displayClientMessage(Component.translatable("messages.db_renewed.wish_villager_ready"), false);
+                player.displayClientMessage(Component.translatable("messages.zenkai.wish_villager_ready"), false);
+
+                // Cierre común del deseo (sonido, mensaje, quitar Shenlong).
+                WishFinalizer.finalizeWish(player);
             });
         }
     }

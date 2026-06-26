@@ -72,7 +72,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
     protected @NotNull InteractionResult useWithoutItem(@NotNull BlockState state, Level level, @NotNull BlockPos pos, Player player, @NotNull BlockHitResult hitResult) {
         player.playNotifySound((ModSounds.DRAGON_BALL_USE.get()), SoundSource.BLOCKS,1f,1f);
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
-            player.displayClientMessage(Component.translatable("messages.db.renewed.shenron_summon"), true);
+            player.displayClientMessage(Component.translatable("messages.zenkai.shenron_summon"), true);
             long currentTime = serverLevel.getDayTime();
             long timeOfDay = currentTime % 24000L;
             long ticksUntilNight = timeOfDay < 13000 ? 13000 - timeOfDay : (24000 - timeOfDay + 13000);
