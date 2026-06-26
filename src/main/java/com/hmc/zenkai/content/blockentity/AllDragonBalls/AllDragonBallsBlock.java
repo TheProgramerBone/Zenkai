@@ -4,6 +4,9 @@ import com.hmc.zenkai.content.block.ModBlocks;
 import com.hmc.zenkai.content.entity.ModEntities;
 import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
 import com.hmc.zenkai.content.sound.ModSounds;
+import com.hmc.zenkai.core.ModGameRules;
+import com.hmc.zenkai.core.config.WishConfig;
+import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -72,20 +75,40 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
     protected @NotNull InteractionResult useWithoutItem(@NotNull BlockState state, Level level, @NotNull BlockPos pos, Player player, @NotNull BlockHitResult hitResult) {
         player.playNotifySound((ModSounds.DRAGON_BALL_USE.get()), SoundSource.BLOCKS,1f,1f);
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
+            // (8) Gamerule: invocación deshabilitada por el admin
+            if (!ModGameRules.enableShenlongSummon(serverLevel.getServer())) {
+                player.displayClientMessage(Component.translatable("messages.zenkai.summon_disabled"), true);
+                return InteractionResult.SUCCESS;
+            }
+            // (1) Cooldown POR JUGADOR
+            PlayerStatsAttachment stats = PlayerStatsAttachment.get(player);
+            long now = serverLevel.getGameTime();
+            long cooldown = WishConfig.summonCooldownTicks();
+            long last = stats.getLastSummonTick();
+            if (cooldown > 0 && last != Long.MIN_VALUE && now - last < cooldown) {
+                long remaining = cooldown - (now - last);
+                int days  = (int) (remaining / 24000L);
+                int hours = (int) ((remaining % 24000L) / 1000L);
+                player.displayClientMessage(
+                        Component.translatable("messages.zenkai.summon_cooldown", days, hours), true);
+                return InteractionResult.SUCCESS;
+            }
+
             player.displayClientMessage(Component.translatable("messages.zenkai.shenron_summon"), true);
             long currentTime = serverLevel.getDayTime();
             long timeOfDay = currentTime % 24000L;
             long ticksUntilNight = timeOfDay < 13000 ? 13000 - timeOfDay : (24000 - timeOfDay + 13000);
             serverLevel.setDayTime(currentTime + ticksUntilNight);
             serverLevel.sendParticles(
-                        ParticleTypes.ENCHANT,
-                        pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5,
-                        50,
-                        0.5, 0.5, 0.5,
-                        0.1
+                    ParticleTypes.ENCHANT,
+                    pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5,
+                    50,
+                    0.5, 0.5, 0.5,
+                    0.1
             );
             level.scheduleTick(pos, this, 20*4);
             summonShenron(level, pos);
+            stats.setLastSummonTick(now); // (1) registrar la invocación
             int spacing = 6;
             int yOffset = 0;
             spawnLightningGrid(serverLevel, pos, spacing, yOffset);
@@ -102,7 +125,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
                 }
             }
             ShenronSummoned = true;
-            }
+        }
         return InteractionResult.SUCCESS;
     }
 
@@ -133,6 +156,9 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
         if (entity != null) {
             entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
             entity.rotate(Rotation.CLOCKWISE_180);
+            if (entity instanceof ShenLongEntity shenlong) {
+                shenlong.setWishesRemaining(WishConfig.shenlongWishCount()); // (2) pool por invocación
+            }
             level.addFreshEntity(entity);
         }
     }
