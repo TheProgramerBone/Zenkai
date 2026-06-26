@@ -128,13 +128,39 @@ public class Zenkai {
             );
 
             // Entidades
-            EntityRenderers.register(ModEntities.SPACE_POD.get(),        SpacePodRenderer::new);
-            EntityRenderers.register(ModEntities.KINTOUN.get(),           KintounRenderer::new);
-            EntityRenderers.register(ModEntities.SHADOW_KINTOUN.get(),    ShadowKintounRenderer::new);
-            EntityRenderers.register(ModEntities.NAMEKIAN.get(),          NamekianRenderer::new);
-            EntityRenderers.register(ModEntities.NAMEKIAN_WARRIOR.get(),  NamekianWarriorRenderer::new);
-            EntityRenderers.register(ModEntities.SHENLONG.get(),          ShenLongRenderer::new);
-            EntityRenderers.register(ModEntities.KI_BLAST.get(),          KiBlastRenderer::new);
+            EntityRenderers.register(ModEntities.SPACE_POD.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("space_pod",
+                                    false, true), 1f));
+
+            EntityRenderers.register(ModEntities.KINTOUN.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("kintoun"),
+                            1f));
+
+            EntityRenderers.register(ModEntities.SHADOW_KINTOUN.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("kintoun",
+                                    "kintoun_shadow", "kintoun", false, false), 1f));
+
+            EntityRenderers.register(ModEntities.NAMEKIAN.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("namekian",
+                                    "namekian", "namekian_default", true, true), 0.5f));
+
+            EntityRenderers.register(ModEntities.NAMEKIAN_WARRIOR.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("namekian_warrior",
+                                    "namekian_warrior", "namekian_default", true, true), 0.5f));
+
+            EntityRenderers.register(ModEntities.SHENLONG.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("shenlong", true), 0.5f));
+
+            EntityRenderers.register(ModEntities.KI_BLAST.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("ki_blast")));
+
+            EntityRenderers.register(ModEntities.ISAAC.get(), ctx -> new GenericGeoRenderer<>(ctx,new GenericGeoModel<>("isaac")));
 
             // Worldgen (Terrablender)
             event.enqueueWork(() -> {
