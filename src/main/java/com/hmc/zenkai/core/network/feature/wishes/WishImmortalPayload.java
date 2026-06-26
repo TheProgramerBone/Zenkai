@@ -14,7 +14,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record WishImmortalPayload() implements CustomPacketPayload {
     public static final Type<WishImmortalPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath("db_renewed","wish_immortal"));
+            new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai","wish_immortal"));
     public static final StreamCodec<RegistryFriendlyByteBuf, WishImmortalPayload> STREAM_CODEC =
             StreamCodec.unit(new WishImmortalPayload());
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
@@ -28,7 +28,7 @@ public record WishImmortalPayload() implements CustomPacketPayload {
                         ModEffects.IMMORTALITY,
                         MobEffectInstance.INFINITE_DURATION, 0, true, false, false
                 ));
-                player.displayClientMessage(Component.translatable("messages.db_renewed.immortal"), false);
+                player.displayClientMessage(Component.translatable("messages.zenkai.immortal"), false);
                 att.setImmortal(true);
 
                 WishFinalizer.finalizeWish(player);

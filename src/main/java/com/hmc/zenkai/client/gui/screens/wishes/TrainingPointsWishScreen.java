@@ -8,14 +8,14 @@ import net.minecraft.network.chat.Component;
 public class TrainingPointsWishScreen extends Screen {
     private final Screen parent;
     public TrainingPointsWishScreen(Screen parent) {
-        super(Component.translatable("screen.db_renewed.wish.training_points"));
+        super(Component.translatable("screen.zenkai.wish.training_points"));
         this.parent = parent;
     }
     @Override protected void init() {
         int cx = this.width/2, cy = this.height/2;
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.db_renewed.gui.confirm"), b -> this.onClose())
+        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.confirm"), b -> this.onClose())
                 .bounds(cx-60, cy, 120, 20).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.db_renewed.gui.back"), b -> this.onClose())
+        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.back"), b -> this.onClose())
                 .bounds(cx-60, cy+24, 120, 20).build());
     }
     @Override public void onClose(){

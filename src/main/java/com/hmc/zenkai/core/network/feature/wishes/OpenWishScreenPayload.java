@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public record OpenWishScreenPayload() implements CustomPacketPayload {
     public static final Type<OpenWishScreenPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath("db_renewed", "open_wish_screen"));
+            new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai", "open_wish_screen"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, OpenWishScreenPayload> STREAM_CODEC =
             StreamCodec.of((buf, payload) -> {

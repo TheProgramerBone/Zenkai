@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
 public class ImmortalWishScreen extends Screen {
     private final Screen parent;
     public ImmortalWishScreen(Screen parent) {
-        super(Component.translatable("screen.db_renewed.wish.immortal"));
+        super(Component.translatable("screen.zenkai.wish.immortal"));
         this.parent = parent;
     }
 
@@ -19,13 +19,13 @@ public class ImmortalWishScreen extends Screen {
         int cx = this.width / 2;
         int cy = this.height / 2;
 
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.db_renewed.gui.confirm"), b -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.confirm"), b -> {
             var conn = Minecraft.getInstance().getConnection();
             if (conn != null) conn.send(new WishImmortalPayload()); // <-- envia al server
             this.onClose();
         }).bounds(cx - 60, cy, 120, 20).build());
 
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.db_renewed.gui.back"), b -> this.onClose())
+        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.back"), b -> this.onClose())
                 .bounds(cx - 60, cy + 24, 120, 20).build());
     }
 
@@ -37,7 +37,7 @@ public class ImmortalWishScreen extends Screen {
         this.renderBackground(g,mouseX,mouseY,partial);
         super.render(g, mouseX, mouseY, partial);
         g.drawCenteredString(this.font, this.title, this.width/2, 20, 0xFFFFFF);
-        g.drawCenteredString(this.font, Component.translatable("screen.db_renewed.wish.immortal.desc"),
+        g.drawCenteredString(this.font, Component.translatable("screen.zenkai.wish.immortal.desc"),
                 this.width/2, this.height/2 - 20, 0xAAAAAA);
     }
 }

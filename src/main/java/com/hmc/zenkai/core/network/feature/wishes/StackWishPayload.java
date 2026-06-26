@@ -14,7 +14,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record StackWishPayload() implements CustomPacketPayload {
     public static final Type<StackWishPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath("db_renewed", "confirm_wish"));
+            new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai", "confirm_wish"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, StackWishPayload> STREAM_CODEC =
             StreamCodec.unit(new StackWishPayload());
@@ -30,20 +30,20 @@ public record StackWishPayload() implements CustomPacketPayload {
                 ServerPlayer player = (ServerPlayer) ctx.player();
 
                 if (!(player.containerMenu instanceof StackWishMenu menu)) {
-                    player.displayClientMessage(Component.translatable("messages.db_renewed.no_open_wish"), false);
+                    player.displayClientMessage(Component.translatable("messages.zenkai.no_open_wish"), false);
                     return;
                 }
 
                 ItemStack chosen = menu.getChosenItem();
                 if (chosen == null || chosen.isEmpty()) {
-                    player.displayClientMessage(Component.translatable("messages.db_renewed.no_chosen_item"), false);
+                    player.displayClientMessage(Component.translatable("messages.zenkai.no_chosen_item"), false);
                     return;
                 }
 
                 ItemStack resolved = WishConfig.resolveWishStack(chosen);
 
                 if (resolved.isEmpty()) {
-                    player.displayClientMessage(Component.translatable("messages.db_renewed.invalid_wish"), false);
+                    player.displayClientMessage(Component.translatable("messages.zenkai.invalid_wish"), false);
                     return;
                 }
 

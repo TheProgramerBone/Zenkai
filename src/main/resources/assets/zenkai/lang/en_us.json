@@ -93,7 +93,7 @@
   "biome.zenkai.namek_mid": "Namek Mid Biome",
   "biome.zenkai.namek_plains": "Namek Plains Biome",
   "biome.zenkai.namek_hills": "Namek Hills Biome",
-
+  
   "messages.zenkai.shenron_summon": "§2§lCome forth Shenron and grant my wish!",
   "messages.zenkai.dragon_ball_radar_not_in_range": "No §6Dragon Balls§f in radius",
   "messages.zenkai.dragon_ball_radar_searching": "A §6Dragon Ball§f is in radius!",
@@ -109,6 +109,10 @@
   "messages.zenkai.player_revive_failed": "The player could not be revived.",
   "messages.zenkai.wish_granted": "§2§lShenlong:§6 Your wish was granted.",
   "messages.zenkai.race_selection_disabled": "Race selection is disabled on this server.",
+  "messages.zenkai.wish_disabled": "That wish is disabled.",
+  "messages.zenkai.villager_spawn_failed": "Failed to spawn the villager.",
+  "messages.zenkai.enchant_not_found": "Enchantment not found: %s",
+  "messages.zenkai.wish_villager_ready": "Your librarian villager is ready!",
 
   "screen.zenkai.shenlong_wish": "§2§lShenlong:§6§l State your wish",
   "screen.zenkai.option.stack": "I want more of...",
@@ -123,6 +127,8 @@
   "screen.zenkai.wish.immortal.desc": "You will be able to die if you receive more damage that you can take",
   "screen.zenkai.wish.revive_player.desc": "Enter the exact name of the player to revive.",
   "screen.zenkai.wish.revive_pet.empty": "There are no available pets.",
+  "screen.zenkai.enchant.max_level": "Maximum level: %s",
+  "screen.zenkai.no_enchantments": "No enchantments available",
 
   "screen.zenkai.appearance.title": "Character Appearance",
   "screen.zenkai.choose_style.title": "Choose Your Style",
@@ -194,5 +200,6 @@
   "entity.zenkai.kintoun": "Flying Nimbus",
   "entity.zenkai.kintoun_shadow": "Shadow Flying Nimbus",
   "entity.zenkai.namekian": "Namekian",
-  "entity.zenkai.namekian_warrior": "Namekian Warrior"
+  "entity.zenkai.namekian_warrior": "Namekian Warrior",
+  "entity.zenkai.wish_librarian": "Special Librarian"
 }

@@ -139,5 +139,11 @@ public class ModNetworking {
                 UpdatePlayerVisualPacket.STREAM_CODEC,
                 UpdatePlayerVisualPacket::handle
         );
+
+        registrar.playToServer(
+                ConfirmVillagerWishPayload.TYPE,
+                ConfirmVillagerWishPayload.STREAM_CODEC,
+                ConfirmVillagerWishPayload.ConfirmVillagerWishPayloadHandler::handle
+        );
     }
 }

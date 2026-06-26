@@ -14,7 +14,7 @@ public class RevivePlayerWishScreen extends Screen {
     private EditBox nameBox;
 
     public RevivePlayerWishScreen(Screen parent) {
-        super(Component.translatable("screen.db_renewed.wish.revive_player"));
+        super(Component.translatable("screen.zenkai.wish.revive_player"));
         this.parent = parent;
     }
 
@@ -27,7 +27,7 @@ public class RevivePlayerWishScreen extends Screen {
         this.nameBox.setMaxLength(32);
         this.addRenderableWidget(this.nameBox);
 
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.db_renewed.gui.confirm"), b -> {
+        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.confirm"), b -> {
             String target = nameBox.getValue().trim();
             if (!target.isEmpty()) {
                 var conn = Minecraft.getInstance().getConnection();
@@ -36,7 +36,7 @@ public class RevivePlayerWishScreen extends Screen {
             this.onClose();
         }).bounds(cx - 60, cy + 20, 120, 20).build());
 
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.db_renewed.gui.back"), b -> this.onClose())
+        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.back"), b -> this.onClose())
                 .bounds(cx - 60, cy + 44, 120, 20).build());
     }
 
@@ -48,7 +48,7 @@ public class RevivePlayerWishScreen extends Screen {
         this.renderBackground(g, mouseX, mouseY, partial);
         super.render(g, mouseX, mouseY, partial);
         g.drawCenteredString(this.font, this.title, this.width/2, 20, 0xFFFFFF);
-        g.drawCenteredString(this.font, Component.translatable("screen.db_renewed.wish.revive_player.desc"),
+        g.drawCenteredString(this.font, Component.translatable("screen.zenkai.wish.revive_player.desc"),
                 this.width/2, this.height/2 - 30, 0xAAAAAA);
     }
 }

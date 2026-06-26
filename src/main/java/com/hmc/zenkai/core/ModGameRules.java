@@ -8,10 +8,10 @@ import net.minecraft.world.level.GameRules;
  * sin tocar nada. Los admins pueden desactivar partes con /gamerule.
  *
  * Comandos disponibles:
- *   /gamerule dbr_allowRaceSelection false   → bloquea la selección de raza
- *   /gamerule dbr_enableRaceBoosts false     → combat 100% vanilla
- *   /gamerule dbr_enableKiDamage false       → Ki Blasts no hacen daño
- *   /gamerule dbr_enableTransformations false → bloquea transformaciones
+ *   /gamerule zenkai_allowRaceSelection false   → bloquea la selección de raza
+ *   /gamerule zenkai_enableRaceBoosts false     → combat 100% vanilla
+ *   /gamerule zenkai_enableKiDamage false       → Ki Blasts no hacen daño
+ *   /gamerule zenkai_enableTransformations false → bloquea transformaciones
  *
  * Uso en código:
  *   ModGameRules.allowRaceSelection(server)    → boolean
@@ -28,7 +28,7 @@ public final class ModGameRules {
     /** Si false, el servidor rechaza el packet de elección de raza. */
     public static final GameRules.Key<GameRules.BooleanValue> ALLOW_RACE_SELECTION =
             GameRules.register(
-                    "dbr_allowRaceSelection",
+                    "zenkai_allowRaceSelection",
                     GameRules.Category.PLAYER,
                     GameRules.BooleanValue.create(true)
             );
@@ -39,7 +39,7 @@ public final class ModGameRules {
      */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_RACE_BOOSTS =
             GameRules.register(
-                    "dbr_enableRaceBoosts",
+                    "zenkai_enableRaceBoosts",
                     GameRules.Category.PLAYER,
                     GameRules.BooleanValue.create(true)
             );
@@ -50,7 +50,7 @@ public final class ModGameRules {
      */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_KI_DAMAGE =
             GameRules.register(
-                    "dbr_enableKiDamage",
+                    "zenkai_enableKiDamage",
                     GameRules.Category.PLAYER,
                     GameRules.BooleanValue.create(true)
             );
@@ -61,7 +61,7 @@ public final class ModGameRules {
      */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_TRANSFORMATIONS =
             GameRules.register(
-                    "dbr_enableTransformations",
+                    "zenkai_enableTransformations",
                     GameRules.Category.PLAYER,
                     GameRules.BooleanValue.create(true)
             );
