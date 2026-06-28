@@ -159,5 +159,11 @@ public class ModNetworking {
                 (payload, context) -> context.enqueueWork(() ->
                        ClientWishToggles.apply(payload))
         );
+
+        registrar.playToServer(
+                WishRevivePetPayload.TYPE,
+                WishRevivePetPayload.STREAM_CODEC,
+                WishRevivePetPayload.Handler::handle
+        );
     }
 }

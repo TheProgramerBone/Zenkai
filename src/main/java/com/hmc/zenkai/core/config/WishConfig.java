@@ -136,6 +136,7 @@ public class WishConfig {
 
     @SubscribeEvent
     public static void onConfigLoad(final ModConfigEvent event) {
+        if (event instanceof ModConfigEvent.Unloading) return;
         if (event.getConfig().getSpec() != SPEC) return;
 
         Map<ResourceLocation, Integer> parsedOverrides = new HashMap<>();

@@ -79,7 +79,6 @@
   "key.zenkai.toggle_fly": "Toggle Flight",
   "key.categories.zenkai": "Zenkai",
 
-
   "sounds.zenkai.dragon_ball_radar_use": "Used Radar",
   "sounds.zenkai.dragon_ball_radar_searching": "A Dragon Ball is in radius",
   "sounds.zenkai.dragon_ball_radar_near": "A Dragon Ball Is Near",
@@ -106,8 +105,8 @@
   "messages.zenkai.no_chosen_item": "§2§lShenlong:§6 You haven't chosen an item",
   "messages.zenkai.item_banned": "§2§lShenlong:§6 Sorry that item it's forbidden",
   "messages.zenkai.immortal": "You feel immortal!",
-  "messages.zenkai.player_revived": "The player has been revived.",
-  "messages.zenkai.player_revive_failed": "The player could not be revived.",
+  "messages.zenkai.player_revived": "§2§lShenlong:§6 A soul returns from the otherworld.",
+  "messages.zenkai.player_revive_failed": "§cThat player can't be revived.",
   "messages.zenkai.wish_dropped_full": "§eInventory full — the wished items were dropped at your feet.",
   "messages.zenkai.wish_granted": "§2§lShenlong:§6 Your wish was granted.",
   "messages.zenkai.wish_granted_remaining": "§2§lShenlong:§6 Your wish was granted. You still have %s wishes left",
@@ -118,6 +117,9 @@
   "messages.zenkai.wish_villager_ready": "Your librarian villager is ready!",
   "messages.zenkai.summon_cooldown": "§cYou must wait %s more day(s) before summoning again.",
   "screen.zenkai.shenlong_wish.remaining": "Wishes remaining: %s",
+  "messages.zenkai.pet_revived": "§2§lShenlong:§6 Your companion returns to you.",
+  "messages.zenkai.pet_revive_failed": "§cThe revival failed.",
+
 
   "screen.zenkai.shenlong_wish": "§2§lShenlong:§6§l State your wish",
   "screen.zenkai.option.stack": "I want more of...",
@@ -131,7 +133,7 @@
   "screen.zenkai.wish.training_points": "I want to be more powerful!",
   "screen.zenkai.wish.immortal.desc": "You will be able to die if you receive more damage that you can take",
   "screen.zenkai.wish.revive_player.desc": "Enter the exact name of the player to revive.",
-  "screen.zenkai.wish.revive_pet.empty": "There are no available pets.",
+  "screen.zenkai.wish.no_pets": "No fallen pets to revive.",
   "screen.zenkai.enchant.max_level": "Maximum level: %s",
   "screen.zenkai.no_enchantments": "No enchantments available",
 

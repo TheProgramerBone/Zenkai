@@ -193,6 +193,7 @@ public final class StatsConfig {
 
     @SubscribeEvent
     public static void onConfigLoad(final ModConfigEvent event) {
+        if (event instanceof ModConfigEvent.Unloading) return;
         if (event.getConfig().getSpec() != SPEC) return;
 
         TP_COEFFICIENT       = TP_COEFFICIENT_RAW.get();
