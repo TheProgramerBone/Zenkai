@@ -1,8 +1,10 @@
 package com.hmc.zenkai.core.network.feature.wishes;
 
+import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
 import com.hmc.zenkai.core.config.WishConfig;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.Holder;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -11,6 +13,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerData;
@@ -24,6 +28,7 @@ import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) implements CustomPacketPayload {
@@ -90,7 +95,6 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
                     return;
                 }
 
-                villager.moveTo(player.getX() + 1.0, player.getY(), player.getZ() + 1.0, player.getYRot(), 0);
                 villager.setPersistenceRequired();
                 villager.setVillagerData(new VillagerData(
                         villager.getVillagerData().getType(), VillagerProfession.LIBRARIAN, 1));
@@ -104,7 +108,35 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
                 offers.add(offer);
                 villager.setOffers(offers);
 
+                // --- Entrada cinematográfica: aparece ~3 bloques sobre las esferas
+                //     (usamos el Shenlong más cercano como referencia, que está sobre ellas),
+                //     con caída lenta (sin daño) y una columna de partículas de encantamiento. ---
+                ShenLongEntity dragon = level.getEntitiesOfClass(
+                                ShenLongEntity.class, player.getBoundingBox().inflate(48))
+                        .stream()
+                        .min(Comparator.comparingDouble(e -> e.distanceToSqr(player)))
+                        .orElse(null);
+
+                double baseX, baseY, baseZ;
+                if (dragon != null) {
+                    baseX = dragon.getX(); baseY = dragon.getY(); baseZ = dragon.getZ();
+                } else {
+                    // Fallback: junto al jugador si no se encuentra el dragón.
+                    baseX = player.getX() + 1.0; baseY = player.getY(); baseZ = player.getZ() + 1.0;
+                }
+                double spawnY = baseY + 5.0;
+
+                villager.moveTo(baseX, spawnY, baseZ, player.getYRot(), 0);
+                villager.fallDistance = 0.0F;
+                villager.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 600, 255, false, false, false));
+
                 level.addFreshEntity(villager);
+
+                // Columna de partículas de encantamiento desde la base hasta el punto de aparición.
+                for (int i = 6; i >= -8; i--) {
+                    double py = 5 + baseY + i * 0.5;
+                    level.sendParticles(ParticleTypes.ENCHANT, baseX, py, baseZ, 48, 0.3, 0.2, 0.3, 0.05);
+                }
 
                 player.displayClientMessage(Component.translatable("messages.zenkai.wish_villager_ready"), false);
 
