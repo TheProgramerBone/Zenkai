@@ -6,18 +6,6 @@ import net.minecraft.world.level.GameRules;
 /**
  * Gamerules del mod. Todas true por defecto — el mod funciona completo
  * sin tocar nada. Los admins pueden desactivar partes con /gamerule.
- *
- * Comandos disponibles:
- *   /gamerule zenkai_allowRaceSelection false   → bloquea la selección de raza
- *   /gamerule zenkai_enableRaceBoosts false     → combat 100% vanilla
- *   /gamerule zenkai_enableKiDamage false       → Ki Blasts no hacen daño
- *   /gamerule zenkai_enableTransformations false → bloquea transformaciones
- *
- * Uso en código:
- *   ModGameRules.allowRaceSelection(server)    → boolean
- *   ModGameRules.enableRaceBoosts(server)      → boolean
- *   ModGameRules.enableKiDamage(server)        → boolean
- *   ModGameRules.enableTransformations(server) → boolean
  */
 public final class ModGameRules {
 
@@ -27,66 +15,40 @@ public final class ModGameRules {
 
     /** Si false, el servidor rechaza el packet de elección de raza. */
     public static final GameRules.Key<GameRules.BooleanValue> ALLOW_RACE_SELECTION =
-            GameRules.register(
-                    "zenkai_allowRaceSelection",
-                    GameRules.Category.PLAYER,
-                    GameRules.BooleanValue.create(true)
-            );
+            GameRules.register("zenkai_allowRaceSelection", GameRules.Category.PLAYER,
+                    GameRules.BooleanValue.create(true));
 
-    /**
-     * Si false, CombatHooks no se activa aunque el jugador tenga raza.
-     * El combat vuelve a ser 100% vanilla.
-     */
+    /** Si false, CombatHooks no se activa aunque el jugador tenga raza. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_RACE_BOOSTS =
-            GameRules.register(
-                    "zenkai_enableRaceBoosts",
-                    GameRules.Category.PLAYER,
-                    GameRules.BooleanValue.create(true)
-            );
+            GameRules.register("zenkai_enableRaceBoosts", GameRules.Category.PLAYER,
+                    GameRules.BooleanValue.create(true));
 
-    /**
-     * Si false, los Ki Blasts no aplican daño al impactar.
-     * Se pueden usar visualmente sin afectar el combate.
-     */
+    /** Si false, los Ki Blasts no aplican daño al impactar. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_KI_DAMAGE =
-            GameRules.register(
-                    "zenkai_enableKiDamage",
-                    GameRules.Category.PLAYER,
-                    GameRules.BooleanValue.create(true)
-            );
+            GameRules.register("zenkai_enableKiDamage", GameRules.Category.PLAYER,
+                    GameRules.BooleanValue.create(true));
 
-    /**
-     * Si false, el servidor rechaza el packet de transformación.
-     * El jugador permanece en su forma base aunque tenga el Ki necesario.
-     */
+    /** Si false, el servidor rechaza el packet de transformación. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_TRANSFORMATIONS =
-            GameRules.register(
-                    "zenkai_enableTransformations",
-                    GameRules.Category.PLAYER,
-                    GameRules.BooleanValue.create(true)
-            );
+            GameRules.register("zenkai_enableTransformations", GameRules.Category.PLAYER,
+                    GameRules.BooleanValue.create(true));
+
+    /** Si false, el bloque de las 7 esferas no invoca a Shenlong. */
+    public static final GameRules.Key<GameRules.BooleanValue> ENABLE_SHENLONG_SUMMON =
+            GameRules.register("zenkai_enableSummon", GameRules.Category.PLAYER,
+                    GameRules.BooleanValue.create(true));
 
     /**
-     * Si false, el bloque de las 7 esferas no invoca a Shenlong.
-     * El resto del sistema de deseos queda inerte porque no hay dragón.
+     * Si true (default), al morir el jugador es enviado al otro mundo en vez de
+     * morir normalmente. En HARDCORE el otro mundo se fuerza siempre, ignore este valor.
      */
-    public static final GameRules.Key<GameRules.BooleanValue> ENABLE_SHENLONG_SUMMON =
-            GameRules.register(
-                    "zenkai_enableSummon",
-                    GameRules.Category.PLAYER,
-                    GameRules.BooleanValue.create(true)
-            );
+    public static final GameRules.Key<GameRules.BooleanValue> ENABLE_OTHERWORLD =
+            GameRules.register("zenkai_enableOtherworld", GameRules.Category.PLAYER,
+                    GameRules.BooleanValue.create(true));
 
     // ── Init ─────────────────────────────────────────────────────────────────
-
-    /**
-     * Llamar desde el constructor de DragonBlockRenewed para forzar
-     * la inicialización estática de las claves antes de que el servidor arranque.
-     */
     public static void init() {
-        // Las constantes ya se registran al cargar la clase.
-        // Este sistema existe solo para provocar esa carga de forma explícita
-        // y documentada, evitando que el JVM la retrase.
+        // Fuerza la carga estática de las claves antes de arrancar el servidor.
     }
 
     // ── Helpers de lectura ────────────────────────────────────────────────────
@@ -109,5 +71,10 @@ public final class ModGameRules {
 
     public static boolean enableShenlongSummon(MinecraftServer server) {
         return server.getGameRules().getBoolean(ENABLE_SHENLONG_SUMMON);
+    }
+
+    /** En hardcore se considera siempre activo. */
+    public static boolean enableOtherworld(MinecraftServer server) {
+        return server.isHardcore() || server.getGameRules().getBoolean(ENABLE_OTHERWORLD);
     }
 }

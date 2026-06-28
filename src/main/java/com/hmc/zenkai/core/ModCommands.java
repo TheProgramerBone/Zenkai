@@ -120,6 +120,19 @@ public class ModCommands {
                                 .executes(ctx -> resetFull(ctx, ctx.getSource().getPlayerOrException()))
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> resetFull(ctx, EntityArgument.getPlayer(ctx, "player"))))))
+
+                .then(Commands.literal("revive")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .executes(ctx -> revivePlayer(ctx, EntityArgument.getPlayer(ctx, "player")))))
+
+                // ── /zenkai pets ──────────────────────────────────────────────────
+                // Borra el historial de mascotas muertas (deseo de revivir).
+                // Uso: /zenkai pets clear [jugador]
+                .then(Commands.literal("pets")
+                        .then(Commands.literal("clear")
+                                .executes(ctx -> clearPets(ctx, ctx.getSource().getPlayerOrException()))
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> clearPets(ctx, EntityArgument.getPlayer(ctx, "player"))))))
         );
     }
 
@@ -226,6 +239,26 @@ public class ModCommands {
 
         ctx.getSource().sendSuccess(
                 () -> Component.literal("[Zenkai] Full reset done → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    private static int clearPets(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        var att = sp.getData(DataAttachments.PLAYER_STATS.get());
+        int n = att.getDeadPets().size();
+        att.clearDeadPets();
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(
+                () -> Component.literal("[Zenkai] Cleared " + n + " dead pet(s) → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    private static int revivePlayer(CommandContext<CommandSourceStack> ctx, ServerPlayer target) {
+        boolean ok = com.hmc.zenkai.core.network.feature.player.OtherworldManager.revive(target);
+        if (!ok) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] " + target.getGameProfile().getName() + " is not in the otherworld."));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Revived " + target.getGameProfile().getName()), true);
         return 1;
     }
 }

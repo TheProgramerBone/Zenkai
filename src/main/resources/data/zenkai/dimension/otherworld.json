@@ -1,0 +1,14 @@
+{
+  "type": "zenkai:otherworld_type",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "minecraft:plains",
+      "lakes": false,
+      "features": false,
+      "layers": [
+        { "block": "minecraft:bedrock", "height": 1 }
+      ]
+    }
+  }
+}

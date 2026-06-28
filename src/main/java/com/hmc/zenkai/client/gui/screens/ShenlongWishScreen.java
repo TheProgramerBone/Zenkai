@@ -6,6 +6,7 @@ import com.hmc.zenkai.client.gui.screens.wishes.ClientWishToggles;
 import com.hmc.zenkai.client.gui.screens.wishes.EnchantVillagerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.ImmortalWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.RevivePlayerWishScreen;
+import com.hmc.zenkai.client.gui.screens.wishes.RevivePetWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.TrainingPointsWishScreen;
 import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
 import com.hmc.zenkai.core.config.WishConfig.WishType;
@@ -81,6 +82,9 @@ public class ShenlongWishScreen extends Screen {
             addWish("screen.zenkai.wish.training_points",
                     () -> { if (minecraft != null) minecraft.setScreen(new TrainingPointsWishScreen(this)); });
         }
+        // Revivir mascota: sin toggle de config (siempre disponible).
+        addWish("screen.zenkai.wish.revive_pet",
+                () -> { if (minecraft != null) minecraft.setScreen(new RevivePetWishScreen(this)); });
     }
 
     /** Crea un botón de deseo en el cursor actual y avanza el cursor. */

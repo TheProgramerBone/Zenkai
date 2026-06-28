@@ -7,8 +7,13 @@ import com.hmc.zenkai.core.network.feature.Style;
 import com.hmc.zenkai.core.network.feature.ki.KiAttackDefinition;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,6 +35,10 @@ public class PlayerStatsAttachment {
 
     /** Último tick (gameTime) en que este jugador invocó a Shenlong. Cooldown por jugador. */
     private long lastSummonTick = Long.MIN_VALUE;
+
+    /** NBT completo de las mascotas muertas del jugador (para el deseo de revivir). Más reciente al final. */
+    private static final int MAX_DEAD_PETS = 6;
+    private final List<CompoundTag> deadPets = new ArrayList<>();
 
     public PlayerStatsAttachment() {
         // Calcular los máximos iniciales y llenar los pools
@@ -141,6 +150,11 @@ public class PlayerStatsAttachment {
     public void setMajin(boolean v)       { flags.setMajin(v); }
     public void setLegendary(boolean v)   { flags.setLegendary(v); }
 
+    public boolean isInOtherworld()        { return flags.isInOtherworld(); }
+    public void setInOtherworld(boolean v) { flags.setInOtherworld(v); }
+    public long getOtherworldSince()       { return flags.getOtherworldSince(); }
+    public void setOtherworldSince(long t) { flags.setOtherworldSince(t); }
+
     // ── Ki Attacks ───────────────────────────────────────────────────────────
     public KiAttackDefinition getKiAttack(String id)    { return kiAttacks.getAttack(id); }
     public void addOrUpdateKiAttack(KiAttackDefinition def) { kiAttacks.addOrUpdate(def); }
@@ -164,6 +178,26 @@ public class PlayerStatsAttachment {
     public long getLastSummonTick()       { return lastSummonTick; }
     public void setLastSummonTick(long t) { this.lastSummonTick = t; }
 
+    // ── Mascotas muertas (deseo de revivir) ──────────────────────────────────
+    /** Lista de solo lectura del NBT de mascotas muertas (la más reciente al final). */
+    public List<CompoundTag> getDeadPets() { return Collections.unmodifiableList(deadPets); }
+
+    /** Añade una mascota muerta (NBT ya serializado). Respeta el tope, descartando la más antigua. */
+    public void addDeadPet(CompoundTag petNbt) {
+        if (petNbt == null || petNbt.isEmpty()) return;
+        deadPets.add(petNbt);
+        while (deadPets.size() > MAX_DEAD_PETS) deadPets.remove(0);
+    }
+
+    /** Saca y devuelve la mascota en el índice dado (para revivirla); null si el índice no es válido. */
+    public CompoundTag removeDeadPet(int index) {
+        if (index < 0 || index >= deadPets.size()) return null;
+        return deadPets.remove(index);
+    }
+
+    /** Borra el historial de mascotas muertas. */
+    public void clearDeadPets() { deadPets.clear(); }
+
     // ── Recalc interno ───────────────────────────────────────────────────────
     /** Propaga los máximos calculados por PlayerRaceStats a PlayerResourcePools. */
     private void applyRecalc() {
@@ -184,6 +218,9 @@ public class PlayerStatsAttachment {
         tag.put("kiAttacks", kiAttacks.save());
         tag.put("flags",     flags.save());
         tag.putLong("lastSummonTick", lastSummonTick);
+        ListTag pets = new ListTag();
+        pets.addAll(deadPets);
+        tag.put("deadPets", pets);
         return tag;
     }
 
@@ -193,6 +230,11 @@ public class PlayerStatsAttachment {
         if (tag.contains("kiAttacks")) kiAttacks.load(tag.getCompound("kiAttacks"));
         if (tag.contains("flags"))     flags.load(tag.getCompound("flags"));
         lastSummonTick = tag.contains("lastSummonTick") ? tag.getLong("lastSummonTick") : Long.MIN_VALUE;
+        deadPets.clear();
+        if (tag.contains("deadPets")) {
+            ListTag pets = tag.getList("deadPets", Tag.TAG_COMPOUND);
+            for (int i = 0; i < pets.size(); i++) deadPets.add(pets.getCompound(i));
+        }
         // Recalc por si los atributos cambiaron al cargar
         applyRecalc();
     }

@@ -11,12 +11,19 @@ public class PlayerStateFlags {
     private boolean flyEnabled  = false;
     private boolean chargingKi  = false;
 
+    /** El jugador está muerto / en el otro mundo. */
+    private boolean inOtherworld = false;
+    /** gameTime en que fue enviado al otro mundo (para el contador de Yemma). */
+    private long otherworldSince = 0L;
+
     public boolean isImmortal()  { return isImmortal; }
     public boolean isDivine()    { return isDivine; }
     public boolean isMajin()     { return isMajin; }
     public boolean isLegendary() { return isLegendary; }
     public boolean isFlyEnabled()  { return flyEnabled; }
     public boolean isChargingKi()  { return chargingKi; }
+    public boolean isInOtherworld() { return inOtherworld; }
+    public long getOtherworldSince() { return otherworldSince; }
 
     public void setImmortal(boolean v)  { this.isImmortal  = v; }
     public void setDivine(boolean v)    { this.isDivine    = v; }
@@ -24,6 +31,8 @@ public class PlayerStateFlags {
     public void setLegendary(boolean v) { this.isLegendary = v; }
     public void setFlyEnabled(boolean v)  { this.flyEnabled  = v; }
     public void setChargingKi(boolean v)  { this.chargingKi  = v; }
+    public void setInOtherworld(boolean v) { this.inOtherworld = v; }
+    public void setOtherworldSince(long t) { this.otherworldSince = t; }
 
     // ── NBT ──────────────────────────────────────────────────────────────────
     public CompoundTag save() {
@@ -34,6 +43,8 @@ public class PlayerStateFlags {
         tag.putBoolean("isLegendary", isLegendary);
         tag.putBoolean("flyEnabled",  flyEnabled);
         tag.putBoolean("chargingKi",  chargingKi);
+        tag.putBoolean("inOtherworld", inOtherworld);
+        tag.putLong("otherworldSince", otherworldSince);
         return tag;
     }
 
@@ -44,5 +55,7 @@ public class PlayerStateFlags {
         this.isLegendary = tag.getBoolean("isLegendary");
         this.flyEnabled  = tag.getBoolean("flyEnabled");
         this.chargingKi  = tag.getBoolean("chargingKi");
+        this.inOtherworld = tag.getBoolean("inOtherworld");
+        this.otherworldSince = tag.getLong("otherworldSince");
     }
 }

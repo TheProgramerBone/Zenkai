@@ -1,14 +1,13 @@
 package com.hmc.zenkai.core.network.feature.wishes;
 
-import net.minecraft.core.BlockPos;
 import com.hmc.zenkai.core.config.WishConfig;
+import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -31,6 +30,7 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
                     invoker.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
                     return;
                 }
+
                 String targetName = payload.targetName() == null ? "" : payload.targetName().trim();
                 if (targetName.isEmpty()) {
                     invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revive_failed"), false);
@@ -38,36 +38,16 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
                 }
 
                 ServerPlayer target = invoker.server.getPlayerList().getPlayerByName(targetName);
-                if (target == null) {
+                // Solo jugadores online y que estén realmente en el otro mundo.
+                if (target == null || !OtherworldManager.isInOtherworld(target)) {
                     invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revive_failed"), false);
                     return;
                 }
 
-                // Integra tu capability/flag isDead (si existe)
-                // Example:
-                // target.getCapability(DeathCapProvider.CAP).ifPresent(cap -> cap.setDead(false));
-
-                // Restaurar estado básico
-                target.setHealth(target.getMaxHealth());
-
-                // Determinar dimensión y posición de respawn
-                ServerLevel dest = target.server.getLevel(target.getRespawnDimension());
-                if (dest == null) dest = target.serverLevel(); // fallback
-
-                BlockPos respawnPos = target.getRespawnPosition();
-                if (respawnPos == null) respawnPos = dest.getSharedSpawnPos();
-
-                target.teleportTo(dest,
-                        respawnPos.getX() + 0.5,
-                        respawnPos.getY(),
-                        respawnPos.getZ() + 0.5,
-                        target.getYRot(),
-                        target.getXRot());
-
-                // Feedback para quien pidió el deseo
+                OtherworldManager.revive(target); // misma lógica que el comando
+                target.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
                 invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
 
-                // Final común (cerrar GUI, quitar Shenlong, etc.)
                 WishFinalizer.finalizeWish(invoker);
             });
         }
