@@ -9,7 +9,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record StackWishPayload() implements CustomPacketPayload {
@@ -29,6 +28,11 @@ public record StackWishPayload() implements CustomPacketPayload {
             ctx.enqueueWork(() -> {
                 ServerPlayer player = (ServerPlayer) ctx.player();
 
+                if (!WishConfig.isEnabled(WishConfig.WishType.STACK)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
+                    return;
+                }
+
                 if (!(player.containerMenu instanceof StackWishMenu menu)) {
                     player.displayClientMessage(Component.translatable("messages.zenkai.no_open_wish"), false);
                     return;
@@ -47,7 +51,15 @@ public record StackWishPayload() implements CustomPacketPayload {
                     return;
                 }
 
-                ItemHandlerHelper.giveItemToPlayer(player, resolved.copy());
+                // Entrega: añade lo que quepa; lo que sobre se suelta a los pies y se avisa
+                // (no se pierde). Un ítem no apilable necesita un slot vacío.
+                ItemStack toGive = resolved.copy();
+                player.getInventory().add(toGive);
+                if (!toGive.isEmpty()) {
+                    player.drop(toGive, false);
+                    player.displayClientMessage(
+                            Component.translatable("messages.zenkai.wish_dropped_full"), false);
+                }
 
                 player.inventoryMenu.broadcastChanges();
                 player.containerMenu.broadcastChanges();

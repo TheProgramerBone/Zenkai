@@ -86,7 +86,6 @@
   "sounds.zenkai.dragon_ball_use": "Dragon Ball Use",
   "sounds.zenkai.senzu_eat": "Senzu Eaten",
   "sounds.zenkai.wish_granted": "Wish Granted",
-  "sounds.zenkai.specialist": "Specialist",
 
   "tooltip.zenkai.dragon_ball_radar": "Locate Dragon Balls in a radius of 128 blocks!",
   "tooltip.zenkai.dragon_balls": "§oA mysterious sphere...",
@@ -95,8 +94,6 @@
   "biome.zenkai.namek_plains": "Namek Plains Biome",
   "biome.zenkai.namek_hills": "Namek Hills Biome",
 
-  "messages.zenkai.summon_disabled": "§cThe Eternal Dragon cannot be summoned here.",
-  "messages.zenkai.summon_cooldown": "§cYou must wait %s day(s) and %s hour(s) before summoning again.",
   "messages.zenkai.shenron_summon": "§2§lCome forth Shenron and grant my wish!",
   "messages.zenkai.dragon_ball_radar_not_in_range": "No §6Dragon Balls§f in radius",
   "messages.zenkai.dragon_ball_radar_searching": "A §6Dragon Ball§f is in radius!",
@@ -110,12 +107,14 @@
   "messages.zenkai.immortal": "You feel immortal!",
   "messages.zenkai.player_revived": "The player has been revived.",
   "messages.zenkai.player_revive_failed": "The player could not be revived.",
+  "messages.zenkai.wish_dropped_full": "§eInventory full — the wished items were dropped at your feet.",
   "messages.zenkai.wish_granted": "§2§lShenlong:§6 Your wish was granted.",
   "messages.zenkai.race_selection_disabled": "Race selection is disabled on this server.",
   "messages.zenkai.wish_disabled": "That wish is disabled.",
   "messages.zenkai.villager_spawn_failed": "Failed to spawn the villager.",
   "messages.zenkai.enchant_not_found": "Enchantment not found: %s",
   "messages.zenkai.wish_villager_ready": "Your librarian villager is ready!",
+  "messages.zenkai.summon_cooldown": "§cYou must wait %s more day(s) before summoning again.",
 
   "screen.zenkai.shenlong_wish": "§2§lShenlong:§6§l State your wish",
   "screen.zenkai.option.stack": "I want more of...",
@@ -199,7 +198,6 @@
   "tooltip.zenkai.attr.mnd": "Focus/mind. Used for special abilities. Base increase ≈ +%s.",
 
   "entity.zenkai.shenlong": "Shenron",
-  "entity.zenkai.isaac": "Isaac",
   "entity.zenkai.space_pod": "Space Pod",
   "entity.zenkai.kintoun": "Flying Nimbus",
   "entity.zenkai.kintoun_shadow": "Shadow Flying Nimbus",

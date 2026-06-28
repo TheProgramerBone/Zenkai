@@ -41,6 +41,11 @@ public record SetGhostSlotPayload(ItemStack chosen) implements CustomPacketPaylo
 
                 // Validación server-side: no permitir banned items
                 ResourceLocation id = BuiltInRegistries.ITEM.getKey(chosen.getItem());
+                if (WishConfig.isBanned(id)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.item_banned"), false);
+                    menu.clearChosenItem();
+                    return;
+                }
                 if (!WishConfig.isAllowedByWhitelist(id)) {
                     player.displayClientMessage(Component.translatable("messages.zenkai.item_not_allowed"), false);
                     menu.clearChosenItem();
@@ -51,6 +56,17 @@ public record SetGhostSlotPayload(ItemStack chosen) implements CustomPacketPaylo
                 ItemStack copy = chosen.copy();
                 copy.setCount(1);
                 menu.setChosenItem(copy);
+
+                // El click normal deja el ítem "pegado" al cursor; lo devolvemos al
+                // inventario y limpiamos el cursor para que el estado quede IGUAL que
+                // tras un shift+click (cursor vacío). Sin esto, el ítem en cursor
+                // interfería con la entrega al confirmar y el deseo no duplicaba.
+                ItemStack carried = menu.getCarried();
+                if (!carried.isEmpty()) {
+                    player.getInventory().placeItemBackInInventory(carried);
+                    menu.setCarried(ItemStack.EMPTY);
+                }
+                menu.broadcastChanges();
             });
         }
     }

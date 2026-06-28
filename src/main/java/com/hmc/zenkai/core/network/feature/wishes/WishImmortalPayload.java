@@ -1,6 +1,7 @@
 package com.hmc.zenkai.core.network.feature.wishes;
 
 import com.hmc.zenkai.content.effect.ModEffects;
+import com.hmc.zenkai.core.config.WishConfig;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -23,6 +24,10 @@ public record WishImmortalPayload() implements CustomPacketPayload {
         public static void handle(WishImmortalPayload payload, IPayloadContext ctx) {
             ctx.enqueueWork(() -> {
                 ServerPlayer player = (ServerPlayer) ctx.player();
+                if (!WishConfig.isEnabled(WishConfig.WishType.IMMORTAL)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
+                    return;
+                }
                 PlayerStatsAttachment att = player.getData(DataAttachments.PLAYER_STATS.get());
                 player.addEffect(new MobEffectInstance(
                         ModEffects.IMMORTALITY,

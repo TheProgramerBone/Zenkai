@@ -106,7 +106,7 @@ public class WishConfig {
                 .defineInRange("cooldown_days", 7, 0, 100000);
         SHENLONG_WISHES = BUILDER
                 .comment("Cuántos deseos concede Shenlong por invocación (pool compartido; se agota).")
-                .defineInRange("shenlong_wishes", 3, 1, 100);
+                .defineInRange("shenlong_wishes", 1, 1, 100);
         PORUNGA_WISHES = BUILDER
                 .comment("Cuántos deseos concede Porunga por invocación.")
                 .defineInRange("porunga_wishes", 3, 1, 100);

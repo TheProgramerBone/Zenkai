@@ -3,6 +3,7 @@ package com.hmc.zenkai.core.network;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.client.gui.StackWishMenu;
+import com.hmc.zenkai.client.gui.screens.wishes.ClientWishToggles;
 import com.hmc.zenkai.core.network.feature.ki.*;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerFormPacket;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerStatsPacket;
@@ -144,6 +145,19 @@ public class ModNetworking {
                 ConfirmVillagerWishPayload.TYPE,
                 ConfirmVillagerWishPayload.STREAM_CODEC,
                 ConfirmVillagerWishPayload.ConfirmVillagerWishPayloadHandler::handle
+        );
+
+        registrar.playToServer(
+                WishTrainingPointsPayload.TYPE,
+                WishTrainingPointsPayload.STREAM_CODEC,
+                WishTrainingPointsPayload.WishTrainingPointsPayloadHandler::handle
+        );
+
+        registrar.playToClient(
+                SyncWishTogglesPayload.TYPE,
+                SyncWishTogglesPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() ->
+                       ClientWishToggles.apply(payload))
         );
     }
 }

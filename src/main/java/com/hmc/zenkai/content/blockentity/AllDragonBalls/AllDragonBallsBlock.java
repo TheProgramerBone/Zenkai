@@ -87,10 +87,10 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
             long last = stats.getLastSummonTick();
             if (cooldown > 0 && last != Long.MIN_VALUE && now - last < cooldown) {
                 long remaining = cooldown - (now - last);
-                int days  = (int) (remaining / 24000L);
-                int hours = (int) ((remaining % 24000L) / 1000L);
+                // Días que faltan, redondeando hacia arriba (mínimo 1 si aún falta algo).
+                int daysLeft = (int) Math.ceil(remaining / 24000.0);
                 player.displayClientMessage(
-                        Component.translatable("messages.zenkai.summon_cooldown", days, hours), true);
+                        Component.translatable("messages.zenkai.summon_cooldown", daysLeft), true);
                 return InteractionResult.SUCCESS;
             }
 
