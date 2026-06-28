@@ -160,7 +160,8 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.KI_BLAST.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("ki_blast")));
 
-            EntityRenderers.register(ModEntities.ISAAC.get(), ctx -> new GenericGeoRenderer<>(ctx,new GenericGeoModel<>("isaac")));
+            EntityRenderers.register(ModEntities.ISAAC.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("isaac", true), 0.5f));
 
             // Worldgen (Terrablender)
             event.enqueueWork(() -> {

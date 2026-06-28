@@ -86,6 +86,7 @@
   "sounds.zenkai.dragon_ball_use": "Dragon Ball Use",
   "sounds.zenkai.senzu_eat": "Senzu Eaten",
   "sounds.zenkai.wish_granted": "Wish Granted",
+  "sounds.zenkai.specialist": "Specialist",
 
   "tooltip.zenkai.dragon_ball_radar": "Locate Dragon Balls in a radius of 128 blocks!",
   "tooltip.zenkai.dragon_balls": "§oA mysterious sphere...",
@@ -198,6 +199,7 @@
   "tooltip.zenkai.attr.mnd": "Focus/mind. Used for special abilities. Base increase ≈ +%s.",
 
   "entity.zenkai.shenlong": "Shenron",
+  "entity.zenkai.isaac": "Isaac",
   "entity.zenkai.space_pod": "Space Pod",
   "entity.zenkai.kintoun": "Flying Nimbus",
   "entity.zenkai.kintoun_shadow": "Shadow Flying Nimbus",

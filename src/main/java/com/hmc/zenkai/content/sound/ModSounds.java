@@ -19,6 +19,7 @@ public class ModSounds {
     public static final Supplier<SoundEvent> DRAGON_BALL_USE = registerSoundEvent("dragon_ball_use");
     public static final Supplier<SoundEvent> SENZU_EAT = registerSoundEvent("senzu_eat");
     public static final Supplier<SoundEvent> WISH_GRANTED = registerSoundEvent("wish_granted");
+    public static final Supplier<SoundEvent> SPECIALIST = registerSoundEvent("specialist");
 
 
     private static Supplier<SoundEvent> registerSoundEvent(String name) {
