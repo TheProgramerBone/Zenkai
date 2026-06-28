@@ -1,6 +1,7 @@
 package com.hmc.zenkai.core.network.feature.wishes;
 
 import net.minecraft.core.BlockPos;
+import com.hmc.zenkai.core.config.WishConfig;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -26,6 +27,10 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
         public static void handle(WishRevivePlayerPayload payload, IPayloadContext ctx) {
             ctx.enqueueWork(() -> {
                 ServerPlayer invoker = (ServerPlayer) ctx.player();
+                if (!WishConfig.isEnabled(WishConfig.WishType.REVIVE_PLAYER)) {
+                    invoker.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
+                    return;
+                }
                 String targetName = payload.targetName() == null ? "" : payload.targetName().trim();
                 if (targetName.isEmpty()) {
                     invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revive_failed"), false);

@@ -1,5 +1,7 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
+import com.hmc.zenkai.core.network.feature.wishes.WishTrainingPointsPayload;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -13,8 +15,11 @@ public class TrainingPointsWishScreen extends Screen {
     }
     @Override protected void init() {
         int cx = this.width/2, cy = this.height/2;
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.confirm"), b -> this.onClose())
-                .bounds(cx-60, cy, 120, 20).build());
+        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.confirm"), b -> {
+            var conn = Minecraft.getInstance().getConnection();
+            if (conn != null) conn.send(new WishTrainingPointsPayload());
+            this.onClose();
+        }).bounds(cx-60, cy, 120, 20).build());
         this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.back"), b -> this.onClose())
                 .bounds(cx-60, cy+24, 120, 20).build());
     }

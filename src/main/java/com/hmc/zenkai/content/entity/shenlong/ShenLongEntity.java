@@ -3,7 +3,11 @@ package com.hmc.zenkai.content.entity.shenlong;
 import com.hmc.zenkai.content.entity.CommonAnimations;
 import com.hmc.zenkai.core.config.WishConfig;
 import com.hmc.zenkai.core.network.feature.wishes.OpenWishScreenPayload;
+import com.hmc.zenkai.core.network.feature.wishes.SyncWishTogglesPayload;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
@@ -26,11 +30,18 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 public class ShenLongEntity extends Mob implements GeoEntity {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    /** Pool de deseos compartido de esta invocación. Se agota; al llegar a 0 el dragón desaparece. */
-    private int wishesRemaining = WishConfig.shenlongWishCount();
+    /** Pool de deseos compartido (sincronizado al cliente para mostrarlo en la GUI). */
+    private static final EntityDataAccessor<Integer> WISHES_REMAINING =
+            SynchedEntityData.defineId(ShenLongEntity.class, EntityDataSerializers.INT);
 
     public ShenLongEntity(EntityType<? extends Mob> entityType, Level level) {
         super(entityType, level);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(WISHES_REMAINING, 0); // valor real se fija al spawnear / cargar
     }
 
     @Override
@@ -42,6 +53,7 @@ public class ShenLongEntity extends Mob implements GeoEntity {
     @Override
     protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (player instanceof ServerPlayer sp) {
+            PacketDistributor.sendToPlayer(sp, SyncWishTogglesPayload.current()); // toggles antes de abrir
             PacketDistributor.sendToPlayer(sp, new OpenWishScreenPayload());
         }
         return InteractionResult.sidedSuccess(this.level().isClientSide);
@@ -54,29 +66,30 @@ public class ShenLongEntity extends Mob implements GeoEntity {
     }
 
     // ── Pool de deseos ────────────────────────────────────────────────────────
-    public int getWishesRemaining()        { return wishesRemaining; }
-    public void setWishesRemaining(int n)  { this.wishesRemaining = n; }
+    public int getWishesRemaining()       { return this.entityData.get(WISHES_REMAINING); }
+    public void setWishesRemaining(int n) { this.entityData.set(WISHES_REMAINING, n); }
 
     /**
      * Consume un deseo del pool compartido.
      * @return true si el dragón debe desaparecer (pool agotado).
      */
     public boolean consumeWish() {
-        wishesRemaining--;
-        return wishesRemaining <= 0;
+        int left = getWishesRemaining() - 1;
+        setWishesRemaining(left);
+        return left <= 0;
     }
 
     @Override
     public void addAdditionalSaveData(@NotNull CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putInt("wishesRemaining", wishesRemaining);
+        tag.putInt("wishesRemaining", getWishesRemaining());
     }
 
     @Override
     public void readAdditionalSaveData(@NotNull CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         if (tag.contains("wishesRemaining")) {
-            wishesRemaining = tag.getInt("wishesRemaining");
+            setWishesRemaining(tag.getInt("wishesRemaining"));
         }
     }
 

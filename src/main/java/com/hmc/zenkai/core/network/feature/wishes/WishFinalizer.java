@@ -8,6 +8,7 @@ import net.minecraft.sounds.SoundSource;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public final class WishFinalizer {
     private WishFinalizer() {}
@@ -15,21 +16,33 @@ public final class WishFinalizer {
     public static void finalizeWish(ServerPlayer player) {
         player.closeContainer();
         player.playNotifySound(ModSounds.WISH_GRANTED.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
-        player.displayClientMessage(Component.translatable("messages.zenkai.wish_granted"), false);
 
-        // (2) Pool de deseos: consumir UN deseo del Shenlong más cercano.
-        // Solo se descarta el dragón cuando el pool llega a 0.
+        // Buscar el Shenlong más cercano y consumir UN deseo del pool.
         List<ShenLongEntity> nearby = player.level().getEntitiesOfClass(
                 ShenLongEntity.class,
                 player.getBoundingBox().inflate(32)
         );
+        Optional<ShenLongEntity> opt = nearby.stream()
+                .min(Comparator.comparingDouble(e -> e.distanceToSqr(player)));
 
-        nearby.stream()
-                .min(Comparator.comparingDouble(e -> e.distanceToSqr(player)))
-                .ifPresent(shenlong -> {
-                    if (shenlong.consumeWish()) {
-                        shenlong.discard();
-                    }
-                });
+        if (opt.isEmpty()) {
+            // Sin dragón (no debería pasar): solo el mensaje de deseo concedido.
+            player.displayClientMessage(Component.translatable("messages.zenkai.wish_granted"), false);
+            return;
+        }
+
+        ShenLongEntity shenlong = opt.get();
+        boolean despawn = shenlong.consumeWish();
+        int remaining = shenlong.getWishesRemaining();
+
+        if (despawn || remaining <= 0) {
+            // Era el último deseo: mensaje simple y el dragón se va.
+            player.displayClientMessage(Component.translatable("messages.zenkai.wish_granted"), false);
+            shenlong.discard();
+        } else {
+            // Aún quedan deseos: avisar cuántos.
+            player.displayClientMessage(
+                    Component.translatable("messages.zenkai.wish_granted_remaining", remaining), false);
+        }
     }
 }

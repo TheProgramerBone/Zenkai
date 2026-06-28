@@ -2,10 +2,13 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
+import com.hmc.zenkai.client.gui.screens.wishes.ClientWishToggles;
 import com.hmc.zenkai.client.gui.screens.wishes.EnchantVillagerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.ImmortalWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.RevivePlayerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.TrainingPointsWishScreen;
+import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
+import com.hmc.zenkai.core.config.WishConfig.WishType;
 import com.hmc.zenkai.core.network.feature.wishes.OpenStackWishPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -37,6 +40,9 @@ public class ShenlongWishScreen extends Screen {
     private int panelLeft, panelTop;
     private TextOnlyButton stackWishButton;
 
+    // Cursor vertical para ir apilando solo los deseos habilitados (sin huecos).
+    private int btnX, btnY;
+
     public ShenlongWishScreen() {
         super(Component.translatable("screen.zenkai.shenlong_wish"));
     }
@@ -44,49 +50,47 @@ public class ShenlongWishScreen extends Screen {
     @Override
     protected void init() {
         this.clearWidgets();
+        this.stackWishButton = null;
         this.panelLeft = (this.width  - BG_W) / 2;
         this.panelTop  = (this.height - BG_H) / 2;
 
         int cx = panelLeft + BG_W / 2;
-        int bx = cx - BTN_W / 2;
-        int y  = panelTop + FIRST_BTN_DY;
+        this.btnX = cx - BTN_W / 2;
+        this.btnY = panelTop + FIRST_BTN_DY;
 
-        // Stack de ítems (vía payload al servidor)
-        this.stackWishButton = addRenderableWidget(new TextOnlyButton(
-                bx, y, BTN_W, BTN_H,
-                Component.translatable("screen.zenkai.option.stack"),
-                () -> {
-                    var conn = Minecraft.getInstance().getConnection();
-                    if (conn != null) conn.send(new OpenStackWishPayload());
-                }).textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
-        y += BTN_STEP;
+        // Solo se crean los botones de deseos habilitados (toggles sincronizados del server).
+        if (ClientWishToggles.isEnabled(WishType.STACK)) {
+            this.stackWishButton = addWish("screen.zenkai.option.stack", () -> {
+                var conn = Minecraft.getInstance().getConnection();
+                if (conn != null) conn.send(new OpenStackWishPayload());
+            });
+        }
+        if (ClientWishToggles.isEnabled(WishType.REVIVE_PLAYER)) {
+            addWish("screen.zenkai.wish.revive_player",
+                    () -> { if (minecraft != null) minecraft.setScreen(new RevivePlayerWishScreen(this)); });
+        }
+        if (ClientWishToggles.isEnabled(WishType.ENCHANT_VILLAGER)) {
+            addWish("screen.zenkai.wish.enchant_villager",
+                    () -> { if (minecraft != null) minecraft.setScreen(new EnchantVillagerWishScreen(this)); });
+        }
+        if (ClientWishToggles.isEnabled(WishType.IMMORTAL)) {
+            addWish("screen.zenkai.wish.immortal",
+                    () -> { if (minecraft != null) minecraft.setScreen(new ImmortalWishScreen(this)); });
+        }
+        if (ClientWishToggles.isEnabled(WishType.TRAINING_POINTS)) {
+            addWish("screen.zenkai.wish.training_points",
+                    () -> { if (minecraft != null) minecraft.setScreen(new TrainingPointsWishScreen(this)); });
+        }
+    }
 
-        addRenderableWidget(new TextOnlyButton(
-                bx, y, BTN_W, BTN_H,
-                Component.translatable("screen.zenkai.wish.revive_player"),
-                () -> { if (minecraft != null) minecraft.setScreen(new RevivePlayerWishScreen(this)); })
-                .textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
-        y += BTN_STEP;
-
-        addRenderableWidget(new TextOnlyButton(
-                bx, y, BTN_W, BTN_H,
-                Component.translatable("screen.zenkai.wish.enchant_villager"),
-                () -> { if (minecraft != null) minecraft.setScreen(new EnchantVillagerWishScreen(this)); })
-                .textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
-        y += BTN_STEP;
-
-        addRenderableWidget(new TextOnlyButton(
-                bx, y, BTN_W, BTN_H,
-                Component.translatable("screen.zenkai.wish.immortal"),
-                () -> { if (minecraft != null) minecraft.setScreen(new ImmortalWishScreen(this)); })
-                .textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
-        y += BTN_STEP;
-
-        addRenderableWidget(new TextOnlyButton(
-                bx, y, BTN_W, BTN_H,
-                Component.translatable("screen.zenkai.wish.training_points"),
-                () -> { if (minecraft != null) minecraft.setScreen(new TrainingPointsWishScreen(this)); })
-                .textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
+    /** Crea un botón de deseo en el cursor actual y avanza el cursor. */
+    private TextOnlyButton addWish(String langKey, Runnable onClick) {
+        TextOnlyButton b = addRenderableWidget(new TextOnlyButton(
+                btnX, btnY, BTN_W, BTN_H,
+                Component.translatable(langKey),
+                onClick).textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
+        btnY += BTN_STEP;
+        return b;
     }
 
     @Override
@@ -111,7 +115,26 @@ public class ShenlongWishScreen extends Screen {
         // Título centrado en el panel
         drawCenteredNoShadow(g, this.title, panelLeft + BG_W / 2, panelTop + 22, COLOR_TITLE);
 
+        // Deseos restantes del dragón más cercano (valor sincronizado del servidor).
+        int remaining = getNearbyWishesRemaining();
+        if (remaining >= 0) {
+            Component rem = Component.translatable("screen.zenkai.shenlong_wish.remaining", remaining);
+            drawCenteredNoShadow(g, rem, panelLeft + BG_W / 2, panelTop + 33, TXT_HOVER);
+        }
+
         super.render(g, mouseX, mouseY, partialTick);
+    }
+
+    /** Lee wishesRemaining del ShenLongEntity más cercano en el cliente; -1 si no hay ninguno. */
+    private int getNearbyWishesRemaining() {
+        var mc = Minecraft.getInstance();
+        if (mc.player == null || mc.level == null) return -1;
+        return mc.level.getEntitiesOfClass(
+                        ShenLongEntity.class, mc.player.getBoundingBox().inflate(48))
+                .stream()
+                .min(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(mc.player)))
+                .map(ShenLongEntity::getWishesRemaining)
+                .orElse(-1);
     }
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
