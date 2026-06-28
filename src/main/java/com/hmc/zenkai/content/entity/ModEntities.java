@@ -46,8 +46,7 @@ public class ModEntities {
                     .sized(1,2).build("namekian"));
 
     public static final Supplier<EntityType<IsaacEntity>> ISAAC =
-            ENTITY_TYPES.register("isaac", () -> EntityType.Builder.of(IsaacEntity::new, MobCategory.CREATURE)
-                    .sized(0.6f, 1.8f).build("isaac"));
+            ENTITY_TYPES.register("isaac", () -> EntityType.Builder.of(IsaacEntity::new, MobCategory.CREATURE).sized(0.6f, 1.8f).build("isaac"));
 
     public static final Supplier<EntityType<KiBlastEntity>> KI_BLAST =
             ENTITY_TYPES.register("ki_blast",()-> EntityType.Builder.of(KiBlastEntity::new,MobCategory.MISC)

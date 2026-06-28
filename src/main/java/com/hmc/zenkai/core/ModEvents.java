@@ -2,6 +2,7 @@ package com.hmc.zenkai.core;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.entity.ModEntities;
+import com.hmc.zenkai.content.entity.isaac.IsaacEntity;
 import com.hmc.zenkai.content.entity.kintoun.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namekian.NamekianEntity;
 import com.hmc.zenkai.content.entity.namekian.NamekianWarriorEntity;
@@ -36,6 +37,7 @@ public class ModEvents {
         event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
         event.put(ModEntities.KINTOUN.get(), KintounEntity.createAttributes().build());
         event.put(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounEntity.createAttributes().build());
+        event.put(ModEntities.ISAAC.get(), IsaacEntity.createAttributes().build());
     }
 
     private static final Set<BlockPos> HARVESTED_BLOCKS = new HashSet<>();
@@ -77,7 +79,7 @@ public class ModEvents {
 
         if (target.getType() == EntityType.INTERACTION && target.getTags().contains("dragon_barrier")) {
             event.setCanceled(true);
-            player.displayClientMessage(Component.translatable("messages.db.renewed.blocked_by_shenlong"), true);
+            player.displayClientMessage(Component.translatable("messages.zenkai.blocked_by_shenlong"), true);
         }
     }
 
@@ -89,7 +91,7 @@ public class ModEvents {
 
         if (target.getType() == EntityType.INTERACTION && target.getTags().contains("dragon_barrier")) {
             event.setCanceled(true);
-            event.getEntity().displayClientMessage(Component.translatable("messages.db.renewed.blocked_by_shenlong"), true);
+            event.getEntity().displayClientMessage(Component.translatable("messages.zenkai.blocked_by_shenlong"), true);
         }
     }
 }

@@ -1,38 +1,44 @@
 {
   "dragon_ball_radar_use": {
-    "subtitle": "sounds.db_renewed.dragon_ball_radar_use",
+    "subtitle": "sounds.zenkai.dragon_ball_radar_use",
     "sounds": [
-      "db_renewed:dragon_ball_radar_use"
+      "zenkai:dragon_ball_radar_use"
     ]
   },
   "dragon_ball_radar_searching": {
-    "subtitle": "sounds.db_renewed.dragon_ball_radar_searching",
+    "subtitle": "sounds.zenkai.dragon_ball_radar_searching",
     "sounds": [
-      "db_renewed:dragon_ball_radar_searching"
+      "zenkai:dragon_ball_radar_searching"
     ]
   },
   "dragon_ball_radar_close": {
-    "subtitle": "sounds.db_renewed.dragon_ball_radar_near",
+    "subtitle": "sounds.zenkai.dragon_ball_radar_near",
     "sounds": [
-      "db_renewed:dragon_ball_radar_near"
+      "zenkai:dragon_ball_radar_near"
+    ]
+  },
+  "specialist": {
+    "subtitle": "sounds.zenkai.specialist",
+    "sounds": [
+      "zenkai:specialist"
     ]
   },
   "dragon_ball_use": {
-    "subtitle": "sounds.db_renewed.dragon_ball_use",
+    "subtitle": "sounds.zenkai.dragon_ball_use",
     "sounds": [
-      "db_renewed:dragon_ball_use"
+      "zenkai:dragon_ball_use"
     ]
   },
   "senzu_eat": {
-    "subtitle": "sounds.db_renewed.senzu_eat",
+    "subtitle": "sounds.zenkai.senzu_eat",
     "sounds": [
-      "db_renewed:senzu_eat"
+      "zenkai:senzu_eat"
     ]
   },
   "wish_granted": {
-    "subtitle": "sounds.db_renewed.wish_granted",
+    "subtitle": "sounds.zenkai.wish_granted",
     "sounds": [
-      "db_renewed:wish_granted"
+      "zenkai:wish_granted"
     ]
   }
 }
