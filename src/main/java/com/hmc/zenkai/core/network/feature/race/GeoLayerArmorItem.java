@@ -17,6 +17,7 @@ import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 import software.bernie.geckolib.util.RenderUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ChatScreen;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
@@ -37,10 +38,9 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     private final boolean hasAnimation;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    // Lo activa ZenkaiFirstPersonArmHooks SOLO durante el render del brazo en 1ª persona.
-    public static volatile boolean ARM_RENDER_PASS = false;
-    private static double frozenArmTick = 0;
-    private static boolean armFrozen    = false;
+    // Congelado de animación del jugador mientras hay una pantalla abierta (ver getTick).
+    private static double frozenTick = 0;
+    private static boolean animFrozen = false;
 
     // Tinte: por defecto NONE (sin tinte)
     private ColorChannel colorChannel = ColorChannel.NONE;
@@ -149,21 +149,24 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     }
 
     /**
-     * Tiempo de animación. Por defecto avanza con el reloj real (RenderUtils.getCurrentTick()).
-     * Durante el render del brazo en 1ª persona, si hay una pantalla abierta, lo CONGELA para que
-     * el brazo no "flote" solo (la mano vanilla queda quieta con el inventario/menús abiertos).
-     * No afecta a los cuerpos en 3ª persona (ARM_RENDER_PASS solo es true durante el brazo).
+     * Tiempo de animación. Por defecto avanza con el reloj real (RenderUtils.getCurrentTick()),
+     * que nunca se detiene — por eso el brazo en 1ª persona y el muñeco del jugador en el inventario
+     * "flotaban" solos al abrir una interfaz (la mano/jugador vanilla quedan quietos).
+     *
+     * Solución: mientras haya una pantalla abierta lo CONGELAMOS, así el jugador (brazo en 1ª persona
+     * y muñeco en inventario/screens) queda quieto. Excluimos el chat para no congelar el idle de
+     * otros jugadores mientras escribes en multijugador.
      */
     @Override
     public double getTick(Object itemStack) {
         double now = RenderUtil.getCurrentTick();
-        if (ARM_RENDER_PASS) {
-            if (Minecraft.getInstance().screen != null) {
-                if (!armFrozen) { frozenArmTick = now; armFrozen = true; }
-                return frozenArmTick;
-            }
-            armFrozen = false;
+        Minecraft mc = Minecraft.getInstance();
+        boolean freeze = mc.screen != null && !(mc.screen instanceof ChatScreen);
+        if (freeze) {
+            if (!animFrozen) { frozenTick = now; animFrozen = true; }
+            return frozenTick;
         }
+        animFrozen = false;
         return now;
     }
 
