@@ -2,10 +2,14 @@ package com.hmc.zenkai.core.network.feature.race;
 
 import com.hmc.zenkai.client.customization.CustomizationAssets;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -14,26 +18,52 @@ import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
+import java.util.function.Function;
+
 /**
  * Capa de overlay de cara (ojos / boca / nariz) sobre el modelo del cuerpo.
  * Re-renderiza el MISMO modelo del cuerpo con la textura del rasgo (elegida por índice).
  *
- *  · Z-fighting: se escala el modelo un pelín (OVERLAY_SCALE) para que quede justo por fuera del cuerpo.
+ *  · En vez de "inflar" el modelo (que al hacer sneak + mirar arriba dejaba el overlay por
+ *    dentro y desaparecía), usamos un RenderType con VIEW_OFFSET_Z_LAYERING: empuja el rasgo
+ *    hacia la cámara en VIEW space, así queda siempre justo por delante de la cara en cualquier
+ *    pose, sin z-fighting y sin tener que dejar hueca la textura de la cara.
  *  · Ojos: dos pasadas estilo armadura de cuero →
  *        eyes_N.png       (esclerótica/contorno, iris transparente) SIN tinte
  *        eyes_N_iris.png  (solo iris, en gris)                      CON tinte de color de ojos
  *    Si no existe el _iris, se tiñe el ojo (fallback).
  *
- * ⚠ API específica de GeckoLib 4.8.4 — verificar al compilar:
- *   firma de render(...) de GeoRenderLayer · getRenderer() · getCurrentEntity() ·
- *   firma de reRender(...) y si el color es int ARGB o software.bernie.geckolib.util.Color.
+ * ⚠ API específica de GeckoLib 4.8.4 / 1.21.1 — verificar al compilar:
+ *   firma de render(...) de GeoRenderLayer · getRenderer() · getCurrentEntity() · reRender(...) ·
+ *   nombres de RenderStateShard (RENDERTYPE_ENTITY_TRANSLUCENT_SHADER, VIEW_OFFSET_Z_LAYERING).
  */
 public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
 
     public enum Kind { EYES, MOUTH, NOSE }
 
-    /** Cuánto se "infla" el overlay para evitar z-fighting. Súbelo si parpadea, bájalo si los ojos se ven grandes. */
-    private static final float OVERLAY_SCALE = 1.01f;
+    /**
+     * Escala del overlay. Ahora 1.0 (NO inflar): el "quedar por delante" lo da el view-offset.
+     * Si vieras z-fighting puntual, súbelo un pelín (1.002), pero normalmente no hace falta.
+     */
+    private static final float OVERLAY_SCALE = 1.0f;
+
+    /** RenderType translúcido + sin cull + offset hacia la cámara (view space). Memoizado por textura. */
+    private static final Function<ResourceLocation, RenderType> FACE_OVERLAY = Util.memoize(tex ->
+            RenderType.create(
+                    "zenkai_face_overlay",
+                    DefaultVertexFormat.NEW_ENTITY,
+                    VertexFormat.Mode.QUADS,
+                    1536,
+                    false, true,
+                    RenderType.CompositeState.builder()
+                            .setShaderState(RenderStateShard.RENDERTYPE_ENTITY_TRANSLUCENT_SHADER)
+                            .setTextureState(new RenderStateShard.TextureStateShard(tex, false, false))
+                            .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                            .setCullState(RenderStateShard.NO_CULL)
+                            .setLightmapState(RenderStateShard.LIGHTMAP)
+                            .setOverlayState(RenderStateShard.OVERLAY)
+                            .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
+                            .createCompositeState(true)));
 
     private final Kind kind;
 
@@ -54,7 +84,7 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         PlayerVisualAttachment vis = PlayerVisualAttachment.get(player);
 
         poseStack.pushPose();
-        poseStack.scale(OVERLAY_SCALE, OVERLAY_SCALE, OVERLAY_SCALE); // un pelín por encima → evita z-fighting
+        poseStack.scale(OVERLAY_SCALE, OVERLAY_SCALE, OVERLAY_SCALE);
 
         switch (kind) {
             case EYES -> {
@@ -90,11 +120,11 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         poseStack.popPose();
     }
 
-    /** Re-renderiza el modelo del cuerpo con una textura y un color ARGB. */
+    /** Re-renderiza el modelo del cuerpo con una textura y un color ARGB, con offset hacia la cámara. */
     private void drawPass(ResourceLocation tex, int argb, PoseStack poseStack, BakedGeoModel bakedModel,
                           GeoLayerArmorItem animatable, MultiBufferSource bufferSource,
                           float partialTick, int packedLight, int packedOverlay) {
-        RenderType rt = RenderType.entityTranslucent(tex); // si hay bordes duros raros, prueba entityCutoutNoCull(tex)
+        RenderType rt = FACE_OVERLAY.apply(tex);
         this.getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, rt,
                 bufferSource.getBuffer(rt), partialTick, packedLight, packedOverlay, argb);
     }

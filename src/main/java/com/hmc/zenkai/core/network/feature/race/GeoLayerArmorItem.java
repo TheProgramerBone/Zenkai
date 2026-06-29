@@ -15,6 +15,8 @@ import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
+import software.bernie.geckolib.util.RenderUtil;
+import net.minecraft.client.Minecraft;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
@@ -35,6 +37,11 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     private final boolean hasAnimation;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
+    // Lo activa ZenkaiFirstPersonArmHooks SOLO durante el render del brazo en 1ª persona.
+    public static volatile boolean ARM_RENDER_PASS = false;
+    private static double frozenArmTick = 0;
+    private static boolean armFrozen    = false;
+
     // Tinte: por defecto NONE (sin tinte)
     private ColorChannel colorChannel = ColorChannel.NONE;
     // Texturas preset opcionales (para razas con presets pintados, p. ej. Namekian/Arcosian).
@@ -42,6 +49,8 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     @Nullable private ResourceLocation[] presetTextures = null;
     // Si true, el renderer añade los overlays de cara (ojos/boca/nariz). Solo para items de cuerpo.
     private boolean faceOverlays = false;
+    // Si true, el renderer añade la capa de tinte de cuerpo (detalle + líneas) — razas multicolor (Namek).
+    private boolean bodyTint = false;
     // Controladores de animación personalizados; si es null se usa el idle genérico (cuando hay animación)
     @Nullable private Consumer<AnimatableManager.ControllerRegistrar> controllerFactory = null;
 
@@ -97,6 +106,14 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
 
     public boolean hasFaceOverlays() { return faceOverlays; }
 
+    /** Marca este item para que el renderer le añada la capa de tinte de cuerpo (detalle + líneas). */
+    public GeoLayerArmorItem bodyTint() {
+        this.bodyTint = true;
+        return this;
+    }
+
+    public boolean hasBodyTint() { return bodyTint; }
+
     // ── Getters ───────────────────────────────────────────────────────────────
 
     public ResourceLocation getModelPath()     { return modelPath; }
@@ -129,6 +146,25 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
                 return this.renderer;
             }
         });
+    }
+
+    /**
+     * Tiempo de animación. Por defecto avanza con el reloj real (RenderUtils.getCurrentTick()).
+     * Durante el render del brazo en 1ª persona, si hay una pantalla abierta, lo CONGELA para que
+     * el brazo no "flote" solo (la mano vanilla queda quieta con el inventario/menús abiertos).
+     * No afecta a los cuerpos en 3ª persona (ARM_RENDER_PASS solo es true durante el brazo).
+     */
+    @Override
+    public double getTick(Object itemStack) {
+        double now = RenderUtil.getCurrentTick();
+        if (ARM_RENDER_PASS) {
+            if (Minecraft.getInstance().screen != null) {
+                if (!armFrozen) { frozenArmTick = now; armFrozen = true; }
+                return frozenArmTick;
+            }
+            armFrozen = false;
+        }
+        return now;
     }
 
     @Override

@@ -109,7 +109,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             "animations/namekian_default.animation.json"
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE =
             ITEMS.register("namekian_race_chestplate", () ->
@@ -118,7 +118,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             "animations/namekian_default.animation.json"
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_LEGGINGS =
             ITEMS.register("namekian_race_leggings", () ->
@@ -127,7 +127,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             "animations/namekian_default.animation.json"
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_BOOTS =
             ITEMS.register("namekian_race_boots", () ->
@@ -136,7 +136,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             "animations/namekian_default.animation.json"
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_HELMET_COLORABLE =
             ITEMS.register("namekian_race_helmet_colorable", () ->
@@ -145,7 +145,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_colorable.png",
                             "animations/namekian_default.animation.json"
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE_COLORABLE =
             ITEMS.register("namekian_race_chestplate_colorable", () ->
@@ -154,7 +154,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_colorable.png",
                             "animations/namekian_default.animation.json"
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_LEGGINGS_COLORABLE =
             ITEMS.register("namekian_race_leggings_colorable", () ->
@@ -163,7 +163,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_colorable.png",
                             "animations/namekian_default.animation.json"
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_BOOTS_COLORABLE =
             ITEMS.register("namekian_race_boots_colorable", () ->
@@ -172,7 +172,7 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_colorable.png",
                             "animations/namekian_default.animation.json"
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET =
             ITEMS.register("human_race_helmet", () ->
