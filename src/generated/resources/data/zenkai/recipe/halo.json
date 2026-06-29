@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "Y": {
+      "item": "minecraft:yellow_wool"
+    }
+  },
+  "pattern": [
+    "YYY",
+    "Y Y",
+    "YYY"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:halo"
+  }
+}
