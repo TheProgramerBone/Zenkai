@@ -97,6 +97,13 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('W', ModItems.TERRAGEM.get())
                 .unlockedBy("has_terragem", has(ModItems.TERRAGEM)).save(recipeOutput);
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.HALO.get(),1)
+                .pattern("YYY")
+                .pattern("Y Y")
+                .pattern("YYY")
+                .define('Y', Items.YELLOW_WOOL)
+                .unlockedBy("has_wool", has(Items.YELLOW_WOOL)).save(recipeOutput);
+
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.TERRAGEM.get(), 9)
                 .requires(ModBlocks.TERRAGEM_BLOCK)
                 .unlockedBy("has_terragem_block", has(ModBlocks.TERRAGEM_BLOCK)).save(recipeOutput);

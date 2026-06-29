@@ -355,6 +355,14 @@ public class ModItems {
                             "animations/arcosian_default.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
+    //Halo
+    public static final DeferredItem<GeoLayerArmorItem> HALO =
+            ITEMS.register("halo", () -> new GeoLayerArmorItem(
+                    ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET, new Item.Properties(),
+                    "geo/halo.geo.json",
+                    "textures/models/races/halo.png",
+                    ""));
+
     //Cabellos Común
     public static final Supplier<GeoLayerArmorItem> HAIR_1 =
             ITEMS.register("hair_1",() ->

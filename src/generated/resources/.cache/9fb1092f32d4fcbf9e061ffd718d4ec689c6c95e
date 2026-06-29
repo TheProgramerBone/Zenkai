@@ -1,4 +1,4 @@
-// 1.21.1	2026-06-12T21:11:02.2342185	Recipes
+// 1.21.1	2026-06-29T10:46:08.1710188	Recipes
 67b0df22c4f6b10c05a1c40f61aefb22d7729ae7 data/zenkai/advancement/recipes/building_blocks/namekian_structure_block.json
 2f729052ab8700a2cae0cac5d5f72d68064b7fd8 data/zenkai/advancement/recipes/misc/advanced_circuit.json
 632a1ddbbe2e8f633f12e90e03a37454144e5db9 data/zenkai/advancement/recipes/misc/basic_circuit.json
@@ -11,6 +11,7 @@ ed39785e68ed5421e1a3f0dacff6f1cafcdc45c0 data/zenkai/advancement/recipes/misc/dr
 ff472bb1d2583d47d73a0426dc7dd55bda4c1a6c data/zenkai/advancement/recipes/misc/dragon_ball_7.json
 e55f5717a2803abcffc42fbb329a176aaa4ba393 data/zenkai/advancement/recipes/misc/dragon_ball_radar.json
 a5ed9426cf1a012d85c20577f9fc17132c3a1a34 data/zenkai/advancement/recipes/misc/elite_circuit.json
+ac80922fd332f2ae20a52848ad548593a1c508f3 data/zenkai/advancement/recipes/misc/halo.json
 6020f13541cf4c8c630fb1279ab57e730237a0d8 data/zenkai/advancement/recipes/misc/namekian_stone_from_smelting_namekian_cobblestone.json
 fe2d9efce6c120572cb851f3731abe8764f7dc82 data/zenkai/advancement/recipes/misc/namek_dragon_ball_1.json
 c8f698eb4f4b8581d0600e47543bdf4dbe142bd2 data/zenkai/advancement/recipes/misc/namek_dragon_ball_2.json
@@ -41,6 +42,7 @@ d84ef4a24778cae38ac519d1e06812bbecc4b8c8 data/zenkai/recipe/dragon_ball_4.json
 48a7ec272f2190ede91ce7138dcd680909cc7f39 data/zenkai/recipe/dragon_ball_7.json
 8221106e1ac0aa06d877f23192d3c9858efee774 data/zenkai/recipe/dragon_ball_radar.json
 a68af7668180fac46818f8f1189961eabcc24509 data/zenkai/recipe/elite_circuit.json
+389674192fa841aa2a78abc1eca6469be94c0719 data/zenkai/recipe/halo.json
 1f68588253cbd3b076efd263779672d71a39a945 data/zenkai/recipe/namekian_stone_from_smelting_namekian_cobblestone.json
 52cfa5b58e2e1972e8bbd62835452721dad635fe data/zenkai/recipe/namekian_structure_block.json
 ff040d63f4183a7153346b5e591c1fee4938213a data/zenkai/recipe/namek_dragon_ball_1.json

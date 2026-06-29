@@ -1,7 +1,8 @@
-// 1.21.1	2026-06-12T21:11:02.2342185	Item Models: zenkai
+// 1.21.1	2026-06-29T10:46:08.1680172	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 e679a4c9273e0f8ec5861c5d4a448f2b69437bca assets/zenkai/models/item/basic_circuit.json
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
+c6fdd6445bc58722d479b71d0c927092b728dc33 assets/zenkai/models/item/halo.json
 cf0c021ac47f4c96a569e2497d53258d04d5a607 assets/zenkai/models/item/kintoun_item.json
 46caf766bc191626aa6f23e3bb63262dbb2d2895 assets/zenkai/models/item/kintoun_shadow_item.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_spawn_egg.json
