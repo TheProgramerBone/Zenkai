@@ -100,6 +100,9 @@ public class ModItems {
     public static final DeferredItem<Item> NAMEKIAN_SPAWN_EGG = ITEMS.register("namekian_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN,0x28ad1b ,0xfdfefe, new Item.Properties()));
 
+    public static final DeferredItem<Item> ISAAC_SPAWN_EGG = ITEMS.register("isaac_spawn_egg",
+    () -> new DeferredSpawnEggItem(ModEntities.ISAAC,0xe4c7c5,0x9c716f, new Item.Properties()));
+
     //Razas
 
     public static final DeferredItem<GeoLayerArmorItem> NAMEKIAN_RACE_HELMET =

@@ -109,7 +109,6 @@ public class IsaacEntity extends ZenkaiGeoMob {
                     this.getNavigation().stop(); // frena de inmediato al empezar a bailar
                     Player nearest = this.level().getNearestPlayer(this, 16.0D);
                     if (nearest != null) {
-                        nearest.displayClientMessage(Component.literal("Dancing"), true);
                         nearest.playNotifySound(ModSounds.SPECIALIST.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
                     }
                 }
