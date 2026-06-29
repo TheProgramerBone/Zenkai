@@ -85,7 +85,6 @@ public final class ZenkaiFirstPersonArmHooks {
         void renderArm(GeoLayerArmorItem item, Player player, HumanoidArm arm,
                        PoseStack poseStack, MultiBufferSource buffers, int light) {
             this.current = player;
-            GeoLayerArmorItem.ARM_RENDER_PASS = true; // congela la anim del brazo si hay pantalla abierta
 
             GeoModel<GeoLayerArmorItem> model = getGeoModel();
             BakedGeoModel baked = model.getBakedModel(model.getModelResource(item));
@@ -141,7 +140,6 @@ public final class ZenkaiFirstPersonArmHooks {
                 }
                 this.passColor = null;
                 this.current = null;
-                GeoLayerArmorItem.ARM_RENDER_PASS = false;
             }
         }
 
