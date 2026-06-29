@@ -96,7 +96,7 @@ public final class RaceSkinRenderHooks {
     }
 
     private static void logLayerOrder(String tag, String skin, List<?> layers) {
-        System.out.println("==== [DBR] " + tag + " PlayerRenderer layers (" + skin + ") ====");
+        System.out.println("==== [Zenkai] " + tag + " PlayerRenderer layers (" + skin + ") ====");
         for (int i = 0; i < layers.size(); i++) {
             Object l = layers.get(i);
             System.out.println("  [" + i + "] " + l.getClass().getName());

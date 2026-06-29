@@ -71,7 +71,6 @@ public class PlayerVisualAttachment {
         ResourceLocation rl = ResourceLocation.tryParse(raceSkinItemId);
         if (rl == null) return ItemStack.EMPTY;
         Item item = BuiltInRegistries.ITEM.get(rl);
-        if (item == null) return ItemStack.EMPTY;
         return new ItemStack(item);
     }
 
