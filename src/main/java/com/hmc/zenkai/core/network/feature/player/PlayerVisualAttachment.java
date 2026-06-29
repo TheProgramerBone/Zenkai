@@ -86,16 +86,16 @@ public class PlayerVisualAttachment {
 
     public static int defaultSkinColorFor(Race race) {
         return switch (race) {
-            case NAMEKIAN -> 0x6FA84E; // verde Namek (ajústalo)
-            case ARCOSIAN -> 0xEDEDED; // blanco Arcosian (cuerpo)
-            default        -> 0xD5A07A; // piel humana
+            case NAMEKIAN -> 0x2DC31E;
+            case ARCOSIAN -> 0xEDEDED;
+            default        -> 0xD5A07A;
         };
     }
 
     /** Color por defecto de la capa "detalles del cuerpo" (Namek capa 2 / Arcosian placas). */
     public static int defaultDetailColorFor(Race race) {
         return switch (race) {
-            case NAMEKIAN -> 0xF1A0C0; // rosa de los detalles Namek (ajústalo)
+            case NAMEKIAN -> 0xF3ACB7; // rosa de los detalles Namek (ajústalo)
             case ARCOSIAN -> 0x9B59B6; // morado biogems Arcosian
             default        -> 0x9B59B6;
         };
@@ -104,7 +104,7 @@ public class PlayerVisualAttachment {
     /** Color por defecto de la capa "líneas de detalle" (Namek capa 3). */
     public static int defaultLineColorFor(Race race) {
         return switch (race) {
-            case NAMEKIAN -> 0x2E7D32; // verde oscuro de las líneas Namek (ajústalo)
+            case NAMEKIAN -> 0xD41A25; // verde oscuro de las líneas Namek (ajústalo)
             default        -> 0x2E7D32;
         };
     }

@@ -4,9 +4,11 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
@@ -26,14 +28,15 @@ import software.bernie.geckolib.util.Color;
  * menos el del brazo y lo renderiza en la pose que da RenderArmEvent. Así hereda automáticamente
  * cualquier cambio de modelo (transformaciones, género, etc.) sin assets extra.
  *
+ * Para razas con tinte multicapa (bodyTint: Namek, y futuras Majin/Arcosian) pinta además las
+ * pasadas _detail y _lines sobre el brazo, igual que BodyTintGeoLayer hace en 3ª persona — si no,
+ * el brazo se vería "hueco" donde la textura base es transparente.
+ *
  * ⚠ API de GeckoLib 4.8.4 a verificar al compilar:
  *   · GeoObjectRenderer (constructor + firma de render(...))
  *   · GeoModel.getBakedModel(...) / BakedGeoModel.topLevelBones()
  *   · GeoBone.setHidden(boolean) / setChildrenHidden(boolean)
  *   · Color.ofOpaque(rgb)  (mismo factory que GeoLayerArmorRenderer)
- *
- * ⚠ ALINEACIÓN: el brazo se dibuja en la posición que ocupa DENTRO del modelo (offset respecto
- *   al origen, a la altura del torso). Ajusta OFF_* / SCALE hasta que calce con la mano vanilla.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class ZenkaiFirstPersonArmHooks {
@@ -41,16 +44,14 @@ public final class ZenkaiFirstPersonArmHooks {
     private ZenkaiFirstPersonArmHooks() {}
 
     // Ajustes de alineación. MUTABLES en runtime vía el comando /zenkaiarm (calibración en vivo).
-    // Cuando te gusten, copia estos valores y vuelve a ponerlos final si quieres.
-    public static float OFF_X = -1.55f;   // bloques: +/- mueve lateral
-    public static float OFF_Y = 0.65f;   // bloques: +/- mueve vertical
-    public static float OFF_Z = -0.5f;  // bloques: +/- acerca/aleja de cámara
-    public static float SCALE = 1.0f;   // tamaño
-    public static float ROT_X = 0.0f;   // grados: inclinar (pitch)
-    public static float ROT_Y = 0.0f;   // grados: girar (yaw) — útil si el brazo apunta a cámara
-    public static float ROT_Z = 0.0f;   // grados: rodar (roll)
+    public static float OFF_X = -1.55f;
+    public static float OFF_Y = 0.65f;
+    public static float OFF_Z = -0.5f;
+    public static float SCALE = 1.0f;
+    public static float ROT_X = 0.0f;
+    public static float ROT_Y = 0.0f;
+    public static float ROT_Z = 0.0f;
 
-    // Nombres de los huesos raíz del brazo en tu geo (convención GeckoLib).
     private static final String RIGHT_ARM_BONE = "bipedRightArm";
     private static final String LEFT_ARM_BONE  = "bipedLeftArm";
 
@@ -63,7 +64,6 @@ public final class ZenkaiFirstPersonArmHooks {
         var stats  = player.getData(DataAttachments.PLAYER_STATS.get());
         if (!visual.shouldRenderRaceSkin() || !stats.isRaceChosen()) return;
 
-        // El cuerpo lleva el brazo; cualquier slot vale porque el modelo es el mismo.
         ItemStack body = RaceSkinSlots.getVirtualRaceArmor(player, EquipmentSlot.CHEST);
         if (!(body.getItem() instanceof GeoLayerArmorItem item)) return;
 
@@ -77,51 +77,71 @@ public final class ZenkaiFirstPersonArmHooks {
     /** GeoObjectRenderer que pinta SOLO el brazo del cuerpo, tintado según el canal del item. */
     private static final class ArmRenderer extends GeoObjectRenderer<GeoLayerArmorItem> {
         private Player current;
+        /** Si != null, getRenderColor devuelve este color (para las pasadas detail/lines). */
+        private Integer passColor = null;
 
         ArmRenderer() { super(new GeoLayerArmorModel()); }
 
         void renderArm(GeoLayerArmorItem item, Player player, HumanoidArm arm,
                        PoseStack poseStack, MultiBufferSource buffers, int light) {
             this.current = player;
+            GeoLayerArmorItem.ARM_RENDER_PASS = true; // congela la anim del brazo si hay pantalla abierta
 
             GeoModel<GeoLayerArmorItem> model = getGeoModel();
             BakedGeoModel baked = model.getBakedModel(model.getModelResource(item));
             String armRoot = (arm == HumanoidArm.RIGHT) ? RIGHT_ARM_BONE : LEFT_ARM_BONE;
 
-            // El baked es COMPARTIDO (1ª/3ª persona, inventario). Forzamos el estado de visibilidad
-            // de toda la rama de forma determinista cada frame: solo la cadena del brazo visible.
-            // No nos fiamos de lo que dejó la pasada anterior (de ahí que desapareciera tras F5).
             try {
                 for (GeoBone b : baked.topLevelBones()) {
                     setBranchHidden(b, !b.getName().equals(armRoot));
                 }
 
-                RenderType rt = RenderType.entityTranslucent(model.getTextureResource(item));
+                ResourceLocation baseTex = model.getTextureResource(item);
+                RenderType rt = RenderType.entityTranslucent(baseTex);
 
-                // Pivote del hombro en el geo (px). bipedRightArm=[-5,22,0], bipedLeftArm=[5,22,0].
                 float pivotX = (arm == HumanoidArm.RIGHT) ? -5f : 5f;
                 float pivotY = 22f;
 
                 poseStack.pushPose();
-                // Perillas de ajuste fino (en bloques), se aplican en el espacio ya corregido.
                 poseStack.translate(OFF_X, OFF_Y, OFF_Z);
                 poseStack.mulPose(Axis.XP.rotationDegrees(ROT_X));
                 poseStack.mulPose(Axis.YP.rotationDegrees(ROT_Y));
                 poseStack.mulPose(Axis.ZP.rotationDegrees(ROT_Z));
                 poseStack.scale(SCALE, SCALE, SCALE);
-                // GeckoLib usa Y hacia arriba; el espacio de RenderArmEvent (ModelPart) usa Y hacia
-                // abajo. Volteamos SOLO en Y (el flip en X que hace GeoEntityRenderer aquí no aplica).
                 poseStack.scale(1f, -1f, 1f);
-                // ...y cancelamos el pivote del hombro para llevarlo al origen de la mano.
                 poseStack.translate(-pivotX / 16f, -pivotY / 16f, 0f);
+
+                // Pasada base (piel): tinte por el canal del item (SKIN).
+                passColor = null;
                 render(poseStack, item, buffers, rt, buffers.getBuffer(rt), light, OverlayTexture.NO_OVERLAY);
+
+                // Pasadas de tinte de cuerpo (detalle + líneas) para razas multicolor.
+                if (item.hasBodyTint()) {
+                    var visual = player.getData(DataAttachments.PLAYER_VISUAL.get());
+                    ResourceLocation detail = deriveMask(baseTex, "_detail");
+                    ResourceLocation lines  = deriveMask(baseTex, "_lines");
+
+                    if (resourceExists(detail)) {
+                        passColor = visual.getDetailColorRgb();
+                        RenderType rtD = RaceRenderTypes.viewOffset(detail);
+                        render(poseStack, item, buffers, rtD, buffers.getBuffer(rtD), light, OverlayTexture.NO_OVERLAY);
+                    }
+                    if (resourceExists(lines)) {
+                        passColor = visual.getLineColorRgb();
+                        RenderType rtL = RaceRenderTypes.viewOffset(lines);
+                        render(poseStack, item, buffers, rtL, buffers.getBuffer(rtL), light, OverlayTexture.NO_OVERLAY);
+                    }
+                    passColor = null;
+                }
+
                 poseStack.popPose();
             } finally {
-                // Restaurar TODA la rama a visible, pase lo que pase (incluido si render lanzó).
                 for (GeoBone b : baked.topLevelBones()) {
                     setBranchHidden(b, false);
                 }
+                this.passColor = null;
                 this.current = null;
+                GeoLayerArmorItem.ARM_RENDER_PASS = false;
             }
         }
 
@@ -134,8 +154,23 @@ public final class ZenkaiFirstPersonArmHooks {
             }
         }
 
+        /** namekian_player_colorable.png -> namekian_player_detail.png / _lines.png */
+        private static ResourceLocation deriveMask(ResourceLocation base, String suffix) {
+            String p = base.getPath();
+            int dot = p.lastIndexOf('.');
+            String ext  = (dot >= 0) ? p.substring(dot) : ".png";
+            String stem = (dot >= 0) ? p.substring(0, dot) : p;
+            if (stem.endsWith("_colorable")) stem = stem.substring(0, stem.length() - "_colorable".length());
+            return ResourceLocation.fromNamespaceAndPath(base.getNamespace(), stem + suffix + ext);
+        }
+
+        private static boolean resourceExists(ResourceLocation rl) {
+            return Minecraft.getInstance().getResourceManager().getResource(rl).isPresent();
+        }
+
         @Override
         public Color getRenderColor(GeoLayerArmorItem animatable, float partialTick, int packedLight) {
+            if (passColor != null) return Color.ofOpaque(passColor & 0xFFFFFF);
             if (current == null) return Color.WHITE;
             GeoLayerArmorItem.ColorChannel ch = animatable.getColorChannel();
             if (ch == GeoLayerArmorItem.ColorChannel.NONE) return Color.WHITE;

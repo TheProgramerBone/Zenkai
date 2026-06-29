@@ -64,9 +64,9 @@ public class AppearanceScreen extends Screen {
     private static final int[] ARCOSIAN_PRESETS = { 0xFFFFFF, 0xE1BEE7, 0xFFE0B2 };
 
     // Presets de Namek por capa. El PRIMERO de cada lista = color por defecto de esa capa.
-    private static final int[] NAMEK_SKIN_PRESETS   = { 0x6FA84E, 0x4CAF50, 0x81C784 };
-    private static final int[] NAMEK_DETAIL_PRESETS = { 0xF1A0C0, 0xBA68C8, 0xE57373 };
-    private static final int[] NAMEK_LINE_PRESETS   = { 0x2E7D32, 0x1B5E20, 0x33691E };
+    private static final int[] NAMEK_SKIN_PRESETS   = { 0x2DC31E, 0x239817, 0x3BDE2B };
+    private static final int[] NAMEK_DETAIL_PRESETS = { 0xF3ACB7, 0xE75C72, 0xFCEDF0 };
+    private static final int[] NAMEK_LINE_PRESETS   = { 0xD41A25, 0xA5141D, 0xE6333D };
 
     @Nullable private final RaceSelectionScreen raceScreen;
     private final CompoundTag statsSnapshot;

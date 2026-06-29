@@ -16,6 +16,10 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
             addRenderLayer(new FaceOverlayGeoLayer(this, FaceOverlayGeoLayer.Kind.MOUTH));
             addRenderLayer(new FaceOverlayGeoLayer(this, FaceOverlayGeoLayer.Kind.NOSE));
         }
+        // Tinte de cuerpo multicapa (detalle + líneas) — razas multicolor (Namek).
+        if (item.hasBodyTint()) {
+            addRenderLayer(new BodyTintGeoLayer(this));
+        }
     }
 
     /**
