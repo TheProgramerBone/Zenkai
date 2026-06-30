@@ -39,6 +39,8 @@ public final class OtherworldManager {
     private static void teleportToOtherworld(ServerPlayer player) {
         ServerLevel ow = player.server.getLevel(ModDimensions.OTHERWORLD_LEVEL);
         if (ow != null) {
+            // Garantiza que el palacio exista (una sola vez por mundo) antes de llegar.
+            com.hmc.zenkai.worldgen.ZenkaiStructurePlacement.ensureOtherworldPalace(ow);
             player.teleportTo(ow,
                     OTHERWORLD_SPAWN.getX() + 0.5,
                     OTHERWORLD_SPAWN.getY(),

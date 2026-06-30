@@ -13,6 +13,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -133,6 +134,23 @@ public class ModCommands {
                                 .executes(ctx -> clearPets(ctx, ctx.getSource().getPlayerOrException()))
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> clearPets(ctx, EntityArgument.getPlayer(ctx, "player"))))))
+
+                .then(Commands.literal("struct")
+                        .then(Commands.literal("place")
+                                .then(Commands.argument("which", StringArgumentType.word())
+                                        .then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                                .executes(ctx -> {
+                                                    var lvl = ctx.getSource().getLevel();
+                                                    var pos = BlockPosArgument.getLoadedBlockPos(ctx, "pos");
+                                                    String which = StringArgumentType.getString(ctx, "which");
+                                                    boolean ok = com.hmc.zenkai.worldgen.ZenkaiStructurePlacement.forcePlace(lvl, which, pos);
+                                                    ctx.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal(
+                                                            ok ? "[Zenkai] Colocado " + which : "[Zenkai] Falló (revisa NBT/offsets)"), true);
+                                                    return ok ? 1 : 0;
+                                                })))))
+
+
+
         );
     }
 
