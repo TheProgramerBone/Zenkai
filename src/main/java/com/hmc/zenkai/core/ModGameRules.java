@@ -37,14 +37,10 @@ public final class ModGameRules {
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_SHENLONG_SUMMON =
             GameRules.register("zenkai_enableSummon", GameRules.Category.PLAYER,
                     GameRules.BooleanValue.create(true));
-
-    /**
-     * Si true (default), al morir el jugador es enviado al otro mundo en vez de
-     * morir normalmente. En HARDCORE el otro mundo se fuerza siempre, ignore este valor.
-     */
+    
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_OTHERWORLD =
             GameRules.register("zenkai_enableOtherworld", GameRules.Category.PLAYER,
-                    GameRules.BooleanValue.create(true));
+                    GameRules.BooleanValue.create(false));
 
     // ── Init ─────────────────────────────────────────────────────────────────
     public static void init() {
@@ -73,8 +69,7 @@ public final class ModGameRules {
         return server.getGameRules().getBoolean(ENABLE_SHENLONG_SUMMON);
     }
 
-    /** En hardcore se considera siempre activo. */
     public static boolean enableOtherworld(MinecraftServer server) {
-        return server.isHardcore() || server.getGameRules().getBoolean(ENABLE_OTHERWORLD);
+        return server.getGameRules().getBoolean(ENABLE_OTHERWORLD);
     }
 }
