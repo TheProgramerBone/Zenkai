@@ -23,8 +23,16 @@ public final class OtherworldHandler {
     public static void onPlayerDeath(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (player.level().isClientSide) return;
+
+        // Si YA está en el otro mundo, no debe morir de verdad ni respawnear fuera:
+        // cancelamos y lo re-anclamos al otro mundo (sin reiniciar su temporizador).
+        if (OtherworldManager.isInOtherworld(player)) {
+            event.setCanceled(true);
+            OtherworldManager.keepInOtherworld(player);
+            return;
+        }
+
         if (!ModGameRules.enableOtherworld(player.server)) return;   // hardcore lo fuerza
-        if (OtherworldManager.isInOtherworld(player)) return;        // ya estaba allí
 
         // Cancelar la muerte y enviarlo al otro mundo en su lugar.
         event.setCanceled(true);

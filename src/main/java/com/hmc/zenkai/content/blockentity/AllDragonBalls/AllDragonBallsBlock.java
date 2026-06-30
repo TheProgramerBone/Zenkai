@@ -48,8 +48,6 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
 
     private static final VoxelShape SHAPE = Block.box(-8.0, 0.0, -8.0, 24.0, 8.0, 24.0);
 
-    private boolean ShenronSummoned = false;
-
     @Override
     protected @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
         return SHAPE;
@@ -124,7 +122,9 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
                     serverLevel.addFreshEntity(barrier);
                 }
             }
-            ShenronSummoned = true;
+            if (level.getBlockEntity(pos) instanceof AllDragonBallsEntity be) {
+                be.setSummoned(true);
+            }
         }
         return InteractionResult.SUCCESS;
     }
@@ -196,7 +196,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
                     }
                     return;
                 }
-                if (!ShenronSummoned) {
+                if (!entity.isSummoned()) {
                     List<Interaction> barriers = serverLevel.getEntitiesOfClass(Interaction.class,
                             new AABB(pos).inflate(5),
                             i -> i.getTags().contains("dragon_barrier"));
@@ -207,9 +207,9 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
                 boolean shenronNearby = !serverLevel.getEntitiesOfClass(
                         ShenLongEntity.class,
                         new AABB(pos).inflate(10)).isEmpty();
-                if (ShenronSummoned) {
+                if (entity.isSummoned()) {
                     if (!shenronNearby) {
-                        ShenronSummoned = false;
+                        entity.setSummoned(false);
                         entity.startAnimation(serverLevel);
                     }
                 }

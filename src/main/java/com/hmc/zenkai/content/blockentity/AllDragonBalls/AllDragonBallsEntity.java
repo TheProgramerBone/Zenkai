@@ -2,6 +2,8 @@ package com.hmc.zenkai.content.blockentity.AllDragonBalls;
 
 import com.hmc.zenkai.content.blockentity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -20,6 +22,8 @@ public class AllDragonBallsEntity extends BlockEntity implements GeoBlockEntity 
     private long animationStartTick = 0;
     private static final int ANIMATION_DURATION = 80;
 
+    private boolean summoned = false;
+
     public AllDragonBallsEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(), pos, blockState);
     }
@@ -31,7 +35,7 @@ public class AllDragonBallsEntity extends BlockEntity implements GeoBlockEntity 
     }
 
     public void triggerAwayAnimation() {
-            this.triggerAnim("controller", "away");
+        this.triggerAnim("controller", "away");
     }
 
     @Override
@@ -44,10 +48,19 @@ public class AllDragonBallsEntity extends BlockEntity implements GeoBlockEntity 
         return this.level != null ? this.level.getGameTime() : 0;
     }
 
+    // ── Estado de invocación (por-posición) ───────────────────────────────────
+    public boolean isSummoned() { return summoned; }
+
+    public void setSummoned(boolean v) {
+        this.summoned = v;
+        setChanged(); // marca el BE para guardarse
+    }
+
     public void startAnimation(ServerLevel level) {
         if (!isAnimating) {
             this.isAnimating = true;
             this.animationStartTick = level.getGameTime();
+            setChanged();
             triggerAwayAnimation();
         }
     }
@@ -62,5 +75,23 @@ public class AllDragonBallsEntity extends BlockEntity implements GeoBlockEntity 
 
     public void stopAnimation() {
         this.isAnimating = false;
+        setChanged();
+    }
+
+    // ── NBT (persistencia por-posición) ───────────────────────────────────────
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.putBoolean("summoned", summoned);
+        tag.putBoolean("isAnimating", isAnimating);
+        tag.putLong("animationStartTick", animationStartTick);
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        this.summoned = tag.getBoolean("summoned");
+        this.isAnimating = tag.getBoolean("isAnimating");
+        this.animationStartTick = tag.getLong("animationStartTick");
     }
 }
