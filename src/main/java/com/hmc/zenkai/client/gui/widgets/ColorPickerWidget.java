@@ -104,7 +104,7 @@ public class ColorPickerWidget extends AbstractWidget {
         if (label != null && !label.isEmpty()) {
             g.drawString(Minecraft.getInstance().font,
                     Component.literal(label),
-                    x, y - 10, 0xC8A96E, false);
+                    x, y - 10, 0xFFFFFF, true);
         }
 
         // ── Cuadrado SV ──────────────────────────────────────────────────────
