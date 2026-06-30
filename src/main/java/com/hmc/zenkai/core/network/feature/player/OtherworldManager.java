@@ -8,10 +8,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Lógica central del "otro mundo": enviar a un jugador muerto y revivirlo.
- * Usado por el death hook (OtherworldHandler), el comando /zenkai revive y el
- * deseo de revivir. El flag inOtherworld vive en PlayerStateFlags (sincronizado
- * y persistido vía PlayerStatsAttachment).
+ * Lógica central del "otro mundo": enviar a un jugador muerto, mantenerlo allí
+ * y revivirlo. Usado por el death hook (OtherworldHandler), el comando
+ * /zenkai revive y el deseo de revivir. El flag inOtherworld vive en
+ * PlayerStateFlags (sincronizado y persistido vía PlayerStatsAttachment).
  */
 public final class OtherworldManager {
     private OtherworldManager() {}
@@ -23,11 +23,8 @@ public final class OtherworldManager {
         return player.getData(DataAttachments.PLAYER_STATS.get()).isInOtherworld();
     }
 
-    /** Marca al jugador como muerto y lo teletransporta al otro mundo. */
-    public static void sendToOtherworld(ServerPlayer player) {
-        PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
-
-        // Limpiar estado de "casi muerto" para que no muera de nuevo.
+    /** Cura vida vanilla + pools (incluida la barra HP/body) y limpia estado de daño. */
+    private static void fullHeal(ServerPlayer player) {
         player.setHealth(player.getMaxHealth());
         player.getFoodData().setFoodLevel(20);
         player.removeAllEffects();
@@ -35,10 +32,11 @@ public final class OtherworldManager {
         player.clearFire();
         player.fallDistance = 0.0F;
         player.setDeltaMovement(Vec3.ZERO);
+        // Restaura los pools (body=HP, stamina, energy) → arregla la barra "HP 0/20".
+        player.getData(DataAttachments.PLAYER_STATS.get()).refillOnRespawn();
+    }
 
-        stats.setInOtherworld(true);
-        stats.setOtherworldSince(player.serverLevel().getGameTime());
-
+    private static void teleportToOtherworld(ServerPlayer player) {
         ServerLevel ow = player.server.getLevel(ModDimensions.OTHERWORLD_LEVEL);
         if (ow != null) {
             player.teleportTo(ow,
@@ -47,6 +45,30 @@ public final class OtherworldManager {
                     OTHERWORLD_SPAWN.getZ() + 0.5,
                     player.getYRot(), player.getXRot());
         }
+    }
+
+    /** Marca al jugador como muerto y lo teletransporta al otro mundo (reinicia el temporizador). */
+    public static void sendToOtherworld(ServerPlayer player) {
+        PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
+
+        fullHeal(player);
+        player.setInvulnerable(true); // no puede volver a morir en el más allá
+
+        stats.setInOtherworld(true);
+        stats.setOtherworldSince(player.serverLevel().getGameTime());
+
+        teleportToOtherworld(player);
+        PlayerLifeCycle.sync(player);
+    }
+
+    /**
+     * Re-ancla a un jugador que YA está en el otro mundo y "murió" allí (p. ej. /kill):
+     * lo cura y lo reposiciona, SIN reiniciar el temporizador de Yemma ni el flag.
+     */
+    public static void keepInOtherworld(ServerPlayer player) {
+        fullHeal(player);
+        player.setInvulnerable(true);
+        teleportToOtherworld(player);
         PlayerLifeCycle.sync(player);
     }
 
@@ -60,8 +82,8 @@ public final class OtherworldManager {
 
         stats.setInOtherworld(false);
         stats.setOtherworldSince(0L);
-        player.setHealth(player.getMaxHealth());
-        player.getFoodData().setFoodLevel(20);
+        player.setInvulnerable(false);
+        fullHeal(player);
 
         ServerLevel dest = player.server.getLevel(player.getRespawnDimension());
         if (dest == null) dest = player.server.overworld();

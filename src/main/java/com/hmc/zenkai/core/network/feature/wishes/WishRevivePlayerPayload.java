@@ -43,12 +43,10 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
                     invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revive_failed"), false);
                     return;
                 }
-
+                WishFinalizer.finalizeWish(invoker);
                 OtherworldManager.revive(target); // misma lógica que el comando
                 target.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
                 invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
-
-                WishFinalizer.finalizeWish(invoker);
             });
         }
     }
