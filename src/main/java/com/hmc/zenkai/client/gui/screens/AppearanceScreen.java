@@ -58,7 +58,7 @@ public class AppearanceScreen extends Screen {
 
     private static final int COLOR_TITLE  = 0x4A3726;
     private static final int COLOR_VALUE  = 0xFFFFFF;
-    private static final int COLOR_SWATCH = 0x8A6A1E;
+    private static final int COLOR_SWATCH = 0x4A3726;
 
     private static final int[] SKIN_TONES       = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
     private static final int[] ARCOSIAN_PRESETS = { 0xFFFFFF, 0xE1BEE7, 0xFFE0B2 };
@@ -79,7 +79,7 @@ public class AppearanceScreen extends Screen {
     private int eyeIndex = 0, hairIndex = 0, mouthIndex = 0, noseIndex = 0;
     private int skinColor = 0xFFD5A07A, eyeColor = 0xFF2E86C1;
     private int hairColor = 0xFF1A1A1A, detailColor = 0xFF9B59B6;
-    private int lineColor = 0xFF2E7D32; // Namek capa 3 (líneas)
+    private int lineColor = 0xFF2E7D32;
     private boolean customSkinColor = false;
     private int     skinPreset      = 0;
     private boolean genderFemale    = false;
@@ -155,7 +155,7 @@ public class AppearanceScreen extends Screen {
 
         this.divY        = blockTop + 2;
         this.bottomZoneY = divY + 8;
-        this.skinAreaCX  = pl + IN_X1 + PAD + PREVIEW_W + (IN_W - PAD * 2 - PREVIEW_W) / 2;
+        this.skinAreaCX  = 25 + pl + IN_X1 + PAD + PREVIEW_W + (IN_W - PAD * 2 - PREVIEW_W) / 2;
 
         buildSkinSection();
 
@@ -252,19 +252,19 @@ public class AppearanceScreen extends Screen {
         showGender = tint;
         if (tint) {
             int rows = (total + perRow - 1) / perRow;
-            int naturalY = gridY + rows * (COLOR_BOX_H + gap) + 2;
+            int naturalY = gridY + rows * (COLOR_BOX_H + gap) - 2;
             addRenderableWidget(new TextOnlyButton(skinAreaCX - 30, naturalY, 60, 14,
                     Component.literal("Default"),
                     () -> { customSkinColor = false; closePicker(); applyPreview(); })
-                    .textColors(0x4A3726, 0x8A6A1E, 0xA0A0A0));
+                    .textColors(0xFFFFFF, 0xFFF149, 0xA0A0A0));
 
             genderTitleY = naturalY + 16;
             genderValueY = genderTitleY + 11;
             int gw = 84;
             int arrowY = genderValueY - 1;
-            addRenderableWidget(new ArrowIconButton(skinAreaCX - gw / 2, arrowY,
+            addRenderableWidget(new ArrowIconButton((skinAreaCX - gw / 2), arrowY,
                     ArrowIconButton.Dir.LEFT,  () -> { genderFemale = !genderFemale; applyPreview(); }));
-            addRenderableWidget(new ArrowIconButton(skinAreaCX + gw / 2 - ARROW_W, arrowY,
+            addRenderableWidget(new ArrowIconButton((skinAreaCX + gw / 2 - ARROW_W), arrowY,
                     ArrowIconButton.Dir.RIGHT, () -> { genderFemale = !genderFemale; applyPreview(); }));
         }
     }
@@ -285,12 +285,11 @@ public class AppearanceScreen extends Screen {
         buildColorRow(ColorChannel.LINE,   NAMEK_LINE_PRESETS,   startY + 2 * NAMEK_LAYER_DY + 10);
     }
 
-    /** Una fila: N presets de color + 1 swatch "Custom" (abre el picker de ese canal). */
     private void buildColorRow(ColorChannel ch, int[] presets, int y) {
         int gap = 4;
         int total = presets.length + 1;
         int rowW   = total * COLOR_BOX_W + (total - 1) * gap;
-        int startX = skinAreaCX - rowW / 2;
+        int startX = (skinAreaCX - rowW / 2);
         for (int i = 0; i < total; i++) {
             int x = startX + i * (COLOR_BOX_W + gap);
             if (i == presets.length) {
