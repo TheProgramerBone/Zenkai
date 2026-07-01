@@ -149,6 +149,21 @@ public class ModCommands {
                                                     return ok ? 1 : 0;
                                                 })))))
 
+                .then(Commands.literal("locate")
+                        .executes(ctx -> {
+                            var src = ctx.getSource();
+                            var zones = com.hmc.zenkai.worldgen.NoHostileSpawnZones.getZones();
+                            if (zones.isEmpty()) { src.sendSuccess(() -> Component.literal("[Zenkai] No hay estructuras registradas."), false); return 0; }
+                            for (var z : zones) {
+                                var c = z.box().getCenter();
+                                src.sendSuccess(() -> Component.literal(String.format(
+                                        "§e%s §7— %s §7@ §f%d %d %d",
+                                        z.protector(), z.dimension().location(),
+                                        (int)c.x, (int)c.y, (int)c.z)), false);
+                            }
+                            return 1;
+                        }))
+
 
 
         );

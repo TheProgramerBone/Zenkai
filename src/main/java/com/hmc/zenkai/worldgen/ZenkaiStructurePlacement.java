@@ -5,6 +5,7 @@ import com.hmc.zenkai.worldgen.StaticStructurePlacer.Segment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -28,6 +29,22 @@ public final class ZenkaiStructurePlacement {
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
         MinecraftServer server = event.getServer();
+
+        // Registrar zonas anti-hostiles cada arranque (la lista es en memoria).
+        NoHostileSpawnZones.clear();
+        NoHostileSpawnZones.addFromBase(Level.OVERWORLD,
+                ModStructureSegments.KAMI_NO_SPAWN_MIN,
+                ModStructureSegments.KAMI_NO_SPAWN_SX,
+                ModStructureSegments.KAMI_NO_SPAWN_SY,
+                ModStructureSegments.KAMI_NO_SPAWN_SZ,
+                "Kami");
+        NoHostileSpawnZones.addFromBase(ModDimensions.OTHERWORLD_LEVEL,
+                ModStructureSegments.OTHERWORLD_NO_SPAWN_MIN,
+                ModStructureSegments.OTHERWORLD_NO_SPAWN_SX,
+                ModStructureSegments.OTHERWORLD_NO_SPAWN_SY,
+                ModStructureSegments.OTHERWORLD_NO_SPAWN_SZ,
+                "Yemma");
+
         placeOnce(server, server.overworld(), KEY_KAMI,
                 ModStructureSegments.KAMI_BASE, ModStructureSegments.KAMI, true);   // Kami: iluminar aire
     }
