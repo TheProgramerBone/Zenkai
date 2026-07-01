@@ -69,6 +69,7 @@
   "block.zenkai.namek_dragon_ball_5": "§6Namek Dragon Ball 5 Star",
   "block.zenkai.namek_dragon_ball_6": "§6Namek Dragon Ball 6 Star",
   "block.zenkai.namek_dragon_ball_7": "§6Namek Dragon Ball 7 Star",
+  "block.zenkai.otherworld_cloud": "Otherworld Cloud",
 
   "effect.zenkai.immortality": "Immortality",
 
@@ -212,5 +213,13 @@
   "entity.zenkai.kintoun_shadow": "Shadow Flying Nimbus",
   "entity.zenkai.namekian": "Namekian",
   "entity.zenkai.namekian_warrior": "Namekian Warrior",
-  "entity.zenkai.wish_librarian": "Special Librarian"
+  "entity.zenkai.wish_librarian": "Special Librarian",
+
+  "gamerule.zenkai_allowRaceSelection": "Enable Race Creation",
+  "gamerule.zenkai_enableKiDamage": "Enable Ki Damage",
+  "gamerule.zenkai_enableOtherworld": "Enable Otherworld dead-system",
+  "gamerule.zenkai_enableRaceBoosts": "Enable statistics",
+  "gamerule.zenkai_enableStructureProtection": "Prevents mob spawn and block destroyed by players on mod's structures",
+  "gamerule.zenkai_enableSummon": "Allows Players to Summon Shenlong",
+  "gamerule.zenkai_enableTransformations": "Allow Players To Transform"
 }

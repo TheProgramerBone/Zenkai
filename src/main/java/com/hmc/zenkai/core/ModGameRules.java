@@ -40,7 +40,7 @@ public final class ModGameRules {
     
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_OTHERWORLD =
             GameRules.register("zenkai_enableOtherworld", GameRules.Category.PLAYER,
-                    GameRules.BooleanValue.create(false));
+                    GameRules.BooleanValue.create(true));
 
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_STRUCTURE_PROTECTION =
             GameRules.register("zenkai_enableStructureProtection", GameRules.Category.PLAYER,
