@@ -357,6 +357,12 @@ public class ModBlocks {
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.QUARTZ)));
 
+    public static final DeferredBlock<Block> OTHERWORLD_CLOUD = registerBlock("otherworld_cloud",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f)
+                    .sound(SoundType.COBWEB)
+                    .mapColor(MapColor.COLOR_YELLOW)));
+
 
     public static void register(IEventBus eventBus) {
         MOD_BLOCKS.register(eventBus);

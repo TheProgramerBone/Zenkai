@@ -1,9 +1,10 @@
-// 1.21.1	2026-06-12T21:11:02.2342185	Block States: zenkai
+// 1.21.1	2026-07-01T13:12:44.7621427	Block States: zenkai
 d9cb25aba30c4602c429224f6b93e510b5d98124 assets/zenkai/blockstates/deepslate_terragem_ore.json
 fa9c35c56b7519e4ac4848347d148fd6726e17d2 assets/zenkai/blockstates/namekian_cobblestone.json
 8df7327bfeb0ed68204dd24470c8fff3cb344f58 assets/zenkai/blockstates/namekian_dirt.json
 8081dfc26eff1654875497f35c36528dddd36646 assets/zenkai/blockstates/namekian_stone.json
 a108a1beb27a107ac3aba5acdef2f05ddb81fea8 assets/zenkai/blockstates/namekian_structure_block.json
+085da3a83534626c2fe0ab9a50a3504306c97bf2 assets/zenkai/blockstates/otherworld_cloud.json
 90defdb8a0e775882c3a5a7ef97e57386e4f190f assets/zenkai/blockstates/rocky_block.json
 da02c517fe5933ee42494fd1708920f2626810ea assets/zenkai/blockstates/structural_concrete_black.json
 b1754a57ef66efab512ed8a7a61dc651dc01f633 assets/zenkai/blockstates/structural_concrete_blue.json
@@ -29,6 +30,7 @@ eaf30610b9bdae5f7bd986695f36228114d8fab9 assets/zenkai/models/block/deepslate_te
 d34c7c3a88b3e4c47ef3966007a4abd485b64d48 assets/zenkai/models/block/namekian_dirt.json
 ab3c1e0be92a9c087224b469ea72990d25c928ca assets/zenkai/models/block/namekian_stone.json
 410ffee5546c47830d26267e1eb537eb18a16297 assets/zenkai/models/block/namekian_structure_block.json
+a1ac85f9881b1633a6808b7bec08e9ae516e3e3d assets/zenkai/models/block/otherworld_cloud.json
 d79cfa8d94ee27d2f7ecec2966936da25dfd1af0 assets/zenkai/models/block/rocky_block.json
 a697f2b94a7a808e11b9f1262f599a98b3038f1e assets/zenkai/models/block/structural_concrete_black.json
 2cd6c91ec2c442e8c87a55a5a2256b7835f8ab43 assets/zenkai/models/block/structural_concrete_blue.json
@@ -54,6 +56,7 @@ cbec59c6fcf5db17ba8793024a9180530f350700 assets/zenkai/models/item/deepslate_ter
 d0832ae29674999ef0dc70497a2f90eb3eb781cf assets/zenkai/models/item/namekian_dirt.json
 914c89d1404a1d0219cfc3be103fa3e006123657 assets/zenkai/models/item/namekian_stone.json
 62f724d1f949b953af777e5f4050ba6fb74f9987 assets/zenkai/models/item/namekian_structure_block.json
+6d8ec4bde2c818241037b4b33070b79102fa5856 assets/zenkai/models/item/otherworld_cloud.json
 25561d687378166373edf0ed01797f763874cbee assets/zenkai/models/item/rocky_block.json
 1829e94030bd54b2f16cc52c972227de0d4bc676 assets/zenkai/models/item/structural_concrete_black.json
 96ecb8d74ff352473403f2512fac1fa37ff84798 assets/zenkai/models/item/structural_concrete_blue.json
