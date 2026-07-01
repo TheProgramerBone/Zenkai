@@ -39,6 +39,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_PINK);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_ORANGE);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED);
+        blockWithItem(ModBlocks.OTHERWORLD_CLOUD);
     }
 
     private void blockWithItem(DeferredBlock<?> deferredBlock) {

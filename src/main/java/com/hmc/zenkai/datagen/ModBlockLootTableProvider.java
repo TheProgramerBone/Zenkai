@@ -68,6 +68,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_PINK.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_ORANGE.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED.get());
+        dropSelf(ModBlocks.OTHERWORLD_CLOUD.get());
 
         add(ModBlocks.NAMEKIAN_STONE.get(),
                 createSingleItemTableWithSilkTouch(ModBlocks.NAMEKIAN_STONE.get(), ModBlocks.NAMEKIAN_COBBLESTONE));

@@ -121,7 +121,7 @@
   "screen.zenkai.shenlong_wish.remaining": "Wishes remaining: %s",
   "messages.zenkai.pet_revived": "§2§lShenlong:§6 Your companion returns to you.",
   "messages.zenkai.pet_revive_failed": "§cThe revival failed.",
-  "messages.zenkai.zone_protected": "This zone is protected by %s",
+  "messages.zenkai.zone_protected": "§6This zone is protected by %s",
 
 
   "screen.zenkai.shenlong_wish": "§2§lShenlong:§6§l State your wish",

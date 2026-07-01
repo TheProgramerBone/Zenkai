@@ -2,6 +2,9 @@ package com.hmc.zenkai.worldgen;
 
 import com.hmc.zenkai.worldgen.StaticStructurePlacer.Segment;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
 
 import java.util.List;
 
@@ -11,8 +14,19 @@ public final class ModStructureSegments {
     // ── KAMI (overworld, estructura única) ────────────────────────────────────
     public static final BlockPos KAMI_BASE = new BlockPos(0, 64, 0);
 
-    public static final BlockPos KAMI_NO_SPAWN_MIN = new BlockPos(KAMI_BASE.getX() - 64, KAMI_BASE.getY(), KAMI_BASE.getZ() - 64);
+    // Anclaje de kami_1: true = nivel del mar; false = superficie del bioma
+    public static final boolean KAMI_ANCHOR_SEA_LEVEL = true;
+    // Radio inicial y tope del auto-expandible (bloques)
+    public static final int KAMI_SEARCH_RADIUS = 500;
+    public static final int KAMI_MAX_SEARCH_RADIUS = 8000;
+    // Ajuste fino de altura sobre el ancla (0 = justo en el ancla; +/- para subir/bajar)
+    public static final int KAMI_Y_OFFSET = 0;
+    // Bioma donde debe aparecer Kami (cámbialo al que quieras)
+    public static final ResourceKey<Biome> KAMI_BIOME = Biomes.PLAINS;
+    // Caja de protección RELATIVA a la base de Kami (offset desde la base + tamaño)
+    public static final int KAMI_NO_SPAWN_OFF_X = -64, KAMI_NO_SPAWN_OFF_Y = 0, KAMI_NO_SPAWN_OFF_Z = -64;
     public static final int KAMI_NO_SPAWN_SX = 160, KAMI_NO_SPAWN_SY = 360, KAMI_NO_SPAWN_SZ = 160;
+    public static final BlockPos KAMI_NO_SPAWN_MIN = new BlockPos(KAMI_BASE.getX() - 64, KAMI_BASE.getY(), KAMI_BASE.getZ() - 64);
 
     public static final List<Segment> KAMI = List.of(
             Segment.of("kami_1",  0, 0, 0),   // 15×48×15
