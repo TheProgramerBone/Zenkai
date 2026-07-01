@@ -42,6 +42,11 @@ public final class ModGameRules {
             GameRules.register("zenkai_enableOtherworld", GameRules.Category.PLAYER,
                     GameRules.BooleanValue.create(false));
 
+    public static final GameRules.Key<GameRules.BooleanValue> ENABLE_STRUCTURE_PROTECTION =
+            GameRules.register("zenkai_enableStructureProtection", GameRules.Category.PLAYER,
+                    GameRules.BooleanValue.create(true));
+
+
     // ── Init ─────────────────────────────────────────────────────────────────
     public static void init() {
         // Fuerza la carga estática de las claves antes de arrancar el servidor.
@@ -71,5 +76,9 @@ public final class ModGameRules {
 
     public static boolean enableOtherworld(MinecraftServer server) {
         return server.getGameRules().getBoolean(ENABLE_OTHERWORLD);
+    }
+
+    public static boolean enableStructureProtection(MinecraftServer server) {
+        return !server.getGameRules().getBoolean(ENABLE_STRUCTURE_PROTECTION);
     }
 }

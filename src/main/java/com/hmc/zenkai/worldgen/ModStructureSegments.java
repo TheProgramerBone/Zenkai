@@ -11,6 +11,9 @@ public final class ModStructureSegments {
     // ── KAMI (overworld, estructura única) ────────────────────────────────────
     public static final BlockPos KAMI_BASE = new BlockPos(0, 64, 0);
 
+    public static final BlockPos KAMI_NO_SPAWN_MIN = new BlockPos(KAMI_BASE.getX() - 64, KAMI_BASE.getY(), KAMI_BASE.getZ() - 64);
+    public static final int KAMI_NO_SPAWN_SX = 160, KAMI_NO_SPAWN_SY = 360, KAMI_NO_SPAWN_SZ = 160;
+
     public static final List<Segment> KAMI = List.of(
             Segment.of("kami_1",  0, 0, 0),   // 15×48×15
             //Segment.of("kami_2",  0, 47, 0),   // 15×48×15
@@ -40,6 +43,8 @@ public final class ModStructureSegments {
 
     // ── OTHERWORLD (dimensión del otro mundo, estructura única) ────────────────
     public static final BlockPos OTHERWORLD_BASE = new BlockPos(0, 64, 0);
+    public static final BlockPos OTHERWORLD_NO_SPAWN_MIN = new BlockPos(OTHERWORLD_BASE.getX() - 8, OTHERWORLD_BASE.getY(), OTHERWORLD_BASE.getZ() - 8);
+    public static final int OTHERWORLD_NO_SPAWN_SX = 140, OTHERWORLD_NO_SPAWN_SY = 60, OTHERWORLD_NO_SPAWN_SZ = 120;
 
     public static final List<Segment> OTHERWORLD = List.of(
             Segment.of("otherworld_palace_1",0,0,0),   // 48×40×48
