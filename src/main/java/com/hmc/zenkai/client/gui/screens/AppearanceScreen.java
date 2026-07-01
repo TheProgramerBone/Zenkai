@@ -56,6 +56,8 @@ public class AppearanceScreen extends Screen {
     private static final int PREVIEW_W    = 80;
     private static final int PREVIEW_SIZE = 45;
 
+
+
     private static final int COLOR_TITLE  = 0x4A3726;
     private static final int COLOR_VALUE  = 0xFFFFFF;
     private static final int COLOR_SWATCH = 0x4A3726;
