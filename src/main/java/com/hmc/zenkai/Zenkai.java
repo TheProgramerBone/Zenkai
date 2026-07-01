@@ -27,6 +27,7 @@ import com.hmc.zenkai.core.network.feature.ki.MouseZenkaiHooks;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.network.feature.stats.FlyApplier;
+import com.hmc.zenkai.worldgen.ModFeatures;
 import com.hmc.zenkai.worldgen.ModOverworldRegion;
 import com.hmc.zenkai.worldgen.ModSurfaceRules;
 import com.mojang.logging.LogUtils;
@@ -79,6 +80,7 @@ public class Zenkai {
         ModEntities.register(modEventBus);
         ModEffects.register(modEventBus);
         DataAttachments.REGISTER.register(modEventBus);
+        ModFeatures.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
 
         // Configs

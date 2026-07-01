@@ -17,7 +17,7 @@ public final class OtherworldManager {
     private OtherworldManager() {}
 
     /** Posición de aparición en el otro mundo (ajusta a la entrada de tu estructura). */
-    public static final BlockPos OTHERWORLD_SPAWN = new BlockPos(0, 65, 0);
+    public static final BlockPos OTHERWORLD_SPAWN = new BlockPos(57, 147, 3);
 
     public static boolean isInOtherworld(ServerPlayer player) {
         return player.getData(DataAttachments.PLAYER_STATS.get()).isInOtherworld();

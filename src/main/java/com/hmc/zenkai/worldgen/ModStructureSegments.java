@@ -56,7 +56,7 @@ public final class ModStructureSegments {
     );
 
     // ── OTHERWORLD (dimensión del otro mundo, estructura única) ────────────────
-    public static final BlockPos OTHERWORLD_BASE = new BlockPos(0, 64, 0);
+    public static final BlockPos OTHERWORLD_BASE = new BlockPos(0, 145, 0);
     public static final BlockPos OTHERWORLD_NO_SPAWN_MIN = new BlockPos(OTHERWORLD_BASE.getX() - 8, OTHERWORLD_BASE.getY(), OTHERWORLD_BASE.getZ() - 8);
     public static final int OTHERWORLD_NO_SPAWN_SX = 140, OTHERWORLD_NO_SPAWN_SY = 60, OTHERWORLD_NO_SPAWN_SZ = 120;
 
