@@ -29,28 +29,28 @@ public final class ZenkaiStructurePlacement {
     public static void onServerStarted(ServerStartedEvent event) {
         MinecraftServer server = event.getServer();
         placeOnce(server, server.overworld(), KEY_KAMI,
-                ModStructureSegments.KAMI_BASE, ModStructureSegments.KAMI);
+                ModStructureSegments.KAMI_BASE, ModStructureSegments.KAMI, true);   // Kami: iluminar aire
     }
 
     /** Garantiza que el palacio del otro mundo exista antes de teletransportar. */
     public static void ensureOtherworldPalace(ServerLevel otherworld) {
         placeOnce(otherworld.getServer(), otherworld, KEY_OTHERWORLD,
-                ModStructureSegments.OTHERWORLD_BASE, ModStructureSegments.OTHERWORLD);
+                ModStructureSegments.OTHERWORLD_BASE, ModStructureSegments.OTHERWORLD, true); // otherworld: iluminar aire
     }
 
     private static void placeOnce(MinecraftServer server, ServerLevel level,
-                                  String key, BlockPos base, List<Segment> segments) {
+                                  String key, BlockPos base, List<Segment> segments, boolean airToLight) {
         ZenkaiWorldData data = ZenkaiWorldData.get(server);
         if (data.isPlaced(key)) return;
-        boolean ok = StaticStructurePlacer.place(level, base, segments);
+        boolean ok = StaticStructurePlacer.place(level, base, segments, airToLight);
         if (ok) data.markPlaced(key);
     }
 
-    /** Colocación forzada (para pruebas de offsets): ignora el flag de "ya colocada". */
+    /** Colocación forzada (para pruebas de offsets): ignora el flag de "ya colocada" e ilumina el aire. */
     public static boolean forcePlace(ServerLevel level, String which, BlockPos base) {
         return switch (which) {
-            case "kami"       -> StaticStructurePlacer.place(level, base, ModStructureSegments.KAMI);
-            case "otherworld" -> StaticStructurePlacer.place(level, base, ModStructureSegments.OTHERWORLD);
+            case "kami"       -> StaticStructurePlacer.place(level, base, ModStructureSegments.KAMI, true);
+            case "otherworld" -> StaticStructurePlacer.place(level, base, ModStructureSegments.OTHERWORLD, true);
             default -> false;
         };
     }
