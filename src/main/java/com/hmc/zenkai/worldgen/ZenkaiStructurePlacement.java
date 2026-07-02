@@ -1,6 +1,8 @@
 package com.hmc.zenkai.worldgen;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.entity.ModEntities;
+import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.worldgen.StaticStructurePlacer.Segment;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
@@ -10,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -33,6 +36,24 @@ public final class ZenkaiStructurePlacement {
 
     public static final String KEY_KAMI       = "kami_palace";
     public static final String KEY_OTHERWORLD = "otherworld_palace";
+
+    // Constante (AJUSTA a donde quieras a Yemma dentro del palacio):
+    public static final BlockPos YEMMA_POS = new BlockPos(57, 147, 54);
+    public static final float    YEMMA_YAW = 180.0f;
+
+    /** Spawnea a Yemma en YEMMA_POS si no hay ya una cerca (idempotente). */
+    public static void ensureYemma(ServerLevel otherworld) {
+        AABB area = new AABB(YEMMA_POS).inflate(8.0);
+        if (!otherworld.getEntitiesOfClass(YemmaEntity.class, area).isEmpty()) return; // ya existe
+
+        YemmaEntity yemma = ModEntities.YEMMA.get().create(otherworld);
+        if (yemma == null) return;
+        yemma.moveTo(YEMMA_POS.getX() + 0.5, YEMMA_POS.getY(), YEMMA_POS.getZ() + 0.5, YEMMA_YAW, 0.0f);
+        yemma.setYBodyRot(YEMMA_YAW);
+        yemma.setYHeadRot(YEMMA_YAW);
+        yemma.setPersistenceRequired();
+        otherworld.addFreshEntity(yemma);
+    }
 
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
@@ -112,7 +133,8 @@ public final class ZenkaiStructurePlacement {
     /** Garantiza que el palacio del otro mundo exista antes de teletransportar. */
     public static void ensureOtherworldPalace(ServerLevel otherworld) {
         placeOnce(otherworld.getServer(), otherworld, KEY_OTHERWORLD,
-                ModStructureSegments.OTHERWORLD_BASE, ModStructureSegments.OTHERWORLD, true); // otherworld: iluminar aire
+                ModStructureSegments.OTHERWORLD_BASE, ModStructureSegments.OTHERWORLD, true);
+        ensureYemma(otherworld);
     }
 
     private static void placeOnce(MinecraftServer server, ServerLevel level,

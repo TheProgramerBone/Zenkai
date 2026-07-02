@@ -15,35 +15,35 @@ public final class ModGameRules {
 
     /** Si false, el servidor rechaza el packet de elección de raza. */
     public static final GameRules.Key<GameRules.BooleanValue> ALLOW_RACE_SELECTION =
-            GameRules.register("zenkai_allowRaceSelection", GameRules.Category.PLAYER,
+            GameRules.register("zenkai_allowRaceSelection", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
     /** Si false, CombatHooks no se activa aunque el jugador tenga raza. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_RACE_BOOSTS =
-            GameRules.register("zenkai_enableRaceBoosts", GameRules.Category.PLAYER,
+            GameRules.register("zenkai_enableRaceBoosts", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
     /** Si false, los Ki Blasts no aplican daño al impactar. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_KI_DAMAGE =
-            GameRules.register("zenkai_enableKiDamage", GameRules.Category.PLAYER,
+            GameRules.register("zenkai_enableKiDamage", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
     /** Si false, el servidor rechaza el packet de transformación. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_TRANSFORMATIONS =
-            GameRules.register("zenkai_enableTransformations", GameRules.Category.PLAYER,
+            GameRules.register("zenkai_enableTransformations", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
     /** Si false, el bloque de las 7 esferas no invoca a Shenlong. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_SHENLONG_SUMMON =
-            GameRules.register("zenkai_enableSummon", GameRules.Category.PLAYER,
+            GameRules.register("zenkai_enableSummon", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
     
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_OTHERWORLD =
-            GameRules.register("zenkai_enableOtherworld", GameRules.Category.PLAYER,
+            GameRules.register("zenkai_enableOtherworld", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_STRUCTURE_PROTECTION =
-            GameRules.register("zenkai_enableStructureProtection", GameRules.Category.PLAYER,
+            GameRules.register("zenkai_enableStructureProtection", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
 

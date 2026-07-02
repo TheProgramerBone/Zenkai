@@ -165,6 +165,10 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.ISAAC.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("isaac", true), 0.5f));
 
+            EntityRenderers.register(ModEntities.YEMMA.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("yemma", true), 4f));
+
+
             // Worldgen (Terrablender)
             event.enqueueWork(() -> {
                 Regions.register(new ModOverworldRegion());

@@ -7,6 +7,7 @@ import com.hmc.zenkai.content.entity.kintoun.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namekian.NamekianEntity;
 import com.hmc.zenkai.content.entity.namekian.NamekianWarriorEntity;
 import com.hmc.zenkai.content.entity.kintoun.KintounEntity;
+import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.content.entity.space_pod.SpacePodEntity;
 import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -51,6 +52,10 @@ public class ModEntities {
     public static final Supplier<EntityType<KiBlastEntity>> KI_BLAST =
             ENTITY_TYPES.register("ki_blast",()-> EntityType.Builder.of(KiBlastEntity::new,MobCategory.MISC)
                     .sized(1,1).build("ki_blast"));
+
+    public static final Supplier<EntityType<YemmaEntity>> YEMMA =
+            ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)
+                    .sized(1.2f, 3.0f).build("yemma"));
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);
