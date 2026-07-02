@@ -1,4 +1,4 @@
-package com.hmc.zenkai.content.entity.space_pod;
+package com.hmc.zenkai.content.entity.misc;
 
 import com.hmc.zenkai.content.item.ModItems;
 import com.hmc.zenkai.core.network.vehicle.VerticalControlVehicle;

@@ -8,7 +8,7 @@ import com.hmc.zenkai.client.gui.screens.wishes.ImmortalWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.RevivePlayerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.RevivePetWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.TrainingPointsWishScreen;
-import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
+import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.core.config.WishConfig.WishType;
 import com.hmc.zenkai.core.network.feature.wishes.OpenStackWishPayload;
 import net.minecraft.client.Minecraft;

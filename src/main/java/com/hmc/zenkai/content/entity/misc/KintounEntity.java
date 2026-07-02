@@ -1,4 +1,4 @@
-package com.hmc.zenkai.content.entity.kintoun;
+package com.hmc.zenkai.content.entity.misc;
 
 import com.hmc.zenkai.content.entity.CommonAnimations;
 import com.hmc.zenkai.content.item.ModItems;
