@@ -52,7 +52,7 @@ public final class ClientZenkaiPalTick {
             if (st.lastHeld) {
                 st.lastHeld = false;
                 st.chainTicks = 0;
-                DbPalAnimations.controller(p).stopTriggeredAnimation();
+                ZenkaiPalAnimations.controller(p).stopTriggeredAnimation();
             }
             return;
         }
@@ -68,20 +68,20 @@ public final class ClientZenkaiPalTick {
 
         if (heldNow && !st.lastHeld) {
             st.lastHeld = true;
-            DbPalAnimations.playTransformStart(p);
+            ZenkaiPalAnimations.playTransformStart(p);
             st.chainTicks = 10; // 0.5s
         }
 
         if (!heldNow && st.lastHeld) {
             st.lastHeld = false;
             st.chainTicks = 0;
-            DbPalAnimations.controller(p).stopTriggeredAnimation();
+            ZenkaiPalAnimations.controller(p).stopTriggeredAnimation();
         }
 
         if (heldNow && st.chainTicks > 0) {
             st.chainTicks--;
             if (st.chainTicks == 0) {
-                DbPalAnimations.playTransformLoop(p);
+                ZenkaiPalAnimations.playTransformLoop(p);
             }
         }
     }

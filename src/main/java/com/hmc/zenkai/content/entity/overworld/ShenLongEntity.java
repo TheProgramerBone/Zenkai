@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.entity.overworld;
 
-import com.hmc.zenkai.content.entity.CommonAnimations;
+import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.core.network.feature.wishes.OpenWishScreenPayload;
 import com.hmc.zenkai.core.network.feature.wishes.SyncWishTogglesPayload;
 import net.minecraft.nbt.CompoundTag;
@@ -45,8 +45,8 @@ public class ShenLongEntity extends Mob implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(CommonAnimations.getSpawnController(this, AnimationState::getController,2*20));
-        controllers.add(CommonAnimations.genericIdleController(this));
+        controllers.add(ZenkaiCommonAnimations.getSpawnController(this, AnimationState::getController,2*20));
+        controllers.add(ZenkaiCommonAnimations.genericIdleController(this));
     }
 
     @Override

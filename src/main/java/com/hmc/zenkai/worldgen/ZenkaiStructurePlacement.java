@@ -1,9 +1,8 @@
 package com.hmc.zenkai.worldgen;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.content.entity.ModEntities;
-import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.worldgen.StaticStructurePlacer.Segment;
+import com.hmc.zenkai.worldgen.npc.StructureNpcManager;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -12,7 +11,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -26,7 +24,9 @@ import java.util.List;
  *  - Kami: una vez en el overworld al arrancar el servidor.
  *  - Otherworld: una vez, justo antes de mandar al primer jugador allí
  *    (ensureOtherworldPalace, llamado desde OtherworldManager).
+ *
  * El flag de "ya colocada" vive en ZenkaiWorldData (una vez por mundo).
+ * Los NPCs de estructura (Yemma, etc.) los gestiona StructureNpcManager.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class ZenkaiStructurePlacement {
@@ -36,24 +36,6 @@ public final class ZenkaiStructurePlacement {
 
     public static final String KEY_KAMI       = "kami_palace";
     public static final String KEY_OTHERWORLD = "otherworld_palace";
-
-    // Constante (AJUSTA a donde quieras a Yemma dentro del palacio):
-    public static final BlockPos YEMMA_POS = new BlockPos(57, 147, 54);
-    public static final float    YEMMA_YAW = 180.0f;
-
-    /** Spawnea a Yemma en YEMMA_POS si no hay ya una cerca (idempotente). */
-    public static void ensureYemma(ServerLevel otherworld) {
-        AABB area = new AABB(YEMMA_POS).inflate(8.0);
-        if (!otherworld.getEntitiesOfClass(YemmaEntity.class, area).isEmpty()) return; // ya existe
-
-        YemmaEntity yemma = ModEntities.YEMMA.get().create(otherworld);
-        if (yemma == null) return;
-        yemma.moveTo(YEMMA_POS.getX() + 0.5, YEMMA_POS.getY(), YEMMA_POS.getZ() + 0.5, YEMMA_YAW, 0.0f);
-        yemma.setYBodyRot(YEMMA_YAW);
-        yemma.setYHeadRot(YEMMA_YAW);
-        yemma.setPersistenceRequired();
-        otherworld.addFreshEntity(yemma);
-    }
 
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
@@ -104,7 +86,7 @@ public final class ZenkaiStructurePlacement {
         Pair<BlockPos, Holder<Biome>> found = null;
         int radius = ModStructureSegments.KAMI_SEARCH_RADIUS;
         while (found == null && radius <= ModStructureSegments.KAMI_MAX_SEARCH_RADIUS) {
-            // ⚠ 1.21.1: findClosestBiome(Predicate<Holder<Biome>>, BlockPos, int radius, int hStep, int vStep)
+            // ⚠ 1.21.1: findClosestBiome3d(Predicate<Holder<Biome>>, BlockPos, int radius, int hStep, int vStep)
             found = overworld.findClosestBiome3d(
                     h -> h.is(ModStructureSegments.KAMI_BIOME), spawn, radius, 32, 64);
             if (found == null) {
@@ -134,7 +116,7 @@ public final class ZenkaiStructurePlacement {
     public static void ensureOtherworldPalace(ServerLevel otherworld) {
         placeOnce(otherworld.getServer(), otherworld, KEY_OTHERWORLD,
                 ModStructureSegments.OTHERWORLD_BASE, ModStructureSegments.OTHERWORLD, true);
-        ensureYemma(otherworld);
+        StructureNpcManager.ensureAllIn(otherworld);   // spawnea los NPCs de esta dimensión
     }
 
     private static void placeOnce(MinecraftServer server, ServerLevel level,

@@ -12,7 +12,7 @@ import software.bernie.geckolib.constant.DefaultAnimations;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class CommonAnimations {
+public class ZenkaiCommonAnimations {
 
 /**
  * Optionally usable class that holds constants for recommended animation paths
@@ -33,11 +33,11 @@ public class CommonAnimations {
     public static final RawAnimation REST = RawAnimation.begin().thenPlay("misc.rest");
     public static final RawAnimation SIT = RawAnimation.begin().thenPlayAndHold("misc.sit");
 
-    public static final RawAnimation KI_CHARGE = RawAnimation.begin().thenPlayAndHold("db.ki_charge");
-    public static final RawAnimation KI_BLAST = RawAnimation.begin().thenPlayAndHold("db.ki_blast");
-    public static final RawAnimation TRANSFORMATION = RawAnimation.begin().thenPlayAndHold("db.transformation");
-    public static final RawAnimation DODGE1 = RawAnimation.begin().thenPlay("db.dodge1");
-    public static final RawAnimation DODGE2 = RawAnimation.begin().thenPlay("db.dodge2");
+    public static final RawAnimation KI_CHARGE = RawAnimation.begin().thenPlayAndHold("zenkai.ki_charge");
+    public static final RawAnimation KI_BLAST = RawAnimation.begin().thenPlayAndHold("zenkai.ki_blast");
+    public static final RawAnimation TRANSFORMATION = RawAnimation.begin().thenPlayAndHold("zenkai.transformation");
+    public static final RawAnimation DODGE1 = RawAnimation.begin().thenPlay("zenkai.dodge1");
+    public static final RawAnimation DODGE2 = RawAnimation.begin().thenPlay("zenkai.dodge2");
 
     public static final RawAnimation WALK = RawAnimation.begin().thenLoop("move.walk");
     public static final RawAnimation SWIM = RawAnimation.begin().thenLoop("move.swim");

@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.entity.misc;
 
-import com.hmc.zenkai.content.entity.CommonAnimations;
+import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.content.entity.ZenkaiGeoMob;
 import com.hmc.zenkai.content.sound.ModSounds;
 import net.minecraft.nbt.CompoundTag;
@@ -130,8 +130,8 @@ public class IsaacEntity extends ZenkaiGeoMob {
             if (this.isDancing())
                 return state.setAndContinue(DANCE);
             if (state.isMoving())
-                return state.setAndContinue(CommonAnimations.WALK);
-            return state.setAndContinue(CommonAnimations.IDLE);
+                return state.setAndContinue(ZenkaiCommonAnimations.WALK);
+            return state.setAndContinue(ZenkaiCommonAnimations.IDLE);
         }));
     }
 

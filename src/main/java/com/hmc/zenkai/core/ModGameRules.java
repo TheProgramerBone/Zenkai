@@ -46,6 +46,10 @@ public final class ModGameRules {
             GameRules.register("zenkai_enableStructureProtection", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
+    public static final GameRules.Key<GameRules.BooleanValue> KEEP_STRUCTURE_NPCS =
+            GameRules.register("zenkai_keepStructureNpcs", GameRules.Category.MISC,
+                    GameRules.BooleanValue.create(true));
+
 
     // ── Init ─────────────────────────────────────────────────────────────────
     public static void init() {
@@ -80,5 +84,9 @@ public final class ModGameRules {
 
     public static boolean enableStructureProtection(MinecraftServer server) {
         return !server.getGameRules().getBoolean(ENABLE_STRUCTURE_PROTECTION);
+    }
+
+    public static boolean keepStructureNpcs(MinecraftServer server) {
+        return server.getGameRules().getBoolean(KEEP_STRUCTURE_NPCS);
     }
 }
