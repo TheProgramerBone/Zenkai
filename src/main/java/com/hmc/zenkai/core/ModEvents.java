@@ -7,6 +7,7 @@ import com.hmc.zenkai.content.entity.kintoun.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namekian.NamekianEntity;
 import com.hmc.zenkai.content.entity.namekian.NamekianWarriorEntity;
 import com.hmc.zenkai.content.entity.kintoun.KintounEntity;
+import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
 import com.hmc.zenkai.content.entity.space_pod.SpacePodEntity;
 import com.hmc.zenkai.content.item.special.HammerItem;
@@ -38,9 +39,12 @@ public class ModEvents {
         event.put(ModEntities.KINTOUN.get(), KintounEntity.createAttributes().build());
         event.put(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounEntity.createAttributes().build());
         event.put(ModEntities.ISAAC.get(), IsaacEntity.createAttributes().build());
+        event.put(ModEntities.YEMMA.get(), YemmaEntity.createAttributes().build());
     }
 
     private static final Set<BlockPos> HARVESTED_BLOCKS = new HashSet<>();
+
+
     // Done with the help of https://github.com/CoFH/CoFHCore/blob/1.19.x/src/main/java/cofh/core/event/AreaEffectEvents.java
     // Don't be a jerk License
     @SubscribeEvent
