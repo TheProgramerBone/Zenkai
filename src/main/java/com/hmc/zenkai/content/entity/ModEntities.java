@@ -55,7 +55,7 @@ public class ModEntities {
 
     public static final Supplier<EntityType<YemmaEntity>> YEMMA =
             ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)
-                    .sized(1.2f, 3.0f).build("yemma"));
+                    .sized(4, 10.0f).build("yemma"));
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);
