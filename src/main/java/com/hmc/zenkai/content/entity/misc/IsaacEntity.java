@@ -1,10 +1,9 @@
-package com.hmc.zenkai.content.entity.isaac;
+package com.hmc.zenkai.content.entity.misc;
 
 import com.hmc.zenkai.content.entity.CommonAnimations;
 import com.hmc.zenkai.content.entity.ZenkaiGeoMob;
 import com.hmc.zenkai.content.sound.ModSounds;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -27,7 +26,6 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.animation.RawAnimation;
 
 import java.util.EnumSet;

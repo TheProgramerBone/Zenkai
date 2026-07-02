@@ -1,4 +1,4 @@
-package com.hmc.zenkai.content.entity.namekian;
+package com.hmc.zenkai.content.entity.namek;
 
 import com.hmc.zenkai.content.entity.CommonAnimations;
 import com.hmc.zenkai.content.entity.ModVillagerTrades;

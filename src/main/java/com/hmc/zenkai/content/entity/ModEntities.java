@@ -1,15 +1,15 @@
 package com.hmc.zenkai.content.entity;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.content.entity.isaac.IsaacEntity;
+import com.hmc.zenkai.content.entity.misc.IsaacEntity;
 import com.hmc.zenkai.content.entity.ki_attacks.KiBlastEntity;
-import com.hmc.zenkai.content.entity.kintoun.ShadowKintounEntity;
-import com.hmc.zenkai.content.entity.namekian.NamekianEntity;
-import com.hmc.zenkai.content.entity.namekian.NamekianWarriorEntity;
-import com.hmc.zenkai.content.entity.kintoun.KintounEntity;
+import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
+import com.hmc.zenkai.content.entity.namek.NamekianEntity;
+import com.hmc.zenkai.content.entity.namek.NamekianWarriorEntity;
+import com.hmc.zenkai.content.entity.misc.KintounEntity;
 import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
-import com.hmc.zenkai.content.entity.space_pod.SpacePodEntity;
-import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
+import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
+import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;

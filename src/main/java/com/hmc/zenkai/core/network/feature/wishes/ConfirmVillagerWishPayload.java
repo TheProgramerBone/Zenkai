@@ -1,6 +1,6 @@
 package com.hmc.zenkai.core.network.feature.wishes;
 
-import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
+import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.core.config.WishConfig;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.Holder;

@@ -1,6 +1,6 @@
 package com.hmc.zenkai.core.network.feature.wishes;
 
-import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
+import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.content.sound.ModSounds;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

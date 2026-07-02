@@ -1,7 +1,7 @@
 package com.hmc.zenkai.content.item.special;
 
 import com.hmc.zenkai.content.entity.ModEntities;
-import com.hmc.zenkai.content.entity.space_pod.SpacePodEntity;
+import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;

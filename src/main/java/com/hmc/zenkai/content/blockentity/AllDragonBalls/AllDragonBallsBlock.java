@@ -2,7 +2,7 @@ package com.hmc.zenkai.content.blockentity.AllDragonBalls;
 
 import com.hmc.zenkai.content.block.ModBlocks;
 import com.hmc.zenkai.content.entity.ModEntities;
-import com.hmc.zenkai.content.entity.shenlong.ShenLongEntity;
+import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.content.sound.ModSounds;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.WishConfig;

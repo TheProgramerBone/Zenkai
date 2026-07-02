@@ -100,8 +100,11 @@ public class ModItems {
     public static final DeferredItem<Item> NAMEKIAN_SPAWN_EGG = ITEMS.register("namekian_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN,0x28ad1b ,0xfdfefe, new Item.Properties()));
 
+    public static final DeferredItem<Item> YEMMA_SPAWN_EGG = ITEMS.register("yemma_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.YEMMA,0xe4c7c5,0x9c716f, new Item.Properties()));
+
     public static final DeferredItem<Item> ISAAC_SPAWN_EGG = ITEMS.register("isaac_spawn_egg",
-    () -> new DeferredSpawnEggItem(ModEntities.ISAAC,0xe4c7c5,0x9c716f, new Item.Properties()));
+    () -> new DeferredSpawnEggItem(ModEntities.ISAAC,0xc96a6f,0x565f97, new Item.Properties()));
 
     //Razas
 

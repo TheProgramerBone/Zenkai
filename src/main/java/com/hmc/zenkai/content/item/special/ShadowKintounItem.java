@@ -1,7 +1,7 @@
 package com.hmc.zenkai.content.item.special;
 
 import com.hmc.zenkai.content.entity.ModEntities;
-import com.hmc.zenkai.content.entity.kintoun.ShadowKintounEntity;
+import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;

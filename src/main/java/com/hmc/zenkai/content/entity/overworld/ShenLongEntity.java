@@ -1,7 +1,6 @@
-package com.hmc.zenkai.content.entity.shenlong;
+package com.hmc.zenkai.content.entity.overworld;
 
 import com.hmc.zenkai.content.entity.CommonAnimations;
-import com.hmc.zenkai.core.config.WishConfig;
 import com.hmc.zenkai.core.network.feature.wishes.OpenWishScreenPayload;
 import com.hmc.zenkai.core.network.feature.wishes.SyncWishTogglesPayload;
 import net.minecraft.nbt.CompoundTag;
