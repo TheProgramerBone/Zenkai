@@ -28,7 +28,7 @@ public final class StructureNpcManager {
     public static void onServerTick(ServerTickEvent.Post event) {
         MinecraftServer server = event.getServer();
         if (server.getTickCount() % CHECK_INTERVAL != 0) return;
-        if (!ModGameRules.keepStructureNpcs(server)) return;
+        if (ModGameRules.keepStructureNpcs(server)) return;
 
         for (StructureNpc npc : StructureNpcs.ALL) {
             ServerLevel level = server.getLevel(npc.dimension());
@@ -40,7 +40,7 @@ public final class StructureNpcManager {
 
     /** Asegura los NPCs de UNA dimensión (para llamar al teletransportar allí). */
     public static void ensureAllIn(ServerLevel level) {
-        if (!ModGameRules.keepStructureNpcs(level.getServer())) return;
+        if (ModGameRules.keepStructureNpcs(level.getServer())) return;
         for (StructureNpc npc : StructureNpcs.ALL) {
             if (npc.dimension() != level.dimension()) continue;
             ensure(level, npc);
