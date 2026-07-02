@@ -87,6 +87,6 @@ public final class ModGameRules {
     }
 
     public static boolean keepStructureNpcs(MinecraftServer server) {
-        return server.getGameRules().getBoolean(KEEP_STRUCTURE_NPCS);
+        return !server.getGameRules().getBoolean(KEEP_STRUCTURE_NPCS);
     }
 }

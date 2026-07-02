@@ -222,6 +222,7 @@
 
   "gamerule.zenkai_allowRaceSelection": "Permitir Creación de Raza",
   "gamerule.zenkai_enableKiDamage": "Habilitar Daño de Ki",
+  "zenkai_keepStructureNpcs": "Si mueren, invoca siempre a los NPCS de estructura",
   "gamerule.zenkai_enableOtherworld": "Habilitar sistema de muerte del Otro Mundo",
   "gamerule.zenkai_enableRaceBoosts": "Habilitar mejoras de estadísticas por raza",
   "gamerule.zenkai_enableStructureProtection": "Evita la generación de criaturas y la destrucción de bloques por jugadores en estructuras del mod",

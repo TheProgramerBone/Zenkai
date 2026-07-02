@@ -222,6 +222,7 @@
 
   "gamerule.zenkai_allowRaceSelection": "Enable Race Creation",
   "gamerule.zenkai_enableKiDamage": "Enable Ki Damage",
+  "zenkai_keepStructureNpcs": "Always summon structure NPCS if killed",
   "gamerule.zenkai_enableOtherworld": "Enable Otherworld dead-system",
   "gamerule.zenkai_enableRaceBoosts": "Enable race statistics boosts",
   "gamerule.zenkai_enableStructureProtection": "Prevents mob spawn and block destroyed by players on mod's structures",
