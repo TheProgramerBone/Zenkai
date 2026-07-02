@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.entity.namek;
 
-import com.hmc.zenkai.content.entity.CommonAnimations;
+import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.content.entity.ModVillagerTrades;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -76,7 +76,7 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(CommonAnimations.genericWalkIdleController(this));
+        controllers.add(ZenkaiCommonAnimations.genericWalkIdleController(this));
     }
 
     @Override

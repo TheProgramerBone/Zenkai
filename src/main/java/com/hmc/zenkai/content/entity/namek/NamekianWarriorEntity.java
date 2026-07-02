@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.entity.namek;
 
-import com.hmc.zenkai.content.entity.CommonAnimations;
+import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.*;
@@ -43,8 +43,8 @@ public class NamekianWarriorEntity extends Monster implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(CommonAnimations.genericWalkIdleController(this));
-        controllers.add(CommonAnimations.genericAttackAnimation(this, CommonAnimations.ATTACK_STRIKE));
+        controllers.add(ZenkaiCommonAnimations.genericWalkIdleController(this));
+        controllers.add(ZenkaiCommonAnimations.genericAttackAnimation(this, ZenkaiCommonAnimations.ATTACK_STRIKE));
     }
 
     public static class DefendNamekians extends TargetGoal {

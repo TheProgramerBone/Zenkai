@@ -1,7 +1,7 @@
 package com.hmc.zenkai.core.network.feature.race;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.content.entity.CommonAnimations;
+import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
@@ -127,7 +127,7 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
         if (controllerFactory != null) {
             controllerFactory.accept(controllers);                       // animaciones personalizadas
         } else if (hasAnimation) {
-            controllers.add(CommonAnimations.genericIdleController(this)); // idle por defecto (FIX: antes se descartaba)
+            controllers.add(ZenkaiCommonAnimations.genericIdleController(this)); // idle por defecto (FIX: antes se descartaba)
         }
         // sin animación y sin factory → no se registra controlador (modelo estático, sin warnings)
     }

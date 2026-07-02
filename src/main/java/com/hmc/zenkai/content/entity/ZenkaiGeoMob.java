@@ -35,7 +35,7 @@ public abstract class ZenkaiGeoMob extends PathfinderMob implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(CommonAnimations.genericIdleController(this));
+        controllers.add(ZenkaiCommonAnimations.genericIdleController(this));
     }
 
     @Override

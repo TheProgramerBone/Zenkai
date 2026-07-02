@@ -4,7 +4,7 @@ package com.hmc.zenkai;
 import com.hmc.zenkai.client.ClientZenkaiHooks;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.client.CombatZenkaiHooks;
-import com.hmc.zenkai.client.DbPalLayers;
+import com.hmc.zenkai.client.ZenkaiPalLayers;
 import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
@@ -182,7 +182,7 @@ public class Zenkai {
             // Animaciones de jugador
             event.enqueueWork(() ->
                     PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                            DbPalLayers.TRANSFORM_LAYER,
+                            ZenkaiPalLayers.TRANSFORM_LAYER,
                             1600,
                             player -> new PlayerAnimationController(
                                     player,

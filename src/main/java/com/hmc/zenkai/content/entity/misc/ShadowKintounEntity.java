@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.entity.misc;
 
-import com.hmc.zenkai.content.entity.CommonAnimations;
+import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.content.item.ModItems;
 import com.hmc.zenkai.core.network.vehicle.VerticalControlVehicle;
 import net.minecraft.core.BlockPos;
@@ -61,7 +61,7 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
 
     @Override
     public void registerControllers(software.bernie.geckolib.animation.AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(CommonAnimations.genericIdleController(this));
+        controllers.add(ZenkaiCommonAnimations.genericIdleController(this));
     }
 
     // -------------------------

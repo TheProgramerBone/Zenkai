@@ -6,16 +6,16 @@ import com.zigythebird.playeranim.api.PlayerAnimationAccess;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;
 
-public final class DbPalAnimations {
-    private DbPalAnimations() {}
+public final class ZenkaiPalAnimations {
+    private ZenkaiPalAnimations() {}
 
     public static final ResourceLocation TRANSFORMATION_1 =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "db.transformation1");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.transformation1");
     public static final ResourceLocation TRANSFORMATION_2 =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "db.transformation2");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.transformation2");
 
     public static PlayerAnimationController controller(AbstractClientPlayer player) {
-        return (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(player, DbPalLayers.TRANSFORM_LAYER);
+        return (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(player, ZenkaiPalLayers.TRANSFORM_LAYER);
     }
 
     public static void playTransformStart(AbstractClientPlayer player) {
