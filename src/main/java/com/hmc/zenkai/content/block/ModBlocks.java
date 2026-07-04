@@ -184,14 +184,14 @@ public class ModBlocks {
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
                     .requiresCorrectToolForDrops()
-                    .lightLevel((state)->15)
+                    
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_BLACK)));
 
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BLUE = registerBlock("structural_concrete_blue",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_BLUE)));
@@ -199,7 +199,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BROWN = registerBlock("structural_concrete_brown",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_BROWN)));
@@ -207,7 +207,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_CYAN = registerBlock("structural_concrete_cyan",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_CYAN)));
@@ -215,7 +215,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_DARK_GREEN = registerBlock("structural_concrete_dark_green",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.TERRACOTTA_GREEN)));
@@ -223,7 +223,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_DARK_RED = registerBlock("structural_concrete_dark_red",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.NETHER)));
@@ -231,7 +231,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_GRAY = registerBlock("structural_concrete_gray",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_GRAY)));
@@ -239,7 +239,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_GREEN = registerBlock("structural_concrete_green",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_GREEN)));
@@ -247,7 +247,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_LIGHT_BLUE = registerBlock("structural_concrete_light_blue",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_LIGHT_BLUE)));
@@ -255,7 +255,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_LIGHT_GRAY = registerBlock("structural_concrete_light_gray",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_LIGHT_GRAY)));
@@ -263,7 +263,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_MAGENTA = registerBlock("structural_concrete_magenta",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_MAGENTA)));
@@ -271,7 +271,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_ORANGE = registerBlock("structural_concrete_orange",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_ORANGE)));
@@ -279,7 +279,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_PINK = registerBlock("structural_concrete_pink",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_PINK)));
@@ -287,7 +287,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_PURPLE = registerBlock("structural_concrete_purple",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_PURPLE)));
@@ -295,7 +295,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_RED = registerBlock("structural_concrete_red",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_RED)));
@@ -303,7 +303,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_WHITE = registerBlock("structural_concrete_white",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.TERRACOTTA_WHITE)));
@@ -311,7 +311,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_YELLOW = registerBlock("structural_concrete_yellow",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(3f,100f)
-                    .lightLevel((state)->15)
+                    
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.COLOR_YELLOW)));
