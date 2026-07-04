@@ -1,4 +1,4 @@
-// 1.21.1	2026-06-29T18:38:07.6558627	Item Models: zenkai
+// 1.21.1	2026-07-04T11:03:19.5320689	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 e679a4c9273e0f8ec5861c5d4a448f2b69437bca assets/zenkai/models/item/basic_circuit.json
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
@@ -63,3 +63,4 @@ e3f81d921fa013be9719d8937f4f62f5f8ea07b7 assets/zenkai/models/item/terragem_pick
 813360705141d832e8b1f0140db69bff13860391 assets/zenkai/models/item/terragem_shovel.json
 c0fe8e087db4fcd6a3478d7a5a2170baf23b9a47 assets/zenkai/models/item/terragem_sword.json
 d1bfa43fb6d989a6c930bbad356d37b6e9157ec0 assets/zenkai/models/item/terragem_template.json
+63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/yemma_spawn_egg.json

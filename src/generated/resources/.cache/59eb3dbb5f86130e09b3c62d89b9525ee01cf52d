@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-01T13:12:44.7641457	Loot Tables
+// 1.21.1	2026-07-04T11:03:19.5340681	Loot Tables
 791a5bbb5f0db832d221f9fd8ca4d08ec1179591 data/zenkai/loot_table/blocks/all_dragon_balls.json
 ed313aafc37c5dd3314e6dece41ad5cc06d11dba data/zenkai/loot_table/blocks/deepslate_terragem_ore.json
 2bf7afe0c9eb29d1b5475818357b20f1f2017019 data/zenkai/loot_table/blocks/dragon_ball_1.json
@@ -22,7 +22,6 @@ c5a381a942423c91af54d1276d1ed3fa568329bb data/zenkai/loot_table/blocks/namekian_
 4346a0e96630e35fe4ce1fcba45884d5224681d9 data/zenkai/loot_table/blocks/namek_dragon_ball_6.json
 a0549d10631001b3e0f84a0d0fc9c40746c9701f data/zenkai/loot_table/blocks/namek_dragon_ball_7.json
 ac048ed8ed83f7eca5e70af24e95bd4dfdd5e747 data/zenkai/loot_table/blocks/namek_dragon_ball_stone.json
-602d9b2d28c7180a368ea3099b619000433ce7e7 data/zenkai/loot_table/blocks/otherworld_cloud.json
 3575b129ff9b5f9f7bd21e759ee769f4c55caadc data/zenkai/loot_table/blocks/rocky_block.json
 3b150e78af9d97ca4e3f460b308ebedc8ade16fb data/zenkai/loot_table/blocks/structural_concrete_black.json
 1a12bdc2a2e67e132ea1a8adfdd9a4dc4290018a data/zenkai/loot_table/blocks/structural_concrete_blue.json

@@ -69,8 +69,8 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_KI_ATTACK = IconUV.grid(1, 0);
 
     private static final IconUV ICON_TRANSFORMING = IconUV.grid(7, 0);
-    private static final IconUV ICON_DIVINE = IconUV.grid(4, 0);
-    private static final IconUV ICON_MAJIN = IconUV.grid(5, 0);
+    private static final IconUV ICON_DIVINE = IconUV.grid(5, 0);
+    private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
     private static final IconUV ICON_IMMORTAL = IconUV.grid(11, 0);
     private static final IconUV ICON_LEGENDARY = IconUV.grid(9, 0);
 
