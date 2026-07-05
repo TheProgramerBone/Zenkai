@@ -3,6 +3,7 @@ package com.hmc.zenkai.core.network.feature.race;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -19,6 +20,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderArmEvent;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
+import software.bernie.geckolib.animation.state.BoneSnapshot;
 import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.GeoObjectRenderer;
 import software.bernie.geckolib.util.Color;
@@ -92,7 +94,13 @@ public final class ZenkaiFirstPersonArmHooks {
 
             try {
                 for (GeoBone b : baked.topLevelBones()) {
-                    setBranchHidden(b, !b.getName().equals(armRoot));
+                    boolean isArm = b.getName().equals(armRoot);
+                    setBranchHidden(b, !isArm);
+                    // Los GeoBone del modelo son compartidos y mutables: un render previo (3ª persona)
+                    // pudo dejar el brazo animado por el idle. Lo devolvemos a su pose de bind ANTES de
+                    // pintar, y como el render fuerza isReRender=true (no corre handleAnimations), se queda
+                    // quieto igual que el brazo vanilla. Fin del vaivén.
+                    if (isArm) resetBranchToBind(b);
                 }
 
                 ResourceLocation baseTex = model.getTextureResource(item);
@@ -150,6 +158,32 @@ public final class ZenkaiFirstPersonArmHooks {
             for (GeoBone child : bone.getChildBones()) {
                 setBranchHidden(child, hidden);
             }
+        }
+
+        /** Devuelve el hueso y su descendencia a la pose inicial (bind), anulando cualquier animación previa. */
+        private static void resetBranchToBind(GeoBone bone) {
+            BoneSnapshot s = bone.getInitialSnapshot();
+            if (s != null) {
+                bone.setRotX(s.getRotX());     bone.setRotY(s.getRotY());     bone.setRotZ(s.getRotZ());
+                bone.setPosX(s.getOffsetX());  bone.setPosY(s.getOffsetY());  bone.setPosZ(s.getOffsetZ());
+                bone.setScaleX(s.getScaleX()); bone.setScaleY(s.getScaleY()); bone.setScaleZ(s.getScaleZ());
+            }
+            for (GeoBone child : bone.getChildBones()) {
+                resetBranchToBind(child);
+            }
+        }
+
+        /**
+         * Fuerza isReRender=true SIEMPRE: así {@code GeoObjectRenderer.actuallyRender} NO llama a
+         * handleAnimations y el modelo se pinta tal cual quedó tras {@link #resetBranchToBind} (bind pose).
+         * Es lo que mantiene el brazo estático (como el vanilla) en vez de reproducir el idle.
+         */
+        @Override
+        public void actuallyRender(PoseStack poseStack, GeoLayerArmorItem animatable, BakedGeoModel model,
+                                   RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
+                                   boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
+            super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer,
+                    true, partialTick, packedLight, packedOverlay, colour);
         }
 
         /** namekian_player_colorable.png -> namekian_player_detail.png / _lines.png */

@@ -56,7 +56,9 @@ public final class OtherworldManager {
         PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
 
         fullHeal(player);
-        player.setInvulnerable(true); // no puede volver a morir en el más allá
+        // NO invulnerable: en el más allá el jugador SÍ puede recibir daño (PvP/entrenamiento).
+        // Al agotar body allí, CombatZenkaiHooks lo re-ancla vía keepInOtherworld (no re-derriba).
+        player.setInvulnerable(false);
 
         stats.setInOtherworld(true);
         stats.setOtherworldSince(player.serverLevel().getGameTime());
@@ -71,7 +73,11 @@ public final class OtherworldManager {
      */
     public static void keepInOtherworld(ServerPlayer player) {
         fullHeal(player);
-        player.setInvulnerable(true);
+        player.setInvulnerable(false);
+        // Limpia cualquier derribado residual: en el más allá no aplica el estado.
+        PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
+        stats.flags().setDowned(false);
+        stats.flags().setDownedUntil(0L);
         teleportToOtherworld(player);
         PlayerLifeCycle.sync(player);
     }

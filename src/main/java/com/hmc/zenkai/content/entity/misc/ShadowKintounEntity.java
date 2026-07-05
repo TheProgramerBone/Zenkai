@@ -9,6 +9,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -44,7 +46,7 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
         super(type, level);
         this.setNoGravity(true);
         this.setNoAi(true);
-        this.noCulling = true;
+        this.noCulling = false;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -197,7 +199,10 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
 
     @Override
     public boolean isControlledByLocalInstance() {
-        return true;
+        // Solo el cliente del conductor predice el movimiento (y envía el paquete de vehículo al
+        // servidor). Los demás clientes reciben la posición por tracking. Antes devolvía siempre
+        // true, así que TODOS los clientes simulaban el vehículo -> desincronización en multijugador.
+        return getControllingPassenger() instanceof Player p && p.isLocalPlayer();
     }
 
     @Override
@@ -208,6 +213,38 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
 
         // Con rider: sin gravedad (vuelo). Sin rider: con gravedad (cae) + tu travel también baja suave.
         this.setNoGravity(hasRider);
+    }
+
+    // -------------------------
+    // Inmunidades (#2): no se ahoga ni muere por pociones
+    // -------------------------
+
+    /** Inmune a TODOS los efectos de poción (veneno, wither, etc.). */
+    @Override
+    public boolean canBeAffected(@NotNull MobEffectInstance effect) {
+        return false;
+    }
+
+    /** Inmune a ahogo, asfixia en bloque y daño mágico/pociones (harming/veneno/wither). */
+    @Override
+    public boolean isInvulnerableTo(@NotNull DamageSource source) {
+        if (source.is(DamageTypes.DROWN)
+                || source.is(DamageTypes.IN_WALL)
+                || source.is(DamageTypes.MAGIC)
+                || source.is(DamageTypes.INDIRECT_MAGIC)
+                || source.is(DamageTypes.WITHER)) {
+            return true;
+        }
+        return super.isInvulnerableTo(source);
+    }
+
+    // -------------------------
+    // Colisión sólida (#5): el jugador puede pararse encima
+    // -------------------------
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
     }
 
     // -------------------------
@@ -222,7 +259,7 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
     @Override
     public void die(@NotNull DamageSource source) {
         if (!this.level().isClientSide) {
-            this.spawnAtLocation(ModItems.SHADOW_KINTOUN_ITEM.get());
+            this.spawnAtLocation(ModItems.KINTOUN_ITEM.get());
         }
         super.die(source);
     }
@@ -234,6 +271,11 @@ public class ShadowKintounEntity extends Animal implements GeoEntity, VerticalCo
     @Override
     protected void playStepSound(@NotNull BlockPos pos, @NotNull BlockState state) {
         // no-op
+    }
+
+    @Override
+    public boolean causeFallDamage(float fallDistance, float multiplier, @NotNull DamageSource source) {
+        return false; // la nimbus no recibe daño de caída
     }
 
     // -------------------------

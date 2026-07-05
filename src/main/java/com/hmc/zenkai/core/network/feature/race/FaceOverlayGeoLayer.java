@@ -47,18 +47,21 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
      */
     private static final float OVERLAY_SCALE = 1.0f;
 
-    /** RenderType translúcido + sin cull + offset hacia la cámara (view space). Memoizado por textura. */
+    /** RenderType cutout (opaco, recorte alfa) + sin cull + offset hacia la cámara. Memoizado por textura. */
     private static final Function<ResourceLocation, RenderType> FACE_OVERLAY = Util.memoize(tex ->
             RenderType.create(
                     "zenkai_face_overlay",
                     DefaultVertexFormat.NEW_ENTITY,
                     VertexFormat.Mode.QUADS,
                     1536,
-                    false, true,
+                    false, false,
                     RenderType.CompositeState.builder()
-                            .setShaderState(RenderStateShard.RENDERTYPE_ENTITY_TRANSLUCENT_SHADER)
+                            // Cutout en vez de translúcido: los overlays de cara se dibujan en la pasada
+                            // opaca (como el cuerpo) y no los oculta el cristal translúcido del space pod.
+                            // Se mantiene VIEW_OFFSET_Z_LAYERING (fix de ojos al hacer sneak + mirar arriba).
+                            .setShaderState(RenderStateShard.RENDERTYPE_ENTITY_CUTOUT_NO_CULL_SHADER)
                             .setTextureState(new RenderStateShard.TextureStateShard(tex, false, false))
-                            .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                            .setTransparencyState(RenderStateShard.NO_TRANSPARENCY)
                             .setCullState(RenderStateShard.NO_CULL)
                             .setLightmapState(RenderStateShard.LIGHTMAP)
                             .setOverlayState(RenderStateShard.OVERLAY)

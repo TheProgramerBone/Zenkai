@@ -5,6 +5,7 @@ import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.Pose;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
@@ -42,6 +43,21 @@ public final class ClientZenkaiPalTick {
     private static void tickPlayer(Minecraft mc, AbstractClientPlayer p) {
         var form  = p.getData(DataAttachments.PLAYER_FORM.get());
         var stats = p.getData(DataAttachments.PLAYER_STATS.get());
+
+        // Derribado: el jugador local recalcula su propia pose cada tick, así que si no la forzamos
+        // aquí no se vería acostado a sí mismo (F5). A los demás ya les llega por DATA_POSE del server.
+        if (stats.flags().isDowned()) {
+            if (p == mc.player) {
+                p.setPose(Pose.SWIMMING);
+                p.setSwimming(true);
+                mc.player.input.forwardImpulse = 0;
+                mc.player.input.leftImpulse = 0;
+                mc.player.input.jumping = false;
+                mc.player.input.shiftKeyDown = false;
+                mc.player.setSprinting(false);
+            }
+            return; // nada de animación de transformación mientras está derribado
+        }
 
         AnimState st = STATES.computeIfAbsent(p.getUUID(), k -> new AnimState());
 

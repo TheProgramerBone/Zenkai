@@ -206,7 +206,9 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
 
     @Override
     public boolean isControlledByLocalInstance() {
-        return true;
+        // Solo el cliente del conductor predice/mueve el pod; el resto lo recibe por tracking.
+        // Antes devolvía siempre true -> todos los clientes lo movían -> desincronización en MP.
+        return getControllingPassenger() instanceof Player p && p.isLocalPlayer();
     }
 
     @Override
@@ -230,6 +232,11 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
     @Override
     protected int getBaseExperienceReward() {
         return 0; // sin XP
+    }
+
+    @Override
+    public boolean causeFallDamage(float fallDistance, float multiplier, @NotNull DamageSource source) {
+        return false; // el space pod no recibe daño de caída
     }
 
     @Override
