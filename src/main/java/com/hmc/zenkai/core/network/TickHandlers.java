@@ -10,10 +10,12 @@ import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -25,6 +27,9 @@ public class TickHandlers {
 
     private static final ResourceLocation TRANSFORM_LOCK_ID =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "transform_lock");
+
+    private static final ResourceLocation DOWNED_LOCK_ID =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "downed_lock");
 
     /**
      * LOCK real (servidor):
@@ -67,6 +72,47 @@ public class TickHandlers {
         p.hurtMarked = true;
     }
 
+    /**
+     * LOCK de derribado (servidor): mismo anclaje que el de transformación pero con su propio id,
+     * para inmovilizar al jugador mientras está acostado. El daño SÍ le llega (no es invulnerable).
+     */
+    private static void applyDownedLockServer(Player p, boolean lock) {
+        AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
+
+        if (!lock) {
+            if (moveAttr != null && moveAttr.getModifier(DOWNED_LOCK_ID) != null) {
+                moveAttr.removeModifier(DOWNED_LOCK_ID);
+            }
+            return;
+        }
+
+        if (moveAttr != null && moveAttr.getModifier(DOWNED_LOCK_ID) == null) {
+            moveAttr.addTransientModifier(new AttributeModifier(
+                    DOWNED_LOCK_ID,
+                    -1.0,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+            ));
+        }
+
+        p.setSprinting(false);
+        p.xxa = 0.0F;
+        p.zza = 0.0F;
+        p.setJumping(false);
+        p.setPos(p.xo, p.getY(), p.zo);
+        var v = p.getDeltaMovement();
+        p.setDeltaMovement(0.0, v.y, 0.0);
+        p.hurtMarked = true;
+    }
+
+    /** Sale del estado derribado: limpia flags, libera el lock y restaura la pose. */
+    private static void clearDowned(Player p, PlayerStatsAttachment att) {
+        att.flags().setDowned(false);
+        att.flags().setDownedUntil(0L);
+        applyDownedLockServer(p, false);
+        p.setSwimming(false);
+        p.setPose(Pose.STANDING); // updatePlayerPose recalculará la correcta al siguiente tick
+    }
+
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         Player p = e.getEntity();
@@ -107,6 +153,32 @@ public class TickHandlers {
                 moveAttr.removeModifier(TRANSFORM_LOCK_ID);
             }
             return;
+        }
+
+        // ================================
+        // DERRIBADO (server)
+        // ================================
+        // Acostado e inmóvil durante 5 s. Si lo curan (senzu propio/aliado -> body>0) se levanta.
+        // Si nadie lo cura y expira el tiempo, muere de verdad: LivingDeathEvent -> OtherworldHandler
+        // lo manda al otro mundo (o muerte real si enableOtherworld está desactivado).
+        if (att.flags().isDowned()) {
+            applyDownedLockServer(p, true);
+            // Pose de gateo/nado: cuerpo horizontal (como al meterse en un hueco de 1 bloque).
+            // Se sincroniza a los demás jugadores vía DATA_POSE; el propio jugador la fuerza en
+            // el cliente (ClientZenkaiPalTick), porque su pose la recalcula LocalPlayer cada tick.
+            p.setPose(Pose.SWIMMING);
+            p.setSwimming(true);
+
+            if (att.getBody() > 0) {
+                clearDowned(p, att);
+                PlayerLifeCycle.syncIfServer(p);
+            } else if (p.level().getGameTime() >= att.flags().getDownedUntil()) {
+                clearDowned(p, att);
+                if (p instanceof net.minecraft.server.level.ServerPlayer sp) {
+                    sp.die(sp.damageSources().generic());
+                }
+            }
+            return; // mientras está derribado no corre volar/regen/transformación/movimiento
         }
 
         // ================================

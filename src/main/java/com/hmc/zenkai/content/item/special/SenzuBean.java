@@ -6,6 +6,7 @@ import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.content.sound.ModSounds;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -94,6 +95,36 @@ public class SenzuBean extends Item {
             }
         }
         return stack;
+    }
+
+    /**
+     * Click derecho con la senzu sobre OTRO jugador: si está derribado (o le falta body) lo cura al
+     * máximo. Es la vía "que alguien lo cure" antes de que expire el temporizador de derribado.
+     */
+    @Override
+    public @NotNull InteractionResult interactLivingEntity(@NotNull ItemStack stack, @NotNull Player user,
+                                                           @NotNull LivingEntity target, @NotNull InteractionHand hand) {
+        if (!(target instanceof Player targetPlayer) || user.level().isClientSide) {
+            return InteractionResult.PASS;
+        }
+
+        PlayerStatsAttachment att = targetPlayer.getData(DataAttachments.PLAYER_STATS.get());
+        boolean needsHelp = att.flags().isDowned() || att.getBody() < att.getBodyMax();
+        if (!needsHelp) return InteractionResult.PASS;
+
+        int bodyMissing = att.getBodyMax() - att.getBody();
+        if (bodyMissing > 0) att.addBody(bodyMissing);
+        att.addStamina(att.getStaminaMax());
+        att.addEnergy(att.getEnergyMax());
+        targetPlayer.setHealth(targetPlayer.getMaxHealth());
+        PlayerLifeCycle.syncIfServer(targetPlayer);
+
+        user.getCooldowns().addCooldown(this, 20 * 7);
+        user.level().playSound(null, target.getX(), target.getY(), target.getZ(),
+                ModSounds.SENZU_EAT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+
+        if (!user.getAbilities().instabuild) stack.shrink(1);
+        return InteractionResult.SUCCESS;
     }
 
     @Override

@@ -30,11 +30,15 @@ public final class RaceRenderTypes {
                     DefaultVertexFormat.NEW_ENTITY,
                     VertexFormat.Mode.QUADS,
                     1536,
-                    false, true,
+                    false, false,
                     RenderType.CompositeState.builder()
-                            .setShaderState(RenderStateShard.RENDERTYPE_ENTITY_TRANSLUCENT_SHADER)
+                            // Cutout (opaco con recorte alfa), NO translúcido: así estos overlays se dibujan
+                            // en la pasada opaca como el cuerpo base y NO quedan ocultos por geometría
+                            // translúcida delante (p. ej. el cristal del space pod). El VIEW_OFFSET_Z_LAYERING
+                            // se conserva para que sigan justo por delante de la superficie (fix del sneak).
+                            .setShaderState(RenderStateShard.RENDERTYPE_ENTITY_CUTOUT_NO_CULL_SHADER)
                             .setTextureState(new RenderStateShard.TextureStateShard(tex, false, false))
-                            .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                            .setTransparencyState(RenderStateShard.NO_TRANSPARENCY)
                             .setCullState(RenderStateShard.NO_CULL)
                             .setLightmapState(RenderStateShard.LIGHTMAP)
                             .setOverlayState(RenderStateShard.OVERLAY)

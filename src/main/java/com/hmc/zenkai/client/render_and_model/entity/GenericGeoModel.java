@@ -73,8 +73,8 @@ public class GenericGeoModel<T extends Entity & GeoAnimatable> extends Defaulted
 
     @Override
     public RenderType getRenderType(T animatable, ResourceLocation texture) {
-        // Opaco => comportamiento por defecto de GeckoLib (idéntico a los modelos
-        // que hoy no sobreescriben getRenderType). Translúcido => entityTranslucentCull.
+        // Opaco => comportamiento por defecto de GeckoLib (entityCutoutNoCull: recorta el alfa,
+        // los huecos se ven y escribe profundidad). Translúcido => entityTranslucentCull.
         return translucent
                 ? RenderType.entityTranslucentCull(texture)
                 : super.getRenderType(animatable, texture);

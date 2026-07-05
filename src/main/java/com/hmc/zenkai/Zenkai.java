@@ -62,10 +62,10 @@ public class Zenkai {
 
     public Zenkai(IEventBus modEventBus, ModContainer modContainer) {
 
-        // ── Gamerules (inicialización estática anticipada) ────────────────────
+        // Gamerules
         ModGameRules.init();
 
-        // ── Registros en el mod bus ───────────────────────────────────────────
+        // Registros en el mod bus
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModNetworking::register);
         modEventBus.addListener(Zenkai::registerCapabilities);
@@ -89,7 +89,7 @@ public class Zenkai {
         modEventBus.addListener(WishConfig::onConfigLoad);
         modEventBus.addListener(StatsConfig::onConfigLoad);
 
-        // ── Registros en el forge bus (eventos del juego) ─────────────────────
+        // Registros en el forge bus (eventos del juego)
         IEventBus forgeBus = NeoForge.EVENT_BUS;
         forgeBus.register(PlayerLifeCycle.class);
         forgeBus.register(CombatZenkaiHooks.class);

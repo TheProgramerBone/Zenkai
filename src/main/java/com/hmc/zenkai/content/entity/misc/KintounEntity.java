@@ -199,7 +199,10 @@ public class KintounEntity extends Animal implements GeoEntity, VerticalControlV
 
     @Override
     public boolean isControlledByLocalInstance() {
-        return true;
+        // Solo el cliente del conductor predice el movimiento (y envía el paquete de vehículo al
+        // servidor). Los demás clientes reciben la posición por tracking. Antes devolvía siempre
+        // true, así que TODOS los clientes simulaban el vehículo -> desincronización en multijugador.
+        return getControllingPassenger() instanceof Player p && p.isLocalPlayer();
     }
 
     @Override
@@ -251,6 +254,11 @@ public class KintounEntity extends Animal implements GeoEntity, VerticalControlV
     @Override
     protected int getBaseExperienceReward() {
         return 0; // sin XP
+    }
+
+    @Override
+    public boolean causeFallDamage(float fallDistance, float multiplier, @NotNull DamageSource source) {
+        return false; // la nimbus no recibe daño de caída
     }
 
     @Override
