@@ -98,7 +98,7 @@
 				}
 			}
 		},
-		"db.transformation1": {
+		"zenkai.transformation1": {
 			"loop": "hold_on_last_frame",
 			"animation_length": 0.5,
 			"bones": {
@@ -212,7 +212,7 @@
 				}
 			}
 		},
-		"db.transformation2": {
+		"zenkai.transformation2": {
 			"loop": true,
 			"animation_length": 0.5,
 			"bones": {

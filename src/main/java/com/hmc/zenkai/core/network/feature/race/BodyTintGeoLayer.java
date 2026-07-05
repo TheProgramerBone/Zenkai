@@ -3,7 +3,6 @@ package com.hmc.zenkai.core.network.feature.race;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -12,6 +11,9 @@ import net.minecraft.world.entity.player.Player;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
+
+import static com.hmc.zenkai.core.network.feature.race.RaceTextureUtil.deriveMask;
+import static com.hmc.zenkai.core.network.feature.race.RaceTextureUtil.resourceExists;
 
 /**
  * Capa de tinte multicapa del CUERPO (Namek y futuras razas multicolor).
@@ -74,19 +76,5 @@ public class BodyTintGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         RenderType rt = RaceRenderTypes.viewOffset(tex);
         this.getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, rt,
                 bufferSource.getBuffer(rt), partialTick, packedLight, packedOverlay, argb);
-    }
-
-    /** namekian_player_colorable.png -> namekian_player_detail.png / _lines.png */
-    private static ResourceLocation deriveMask(ResourceLocation base, String suffix) {
-        String p = base.getPath();
-        int dot = p.lastIndexOf('.');
-        String ext  = (dot >= 0) ? p.substring(dot) : ".png";
-        String stem = (dot >= 0) ? p.substring(0, dot) : p;
-        if (stem.endsWith("_colorable")) stem = stem.substring(0, stem.length() - "_colorable".length());
-        return ResourceLocation.fromNamespaceAndPath(base.getNamespace(), stem + suffix + ext);
-    }
-
-    private static boolean resourceExists(ResourceLocation rl) {
-        return Minecraft.getInstance().getResourceManager().getResource(rl).isPresent();
     }
 }

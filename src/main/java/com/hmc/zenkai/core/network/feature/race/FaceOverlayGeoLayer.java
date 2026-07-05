@@ -2,14 +2,9 @@ package com.hmc.zenkai.core.network.feature.race;
 
 import com.hmc.zenkai.client.customization.CustomizationAssets;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.Util;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -18,55 +13,34 @@ import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
-import java.util.function.Function;
+import static com.hmc.zenkai.core.network.feature.race.RaceTextureUtil.resourceExists;
+import static com.hmc.zenkai.core.network.feature.race.RaceTextureUtil.withSuffix;
 
 /**
  * Capa de overlay de cara (ojos / boca / nariz) sobre el modelo del cuerpo.
  * Re-renderiza el MISMO modelo del cuerpo con la textura del rasgo (elegida por índice).
  *
- *  · En vez de "inflar" el modelo (que al hacer sneak + mirar arriba dejaba el overlay por
- *    dentro y desaparecía), usamos un RenderType con VIEW_OFFSET_Z_LAYERING: empuja el rasgo
- *    hacia la cámara en VIEW space, así queda siempre justo por delante de la cara en cualquier
- *    pose, sin z-fighting y sin tener que dejar hueca la textura de la cara.
+ *  · Usa el RenderType compartido {@link RaceRenderTypes#viewOffset} (cutout + VIEW_OFFSET_Z_LAYERING):
+ *    empuja el rasgo hacia la cámara en VIEW space, así queda siempre justo por delante de la cara en
+ *    cualquier pose, sin z-fighting; y al ser cutout (opaco) se dibuja en la pasada opaca como el
+ *    cuerpo, por lo que no lo oculta geometría translúcida delante (p. ej. el cristal del space pod).
  *  · Ojos: dos pasadas estilo armadura de cuero →
  *        eyes_N.png       (esclerótica/contorno, iris transparente) SIN tinte
  *        eyes_N_iris.png  (solo iris, en gris)                      CON tinte de color de ojos
  *    Si no existe el _iris, se tiñe el ojo (fallback).
  *
  * ⚠ API específica de GeckoLib 4.8.4 / 1.21.1 — verificar al compilar:
- *   firma de render(...) de GeoRenderLayer · getRenderer() · getCurrentEntity() · reRender(...) ·
- *   nombres de RenderStateShard (RENDERTYPE_ENTITY_TRANSLUCENT_SHADER, VIEW_OFFSET_Z_LAYERING).
+ *   firma de render(...) de GeoRenderLayer · getRenderer() · getCurrentEntity() · reRender(...).
  */
 public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
 
     public enum Kind { EYES, MOUTH, NOSE }
 
     /**
-     * Escala del overlay. Ahora 1.0 (NO inflar): el "quedar por delante" lo da el view-offset.
+     * Escala del overlay. 1.0 (NO inflar): el "quedar por delante" lo da el view-offset.
      * Si vieras z-fighting puntual, súbelo un pelín (1.002), pero normalmente no hace falta.
      */
     private static final float OVERLAY_SCALE = 1.0f;
-
-    /** RenderType cutout (opaco, recorte alfa) + sin cull + offset hacia la cámara. Memoizado por textura. */
-    private static final Function<ResourceLocation, RenderType> FACE_OVERLAY = Util.memoize(tex ->
-            RenderType.create(
-                    "zenkai_face_overlay",
-                    DefaultVertexFormat.NEW_ENTITY,
-                    VertexFormat.Mode.QUADS,
-                    1536,
-                    false, false,
-                    RenderType.CompositeState.builder()
-                            // Cutout en vez de translúcido: los overlays de cara se dibujan en la pasada
-                            // opaca (como el cuerpo) y no los oculta el cristal translúcido del space pod.
-                            // Se mantiene VIEW_OFFSET_Z_LAYERING (fix de ojos al hacer sneak + mirar arriba).
-                            .setShaderState(RenderStateShard.RENDERTYPE_ENTITY_CUTOUT_NO_CULL_SHADER)
-                            .setTextureState(new RenderStateShard.TextureStateShard(tex, false, false))
-                            .setTransparencyState(RenderStateShard.NO_TRANSPARENCY)
-                            .setCullState(RenderStateShard.NO_CULL)
-                            .setLightmapState(RenderStateShard.LIGHTMAP)
-                            .setOverlayState(RenderStateShard.OVERLAY)
-                            .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
-                            .createCompositeState(true)));
 
     private final Kind kind;
 
@@ -127,20 +101,8 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
     private void drawPass(ResourceLocation tex, int argb, PoseStack poseStack, BakedGeoModel bakedModel,
                           GeoLayerArmorItem animatable, MultiBufferSource bufferSource,
                           float partialTick, int packedLight, int packedOverlay) {
-        RenderType rt = FACE_OVERLAY.apply(tex);
+        RenderType rt = RaceRenderTypes.viewOffset(tex);
         this.getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, rt,
                 bufferSource.getBuffer(rt), partialTick, packedLight, packedOverlay, argb);
-    }
-
-    /** Inserta un sufijo antes de la extensión: eyes_1.png → eyes_1_iris.png */
-    private static ResourceLocation withSuffix(ResourceLocation rl, String suffix) {
-        String p = rl.getPath();
-        int dot = p.lastIndexOf('.');
-        String np = (dot >= 0) ? p.substring(0, dot) + suffix + p.substring(dot) : p + suffix;
-        return ResourceLocation.fromNamespaceAndPath(rl.getNamespace(), np);
-    }
-
-    private static boolean resourceExists(ResourceLocation rl) {
-        return Minecraft.getInstance().getResourceManager().getResource(rl).isPresent();
     }
 }
