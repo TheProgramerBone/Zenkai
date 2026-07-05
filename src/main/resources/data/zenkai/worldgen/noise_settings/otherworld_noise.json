@@ -158,8 +158,20 @@
       },
       {
         "type": "minecraft:condition",
-        "if_true": { "type": "minecraft:above_preliminary_surface" },
-        "then_run": { "type": "minecraft:bandlands" }
+        "if_true": {
+          "type": "minecraft:not",
+          "invert": {
+            "type": "minecraft:y_above",
+            "anchor": { "absolute": 130 },
+            "surface_depth_multiplier": 0,
+            "add_stone_depth": false
+          }
+        },
+        "then_run": {
+          "type": "minecraft:condition",
+          "if_true": { "type": "minecraft:above_preliminary_surface" },
+          "then_run": { "type": "minecraft:bandlands" }
+        }
       }
     ]
   }
