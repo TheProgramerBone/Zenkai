@@ -361,8 +361,15 @@ public class ModBlocks {
             () -> new Block(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_YELLOW)
                     .sound(SoundType.WOOL)
-                    .strength(-1.0f, 3600000.0f)
+                    .strength(-1.0f, 3600000)
                     .noCollission()
+                    .noLootTable()));
+
+    public static final DeferredBlock<Block> HTC_BLOCK = registerBlock("htc_block",
+            ()  -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.SNOW)
+                    .sound(SoundType.STONE)
+                    .strength(-1f,3600000)
                     .noLootTable()));
 
     public static void register(IEventBus eventBus) {
