@@ -5,7 +5,8 @@ import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
+import static com.hmc.zenkai.core.network.feature.race.RaceTextureUtil.deriveMask;
+import static com.hmc.zenkai.core.network.feature.race.RaceTextureUtil.resourceExists;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -184,20 +185,6 @@ public final class ZenkaiFirstPersonArmHooks {
                                    boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
             super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer,
                     true, partialTick, packedLight, packedOverlay, colour);
-        }
-
-        /** namekian_player_colorable.png -> namekian_player_detail.png / _lines.png */
-        private static ResourceLocation deriveMask(ResourceLocation base, String suffix) {
-            String p = base.getPath();
-            int dot = p.lastIndexOf('.');
-            String ext  = (dot >= 0) ? p.substring(dot) : ".png";
-            String stem = (dot >= 0) ? p.substring(0, dot) : p;
-            if (stem.endsWith("_colorable")) stem = stem.substring(0, stem.length() - "_colorable".length());
-            return ResourceLocation.fromNamespaceAndPath(base.getNamespace(), stem + suffix + ext);
-        }
-
-        private static boolean resourceExists(ResourceLocation rl) {
-            return Minecraft.getInstance().getResourceManager().getResource(rl).isPresent();
         }
 
         @Override

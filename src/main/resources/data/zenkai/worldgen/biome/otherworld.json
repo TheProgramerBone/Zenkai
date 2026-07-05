@@ -6,8 +6,8 @@
   "effects": {
     "sky_color": 16773514,
     "fog_color": 16751563,
-    "water_color": 35890,
-    "water_fog_color": 19967,
+    "water_color": 9109504,
+    "water_fog_color": 4849664,
     "grass_color": 6344510,
     "foliage_color": 5028651
   },
@@ -17,6 +17,25 @@
     "ambient": [],
     "monster": []
   },
-  "carvers": { "air": [], "liquid": [] },
-  "features": [ ["zenkai:otherworld_clouds"] ]
+  "carvers": {
+    "air": [],
+    "liquid": []
+  },
+  "features": [
+    [
+      "zenkai:otherworld_clouds"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "zenkai:otherworld_cherry",
+      "zenkai:otherworld_dead_bush"
+    ]
+  ]
 }
