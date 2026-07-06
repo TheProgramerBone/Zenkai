@@ -1,6 +1,5 @@
 package com.hmc.zenkai.content.entity.namek;
 
-import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.content.entity.ZenkaiDefaultMob;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
@@ -10,12 +9,10 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.TargetGoal;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import org.jetbrains.annotations.NotNull;
-import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
@@ -23,8 +20,6 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import java.util.List;
 
 public class NamekianWarriorEntity extends ZenkaiDefaultMob {
-
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public NamekianWarriorEntity(EntityType<? extends ZenkaiDefaultMob> type, Level level) {
         super(type, level);
@@ -41,10 +36,6 @@ public class NamekianWarriorEntity extends ZenkaiDefaultMob {
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
-    }
-
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
     }
 
     public static class DefendNamekians extends TargetGoal {
@@ -84,11 +75,6 @@ public class NamekianWarriorEntity extends ZenkaiDefaultMob {
     }
 
     // ========================== GeckoLib ==========================
-
-    @Override
-    public @NotNull AnimatableInstanceCache getAnimatableInstanceCache() {
-        return this.cache;
-    }
 
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()

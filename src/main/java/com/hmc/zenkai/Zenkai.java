@@ -148,12 +148,17 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.NAMEKIAN.get(),
                     ctx -> new GenericGeoRenderer<>(ctx,
                             new GenericGeoModel<>("namekian",
-                                    "namekian", "npc", true, false), 0.5f));
+                                    "namekian", "zenkai_animations", true, false), 0.5f));
 
             EntityRenderers.register(ModEntities.NAMEKIAN_WARRIOR.get(),
                     ctx -> new GenericGeoRenderer<>(ctx,
                             new GenericGeoModel<>("namekian_warrior",
-                                    "namekian_warrior", "npc", true, false), 0.5f));
+                                    "namekian_warrior", "zenkai_animations", true, false), 0.5f));
+
+            EntityRenderers.register(ModEntities.SAIBAMAN.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("saibaman",
+                                    "saibaman", "zenkai_animations", true, false), 0.5f));
 
             EntityRenderers.register(ModEntities.SHENLONG.get(),
                     ctx -> new GenericGeoRenderer<>(ctx,

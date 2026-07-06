@@ -63,7 +63,7 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
         this.hasAnimation  = animationPath != null && !animationPath.isBlank();
     }
 
-    // ── Configuración fluida (encadenable en el registro)
+    // ── Configuración fluida (encadenable en el registro) ─────────────────────
 
     /** Asigna el canal de color para el tinte. Devuelve this para encadenar. */
     public GeoLayerArmorItem channel(ColorChannel channel) {
@@ -127,8 +127,9 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
         if (controllerFactory != null) {
             controllerFactory.accept(controllers);                       // animaciones personalizadas
         } else if (hasAnimation) {
-            controllers.add(ZenkaiCommonAnimations.genericIdleController(this)); // idle por defecto (FIX: antes se descartaba)
+            controllers.add(ZenkaiCommonAnimations.playerFlyIdleController(this)); // idle + vuelo (move.fly al volar)
         }
+        // sin animación y sin factory → no se registra controlador (modelo estático, sin warnings)
     }
 
     @Override
@@ -151,6 +152,7 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
      * Tiempo de animación. Por defecto avanza con el reloj real (RenderUtils.getCurrentTick()),
      * que nunca se detiene — por eso el brazo en 1ª persona y el muñeco del jugador en el inventario
      * "flotaban" solos al abrir una interfaz (la mano/jugador vanilla quedan quietos).
+     *
      * Solución: mientras haya una pantalla abierta lo CONGELAMOS, así el jugador (brazo en 1ª persona
      * y muñeco en inventario/screens) queda quieto. Excluimos el chat para no congelar el idle de
      * otros jugadores mientras escribes en multijugador.

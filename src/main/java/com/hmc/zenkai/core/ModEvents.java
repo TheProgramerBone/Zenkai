@@ -8,6 +8,7 @@ import com.hmc.zenkai.content.entity.namek.NamekianEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianWarriorEntity;
 import com.hmc.zenkai.content.entity.misc.KintounEntity;
 import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
+import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
 import com.hmc.zenkai.content.item.special.HammerItem;
@@ -37,6 +38,7 @@ public class ModEvents {
         event.put(ModEntities.SHENLONG.get(), ShenLongEntity.createAttributes().build());
         event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
         event.put(ModEntities.KINTOUN.get(), KintounEntity.createAttributes().build());
+        event.put(ModEntities.SAIBAMAN.get(), SaibamanEntity.createAttributes().build());
         event.put(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounEntity.createAttributes().build());
         event.put(ModEntities.ISAAC.get(), IsaacEntity.createAttributes().build());
         event.put(ModEntities.YEMMA.get(), YemmaEntity.createAttributes().build());
