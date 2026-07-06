@@ -2,6 +2,7 @@
 	"format_version": "1.8.0",
 	"animations": {
 		"attack.strike": {
+			"loop": true,
 			"animation_length": 0.3333,
 			"bones": {
 				"right_arm": {
