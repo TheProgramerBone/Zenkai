@@ -2,6 +2,8 @@ package com.hmc.zenkai.core.network.feature.player;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.ModGameRules;
+import com.hmc.zenkai.worldgen.NoHostileSpawnZones;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -44,6 +46,11 @@ public final class OtherworldHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!OtherworldManager.isInOtherworld(player)) return;
         if (player.isCreative()) return; // en creativo sí puede
+        // Dentro de una zona protegida (el palacio) SÍ se puede construir: lo gestiona
+        // StructureProtectionHandler (registrar + romper solo lo propio). Fuera del palacio,
+        // en el más allá no se construye.
+        BlockPos p = event.getPos();
+        if (NoHostileSpawnZones.isProtected(player.level().dimension(), p.getX(), p.getY(), p.getZ())) return;
         event.setCanceled(true);
     }
 }

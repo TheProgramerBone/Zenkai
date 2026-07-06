@@ -1,0 +1,11 @@
+{
+  "type": "zenkai:htc_type",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "zenkai:htc_noise",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "zenkai:htc"
+    }
+  }
+}

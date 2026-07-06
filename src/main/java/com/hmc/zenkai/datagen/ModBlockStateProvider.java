@@ -21,6 +21,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.NAMEKIAN_STONE);
         blockWithItem(ModBlocks.NAMEKIAN_COBBLESTONE);
         blockWithItem(ModBlocks.ROCKY_BLOCK);
+        blockWithItem(ModBlocks.HTC_BLOCK);
+        blockWithItem(ModBlocks.HTC_PORTAL);
         blockWithItem(ModBlocks.NAMEKIAN_STRUCTURE_BLOCK);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_BLACK);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_BLUE);
@@ -40,7 +42,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_ORANGE);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED);
         blockWithItem(ModBlocks.OTHERWORLD_CLOUD);
-        blockWithItem(ModBlocks.HTC_BLOCK);
     }
 
     private void blockWithItem(DeferredBlock<?> deferredBlock) {

@@ -36,6 +36,7 @@ public final class ZenkaiStructurePlacement {
 
     public static final String KEY_KAMI       = "kami_palace";
     public static final String KEY_OTHERWORLD = "otherworld_palace";
+    public static final String KEY_HTC        = "htc_structure";
 
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
@@ -73,6 +74,12 @@ public final class ZenkaiStructurePlacement {
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SY,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SZ,
                 "Yemma");
+        NoHostileSpawnZones.addFromBase(ModDimensions.HTC_LEVEL,
+                ModStructureSegments.HTC_NO_SPAWN_MIN,
+                ModStructureSegments.HTC_NO_SPAWN_SX,
+                ModStructureSegments.HTC_NO_SPAWN_SY,
+                ModStructureSegments.HTC_NO_SPAWN_SZ,
+                "HTC");
     }
 
     /**
@@ -105,6 +112,16 @@ public final class ZenkaiStructurePlacement {
             LOGGER.warn("[Zenkai] No se encontró el bioma de Kami; se coloca en el spawn.");
         }
 
+        // Dentro del bioma, busca un cuadro naturalmente PLANO del tamaño de kami_1,
+        // para que la base del pilar no quede medio enterrada / medio flotando en pendiente.
+        BlockPos flat = findFlatSpot(overworld, xz);
+        if (flat != null) {
+            LOGGER.info("[Zenkai] Kami: terreno plano hallado en {}, {}.", flat.getX(), flat.getZ());
+            xz = flat;
+        } else {
+            LOGGER.warn("[Zenkai] Kami: sin terreno plano cercano; se usa el punto del bioma.");
+        }
+
         // Ancla kami_1 (offset 0,0,0) al nivel del mar o a la superficie.
         int baseY = ModStructureSegments.KAMI_ANCHOR_SEA_LEVEL
                 ? overworld.getSeaLevel()
@@ -112,11 +129,67 @@ public final class ZenkaiStructurePlacement {
         return new BlockPos(xz.getX(), baseY + ModStructureSegments.KAMI_Y_OFFSET, xz.getZ());
     }
 
+    /**
+     * Busca alrededor de {@code centerXZ} un cuadro plano del tamaño de kami_1
+     * ({@link ModStructureSegments#KAMI_FOOTPRINT}). Muestrea la altura del terreno en las 4 esquinas
+     * + centro de cada candidato; se queda con el más plano (menor desnivel), prefiriendo los cercanos
+     * al nivel del mar y al centro. Si nada cumple, relaja el desnivel tolerado hasta 8; si aun así no,
+     * devuelve null (se usará centerXZ).
+     */
+    private static BlockPos findFlatSpot(ServerLevel level, BlockPos centerXZ) {
+        int half   = ModStructureSegments.KAMI_FOOTPRINT / 2;
+        int radius = ModStructureSegments.KAMI_FLAT_SEARCH_RADIUS;
+        int step   = Math.max(1, ModStructureSegments.KAMI_FLAT_STEP);
+        int sea    = level.getSeaLevel();
+
+        for (int maxDiff = ModStructureSegments.KAMI_FLAT_MAX_DIFF; maxDiff <= 8; maxDiff += 2) {
+            BlockPos best = null;
+            long bestScore = Long.MAX_VALUE;
+            for (int dx = -radius; dx <= radius; dx += step) {
+                for (int dz = -radius; dz <= radius; dz += step) {
+                    int cx = centerXZ.getX() + dx;
+                    int cz = centerXZ.getZ() + dz;
+                    int h0 = surfaceY(level, cx - half, cz - half);
+                    int h1 = surfaceY(level, cx + half, cz - half);
+                    int h2 = surfaceY(level, cx - half, cz + half);
+                    int h3 = surfaceY(level, cx + half, cz + half);
+                    int h4 = surfaceY(level, cx, cz);
+                    int min = Math.min(Math.min(h0, h1), Math.min(h2, Math.min(h3, h4)));
+                    int max = Math.max(Math.max(h0, h1), Math.max(h2, Math.max(h3, h4)));
+                    if (max - min > maxDiff) continue; // no es plano
+
+                    int avg = (h0 + h1 + h2 + h3 + h4) / 5;
+                    long score = (long) (max - min) * 100L        // plano
+                            + (long) Math.abs(avg - sea) * 2L      // preferir cerca del nivel del mar
+                            + (Math.abs(dx) + Math.abs(dz)) / 8L;  // y cerca del centro del bioma
+                    if (score < bestScore) {
+                        bestScore = score;
+                        best = new BlockPos(cx, avg, cz);
+                    }
+                }
+            }
+            if (best != null) return best;
+        }
+        return null;
+    }
+
+    /** Altura del suelo ignorando agua y hojas (OCEAN_FLOOR): sirve para medir "planitud" del terreno. */
+    private static int surfaceY(ServerLevel level, int x, int z) {
+        return level.getHeight(Heightmap.Types.OCEAN_FLOOR, x, z);
+    }
+
     /** Garantiza que el palacio del otro mundo exista antes de teletransportar. */
     public static void ensureOtherworldPalace(ServerLevel otherworld) {
         placeOnce(otherworld.getServer(), otherworld, KEY_OTHERWORLD,
                 ModStructureSegments.OTHERWORLD_BASE, ModStructureSegments.OTHERWORLD, true);
         StructureNpcManager.ensureAllIn(otherworld);   // spawnea los NPCs de esta dimensión
+    }
+
+    /** Garantiza que la estructura de la Habitación del Tiempo exista antes de teletransportar allí. */
+    public static void ensureHtcStructure(ServerLevel htc) {
+        placeOnce(htc.getServer(), htc, KEY_HTC,
+                ModStructureSegments.HTC_BASE, ModStructureSegments.HTC, true);
+        StructureNpcManager.ensureAllIn(htc);
     }
 
     private static void placeOnce(MinecraftServer server, ServerLevel level,
@@ -132,6 +205,7 @@ public final class ZenkaiStructurePlacement {
         return switch (which) {
             case "kami"       -> StaticStructurePlacer.place(level, base, ModStructureSegments.KAMI, true);
             case "otherworld" -> StaticStructurePlacer.place(level, base, ModStructureSegments.OTHERWORLD, true);
+            case "htc"        -> StaticStructurePlacer.place(level, base, ModStructureSegments.HTC, true);
             default -> false;
         };
     }
