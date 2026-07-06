@@ -42,7 +42,7 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
     }
 
     @Override
-    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+    public @NotNull InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (!this.level().isClientSide && !this.isTrading() && !this.isBaby()) {
             this.setTradingPlayer(player);
             this.openTradingScreen(player, this.getDisplayName(), 1);
@@ -52,7 +52,7 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
     }
 
     @Override
-    protected void rewardTradeXp(MerchantOffer merchantOffer) {
+    protected void rewardTradeXp(@NotNull MerchantOffer merchantOffer) {
 
     }
 

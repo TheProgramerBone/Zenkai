@@ -71,10 +71,10 @@
 				{
 					"name": "right_arm",
 					"parent": "body",
-					"pivot": [-6, 22, 0],
+					"pivot": [-5, 22, 0],
 					"rotation": [0, 180, 0],
 					"cubes": [
-						{"origin": [-8, 12, -2], "size": [4, 12, 4], "uv": [16, 32], "mirror": true}
+						{"origin": [-6, 12, -2], "size": [4, 12, 4], "uv": [16, 32], "mirror": true}
 					]
 				},
 				{
@@ -98,10 +98,10 @@
 				{
 					"name": "left_arm",
 					"parent": "body",
-					"pivot": [6, 22, 0],
+					"pivot": [5, 22, 0],
 					"rotation": [0, 180, 0],
 					"cubes": [
-						{"origin": [4, 12, -2], "size": [4, 12, 4], "uv": [24, 16], "mirror": true}
+						{"origin": [2, 12, -2], "size": [4, 12, 4], "uv": [24, 16], "mirror": true}
 					]
 				}
 			]
