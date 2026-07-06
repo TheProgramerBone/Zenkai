@@ -27,4 +27,14 @@ public class ModDimensions {
             Registries.DIMENSION_TYPE,
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "otherworld")
     );
+
+    public static final ResourceKey<Level> HTC_LEVEL = ResourceKey.create(
+            Registries.DIMENSION,
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "htc")
+    );
+
+    public static final ResourceKey<DimensionType> HTC_DIM_TYPE = ResourceKey.create(
+            Registries.DIMENSION_TYPE,
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "htc")
+    );
 }

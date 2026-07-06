@@ -17,7 +17,20 @@
   },
   "spawn_costs": {},
   "spawners": {},
-  "features": [],
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "zenkai:rocky_dead_bush"
+    ]
+  ],
   "carvers": {},
   "starts": [],
   "player_spawn_friendly": false

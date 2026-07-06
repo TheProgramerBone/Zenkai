@@ -1,5 +1,7 @@
-// 1.21.1	2026-07-01T13:12:44.7621427	Block States: zenkai
+// 1.21.1	2026-07-05T20:30:48.2982246	Block States: zenkai
 d9cb25aba30c4602c429224f6b93e510b5d98124 assets/zenkai/blockstates/deepslate_terragem_ore.json
+ae86d7472bb7bfc89f08fdad987a8518e483ee21 assets/zenkai/blockstates/htc_block.json
+db3d742379ca8e4147182eaab826cee150797fb2 assets/zenkai/blockstates/htc_portal.json
 fa9c35c56b7519e4ac4848347d148fd6726e17d2 assets/zenkai/blockstates/namekian_cobblestone.json
 8df7327bfeb0ed68204dd24470c8fff3cb344f58 assets/zenkai/blockstates/namekian_dirt.json
 8081dfc26eff1654875497f35c36528dddd36646 assets/zenkai/blockstates/namekian_stone.json
@@ -26,6 +28,8 @@ e52a363d406378cd00b09bd36db1c1ff90089427 assets/zenkai/blockstates/structural_co
 ecadf14a4fd7f0a8699f1a89c06168a868b95831 assets/zenkai/blockstates/terragem_block.json
 d42635e000b2b6fda5e1ef66265d18dd8a68f6fa assets/zenkai/blockstates/terragem_ore.json
 eaf30610b9bdae5f7bd986695f36228114d8fab9 assets/zenkai/models/block/deepslate_terragem_ore.json
+270e890716d85116689785ac94f37d446978f7b3 assets/zenkai/models/block/htc_block.json
+17280709590c484c48a9944f75a62d6e8818e860 assets/zenkai/models/block/htc_portal.json
 94d49c917afa00546d1b56866f5ed34fed9abe58 assets/zenkai/models/block/namekian_cobblestone.json
 d34c7c3a88b3e4c47ef3966007a4abd485b64d48 assets/zenkai/models/block/namekian_dirt.json
 ab3c1e0be92a9c087224b469ea72990d25c928ca assets/zenkai/models/block/namekian_stone.json
@@ -52,6 +56,8 @@ bb629c03cc8bf278a72d459edbf838e9d2ec2a86 assets/zenkai/models/block/structural_c
 8ccd69df1523033024a95c021ce504335c73d530 assets/zenkai/models/block/terragem_block.json
 81e37e51b8c8031b1aaf9efbf0ab7e8e5d462b70 assets/zenkai/models/block/terragem_ore.json
 cbec59c6fcf5db17ba8793024a9180530f350700 assets/zenkai/models/item/deepslate_terragem_ore.json
+d5ace1175e61ae190da2a844de85d57d8f916615 assets/zenkai/models/item/htc_block.json
+318991a80f390b55a717c59ce34e4ccd2bab4c2d assets/zenkai/models/item/htc_portal.json
 2a0d620afb750dc1f431093a6990cf383dc160e4 assets/zenkai/models/item/namekian_cobblestone.json
 d0832ae29674999ef0dc70497a2f90eb3eb781cf assets/zenkai/models/item/namekian_dirt.json
 914c89d1404a1d0219cfc3be103fa3e006123657 assets/zenkai/models/item/namekian_stone.json

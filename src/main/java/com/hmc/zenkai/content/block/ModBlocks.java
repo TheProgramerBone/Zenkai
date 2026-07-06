@@ -372,6 +372,14 @@ public class ModBlocks {
                     .strength(-1f,3600000)
                     .noLootTable()));
 
+    public static final DeferredBlock<Block> HTC_PORTAL = registerBlock("htc_portal",
+            ()-> new HtcPortalBlock(BlockBehaviour.Properties.of()
+                    .strength(50f, 1200f)
+                    .sound(SoundType.WOOD)
+                    .noLootTable()
+                    .lightLevel(s -> 10)
+                    .noOcclusion()));
+
     public static void register(IEventBus eventBus) {
         MOD_BLOCKS.register(eventBus);
     }

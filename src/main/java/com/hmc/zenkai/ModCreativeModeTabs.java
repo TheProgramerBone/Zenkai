@@ -1,5 +1,6 @@
 package com.hmc.zenkai;
 
+import com.hmc.zenkai.content.block.ModBlocks;
 import com.hmc.zenkai.content.item.ModArmorMaterials;
 import com.hmc.zenkai.content.item.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -10,10 +11,11 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +37,7 @@ public class ModCreativeModeTabs {
                         ));
 
                         // Items que NO son de material RACE pero igual quieres ocultar (red de seguridad).
-                        Set<Item> extraExcluded = new HashSet<>(List.of(
+                        Set<Item> ItemsExtraExcluded = new HashSet<>(List.of(
                                 ModItems.HAIR_1.get(),
                                 ModItems.SSJ1_HAIR1.get()
                         ));
@@ -46,7 +48,7 @@ public class ModCreativeModeTabs {
                             if (!id.getNamespace().equals(Zenkai.MOD_ID)) return;
                             boolean hideByMaterial = isRaceArmor(item) && !raceMaterialExceptions.contains(item);
 
-                            if (hideByMaterial || extraExcluded.contains(item)) return;
+                            if (hideByMaterial || ItemsExtraExcluded.contains(item)) return;
 
                             output.accept(item);
                         });

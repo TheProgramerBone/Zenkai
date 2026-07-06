@@ -19,6 +19,15 @@ public final class ModStructureSegments {
     // Radio inicial y tope del auto-expandible (bloques)
     public static final int KAMI_SEARCH_RADIUS = 500;
     public static final int KAMI_MAX_SEARCH_RADIUS = 8000;
+    // ── Búsqueda de terreno PLANO del tamaño de kami_1 (para que la base no quede en pendiente) ──
+    // Tamaño (X=Z) de la base kami_1 que debe caber en terreno plano.
+    public static final int KAMI_FOOTPRINT = 15;
+    // Radio (bloques) alrededor del punto del bioma donde se busca el cuadro plano.
+    public static final int KAMI_FLAT_SEARCH_RADIUS = 64;
+    // Paso del muestreo (más pequeño = más preciso pero genera más chunks al arrancar).
+    public static final int KAMI_FLAT_STEP = 8;
+    // Desnivel máximo tolerado en el cuadro (bloques). Si no encuentra, relaja hasta 8 solo.
+    public static final int KAMI_FLAT_MAX_DIFF = 3;
     // Ajuste fino de altura sobre el ancla (0 = justo en el ancla; +/- para subir/bajar)
     public static final int KAMI_Y_OFFSET = 0;
     // Bioma donde debe aparecer Kami (cámbialo al que quieras)
@@ -68,5 +77,20 @@ public final class ModStructureSegments {
             Segment.of("otherworld_palace_5",48,0,48), // 48×40×48
             Segment.of("otherworld_palace_6",96,0,48), // 20×40×48
             Segment.of("otherworld_palace_7",46,1,96)  // 23×39×13
+    );
+
+    // ── HABITACIÓN DEL TIEMPO (HTC, dimensión propia, estructura única) ────────
+    // La base del suelo de htc_block queda en ~y63; coloca la estructura sobre él.
+    public static final BlockPos HTC_BASE = new BlockPos(0, 64, 0);
+
+    // Dónde aparece el jugador al entrar (ajústalo a donde esté el portal dentro de tu htc_x).
+    public static final BlockPos HTC_ENTRANCE = new BlockPos(39, 67, 32);
+    public static final BlockPos HTC_NO_SPAWN_MIN = new BlockPos(HTC_BASE.getX() - 32, HTC_BASE.getY() - 8, HTC_BASE.getZ() - 32);
+    public static final int HTC_NO_SPAWN_SX = 96, HTC_NO_SPAWN_SY = 120, HTC_NO_SPAWN_SZ = 96;
+
+    // Rellena con tus segmentos htc_x (mismo patrón que KAMI/OTHERWORLD: nombre + offset X,Y,Z).
+    public static final List<Segment> HTC = List.of(
+            Segment.of("htc_1", 0, 0, 0),
+            Segment.of("htc_2",48,0,0)
     );
 }

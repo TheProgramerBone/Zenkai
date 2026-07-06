@@ -27,7 +27,17 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.ROCKY_BLOCK.get())
                 .add(ModBlocks.NAMEKIAN_STONE.get())
                 .add(ModBlocks.NAMEKIAN_COBBLESTONE.get())
+                .add(ModBlocks.ROCKY_BLOCK.get())
                 .add(ModBlocks.NAMEKIAN_STRUCTURE_BLOCK.get());
+
+        tag(BlockTags.SCULK_REPLACEABLE)
+                .add(ModBlocks.ROCKY_BLOCK.get())
+                .add(ModBlocks.NAMEKIAN_GRASS_BLOCK.get())
+                .add(ModBlocks.NAMEKIAN_STONE.get())
+                .add(ModBlocks.NAMEKIAN_COBBLESTONE.get())
+                .add(ModBlocks.NAMEKIAN_DIRT.get())
+                ;
+
 
         tag(BlockTags.DEAD_BUSH_MAY_PLACE_ON)
                 .add(ModBlocks.ROCKY_BLOCK.get());
