@@ -1,7 +1,7 @@
 package com.hmc.zenkai.content.entity.misc;
 
 import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
-import com.hmc.zenkai.content.entity.ZenkaiGeoMob;
+import com.hmc.zenkai.content.entity.ZenkaiDefaultMob;
 import com.hmc.zenkai.content.sound.ModSounds;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -24,9 +24,11 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -36,9 +38,11 @@ import java.util.Set;
  * Render/modelo los aporta GenericGeoRenderer por convención de nombre "isaac".
  *
  * Click derecho con un ítem de DANCE_TRIGGER_ITEMS => alterna la animación de baile.
- * Mientras baila NO se mueve (para que la animación se vea bien); conserva el head-turn.
+ * Mientras baila NO se mueve y la cabeza se congela para respetar la animación.
  */
-public class IsaacEntity extends ZenkaiGeoMob {
+public class IsaacEntity extends ZenkaiDefaultMob {
+
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     /** Ítems que activan el baile al hacer click derecho. Edita esta lista a gusto. */
     private static final Set<Item> DANCE_TRIGGER_ITEMS = Set.of(
@@ -57,11 +61,10 @@ public class IsaacEntity extends ZenkaiGeoMob {
 
     private static final RawAnimation DANCE = RawAnimation.begin().thenPlay("isaac.dance");
 
-    /** Flag sincronizado cliente<->servidor para que el controlador sepa cuándo bailar. */
     private static final EntityDataAccessor<Boolean> DANCING =
             SynchedEntityData.defineId(IsaacEntity.class, EntityDataSerializers.BOOLEAN);
 
-    public IsaacEntity(EntityType<? extends IsaacEntity> type, Level level) {
+    public IsaacEntity(EntityType<? extends ZenkaiDefaultMob> type, Level level) {
         super(type, level);
     }
 
@@ -76,23 +79,36 @@ public class IsaacEntity extends ZenkaiGeoMob {
 
     @Override
     protected void registerGoals() {
-        // El paseo NO corre mientras baila (así Isaac se queda quieto).
+        // El paseo NO corre mientras baila.
         this.goalSelector.addGoal(1, new WaterAvoidingRandomStrollGoal(this, 1.0) {
             @Override public boolean canUse()           { return !isDancing() && super.canUse(); }
             @Override public boolean canContinueToUse() { return !isDancing() && super.canContinueToUse(); }
         });
-        // Estos solo rotan la cabeza/cuerpo, no desplazan: se quedan activos.
-        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
+
+        // Modificados: Ya no se ejecutarán si el mob está bailando.
+        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F) {
+            @Override public boolean canUse()           { return !isDancing() && super.canUse(); }
+            @Override public boolean canContinueToUse() { return !isDancing() && super.canContinueToUse(); }
+        });
+
+        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this) {
+            @Override public boolean canUse()           { return !isDancing() && super.canUse(); }
+            @Override public boolean canContinueToUse() { return !isDancing() && super.canContinueToUse(); }
+        });
     }
 
-    /** Red de seguridad: si está bailando, corta navegación y anula el movimiento horizontal. */
+    /** Red de seguridad: si está bailando, corta navegación, anula el movimiento horizontal y frena la rotación de cabeza por IA. */
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!this.level().isClientSide && isDancing()) {
-            this.getNavigation().stop();
-            this.setDeltaMovement(0.0D, this.getDeltaMovement().y, 0.0D); // conserva gravedad
+        if (isDancing()) {
+            if (!this.level().isClientSide) {
+                this.getNavigation().stop();
+                this.setDeltaMovement(0.0D, this.getDeltaMovement().y, 0.0D); // conserva gravedad
+            }
+            // Sincroniza la rotación del cuerpo con la cabeza para que no se tuerza de forma extraña
+            this.setYRot(this.yRotO);
+            this.setYHeadRot(this.yRotO);
         }
     }
 
@@ -116,14 +132,6 @@ public class IsaacEntity extends ZenkaiGeoMob {
         return super.mobInteract(player, hand);
     }
 
-    /**
-     * UN solo controlador para evitar que varios animen los mismos bones a la vez.
-     * Prioridad: bailar > caminar > idle.
-     *
-     * ⚠ Requiere que isaac.animation.json tenga también "move.walk" y "misc.idle".
-     *   Si Isaac SOLO tiene la animación de baile, sustituye el cuerpo por:
-     *       return this.isDancing() ? state.setAndContinue(DANCE) : PlayState.STOP;
-     */
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "main", 5, state -> {
@@ -135,13 +143,17 @@ public class IsaacEntity extends ZenkaiGeoMob {
         }));
     }
 
+    @Override
+    public @NotNull AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.cache;
+    }
+
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25);
     }
 
-    // ── Persistencia del estado de baile ─────────────────────────────────────
     @Override
     public void addAdditionalSaveData(@NotNull CompoundTag tag) {
         super.addAdditionalSaveData(tag);

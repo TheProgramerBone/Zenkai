@@ -1,6 +1,7 @@
 package com.hmc.zenkai.content.entity.overworld;
 
 import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
+import com.hmc.zenkai.content.entity.ZenkaiDefaultNPC;
 import com.hmc.zenkai.core.network.feature.wishes.OpenWishScreenPayload;
 import com.hmc.zenkai.core.network.feature.wishes.SyncWishTogglesPayload;
 import net.minecraft.nbt.CompoundTag;
@@ -20,27 +21,25 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
-import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class ShenLongEntity extends Mob implements GeoEntity {
+public class ShenLongEntity extends ZenkaiDefaultNPC {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    /** Pool de deseos compartido (sincronizado al cliente para mostrarlo en la GUI). */
     private static final EntityDataAccessor<Integer> WISHES_REMAINING =
             SynchedEntityData.defineId(ShenLongEntity.class, EntityDataSerializers.INT);
 
-    public ShenLongEntity(EntityType<? extends Mob> entityType, Level level) {
+    public ShenLongEntity(EntityType<? extends ZenkaiDefaultNPC> entityType, Level level) {
         super(entityType, level);
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
         super.defineSynchedData(builder);
-        builder.define(WISHES_REMAINING, 0); // valor real se fija al spawnear / cargar
+        builder.define(WISHES_REMAINING, 1);
     }
 
     @Override
@@ -52,7 +51,7 @@ public class ShenLongEntity extends Mob implements GeoEntity {
     @Override
     protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (player instanceof ServerPlayer sp) {
-            PacketDistributor.sendToPlayer(sp, SyncWishTogglesPayload.current()); // toggles antes de abrir
+            PacketDistributor.sendToPlayer(sp, SyncWishTogglesPayload.current());
             PacketDistributor.sendToPlayer(sp, new OpenWishScreenPayload());
         }
         return InteractionResult.sidedSuccess(this.level().isClientSide);
@@ -93,7 +92,7 @@ public class ShenLongEntity extends Mob implements GeoEntity {
     }
 
     @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
+    public @NotNull AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
     }
 
@@ -126,45 +125,7 @@ public class ShenLongEntity extends Mob implements GeoEntity {
     }
 
     @Override
-    public void aiStep() {
-        super.aiStep();
-        setDeltaMovement(0, 0, 0);
-    }
-
-    @Override
-    public boolean isInvulnerableTo(DamageSource source) {
-        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) ||
-                source.is(DamageTypeTags.IS_EXPLOSION) ||
-                source.is(DamageTypeTags.IS_FREEZING) ||
-                source.is(DamageTypeTags.IS_FALL) ||
-                source.is(DamageTypeTags.IS_LIGHTNING) ||
-                source.is(DamageTypeTags.IS_FIRE))
-        {
-            return super.isInvulnerableTo(source);
-        }
-        Entity attacker = source.getEntity();
-        if (attacker instanceof Player) {
-            return true;
-        }
-        Entity direct = source.getDirectEntity();
-        if (direct instanceof Projectile proj && proj.getOwner() instanceof Player) {
-            return true;
-        }
-        return super.isInvulnerableTo(source);
-    }
-
-    @Override
     public boolean isPickable() {
         return true;
-    }
-
-    @Override
-    public boolean hurt(DamageSource source, float amount) {
-        if (!source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-            if (source.getEntity() instanceof Player) return false;
-            Entity direct = source.getDirectEntity();
-            if (direct instanceof Projectile proj && proj.getOwner() instanceof Player) return false;
-        }
-        return super.hurt(source, amount);
     }
 }

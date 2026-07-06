@@ -1,6 +1,7 @@
 package com.hmc.zenkai.content.entity.namek;
 
 import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
+import com.hmc.zenkai.content.entity.ZenkaiDefaultMob;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.*;
@@ -13,6 +14,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
@@ -20,11 +22,11 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.List;
 
-public class NamekianWarriorEntity extends Monster implements GeoEntity {
+public class NamekianWarriorEntity extends ZenkaiDefaultMob {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    public NamekianWarriorEntity(EntityType<? extends NamekianWarriorEntity> type, Level level) {
+    public NamekianWarriorEntity(EntityType<? extends ZenkaiDefaultMob> type, Level level) {
         super(type, level);
     }
 
@@ -33,12 +35,12 @@ public class NamekianWarriorEntity extends Monster implements GeoEntity {
     @Override
     protected void registerGoals() {
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1, true));
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.targetSelector.addGoal(1, new DefendNamekians(this));
-        this.goalSelector.addGoal(2, new WaterAvoidingRandomStrollGoal(this, 0.8D));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1, true));
+        this.targetSelector.addGoal(2, new DefendNamekians(this));
+        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -86,7 +88,7 @@ public class NamekianWarriorEntity extends Monster implements GeoEntity {
     // ========================== GeckoLib ==========================
 
     @Override
-    public AnimatableInstanceCache getAnimatableInstanceCache() {
+    public @NotNull AnimatableInstanceCache getAnimatableInstanceCache() {
         return this.cache;
     }
 

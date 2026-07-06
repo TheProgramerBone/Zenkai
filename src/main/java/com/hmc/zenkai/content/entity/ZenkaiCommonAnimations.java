@@ -168,9 +168,7 @@ public class ZenkaiCommonAnimations {
         return new AnimationController<>(animatable, "Attack", 5, state -> {
             if (animatable.swinging)
                 return state.setAndContinue(attackAnimation);
-
-            state.getController().forceAnimationReset();
-
+            //state.getController().forceAnimationReset();
             return PlayState.STOP;
         });
     }
