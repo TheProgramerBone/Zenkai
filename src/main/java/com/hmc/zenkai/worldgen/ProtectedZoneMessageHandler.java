@@ -42,12 +42,11 @@ public final class ProtectedZoneMessageHandler {
                 level.dimension(), player.getX(), player.getY(), player.getZ());
         String prev = LAST_ZONE.get(player.getUUID());
 
-        // Entró (o cambió de zona): avisar una vez.
         if (current != null && !current.equals(prev)) {
             player.displayClientMessage(
                     Component.translatable("messages.zenkai.zone_protected", current)
                             .withStyle(ChatFormatting.YELLOW),
-                    true); // true = actionbar (hotbar)
+                    true);
         }
 
         if (current == null) LAST_ZONE.remove(player.getUUID());

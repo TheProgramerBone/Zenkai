@@ -27,20 +27,19 @@ public final class StructureProtectionHandler {
         if (level.isClientSide || level.getServer() == null) return;
 
         BlockPos pos = event.getPos();
-        if (!isProtectedArea(level, pos)) return; // fuera de zona: reglas normales
-        // Dentro de zona: se permite construir y se REGISTRA para poder romperlo después.
+        if (isProtectedArea(level, pos)) return;
         PlayerPlacedBlocks.get(level.getServer()).add(level.dimension(), pos);
     }
 
     @SubscribeEvent
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
         Player player = event.getPlayer();
-        if (player == null || player.isCreative()) return;
+        if (player.isCreative()) return;
         Level level = player.level();
         if (level.isClientSide || level.getServer() == null) return;
 
         BlockPos pos = event.getPos();
-        if (!isProtectedArea(level, pos)) return; // fuera de zona: reglas normales
+        if (isProtectedArea(level, pos)) return; // fuera de zona: reglas normales
 
         PlayerPlacedBlocks data = PlayerPlacedBlocks.get(level.getServer());
         if (data.contains(level.dimension(), pos)) {
@@ -50,12 +49,10 @@ public final class StructureProtectionHandler {
         }
     }
 
-    /** True si la protección está activa Y el punto está en la HTC entera o en una zona registrada. */
     private static boolean isProtectedArea(Level level, BlockPos pos) {
-        if (level.getServer() == null) return false;
-        // FIX: la protección debe estar ACTIVA cuando la gamerule es true (antes estaba invertido).
-        if (!ModGameRules.enableStructureProtection(level.getServer())) return false;
-        if (level.dimension() == ModDimensions.HTC_LEVEL) return true; // toda la HTC protegida
-        return NoHostileSpawnZones.isProtected(level.dimension(), pos.getX(), pos.getY(), pos.getZ());
+        if (level.getServer() == null) return true;
+        if (!ModGameRules.enableStructureProtection(level.getServer())) return true;
+        if (level.dimension() == ModDimensions.HTC_LEVEL) return true;
+        return !NoHostileSpawnZones.isProtected(level.dimension(), pos.getX(), pos.getY(), pos.getZ());
     }
 }
