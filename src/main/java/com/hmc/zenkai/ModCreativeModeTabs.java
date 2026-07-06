@@ -36,10 +36,11 @@ public class ModCreativeModeTabs {
                                 ModItems.HALO.get()
                         ));
 
-                        // Items que NO son de material RACE pero igual quieres ocultar (red de seguridad).
+                        // Items a ocultar
                         Set<Item> ItemsExtraExcluded = new HashSet<>(List.of(
                                 ModItems.HAIR_1.get(),
-                                ModItems.SSJ1_HAIR1.get()
+                                ModItems.SSJ1_HAIR1.get(),
+                                ModBlocks.HTC_PORTAL.get().asItem()
                         ));
 
                         ModItems.ITEMS.getEntries().forEach(supplier -> {
