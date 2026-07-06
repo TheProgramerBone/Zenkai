@@ -45,8 +45,6 @@ public class NamekianWarriorEntity extends ZenkaiDefaultMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(ZenkaiCommonAnimations.genericWalkIdleController(this));
-        controllers.add(ZenkaiCommonAnimations.genericAttackAnimation(this, ZenkaiCommonAnimations.ATTACK_STRIKE));
     }
 
     public static class DefendNamekians extends TargetGoal {

@@ -34,35 +34,44 @@ import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * Isaac: entidad GeckoLib mínima. NO tiene Model ni Renderer propios.
- * Render/modelo los aporta GenericGeoRenderer por convención de nombre "isaac".
+ * Isaac: entidad GeckoLib mínima (render/modelo vía GenericGeoRenderer por nombre "isaac").
  *
- * Click derecho con un ítem de DANCE_TRIGGER_ITEMS => alterna la animación de baile.
- * Mientras baila NO se mueve y la cabeza se congela para respetar la animación.
+ * Click derecho con un ítem de DANCE_TRIGGER => baila UNA sola vez y luego vuelve a su
+ * comportamiento normal. NO alterna. El fin del baile lo decide el SERVIDOR tras
+ * DANCE_DURATION_TICKS (para que no se pelee con el cliente). Mientras baila, la
+ * rotación de cuerpo/cabeza queda BLOQUEADA: solo la animación mueve el modelo.
  */
 public class IsaacEntity extends ZenkaiDefaultMob {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    /** Ítems que activan el baile al hacer click derecho. Edita esta lista a gusto. */
+    /** ⚠ Ajusta a la DURACIÓN real de "isaac.dance" en ticks (segundos × 20). */
+    private static final int DANCE_DURATION_TICKS = 269;
+
+    private static final RawAnimation DANCE = RawAnimation.begin().thenPlay("isaac.dance");
+
+    private static final EntityDataAccessor<Boolean> DANCING =
+            SynchedEntityData.defineId(IsaacEntity.class, EntityDataSerializers.BOOLEAN);
+
+    /** Estado interno para bloquear la orientación y cronometrar el fin (servidor). */
+    private boolean wasDancing = false;
+    private float danceYaw;
+    private int danceEndTick;
+
+    /** Ítems que activan el baile al hacer click derecho. Edita a gusto. */
     private static final Set<Item> DANCE_TRIGGER_ITEMS = Set.of(
             Items.MUSIC_DISC_13,
             Items.NOTE_BLOCK,
             Items.DIAMOND
     );
-
-    private static final Set<Rarity> DANCE_TRIGGER_RARITIES = EnumSet.of(Rarity.RARE,Rarity.EPIC,Rarity.UNCOMMON);
+    private static final Set<Rarity> DANCE_TRIGGER_RARITIES =
+            EnumSet.of(Rarity.RARE, Rarity.EPIC, Rarity.UNCOMMON);
 
     private boolean triggersDance(ItemStack stack) {
         return !stack.isEmpty()
                 && (DANCE_TRIGGER_ITEMS.contains(stack.getItem())
                 || DANCE_TRIGGER_RARITIES.contains(stack.getRarity()));
     }
-
-    private static final RawAnimation DANCE = RawAnimation.begin().thenPlay("isaac.dance");
-
-    private static final EntityDataAccessor<Boolean> DANCING =
-            SynchedEntityData.defineId(IsaacEntity.class, EntityDataSerializers.BOOLEAN);
 
     public IsaacEntity(EntityType<? extends ZenkaiDefaultMob> type, Level level) {
         super(type, level);
@@ -79,36 +88,50 @@ public class IsaacEntity extends ZenkaiDefaultMob {
 
     @Override
     protected void registerGoals() {
-        // El paseo NO corre mientras baila.
+        // Ninguna IA de movimiento/mirada corre mientras baila.
         this.goalSelector.addGoal(1, new WaterAvoidingRandomStrollGoal(this, 1.0) {
             @Override public boolean canUse()           { return !isDancing() && super.canUse(); }
             @Override public boolean canContinueToUse() { return !isDancing() && super.canContinueToUse(); }
         });
-
-        // Modificados: Ya no se ejecutarán si el mob está bailando.
         this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 8.0F) {
             @Override public boolean canUse()           { return !isDancing() && super.canUse(); }
             @Override public boolean canContinueToUse() { return !isDancing() && super.canContinueToUse(); }
         });
-
         this.goalSelector.addGoal(3, new RandomLookAroundGoal(this) {
             @Override public boolean canUse()           { return !isDancing() && super.canUse(); }
             @Override public boolean canContinueToUse() { return !isDancing() && super.canContinueToUse(); }
         });
     }
 
-    /** Red de seguridad: si está bailando, corta navegación, anula el movimiento horizontal y frena la rotación de cabeza por IA. */
     @Override
     public void aiStep() {
         super.aiStep();
-        if (isDancing()) {
+
+        boolean dancing = isDancing();
+
+        // Al empezar a bailar, fija la orientación actual.
+        if (dancing && !wasDancing) {
+            this.danceYaw = this.getYRot();
+        }
+        this.wasDancing = dancing;
+
+        if (dancing) {
+            // Bloquea TODA la rotación por IA (cuerpo y cabeza). La animación manda.
+            this.setYRot(danceYaw);
+            this.yRotO = danceYaw;
+            this.setYBodyRot(danceYaw);
+            this.yBodyRotO = danceYaw;
+            this.setYHeadRot(danceYaw);
+            this.yHeadRotO = danceYaw;
+
             if (!this.level().isClientSide) {
                 this.getNavigation().stop();
                 this.setDeltaMovement(0.0D, this.getDeltaMovement().y, 0.0D); // conserva gravedad
+                // Fin del baile UNA sola vez, tras la duración: vuelve al comportamiento normal.
+                if (this.tickCount >= danceEndTick) {
+                    setDancing(false);
+                }
             }
-            // Sincroniza la rotación del cuerpo con la cabeza para que no se tuerza de forma extraña
-            this.setYRot(this.yRotO);
-            this.setYHeadRot(this.yRotO);
         }
     }
 
@@ -116,31 +139,41 @@ public class IsaacEntity extends ZenkaiDefaultMob {
     protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
         if (triggersDance(held)) {
-            if (!this.level().isClientSide) {
-                boolean nowDancing = !isDancing();
-                setDancing(nowDancing);          // alterna baile on/off
-                if (nowDancing) {
-                    this.getNavigation().stop(); // frena de inmediato al empezar a bailar
-                    Player nearest = this.level().getNearestPlayer(this, 16.0D);
-                    if (nearest != null) {
-                        nearest.playNotifySound(ModSounds.SPECIALIST.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
-                    }
-                }
+            if (!this.level().isClientSide && !isDancing()) {   // NO alterna: solo inicia si no baila
+                startDance();
             }
             return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         return super.mobInteract(player, hand);
     }
 
+    /** Arranca el baile en el servidor: fija duración, orientación y frena la IA. */
+    private void startDance() {
+        setDancing(true);
+        this.danceEndTick = this.tickCount + DANCE_DURATION_TICKS;
+        this.danceYaw = this.getYRot();
+        this.getNavigation().stop();
+
+        Player nearest = this.level().getNearestPlayer(this, 16.0D);
+        if (nearest != null) {
+            nearest.playNotifySound(ModSounds.SPECIALIST.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+        }
+    }
+
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "main", 5, state -> {
-            if (this.isDancing())
-                return state.setAndContinue(DANCE);
-            if (state.isMoving())
-                return state.setAndContinue(ZenkaiCommonAnimations.WALK);
-            return state.setAndContinue(ZenkaiCommonAnimations.IDLE);
-        }));
+        // 5 ticks de transición para entrar/salir del baile con suavidad.
+        AnimationController<IsaacEntity> controller =
+                new AnimationController<>(this, "main", 5, state -> {
+                    if (isDancing()) {
+                        return state.setAndContinue(DANCE);
+                    }
+                    if (state.isMoving()) {
+                        return state.setAndContinue(ZenkaiCommonAnimations.WALK);
+                    }
+                    return state.setAndContinue(ZenkaiCommonAnimations.IDLE);
+                });
+        controllers.add(controller);
     }
 
     @Override
