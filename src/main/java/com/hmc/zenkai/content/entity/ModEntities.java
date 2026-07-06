@@ -9,6 +9,7 @@ import com.hmc.zenkai.content.entity.namek.NamekianWarriorEntity;
 import com.hmc.zenkai.content.entity.misc.KintounEntity;
 import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
+import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
@@ -41,6 +42,10 @@ public class ModEntities {
     public static final Supplier<EntityType<NamekianWarriorEntity>> NAMEKIAN_WARRIOR =
             ENTITY_TYPES.register("namekian_warrior",() -> EntityType.Builder.of(NamekianWarriorEntity::new, MobCategory.CREATURE)
                     .sized(1,2).build("namekian_warrior"));
+
+    public static final Supplier<EntityType<SaibamanEntity>> SAIBAMAN =
+            ENTITY_TYPES.register("saibaman",() -> EntityType.Builder.of(SaibamanEntity::new, MobCategory.CREATURE)
+                    .sized(1,1.5f).build("saibaman"));
 
     public static final Supplier<EntityType<NamekianEntity>> NAMEKIAN =
             ENTITY_TYPES.register("namekian",() -> EntityType.Builder.of(NamekianEntity::new, MobCategory.CREATURE)

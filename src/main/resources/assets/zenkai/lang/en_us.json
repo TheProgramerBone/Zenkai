@@ -21,9 +21,10 @@
   "item.zenkai.terragem_leggings": "Terragem Leggings",
   "item.zenkai.terragem_boots": "Terragem Boots",
   "item.zenkai.terragem_hammer": "Terragem Hammer",
+  "item.zenkai.halo": "Halo",
   "item.zenkai.namekian_warrior_spawn_egg": "Namekian Warrior Spawn Egg",
   "item.zenkai.namekian_spawn_egg": "Namekian Spawn Egg",
-  "item.zenkai.halo": "Halo",
+  "item.zenkai.saibaman_spawn_egg": "Saibaman Spawn Egg",
   "item.zenkai.isaac_spawn_egg": "Isaac Spawn Egg",
   "item.zenkai.yemma_spawn_egg": "Yemma Spawn Egg",
 
@@ -225,6 +226,7 @@
   "entity.zenkai.namekian_warrior": "Namekian Warrior",
   "entity.zenkai.yemma": "Yemma",
   "entity.zenkai.wish_librarian": "Special Librarian",
+  "entity.zenkai.saibaman": "Saibaman",
 
   "gamerule.zenkai_allowRaceSelection": "Enable Race Creation",
   "gamerule.zenkai_enableKiDamage": "Enable Ki Damage",

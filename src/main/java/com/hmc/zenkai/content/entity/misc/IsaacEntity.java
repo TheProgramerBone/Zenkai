@@ -162,7 +162,6 @@ public class IsaacEntity extends ZenkaiDefaultMob {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        // 5 ticks de transición para entrar/salir del baile con suavidad.
         AnimationController<IsaacEntity> controller =
                 new AnimationController<>(this, "main", 5, state -> {
                     if (isDancing()) {

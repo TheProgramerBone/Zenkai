@@ -2,7 +2,10 @@ package com.hmc.zenkai.content.entity;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import software.bernie.geckolib.animatable.GeoAnimatable;
+import software.bernie.geckolib.constant.DataTickets;
 import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.animation.RawAnimation;
@@ -14,13 +17,13 @@ import java.util.function.Function;
 
 public class ZenkaiCommonAnimations {
 
-/**
- * Optionally usable class that holds constants for recommended animation paths
- * <p>
- * Using these won't affect much, but it may help keep some consistency in animation namings
- * <p>
- * Additionally, it encourages use of cached {@link RawAnimation RawAnimations}, to reduce overheads.
- */
+    /**
+     * Optionally usable class that holds constants for recommended animation paths
+     * <p>
+     * Using these won't affect much, but it may help keep some consistency in animation namings
+     * <p>
+     * Additionally, it encourages use of cached {@link RawAnimation RawAnimations}, to reduce overheads.
+     */
 
     public static final RawAnimation ITEM_ON_USE = RawAnimation.begin().thenPlay("item.use");
 
@@ -34,8 +37,12 @@ public class ZenkaiCommonAnimations {
     public static final RawAnimation SIT = RawAnimation.begin().thenPlayAndHold("misc.sit");
 
     public static final RawAnimation KI_CHARGE = RawAnimation.begin().thenPlayAndHold("zenkai.ki_charge");
-    public static final RawAnimation KI_BLAST = RawAnimation.begin().thenPlayAndHold("zenkai.ki_blast");
-    public static final RawAnimation TRANSFORMATION = RawAnimation.begin().thenPlayAndHold("zenkai.transformation");
+    public static final RawAnimation KI_ATTACK_1_CHARGE = RawAnimation.begin().thenPlayAndHold("zenkai.ki_attack_1_charge");
+    public static final RawAnimation KI_ATTACK_1_RELEASE = RawAnimation.begin().thenPlayAndHold("zenkai.ki_attack_1_release");
+    public static final RawAnimation KI_ATTACK_2_CHARGE = RawAnimation.begin().thenPlayAndHold("zenkai.ki_attack_2_charge");
+    public static final RawAnimation KI_ATTACK_2_RELEASE = RawAnimation.begin().thenPlayAndHold("zenkai.ki_attack_2_release");
+    public static final RawAnimation TRANSFORMATION1 = RawAnimation.begin().thenPlayAndHold("zenkai.transformation1");
+    public static final RawAnimation TRANSFORMATION2 = RawAnimation.begin().thenLoop("zenkai.transformation2");
     public static final RawAnimation DODGE1 = RawAnimation.begin().thenPlay("zenkai.dodge1");
     public static final RawAnimation DODGE2 = RawAnimation.begin().thenPlay("zenkai.dodge2");
 
@@ -168,7 +175,9 @@ public class ZenkaiCommonAnimations {
         return new AnimationController<>(animatable, "Attack", 5, state -> {
             if (animatable.swinging)
                 return state.setAndContinue(attackAnimation);
-            //state.getController().forceAnimationReset();
+
+            state.getController().forceAnimationReset();
+
             return PlayState.STOP;
         });
     }
@@ -221,6 +230,26 @@ public class ZenkaiCommonAnimations {
      */
     public static <T extends GeoAnimatable> AnimationController<T> genericFlyIdleController(T animatable) {
         return new AnimationController<T>(animatable, "Fly/Idle", 0, state -> state.setAndContinue(state.isMoving() ? FLY : IDLE));
+    }
+
+    /**
+     * Controlador de vuelo para la skin de raza del JUGADOR: reproduce {@link #FLY move.fly} cuando el
+     * jugador está volando, si no {@link #IDLE misc.idle}. Transición suave (5 ticks).
+     * Detección de vuelo:
+     *  - jugador local: {@code getAbilities().flying} (fiable).
+     *  - otros jugadores: vuelo habilitado + en el aire ({@code isFlyEnabled} llega sincronizado).
+     */
+    public static <T extends GeoAnimatable> AnimationController<T> playerFlyIdleController(T animatable) {
+        return new AnimationController<T>(animatable, "Fly/Idle", 5, state -> {
+            Entity e = state.getData(DataTickets.ENTITY);
+            return state.setAndContinue(e instanceof Player p && isPlayerFlying(p) ? FLY : IDLE);
+        });
+    }
+
+    private static boolean isPlayerFlying(Player p) {
+        if (p.getAbilities().flying) return true; // fiable para el jugador local
+        var att = p.getData(DataAttachments.PLAYER_STATS.get()); // sincronizado (otros jugadores)
+        return att.isFlyEnabled() && !p.onGround() && !p.isInWater() && !p.isPassenger();
     }
 
     /**
