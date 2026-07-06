@@ -6,6 +6,7 @@ import com.hmc.zenkai.worldgen.npc.StructureNpcManager;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -67,19 +68,19 @@ public final class ZenkaiStructurePlacement {
                 ModStructureSegments.KAMI_NO_SPAWN_SX,
                 ModStructureSegments.KAMI_NO_SPAWN_SY,
                 ModStructureSegments.KAMI_NO_SPAWN_SZ,
-                "Kami");
+                String.valueOf(Component.translatable("protector.zenkai.kami")));
         NoHostileSpawnZones.addFromBase(ModDimensions.OTHERWORLD_LEVEL,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_MIN,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SX,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SY,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SZ,
-                "Yemma");
+                String.valueOf(Component.translatable("protector.zenkai.yemma")));
         NoHostileSpawnZones.addFromBase(ModDimensions.HTC_LEVEL,
                 ModStructureSegments.HTC_NO_SPAWN_MIN,
                 ModStructureSegments.HTC_NO_SPAWN_SX,
                 ModStructureSegments.HTC_NO_SPAWN_SY,
                 ModStructureSegments.HTC_NO_SPAWN_SZ,
-                "HTC");
+                String.valueOf(Component.translatable("protector.zenkai.htc")));
     }
 
     /**

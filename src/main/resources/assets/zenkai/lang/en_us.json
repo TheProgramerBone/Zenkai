@@ -71,6 +71,7 @@
   "block.zenkai.namek_dragon_ball_6": "§6Namek Dragon Ball 6 Star",
   "block.zenkai.namek_dragon_ball_7": "§6Namek Dragon Ball 7 Star",
   "block.zenkai.otherworld_cloud": "Otherworld Cloud",
+  "block.zenkai.htc_block": "Hyperbolic Time Chamber Block",
   "block.zenkai.htc_portal": "Hyperbolic Time Chamber Portal",
 
   "effect.zenkai.immortality": "Immortality",
@@ -128,6 +129,10 @@
   "messages.zenkai.yemma_wait": "It's not your time yet. You must stay here %s longer.",
   "messages.zenkai.yemma_revive": "Your time is up. Return to the world of the living.",
   "messages.zenkai.yemma_not_dead": "You have no business being here yet.",
+
+  "protector.zenkai.kami": "Kami",
+  "protector.zenkai.yemma": "Yemma",
+  "protector.zenkai.htc": "Hyperbolic Time Chamber",
 
 
   "screen.zenkai.shenlong_wish": "§2§lShenlong:§6§l State your wish",
