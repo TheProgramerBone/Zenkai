@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client;
 
+import com.hmc.zenkai.client.ZenkaiPalAnimations.FlyDir;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
@@ -20,8 +21,8 @@ public final class ClientZenkaiPalTick {
         boolean lastHeld = false;
         int chainTicks = 0;
         boolean flyPlaying = false;
-        ZenkaiPalAnimations.FlyDir flyDir = null;
-        int flyBoostState = 0; // 0 = crucero, 1 = intermedia, 2 = boost (loop)
+        FlyDir flyDir = null;
+        int flyBoostState = 0; // ver constantes CRUISE_START/CRUISE_LOOP/BOOST_START/BOOST_LOOP
         int flyBoostTicks = 0; // cuenta atrás de la intermedia antes de pasar al loop
     }
 
@@ -34,13 +35,10 @@ public final class ClientZenkaiPalTick {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
 
-        // Recorremos TODOS los jugadores visibles para reproducir la animación de cada uno
-        // según SU estado de transformación (que ya llega sincronizado por SyncPlayerFormPacket).
         for (AbstractClientPlayer p : mc.level.players()) {
             tickPlayer(mc, p);
         }
 
-        // Limpieza: descartar estados de jugadores que ya no están en el nivel.
         STATES.keySet().removeIf(uuid -> mc.level.getPlayerByUUID(uuid) == null);
     }
 
@@ -48,8 +46,7 @@ public final class ClientZenkaiPalTick {
         var form  = p.getData(DataAttachments.PLAYER_FORM.get());
         var stats = p.getData(DataAttachments.PLAYER_STATS.get());
 
-        // Derribado: el jugador local recalcula su propia pose cada tick, así que si no la forzamos
-        // aquí no se vería acostado a sí mismo (F5). A los demás ya les llega por DATA_POSE del server.
+        // Derribado: forzamos la pose acostada del jugador local (los demás la reciben por DATA_POSE).
         if (stats.flags().isDowned()) {
             if (p == mc.player) {
                 p.setPose(Pose.SWIMMING);
@@ -60,15 +57,12 @@ public final class ClientZenkaiPalTick {
                 mc.player.input.shiftKeyDown = false;
                 mc.player.setSprinting(false);
             }
-            return; // nada de animación de transformación mientras está derribado
+            return;
         }
 
         AnimState st = STATES.computeIfAbsent(p.getUUID(), k -> new AnimState());
 
         // ── Animación de vuelo direccional + aceleración (jugador local) ──
-        // Mientras vuela: animación según dirección. Al pulsar Control: intermedia (una vez) -> boost (loop).
-        // Al soltar Control: vuelve a crucero. Al cambiar de dirección: crucero/boost de la nueva dirección.
-        // Solo local por ahora (input sin sincronizar).
         if (p == mc.player) {
             boolean flying = !p.isCreative() && !p.isSpectator()
                     && stats.isFlyEnabled()
@@ -96,7 +90,6 @@ public final class ClientZenkaiPalTick {
             return;
         }
 
-        // El bloqueo de input SOLO aplica al jugador local (los demás no tienen input local aquí).
         if (heldNow && p == mc.player) {
             mc.player.input.forwardImpulse = 0;
             mc.player.input.leftImpulse = 0;
@@ -125,54 +118,66 @@ public final class ClientZenkaiPalTick {
         }
     }
 
-    /** Duración (ticks) de la animación intermedia antes de pasar al loop de boost. */
-    // Estados de la animación de vuelo.
+    // ── Estados de la animación de vuelo ─────────────────────────────────────
     private static final int CRUISE_START = 0, CRUISE_LOOP = 1, BOOST_START = 2, BOOST_LOOP = 3;
-    // Duración (ticks) de cada INTERMEDIA antes de su loop. Ajústalas a la longitud real de tus animaciones.
+    // Duración (ticks) de cada START antes de su loop. Ajústalas a la longitud real de tus animaciones.
     private static final int FLY_CRUISE_START_TICKS = 6; // ~0.3 s
     private static final int FLY_BOOST_START_TICKS  = 6; // ~0.3 s
 
-    /** Máquina de estados de la animación de vuelo del jugador local (crucero y boost, cada uno start->loop). */
+    /**
+     * Máquina de estados de la animación de vuelo del jugador local.
+     * Resolución (dirección, boost) según tus inputs:
+     *   Shift+Control+W -> DOWN boost (down_boost)   ·  Espacio+Control+W -> UP boost (up_boost)
+     *   Shift            -> DOWN (cualquier dir)      ·  W+Control -> FORWARD boost
+     *   W -> FORWARD (cubre A/D)  ·  S -> BACK  ·  A -> LEFT  ·  D -> RIGHT  ·  Espacio -> UP  ·  nada -> IDLE
+     * Todas las direcciones pasan por su START -> LOOP (idle no tiene start). En cambio de dirección
+     * TAMBIÉN se respeta el start (era lo que se saltaba). El timer garantiza el paso start->loop.
+     */
     private static void handleFlyAnim(Minecraft mc, AbstractClientPlayer p, AnimState st) {
-        assert mc.player != null;
-        ZenkaiPalAnimations.FlyDir dir = computeFlyDir(mc.player);
-        boolean boosting = mc.options.keySprint.isDown();
+        var in = mc.player.input;
+        boolean f = in.forwardImpulse >  0.1f, b = in.forwardImpulse < -0.1f;
+        boolean l = in.leftImpulse    >  0.1f, r = in.leftImpulse    < -0.1f;
+        boolean up = in.jumping, down = in.shiftKeyDown;
+        boolean ctrl = mc.options.keySprint.isDown();
 
-        // Arranque de vuelo -> intermedia de crucero
-        if (!st.flyPlaying) {
-            st.flyPlaying = true;
-            st.flyDir = dir;
-            enterCruiseStart(p, st, dir);
-            return;
-        }
+        FlyDir dir;
+        boolean boosting;
+        if (down && ctrl && f)   { dir = FlyDir.DOWN;    boosting = true;  } // down_boost: shift+control+W
+        else if (up && ctrl && f){ dir = FlyDir.UP;      boosting = true;  } // up_boost: espacio+control+W
+        else if (down)           { dir = FlyDir.DOWN;    boosting = false; } // shift solo (cualquier dir)
+        else if (f && ctrl)      { dir = FlyDir.FORWARD; boosting = true;  } // forward_boost: W+control
+        else if (f)              { dir = FlyDir.FORWARD; boosting = false; } // W (cubre A/D)
+        else if (b)              { dir = FlyDir.BACK;    boosting = false; }
+        else if (l)              { dir = FlyDir.LEFT;    boosting = false; }
+        else if (r)              { dir = FlyDir.RIGHT;   boosting = false; }
+        else if (up)             { dir = FlyDir.UP;      boosting = false; } // espacio solo
+        else                     { dir = FlyDir.IDLE;    boosting = false; }
 
         boolean inBoost = (st.flyBoostState == BOOST_START || st.flyBoostState == BOOST_LOOP);
 
-        // Cambio de dirección: loop de la nueva dirección en el modo actual (sin repetir intermedias).
-        if (dir != st.flyDir) {
+        // Arranque de vuelo
+        if (!st.flyPlaying) {
+            st.flyPlaying = true;
             st.flyDir = dir;
-            if (inBoost) {
-                ZenkaiPalAnimations.playFly(p, dir.boost);
-                st.flyBoostState = BOOST_LOOP;
-            } else {
-                ZenkaiPalAnimations.playFly(p, dir.cruiseStart);
-                st.flyBoostState = CRUISE_LOOP;
-            }
+            enterDir(p, st, dir, boosting);
             return;
         }
 
-        // Misma dirección: transiciones de Control + avance de las intermedias.
+        // Cambio de dirección: entra a la nueva dirección RESPETANDO su start (idle va directo al loop).
+        if (dir != st.flyDir) {
+            st.flyDir = dir;
+            enterDir(p, st, dir, boosting);
+            return;
+        }
+
+        // Misma dirección: transiciones de Control + avance de los starts.
         if (boosting && !inBoost) {
-            // Entrar a boost -> intermedia de boost
-            ZenkaiPalAnimations.playFly(p, dir.boostStart);
-            st.flyBoostState = BOOST_START;
-            st.flyBoostTicks = FLY_BOOST_START_TICKS;
+            enterBoostStart(p, st, dir);        // entrar a boost -> boost_start -> boost
         } else if (!boosting && inBoost) {
-            // Salir de boost -> intermedia de crucero
-            enterCruiseStart(p, st, dir);
+            enterDir(p, st, dir, false);        // salir de boost -> <dir>_start -> <dir>
         } else if (st.flyBoostState == CRUISE_START) {
             if (--st.flyBoostTicks <= 0) {
-                ZenkaiPalAnimations.playFly(p, dir.cruiseStart);
+                ZenkaiPalAnimations.playFly(p, dir.cruise);
                 st.flyBoostState = CRUISE_LOOP;
             }
         } else if (st.flyBoostState == BOOST_START) {
@@ -183,28 +188,29 @@ public final class ClientZenkaiPalTick {
         }
     }
 
-    /** Dispara la intermedia de crucero y arma el timer hacia el loop de crucero. */
-    private static void enterCruiseStart(AbstractClientPlayer p, AnimState st, ZenkaiPalAnimations.FlyDir dir) {
-        ZenkaiPalAnimations.playFly(p, dir.cruise);
-        st.flyBoostState = CRUISE_START;
-        st.flyBoostTicks = FLY_CRUISE_START_TICKS;
+    /** Entra a una dirección: boost_start (si boost), o <dir>_start->loop; idle va directo (no tiene start). */
+    private static void enterDir(AbstractClientPlayer p, AnimState st, FlyDir dir, boolean boosting) {
+        if (boosting) {
+            enterBoostStart(p, st, dir);
+        } else if (dir == FlyDir.IDLE) {
+            ZenkaiPalAnimations.playFly(p, dir.cruise); // idle no tiene start
+            st.flyBoostState = CRUISE_LOOP;
+        } else {
+            enterCruiseStart(p, st, dir);
+        }
     }
 
-    /** Dirección de vuelo según el input del jugador local (adelante/atrás/lados/vertical + diagonales). */
-    private static ZenkaiPalAnimations.FlyDir computeFlyDir(net.minecraft.client.player.LocalPlayer p) {
-        var in = p.input;
-        boolean f = in.forwardImpulse >  0.1f, b = in.forwardImpulse < -0.1f;
-        boolean l = in.leftImpulse    >  0.1f, r = in.leftImpulse    < -0.1f;
-        if (f && l) return ZenkaiPalAnimations.FlyDir.FORWARD_LEFT;
-        if (f && r) return ZenkaiPalAnimations.FlyDir.FORWARD_RIGHT;
-        if (b && l) return ZenkaiPalAnimations.FlyDir.BACK_LEFT;
-        if (b && r) return ZenkaiPalAnimations.FlyDir.BACK_RIGHT;
-        if (f) return ZenkaiPalAnimations.FlyDir.FORWARD;
-        if (b) return ZenkaiPalAnimations.FlyDir.BACK;
-        if (l) return ZenkaiPalAnimations.FlyDir.LEFT;
-        if (r) return ZenkaiPalAnimations.FlyDir.RIGHT;
-        if (in.jumping)      return ZenkaiPalAnimations.FlyDir.UP;
-        if (in.shiftKeyDown) return ZenkaiPalAnimations.FlyDir.DOWN;
-        return ZenkaiPalAnimations.FlyDir.IDLE;
+    /** Dispara el <dir>_boost_start y arma el timer hacia el loop de boost. */
+    private static void enterBoostStart(AbstractClientPlayer p, AnimState st, FlyDir dir) {
+        ZenkaiPalAnimations.playFly(p, dir.boostStart);
+        st.flyBoostState = BOOST_START;
+        st.flyBoostTicks = FLY_BOOST_START_TICKS;
+    }
+
+    /** Dispara el <dir>_start y arma el timer hacia el loop de crucero. */
+    private static void enterCruiseStart(AbstractClientPlayer p, AnimState st, FlyDir dir) {
+        ZenkaiPalAnimations.playFly(p, dir.cruiseStart);
+        st.flyBoostState = CRUISE_START;
+        st.flyBoostTicks = FLY_CRUISE_START_TICKS;
     }
 }
