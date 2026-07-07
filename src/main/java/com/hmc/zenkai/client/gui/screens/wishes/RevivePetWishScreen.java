@@ -29,8 +29,8 @@ public class RevivePetWishScreen extends Screen {
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
     private static final int BG_W = 256, BG_H = 256;
-    private static final int COLOR_TITLE = 0x4A3726, TXT_NORMAL = 0x4A3726,
-            TXT_HOVER = 0x8A6A1E, TXT_INACTIVE = 0xA0A0A0;
+    private static final int COLOR_TITLE = 0x4A3726, TXT_NORMAL = 0xFFFFFF,
+            TXT_HOVER = 0xFFF149, TXT_INACTIVE = 0xA0A0A0;
 
     private final Screen parent;
     /** Entidades reconstruidas en cliente solo para render. */
@@ -42,7 +42,6 @@ public class RevivePetWishScreen extends Screen {
         super(Component.translatable("screen.zenkai.wish.revive_pet"));
         this.parent = parent;
     }
-
     @Override
     protected void init() {
         this.clearWidgets();
@@ -52,14 +51,14 @@ public class RevivePetWishScreen extends Screen {
 
         int cx = panelLeft + BG_W / 2;
 
-        addRenderableWidget(new ArrowIconButton(cx - 70, panelTop + 120, ArrowIconButton.Dir.LEFT, () -> cycle(-1)));
-        addRenderableWidget(new ArrowIconButton(cx + 54, panelTop + 120, ArrowIconButton.Dir.RIGHT, () -> cycle(1)));
+        addRenderableWidget(new ArrowIconButton(cx - 80, panelTop + 120, ArrowIconButton.Dir.LEFT, () -> cycle(-1)));
+        addRenderableWidget(new ArrowIconButton(cx + 60, panelTop + 120, ArrowIconButton.Dir.RIGHT, () -> cycle(1)));
 
-        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 168, 120, 16,
+        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 190, 120, 16,
                 Component.translatable("screen.zenkai.gui.confirm"), this::confirm)
                 .textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
 
-        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 190, 120, 16,
+        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 210, 120, 16,
                 Component.translatable("screen.zenkai.gui.back"),
                 () -> { if (minecraft != null) minecraft.setScreen(parent); })
                 .textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
@@ -75,8 +74,6 @@ public class RevivePetWishScreen extends Screen {
         for (CompoundTag tag : stats.getDeadPets()) {
             Entity e = EntityType.loadEntityRecursive(tag, mc.level, ent -> ent);
             if (e instanceof LivingEntity le) {
-                // El NBT se guardó al morir (Health 0, HurtTime/DeathTime > 0), lo que
-                // provoca el overlay rojo de daño. Reseteamos para un render limpio.
                 le.setHealth(le.getMaxHealth());
                 le.hurtTime = 0;
                 le.hurtDuration = 0;
@@ -102,19 +99,18 @@ public class RevivePetWishScreen extends Screen {
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float pt) {
         super.renderBackground(g, mouseX, mouseY, pt);
         g.blit(BG, panelLeft, panelTop, 0, 0, BG_W, BG_H);
-        drawCentered(g, this.title, panelLeft + BG_W / 2, panelTop + 22, COLOR_TITLE);
+        drawCentered(g, this.title, panelLeft + BG_W / 2, panelTop + 25, 0x04a500);
 
         if (pets.isEmpty()) {
             drawCentered(g, Component.translatable("screen.zenkai.wish.no_pets"),
-                    panelLeft + BG_W / 2, panelTop + 110, TXT_INACTIVE);
+                    panelLeft + BG_W / 2, panelTop + 60, TXT_INACTIVE);
         } else {
             LivingEntity pet = pets.get(index);
             Component name = pet.hasCustomName() ? pet.getCustomName() : pet.getType().getDescription();
-            drawCentered(g, name, panelLeft + BG_W / 2, panelTop + 44, TXT_NORMAL);
+            drawCentered(g, name, panelLeft + BG_W / 2, panelTop + 44, 0xFFFFFF);
 
             int ex = panelLeft + BG_W / 2;
-            int ey = panelTop + 138;
-            // Cuadro de render (x1,y1,x2,y2), escala, offset y seguimiento del ratón.
+            int ey = panelTop + 150;
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     g, ex - 30, ey - 60, ex + 30, ey, 30, 0.0625F, (float) mouseX, (float) mouseY, pet);
         }
@@ -125,7 +121,7 @@ public class RevivePetWishScreen extends Screen {
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
 
     private void drawCentered(GuiGraphics g, Component t, int cx, int y, int color) {
-        g.drawString(this.font, t, cx - this.font.width(t) / 2, y, color, false);
+        g.drawString(this.font, t, cx - this.font.width(t) / 2, y, color, true);
     }
 
     @Override public boolean isPauseScreen() { return false; }

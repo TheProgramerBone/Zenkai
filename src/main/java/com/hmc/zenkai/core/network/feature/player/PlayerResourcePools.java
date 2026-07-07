@@ -24,6 +24,11 @@ public class PlayerResourcePools {
         body = MathUtil.clamp(body + delta, 0, bodyMax);
     }
 
+    /** Fija el body a un valor absoluto (con clamp a [0, bodyMax]). */
+    public void setBody(int value) {
+        body = MathUtil.clamp(value, 0, bodyMax);
+    }
+
     // ── Stamina ──────────────────────────────────────────────────────────────
     public int getStamina()    { return stamina; }
     public int getStaminaMax() { return staminaMax; }

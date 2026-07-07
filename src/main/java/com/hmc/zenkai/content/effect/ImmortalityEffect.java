@@ -38,9 +38,10 @@ public class ImmortalityEffect extends MobEffect {
 
         // ===== Sistema DBR: curar BODY =====
         int bodyMax = att.getBodyMax();
-        int bodyCur = att.getBody();
 
-        if (bodyCur <= 0 || bodyMax <= 0) {
+        // Solo cortamos si bodyMax es inválido. Antes también cortaba con bodyCur<=0, lo que dejaba
+        // al inmortal atascado a 0 sin recuperarse nunca. Ahora si está a 0 también regenera.
+        if (bodyMax <= 0) {
             return true;
         }
 

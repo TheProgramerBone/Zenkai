@@ -24,7 +24,7 @@ public class EnchantVillagerWishScreen extends Screen {
 
     private static final int BG_W = 256, BG_H = 256;
     private static final int ARROW_W = 12;
-    private static final int COLOR_TITLE = 0x4A3726, COLOR_VALUE = 0x2A1F14, COLOR_SUB = 0x5A4636;
+    private static final int COLOR_TITLE = 0x04a500, COLOR_VALUE = 0xFFFFFF, COLOR_SUB = 0x5A4636;
 
     private final Screen parent;
     private List<Holder.Reference<Enchantment>> enchants = List.of();
@@ -53,7 +53,7 @@ public class EnchantVillagerWishScreen extends Screen {
         if (index >= enchants.size()) index = 0;
 
         int cx = panelLeft + BG_W / 2;
-        int valueY = panelTop + 70;
+        int valueY = panelTop + 50;
         int arrowY = valueY - 1;
 
         // Flechas ← valor →
@@ -63,12 +63,12 @@ public class EnchantVillagerWishScreen extends Screen {
                 () -> { if (!enchants.isEmpty()) index = (index + 1) % enchants.size(); }));
 
         // Confirmar / Volver
-        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 150, 120, 16,
+        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 190, 120, 16,
                 Component.translatable("screen.zenkai.gui.confirm"), this::confirm)
-                .textColors(COLOR_TITLE, 0x8A6A1E, 0xA0A0A0));
-        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 172, 120, 16,
+                .textColors(0xFFFFFF, 0xFFF149, 0xA0A0A0));
+        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 210, 120, 16,
                 Component.translatable("screen.zenkai.gui.back"), this::onClose)
-                .textColors(COLOR_TITLE, 0x8A6A1E, 0xA0A0A0));
+                .textColors(0xFFFFFF, 0xFFF149, 0xA0A0A0));
     }
 
     private void confirm() {
@@ -85,15 +85,15 @@ public class EnchantVillagerWishScreen extends Screen {
         g.blit(BG, panelLeft, panelTop, 0, 0, BG_W, BG_H);
 
         int cx = panelLeft + BG_W / 2;
-        drawCentered(g, this.title, cx, panelTop + 22, COLOR_TITLE);
+        drawCentered(g, this.title, cx, panelTop + 25, COLOR_TITLE);
 
         if (enchants.isEmpty()) {
             drawCentered(g, Component.translatable("screen.zenkai.no_enchantments"), cx, panelTop + 70, COLOR_VALUE);
         } else {
             Holder.Reference<Enchantment> h = enchants.get(index);
-            drawCentered(g, h.value().description(), cx, panelTop + 70, COLOR_VALUE);
+            drawCentered(g, h.value().description(), cx, panelTop + 50, COLOR_VALUE);
             drawCentered(g, Component.translatable("screen.zenkai.enchant.max_level", h.value().getMaxLevel()),
-                    cx, panelTop + 86, COLOR_SUB);
+                    cx, panelTop + 70, COLOR_SUB);
         }
 
         super.render(g, mouseX, mouseY, partialTick);
@@ -102,7 +102,7 @@ public class EnchantVillagerWishScreen extends Screen {
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
 
     private void drawCentered(GuiGraphics g, Component text, int cx, int y, int color) {
-        g.drawString(this.font, text, cx - this.font.width(text) / 2, y, color, false);
+        g.drawString(this.font, text, cx - this.font.width(text) / 2, y, color, true);
     }
 
     @Override public void onClose() { if (minecraft != null) minecraft.setScreen(parent); }

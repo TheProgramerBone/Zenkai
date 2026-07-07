@@ -10,9 +10,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 /**
  * Pipeline de combate en UN SOLO handler (antes había dos handlers sobre el mismo evento y el
@@ -28,6 +32,17 @@ public class CombatZenkaiHooks {
 
     /** Duración del estado derribado antes de morir de verdad (5 s). */
     public static final int DOWNED_TICKS = 100;
+
+    /** Al salir del derribado (por curación propia o de un aliado) el jugador vuelve con este % del body máx. */
+    public static final double DOWNED_REVIVE_PCT = 0.20;
+
+    /** Hambre (puntos de comida) que gasta quien revive a un aliado con click derecho (mano vacía). */
+    public static final int REVIVE_HUNGER_COST = 4;
+
+    /** Body con el que se levanta un derribado: 20% del máximo (mínimo 1). */
+    public static int downedReviveBody(PlayerStatsAttachment att) {
+        return Math.max(1, (int) Math.round(att.getBodyMax() * DOWNED_REVIVE_PCT));
+    }
 
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent.Pre e) {
@@ -102,7 +117,15 @@ public class CombatZenkaiHooks {
      */
     private static void onBodyDepleted(Player victim, PlayerStatsAttachment att) {
         if (!(victim instanceof ServerPlayer sp)) return;
-        if (att.isImmortal()) return;
+
+        // Inmortal: no cae NUNCA y no debe quedarse a 0. Rellenamos el body al máximo
+        // (antes solo se hacía `return`, dejando body=0 y la barra bugueada en "HP 0/max").
+        if (att.isImmortal()) {
+            att.setBody(att.getBodyMax());
+            sp.setHealth(sp.getMaxHealth());
+            PlayerLifeCycle.sync(sp);
+            return;
+        }
 
         if (att.isInOtherworld()) {
             OtherworldManager.keepInOtherworld(sp);
@@ -114,5 +137,45 @@ public class CombatZenkaiHooks {
         att.flags().setDowned(true);
         att.flags().setDownedUntil(sp.serverLevel().getGameTime() + DOWNED_TICKS);
         PlayerLifeCycle.sync(sp);
+    }
+
+    /**
+     * Curar a un aliado DERRIBADO con click derecho y MANO VACÍA ("darle energía"):
+     *  - Solo funciona si el objetivo está derribado.
+     *  - Al curador le cuesta hambre (REVIVE_HUNGER_COST); si no le queda comida, no puede.
+     *  - El objetivo recupera el 20% del body; el tick de derribado (TickHandlers) lo levanta
+     *    al siguiente tick al detectar body>0 (libera lock y pose).
+     *
+     * Con la senzu en mano NO entra aquí (mano no vacía): esa vía la maneja SenzuBean.
+     */
+    @SubscribeEvent
+    public static void onDownedAllyInteract(PlayerInteractEvent.EntityInteract e) {
+        if (e.getLevel().isClientSide()) return;
+        if (e.getHand() != InteractionHand.MAIN_HAND) return;
+
+        Player healer = e.getEntity();
+        if (!healer.getMainHandItem().isEmpty()) return;               // mano vacía
+        if (!(e.getTarget() instanceof ServerPlayer target)) return;
+
+        PlayerStatsAttachment tAtt = PlayerStatsAttachment.get(target);
+        if (!tAtt.flags().isDowned()) return;                          // solo si está derribado
+
+        // Costo de hambre para el curador (creativo cura gratis).
+        if (!healer.isCreative()) {
+            FoodData food = healer.getFoodData();
+            if (food.getFoodLevel() <= 0) {                            // sin energía que dar
+                e.setCanceled(true);
+                e.setCancellationResult(InteractionResult.FAIL);
+                return;
+            }
+            food.setFoodLevel(Math.max(0, food.getFoodLevel() - REVIVE_HUNGER_COST));
+        }
+
+        // Levanta al aliado con el 20% del body.
+        tAtt.setBody(downedReviveBody(tAtt));
+        PlayerLifeCycle.sync(target);
+
+        e.setCanceled(true);
+        e.setCancellationResult(InteractionResult.SUCCESS);
     }
 }

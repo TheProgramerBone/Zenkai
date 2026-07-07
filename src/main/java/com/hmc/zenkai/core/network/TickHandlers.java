@@ -170,6 +170,9 @@ public class TickHandlers {
             p.setSwimming(true);
 
             if (att.getBody() > 0) {
+                // Se levanta con el 20% del body (regla única de salida del derribo, venga la
+                // curación de una senzu, de un aliado o de lo que sea).
+                att.setBody(com.hmc.zenkai.client.CombatZenkaiHooks.downedReviveBody(att));
                 clearDowned(p, att);
                 PlayerLifeCycle.syncIfServer(p);
             } else if (p.level().getGameTime() >= att.flags().getDownedUntil()) {
