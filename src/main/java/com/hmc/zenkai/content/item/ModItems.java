@@ -117,7 +117,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE =
@@ -126,7 +126,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_LEGGINGS =
@@ -135,7 +135,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_BOOTS =
@@ -144,7 +144,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_HELMET_COLORABLE =
@@ -153,7 +153,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE_COLORABLE =
@@ -162,7 +162,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_LEGGINGS_COLORABLE =
@@ -171,7 +171,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_BOOTS_COLORABLE =
@@ -180,7 +180,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET =
@@ -189,7 +189,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE =
@@ -198,7 +198,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS =
@@ -207,7 +207,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS =
@@ -216,7 +216,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET_COLORABLE =
@@ -225,7 +225,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_COLORABLE =
@@ -234,7 +234,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_COLORABLE =
@@ -243,7 +243,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_COLORABLE =
@@ -252,7 +252,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human_player_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     // ── Human/Saiyan FEMENINO (modelo + textura femeninos) ─────────────────────
@@ -262,7 +262,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human_player_female.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_FEMALE =
@@ -271,7 +271,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human_player_female.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_FEMALE =
@@ -280,7 +280,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human_player_female.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_FEMALE =
@@ -289,7 +289,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human_player_female.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET_COLORABLE_FEMALE =
@@ -298,7 +298,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human_player_female_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_COLORABLE_FEMALE =
@@ -307,7 +307,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human_player_female_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_COLORABLE_FEMALE =
@@ -316,7 +316,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human_player_female_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_COLORABLE_FEMALE =
@@ -325,7 +325,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human_player_female_colorable.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_HELMET =
@@ -334,7 +334,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/arcosian_final_form_player.geo.json",
                             "textures/models/races/arcosian_final_form_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_CHESTPLATE =
@@ -343,7 +343,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/arcosian_final_form_player.geo.json",
                             "textures/models/races/arcosian_final_form_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_LEGGINGS =
@@ -352,7 +352,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/arcosian_final_form_player.geo.json",
                             "textures/models/races/arcosian_final_form_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_BOOTS =
@@ -361,7 +361,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/arcosian_final_form_player.geo.json",
                             "textures/models/races/arcosian_final_form_player.png",
-                            "animations/zenkai_animations.animation.json"
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     //Halo

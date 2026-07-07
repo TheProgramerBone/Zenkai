@@ -185,16 +185,24 @@ public class Zenkai {
             });
 
             // Animaciones de jugador
-            event.enqueueWork(() ->
-                    PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                            ZenkaiPalLayers.TRANSFORM_LAYER,
-                            1600,
-                            player -> new PlayerAnimationController(
-                                    player,
-                                    (controller, state, animSetter) -> PlayState.STOP
-                            )
-                    )
-            );
+            event.enqueueWork(() -> {
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.TRANSFORM_LAYER,
+                        1000,
+                        player -> new PlayerAnimationController(
+                                player,
+                                (controller, state, animSetter) -> PlayState.STOP
+                        )
+                );
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.FLY_LAYER,
+                        1000,
+                        player -> new PlayerAnimationController(
+                                player,
+                                (controller, state, animSetter) -> PlayState.STOP
+                        )
+                );
+            });
         }
 
         @SubscribeEvent
