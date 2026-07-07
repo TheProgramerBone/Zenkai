@@ -14,6 +14,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -156,10 +157,12 @@ public class ModCommands {
                             if (zones.isEmpty()) { src.sendSuccess(() -> Component.literal("[Zenkai] No hay estructuras registradas."), false); return 0; }
                             for (var z : zones) {
                                 var c = z.box().getCenter();
-                                src.sendSuccess(() -> Component.literal(String.format(
-                                        "§e%s §7— %s §7@ §f%d %d %d",
-                                        z.protector(), z.dimension().location(),
-                                        (int)c.x, (int)c.y, (int)c.z)), false);
+                                src.sendSuccess(() -> Component.translatable(z.protector())
+                                        .withStyle(ChatFormatting.YELLOW)
+                                        .append(Component.literal(String.format(
+                                                " §7— %s §7@ §f%d %d %d",
+                                                z.dimension().location(),
+                                                (int) c.x, (int) c.y, (int) c.z))), false);
                             }
                             return 1;
                         }))
