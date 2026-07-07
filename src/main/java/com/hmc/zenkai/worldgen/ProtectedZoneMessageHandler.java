@@ -44,7 +44,8 @@ public final class ProtectedZoneMessageHandler {
 
         if (current != null && !current.equals(prev)) {
             player.displayClientMessage(
-                    Component.translatable("messages.zenkai.zone_protected", current)
+                    Component.translatable("messages.zenkai.zone_protected",
+                                    Component.translatable(current))
                             .withStyle(ChatFormatting.YELLOW),
                     true);
         }

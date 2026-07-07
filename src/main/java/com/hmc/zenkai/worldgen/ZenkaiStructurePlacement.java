@@ -6,7 +6,6 @@ import com.hmc.zenkai.worldgen.npc.StructureNpcManager;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -25,9 +24,8 @@ import java.util.List;
  *  - Kami: una vez en el overworld al arrancar el servidor.
  *  - Otherworld: una vez, justo antes de mandar al primer jugador allí
  *    (ensureOtherworldPalace, llamado desde OtherworldManager).
- *
  * El flag de "ya colocada" vive en ZenkaiWorldData (una vez por mundo).
- * Los NPCs de estructura (Yemma, etc.) los gestiona StructureNpcManager.
+ * Los NPC de estructura (Yemma, etc.) los gestiona StructureNpcManager.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class ZenkaiStructurePlacement {
@@ -68,19 +66,19 @@ public final class ZenkaiStructurePlacement {
                 ModStructureSegments.KAMI_NO_SPAWN_SX,
                 ModStructureSegments.KAMI_NO_SPAWN_SY,
                 ModStructureSegments.KAMI_NO_SPAWN_SZ,
-                String.valueOf(Component.translatable("protector.zenkai.kami")));
+                "protector.zenkai.kami");
         NoHostileSpawnZones.addFromBase(ModDimensions.OTHERWORLD_LEVEL,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_MIN,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SX,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SY,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SZ,
-                String.valueOf(Component.translatable("protector.zenkai.yemma")));
+                "protector.zenkai.yemma");
         NoHostileSpawnZones.addFromBase(ModDimensions.HTC_LEVEL,
                 ModStructureSegments.HTC_NO_SPAWN_MIN,
                 ModStructureSegments.HTC_NO_SPAWN_SX,
                 ModStructureSegments.HTC_NO_SPAWN_SY,
                 ModStructureSegments.HTC_NO_SPAWN_SZ,
-                String.valueOf(Component.translatable("protector.zenkai.htc")));
+                "protector.zenkai.htc");
     }
 
     /**
@@ -182,22 +180,22 @@ public final class ZenkaiStructurePlacement {
     /** Garantiza que el palacio del otro mundo exista antes de teletransportar. */
     public static void ensureOtherworldPalace(ServerLevel otherworld) {
         placeOnce(otherworld.getServer(), otherworld, KEY_OTHERWORLD,
-                ModStructureSegments.OTHERWORLD_BASE, ModStructureSegments.OTHERWORLD, true);
+                ModStructureSegments.OTHERWORLD_BASE, ModStructureSegments.OTHERWORLD);
         StructureNpcManager.ensureAllIn(otherworld);   // spawnea los NPCs de esta dimensión
     }
 
     /** Garantiza que la estructura de la Habitación del Tiempo exista antes de teletransportar allí. */
     public static void ensureHtcStructure(ServerLevel htc) {
         placeOnce(htc.getServer(), htc, KEY_HTC,
-                ModStructureSegments.HTC_BASE, ModStructureSegments.HTC, true);
+                ModStructureSegments.HTC_BASE, ModStructureSegments.HTC);
         StructureNpcManager.ensureAllIn(htc);
     }
 
     private static void placeOnce(MinecraftServer server, ServerLevel level,
-                                  String key, BlockPos base, List<Segment> segments, boolean airToLight) {
+                                  String key, BlockPos base, List<Segment> segments) {
         ZenkaiWorldData data = ZenkaiWorldData.get(server);
         if (data.isPlaced(key)) return;
-        boolean ok = StaticStructurePlacer.place(level, base, segments, airToLight);
+        boolean ok = StaticStructurePlacer.place(level, base, segments, true);
         if (ok) data.markPlaced(key);
     }
 
