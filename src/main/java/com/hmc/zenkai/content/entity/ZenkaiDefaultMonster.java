@@ -21,7 +21,7 @@ public abstract class ZenkaiDefaultMonster extends Monster implements GeoEntity 
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(ZenkaiCommonAnimations.genericWalkIdleController(this));
+        controllers.add(ZenkaiCommonAnimations.genericWalkController(this));
         controllers.add(ZenkaiCommonAnimations.genericAttackAnimation(this, ZenkaiCommonAnimations.ATTACK_STRIKE));
     }
 

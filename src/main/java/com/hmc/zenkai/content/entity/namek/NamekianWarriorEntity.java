@@ -12,10 +12,7 @@ import net.minecraft.world.entity.ai.goal.target.TargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import org.jetbrains.annotations.NotNull;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.List;
 
@@ -83,7 +80,6 @@ public class NamekianWarriorEntity extends ZenkaiDefaultMob {
                 .add(Attributes.ATTACK_DAMAGE, 6.0D)
                 .add(Attributes.FOLLOW_RANGE, 16.0D);
     }
-
 
     // ========================== Sonidos ==========================
 
