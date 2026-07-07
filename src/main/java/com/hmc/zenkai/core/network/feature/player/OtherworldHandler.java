@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
 /**
@@ -26,19 +27,34 @@ public final class OtherworldHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (player.level().isClientSide) return;
 
-        // Si YA está en el otro mundo, no debe morir de verdad ni respawnear fuera:
-        // cancelamos y lo re-anclamos al otro mundo (sin reiniciar su temporizador).
+        // Muerte OCURRIDA DENTRO del otro mundo (p. ej. /kill, PvP de entrenamiento):
+        // se mantiene el comportamiento suave -> se cancela y se re-ancla ahí mismo,
+        // sin reiniciar el temporizador de Yemma. (No hay pantalla aquí: es el campo de
+        // entrenamiento; si quieres pantalla también aquí, dilo y lo cambio.)
         if (OtherworldManager.isInOtherworld(player)) {
             event.setCanceled(true);
             OtherworldManager.keepInOtherworld(player);
             return;
         }
 
-        if (!ModGameRules.enableOtherworld(player.server)) return;   // hardcore lo fuerza
+        if (!ModGameRules.enableOtherworld(player.server)) return;   // muerte normal (pantalla + respawn vanilla)
 
-        // Cancelar la muerte y enviarlo al otro mundo en su lugar.
-        event.setCanceled(true);
-        OtherworldManager.sendToOtherworld(player);
+        // Otro mundo ACTIVO: NO cancelamos la muerte -> sale la pantalla de muerte "sí o sí".
+        // Solo marcamos el destino; el teletransporte real ocurre en el respawn (onPlayerRespawn).
+        OtherworldManager.markPendingOtherworld(player);
+    }
+
+    /**
+     * Tras pulsar "Reaparecer" en la pantalla de muerte: si el jugador quedó marcado para el
+     * otro mundo, lo redirigimos allí (en vez de a su cama/spawn). Si no, respawn vanilla normal.
+     */
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (event.isEndConquered()) return;                          // salir del End: no aplica
+        if (!OtherworldManager.isInOtherworld(player)) return;
+
+        OtherworldManager.respawnIntoOtherworld(player);
     }
 
     @SubscribeEvent

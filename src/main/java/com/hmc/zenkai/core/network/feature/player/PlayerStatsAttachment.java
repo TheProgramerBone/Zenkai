@@ -18,9 +18,8 @@ import java.util.Map;
 
 /**
  * Coordinador principal de los datos del jugador.
- * No contiene lógica propia: delega a los cuatro sub-módulos.
- *
- * Sub-módulos:
+ * No contiene lógica propia: delega a los cuatro submódulos.
+ * Submódulos:
  *   - PlayerRaceStats    → raza, estilo, atributos, TP
  *   - PlayerResourcePools → body, stamina, energy, movimiento
  *   - PlayerKiAttacks    → definiciones y cálculos de Ki Attacks
@@ -51,7 +50,7 @@ public class PlayerStatsAttachment {
         return p.getData(DataAttachments.PLAYER_STATS.get());
     }
 
-    // ── Acceso a sub-módulos completos (cuando se necesita más que un getter) ─
+    // ── Acceso a submódulos completos (cuando se necesita más que un getter) ─
     public PlayerRaceStats     raceStats()  { return raceStats; }
     public PlayerResourcePools pools()      { return pools; }
     public PlayerKiAttacks     kiAttacks()  { return kiAttacks; }
@@ -107,6 +106,7 @@ public class PlayerStatsAttachment {
     public int  getBody()            { return pools.getBody(); }
     public int  getBodyMax()         { return pools.getBodyMax(); }
     public void addBody(int delta)   { pools.addBody(delta); }
+    public void setBody(int value)   { pools.setBody(value); }
 
     // ── Stamina ──────────────────────────────────────────────────────────────
     public int  getStamina()                  { return pools.getStamina(); }

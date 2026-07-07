@@ -68,6 +68,33 @@ public final class OtherworldManager {
     }
 
     /**
+     * Marca a un jugador que acaba de MORIR DE VERDAD (no se cancela la muerte) para que
+     * reaparezca en el otro mundo. Se llama desde el death hook; el teletransporte ocurre en
+     * el respawn (respawnIntoOtherworld). Fija aquí el flag + el inicio del temporizador de Yemma.
+     * Como PLAYER_STATS usa copyOnDeath, el flag sobrevive a la muerte hasta el nuevo cuerpo.
+     */
+    public static void markPendingOtherworld(ServerPlayer player) {
+        PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
+        stats.setInOtherworld(true);
+        stats.setOtherworldSince(player.serverLevel().getGameTime());
+    }
+
+    /**
+     * Coloca en el otro mundo a un jugador que ACABA DE REAPARECER con el flag activo.
+     * NO reinicia el flag ni el temporizador de Yemma (ya se fijaron al morir): solo cura,
+     * limpia el derribado residual y teletransporta a la entrada.
+     */
+    public static void respawnIntoOtherworld(ServerPlayer player) {
+        PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
+        fullHeal(player);
+        player.setInvulnerable(false);
+        stats.flags().setDowned(false);
+        stats.flags().setDownedUntil(0L);
+        teleportToOtherworld(player);
+        PlayerLifeCycle.sync(player);
+    }
+
+    /**
      * Re-ancla a un jugador que YA está en el otro mundo y "murió" allí (p. ej. /kill):
      * lo cura y lo reposiciona, SIN reiniciar el temporizador de Yemma ni el flag.
      */
