@@ -163,6 +163,12 @@ public class PlayerRaceStats {
     public double computeKiPoolFinal() {
         return BalanceUtil.computeStat(attributes.get(Dbrattributes.SPIRIT),     race, style, Dbrattributes.SPIRIT);
     }
+
+    /** CON efectiva (lineal, sin el offset del pool). La usa el Power Level. */
+    public double computeConFinal() {
+        return BalanceUtil.computeStat(attributes.get(Dbrattributes.CONSTITUTION), race, style, Dbrattributes.CONSTITUTION);
+    }
+
     public double getMeleeBonus() {
         return attributes.get(Dbrattributes.STRENGTH);
     }

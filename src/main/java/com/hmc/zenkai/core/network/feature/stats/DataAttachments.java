@@ -1,6 +1,7 @@
 package com.hmc.zenkai.core.network.feature.stats;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.core.combat.EntityStats;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
@@ -63,5 +64,16 @@ public class DataAttachments {
                     AttachmentType.builder(PlayerFormAttachment::new)
                             .serialize(PLAYER_FORM_CODEC)
                             .copyOnDeath()
+                            .build());
+
+    // Stats de entidad (mobs/npc). Sin copyOnDeath: las entidades no respawn.
+    public static final Codec<EntityStats> ENTITY_STATS_CODEC = CompoundTag.CODEC.xmap(
+            tag -> { EntityStats s = new EntityStats(); s.load(tag); return s; },
+            EntityStats::save);
+
+    public static final Supplier<AttachmentType<EntityStats>> ENTITY_STATS =
+            REGISTER.register("entity_stats", () ->
+                    AttachmentType.builder(EntityStats::new)
+                            .serialize(ENTITY_STATS_CODEC)
                             .build());
 }

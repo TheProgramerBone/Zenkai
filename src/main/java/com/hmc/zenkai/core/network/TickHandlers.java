@@ -210,6 +210,16 @@ public class TickHandlers {
             float baseFly = 0.02f;
             float flyMult = (float) Math.min(2.0, att.getFlyMultiplier());
             ab.setFlyingSpeed(baseFly * flyMult);
+            if (!ab.flying) att.flags().setFlyBoosting(false);
+        }
+        {
+            boolean flyingNow = att.isFlyEnabled() && p.getAbilities().flying && !p.isSpectator();
+            if (!flyingNow) att.flags().setFlyBoosting(false);
+            boolean prone = att.flags().isFlyBoosting();
+            if (prone != att.flags().isBoostSizeApplied()) {
+                att.flags().setBoostSizeApplied(prone);
+                p.refreshDimensions();
+            }
         }
 
         // ================================

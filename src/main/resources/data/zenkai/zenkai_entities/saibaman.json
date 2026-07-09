@@ -1,0 +1,15 @@
+{
+  "entity": "zenkai:saibaman",
+  "power_level": 1200,
+  "archetype": "brawler",
+  "overrides": {
+    "attributes": { "spirit": "+20%" },
+    "body_mult": 1.0,
+    "ki_mult": 1.0
+  },
+  "moveset": {
+    "ki_attacks": ["zenkai:ki_blast"],
+    "melee": true
+  },
+  "rewards": { "tp": "auto" }
+}
