@@ -18,17 +18,15 @@ import java.util.concurrent.ConcurrentHashMap;
  *  - Modo actual (ciclo F4; ver SenseKiMode). Cada cambio se anuncia en la actionbar.
  *  - Caché de entidades sentidas (respuestas del servidor), consumida por SenseKiOverlayRenderer.
  *  - Tick: cada SCAN_INTERVAL ticks con modo != OFF manda un SenseKiScanPacket.
- *
  * Gate del F4: si el jugador lleva SCOUTER en la cabeza, F4 es del scouter (fase futura);
  * si no, F4 cicla el sentir el ki. isScouterEquipped() es el gancho (hoy: siempre false).
- *
  * NIVELES (futuro sistema de habilidades/MIND): nivel 1 = solo barras. senseKiLevel() es el
  * gancho (hoy: 1). Niveles superiores: +rango, vida numérica, alineamiento.
  */
 public final class SenseKiClientState {
     private SenseKiClientState() {}
 
-    private static final int SCAN_INTERVAL = 10; // ticks (0.5 s)
+    private static final int SCAN_INTERVAL = 1; //Ticks
 
     private static SenseKiMode mode = SenseKiMode.OFF;
     private static int tickCounter = 0;
@@ -40,9 +38,15 @@ public final class SenseKiClientState {
 
     public static Map<Integer, SenseKiDataPacket.Entry> sensed() { return SENSED; }
 
-    /** Gancho del scouter (fase futura): ¿casco = scouter? Hoy no existe el item. */
+    /** ¿Lleva un scouter en la cabeza? (delegado al estado del scouter). */
     public static boolean isScouterEquipped(Minecraft mc) {
-        return false; // fase scouter: chequear helmet instanceof ScouterItem
+        return ScouterClientState.isScouterEquipped(mc);
+    }
+
+    /** Apaga el sentir el ki desde fuera (el scouter lo fuerza al encenderse: excluyentes). */
+    public static void forceOff() {
+        mode = SenseKiMode.OFF;
+        SENSED.clear();
     }
 
     /** Gancho del nivel de la habilidad (futuro sistema de habilidades/MIND). */
@@ -55,7 +59,7 @@ public final class SenseKiClientState {
         if (mc.player == null) return;
 
         if (isScouterEquipped(mc)) {
-            // Fase futura: toggle del overlay del scouter (HUD de PL en pantalla).
+            ScouterClientState.toggle(mc); // F4 con scouter puesto = toggle del overlay de PL
             return;
         }
 
@@ -84,13 +88,6 @@ public final class SenseKiClientState {
 
     /** Respuesta del servidor: reemplaza la caché entera (lo que ya no viene, dejó el rango). */
     public static void onData(List<SenseKiDataPacket.Entry> entries) {
-        // DEBUG temporal — bórrame cuando confirmes que las barras se ven.
-        // Si este log aparece con size>0 pero no ves barras => problema de render.
-        // Si nunca aparece => problema de red/registro de paquetes.
-        if (entries.size() != SENSED.size()) {
-            org.slf4j.LoggerFactory.getLogger("Zenkai-SenseKi")
-                    .info("[Zenkai] SenseKi: {} entidades sentidas", entries.size());
-        }
         SENSED.clear();
         for (SenseKiDataPacket.Entry e : entries) SENSED.put(e.entityId(), e);
     }
@@ -109,7 +106,6 @@ public final class SenseKiClientState {
     }
 
     private static boolean isStrong(SenseKiDataPacket.Entry e, Minecraft mc) {
-        assert mc.player != null;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
         long myPl = att.isRaceChosen()
                 ? att.getPowerLevel()

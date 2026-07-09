@@ -181,6 +181,10 @@ public final class StatsConfig {
             BUILDER.comment("PL of vanilla mobs / raceless players = max_health * factor")
                     .defineInRange("power_level.vanilla_factor", 1.0D, 0.0D, 1000.0D);
 
+    private static final ModConfigSpec.IntValue SCOUTER_RANGE_RAW =
+            BUILDER.comment("Scouter: crosshair scan range in blocks")
+                    .defineInRange("scouter.range", 64, 8, 256);
+
 
     // -------------------------------------------------
     // BUILD
@@ -198,6 +202,7 @@ public final class StatsConfig {
     private static volatile int SENSE_KI_RANGE = 64;
     private static volatile double SENSE_KI_SIMILAR = 0.8D;
     private static volatile double VANILLA_PL_FACTOR = 1;
+    private static volatile int SCOUTER_RANGE = 64;
 
     // === NEW: cachés para race/style ===
     private static final EnumMap<Race, int[]> RACE_BASES = new EnumMap<>(Race.class);
@@ -247,6 +252,7 @@ public final class StatsConfig {
         SENSE_KI_RANGE = SENSE_KI_RANGE_RAW.get();
         SENSE_KI_SIMILAR = SENSE_KI_SIMILAR_RAW.get();
         VANILLA_PL_FACTOR = VANILLA_PL_FACTOR_RAW.get();
+        SCOUTER_RANGE = SCOUTER_RANGE_RAW.get();
     }
 
     // === Getters públicos (thread-safe) ===
@@ -266,6 +272,7 @@ public final class StatsConfig {
     public static int senseKiRange() { return SENSE_KI_RANGE; }
     public static double senseKiSimilarThreshold() { return SENSE_KI_SIMILAR; }
     public static double vanillaPowerLevelFactor() { return VANILLA_PL_FACTOR; }
+    public static int scouterRange() { return SCOUTER_RANGE; }
 
     // === NEW: getters para bases y multiplicadores ===
 
