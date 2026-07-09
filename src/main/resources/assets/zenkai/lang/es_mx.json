@@ -26,6 +26,7 @@
   "item.zenkai.halo": "Aureola",
   "item.zenkai.isaac_spawn_egg": "Huevo de Generación de Isaac",
   "item.zenkai.yemma_spawn_egg": "Huevo de Generación de Enma Daiyō",
+  "item.zenkai.scouter": "Rastreador",
 
   "block.zenkai.namekian_grass_block": "Bloque de Hierba Namekiana",
   "block.zenkai.namekian_dirt": "Tierra Namekiana",
@@ -134,6 +135,8 @@
   "messages.zenkai.sense_ki.mobs": "Sentir el Ki: Solo Mobs",
   "messages.zenkai.sense_ki.players_strong": "Sentir el Ki: Jugadores similares o más fuertes",
   "messages.zenkai.sense_ki.mobs_strong": "Sentir el Ki: Mobs similares o más fuertes",
+  "messages.zenkai.scouter.on": "Scouter: Encendido",
+  "messages.zenkai.scouter.off": "Scouter: Apagado",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Enma Daiyō",

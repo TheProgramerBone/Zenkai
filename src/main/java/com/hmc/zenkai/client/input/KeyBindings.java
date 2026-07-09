@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.input;
 
+import com.hmc.zenkai.client.ScouterClientState;
 import com.hmc.zenkai.client.SenseKiClientState;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.client.gui.screens.StatsScreen;
@@ -97,6 +98,7 @@ public final class KeyBindings {
         if (mc.player == null) return;
 
         SenseKiClientState.tick(mc);
+        ScouterClientState.tick(mc);
 
         PlayerStatsAttachment stats = mc.player.getData(DataAttachments.PLAYER_STATS.get());
         boolean hasRace = stats.isRaceChosen();

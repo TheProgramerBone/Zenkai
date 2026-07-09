@@ -60,7 +60,7 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
         this.modelPath     = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, modelPath);
         this.texturePath   = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, texturePath);
         this.animationPath = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, animationPath);
-        this.hasAnimation  = animationPath != null && !animationPath.isBlank();
+        this.hasAnimation  = !animationPath.isBlank();
     }
 
     // ── Configuración fluida (encadenable en el registro) ─────────────────────
@@ -152,7 +152,6 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
      * Tiempo de animación. Por defecto avanza con el reloj real (RenderUtils.getCurrentTick()),
      * que nunca se detiene — por eso el brazo en 1ª persona y el muñeco del jugador en el inventario
      * "flotaban" solos al abrir una interfaz (la mano/jugador vanilla quedan quietos).
-     *
      * Solución: mientras haya una pantalla abierta lo CONGELAMOS, así el jugador (brazo en 1ª persona
      * y muñeco en inventario/screens) queda quieto. Excluimos el chat para no congelar el idle de
      * otros jugadores mientras escribes en multijugador.

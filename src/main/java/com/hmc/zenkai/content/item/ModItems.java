@@ -372,6 +372,12 @@ public class ModItems {
                     "textures/models/races/halo.png",
                     ""));
 
+    public static final DeferredItem<ScouterItem> SCOUTER =
+            ITEMS.register("scouter", () -> new ScouterItem(
+                    ArmorMaterials.IRON, new Item.Properties(),
+                    "geo/scouter.geo.json",
+                    "textures/models/armor/scouter.png"));
+
     //Cabellos Común
     public static final Supplier<GeoLayerArmorItem> HAIR_1 =
             ITEMS.register("hair_1",() ->

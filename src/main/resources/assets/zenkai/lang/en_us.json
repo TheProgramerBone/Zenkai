@@ -27,6 +27,7 @@
   "item.zenkai.saibaman_spawn_egg": "Saibaman Spawn Egg",
   "item.zenkai.isaac_spawn_egg": "Isaac Spawn Egg",
   "item.zenkai.yemma_spawn_egg": "Yemma Spawn Egg",
+  "item.zenkai.scouter": "Scouter",
 
   "block.zenkai.namekian_grass_block": "Namekian Grass Block",
   "block.zenkai.namekian_dirt": "Namekian Dirt",
@@ -137,6 +138,8 @@
   "messages.zenkai.sense_ki.mobs": "Sense Ki: Mobs Only",
   "messages.zenkai.sense_ki.players_strong": "Sense Ki: Similar or Stronger Players",
   "messages.zenkai.sense_ki.mobs_strong": "Sense Ki: Similar or Stronger Mobs",
+  "messages.zenkai.scouter.on": "Scouter: On",
+  "messages.zenkai.scouter.off": "Scouter: Off",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Yemma",
