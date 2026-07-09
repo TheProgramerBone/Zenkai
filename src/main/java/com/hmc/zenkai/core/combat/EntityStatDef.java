@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * Definición de stats de una entidad, tal cual viene del JSON de datapack
  * (data/&lt;ns&gt;/zenkai_entities/*.json). Es solo el "plano"; el runtime resuelto es EntityStats.
+ *
  * Ejemplo:
  * {
  *   "entity": "zenkai:saibaman",
@@ -23,6 +24,7 @@ import java.util.List;
 public record EntityStatDef(
         ResourceLocation entity,
         long powerLevel,
+        boolean displayOnly,       // true = solo PL de display (sin stats de combate); "display_only" en JSON
         String archetype,
         EnumMap<Dbrattributes, AttrOverride> attributeOverrides,
         double bodyMultOverride,   // 1.0 = usar el del arquetipo

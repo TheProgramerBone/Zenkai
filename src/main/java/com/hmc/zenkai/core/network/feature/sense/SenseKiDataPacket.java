@@ -1,0 +1,56 @@
+package com.hmc.zenkai.core.network.feature.sense;
+
+import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.SenseKiClientState;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * S2C: respuesta del escaneo de sentir el ki. Lista de entidades en rango con su vida (body real
+ * si tienen stats; vanilla si no) y su PL. El cliente la cachea y filtra por modo al renderizar.
+ */
+public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayload {
+
+    /** id de entidad + vida + PL + si es jugador (para los filtros de modo). */
+    public record Entry(int entityId, int body, int bodyMax, long powerLevel, boolean isPlayer) {}
+
+    public static final Type<SenseKiDataPacket> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "sense_ki_data"));
+
+    public static final StreamCodec<FriendlyByteBuf, SenseKiDataPacket> STREAM_CODEC =
+            StreamCodec.of(SenseKiDataPacket::encode, SenseKiDataPacket::decode);
+
+    private static void encode(FriendlyByteBuf buf, SenseKiDataPacket pkt) {
+        buf.writeVarInt(pkt.entries().size());
+        for (Entry e : pkt.entries()) {
+            buf.writeVarInt(e.entityId());
+            buf.writeInt(e.body());
+            buf.writeInt(e.bodyMax());
+            buf.writeLong(e.powerLevel());
+            buf.writeBoolean(e.isPlayer());
+        }
+    }
+
+    private static SenseKiDataPacket decode(FriendlyByteBuf buf) {
+        int n = buf.readVarInt();
+        List<Entry> list = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            list.add(new Entry(buf.readVarInt(), buf.readInt(), buf.readInt(),
+                    buf.readLong(), buf.readBoolean()));
+        }
+        return new SenseKiDataPacket(list);
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+
+    public static void handle(SenseKiDataPacket pkt, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> SenseKiClientState.onData(pkt.entries()));
+    }
+}

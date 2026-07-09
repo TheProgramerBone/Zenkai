@@ -82,6 +82,7 @@
   "key.zenkai.open_stats": "Abrir Estadísticas",
   "key.zenkai.toggle_fly": "Alternar Vuelo",
   "key.categories.zenkai": "Zenkai",
+  "key.zenkai.sense_ki": "Sentir el Ki / Scouter",
 
   "sounds.zenkai.dragon_ball_radar_use": "Radar Usado",
   "sounds.zenkai.dragon_ball_radar_searching": "Una Esfera del Dragón está en el radio",
@@ -127,6 +128,12 @@
   "messages.zenkai.yemma_wait": "Aún no es tu momento. Debes quedarte aquí %s más.",
   "messages.zenkai.yemma_revive": "Tu tiempo se ha acabado. Regresa al mundo de los vivos.",
   "messages.zenkai.yemma_not_dead": "No tienes nada que hacer aquí todavía.",
+  "messages.zenkai.sense_ki.off": "Sentir el Ki: Apagado",
+  "messages.zenkai.sense_ki.all": "Sentir el Ki: Todos",
+  "messages.zenkai.sense_ki.players": "Sentir el Ki: Solo Jugadores",
+  "messages.zenkai.sense_ki.mobs": "Sentir el Ki: Solo Mobs",
+  "messages.zenkai.sense_ki.players_strong": "Sentir el Ki: Jugadores similares o más fuertes",
+  "messages.zenkai.sense_ki.mobs_strong": "Sentir el Ki: Mobs similares o más fuertes",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Enma Daiyō",

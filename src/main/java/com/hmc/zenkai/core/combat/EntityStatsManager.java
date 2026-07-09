@@ -80,7 +80,7 @@ public final class EntityStatsManager {
         }
 
         @Override
-        protected void apply(@NotNull Map<ResourceLocation, EntityStatDef> object, @NotNull ResourceManager rm, @NotNull ProfilerFiller profiler) {
+        protected void apply(Map<ResourceLocation, EntityStatDef> object, ResourceManager rm, ProfilerFiller profiler) {
             DEFS = Map.copyOf(object);
             LOGGER.info("[Zenkai] Stats de entidad cargados: {} definición(es).", DEFS.size());
         }
@@ -90,6 +90,7 @@ public final class EntityStatsManager {
     private static EntityStatDef parse(JsonObject o) {
         ResourceLocation entity = ResourceLocation.parse(o.get("entity").getAsString());
         long powerLevel = o.get("power_level").getAsLong();
+        boolean displayOnly = o.has("display_only") && o.get("display_only").getAsBoolean();
         String archetype = o.has("archetype") ? o.get("archetype").getAsString() : "balanced";
 
         EnumMap<Dbrattributes, EntityStatDef.AttrOverride> attrOv = new EnumMap<>(Dbrattributes.class);
@@ -136,7 +137,7 @@ public final class EntityStatsManager {
             if (rw.has("tp")) rewardTp = rw.get("tp").getAsString();
         }
 
-        return new EntityStatDef(entity, powerLevel, archetype, attrOv, bodyMult, kiMult,
+        return new EntityStatDef(entity, powerLevel, displayOnly, archetype, attrOv, bodyMult, kiMult,
                 kiAttacks, melee, rewardTp);
     }
 

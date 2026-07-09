@@ -6,6 +6,7 @@ import com.hmc.zenkai.core.network.feature.ki.MouseZenkaiHooks;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -198,6 +199,11 @@ public final class ClientZenkaiHooks {
                     0xFFFFAA00
             );
         }
+
+        // PL del propio jugador (debajo del panel; muévelo/re-estilízalo a gusto).
+        g.drawString(mc.font, Component.literal(
+                        "PL " + ZenkaiNumbers.format(stats.getPowerLevel())),
+                PANEL_X, PANEL_Y + panelH + 4, 0xFFFFE066);
     }
 
     // =========================================================
@@ -242,7 +248,7 @@ public final class ClientZenkaiHooks {
         g.fill(x + w - 1, y, x + w, y + h, C_BAR_EDGE);
 
         // texto cur/max
-        String txt = cur + "/" + max;
+        String txt = ZenkaiNumbers.format(cur) + "/" + ZenkaiNumbers.format(max);
         g.drawString(mc.font, Component.literal(txt), x + w + TEXT_PAD, y - 1, 0xFFFFFFFF);
     }
 

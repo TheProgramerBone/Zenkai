@@ -171,6 +171,16 @@ public final class StatsConfig {
             BUILDER.comment("If (vanillaFinalDamage - modDefense) <= 0, deal at least this % of vanilla final damage. 0.01 = 1%")
                     .defineInRange("combat.min_damage_percent", 0.05D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.IntValue SENSE_KI_RANGE_RAW =
+            BUILDER.comment("Sense Ki: range in blocks")
+                    .defineInRange("sense_ki.range", 64, 8, 256);
+    private static final ModConfigSpec.DoubleValue SENSE_KI_SIMILAR_RAW =
+            BUILDER.comment("Sense Ki: 'similar or stronger' = fraction of your PL")
+                    .defineInRange("sense_ki.similar_threshold", 0.8D, 0.0D, 10.0D);
+    private static final ModConfigSpec.DoubleValue VANILLA_PL_FACTOR_RAW =
+            BUILDER.comment("PL of vanilla mobs / raceless players = max_health * factor")
+                    .defineInRange("power_level.vanilla_factor", 1.0D, 0.0D, 1000.0D);
+
 
     // -------------------------------------------------
     // BUILD
@@ -185,6 +195,9 @@ public final class StatsConfig {
     private static volatile int REGEN_BODY = 1, REGEN_STAMINA = 1, REGEN_ENERGY = 1;
     private static volatile double MOVE_SCALING = 1.0D, FLY_SCALING = 1.0D;
     private static volatile double MIN_DAMAGE_PERCENT = 0.01D;
+    private static volatile int SENSE_KI_RANGE = 64;
+    private static volatile double SENSE_KI_SIMILAR = 0.8D;
+    private static volatile double VANILLA_PL_FACTOR = 1;
 
     // === NEW: cachés para race/style ===
     private static final EnumMap<Race, int[]> RACE_BASES = new EnumMap<>(Race.class);
@@ -229,6 +242,11 @@ public final class StatsConfig {
         STYLE_MULTS.put(Style.WARRIOR,        toDoubleArray(WARRIOR_MULT_RAW.get(),        WARRIOR_MULT_DEFAULT));
         STYLE_MULTS.put(Style.MARTIAL_ARTIST, toDoubleArray(MARTIAL_MULT_RAW.get(),        MARTIAL_MULT_DEFAULT));
         STYLE_MULTS.put(Style.SPIRITUALIST,   toDoubleArray(SPIRITUALIST_MULT_RAW.get(),   SPIRITUALIST_MULT_DEFAULT));
+
+        // caché (en onConfigLoad)
+        SENSE_KI_RANGE = SENSE_KI_RANGE_RAW.get();
+        SENSE_KI_SIMILAR = SENSE_KI_SIMILAR_RAW.get();
+        VANILLA_PL_FACTOR = VANILLA_PL_FACTOR_RAW.get();
     }
 
     // === Getters públicos (thread-safe) ===
@@ -244,6 +262,10 @@ public final class StatsConfig {
 
     public static double movementScaling()    { return MOVE_SCALING; }
     public static double flyScaling()         { return FLY_SCALING; }
+
+    public static int senseKiRange() { return SENSE_KI_RANGE; }
+    public static double senseKiSimilarThreshold() { return SENSE_KI_SIMILAR; }
+    public static double vanillaPowerLevelFactor() { return VANILLA_PL_FACTOR; }
 
     // === NEW: getters para bases y multiplicadores ===
 

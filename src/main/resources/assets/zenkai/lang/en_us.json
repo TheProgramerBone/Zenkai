@@ -85,6 +85,7 @@
   "key.zenkai.open_stats": "Open Stats",
   "key.zenkai.toggle_fly": "Toggle Flight",
   "key.categories.zenkai": "Zenkai",
+  "key.zenkai.sense_ki": "Sense Ki / Scouter",
 
   "sounds.zenkai.dragon_ball_radar_use": "Used Radar",
   "sounds.zenkai.dragon_ball_radar_searching": "A Dragon Ball is in radius",
@@ -130,6 +131,12 @@
   "messages.zenkai.yemma_wait": "It's not your time yet. You must stay here %s longer.",
   "messages.zenkai.yemma_revive": "Your time is up. Return to the world of the living.",
   "messages.zenkai.yemma_not_dead": "You have no business being here yet.",
+  "messages.zenkai.sense_ki.off": "Sense Ki: Off",
+  "messages.zenkai.sense_ki.all": "Sense Ki: All",
+  "messages.zenkai.sense_ki.players": "Sense Ki: Players Only",
+  "messages.zenkai.sense_ki.mobs": "Sense Ki: Mobs Only",
+  "messages.zenkai.sense_ki.players_strong": "Sense Ki: Similar or Stronger Players",
+  "messages.zenkai.sense_ki.mobs_strong": "Sense Ki: Similar or Stronger Mobs",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Yemma",
