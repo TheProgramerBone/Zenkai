@@ -1,0 +1,100 @@
+package com.hmc.zenkai.core.network.feature.sense;
+
+import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.core.combat.EntityStatDef;
+import com.hmc.zenkai.core.combat.EntityStats;
+import com.hmc.zenkai.core.combat.EntityStatsManager;
+import com.hmc.zenkai.core.combat.ZenkaiStats;
+import com.hmc.zenkai.core.config.StatsConfig;
+import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * C2S: "escanea mi entorno" (sentir el ki). El cliente lo manda cada 10 ticks mientras el modo
+ * no sea OFF. El servidor responde con un SenseKiDataPacket con lo que hay en rango (el
+ * filtrado por modo es del cliente, que conoce su propio PL).
+ *
+ * PL de cada entidad:
+ *  - Jugador con raza / entidad con stats -> su PL real (y su body real).
+ *  - Entidad con JSON display_only -> PL fijo del JSON; vida = la vanilla.
+ *  - Mob vanilla / jugador sin raza -> PL = vida_max × factor (config); vida = la vanilla.
+ */
+public record SenseKiScanPacket() implements CustomPacketPayload {
+    public static final Type<SenseKiScanPacket> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "sense_ki_scan"));
+
+    public static final StreamCodec<FriendlyByteBuf, SenseKiScanPacket> STREAM_CODEC =
+            StreamCodec.of((buf, pkt) -> {}, buf -> new SenseKiScanPacket());
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+
+    public static void handle(SenseKiScanPacket pkt, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (!(ctx.player() instanceof ServerPlayer sp)) return;
+
+            double r = StatsConfig.senseKiRange();
+            AABB box = AABB.ofSize(sp.position(), r * 2, r * 2, r * 2);
+
+            List<SenseKiDataPacket.Entry> out = new ArrayList<>();
+            for (LivingEntity le : sp.serverLevel().getEntitiesOfClass(LivingEntity.class, box,
+                    e -> e != sp && e.isAlive() && !e.isSpectator())) {
+                out.add(buildEntry(le));
+                if (out.size() >= 128) break; // techo de seguridad del paquete
+            }
+            PacketDistributor.sendToPlayer(sp, new SenseKiDataPacket(out));
+        });
+    }
+
+    private static SenseKiDataPacket.Entry buildEntry(LivingEntity le) {
+        boolean isPlayer = le instanceof Player;
+
+        // Jugador con raza: stats reales.
+        if (le instanceof Player p) {
+            PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
+            if (att.isRaceChosen()) {
+                return new SenseKiDataPacket.Entry(le.getId(), att.getBody(), att.getBodyMax(),
+                        att.getPowerLevel(), true);
+            }
+            return vanillaEntry(le, true);
+        }
+
+        // Entidad con stats de combate resueltos.
+        EntityStats stats = ZenkaiStats.entityStats(le);
+        if (stats != null) {
+            return new SenseKiDataPacket.Entry(le.getId(), stats.getBody(), stats.getBodyMax(),
+                    stats.getPowerLevel(), false);
+        }
+
+        // JSON display_only: PL fijo, vida vanilla.
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(le.getType());
+        EntityStatDef def = EntityStatsManager.get(id);
+        if (def != null && def.displayOnly()) {
+            return new SenseKiDataPacket.Entry(le.getId(),
+                    Math.round(le.getHealth()), Math.round(le.getMaxHealth()),
+                    def.powerLevel(), false);
+        }
+
+        return vanillaEntry(le, false);
+    }
+
+    /** Mob vanilla / jugador sin raza: PL = vida_max × factor; vida = vanilla. */
+    private static SenseKiDataPacket.Entry vanillaEntry(LivingEntity le, boolean isPlayer) {
+        long pl = Math.round(le.getMaxHealth() * StatsConfig.vanillaPowerLevelFactor());
+        return new SenseKiDataPacket.Entry(le.getId(),
+                Math.round(le.getHealth()), Math.round(le.getMaxHealth()), pl, isPlayer);
+    }
+}

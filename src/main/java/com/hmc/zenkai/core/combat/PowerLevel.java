@@ -17,13 +17,16 @@ import java.util.EnumMap;
 public final class PowerLevel {
     private PowerLevel() {}
 
-    // Pesos por atributo. Todos 0.1 por defecto -> un humano base (attrs 10) ≈ PL 5.
-    // Súbelos/diferéncialos en el rebalanceo (p. ej. ofensiva pesa más).
-    public static final double W_STR = 0.1; // melee
-    public static final double W_CON = 0.1; // body
-    public static final double W_DEX = 0.1; // defensa
-    public static final double W_WIL = 0.1; // ki power
-    public static final double W_SPI = 0.1; // ki pool
+    // Pesos por atributo. En 1.0 => "1 punto de stat = 1 de PL": el PL es la SUMA de los stats,
+    // y como los shape de arquetipo suman 100, el reparto queda literalmente stat = PL × (shape/100).
+    // Así ningún stat supera el PL y el daño es proporcional al número de poder.
+    // (Si algún día quieres que la ofensiva "pese más" en el PL, sube estos y el PL se despega de la
+    //  suma — pero entonces un stat podría superar el PL. Por eso el default es 1.0.)
+    public static final double W_STR = 1.0; // melee
+    public static final double W_CON = 1.0; // body
+    public static final double W_DEX = 1.0; // defensa
+    public static final double W_WIL = 1.0; // ki power
+    public static final double W_SPI = 1.0; // ki pool
 
     /** PL a partir de cualquier portador de stats (jugador o entidad). */
     public static long compute(ZenkaiCombatStats s) {
@@ -56,7 +59,7 @@ public final class PowerLevel {
         out.put(Dbrattributes.DEXTERITY,    round(k * arch.shape(Dbrattributes.DEXTERITY)));
         out.put(Dbrattributes.WILLPOWER,    round(k * arch.shape(Dbrattributes.WILLPOWER)));
         out.put(Dbrattributes.SPIRIT,       round(k * arch.shape(Dbrattributes.SPIRIT)));
-        out.put(Dbrattributes.MIND,         0); // MIND = habilidades, no entra en PL ni en el reparto
+        out.put(Dbrattributes.MIND,         0);
         return out;
     }
 

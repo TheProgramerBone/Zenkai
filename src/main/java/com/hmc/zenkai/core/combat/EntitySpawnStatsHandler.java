@@ -28,7 +28,7 @@ public final class EntitySpawnStatsHandler {
 
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(le.getType());
         EntityStatDef def = EntityStatsManager.get(id);
-        if (def == null) return;
+        if (def == null || def.displayOnly()) return;
 
         EntityStats stats = le.getData(DataAttachments.ENTITY_STATS.get());
         if (!stats.isInitialized()) {

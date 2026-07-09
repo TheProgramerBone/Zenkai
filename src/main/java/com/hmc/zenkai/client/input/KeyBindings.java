@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.input;
 
+import com.hmc.zenkai.client.SenseKiClientState;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.client.gui.screens.StatsScreen;
 import com.hmc.zenkai.client.gui.screens.StyleSelectionScreen;
@@ -22,6 +23,7 @@ public final class KeyBindings {
     public static KeyMapping OPEN_STATS;
     public static KeyMapping TOGGLE_FLY;
     public static KeyMapping CHARGE_KI;
+    public static KeyMapping SENSE_KI;
 
     /** Modificador configurable para transformar + C (default ALT) */
     public static KeyMapping TRANSFORM_MOD;
@@ -81,6 +83,9 @@ public final class KeyBindings {
                 "key.categories.zenkai"
         );
         event.register(DETRANSFORM_MOD);
+
+        SENSE_KI = new KeyMapping("key.zenkai.sense_ki", GLFW.GLFW_KEY_F4, "key.categories.zenkai");
+        event.register(SENSE_KI);
     }
 
     /**
@@ -90,6 +95,8 @@ public final class KeyBindings {
     public static void handleKeyInput(InputEvent.Key e) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
+
+        SenseKiClientState.tick(mc);
 
         PlayerStatsAttachment stats = mc.player.getData(DataAttachments.PLAYER_STATS.get());
         boolean hasRace = stats.isRaceChosen();
@@ -110,14 +117,16 @@ public final class KeyBindings {
         if (hasRace && TOGGLE_FLY != null && TOGGLE_FLY.consumeClick()) {
             PacketDistributor.sendToServer(new ToggleFlyPacket());
         }
+
+        if (SENSE_KI != null && SENSE_KI.consumeClick()) {
+            SenseKiClientState.onKeyPress(mc);
+        }
     }
 
     /**
      * IMPORTANTÍSIMO:
      * Llama esto UNA VEZ por tick desde tu ClientTickEvent.Post (donde ya haces PAL o client logic).
-     *
      * Ejemplo en tu handler:
-     * @SubscribeEvent
      * public static void onClientTick(ClientTickEvent.Post e) { KeyBindings.handleClientTick(); }
      */
     public static void handleClientTick() {
