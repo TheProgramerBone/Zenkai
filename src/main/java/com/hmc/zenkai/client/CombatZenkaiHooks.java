@@ -2,6 +2,8 @@ package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.content.entity.ki_attacks.KiBlastEntity;
 import com.hmc.zenkai.core.ModGameRules;
+import com.hmc.zenkai.core.combat.ZenkaiCombatStats;
+import com.hmc.zenkai.core.combat.ZenkaiStats;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
@@ -53,18 +55,20 @@ public class CombatZenkaiHooks {
 
         float dmg = e.getNewDamage();
 
-        // ── 1) LADO ATACANTE ──────────────────────────────────────────────────
-        if (e.getSource().getEntity() instanceof Player attacker
+        // ── 1) LADO ATACANTE (jugador o entidad con stats) ────────────────────
+        // Ki Blast tiene su propio cálculo -> no se recalcula aquí.
+        ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
+        if (atkStats != null && atkStats.isCombatActive()
                 && !(e.getSource().getDirectEntity() instanceof KiBlastEntity)) {
-            PlayerStatsAttachment att = PlayerStatsAttachment.get(attacker);
-            if (att.isRaceChosen()) {
-                double strDamage = att.computeMeleeFinal();
+            double strDamage = atkStats.computeMeleeFinal();
 
+            if (e.getSource().getEntity() instanceof Player attacker) {
+                // Jugador: STR (limitado por stamina) + bonus de arma, y consume stamina.
                 double weaponBonus = 0.0;
                 AttributeInstance attr = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
                 if (attr != null) weaponBonus = attr.getValue();
 
-                int currentStamina = att.getStamina();
+                int currentStamina = atkStats.getStamina();
                 double strApplied, totalDamage;
                 if (currentStamina <= 0) {
                     strApplied = 0.0;
@@ -75,36 +79,47 @@ public class CombatZenkaiHooks {
                 }
 
                 int staminaCost = (int) Math.ceil(strApplied);
-                if (staminaCost > 0) att.consumeStamina(staminaCost);
+                if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
 
                 dmg = (float) totalDamage;
                 PlayerLifeCycle.syncIfServer(attacker);
+            } else {
+                // Entidad: su STR es la fuente única del daño melee (sin gate de stamina en Fase 2).
+                dmg = (float) strDamage;
             }
         }
 
-        // ── 2) LADO DEFENSOR ──────────────────────────────────────────────────
-        if (e.getEntity() instanceof Player victim) {
-            PlayerStatsAttachment att = PlayerStatsAttachment.get(victim);
-            if (att.isRaceChosen()) {
-                if (dmg > 0f) {
-                    double defense = att.computeDefenseFinal();
-                    double finalDamage = (dmg <= defense)
-                            ? dmg * StatsConfig.minDamagePercent()
-                            : dmg - defense;
-                    finalDamage = Math.max(finalDamage, 0.0);
-                    att.addBody(-(int) Math.ceil(finalDamage));
-                }
+        // ── 2) LADO DEFENSOR (jugador o entidad con stats) ────────────────────
+        ZenkaiCombatStats defStats = ZenkaiStats.of(e.getEntity());
+        if (defStats != null && defStats.isCombatActive()) {
+            if (dmg > 0f) {
+                double defense = defStats.computeDefenseFinal();
+                double finalDamage = (dmg <= defense)
+                        ? dmg * StatsConfig.minDamagePercent()
+                        : dmg - defense;
+                finalDamage = Math.max(finalDamage, 0.0);
+                defStats.addBody(-(int) Math.ceil(finalDamage));
+            }
 
-                // El daño va al pool body; la vida vanilla no se toca nunca.
+            if (e.getEntity() instanceof Player victim) {
+                // El jugador nunca recibe daño vanilla; el daño vive en el pool body.
                 e.setNewDamage(0.0F);
-
-                if (att.getBody() <= 0) onBodyDepleted(victim, att);
+                if (defStats.getBody() <= 0) onBodyDepleted(victim, PlayerStatsAttachment.get(victim));
                 PlayerLifeCycle.syncIfServer(victim);
                 return;
             }
+
+            // Entidad con stats: el body es su vida real (esquiva el cap de MC).
+            if (defStats.getBody() <= 0) {
+                // Golpe letal: dejamos pasar daño vanilla real -> muerte con loot/XP/killer correctos.
+                e.setNewDamage(Math.max(e.getEntity().getHealth(), 1.0F));
+            } else {
+                e.setNewDamage(0.0F); // absorbido por el pool body
+            }
+            return;
         }
 
-        // Víctima sin raza (mob u otro): aplica el daño recalculado del atacante a su vida vanilla.
+        // Víctima sin stats (mob vanilla): aplica el daño recalculado del atacante a su vida vanilla.
         e.setNewDamage(dmg);
     }
 
@@ -145,7 +160,6 @@ public class CombatZenkaiHooks {
      *  - Al curador le cuesta hambre (REVIVE_HUNGER_COST); si no le queda comida, no puede.
      *  - El objetivo recupera el 20% del body; el tick de derribado (TickHandlers) lo levanta
      *    al siguiente tick al detectar body>0 (libera lock y pose).
-     *
      * Con la senzu en mano NO entra aquí (mano no vacía): esa vía la maneja SenzuBean.
      */
     @SubscribeEvent

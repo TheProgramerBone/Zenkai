@@ -98,6 +98,7 @@ public class ModNetworking {
 
         registrar.playToServer(ToggleFlyPacket.TYPE, ToggleFlyPacket.STREAM_CODEC, ToggleFlyPacket::handle);
         registrar.playToServer(KiChargePacket.TYPE,  KiChargePacket.STREAM_CODEC,  KiChargePacket::handle);
+        registrar.playToServer(FlyBoostPacket.TYPE,  FlyBoostPacket.STREAM_CODEC,  FlyBoostPacket::handle);
 
         registrar.playToServer(
                 UpdateKiAttackColorPacket.TYPE,
@@ -157,7 +158,7 @@ public class ModNetworking {
                 SyncWishTogglesPayload.TYPE,
                 SyncWishTogglesPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() ->
-                       ClientWishToggles.apply(payload))
+                        ClientWishToggles.apply(payload))
         );
 
         registrar.playToServer(

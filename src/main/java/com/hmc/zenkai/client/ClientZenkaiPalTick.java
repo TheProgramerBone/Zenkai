@@ -2,6 +2,7 @@ package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.client.ZenkaiPalAnimations.FlyDir;
 import com.hmc.zenkai.client.input.KeyBindings;
+import com.hmc.zenkai.core.network.feature.ki.FlyBoostPacket;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
@@ -9,6 +10,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.entity.Pose;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +29,31 @@ public final class ClientZenkaiPalTick {
     }
 
     private static final Map<UUID, AnimState> STATES = new HashMap<>();
+
+    /** Último valor del bit de boost enviado al servidor (edge-trigger, solo jugador local). */
+    private static boolean lastFlyBoostSent = false;
+
+    /**
+     * Aplica el estado de boost del jugador LOCAL:
+     *  - Avisa al servidor (bit autoritativo) solo cuando cambia.
+     *  - Fija el flag local para que BoostSizeHandler encoja hitbox + baje la cámara sin esperar
+     *    el round-trip.
+     *  - Llama refreshDimensions() SOLO en el cambio (fuera->dentro / dentro->fuera) para recalcular
+     *    la caja y la altura de ojos (dispara EntityEvent.Size).
+     * NO toca la pose -> no frena el vuelo ni inclina el modelo (eso lo hace la animación PAL).
+     */
+    private static void applyLocalBoost(AbstractClientPlayer p, boolean boosting) {
+        if (boosting != lastFlyBoostSent) {
+            lastFlyBoostSent = boosting;
+            PacketDistributor.sendToServer(new FlyBoostPacket(boosting));
+        }
+        var fl = p.getData(DataAttachments.PLAYER_STATS.get()).flags();
+        fl.setFlyBoosting(boosting);
+        if (boosting != fl.isBoostSizeApplied()) {
+            fl.setBoostSizeApplied(boosting);
+            p.refreshDimensions();
+        }
+    }
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
@@ -49,6 +76,7 @@ public final class ClientZenkaiPalTick {
         // Derribado: forzamos la pose acostada del jugador local (los demás la reciben por DATA_POSE).
         if (stats.flags().isDowned()) {
             if (p == mc.player) {
+                applyLocalBoost(p, false); // por si se derriba en pleno boost (limpia hitbox/cámara)
                 p.setPose(Pose.SWIMMING);
                 p.setSwimming(true);
                 mc.player.input.forwardImpulse = 0;
@@ -74,6 +102,7 @@ public final class ClientZenkaiPalTick {
                 st.flyDir = null;
                 st.flyBoostState = 0;
                 st.flyBoostTicks = 0;
+                applyLocalBoost(p, false); // deja de volar -> hitbox/cámara vuelven a normal
                 ZenkaiPalAnimations.stopFly(p);
             }
         }
@@ -134,6 +163,7 @@ public final class ClientZenkaiPalTick {
      * TAMBIÉN se respeta el start (era lo que se saltaba). El timer garantiza el paso start->loop.
      */
     private static void handleFlyAnim(Minecraft mc, AbstractClientPlayer p, AnimState st) {
+        assert mc.player != null;
         var in = mc.player.input;
         boolean f = in.forwardImpulse >  0.1f, b = in.forwardImpulse < -0.1f;
         boolean l = in.leftImpulse    >  0.1f, r = in.leftImpulse    < -0.1f;
@@ -152,6 +182,10 @@ public final class ClientZenkaiPalTick {
         else if (r)              { dir = FlyDir.RIGHT;   boosting = false; }
         else if (up)             { dir = FlyDir.UP;      boosting = false; } // espacio solo
         else                     { dir = FlyDir.IDLE;    boosting = false; }
+
+        // Hitbox + cámara "acostado" durante el boost. NO tocamos la pose (eso frenaba el vuelo):
+        // el tamaño/altura-de-ojos se ajustan por EntityEvent.Size (BoostSizeHandler) según este flag.
+        applyLocalBoost(p, boosting);
 
         boolean inBoost = (st.flyBoostState == BOOST_START || st.flyBoostState == BOOST_LOOP);
 

@@ -25,7 +25,7 @@ public final class StatsConfig {
 
     private static final ModConfigSpec.IntValue GLOBAL_ATTRIBUTE_CAP_RAW =
             BUILDER.comment("Global cap per attribute")
-                    .defineInRange("caps.global_attribute", 1000, 1, 10000);
+                    .defineInRange("caps.global_attribute", 1000, 1, 1000000);
 
     private static final ModConfigSpec.DoubleValue SPEED_MULT_CAP_RAW =
             BUILDER.comment("Max movement multiplier (cap)")

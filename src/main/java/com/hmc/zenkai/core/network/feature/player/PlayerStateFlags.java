@@ -11,6 +11,19 @@ public class PlayerStateFlags {
     private boolean flyEnabled  = false;
     private boolean chargingKi  = false;
 
+    /**
+     * El jugador está en BOOST de vuelo -> pose/hitbox horizontal ("acostado").
+     * Transitorio (runtime, server-only): NO se guarda en NBT (evita quedar horizontal al
+     * reconectar) ni hace falta en el sync (la pose se propaga sola por DATA_POSE).
+     */
+    private boolean flyBoosting = false;
+
+    /**
+     * Tracker transitorio (por lado, NO se guarda ni sincroniza): si la hitbox de boost ya está
+     * aplicada. Sirve para llamar refreshDimensions() SOLO en la transición (evita recalcular cada tick).
+     */
+    private boolean boostSizeApplied = false;
+
     /** El jugador está muerto / en el otro mundo. */
     private boolean inOtherworld = false;
     /** gameTime en que fue enviado al otro mundo (para el contador de Yemma). */
@@ -27,6 +40,8 @@ public class PlayerStateFlags {
     public boolean isLegendary() { return isLegendary; }
     public boolean isFlyEnabled()  { return flyEnabled; }
     public boolean isChargingKi()  { return chargingKi; }
+    public boolean isFlyBoosting() { return flyBoosting; }
+    public boolean isBoostSizeApplied() { return boostSizeApplied; }
     public boolean isInOtherworld() { return inOtherworld; }
     public long getOtherworldSince() { return otherworldSince; }
     public boolean isDowned()     { return downed; }
@@ -38,6 +53,8 @@ public class PlayerStateFlags {
     public void setLegendary(boolean v) { this.isLegendary = v; }
     public void setFlyEnabled(boolean v)  { this.flyEnabled  = v; }
     public void setChargingKi(boolean v)  { this.chargingKi  = v; }
+    public void setFlyBoosting(boolean v) { this.flyBoosting = v; }
+    public void setBoostSizeApplied(boolean v) { this.boostSizeApplied = v; }
     public void setInOtherworld(boolean v) { this.inOtherworld = v; }
     public void setOtherworldSince(long t) { this.otherworldSince = t; }
     public void setDowned(boolean v)     { this.downed = v; }

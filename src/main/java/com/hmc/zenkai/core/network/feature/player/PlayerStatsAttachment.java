@@ -1,5 +1,6 @@
 package com.hmc.zenkai.core.network.feature.player;
 
+import com.hmc.zenkai.core.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.Dbrattributes;
 import com.hmc.zenkai.core.network.feature.Race;
@@ -25,7 +26,7 @@ import java.util.Map;
  *   - PlayerKiAttacks    → definiciones y cálculos de Ki Attacks
  *   - PlayerStateFlags   → flags especiales (inmortal, divino, etc.)
  */
-public class PlayerStatsAttachment {
+public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
     private final PlayerRaceStats     raceStats = new PlayerRaceStats();
     private final PlayerResourcePools pools     = new PlayerResourcePools();
@@ -101,6 +102,8 @@ public class PlayerStatsAttachment {
     public double computeFlyFinal()     { return raceStats.computeFlyFinal(); }
     public double computeKiPowerFinal() { return raceStats.computeKiPowerFinal(); }
     public double computeKiPoolFinal()  { return raceStats.computeKiPoolFinal(); }
+    public double computeConFinal()     { return raceStats.computeConFinal(); }
+    public boolean isCombatActive() { return isRaceChosen(); }
 
     // ── Body ─────────────────────────────────────────────────────────────────
     public int  getBody()            { return pools.getBody(); }
