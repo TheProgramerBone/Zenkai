@@ -71,13 +71,14 @@ public final class EntityStats implements ZenkaiCombatStats {
         catch (Exception ex) { return auto; }
     }
 
-    // ── Pools (mismos offsets que el jugador; el escalado grande llega en Fase 4) ──
+    // ── Pools: MISMAS fórmulas y escalas de config que el jugador (simetría del pipeline),
+    //    con los multiplicadores del arquetipo encima (body/ki). ──
     private void recalc() {
         double con = getAttr(Dbrattributes.CONSTITUTION);
         double spi = getAttr(Dbrattributes.SPIRIT);
-        this.bodyMax    = (int) Math.max(1, Math.round(10 + con * bodyMult));
-        this.staminaMax = (int) Math.max(1, Math.round(90 + con));
-        this.energyMax  = (int) Math.max(1, Math.round(90 + spi * kiMult));
+        this.bodyMax    = (int) Math.max(1, Math.round(10 + con * bodyMult * com.hmc.zenkai.core.config.StatsConfig.bodyScale()));
+        this.staminaMax = (int) Math.max(1, Math.round(90 + con * com.hmc.zenkai.core.config.StatsConfig.staminaScale()));
+        this.energyMax  = (int) Math.max(1, Math.round(90 + spi * kiMult * com.hmc.zenkai.core.config.StatsConfig.energyScale()));
     }
 
     public int getAttr(Dbrattributes a) { return attr.getOrDefault(a, 0); }

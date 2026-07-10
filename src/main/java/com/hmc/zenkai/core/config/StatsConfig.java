@@ -20,12 +20,12 @@ public final class StatsConfig {
     // TP / CAPS / MOVEMENT (YA LOS TENÍAS)
     // -------------------------------------------------
     private static final ModConfigSpec.DoubleValue TP_COEFFICIENT_RAW =
-            BUILDER.comment("TP cost coeff: cost = 1 + invested * coeff")
-                    .defineInRange("tp.coefficient", 1.5D, 0.1D, 100D);
+            BUILDER.comment("TP cost growth: cost = points * (1 + coef * avgInvested)")
+                    .defineInRange("tp.coefficient", 0.00001D, 0.0D, 100D);
 
     private static final ModConfigSpec.IntValue GLOBAL_ATTRIBUTE_CAP_RAW =
-            BUILDER.comment("Global cap per attribute")
-                    .defineInRange("caps.global_attribute", 1000, 1, 1000000);
+            BUILDER.comment("Max per attribute. 5 counted attrs x 200000 = PL cap 1,000,000")
+                    .defineInRange("caps.global_attribute", 200000, 1, 1000000);;
 
     private static final ModConfigSpec.DoubleValue SPEED_MULT_CAP_RAW =
             BUILDER.comment("Max movement multiplier (cap)")
@@ -96,6 +96,16 @@ public final class StatsConfig {
                     .defineList("race.majin.base",
                             ints(MAJIN_BASE_DEFAULT),
                             o -> o instanceof Integer);
+
+    private static final ModConfigSpec.DoubleValue BODY_SCALE_RAW =
+            BUILDER.comment("bodyMax = 10 + CON * scale. WARNING: multiplies time-to-kill by the same factor")
+                    .defineInRange("pools.body_scale", 1.0D, 0.1D, 1000.0D);
+    private static final ModConfigSpec.DoubleValue STAMINA_SCALE_RAW =
+            BUILDER.comment("staminaMax = 90 + CON * scale")
+                    .defineInRange("pools.stamina_scale", 1.0D, 0.1D, 1000.0D);
+    private static final ModConfigSpec.DoubleValue ENERGY_SCALE_RAW =
+            BUILDER.comment("energyMax = 90 + SPI * scale")
+                    .defineInRange("pools.energy_scale", 1.0D, 0.1D, 1000.0D);
 
 
     // -------------------------------------------------
@@ -203,6 +213,9 @@ public final class StatsConfig {
     private static volatile double SENSE_KI_SIMILAR = 0.8D;
     private static volatile double VANILLA_PL_FACTOR = 1;
     private static volatile int SCOUTER_RANGE = 64;
+    private static volatile double BODY_SCALE = 1;
+    private static volatile double STAMINA_SCALE = 1;
+    private static volatile double ENERGY_SCALE = 1;
 
     // === NEW: cachés para race/style ===
     private static final EnumMap<Race, int[]> RACE_BASES = new EnumMap<>(Race.class);
@@ -223,6 +236,9 @@ public final class StatsConfig {
         REGEN_ENERGY         = REGEN_ENERGY_RAW.get();
         MOVE_SCALING         = MOVE_SCALING_RAW.get();
         FLY_SCALING          = FLY_SCALING_RAW.get();
+        BODY_SCALE           = BODY_SCALE_RAW.get();
+        STAMINA_SCALE        = STAMINA_SCALE_RAW.get();
+        ENERGY_SCALE         = ENERGY_SCALE_RAW.get();
 
         // === NEW: cargar race bases ===
         RACE_BASES.clear();
@@ -261,6 +277,9 @@ public final class StatsConfig {
     public static double speedMultiplierCap() { return SPEED_MULT_CAP; }
     public static double flyMultiplierCap()   { return FLY_MULT_CAP; }
     public static double minDamagePercent() { return MIN_DAMAGE_PERCENT; }
+    public static double bodyScale() { return BODY_SCALE; }
+    public static double staminaScale() { return STAMINA_SCALE; }
+    public static double energyScale() { return ENERGY_SCALE; }
 
     public static int baseRegenBody()         { return REGEN_BODY; }
     public static int baseRegenStamina()      { return REGEN_STAMINA; }
