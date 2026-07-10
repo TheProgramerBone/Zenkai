@@ -2,6 +2,7 @@ package com.hmc.zenkai.core.network;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.effect.ModEffects;
+import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.forms.FormDefinition;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
@@ -187,7 +188,10 @@ public class TickHandlers {
         // ================================
         // Curar vida vanilla si body > 0
         // ================================
-        if (att.getBody() > 0 && !p.isDeadOrDying()) {
+        // Mantener la vida vanilla llena mientras el BODY sea la vida real.
+        // ================================
+        if (att.getBody() > 0 && !p.isDeadOrDying()
+                && p.getServer() != null && ModGameRules.enableRaceBoosts(p.getServer())) {
             float max = p.getMaxHealth();
             if (p.getHealth() < max) {
                 p.setHealth(max);

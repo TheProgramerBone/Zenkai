@@ -5,6 +5,7 @@ import com.hmc.zenkai.core.combat.EntityStatDef;
 import com.hmc.zenkai.core.combat.EntityStats;
 import com.hmc.zenkai.core.combat.EntityStatsManager;
 import com.hmc.zenkai.core.combat.ZenkaiStats;
+import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -24,7 +25,7 @@ import java.util.List;
 
 /**
  * C2S: "escanea mi entorno" (sentir el ki). El cliente lo manda cada 10 ticks mientras el modo
- * no sea OFF. El servidor responde con un SenseKiDataPacket con lo que hay en rango (el
+ * no sea OFF. El servidor responde con un SenseKiDataPacket con TODO lo que hay en rango (el
  * filtrado por modo es del cliente, que conoce su propio PL).
  *
  * PL de cada entidad:
@@ -62,6 +63,12 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
     private static SenseKiDataPacket.Entry buildEntry(LivingEntity le) {
         boolean isPlayer = le instanceof Player;
 
+        // Gamerule de la capa Zenkai apagado: el combate va por vida vanilla (los pools quedan
+        // congelados), asi que TODO se reporta vanilla, igual que el resto del sistema.
+        if (le.getServer() == null || !ModGameRules.enableRaceBoosts(le.getServer())) {
+            return vanillaEntry(le, isPlayer);
+        }
+
         // Jugador con raza: stats reales.
         if (le instanceof Player p) {
             PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
@@ -91,7 +98,6 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         return vanillaEntry(le, false);
     }
 
-    /** Mob vanilla / jugador sin raza: PL = vida_max × factor; vida = vanilla. */
     private static SenseKiDataPacket.Entry vanillaEntry(LivingEntity le, boolean isPlayer) {
         long pl = Math.round(le.getMaxHealth() * StatsConfig.vanillaPowerLevelFactor());
         return new SenseKiDataPacket.Entry(le.getId(),
