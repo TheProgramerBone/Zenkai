@@ -17,7 +17,6 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
  * PL de lo que tengas en la mira, cerca del crosshair. Color por fuerza relativa a TU PL
  * (umbral sense_ki.similar_threshold): verde = más débil, amarillo = similar, rojo = más fuerte.
  * Sin objetivo: "PL ---".
- *
  * Texto simple por ahora; el marco/textura estilo scouter es de la fase de pulido visual
  * (Juan: textura + posicionamiento cuando toque).
  */
@@ -47,7 +46,8 @@ public final class ScouterOverlay {
             color = relativeColor(mc, pl);
         } else {
             txt = "PL ---";
-            color = 0xFF9AE29A; // verde scouter apagadito
+            // Sin objetivo: el texto toma el color del cristal (tinte vanilla del scouter puesto).
+            color = 0xFF000000 | ScouterClientState.scouterTint(mc);
         }
 
         g.drawString(mc.font, Component.literal(txt), cx + OFF_X, cy + OFF_Y, color);
@@ -55,6 +55,7 @@ public final class ScouterOverlay {
 
     /** Verde = más débil que tú, amarillo = similar (umbral config), rojo = más fuerte. */
     private static int relativeColor(Minecraft mc, long targetPl) {
+        assert mc.player != null;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
         long myPl = att.isRaceChosen()
                 ? att.getPowerLevel()

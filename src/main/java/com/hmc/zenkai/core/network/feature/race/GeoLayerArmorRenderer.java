@@ -15,10 +15,14 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
             addRenderLayer(new FaceOverlayGeoLayer(this, FaceOverlayGeoLayer.Kind.EYES));
             addRenderLayer(new FaceOverlayGeoLayer(this, FaceOverlayGeoLayer.Kind.MOUTH));
             addRenderLayer(new FaceOverlayGeoLayer(this, FaceOverlayGeoLayer.Kind.NOSE));
+
         }
         // Tinte de cuerpo multicapa (detalle + líneas) — razas multicolor (Namek).
         if (item.hasBodyTint()) {
             addRenderLayer(new BodyTintGeoLayer(this));
+        }
+        if (item.hasDyeTint()) {
+            addRenderLayer(new DyedTintGeoLayer(this));
         }
     }
 
@@ -48,6 +52,8 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
         // Alternativas según versión: Color.ofOpaque(rgb), Color.ofRGB(rgb), new Color(0xFF000000 | rgb).
         return Color.ofOpaque(rgb);
     }
+
+
 
     /**
      * Permite presets de textura: elige la textura según el índice skinPreset del jugador.

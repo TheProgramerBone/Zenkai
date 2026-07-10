@@ -367,14 +367,16 @@ public class ModItems {
     //Halo
     public static final DeferredItem<GeoLayerArmorItem> HALO =
             ITEMS.register("halo", () -> new GeoLayerArmorItem(
-                    ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET, new Item.Properties(),
+                    ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                    new Item.Properties(),
                     "geo/halo.geo.json",
                     "textures/models/races/halo.png",
                     ""));
 
     public static final DeferredItem<ScouterItem> SCOUTER =
             ITEMS.register("scouter", () -> new ScouterItem(
-                    ArmorMaterials.IRON, new Item.Properties(),
+                    ArmorMaterials.IRON,
+                    new Item.Properties(),
                     "geo/scouter.geo.json",
                     "textures/models/armor/scouter.png"));
 

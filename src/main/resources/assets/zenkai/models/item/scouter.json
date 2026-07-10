@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zenkai:item/scouter",
+    "layer1": "zenkai:item/scouter_tint"
+  }
+}

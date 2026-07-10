@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-06T16:53:04.5808817	Item Models: zenkai
+// 1.21.1	2026-07-09T15:16:24.2037151	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 e679a4c9273e0f8ec5861c5d4a448f2b69437bca assets/zenkai/models/item/basic_circuit.json
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
@@ -9,6 +9,7 @@ cf0c021ac47f4c96a569e2497d53258d04d5a607 assets/zenkai/models/item/kintoun_item.
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_warrior_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/saibaman_spawn_egg.json
+4b709734fbd9cfbeda7ab6f174c3adf5da906f75 assets/zenkai/models/item/scouter.json
 340e5a499537ca1c3856387e5dbacb789e98e351 assets/zenkai/models/item/senzu_bean.json
 b2b33d40b8094e7f9ef4314e5b8c7c9f0ecb27c0 assets/zenkai/models/item/space_pod_item.json
 6597c75a48f1a408e92c3ea1aef5faec47f11f0f assets/zenkai/models/item/terragem.json
