@@ -90,10 +90,7 @@ public class PlayerRaceStats {
         int    add      = Math.min(points, cap - cur);
         if (add <= 0) return false;
 
-        int totalCost = 0;
-        for (int k = 0; k < add; k++) {
-            totalCost += (int) Math.ceil(1 + (totalInv + k) * coeff);
-        }
+        int totalCost = closedCost(totalInv, add, coeff);
         if (tp < totalCost) return false;
 
         attributes.put(attr, cur + add);
@@ -110,12 +107,15 @@ public class PlayerRaceStats {
         int    cur      = attributes.get(attr);
         int    add      = Math.min(points, cap - cur);
         if (add <= 0) return 0;
+        return closedCost(totalInv, add, coeff);
+    }
 
-        int totalCost = 0;
-        for (int k = 0; k < add; k++) {
-            totalCost += (int) Math.ceil(1 + (totalInv + k) * coeff);
-        }
-        return totalCost;
+    /** Coste total en O(1): add*(1 + coef*(inv + (add-1)/2)), UN solo redondeo.
+     *  (El bucle anterior era O(n) por compra — inviable comprando miles — y con coefs
+     *  pequeños inflaba ~+1 por punto por el ceil por término. Cambio de balance Fase 4.) */
+    private static int closedCost(int inv, int add, double coeff) {
+        double total = add * (1.0 + coeff * (inv + (add - 1) / 2.0));
+        return (int) Math.min(Integer.MAX_VALUE, Math.ceil(total));
     }
 
     public void respec() {
@@ -136,10 +136,9 @@ public class PlayerRaceStats {
         double CON = attributes.get(Dbrattributes.CONSTITUTION) * r[1] * s[1];
         double DEX = attributes.get(Dbrattributes.DEXTERITY)    * r[2] * s[2];
         double SPI = attributes.get(Dbrattributes.SPIRIT)       * r[4] * s[4];
-
-        int bodyMax    = (int) Math.max(1, Math.round(10 + CON));
-        int staminaMax = (int) Math.max(1, Math.round(90 + CON));
-        int energyMax  = (int) Math.max(1, Math.round(90 + SPI));
+        int bodyMax    = (int) Math.max(1, Math.round(10 + CON * StatsConfig.bodyScale()));
+        int staminaMax = (int) Math.max(1, Math.round(90 + CON * StatsConfig.staminaScale()));
+        int energyMax  = (int) Math.max(1, Math.round(90 + SPI * StatsConfig.energyScale()));
 
         return new RecalcResult(bodyMax, staminaMax, energyMax, DEX, DEX);
     }

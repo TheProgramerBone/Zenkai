@@ -45,7 +45,7 @@ public class StatsScreen extends Screen {
 
     // ================= TP MULTIPLIER =================
 
-    private static final int[] TP_STEPS = {1, 10, 100, 1000};
+    private static final int[] TP_STEPS = {1, 10, 100, 1000, 10000, 100000};
     private int tpStepIndex = 0; // por defecto x1
 
     // área de texto "TPC: xN" para tooltip / posición
