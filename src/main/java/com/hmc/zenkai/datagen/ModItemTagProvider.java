@@ -44,5 +44,8 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 .add(ModItems.TERRAGEM_CHESTPLATE.get())
                 .add(ModItems.TERRAGEM_LEGGINGS.get())
                 .add(ModItems.TERRAGEM_BOOTS.get());
+
+        this.tag(ItemTags.DYEABLE)
+                .add(ModItems.SCOUTER.get());
     }
 }

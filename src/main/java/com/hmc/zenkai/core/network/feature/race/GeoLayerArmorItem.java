@@ -56,7 +56,7 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
 
     public GeoLayerArmorItem(Holder<ArmorMaterial> material, Type type, Properties properties,
                              String modelPath, String texturePath, String animationPath) {
-        super(material, type, properties);
+        super(material, type, properties.stacksTo(1));
         this.modelPath     = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, modelPath);
         this.texturePath   = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, texturePath);
         this.animationPath = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, animationPath);
@@ -168,6 +168,20 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
         animFrozen = false;
         return now;
     }
+
+    // Tinte por tintes vanilla (DYED_COLOR del stack): capa <textura>_tint.png. 0 = desactivado.
+    private boolean dyeTint = false;
+    private int dyeTintDefault = 0xFFFFFF;
+
+    /** Activa la capa de tinte vanilla con este color por defecto (sin teñir). Encadenable. */
+    public GeoLayerArmorItem dyeTint(int defaultColor) {
+        this.dyeTint = true;
+        this.dyeTintDefault = defaultColor;
+        return this;
+    }
+
+    public boolean hasDyeTint()       { return dyeTint; }
+    public int     getDyeTintDefault(){ return dyeTintDefault; }
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
