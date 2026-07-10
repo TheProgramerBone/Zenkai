@@ -38,9 +38,15 @@ public final class ZenkaiStats {
      * PL "de display" de CUALQUIER entidad viva (scouter / sentir ki), por prioridad:
      *  1. Jugador con raza / entidad con stats -> su PL real.
      *  2. Entidad con JSON display_only -> el PL fijo del JSON.
-     *  3. Fallback vanilla -> vida_max x factor (config power_level.vanilla_factor).
+     *  3. Fallback vanilla -> vida_max * factor (config power_level.vanilla_factor).
      */
     public static long resolveDisplayPowerLevel(LivingEntity le) {
+        // Game rule apagado: la capa Zenkai no aplica -> PL vanilla (vida_max x factor) para todos.
+        if (le.getServer() == null
+                || !com.hmc.zenkai.core.ModGameRules.enableRaceBoosts(le.getServer())) {
+            return Math.round(le.getMaxHealth() * StatsConfig.vanillaPowerLevelFactor());
+        }
+
         ZenkaiCombatStats stats = of(le);
         if (stats != null && stats.isCombatActive()) {
             return stats.getPowerLevel();
