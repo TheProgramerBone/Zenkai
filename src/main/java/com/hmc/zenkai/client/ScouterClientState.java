@@ -64,11 +64,6 @@ public final class ScouterClientState {
         } else {
             targetFound = false;
         }
-        mc.player.displayClientMessage(
-                Component.translatable(overlayOn ? "messages.zenkai.scouter.on"
-                                : "messages.zenkai.scouter.off")
-                        .withStyle(ChatFormatting.GREEN),
-                true); // actionbar
     }
 
     /** Llamar 1 vez por tick de cliente (desde KeyBindings.handleClientTick, junto al del sense ki). */
