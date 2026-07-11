@@ -10,7 +10,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * Golpes al aire (entrenamiento): LeftClickEmpty es un evento SOLO-CLIENTE (el servidor no se
- * entera de los clicks al vacío), por eso hace falta el packet. El servidor revalida
+ * entera de los clics al vacío), por eso hace falta el packet. El servidor revalida
  * (mano vacía, cooldown, stamina): esto es solo el aviso.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)

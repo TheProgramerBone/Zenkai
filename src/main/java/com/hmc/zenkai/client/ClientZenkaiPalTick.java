@@ -67,6 +67,7 @@ public final class ClientZenkaiPalTick {
         }
 
         STATES.keySet().removeIf(uuid -> mc.level.getPlayerByUUID(uuid) == null);
+        ClientFlyAnimState.prune(mc.level);
     }
 
     private static void tickPlayer(Minecraft mc, AbstractClientPlayer p) {
@@ -90,7 +91,7 @@ public final class ClientZenkaiPalTick {
 
         AnimState st = STATES.computeIfAbsent(p.getUUID(), k -> new AnimState());
 
-        // ── Animación de vuelo direccional + aceleración (jugador local) ──
+        // ── Animación de vuelo direccional + aceleración ──
         if (p == mc.player) {
             boolean flying = !p.isCreative() && !p.isSpectator()
                     && stats.isFlyEnabled()
@@ -103,6 +104,19 @@ public final class ClientZenkaiPalTick {
                 st.flyBoostState = 0;
                 st.flyBoostTicks = 0;
                 applyLocalBoost(p, false); // deja de volar -> hitbox/cámara vuelven a normal
+                ClientFlyAnimState.sendIfChanged(false, null, false); // avisa a los demás
+                ZenkaiPalAnimations.stopFly(p);
+            }
+        } else {
+            // Jugadores REMOTOS: mismo estado-máquina, alimentado por el estado sincronizado.
+            ClientFlyAnimState.Remote rs = ClientFlyAnimState.get(p.getId());
+            if (rs != null && rs.flying()) {
+                driveFly(p, st, rs.dir(), rs.boosting());
+            } else if (st.flyPlaying) {
+                st.flyPlaying = false;
+                st.flyDir = null;
+                st.flyBoostState = 0;
+                st.flyBoostTicks = 0;
                 ZenkaiPalAnimations.stopFly(p);
             }
         }
@@ -187,6 +201,17 @@ public final class ClientZenkaiPalTick {
         // el tamaño/altura-de-ojos se ajustan por EntityEvent.Size (BoostSizeHandler) según este flag.
         applyLocalBoost(p, boosting);
 
+        // Publica el estado propio a los demás (solo si cambió).
+        ClientFlyAnimState.sendIfChanged(true, dir, boosting);
+
+        driveFly(p, st, dir, boosting);
+    }
+
+    /**
+     * Estado-máquina de la animación de vuelo, COMÚN a local y remotos: entrada, cambio de
+     * dirección, transiciones de boost y avance de los starts hacia sus loops.
+     */
+    private static void driveFly(AbstractClientPlayer p, AnimState st, FlyDir dir, boolean boosting) {
         boolean inBoost = (st.flyBoostState == BOOST_START || st.flyBoostState == BOOST_LOOP);
 
         // Arranque de vuelo

@@ -2,14 +2,19 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
+import com.hmc.zenkai.client.gui.buttons.TabIconButton;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.Dbrattributes;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.core.network.feature.stats.*;
+import com.hmc.zenkai.core.skills.SkillDef;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -47,6 +52,7 @@ public class StatsScreen extends Screen {
 
     private static final int[] TP_STEPS = {1, 10, 100, 1000, 10000, 100000};
     private int tpStepIndex = 0; // por defecto x1
+    private ZenkaiTab tab = ZenkaiTab.MAIN;
 
     // área de texto "TPC: xN" para tooltip / posición
     private int tpcLabelX, tpcLabelY, tpcLabelW, tpcLabelH;
@@ -83,6 +89,13 @@ public class StatsScreen extends Screen {
 
         this.panelLeft = (this.width  - BG_W) / 2;
         this.panelTop  = (this.height - BG_H) / 2;
+        addTabButtons();
+
+        if (tab == ZenkaiTab.SKILLS) {
+            addSkillButtons();
+            return;
+        }
+        if (tab != ZenkaiTab.MAIN) return;
 
         int x = panelLeft + 16;
         int y = panelTop  + 60;
@@ -132,6 +145,10 @@ public class StatsScreen extends Screen {
         att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
 
         super.render(g, mouseX, mouseY, partialTick);
+        if (tab != ZenkaiTab.MAIN) {
+            renderTabContent(g, mouseX, mouseY);
+            return;
+        }
 
         int left = panelLeft + 12;
         int top  = panelTop  + 16;
@@ -385,6 +402,92 @@ public class StatsScreen extends Screen {
                 yield Component.translatable("tooltip.zenkai.attr.mnd", formatted);
             }
         };
+    }
+
+    // ═══════════ Pestañas (shell v1.0) ═══════════
+
+    private void selectTab(ZenkaiTab t) {
+        if (tab == t) return;
+        tab = t;
+        this.rebuildWidgets(); // clearWidgets + init con la pestaña nueva
+    }
+
+    /** Dos filas de pestañas sobre el panel (4 + 3). La activa se muestra deshabilitada. */
+    private void addTabButtons() {
+        ZenkaiTab[] tabs = ZenkaiTab.values();
+        int icon = 20, gap = 4; // ⚠ icon = tamaño de celda de tu atlas
+        int rowW = tabs.length * icon + (tabs.length - 1) * gap;
+        int y = Math.max(2, panelTop - icon - 6);
+        int x = panelLeft + (BG_W - rowW) / 2;
+        for (ZenkaiTab t : tabs) {
+            TabIconButton b = new TabIconButton(x, y, icon, t.u, t.v,
+                    Component.translatable(t.titleKey()),
+                    () -> tab == t,
+                    () -> selectTab(t));
+            b.setTooltip(Tooltip.create(Component.translatable(t.titleKey())));
+            this.addRenderableWidget(b);
+            x += icon + gap;
+        }
+    }
+
+    /** Botón Comprar por habilidad no aprendida (tooltip = descripción). */
+    private void addSkillButtons() {
+        int y = panelTop + 58;
+        for (SkillDef def : SkillDef.all()) {
+            boolean owned = att != null && att.skills().has(def.id());
+            if (!owned) {
+                boolean canBuy = att != null
+                        && att.getAttribute(Dbrattributes.MIND) >= def.mindReq()
+                        && att.getTP() >= def.tpCost();
+                Button buy = Button.builder(Component.translatable("screen.zenkai.skills.buy"),
+                                btn -> PacketDistributor.sendToServer(new SkillBuyPacket(def.id())))
+                        .bounds(panelLeft + BG_W - 66, y, 54, 16)
+                        .tooltip(Tooltip.create(Component.translatable(def.descKey())))
+                        .build();
+                buy.active = canBuy;
+                this.addRenderableWidget(buy);
+            }
+            y += 30;
+        }
+    }
+
+    private void renderTabContent(GuiGraphics g, int mouseX, int mouseY) {
+        if (tab == ZenkaiTab.SKILLS) {
+            renderSkillsTab(g);
+            return;
+        }
+        g.drawCenteredString(this.font, Component.translatable("screen.zenkai.coming_soon"),
+                panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, 0xFFAAAAAA);
+    }
+
+    private void renderSkillsTab(GuiGraphics g) {
+        g.drawString(this.font, Component.translatable(tab.titleKey()),
+                panelLeft + 16, panelTop + 24, 0xFFFFFFFF, false);
+        if (att != null) {
+            g.drawString(this.font, Component.literal("TP: " + att.getTP()),
+                    panelLeft + 16, panelTop + 38, 0xFFFFD700, false);
+        }
+        if (SkillDef.all().isEmpty()) {
+            g.drawCenteredString(this.font, Component.translatable("screen.zenkai.skills.empty"),
+                    panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, 0xFFAAAAAA);
+            return;
+        }
+        int y = panelTop + 58;
+        for (SkillDef def : SkillDef.all()) {
+            boolean owned = att != null && att.skills().has(def.id());
+            boolean mindOk = att != null && att.getAttribute(Dbrattributes.MIND) >= def.mindReq();
+            g.drawString(this.font, Component.translatable(def.nameKey()),
+                    panelLeft + 16, y, owned ? 0xFF7CFC7C : 0xFFFFFFFF, false);
+            if (owned) {
+                g.drawString(this.font, Component.translatable("screen.zenkai.skills.owned"),
+                        panelLeft + 16, y + 11, 0xFF7CFC7C, false);
+            } else {
+                g.drawString(this.font, Component.translatable("screen.zenkai.skills.cost",
+                                def.tpCost(), def.mindReq()),
+                        panelLeft + 16, y + 11, mindOk ? 0xFFAAAAAA : 0xFFFF5555, false);
+            }
+            y += 30;
+        }
     }
 
     @Override

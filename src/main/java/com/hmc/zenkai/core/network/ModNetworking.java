@@ -10,6 +10,7 @@ import com.hmc.zenkai.core.network.feature.player.SyncPlayerStatsPacket;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerVisualPacket;
 import com.hmc.zenkai.core.network.feature.race.UpdatePlayerVisualPacket;
 import com.hmc.zenkai.core.network.feature.sense.*;
+import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.core.network.feature.stats.*;
 import com.hmc.zenkai.core.network.feature.training.TrainingSwingPacket;
 import com.hmc.zenkai.core.network.feature.wishes.*;
@@ -201,5 +202,19 @@ public class ModNetworking {
                 TrainingSwingPacket.TYPE,
                 TrainingSwingPacket.STREAM_CODEC,
                 TrainingSwingPacket::handle);
+
+        registrar.playToServer(
+                FlyAnimPacket.TYPE,
+                FlyAnimPacket.STREAM_CODEC,
+                FlyAnimPacket::handle);
+        registrar.playToClient(
+                FlyAnimSyncPacket.TYPE,
+                FlyAnimSyncPacket.STREAM_CODEC,
+                FlyAnimSyncPacket::handle);
+
+        registrar.playToServer(
+                SkillBuyPacket.TYPE,
+                SkillBuyPacket.STREAM_CODEC,
+                SkillBuyPacket::handle);
     }
 }
