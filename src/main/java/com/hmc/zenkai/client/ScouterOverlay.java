@@ -52,14 +52,16 @@ public final class ScouterOverlay {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/scouter/frame.png");
     private static final ResourceLocation FRAME_TINT_TEX =
             RaceTextureUtil.deriveMask(FRAME_TEX, "_tint");
-    private static final int FRAME_W = 400;
-    private static final int FRAME_H = 300;
-    private static final int TEXT_OFF_X = 50; // posición del bloque de texto DENTRO del marco
-    private static final int TEXT_OFF_Y = 110;
+    private static final int FRAME_W = 300;
+    private static final int FRAME_H = 199;
+    private static final int TEXT_OFF_X = 50;
+    private static final int TEXT_OFF_Y = 70;
 
     // --- Comunes / panel plano de respaldo ---
     private static final int MARGIN_X = 0;
-    private static final int MAIN_SCALE = 2;
+    private static final int TITLE_SCALE = 2; // título del modo
+    private static final int MAIN_SCALE = 3;  // línea principal
+    private static final int SUB_SCALE = 1;   // subtítulo (etiqueta/distancia)
     private static final int PAD_X = 6;
     private static final int PAD_Y = 5;
     private static final int LINE_GAP = 2;
@@ -188,7 +190,8 @@ public final class ScouterOverlay {
                                   Component title, Component main, Component sub) {
         int x = MARGIN_X;
         int y = (g.guiHeight() - FRAME_H) / 2;
-
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
         g.blit(FRAME_TEX, x, y, 0, 0, FRAME_W, FRAME_H, FRAME_W, FRAME_H);
 
         float r = ((tint >> 16) & 0xFF) / 255f;
@@ -204,11 +207,12 @@ public final class ScouterOverlay {
     private static void drawFlatPanel(GuiGraphics g, Minecraft mc, int tint, int textColor,
                                       Component title, Component main, Component sub) {
         int lh = mc.font.lineHeight;
-        int w = Math.max(mc.font.width(title),
-                Math.max(mc.font.width(main) * MAIN_SCALE, sub == null ? 0 : mc.font.width(sub)))
+        int w = Math.max(mc.font.width(title) * TITLE_SCALE,
+                Math.max(mc.font.width(main) * MAIN_SCALE,
+                        sub == null ? 0 : mc.font.width(sub) * SUB_SCALE))
                 + PAD_X * 2;
-        int h = PAD_Y * 2 + lh + LINE_GAP + lh * MAIN_SCALE
-                + (sub == null ? 0 : LINE_GAP + lh);
+        int h = PAD_Y * 2 + lh * TITLE_SCALE + LINE_GAP + lh * MAIN_SCALE
+                + (sub == null ? 0 : LINE_GAP + lh * SUB_SCALE);
         int x = MARGIN_X;
         int y = (g.guiHeight() - h) / 2;
 
@@ -223,23 +227,29 @@ public final class ScouterOverlay {
         drawLines(g, mc, x + PAD_X, y + PAD_Y, textColor, title, main, sub);
     }
 
-    /** Título (1x) + principal (2x) + subtítulo (1x, opcional), apilados desde (x, y). */
+    /** Título + principal + subtítulo (opcional), apilados desde (x, y), cada uno a su escala. */
     private static void drawLines(GuiGraphics g, Minecraft mc, int x, int y, int color,
                                   Component title, Component main, Component sub) {
         int lh = mc.font.lineHeight;
-        g.drawString(mc.font, title, x, y, color, false);
-        y += lh + LINE_GAP;
 
-        g.pose().pushPose();
-        g.pose().translate(x, y, 0);
-        g.pose().scale(MAIN_SCALE, MAIN_SCALE, 1f);
-        g.drawString(mc.font, main, 0, 0, color, false);
-        g.pose().popPose();
+        drawScaled(g, mc, title, x, y, TITLE_SCALE, color);
+        y += lh * TITLE_SCALE + LINE_GAP;
+
+        drawScaled(g, mc, main, x, y, MAIN_SCALE, color);
         y += lh * MAIN_SCALE + LINE_GAP;
 
         if (sub != null) {
-            g.drawString(mc.font, sub, x, y, color, false);
+            drawScaled(g, mc, sub, x, y, SUB_SCALE, color);
         }
+    }
+
+    private static void drawScaled(GuiGraphics g, Minecraft mc, Component c,
+                                   int x, int y, int scale, int color) {
+        g.pose().pushPose();
+        g.pose().translate(x, y, 0);
+        g.pose().scale(scale, scale, 1f);
+        g.drawString(mc.font, c, 0, 0, color, true);
+        g.pose().popPose();
     }
 
     /**
