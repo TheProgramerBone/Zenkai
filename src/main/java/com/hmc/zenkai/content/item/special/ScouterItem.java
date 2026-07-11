@@ -17,7 +17,7 @@ import net.minecraft.world.item.ArmorMaterial;
 public class ScouterItem extends GeoLayerArmorItem {
 
     /** Verde clásico de scouter (color del cristal cuando no está teñido). */
-    public static final int DEFAULT_TINT = 0x55FF55;
+    public static final int DEFAULT_TINT = 0xd82624;
 
     public ScouterItem(Holder<ArmorMaterial> material, Properties properties,
                        String modelPath, String texturePath) {

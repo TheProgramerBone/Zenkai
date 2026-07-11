@@ -6,7 +6,7 @@ package com.hmc.zenkai.core.combat;
  * así no le importa si golpea/recibe un jugador o un mob.
  *
  * Los stats "final" son los derivados lineales (atributo × multiplicadores). El Power Level
- * se calcula UNA sola vez, con la fórmula de {@link PowerLevel}, vía el método default.
+ * se calcula UNA sola vez, con la fórmula de {@link PowerLevel}, vía el default.
  *
  * FASE 1: solo el modelo de datos. Nada de esto se engancha al combate todavía.
  */

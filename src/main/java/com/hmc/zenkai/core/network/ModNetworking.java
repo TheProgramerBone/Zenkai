@@ -9,10 +9,7 @@ import com.hmc.zenkai.core.network.feature.player.SyncPlayerFormPacket;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerStatsPacket;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerVisualPacket;
 import com.hmc.zenkai.core.network.feature.race.UpdatePlayerVisualPacket;
-import com.hmc.zenkai.core.network.feature.sense.ScouterDataPacket;
-import com.hmc.zenkai.core.network.feature.sense.ScouterScanPacket;
-import com.hmc.zenkai.core.network.feature.sense.SenseKiDataPacket;
-import com.hmc.zenkai.core.network.feature.sense.SenseKiScanPacket;
+import com.hmc.zenkai.core.network.feature.sense.*;
 import com.hmc.zenkai.core.network.feature.stats.*;
 import com.hmc.zenkai.core.network.feature.wishes.*;
 import com.hmc.zenkai.core.network.vehicle.VehicleControlPayload;
@@ -188,5 +185,15 @@ public class ModNetworking {
                 ScouterDataPacket.TYPE,
                 ScouterDataPacket.STREAM_CODEC,
                 ScouterDataPacket::handle);
+
+        registrar.playToServer(
+                ScouterAreaScanPacket.TYPE,
+                ScouterAreaScanPacket.STREAM_CODEC,
+                ScouterAreaScanPacket::handle);
+
+        registrar.playToClient(
+                ScouterAreaDataPacket.TYPE,
+                ScouterAreaDataPacket.STREAM_CODEC,
+                ScouterAreaDataPacket::handle);
     }
 }

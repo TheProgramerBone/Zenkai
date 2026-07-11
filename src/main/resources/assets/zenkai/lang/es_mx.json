@@ -27,6 +27,18 @@
   "item.zenkai.isaac_spawn_egg": "Huevo de Generación de Isaac",
   "item.zenkai.yemma_spawn_egg": "Huevo de Generación de Enma Daiyō",
   "item.zenkai.scouter": "Rastreador",
+  "item.zenkai.scouter_radar_upgrade": "Mejora de Radar",
+
+  "scouter.zenkai.mode.power": "PODER",
+  "scouter.zenkai.mode.strongest": "MÁS FUERTE",
+  "scouter.zenkai.mode.radar": "RADAR",
+  "scouter.zenkai.label.weak": "DÉBIL",
+  "scouter.zenkai.label.formidable": "FORMIDABLE",
+  "scouter.zenkai.label.threat": "AMENAZA",
+  "scouter.zenkai.no_signal": "SIN SEÑAL",
+  "scouter.zenkai.radar.ball": "DRAGON BALL",
+  "scouter.zenkai.radar.unavailable": "MEJORA NO DISPONIBLE",
+  "scouter.zenkai.meters": "%sm",
 
   "block.zenkai.namekian_grass_block": "Bloque de Hierba Namekiana",
   "block.zenkai.namekian_dirt": "Tierra Namekiana",
