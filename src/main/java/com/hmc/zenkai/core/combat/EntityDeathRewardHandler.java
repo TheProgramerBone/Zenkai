@@ -1,6 +1,7 @@
 package com.hmc.zenkai.core.combat;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
@@ -20,15 +21,14 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 public final class EntityDeathRewardHandler {
     private EntityDeathRewardHandler() {}
 
+    /** Reward de mobs vanilla: PL = vida máx × vanilla_factor (misma fórmula que el scouter). */
+    private static final double VANILLA_TP_PER_PL = 0.05;
+
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event) {
         if (event.getEntity().level().isClientSide()) return;
         if (event.getEntity() instanceof Player) return;
         LivingEntity dead = event.getEntity();
-        if (!dead.hasData(DataAttachments.ENTITY_STATS.get())) return;
-
-        EntityStats stats = dead.getData(DataAttachments.ENTITY_STATS.get());
-        if (!stats.isInitialized() || stats.getTpReward() <= 0) return;
 
         Player killer = resolveKiller(event.getSource());
         if (killer == null) return;
@@ -36,7 +36,18 @@ public final class EntityDeathRewardHandler {
         PlayerStatsAttachment ka = PlayerStatsAttachment.get(killer);
         if (!ka.isRaceChosen()) return;
 
-        ka.addTP(stats.getTpReward());
+        int reward;
+        if (dead.hasData(DataAttachments.ENTITY_STATS.get())
+                && dead.getData(DataAttachments.ENTITY_STATS.get()).isInitialized()) {
+            reward = dead.getData(DataAttachments.ENTITY_STATS.get()).getTpReward();
+        } else {
+            // Mob vanilla (sin stats): PL derivado de su vida máxima. Mínimo 1 TP.
+            double vanillaPl = dead.getMaxHealth() * StatsConfig.vanillaPowerLevelFactor();
+            reward = (int) Math.max(1, Math.round(vanillaPl * VANILLA_TP_PER_PL));
+        }
+        if (reward <= 0) return;
+
+        ka.addTP(reward);
         PlayerLifeCycle.syncIfServer(killer);
     }
 

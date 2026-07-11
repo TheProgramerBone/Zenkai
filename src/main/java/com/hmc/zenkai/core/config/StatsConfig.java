@@ -195,10 +195,33 @@ public final class StatsConfig {
             BUILDER.comment("Scouter: crosshair scan range in blocks")
                     .defineInRange("scouter.range", 64, 8, 256);
 
+    private static final ModConfigSpec.DoubleValue TRAIN_DMG_TP_RAW =
+            BUILDER.comment("Training: TP per point of effective damage dealt")
+                    .defineInRange("training.damage_tp_factor", 0.02D, 0.0D, 10.0D);
+    private static final ModConfigSpec.DoubleValue TRAIN_AIR_TP_RAW =
+            BUILDER.comment("Training: TP per air punch = own PL * factor")
+                    .defineInRange("training.air_tp_factor", 0.0001D, 0.0D, 1.0D);
+    private static final ModConfigSpec.DoubleValue TRAIN_AIR_COST_RAW =
+            BUILDER.comment("Training: air punch stamina cost as fraction of max stamina")
+                    .defineInRange("training.air_stamina_cost_pct", 0.04D, 0.0D, 1.0D);
+    private static final ModConfigSpec.IntValue TRAIN_AIR_TICKS_RAW =
+            BUILDER.comment("Training: min ticks between counted air punches")
+                    .defineInRange("training.air_min_ticks", 10, 1, 200);
+    private static final ModConfigSpec.DoubleValue TRAIN_HALF_LIFE_RAW =
+            BUILDER.comment("Training: fatigue (session TP / own PL) at which efficiency halves")
+                    .defineInRange("training.fatigue_half_life", 0.10D, 0.001D, 10.0D);
+    private static final ModConfigSpec.DoubleValue TRAIN_DECAY_RAW =
+            BUILDER.comment("Training: fatigue recovered per real minute of play")
+                    .defineInRange("training.fatigue_decay_per_minute", 0.01D, 0.0D, 10.0D);
+    private static final ModConfigSpec.DoubleValue TRAIN_HTC_MULT_RAW =
+            BUILDER.comment("Training: TP multiplier while inside the HTC")
+                    .defineInRange("training.htc_multiplier", 2.0D, 1.0D, 100.0D);
+    private static final ModConfigSpec.DoubleValue TRAIN_MIN_EFF_RAW =
+            BUILDER.comment("Training: efficiency floor (never drops to 0)")
+                    .defineInRange("training.min_efficiency", 0.05D, 0.0D, 1.0D);
 
-    // -------------------------------------------------
+
     // BUILD
-    // -------------------------------------------------
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     // === Caché segura (sólo lectura) ===
@@ -216,6 +239,11 @@ public final class StatsConfig {
     private static volatile double BODY_SCALE = 1;
     private static volatile double STAMINA_SCALE = 1;
     private static volatile double ENERGY_SCALE = 1;
+
+    private static volatile double TRAIN_DMG_TP = 0.05D, TRAIN_AIR_TP = 0.0003D,
+            TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.25D, TRAIN_DECAY = 0.03D,
+            TRAIN_HTC_MULT = 2.0D, TRAIN_MIN_EFF = 0.05D;
+    private static volatile int TRAIN_AIR_TICKS = 10;
 
     // === NEW: cachés para race/style ===
     private static final EnumMap<Race, int[]> RACE_BASES = new EnumMap<>(Race.class);
@@ -269,6 +297,10 @@ public final class StatsConfig {
         SENSE_KI_SIMILAR = SENSE_KI_SIMILAR_RAW.get();
         VANILLA_PL_FACTOR = VANILLA_PL_FACTOR_RAW.get();
         SCOUTER_RANGE = SCOUTER_RANGE_RAW.get();
+        TRAIN_DMG_TP = TRAIN_DMG_TP_RAW.get();       TRAIN_AIR_TP = TRAIN_AIR_TP_RAW.get();
+        TRAIN_AIR_COST = TRAIN_AIR_COST_RAW.get();   TRAIN_AIR_TICKS = TRAIN_AIR_TICKS_RAW.get();
+        TRAIN_HALF_LIFE = TRAIN_HALF_LIFE_RAW.get(); TRAIN_DECAY = TRAIN_DECAY_RAW.get();
+        TRAIN_HTC_MULT = TRAIN_HTC_MULT_RAW.get();   TRAIN_MIN_EFF = TRAIN_MIN_EFF_RAW.get();
     }
 
     // === Getters públicos (thread-safe) ===
@@ -292,6 +324,15 @@ public final class StatsConfig {
     public static double senseKiSimilarThreshold() { return SENSE_KI_SIMILAR; }
     public static double vanillaPowerLevelFactor() { return VANILLA_PL_FACTOR; }
     public static int scouterRange() { return SCOUTER_RANGE; }
+
+    public static double trainingDamageTpFactor()        { return TRAIN_DMG_TP; }
+    public static double trainingAirTpFactor()           { return TRAIN_AIR_TP; }
+    public static double trainingAirStaminaCostPct()     { return TRAIN_AIR_COST; }
+    public static int    trainingAirMinTicks()           { return TRAIN_AIR_TICKS; }
+    public static double trainingFatigueHalfLife()       { return TRAIN_HALF_LIFE; }
+    public static double trainingFatigueDecayPerMinute() { return TRAIN_DECAY; }
+    public static double trainingHtcMultiplier()         { return TRAIN_HTC_MULT; }
+    public static double trainingMinEfficiency()         { return TRAIN_MIN_EFF; }
 
     // === NEW: getters para bases y multiplicadores ===
 
