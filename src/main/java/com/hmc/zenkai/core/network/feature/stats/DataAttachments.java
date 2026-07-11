@@ -5,6 +5,7 @@ import com.hmc.zenkai.core.combat.EntityStats;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.core.training.TrainingData;
 import com.mojang.serialization.Codec;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -76,4 +77,20 @@ public class DataAttachments {
                     AttachmentType.builder(EntityStats::new)
                             .serialize(ENTITY_STATS_CODEC)
                             .build());
+    public static final Codec<TrainingData> TRAINING_CODEC =
+            CompoundTag.CODEC.xmap(
+                    tag -> {
+                        var td = new TrainingData();
+                        td.load(tag);
+                        return td;
+                    },
+                    TrainingData::save);
+
+    public static final Supplier<AttachmentType<TrainingData>> TRAINING =
+            REGISTER.register("training", () ->
+                    AttachmentType.builder(TrainingData::new)
+                            .serialize(TRAINING_CODEC)
+                            .copyOnDeath()
+                            .build());
+    
 }

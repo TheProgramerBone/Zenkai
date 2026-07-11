@@ -8,6 +8,7 @@ import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.training.TrainingHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -98,7 +99,14 @@ public class CombatZenkaiHooks {
                         ? dmg * StatsConfig.minDamagePercent()
                         : dmg - defense;
                 finalDamage = Math.max(finalDamage, 0.0);
+                int bodyBefore = defStats.getBody();
                 defStats.addBody(-(int) Math.ceil(finalDamage));
+
+                // Entrenamiento: TP por daño efectivo (capado por el pool restante: sin overkill).
+                if (e.getSource().getEntity() instanceof ServerPlayer trainer
+                        && trainer != e.getEntity()) {
+                    TrainingHooks.grantFromDamage(trainer, Math.min(finalDamage, bodyBefore));
+                }
             }
 
             if (e.getEntity() instanceof Player victim) {
@@ -121,6 +129,11 @@ public class CombatZenkaiHooks {
 
         // Víctima sin stats (mob vanilla): aplica el daño recalculado del atacante a su vida vanilla.
         e.setNewDamage(dmg);
+        // Entrenamiento vs mobs vanilla: capado por la vida restante (sin overkill).
+        if (dmg > 0f && e.getSource().getEntity() instanceof ServerPlayer trainer
+                && trainer != e.getEntity()) {
+            TrainingHooks.grantFromDamage(trainer, Math.min(dmg, e.getEntity().getHealth()));
+        }
     }
 
     /**

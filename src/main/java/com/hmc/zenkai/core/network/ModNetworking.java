@@ -11,6 +11,7 @@ import com.hmc.zenkai.core.network.feature.player.SyncPlayerVisualPacket;
 import com.hmc.zenkai.core.network.feature.race.UpdatePlayerVisualPacket;
 import com.hmc.zenkai.core.network.feature.sense.*;
 import com.hmc.zenkai.core.network.feature.stats.*;
+import com.hmc.zenkai.core.network.feature.training.TrainingSwingPacket;
 import com.hmc.zenkai.core.network.feature.wishes.*;
 import com.hmc.zenkai.core.network.vehicle.VehicleControlPayload;
 import net.minecraft.client.Minecraft;
@@ -195,5 +196,10 @@ public class ModNetworking {
                 ScouterAreaDataPacket.TYPE,
                 ScouterAreaDataPacket.STREAM_CODEC,
                 ScouterAreaDataPacket::handle);
+
+        registrar.playToServer(
+                TrainingSwingPacket.TYPE,
+                TrainingSwingPacket.STREAM_CODEC,
+                TrainingSwingPacket::handle);
     }
 }
