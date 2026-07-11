@@ -14,6 +14,7 @@ import com.hmc.zenkai.content.block.ModBlocks;
 import com.hmc.zenkai.content.blockentity.ModBlockEntities;
 import com.hmc.zenkai.content.effect.ModEffects;
 import com.hmc.zenkai.content.entity.ModEntities;
+import com.hmc.zenkai.content.item.ModDataComponents;
 import com.hmc.zenkai.content.item.ModItems;
 import com.hmc.zenkai.content.sound.ModSounds;
 import com.hmc.zenkai.core.ModCommands;
@@ -82,6 +83,7 @@ public class Zenkai {
         DataAttachments.REGISTER.register(modEventBus);
         ModFeatures.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
+        ModDataComponents.register(modEventBus);
 
         // Configs
         modContainer.registerConfig(ModConfig.Type.SERVER, WishConfig.SPEC);

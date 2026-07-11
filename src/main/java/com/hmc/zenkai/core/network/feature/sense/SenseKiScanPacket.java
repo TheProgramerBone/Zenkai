@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * C2S: "escanea mi entorno" (sentir el ki). El cliente lo manda cada 10 ticks mientras el modo
- * no sea OFF. El servidor responde con un SenseKiDataPacket con TODO lo que hay en rango (el
+ * no sea OFF. El servidor responde con un SenseKiDataPacket con lo que hay en rango (el
  * filtrado por modo es del cliente, que conoce su propio PL).
  *
  * PL de cada entidad:
@@ -64,7 +64,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         boolean isPlayer = le instanceof Player;
 
         // Gamerule de la capa Zenkai apagado: el combate va por vida vanilla (los pools quedan
-        // congelados), asi que TODO se reporta vanilla, igual que el resto del sistema.
+        // congelados), asi que se reporta vanilla, igual que el resto del sistema.
         if (le.getServer() == null || !ModGameRules.enableRaceBoosts(le.getServer())) {
             return vanillaEntry(le, isPlayer);
         }

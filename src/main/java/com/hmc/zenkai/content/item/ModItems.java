@@ -34,6 +34,9 @@ public class ModItems {
     public static final DeferredItem<Item> ELITE_CIRCUIT = ITEMS.registerItem("elite_circuit",
             Item::new, new Item.Properties());
 
+    public static final DeferredItem<Item> SCOUTER_RADAR_UPGRADE = ITEMS.registerItem("scouter_radar_upgrade",
+            Item::new, new Item.Properties());
+
     public static final DeferredItem<Item> SPACE_POD_ITEM = ITEMS.registerItem("space_pod_item",
             SpacePodItem::new, new Item.Properties().stacksTo(1));
 
@@ -109,8 +112,11 @@ public class ModItems {
     public static final DeferredItem<Item> ISAAC_SPAWN_EGG = ITEMS.register("isaac_spawn_egg",
     () -> new DeferredSpawnEggItem(ModEntities.ISAAC,0xe4c7c5,0x9c716f, new Item.Properties()));
 
-    //Razas
 
+
+
+
+    //Razas
     public static final DeferredItem<GeoLayerArmorItem> NAMEKIAN_RACE_HELMET =
             ITEMS.register("namekian_race_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,

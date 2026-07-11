@@ -28,6 +28,18 @@
   "item.zenkai.isaac_spawn_egg": "Isaac Spawn Egg",
   "item.zenkai.yemma_spawn_egg": "Yemma Spawn Egg",
   "item.zenkai.scouter": "Scouter",
+  "item.zenkai.scouter_radar_upgrade": "Radar Upgrade",
+
+  "scouter.zenkai.mode.power": "POWER",
+  "scouter.zenkai.mode.strongest": "STRONGEST",
+  "scouter.zenkai.mode.radar": "RADAR",
+  "scouter.zenkai.label.weak": "WEAK",
+  "scouter.zenkai.label.formidable": "FORMIDABLE",
+  "scouter.zenkai.label.threat": "THREAT",
+  "scouter.zenkai.no_signal": "NO SIGNAL",
+  "scouter.zenkai.radar.ball": "DRAGON BALL",
+  "scouter.zenkai.radar.unavailable": "UPGRADE UNAVAILABLE",
+  "scouter.zenkai.meters": "%sm",
 
   "block.zenkai.namekian_grass_block": "Namekian Grass Block",
   "block.zenkai.namekian_dirt": "Namekian Dirt",

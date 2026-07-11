@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": { "item": "zenkai:scouter_radar_upgrade" },
+  "base": { "item": "zenkai:scouter" },
+  "addition": { "item": "zenkai:dragon_ball_radar" },
+  "result": {
+    "id": "zenkai:scouter",
+    "count": 1,
+    "components": {
+      "zenkai:radar_upgrade": true
+    }
+  }
+}
