@@ -32,6 +32,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     private final PlayerResourcePools pools     = new PlayerResourcePools();
     private final PlayerKiAttacks     kiAttacks = new PlayerKiAttacks();
     private final PlayerStateFlags    flags     = new PlayerStateFlags();
+    private final PlayerSkills skills = new PlayerSkills();
 
     /** Último tick (gameTime) en que este jugador invocó a Shenlong. Cooldown por jugador. */
     private long lastSummonTick = Long.MIN_VALUE;
@@ -56,6 +57,8 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public PlayerResourcePools pools()      { return pools; }
     public PlayerKiAttacks     kiAttacks()  { return kiAttacks; }
     public PlayerStateFlags    flags()      { return flags; }
+    public PlayerSkills skills() { return skills; }
+
 
     // ────────────────────────────────────────────────────────────────────────
     // API de compatibilidad — mantiene todas las llamadas existentes sin cambios
@@ -224,6 +227,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         ListTag pets = new ListTag();
         pets.addAll(deadPets);
         tag.put("deadPets", pets);
+        tag.put("skills", skills.save());
         return tag;
     }
 
@@ -232,6 +236,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         if (tag.contains("pools"))     pools.load(tag.getCompound("pools"));
         if (tag.contains("kiAttacks")) kiAttacks.load(tag.getCompound("kiAttacks"));
         if (tag.contains("flags"))     flags.load(tag.getCompound("flags"));
+        if (tag.contains("skills")) skills.load(tag.getCompound("skills"));
         lastSummonTick = tag.contains("lastSummonTick") ? tag.getLong("lastSummonTick") : Long.MIN_VALUE;
         deadPets.clear();
         if (tag.contains("deadPets")) {

@@ -221,6 +221,22 @@
   "screen.zenkai.stats_screen.stat.flying": "Volando: %s%%",
   "screen.zenkai.stats_screen.stat.ki_power": "Poder de Ki: %s",
 
+  "screen.zenkai.tab.main": "Principal",
+  "screen.zenkai.tab.skills": "Habilidades",
+  "screen.zenkai.tab.ki_techniques": "Téc. Ki",
+  "screen.zenkai.tab.physical_techniques": "Téc. Fís.",
+  "screen.zenkai.tab.story": "Historia",
+  "screen.zenkai.tab.party": "Party",
+  "screen.zenkai.tab.config": "Config",
+  "screen.zenkai.coming_soon": "Próximamente...",
+  "screen.zenkai.skills.empty": "No hay habilidades disponibles todavía",
+  "screen.zenkai.skills.buy": "Comprar",
+  "screen.zenkai.skills.owned": "✔ Aprendida",
+  "screen.zenkai.skills.cost": "Coste: %s TP · MIND %s",
+
+  "skill.zenkai.focus": "Enfoque",
+  "skill.zenkai.focus.desc": "Habilidad de prueba (sin efecto todavía).",
+
   "attribute.zenkai.str": "FUERZA: %s",
   "attribute.zenkai.dex": "DESTREZA: %s",
   "attribute.zenkai.con": "CONSTITUCIÓN: %s",
