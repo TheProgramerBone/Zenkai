@@ -55,6 +55,10 @@ public final class StatsConfig {
             BUILDER.comment("How DEX-derived FlySpeed translates to fly % per 100 points")
                     .defineInRange("scaling.fly", 1.0D, 0.01D, 10.0D);
 
+    private static final ModConfigSpec.IntValue TECHNIQUE_MAX_SLOTS_RAW =
+            BUILDER.comment("Ki techniques: max technique slots per player")
+                    .defineInRange("technique.max_slots", 6, 1, 24);
+
     // -------------------------------------------------
     // === NEW === BASE STATS POR RAZA (STR, DEX, CON, WIL, SPI, MND)
     // -------------------------------------------------
@@ -239,6 +243,8 @@ public final class StatsConfig {
     private static volatile double BODY_SCALE = 1;
     private static volatile double STAMINA_SCALE = 1;
     private static volatile double ENERGY_SCALE = 1;
+    private static volatile int TECHNIQUE_MAX_SLOTS = 6;
+
 
     private static volatile double TRAIN_DMG_TP = 0.05D, TRAIN_AIR_TP = 0.0003D,
             TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.25D, TRAIN_DECAY = 0.03D,
@@ -254,6 +260,8 @@ public final class StatsConfig {
     public static void onConfigLoad(final ModConfigEvent event) {
         if (event instanceof ModConfigEvent.Unloading) return;
         if (event.getConfig().getSpec() != SPEC) return;
+
+
 
         TP_COEFFICIENT       = TP_COEFFICIENT_RAW.get();
         GLOBAL_ATTRIBUTE_CAP = GLOBAL_ATTRIBUTE_CAP_RAW.get();
@@ -301,6 +309,8 @@ public final class StatsConfig {
         TRAIN_AIR_COST = TRAIN_AIR_COST_RAW.get();   TRAIN_AIR_TICKS = TRAIN_AIR_TICKS_RAW.get();
         TRAIN_HALF_LIFE = TRAIN_HALF_LIFE_RAW.get(); TRAIN_DECAY = TRAIN_DECAY_RAW.get();
         TRAIN_HTC_MULT = TRAIN_HTC_MULT_RAW.get();   TRAIN_MIN_EFF = TRAIN_MIN_EFF_RAW.get();
+        TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
+
     }
 
     // === Getters públicos (thread-safe) ===
@@ -333,6 +343,7 @@ public final class StatsConfig {
     public static double trainingFatigueDecayPerMinute() { return TRAIN_DECAY; }
     public static double trainingHtcMultiplier()         { return TRAIN_HTC_MULT; }
     public static double trainingMinEfficiency()         { return TRAIN_MIN_EFF; }
+    public static int techniqueMaxSlots() { return TECHNIQUE_MAX_SLOTS; }
 
     // === NEW: getters para bases y multiplicadores ===
 

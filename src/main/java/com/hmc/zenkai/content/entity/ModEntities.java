@@ -2,7 +2,6 @@ package com.hmc.zenkai.content.entity;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.entity.misc.IsaacEntity;
-import com.hmc.zenkai.content.entity.ki_attacks.KiBlastEntity;
 import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianWarriorEntity;
@@ -11,6 +10,7 @@ import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
 import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
+import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -54,9 +54,13 @@ public class ModEntities {
     public static final Supplier<EntityType<IsaacEntity>> ISAAC =
             ENTITY_TYPES.register("isaac", () -> EntityType.Builder.of(IsaacEntity::new, MobCategory.CREATURE).sized(0.6f, 1.8f).build("isaac"));
 
-    public static final Supplier<EntityType<KiBlastEntity>> KI_BLAST =
-            ENTITY_TYPES.register("ki_blast",()-> EntityType.Builder.of(KiBlastEntity::new,MobCategory.MISC)
-                    .sized(1,1).build("ki_blast"));
+    public static final Supplier<EntityType<KiProjectileEntity>> KI_PROJECTILE =
+            ENTITY_TYPES.register("ki_projectile", () -> EntityType.Builder
+                    .<KiProjectileEntity>of(KiProjectileEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(8)
+                    .updateInterval(1)
+                    .build("ki_projectile"));
 
     public static final Supplier<EntityType<YemmaEntity>> YEMMA =
             ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)

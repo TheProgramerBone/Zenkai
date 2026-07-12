@@ -98,7 +98,11 @@
   "key.zenkai.open_stats": "Open Stats",
   "key.zenkai.toggle_fly": "Toggle Flight",
   "key.categories.zenkai": "Zenkai",
+  "key.zenkai.fire_ki": "Fire Ki Technique",
   "key.zenkai.sense_ki": "Sense Ki / Scouter",
+  "key.zenkai.combat_mode": "Combat Mode",
+
+  "hud.zenkai.combat.no_techniques": "Assign techniques in the Ki Techniques menu",
 
   "sounds.zenkai.dragon_ball_radar_use": "Used Radar",
   "sounds.zenkai.dragon_ball_radar_searching": "A Dragon Ball is in radius",
@@ -138,6 +142,10 @@
   "messages.zenkai.wish_villager_ready": "Your librarian villager is ready!",
   "messages.zenkai.summon_cooldown": "§cYou must wait %s more day(s) before summoning again.",
   "screen.zenkai.shenlong_wish.remaining": "Wishes remaining: %s",
+  "screen.zenkai.technique.assign": "Assign",
+  "screen.zenkai.technique.assign_hint": "Click a slot to place it (click an occupied slot to clear)",
+
+
   "messages.zenkai.pet_revived": "§2§lShenlong:§6 Your companion returns to you.",
   "messages.zenkai.pet_revive_failed": "§cThe revival failed.",
   "messages.zenkai.zone_protected": "§6This zone is protected by %s",
@@ -237,9 +245,25 @@
   "screen.zenkai.skills.buy": "Buy",
   "screen.zenkai.skills.owned": "✔ Learned",
   "screen.zenkai.skills.cost": "Cost: %s TP · MIND %s",
+
   "skill.zenkai.focus": "Focus",
   "skill.zenkai.focus.desc": "Test skill (no effect yet).",
-  
+
+  "screen.zenkai.technique.edit_title": "Ki Technique Editor",
+  "screen.zenkai.technique.name": "Name",
+  "screen.zenkai.technique.type": "Type",
+  "screen.zenkai.technique.unlock": "Unlock (%s TP)",
+  "screen.zenkai.technique.save": "Save",
+  "screen.zenkai.technique.create": "New technique",
+  "screen.zenkai.technique.edit": "Edit",
+  "screen.zenkai.technique.empty": "No techniques created yet",
+  "screen.zenkai.technique.size": "Size: %s",
+
+  "technique.zenkai.wave": "Wave", "technique.zenkai.blast": "Blast",
+  "technique.zenkai.lazer": "Lazer", "technique.zenkai.spiral": "Spiral",
+  "technique.zenkai.big_blast": "Big Blast", "technique.zenkai.barrier": "Barrier",
+  "technique.zenkai.burst": "Burst",
+
   "attribute.zenkai.str": "STR: %s",
   "attribute.zenkai.dex": "DEX: %s",
   "attribute.zenkai.con": "CON: %s",
@@ -264,6 +288,8 @@
   "entity.zenkai.yemma": "Yemma",
   "entity.zenkai.wish_librarian": "Special Librarian",
   "entity.zenkai.saibaman": "Saibaman",
+
+  "entity.zenkai.ki_projectile": "Ki Technique",
 
   "gamerule.zenkai_allowRaceSelection": "Enable Race Creation",
   "gamerule.zenkai_enableKiDamage": "Enable Ki Damage",

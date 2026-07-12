@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.input;
 
+import com.hmc.zenkai.client.CombatModeClientState;
 import com.hmc.zenkai.client.ScouterClientState;
 import com.hmc.zenkai.client.SenseKiClientState;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
@@ -10,6 +11,7 @@ import com.hmc.zenkai.core.network.feature.ki.ToggleFlyPacket;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.network.feature.stats.TransformHoldPacket;
+import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -25,6 +27,8 @@ public final class KeyBindings {
     public static KeyMapping TOGGLE_FLY;
     public static KeyMapping CHARGE_KI;
     public static KeyMapping SENSE_KI;
+    public static KeyMapping FIRE_KI;
+    public static KeyMapping COMBAT_MODE;
 
     /** Modificador configurable para transformar + C (default ALT) */
     public static KeyMapping TRANSFORM_MOD;
@@ -87,6 +91,20 @@ public final class KeyBindings {
 
         SENSE_KI = new KeyMapping("key.zenkai.sense_ki", GLFW.GLFW_KEY_F4, "key.categories.zenkai");
         event.register(SENSE_KI);
+
+        FIRE_KI = new KeyMapping(
+                "key.zenkai.fire_ki",
+                GLFW.GLFW_KEY_R,
+                "key.categories.zenkai"
+        );
+        event.register(FIRE_KI);
+
+        COMBAT_MODE = new KeyMapping(
+                "key.zenkai.combat_mode",
+                GLFW.GLFW_KEY_X,
+                "key.categories.zenkai"
+        );
+        event.register(COMBAT_MODE);
     }
 
     /**
@@ -99,6 +117,7 @@ public final class KeyBindings {
 
         SenseKiClientState.tick(mc);
         ScouterClientState.tick(mc);
+        CombatModeClientState.tick(mc);
 
         PlayerStatsAttachment stats = mc.player.getData(DataAttachments.PLAYER_STATS.get());
         boolean hasRace = stats.isRaceChosen();
@@ -216,6 +235,13 @@ public final class KeyBindings {
                 lastChargeSent = now;
                 PacketDistributor.sendToServer(new KiChargePacket(now));
             }
+        }
+
+        while (COMBAT_MODE.consumeClick()) {
+            CombatModeClientState.toggle(mc);
+        }
+        while (FIRE_KI.consumeClick()) {
+            CombatModeClientState.fireSelected(mc); // solo dispara en modo combate
         }
     }
 

@@ -1,13 +1,15 @@
 package com.hmc.zenkai.client;
 
-import com.hmc.zenkai.content.entity.ki_attacks.KiBlastEntity;
+import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.core.combat.ZenkaiStats;
 import com.hmc.zenkai.core.config.StatsConfig;
+import com.hmc.zenkai.core.network.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.technique.KiCombatServer;
 import com.hmc.zenkai.core.training.TrainingHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -57,33 +59,41 @@ public class CombatZenkaiHooks {
         float dmg = e.getNewDamage();
 
         // ── 1) LADO ATACANTE (jugador o entidad con stats) ────────────────────
-        // Ki Blast tiene su propio cálculo -> no se recalcula aquí.
+        // Los proyectiles ki traen su daño ya calculado (kiPower) -> no se recalculan aquí.
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
         if (atkStats != null && atkStats.isCombatActive()
-                && !(e.getSource().getDirectEntity() instanceof KiBlastEntity)) {
+                && !(e.getSource().getDirectEntity() instanceof KiProjectileEntity)) {
             double strDamage = atkStats.computeMeleeFinal();
 
             if (e.getSource().getEntity() instanceof Player attacker) {
-                // Jugador: STR (limitado por stamina) + bonus de arma, y consume stamina.
-                double weaponBonus = 0.0;
-                AttributeInstance attr = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
-                if (attr != null) weaponBonus = attr.getValue();
+                // Compuerta de MODO COMBATE: fuera de él, el golpe del jugador deja pasar el
+                // daño VANILLA puro (sin STR zenkai y sin gastar stamina). Contra pools zenkai
+                // es simbólico -> golpes amistosos sin vaporizar a nadie; contra mobs, normal.
+                boolean zenkaiMelee = attacker instanceof ServerPlayer atkSp
+                        && CombatModeServerState.isActive(atkSp.getUUID());
 
-                int currentStamina = atkStats.getStamina();
-                double strApplied, totalDamage;
-                if (currentStamina <= 0) {
-                    strApplied = 0.0;
-                    totalDamage = 0.0;
-                } else {
-                    strApplied = Math.min(strDamage, currentStamina);
-                    totalDamage = strApplied + weaponBonus;
+                if (zenkaiMelee) {
+                    // Jugador: STR (limitado por stamina) + bonus de arma, y consume stamina.
+                    double weaponBonus = 0.0;
+                    AttributeInstance attr = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
+                    if (attr != null) weaponBonus = attr.getValue();
+
+                    int currentStamina = atkStats.getStamina();
+                    double strApplied, totalDamage;
+                    if (currentStamina <= 0) {
+                        strApplied = 0.0;
+                        totalDamage = 0.0;
+                    } else {
+                        strApplied = Math.min(strDamage, currentStamina);
+                        totalDamage = strApplied + weaponBonus;
+                    }
+
+                    int staminaCost = (int) Math.ceil(strApplied);
+                    if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
+
+                    dmg = (float) totalDamage;
+                    PlayerLifeCycle.syncIfServer(attacker);
                 }
-
-                int staminaCost = (int) Math.ceil(strApplied);
-                if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
-
-                dmg = (float) totalDamage;
-                PlayerLifeCycle.syncIfServer(attacker);
             } else {
                 // Entidad: su STR es la fuente única del daño melee (sin gate de stamina en Fase 2).
                 dmg = (float) strDamage;
@@ -91,6 +101,7 @@ public class CombatZenkaiHooks {
         }
 
         // ── 2) LADO DEFENSOR (jugador o entidad con stats) ────────────────────
+        // La DEFENSA se mantiene SIEMPRE, esté o no en modo combate.
         ZenkaiCombatStats defStats = ZenkaiStats.of(e.getEntity());
         if (defStats != null && defStats.isCombatActive()) {
             if (dmg > 0f) {
@@ -99,10 +110,17 @@ public class CombatZenkaiHooks {
                         ? dmg * StatsConfig.minDamagePercent()
                         : dmg - defense;
                 finalDamage = Math.max(finalDamage, 0.0);
+
+                // Barrera ki: absorbe ANTES de tocar el body (solo jugadores).
+                if (e.getEntity() instanceof ServerPlayer defSp) {
+                    finalDamage = KiCombatServer.absorb(defSp, finalDamage);
+                }
+
                 int bodyBefore = defStats.getBody();
                 defStats.addBody(-(int) Math.ceil(finalDamage));
 
-                // Entrenamiento: TP por daño efectivo (capado por el pool restante: sin overkill).
+                // Entrenamiento: TP por daño EFECTIVO (post-defensa y post-barrera,
+                // capado por el pool restante -> sin exploit de overkill ni de derribados).
                 if (e.getSource().getEntity() instanceof ServerPlayer trainer
                         && trainer != e.getEntity()) {
                     TrainingHooks.grantFromDamage(trainer, Math.min(finalDamage, bodyBefore));
@@ -127,7 +145,7 @@ public class CombatZenkaiHooks {
             return;
         }
 
-        // Víctima sin stats (mob vanilla): aplica el daño recalculado del atacante a su vida vanilla.
+        // Víctima sin stats (mob vanilla): aplica el daño (recalculado o vanilla) a su vida.
         e.setNewDamage(dmg);
         // Entrenamiento vs mobs vanilla: capado por la vida restante (sin overkill).
         if (dmg > 0f && e.getSource().getEntity() instanceof ServerPlayer trainer

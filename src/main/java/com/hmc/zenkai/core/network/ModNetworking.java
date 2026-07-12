@@ -4,6 +4,8 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.client.gui.StackWishMenu;
 import com.hmc.zenkai.client.gui.screens.wishes.ClientWishToggles;
+import com.hmc.zenkai.core.network.feature.combat.CombatModePacket;
+import com.hmc.zenkai.core.network.feature.combat.CombatModeSyncPacket;
 import com.hmc.zenkai.core.network.feature.ki.*;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerFormPacket;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerStatsPacket;
@@ -12,6 +14,8 @@ import com.hmc.zenkai.core.network.feature.race.UpdatePlayerVisualPacket;
 import com.hmc.zenkai.core.network.feature.sense.*;
 import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.core.network.feature.stats.*;
+import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
+import com.hmc.zenkai.core.network.feature.technique.TechniquePacket;
 import com.hmc.zenkai.core.network.feature.training.TrainingSwingPacket;
 import com.hmc.zenkai.core.network.feature.wishes.*;
 import com.hmc.zenkai.core.network.vehicle.VehicleControlPayload;
@@ -102,18 +106,6 @@ public class ModNetworking {
         registrar.playToServer(ToggleFlyPacket.TYPE, ToggleFlyPacket.STREAM_CODEC, ToggleFlyPacket::handle);
         registrar.playToServer(KiChargePacket.TYPE,  KiChargePacket.STREAM_CODEC,  KiChargePacket::handle);
         registrar.playToServer(FlyBoostPacket.TYPE,  FlyBoostPacket.STREAM_CODEC,  FlyBoostPacket::handle);
-
-        registrar.playToServer(
-                UpdateKiAttackColorPacket.TYPE,
-                UpdateKiAttackColorPacket.CODEC,
-                UpdateKiAttackColorPacket::handle
-        );
-
-        registrar.playToServer(
-                ChargeKiAttackPacket.TYPE,
-                ChargeKiAttackPacket.STREAM_CODEC,
-                ChargeKiAttackPacket::handle
-        );
 
         registrar.playToServer(
                 ChooseRacePacket.TYPE,
@@ -216,5 +208,25 @@ public class ModNetworking {
                 SkillBuyPacket.TYPE,
                 SkillBuyPacket.STREAM_CODEC,
                 SkillBuyPacket::handle);
+
+        registrar.playToServer(
+                TechniquePacket.TYPE,
+                TechniquePacket.STREAM_CODEC,
+                TechniquePacket::handle);
+
+        registrar.playToServer(
+                KiFirePacket.TYPE,
+                KiFirePacket.STREAM_CODEC,
+                KiFirePacket::handle);
+
+        registrar.playToServer(
+                CombatModePacket.TYPE,
+                CombatModePacket.STREAM_CODEC,
+                CombatModePacket::handle);
+
+        registrar.playToClient(
+                CombatModeSyncPacket.TYPE,
+                CombatModeSyncPacket.STREAM_CODEC,
+                CombatModeSyncPacket::handle);
     }
 }
