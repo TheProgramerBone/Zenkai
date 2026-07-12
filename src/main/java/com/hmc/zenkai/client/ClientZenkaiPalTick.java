@@ -26,6 +26,7 @@ public final class ClientZenkaiPalTick {
         FlyDir flyDir = null;
         int flyBoostState = 0; // ver constantes CRUISE_START/CRUISE_LOOP/BOOST_START/BOOST_LOOP
         int flyBoostTicks = 0; // cuenta atrás de la intermedia antes de pasar al loop
+        boolean blockPlaying = false;
     }
 
     private static final Map<UUID, AnimState> STATES = new HashMap<>();
@@ -158,6 +159,18 @@ public final class ClientZenkaiPalTick {
             if (st.chainTicks == 0) {
                 ZenkaiPalAnimations.playTransformLoop(p);
             }
+        }
+
+        // ── Animación de defensa (local: estado propio instantáneo; remotos: sync) ──
+        boolean blockingNow = (p == mc.player)
+                ? CombatModeClientState.isBlockingLocal()
+                : CombatModeClientState.isBlockingRemote(p.getId());
+        if (blockingNow && !st.blockPlaying) {
+            st.blockPlaying = true;
+            ZenkaiPalAnimations.playBlock(p);
+        } else if (!blockingNow && st.blockPlaying) {
+            st.blockPlaying = false;
+            ZenkaiPalAnimations.stopBlock(p);
         }
     }
 

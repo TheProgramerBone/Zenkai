@@ -20,7 +20,7 @@ public final class ClientZenkaiHooks {
     // =========================
     // Icons atlas
     // =========================
-    private static final ResourceLocation ICONS_TEX =
+    public static final ResourceLocation ICONS_TEX =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
 
     private static final int ICONS_TEX_W = 270;

@@ -2,6 +2,7 @@ package com.hmc.zenkai.core.network.feature.combat;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.technique.KiCombatServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -30,6 +31,7 @@ public final class CombatModeServerState {
         } else {
             ACTIVE.remove(sp.getUUID());
         }
+        if (!active) KiCombatServer.setBlocking(sp, false);
         PacketDistributor.sendToPlayersTrackingEntity(sp,
                 new CombatModeSyncPacket(sp.getId(), active, style));
     }
@@ -61,6 +63,7 @@ public final class CombatModeServerState {
     }
 
     private static void clear(ServerPlayer sp) {
+        KiCombatServer.setBlocking(sp, false);
         if (ACTIVE.remove(sp.getUUID()) != null) {
             PacketDistributor.sendToPlayersTrackingEntity(sp,
                     new CombatModeSyncPacket(sp.getId(), false, (byte) 0));

@@ -11,4 +11,7 @@ public final class ZenkaiPalLayers {
 
     public static final ResourceLocation FLY_LAYER =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "fly");
+
+    public static final ResourceLocation BLOCK_LAYER =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "block");
 }

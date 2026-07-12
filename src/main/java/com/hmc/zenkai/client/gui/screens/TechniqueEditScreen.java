@@ -1,16 +1,17 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.network.feature.technique.TechniquePacket;
+import com.hmc.zenkai.core.technique.KiCombatServer;
 import com.hmc.zenkai.core.technique.KiTechnique;
 import com.hmc.zenkai.core.technique.KiTechniqueType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -18,17 +19,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
+import java.util.Locale;
 
 /**
- * Editor de técnicas ki (crear con slot = -1, editar con slot >= 0), sobre common_screen.
- *  - Botones: TextOnlyButton (texturizable por Juan).
- *  - Color: ColorPickerWidget (HSV + hex), embebido en el panel.
- *  - Columna derecha: PREVIEW de la entidad (Fase B: cuando exista el proyectil, aquí se
- *    renderiza en vivo con el color/tamaño elegidos; hoy dibuja un placeholder que ya
- *    reacciona al color y al tamaño).
- * Guardar solo activo con tipo desbloqueado y nombre no vacío; el servidor vuelve a validar.
- * Al cerrar vuelve al menú en la pestaña Técnicas Ki.
+ * Editor de técnicas ki estilo DBC (crear con slot = -1, editar con slot >= 0), sobre
+ * common_screen. Filas con cicladores < >:
+ *   Name | Type | Effect (No/Explosive) | Size | Color (abre ColorPickerWidget, patrón
+ *   AppearanceScreen/StyleSelection).
+ * Debajo, PREVIEWS de solo lectura calculadas con LAS MISMAS fórmulas del servidor
+ * (KiCombatServer): Speed, Damage (con tu Ki Power actual), Energy Cost, Casttime,
+ * Cooldown. Guardar exige tipo desbloqueado y nombre; el servidor revalida.
  */
 public class TechniqueEditScreen extends Screen {
 
@@ -36,19 +36,20 @@ public class TechniqueEditScreen extends Screen {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
     private static final int BG_W = 256;
     private static final int BG_H = 256;
+    private static final int ROW_H = 17;
 
     private final Minecraft mc = Minecraft.getInstance();
     private final int slot; // -1 = crear
 
     private KiTechniqueType type;
-    private int rgb; // 0xRRGGBB
+    private int rgb;
     private int size;
+    private boolean explosive;
 
     private EditBox nameBox;
-    private ColorPickerWidget picker;
     private TextOnlyButton unlockButton;
     private TextOnlyButton saveButton;
-    private boolean explosive;
+    private boolean pickerOpen = false;
 
     private int leftPos, topPos;
 
@@ -62,10 +63,12 @@ public class TechniqueEditScreen extends Screen {
             type = existing.type();
             rgb = existing.rgb();
             size = existing.size();
+            explosive = existing.explosive();
         } else {
             type = KiTechniqueType.BLAST;
             rgb = type.defaultRgb;
             size = KiTechnique.MIN_SIZE;
+            explosive = false;
         }
     }
 
@@ -80,66 +83,84 @@ public class TechniqueEditScreen extends Screen {
         int x = leftPos + 16;
         int contentW = BG_W - 32;
 
-        // Nombre
+        // ── Name ──
         String prevName = nameBox != null ? nameBox.getValue() : initialName();
-        nameBox = new EditBox(this.font, x, topPos + 28, contentW, 16,
+        nameBox = new EditBox(this.font, x + 44, topPos + 26, contentW - 44, 14,
                 Component.translatable("screen.zenkai.technique.name"));
         nameBox.setMaxLength(KiTechnique.MAX_NAME_LENGTH);
         nameBox.setValue(prevName);
         nameBox.setResponder(s -> refreshButtons());
         this.addRenderableWidget(nameBox);
 
-        // Tipo (cicla) + desbloqueo
-        this.addRenderableWidget(new TextOnlyButton(x, topPos + 50, contentW, 14,
-                typeLabel(), () -> {
-            KiTechniqueType[] all = KiTechniqueType.values();
-            type = all[(type.ordinal() + 1) % all.length];
-            rgb = type.defaultRgb;
-            rebuildWidgets();
-        }));
+        int y = topPos + 46;
 
-        unlockButton = new TextOnlyButton(x, topPos + 66, contentW, 12,
+        // ── Type ──
+        cyclerRow(x, y, contentW,
+                () -> Component.translatable("screen.zenkai.technique.type")
+                        .append(": ").append(Component.translatable(type.nameKey())),
+                dir -> {
+                    KiTechniqueType[] all = KiTechniqueType.values();
+                    type = all[Math.floorMod(type.ordinal() + dir, all.length)];
+                    rgb = type.defaultRgb;
+                    rebuildWidgets();
+                });
+        y += ROW_H;
+
+        // ── Effect (No / Explosive) ──
+        cyclerRow(x, y, contentW,
+                () -> Component.translatable("screen.zenkai.technique.effect")
+                        .append(": ")
+                        .append(Component.translatable(explosive
+                                ? "screen.zenkai.technique.effect.explosive"
+                                : "screen.zenkai.technique.effect.none")),
+                dir -> {
+                    explosive = !explosive;
+                    rebuildWidgets();
+                });
+        y += ROW_H;
+
+        // ── Size ──
+        cyclerRow(x, y, contentW,
+                () -> Component.translatable("screen.zenkai.technique.size", size),
+                dir -> {
+                    int span = KiTechnique.MAX_SIZE - KiTechnique.MIN_SIZE + 1;
+                    size = KiTechnique.MIN_SIZE
+                            + Math.floorMod(size - KiTechnique.MIN_SIZE + dir, span);
+                    rebuildWidgets();
+                });
+        y += ROW_H;
+
+        // ── Color (abre/cierra el picker) ──
+        this.addRenderableWidget(new TextOnlyButton(x, y, 90, 14,
+                Component.translatable("screen.zenkai.technique.color"),
+                () -> {
+                    pickerOpen = !pickerOpen;
+                    rebuildWidgets();
+                }));
+        if (pickerOpen) {
+            this.addRenderableWidget(new ColorPickerWidget(
+                    leftPos + BG_W - 16 - ColorPickerWidget.TOTAL_W, y + 16,
+                    0xFF000000 | rgb, "Ki Color", argb -> rgb = argb & 0xFFFFFF));
+        }
+        y += ROW_H;
+
+        // ── Unlock (solo si el tipo está bloqueado) ──
+        unlockButton = new TextOnlyButton(x, topPos + 196, contentW, 12,
                 Component.translatable("screen.zenkai.technique.unlock", type.tpCost),
                 () -> PacketDistributor.sendToServer(TechniquePacket.unlock(type)));
         this.addRenderableWidget(unlockButton);
 
-        // Color (izquierda) — 118x98. La columna derecha queda para el preview (Fase B).
-        picker = new ColorPickerWidget(x, topPos + 84, 0xFF000000 | rgb,
-                "Ki Color", argb -> rgb = argb & 0xFFFFFF);
-        this.addRenderableWidget(picker);
-
-        // Tamaño
-        this.addRenderableWidget(new AbstractSliderButton(x, topPos + 192, contentW, 14,
-                sizeLabel(size), (size - KiTechnique.MIN_SIZE)
-                / (double) (KiTechnique.MAX_SIZE - KiTechnique.MIN_SIZE)) {
-            @Override protected void updateMessage() {
-                setMessage(sizeLabel(size));
-            }
-            @Override protected void applyValue() {
-                size = KiTechnique.MIN_SIZE + (int) Math.round(
-                        value * (KiTechnique.MAX_SIZE - KiTechnique.MIN_SIZE));
-            }
-        });
-
-        //Explosivo
-        this.addRenderableWidget(new TextOnlyButton(x, topPos + 210, contentW, 12,
-                explosiveLabel(), () -> {
-            explosive = !explosive;
-            rebuildWidgets();
-        }));
-
-
-        // Guardar / Cancelar
-        saveButton = new TextOnlyButton(x, topPos + 228, contentW / 2 - 4, 14,
+        // ── Save / Cancel ──
+        saveButton = new TextOnlyButton(x, topPos + 214, contentW / 2 - 4, 14,
                 Component.translatable("screen.zenkai.technique.save"), () -> {
             PlayerStatsAttachment a = att();
             if (a != null) {
                 String n = KiTechnique.sanitizeName(nameBox.getValue());
                 if (slot < 0) {
-                    a.techniques().addSlot(new KiTechnique(n, type, rgb, size, explosive));
+                    a.techniques().addSlot(new KiTechnique(n, type, rgb, size, explosive)); // optimista
                 } else {
                     KiTechnique ex = a.techniques().slot(slot);
-                    if (ex != null) ex.set(n, type, rgb, size, explosive);
+                    if (ex != null) ex.set(n, type, rgb, size, explosive);                  // optimista
                 }
             }
             PacketDistributor.sendToServer(
@@ -154,26 +175,21 @@ public class TechniqueEditScreen extends Screen {
         refreshButtons();
     }
 
+    /** Fila DBC: [<] etiqueta centrada [>]. dir = -1 / +1. */
+    private void cyclerRow(int x, int y, int w, java.util.function.Supplier<Component> label,
+                           java.util.function.IntConsumer onCycle) {
+        this.addRenderableWidget(new TextOnlyButton(x, y, 12, 14,
+                Component.literal("<"), () -> onCycle.accept(-1)));
+        this.addRenderableWidget(new TextOnlyButton(x + 14, y, w - 28, 14,
+                label.get(), () -> onCycle.accept(1)));
+        this.addRenderableWidget(new TextOnlyButton(x + w - 12, y, 12, 14,
+                Component.literal(">"), () -> onCycle.accept(1)));
+    }
+
     private String initialName() {
         PlayerStatsAttachment att = att();
         KiTechnique existing = (att != null && slot >= 0) ? att.techniques().slot(slot) : null;
         return existing != null ? existing.name() : "";
-    }
-
-    private Component typeLabel() {
-        return Component.translatable("screen.zenkai.technique.type")
-                .append(": ")
-                .append(Component.translatable(type.nameKey()));
-    }
-
-    private Component explosiveLabel() {
-        return Component.translatable("screen.zenkai.technique.explosive")
-                .append(": ")
-                .append(Component.translatable(explosive ? "gui.yes" : "gui.no"));
-    }
-
-    private static Component sizeLabel(int s) {
-        return Component.translatable("screen.zenkai.technique.size", s);
     }
 
     private void refreshButtons() {
@@ -190,22 +206,56 @@ public class TechniqueEditScreen extends Screen {
         refreshButtons(); // el desbloqueo llega por sync asíncrono
 
         g.drawCenteredString(this.font, this.title, leftPos + BG_W / 2, topPos + 12, 0xFFFFFFFF);
+        g.drawString(this.font, Component.translatable("screen.zenkai.technique.name")
+                .append(":"), leftPos + 16, topPos + 29, 0xFFFFFFFF, true);
 
-        // Columna derecha: preview de la entidad (Fase B). Placeholder que ya reacciona
-        // al color y tamaño elegidos.
-        int px = leftPos + 16 + ColorPickerWidget.TOTAL_W + 8;
-        int pw = leftPos + BG_W - 16 - px;
-        int py = topPos + 84;
-        int ph = ColorPickerWidget.TOTAL_H;
-        g.fill(px, py, px + pw, py + ph, 0x60000000);
-        int dot = 6 + size * 3;
-        int cx = px + pw / 2, cy = py + ph / 2;
-        g.fill(cx - dot / 2, cy - dot / 2, cx + dot / 2, cy + dot / 2, 0xFF000000 | rgb);
+        // Swatch + ícono junto al botón Color.
+        KiTechnique previewTech = new KiTechnique(" ", type, rgb, size, explosive);
+        int sy = topPos + 46 + ROW_H * 3;
+        g.fill(leftPos + 110, sy + 1, leftPos + 124, sy + 13, 0xFF000000);
+        g.fill(leftPos + 111, sy + 2, leftPos + 123, sy + 12, 0xFF000000 | rgb);
+        TechniqueIcons.draw(g, leftPos + 130, sy - 3, previewTech);
 
-        if (att() != null) {
-            g.drawString(this.font, Component.literal("TP: " + Objects.requireNonNull(att()).getTP()),
-                    leftPos + 16, topPos + 232, 0xFFFFD700, true);
+        // ── Previews (mismas fórmulas del servidor) ──
+        PlayerStatsAttachment att = att();
+        if (att != null && !pickerOpen) {
+            double kiPower = att.computeKiPowerFinal();
+            double dmg = KiCombatServer.computeDamage(kiPower, type, size)
+                    * Math.max(1, type.count);
+            int cost = KiCombatServer.computeCost(att.getEnergyMax(), type, size,
+                    explosive && !type.defensive);
+
+            int iy = topPos + 118;
+            info(g, iy, "screen.zenkai.technique.speed", speedLabel());
+            info(g, iy += 12, "screen.zenkai.technique.damage",
+                    Component.literal(fmt(dmg)));
+            info(g, iy += 12, "screen.zenkai.technique.cost",
+                    Component.literal(String.valueOf(cost)));
+            info(g, iy += 12, "screen.zenkai.technique.casttime",
+                    Component.literal(fmt(type.chargeTicks / 20.0) + " sec"));
+            info(g, iy += 12, "screen.zenkai.technique.cooldown",
+                    Component.literal(fmt(type.cooldownTicks / 20.0) + " sec"));
+
+            g.drawString(this.font, Component.literal("TP: " + att.getTP()),
+                    leftPos + 16, topPos + 182, 0xFFFFD700, true);
         }
+    }
+
+    private void info(GuiGraphics g, int y, String key, Component value) {
+        g.drawString(this.font, Component.translatable(key).append(": ").append(value),
+                leftPos + 16, y, 0xFFCCCCCC, true);
+    }
+
+    private Component speedLabel() {
+        String k = type.defensive ? "screen.zenkai.technique.speed.none"
+                : type.speed <= 0.9f ? "screen.zenkai.technique.speed.slow"
+                : type.speed <= 1.4f ? "screen.zenkai.technique.speed.average"
+                : "screen.zenkai.technique.speed.fast";
+        return Component.translatable(k);
+    }
+
+    private static String fmt(double v) {
+        return String.format(Locale.ROOT, v == Math.floor(v) ? "%.0f" : "%.1f", v);
     }
 
     @Override
@@ -221,6 +271,3 @@ public class TechniqueEditScreen extends Screen {
     @Override
     public boolean isPauseScreen() { return false; }
 }
-
-
-

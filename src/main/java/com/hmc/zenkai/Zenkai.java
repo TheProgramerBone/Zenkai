@@ -197,11 +197,19 @@ public class Zenkai {
                 );
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.FLY_LAYER,
-                        1000,
+                        1100,
                         player -> new PlayerAnimationController(
                                 player,
                                 (controller, state, animSetter) -> PlayState.STOP
                         )
+                );
+
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.BLOCK_LAYER,
+                        1200,
+                        player -> new PlayerAnimationController(
+                                player,(controller, state, animSetter) -> PlayState.STOP)
+
                 );
             });
         }

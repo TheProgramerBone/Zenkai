@@ -24,9 +24,9 @@ public final class TechniqueIcons {
     private static final ResourceLocation ATLAS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/technique_icons.png");
     private static final int CELL = 20;
-    private static final int ATLAS_W = 160;
+    private static final int ATLAS_W = 180;
     private static final int ATLAS_H = 20;
-    private static final int EXPLOSIVE_CELL = 7;
+    private static final int EXPLOSIVE_CELL = 8;
 
     // Caché de existencia (recheck periódico: recoge F3+T).
     private static boolean atlasExists = false;
