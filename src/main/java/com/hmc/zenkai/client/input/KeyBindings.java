@@ -240,9 +240,6 @@ public final class KeyBindings {
         while (COMBAT_MODE.consumeClick()) {
             CombatModeClientState.toggle(mc);
         }
-        while (FIRE_KI.consumeClick()) {
-            CombatModeClientState.fireSelected(mc); // solo dispara en modo combate
-        }
     }
 
     private static void stopChargeIfNeeded() {

@@ -111,6 +111,11 @@ public class CombatZenkaiHooks {
                         : dmg - defense;
                 finalDamage = Math.max(finalDamage, 0.0);
 
+                if (e.getEntity() instanceof ServerPlayer defSp
+                        && KiCombatServer.isBlocking(defSp)) {
+                    finalDamage *= KiCombatServer.BLOCK_REDUCTION;
+                }
+
                 // Barrera ki: absorbe ANTES de tocar el body (solo jugadores).
                 if (e.getEntity() instanceof ServerPlayer defSp) {
                     finalDamage = KiCombatServer.absorb(defSp, finalDamage);

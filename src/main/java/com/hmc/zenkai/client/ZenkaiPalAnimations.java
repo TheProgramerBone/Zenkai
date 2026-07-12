@@ -14,6 +14,9 @@ public final class ZenkaiPalAnimations {
     public static final ResourceLocation TRANSFORMATION_2 =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.transformation2");
 
+    private static final ResourceLocation BLOCK_ANIM =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.block");
+
     /** Direcciones de vuelo. Cada una tiene 3 animaciones del PAL (créalas en player_animations/):
      *   cruise     = "fly.<dir>"              (crucero, sin Control)
      *   boostStart = "fly.<dir>_boost_start"  (INTERMEDIA: transición al pulsar Control, se ve una vez)
@@ -64,5 +67,17 @@ public final class ZenkaiPalAnimations {
 
     public static void playTransformLoop(AbstractClientPlayer player) {
         controller(player).triggerAnimation(TRANSFORMATION_2);
+    }
+
+    public static PlayerAnimationController blockController(AbstractClientPlayer player) {
+        return (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(player, ZenkaiPalLayers.BLOCK_LAYER);
+    }
+
+    public static void playBlock(AbstractClientPlayer player) {
+        blockController(player).triggerAnimation(BLOCK_ANIM);
+    }
+
+    public static void stopBlock(AbstractClientPlayer player) {
+        blockController(player).stopTriggeredAnimation();
     }
 }

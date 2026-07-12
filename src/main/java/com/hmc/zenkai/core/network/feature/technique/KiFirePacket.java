@@ -9,35 +9,38 @@ import com.hmc.zenkai.core.technique.KiCombatServer;
 import com.hmc.zenkai.core.technique.KiTechnique;
 import com.hmc.zenkai.core.technique.KiTechniqueType;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * C2S: disparar la técnica del slot indicado. Validación 100% servidor: raza, slot,
- * cooldown (KiCombatServer), y energía suficiente (se descuenta con addEnergy negativo).
+ * C2S: disparar la técnica del slot con la carga acumulada (R + click derecho; soltar
+ * click dispara). Validación 100% servidor: raza, manos vacías, slot, cooldown por slot
+ * (KiCombatServer.tryFire), carga mínima (MIN_CHARGE) y energía suficiente.
  *
- * Fórmulas (simuladas, eficiencia 0.22-0.35 pareja entre tipos):
- *  daño  = kiPower × type.damageMult × sizeFactor(size)          [por proyectil]
- *  coste = ceil(energyMax × 0.04 × type.kiCostMult × costSizeFactor(size)
- *               × (explosiva ? 1.5 : 1))                          [por disparo]
- * BURST dispara type.count proyectiles con dispersión; BARRIER activa la burbuja.
+ * chargeTicks se clampa a type.chargeTicks; ratio = ticks/max. Daño y coste escalan
+ * LINEAL con la carga (misma eficiencia a cualquier %, disparar antes = más débil pero
+ * más rápido). BARRIER ignora la carga (siempre completa). Fórmulas en KiCombatServer
+ * (compartidas con las previews del editor).
  */
-public record KiFirePacket(int slot) implements CustomPacketPayload {
+public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPayload {
 
-    private static final double BASE_COST_PCT = 0.04;
-    private static final double EXPLOSIVE_COST_MULT = 1.5;
     private static final float BURST_SPREAD_DEG = 6.0f;
 
     public static final Type<KiFirePacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_fire"));
 
     public static final StreamCodec<FriendlyByteBuf, KiFirePacket> STREAM_CODEC =
-            StreamCodec.composite(ByteBufCodecs.VAR_INT, KiFirePacket::slot, KiFirePacket::new);
+            StreamCodec.of(
+                    (buf, pkt) -> {
+                        buf.writeVarInt(pkt.slot());
+                        buf.writeVarInt(pkt.chargeTicks());
+                    },
+                    buf -> new KiFirePacket(buf.readVarInt(), buf.readVarInt()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
@@ -48,24 +51,31 @@ public record KiFirePacket(int slot) implements CustomPacketPayload {
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             if (!att.isRaceChosen()) return;
 
+            // Técnicas ki: ambas manos libres (canaliza el ki con las palmas).
+            if (!sp.getMainHandItem().isEmpty() || !sp.getOffhandItem().isEmpty()) return;
+
             KiTechnique tech = att.techniques().slot(pkt.slot());
             if (tech == null) return;
-            if (!KiCombatServer.tryFire(sp)) return;
 
             KiTechniqueType type = tech.type();
+            double ratio = type.defensive ? 1.0
+                    : Mth.clamp(pkt.chargeTicks() / (double) Math.max(1, type.chargeTicks), 0.0, 1.0);
+            if (ratio < KiTechniqueType.MIN_CHARGE) return;
+
+            if (!KiCombatServer.tryFire(sp, pkt.slot(), type.cooldownTicks)) return;
+
             double kiPower = att.computeKiPowerFinal();
             boolean explosive = tech.explosive() && !type.defensive;
 
-            int cost = (int) Math.ceil(att.getEnergyMax() * BASE_COST_PCT
-                    * type.kiCostMult * KiCombatServer.costSizeFactor(tech.size())
-                    * (explosive ? EXPLOSIVE_COST_MULT : 1.0));
+            int cost = (int) Math.max(1, Math.ceil(
+                    KiCombatServer.computeCost(att.getEnergyMax(), type, tech.size(), explosive) * ratio));
             if (att.getEnergy() < cost) return;
             att.addEnergy(-cost);
 
             if (type.defensive) {
                 KiCombatServer.activateBarrier(sp, tech, kiPower);
             } else {
-                double damage = kiPower * type.damageMult * KiCombatServer.sizeFactor(tech.size());
+                double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio;
                 for (int i = 0; i < Math.max(1, type.count); i++) {
                     spawnProjectile(sp, tech, damage, explosive, i);
                 }

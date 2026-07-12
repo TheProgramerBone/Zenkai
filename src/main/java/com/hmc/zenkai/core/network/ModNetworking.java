@@ -4,6 +4,8 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.client.gui.StackWishMenu;
 import com.hmc.zenkai.client.gui.screens.wishes.ClientWishToggles;
+import com.hmc.zenkai.core.network.feature.combat.BlockingPacket;
+import com.hmc.zenkai.core.network.feature.combat.BlockingSyncPacket;
 import com.hmc.zenkai.core.network.feature.combat.CombatModePacket;
 import com.hmc.zenkai.core.network.feature.combat.CombatModeSyncPacket;
 import com.hmc.zenkai.core.network.feature.ki.*;
@@ -228,5 +230,15 @@ public class ModNetworking {
                 CombatModeSyncPacket.TYPE,
                 CombatModeSyncPacket.STREAM_CODEC,
                 CombatModeSyncPacket::handle);
+
+        registrar.playToServer(
+                BlockingPacket.TYPE,
+                BlockingPacket.STREAM_CODEC,
+                BlockingPacket::handle);
+
+        registrar.playToClient(
+                BlockingSyncPacket.TYPE,
+                BlockingSyncPacket.STREAM_CODEC,
+                BlockingSyncPacket::handle);
     }
 }
