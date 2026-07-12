@@ -143,7 +143,7 @@
   "messages.zenkai.summon_cooldown": "§cDebes esperar %s día(s) más antes de invocar de nuevo.",
   "screen.zenkai.shenlong_wish.remaining": "Deseos restantes: %s",
   "screen.zenkai.technique.assign": "Asignar",
-  "screen.zenkai.technique.assign_hint": "Dale click a un espacio para equiparla (Clickear un slot ocupado lo reemplazará)",
+  "screen.zenkai.technique.assign_hint": "Dale click a un espacio para equiparla",
 
   "messages.zenkai.pet_revived": "§2§lShenlong:§6 Tu compañero regresa contigo.",
   "messages.zenkai.pet_revive_failed": "§cLa resurrección falló.",

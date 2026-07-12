@@ -141,9 +141,6 @@
   "messages.zenkai.enchant_not_found": "Enchantment not found: %s",
   "messages.zenkai.wish_villager_ready": "Your librarian villager is ready!",
   "messages.zenkai.summon_cooldown": "§cYou must wait %s more day(s) before summoning again.",
-  "screen.zenkai.shenlong_wish.remaining": "Wishes remaining: %s",
-  "screen.zenkai.technique.assign": "Assign",
-  "screen.zenkai.technique.assign_hint": "Click a slot to place it (click an occupied slot to clear)",
 
 
   "messages.zenkai.pet_revived": "§2§lShenlong:§6 Your companion returns to you.",
@@ -259,10 +256,18 @@
   "screen.zenkai.technique.empty": "No techniques created yet",
   "screen.zenkai.technique.size": "Size: %s",
 
-  "technique.zenkai.wave": "Wave", "technique.zenkai.blast": "Blast",
-  "technique.zenkai.lazer": "Lazer", "technique.zenkai.spiral": "Spiral",
-  "technique.zenkai.big_blast": "Big Blast", "technique.zenkai.barrier": "Barrier",
+  "technique.zenkai.wave": "Wave",
+  "technique.zenkai.blast": "Blast",
+  "technique.zenkai.lazer": "Lazer",
+  "technique.zenkai.spiral": "Spiral",
+  "technique.zenkai.big_blast": "Big Blast",
+  "technique.zenkai.barrier": "Barrier",
   "technique.zenkai.burst": "Burst",
+
+  "screen.zenkai.shenlong_wish.remaining": "Wishes remaining: %s",
+  "screen.zenkai.technique.assign": "Assign",
+  "screen.zenkai.technique.assign_hint": "Click a slot to place it",
+  "screen.zenkai.technique.explosive": "Explosive",
 
   "attribute.zenkai.str": "STR: %s",
   "attribute.zenkai.dex": "DEX: %s",

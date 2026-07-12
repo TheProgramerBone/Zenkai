@@ -1,10 +1,14 @@
 package com.hmc.zenkai.content.entity.technique;
 
 import com.hmc.zenkai.core.technique.KiTechniqueType;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -13,6 +17,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -21,14 +26,19 @@ import net.minecraft.world.phys.Vec3;
  * Proyectil ki (sistema nuevo, desde cero). Tipo/color/tamaño viajan como entity data
  * (el renderer los lee directamente). El DAÑO se fija en servidor al disparar
  * (kiPower × dmgMult × sizeF, ver KiFirePacket) y entra al pipeline de combate como
- * proyectil: CombatZenkaiHooks NO lo recomputa como melee (bypass por instanceof).
+ * proyectil: CombatZenkaiHooks NO lo recalcula como melee (bypass por instanceof).
  *
  * Tipos especiales:
  *  - SPIRAL: oscilación perpendicular a la trayectoria (server mueve, cliente interpola).
  *  - BARRIER: no se mueve ni golpea; sigue el centro del dueño y muere al expirar
  *    (la absorción de daño vive en KiCombatServer, esta entidad es solo el visual).
  *
- * Sin gravedad; muere al chocar (bloque o entidad) o al agotar la vida.
+ * Explosiva: al impactar (bloque o entidad) genera daño en ÁREA con caída lineal —
+ * radio 1.5 + 0.35×size, daño AoE = 60% del directo. Sin daño a bloques (griefing off).
+ * El objetivo directo recibe el daño completo y se excluye del AoE (no doble golpe);
+ * el dueño también se excluye (sin auto-daño).
+ *
+ * Sin gravedad; muere al chocar o al agotar la vida.
  */
 public class KiProjectileEntity extends Projectile {
 
@@ -39,10 +49,11 @@ public class KiProjectileEntity extends Projectile {
     private static final EntityDataAccessor<Byte> DATA_SIZE =
             SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.BYTE);
 
-    private static final int PROJECTILE_LIFE = 100; // ticks (5 s)
+    private static final double EXPLOSION_AOE_FACTOR = 0.6;
 
     private double damage = 0;
-    private int life = PROJECTILE_LIFE;
+    private int life = 100;
+    private boolean explosive = false;
 
     public KiProjectileEntity(EntityType<? extends KiProjectileEntity> type, Level level) {
         super(type, level);
@@ -51,13 +62,14 @@ public class KiProjectileEntity extends Projectile {
 
     /** Configuración al disparar (solo servidor; el data syncer propaga al cliente). */
     public void configure(LivingEntity owner, KiTechniqueType type, int rgb, int size,
-                          double damage, int lifeTicks) {
+                          double damage, int lifeTicks, boolean explosive) {
         setOwner(owner);
         this.entityData.set(DATA_TYPE, (byte) type.ordinal());
         this.entityData.set(DATA_RGB, rgb & 0xFFFFFF);
         this.entityData.set(DATA_SIZE, (byte) size);
         this.damage = damage;
         this.life = lifeTicks;
+        this.explosive = explosive && !type.defensive;
         refreshDimensions();
     }
 
@@ -133,7 +145,7 @@ public class KiProjectileEntity extends Projectile {
             return;
         }
         Vec3 c = owner.position().add(0, owner.getBbHeight() * 0.5, 0);
-        setPos(c.x - getBbWidth() * 0, c.y - getBbHeight() * 0.5, c.z);
+        setPos(c.x, c.y - getBbHeight() * 0.5, c.z);
         if (!level().isClientSide && --life <= 0) discard();
     }
 
@@ -143,6 +155,7 @@ public class KiProjectileEntity extends Projectile {
         if (level().isClientSide) return;
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
         hit.getEntity().hurt(damageSources().mobProjectile(this, owner), (float) damage);
+        if (explosive) explode(hit.getEntity().position(), hit.getEntity());
         discard();
     }
 
@@ -150,8 +163,32 @@ public class KiProjectileEntity extends Projectile {
     protected void onHit(HitResult hit) {
         super.onHit(hit);
         if (!level().isClientSide && hit.getType() == HitResult.Type.BLOCK) {
+            if (explosive) explode(hit.getLocation(), null);
             discard();
         }
+    }
+
+    /** Daño en área con caída lineal + partículas/sonido. Excluye dueño y objetivo directo. */
+    private void explode(Vec3 center, Entity directHit) {
+        if (!(level() instanceof ServerLevel sl)) return;
+        double radius = 1.5 + 0.35 * size();
+        LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
+
+        for (LivingEntity target : sl.getEntitiesOfClass(LivingEntity.class,
+                AABB.ofSize(center, radius * 2, radius * 2, radius * 2),
+                t -> t.isAlive() && t != getOwner() && t != directHit)) {
+            double dist = target.position().add(0, target.getBbHeight() * 0.5, 0)
+                    .distanceTo(center);
+            if (dist > radius) continue;
+            double falloff = 1.0 - dist / radius;
+            target.hurt(damageSources().mobProjectile(this, owner),
+                    (float) (damage * EXPLOSION_AOE_FACTOR * falloff));
+        }
+
+        sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z,
+                1, 0, 0, 0, 0);
+        sl.playSound(null, center.x, center.y, center.z,
+                SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.5f, 1.0f);
     }
 
     @Override
@@ -164,6 +201,7 @@ public class KiProjectileEntity extends Projectile {
         super.addAdditionalSaveData(tag);
         tag.putDouble("damage", damage);
         tag.putInt("life", life);
+        tag.putBoolean("explosive", explosive);
         tag.putByte("ktype", this.entityData.get(DATA_TYPE));
         tag.putInt("rgb", rgb());
         tag.putByte("size", (byte) size());
@@ -174,6 +212,7 @@ public class KiProjectileEntity extends Projectile {
         super.readAdditionalSaveData(tag);
         damage = tag.getDouble("damage");
         life = tag.getInt("life");
+        explosive = tag.getBoolean("explosive");
         this.entityData.set(DATA_TYPE, tag.getByte("ktype"));
         this.entityData.set(DATA_RGB, tag.getInt("rgb"));
         this.entityData.set(DATA_SIZE, tag.getByte("size"));

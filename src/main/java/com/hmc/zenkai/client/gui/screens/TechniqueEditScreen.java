@@ -48,6 +48,7 @@ public class TechniqueEditScreen extends Screen {
     private ColorPickerWidget picker;
     private TextOnlyButton unlockButton;
     private TextOnlyButton saveButton;
+    private boolean explosive;
 
     private int leftPos, topPos;
 
@@ -120,21 +121,29 @@ public class TechniqueEditScreen extends Screen {
             }
         });
 
+        //Explosivo
+        this.addRenderableWidget(new TextOnlyButton(x, topPos + 210, contentW, 12,
+                explosiveLabel(), () -> {
+            explosive = !explosive;
+            rebuildWidgets();
+        }));
+
+
         // Guardar / Cancelar
-        saveButton = new TextOnlyButton(x, topPos + 214, contentW / 2 - 4, 14,
+        saveButton = new TextOnlyButton(x, topPos + 228, contentW / 2 - 4, 14,
                 Component.translatable("screen.zenkai.technique.save"), () -> {
             PlayerStatsAttachment a = att();
             if (a != null) {
                 String n = KiTechnique.sanitizeName(nameBox.getValue());
                 if (slot < 0) {
-                    a.techniques().addSlot(new KiTechnique(n, type, rgb, size)); // optimista
+                    a.techniques().addSlot(new KiTechnique(n, type, rgb, size, explosive));
                 } else {
                     KiTechnique ex = a.techniques().slot(slot);
-                    if (ex != null) ex.set(n, type, rgb, size);                  // optimista
+                    if (ex != null) ex.set(n, type, rgb, size, explosive);
                 }
             }
             PacketDistributor.sendToServer(
-                    TechniquePacket.save(slot, type, nameBox.getValue(), rgb, size));
+                    TechniquePacket.save(slot, type, nameBox.getValue(), rgb, size, explosive));
             close();
         });
         this.addRenderableWidget(saveButton);
@@ -155,6 +164,12 @@ public class TechniqueEditScreen extends Screen {
         return Component.translatable("screen.zenkai.technique.type")
                 .append(": ")
                 .append(Component.translatable(type.nameKey()));
+    }
+
+    private Component explosiveLabel() {
+        return Component.translatable("screen.zenkai.technique.explosive")
+                .append(": ")
+                .append(Component.translatable(explosive ? "gui.yes" : "gui.no"));
     }
 
     private static Component sizeLabel(int s) {

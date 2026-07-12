@@ -17,16 +17,13 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * C2S del sistema de técnicas (validación 100% servidor).
  *
  * op = UNLOCK: desbloquear un tipo (cuesta type.tpCost).
- * op = SAVE:   crear (slot = -1) o editar (slot >= 0) una instancia. Requiere tipo
- *              desbloqueado, nombre no vacío, tamaño y color clampados, y hueco libre
- *              (technique.max_slots) al crear.
+ * op = SAVE:   crear (slot = -1) o editar (slot >= 0) una instancia (nombre, tipo,
+ *              color, tamaño, explosiva).
  * op = DELETE: borrar el slot indicado (las asignaciones se reparan solas).
- * op = BIND:   asignar el slot a una posición del overlay de combate (campo size =
- *              posición 0..8; -1 = desasignar). Una técnica ocupa una sola posición.
- *
- * Un solo packet con opcode: operaciones pequeñas del mismo dominio, mismo canal.
+ * op = BIND:   asignar el slot a una posición del overlay (size = posición 0..8; -1 = quitar).
  */
-public record TechniquePacket(byte op, int slot, String typeName, String name, int rgb, int size)
+public record TechniquePacket(byte op, int slot, String typeName, String name,
+                              int rgb, int size, boolean explosive)
         implements CustomPacketPayload {
 
     public static final byte OP_UNLOCK = 0;
@@ -46,27 +43,29 @@ public record TechniquePacket(byte op, int slot, String typeName, String name, i
                         buf.writeUtf(pkt.name(), KiTechnique.MAX_NAME_LENGTH * 4);
                         buf.writeInt(pkt.rgb());
                         buf.writeVarInt(pkt.size());
+                        buf.writeBoolean(pkt.explosive());
                     },
                     buf -> new TechniquePacket(buf.readByte(), buf.readVarInt(),
                             buf.readUtf(32), buf.readUtf(KiTechnique.MAX_NAME_LENGTH * 4),
-                            buf.readInt(), buf.readVarInt()));
+                            buf.readInt(), buf.readVarInt(), buf.readBoolean()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     // ---- Constructores de conveniencia (cliente) ----
     public static TechniquePacket unlock(KiTechniqueType t) {
-        return new TechniquePacket(OP_UNLOCK, -1, t.name(), "", 0, 0);
+        return new TechniquePacket(OP_UNLOCK, -1, t.name(), "", 0, 0, false);
     }
-    public static TechniquePacket save(int slot, KiTechniqueType t, String name, int rgb, int size) {
-        return new TechniquePacket(OP_SAVE, slot, t.name(), name, rgb, size);
+    public static TechniquePacket save(int slot, KiTechniqueType t, String name,
+                                       int rgb, int size, boolean explosive) {
+        return new TechniquePacket(OP_SAVE, slot, t.name(), name, rgb, size, explosive);
     }
     public static TechniquePacket delete(int slot) {
-        return new TechniquePacket(OP_DELETE, slot, "", "", 0, 0);
+        return new TechniquePacket(OP_DELETE, slot, "", "", 0, 0, false);
     }
     /** position 0..8 del overlay; -1 = desasignar. */
     public static TechniquePacket bind(int slot, int position) {
-        return new TechniquePacket(OP_BIND, slot, "", "", 0, position);
+        return new TechniquePacket(OP_BIND, slot, "", "", 0, position, false);
     }
 
     public static void handle(TechniquePacket pkt, IPayloadContext ctx) {
@@ -113,12 +112,12 @@ public record TechniquePacket(byte op, int slot, String typeName, String name, i
 
         if (pkt.slot() < 0) { // crear
             if (att.techniques().slotCount() >= StatsConfig.techniqueMaxSlots()) return false;
-            att.techniques().addSlot(new KiTechnique(name, type, rgb, size));
+            att.techniques().addSlot(new KiTechnique(name, type, rgb, size, pkt.explosive()));
             return true;
         }
         KiTechnique existing = att.techniques().slot(pkt.slot()); // editar
         if (existing == null) return false;
-        existing.set(name, type, rgb, size);
+        existing.set(name, type, rgb, size, pkt.explosive());
         return true;
     }
 }
