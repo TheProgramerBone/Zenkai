@@ -2,7 +2,6 @@ package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.network.feature.Race;
-import com.hmc.zenkai.core.network.feature.ki.MouseZenkaiHooks;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
@@ -13,8 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
-
-import java.lang.reflect.Method;
 
 public final class ClientZenkaiHooks {
 
@@ -29,7 +26,6 @@ public final class ClientZenkaiHooks {
     private static final int ICONS_TEX_W = 270;
     private static final int ICONS_TEX_H = 270;
 
-    // OJO: esto está como lo tienes actualmente
     private static final int ICON_CELL = 20;     // tamaño real de celda en el atlas
     private static final int ICON_DRAW = 20;     // tamaño al dibujar el icono
     private static final int BADGE_SIZE = 20;    // cuadrito contenedor
@@ -58,16 +54,11 @@ public final class ClientZenkaiHooks {
     private static final int C_STAM_FILL  = 0xFF33CC66;
     private static final int C_KI_FILL    = 0xFF33A0FF;
 
-    // Badges (cuadritos)
-    private static final int C_BADGE_BG   = 0xAA000000;
-    private static final int C_BADGE_EDGE = 0x55FFFFFF;
-
     // =========================
-    // Íconos existentes
+    // Íconos
     // =========================
     private static final IconUV ICON_FLY = IconUV.grid(3, 0);
     private static final IconUV ICON_KI_CHARGE = IconUV.grid(2, 0);
-    private static final IconUV ICON_KI_ATTACK = IconUV.grid(1, 0);
 
     private static final IconUV ICON_TRANSFORMING = IconUV.grid(7, 0);
     private static final IconUV ICON_DIVINE = IconUV.grid(5, 0);
@@ -146,13 +137,13 @@ public final class ClientZenkaiHooks {
         int iconX = PANEL_X;
         int iconY = PANEL_Y + panelH + 4;
 
-        // --- Estados “especiales” (antes de acciones, misma altura) ---
+        // --- Estados "especiales" (antes de acciones, misma altura) ---
         if (form.isTransforming()) {
             drawBadge(g, iconX, iconY, ICON_TRANSFORMING);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 
-        if (safeBool(stats, "isDivine")) {
+        if (stats.isDivine()) {
             drawBadge(g, iconX, iconY, ICON_DIVINE);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
@@ -162,12 +153,12 @@ public final class ClientZenkaiHooks {
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 
-        if (safeBool(stats, "isImmortal")) {
+        if (stats.isImmortal()) {
             drawBadge(g, iconX, iconY, ICON_IMMORTAL);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 
-        if (safeBool(stats, "isLegendary")) {
+        if (stats.isLegendary()) {
             drawBadge(g, iconX, iconY, ICON_LEGENDARY);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
@@ -181,23 +172,6 @@ public final class ClientZenkaiHooks {
         if (stats.isChargingKi()) {
             drawBadge(g, iconX, iconY, ICON_KI_CHARGE);
             iconX += BADGE_SIZE + BADGE_PAD;
-        }
-
-        if (MouseZenkaiHooks.wasChargingKiAttack) {
-            drawBadge(g, iconX, iconY, ICON_KI_ATTACK);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        }
-
-        // Texto % KI attack
-        if (MouseZenkaiHooks.wasChargingKiAttack && mc.level != null) {
-            int percent = computeKiAttackPercent(mc);
-            g.drawString(
-                    mc.font,
-                    Component.literal("Ki " + percent + "%"),
-                    iconX + 4,
-                    iconY + 6,
-                    0xFFFFAA00
-            );
         }
 
         // PL del propio jugador (debajo del panel; muévelo/re-estilízalo a gusto).
@@ -254,40 +228,6 @@ public final class ClientZenkaiHooks {
 
     private static void drawBadge(GuiGraphics g, int x, int y, IconUV icon) {
         g.blit(ICONS_TEX, x, y, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_TEX_W, ICONS_TEX_H);
-    }
-
-    // =========================================================
-    // Helpers (Ki attack %)
-    // =========================================================
-    private static int computeKiAttackPercent(Minecraft mc) {
-        long now = mc.level.getGameTime();
-        long ticks = Math.max(0L, now - MouseZenkaiHooks.clientChargeStartTick);
-
-        long clamped = Math.min(
-                ticks,
-                com.hmc.zenkai.core.network.feature.ki.KiAttackServerLogic.MAX_TOTAL_CHARGE_TICKS
-        );
-
-        double factor;
-        if (clamped <= com.hmc.zenkai.core.network.feature.ki.KiAttackServerLogic.MAX_BASE_CHARGE_TICKS) {
-            factor = clamped / (double) com.hmc.zenkai.core.network.feature.ki.KiAttackServerLogic.MAX_BASE_CHARGE_TICKS;
-        } else {
-            long over = clamped - com.hmc.zenkai.core.network.feature.ki.KiAttackServerLogic.MAX_BASE_CHARGE_TICKS;
-            factor = 1.0 + over / (double) com.hmc.zenkai.core.network.feature.ki.KiAttackServerLogic.MAX_OVER_CHARGE_TICKS;
-        }
-
-        return (int) Math.round(factor * 100.0); // 0–200%
-    }
-
-    private static boolean safeBool(Object obj, String methodName) {
-        if (obj == null) return false;
-        try {
-            Method m = obj.getClass().getMethod(methodName);
-            Object r = m.invoke(obj);
-            return (r instanceof Boolean b) && b;
-        } catch (Throwable ignored) {
-            return false;
-        }
     }
 
     private record IconUV(int u, int v) {

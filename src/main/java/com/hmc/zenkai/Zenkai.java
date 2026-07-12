@@ -8,6 +8,7 @@ import com.hmc.zenkai.client.ZenkaiPalLayers;
 import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
+import com.hmc.zenkai.client.render_and_model.KiProjectileRenderer;
 import com.hmc.zenkai.client.render_and_model.blockentity.AllDragonBallsRenderer;
 import com.hmc.zenkai.client.render_and_model.entity.*;
 import com.hmc.zenkai.content.block.ModBlocks;
@@ -24,7 +25,6 @@ import com.hmc.zenkai.core.config.WishConfig;
 import com.hmc.zenkai.core.network.ModNetworking;
 import com.hmc.zenkai.core.network.TickHandlers;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
-import com.hmc.zenkai.core.network.feature.ki.MouseZenkaiHooks;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.network.feature.stats.FlyApplier;
@@ -100,7 +100,6 @@ public class Zenkai {
         forgeBus.register(ModCommands.class);
 
         // Cliente
-        forgeBus.register(MouseZenkaiHooks.class);
         forgeBus.register(ClientZenkaiHooks.class);
         forgeBus.register(ClientZenkaiPalTick.class);
     }
@@ -166,8 +165,8 @@ public class Zenkai {
                     ctx -> new GenericGeoRenderer<>(ctx,
                             new GenericGeoModel<>("shenlong", true), 0.5f));
 
-            EntityRenderers.register(ModEntities.KI_BLAST.get(),
-                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("ki_blast")));
+            EntityRenderers.register(ModEntities.KI_PROJECTILE.get(),
+                    KiProjectileRenderer::new);
 
             EntityRenderers.register(ModEntities.ISAAC.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("isaac", true), 0.5f));

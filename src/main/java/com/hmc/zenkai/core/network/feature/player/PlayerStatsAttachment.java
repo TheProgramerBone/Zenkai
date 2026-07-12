@@ -5,7 +5,6 @@ import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.Dbrattributes;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.Style;
-import com.hmc.zenkai.core.network.feature.ki.KiAttackDefinition;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -15,24 +14,24 @@ import net.minecraft.world.entity.player.Player;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Coordinador principal de los datos del jugador.
- * No contiene lógica propia: delega a los cuatro submódulos.
+ * No contiene lógica propia: delega a los submódulos.
  * Submódulos:
- *   - PlayerRaceStats    → raza, estilo, atributos, TP
+ *   - PlayerRaceStats     → raza, estilo, atributos, TP
  *   - PlayerResourcePools → body, stamina, energy, movimiento
- *   - PlayerKiAttacks    → definiciones y cálculos de Ki Attacks
- *   - PlayerStateFlags   → flags especiales (inmortal, divino, etc.)
+ *   - PlayerStateFlags    → flags especiales (inmortal, divino, etc.)
+ *   - PlayerSkills        → habilidades desbloqueadas (MIND)
+ *   - PlayerTechniques    → técnicas ki (tipos desbloqueados + slots)
  */
 public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
-    private final PlayerRaceStats     raceStats = new PlayerRaceStats();
-    private final PlayerResourcePools pools     = new PlayerResourcePools();
-    private final PlayerKiAttacks     kiAttacks = new PlayerKiAttacks();
-    private final PlayerStateFlags    flags     = new PlayerStateFlags();
-    private final PlayerSkills skills = new PlayerSkills();
+    private final PlayerRaceStats     raceStats  = new PlayerRaceStats();
+    private final PlayerResourcePools pools      = new PlayerResourcePools();
+    private final PlayerStateFlags    flags      = new PlayerStateFlags();
+    private final PlayerSkills        skills     = new PlayerSkills();
+    private final PlayerTechniques    techniques = new PlayerTechniques();
 
     /** Último tick (gameTime) en que este jugador invocó a Shenlong. Cooldown por jugador. */
     private long lastSummonTick = Long.MIN_VALUE;
@@ -55,10 +54,9 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     // ── Acceso a submódulos completos (cuando se necesita más que un getter) ─
     public PlayerRaceStats     raceStats()  { return raceStats; }
     public PlayerResourcePools pools()      { return pools; }
-    public PlayerKiAttacks     kiAttacks()  { return kiAttacks; }
     public PlayerStateFlags    flags()      { return flags; }
-    public PlayerSkills skills() { return skills; }
-
+    public PlayerSkills        skills()     { return skills; }
+    public PlayerTechniques    techniques() { return techniques; }
 
     // ────────────────────────────────────────────────────────────────────────
     // API de compatibilidad — mantiene todas las llamadas existentes sin cambios
@@ -161,21 +159,6 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public long getOtherworldSince()       { return flags.getOtherworldSince(); }
     public void setOtherworldSince(long t) { flags.setOtherworldSince(t); }
 
-    // ── Ki Attacks ───────────────────────────────────────────────────────────
-    public KiAttackDefinition getKiAttack(String id)    { return kiAttacks.getAttack(id); }
-    public void addOrUpdateKiAttack(KiAttackDefinition def) { kiAttacks.addOrUpdate(def); }
-    public void setKiAttackColor(String id, int rgb)    { kiAttacks.setColor(id, rgb); }
-    public void setSelectedKiAttackId(String id)        { kiAttacks.setSelectedId(id); }
-    public String getSelectedKiAttackId()               { return kiAttacks.getSelectedId(); }
-    public Map<String, KiAttackDefinition> getKiAttacksReadonly() { return kiAttacks.getReadonly(); }
-
-    public int computeKiAttackCost(KiAttackDefinition def, double chargeRatio) {
-        return kiAttacks.computeCost(def, chargeRatio, raceStats.computeKiPowerFinal());
-    }
-    public float computeKiAttackDamage(KiAttackDefinition def, double chargeRatio) {
-        return kiAttacks.computeDamage(def, chargeRatio, raceStats.computeKiPowerFinal());
-    }
-
     // ── Ciclo de vida ────────────────────────────────────────────────────────
     public void refillOnRespawn() { pools.refillAll(); }
 
@@ -219,24 +202,24 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     // ── NBT ──────────────────────────────────────────────────────────────────
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
-        tag.put("race",      raceStats.save());
-        tag.put("pools",     pools.save());
-        tag.put("kiAttacks", kiAttacks.save());
-        tag.put("flags",     flags.save());
+        tag.put("race",       raceStats.save());
+        tag.put("pools",      pools.save());
+        tag.put("flags",      flags.save());
+        tag.put("skills",     skills.save());
+        tag.put("techniques", techniques.save());
         tag.putLong("lastSummonTick", lastSummonTick);
         ListTag pets = new ListTag();
         pets.addAll(deadPets);
         tag.put("deadPets", pets);
-        tag.put("skills", skills.save());
         return tag;
     }
 
     public void load(CompoundTag tag) {
-        if (tag.contains("race"))      raceStats.load(tag.getCompound("race"));
-        if (tag.contains("pools"))     pools.load(tag.getCompound("pools"));
-        if (tag.contains("kiAttacks")) kiAttacks.load(tag.getCompound("kiAttacks"));
-        if (tag.contains("flags"))     flags.load(tag.getCompound("flags"));
-        if (tag.contains("skills")) skills.load(tag.getCompound("skills"));
+        if (tag.contains("race"))       raceStats.load(tag.getCompound("race"));
+        if (tag.contains("pools"))      pools.load(tag.getCompound("pools"));
+        if (tag.contains("flags"))      flags.load(tag.getCompound("flags"));
+        if (tag.contains("skills"))     skills.load(tag.getCompound("skills"));
+        if (tag.contains("techniques")) techniques.load(tag.getCompound("techniques"));
         lastSummonTick = tag.contains("lastSummonTick") ? tag.getLong("lastSummonTick") : Long.MIN_VALUE;
         deadPets.clear();
         if (tag.contains("deadPets")) {
