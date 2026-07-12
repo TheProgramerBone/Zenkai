@@ -4,11 +4,14 @@ import net.minecraft.nbt.CompoundTag;
 
 /**
  * Una técnica CREADA por el jugador (vive en un slot de PlayerTechniques).
- * v1.0: nombre + tipo + color + tamaño (1..MAX_SIZE).
+ * v1.0: nombre + tipo + color + tamaño (1..MAX_SIZE) + explosiva.
  *
- * EXTENSIBLE para el creador completo post-release: los campos futuros (explosivo,
- * teledirigido, carga, etc.) se añaden con contains() en load() y put en save() —
- * los saves viejos cargan con defaults y nada se rompe.
+ * Explosiva: al impactar genera daño en área (radio y daño escalan con el tamaño) y
+ * cuesta más ki (KiFirePacket). Ignorada en tipos defensivos (BARRIER).
+ *
+ * EXTENSIBLE para el creador completo post-release: los campos futuros (teledirigido,
+ * carga, etc.) se añaden con contains() en load() y put en save() — los saves viejos
+ * cargan con defaults y nada se rompe.
  */
 public final class KiTechnique {
 
@@ -20,24 +23,28 @@ public final class KiTechnique {
     private KiTechniqueType type;
     private int rgb;   // 0xRRGGBB
     private int size;  // MIN_SIZE..MAX_SIZE
+    private boolean explosive;
 
-    public KiTechnique(String name, KiTechniqueType type, int rgb, int size) {
+    public KiTechnique(String name, KiTechniqueType type, int rgb, int size, boolean explosive) {
         this.name = sanitizeName(name);
         this.type = type;
         this.rgb = rgb & 0xFFFFFF;
         this.size = clampSize(size);
+        this.explosive = explosive;
     }
 
     public String name()            { return name; }
     public KiTechniqueType type()   { return type; }
     public int rgb()                { return rgb; }
     public int size()               { return size; }
+    public boolean explosive()      { return explosive; }
 
-    public void set(String name, KiTechniqueType type, int rgb, int size) {
+    public void set(String name, KiTechniqueType type, int rgb, int size, boolean explosive) {
         this.name = sanitizeName(name);
         this.type = type;
         this.rgb = rgb & 0xFFFFFF;
         this.size = clampSize(size);
+        this.explosive = explosive;
     }
 
     public CompoundTag save() {
@@ -46,6 +53,7 @@ public final class KiTechnique {
         tag.putString("type", type.name());
         tag.putInt("rgb", rgb);
         tag.putInt("size", size);
+        tag.putBoolean("explosive", explosive);
         return tag;
     }
 
@@ -53,7 +61,8 @@ public final class KiTechnique {
     public static KiTechnique load(CompoundTag tag) {
         KiTechniqueType type = KiTechniqueType.byName(tag.getString("type"));
         if (type == null) return null;
-        return new KiTechnique(tag.getString("name"), type, tag.getInt("rgb"), tag.getInt("size"));
+        return new KiTechnique(tag.getString("name"), type, tag.getInt("rgb"),
+                tag.getInt("size"), tag.getBoolean("explosive"));
     }
 
     public static int clampSize(int s) {

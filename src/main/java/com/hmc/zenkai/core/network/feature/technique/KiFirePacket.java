@@ -23,12 +23,14 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  *
  * Fórmulas (simuladas, eficiencia 0.22-0.35 pareja entre tipos):
  *  daño  = kiPower × type.damageMult × sizeFactor(size)          [por proyectil]
- *  coste = ceil(energyMax × 0.04 × type.kiCostMult × costSizeFactor(size))  [por disparo]
+ *  coste = ceil(energyMax × 0.04 × type.kiCostMult × costSizeFactor(size)
+ *               × (explosiva ? 1.5 : 1))                          [por disparo]
  * BURST dispara type.count proyectiles con dispersión; BARRIER activa la burbuja.
  */
 public record KiFirePacket(int slot) implements CustomPacketPayload {
 
     private static final double BASE_COST_PCT = 0.04;
+    private static final double EXPLOSIVE_COST_MULT = 1.5;
     private static final float BURST_SPREAD_DEG = 6.0f;
 
     public static final Type<KiFirePacket> TYPE =
@@ -52,9 +54,11 @@ public record KiFirePacket(int slot) implements CustomPacketPayload {
 
             KiTechniqueType type = tech.type();
             double kiPower = att.computeKiPowerFinal();
+            boolean explosive = tech.explosive() && !type.defensive;
 
             int cost = (int) Math.ceil(att.getEnergyMax() * BASE_COST_PCT
-                    * type.kiCostMult * KiCombatServer.costSizeFactor(tech.size()));
+                    * type.kiCostMult * KiCombatServer.costSizeFactor(tech.size())
+                    * (explosive ? EXPLOSIVE_COST_MULT : 1.0));
             if (att.getEnergy() < cost) return;
             att.addEnergy(-cost);
 
@@ -63,14 +67,15 @@ public record KiFirePacket(int slot) implements CustomPacketPayload {
             } else {
                 double damage = kiPower * type.damageMult * KiCombatServer.sizeFactor(tech.size());
                 for (int i = 0; i < Math.max(1, type.count); i++) {
-                    spawnProjectile(sp, tech, damage, i);
+                    spawnProjectile(sp, tech, damage, explosive, i);
                 }
             }
             PlayerLifeCycle.syncIfServer(sp);
         });
     }
 
-    private static void spawnProjectile(ServerPlayer sp, KiTechnique tech, double damage, int index) {
+    private static void spawnProjectile(ServerPlayer sp, KiTechnique tech, double damage,
+                                        boolean explosive, int index) {
         KiTechniqueType type = tech.type();
         KiProjectileEntity proj = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sp.level());
 
@@ -83,7 +88,7 @@ public record KiFirePacket(int slot) implements CustomPacketPayload {
         Vec3 dir = Vec3.directionFromRotation(sp.getXRot() + pitchJitter, sp.getYRot() + yawJitter);
         Vec3 spawn = sp.getEyePosition().add(dir.scale(0.9)).subtract(0, 0.15, 0);
 
-        proj.configure(sp, type, tech.rgb(), tech.size(), damage, 100);
+        proj.configure(sp, type, tech.rgb(), tech.size(), damage, 100, explosive);
         proj.setPos(spawn.x, spawn.y, spawn.z);
         proj.setDeltaMovement(dir.scale(type.speed));
         sp.level().addFreshEntity(proj);

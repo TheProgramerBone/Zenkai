@@ -16,12 +16,10 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
  * Overlay del modo combate: columna de 9 posiciones en el LADO DERECHO de la pantalla,
  * centrada verticalmente (cero manipulación del HUD vanilla -> compatible con otros mods).
  *
- *  - Cada posición muestra su número (tecla) y, si tiene técnica asignada, el swatch del
- *    color + el tamaño. Vacía = caja oscura.
- *  - El resaltado es la selección PROPIA del overlay (teclas 1-9 en modo combate; la
- *    hotbar vanilla no se entera). El nombre de la asignada se dibuja a la izquierda de
- *    la posición seleccionada.
- *  - Asignación: menú Técnicas Ki (botón de posición por técnica).
+ *  - Cada posición muestra su número (tecla) y, si tiene técnica asignada, su ÍCONO
+ *    (base explosiva + ícono del tipo teñido — TechniqueIcons). Vacía = caja oscura.
+ *  - El resaltado es la selección PROPIA del overlay (teclas 1-9 en modo combate).
+ *    El nombre de la asignada se dibuja a la izquierda de la posición seleccionada.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class TechniqueHotbarOverlay {
@@ -50,15 +48,12 @@ public final class TechniqueHotbarOverlay {
         int y = (g.guiHeight() - totalH) / 2;
 
         for (int pos = 0; pos < n; pos++) {
-            int slotIdx = tech.binding(pos);
-            KiTechnique t = tech.slot(slotIdx);
+            KiTechnique t = tech.slot(tech.binding(pos));
             boolean sel = (pos == selected);
 
             g.fill(x, y, x + CELL, y + CELL, 0xA0000000);
             if (t != null) {
-                g.fill(x + 3, y + 3, x + CELL - 3, y + CELL - 3, 0xFF000000 | t.rgb());
-                g.drawString(mc.font, Component.literal(String.valueOf(t.size())),
-                        x + CELL - 6, y + CELL - 9, 0xFFFFFFFF, true);
+                TechniqueIcons.draw(g, x, y, t);
             }
 
             int border = sel ? 0xFFFFFFFF : 0x60FFFFFF;
