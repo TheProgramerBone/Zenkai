@@ -37,7 +37,7 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
 
             SkillDef def = SkillDef.get(pkt.skillId());
             if (def == null) return;
-
+            if (!def.purchasable()) return; // solo maestros / comando
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             if (!att.isRaceChosen()) return;
             if (att.skills().has(def.id())) return;

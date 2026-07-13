@@ -1,12 +1,14 @@
 package com.hmc.zenkai.core.network;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.CombatZenkaiHooks;
 import com.hmc.zenkai.content.effect.ModEffects;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.forms.FormDefinition;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
+import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
@@ -149,6 +151,18 @@ public class TickHandlers {
             form.resetAll();
 
             AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
+            // Sin raza no hay vuelo. Sin esto, tras /zenkai reset full el jugador conservaba
+            // mayfly y la velocidad de vuelo vieja (este gate retornaba antes de la sección
+            // "Volar (server)" que gestiona las abilities).
+            if (!p.isCreative() && !p.isSpectator()) {
+                var ab = p.getAbilities();
+                if (ab.mayfly || ab.flying) {
+                    ab.mayfly = false;
+                    ab.flying = false;
+                    ab.setFlyingSpeed(0.05F); // default vanilla
+                    p.onUpdateAbilities();
+                }
+            }
             if (moveAttr != null) {
                 moveAttr.removeModifier(MOVE_MOD_ID);
                 moveAttr.removeModifier(TRANSFORM_LOCK_ID);
@@ -171,14 +185,17 @@ public class TickHandlers {
             p.setSwimming(true);
 
             if (att.getBody() > 0) {
-                // Se levanta con el 20% del body (regla única de salida del derribo, venga la
-                // curación de una senzu, de un aliado o de lo que sea).
-                att.setBody(com.hmc.zenkai.client.CombatZenkaiHooks.downedReviveBody(att));
+                // Se levanta con el body que la curación haya dejado: la senzu deja 100%,
+                // el revive de aliado (mano vacía) ya fija su 20% en CombatZenkaiHooks.
                 clearDowned(p, att);
                 PlayerLifeCycle.syncIfServer(p);
             } else if (p.level().getGameTime() >= att.flags().getDownedUntil()) {
                 clearDowned(p, att);
                 if (p instanceof net.minecraft.server.level.ServerPlayer sp) {
+                    // health=0 ANTES de die(): sin esto la muerte "no cuaja" (el cliente
+                    // nunca ve vida 0) y el respawn sincroniza en multiplayer ->
+                    // jugador vivo con body 0 y sin viaje al otro mundo.
+                    sp.setHealth(0.0F);
                     sp.die(sp.damageSources().generic());
                 }
             }
@@ -190,12 +207,16 @@ public class TickHandlers {
         // ================================
         // Mantener la vida vanilla llena mientras el BODY sea la vida real.
         // ================================
-        if (att.getBody() > 0 && !p.isDeadOrDying()
-                && p.getServer() != null && ModGameRules.enableRaceBoosts(p.getServer())) {
-            float max = p.getMaxHealth();
-            if (p.getHealth() < max) {
-                p.setHealth(max);
+        if (att.getBody() <= 0 && !p.isDeadOrDying()
+                && p instanceof net.minecraft.server.level.ServerPlayer sp) {
+            if (att.isInOtherworld()) {
+                OtherworldManager.keepInOtherworld(sp);
+            } else {
+                att.flags().setDowned(true);
+                att.flags().setDownedUntil(p.level().getGameTime() + CombatZenkaiHooks.DOWNED_TICKS);
+                PlayerLifeCycle.syncIfServer(p);
             }
+            return;
         }
 
         // ================================

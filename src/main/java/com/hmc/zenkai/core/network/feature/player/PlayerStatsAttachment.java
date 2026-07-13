@@ -93,7 +93,19 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         return raceStats.previewTpCost(attr, points);
     }
 
-    public void respec() { raceStats.respec(); applyRecalc(); }
+    /** Respec: devuelve el TP invertido en atributos Y en habilidades COMPRADAS (y las
+     *  limpia). Las otorgadas por maestros/comando no se tocan. */
+    public void respec() {
+        int skillRefund = 0;
+        for (String id : skills.boughtAll()) {
+            com.hmc.zenkai.core.skills.SkillDef def = com.hmc.zenkai.core.skills.SkillDef.get(id);
+            if (def != null) skillRefund += def.tpCost();
+        }
+        skills.clearBought();
+        raceStats.respec();
+        raceStats.addTP(skillRefund);
+        applyRecalc();
+    }
 
     // ── Stats de combate ─────────────────────────────────────────────────────
     public double getMeleeBonus()       { return raceStats.getMeleeBonus(); }

@@ -158,6 +158,11 @@ public final class CombatModeClientState {
                 PacketDistributor.sendToServer(new BlockingPacket(blocking));
             }
         }
+        // Bloquear = no atacar: consume los clicks de ataque para que ni haga el swing
+        // (el server además cancela AttackEntityEvent — guard en ambos lados).
+        if (blocking) {
+            while (mc.options.keyAttack.consumeClick()) { /* descartado */ }
+        }
     }
 
     private static void cancelCharge() {
