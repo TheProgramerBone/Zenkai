@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -93,7 +93,7 @@ public final class EntityStatsManager {
         boolean displayOnly = o.has("display_only") && o.get("display_only").getAsBoolean();
         String archetype = o.has("archetype") ? o.get("archetype").getAsString() : "balanced";
 
-        EnumMap<Dbrattributes, EntityStatDef.AttrOverride> attrOv = new EnumMap<>(Dbrattributes.class);
+        EnumMap<ZenkaiAttributes, EntityStatDef.AttrOverride> attrOv = new EnumMap<>(ZenkaiAttributes.class);
         double bodyMult = 1.0, kiMult = 1.0;
 
         if (o.has("overrides") && o.get("overrides").isJsonObject()) {
@@ -104,9 +104,9 @@ public final class EntityStatsManager {
             if (ov.has("attributes") && ov.get("attributes").isJsonObject()) {
                 JsonObject attrs = ov.getAsJsonObject("attributes");
                 for (var e : attrs.entrySet()) {
-                    Dbrattributes key;
+                    ZenkaiAttributes key;
                     try {
-                        key = Dbrattributes.fromString(e.getKey());
+                        key = ZenkaiAttributes.fromString(e.getKey());
                     } catch (Exception ex) {
                         LOGGER.warn("[Zenkai] Atributo desconocido '{}' en {}", e.getKey(), entity);
                         continue;

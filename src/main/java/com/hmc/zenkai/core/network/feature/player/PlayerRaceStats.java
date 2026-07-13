@@ -1,7 +1,7 @@
 package com.hmc.zenkai.core.network.feature.player;
 
 import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.Style;
 import com.hmc.zenkai.util.BalanceUtil;
@@ -20,11 +20,11 @@ public class PlayerRaceStats {
     private boolean styleChosen = false;
 
     private int tp = 0;
-    private final EnumMap<Dbrattributes, Integer> attributes = new EnumMap<>(Dbrattributes.class);
-    private final EnumMap<Dbrattributes, Integer> invested   = new EnumMap<>(Dbrattributes.class);
+    private final EnumMap<ZenkaiAttributes, Integer> attributes = new EnumMap<>(ZenkaiAttributes.class);
+    private final EnumMap<ZenkaiAttributes, Integer> invested   = new EnumMap<>(ZenkaiAttributes.class);
 
     public PlayerRaceStats() {
-        for (Dbrattributes a : Dbrattributes.values()) {
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) {
             attributes.put(a, 0);
             invested.put(a, 0);
         }
@@ -66,14 +66,14 @@ public class PlayerRaceStats {
 
     private void capAll() {
         int cap = StatsConfig.globalAttributeCap();
-        for (Map.Entry<Dbrattributes, Integer> e : attributes.entrySet()) {
+        for (Map.Entry<ZenkaiAttributes, Integer> e : attributes.entrySet()) {
             e.setValue(Math.min(e.getValue(), cap));
         }
     }
 
-    public int getAttribute(Dbrattributes a) { return attributes.getOrDefault(a, 0); }
+    public int getAttribute(ZenkaiAttributes a) { return attributes.getOrDefault(a, 0); }
 
-    public void setAttribute(Dbrattributes a, int v) {
+    public void setAttribute(ZenkaiAttributes a, int v) {
         attributes.put(a, MathUtil.clamp(v, 0, StatsConfig.globalAttributeCap()));
     }
 
@@ -81,7 +81,7 @@ public class PlayerRaceStats {
     public int  getTP() { return tp; }
     public void addTP(int amount) { this.tp = Math.max(0, this.tp + amount); }
 
-    public boolean spendTP(Dbrattributes attr, int points) {
+    public boolean spendTP(ZenkaiAttributes attr, int points) {
         if (points <= 0) return false;
         double coeff    = StatsConfig.tpCoefficient();
         int    totalInv = invested.values().stream().mapToInt(Integer::intValue).sum();
@@ -99,7 +99,7 @@ public class PlayerRaceStats {
         return true;
     }
 
-    public int previewTpCost(Dbrattributes attr, int points) {
+    public int previewTpCost(ZenkaiAttributes attr, int points) {
         if (points <= 0) return 0;
         double coeff    = StatsConfig.tpCoefficient();
         int    totalInv = invested.values().stream().mapToInt(Integer::intValue).sum();
@@ -133,9 +133,9 @@ public class PlayerRaceStats {
         double[] r = StatsConfig.raceMultipliers(this.race);
         double[] s = StatsConfig.styleMultipliers(this.style);
 
-        double CON = attributes.get(Dbrattributes.CONSTITUTION) * r[1] * s[1];
-        double DEX = attributes.get(Dbrattributes.DEXTERITY)    * r[2] * s[2];
-        double SPI = attributes.get(Dbrattributes.SPIRIT)       * r[4] * s[4];
+        double CON = attributes.get(ZenkaiAttributes.CONSTITUTION) * r[1] * s[1];
+        double DEX = attributes.get(ZenkaiAttributes.DEXTERITY)    * r[2] * s[2];
+        double SPI = attributes.get(ZenkaiAttributes.SPIRIT)       * r[4] * s[4];
         int bodyMax    = (int) Math.max(1, Math.round(10 + CON * StatsConfig.bodyScale()));
         int staminaMax = (int) Math.max(1, Math.round(90 + CON * StatsConfig.staminaScale()));
         int energyMax  = (int) Math.max(1, Math.round(90 + SPI * StatsConfig.energyScale()));
@@ -145,31 +145,31 @@ public class PlayerRaceStats {
 
     // ── Stats de combate ─────────────────────────────────────────────────────
     public double computeMeleeFinal() {
-        return BalanceUtil.computeStat(attributes.get(Dbrattributes.STRENGTH),   race, style, Dbrattributes.STRENGTH);
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.STRENGTH),   race, style, ZenkaiAttributes.STRENGTH);
     }
     public double computeDefenseFinal() {
-        return BalanceUtil.computeStat(attributes.get(Dbrattributes.DEXTERITY),  race, style, Dbrattributes.DEXTERITY);
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY),  race, style, ZenkaiAttributes.DEXTERITY);
     }
     public double computeSpeedFinal() {
-        return BalanceUtil.computeStat(attributes.get(Dbrattributes.DEXTERITY),  race, style, Dbrattributes.DEXTERITY);
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY),  race, style, ZenkaiAttributes.DEXTERITY);
     }
     public double computeFlyFinal() {
-        return BalanceUtil.computeStat(attributes.get(Dbrattributes.DEXTERITY),  race, style, Dbrattributes.DEXTERITY);
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY),  race, style, ZenkaiAttributes.DEXTERITY);
     }
     public double computeKiPowerFinal() {
-        return BalanceUtil.computeStat(attributes.get(Dbrattributes.WILLPOWER),  race, style, Dbrattributes.WILLPOWER);
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.WILLPOWER),  race, style, ZenkaiAttributes.WILLPOWER);
     }
     public double computeKiPoolFinal() {
-        return BalanceUtil.computeStat(attributes.get(Dbrattributes.SPIRIT),     race, style, Dbrattributes.SPIRIT);
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.SPIRIT),     race, style, ZenkaiAttributes.SPIRIT);
     }
 
     /** CON efectiva (lineal, sin el offset del pool). La usa el Power Level. */
     public double computeConFinal() {
-        return BalanceUtil.computeStat(attributes.get(Dbrattributes.CONSTITUTION), race, style, Dbrattributes.CONSTITUTION);
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.CONSTITUTION), race, style, ZenkaiAttributes.CONSTITUTION);
     }
 
     public double getMeleeBonus() {
-        return attributes.get(Dbrattributes.STRENGTH);
+        return attributes.get(ZenkaiAttributes.STRENGTH);
     }
 
     // ── NBT ──────────────────────────────────────────────────────────────────
@@ -203,9 +203,9 @@ public class PlayerRaceStats {
         this.tp          = tag.getInt("tp");
 
         CompoundTag attrs = tag.getCompound("attributes");
-        for (Dbrattributes a : Dbrattributes.values()) attributes.put(a, attrs.getInt(a.name()));
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) attributes.put(a, attrs.getInt(a.name()));
 
         CompoundTag inv = tag.getCompound("invested");
-        for (Dbrattributes a : Dbrattributes.values()) invested.put(a, inv.getInt(a.name()));
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) invested.put(a, inv.getInt(a.name()));
     }
 }

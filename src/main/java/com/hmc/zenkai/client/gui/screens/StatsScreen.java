@@ -2,7 +2,7 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.*;
 import net.minecraft.ChatFormatting;
@@ -24,9 +24,9 @@ public class StatsScreen extends ZenkaiMenuScreen {
     private static final int PAD = 8;
 
     // Orden de atributos
-    private static final List<Dbrattributes> ORDER = List.of(
-            Dbrattributes.STRENGTH, Dbrattributes.DEXTERITY, Dbrattributes.CONSTITUTION,
-            Dbrattributes.WILLPOWER, Dbrattributes.MIND, Dbrattributes.SPIRIT
+    private static final List<ZenkaiAttributes> ORDER = List.of(
+            ZenkaiAttributes.STRENGTH, ZenkaiAttributes.DEXTERITY, ZenkaiAttributes.CONSTITUTION,
+            ZenkaiAttributes.WILLPOWER, ZenkaiAttributes.MIND, ZenkaiAttributes.SPIRIT
     );
 
     // ================= TP MULTIPLIER =================
@@ -48,7 +48,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     // ================= AREAS PARA TOOLTIP DE ATRIBUTOS =================
 
-    private record AttrArea(Dbrattributes attr, int x, int y, int w, int h) {
+    private record AttrArea(ZenkaiAttributes attr, int x, int y, int w, int h) {
         boolean contains(int mx, int my) {
             return mx >= x && mx < x + w && my >= y && my < y + h;
         }
@@ -69,7 +69,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         int y = panelTop  + 60;
 
         // Botón "+" por atributo (usa el multiplicador actual)
-        for (Dbrattributes a : ORDER) {
+        for (ZenkaiAttributes a : ORDER) {
             final String name = a.name();
 
             this.addRenderableWidget(new PlusIconButton(
@@ -151,7 +151,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         // ======= Atributos (izquierda) =======
         attrAreas.clear();
         int ay = y;
-        for (Dbrattributes a : ORDER) {
+        for (ZenkaiAttributes a : ORDER) {
             int value = att.getAttribute(a);
             Component line = getAttributeLabel(a, value);
 
@@ -246,7 +246,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         int step = getCurrentTpStep();
         int best = Integer.MAX_VALUE;
 
-        for (Dbrattributes a : ORDER) {
+        for (ZenkaiAttributes a : ORDER) {
             int c = att.previewTpCost(a, step);
             if (c > 0 && c < best) {
                 best = c;
@@ -278,7 +278,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         }
     }
 
-    private Component getAttributeLabel(Dbrattributes attr, int value) {
+    private Component getAttributeLabel(ZenkaiAttributes attr, int value) {
         return switch (attr) {
             case STRENGTH     -> Component.translatable("attribute.zenkai.str", value);
             case DEXTERITY    -> Component.translatable("attribute.zenkai.dex", value);
@@ -300,7 +300,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
      *  "tooltip.zenkai.attr.spi"
      *  "tooltip.zenkai.attr.mnd"
      */
-    private Component getAttributeDescription(Dbrattributes attr, PlayerStatsAttachment att) {
+    private Component getAttributeDescription(ZenkaiAttributes attr, PlayerStatsAttachment att) {
         // Usamos SIEMPRE los multiplicadores de StatsConfig para evitar desincronizar
         double[] r = StatsConfig.raceMultipliers(att.getRace());   // [mSTR, mCON, mDEX, mWIL, mSPI, mMND]
         double[] s = StatsConfig.styleMultipliers(att.getStyle()); // [sSTR, sCON, sDEX, sWIL, sSPI, sMND]

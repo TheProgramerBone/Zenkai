@@ -2,7 +2,7 @@ package com.hmc.zenkai.core.network.feature.player;
 
 import com.hmc.zenkai.core.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.Style;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
@@ -77,19 +77,19 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public void applyRaceBaseAttributes() { raceStats.applyRaceBaseAttributes(); applyRecalc(); }
 
     // ── Atributos / TP ───────────────────────────────────────────────────────
-    public int  getAttribute(Dbrattributes a)        { return raceStats.getAttribute(a); }
-    public void setAttribute(Dbrattributes a, int v) { raceStats.setAttribute(a, v); applyRecalc(); }
+    public int  getAttribute(ZenkaiAttributes a)        { return raceStats.getAttribute(a); }
+    public void setAttribute(ZenkaiAttributes a, int v) { raceStats.setAttribute(a, v); applyRecalc(); }
 
     public int  getTP()              { return raceStats.getTP(); }
     public void addTP(int amount)    { raceStats.addTP(amount); }
 
-    public boolean spendTP(Dbrattributes attr, int points) {
+    public boolean spendTP(ZenkaiAttributes attr, int points) {
         boolean ok = raceStats.spendTP(attr, points);
         if (ok) applyRecalc();
         return ok;
     }
 
-    public int  previewTpCost(Dbrattributes attr, int points) {
+    public int  previewTpCost(ZenkaiAttributes attr, int points) {
         return raceStats.previewTpCost(attr, points);
     }
 

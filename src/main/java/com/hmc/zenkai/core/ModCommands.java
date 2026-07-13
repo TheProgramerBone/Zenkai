@@ -1,7 +1,7 @@
 package com.hmc.zenkai.core;
 
 import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.Style;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
@@ -186,7 +186,7 @@ public class ModCommands {
     private static int setAttr(CommandContext<CommandSourceStack> ctx,
                                ServerPlayer sp, String attrName, int value) {
         var att = sp.getData(DataAttachments.PLAYER_STATS.get());
-        Dbrattributes a = Dbrattributes.fromString(attrName);
+        ZenkaiAttributes a = ZenkaiAttributes.fromString(attrName);
         if (a == null) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] Unknown attribute: " + attrName
                     + ". Valid: STR, CON, DEX, WIL, SPI, MND"));
@@ -202,7 +202,7 @@ public class ModCommands {
     private static int setAllAttr(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, int value) {
         var att = sp.getData(DataAttachments.PLAYER_STATS.get());
         int v = Math.max(0, Math.min(value, StatsConfig.globalAttributeCap()));
-        for (Dbrattributes a : Dbrattributes.values()) att.setAttribute(a, v);
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) att.setAttribute(a, v);
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(
                 () -> Component.literal("[Zenkai] All attributes = " + v + " → " + sp.getGameProfile().getName()), true);

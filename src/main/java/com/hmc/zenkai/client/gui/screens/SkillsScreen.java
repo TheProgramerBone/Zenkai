@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.core.skills.SkillDef;
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,7 +32,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
             boolean owned = att != null && att.skills().has(def.id());
             if (!owned) {
                 boolean canBuy = att != null
-                        && att.getAttribute(Dbrattributes.MIND) >= def.mindReq()
+                        && att.getAttribute(ZenkaiAttributes.MIND) >= def.mindReq()
                         && att.getTP() >= def.tpCost();
                 TextOnlyButton buy = new TextOnlyButton(panelLeft + BG_W - 66, y, 54, 16,
                         Component.translatable("screen.zenkai.skills.buy"),
@@ -65,7 +65,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         int y = panelTop + 58;
         for (SkillDef def : SkillDef.all()) {
             boolean owned = att != null && att.skills().has(def.id());
-            boolean mindOk = att != null && att.getAttribute(Dbrattributes.MIND) >= def.mindReq();
+            boolean mindOk = att != null && att.getAttribute(ZenkaiAttributes.MIND) >= def.mindReq();
             g.drawString(this.font, Component.translatable(def.nameKey()),
                     panelLeft + 16, y, owned ? 0xFF7CFC7C : 0xFFFFFFFF, true);
             if (owned) {

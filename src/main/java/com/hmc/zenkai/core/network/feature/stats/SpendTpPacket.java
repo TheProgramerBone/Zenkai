@@ -1,7 +1,7 @@
 package com.hmc.zenkai.core.network.feature.stats;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -30,8 +30,8 @@ public record SpendTpPacket(String attrName, int points) implements CustomPacket
         ctx.enqueueWork(() -> {
             var sp = ctx.player();
 
-            Dbrattributes a;
-            try { a = Dbrattributes.fromString(pkt.attrName()); } catch (Exception ignored) { return; }
+            ZenkaiAttributes a;
+            try { a = ZenkaiAttributes.fromString(pkt.attrName()); } catch (Exception ignored) { return; }
 
             var att = sp.getData(DataAttachments.PLAYER_STATS.get());
             if (pkt.points() > 0 && att.spendTP(a, pkt.points())) {
