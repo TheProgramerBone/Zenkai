@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "zenkai:elite_circuit"
+    },
+    "D": {
+      "tag": "zenkai:dragon_balls_item"
+    },
+    "E": {
+      "item": "minecraft:emerald"
+    },
+    "G": {
+      "tag": "c:glass_blocks"
+    },
+    "I": {
+      "tag": "c:ingots/iron"
+    }
+  },
+  "pattern": [
+    "IEI",
+    "GDG",
+    "ICI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:scouter_radar_upgrade"
+  }
+}

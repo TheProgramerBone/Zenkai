@@ -1,12 +1,15 @@
 package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.block.ModBlocks;
 import com.hmc.zenkai.content.item.ModItems;
+import com.hmc.zenkai.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import org.jetbrains.annotations.NotNull;
@@ -47,5 +50,21 @@ public class ModItemTagProvider extends ItemTagsProvider {
 
         this.tag(ItemTags.DYEABLE)
                 .add(ModItems.SCOUTER.get());
+
+        this.tag(ModTags.Items.DRAGON_BALLS_ITEM)
+                .add(ModBlocks.DRAGON_BALL_1.get().asItem())
+                .add(ModBlocks.DRAGON_BALL_2.get().asItem())
+                .add(ModBlocks.DRAGON_BALL_3.get().asItem())
+                .add(ModBlocks.DRAGON_BALL_4.get().asItem())
+                .add(ModBlocks.DRAGON_BALL_5.get().asItem())
+                .add(ModBlocks.DRAGON_BALL_6.get().asItem())
+                .add(ModBlocks.DRAGON_BALL_7.get().asItem())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_1.get().asItem())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_2.get().asItem())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_3.get().asItem())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_4.get().asItem())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_5.get().asItem())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_6.get().asItem())
+                .add(ModBlocks.NAMEK_DRAGON_BALL_7.get().asItem());
     }
 }

@@ -3,6 +3,7 @@ package com.hmc.zenkai.datagen;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.block.ModBlocks;
 import com.hmc.zenkai.content.item.ModItems;
+import com.hmc.zenkai.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
+import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
 import org.jetbrains.annotations.NotNull;
 
@@ -103,6 +105,27 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .pattern("YYY")
                 .define('Y', Items.YELLOW_WOOL)
                 .unlockedBy("has_wool", has(Items.YELLOW_WOOL)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.SCOUTER.get(),1)
+                .pattern("III")
+                .pattern("IGI")
+                .pattern("RCR")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('G',Tags.Items.GLASS_BLOCKS)
+                .define('C',ModItems.ADVANCED_CIRCUIT)
+                .define('R',Tags.Items.DUSTS_REDSTONE)
+                .unlockedBy("has_advanced_circuit", has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SCOUTER_RADAR_UPGRADE.get(),1)
+                .pattern("IEI")
+                .pattern("GDG")
+                .pattern("ICI")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('G',Tags.Items.GLASS_BLOCKS)
+                .define('D', ModTags.Items.DRAGON_BALLS_ITEM)
+                .define('C',ModItems.ELITE_CIRCUIT)
+                .define('E',Items.EMERALD)
+                .unlockedBy("has_scouter", has(ModItems.SCOUTER)).save(recipeOutput);
 
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.TERRAGEM.get(), 9)
                 .requires(ModBlocks.TERRAGEM_BLOCK)
