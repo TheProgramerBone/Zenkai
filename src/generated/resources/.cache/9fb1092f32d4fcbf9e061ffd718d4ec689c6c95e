@@ -1,4 +1,4 @@
-// 1.21.1	2026-06-29T10:46:08.1710188	Recipes
+// 1.21.1	2026-07-13T13:45:15.2308639	Recipes
 67b0df22c4f6b10c05a1c40f61aefb22d7729ae7 data/zenkai/advancement/recipes/building_blocks/namekian_structure_block.json
 2f729052ab8700a2cae0cac5d5f72d68064b7fd8 data/zenkai/advancement/recipes/misc/advanced_circuit.json
 632a1ddbbe2e8f633f12e90e03a37454144e5db9 data/zenkai/advancement/recipes/misc/basic_circuit.json
@@ -20,6 +20,7 @@ c8f698eb4f4b8581d0600e47543bdf4dbe142bd2 data/zenkai/advancement/recipes/misc/na
 e195438bd3bb916c69e698e8c7a95e5cb94048ad data/zenkai/advancement/recipes/misc/namek_dragon_ball_5.json
 4dba855d5059ae633eb9ea02a39a005ce581a153 data/zenkai/advancement/recipes/misc/namek_dragon_ball_6.json
 836415df46989625f017eef140d0c6b4af5ba27f data/zenkai/advancement/recipes/misc/namek_dragon_ball_7.json
+11676fc3e89ee0ca4eb53923ce9a0863ef99891e data/zenkai/advancement/recipes/misc/scouter_radar_upgrade.json
 f843c02d1f55eb3cbd1948c7bcb25cb7c0bed407 data/zenkai/advancement/recipes/misc/space_pod_item.json
 dde6a0edffcca8378859c9c61b30a4979f69e197 data/zenkai/advancement/recipes/misc/terragem.json
 ebb4dd9484b6f7b1a5d945ab34d06a90646f9998 data/zenkai/advancement/recipes/misc/terragem_block.json
@@ -31,6 +32,7 @@ a331c5fe18deae86457924281ac972fd59ef6b67 data/zenkai/advancement/recipes/misc/te
 d3c4d3804c482b0a54d16c99d063e15e2682bd68 data/zenkai/advancement/recipes/misc/terragem_from_smelting_terragem_ore.json
 58b74169283b74d00c5ab3f918742f3b6b3affe4 data/zenkai/advancement/recipes/misc/terragem_hammer.json
 becc57aa1c09c010331bb4e453c0e4cca931989f data/zenkai/advancement/recipes/misc/terragem_template.json
+c14be46a54bba544e5325b52adccd8933cab9871 data/zenkai/advancement/recipes/tools/scouter.json
 0aa6dbc707deacf7a81acb603344816c29486db7 data/zenkai/recipe/advanced_circuit.json
 7329966b7d68470834fea897e3d9d0bc664c59b2 data/zenkai/recipe/basic_circuit.json
 2c7d2ca2b49ff729a24dbb342b08bd2dfacddcdd data/zenkai/recipe/dragon_ball_1.json
@@ -52,6 +54,8 @@ ace68871509d6dad3a442300d6cde3ef39acbc03 data/zenkai/recipe/namek_dragon_ball_2.
 bb024c7f912224f38d814dd44bbd947f1aa2fe41 data/zenkai/recipe/namek_dragon_ball_5.json
 764f0cafd99de03fee3604dbbfd0b895272ffbfc data/zenkai/recipe/namek_dragon_ball_6.json
 cacc03d3a719a7f63ba76caec199eb3947efc8a6 data/zenkai/recipe/namek_dragon_ball_7.json
+8069093361572736e67e4654185c6f38c477e9f5 data/zenkai/recipe/scouter.json
+e64f4d05c79c82b1fda37ac7664bdb4a18f3d0fd data/zenkai/recipe/scouter_radar_upgrade.json
 1da6168f67c0a8f7336de73f704277b2a2666ea3 data/zenkai/recipe/space_pod_item.json
 4e2d7aeea09a120deb171a38ca76f5c482a01ec0 data/zenkai/recipe/terragem.json
 a6a36420b241f510d09b9cde7706a5d1bcbb25be data/zenkai/recipe/terragem_block.json

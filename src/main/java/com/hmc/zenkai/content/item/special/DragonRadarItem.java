@@ -137,7 +137,7 @@ public class DragonRadarItem extends Item {
                 for (int y = startY; y <= endY; y++) {
                     mutable.set(x, y, z);
                     BlockState state = level.getBlockState(mutable);
-                    if (state.is(ModTags.Blocks.DRAGON_BALLS)) {
+                    if (state.is(ModTags.Blocks.DRAGON_BALLS_BLOCK)) {
                         double distSqr = origin.distSqr(mutable);
                         if (distSqr < closestDistanceSqr) {
                             closestDistanceSqr = distSqr;

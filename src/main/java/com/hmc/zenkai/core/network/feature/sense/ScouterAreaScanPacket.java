@@ -172,13 +172,13 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
                 for (int i = 0; i < sections.length; i++) {
                     LevelChunkSection sec = sections[i];
                     if (sec.hasOnlyAir()) continue;
-                    if (!sec.maybeHas(s -> s.is(ModTags.Blocks.DRAGON_BALLS))) continue; // paleta
+                    if (!sec.maybeHas(s -> s.is(ModTags.Blocks.DRAGON_BALLS_BLOCK))) continue; // paleta
 
                     int baseY = level.getSectionYFromSectionIndex(i) << 4;
                     for (int y = 0; y < 16; y++) {
                         for (int z = 0; z < 16; z++) {
                             for (int x = 0; x < 16; x++) {
-                                if (!sec.getBlockState(x, y, z).is(ModTags.Blocks.DRAGON_BALLS)) continue;
+                                if (!sec.getBlockState(x, y, z).is(ModTags.Blocks.DRAGON_BALLS_BLOCK)) continue;
                                 BlockPos p = new BlockPos((cx << 4) + x, baseY + y, (cz << 4) + z);
                                 double d = origin.distSqr(p);
                                 if (d < bestSqr) {

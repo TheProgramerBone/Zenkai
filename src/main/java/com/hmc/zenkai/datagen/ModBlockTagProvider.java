@@ -62,7 +62,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.NAMEKIAN_DIRT.get())
                 .add(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
 
-        tag(ModTags.Blocks.DRAGON_BALLS)
+        tag(ModTags.Blocks.DRAGON_BALLS_BLOCK)
                 .add(ModBlocks.DRAGON_BALL_STONE.get())
                 .add(ModBlocks.DRAGON_BALL_1.get())
                 .add(ModBlocks.DRAGON_BALL_2.get())
