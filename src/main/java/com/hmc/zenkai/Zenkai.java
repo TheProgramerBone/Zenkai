@@ -34,6 +34,8 @@ import com.hmc.zenkai.worldgen.ModSurfaceRules;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
+import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonConfiguration;
+import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonMode;
 import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
@@ -190,10 +192,15 @@ public class Zenkai {
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.TRANSFORM_LAYER,
                         1000,
-                        player -> new PlayerAnimationController(
-                                player,
-                                (controller, state, animSetter) -> PlayState.STOP
-                        )
+                        player -> {
+                            PlayerAnimationController c = new PlayerAnimationController(
+                                    player, (controller, state, animSetter) -> PlayState.STOP);
+                            c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
+                            c.setFirstPersonConfiguration(new FirstPersonConfiguration()
+                                    .setShowLeftArm(true)
+                                    .setShowRightArm(true));
+                            return c;
+                        }
                 );
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.FLY_LAYER,
@@ -207,6 +214,22 @@ public class Zenkai {
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.BLOCK_LAYER,
                         1200,
+                        player -> {
+                            PlayerAnimationController c = new PlayerAnimationController(
+                                    player, (controller, state, animSetter) -> PlayState.STOP);
+                            // Visible en primera persona: renderiza los brazos del modelo 3ª persona
+                            // mientras la animación de bloqueo está activa.
+                            c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
+                            c.setFirstPersonConfiguration(new FirstPersonConfiguration()
+                                    .setShowLeftArm(true)
+                                    .setShowRightArm(true));
+                            return c;
+                        }
+                );
+
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.COMBAT_LAYER,
+                        900,
                         player -> new PlayerAnimationController(
                                 player,(controller, state, animSetter) -> PlayState.STOP)
 

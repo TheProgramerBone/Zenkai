@@ -106,6 +106,11 @@ public class CombatZenkaiHooks {
         if (defStats != null && defStats.isCombatActive()) {
             if (dmg > 0f) {
                 double defense = defStats.computeDefenseFinal();
+                if (e.getSource().getDirectEntity() instanceof KiProjectileEntity
+                        && atkStats != null) {
+                    double kiPower = atkStats.computeKiPowerFinal();
+                    if (kiPower > 1.0e-6) defense *= (dmg / kiPower);
+                }
                 double finalDamage = (dmg <= defense)
                         ? dmg * StatsConfig.minDamagePercent()
                         : dmg - defense;
@@ -227,5 +232,13 @@ public class CombatZenkaiHooks {
 
         e.setCanceled(true);
         e.setCancellationResult(InteractionResult.SUCCESS);
+    }
+
+    @SubscribeEvent
+    public static void onAttackWhileBlocking(net.neoforged.neoforge.event.entity.player.AttackEntityEvent e) {
+        if (e.getEntity().level().isClientSide()) return;
+        if (e.getEntity() instanceof ServerPlayer sp && KiCombatServer.isBlocking(sp)) {
+            e.setCanceled(true);
+        }
     }
 }

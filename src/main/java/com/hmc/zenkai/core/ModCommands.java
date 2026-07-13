@@ -7,6 +7,7 @@ import com.hmc.zenkai.core.network.feature.Style;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.core.skills.SkillDef;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -167,7 +168,22 @@ public class ModCommands {
                             return 1;
                         }))
 
-
+                // ── /zenkai skill ─────────────────────────────────────────────────
+                // Otorga/revoca habilidades sin TP (la vía de maestros/NPCs).
+                // Uso: /zenkai skill give|revoke <jugador> <id>
+                .then(Commands.literal("skill")
+                        .then(Commands.literal("give")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("id", StringArgumentType.string())
+                                                .executes(ctx -> skillGive(ctx,
+                                                        EntityArgument.getPlayer(ctx, "player"),
+                                                        StringArgumentType.getString(ctx, "id"))))))
+                        .then(Commands.literal("revoke")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("id", StringArgumentType.string())
+                                                .executes(ctx -> skillRevoke(ctx,
+                                                        EntityArgument.getPlayer(ctx, "player"),
+                                                        StringArgumentType.getString(ctx, "id")))))))
 
         );
     }
@@ -257,14 +273,18 @@ public class ModCommands {
     private static int resetFull(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
         // ── Stats ─────────────────────────────────────────────────────────────
         var att = sp.getData(DataAttachments.PLAYER_STATS.get());
+        att.skills().clear();
         att.setRace(Race.HUMAN);
         att.setStyle(Style.MARTIAL_ARTIST);
         att.respec();
-        att.addTP(-att.getTP()); // vaciar TP restante
+        att.addTP(-att.getTP());
         att.setRaceChosen(false);
         att.setStyleChosen(false);
         att.setFlyEnabled(false);
         att.setImmortal(false);
+        att.setMajin(false);
+        att.setLegendary(false);
+        att.setDivine(false);
         PlayerLifeCycle.sync(sp);
 
         // ── Visual (pelo, ojos, colores, índices) ─────────────────────────────
@@ -295,6 +315,39 @@ public class ModCommands {
             return 0;
         }
         ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Revived " + target.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /** Otorga una habilidad SIN coste de TP (maestro/NPC/operador). Sobrevive al respec. */
+    private static int skillGive(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, String id) {
+        if (SkillDef.get(id) == null) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] Unknown skill: " + id));
+            return 0;
+        }
+        var att = sp.getData(DataAttachments.PLAYER_STATS.get());
+        if (att.skills().has(id)) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] "
+                    + sp.getGameProfile().getName() + " already has: " + id));
+            return 0;
+        }
+        att.skills().unlock(id, false); // otorgada, no comprada
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Skill '" + id + "' → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /** Revoca aunque el id ya no exista en el registro (limpia huérfanas). */
+    private static int skillRevoke(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, String id) {
+        var att = sp.getData(DataAttachments.PLAYER_STATS.get());
+        if (!att.skills().revoke(id)) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] "
+                    + sp.getGameProfile().getName() + " doesn't have: " + id));
+            return 0;
+        }
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Skill '" + id + "' revoked ← " + sp.getGameProfile().getName()), true);
         return 1;
     }
 }

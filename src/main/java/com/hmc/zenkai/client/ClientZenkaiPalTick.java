@@ -27,6 +27,9 @@ public final class ClientZenkaiPalTick {
         int flyBoostState = 0; // ver constantes CRUISE_START/CRUISE_LOOP/BOOST_START/BOOST_LOOP
         int flyBoostTicks = 0; // cuenta atrás de la intermedia antes de pasar al loop
         boolean blockPlaying = false;
+        boolean combatPlaying = false;
+        int combatStyle = -1;      // ordinal del Style con el que se posó
+        int combatStartTicks = 0;  // cuenta atrás del start antes del loop
     }
 
     private static final Map<UUID, AnimState> STATES = new HashMap<>();
@@ -76,7 +79,11 @@ public final class ClientZenkaiPalTick {
         var stats = p.getData(DataAttachments.PLAYER_STATS.get());
 
         // Derribado: forzamos la pose acostada del jugador local (los demás la reciben por DATA_POSE).
+        AnimState st = STATES.computeIfAbsent(p.getUUID(), k -> new AnimState());
+
+        // Derribado: forzamos la pose acostada del jugador local (los demás la reciben por DATA_POSE).
         if (stats.flags().isDowned()) {
+            tickCombatIdle(p, st, -1); // corta la pose ofensiva si estaba activa
             if (p == mc.player) {
                 applyLocalBoost(p, false); // por si se derriba en pleno boost (limpia hitbox/cámara)
                 p.setPose(Pose.SWIMMING);
@@ -89,8 +96,6 @@ public final class ClientZenkaiPalTick {
             }
             return;
         }
-
-        AnimState st = STATES.computeIfAbsent(p.getUUID(), k -> new AnimState());
 
         // ── Animación de vuelo direccional + aceleración ──
         if (p == mc.player) {
@@ -160,6 +165,23 @@ public final class ClientZenkaiPalTick {
                 ZenkaiPalAnimations.playTransformLoop(p);
             }
         }
+
+        // ── Pose ofensiva del modo combate (solo QUIETO; start -> loop, por estilo) ──
+        int combatStyleOrd = -1;
+        boolean combatStill = p.onGround()
+                && p.walkAnimation.speed() < 0.05f
+                && !p.isSwimming();
+        if (combatStill) {
+            if (p == mc.player) {
+                if (CombatModeClientState.isActive() && stats.isStyleChosen()) {
+                    combatStyleOrd = stats.getStyle().ordinal();
+                }
+            } else {
+                CombatModeClientState.Remote cr = CombatModeClientState.remote(p.getId());
+                if (cr != null) combatStyleOrd = cr.styleOrdinal();
+            }
+        }
+        tickCombatIdle(p, st, combatStyleOrd);
 
         // ── Animación de defensa (local: estado propio instantáneo; remotos: sync) ──
         boolean blockingNow = (p == mc.player)
@@ -284,5 +306,32 @@ public final class ClientZenkaiPalTick {
         ZenkaiPalAnimations.playFly(p, dir.cruiseStart);
         st.flyBoostState = CRUISE_START;
         st.flyBoostTicks = FLY_CRUISE_START_TICKS;
+    }
+
+    // ── Pose ofensiva del modo combate ───────────────────────────────────────
+    /** Duración (ticks) del start antes del loop. Ajústala a tus animaciones. */
+    private static final int COMBAT_START_TICKS = 6; // ~0.3 s
+
+    /** styleOrd < 0 = sin pose (fuera de modo combate / derribado / sin estilo). */
+    private static void tickCombatIdle(AbstractClientPlayer p, AnimState st, int styleOrd) {
+        if (styleOrd < 0) {
+            if (st.combatPlaying) {
+                st.combatPlaying = false;
+                st.combatStyle = -1;
+                st.combatStartTicks = 0;
+                ZenkaiPalAnimations.stopCombatIdle(p);
+            }
+            return;
+        }
+        if (!st.combatPlaying || st.combatStyle != styleOrd) {
+            st.combatPlaying = true;
+            st.combatStyle = styleOrd;
+            st.combatStartTicks = COMBAT_START_TICKS;
+            ZenkaiPalAnimations.playCombatIdleStart(p, styleOrd);
+            return;
+        }
+        if (st.combatStartTicks > 0 && --st.combatStartTicks == 0) {
+            ZenkaiPalAnimations.playCombatIdleLoop(p, styleOrd);
+        }
     }
 }

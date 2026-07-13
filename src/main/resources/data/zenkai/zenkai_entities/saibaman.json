@@ -1,6 +1,6 @@
 {
   "entity": "zenkai:saibaman",
-  "power_level": 1200,
+  "power_level": 120,
   "archetype": "brawler",
   "overrides": {
     "attributes": { "spirit": "+20%" },

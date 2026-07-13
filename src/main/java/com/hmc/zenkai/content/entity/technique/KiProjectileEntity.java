@@ -1,5 +1,6 @@
 package com.hmc.zenkai.content.entity.technique;
 
+import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.technique.KiTechniqueType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -17,27 +18,29 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.SimpleExplosionDamageCalculator;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Proyectil ki (sistema nuevo, desde cero). Tipo/color/tamaño viajan como entity data
  * (el renderer los lee directamente). El DAÑO se fija en servidor al disparar
  * (kiPower × dmgMult × sizeF, ver KiFirePacket) y entra al pipeline de combate como
  * proyectil: CombatZenkaiHooks NO lo recalcula como melee (bypass por instanceof).
- *
  * Tipos especiales:
  *  - SPIRAL: oscilación perpendicular a la trayectoria (server mueve, cliente interpola).
  *  - BARRIER: no se mueve ni golpea; sigue el centro del dueño y muere al expirar
  *    (la absorción de daño vive en KiCombatServer, esta entidad es solo el visual).
- *
  * Explosiva: al impactar (bloque o entidad) genera daño en ÁREA con caída lineal —
  * radio 1.5 + 0.35×size, daño AoE = 60% del directo. Sin daño a bloques (griefing off).
  * El objetivo directo recibe el daño completo y se excluye del AoE (no doble golpe);
  * el dueño también se excluye (sin auto-daño).
- *
  * Sin gravedad; muere al chocar o al agotar la vida.
  */
 public class KiProjectileEntity extends Projectile {
@@ -90,13 +93,13 @@ public class KiProjectileEntity extends Projectile {
     }
 
     @Override
-    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+    public void onSyncedDataUpdated(@NotNull EntityDataAccessor<?> key) {
         super.onSyncedDataUpdated(key);
         if (DATA_SIZE.equals(key) || DATA_TYPE.equals(key)) refreshDimensions();
     }
 
     @Override
-    public EntityDimensions getDimensions(Pose pose) {
+    public @NotNull EntityDimensions getDimensions(@NotNull Pose pose) {
         float d = techniqueType() == KiTechniqueType.BARRIER
                 ? 2.4f + 0.2f * size()
                 : 0.3f + 0.15f * size();
@@ -150,17 +153,19 @@ public class KiProjectileEntity extends Projectile {
     }
 
     @Override
-    protected void onHitEntity(EntityHitResult hit) {
+    protected void onHitEntity(@NotNull EntityHitResult hit) {
         super.onHitEntity(hit);
         if (level().isClientSide) return;
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
-        hit.getEntity().hurt(damageSources().mobProjectile(this, owner), (float) damage);
+        if (level().getServer() == null || ModGameRules.enableKiDamage(Objects.requireNonNull(level().getServer()))) {
+            hit.getEntity().hurt(damageSources().mobProjectile(this, owner), (float) damage);
+        }
         if (explosive) explode(hit.getEntity().position(), hit.getEntity());
         discard();
     }
 
     @Override
-    protected void onHit(HitResult hit) {
+    protected void onHit(@NotNull HitResult hit) {
         super.onHit(hit);
         if (!level().isClientSide && hit.getType() == HitResult.Type.BLOCK) {
             if (explosive) explode(hit.getLocation(), null);
@@ -168,36 +173,53 @@ public class KiProjectileEntity extends Projectile {
         }
     }
 
-    /** Daño en área con caída lineal + partículas/sonido. Excluye dueño y objetivo directo. */
+    /** Daño en área con caída lineal + (si procede) explosión REAL de bloques.
+     *  - Daño a entidades: SOLO el del ki (gamerule zenkai_enableKiDamage), por el pipeline.
+     *  - Bloques: gamerule zenkai_enableKiGriefing; la explosión vanilla va con calculator
+     *    "solo bloques" (sin daño a entidades -> sin doble golpe) y las zonas protegidas se
+     *    filtran globalmente en StructureProtectionHandler.onExplosionDetonate.
+     *  Excluye dueño y objetivo directo. */
     private void explode(Vec3 center, Entity directHit) {
         if (!(level() instanceof ServerLevel sl)) return;
         double radius = 1.5 + 0.35 * size();
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
 
-        for (LivingEntity target : sl.getEntitiesOfClass(LivingEntity.class,
-                AABB.ofSize(center, radius * 2, radius * 2, radius * 2),
-                t -> t.isAlive() && t != getOwner() && t != directHit)) {
-            double dist = target.position().add(0, target.getBbHeight() * 0.5, 0)
-                    .distanceTo(center);
-            if (dist > radius) continue;
-            double falloff = 1.0 - dist / radius;
-            target.hurt(damageSources().mobProjectile(this, owner),
-                    (float) (damage * EXPLOSION_AOE_FACTOR * falloff));
+        if (ModGameRules.enableKiDamage(sl.getServer())) {
+            for (LivingEntity target : sl.getEntitiesOfClass(LivingEntity.class,
+                    AABB.ofSize(center, radius * 2, radius * 2, radius * 2),
+                    t -> t.isAlive() && t != getOwner() && t != directHit)) {
+                double dist = target.position().add(0, target.getBbHeight() * 0.5, 0)
+                        .distanceTo(center);
+                if (dist > radius) continue;
+                double falloff = 1.0 - dist / radius;
+                target.hurt(damageSources().mobProjectile(this, owner),
+                        (float) (damage * EXPLOSION_AOE_FACTOR * falloff));
+            }
         }
 
-        sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z,
-                1, 0, 0, 0, 0);
-        sl.playSound(null, center.x, center.y, center.z,
-                SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.5f, 1.0f);
+        if (ModGameRules.enableKiGriefing(sl.getServer())) {
+            // Explosión vanilla SOLO bloques: drops estilo TNT, respeta blast resistance,
+            // partículas y sonido incluidos. TNT ignora mobGriefing: manda nuestra gamerule.
+            sl.explode(this, null,
+                    new SimpleExplosionDamageCalculator(true, false,
+                            Optional.empty(), Optional.empty()),
+                    center.x, center.y, center.z, (float) radius, false,
+                    Level.ExplosionInteraction.TNT);
+        } else {
+            sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z,
+                    1, 0, 0, 0, 0);
+            sl.playSound(null, center.x, center.y, center.z,
+                    SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.5f, 1.0f);
+        }
     }
 
     @Override
-    protected boolean canHitEntity(Entity e) {
+    protected boolean canHitEntity(@NotNull Entity e) {
         return super.canHitEntity(e) && e != getOwner();
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag tag) {
+    protected void addAdditionalSaveData(@NotNull CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putDouble("damage", damage);
         tag.putInt("life", life);
@@ -208,7 +230,7 @@ public class KiProjectileEntity extends Projectile {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag tag) {
+    protected void readAdditionalSaveData(@NotNull CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         damage = tag.getDouble("damage");
         life = tag.getInt("life");
@@ -222,7 +244,7 @@ public class KiProjectileEntity extends Projectile {
     public boolean isPickable() { return false; }
 
     @Override
-    public boolean hurt(net.minecraft.world.damagesource.DamageSource source, float amount) {
+    public boolean hurt(net.minecraft.world.damagesource.@NotNull DamageSource source, float amount) {
         return false; // los proyectiles ki no reciben daño
     }
 }

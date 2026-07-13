@@ -15,6 +15,7 @@ import com.hmc.zenkai.core.network.feature.player.SyncPlayerVisualPacket;
 import com.hmc.zenkai.core.network.feature.race.UpdatePlayerVisualPacket;
 import com.hmc.zenkai.core.network.feature.sense.*;
 import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
+import com.hmc.zenkai.core.network.feature.skills.SkillSyncPacket;
 import com.hmc.zenkai.core.network.feature.stats.*;
 import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
 import com.hmc.zenkai.core.network.feature.technique.TechniquePacket;
@@ -240,5 +241,10 @@ public class ModNetworking {
                 BlockingSyncPacket.TYPE,
                 BlockingSyncPacket.STREAM_CODEC,
                 BlockingSyncPacket::handle);
+
+        registrar.playToClient(
+                SkillSyncPacket.TYPE,
+                SkillSyncPacket.STREAM_CODEC,
+                SkillSyncPacket::handle);
     }
 }

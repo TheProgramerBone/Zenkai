@@ -50,6 +50,11 @@ public final class ModGameRules {
             GameRules.register("zenkai_keepStructureNpcs", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
+    /** Si false, las técnicas explosivas no rompen bloques (solo daño/partículas). */
+    public static final GameRules.Key<GameRules.BooleanValue> ENABLE_KI_GRIEFING =
+            GameRules.register("zenkai_enableKiGriefing", GameRules.Category.MISC,
+                    GameRules.BooleanValue.create(true));
+
 
     // ── Init ─────────────────────────────────────────────────────────────────
     public static void init() {
@@ -88,5 +93,9 @@ public final class ModGameRules {
 
     public static boolean keepStructureNpcs(MinecraftServer server) {
         return !server.getGameRules().getBoolean(KEEP_STRUCTURE_NPCS);
+    }
+
+    public static boolean enableKiGriefing(MinecraftServer server) {
+        return server.getGameRules().getBoolean(ENABLE_KI_GRIEFING);
     }
 }

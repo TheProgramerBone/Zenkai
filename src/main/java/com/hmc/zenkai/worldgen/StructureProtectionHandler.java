@@ -8,6 +8,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.ExplosionEvent;
 
 /**
  * Protección de zonas (la HTC entera + las zonas de Kami/Yemma): se PUEDE construir, pero solo se
@@ -54,5 +55,25 @@ public final class StructureProtectionHandler {
         if (!ModGameRules.enableStructureProtection(level.getServer())) return true;
         if (level.dimension() == ModDimensions.HTC_LEVEL) return true;
         return !NoHostileSpawnZones.isProtected(level.dimension(), pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    /** NINGUNA explosión (ki, TNT, creeper...) rompe bloques protegidos: toda la HTC, y
+     *  dentro de las zonas de Kami/Yemma solo sobreviven los bloques puestos por jugadores.
+     *  (Antes las explosiones se saltaban la protección: solo se cubría la rotura manual.) */
+    @SubscribeEvent
+    public static void onExplosionDetonate(ExplosionEvent.Detonate event) {
+        Level level = event.getLevel();
+        if (level.isClientSide || level.getServer() == null) return;
+        if (!ModGameRules.enableStructureProtection(level.getServer())) return;
+
+        if (level.dimension() == ModDimensions.HTC_LEVEL) {
+            event.getAffectedBlocks().clear();
+            return;
+        }
+
+        PlayerPlacedBlocks placed = PlayerPlacedBlocks.get(level.getServer());
+        event.getAffectedBlocks().removeIf(pos ->
+                NoHostileSpawnZones.isProtected(level.dimension(), pos.getX(), pos.getY(), pos.getZ())
+                        && !placed.contains(level.dimension(), pos));
     }
 }

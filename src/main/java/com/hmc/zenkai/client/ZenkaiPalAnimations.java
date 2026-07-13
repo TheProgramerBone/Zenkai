@@ -80,4 +80,38 @@ public final class ZenkaiPalAnimations {
     public static void stopBlock(AbstractClientPlayer player) {
         blockController(player).stopTriggeredAnimation();
     }
+
+    // ── Pose ofensiva del modo combate ───────────────────────────────────────
+    /** Por estilo (orden = Style.ordinal()):
+     *   start = "zenkai.combat_idle_<estilo>_start" (transición, se ve una vez)
+     *   loop  = "zenkai.combat_idle_<estilo>"        (pose sostenida, loop) */
+    private static final String[] COMBAT_STYLES = {"warrior", "martial_artist", "spiritualist"};
+    private static final ResourceLocation[] COMBAT_IDLE_START = new ResourceLocation[COMBAT_STYLES.length];
+    private static final ResourceLocation[] COMBAT_IDLE_LOOP  = new ResourceLocation[COMBAT_STYLES.length];
+    static {
+        for (int i = 0; i < COMBAT_STYLES.length; i++) {
+            COMBAT_IDLE_START[i] = ResourceLocation.fromNamespaceAndPath(
+                    Zenkai.MOD_ID, "zenkai.combat_idle_" + COMBAT_STYLES[i] + "_start");
+            COMBAT_IDLE_LOOP[i] = ResourceLocation.fromNamespaceAndPath(
+                    Zenkai.MOD_ID, "zenkai.combat_idle_" + COMBAT_STYLES[i]);
+        }
+    }
+
+    public static PlayerAnimationController combatController(AbstractClientPlayer player) {
+        return (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(player, ZenkaiPalLayers.COMBAT_LAYER);
+    }
+
+    public static void playCombatIdleStart(AbstractClientPlayer player, int styleOrdinal) {
+        if (styleOrdinal < 0 || styleOrdinal >= COMBAT_IDLE_START.length) return;
+        combatController(player).triggerAnimation(COMBAT_IDLE_START[styleOrdinal]);
+    }
+
+    public static void playCombatIdleLoop(AbstractClientPlayer player, int styleOrdinal) {
+        if (styleOrdinal < 0 || styleOrdinal >= COMBAT_IDLE_LOOP.length) return;
+        combatController(player).triggerAnimation(COMBAT_IDLE_LOOP[styleOrdinal]);
+    }
+
+    public static void stopCombatIdle(AbstractClientPlayer player) {
+        combatController(player).stopTriggeredAnimation();
+    }
 }
