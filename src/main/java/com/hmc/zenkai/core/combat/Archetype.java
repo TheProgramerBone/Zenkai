@@ -1,6 +1,6 @@
 package com.hmc.zenkai.core.combat;
 
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 
 import java.util.EnumMap;
 import java.util.Locale;
@@ -16,11 +16,11 @@ import java.util.Map;
 public final class Archetype {
 
     private final String name;
-    private final EnumMap<Dbrattributes, Double> shape;
+    private final EnumMap<ZenkaiAttributes, Double> shape;
     private final double bodyMult;
     private final double kiMult;
 
-    public Archetype(String name, EnumMap<Dbrattributes, Double> shape, double bodyMult, double kiMult) {
+    public Archetype(String name, EnumMap<ZenkaiAttributes, Double> shape, double bodyMult, double kiMult) {
         this.name = name;
         this.shape = shape;
         this.bodyMult = bodyMult;
@@ -30,18 +30,18 @@ public final class Archetype {
     public String name()      { return name; }
     public double bodyMult()  { return bodyMult; }
     public double kiMult()    { return kiMult; }
-    public double shape(Dbrattributes a) { return shape.getOrDefault(a, 0.0); }
+    public double shape(ZenkaiAttributes a) { return shape.getOrDefault(a, 0.0); }
 
     // ── Helper para construir shapes (STR, CON, DEX, WIL, SPI) ────────────────
-    private static EnumMap<Dbrattributes, Double> shapeOf(double str, double con, double dex,
-                                                          double wil, double spi) {
-        EnumMap<Dbrattributes, Double> m = new EnumMap<>(Dbrattributes.class);
-        m.put(Dbrattributes.STRENGTH,     str);
-        m.put(Dbrattributes.CONSTITUTION, con);
-        m.put(Dbrattributes.DEXTERITY,    dex);
-        m.put(Dbrattributes.WILLPOWER,    wil);
-        m.put(Dbrattributes.SPIRIT,       spi);
-        m.put(Dbrattributes.MIND,         0.0);
+    private static EnumMap<ZenkaiAttributes, Double> shapeOf(double str, double con, double dex,
+                                                             double wil, double spi) {
+        EnumMap<ZenkaiAttributes, Double> m = new EnumMap<>(ZenkaiAttributes.class);
+        m.put(ZenkaiAttributes.STRENGTH,     str);
+        m.put(ZenkaiAttributes.CONSTITUTION, con);
+        m.put(ZenkaiAttributes.DEXTERITY,    dex);
+        m.put(ZenkaiAttributes.WILLPOWER,    wil);
+        m.put(ZenkaiAttributes.SPIRIT,       spi);
+        m.put(ZenkaiAttributes.MIND,         0.0);
         return m;
     }
 

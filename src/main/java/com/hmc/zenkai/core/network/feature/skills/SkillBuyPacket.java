@@ -1,7 +1,7 @@
 package com.hmc.zenkai.core.network.feature.skills;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.skills.SkillDef;
@@ -41,7 +41,7 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             if (!att.isRaceChosen()) return;
             if (att.skills().has(def.id())) return;
-            if (att.getAttribute(Dbrattributes.MIND) < def.mindReq()) return;
+            if (att.getAttribute(ZenkaiAttributes.MIND) < def.mindReq()) return;
             if (att.getTP() < def.tpCost()) return;
 
             att.addTP(-def.tpCost());

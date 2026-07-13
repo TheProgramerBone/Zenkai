@@ -83,7 +83,7 @@ public final class ModGameRules {
     }
 
     public static boolean enableStructureProtection(MinecraftServer server) {
-        return !server.getGameRules().getBoolean(ENABLE_STRUCTURE_PROTECTION);
+        return server.getGameRules().getBoolean(ENABLE_STRUCTURE_PROTECTION);
     }
 
     public static boolean keepStructureNpcs(MinecraftServer server) {

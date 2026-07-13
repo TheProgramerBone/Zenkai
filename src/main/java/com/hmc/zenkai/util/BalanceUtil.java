@@ -1,7 +1,7 @@
 package com.hmc.zenkai.util;
 
 import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.Style;
 
@@ -9,21 +9,21 @@ import java.util.EnumMap;
 
 public class BalanceUtil {
 
-    public static void setBase(EnumMap<Dbrattributes,Integer> map,
+    public static void setBase(EnumMap<ZenkaiAttributes,Integer> map,
                                int STR, int CON, int DEX, int WIL, int SPI, int MIND) {
-        map.put(Dbrattributes.STRENGTH,     STR);
-        map.put(Dbrattributes.CONSTITUTION, CON);
-        map.put(Dbrattributes.DEXTERITY,    DEX);
-        map.put(Dbrattributes.WILLPOWER,    WIL);
-        map.put(Dbrattributes.SPIRIT,       SPI);
-        map.put(Dbrattributes.MIND,         MIND);
+        map.put(ZenkaiAttributes.STRENGTH,     STR);
+        map.put(ZenkaiAttributes.CONSTITUTION, CON);
+        map.put(ZenkaiAttributes.DEXTERITY,    DEX);
+        map.put(ZenkaiAttributes.WILLPOWER,    WIL);
+        map.put(ZenkaiAttributes.SPIRIT,       SPI);
+        map.put(ZenkaiAttributes.MIND,         MIND);
     }
 
     /**
      * Calcula Stat = Atributo × MultRaza × MultEstilo
      * usando los multiplicadores configurables de StatsConfig.
      */
-    public static double computeStat(int base, Race race, Style style, Dbrattributes attr) {
+    public static double computeStat(int base, Race race, Style style, ZenkaiAttributes attr) {
         // raceMult: [mSTR, mCON, mDEX, mWIL, mSPI, mMND]
         double[] r = StatsConfig.raceMultipliers(race);
         // styleMult: [sSTR, sCON, sDEX, sWIL, sSPI, sMND]

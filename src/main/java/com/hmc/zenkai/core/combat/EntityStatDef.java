@@ -1,6 +1,6 @@
 package com.hmc.zenkai.core.combat;
 
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.EnumMap;
@@ -26,7 +26,7 @@ public record EntityStatDef(
         long powerLevel,
         boolean displayOnly,       // true = solo PL de display (sin stats de combate); "display_only" en JSON
         String archetype,
-        EnumMap<Dbrattributes, AttrOverride> attributeOverrides,
+        EnumMap<ZenkaiAttributes, AttrOverride> attributeOverrides,
         double bodyMultOverride,   // 1.0 = usar el del arquetipo
         double kiMultOverride,     // 1.0 = usar el del arquetipo
         List<ResourceLocation> movesetKiAttacks, // placeholder (Fase futura)

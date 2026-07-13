@@ -1,6 +1,6 @@
 package com.hmc.zenkai.core.combat;
 
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.util.MathUtil;
 import net.minecraft.nbt.CompoundTag;
 
@@ -22,7 +22,7 @@ public final class EntityStats implements ZenkaiCombatStats {
     /** Recompensa de TP "auto" = PL × esto (placeholder tuneable; el "mundo TP" real va después). */
     private static final double TP_PER_PL = 0.05;
 
-    private final EnumMap<Dbrattributes, Integer> attr = new EnumMap<>(Dbrattributes.class);
+    private final EnumMap<ZenkaiAttributes, Integer> attr = new EnumMap<>(ZenkaiAttributes.class);
     private double bodyMult = 1.0;
     private double kiMult   = 1.0;
 
@@ -34,14 +34,14 @@ public final class EntityStats implements ZenkaiCombatStats {
 
     /** Constructor por defecto (attachment sin poblar). isCombatActive()=false hasta applyDef/load. */
     public EntityStats() {
-        for (Dbrattributes a : Dbrattributes.values()) attr.put(a, 0);
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) attr.put(a, 0);
         recalc();
     }
 
     /** Resuelve los stats desde el plano JSON (spawn). */
     public void applyDef(EntityStatDef def) {
         Archetype arch = Archetype.get(def.archetype());
-        EnumMap<Dbrattributes, Integer> solved = PowerLevel.solveAttributes(def.powerLevel(), arch);
+        EnumMap<ZenkaiAttributes, Integer> solved = PowerLevel.solveAttributes(def.powerLevel(), arch);
 
         // Overrides de atributos (absolutos o en %).
         for (var e : def.attributeOverrides().entrySet()) {
@@ -74,24 +74,24 @@ public final class EntityStats implements ZenkaiCombatStats {
     // ── Pools: MISMAS fórmulas y escalas de config que el jugador (simetría del pipeline),
     //    con los multiplicadores del arquetipo encima (body/ki). ──
     private void recalc() {
-        double con = getAttr(Dbrattributes.CONSTITUTION);
-        double spi = getAttr(Dbrattributes.SPIRIT);
+        double con = getAttr(ZenkaiAttributes.CONSTITUTION);
+        double spi = getAttr(ZenkaiAttributes.SPIRIT);
         this.bodyMax    = (int) Math.max(1, Math.round(10 + con * bodyMult * com.hmc.zenkai.core.config.StatsConfig.bodyScale()));
         this.staminaMax = (int) Math.max(1, Math.round(90 + con * com.hmc.zenkai.core.config.StatsConfig.staminaScale()));
         this.energyMax  = (int) Math.max(1, Math.round(90 + spi * kiMult * com.hmc.zenkai.core.config.StatsConfig.energyScale()));
     }
 
-    public int getAttr(Dbrattributes a) { return attr.getOrDefault(a, 0); }
+    public int getAttr(ZenkaiAttributes a) { return attr.getOrDefault(a, 0); }
     public boolean isInitialized()       { return initialized; }
     public int getTpReward()             { return tpReward; }
 
     // ── ZenkaiCombatStats ─────────────────────────────────────────────────────
     @Override public boolean isCombatActive()     { return initialized; }
-    @Override public double computeMeleeFinal()   { return getAttr(Dbrattributes.STRENGTH); }
-    @Override public double computeDefenseFinal() { return getAttr(Dbrattributes.DEXTERITY); }
-    @Override public double computeKiPowerFinal() { return getAttr(Dbrattributes.WILLPOWER); }
-    @Override public double computeKiPoolFinal()  { return getAttr(Dbrattributes.SPIRIT); }
-    @Override public double computeConFinal()     { return getAttr(Dbrattributes.CONSTITUTION); }
+    @Override public double computeMeleeFinal()   { return getAttr(ZenkaiAttributes.STRENGTH); }
+    @Override public double computeDefenseFinal() { return getAttr(ZenkaiAttributes.DEXTERITY); }
+    @Override public double computeKiPowerFinal() { return getAttr(ZenkaiAttributes.WILLPOWER); }
+    @Override public double computeKiPoolFinal()  { return getAttr(ZenkaiAttributes.SPIRIT); }
+    @Override public double computeConFinal()     { return getAttr(ZenkaiAttributes.CONSTITUTION); }
 
     @Override public int  getBody()          { return body; }
     @Override public int  getBodyMax()       { return bodyMax; }
@@ -122,7 +122,7 @@ public final class EntityStats implements ZenkaiCombatStats {
     public void load(CompoundTag t) {
         this.initialized = t.getBoolean("init");
         CompoundTag a = t.getCompound("attr");
-        for (Dbrattributes x : Dbrattributes.values()) attr.put(x, a.getInt(x.name()));
+        for (ZenkaiAttributes x : ZenkaiAttributes.values()) attr.put(x, a.getInt(x.name()));
         this.bodyMult = t.contains("bodyMult") ? t.getDouble("bodyMult") : 1.0;
         this.kiMult   = t.contains("kiMult")   ? t.getDouble("kiMult")   : 1.0;
         this.tpReward = t.getInt("tpReward");

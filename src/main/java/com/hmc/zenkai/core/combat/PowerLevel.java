@@ -1,6 +1,6 @@
 package com.hmc.zenkai.core.combat;
 
-import com.hmc.zenkai.core.network.feature.Dbrattributes;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 
 import java.util.EnumMap;
 
@@ -43,23 +43,23 @@ public final class PowerLevel {
      * Como (para entidades) el stat efectivo = atributo × 1, se cumple PL = Σ w·attr, y con
      * attr = k·shape queda k = targetPL / Σ(w·shape). Cerrado y exacto. MIND se deja en 0.
      */
-    public static EnumMap<Dbrattributes, Integer> solveAttributes(long targetPL, Archetype arch) {
+    public static EnumMap<ZenkaiAttributes, Integer> solveAttributes(long targetPL, Archetype arch) {
         double denom =
-                W_STR * arch.shape(Dbrattributes.STRENGTH)
-                        + W_CON * arch.shape(Dbrattributes.CONSTITUTION)
-                        + W_DEX * arch.shape(Dbrattributes.DEXTERITY)
-                        + W_WIL * arch.shape(Dbrattributes.WILLPOWER)
-                        + W_SPI * arch.shape(Dbrattributes.SPIRIT);
+                W_STR * arch.shape(ZenkaiAttributes.STRENGTH)
+                        + W_CON * arch.shape(ZenkaiAttributes.CONSTITUTION)
+                        + W_DEX * arch.shape(ZenkaiAttributes.DEXTERITY)
+                        + W_WIL * arch.shape(ZenkaiAttributes.WILLPOWER)
+                        + W_SPI * arch.shape(ZenkaiAttributes.SPIRIT);
 
         double k = (denom <= 0) ? 0 : targetPL / denom;
 
-        EnumMap<Dbrattributes, Integer> out = new EnumMap<>(Dbrattributes.class);
-        out.put(Dbrattributes.STRENGTH,     round(k * arch.shape(Dbrattributes.STRENGTH)));
-        out.put(Dbrattributes.CONSTITUTION, round(k * arch.shape(Dbrattributes.CONSTITUTION)));
-        out.put(Dbrattributes.DEXTERITY,    round(k * arch.shape(Dbrattributes.DEXTERITY)));
-        out.put(Dbrattributes.WILLPOWER,    round(k * arch.shape(Dbrattributes.WILLPOWER)));
-        out.put(Dbrattributes.SPIRIT,       round(k * arch.shape(Dbrattributes.SPIRIT)));
-        out.put(Dbrattributes.MIND,         0);
+        EnumMap<ZenkaiAttributes, Integer> out = new EnumMap<>(ZenkaiAttributes.class);
+        out.put(ZenkaiAttributes.STRENGTH,     round(k * arch.shape(ZenkaiAttributes.STRENGTH)));
+        out.put(ZenkaiAttributes.CONSTITUTION, round(k * arch.shape(ZenkaiAttributes.CONSTITUTION)));
+        out.put(ZenkaiAttributes.DEXTERITY,    round(k * arch.shape(ZenkaiAttributes.DEXTERITY)));
+        out.put(ZenkaiAttributes.WILLPOWER,    round(k * arch.shape(ZenkaiAttributes.WILLPOWER)));
+        out.put(ZenkaiAttributes.SPIRIT,       round(k * arch.shape(ZenkaiAttributes.SPIRIT)));
+        out.put(ZenkaiAttributes.MIND,         0);
         return out;
     }
 
