@@ -77,21 +77,11 @@ public final class ZenkaiPalAnimations {
 
     public static void playBlock(AbstractClientPlayer player) {
         var c = blockController(player);
-        boolean geoSkin = player.getData(
-                        com.hmc.zenkai.core.network.feature.stats.DataAttachments.PLAYER_VISUAL.get())
-                .shouldRenderRaceSkin();
-        if (geoSkin) {
-            // Skin racial geo: PAL no toca la 1ª persona; el cruce lo pinta
-            // ZenkaiFirstPersonArmHooks con el modelo custom.
-            c.setFirstPersonMode(FirstPersonMode.VANILLA);
-        } else {
-            // Sin skin racial: brazos del PlayerModel posados por PAL.
-            c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
-            c.setFirstPersonConfiguration(new FirstPersonConfiguration()
-                    .setShowLeftArm(true)
-                    .setShowRightArm(true)
-                    .setShowArmor(true));
-        }
+        c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
+        c.setFirstPersonConfiguration(new FirstPersonConfiguration()
+                .setShowLeftArm(true)
+                .setShowRightArm(true)
+                .setShowArmor(true));
         c.triggerAnimation(BLOCK_ANIM);
     }
 
