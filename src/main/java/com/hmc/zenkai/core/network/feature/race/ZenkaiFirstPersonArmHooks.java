@@ -54,17 +54,11 @@ public final class ZenkaiFirstPersonArmHooks {
     public static float ROT_X = 0.0f;
     public static float ROT_Y = 0.0f;
     public static float ROT_Z = 0.0f;
-    // Pose de guardia (bloqueo) en 1ª persona: cruce de brazos. Calibrables en runtime.
-    public static float BLOCK_OFF_X = 0.0f;
-    public static float BLOCK_OFF_Y = 0.25f;
-    public static float BLOCK_OFF_Z = -0.9f;
-    public static float BLOCK_ROT_ARM_X = -95f;  // levantar antebrazos
-    public static float BLOCK_ROT_ARM_Y = -35f;  // cruce hacia el centro (espejado en el izq)
 
     private static final String RIGHT_ARM_BONE = "bipedRightArm";
     private static final String LEFT_ARM_BONE  = "bipedLeftArm";
 
-    private static ArmRenderer RENDERER; // cache perezoso (en hilo de render)
+    private static com.hmc.zenkai.core.network.feature.race.ZenkaiFirstPersonArmHooks.ArmRenderer RENDERER; // cache perezoso (en hilo de render)
 
     @SubscribeEvent
     public static void onRenderArm(RenderArmEvent e) {
@@ -76,20 +70,9 @@ public final class ZenkaiFirstPersonArmHooks {
         ItemStack body = RaceSkinSlots.getVirtualRaceArmor(player, EquipmentSlot.CHEST);
         if (!(body.getItem() instanceof GeoLayerArmorItem item)) return;
 
-        e.setCanceled(true); // ocultar el brazo vanilla (en ambos casos)
-        if (RENDERER == null) RENDERER = new ArmRenderer();
+        e.setCanceled(true); // ocultar el brazo vanilla
 
-        // Bloqueando: pose de guardia con AMBOS brazos (una sola pasada, en el evento del
-        // brazo principal para no dibujar doble). Sustituye al brazo normal, no se suma.
-        if (com.hmc.zenkai.client.CombatModeClientState.isBlockingLocal()
-                && player == net.minecraft.client.Minecraft.getInstance().player) {
-            if (e.getArm() == player.getMainArm()) {
-                RENDERER.renderBlockingArms(item, player, e.getPoseStack(),
-                        e.getMultiBufferSource(), e.getPackedLight());
-            }
-            return;
-        }
-
+        if (RENDERER == null) RENDERER = new com.hmc.zenkai.core.network.feature.race.ZenkaiFirstPersonArmHooks.ArmRenderer();
         RENDERER.renderArm(item, player, e.getArm(), e.getPoseStack(),
                 e.getMultiBufferSource(), e.getPackedLight());
     }
@@ -218,64 +201,6 @@ public final class ZenkaiFirstPersonArmHooks {
                 default     -> 0xFFFFFF;
             };
             return Color.ofOpaque(rgb);
-        }
-
-        /** AMBOS brazos en pose de guardia cruzada (bloqueo). Mismo pipeline que renderArm:
-         *  bind pose + rotaciones fijas, isReRender=true evita handleAnimations. */
-        void renderBlockingArms(GeoLayerArmorItem item, Player player, PoseStack poseStack,
-                                MultiBufferSource buffers, int light) {
-            this.current = player;
-            GeoModel<GeoLayerArmorItem> model = getGeoModel();
-            BakedGeoModel baked = model.getBakedModel(model.getModelResource(item));
-            try {
-                for (GeoBone b : baked.topLevelBones()) {
-                    boolean right = b.getName().equals(RIGHT_ARM_BONE);
-                    boolean isArm = right || b.getName().equals(LEFT_ARM_BONE);
-                    setBranchHidden(b, !isArm);
-                    if (isArm) {
-                        resetBranchToBind(b);
-                        b.setRotX((float) Math.toRadians(BLOCK_ROT_ARM_X));
-                        b.setRotY((float) Math.toRadians(right ? BLOCK_ROT_ARM_Y : -BLOCK_ROT_ARM_Y));
-                    }
-                }
-
-                ResourceLocation baseTex = model.getTextureResource(item);
-                RenderType rt = RenderType.entityTranslucent(baseTex);
-
-                poseStack.pushPose();
-                poseStack.translate(BLOCK_OFF_X, BLOCK_OFF_Y, BLOCK_OFF_Z);
-                poseStack.scale(SCALE, SCALE, SCALE);
-                poseStack.scale(1f, -1f, 1f);
-                poseStack.translate(0f, -22f / 16f, 0f); // centrado: brazos simétricos a la cámara
-
-                passColor = null;
-                render(poseStack, item, buffers, rt, buffers.getBuffer(rt), light, OverlayTexture.NO_OVERLAY);
-
-                if (item.hasBodyTint()) {
-                    var visual = player.getData(DataAttachments.PLAYER_VISUAL.get());
-                    ResourceLocation detail = deriveMask(baseTex, "_detail");
-                    ResourceLocation lines  = deriveMask(baseTex, "_lines");
-                    if (resourceExists(detail)) {
-                        passColor = visual.getDetailColorRgb();
-                        RenderType rtD = RaceRenderTypes.viewOffset(detail);
-                        render(poseStack, item, buffers, rtD, buffers.getBuffer(rtD), light, OverlayTexture.NO_OVERLAY);
-                    }
-                    if (resourceExists(lines)) {
-                        passColor = visual.getLineColorRgb();
-                        RenderType rtL = RaceRenderTypes.viewOffset(lines);
-                        render(poseStack, item, buffers, rtL, buffers.getBuffer(rtL), light, OverlayTexture.NO_OVERLAY);
-                    }
-                    passColor = null;
-                }
-
-                poseStack.popPose();
-            } finally {
-                for (GeoBone b : baked.topLevelBones()) {
-                    setBranchHidden(b, false);
-                }
-                this.passColor = null;
-                this.current = null;
-            }
         }
     }
 }

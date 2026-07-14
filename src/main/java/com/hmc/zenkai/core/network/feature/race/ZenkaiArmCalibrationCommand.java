@@ -14,19 +14,16 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 /**
  * Comando SOLO-CLIENTE para calibrar el brazo en 1a persona sin recompilar.
  * Modifica en runtime los campos publicos de {@link ZenkaiFirstPersonArmHooks} y reporta en chat.
- *
  *   /zenkaiarm get
  *   /zenkaiarm pos  <x> <y> <z>     -> fija OFF_X/Y/Z (bloques)
  *   /zenkaiarm rot  <x> <y> <z>     -> fija ROT_X/Y/Z (grados)
  *   /zenkaiarm scale <s>            -> fija SCALE
  *   /zenkaiarm nudge <eje> <delta>  -> suma delta a un eje. eje: x y z rx ry rz s
- *
  * Flujo tipico de calibracion:
  *   /zenkaiarm nudge z -0.1   (repite hasta acercar)
  *   /zenkaiarm nudge y 0.1    (sube/baja)
  *   /zenkaiarm nudge ry 15    (gira si apunta mal)
  *   /zenkaiarm get            (lee los valores finales para pegarlos al codigo)
- *
  * NOTA GeckoLib/NeoForge no verificable offline:
  *   - RegisterClientCommandsEvent se dispara en el game bus (no el mod bus).
  *   - CommandSourceStack#sendSuccess(Supplier<Component>, boolean) en 1.21.1.
