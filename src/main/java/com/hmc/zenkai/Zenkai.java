@@ -214,17 +214,8 @@ public class Zenkai {
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.BLOCK_LAYER,
                         1200,
-                        player -> {
-                            PlayerAnimationController c = new PlayerAnimationController(
-                                    player, (controller, state, animSetter) -> PlayState.STOP);
-                            // Visible en primera persona: renderiza los brazos del modelo 3ª persona
-                            // mientras la animación de bloqueo está activa.
-                            c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
-                            c.setFirstPersonConfiguration(new FirstPersonConfiguration()
-                                    .setShowLeftArm(true)
-                                    .setShowRightArm(true));
-                            return c;
-                        }
+                        player -> new PlayerAnimationController(
+                                player, (controller, state, animSetter) -> PlayState.STOP)
                 );
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
@@ -234,6 +225,16 @@ public class Zenkai {
                                 player,(controller, state, animSetter) -> PlayState.STOP)
 
                 );
+
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.PHYS_LAYER,
+                        950, // sobre la pose de combate (900), bajo transform/fly/block
+                        player -> new PlayerAnimationController(
+                                player, (controller, state, animSetter) -> PlayState.STOP)
+                );
+
+
+
             });
         }
 

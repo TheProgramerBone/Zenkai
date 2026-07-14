@@ -5,6 +5,7 @@ import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.Style;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.skills.SkillDef;
@@ -185,6 +186,18 @@ public class ModCommands {
                                                         EntityArgument.getPlayer(ctx, "player"),
                                                         StringArgumentType.getString(ctx, "id")))))))
 
+                .then(Commands.literal("phys")
+                        .then(Commands.literal("give")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("tech", StringArgumentType.word())
+                                                .executes(ctx -> physGive(ctx,
+                                                        EntityArgument.getPlayer(ctx, "player"),
+                                                        StringArgumentType.getString(ctx, "tech")))))))
+
+
+
+
+
         );
     }
 
@@ -348,6 +361,22 @@ public class ModCommands {
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] Skill '" + id + "' revoked ← " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /** Desbloquea una física SIN TP (pruebas; maestros después). */
+    private static int physGive(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, String name) {
+        var t = com.hmc.zenkai.core.technique.PhysicalTechnique.byName(
+                name.toUpperCase(java.util.Locale.ROOT));
+        if (t == null) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] Unknown: " + name
+                    + " (dash_punch|heavy_blow|barrage|kiai)"));
+            return 0;
+        }
+        PlayerStatsAttachment.get(sp).techniques().unlock(t);
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] " + t.name() + " → " + sp.getGameProfile().getName()), true);
         return 1;
     }
 }

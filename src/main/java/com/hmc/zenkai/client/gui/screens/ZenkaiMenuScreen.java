@@ -83,6 +83,7 @@ public abstract class ZenkaiMenuScreen extends Screen {
             case MAIN -> new StatsScreen();
             case SKILLS -> new SkillsScreen();
             case KI_TECHNIQUES -> new KiTechniquesScreen();
+            case PHYSICAL_TECHNIQUES -> new PhysicalScreen();
             default -> new ComingSoonScreen(t);
         };
     }

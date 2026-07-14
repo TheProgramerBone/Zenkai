@@ -3,6 +3,8 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.Zenkai;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
+import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonConfiguration;
+import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonMode;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;
 
@@ -74,7 +76,23 @@ public final class ZenkaiPalAnimations {
     }
 
     public static void playBlock(AbstractClientPlayer player) {
-        blockController(player).triggerAnimation(BLOCK_ANIM);
+        var c = blockController(player);
+        boolean geoSkin = player.getData(
+                        com.hmc.zenkai.core.network.feature.stats.DataAttachments.PLAYER_VISUAL.get())
+                .shouldRenderRaceSkin();
+        if (geoSkin) {
+            // Skin racial geo: PAL no toca la 1ª persona; el cruce lo pinta
+            // ZenkaiFirstPersonArmHooks con el modelo custom.
+            c.setFirstPersonMode(FirstPersonMode.VANILLA);
+        } else {
+            // Sin skin racial: brazos del PlayerModel posados por PAL.
+            c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
+            c.setFirstPersonConfiguration(new FirstPersonConfiguration()
+                    .setShowLeftArm(true)
+                    .setShowRightArm(true)
+                    .setShowArmor(true));
+        }
+        c.triggerAnimation(BLOCK_ANIM);
     }
 
     public static void stopBlock(AbstractClientPlayer player) {
@@ -113,5 +131,25 @@ public final class ZenkaiPalAnimations {
 
     public static void stopCombatIdle(AbstractClientPlayer player) {
         combatController(player).stopTriggeredAnimation();
+    }
+
+    // ── Técnicas físicas: una animación one-shot por técnica (sin loop):
+    //    "zenkai.phys_dash_punch", "zenkai.phys_heavy_blow", "zenkai.phys_barrage",
+    //    "zenkai.phys_kiai" (orden = PhysicalTechnique.ordinal()). ──
+    private static final ResourceLocation[] PHYS_ANIMS;
+    static {
+        var vals = com.hmc.zenkai.core.technique.PhysicalTechnique.values();
+        PHYS_ANIMS = new ResourceLocation[vals.length];
+        for (int i = 0; i < vals.length; i++) {
+            PHYS_ANIMS[i] = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                    "zenkai.phys_" + vals[i].name().toLowerCase(java.util.Locale.ROOT));
+        }
+    }
+
+    public static void playPhysical(AbstractClientPlayer player,
+                                    com.hmc.zenkai.core.technique.PhysicalTechnique t) {
+        var c = (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
+        if (c != null) c.triggerAnimation(PHYS_ANIMS[t.ordinal()]);
     }
 }

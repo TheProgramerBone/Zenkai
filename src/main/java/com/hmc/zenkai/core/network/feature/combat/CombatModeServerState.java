@@ -37,7 +37,7 @@ public final class CombatModeServerState {
     }
 
     /** ¿Está este jugador en modo combate? (consulta del pipeline de daño). */
-    public static boolean isActive(java.util.UUID playerId) {
+    public static boolean isActive(UUID playerId) {
         return ACTIVE.containsKey(playerId);
     }
 
