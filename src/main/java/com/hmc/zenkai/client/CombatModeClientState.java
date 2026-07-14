@@ -125,6 +125,8 @@ public final class CombatModeClientState {
                 && mc.player.getOffhandItem().isEmpty();
         boolean inGame = mc.screen == null && mc.getConnection() != null;
 
+        // ── Física en la posición seleccionada: R + click derecho = ejecutar (instantáneo,
+        //    edge-trigger; sin carga). Si la posición es física, la máquina de carga no entra. ──
         PhysicalTechnique phys = active && mc.player != null
                 ? PlayerStatsAttachment.get(mc.player).techniques().physicalBinding(selected)
                 : null;
@@ -135,6 +137,7 @@ public final class CombatModeClientState {
             if (PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
                 PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
                 PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks); // optimista
+                ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: pendiente)
             }
         }
         lastPhysCombo = physCombo;
@@ -228,5 +231,12 @@ public final class CombatModeClientState {
         lastBlockingSent = false;
         REMOTES.clear();
         REMOTE_BLOCKING.clear();
+    }
+
+    /** Fracción de cooldown restante de una física (0 = lista), para el overlay. */
+    public static double physCooldownFraction(Minecraft mc, PhysicalTechnique t) {
+        if (mc.level == null || t == null) return 0;
+        long left = PHYS_READY_AT.getOrDefault(t.ordinal(), 0L) - mc.level.getGameTime();
+        return left <= 0 ? 0 : Math.min(1.0, left / (double) Math.max(1, t.cooldownTicks));
     }
 }

@@ -60,14 +60,20 @@ public final class TechniqueHotbarOverlay {
         for (int pos = 0; pos < n; pos++) {
             int slotIdx = tech.binding(pos);
             KiTechnique t = tech.slot(slotIdx);
+            com.hmc.zenkai.core.technique.PhysicalTechnique ph = tech.physicalBinding(pos);
             boolean sel = (pos == selected);
 
             g.fill(x, y, x + CELL, y + CELL, 0xA0000000);
             if (t != null) {
                 TechniqueIcons.draw(g, x, y, t);
-
-                // Cooldown: velo que baja con el tiempo restante.
                 double cd = CombatModeClientState.cooldownFraction(mc, slotIdx);
+                if (cd > 0) {
+                    int h = (int) Math.ceil(CELL * cd);
+                    g.fill(x, y + CELL - h, x + CELL, y + CELL, 0xB0101010);
+                }
+            } else if (ph != null) {
+                PhysicalIcons.draw(g, x, y, ph);
+                double cd = CombatModeClientState.physCooldownFraction(mc, ph);
                 if (cd > 0) {
                     int h = (int) Math.ceil(CELL * cd);
                     g.fill(x, y + CELL - h, x + CELL, y + CELL, 0xB0101010);
@@ -83,8 +89,9 @@ public final class TechniqueHotbarOverlay {
             g.drawString(mc.font, Component.literal(String.valueOf(pos + 1)),
                     x + 2, y + 1, sel ? 0xFFFFFFFF : 0xFFAAAAAA, true);
 
-            if (sel && t != null) {
-                Component name = Component.literal(t.name());
+            if (sel && (t != null || ph != null)) {
+                Component name = t != null ? Component.literal(t.name())
+                        : Component.translatable(ph.nameKey());
                 g.drawString(mc.font, name,
                         x - 6 - mc.font.width(name), y + (CELL - 8) / 2, 0xFFFFFFFF, true);
             }

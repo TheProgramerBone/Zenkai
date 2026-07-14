@@ -17,4 +17,7 @@ public final class ZenkaiPalLayers {
 
     public static final ResourceLocation COMBAT_LAYER =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "combat");
+
+    public static final ResourceLocation PHYS_LAYER =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "phys");
 }

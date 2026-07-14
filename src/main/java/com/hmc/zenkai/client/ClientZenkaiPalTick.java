@@ -168,9 +168,12 @@ public final class ClientZenkaiPalTick {
             }
         }
 
-        // ── Pose ofensiva del modo combate (solo QUIETO; start -> loop, por estilo) ──
+        // ── Pose ofensiva del modo combate (SHIFT + quieto en tierra; start -> loop, por estilo) ──
+        // Si se mueve con shift pulsado, walkAnimation.speed() sube -> se cancela sola.
         int combatStyleOrd = -1;
-        boolean combatStill = p.onGround()
+        boolean sneaking = (p == mc.player) ? p.isShiftKeyDown() : p.isCrouching();
+        boolean combatStill = sneaking
+                && p.onGround()
                 && p.walkAnimation.speed() < 0.05f
                 && !p.isSwimming();
         if (combatStill) {

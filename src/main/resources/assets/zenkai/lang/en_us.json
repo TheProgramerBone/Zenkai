@@ -281,6 +281,16 @@
   "screen.zenkai.technique.assign_hint": "Click a slot to place it",
   "screen.zenkai.technique.explosive": "Explosive",
 
+  "screen.zenkai.physical.unlock": "Unlock (%s TP)",
+  "screen.zenkai.physical.assign": "Assign",
+  "screen.zenkai.physical.assigning": "Pick 1-9…",
+  "screen.zenkai.physical.pick_slot": "Click a slot above",
+
+  "physical.zenkai.dash_punch": "Dash Punch",
+  "physical.zenkai.heavy_blow": "Heavy Blow",
+  "physical.zenkai.barrage": "Barrage",
+  "physical.zenkai.kiai": "Kiai",
+
   "attribute.zenkai.str": "STR: %s",
   "attribute.zenkai.dex": "DEX: %s",
   "attribute.zenkai.con": "CON: %s",
