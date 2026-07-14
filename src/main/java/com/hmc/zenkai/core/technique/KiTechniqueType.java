@@ -64,4 +64,31 @@ public enum KiTechniqueType {
             return null;
         }
     }
+
+    // ── Estela 3D (cinta por posiciones históricas; solo tipos "viajeros") ──
+
+    /** ¿Este tipo dibuja estela detrás del proyectil? */
+    public boolean hasTrail() {
+        return this == LAZER || this == WAVE || this == SPIRAL;
+    }
+
+    /** Longitud de la estela en puntos (≈ ticks de historia). */
+    public int trailPoints() {
+        return switch (this) {
+            case LAZER -> 34;   // haz largo y fino
+            case WAVE  -> 18;   // haz corto y grueso
+            case SPIRAL -> 26;  // la oscilación dibuja la espiral sola
+            default -> 0;
+        };
+    }
+
+    /** Ancho total de la estela como múltiplo del ancho del hitbox. */
+    public float trailWidth() {
+        return switch (this) {
+            case LAZER -> 1.0f;
+            case WAVE  -> 2.4f;
+            case SPIRAL -> 1.4f;
+            default -> 0f;
+        };
+    }
 }

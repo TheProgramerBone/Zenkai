@@ -7,8 +7,10 @@ import com.hmc.zenkai.core.network.feature.combat.CombatModePacket;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerTechniques;
 import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
+import com.hmc.zenkai.core.network.feature.technique.PhysicalFirePacket;
 import com.hmc.zenkai.core.technique.KiTechnique;
 import com.hmc.zenkai.core.technique.KiTechniqueType;
+import com.hmc.zenkai.core.technique.PhysicalTechnique;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,6 +18,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,6 +55,10 @@ public final class CombatModeClientState {
 
     // Bloqueo local (edge-trigger)
     private static boolean lastBlockingSent = false;
+
+    /** Cooldowns cliente de físicas (gameTime listo), por ordinal. */
+    private static final Map<Integer, Long> PHYS_READY_AT = new HashMap<>();
+    private static boolean lastPhysCombo = false;
 
     // Estados remotos
     private static final Map<Integer, Remote> REMOTES = new ConcurrentHashMap<>();
@@ -118,16 +125,35 @@ public final class CombatModeClientState {
                 && mc.player.getOffhandItem().isEmpty();
         boolean inGame = mc.screen == null && mc.getConnection() != null;
 
+        PhysicalTechnique phys = active && mc.player != null
+                ? PlayerStatsAttachment.get(mc.player).techniques().physicalBinding(selected)
+                : null;
+        boolean physCombo = phys != null && inGame && rDown && rightDown && handsFree
+                && chargingSlot < 0;
+        if (physCombo && !lastPhysCombo && mc.level != null) {
+            long now = mc.level.getGameTime();
+            if (PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
+                PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
+                PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks); // optimista
+            }
+        }
+        lastPhysCombo = physCombo;
+        if (phys != null) {
+            // posición física seleccionada: nunca arranca la carga ki con este binding
+        }
+
         // ── Máquina de CARGA (R + click derecho; soltar click = disparar) ──
         if (chargingSlot < 0) {
             if (active && inGame && rDown && rightDown && handsFree) {
+                assert mc.player != null;
                 int bound = PlayerStatsAttachment.get(mc.player).techniques().binding(selected);
-                if (bound >= 0 && cooldownFraction(mc, bound) <= 0) {
+                if (bound >= 0 && phys == null && cooldownFraction(mc, bound) <= 0) {
                     chargingSlot = bound;
                     chargeTicks = 0;
                 }
             }
         } else {
+            assert mc.player != null;
             KiTechnique t = PlayerStatsAttachment.get(mc.player).techniques().slot(chargingSlot);
             if (!active || !inGame || !handsFree || t == null) {
                 cancelCharge();

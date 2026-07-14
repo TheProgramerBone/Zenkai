@@ -52,6 +52,15 @@ public class KiProjectileEntity extends Projectile {
     private static final EntityDataAccessor<Byte> DATA_SIZE =
             SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.BYTE);
 
+    // ── Estela (SOLO cliente): historial de posiciones del centro, cabeza primero.
+    //    Lo llena tick() y lo lee KiProjectileRenderer. En server queda vacío. ──
+    private final java.util.ArrayDeque<Vec3> trail = new java.util.ArrayDeque<>();
+    public java.util.Deque<Vec3> trailHistory() { return trail; }
+
+    // ── DISK: ids de entidades ya atravesadas (solo server, para no re-golpear).
+    //    No persiste en NBT a propósito: el proyectil vive segundos. ──
+    private final java.util.Set<Integer> pierced = new java.util.HashSet<>();
+
     private static final double EXPLOSION_AOE_FACTOR = 0.6;
 
     private double damage = 0;
@@ -73,6 +82,7 @@ public class KiProjectileEntity extends Projectile {
         this.damage = damage;
         this.life = lifeTicks;
         this.explosive = explosive && !type.defensive;
+        this.noCulling = true; // la estela sobresale del hitbox: sin esto desaparece al salir la bola de cámara
         refreshDimensions();
     }
 
@@ -137,6 +147,12 @@ public class KiProjectileEntity extends Projectile {
 
         setPos(next.x, next.y, next.z);
 
+        // Estela: historial de posiciones en cliente (cabeza primero, longitud por tipo).
+        if (level().isClientSide && techniqueType().hasTrail()) {
+            trail.addFirst(position().add(0, getBbHeight() * 0.5, 0));
+            while (trail.size() > techniqueType().trailPoints()) trail.removeLast();
+        }
+
         if (!level().isClientSide && --life <= 0) discard();
     }
 
@@ -157,9 +173,18 @@ public class KiProjectileEntity extends Projectile {
         super.onHitEntity(hit);
         if (level().isClientSide) return;
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
+
         if (level().getServer() == null || ModGameRules.enableKiDamage(Objects.requireNonNull(level().getServer()))) {
             hit.getEntity().hurt(damageSources().mobProjectile(this, owner), (float) damage);
         }
+
+        if (techniqueType() == KiTechniqueType.DISK) {
+            // Perforante: marca al objetivo y sigue volando. Si es explosiva, la explosión
+            // queda para el impacto con bloque (onHit) — nada de tren de explosiones.
+            pierced.add(hit.getEntity().getId());
+            return;
+        }
+
         if (explosive) explode(hit.getEntity().position(), hit.getEntity());
         discard();
     }
@@ -215,7 +240,7 @@ public class KiProjectileEntity extends Projectile {
 
     @Override
     protected boolean canHitEntity(@NotNull Entity e) {
-        return super.canHitEntity(e) && e != getOwner();
+        return super.canHitEntity(e) && e != getOwner() && !pierced.contains(e.getId());
     }
 
     @Override

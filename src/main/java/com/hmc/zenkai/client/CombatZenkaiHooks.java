@@ -10,6 +10,7 @@ import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.technique.KiCombatServer;
+import com.hmc.zenkai.core.technique.PhysicalCombatServer;
 import com.hmc.zenkai.core.training.TrainingHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -62,7 +63,7 @@ public class CombatZenkaiHooks {
         // Los proyectiles ki traen su daño ya calculado (kiPower) -> no se recalculan aquí.
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
         if (atkStats != null && atkStats.isCombatActive()
-                && !(e.getSource().getDirectEntity() instanceof KiProjectileEntity)) {
+                && !(e.getSource().getDirectEntity() instanceof KiProjectileEntity) && !PhysicalCombatServer.isFiring()) {
             double strDamage = atkStats.computeMeleeFinal();
 
             if (e.getSource().getEntity() instanceof Player attacker) {
@@ -106,6 +107,9 @@ public class CombatZenkaiHooks {
         if (defStats != null && defStats.isCombatActive()) {
             if (dmg > 0f) {
                 double defense = defStats.computeDefenseFinal();
+                if (PhysicalCombatServer.isFiring()) {
+                    defense *= PhysicalCombatServer.currentDefenseScale();
+                }
                 if (e.getSource().getDirectEntity() instanceof KiProjectileEntity
                         && atkStats != null) {
                     double kiPower = atkStats.computeKiPowerFinal();
