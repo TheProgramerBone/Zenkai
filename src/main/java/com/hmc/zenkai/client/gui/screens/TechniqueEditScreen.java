@@ -10,6 +10,8 @@ import com.hmc.zenkai.core.network.feature.technique.TechniquePacket;
 import com.hmc.zenkai.core.technique.KiCombatServer;
 import com.hmc.zenkai.core.technique.KiTechnique;
 import com.hmc.zenkai.core.technique.KiTechniqueType;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -34,6 +36,10 @@ public class TechniqueEditScreen extends Screen {
 
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+    private static final ResourceLocation PREVIEW_BALL =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_ball.png");
+    private static final ResourceLocation PREVIEW_TRAIL =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_trail.png");
     private static final int BG_W = 256;
     private static final int BG_H = 256;
     private static final int ROW_H = 17;
@@ -131,17 +137,20 @@ public class TechniqueEditScreen extends Screen {
         y += ROW_H;
 
         // ── Color (abre/cierra el picker) ──
-        this.addRenderableWidget(new TextOnlyButton(x, y, 90, 14,
+        this.addRenderableWidget(new TextOnlyButton(x, y, 60, 14,
                 Component.translatable("screen.zenkai.technique.color"),
                 () -> {
                     pickerOpen = !pickerOpen;
                     rebuildWidgets();
                 }));
         if (pickerOpen) {
+            // Centrado en el hueco de las previews (ocultas mientras está abierto):
+            // no pisa la fila Color, ni Unlock (también oculto), ni Save/Cancel.
             this.addRenderableWidget(new ColorPickerWidget(
-                    leftPos + BG_W - 16 - ColorPickerWidget.TOTAL_W, y + 16,
+                    leftPos + (BG_W - ColorPickerWidget.TOTAL_W) / 2, topPos + 112,
                     0xFF000000 | rgb, "Ki Color", argb -> rgb = argb & 0xFFFFFF));
         }
+
         y += ROW_H;
 
         // ── Unlock (solo si el tipo está bloqueado) ──
@@ -195,7 +204,7 @@ public class TechniqueEditScreen extends Screen {
     private void refreshButtons() {
         PlayerStatsAttachment att = att();
         boolean unlocked = att != null && att.techniques().isUnlocked(type);
-        unlockButton.visible = !unlocked;
+        unlockButton.visible = !unlocked && !pickerOpen;
         unlockButton.active = !unlocked && att != null && att.getTP() >= type.tpCost;
         saveButton.active = unlocked && !KiTechnique.sanitizeName(nameBox.getValue()).isEmpty();
     }
@@ -210,11 +219,13 @@ public class TechniqueEditScreen extends Screen {
                 .append(":"), leftPos + 16, topPos + 29, 0xFFFFFFFF, true);
 
         // Swatch + ícono junto al botón Color.
+        // Swatch + ícono alineado a la derecha de la fila Color: [Color] ……… [▩][icono]
         KiTechnique previewTech = new KiTechnique(" ", type, rgb, size, explosive);
         int sy = topPos + 46 + ROW_H * 3;
-        g.fill(leftPos + 110, sy + 1, leftPos + 124, sy + 13, 0xFF000000);
-        g.fill(leftPos + 111, sy + 2, leftPos + 123, sy + 12, 0xFF000000 | rgb);
-        TechniqueIcons.draw(g, leftPos + 130, sy - 3, previewTech);
+        int right = leftPos + BG_W - 16;
+        g.fill(right - 44, sy + 1, right - 30, sy + 13, 0xFF000000);
+        g.fill(right - 43, sy + 2, right - 31, sy + 12, 0xFF000000 | rgb);
+        TechniqueIcons.draw(g, right - 20, sy - 3, previewTech);
 
         // ── Previews (mismas fórmulas del servidor) ──
         PlayerStatsAttachment att = att();
@@ -238,6 +249,7 @@ public class TechniqueEditScreen extends Screen {
 
             g.drawString(this.font, Component.literal("TP: " + att.getTP()),
                     leftPos + 16, topPos + 182, 0xFFFFD700, true);
+            renderTechniquePreview(g, partialTick);
         }
     }
 
@@ -256,6 +268,60 @@ public class TechniqueEditScreen extends Screen {
 
     private static String fmt(double v) {
         return String.format(Locale.ROOT, v == Math.floor(v) ? "%.0f" : "%.1f", v);
+    }
+
+    /** Preview en vivo (columna derecha del hueco de stats): bola tintada con pulso +
+     *  estela desvanecida para los tipos que la tienen (SPIRAL ondula), BARRIER translúcida,
+     *  BURST con sus bolitas. Solo GUI: usa las texturas del renderer, sin entidad. */
+    private void renderTechniquePreview(GuiGraphics g, float partialTick) {
+        float t = (mc.player != null ? mc.player.tickCount : 0) + partialTick;
+        float cr = ((rgb >> 16) & 0xFF) / 255f;
+        float cg = ((rgb >> 8) & 0xFF) / 255f;
+        float cb = (rgb & 0xFF) / 255f;
+
+        int cx = leftPos + 208;
+        int cy = topPos + 144;
+        boolean spiral = type == KiTechniqueType.SPIRAL;
+        if (spiral) cy += (int) (Math.sin(t * 0.35) * 3);
+
+        RenderSystem.enableBlend();
+
+        // ── Estela: 3 segmentos hacia la izquierda, alpha decreciente; la franja vertical
+        //    de ki_trail se rota 90° para quedar horizontal. ──
+        if (type.hasTrail()) {
+            int trailLen = switch (type) { case LAZER -> 57; case WAVE -> 42; default -> 48; };
+            int trailW = (int) Math.max(6, (10 + 2 * size) * type.trailWidth());
+            int seg = trailLen / 3;
+            float[] alphas = {0.65f, 0.4f, 0.18f};
+            for (int i = 0; i < 3; i++) {
+                float segCx = cx - seg * (i + 0.5f);
+                float segCy = cy + (spiral ? (float) Math.sin(t * 0.35 - (i + 1) * 1.1) * 3 : 0);
+                RenderSystem.setShaderColor(cr, cg, cb, alphas[i]);
+                g.pose().pushPose();
+                g.pose().translate(segCx, segCy, 0);
+                g.pose().mulPose(Axis.ZP.rotationDegrees(90));
+                g.blit(PREVIEW_TRAIL, -trailW / 2, -seg / 2, trailW, seg, 0f, 0f, 32, 64, 32, 64);
+                g.pose().popPose();
+            }
+        }
+
+        // ── Bola(s): pulso suave; BARRIER translúcida y grande; BURST = 3 bolitas ──
+        float pulse = 1f + 0.06f * (float) Math.sin(t * 0.3);
+        boolean barrier = type == KiTechniqueType.BARRIER;
+        RenderSystem.setShaderColor(cr, cg, cb, barrier ? 0.45f : 1f);
+        if (type == KiTechniqueType.BURST) {
+            int d = (int) ((10 + 2 * size) * pulse);
+            int[][] off = {{0, 0}, {-13, -9}, {-9, 10}};
+            for (int[] o : off) {
+                g.blit(PREVIEW_BALL, cx + o[0] - d / 2, cy + o[1] - d / 2, d, d, 0f, 0f, 64, 64, 64, 64);
+            }
+        } else {
+            int base = barrier ? 34 + 2 * size : 16 + 4 * size;
+            int d = (int) (base * pulse);
+            g.blit(PREVIEW_BALL, cx - d / 2, cy - d / 2, d, d, 0f, 0f, 64, 64, 64, 64);
+        }
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        RenderSystem.disableBlend();
     }
 
     @Override

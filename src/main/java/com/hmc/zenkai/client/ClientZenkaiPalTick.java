@@ -131,38 +131,40 @@ public final class ClientZenkaiPalTick {
         boolean canTransform = PlayerFormAttachment.canTransformFrom(stats.getRace(), form.getFormId());
 
         if (!canTransform) {
+            // Sin transformación disponible (p. ej. humano/namekiano en base): solo limpiar
+            // la anim de transformación. NO retornar: antes este return se tragaba las
+            // animaciones de pose de combate y defensa de esas razas.
             if (st.lastHeld) {
                 st.lastHeld = false;
                 st.chainTicks = 0;
                 ZenkaiPalAnimations.controller(p).stopTriggeredAnimation();
             }
-            return;
-        }
+        } else {
+            if (heldNow && p == mc.player) {
+                mc.player.input.forwardImpulse = 0;
+                mc.player.input.leftImpulse = 0;
+                mc.player.input.jumping = false;
+                mc.player.input.shiftKeyDown = false;
+                mc.player.setSprinting(false);
+            }
 
-        if (heldNow && p == mc.player) {
-            mc.player.input.forwardImpulse = 0;
-            mc.player.input.leftImpulse = 0;
-            mc.player.input.jumping = false;
-            mc.player.input.shiftKeyDown = false;
-            mc.player.setSprinting(false);
-        }
+            if (heldNow && !st.lastHeld) {
+                st.lastHeld = true;
+                ZenkaiPalAnimations.playTransformStart(p);
+                st.chainTicks = 10; // 0.5s
+            }
 
-        if (heldNow && !st.lastHeld) {
-            st.lastHeld = true;
-            ZenkaiPalAnimations.playTransformStart(p);
-            st.chainTicks = 10; // 0.5s
-        }
+            if (!heldNow && st.lastHeld) {
+                st.lastHeld = false;
+                st.chainTicks = 0;
+                ZenkaiPalAnimations.controller(p).stopTriggeredAnimation();
+            }
 
-        if (!heldNow && st.lastHeld) {
-            st.lastHeld = false;
-            st.chainTicks = 0;
-            ZenkaiPalAnimations.controller(p).stopTriggeredAnimation();
-        }
-
-        if (heldNow && st.chainTicks > 0) {
-            st.chainTicks--;
-            if (st.chainTicks == 0) {
-                ZenkaiPalAnimations.playTransformLoop(p);
+            if (heldNow && st.chainTicks > 0) {
+                st.chainTicks--;
+                if (st.chainTicks == 0) {
+                    ZenkaiPalAnimations.playTransformLoop(p);
+                }
             }
         }
 

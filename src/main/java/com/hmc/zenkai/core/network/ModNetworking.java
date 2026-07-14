@@ -18,6 +18,8 @@ import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.core.network.feature.skills.SkillSyncPacket;
 import com.hmc.zenkai.core.network.feature.stats.*;
 import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
+import com.hmc.zenkai.core.network.feature.technique.PhysicalFirePacket;
+import com.hmc.zenkai.core.network.feature.technique.PhysicalTechniquePacket;
 import com.hmc.zenkai.core.network.feature.technique.TechniquePacket;
 import com.hmc.zenkai.core.network.feature.training.TrainingSwingPacket;
 import com.hmc.zenkai.core.network.feature.wishes.*;
@@ -246,5 +248,15 @@ public class ModNetworking {
                 SkillSyncPacket.TYPE,
                 SkillSyncPacket.STREAM_CODEC,
                 SkillSyncPacket::handle);
+
+        registrar.playToServer(
+                PhysicalTechniquePacket.TYPE,
+                PhysicalTechniquePacket.STREAM_CODEC,
+                PhysicalTechniquePacket::handle);
+
+        registrar.playToServer(
+                PhysicalFirePacket.TYPE,
+                PhysicalFirePacket.STREAM_CODEC,
+                PhysicalFirePacket::handle);
     }
 }
