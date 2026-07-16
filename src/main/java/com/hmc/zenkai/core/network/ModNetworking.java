@@ -4,6 +4,8 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.client.gui.StackWishMenu;
 import com.hmc.zenkai.client.gui.screens.wishes.ClientWishToggles;
+import com.hmc.zenkai.core.network.feature.aura.TurboPacket;
+import com.hmc.zenkai.core.network.feature.aura.TurboSyncPacket;
 import com.hmc.zenkai.core.network.feature.combat.BlockingPacket;
 import com.hmc.zenkai.core.network.feature.combat.BlockingSyncPacket;
 import com.hmc.zenkai.core.network.feature.combat.CombatModePacket;
@@ -258,5 +260,16 @@ public class ModNetworking {
                 PhysicalFirePacket.TYPE,
                 PhysicalFirePacket.STREAM_CODEC,
                 PhysicalFirePacket::handle);
+
+        registrar.playToServer(
+                TurboPacket.TYPE,
+                TurboPacket.STREAM_CODEC,
+                TurboPacket::handle);
+
+        registrar.playToClient(
+                TurboSyncPacket.TYPE,
+                TurboSyncPacket.STREAM_CODEC,
+                TurboSyncPacket::handle);
+
     }
 }
