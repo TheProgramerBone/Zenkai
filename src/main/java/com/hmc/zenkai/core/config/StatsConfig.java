@@ -57,7 +57,7 @@ public final class StatsConfig {
 
     private static final ModConfigSpec.IntValue TECHNIQUE_MAX_SLOTS_RAW =
             BUILDER.comment("Ki techniques: max technique slots per player")
-                    .defineInRange("technique.max_slots", 6, 1, 24);
+                    .defineInRange("technique.max_slots", 12, 1, 24);
 
     // -------------------------------------------------
     // === NEW === BASE STATS POR RAZA (STR, DEX, CON, WIL, SPI, MND)
@@ -224,6 +224,10 @@ public final class StatsConfig {
             BUILDER.comment("Training: efficiency floor (never drops to 0)")
                     .defineInRange("training.min_efficiency", 0.05D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue TURBO_DRAIN_PCT_PER_SEC_RAW  =
+            BUILDER.comment("Energia drenada por segundo en turbo, como fraccion de energyMax (0.005 = 0.5%/s)")
+            .defineInRange("aura.turbo_drain_pct_per_sec", 0.005D, 0.0D, 1.0D);
+
 
     // BUILD
     public static final ModConfigSpec SPEC = BUILDER.build();
@@ -244,6 +248,7 @@ public final class StatsConfig {
     private static volatile double STAMINA_SCALE = 1;
     private static volatile double ENERGY_SCALE = 1;
     private static volatile int TECHNIQUE_MAX_SLOTS = 6;
+    private static volatile double TURBO_DRAIN_PCT_PER_SEC = 0.05D;
 
 
     private static volatile double TRAIN_DMG_TP = 0.05D, TRAIN_AIR_TP = 0.0003D,
@@ -310,7 +315,7 @@ public final class StatsConfig {
         TRAIN_HALF_LIFE = TRAIN_HALF_LIFE_RAW.get(); TRAIN_DECAY = TRAIN_DECAY_RAW.get();
         TRAIN_HTC_MULT = TRAIN_HTC_MULT_RAW.get();   TRAIN_MIN_EFF = TRAIN_MIN_EFF_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
-
+        TURBO_DRAIN_PCT_PER_SEC = TURBO_DRAIN_PCT_PER_SEC_RAW.get();
     }
 
     // === Getters públicos (thread-safe) ===
@@ -322,6 +327,7 @@ public final class StatsConfig {
     public static double bodyScale() { return BODY_SCALE; }
     public static double staminaScale() { return STAMINA_SCALE; }
     public static double energyScale() { return ENERGY_SCALE; }
+    public static double turboDrainPctPerSec() { return TURBO_DRAIN_PCT_PER_SEC; }
 
     public static int baseRegenBody()         { return REGEN_BODY; }
     public static int baseRegenStamina()      { return REGEN_STAMINA; }

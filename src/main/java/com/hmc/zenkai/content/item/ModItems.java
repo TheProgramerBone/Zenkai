@@ -338,8 +338,8 @@ public class ModItems {
             ITEMS.register("arcosian_race_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/races/arcosian_final_form_player.geo.json",
-                            "textures/models/races/arcosian_final_form_player.png",
+                            "geo/races/arcosian_first_form_player.geo.json",
+                            "textures/models/races/arcosian_first_form_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -347,17 +347,17 @@ public class ModItems {
             ITEMS.register("arcosian_race_chestplate", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
-                            "geo/races/arcosian_final_form_player.geo.json",
-                            "textures/models/races/arcosian_final_form_player.png",
-                            ""
+                            "geo/races/arcosian_first_form_player.geo.json",
+                            "textures/models/races/arcosian_first_form_player.png",
+                            "animations/freezer.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_LEGGINGS =
             ITEMS.register("arcosian_race_leggings", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
-                            "geo/races/arcosian_final_form_player.geo.json",
-                            "textures/models/races/arcosian_final_form_player.png",
+                            "geo/races/arcosian_first_form_player.geo.json",
+                            "textures/models/races/arcosian_first_form_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -365,8 +365,8 @@ public class ModItems {
             ITEMS.register("arcosian_race_boots", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
-                            "geo/races/arcosian_final_form_player.geo.json",
-                            "textures/models/races/arcosian_final_form_player.png",
+                            "geo/races/arcosian_first_form_player.geo.json",
+                            "textures/models/races/arcosian_first_form_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 

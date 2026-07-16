@@ -127,7 +127,7 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
         if (controllerFactory != null) {
             controllerFactory.accept(controllers);                       // animaciones personalizadas
         } else if (hasAnimation) {
-            controllers.add(ZenkaiCommonAnimations.playerFlyIdleController(this)); // idle + vuelo (move.fly al volar)
+            controllers.add(ZenkaiCommonAnimations.genericIdleController(this));
         }
         // sin animación y sin factory → no se registra controlador (modelo estático, sin warnings)
     }

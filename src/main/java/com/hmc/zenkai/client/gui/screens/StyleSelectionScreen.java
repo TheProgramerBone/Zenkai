@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.AuraPreviewRenderer;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
@@ -197,13 +198,22 @@ public class StyleSelectionScreen extends Screen {
 
         g.fill(lp + IN_X1 + PAD, tp + DIV2_Y, lp + IN_X2 - PAD, tp + DIV2_Y + 1, 0x44FFFFFF);
 
-        // Preview jugador — izquierda zona inferior
-        InventoryScreen.renderEntityInInventoryFollowsMouse(
-                g,
-                lp + IN_X1 + PAD,              tp + DIV2_Y + 8,
-                lp + IN_X1 + PAD + PREVIEW_W,  tp + IN_Y2 - 4,
-                PREVIEW_SIZE, 0.0625f,
-                (float) mouseX, (float) mouseY, mc.player);
+        // Preview jugador — izquierda zona inferior (con aura de ki EN VIVO)
+        int pvX1 = lp + IN_X1 + PAD;
+        int pvY1 = tp + DIV2_Y + 8;
+        int pvX2 = lp + IN_X1 + PAD + PREVIEW_W;
+        int pvY2 = tp + IN_Y2 - 4;
+        g.enableScissor(pvX1, pvY1, pvX2, pvY2);   // recorta el aura al recuadro del preview
+        AuraPreviewRenderer.ACTIVE = true;         // el hook dibuja el aura SOLO en esta pasada
+        try {
+            InventoryScreen.renderEntityInInventoryFollowsMouse(
+                    g, pvX1, pvY1, pvX2, pvY2,
+                    PREVIEW_SIZE, 0.0625f,
+                    (float) mouseX, (float) mouseY, mc.player);
+        } finally {
+            AuraPreviewRenderer.ACTIVE = false;
+            g.disableScissor();
+        }
 
         // Label "Ki Color" encima del swatch
         drawCenteredNoShadow(g, Component.literal("Ki Color"), kiAreaCX, tp + DIV2_Y + 8, COLOR_SWATCH);

@@ -48,6 +48,8 @@ public final class CombatModeClientState {
 
     // Carga en curso
     private static int chargingSlot = -1;   // slot de técnica latcheado al iniciar
+    /** Posición (0..8) cuya tecla sostiene la carga actual, o -1. */
+    private static int chargingKey = -1;
     private static int chargeTicks = 0;
 
     // Cooldowns espejo (slot -> gameTime en que vuelve a estar listo)
@@ -109,59 +111,61 @@ public final class CombatModeClientState {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        // ── Teclas 1-9: solo el overlay (consumidas ANTES de handleKeybinds) ──
-        if (active && mc.screen == null) {
-            for (int i = 0; i < Math.min(mc.options.keyHotbarSlots.length,
-                    PlayerTechniques.BIND_POSITIONS); i++) {
-                while (mc.options.keyHotbarSlots[i].consumeClick()) {
-                    selected = i;
-                }
-            }
-        }
-
-        boolean rDown = KeyBindings.FIRE_KI.isDown();
         boolean rightDown = mc.options.keyUse.isDown();
         boolean handsFree = mc.player.getMainHandItem().isEmpty()
                 && mc.player.getOffhandItem().isEmpty();
         boolean inGame = mc.screen == null && mc.getConnection() != null;
 
-        // ── Física en la posición seleccionada: R + click derecho = ejecutar (instantáneo,
-        //    edge-trigger; sin carga). Si la posición es física, la máquina de carga no entra. ──
-        PhysicalTechnique phys = active && mc.player != null
-                ? PlayerStatsAttachment.get(mc.player).techniques().physicalBinding(selected)
-                : null;
-        boolean physCombo = phys != null && inGame && rDown && rightDown && handsFree
-                && chargingSlot < 0;
-        if (physCombo && !lastPhysCombo && mc.level != null) {
-            long now = mc.level.getGameTime();
-            if (PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
-                PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
-                PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks); // optimista
-                ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: pendiente)
+        // ── Teclas 1-9 (consumidas ANTES de handleKeybinds; la hotbar vanilla no se mueve):
+        //    primera pulsación = seleccionar; SEGUNDA pulsación sobre la seleccionada = actuar
+        //    (física: ejecutar; ki: empezar carga sosteniendo la tecla). ──
+        boolean pressedSelected = false;
+        if (active && mc.screen == null) {
+            for (int i = 0; i < Math.min(mc.options.keyHotbarSlots.length,
+                    PlayerTechniques.BIND_POSITIONS); i++) {
+                while (mc.options.keyHotbarSlots[i].consumeClick()) {
+                    if (i != selected) {
+                        selected = i;
+                        cancelCharge(); // cambiar de casilla cancela la carga en curso
+                    } else {
+                        pressedSelected = true;
+                    }
+                }
             }
         }
-        lastPhysCombo = physCombo;
-        if (phys != null) {
-            // posición física seleccionada: nunca arranca la carga ki con este binding
-        }
 
-        // ── Máquina de CARGA (R + click derecho; soltar click = disparar) ──
-        if (chargingSlot < 0) {
-            if (active && inGame && rDown && rightDown && handsFree) {
-                assert mc.player != null;
-                int bound = PlayerStatsAttachment.get(mc.player).techniques().binding(selected);
-                if (bound >= 0 && phys == null && cooldownFraction(mc, bound) <= 0) {
+        // ── Actuar sobre la casilla seleccionada ──
+        if (pressedSelected && active && inGame && handsFree && mc.level != null) {
+            var techniques = PlayerStatsAttachment.get(mc.player).techniques();
+            PhysicalTechnique phys = techniques.physicalBinding(selected);
+            if (phys != null) {
+                // Física: instantánea (con cooldown local optimista + anim).
+                long now = mc.level.getGameTime();
+                if (PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
+                    PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
+                    PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks); // optimista
+                    ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: pendiente)
+                }
+            } else if (chargingSlot < 0) {
+                int bound = techniques.binding(selected);
+                if (bound >= 0 && cooldownFraction(mc, bound) <= 0) {
                     chargingSlot = bound;
+                    chargingKey = selected;
                     chargeTicks = 0;
                 }
             }
-        } else {
-            assert mc.player != null;
+        }
+
+        // ── Máquina de CARGA: se sostiene con la TECLA DE NÚMERO; soltar = disparar (≥25%). ──
+        if (chargingSlot >= 0) {
             KiTechnique t = PlayerStatsAttachment.get(mc.player).techniques().slot(chargingSlot);
+            boolean held = chargingKey >= 0
+                    && chargingKey < mc.options.keyHotbarSlots.length
+                    && mc.options.keyHotbarSlots[chargingKey].isDown();
             if (!active || !inGame || !handsFree || t == null) {
                 cancelCharge();
-            } else if (!rightDown) {
-                // Soltar el click derecho: DISPARA si llegó al mínimo.
+            } else if (!held) {
+                // Soltar el número: DISPARA si llegó al mínimo; si no, cancela.
                 double ratio = chargeTicks / (double) Math.max(1, t.type().chargeTicks);
                 if (ratio >= KiTechniqueType.MIN_CHARGE) {
                     PacketDistributor.sendToServer(new KiFirePacket(chargingSlot, chargeTicks));
@@ -171,15 +175,13 @@ public final class CombatModeClientState {
                     }
                 }
                 cancelCharge();
-            } else if (!rDown) {
-                cancelCharge(); // soltar R primero = cancelar
             } else {
                 chargeTicks = Math.min(chargeTicks + 1, t.type().chargeTicks);
             }
         }
 
-        // ── DEFENSA: click derecho SIN R, manos vacías (edge-trigger al server) ──
-        boolean blocking = active && inGame && rightDown && !rDown
+        // ── DEFENSA: click derecho + manos vacías (edge-trigger al server) ──
+        boolean blocking = active && inGame && rightDown
                 && chargingSlot < 0 && handsFree;
         if (blocking != lastBlockingSent) {
             lastBlockingSent = blocking;
@@ -187,6 +189,7 @@ public final class CombatModeClientState {
                 PacketDistributor.sendToServer(new BlockingPacket(blocking));
             }
         }
+
         // Bloquear = no atacar: consume los clicks de ataque para que ni haga el swing
         // (el server además cancela AttackEntityEvent — guard en ambos lados).
         if (blocking) {
@@ -196,6 +199,7 @@ public final class CombatModeClientState {
 
     private static void cancelCharge() {
         chargingSlot = -1;
+        chargingKey = -1;
         chargeTicks = 0;
     }
 
