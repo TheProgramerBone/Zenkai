@@ -44,7 +44,6 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
         int rgb = switch (ch) {
             case SKIN   -> visual.getSkinColorRgb();
             case HAIR   -> visual.getHairColorRgb();
-            case DETAIL -> visual.getDetailColorRgb();
             default     -> 0xFFFFFF;
         };
 

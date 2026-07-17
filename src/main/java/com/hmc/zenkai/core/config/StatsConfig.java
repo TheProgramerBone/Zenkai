@@ -228,6 +228,13 @@ public final class StatsConfig {
             BUILDER.comment("Energia drenada por segundo en turbo, como fraccion de energyMax (0.005 = 0.5%/s)")
             .defineInRange("aura.turbo_drain_pct_per_sec", 0.005D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue FORM_MASTERY_PER_MINUTE_RAW =
+            BUILDER.comment("Form mastery gained per minute while transformed (percent points, 0-100 scale)")
+                    .defineInRange("mastery.form_per_minute", 0.5D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue TECH_MASTERY_PER_USE_RAW =
+            BUILDER.comment("Technique mastery gained per use (percent points, 0-100 scale)")
+                    .defineInRange("mastery.technique_per_use", 0.2D, 0.0D, 100.0D);
 
     // BUILD
     public static final ModConfigSpec SPEC = BUILDER.build();
@@ -249,6 +256,8 @@ public final class StatsConfig {
     private static volatile double ENERGY_SCALE = 1;
     private static volatile int TECHNIQUE_MAX_SLOTS = 6;
     private static volatile double TURBO_DRAIN_PCT_PER_SEC = 0.05D;
+    private static volatile double FORM_MASTERY_PER_MINUTE = 0.5D;
+    private static volatile double TECH_MASTERY_PER_USE = 0.2D;
 
 
     private static volatile double TRAIN_DMG_TP = 0.05D, TRAIN_AIR_TP = 0.0003D,
@@ -316,6 +325,8 @@ public final class StatsConfig {
         TRAIN_HTC_MULT = TRAIN_HTC_MULT_RAW.get();   TRAIN_MIN_EFF = TRAIN_MIN_EFF_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
         TURBO_DRAIN_PCT_PER_SEC = TURBO_DRAIN_PCT_PER_SEC_RAW.get();
+        FORM_MASTERY_PER_MINUTE = FORM_MASTERY_PER_MINUTE_RAW.get();
+        TECH_MASTERY_PER_USE = TECH_MASTERY_PER_USE_RAW.get();
     }
 
     // === Getters públicos (thread-safe) ===
@@ -350,6 +361,9 @@ public final class StatsConfig {
     public static double trainingHtcMultiplier()         { return TRAIN_HTC_MULT; }
     public static double trainingMinEfficiency()         { return TRAIN_MIN_EFF; }
     public static int techniqueMaxSlots() { return TECHNIQUE_MAX_SLOTS; }
+
+    public static double formMasteryPerMinute() { return FORM_MASTERY_PER_MINUTE; }
+    public static double techMasteryPerUse() { return TECH_MASTERY_PER_USE; }
 
     // === NEW: getters para bases y multiplicadores ===
 

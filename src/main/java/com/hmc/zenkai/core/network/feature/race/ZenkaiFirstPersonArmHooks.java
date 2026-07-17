@@ -125,18 +125,10 @@ public final class ZenkaiFirstPersonArmHooks {
 
                 // Pasadas de tinte de cuerpo (detalle + líneas) para razas multicolor.
                 if (item.hasBodyTint()) {
-                    var visual = player.getData(DataAttachments.PLAYER_VISUAL.get());
-                    ResourceLocation detail = deriveMask(baseTex, "_detail");
-                    ResourceLocation lines  = deriveMask(baseTex, "_lines");
-
-                    if (resourceExists(detail)) {
-                        passColor = visual.getDetailColorRgb();
-                        RenderType rtD = RaceRenderTypes.viewOffset(detail);
-                        render(poseStack, item, buffers, rtD, buffers.getBuffer(rtD), light, OverlayTexture.NO_OVERLAY);
-                    }
-                    if (resourceExists(lines)) {
-                        passColor = visual.getLineColorRgb();
-                        RenderType rtL = RaceRenderTypes.viewOffset(lines);
+                    for (RaceLayerDiscovery.Layer layer : RaceLayerDiscovery.layersFor(item)) {
+                        if (layer.index() == 0) continue;
+                        passColor = layer.argb(player) & 0xFFFFFF;
+                        RenderType rtL = RaceRenderTypes.viewOffset(layer.texture());
                         render(poseStack, item, buffers, rtL, buffers.getBuffer(rtL), light, OverlayTexture.NO_OVERLAY);
                     }
                     passColor = null;
@@ -197,7 +189,6 @@ public final class ZenkaiFirstPersonArmHooks {
             int rgb = switch (ch) {
                 case SKIN   -> visual.getSkinColorRgb();
                 case HAIR   -> visual.getHairColorRgb();
-                case DETAIL -> visual.getDetailColorRgb();
                 default     -> 0xFFFFFF;
             };
             return Color.ofOpaque(rgb);

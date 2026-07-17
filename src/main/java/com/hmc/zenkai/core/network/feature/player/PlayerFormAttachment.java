@@ -58,14 +58,6 @@ public class PlayerFormAttachment {
      *
      * @return dirty si cambió algo importante y conviene sync inmediato.
      */
-    /**
-     * Tick SOLO SERVIDOR.
-     * Reglas:
-     * - Si NO hay transformación configurada para esa raza (o no hay next desde el estado actual),
-     *   NO se marca transforming, NO progresa hold, NO hay anim/FOV si el cliente depende de eso.
-     *
-     * @return dirty si cambió algo importante y conviene sync inmediato.
-     */
     public boolean serverTick(Player p, PlayerStatsAttachment stats, PlayerVisualAttachment visual) {
         boolean dirty = false;
 
@@ -185,6 +177,20 @@ public class PlayerFormAttachment {
         return resolveNextForm(race, current) != null;
     }
 
+    // ── Maestría por forma (clave = formId, 0..100%) ─────────────────────────
+    private final java.util.Map<String, Float> formMastery = new java.util.HashMap<>();
+
+    public float getFormMastery(ResourceLocation form) {
+        return form == null ? 0f : formMastery.getOrDefault(form.toString(), 0f);
+    }
+    public void addFormMastery(ResourceLocation form, float delta) {
+        if (form == null || delta <= 0) return;
+        String k = form.toString();
+        formMastery.merge(k, delta, Float::sum);
+        formMastery.computeIfPresent(k, (key, v) -> Math.min(100f, v));
+    }
+
+
     // ---------------- NBT ----------------
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
@@ -193,6 +199,9 @@ public class PlayerFormAttachment {
         tag.putInt("holdTicks", holdTicks);
         tag.putString("formId", formId.toString());
         tag.putInt("cooldownTicks", cooldownTicks);
+        CompoundTag fm = new CompoundTag();
+        for (var e : formMastery.entrySet()) fm.putFloat(e.getKey(), e.getValue());
+        tag.put("formMastery", fm);
         return tag;
     }
 
@@ -209,7 +218,11 @@ public class PlayerFormAttachment {
         }
 
         this.cooldownTicks = tag.getInt("cooldownTicks");
-
+        formMastery.clear();
+        if (tag.contains("formMastery")) {
+            CompoundTag fm = tag.getCompound("formMastery");
+            for (String k : fm.getAllKeys()) formMastery.put(k, Math.min(100f, Math.max(0f, fm.getFloat(k))));
+        }
         // Safety: si quedó en una forma no permitida (cambio de configs), vuelve a base
         // (Opcional, pero recomendado)
         // Race no está en NBT aquí; se valida en runtime al transformarse.

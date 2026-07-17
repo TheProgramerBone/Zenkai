@@ -211,6 +211,25 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         pools.clampToCurrent();
     }
 
+    // ── Alineamiento (-100..+100) ────────────────────────────────────────────
+    private int alignment = 0;
+
+    public int  getAlignment()          { return alignment; }
+    public void setAlignment(int v)     { this.alignment = Math.max(-100, Math.min(100, v)); }
+    public void addAlignment(int delta) { setAlignment(alignment + delta); }
+
+    // ── Maestría por técnica (clave = nombre del tipo, 0..100%) ──────────────
+    private final java.util.Map<String, Float> techMastery = new java.util.HashMap<>();
+
+    public float getTechniqueMastery(String key) {
+        return techMastery.getOrDefault(key, 0f);
+    }
+    public void addTechniqueMastery(String key, float delta) {
+        if (key == null || key.isEmpty() || delta <= 0) return;
+        techMastery.merge(key, delta, Float::sum);
+        techMastery.computeIfPresent(key, (k, v) -> Math.min(100f, v));
+    }
+
     // ── NBT ──────────────────────────────────────────────────────────────────
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
@@ -223,6 +242,10 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         ListTag pets = new ListTag();
         pets.addAll(deadPets);
         tag.put("deadPets", pets);
+        tag.putInt("alignment", alignment);
+        CompoundTag tm = new CompoundTag();
+        for (var e : techMastery.entrySet()) tm.putFloat(e.getKey(), e.getValue());
+        tag.put("techMastery", tm);
         return tag;
     }
 
@@ -233,6 +256,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         if (tag.contains("skills"))     skills.load(tag.getCompound("skills"));
         if (tag.contains("techniques")) techniques.load(tag.getCompound("techniques"));
         lastSummonTick = tag.contains("lastSummonTick") ? tag.getLong("lastSummonTick") : Long.MIN_VALUE;
+        setAlignment(tag.contains("alignment") ? tag.getInt("alignment") : 0);
+        techMastery.clear();
+        if (tag.contains("techMastery")) {
+            CompoundTag tm = tag.getCompound("techMastery");
+            for (String k : tm.getAllKeys()) techMastery.put(k, Math.min(100f, Math.max(0f, tm.getFloat(k))));
+        }
         deadPets.clear();
         if (tag.contains("deadPets")) {
             ListTag pets = tag.getList("deadPets", Tag.TAG_COMPOUND);

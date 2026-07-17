@@ -2,6 +2,7 @@ package com.hmc.zenkai.core.technique;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.ModGameRules;
+import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
@@ -89,6 +90,7 @@ public final class PhysicalCombatServer {
 
         att.consumeStamina(cost);
         cds[t.ordinal()] = now + t.cooldownTicks;
+        att.addTechniqueMastery(t.name(), (float) StatsConfig.techMasteryPerUse());
 
         double str = att.computeMeleeFinal();
         Vec3 look = sp.getLookAngle();

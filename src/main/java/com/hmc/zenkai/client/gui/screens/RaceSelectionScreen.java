@@ -5,7 +5,13 @@ import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.core.network.feature.race.GeoLayerArmorItem;
+import com.hmc.zenkai.core.network.feature.race.RaceLayerDiscovery;
+import com.hmc.zenkai.core.network.feature.race.RaceSkinSlots;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -210,9 +216,13 @@ public class RaceSelectionScreen extends Screen {
         // Esto también arregla el tinte de boca/nariz (que usa skinColorRgb).
         if (r != lastAppliedRace) {
             lastAppliedRace = r;
-            visual.setSkinColorRgb(PlayerVisualAttachment.defaultSkinColorFor(r));
-            visual.setDetailColorRgb(PlayerVisualAttachment.defaultDetailColorFor(r));
-            visual.setLineColorRgb(PlayerVisualAttachment.defaultLineColorFor(r));
+            // Limpia overrides de capas de la raza anterior (si no, p.ej. el Detail de Namek
+            // en layerColors[1] se aplicaría a la capa 1 de la nueva raza).
+            visual.clearLayerColors();
+            // Piel: default del JSON de la capa 0 de la raza (data-driven); fallback al valor en código.
+            // Los demás colores por capa ya NO se siembran aquí: salen del JSON de cada capa
+            // (layerColors vacío => cada capa usa su default) tras el clearLayerColors() de arriba.
+            visual.setSkinColorRgb(seedSkinColorFor(mc.player, r));
             // Namek/Arcosian = tinte multicapa (siempre coloreable); Human/Saiyan/Majin arrancan natural.
             visual.setCustomSkinColor(r == Race.NAMEKIAN || r == Race.ARCOSIAN);
         }
@@ -227,6 +237,21 @@ public class RaceSelectionScreen extends Screen {
             visual.setRenderRaceSkin(true);
             visual.setHideVanillaBody(true);
         }
+    }
+
+    /**
+     * Color de piel inicial de la raza: el "color" del JSON de su capa 0
+     * (<base>_layer_0.json). Si la raza no tiene capas, cae al default en código.
+     * NOTA: stats.setRace(r) debe llamarse ANTES (el slot resuelve el item por la raza actual).
+     */
+    private static int seedSkinColorFor(Player player, Race r) {
+        ItemStack body = RaceSkinSlots.getVirtualRaceArmor(player, EquipmentSlot.CHEST);
+        if (body.getItem() instanceof GeoLayerArmorItem gi) {
+            for (RaceLayerDiscovery.Layer L : RaceLayerDiscovery.layersFor(gi)) {
+                if (L.index() == 0) return L.defaultRgb();
+            }
+        }
+        return PlayerVisualAttachment.defaultSkinColorFor(r);
     }
 
     void restoreSnapshots() {
