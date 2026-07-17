@@ -8,7 +8,12 @@ import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.core.network.feature.race.GeoLayerArmorItem;
+import com.hmc.zenkai.core.network.feature.race.RaceLayerDiscovery;
+import com.hmc.zenkai.core.network.feature.race.RaceSkinSlots;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -46,8 +51,9 @@ public class AppearanceScreen extends Screen {
 
     private static final int SKIN_SECTION_DY = 12;
 
-    // Paso vertical entre capas de color de Namek (label + fila de presets). Ajústalo si se solapan.
-    private static final int NAMEK_LAYER_DY = 24;
+    // Paso vertical base entre filas de capas (label + presets). Cada capa puede sumarle
+    // su propio "dy" desde el JSON para ajuste fino de posición.
+    private static final int LAYER_DY = 24;
 
     private static final int ARROW_LX            = IN_X1 + PAD;
     private static final int ARROW_RX_NO_COLOR   = IN_X2 - PAD - ARROW_W;
@@ -62,13 +68,8 @@ public class AppearanceScreen extends Screen {
     private static final int COLOR_VALUE  = 0xFFFFFF;
     private static final int COLOR_SWATCH = 0x4A3726;
 
-    private static final int[] SKIN_TONES       = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
-    private static final int[] ARCOSIAN_PRESETS = { 0xFFFFFF, 0xE1BEE7, 0xFFE0B2 };
-
-    // Presets de Namek por capa. El PRIMERO de cada lista = color por defecto de esa capa.
-    private static final int[] NAMEK_SKIN_PRESETS   = { 0x2DC31E, 0x239817, 0x3BDE2B };
-    private static final int[] NAMEK_DETAIL_PRESETS = { 0xF3ACB7, 0xE75C72, 0xFCEDF0 };
-    private static final int[] NAMEK_LINE_PRESETS   = { 0xD41A25, 0xA5141D, 0xE6333D };
+    // Tonos de piel Human/Saiyan/Majin. Las razas multicolor sacan TODO de los JSON de capa.
+    private static final int[] SKIN_TONES = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
 
     @Nullable private final RaceSelectionScreen raceScreen;
     private final CompoundTag statsSnapshot;
@@ -80,18 +81,21 @@ public class AppearanceScreen extends Screen {
 
     private int eyeIndex = 0, hairIndex = 0, mouthIndex = 0, noseIndex = 0;
     private int skinColor = 0xFFD5A07A, eyeColor = 0xFF2E86C1;
-    private int hairColor = 0xFF1A1A1A, detailColor = 0xFF9B59B6;
-    private int lineColor = 0xFF2E7D32;
+    private int hairColor = 0xFF1A1A1A;
     private boolean customSkinColor = false;
     private int     skinPreset      = 0;
     private boolean genderFemale    = false;
     private boolean showGender       = false;
     private int     genderTitleY, genderValueY;
 
-    // Y de las etiquetas de las 3 capas de Namek (para render)
-    private int namekLabelSkinY, namekLabelDetailY, namekLabelLineY;
+    // ── Estado genérico de capas de tinte (razas multicolor) ──────────────────
+    // index 0 = piel (escribe skinColorRgb); index >= 1 = capas (escriben layerColors[index]).
+    private final java.util.List<RaceLayerDiscovery.Layer> tintLayers = new java.util.ArrayList<>();
+    private final java.util.Map<Integer, Integer> layerArgb   = new java.util.HashMap<>(); // index -> ARGB actual
+    private final java.util.Map<Integer, Integer> layerLabelY = new java.util.HashMap<>(); // index -> Y de la etiqueta
+    private int activeLayerIndex = -1; // capa con picker abierto (-1 = ninguna)
 
-    private enum ColorChannel { SKIN, EYE, HAIR, DETAIL, LINE }
+    private enum ColorChannel { SKIN, EYE, HAIR }
     @Nullable private ColorChannel    activeChannel = null;
     @Nullable private ColorPickerWidget picker      = null;
     private Race race = Race.HUMAN;
@@ -121,8 +125,6 @@ public class AppearanceScreen extends Screen {
         skinColor   = visual.getSkinColorRgb()   | 0xFF000000;
         eyeColor    = visual.getEyeColorRgb()    | 0xFF000000;
         hairColor   = visual.getHairColorRgb()   | 0xFF000000;
-        detailColor = visual.getDetailColorRgb() | 0xFF000000;
-        lineColor   = visual.getLineColorRgb()   | 0xFF000000;
         eyeIndex    = visual.getEyeIndex();
         hairIndex   = visual.getHairIndex();
         mouthIndex  = visual.getMouthIndex();
@@ -202,22 +204,14 @@ public class AppearanceScreen extends Screen {
         return r == Race.HUMAN || r == Race.SAIYAN || r == Race.MAJIN;
     }
 
-    /** Namek = tinte multicapa (piel + detalles + líneas). */
     private boolean isMultiTintRace(Race r) {
-        return r == Race.NAMEKIAN;
-    }
-
-    private int[] presetColorsFor(Race r) {
-        return switch (r) {
-            case ARCOSIAN -> ARCOSIAN_PRESETS;
-            default       -> SKIN_TONES; // Human / Saiyan / Majin
-        };
+        return r == Race.NAMEKIAN || r == Race.ARCOSIAN;
     }
 
     private void buildSkinSection() {
-        if (isMultiTintRace(race)) { buildNamekColorSections(); return; }
+        if (isMultiTintRace(race)) { buildLayerSections(); return; }
 
-        int[] presets = presetColorsFor(race);
+        int[] presets = SKIN_TONES;
         boolean tint  = isTintRace(race);
         int perRow = 4, gap = 4;
         int total  = presets.length + (tint ? 1 : 0);
@@ -271,52 +265,86 @@ public class AppearanceScreen extends Screen {
         }
     }
 
-    /** Namek: 3 capas de color apiladas (piel / detalles / líneas), cada una presets + Custom (picker). */
-    private void buildNamekColorSections() {
+    /**
+     * Razas multicolor: una fila de color por CAPA descubierta (genérico, data-driven).
+     * index 0 = piel (escribe skinColorRgb); index >= 1 = capa (escribe layerColors[index]).
+     * Etiqueta y presets salen del JSON de cada capa. Añadir/quitar capas = soltar PNG+JSON.
+     */
+    private void buildLayerSections() {
         showGender = false;
-        customSkinColor = true; // Namek siempre coloreable
+        customSkinColor = true; // multicolor siempre coloreable
+        tintLayers.clear();
+        layerArgb.clear();
+        layerLabelY.clear();
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+
+        ItemStack body = RaceSkinSlots.getVirtualRaceArmor(mc.player, EquipmentSlot.CHEST);
+        if (!(body.getItem() instanceof GeoLayerArmorItem gi)) return;
+
         int startY = bottomZoneY + SKIN_SECTION_DY + 12;
+        int row = 0;
+        for (RaceLayerDiscovery.Layer L : RaceLayerDiscovery.layersFor(gi)) {
+            int idx = -10+L.index();
+            int cur = (idx == 0)
+                    ? visual.getSkinColorRgb()
+                    : (visual.hasLayerColor(idx) ? visual.getLayerColorRgb(idx) : L.defaultRgb());
+            layerArgb.put(idx, 0xFF000000 | (cur & 0xFFFFFF));
 
-        namekLabelSkinY   = startY;
-        buildColorRow(ColorChannel.SKIN,   NAMEK_SKIN_PRESETS,   startY + 10);
-
-        namekLabelDetailY = startY + NAMEK_LAYER_DY;
-        buildColorRow(ColorChannel.DETAIL, NAMEK_DETAIL_PRESETS, startY + NAMEK_LAYER_DY + 10);
-
-        namekLabelLineY   = startY + 2 * NAMEK_LAYER_DY;
-        buildColorRow(ColorChannel.LINE,   NAMEK_LINE_PRESETS,   startY + 2 * NAMEK_LAYER_DY + 10);
+            int labelY = -30 + startY + row * LAYER_DY + L.dy();
+            layerLabelY.put(idx, labelY);
+            tintLayers.add(L);
+            buildLayerRow(L, labelY + 10);
+            row++;
+        }
     }
 
-    private void buildColorRow(ColorChannel ch, int[] presets, int y) {
+    private void buildLayerRow(RaceLayerDiscovery.Layer L, int y) {
+        int[] presets = L.presets();
         int gap = 4;
-        int total = presets.length + 1;
+        int total = presets.length + 1; // + swatch/picker "custom"
         int rowW   = total * COLOR_BOX_W + (total - 1) * gap;
         int startX = (skinAreaCX - rowW / 2);
         for (int i = 0; i < total; i++) {
             int x = startX + i * (COLOR_BOX_W + gap);
             if (i == presets.length) {
                 addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
-                        () -> colorForChannel(ch) & 0xFFFFFF,
-                        () -> activeChannel == ch,
-                        () -> togglePicker(ch)));
+                        () -> layerCurrent(L) & 0xFFFFFF,
+                        () -> activeLayerIndex == L.index(),
+                        () -> toggleLayerPicker(L)));
             } else {
                 final int c = presets[i];
                 addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
                         () -> c,
-                        () -> (colorForChannel(ch) & 0xFFFFFF) == c,
-                        () -> { setChannelColor(ch, 0xFF000000 | c); customSkinColor = true; closePicker(); applyPreview(); }));
+                        () -> (layerCurrent(L) & 0xFFFFFF) == c,
+                        () -> { layerArgb.put(L.index(), 0xFF000000 | c); closePicker(); applyPreview(); }));
             }
         }
     }
 
-    private void setChannelColor(ColorChannel ch, int argb) {
-        switch (ch) {
-            case SKIN   -> skinColor = argb;
-            case EYE    -> eyeColor = argb;
-            case HAIR   -> hairColor = argb;
-            case DETAIL -> detailColor = argb;
-            case LINE   -> lineColor = argb;
-        }
+    /** ARGB actual de una capa (o su default si aún no se tocó). */
+    private int layerCurrent(RaceLayerDiscovery.Layer L) {
+        return layerArgb.getOrDefault(L.index(), 0xFF000000 | L.defaultRgb());
+    }
+
+    private void toggleLayerPicker(RaceLayerDiscovery.Layer L) {
+        if (activeLayerIndex == L.index() && picker != null) { closePicker(); return; }
+        openLayerPicker(L);
+    }
+
+    private void openLayerPicker(RaceLayerDiscovery.Layer L) {
+        closePicker();
+        activeLayerIndex = L.index();
+        int pickerX = panelLeft + BG_W + 8;
+        if (pickerX + ColorPickerWidget.TOTAL_W > this.width - 4)
+            pickerX = panelLeft - ColorPickerWidget.TOTAL_W - 8;
+        picker = new ColorPickerWidget(pickerX, panelTop + IN_Y1, layerCurrent(L), L.labelComponent().getString(), argb -> {
+            layerArgb.put(L.index(), 0xFF000000 | (argb & 0xFFFFFF));
+            applyPreview();
+        });
+        addRenderableWidget(picker);
     }
 
     private void togglePicker(ColorChannel ch) {
@@ -330,8 +358,7 @@ public class AppearanceScreen extends Screen {
         if (channel == ColorChannel.SKIN) customSkinColor = true;
         String label = switch (channel) {
             case SKIN -> "Skin Color"; case EYE -> "Eye Color";
-            case HAIR -> "Hair Color"; case DETAIL -> "Detail Color";
-            case LINE -> "Line Color";
+            case HAIR -> "Hair Color";
         };
         int pickerX = panelLeft + BG_W + 8;
         if (pickerX + ColorPickerWidget.TOTAL_W > this.width - 4)
@@ -341,8 +368,6 @@ public class AppearanceScreen extends Screen {
                 case SKIN -> { skinColor = argb; customSkinColor = true; }
                 case EYE -> eyeColor = argb;
                 case HAIR -> hairColor = argb;
-                case DETAIL -> detailColor = argb;
-                case LINE -> lineColor = argb;
             }
             applyPreview();
         });
@@ -352,6 +377,7 @@ public class AppearanceScreen extends Screen {
     private void closePicker() {
         if (picker != null) { removeWidget(picker); picker = null; }
         activeChannel = null;
+        activeLayerIndex = -1;
     }
 
     @Override
@@ -382,9 +408,10 @@ public class AppearanceScreen extends Screen {
                 (float) mouseX, (float) mouseY, mc.player);
 
         if (isMultiTintRace(race)) {
-            drawCenteredNoShadow(g, Component.literal("Skin"),   skinAreaCX, namekLabelSkinY,   COLOR_SWATCH);
-            drawCenteredNoShadow(g, Component.literal("Detail"), skinAreaCX, namekLabelDetailY, COLOR_SWATCH);
-            drawCenteredNoShadow(g, Component.literal("Lines"),  skinAreaCX, namekLabelLineY,   COLOR_SWATCH);
+            for (RaceLayerDiscovery.Layer L : tintLayers) {
+                Integer ly = layerLabelY.get(L.index());
+                if (ly != null) drawCenteredNoShadow(g, L.labelComponent(), skinAreaCX, ly, COLOR_SWATCH);
+            }
         } else {
             drawCenteredNoShadow(g, Component.literal(isTintRace(race) ? "Skin Color" : "Skin Preset"),
                     skinAreaCX, bottomZoneY + SKIN_SECTION_DY, COLOR_SWATCH);
@@ -426,8 +453,7 @@ public class AppearanceScreen extends Screen {
     private int colorForChannel(ColorChannel ch) {
         return switch (ch) {
             case SKIN -> skinColor; case EYE -> eyeColor;
-            case HAIR -> hairColor; case DETAIL -> detailColor;
-            case LINE -> lineColor;
+            case HAIR -> hairColor;
         };
     }
 
@@ -438,8 +464,6 @@ public class AppearanceScreen extends Screen {
         visual.setSkinColorRgb(skinColor & 0xFFFFFF);
         visual.setEyeColorRgb(eyeColor & 0xFFFFFF);
         visual.setHairColorRgb(hairColor & 0xFFFFFF);
-        visual.setDetailColorRgb(detailColor & 0xFFFFFF);
-        visual.setLineColorRgb(lineColor & 0xFFFFFF);
         visual.setEyeIndex(eyeIndex); visual.setHairIndex(hairIndex);
         visual.setMouthIndex(mouthIndex); visual.setNoseIndex(noseIndex);
         visual.setHairStyleId(hairIndex == 0 ? "hair0" : "hair" + hairIndex);
@@ -447,6 +471,15 @@ public class AppearanceScreen extends Screen {
         visual.setSkinPreset(skinPreset);
         visual.setGender(genderFemale ? PlayerVisualAttachment.Gender.FEMALE
                 : PlayerVisualAttachment.Gender.MALE);
+
+        // Razas multicolor: capa 0 -> piel (skinColorRgb); capa >=1 -> layerColors[index].
+        if (isMultiTintRace(race)) {
+            for (var e : layerArgb.entrySet()) {
+                int idx = e.getKey(), rgb = e.getValue() & 0xFFFFFF;
+                if (idx == 0) visual.setSkinColorRgb(rgb);
+                else          visual.setLayerColorRgb(idx, rgb);
+            }
+        }
     }
 
     private void goToStyle() {

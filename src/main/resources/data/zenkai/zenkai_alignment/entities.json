@@ -1,0 +1,13 @@
+{
+  "kill_deltas": {
+    "minecraft:villager": -5,
+    "minecraft:wandering_trader": -3,
+    "minecraft:iron_golem": -4,
+    "player": -10,
+    "minecraft:pillager": 3,
+    "minecraft:vindicator": 4,
+    "minecraft:evoker": 8,
+    "minecraft:ravager": 6,
+    "minecraft:witch": 2
+  }
+}

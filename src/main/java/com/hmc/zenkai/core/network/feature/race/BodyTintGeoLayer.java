@@ -28,7 +28,7 @@ import static com.hmc.zenkai.core.network.feature.race.RaceTextureUtil.resourceE
  * dejar hueca la textura base. Esto evita además que las capas desaparezcan al hacer sneak.
  *
  * Las máscaras se derivan por convención desde la textura base del item:
- *   namekian_player_colorable.png  ->  namekian_player_detail.png / namekian_player_lines.png
+ *   namekian_player_layer_0.png  ->  namekian_player_layer_1.png / namekian_player_layer_2.png
  * Cada máscara en gris claro en sus zonas teñibles y transparente en el resto.
  * Si una máscara no existe, esa pasada se omite.
  *
@@ -49,22 +49,14 @@ public class BodyTintGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
 
         Entity wearer = ((GeoLayerArmorRenderer) this.getRenderer()).getCurrentEntity();
         if (!(wearer instanceof Player player)) return;
-        PlayerVisualAttachment vis = PlayerVisualAttachment.get(player);
 
-        ResourceLocation base   = animatable.getTexturePath();
-        ResourceLocation detail = deriveMask(base, "_detail");
-        ResourceLocation lines  = deriveMask(base, "_lines");
-
-        // Capa 2: detalles
-        if (resourceExists(detail)) {
-            int argb = 0xFF000000 | (vis.getDetailColorRgb() & 0xFFFFFF);
-            drawPass(detail, argb, poseStack, bakedModel, animatable,
-                    bufferSource, partialTick, packedLight, packedOverlay);
-        }
-        // Capa 3: líneas
-        if (resourceExists(lines)) {
-            int argb = 0xFF000000 | (vis.getLineColorRgb() & 0xFFFFFF);
-            drawPass(lines, argb, poseStack, bakedModel, animatable,
+        // Capas numeradas descubiertas por convención (<base>_layer_0, _1, ...), en orden.
+        // Cada una se pinta sobre la base con su canal de color (o color fijo del JSON).
+        for (RaceLayerDiscovery.Layer layer : RaceLayerDiscovery.layersFor(animatable)) {
+            // La capa 0 = piel/base: ya la tiñe el pase base del renderer (canal SKIN).
+            // Repintarla aquí multiplicaría el color dos veces (piel más oscura). La omitimos.
+            if (layer.index() == 0) continue;
+            drawPass(layer.texture(), layer.argb(player), poseStack, bakedModel, animatable,
                     bufferSource, partialTick, packedLight, packedOverlay);
         }
     }

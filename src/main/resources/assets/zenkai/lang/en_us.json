@@ -110,7 +110,7 @@
   "sounds.zenkai.dragon_ball_use": "Dragon Ball Use",
   "sounds.zenkai.senzu_eat": "Senzu Eaten",
   "sounds.zenkai.wish_granted": "Wish Granted",
-  "sounds.specialist": "Specialist",
+  "sounds.zenkai.specialist": "Specialist",
 
   "tooltip.zenkai.dragon_ball_radar": "Locate Dragon Balls in a radius of 128 blocks!",
   "tooltip.zenkai.dragon_balls": "§oA mysterious sphere...",
@@ -317,6 +317,16 @@
   "entity.zenkai.saibaman": "Saibaman",
 
   "entity.zenkai.ki_projectile": "Ki Technique",
+
+  "layer.zenkai.arcosian_first_form_player.0": "Skin",
+  "layer.zenkai.arcosian_first_form_player.1": "Muscles",
+  "layer.zenkai.arcosian_first_form_player.2": "Armor",
+  "layer.zenkai.arcosian_first_form_player.3": "Armor Detail",
+  "layer.zenkai.arcosian_first_form_player.4": "Armor Detail 2",
+  "layer.zenkai.arcosian_first_form_player.5": "Horns",
+  "layer.zenkai.namekian_player.0": "Skin",
+  "layer.zenkai.namekian_player.1": "Detail",
+  "layer.zenkai.namekian_player.2": "Lines",
 
   "gamerule.zenkai_allowRaceSelection": "Enable Race Creation",
   "gamerule.zenkai_enableKiDamage": "Enable Ki Damage",

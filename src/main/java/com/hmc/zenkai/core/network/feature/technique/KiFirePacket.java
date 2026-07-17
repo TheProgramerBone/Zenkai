@@ -3,6 +3,7 @@ package com.hmc.zenkai.core.network.feature.technique;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.entity.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
+import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.technique.KiCombatServer;
@@ -71,6 +72,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
                     KiCombatServer.computeCost(att.getEnergyMax(), type, tech.size(), explosive) * ratio));
             if (att.getEnergy() < cost) return;
             att.addEnergy(-cost);
+            att.addTechniqueMastery(type.name(), (float) StatsConfig.techMasteryPerUse());
 
             if (type.defensive) {
                 KiCombatServer.activateBarrier(sp, tech, kiPower);

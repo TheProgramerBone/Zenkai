@@ -24,6 +24,8 @@ public class PlayerVisualAttachment {
     private int auraColorRgb   = 0x33CCFF; // ki azul
     private int detailColorRgb = 0x9B59B6; // detalles del cuerpo (Arcosian / Namek capa 2)
     private int lineColorRgb   = 0x2E7D32; // líneas de detalle del cuerpo (Namek capa 3)
+    // ── Colores por layer numerado (escalable: canal "layer" + índice en el JSON) ──
+    private final java.util.List<Integer> layerColors = new java.util.ArrayList<>();
 
     // ── Índices de forma (apuntan a CustomizationAssets) ─────────────────────
     private int eyeIndex   = 1;
@@ -66,23 +68,6 @@ public class PlayerVisualAttachment {
         return raceSkinItemId != null && !raceSkinItemId.isEmpty();
     }
 
-    public ItemStack getRaceSkinStack() {
-        if (!hasRaceSkin()) return ItemStack.EMPTY;
-        ResourceLocation rl = ResourceLocation.tryParse(raceSkinItemId);
-        if (rl == null) return ItemStack.EMPTY;
-        Item item = BuiltInRegistries.ITEM.get(rl);
-        return new ItemStack(item);
-    }
-
-    public void applyDefaultsForRace(Race race) {
-        switch (race) {
-            case NAMEKIAN -> setRaceSkinItemId("zenkai:namekian_race_skin");
-            case SAIYAN   -> setRaceSkinItemId("zenkai:saiyan_race_skin");
-            case ARCOSIAN -> setRaceSkinItemId("zenkai:arcosian_race_skin");
-            case MAJIN    -> setRaceSkinItemId("zenkai:majin_race_skin");
-            case HUMAN    -> setRaceSkinItemId("");
-        }
-    }
 
     public static int defaultSkinColorFor(Race race) {
         return switch (race) {
@@ -92,22 +77,6 @@ public class PlayerVisualAttachment {
         };
     }
 
-    /** Color por defecto de la capa "detalles del cuerpo" (Namek capa 2 / Arcosian placas). */
-    public static int defaultDetailColorFor(Race race) {
-        return switch (race) {
-            case NAMEKIAN -> 0xF3ACB7; // rosa de los detalles Namek (ajústalo)
-            case ARCOSIAN -> 0x9B59B6; // morado biogems Arcosian
-            default        -> 0x9B59B6;
-        };
-    }
-
-    /** Color por defecto de la capa "líneas de detalle" (Namek capa 3). */
-    public static int defaultLineColorFor(Race race) {
-        return switch (race) {
-            case NAMEKIAN -> 0xD41A25; // verde oscuro de las líneas Namek (ajústalo)
-            default        -> 0x2E7D32;
-        };
-    }
 
     // ── Colores API ───────────────────────────────────────────────────────────
     public int  getSkinColorRgb()              { return skinColorRgb; }
@@ -121,12 +90,6 @@ public class PlayerVisualAttachment {
 
     public int  getAuraColorRgb()              { return auraColorRgb; }
     public void setAuraColorRgb(int rgb)       { this.auraColorRgb   = rgb & 0xFFFFFF; }
-
-    public int  getDetailColorRgb()            { return detailColorRgb; }
-    public void setDetailColorRgb(int rgb)     { this.detailColorRgb = rgb & 0xFFFFFF; }
-
-    public int  getLineColorRgb()              { return lineColorRgb; }
-    public void setLineColorRgb(int rgb)       { this.lineColorRgb   = rgb & 0xFFFFFF; }
 
     // ── Piel: modo y preset API ───────────────────────────────────────────────
     public boolean isCustomSkinColor()         { return customSkinColor; }
@@ -195,6 +158,10 @@ public class PlayerVisualAttachment {
         tag.putInt("skinPreset", skinPreset);
         tag.putString("gender", gender.name());
 
+        int[] lc = new int[layerColors.size()];
+        for (int i = 0; i < lc.length; i++) lc[i] = layerColors.get(i);
+        tag.putIntArray("layerColors", lc);
+
         return tag;
     }
 
@@ -227,5 +194,35 @@ public class PlayerVisualAttachment {
         if (tag.contains("gender")) {
             try { this.gender = Gender.valueOf(tag.getString("gender")); } catch (IllegalArgumentException ignored) {}
         }
+
+        layerColors.clear();
+        if (tag.contains("layerColors")) {
+            for (int v : tag.getIntArray("layerColors")) layerColors.add(v < 0 ? -1 : (v & 0xFFFFFF));
+        }
+
+    }
+
+    /** ¿El jugador ha FIJADO explícitamente el color del layer i? (si no, se usa el default del JSON). */
+    public boolean hasLayerColor(int i) {
+        return i >= 0 && i < layerColors.size() && layerColors.get(i) >= 0;
+    }
+
+    /** Color del layer numerado i, o -1 si no está fijado (usa el default del JSON en ese caso). */
+    public int getLayerColorRgb(int i) {
+        return (i >= 0 && i < layerColors.size()) ? layerColors.get(i) : -1;
+    }
+
+    /** Fija el color del layer i. Autoextiende con -1 (sin fijar) los huecos intermedios. */
+    public void setLayerColorRgb(int i, int rgb) {
+        if (i < 0) return;
+        while (layerColors.size() <= i) layerColors.add(-1);
+        layerColors.set(i, rgb & 0xFFFFFF);
+    }
+
+    public int layerColorCount() { return layerColors.size(); }
+
+    /** Olvida TODOS los overrides de capas (vuelven a los defaults del JSON). Usar al cambiar de raza. */
+    public void clearLayerColors() {
+        layerColors.clear();
     }
 }
