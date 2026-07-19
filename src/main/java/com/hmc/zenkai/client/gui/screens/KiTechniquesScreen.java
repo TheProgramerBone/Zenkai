@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.PhysicalIcons; // <- IMPORTANTE: Añadido aquí
 import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.core.config.StatsConfig;
@@ -131,11 +132,17 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
         int by = panelTop + BIND_Y_OFF;
         for (int pos = 0; pos < n; pos++) {
             KiTechnique t = att.techniques().slot(att.techniques().binding(pos));
+            var phys = att.techniques().physicalBinding(pos);
+
             if (t != null) {
                 TechniqueIcons.draw(g, bx, by, t);
+            } else if (phys != null) {
+                PhysicalIcons.draw(g, bx, by, phys);
             }
+
+            boolean occupied = t != null || phys != null;
             g.drawString(this.font, Component.literal(String.valueOf(pos + 1)),
-                    bx + 2, by + 1, t != null ? 0xFFFFFFFF : 0xFFAAAAAA, true);
+                    bx + 2, by + 1, occupied ? 0xFFFFFFFF : 0xFFAAAAAA, true);
             bx += CELL + CELL_GAP;
         }
 

@@ -16,6 +16,9 @@ public final class ModEffects {
     public static final DeferredHolder<MobEffect, MobEffect> IMMORTALITY =
             EFFECTS.register("immortality", ImmortalityEffect::new);
 
+    public static final DeferredHolder<MobEffect, MobEffect> MAJIN =
+            EFFECTS.register("majin", MajinEffect::new);
+
     public static void register(IEventBus bus) {
         EFFECTS.register(bus);
     }

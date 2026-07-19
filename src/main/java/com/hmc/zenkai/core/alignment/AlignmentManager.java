@@ -3,6 +3,7 @@ package com.hmc.zenkai.core.alignment;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.effect.MajinEffect;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -34,7 +35,6 @@ import java.util.Map;
  * - Positivo sube el alineamiento del asesino, negativo lo baja.
  * - Varios archivos se fusionan; si dos definen la misma clave gana el último y se loguea.
  * El campo alignment vive en PlayerStatsAttachment (viaja con el sync de stats normal).
- * TODO: delta pasivo por estar bajo el efecto majin, cuando ese efecto exista.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class AlignmentManager {
@@ -62,10 +62,18 @@ public final class AlignmentManager {
                 ? PLAYER_KEY
                 : BuiltInRegistries.ENTITY_TYPE.getKey(victim.getType()).toString();
 
+
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(killer);
+
+        // Bajo la marca Majin el alineamiento está clavado en -100: ningún kill lo mueve.
+        if (MajinEffect.isActive(killer)) {
+            if (att.getAlignment() != -100) { att.setAlignment(-100); PlayerLifeCycle.sync(killer); }
+            return;
+        }
+
         Integer delta = KILL_DELTAS.get(key);
         if (delta == null || delta == 0) return;
 
-        PlayerStatsAttachment att = PlayerStatsAttachment.get(killer);
         att.addAlignment(delta);
         PlayerLifeCycle.sync(killer);
     }

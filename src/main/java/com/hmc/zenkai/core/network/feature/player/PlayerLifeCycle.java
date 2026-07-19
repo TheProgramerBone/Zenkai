@@ -20,7 +20,9 @@ public class PlayerLifeCycle {
         att.setImmortal(false);
         p.removeEffect(ModEffects.IMMORTALITY);
         att.refillOnRespawn();
-
+        var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
+        visual.setMajinControlled(false);
+        p.removeEffect(ModEffects.MAJIN);
         syncIfServer(p);          // stats
         syncVisualIfServer(p);    // visual
     }
@@ -34,7 +36,8 @@ public class PlayerLifeCycle {
         // Al morir, cortamos de raíz cualquier rastro de inmortalidad
         att.setImmortal(false);
         sp.removeEffect(ModEffects.IMMORTALITY);
-
+        sp.getData(DataAttachments.PLAYER_VISUAL.get()).setMajinControlled(false);
+        sp.removeEffect(ModEffects.MAJIN);
         // Opcional: si quieres, también puedes resetear body/stats aquí,
         // pero normalmente eso ya lo haces en el respawn con refillOnRespawn().
     }

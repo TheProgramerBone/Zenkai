@@ -121,10 +121,16 @@ public final class CombatModeClientState {
         //    (física: ejecutar; ki: empezar carga sosteniendo la tecla). ──
         boolean pressedSelected = false;
         if (active && mc.screen == null) {
+            var binds = PlayerStatsAttachment.get(mc.player).techniques();
             for (int i = 0; i < Math.min(mc.options.keyHotbarSlots.length,
                     PlayerTechniques.BIND_POSITIONS); i++) {
                 while (mc.options.keyHotbarSlots[i].consumeClick()) {
-                    if (i != selected) {
+                    if (binds.physicalBinding(i) != null) {
+                        // FÍSICA: se ejecuta A LA PRIMERA pulsación
+                        selected = i;
+                        cancelCharge();
+                        pressedSelected = true;
+                    } else if (i != selected) {
                         selected = i;
                         cancelCharge(); // cambiar de casilla cancela la carga en curso
                     } else {

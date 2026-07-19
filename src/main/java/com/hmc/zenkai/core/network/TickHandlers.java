@@ -5,6 +5,7 @@ import com.hmc.zenkai.client.CombatZenkaiHooks;
 import com.hmc.zenkai.content.effect.ModEffects;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.StatsConfig;
+import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.forms.FormDefinition;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
@@ -142,6 +143,15 @@ public class TickHandlers {
             p.removeEffect(ModEffects.IMMORTALITY);
         }
 
+        // Marca Majin: persistente como la inmortalidad. Si el flag está puesto, el efecto
+        // se aplica aunque lo quiten con leche o /effect clear; solo la muerte lo borra.
+        if (visual.isMajinControlled() && !p.hasEffect(ModEffects.MAJIN)) {
+            p.addEffect(new MobEffectInstance(
+                    ModEffects.MAJIN,
+                    MobEffectInstance.INFINITE_DURATION, 0, true, false, false
+            ));
+        }
+
         // ================================
         // Gate: si no eligió raza, corta features
         // ================================
@@ -271,7 +281,7 @@ public class TickHandlers {
 
                 // (por seguridad) solo si la raza actual está permitida
                 if (def != null && def.allowedRaces().contains(att.getRace())) {
-                    double drain = def.kiDrainPerTick();
+                    double drain = def.kiDrainPerTick()* MasteryEffects.formDrainFactor(p);
                     if (drain > 0.0) {
                         int before = att.getKiCurrent();
                         att.addKi(-drain);

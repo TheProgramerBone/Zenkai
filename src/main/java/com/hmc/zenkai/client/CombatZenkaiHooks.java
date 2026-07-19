@@ -5,6 +5,7 @@ import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.core.combat.ZenkaiStats;
 import com.hmc.zenkai.core.config.StatsConfig;
+import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
@@ -65,7 +66,9 @@ public class CombatZenkaiHooks {
         if (atkStats != null && atkStats.isCombatActive()
                 && !(e.getSource().getDirectEntity() instanceof KiProjectileEntity) && !PhysicalCombatServer.isFiring()) {
             double strDamage = atkStats.computeMeleeFinal();
-
+            if (e.getSource().getEntity() instanceof Player atkP) {
+                strDamage *= MasteryEffects.formStatFactor(atkP);
+            }
             if (e.getSource().getEntity() instanceof Player attacker) {
                 // Compuerta de MODO COMBATE: fuera de él, el golpe del jugador deja pasar el
                 // daño VANILLA puro (sin STR zenkai y sin gastar stamina). Contra pools zenkai
@@ -107,6 +110,9 @@ public class CombatZenkaiHooks {
         if (defStats != null && defStats.isCombatActive()) {
             if (dmg > 0f) {
                 double defense = defStats.computeDefenseFinal();
+                if (e.getEntity() instanceof Player defP) {
+                    defense *= com.hmc.zenkai.core.mastery.MasteryEffects.formStatFactor(defP);
+                }
                 if (PhysicalCombatServer.isFiring()) {
                     defense *= PhysicalCombatServer.currentDefenseScale();
                 }

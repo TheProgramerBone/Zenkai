@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.core.network.feature.aura.TurboPacket;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.neoforged.api.distmarker.Dist;
@@ -85,7 +86,9 @@ public final class AuraClientState {
     /** Color del aura. Punto único para que las transformaciones lo pisen después
      *  (auraStyleId ya existe en PlayerVisualAttachment). */
     public static int resolveColor(AbstractClientPlayer p) {
-        return p.getData(com.hmc.zenkai.core.network.feature.stats.DataAttachments.PLAYER_VISUAL.get())
-                .getAuraColorRgb();
+        var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
+        // Marca Majin: el aura se fuerza a rojo mientras dure (flag sincronizado a trackers).
+        if (visual.isMajinControlled()) return 0xD41A25;
+        return visual.getAuraColorRgb();
     }
 }

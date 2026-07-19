@@ -59,6 +59,26 @@ public final class StatsConfig {
             BUILDER.comment("Ki techniques: max technique slots per player")
                     .defineInRange("technique.max_slots", 12, 1, 24);
 
+    private static final ModConfigSpec.DoubleValue MASTERY_FORM_STAT_BONUS_RAW =
+            BUILDER.comment("At 100% form mastery: bonus fraction to combat stats while transformed (0.20 = +20%)")
+                    .defineInRange("mastery.form_stat_bonus", 0.20D, 0.0D, 5.0D);
+    private static final ModConfigSpec.DoubleValue MASTERY_FORM_DRAIN_RED_RAW =
+            BUILDER.comment("At 100% form mastery: fraction of form ki drain removed (0.50 = -50%)")
+                    .defineInRange("mastery.form_drain_reduction", 0.50D, 0.0D, 1.0D);
+    private static final ModConfigSpec.DoubleValue MASTERY_TECH_DMG_RAW =
+            BUILDER.comment("At 100% technique mastery: damage bonus fraction (0.25 = +25%)")
+                    .defineInRange("mastery.tech_damage_bonus", 0.25D, 0.0D, 5.0D);
+    private static final ModConfigSpec.DoubleValue MASTERY_TECH_COST_RAW =
+            BUILDER.comment("At 100% technique mastery: cost reduction fraction (0.30 = -30% ki/stamina)")
+                    .defineInRange("mastery.tech_cost_reduction", 0.30D, 0.0D, 1.0D);
+    private static final ModConfigSpec.DoubleValue MASTERY_TECH_CAST_RAW =
+            BUILDER.comment("At 100% technique mastery: charge-time reduction fraction (0.30 = charges 30% faster)")
+                    .defineInRange("mastery.tech_cast_reduction", 0.30D, 0.0D, 0.95D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_STAT_BONUS_RAW =
+            BUILDER.comment("Stat bonus fraction while under the Majin effect (0.10 = +10%)")
+                    .defineInRange("majin.effect_stat_bonus", 0.10D, 0.0D, 5.0D);
+
     // -------------------------------------------------
     // === NEW === BASE STATS POR RAZA (STR, DEX, CON, WIL, SPI, MND)
     // -------------------------------------------------
@@ -258,6 +278,9 @@ public final class StatsConfig {
     private static volatile double TURBO_DRAIN_PCT_PER_SEC = 0.05D;
     private static volatile double FORM_MASTERY_PER_MINUTE = 0.5D;
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
+    private static volatile double M_FORM_STAT = 0.20D, M_FORM_DRAIN = 0.50D,
+            M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
+    private static volatile double MAJIN_STAT_BONUS = 0.10D;
 
 
     private static volatile double TRAIN_DMG_TP = 0.05D, TRAIN_AIR_TP = 0.0003D,
@@ -327,6 +350,12 @@ public final class StatsConfig {
         TURBO_DRAIN_PCT_PER_SEC = TURBO_DRAIN_PCT_PER_SEC_RAW.get();
         FORM_MASTERY_PER_MINUTE = FORM_MASTERY_PER_MINUTE_RAW.get();
         TECH_MASTERY_PER_USE = TECH_MASTERY_PER_USE_RAW.get();
+        M_FORM_STAT  = MASTERY_FORM_STAT_BONUS_RAW.get();
+        M_FORM_DRAIN = MASTERY_FORM_DRAIN_RED_RAW.get();
+        M_TECH_DMG   = MASTERY_TECH_DMG_RAW.get();
+        M_TECH_COST  = MASTERY_TECH_COST_RAW.get();
+        M_TECH_CAST  = MASTERY_TECH_CAST_RAW.get();
+        MAJIN_STAT_BONUS = MAJIN_STAT_BONUS_RAW.get();
     }
 
     // === Getters públicos (thread-safe) ===
@@ -364,6 +393,13 @@ public final class StatsConfig {
 
     public static double formMasteryPerMinute() { return FORM_MASTERY_PER_MINUTE; }
     public static double techMasteryPerUse() { return TECH_MASTERY_PER_USE; }
+
+    public static double masteryFormStatBonus()      { return M_FORM_STAT; }
+    public static double masteryFormDrainReduction() { return M_FORM_DRAIN; }
+    public static double masteryTechDamageBonus()    { return M_TECH_DMG; }
+    public static double masteryTechCostReduction()  { return M_TECH_COST; }
+    public static double masteryTechCastReduction()  { return M_TECH_CAST; }
+    public static double majinStatBonus() { return MAJIN_STAT_BONUS; }
 
     // === NEW: getters para bases y multiplicadores ===
 

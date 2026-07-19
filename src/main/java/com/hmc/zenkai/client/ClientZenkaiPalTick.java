@@ -205,7 +205,19 @@ public final class ClientZenkaiPalTick {
     private static final int CRUISE_START = 0, CRUISE_LOOP = 1, BOOST_START = 2, BOOST_LOOP = 3;
     // Duración (ticks) de cada START antes de su loop. Ajústalas a la longitud real de tus animaciones.
     private static final int FLY_CRUISE_START_TICKS = 6; // ~0.3 s
-    private static final int FLY_BOOST_START_TICKS  = 6; // ~0.3 s
+    private static final int FLY_BOOST_START_TICKS  = 6;
+
+    /** Estado de vuelo para otros sistemas (p.ej. la inclinación del aura).
+     *  dir = null cuando NO está en animación de vuelo. Funciona para el jugador
+     *  local y los remotos (ambos alimentan la misma máquina de estados). */
+    public record FlyPose(ZenkaiPalAnimations.FlyDir dir, boolean boosting) {}
+
+    public static FlyPose flyPoseOf(java.util.UUID playerId) {
+        AnimState st = STATES.get(playerId);
+        if (st == null || !st.flyPlaying) return new FlyPose(null, false);
+        boolean boosting = st.flyBoostState == BOOST_START || st.flyBoostState == BOOST_LOOP;
+        return new FlyPose(st.flyDir, boosting);
+    }// ~0.3 s
 
     /**
      * Máquina de estados de la animación de vuelo del jugador local.
