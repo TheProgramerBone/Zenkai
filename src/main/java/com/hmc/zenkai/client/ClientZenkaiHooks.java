@@ -132,7 +132,7 @@ public final class ClientZenkaiHooks {
         );
 
         // ========================
-        // TODOS LOS ICONOS EN UNA SOLA LINEA (debajo del panel)
+        // TODOS LOS ICONOS EN UNA SOLA LÍNEA (debajo del panel)
         // ========================
         int iconX = PANEL_X;
         int iconY = PANEL_Y + panelH + 4;
@@ -148,7 +148,7 @@ public final class ClientZenkaiHooks {
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 
-        if (stats.getRace() == Race.MAJIN) {
+        if (mc.player.getData(DataAttachments.PLAYER_VISUAL.get()).isMajinControlled()) {
             drawBadge(g, iconX, iconY, ICON_MAJIN);
             iconX += BADGE_SIZE + BADGE_PAD;
         }

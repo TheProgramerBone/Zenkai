@@ -128,6 +128,12 @@ public class PlayerVisualAttachment {
     public int  getFormStage()                 { return formStage; }
     public void setFormStage(int v)            { this.formStage = Math.max(0, v); }
 
+    // ── Marca Majin (controlado por Babidi): aura roja + badge. La fija el efecto. ──
+    private boolean majinControlled = false;
+
+    public boolean isMajinControlled()        { return majinControlled; }
+    public void    setMajinControlled(boolean v) { this.majinControlled = v; }
+
     // ── NBT ──────────────────────────────────────────────────────────────────
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
@@ -157,6 +163,7 @@ public class PlayerVisualAttachment {
         tag.putBoolean("customSkinColor", customSkinColor);
         tag.putInt("skinPreset", skinPreset);
         tag.putString("gender", gender.name());
+        tag.putBoolean("majinControlled", majinControlled);
 
         int[] lc = new int[layerColors.size()];
         for (int i = 0; i < lc.length; i++) lc[i] = layerColors.get(i);
@@ -188,6 +195,7 @@ public class PlayerVisualAttachment {
         if (tag.contains("outfitId"))    this.outfitId    = tag.getString("outfitId");
 
         if (tag.contains("formStage")) this.formStage = Math.max(0, tag.getInt("formStage"));
+        this.majinControlled = tag.contains("majinControlled") && tag.getBoolean("majinControlled");
 
         if (tag.contains("customSkinColor")) this.customSkinColor = tag.getBoolean("customSkinColor");
         if (tag.contains("skinPreset"))      this.skinPreset      = Math.max(0, tag.getInt("skinPreset"));

@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.entity.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.core.config.StatsConfig;
+import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.technique.KiCombatServer;
@@ -59,13 +60,16 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
             if (tech == null) return;
 
             KiTechniqueType type = tech.type();
+            // Maestría: carga requerida reducida (cast), costo reducido, daño aumentado.
+            double castF = com.hmc.zenkai.core.mastery.MasteryEffects.techCastFactor(att, type.name());
+            int reqCharge = Math.max(1, (int) Math.round(type.chargeTicks * castF));
             double ratio = type.defensive ? 1.0
-                    : Mth.clamp(pkt.chargeTicks() / (double) Math.max(1, type.chargeTicks), 0.0, 1.0);
+                    : Mth.clamp(pkt.chargeTicks() / (double) reqCharge, 0.0, 1.0);
             if (ratio < KiTechniqueType.MIN_CHARGE) return;
 
             if (!KiCombatServer.tryFire(sp, pkt.slot(), type.cooldownTicks)) return;
 
-            double kiPower = att.computeKiPowerFinal();
+            double kiPower = att.computeKiPowerFinal()* MasteryEffects.formStatFactor(sp);
             boolean explosive = tech.explosive() && !type.defensive;
 
             int cost = (int) Math.max(1, Math.ceil(

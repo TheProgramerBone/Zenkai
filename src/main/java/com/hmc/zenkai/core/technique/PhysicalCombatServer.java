@@ -3,6 +3,7 @@ package com.hmc.zenkai.core.technique;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.StatsConfig;
+import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
@@ -85,14 +86,17 @@ public final class PhysicalCombatServer {
                 k -> new long[PhysicalTechnique.values().length]);
         if (now < cds[t.ordinal()]) return;
 
-        int cost = (int) Math.ceil(att.getStaminaMax() * t.staminaPct);
+        int cost = (int) Math.ceil(att.getStaminaMax() * t.staminaPct
+                * MasteryEffects.techCostFactor(att, t.name()));
         if (att.getStamina() < cost) return;
 
         att.consumeStamina(cost);
         cds[t.ordinal()] = now + t.cooldownTicks;
         att.addTechniqueMastery(t.name(), (float) StatsConfig.techMasteryPerUse());
 
-        double str = att.computeMeleeFinal();
+        double str = att.computeMeleeFinal()
+                * MasteryEffects.formStatFactor(sp)
+                * MasteryEffects.techDamageFactor(att, t.name());
         Vec3 look = sp.getLookAngle();
 
         switch (t) {

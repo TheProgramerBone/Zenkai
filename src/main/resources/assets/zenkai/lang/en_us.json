@@ -89,6 +89,7 @@
   "block.zenkai.htc_portal": "Hyperbolic Time Chamber Portal",
 
   "effect.zenkai.immortality": "Immortality",
+  "effect.zenkai.majin": "Majin",
 
   "creativetab.zenkai": "Zenkai",
 
@@ -211,6 +212,10 @@
   "screen.zenkai.style.spiritualist.desc": "Master of Ki energy. Low physical strength, overwhelming Ki power.",
   "screen.zenkai.choose_race.title": "Choose your race",
 
+  "screen.zenkai.stats_screen.form": "Form: ",
+  "screen.zenkai.stats_screen.effective": "Stats",
+  "screen.zenkai.stats_screen.alignment": "Alignment",
+  "screen.zenkai.stats_screen.mastery": "Mastery: %s%%",
   "screen.zenkai.stats_screen.title": "My Stats",
   "screen.zenkai.stats_screen.race": "Race: ",
   "screen.zenkai.stats_screen.style": "Style: ",
@@ -317,6 +322,8 @@
   "entity.zenkai.saibaman": "Saibaman",
 
   "entity.zenkai.ki_projectile": "Ki Technique",
+
+  "form.zenkai.base": "Base",
 
   "layer.zenkai.arcosian_first_form_player.0": "Skin",
   "layer.zenkai.arcosian_first_form_player.1": "Muscles",
