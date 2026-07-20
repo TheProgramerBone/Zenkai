@@ -13,7 +13,13 @@ import java.util.Optional;
 public final class WishFinalizer {
     private WishFinalizer() {}
 
+    /** Compatibilidad: deseo sin descripción concreta. */
     public static void finalizeWish(ServerPlayer player) {
+        finalizeWish(player, Component.translatable("messages.zenkai.wish_desc.unknown"));
+    }
+
+    /** wishDesc = qué pidió el jugador; se difunde a los jugadores cercanos. */
+    public static void finalizeWish(ServerPlayer player, Component wishDesc) {
         player.closeContainer();
         player.playNotifySound(ModSounds.WISH_GRANTED.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
 
@@ -27,7 +33,9 @@ public final class WishFinalizer {
 
         if (opt.isEmpty()) {
             // Sin dragón (no debería pasar): solo el mensaje de deseo concedido.
-            player.displayClientMessage(Component.translatable("messages.zenkai.wish_granted"), false);
+            WishBroadcast.nearby(player, Component.translatable(
+                    "messages.zenkai.wish_granted_public",
+                    player.getDisplayName(), wishDesc), false);
             return;
         }
 
@@ -37,12 +45,15 @@ public final class WishFinalizer {
 
         if (despawn || remaining <= 0) {
             // Era el último deseo: mensaje simple y el dragón se va.
-            player.displayClientMessage(Component.translatable("messages.zenkai.wish_granted"), false);
+            WishBroadcast.nearby(player, Component.translatable(
+                    "messages.zenkai.wish_granted_public",
+                    player.getDisplayName(), wishDesc), false);
             shenlong.discard();
         } else {
             // Aún quedan deseos: avisar cuántos.
-            player.displayClientMessage(
-                    Component.translatable("messages.zenkai.wish_granted_remaining", remaining), false);
+            WishBroadcast.nearby(player, Component.translatable(
+                    "messages.zenkai.wish_granted_remaining_public",
+                    player.getDisplayName(), wishDesc, remaining), false);
         }
     }
 }

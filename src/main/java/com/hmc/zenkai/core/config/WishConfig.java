@@ -45,6 +45,7 @@ public class WishConfig {
     public static final ModConfigSpec.IntValue SUMMON_COOLDOWN_DAYS;
     public static final ModConfigSpec.IntValue SHENLONG_WISHES;
     public static final ModConfigSpec.IntValue PORUNGA_WISHES;
+    public static final ModConfigSpec.IntValue BROADCAST_RADIUS;
 
     public static final ModConfigSpec SPEC;
 
@@ -110,6 +111,11 @@ public class WishConfig {
         PORUNGA_WISHES = BUILDER
                 .comment("Cuántos deseos concede Porunga por invocación.")
                 .defineInRange("porunga_wishes", 3, 1, 100);
+        BROADCAST_RADIUS = BUILDER
+                .comment("Radio (bloques) en el que los demás jugadores ven los mensajes públicos",
+                        "de Shenlong: invocación y deseo concedido (con qué se pidió).",
+                        "0 = solo el jugador que interactúa.")
+                .defineInRange("broadcast_radius", 32, 0, 256);
         BUILDER.pop();
 
         SPEC = BUILDER.build();
@@ -203,6 +209,7 @@ public class WishConfig {
     public static long summonCooldownTicks()     { return (long) SUMMON_COOLDOWN_DAYS.get() * 24000L; }
     public static int shenlongWishCount()        { return SHENLONG_WISHES.get(); }
     public static int porungaWishCount()           { return PORUNGA_WISHES.get(); }
+    public static int broadcastRadius()          { return BROADCAST_RADIUS.get(); }
 
     // === LÓGICA FINAL: aplica overrides con las nuevas opciones ===
     public static ItemStack resolveWishStack(ItemStack chosen) {

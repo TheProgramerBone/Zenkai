@@ -83,7 +83,8 @@ public record WishRevivePetPayload(int index) implements CustomPacketPayload {
 
                 PlayerLifeCycle.sync(player); // actualizar la lista en el cliente
                 player.displayClientMessage(Component.translatable("messages.zenkai.pet_revived"), false);
-                WishFinalizer.finalizeWish(player);
+                WishFinalizer.finalizeWish(player, Component.translatable(
+                        "messages.zenkai.wish_desc.revive_pet", entity.getDisplayName()));
             });
         }
     }

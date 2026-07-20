@@ -142,6 +142,15 @@
   "messages.zenkai.enchant_not_found": "Enchantment not found: %s",
   "messages.zenkai.wish_villager_ready": "Your librarian villager is ready!",
   "messages.zenkai.summon_cooldown": "§cYou must wait %s more day(s) before summoning again.",
+  "messages.zenkai.wish_granted_public": "§2§lShenlong:§6 %s wished for %s.",
+  "messages.zenkai.wish_granted_remaining_public": "§2§lShenlong:§6 %s wished for %s. %s wishes left.",
+  "messages.zenkai.wish_desc.unknown": "something",
+  "messages.zenkai.wish_desc.immortal": "immortality",
+  "messages.zenkai.wish_desc.training_points": "%s Training Points",
+  "messages.zenkai.wish_desc.revive_player": "the revival of %s",
+  "messages.zenkai.wish_desc.revive_pet": "the revival of %s",
+  "messages.zenkai.wish_desc.stack": "%s x %s",
+  "messages.zenkai.wish_desc.enchant_villager": "a librarian with %s",
 
 
   "messages.zenkai.pet_revived": "§2§lShenlong:§6 Your companion returns to you.",

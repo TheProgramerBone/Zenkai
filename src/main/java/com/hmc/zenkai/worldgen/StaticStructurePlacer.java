@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * Coloca una estructura ÚNICA y grande compuesta por varios segmentos NBT
- * (cada uno en data/zenkai/structure/&lt;nombre&gt;.nbt), recolocándolos en
+ * (cada uno en data/zenkai/structure/&lt; nombre&gt; .nbt), recolocándolos en
  * base + offset. Para estructuras fijas (otherworld, Kami) que NO se generan
  * aleatoriamente — se colocan una sola vez por código.
  */

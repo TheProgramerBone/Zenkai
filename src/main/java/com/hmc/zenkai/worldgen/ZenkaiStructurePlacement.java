@@ -10,6 +10,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -17,6 +20,8 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -82,99 +87,107 @@ public final class ZenkaiStructurePlacement {
     }
 
     /**
-     * Busca el bioma objetivo alrededor del spawn, DUPLICANDO el radio hasta
-     * encontrarlo (o hasta KAMI_MAX_SEARCH_RADIUS). Ancla la base (kami_1) al
-     * nivel del mar o a la superficie del bioma, según KAMI_ANCHOR_SEA_LEVEL.
+     * Sistema único de búsqueda del sitio de Kami:
+     * 1) Recorre un anillo de puntos a >= KAMI_MIN_DIST_FROM_SPAWN del spawn y busca el bioma
+     *    objetivo cerca de cada uno (así garantizamos distancia mínima Y bioma).
+     * 2) Alrededor del punto del bioma, barre candidatos buscando un pad KAMI_PAD_SIZE² de
+     *    césped EXACTAMENTE plano, con dirt debajo, a altura KAMI_PAD_MIN_Y..KAMI_PAD_MAX_Y.
+     * 3) Ancla la base a la superficie de ese pad (+ KAMI_Y_OFFSET).
+     * Las alturas se leen forzando la generación del chunk (level.getChunk), porque
+     * Level.getHeight devuelve la altura mínima del mundo (bedrock) en chunks no generados
+     * — ese era el bug del anclaje a superficie.
      */
     private static BlockPos findKamiBase(ServerLevel overworld) {
         BlockPos spawn = overworld.getSharedSpawnPos();
+        int minDist = ModStructureSegments.KAMI_MIN_DIST_FROM_SPAWN;
 
-        Pair<BlockPos, Holder<Biome>> found = null;
-        int radius = ModStructureSegments.KAMI_SEARCH_RADIUS;
-        while (found == null && radius <= ModStructureSegments.KAMI_MAX_SEARCH_RADIUS) {
-            // ⚠ 1.21.1: findClosestBiome3d(Predicate<Holder<Biome>>, BlockPos, int radius, int hStep, int vStep)
-            found = overworld.findClosestBiome3d(
-                    h -> h.is(ModStructureSegments.KAMI_BIOME), spawn, radius, 32, 64);
-            if (found == null) {
-                LOGGER.info("[Zenkai] Bioma de Kami no hallado en radio {}, ampliando...", radius);
-                radius *= 2;
+        for (int ring = 0; ring < 3; ring++) {
+            int dist = minDist + ModStructureSegments.KAMI_SITE_SEARCH_RADIUS + 64 + ring * 1000;
+            for (int d = 0; d < 8; d++) {
+                double ang = Math.PI * 2.0 * d / 8.0;
+                BlockPos center = spawn.offset(
+                        (int) Math.round(Math.cos(ang) * dist), 0,
+                        (int) Math.round(Math.sin(ang) * dist));
+
+                var found = overworld.findClosestBiome3d(
+                        h -> h.is(ModStructureSegments.KAMI_BIOME), center,
+                        ModStructureSegments.KAMI_BIOME_SEARCH_RADIUS, 32, 64);
+                if (found == null) continue;
+
+                BlockPos site = findGoodPad(overworld, found.getFirst(), spawn);
+                if (site != null) {
+                    LOGGER.info("[Zenkai] Kami: sitio válido en {} {} {} ({} bloques del spawn).",
+                            site.getX(), site.getY(), site.getZ(),
+                            (int) Math.sqrt(spawn.distSqr(site)));
+                    return site.offset(0, ModStructureSegments.KAMI_Y_OFFSET, 0);
+                }
+                LOGGER.info("[Zenkai] Kami: bioma hallado cerca de {},{} pero sin pad válido; probando otra dirección.",
+                        center.getX(), center.getZ());
             }
         }
 
-        BlockPos xz;
-        if (found != null) {
-            xz = found.getFirst();
-            LOGGER.info("[Zenkai] Kami: bioma hallado a {} bloques del spawn.",
-                    (int) Math.sqrt(spawn.distSqr(xz)));
-        } else {
-            xz = spawn;
-            LOGGER.warn("[Zenkai] No se encontró el bioma de Kami; se coloca en el spawn.");
-        }
-
-        // Dentro del bioma, busca un cuadro naturalmente PLANO del tamaño de kami_1,
-        // para que la base del pilar no quede medio enterrada / medio flotando en pendiente.
-        BlockPos flat = findFlatSpot(overworld, xz);
-        if (flat != null) {
-            LOGGER.info("[Zenkai] Kami: terreno plano hallado en {}, {}.", flat.getX(), flat.getZ());
-            xz = flat;
-        } else {
-            LOGGER.warn("[Zenkai] Kami: sin terreno plano cercano; se usa el punto del bioma.");
-        }
-
-        // Ancla kami_1 (offset 0,0,0) al nivel del mar o a la superficie.
-        int baseY = ModStructureSegments.KAMI_ANCHOR_SEA_LEVEL
-                ? overworld.getSeaLevel()
-                : overworld.getHeight(Heightmap.Types.WORLD_SURFACE, xz.getX(), xz.getZ());
-        return new BlockPos(xz.getX(), baseY + ModStructureSegments.KAMI_Y_OFFSET, xz.getZ());
+        // Fallback muy improbable: superficie real (chunk generado) a distancia mínima del spawn.
+        LOGGER.warn("[Zenkai] Kami: sin sitio ideal; colocando en superficie a {} bloques del spawn.", minDist);
+        int fx = spawn.getX() + minDist, fz = spawn.getZ();
+        return new BlockPos(fx, surfaceY(overworld, fx, fz), fz)
+                .offset(0, ModStructureSegments.KAMI_Y_OFFSET, 0);
     }
 
     /**
-     * Busca alrededor de {@code centerXZ} un cuadro plano del tamaño de kami_1
-     * ({@link ModStructureSegments#KAMI_FOOTPRINT}). Muestrea la altura del terreno en las 4 esquinas
-     * + centro de cada candidato; se queda con el más plano (menor desnivel), prefiriendo los cercanos
-     * al nivel del mar y al centro. Si nada cumple, relaja el desnivel tolerado hasta 8; si aun así no,
-     * devuelve null (se usará centerXZ).
+     * Barre en cuadrícula alrededor de {@code biomePos} buscando el primer pad válido que además
+     * respete la distancia mínima al spawn. Barato por diseño: la primera condición que falla
+     * descarta el candidato sin leer más bloques.
      */
-    private static BlockPos findFlatSpot(ServerLevel level, BlockPos centerXZ) {
-        int half   = ModStructureSegments.KAMI_FOOTPRINT / 2;
-        int radius = ModStructureSegments.KAMI_FLAT_SEARCH_RADIUS;
-        int step   = Math.max(1, ModStructureSegments.KAMI_FLAT_STEP);
-        int sea    = level.getSeaLevel();
+    private static BlockPos findGoodPad(ServerLevel level, BlockPos biomePos, BlockPos spawn) {
+        int radius = ModStructureSegments.KAMI_SITE_SEARCH_RADIUS;
+        int step   = Math.max(1, ModStructureSegments.KAMI_SITE_STEP);
+        long minDistSqr = (long) ModStructureSegments.KAMI_MIN_DIST_FROM_SPAWN
+                * ModStructureSegments.KAMI_MIN_DIST_FROM_SPAWN;
 
-        for (int maxDiff = ModStructureSegments.KAMI_FLAT_MAX_DIFF; maxDiff <= 8; maxDiff += 2) {
-            BlockPos best = null;
-            long bestScore = Long.MAX_VALUE;
-            for (int dx = -radius; dx <= radius; dx += step) {
-                for (int dz = -radius; dz <= radius; dz += step) {
-                    int cx = centerXZ.getX() + dx;
-                    int cz = centerXZ.getZ() + dz;
-                    int h0 = surfaceY(level, cx - half, cz - half);
-                    int h1 = surfaceY(level, cx + half, cz - half);
-                    int h2 = surfaceY(level, cx - half, cz + half);
-                    int h3 = surfaceY(level, cx + half, cz + half);
-                    int h4 = surfaceY(level, cx, cz);
-                    int min = Math.min(Math.min(h0, h1), Math.min(h2, Math.min(h3, h4)));
-                    int max = Math.max(Math.max(h0, h1), Math.max(h2, Math.max(h3, h4)));
-                    if (max - min > maxDiff) continue; // no es plano
+        for (int dx = -radius; dx <= radius; dx += step) {
+            for (int dz = -radius; dz <= radius; dz += step) {
+                int cx = biomePos.getX() + dx;
+                int cz = biomePos.getZ() + dz;
+                long ddx = cx - spawn.getX(), ddz = cz - spawn.getZ();
+                if (ddx * ddx + ddz * ddz < minDistSqr) continue;
 
-                    int avg = (h0 + h1 + h2 + h3 + h4) / 5;
-                    long score = (long) (max - min) * 100L        // plano
-                            + (long) Math.abs(avg - sea) * 2L      // preferir cerca del nivel del mar
-                            + (Math.abs(dx) + Math.abs(dz)) / 8L;  // y cerca del centro del bioma
-                    if (score < bestScore) {
-                        bestScore = score;
-                        best = new BlockPos(cx, avg, cz);
-                    }
-                }
+                BlockPos pad = goodPadAt(level, cx, cz);
+                if (pad != null) return pad;
             }
-            if (best != null) return best;
         }
         return null;
     }
 
-    /** Altura del suelo ignorando agua y hojas (OCEAN_FLOOR): sirve para medir "planitud" del terreno. */
+    /**
+     * Valida el pad centrado en (cx, cz): KAMI_PAD_SIZE² columnas con la MISMA altura de
+     * superficie, césped en la capa superior y dirt debajo, dentro del rango de altura.
+     * Devuelve la posición de la base (primer bloque de aire sobre el césped) o null.
+     */
+    private static BlockPos goodPadAt(ServerLevel level, int cx, int cz) {
+        int half = ModStructureSegments.KAMI_PAD_SIZE / 2;
+        int y = surfaceY(level, cx, cz);
+        if (y < ModStructureSegments.KAMI_PAD_MIN_Y || y > ModStructureSegments.KAMI_PAD_MAX_Y) return null;
+
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        for (int x = cx - half; x <= cx + half; x++) {
+            for (int z = cz - half; z <= cz + half; z++) {
+                if (surfaceY(level, x, z) != y) return null;                          // plano exacto
+                m.set(x, y - 1, z);
+                if (!level.getBlockState(m).is(Blocks.GRASS_BLOCK)) return null;      // césped arriba
+                m.set(x, y - 2, z);
+                if (!level.getBlockState(m).is(Blocks.DIRT)) return null;             // dirt debajo
+            }
+        }
+        return new BlockPos(cx, y, cz);
+    }
+
+    /**
+     * Altura del primer bloque de aire sobre la superficie, FORZANDO la generación del chunk.
+     * (Level.getHeight sin chunk cargado devuelve la altura mínima del mundo → bug de la bedrock.)
+     */
     private static int surfaceY(ServerLevel level, int x, int z) {
-        return level.getHeight(Heightmap.Types.OCEAN_FLOOR, x, z);
+        ChunkAccess chunk = level.getChunk(x >> 4, z >> 4);
+        return chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15) + 1;
     }
 
     /** Garantiza que el palacio del otro mundo exista antes de teletransportar. */
