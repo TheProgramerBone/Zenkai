@@ -24,7 +24,7 @@ public final class NoHostileSpawnHandler {
         if (!(event.getEntity() instanceof Enemy)) return;
 
         ServerLevel level = event.getLevel().getLevel();
-        if (ModGameRules.enableStructureProtection(level.getServer())) return;
+        if (!ModGameRules.enableStructureProtection(level.getServer())) return;
 
         ResourceKey<Level> dim = level.dimension();
         if (NoHostileSpawnZones.isProtected(dim, event.getX(), event.getY(), event.getZ())) {

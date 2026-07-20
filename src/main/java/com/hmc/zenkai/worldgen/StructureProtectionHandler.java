@@ -2,7 +2,10 @@ package com.hmc.zenkai.worldgen;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.ModGameRules;
+import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -23,19 +26,37 @@ public final class StructureProtectionHandler {
     @SubscribeEvent
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
-        if (player.isCreative()) return;
         Level level = player.level();
         if (level.isClientSide || level.getServer() == null) return;
 
         BlockPos pos = event.getPos();
+        boolean inZone = NoHostileSpawnZones.isProtected(
+                level.dimension(), pos.getX(), pos.getY(), pos.getZ());
+
+        // Más allá: FUERA de las zonas del palacio no se construye (creativo sí puede).
+        // Nota: no depende de la gamerule de protección, es una regla propia del más allá.
+        if (!player.isCreative() && player instanceof ServerPlayer sp
+                && OtherworldManager.isInOtherworld(sp) && !inZone) {
+            event.setCanceled(true);
+            resyncAfterCancel(player, pos);
+            return;
+        }
+
         if (isProtectedArea(level, pos)) return;
-        PlayerPlacedBlocks.get(level.getServer()).add(level.dimension(), pos);
+
+        PlayerPlacedBlocks data = PlayerPlacedBlocks.get(level.getServer());
+        if (player.isCreative()) {
+            // Creativo construye ESTRUCTURA: no se registra como "del jugador", así que en
+            // survival no se puede romper. Limpiamos cualquier registro previo en esa posición.
+            data.remove(level.dimension(), pos);
+            return;
+        }
+        data.add(level.dimension(), pos);
     }
 
     @SubscribeEvent
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
         Player player = event.getPlayer();
-        if (player.isCreative()) return;
         Level level = player.level();
         if (level.isClientSide || level.getServer() == null) return;
 
@@ -43,17 +64,44 @@ public final class StructureProtectionHandler {
         if (isProtectedArea(level, pos)) return; // fuera de zona: reglas normales
 
         PlayerPlacedBlocks data = PlayerPlacedBlocks.get(level.getServer());
+        if (player.isCreative()) {
+            data.remove(level.dimension(), pos); // limpieza: la posición vuelve a ser estructura
+            return;
+        }
+
         if (data.contains(level.dimension(), pos)) {
             data.remove(level.dimension(), pos);  // era del jugador → se puede romper
         } else {
             event.setCanceled(true);              // bloque original de la estructura → protegido
+            resyncAfterCancel(player, pos);
+
+            String protector = NoHostileSpawnZones.getProtector(
+                    level.dimension(), pos.getX(), pos.getY(), pos.getZ());
+            player.displayClientMessage(
+                    protector != null
+                            ? Component.translatable("messages.zenkai.cannot_break",
+                            Component.translatable(protector))
+                            : Component.translatable("messages.zenkai.cannot_break_generic"),
+                    true);
         }
+    }
+
+    /**
+     * Sincroniza al cliente tras cancelar una colocación/rotura: el cliente predice el cambio
+     * (bloque puesto/roto + ítem descontado) y sin esto queda desincronizado en multijugador.
+     */
+    private static void resyncAfterCancel(net.minecraft.world.entity.player.Player player, BlockPos pos) {
+        if (!(player instanceof net.minecraft.server.level.ServerPlayer sp)) return;
+        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket(sp.level(), pos));
+        for (net.minecraft.core.Direction d : net.minecraft.core.Direction.values()) {
+            sp.connection.send(new net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket(sp.level(), pos.relative(d)));
+        }
+        sp.containerMenu.sendAllDataToRemote();
     }
 
     private static boolean isProtectedArea(Level level, BlockPos pos) {
         if (level.getServer() == null) return true;
         if (!ModGameRules.enableStructureProtection(level.getServer())) return true;
-        if (level.dimension() == ModDimensions.HTC_LEVEL) return true;
         return !NoHostileSpawnZones.isProtected(level.dimension(), pos.getX(), pos.getY(), pos.getZ());
     }
 
