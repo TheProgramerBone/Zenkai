@@ -1,6 +1,7 @@
 package com.hmc.zenkai.util;
 
 import com.hmc.zenkai.Zenkai;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
@@ -28,5 +29,11 @@ public class ModTags {
             return ItemTags.create(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,name));
         }
 
+    }
+
+    public static class Structures {
+        public static final TagKey<net.minecraft.world.level.levelgen.structure.Structure> DRAGON_BALLS =
+                TagKey.create(Registries.STRUCTURE,
+                        ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "dragon_balls"));
     }
 }

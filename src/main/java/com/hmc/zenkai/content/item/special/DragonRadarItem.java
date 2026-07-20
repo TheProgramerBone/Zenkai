@@ -117,6 +117,13 @@ public class DragonRadarItem extends Item {
         }
     }
 
+    /**
+     * Híbrido: primero escaneo de bloques cercano (exacto, y respeta esferas ya recogidas
+     * o dejadas en otro sitio); si no hay nada cerca, localiza la ESTRUCTURA más próxima
+     * vía el tag zenkai:dragon_balls (como /locate, sin límite práctico de distancia).
+     * Limitación conocida: si alguien saqueó la estructura, el radar seguirá apuntando
+     * a su posición hasta que el jugador llegue y el escaneo cercano no encuentre nada.
+     */
     private BlockPos findNearestDragonBall(Level level, BlockPos origin) {
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
         BlockPos nearest = null;
@@ -124,20 +131,14 @@ public class DragonRadarItem extends Item {
 
         final int minY = level.getMinBuildHeight();
         final int maxY = level.getMaxBuildHeight() - 1; // inclusive
-        int startX = origin.getX() - DETECTION_RADIUS;
-        int endX   = origin.getX() + DETECTION_RADIUS;
         int startY = Math.max(minY, origin.getY() - DETECTION_RADIUS);
         int endY   = Math.min(maxY, origin.getY() + DETECTION_RADIUS);
-        int startZ = origin.getZ() - DETECTION_RADIUS;
-        int endZ   = origin.getZ() + DETECTION_RADIUS;
 
-        for (int x = startX; x <= endX; x++) {
-            for (int z = startZ; z <= endZ; z++) {
-
+        for (int x = origin.getX() - DETECTION_RADIUS; x <= origin.getX() + DETECTION_RADIUS; x++) {
+            for (int z = origin.getZ() - DETECTION_RADIUS; z <= origin.getZ() + DETECTION_RADIUS; z++) {
                 for (int y = startY; y <= endY; y++) {
                     mutable.set(x, y, z);
-                    BlockState state = level.getBlockState(mutable);
-                    if (state.is(ModTags.Blocks.DRAGON_BALLS_BLOCK)) {
+                    if (level.getBlockState(mutable).is(ModTags.Blocks.DRAGON_BALLS_BLOCK)) {
                         double distSqr = origin.distSqr(mutable);
                         if (distSqr < closestDistanceSqr) {
                             closestDistanceSqr = distSqr;
@@ -146,6 +147,13 @@ public class DragonRadarItem extends Item {
                     }
                 }
             }
+        }
+        if (nearest != null) return nearest;
+
+        // Lejos: localizar la estructura más cercana (radio en CHUNKS; false = no saltar generadas).
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            return serverLevel.findNearestMapStructure(
+                    ModTags.Structures.DRAGON_BALLS, origin, 200, false);
         }
         return nearest;
     }
