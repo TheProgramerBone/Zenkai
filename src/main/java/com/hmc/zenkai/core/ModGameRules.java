@@ -28,11 +28,6 @@ public final class ModGameRules {
             GameRules.register("zenkai_enableKiDamage", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
-    /** Si false, el servidor rechaza el packet de transformación. */
-    public static final GameRules.Key<GameRules.BooleanValue> ENABLE_TRANSFORMATIONS =
-            GameRules.register("zenkai_enableTransformations", GameRules.Category.MISC,
-                    GameRules.BooleanValue.create(true));
-
     /** Si false, el bloque de las 7 esferas no invoca a Shenlong. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_SHENLONG_SUMMON =
             GameRules.register("zenkai_enableSummon", GameRules.Category.MISC,
@@ -73,10 +68,6 @@ public final class ModGameRules {
 
     public static boolean enableKiDamage(MinecraftServer server) {
         return server.getGameRules().getBoolean(ENABLE_KI_DAMAGE);
-    }
-
-    public static boolean enableTransformations(MinecraftServer server) {
-        return server.getGameRules().getBoolean(ENABLE_TRANSFORMATIONS);
     }
 
     public static boolean enableShenlongSummon(MinecraftServer server) {

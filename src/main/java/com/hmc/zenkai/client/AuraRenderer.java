@@ -115,7 +115,7 @@ public final class AuraRenderer {
     /** Última posición vista por jugador (para velocidad REAL por delta de posición). */
     private static final Map<Integer, Vec3> TILT_LAST_POS = new HashMap<>();
 
-    // ── ÁNGULOS DEL AURA POR ESTADO DE ANIMACIÓN DE VUELO ────────────────────
+    // ÁNGULOS DEL AURA POR ESTADO DE ANIMACIÓN DE VUELO
     // El aura ya no adivina por velocidad: copia la POSE de tus animaciones fly.*.
     // pitchDeg: grados desde la vertical HACIA EL FRENTE del cuerpo (negativo = hacia atrás).
     // sideDeg:  grados hacia la DERECHA del cuerpo (negativo = izquierda).
@@ -217,7 +217,7 @@ public final class AuraRenderer {
     private static void updateAndRenderFlightTrail(PoseStack pose, MultiBufferSource buffers,
                                                    AbstractClientPlayer p, Vec3 at,
                                                    Vec3 camPos, int rgb, Motion mo) {
-        var trail = TRAILS.computeIfAbsent(p.getId(), k -> new ArrayDeque<Vec3>());
+        var trail = TRAILS.computeIfAbsent(p.getId(), k -> new ArrayDeque<>());
         Vec3 head = at.add(0, p.getBbHeight() * 0.5, 0);
 
         boolean moving = mo.flying() && mo.vel().length() > TRAIL_MIN_SPEED;
@@ -240,7 +240,7 @@ public final class AuraRenderer {
         float b = (rgb & 0xFF) / 255f;
 
         pose.pushPose();
-        pose.translate(-camPos.x, -camPos.y, -camPos.z); // verts en coords de mundo
+        pose.translate(-camPos.x, -camPos.y, -camPos.z); // vertices en coordenadas de mundo
         VertexConsumer vc = buffers.getBuffer(
                 RenderType.entityTranslucentEmissive(TRAIL_TEXTURE));
         PoseStack.Pose mat = pose.last();
@@ -350,7 +350,7 @@ public final class AuraRenderer {
         }
     }
 
-    /** Plano-llama vertical: nace en y=0 (piso), sube a y=h, ancho w centrado, en z=0. */
+    /** Plano-llama vertical: nace en y=0 (piso), sube a y=h, ancho centrado, en z=0. */
     private static void plane(VertexConsumer vc, PoseStack.Pose m, float w, float h,
                               float r, float g, float b, float a) {
         vert(vc, m, -w / 2, 0f, 0f, 1f, r, g, b, a);

@@ -123,12 +123,31 @@ public final class TechniqueHotbarOverlay {
             g.drawCenteredString(mc.font,
                     Component.literal((int) Math.round(ratio * 100) + "%"),
                     g.guiWidth() / 2, by + CHARGE_H + 3, 0xFFFFFFFF);
+
+            if (t != null && !t.type().defensive) {
+                double dmg = previewDamage(mc, att, t, ratio);
+                String dmgTxt = String.format("%.1f", dmg);
+                if (t.type().count > 1) dmgTxt = dmgTxt + " x" + t.type().count;
+                g.drawCenteredString(mc.font, Component.literal(dmgTxt),
+                        g.guiWidth() / 2, by + CHARGE_H + 13,
+                        releasable ? (0xFF000000 | rgb) : 0xA0FFFFFF);
+            }
         }
 
-        // ── Ícono de DEFENSA (centro de pantalla) mientras se bloquea ──
+        // Ícono de DEFENSA (centro de pantalla) mientras se bloquea
         if (CombatModeClientState.isBlockingLocal()) {
             g.blit(ICONS_TEX, g.guiWidth() / 2 - 10, g.guiHeight() / 2 - 10 - 16,
                     BLOCK_ICON_U, BLOCK_ICON_V, 20, 20, 270, 270);
         }
+    }
+
+    /** Daño estimado del disparo actual (espeja KiFirePacket + KiCombatServer.computeDamage). */
+    private static double previewDamage(Minecraft mc, PlayerStatsAttachment att,
+                                        KiTechnique t, double ratio) {
+        if (mc.player == null || t == null || t.type().defensive) return 0;
+        double kiPower = att.computeKiPowerFinal()
+                * com.hmc.zenkai.core.mastery.MasteryEffects.formStatFactor(mc.player);
+        return com.hmc.zenkai.core.technique.KiCombatServer
+                .computeDamage(kiPower, t.type(), t.size()) * ratio;
     }
 }

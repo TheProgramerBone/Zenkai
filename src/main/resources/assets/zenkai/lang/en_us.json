@@ -158,6 +158,8 @@
   "messages.zenkai.sense_ki.mobs_strong": "Sense Ki: Similar or Stronger Mobs",
   "messages.zenkai.scouter.on": "Scouter: On",
   "messages.zenkai.scouter.off": "Scouter: Off",
+  "messages.zenkai.cannot_break": "§cThis block is protected by %s",
+  "messages.zenkai.cannot_break_generic": "§cThis block is protected",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Yemma",

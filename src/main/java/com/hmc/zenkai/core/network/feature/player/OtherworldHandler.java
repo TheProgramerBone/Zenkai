@@ -56,17 +56,4 @@ public final class OtherworldHandler {
 
         OtherworldManager.respawnIntoOtherworld(player);
     }
-
-    @SubscribeEvent
-    public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (!OtherworldManager.isInOtherworld(player)) return;
-        if (player.isCreative()) return; // en creativo sí puede
-        // Dentro de una zona protegida (el palacio) SÍ se puede construir: lo gestiona
-        // StructureProtectionHandler (registrar + romper solo lo propio). Fuera del palacio,
-        // en el más allá no se construye.
-        BlockPos p = event.getPos();
-        if (NoHostileSpawnZones.isProtected(player.level().dimension(), p.getX(), p.getY(), p.getZ())) return;
-        event.setCanceled(true);
-    }
 }
