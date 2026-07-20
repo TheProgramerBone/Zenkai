@@ -22,8 +22,6 @@ public class PlayerVisualAttachment {
     private int hairColorRgb   = 0x000000; // negro por defecto
     private int eyeColorRgb    = 0x000000; // negro por defecto
     private int auraColorRgb   = 0x33CCFF; // ki azul
-    private int detailColorRgb = 0x9B59B6; // detalles del cuerpo (Arcosian / Namek capa 2)
-    private int lineColorRgb   = 0x2E7D32; // líneas de detalle del cuerpo (Namek capa 3)
     // ── Colores por layer numerado (escalable: canal "layer" + índice en el JSON) ──
     private final java.util.List<Integer> layerColors = new java.util.ArrayList<>();
 
@@ -146,8 +144,6 @@ public class PlayerVisualAttachment {
         tag.putInt("hairColor",   hairColorRgb);
         tag.putInt("eyeColor",    eyeColorRgb);
         tag.putInt("auraColor",   auraColorRgb);
-        tag.putInt("detailColor", detailColorRgb);
-        tag.putInt("lineColor",   lineColorRgb);
 
         tag.putInt("eyeIndex",   eyeIndex);
         tag.putInt("hairIndex",  hairIndex);
@@ -182,8 +178,6 @@ public class PlayerVisualAttachment {
         if (tag.contains("hairColor"))   this.hairColorRgb   = tag.getInt("hairColor");
         if (tag.contains("eyeColor"))    this.eyeColorRgb    = tag.getInt("eyeColor");
         if (tag.contains("auraColor"))   this.auraColorRgb   = tag.getInt("auraColor");
-        if (tag.contains("detailColor")) this.detailColorRgb = tag.getInt("detailColor");
-        if (tag.contains("lineColor"))   this.lineColorRgb   = tag.getInt("lineColor");
 
         if (tag.contains("eyeIndex"))   this.eyeIndex   = Math.max(0, tag.getInt("eyeIndex"));
         if (tag.contains("hairIndex"))  this.hairIndex  = Math.max(0, tag.getInt("hairIndex"));

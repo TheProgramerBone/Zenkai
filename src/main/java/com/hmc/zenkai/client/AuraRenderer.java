@@ -163,6 +163,7 @@ public final class AuraRenderer {
         var fp = ClientZenkaiPalTick.flyPoseOf(p.getUUID());
         if (mo.flying() && fp.dir() != null) {
             float[] ang = anglesFor(fp.dir(), fp.boosting());
+            assert ang != null;
             float pitch = (float) Math.toRadians(ang[0]);
             float side  = (float) Math.toRadians(ang[1]);
             if (Math.abs(pitch) > 1.0e-3f || Math.abs(side) > 1.0e-3f) {
@@ -317,7 +318,7 @@ public final class AuraRenderer {
             drawCone(pose, buffers.getBuffer(ModAuraRenderType.energyDark(tex)), rgb, scale, time, seed, wDark);
     }
 
-    private static float clamp01(float v) { return v < 0f ? 0f : (v > 1f ? 1f : v); }
+    private static float clamp01(float v) { return v < 0f ? 0f : (Math.min(v, 1f)); }
 
     /**
      * Dibuja el cono en el espacio actual del PoseStack (origen = pies, +Y arriba, bloques).

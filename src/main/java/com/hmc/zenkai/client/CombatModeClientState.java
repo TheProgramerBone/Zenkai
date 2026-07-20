@@ -78,7 +78,7 @@ public final class CombatModeClientState {
         if (chargingSlot < 0 || mc.player == null) return 0;
         KiTechnique t = PlayerStatsAttachment.get(mc.player).techniques().slot(chargingSlot);
         if (t == null) return 0;
-        return Math.min(1.0, chargeTicks / (double) Math.max(1, t.type().chargeTicks));
+        return Math.min(1.0, chargeTicks / (double) reqChargeFor(mc, t));
     }
 
     /** Fracción de cooldown RESTANTE del slot (0 = listo), para pintar el overlay. */
@@ -172,7 +172,7 @@ public final class CombatModeClientState {
                 cancelCharge();
             } else if (!held) {
                 // Soltar el número: DISPARA si llegó al mínimo; si no, cancela.
-                double ratio = chargeTicks / (double) Math.max(1, t.type().chargeTicks);
+                double ratio = chargeTicks / (double) reqChargeFor(mc, t);
                 if (ratio >= KiTechniqueType.MIN_CHARGE) {
                     PacketDistributor.sendToServer(new KiFirePacket(chargingSlot, chargeTicks));
                     if (mc.level != null) {
@@ -182,7 +182,7 @@ public final class CombatModeClientState {
                 }
                 cancelCharge();
             } else {
-                chargeTicks = Math.min(chargeTicks + 1, t.type().chargeTicks);
+                chargeTicks = Math.min(chargeTicks + 1, reqChargeFor(mc, t));
             }
         }
 
@@ -248,5 +248,13 @@ public final class CombatModeClientState {
         if (mc.level == null || t == null) return 0;
         long left = PHYS_READY_AT.getOrDefault(t.ordinal(), 0L) - mc.level.getGameTime();
         return left <= 0 ? 0 : Math.min(1.0, left / (double) Math.max(1, t.cooldownTicks));
+    }
+
+    private static int reqChargeFor(Minecraft mc, KiTechnique t) {
+        int base = Math.max(1, t.type().chargeTicks);
+        if (mc.player == null) return base;
+        var att = PlayerStatsAttachment.get(mc.player);
+        double castF = com.hmc.zenkai.core.mastery.MasteryEffects.techCastFactor(att, t.type().name());
+        return Math.max(1, (int) Math.round(t.type().chargeTicks * castF));
     }
 }
