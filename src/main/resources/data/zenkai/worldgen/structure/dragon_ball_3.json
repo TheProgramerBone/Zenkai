@@ -1,6 +1,6 @@
 {
   "type": "minecraft:jigsaw",
-  "biomes": "#minecraft:is_overworld",
+  "biomes": "#zenkai:has_structure/dragon_ball_3",
   "step": "surface_structures",
   "terrain_adaptation": "none",
   "start_pool": "zenkai:dragon_ball_3",
