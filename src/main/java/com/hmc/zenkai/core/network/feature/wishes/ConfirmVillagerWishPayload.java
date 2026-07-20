@@ -139,9 +139,9 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
                 }
 
                 player.displayClientMessage(Component.translatable("messages.zenkai.wish_villager_ready"), false);
-
-                // Cierre común del deseo (sonido, mensaje, quitar Shenlong).
-                WishFinalizer.finalizeWish(player);
+                WishFinalizer.finalizeWish(player, Component.translatable(
+                        "messages.zenkai.wish_desc.enchant_villager",
+                        Component.translatable(holder.value().description().getString())));
             });
         }
     }

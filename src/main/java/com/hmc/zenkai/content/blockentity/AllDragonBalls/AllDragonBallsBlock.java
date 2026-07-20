@@ -7,6 +7,7 @@ import com.hmc.zenkai.content.sound.ModSounds;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.WishConfig;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.network.feature.wishes.WishBroadcast;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -92,7 +93,8 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
                 return InteractionResult.SUCCESS;
             }
 
-            player.displayClientMessage(Component.translatable("messages.zenkai.shenron_summon"), true);
+            WishBroadcast.nearby(
+                    player, Component.translatable("messages.zenkai.shenron_summon"), true);
             long currentTime = serverLevel.getDayTime();
             long timeOfDay = currentTime % 24000L;
             long ticksUntilNight = timeOfDay < 13000 ? 13000 - timeOfDay : (24000 - timeOfDay + 13000);

@@ -11,31 +11,28 @@ import java.util.List;
 public final class ModStructureSegments {
     private ModStructureSegments() {}
 
-    // ── KAMI (overworld, estructura única) ────────────────────────────────────
-    public static final BlockPos KAMI_BASE = new BlockPos(0, 64, 0);
 
-    // Anclaje de kami_1: true = nivel del mar; false = superficie del bioma
-    public static final boolean KAMI_ANCHOR_SEA_LEVEL = true;
-    // Radio inicial y tope del auto-expandible (bloques)
-    public static final int KAMI_SEARCH_RADIUS = 500;
-    public static final int KAMI_MAX_SEARCH_RADIUS = 8000;
-    // ── Búsqueda de terreno PLANO del tamaño de kami_1 (para que la base no quede en pendiente) ──
-    // Tamaño (X=Z) de la base kami_1 que debe caber en terreno plano.
-    public static final int KAMI_FOOTPRINT = 15;
-    // Radio (bloques) alrededor del punto del bioma donde se busca el cuadro plano.
-    public static final int KAMI_FLAT_SEARCH_RADIUS = 64;
-    // Paso del muestreo (más pequeño = más preciso pero genera más chunks al arrancar).
-    public static final int KAMI_FLAT_STEP = 8;
-    // Desnivel máximo tolerado en el cuadro (bloques). Si no encuentra, relaja hasta 8 solo.
-    public static final int KAMI_FLAT_MAX_DIFF = 3;
-    // Ajuste fino de altura sobre el ancla (0 = justo en el ancla; +/- para subir/bajar)
     public static final int KAMI_Y_OFFSET = 0;
     // Bioma donde debe aparecer Kami (cámbialo al que quieras)
     public static final ResourceKey<Biome> KAMI_BIOME = Biomes.PLAINS;
     // Caja de protección RELATIVA a la base de Kami (offset desde la base + tamaño)
     public static final int KAMI_NO_SPAWN_OFF_X = -64, KAMI_NO_SPAWN_OFF_Y = 0, KAMI_NO_SPAWN_OFF_Z = -64;
     public static final int KAMI_NO_SPAWN_SX = 160, KAMI_NO_SPAWN_SY = 360, KAMI_NO_SPAWN_SZ = 160;
-    public static final BlockPos KAMI_NO_SPAWN_MIN = new BlockPos(KAMI_BASE.getX() - 64, KAMI_BASE.getY(), KAMI_BASE.getZ() - 64);
+
+    // ── Búsqueda del sitio de Kami (sistema único) ────────────────────────────
+    // Distancia MÍNIMA al spawn del mundo (bloques): obliga a explorar un poco.
+    public static final int KAMI_MIN_DIST_FROM_SPAWN = 500;
+    // Radio de búsqueda del bioma en cada intento (desde cada punto del anillo).
+    public static final int KAMI_BIOME_SEARCH_RADIUS = 1500;
+    // Radio (bloques) alrededor del punto del bioma donde se busca el pad válido.
+    public static final int KAMI_SITE_SEARCH_RADIUS = 96;
+    // Paso del barrido de candidatos (más pequeño = más fino, más chunks generados).
+    public static final int KAMI_SITE_STEP = 4;
+    // Lado del pad que debe ser césped plano con dirt debajo (5 = 5x5).
+    public static final int KAMI_PAD_SIZE = 5;
+    // Rango de altura aceptado para la superficie del pad ("alrededor de 60").
+    public static final int KAMI_PAD_MIN_Y = 58;
+    public static final int KAMI_PAD_MAX_Y = 72;
 
     public static final List<Segment> KAMI = List.of(
             Segment.of("kami_1",  0, 0, 0),   // 15×48×15

@@ -65,7 +65,9 @@ public record StackWishPayload() implements CustomPacketPayload {
                 player.containerMenu.broadcastChanges();
 
                 menu.clearChosenItem();
-                WishFinalizer.finalizeWish(player);
+                WishFinalizer.finalizeWish(player, Component.translatable(
+                        "messages.zenkai.wish_desc.stack",
+                        resolved.getCount(), resolved.getHoverName()));
             });
         }
     }

@@ -36,7 +36,8 @@ public record WishImmortalPayload() implements CustomPacketPayload {
                 player.displayClientMessage(Component.translatable("messages.zenkai.immortal"), false);
                 att.setImmortal(true);
 
-                WishFinalizer.finalizeWish(player);
+                WishFinalizer.finalizeWish(player, Component.translatable(
+                        "messages.zenkai.wish_desc.immortal"));
             });
         }
     }

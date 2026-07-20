@@ -39,7 +39,8 @@ public record WishTrainingPointsPayload() implements CustomPacketPayload {
                 player.displayClientMessage(
                         Component.translatable("messages.zenkai.training_points_granted", amount), false);
 
-                WishFinalizer.finalizeWish(player);
+                WishFinalizer.finalizeWish(player, Component.translatable(
+                        "messages.zenkai.wish_desc.training_points", amount));
             });
         }
     }

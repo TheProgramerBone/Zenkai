@@ -32,7 +32,6 @@ public final class ProtectedZoneMessageHandler {
         Level level = player.level();
         if (level.isClientSide) return;
 
-        // Si la protección está desactivada por game rule, no avisamos.
         if (level.getServer() != null && !ModGameRules.enableStructureProtection(level.getServer())) {
             LAST_ZONE.remove(player.getUUID());
             return;
