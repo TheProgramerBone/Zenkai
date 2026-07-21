@@ -27,7 +27,6 @@ import com.hmc.zenkai.core.network.TickHandlers;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
-import com.hmc.zenkai.core.network.feature.stats.FlyApplier;
 import com.hmc.zenkai.worldgen.ModFeatures;
 import com.hmc.zenkai.worldgen.ModOverworldRegion;
 import com.hmc.zenkai.worldgen.ModSurfaceRules;
@@ -97,7 +96,6 @@ public class Zenkai {
         IEventBus forgeBus = NeoForge.EVENT_BUS;
         forgeBus.register(PlayerLifeCycle.class);
         forgeBus.register(CombatZenkaiHooks.class);
-        forgeBus.register(FlyApplier.class);
         forgeBus.register(TickHandlers.class);
         forgeBus.register(ModCommands.class);
 
