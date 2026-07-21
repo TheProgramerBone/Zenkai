@@ -72,7 +72,7 @@ public class TechniqueEditScreen extends Screen {
             explosive = existing.explosive();
         } else {
             type = KiTechniqueType.BLAST;
-            rgb = type.defaultRgb;
+            rgb = type.defaultRgb();
             size = KiTechnique.MIN_SIZE;
             explosive = false;
         }
@@ -106,8 +106,15 @@ public class TechniqueEditScreen extends Screen {
                         .append(": ").append(Component.translatable(type.nameKey())),
                 dir -> {
                     KiTechniqueType[] all = KiTechniqueType.values();
-                    type = all[Math.floorMod(type.ordinal() + dir, all.length)];
-                    rgb = type.defaultRgb;
+                    // Saltar tipos sin JSON (desactivados). Si ninguno lo tiene, no mover.
+                    KiTechniqueType next = type;
+                    for (int i = 0; i < all.length; i++) {
+                        next = all[Math.floorMod(next.ordinal() + dir, all.length)];
+                        if (next.enabled()) break;
+                    }
+                    if (!next.enabled()) return;
+                    type = next;
+                    rgb = type.defaultRgb();
                     rebuildWidgets();
                 });
         y += ROW_H;
@@ -155,7 +162,10 @@ public class TechniqueEditScreen extends Screen {
 
         // ── Unlock (solo si el tipo está bloqueado) ──
         unlockButton = new TextOnlyButton(x, topPos + 196, contentW, 12,
-                Component.translatable("screen.zenkai.technique.unlock", type.tpCost),
+                type.mindReq() > 0
+                        ? Component.translatable("screen.zenkai.technique.unlock_mnd",
+                        type.tpCost(), type.mindReq())
+                        : Component.translatable("screen.zenkai.technique.unlock", type.tpCost()),
                 () -> PacketDistributor.sendToServer(TechniquePacket.unlock(type)));
         this.addRenderableWidget(unlockButton);
 
@@ -204,9 +214,12 @@ public class TechniqueEditScreen extends Screen {
     private void refreshButtons() {
         PlayerStatsAttachment att = att();
         boolean unlocked = att != null && att.techniques().isUnlocked(type);
-        unlockButton.visible = !unlocked && !pickerOpen;
-        unlockButton.active = !unlocked && att != null && att.getTP() >= type.tpCost;
-        saveButton.active = unlocked && !KiTechnique.sanitizeName(nameBox.getValue()).isEmpty();
+        unlockButton.visible = !unlocked && !pickerOpen && type.enabled();
+        unlockButton.active = !unlocked && type.enabled() && att != null
+                && att.getTP() >= type.tpCost()
+                && att.getAttribute(com.hmc.zenkai.core.network.feature.ZenkaiAttributes.MIND) >= type.mindReq();
+        saveButton.active = unlocked && type.enabled()
+                && !KiTechnique.sanitizeName(nameBox.getValue()).isEmpty();
     }
 
     @Override
@@ -232,9 +245,9 @@ public class TechniqueEditScreen extends Screen {
         if (att != null && !pickerOpen) {
             double kiPower = att.computeKiPowerFinal();
             double dmg = KiCombatServer.computeDamage(kiPower, type, size)
-                    * Math.max(1, type.count);
+                    * Math.max(1, type.count());
             int cost = KiCombatServer.computeCost(att.getEnergyMax(), type, size,
-                    explosive && !type.defensive);
+                    explosive && !type.defensive());
 
             int iy = topPos + 118;
             info(g, iy, "screen.zenkai.technique.speed", speedLabel());
@@ -243,9 +256,9 @@ public class TechniqueEditScreen extends Screen {
             info(g, iy += 12, "screen.zenkai.technique.cost",
                     Component.literal(String.valueOf(cost)));
             info(g, iy += 12, "screen.zenkai.technique.casttime",
-                    Component.literal(fmt(type.chargeTicks / 20.0) + " sec"));
+                    Component.literal(fmt(type.chargeTicks() / 20.0) + " sec"));
             info(g, iy += 12, "screen.zenkai.technique.cooldown",
-                    Component.literal(fmt(type.cooldownTicks / 20.0) + " sec"));
+                    Component.literal(fmt(type.cooldownTicks() / 20.0) + " sec"));
 
             g.drawString(this.font, Component.literal("TP: " + att.getTP()),
                     leftPos + 16, topPos + 182, 0xFFFFD700, true);
@@ -259,9 +272,9 @@ public class TechniqueEditScreen extends Screen {
     }
 
     private Component speedLabel() {
-        String k = type.defensive ? "screen.zenkai.technique.speed.none"
-                : type.speed <= 0.9f ? "screen.zenkai.technique.speed.slow"
-                : type.speed <= 1.4f ? "screen.zenkai.technique.speed.average"
+        String k = type.defensive() ? "screen.zenkai.technique.speed.none"
+                : type.speed() <= 0.9f ? "screen.zenkai.technique.speed.slow"
+                : type.speed() <= 1.4f ? "screen.zenkai.technique.speed.average"
                 : "screen.zenkai.technique.speed.fast";
         return Component.translatable(k);
     }

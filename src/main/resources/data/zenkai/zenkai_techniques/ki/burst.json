@@ -1,0 +1,12 @@
+{
+  "tp_cost": 600,
+  "mind_req": 12,
+  "damage_mult": 0.22,
+  "ki_cost_mult": 0.9,
+  "charge_ticks": 25,
+  "cooldown_ticks": 40,
+  "speed": 1.6,
+  "count": 5,
+  "defensive": false,
+  "default_rgb": "0xFFF3A0"
+}

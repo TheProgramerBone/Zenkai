@@ -2,6 +2,7 @@ package com.hmc.zenkai.core.network.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.config.StatsConfig;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.technique.KiTechnique;
@@ -95,16 +96,17 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
 
     private static boolean handleUnlock(PlayerStatsAttachment att, TechniquePacket pkt) {
         KiTechniqueType type = KiTechniqueType.byName(pkt.typeName());
-        if (type == null || att.techniques().isUnlocked(type)) return false;
-        if (att.getTP() < type.tpCost) return false;
-        att.addTP(-type.tpCost);
+        if (type == null || !type.enabled() || att.techniques().isUnlocked(type)) return false;
+        if (att.getAttribute(ZenkaiAttributes.MIND) < type.mindReq()) return false;
+        if (att.getTP() < type.tpCost()) return false;
+        att.addTP(-type.tpCost());
         att.techniques().unlock(type);
         return true;
     }
 
     private static boolean handleSave(PlayerStatsAttachment att, TechniquePacket pkt) {
         KiTechniqueType type = KiTechniqueType.byName(pkt.typeName());
-        if (type == null || !att.techniques().isUnlocked(type)) return false;
+        if (type == null || !type.enabled() || !att.techniques().isUnlocked(type)) return false;
         String name = KiTechnique.sanitizeName(pkt.name());
         if (name.isEmpty()) return false;
         int size = KiTechnique.clampSize(pkt.size());

@@ -13,8 +13,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public record TransformHoldPacket(Action action, boolean active) implements CustomPacketPayload {
 
     public enum Action {
-        TRANSFORM_HOLD, // ALT + C (hold)
-        DETRANSFORM     // SHIFT + C (tap o hold, da igual)
+        TRANSFORM_HOLD, // B sostenido
+        DETRANSFORM     // B toque
     }
 
     public static final Type<TransformHoldPacket> TYPE =

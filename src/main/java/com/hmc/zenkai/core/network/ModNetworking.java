@@ -19,10 +19,7 @@ import com.hmc.zenkai.core.network.feature.sense.*;
 import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.core.network.feature.skills.SkillSyncPacket;
 import com.hmc.zenkai.core.network.feature.stats.*;
-import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
-import com.hmc.zenkai.core.network.feature.technique.PhysicalFirePacket;
-import com.hmc.zenkai.core.network.feature.technique.PhysicalTechniquePacket;
-import com.hmc.zenkai.core.network.feature.technique.TechniquePacket;
+import com.hmc.zenkai.core.network.feature.technique.*;
 import com.hmc.zenkai.core.network.feature.training.TrainingSwingPacket;
 import com.hmc.zenkai.core.network.feature.wishes.*;
 import com.hmc.zenkai.core.network.vehicle.VehicleControlPayload;
@@ -286,5 +283,9 @@ public class ModNetworking {
                 TurboSyncPacket.STREAM_CODEC,
                 TurboSyncPacket::handle);
 
+        registrar.playToClient(
+                TechniqueSyncPacket.TYPE,
+                TechniqueSyncPacket.STREAM_CODEC,
+                TechniqueSyncPacket::handle);
     }
 }

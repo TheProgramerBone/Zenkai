@@ -90,7 +90,7 @@ public final class CombatModeClientState {
         if (now >= ready) return 0;
         KiTechnique t = mc.player == null ? null
                 : PlayerStatsAttachment.get(mc.player).techniques().slot(slot);
-        int total = t == null ? 20 : Math.max(1, t.type().cooldownTicks);
+        int total = t == null ? 20 : Math.max(1, t.type().cooldownTicks());
         return Math.min(1.0, (ready - now) / (double) total);
     }
 
@@ -142,14 +142,20 @@ public final class CombatModeClientState {
 
         // ── Actuar sobre la casilla seleccionada ──
         if (pressedSelected && active && inGame && handsFree && mc.level != null) {
-            var techniques = PlayerStatsAttachment.get(mc.player).techniques();
+            var att = PlayerStatsAttachment.get(mc.player);
+            var techniques = att.techniques();
             PhysicalTechnique phys = techniques.physicalBinding(selected);
             if (phys != null) {
                 // Física: instantánea (con cooldown local optimista + anim).
                 long now = mc.level.getGameTime();
-                if (PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
+                // Espeja PhysicalCombatServer.tryExecute: sin estamina no se dispara y,
+                // NO se arranca el cooldown local (si no, la tecla queda muerta en balde).
+                int cost = (int) Math.ceil(att.getStaminaMax() * phys.staminaPct()
+                        * com.hmc.zenkai.core.mastery.MasteryEffects.techCostFactor(att, phys.name()));
+                boolean canPay = phys.enabled() && att.getStamina() >= cost;
+                if (canPay && PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
                     PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
-                    PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks); // optimista
+                    PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks()); // optimista
                     ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: pendiente)
                 }
             } else if (chargingSlot < 0) {
@@ -171,13 +177,20 @@ public final class CombatModeClientState {
             if (!active || !inGame || !handsFree || t == null) {
                 cancelCharge();
             } else if (!held) {
-                // Soltar el número: DISPARA si llegó al mínimo; si no, cancela.
+                // Soltar el número: DISPARA si llegó al mínimo y hay ki; si no, cancela.
                 double ratio = chargeTicks / (double) reqChargeFor(mc, t);
-                if (ratio >= KiTechniqueType.MIN_CHARGE) {
+                var fAtt = PlayerStatsAttachment.get(mc.player);
+                boolean defensive = t.type().defensive();
+                int fCost = (int) Math.max(1, Math.ceil(
+                        com.hmc.zenkai.core.technique.KiCombatServer.computeCost(
+                                fAtt.getEnergyMax(), t.type(), t.size(),
+                                t.explosive() && !defensive)
+                                * (defensive ? 1.0 : ratio) * fAtt.powerFraction()));
+                if (ratio >= KiTechniqueType.MIN_CHARGE && fAtt.getEnergy() >= fCost) {
                     PacketDistributor.sendToServer(new KiFirePacket(chargingSlot, chargeTicks));
                     if (mc.level != null) {
                         READY_AT.put(chargingSlot,
-                                mc.level.getGameTime() + t.type().cooldownTicks);
+                                mc.level.getGameTime() + t.type().cooldownTicks());
                     }
                 }
                 cancelCharge();
@@ -247,14 +260,14 @@ public final class CombatModeClientState {
     public static double physCooldownFraction(Minecraft mc, PhysicalTechnique t) {
         if (mc.level == null || t == null) return 0;
         long left = PHYS_READY_AT.getOrDefault(t.ordinal(), 0L) - mc.level.getGameTime();
-        return left <= 0 ? 0 : Math.min(1.0, left / (double) Math.max(1, t.cooldownTicks));
+        return left <= 0 ? 0 : Math.min(1.0, left / (double) Math.max(1, t.cooldownTicks()));
     }
 
     private static int reqChargeFor(Minecraft mc, KiTechnique t) {
-        int base = Math.max(1, t.type().chargeTicks);
+        int base = Math.max(1, t.type().chargeTicks());
         if (mc.player == null) return base;
         var att = PlayerStatsAttachment.get(mc.player);
         double castF = com.hmc.zenkai.core.mastery.MasteryEffects.techCastFactor(att, t.type().name());
-        return Math.max(1, (int) Math.round(t.type().chargeTicks * castF));
+        return Math.max(1, (int) Math.round(t.type().chargeTicks() * castF));
     }
 }

@@ -30,21 +30,20 @@ public final class KeyBindings {
     public static KeyMapping TURBO;
     public static KeyMapping COMBAT_MODE;
 
-    /** Modificador configurable para transformar + C (default ALT) */
-    public static KeyMapping TRANSFORM_MOD;
+    /** Z: baja el % de poder en escalones (Ki Control). */
+    public static KeyMapping POWER_DOWN;
 
-    /** Modificador configurable para destransformar + C (default SHIFT) */
-    public static KeyMapping DETRANSFORM_MOD;
+    /** B: toque = destransformar, sostenido = transformar (la máquina de hold es del servidor). */
+    public static KeyMapping FORM;
 
     private static boolean REGISTERED = false;
 
     private static boolean lastChargeSent = false;
     private static boolean lastTransformSent = false;
 
-    // Detransform hold 3s = 60 ticks
-    private static final int DETRANSFORM_HOLD_REQUIRED_TICKS = 60;
-    private static int detransformHoldTicks = 0;
-    private static boolean detransformTriggered = false;
+    /** Soltar FORM antes de esto = toque (destransformar). Más largo = intento de transformación. */
+    private static final int FORM_TAP_MAX_TICKS = 6;
+    private static int formHeldTicks = 0;
 
     // Llamado SOLO desde tu evento RegisterKeyMappingsEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
@@ -73,21 +72,21 @@ public final class KeyBindings {
         );
         event.register(CHARGE_KI);
 
-        // Modificador para transformar (default ALT)
-        TRANSFORM_MOD = new KeyMapping(
-                "key.zenkai.transform_modifier",
-                GLFW.GLFW_KEY_LEFT_ALT,
+        // Z = bajar el % de poder
+        POWER_DOWN = new KeyMapping(
+                "key.zenkai.power_down",
+                GLFW.GLFW_KEY_Z,
                 "key.categories.zenkai"
         );
-        event.register(TRANSFORM_MOD);
+        event.register(POWER_DOWN);
 
-        // Modificador para destransformar (default SHIFT)
-        DETRANSFORM_MOD = new KeyMapping(
-                "key.zenkai.detransform_modifier",
-                GLFW.GLFW_KEY_LEFT_SHIFT,
+        // B = transformar (hold) / destransformar (tap)
+        FORM = new KeyMapping(
+                "key.zenkai.form",
+                GLFW.GLFW_KEY_H,
                 "key.categories.zenkai"
         );
-        event.register(DETRANSFORM_MOD);
+        event.register(FORM);
 
         SENSE_KI = new KeyMapping("key.zenkai.sense_ki", GLFW.GLFW_KEY_F4, "key.categories.zenkai");
         event.register(SENSE_KI);
@@ -159,95 +158,80 @@ public final class KeyBindings {
         PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
         boolean hasRace = stats.isRaceChosen();
 
-        // Gate: sin raza, cortar
+        // Gate: sin raza, cortar y vaciar colas. Sin el drenaje, los clicks se acumulan
+        // y se disparan todos de golpe la próxima vez que alguien los consuma.
         if (!hasRace) {
             stopChargeIfNeeded();
             stopTransformHoldIfNeeded();
-
-            detransformHoldTicks = 0;
-            detransformTriggered = false;
+            drainClicks(CHARGE_KI);
+            drainClicks(POWER_DOWN);
+            drainClicks(FORM);
+            drainClicks(COMBAT_MODE);
+            formHeldTicks = 0;
             return;
         }
 
-        boolean cDown = (CHARGE_KI != null && CHARGE_KI.isDown());
-        boolean transformModDown = (TRANSFORM_MOD != null && TRANSFORM_MOD.isDown());
-        boolean detransformModDown = (DETRANSFORM_MOD != null && DETRANSFORM_MOD.isDown());
+        // ── B: sostenido = transformar, toque = volver a base ──────────────
+        boolean formDown = false;
+        if (FORM != null) {
+            drainClicks(FORM); // el estado lo lleva formHeldTicks, no la cola
+            formDown = FORM.isDown();
 
-        // ======================================================
-        // PRIORIDAD 1: DETRANSFORM (hold 3s) = DETRANSFORM_MOD + C
-        // ======================================================
-        boolean detransformNow = detransformModDown && cDown;
-
-        if (detransformNow) {
-            // Si está intentando destransformar, no puede correr ni transform ni ki
-            stopChargeIfNeeded();
-            stopTransformHoldIfNeeded();
-
-            if (!detransformTriggered) {
-                detransformHoldTicks++;
-                if (detransformHoldTicks >= DETRANSFORM_HOLD_REQUIRED_TICKS) {
-                    detransformTriggered = true;
-
-                    // feedback local: cortar hold (si tu PAL lo usa)
-                    var form = player.getData(DataAttachments.PLAYER_FORM.get());
-                    form.setTransformHeld(false);
-
+            if (formDown) {
+                formHeldTicks++;
+            } else if (formHeldTicks > 0) {
+                // Toque corto = destransformar. Un hold largo abortado no hace nada:
+                // el servidor ya descartó el progreso al dejar de recibir transformHeld.
+                if (formHeldTicks <= FORM_TAP_MAX_TICKS) {
                     PacketDistributor.sendToServer(new TransformHoldPacket(
-                            TransformHoldPacket.Action.DETRANSFORM, true
-                    ));
+                            TransformHoldPacket.Action.DETRANSFORM, true));
                 }
+                formHeldTicks = 0;
             }
-            return;
-        } else {
-            detransformHoldTicks = 0;
-            detransformTriggered = false;
+
+            if (formDown != lastTransformSent) {
+                lastTransformSent = formDown;
+
+                // feedback local
+                var form = player.getData(DataAttachments.PLAYER_FORM.get());
+                form.setTransformHeld(formDown);
+
+                PacketDistributor.sendToServer(new TransformHoldPacket(
+                        TransformHoldPacket.Action.TRANSFORM_HOLD, formDown));
+            }
         }
 
-        // ======================================================
-        // PRIORIDAD 2: TRANSFORM HOLD = TRANSFORM_MOD + C
-        // ======================================================
-        boolean transformNow = transformModDown && cDown;
-
-        if (transformNow != lastTransformSent) {
-            lastTransformSent = transformNow;
-
-            // feedback local
-            var form = player.getData(DataAttachments.PLAYER_FORM.get());
-            form.setTransformHeld(transformNow);
-
-            PacketDistributor.sendToServer(new TransformHoldPacket(
-                    TransformHoldPacket.Action.TRANSFORM_HOLD, transformNow
-            ));
+        // ── Z: bajar el % de poder, escalón a escalón ──────────────────────
+        if (POWER_DOWN != null) {
+            while (POWER_DOWN.consumeClick()) {
+                PacketDistributor.sendToServer(new PowerPercentPacket());
+            }
         }
 
-        // Si el modificador de transform está abajo, NO cargar KI
-        if (transformModDown) {
+        // ── C: cargar ki (el % de poder sube solo). Sin modificadores. ─────
+        if (formDown) {
+            // Transformando no se carga ki: respeta la animación de transformación.
             stopChargeIfNeeded();
-            return;
-        }
-
-        // ======================================================
-        // PRIORIDAD 3: C normal = CHARGE KI
-        // ======================================================
-        if (CHARGE_KI != null) {
-            // Shift + C: bajar el % de poder (Ki Control). Edge-triggered, y NO carga.
-            if (player.isShiftKeyDown()) {
-                stopChargeIfNeeded();
-                while (CHARGE_KI.consumeClick()) {
-                    PacketDistributor.sendToServer(new PowerPercentPacket());
-                }
-            } else {
-                boolean now = CHARGE_KI.isDown();
-                if (now != lastChargeSent) {
-                    lastChargeSent = now;
-                    PacketDistributor.sendToServer(new KiChargePacket(now));
-                }
+            drainClicks(CHARGE_KI);
+        } else if (CHARGE_KI != null) {
+            drainClicks(CHARGE_KI); // se lee por isDown(): hay que vaciar la cola igual
+            boolean now = CHARGE_KI.isDown();
+            if (now != lastChargeSent) {
+                lastChargeSent = now;
+                PacketDistributor.sendToServer(new KiChargePacket(now));
             }
         }
 
         while (COMBAT_MODE.consumeClick()) {
             CombatModeClientState.toggle(mc);
         }
+    }
+
+    /** Vacía la cola de clicks de una tecla que se lee por isDown(). Sin esto se acumulan
+     *  y se disparan de golpe cuando alguien las consuma (era el bug del % de poder). */
+    private static void drainClicks(KeyMapping key) {
+        if (key == null) return;
+        while (key.consumeClick()) { /* descartar */ }
     }
 
     private static void stopChargeIfNeeded() {
