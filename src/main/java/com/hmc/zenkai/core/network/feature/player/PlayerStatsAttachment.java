@@ -33,6 +33,9 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     private final PlayerSkills        skills     = new PlayerSkills();
     private final PlayerTechniques    techniques = new PlayerTechniques();
 
+    /** % de poder en uso (Ki Control): 50 maxPowerPercent. Multiplica STR/DEX-def/WIL. */
+    private int powerPercent = 50;
+
     /** Último tick (gameTime) en que este jugador invocó a Shenlong. Cooldown por jugador. */
     private long lastSummonTick = Long.MIN_VALUE;
 
@@ -93,13 +96,14 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         return raceStats.previewTpCost(attr, points);
     }
 
-    /** Respec: devuelve el TP invertido en atributos Y en habilidades COMPRADAS (y las
-     *  limpia). Las otorgadas por maestros/comando no se tocan. */
+    /** Respec: devuelve el TP invertido en atributos Y en los NIVELES de habilidad comprados
+     *  (cada habilidad baja hasta el nivel que le otorgó un maestro; si no tenía, desaparece).
+     *  Los niveles otorgados por maestros/comando no se tocan ni se devuelven. */
     public void respec() {
         int skillRefund = 0;
-        for (String id : skills.boughtAll()) {
+        for (String id : skills.allLevels().keySet()) {
             com.hmc.zenkai.core.skills.SkillDef def = com.hmc.zenkai.core.skills.SkillDef.get(id);
-            if (def != null) skillRefund += def.tpCost();
+            if (def != null) skillRefund += def.tpCost() * skills.boughtLevels(id);
         }
         skills.clearBought();
         raceStats.respec();
@@ -109,11 +113,11 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
     // ── Stats de combate ─────────────────────────────────────────────────────
     public double getMeleeBonus()       { return raceStats.getMeleeBonus(); }
-    public double computeMeleeFinal()   { return raceStats.computeMeleeFinal(); }
-    public double computeDefenseFinal() { return raceStats.computeDefenseFinal(); }
+    public double computeMeleeFinal()   { return raceStats.computeMeleeFinal()   * powerFraction(); }
+    public double computeDefenseFinal() { return raceStats.computeDefenseFinal() * powerFraction(); }
+    public double computeKiPowerFinal() { return raceStats.computeKiPowerFinal() * powerFraction(); }
     public double computeSpeedFinal()   { return raceStats.computeSpeedFinal(); }
     public double computeFlyFinal()     { return raceStats.computeFlyFinal(); }
-    public double computeKiPowerFinal() { return raceStats.computeKiPowerFinal(); }
     public double computeKiPoolFinal()  { return raceStats.computeKiPoolFinal(); }
     public double computeConFinal()     { return raceStats.computeConFinal(); }
     public boolean isCombatActive() { return isRaceChosen(); }
@@ -246,6 +250,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         CompoundTag tm = new CompoundTag();
         for (var e : techMastery.entrySet()) tm.putFloat(e.getKey(), e.getValue());
         tag.put("techMastery", tm);
+        tag.putInt("powerPercent", powerPercent);
         return tag;
     }
 
@@ -267,7 +272,20 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             ListTag pets = tag.getList("deadPets", Tag.TAG_COMPOUND);
             for (int i = 0; i < pets.size(); i++) deadPets.add(pets.getCompound(i));
         }
+        powerPercent = tag.contains("powerPercent") ? Math.max(50, tag.getInt("powerPercent")) : 50;
         // Recalc por si los atributos cambiaron al cargar
         applyRecalc();
+    }
+
+    public int getPowerPercent() { return powerPercent; }
+
+    public double powerFraction() { return powerPercent / 100.0; }
+
+    /** Clampa a [50, techo por skill]. Devuelve true si cambió. */
+    public boolean setPowerPercent(int pct, int maxAllowed) {
+        int clamped = Math.max(50, Math.min(maxAllowed, pct));
+        if (clamped == powerPercent) return false;
+        powerPercent = clamped;
+        return true;
     }
 }

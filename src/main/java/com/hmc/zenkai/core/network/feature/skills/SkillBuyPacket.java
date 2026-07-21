@@ -38,14 +38,22 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
             SkillDef def = SkillDef.get(pkt.skillId());
             if (def == null) return;
             if (!def.purchasable()) return; // solo maestros / comando
+
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             if (!att.isRaceChosen()) return;
-            if (att.skills().has(def.id())) return;
-            if (att.getAttribute(ZenkaiAttributes.MIND) < def.mindReq()) return;
+
+            int current = att.skills().level(def.id());
+            if (current >= def.maxLevel()) return;              // ya al máximo
+            // El nivel 1 de una habilidad CON maestro solo lo da el maestro.
+            // Las que no tienen maestro (como focus) se compran desde nivel 0 como antes.
+            if (current <= 0 && def.master() != null) return;
+
+            int next = current + 1;
+            if (att.getAttribute(ZenkaiAttributes.MIND) < def.mindReqFor(next)) return;
             if (att.getTP() < def.tpCost()) return;
 
             att.addTP(-def.tpCost());
-            att.skills().unlock(def.id());
+            att.skills().raise(def.id(), def.maxLevel());
             PlayerLifeCycle.syncIfServer(sp);
         });
     }

@@ -7,11 +7,11 @@ import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.client.gui.screens.StatsScreen;
 import com.hmc.zenkai.client.gui.screens.StyleSelectionScreen;
 import com.hmc.zenkai.core.network.feature.ki.KiChargePacket;
+import com.hmc.zenkai.core.network.feature.ki.PowerPercentPacket;
 import com.hmc.zenkai.core.network.feature.ki.ToggleFlyPacket;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.network.feature.stats.TransformHoldPacket;
-import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -27,7 +27,7 @@ public final class KeyBindings {
     public static KeyMapping TOGGLE_FLY;
     public static KeyMapping CHARGE_KI;
     public static KeyMapping SENSE_KI;
-    public static KeyMapping FIRE_KI;
+    public static KeyMapping TURBO;
     public static KeyMapping COMBAT_MODE;
 
     /** Modificador configurable para transformar + C (default ALT) */
@@ -92,12 +92,12 @@ public final class KeyBindings {
         SENSE_KI = new KeyMapping("key.zenkai.sense_ki", GLFW.GLFW_KEY_F4, "key.categories.zenkai");
         event.register(SENSE_KI);
 
-        FIRE_KI = new KeyMapping(
-                "key.zenkai.fire_ki",
+        TURBO = new KeyMapping(
+                "key.zenkai.turbo",
                 GLFW.GLFW_KEY_R,
                 "key.categories.zenkai"
         );
-        event.register(FIRE_KI);
+        event.register(TURBO);
 
         COMBAT_MODE = new KeyMapping(
                 "key.zenkai.combat_mode",
@@ -230,10 +230,18 @@ public final class KeyBindings {
         // PRIORIDAD 3: C normal = CHARGE KI
         // ======================================================
         if (CHARGE_KI != null) {
-            boolean now = CHARGE_KI.isDown();
-            if (now != lastChargeSent) {
-                lastChargeSent = now;
-                PacketDistributor.sendToServer(new KiChargePacket(now));
+            // Shift + C: bajar el % de poder (Ki Control). Edge-triggered, y NO carga.
+            if (player.isShiftKeyDown()) {
+                stopChargeIfNeeded();
+                while (CHARGE_KI.consumeClick()) {
+                    PacketDistributor.sendToServer(new PowerPercentPacket());
+                }
+            } else {
+                boolean now = CHARGE_KI.isDown();
+                if (now != lastChargeSent) {
+                    lastChargeSent = now;
+                    PacketDistributor.sendToServer(new KiChargePacket(now));
+                }
             }
         }
 

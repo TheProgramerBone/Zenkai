@@ -101,7 +101,7 @@
   "key.zenkai.open_stats": "Open Stats",
   "key.zenkai.toggle_fly": "Toggle Flight",
   "key.categories.zenkai": "Zenkai",
-  "key.zenkai.fire_ki": "Fire Ki Technique",
+  "key.zenkai.turbo": "Turbo Mode",
   "key.zenkai.sense_ki": "Sense Ki / Scouter",
   "key.zenkai.combat_mode": "Combat Mode",
 
@@ -171,6 +171,7 @@
   "messages.zenkai.scouter.off": "Scouter: Off",
   "messages.zenkai.cannot_break": "§cThis block is protected by %s",
   "messages.zenkai.cannot_break_generic": "§cThis block is protected",
+  "messages.zenkai.power_percent": "§bPower: %s%% / %s%%",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Yemma",
@@ -256,13 +257,21 @@
   "screen.zenkai.tab.party": "Party",
   "screen.zenkai.tab.config": "Config",
   "screen.zenkai.coming_soon": "Coming Soon...",
+
   "screen.zenkai.skills.empty": "No skills available yet",
   "screen.zenkai.skills.buy": "Buy",
   "screen.zenkai.skills.owned": "✔ Learned",
-  "screen.zenkai.skills.cost": "Cost: %s TP · MIND %s",
+  "screen.zenkai.skills.resources": "TP: %s    MND: %s",
+  "screen.zenkai.skills.cost": "Next level: %s TP · %s MND",
+  "screen.zenkai.skills.maxed": "Max level",
 
   "skill.zenkai.focus": "Focus",
   "skill.zenkai.focus.desc": "Test skill (no effect yet).",
+  "skill.zenkai.run": "Run",
+  "skill.zenkai.run.desc": "Run faster using stamina.",
+  "skill.zenkai.fly": "Fly",
+  "skill.zenkai.fly.desc": "Be able to fly using ki.",
+
 
   "screen.zenkai.technique.edit_title": "Ki Technique Editor",
   "screen.zenkai.technique.name": "Name",

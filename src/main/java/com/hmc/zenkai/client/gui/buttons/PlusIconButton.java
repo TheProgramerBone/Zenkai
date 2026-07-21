@@ -6,6 +6,7 @@ import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -39,20 +40,13 @@ public class PlusIconButton extends AbstractButton {
 
     @Override
     protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // Elegimos textura según hover/focus
-        ResourceLocation tex = this.isHoveredOrFocused() ? TEX_HOVER : TEX_NORMAL;
-
-        // Dibuja el PNG completo (asumiendo 16x16)
-        g.blit(
-                tex,
-                this.getX(), this.getY(),   // posición en pantalla
-                0, 0,                       // u, v dentro del PNG
-                this.width, this.height,    // ancho/alto a dibujar
-                12, 12                      // ancho/alto del PNG real
-        );
+        ResourceLocation tex = (this.active && this.isHoveredOrFocused()) ? TEX_HOVER : TEX_NORMAL;
+        if (!this.active) g.setColor(0.45F, 0.45F, 0.45F, 1.0F); // sin TP/MND: apagado
+        g.blit(tex, this.getX(), this.getY(), 0, 0, this.width, this.height, 12, 12);
+        if (!this.active) g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 }

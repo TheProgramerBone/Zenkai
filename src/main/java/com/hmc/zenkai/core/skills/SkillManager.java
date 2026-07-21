@@ -19,9 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Carga las habilidades desde datapack (data/&lt;ns&gt;/zenkai_skills/*.json) y las
@@ -68,10 +66,33 @@ public final class SkillManager {
                         file.getPath().length() - ".json".length());
                 try (BufferedReader reader = entry.getValue().openAsReader()) {
                     JsonObject o = JsonParser.parseReader(reader).getAsJsonObject();
+
+                    List<Integer> mind = new ArrayList<>();
+                    if (o.has("mind_req") && o.get("mind_req").isJsonArray()) {
+                        for (var el : o.getAsJsonArray("mind_req")) mind.add(el.getAsInt());
+                    } else {
+                        // Compat con el formato viejo: un solo número = mismo MND en todos los niveles.
+                        int flat = GsonHelper.getAsInt(o, "mind_req", 0);
+                        if (flat > 0) mind.add(flat);
+                    }
+
+                    Map<String, List<Double>> values = new LinkedHashMap<>();
+                    if (o.has("values") && o.get("values").isJsonObject()) {
+                        JsonObject vo = o.getAsJsonObject("values");
+                        for (String key : vo.keySet()) {
+                            List<Double> curve = new ArrayList<>();
+                            for (var el : vo.getAsJsonArray(key)) curve.add(el.getAsDouble());
+                            values.put(key, List.copyOf(curve));
+                        }
+                    }
+
                     SkillDef def = new SkillDef(id,
                             GsonHelper.getAsInt(o, "tp_cost", 0),
-                            GsonHelper.getAsInt(o, "mind_req", 0),
-                            GsonHelper.getAsBoolean(o, "purchasable", true));
+                            Math.max(1, GsonHelper.getAsInt(o, "max_level", 1)),
+                            List.copyOf(mind),
+                            GsonHelper.getAsBoolean(o, "purchasable", true),
+                            o.has("master") ? GsonHelper.getAsString(o, "master") : null,
+                            Collections.unmodifiableMap(values));
                     if (out.put(id, def) != null) {
                         LOGGER.warn("[Zenkai] Skill duplicada '{}': dos namespaces definen el mismo path (gana {}).", id, file);
                     }

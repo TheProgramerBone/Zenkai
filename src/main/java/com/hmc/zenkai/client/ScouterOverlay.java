@@ -45,7 +45,8 @@ public final class ScouterOverlay {
     // Referencia {"↑", "⬈", "→", "↘", "↓", "↙", "←", "↖"}
 
     /** Umbrales de la etiqueta del modo PODER (fracción de TU PL). */
-    private static final double WEAK_BELOW = 0.8; // <80% débil; 80-100% formidable; >100% amenaza
+    private static final double WEAK_BELOW = 0.8; // <80% débil; 80-100% formidable; >125% amenaza
+    private static final double THREAT_ABOVE = 1.5;
 
     // --- Marco de textura (Juan ajusta a su PNG) ---
     private static final ResourceLocation FRAME_TEX =
@@ -146,7 +147,7 @@ public final class ScouterOverlay {
     /** Etiqueta del modo PODER relativa a TU PL: débil / formidable / amenaza. */
     private static String powerLabelKey(Minecraft mc, long targetPl) {
         long myPl = ownPowerLevel(mc);
-        if (targetPl > myPl) return "scouter.zenkai.label.threat";
+        if (targetPl >= Math.round(myPl * THREAT_ABOVE)) return "scouter.zenkai.label.threat";
         if (targetPl >= Math.round(myPl * WEAK_BELOW)) return "scouter.zenkai.label.formidable";
         return "scouter.zenkai.label.weak";
     }

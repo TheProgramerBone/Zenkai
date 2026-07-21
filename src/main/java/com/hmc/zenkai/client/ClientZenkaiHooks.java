@@ -5,6 +5,7 @@ import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.core.skills.SkillEffects;
 import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -164,7 +165,7 @@ public final class ClientZenkaiHooks {
         }
 
         // --- Acciones (misma altura) ---
-        if (stats.isFlyEnabled()) {
+        if (stats.isFlyEnabled() && SkillEffects.canFly(mc.player)) {
             drawBadge(g, iconX, iconY, ICON_FLY);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
