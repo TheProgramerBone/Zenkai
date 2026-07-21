@@ -50,9 +50,7 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
     /** Valores de mode (byte propio del protocolo, NO el ordinal del enum cliente). */
     public static final byte MODE_STRONGEST = 1;
     public static final byte MODE_RADAR = 2;
-
-    /** Radio de búsqueda de esferas (bloques). Mismo espíritu que el ítem radar (128). */
-    private static final int RADAR_RADIUS = 128;
+    private static final int RADAR_RADIUS = 256;
 
     public static final Type<ScouterAreaScanPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "scouter_area_scan"));
