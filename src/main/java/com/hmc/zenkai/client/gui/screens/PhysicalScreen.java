@@ -65,13 +65,18 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
         // ── Filas por técnica ──
         int y = panelTop + 40 + CELL + 10;
         for (PhysicalTechnique t : PhysicalTechnique.values()) {
+            if (!t.enabled()) continue; // sin JSON: no se muestra
             if (!tech.isUnlocked(t)) {
                 TextOnlyButton unlock = new TextOnlyButton(panelLeft + BG_W - 106, y, 90, 16,
-                        Component.translatable("screen.zenkai.physical.unlock", t.tpCost),
+                        t.mindReq() > 0
+                                ? Component.translatable("screen.zenkai.physical.unlock_mnd",
+                                t.tpCost(), t.mindReq())
+                                : Component.translatable("screen.zenkai.physical.unlock", t.tpCost()),
                         () -> {
                             PacketDistributor.sendToServer(PhysicalTechniquePacket.unlock(t));
                         });
-                unlock.active = att.getTP() >= t.tpCost;
+                unlock.active = att.getTP() >= t.tpCost()
+                        && att.getAttribute(com.hmc.zenkai.core.network.feature.ZenkaiAttributes.MIND) >= t.mindReq();
                 this.addRenderableWidget(unlock);
             } else {
                 this.addRenderableWidget(new TextOnlyButton(panelLeft + BG_W - 106, y, 60, 16,

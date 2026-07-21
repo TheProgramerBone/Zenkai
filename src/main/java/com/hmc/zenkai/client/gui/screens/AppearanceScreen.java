@@ -68,7 +68,7 @@ public class AppearanceScreen extends Screen {
     private static final int COLOR_VALUE  = 0xFFFFFF;
     private static final int COLOR_SWATCH = 0x4A3726;
 
-    // Tonos de piel Human/Saiyan/Majin. Las razas multicolor sacan TODO de los JSON de capa.
+    // Tonos de piel Human/Saiyan/Majin. Las razas multicolor sacan de los JSON de capa.
     private static final int[] SKIN_TONES = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
 
     @Nullable private final RaceSelectionScreen raceScreen;

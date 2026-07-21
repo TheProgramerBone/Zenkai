@@ -1,6 +1,7 @@
 package com.hmc.zenkai.core.network.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.technique.PhysicalTechnique;
@@ -43,13 +44,14 @@ public record PhysicalTechniquePacket(int op, int tech, int position) implements
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
             PhysicalTechnique t = PhysicalTechnique.byOrdinal(pkt.tech());
-            if (t == null) return;
+            if (t == null || !t.enabled()) return;
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
 
             if (pkt.op() == 0) {
                 if (att.techniques().isUnlocked(t)) return;
-                if (att.getTP() < t.tpCost) return;
-                att.addTP(-t.tpCost);
+                if (att.getAttribute(ZenkaiAttributes.MIND) < t.mindReq()) return;
+                if (att.getTP() < t.tpCost()) return;
+                att.addTP(-t.tpCost());
                 att.techniques().unlock(t);
             } else if (pkt.op() == 1) {
                 if (!att.techniques().isUnlocked(t)) return;

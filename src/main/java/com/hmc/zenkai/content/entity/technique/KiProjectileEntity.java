@@ -81,7 +81,7 @@ public class KiProjectileEntity extends Projectile {
         this.entityData.set(DATA_SIZE, (byte) size);
         this.damage = damage;
         this.life = lifeTicks;
-        this.explosive = explosive && !type.defensive;
+        this.explosive = explosive && !type.defensive();
         this.noCulling = true; // la estela sobresale del hitbox: sin esto desaparece al salir la bola de cámara
         refreshDimensions();
     }
@@ -198,15 +198,14 @@ public class KiProjectileEntity extends Projectile {
         }
     }
 
-    /** Daño en área con caída lineal + (si procede) explosión REAL de bloques.
-     *  - Daño a entidades: SOLO el del ki (gamerule zenkai_enableKiDamage), por el pipeline.
-     *  - Bloques: gamerule zenkai_enableKiGriefing; la explosión vanilla va con calculator
-     *    "solo bloques" (sin daño a entidades -> sin doble golpe) y las zonas protegidas se
-     *    filtran globalmente en StructureProtectionHandler.onExplosionDetonate.
-     *  Excluye dueño y objetivo directo. */
+    /** Radio de la explosión. Escala con el tamaño elegido en el editor (1..7 -> 1.7..4.7). */
+    private double explosionRadius() {
+        return 1.2 + 0.5 * size();
+    }
+
     private void explode(Vec3 center, Entity directHit) {
         if (!(level() instanceof ServerLevel sl)) return;
-        double radius = 1.5 + 0.35 * size();
+        double radius = explosionRadius();
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
 
         if (ModGameRules.enableKiDamage(sl.getServer())) {
@@ -224,17 +223,25 @@ public class KiProjectileEntity extends Projectile {
 
         if (ModGameRules.enableKiGriefing(sl.getServer())) {
             // Explosión vanilla SOLO bloques: drops estilo TNT, respeta blast resistance,
-            // partículas y sonido incluidos. TNT ignora mobGriefing: manda nuestra gamerule.
+            // partículas y sonido incluidos (ya escalan solos con radius).
             sl.explode(this, null,
                     new SimpleExplosionDamageCalculator(true, false,
                             Optional.empty(), Optional.empty()),
                     center.x, center.y, center.z, (float) radius, false,
                     Level.ExplosionInteraction.TNT);
         } else {
+            // Sin griefing montamos el fogonazo a mano, porque un solo EXPLOSION_EMITTER
+            // se ve idéntico en size 1 y en size 7.
+            int emitters = 1 + size() / 2;                  // 1..4
+            double spread = radius * 0.35;
             sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z,
-                    1, 0, 0, 0, 0);
+                    emitters, spread, spread, spread, 0);
+            int puffs = 8 + size() * 6;                     // 14..50
+            sl.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z,
+                    puffs, radius * 0.5, radius * 0.5, radius * 0.5, 0);
             sl.playSound(null, center.x, center.y, center.z,
-                    SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.5f, 1.0f);
+                    SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS,
+                    1.2f + 0.15f * size(), 1.25f - 0.06f * size()); // grande = grave
         }
     }
 

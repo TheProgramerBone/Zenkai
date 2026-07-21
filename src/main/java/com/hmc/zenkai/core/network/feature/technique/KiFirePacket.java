@@ -18,12 +18,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * C2S: disparar la técnica del slot con la carga acumulada (R + click derecho; soltar
  * click dispara). Validación 100% servidor: raza, manos vacías, slot, cooldown por slot
  * (KiCombatServer.tryFire), carga mínima (MIN_CHARGE) y energía suficiente.
- *
  * chargeTicks se clampa a type.chargeTicks; ratio = ticks/max. Daño y coste escalan
  * LINEAL con la carga (misma eficiencia a cualquier %, disparar antes = más débil pero
  * más rápido). BARRIER ignora la carga (siempre completa). Fórmulas en KiCombatServer
@@ -45,7 +45,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
                     buf -> new KiFirePacket(buf.readVarInt(), buf.readVarInt()));
 
     @Override
-    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(KiFirePacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -60,29 +60,34 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
             if (tech == null) return;
 
             KiTechniqueType type = tech.type();
+            if (!type.enabled()) return; // sin JSON: técnica desactivada
+
             // Maestría: carga requerida reducida (cast), costo reducido, daño aumentado.
             double castF = com.hmc.zenkai.core.mastery.MasteryEffects.techCastFactor(att, type.name());
-            int reqCharge = Math.max(1, (int) Math.round(type.chargeTicks * castF));
-            double ratio = type.defensive ? 1.0
+            int reqCharge = Math.max(1, (int) Math.round(type.chargeTicks() * castF));
+            double ratio = type.defensive() ? 1.0
                     : Mth.clamp(pkt.chargeTicks() / (double) reqCharge, 0.0, 1.0);
             if (ratio < KiTechniqueType.MIN_CHARGE) return;
 
-            if (!KiCombatServer.tryFire(sp, pkt.slot(), type.cooldownTicks)) return;
-
-            double kiPower = att.computeKiPowerFinal()* MasteryEffects.formStatFactor(sp);
-            boolean explosive = tech.explosive() && !type.defensive;
-
+            boolean explosive = tech.explosive() && !type.defensive();
             int cost = (int) Math.max(1, Math.ceil(
                     KiCombatServer.computeCost(att.getEnergyMax(), type, tech.size(), explosive) * ratio * att.powerFraction()));
+            // La energía se comprueba ANTES de tryFire: si no, sin ki el slot se queda
+            // enfriándose sin haber disparado nada.
             if (att.getEnergy() < cost) return;
+
+            if (!KiCombatServer.tryFire(sp, pkt.slot(), type.cooldownTicks())) return;
+
             att.addEnergy(-cost);
             att.addTechniqueMastery(type.name(), (float) StatsConfig.techMasteryPerUse());
 
-            if (type.defensive) {
+            double kiPower = att.computeKiPowerFinal() * MasteryEffects.formStatFactor(sp);
+
+            if (type.defensive()) {
                 KiCombatServer.activateBarrier(sp, tech, kiPower);
             } else {
                 double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio;
-                for (int i = 0; i < Math.max(1, type.count); i++) {
+                for (int i = 0; i < Math.max(1, type.count()); i++) {
                     spawnProjectile(sp, tech, damage, explosive, i);
                 }
             }
@@ -106,7 +111,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
 
         proj.configure(sp, type, tech.rgb(), tech.size(), damage, 100, explosive);
         proj.setPos(spawn.x, spawn.y, spawn.z);
-        proj.setDeltaMovement(dir.scale(type.speed));
+        proj.setDeltaMovement(dir.scale(type.speed()));
         sp.level().addFreshEntity(proj);
     }
 }

@@ -49,13 +49,13 @@ public final class KiCombatServer {
 
     /** Daño por proyectil a carga completa. */
     public static double computeDamage(double kiPower, KiTechniqueType type, int size) {
-        return kiPower * type.damageMult * sizeFactor(size);
+        return kiPower * type.damageMult() * sizeFactor(size);
     }
 
     /** Coste de ki del disparo a carga completa. */
     public static int computeCost(int energyMax, KiTechniqueType type, int size, boolean explosive) {
         return (int) Math.ceil(energyMax * BASE_COST_PCT
-                * type.kiCostMult * costSizeFactor(size)
+                * type.kiCostMult() * costSizeFactor(size)
                 * (explosive ? EXPLOSIVE_COST_MULT : 1.0));
     }
 

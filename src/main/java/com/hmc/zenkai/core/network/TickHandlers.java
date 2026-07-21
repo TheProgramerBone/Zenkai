@@ -32,20 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Tick de servidor del jugador. onPlayerTick solo ORQUESTA: cada bloque vive.
- * Los tres handle* devuelven boolean porque cortan el tick entero (sin raza, derribado,
- * body agotado); el resto son void.
- *
- * ESCALONES DE RENDIMIENTO (solo movimiento; el daño y la defensa los gobierna el % de
- * poder directamente en PlayerStatsAttachment):
- *   0% de poder      -> vanilla puro
- *   sin Control      -> 25% del bonus máximo posible para ese %
- *   con Control      -> 50%
- *   Control + Turbo  -> 100%
- * "Control" es esprintar en tierra y el boost de vuelo (Ctrl+W) en el aire; el turbo EXIGE
- * Control pulsado. Se interpola desde 1.0, así que con 0% el multiplicador cae a vanilla.
- */
 public class TickHandlers {
 
     private static final ResourceLocation MOVE_MOD_ID =
@@ -220,19 +206,17 @@ public class TickHandlers {
         boolean control  = att.flags().isFlyBoosting();   // Ctrl+W en vuelo
         boolean flyTurbo = ab.flying && control && turboOn;
 
-        // El máximo lo marca DEX (flyMultiplier, con su tope) y lo eleva la habilidad Fly.
+        // Máximo: DEX (flyMultiplier, con su tope) elevado por la habilidad Fly.
+        // Calibrado para que DEX 1000 + Fly 10 = x2.0 = ~20 bloques/segundo en turbo.
         double max = Math.min(StatsConfig.flyMultiplierCap(), att.getFlyMultiplier())
                 * SkillEffects.flySpeedFactor(p);
-        // Suelo: con poder liberado, volar suelto nunca baja de x1.5 (creativo es x1.0).
-        // A 0% de poder el suelo desaparece y queda vuelo vanilla exacto.
-        double tierMult = 1.0 + (max - 1.0) * performanceTier(control, turboOn);
-        double floor = 1.0 + 0.5 * att.powerFraction();
-        double mult = 1.0 + (Math.max(tierMult, floor) - 1.0) * att.powerFraction();
+        // Se interpola desde 1.0 (vuelo vanilla): con 0% de poder el multiplicador cae a 1.0.
+        double mult = 1.0 + (max - 1.0) * performanceTier(control, turboOn) * att.powerFraction();
 
         float newSpeed = (float) (StatsConfig.flyBaseSpeed() * mult);
         // Player.getFlyingSpeed() DUPLICA la velocidad al esprintar, y Control ES la tecla de
         // sprint: sin compensar, el escalón medio se llevaba un x2 gratis que rompía la
-        // proporción entre escalones (Ctrl parecía enorme y el turbo apenas sumaba).
+        // proporción entre escalones.
         if (p.isSprinting()) newSpeed /= 2.0F;
 
         // setFlyingSpeed en servidor NO llega al cliente sin onUpdateAbilities(), pero llamarlo
@@ -240,13 +224,6 @@ public class TickHandlers {
         if (Math.abs(ab.getFlyingSpeed() - newSpeed) > 1.0e-4F) {
             ab.setFlyingSpeed(newSpeed);
             p.onUpdateAbilities();
-        }
-
-        // TEMPORAL: lectura de depuración para calibrar. Borrar cuando esté ajustado.
-        if (ab.flying && p.tickCount % 20 == 0 && p instanceof ServerPlayer dbg) {
-            dbg.displayClientMessage(Component.literal(String.format(
-                    "max %.2f · tier %.2f · pct %.2f · mult %.2f · speed %.4f",
-                    max, performanceTier(control, turboOn), att.powerFraction(), mult, newSpeed)), true);
         }
 
         // Coste del vuelo turbo: ki por tick reducido por Fly. El drenaje base del aura lo

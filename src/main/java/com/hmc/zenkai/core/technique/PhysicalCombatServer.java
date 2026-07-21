@@ -79,6 +79,7 @@ public final class PhysicalCombatServer {
         if (KiCombatServer.isBlocking(sp) || att.flags().isDowned()) return;
         if (!sp.getMainHandItem().isEmpty() || !sp.getOffhandItem().isEmpty()) return;
         if (!att.techniques().isUnlocked(t)) return;
+        if (!t.enabled()) return; // sin JSON: técnica desactivada
         if (ACTIVE.containsKey(sp.getUUID())) return; // un movimiento a la vez
 
         long now = sp.level().getGameTime();
@@ -86,12 +87,12 @@ public final class PhysicalCombatServer {
                 k -> new long[PhysicalTechnique.values().length]);
         if (now < cds[t.ordinal()]) return;
 
-        int cost = (int) Math.ceil(att.getStaminaMax() * t.staminaPct
+        int cost = (int) Math.ceil(att.getStaminaMax() * t.staminaPct()
                 * MasteryEffects.techCostFactor(att, t.name()));
         if (att.getStamina() < cost) return;
 
         att.consumeStamina(cost);
-        cds[t.ordinal()] = now + t.cooldownTicks;
+        cds[t.ordinal()] = now + t.cooldownTicks();
         att.addTechniqueMastery(t.name(), (float) StatsConfig.techMasteryPerUse());
 
         double str = att.computeMeleeFinal()
@@ -135,14 +136,14 @@ public final class PhysicalCombatServer {
                         a.dir.z * DASH_SPEED);
                 sp.hurtMarked = true;
                 if (damageEnabled(sp)) {
-                    hitAll(sp, a, sp.getBoundingBox().inflate(1.2), a.str * a.tech.dmgMult);
+                    hitAll(sp, a, sp.getBoundingBox().inflate(1.2), a.str * a.tech.dmgMult());
                 }
                 if (sp.horizontalCollision) a.ticksLeft = 0; // pared: fin del trayecto
             }
             case BARRAGE -> {
                 if (a.ticksLeft % 2 == 0 && damageEnabled(sp)) {
                     // Un pulso: cono frontal (los objetivos pueden recibir varios pulsos).
-                    pulse(sp, a.str * a.tech.dmgMult, a.tech);
+                    pulse(sp, a.str * a.tech.dmgMult(), a.tech);
                 }
             }
             default -> a.ticksLeft = 0; // no debería: los instantáneos no se registran
@@ -164,9 +165,9 @@ public final class PhysicalCombatServer {
      *  (bloque mirado o aire a rango máximo). En ambos casos: explosión (partículas +
      *  sonido + AoE 50% con caída + empuje radial). Sin romper bloques: físico, no ki. */
     private static void heavyBlow(ServerPlayer sp, double str, PhysicalTechnique t) {
-        double dmg = str * t.dmgMult;
+        double dmg = str * t.dmgMult();
         Vec3 look = sp.getLookAngle();
-        LivingEntity target = firstInRay(sp, t.range, 1.0);
+        LivingEntity target = firstInRay(sp, t.range(), 1.0);
 
         Vec3 c;
         if (target != null) {
@@ -174,7 +175,7 @@ public final class PhysicalCombatServer {
         } else {
             // Punto de impacto: el bloque en la mirada, o el aire a rango máximo.
             Vec3 eye = sp.getEyePosition();
-            Vec3 end = eye.add(look.scale(t.range));
+            Vec3 end = eye.add(look.scale(t.range()));
             var clip = sp.level().clip(new net.minecraft.world.level.ClipContext(
                     eye, end,
                     net.minecraft.world.level.ClipContext.Block.COLLIDER,
@@ -183,7 +184,7 @@ public final class PhysicalCombatServer {
                     ? clip.getLocation() : end;
         }
 
-        withBridge(t.dmgMult, () -> {
+        withBridge(t.dmgMult(), () -> {
             if (target != null) {
                 if (damageEnabled(sp)) {
                     target.hurt(sp.damageSources().playerAttack(sp), (float) dmg);
@@ -218,12 +219,12 @@ public final class PhysicalCombatServer {
     private static void kiai(ServerPlayer sp, double str, PhysicalTechnique t) {
         double push = 0.7 + 0.9 * (str / (str + 100.0)); // 100 = perilla de "STR media"
         Vec3 look = sp.getLookAngle();
-        for (LivingEntity e : inCone(sp, t.range, 0.4)) {
+        for (LivingEntity e : inCone(sp, t.range(), 0.4)) {
             e.setDeltaMovement(e.getDeltaMovement()
                     .add(look.x * push, 0.3 + push * 0.15, look.z * push));
             e.hurtMarked = true;
         }
-        AABB box = sp.getBoundingBox().inflate(t.range);
+        AABB box = sp.getBoundingBox().inflate(t.range());
         for (var proj : sp.serverLevel().getEntitiesOfClass(
                 com.hmc.zenkai.content.entity.technique.KiProjectileEntity.class, box,
                 pr -> pr.getOwner() != sp)) {
@@ -235,8 +236,8 @@ public final class PhysicalCombatServer {
     /** Pulso de barrage: cono frontal corto. Resetea i-frames: la ráfaga define su propio
      *  ritmo (6 golpes/0.6 s), no la ventana de invulnerabilidad vanilla. */
     private static void pulse(ServerPlayer sp, double dmgPerHit, PhysicalTechnique t) {
-        withBridge(t.dmgMult, () -> {
-            for (LivingEntity e : inCone(sp, t.range, 0.5)) {
+        withBridge(t.dmgMult(), () -> {
+            for (LivingEntity e : inCone(sp, t.range(), 0.5)) {
                 e.invulnerableTime = 0;
                 e.hurt(sp.damageSources().playerAttack(sp), (float) dmgPerHit);
             }
@@ -245,7 +246,7 @@ public final class PhysicalCombatServer {
 
     /** Daña una vez a cada entidad nueva dentro de la caja (dash). */
     private static void hitAll(ServerPlayer sp, Active a, AABB box, double dmg) {
-        withBridge(a.tech.dmgMult, () -> {
+        withBridge(a.tech.dmgMult(), () -> {
             for (LivingEntity e : sp.serverLevel().getEntitiesOfClass(LivingEntity.class, box,
                     x -> x != sp && x.isAlive() && !a.hitIds.contains(x.getId()))) {
                 a.hitIds.add(e.getId());

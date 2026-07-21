@@ -104,6 +104,8 @@
   "key.zenkai.turbo": "Turbo Mode",
   "key.zenkai.sense_ki": "Sense Ki / Scouter",
   "key.zenkai.combat_mode": "Combat Mode",
+  "key.zenkai.power_down": "Lower Power %",
+  "key.zenkai.form": "Transform (hold) / Revert (tap)",
 
   "hud.zenkai.combat.no_techniques": "Assign techniques in the Ki Techniques menu",
 
@@ -251,6 +253,8 @@
   "screen.zenkai.stats_screen.stat.running": "Running: %s%%",
   "screen.zenkai.stats_screen.stat.flying": "Flying: %s%%",
   "screen.zenkai.stats_screen.stat.ki_power": "Ki Power: %s",
+  "screen.zenkai.technique.unlock_mnd": "Unlock (%s TP · %s MND)",
+  "screen.zenkai.physical.unlock_mnd": "Unlock (%s TP · %s MND)",
 
   "screen.zenkai.tab.main": "Main",
   "screen.zenkai.tab.skills": "Skills",
