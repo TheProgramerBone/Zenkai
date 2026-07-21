@@ -136,7 +136,7 @@ public final class ClientZenkaiHooks {
         // TODOS LOS ICONOS EN UNA SOLA LÍNEA (debajo del panel)
         // ========================
         int iconX = PANEL_X;
-        int iconY = PANEL_Y + panelH + 4;
+        int iconY = PANEL_Y + panelH + 12;
 
         // --- Estados "especiales" (antes de acciones, misma altura) ---
         if (form.isTransforming()) {
@@ -175,9 +175,8 @@ public final class ClientZenkaiHooks {
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 
-        // PL del propio jugador (debajo del panel; muévelo/re-estilízalo a gusto).
         g.drawString(mc.font, Component.literal(
-                        "PL " + ZenkaiNumbers.format(stats.getPowerLevel())),
+                        stats.getPowerPercent() + "%  PL " + ZenkaiNumbers.format(stats.getPowerLevel())),
                 PANEL_X, PANEL_Y + panelH + 4, 0xFFFFE066);
     }
 

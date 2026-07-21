@@ -148,8 +148,9 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public double getFlySpeed()     { return pools.getFlySpeed(); }
 
     public double getFlyMultiplier() {
-        return pools.getFlyMultiplier(StatsConfig.flyMultiplierCap());
+        return pools.getFlyMultiplier(StatsConfig.flyMultiplierCap(), StatsConfig.flyScaling());
     }
+
     public double getMoveMultiplier() {
         return pools.getMoveMultiplier();
     }
@@ -272,7 +273,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             ListTag pets = tag.getList("deadPets", Tag.TAG_COMPOUND);
             for (int i = 0; i < pets.size(); i++) deadPets.add(pets.getCompound(i));
         }
-        powerPercent = tag.contains("powerPercent") ? Math.max(50, tag.getInt("powerPercent")) : 50;
+        powerPercent = tag.contains("powerPercent") ? Math.max(0, tag.getInt("powerPercent")) : 50;
         // Recalc por si los atributos cambiaron al cargar
         applyRecalc();
     }
@@ -283,7 +284,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
     /** Clampa a [50, techo por skill]. Devuelve true si cambió. */
     public boolean setPowerPercent(int pct, int maxAllowed) {
-        int clamped = Math.max(50, Math.min(maxAllowed, pct));
+        int clamped = Math.max(0, Math.min(maxAllowed, pct));
         if (clamped == powerPercent) return false;
         powerPercent = clamped;
         return true;

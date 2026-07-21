@@ -69,8 +69,9 @@ public class PlayerResourcePools {
     public void setSpeed(double v)    { this.speed    = v; }
     public void setFlySpeed(double v) { this.flySpeed = v; }
 
-    public double getFlyMultiplier(double cap) {
-        return Math.min(cap, Math.max(0.0, 1.0 + (flySpeed / 100.0)));
+    /** scaling.fly = cuánto multiplicador da cada 100 puntos de FlySpeed. */
+    public double getFlyMultiplier(double cap, double scaling) {
+        return Math.min(cap, Math.max(0.0, 1.0 + (flySpeed / 100.0) * scaling));
     }
 
     public double getMoveMultiplier() {
