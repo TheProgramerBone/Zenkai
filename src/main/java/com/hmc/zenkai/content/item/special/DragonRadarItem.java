@@ -22,6 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -30,15 +31,21 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 /**
  * Radar de esferas del dragón. Se enciende y apaga con click derecho (toggle).
- * Mientras está encendido, una vez por segundo busca la esfera más cercana y escribe su
- * posición en el componente radar_target; la aguja la dibuja el cliente con la misma
- * función que la brújula vanilla (ver ZenkaiClientSetup), lo que da el giro suavizado y
- * evita resincronizar el slot cada segundo.
- * Búsqueda en dos pasos: primero bloques de esfera cercanos (cubre las que un jugador
- * haya colocado en su base), y si no hay, la ESTRUCTURA no saqueada más cercana.
+ * Coste: la búsqueda de ESTRUCTURAS es lo caro (findNearestMapStructure consulta
+ * StructureCheck, que puede leer chunks de disco, y se llama una vez por cada esfera
+ * del tag). Por eso se hace UNA SOLA VEZ al encender y fija el objetivo para toda la
+ * activación; si no hay nada en rango, el radar ni siquiera se enciende.
+ * Mientras está encendido solo corre el escaneo local de bloques (chunks ya cargados +
+ * filtro por paleta de sección), que es casi gratis y cubre las esferas que un jugador
+ * haya colocado en su base o las que aparezcan por el camino.
+ * La AGUJA sí se actualiza continuamente: el cliente recalcula el ángulo cada frame con
+ * la misma función que la brújula vanilla (ver ZenkaiClientSetup), a partir de la
+ * posición objetiva y la posición/rotación del jugador. El servidor solo reescribe el
+ * componente radar_target cuando el objetivo cambia.
  */
 public class DragonRadarItem extends Item {
 
@@ -49,17 +56,22 @@ public class DragonRadarItem extends Item {
 
     private static final int NEAR_RADIUS_SQR = 16 * 16;
     private static final int DETECTION_RADIUS = 32;      // escaneo de bloques cercano
-    private static final int STRUCTURE_SEARCH_CHUNKS = 100;
+    private static final int STRUCTURE_SEARCH_CHUNKS = 32;
     private static final int LOOTED_MATCH_RADIUS = 32;   // margen entre la esfera y el inicio de su estructura
-    private static final int TARGET_CACHE_TICKS = 200;   // 10 s entre búsquedas completas
 
-    /** Si pasa este tiempo sin encontrar nada, el radar se apaga solo (ahorra búsquedas). */
+    /** Centinela de "sin objetivo" dentro del caché. */
+    private static final long NO_TARGET = Long.MIN_VALUE;
+
+    /** Si pasa este tiempo sin encontrar nada, el radar se apaga solo. */
     private static final int GIVE_UP_TICKS = 200; // 10 s
+
+    /** Estático para no recrear la lambda ni repetir el lookup del tag en cada sección. */
+    private static final Predicate<BlockState> IS_BALL = s -> s.is(ModTags.Blocks.DRAGON_BALLS_BLOCK);
 
     /** Último tick con hallazgo, por jugador. Transitorio, solo servidor. */
     private static final java.util.Map<UUID, Integer> LAST_HIT = new java.util.HashMap<>();
 
-    /** Objetivo cacheado por jugador: {posLong, tickDeCaducidad}. Solo servidor, no persiste. */
+    /** Objetivo fijado al encender, por jugador: {poseLong}. Transitorio, solo servidor. */
     private static final java.util.Map<UUID, long[]> TARGET_CACHE = new java.util.HashMap<>();
 
     public DragonRadarItem(Properties properties) {
@@ -91,28 +103,33 @@ public class DragonRadarItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
 
         if (!level.isClientSide) {
-            boolean on = !isActive(stack);
-            setActive(stack, on);
-            if (!on) {
-                // Apagar: la aguja vuelve a girar sola y se olvida el objetivo cacheado.
+            if (isActive(stack)) {
+                // Apagar: la aguja vuelve a girar sola y se olvida el objetivo.
+                setActive(stack, false);
                 stack.remove(ModDataComponents.RADAR_TARGET.get());
                 TARGET_CACHE.remove(player.getUUID());
-            }
-            player.displayClientMessage(Component.translatable(
-                    on ? "messages.zenkai.dragon_ball_radar_on"
-                            : "messages.zenkai.dragon_ball_radar_off"), true);
-            player.getCooldowns().addCooldown(this, TOGGLE_COOLDOWN_TICKS);
-        }
+                LAST_HIT.remove(player.getUUID());
+                player.displayClientMessage(Component.translatable(
+                        "messages.zenkai.dragon_ball_radar_off"), true);
+            } else {
+                // Búsqueda ÚNICA de la activación: fija el objetivo de aquí en adelante.
+                BlockPos target = level instanceof ServerLevel sl
+                        ? locateUnlootedStructure(sl, player.blockPosition())
+                        : null;
 
-        boolean on = !isActive(stack);
-        setActive(stack, on);
-        if (on) {
-            LAST_HIT.put(player.getUUID(), player.tickCount);
-        } else {
-            // Apagar: la aguja vuelve a girar sola y se olvida el objetivo cacheado.
-            stack.remove(ModDataComponents.RADAR_TARGET.get());
-            TARGET_CACHE.remove(player.getUUID());
-            LAST_HIT.remove(player.getUUID());
+                if (target == null) {
+                    // Sin señal: no se enciende, así no queda gastando búsquedas en balde.
+                    player.displayClientMessage(Component.translatable(
+                            "messages.zenkai.dragon_ball_radar_not_in_range"), true);
+                } else {
+                    TARGET_CACHE.put(player.getUUID(), new long[]{ target.asLong() });
+                    LAST_HIT.put(player.getUUID(), player.tickCount);
+                    setActive(stack, true);
+                    player.displayClientMessage(Component.translatable(
+                            "messages.zenkai.dragon_ball_radar_on"), true);
+                }
+            }
+            player.getCooldowns().addCooldown(this, TOGGLE_COOLDOWN_TICKS);
         }
 
         player.playNotifySound(ModSounds.DRAGON_BALL_RADAR_USE.get(), SoundSource.PLAYERS, 0.9F, 0.85F);
@@ -131,7 +148,7 @@ public class DragonRadarItem extends Item {
             return;
         }
 
-        // Solo el radar en mano trabaja: si no, N radares en el inventario ticarían todos.
+        // Solo el radar en mano trabaja: si no, N radares en el inventario todos.
         if (!selected && player.getOffhandItem() != stack) return;
 
         // Desfase por jugador: evita que varios radares caigan en el mismo tick del servidor.
@@ -140,7 +157,7 @@ public class DragonRadarItem extends Item {
         BlockPos nearest = findNearestDragonBall(level, player, player.blockPosition());
         if (nearest != null) {
             LAST_HIT.put(player.getUUID(), player.tickCount);
-            // Solo escribimos si cambió: un stack.set cada segundo resincronizaría el slot
+            // Solo escribimos si cambió: un stack. Set cada segundo resynchronization el slot
             // a todos los clientes, que es justo el coste que evita este enfoque.
             GlobalPos target = new GlobalPos(level.dimension(), nearest);
             if (!target.equals(stack.get(ModDataComponents.RADAR_TARGET.get()))) {
@@ -163,7 +180,7 @@ public class DragonRadarItem extends Item {
 
             int since = player.tickCount - LAST_HIT.getOrDefault(player.getUUID(), player.tickCount);
             if (since >= GIVE_UP_TICKS) {
-                // Nada en rango durante 10 s: apagado automático para no seguir buscando.
+                // El objetivo dejó de ser válido (ya saqueado, otra dimensión...): apagar.
                 setActive(stack, false);
                 TARGET_CACHE.remove(player.getUUID());
                 LAST_HIT.remove(player.getUUID());
@@ -178,8 +195,9 @@ public class DragonRadarItem extends Item {
     }
 
     /**
-     * 1) Esferas físicas cerca (incluye las que un jugador haya colocado en su base).
-     * 2) Si no hay, la estructura NO saqueada más cercana, cacheada por jugador.
+     * 1) Esferas físicas cerca (incluye las que un jugador haya colocado en su base): esto
+     *    SÍ corre cada segundo, es barato y permite que el objetivo mejore sobre la marcha.
+     * 2) Si no hay ninguna cerca, el objetivo fijado al encender. No se vuelve a buscar.
      */
     private BlockPos findNearestDragonBall(Level level, Player player, BlockPos origin) {
         if (!(level instanceof ServerLevel serverLevel)) return null;
@@ -188,16 +206,8 @@ public class DragonRadarItem extends Item {
         if (nearby != null) return nearby;
 
         long[] cached = TARGET_CACHE.get(player.getUUID());
-        if (cached != null && player.tickCount < cached[1]) return BlockPos.of(cached[0]);
-
-        BlockPos target = locateUnlootedStructure(serverLevel, origin);
-        if (target != null) {
-            TARGET_CACHE.put(player.getUUID(),
-                    new long[]{ target.asLong(), player.tickCount + TARGET_CACHE_TICKS });
-        } else {
-            TARGET_CACHE.remove(player.getUUID());
-        }
-        return target;
+        if (cached == null || cached[0] == NO_TARGET) return null;
+        return BlockPos.of(cached[0]);
     }
 
     /**
@@ -226,7 +236,7 @@ public class DragonRadarItem extends Item {
                 for (int i = 0; i < sections.length; i++) {
                     LevelChunkSection sec = sections[i];
                     if (sec.hasOnlyAir()) continue;
-                    if (!sec.maybeHas(s -> s.is(ModTags.Blocks.DRAGON_BALLS_BLOCK))) continue;
+                    if (!sec.maybeHas(IS_BALL)) continue;
 
                     int baseY = level.getSectionYFromSectionIndex(i) << 4;
                     if (baseY + 15 < origin.getY() - DETECTION_RADIUS
@@ -260,6 +270,7 @@ public class DragonRadarItem extends Item {
      * próxima que no esté marcada como saqueada. Ir por estructura (y no con el tag entero) es lo
      * que permite tener alternativa cuando la más cercana ya está vacía. Al iterar el tag, las
      * estructuras de Namek entran solas en cuanto las añadas a zenkai:dragon_balls.
+     * OJO: es la forma CARA. Llamarlo solo desde que use() (una vez por activación).
      */
     private static BlockPos locateUnlootedStructure(ServerLevel level, BlockPos origin) {
         Optional<HolderSet.Named<Structure>> set =
