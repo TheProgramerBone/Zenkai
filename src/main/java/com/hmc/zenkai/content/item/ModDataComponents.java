@@ -2,6 +2,7 @@ package com.hmc.zenkai.content.item;
 
 import com.hmc.zenkai.Zenkai;
 import com.mojang.serialization.Codec;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -27,6 +28,12 @@ public final class ModDataComponents {
             COMPONENTS.register("radar_upgrade", () -> DataComponentType.<Boolean>builder()
                     .persistent(Codec.BOOL)
                     .networkSynchronized(ByteBufCodecs.BOOL)
+                    .build());
+
+    public static final Supplier<DataComponentType<GlobalPos>> RADAR_TARGET =
+            COMPONENTS.register("radar_target", () -> DataComponentType.<GlobalPos>builder()
+                    .persistent(GlobalPos.CODEC)
+                    .networkSynchronized(GlobalPos.STREAM_CODEC)
                     .build());
 
     public static void register(IEventBus modBus) {

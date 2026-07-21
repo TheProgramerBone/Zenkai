@@ -122,6 +122,8 @@
   "biome.zenkai.namek_plains": "Namek Plains Biome",
   "biome.zenkai.namek_hills": "Namek Hills Biome",
 
+  "messages.zenkai.dragon_ball_radar_on": "§bRadar activated",
+  "messages.zenkai.dragon_ball_radar_off": "§7Radar deactivated",
   "messages.zenkai.shenron_summon": "§2§lCome forth Shenron and grant my wish!",
   "messages.zenkai.dragon_ball_radar_not_in_range": "No §6Dragon Balls§f in radius",
   "messages.zenkai.dragon_ball_radar_searching": "A §6Dragon Ball§f is in radius!",
@@ -172,6 +174,7 @@
   "messages.zenkai.cannot_break": "§cThis block is protected by %s",
   "messages.zenkai.cannot_break_generic": "§cThis block is protected",
   "messages.zenkai.power_percent": "§bPower: %s%% / %s%%",
+
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Yemma",
