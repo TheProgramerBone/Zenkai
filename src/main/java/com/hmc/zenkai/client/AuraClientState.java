@@ -47,7 +47,7 @@ public final class AuraClientState {
             return;
         }
 
-        boolean down = KeyBindings.FIRE_KI.isDown();
+        boolean down = KeyBindings.TURBO.isDown();
         // Doble-tap de R SIN click derecho (para no confundir con el combo de carga).
         if (down && !prevDown && mc.screen == null && !mc.options.keyUse.isDown()) {
             if (tick - lastPressTick <= DOUBLE_TAP_TICKS) {

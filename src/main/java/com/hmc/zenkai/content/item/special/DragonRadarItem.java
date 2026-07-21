@@ -2,10 +2,15 @@ package com.hmc.zenkai.content.item.special;
 
 import com.hmc.zenkai.content.sound.ModSounds;
 import com.hmc.zenkai.util.ModTags;
+import com.hmc.zenkai.worldgen.LootedDragonBalls;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomModelData;
@@ -17,15 +22,23 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.Structure;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class DragonRadarItem extends Item {
     private static final String RADAR_TAG = "RadarStartTime";
     private static final int ACTIVE_DURATION_TICKS = 20 * 20; // 20 seconds
-    private static final int DETECTION_RADIUS = 128;
     private static final int NEAR_RADIUS_SQR = 16 * 16;
+    private static final int DETECTION_RADIUS = 32;      // escaneo de bloques cercano
+    private static final int STRUCTURE_SEARCH_CHUNKS = 100;
+    private static final int LOOTED_MATCH_RADIUS = 32;   // margen entre la esfera y el inicio de su estructura
+    private static final int TARGET_CACHE_TICKS = 200;   // 10 s entre búsquedas completas
+    /** Objetivo cacheado por jugador: {posLong, tickDeCaducidad}. Solo servidor, no persiste. */
+    private static final java.util.Map<UUID, long[]> TARGET_CACHE = new java.util.HashMap<>();
 
     public DragonRadarItem(Properties properties) {
         super(properties);
@@ -79,7 +92,7 @@ public class DragonRadarItem extends Item {
         }
 
         if (player.tickCount % 20 != 0) return;
-        BlockPos nearest = findNearestDragonBall(level, player.blockPosition());
+        BlockPos nearest = findNearestDragonBall(level, player, player.blockPosition());
         if (nearest != null) {
             updateRadarDirection(stack, player, slot, player.getX(), player.getZ(), nearest.getX(), nearest.getZ(), player.getYRot());
             double distanceSqr = player.blockPosition().distToCenterSqr(nearest.getX(), nearest.getY(), nearest.getZ());
@@ -118,21 +131,36 @@ public class DragonRadarItem extends Item {
     }
 
     /**
-     * Híbrido: primero escaneo de bloques cercano (exacto, y respeta esferas ya recogidas
-     * o dejadas en otro sitio); si no hay nada cerca, localiza la ESTRUCTURA más próxima
-     * vía el tag zenkai:dragon_balls (como /locate, sin límite práctico de distancia).
-     * Limitación conocida: si alguien saqueó la estructura, el radar seguirá apuntando
-     * a su posición hasta que el jugador llegue y el escaneo cercano no encuentre nada.
+     * 1) Esferas físicas cerca (incluye las que un jugador haya colocado en su base).
+     * 2) Si no hay, la estructura NO saqueada más cercana, cacheada por jugador.
      */
-    private BlockPos findNearestDragonBall(Level level, BlockPos origin) {
+    private BlockPos findNearestDragonBall(Level level, Player player, BlockPos origin) {
+        BlockPos nearby = scanNearbyBalls(level, origin);
+        if (nearby != null) return nearby;
+
+        if (!(level instanceof ServerLevel serverLevel)) return null;
+
+        long[] cached = TARGET_CACHE.get(player.getUUID());
+        if (cached != null && player.tickCount < cached[1]) return BlockPos.of(cached[0]);
+
+        BlockPos target = locateUnlootedStructure(serverLevel, origin);
+        if (target != null) {
+            TARGET_CACHE.put(player.getUUID(),
+                    new long[]{ target.asLong(), player.tickCount + TARGET_CACHE_TICKS });
+        } else {
+            TARGET_CACHE.remove(player.getUUID());
+        }
+        return target;
+    }
+
+    /** Escaneo de bloques en un cubo pequeño alrededor del jugador. */
+    private static BlockPos scanNearbyBalls(Level level, BlockPos origin) {
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
         BlockPos nearest = null;
         double closestDistanceSqr = Double.MAX_VALUE;
 
-        final int minY = level.getMinBuildHeight();
-        final int maxY = level.getMaxBuildHeight() - 1; // inclusive
-        int startY = Math.max(minY, origin.getY() - DETECTION_RADIUS);
-        int endY   = Math.min(maxY, origin.getY() + DETECTION_RADIUS);
+        int startY = Math.max(level.getMinBuildHeight(), origin.getY() - DETECTION_RADIUS);
+        int endY   = Math.min(level.getMaxBuildHeight() - 1, origin.getY() + DETECTION_RADIUS);
 
         for (int x = origin.getX() - DETECTION_RADIUS; x <= origin.getX() + DETECTION_RADIUS; x++) {
             for (int z = origin.getZ() - DETECTION_RADIUS; z <= origin.getZ() + DETECTION_RADIUS; z++) {
@@ -148,13 +176,34 @@ public class DragonRadarItem extends Item {
                 }
             }
         }
-        if (nearest != null) return nearest;
-
-        // Lejos: localizar la estructura más cercana (radio en CHUNKS; false = no saltar generadas).
-        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-            return serverLevel.findNearestMapStructure(
-                    ModTags.Structures.DRAGON_BALLS, origin, 200, false);
-        }
         return nearest;
+    }
+
+    /**
+     * Busca la estructura más cercana de CADA esfera del tag por separado y se queda con la más
+     * próxima que no esté marcada como saqueada. Ir por estructura (y no con el tag entero) es lo
+     * que permite tener alternativa cuando la más cercana ya está vacía. Al iterar el tag, las
+     * estructuras de Namek entran solas en cuanto las añadas a zenkai:dragon_balls.
+     */
+    private static BlockPos locateUnlootedStructure(ServerLevel level, BlockPos origin) {
+        Optional<HolderSet.Named<Structure>> set =
+                level.registryAccess().lookupOrThrow(Registries.STRUCTURE)
+                        .get(ModTags.Structures.DRAGON_BALLS);
+        if (set.isEmpty()) return null;
+
+        LootedDragonBalls looted = LootedDragonBalls.get(level);
+        BlockPos best = null;
+        double bestSqr = Double.MAX_VALUE;
+
+        for (Holder<Structure> holder : set.get()) {
+            var found = level.getChunkSource().getGenerator().findNearestMapStructure(
+                    level, HolderSet.direct(holder), origin, STRUCTURE_SEARCH_CHUNKS, false);
+            if (found == null) continue;
+            BlockPos pos = found.getFirst();
+            if (looted.isLootedNear(pos, LOOTED_MATCH_RADIUS)) continue;
+            double d = origin.distSqr(pos);
+            if (d < bestSqr) { bestSqr = d; best = pos; }
+        }
+        return best;
     }
 }

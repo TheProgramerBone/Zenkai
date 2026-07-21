@@ -1,0 +1,7 @@
+{
+  "max_level": 10,
+  "tp_cost": 600,
+  "mind_req": [6, 10, 15, 20, 26, 33, 41, 50, 60, 72],
+  "purchasable": true,
+  "master": "kami"
+}

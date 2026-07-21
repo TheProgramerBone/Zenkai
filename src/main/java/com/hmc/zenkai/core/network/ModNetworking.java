@@ -110,9 +110,24 @@ public class ModNetworking {
                 SpendTpPacket.STREAM_CODEC,
                 SpendTpPacket::handle);
 
-        registrar.playToServer(ToggleFlyPacket.TYPE, ToggleFlyPacket.STREAM_CODEC, ToggleFlyPacket::handle);
-        registrar.playToServer(KiChargePacket.TYPE,  KiChargePacket.STREAM_CODEC,  KiChargePacket::handle);
-        registrar.playToServer(FlyBoostPacket.TYPE,  FlyBoostPacket.STREAM_CODEC,  FlyBoostPacket::handle);
+        registrar.playToServer(
+                ToggleFlyPacket.TYPE,
+                ToggleFlyPacket.STREAM_CODEC,
+                ToggleFlyPacket::handle);
+
+        registrar.playToServer(
+                KiChargePacket.TYPE,
+                KiChargePacket.STREAM_CODEC,
+                KiChargePacket::handle);
+        registrar.playToServer(
+                PowerPercentPacket.TYPE,
+                PowerPercentPacket.STREAM_CODEC,
+                PowerPercentPacket::handle);
+
+        registrar.playToServer(
+                FlyBoostPacket.TYPE,
+                FlyBoostPacket.STREAM_CODEC,
+                FlyBoostPacket::handle);
 
         registrar.playToServer(
                 ChooseRacePacket.TYPE,

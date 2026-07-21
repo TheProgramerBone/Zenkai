@@ -73,7 +73,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
             boolean explosive = tech.explosive() && !type.defensive;
 
             int cost = (int) Math.max(1, Math.ceil(
-                    KiCombatServer.computeCost(att.getEnergyMax(), type, tech.size(), explosive) * ratio));
+                    KiCombatServer.computeCost(att.getEnergyMax(), type, tech.size(), explosive) * ratio * att.powerFraction()));
             if (att.getEnergy() < cost) return;
             att.addEnergy(-cost);
             att.addTechniqueMastery(type.name(), (float) StatsConfig.techMasteryPerUse());

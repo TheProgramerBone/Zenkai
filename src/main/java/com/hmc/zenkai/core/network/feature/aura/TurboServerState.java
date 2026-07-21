@@ -49,6 +49,7 @@ public final class TurboServerState {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (!ON.contains(sp.getUUID())) return;
         if (sp.level().getGameTime() % 20 != 0) return; // cobro 1 vez por segundo
+        if (!sp.getAbilities().flying) return; // turbo en tierra: sin coste de ki (correr ya paga estamina)
 
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         int cost = drainPerSecond(att);

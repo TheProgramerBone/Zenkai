@@ -35,6 +35,18 @@ public final class StatsConfig {
             BUILDER.comment("Max fly multiplier (cap)")
                     .defineInRange("fly.multiplier_cap", 5.0D, 1.0D, 10.0D);
 
+    private static final ModConfigSpec.DoubleValue FLY_KI_DRAIN_RAW =
+            BUILDER.comment("Ki drained per TICK while flying (before the Fly skill reduction)")
+                    .defineInRange("fly.ki_drain_per_tick", 0.15D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue FLY_TURBO_SPEED_RAW =
+            BUILDER.comment("Extra fly speed multiplier while TURBO is active (the Fly skill curve stacks on top)")
+                    .defineInRange("fly.turbo_speed_mult", 1.8D, 1.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue RUN_STAMINA_DRAIN_RAW =
+            BUILDER.comment("Stamina drained per SECOND while sprinting (before the Run skill reduction)")
+                    .defineInRange("run.stamina_drain_per_second", 2.0D, 0.0D, 100.0D);
+
     private static final ModConfigSpec.IntValue REGEN_BODY_RAW =
             BUILDER.comment("Body regen percent per second (1 = 1% of max per second)")
                     .defineInRange("regen.base_per_second.body_percent", 5, 0, 100);
@@ -74,7 +86,6 @@ public final class StatsConfig {
     private static final ModConfigSpec.DoubleValue MASTERY_TECH_CAST_RAW =
             BUILDER.comment("At 100% technique mastery: charge-time reduction fraction (0.30 = charges 30% faster)")
                     .defineInRange("mastery.tech_cast_reduction", 0.30D, 0.0D, 0.95D);
-
     private static final ModConfigSpec.DoubleValue MAJIN_STAT_BONUS_RAW =
             BUILDER.comment("Stat bonus fraction while under the Majin effect (0.10 = +10%)")
                     .defineInRange("majin.effect_stat_bonus", 0.10D, 0.0D, 5.0D);
@@ -264,6 +275,8 @@ public final class StatsConfig {
     private static volatile int GLOBAL_ATTRIBUTE_CAP = 200;
     private static volatile double SPEED_MULT_CAP = 2.0D;
     private static volatile double FLY_MULT_CAP = 2.0D;
+    private static volatile double FLY_KI_DRAIN = 0.15D, RUN_STAMINA_DRAIN = 2.0D;
+    private static volatile double FLY_TURBO_SPEED = 1.8D;
     private static volatile int REGEN_BODY = 1, REGEN_STAMINA = 1, REGEN_ENERGY = 1;
     private static volatile double MOVE_SCALING = 1.0D, FLY_SCALING = 1.0D;
     private static volatile double MIN_DAMAGE_PERCENT = 0.01D;
@@ -281,7 +294,6 @@ public final class StatsConfig {
     private static volatile double M_FORM_STAT = 0.20D, M_FORM_DRAIN = 0.50D,
             M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
     private static volatile double MAJIN_STAT_BONUS = 0.10D;
-
 
     private static volatile double TRAIN_DMG_TP = 0.05D, TRAIN_AIR_TP = 0.0003D,
             TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.25D, TRAIN_DECAY = 0.03D,
@@ -312,6 +324,9 @@ public final class StatsConfig {
         BODY_SCALE           = BODY_SCALE_RAW.get();
         STAMINA_SCALE        = STAMINA_SCALE_RAW.get();
         ENERGY_SCALE         = ENERGY_SCALE_RAW.get();
+        FLY_KI_DRAIN         = FLY_KI_DRAIN_RAW.get();
+        FLY_TURBO_SPEED = FLY_TURBO_SPEED_RAW.get();
+        RUN_STAMINA_DRAIN    = RUN_STAMINA_DRAIN_RAW.get();
 
         // === NEW: cargar race bases ===
         RACE_BASES.clear();
@@ -375,6 +390,9 @@ public final class StatsConfig {
 
     public static double movementScaling()    { return MOVE_SCALING; }
     public static double flyScaling()         { return FLY_SCALING; }
+    public static double flyKiDrainPerTick()      { return FLY_KI_DRAIN; }
+    public static double flyTurboSpeedMult() { return FLY_TURBO_SPEED; }
+    public static double runStaminaDrainPerSecond(){ return RUN_STAMINA_DRAIN; }
 
     public static int senseKiRange() { return SENSE_KI_RANGE; }
     public static double senseKiSimilarThreshold() { return SENSE_KI_SIMILAR; }

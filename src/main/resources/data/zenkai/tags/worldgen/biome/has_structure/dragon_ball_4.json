@@ -1,1 +1,1 @@
-{ "values": [ "minecraft:desert", "minecraft:savanna", "minecraft:savanna_plateau", "minecraft:windswept_savanna" ] }
+{ "values": [ "#c:is_savanna" ] }

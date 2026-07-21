@@ -1,10 +1,10 @@
-// 1.21.1	2026-07-13T13:45:15.2318625	Tags for minecraft:block mod id zenkai
+// 1.21.1	2026-07-20T17:11:08.7043684	Tags for minecraft:block mod id zenkai
 859f95cec43ca2e9aa57c8607cfde9edbafb8fbc data/minecraft/tags/block/dead_bush_may_place_on.json
 b9a230b994fbd179ce5a7ba0bfdf6b8618083e4d data/minecraft/tags/block/dirt.json
 a7be78592170d29007ce22ba90b48167eb3e2ad2 data/minecraft/tags/block/mineable/pickaxe.json
 b9a230b994fbd179ce5a7ba0bfdf6b8618083e4d data/minecraft/tags/block/mineable/shovel.json
 e541b126c68665a1badc5b4d9b3f986e0e5d75c3 data/minecraft/tags/block/needs_iron_tool.json
 33c0b4afe0099a0962fd120a2b69d17e9798ac0f data/minecraft/tags/block/sculk_replaceable.json
-b123f1fa420670b3daed01bb390c6c6c5dc286e6 data/zenkai/tags/block/dragon_balls_block.json
+0aee6efe81b8d51f8eb5660cd4ea0f8a99cdf80e data/zenkai/tags/block/dragon_balls_block.json
 1e578f1a7e9b81f6c452a0f19943980f0f526e7a data/zenkai/tags/block/incorrect_for_terragem_tool.json
 32b13946c4cd1f944b029659ccce5fcb2adad4ff data/zenkai/tags/block/needs_terragem_tool.json

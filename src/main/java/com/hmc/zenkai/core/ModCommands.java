@@ -331,22 +331,23 @@ public class ModCommands {
         return 1;
     }
 
-    /** Otorga una habilidad SIN coste de TP (maestro/NPC/operador). Sobrevive al respec. */
     private static int skillGive(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, String id) {
-        if (SkillDef.get(id) == null) {
+        SkillDef def = SkillDef.get(id);
+        if (def == null) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] Unknown skill: " + id));
             return 0;
         }
         var att = sp.getData(DataAttachments.PLAYER_STATS.get());
-        if (att.skills().has(id)) {
+        if (att.skills().level(id) >= def.maxLevel()) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] "
-                    + sp.getGameProfile().getName() + " already has: " + id));
+                    + sp.getGameProfile().getName() + " already maxed: " + id));
             return 0;
         }
-        att.skills().unlock(id, false); // otorgada, no comprada
+        final int next = att.skills().level(id) + 1;
+        att.skills().grant(id, next); // otorgada, no comprada: sobrevive al respec
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(() -> Component.literal(
-                "[Zenkai] Skill '" + id + "' → " + sp.getGameProfile().getName()), true);
+                "[Zenkai] Skill '" + id + "' lvl " + next + " → " + sp.getGameProfile().getName()), true);
         return 1;
     }
 

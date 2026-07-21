@@ -20,6 +20,7 @@ public final class TrainingSwingClientHandler {
     @SubscribeEvent
     public static void onLeftClickEmpty(PlayerInteractEvent.LeftClickEmpty e) {
         if (!e.getItemStack().isEmpty()) return; // solo puños
+        if (!CombatModeClientState.isActive()) return; // entrenar solo en modo combate
         PacketDistributor.sendToServer(new TrainingSwingPacket());
     }
 }

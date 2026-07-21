@@ -48,16 +48,19 @@ public final class ZenkaiStructurePlacement {
         ServerLevel overworld = server.overworld();
         ZenkaiWorldData data = ZenkaiWorldData.get(server);
 
-        // Base de Kami: usa la guardada; si no, busca el bioma objetivo dentro del
-        // radio alrededor del spawn (garantiza bioma + cercanía). Fallback: spawn.
+        // Base de Kami: la búsqueda del sitio (cara: genera chunks) se hace UNA sola vez
+        // por mundo y se persiste SIEMPRE, haya o no colocación después. Antes solo se
+        // guardaba si place() tenía éxito, y un fallo condenaba a iterar cada arranque.
         BlockPos kamiBase = data.getPos(KEY_KAMI);
-        if (kamiBase == null) kamiBase = findKamiBase(overworld);
+        if (kamiBase == null) {
+            kamiBase = findKamiBase(overworld);
+            data.setPos(KEY_KAMI, kamiBase);
+        }
 
-        // Colocar Kami una sola vez y recordar dónde quedó.
+        // Colocar Kami una sola vez.
         if (!data.isPlaced(KEY_KAMI)) {
             if (StaticStructurePlacer.place(overworld, kamiBase, ModStructureSegments.KAMI, true)) {
                 data.markPlaced(KEY_KAMI);
-                data.setPos(KEY_KAMI, kamiBase);
             }
         }
 

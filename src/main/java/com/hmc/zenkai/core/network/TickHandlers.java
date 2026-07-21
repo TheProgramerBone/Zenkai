@@ -6,6 +6,7 @@ import com.hmc.zenkai.content.effect.ModEffects;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.mastery.MasteryEffects;
+import com.hmc.zenkai.core.network.feature.aura.TurboServerState;
 import com.hmc.zenkai.core.network.feature.forms.FormDefinition;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
@@ -13,6 +14,7 @@ import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.core.skills.SkillEffects;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -34,6 +36,9 @@ public class TickHandlers {
 
     private static final ResourceLocation DOWNED_LOCK_ID =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "downed_lock");
+
+    /** Ticks seguidos cargando ki, por jugador (transitorio, solo server). */
+    private static final java.util.Map<java.util.UUID, Integer> chargeTicks = new java.util.HashMap<>();
 
     /**
      * LOCK real (servidor):
@@ -77,7 +82,7 @@ public class TickHandlers {
     }
 
     /**
-     * LOCK de derribado (servidor): mismo anclaje que el de transformación pero con su propio id,
+     * LOCK de derribado (servidor): mismo anclaje que el de transformación, pero con su propio id,
      * para inmovilizar al jugador mientras está acostado. El daño SÍ le llega (no es invulnerable).
      */
     private static void applyDownedLockServer(Player p, boolean lock) {
@@ -108,7 +113,7 @@ public class TickHandlers {
         p.hurtMarked = true;
     }
 
-    /** Sale del estado derribado: limpia flags, libera el lock y restaura la pose. */
+    /** Sale del estado derribado: limpio flag, libera el lock y restaura la pose. */
     private static void clearDowned(Player p, PlayerStatsAttachment att) {
         att.flags().setDowned(false);
         att.flags().setDownedUntil(0L);
@@ -196,7 +201,7 @@ public class TickHandlers {
 
             if (att.getBody() > 0) {
                 // Se levanta con el body que la curación haya dejado: la senzu deja 100%,
-                // el revive de aliado (mano vacía) ya fija su 20% en CombatZenkaiHooks.
+                // él revive de aliado (mano vacía) ya fija su 20% en CombatZenkaiHooks.
                 clearDowned(p, att);
                 PlayerLifeCycle.syncIfServer(p);
             } else if (p.level().getGameTime() >= att.flags().getDownedUntil()) {
@@ -232,9 +237,12 @@ public class TickHandlers {
         // ================================
         // Volar (server)
         // ================================
+        boolean turboOn = p instanceof ServerPlayer spTurbo && TurboServerState.isOn(spTurbo);
+
         if (!p.isCreative() && !p.isSpectator()) {
             var ab = p.getAbilities();
-            boolean shouldFly = att.isFlyEnabled();
+            // La habilidad Fly HABILITA el vuelo: sin ella no se vuela aunque el toggle esté activo.
+            boolean shouldFly = att.isFlyEnabled() && SkillEffects.canFly(p);
 
             if (ab.mayfly != shouldFly) {
                 ab.mayfly = shouldFly;
@@ -242,9 +250,22 @@ public class TickHandlers {
                 p.onUpdateAbilities();
             }
 
+            boolean flyTurbo = ab.flying && turboOn;
+
+            // Velocidad: base por stats (tope de config); el bonus de la habilidad SOLO en turbo
+            // y aplicado tras el tope, para que prevalezca.
             float baseFly = 0.02f;
-            float flyMult = (float) Math.min(2.0, att.getFlyMultiplier());
-            ab.setFlyingSpeed(baseFly * flyMult);
+            double mult = Math.min(StatsConfig.flyMultiplierCap(), att.getFlyMultiplier());
+            if (flyTurbo) mult *= StatsConfig.flyTurboSpeedMult() * SkillEffects.flySpeedFactor(p);
+            ab.setFlyingSpeed((float) (baseFly * mult));
+
+            // Coste extra del vuelo turbo: ki por tick reducido por el nivel de Fly.
+            // (El drenaje base del turbo/aura lo cobra TurboServerState por su cuenta.)
+            if (flyTurbo) {
+                double drain = StatsConfig.flyKiDrainPerTick() * SkillEffects.flyKiDrainFactor(p);
+                if (drain > 0.0) att.addKi(-drain);
+                // Sin ki, TurboServerState se auto-apaga en su propio tick.
+            }
             if (!ab.flying) att.flags().setFlyBoosting(false);
         }
         {
@@ -308,14 +329,26 @@ public class TickHandlers {
             applyTransformLockServer(p, false);
         }
 
-        // ----------------------------
-        // Carga de KI (mantener tecla)
-        // ----------------------------
+        // Carga de KI (mantener tecla) + subida del % de poder (Ki Control)
+
         if (att.isChargingKi()) {
             double perTick = att.getRegenEnergyPerTick();
             double bonusMul = 3.0; // o config
-            double gain = perTick * bonusMul;
-            att.addKi(gain);
+            att.addKi(perTick * bonusMul);
+
+            // Tras 1 s cargando, el % sube de 5 en 5 cada segundo hasta el techo de la skill.
+            chargeTicks.merge(p.getUUID(), 1, Integer::sum);
+            int t = chargeTicks.get(p.getUUID());
+            if (t > 20 && (t - 20) % 20 == 0) {
+                if (att.setPowerPercent(att.getPowerPercent() + 5, SkillEffects.maxPowerPercent(p))
+                        && p instanceof ServerPlayer spp) {
+                    spp.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                            "messages.zenkai.power_percent",
+                            att.getPowerPercent(), SkillEffects.maxPowerPercent(p)), true);
+                }
+            }
+        } else {
+            chargeTicks.remove(p.getUUID());
         }
 
         // ----------------------------
@@ -343,9 +376,10 @@ public class TickHandlers {
                     didBody = true;
                 }
 
+                // Correr drena stamina: no se regenera a la vez o se anularían entre sí.
                 int stCur = att.getStamina();
                 int stMax = att.getStaminaMax();
-                if (stCur < stMax) {
+                if (stCur < stMax && !p.isSprinting()) {
                     double pct = StatsConfig.baseRegenStamina() / 100.0;
                     int regen = (int) Math.round(stMax * pct);
                     if (regen <= 0) regen = 1;
@@ -370,6 +404,20 @@ public class TickHandlers {
         }
 
         // ----------------------------
+        // Correr: el sprint normal es GRATIS; con TURBO activo (doble R) drena estamina
+        // (reducida por Run) y aplica el bonus de velocidad de la habilidad.
+        // ----------------------------
+        boolean groundTurbo = turboOn && p.isSprinting() && !p.getAbilities().flying
+                && SkillEffects.level(p, SkillEffects.RUN) > 0;
+        if (groundTurbo && p.tickCount % 20 == 0) {
+            double drain = StatsConfig.runStaminaDrainPerSecond() * SkillEffects.runStaminaDrainFactor(p);
+            if (drain > 0.0) {
+                att.addStamina(-(int) Math.max(1, Math.round(drain)));
+                if (att.getStamina() <= 0) p.setSprinting(false); // sin estamina: se corta el sprint
+            }
+        }
+
+        // ----------------------------
         // Movimiento por stats (solo cuando NO transforma)
         // ----------------------------
         double speedStat = att.computeSpeedFinal();
@@ -377,6 +425,8 @@ public class TickHandlers {
                 1.0 + (speedStat / 100.0) * StatsConfig.movementScaling(),
                 StatsConfig.speedMultiplierCap()
         );
+        // El bonus de Run se aplica TRAS el tope (prevalece la habilidad), solo en turbo.
+        if (groundTurbo) moveMult *= SkillEffects.runSpeedFactor(p);
 
         AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
         if (moveAttr != null) {
