@@ -14,6 +14,8 @@ public final class SkillEffects {
     public static final String FLY = "fly";
     public static final String RUN = "run";
     public static final String KI_CONTROL = "ki_control";
+    public static final String MEDITATION = "meditation";
+    public static final String KI_BLOCK = "ki_block";
 
     public static int level(Player p, String skillId) {
         if (p == null) return 0;
@@ -47,5 +49,28 @@ public final class SkillEffects {
     /** Techo del % de poder: 50 base + 5 por nivel de Ki Control (nivel 10 = 100). */
     public static int maxPowerPercent(Player p) {
         return 50 + 5 * level(p, KI_CONTROL);
+    }
+
+    // ── Meditación ───────────────────────────────────────────────────────────
+    /** Sin Meditación NO se recupera ki cargando con C. El % de poder sí sube igual:
+     *  concentrarse siempre funciona, canalizar el ki es lo que hay que aprender. */
+    public static boolean canChargeKi(Player p) { return level(p, MEDITATION) > 0; }
+
+    /** Multiplicador del regen PASIVO de ki. 1.0 sin la habilidad (mínimo vital). */
+    public static double kiRegenFactor(Player p) { return curve(p, MEDITATION, "regen_mult", 1.0); }
+
+    /** Multiplicador de la carga con C sobre el regen base por segundo. 0 = no puede cargar. */
+    public static double kiChargeFactor(Player p) { return curve(p, MEDITATION, "charge_mult", 0.0); }
+
+    // ── Ki Block ─────────────────────────────────────────────────────────────
+    /** Fracción del daño que se CORTA al bloquear: 0.20 sin la habilidad, 0.50 a nivel 5.
+     *  Bloquear siempre sirve de algo; la habilidad es lo que lo hace fiable. */
+    public static double blockReduction(Player p) {
+        return curve(p, KI_BLOCK, "block_reduction", 0.20);
+    }
+
+    /** Multiplicador de daño RECIBIDO al bloquear. Menos es mejor. */
+    public static double blockDamageMultiplier(Player p) {
+        return Math.max(0.0, 1.0 - blockReduction(p));
     }
 }

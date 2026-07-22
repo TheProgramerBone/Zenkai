@@ -80,7 +80,7 @@ public abstract class ZenkaiMenuScreen extends Screen {
     /** Fábrica de screens por pestaña. Las que faltan (pasos 5+) muestran "Coming soon". */
     public static Screen createScreen(ZenkaiTab t) {
         return switch (t) {
-            case MAIN -> new StatsScreen();
+            case STATS -> new StatsScreen();
             case SKILLS -> new SkillsScreen();
             case KI_TECHNIQUES -> new KiTechniquesScreen();
             case PHYSICAL_TECHNIQUES -> new PhysicalScreen();

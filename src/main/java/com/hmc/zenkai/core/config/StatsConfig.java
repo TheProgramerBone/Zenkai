@@ -91,17 +91,25 @@ public final class StatsConfig {
             BUILDER.comment("energyMax = 90 + SPI * scale")
                     .defineInRange("pools.energy_scale", 1.0D, 0.1D, 1000.0D);
 
-    private static final ModConfigSpec.IntValue REGEN_BODY_RAW =
-            BUILDER.comment("Body regen percent per second (1 = 1% of max per second)")
-                    .defineInRange("regen.base_per_second.body_percent", 5, 0, 100);
+    private static final ModConfigSpec.DoubleValue REGEN_BODY_RAW =
+            BUILDER.comment("Body regen percent per second (1.0 = 1% of max per second)")
+                    .defineInRange("regen.base_per_second.body_percent", 1.5D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.IntValue REGEN_STAMINA_RAW =
-            BUILDER.comment("Stamina regen percent per second (1 = 1% of max per second)")
-                    .defineInRange("regen.base_per_second.stamina_percent", 10, 0, 100);
+    private static final ModConfigSpec.DoubleValue REGEN_STAMINA_RAW =
+            BUILDER.comment("Stamina regen percent per second (1.0 = 1% of max per second)")
+                    .defineInRange("regen.base_per_second.stamina_percent", 3.0D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.IntValue REGEN_ENERGY_RAW =
-            BUILDER.comment("Energy/Ki regen percent per second (1 = 1% of max per second)")
-                    .defineInRange("regen.base_per_second.energy_percent", 5, 0, 100);
+    private static final ModConfigSpec.DoubleValue REGEN_ENERGY_RAW =
+            BUILDER.comment("Energy/Ki regen percent per second (1.0 = 1%). Meditation multiplies this, and also drives the charge rate")
+                    .defineInRange("regen.base_per_second.energy_percent", 1.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue FOOD_KI_RAW =
+            BUILDER.comment("Ki restored per nutrition point when finishing a food item, as % of energyMax (2.0 = 2%)")
+                    .defineInRange("regen.food.ki_percent_per_nutrition", 2.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue FOOD_STAMINA_RAW =
+            BUILDER.comment("Stamina restored per nutrition point when finishing a food item, as % of staminaMax (3.0 = 3%)")
+                    .defineInRange("regen.food.stamina_percent_per_nutrition", 3.0D, 0.0D, 100.0D);
 
     // =====================================================================
     // SPEC — Combate, técnicas y detección
@@ -296,7 +304,8 @@ public final class StatsConfig {
     private static volatile double TURBO_DRAIN_PCT_PER_SEC = 0.005D;
 
     private static volatile double BODY_SCALE = 1.0D, STAMINA_SCALE = 1.0D, ENERGY_SCALE = 1.0D;
-    private static volatile int    REGEN_BODY = 5, REGEN_STAMINA = 10, REGEN_ENERGY = 5;
+    private static volatile double REGEN_BODY = 1.5, REGEN_STAMINA = 3.0, REGEN_ENERGY = 1.0;
+    private static volatile double FOOD_KI_PCT = 2.0, FOOD_STAMINA_PCT = 3.0;
 
     private static volatile double MIN_DAMAGE_PERCENT = 0.05D;
     private static volatile int    TECHNIQUE_MAX_SLOTS = 12;
@@ -347,6 +356,8 @@ public final class StatsConfig {
         REGEN_BODY    = REGEN_BODY_RAW.get();
         REGEN_STAMINA = REGEN_STAMINA_RAW.get();
         REGEN_ENERGY  = REGEN_ENERGY_RAW.get();
+        FOOD_KI_PCT      = FOOD_KI_RAW.get();
+        FOOD_STAMINA_PCT = FOOD_STAMINA_RAW.get();
 
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
@@ -412,9 +423,11 @@ public final class StatsConfig {
     public static double bodyScale()      { return BODY_SCALE; }
     public static double staminaScale()   { return STAMINA_SCALE; }
     public static double energyScale()    { return ENERGY_SCALE; }
-    public static int baseRegenBody()     { return REGEN_BODY; }
-    public static int baseRegenStamina()  { return REGEN_STAMINA; }
-    public static int baseRegenEnergy()   { return REGEN_ENERGY; }
+    public static double baseRegenBody()    { return REGEN_BODY; }
+    public static double baseRegenStamina() { return REGEN_STAMINA; }
+    public static double baseRegenEnergy()  { return REGEN_ENERGY; }
+    public static double foodKiPercentPerNutrition()      { return FOOD_KI_PCT; }
+    public static double foodStaminaPercentPerNutrition() { return FOOD_STAMINA_PCT; }
 
     public static double minDamagePercent()        { return MIN_DAMAGE_PERCENT; }
     public static int techniqueMaxSlots()          { return TECHNIQUE_MAX_SLOTS; }

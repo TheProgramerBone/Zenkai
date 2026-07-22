@@ -5,10 +5,10 @@ package com.hmc.zenkai.client.gui.screens;
  * tienen contenido; el resto muestra "Próximamente" (los pasos 4-5 del release las llenan).
  */
 public enum ZenkaiTab {
-    MAIN(0,20),
+    STATS(0,20),
     SKILLS(160,0),
     KI_TECHNIQUES(40,20),
-    PHYSICAL_TECHNIQUES(0,20),
+    PHYSICAL_TECHNIQUES(120,20),
     STORY(20,20),
     PARTY(80,20),
     CONFIG(100,20);

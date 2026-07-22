@@ -1,0 +1,10 @@
+{
+  "max_level": 5,
+  "tp_cost": 350,
+  "mind_req": [5, 10, 16, 23, 31],
+  "purchasable": true,
+  "master": "kami",
+  "values": {
+    "block_reduction": [0.26, 0.32, 0.38, 0.44, 0.50]
+  }
+}

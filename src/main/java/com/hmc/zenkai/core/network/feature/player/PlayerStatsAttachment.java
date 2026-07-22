@@ -154,7 +154,6 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public double getMoveMultiplier() {
         return pools.getMoveMultiplier();
     }
-    public double getRegenEnergyPerTick() { return 1.0; }
 
     // ── Flags ────────────────────────────────────────────────────────────────
     public boolean isFlyEnabled()    { return flags.isFlyEnabled(); }
