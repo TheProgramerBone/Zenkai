@@ -140,9 +140,6 @@ public final class KiCombatServer {
 
     // ── Bloqueo (defensa) ────────────────────────────────────────────────────
 
-    /** Reducción del daño mientras se defiende (manos vacías + click derecho sostenido). */
-    public static final double BLOCK_REDUCTION = 0.4; // recibe el 40%
-
     /** -60% de velocidad mientras defiende (modificador transitorio, sin partículas). */
     private static final ResourceLocation BLOCK_SLOW_ID =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "block_slow");

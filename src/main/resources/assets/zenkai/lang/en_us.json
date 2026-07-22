@@ -107,6 +107,7 @@
   "key.zenkai.power_down": "Lower Power %",
   "key.zenkai.form": "Transform (hold) / Revert (tap)",
 
+
   "hud.zenkai.combat.no_techniques": "Assign techniques in the Ki Techniques menu",
 
   "sounds.zenkai.dragon_ball_radar_use": "Used Radar",
@@ -278,6 +279,12 @@
   "skill.zenkai.run.desc": "Run faster using stamina.",
   "skill.zenkai.fly": "Fly",
   "skill.zenkai.fly.desc": "Be able to fly using ki.",
+  "skill.zenkai.ki_control": "Ki Control",
+  "skill.zenkai.ki_control.desc": "Channel your power output at your 100%. Each level increases by 5% the power output",
+  "skill.zenkai.meditation": "Meditation",
+  "skill.zenkai.meditation.desc": "Channel your ki. Required to charge (C) at all; each level speeds up charging and passive ki regeneration.",
+  "skill.zenkai.ki_block": "Ki Block",
+  "skill.zenkai.ki_block.desc": "Reinforce your guard with ki. Cuts 20% of incoming damage while blocking, up to 50% at max level.",
 
 
   "screen.zenkai.technique.edit_title": "Ki Technique Editor",

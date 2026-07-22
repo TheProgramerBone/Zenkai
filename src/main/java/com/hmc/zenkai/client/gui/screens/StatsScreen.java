@@ -66,7 +66,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     public StatsScreen() { super(Component.translatable("screen.zenkai.stats_screen.title")); }
 
-    @Override protected ZenkaiTab currentTab() { return ZenkaiTab.MAIN; }
+    @Override protected ZenkaiTab currentTab() { return ZenkaiTab.STATS; }
 
     @Override
     protected void initContent() {

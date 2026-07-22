@@ -46,6 +46,9 @@ public class TickHandlers {
     /** Ticks seguidos cargando ki, por jugador (transitorio, solo server). */
     private static final Map<UUID, Integer> chargeTicks = new HashMap<>();
 
+    /** Restos fraccionarios de regen por jugador [body, stamina, ki]. Sin esto, un 1%/s
+     *  sobre un pool pequeño se redondeaba a 0 y la config no servía de nada. */
+    private static final Map<UUID, double[]> regenCarry = new HashMap<>();
     // =====================================================================
     // ORQUESTADOR
     // =====================================================================
@@ -296,9 +299,14 @@ public class TickHandlers {
             return;
         }
 
-        double perTick = att.getRegenEnergyPerTick();
-        double bonusMul = 3.0; // o config
-        att.addKi(perTick * bonusMul);
+        // Sin Meditación se puede concentrar (el % de poder sube) pero NO se recupera ki.
+        double chargeMul = SkillEffects.kiChargeFactor(p);
+        if (chargeMul > 0.0) {
+            // Porcentual sobre el pool, igual que el regen pasivo: antes era un plano
+            // getRegenEnergyPerTick() = 1.0, que ignoraba pool y config por completo.
+            double perTick = att.getEnergyMax() * (StatsConfig.baseRegenEnergy() / 100.0) / 20.0;
+            att.addKi(perTick * chargeMul);
+        }
 
         // Tras 1 s cargando, el % sube de 5 en 5 cada segundo hasta el techo de Ki Control.
         chargeTicks.merge(p.getUUID(), 1, Integer::sum);
@@ -322,24 +330,28 @@ public class TickHandlers {
         var food = p.getFoodData();
         if (!p.isCreative() && food.getFoodLevel() <= 0) return;
 
+        double[] carry = regenCarry.computeIfAbsent(p.getUUID(), k -> new double[3]);
         boolean didBody = false, didStamina = false;
 
         int bodyCur = att.getBody(), bodyMax = att.getBodyMax();
         if (bodyCur > 0 && bodyCur < bodyMax) {
-            att.addBody(atLeastOne(bodyMax * (StatsConfig.baseRegenBody() / 100.0)));
-            didBody = true;
+            int gain = accrue(carry, 0, bodyMax * (StatsConfig.baseRegenBody() / 100.0));
+            if (gain > 0) { att.addBody(gain); didBody = true; }
         }
 
         // Correr en turbo drena estamina: no se regenera a la vez o se anularían entre sí.
         int stCur = att.getStamina(), stMax = att.getStaminaMax();
         if (stCur < stMax && !p.isSprinting()) {
-            att.addStamina(atLeastOne(stMax * (StatsConfig.baseRegenStamina() / 100.0)));
-            didStamina = true;
+            int gain = accrue(carry, 1, stMax * (StatsConfig.baseRegenStamina() / 100.0));
+            if (gain > 0) { att.addStamina(gain); didStamina = true; }
         }
 
+        // El regen pasivo de ki existe siempre (mínimo vital); Meditación lo multiplica.
         int kiCur = att.getEnergy(), kiMax = att.getEnergyMax();
         if (kiCur < kiMax) {
-            att.addEnergy(atLeastOne(kiMax * (StatsConfig.baseRegenEnergy() / 100.0)));
+            int gain = accrue(carry, 2, kiMax * (StatsConfig.baseRegenEnergy() / 100.0)
+                    * SkillEffects.kiRegenFactor(p));
+            if (gain > 0) att.addEnergy(gain);
         }
 
         if (!p.isCreative()) {
@@ -348,9 +360,19 @@ public class TickHandlers {
         }
     }
 
-    private static int atLeastOne(double amount) {
-        int v = (int) Math.round(amount);
-        return v <= 0 ? 1 : v;
+    /** Acumula la fracción y devuelve los puntos enteros a otorgar este segundo. */
+    private static int accrue(double[] carry, int idx, double amount) {
+        carry[idx] += amount;
+        int whole = (int) carry[idx];
+        if (whole > 0) carry[idx] -= whole;
+        return whole;
+    }
+
+    /** Limpia los mapas por jugador al desloguear (chargeTicks tampoco se limpiaba antes). */
+    @SubscribeEvent
+    public static void onLogout(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent e) {
+        chargeTicks.remove(e.getEntity().getUUID());
+        regenCarry.remove(e.getEntity().getUUID());
     }
 
     // =====================================================================

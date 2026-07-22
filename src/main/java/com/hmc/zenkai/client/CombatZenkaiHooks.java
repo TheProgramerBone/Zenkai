@@ -10,6 +10,7 @@ import com.hmc.zenkai.core.network.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.skills.SkillEffects;
 import com.hmc.zenkai.core.technique.KiCombatServer;
 import com.hmc.zenkai.core.technique.PhysicalCombatServer;
 import com.hmc.zenkai.core.training.TrainingHooks;
@@ -128,7 +129,7 @@ public class CombatZenkaiHooks {
 
                 if (e.getEntity() instanceof ServerPlayer defSp
                         && KiCombatServer.isBlocking(defSp)) {
-                    finalDamage *= KiCombatServer.BLOCK_REDUCTION;
+                    finalDamage *= SkillEffects.blockDamageMultiplier(defSp);
                 }
 
                 // Barrera ki: absorbe ANTES de tocar el body (solo jugadores).
