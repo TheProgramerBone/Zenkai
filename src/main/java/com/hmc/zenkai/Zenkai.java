@@ -106,7 +106,7 @@ public class Zenkai {
 
     // ── Setup común (servidor + cliente) ─────────────────────────────────────
     private void commonSetup(final FMLCommonSetupEvent event) {
-        event.enqueueWork(FormRegistry::bootstrap);
+
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {

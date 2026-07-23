@@ -3,6 +3,7 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.core.network.feature.aura.TurboPacket;
+import com.hmc.zenkai.core.network.feature.forms.FormDef;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.client.Minecraft;
@@ -89,6 +90,23 @@ public final class AuraClientState {
         var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
         // Marca Majin: el aura se fuerza a rojo mientras dure (flag sincronizado a trackers).
         if (visual.isMajinControlled()) return 0xD41A25;
+
+        // El kaioken MANDA sobre la transformación: si está activo, su rojo gana.
+        var form = p.getData(DataAttachments.PLAYER_FORM.get());
+        if (form.getKaioken().isOn()) return 0xE02020;
+
+        // La forma activa define su aura en el datapack; en base, el color del jugador.
+        FormDef def = form.activeDef();
+        if (def != null) return def.auraRgb();
         return visual.getAuraColorRgb();
+    }
+
+    /** Clave de tipo de aura de la forma activa ("ssj", "golden", "arcosian"...).
+     *  Aún no la usa nadie: queda lista para cuando el render varíe la forma del cono. */
+    public static String resolveAuraType(AbstractClientPlayer p) {
+        var form = p.getData(DataAttachments.PLAYER_FORM.get());
+        if (form.getKaioken().isOn()) return "kaioken";
+        FormDef def = form.activeDef();
+        return def == null ? "default" : def.auraType();
     }
 }

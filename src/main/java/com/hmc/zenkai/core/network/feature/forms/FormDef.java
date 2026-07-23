@@ -32,7 +32,10 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
                       double masteryGain,
                       double statPercentUntrained, double statPercentMastered,
-                      double kiDrainUntrained, double kiDrainMastered) {
+                      double kiDrainUntrained, double kiDrainMastered,
+                      Map<String, ResourceLocation> hairItems,
+                      Map<String, ResourceLocation> bodyItems,
+                      String auraType, int auraRgb, int hairRgb, double scale) {
 
     public enum Kind {
         /** Innata por raza: no la enseña ningún maestro. */
@@ -79,6 +82,29 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
 
     public boolean allows(Race race) { return race != null && races.contains(race); }
 
+    // ── Visuales ────────────────────────────────────────────────────────────
+
+    /**
+     * Item de pelo para un peinado ("hair1", "hair2"...). null si esta forma no cambia el
+     * pelo para ese peinado, en cuyo caso manda el pelo base del jugador.
+     *
+     * OJO: son REFERENCIAS a items ya registrados en Java. Un datapack puede elegir entre
+     * los que existan, pero no crear uno nuevo: registrar items es cosa del código. Para
+     * pelo totalmente libre habría que renderizar modelo+textura sin item de por medio.
+     */
+    public ResourceLocation hairItem(String hairStyle) {
+        return hairStyle == null ? null : hairItems.get(hairStyle.toLowerCase(Locale.ROOT));
+    }
+
+    /** ¿Esta forma tiñe el pelo? -1 = no lo toca (el pelo va con su color propio).
+     *  Con el pelo en escala de grises, un solo modelo sirve para todas las formas. */
+    public boolean tintsHair() { return hairRgb >= 0; }
+
+    /** Item de cuerpo para un slot ("head", "chest", "legs", "feet"). null = no lo cambia. */
+    public ResourceLocation bodyItem(String slot) {
+        return slot == null ? null : bodyItems.get(slot.toLowerCase(Locale.ROOT));
+    }
+
     // ── StreamCodec manual (11 campos + lista de razas) ─────────────────────
 
     public static final StreamCodec<FriendlyByteBuf, FormDef> STREAM_CODEC = StreamCodec.of(
@@ -96,6 +122,12 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeDouble(d.statPercentMastered());
                 buf.writeDouble(d.kiDrainUntrained());
                 buf.writeDouble(d.kiDrainMastered());
+                writeMap(buf, d.hairItems());
+                writeMap(buf, d.bodyItems());
+                buf.writeUtf(d.auraType());
+                buf.writeInt(d.auraRgb());
+                buf.writeInt(d.hairRgb());
+                buf.writeDouble(d.scale());
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -113,6 +145,23 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readVarInt(), buf.readVarInt(),
                         buf.readDouble(),
                         buf.readDouble(), buf.readDouble(),
-                        buf.readDouble(), buf.readDouble());
+                        buf.readDouble(), buf.readDouble(),
+                        readMap(buf), readMap(buf),
+                        buf.readUtf(), buf.readInt(), buf.readInt(), buf.readDouble());
             });
+
+    private static void writeMap(FriendlyByteBuf buf, Map<String, ResourceLocation> map) {
+        buf.writeVarInt(map.size());
+        for (var e : map.entrySet()) {
+            buf.writeUtf(e.getKey());
+            buf.writeResourceLocation(e.getValue());
+        }
+    }
+
+    private static Map<String, ResourceLocation> readMap(FriendlyByteBuf buf) {
+        int n = buf.readVarInt();
+        Map<String, ResourceLocation> map = new LinkedHashMap<>();
+        for (int i = 0; i < n; i++) map.put(buf.readUtf(), buf.readResourceLocation());
+        return Collections.unmodifiableMap(map);
+    }
 }

@@ -9,5 +9,13 @@
   "stat_percent_untrained": 1.0,
   "stat_percent_mastered": 1.5,
   "ki_drain_untrained": 0.4,
-  "ki_drain_mastered": 0.1
+  "ki_drain_mastered": 0.1,
+  "hair_items": {
+    "hair1": "zenkai:ssj1_hair1"
+  },
+  "body_items": {},
+  "aura_type": "ssj",
+  "aura_rgb": "0xFFE55C",
+  "scale": 1.0,
+  "hair_rgb": "0xFFE55C"
 }

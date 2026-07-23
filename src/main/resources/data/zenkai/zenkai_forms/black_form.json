@@ -10,5 +10,9 @@
   "stat_percent_mastered": 14.0,
   "ki_drain_untrained": 2.6,
   "ki_drain_mastered": 0.95,
-  "parent": "zenkai:golden_form"
+  "parent": "zenkai:golden_form",
+  "body_items": {},
+  "aura_type": "golden",
+  "aura_rgb": "0x6040A0",
+  "scale": 1.0
 }
