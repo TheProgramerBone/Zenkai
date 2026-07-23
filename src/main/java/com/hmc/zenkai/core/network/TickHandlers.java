@@ -160,6 +160,11 @@ public class TickHandlers {
         // cliente (ClientZenkaiPalTick) porque LocalPlayer la recalcula cada tick.
         p.setPose(Pose.SWIMMING);
         p.setSwimming(true);
+        // Los mobs sueltan al derribado. Se repasa cada 10 ticks y no una sola vez al caer,
+        // porque también hay que soltar a los que se acerquen durante los 5 segundos.
+        if (p instanceof ServerPlayer downedSp && p.tickCount % 10 == 0) {
+            releaseAttackers(downedSp);
+        }
 
         if (att.getBody() > 0) {
             // Se levanta con el body que dejó la curación: senzu 100%, revive de aliado 20%.
@@ -464,5 +469,15 @@ public class TickHandlers {
         applyDownedLockServer(p, false);
         p.setSwimming(false);
         p.setPose(Pose.STANDING); // updatePlayerPose recalculará la correcta al siguiente tick
+    }
+
+    /** Quita a este jugador de la mira de mob que lo tuviera fijado. */
+    private static void releaseAttackers(ServerPlayer sp) {
+        for (net.minecraft.world.entity.Mob mob : sp.serverLevel().getEntitiesOfClass(
+                net.minecraft.world.entity.Mob.class,
+                sp.getBoundingBox().inflate(48.0),
+                m -> m.getTarget() == sp)) {
+            mob.setTarget(null);
+        }
     }
 }

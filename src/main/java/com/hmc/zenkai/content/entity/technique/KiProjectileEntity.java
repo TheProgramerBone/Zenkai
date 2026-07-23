@@ -207,7 +207,7 @@ public class KiProjectileEntity extends Projectile {
 
     /** Radio de la explosión. Escala con el tamaño elegido en el editor (1..7 -> 1.7..4.7). */
     private double explosionRadius() {
-        return 1.2 + 0.5 * size();
+        return 1.2 * size();
     }
 
     private void explode(Vec3 center, Entity directHit) {
@@ -288,17 +288,31 @@ public class KiProjectileEntity extends Projectile {
     }
 
     /**
+     * ¿Se puede desviar con kiai? La BARRIER no: no viaja, es el visual de la burbuja y
+     * tickBarrier() la pega a su dueño cada tick. Cambiarle el dueño le movería la esfera
+     * al que desvía mientras el pool de absorción (BARRIERS, por UUID) sigue protegiendo
+     * al original. Se exige damage > 0 por lo mismo: lo que no hace daño no se devuelve.
+     */
+    public boolean canBeDeflected() {
+        return !techniqueType().defensive() && damage > 0.0;
+    }
+
+    /**
      * Desvío por kiai: el proyectil cambia de dueño. Con eso, quien lo disparó pasa a ser
      * blanco válido (canHitEntity excluye al dueño) y quien lo devuelve queda inmune, tanto
      * al impacto como a la explosión. El daño NO se recalcula: devuelve exactamente lo que
      * traía. Llamar ANTES de invertir la dirección.
+     * @return false si este proyectil no es desviable (ver canBeDeflected).
      */
-    public void deflect(LivingEntity newOwner) {
+    public boolean deflect(LivingEntity newOwner) {
+        if (!canBeDeflected()) return false;
+
         if (refPower <= 0.0 && getOwner() instanceof LivingEntity original) {
             var st = com.hmc.zenkai.core.combat.ZenkaiStats.of(original);
             if (st != null) refPower = st.computeKiPowerFinal();
         }
         setOwner(newOwner);
         pierced.clear(); // DISK: puede volver a atravesar a los que ya cruzó de ida
+        return true;
     }
 }

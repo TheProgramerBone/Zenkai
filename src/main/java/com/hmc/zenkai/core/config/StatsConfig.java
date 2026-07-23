@@ -359,6 +359,7 @@ public final class StatsConfig {
         FOOD_KI_PCT      = FOOD_KI_RAW.get();
         FOOD_STAMINA_PCT = FOOD_STAMINA_RAW.get();
 
+
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
         SENSE_KI_RANGE      = SENSE_KI_RANGE_RAW.get();
@@ -419,6 +420,8 @@ public final class StatsConfig {
     public static double flyBaseSpeed()             { return FLY_BASE_SPEED; }
     public static double flyKiDrainPerTick()        { return FLY_KI_DRAIN; }
     public static double turboDrainPctPerSec()      { return TURBO_DRAIN_PCT_PER_SEC; }
+
+
 
     public static double bodyScale()      { return BODY_SCALE; }
     public static double staminaScale()   { return STAMINA_SCALE; }

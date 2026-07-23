@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.AlignmentPalette;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.core.config.StatsConfig;
@@ -203,10 +204,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         // marco + gradiente horizontal rojo -> gris -> azul (por columnas)
         g.fill(alignBarX - 1, alignBarY - 1, alignBarX + ALIGN_BAR_W + 1, alignBarY + ALIGN_BAR_H + 1, 0xFF3A2A18);
         for (int i = 0; i < ALIGN_BAR_W; i++) {
-            float t = i / (float) (ALIGN_BAR_W - 1);
-            int rgb = (t < 0.5f)
-                    ? lerpRgb(0xD62828, 0x9A9A9A, t * 2f)
-                    : lerpRgb(0x9A9A9A, 0x2D6CDF, (t - 0.5f) * 2f);
+            int rgb = AlignmentPalette.gradient(i / (float) (ALIGN_BAR_W - 1));
             g.fill(alignBarX + i, alignBarY, alignBarX + i + 1, alignBarY + ALIGN_BAR_H, 0xFF000000 | rgb);
         }
 
@@ -219,13 +217,6 @@ public class StatsScreen extends ZenkaiMenuScreen {
             String v = (alignment > 0 ? "+" : "") + alignment;
             g.renderTooltip(font, Component.literal(v), mouseX, mouseY);
         }
-    }
-
-    private static int lerpRgb(int a, int b, float t) {
-        int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
-        int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
-        int r = (int) (ar + (br - ar) * t), gg = (int) (ag + (bg - ag) * t), bl = (int) (ab + (bb - ab) * t);
-        return (r << 16) | (gg << 8) | bl;
     }
 
     // ── Popup de stats efectivas ─────────────────────────────────────────────
