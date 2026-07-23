@@ -2,7 +2,7 @@ package com.hmc.zenkai.core.mastery;
 
 import com.hmc.zenkai.content.effect.MajinEffect;
 import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.forms.FormDefinition;
+import com.hmc.zenkai.core.network.feature.forms.FormDef;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
@@ -56,8 +56,8 @@ public final class MasteryEffects {
 
         double percent = form.getKaioken().statPercent();
         if (!FormIds.BASE.equals(form.getFormId())) {
-            FormDefinition def = FormRegistry.get(form.getFormId());
-            if (def != null) percent += def.statPercent();
+            FormDef def = FormRegistry.get(form.getFormId());
+            if (def != null) percent += def.statPercent(100);
         }
         double f = 1.0 + percent;
 
