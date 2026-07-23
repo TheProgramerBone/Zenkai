@@ -10,5 +10,9 @@
   "stat_percent_mastered": 1.2,
   "ki_drain_untrained": 0.3,
   "ki_drain_mastered": 0.1,
-  "parent": "zenkai:second_form"
+  "parent": "zenkai:second_form",
+  "body_items": {},
+  "aura_type": "arcosian",
+  "aura_rgb": "0xB060FF",
+  "scale": 1.1
 }

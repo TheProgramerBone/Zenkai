@@ -70,6 +70,29 @@ public final class FormManager {
         return out;
     }
 
+    /** Mapa clave -> id de item. Ausente = mapa vacío (la forma no cambia ese visual). */
+    private static Map<String, ResourceLocation> readItemMap(JsonObject o, String key) {
+        if (!o.has(key)) return Map.of();
+        Map<String, ResourceLocation> out = new LinkedHashMap<>();
+        JsonObject obj = GsonHelper.getAsJsonObject(o, key);
+        for (String k : obj.keySet()) {
+            String v = obj.get(k).getAsString();
+            if (v == null || v.isBlank()) continue;
+            out.put(k.toLowerCase(Locale.ROOT), ResourceLocation.parse(v));
+        }
+        return out;
+    }
+
+    /** Acepta 0xFFE55C, #FFE55C o un entero. */
+    private static int readRgb(JsonObject o, String key, int fallback) {
+        if (!o.has(key)) return fallback;
+        var el = o.get(key);
+        if (el.isJsonPrimitive() && el.getAsJsonPrimitive().isString()) {
+            return Integer.decode(el.getAsString().trim().replace("#", "0x")) & 0xFFFFFF;
+        }
+        return el.getAsInt() & 0xFFFFFF;
+    }
+
     private static final class Loader extends SimplePreparableReloadListener<Map<ResourceLocation, FormDef>> {
 
         @Override
@@ -106,7 +129,13 @@ public final class FormManager {
                             GsonHelper.getAsDouble(o, "stat_percent_untrained", 0.0),
                             GsonHelper.getAsDouble(o, "stat_percent_mastered", 0.0),
                             GsonHelper.getAsDouble(o, "ki_drain_untrained", 0.0),
-                            GsonHelper.getAsDouble(o, "ki_drain_mastered", 0.0)));
+                            GsonHelper.getAsDouble(o, "ki_drain_mastered", 0.0),
+                            readItemMap(o, "hair_items"),
+                            readItemMap(o, "body_items"),
+                            GsonHelper.getAsString(o, "aura_type", "default"),
+                            readRgb(o, "aura_rgb", 0xFFFFFF),
+                            readRgb(o, "hair_rgb", -1),
+                            GsonHelper.getAsDouble(o, "scale", 1.0)));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }

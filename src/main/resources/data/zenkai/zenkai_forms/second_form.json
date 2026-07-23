@@ -1,0 +1,17 @@
+{
+  "races": [
+    "arcosian"
+  ],
+  "kind": "super",
+  "tp_cost": 4000,
+  "hold_ticks": 80,
+  "mastery_gain": 1.2,
+  "stat_percent_untrained": 0.35,
+  "stat_percent_mastered": 0.5,
+  "ki_drain_untrained": 0.2,
+  "ki_drain_mastered": 0.05,
+  "body_items": {},
+  "aura_type": "arcosian",
+  "aura_rgb": "0xC080FF",
+  "scale": 1.15
+}
