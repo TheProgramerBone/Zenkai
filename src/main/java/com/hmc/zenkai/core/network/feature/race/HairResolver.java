@@ -7,7 +7,6 @@ import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
-import com.hmc.zenkai.core.network.feature.forms.FormIds;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -39,24 +38,23 @@ public final class HairResolver {
             return ItemStack.EMPTY;
         }
 
-        // ¿La forma activa sobrescribe el pelo para este peinado? Lo dice su JSON.
+        // 1) ¿La forma activa sobrescribe el modelo de pelo para este peinado? Lo dice su JSON.
         FormDef def = FormRegistry.get(form.getFormId());
-        if (def != null) {
-            ItemStack override = itemFrom(def.hairItem(hairStyle));
-            if (!override.isEmpty()) return override;
-        }
+        ItemStack stack = (def == null) ? ItemStack.EMPTY : itemFrom(def.hairItem(hairStyle));
 
-        // Sin override: pelo base. Solo hair1 por ahora.
-        return "hair1".equalsIgnoreCase(hairStyle)
-                ? ModItems.HAIR_1.get().getDefaultInstance()
-                : ItemStack.EMPTY;
-
-        // Tinte de la forma: con el pelo en escala de grises, un modelo sirve para todas.
-        // Se usa el componente DYED_COLOR de vanilla, que es lo que ya lee DyedTintGeoLayer.
-        if (def != null && def.tintsHair() && !stack.isEmpty()) {
-            stack.set(DataComponents.DYED_COLOR,
-                    new DyedItemColor(def.hairRgb(), false));
+        // 2) Sin override: pelo base. Solo hair1 por ahora.
+        if (stack.isEmpty() && "hair1".equalsIgnoreCase(hairStyle)) {
+            stack = ModItems.HAIR_1.get().getDefaultInstance();
         }
+        if (stack.isEmpty()) return ItemStack.EMPTY;
+
+        // 3) Tinte de la forma: con el pelo en escala de grises, un modelo sirve para todas.
+        //    Se tiñe TAMBIÉN el pelo base, que es justo la gracia: SSJ1 puede reusar hair1
+        //    y limitarse a declarar hair_rgb, sin necesitar un item propio.
+        if (def != null && def.tintsHair()) {
+            stack.set(DataComponents.DYED_COLOR, new DyedItemColor(def.hairRgb(), false));
+        }
+        return stack;
     }
 
     /** Resuelve un id de item del datapack. Vacío si no existe: un JSON con una errata no

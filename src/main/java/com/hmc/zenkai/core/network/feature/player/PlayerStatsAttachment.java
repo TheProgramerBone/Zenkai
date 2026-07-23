@@ -6,6 +6,7 @@ import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.Style;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.core.skills.SkillDef;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -48,6 +49,14 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         applyRecalc();
         pools.refillAll();
     }
+
+    /** Multiplicador de forma + kaioken + majin. DERIVADO: no va a NBT, lo recalcula
+     *  TickHandlers.tickForms cada tick. Un solo punto de escritura, así ningún camino
+     *  se queda sin él (la lección del gamerule de griefing). */
+    private double statMultiplier = 1.0;
+
+    public void setStatMultiplier(double m) { this.statMultiplier = Math.max(0.0, m); }
+    public double getStatMultiplier() { return statMultiplier; }
 
     // ── Acceso estático ──────────────────────────────────────────────────────
     public static PlayerStatsAttachment get(Player p) {
@@ -102,7 +111,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public void respec() {
         int skillRefund = 0;
         for (String id : skills.allLevels().keySet()) {
-            com.hmc.zenkai.core.skills.SkillDef def = com.hmc.zenkai.core.skills.SkillDef.get(id);
+            SkillDef def = SkillDef.get(id);
             if (def != null) skillRefund += def.tpCost() * skills.boughtLevels(id);
         }
         skills.clearBought();
@@ -112,12 +121,14 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     }
 
     // ── Stats de combate ─────────────────────────────────────────────────────
+    // El multiplicador de forma escala SOLO STR, DEX y WIL (como DBC). CON y SPI se quedan
+    // crudos: transformarse no te da más vida ni más pool de ki, te hace pegar más fuerte.
     public double getMeleeBonus()       { return raceStats.getMeleeBonus(); }
-    public double computeMeleeFinal()   { return raceStats.computeMeleeFinal()   * powerFraction(); }
-    public double computeDefenseFinal() { return raceStats.computeDefenseFinal() * powerFraction(); }
-    public double computeKiPowerFinal() { return raceStats.computeKiPowerFinal() * powerFraction(); }
-    public double computeSpeedFinal()   { return raceStats.computeSpeedFinal(); }
-    public double computeFlyFinal()     { return raceStats.computeFlyFinal(); }
+    public double computeMeleeFinal()   { return raceStats.computeMeleeFinal()   * powerFraction() * statMultiplier; }
+    public double computeDefenseFinal() { return raceStats.computeDefenseFinal() * powerFraction() * statMultiplier; }
+    public double computeKiPowerFinal() { return raceStats.computeKiPowerFinal() * powerFraction() * statMultiplier; }
+    public double computeSpeedFinal()   { return raceStats.computeSpeedFinal()   * statMultiplier; }
+    public double computeFlyFinal()     { return raceStats.computeFlyFinal()     * statMultiplier; }
     public double computeKiPoolFinal()  { return raceStats.computeKiPoolFinal(); }
     public double computeConFinal()     { return raceStats.computeConFinal(); }
     public boolean isCombatActive() { return isRaceChosen(); }
@@ -148,11 +159,13 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public double getFlySpeed()     { return pools.getFlySpeed(); }
 
     public double getFlyMultiplier() {
-        return pools.getFlyMultiplier(StatsConfig.flyMultiplierCap(), StatsConfig.flyScaling());
+        return pools.getFlyMultiplier(StatsConfig.flyMultiplierCap(),
+                StatsConfig.flyScaling(), statMultiplier);
     }
 
     public double getMoveMultiplier() {
-        return pools.getMoveMultiplier();
+        return pools.getMoveMultiplier(StatsConfig.speedMultiplierCap(),
+                StatsConfig.movementScaling(), statMultiplier);
     }
 
     // ── Flags ────────────────────────────────────────────────────────────────
@@ -287,5 +300,18 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         if (clamped == powerPercent) return false;
         powerPercent = clamped;
         return true;
+    }
+
+    /**
+     * Atributo con el boost de forma aplicado. SOLO para mostrar y para cálculos de combate.s
+     * Para costes de TP, requisitos de MND y el cap se usa getAttribute() (el crudo): si no,
+     * transformarse te desbloquearía habilidades y abarataría subidas.
+     */
+    public int getEffectiveAttribute(ZenkaiAttributes a) {
+        int raw = raceStats.getAttribute(a);
+        return switch (a) {
+            case STRENGTH, DEXTERITY, WILLPOWER -> (int) Math.round(raw * statMultiplier);
+            default -> raw; // CON y SPI no escalan con la forma; MIND tampoco
+        };
     }
 }

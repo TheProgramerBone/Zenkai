@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.core.technique.PhysicalTechnique;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
 import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonConfiguration;
@@ -128,7 +129,7 @@ public final class ZenkaiPalAnimations {
     //    "zenkai.phys_kiai" (orden = PhysicalTechnique.ordinal()). ──
     private static final ResourceLocation[] PHYS_ANIMS;
     static {
-        var vals = com.hmc.zenkai.core.technique.PhysicalTechnique.values();
+        var vals = PhysicalTechnique.values();
         PHYS_ANIMS = new ResourceLocation[vals.length];
         for (int i = 0; i < vals.length; i++) {
             PHYS_ANIMS[i] = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,

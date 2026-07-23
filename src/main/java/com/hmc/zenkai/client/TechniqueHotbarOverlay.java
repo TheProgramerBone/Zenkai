@@ -3,7 +3,9 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerTechniques;
+import com.hmc.zenkai.core.technique.KiCombatServer;
 import com.hmc.zenkai.core.technique.KiTechnique;
+import com.hmc.zenkai.core.technique.PhysicalTechnique;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -60,7 +62,7 @@ public final class TechniqueHotbarOverlay {
         for (int pos = 0; pos < n; pos++) {
             int slotIdx = tech.binding(pos);
             KiTechnique t = tech.slot(slotIdx);
-            com.hmc.zenkai.core.technique.PhysicalTechnique ph = tech.physicalBinding(pos);
+            PhysicalTechnique ph = tech.physicalBinding(pos);
             boolean sel = (pos == selected);
 
             g.fill(x, y, x + CELL, y + CELL, 0xA0000000);
@@ -145,9 +147,7 @@ public final class TechniqueHotbarOverlay {
     private static double previewDamage(Minecraft mc, PlayerStatsAttachment att,
                                         KiTechnique t, double ratio) {
         if (mc.player == null || t == null || t.type().defensive()) return 0;
-        double kiPower = att.computeKiPowerFinal()
-                * com.hmc.zenkai.core.mastery.MasteryEffects.formStatFactor(mc.player);
-        return com.hmc.zenkai.core.technique.KiCombatServer
-                .computeDamage(kiPower, t.type(), t.size()) * ratio;
+        double kiPower = att.computeKiPowerFinal();
+        return KiCombatServer.computeDamage(kiPower, t.type(), t.size()) * ratio;
     }
 }

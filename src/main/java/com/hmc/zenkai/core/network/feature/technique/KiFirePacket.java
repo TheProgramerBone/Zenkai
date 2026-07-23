@@ -81,7 +81,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
             att.addEnergy(-cost);
             att.addTechniqueMastery(type.name(), (float) StatsConfig.techMasteryPerUse());
 
-            double kiPower = att.computeKiPowerFinal() * MasteryEffects.formStatFactor(sp);
+            double kiPower = att.computeKiPowerFinal();
 
             if (type.defensive()) {
                 KiCombatServer.activateBarrier(sp, tech, kiPower);

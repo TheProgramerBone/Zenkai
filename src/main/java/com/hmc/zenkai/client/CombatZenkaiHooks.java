@@ -99,9 +99,6 @@ public class CombatZenkaiHooks {
         if (PhysicalCombatServer.isFiring()) return dmg;
 
         double strDamage = atkStats.computeMeleeFinal();
-        if (e.getSource().getEntity() instanceof Player atkP) {
-            strDamage *= MasteryEffects.formStatFactor(atkP);
-        }
 
         if (e.getSource().getEntity() instanceof Player attacker) {
             return playerMeleeDamage(attacker, atkStats, strDamage, dmg);
@@ -204,9 +201,6 @@ public class CombatZenkaiHooks {
                                          ZenkaiCombatStats defStats, float dmg) {
         double defense = defStats.computeDefenseFinal();
 
-        if (e.getEntity() instanceof Player defP) {
-            defense *= MasteryEffects.formStatFactor(defP);
-        }
         if (PhysicalCombatServer.isFiring()) {
             defense *= PhysicalCombatServer.currentDefenseScale();
         }
