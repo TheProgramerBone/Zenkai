@@ -46,25 +46,14 @@ public final class MasteryEffects {
     }
 
     /**
-     * Multiplicador total de stats. ADITIVO entre capas: total = 1 + %forma + %kaioken,
-     * y el bonus de maestría multiplica encima. Sumar significa que la capa con números más
-     * grandes ensombrece a la otra: si subes las transformaciones de golpe, sube también los
-     * porcentajes de KaiokenTier o el kaioken dejará de notarse.
+     * Multiplicador total de stats. ADITIVO entre capas: 1 + %forma + %kaioken, con el
+     * bonus de Majin multiplicando encima.
+     * YA NO se llama desde los sitios de combate: lo consume TickHandlers.tickForms, que lo
+     * guarda en PlayerStatsAttachment.setStatMultiplier(). Así el PL, la pantalla de stats se actualiza sola.
      */
     public static double formStatFactor(Player p) {
         PlayerFormAttachment form = p.getData(DataAttachments.PLAYER_FORM.get());
-
-        double percent = form.getKaioken().statPercent();
-        if (!FormIds.BASE.equals(form.getFormId())) {
-            FormDef def = FormRegistry.get(form.getFormId());
-            if (def != null) percent += def.statPercent(100);
-        }
-        double f = 1.0 + percent;
-
-        if (!FormIds.BASE.equals(form.getFormId())) {
-            double m = form.getFormMastery(form.getFormId()) / 100.0;
-            f *= 1.0 + StatsConfig.masteryFormStatBonus() * m;
-        }
+        double f = 1.0 + form.totalStatPercent();
         if (MajinEffect.isActive(p)) {
             f *= 1.0 + StatsConfig.majinStatBonus();
         }

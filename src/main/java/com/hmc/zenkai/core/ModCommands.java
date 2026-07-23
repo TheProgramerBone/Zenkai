@@ -273,6 +273,10 @@ public class ModCommands {
     /** Respec: devuelve los TP invertidos sin tocar raza ni estilo. */
     private static int resetStats(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
         sp.getData(DataAttachments.PLAYER_STATS.get()).respec();
+        // Las formas también se pierden: hay que volver a aprenderlas. Va aquí y no dentro
+        // de respec() porque PlayerStatsAttachment no tiene referencia al Player, y la forma
+        // vive en otro attachment.
+        sp.getData(DataAttachments.PLAYER_FORM.get()).clearProgression();
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(
                 () -> Component.literal("[Zenkai] Stats respec done → " + sp.getGameProfile().getName()), true);
@@ -290,6 +294,7 @@ public class ModCommands {
         att.setRace(Race.HUMAN);
         att.setStyle(Style.MARTIAL_ARTIST);
         att.respec();
+        sp.getData(DataAttachments.PLAYER_FORM.get()).clearProgression();
         att.addTP(-att.getTP());
         att.setRaceChosen(false);
         att.setStyleChosen(false);
@@ -299,7 +304,6 @@ public class ModCommands {
         att.setLegendary(false);
         att.setDivine(false);
         PlayerLifeCycle.sync(sp);
-
         // ── Visual (pelo, ojos, colores, índices) ─────────────────────────────
         // Cargar un attachment limpio con todos los valores por defecto
         var visual = sp.getData(DataAttachments.PLAYER_VISUAL.get());

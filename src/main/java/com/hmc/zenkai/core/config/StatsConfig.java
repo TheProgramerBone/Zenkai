@@ -421,8 +421,6 @@ public final class StatsConfig {
     public static double flyKiDrainPerTick()        { return FLY_KI_DRAIN; }
     public static double turboDrainPctPerSec()      { return TURBO_DRAIN_PCT_PER_SEC; }
 
-
-
     public static double bodyScale()      { return BODY_SCALE; }
     public static double staminaScale()   { return STAMINA_SCALE; }
     public static double energyScale()    { return ENERGY_SCALE; }

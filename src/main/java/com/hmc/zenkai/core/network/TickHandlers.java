@@ -7,7 +7,7 @@ import com.hmc.zenkai.core.combat.DownedDeathGuard;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.aura.TurboServerState;
-import com.hmc.zenkai.core.network.feature.forms.FormDefinition;
+import com.hmc.zenkai.core.network.feature.forms.FormDef;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
 import com.hmc.zenkai.core.network.feature.forms.KaiokenTier;
@@ -269,16 +269,32 @@ public class TickHandlers {
      *  @return true si está transformando (corta el tick). */
     private static boolean tickForms(Player p, PlayerStatsAttachment att,
                                      PlayerFormAttachment form, PlayerVisualAttachment visual) {
+        // ÚNICO punto donde se escribe el multiplicador de stats (forma + kaioken + majin).
+        // Va cada tick porque la maestría sube de forma continua y el kaioken puede apagarse
+        // solo. Con esto el PL y la pantalla de stats se actualizan sin tocar nada más.
+        att.setStatMultiplier(MasteryEffects.formStatFactor(p));
+
         if (form.serverTick(p, att, visual)) {
             PlayerLifeCycle.syncFormIfServer(p);
         }
 
         // Drena ki si la forma actual tiene coste por tick; sin ki, vuelve a BASE.
         ResourceLocation currentFormId = form.getFormId();
+        FormDef activeDef = null;
         if (currentFormId != null && !FormIds.BASE.equals(currentFormId)) {
-            FormDefinition def = FormRegistry.get(currentFormId);
-            if (def != null && def.allowedRaces().contains(att.getRace())) {
-                double drain = def.kiDrainPerTick() * MasteryEffects.formDrainFactor(p);
+            FormDef def = FormRegistry.get(currentFormId);
+
+            // Forma inválida para esta raza, o desaparecida del datapack tras un /reload:
+            // se vuelve a base. Antes solo se saltaba el drenaje, así que el jugador se
+            // quedaba transformado GRATIS.
+            if (def == null || !def.allows(att.getRace())) {
+                form.forceBase();
+                PlayerLifeCycle.syncFormIfServer(p);
+            } else {
+                activeDef = def;
+                // El drenaje ya viene interpolado por maestría desde el datapack
+                // (ki_drain_untrained -> ki_drain_mastered): no lleva factor extra.
+                double drain = form.formKiDrainPerTick();
                 if (drain > 0.0) {
                     int before = att.getKiCurrent();
                     att.addKi(-drain);
@@ -289,6 +305,7 @@ public class TickHandlers {
                 }
             }
         }
+        applyFormScale(p, activeDef);
 
         if (form.isTransforming()) {
             applyTransformLockServer(p, true);
@@ -298,6 +315,28 @@ public class TickHandlers {
         }
         applyTransformLockServer(p, false);
         return false;
+    }
+
+    private static final ResourceLocation FORM_SCALE_MOD_ID =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "form_scale");
+
+    /** Escala de la forma (render + hitbox + ojos) vía minecraft:generic.scale.
+     *  Syncable: los clientes la ven sin packet. Único sitio de escritura. */
+    private static void applyFormScale(Player p, FormDef def) {
+        AttributeInstance scaleAttr = p.getAttribute(Attributes.SCALE); // ⚠
+        if (scaleAttr == null) return;
+        double target = (def != null && def.scale() > 0.0) ? def.scale() : 1.0;
+        double amount = target - 1.0; // ADD_VALUE sobre base 1.0
+        AttributeModifier current = scaleAttr.getModifier(FORM_SCALE_MOD_ID); // ⚠
+        if (amount == 0.0) {
+            if (current != null) scaleAttr.removeModifier(FORM_SCALE_MOD_ID);
+            return;
+        }
+        if (current == null || current.amount() != amount) {
+            scaleAttr.removeModifier(FORM_SCALE_MOD_ID);
+            scaleAttr.addTransientModifier(new AttributeModifier(
+                    FORM_SCALE_MOD_ID, amount, AttributeModifier.Operation.ADD_VALUE)); // ⚠
+        }
     }
 
     /** Kaioken: quema VIDA mientras esté activo. Es lo que impide que sea gratis, y por eso

@@ -7,6 +7,7 @@ import com.hmc.zenkai.client.SenseKiClientState;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.client.gui.screens.StatsScreen;
 import com.hmc.zenkai.client.gui.screens.StyleSelectionScreen;
+import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.ki.KiChargePacket;
 import com.hmc.zenkai.core.network.feature.ki.PowerPercentPacket;
 import com.hmc.zenkai.core.network.feature.ki.ToggleFlyPacket;
@@ -162,6 +163,7 @@ public final class KeyBindings {
         ScouterClientState.tick(mc);
         CombatModeClientState.tick(mc);
         PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
+        stats.setStatMultiplier(MasteryEffects.formStatFactor(player));
         boolean hasRace = stats.isRaceChosen();
 
         if (LOCK_ON != null) {

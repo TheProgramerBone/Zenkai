@@ -101,9 +101,9 @@ public final class PhysicalCombatServer {
         cds[t.ordinal()] = now + t.cooldownTicks();
         att.addTechniqueMastery(t.name(), (float) StatsConfig.techMasteryPerUse());
 
-        double str = att.computeMeleeFinal()
-                * MasteryEffects.formStatFactor(sp)
-                * MasteryEffects.techDamageFactor(att, t.name());
+        // computeMeleeFinal YA incluye el multiplicador de forma/kaioken (statMultiplier).
+        // Volver a aplicar formStatFactor aquí lo contaría dos veces.
+        double str = att.computeMeleeFinal() * MasteryEffects.techDamageFactor(att, t.name());
         Vec3 look = sp.getLookAngle();
 
         switch (t) {

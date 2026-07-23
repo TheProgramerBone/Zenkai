@@ -5,6 +5,7 @@ import com.hmc.zenkai.client.CombatZenkaiHooks;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.EventPriority;
@@ -68,6 +69,7 @@ public final class DownedDeathGuard {
             e.setCanceled(true);
             att.setBody(att.getBodyMax());
             sp.setHealth(sp.getMaxHealth());
+            sp.getData(DataAttachments.PLAYER_FORM.get()).resetAll();
             PlayerLifeCycle.sync(sp);
             return;
         }
@@ -84,6 +86,8 @@ public final class DownedDeathGuard {
             att.flags().setDownedUntil(
                     sp.serverLevel().getGameTime() + CombatZenkaiHooks.DOWNED_TICKS);
         }
+        // Morir deshace la transformación: nadie resucita en SSJ.
+        sp.getData(DataAttachments.PLAYER_FORM.get()).resetAll();
         PlayerLifeCycle.sync(sp);
     }
 }

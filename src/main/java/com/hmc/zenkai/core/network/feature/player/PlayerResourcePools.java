@@ -69,13 +69,16 @@ public class PlayerResourcePools {
     public void setSpeed(double v)    { this.speed    = v; }
     public void setFlySpeed(double v) { this.flySpeed = v; }
 
-    /** scaling.fly = cuánto multiplicador da cada 100 puntos de FlySpeed. */
-    public double getFlyMultiplier(double cap, double scaling) {
-        return Math.min(cap, Math.max(0.0, 1.0 + (flySpeed / 100.0) * scaling));
+    /** El boost de forma se aplica a la DEX efectiva ANTES del cap, así el techo de config
+     *  sigue siendo el límite real de seguridad. */
+    public double getFlyMultiplier(double cap, double scaling, double statMult) {
+        return Math.min(cap, Math.max(0.0, 1.0 + (flySpeed * statMult / 100.0) * scaling));
     }
 
-    public double getMoveMultiplier() {
-        return Math.min(2.0, Math.max(0.0, 1.0 + (speed / 100.0)));
+    /** El 2.0 cableado que había aquí ignoraba speedMultiplierCap y movementScaling, así que
+     *  la pantalla de stats mostraba un número y el movimiento aplicaba otro. */
+    public double getMoveMultiplier(double cap, double scaling, double statMult) {
+        return Math.min(cap, Math.max(0.0, 1.0 + (speed * statMult / 100.0) * scaling));
     }
 
     // ── Clamp y refill ───────────────────────────────────────────────────────

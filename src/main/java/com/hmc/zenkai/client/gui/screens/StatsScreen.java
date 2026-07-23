@@ -144,8 +144,12 @@ public class StatsScreen extends ZenkaiMenuScreen {
         int ay = panelTop + ATTR_Y0 + 2;
         int ax = panelLeft + 16;
         for (ZenkaiAttributes a : ORDER) {
-            Component line = getAttributeLabel(a, att.getAttribute(a));
-            g.drawString(font, line, ax, ay, 0xFFFFFF);
+            int raw = att.getAttribute(a);
+            int eff = att.getEffectiveAttribute(a);
+            Component line = (eff != raw)
+                    ? getAttributeLabel(a, eff + " (" + raw + ")")
+                    : getAttributeLabel(a, String.valueOf(raw));
+            g.drawString(font, line, ax, ay, (eff != raw) ? 0xFFD966 : 0xFFFFFF);
             attrAreas.add(new AttrArea(a, ax, ay, font.width(line), font.lineHeight));
             ay += ATTR_STEP;
         }
@@ -254,15 +258,16 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     private List<Component> buildEffectiveStats() {
         assert mc.player != null;
-        double f = MasteryEffects.formStatFactor(mc.player);
-        double melee   = att.computeMeleeFinal()   * f;
-        double defense = att.computeDefenseFinal() * f;
-        double speed   = att.computeSpeedFinal();
-        double fly     = att.computeFlyFinal();
-        double kiPower = att.computeKiPowerFinal() * f;
+        // SIN formStatFactor: computeXFinal ya lo incluye vía statMultiplier. Multiplicar aquí
+        // lo contaría dos veces (y era la razón de que el popup mostrara números inflados).
+        double melee   = att.computeMeleeFinal();
+        double defense = att.computeDefenseFinal();
+        double kiPower = att.computeKiPowerFinal();
 
-        double moveMult = Math.min(1.0 + (speed / 100.0) * StatsConfig.movementScaling(), StatsConfig.speedMultiplierCap());
-        double flyMult  = Math.min(1.0 + (fly   / 100.0) * StatsConfig.flyScaling(),      StatsConfig.flyMultiplierCap());
+        // Los multiplicadores salen del attachment, NO de una fórmula propia: así la pantalla
+        // no puede volver a desviarse de lo que aplica el movimiento de verdad.
+        double moveMult = att.getMoveMultiplier();
+        double flyMult  = att.getFlyMultiplier();
 
         List<Component> out = new ArrayList<>();
         out.add(Component.translatable("screen.zenkai.stats_screen.stat.melee",   fmt(melee)));
@@ -318,7 +323,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         return (best == Integer.MAX_VALUE) ? 0 : best;
     }
 
-    private Component getAttributeLabel(ZenkaiAttributes attr, int value) {
+    private Component getAttributeLabel(ZenkaiAttributes attr, String value) {
         return switch (attr) {
             case STRENGTH     -> Component.translatable("attribute.zenkai.str", value);
             case DEXTERITY    -> Component.translatable("attribute.zenkai.dex", value);
