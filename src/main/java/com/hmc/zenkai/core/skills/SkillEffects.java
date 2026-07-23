@@ -47,14 +47,14 @@ public final class SkillEffects {
 
     public static double runSpeedFactor(Player p) { return curve(p, RUN, "speed_mult", 1.0); }
 
-    /** Techo del % de poder: 50 base + 5 por nivel de Ki Control (nivel 10 = 100). */
+    /** Techo del % de poder: 50 bases + 5 por nivel de Ki Control (nivel 10 = 100). */
     public static int maxPowerPercent(Player p) {
         return 50 + 5 * level(p, KI_CONTROL);
     }
 
     // ── Meditación ───────────────────────────────────────────────────────────
-    /** Sin Meditación NO se recupera ki cargando con C. El % de poder sí sube igual:
-     *  concentrarse siempre funciona, canalizar el ki es lo que hay que aprender. */
+    /** EL GATE: sin Meditación NO se recupera ki cargando con C. El % de poder sí sube
+     *  igual: concentrarse siempre funciona, canalizar el ki es lo que hay que aprender. */
     public static boolean canChargeKi(Player p) { return level(p, MEDITATION) > 0; }
 
     /** Multiplicador del regen PASIVO de ki. 1.0 sin la habilidad (mínimo vital). */
@@ -82,11 +82,12 @@ public final class SkillEffects {
     public static double senseRangeFactor(Player p) { return curve(p, KI_SENSE, "range_mult", 1.0); }
 
     /** Fijar objetivo se desbloquea con el nivel 1. */
-    public static boolean canLockOn(Player p) { return level(p, KI_SENSE) > 0; }
+    public static boolean canLockOn(Player p) { return level(p, KI_SENSE) <= 0; }
 
-    /** Fuerza de atracción de la mirada al fijar (0 = sin lock, 1 = clavado). */
-    public static double lockStrength(Player p) { return curve(p, KI_SENSE, "lock_strength", 0.0); }
-
-    public static boolean senseShowsStamina(Player p) { return curve(p, KI_SENSE, "show_stamina", 0.0) > 0.5; }
-    public static boolean senseShowsKi(Player p)      { return curve(p, KI_SENSE, "show_ki", 0.0) > 0.5; }
+    // Lo que se PERCIBE por nivel. Son umbrales de estructura, no números a balancear,
+    // así que viven aquí y no como listas de 0/1 en el datapack (fáciles de descuadrar).
+    public static boolean senseShowsHealth(Player p)    { return level(p, KI_SENSE) >= 2; }
+    public static boolean senseShowsAlignment(Player p) { return level(p, KI_SENSE) >= 3; }
+    public static boolean senseShowsKi(Player p)        { return level(p, KI_SENSE) >= 4; }
+    public static boolean senseShowsStamina(Player p)   { return level(p, KI_SENSE) >= 5; }
 }

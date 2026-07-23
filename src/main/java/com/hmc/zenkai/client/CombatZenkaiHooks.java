@@ -62,7 +62,12 @@ public class CombatZenkaiHooks {
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent.Pre e) {
         if (e.getEntity().level().isClientSide()) return;
-
+        // I-frames: va lo PRIMERO, antes de tocar defensa o pools. Un dash esquiva de verdad.
+        if (e.getEntity() instanceof ServerPlayer dodger
+                && PhysicalCombatServer.hasIFrames(dodger.getUUID())) {
+            e.setNewDamage(0.0F);
+            return;
+        }
         MinecraftServer server = e.getEntity().getServer();
         if (server == null || !ModGameRules.enableRaceBoosts(server)) return;
 
@@ -315,6 +320,16 @@ public class CombatZenkaiHooks {
     public static void onAttackWhileBlocking(net.neoforged.neoforge.event.entity.player.AttackEntityEvent e) {
         if (e.getEntity().level().isClientSide()) return;
         if (e.getEntity() instanceof ServerPlayer sp && KiCombatServer.isBlocking(sp)) {
+            e.setCanceled(true);
+        }
+    }
+
+    /** Nadie FIJA a un jugador derribado. Complemento del barrido de TickHandlers, que es
+     *  quien suelta a los que ya lo tenían de objetivo antes de que cayera. */
+    @SubscribeEvent
+    public static void onChangeTarget(net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent e) {
+        if (!(e.getNewAboutToBeSetTarget() instanceof ServerPlayer target)) return;
+        if (PlayerStatsAttachment.get(target).flags().isDowned()) {
             e.setCanceled(true);
         }
     }

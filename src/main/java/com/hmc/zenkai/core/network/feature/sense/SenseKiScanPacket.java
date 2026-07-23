@@ -80,6 +80,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
                         att.getBody(), att.getBodyMax(),
                         att.getStamina(), att.getStaminaMax(),
                         att.getEnergy(), att.getEnergyMax(),
+                        att.getAlignment(),
                         att.getPowerLevel(), true);
             }
             return vanillaEntry(le, true);
@@ -90,7 +91,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         if (stats != null) {
             return new SenseKiDataPacket.Entry(le.getId(),
                     stats.getBody(), stats.getBodyMax(),
-                    0, 0, 0, 0,
+                    0,0,0,0,entityAlignment(le),
                     stats.getPowerLevel(), false);
         }
 
@@ -100,7 +101,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         if (def != null && def.displayOnly()) {
             return new SenseKiDataPacket.Entry(le.getId(),
                     Math.round(le.getHealth()), Math.round(le.getMaxHealth()),
-                    0,0,0,0,
+                    0,0,0,0,entityAlignment(le),
                     def.powerLevel(), false);
         }
 
@@ -111,6 +112,12 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         long pl = Math.round(le.getMaxHealth() * StatsConfig.vanillaPowerLevelFactor());
         return new SenseKiDataPacket.Entry(le.getId(),
                 Math.round(le.getHealth()), Math.round(le.getMaxHealth()),
-                0,0,0,0, pl, isPlayer);
+                0,0,0,0,entityAlignment(le),
+                pl, isPlayer);
+    }
+
+    /** Las entidades no tienen alineamiento propio: los hostiles se sienten malvados. */
+    private static int entityAlignment(LivingEntity le) {
+        return le instanceof net.minecraft.world.entity.monster.Enemy ? -60 : 0;
     }
 }

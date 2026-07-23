@@ -20,9 +20,12 @@ public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayl
     /** id + vida + estamina + ki + PL + si es jugador (para los filtros de modo).
      *  Estamina y ki van a 0 en lo que no tenga pools Zenkai; el cliente decide si los
      *  muestra según el nivel de Ki Sense. */
+    /** id + vida + estamina + ki + alineamiento + PL + si es jugador.
+     *  Los pools van a 0 en lo que no tenga stats Zenkai; el cliente decide qué muestra
+     *  según el nivel de Ki Sense. */
     public record Entry(int entityId, int body, int bodyMax,
                         int stamina, int staminaMax, int energy, int energyMax,
-                        long powerLevel, boolean isPlayer) {}
+                        int alignment, long powerLevel, boolean isPlayer) {}
 
     public static final Type<SenseKiDataPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "sense_ki_data"));
@@ -40,6 +43,7 @@ public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayl
             buf.writeInt(e.staminaMax());
             buf.writeInt(e.energy());
             buf.writeInt(e.energyMax());
+            buf.writeVarInt(e.alignment());
             buf.writeLong(e.powerLevel());
             buf.writeBoolean(e.isPlayer());
         }
@@ -53,6 +57,7 @@ public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayl
                     buf.readInt(), buf.readInt(),
                     buf.readInt(), buf.readInt(),
                     buf.readInt(), buf.readInt(),
+                    buf.readVarInt(),
                     buf.readLong(), buf.readBoolean()));
         }
         return new SenseKiDataPacket(list);

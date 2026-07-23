@@ -71,6 +71,12 @@ public final class PhysicalCombatServer {
     private static boolean firing = false;
     private static double defenseScale = 1.0;
     public static boolean isFiring()           { return firing; }
+    /** ¿Está en los i-frames de un movimiento? DASH_PUNCH no es solo un golpe: la embestida
+     *  ES la esquiva, así que durante sus 8 ticks el jugador no recibe daño. */
+    public static boolean hasIFrames(UUID id) {
+        Active a = ACTIVE.get(id);
+        return a != null && a.tech == PhysicalTechnique.DASH_PUNCH && a.ticksLeft > 0;
+    }
     public static double currentDefenseScale() { return defenseScale; }
 
     public static void tryExecute(ServerPlayer sp, PhysicalTechnique t) {
@@ -240,9 +246,9 @@ public final class PhysicalCombatServer {
         AABB box = sp.getBoundingBox().inflate(t.range());
         for (var proj : sp.serverLevel().getEntitiesOfClass(
                 com.hmc.zenkai.content.entity.technique.KiProjectileEntity.class, box,
-                pr -> pr.getOwner() != sp)) {
+                pr -> pr.getOwner() != sp && pr.canBeDeflected())) {
             double speed = proj.getDeltaMovement().length();
-            proj.deflect(sp); // cambia de dueño: ahora puede golpear a quien lo lanzó
+            if (!proj.deflect(sp)) continue; // guarda doble: barreras y proyectiles sin daño
             proj.setDeltaMovement(look.scale(Math.max(speed, 0.4 + push * 0.4)));
         }
     }
