@@ -10,6 +10,7 @@ import com.hmc.zenkai.core.network.feature.combat.BlockingPacket;
 import com.hmc.zenkai.core.network.feature.combat.BlockingSyncPacket;
 import com.hmc.zenkai.core.network.feature.combat.CombatModePacket;
 import com.hmc.zenkai.core.network.feature.combat.CombatModeSyncPacket;
+import com.hmc.zenkai.core.network.feature.forms.FormSyncPacket;
 import com.hmc.zenkai.core.network.feature.ki.*;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerFormPacket;
 import com.hmc.zenkai.core.network.feature.player.SyncPlayerStatsPacket;
@@ -292,5 +293,10 @@ public class ModNetworking {
                 LockOnPacket.TYPE,
                 LockOnPacket.STREAM_CODEC,
                 LockOnPacket::handle);
+
+        registrar.playToClient(
+                FormSyncPacket.TYPE,
+                FormSyncPacket.STREAM_CODEC,
+                FormSyncPacket::handle);
     }
 }

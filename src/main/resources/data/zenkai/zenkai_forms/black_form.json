@@ -1,0 +1,14 @@
+{
+  "races": [
+    "arcosian"
+  ],
+  "kind": "extension",
+  "tp_cost": 90000,
+  "hold_ticks": 140,
+  "mastery_gain": 0.35,
+  "stat_percent_untrained": 10.5,
+  "stat_percent_mastered": 14.0,
+  "ki_drain_untrained": 2.6,
+  "ki_drain_mastered": 0.95,
+  "parent": "zenkai:golden_form"
+}

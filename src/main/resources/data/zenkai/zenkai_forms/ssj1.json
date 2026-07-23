@@ -1,0 +1,13 @@
+{
+  "races": [
+    "saiyan"
+  ],
+  "kind": "super",
+  "tp_cost": 5000,
+  "hold_ticks": 100,
+  "mastery_gain": 1.0,
+  "stat_percent_untrained": 1.0,
+  "stat_percent_mastered": 1.5,
+  "ki_drain_untrained": 0.4,
+  "ki_drain_mastered": 0.1
+}
