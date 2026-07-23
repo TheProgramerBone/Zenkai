@@ -16,6 +16,7 @@ public final class SkillEffects {
     public static final String KI_CONTROL = "ki_control";
     public static final String MEDITATION = "meditation";
     public static final String KI_BLOCK = "ki_block";
+    public static final String KI_SENSE = "ki_sense";
 
     public static int level(Player p, String skillId) {
         if (p == null) return 0;
@@ -73,4 +74,19 @@ public final class SkillEffects {
     public static double blockDamageMultiplier(Player p) {
         return Math.max(0.0, 1.0 - blockReduction(p));
     }
+
+    // ── Ki Sense ─────────────────────────────────────────────────────────────
+    public static int senseLevel(Player p) { return level(p, KI_SENSE); }
+
+    /** Multiplicador del rango de sentido. 1.0 sin la habilidad. */
+    public static double senseRangeFactor(Player p) { return curve(p, KI_SENSE, "range_mult", 1.0); }
+
+    /** Fijar objetivo se desbloquea con el nivel 1. */
+    public static boolean canLockOn(Player p) { return level(p, KI_SENSE) > 0; }
+
+    /** Fuerza de atracción de la mirada al fijar (0 = sin lock, 1 = clavado). */
+    public static double lockStrength(Player p) { return curve(p, KI_SENSE, "lock_strength", 0.0); }
+
+    public static boolean senseShowsStamina(Player p) { return curve(p, KI_SENSE, "show_stamina", 0.0) > 0.5; }
+    public static boolean senseShowsKi(Player p)      { return curve(p, KI_SENSE, "show_ki", 0.0) > 0.5; }
 }

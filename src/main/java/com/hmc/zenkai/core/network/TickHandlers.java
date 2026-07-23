@@ -3,6 +3,7 @@ package com.hmc.zenkai.core.network;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.CombatZenkaiHooks;
 import com.hmc.zenkai.content.effect.ModEffects;
+import com.hmc.zenkai.core.combat.DownedDeathGuard;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.aura.TurboServerState;
@@ -169,6 +170,9 @@ public class TickHandlers {
             if (p instanceof ServerPlayer sp) {
                 // health=0 ANTES de die(): sin esto la muerte "no cuaja" (el cliente nunca ve
                 // vida 0) y el respawn sincroniza -> jugador vivo con body 0 y sin viaje.
+                // allowRealDeath: esta muerte es intencional, DownedDeathGuard no debe
+                // convertirla otra vez en derribado (sería un bucle infinito).
+                DownedDeathGuard.allowRealDeath(sp);
                 sp.setHealth(0.0F);
                 sp.die(sp.damageSources().generic());
             }
@@ -371,6 +375,7 @@ public class TickHandlers {
     /** Limpia los mapas por jugador al desloguear (chargeTicks tampoco se limpiaba antes). */
     @SubscribeEvent
     public static void onLogout(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent e) {
+        DownedDeathGuard.forget(e.getEntity().getUUID());
         chargeTicks.remove(e.getEntity().getUUID());
         regenCarry.remove(e.getEntity().getUUID());
     }

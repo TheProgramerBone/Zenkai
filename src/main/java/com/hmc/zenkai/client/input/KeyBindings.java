@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.input;
 
 import com.hmc.zenkai.client.CombatModeClientState;
+import com.hmc.zenkai.client.LockOnClientState;
 import com.hmc.zenkai.client.ScouterClientState;
 import com.hmc.zenkai.client.SenseKiClientState;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
@@ -29,6 +30,7 @@ public final class KeyBindings {
     public static KeyMapping SENSE_KI;
     public static KeyMapping TURBO;
     public static KeyMapping COMBAT_MODE;
+    public static KeyMapping LOCK_ON;
 
     /** Z: baja el % de poder en escalones (Ki Control). */
     public static KeyMapping POWER_DOWN;
@@ -104,6 +106,13 @@ public final class KeyBindings {
                 "key.categories.zenkai"
         );
         event.register(COMBAT_MODE);
+
+        LOCK_ON = new KeyMapping(
+                "key.zenkai.lock_on",
+                GLFW.GLFW_KEY_LEFT_ALT,
+                "key.categories.zenkai"
+        );
+        event.register(LOCK_ON);
     }
 
     /**
@@ -113,10 +122,6 @@ public final class KeyBindings {
     public static void handleKeyInput(InputEvent.Key e) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-
-        SenseKiClientState.tick(mc);
-        ScouterClientState.tick(mc);
-        CombatModeClientState.tick(mc);
 
         PlayerStatsAttachment stats = mc.player.getData(DataAttachments.PLAYER_STATS.get());
         boolean hasRace = stats.isRaceChosen();
@@ -152,11 +157,17 @@ public final class KeyBindings {
     public static void handleClientTick() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-
         var player = mc.player;
-
+        SenseKiClientState.tick(mc);
+        ScouterClientState.tick(mc);
+        CombatModeClientState.tick(mc);
         PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
         boolean hasRace = stats.isRaceChosen();
+
+        if (LOCK_ON != null) {
+            while (LOCK_ON.consumeClick()) LockOnClientState.toggle(mc);
+        }
+        LockOnClientState.tick(mc);
 
         // Gate: sin raza, cortar y vaciar colas. Sin el drenaje, los clicks se acumulan
         // y se disparan todos de golpe la próxima vez que alguien los consuma.

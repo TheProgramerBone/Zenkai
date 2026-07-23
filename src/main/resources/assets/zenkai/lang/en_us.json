@@ -106,6 +106,7 @@
   "key.zenkai.combat_mode": "Combat Mode",
   "key.zenkai.power_down": "Lower Power %",
   "key.zenkai.form": "Transform (hold) / Revert (tap)",
+  "key.zenkai.lock_on": "Lock On Target",
 
 
   "hud.zenkai.combat.no_techniques": "Assign techniques in the Ki Techniques menu",
@@ -177,6 +178,12 @@
   "messages.zenkai.cannot_break": "§cThis block is protected by %s",
   "messages.zenkai.cannot_break_generic": "§cThis block is protected",
   "messages.zenkai.power_percent": "§bPower: %s%% / %s%%",
+  "messages.zenkai.lock_on.on": "Locked on: %s",
+  "messages.zenkai.lock_on.off": "Lock released",
+  "messages.zenkai.lock_on.none": "No target in sight",
+  "messages.zenkai.lock_on.lost": "Lost the target",
+  "messages.zenkai.lock_on.locked": "You need Ki Sense to lock on",
+  "messages.zenkai.lock_on.targeted": "%s has locked on to you",
 
 
   "protector.zenkai.kami": "Kami",
@@ -285,7 +292,8 @@
   "skill.zenkai.meditation.desc": "Channel your ki. Required to charge (C) at all; each level speeds up charging and passive ki regeneration.",
   "skill.zenkai.ki_block": "Ki Block",
   "skill.zenkai.ki_block.desc": "Reinforce your guard with ki. Cuts 20% of incoming damage while blocking, up to 50% at max level.",
-
+  "skill.zenkai.ki_sense": "Ki Sense",
+  "skill.zenkai.ki_sense.desc": "Feel the ki around you. Extends sensing range, reveals stamina and ki of those you sense, and lets you lock on to a target.",
 
   "screen.zenkai.technique.edit_title": "Ki Technique Editor",
   "screen.zenkai.technique.name": "Name",

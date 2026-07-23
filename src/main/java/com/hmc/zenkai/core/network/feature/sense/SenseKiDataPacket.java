@@ -17,8 +17,12 @@ import java.util.List;
  */
 public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayload {
 
-    /** id de entidad + vida + PL + si es jugador (para los filtros de modo). */
-    public record Entry(int entityId, int body, int bodyMax, long powerLevel, boolean isPlayer) {}
+    /** id + vida + estamina + ki + PL + si es jugador (para los filtros de modo).
+     *  Estamina y ki van a 0 en lo que no tenga pools Zenkai; el cliente decide si los
+     *  muestra según el nivel de Ki Sense. */
+    public record Entry(int entityId, int body, int bodyMax,
+                        int stamina, int staminaMax, int energy, int energyMax,
+                        long powerLevel, boolean isPlayer) {}
 
     public static final Type<SenseKiDataPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "sense_ki_data"));
@@ -32,6 +36,10 @@ public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayl
             buf.writeVarInt(e.entityId());
             buf.writeInt(e.body());
             buf.writeInt(e.bodyMax());
+            buf.writeInt(e.stamina());
+            buf.writeInt(e.staminaMax());
+            buf.writeInt(e.energy());
+            buf.writeInt(e.energyMax());
             buf.writeLong(e.powerLevel());
             buf.writeBoolean(e.isPlayer());
         }
@@ -41,7 +49,10 @@ public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayl
         int n = buf.readVarInt();
         List<Entry> list = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
-            list.add(new Entry(buf.readVarInt(), buf.readInt(), buf.readInt(),
+            list.add(new Entry(buf.readVarInt(),
+                    buf.readInt(), buf.readInt(),
+                    buf.readInt(), buf.readInt(),
+                    buf.readInt(), buf.readInt(),
                     buf.readLong(), buf.readBoolean()));
         }
         return new SenseKiDataPacket(list);

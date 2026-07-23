@@ -287,5 +287,10 @@ public class ModNetworking {
                 TechniqueSyncPacket.TYPE,
                 TechniqueSyncPacket.STREAM_CODEC,
                 TechniqueSyncPacket::handle);
+
+        registrar.playToServer(
+                LockOnPacket.TYPE,
+                LockOnPacket.STREAM_CODEC,
+                LockOnPacket::handle);
     }
 }
