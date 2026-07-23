@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
@@ -60,7 +61,7 @@ public final class ClientZenkaiHooks {
     // =========================
     private static final IconUV ICON_FLY = IconUV.grid(3, 0);
     private static final IconUV ICON_KI_CHARGE = IconUV.grid(2, 0);
-
+    private static final IconUV ICON_TURBO = IconUV.grid(7, 1);
     private static final IconUV ICON_TRANSFORMING = IconUV.grid(7, 0);
     private static final IconUV ICON_DIVINE = IconUV.grid(5, 0);
     private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
@@ -151,6 +152,11 @@ public final class ClientZenkaiHooks {
 
         if (mc.player.getData(DataAttachments.PLAYER_VISUAL.get()).isMajinControlled()) {
             drawBadge(g, iconX, iconY, ICON_MAJIN);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        if (AuraClientState.localTurbo) {
+            drawBadge(g, iconX, iconY, ICON_TURBO);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 

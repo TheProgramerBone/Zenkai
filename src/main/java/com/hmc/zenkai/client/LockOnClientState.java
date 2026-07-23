@@ -17,14 +17,12 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
- * Lock-on estilo Xenoverse / TFAR (habilidad Ki Sense, nivel 1+).
- *
+ * Lock-on estilo xenoverse / TFAR (habilidad Ki Sense, nivel 1+).
  * CLAVE (por qué no marea): la cámara NO se mueve cada tick. La rotación se aplica solo
  * cuando el jugador mueve el ratón, desde MouseHandlerMixin (gancho en turnPlayer), y ahí
  * REEMPLAZA el giro libre por "mira al objetivo" en vez de sumarse. Con el ratón quieto la
  * cámara está quieta; al moverlo, la vista se mantiene anclada al objetivo. Este es el patrón
  * del mod TFAR Lock-On, adaptado a la habilidad Ki Sense.
- *
  * El estado aquí es solo: a quién se ha fijado. La geometría de la rotación vive en aimDelta,
  * que el mixin invoca.
  */
@@ -36,6 +34,11 @@ public final class LockOnClientState {
 
     /** Margen sobre el rango de sentido antes de soltar el objetivo (histéresis). */
     private static final double DROP_MARGIN = 8.0;
+
+    /** Altura del punto de mira DENTRO del objetivo, como fracción de su altura.
+     *  1.0 = coronilla · ~0.85 = ojos (comportamiento anterior) · 0.62 = pecho · 0.5 = ombligo.
+     *  Bájalo para que la cámara apunte más al centro del cuerpo. */
+    private static final double AIM_HEIGHT_FRACTION = 0.62;
 
     private static int targetId = -1;
 
@@ -112,7 +115,7 @@ public final class LockOnClientState {
 
             double dot = look.dot(to.scale(1.0 / dist));
             if (dot <= bestDot) continue;
-            if (!hasLineOfSight(mc, p, le)) continue; // solo se fija lo que se ve
+            if (hasLineOfSight(mc, p, le)) continue; // solo se fija lo que se ve
 
             bestDot = dot;
             best = le;
@@ -122,13 +125,13 @@ public final class LockOnClientState {
 
     /** Raycast de bloques entre los ojos del jugador y los del objetivo. */
     private static boolean hasLineOfSight(Minecraft mc, LocalPlayer p, LivingEntity t) {
-        if (mc.level == null) return false;
+        if (mc.level == null) return true;
         Vec3 from = p.getEyePosition();
         Vec3 target = t.getEyePosition();
         HitResult hit = mc.level.clip(new ClipContext(from, target,
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, p));
-        return hit.getType() == HitResult.Type.MISS
-                || hit.getLocation().distanceToSqr(from) >= from.distanceToSqr(target) - 0.5;
+        return hit.getType() != HitResult.Type.MISS
+                && !(hit.getLocation().distanceToSqr(from) >= from.distanceToSqr(target) - 0.5);
     }
 
     private static double range(LocalPlayer p) {
@@ -155,7 +158,6 @@ public final class LockOnClientState {
      * Devuelve el giro [yaw, pitch] (grados) que debe aplicarse ESTE frame para mirar al
      * objetivo, o null si no hay lock o no se debe rotar. Lo invoca MouseHandlerMixin cuando
      * el jugador mueve el ratón: sustituye el giro libre por "mira al objetivo".
-     *
      * Al llamarse solo con el ratón en movimiento, la cámara nunca se mueve sola: es el patrón
      * de TFAR que evita el mareo.
      */
@@ -167,15 +169,15 @@ public final class LockOnClientState {
         LivingEntity t = target(mc);
         if (t == null || !t.isAlive()) return null;
         // Tras una pared no reorientamos: dejamos que el ratón mande ese instante.
-        if (!hasLineOfSight(mc, p, t)) return null;
+        if (hasLineOfSight(mc, p, t)) return null;
 
-        Vec3 to = t.getEyePosition().subtract(p.getEyePosition());
-        double horiz = to.horizontalDistance();
-        if (horiz < 1.0e-6 && Math.abs(to.y) < 1.0e-6) return null;
+        Vec3 to = aimPoint(t).subtract(p.getEyePosition());
+        double horizon = to.horizontalDistance();
+        if (horizon < 1.0e-6 && Math.abs(to.y) < 1.0e-6) return null;
 
         // Convenio EXACTO de TFAR (handleKeyPress), para no arriesgar signos con turn():
         //   targetYaw   = atan2(-x, z),  turn recibe -(yRot - targetYaw)
-        //   targetPitch = atan2(y, horiz), turn recibe -(xRot + targetPitch)
+        //   targetPitch = atan2(y, horizon), turn recibe -(xRot + targetPitch)
         Vec3 dir = to.normalize();
         double targetYaw = Mth.wrapDegrees(Mth.atan2(-dir.x, dir.z) * 180.0 / Math.PI);
         double targetPitch = Mth.atan2(dir.y, dir.horizontalDistance()) * 180.0 / Math.PI;
@@ -183,5 +185,11 @@ public final class LockOnClientState {
         double toTurnYaw = Mth.wrapDegrees(Mth.wrapDegrees(p.getYRot()) - targetYaw);
         double toTurnPitch = Mth.wrapDegrees(Mth.wrapDegrees(p.getXRot()) + targetPitch);
         return new float[]{ (float) -toTurnYaw, (float) -toTurnPitch };
+    }
+
+    /** Punto al que se apunta. Deliberadamente, NO son los ojos: fijar la cabeza deja la
+     *  cámara mirando alto y el cuerpo se sale del centro en corta distancia. */
+    private static Vec3 aimPoint(LivingEntity t) {
+        return new Vec3(t.getX(), t.getY() + t.getBbHeight() * AIM_HEIGHT_FRACTION, t.getZ());
     }
 }

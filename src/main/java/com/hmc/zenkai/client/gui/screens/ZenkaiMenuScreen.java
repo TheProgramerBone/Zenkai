@@ -57,7 +57,7 @@ public abstract class ZenkaiMenuScreen extends Screen {
     /** Fila de pestañas con ícono (icons.png), centrada sobre el panel. Nombre = tooltip. */
     private void addTabButtons() {
         ZenkaiTab[] tabs = ZenkaiTab.values();
-        int icon = 18, gap = 4; // icon = tamaño de celda del atlas
+        int icon = 20, gap = 4; // icon = tamaño de celda del atlas
         int rowW = tabs.length * icon + (tabs.length - 1) * gap;
         int y = Math.max(2, panelTop - icon - 6);
         int x = panelLeft + (BG_W - rowW) / 2;

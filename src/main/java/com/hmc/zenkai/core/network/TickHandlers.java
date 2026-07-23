@@ -6,6 +6,7 @@ import com.hmc.zenkai.content.effect.ModEffects;
 import com.hmc.zenkai.core.combat.DownedDeathGuard;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.mastery.MasteryEffects;
+import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.aura.TurboServerState;
 import com.hmc.zenkai.core.network.feature.forms.FormDef;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
@@ -36,7 +37,7 @@ import java.util.UUID;
 
 public class TickHandlers {
 
-    private static final ResourceLocation MOVE_MOD_ID =
+    public static final ResourceLocation MOVE_MOD_ID =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "speed_mult");
 
     private static final ResourceLocation TRANSFORM_LOCK_ID =
@@ -305,7 +306,7 @@ public class TickHandlers {
                 }
             }
         }
-        applyFormScale(p, activeDef);
+        applyFormScale(p,att.getRace(), activeDef);
 
         if (form.isTransforming()) {
             applyTransformLockServer(p, true);
@@ -321,11 +322,12 @@ public class TickHandlers {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "form_scale");
 
     /** Escala de la forma (render + hitbox + ojos) vía minecraft:generic.scale.
-     *  Syncable: los clientes la ven sin packet. Único sitio de escritura. */
-    private static void applyFormScale(Player p, FormDef def) {
+     *  Sin forma cae a la escala base de la RAZA. Syncable: los clientes la ven sin packet. */
+    private static void applyFormScale(Player p, Race race, FormDef def) {
         AttributeInstance scaleAttr = p.getAttribute(Attributes.SCALE); // ⚠
         if (scaleAttr == null) return;
-        double target = (def != null && def.scale() > 0.0) ? def.scale() : 1.0;
+        double base = (race == null) ? 1.0 : race.baseScale();
+        double target = (def != null && def.scale() > 0.0) ? def.scale() : base;
         double amount = target - 1.0; // ADD_VALUE sobre base 1.0
         AttributeModifier current = scaleAttr.getModifier(FORM_SCALE_MOD_ID); // ⚠
         if (amount == 0.0) {
