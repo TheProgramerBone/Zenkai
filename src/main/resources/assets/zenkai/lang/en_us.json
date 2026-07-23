@@ -265,7 +265,7 @@
   "screen.zenkai.physical.unlock_mnd": "Unlock (%s TP · %s MND)",
 
 
-  "screen.zenkai.tab.main": "Main",
+  "screen.zenkai.tab.stats": "Stats",
   "screen.zenkai.tab.skills": "Skills",
   "screen.zenkai.tab.ki_techniques": "Ki Techniques",
   "screen.zenkai.tab.physical_techniques": "Physical Techniques",

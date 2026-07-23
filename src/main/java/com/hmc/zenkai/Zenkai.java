@@ -8,6 +8,8 @@ import com.hmc.zenkai.client.ZenkaiPalLayers;
 import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
+import com.hmc.zenkai.client.particle.KiImpactParticle;
+import com.hmc.zenkai.client.particle.KiSparkParticle;
 import com.hmc.zenkai.client.render_and_model.KiProjectileRenderer;
 import com.hmc.zenkai.client.render_and_model.blockentity.AllDragonBallsRenderer;
 import com.hmc.zenkai.client.render_and_model.entity.*;
@@ -17,6 +19,7 @@ import com.hmc.zenkai.content.effect.ModEffects;
 import com.hmc.zenkai.content.entity.ModEntities;
 import com.hmc.zenkai.content.item.ModDataComponents;
 import com.hmc.zenkai.content.item.ModItems;
+import com.hmc.zenkai.content.particle.ModParticles;
 import com.hmc.zenkai.content.sound.ModSounds;
 import com.hmc.zenkai.core.ModCommands;
 import com.hmc.zenkai.core.ModGameRules;
@@ -51,6 +54,7 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
 import terrablender.api.Regions;
@@ -85,6 +89,7 @@ public class Zenkai {
         ModFeatures.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
         ModDataComponents.register(modEventBus);
+        ModParticles.register(modEventBus);
 
         // Configs
         modContainer.registerConfig(ModConfig.Type.SERVER, WishConfig.SPEC);
@@ -234,6 +239,14 @@ public class Zenkai {
 
 
             });
+        }
+
+        @SubscribeEvent
+        public static void registerParticleProviders(RegisterParticleProvidersEvent event) { // ⚠
+            event.registerSpriteSet(ModParticles.KI_IMPACT.get(),
+                    KiImpactParticle.Provider::new);
+            event.registerSpriteSet(ModParticles.KI_SPARK.get(),
+                    KiSparkParticle.Provider::new);
         }
 
         @SubscribeEvent

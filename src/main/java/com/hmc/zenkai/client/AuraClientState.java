@@ -2,6 +2,7 @@ package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.input.KeyBindings;
+import com.hmc.zenkai.core.network.feature.aura.AuraColors;
 import com.hmc.zenkai.core.network.feature.aura.TurboPacket;
 import com.hmc.zenkai.core.network.feature.forms.FormDef;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
@@ -30,7 +31,7 @@ public final class AuraClientState {
     /** Ventana del doble-tap en ticks. */
     private static final int DOUBLE_TAP_TICKS = 7;
 
-    private static boolean localTurbo = false;
+    public static boolean localTurbo = false;
     private static final Set<Integer> REMOTE_TURBO = new HashSet<>();
 
     private static boolean prevDown = false;
@@ -72,33 +73,30 @@ public final class AuraClientState {
         } else if (on) {
             REMOTE_TURBO.add(entityId);
         } else {
-            REMOTE_TURBO.remove(Integer.valueOf(entityId));
+            REMOTE_TURBO.remove(entityId);
         }
     }
 
     public static boolean isAuraActive(AbstractClientPlayer p) {
+        // Transformándose: flag autoritativo del servidor, sincronizado a trackers ->
+        // vale igual para el jugador local y para los remotos, sin packet nuevo.
+        if (p.getData(DataAttachments.PLAYER_FORM.get()).isTransforming()) return true;
+
+        // Cargando ki: idem (lo escribe KiChargePacket en el servidor).
+        if (p.getData(DataAttachments.PLAYER_STATS.get()).isChargingKi()) return true;
+
         Minecraft mc = Minecraft.getInstance();
         if (p == mc.player) {
+            // Local: además el estado optimista, para no esperar el round-trip.
             return localTurbo || CombatModeClientState.isCharging();
         }
         return REMOTE_TURBO.contains(p.getId());
     }
 
-    /** Color del aura. Punto único para que las transformaciones lo pisen después
-     *  (auraStyleId ya existe en PlayerVisualAttachment). */
+    /** Color del aura. Delega en AuraColors (core) para que servidor y cliente no se
+     *  separen: las partículas de impacto resuelven el tinte. */
     public static int resolveColor(AbstractClientPlayer p) {
-        var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
-        // Marca Majin: el aura se fuerza a rojo mientras dure (flag sincronizado a trackers).
-        if (visual.isMajinControlled()) return 0xD41A25;
-
-        // El kaioken MANDA sobre la transformación: si está activo, su rojo gana.
-        var form = p.getData(DataAttachments.PLAYER_FORM.get());
-        if (form.getKaioken().isOn()) return 0xE02020;
-
-        // La forma activa define su aura en el datapack; en base, el color del jugador.
-        FormDef def = form.activeDef();
-        if (def != null) return def.auraRgb();
-        return visual.getAuraColorRgb();
+        return AuraColors.resolve(p);
     }
 
     /** Clave de tipo de aura de la forma activa ("ssj", "golden", "arcosian"...).

@@ -1,6 +1,7 @@
 package com.hmc.zenkai.core.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.particle.ModParticles;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.mastery.MasteryEffects;
@@ -164,8 +165,6 @@ public final class PhysicalCombatServer {
         sp.hurtMarked = true;
     }
 
-    /** Golpe único pesado: daño + EXPLOSIÓN al impactar (partículas + AoE 50% con caída
-     *  + knockback). Sin romper bloques: es físico, no ki. */
     /** Golpe único pesado: SIEMPRE se ejecuta. Con objetivo directo: daño completo +
      *  knockback en él. Sin objetivo: el golpe revienta donde termina la trayectoria
      *  (bloque mirado o aire a rango máximo). En ambos casos: explosión (partículas +
@@ -192,9 +191,7 @@ public final class PhysicalCombatServer {
 
         withBridge(t.dmgMult(), () -> {
             if (target != null) {
-                if (damageEnabled(sp)) {
-                    target.hurt(sp.damageSources().playerAttack(sp), (float) dmg);
-                }
+                hit(sp, target, dmg, t);
                 target.knockback(1.8, -look.x, -look.z);
             }
 
@@ -206,9 +203,7 @@ public final class PhysicalCombatServer {
                 double dist = e.position().add(0, e.getBbHeight() * 0.5, 0).distanceTo(c);
                 if (dist > radius) continue;
                 double falloff = 1.0 - dist / radius;
-                if (damageEnabled(sp)) {
-                    e.hurt(sp.damageSources().playerAttack(sp), (float) (dmg * 0.5 * falloff));
-                }
+                hit(sp, e, dmg * 0.5 * falloff, t);
                 Vec3 away = e.position().subtract(c).normalize();
                 e.setDeltaMovement(e.getDeltaMovement().add(away.x * 0.8, 0.25, away.z * 0.8));
                 e.hurtMarked = true;
@@ -232,7 +227,7 @@ public final class PhysicalCombatServer {
         if (dmg > 0.0 && damageEnabled(sp)) {
             withBridge(t.dmgMult(), () -> {
                 for (LivingEntity e : targets) {
-                    e.hurt(sp.damageSources().playerAttack(sp), (float) dmg);
+                    hit(sp, e, dmg, t);
                 }
             });
         }
@@ -259,7 +254,7 @@ public final class PhysicalCombatServer {
         withBridge(t.dmgMult(), () -> {
             for (LivingEntity e : inCone(sp, t.range(), 0.5)) {
                 e.invulnerableTime = 0;
-                e.hurt(sp.damageSources().playerAttack(sp), (float) dmgPerHit);
+                hit(sp, e, dmgPerHit, t);
             }
         });
     }
@@ -270,7 +265,7 @@ public final class PhysicalCombatServer {
             for (LivingEntity e : sp.serverLevel().getEntitiesOfClass(LivingEntity.class, box,
                     x -> x != sp && x.isAlive() && !a.hitIds.contains(x.getId()))) {
                 a.hitIds.add(e.getId());
-                e.hurt(sp.damageSources().playerAttack(sp), (float) dmg);
+                hit(sp, e, dmg, a.tech);
             }
         });
     }
@@ -287,6 +282,41 @@ public final class PhysicalCombatServer {
             firing = false;
             defenseScale = 1.0;
         }
+    }
+
+    /** ÚNICO sitio donde se dibuja el impacto de una técnica física.
+     *  El tinte sale del aura del ATACANTE, resuelto en servidor: viaja en el packet
+     *  de partículas, así que todos los clientes ven el mismo color. */
+    private static void impactFx(ServerPlayer sp, LivingEntity e, PhysicalTechnique t) {
+        record Fx(float flash, int sparks, double spread,
+                  net.minecraft.sounds.SoundEvent sound, float vol, float pitch) {}
+
+        Fx fx = switch (t) {
+            case DASH_PUNCH -> new Fx(1.0f,  8, 0.25, SoundEvents.PLAYER_ATTACK_STRONG,    1.0f, 1.1f); // ⚠
+            case HEAVY_BLOW -> new Fx(2.0f, 18, 0.45, SoundEvents.PLAYER_ATTACK_CRIT,      1.0f, 0.8f); // ⚠
+            case BARRAGE    -> new Fx(0.7f,  4, 0.18, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 0.7f, 1.6f); // ⚠
+            case KIAI       -> new Fx(1.4f, 10, 0.35, SoundEvents.PLAYER_ATTACK_SWEEP,     0.9f, 1.4f); // ⚠
+        };
+
+        var lvl = sp.serverLevel();
+        int rgb = com.hmc.zenkai.core.network.feature.aura.AuraColors.resolve(sp);
+        double x = e.getX(), y = e.getY() + e.getBbHeight() * 0.6, z = e.getZ();
+        double s = e.getBbWidth() * 0.4;
+
+        lvl.sendParticles(ModParticles.impact(rgb, fx.flash()),
+                x, y, z, 1, 0.0, 0.0, 0.0, 0.0);
+        lvl.sendParticles(ModParticles.spark(rgb, 1.0f),
+                x, y, z, fx.sparks(), s, 0.2, s, fx.spread());
+        lvl.playSound(null, x, y, z, fx.sound(), SoundSource.PLAYERS, fx.vol(), fx.pitch());
+    }
+
+    /** Funnel de daño físico: aquí (y SOLO aquí) se pega y se dibuja el impacto.
+     *  Las partículas salen aunque el daño esté desactivado por gamerule. */
+    private static void hit(ServerPlayer sp, LivingEntity e, double dmg, PhysicalTechnique t) {
+        if (damageEnabled(sp)) {
+            e.hurt(sp.damageSources().playerAttack(sp), (float) dmg);
+        }
+        impactFx(sp, e, t);
     }
 
     private static boolean damageEnabled(ServerPlayer sp) {
