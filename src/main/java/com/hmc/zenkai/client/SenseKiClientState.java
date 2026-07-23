@@ -4,6 +4,7 @@ import com.hmc.zenkai.core.combat.SenseKiMode;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.sense.SenseKiDataPacket;
 import com.hmc.zenkai.core.network.feature.sense.SenseKiScanPacket;
+import com.hmc.zenkai.core.skills.SkillEffects;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -26,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class SenseKiClientState {
     private SenseKiClientState() {}
 
-    private static final int SCAN_INTERVAL = 1; //Ticks
+    private static final int SCAN_INTERVAL = 10; //Ticks
 
     private static SenseKiMode mode = SenseKiMode.OFF;
     private static int tickCounter = 0;
@@ -49,9 +50,10 @@ public final class SenseKiClientState {
         SENSED.clear();
     }
 
-    /** Gancho del nivel de la habilidad (futuro sistema de habilidades/MIND). */
+    /** Nivel de la habilidad Ki Sense (0 = sin habilidad: solo barras y PL). */
     public static int senseKiLevel() {
-        return 1; // nivel 1: solo barras de vida
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player == null ? 0 : SkillEffects.senseLevel(mc.player);
     }
 
     /** Pulsación de F4 (desde KeyBindings). */
@@ -60,6 +62,15 @@ public final class SenseKiClientState {
 
         if (isScouterEquipped(mc)) {
             ScouterClientState.toggle(mc); // F4 con scouter puesto = toggle del overlay de PL
+            return;
+        }
+        // Sin la habilidad no se siente nada. El scouter es la vía alternativa: por eso
+        // el gate va DESPUÉS del desvío al scouter, no antes.
+        if (SkillEffects.senseLevel(mc.player) <= 0) {
+            forceOff();
+            mc.player.displayClientMessage(
+                    Component.translatable("messages.zenkai.sense_ki.locked")
+                            .withStyle(ChatFormatting.RED), true);
             return;
         }
 
@@ -79,6 +90,12 @@ public final class SenseKiClientState {
             return;
         }
         if (mode == SenseKiMode.OFF) return;
+
+        // Perdió la habilidad (respec, /zenkai skill revoke): se apaga solo.
+        if (SkillEffects.senseLevel(mc.player) <= 0) {
+            forceOff();
+            return;
+        }
 
         if (++tickCounter >= SCAN_INTERVAL) {
             tickCounter = 0;

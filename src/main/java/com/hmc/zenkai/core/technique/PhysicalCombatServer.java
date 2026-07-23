@@ -214,21 +214,35 @@ public final class PhysicalCombatServer {
                 SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.0f, 1.2f);
     }
 
-    /** Kiai: empujón en cono ESCALADO CON STR (softcap: 0.7 débil -> ~1.6 fuerte);
-     *  desvía proyectiles ki ajenos. Sin daño. */
+    /** Kiai: cono frontal con daño moderado + empujón ESCALADO CON STR (softcap: 0.7 débiles
+     *  -> ~1.6 fuerte); desvía proyectiles ki ajenos. El empuje se aplica DESPUÉS del daño
+     *  para que no lo pise el knockback vanilla de hurt(). */
     private static void kiai(ServerPlayer sp, double str, PhysicalTechnique t) {
         double push = 0.7 + 0.9 * (str / (str + 100.0)); // 100 = perilla de "STR media"
+        double dmg = str * t.dmgMult();
         Vec3 look = sp.getLookAngle();
-        for (LivingEntity e : inCone(sp, t.range(), 0.4)) {
+        List<LivingEntity> targets = inCone(sp, t.range(), 0.4);
+
+        if (dmg > 0.0 && damageEnabled(sp)) {
+            withBridge(t.dmgMult(), () -> {
+                for (LivingEntity e : targets) {
+                    e.hurt(sp.damageSources().playerAttack(sp), (float) dmg);
+                }
+            });
+        }
+
+        for (LivingEntity e : targets) {
             e.setDeltaMovement(e.getDeltaMovement()
                     .add(look.x * push, 0.3 + push * 0.15, look.z * push));
             e.hurtMarked = true;
         }
+
         AABB box = sp.getBoundingBox().inflate(t.range());
         for (var proj : sp.serverLevel().getEntitiesOfClass(
                 com.hmc.zenkai.content.entity.technique.KiProjectileEntity.class, box,
                 pr -> pr.getOwner() != sp)) {
             double speed = proj.getDeltaMovement().length();
+            proj.deflect(sp); // cambia de dueño: ahora puede golpear a quien lo lanzó
             proj.setDeltaMovement(look.scale(Math.max(speed, 0.4 + push * 0.4)));
         }
     }

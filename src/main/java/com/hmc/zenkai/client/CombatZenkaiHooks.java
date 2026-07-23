@@ -16,6 +16,7 @@ import com.hmc.zenkai.core.technique.PhysicalCombatServer;
 import com.hmc.zenkai.core.training.TrainingHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.InteractionHand;
@@ -35,6 +36,8 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
  *   2) Lado DEFENSOR: si recibe un jugador con raza, se mitiga con su DEF y el daño va al pool
  *      BODY (la vida vanilla nunca baja). Si body llega a 0 -> estado "derribado" (transición).
  * Si la víctima es un mob, recibe en su vida vanilla el daño ya recalculado del atacante.
+ * onDamage solo ORQUESTA; cada paso vive en su propia forma (mismo criterio que
+ * TickHandlers.onPlayerTick).
  */
 public class CombatZenkaiHooks {
 
@@ -52,6 +55,10 @@ public class CombatZenkaiHooks {
         return Math.max(1, (int) Math.round(att.getBodyMax() * DOWNED_REVIVE_PCT));
     }
 
+    // =====================================================================
+    // ORQUESTADOR
+    // =====================================================================
+
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent.Pre e) {
         if (e.getEntity().level().isClientSide()) return;
@@ -59,121 +66,176 @@ public class CombatZenkaiHooks {
         MinecraftServer server = e.getEntity().getServer();
         if (server == null || !ModGameRules.enableRaceBoosts(server)) return;
 
-        float dmg = e.getNewDamage();
-
-        // ── 1) LADO ATACANTE (jugador o entidad con stats) ────────────────────
-        // Los proyectiles ki traen su daño ya calculado (kiPower) -> no se recalculan aquí.
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
-        if (atkStats != null && atkStats.isCombatActive()
-                && !(e.getSource().getDirectEntity() instanceof KiProjectileEntity) && !PhysicalCombatServer.isFiring()) {
-            double strDamage = atkStats.computeMeleeFinal();
-            if (e.getSource().getEntity() instanceof Player atkP) {
-                strDamage *= MasteryEffects.formStatFactor(atkP);
-            }
-            if (e.getSource().getEntity() instanceof Player attacker) {
-                // Compuerta de MODO COMBATE: fuera de él, el golpe del jugador deja pasar el
-                // daño VANILLA puro (sin STR zenkai y sin gastar stamina). Contra pools zenkai
-                // es simbólico -> golpes amistosos sin vaporizar a nadie; contra mobs, normal.
-                boolean zenkaiMelee = attacker instanceof ServerPlayer atkSp
-                        && CombatModeServerState.isActive(atkSp.getUUID());
+        float dmg = computeAttackDamage(e, atkStats);
 
-                if (zenkaiMelee) {
-                    // Jugador: STR (limitado por stamina) + bonus de arma, y consume stamina.
-                    double weaponBonus = 0.0;
-                    AttributeInstance attr = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
-                    if (attr != null) weaponBonus = attr.getValue();
-
-                    int currentStamina = atkStats.getStamina();
-                    double strApplied, totalDamage;
-                    if (currentStamina <= 0) {
-                        strApplied = 0.0;
-                        totalDamage = 0.0;
-                    } else {
-                        strApplied = Math.min(strDamage, currentStamina);
-                        totalDamage = strApplied + weaponBonus;
-                    }
-
-                    int staminaCost = (int) Math.ceil(strApplied);
-                    if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
-
-                    dmg = (float) totalDamage;
-                    PlayerLifeCycle.syncIfServer(attacker);
-                }
-            } else {
-                // Entidad: su STR es la fuente única del daño melee (sin gate de stamina en Fase 2).
-                dmg = (float) strDamage;
-            }
-        }
-
-        // ── 2) LADO DEFENSOR (jugador o entidad con stats) ────────────────────
-        // La DEFENSA se mantiene SIEMPRE, esté o no en modo combate.
         ZenkaiCombatStats defStats = ZenkaiStats.of(e.getEntity());
         if (defStats != null && defStats.isCombatActive()) {
-            if (dmg > 0f) {
-                double defense = defStats.computeDefenseFinal();
-                if (e.getEntity() instanceof Player defP) {
-                    defense *= com.hmc.zenkai.core.mastery.MasteryEffects.formStatFactor(defP);
-                }
-                if (PhysicalCombatServer.isFiring()) {
-                    defense *= PhysicalCombatServer.currentDefenseScale();
-                }
-                if (e.getSource().getDirectEntity() instanceof KiProjectileEntity
-                        && atkStats != null) {
-                    double kiPower = atkStats.computeKiPowerFinal();
-                    if (kiPower > 1.0e-6) defense *= (dmg / kiPower);
-                }
-                double finalDamage = (dmg <= defense)
-                        ? dmg * StatsConfig.minDamagePercent()
-                        : dmg - defense;
-                finalDamage = Math.max(finalDamage, 0.0);
+            applyToZenkaiVictim(e, atkStats, defStats, dmg);
+            return;
+        }
+        applyToVanillaVictim(e, dmg);
+    }
 
-                if (e.getEntity() instanceof ServerPlayer defSp
-                        && KiCombatServer.isBlocking(defSp)) {
-                    finalDamage *= SkillEffects.blockDamageMultiplier(defSp);
-                }
+    // =====================================================================
+    // LADO ATACANTE
+    // =====================================================================
 
-                // Barrera ki: absorbe ANTES de tocar el body (solo jugadores).
-                if (e.getEntity() instanceof ServerPlayer defSp) {
-                    finalDamage = KiCombatServer.absorb(defSp, finalDamage);
-                }
+    /**
+     * Daño de salida del atacante. Los proyectiles ki traen su daño ya calculado (kiPower),
+     * así que no se recalculan aquí.
+     * @return el daño que entra al lado defensor.
+     */
+    private static float computeAttackDamage(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats) {
+        float dmg = e.getNewDamage();
 
-                int bodyBefore = defStats.getBody();
-                defStats.addBody(-(int) Math.ceil(finalDamage));
+        if (atkStats == null || !atkStats.isCombatActive()) return dmg;
+        if (e.getSource().getDirectEntity() instanceof KiProjectileEntity) return dmg;
+        if (PhysicalCombatServer.isFiring()) return dmg;
 
-                // Entrenamiento: TP por daño EFECTIVO (post-defensa y post-barrera,
-                // capado por el pool restante -> sin exploit de overkill ni de derribados).
-                if (e.getSource().getEntity() instanceof ServerPlayer trainer
-                        && trainer != e.getEntity()) {
-                    TrainingHooks.grantFromDamage(trainer, Math.min(finalDamage, bodyBefore));
-                }
-            }
+        double strDamage = atkStats.computeMeleeFinal();
+        if (e.getSource().getEntity() instanceof Player atkP) {
+            strDamage *= MasteryEffects.formStatFactor(atkP);
+        }
 
-            if (e.getEntity() instanceof Player victim) {
-                // El jugador nunca recibe daño vanilla; el daño vive en el pool body.
-                e.setNewDamage(0.0F);
-                if (defStats.getBody() <= 0) onBodyDepleted(victim, PlayerStatsAttachment.get(victim));
-                PlayerLifeCycle.syncIfServer(victim);
-                return;
-            }
+        if (e.getSource().getEntity() instanceof Player attacker) {
+            return playerMeleeDamage(attacker, atkStats, strDamage, dmg);
+        }
+        // Entidad: su STR es la fuente única del daño melee (sin gate de stamina en Fase 2).
+        return (float) strDamage;
+    }
 
-            // Entidad con stats: el body es su vida real (esquiva el cap de MC).
-            if (defStats.getBody() <= 0) {
-                // Golpe letal: dejamos pasar daño vanilla real -> muerte con loot/XP/killer correctos.
-                e.setNewDamage(Math.max(e.getEntity().getHealth(), 1.0F));
-            } else {
-                e.setNewDamage(0.0F); // absorbido por el pool body
-            }
+    /**
+     * Golpe cuerpo a cuerpo de un JUGADOR. Compuerta de MODO COMBATE: fuera de él, el golpe
+     * deja pasar el daño VANILLA puro (sin STR zenkai y sin gastar stamina). Contra pools
+     * zenkai es simbólico -> golpes amistosos sin vaporizar a nadie; contra mobs, normal.
+     */
+    private static float playerMeleeDamage(Player attacker, ZenkaiCombatStats atkStats,
+                                           double strDamage, float vanillaDmg) {
+        boolean zenkaiMelee = attacker instanceof ServerPlayer atkSp
+                && CombatModeServerState.isActive(atkSp.getUUID());
+        if (!zenkaiMelee) return vanillaDmg;
+
+        // STR (limitado por stamina) + bonus de arma, y consume stamina.
+        double weaponBonus = 0.0;
+        AttributeInstance attr = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
+        if (attr != null) weaponBonus = attr.getValue();
+
+        int currentStamina = atkStats.getStamina();
+        double strApplied, totalDamage;
+        if (currentStamina <= 0) {
+            strApplied = 0.0;
+            totalDamage = 0.0;
+        } else {
+            strApplied = Math.min(strDamage, currentStamina);
+            totalDamage = strApplied + weaponBonus;
+        }
+
+        int staminaCost = (int) Math.ceil(strApplied);
+        if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
+
+        PlayerLifeCycle.syncIfServer(attacker);
+        return (float) totalDamage;
+    }
+
+    // =====================================================================
+    // LADO DEFENSOR
+    // =====================================================================
+
+    /** Víctima CON stats zenkai: mitiga con DEF y el daño va al pool body. */
+    private static void applyToZenkaiVictim(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
+                                            ZenkaiCombatStats defStats, float dmg) {
+        if (dmg > 0f) {
+            double finalDamage = mitigate(e, atkStats, defStats, dmg);
+
+            int bodyBefore = defStats.getBody();
+            defStats.addBody(-(int) Math.ceil(finalDamage));
+
+            // Entrenamiento: TP por daño EFECTIVO (post-defensa y post-barrera,
+            // capado por el pool restante -> sin exploit de overkill ni de derribados).
+            grantTraining(e, Math.min(finalDamage, bodyBefore));
+        }
+
+        if (e.getEntity() instanceof Player victim) {
+            // El jugador nunca recibe daño vanilla; el daño vive en el pool body.
+            e.setNewDamage(0.0F);
+            if (defStats.getBody() <= 0) onBodyDepleted(victim, PlayerStatsAttachment.get(victim));
+            PlayerLifeCycle.syncIfServer(victim);
             return;
         }
 
-        // Víctima sin stats (mob vanilla): aplica el daño (recalculado o vanilla) a su vida.
-        e.setNewDamage(dmg);
-        // Entrenamiento vs mobs vanilla: capado por la vida restante (sin overkill).
-        if (dmg > 0f && e.getSource().getEntity() instanceof ServerPlayer trainer
-                && trainer != e.getEntity()) {
-            TrainingHooks.grantFromDamage(trainer, Math.min(dmg, e.getEntity().getHealth()));
+        // Entidad con stats: el body es su vida real (esquiva el cap de MC).
+        if (defStats.getBody() <= 0) {
+            // Golpe letal: dejamos pasar daño vanilla real -> muerte con loot/XP/killer correctos.
+            e.setNewDamage(Math.max(e.getEntity().getHealth(), 1.0F));
+        } else {
+            e.setNewDamage(0.0F); // absorbido por el pool body
         }
     }
+
+    /** Aplica DEF, bloqueo y barrera. @return daño que llega al body. */
+    private static double mitigate(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
+                                   ZenkaiCombatStats defStats, float dmg) {
+        double defense = computeDefense(e, atkStats, defStats, dmg);
+
+        double finalDamage = (dmg <= defense)
+                ? dmg * StatsConfig.minDamagePercent()
+                : dmg - defense;
+        finalDamage = Math.max(finalDamage, 0.0);
+
+        if (e.getEntity() instanceof ServerPlayer defSp && KiCombatServer.isBlocking(defSp)) {
+            finalDamage *= SkillEffects.blockDamageMultiplier(defSp);
+        }
+
+        // Barrera ki: absorbe ANTES de tocar el body (solo jugadores).
+        if (e.getEntity() instanceof ServerPlayer defSp) {
+            finalDamage = KiCombatServer.absorb(defSp, finalDamage);
+        }
+        return finalDamage;
+    }
+
+    /** DEF efectiva del defensor frente a ESTE golpe. Se mantiene SIEMPRE, en modo combate o no. */
+    private static double computeDefense(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
+                                         ZenkaiCombatStats defStats, float dmg) {
+        double defense = defStats.computeDefenseFinal();
+
+        if (e.getEntity() instanceof Player defP) {
+            defense *= MasteryEffects.formStatFactor(defP);
+        }
+        if (PhysicalCombatServer.isFiring()) {
+            defense *= PhysicalCombatServer.currentDefenseScale();
+        }
+
+        // Proyectil ki: la DEF se escala según lo cargado que venía el disparo respecto al
+        // poder de QUIEN LO LANZÓ. refPower > 0 = fue desviado (kiai), así que el dueño actual
+        // ya no es quien disparó y hay que usar la referencia congelada en el proyectil.
+        if (e.getSource().getDirectEntity() instanceof KiProjectileEntity proj) {
+            double kiPower = proj.refPower() > 0.0
+                    ? proj.refPower()
+                    : (atkStats != null ? atkStats.computeKiPowerFinal() : 0.0);
+            if (kiPower > 1.0e-6) defense *= (dmg / kiPower);
+        }
+        return defense;
+    }
+
+    /** Víctima SIN stats (mob vanilla): recibe en su vida el daño ya recalculado. */
+    private static void applyToVanillaVictim(LivingDamageEvent.Pre e, float dmg) {
+        e.setNewDamage(dmg);
+        // Entrenamiento vs mobs vanilla: capado por la vida restante (sin overkill).
+        if (dmg > 0f) grantTraining(e, Math.min(dmg, e.getEntity().getHealth()));
+    }
+
+    /** TP de entrenamiento al atacante, si es un jugador distinto de la víctima. */
+    private static void grantTraining(LivingDamageEvent.Pre e, double amount) {
+        Entity source = e.getSource().getEntity();
+        if (source instanceof ServerPlayer trainer && trainer != e.getEntity()) {
+            TrainingHooks.grantFromDamage(trainer, amount);
+        }
+    }
+
+    // =====================================================================
+    // DERRIBADO
+    // =====================================================================
 
     /**
      * Body agotado. En vez de morir al instante:
@@ -244,6 +306,10 @@ public class CombatZenkaiHooks {
         e.setCanceled(true);
         e.setCancellationResult(InteractionResult.SUCCESS);
     }
+
+    // =====================================================================
+    // BLOQUEO
+    // =====================================================================
 
     @SubscribeEvent
     public static void onAttackWhileBlocking(net.neoforged.neoforge.event.entity.player.AttackEntityEvent e) {

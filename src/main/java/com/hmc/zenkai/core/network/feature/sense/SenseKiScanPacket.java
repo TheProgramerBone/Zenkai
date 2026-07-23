@@ -1,13 +1,11 @@
 package com.hmc.zenkai.core.network.feature.sense;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.combat.EntityStatDef;
-import com.hmc.zenkai.core.combat.EntityStats;
-import com.hmc.zenkai.core.combat.EntityStatsManager;
-import com.hmc.zenkai.core.combat.ZenkaiStats;
+import com.hmc.zenkai.core.combat.*;
 import com.hmc.zenkai.core.ModGameRules;
 import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.skills.SkillEffects;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -46,8 +44,13 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
     public static void handle(SenseKiScanPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
+            // Deja constancia de que este jugador tiene el sense encendido: es lo que
+            // permite avisarle si alguien lo fija con el lock-on.
+            // Sin la habilidad no se escanea, pase lo que pase en el cliente.
+            if (SkillEffects.senseLevel(sp) <= 0) return;
+            SenseServerState.markScan(sp);
 
-            double r = StatsConfig.senseKiRange();
+            double r = StatsConfig.senseKiRange() * SkillEffects.senseRangeFactor(sp);
             AABB box = AABB.ofSize(sp.position(), r * 2, r * 2, r * 2);
 
             List<SenseKiDataPacket.Entry> out = new ArrayList<>();
@@ -73,7 +76,10 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         if (le instanceof Player p) {
             PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
             if (att.isRaceChosen()) {
-                return new SenseKiDataPacket.Entry(le.getId(), att.getBody(), att.getBodyMax(),
+                return new SenseKiDataPacket.Entry(le.getId(),
+                        att.getBody(), att.getBodyMax(),
+                        att.getStamina(), att.getStaminaMax(),
+                        att.getEnergy(), att.getEnergyMax(),
                         att.getPowerLevel(), true);
             }
             return vanillaEntry(le, true);
@@ -82,7 +88,9 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         // Entidad con stats de combate resueltos.
         EntityStats stats = ZenkaiStats.entityStats(le);
         if (stats != null) {
-            return new SenseKiDataPacket.Entry(le.getId(), stats.getBody(), stats.getBodyMax(),
+            return new SenseKiDataPacket.Entry(le.getId(),
+                    stats.getBody(), stats.getBodyMax(),
+                    0, 0, 0, 0,
                     stats.getPowerLevel(), false);
         }
 
@@ -92,6 +100,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         if (def != null && def.displayOnly()) {
             return new SenseKiDataPacket.Entry(le.getId(),
                     Math.round(le.getHealth()), Math.round(le.getMaxHealth()),
+                    0,0,0,0,
                     def.powerLevel(), false);
         }
 
@@ -101,6 +110,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
     private static SenseKiDataPacket.Entry vanillaEntry(LivingEntity le, boolean isPlayer) {
         long pl = Math.round(le.getMaxHealth() * StatsConfig.vanillaPowerLevelFactor());
         return new SenseKiDataPacket.Entry(le.getId(),
-                Math.round(le.getHealth()), Math.round(le.getMaxHealth()), pl, isPlayer);
+                Math.round(le.getHealth()), Math.round(le.getMaxHealth()),
+                0,0,0,0, pl, isPlayer);
     }
 }

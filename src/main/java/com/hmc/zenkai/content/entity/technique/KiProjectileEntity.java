@@ -198,6 +198,13 @@ public class KiProjectileEntity extends Projectile {
         }
     }
 
+    /** Poder de ki de referencia con el que se calculó el daño. Se congela al desviar,
+     *  porque a partir de ahí el dueño ya no es quien disparó y la defensa del receptor
+     *  se escala contra el poder del ORIGINAL, no contra el de quien lo devolvió. */
+    private double refPower = 0.0;
+
+    public double refPower() { return refPower; }
+
     /** Radio de la explosión. Escala con el tamaño elegido en el editor (1..7 -> 1.7..4.7). */
     private double explosionRadius() {
         return 1.2 + 0.5 * size();
@@ -278,5 +285,20 @@ public class KiProjectileEntity extends Projectile {
     @Override
     public boolean hurt(net.minecraft.world.damagesource.@NotNull DamageSource source, float amount) {
         return false; // los proyectiles ki no reciben daño
+    }
+
+    /**
+     * Desvío por kiai: el proyectil cambia de dueño. Con eso, quien lo disparó pasa a ser
+     * blanco válido (canHitEntity excluye al dueño) y quien lo devuelve queda inmune, tanto
+     * al impacto como a la explosión. El daño NO se recalcula: devuelve exactamente lo que
+     * traía. Llamar ANTES de invertir la dirección.
+     */
+    public void deflect(LivingEntity newOwner) {
+        if (refPower <= 0.0 && getOwner() instanceof LivingEntity original) {
+            var st = com.hmc.zenkai.core.combat.ZenkaiStats.of(original);
+            if (st != null) refPower = st.computeKiPowerFinal();
+        }
+        setOwner(newOwner);
+        pierced.clear(); // DISK: puede volver a atravesar a los que ya cruzó de ida
     }
 }
