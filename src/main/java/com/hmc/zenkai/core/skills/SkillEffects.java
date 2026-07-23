@@ -1,5 +1,6 @@
 package com.hmc.zenkai.core.skills;
 
+import com.hmc.zenkai.core.network.feature.forms.KaiokenTier;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import net.minecraft.world.entity.player.Player;
 
@@ -17,6 +18,7 @@ public final class SkillEffects {
     public static final String MEDITATION = "meditation";
     public static final String KI_BLOCK = "ki_block";
     public static final String KI_SENSE = "ki_sense";
+    public static final String KAIOKEN = "kaioken";
 
     public static int level(Player p, String skillId) {
         if (p == null) return 0;
@@ -90,4 +92,17 @@ public final class SkillEffects {
     public static boolean senseShowsAlignment(Player p) { return level(p, KI_SENSE) >= 3; }
     public static boolean senseShowsKi(Player p)        { return level(p, KI_SENSE) >= 4; }
     public static boolean senseShowsStamina(Player p)   { return level(p, KI_SENSE) >= 5; }
+
+    // ── Kaioken ──────────────────────────────────────────────────────────────
+    public static int kaiokenLevel(Player p) { return level(p, KAIOKEN); }
+
+    /** Multiplicador del drenaje de vida. 1.0 sin maestría, 0.35 a nivel 10. */
+    public static double kaiokenDrainFactor(Player p) {
+        return curve(p, KAIOKEN, "drain_factor", 1.0);
+    }
+
+    /** Escalón más alto que este jugador puede usar. */
+    public static KaiokenTier maxKaioken(Player p) {
+        return KaiokenTier.highestFor(level(p, KAIOKEN));
+    }
 }

@@ -3,163 +3,91 @@ package com.hmc.zenkai.core.network.feature.forms;
 import com.hmc.zenkai.core.network.feature.Race;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.EnumSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+/**
+ * Consultas sobre las formas. Ya NO define nada: los datos vienen del datapack (FormDef /
+ * FormManager) y aquí solo se cachean los índices derivados, que se recalculan en cada
+ * /reload mediante rebuild().
+ *
+ * Índices que se derivan de los datos:
+ *  - primera forma por raza: la de kind SUPER sin parent que admite esa raza.
+ *  - hijo de cada forma: la cadena del datapack apunta hacia atrás (parent), así que el
+ *    "siguiente" se reconstruye invirtiéndola.
+ */
 public final class FormRegistry {
-
-    private static final Map<ResourceLocation, FormDefinition> FORMS = new HashMap<>();
-
-    private static final Map<Race, ResourceLocation> FIRST_FORM_BY_RACE = new HashMap<>();
-
-    private static boolean BOOTSTRAPPED = false;
-
     private FormRegistry() {}
 
-    public static void bootstrap() {
-        if (BOOTSTRAPPED) return;
-        BOOTSTRAPPED = true;
+    private static volatile Map<Race, ResourceLocation> FIRST_BY_RACE = Map.of();
+    private static volatile Map<ResourceLocation, List<ResourceLocation>> CHILDREN = Map.of();
 
-        // =========================
-        // BASE (no apunta a nada)
-        // =========================
-        registerRaw(new FormDefinition(
-                FormIds.BASE,
-                EnumSet.allOf(Race.class),
-                0,
-                0.0,
-                null
-        ));
+    /** Recalcula los índices derivados. Lo llama FormManager tras cada carga. */
+    public static void rebuild() {
+        Map<Race, ResourceLocation> first = new EnumMap<>(Race.class);
+        Map<ResourceLocation, List<ResourceLocation>> children = new HashMap<>();
 
-        // =========================
-        // Saiyan route
-        // =========================
-        FIRST_FORM_BY_RACE.put(Race.SAIYAN, FormIds.SSJ1);
-
-        registerRaw(new FormDefinition(
-                FormIds.SSJ1,
-                EnumSet.of(Race.SAIYAN),
-                100,
-                0.2,
-                FormIds.SSJ2
-        ));
-
-        registerRaw(new FormDefinition(
-                FormIds.SSJ2,
-                EnumSet.of(Race.SAIYAN),
-                100,
-                0.2,
-                FormIds.SSJ3
-        ));
-
-        registerRaw(new FormDefinition(
-                FormIds.SSJ3,
-                EnumSet.of(Race.SAIYAN),
-                100,
-                0.2,
-                FormIds.SSJ4
-        ));
-
-        registerRaw(new FormDefinition(
-                FormIds.SSJ4,
-                EnumSet.of(Race.SAIYAN),
-                100,
-                0.2,
-                null
-        ));
-
-        // =========================
-        // Arcosian / Freezer route
-        // =========================
-        FIRST_FORM_BY_RACE.put(Race.ARCOSIAN, FormIds.SECOND_FORM);
-
-        registerRaw(new FormDefinition(
-                FormIds.SECOND_FORM,
-                EnumSet.of(Race.ARCOSIAN),
-                80,     // 4s
-                0.10,
-                FormIds.THIRD_FORM
-        ));
-
-        registerRaw(new FormDefinition(
-                FormIds.THIRD_FORM,
-                EnumSet.of(Race.ARCOSIAN),
-                80,
-                0.14,
-                FormIds.FINAL_FORM
-        ));
-
-        registerRaw(new FormDefinition(
-                FormIds.FINAL_FORM,
-                EnumSet.of(Race.ARCOSIAN),
-                100,    // 5s
-                0.20,
-                FormIds.GOLDEN_FORM
-        ));
-
-        registerRaw(new FormDefinition(
-                FormIds.GOLDEN_FORM,
-                EnumSet.of(Race.ARCOSIAN),
-                120,    // 6s
-                0.30,
-                FormIds.BLACK_FORM
-        ));
-
-        registerRaw(new FormDefinition(
-                FormIds.BLACK_FORM,
-                EnumSet.of(Race.ARCOSIAN),
-                140,    // 7s (ajusta)
-                0.40,
-                null
-        ));
+        for (FormDef d : FormDef.all()) {
+            if (d.parent() == null && d.kind() == FormDef.Kind.SUPER) {
+                for (Race r : d.races()) first.putIfAbsent(r, d.id());
+            } else if (d.parent() != null) {
+                children.computeIfAbsent(d.parent(), k -> new ArrayList<>()).add(d.id());
+            }
+        }
+        FIRST_BY_RACE = Collections.unmodifiableMap(first);
+        CHILDREN = Collections.unmodifiableMap(children);
     }
 
-    private static void ensureBootstrapped() {
-        if (!BOOTSTRAPPED) bootstrap();
+    /** Datos de una forma. null en BASE o si no está definida (BASE es el estado neutro). */
+    public static FormDef get(ResourceLocation id) {
+        if (id == null || FormIds.BASE.equals(id)) return null;
+        return FormDef.get(id);
     }
 
-    /**
-     * Registro público (seguro). Si llamas esto antes del bootstrap, lo dispara.
-     * Útil si luego quieres registrar formas vía datapacks/config.
-     */
-    public static void register(FormDefinition def) {
-        ensureBootstrapped();
-        if (def == null || def.id() == null) return;
-        FORMS.put(def.id(), def);
-    }
-
-    /**
-     * Registro interno usado solo durante bootstrap() para no recursar.
-     */
-    private static void registerRaw(FormDefinition def) {
-        if (def == null || def.id() == null) return;
-        FORMS.put(def.id(), def);
-    }
-
-    public static FormDefinition get(ResourceLocation id) {
-        ensureBootstrapped();
-        FormDefinition base = FORMS.get(FormIds.BASE);
-        if (id == null) return base;
-        return FORMS.getOrDefault(id, base);
-    }
-
-    /**
-     * Cuando el jugador está en BASE, de aquí sale la “primera forma” según raza.
-     * Si retorna null => esa raza no tiene transformaciones (y NO deberías animar ni FOV, etc).
-     */
+    /** Primera forma de una raza, o null si esa raza no tiene transformaciones. */
     public static ResourceLocation firstFormFor(Race race) {
-        ensureBootstrapped();
-        if (race == null) return null;
-        return FIRST_FORM_BY_RACE.get(race);
+        return race == null ? null : FIRST_BY_RACE.get(race);
     }
 
     /**
-     * Helper opcional: valida si una forma es usable por una raza.
+     * Siguiente forma en la cadena. Con varias ramas devuelve la primera; cuando existan
+     * bifurcaciones de verdad, es la rueda quien debe elegir y no esta función.
      */
+    public static ResourceLocation nextFrom(ResourceLocation current, Race race) {
+        if (current == null || FormIds.BASE.equals(current)) return firstFormFor(race);
+        List<ResourceLocation> kids = CHILDREN.get(current);
+        if (kids == null) return null;
+        for (ResourceLocation k : kids) {
+            FormDef d = FormDef.get(k);
+            if (d != null && d.allows(race)) return k;
+        }
+        return null;
+    }
+
+    /** Todas las ramas que salen de una forma (para la rueda). Nunca null. */
+    public static List<ResourceLocation> childrenOf(ResourceLocation id) {
+        return CHILDREN.getOrDefault(id, List.of());
+    }
+
     public static boolean isAllowed(Race race, ResourceLocation formId) {
-        ensureBootstrapped();
-        if (race == null || formId == null) return false;
-        return get(formId).allowedRaces().contains(race);
+        if (FormIds.BASE.equals(formId)) return true; // base siempre disponible
+        FormDef d = get(formId);
+        return d != null && d.allows(race);
+    }
+
+    /** Multiplicador (fracción a SUMAR) de una forma con cierta maestría. 0 en base. */
+    public static double statPercent(ResourceLocation id, double mastery) {
+        FormDef d = get(id);
+        return d == null ? 0.0 : d.statPercent(mastery);
+    }
+
+    /** Ki drenado por tick por una forma con cierta maestría. 0 en base. */
+    public static double kiDrain(ResourceLocation id, double mastery) {
+        FormDef d = get(id);
+        return d == null ? 0.0 : d.kiDrainPerTick(mastery);
     }
 }

@@ -184,7 +184,7 @@
   "messages.zenkai.lock_on.lost": "Lost the target",
   "messages.zenkai.lock_on.locked": "You need Ki Sense to lock on",
   "messages.zenkai.lock_on.targeted": "%s has locked on to you",
-
+  "messages.zenkai.kaioken.exhausted": "Your body gives out — Kaioken released",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Yemma",
@@ -264,6 +264,7 @@
   "screen.zenkai.technique.unlock_mnd": "Unlock (%s TP · %s MND)",
   "screen.zenkai.physical.unlock_mnd": "Unlock (%s TP · %s MND)",
 
+
   "screen.zenkai.tab.main": "Main",
   "screen.zenkai.tab.skills": "Skills",
   "screen.zenkai.tab.ki_techniques": "Ki Techniques",
@@ -294,6 +295,8 @@
   "skill.zenkai.ki_block.desc": "Reinforce your guard with ki. Cuts 20% of incoming damage while blocking, up to 50% at max level.",
   "skill.zenkai.ki_sense": "Ki Sense",
   "skill.zenkai.ki_sense.desc": "Feel the ki around you. Extends sensing range, reveals stamina and ki of those you sense, and lets you lock on to a target.",
+  "skill.zenkai.kaioken": "Kaioken",
+  "skill.zenkai.kaioken.desc": "Multiply your power at the cost of your own body. Higher levels unlock stronger folds and reduce the health drain.",
 
   "screen.zenkai.technique.edit_title": "Ki Technique Editor",
   "screen.zenkai.technique.name": "Name",

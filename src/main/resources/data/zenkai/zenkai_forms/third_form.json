@@ -1,0 +1,14 @@
+{
+  "races": [
+    "arcosian"
+  ],
+  "kind": "extension",
+  "tp_cost": 10000,
+  "hold_ticks": 80,
+  "mastery_gain": 1.0,
+  "stat_percent_untrained": 0.9,
+  "stat_percent_mastered": 1.2,
+  "ki_drain_untrained": 0.3,
+  "ki_drain_mastered": 0.1,
+  "parent": "zenkai:second_form"
+}

@@ -4,6 +4,7 @@ import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.forms.FormDefinition;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
+import com.hmc.zenkai.core.network.feature.forms.KaiokenTier;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -15,6 +16,7 @@ public class PlayerFormAttachment {
     private int holdTicks = 0;
     private ResourceLocation formId = FormIds.BASE;
     private int cooldownTicks = 0;
+    private KaiokenTier kaioken = KaiokenTier.OFF;
 
     // (Opcional) habilita sync de progreso cada N ticks (si quieres barra/anim más “en vivo”)
     private static final int PROGRESS_SYNC_EVERY = 0; // 0 = off, ej: 5 = cada 5 ticks
@@ -235,4 +237,9 @@ public class PlayerFormAttachment {
         holdTicks = 0;
         cooldownTicks = 10;
     }
+
+    public KaiokenTier getKaioken() { return kaioken; }
+
+    /** Kaioken y transformación son capas INDEPENDIENTES: cambiar de forma no lo apaga. */
+    public void setKaioken(KaiokenTier tier) { this.kaioken = (tier == null) ? KaiokenTier.OFF : tier; }
 }

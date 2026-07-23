@@ -10,6 +10,7 @@ import com.hmc.zenkai.core.network.feature.aura.TurboServerState;
 import com.hmc.zenkai.core.network.feature.forms.FormDefinition;
 import com.hmc.zenkai.core.network.feature.forms.FormIds;
 import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
+import com.hmc.zenkai.core.network.feature.forms.KaiokenTier;
 import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
@@ -75,6 +76,7 @@ public class TickHandlers {
         tickBoostHitbox(p, att);
 
         if (tickForms(p, att, form, visual)) return;
+        tickKaioken(p, att);
 
         tickKiCharge(p, att);
         tickRegen(p, att);
@@ -298,6 +300,45 @@ public class TickHandlers {
         return false;
     }
 
+    /** Kaioken: quema VIDA mientras esté activo. Es lo que impide que sea gratis, y por eso
+     *  drena body y no ki. Se apaga solo al caer al mínimo o al perder la habilidad. */
+    private static void tickKaioken(Player p, PlayerStatsAttachment att) {
+        var form = p.getData(DataAttachments.PLAYER_FORM.get());
+        KaiokenTier tier = form.getKaioken();
+        if (!tier.isOn()) return;
+
+        // Perdió la habilidad (respec) o el nivel ya no alcanza este escalón: se apaga.
+        if (!tier.allowedAt(SkillEffects.kaiokenLevel(p))) {
+            form.setKaioken(KaiokenTier.OFF);
+            if (p instanceof ServerPlayer sp) PlayerLifeCycle.sync(sp);
+            return;
+        }
+
+        double[] carry = regenCarry.computeIfAbsent(p.getUUID(), k -> new double[3]);
+        double perTick = att.getBodyMax() * (tier.drainPctPerSecond() / 100.0) / 20.0
+                * SkillEffects.kaiokenDrainFactor(p);
+
+        // Reusa el acumulador de body: el drenaje también es fraccionario.
+        carry[0] -= perTick;
+        int whole = (int) Math.floor(-carry[0]);
+        if (whole > 0) {
+            carry[0] += whole;
+            att.addBody(-whole);
+        }
+
+        // No mata: al llegar a 1 se corta solo. Morir por kaioken sería un castigo doble
+        // (ya te deja al borde y sin recursos).
+        if (att.getBody() <= 1) {
+            att.setBody(1);
+            form.setKaioken(KaiokenTier.OFF);
+            if (p instanceof ServerPlayer sp) {
+                sp.displayClientMessage(
+                        Component.translatable("messages.zenkai.kaioken.exhausted"), true);
+                PlayerLifeCycle.sync(sp);
+            }
+        }
+    }
+
     // =====================================================================
     // CARGA DE KI Y % DE PODER
     // =====================================================================
@@ -462,7 +503,7 @@ public class TickHandlers {
         p.hurtMarked = true;
     }
 
-    /** Sale del estado derribado: limpia flags, libera el lock y restaura la pose. */
+    /** Sale del estado derribado: limpio flag, libera el lock y restaura la pose. */
     private static void clearDowned(Player p, PlayerStatsAttachment att) {
         att.flags().setDowned(false);
         att.flags().setDownedUntil(0L);

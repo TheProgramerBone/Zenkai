@@ -16,7 +16,6 @@ public final class FormSkinResolver {
     /**
      * Devuelve SOLO overrides del BODY por forma.
      * Si la forma NO cambia body en ese slot, retorna ItemStack.EMPTY.
-     *
      * Nota: Aquí NO deberías meter pelo/halo/aura. Solo "body" (cuerpo gecko por forma),
      * especialmente para razas tipo Arcosian (Freezer) donde cambia el modelo.
      */

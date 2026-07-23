@@ -1,0 +1,14 @@
+{
+  "races": [
+    "saiyan"
+  ],
+  "kind": "extension",
+  "tp_cost": 30000,
+  "hold_ticks": 120,
+  "mastery_gain": 0.6,
+  "stat_percent_untrained": 4.5,
+  "stat_percent_mastered": 6.0,
+  "ki_drain_untrained": 1.3,
+  "ki_drain_mastered": 0.45,
+  "parent": "zenkai:ssj2"
+}
