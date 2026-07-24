@@ -160,7 +160,6 @@
   "messages.zenkai.wish_desc.stack": "%s x %s",
   "messages.zenkai.wish_desc.enchant_villager": "a librarian with %s",
 
-
   "messages.zenkai.pet_revived": "§2§lShenlong:§6 Your companion returns to you.",
   "messages.zenkai.pet_revive_failed": "§cThe revival failed.",
   "messages.zenkai.zone_protected": "§6This zone is protected by %s",
@@ -188,6 +187,13 @@
   "message.zenkai.form_selected": "Form Selected: %s",
   "message.zenkai.kaioken.shout": "KAIOKEN %s",
   "message.zenkai.kaioken.shout_other": "%s: KAIOKEN %s",
+
+  "technique.zenkai.position.right_hand": "Right Hand",
+  "technique.zenkai.position.left_hand": "Left Hand",
+  "technique.zenkai.position.both_hands": "Both Hands",
+  "technique.zenkai.position.mouth": "Mouth",
+  "technique.zenkai.position.forehead": "Forehead",
+  "technique.zenkai.position.eyes": "Eyes",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Yemma",
@@ -283,6 +289,14 @@
   "screen.zenkai.skills.resources": "TP: %s    MND: %s",
   "screen.zenkai.skills.cost": "Next level: %s TP · %s MND",
   "screen.zenkai.skills.maxed": "Max level",
+
+  "screen.zenkai.technique.tab.combat": "Combat",
+  "screen.zenkai.technique.tab.style": "Style",
+  "screen.zenkai.technique.position": "Position",
+  "screen.zenkai.technique.sound_charge": "Charge Sound",
+  "screen.zenkai.technique.sound_release": "Fire Sound",
+  "screen.zenkai.technique.sound.none": "None",
+  "screen.zenkai.technique.anim": "Animation: %s",
 
   "skill.zenkai.focus": "Focus",
   "skill.zenkai.focus.desc": "Test skill (no effect yet).",

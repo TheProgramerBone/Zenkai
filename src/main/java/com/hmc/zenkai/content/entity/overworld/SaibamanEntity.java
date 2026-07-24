@@ -33,6 +33,7 @@ public class SaibamanEntity extends ZenkaiDefaultMob {
         return AbstractVillager.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 50.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
-                .add(Attributes.ATTACK_DAMAGE,6);
+                .add(Attributes.ATTACK_DAMAGE,6)
+                .add(Attributes.SCALE,0.75);
     }
 }

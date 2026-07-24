@@ -7,6 +7,7 @@ import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.core.technique.KiChargeServer;
 import com.hmc.zenkai.core.technique.KiCombatServer;
 import com.hmc.zenkai.core.technique.KiTechnique;
 import com.hmc.zenkai.core.technique.KiTechniqueType;
@@ -15,6 +16,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -50,6 +53,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
     public static void handle(KiFirePacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
+            KiChargeServer.stop(sp); // disparó: la bola de carga se apaga para todos
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             if (!att.isRaceChosen()) return;
 
@@ -107,11 +111,25 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
                 : (sp.getRandom().nextFloat() - 0.5f) * 2 * BURST_SPREAD_DEG;
 
         Vec3 dir = Vec3.directionFromRotation(sp.getXRot() + pitchJitter, sp.getYRot() + yawJitter);
-        Vec3 spawn = sp.getEyePosition().add(dir.scale(0.9)).subtract(0, 0.15, 0);
+
+        // El punto de salida lo decide la técnica (mano, boca, frente...). El enum ya lo
+        // orienta con la mirada y lo escala con el tamaño del jugador; aquí solo se empuja
+        // un poco hacia delante para que no nazca dentro del propio modelo.
+        Vec3 spawn = tech.position().origin(sp).add(dir.scale(0.45));
 
         proj.configure(sp, type, tech.rgb(), tech.size(), damage, 100, explosive);
         proj.setPos(spawn.x, spawn.y, spawn.z);
         proj.setDeltaMovement(dir.scale(type.speed()));
         sp.level().addFreshEntity(proj);
+
+        // Sonido de disparo: solo con el primer proyectil, o una ráfaga lo solaparía cinco
+        // veces. Desde el servidor y con player=null, así lo oyen todos los de alrededor.
+        if (index == 0) {
+            SoundEvent snd = TechniqueAssets.soundOf(tech.releaseSound());
+            if (snd != null) {
+                sp.level().playSound(null, spawn.x, spawn.y, spawn.z,
+                        snd, SoundSource.PLAYERS, 1.0f, 1.0f);
+            }
+        }
     }
 }

@@ -207,7 +207,7 @@ public class Zenkai {
                 );
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.FLY_LAYER,
-                        1100,
+                        800,
                         player -> new PlayerAnimationController(
                                 player,
                                 (controller, state, animSetter) -> PlayState.STOP

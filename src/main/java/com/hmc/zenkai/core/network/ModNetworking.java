@@ -305,5 +305,15 @@ public class ModNetworking {
                 WheelSelectPacket.STREAM_CODEC,
                 WheelSelectPacket::handle);
 
+        registrar.playToServer(
+                KiChargeStartPacket.TYPE,
+                KiChargeStartPacket.STREAM_CODEC,
+                KiChargeStartPacket::handle);
+
+        registrar.playToClient(
+                KiChargeStatePacket.TYPE,
+                KiChargeStatePacket.STREAM_CODEC,
+                KiChargeStatePacket::handle);
+
     }
 }

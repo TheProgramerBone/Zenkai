@@ -6,6 +6,7 @@ import com.hmc.zenkai.core.network.feature.combat.BlockingPacket;
 import com.hmc.zenkai.core.network.feature.combat.CombatModePacket;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerTechniques;
+import com.hmc.zenkai.core.network.feature.technique.KiChargeStartPacket;
 import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
 import com.hmc.zenkai.core.network.feature.technique.PhysicalFirePacket;
 import com.hmc.zenkai.core.technique.KiTechnique;
@@ -164,6 +165,7 @@ public final class CombatModeClientState {
                     chargingSlot = bound;
                     chargingKey = selected;
                     chargeTicks = 0;
+                    PacketDistributor.sendToServer(new KiChargeStartPacket(bound, true));
                 }
             }
         }
@@ -216,7 +218,13 @@ public final class CombatModeClientState {
         }
     }
 
+    /** ÚNICO sitio que apaga la carga en cliente, así que también el único que avisa al
+     *  servidor. Repartirlo por los cuatro sitios que lo llaman era garantía de olvidarse
+     *  de uno y dejar la bola encendida para los demás. */
     private static void cancelCharge() {
+        if (chargingSlot >= 0 && Minecraft.getInstance().getConnection() != null) {
+            PacketDistributor.sendToServer(new KiChargeStartPacket(chargingSlot, false));
+        }
         chargingSlot = -1;
         chargingKey = -1;
         chargeTicks = 0;
@@ -254,6 +262,7 @@ public final class CombatModeClientState {
         lastBlockingSent = false;
         REMOTES.clear();
         REMOTE_BLOCKING.clear();
+        KiChargeClientState.clear();
     }
 
     /** Fracción de cooldown restante de una física (0 = lista), para el overlay. */

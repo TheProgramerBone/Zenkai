@@ -45,7 +45,7 @@ public class ModEntities {
 
     public static final Supplier<EntityType<SaibamanEntity>> SAIBAMAN =
             ENTITY_TYPES.register("saibaman",() -> EntityType.Builder.of(SaibamanEntity::new, MobCategory.CREATURE)
-                    .sized(1,1.5f).build("saibaman"));
+                    .sized(1,2f).build("saibaman"));
 
     public static final Supplier<EntityType<NamekianEntity>> NAMEKIAN =
             ENTITY_TYPES.register("namekian",() -> EntityType.Builder.of(NamekianEntity::new, MobCategory.CREATURE)
