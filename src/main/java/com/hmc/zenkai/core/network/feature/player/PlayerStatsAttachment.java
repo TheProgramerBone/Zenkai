@@ -7,6 +7,7 @@ import com.hmc.zenkai.core.network.feature.Race;
 import com.hmc.zenkai.core.network.feature.Style;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.skills.SkillDef;
+import com.hmc.zenkai.core.skills.SuperForms;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -112,7 +113,21 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         int skillRefund = 0;
         for (String id : skills.allLevels().keySet()) {
             SkillDef def = SkillDef.get(id);
-            if (def != null) skillRefund += def.tpCost() * skills.boughtLevels(id);
+            if (def == null) continue;
+            int bought = skills.boughtLevels(id);
+            if (bought <= 0) continue;
+
+            if (def.levelsFromForms()) {
+                // Coste por nivel derivado de las formas: hay que sumar nivel a nivel. Con
+                // def.tpCost() (que aquí es 0) el respec se quedaría con el TP invertido.
+                int top = skills.level(id);
+                for (int lvl = top - bought + 1; lvl <= top; lvl++) {
+                    int c = SuperForms.tpCostForLevel(getRace(), lvl);
+                    if (c != Integer.MAX_VALUE) skillRefund += c;
+                }
+            } else {
+                skillRefund += def.tpCost() * bought;
+            }
         }
         skills.clearBought();
         raceStats.respec();

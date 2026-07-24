@@ -185,6 +185,9 @@
   "messages.zenkai.lock_on.locked": "You need Ki Sense to lock on",
   "messages.zenkai.lock_on.targeted": "%s has locked on to you",
   "messages.zenkai.kaioken.exhausted": "Your body gives out — Kaioken released",
+  "message.zenkai.form_selected": "Form Selected: %s",
+  "message.zenkai.kaioken.shout": "KAIOKEN %s",
+  "message.zenkai.kaioken.shout_other": "%s: KAIOKEN %s",
 
   "protector.zenkai.kami": "Kami",
   "protector.zenkai.yemma": "Yemma",
@@ -297,6 +300,8 @@
   "skill.zenkai.ki_sense.desc": "Feel the ki around you. Extends sensing range, reveals stamina and ki of those you sense, and lets you lock on to a target.",
   "skill.zenkai.kaioken": "Kaioken",
   "skill.zenkai.kaioken.desc": "Multiply your power at the cost of your own body. Higher levels unlock stronger folds and reduce the health drain.",
+  "skill.zenkai.super_forms": "Super Forms",
+  "skill.zenkai.super_forms.desc": "Awaken your potential and unlock your race's transformations, one per level.",
 
   "screen.zenkai.technique.edit_title": "Ki Technique Editor",
   "screen.zenkai.technique.name": "Name",
@@ -318,6 +323,7 @@
   "screen.zenkai.technique.cost": "Energy Cost",
   "screen.zenkai.technique.casttime": "Cast time",
   "screen.zenkai.technique.cooldown": "Cooldown",
+
 
   "technique.zenkai.wave": "Wave",
   "technique.zenkai.blast": "Blast",
@@ -381,6 +387,22 @@
   "layer.zenkai.namekian_player.0": "Skin",
   "layer.zenkai.namekian_player.1": "Detail",
   "layer.zenkai.namekian_player.2": "Lines",
+
+  "wheel.zenkai.title": "Power Wheel",
+  "wheel.zenkai.forms": "Forms",
+  "wheel.zenkai.kaioken.on": "Kaioken ON (%s)",
+  "wheel.zenkai.kaioken.off": "Kaioken OFF",
+  "wheel.zenkai.base": "Base",
+  "wheel.zenkai.empty": "Nothing to select yet",
+  "form.zenkai.ssj1": "Super Saiyan",
+  "form.zenkai.ssj2": "Super Saiyan 2",
+  "form.zenkai.ssj3": "Super Saiyan 3",
+  "form.zenkai.ssj4": "Super Saiyan 4",
+  "form.zenkai.second_form": "Second Form",
+  "form.zenkai.third_form": "Third Form",
+  "form.zenkai.final_form": "Final Form",
+  "form.zenkai.golden_form": "Golden Form",
+  "form.zenkai.black_form": "Black Form",
 
   "gamerule.zenkai_allowRaceSelection": "Enable Race Creation",
   "gamerule.zenkai_enableKiDamage": "Enable Ki Damage",

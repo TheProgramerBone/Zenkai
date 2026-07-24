@@ -128,7 +128,7 @@ public final class ClientZenkaiPalTick {
         }
 
         boolean heldNow = form.isTransformHeld();
-        boolean canTransform = PlayerFormAttachment.canTransformFrom(stats.getRace(), form.getFormId());
+        boolean canTransform = PlayerFormAttachment.canTransformFrom(p, stats.getRace(), form.getFormId());
 
         if (!canTransform) {
             // Sin transformación disponible (p. ej. humano/namekiano en base): solo limpiar

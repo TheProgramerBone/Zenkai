@@ -19,6 +19,7 @@ import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.skills.SkillEffects;
+import com.hmc.zenkai.core.skills.SuperForms;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -270,6 +271,15 @@ public class TickHandlers {
      *  @return true si está transformando (corta el tick). */
     private static boolean tickForms(Player p, PlayerStatsAttachment att,
                                      PlayerFormAttachment form, PlayerVisualAttachment visual) {
+        // Nivel 1 de super_forms: REGALADO. Es el estado base, así que el jugador SIEMPRE tiene
+        // la habilidad y solo compra del 2 en adelante. grant() sube el suelo otorgado -> el
+        // respec no se lo quita. Aquí ya se filtró "sin raza" (handleNoRace) y solo corre en
+        // servidor, así que este único sitio cubre elegir raza, partidas viejas y reset completo.
+        // maxLevel > 1 -> a las razas sin transformaciones ni les aparece la habilidad.
+        if (SuperForms.maxLevel(p) > 1 && att.skills().level(SuperForms.SKILL) <= 0) {
+            att.skills().grant(SuperForms.SKILL, 1);
+            PlayerLifeCycle.syncIfServer(p);
+        }
         // ÚNICO punto donde se escribe el multiplicador de stats (forma + kaioken + majin).
         // Va cada tick porque la maestría sube de forma continua y el kaioken puede apagarse
         // solo. Con esto el PL y la pantalla de stats se actualizan sin tocar nada más.
@@ -288,7 +298,8 @@ public class TickHandlers {
             // Forma inválida para esta raza, o desaparecida del datapack tras un /reload:
             // se vuelve a base. Antes solo se saltaba el drenaje, así que el jugador se
             // quedaba transformado GRATIS.
-            if (def == null || !def.allows(att.getRace())) {
+            if (def == null || !def.allows(att.getRace())
+                    || !SuperForms.unlocked(p, currentFormId)) {
                 form.forceBase();
                 PlayerLifeCycle.syncFormIfServer(p);
             } else {

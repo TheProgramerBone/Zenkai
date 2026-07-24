@@ -6,6 +6,7 @@ import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
 import com.hmc.zenkai.core.skills.SkillDef;
+import com.hmc.zenkai.core.skills.SuperForms;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -79,7 +80,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         SkillDef def = SkillDef.get(id);
         if (st == null || def == null || !def.purchasable()) return;
         int lvl = st.skills().level(id);
-        if (lvl >= def.maxLevel() || !canAfford(st, def, lvl)) return;
+        if (lvl >= maxLevelOf(def) || !canAfford(st, def, lvl)) return;
         PacketDistributor.sendToServer(new SkillBuyPacket(id));
     }
 
@@ -109,9 +110,29 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         return rel >= 0 && rel < visibleRows();
     }
 
+    /**
+     * Techo REAL de la habilidad para este jugador. Con levels_from_forms el máximo sale de la
+     * cadena de formas de su raza (un saiyan tiene 4 transformaciones y un arcosiano 5), así que
+     * un max_level fijo mostraría niveles que ese jugador no puede desbloquear nunca.
+     */
+    private int maxLevelOf(SkillDef def) {
+        if (def == null) return 0;
+        return def.levelsFromForms() && mc.player != null
+                ? Math.min(def.maxLevel(), SuperForms.maxLevel(mc.player))
+                : def.maxLevel();
+    }
+
+    /** Coste en TP de subir al nivel indicado (derivado de la forma que desbloquea, si aplica). */
+    private int costOf(SkillDef def, int nextLevel) {
+        if (def == null) return Integer.MAX_VALUE;
+        return def.levelsFromForms() && mc.player != null
+                ? SuperForms.tpCostForLevel(mc.player, nextLevel)
+                : def.tpCost();
+    }
+
     /** ¿Se puede pagar el siguiente nivel de esta habilidad? */
-    private static boolean canAfford(PlayerStatsAttachment st, SkillDef def, int currentLevel) {
-        return st.getTP() >= def.tpCost()
+    private boolean canAfford(PlayerStatsAttachment st, SkillDef def, int currentLevel) {
+        return st.getTP() >= costOf(def, currentLevel + 1)
                 && st.getAttribute(ZenkaiAttributes.MIND) >= def.mindReqFor(currentLevel + 1);
     }
 
@@ -147,7 +168,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
             SkillDef def = SkillDef.get(rowIds.get(i));
             int lvl = st.skills().level(rowIds.get(i));
-            boolean canLevel = def != null && def.purchasable() && lvl < def.maxLevel();
+            boolean canLevel = def != null && def.purchasable() && lvl < maxLevelOf(def);
 
             b.visible = canLevel && onScreen(i);
             b.active = b.visible && canAfford(st, def, lvl);
@@ -223,8 +244,8 @@ public class SkillsScreen extends ZenkaiMenuScreen {
                     ? Component.translatable(def.nameKey())
                     : Component.literal(id); // huérfana: el registro cambió, se muestra el id
             Component name;
-            if (def != null && def.maxLevel() > 1) {
-                Component suffix = Component.literal("  " + lvl + "/" + def.maxLevel());
+            if (def != null && maxLevelOf(def) > 1) {
+                Component suffix = Component.literal("  " + lvl + "/" + maxLevelOf(def));
                 name = Component.empty()
                         .append(fit(base, maxW - this.font.width(suffix)))
                         .append(suffix);
@@ -247,9 +268,9 @@ public class SkillsScreen extends ZenkaiMenuScreen {
             g.drawString(this.font, fit(Component.translatable(def.descKey()), maxW),
                     textX, y + 11, COL_DESC, true);
 
-            boolean canLevel = def.purchasable() && lvl < def.maxLevel();
+            boolean canLevel = def.purchasable() && lvl < maxLevelOf(def);
             if (!canLevel) {
-                if (lvl >= def.maxLevel()) {
+                if (lvl >= maxLevelOf(def)) {
                     g.drawString(this.font, Component.translatable("screen.zenkai.skills.maxed"),
                             textX, y + 22, COL_MAXED, true);
                 }
@@ -257,7 +278,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
             }
             g.drawString(this.font,
                     Component.translatable("screen.zenkai.skills.cost",
-                            def.tpCost(), def.mindReqFor(lvl + 1)),
+                            costOf(def, lvl + 1), def.mindReqFor(lvl + 1)),
                     textX, y + 22, canAfford(st, def, lvl) ? COL_COST : COL_POOR, true);
         }
         g.disableScissor();

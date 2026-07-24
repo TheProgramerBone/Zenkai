@@ -26,7 +26,8 @@ import java.util.Map;
  * Claves de lang derivadas: skill.zenkai.&lt; id&gt; (nombre) y skill.zenkai.&lt; id&gt; .desc.
  */
 public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindReq,
-                       boolean purchasable, String master, Map<String, List<Double>> values) {
+                       boolean purchasable, String master, Map<String, List<Double>> values,
+                       boolean levelsFromForms) {
 
     private static volatile Map<String, SkillDef> REGISTRY = Map.of();
 
@@ -68,6 +69,7 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
     public String descKey() { return nameKey() + ".desc"; }
 
     // StreamCodec manual: composite no llega a 7 campos y aquí hay listas y mapas.
+    // StreamCodec manual: composite no llega a 8 campos y aquí hay listas y mapas.
     public static final StreamCodec<FriendlyByteBuf, SkillDef> STREAM_CODEC = StreamCodec.of(
             (buf, def) -> {
                 buf.writeUtf(def.id());
@@ -83,6 +85,7 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                     buf.writeVarInt(e.getValue().size());
                     for (double d : e.getValue()) buf.writeDouble(d);
                 }
+                buf.writeBoolean(def.levelsFromForms());
             },
             buf -> {
                 String id = buf.readUtf();
@@ -102,8 +105,9 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                     for (int j = 0; j < ln; j++) curve.add(buf.readDouble());
                     vals.put(k, List.copyOf(curve));
                 }
+                boolean lff = buf.readBoolean();
                 return new SkillDef(id, tp, max, List.copyOf(mind), purch,
                         master.isEmpty() ? null : master,
-                        Collections.unmodifiableMap(vals));
+                        Collections.unmodifiableMap(vals), lff);
             });
 }

@@ -1,0 +1,7 @@
+{
+  "max_level": 10,
+  "tp_cost": 0,
+  "mind_req": [0, 12, 22, 38, 60, 88, 120, 160, 210, 270],
+  "purchasable": true,
+  "levels_from_forms": true
+}
