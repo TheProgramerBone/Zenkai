@@ -99,12 +99,11 @@ public final class AuraClientState {
         return AuraColors.resolve(p);
     }
 
-    /** Clave de tipo de aura de la forma activa ("ssj", "golden", "arcosian"...).
-     *  Aún no la usa nadie: queda lista para cuando el render varíe la forma del cono. */
+    /** Clave de tipo de aura de la forma activa ("default", "ssj", "divine", "dark").
+     *  El kaioken NO enmascara el tipo: es capa de color (AuraColors.Layers); la
+     *  FORMA decide la silueta. Sin forma → "default". */
     public static String resolveAuraType(AbstractClientPlayer p) {
-        var form = p.getData(DataAttachments.PLAYER_FORM.get());
-        if (form.getKaioken().isOn()) return "kaioken";
-        FormDef def = form.activeDef();
+        FormDef def = p.getData(DataAttachments.PLAYER_FORM.get()).activeDef();
         return def == null ? "default" : def.auraType();
     }
 }

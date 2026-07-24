@@ -17,15 +17,27 @@ public final class AuraColors {
     public static final int MAJIN_RGB   = 0xD41A25;
     public static final int KAIOKEN_RGB = 0xE02020;
 
-    public static int resolve(Player p) {
+    /** Capas del aura: interior (siempre) + exterior envolvente (kaioken sobre forma), o -1. */
+    public record Layers(int inner, int outer) {
+        public boolean hasOuter() { return outer >= 0; }
+    }
+
+    public static Layers resolveLayers(Player p) {
         var visual = p.getData(DataAttachments.PLAYER_VISUAL.get());
         var form = p.getData(DataAttachments.PLAYER_FORM.get());
-        // El kaioken MANDA sobre la transformación: si está activo, su rojo gana.
-        if (form.getKaioken().isOn()) return KAIOKEN_RGB;
-        if (visual.isMajinControlled()) return MAJIN_RGB;
-        // La forma activa define su aura en el datapack; en base, el color del jugador.
         FormDef def = form.activeDef();
-        if (def != null) return def.auraRgb();
-        return visual.getAuraColorRgb();
+        boolean kaio = form.getKaioken().isOn();
+        // Kaioken SOBRE una forma: rojo por FUERA envolviendo el color de la forma.
+        if (kaio && def != null) return new Layers(def.auraRgb(), KAIOKEN_RGB);
+        if (kaio) return new Layers(KAIOKEN_RGB, -1);
+        if (def != null) return new Layers(def.auraRgb(), -1);
+        // Majin solo tiñe el aura en BASE (con forma activa manda la forma).
+        if (visual.isMajinControlled()) return new Layers(MAJIN_RGB, -1);
+        return new Layers(visual.getAuraColorRgb(), -1);
+    }
+
+    public static int resolve(Player p) {
+        Layers l = resolveLayers(p);
+        return l.hasOuter() ? l.outer() : l.inner(); // partículas: bajo kaioken, rojo
     }
 }
