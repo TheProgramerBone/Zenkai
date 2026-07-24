@@ -9,43 +9,37 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.function.Function;
 
 /**
- * RenderTypes para el aura de energía:
- *   energy(tex)     → ADITIVO (SRC_ALPHA, ONE): los planos SUMAN luz → núcleo blanco.
- *                     Para colores claros (ki que brilla).
- *   energyDark(tex) → ALPHA (SRC_ALPHA, 1-SRC_ALPHA): los planos OSCURECEN/ocluyen el fondo.
- *                     Para colores oscuros/negros (ki oscuro que NO puede "brillar" en aditivo).
- * Ambos: depth-test LEQUAL (el jugador ocluye lo de atrás) sin escribir profundidad
- * (COLOR_WRITE) para que los planos se acumulen entre sí. Memoizados por textura.
+ * RenderType único del aura: TRANSLÚCIDO EMISIVO (SRC_ALPHA, 1-SRC_ALPHA, fullbright).
+ * El sombreado del aura vive EN LA TEXTURA (bandas centro-blanco → borde-gris → puntas
+ * oscuras) y se tinta por vértice: funciona igual para blanco, negro y cualquier tono,
+ * sin pases aditivos ni crossfades por luminancia.
+ * Depth-test LEQUAL (el mundo/jugador ocluyen) sin escribir profundidad (COLOR_WRITE)
+ * para que los planos del cono se apilen entre sí en orden de dibujo.
+ * Blur=true (filtrado bilineal en magnificación): sin él, escalar la llama a ~4 bloques
+ * hace que cada téxel se lea como un escalón. La hoja lleva margen transparente por
+ * cuadrante y el renderer inserta las UV media téxel para que el filtro no sangre.
+ * Memoizado por textura.
  */
 public final class ModAuraRenderType extends RenderType {
     // Nunca se instancia: solo heredamos para acceder a los shards protegidos de RenderStateShard.
     private ModAuraRenderType() { super("", null, null, 0, false, false, null, null); }
 
-    private static RenderType build(ResourceLocation tex, TransparencyStateShard transparency, String name) {
-        return RenderType.create(
-                name,
-                DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256,
-                false, true,
-                RenderType.CompositeState.builder()
-                        .setShaderState(RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE_SHADER) // ⚠
-                        .setTextureState(new TextureStateShard(tex, false, false))     // ⚠
-                        .setTransparencyState(transparency)
-                        .setCullState(NO_CULL)                                         // ⚠
-                        .setLightmapState(LIGHTMAP)                                    // ⚠
-                        .setOverlayState(OVERLAY)                                      // ⚠
-                        .setDepthTestState(LEQUAL_DEPTH_TEST)                          // ⚠
-                        .setWriteMaskState(COLOR_WRITE)                                // ⚠ no escribe profundidad
-                        .createCompositeState(false));
-    }
-
     private static final Function<ResourceLocation, RenderType> ENERGY =
-            Util.memoize(tex -> build(tex, ADDITIVE_TRANSPARENCY, "zenkai_energy"));            // ⚠ ADDITIVE_TRANSPARENCY
-    private static final Function<ResourceLocation, RenderType> ENERGY_DARK =
-            Util.memoize(tex -> build(tex, TRANSLUCENT_TRANSPARENCY, "zenkai_energy_dark"));    // ⚠ TRANSLUCENT_TRANSPARENCY
+            Util.memoize(tex -> RenderType.create(
+                    "zenkai_energy",
+                    DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256,
+                    false, true,
+                    RenderType.CompositeState.builder()
+                            .setShaderState(RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE_SHADER) // ⚠
+                            .setTextureState(new TextureStateShard(tex, true, true))      // ⚠ blur=true: magnificación bilineal
+                            .setTransparencyState(TRANSLUCENT_TRANSPARENCY)                // ⚠
+                            .setCullState(NO_CULL)                                         // ⚠
+                            .setLightmapState(LIGHTMAP)                                    // ⚠
+                            .setOverlayState(OVERLAY)                                      // ⚠
+                            .setDepthTestState(LEQUAL_DEPTH_TEST)                          // ⚠
+                            .setWriteMaskState(COLOR_WRITE)                                // ⚠ no escribe profundidad
+                            .createCompositeState(false)));
 
-    /** Aditivo (colores claros → brilla). */
+    /** Pasada única del aura (tintada por vértice; sombreado horneado en la textura). */
     public static RenderType energy(ResourceLocation tex) { return ENERGY.apply(tex); }
-
-    /** Alpha-blended (colores oscuros → oscurece/ocluye). */
-    public static RenderType energyDark(ResourceLocation tex) { return ENERGY_DARK.apply(tex); }
 }

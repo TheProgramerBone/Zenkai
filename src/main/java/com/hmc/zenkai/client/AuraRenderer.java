@@ -1,6 +1,9 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.AuraStyles.AuraStyle;
+import com.hmc.zenkai.client.AuraStyles.Skirt;
+import com.hmc.zenkai.core.network.feature.aura.AuraColors;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -25,17 +28,19 @@ import org.joml.Vector3f;
 import java.util.*;
 
 /**
- * Aura estilo DBC/DMZ: CONO RADIAL de planos-llama.
- * Colores claros → pase ADITIVO (brilla). Colores oscuros → pase ALPHA (oscurece/ocluye).
- * En una banda alrededor del umbral se dibujan AMBOS pases con pesos que se cruzan
- * (crossfade), para que el cambio claro↔oscuro sea suave y no un salto brusco.
+ * Aura estilo DMZ: GOTA de planos-silueta. Cada plano muestra UNA llama completa
+ * (cuadrante de aura_flame_N.png, sombreado horneado) y se tinta; pasada única
+ * translúcida-emisiva → consistente en blanco/negro/cualquier tono.
+ * Doble aura: si AuraColors.resolveLayers da capa exterior (kaioken sobre forma),
+ * se dibuja un cono envolvente rojo FUERA del cono interior del color de la forma.
+ * Núcleo: mini-cono blanco interior (se omite en auras oscuras).
  * Se renderiza en AFTER_PARTICLES (el jugador ya escribió profundidad → depth-test lo ocluye).
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class AuraRenderer {
     private AuraRenderer() {}
 
-    private static final int FRAMES = 3;
+    private static final int FRAMES = 4;
     private static final ResourceLocation[] FLAME = new ResourceLocation[FRAMES];
     static {
         for (int i = 0; i < FRAMES; i++) {
@@ -45,24 +50,21 @@ public final class AuraRenderer {
     }
 
     private static final int FULL_BRIGHT = 0xF000F0;
-    private static final float BASE_ALPHA = 0.13f;   // bajo a propósito: el aditivo acumula
+    private static final float BASE_ALPHA = 0.30f;   // pasada alpha única (ya no aditiva)
     private static final float AURA_SCALE = 1.30f;   // tamaño global del aura en el MUNDO
 
-    // Transición claro↔oscuro por luminancia: crossfade en [THRESHOLD - BAND, THRESHOLD + BAND].
-    private static final float DARK_THRESHOLD = 0.22f;
-    private static final float DARK_BAND      = 0.12f; // ancho de la transición (súbelo = más suave)
+    // Atenuación del SECTOR FRONTAL: los planos entre cámara y jugador se atenúan para
+    // que el jugador se lea siempre (como en DMZ); la silueta trasera queda a full.
+    private static final float FRONT_FADE_MIN   = 0.30f; // alpha restante del plano frontal puro
+    private static final float FRONT_DOT_START  = 0.40f; // dot outward·haciaCámara donde empieza
+    private static final float FRONT_DOT_FULL   = 0.85f; // dot donde la atenuación es total
 
-    /** Un faldón del cono: anillo de {@code count} planos-llama. */
-    private record Skirt(int count, float offsetDeg, float tiltDeg, float baseR,
-                         float width, float height, float yStart, float jitter, float alpha) {}
-
-    private static final Skirt[] SKIRTS = {
-            //        count offset  tilt   baseR  width height yStart jitter alpha
-            new Skirt(12,   0f,     6f,    0.22f, 1.4f, 3.2f,  0.0f,  0.30f, 0.55f), // COLUMNA
-            new Skirt(12,   15f,    20f,   0.44f, 1.5f, 2.8f,  0.0f,  0.35f, 1.00f), // MEDIA
-            new Skirt(3,    0f,     0f,    0.06f, 1.0f, 3.3f,  0.0f,  0.15f, 0.35f), // PLUME
-            new Skirt(8,    0f,     48f,   0.55f, 1.4f, 1.6f,  0.0f,  0.30f, 1.00f), // FLARE
-    };
+    // Capa exterior (kaioken envolvente) y núcleo blanco interior.
+    private static final float OUTER_SCALE_MUL = 1.26f;
+    private static final float OUTER_ALPHA_MUL = 0.85f;
+    private static final float CORE_SCALE_MUL  = 0.70f;
+    private static final float CORE_ALPHA_MUL  = 0.80f;
+    private static final float CORE_MIN_LUM    = 0.25f; // auras oscuras: sin núcleo blanco
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent e) {
@@ -82,17 +84,26 @@ public final class AuraRenderer {
             if (!AuraClientState.isAuraActive(p)) continue;
             if (p == mc.player && mc.options.getCameraType().isFirstPerson()) continue;
 
-            int rgb = AuraClientState.resolveColor(p);
+            AuraColors.Layers layers = AuraColors.resolveLayers(p);
+            AuraStyle style = AuraStyles.of(AuraClientState.resolveAuraType(p));
             Vec3 at = p.getPosition(pt);
             Motion mo = sampleMotion(p, at); // velocidad + alpha de suavizado, UNA vez por frame
 
             // Estela de vuelo (coordenadas de mundo, relativa a cámara — antes del translate).
-            updateAndRenderFlightTrail(pose, buffers, p, at, camPos, rgb, mo);
+            updateAndRenderFlightTrail(pose, buffers, p, at, camPos, AuraColors.resolve(p), mo);
+
+            // Dirección jugador→cámara en XZ (para atenuar el sector frontal del cono).
+            double dcx = camPos.x - at.x, dcz = camPos.z - at.z;
+            double dlen = Math.sqrt(dcx * dcx + dcz * dcz);
+            float tcx = dlen < 1.0e-4 ? Float.NaN : (float) (dcx / dlen);
+            float tcz = dlen < 1.0e-4 ? Float.NaN : (float) (dcz / dlen);
 
             pose.pushPose();
             pose.translate(at.x - camPos.x, at.y - camPos.y, at.z - camPos.z);
             applyFlightTilt(pose, p, mo);
-            drawAura(pose, buffers, rgb, AURA_SCALE, t, pt, p.getId());
+            drawAuraLayered(pose, buffers, style, layers.inner(),
+                    layers.hasOuter() ? layers.outer() : -1,
+                    AURA_SCALE, t, pt, p.getId(), tcx, tcz);
             pose.popPose();
         }
 
@@ -290,73 +301,111 @@ public final class AuraRenderer {
                 .setNormal(mat, 0, 1, 0);
     }
 
-    /**
-     * Dibuja el aura completa para un jugador, eligiendo aditivo/oscuro por luminancia y
-     * haciendo crossfade en la banda de transición. No hace flush.
-     */
+    /** Compatibilidad (editor de técnicas / preview): estilo default, una capa, sin fade. */
     public static void drawAura(PoseStack pose, MultiBufferSource buffers, int rgb, float scale,
                                 long gameTime, float partialTick, int seed) {
-        int frame = (int) (((float) gameTime / 1.5f + seed) % FRAMES);
-        ResourceLocation tex = FLAME[frame];
-        double time = gameTime + partialTick;
-
-        float r = ((rgb >> 16) & 0xFF) / 255f;
-        float g = ((rgb >> 8) & 0xFF) / 255f;
-        float b = (rgb & 0xFF) / 255f;
-        float lum = 0.299f * r + 0.587f * g + 0.114f * b;
-
-        // wLight: 1 = claro puro (aditivo), 0 = oscuro puro (alpha). Crossfade suave (smoothstep).
-        float lo = DARK_THRESHOLD - DARK_BAND;
-        float hi = DARK_THRESHOLD + DARK_BAND;
-        float u = clamp01((lum - lo) / (hi - lo));
-        float wLight = u * u * (3f - 2f * u);
-        float wDark = 1f - wLight;
-
-        if (wLight > 0.001f)
-            drawCone(pose, buffers.getBuffer(ModAuraRenderType.energy(tex)), rgb, scale, time, seed, wLight);
-        if (wDark > 0.001f)
-            drawCone(pose, buffers.getBuffer(ModAuraRenderType.energyDark(tex)), rgb, scale, time, seed, wDark);
+        drawAuraLayered(pose, buffers, AuraStyles.of(null), rgb, -1, scale,
+                gameTime, partialTick, seed, Float.NaN, Float.NaN);
     }
 
-    private static float clamp01(float v) { return v < 0f ? 0f : (Math.min(v, 1f)); }
+    /**
+     * Dibuja el aura completa: [exterior envolvente si outerRgb >= 0] + interior + núcleo
+     * blanco (omitido en auras oscuras). Orden de dibujo = orden de apilado (sin depth-write),
+     * así que el interior se pinta DESPUÉS del exterior y queda por delante. No hace flush.
+     */
+    public static void drawAuraLayered(PoseStack pose, MultiBufferSource buffers, AuraStyle style,
+                                       int innerRgb, int outerRgb, float scale,
+                                       long gameTime, float partialTick, int seed,
+                                       float toCamX, float toCamZ) {
+        int frame = (int) (((float) gameTime / style.frameTicks() + seed) % FRAMES);
+        ResourceLocation tex = FLAME[frame];
+        double time = gameTime + partialTick;
+        VertexConsumer vc = buffers.getBuffer(ModAuraRenderType.energy(tex));
+        float sc = scale * style.scaleMul();
+
+        if (outerRgb >= 0) {
+            // Capa envolvente (kaioken): más grande, seed desfasado para que no respire igual.
+            // Hereda el ESTILO de la forma interior (una gota, dos colores).
+            drawCone(pose, vc, style, outerRgb, sc * OUTER_SCALE_MUL, time, seed + 7,
+                    OUTER_ALPHA_MUL, toCamX, toCamZ);
+        }
+        drawCone(pose, vc, style, innerRgb, sc, time, seed, 1.0f, toCamX, toCamZ);
+
+        float lum = 0.299f * (((innerRgb >> 16) & 0xFF) / 255f)
+                + 0.587f * (((innerRgb >> 8) & 0xFF) / 255f)
+                + 0.114f * ((innerRgb & 0xFF) / 255f);
+        if (style.whiteCore() && lum >= CORE_MIN_LUM) {
+            // Núcleo blanco interior (mini-gota): el "más claro que el tinte" del canon DBZ.
+            drawCone(pose, vc, style, 0xFFFFFF, sc * CORE_SCALE_MUL, time, seed + 3,
+                    CORE_ALPHA_MUL, toCamX, toCamZ);
+        }
+    }
 
     /**
-     * Dibuja el cono en el espacio actual del PoseStack (origen = pies, +Y arriba, bloques).
-     * alphaMul escala el alpha de todos los planos (para el crossfade). No hace flush.
+     * Dibuja la gota en el espacio actual del PoseStack (origen = pies, +Y arriba, bloques).
+     * Cada plano mapea el cuadrante de silueta de su faldón (espejado alterno para variedad).
+     * alphaMul escala el alpha de todos los planos. No hace flush.
      */
-    public static void drawCone(PoseStack pose, VertexConsumer vc, int rgb, float scale,
-                                double timeTicks, int seed, float alphaMul) {
+    public static void drawCone(PoseStack pose, VertexConsumer vc, AuraStyle style, int rgb,
+                                float scale, double timeTicks, int seed, float alphaMul,
+                                float toCamX, float toCamZ) {
         float r = ((rgb >> 16) & 0xFF) / 255f;
         float g = ((rgb >> 8) & 0xFF) / 255f;
         float b = (rgb & 0xFF) / 255f;
-        float pulse = 1f + 0.05f * (float) Math.sin(timeTicks * 0.3 + seed);
+        float pulse = 1f + style.pulseAmp() * (float) Math.sin(timeTicks * 0.3 + seed);
+        boolean fade = !Float.isNaN(toCamX);
 
         int si = 0;
-        for (Skirt s : SKIRTS) {
+        for (Skirt s : style.skirts()) {
             float w = s.width() * scale * pulse;
             float step = 360f / s.count();
-            float a = BASE_ALPHA * s.alpha() * alphaMul;
+            float a = BASE_ALPHA * s.alpha() * style.alphaMul() * alphaMul;
+            // UVs del cuadrante de este faldón: hoja 2x2 → media textura por eje.
+            float u0 = (s.tex() & 1) * 0.5f;
+            float v0 = (s.tex() >> 1) * 0.5f;
             for (int i = 0; i < s.count(); i++) {
                 float wobble = 0.5f + 0.5f * (float) Math.sin(i * 2.399f + si * 1.3f);
                 float h = s.height() * scale * pulse * (1f - s.jitter() * wobble);
+                boolean mirror = ((i + si) & 1) == 1;
+                float ang = s.offsetDeg() + i * step;
+                float pa = a;
+                if (fade) {
+                    // outward del plano tras rotar YP por ang: (sin, 0, cos).
+                    float rad = (float) Math.toRadians(ang);
+                    float dot = (float) (Math.sin(rad) * toCamX + Math.cos(rad) * toCamZ);
+                    float u = clamp01((dot - FRONT_DOT_START) / (FRONT_DOT_FULL - FRONT_DOT_START));
+                    float smooth = u * u * (3f - 2f * u);
+                    pa = a * (1f - (1f - FRONT_FADE_MIN) * smooth);
+                }
                 pose.pushPose();
-                pose.mulPose(Axis.YP.rotationDegrees(s.offsetDeg() + i * step));
+                pose.mulPose(Axis.YP.rotationDegrees(ang));
                 pose.translate(0f, s.yStart() * scale, s.baseR() * scale);
                 pose.mulPose(Axis.XP.rotationDegrees(s.tiltDeg()));
-                plane(vc, pose.last(), w, h, r, g, b, a);
+                plane(vc, pose.last(), w, h, u0, v0, mirror, r, g, b, pa);
                 pose.popPose();
             }
             si++;
         }
     }
 
-    /** Plano-llama vertical: nace en y=0 (piso), sube a y=h, ancho centrado, en z=0. */
+    private static float clamp01(float v) { return v < 0f ? 0f : (Math.min(v, 1f)); }
+
+    /** Inset de UV (fracción de hoja) para que el filtrado bilineal no sangre entre cuadrantes. */
+    private static final float UV_INSET = 0.0015f; // ≈1.5 téxeles en 1024
+
+    /** Plano-silueta vertical: nace en y=0, sube a y=h, mapea el cuadrante (u0,v0)-(+0.5,+0.5). */
     private static void plane(VertexConsumer vc, PoseStack.Pose m, float w, float h,
+                              float u0, float v0, boolean mirror,
                               float r, float g, float b, float a) {
-        vert(vc, m, -w / 2, 0f, 0f, 1f, r, g, b, a);
-        vert(vc, m, w / 2, 0f, 1f, 1f, r, g, b, a);
-        vert(vc, m, w / 2, h, 1f, 0f, r, g, b, a);
-        vert(vc, m, -w / 2, h, 0f, 0f, r, g, b, a);
+        float uLo = u0 + UV_INSET, uHi = u0 + 0.5f - UV_INSET;
+        float uA = mirror ? uHi : uLo;
+        float uB = mirror ? uLo : uHi;
+        v0 = v0 + UV_INSET;
+        float v1 = v0 + 0.5f - 2f * UV_INSET;
+        vert(vc, m, -w / 2, 0f, uA, v1, r, g, b, a);
+        vert(vc, m, w / 2, 0f, uB, v1, r, g, b, a);
+        vert(vc, m, w / 2, h, uB, v0, r, g, b, a);
+        vert(vc, m, -w / 2, h, uA, v0, r, g, b, a);
     }
 
     private static void vert(VertexConsumer vc, PoseStack.Pose m, float x, float y,

@@ -12,7 +12,7 @@
   "ki_drain_mastered": 0.8,
   "parent": "zenkai:ssj3",
   "body_items": {},
-  "aura_type": "ssj4",
+  "aura_type": "ssj",
   "aura_rgb": "0xFF4040",
   "scale": 1.05,
   "hair_rgb": "0xE03030"
