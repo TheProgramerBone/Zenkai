@@ -5,6 +5,7 @@ import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
 import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.skills.SkillDef;
+import com.hmc.zenkai.core.skills.SuperForms;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -42,18 +43,25 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             if (!att.isRaceChosen()) return;
 
+            // Con levels_from_forms el techo y el precio salen de la cadena de formas de SU
+            // raza: un saiyan no puede comprar el nivel que solo existe para arcosianos.
+            int max  = def.levelsFromForms()
+                    ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
+
             int current = att.skills().level(def.id());
-            if (current >= def.maxLevel()) return;              // ya al máximo
+            if (current >= max) return;                        // ya al máximo
             // El nivel 1 de una habilidad CON maestro solo lo da el maestro.
-            // Las que no tienen maestro (como focus) se compran desde nivel 0 como antes.
             if (current <= 0 && def.master() != null) return;
 
             int next = current + 1;
-            if (att.getAttribute(ZenkaiAttributes.MIND) < def.mindReqFor(next)) return;
-            if (att.getTP() < def.tpCost()) return;
+            int cost = def.levelsFromForms()
+                    ? SuperForms.tpCostForLevel(sp, next) : def.tpCost();
 
-            att.addTP(-def.tpCost());
-            att.skills().raise(def.id(), def.maxLevel());
+            if (att.getAttribute(ZenkaiAttributes.MIND) < def.mindReqFor(next)) return;
+            if (att.getTP() < cost) return;
+
+            att.addTP(-cost);
+            att.skills().raise(def.id(), max);
             PlayerLifeCycle.syncIfServer(sp);
         });
     }

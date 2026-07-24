@@ -90,4 +90,18 @@ public final class FormRegistry {
         FormDef d = get(id);
         return d == null ? 0.0 : d.kiDrainPerTick(mastery);
     }
+
+    /** Cadena completa de formas de una raza, en orden (índice 0 = la primera). Nunca null.
+     *  Es la FUENTE DE VERDAD de "cuántas transformaciones tiene esta raza": la habilidad
+     *  super_forms deriva de aquí su nivel máximo y el coste de cada nivel. */
+    public static List<ResourceLocation> chainFor(Race race) {
+        if (race == null) return List.of();
+        List<ResourceLocation> out = new ArrayList<>();
+        ResourceLocation cur = firstFormFor(race);
+        while (cur != null && !out.contains(cur)) { // contains: corta ciclos de un datapack roto
+            out.add(cur);
+            cur = nextFrom(cur, race);
+        }
+        return Collections.unmodifiableList(out);
+    }
 }

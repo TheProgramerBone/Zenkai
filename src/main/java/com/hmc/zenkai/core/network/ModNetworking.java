@@ -22,6 +22,7 @@ import com.hmc.zenkai.core.network.feature.skills.SkillSyncPacket;
 import com.hmc.zenkai.core.network.feature.stats.*;
 import com.hmc.zenkai.core.network.feature.technique.*;
 import com.hmc.zenkai.core.network.feature.training.TrainingSwingPacket;
+import com.hmc.zenkai.core.network.feature.wheel.WheelSelectPacket;
 import com.hmc.zenkai.core.network.feature.wishes.*;
 import com.hmc.zenkai.core.network.vehicle.VehicleControlPayload;
 import net.minecraft.client.Minecraft;
@@ -298,5 +299,11 @@ public class ModNetworking {
                 FormSyncPacket.TYPE,
                 FormSyncPacket.STREAM_CODEC,
                 FormSyncPacket::handle);
+
+        registrar.playToServer(
+                WheelSelectPacket.TYPE,
+                WheelSelectPacket.STREAM_CODEC,
+                WheelSelectPacket::handle);
+
     }
 }

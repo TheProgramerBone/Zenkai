@@ -7,6 +7,8 @@ import com.hmc.zenkai.client.SenseKiClientState;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.client.gui.screens.StatsScreen;
 import com.hmc.zenkai.client.gui.screens.StyleSelectionScreen;
+import com.hmc.zenkai.client.gui.wheel.WheelMenu;
+import com.hmc.zenkai.client.gui.wheel.WheelScreen;
 import com.hmc.zenkai.core.mastery.MasteryEffects;
 import com.hmc.zenkai.core.network.feature.ki.KiChargePacket;
 import com.hmc.zenkai.core.network.feature.ki.PowerPercentPacket;
@@ -32,6 +34,8 @@ public final class KeyBindings {
     public static KeyMapping TURBO;
     public static KeyMapping COMBAT_MODE;
     public static KeyMapping LOCK_ON;
+    private static final int WHEEL_HOLD_TICKS = 6; // igual que el umbral de B
+    private static int xHoldTicks = 0;
 
     /** Z: baja el % de poder en escalones (Ki Control). */
     public static KeyMapping POWER_DOWN;
@@ -235,8 +239,20 @@ public final class KeyBindings {
             }
         }
 
-        while (COMBAT_MODE.consumeClick()) {
-            CombatModeClientState.toggle(mc);
+        // X: toque = modo combate · mantenido = rueda. El toggle pasa a dispararse al SOLTAR,
+        // porque hasta entonces no sabemos si era toque o mantenido.
+        drainClicks(COMBAT_MODE);
+        boolean xDown = COMBAT_MODE.isDown();
+        if (xDown) {
+            xHoldTicks++;
+            if (xHoldTicks == WHEEL_HOLD_TICKS && mc.screen == null && mc.player != null) {
+                mc.setScreen(new WheelScreen(WheelMenu.build(mc.player)));
+            }
+        } else {
+            if (xHoldTicks > 0 && xHoldTicks < WHEEL_HOLD_TICKS) {
+                CombatModeClientState.toggle(mc);
+            }
+            xHoldTicks = 0;
         }
     }
 

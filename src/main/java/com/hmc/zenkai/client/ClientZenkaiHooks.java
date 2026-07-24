@@ -3,6 +3,7 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.core.network.feature.Race;
+import com.hmc.zenkai.core.network.feature.forms.KaiokenTier;
 import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
@@ -67,6 +68,7 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
     private static final IconUV ICON_IMMORTAL = IconUV.grid(11, 0);
     private static final IconUV ICON_LEGENDARY = IconUV.grid(9, 0);
+    private static final IconUV ICON_KAIOKEN = IconUV.grid(10, 0);
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
@@ -157,6 +159,11 @@ public final class ClientZenkaiHooks {
 
         if (AuraClientState.localTurbo) {
             drawBadge(g, iconX, iconY, ICON_TURBO);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        if (mc.player.getData(DataAttachments.PLAYER_FORM.get()).getKaioken() != KaiokenTier.OFF) {
+            drawBadge(g, iconX, iconY, ICON_KAIOKEN);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 

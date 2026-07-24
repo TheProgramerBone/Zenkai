@@ -92,7 +92,8 @@ public final class SkillManager {
                             List.copyOf(mind),
                             GsonHelper.getAsBoolean(o, "purchasable", true),
                             o.has("master") ? GsonHelper.getAsString(o, "master") : null,
-                            Collections.unmodifiableMap(values));
+                            Collections.unmodifiableMap(values),
+                            GsonHelper.getAsBoolean(o, "levels_from_forms", false));
                     if (out.put(id, def) != null) {
                         LOGGER.warn("[Zenkai] Skill duplicada '{}': dos namespaces definen el mismo path (gana {}).", id, file);
                     }
