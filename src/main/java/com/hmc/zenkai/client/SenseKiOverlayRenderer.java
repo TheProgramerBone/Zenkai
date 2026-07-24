@@ -129,11 +129,14 @@ public final class SenseKiOverlayRenderer {
             drawBar(m, vc, y, en.body(), en.bodyMax(), 0); // 0 = degradado verde->rojo
             y += BAR_H + BAR_GAP;
         }
-        if (lvl >= 4) {
+        // Ki y stamina son EXCLUSIVOS del jugador: los mobs no tienen pools (van por cooldown),
+        // así que reportan 0 y pintarían una barra vacía. isPlayer() (no max> 0) para que un
+        // jugador sin raza sí muestre sus barras, aunque estén a cero.
+        if (lvl >= 4 && en.isPlayer()) {
             drawBar(m, vc, y, en.energy(), en.energyMax(), C_KI);
             y += BAR_H + BAR_GAP;
         }
-        if (lvl >= 5) {
+        if (lvl >= 5 && en.isPlayer()) {
             drawBar(m, vc, y, en.stamina(), en.staminaMax(), C_STAMINA);
         }
     }

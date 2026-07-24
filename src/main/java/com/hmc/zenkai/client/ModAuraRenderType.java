@@ -40,6 +40,26 @@ public final class ModAuraRenderType extends RenderType {
                             .setWriteMaskState(COLOR_WRITE)                                // ⚠ no escribe profundidad
                             .createCompositeState(false)));
 
+    /** Igual que ENERGY pero SIN filtrado bilineal: para texturas pixel art (bola de ki,
+     *  proyectiles) donde el escalonado ES el estilo. El aura sigue usando blur=true. */
+    private static final Function<ResourceLocation, RenderType> ENERGY_CRISP =
+            Util.memoize(tex -> RenderType.create(
+                    "zenkai_energy_crisp",
+                    DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256,
+                    false, true,
+                    RenderType.CompositeState.builder()
+                            .setShaderState(RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE_SHADER)
+                            .setTextureState(new TextureStateShard(tex, false, false))
+                            .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                            .setCullState(NO_CULL)
+                            .setLightmapState(LIGHTMAP)
+                            .setOverlayState(OVERLAY)
+                            .setDepthTestState(LEQUAL_DEPTH_TEST)
+                            .setWriteMaskState(COLOR_WRITE)
+                            .createCompositeState(false)));
+
+    public static RenderType energyCrisp(ResourceLocation tex) { return ENERGY_CRISP.apply(tex); }
+
     /** Pasada única del aura (tintada por vértice; sombreado horneado en la textura). */
     public static RenderType energy(ResourceLocation tex) { return ENERGY.apply(tex); }
 }

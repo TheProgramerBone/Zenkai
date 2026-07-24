@@ -160,26 +160,14 @@ public class ZenkaiCommonAnimations {
         });
     }
 
-    /**
-     * Generic attack controller
-     * <p>
-     * Plays an attack animation if the animatable is {@link net.minecraft.world.entity.LivingEntity#swinging}
-     * <p>
-     * Resets the animation each time it stops, ready for the next swing
-     *
-     * @param animatable The entity that should swing
-     * @param attackAnimation The attack animation to play (E.G. swipe, strike, stomp, swing, etc)
-     * @return A new {@link AnimationController} instance to use
-     */
-    public static <T extends LivingEntity & GeoAnimatable> AnimationController<T> genericAttackAnimation(T animatable, RawAnimation attackAnimation) {
-        return new AnimationController<>(animatable, "Attack", 5, state -> {
-            if (animatable.swinging)
-                return state.setAndContinue(attackAnimation);
-
-            state.getController().forceAnimationReset();
-
-            return PlayState.STOP;
-        });
+    /** Id del trigger de ataque. El servidor llama triggerAnim(entity, "attack") y este
+     *  controlador reproduce el strike UNA vez, reiniciándose en cada llamada. A diferencia
+     *  del de 'swinging', no se queda pegado: triggerableAnim registra la animación y el
+     *  trigger la relanza aunque sea la misma. */
+    public static <T extends LivingEntity & GeoAnimatable> AnimationController<T>
+    genericAttackAnimation(T animatable, RawAnimation attackAnimation) {
+        return new AnimationController<>(animatable, "Attack", 5, state -> PlayState.STOP)
+                .triggerableAnim("attack", attackAnimation);
     }
 
     /**

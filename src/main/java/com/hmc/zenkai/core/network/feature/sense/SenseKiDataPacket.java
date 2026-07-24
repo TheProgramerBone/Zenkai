@@ -17,10 +17,7 @@ import java.util.List;
  */
 public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayload {
 
-    /** id + vida + estamina + ki + PL + si es jugador (para los filtros de modo).
-     *  Estamina y ki van a 0 en lo que no tenga pools Zenkai; el cliente decide si los
-     *  muestra según el nivel de Ki Sense. */
-    /** id + vida + estamina + ki + alineamiento + PL + si es jugador.
+    /** Id + vida + stamina + ki + alineamiento + PL + si es jugador.
      *  Los pools van a 0 en lo que no tenga stats Zenkai; el cliente decide qué muestra
      *  según el nivel de Ki Sense. */
     public record Entry(int entityId, int body, int bodyMax,
