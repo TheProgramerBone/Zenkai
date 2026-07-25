@@ -5,9 +5,9 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
-import com.hmc.zenkai.worldgen.ModConfiguredFeatures;
-import com.hmc.zenkai.worldgen.ModPlacedFeatures;
-import com.hmc.zenkai.worldgen.ModBiomeModifiers;
+import com.hmc.zenkai.registry.ModConfiguredFeatures;
+import com.hmc.zenkai.registry.ModPlacedFeatures;
+import com.hmc.zenkai.registry.ModBiomeModifiers;
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 

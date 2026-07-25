@@ -2,8 +2,8 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.TabIconButton;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -46,7 +46,7 @@ public abstract class ZenkaiMenuScreen extends Screen {
     @Override
     protected final void init() {
         if (mc.player != null) {
-            att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
+            att = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         }
         panelLeft = (this.width - BG_W) / 2;
         panelTop = (this.height - BG_H) / 2;

@@ -1,0 +1,74 @@
+package com.hmc.zenkai.feature.wishes;
+
+import com.hmc.zenkai.client.gui.StackWishMenu;
+import com.hmc.zenkai.config.ServerConfig;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+public record StackWishPayload() implements CustomPacketPayload {
+    public static final Type<StackWishPayload> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath("zenkai", "confirm_wish"));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, StackWishPayload> STREAM_CODEC =
+            StreamCodec.unit(new StackWishPayload());
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
+    public static class StackWishPayloadHandler {
+        public static void handle(final StackWishPayload payload, final IPayloadContext ctx) {
+            ctx.enqueueWork(() -> {
+                ServerPlayer player = (ServerPlayer) ctx.player();
+
+                if (!ServerConfig.isEnabled(ServerConfig.WishType.STACK)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
+                    return;
+                }
+
+                if (!(player.containerMenu instanceof StackWishMenu menu)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.no_open_wish"), false);
+                    return;
+                }
+
+                ItemStack chosen = menu.getChosenItem();
+                if (chosen == null || chosen.isEmpty()) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.no_chosen_item"), false);
+                    return;
+                }
+
+                ItemStack resolved = ServerConfig.resolveWishStack(chosen);
+
+                if (resolved.isEmpty()) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.invalid_wish"), false);
+                    return;
+                }
+
+                // Entrega: añade lo que quepa; lo que sobre se suelta a los pies y se avisa
+                // (no se pierde). Un ítem no apilable necesita un slot vacío.
+                ItemStack toGive = resolved.copy();
+                player.getInventory().add(toGive);
+                if (!toGive.isEmpty()) {
+                    player.drop(toGive, false);
+                    player.displayClientMessage(
+                            Component.translatable("messages.zenkai.wish_dropped_full"), false);
+                }
+
+                player.inventoryMenu.broadcastChanges();
+                player.containerMenu.broadcastChanges();
+
+                menu.clearChosenItem();
+                WishFinalizer.finalizeWish(player, Component.translatable(
+                        "messages.zenkai.wish_desc.stack",
+                        resolved.getCount(), resolved.getHoverName()));
+            });
+        }
+    }
+}

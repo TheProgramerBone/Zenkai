@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
-import com.hmc.zenkai.core.network.feature.wishes.WishTrainingPointsPayload;
+import com.hmc.zenkai.feature.wishes.WishTrainingPointsPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

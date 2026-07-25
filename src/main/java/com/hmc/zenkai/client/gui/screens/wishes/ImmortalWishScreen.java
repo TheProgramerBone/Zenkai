@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
-import com.hmc.zenkai.core.network.feature.wishes.WishImmortalPayload;
+import com.hmc.zenkai.feature.wishes.WishImmortalPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

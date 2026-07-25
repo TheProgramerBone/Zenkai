@@ -1,18 +1,18 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.input.KeyBindings;
-import com.hmc.zenkai.core.network.feature.combat.BlockingPacket;
-import com.hmc.zenkai.core.network.feature.combat.CombatModePacket;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.player.PlayerTechniques;
-import com.hmc.zenkai.core.network.feature.technique.KiChargeStartPacket;
-import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
-import com.hmc.zenkai.core.network.feature.technique.PhysicalFirePacket;
-import com.hmc.zenkai.core.technique.KiCombatServer;
-import com.hmc.zenkai.core.technique.KiTechnique;
-import com.hmc.zenkai.core.technique.KiTechniqueType;
-import com.hmc.zenkai.core.technique.PhysicalTechnique;
+import com.hmc.zenkai.event.ZenkaiPalAnimations;
+import com.hmc.zenkai.feature.combat.BlockingPacket;
+import com.hmc.zenkai.feature.combat.CombatModePacket;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.PlayerTechniques;
+import com.hmc.zenkai.feature.technique.KiChargeStartPacket;
+import com.hmc.zenkai.feature.technique.KiFirePacket;
+import com.hmc.zenkai.feature.technique.PhysicalFirePacket;
+import com.hmc.zenkai.feature.technique.KiCombatServer;
+import com.hmc.zenkai.feature.technique.KiTechnique;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -153,7 +153,7 @@ public final class CombatModeClientState {
                 // Espeja PhysicalCombatServer.tryExecute: sin estamina no se dispara y,
                 // NO se arranca el cooldown local (si no, la tecla queda muerta en balde).
                 int cost = (int) Math.ceil(att.getStaminaMax() * phys.staminaPct()
-                        * com.hmc.zenkai.core.mastery.MasteryEffects.techCostFactor(att, phys.name()));
+                        * com.hmc.zenkai.feature.mastery.MasteryEffects.techCostFactor(att, phys.name()));
                 boolean canPay = phys.enabled() && att.getStamina() >= cost;
                 if (canPay && PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
                     PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
@@ -277,7 +277,7 @@ public final class CombatModeClientState {
         int base = Math.max(1, t.type().chargeTicks());
         if (mc.player == null) return base;
         var att = PlayerStatsAttachment.get(mc.player);
-        double castF = com.hmc.zenkai.core.mastery.MasteryEffects.techCastFactor(att, t.type().name());
+        double castF = com.hmc.zenkai.feature.mastery.MasteryEffects.techCastFactor(att, t.type().name());
         return Math.max(1, (int) Math.round(t.type().chargeTicks() * castF));
     }
 }

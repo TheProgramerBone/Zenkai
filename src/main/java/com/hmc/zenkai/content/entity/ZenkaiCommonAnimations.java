@@ -3,7 +3,7 @@ package com.hmc.zenkai.content.entity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.constant.DataTickets;
 import software.bernie.geckolib.animation.AnimationController;
@@ -236,7 +236,7 @@ public class ZenkaiCommonAnimations {
 
     private static boolean isPlayerFlying(Player p) {
         if (p.getAbilities().flying) return true; // fiable para el jugador local
-        var att = p.getData(DataAttachments.PLAYER_STATS.get()); // sincronizado (otros jugadores)
+        var att = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get()); // sincronizado (otros jugadores)
         return att.isFlyEnabled() && !p.onGround() && !p.isInWater() && !p.isPassenger();
     }
 

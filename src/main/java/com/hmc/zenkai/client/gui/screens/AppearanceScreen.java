@@ -1,17 +1,17 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.customization.CustomizationAssets;
+import com.hmc.zenkai.client.CustomizationAssets;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
-import com.hmc.zenkai.core.network.feature.Race;
-import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
-import com.hmc.zenkai.core.network.feature.race.GeoLayerArmorItem;
-import com.hmc.zenkai.core.network.feature.race.RaceLayerDiscovery;
-import com.hmc.zenkai.core.network.feature.race.RaceSkinSlots;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
+import com.hmc.zenkai.feature.race.layer.RaceLayerDiscovery;
+import com.hmc.zenkai.feature.race.RaceSkinSlots;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;
@@ -118,8 +118,8 @@ public class AppearanceScreen extends Screen {
         this.panelLeft = (this.width  - BG_W) / 2;
         this.panelTop  = (this.height - BG_H) / 2;
 
-        var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
-        var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+        var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
 
         this.race   = stats.getRace();
         skinColor   = visual.getSkinColorRgb()   | 0xFF000000;
@@ -279,7 +279,7 @@ public class AppearanceScreen extends Screen {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
 
         ItemStack body = RaceSkinSlots.getVirtualRaceArmor(mc.player, EquipmentSlot.CHEST);
         if (!(body.getItem() instanceof GeoLayerArmorItem gi)) return;
@@ -460,7 +460,7 @@ public class AppearanceScreen extends Screen {
     private void applyPreview() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.setSkinColorRgb(skinColor & 0xFFFFFF);
         visual.setEyeColorRgb(eyeColor & 0xFFFFFF);
         visual.setHairColorRgb(hairColor & 0xFFFFFF);
@@ -494,8 +494,8 @@ public class AppearanceScreen extends Screen {
         if (!confirmed && !goingNext && !goingBack) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
-                var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
-                var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+                var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+                var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
                 if (statsSnapshot  != null) stats.load(statsSnapshot);
                 if (visualSnapshot != null) visual.load(visualSnapshot);
             }

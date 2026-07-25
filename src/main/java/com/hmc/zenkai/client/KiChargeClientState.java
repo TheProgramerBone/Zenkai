@@ -1,8 +1,8 @@
 package com.hmc.zenkai.client;
 
-import com.hmc.zenkai.core.network.feature.technique.KiChargeStatePacket;
-import com.hmc.zenkai.core.network.feature.technique.TechniquePosition;
-import com.hmc.zenkai.core.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.technique.KiChargeStatePacket;
+import com.hmc.zenkai.feature.technique.TechniquePosition;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 

@@ -2,15 +2,15 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
-import com.hmc.zenkai.client.gui.screens.wishes.ClientWishToggles;
 import com.hmc.zenkai.client.gui.screens.wishes.EnchantVillagerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.ImmortalWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.RevivePlayerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.RevivePetWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.TrainingPointsWishScreen;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
-import com.hmc.zenkai.core.config.WishConfig.WishType;
-import com.hmc.zenkai.core.network.feature.wishes.OpenStackWishPayload;
+import com.hmc.zenkai.config.ServerConfig.WishType;
+import com.hmc.zenkai.feature.wishes.ClientWishToggles;
+import com.hmc.zenkai.feature.wishes.OpenStackWishPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;

@@ -1,12 +1,11 @@
 package com.hmc.zenkai.content.entity.ai;
 
-import com.hmc.zenkai.content.entity.ModEntities;
-import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
+import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
-import com.hmc.zenkai.core.combat.EntityKiAttack;
-import com.hmc.zenkai.core.combat.EntityStats;
-import com.hmc.zenkai.core.combat.ZenkaiStats;
-import com.hmc.zenkai.core.technique.KiCombatServer;
+import com.hmc.zenkai.feature.combat.entity.EntityKiAttack;
+import com.hmc.zenkai.feature.combat.entity.EntityStats;
+import com.hmc.zenkai.feature.combat.ZenkaiStats;
+import com.hmc.zenkai.feature.technique.KiCombatServer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;

@@ -1,8 +1,8 @@
 package com.hmc.zenkai.client;
 
-import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.sense.LockOnPacket;
-import com.hmc.zenkai.core.skills.SkillEffects;
+import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.sense.LockOnPacket;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -135,7 +135,7 @@ public final class LockOnClientState {
     }
 
     private static double range(LocalPlayer p) {
-        return StatsConfig.senseKiRange() * SkillEffects.senseRangeFactor(p);
+        return CommonConfig.senseKiRange() * SkillEffects.senseRangeFactor(p);
     }
 
     /** Llamar 1 vez por tick de cliente. Solo mantiene el objetivo vivo/en rango; NO rota. */

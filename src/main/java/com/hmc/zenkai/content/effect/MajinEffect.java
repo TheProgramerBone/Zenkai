@@ -1,8 +1,9 @@
 package com.hmc.zenkai.content.effect;
 
-import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.registry.ModEffects;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;

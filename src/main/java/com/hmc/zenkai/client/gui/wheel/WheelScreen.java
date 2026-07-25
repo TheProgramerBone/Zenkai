@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui.wheel;
 
-import com.hmc.zenkai.core.network.feature.wheel.WheelSelectPacket;
+import com.hmc.zenkai.feature.wheel.WheelSelectPacket;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;

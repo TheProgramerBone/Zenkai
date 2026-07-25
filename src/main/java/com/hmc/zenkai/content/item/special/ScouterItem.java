@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.item.special;
 
-import com.hmc.zenkai.core.network.feature.race.GeoLayerArmorItem;
+import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;

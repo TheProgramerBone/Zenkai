@@ -1,7 +1,7 @@
 package com.hmc.zenkai.worldgen.npc;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.ModGameRules;
+import com.hmc.zenkai.registry.ModGameRules;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;

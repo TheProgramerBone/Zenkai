@@ -1,17 +1,15 @@
 package com.hmc.zenkai.worldgen;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.registry.ModDimensions;
+import com.hmc.zenkai.registry.ModStructureSegments;
 import com.hmc.zenkai.worldgen.StaticStructurePlacer.Segment;
 import com.hmc.zenkai.worldgen.npc.StructureNpcManager;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -20,8 +18,6 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**

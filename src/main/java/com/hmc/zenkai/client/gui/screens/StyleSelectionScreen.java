@@ -1,16 +1,16 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.AuraPreviewRenderer;
+import com.hmc.zenkai.client.aura.AuraPreviewRenderer;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
-import com.hmc.zenkai.core.network.ChooseStylePacket;
-import com.hmc.zenkai.core.network.feature.Style;
-import com.hmc.zenkai.core.network.feature.stats.ChooseRacePacket;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
-import com.hmc.zenkai.core.network.feature.race.UpdatePlayerVisualPacket;
+import com.hmc.zenkai.network.ChooseStylePacket;
+import com.hmc.zenkai.feature.Style;
+import com.hmc.zenkai.feature.stats.ChooseRacePacket;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.race.UpdatePlayerVisualPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -96,8 +96,8 @@ public class StyleSelectionScreen extends Screen {
         this.leftPos = (this.width  - BG_W) / 2;
         this.topPos  = (this.height - BG_H) / 2;
 
-        var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
-        var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
 
         kiColor = visual.getAuraColorRgb() | 0xFF000000;
 
@@ -156,7 +156,7 @@ public class StyleSelectionScreen extends Screen {
             kiColor = argb;
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null)
-                mc.player.getData(DataAttachments.PLAYER_VISUAL.get()).setAuraColorRgb(argb & 0xFFFFFF);
+                mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).setAuraColorRgb(argb & 0xFFFFFF);
         });
         addRenderableWidget(picker);
     }
@@ -244,8 +244,8 @@ public class StyleSelectionScreen extends Screen {
         if (!confirmed && !goingBack) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
-                var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
-                var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+                var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+                var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
                 if (statsSnapshot  != null) stats.load(statsSnapshot);
                 if (visualSnapshot != null) visual.load(visualSnapshot);
             }
@@ -256,8 +256,8 @@ public class StyleSelectionScreen extends Screen {
     private void onConfirm() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        var stats  = mc.player.getData(DataAttachments.PLAYER_STATS.get());
-        var visual = mc.player.getData(DataAttachments.PLAYER_VISUAL.get());
+        var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.setAuraColorRgb(kiColor & 0xFFFFFF);
         PacketDistributor.sendToServer(new ChooseRacePacket(stats.getRace()));
         PacketDistributor.sendToServer(UpdatePlayerVisualPacket.from(visual));

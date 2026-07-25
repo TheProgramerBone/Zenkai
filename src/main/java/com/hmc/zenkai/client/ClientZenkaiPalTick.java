@@ -1,10 +1,11 @@
 package com.hmc.zenkai.client;
 
-import com.hmc.zenkai.client.ZenkaiPalAnimations.FlyDir;
+import com.hmc.zenkai.event.ZenkaiPalAnimations;
+import com.hmc.zenkai.event.ZenkaiPalAnimations.FlyDir;
 import com.hmc.zenkai.client.input.KeyBindings;
-import com.hmc.zenkai.core.network.feature.ki.FlyBoostPacket;
-import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.feature.ki.FlyBoostPacket;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.entity.Pose;
@@ -51,7 +52,7 @@ public final class ClientZenkaiPalTick {
             lastFlyBoostSent = boosting;
             PacketDistributor.sendToServer(new FlyBoostPacket(boosting));
         }
-        var fl = p.getData(DataAttachments.PLAYER_STATS.get()).flags();
+        var fl = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).flags();
         fl.setFlyBoosting(boosting);
         if (boosting != fl.isBoostSizeApplied()) {
             fl.setBoostSizeApplied(boosting);
@@ -75,8 +76,8 @@ public final class ClientZenkaiPalTick {
     }
 
     private static void tickPlayer(Minecraft mc, AbstractClientPlayer p) {
-        var form  = p.getData(DataAttachments.PLAYER_FORM.get());
-        var stats = p.getData(DataAttachments.PLAYER_STATS.get());
+        var form  = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        var stats = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
 
         // Derribado: forzamos la pose acostada del jugador local (los demás la reciben por DATA_POSE).
         AnimState st = STATES.computeIfAbsent(p.getUUID(), k -> new AnimState());

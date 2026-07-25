@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.blockentity.AllDragonBalls;
 
-import com.hmc.zenkai.content.blockentity.ModBlockEntities;
+import com.hmc.zenkai.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;

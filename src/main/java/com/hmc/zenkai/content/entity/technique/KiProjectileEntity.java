@@ -1,7 +1,8 @@
 package com.hmc.zenkai.content.entity.technique;
 
-import com.hmc.zenkai.core.ModGameRules;
-import com.hmc.zenkai.core.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.combat.ZenkaiStats;
+import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -361,7 +362,7 @@ public class KiProjectileEntity extends Projectile {
         if (!canBeDeflected()) return false;
 
         if (refPower <= 0.0 && getOwner() instanceof LivingEntity original) {
-            var st = com.hmc.zenkai.core.combat.ZenkaiStats.of(original);
+            var st = ZenkaiStats.of(original);
             if (st != null) refPower = st.computeKiPowerFinal();
         }
         setOwner(newOwner);

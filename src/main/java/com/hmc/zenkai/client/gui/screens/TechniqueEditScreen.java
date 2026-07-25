@@ -6,14 +6,15 @@ import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
-import com.hmc.zenkai.core.network.feature.technique.TechniqueAssets;
-import com.hmc.zenkai.core.network.feature.technique.TechniquePacket;
-import com.hmc.zenkai.core.network.feature.technique.TechniquePosition;
-import com.hmc.zenkai.core.technique.KiCombatServer;
-import com.hmc.zenkai.core.technique.KiTechnique;
-import com.hmc.zenkai.core.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.technique.TechniqueAssets;
+import com.hmc.zenkai.feature.technique.TechniquePacket;
+import com.hmc.zenkai.feature.technique.TechniquePosition;
+import com.hmc.zenkai.feature.technique.KiCombatServer;
+import com.hmc.zenkai.feature.technique.KiTechnique;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
@@ -126,7 +127,7 @@ public class TechniqueEditScreen extends Screen {
     }
 
     private PlayerStatsAttachment att() {
-        return mc.player == null ? null : mc.player.getData(DataAttachments.PLAYER_STATS.get());
+        return mc.player == null ? null : mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
     }
 
     /** Lista de sonidos con un hueco null al principio: "sin sonido" es una opción válida. */
@@ -365,7 +366,7 @@ public class TechniqueEditScreen extends Screen {
         unlockButton.visible = !unlocked && !pickerOpen && type.enabled();
         unlockButton.active = !unlocked && type.enabled() && att != null
                 && att.getTP() >= type.tpCost()
-                && att.getAttribute(com.hmc.zenkai.core.network.feature.ZenkaiAttributes.MIND)
+                && att.getAttribute(ZenkaiAttributes.MIND)
                 >= type.mindReq();
         // El nombre vacío YA NO bloquea: se guarda vacío y se muestra el nombre del tipo.
         saveButton.active = unlocked && type.enabled();

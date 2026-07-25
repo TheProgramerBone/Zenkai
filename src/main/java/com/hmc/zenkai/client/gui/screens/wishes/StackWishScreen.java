@@ -2,8 +2,8 @@ package com.hmc.zenkai.client.gui.screens.wishes;
 
 import com.hmc.zenkai.client.gui.StackWishMenu;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
-import com.hmc.zenkai.core.network.feature.wishes.StackWishPayload;
-import com.hmc.zenkai.core.network.feature.wishes.SetGhostSlotPayload;
+import com.hmc.zenkai.feature.wishes.StackWishPayload;
+import com.hmc.zenkai.feature.wishes.SetGhostSlotPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

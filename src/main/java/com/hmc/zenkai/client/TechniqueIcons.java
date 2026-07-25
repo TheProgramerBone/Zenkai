@@ -1,8 +1,8 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.network.feature.race.RaceTextureUtil;
-import com.hmc.zenkai.core.technique.KiTechnique;
+import com.hmc.zenkai.feature.race.RaceTextureUtil;
+import com.hmc.zenkai.feature.technique.KiTechnique;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 

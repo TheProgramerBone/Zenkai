@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -31,7 +31,7 @@ public final class BoostSizeHandler {
     public static void onSize(EntityEvent.Size e) {
         if (!(e.getEntity() instanceof Player p)) return;
 
-        var att = p.getData(DataAttachments.PLAYER_STATS.get());
+        var att = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         if (att.flags().isFlyBoosting()) {
             // scalable() respeta el atributo de escala del jugador; withEyeHeight baja la cámara.
             e.setNewSize(EntityDimensions.scalable(BOOST_WIDTH, BOOST_HEIGHT).withEyeHeight(BOOST_EYE));

@@ -1,0 +1,96 @@
+package com.hmc.zenkai.event;
+
+import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.combat.entity.EntityStats;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.feature.training.TrainingData;
+import com.mojang.serialization.Codec;
+import net.minecraft.nbt.CompoundTag;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+
+import java.util.function.Supplier;
+
+public class ZenkaiDataAttachments {
+    public static final DeferredRegister<AttachmentType<?>> REGISTER =
+            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Zenkai.MOD_ID);
+
+    public static final Codec<PlayerStatsAttachment> PLAYER_STATS_CODEC = CompoundTag.CODEC.xmap(
+            tag -> {
+                PlayerStatsAttachment att = new PlayerStatsAttachment();
+                att.load(tag);
+                return att;
+            },
+            PlayerStatsAttachment::save // de objeto a NBT
+    );
+
+    public static final Codec<PlayerVisualAttachment> PLAYER_VISUAL_CODEC = CompoundTag.CODEC.xmap(
+            tag -> {
+                PlayerVisualAttachment att = new PlayerVisualAttachment();
+                att.load(tag);
+                return att;
+            },
+            PlayerVisualAttachment::save // de objeto a NBT
+    );
+
+    public static final Codec<PlayerFormAttachment> PLAYER_FORM_CODEC =
+            CompoundTag.CODEC.xmap(
+                    tag -> {
+                        var att = new PlayerFormAttachment();
+                        att.load(tag);
+                        return att;
+                    },
+                    PlayerFormAttachment::save
+            );
+
+    public static final Supplier<AttachmentType<PlayerStatsAttachment>> PLAYER_STATS =
+            REGISTER.register("player_stats", () ->
+                    AttachmentType.builder(PlayerStatsAttachment::new)
+                            .serialize(PLAYER_STATS_CODEC)
+                            .copyOnDeath()
+                            .build());
+
+    public static final Supplier<AttachmentType<PlayerVisualAttachment>> PLAYER_VISUAL =
+            REGISTER.register("player_visual", () ->
+                    AttachmentType.builder(PlayerVisualAttachment::new)
+                            .serialize(PLAYER_VISUAL_CODEC)
+                            .copyOnDeath()
+                            .build());
+
+    public static final Supplier<AttachmentType<PlayerFormAttachment>> PLAYER_FORM =
+            REGISTER.register("player_form", () ->
+                    AttachmentType.builder(PlayerFormAttachment::new)
+                            .serialize(PLAYER_FORM_CODEC)
+                            .copyOnDeath()
+                            .build());
+
+    // Stats de entidad (mobs/npc). Sin copyOnDeath: las entidades no respawn.
+    public static final Codec<EntityStats> ENTITY_STATS_CODEC = CompoundTag.CODEC.xmap(
+            tag -> { EntityStats s = new EntityStats(); s.load(tag); return s; },
+            EntityStats::save);
+
+    public static final Supplier<AttachmentType<EntityStats>> ENTITY_STATS =
+            REGISTER.register("entity_stats", () ->
+                    AttachmentType.builder(EntityStats::new)
+                            .serialize(ENTITY_STATS_CODEC)
+                            .build());
+    public static final Codec<TrainingData> TRAINING_CODEC =
+            CompoundTag.CODEC.xmap(
+                    tag -> {
+                        var td = new TrainingData();
+                        td.load(tag);
+                        return td;
+                    },
+                    TrainingData::save);
+
+    public static final Supplier<AttachmentType<TrainingData>> TRAINING =
+            REGISTER.register("training", () ->
+                    AttachmentType.builder(TrainingData::new)
+                            .serialize(TRAINING_CODEC)
+                            .copyOnDeath()
+                            .build());
+    
+}

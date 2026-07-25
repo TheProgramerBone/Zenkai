@@ -1,13 +1,13 @@
 package com.hmc.zenkai.client.gui.wheel;
 
-import com.hmc.zenkai.core.network.feature.Race;
-import com.hmc.zenkai.core.network.feature.forms.FormDef;
-import com.hmc.zenkai.core.network.feature.forms.FormIds;
-import com.hmc.zenkai.core.network.feature.forms.KaiokenTier;
-import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
-import com.hmc.zenkai.core.skills.SkillEffects;
+import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.forms.FormDef;
+import com.hmc.zenkai.feature.forms.FormIds;
+import com.hmc.zenkai.feature.forms.KaiokenTier;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.core.skills.SuperForms;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -54,8 +54,8 @@ public final class WheelMenu {
     /** Cadena de formas. 'active' = la que está SELECCIONADA, no la que lleva puesta. */
     private static List<WheelNode> forms(Player p) {
         List<WheelNode> out = new ArrayList<>();
-        PlayerStatsAttachment st = p.getData(DataAttachments.PLAYER_STATS.get());
-        PlayerFormAttachment fm = p.getData(DataAttachments.PLAYER_FORM.get());
+        PlayerStatsAttachment st = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        PlayerFormAttachment fm = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
 
         Race race = st.getRace();
         ResourceLocation selected = fm.getSelectedForm();
@@ -80,7 +80,7 @@ public final class WheelMenu {
      * null si el jugador no tiene la habilidad: no se enseña lo que no existe.
      */
     private static WheelNode kaiokenToggle(Player p) {
-        PlayerFormAttachment fm = p.getData(DataAttachments.PLAYER_FORM.get());
+        PlayerFormAttachment fm = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         if (SkillEffects.level(p, KAIOKEN_SKILL) <= 0) return null;
 
         boolean on = fm.isKaiokenSwitch();

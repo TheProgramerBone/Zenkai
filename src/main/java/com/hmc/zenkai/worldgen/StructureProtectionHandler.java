@@ -1,8 +1,9 @@
 package com.hmc.zenkai.worldgen;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.ModGameRules;
-import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
+import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.feature.player.OtherworldManager;
+import com.hmc.zenkai.registry.ModDimensions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

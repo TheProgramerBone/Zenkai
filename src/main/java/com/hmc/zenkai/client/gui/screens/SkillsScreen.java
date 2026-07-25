@@ -1,11 +1,11 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
-import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.skills.SkillBuyPacket;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
-import com.hmc.zenkai.core.skills.SkillDef;
+import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.SkillBuyPacket;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.core.skills.SuperForms;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -86,7 +86,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
     /** Attachment fresco: tras comprar, el server sincroniza y esto refleja el cambio solo. */
     private PlayerStatsAttachment stats() {
-        return mc.player == null ? att : mc.player.getData(DataAttachments.PLAYER_STATS.get());
+        return mc.player == null ? att : mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
     }
 
     // ── Geometría de la lista ────────────────────────────────────────────────

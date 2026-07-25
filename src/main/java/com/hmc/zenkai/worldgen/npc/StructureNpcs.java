@@ -1,7 +1,7 @@
 package com.hmc.zenkai.worldgen.npc;
 
-import com.hmc.zenkai.content.entity.ModEntities;
-import com.hmc.zenkai.worldgen.ModDimensions;
+import com.hmc.zenkai.registry.ModEntities;
+import com.hmc.zenkai.registry.ModDimensions;
 import net.minecraft.core.BlockPos;
 // import net.minecraft.world.level.Level;   // <- para NPCs del overworld
 

@@ -1,7 +1,7 @@
 package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.content.item.ModItems;
+import com.hmc.zenkai.registry.ModItems;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

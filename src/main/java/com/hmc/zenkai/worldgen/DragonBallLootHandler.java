@@ -1,7 +1,7 @@
 package com.hmc.zenkai.worldgen;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.util.ModTags;
+import com.hmc.zenkai.registry.ModTags;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;

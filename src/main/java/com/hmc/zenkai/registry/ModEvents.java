@@ -1,0 +1,102 @@
+package com.hmc.zenkai.registry;
+
+import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.entity.misc.IsaacEntity;
+import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
+import com.hmc.zenkai.content.entity.namek.NamekianEntity;
+import com.hmc.zenkai.content.entity.namek.NamekianWarriorEntity;
+import com.hmc.zenkai.content.entity.misc.KintounEntity;
+import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
+import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
+import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
+import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
+import com.hmc.zenkai.content.item.special.HammerItem;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@EventBusSubscriber(modid = Zenkai.MOD_ID)
+public class ModEvents {
+
+    @SubscribeEvent
+    public static void onEntityAttributeCreation(EntityAttributeCreationEvent event) {
+        event.put(ModEntities.NAMEKIAN_WARRIOR.get(), NamekianWarriorEntity.createAttributes().build());
+        event.put(ModEntities.NAMEKIAN.get(), NamekianEntity.createAttributes().build());
+        event.put(ModEntities.SHENLONG.get(), ShenLongEntity.createAttributes().build());
+        event.put(ModEntities.SPACE_POD.get(), SpacePodEntity.createAttributes().build());
+        event.put(ModEntities.KINTOUN.get(), KintounEntity.createAttributes().build());
+        event.put(ModEntities.SAIBAMAN.get(), SaibamanEntity.createAttributes().build());
+        event.put(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounEntity.createAttributes().build());
+        event.put(ModEntities.ISAAC.get(), IsaacEntity.createAttributes().build());
+        event.put(ModEntities.YEMMA.get(), YemmaEntity.createAttributes().build());
+    }
+
+    private static final Set<BlockPos> HARVESTED_BLOCKS = new HashSet<>();
+
+
+    // Done with the help of https://github.com/CoFH/CoFHCore/blob/1.19.x/src/main/java/cofh/core/event/AreaEffectEvents.java
+    // Don't be a jerk License
+    @SubscribeEvent
+    public static void onHammerUsage(BlockEvent.BreakEvent event) {
+        Player player = event.getPlayer();
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (mainHandItem.getItem() instanceof HammerItem hammer && player instanceof ServerPlayer serverPlayer) {
+            if (player.isCrouching()) {
+                return;
+            }
+        }
+
+        if(mainHandItem.getItem() instanceof HammerItem hammer && player instanceof ServerPlayer serverPlayer) {
+            BlockPos initialBlockPos = event.getPos();
+            if(HARVESTED_BLOCKS.contains(initialBlockPos)) {
+                return;
+            }
+
+            for(BlockPos pos : HammerItem.getBlocksToBeDestroyed(1, initialBlockPos, serverPlayer)) {
+                if(pos.equals(initialBlockPos) || !hammer.isCorrectToolForDrops(mainHandItem, event.getLevel().getBlockState(pos))) {
+                    continue;
+                }
+                HARVESTED_BLOCKS.add(pos);
+                serverPlayer.gameMode.destroyBlock(pos);
+                HARVESTED_BLOCKS.remove(pos);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onAttackEntity(net.neoforged.neoforge.event.entity.player.AttackEntityEvent event) {
+        Player player = event.getEntity();
+        Entity target = event.getTarget();
+        if (player.level().isClientSide) return;
+
+        if (target.getType() == EntityType.INTERACTION && target.getTags().contains("dragon_barrier")) {
+            event.setCanceled(true);
+            player.displayClientMessage(Component.translatable("messages.zenkai.blocked_by_shenlong"), true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteractSpecific event) {
+        if (event.getLevel().isClientSide) return;
+
+        Entity target = event.getTarget();
+
+        if (target.getType() == EntityType.INTERACTION && target.getTags().contains("dragon_barrier")) {
+            event.setCanceled(true);
+            event.getEntity().displayClientMessage(Component.translatable("messages.zenkai.blocked_by_shenlong"), true);
+        }
+    }
+}

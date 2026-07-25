@@ -1,9 +1,9 @@
 package com.hmc.zenkai.content.item.special;
 
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
-import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.content.sound.ModSounds;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.registry.ModSounds;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -56,7 +56,7 @@ public class SenzuBean extends Item {
                 );
 
                 // === Integración con sistema de stats (body / stamina / ki) ===
-                PlayerStatsAttachment att = player.getData(DataAttachments.PLAYER_STATS.get());
+                PlayerStatsAttachment att = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
 
                 // Curar body al máximo
                 int bodyMissing = att.getBodyMax() - att.getBody();
@@ -108,7 +108,7 @@ public class SenzuBean extends Item {
             return InteractionResult.PASS;
         }
 
-        PlayerStatsAttachment att = targetPlayer.getData(DataAttachments.PLAYER_STATS.get());
+        PlayerStatsAttachment att = targetPlayer.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         boolean needsHelp = att.flags().isDowned() || att.getBody() < att.getBodyMax();
         if (!needsHelp) return InteractionResult.PASS;
 

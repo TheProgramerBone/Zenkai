@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.blockentity.DragonBalls;
 
-import com.hmc.zenkai.content.block.ModBlocks;
+import com.hmc.zenkai.registry.ModBlocks;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

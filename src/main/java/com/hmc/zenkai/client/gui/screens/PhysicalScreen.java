@@ -3,10 +3,11 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.client.PhysicalIcons;
 import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
-import com.hmc.zenkai.core.network.feature.player.PlayerTechniques;
-import com.hmc.zenkai.core.network.feature.technique.PhysicalTechniquePacket;
-import com.hmc.zenkai.core.technique.KiTechnique;
-import com.hmc.zenkai.core.technique.PhysicalTechnique;
+import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.player.PlayerTechniques;
+import com.hmc.zenkai.feature.technique.PhysicalTechniquePacket;
+import com.hmc.zenkai.feature.technique.KiTechnique;
+import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -76,7 +77,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                             PacketDistributor.sendToServer(PhysicalTechniquePacket.unlock(t));
                         });
                 unlock.active = att.getTP() >= t.tpCost()
-                        && att.getAttribute(com.hmc.zenkai.core.network.feature.ZenkaiAttributes.MIND) >= t.mindReq();
+                        && att.getAttribute(ZenkaiAttributes.MIND) >= t.mindReq();
                 this.addRenderableWidget(unlock);
             } else {
                 this.addRenderableWidget(new TextOnlyButton(panelLeft + BG_W - 106, y, 60, 16,

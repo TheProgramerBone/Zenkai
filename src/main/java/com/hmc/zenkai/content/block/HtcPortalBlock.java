@@ -1,7 +1,7 @@
 package com.hmc.zenkai.content.block;
 
 import com.hmc.zenkai.worldgen.HtcTravel;
-import com.hmc.zenkai.worldgen.ModDimensions;
+import com.hmc.zenkai.registry.ModDimensions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;

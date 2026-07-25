@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.network.feature.training.TrainingSwingPacket;
+import com.hmc.zenkai.feature.training.TrainingSwingPacket;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;

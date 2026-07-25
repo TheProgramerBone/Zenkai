@@ -1,13 +1,13 @@
 package com.hmc.zenkai.content.blockentity.AllDragonBalls;
 
-import com.hmc.zenkai.content.block.ModBlocks;
-import com.hmc.zenkai.content.entity.ModEntities;
+import com.hmc.zenkai.registry.ModBlocks;
+import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
-import com.hmc.zenkai.content.sound.ModSounds;
-import com.hmc.zenkai.core.ModGameRules;
-import com.hmc.zenkai.core.config.WishConfig;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.wishes.WishBroadcast;
+import com.hmc.zenkai.registry.ModSounds;
+import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.wishes.WishBroadcast;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -82,7 +82,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
             // (1) Cooldown POR JUGADOR
             PlayerStatsAttachment stats = PlayerStatsAttachment.get(player);
             long now = serverLevel.getGameTime();
-            long cooldown = WishConfig.summonCooldownTicks();
+            long cooldown = ServerConfig.summonCooldownTicks();
             long last = stats.getLastSummonTick();
             if (cooldown > 0 && last != Long.MIN_VALUE && now - last < cooldown) {
                 long remaining = cooldown - (now - last);
@@ -159,7 +159,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
             entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
             entity.rotate(Rotation.CLOCKWISE_180);
             if (entity instanceof ShenLongEntity shenlong) {
-                shenlong.setWishesRemaining(WishConfig.shenlongWishCount()); // (2) pool por invocación
+                shenlong.setWishesRemaining(ServerConfig.shenlongWishCount()); // (2) pool por invocación
             }
             level.addFreshEntity(entity);
         }

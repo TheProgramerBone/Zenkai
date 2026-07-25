@@ -1,7 +1,7 @@
 package com.hmc.zenkai.datagen;
 
-import com.hmc.zenkai.content.block.ModBlocks;
-import com.hmc.zenkai.content.item.ModItems;
+import com.hmc.zenkai.registry.ModBlocks;
+import com.hmc.zenkai.registry.ModItems;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;

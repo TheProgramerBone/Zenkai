@@ -2,7 +2,7 @@ package com.hmc.zenkai.content.entity.misc;
 
 import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.content.entity.ZenkaiDefaultMob;
-import com.hmc.zenkai.content.sound.ModSounds;
+import com.hmc.zenkai.registry.ModSounds;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;

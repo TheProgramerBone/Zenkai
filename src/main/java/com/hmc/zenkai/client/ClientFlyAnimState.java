@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client;
 
-import com.hmc.zenkai.client.ZenkaiPalAnimations.FlyDir;
-import com.hmc.zenkai.core.network.feature.ki.FlyAnimPacket;
+import com.hmc.zenkai.event.ZenkaiPalAnimations.FlyDir;
+import com.hmc.zenkai.feature.ki.FlyAnimPacket;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.neoforged.neoforge.network.PacketDistributor;
 

@@ -1,5 +1,7 @@
 package com.hmc.zenkai.worldgen;
 
+import com.hmc.zenkai.registry.ModDimensions;
+import com.hmc.zenkai.registry.ModStructureSegments;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;

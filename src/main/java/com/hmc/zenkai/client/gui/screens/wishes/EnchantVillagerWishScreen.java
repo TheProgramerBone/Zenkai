@@ -3,7 +3,7 @@ package com.hmc.zenkai.client.gui.screens.wishes;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
-import com.hmc.zenkai.core.network.feature.wishes.ConfirmVillagerWishPayload;
+import com.hmc.zenkai.feature.wishes.ConfirmVillagerWishPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;

@@ -1,6 +1,6 @@
 package com.hmc.zenkai.mixin.client;
 
-import com.hmc.zenkai.core.network.feature.race.FirstPersonRaceArmorSwap;
+import com.hmc.zenkai.feature.race.FirstPersonRaceArmorSwap;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.AgeableListModel;

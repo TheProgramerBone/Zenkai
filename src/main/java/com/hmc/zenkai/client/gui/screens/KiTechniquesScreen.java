@@ -3,10 +3,10 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.client.PhysicalIcons; // <- IMPORTANTE: Añadido aquí
 import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
-import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.player.PlayerTechniques;
-import com.hmc.zenkai.core.network.feature.technique.TechniquePacket;
-import com.hmc.zenkai.core.technique.KiTechnique;
+import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.player.PlayerTechniques;
+import com.hmc.zenkai.feature.technique.TechniquePacket;
+import com.hmc.zenkai.feature.technique.KiTechnique;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -85,7 +85,7 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
                     }));
             y += ROW_H;
         }
-        if (slots.size() < StatsConfig.techniqueMaxSlots()) {
+        if (slots.size() < CommonConfig.techniqueMaxSlots()) {
             this.addRenderableWidget(new TextOnlyButton(panelLeft + 16, y + 4, 110, 16,
                     Component.translatable("screen.zenkai.technique.create"),
                     () -> mc.setScreen(new TechniqueEditScreen(-1))));

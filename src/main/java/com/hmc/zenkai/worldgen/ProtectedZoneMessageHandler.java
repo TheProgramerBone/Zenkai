@@ -1,7 +1,7 @@
 package com.hmc.zenkai.worldgen;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.ModGameRules;
+import com.hmc.zenkai.registry.ModGameRules;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

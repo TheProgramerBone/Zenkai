@@ -1,8 +1,8 @@
 package com.hmc.zenkai.content.entity.otherworld;
 
 import com.hmc.zenkai.content.entity.ZenkaiDefaultNPC;
-import com.hmc.zenkai.core.network.feature.player.OtherworldManager;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.OtherworldManager;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

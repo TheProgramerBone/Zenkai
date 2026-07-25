@@ -1,9 +1,9 @@
 package com.hmc.zenkai.util;
 
-import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
-import com.hmc.zenkai.core.network.feature.Race;
-import com.hmc.zenkai.core.network.feature.Style;
+import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.Style;
 
 import java.util.EnumMap;
 
@@ -25,9 +25,9 @@ public class BalanceUtil {
      */
     public static double computeStat(int base, Race race, Style style, ZenkaiAttributes attr) {
         // raceMult: [mSTR, mCON, mDEX, mWIL, mSPI, mMND]
-        double[] r = StatsConfig.raceMultipliers(race);
+        double[] r = CommonConfig.raceMultipliers(race);
         // styleMult: [sSTR, sCON, sDEX, sWIL, sSPI, sMND]
-        double[] s = StatsConfig.styleMultipliers(style);
+        double[] s = CommonConfig.styleMultipliers(style);
 
         int index = switch (attr) {
             case STRENGTH     -> 0;

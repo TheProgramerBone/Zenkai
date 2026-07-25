@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.core.network.TickHandlers;
+import com.hmc.zenkai.event.ZenkaiTickHandlers;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -33,7 +33,7 @@ public final class FovLockHandler {
         AttributeInstance attr = p.getAttribute(Attributes.MOVEMENT_SPEED);
         if (attr == null) return;
 
-        AttributeModifier ours = attr.getModifier(TickHandlers.MOVE_MOD_ID); // ⚠
+        AttributeModifier ours = attr.getModifier(ZenkaiTickHandlers.MOVE_MOD_ID); // ⚠
         if (ours == null || ours.amount() <= 0.0) return; // sin boost del mod: FOV vanilla tal cual
 
         float walk = p.getAbilities().getWalkingSpeed();

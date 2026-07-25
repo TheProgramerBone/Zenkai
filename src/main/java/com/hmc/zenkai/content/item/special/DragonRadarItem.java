@@ -1,8 +1,8 @@
 package com.hmc.zenkai.content.item.special;
 
-import com.hmc.zenkai.content.item.ModDataComponents;
-import com.hmc.zenkai.content.sound.ModSounds;
-import com.hmc.zenkai.util.ModTags;
+import com.hmc.zenkai.registry.ModDataComponents;
+import com.hmc.zenkai.registry.ModSounds;
+import com.hmc.zenkai.registry.ModTags;
 import com.hmc.zenkai.worldgen.LootedDragonBalls;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;

@@ -1,8 +1,8 @@
 package com.hmc.zenkai.content.entity.misc;
 
 import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
-import com.hmc.zenkai.content.item.ModItems;
-import com.hmc.zenkai.core.network.vehicle.VerticalControlVehicle;
+import com.hmc.zenkai.registry.ModItems;
+import com.hmc.zenkai.network.vehicle.VerticalControlVehicle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;

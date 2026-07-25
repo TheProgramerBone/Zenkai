@@ -1,9 +1,9 @@
 package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.content.block.ModBlocks;
-import com.hmc.zenkai.content.item.ModItems;
-import com.hmc.zenkai.util.ModTags;
+import com.hmc.zenkai.registry.ModBlocks;
+import com.hmc.zenkai.registry.ModItems;
+import com.hmc.zenkai.registry.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;

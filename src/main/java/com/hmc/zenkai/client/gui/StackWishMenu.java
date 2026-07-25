@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui;
 
-import com.hmc.zenkai.core.config.WishConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
@@ -111,7 +111,7 @@ public class StackWishMenu extends AbstractContainerMenu {
             // Validación rápida en cliente/servidor: si está baneado, no permitir colocarlo.
             ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
             if (id == null) return true; // fallback: permitir
-            return !WishConfig.getBannedItems().contains(id);
+            return !ServerConfig.getBannedItems().contains(id);
         }
 
         @Override

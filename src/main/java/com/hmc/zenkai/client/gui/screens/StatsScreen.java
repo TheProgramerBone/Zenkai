@@ -1,14 +1,14 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
 import com.hmc.zenkai.client.gui.AlignmentPalette;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
-import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.mastery.MasteryEffects;
-import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
-import com.hmc.zenkai.core.network.feature.player.PlayerFormAttachment;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.stats.*;
+import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.stats.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -110,8 +110,8 @@ public class StatsScreen extends ZenkaiMenuScreen {
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         if (mc.player == null) { super.render(g, mouseX, mouseY, partialTick); return; }
-        att = mc.player.getData(DataAttachments.PLAYER_STATS.get());
-        PlayerFormAttachment form = mc.player.getData(DataAttachments.PLAYER_FORM.get());
+        att = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        PlayerFormAttachment form = mc.player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
 
         super.render(g, mouseX, mouseY, partialTick);
 
@@ -225,7 +225,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     // ── Popup de stats efectivas ─────────────────────────────────────────────
     private void renderEffectiveStatsPopup(GuiGraphics g, Font font) {
-        boolean majin = mc.player.getData(DataAttachments.PLAYER_VISUAL.get()).isMajinControlled();
+        boolean majin = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).isMajinControlled();
         List<Component> lines = buildEffectiveStats();
 
         // Altura dinámica: título (12) + línea majin opcional (10) + stats (10 c/u) + márgenes.
@@ -247,7 +247,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         if (majin) {
             g.drawString(font, Component.translatableWithFallback(
                     "screen.zenkai.stats_screen.majin_boost", "Majin +%s%%",
-                    String.valueOf((int) Math.round(StatsConfig.majinStatBonus() * 100))), tx, ty, 0xFFFF5566);
+                    String.valueOf((int) Math.round(CommonConfig.majinStatBonus() * 100))), tx, ty, 0xFFFF5566);
             ty += 10;
         }
         for (Component c : lines) {
@@ -335,8 +335,8 @@ public class StatsScreen extends ZenkaiMenuScreen {
     }
 
     private Component getAttributeDescription(ZenkaiAttributes attr, PlayerStatsAttachment att) {
-        double[] r = StatsConfig.raceMultipliers(att.getRace());
-        double[] s = StatsConfig.styleMultipliers(att.getStyle());
+        double[] r = CommonConfig.raceMultipliers(att.getRace());
+        double[] s = CommonConfig.styleMultipliers(att.getStyle());
 
         double mSTR = (r.length > 0) ? r[0] : 1.0, mCON = (r.length > 1) ? r[1] : 1.0,
                 mDEX = (r.length > 2) ? r[2] : 1.0, mWIL = (r.length > 3) ? r[3] : 1.0,

@@ -1,7 +1,7 @@
 package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.content.block.ModBlocks;
+import com.hmc.zenkai.registry.ModBlocks;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;

@@ -2,20 +2,20 @@ package com.hmc.zenkai.client.input;
 
 import com.hmc.zenkai.client.CombatModeClientState;
 import com.hmc.zenkai.client.LockOnClientState;
-import com.hmc.zenkai.client.ScouterClientState;
-import com.hmc.zenkai.client.SenseKiClientState;
+import com.hmc.zenkai.client.overlay.ScouterClientState;
+import com.hmc.zenkai.client.overlay.SenseKiClientState;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.client.gui.screens.StatsScreen;
 import com.hmc.zenkai.client.gui.screens.StyleSelectionScreen;
 import com.hmc.zenkai.client.gui.wheel.WheelMenu;
 import com.hmc.zenkai.client.gui.wheel.WheelScreen;
-import com.hmc.zenkai.core.mastery.MasteryEffects;
-import com.hmc.zenkai.core.network.feature.ki.KiChargePacket;
-import com.hmc.zenkai.core.network.feature.ki.PowerPercentPacket;
-import com.hmc.zenkai.core.network.feature.ki.ToggleFlyPacket;
-import com.hmc.zenkai.core.network.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
-import com.hmc.zenkai.core.network.feature.stats.TransformHoldPacket;
+import com.hmc.zenkai.feature.mastery.MasteryEffects;
+import com.hmc.zenkai.feature.ki.KiChargePacket;
+import com.hmc.zenkai.feature.ki.PowerPercentPacket;
+import com.hmc.zenkai.feature.ki.ToggleFlyPacket;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.stats.TransformHoldPacket;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -128,7 +128,7 @@ public final class KeyBindings {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        PlayerStatsAttachment stats = mc.player.getData(DataAttachments.PLAYER_STATS.get());
+        PlayerStatsAttachment stats = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         boolean hasRace = stats.isRaceChosen();
 
         // OPEN_STATS (V)
@@ -166,7 +166,7 @@ public final class KeyBindings {
         SenseKiClientState.tick(mc);
         ScouterClientState.tick(mc);
         CombatModeClientState.tick(mc);
-        PlayerStatsAttachment stats = player.getData(DataAttachments.PLAYER_STATS.get());
+        PlayerStatsAttachment stats = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         stats.setStatMultiplier(MasteryEffects.formStatFactor(player));
         boolean hasRace = stats.isRaceChosen();
 
@@ -210,7 +210,7 @@ public final class KeyBindings {
                 lastTransformSent = formDown;
 
                 // feedback local
-                var form = player.getData(DataAttachments.PLAYER_FORM.get());
+                var form = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
                 form.setTransformHeld(formDown);
 
                 PacketDistributor.sendToServer(new TransformHoldPacket(
@@ -276,7 +276,7 @@ public final class KeyBindings {
 
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
-                var form = mc.player.getData(DataAttachments.PLAYER_FORM.get());
+                var form = mc.player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
                 form.setTransformHeld(false);
             }
 

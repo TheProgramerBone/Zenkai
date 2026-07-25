@@ -1,38 +1,38 @@
 package com.hmc.zenkai;
 
 
-import com.hmc.zenkai.client.ClientZenkaiHooks;
+import com.hmc.zenkai.event.ClientZenkaiHooks;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
-import com.hmc.zenkai.client.CombatZenkaiHooks;
-import com.hmc.zenkai.client.ZenkaiPalLayers;
+import com.hmc.zenkai.event.CombatZenkaiHooks;
+import com.hmc.zenkai.event.ZenkaiPalLayers;
 import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.client.particle.KiImpactParticle;
 import com.hmc.zenkai.client.particle.KiSparkParticle;
-import com.hmc.zenkai.client.render_and_model.KiProjectileRenderer;
-import com.hmc.zenkai.client.render_and_model.blockentity.AllDragonBallsRenderer;
-import com.hmc.zenkai.client.render_and_model.entity.*;
-import com.hmc.zenkai.content.block.ModBlocks;
-import com.hmc.zenkai.content.blockentity.ModBlockEntities;
-import com.hmc.zenkai.content.effect.ModEffects;
-import com.hmc.zenkai.content.entity.ModEntities;
-import com.hmc.zenkai.content.item.ModDataComponents;
-import com.hmc.zenkai.content.item.ModItems;
-import com.hmc.zenkai.content.particle.ModParticles;
-import com.hmc.zenkai.content.sound.ModSounds;
-import com.hmc.zenkai.core.ModCommands;
-import com.hmc.zenkai.core.ModGameRules;
-import com.hmc.zenkai.core.config.StatsConfig;
-import com.hmc.zenkai.core.config.WishConfig;
-import com.hmc.zenkai.core.network.ModNetworking;
-import com.hmc.zenkai.core.network.TickHandlers;
-import com.hmc.zenkai.core.network.feature.forms.FormRegistry;
-import com.hmc.zenkai.core.network.feature.player.PlayerLifeCycle;
-import com.hmc.zenkai.core.network.feature.stats.DataAttachments;
-import com.hmc.zenkai.worldgen.ModFeatures;
-import com.hmc.zenkai.worldgen.ModOverworldRegion;
-import com.hmc.zenkai.worldgen.ModSurfaceRules;
+import com.hmc.zenkai.client.render_and_model_entities.KiProjectileRenderer;
+import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBallsRenderer;
+import com.hmc.zenkai.client.render_and_model_entities.entity.*;
+import com.hmc.zenkai.event.ZenkaiTickHandlers;
+import com.hmc.zenkai.registry.ModBlocks;
+import com.hmc.zenkai.registry.ModBlockEntities;
+import com.hmc.zenkai.registry.ModEffects;
+import com.hmc.zenkai.registry.ModEntities;
+import com.hmc.zenkai.registry.ModDataComponents;
+import com.hmc.zenkai.registry.ModItems;
+import com.hmc.zenkai.registry.ModParticles;
+import com.hmc.zenkai.registry.ModSounds;
+import com.hmc.zenkai.registry.ModCommands;
+import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.network.ModNetworking;
+import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ModCreativeModeTabs;
+import com.hmc.zenkai.registry.ModFeatures;
+import com.hmc.zenkai.registry.ModOverworldRegion;
+import com.hmc.zenkai.registry.ModSurfaceRules;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
@@ -85,23 +85,23 @@ public class Zenkai {
         ModSounds.register(modEventBus);
         ModEntities.register(modEventBus);
         ModEffects.register(modEventBus);
-        DataAttachments.REGISTER.register(modEventBus);
+        ZenkaiDataAttachments.REGISTER.register(modEventBus);
         ModFeatures.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
         ModDataComponents.register(modEventBus);
         ModParticles.register(modEventBus);
 
         // Configs
-        modContainer.registerConfig(ModConfig.Type.SERVER, WishConfig.SPEC);
-        modContainer.registerConfig(ModConfig.Type.COMMON, StatsConfig.SPEC);
-        modEventBus.addListener(WishConfig::onConfigLoad);
-        modEventBus.addListener(StatsConfig::onConfigLoad);
+        modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
+        modEventBus.addListener(ServerConfig::onConfigLoad);
+        modEventBus.addListener(CommonConfig::onConfigLoad);
 
         // Registros en el forge bus (eventos del juego)
         IEventBus forgeBus = NeoForge.EVENT_BUS;
         forgeBus.register(PlayerLifeCycle.class);
         forgeBus.register(CombatZenkaiHooks.class);
-        forgeBus.register(TickHandlers.class);
+        forgeBus.register(ZenkaiTickHandlers.class);
         forgeBus.register(ModCommands.class);
 
         // Cliente

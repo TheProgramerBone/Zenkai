@@ -1,9 +1,8 @@
 package com.hmc.zenkai.content.entity;
 
 import com.hmc.zenkai.content.entity.ai.KiAttackGoal;
-import com.hmc.zenkai.core.combat.EntityStatsManager;
+import com.hmc.zenkai.feature.combat.entity.EntityStatsManager;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;

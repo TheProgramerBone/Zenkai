@@ -1,0 +1,171 @@
+package com.hmc.zenkai.client.overlay;
+
+import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.CombatModeClientState;
+import com.hmc.zenkai.client.PhysicalIcons;
+import com.hmc.zenkai.client.TechniqueIcons;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.PlayerTechniques;
+import com.hmc.zenkai.feature.technique.KiCombatServer;
+import com.hmc.zenkai.feature.technique.KiTechnique;
+import com.hmc.zenkai.feature.technique.PhysicalTechnique;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
+
+/**
+ * Overlay del modo combate: columna de 9 posiciones a la derecha (íconos, número de tecla,
+ * nombre de la seleccionada) + estados:
+ *
+ *  - COOLDOWN: velo oscuro que "baja" con el tiempo restante en cada celda.
+ *  - CARGA: barra horizontal bajo la mira con el color de la técnica, borde blanco al
+ *    pasar del 25% (ya se puede soltar) y % numérico.
+ *  - DEFENSA: ícono de icons.png centrado (ajusta BLOCK_ICON_U/V a tu celda).
+ */
+@EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
+public final class TechniqueHotbarOverlay {
+    private TechniqueHotbarOverlay() {}
+
+    private static final ResourceLocation ICONS_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
+    private static final int BLOCK_ICON_U = 3 * 20; // ⚠ AJUSTA a la celda real de tu ícono
+    private static final int BLOCK_ICON_V = 20;
+
+    private static final int CELL = 20;
+    private static final int GAP = 2;
+    private static final int MARGIN_RIGHT = 4;
+
+    private static final int CHARGE_W = 62;
+    private static final int CHARGE_H = 5;
+
+    @SubscribeEvent
+    public static void onRenderGui(RenderGuiEvent.Post e) {
+        Minecraft mc = Minecraft.getInstance();
+        if (!CombatModeClientState.isActive()) return;
+        if (mc.player == null || mc.options.hideGui) return;
+
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
+        if (!att.isRaceChosen()) return;
+
+        GuiGraphics g = e.getGuiGraphics();
+        PlayerTechniques tech = att.techniques();
+        int selected = CombatModeClientState.selected();
+
+        // ── Columna derecha ──
+        int n = PlayerTechniques.BIND_POSITIONS;
+        int totalH = n * CELL + (n - 1) * GAP;
+        int x = g.guiWidth() - MARGIN_RIGHT - CELL;
+        int y = (g.guiHeight() - totalH) / 2;
+
+        for (int pos = 0; pos < n; pos++) {
+            int slotIdx = tech.binding(pos);
+            KiTechnique t = tech.slot(slotIdx);
+            PhysicalTechnique ph = tech.physicalBinding(pos);
+            boolean sel = (pos == selected);
+
+            g.fill(x, y, x + CELL, y + CELL, 0xA0000000);
+            if (t != null) {
+                TechniqueIcons.draw(g, x, y, t);
+                double cd = CombatModeClientState.cooldownFraction(mc, slotIdx);
+                if (cd > 0) {
+                    int h = (int) Math.ceil(CELL * cd);
+                    g.fill(x, y + CELL - h, x + CELL, y + CELL, 0xB0101010);
+                }
+            } else if (ph != null) {
+                PhysicalIcons.draw(g, x, y, ph);
+                double cd = CombatModeClientState.physCooldownFraction(mc, ph);
+                if (cd > 0) {
+                    int h = (int) Math.ceil(CELL * cd);
+                    g.fill(x, y + CELL - h, x + CELL, y + CELL, 0xB0101010);
+                }
+            }
+
+            int border = sel ? 0xFFFFFFFF : 0x60FFFFFF;
+            g.fill(x, y, x + CELL, y + 1, border);
+            g.fill(x, y + CELL - 1, x + CELL, y + CELL, border);
+            g.fill(x, y + 1, x + 1, y + CELL - 1, border);
+            g.fill(x + CELL - 1, y + 1, x + CELL, y + CELL - 1, border);
+
+            g.drawString(mc.font, Component.literal(String.valueOf(pos + 1)),
+                    x + 2, y + 1, sel ? 0xFFFFFFFF : 0xFFAAAAAA, true);
+
+            if (sel && (t != null || ph != null)) {
+                Component name = t != null ? Component.literal(t.name())
+                        : Component.translatable(ph.nameKey());
+                g.drawString(mc.font, name,
+                        x - 6 - mc.font.width(name), y + (CELL - 8) / 2, 0xFFFFFFFF, true);
+            }
+
+            y += CELL + GAP;
+        }
+
+        // ── Barra de CARGA central (bajo la mira) ──
+        if (CombatModeClientState.isCharging()) {
+            KiTechnique t = att.techniques().slot(CombatModeClientState.chargingSlot());
+            double ratio = CombatModeClientState.chargeRatio(mc);
+            int rgb = t != null ? t.rgb() : 0xFFFFFF;
+
+            int bx = g.guiWidth() / 2 - CHARGE_W / 2;
+            int by = g.guiHeight() / 2 + 12;
+
+            boolean releasable = ratio >= KiTechniqueType.MIN_CHARGE;
+            g.fill(bx - 1, by - 1, bx + CHARGE_W + 1, by + CHARGE_H + 1,
+                    releasable ? 0xFFFFFFFF : 0x80FFFFFF); // borde: blanco pleno al pasar el 25%
+            g.fill(bx, by, bx + CHARGE_W, by + CHARGE_H, 0xC0000000);
+            int fill = (int) Math.round(CHARGE_W * ratio);
+            if (fill > 0) {
+                g.fill(bx, by, bx + fill, by + CHARGE_H, 0xFF000000 | rgb);
+            }
+            // Marca del 25% mínimo.
+            int minX = bx + (int) (CHARGE_W * KiTechniqueType.MIN_CHARGE);
+            g.fill(minX, by, minX + 1, by + CHARGE_H, 0xFFFFFFFF);
+
+            g.drawCenteredString(mc.font,
+                    Component.literal((int) Math.round(ratio * 100) + "%"),
+                    g.guiWidth() / 2, by + CHARGE_H + 3, 0xFFFFFFFF);
+
+            if (t != null && !t.type().defensive()) {
+                double dmg = previewDamage(mc, att, t, ratio);
+                String dmgTxt = String.format("%.1f", dmg);
+                if (t.type().count() > 1) dmgTxt = dmgTxt + " x" + t.type().count();
+                g.drawCenteredString(mc.font, Component.literal(dmgTxt),
+                        g.guiWidth() / 2, by + CHARGE_H + 13,
+                        releasable ? (0xFF000000 | rgb) : 0xA0FFFFFF);
+            }
+
+            // Coste de ki EN VIVO (azul): crece con la carga igual que el daño, así el
+            // jugador no adivina cuánto le va a costar soltar ahora mismo.
+            if (t != null) {
+                int fullCost = KiCombatServer.computeCost(
+                        att.computeKiPowerFinal(), t.type(), t.size(),
+                        t.explosive() && !t.type().defensive());
+                int cost = (int) Math.max(1, Math.ceil(fullCost * ratio * att.powerFraction()));
+                boolean affordable = att.getEnergy() >= cost;
+                g.drawCenteredString(mc.font,
+                        Component.literal("◆ " + cost),          // ◆ + cifra
+                        g.guiWidth() / 2, by + CHARGE_H + 23,
+                        affordable ? 0xFF40A0FF : 0xFFFF5050);        // azul ki / rojo si no llega
+            }
+        }
+
+        // Ícono de DEFENSA (centro de pantalla) mientras se bloquea
+        if (CombatModeClientState.isBlockingLocal()) {
+            g.blit(ICONS_TEX, g.guiWidth() / 2 - 10, g.guiHeight() / 2 - 10 - 16,
+                    BLOCK_ICON_U, BLOCK_ICON_V, 20, 20, 270, 270);
+        }
+    }
+
+    /** Daño estimado del disparo actual (espeja KiFirePacket + KiCombatServer.computeDamage). */
+    private static double previewDamage(Minecraft mc, PlayerStatsAttachment att,
+                                        KiTechnique t, double ratio) {
+        if (mc.player == null || t == null || t.type().defensive()) return 0;
+        double kiPower = att.computeKiPowerFinal();
+        return KiCombatServer.computeDamage(kiPower, t.type(), t.size()) * ratio;
+    }
+}
