@@ -134,6 +134,20 @@ public final class TechniqueHotbarOverlay {
                         g.guiWidth() / 2, by + CHARGE_H + 13,
                         releasable ? (0xFF000000 | rgb) : 0xA0FFFFFF);
             }
+
+            // Coste de ki EN VIVO (azul): crece con la carga igual que el daño, así el
+            // jugador no adivina cuánto le va a costar soltar ahora mismo.
+            if (t != null) {
+                int fullCost = com.hmc.zenkai.core.technique.KiCombatServer.computeCost(
+                        att.computeKiPowerFinal(), t.type(), t.size(),
+                        t.explosive() && !t.type().defensive());
+                int cost = (int) Math.max(1, Math.ceil(fullCost * ratio * att.powerFraction()));
+                boolean affordable = att.getEnergy() >= cost;
+                g.drawCenteredString(mc.font,
+                        Component.literal("◆ " + cost),          // ◆ + cifra
+                        g.guiWidth() / 2, by + CHARGE_H + 23,
+                        affordable ? 0xFF40A0FF : 0xFFFF5050);        // azul ki / rojo si no llega
+            }
         }
 
         // Ícono de DEFENSA (centro de pantalla) mientras se bloquea

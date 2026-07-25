@@ -13,11 +13,9 @@ import java.util.List;
 /**
  * Config común del mod. Patrón: cada opción tiene su *_RAW (spec) y una copia volátil que se
  * refresca en onConfigLoad; el resto del código lee SOLO los getters, que son thread-safe.
- *
  * IMPORTANTE: los valores iniciales de las copias volátiles deben coincidir con el default de
  * su *_RAW. Se usan durante el arranque, antes de que la config cargue, y si difieren el mod
  * trabaja con números equivocados en esa ventana.
- *
  * Orden de atributos en las listas de raza/estilo: [STR, DEX, CON, WIL, SPI, MND] para las bases
  * y [STR, CON, DEX, WIL, SPI, MND] para los multiplicadores (heredado de recalcAll).
  */
@@ -138,6 +136,14 @@ public final class StatsConfig {
     private static final ModConfigSpec.IntValue SCOUTER_RANGE_RAW =
             BUILDER.comment("Scouter: crosshair scan range in blocks")
                     .defineInRange("scouter.range", 64, 8, 256);
+
+    private static final ModConfigSpec.DoubleValue KI_COST_PER_POWER_RAW =
+            BUILDER.comment("Ki cost per point of ki power (WIL). Higher = ki drains faster, SPI matters more.")
+                    .defineInRange("cost.ki_per_power", 0.8D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue MELEE_STAMINA_PER_HIT_RAW =
+            BUILDER.comment("Stamina per point of melee damage (STR). Higher = fewer hits, CON matters more.")
+                    .defineInRange("cost.melee_stamina_per_hit", 0.2D, 0.0D, 10.0D);
 
     // =====================================================================
     // SPEC — Maestría y efecto Majin
@@ -318,6 +324,8 @@ public final class StatsConfig {
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
     private static volatile double M_FORM_STAT = 0.20D, M_FORM_DRAIN = 0.50D,
             M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
+    private static volatile double KI_COST_PER_POWER = 0.06D;
+    private static volatile double MELEE_STAMINA_PER_HIT = 0.12D;
     private static volatile double MAJIN_STAT_BONUS = 0.10D;
 
     private static volatile double TRAIN_DMG_TP = 0.02D, TRAIN_AIR_TP = 0.0001D,
@@ -360,6 +368,7 @@ public final class StatsConfig {
         FOOD_STAMINA_PCT = FOOD_STAMINA_RAW.get();
 
 
+
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
         SENSE_KI_RANGE      = SENSE_KI_RANGE_RAW.get();
@@ -384,6 +393,9 @@ public final class StatsConfig {
         TRAIN_DECAY     = TRAIN_DECAY_RAW.get();
         TRAIN_HTC_MULT  = TRAIN_HTC_MULT_RAW.get();
         TRAIN_MIN_EFF   = TRAIN_MIN_EFF_RAW.get();
+
+        KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
+        MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
 
         RACE_BASES.clear();
         RACE_BASES.put(Race.HUMAN,    toIntArray(HUMAN_BASE_RAW.get(),    HUMAN_BASE_DEFAULT));
@@ -445,6 +457,9 @@ public final class StatsConfig {
     public static double masteryTechCostReduction()  { return M_TECH_COST; }
     public static double masteryTechCastReduction()  { return M_TECH_CAST; }
     public static double majinStatBonus()            { return MAJIN_STAT_BONUS; }
+
+    public static double kiCostPerPower()    { return KI_COST_PER_POWER; }
+    public static double meleeStaminaPerHit() { return MELEE_STAMINA_PER_HIT; }
 
     public static double trainingDamageTpFactor()        { return TRAIN_DMG_TP; }
     public static double trainingAirTpFactor()           { return TRAIN_AIR_TP; }

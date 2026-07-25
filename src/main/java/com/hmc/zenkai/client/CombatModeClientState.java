@@ -9,6 +9,7 @@ import com.hmc.zenkai.core.network.feature.player.PlayerTechniques;
 import com.hmc.zenkai.core.network.feature.technique.KiChargeStartPacket;
 import com.hmc.zenkai.core.network.feature.technique.KiFirePacket;
 import com.hmc.zenkai.core.network.feature.technique.PhysicalFirePacket;
+import com.hmc.zenkai.core.technique.KiCombatServer;
 import com.hmc.zenkai.core.technique.KiTechnique;
 import com.hmc.zenkai.core.technique.KiTechniqueType;
 import com.hmc.zenkai.core.technique.PhysicalTechnique;
@@ -184,8 +185,8 @@ public final class CombatModeClientState {
                 var fAtt = PlayerStatsAttachment.get(mc.player);
                 boolean defensive = t.type().defensive();
                 int fCost = (int) Math.max(1, Math.ceil(
-                        com.hmc.zenkai.core.technique.KiCombatServer.computeCost(
-                                fAtt.getEnergyMax(), t.type(), t.size(),
+                        KiCombatServer.computeCost(
+                                fAtt.computeKiPowerFinal(), t.type(), t.size(),
                                 t.explosive() && !defensive)
                                 * (defensive ? 1.0 : ratio) * fAtt.powerFraction()));
                 if (ratio >= KiTechniqueType.MIN_CHARGE && fAtt.getEnergy() >= fCost) {

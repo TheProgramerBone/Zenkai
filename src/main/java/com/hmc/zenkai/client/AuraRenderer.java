@@ -35,6 +35,14 @@ import java.util.*;
  * se dibuja un cono envolvente rojo FUERA del cono interior del color de la forma.
  * Núcleo: mini-cono blanco interior (se omite en auras oscuras).
  * Se renderiza en AFTER_PARTICLES (el jugador ya escribió profundidad → depth-test lo ocluye).
+ * CADENCIA STEPPED (fidelidad anime): pulso, jitter de altura y espejado se cuantizan al
+ * mismo step que el frame de textura (floor(time / frameTicks)) — salta "en dos", nada
+ * respira suave. El jitter por plano es un hash que re-rueda cada 2 steps con fase desfasada
+ * por plano: cada llama lame por su cuenta.
+ * LENGUAS DESPRENDIDAS: en cada step del aura se suelta una lengüeta desde la corona,
+ * anclada al MUNDO (volando quedan detrás como rastro): sube, deriva hacia fuera, encoge y
+ * se desvanece. Mismo RenderType y hoja de llamas; tintada con el color capturado al nacer
+ * (alterna con la capa exterior kaioken si existe). Simulación por gameTime (se pausa sola).
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class AuraRenderer {
@@ -92,6 +100,9 @@ public final class AuraRenderer {
             // Estela de vuelo (coordenadas de mundo, relativa a cámara — antes del translate).
             updateAndRenderFlightTrail(pose, buffers, p, at, camPos, AuraColors.resolve(p), mo);
 
+            // Lenguas desprendidas: una por STEP del aura, desde la corona (ancladas al mundo).
+            spawnTongues(p, at, style, layers, t);
+
             // Dirección jugador→cámara en XZ (para atenuar el sector frontal del cono).
             double dcx = camPos.x - at.x, dcz = camPos.z - at.z;
             double dlen = Math.sqrt(dcx * dcx + dcz * dcz);
@@ -106,6 +117,9 @@ public final class AuraRenderer {
                     AURA_SCALE, t, pt, p.getId(), tcx, tcz);
             pose.popPose();
         }
+
+        // Lenguas de TODOS los jugadores (siguen vivas aunque el aura se apague).
+        updateAndRenderTongues(pose, buffers, cam, camPos, t, pt);
 
         buffers.endBatch();
     }
@@ -203,12 +217,14 @@ public final class AuraRenderer {
         pose.mulPose(new Quaternionf().rotationTo(0f, 1f, 0f, axis.x, axis.y, axis.z));
     }
 
-    /** Limpieza de estado de inclinación/estela de jugadores que ya no están. */
+    /** Limpieza de estado de inclinación/estela/lenguas de jugadores que ya no están. */
     public static void clearTilt(int playerId) {
         TILT_AXIS.remove(playerId);
         TILT_LAST_NANOS.remove(playerId);
         TILT_LAST_POS.remove(playerId);
         TRAILS.remove(playerId);
+        TONGUES.remove(playerId);
+        LAST_STEP.remove(playerId);
     }
 
     // ── Estela de VUELO (misma técnica que la de los proyectiles ki) ─────────
@@ -244,7 +260,7 @@ public final class AuraRenderer {
         if (trail.size() < 2) return;
 
         List<Vec3> pts = new ArrayList<>(trail);
-        pts.add(0, head); // cabeza interpolada pegada al jugador
+        pts.addFirst(head); // cabeza interpolada pegada al jugador
 
         float r = ((rgb >> 16) & 0xFF) / 255f;
         float g = ((rgb >> 8) & 0xFF) / 255f;
@@ -301,6 +317,113 @@ public final class AuraRenderer {
                 .setNormal(mat, 0, 1, 0);
     }
 
+    // ── LENGUAS DESPRENDIDAS ─────────────────────────────────────────────────
+    // Lengüetas que se separan de la corona del aura y suben ancladas al MUNDO.
+    // Se simulan con gameTime (pausa automática) y siguen vivas si el aura se apaga.
+
+    private static final int   TONGUE_MAX_PER_PLAYER = 24;
+    private static final float TONGUE_ALPHA_MUL      = 1.10f;  // sobre BASE_ALPHA
+
+    private static final class Tongue {
+        double x, y, z, vx, vy, vz;
+        float age, life, size, u0, v0, r, g, b;
+        boolean mirror;
+    }
+
+    private static final Random RNG = new Random();
+    private static final Map<Integer, List<Tongue>> TONGUES = new HashMap<>();
+    /** Último step del aura visto por jugador (para soltar UNA lengua por step). */
+    private static final Map<Integer, Integer> LAST_STEP = new HashMap<>();
+    private static long lastSimTick = Long.MIN_VALUE;
+
+    /**
+     * Suelta una lengua cuando cambia el STEP del aura de este jugador. Al compartir el
+     * reloj con frameTicks, los estilos frenéticos (SSJ) sueltan más por segundo, gratis.
+     */
+    private static void spawnTongues(AbstractClientPlayer p, Vec3 at, AuraStyle style,
+                                     AuraColors.Layers layers, long t) {
+        int step = (int) (t / style.frameTicks());
+        Integer prev = LAST_STEP.put(p.getId(), step);
+        if (prev != null && prev == step) return;
+
+        List<Tongue> list = TONGUES.computeIfAbsent(p.getId(), k -> new ArrayList<>());
+        if (list.size() >= TONGUE_MAX_PER_PLAYER) return;
+
+        float eff = AURA_SCALE * style.scaleMul();
+        double ang = RNG.nextDouble() * Math.PI * 2.0;
+        double rad = (0.22 + 0.28 * RNG.nextDouble()) * eff;
+        double y0  = (1.45 + 0.95 * RNG.nextDouble()) * eff;
+
+        int rgb = (layers.hasOuter() && RNG.nextBoolean()) ? layers.outer() : layers.inner();
+
+        Tongue tg = new Tongue();
+        tg.x = at.x + Math.sin(ang) * rad;
+        tg.y = at.y + y0;
+        tg.z = at.z + Math.cos(ang) * rad;
+        tg.vx = Math.sin(ang) * 0.012;                    // deriva leve hacia fuera
+        tg.vz = Math.cos(ang) * 0.012;
+        tg.vy = 0.055 + 0.050 * RNG.nextDouble();         // ascenso (bloques/tick)
+        tg.life = 8f + RNG.nextInt(7);                    // 8-14 ticks
+        tg.size = (0.45f + 0.30f * RNG.nextFloat()) * eff;
+        int q = RNG.nextBoolean() ? 1 : 2;                // cuadrantes: llama alta / penacho
+        tg.u0 = (q & 1) * 0.5f;
+        tg.v0 = (q >> 1) * 0.5f;
+        tg.mirror = RNG.nextBoolean();
+        tg.r = ((rgb >> 16) & 0xFF) / 255f;
+        tg.g = ((rgb >> 8) & 0xFF) / 255f;
+        tg.b = (rgb & 0xFF) / 255f;
+        list.add(tg);
+    }
+
+    /** Avanza la simulación (por delta de gameTime) y dibuja todas las lenguas vivas. */
+    private static void updateAndRenderTongues(PoseStack pose, MultiBufferSource buffers,
+                                               Camera cam, Vec3 camPos, long t, float pt) {
+        long dt = (lastSimTick == Long.MIN_VALUE) ? 0 : Math.min(10, Math.max(0, t - lastSimTick));
+        lastSimTick = t;
+        if (TONGUES.isEmpty()) return;
+
+        if (dt > 0) {
+            for (var it = TONGUES.entrySet().iterator(); it.hasNext(); ) {
+                List<Tongue> list = it.next().getValue();
+                for (var ti = list.iterator(); ti.hasNext(); ) {
+                    Tongue tg = ti.next();
+                    tg.age += dt;
+                    if (tg.age >= tg.life) { ti.remove(); continue; }
+                    tg.x += tg.vx * dt;
+                    tg.y += tg.vy * dt;
+                    tg.z += tg.vz * dt;
+                }
+                if (list.isEmpty()) it.remove();
+            }
+            if (TONGUES.isEmpty()) return;
+        }
+
+        // Mismo reloj global de frames que el aura (step de 2 ticks) para la hoja.
+        VertexConsumer vc = buffers.getBuffer(
+                ModAuraRenderType.energy(FLAME[(int) ((t / 2) % FRAMES)]));
+        // ⚠ Verificar signo del billboard cilíndrico: Camera#getYRot() en 1.21.1.
+        float yaw = -cam.getYRot();
+
+        pose.pushPose();
+        pose.translate(-camPos.x, -camPos.y, -camPos.z); // vértices en coordenadas de mundo
+        for (List<Tongue> list : TONGUES.values()) {
+            for (Tongue tg : list) {
+                float lf = 1f - Math.min(1f, (tg.age + pt) / tg.life);   // 1 nace → 0 muere
+                float fade = lf * lf * (3f - 2f * lf);                   // smoothstep
+                float w = tg.size * (0.35f + 0.65f * lf);
+                float h = tg.size * (0.55f + 0.85f * lf);
+                float a = BASE_ALPHA * TONGUE_ALPHA_MUL * fade;
+
+                pose.pushPose();
+                pose.translate(tg.x + tg.vx * pt, tg.y + tg.vy * pt, tg.z + tg.vz * pt);
+                pose.mulPose(Axis.YP.rotationDegrees(yaw));
+                plane(vc, pose.last(), w, h, tg.u0, tg.v0, tg.mirror, tg.r, tg.g, tg.b, a);
+                pose.popPose();
+            }
+        }
+        pose.popPose();
+    }
+
     /** Compatibilidad (editor de técnicas / preview): estilo default, una capa, sin fade. */
     public static void drawAura(PoseStack pose, MultiBufferSource buffers, int rgb, float scale,
                                 long gameTime, float partialTick, int seed) {
@@ -343,7 +466,10 @@ public final class AuraRenderer {
 
     /**
      * Dibuja la gota en el espacio actual del PoseStack (origen = pies, +Y arriba, bloques).
-     * Cada plano mapea el cuadrante de silueta de su faldón (espejado alterno para variedad).
+     * Cada plano mapea el cuadrante de silueta de su faldón y se tinta.
+     * CADENCIA STEPPED: pulso, jitter y espejado se cuantizan al step del frame de textura
+     * (floor(time / frameTicks)); el jitter re-rueda cada 2 steps con fase desfasada por
+     * plano, así cada llama estira/encoge por su cuenta y a saltos, como animación en dos.
      * alphaMul escala el alpha de todos los planos. No hace flush.
      */
     public static void drawCone(PoseStack pose, VertexConsumer vc, AuraStyle style, int rgb,
@@ -352,7 +478,10 @@ public final class AuraRenderer {
         float r = ((rgb >> 16) & 0xFF) / 255f;
         float g = ((rgb >> 8) & 0xFF) / 255f;
         float b = (rgb & 0xFF) / 255f;
-        float pulse = 1f + style.pulseAmp() * (float) Math.sin(timeTicks * 0.3 + seed);
+
+        // Reloj STEPPED compartido con el frame de textura: nada respira suave.
+        int stepIdx = (int) Math.floor(timeTicks / style.frameTicks());
+        float pulse = 1f + style.pulseAmp() * (float) Math.sin(stepIdx * 0.55f + seed);
         boolean fade = !Float.isNaN(toCamX);
 
         int si = 0;
@@ -364,9 +493,13 @@ public final class AuraRenderer {
             float u0 = (s.tex() & 1) * 0.5f;
             float v0 = (s.tex() >> 1) * 0.5f;
             for (int i = 0; i < s.count(); i++) {
-                float wobble = 0.5f + 0.5f * (float) Math.sin(i * 2.399f + si * 1.3f);
+                // Jitter ANIMADO por plano: hash que cambia cada 2 steps, con fase
+                // desfasada por plano (i*7 + si*13) para que no salten a coro.
+                int jStep = (stepIdx + i * 7 + si * 13) >> 1;
+                float wobble = hash01(i, si, seed, jStep);
                 float h = s.height() * scale * pulse * (1f - s.jitter() * wobble);
-                boolean mirror = ((i + si) & 1) == 1;
+                // Espejado re-rodado por step: variedad de "frames" sin texturas nuevas.
+                boolean mirror = hash01(i + 31, si, seed, jStep) > 0.5f;
                 float ang = s.offsetDeg() + i * step;
                 float pa = a;
                 if (fade) {
@@ -389,6 +522,14 @@ public final class AuraRenderer {
     }
 
     private static float clamp01(float v) { return v < 0f ? 0f : (Math.min(v, 1f)); }
+
+    /** Hash entero → [0,1). Determinista por (plano, faldón, seed, step): estable dentro
+     *  del step, re-rueda al cambiar de step. */
+    private static float hash01(int a, int b, int c, int d) {
+        int h = a * 0x8DA6B343 + b * 0xD8163841 + c * 0xCB1AB31F + d * 0x165667B1;
+        h ^= (h >>> 13); h *= 0x5BD1E995; h ^= (h >>> 15);
+        return (h & 0xFFFF) / 65536f;
+    }
 
     /** Inset de UV (fracción de hoja) para que el filtrado bilineal no sangre entre cuadrantes. */
     private static final float UV_INSET = 0.0015f; // ≈1.5 téxeles en 1024

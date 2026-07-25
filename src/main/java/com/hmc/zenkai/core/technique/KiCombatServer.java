@@ -3,6 +3,7 @@ package com.hmc.zenkai.core.technique;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.entity.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
+import com.hmc.zenkai.core.config.StatsConfig;
 import com.hmc.zenkai.core.network.feature.combat.BlockingSyncPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -21,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Estado SERVIDOR del combate ki + fórmulas COMPARTIDAS (las usa KiFirePacket para
  * disparar y TechniqueEditScreen para las previews del editor — una sola fuente de verdad).
- *
  *  - Fórmulas: daño = kiPower × dmgMult × sizeFactor; coste = energyMax × 4% × kiMult ×
  *    costSizeFactor × (explosiva ? 1.5 : 1). Ambos escalan lineal con la CARGA (0.25..1).
  *  - Cooldown: global anti-spam (5 ticks) + POR SLOT según type.cooldownTicks.
@@ -52,9 +52,10 @@ public final class KiCombatServer {
         return kiPower * type.damageMult() * sizeFactor(size);
     }
 
-    /** Coste de ki del disparo a carga completa. */
-    public static int computeCost(int energyMax, KiTechniqueType type, int size, boolean explosive) {
-        return (int) Math.ceil(energyMax * BASE_COST_PCT
+    /** Coste de ki del disparo a carga completa. Escala con el PODER (WIL), no con el pool:
+     *  así subir WIL sube daño Y coste, y SPI (el pool) decide cuántas veces lo sostienes. */
+    public static int computeCost(double kiPower, KiTechniqueType type, int size, boolean explosive) {
+        return (int) Math.ceil(kiPower * StatsConfig.kiCostPerPower()
                 * type.kiCostMult() * costSizeFactor(size)
                 * (explosive ? EXPLOSIVE_COST_MULT : 1.0));
     }

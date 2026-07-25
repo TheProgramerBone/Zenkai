@@ -392,7 +392,7 @@ public class TechniqueEditScreen extends Screen {
 
         double kiPower = att.computeKiPowerFinal();
         double dmg = KiCombatServer.computeDamage(kiPower, type, size) * Math.max(1, type.count());
-        int cost = KiCombatServer.computeCost(att.getEnergyMax(), type, size,
+        int cost = KiCombatServer.computeCost(att.computeKiPowerFinal(), type, size,
                 explosive && !type.defensive());
 
         int iy = topPos + Y_BLOCK;

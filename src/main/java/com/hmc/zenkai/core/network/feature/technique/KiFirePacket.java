@@ -75,7 +75,8 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
 
             boolean explosive = tech.explosive() && !type.defensive();
             int cost = (int) Math.max(1, Math.ceil(
-                    KiCombatServer.computeCost(att.getEnergyMax(), type, tech.size(), explosive) * ratio * att.powerFraction()));
+                    KiCombatServer.computeCost(att.computeKiPowerFinal(), type, tech.size(), explosive)
+                            * ratio * att.powerFraction()));
             // La energía se comprueba ANTES de tryFire: si no, sin ki el slot se queda
             // enfriándose sin haber disparado nada.
             if (att.getEnergy() < cost) return;

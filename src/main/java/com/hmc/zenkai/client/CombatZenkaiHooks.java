@@ -111,6 +111,10 @@ public class CombatZenkaiHooks {
      * Golpe cuerpo a cuerpo de un JUGADOR. Compuerta de MODO COMBATE: fuera de él, el golpe
      * deja pasar el daño VANILLA puro (sin STR zenkai y sin gastar stamina). Contra pools
      * zenkai es simbólico -> golpes amistosos sin vaporizar a nadie; contra mobs, normal.
+     * La estamina YA NO capa el daño: el golpe pega STR completo. Lo que la estamina decide
+     * es CUÁNTOS golpes aguantas, con un coste sub-lineal (config). Así subir STR sin CON
+     * pega igual de fuerte, pero te seca antes -> CON pasa a valer para sostener el melee,
+     * como SPI sostiene el ki.
      */
     private static float playerMeleeDamage(Player attacker, ZenkaiCombatStats atkStats,
                                            double strDamage, float vanillaDmg) {
@@ -118,22 +122,21 @@ public class CombatZenkaiHooks {
                 && CombatModeServerState.isActive(atkSp.getUUID());
         if (!zenkaiMelee) return vanillaDmg;
 
-        // STR (limitado por stamina) + bonus de arma, y consume stamina.
         double weaponBonus = 0.0;
         AttributeInstance attr = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
         if (attr != null) weaponBonus = attr.getValue();
 
-        int currentStamina = atkStats.getStamina();
-        double strApplied, totalDamage;
-        if (currentStamina <= 0) {
-            strApplied = 0.0;
-            totalDamage = 0.0;
-        } else {
-            strApplied = Math.min(strDamage, currentStamina);
-            totalDamage = strApplied + weaponBonus;
+        // Sin fondo de stamina: solo pega el arma vanilla, sin el STR zenkai. No se puede
+        // machacar con golpes potenciados cuando estás seco, pero tampoco quedas indefenso.
+        if (atkStats.getStamina() <= 0) {
+            return (float) weaponBonus;
         }
 
-        int staminaCost = (int) Math.ceil(strApplied);
+        double totalDamage = strDamage + weaponBonus;
+
+        // Coste = daño STR × factor de config (0.12 por defecto). Sub-lineal respecto al 1:1
+        // anterior: un build equilibrado aguanta ~8 golpes en vez de 1.
+        int staminaCost = (int) Math.ceil(strDamage * StatsConfig.meleeStaminaPerHit());
         if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
 
         PlayerLifeCycle.syncIfServer(attacker);

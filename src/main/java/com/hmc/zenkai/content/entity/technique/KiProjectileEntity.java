@@ -61,8 +61,6 @@ public class KiProjectileEntity extends Projectile {
     //    No persiste en NBT a propósito: el proyectil vive segundos. ──
     private final java.util.Set<Integer> pierced = new java.util.HashSet<>();
 
-    private static final double EXPLOSION_AOE_FACTOR = 0.6;
-
     private double damage = 0;
     private int life = 100;
     private boolean explosive = false;
@@ -205,14 +203,71 @@ public class KiProjectileEntity extends Projectile {
 
     public double refPower() { return refPower; }
 
-    /** Radio de la explosión. Escala con el tamaño elegido en el editor (1..7 -> 1.7..4.7). */
+    /**
+     * Radio de la explosión (Radio = Diámetro / 2).
+     * Escala según el tamaño (size) y se limita o multiplica según el tipo de técnica (KiTechniqueType).
+     */
+    /**
+     * Radio de la explosión (Radio = Diámetro / 2).
+     * Escala con el tamaño (size) y aplica multiplicadores + límites máximos según la técnica.
+     */
     private double explosionRadius() {
-        return 1.2 * size();
+        double baseRadius = 1.2 * size();
+
+        return switch (techniqueType()) {
+            case WAVE -> {
+                // Kamehameha: Onda potente de impacto amplio (Diámetro máx: 10 bloques)
+                yield Math.min(baseRadius * 1.3, 5.0);
+            }
+            case BLAST -> {
+                // Bola estándar (Diámetro máx: 7 bloques)
+                yield Math.min(baseRadius, 3.5);
+            }
+            case LAZER -> {
+                // Láser: Superconcentrado y penetrante, explosión muy reducida (Diámetro máx: 3 bloques)
+                yield Math.min(baseRadius * 0.5, 1.5);
+            }
+            case SPIRAL -> {
+                // Espiral: Onda de choque expansiva (Diámetro máx: 8.5 bloques)
+                yield Math.min(baseRadius * 1.1, 4.25);
+            }
+            case BIG_BLAST -> {
+                // Enorme y lento: Explosión masiva (Diámetro máx: 16 bloques)
+                yield Math.min(baseRadius * 2.2, 8.0);
+            }
+            case BURST -> {
+                // Ráfaga pequeña: Múltiples disparos con explosiones pequeñas (Diámetro máx: 4 bloques)
+                yield Math.min(baseRadius * 0.6, 2.0);
+            }
+            case DISK -> {
+                // Disco cortante: Impacto muy localizado (Diámetro máx: 4 bloques)
+                yield Math.min(baseRadius * 0.7, 2.0);
+            }
+            case BARRIER -> 0.0; // Burbuja defensiva: sin explosión
+        };
+    }
+
+    /**
+     * Porcentaje del daño directo que se transmite como daño en área (AoE).
+     * Ej: 0.80 = 80% del daño base repartido en la zona.
+     */
+    private double explosionAoeFactor() {
+        return switch (techniqueType()) {
+            case WAVE      -> 0.75; // 75% del daño en área (Onda destructiva)
+            case BIG_BLAST -> 0.85; // 85% del daño en área (Devastador)
+            case BLAST     -> 0.50; // 50% del daño en área (Balanceado)
+            case SPIRAL    -> 0.60; // 60% del daño en área
+            case DISK      -> 0.40; // 40% del daño en área (Daño más centrado en el corte)
+            case BURST     -> 0.35; // 35% por cada bolita (Acumulable por cantidad)
+            case LAZER     -> 0.20; // 20% en área (El daño es single-target)
+            case BARRIER   -> 0.00;
+        };
     }
 
     private void explode(Vec3 center, Entity directHit) {
         if (!(level() instanceof ServerLevel sl)) return;
         double radius = explosionRadius();
+        double aoeFactor = explosionAoeFactor(); // <-- Leemos el factor dinámico
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
 
         if (ModGameRules.enableKiDamage(sl.getServer())) {
@@ -223,32 +278,30 @@ public class KiProjectileEntity extends Projectile {
                         .distanceTo(center);
                 if (dist > radius) continue;
                 double falloff = 1.0 - dist / radius;
+
+                // Aplicamos aoeFactor en lugar de la constante
                 target.hurt(damageSources().mobProjectile(this, owner),
-                        (float) (damage * EXPLOSION_AOE_FACTOR * falloff));
+                        (float) (damage * aoeFactor * falloff));
             }
         }
 
         if (ModGameRules.enableKiGriefing(sl.getServer())) {
-            // Explosión vanilla SOLO bloques: drops estilo TNT, respeta blast resistance,
-            // partículas y sonido incluidos (ya escalan solos con radius).
             sl.explode(this, null,
                     new SimpleExplosionDamageCalculator(true, false,
                             Optional.empty(), Optional.empty()),
                     center.x, center.y, center.z, (float) radius, false,
                     Level.ExplosionInteraction.TNT);
         } else {
-            // Sin griefing montamos el fogonazo a mano, porque un solo EXPLOSION_EMITTER
-            // se ve idéntico en size 1 y en size 7.
-            int emitters = 1 + size() / 2;                  // 1..4
+            int emitters = 1 + size() / 2;
             double spread = radius * 0.35;
             sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z,
                     emitters, spread, spread, spread, 0);
-            int puffs = 8 + size() * 6;                     // 14..50
+            int puffs = 8 + size() * 6;
             sl.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z,
                     puffs, radius * 0.5, radius * 0.5, radius * 0.5, 0);
             sl.playSound(null, center.x, center.y, center.z,
                     SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS,
-                    1.2f + 0.15f * size(), 1.25f - 0.06f * size()); // grande = grave
+                    1.2f + 0.15f * size(), 1.25f - 0.06f * size());
         }
     }
 
