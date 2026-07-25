@@ -3,13 +3,16 @@
   "power_level": 120,
   "archetype": "brawler",
   "overrides": {
-    "attributes": { "spirit": "+20%" },
+    "attributes": { "strength": "+20%" },
     "body_mult": 1.0,
     "ki_mult": 1.0
   },
   "moveset": {
-    "ki_attacks": ["zenkai:ki_blast"],
-    "melee": true
+    "melee": true,
+    "ki_attacks": [
+      { "type": "wave", "size": 3, "rgb": "0x33CCFF", "cooldown": 8, "range": 20 },
+      { "type": "big_blast", "size": 5, "rgb": "0xFFAA00", "cooldown": 14, "range": 24, "damage_mult": 1.2 }
+    ]
   },
   "rewards": { "tp": "auto" }
 }

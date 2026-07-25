@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.core.network.feature.ZenkaiAttributes;
+import com.hmc.zenkai.core.technique.KiTechniqueType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -116,16 +117,17 @@ public final class EntityStatsManager {
             }
         }
 
-        // moveset (placeholder Fase futura)
-        List<ResourceLocation> kiAttacks = new ArrayList<>();
+        // moveset
+        List<EntityKiAttack> kiAttacks = new ArrayList<>();
         boolean melee = true;
         if (o.has("moveset") && o.get("moveset").isJsonObject()) {
             JsonObject ms = o.getAsJsonObject("moveset");
             if (ms.has("melee")) melee = ms.get("melee").getAsBoolean();
             if (ms.has("ki_attacks") && ms.get("ki_attacks").isJsonArray()) {
                 for (JsonElement el : ms.getAsJsonArray("ki_attacks")) {
-                    ResourceLocation id = ResourceLocation.tryParse(el.getAsString());
-                    if (id != null) kiAttacks.add(id);
+                    if (!el.isJsonObject()) continue;
+                    EntityKiAttack atk = parseKiAttack(el.getAsJsonObject(), entity);
+                    if (atk != null && atk.valid()) kiAttacks.add(atk);
                 }
             }
         }
@@ -149,5 +151,23 @@ public final class EntityStatsManager {
             return new EntityStatDef.AttrOverride(true, v);
         }
         return new EntityStatDef.AttrOverride(false, Double.parseDouble(s.replace("+", "").trim()));
+    }
+
+    /** Una entrada de ki_attacks del JSON. null si el tipo no existe (se descarta con aviso). */
+    private static EntityKiAttack parseKiAttack(JsonObject a, ResourceLocation entity) {
+        String typeName = a.has("type") ? a.get("type").getAsString() : "";
+        KiTechniqueType type = KiTechniqueType.byName(typeName.toUpperCase(java.util.Locale.ROOT));
+        if (type == null) {
+            LOGGER.warn("[Zenkai] Tipo de ki '{}' desconocido en {}", typeName, entity);
+            return null;
+        }
+        int size = a.has("size") ? a.get("size").getAsInt() : 1;
+        int rgb = a.has("rgb")
+                ? Integer.decode(a.get("rgb").getAsString()) & 0xFFFFFF
+                : type.defaultRgb();
+        int cooldown = a.has("cooldown") ? a.get("cooldown").getAsInt() : 60;
+        double range = a.has("range") ? a.get("range").getAsDouble() : 16.0;
+        double dmgMult = a.has("damage_mult") ? a.get("damage_mult").getAsDouble() : 1.0;
+        return new EntityKiAttack(type, size, rgb, cooldown, range, dmgMult);
     }
 }
