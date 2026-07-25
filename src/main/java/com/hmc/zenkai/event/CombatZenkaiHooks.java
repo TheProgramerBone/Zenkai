@@ -182,10 +182,16 @@ public class CombatZenkaiHooks {
                                    ZenkaiCombatStats defStats, float dmg) {
         double defense = computeDefense(e, atkStats, defStats, dmg);
 
-        double finalDamage = (dmg <= defense)
-                ? dmg * CommonConfig.minDamagePercent()
-                : dmg - defense;
-        finalDamage = Math.max(finalDamage, 0.0);
+        // Reducción PORCENTUAL relativa al golpe entrante, no resta.
+        // Con resta, melee y defensa tenían que vivir en escalas separadas a mano: un
+        // Arcosian recién creado tenía defensa 74 contra melee 75 y necesitaba 47 golpes
+        // para matar a otro Arcosian. Además esto se autoescala: la misma fórmula vale con
+        // STR 10 y con STR 200.000, sin recalibrar nada.
+        // defensa == daño  ->  50% de reducción.
+        double finalDamage = (defense <= 0.0)
+                ? dmg
+                : dmg * (1.0 - defense / (defense + dmg));
+        finalDamage = Math.max(finalDamage, dmg * CommonConfig.minDamagePercent());
 
         if (e.getEntity() instanceof ServerPlayer defSp && KiCombatServer.isBlocking(defSp)) {
             finalDamage *= SkillEffects.blockDamageMultiplier(defSp);
@@ -202,10 +208,6 @@ public class CombatZenkaiHooks {
     private static double computeDefense(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
                                          ZenkaiCombatStats defStats, float dmg) {
         double defense = defStats.computeDefenseFinal();
-
-        if (PhysicalCombatServer.isFiring()) {
-            defense *= PhysicalCombatServer.currentDefenseScale();
-        }
 
         // Proyectil ki: la DEF se escala según lo cargado que venía el disparo respecto al
         // poder de QUIEN LO LANZÓ. refPower > 0 = fue desviado (kiai), así que el dueño actual

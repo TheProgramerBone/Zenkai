@@ -9,6 +9,10 @@ import net.minecraft.world.entity.player.Player;
 public final class FlightSystem {
     private FlightSystem() {}
 
+    /** Empujón del turbo sobre la velocidad final. Mismo valor que en tierra a propósito:
+     *  el turbo debe sentirse igual corriendo que volando. Candidato a StatsConfig. */
+    private static final double TURBO_SPEED_MULT = 1.35;
+
     public static void tick(TickCtx c, boolean turboOn) {
         Player p = c.p();
         PlayerStatsAttachment att = c.att();
@@ -26,13 +30,14 @@ public final class FlightSystem {
         boolean control  = att.flags().isFlyBoosting();   // Ctrl+W en vuelo
         boolean flyTurbo = ab.flying && control && turboOn;
 
-        // Máximo: DEX (flyMultiplier, con su tope) elevado por la habilidad Fly.
-        // Calibrado para que DEX 1000 + Fly 10 = x2.0 = ~20 bloques/segundo en turbo.
-        double max = Math.min(CommonConfig.flyMultiplierCap(), att.getFlyMultiplier())
-                * SkillEffects.flySpeedFactor(p);
+        // Techo = habilidad Fly. DEX ya NO interviene: alimentaba defensa, velocidad y vuelo
+        // a la vez, así que tocar el balance defensivo movía la velocidad de rebote.
+        double max = Math.min(CommonConfig.flyMultiplierCap(), SkillEffects.flySpeedFactor(p));
         // Se interpola desde 1.0 (vuelo vanilla): con 0% de poder el multiplicador cae a 1.0.
         double mult = 1.0 + (max - 1.0)
-                * PerformanceTier.of(control, turboOn) * att.powerFraction();
+                * PerformanceTier.of(control) * att.powerFraction();
+        // El turbo multiplica FUERA del escalón: efecto constante y perceptible.
+        if (flyTurbo) mult *= TURBO_SPEED_MULT;
 
         float newSpeed = (float) (CommonConfig.flyBaseSpeed() * mult);
         // Player.getFlyingSpeed() DUPLICA la velocidad al esprintar, y Control ES la tecla de

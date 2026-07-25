@@ -1,6 +1,7 @@
 package com.hmc.zenkai.util;
 
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
@@ -24,23 +25,7 @@ public class BalanceUtil {
      * usando los multiplicadores configurables de StatsConfig.
      */
     public static double computeStat(int base, Race race, Style style, ZenkaiAttributes attr) {
-        // raceMult: [mSTR, mCON, mDEX, mWIL, mSPI, mMND]
-        double[] r = CommonConfig.raceMultipliers(race);
-        // styleMult: [sSTR, sCON, sDEX, sWIL, sSPI, sMND]
-        double[] s = CommonConfig.styleMultipliers(style);
-
-        int index = switch (attr) {
-            case STRENGTH     -> 0;
-            case CONSTITUTION -> 1;
-            case DEXTERITY    -> 2;
-            case WILLPOWER    -> 3;
-            case SPIRIT       -> 4;
-            case MIND         -> 5;
-        };
-
-        double rm = (r != null && r.length > index) ? r[index] : 1.0;
-        double sm = (s != null && s.length > index) ? s[index] : 1.0;
-
-        return base * rm * sm;
+        RaceStatTable.Col col = RaceStatTable.colFor(attr);
+        return col == null ? base : base * RaceStatTable.get(race, style, col);
     }
 }

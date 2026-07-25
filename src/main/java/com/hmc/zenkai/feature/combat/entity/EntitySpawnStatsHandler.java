@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.combat.entity;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -28,12 +29,18 @@ public final class EntitySpawnStatsHandler {
 
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(le.getType());
         EntityStatDef def = EntityStatsManager.get(id);
-        if (def == null || def.displayOnly()) return;
-
         EntityStats stats = le.getData(ZenkaiDataAttachments.ENTITY_STATS.get());
-        if (!stats.isInitialized()) {
+        if (stats.isInitialized()) return;
+
+        if (def != null && !def.displayOnly()) {
             stats.applyDef(def);
-            le.setData(ZenkaiDataAttachments.ENTITY_STATS.get(), stats);
+        } else if (def == null && CommonConfig.vanillaStatsFallback()) {
+            // Sin JSON: se derivan de sus atributos vanilla. Los display_only se quedan
+            // fuera a propósito (PL para el scouter, sin stats de combate).
+            stats.applyVanilla(le);
+        } else {
+            return;
         }
+        le.setData(ZenkaiDataAttachments.ENTITY_STATS.get(), stats);
     }
 }

@@ -278,6 +278,7 @@
   "screen.zenkai.technique.unlock_mnd": "Unlock (%s TP · %s MND)",
   "screen.zenkai.physical.unlock_mnd": "Unlock (%s TP · %s MND)",
 
+
   "screen.zenkai.tab.stats": "Stats",
   "screen.zenkai.tab.skills": "Skills",
   "screen.zenkai.tab.ki_techniques": "Ki Techniques",
@@ -375,7 +376,7 @@
   "attribute.zenkai.spi": "SPI: %s",
 
   "tooltip.zenkai.attr.str": "Physical strength. Each point increases melee damage by about +%s.",
-  "tooltip.zenkai.attr.con": "Endurance and vitality. Each point increases max Body by about +%s.",
+  "tooltip.zenkai.attr.con": "+%s health and +%s stamina per point",
   "tooltip.zenkai.attr.dex": "Speed and defense. Each point slightly improves defense and movement speed (≈ +%s to base stat).",
   "tooltip.zenkai.attr.wil": "Offensive Ki control. Each point increases Ki Power for Ki attacks (≈ +%s).",
   "tooltip.zenkai.attr.spi": "Ki reserve. Each point increases max Ki and regen (≈ +%s to pool).",

@@ -1,6 +1,9 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.event.tick.KaiokenSystem;
+import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.RaceStatTable;
+import com.hmc.zenkai.feature.Style;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -364,23 +367,23 @@ public class StatsScreen extends ZenkaiMenuScreen {
     }
 
     private Component getAttributeDescription(ZenkaiAttributes attr, PlayerStatsAttachment att) {
-        double[] r = CommonConfig.raceMultipliers(att.getRace());
-        double[] s = CommonConfig.styleMultipliers(att.getStyle());
-
-        double mSTR = (r.length > 0) ? r[0] : 1.0, mCON = (r.length > 1) ? r[1] : 1.0,
-                mDEX = (r.length > 2) ? r[2] : 1.0, mWIL = (r.length > 3) ? r[3] : 1.0,
-                mSPI = (r.length > 4) ? r[4] : 1.0, mMND = (r.length > 5) ? r[5] : 1.0;
-        double sSTR = (s.length > 0) ? s[0] : 1.0, sCON = (s.length > 1) ? s[1] : 1.0,
-                sDEX = (s.length > 2) ? s[2] : 1.0, sWIL = (s.length > 3) ? s[3] : 1.0,
-                sSPI = (s.length > 4) ? s[4] : 1.0, sMND = (s.length > 5) ? s[5] : 1.0;
-
+        Race race = att.getRace();
+        Style style = att.getStyle();
+        // Ahora es el rendimiento REAL por punto (lo que dice el datapack), no un
+        // multiplicador abstracto. CON muestra sus dos columnas: son independientes.
         return switch (attr) {
-            case STRENGTH     -> Component.translatable("tooltip.zenkai.attr.str", fmt(mSTR * sSTR));
-            case CONSTITUTION -> Component.translatable("tooltip.zenkai.attr.con", fmt(mCON * sCON * 2.0));
-            case DEXTERITY    -> Component.translatable("tooltip.zenkai.attr.dex", fmt(mDEX * sDEX));
-            case WILLPOWER    -> Component.translatable("tooltip.zenkai.attr.wil", fmt(mWIL * sWIL));
-            case SPIRIT       -> Component.translatable("tooltip.zenkai.attr.spi", fmt(mSPI * sSPI));
-            case MIND         -> Component.translatable("tooltip.zenkai.attr.mnd", fmt(mMND * sMND));
+            case STRENGTH     -> Component.translatable("tooltip.zenkai.attr.str",
+                    fmt(RaceStatTable.melee(race, style)));
+            case CONSTITUTION -> Component.translatable("tooltip.zenkai.attr.con",
+                    fmt(RaceStatTable.health(race, style)),
+                    fmt(RaceStatTable.stamina(race, style)));
+            case DEXTERITY    -> Component.translatable("tooltip.zenkai.attr.dex",
+                    fmt(RaceStatTable.defense(race, style)));
+            case WILLPOWER    -> Component.translatable("tooltip.zenkai.attr.wil",
+                    fmt(RaceStatTable.kiDamage(race, style)));
+            case SPIRIT       -> Component.translatable("tooltip.zenkai.attr.spi",
+                    fmt(RaceStatTable.kiReserves(race, style)));
+            case MIND         -> Component.translatable("tooltip.zenkai.attr.mnd");
         };
     }
 }

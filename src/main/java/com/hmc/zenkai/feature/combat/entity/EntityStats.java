@@ -5,7 +5,11 @@ import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.combat.PowerLevel;
 import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.util.MathUtil;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 import java.util.EnumMap;
 
@@ -13,10 +17,8 @@ import java.util.EnumMap;
  * Stats de combate RESUELTOS de una entidad (runtime). Implementa el mismo contrato que el
  * jugador, así que el pipeline los trata igual. Se resuelve desde un {@link EntityStatDef}:
  * PL + arquetipo -> atributos (back-solve) -> overrides -> pools.
- *
  * Para entidades el stat efectivo = atributo × 1 (la "forma" del arquetipo ya define la
  * personalidad); los multiplicadores de body/ki afinan cuánto aguanta/pega por encima del PL.
- *
  * El body es la VIDA REAL (esquiva el cap de MC). Serializable: una entidad herida conserva su
  * body tras guardar/recargar (los máximos se recalculan de atributos+mults).
  */
@@ -133,5 +135,39 @@ public final class EntityStats implements ZenkaiCombatStats {
         this.body    = MathUtil.clamp(t.getInt("body"),    0, bodyMax);
         this.stamina = MathUtil.clamp(t.getInt("stamina"), 0, staminaMax);
         this.energy  = MathUtil.clamp(t.getInt("energy"),  0, energyMax);
+    }
+
+    /**
+     * Fallback para mobs SIN JSON: traduce sus atributos vanilla a la escala del mod.
+     * Sin esto, cualquier mob no listado queda fuera del pipeline y el PvE se vuelve
+     * irrelevante (un jugador nuevo pega 113 efectivos contra 20 de vida).
+     * Vida y daño usan factores DISTINTOS a propósito: con el mismo, las explosiones y el
+     * warden pasaban a matar de un golpe.
+     */
+    public void applyVanilla(LivingEntity le) {
+        double hp    = le.getMaxHealth();
+        double atk   = attrOr(le, Attributes.ATTACK_DAMAGE, 1.0);
+        double armor = attrOr(le, Attributes.ARMOR, 0.0);
+
+        attr.clear();
+        attr.put(ZenkaiAttributes.CONSTITUTION, (int) Math.max(1, Math.round(hp * CommonConfig.vanillaBodyFactor())));
+        attr.put(ZenkaiAttributes.STRENGTH,     (int) Math.max(0, Math.round(atk * CommonConfig.vanillaDamageFactor())));
+        attr.put(ZenkaiAttributes.DEXTERITY,    (int) Math.max(0, Math.round(armor * CommonConfig.vanillaDamageFactor())));
+        attr.put(ZenkaiAttributes.WILLPOWER, 0);
+        attr.put(ZenkaiAttributes.SPIRIT, 0);
+        attr.put(ZenkaiAttributes.MIND, 0);
+
+        bodyMult = 1.0;
+        kiMult   = 1.0;
+        recalc();
+        body = bodyMax; stamina = staminaMax; energy = energyMax;
+        tpReward = (int) Math.max(0, Math.round(getPowerLevel() * TP_PER_PL
+                * CommonConfig.vanillaTpRewardFactor()));
+        initialized = true;
+    }
+
+    private static double attrOr(LivingEntity le, Holder<Attribute> a, double fallback) {
+        var inst = le.getAttribute(a);   // ⚠ ATTACK_DAMAGE no existe en pasivos (vaca, aldeano)
+        return inst == null ? fallback : inst.getValue();
     }
 }

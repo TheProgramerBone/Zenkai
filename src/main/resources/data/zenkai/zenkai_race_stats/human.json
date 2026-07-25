@@ -1,0 +1,34 @@
+{
+  "base_attributes": {
+    "str": 10,
+    "con": 10,
+    "dex": 10,
+    "wil": 10,
+    "spi": 10,
+    "mnd": 10
+  },
+  "warrior": {
+    "melee": 9.8,
+    "defense": 5.4,
+    "health": 32,
+    "stamina": 15.0,
+    "ki_damage": 4.0,
+    "ki_reserves": 46
+  },
+  "martial_artist": {
+    "melee": 7.2,
+    "defense": 6.4,
+    "health": 38,
+    "stamina": 18.0,
+    "ki_damage": 5.2,
+    "ki_reserves": 70
+  },
+  "spiritualist": {
+    "melee": 4.2,
+    "defense": 5.0,
+    "health": 28,
+    "stamina": 8.0,
+    "ki_damage": 8.0,
+    "ki_reserves": 86
+  }
+}

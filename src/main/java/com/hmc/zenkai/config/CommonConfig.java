@@ -74,6 +74,29 @@ public final class CommonConfig {
                     .defineInRange("aura.turbo_drain_pct_per_sec", 0.005D, 0.0D, 1.0D);
 
     // =====================================================================
+    // SPEC — Entidades sin stats propias
+    // =====================================================================
+
+    private static final ModConfigSpec.BooleanValue VANILLA_STATS_FALLBACK_RAW =
+            BUILDER.comment("Give derived Zenkai stats to mobs that have no zenkai_entities JSON.",
+                            "Off = they stay vanilla-scaled and PvE becomes irrelevant past character creation")
+                    .define("entity.vanilla_stats_fallback", true);
+
+    private static final ModConfigSpec.DoubleValue VANILLA_BODY_FACTOR_RAW =
+            BUILDER.comment("Fallback mobs: CON (and therefore bodyMax) = maxHealth * factor")
+                    .defineInRange("entity.vanilla_body_factor", 15.0D, 0.1D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue VANILLA_DAMAGE_FACTOR_RAW =
+            BUILDER.comment("Fallback mobs: STR = attackDamage * factor, DEX = armor * factor.",
+                            "Deliberately lower than the body factor: sharing it made creepers and the warden one-shot players")
+                    .defineInRange("entity.vanilla_damage_factor", 6.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue VANILLA_TP_REWARD_FACTOR_RAW =
+            BUILDER.comment("Fallback mobs: TP reward as a fraction of the automatic one (PL-based).",
+                            "Every mob starts granting TP once the fallback is on, so mob farms can outpace training")
+                    .defineInRange("entity.vanilla_tp_reward_factor", 0.25D, 0.0D, 10.0D);
+
+    // =====================================================================
     // SPEC — Pools y regeneración
     // =====================================================================
 
@@ -114,7 +137,7 @@ public final class CommonConfig {
     // =====================================================================
 
     private static final ModConfigSpec.DoubleValue MIN_DAMAGE_PERCENT_RAW =
-            BUILDER.comment("If (vanillaFinalDamage - modDefense) <= 0, deal at least this % of vanilla final damage. 0.01 = 1%")
+            BUILDER.comment("Damage floor as a fraction of the incoming hit, after defense reduction. 0.05 = 5%")
                     .defineInRange("combat.min_damage_percent", 0.05D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.IntValue TECHNIQUE_MAX_SLOTS_RAW =
@@ -217,79 +240,6 @@ public final class CommonConfig {
             BUILDER.comment("Training: efficiency floor (never drops to 0)")
                     .defineInRange("training.min_efficiency", 0.05D, 0.0D, 1.0D);
 
-    // =====================================================================
-    // SPEC — Bases y multiplicadores por raza / estilo
-    // =====================================================================
-
-    // Bases: [STR, DEX, CON, WIL, SPI, MND]
-    private static final int[] HUMAN_BASE_DEFAULT    = {10, 10, 10, 10, 10, 10};
-    private static final int[] SAIYAN_BASE_DEFAULT   = {14, 12, 10,  8,  6, 10};
-    private static final int[] NAMEKIAN_BASE_DEFAULT = { 8, 10,  8, 11, 13, 10};
-    private static final int[] ARCOSIAN_BASE_DEFAULT = { 8, 10,  8, 12, 12, 10};
-    private static final int[] MAJIN_BASE_DEFAULT    = {10, 10,  8,  8, 10, 10};
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Integer>> HUMAN_BASE_RAW =
-            BUILDER.comment("Base attributes for HUMAN: [STR, DEX, CON, WIL, SPI, MND]")
-                    .defineList("race.human.base", ints(HUMAN_BASE_DEFAULT), o -> o instanceof Integer);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Integer>> SAIYAN_BASE_RAW =
-            BUILDER.comment("Base attributes for SAIYAN: [STR, DEX, CON, WIL, SPI, MND]")
-                    .defineList("race.saiyan.base", ints(SAIYAN_BASE_DEFAULT), o -> o instanceof Integer);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Integer>> NAMEKIAN_BASE_RAW =
-            BUILDER.comment("Base attributes for NAMEKIAN: [STR, DEX, CON, WIL, SPI, MND]")
-                    .defineList("race.namekian.base", ints(NAMEKIAN_BASE_DEFAULT), o -> o instanceof Integer);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Integer>> ARCOSIAN_BASE_RAW =
-            BUILDER.comment("Base attributes for ARCOSIAN: [STR, DEX, CON, WIL, SPI, MND]")
-                    .defineList("race.arcosian.base", ints(ARCOSIAN_BASE_DEFAULT), o -> o instanceof Integer);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Integer>> MAJIN_BASE_RAW =
-            BUILDER.comment("Base attributes for MAJIN: [STR, DEX, CON, WIL, SPI, MND]")
-                    .defineList("race.majin.base", ints(MAJIN_BASE_DEFAULT), o -> o instanceof Integer);
-
-    // Multiplicadores: [STR, CON, DEX, WIL, SPI, MND]
-    private static final double[] HUMAN_MULT_DEFAULT    = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    private static final double[] SAIYAN_MULT_DEFAULT   = {1.3, 1.0, 1.2, 0.8, 0.7, 1.0};
-    private static final double[] NAMEKIAN_MULT_DEFAULT = {0.8, 0.9, 0.9, 1.1, 1.3, 1.0};
-    private static final double[] ARCOSIAN_MULT_DEFAULT = {0.9, 0.9, 1.0, 1.2, 1.1, 1.0};
-    private static final double[] MAJIN_MULT_DEFAULT    = {0.9, 1.3, 0.9, 1.1, 0.8, 1.0};
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Double>> HUMAN_MULT_RAW =
-            BUILDER.comment("Race multipliers for HUMAN: [STR, CON, DEX, WIL, SPI, MND]")
-                    .defineList("race.human.mult", doubles(HUMAN_MULT_DEFAULT), o -> o instanceof Number);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Double>> SAIYAN_MULT_RAW =
-            BUILDER.comment("Race multipliers for SAIYAN: [STR, CON, DEX, WIL, SPI, MND]")
-                    .defineList("race.saiyan.mult", doubles(SAIYAN_MULT_DEFAULT), o -> o instanceof Number);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Double>> NAMEKIAN_MULT_RAW =
-            BUILDER.comment("Race multipliers for NAMEKIAN: [STR, CON, DEX, WIL, SPI, MND]")
-                    .defineList("race.namekian.mult", doubles(NAMEKIAN_MULT_DEFAULT), o -> o instanceof Number);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Double>> ARCOSIAN_MULT_RAW =
-            BUILDER.comment("Race multipliers for ARCOSIAN: [STR, CON, DEX, WIL, SPI, MND]")
-                    .defineList("race.arcosian.mult", doubles(ARCOSIAN_MULT_DEFAULT), o -> o instanceof Number);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Double>> MAJIN_MULT_RAW =
-            BUILDER.comment("Race multipliers for MAJIN: [STR, CON, DEX, WIL, SPI, MND]")
-                    .defineList("race.majin.mult", doubles(MAJIN_MULT_DEFAULT), o -> o instanceof Number);
-
-    private static final double[] WARRIOR_MULT_DEFAULT      = {1.2, 1.1, 1.3, 0.8, 0.8, 1.0};
-    private static final double[] MARTIAL_MULT_DEFAULT      = {1.1, 1.0, 1.0, 1.1, 1.0, 1.0};
-    private static final double[] SPIRITUALIST_MULT_DEFAULT = {0.9, 0.9, 0.9, 1.3, 1.2, 1.0};
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Double>> WARRIOR_MULT_RAW =
-            BUILDER.comment("Style multipliers for WARRIOR: [STR, CON, DEX, WIL, SPI, MND]")
-                    .defineList("style.warrior.mult", doubles(WARRIOR_MULT_DEFAULT), o -> o instanceof Number);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Double>> MARTIAL_MULT_RAW =
-            BUILDER.comment("Style multipliers for MARTIAL_ARTIST: [STR, CON, DEX, WIL, SPI, MND]")
-                    .defineList("style.martial_artist.mult", doubles(MARTIAL_MULT_DEFAULT), o -> o instanceof Number);
-
-    private static final ModConfigSpec.ConfigValue<List<? extends Double>> SPIRITUALIST_MULT_RAW =
-            BUILDER.comment("Style multipliers for SPIRITUALIST: [STR, CON, DEX, WIL, SPI, MND]")
-                    .defineList("style.spiritualist.mult", doubles(SPIRITUALIST_MULT_DEFAULT), o -> o instanceof Number);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -324,9 +274,13 @@ public final class CommonConfig {
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
     private static volatile double M_FORM_STAT = 0.20D, M_FORM_DRAIN = 0.50D,
             M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
-    private static volatile double KI_COST_PER_POWER = 0.06D;
-    private static volatile double MELEE_STAMINA_PER_HIT = 0.12D;
+    private static volatile double KI_COST_PER_POWER = 0.8D;
+    private static volatile double MELEE_STAMINA_PER_HIT = 0.2D;
     private static volatile double MAJIN_STAT_BONUS = 0.10D;
+    private static volatile boolean VANILLA_STATS_FALLBACK = true;
+    private static volatile double  VANILLA_BODY_FACTOR = 15.0D;
+    private static volatile double  VANILLA_DAMAGE_FACTOR = 6.0D;
+    private static volatile double  VANILLA_TP_REWARD_FACTOR = 0.25D;
 
     private static volatile double TRAIN_DMG_TP = 0.02D, TRAIN_AIR_TP = 0.0001D,
             TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.01D,
@@ -367,6 +321,10 @@ public final class CommonConfig {
         FOOD_KI_PCT      = FOOD_KI_RAW.get();
         FOOD_STAMINA_PCT = FOOD_STAMINA_RAW.get();
 
+        VANILLA_STATS_FALLBACK   = VANILLA_STATS_FALLBACK_RAW.get();
+        VANILLA_BODY_FACTOR      = VANILLA_BODY_FACTOR_RAW.get();
+        VANILLA_DAMAGE_FACTOR    = VANILLA_DAMAGE_FACTOR_RAW.get();
+        VANILLA_TP_REWARD_FACTOR = VANILLA_TP_REWARD_FACTOR_RAW.get();
 
 
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
@@ -398,23 +356,10 @@ public final class CommonConfig {
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
 
         RACE_BASES.clear();
-        RACE_BASES.put(Race.HUMAN,    toIntArray(HUMAN_BASE_RAW.get(),    HUMAN_BASE_DEFAULT));
-        RACE_BASES.put(Race.SAIYAN,   toIntArray(SAIYAN_BASE_RAW.get(),   SAIYAN_BASE_DEFAULT));
-        RACE_BASES.put(Race.NAMEKIAN, toIntArray(NAMEKIAN_BASE_RAW.get(), NAMEKIAN_BASE_DEFAULT));
-        RACE_BASES.put(Race.ARCOSIAN, toIntArray(ARCOSIAN_BASE_RAW.get(), ARCOSIAN_BASE_DEFAULT));
-        RACE_BASES.put(Race.MAJIN,    toIntArray(MAJIN_BASE_RAW.get(),    MAJIN_BASE_DEFAULT));
 
         RACE_MULTS.clear();
-        RACE_MULTS.put(Race.HUMAN,    toDoubleArray(HUMAN_MULT_RAW.get(),    HUMAN_MULT_DEFAULT));
-        RACE_MULTS.put(Race.SAIYAN,   toDoubleArray(SAIYAN_MULT_RAW.get(),   SAIYAN_MULT_DEFAULT));
-        RACE_MULTS.put(Race.NAMEKIAN, toDoubleArray(NAMEKIAN_MULT_RAW.get(), NAMEKIAN_MULT_DEFAULT));
-        RACE_MULTS.put(Race.ARCOSIAN, toDoubleArray(ARCOSIAN_MULT_RAW.get(), ARCOSIAN_MULT_DEFAULT));
-        RACE_MULTS.put(Race.MAJIN,    toDoubleArray(MAJIN_MULT_RAW.get(),    MAJIN_MULT_DEFAULT));
 
         STYLE_MULTS.clear();
-        STYLE_MULTS.put(Style.WARRIOR,        toDoubleArray(WARRIOR_MULT_RAW.get(),      WARRIOR_MULT_DEFAULT));
-        STYLE_MULTS.put(Style.MARTIAL_ARTIST, toDoubleArray(MARTIAL_MULT_RAW.get(),      MARTIAL_MULT_DEFAULT));
-        STYLE_MULTS.put(Style.SPIRITUALIST,   toDoubleArray(SPIRITUALIST_MULT_RAW.get(), SPIRITUALIST_MULT_DEFAULT));
     }
 
     // =====================================================================
@@ -432,6 +377,11 @@ public final class CommonConfig {
     public static double flyBaseSpeed()             { return FLY_BASE_SPEED; }
     public static double flyKiDrainPerTick()        { return FLY_KI_DRAIN; }
     public static double turboDrainPctPerSec()      { return TURBO_DRAIN_PCT_PER_SEC; }
+
+    public static boolean vanillaStatsFallback()   { return VANILLA_STATS_FALLBACK; }
+    public static double  vanillaBodyFactor()      { return VANILLA_BODY_FACTOR; }
+    public static double  vanillaDamageFactor()    { return VANILLA_DAMAGE_FACTOR; }
+    public static double  vanillaTpRewardFactor()  { return VANILLA_TP_REWARD_FACTOR; }
 
     public static double bodyScale()      { return BODY_SCALE; }
     public static double staminaScale()   { return STAMINA_SCALE; }
@@ -469,40 +419,6 @@ public final class CommonConfig {
     public static double trainingFatigueDecayPerMinute() { return TRAIN_DECAY; }
     public static double trainingHtcMultiplier()         { return TRAIN_HTC_MULT; }
     public static double trainingMinEfficiency()         { return TRAIN_MIN_EFF; }
-
-    /** Copia de los stats base de la raza: [STR, DEX, CON, WIL, SPI, MND]. */
-    public static int[] raceBaseAttributes(Race race) {
-        int[] def = switch (race) {
-            case HUMAN    -> HUMAN_BASE_DEFAULT;
-            case SAIYAN   -> SAIYAN_BASE_DEFAULT;
-            case NAMEKIAN -> NAMEKIAN_BASE_DEFAULT;
-            case ARCOSIAN -> ARCOSIAN_BASE_DEFAULT;
-            case MAJIN    -> MAJIN_BASE_DEFAULT;
-        };
-        return RACE_BASES.getOrDefault(race, def).clone();
-    }
-
-    /** Copia de [mSTR, mCON, mDEX, mWIL, mSPI, mMND] de la raza. */
-    public static double[] raceMultipliers(Race race) {
-        double[] def = switch (race) {
-            case HUMAN    -> HUMAN_MULT_DEFAULT;
-            case SAIYAN   -> SAIYAN_MULT_DEFAULT;
-            case NAMEKIAN -> NAMEKIAN_MULT_DEFAULT;
-            case ARCOSIAN -> ARCOSIAN_MULT_DEFAULT;
-            case MAJIN    -> MAJIN_MULT_DEFAULT;
-        };
-        return RACE_MULTS.getOrDefault(race, def).clone();
-    }
-
-    /** Copia de [sSTR, sCON, sDEX, sWIL, sSPI, sMND] del estilo. */
-    public static double[] styleMultipliers(Style style) {
-        double[] def = switch (style) {
-            case WARRIOR        -> WARRIOR_MULT_DEFAULT;
-            case MARTIAL_ARTIST -> MARTIAL_MULT_DEFAULT;
-            case SPIRITUALIST   -> SPIRITUALIST_MULT_DEFAULT;
-        };
-        return STYLE_MULTS.getOrDefault(style, def).clone();
-    }
 
     // =====================================================================
     // HELPERS

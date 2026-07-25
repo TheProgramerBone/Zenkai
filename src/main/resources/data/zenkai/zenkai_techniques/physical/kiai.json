@@ -2,7 +2,7 @@
   "tp_cost": 250,
   "mind_req": 8,
   "damage_mult": 0.6,
-  "stamina_pct": 0.18,
+  "stamina_pct": 1.9,
   "cooldown_ticks": 100,
   "range": 6.0
 }

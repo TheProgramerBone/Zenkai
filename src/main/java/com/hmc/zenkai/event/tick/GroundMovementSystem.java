@@ -8,9 +8,22 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
-/** Movimiento en tierra: coste de estamina del turbo y multiplicador de velocidad. */
+/**
+ * Movimiento en tierra: coste de estamina del turbo y multiplicador de velocidad.
+ *
+ * La velocidad YA NO sale de DEX. El techo lo pone la habilidad Run (curva speed_mult del
+ * datapack) y punto. Motivo: DEX alimentaba a la vez defensa, velocidad y vuelo, así que
+ * cualquier retoque de balance defensivo movía la velocidad de rebote. Ahora DEX es
+ * puramente defensivo (ver RaceStatTable) y la velocidad se compra con TP en Run.
+ *
+ * El TURBO multiplica al final, fuera del escalón de control: así su efecto es visible
+ * siempre (+35 %) en lugar de depender del build y del % de poder.
+ */
 public final class GroundMovementSystem {
     private GroundMovementSystem() {}
+
+    /** Empujón del turbo sobre la velocidad final. Candidato a StatsConfig. */
+    private static final double TURBO_SPEED_MULT = 1.35;
 
     public static void tick(TickCtx c, boolean turboOn) {
         Player p = c.p();
@@ -29,12 +42,11 @@ public final class GroundMovementSystem {
             }
         }
 
-        // El máximo lo marca DEX (speedStat, con su tope) y lo eleva la habilidad Run.
-        double speedStat = att.computeSpeedFinal();
-        double max = Math.min(1.0 + (speedStat / 100.0) * CommonConfig.movementScaling(),
-                CommonConfig.speedMultiplierCap()) * SkillEffects.runSpeedFactor(p);
-        double moveMult = 1.0 + (max - 1.0)
-                * PerformanceTier.of(control, turboOn) * att.powerFraction();
+        // Techo = habilidad Run. Sin niveles de Run, speedMult() vale 1.0 -> velocidad vanilla.
+        double maxBonus = Math.min(CommonConfig.speedMultiplierCap(),
+                SkillEffects.runSpeedFactor(p)) - 1.0;
+        double moveMult = 1.0 + maxBonus * PerformanceTier.of(control) * att.powerFraction();
+        if (groundTurbo) moveMult *= TURBO_SPEED_MULT;
 
         AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
         if (moveAttr != null) {

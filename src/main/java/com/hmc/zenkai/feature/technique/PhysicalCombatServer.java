@@ -46,6 +46,10 @@ public final class PhysicalCombatServer {
     private static final int DASH_TICKS = 8;      // 0.4 s de trayecto
     private static final int BARRAGE_TICKS = 12;  // 6 pulsos (cada 2 ticks)
     private static final double DASH_SPEED = 1.1;
+    /** Coste de estamina por unidad de poder físico. Simétrico a CommonConfig.kiCostPerPower():
+     *  STR sube daño Y coste, y la estamina (CON) decide cuántas veces lo sostienes.
+     *  Candidato a StatsConfig. */
+    private static final double STAMINA_COST_PER_POWER = 2.5;
 
     /** Cooldowns por jugador+técnica (gameTime de disponibilidad). */
     private static final Map<UUID, long[]> COOLDOWNS = new HashMap<>();
@@ -94,8 +98,13 @@ public final class PhysicalCombatServer {
                 k -> new long[PhysicalTechnique.values().length]);
         if (now < cds[t.ordinal()]) return;
 
-        int cost = (int) Math.ceil(att.getStaminaMax() * t.staminaPct()
-                * MasteryEffects.techCostFactor(att, t.name()));
+
+        // Coste ABSOLUTO escalado con STR, igual que el golpe básico (CombatZenkaiHooks) y
+        // que el ki (KiCombatServer.computeCost). Antes era staminaMax * pct, así que subir
+        // estamina no daba ni un uso más: mismo patrón que tenía el kaioken con la vida.
+        // OJO: staminaPct() pasa a significar "cuántos golpes básicos cuesta", no % del pool.
+        int cost = (int) Math.ceil(att.computeMeleeFinal() * CommonConfig.meleeStaminaPerHit()
+                * t.staminaPct() * MasteryEffects.techCostFactor(att, t.name()));
         if (att.getStamina() < cost) return;
 
         att.consumeStamina(cost);

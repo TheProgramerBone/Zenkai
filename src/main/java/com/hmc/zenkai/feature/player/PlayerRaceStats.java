@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
@@ -52,15 +53,17 @@ public class PlayerRaceStats {
 
     // ── Atributos base ────────────────────────────────────────────────────────
     public void applyRaceBaseAttributes() {
-        int[] base = CommonConfig.raceBaseAttributes(this.race);
+        // Indexado por ZenkaiAttributes.ordinal(): STR, CON, DEX, WIL, SPI, MND.
+        // El array de config venía documentado como [STR, DEX, CON, ...] pero se leía como
+        // [STR, CON, DEX, ...], así que CON y DEX salían cambiadas en las cinco razas.
+        int[] base = RaceStatTable.baseAttributes(this.race);
         BalanceUtil.setBase(attributes,
-                base[0], // STR
-                base[1], // CON
-                base[2], // DEX
-                base[3], // WIL
-                base[4], // SPI
-                base[5]  // MND
-        );
+                base[ZenkaiAttributes.STRENGTH.ordinal()],
+                base[ZenkaiAttributes.CONSTITUTION.ordinal()],
+                base[ZenkaiAttributes.DEXTERITY.ordinal()],
+                base[ZenkaiAttributes.WILLPOWER.ordinal()],
+                base[ZenkaiAttributes.SPIRIT.ordinal()],
+                base[ZenkaiAttributes.MIND.ordinal()]);
         capAll();
     }
 
@@ -130,38 +133,45 @@ public class PlayerRaceStats {
                                double speed, double flySpeed) {}
 
     public RecalcResult recalcAll() {
-        double[] r = CommonConfig.raceMultipliers(this.race);
-        double[] s = CommonConfig.styleMultipliers(this.style);
+        int con = attributes.get(ZenkaiAttributes.CONSTITUTION);
+        int spi = attributes.get(ZenkaiAttributes.SPIRIT);
 
-        double CON = attributes.get(ZenkaiAttributes.CONSTITUTION) * r[1] * s[1];
-        double DEX = attributes.get(ZenkaiAttributes.DEXTERITY)    * r[2] * s[2];
-        double SPI = attributes.get(ZenkaiAttributes.SPIRIT)       * r[4] * s[4];
-        int bodyMax    = (int) Math.max(1, Math.round(10 + CON * CommonConfig.bodyScale()));
-        int staminaMax = (int) Math.max(1, Math.round(90 + CON * CommonConfig.staminaScale()));
-        int energyMax  = (int) Math.max(1, Math.round(90 + SPI * CommonConfig.energyScale()));
+        // RaceStatTable reparte por raza/estilo; las *Scale de config siguen siendo el mando
+        // global de time-to-kill (y las comparten los mobs vía EntityStats).
+        int bodyMax    = (int) Math.max(1, Math.round(
+                10 + con * RaceStatTable.health(race, style)  * CommonConfig.bodyScale()));
+        int staminaMax = (int) Math.max(1, Math.round(
+                90 + con * RaceStatTable.stamina(race, style) * CommonConfig.staminaScale()));
+        int energyMax  = (int) Math.max(1, Math.round(
+                90 + spi * RaceStatTable.kiReserves(race, style) * CommonConfig.energyScale()));
 
-        return new RecalcResult(bodyMax, staminaMax, energyMax, DEX, DEX);
+        // speed/flySpeed ya no salen de DEX: los gobiernan las habilidades Run y Fly.
+        return new RecalcResult(bodyMax, staminaMax, energyMax, 0.0, 0.0);
     }
 
     // ── Stats de combate ─────────────────────────────────────────────────────
     public double computeMeleeFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.STRENGTH),   race, style, ZenkaiAttributes.STRENGTH);
+        return attributes.get(ZenkaiAttributes.STRENGTH) * RaceStatTable.melee(race, style);
     }
     public double computeDefenseFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY),  race, style, ZenkaiAttributes.DEXTERITY);
+        return attributes.get(ZenkaiAttributes.DEXTERITY) * RaceStatTable.defense(race, style);
     }
+    public double computeKiPowerFinal() {
+        return attributes.get(ZenkaiAttributes.WILLPOWER) * RaceStatTable.kiDamage(race, style);
+    }
+    public double computeKiPoolFinal() {
+        return attributes.get(ZenkaiAttributes.SPIRIT) * RaceStatTable.kiReserves(race, style);
+    }
+    // computeSpeedFinal / computeFlyFinal: ya no se usan para velocidad. Si algo más los
+    // llama, que devuelvan defensa o se eliminen.
     public double computeSpeedFinal() {
         return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY),  race, style, ZenkaiAttributes.DEXTERITY);
     }
     public double computeFlyFinal() {
         return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY),  race, style, ZenkaiAttributes.DEXTERITY);
     }
-    public double computeKiPowerFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.WILLPOWER),  race, style, ZenkaiAttributes.WILLPOWER);
-    }
-    public double computeKiPoolFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.SPIRIT),     race, style, ZenkaiAttributes.SPIRIT);
-    }
+
+
 
     /** CON efectiva (lineal, sin el offset del pool). La usa el Power Level. */
     public double computeConFinal() {

@@ -314,5 +314,9 @@ public class ModNetworking {
                 KiChargeStatePacket.STREAM_CODEC,
                 KiChargeStatePacket::handle);
 
+        registrar.playToClient(
+                RaceStatSyncPacket.TYPE,
+                RaceStatSyncPacket.STREAM_CODEC,
+                RaceStatSyncPacket::handle);
     }
 }
