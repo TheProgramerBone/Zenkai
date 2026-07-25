@@ -339,13 +339,6 @@ public class PlayerFormAttachment {
         kaioken = KaiokenTier.OFF;
         kaiokenSwitch = false;
         selectedForm = null;
-        strainUntil = 0L;
-    }
-
-    /** Respec: se pierde la maestría además del estado. */
-    public void clearProgression() {
-        formMastery.clear();
-        resetAll();
     }
 
     /** Vuelta forzada a base (ki agotado, forma inválida). Deja cooldown para no reencadenar. */
@@ -460,5 +453,26 @@ public class PlayerFormAttachment {
     /** Segundos que faltan (para la UI). */
     public float strainSecondsLeft(long gameTime) {
         return isStrained(gameTime) ? (strainUntil - gameTime) / 20f : 0f;
+    }
+
+    /** Fija la maestría de una clave (forma o escalón de kaioken). Para comandos y debug. */
+    public void setMastery(ResourceLocation key, float value) {
+        if (key == null) return;
+        formMastery.put(key.toString(), Math.max(0f, Math.min(100f, value)));
+    }
+
+    /** Vista de solo lectura de TODAS las entradas de maestría (formas + kaioken). */
+    public Map<String, Float> masteryView() {
+        return java.util.Collections.unmodifiableMap(formMastery);
+    }
+
+    /** Limpia la fatiga. SOLO muerte y respec. */
+    public void clearStrain() { this.strainUntil = 0L; }
+
+    /** Respec: se pierde la maestría además del estado. */
+    public void clearProgression() {
+        formMastery.clear();
+        strainUntil = 0L;
+        resetAll();
     }
 }

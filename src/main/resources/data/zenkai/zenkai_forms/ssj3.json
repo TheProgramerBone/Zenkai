@@ -4,7 +4,7 @@
   ],
   "kind": "extension",
   "tp_cost": 30000,
-  "hold_ticks": 120,
+  "hold_ticks": 60,
   "mastery_gain": 0.6,
   "stat_percent_untrained": 4.5,
   "stat_percent_mastered": 6.0,

@@ -1,6 +1,10 @@
 package com.hmc.zenkai.registry;
 
+import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.forms.FormDef;
+import com.hmc.zenkai.feature.forms.KaiokenTier;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
@@ -13,17 +17,22 @@ import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class ModCommands {
 
@@ -208,6 +217,25 @@ public class ModCommands {
                                                 .executes(ctx -> forEach(ctx, targets(ctx),
                                                         (c, sp) -> physGive(c, sp,
                                                                 StringArgumentType.getString(c, "tech"))))))))
+
+                // ── /zenkai mastery ───────────────────────────────────────────────
+                // Maestría de una FORMA o de un escalón de KAIOKEN, ambas en el mismo mapa.
+                // Uso: /zenkai mastery set <objetivos> <id> <0-100>
+                //      /zenkai mastery list [jugador]
+                .then(Commands.literal("mastery")
+                        .then(Commands.literal("set")
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .then(Commands.argument("id", StringArgumentType.string())
+                                                .suggests(MASTERY_IDS)
+                                                .then(Commands.argument("value", IntegerArgumentType.integer(0, 100))
+                                                        .executes(ctx -> forEach(ctx, targets(ctx),
+                                                                (c, sp) -> masterySet(c, sp,
+                                                                        StringArgumentType.getString(c, "id"),
+                                                                        IntegerArgumentType.getInteger(c, "value"))))))))
+                        .then(Commands.literal("list")
+                                .executes(ctx -> masteryList(ctx, ctx.getSource().getPlayerOrException()))
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> masteryList(ctx, EntityArgument.getPlayer(ctx, "player"))))))
         );
     }
 
@@ -484,6 +512,63 @@ public class ModCommands {
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] " + t.name() + " → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /** Autocompleta formas del datapack y escalones de kaioken por su etiqueta ("x20"). */
+    private static final SuggestionProvider<CommandSourceStack> MASTERY_IDS = (ctx, b) -> {
+        List<String> ids = new ArrayList<>();
+        for (FormDef d : FormDef.all()) ids.add(d.id().toString());
+        for (KaiokenTier t : KaiokenTier.values()) if (t.isOn()) ids.add(t.label());
+        return SharedSuggestionProvider.suggest(ids, b);
+    };
+
+    /**
+     * Admite tres formatos: "x20" (escalón de kaioken), "ssj4" (forma sin namespace) y
+     * "zenkai:ssj4" (completo). Los escalones se traducen a su clave sintética, que es como
+     * viven dentro del mismo mapa de maestría que las formas.
+     */
+    private static ResourceLocation resolveMasteryId(String raw) {
+        String s = raw.toLowerCase(java.util.Locale.ROOT).trim();
+        for (KaiokenTier t : KaiokenTier.values()) {
+            if (t.isOn() && t.label().equals(s)) return PlayerFormAttachment.kaiokenMasteryKey(t);
+        }
+        return ResourceLocation.tryParse(s.contains(":") ? s : Zenkai.MOD_ID + ":" + s);
+    }
+
+    private static int masterySet(CommandContext<CommandSourceStack> ctx, ServerPlayer sp,
+                                  String rawId, int value) {
+        ResourceLocation id = resolveMasteryId(rawId);
+        if (id == null) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] Invalid id: " + rawId));
+            return 0;
+        }
+        var form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        form.setMastery(id, value);
+        // syncForm y NO sync: la maestría vive en PLAYER_FORM. Con sync() el cliente
+        // seguiría mostrando el valor viejo en la pantalla de stats.
+        PlayerLifeCycle.syncForm(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] " + id + " mastery = " + value + "% → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /** Lista lo que el jugador tiene entrenado (formas y escalones mezclados, es un solo mapa). */
+    private static int masteryList(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        var form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        var view = form.masteryView();
+        if (view.isEmpty()) {
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                    "[Zenkai] " + sp.getGameProfile().getName() + " no tiene maestría en nada."), false);
+            return 0;
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                        "[Zenkai] " + view.size() + " entrada(s) — " + sp.getGameProfile().getName())
+                .withStyle(ChatFormatting.GOLD), false);
+        view.entrySet().stream()
+                .sorted(java.util.Map.Entry.comparingByKey())
+                .forEach(en -> ctx.getSource().sendSuccess(() -> Component.literal(
+                        String.format("§7- §f%s §7%.1f%%", en.getKey(), en.getValue())), false));
         return 1;
     }
 }

@@ -78,8 +78,11 @@ public final class DownedDeathGuard {
             e.setCanceled(true);
             att.setBody(att.getBodyMax());
             sp.setHealth(sp.getMaxHealth());
-            sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).resetAll();
+            var form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+            form.resetAll();
+            form.clearStrain();               // ser rescatado a full limpia la fatiga
             PlayerLifeCycle.sync(sp);
+            PlayerLifeCycle.syncForm(sp);     // resetAll toca PLAYER_FORM, no basta con sync()
             return;
         }
 
@@ -95,8 +98,12 @@ public final class DownedDeathGuard {
             att.flags().setDownedUntil(
                     sp.serverLevel().getGameTime() + CombatZenkaiHooks.DOWNED_TICKS);
         }
+
         // Morir deshace la transformación: nadie resucita en SSJ.
-        sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).resetAll();
+        var form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        form.resetAll();
+        form.clearStrain();
         PlayerLifeCycle.sync(sp);
+        PlayerLifeCycle.syncForm(sp);
     }
 }

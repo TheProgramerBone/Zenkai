@@ -71,7 +71,7 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_IMMORTAL = IconUV.grid(11, 0);
     private static final IconUV ICON_LEGENDARY = IconUV.grid(9, 0);
     private static final IconUV ICON_KAIOKEN = IconUV.grid(10, 0);
-    private static final IconUV ICON_STRAIN = IconUV.grid(8, 0);
+    private static final IconUV ICON_STRAIN = IconUV.grid(1, 0);
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
@@ -175,11 +175,6 @@ public final class ClientZenkaiHooks {
         if (tier.isOn()) {
             drawBadge(g, iconX, iconY, ICON_KAIOKEN);
             drawBadgeLabel(g, iconX, iconY, tier.label(), 0xFFFF8866);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        } else if (strained) {
-            drawBadge(g, iconX, iconY, ICON_STRAIN);
-            drawBadgeLabel(g, iconX, iconY,
-                    Math.round(form.strainSecondsLeft(now)) + "s", 0xFFCC99FF);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 

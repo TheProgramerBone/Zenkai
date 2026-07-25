@@ -50,7 +50,7 @@ public final class KaiokenSystem {
     private static final double MIN_POWER_STAT = 10.0;
 
     /** Strain base al agotarse, en ticks (5 s). Se escala por escalón y lo recorta la maestría. */
-    private static final int STRAIN_BASE_TICKS = 5000;
+    private static final int STRAIN_BASE_TICKS = 600;
 
     /** Cuánto recorta el strain tener el escalón dominado al 100 %. */
     private static final double STRAIN_MASTERY_REDUCTION = 0.5;
