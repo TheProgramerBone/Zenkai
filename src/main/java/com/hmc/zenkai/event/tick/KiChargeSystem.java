@@ -1,0 +1,42 @@
+package com.hmc.zenkai.event.tick;
+
+import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.SkillEffects;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+
+/** Carga de ki (mantener R) y subida del % de poder por concentración. */
+public final class KiChargeSystem {
+    private KiChargeSystem() {}
+
+    public static void tick(TickCtx c) {
+        Player p = c.p();
+        PlayerStatsAttachment att = c.att();
+
+        if (!att.isChargingKi()) {
+            PlayerTickState.resetCharge(p.getUUID());
+            return;
+        }
+
+        // Sin Meditación se puede concentrar (el % de poder sube) pero NO se recupera ki.
+        double chargeMul = SkillEffects.kiChargeFactor(p);
+        if (chargeMul > 0.0) {
+            // Porcentual sobre el pool, igual que el regen pasivo: antes era un plano
+            // getRegenEnergyPerTick() = 1.0, que ignoraba pool y config por completo.
+            double perTick = att.getEnergyMax() * (CommonConfig.baseRegenEnergy() / 100.0) / 20.0;
+            att.addKi(perTick * chargeMul);
+        }
+
+        // Tras 1 s cargando, el % sube de 5 en 5 cada segundo hasta el techo de Ki Control.
+        int t = PlayerTickState.bumpCharge(p.getUUID());
+        if (t > 20 && (t - 20) % 20 == 0) {
+            if (att.setPowerPercent(att.getPowerPercent() + 5, SkillEffects.maxPowerPercent(p))
+                    && p instanceof ServerPlayer sp) {
+                sp.displayClientMessage(Component.translatable("messages.zenkai.power_percent",
+                        att.getPowerPercent(), SkillEffects.maxPowerPercent(p)), true);
+            }
+        }
+    }
+}

@@ -28,7 +28,7 @@ import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.network.ModNetworking;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.registry.ModCreativeModeTabs;
 import com.hmc.zenkai.registry.ModFeatures;
 import com.hmc.zenkai.registry.ModOverworldRegion;

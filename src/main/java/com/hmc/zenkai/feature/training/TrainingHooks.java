@@ -3,7 +3,7 @@ package com.hmc.zenkai.feature.training;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.registry.ModDimensions;
 import net.minecraft.server.level.ServerPlayer;
 

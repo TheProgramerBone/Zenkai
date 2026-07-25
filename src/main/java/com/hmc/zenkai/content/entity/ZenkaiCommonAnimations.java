@@ -3,7 +3,7 @@ package com.hmc.zenkai.content.entity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.constant.DataTickets;
 import software.bernie.geckolib.animation.AnimationController;

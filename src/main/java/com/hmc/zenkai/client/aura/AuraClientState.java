@@ -7,7 +7,7 @@ import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.aura.TurboPacket;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.neoforged.api.distmarker.Dist;

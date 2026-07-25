@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.ki;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;

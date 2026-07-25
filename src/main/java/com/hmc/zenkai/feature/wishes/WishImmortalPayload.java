@@ -2,7 +2,7 @@ package com.hmc.zenkai.feature.wishes;
 
 import com.hmc.zenkai.registry.ModEffects;
 import com.hmc.zenkai.config.ServerConfig;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;

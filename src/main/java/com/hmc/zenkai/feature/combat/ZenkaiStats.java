@@ -5,7 +5,7 @@ import com.hmc.zenkai.feature.combat.entity.EntityStatDef;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.combat.entity.EntityStatsManager;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.registry.ModGameRules;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;

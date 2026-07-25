@@ -7,7 +7,6 @@ import com.hmc.zenkai.feature.Style;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.mojang.brigadier.arguments.IntegerArgumentType;

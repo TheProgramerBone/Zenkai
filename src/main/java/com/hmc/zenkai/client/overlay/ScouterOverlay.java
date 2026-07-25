@@ -4,7 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.sense.ScouterAreaDataPacket;
 import com.hmc.zenkai.feature.race.RaceTextureUtil;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.Minecraft;

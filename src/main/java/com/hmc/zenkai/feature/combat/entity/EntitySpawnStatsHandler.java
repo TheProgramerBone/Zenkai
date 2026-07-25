@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.combat.entity;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;

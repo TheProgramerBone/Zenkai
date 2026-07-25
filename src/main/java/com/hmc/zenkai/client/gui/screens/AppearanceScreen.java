@@ -11,7 +11,7 @@ import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import com.hmc.zenkai.feature.race.layer.RaceLayerDiscovery;
 import com.hmc.zenkai.feature.race.RaceSkinSlots;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;

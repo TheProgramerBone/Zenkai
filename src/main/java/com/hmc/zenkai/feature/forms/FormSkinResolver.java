@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.forms;
 
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;

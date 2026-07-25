@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.registry.ModEffects;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;

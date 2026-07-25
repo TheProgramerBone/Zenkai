@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.race;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.network.syncher.EntityDataAccessor;

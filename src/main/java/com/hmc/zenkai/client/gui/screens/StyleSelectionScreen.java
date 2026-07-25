@@ -9,7 +9,7 @@ import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.network.ChooseStylePacket;
 import com.hmc.zenkai.feature.Style;
 import com.hmc.zenkai.feature.stats.ChooseRacePacket;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.race.UpdatePlayerVisualPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;

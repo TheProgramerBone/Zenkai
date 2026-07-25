@@ -1,4 +1,4 @@
-package com.hmc.zenkai.event;
+package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;

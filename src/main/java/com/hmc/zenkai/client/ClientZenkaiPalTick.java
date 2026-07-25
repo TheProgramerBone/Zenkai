@@ -5,7 +5,7 @@ import com.hmc.zenkai.event.ZenkaiPalAnimations.FlyDir;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.feature.ki.FlyBoostPacket;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.entity.Pose;

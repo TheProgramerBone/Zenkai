@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.race;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorModel;
 import com.hmc.zenkai.feature.race.layer.RaceLayerDiscovery;

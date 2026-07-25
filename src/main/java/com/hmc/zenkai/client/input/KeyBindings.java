@@ -14,7 +14,7 @@ import com.hmc.zenkai.feature.ki.KiChargePacket;
 import com.hmc.zenkai.feature.ki.PowerPercentPacket;
 import com.hmc.zenkai.feature.ki.ToggleFlyPacket;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.stats.TransformHoldPacket;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;

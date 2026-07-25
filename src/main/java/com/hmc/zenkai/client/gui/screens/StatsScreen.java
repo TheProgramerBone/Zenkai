@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.client.gui.AlignmentPalette;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;

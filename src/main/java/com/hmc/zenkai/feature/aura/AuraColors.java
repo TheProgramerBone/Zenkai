@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.aura;
 
 import com.hmc.zenkai.feature.forms.FormDef;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.world.entity.player.Player;
 
 /**

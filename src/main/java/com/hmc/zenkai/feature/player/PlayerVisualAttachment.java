@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.feature.Race;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;

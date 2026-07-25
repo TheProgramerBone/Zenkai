@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.race.layer;
 
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;

@@ -3,7 +3,7 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.buttons.TabIconButton;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;

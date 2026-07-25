@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.stats;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.event.ZenkaiDataAttachments;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import net.minecraft.network.FriendlyByteBuf;

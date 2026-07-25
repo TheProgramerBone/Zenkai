@@ -2,6 +2,7 @@ package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.event.ZenkaiTickHandlers;
+import com.hmc.zenkai.event.tick.MovementLocks;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -16,7 +17,6 @@ import net.neoforged.neoforge.client.event.ComputeFovModifierEvent;
  * Vanilla deforma el FOV con MOVEMENT_SPEED; con los multiplicadores de DEX/forma
  * (SSJ4 corre a varios x) eso da un ojo de pez constante y mareante. Antes lo clavábamos
  * a 1.0, lo que también mataba el efecto de sprint, volar y tensar el arco.
- *
  * Ahora se descuenta SOLO el modificador zenkai:speed_mult: como es ADD_MULTIPLIED_BASE y
  * el sprint de vanilla es ADD_MULTIPLIED_TOTAL, la velocidad "limpia" sale de dividir por
  * (1 + amount). Se corrige el resultado del evento de forma multiplicativa, así que lo que
@@ -33,7 +33,7 @@ public final class FovLockHandler {
         AttributeInstance attr = p.getAttribute(Attributes.MOVEMENT_SPEED);
         if (attr == null) return;
 
-        AttributeModifier ours = attr.getModifier(ZenkaiTickHandlers.MOVE_MOD_ID); // ⚠
+        AttributeModifier ours = attr.getModifier(MovementLocks.MOVE_MOD_ID); // ⚠
         if (ours == null || ours.amount() <= 0.0) return; // sin boost del mod: FOV vanilla tal cual
 
         float walk = p.getAbilities().getWalkingSpeed();

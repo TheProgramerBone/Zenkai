@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
