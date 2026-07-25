@@ -270,9 +270,13 @@
   "screen.zenkai.stats_screen.stat.running": "Running: %s%%",
   "screen.zenkai.stats_screen.stat.flying": "Flying: %s%%",
   "screen.zenkai.stats_screen.stat.ki_power": "Ki Power: %s",
+  "screen.zenkai.stats_screen.kaioken": "Kaioken %s",
+  "screen.zenkai.stats_screen.kaioken_mastery": "  Mastery: %s%%",
+  "screen.zenkai.stats_screen.kaioken_stats": "  +%s%% stats",
+  "screen.zenkai.stats_screen.kaioken_drain": "  -%s HP/s",
+  "screen.zenkai.stats_screen.kaioken_strain": "Strain: %ss (-10%% stats)",
   "screen.zenkai.technique.unlock_mnd": "Unlock (%s TP · %s MND)",
   "screen.zenkai.physical.unlock_mnd": "Unlock (%s TP · %s MND)",
-
 
   "screen.zenkai.tab.stats": "Stats",
   "screen.zenkai.tab.skills": "Skills",

@@ -1,6 +1,7 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
@@ -22,6 +23,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
+import java.util.Collection;
+
 public class ModCommands {
 
     @SubscribeEvent
@@ -30,7 +33,7 @@ public class ModCommands {
 
         // ── /zenkai tp ───────────────────────────────────────────────────────
         // Añade TP de entrenamiento al jugador.
-        // Uso: /zenkai tp add [jugador] <cantidad>
+        // Uso: /zenkai tp add [objetivos] <cantidad>
         root.register(Commands.literal("zenkai")
                 .requires(cs -> cs.hasPermission(2))
 
@@ -40,17 +43,17 @@ public class ModCommands {
                                         .executes(ctx -> addTp(ctx,
                                                 ctx.getSource().getPlayerOrException(),
                                                 IntegerArgumentType.getInteger(ctx, "amount"))))
-                                .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
-                                                .executes(ctx -> addTp(ctx,
-                                                        EntityArgument.getPlayer(ctx, "player"),
-                                                        IntegerArgumentType.getInteger(ctx, "amount")))))))
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> addTp(c, sp,
+                                                                IntegerArgumentType.getInteger(c, "amount"))))))))
 
                 // ── /zenkai attr ──────────────────────────────────────────────────
                 // Manipula atributos individuales o en bloque.
-                // Uso: /zenkai attr set [jugador] <atributo> <valor>
-                //      /zenkai attr setall [jugador] <valor>
-                //      /zenkai attr maxall [jugador]
+                // Uso: /zenkai attr set [objetivos] <atributo> <valor>
+                //      /zenkai attr setall [objetivos] <valor>
+                //      /zenkai attr maxall [objetivos]
                 .then(Commands.literal("attr")
                         .then(Commands.literal("set")
                                 .then(Commands.argument("attr", StringArgumentType.string())
@@ -59,84 +62,84 @@ public class ModCommands {
                                                         ctx.getSource().getPlayerOrException(),
                                                         StringArgumentType.getString(ctx, "attr"),
                                                         IntegerArgumentType.getInteger(ctx, "value")))))
-                                .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("attr", StringArgumentType.string())
                                                 .then(Commands.argument("value", IntegerArgumentType.integer(0))
-                                                        .executes(ctx -> setAttr(ctx,
-                                                                EntityArgument.getPlayer(ctx, "player"),
-                                                                StringArgumentType.getString(ctx, "attr"),
-                                                                IntegerArgumentType.getInteger(ctx, "value")))))))
+                                                        .executes(ctx -> forEach(ctx, targets(ctx),
+                                                                (c, sp) -> setAttr(c, sp,
+                                                                        StringArgumentType.getString(c, "attr"),
+                                                                        IntegerArgumentType.getInteger(c, "value"))))))))
                         .then(Commands.literal("setall")
                                 .then(Commands.argument("value", IntegerArgumentType.integer(0))
                                         .executes(ctx -> setAllAttr(ctx,
                                                 ctx.getSource().getPlayerOrException(),
                                                 IntegerArgumentType.getInteger(ctx, "value"))))
-                                .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("value", IntegerArgumentType.integer(0))
-                                                .executes(ctx -> setAllAttr(ctx,
-                                                        EntityArgument.getPlayer(ctx, "player"),
-                                                        IntegerArgumentType.getInteger(ctx, "value"))))))
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> setAllAttr(c, sp,
+                                                                IntegerArgumentType.getInteger(c, "value")))))))
                         .then(Commands.literal("maxall")
                                 .executes(ctx -> maxAllAttr(ctx, ctx.getSource().getPlayerOrException()))
-                                .then(Commands.argument("player", EntityArgument.player())
-                                        .executes(ctx -> maxAllAttr(ctx, EntityArgument.getPlayer(ctx, "player"))))))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::maxAllAttr)))))
 
                 // ── /zenkai race ──────────────────────────────────────────────────
                 // Fuerza la raza de un jugador desde el servidor.
-                // Uso: /zenkai race set [jugador] <raza>
+                // Uso: /zenkai race set [objetivos] <raza>
                 .then(Commands.literal("race")
                         .then(Commands.literal("set")
                                 .then(Commands.argument("race", StringArgumentType.string())
                                         .executes(ctx -> setRace(ctx,
                                                 ctx.getSource().getPlayerOrException(),
                                                 StringArgumentType.getString(ctx, "race"))))
-                                .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("race", StringArgumentType.string())
-                                                .executes(ctx -> setRace(ctx,
-                                                        EntityArgument.getPlayer(ctx, "player"),
-                                                        StringArgumentType.getString(ctx, "race")))))))
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> setRace(c, sp,
+                                                                StringArgumentType.getString(c, "race"))))))))
 
                 // ── /zenkai style ─────────────────────────────────────────────────
                 // Fuerza el estilo de combate de un jugador desde el servidor.
-                // Uso: /zenkai style set [jugador] <estilo>
+                // Uso: /zenkai style set [objetivos] <estilo>
                 .then(Commands.literal("style")
                         .then(Commands.literal("set")
                                 .then(Commands.argument("style", StringArgumentType.string())
                                         .executes(ctx -> setStyle(ctx,
                                                 ctx.getSource().getPlayerOrException(),
                                                 StringArgumentType.getString(ctx, "style"))))
-                                .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("style", StringArgumentType.string())
-                                                .executes(ctx -> setStyle(ctx,
-                                                        EntityArgument.getPlayer(ctx, "player"),
-                                                        StringArgumentType.getString(ctx, "style")))))))
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> setStyle(c, sp,
+                                                                StringArgumentType.getString(c, "style"))))))))
 
                 // ── /zenkai reset ─────────────────────────────────────────────────
                 // Resetea el progreso del jugador.
-                // /zenkai reset stats [jugador] → devuelve los TP invertidos (respec)
-                // /zenkai reset full  [jugador] → borra raza, estilo, stats, TP y apariencia
+                // /zenkai reset stats [objetivos] → devuelve los TP invertidos (respec)
+                // /zenkai reset full  [objetivos] → borra raza, estilo, stats, TP y apariencia
                 .then(Commands.literal("reset")
                         .then(Commands.literal("stats")
                                 .executes(ctx -> resetStats(ctx, ctx.getSource().getPlayerOrException()))
-                                .then(Commands.argument("player", EntityArgument.player())
-                                        .executes(ctx -> resetStats(ctx, EntityArgument.getPlayer(ctx, "player")))))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::resetStats))))
                         .then(Commands.literal("full")
                                 .executes(ctx -> resetFull(ctx, ctx.getSource().getPlayerOrException()))
-                                .then(Commands.argument("player", EntityArgument.player())
-                                        .executes(ctx -> resetFull(ctx, EntityArgument.getPlayer(ctx, "player"))))))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::resetFull)))))
 
                 .then(Commands.literal("revive")
-                        .then(Commands.argument("player", EntityArgument.player())
-                                .executes(ctx -> revivePlayer(ctx, EntityArgument.getPlayer(ctx, "player")))))
+                        .then(Commands.argument("player", EntityArgument.players())
+                                .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::revivePlayer))))
 
                 // ── /zenkai pets ──────────────────────────────────────────────────
                 // Borra el historial de mascotas muertas (deseo de revivir).
-                // Uso: /zenkai pets clear [jugador]
+                // Uso: /zenkai pets clear [objetivos]
                 .then(Commands.literal("pets")
                         .then(Commands.literal("clear")
                                 .executes(ctx -> clearPets(ctx, ctx.getSource().getPlayerOrException()))
-                                .then(Commands.argument("player", EntityArgument.player())
-                                        .executes(ctx -> clearPets(ctx, EntityArgument.getPlayer(ctx, "player"))))))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::clearPets)))))
 
                 .then(Commands.literal("struct")
                         .then(Commands.literal("place")
@@ -171,34 +174,77 @@ public class ModCommands {
 
                 // ── /zenkai skill ─────────────────────────────────────────────────
                 // Otorga/revoca habilidades sin TP (la vía de maestros/NPCs).
-                // Uso: /zenkai skill give|revoke <jugador> <id>
+                // Uso: /zenkai skill give|revoke <objetivos> <id>
+                //      /zenkai skill giveall [objetivos]   → todas al máximo
+                //      /zenkai skill list [jugador]        → consulta (un solo jugador)
                 .then(Commands.literal("skill")
                         .then(Commands.literal("give")
-                                .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("id", StringArgumentType.string())
-                                                .executes(ctx -> skillGive(ctx,
-                                                        EntityArgument.getPlayer(ctx, "player"),
-                                                        StringArgumentType.getString(ctx, "id"))))))
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> skillGive(c, sp,
+                                                                StringArgumentType.getString(c, "id")))))))
                         .then(Commands.literal("revoke")
-                                .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("id", StringArgumentType.string())
-                                                .executes(ctx -> skillRevoke(ctx,
-                                                        EntityArgument.getPlayer(ctx, "player"),
-                                                        StringArgumentType.getString(ctx, "id")))))))
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> skillRevoke(c, sp,
+                                                                StringArgumentType.getString(c, "id")))))))
+                        .then(Commands.literal("giveall")
+                                .executes(ctx -> skillGiveAll(ctx, ctx.getSource().getPlayerOrException()))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::skillGiveAll))))
+                        // list NO admite @a a propósito: es una consulta y con varios objetivos
+                        // escupiría (nº skills × nº jugadores) líneas de chat, ilegible.
+                        .then(Commands.literal("list")
+                                .executes(ctx -> skillList(ctx, ctx.getSource().getPlayerOrException()))
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> skillList(ctx, EntityArgument.getPlayer(ctx, "player"))))))
 
                 .then(Commands.literal("phys")
                         .then(Commands.literal("give")
-                                .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("tech", StringArgumentType.word())
-                                                .executes(ctx -> physGive(ctx,
-                                                        EntityArgument.getPlayer(ctx, "player"),
-                                                        StringArgumentType.getString(ctx, "tech")))))))
-
-
-
-
-
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> physGive(c, sp,
+                                                                StringArgumentType.getString(c, "tech"))))))))
         );
+    }
+
+    // ── Selectores múltiples ─────────────────────────────────────────────────
+    // Todos los <player> usan EntityArgument.players(), así que aceptan @a, @p, @r, @s,
+    // @e[type=player] o un nombre suelto. La acción corre UNA VEZ por objetivo y cada
+    // implementación se queda tal cual (firma de un solo ServerPlayer).
+
+    @FunctionalInterface
+    private interface PlayerAction {
+        int run(CommandContext<CommandSourceStack> ctx, ServerPlayer sp);
+    }
+
+    /** Objetivos del argumento "player". Lanza si el selector no encuentra a nadie (vanilla). */
+    private static Collection<ServerPlayer> targets(CommandContext<CommandSourceStack> ctx)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        return EntityArgument.getPlayers(ctx, "player");
+    }
+
+    /**
+     * Ejecuta la acción sobre cada objetivo y devuelve CUÁNTOS tuvieron éxito: es el valor
+     * que lee /execute store result, así que sirve para encadenar.
+     * Con más de un objetivo añade una línea de resumen (las implementaciones ya emiten
+     * su propio mensaje por jugador).
+     */
+    private static int forEach(CommandContext<CommandSourceStack> ctx,
+                               Collection<ServerPlayer> targets, PlayerAction action) {
+        int ok = 0;
+        for (ServerPlayer sp : targets) {
+            if (action.run(ctx, sp) > 0) ok++;
+        }
+        if (targets.size() > 1) {
+            final int n = ok, total = targets.size();
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                    "[Zenkai] " + n + "/" + total + " jugador(es) afectados"), true);
+        }
+        return ok;
     }
 
     // ── Implementaciones ─────────────────────────────────────────────────────
@@ -366,6 +412,62 @@ public class ModCommands {
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] Skill '" + id + "' revoked ← " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /**
+     * Otorga TODAS las habilidades del datapack al máximo. Son "granted", no compradas:
+     * sobreviven al respec y no consumen TP.
+     * OJO con levels_from_forms: su techo real NO es def.maxLevel(), sino la cadena de
+     * formas de SU raza (misma regla que SkillBuyPacket). Sin este mínimo, un humano
+     * acabaría con niveles de super_forms que no existen para él.
+     */
+    private static int skillGiveAll(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        if (SkillDef.all().isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal(
+                    "[Zenkai] No skills loaded (¿datapack sin cargar? prueba /reload)"));
+            return 0;
+        }
+        var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        int granted = 0, capped = 0;
+        for (SkillDef def : SkillDef.all()) {
+            int max = def.levelsFromForms()
+                    ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
+            if (max <= 0) { capped++; continue; }   // raza sin cadena de formas
+            if (att.skills().level(def.id()) >= max) continue;
+            att.skills().grant(def.id(), max);
+            granted++;
+        }
+        PlayerLifeCycle.sync(sp);
+        final int g = granted, c = capped;
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] " + g + " skill(s) maxed → " + sp.getGameProfile().getName()
+                        + (c > 0 ? " (" + c + " N/A para su raza)" : "")), true);
+        return 1;
+    }
+
+    /** Lista las habilidades del datapack con el nivel actual del jugador. */
+    private static int skillList(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        var all = SkillDef.all();
+        if (all.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] No skills loaded."));
+            return 0;
+        }
+        var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                        "[Zenkai] " + all.size() + " skill(s) — " + sp.getGameProfile().getName())
+                .withStyle(ChatFormatting.GOLD), false);
+        for (SkillDef def : all) {
+            int max = def.levelsFromForms()
+                    ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
+            int lvl = att.skills().level(def.id());
+            String extra = (def.master() != null ? " §8master:" + def.master() : "")
+                    + (def.purchasable() ? "" : " §8[no comprable]")
+                    + (def.levelsFromForms() ? " §8[formas]" : "");
+            ctx.getSource().sendSuccess(() -> Component.literal(
+                    String.format("§7- §f%s §7%d/%d §8· §7%d TP%s",
+                            def.id(), lvl, max, def.tpCost(), extra)), false);
+        }
         return 1;
     }
 

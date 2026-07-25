@@ -71,9 +71,9 @@ public class ImmortalityEffect extends MobEffect {
 
     @Override
     public boolean shouldApplyEffectTickThisTick(int duration, int amplifier) {
-        // Si quieres que sea cada 20 ticks (1 s), puedes hacer:
-        // return duration % 20 == 0;
-        // De momento lo dejamos en "cada tick" como tenías:
-        return true;
+        // Una vez por segundo, no por tick. Corría 20 veces más de lo que la fórmula
+        // documenta y disparaba un SyncPlayerStatsPacket CADA TICK por jugador inmortal.
+        return duration % 20 == 0;
     }
+
 }

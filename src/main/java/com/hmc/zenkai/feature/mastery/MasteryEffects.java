@@ -54,6 +54,9 @@ public final class MasteryEffects {
         if (MajinEffect.isActive(p)) {
             f *= 1.0 + CommonConfig.majinStatBonus();
         }
+        // Fatiga por agotar el kaioken. Va aquí porque FormSystem vuelca este valor en
+        // setStatMultiplier cada tick: así el castigo se propaga solo al PL, al daño y a la GUI.
+        if (form.isStrained(p.level().getGameTime())) f *= 0.9;
         return f;
     }
 }

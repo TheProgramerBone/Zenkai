@@ -8,6 +8,7 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.DamageTypeTags;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -54,6 +55,14 @@ public final class DownedDeathGuard {
 
         // Muerte provocada por el propio mod: dejarla pasar y limpiar la marca.
         if (ALLOW_DEATH.remove(sp.getUUID())) return;
+
+        // Daño que atraviesa invulnerabilidad (/kill, el vacío, genericKill): esta muerte NO
+        // es negociable. Sin esto, un inmortal era literalmente inmatable y quedaba atrapado
+        // cayendo bajo el mundo, porque el vacío usa este mismo tag.
+        if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            ALLOW_DEATH.remove(sp.getUUID());   // la marca ya no hace falta: la muerte pasa
+            return;
+        }
 
         MinecraftServer server = sp.getServer();
         if (server == null || !ModGameRules.enableRaceBoosts(server)) return;

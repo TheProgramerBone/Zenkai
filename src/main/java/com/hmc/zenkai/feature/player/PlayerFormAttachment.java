@@ -61,6 +61,9 @@ public class PlayerFormAttachment {
     /** Maestría por forma (clave = formId, 0..100). */
     private final Map<String, Float> formMastery = new HashMap<>();
 
+    /** Fin del strain (gameTime absoluto). 0 = sin fatiga. Ver KaiokenSystem. */
+    private long strainUntil = 0L;
+
     // ── Getters ──────────────────────────────────────────────────────────────
 
     public boolean isTransformHeld()      { return transformHeld; }
@@ -139,9 +142,11 @@ public class PlayerFormAttachment {
      */
     public boolean canAdvance(Player p, Race race) {
         if (race == null) return false;
-
-        if (kaiokenSwitch) return nextKaiokenTier(p) != null;
-
+        // Con strain no se sube escalón: se consulta desde cliente y servidor, así que el
+        // jugador ve que la transformación no arranca en vez de cancelársela a medias.
+        if (kaiokenSwitch) {
+            return !isStrained(p.level().getGameTime()) && nextKaiokenTier(p) != null;
+        }
         ResourceLocation target = targetForm(p, race);
         if (target == null) return false;
 
@@ -300,7 +305,7 @@ public class PlayerFormAttachment {
 
         double r2 = SHOUT_RANGE * SHOUT_RANGE;
         for (Player q : p.level().players()) {
-            if (q != p && q.distanceToSqr(p) <= r2) q.displayClientMessage(other, true);
+            if (q != p && q.distanceToSqr(p) <= r2) q.displayClientMessage(other, false);
         }
     }
 
@@ -334,6 +339,7 @@ public class PlayerFormAttachment {
         kaioken = KaiokenTier.OFF;
         kaiokenSwitch = false;
         selectedForm = null;
+        strainUntil = 0L;
     }
 
     /** Respec: se pierde la maestría además del estado. */
@@ -384,6 +390,7 @@ public class PlayerFormAttachment {
         tag.putString("formId", formId.toString());
         tag.putInt("kaioken", getKaioken().ordinal());
         tag.putBoolean("kaiokenSwitch", kaiokenSwitch);
+        tag.putLong("strainUntil", strainUntil);
         if (selectedForm != null) tag.putString("selectedForm", selectedForm.toString());
 
         CompoundTag fm = new CompoundTag();
@@ -406,6 +413,7 @@ public class PlayerFormAttachment {
         this.kaiokenSwitch = tag.getBoolean("kaiokenSwitch");
         this.selectedForm = tag.contains("selectedForm")
                 ? ResourceLocation.tryParse(tag.getString("selectedForm")) : null;
+        this.strainUntil = tag.getLong("strainUntil");
 
         formMastery.clear();
         if (tag.contains("formMastery")) {
@@ -416,5 +424,41 @@ public class PlayerFormAttachment {
         }
         // La forma guardada puede haber desaparecido del datapack entre partidas. No se valida
         // aquí (el registro aún no está cargado al leer NBT): lo hace validateOrReset en el tick.
+    }
+
+    /**
+     * Clave sintética de maestría para un escalón de Kaioken. NO es una forma real: vive en
+     * el mismo mapa formMastery para heredar persistencia NBT, sync y borrado en respec sin
+     * tocar save/load ni añadir packets. validateOrReset no toca el mapa, así que es estable.
+     */
+    public static ResourceLocation kaiokenMasteryKey(KaiokenTier tier) {
+        return ResourceLocation.fromNamespaceAndPath(
+                com.hmc.zenkai.Zenkai.MOD_ID, "kaioken/" + tier.name().toLowerCase(java.util.Locale.ROOT));
+    }
+
+    /** Maestría (0..100) del escalón indicado. */
+    public float getKaiokenMastery(KaiokenTier tier) {
+        if (tier == null || !tier.isOn()) return 0f;
+        return formMastery.getOrDefault(kaiokenMasteryKey(tier).toString(), 0f);
+    }
+
+    /** Por ESCALÓN, no global: dominar x20 exige usar x20 (si no, se farmearía x2 en AFK). */
+    public void addKaiokenMastery(KaiokenTier tier, float delta) {
+        if (tier == null || !tier.isOn() || delta <= 0) return;
+        String k = kaiokenMasteryKey(tier).toString();
+        formMastery.merge(k, delta, Float::sum);
+        formMastery.computeIfPresent(k, (key, v) -> Math.min(100f, v));
+    }
+
+    public long getStrainUntil() { return strainUntil; }
+
+    /** Fatiga tras agotar el kaioken: bloquea reactivarlo y castiga stats mientras dura. */
+    public boolean isStrained(long gameTime) { return gameTime < strainUntil; }
+
+    public void setStrain(long until) { this.strainUntil = Math.max(this.strainUntil, until); }
+
+    /** Segundos que faltan (para la UI). */
+    public float strainSecondsLeft(long gameTime) {
+        return isStrained(gameTime) ? (strainUntil - gameTime) / 20f : 0f;
     }
 }

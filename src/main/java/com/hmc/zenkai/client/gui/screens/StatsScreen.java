@@ -1,5 +1,8 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.event.tick.KaiokenSystem;
+import com.hmc.zenkai.feature.forms.KaiokenTier;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.client.gui.AlignmentPalette;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
@@ -285,14 +288,40 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     // ── Tooltips ─────────────────────────────────────────────────────────────
     /** Hover sobre el render del jugador: forma actual + su maestría. */
+    /** Hover sobre el render del jugador: forma actual + maestría, y el Kaioken si está activo. */
     private void renderPlayerHoverTooltip(GuiGraphics g, PlayerFormAttachment form,
                                           int mouseX, int mouseY, int x1, int y1, int x2, int y2) {
         if (mouseX < x1 || mouseX >= x2 || mouseY < y1 || mouseY >= y2) return;
         float mastery = form.getFormMastery(form.getFormId());
-        List<Component> lines = List.of(
-                formName(form.getFormId()),
-                Component.translatableWithFallback("screen.zenkai.stats_screen.mastery", "Mastery: %s%%",
-                        fmt(mastery)).withStyle(ChatFormatting.GOLD));
+        List<Component> lines = new ArrayList<>();
+        lines.add(formName(form.getFormId()));
+        lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.mastery",
+                "Mastery: %s%%", fmt(mastery)).withStyle(ChatFormatting.GOLD));
+
+        // El Kaioken es una capa APARTE de la forma y NO tiene maestría propia (son cinco
+        // escalones fijos del enum). Lo que sí progresa es el nivel de la habilidad, y se
+        // nota en el drenaje: por eso aquí se muestra el coste real en vida, que ya lleva
+        // dentro kaiokenDrainFactor. drainPerTick es estático puro -> vale en cliente.
+        KaiokenTier tier = form.getKaioken();
+        if (tier.isOn() && att != null && mc.player != null) {
+            double hpPerSecond = KaiokenSystem.drainPerTick(att, form,
+                    SkillEffects.kaiokenDrainFactor(mc.player)) * 20.0;
+            lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken",
+                    "Kaioken %s", tier.label()).withStyle(ChatFormatting.RED));
+            lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken_mastery",
+                    "  Mastery: %s%%", fmt(form.getKaiokenMastery(tier))).withStyle(ChatFormatting.GOLD));
+            lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken_stats",
+                    "  +%s%% stats", fmt(tier.statPercent() * 100.0)).withStyle(ChatFormatting.GRAY));
+            lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken_drain",
+                    "  -%s HP/s", fmt(hpPerSecond)).withStyle(ChatFormatting.DARK_RED));
+        }
+        if (att != null && mc.player != null
+                && form.isStrained(mc.player.level().getGameTime())) {
+            lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken_strain",
+                            "Strain: %ss (-10%% stats)",
+                            fmt(form.strainSecondsLeft(mc.player.level().getGameTime())))
+                    .withStyle(ChatFormatting.DARK_PURPLE));
+        }
         g.renderComponentTooltip(this.font, lines, mouseX, mouseY);
     }
 

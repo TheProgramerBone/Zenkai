@@ -25,6 +25,9 @@ public final class ClientZenkaiHooks {
     public static final ResourceLocation ICONS_TEX =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
 
+    private static final int C_BODY_KAIOKEN = 0xFFFF6633;  // quemando vida
+    private static final int C_BODY_STRAIN  = 0xFF9966CC;  // fatiga, stats penalizadas
+
     private static final int ICONS_TEX_W = 270;
     private static final int ICONS_TEX_H = 270;
 
@@ -68,6 +71,7 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_IMMORTAL = IconUV.grid(11, 0);
     private static final IconUV ICON_LEGENDARY = IconUV.grid(9, 0);
     private static final IconUV ICON_KAIOKEN = IconUV.grid(10, 0);
+    private static final IconUV ICON_STRAIN = IconUV.grid(8, 0);
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
@@ -96,6 +100,11 @@ public final class ClientZenkaiHooks {
         int barX = PANEL_X + 25;
         int barY = PANEL_Y + 8;
 
+        long now = mc.player.level().getGameTime();
+        KaiokenTier tier = form.getKaioken();
+        boolean strained = form.isStrained(now);
+        int bodyColor = tier.isOn() ? C_BODY_KAIOKEN : (strained ? C_BODY_STRAIN : C_BODY_FILL);
+
         // ========================
         // 1) BODY
         // ========================
@@ -104,7 +113,7 @@ public final class ClientZenkaiHooks {
                 barX, barY,
                 BAR_W, BAR_H,
                 stats.getBody(), stats.getBodyMax(),
-                C_BODY_FILL,
+                bodyColor,
                 "HP"
         );
 
@@ -161,8 +170,16 @@ public final class ClientZenkaiHooks {
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 
-        if (mc.player.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getKaioken() != KaiokenTier.OFF) {
+        // Excluyentes por construcción: el strain nace en el instante en que el kaioken se
+        // apaga por agotamiento, así que nunca coinciden y comparten hueco en la fila.
+        if (tier.isOn()) {
             drawBadge(g, iconX, iconY, ICON_KAIOKEN);
+            drawBadgeLabel(g, iconX, iconY, tier.label(), 0xFFFF8866);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        } else if (strained) {
+            drawBadge(g, iconX, iconY, ICON_STRAIN);
+            drawBadgeLabel(g, iconX, iconY,
+                    Math.round(form.strainSecondsLeft(now)) + "s", 0xFFCC99FF);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 
@@ -246,5 +263,13 @@ public final class ClientZenkaiHooks {
         static IconUV grid(int col, int row) {
             return new IconUV(col * ICON_CELL, row * ICON_CELL);
         }
+    }
+
+    /** Etiqueta corta pegada al borde inferior derecho de un badge ("x20", "12s"). */
+    private static void drawBadgeLabel(GuiGraphics g, int x, int y, String text, int color) {
+        if (text == null || text.isEmpty()) return;
+        Minecraft mc = Minecraft.getInstance();
+        int w = mc.font.width(text);
+        g.drawString(mc.font, text, x + BADGE_SIZE - w, y + BADGE_SIZE - 8, color, true);
     }
 }
