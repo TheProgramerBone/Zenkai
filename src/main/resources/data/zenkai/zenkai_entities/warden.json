@@ -1,6 +1,6 @@
 {
   "entity": "minecraft:warden",
-  "power_level": 25000,
+  "power_level": 13000,
   "archetype": "tank",
   "overrides": {
     "attributes": {

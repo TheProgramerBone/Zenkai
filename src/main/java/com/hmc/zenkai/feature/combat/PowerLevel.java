@@ -24,10 +24,10 @@ public final class PowerLevel {
     // (Si algún día quieres que la ofensiva "pese más" en el PL, sube estos y el PL se despega de la
     //  suma — pero entonces un stat podría superar el PL. Por eso el default es 1.0.)
     public static final double W_STR = 1.0; // melee
-    public static final double W_CON = 0.0; // body
+    public static final double W_CON = 1.0; // body
     public static final double W_DEX = 1.0; // defensa
     public static final double W_WIL = 1.0; // ki power
-    public static final double W_SPI = 0.0; // ki pool
+    public static final double W_SPI = 1.0; // ki pool
 
     /** PL a partir de cualquier portador de stats (jugador o entidad). */
     public static long compute(ZenkaiCombatStats s) {

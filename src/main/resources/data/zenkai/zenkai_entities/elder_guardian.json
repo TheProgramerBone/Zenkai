@@ -1,18 +1,9 @@
 {
   "entity": "minecraft:elder_guardian",
-  "power_level": 3000,
+  "power_level": 1710,
   "archetype": "ki_user",
   "moveset": {
-    "melee": false,
-    "ki_attacks": [
-      {
-        "type": "lazer",
-        "size": 4,
-        "rgb": "0x66FFCC",
-        "cooldown": 14,
-        "range": 26
-      }
-    ]
+    "melee": false
   },
   "rewards": {
     "tp": "auto"
