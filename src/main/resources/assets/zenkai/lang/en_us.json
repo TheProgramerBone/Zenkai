@@ -182,6 +182,7 @@
   "messages.zenkai.lock_on.none": "No target in sight",
   "messages.zenkai.lock_on.lost": "Lost the target",
   "messages.zenkai.lock_on.locked": "You need Ki Sense to lock on",
+  "messages.zenkai.sense_ki.locked": "You need Ki Sense",
   "messages.zenkai.lock_on.targeted": "%s has locked on to you",
   "messages.zenkai.kaioken.exhausted": "Your body gives out — Kaioken released",
   "message.zenkai.form_selected": "Form Selected: %s",

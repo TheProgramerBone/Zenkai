@@ -4,10 +4,12 @@ import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.combat.PowerLevel;
 import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
+import com.hmc.zenkai.registry.ModTags;
 import com.hmc.zenkai.util.MathUtil;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
@@ -145,14 +147,16 @@ public final class EntityStats implements ZenkaiCombatStats {
      * warden pasaban a matar de un golpe.
      */
     public void applyVanilla(LivingEntity le) {
+        double f     = categoryFactor(le);
         double hp    = le.getMaxHealth();
         double atk   = attrOr(le, Attributes.ATTACK_DAMAGE, 1.0);
         double armor = attrOr(le, Attributes.ARMOR, 0.0);
+        double dmgF  = f * CommonConfig.vanillaDamageRatio();
 
         attr.clear();
-        attr.put(ZenkaiAttributes.CONSTITUTION, (int) Math.max(1, Math.round(hp * CommonConfig.vanillaBodyFactor())));
-        attr.put(ZenkaiAttributes.STRENGTH,     (int) Math.max(0, Math.round(atk * CommonConfig.vanillaDamageFactor())));
-        attr.put(ZenkaiAttributes.DEXTERITY,    (int) Math.max(0, Math.round(armor * CommonConfig.vanillaDamageFactor())));
+        attr.put(ZenkaiAttributes.CONSTITUTION, (int) Math.max(1, Math.round(hp * f)));
+        attr.put(ZenkaiAttributes.STRENGTH,     (int) Math.max(0, Math.round(atk * dmgF)));
+        attr.put(ZenkaiAttributes.DEXTERITY,    (int) Math.max(0, Math.round(armor * dmgF)));
         attr.put(ZenkaiAttributes.WILLPOWER, 0);
         attr.put(ZenkaiAttributes.SPIRIT, 0);
         attr.put(ZenkaiAttributes.MIND, 0);
@@ -166,8 +170,20 @@ public final class EntityStats implements ZenkaiCombatStats {
         initialized = true;
     }
 
+    /**
+     * Un aldeano y un warden no pueden compartir factor: con uno global, el aldeano salía
+     * con PL 330 (en DBZ un humano corriente marca 5). La categoría lo resuelve sin listar
+     * mobs uno a uno, y zenkai_entities/*.json sigue mandando por encima de esto.
+     */
+    private static double categoryFactor(LivingEntity le) {
+        if (le.getType().is(ModTags.EntityTypes.BOSSES)) return CommonConfig.vanillaBossFactor();
+        return le.getType().getCategory() == MobCategory.MONSTER
+                ? CommonConfig.vanillaHostileFactor()
+                : CommonConfig.vanillaPassiveFactor();
+    }
+
     private static double attrOr(LivingEntity le, Holder<Attribute> a, double fallback) {
-        var inst = le.getAttribute(a);   // ⚠ ATTACK_DAMAGE no existe en pasivos (vaca, aldeano)
+        var inst = le.getAttribute(a);   // ATTACK_DAMAGE no existe en pasivos
         return inst == null ? fallback : inst.getValue();
     }
 }

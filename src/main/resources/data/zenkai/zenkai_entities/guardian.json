@@ -1,0 +1,20 @@
+{
+  "entity": "minecraft:guardian",
+  "power_level": 400,
+  "archetype": "ki_user",
+  "moveset": {
+    "melee": false,
+    "ki_attacks": [
+      {
+        "type": "lazer",
+        "size": 2,
+        "rgb": "0x66FFCC",
+        "cooldown": 10,
+        "range": 20
+      }
+    ]
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

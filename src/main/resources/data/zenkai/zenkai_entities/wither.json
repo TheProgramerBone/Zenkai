@@ -1,0 +1,20 @@
+{
+  "entity": "minecraft:wither",
+  "power_level": 15000,
+  "archetype": "boss",
+  "moveset": {
+    "melee": true,
+    "ki_attacks": [
+      {
+        "type": "wave",
+        "size": 5,
+        "rgb": "0x333333",
+        "cooldown": 12,
+        "range": 30
+      }
+    ]
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

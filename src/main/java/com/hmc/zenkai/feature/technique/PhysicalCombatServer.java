@@ -38,6 +38,10 @@ import java.util.UUID;
  *    chocar contra pared lo corta.
  *  - BARRAGE: 6 golpes, uno cada 2 ticks (12 ticks = 0.6 s), cono frontal por pulso.
  * Morir, caer derribado, bloquear o salir del modo combate cancela el movimiento activo.
+ *
+ * COSTE: absoluto y escalado con STR (staminaCost), igual que el golpe básico y que el ki.
+ * El cliente NO reimplementa la fórmula: llama a staminaCost() para su predicción, porque
+ * tenerla duplicada dejó las técnicas muertas cuando la fórmula cambió en un solo lado.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class PhysicalCombatServer {
@@ -46,10 +50,14 @@ public final class PhysicalCombatServer {
     private static final int DASH_TICKS = 8;      // 0.4 s de trayecto
     private static final int BARRAGE_TICKS = 12;  // 6 pulsos (cada 2 ticks)
     private static final double DASH_SPEED = 1.1;
-    /** Coste de estamina por unidad de poder físico. Simétrico a CommonConfig.kiCostPerPower():
-     *  STR sube daño Y coste, y la estamina (CON) decide cuántas veces lo sostienes.
-     *  Candidato a StatsConfig. */
-    private static final double STAMINA_COST_PER_POWER = 2.5;
+
+    /**
+     * Techo del coste como fracción del pool. El coste escala con STR y el pool con CON,
+     * así que un build con STR alta y CON baja llegaba a costes por encima de su barra
+     * entera y la técnica quedaba inutilizable PARA SIEMPRE. Con el techo, subir STR la
+     * encarece hasta este límite y ahí se queda: siempre quedan al menos 1/0.40 = 2 usos.
+     */
+    private static final double MAX_COST_PCT_OF_POOL = 0.40;
 
     /** Cooldowns por jugador+técnica (gameTime de disponibilidad). */
     private static final Map<UUID, long[]> COOLDOWNS = new HashMap<>();
@@ -84,6 +92,21 @@ public final class PhysicalCombatServer {
     }
     public static double currentDefenseScale() { return defenseScale; }
 
+    /**
+     * Coste de estamina de una técnica. ÚNICA fuente de verdad: la llaman el servidor al
+     * ejecutar y el cliente para decidir si merece la pena mandar el packet.
+     *
+     * Absoluto y escalado con el poder físico (no % del pool): así subir CON da usos de
+     * verdad. staminaPct() del datapack ya NO es un porcentaje, es "cuántos golpes básicos
+     * cuesta" — de ahí que sus valores estén en el rango 1.9-3.1 y no en 0.15-0.25.
+     */
+    public static int staminaCost(PlayerStatsAttachment att, PhysicalTechnique t) {
+        double raw = att.computeMeleeFinal() * CommonConfig.meleeStaminaPerHit()
+                * t.staminaPct() * MasteryEffects.techCostFactor(att, t.name());
+        return (int) Math.max(1, Math.ceil(
+                Math.min(raw, att.getStaminaMax() * MAX_COST_PCT_OF_POOL)));
+    }
+
     public static void tryExecute(ServerPlayer sp, PhysicalTechnique t) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         if (!att.isCombatActive() || !CombatModeServerState.isActive(sp.getUUID())) return;
@@ -98,13 +121,7 @@ public final class PhysicalCombatServer {
                 k -> new long[PhysicalTechnique.values().length]);
         if (now < cds[t.ordinal()]) return;
 
-
-        // Coste ABSOLUTO escalado con STR, igual que el golpe básico (CombatZenkaiHooks) y
-        // que el ki (KiCombatServer.computeCost). Antes era staminaMax * pct, así que subir
-        // estamina no daba ni un uso más: mismo patrón que tenía el kaioken con la vida.
-        // OJO: staminaPct() pasa a significar "cuántos golpes básicos cuesta", no % del pool.
-        int cost = (int) Math.ceil(att.computeMeleeFinal() * CommonConfig.meleeStaminaPerHit()
-                * t.staminaPct() * MasteryEffects.techCostFactor(att, t.name()));
+        int cost = staminaCost(att, t);
         if (att.getStamina() < cost) return;
 
         att.consumeStamina(cost);
@@ -369,6 +386,4 @@ public final class PhysicalCombatServer {
         COOLDOWNS.remove(id);
         ACTIVE.remove(id);
     }
-
-
 }

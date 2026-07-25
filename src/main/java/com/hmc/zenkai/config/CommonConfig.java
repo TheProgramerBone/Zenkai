@@ -1,13 +1,10 @@
 package com.hmc.zenkai.config;
 
-import com.hmc.zenkai.feature.Race;
-import com.hmc.zenkai.feature.Style;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 
 /**
@@ -86,15 +83,29 @@ public final class CommonConfig {
             BUILDER.comment("Fallback mobs: CON (and therefore bodyMax) = maxHealth * factor")
                     .defineInRange("entity.vanilla_body_factor", 15.0D, 0.1D, 1000.0D);
 
-    private static final ModConfigSpec.DoubleValue VANILLA_DAMAGE_FACTOR_RAW =
-            BUILDER.comment("Fallback mobs: STR = attackDamage * factor, DEX = armor * factor.",
-                            "Deliberately lower than the body factor: sharing it made creepers and the warden one-shot players")
-                    .defineInRange("entity.vanilla_damage_factor", 6.0D, 0.0D, 1000.0D);
 
     private static final ModConfigSpec.DoubleValue VANILLA_TP_REWARD_FACTOR_RAW =
             BUILDER.comment("Fallback mobs: TP reward as a fraction of the automatic one (PL-based).",
                             "Every mob starts granting TP once the fallback is on, so mob farms can outpace training")
                     .defineInRange("entity.vanilla_tp_reward_factor", 0.25D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue VANILLA_PASSIVE_FACTOR_RAW =
+            BUILDER.comment("Fallback mobs, passive/ambient: CON = maxHealth * factor.",
+                            "1.0 keeps villagers around PL 20, canon for a human with no ki training")
+                    .defineInRange("entity.factor.passive", 1.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue VANILLA_HOSTILE_FACTOR_RAW =
+            BUILDER.comment("Fallback mobs, MobCategory.MONSTER: CON = maxHealth * factor")
+                    .defineInRange("entity.factor.hostile", 12.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue VANILLA_BOSS_FACTOR_RAW =
+            BUILDER.comment("Fallback mobs tagged zenkai:bosses: CON = maxHealth * factor")
+                    .defineInRange("entity.factor.boss", 40.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue VANILLA_DAMAGE_RATIO_RAW =
+            BUILDER.comment("Fallback mobs: how much of the category factor applies to damage.",
+                            "Below 1.0 on purpose: sharing it made creepers and the warden one-shot players")
+                    .defineInRange("entity.factor.damage_ratio", 0.4D, 0.0D, 10.0D);
 
     // =====================================================================
     // SPEC — Pools y regeneración
@@ -279,8 +290,11 @@ public final class CommonConfig {
     private static volatile double MAJIN_STAT_BONUS = 0.10D;
     private static volatile boolean VANILLA_STATS_FALLBACK = true;
     private static volatile double  VANILLA_BODY_FACTOR = 15.0D;
-    private static volatile double  VANILLA_DAMAGE_FACTOR = 6.0D;
     private static volatile double  VANILLA_TP_REWARD_FACTOR = 0.25D;
+    private static volatile double VANILLA_PASSIVE_FACTOR = 1.0D;
+    private static volatile double VANILLA_HOSTILE_FACTOR = 12.0D;
+    private static volatile double VANILLA_BOSS_FACTOR = 40.0D;
+    private static volatile double VANILLA_DAMAGE_RATIO = 0.4D;
 
     private static volatile double TRAIN_DMG_TP = 0.02D, TRAIN_AIR_TP = 0.0001D,
             TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.01D,
@@ -319,8 +333,11 @@ public final class CommonConfig {
 
         VANILLA_STATS_FALLBACK   = VANILLA_STATS_FALLBACK_RAW.get();
         VANILLA_BODY_FACTOR      = VANILLA_BODY_FACTOR_RAW.get();
-        VANILLA_DAMAGE_FACTOR    = VANILLA_DAMAGE_FACTOR_RAW.get();
+        VANILLA_DAMAGE_RATIO = VANILLA_DAMAGE_RATIO_RAW.get();
         VANILLA_TP_REWARD_FACTOR = VANILLA_TP_REWARD_FACTOR_RAW.get();
+        VANILLA_PASSIVE_FACTOR = VANILLA_PASSIVE_FACTOR_RAW.get();
+        VANILLA_BOSS_FACTOR = VANILLA_BOSS_FACTOR_RAW.get();
+        VANILLA_HOSTILE_FACTOR = VANILLA_HOSTILE_FACTOR_RAW.get();
 
 
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
@@ -370,8 +387,12 @@ public final class CommonConfig {
 
     public static boolean vanillaStatsFallback()   { return VANILLA_STATS_FALLBACK; }
     public static double  vanillaBodyFactor()      { return VANILLA_BODY_FACTOR; }
-    public static double  vanillaDamageFactor()    { return VANILLA_DAMAGE_FACTOR; }
+    public static double  vanillaDamageFactor()    { return VANILLA_DAMAGE_RATIO; }
     public static double  vanillaTpRewardFactor()  { return VANILLA_TP_REWARD_FACTOR; }
+    public static double vanillaPassiveFactor() { return VANILLA_PASSIVE_FACTOR; }
+    public static double vanillaHostileFactor() { return VANILLA_HOSTILE_FACTOR; }
+    public static double vanillaBossFactor() { return VANILLA_BOSS_FACTOR; }
+    public static double vanillaDamageRatio() { return VANILLA_DAMAGE_RATIO; }
 
     public static double bodyScale()      { return BODY_SCALE; }
     public static double staminaScale()   { return STAMINA_SCALE; }

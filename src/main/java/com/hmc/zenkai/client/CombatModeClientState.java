@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.event.ZenkaiPalAnimations;
 import com.hmc.zenkai.feature.combat.BlockingPacket;
 import com.hmc.zenkai.feature.combat.CombatModePacket;
+import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerTechniques;
 import com.hmc.zenkai.feature.technique.KiChargeStartPacket;
@@ -12,6 +13,7 @@ import com.hmc.zenkai.feature.technique.PhysicalFirePacket;
 import com.hmc.zenkai.feature.technique.KiCombatServer;
 import com.hmc.zenkai.feature.technique.KiTechnique;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.technique.PhysicalCombatServer;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -37,6 +39,12 @@ import java.util.concurrent.ConcurrentHashMap;
  *  - COOLDOWNS espejo: al disparar se anota localmente ready-at por slot (el servidor
  *    es autoritativo; esto es solo para pintar el overlay y no cargar en vano).
  *  - REMOTES / REMOTE_BLOCKING: estados de otros jugadores para las poses PAL.
+ *
+ * PREDICCIÓN: las guardas de aquí deben ESPEJAR las de PhysicalCombatServer.tryExecute, y
+ * el coste sale de PhysicalCombatServer.staminaCost() en vez de recalcularse. Tener la
+ * fórmula duplicada dejó las físicas muertas cuando cambió en un solo lado, y olvidar la
+ * guarda de bloqueo hacía que el cooldown local se gastara en un ataque que el servidor
+ * rechazaba en silencio.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class CombatModeClientState {
@@ -57,12 +65,12 @@ public final class CombatModeClientState {
     // Cooldowns espejo (slot -> gameTime en que vuelve a estar listo)
     private static final Map<Integer, Long> READY_AT = new ConcurrentHashMap<>();
 
-    // Bloqueo local (edge-trigger)
+    // Bloqueo local (edge-trigger). Es lo ÚLTIMO enviado al servidor, así que es
+    // exactamente el estado con el que él va a validar.
     private static boolean lastBlockingSent = false;
 
     /** Cooldowns cliente de físicas (gameTime listo), por ordinal. */
     private static final Map<Integer, Long> PHYS_READY_AT = new HashMap<>();
-    private static boolean lastPhysCombo = false;
 
     // Estados remotos
     private static final Map<Integer, Remote> REMOTES = new ConcurrentHashMap<>();
@@ -150,12 +158,13 @@ public final class CombatModeClientState {
             if (phys != null) {
                 // Física: instantánea (con cooldown local optimista + anim).
                 long now = mc.level.getGameTime();
-                // Espeja PhysicalCombatServer.tryExecute: sin estamina no se dispara y,
-                // NO se arranca el cooldown local (si no, la tecla queda muerta en balde).
-                int cost = (int) Math.ceil(att.getStaminaMax() * phys.staminaPct()
-                        * com.hmc.zenkai.feature.mastery.MasteryEffects.techCostFactor(att, phys.name()));
-                boolean canPay = phys.enabled() && att.getStamina() >= cost;
-                if (canPay && PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
+                // Espeja PhysicalCombatServer.tryExecute LLAMANDO a su fórmula, no copiándola.
+                // Si alguna guarda falla no se manda el packet NI se arranca el cooldown
+                // local: si no, la tecla quedaba muerta por un ataque que nunca ocurrió.
+                boolean blocked = lastBlockingSent || att.flags().isDowned();
+                int cost = PhysicalCombatServer.staminaCost(att, phys);
+                boolean canFire = phys.enabled() && !blocked && att.getStamina() >= cost;
+                if (canFire && PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
                     PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
                     PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks()); // optimista
                     ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: pendiente)
@@ -260,6 +269,7 @@ public final class CombatModeClientState {
         selected = 0;
         cancelCharge();
         READY_AT.clear();
+        PHYS_READY_AT.clear();
         lastBlockingSent = false;
         REMOTES.clear();
         REMOTE_BLOCKING.clear();
@@ -273,11 +283,12 @@ public final class CombatModeClientState {
         return left <= 0 ? 0 : Math.min(1.0, left / (double) Math.max(1, t.cooldownTicks()));
     }
 
+    /** Ticks de carga requeridos, ya reducidos por la maestría de la técnica. */
     private static int reqChargeFor(Minecraft mc, KiTechnique t) {
         int base = Math.max(1, t.type().chargeTicks());
         if (mc.player == null) return base;
         var att = PlayerStatsAttachment.get(mc.player);
-        double castF = com.hmc.zenkai.feature.mastery.MasteryEffects.techCastFactor(att, t.type().name());
-        return Math.max(1, (int) Math.round(t.type().chargeTicks() * castF));
+        double castF = MasteryEffects.techCastFactor(att, t.type().name());
+        return Math.max(1, (int) Math.round(base * castF));
     }
 }

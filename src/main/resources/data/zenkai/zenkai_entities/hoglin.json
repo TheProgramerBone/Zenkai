@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:hoglin",
+  "power_level": 500,
+  "archetype": "brawler",
+  "moveset": {
+    "melee": true
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

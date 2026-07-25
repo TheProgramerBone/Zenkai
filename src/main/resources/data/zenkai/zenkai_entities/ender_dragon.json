@@ -1,0 +1,21 @@
+{
+  "entity": "minecraft:ender_dragon",
+  "power_level": 12000,
+  "archetype": "boss",
+  "moveset": {
+    "melee": true,
+    "ki_attacks": [
+      {
+        "type": "big_blast",
+        "size": 6,
+        "rgb": "0xAA33FF",
+        "cooldown": 20,
+        "range": 40,
+        "damage_mult": 1.4
+      }
+    ]
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

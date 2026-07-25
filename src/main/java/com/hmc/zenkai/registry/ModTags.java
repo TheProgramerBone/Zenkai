@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
@@ -35,5 +36,15 @@ public class ModTags {
         public static final TagKey<net.minecraft.world.level.levelgen.structure.Structure> DRAGON_BALLS =
                 TagKey.create(Registries.STRUCTURE,
                         ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "dragon_balls"));
+    }
+
+    public static class EntityTypes {
+        /** Mobs que merecen escala de jefe. El resto se reparte por MobCategory. */
+        public static final TagKey<EntityType<?>> BOSSES = createTag("bosses");
+
+        private static TagKey<EntityType<?>> createTag(String name) {
+            return TagKey.create(Registries.ENTITY_TYPE,
+                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, name));
+        }
     }
 }
