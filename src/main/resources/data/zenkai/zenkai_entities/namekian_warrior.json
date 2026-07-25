@@ -1,6 +1,6 @@
 {
-  "entity": "zenkai:saibaman",
-  "power_level": 1200,
+  "entity": "zenkai:namekian_warrior",
+  "power_level": 3000,
   "archetype": "brawler",
   "overrides": {
     "attributes": { "strength": "+20%" },
@@ -10,7 +10,7 @@
   "moveset": {
     "melee": true,
     "ki_attacks": [
-      { "type": "wave", "size": 3, "rgb": "0x33CCFF", "cooldown": 400, "range": 20 },
+      { "type": "wave", "size": 3, "rgb": "0x49cc5d", "cooldown": 400, "range": 20 },
       { "type": "blast", "size": 5, "rgb": "0xFFAA00", "cooldown": 200, "range": 24, "damage_mult": 1.3 }
     ]
   },

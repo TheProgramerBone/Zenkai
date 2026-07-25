@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:blaze",
+  "power_level": 256,
+  "archetype": "ki_user",
+  "moveset": {
+    "melee": false
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

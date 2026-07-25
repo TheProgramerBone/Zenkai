@@ -22,14 +22,20 @@ public class SaibamanEntity extends ZenkaiDefaultMob {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, true));
+
+        // Prioridad 1: Ataque cuerpo a cuerpo (Máxima preferencia de combate)
+        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2D, true));
+
+        // Prioridad 2 (o 3): Ataque a distancia como alternativa
+        addKiAttackGoalIfDefined(2, 1);
+
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this, SaibamanEntity.class).setAlertOthers());
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, true));
-        addKiAttackGoalIfDefined(1, 1);
     }
 
     @Override

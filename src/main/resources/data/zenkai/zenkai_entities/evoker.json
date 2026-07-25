@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:evoker",
+  "power_level": 456,
+  "archetype": "ki_user",
+  "moveset": {
+    "melee": false
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:ravager",
+  "power_level": 728,
+  "archetype": "tank",
+  "moveset": {
+    "melee": true
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:wither_skeleton",
+  "power_level": 372,
+  "archetype": "brawler",
+  "moveset": {
+    "melee": true
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

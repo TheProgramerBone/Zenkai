@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:snow_golem",
+  "power_level": 36,
+  "archetype": "balanced",
+  "moveset": {
+    "melee": false
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

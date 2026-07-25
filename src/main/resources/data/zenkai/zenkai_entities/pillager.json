@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:pillager",
+  "power_level": 180,
+  "archetype": "balanced",
+  "moveset": {
+    "melee": true
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

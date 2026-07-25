@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:piglin",
+  "power_level": 217,
+  "archetype": "brawler",
+  "moveset": {
+    "melee": true
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

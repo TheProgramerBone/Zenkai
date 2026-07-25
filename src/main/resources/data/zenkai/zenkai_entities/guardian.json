@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:guardian",
+  "power_level": 228,
+  "archetype": "ki_user",
+  "moveset": {
+    "melee": false
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

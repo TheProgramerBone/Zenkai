@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:enderman",
+  "power_level": 532,
+  "archetype": "speedster",
+  "moveset": {
+    "melee": true
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}

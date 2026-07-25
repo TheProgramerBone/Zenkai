@@ -1,0 +1,11 @@
+{
+  "entity": "minecraft:witch",
+  "power_level": 285,
+  "archetype": "ki_user",
+  "moveset": {
+    "melee": false
+  },
+  "rewards": {
+    "tp": "auto"
+  }
+}
