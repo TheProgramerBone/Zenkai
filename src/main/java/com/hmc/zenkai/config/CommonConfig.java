@@ -287,10 +287,6 @@ public final class CommonConfig {
             TRAIN_HTC_MULT = 2.0D, TRAIN_MIN_EFF = 0.05D;
     private static volatile int TRAIN_AIR_TICKS = 10;
 
-    private static final EnumMap<Race, int[]>     RACE_BASES  = new EnumMap<>(Race.class);
-    private static final EnumMap<Race, double[]>  RACE_MULTS  = new EnumMap<>(Race.class);
-    private static final EnumMap<Style, double[]> STYLE_MULTS = new EnumMap<>(Style.class);
-
     // =====================================================================
     // CARGA
     // =====================================================================
@@ -354,12 +350,6 @@ public final class CommonConfig {
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
-
-        RACE_BASES.clear();
-
-        RACE_MULTS.clear();
-
-        STYLE_MULTS.clear();
     }
 
     // =====================================================================
