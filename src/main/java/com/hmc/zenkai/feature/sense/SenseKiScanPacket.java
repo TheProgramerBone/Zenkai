@@ -33,6 +33,10 @@ import java.util.List;
  *  - Jugador con raza / entidad con stats -> su PL real (y su body real).
  *  - Entidad con JSON display_only -> PL fijo del JSON; vida = la vanilla.
  *  - Mob vanilla / jugador sin raza -> PL = vida_max × factor (config); vida = la vanilla.
+ *
+ * DESGLOSE (melee/defensa/kiPower): solo para la entidad FIJADA con el lock-on y solo si el
+ * Ki Sense está al máximo. Se decide aquí y no en la GUI: si viajaran siempre, ocultarlos en
+ * el cliente sería un gate de mentira.
  */
 public record SenseKiScanPacket() implements CustomPacketPayload {
     public static final Type<SenseKiScanPacket> TYPE =
@@ -56,17 +60,35 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
             double r = CommonConfig.senseKiRange() * SkillEffects.senseRangeFactor(sp);
             AABB box = AABB.ofSize(sp.position(), r * 2, r * 2, r * 2);
 
+            // Quién puede ver números exactos y de quién: al máximo de Ki Sense, y solo del fijado.
+            boolean numbers = SkillEffects.senseShowsNumbers(sp);
+            int locked = numbers ? SenseServerState.lockOf(sp) : -1;
+
             List<SenseKiDataPacket.Entry> out = new ArrayList<>();
             for (LivingEntity le : sp.serverLevel().getEntitiesOfClass(LivingEntity.class, box,
                     e -> e != sp && e.isAlive() && !e.isSpectator())) {
-                out.add(buildEntry(le));
+                out.add(buildEntry(le, le.getId() == locked));
                 if (out.size() >= 128) break; // techo de seguridad del paquete
             }
             PacketDistributor.sendToPlayer(sp, new SenseKiDataPacket(out));
         });
     }
 
-    private static SenseKiDataPacket.Entry buildEntry(LivingEntity le) {
+    private static SenseKiDataPacket.Entry buildEntry(LivingEntity le, boolean withBreakdown) {
+        SenseKiDataPacket.Entry base = buildBase(le);
+        if (!withBreakdown) return base;
+
+        long[] b = ZenkaiStats.resolveBreakdown(le); // null = sin stats del mod
+        if (b == null) return base;
+        return new SenseKiDataPacket.Entry(base.entityId(),
+                base.body(), base.bodyMax(),
+                base.stamina(), base.staminaMax(),
+                base.energy(), base.energyMax(),
+                base.alignment(), base.powerLevel(), base.isPlayer(),
+                b[0], b[1], b[2]);
+    }
+
+    private static SenseKiDataPacket.Entry buildBase(LivingEntity le) {
         boolean isPlayer = le instanceof Player;
 
         // Gamerule de la capa Zenkai apagado: el combate va por vida vanilla (los pools quedan

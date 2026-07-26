@@ -23,7 +23,7 @@ public final class SkillEffects {
     public static int level(Player p, String skillId) {
         if (p == null) return 0;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
-        return att == null ? 0 : att.skills().level(skillId);
+        return att.skills().level(skillId);
     }
 
     /** Valor de una curva en el nivel actual; devuelve fallback si no tiene la habilidad. */
@@ -104,5 +104,10 @@ public final class SkillEffects {
     /** Escalón más alto que este jugador puede usar. */
     public static KaiokenTier maxKaioken(Player p) {
         return KaiokenTier.highestFor(level(p, KAIOKEN));
+    }
+
+    /** Los números exactos del objetivo fijado se desbloquean al máximo (curva del datapack). */
+    public static boolean senseShowsNumbers(Player p) {
+        return curve(p, KI_SENSE, "numbers", 0.0) >= 1.0;
     }
 }

@@ -8,6 +8,12 @@ public enum ScouterMode {
     OFF,
     /** PL de lo que tienes en la mira + etiqueta DÉBIL/FORMIDABLE/AMENAZA. */
     POWER,
+    /**
+     * Desglose del PL del objetivo: melee, defensa y poder de ki. Van justo detrás de POWER
+     * porque son literalmente sus sumandos — con los pesos a 1.0, melee+defensa+kiPower ES
+     * el PL, así que este modo explica el número del anterior.
+     */
+    ATTRIBUTES,
     /** Busca la entidad con MÁS PL en rango (solo jugadores con raza y mobs con stats). */
     STRONGEST,
     /** Esfera del dragón más cercana (requiere la mejora de radar en el ítem). */

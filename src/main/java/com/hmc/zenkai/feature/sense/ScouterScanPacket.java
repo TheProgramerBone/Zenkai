@@ -46,9 +46,11 @@ public record ScouterScanPacket() implements CustomPacketPayload {
 
             if (hit != null && hit.getEntity() instanceof LivingEntity target) {
                 long pl = ZenkaiStats.resolveDisplayPowerLevel(target);
-                PacketDistributor.sendToPlayer(sp, new ScouterDataPacket(true, pl));
+                long[] b = ZenkaiStats.resolveBreakdown(target);   // null = sin stats del mod
+                PacketDistributor.sendToPlayer(sp, new ScouterDataPacket(true, pl,
+                        b == null ? 0L : b[0], b == null ? 0L : b[1], b == null ? 0L : b[2]));
             } else {
-                PacketDistributor.sendToPlayer(sp, new ScouterDataPacket(false, 0L));
+                PacketDistributor.sendToPlayer(sp, ScouterDataPacket.empty());
             }
         });
     }

@@ -14,11 +14,12 @@ import net.neoforged.neoforge.network.PacketDistributor;
 /**
  * Estado CLIENTE del scouter.
  *
- *  - F4 con scouter puesto CICLA el modo: OFF -> PODER -> MÁS FUERTE -> RADAR -> OFF.
+ *  - F4 con scouter puesto CICLA el modo: OFF -> PODER -> STATS -> MÁS FUERTE -> RADAR -> OFF.
  *    Silencioso: el feedback es el propio panel (muestra el título del modo).
  *    Al salir de OFF apaga el sentir el ki (mutuamente excluyentes).
- *  - PODER: manda ScouterScanPacket (raycast de la mira) cada SCAN_INTERVAL ticks.
- *  - MÁS FUERTE / RADAR: manda ScouterAreaScanPacket cada AREA_INTERVAL ticks. El cliente
+ *  - PODER y STATS: mandan ScouterScanPacket (raycast de la mira) cada SCAN_INTERVAL ticks.
+ *    Comparten scan porque comparten objetivo: STATS solo desglosa el PL que PODER resume.
+ *  - MÁS FUERTE / RADAR: mandan ScouterAreaScanPacket cada AREA_INTERVAL ticks. El cliente
  *    cachea la POSICIÓN objetivo y ScouterOverlay recalcula la flecha cada frame.
  *  - Si te quitas el scouter, vuelve a OFF solo.
  */
@@ -31,9 +32,12 @@ public final class ScouterClientState {
     private static ScouterMode mode = ScouterMode.OFF;
     private static int tickCounter = 0;
 
-    // --- Caché modo PODER (raycast de la mira) ---
+    // --- Caché modo PODER / STATS (raycast de la mira) ---
     private static boolean targetFound = false;
     private static long targetPl = 0L;
+    private static long targetMelee = 0L;
+    private static long targetDefense = 0L;
+    private static long targetKiPower = 0L;
 
     // --- Caché modos de ÁREA (más fuerte / radar) ---
     private static byte areaStatus = ScouterAreaDataPacket.STATUS_NONE;
@@ -44,6 +48,15 @@ public final class ScouterClientState {
     public static boolean isOverlayOn()   { return mode != ScouterMode.OFF; }
     public static boolean hasTarget()     { return targetFound; }
     public static long targetPowerLevel() { return targetPl; }
+
+    public static long targetMelee()   { return targetMelee; }
+    public static long targetDefense() { return targetDefense; }
+    public static long targetKiPower() { return targetKiPower; }
+
+    /** ¿El objetivo tiene stats del mod? Un mob vanilla sin JSON solo da PL de display. */
+    public static boolean hasBreakdown() {
+        return targetFound && (targetMelee > 0 || targetDefense > 0 || targetKiPower > 0);
+    }
 
     public static byte areaStatus() { return areaStatus; }
     public static double areaX()    { return areaX; }
@@ -98,11 +111,12 @@ public final class ScouterClientState {
             return;
         }
 
-        int interval = (mode == ScouterMode.POWER) ? SCAN_INTERVAL : AREA_INTERVAL;
+        boolean aimed = (mode == ScouterMode.POWER || mode == ScouterMode.ATTRIBUTES);
+        int interval = aimed ? SCAN_INTERVAL : AREA_INTERVAL;
         if (++tickCounter >= interval) {
             tickCounter = 0;
             switch (mode) {
-                case POWER -> PacketDistributor.sendToServer(new ScouterScanPacket());
+                case POWER, ATTRIBUTES -> PacketDistributor.sendToServer(new ScouterScanPacket());
                 case STRONGEST -> PacketDistributor.sendToServer(
                         new ScouterAreaScanPacket(ScouterAreaScanPacket.MODE_STRONGEST));
                 case RADAR -> PacketDistributor.sendToServer(
@@ -112,10 +126,13 @@ public final class ScouterClientState {
         }
     }
 
-    /** Respuesta del servidor: raycast de la mira (modo PODER). */
-    public static void onData(boolean found, long pl) {
+    /** Respuesta del servidor: raycast de la mira (modos PODER y STATS). */
+    public static void onData(boolean found, long pl, long melee, long defense, long kiPower) {
         targetFound = found;
         targetPl = pl;
+        targetMelee = melee;
+        targetDefense = defense;
+        targetKiPower = kiPower;
     }
 
     /** Respuesta del servidor: escaneo por área. Descarta respuestas de un modo ya abandonado. */
@@ -133,6 +150,9 @@ public final class ScouterClientState {
     private static void clearCaches() {
         targetFound = false;
         targetPl = 0L;
+        targetMelee = 0L;
+        targetDefense = 0L;
+        targetKiPower = 0L;
         areaStatus = ScouterAreaDataPacket.STATUS_NONE;
         areaPl = 0L;
     }

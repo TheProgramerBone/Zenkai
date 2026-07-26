@@ -6,6 +6,7 @@ import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.combat.SenseKiMode;
 import com.hmc.zenkai.feature.sense.SenseKiDataPacket;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
@@ -23,7 +24,6 @@ import org.joml.Matrix4f;
 
 /**
  * Overlay flotante del SENTIR EL KI. Billboards sobre la cabeza, visibles A TRAVÉS de paredes.
- *
  * Lo que se ve depende del nivel de la habilidad Ki Sense (percepción CUALITATIVA; la cifra
  * exacta de PL es cosa del scouter):
  *   nv1  marcador de fuerza relativa (rojo más fuerte / amarillo similar / verde más débil)
@@ -31,14 +31,15 @@ import org.joml.Matrix4f;
  *   nv3  + marcador de alineamiento (gradiente de AlignmentPalette, el mismo de StatsScreen)
  *   nv4  + barra de ki
  *   nv5  + barra de estamina
- *
+ * Y al MÁXIMO, el desglose numérico (ATK/DEF/KI) de la entidad que tengas FIJADA. Ese gate
+ * no se comprueba aquí: el servidor solo manda esos números para el objetivo del lock-on y
+ * con la habilidad al tope, así que si el Entry los trae, se pintan y punto.
  * Render: RenderType.textBackgroundSeeThrough() + bufferSource del juego (el camino de los
  * fondos de nametag). Reglas aprendidas EN JUEGO de este RenderType:
  *  - Cullea: el winding de quad(...) es el frontal correcto para nuestra transformación.
  *  - Las capas NO deben superponerse: quads coplanares en el mismo plano hacían z-fighting
  *    (titileo). Por eso el layout es SIN solapamiento: relleno hasta pct, fondo desde pct,
  *    y el borde en 4 tiras alrededor.
- *
  * OJO con el eje Y: tras el scale de nametag (-0.025 en Y) el +Y va HACIA ABAJO. Por eso los
  * marcadores viven en Y negativa y las barras van sumando hacia abajo.
  */
@@ -67,6 +68,13 @@ public final class SenseKiOverlayRenderer {
     // Pools (nv4, nv5).
     private static final int C_KI      = 0xFF40A0FF;
     private static final int C_STAMINA = 0xFFB0F040;
+
+    // Desglose numérico del objetivo fijado.
+    /** La fuente mide 9 de alto y las barras 4: a tamaño normal el bloque taparía el overlay. */
+    private static final float NUM_SCALE = 0.5f;
+    private static final int C_ATK = 0xFFFF7060;
+    private static final int C_DEF = 0xFF70B0FF;
+    private static final int C_KIP = 0xFFC080FF;
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent e) {
@@ -102,16 +110,23 @@ public final class SenseKiOverlayRenderer {
             pose.mulPose(cam.rotation());          // billboard: mira a la cámara
             pose.scale(-0.025f, -0.025f, 0.025f);  // convención nametag
 
-            drawEntry(pose.last().pose(), vc, entry, mc, lvl);
+            drawEntry(pose, buffers, vc, entry, mc, lvl);
             pose.popPose();
         }
-
-        buffers.endBatch(RenderType.textBackgroundSeeThrough());
+        // endBatch SIN argumento: el desglose usa Font.drawInBatch, que escribe en otros
+        // RenderType. Cerrando solo textBackgroundSeeThrough, el texto se quedaba sin volcar.
+        buffers.endBatch();
     }
 
-    /** Pinta lo que el nivel permita ver de esta entidad. */
-    private static void drawEntry(Matrix4f m, VertexConsumer vc, SenseKiDataPacket.Entry en,
-                                  Minecraft mc, int lvl) {
+    /**
+     * Pinta lo que el nivel permita ver de esta entidad.
+     * Recibe el PoseStack (y no solo su Matrix4f) porque el bloque numérico necesita su
+     * propia escala, así que empuja y saca su propia matriz.
+     */
+    private static void drawEntry(PoseStack pose, MultiBufferSource buffers, VertexConsumer vc,
+                                  SenseKiDataPacket.Entry en, Minecraft mc, int lvl) {
+        Matrix4f m = pose.last().pose();
+
         // ── Fila de marcadores (arriba, en Y negativa) ──
         boolean showAlign = lvl >= 3;
         float markY0 = -(MARK + 2f), markY1 = -2f;
@@ -139,6 +154,14 @@ public final class SenseKiOverlayRenderer {
         }
         if (lvl >= 5 && en.isPlayer()) {
             drawBar(m, vc, y, en.stamina(), en.staminaMax(), C_STAMINA);
+            y += BAR_H + BAR_GAP;
+        }
+
+        // ── Desglose del fijado ──
+        // FUERA del bloque de estamina a propósito: si dependiera de isPlayer(), un mob
+        // fijado nunca mostraría sus números. Y el nivel ya lo filtró el servidor.
+        if (en.hasBreakdown()) {
+            drawNumbers(pose, buffers, en, mc, y + BAR_GAP);
         }
     }
 
@@ -158,6 +181,33 @@ public final class SenseKiOverlayRenderer {
         if (en.powerLevel() < myPl * t) return C_WEAKER;
         if (en.powerLevel() > myPl / t) return C_STRONGER;
         return C_SIMILAR;
+    }
+
+    /**
+     * Tres líneas con el desglose del PL (sus tres sumandos con pesos 1.0).
+     * Empuja su propia matriz porque necesita otra escala, y usa Font.drawInBatch en modo
+     * SEE_THROUGH para compartir el bufferSource con los quads y respetar el ver-a-través.
+     */
+    private static void drawNumbers(PoseStack pose, MultiBufferSource buffers,
+                                    SenseKiDataPacket.Entry en, Minecraft mc, float yTop) {
+        pose.pushPose();
+        pose.translate(0f, yTop, 0f);
+        pose.scale(NUM_SCALE, NUM_SCALE, NUM_SCALE);
+        Matrix4f m = pose.last().pose();
+
+        float lh = mc.font.lineHeight + 1f;
+        line(mc, m, buffers, "ATK " + ZenkaiNumbers.format(en.melee()),   0f,      C_ATK);
+        line(mc, m, buffers, "DEF " + ZenkaiNumbers.format(en.defense()), lh,      C_DEF);
+        line(mc, m, buffers, "KI "  + ZenkaiNumbers.format(en.kiPower()), lh * 2f, C_KIP);
+        pose.popPose();
+    }
+
+    /** Una línea centrada. ⚠ Font.drawInBatch: verificar la firma exacta en 1.21.1. */
+    private static void line(Minecraft mc, Matrix4f m, MultiBufferSource buffers,
+                             String text, float y, int color) {
+        float x = -mc.font.width(text) / 2f;
+        mc.font.drawInBatch(text, x, y, color, false, m, buffers,
+                net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH, 0, FULL_BRIGHT); // ⚠
     }
 
     /** Marcador cuadrado con borde (mismo criterio anti z-fighting que las barras). */

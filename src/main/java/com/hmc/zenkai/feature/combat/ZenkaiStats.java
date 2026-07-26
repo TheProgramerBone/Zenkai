@@ -62,4 +62,19 @@ public final class ZenkaiStats {
         }
         return Math.round(le.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor());
     }
+
+    /**
+     * Desglose de combate: [melee, defensa, kiPower]. Son los tres sumandos del PL con los
+     * pesos a 1.0, así que su suma ES el power level.
+     * @return null si la entidad no tiene stats del mod (mob vanilla, jugador sin raza).
+     */
+    public static long[] resolveBreakdown(LivingEntity le) {
+        ZenkaiCombatStats s = of(le);
+        if (s == null || !s.isCombatActive()) return null;
+        return new long[]{
+                Math.round(s.computeMeleeFinal()),
+                Math.round(s.computeDefenseFinal()),
+                Math.round(s.computeKiPowerFinal())
+        };
+    }
 }
