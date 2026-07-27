@@ -78,14 +78,14 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         SenseKiDataPacket.Entry base = buildBase(le);
         if (!withBreakdown) return base;
 
-        long[] b = ZenkaiStats.resolveBreakdown(le); // null = sin stats del mod
-        if (b == null) return base;
+        long[] b = ZenkaiStats.resolveBreakdown(le);
+        if (b == null) return base;   // sin stats del mod: no hay nada que desglosar
         return new SenseKiDataPacket.Entry(base.entityId(),
                 base.body(), base.bodyMax(),
                 base.stamina(), base.staminaMax(),
                 base.energy(), base.energyMax(),
                 base.alignment(), base.powerLevel(), base.isPlayer(),
-                b[0], b[1], b[2]);
+                b[0], b[1], b[2], true);
     }
 
     private static SenseKiDataPacket.Entry buildBase(LivingEntity le) {

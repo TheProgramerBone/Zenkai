@@ -13,6 +13,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -86,52 +87,74 @@ public final class SenseKiOverlayRenderer {
         if (SenseKiClientState.sensed().isEmpty()) return;
 
         int lvl = SkillEffects.senseLevel(mc.player);
-        if (lvl <= 0) return; // sin la habilidad no se percibe nada
+        if (lvl <= 0) return;
 
         Camera cam = e.getCamera();
         Vec3 camPos = cam.getPosition();
         PoseStack pose = e.getPoseStack();
         float pt = e.getPartialTick().getGameTimeDeltaPartialTick(true);
-
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
+
+        // PASADA 1: los quads de TODAS las entidades. Sin texto de por medio, el buffer
+        // no se cierra a mitad y basta con pedirlo una vez.
         VertexConsumer vc = buffers.getBuffer(RenderType.textBackgroundSeeThrough());
-
         for (SenseKiDataPacket.Entry entry : SenseKiClientState.sensed().values()) {
-            if (!SenseKiClientState.passesFilter(entry, mc)) continue;
-
-            Entity ent = mc.level.getEntity(entry.entityId());
-            if (!(ent instanceof LivingEntity le) || !le.isAlive()) continue;
-            if (le == mc.player) continue;
-
-            Vec3 p = le.getPosition(pt).add(0, le.getBbHeight() + Y_OFFSET, 0);
-
+            LivingEntity le = resolve(entry, mc);
+            if (le == null) continue;
             pose.pushPose();
-            pose.translate(p.x - camPos.x, p.y - camPos.y, p.z - camPos.z);
-            pose.mulPose(cam.rotation());          // billboard: mira a la cámara
-            pose.scale(-0.025f, -0.025f, 0.025f);  // convención nametag
-
-            drawEntry(pose, buffers, vc, entry, mc, lvl);
+            billboard(pose, le, cam, camPos, pt);
+            drawQuads(pose.last().pose(), vc, entry, mc, lvl);
             pose.popPose();
         }
-        // endBatch SIN argumento: el desglose usa Font.drawInBatch, que escribe en otros
-        // RenderType. Cerrando solo textBackgroundSeeThrough, el texto se quedaba sin volcar.
+        buffers.endBatch(RenderType.textBackgroundSeeThrough());
+
+        // PASADA 2: el texto, DESPUÉS de todos los quads. Con NO_DEPTH_TEST manda el orden
+        // de envío, no la distancia: si se intercalara, las barras de una entidad taparían
+        // los números de otra.
+        for (SenseKiDataPacket.Entry entry : SenseKiClientState.sensed().values()) {
+            if (!entry.hasBreakdown()) continue;
+            LivingEntity le = resolve(entry, mc);
+            if (le == null) continue;
+            pose.pushPose();
+            billboard(pose, le, cam, camPos, pt);
+            drawNumbers(pose, buffers, entry, mc, barsBottom(entry, lvl) + BAR_GAP);
+            pose.popPose();
+        }
         buffers.endBatch();
     }
 
-    /**
-     * Pinta lo que el nivel permita ver de esta entidad.
-     * Recibe el PoseStack (y no solo su Matrix4f) porque el bloque numérico necesita su
-     * propia escala, así que empuja y saca su propia matriz.
-     */
-    private static void drawEntry(PoseStack pose, MultiBufferSource buffers, VertexConsumer vc,
-                                  SenseKiDataPacket.Entry en, Minecraft mc, int lvl) {
-        Matrix4f m = pose.last().pose();
+    /** Entidad viva y visible detrás de una entrada, o null si no toca pintarla. */
+    private static LivingEntity resolve(SenseKiDataPacket.Entry entry, Minecraft mc) {
+        if (!SenseKiClientState.passesFilter(entry, mc)) return null;
+        assert mc.level != null;
+        Entity ent = mc.level.getEntity(entry.entityId());
+        if (!(ent instanceof LivingEntity le) || !le.isAlive() || le == mc.player) return null;
+        return le;
+    }
 
-        // ── Fila de marcadores (arriba, en Y negativa) ──
+    /** Coloca el PoseStack sobre la cabeza de la entidad, mirando a la cámara. */
+    private static void billboard(PoseStack pose, LivingEntity le, Camera cam, Vec3 camPos, float pt) {
+        Vec3 p = le.getPosition(pt).add(0, le.getBbHeight() + Y_OFFSET, 0);
+        pose.translate(p.x - camPos.x, p.y - camPos.y, p.z - camPos.z);
+        pose.mulPose(cam.rotation());
+        pose.scale(-0.025f, -0.025f, 0.025f);
+    }
+
+    /** Altura a la que terminan las barras, para saber dónde empieza el bloque numérico. */
+    private static float barsBottom(SenseKiDataPacket.Entry en, int lvl) {
+        float y = 0f;
+        if (lvl >= 2) y += BAR_H + BAR_GAP;
+        if (lvl >= 4 && en.isPlayer()) y += BAR_H + BAR_GAP;
+        if (lvl >= 5 && en.isPlayer()) y += BAR_H + BAR_GAP;
+        return y;
+    }
+
+    /** Marcadores y barras. Solo quads: el texto va en la segunda pasada. */
+    private static void drawQuads(Matrix4f m, VertexConsumer vc,
+                                  SenseKiDataPacket.Entry en, Minecraft mc, int lvl) {
         boolean showAlign = lvl >= 3;
         float markY0 = -(MARK + 2f), markY1 = -2f;
         if (showAlign) {
-            // Dos marcadores centrados: fuerza a la izquierda, alineamiento a la derecha.
             drawMark(m, vc, -(MARK + 1f), markY0, -1f, markY1, strengthColor(en, mc));
             drawMark(m, vc, 1f, markY0, MARK + 1f, markY1,
                     AlignmentPalette.forAlignment(en.alignment()));
@@ -139,29 +162,17 @@ public final class SenseKiOverlayRenderer {
             drawMark(m, vc, -MARK / 2f, markY0, MARK / 2f, markY1, strengthColor(en, mc));
         }
 
-        // ── Barras (hacia abajo) ──
         float y = 0f;
         if (lvl >= 2) {
-            drawBar(m, vc, y, en.body(), en.bodyMax(), 0); // 0 = degradado verde->rojo
+            drawBar(m, vc, y, en.body(), en.bodyMax(), 0);
             y += BAR_H + BAR_GAP;
         }
-        // Ki y stamina son EXCLUSIVOS del jugador: los mobs no tienen pools (van por cooldown),
-        // así que reportan 0 y pintarían una barra vacía. isPlayer() (no max> 0) para que un
-        // jugador sin raza sí muestre sus barras, aunque estén a cero.
         if (lvl >= 4 && en.isPlayer()) {
             drawBar(m, vc, y, en.energy(), en.energyMax(), C_KI);
             y += BAR_H + BAR_GAP;
         }
         if (lvl >= 5 && en.isPlayer()) {
             drawBar(m, vc, y, en.stamina(), en.staminaMax(), C_STAMINA);
-            y += BAR_H + BAR_GAP;
-        }
-
-        // ── Desglose del fijado ──
-        // FUERA del bloque de estamina a propósito: si dependiera de isPlayer(), un mob
-        // fijado nunca mostraría sus números. Y el nivel ya lo filtró el servidor.
-        if (en.hasBreakdown()) {
-            drawNumbers(pose, buffers, en, mc, y + BAR_GAP);
         }
     }
 
@@ -192,22 +203,34 @@ public final class SenseKiOverlayRenderer {
                                     SenseKiDataPacket.Entry en, Minecraft mc, float yTop) {
         pose.pushPose();
         pose.translate(0f, yTop, 0f);
-        pose.scale(NUM_SCALE, NUM_SCALE, NUM_SCALE);
+        // X negada: deshace el espejo del espacio (por eso quad() usa winding invertido) y de
+        // paso invierte el winding, que es lo que deja los glifos de CARA. Sin esto el cull de
+        // textSeeThrough se los come y no se pinta nada.
+        pose.scale(-NUM_SCALE, NUM_SCALE, NUM_SCALE);
         Matrix4f m = pose.last().pose();
 
         float lh = mc.font.lineHeight + 1f;
-        line(mc, m, buffers, "ATK " + ZenkaiNumbers.format(en.melee()),   0f,      C_ATK);
-        line(mc, m, buffers, "DEF " + ZenkaiNumbers.format(en.defense()), lh,      C_DEF);
-        line(mc, m, buffers, "KI "  + ZenkaiNumbers.format(en.kiPower()), lh * 2f, C_KIP);
+        line(mc, m, buffers,
+                Component.translatable("ki_sense.zenkai.attack", ZenkaiNumbers.format(en.melee())),
+                0f, C_ATK);
+        line(mc, m, buffers,
+                Component.translatable("ki_sense.zenkai.defense", ZenkaiNumbers.format(en.defense())),
+                0f, C_DEF);
+        line(mc, m, buffers,
+                Component.translatable("ki_sense.zenkai.ki_power", ZenkaiNumbers.format(en.kiPower())),
+                0f, C_KIP);
         pose.popPose();
     }
 
-    /** Una línea centrada. ⚠ Font.drawInBatch: verificar la firma exacta en 1.21.1. */
+    /** Una línea centrada. SEE_THROUGH con backgroundColor 0 deja el texto invisible: ese
+     *  modo tiñe el glifo contra el fondo, y vanilla siempre lo usa con un fondo con alfa
+     *  (es lo que hace con los nametags). Por eso va un negro semitransparente y no 0. */
     private static void line(Minecraft mc, Matrix4f m, MultiBufferSource buffers,
-                             String text, float y, int color) {
+                             Component text, float y, int color) {
         float x = -mc.font.width(text) / 2f;
         mc.font.drawInBatch(text, x, y, color, false, m, buffers,
-                net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH, 0, FULL_BRIGHT); // ⚠
+                net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH,
+                0x40000000, FULL_BRIGHT);
     }
 
     /** Marcador cuadrado con borde (mismo criterio anti z-fighting que las barras). */

@@ -63,7 +63,7 @@ public final class LockOnClientState {
     public static void toggle(Minecraft mc) {
         if (mc.player == null || mc.level == null) return;
 
-        if (SkillEffects.canLockOn(mc.player)) {
+        if (SkillEffects.lockOnBlocked(mc.player)) {
             mc.player.displayClientMessage(
                     Component.translatable("messages.zenkai.lock_on.locked")
                             .withStyle(ChatFormatting.RED), true);
@@ -146,7 +146,7 @@ public final class LockOnClientState {
         if (p == null || mc.level == null) { targetId = -1; return; }
 
         LivingEntity t = target(mc);
-        if (t == null || !t.isAlive() || SkillEffects.canLockOn(p)
+        if (t == null || !t.isAlive() || SkillEffects.lockOnBlocked(p)
                 || p.distanceTo(t) > range(p) + DROP_MARGIN) {
             clear();
             p.displayClientMessage(Component.translatable("messages.zenkai.lock_on.lost")

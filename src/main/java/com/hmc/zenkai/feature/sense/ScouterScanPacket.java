@@ -47,8 +47,17 @@ public record ScouterScanPacket() implements CustomPacketPayload {
             if (hit != null && hit.getEntity() instanceof LivingEntity target) {
                 long pl = ZenkaiStats.resolveDisplayPowerLevel(target);
                 long[] b = ZenkaiStats.resolveBreakdown(target);   // null = sin stats del mod
+
+                // Vida: el pool del mod si lo tiene, la vanilla si no. Así el modo PODER
+                // muestra vida de cualquier objetivo, tenga stats o no.
+                var st = ZenkaiStats.of(target);
+                boolean zenkai = st != null && st.isCombatActive();
+                long hp    = zenkai ? st.getBody()    : Math.round(target.getHealth());
+                long hpMax = zenkai ? st.getBodyMax() : Math.round(target.getMaxHealth());
+
                 PacketDistributor.sendToPlayer(sp, new ScouterDataPacket(true, pl,
-                        b == null ? 0L : b[0], b == null ? 0L : b[1], b == null ? 0L : b[2]));
+                        b == null ? 0L : b[0], b == null ? 0L : b[1], b == null ? 0L : b[2],
+                        hp, hpMax));
             } else {
                 PacketDistributor.sendToPlayer(sp, ScouterDataPacket.empty());
             }

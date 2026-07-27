@@ -15,9 +15,12 @@ import org.jetbrains.annotations.NotNull;
  * el gate del scouter es el propio ítem, no hace falta uno extra.
  * breakdown a 0 = la entidad no tiene stats del mod (mob vanilla sin JSON, jugador sin
  * raza): en ese caso solo hay PL de display y el modo ATTRIBUTES no tiene nada que enseñar.
+ * body/bodyMax son el pool del mod si la entidad lo tiene, y la vida vanilla si no: así el
+ * modo PODER siempre puede mostrar vida, tenga stats el objetivo o no.
  */
 public record ScouterDataPacket(boolean found, long powerLevel,
-                                long melee, long defense, long kiPower) implements CustomPacketPayload {
+                                long melee, long defense, long kiPower,
+                                long body, long bodyMax) implements CustomPacketPayload {
 
     public static final Type<ScouterDataPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "scouter_data"));
@@ -30,13 +33,16 @@ public record ScouterDataPacket(boolean found, long powerLevel,
                         buf.writeLong(pkt.melee());
                         buf.writeLong(pkt.defense());
                         buf.writeLong(pkt.kiPower());
+                        buf.writeLong(pkt.body());
+                        buf.writeLong(pkt.bodyMax());
                     },
                     buf -> new ScouterDataPacket(buf.readBoolean(), buf.readLong(),
-                            buf.readLong(), buf.readLong(), buf.readLong()));
+                            buf.readLong(), buf.readLong(), buf.readLong(),
+                            buf.readLong(), buf.readLong()));
 
     /** Sin objetivo en la mira. */
     public static ScouterDataPacket empty() {
-        return new ScouterDataPacket(false, 0L, 0L, 0L, 0L);
+        return new ScouterDataPacket(false, 0L, 0L, 0L, 0L, 0L, 0L);
     }
 
     /** ¿Trae desglose utilizable? */
@@ -49,6 +55,7 @@ public record ScouterDataPacket(boolean found, long powerLevel,
 
     public static void handle(ScouterDataPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> ScouterClientState.onData(
-                pkt.found(), pkt.powerLevel(), pkt.melee(), pkt.defense(), pkt.kiPower()));
+                pkt.found(), pkt.powerLevel(), pkt.melee(), pkt.defense(), pkt.kiPower(),
+                pkt.body(), pkt.bodyMax()));
     }
 }

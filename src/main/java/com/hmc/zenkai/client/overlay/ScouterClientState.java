@@ -38,6 +38,8 @@ public final class ScouterClientState {
     private static long targetMelee = 0L;
     private static long targetDefense = 0L;
     private static long targetKiPower = 0L;
+    private static long targetBody = 0L;
+    private static long targetBodyMax = 0L;
 
     // --- Caché modos de ÁREA (más fuerte / radar) ---
     private static byte areaStatus = ScouterAreaDataPacket.STATUS_NONE;
@@ -52,6 +54,8 @@ public final class ScouterClientState {
     public static long targetMelee()   { return targetMelee; }
     public static long targetDefense() { return targetDefense; }
     public static long targetKiPower() { return targetKiPower; }
+    public static long targetBody()    { return targetBody; }
+    public static long targetBodyMax() { return targetBodyMax; }
 
     /** ¿El objetivo tiene stats del mod? Un mob vanilla sin JSON solo da PL de display. */
     public static boolean hasBreakdown() {
@@ -127,12 +131,15 @@ public final class ScouterClientState {
     }
 
     /** Respuesta del servidor: raycast de la mira (modos PODER y STATS). */
-    public static void onData(boolean found, long pl, long melee, long defense, long kiPower) {
+    public static void onData(boolean found, long pl, long melee, long defense, long kiPower,
+                              long body, long bodyMax) {
         targetFound = found;
         targetPl = pl;
         targetMelee = melee;
         targetDefense = defense;
         targetKiPower = kiPower;
+        targetBody = body;
+        targetBodyMax = bodyMax;
     }
 
     /** Respuesta del servidor: escaneo por área. Descarta respuestas de un modo ya abandonado. */
@@ -153,6 +160,8 @@ public final class ScouterClientState {
         targetMelee = 0L;
         targetDefense = 0L;
         targetKiPower = 0L;
+        targetBody = 0L;
+        targetBodyMax = 0L;
         areaStatus = ScouterAreaDataPacket.STATUS_NONE;
         areaPl = 0L;
     }

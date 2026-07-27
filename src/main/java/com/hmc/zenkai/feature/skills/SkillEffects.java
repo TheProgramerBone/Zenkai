@@ -83,9 +83,6 @@ public final class SkillEffects {
     /** Multiplicador del rango de sentido. 1.0 sin la habilidad. */
     public static double senseRangeFactor(Player p) { return curve(p, KI_SENSE, "range_mult", 1.0); }
 
-    /** Fijar objetivo se desbloquea con el nivel 1. */
-    public static boolean canLockOn(Player p) { return level(p, KI_SENSE) <= 0; }
-
     // Lo que se PERCIBE por nivel. Son umbrales de estructura, no números a balancear,
     // así que viven aquí y no como listas de 0/1 en el datapack (fáciles de descuadrar).
     public static boolean senseShowsHealth(Player p)    { return level(p, KI_SENSE) >= 2; }
@@ -110,4 +107,8 @@ public final class SkillEffects {
     public static boolean senseShowsNumbers(Player p) {
         return curve(p, KI_SENSE, "numbers", 0.0) >= 1.0;
     }
+
+    /** true si el jugador NO puede fijar objetivo (sin la habilidad). Se llamaba canLockOn
+     *  y devolvía justo lo contrario de lo que su nombre prometía. */
+    public static boolean lockOnBlocked(Player p) { return level(p, KI_SENSE) <= 0; }
 }

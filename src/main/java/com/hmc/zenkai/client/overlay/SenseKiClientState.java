@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.overlay;
 
+import com.hmc.zenkai.client.LockOnClientState;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.combat.SenseKiMode;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -120,10 +121,14 @@ public final class SenseKiClientState {
             case MOBS           -> !e.isPlayer();
             case PLAYERS_STRONG -> e.isPlayer()  && isStrong(e, mc);
             case MOBS_STRONG    -> !e.isPlayer() && isStrong(e, mc);
+            // Sin lock activo, targetId() es -1 y no pasa nadie: la pantalla queda limpia,
+            // que es justo la señal de "no estás fijando a nadie".
+            case LOCKED         -> e.entityId() == LockOnClientState.targetId();
         };
     }
 
     private static boolean isStrong(SenseKiDataPacket.Entry e, Minecraft mc) {
+        assert mc.player != null;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
         long myPl = att.isRaceChosen()
                 ? att.getPowerLevel()

@@ -28,20 +28,19 @@ public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayl
     public record Entry(int entityId, int body, int bodyMax,
                         int stamina, int staminaMax, int energy, int energyMax,
                         int alignment, long powerLevel, boolean isPlayer,
-                        long melee, long defense, long kiPower) {
+                        long melee, long defense, long kiPower, boolean breakdown) {
 
         /** Constructor corto para lo que no lleva desglose. */
         public Entry(int entityId, int body, int bodyMax,
                      int stamina, int staminaMax, int energy, int energyMax,
                      int alignment, long powerLevel, boolean isPlayer) {
             this(entityId, body, bodyMax, stamina, staminaMax, energy, energyMax,
-                    alignment, powerLevel, isPlayer, 0L, 0L, 0L);
+                    alignment, powerLevel, isPlayer, 0L, 0L, 0L, false);
         }
 
-        /** ¿Trae los números exactos? (fijado + Ki Sense al máximo) */
-        public boolean hasBreakdown() {
-            return melee > 0 || defense > 0 || kiPower > 0;
-        }
+        /** ¿Trae los números exactos? (fijado + Ki Sense al máximo).
+         *  Bandera explícita: un mob con STR/DEX/WIL a 0 SÍ tiene desglose, vale 0. */
+        public boolean hasBreakdown() { return breakdown; }
     }
 
     public static final Type<SenseKiDataPacket> TYPE =
@@ -86,13 +85,14 @@ public record SenseKiDataPacket(List<Entry> entries) implements CustomPacketPayl
             long pl = buf.readLong();
             boolean isPlayer = buf.readBoolean();
             long melee = 0L, defense = 0L, kiPower = 0L;
-            if (buf.readBoolean()) {
+            boolean bd = buf.readBoolean();
+            if (bd) {
                 melee = buf.readLong();
                 defense = buf.readLong();
                 kiPower = buf.readLong();
             }
             list.add(new Entry(id, body, bodyMax, stam, stamMax, energy, energyMax,
-                    align, pl, isPlayer, melee, defense, kiPower));
+                    align, pl, isPlayer, melee, defense, kiPower, bd));
         }
         return new SenseKiDataPacket(list);
     }

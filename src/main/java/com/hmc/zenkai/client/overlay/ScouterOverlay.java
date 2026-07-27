@@ -92,9 +92,34 @@ public final class ScouterOverlay {
                 if (ScouterClientState.hasTarget()) {
                     long pl = ScouterClientState.targetPowerLevel();
                     main = styled(Component.literal("PL " + ZenkaiNumbers.format(pl)));
-                    sub = styled(Component.translatable(powerLabelKey(mc, pl)));
+                    // Vida + etiqueta en la misma línea: el sub va a 1x y cabe de sobra.
+                    // body/bodyMax siempre vienen (pool del mod o vida vanilla), así que
+                    // esto no depende de hasBreakdown().
+                    sub = styled(Component.translatable("scouter.zenkai.hp_label",
+                            ZenkaiNumbers.format(ScouterClientState.targetBody()),
+                            ZenkaiNumbers.format(ScouterClientState.targetBodyMax()),
+                            Component.translatable(powerLabelKey(mc, pl))));
                 } else {
                     main = styled(Component.literal("PL ---"));
+                    sub = null;
+                }
+            }
+
+            case ATTRIBUTES -> {
+                // Desglose del PL: melee + defensa + kiPower SON sus tres sumandos (pesos 1.0),
+                // así que este modo explica la cifra que enseña PODER.
+                if (ScouterClientState.hasBreakdown()) {
+                    main = styled(Component.translatable("scouter.zenkai.atk",
+                            ZenkaiNumbers.format(ScouterClientState.targetMelee())));
+                    sub = styled(Component.translatable("scouter.zenkai.def_ki",
+                            ZenkaiNumbers.format(ScouterClientState.targetDefense()),
+                            ZenkaiNumbers.format(ScouterClientState.targetKiPower())));
+                } else if (ScouterClientState.hasTarget()) {
+                    // Hay objetivo pero no tiene stats del mod (mob vanilla sin JSON).
+                    main = styled(Component.literal("---"));
+                    sub = styled(Component.translatable("scouter.zenkai.no_data"));
+                } else {
+                    main = styled(Component.literal("---"));
                     sub = null;
                 }
             }
@@ -119,24 +144,6 @@ public final class ScouterOverlay {
                 } else {
                     main = styled(Component.literal("---"));
                     sub = styled(Component.translatable("scouter.zenkai.no_signal"));
-                }
-            }
-            case ATTRIBUTES -> {
-                // Desglose del PL: melee + defensa + kiPower SON sus tres sumandos (pesos 1.0),
-                // así que este modo explica la cifra que enseña PODER.
-                if (ScouterClientState.hasBreakdown()) {
-                    main = styled(Component.translatable("scouter.zenkai.atk",
-                            ZenkaiNumbers.format(ScouterClientState.targetMelee())));
-                    sub = styled(Component.translatable("scouter.zenkai.def_ki",
-                            ZenkaiNumbers.format(ScouterClientState.targetDefense()),
-                            ZenkaiNumbers.format(ScouterClientState.targetKiPower())));
-                } else if (ScouterClientState.hasTarget()) {
-                    // Hay objetivo pero no tiene stats del mod (mob vanilla sin JSON).
-                    main = styled(Component.literal("---"));
-                    sub = styled(Component.translatable("scouter.zenkai.no_data"));
-                } else {
-                    main = styled(Component.literal("---"));
-                    sub = null;
                 }
             }
             default -> { return; }

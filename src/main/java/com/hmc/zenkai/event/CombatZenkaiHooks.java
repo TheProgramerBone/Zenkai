@@ -154,6 +154,12 @@ public class CombatZenkaiHooks {
 
             int bodyBefore = defStats.getBody();
             defStats.addBody(-(int) Math.ceil(finalDamage));
+            // La barra vanilla sigue al pool: sin esto la de los jefes no se movía nunca.
+            // Solo para no-jugadores; el jugador mantiene su vida vanilla llena a propósito
+            // (su daño vive en el pool y la GUI del mod es la que lo muestra).
+            if (!(e.getEntity() instanceof Player)) {
+                defStats.mirrorToVanilla(e.getEntity());
+            }
 
             // Entrenamiento: TP por daño EFECTIVO (post-defensa y post-barrera,
             // capado por el pool restante -> sin exploit de overkill ni de derribados).

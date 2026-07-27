@@ -186,4 +186,16 @@ public final class EntityStats implements ZenkaiCombatStats {
         var inst = le.getAttribute(a);   // ATTACK_DAMAGE no existe en pasivos
         return inst == null ? fallback : inst.getValue();
     }
+
+    /**
+     * Refleja el pool del mod en la vida vanilla, conservando el RATIO. Sin esto, las
+     * entidades con lógica propia sobre getHealth() (dragón, wither, warden) no morían
+     * nunca: su barra se quedaba llena mientras el body bajaba en paralelo.
+     * No baja de 1: matarlas es cosa del pipeline de daño, no de este espejo.
+     */
+    public void mirrorToVanilla(LivingEntity le) {
+        if (bodyMax <= 0) return;
+        float target = le.getMaxHealth() * (body / (float) bodyMax);
+        le.setHealth(Math.max(1.0F, Math.min(le.getMaxHealth(), target)));
+    }
 }
