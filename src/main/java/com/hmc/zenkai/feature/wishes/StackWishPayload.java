@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.wishes;
 
-import com.hmc.zenkai.client.gui.StackWishMenu;
+import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import com.hmc.zenkai.config.ServerConfig;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;

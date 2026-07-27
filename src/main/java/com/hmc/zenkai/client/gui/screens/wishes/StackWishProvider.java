@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
-import com.hmc.zenkai.client.gui.StackWishMenu;
+import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;

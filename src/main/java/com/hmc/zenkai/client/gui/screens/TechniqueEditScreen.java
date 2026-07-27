@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.TechniqueAnimSets;
 import com.hmc.zenkai.client.TechniqueIcons;
+import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
@@ -88,8 +89,8 @@ public class TechniqueEditScreen extends Screen {
     private static final int PREVIEW_H = 58;
     private static final int Y_UNLOCK = 214;
     private static final int Y_BUTTONS = BG_H + 4; // FUERA del panel
-    private static final int TITLE_NUDGE = 0; // corrección horizontal si el marco no es simétrico
-    private static final int TRASH_SIZE = 16; // 32px de textura / 2 → reducción limpia
+    private static final int TITLE_NUDGE = 0;  // corrección si el marco del PNG no es simétrico
+    private static final int TRASH_SIZE = 16;  // 32px de textura / 2 → reducción limpia
 
     private enum Tab { COMBAT, STYLE }
 
@@ -293,8 +294,8 @@ public class TechniqueEditScreen extends Screen {
                 });
     }
 
-    /** Cancelar | papelera | Guardar, FUERA del panel. La papelera queda en medio pero necesita
-     *  dos pulsaciones: comparte fila con Save, así que un clic suelto no puede borrar nada. */
+    /** Cancelar | papelera | Guardar, FUERA del panel. La papelera comparte fila con Save,
+     *  así que necesita DOS pulsaciones: un clic suelto no puede borrar nada. */
     private void initBottomBar() {
         int y = topPos + Y_BUTTONS;
 
@@ -436,8 +437,8 @@ public class TechniqueEditScreen extends Screen {
         super.render(g, mouseX, mouseY, partialTick);
         refreshButtons(); // el desbloqueo llega por sync asíncrono
 
-        g.drawCenteredString(this.font, this.title,
-                leftPos + BG_W / 2 + TITLE_NUDGE, topPos + Y_TITLE, 0xFFFFFFFF);
+        ScreenTitle.drawCentered(g, this.font, this.title,
+                leftPos + BG_W / 2 + TITLE_NUDGE, topPos + Y_TITLE);
         g.drawString(this.font, Component.translatable("screen.zenkai.technique.name").append(":"),
                 leftPos + MARGIN, topPos + Y_NAME + 3, 0xFFFFFFFF, true);
 

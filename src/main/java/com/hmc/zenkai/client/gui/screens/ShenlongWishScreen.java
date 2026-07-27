@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.screens.wishes.EnchantVillagerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.ImmortalWishScreen;
@@ -27,13 +28,14 @@ public class ShenlongWishScreen extends Screen {
     private static final int BG_W = 256;
     private static final int BG_H = 256;
 
+    private static final int TITLE_Y = 20;
+
     private static final int BTN_W = 170;
     private static final int BTN_H = 16;
     private static final int FIRST_BTN_DY = 50; // desde el top del panel
     private static final int BTN_STEP      = 22;
 
     // Colores de texto (consistentes con las otras pantallas, legibles sobre el beige).
-    private static final int COLOR_TITLE = 0x4A3726;
     private static final int TXT_NORMAL  = 0xFFFFFF;
     private static final int TXT_HOVER   = 0xFFF149;
     private static final int TXT_INACTIVE= 0xA0A0A0;
@@ -116,8 +118,7 @@ public class ShenlongWishScreen extends Screen {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         g.blit(BG, panelLeft, panelTop, 0, 0, BG_W, BG_H);
 
-        // Título centrado en el panel
-        drawCenteredNoShadow(g, this.title, panelLeft + BG_W / 2, panelTop + 22, COLOR_TITLE);
+        ScreenTitle.drawCentered(g, this.font, this.title, panelLeft + BG_W / 2, panelTop + TITLE_Y);
 
         // Deseos restantes del dragón más cercano (valor sincronizado del servidor).
         int remaining = getNearbyWishesRemaining();

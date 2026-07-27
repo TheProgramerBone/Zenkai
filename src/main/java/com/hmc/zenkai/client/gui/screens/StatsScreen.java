@@ -8,6 +8,7 @@ import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.client.gui.AlignmentPalette;
+import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.config.CommonConfig;
@@ -45,9 +46,9 @@ public class StatsScreen extends ZenkaiMenuScreen {
     );
 
     // ── Layout ────────────────────────────────────────────────────────────────
-    private static final int HEADER_Y   = 30;  // 1ª línea de cabecera (rel. panelTop)
-    private static final int DIV_Y      = 54;  // divisor bajo cabecera
-    private static final int ATTR_Y0    = 66;  // 1ª fila de atributos
+    private static final int HEADER_Y   = 34;  // 1ª línea de cabecera (rel. panelTop)
+    private static final int DIV_Y      = 56;  // divisor bajo cabecera
+    private static final int ATTR_Y0    = 68;  // 1ª fila de atributos
     private static final int ATTR_STEP  = 20;  // paso entre filas
     private static final int PREVIEW_X1 = 150, PREVIEW_X2 = 244; // zona del render (rel. panelLeft)
     private static final int PREVIEW_Y1 = 62,  PREVIEW_Y2 = 186; // (rel. panelTop)
@@ -124,7 +125,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         Font font = this.font;
         int left = panelLeft + 12;
 
-        g.drawString(font, this.title, left, panelTop + 16, 0xFFFFFF);
+        ScreenTitle.drawCentered(g, font, this.title, panelLeft + BG_W / 2, panelTop + TITLE_Y);
 
         // ======= Cabecera: Race | Style / Form | TP (2 líneas x 2 columnas) =======
         int col2 = panelLeft + 128;
@@ -290,7 +291,6 @@ public class StatsScreen extends ZenkaiMenuScreen {
     private static String fmt(double d) { return String.format(Locale.ROOT, "%.1f", d); }
 
     // ── Tooltips ─────────────────────────────────────────────────────────────
-    /** Hover sobre el render del jugador: forma actual + su maestría. */
     /** Hover sobre el render del jugador: forma actual + maestría, y el Kaioken si está activo. */
     private void renderPlayerHoverTooltip(GuiGraphics g, PlayerFormAttachment form,
                                           int mouseX, int mouseY, int x1, int y1, int x2, int y2) {

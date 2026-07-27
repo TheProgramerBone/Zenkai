@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
-import com.hmc.zenkai.client.gui.StackWishMenu;
+import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.feature.wishes.StackWishPayload;
 import com.hmc.zenkai.feature.wishes.SetGhostSlotPayload;

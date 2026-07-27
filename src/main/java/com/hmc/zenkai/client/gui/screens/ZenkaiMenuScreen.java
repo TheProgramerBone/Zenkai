@@ -20,6 +20,9 @@ import org.jetbrains.annotations.NotNull;
  * Las hijas implementan initContent() (widgets) y dibujan su contenido en render()
  * después de super.render(). Campos protected con los MISMOS nombres que usaba StatsScreen
  * (mc, att, panelLeft, panelTop, BG_W, BG_H) para que su código migre sin tocarse.
+ *
+ * La fila de íconos va DEBAJO del panel: arriba competía con el título, que ahora ocupa
+ * esa franja. Las hijas dibujan su título con ScreenTitle (mayúsculas + color + sombra).
  */
 public abstract class ZenkaiMenuScreen extends Screen {
 
@@ -27,6 +30,12 @@ public abstract class ZenkaiMenuScreen extends Screen {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
     protected static final int BG_W = 256;
     protected static final int BG_H = 256;
+
+    /** Y del título dentro del panel. Las hijas lo usan para no descuadrarse entre sí. */
+    protected static final int TITLE_Y = 20;
+
+    private static final int TAB_ICON = 20; // tamaño de celda del atlas
+    private static final int TAB_GAP  = 4;
 
     protected final Minecraft mc = Minecraft.getInstance();
     protected PlayerStatsAttachment att;
@@ -54,21 +63,21 @@ public abstract class ZenkaiMenuScreen extends Screen {
         initContent();
     }
 
-    /** Fila de pestañas con ícono (icons.png), centrada sobre el panel. Nombre = tooltip. */
+    /** Fila de pestañas con ícono (icons.png), centrada BAJO el panel. Nombre = tooltip. */
     private void addTabButtons() {
         ZenkaiTab[] tabs = ZenkaiTab.values();
-        int icon = 20, gap = 4; // icon = tamaño de celda del atlas
-        int rowW = tabs.length * icon + (tabs.length - 1) * gap;
-        int y = Math.max(2, panelTop - icon - 6);
+        int rowW = tabs.length * TAB_ICON + (tabs.length - 1) * TAB_GAP;
+        // Bajo el panel, pero sin salirse de la ventana en resoluciones pequeñas.
+        int y = Math.min(this.height - TAB_ICON - 2, panelTop + BG_H + 6);
         int x = panelLeft + (BG_W - rowW) / 2;
         for (ZenkaiTab t : tabs) {
-            TabIconButton b = new TabIconButton(x, y, icon, t.u, t.v,
+            TabIconButton b = new TabIconButton(x, y, TAB_ICON, t.u, t.v,
                     Component.translatable(t.titleKey()),
                     () -> currentTab() == t,
                     () -> open(t));
             b.setTooltip(Tooltip.create(Component.translatable(t.titleKey())));
             this.addRenderableWidget(b);
-            x += icon + gap;
+            x += TAB_ICON + TAB_GAP;
         }
     }
 

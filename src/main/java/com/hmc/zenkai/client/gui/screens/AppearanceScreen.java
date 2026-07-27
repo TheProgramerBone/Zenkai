@@ -2,6 +2,7 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.CustomizationAssets;
+import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
@@ -42,6 +43,10 @@ public class AppearanceScreen extends Screen {
     private static final int BTN_BAR_Y = 260;
     private static final int BTN_W     = 60;
 
+    /** Franja del título; las filas de campos empiezan justo debajo. */
+    private static final int TITLE_Y    = IN_Y1 + 6;
+    private static final int CONTENT_Y0 = IN_Y1 + 20;
+
     private static final int PAD          = 8;
     private static final int ARROW_W      = 12;
     private static final int TITLE_H      = 11;
@@ -61,8 +66,6 @@ public class AppearanceScreen extends Screen {
 
     private static final int PREVIEW_W    = 80;
     private static final int PREVIEW_SIZE = 45;
-
-
 
     private static final int COLOR_TITLE  = 0x4A3726;
     private static final int COLOR_VALUE  = 0xFFFFFF;
@@ -137,7 +140,7 @@ public class AppearanceScreen extends Screen {
 
         int pl = panelLeft;
         int pt = panelTop;
-        int blockTop = pt + IN_Y1 + 6;
+        int blockTop = pt + CONTENT_Y0;
 
         blockTop = addField(pl, blockTop, ColorChannel.EYE,
                 () -> eyeIndex = (eyeIndex - 1 + CustomizationAssets.eyesCount()) % CustomizationAssets.eyesCount(),
@@ -391,7 +394,9 @@ public class AppearanceScreen extends Screen {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         g.blit(BG, pl, pt, 0, 0, BG_W, BG_H);
 
-        int blockTop = pt + IN_Y1 + 6;
+        ScreenTitle.drawCentered(g, mc.font, this.title, pl + BG_W / 2, pt + TITLE_Y);
+
+        int blockTop = pt + CONTENT_Y0;
         blockTop = renderField(g, mc, pl, blockTop, "Eyes", CustomizationAssets.eyeLabel(eyeIndex));
         if (race == Race.HUMAN || race == Race.SAIYAN)
             blockTop = renderField(g, mc, pl, blockTop, "Hair", CustomizationAssets.hairLabel(hairIndex));

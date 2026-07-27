@@ -1,7 +1,8 @@
 package com.hmc.zenkai.client.gui.screens;
 
-import com.hmc.zenkai.client.PhysicalIcons; // <- IMPORTANTE: Añadido aquí
+import com.hmc.zenkai.client.PhysicalIcons;
 import com.hmc.zenkai.client.TechniqueIcons;
+import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.PlayerTechniques;
@@ -120,7 +121,7 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
 
-        g.drawString(this.font, this.title, panelLeft + 16, panelTop + 24, 0xFFFFFFFF, true);
+        ScreenTitle.drawCentered(g, this.font, this.title, panelLeft + BG_W / 2, panelTop + TITLE_Y);
         if (att == null) return;
         g.drawString(this.font, Component.literal("TP: " + att.getTP()),
                 panelLeft + 16, panelTop + 38, 0xFFFFD700, true);

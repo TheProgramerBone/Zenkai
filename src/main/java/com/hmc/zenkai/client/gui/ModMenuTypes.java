@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;

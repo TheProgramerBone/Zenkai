@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -209,7 +210,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
         super.render(g, mouseX, mouseY, partialTick);
 
-        g.drawString(this.font, this.title, panelLeft + 16, panelTop + 24, 0xFFFFFFFF, true);
+        ScreenTitle.drawCentered(g, this.font, this.title, panelLeft + BG_W / 2, panelTop + TITLE_Y);
         if (st == null) return;
 
         g.drawString(this.font,

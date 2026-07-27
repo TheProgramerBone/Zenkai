@@ -1,5 +1,6 @@
-package com.hmc.zenkai.client.gui;
+package com.hmc.zenkai.client.gui.menu;
 
+import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.config.ServerConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;

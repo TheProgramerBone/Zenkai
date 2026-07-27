@@ -2,7 +2,7 @@ package com.hmc.zenkai.network;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
-import com.hmc.zenkai.client.gui.StackWishMenu;
+import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import com.hmc.zenkai.feature.aura.TurboPacket;
 import com.hmc.zenkai.feature.aura.TurboSyncPacket;
 import com.hmc.zenkai.feature.combat.BlockingPacket;
