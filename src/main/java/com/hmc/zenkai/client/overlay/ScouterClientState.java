@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.overlay;
 
+import com.hmc.zenkai.compat.CuriosCompat;
 import com.hmc.zenkai.content.item.special.ScouterItem;
 import com.hmc.zenkai.feature.sense.ScouterAreaDataPacket;
 import com.hmc.zenkai.feature.sense.ScouterAreaScanPacket;
@@ -68,10 +69,16 @@ public final class ScouterClientState {
     public static double areaZ()    { return areaZ; }
     public static long areaPl()     { return areaPl; }
 
-    /** ¿Lleva un scouter (cualquier variante de color) en la cabeza? */
     public static boolean isScouterEquipped(Minecraft mc) {
-        return mc.player != null
-                && mc.player.getItemBySlot(EquipmentSlot.HEAD).getItem() instanceof ScouterItem;
+        return mc.player != null && scouterStack(mc).getItem() instanceof ScouterItem;
+    }
+
+    /** El scouter equipado: slot de Curios si el mod está, casco vanilla como respaldo. */
+    private static ItemStack scouterStack(Minecraft mc) {
+        if (mc.player == null) return ItemStack.EMPTY;
+        ItemStack curio = CuriosCompat.findEquipped(mc.player, "scouter");
+        if (!curio.isEmpty()) return curio;
+        return mc.player.getItemBySlot(EquipmentSlot.HEAD);
     }
 
     /**

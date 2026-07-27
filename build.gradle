@@ -42,7 +42,7 @@ repositories {
     maven {//Terrablender
         url = 'https://repo.spongepowered.org/repository/maven-public/' }
 
-    repositories {//Curious
+    repositories {//Curios
         maven {
             name = "Illusive Soulworks maven"
             url = "https://maven.theillusivec4.top/"

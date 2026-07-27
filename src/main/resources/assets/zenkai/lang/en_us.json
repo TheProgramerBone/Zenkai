@@ -442,5 +442,8 @@
   "gamerule.zenkai_enableStructureProtection": "Prevents mob spawn and block destroyed by players on mod's structures",
   "gamerule.zenkai_enableSummon": "Allows Players to Summon Shenlong",
   "gamerule.zenkai_enableKiGriefing": "Explosive ki techniques break blocks",
-  "gamerule.zenkai_enableTransformations": "Allow Players To Transform"
+  "gamerule.zenkai_enableTransformations": "Allow Players To Transform",
+
+  "curios.identifier.scouter": "Scouter",
+  "curios.identifier.weight": "Weight"
 }
