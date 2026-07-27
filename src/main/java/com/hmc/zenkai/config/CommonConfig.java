@@ -173,11 +173,19 @@ public final class CommonConfig {
 
     private static final ModConfigSpec.DoubleValue KI_COST_PER_POWER_RAW =
             BUILDER.comment("Ki cost per point of ki power (WIL). Higher = ki drains faster, SPI matters more.")
-                    .defineInRange("cost.ki_per_power", 0.8D, 0.0D, 10.0D);
+                    .defineInRange("cost.ki_per_power", 0.7D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue OVERCHARGE_TIME_MULT_RAW =
+            BUILDER.comment("Extra charge time for the 100%->200% overcharge stretch, as a multiple of the base cast time. 2.5 = the second 100% takes 2.5x as long as the first.")
+                    .defineInRange("cost.overcharge_time_mult", 2.5D, 1.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue OVERCHARGE_COST_MULT_RAW =
+            BUILDER.comment("Ki cost multiplier applied ONLY to the overcharged portion. 1.5 = every point past 100% costs 50% more than a normal one.")
+                    .defineInRange("cost.overcharge_cost_mult", 1.5D, 1.0D, 5.0D);
 
     private static final ModConfigSpec.DoubleValue MELEE_STAMINA_PER_HIT_RAW =
             BUILDER.comment("Stamina per point of melee damage (STR). Higher = fewer hits, CON matters more.")
-                    .defineInRange("cost.melee_stamina_per_hit", 0.2D, 0.0D, 10.0D);
+                    .defineInRange("cost.melee_stamina_per_hit", 0.1D, 0.0D, 10.0D);
 
     // =====================================================================
     // SPEC — Maestría y efecto Majin
@@ -285,8 +293,10 @@ public final class CommonConfig {
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
     private static volatile double M_FORM_STAT = 0.20D, M_FORM_DRAIN = 0.50D,
             M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
-    private static volatile double KI_COST_PER_POWER = 0.8D;
-    private static volatile double MELEE_STAMINA_PER_HIT = 0.2D;
+    private static volatile double KI_COST_PER_POWER = 0.7D;
+    private static volatile double OVERCHARGE_TIME_MULT = 2.5D;
+    private static volatile double OVERCHARGE_COST_MULT = 1.5D;
+    private static volatile double MELEE_STAMINA_PER_HIT = 0.1D;
     private static volatile double MAJIN_STAT_BONUS = 0.10D;
     private static volatile boolean VANILLA_STATS_FALLBACK = true;
     private static volatile double  VANILLA_BODY_FACTOR = 15.0D;
@@ -366,6 +376,8 @@ public final class CommonConfig {
         TRAIN_MIN_EFF   = TRAIN_MIN_EFF_RAW.get();
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
+        OVERCHARGE_TIME_MULT = OVERCHARGE_TIME_MULT_RAW.get();
+        OVERCHARGE_COST_MULT = OVERCHARGE_COST_MULT_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
     }
 
@@ -420,6 +432,8 @@ public final class CommonConfig {
     public static double majinStatBonus()            { return MAJIN_STAT_BONUS; }
 
     public static double kiCostPerPower()    { return KI_COST_PER_POWER; }
+    public static double overchargeTimeMult() { return OVERCHARGE_TIME_MULT; }
+    public static double overchargeCostMult() { return OVERCHARGE_COST_MULT; }
     public static double meleeStaminaPerHit() { return MELEE_STAMINA_PER_HIT; }
 
     public static double trainingDamageTpFactor()        { return TRAIN_DMG_TP; }

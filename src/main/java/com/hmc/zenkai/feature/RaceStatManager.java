@@ -136,14 +136,18 @@ public final class RaceStatManager {
         /** Cada campo cae a su default compilado si falta: los JSON parciales son válidos. */
         private static double[] readRow(JsonObject o, Race race, Style style) {
             double[] def = RaceStatTable.row(race, style);
-            double[] d = (def != null) ? def : new double[]{1, 1, 1, 1, 1, 1};
+            double[] d = new double[RaceStatTable.COLS];
+            java.util.Arrays.fill(d, 1.0);
+            if (def != null) System.arraycopy(def, 0, d, 0, Math.min(def.length, d.length));
             return new double[]{
-                    GsonHelper.getAsDouble(o, "melee",       d[0]),
-                    GsonHelper.getAsDouble(o, "defense",     d[1]),
-                    GsonHelper.getAsDouble(o, "health",      d[2]),
-                    GsonHelper.getAsDouble(o, "stamina",     d[3]),
-                    GsonHelper.getAsDouble(o, "ki_damage",   d[4]),
-                    GsonHelper.getAsDouble(o, "ki_reserves", d[5])
+                    GsonHelper.getAsDouble(o, "melee",             d[0]),
+                    GsonHelper.getAsDouble(o, "defense",           d[1]),
+                    GsonHelper.getAsDouble(o, "health",            d[2]),
+                    GsonHelper.getAsDouble(o, "stamina",           d[3]),
+                    GsonHelper.getAsDouble(o, "ki_damage",         d[4]),
+                    GsonHelper.getAsDouble(o, "ki_reserves",       d[5]),
+                    GsonHelper.getAsDouble(o, "ki_cost_mult",      d[6]),
+                    GsonHelper.getAsDouble(o, "stamina_cost_mult", d[7])
             };
         }
 

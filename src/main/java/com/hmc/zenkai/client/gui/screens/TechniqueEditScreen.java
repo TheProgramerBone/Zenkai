@@ -80,7 +80,6 @@ public class TechniqueEditScreen extends Screen {
     private static final int BTN_H = 25;
     private static final int X_SIZE = 12;
 
-    private static final int Y_TITLE = 16;
     private static final int Y_NAME  = 28;
     private static final int Y_TABS  = 48;
     private static final int Y_ROWS  = 70;
@@ -89,7 +88,6 @@ public class TechniqueEditScreen extends Screen {
     private static final int PREVIEW_H = 58;
     private static final int Y_UNLOCK = 214;
     private static final int Y_BUTTONS = BG_H + 4; // FUERA del panel
-    private static final int TITLE_NUDGE = 0;  // corrección si el marco del PNG no es simétrico
     private static final int TRASH_SIZE = 16;  // 32px de textura / 2 → reducción limpia
 
     private enum Tab { COMBAT, STYLE }
@@ -185,7 +183,7 @@ public class TechniqueEditScreen extends Screen {
 
         // ── X de cerrar, esquina superior derecha del panel ──
         addRenderableWidget(new TextOnlyButton(
-                leftPos + BG_W - MARGIN - X_SIZE, topPos + Y_TITLE - 2, X_SIZE, X_SIZE,
+                leftPos + BG_W - MARGIN - X_SIZE, topPos + 10, X_SIZE, X_SIZE,
                 Component.empty(), TEX_X, TEX_X_HL, this::close));
 
         // ── Pestañas ──
@@ -437,8 +435,7 @@ public class TechniqueEditScreen extends Screen {
         super.render(g, mouseX, mouseY, partialTick);
         refreshButtons(); // el desbloqueo llega por sync asíncrono
 
-        ScreenTitle.drawCentered(g, this.font, this.title,
-                leftPos + BG_W / 2 + TITLE_NUDGE, topPos + Y_TITLE);
+        ScreenTitle.drawAbovePanel(g, this.font, this.title, leftPos + BG_W / 2, topPos);
         g.drawString(this.font, Component.translatable("screen.zenkai.technique.name").append(":"),
                 leftPos + MARGIN, topPos + Y_NAME + 3, 0xFFFFFFFF, true);
 
@@ -458,7 +455,7 @@ public class TechniqueEditScreen extends Screen {
 
         double kiPower = att.computeKiPowerFinal();
         double dmg = KiCombatServer.computeDamage(kiPower, type, size) * Math.max(1, type.count());
-        int cost = KiCombatServer.computeCost(att.computeKiPowerFinal(), type, size,
+        int cost = KiCombatServer.computeCost(att, type, size,
                 explosive && !type.defensive());
 
         int iy = topPos + Y_BLOCK;

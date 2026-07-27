@@ -46,9 +46,9 @@ public class StatsScreen extends ZenkaiMenuScreen {
     );
 
     // ── Layout ────────────────────────────────────────────────────────────────
-    private static final int HEADER_Y   = 34;  // 1ª línea de cabecera (rel. panelTop)
-    private static final int DIV_Y      = 56;  // divisor bajo cabecera
-    private static final int ATTR_Y0    = 68;  // 1ª fila de atributos
+    private static final int HEADER_Y   = 30;  // 1ª línea de cabecera (rel. panelTop)
+    private static final int DIV_Y      = 54;  // divisor bajo cabecera
+    private static final int ATTR_Y0    = 66;  // 1ª fila de atributos
     private static final int ATTR_STEP  = 20;  // paso entre filas
     private static final int PREVIEW_X1 = 150, PREVIEW_X2 = 244; // zona del render (rel. panelLeft)
     private static final int PREVIEW_Y1 = 62,  PREVIEW_Y2 = 186; // (rel. panelTop)
@@ -125,7 +125,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         Font font = this.font;
         int left = panelLeft + 12;
 
-        ScreenTitle.drawCentered(g, font, this.title, panelLeft + BG_W / 2, panelTop + TITLE_Y);
+        ScreenTitle.drawAbovePanel(g, font, this.title, panelLeft + BG_W / 2, panelTop);
 
         // ======= Cabecera: Race | Style / Form | TP (2 líneas x 2 columnas) =======
         int col2 = panelLeft + 128;

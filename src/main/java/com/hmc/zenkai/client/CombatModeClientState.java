@@ -83,12 +83,12 @@ public final class CombatModeClientState {
     public static boolean isCharging() { return chargingSlot >= 0; }
     public static int chargingSlot()   { return chargingSlot; }
 
-    /** 0..1 respecto al casttime del tipo cargándose (0 si no hay carga). */
+    /** 0..MAX_CHARGE respecto al casttime del tipo cargándose (0 si no hay carga). */
     public static double chargeRatio(Minecraft mc) {
         if (chargingSlot < 0 || mc.player == null) return 0;
         KiTechnique t = PlayerStatsAttachment.get(mc.player).techniques().slot(chargingSlot);
         if (t == null) return 0;
-        return Math.min(1.0, chargeTicks / (double) reqChargeFor(mc, t));
+        return KiCombatServer.chargeRatio(chargeTicks, reqChargeFor(mc, t));
     }
 
     /** Fracción de cooldown RESTANTE del slot (0 = listo), para pintar el overlay. */
@@ -190,14 +190,14 @@ public final class CombatModeClientState {
                 cancelCharge();
             } else if (!held) {
                 // Soltar el número: DISPARA si llegó al mínimo y hay ki; si no, cancela.
-                double ratio = chargeTicks / (double) reqChargeFor(mc, t);
+                double ratio = KiCombatServer.chargeRatio(chargeTicks, reqChargeFor(mc, t));
                 var fAtt = PlayerStatsAttachment.get(mc.player);
                 boolean defensive = t.type().defensive();
                 int fCost = (int) Math.max(1, Math.ceil(
-                        KiCombatServer.computeCost(
-                                fAtt.computeKiPowerFinal(), t.type(), t.size(),
+                        KiCombatServer.computeCost(fAtt, t.type(), t.size(),
                                 t.explosive() && !defensive)
-                                * (defensive ? 1.0 : ratio) * fAtt.powerFraction()));
+                                * (defensive ? 1.0 : KiCombatServer.chargeCostFactor(ratio))
+                                * fAtt.powerFraction()));
                 if (ratio >= KiTechniqueType.MIN_CHARGE && fAtt.getEnergy() >= fCost) {
                     PacketDistributor.sendToServer(new KiFirePacket(chargingSlot, chargeTicks));
                     if (mc.level != null) {
@@ -207,7 +207,8 @@ public final class CombatModeClientState {
                 }
                 cancelCharge();
             } else {
-                chargeTicks = Math.min(chargeTicks + 1, reqChargeFor(mc, t));
+                chargeTicks = Math.min(chargeTicks + 1,
+                        KiCombatServer.maxChargeTicks(reqChargeFor(mc, t)));
             }
         }
 

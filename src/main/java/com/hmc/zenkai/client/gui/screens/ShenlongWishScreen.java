@@ -28,8 +28,6 @@ public class ShenlongWishScreen extends Screen {
     private static final int BG_W = 256;
     private static final int BG_H = 256;
 
-    private static final int TITLE_Y = 20;
-
     private static final int BTN_W = 170;
     private static final int BTN_H = 16;
     private static final int FIRST_BTN_DY = 50; // desde el top del panel
@@ -118,7 +116,7 @@ public class ShenlongWishScreen extends Screen {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         g.blit(BG, panelLeft, panelTop, 0, 0, BG_W, BG_H);
 
-        ScreenTitle.drawCentered(g, this.font, this.title, panelLeft + BG_W / 2, panelTop + TITLE_Y);
+        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
 
         // Deseos restantes del dragón más cercano (valor sincronizado del servidor).
         int remaining = getNearbyWishesRemaining();

@@ -43,16 +43,17 @@ public class AppearanceScreen extends Screen {
     private static final int BTN_BAR_Y = 260;
     private static final int BTN_W     = 60;
 
-    /** Franja del título; las filas de campos empiezan justo debajo. */
-    private static final int TITLE_Y    = IN_Y1 + 6;
-    private static final int CONTENT_Y0 = IN_Y1 + 20;
+    /** Primera fila de campos. El título va FUERA del panel, así que no le roba altura. */
+    private static final int CONTENT_Y0 = IN_Y1 + 6;
 
     private static final int PAD          = 8;
     private static final int ARROW_W      = 12;
     private static final int TITLE_H      = 11;
     private static final int BLOCK_H      = 27;
-    private static final int COLOR_BOX_W  = 20;
-    private static final int COLOR_BOX_H  = 12;
+    private static final int COLOR_BOX_W  = 12;
+    private static final int COLOR_BOX_H  = 10;
+    private static final int PRESET_BOX_W = 12;
+    private static final int PRESET_BOX_H = 10;
 
     private static final int SKIN_SECTION_DY = 12;
 
@@ -287,16 +288,18 @@ public class AppearanceScreen extends Screen {
         ItemStack body = RaceSkinSlots.getVirtualRaceArmor(mc.player, EquipmentSlot.CHEST);
         if (!(body.getItem() instanceof GeoLayerArmorItem gi)) return;
 
-        int startY = bottomZoneY + SKIN_SECTION_DY + 12;
+        int startY = bottomZoneY + SKIN_SECTION_DY - 17;
         int row = 0;
         for (RaceLayerDiscovery.Layer L : RaceLayerDiscovery.layersFor(gi)) {
-            int idx = -10+L.index();
+            // La clave es SIEMPRE L.index(): layerArgb, layerLabelY, buildLayerRow y
+            // applyPreview la comparten. Cualquier desplazamiento aquí rompe el resto.
+            int idx = L.index();
             int cur = (idx == 0)
                     ? visual.getSkinColorRgb()
                     : (visual.hasLayerColor(idx) ? visual.getLayerColorRgb(idx) : L.defaultRgb());
             layerArgb.put(idx, 0xFF000000 | (cur & 0xFFFFFF));
 
-            int labelY = -30 + startY + row * LAYER_DY + L.dy();
+            int labelY = startY + row * LAYER_DY + L.dy();
             layerLabelY.put(idx, labelY);
             tintLayers.add(L);
             buildLayerRow(L, labelY + 10);
@@ -306,25 +309,24 @@ public class AppearanceScreen extends Screen {
 
     private void buildLayerRow(RaceLayerDiscovery.Layer L, int y) {
         int[] presets = L.presets();
-        int gap = 4;
-        int total = presets.length + 1; // + swatch/picker "custom"
-        int rowW   = total * COLOR_BOX_W + (total - 1) * gap;
-        int startX = (skinAreaCX - rowW / 2);
-        for (int i = 0; i < total; i++) {
-            int x = startX + i * (COLOR_BOX_W + gap);
-            if (i == presets.length) {
-                addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
-                        () -> layerCurrent(L) & 0xFFFFFF,
-                        () -> activeLayerIndex == L.index(),
-                        () -> toggleLayerPicker(L)));
-            } else {
-                final int c = presets[i];
-                addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
-                        () -> c,
-                        () -> (layerCurrent(L) & 0xFFFFFF) == c,
-                        () -> { layerArgb.put(L.index(), 0xFF000000 | c); closePicker(); applyPreview(); }));
-            }
+        int gap = 3;
+        int rowW = presets.length * (PRESET_BOX_W + gap) + COLOR_BOX_W;
+        int x = skinAreaCX - rowW / 2;
+
+        for (int c : presets) {
+            final int col = c;
+            addRenderableWidget(new ColorBoxButton(x, (y + (COLOR_BOX_H - PRESET_BOX_H) / 2),
+                    PRESET_BOX_W, PRESET_BOX_H,
+                    () -> col,
+                    () -> (layerCurrent(L) & 0xFFFFFF) == col,
+                    () -> { layerArgb.put(L.index(), 0xFF000000 | col); closePicker(); applyPreview(); }));
+            x += PRESET_BOX_W + gap;
         }
+
+        addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
+                () -> layerCurrent(L) & 0xFFFFFF,
+                () -> activeLayerIndex == L.index(),
+                () -> toggleLayerPicker(L)));
     }
 
     /** ARGB actual de una capa (o su default si aún no se tocó). */
@@ -394,7 +396,7 @@ public class AppearanceScreen extends Screen {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         g.blit(BG, pl, pt, 0, 0, BG_W, BG_H);
 
-        ScreenTitle.drawCentered(g, mc.font, this.title, pl + BG_W / 2, pt + TITLE_Y);
+        ScreenTitle.drawAbovePanel(g, mc.font, this.title, pl + BG_W / 2, pt);
 
         int blockTop = pt + CONTENT_Y0;
         blockTop = renderField(g, mc, pl, blockTop, "Eyes", CustomizationAssets.eyeLabel(eyeIndex));

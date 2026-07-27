@@ -2,6 +2,7 @@ package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
@@ -27,6 +28,9 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
@@ -377,6 +381,15 @@ public class ModCommands {
         att.setMajin(false);
         att.setLegendary(false);
         att.setDivine(false);
+        att.setAlignment(0);
+        att.setLastSummonTick(ServerConfig.summonCooldownTicks());
+
+        AttributeInstance scaleAttr = sp.getAttribute(Attributes.SCALE);
+        if (scaleAttr != null) {
+            scaleAttr.setBaseValue(1.0D);
+            scaleAttr.getModifiers().forEach(scaleAttr::removeModifier);
+        }
+
         PlayerLifeCycle.sync(sp);
         // ── Visual (pelo, ojos, colores, índices) ─────────────────────────────
         // Cargar un attachment limpio con todos los valores por defecto

@@ -135,7 +135,10 @@ public class CombatZenkaiHooks {
 
         // Coste = daño STR × factor de config (0.12 por defecto). Sub-lineal respecto al 1:1
         // anterior: un build equilibrado aguanta ~8 golpes en vez de 1.
-        int staminaCost = (int) Math.ceil(strDamage * CommonConfig.meleeStaminaPerHit());
+        // Coste = daño STR × factor global × multiplicador de raza/estilo. Sub-lineal
+        // respecto al 1:1 antiguo: un build equilibrado aguanta ~15 golpes en vez de 1.
+        int staminaCost = (int) Math.ceil(strDamage * CommonConfig.meleeStaminaPerHit()
+                * atkStats.staminaCostMult());
         if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
 
         PlayerLifeCycle.syncIfServer(attacker);

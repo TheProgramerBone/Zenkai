@@ -102,6 +102,7 @@ public final class PhysicalCombatServer {
      */
     public static int staminaCost(PlayerStatsAttachment att, PhysicalTechnique t) {
         double raw = att.computeMeleeFinal() * CommonConfig.meleeStaminaPerHit()
+                * att.staminaCostMult()
                 * t.staminaPct() * MasteryEffects.techCostFactor(att, t.name());
         return (int) Math.max(1, Math.ceil(
                 Math.min(raw, att.getStaminaMax() * MAX_COST_PCT_OF_POOL)));

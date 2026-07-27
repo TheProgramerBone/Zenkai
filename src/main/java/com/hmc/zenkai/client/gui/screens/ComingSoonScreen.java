@@ -28,7 +28,7 @@ public class ComingSoonScreen extends ZenkaiMenuScreen {
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
-        ScreenTitle.drawCentered(g, this.font, this.title, panelLeft + BG_W / 2, panelTop + TITLE_Y);
+        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
         g.drawCenteredString(this.font, Component.translatable("screen.zenkai.coming_soon"),
                 panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, 0xFFAAAAAA);
     }

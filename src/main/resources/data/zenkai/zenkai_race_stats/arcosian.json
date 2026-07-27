@@ -13,7 +13,9 @@
     "health": 21,
     "stamina": 12.5,
     "ki_damage": 4.6,
-    "ki_reserves": 44
+    "ki_reserves": 44,
+    "ki_cost_mult": 0.9,
+    "stamina_cost_mult": 0.85
   },
   "martial_artist": {
     "melee": 6.9,
@@ -21,7 +23,9 @@
     "health": 25,
     "stamina": 15.0,
     "ki_damage": 6.2,
-    "ki_reserves": 68
+    "ki_reserves": 68,
+    "ki_cost_mult": 0.95,
+    "stamina_cost_mult": 1.05
   },
   "spiritualist": {
     "melee": 3.8,
@@ -29,6 +33,8 @@
     "health": 19,
     "stamina": 6.8,
     "ki_damage": 9.2,
-    "ki_reserves": 84
+    "ki_reserves": 84,
+    "ki_cost_mult": 0.75,
+    "stamina_cost_mult": 1.0
   }
 }

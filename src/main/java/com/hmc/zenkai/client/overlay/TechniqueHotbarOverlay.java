@@ -115,16 +115,29 @@ public final class TechniqueHotbarOverlay {
             int by = g.guiHeight() / 2 + 12;
 
             boolean releasable = ratio >= KiTechniqueType.MIN_CHARGE;
+            boolean over = ratio > 1.0;
             g.fill(bx - 1, by - 1, bx + CHARGE_W + 1, by + CHARGE_H + 1,
-                    releasable ? 0xFFFFFFFF : 0x80FFFFFF); // borde: blanco pleno al pasar el 25%
+                    over ? 0xFFFFD24A                       // dorado: estás sobrecargando
+                            : releasable ? 0xFFFFFFFF : 0x80FFFFFF);
             g.fill(bx, by, bx + CHARGE_W, by + CHARGE_H, 0xC0000000);
-            int fill = (int) Math.round(CHARGE_W * ratio);
-            if (fill > 0) {
-                g.fill(bx, by, bx + fill, by + CHARGE_H, 0xFF000000 | rgb);
+
+            int fill = (int) Math.round(CHARGE_W * Math.min(ratio, 1.0));
+            if (fill > 0) g.fill(bx, by, bx + fill, by + CHARGE_H, 0xFF000000 | rgb);
+
+            // Sobrecarga: segunda pasada CLARA sobre la barra ya llena. Crece de 0 a
+            // CHARGE_W mientras el ratio va de 1.0 a 2.0.
+            if (over) {
+                int oFill = (int) Math.round(CHARGE_W * (ratio - 1.0));
+                if (oFill > 0) g.fill(bx, by, bx + oFill, by + CHARGE_H, 0xB0FFFFFF);
             }
+
             // Marca del 25% mínimo.
             int minX = bx + (int) (CHARGE_W * KiTechniqueType.MIN_CHARGE);
             g.fill(minX, by, minX + 1, by + CHARGE_H, 0xFFFFFFFF);
+
+            g.drawCenteredString(mc.font,
+                    Component.literal((int) Math.round(ratio * 100) + "%"),
+                    g.guiWidth() / 2, by + CHARGE_H + 3, over ? 0xFFFFD24A : 0xFFFFFFFF);
 
             g.drawCenteredString(mc.font,
                     Component.literal((int) Math.round(ratio * 100) + "%"),
@@ -143,9 +156,10 @@ public final class TechniqueHotbarOverlay {
             // jugador no adivina cuánto le va a costar soltar ahora mismo.
             if (t != null) {
                 int fullCost = KiCombatServer.computeCost(
-                        att.computeKiPowerFinal(), t.type(), t.size(),
+                        att, t.type(), t.size(),
                         t.explosive() && !t.type().defensive());
-                int cost = (int) Math.max(1, Math.ceil(fullCost * ratio * att.powerFraction()));
+                int cost = (int) Math.max(1, Math.ceil(
+                        fullCost * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()));
                 boolean affordable = att.getEnergy() >= cost;
                 g.drawCenteredString(mc.font,
                         Component.literal("◆ " + cost),          // ◆ + cifra

@@ -48,9 +48,7 @@ public class StyleSelectionScreen extends Screen {
     private static final int COLOR_BOX_W = 20;
     private static final int COLOR_BOX_H = 12;
 
-    /** Franja del título; el bloque "Fighting Style" cuelga de aquí. */
-    private static final int TITLE_Y   = IN_Y1 + 6;
-    private static final int S_TITLE_Y = TITLE_Y + 16;
+    private static final int S_TITLE_Y = IN_Y1 + 8;
     private static final int S_VALUE_Y = S_TITLE_Y + TITLE_H;
     private static final int DIV1_Y    = S_VALUE_Y + 14;
     private static final int DESC_Y    = DIV1_Y + 6;
@@ -182,7 +180,7 @@ public class StyleSelectionScreen extends Screen {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         g.blit(BG, lp, tp, 0, 0, BG_W, BG_H);
 
-        ScreenTitle.drawCentered(g, mc.font, this.title, cx, tp + TITLE_Y);
+        ScreenTitle.drawAbovePanel(g, mc.font, this.title, cx, tp);
 
         // Bloque estilo — título arriba, valor (entre flechas) debajo
         drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.style"),

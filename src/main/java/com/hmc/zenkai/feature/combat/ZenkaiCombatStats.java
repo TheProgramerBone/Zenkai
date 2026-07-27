@@ -41,6 +41,13 @@ public interface ZenkaiCombatStats {
         return PowerLevel.compute(this);
     }
 
+    /** Multiplicador de coste de ki de esta entidad. Los mobs no tienen raza ni estilo:
+     *  1.0 y el pipeline de combate no necesita saber a quién está golpeando. */
+    default double kiCostMult() { return 1.0; }
+
+    /** Multiplicador de coste de estamina de esta entidad. */
+    default double staminaCostMult() { return 1.0; }
+
     /**
      * Refleja el pool del mod en la vida vanilla conservando el RATIO.
      * Sin esto, las entidades con lógica propia sobre getHealth() (dragón, wither, warden)

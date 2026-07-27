@@ -21,8 +21,8 @@ import org.jetbrains.annotations.NotNull;
  * después de super.render(). Campos protected con los MISMOS nombres que usaba StatsScreen
  * (mc, att, panelLeft, panelTop, BG_W, BG_H) para que su código migre sin tocarse.
  *
- * La fila de íconos va DEBAJO del panel: arriba competía con el título, que ahora ocupa
- * esa franja. Las hijas dibujan su título con ScreenTitle (mayúsculas + color + sombra).
+ * La fila de íconos va DEBAJO del panel; el título de cada hija va ENCIMA (ScreenTitle),
+ * así que la franja superior queda para el título y la inferior para las pestañas.
  */
 public abstract class ZenkaiMenuScreen extends Screen {
 
@@ -30,9 +30,6 @@ public abstract class ZenkaiMenuScreen extends Screen {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
     protected static final int BG_W = 256;
     protected static final int BG_H = 256;
-
-    /** Y del título dentro del panel. Las hijas lo usan para no descuadrarse entre sí. */
-    protected static final int TITLE_Y = 20;
 
     private static final int TAB_ICON = 20; // tamaño de celda del atlas
     private static final int TAB_GAP  = 4;

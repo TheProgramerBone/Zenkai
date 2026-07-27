@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.player;
 
+import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
@@ -329,4 +330,10 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             default -> raw; // CON y SPI no escalan con la forma; MIND tampoco
         };
     }
+
+    @Override
+    public double kiCostMult() { return RaceStatTable.kiCostMult(getRace(), getStyle()); }
+
+    @Override
+    public double staminaCostMult() { return RaceStatTable.staminaCostMult(getRace(), getStyle()); }
 }

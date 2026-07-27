@@ -43,9 +43,7 @@ public class RaceSelectionScreen extends Screen {
     private static final int ARROW_W = 12;
     private static final int TITLE_H = 11;
 
-    /** Franja del título. Lo de abajo cuelga de aquí: subir/bajar esto mueve la pantalla. */
-    private static final int TITLE_Y     = IN_Y1 + 6;
-    private static final int B1_TITLE_Y  = TITLE_Y + 16;
+    private static final int B1_TITLE_Y = IN_Y1 + 8;
     private static final int B1_VALUE_Y = B1_TITLE_Y + TITLE_H;
     private static final int DIV1_Y     = B1_VALUE_Y + 14;
     private static final int B2_TITLE_Y = DIV1_Y + 6;
@@ -74,7 +72,7 @@ public class RaceSelectionScreen extends Screen {
     private ArrowIconButton skinLeft, skinRight;
 
     public RaceSelectionScreen() {
-        super(Component.translatable("screen.zenkai.appearance.title"));
+        super(Component.translatable("screen.zenkai.race.title"));
     }
 
     @Override
@@ -147,7 +145,7 @@ public class RaceSelectionScreen extends Screen {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         g.blit(BG, pl, pt, 0, 0, BG_W, BG_H);
 
-        ScreenTitle.drawCentered(g, mc.font, this.title, cx, pt + TITLE_Y);
+        ScreenTitle.drawAbovePanel(g, mc.font, this.title, cx, pt);
 
         drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.race"),
                 cx, pt + B1_TITLE_Y, COLOR_TITLE);

@@ -54,7 +54,10 @@ public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
             for (var styleEntry : raceEntry.getValue().entrySet()) {
                 buf.writeEnum(raceEntry.getKey());
                 buf.writeEnum(styleEntry.getKey());
-                for (double v : styleEntry.getValue()) buf.writeDouble(v);
+                double[] row = styleEntry.getValue();
+                for (int j = 0; j < RaceStatTable.COLS; j++) {
+                    buf.writeDouble(j < row.length ? row[j] : 1.0);
+                }
             }
         }
         buf.writeVarInt(pkt.bases().size());
@@ -70,15 +73,15 @@ public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
         for (int i = 0; i < rows; i++) {
             Race race = buf.readEnum(Race.class);
             Style style = buf.readEnum(Style.class);
-            double[] vals = new double[6];
-            for (int j = 0; j < 6; j++) vals[j] = buf.readDouble();
+            double[] vals = new double[RaceStatTable.COLS];
+            for (int j = 0; j < RaceStatTable.COLS; j++) vals[j] = buf.readDouble();
             out.computeIfAbsent(race, k -> new EnumMap<>(Style.class)).put(style, vals);
         }
         int nBases = buf.readVarInt();
         Map<Race, int[]> bases = new EnumMap<>(Race.class);
         for (int i = 0; i < nBases; i++) {
             Race race = buf.readEnum(Race.class);
-            int[] vals = new int[6];
+            int[] vals = new int[6];   // atributos: STR, CON, DEX, WIL, SPI, MND — fijos
             for (int j = 0; j < 6; j++) vals[j] = buf.readVarInt();
             bases.put(race, vals);
         }

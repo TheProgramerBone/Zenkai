@@ -92,7 +92,7 @@ public final class FormSystem {
         if (scaleAttr == null) return;
         double base = (race == null) ? 1.0 : race.baseScale();
         double target = (def != null && def.scale() > 0.0) ? def.scale() : base;
-        double amount = target - 1.0; // ADD_VALUE sobre base 1.0
+        double amount = target - 1.0;
         AttributeModifier current = scaleAttr.getModifier(FORM_SCALE_MOD_ID); // ⚠
         if (amount == 0.0) {
             if (current != null) scaleAttr.removeModifier(FORM_SCALE_MOD_ID);
