@@ -26,6 +26,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,13 @@ import java.util.Locale;
  *   - STYLE:  color, sonido de carga, sonido de disparo, set de animación + preview.
  *
  * El nombre y los botones viven fuera de las pestañas: aplican a las dos.
- * Guardar/Cancelar van FUERA del panel; la X de arriba cierra y la de abajo borra el slot.
+ * Guardar/Cancelar van FUERA del panel; la X de arriba cierra. Borrar NO comparte fila con
+ * Guardar: es una papelera dentro del panel, en la esquina inferior izquierda, y necesita
+ * dos pulsaciones.
+ *
+ * El ColorPickerWidget se abre FUERA del panel (a la derecha, o a la izquierda si no cabe),
+ * igual que en StyleSelectionScreen y AppearanceScreen. Antes se abría encima del bloque de
+ * preview y obligaba a esconder media pestaña mientras estaba abierto.
  */
 public class TechniqueEditScreen extends Screen {
 
@@ -53,6 +60,10 @@ public class TechniqueEditScreen extends Screen {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x.png");
     private static final ResourceLocation TEX_X_HL =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x_highlight.png");
+    private static final ResourceLocation TEX_TRASH =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_trash.png");
+    private static final ResourceLocation TEX_TRASH_HL =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_trash_highlight.png");
     private static final ResourceLocation PREVIEW_BALL =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_ball.png");
     private static final ResourceLocation PREVIEW_TRAIL =
@@ -68,13 +79,17 @@ public class TechniqueEditScreen extends Screen {
     private static final int BTN_H = 25;
     private static final int X_SIZE = 12;
 
-    private static final int Y_TITLE = 12;
+    private static final int Y_TITLE = 16;
     private static final int Y_NAME  = 28;
     private static final int Y_TABS  = 48;
     private static final int Y_ROWS  = 70;
-    private static final int Y_BLOCK = 148;   // previews / preview de animación
+    private static final int Y_BLOCK = 148;   // previews de combate
+    private static final int Y_PREVIEW = 150; // caja de animación (STYLE); la fila 4 acaba en 142
+    private static final int PREVIEW_H = 58;
     private static final int Y_UNLOCK = 214;
     private static final int Y_BUTTONS = BG_H + 4; // FUERA del panel
+    private static final int TITLE_NUDGE = 0; // corrección horizontal si el marco no es simétrico
+    private static final int TRASH_SIZE = 16; // 32px de textura / 2 → reducción limpia
 
     private enum Tab { COMBAT, STYLE }
 
@@ -92,11 +107,12 @@ public class TechniqueEditScreen extends Screen {
     private int animSet;
 
     private Tab tab = Tab.COMBAT;
-    private boolean pickerOpen = false;
+    private boolean deleteArmed = false;
 
     private EditBox nameBox;
     private TextOnlyButton unlockButton;
     private TextOnlyButton saveButton;
+    @Nullable private ColorPickerWidget picker = null;
     private int leftPos, topPos;
 
     public TechniqueEditScreen(int slot) {
@@ -147,6 +163,11 @@ public class TechniqueEditScreen extends Screen {
 
     @Override
     protected void init() {
+        // rebuildWidgets() vacía la lista de hijos: la referencia al picker queda colgando.
+        // Se anota si estaba abierto para reabrirlo al final y que ciclar un sonido no lo cierre.
+        boolean reopenPicker = picker != null;
+        picker = null;
+
         leftPos = (this.width - BG_W) / 2;
         topPos = (this.height - BG_H) / 2;
         int x = leftPos + MARGIN;
@@ -163,7 +184,7 @@ public class TechniqueEditScreen extends Screen {
 
         // ── X de cerrar, esquina superior derecha del panel ──
         addRenderableWidget(new TextOnlyButton(
-                leftPos + BG_W - MARGIN - X_SIZE, topPos + 10, X_SIZE, X_SIZE,
+                leftPos + BG_W - MARGIN - X_SIZE, topPos + Y_TITLE - 2, X_SIZE, X_SIZE,
                 Component.empty(), TEX_X, TEX_X_HL, this::close));
 
         // ── Pestañas ──
@@ -187,6 +208,8 @@ public class TechniqueEditScreen extends Screen {
 
         initBottomBar();
         refreshButtons();
+
+        if (reopenPicker && tab == Tab.STYLE) openPicker();
     }
 
     private void initCombatTab(int x, int contentW) {
@@ -240,15 +263,9 @@ public class TechniqueEditScreen extends Screen {
     private void initStyleTab(int x, int contentW) {
         int y = topPos + Y_ROWS;
 
-        // ── Color: botón + swatch (el picker se abre encima del bloque de preview) ──
+        // Color: botón a la izquierda, swatch + icono a la derecha. El picker se abre fuera.
         addRenderableWidget(new TextOnlyButton(x, y, 60, 14,
-                Component.translatable("screen.zenkai.technique.color"),
-                () -> { pickerOpen = !pickerOpen; rebuildWidgets(); }));
-        if (pickerOpen) {
-            addRenderableWidget(new ColorPickerWidget(
-                    leftPos + (BG_W - ColorPickerWidget.TOTAL_W) / 2, topPos + Y_BLOCK - 20,
-                    0xFF000000 | rgb, "Ki Color", argb -> rgb = argb & 0xFFFFFF));
-        }
+                Component.translatable("screen.zenkai.technique.color"), this::togglePicker));
         y += ROW_H;
 
         List<ResourceLocation> charges = soundList(true);
@@ -276,7 +293,8 @@ public class TechniqueEditScreen extends Screen {
                 });
     }
 
-    /** Cancelar | (X borrar) | Guardar, FUERA del panel, con btn_wide de 60x25. */
+    /** Cancelar | papelera | Guardar, FUERA del panel. La papelera queda en medio pero necesita
+     *  dos pulsaciones: comparte fila con Save, así que un clic suelto no puede borrar nada. */
     private void initBottomBar() {
         int y = topPos + Y_BUTTONS;
 
@@ -286,19 +304,25 @@ public class TechniqueEditScreen extends Screen {
 
         if (slot >= 0) {
             addRenderableWidget(new TextOnlyButton(
-                    leftPos + (BG_W - X_SIZE) / 2, y + (BTN_H - X_SIZE) / 2, X_SIZE, X_SIZE,
-                    Component.empty(), TEX_X, TEX_X_HL, () -> {
-                PlayerStatsAttachment a = att();
-                if (a != null) a.techniques().removeSlot(slot); // optimista
-                PacketDistributor.sendToServer(TechniquePacket.delete(slot));
-                close();
-            }));
+                    leftPos + (BG_W - TRASH_SIZE) / 2, y + (BTN_H - TRASH_SIZE) / 2,
+                    TRASH_SIZE, TRASH_SIZE,
+                    Component.empty(), TEX_TRASH, TEX_TRASH_HL, this::confirmDelete));
         }
 
         saveButton = new TextOnlyButton(
                 leftPos + BG_W - MARGIN - BTN_W, y, BTN_W, BTN_H,
                 Component.translatable("screen.zenkai.technique.save"), TEX_BTN, null, this::save);
         addRenderableWidget(saveButton);
+    }
+
+    /** Doble pulsación: el primer clic arma, el segundo borra. Sin pantalla de confirmación
+     *  para no destruir el borrador que vive en este Screen. */
+    private void confirmDelete() {
+        if (!deleteArmed) { deleteArmed = true; return; }
+        PlayerStatsAttachment a = att();
+        if (a != null) a.techniques().removeSlot(slot); // optimista
+        PacketDistributor.sendToServer(TechniquePacket.delete(slot));
+        close();
     }
 
     private void save() {
@@ -326,8 +350,41 @@ public class TechniqueEditScreen extends Screen {
     private void switchTab(Tab t) {
         if (tab == t) return;
         tab = t;
-        pickerOpen = false;
+        closePicker();
         rebuildWidgets();
+    }
+
+    // ── Color picker, fuera del panel ────────────────────────────────────────
+
+    private void togglePicker() {
+        if (picker != null) { closePicker(); return; }
+        openPicker();
+    }
+
+    /** A la derecha del panel; si se sale de pantalla, a la izquierda. Nunca encima del panel:
+     *  así el preview y las filas siguen visibles mientras se elige el color. */
+    private void openPicker() {
+        closePicker();
+        int px = leftPos + BG_W + 8;
+        if (px + ColorPickerWidget.TOTAL_W > this.width - 4)
+            px = leftPos - ColorPickerWidget.TOTAL_W - 8;
+        picker = new ColorPickerWidget(px, topPos + Y_ROWS, 0xFF000000 | rgb,
+                "Ki Color", argb -> rgb = argb & 0xFFFFFF);
+        addRenderableWidget(picker);
+    }
+
+    private void closePicker() {
+        if (picker != null) { removeWidget(picker); picker = null; }
+    }
+
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (picker != null) {
+            boolean inside = mx >= picker.getX() && mx < picker.getX() + ColorPickerWidget.TOTAL_W
+                    && my >= picker.getY() && my < picker.getY() + ColorPickerWidget.TOTAL_H;
+            if (!inside) closePicker();
+        }
+        return super.mouseClicked(mx, my, button);
     }
 
     private Component tabLabel(Tab t) {
@@ -363,7 +420,7 @@ public class TechniqueEditScreen extends Screen {
     private void refreshButtons() {
         PlayerStatsAttachment att = att();
         boolean unlocked = att != null && att.techniques().isUnlocked(type);
-        unlockButton.visible = !unlocked && !pickerOpen && type.enabled();
+        unlockButton.visible = !unlocked && type.enabled();
         unlockButton.active = !unlocked && type.enabled() && att != null
                 && att.getTP() >= type.tpCost()
                 && att.getAttribute(ZenkaiAttributes.MIND)
@@ -379,12 +436,19 @@ public class TechniqueEditScreen extends Screen {
         super.render(g, mouseX, mouseY, partialTick);
         refreshButtons(); // el desbloqueo llega por sync asíncrono
 
-        g.drawCenteredString(this.font, this.title, leftPos + BG_W / 2, topPos + Y_TITLE, 0xFFFFFFFF);
+        g.drawCenteredString(this.font, this.title,
+                leftPos + BG_W / 2 + TITLE_NUDGE, topPos + Y_TITLE, 0xFFFFFFFF);
         g.drawString(this.font, Component.translatable("screen.zenkai.technique.name").append(":"),
                 leftPos + MARGIN, topPos + Y_NAME + 3, 0xFFFFFFFF, true);
 
         if (tab == Tab.COMBAT) renderCombatTab(g, partialTick);
         else renderStyleTab(g, mouseX, mouseY);
+
+        if (deleteArmed && slot >= 0) {
+            g.drawCenteredString(this.font,
+                    Component.translatable("screen.zenkai.technique.delete_confirm"),
+                    leftPos + BG_W / 2, topPos + Y_BUTTONS - 11, 0xFFFF5555);
+        }
     }
 
     private void renderCombatTab(GuiGraphics g, float partialTick) {
@@ -412,25 +476,24 @@ public class TechniqueEditScreen extends Screen {
     }
 
     private void renderStyleTab(GuiGraphics g, int mouseX, int mouseY) {
-        // Swatch del color, a la derecha de la fila Color.
+        // Swatch del color + icono, a la derecha de la fila Color.
         int sy = topPos + Y_ROWS;
         int right = leftPos + BG_W - MARGIN;
         KiTechnique previewTech = new KiTechnique(" ", type, rgb, size, explosive);
-        g.fill(right - 44, sy + 1, right - 30, sy + 13, 0xFF000000);
-        g.fill(right - 43, sy + 2, right - 31, sy + 12, 0xFF000000 | rgb);
-        TechniqueIcons.draw(g, right - 20, sy - 3, previewTech);
+        g.fill(right - 40, sy + 1, right - 26, sy + 13, 0xFF000000);
+        g.fill(right - 39, sy + 2, right - 27, sy + 12, 0xFF000000 | rgb);
+        TechniqueIcons.draw(g, right - 18, sy - 3, previewTech);
 
-        if (pickerOpen) return; // el picker ocupa el hueco del preview
-
-        // ── Preview de la animación: MAQUETADO. Hoy pinta el modelo quieto; falta lanzar la
-        //    animación PAL en LOCAL (sin packet) para que el resto de jugadores no la vea. ──
+        // El preview ya NO se esconde con el picker abierto: el picker está fuera del panel.
+        // MAQUETADO: hoy pinta el modelo quieto; falta lanzar la animación PAL en LOCAL
+        // (sin packet) para que el resto de jugadores no la vea.
         int cx = leftPos + BG_W / 2;
-        int top = topPos + Y_BLOCK - 24;
-        g.fill(cx - 44, top, cx + 44, top + 78, 0x40000000);
+        int top = topPos + Y_PREVIEW;
+        g.fill(cx - 44, top, cx + 44, top + PREVIEW_H, 0x40000000);
         if (mc.player != null) {
             InventoryScreen.renderEntityInInventoryFollowsMouse(
-                    g, cx - 40, top + 2, cx + 40, top + 76,
-                    30, 0.0625f, (float) mouseX, (float) mouseY, mc.player);
+                    g, cx - 40, top + 2, cx + 40, top + PREVIEW_H - 2,
+                    24, 0.0625f, (float) mouseX, (float) mouseY, mc.player);
         }
     }
 

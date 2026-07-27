@@ -116,7 +116,6 @@
   "key.zenkai.form": "Transform (hold) / Revert (tap)",
   "key.zenkai.lock_on": "Lock On Target",
 
-
   "hud.zenkai.combat.no_techniques": "Assign techniques in the Ki Techniques menu",
 
   "sounds.zenkai.dragon_ball_radar_use": "Used Radar",
@@ -287,6 +286,7 @@
   "screen.zenkai.stats_screen.kaioken_drain": "  -%s HP/s",
   "screen.zenkai.stats_screen.kaioken_strain": "Strain: %ss (-10%% stats)",
   "screen.zenkai.technique.unlock_mnd": "Unlock (%s TP · %s MND)",
+  "screen.zenkai.technique.delete_confirm": "Are you sure?",
   "screen.zenkai.physical.unlock_mnd": "Unlock (%s TP · %s MND)",
 
 
