@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.DyedItemColor;
 
-public final class HairResolver {
+public final class  HairResolver {
 
     private HairResolver() {}
 
@@ -27,9 +27,13 @@ public final class HairResolver {
         Race race = stats.getRace();
         if (race != Race.SAIYAN && race != Race.HUMAN) return ItemStack.EMPTY;
 
+
         PlayerFormAttachment form = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         PlayerVisualAttachment vis = player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
-        String hairStyle = vis.getHairStyleId(); // "hair0", "hair1", ...
+        String hairStyle = vis.getHairStyleId();
+        // Pelo procedimental: lo pinta un RenderLayer propio, no un item de GeckoLib.
+        // Hasta que exista, se devuelve vacío (calvo) en vez de romper.
+        if (HairCode.isCustom(hairStyle)) return ItemStack.EMPTY;
 
         // hair0 = calvo
         if (hairStyle == null || hairStyle.isEmpty()
