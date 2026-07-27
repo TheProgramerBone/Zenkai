@@ -47,6 +47,10 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 .add(ModItems.TERRAGEM_LEGGINGS.get())
                 .add(ModItems.TERRAGEM_BOOTS.get());
 
+        this.tag(ModTags.Items.KEEPS_HAIR)
+                .add(ModItems.HALO.get())
+                .add(ModItems.SCOUTER.get());
+
         this.tag(ItemTags.DYEABLE)
                 .add(ModItems.SCOUTER.get());
 

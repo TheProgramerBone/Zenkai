@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.race.layer;
 
 import com.hmc.zenkai.feature.race.HairResolver;
+import com.hmc.zenkai.registry.ModTags;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
@@ -37,8 +38,10 @@ public class HairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
                        float limbSwing, float limbSwingAmount, float partialTick,
                        float ageInTicks, float netHeadYaw, float headPitch) {
 
-        // Si tiene casco real equipado, no renderizar pelo
-        if (!player.getInventory().getArmor(3).isEmpty()) return;
+        // El pelo solo desaparece bajo un casco DE VERDAD. Los accesorios que no cubren el
+        // cráneo se declaran en #zenkai:keeps_hair y conviven con el peinado.
+        ItemStack head = player.getInventory().getArmor(3);
+        if (!head.isEmpty() && !head.is(ModTags.Items.KEEPS_HAIR)) return;
 
         ItemStack hair = HairResolver.resolveHairHead(player);
         if (hair.isEmpty()) return;
