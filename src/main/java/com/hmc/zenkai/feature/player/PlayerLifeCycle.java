@@ -19,10 +19,10 @@ public class PlayerLifeCycle {
         PlayerStatsAttachment att = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         att.setImmortal(false);
         p.removeEffect(ModEffects.IMMORTALITY);
+        p.removeEffect(ModEffects.MAJIN);
         att.refillOnRespawn();
         var visual = p.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.setMajinControlled(false);
-        p.removeEffect(ModEffects.MAJIN);
         syncIfServer(p);          // stats
         syncVisualIfServer(p);    // visual
     }
@@ -30,16 +30,12 @@ public class PlayerLifeCycle {
     @SubscribeEvent
     public static void onPlayerDeath(LivingDeathEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
-
         PlayerStatsAttachment att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
-
-        // Al morir, cortamos de raíz cualquier rastro de inmortalidad
         att.setImmortal(false);
         sp.removeEffect(ModEffects.IMMORTALITY);
         sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).setMajinControlled(false);
         sp.removeEffect(ModEffects.MAJIN);
-        // Opcional: si quieres, también puedes resetear body/stats aquí,
-        // pero normalmente eso ya lo haces en el respawn con refillOnRespawn().
+        att.skills().clearToggles();
     }
 
     @SubscribeEvent

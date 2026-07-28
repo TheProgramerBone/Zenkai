@@ -158,6 +158,8 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public double computeFlyFinal()     { return raceStats.computeFlyFinal()     * statMultiplier; }
     public double computeKiPoolFinal()  { return raceStats.computeKiPoolFinal(); }
     public double computeConFinal()     { return raceStats.computeConFinal(); }
+    /** Escala con forma y % de poder igual que el melee: Ki Fist se beneficia de transformarse. */
+    public double computeSpiritMeleeFinal() { return raceStats.computeSpiritMeleeFinal() * powerFraction() * statMultiplier; }
     public boolean isCombatActive() { return isRaceChosen(); }
 
     // ── Body ─────────────────────────────────────────────────────────────────

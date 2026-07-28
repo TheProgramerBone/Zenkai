@@ -179,6 +179,10 @@ public final class CommonConfig {
             BUILDER.comment("Stamina per point of melee damage (STR). Higher = fewer hits, CON matters more.")
                     .defineInRange("cost.melee_stamina_per_hit", 0.10D, 0.0D, 10.0D);
 
+    private static final ModConfigSpec.DoubleValue MELEE_KI_PER_HIT_RAW =
+            BUILDER.comment("Ki per point of melee damage (STR) when Ki Fist replaces stamina. Mirror of cost.melee_stamina_per_hit for the ki pool.")
+                    .defineInRange("cost.melee_ki_per_hit", 0.10D, 0.0D, 10.0D);
+
     private static final ModConfigSpec.DoubleValue WEAPON_SCALE_RAW =
             BUILDER.comment("Weapon damage as a MULTIPLIER on melee: mult = 1 + (attack_damage - 1) * scale. 0.04 = diamond sword x1.28. Set to 0 to make weapons irrelevant again.")
                     .defineInRange("combat.weapon_scale", 0.04D, 0.0D, 1.0D);
@@ -307,6 +311,7 @@ public final class CommonConfig {
             M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
     private static volatile double KI_COST_PER_POWER = 0.70D;
     private static volatile double MELEE_STAMINA_PER_HIT = 0.10D;
+    private static volatile double MELEE_KI_PER_HIT = 0.10D;
     private static volatile double WEAPON_SCALE = 0.04D;
     private static volatile double KI_PER_BONUS_DAMAGE = 0.50D;
     private static volatile double COMBAT_ATTACK_SPEED = 1.6D;
@@ -392,6 +397,7 @@ public final class CommonConfig {
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
+        MELEE_KI_PER_HIT      = MELEE_KI_PER_HIT_RAW.get();
         WEAPON_SCALE          = WEAPON_SCALE_RAW.get();
         KI_PER_BONUS_DAMAGE   = KI_PER_BONUS_DAMAGE_RAW.get();
         COMBAT_ATTACK_SPEED   = COMBAT_ATTACK_SPEED_RAW.get();
@@ -451,6 +457,10 @@ public final class CommonConfig {
 
     public static double kiCostPerPower()    { return KI_COST_PER_POWER; }
     public static double meleeStaminaPerHit() { return MELEE_STAMINA_PER_HIT; }
+
+    /** Ki por punto de daño STR cuando Ki Fist sustituye a la estamina. */
+    public static double meleeKiPerHit()      { return MELEE_KI_PER_HIT; }
+
     /** El arma como multiplicador del golpe, no como suma. Ver KiInfusion. */
     public static double weaponScale()       { return WEAPON_SCALE; }
     /** Ki por punto de daño EXTRA de Ki Infuse / Ki Fist. */

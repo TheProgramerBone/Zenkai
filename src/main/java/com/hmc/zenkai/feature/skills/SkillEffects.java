@@ -122,4 +122,10 @@ public final class SkillEffects {
     public static double kiInfuseFactor(Player p) {
         return curve(p, KI_INFUSE, "damage_factor", 0.0);
     }
+
+    // ── Ki Fist ──────────────────────────────────────────────────────────────
+    /** Fracción del SPI (en escala de melee) que suma un golpe con los puños de ki. */
+    public static double kiFistFactor(Player p) {
+        return curve(p, KI_FIST, "damage_factor", 0.0);
+    }
 }

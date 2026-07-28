@@ -117,12 +117,11 @@ public class CombatZenkaiHooks {
     }
 
     /**
-     * Golpe cuerpo a cuerpo de un JUGADOR. Compuerta de MODO COMBATE: fuera de él, el golpe
-     * deja pasar el daño VANILLA puro (sin STR zenkai y sin gastar stamina).
-     * EL ARMA MULTIPLICA, NO SUMA: sumando, una espada de diamante (~8) era ruido frente a
-     * una STR de cientos y todas las armas valían lo mismo. Ver KiInfusion.weaponMultiplier.
-     * La estamina no capa el daño: el golpe pega STR completo y lo que decide es CUÁNTOS
-     * golpes aguantas. Ki Infuse suma aparte su bonus de WIL y se cobra en ki.
+     * Golpe cuerpo a cuerpo de un JUGADOR. Compuerta de MODO COMBATE: fuera de él, daño
+     * VANILLA puro. EL ARMA MULTIPLICA (ver KiInfusion.weaponMultiplier).
+     * ORDEN IMPORTANTE: primero se intenta pagar con Ki Fist y SOLO DESPUÉS se mira la
+     * estamina. Al revés, un ki user con la estamina seca y la barra de ki llena caía en la
+     * rama de "solo arma vanilla", que es justo el caso que la habilidad viene a resolver.
      */
     private static float playerMeleeDamage(Player attacker, ZenkaiCombatStats atkStats,
                                            double strDamage, float vanillaDmg) {
@@ -130,33 +129,34 @@ public class CombatZenkaiHooks {
                 && CombatModeServerState.isActive(atkSp.getUUID());
         if (!zenkaiMelee) return vanillaDmg;
 
-        // Sin fondo de stamina: solo pega el arma vanilla, sin el STR zenkai y sin
-        // multiplicador. No se puede machacar con golpes potenciados cuando estás seco,
-        // pero tampoco quedas indefenso.
-        if (atkStats.getStamina() <= 0) {
-            return (float) KiInfusion.attackDamageOf(attacker);
-        }
-
         // Cooldown de golpe estilo espada: misma curva que Player.attack(), 20% de daño con
-        // el ticker a cero y 100% lleno. Es cuadrática a propósito — castiga el spam mucho
-        // más que un lineal. Hay que aplicarla a mano porque este hook REEMPLAZA el daño
-        // entrante, y vanilla ya la había aplicado sobre el valor que estamos descartando.
+        // el ticker a cero y 100% lleno. Cuadrática a propósito: castiga el spam mucho más
+        // que un lineal. A mano porque este hook REEMPLAZA el daño entrante y vanilla ya la
+        // aplicó sobre el valor que estamos descartando.
         float scale = consumeAttackScale(attacker);
         double chargeF = 0.2 + scale * scale * 0.8;
 
-        double base = strDamage * KiInfusion.weaponMultiplier(attacker) * chargeF;
-        // Ki Infuse: 0 si el interruptor está apagado, si va desarmado o si no le queda ki.
-        // spendForMelee ya cobra: coste y daño salen del mismo número y no pueden descuadrarse.
-        double bonus = KiInfusion.spendForMelee(attacker, atkStats, chargeF);
+        // Ki Fist: paga el golpe en ki y suma su bonus de SPI. NONE si está apagado o seco.
+        KiFist.Result fist = KiFist.spendForMelee(attacker, atkStats, strDamage, chargeF);
 
-        // Coste de estamina = daño STR × carga × factor global × multiplicador de raza/estilo.
-        // Sale del STR PELADO (sin arma ni infusión): el arma no cansa más, y lo que añade la
-        // infusión ya se pagó en ki. Que la estamina escale igual que el daño es deliberado:
-        // el spam pierde DPS pero no malgasta recurso, así el incentivo a esperar es el daño
-        // y no el castigo doble.
-        int staminaCost = (int) Math.ceil(strDamage * chargeF
-                * CommonConfig.meleeStaminaPerHit() * atkStats.staminaCostMult());
-        if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
+        // Sin ki que lo cubra Y sin estamina: solo el arma vanilla. No se puede machacar con
+        // golpes potenciados cuando no queda nada, pero tampoco quedas indefenso.
+        if (!fist.paidWithKi() && atkStats.getStamina() <= 0) {
+            return (float) KiInfusion.attackDamageOf(attacker);
+        }
+
+        double base = strDamage * KiInfusion.weaponMultiplier(attacker) * chargeF;
+        // Ki Infuse se suma y se cobra APARTE: llevar los dos interruptores puestos cuesta
+        // las dos cosas (y pega las dos cosas).
+        double bonus = fist.bonus() + KiInfusion.spendForMelee(attacker, atkStats, chargeF);
+
+        // Estamina solo si el ki NO cubrió el golpe. Sale del STR pelado: el arma no cansa
+        // más, y lo que añaden las habilidades ya se pagó en ki.
+        if (!fist.paidWithKi()) {
+            int staminaCost = (int) Math.ceil(strDamage * chargeF
+                    * CommonConfig.meleeStaminaPerHit() * atkStats.staminaCostMult());
+            if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
+        }
 
         PlayerLifeCycle.syncIfServer(attacker);
         return (float) (base + bonus);

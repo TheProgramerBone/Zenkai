@@ -162,6 +162,10 @@ public class PlayerRaceStats {
     public double computeKiPoolFinal() {
         return attributes.get(ZenkaiAttributes.SPIRIT) * RaceStatTable.kiReserves(race, style);
     }
+
+    public double computeSpiritMeleeFinal() {
+        return attributes.get(ZenkaiAttributes.SPIRIT) * RaceStatTable.melee(race, style);
+    }
     // computeSpeedFinal / computeFlyFinal: ya no se usan para velocidad. Si algo más los
     // llama, que devuelvan defensa o se eliminen.
     public double computeSpeedFinal() {

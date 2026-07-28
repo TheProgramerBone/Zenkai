@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.combat.KiFist;
 import com.hmc.zenkai.registry.ModParticles;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.config.CommonConfig;
@@ -13,6 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -108,6 +110,22 @@ public final class PhysicalCombatServer {
                 Math.min(raw, att.getStaminaMax() * MAX_COST_PCT_OF_POOL)));
     }
 
+    /** Coste en KI de una técnica física cuando Ki Fist está activo. Mismo cap que la
+    *  estamina, sobre el pool que toca. */
+    public static int kiCost(Player p, PlayerStatsAttachment att, PhysicalTechnique t) {
+        double costMult = t.staminaPct() * MasteryEffects.techCostFactor(att, t.name());
+        int raw = KiFist.kiCost(att, att.computeMeleeFinal(), KiFist.rawBonus(p, att), costMult);
+        return (int) Math.max(1, Math.min(raw, att.getEnergyMax() * MAX_COST_PCT_OF_POOL));
+    }
+
+    /** ¿Puede pagar esta técnica? Mira el recurso que toque. ÚNICA fuente de verdad: la
+    *  llaman el servidor y la predicción del cliente, que si no tendría que saber por su
+    *  cuenta si Ki Fist cambia el recurso. */
+    public static boolean canAfford(Player p, PlayerStatsAttachment att, PhysicalTechnique t) {
+        if (KiFist.isOn(p) && att.getEnergy() >= kiCost(p, att, t)) return true;
+        return att.getStamina() >= staminaCost(att, t);
+    }
+
     public static void tryExecute(ServerPlayer sp, PhysicalTechnique t) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         if (!att.isCombatActive() || !CombatModeServerState.isActive(sp.getUUID())) return;
@@ -122,16 +140,29 @@ public final class PhysicalCombatServer {
                 k -> new long[PhysicalTechnique.values().length]);
         if (now < cds[t.ordinal()]) return;
 
-        int cost = staminaCost(att, t);
-        if (att.getStamina() < cost) return;
-
-        att.consumeStamina(cost);
+        // Ki Fist cambia el recurso: el golpe se paga en ki. Si no llega, se cae a estamina
+        // sin bonus, igual que el golpe básico.
+        boolean paidWithKi = false;
+        if (KiFist.isOn(sp)) {
+            int ki = kiCost(sp, att, t);
+            if (att.getEnergy() >= ki) {
+                att.consumeEnergy(ki);
+                paidWithKi = true;
+            }
+        }
+        if (!paidWithKi) {
+            int cost = staminaCost(att, t);
+            if (att.getStamina() < cost) return;
+            att.consumeStamina(cost);
+        }
         cds[t.ordinal()] = now + t.cooldownTicks();
         att.addTechniqueMastery(t.name(), (float) CommonConfig.techMasteryPerUse());
 
         // computeMeleeFinal YA incluye el multiplicador de forma/kaioken (statMultiplier).
         // Volver a aplicar formStatFactor aquí lo contaría dos veces.
-        double str = att.computeMeleeFinal() * MasteryEffects.techDamageFactor(att, t.name());
+        // El bonus de Ki Fist solo cuenta si el ki pagó el movimiento.
+        double melee = att.computeMeleeFinal() + (paidWithKi ? KiFist.rawBonus(sp, att) : 0.0);
+        double str = melee * MasteryEffects.techDamageFactor(att, t.name());
         Vec3 look = sp.getLookAngle();
 
         switch (t) {

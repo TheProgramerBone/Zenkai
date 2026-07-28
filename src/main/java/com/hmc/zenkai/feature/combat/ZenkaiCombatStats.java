@@ -6,10 +6,8 @@ import net.minecraft.world.entity.LivingEntity;
  * Contrato común de combate que implementan TANTO el jugador (PlayerStatsAttachment)
  * COMO las entidades (EntityStats). El pipeline de combate hablará solo con esta interfaz,
  * así no le importa si golpea/recibe un jugador o un mob.
- *
  * Los stats "final" son los derivados lineales (atributo × multiplicadores). El Power Level
  * se calcula UNA sola vez, con la fórmula de {@link PowerLevel}, vía el default.
- *
  * FASE 1: solo el modelo de datos. Nada de esto se engancha al combate todavía.
  */
 public interface ZenkaiCombatStats {
@@ -20,6 +18,8 @@ public interface ZenkaiCombatStats {
     double computeKiPowerFinal();  // WIL
     double computeKiPoolFinal();   // SPI
     double computeConFinal();      // CON (lineal, sin el offset del pool)
+    /** SPI en escala de melee (Ki Fist). 0 en entidades: no tienen la habilidad. */
+    default double computeSpiritMeleeFinal() { return 0.0; }
 
     /** ¿Participa del combate Zenkai? Jugador: raza elegida. Entidad: stats resueltos. */
     boolean isCombatActive();

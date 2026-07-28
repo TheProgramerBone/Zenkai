@@ -163,8 +163,9 @@ public final class CombatModeClientState {
                 // Si alguna guarda falla no se manda el packet NI se arranca el cooldown
                 // local: si no, la tecla quedaba muerta por un ataque que nunca ocurrió.
                 boolean blocked = lastBlockingSent || att.flags().isDowned();
-                int cost = PhysicalCombatServer.staminaCost(att, phys);
-                boolean canFire = phys.enabled() && !blocked && att.getStamina() >= cost;
+                // canAfford decide el recurso (ki con Ki Fist, estamina si no); el cliente
+                // no reimplementa esa decisión.
+                boolean canFire = phys.enabled() && !blocked && PhysicalCombatServer.canAfford(mc.player, att, phys);
                 if (canFire && PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
                     PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
                     PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks()); // optimista
