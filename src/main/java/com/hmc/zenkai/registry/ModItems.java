@@ -1,9 +1,15 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.item.*;
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
-import com.hmc.zenkai.content.item.special.*;
+import com.hmc.zenkai.feature.skills.SkillEffects;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -112,6 +118,40 @@ public class ModItems {
     () -> new DeferredSpawnEggItem(ModEntities.ISAAC,0xe4c7c5,0x9c716f, new Item.Properties()));
 
 
+
+    /** Espada de ki. Equilibrada: alcance +1, velocidad de espada. */
+    public static final DeferredItem<Item> KI_SWORD = ITEMS.registerItem("ki_sword",
+            p -> new KiWeaponItem(p, SkillEffects.KI_SWORD), new Item.Properties()
+                    .attributes(ItemAttributeModifiers.builder()
+                            .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(
+                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_sword_dmg"),
+                                            3.0, AttributeModifier.Operation.ADD_VALUE),
+                                    EquipmentSlotGroup.MAINHAND)
+                            .add(Attributes.ATTACK_SPEED, new AttributeModifier(
+                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_sword_spd"),
+                                            -2.4, AttributeModifier.Operation.ADD_VALUE),
+                                    EquipmentSlotGroup.MAINHAND)
+                            .add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(
+                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_sword_reach"),
+                                            1.0, AttributeModifier.Operation.ADD_VALUE),
+                                    EquipmentSlotGroup.MAINHAND).build()));
+
+        /** Guadaña de ki. Más daño y alcance, más lenta y mucho más cara en ki. */
+        public static final DeferredItem<Item> KI_SCYTHE = ITEMS.registerItem("ki_scythe",
+                        p -> new KiWeaponItem(p, SkillEffects.KI_SCYTHE), new Item.Properties()
+                        .attributes(ItemAttributeModifiers.builder()
+                                .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(
+                                        ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_scythe_dmg"),
+                                                4.0, AttributeModifier.Operation.ADD_VALUE),
+                                        EquipmentSlotGroup.MAINHAND)
+                                .add(Attributes.ATTACK_SPEED, new AttributeModifier(
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_scythe_spd"),
+                                                -3.0, AttributeModifier.Operation.ADD_VALUE),
+                                        EquipmentSlotGroup.MAINHAND)
+                                .add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(
+                                        ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_scythe_reach"),
+                                                2.0, AttributeModifier.Operation.ADD_VALUE),
+                                        EquipmentSlotGroup.MAINHAND).build()));
 
 
 

@@ -1,4 +1,4 @@
-package com.hmc.zenkai.content.item.special;
+package com.hmc.zenkai.content.item;
 
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;

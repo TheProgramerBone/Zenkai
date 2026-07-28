@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client.overlay;
 
 import com.hmc.zenkai.compat.CuriosCompat;
-import com.hmc.zenkai.content.item.special.ScouterItem;
+import com.hmc.zenkai.content.item.ScouterItem;
 import com.hmc.zenkai.feature.sense.ScouterAreaDataPacket;
 import com.hmc.zenkai.feature.sense.ScouterAreaScanPacket;
 import com.hmc.zenkai.feature.sense.ScouterScanPacket;

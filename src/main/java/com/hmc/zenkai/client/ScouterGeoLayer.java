@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.compat.CuriosCompat;
-import com.hmc.zenkai.content.item.special.ScouterItem;
+import com.hmc.zenkai.content.item.ScouterItem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;

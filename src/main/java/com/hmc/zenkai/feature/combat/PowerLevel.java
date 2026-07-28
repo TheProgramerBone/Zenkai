@@ -27,7 +27,7 @@ public final class PowerLevel {
     public static final double W_CON = 1.0; // body
     public static final double W_DEX = 1.0; // defensa
     public static final double W_WIL = 1.0; // ki power
-    public static final double W_SPI = 0.0; // ki pool
+    public static final double W_SPI = 1.0; // ki pool
 
     /** PL a partir de cualquier portador de stats (jugador o entidad). */
     public static long compute(ZenkaiCombatStats s) {

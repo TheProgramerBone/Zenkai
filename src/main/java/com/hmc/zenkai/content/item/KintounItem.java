@@ -1,7 +1,7 @@
-package com.hmc.zenkai.content.item.special;
+package com.hmc.zenkai.content.item;
 
 import com.hmc.zenkai.registry.ModEntities;
-import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
+import com.hmc.zenkai.content.entity.misc.KintounEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
@@ -13,8 +13,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
-public class SpacePodItem extends Item {
-    public SpacePodItem(Properties properties) {
+public class KintounItem extends Item {
+    public KintounItem(Properties properties) {
         super(properties);
     }
     @Override
@@ -27,13 +27,11 @@ public class SpacePodItem extends Item {
 
         if (!level.isClientSide()) {
             Vec3 spawnPos = Vec3.atCenterOf(clickedPos).add(0, 1, 0);
-
-            SpacePodEntity pod = new SpacePodEntity(ModEntities.SPACE_POD.get(), level);
+            KintounEntity nimbus = new KintounEntity(ModEntities.KINTOUN.get(), level);
             assert player != null;
-            pod.moveTo(spawnPos, player.getYRot(), 0.0F);
-            level.addFreshEntity(pod);
+            nimbus.moveTo(spawnPos, player.getYRot(), 0.0F);
+            level.addFreshEntity(nimbus);
             stack.shrink(1);
-
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide());

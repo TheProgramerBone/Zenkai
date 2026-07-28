@@ -1,4 +1,4 @@
-package com.hmc.zenkai.content.item.special;
+package com.hmc.zenkai.content.item;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

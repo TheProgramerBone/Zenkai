@@ -2,7 +2,7 @@ package com.hmc.zenkai.feature.sense;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.registry.ModDataComponents;
-import com.hmc.zenkai.content.item.special.ScouterItem;
+import com.hmc.zenkai.content.item.ScouterItem;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.combat.entity.EntityStatDef;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;

@@ -2,7 +2,7 @@ package com.hmc.zenkai.client.overlay;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.registry.ModItems;
-import com.hmc.zenkai.content.item.special.ScouterItem;
+import com.hmc.zenkai.content.item.ScouterItem;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.neoforged.api.distmarker.Dist;

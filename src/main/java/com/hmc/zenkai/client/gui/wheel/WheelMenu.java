@@ -15,7 +15,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Construye el árbol de la rueda. ÚNICO sitio donde se decide qué aparece y en qué orden.
@@ -36,6 +38,7 @@ public final class WheelMenu {
     private static final int COL_BASE  = 0xFFBBBBBB;
     private static final int COL_ON    = 0xFF3FD24A; // interruptor encendido
     private static final int COL_OFF   = 0xFFE02020; // interruptor apagado
+    private static final int COL_CATEGORY = 0xFF7CC8FC; // submenús de interruptores
 
     public static WheelNode build(Player p) {
         List<WheelNode> roots = new ArrayList<>();
@@ -48,10 +51,21 @@ public final class WheelMenu {
 
         WheelNode kaioken = kaiokenToggle(p);
         if (kaioken != null) roots.add(kaioken);
+        // Interruptores: los sueltos cuelgan de la raíz, los que declaran categoría se
+        // agrupan en su propia rama. Agrupar es SOLO presentación: el packet manda el mismo
+        // kind TOGGLE con el mismo id, esté donde esté la hoja.
+        Map<String, List<WheelNode>> categories = new LinkedHashMap<>();
         for (SkillToggles.Toggle t : SkillToggles.all()) {
-            WheelNode n = toggleNode(p, t.id());
-            if (n != null) roots.add(n);
-        }
+                WheelNode n = toggleNode(p, t.id());
+                if (n == null) continue;
+                if (t.category() == null) roots.add(n);
+                else categories.computeIfAbsent(t.category(), k -> new ArrayList<>()).add(n);
+            }
+        for (var entry : categories.entrySet()) {
+                roots.add(WheelNode.category(
+                                Component.translatable("wheel.zenkai." + entry.getKey()),
+                                COL_CATEGORY, entry.getValue()));
+            }
         return WheelNode.category(Component.empty(), 0xFFFFFFFF, roots);
     }
 
@@ -69,11 +83,15 @@ public final class WheelMenu {
                 true, FormIds.BASE.equals(selected)));
 
         for (ResourceLocation id : SuperForms.chain(race)) {
+            // Solo se enseña lo que ya se tiene. Con super_forms a nivel 1, un saiyan ve
+            // SSJ1 y nada más: SSJ2/3/4 no existen para él hasta comprarlos. Enseñarlos en
+            // gris adelantaba la progresión y llenaba la rueda de opciones muertas.
+            if (!SuperForms.unlocked(p, id)) continue;
             FormDef def = FormDef.get(id);
             int color = def == null ? COL_FORMS : (0xFF000000 | def.auraRgb());
             out.add(WheelNode.leaf(WheelNode.Kind.FORM, id.toString(),
                     Component.translatable("form.zenkai." + id.getPath()), color,
-                    SuperForms.unlocked(p, id), id.equals(selected)));
+                    true,id.equals(selected)));
         }
         return out;
     }

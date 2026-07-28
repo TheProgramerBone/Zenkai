@@ -1,7 +1,7 @@
-package com.hmc.zenkai.content.item.special;
+package com.hmc.zenkai.content.item;
 
 import com.hmc.zenkai.registry.ModEntities;
-import com.hmc.zenkai.content.entity.misc.KintounEntity;
+import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionResult;
@@ -13,8 +13,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 
-public class KintounItem extends Item {
-    public KintounItem(Properties properties) {
+public class ShadowKintounItem extends Item {
+    public ShadowKintounItem(Properties properties) {
         super(properties);
     }
     @Override
@@ -27,10 +27,10 @@ public class KintounItem extends Item {
 
         if (!level.isClientSide()) {
             Vec3 spawnPos = Vec3.atCenterOf(clickedPos).add(0, 1, 0);
-            KintounEntity nimbus = new KintounEntity(ModEntities.KINTOUN.get(), level);
+            ShadowKintounEntity kintoun = new ShadowKintounEntity(ModEntities.SHADOW_KINTOUN.get(), level);
             assert player != null;
-            nimbus.moveTo(spawnPos, player.getYRot(), 0.0F);
-            level.addFreshEntity(nimbus);
+            kintoun.moveTo(spawnPos, player.getYRot(), 0.0F);
+            level.addFreshEntity(kintoun);
             stack.shrink(1);
         }
 

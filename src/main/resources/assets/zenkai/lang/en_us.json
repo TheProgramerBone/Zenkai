@@ -334,11 +334,14 @@
   "skill.zenkai.super_forms": "Super Forms",
   "skill.zenkai.super_forms.desc": "Awaken your potential and unlock your race's transformations, one per level.",
   "skill.zenkai.ki_infuse": "Ki Infuse",
-  "skill.zenkai.ki_infuse.desc": "Channel ki through your weapons and projectiles. Each level increases the damage your willpower adds to an infused strike.",
+  "skill.zenkai.ki_infuse.desc": "Channel ki through your weapons and projectiles. Each level increases the damage your willpower adds to an infused strike, spent from your ki on top of the usual stamina cost.",
   "skill.zenkai.ki_fist": "Ki Fist",
-  "skill.zenkai.ki_fist.desc": "Wrap your fists in ki. Melee attacks spend ki instead of stamina and hit harder the more spirit you have.",
-  "skill.zenkai.ki_weapon": "Ki Weapon",
-  "skill.zenkai.ki_weapon.desc": "Shape your ki into a blade or a scythe. Costs far more ki per swing, but hits harder and reaches further.",
+  "skill.zenkai.ki_fist.desc": "Wrap your fists in ki. Melee attacks and physical techniques hit harder the more spirit you have, spending ki on top of their usual stamina cost.",
+
+  "skill.zenkai.ki_sword": "Ki Sword",
+  "skill.zenkai.ki_scythe": "Ki Scythe",
+  "item.zenkai.ki_sword": "Ki Sword",
+  "item.zenkai.ki_scythe": "Ki Scythe",
   "skill.zenkai.potential_unlock": "Potential Unlock",
   "skill.zenkai.potential_unlock.desc": "Draw out the power sleeping inside you. Costs no ki to hold, but locks you out of every other transformation.",
 
@@ -435,6 +438,7 @@
   "wheel.zenkai.empty": "Nothing to select yet",
   "wheel.zenkai.toggle.on": "%s ON",
   "wheel.zenkai.toggle.off": "%s OFF",
+  "wheel.zenkai.ki_weapons": "Ki Weapons",
   "message.zenkai.toggle_on": "%s enabled",
   "message.zenkai.toggle_off": "%s disabled",
 

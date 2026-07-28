@@ -22,8 +22,10 @@ public final class SkillEffects {
     public static final String KI_INFUSE = "ki_infuse";
     public static final String KI_FIST   = "ki_fist";
     /** No es una habilidad comprable: se desbloquea por tener Ki Fist + Ki Infuse. */
-    public static final String KI_WEAPON = "ki_weapon";
     public static final String POTENTIAL_UNLOCK = "potential_unlock";
+    /** No son habilidades comprables: se desbloquean por tener Ki Fist + Ki Infuse. */
+    public static final String KI_SWORD  = "ki_sword";
+    public static final String KI_SCYTHE = "ki_scythe";
 
     public static int level(Player p, String skillId) {
         if (p == null) return 0;

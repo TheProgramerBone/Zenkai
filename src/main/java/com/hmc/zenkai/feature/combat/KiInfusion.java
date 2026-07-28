@@ -1,6 +1,8 @@
 package com.hmc.zenkai.feature.combat;
 
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.content.item.KiWeaponItem;
+import com.hmc.zenkai.feature.kiweapon.KiWeaponServer;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import net.minecraft.world.entity.LivingEntity;
@@ -41,15 +43,6 @@ public final class KiInfusion {
     }
 
     /**
-     * Multiplicador del arma. Puño desnudo = 1.0 exacto.
-     * Con weapon_scale = 0.04: palo 1.16 · hierro 1.24 · diamante 1.28 · netherita 1.32.
-     */
-    public static double weaponMultiplier(LivingEntity e) {
-        double extra = Math.max(0.0, attackDamageOf(e) - 1.0);
-        return 1.0 + extra * CommonConfig.weaponScale();
-    }
-
-    /**
      * Daño extra bruto de la infusión, SIN escalar por la carga del golpe. 0 si el
      * interruptor está apagado o si va con las manos vacías: infusionar exige un arma, o
      * Ki Infuse sería un Ki Fist barato y las dos habilidades se pisarían.
@@ -84,5 +77,24 @@ public final class KiInfusion {
 
         st.consumeEnergy(cost);
         return bonus;
+    }
+
+    public static double weaponMultiplier(LivingEntity e) {
+        // El arma de ki no usa la fórmula del attack_damage: su multiplicador es un número
+        // de datapack, porque no representa "una hoja mejor" sino ki moldeado.
+        if (e instanceof Player p) {
+            KiWeaponItem w = KiWeaponServer.heldWeapon(p);
+            if (w != null) return w.def().damageMult();
+        }
+        double extra = Math.max(0.0, attackDamageOf(e) - 1.0);
+        return 1.0 + extra * CommonConfig.weaponScale();
+    }
+
+    /** Coste en ki del EXTRA que aporta el arma de ki sobre pegar a mano limpia. Se cobra
+    *  aparte porque, si no, el multiplicador saldría gratis y no habría decisión que tomar
+    *  entre invocarla o no. */
+    public static double kiWeaponExtra(Player p, double strDamage, double chargeF) {
+        KiWeaponItem w = KiWeaponServer.heldWeapon(p);
+        return w == null ? 0.0 : strDamage * chargeF * Math.max(0.0, w.def().damageMult() - 1.0);
     }
 }

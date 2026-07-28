@@ -1,4 +1,4 @@
-package com.hmc.zenkai.content.item.special;
+package com.hmc.zenkai.content.item;
 
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import net.minecraft.core.Holder;

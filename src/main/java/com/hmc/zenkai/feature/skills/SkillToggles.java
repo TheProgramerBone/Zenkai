@@ -5,6 +5,7 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -12,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Registro central de los INTERRUPTORES de habilidad (Ki Fist, Ki Infuse, arma de ki,
+ * Registro central de los INTERRUPTORES de habilidad (Ki Fist, Ki Infuse, las armas de ki,
  * Potential Unlock). Un interruptor no es un nivel: es "tengo la habilidad y ahora mismo la
  * quiero encendida". El estado vive en {@link com.hmc.zenkai.feature.player.PlayerSkills}
  * (dentro del attachment de stats), así que persiste, se copia al morir y viaja al cliente
@@ -30,25 +31,41 @@ import java.util.Set;
 public final class SkillToggles {
     private SkillToggles() {}
 
+    /** Categorías de la rueda. El valor es la clave de lang: wheel.zenkai.&lt;categoría&gt;. */
+    public static final String CAT_KI_WEAPONS = "ki_weapons";
+
     /**
      * @param id            id del interruptor (coincide con el id de habilidad si la tiene)
-     * @param needsOwnSkill true si exige tener ESA habilidad a nivel > 0. El arma de ki no:
-     *                      no se compra, se desbloquea por tener otras dos.
+     * @param needsOwnSkill true si exige tener ESA habilidad a nivel > 0. Las armas de ki no:
+     *                      no se compran, se desbloquean por tener otras dos.
      * @param requires      habilidades que además hay que tener (nivel > 0)
+     * @param conflicts     interruptores que se apagan solos al encender este. La espada y la
+     *                      guadaña compiten por la misma mano, así que encender una apaga la
+     *                      otra en vez de dejar un estado imposible que alguien tenga que
+     *                      resolver más tarde.
+     * @param category      subcategoría de la rueda, o null para colgar de la raíz
      */
-    public record Toggle(String id, boolean needsOwnSkill, Set<String> requires) {}
+    public record Toggle(String id, boolean needsOwnSkill, Set<String> requires,
+                         Set<String> conflicts, @Nullable String category) {}
 
     private static final Map<String, Toggle> REGISTRY = new LinkedHashMap<>();
 
     private static void register(Toggle t) { REGISTRY.put(t.id(), t); }
 
     static {
-        register(new Toggle(SkillEffects.KI_INFUSE, true, Set.of()));
-        register(new Toggle(SkillEffects.KI_FIST,   true, Set.of()));
-        // El arma de ki no es una habilidad comprable: es lo que pasa cuando tienes las dos.
-        register(new Toggle(SkillEffects.KI_WEAPON, false,
-                Set.of(SkillEffects.KI_FIST, SkillEffects.KI_INFUSE)));
-        register(new Toggle(SkillEffects.POTENTIAL_UNLOCK, true, Set.of()));
+        register(new Toggle(SkillEffects.KI_INFUSE, true, Set.of(), Set.of(), null));
+        register(new Toggle(SkillEffects.KI_FIST,   true, Set.of(), Set.of(), null));
+
+        // Las armas de ki no son habilidades comprables: son lo que pasa cuando tienes las
+        // dos. Van agrupadas en su propia rama de la rueda porque son variantes de una misma
+        // cosa, no dos interruptores independientes.
+        Set<String> weaponReq = Set.of(SkillEffects.KI_FIST, SkillEffects.KI_INFUSE);
+        register(new Toggle(SkillEffects.KI_SWORD,  false, weaponReq,
+                Set.of(SkillEffects.KI_SCYTHE), CAT_KI_WEAPONS));
+        register(new Toggle(SkillEffects.KI_SCYTHE, false, weaponReq,
+                Set.of(SkillEffects.KI_SWORD),  CAT_KI_WEAPONS));
+
+        register(new Toggle(SkillEffects.POTENTIAL_UNLOCK, true, Set.of(), Set.of(), null));
     }
 
     /** En orden de registro (orden en la rueda). */
@@ -88,6 +105,13 @@ public final class SkillToggles {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         boolean now = !att.skills().isToggleOn(id);
         att.skills().setToggle(id, now);
+
+        // Al encender, apagar lo que no puede convivir con esto.
+        if (now) {
+            Toggle t = REGISTRY.get(id);
+            for (String other : t.conflicts()) att.skills().setToggle(other, false);
+        }
+
         PlayerLifeCycle.sync(sp);   // stats, no forma: los interruptores viven en PlayerSkills
 
         sp.displayClientMessage(Component.translatable(

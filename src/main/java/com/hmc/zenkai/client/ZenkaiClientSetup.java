@@ -3,7 +3,7 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.registry.ModDataComponents;
 import com.hmc.zenkai.registry.ModItems;
-import com.hmc.zenkai.content.item.special.DragonRadarItem;
+import com.hmc.zenkai.content.item.DragonRadarItem;
 import net.minecraft.client.renderer.item.CompassItemPropertyFunction;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;

@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.combat.KiFist;
+import com.hmc.zenkai.feature.combat.KiInfusion;
 import com.hmc.zenkai.registry.ModParticles;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.config.CommonConfig;
@@ -14,7 +15,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -34,16 +34,15 @@ import java.util.UUID;
  * pipeline normal (playerAttack) con dos puentes hacia CombatZenkaiHooks:
  *  - FIRING evita que la rama atacante recalcule el golpe como melee básico.
  *  - defenseScale: la defensa del rival escala con el dmgMult (regla unificada con el ki).
- *
  * Movimientos con DURACIÓN (tick propio, PlayerTickEvent.Post):
  *  - DASH_PUNCH: 8 ticks de embestida, golpea al que toque (una vez a cada uno);
  *    chocar contra pared lo corta.
  *  - BARRAGE: 6 golpes, uno cada 2 ticks (12 ticks = 0.6 s), cono frontal por pulso.
  * Morir, caer derribado, bloquear o salir del modo combate cancela el movimiento activo.
- *
  * COSTE: absoluto y escalado con STR (staminaCost), igual que el golpe básico y que el ki.
  * El cliente NO reimplementa la fórmula: llama a staminaCost() para su predicción, porque
  * tenerla duplicada dejó las técnicas muertas cuando la fórmula cambió en un solo lado.
+ * Ki Fist NO cambia ese recurso: la estamina se paga igual, y el ki solo cubre el bonus.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class PhysicalCombatServer {
@@ -97,7 +96,6 @@ public final class PhysicalCombatServer {
     /**
      * Coste de estamina de una técnica. ÚNICA fuente de verdad: la llaman el servidor al
      * ejecutar y el cliente para decidir si merece la pena mandar el packet.
-     *
      * Absoluto y escalado con el poder físico (no % del pool): así subir CON da usos de
      * verdad. staminaPct() del datapack ya NO es un porcentaje, es "cuántos golpes básicos
      * cuesta" — de ahí que sus valores estén en el rango 1.9-3.1 y no en 0.15-0.25.
@@ -108,22 +106,6 @@ public final class PhysicalCombatServer {
                 * t.staminaPct() * MasteryEffects.techCostFactor(att, t.name());
         return (int) Math.max(1, Math.ceil(
                 Math.min(raw, att.getStaminaMax() * MAX_COST_PCT_OF_POOL)));
-    }
-
-    /** Coste en KI de una técnica física cuando Ki Fist está activo. Mismo cap que la
-    *  estamina, sobre el pool que toca. */
-    public static int kiCost(Player p, PlayerStatsAttachment att, PhysicalTechnique t) {
-        double costMult = t.staminaPct() * MasteryEffects.techCostFactor(att, t.name());
-        int raw = KiFist.kiCost(att, att.computeMeleeFinal(), KiFist.rawBonus(p, att), costMult);
-        return (int) Math.max(1, Math.min(raw, att.getEnergyMax() * MAX_COST_PCT_OF_POOL));
-    }
-
-    /** ¿Puede pagar esta técnica? Mira el recurso que toque. ÚNICA fuente de verdad: la
-    *  llaman el servidor y la predicción del cliente, que si no tendría que saber por su
-    *  cuenta si Ki Fist cambia el recurso. */
-    public static boolean canAfford(Player p, PlayerStatsAttachment att, PhysicalTechnique t) {
-        if (KiFist.isOn(p) && att.getEnergy() >= kiCost(p, att, t)) return true;
-        return att.getStamina() >= staminaCost(att, t);
     }
 
     public static void tryExecute(ServerPlayer sp, PhysicalTechnique t) {
@@ -140,29 +122,35 @@ public final class PhysicalCombatServer {
                 k -> new long[PhysicalTechnique.values().length]);
         if (now < cds[t.ordinal()]) return;
 
-        // Ki Fist cambia el recurso: el golpe se paga en ki. Si no llega, se cae a estamina
-        // sin bonus, igual que el golpe básico.
-        boolean paidWithKi = false;
-        if (KiFist.isOn(sp)) {
-            int ki = kiCost(sp, att, t);
-            if (att.getEnergy() >= ki) {
-                att.consumeEnergy(ki);
-                paidWithKi = true;
-            }
-        }
-        if (!paidWithKi) {
-            int cost = staminaCost(att, t);
-            if (att.getStamina() < cost) return;
-            att.consumeStamina(cost);
-        }
+        // La ESTAMINA se cobra siempre y sale del STR: Ki Fist no cambia el recurso del
+        // movimiento, solo añade daño encima. Si no hay fondo, el movimiento no sale.
+        int cost = staminaCost(att, t);
+        if (att.getStamina() < cost) return;
+
+        att.consumeStamina(cost);
         cds[t.ordinal()] = now + t.cooldownTicks();
         att.addTechniqueMastery(t.name(), (float) CommonConfig.techMasteryPerUse());
 
+        // Ki Fist: bonus aparte, cobrado en KI. El coste se calcula sobre el bonus YA
+        // multiplicado por la potencia del movimiento, porque eso es lo que acaba pegando.
+        // Sin ki suficiente no hay bonus y el movimiento sale igual: la estamina ya se pagó,
+        // así que quedarse seco de ki nunca puede tragarse una técnica.
+        double fistBonus = 0.0;
+        double raw = KiFist.rawBonus(sp, att);
+        if (raw > 0.0) {
+            double effective = raw * t.dmgMult() * MasteryEffects.techCostFactor(att, t.name());
+            int kiCost = Math.min(KiInfusion.kiCost(att, effective),
+                    (int) (att.getEnergyMax() * MAX_COST_PCT_OF_POOL));
+            if (att.getEnergy() >= kiCost) {
+                att.consumeEnergy(kiCost);
+                fistBonus = raw;
+            }
+        }
+
         // computeMeleeFinal YA incluye el multiplicador de forma/kaioken (statMultiplier).
         // Volver a aplicar formStatFactor aquí lo contaría dos veces.
-        // El bonus de Ki Fist solo cuenta si el ki pagó el movimiento.
-        double melee = att.computeMeleeFinal() + (paidWithKi ? KiFist.rawBonus(sp, att) : 0.0);
-        double str = melee * MasteryEffects.techDamageFactor(att, t.name());
+        double str = (att.computeMeleeFinal() + fistBonus)
+                * MasteryEffects.techDamageFactor(att, t.name());
         Vec3 look = sp.getLookAngle();
 
         switch (t) {
