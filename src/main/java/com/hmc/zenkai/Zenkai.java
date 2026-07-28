@@ -41,6 +41,7 @@ import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonMode;
 import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.client.renderer.entity.TippableArrowRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -172,6 +173,9 @@ public class Zenkai {
 
             EntityRenderers.register(ModEntities.KI_PROJECTILE.get(),
                     KiProjectileRenderer::new);
+
+            EntityRenderers.register(ModEntities.KI_ARROW.get(),
+                    TippableArrowRenderer::new);
 
             EntityRenderers.register(ModEntities.ISAAC.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("isaac", true), 0.5f));

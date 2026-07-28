@@ -2,12 +2,10 @@ package com.hmc.zenkai.feature.player;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Submódulo de PlayerStatsAttachment: habilidades y su NIVEL actual.
@@ -22,6 +20,7 @@ public final class PlayerSkills {
 
     private final Map<String, Integer> levels       = new LinkedHashMap<>();
     private final Map<String, Integer> grantedFloor = new LinkedHashMap<>();
+    private final Set<String> toggles = new LinkedHashSet<>();
 
     /** Nivel actual (0 = no la tiene). */
     public int level(String id) { return levels.getOrDefault(id, 0); }
@@ -57,6 +56,7 @@ public final class PlayerSkills {
     /** Quita la habilidad venga de donde venga. true si la tenía. */
     public boolean revoke(String id) {
         grantedFloor.remove(id);
+        toggles.remove(id);
         return levels.remove(id) != null;
     }
 
@@ -76,7 +76,7 @@ public final class PlayerSkills {
     }
 
     /** Reset full: todas. */
-    public void clear() { levels.clear(); grantedFloor.clear(); }
+    public void clear() { levels.clear(); grantedFloor.clear(); toggles.clear(); }
 
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
@@ -86,6 +86,9 @@ public final class PlayerSkills {
         CompoundTag gf = new CompoundTag();
         grantedFloor.forEach(gf::putInt);
         tag.put("grantedFloor", gf);
+        ListTag tg = new ListTag();
+        for (String id : toggles) tg.add(StringTag.valueOf(id));
+        tag.put("toggles", tg);
         return tag;
     }
 
@@ -99,6 +102,11 @@ public final class PlayerSkills {
         if (tag.contains("grantedFloor")) {
             CompoundTag gf = tag.getCompound("grantedFloor");
             for (String k : gf.getAllKeys()) grantedFloor.put(k, gf.getInt(k));
+        }
+        toggles.clear();
+        if (tag.contains("toggles")) {
+            ListTag tg = tag.getList("toggles", Tag.TAG_STRING);
+            for (int i = 0; i < tg.size(); i++) toggles.add(tg.getString(i));
         }
         // Migración del formato binario: lo que tuviera pasa a nivel 1.
         migrateFlat(tag, "bought",   false);
@@ -115,4 +123,16 @@ public final class PlayerSkills {
             if (granted) grantedFloor.merge(id, 1, Math::max);
         }
     }
+
+    // ── Interruptores ────────────────────────────────────────────────────────
+    // OJO: leer esto directamente NO valida nada. El consumidor correcto es
+    // SkillToggles.isOn(player, id), que además comprueba habilidad y prerrequisitos.
+
+    public boolean isToggleOn(String id) { return toggles.contains(id); }
+
+    public void setToggle(String id, boolean on) {
+        if (on) toggles.add(id); else toggles.remove(id);
+    }
+
+    public void clearToggles() { toggles.clear(); }
 }

@@ -1,6 +1,7 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.combat.KiInfusedShot;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -66,6 +67,13 @@ public class ZenkaiDataAttachments {
                             .serialize(PLAYER_FORM_CODEC)
                             .copyOnDeath()
                             .build());
+
+    /** Datos de infusión pegados a un proyectil. Default NONE: nunca hay que comprobar null. */
+    public static final Supplier<AttachmentType<KiInfusedShot>> KI_SHOT =
+                REGISTER.register("ki_shot", () ->
+                    AttachmentType.builder(() -> KiInfusedShot.NONE)
+                        .serialize(KiInfusedShot.CODEC)
+                        .build());
 
     // Stats de entidad (mobs/npc). Sin copyOnDeath: las entidades no respawn.
     public static final Codec<EntityStats> ENTITY_STATS_CODEC = CompoundTag.CODEC.xmap(

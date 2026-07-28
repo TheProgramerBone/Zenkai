@@ -1,0 +1,106 @@
+package com.hmc.zenkai.feature.skills;
+
+import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Registro central de los INTERRUPTORES de habilidad (Ki Fist, Ki Infuse, arma de ki,
+ * Potential Unlock). Un interruptor no es un nivel: es "tengo la habilidad y ahora mismo la
+ * quiero encendida". El estado vive en {@link com.hmc.zenkai.feature.player.PlayerSkills}
+ * (dentro del attachment de stats), así que persiste, se copia al morir y viaja al cliente
+ * por el sync de stats de siempre: no hace falta packet de sincronización propio.
+ *
+ * ÚNICO LECTOR: {@link #isOn(Player, String)}. Nadie debe leer el bit crudo del attachment,
+ * porque isOn valida ADEMÁS que el interruptor siga siendo legítimo (habilidad revocada,
+ * prerrequisito perdido, respec). Así un bit obsoleto en el NBT no puede activar nada:
+ * el guard está en el punto de lectura, que es por donde pasan todos los consumidores,
+ * en vez de repartido por cada sitio que quiera consultar el estado.
+ *
+ * Añadir un interruptor nuevo = una línea en el bloque static. Ni la rueda, ni el packet,
+ * ni el guardado se enteran.
+ */
+public final class SkillToggles {
+    private SkillToggles() {}
+
+    /**
+     * @param id            id del interruptor (coincide con el id de habilidad si la tiene)
+     * @param needsOwnSkill true si exige tener ESA habilidad a nivel > 0. El arma de ki no:
+     *                      no se compra, se desbloquea por tener otras dos.
+     * @param requires      habilidades que además hay que tener (nivel > 0)
+     */
+    public record Toggle(String id, boolean needsOwnSkill, Set<String> requires) {}
+
+    private static final Map<String, Toggle> REGISTRY = new LinkedHashMap<>();
+
+    private static void register(Toggle t) { REGISTRY.put(t.id(), t); }
+
+    static {
+        register(new Toggle(SkillEffects.KI_INFUSE, true, Set.of()));
+        register(new Toggle(SkillEffects.KI_FIST,   true, Set.of()));
+        // El arma de ki no es una habilidad comprable: es lo que pasa cuando tienes las dos.
+        register(new Toggle(SkillEffects.KI_WEAPON, false,
+                Set.of(SkillEffects.KI_FIST, SkillEffects.KI_INFUSE)));
+        register(new Toggle(SkillEffects.POTENTIAL_UNLOCK, true, Set.of()));
+    }
+
+    /** En orden de registro (orden en la rueda). */
+    public static Collection<Toggle> all() { return REGISTRY.values(); }
+
+    public static Toggle get(String id) { return REGISTRY.get(id); }
+
+    public static boolean isToggleable(String id) { return REGISTRY.containsKey(id); }
+
+    /** ¿Este jugador tiene derecho a este interruptor? (habilidad + prerrequisitos) */
+    public static boolean available(Player p, String id) {
+        if (p == null) return false;
+        Toggle t = REGISTRY.get(id);
+        if (t == null) return false;
+        if (t.needsOwnSkill() && SkillEffects.level(p, id) <= 0) return false;
+        for (String req : t.requires()) {
+            if (SkillEffects.level(p, req) <= 0) return false;
+        }
+        return true;
+    }
+
+    /** EL lector. false si el interruptor ya no es legítimo, aunque el bit siga guardado. */
+    public static boolean isOn(Player p, String id) {
+        if (!available(p, id)) return false;
+        return PlayerStatsAttachment.get(p).skills().isToggleOn(id);
+    }
+
+    /**
+     * Servidor: alterna y sincroniza. Punto de entrada ÚNICO — lo llaman la rueda
+     * (WheelSelectPacket) y SkillTogglePacket (teclas), para que la validación no se
+     * duplique en dos sitios y se descuadre.
+     * @return true si el interruptor cambió de estado.
+     */
+    public static boolean flip(ServerPlayer sp, String id) {
+        if (!available(sp, id)) return false;
+
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        boolean now = !att.skills().isToggleOn(id);
+        att.skills().setToggle(id, now);
+        PlayerLifeCycle.sync(sp);   // stats, no forma: los interruptores viven en PlayerSkills
+
+        sp.displayClientMessage(Component.translatable(
+                now ? "message.zenkai.toggle_on" : "message.zenkai.toggle_off",
+                Component.translatable("skill.zenkai." + id)), true);
+        return true;
+    }
+
+    /** Fija un estado concreto (muerte, comandos). No valida: es para apagar, no para dar. */
+    public static void set(ServerPlayer sp, String id, boolean on) {
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        if (att.skills().isToggleOn(id) == on) return;
+        att.skills().setToggle(id, on);
+        PlayerLifeCycle.sync(sp);
+    }
+}

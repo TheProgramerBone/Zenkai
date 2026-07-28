@@ -1,0 +1,12 @@
+{
+  "replace": {
+    "minecraft:arrow": "zenkai:ki_arrow"
+  },
+  "scaled": [
+    "minecraft:spectral_arrow",
+    "minecraft:trident",
+    "minecraft:snowball",
+    "minecraft:egg"
+  ],
+  "blocked": []
+}

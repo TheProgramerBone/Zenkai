@@ -18,6 +18,7 @@ import com.hmc.zenkai.feature.race.UpdatePlayerVisualPacket;
 import com.hmc.zenkai.feature.sense.*;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.feature.skills.SkillSyncPacket;
+import com.hmc.zenkai.feature.skills.SkillTogglePacket;
 import com.hmc.zenkai.feature.stats.*;
 import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.feature.training.TrainingSwingPacket;
@@ -318,5 +319,10 @@ public class ModNetworking {
                 RaceStatSyncPacket.TYPE,
                 RaceStatSyncPacket.STREAM_CODEC,
                 RaceStatSyncPacket::handle);
+
+        registrar.playToServer(
+                SkillTogglePacket.TYPE,
+                SkillTogglePacket.STREAM_CODEC,
+                SkillTogglePacket::handle);
     }
 }

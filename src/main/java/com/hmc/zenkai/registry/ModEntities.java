@@ -10,6 +10,7 @@ import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
 import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
+import com.hmc.zenkai.content.entity.technique.KiArrowEntity;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
@@ -56,11 +57,19 @@ public class ModEntities {
 
     public static final Supplier<EntityType<KiProjectileEntity>> KI_PROJECTILE =
             ENTITY_TYPES.register("ki_projectile", () -> EntityType.Builder
-                    .<KiProjectileEntity>of(KiProjectileEntity::new, MobCategory.MISC)
+                    .of(KiProjectileEntity::new, MobCategory.MISC)
                     .sized(0.5f, 0.5f)
                     .clientTrackingRange(8)
                     .updateInterval(1)
                     .build("ki_projectile"));
+
+    public static final Supplier<EntityType<KiArrowEntity>> KI_ARROW =
+            ENTITY_TYPES.register("ki_arrow", () -> EntityType.Builder
+                    .of(KiArrowEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(4)
+                    .updateInterval(20)
+                    .build("ki_arrow"));
 
     public static final Supplier<EntityType<YemmaEntity>> YEMMA =
             ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)

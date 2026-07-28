@@ -52,6 +52,10 @@ public interface ZenkaiCombatStats {
     /** Multiplicador de coste de estamina de esta entidad. 1.0 = neutro. */
     default double staminaCostMult() { return 1.0; }
 
+    /** Gasta ki. Default no-op: las entidades todavía no llevan pool de ki propio, así que
+    * el pipeline puede cobrar sin preguntar si golpea un jugador o un mob. */
+    default void consumeEnergy(int amount) {}
+
     /**
      * Refleja el pool del mod en la vida vanilla conservando el RATIO.
      * Sin esto, las entidades con lógica propia sobre getHealth() (dragón, wither, warden)

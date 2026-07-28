@@ -7,6 +7,7 @@ import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SuperForms;
@@ -52,6 +53,10 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
             boolean changed = switch (pkt.kind()) {
                 case "FORM"    -> selectForm(sp, st.getRace(), fm, pkt.value());
                 case "KAIOKEN" -> toggleKaioken(sp, fm);
+                // flip ya sincroniza los STATS (ahí viven los interruptores); devolvemos
+                // false para no disparar además el sync de FORMA, que aquí no cambió.
+                case "TOGGLE"  -> {
+                    SkillToggles.flip(sp, pkt.value()); yield false;}
                 default        -> false;
             };
             if (changed) PlayerLifeCycle.syncFormIfServer(sp);

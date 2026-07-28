@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SuperForms;
@@ -47,7 +48,10 @@ public final class WheelMenu {
 
         WheelNode kaioken = kaiokenToggle(p);
         if (kaioken != null) roots.add(kaioken);
-
+        for (SkillToggles.Toggle t : SkillToggles.all()) {
+            WheelNode n = toggleNode(p, t.id());
+            if (n != null) roots.add(n);
+        }
         return WheelNode.category(Component.empty(), 0xFFFFFFFF, roots);
     }
 
@@ -93,5 +97,14 @@ public final class WheelMenu {
 
         return WheelNode.leaf(WheelNode.Kind.KAIOKEN, "", label,
                 on ? COL_ON : COL_OFF, true, on);
+    }
+
+    private static WheelNode toggleNode(Player p, String id) {
+        if (!SkillToggles.available(p, id)) return null;
+        boolean on = SkillToggles.isOn(p, id);
+        Component label = Component.translatable(
+        on ? "wheel.zenkai.toggle.on" : "wheel.zenkai.toggle.off",
+        Component.translatable("skill.zenkai." + id));
+        return WheelNode.leaf(WheelNode.Kind.TOGGLE, id, label, on ? COL_ON : COL_OFF, true, on);
     }
 }

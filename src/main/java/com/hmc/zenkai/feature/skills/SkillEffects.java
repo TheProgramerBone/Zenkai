@@ -19,6 +19,11 @@ public final class SkillEffects {
     public static final String KI_BLOCK = "ki_block";
     public static final String KI_SENSE = "ki_sense";
     public static final String KAIOKEN = "kaioken";
+    public static final String KI_INFUSE = "ki_infuse";
+    public static final String KI_FIST   = "ki_fist";
+    /** No es una habilidad comprable: se desbloquea por tener Ki Fist + Ki Infuse. */
+    public static final String KI_WEAPON = "ki_weapon";
+    public static final String POTENTIAL_UNLOCK = "potential_unlock";
 
     public static int level(Player p, String skillId) {
         if (p == null) return 0;
@@ -111,4 +116,10 @@ public final class SkillEffects {
     /** true si el jugador NO puede fijar objetivo (sin la habilidad). Se llamaba canLockOn
      *  y devolvía justo lo contrario de lo que su nombre prometía. */
     public static boolean lockOnBlocked(Player p) { return level(p, KI_SENSE) <= 0; }
+
+    // ── Ki Infuse ────────────────────────────────────────────────────────────
+    /** Fracción de la potencia de ki (WIL) que suma un golpe infusionado. 0 sin la habilidad. */
+    public static double kiInfuseFactor(Player p) {
+        return curve(p, KI_INFUSE, "damage_factor", 0.0);
+    }
 }

@@ -180,6 +180,9 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public int  getKiCurrent()         { return pools.getKiCurrent(); }
     public int  getKiPool()            { return pools.getKiPool(); }
 
+    @Override
+    public void consumeEnergy(int amount) { pools.addEnergy(-Math.max(0, amount)); }
+
     // ── Movimiento ───────────────────────────────────────────────────────────
     public double getSpeedStat()    { return pools.getSpeedStat(); }
     public double getFlySpeedStat() { return pools.getFlySpeedStat(); }

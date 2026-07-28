@@ -1,0 +1,9 @@
+{
+  "max_level": 5,
+  "tp_cost": 400,
+  "mind_req": [6, 12, 19, 27, 36],
+  "purchasable": true,
+  "values": {
+    "damage_factor": [0.15, 0.20, 0.26, 0.32, 0.40]
+  }
+}

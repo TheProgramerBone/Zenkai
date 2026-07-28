@@ -1,11 +1,9 @@
 package com.hmc.zenkai.event;
 
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
+import com.hmc.zenkai.feature.combat.*;
 import com.hmc.zenkai.registry.ModGameRules;
-import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
-import com.hmc.zenkai.feature.combat.ZenkaiStats;
 import com.hmc.zenkai.config.CommonConfig;
-import com.hmc.zenkai.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -16,8 +14,6 @@ import com.hmc.zenkai.feature.training.TrainingHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -102,6 +98,15 @@ public class CombatZenkaiHooks {
         if (e.getSource().getDirectEntity() instanceof KiProjectileEntity) return dmg;
         if (PhysicalCombatServer.isFiring()) return dmg;
 
+        // GOLPE INDIRECTO (flecha, tridente, bola de nieve): el daño NO es el melee del
+        // tirador. Sin esto caía en playerMeleeDamage y una flecha pegaba el STR completo
+        // gastando estamina, con el arco actuando de "arma" del multiplicador. Lo que lleva
+        // es su daño vanilla más lo que Ki Infuse le puso AL LANZARLA.
+        Entity direct = e.getSource().getDirectEntity();
+        if (direct != null && direct != e.getSource().getEntity()) {
+            return dmg + (float) KiInfusedShot.of(direct).bonusDamage();
+        }
+
         double strDamage = atkStats.computeMeleeFinal();
 
         if (e.getSource().getEntity() instanceof Player attacker) {
@@ -113,12 +118,11 @@ public class CombatZenkaiHooks {
 
     /**
      * Golpe cuerpo a cuerpo de un JUGADOR. Compuerta de MODO COMBATE: fuera de él, el golpe
-     * deja pasar el daño VANILLA puro (sin STR zenkai y sin gastar stamina). Contra pools
-     * zenkai es simbólico -> golpes amistosos sin vaporizar a nadie; contra mobs, normal.
-     * La estamina YA NO capa el daño: el golpe pega STR completo. Lo que la estamina decide
-     * es CUÁNTOS golpes aguantas, con un coste sub-lineal (config). Así subir STR sin CON
-     * pega igual de fuerte, pero te seca antes -> CON pasa a valer para sostener el melee,
-     * como SPI sostiene el ki.
+     * deja pasar el daño VANILLA puro (sin STR zenkai y sin gastar stamina).
+     * EL ARMA MULTIPLICA, NO SUMA: sumando, una espada de diamante (~8) era ruido frente a
+     * una STR de cientos y todas las armas valían lo mismo. Ver KiInfusion.weaponMultiplier.
+     * La estamina no capa el daño: el golpe pega STR completo y lo que decide es CUÁNTOS
+     * golpes aguantas. Ki Infuse suma aparte su bonus de WIL y se cobra en ki.
      */
     private static float playerMeleeDamage(Player attacker, ZenkaiCombatStats atkStats,
                                            double strDamage, float vanillaDmg) {
@@ -126,17 +130,12 @@ public class CombatZenkaiHooks {
                 && CombatModeServerState.isActive(atkSp.getUUID());
         if (!zenkaiMelee) return vanillaDmg;
 
-        double weaponBonus = 0.0;
-        AttributeInstance attr = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
-        if (attr != null) weaponBonus = attr.getValue();
-
-        // Sin fondo de stamina: solo pega el arma vanilla, sin el STR zenkai. No se puede
-        // machacar con golpes potenciados cuando estás seco, pero tampoco quedas indefenso.
+        // Sin fondo de stamina: solo pega el arma vanilla, sin el STR zenkai y sin
+        // multiplicador. No se puede machacar con golpes potenciados cuando estás seco,
+        // pero tampoco quedas indefenso.
         if (atkStats.getStamina() <= 0) {
-            return (float) weaponBonus;
+            return (float) KiInfusion.attackDamageOf(attacker);
         }
-
-        double totalDamage = strDamage + weaponBonus;
 
         // Cooldown de golpe estilo espada: misma curva que Player.attack(), 20% de daño con
         // el ticker a cero y 100% lleno. Es cuadrática a propósito — castiga el spam mucho
@@ -144,17 +143,23 @@ public class CombatZenkaiHooks {
         // entrante, y vanilla ya la había aplicado sobre el valor que estamos descartando.
         float scale = consumeAttackScale(attacker);
         double chargeF = 0.2 + scale * scale * 0.8;
-        totalDamage *= chargeF;
 
-        // Coste = daño STR × carga × factor global × multiplicador de raza/estilo. Que la
-        // estamina escale igual que el daño es deliberado: el spam pierde DPS pero no
-        // malgasta recurso, así el incentivo a esperar es el daño y no el castigo doble.
+        double base = strDamage * KiInfusion.weaponMultiplier(attacker) * chargeF;
+        // Ki Infuse: 0 si el interruptor está apagado, si va desarmado o si no le queda ki.
+        // spendForMelee ya cobra: coste y daño salen del mismo número y no pueden descuadrarse.
+        double bonus = KiInfusion.spendForMelee(attacker, atkStats, chargeF);
+
+        // Coste de estamina = daño STR × carga × factor global × multiplicador de raza/estilo.
+        // Sale del STR PELADO (sin arma ni infusión): el arma no cansa más, y lo que añade la
+        // infusión ya se pagó en ki. Que la estamina escale igual que el daño es deliberado:
+        // el spam pierde DPS pero no malgasta recurso, así el incentivo a esperar es el daño
+        // y no el castigo doble.
         int staminaCost = (int) Math.ceil(strDamage * chargeF
                 * CommonConfig.meleeStaminaPerHit() * atkStats.staminaCostMult());
         if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
 
         PlayerLifeCycle.syncIfServer(attacker);
-        return (float) totalDamage;
+        return (float) (base + bonus);
     }
 
     // =====================================================================
@@ -238,6 +243,14 @@ public class CombatZenkaiHooks {
                     ? proj.refPower()
                     : (atkStats != null ? atkStats.computeKiPowerFinal() : 0.0);
             if (kiPower > 1.0e-6) defense *= (dmg / kiPower);
+        } else {
+            // Proyectil infusionado: misma regla que el ki. La defensa se escala según lo
+            // que este disparo vale frente al poder de quien lo lanzó, congelado al salir
+            // (el tirador pudo transformarse o morir mientras la flecha volaba).
+            KiInfusedShot shot = KiInfusedShot.of(e.getSource().getDirectEntity());
+            if (shot.isInfused() && shot.refPower() > 1.0e-6) {
+                defense *= (dmg / shot.refPower());
+            }
         }
         return defense;
     }
