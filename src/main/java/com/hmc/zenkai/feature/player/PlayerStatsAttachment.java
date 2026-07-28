@@ -1,6 +1,5 @@
 package com.hmc.zenkai.feature.player;
 
-import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
@@ -79,6 +78,18 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     // ── Raza / Estilo ────────────────────────────────────────────────────────
     public Race  getRace()  { return raceStats.getRace(); }
     public Style getStyle() { return raceStats.getStyle(); }
+
+    /** Coste de ki de esta combinación raza/estilo (columna KI_COST del datapack). */
+    @Override
+    public double kiCostMult() {
+        return com.hmc.zenkai.feature.RaceStatTable.kiCostMult(getRace(), getStyle());
+    }
+
+    /** Coste de estamina de esta combinación raza/estilo (columna STAM_COST). */
+    @Override
+    public double staminaCostMult() {
+        return com.hmc.zenkai.feature.RaceStatTable.staminaCostMult(getRace(), getStyle());
+    }
 
     public void setRace(Race r)   { raceStats.setRace(r);   applyRecalc(); }
     public void setStyle(Style s) { raceStats.setStyle(s);  applyRecalc(); }
@@ -330,10 +341,4 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             default -> raw; // CON y SPI no escalan con la forma; MIND tampoco
         };
     }
-
-    @Override
-    public double kiCostMult() { return RaceStatTable.kiCostMult(getRace(), getStyle()); }
-
-    @Override
-    public double staminaCostMult() { return RaceStatTable.staminaCostMult(getRace(), getStyle()); }
 }

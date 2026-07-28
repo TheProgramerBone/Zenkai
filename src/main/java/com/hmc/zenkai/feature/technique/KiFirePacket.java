@@ -22,10 +22,11 @@ import org.jetbrains.annotations.NotNull;
  * C2S: disparar la técnica del slot con la carga acumulada (R + click derecho; soltar
  * click dispara). Validación 100% servidor: raza, manos vacías, slot, cooldown por slot
  * (KiCombatServer.tryFire), carga mínima (MIN_CHARGE) y energía suficiente.
- * chargeTicks se clampa a maxChargeTicks; ratio = 0..2.0 vía KiCombatServer.chargeRatio.
- * El daño escala LINEAL con la carga hasta el 200%; el coste lo hace 1:1 hasta el 100% y
- * con recargo por encima (chargeCostFactor). BARRIER ignora la carga (siempre completa).
- * (compartidas con las previews del editor).
+ * chargeTicks se clampa a KiCombatServer.maxChargeTicks; ratio = 0..2.0 vía
+ * KiCombatServer.chargeRatio (SOBRECARGA hasta el 200%). El daño escala LINEAL con la carga;
+ * el coste 1:1 hasta el 100% y con recargo por encima (chargeCostFactor), así sobrecargar
+ * dobla el daño pero cuesta 2.5x y tarda 3.5x. BARRIER ignora la carga (siempre completa).
+ * Fórmulas en KiCombatServer (compartidas con las previews del editor).
  */
 public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPayload {
 
@@ -64,6 +65,8 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
             // Maestría: carga requerida reducida (cast), costo reducido, daño aumentado.
             double castF = com.hmc.zenkai.feature.mastery.MasteryEffects.techCastFactor(att, type.name());
             int reqCharge = Math.max(1, (int) Math.round(type.chargeTicks() * castF));
+            // Clamp a maxChargeTicks ANTES de convertir: un cliente modificado podría mandar
+            // 99999 ticks y disparar al 5000%.
             int maxTicks = KiCombatServer.maxChargeTicks(reqCharge);
             double ratio = type.defensive() ? 1.0
                     : KiCombatServer.chargeRatio(Mth.clamp(pkt.chargeTicks(), 0, maxTicks), reqCharge);
@@ -73,7 +76,6 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
             int cost = (int) Math.max(1, Math.ceil(
                     KiCombatServer.computeCost(att, type, tech.size(), explosive)
                             * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()));
-
             // La energía se comprueba ANTES de tryFire: si no, sin ki el slot se queda
             // enfriándose sin haber disparado nada.
             if (att.getEnergy() < cost) return;

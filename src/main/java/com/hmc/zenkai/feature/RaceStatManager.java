@@ -135,6 +135,8 @@ public final class RaceStatManager {
 
         /** Cada campo cae a su default compilado si falta: los JSON parciales son válidos. */
         private static double[] readRow(JsonObject o, Race race, Style style) {
+            // Relleno con 1.0 y NO con 0: si un datapack de otra versión no trae las
+            // columnas de coste, caen a neutro. A cero saldrían técnicas gratis.
             double[] def = RaceStatTable.row(race, style);
             double[] d = new double[RaceStatTable.COLS];
             java.util.Arrays.fill(d, 1.0);

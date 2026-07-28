@@ -1,11 +1,11 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.combat.BlockingSyncPacket;
+import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,8 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Estado SERVIDOR del combate ki + fórmulas COMPARTIDAS (las usa KiFirePacket para
  * disparar y TechniqueEditScreen para las previews del editor — una sola fuente de verdad).
- *  - Fórmulas: daño = kiPower × dmgMult × sizeFactor; coste = energyMax × 4% × kiMult ×
- *    costSizeFactor × (explosiva ? 1.5 : 1). Ambos escalan lineal con la CARGA (0.25..1).
+ *  - Fórmulas: daño = kiPower × dmgMult × sizeFactor; coste = kiPower × factor global ×
+ *    multiplicador de raza/estilo × kiMult × costSizeFactor × (explosiva ? 1.5 : 1).
+ *  - Carga: 0.25..2.00 (SOBRECARGA hasta el 200%). El daño escala lineal con el ratio; el
+ *    coste 1:1 hasta el 100% y con recargo por encima. chargeRatio/chargeCostFactor son la
+ *    ÚNICA conversión del mod: servidor, HUD, predicción de cliente y editor las comparten.
  *  - Cooldown: global anti-spam (5 ticks) + POR SLOT según type.cooldownTicks.
  *  - Barrera: pool = kiPower × 3 × sizeF, 10 s; absorb() desde CombatZenkaiHooks.
  *  - Bloqueo: manos vacías + click derecho; -60% velocidad (modificador transitorio) y
@@ -38,33 +41,9 @@ public final class KiCombatServer {
     public static final double BASE_COST_PCT = 0.04;
     public static final double EXPLOSIVE_COST_MULT = 1.5;
 
-    /** Techo de carga: 2.0 = 200%. El daño escala lineal con el ratio, así que sobrecargar
+    /** Techo de carga: 2.0 = 200%. Como el daño escala lineal con el ratio, sobrecargar
      *  al máximo dobla el daño del disparo. */
     public static final double MAX_CHARGE = 2.0;
-
-    /** Ticks totales para llegar al 200%: el primer 100% cuesta reqCharge, y el tramo de
-     *  sobrecarga cuesta overchargeTimeMult veces más. Con 2.5 son 3.5x el cast base. */
-    public static int maxChargeTicks(int reqCharge) {
-        return (int) Math.ceil(reqCharge
-                * (1.0 + (MAX_CHARGE - 1.0) * CommonConfig.overchargeTimeMult()));
-    }
-
-    /** Ticks acumulados -> ratio 0..MAX_CHARGE. Curva PARTIDA a propósito: hasta el 100% es
-     *  lineal 1:1, y a partir de ahí avanza overchargeTimeMult veces más lento. Es la única
-     *  conversión ticks->ratio del mod; servidor y cliente la comparten o el HUD miente. */
-    public static double chargeRatio(int ticks, int reqCharge) {
-        if (reqCharge <= 0 || ticks <= 0) return 0.0;
-        if (ticks <= reqCharge) return ticks / (double) reqCharge;
-        double over = (ticks - reqCharge) / (reqCharge * CommonConfig.overchargeTimeMult());
-        return Math.min(MAX_CHARGE, 1.0 + over);
-    }
-
-    /** Multiplicador de coste para un ratio dado. El tramo normal cuesta 1:1; SOLO lo que
-     *  pasa del 100% lleva el recargo. Con 1.5, un disparo al 200% cuesta 2.5x el de 100%. */
-    public static double chargeCostFactor(double ratio) {
-        return Math.min(ratio, 1.0)
-                + Math.max(0.0, ratio - 1.0) * CommonConfig.overchargeCostMult();
-    }
 
     /** Escalado del DAÑO por tamaño (1..7): 1.0 .. 2.5. */
     public static double sizeFactor(int size) {
@@ -83,14 +62,39 @@ public final class KiCombatServer {
 
     /** Coste de ki del disparo a carga completa. Escala con el PODER (WIL), no con el pool:
      *  así subir WIL sube daño Y coste, y SPI (el pool) decide cuántas veces lo sostienes.
-     *  El multiplicador de raza/estilo entra aquí para que los cuatro call sites (disparo,
-     *  HUD, editor y predicción de cliente) den siempre la misma cifra. */
+     *  Recibe el objeto de stats y no el kiPower suelto para que el multiplicador de
+     *  raza/estilo no se pueda olvidar en ningún call site. */
     public static int computeCost(ZenkaiCombatStats stats, KiTechniqueType type, int size,
                                   boolean explosive) {
         return (int) Math.ceil(stats.computeKiPowerFinal() * CommonConfig.kiCostPerPower()
                 * stats.kiCostMult()
                 * type.kiCostMult() * costSizeFactor(size)
                 * (explosive ? EXPLOSIVE_COST_MULT : 1.0));
+    }
+
+    // ── Carga y sobrecarga ───────────────────────────────────────────────────
+
+    /** Ticks totales para llegar al 200%: el primer 100% cuesta reqCharge y el tramo de
+     *  sobrecarga overchargeTimeMult veces más. Con 2.5 son 3.5x el cast base. */
+    public static int maxChargeTicks(int reqCharge) {
+        return (int) Math.ceil(reqCharge
+                * (1.0 + (MAX_CHARGE - 1.0) * CommonConfig.overchargeTimeMult()));
+    }
+
+    /** Ticks acumulados -> ratio 0..MAX_CHARGE. Curva PARTIDA a propósito: hasta el 100% es
+     *  lineal 1:1 y a partir de ahí avanza overchargeTimeMult veces más lento. */
+    public static double chargeRatio(int ticks, int reqCharge) {
+        if (reqCharge <= 0 || ticks <= 0) return 0.0;
+        if (ticks <= reqCharge) return ticks / (double) reqCharge;
+        double over = (ticks - reqCharge) / (reqCharge * CommonConfig.overchargeTimeMult());
+        return Math.min(MAX_CHARGE, 1.0 + over);
+    }
+
+    /** Multiplicador de coste para un ratio dado. El tramo normal cuesta 1:1; SOLO lo que
+     *  pasa del 100% lleva recargo. Con 1.5, un disparo al 200% cuesta 2.5x el de 100%. */
+    public static double chargeCostFactor(double ratio) {
+        return Math.min(ratio, 1.0)
+                + Math.max(0.0, ratio - 1.0) * CommonConfig.overchargeCostMult();
     }
 
     // ── Cooldowns (global anti-spam + por slot) ─────────────────────────────

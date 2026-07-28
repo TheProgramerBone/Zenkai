@@ -41,11 +41,15 @@ public interface ZenkaiCombatStats {
         return PowerLevel.compute(this);
     }
 
-    /** Multiplicador de coste de ki de esta entidad. Los mobs no tienen raza ni estilo:
-     *  1.0 y el pipeline de combate no necesita saber a quién está golpeando. */
+    // ── Multiplicadores de coste por raza/estilo ──────────────────────────────
+    // Viven aquí y no en PlayerStatsAttachment para que el pipeline de combate pueda
+    // pedirlos sin saber si golpea un jugador o un mob: las entidades no tienen raza ni
+    // estilo, así que se quedan en el neutro 1.0 y nadie necesita un instanceof.
+
+    /** Multiplicador de coste de ki de esta entidad. 1.0 = neutro. */
     default double kiCostMult() { return 1.0; }
 
-    /** Multiplicador de coste de estamina de esta entidad. */
+    /** Multiplicador de coste de estamina de esta entidad. 1.0 = neutro. */
     default double staminaCostMult() { return 1.0; }
 
     /**

@@ -117,15 +117,17 @@ public final class TechniqueHotbarOverlay {
             boolean releasable = ratio >= KiTechniqueType.MIN_CHARGE;
             boolean over = ratio > 1.0;
             g.fill(bx - 1, by - 1, bx + CHARGE_W + 1, by + CHARGE_H + 1,
-                    over ? 0xFFFFD24A                       // dorado: estás sobrecargando
-                            : releasable ? 0xFFFFFFFF : 0x80FFFFFF);
+                    over ? 0xFFFFD24A                        // dorado: estás sobrecargando
+                            : releasable ? 0xFFFFFFFF : 0x80FFFFFF); // blanco pleno al pasar el 25%
             g.fill(bx, by, bx + CHARGE_W, by + CHARGE_H, 0xC0000000);
 
             int fill = (int) Math.round(CHARGE_W * Math.min(ratio, 1.0));
-            if (fill > 0) g.fill(bx, by, bx + fill, by + CHARGE_H, 0xFF000000 | rgb);
-
-            // Sobrecarga: segunda pasada CLARA sobre la barra ya llena. Crece de 0 a
-            // CHARGE_W mientras el ratio va de 1.0 a 2.0.
+            if (fill > 0) {
+                g.fill(bx, by, bx + fill, by + CHARGE_H, 0xFF000000 | rgb);
+            }
+            // Sobrecarga: SEGUNDA pasada clara sobre la barra ya llena, en vez de estirar la
+            // escala a 0-200%. Así el tramo normal no pierde la mitad de resolución y la marca
+            // del 25% sigue donde el jugador la tiene memorizada.
             if (over) {
                 int oFill = (int) Math.round(CHARGE_W * (ratio - 1.0));
                 if (oFill > 0) g.fill(bx, by, bx + oFill, by + CHARGE_H, 0xB0FFFFFF);
@@ -138,10 +140,6 @@ public final class TechniqueHotbarOverlay {
             g.drawCenteredString(mc.font,
                     Component.literal((int) Math.round(ratio * 100) + "%"),
                     g.guiWidth() / 2, by + CHARGE_H + 3, over ? 0xFFFFD24A : 0xFFFFFFFF);
-
-            g.drawCenteredString(mc.font,
-                    Component.literal((int) Math.round(ratio * 100) + "%"),
-                    g.guiWidth() / 2, by + CHARGE_H + 3, 0xFFFFFFFF);
 
             if (t != null && !t.type().defensive()) {
                 double dmg = previewDamage(mc, att, t, ratio);

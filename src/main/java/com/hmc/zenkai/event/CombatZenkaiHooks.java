@@ -25,6 +25,11 @@ import net.minecraft.world.food.FoodData;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Pipeline de combate en UN SOLO handler (antes había dos handlers sobre el mismo evento y el
@@ -133,12 +138,19 @@ public class CombatZenkaiHooks {
 
         double totalDamage = strDamage + weaponBonus;
 
-        // Coste = daño STR × factor de config (0.12 por defecto). Sub-lineal respecto al 1:1
-        // anterior: un build equilibrado aguanta ~8 golpes en vez de 1.
-        // Coste = daño STR × factor global × multiplicador de raza/estilo. Sub-lineal
-        // respecto al 1:1 antiguo: un build equilibrado aguanta ~15 golpes en vez de 1.
-        int staminaCost = (int) Math.ceil(strDamage * CommonConfig.meleeStaminaPerHit()
-                * atkStats.staminaCostMult());
+        // Cooldown de golpe estilo espada: misma curva que Player.attack(), 20% de daño con
+        // el ticker a cero y 100% lleno. Es cuadrática a propósito — castiga el spam mucho
+        // más que un lineal. Hay que aplicarla a mano porque este hook REEMPLAZA el daño
+        // entrante, y vanilla ya la había aplicado sobre el valor que estamos descartando.
+        float scale = consumeAttackScale(attacker);
+        double chargeF = 0.2 + scale * scale * 0.8;
+        totalDamage *= chargeF;
+
+        // Coste = daño STR × carga × factor global × multiplicador de raza/estilo. Que la
+        // estamina escale igual que el daño es deliberado: el spam pierde DPS pero no
+        // malgasta recurso, así el incentivo a esperar es el daño y no el castigo doble.
+        int staminaCost = (int) Math.ceil(strDamage * chargeF
+                * CommonConfig.meleeStaminaPerHit() * atkStats.staminaCostMult());
         if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
 
         PlayerLifeCycle.syncIfServer(attacker);
@@ -324,11 +336,44 @@ public class CombatZenkaiHooks {
     // =====================================================================
 
     @SubscribeEvent
-    public static void onAttackWhileBlocking(net.neoforged.neoforge.event.entity.player.AttackEntityEvent e) {
+    public static void onAttackWhileBlocking(AttackEntityEvent e) {
         if (e.getEntity().level().isClientSide()) return;
         if (e.getEntity() instanceof ServerPlayer sp && KiCombatServer.isBlocking(sp)) {
             e.setCanceled(true);
         }
+    }
+
+    // =====================================================================
+    // COOLDOWN DE GOLPE (attack_strength de vanilla)
+    // =====================================================================
+
+    /**
+     * Escalado de fuerza de golpe capturado al inicio de Player.attack().
+     * Hay que guardarlo aquí porque attack() llama a resetAttackStrengthTicker() ANTES de
+     * hurt(), así que cuando corre LivingDamageEvent el ticker ya volvió a cero y
+     * getAttackStrengthScale devolvería ~0 para todos los golpes.
+     * El valor guardado es {escala, tickCount}: el tick sirve para descartar una entrada
+     * vieja y que un daño que NO venga de attack() (fuego, caída) no herede una escala baja.
+     */
+    private static final Map<UUID, float[]> ATTACK_SCALE = new ConcurrentHashMap<>();
+
+    @SubscribeEvent
+    public static void onAttackCaptureScale(AttackEntityEvent e) {
+        if (e.getEntity().level().isClientSide()) return;
+        Player p = e.getEntity();
+        ATTACK_SCALE.put(p.getUUID(), new float[]{ p.getAttackStrengthScale(0.5f), p.tickCount });
+    }
+
+    /** Consume la escala capturada. 1.0 si no hay una fresca: el daño no vino de un golpe. */
+    private static float consumeAttackScale(Player p) {
+        float[] v = ATTACK_SCALE.remove(p.getUUID());
+        if (v == null || p.tickCount - v[1] > 1) return 1.0f;
+        return v[0];
+    }
+
+    /** Llamar al desconectar: si no, queda una entrada por jugador que haya entrado alguna vez. */
+    public static void forgetAttackScale(UUID playerId) {
+        ATTACK_SCALE.remove(playerId);
     }
 
     /** Nadie FIJA a un jugador derribado. Complemento del barrido de TickHandlers, que es

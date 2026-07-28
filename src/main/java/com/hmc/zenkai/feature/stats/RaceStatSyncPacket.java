@@ -18,8 +18,8 @@ import java.util.Map;
  * El cliente reemplaza su tabla entera, igual que SkillSyncPacket: la pantalla de stats y
  * los previews del editor siempre ven los números del servidor, no los compilados.
  *
- * Formato plano (raza, estilo, 6 doubles) en vez de un mapa anidado: son 15 filas fijas,
- * así que un codec compuesto no aporta nada y esto se lee de un vistazo.
+ * Formato plano (raza, estilo, RaceStatTable.COLS doubles) en vez de un mapa anidado: son
+ * 15 filas fijas, así que un codec compuesto no aporta nada y esto se lee de un vistazo.
  */
 public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
                                  Map<Race, int[]> bases) implements CustomPacketPayload {
@@ -54,6 +54,8 @@ public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
             for (var styleEntry : raceEntry.getValue().entrySet()) {
                 buf.writeEnum(raceEntry.getKey());
                 buf.writeEnum(styleEntry.getKey());
+                // Longitud FIJA a COLS, no el largo del array: una fila corta (datapack de
+                // otra versión) desincronizaría el buffer y el resto del paquete saldría basura.
                 double[] row = styleEntry.getValue();
                 for (int j = 0; j < RaceStatTable.COLS; j++) {
                     buf.writeDouble(j < row.length ? row[j] : 1.0);

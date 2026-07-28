@@ -83,7 +83,8 @@ public final class CombatModeClientState {
     public static boolean isCharging() { return chargingSlot >= 0; }
     public static int chargingSlot()   { return chargingSlot; }
 
-    /** 0..MAX_CHARGE respecto al casttime del tipo cargándose (0 si no hay carga). */
+    /** 0..MAX_CHARGE respecto al casttime del tipo cargándose (0 si no hay carga).
+     *  Puede pasar de 1.0: a partir de ahí el jugador está SOBRECARGANDO. */
     public static double chargeRatio(Minecraft mc) {
         if (chargingSlot < 0 || mc.player == null) return 0;
         KiTechnique t = PlayerStatsAttachment.get(mc.player).techniques().slot(chargingSlot);
@@ -194,7 +195,8 @@ public final class CombatModeClientState {
                 var fAtt = PlayerStatsAttachment.get(mc.player);
                 boolean defensive = t.type().defensive();
                 int fCost = (int) Math.max(1, Math.ceil(
-                        KiCombatServer.computeCost(fAtt, t.type(), t.size(),
+                        KiCombatServer.computeCost(
+                                fAtt, t.type(), t.size(),
                                 t.explosive() && !defensive)
                                 * (defensive ? 1.0 : KiCombatServer.chargeCostFactor(ratio))
                                 * fAtt.powerFraction()));
