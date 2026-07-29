@@ -27,7 +27,7 @@ public class ModCreativeModeTabs {
                     .icon(() -> new ItemStack(ModItems.SENZU_BEAN.get()))
                     .displayItems((params, output) -> {
 
-                        // Items de material RACE que SÍ quieres mostrar (excepciones a la auto-exclusión).
+                        // Items a mostrar.
                         Set<Item> raceMaterialExceptions = new HashSet<>(List.of(
                                 ModItems.HALO.get()
                         ));
@@ -36,6 +36,8 @@ public class ModCreativeModeTabs {
                         Set<Item> ItemsExtraExcluded = new HashSet<>(List.of(
                                 ModItems.HAIR_1.get(),
                                 ModItems.SSJ1_HAIR1.get(),
+                                ModItems.KI_BLADE.get(),
+                                ModItems.KI_SCYTHE.get(),
                                 ModBlocks.HTC_PORTAL.get().asItem()
                         ));
 
