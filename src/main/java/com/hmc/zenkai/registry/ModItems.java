@@ -127,7 +127,7 @@ public class ModItems {
                     5.0, 100.0));
 
     public static final DeferredItem<WeightArmorItem> WEIGHTED_CAPE =
-            ITEMS.register("weight_cape", () -> new WeightArmorItem(
+            ITEMS.register("weighted_cape", () -> new WeightArmorItem(
                     "geo/weighted_cape.geo.json",
                     "textures/models/armor/weighted_cape.png",
                     100.0, 2000.0));
