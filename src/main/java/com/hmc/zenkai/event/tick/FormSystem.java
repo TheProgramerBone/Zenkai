@@ -5,6 +5,7 @@ import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
+import com.hmc.zenkai.feature.forms.PotentialUnlock;
 import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -27,6 +28,8 @@ public final class FormSystem {
         Player p = c.p();
         PlayerStatsAttachment att = c.att();
         var form = c.form();
+        // Antes del multiplicador: si el techo llega tarde, el tick entero usa el de ayer.
+        form.refreshPotentialCeiling(p);
 
         // Nivel 1 de super_forms: REGALADO. Es el estado base, así que el jugador SIEMPRE tiene
         // la habilidad y solo compra del 2 en adelante. grant() sube el suelo otorgado -> el
@@ -55,10 +58,8 @@ public final class FormSystem {
             // Forma inválida para esta raza, o desaparecida del datapack tras un /reload:
             // se vuelve a base. Antes solo se saltaba el drenaje, así que el jugador se
             // quedaba transformado GRATIS.
-            if (def == null || !def.allows(att.getRace())
-                    || !SuperForms.unlocked(p, currentFormId)) {
-                form.forceBase();
-                PlayerLifeCycle.syncFormIfServer(p);
+            if (def == null || !def.allows(att.getRace()) || !SuperForms.unlocked(p, currentFormId) || !PotentialUnlock.canRemain(p, currentFormId)) {
+                    form.forceBase();
             } else {
                 activeDef = def;
                 // El drenaje ya viene interpolado por maestría desde el datapack

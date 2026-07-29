@@ -112,12 +112,12 @@ public final class KaiokenSystem {
         if (!tier.isOn()) return 0.0;
         return tier.drainPctPerSecond() / 100.0
                 * powerStat(att) * KAIOKEN_DRAIN_SCALE / 20.0
-                * skillFactor * masteryFactor(form, tier) * formFactor(form);
+                * skillFactor * masteryFactor(form) * formFactor(form);
     }
 
     /** 1.0 sin maestría -> MASTERED_DRAIN_FACTOR al 100 %. Lineal: el progreso se nota desde el principio. */
-    public static double masteryFactor(PlayerFormAttachment form, KaiokenTier tier) {
-        float m = form.getKaiokenMastery(tier);   // 0..100
+    public static double masteryFactor(PlayerFormAttachment form) {
+        float m = form.getKaiokenMastery();   // 0..100
         return 1.0 - (1.0 - MASTERED_DRAIN_FACTOR) * (m / 100.0);
     }
 
@@ -136,12 +136,14 @@ public final class KaiokenSystem {
 
     /**
      * Ticks de fatiga tras caer agotado. Proporcional al escalón que te tumbó (caer desde
-     * x20 castiga 25 veces más que desde x2) y recortado por la maestría de ESE escalón:
-     * es el segundo uso de la maestría, que así vale para algo más que el drenaje.
+     * x20 castiga 25 veces más que desde x2) y recortado por la maestría de kaioken: es el
+     * segundo uso de la maestría, que así vale para algo más que el drenaje.
      */
     public static long strainTicks(PlayerFormAttachment form, KaiokenTier tier) {
         if (!tier.isOn()) return 0L;
-        double mastery = form.getKaiokenMastery(tier) / 100.0;
+        // El escalón sigue marcando la magnitud del castigo; la maestría que lo recorta ya
+        // es general.
+        double mastery = form.getKaiokenMastery() / 100.0;
         return Math.round(STRAIN_BASE_TICKS * (tier.drainPctPerSecond() / 2.5)
                 * (1.0 - STRAIN_MASTERY_REDUCTION * mastery));
     }

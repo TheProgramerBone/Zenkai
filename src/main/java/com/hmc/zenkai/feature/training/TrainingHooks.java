@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.training;
 
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.weights.WeightSystem;
@@ -90,6 +91,15 @@ public final class TrainingHooks {
         double granted = base
                 * (inHtc ? CommonConfig.trainingHtcMultiplier() : 1.0)
                 * WeightSystem.tpFactor(att.getWeightLoad());
+
+        // Potential Unlock: estás USANDO tu potencial, no entrenándolo. Se comprueba contra
+        // la forma ACTIVA, nunca contra tener la habilidad: llevarla comprada no debe costar
+        // nada. Se aplica sobre lo concedido y no sobre rawTp para que la fatiga siga
+        // acumulándose igual — quemas lo mismo y te llevas la mitad.
+        if (FormIds.POTENTIAL_UNLOCK.equals(
+            sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId())) {
+            granted *= CommonConfig.potentialUnlockTpMult();
+        }
 
         double total = granted + td.getCarry();
         int whole = (int) Math.floor(total);

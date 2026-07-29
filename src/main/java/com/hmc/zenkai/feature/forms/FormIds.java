@@ -32,6 +32,9 @@ public final class FormIds {
     public static final ResourceLocation FINAL_FORM  = id("final_form");
     public static final ResourceLocation GOLDEN_FORM = id("golden_form");
     public static final ResourceLocation BLACK_FORM  = id("black_form");
+    /** Potential Unlock. Hay lógica Java que compara contra este id (el multiplicador
+    +     *  acoplado y el castigo de TP), así que es de los que sí van cableados. */
+    public static final ResourceLocation POTENTIAL_UNLOCK = id("potential_unlock");
 
     private static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path);

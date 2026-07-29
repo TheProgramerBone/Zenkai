@@ -4,6 +4,7 @@ import com.hmc.zenkai.event.tick.KaiokenSystem;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.Style;
+import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.weights.WeightSystem;
@@ -54,6 +55,11 @@ public class StatsScreen extends ZenkaiMenuScreen {
     private static final int PREVIEW_X1 = 150, PREVIEW_X2 = 244; // zona del render (rel. panelLeft)
     private static final int PREVIEW_Y1 = 62,  PREVIEW_Y2 = 186; // (rel. panelTop)
     private static final int ALIGN_BAR_W = 130, ALIGN_BAR_H = 7;
+    /** Ancho del botón +. El texto del atributo arranca DESPUÉS de él, así que los números
+    *  largos crecen hacia la derecha sin empujar nada: con el + detrás, un STR de seis
+    *  cifras se comía el botón. */
+    private static final int PLUS_W     = 12;
+    private static final int ATTR_TEXT_X = 16 + PLUS_W + 4;
 
     // Popup de stats efectivas
     private static final int POPUP_W = 118, POPUP_H = 104;
@@ -84,7 +90,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         for (ZenkaiAttributes a : ORDER) {
             final String name = a.name();
-            this.addRenderableWidget(new PlusIconButton(x + 60, y + 1,
+            this.addRenderableWidget(new PlusIconButton(x, y + 1,
                     () -> spend(name, getCurrentTpStep())));
             y += ATTR_STEP;
         }
@@ -92,7 +98,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         // TPC + botón de multiplicador (abajo-izquierda)
         Font font = this.font;
         tpcLabelX = panelLeft + 12;
-        tpcLabelY = panelTop + BG_H - 30;
+        tpcLabelY = panelTop + BG_H - 40;
         tpcLabelW = font.width("TPC: x100000");
         tpcLabelH = font.lineHeight;
         this.addRenderableWidget(new PlusIconButton(tpcLabelX + tpcLabelW + 10, tpcLabelY - 2, this::cycleTpStep));
@@ -108,7 +114,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         // Barra de alineamiento (abajo-derecha)
         alignBarX = panelLeft + BG_W - 12 - ALIGN_BAR_W;
-        alignBarY = panelTop + BG_H - 20;
+        alignBarY = panelTop + BG_H - 30;
     }
 
     private void spend(String attrName, int points) {
@@ -150,7 +156,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         attrAreas.clear();
         int ay = panelTop + ATTR_Y0 + 2;
-        int ax = panelLeft + 16;
+        int ax = panelLeft + ATTR_TEXT_X;
         for (ZenkaiAttributes a : ORDER) {
             int raw = att.getAttribute(a);
             int eff = att.getEffectiveAttribute(a);
@@ -314,6 +320,24 @@ public class StatsScreen extends ZenkaiMenuScreen {
         lines.add(formName(form.getFormId()));
         lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.mastery",
                 "Mastery: %s%%", fmt(mastery)).withStyle(ChatFormatting.GOLD));
+        // Multiplicador REAL, no el de la forma: statMultiplier ya lleva dentro forma,
+        // kaioken, majin y el castigo de strain, que es exactamente lo que el jugador quiere
+        // saber cuando pregunta "cuánto pego ahora mismo".
+        if (att != null) {
+            lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.multiplier",
+            "Multiplier: x%s", fmt2(att.getStatMultiplier()))
+            .withStyle(ChatFormatting.GREEN));
+            }
+        // Drenaje de la forma. El 0 se enseña explícitamente en vez de omitirlo: que
+        // Potential Unlock no cueste ki es su razón de ser, y callarlo lo escondería.
+        if (!FormIds.BASE.equals(form.getFormId())) {
+            double kiPerSecond = form.formKiDrainPerTick() * 20.0;
+            lines.add(kiPerSecond > 0.0
+                ? Component.translatableWithFallback("screen.zenkai.stats_screen.form_drain",
+            "-%s ki/s", fmt(kiPerSecond)).withStyle(ChatFormatting.AQUA)
+                    : Component.translatableWithFallback("screen.zenkai.stats_screen.form_no_drain",
+            "No ki cost", "No ki cost").withStyle(ChatFormatting.DARK_AQUA));
+        }
 
         // El Kaioken es una capa APARTE de la forma y NO tiene maestría propia (son cinco
         // escalones fijos del enum). Lo que sí progresa es el nivel de la habilidad, y se
@@ -326,7 +350,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
             lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken",
                     "Kaioken %s", tier.label()).withStyle(ChatFormatting.RED));
             lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken_mastery",
-                    "  Mastery: %s%%", fmt(form.getKaiokenMastery(tier))).withStyle(ChatFormatting.GOLD));
+                    "  Mastery: %s%%", fmt(form.getKaiokenMastery())).withStyle(ChatFormatting.GOLD));
             lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken_stats",
                     "  +%s%% stats", fmt(tier.statPercent() * 100.0)).withStyle(ChatFormatting.GRAY));
             lines.add(Component.translatableWithFallback("screen.zenkai.stats_screen.kaioken_drain",
@@ -400,4 +424,6 @@ public class StatsScreen extends ZenkaiMenuScreen {
             case MIND         -> Component.translatable("tooltip.zenkai.attr.mnd");
         };
     }
+
+    private static String fmt2(double d) { return String.format(Locale.ROOT, "%.2f", d); }
 }

@@ -426,7 +426,7 @@ public class ModItems {
     //Halo
     public static final DeferredItem<GeoLayerArmorItem> HALO =
             ITEMS.register("halo", () -> new GeoLayerArmorItem(
-                    ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                    ArmorMaterials.LEATHER, ArmorItem.Type.HELMET,
                     new Item.Properties(),
                     "geo/halo.geo.json",
                     "textures/models/races/halo.png",

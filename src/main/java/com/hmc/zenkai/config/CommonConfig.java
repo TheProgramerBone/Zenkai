@@ -307,6 +307,14 @@ public final class CommonConfig {
             BUILDER.comment("Weights: movement multiplier while overloaded (drag)")
                     .defineInRange("training.weight_overload_move_factor", 0.15D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue PU_TP_MULT_RAW =
+            BUILDER.comment("TP multiplier while Potential Unlock is ACTIVE. You are using your potential, not training it.")
+                    .defineInRange("training.potential_unlock_tp_mult", 0.50D, 0.0D, 1.0D);
+
+   private static final ModConfigSpec.IntValue PU_ALIGNMENT_REQ_RAW =
+            BUILDER.comment("Minimum alignment (-100..100) required to BUY Potential Unlock. Not checked afterwards.")
+                    .defineInRange("skills.potential_unlock_alignment_req", 50, -100, 100);
+
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -365,6 +373,8 @@ public final class CommonConfig {
     private static volatile double WEIGHT_CAP_DIV = 3.4D, WEIGHT_CAP_EXP = 0.6D,
             WEIGHT_STAT_PEN = 0.25D, WEIGHT_MOVE_PEN = 0.60D, WEIGHT_JUMP_PEN = 0.40D,
             WEIGHT_TP_BONUS = 1.5D, WEIGHT_OVER_THRESH = 1.2D, WEIGHT_OVER_MOVE = 0.15D;
+    private static volatile double PU_TP_MULT = 0.50D;
+    private static volatile int    PU_ALIGNMENT_REQ = 50;
 
     // =====================================================================
     // CARGA
@@ -438,6 +448,8 @@ public final class CommonConfig {
         WEIGHT_TP_BONUS    = WEIGHT_TP_BONUS_RAW.get();
         WEIGHT_OVER_THRESH = WEIGHT_OVER_THRESH_RAW.get();
         WEIGHT_OVER_MOVE   = WEIGHT_OVER_MOVE_RAW.get();
+        PU_TP_MULT       = PU_TP_MULT_RAW.get();
+        PU_ALIGNMENT_REQ = PU_ALIGNMENT_REQ_RAW.get();
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
@@ -498,6 +510,9 @@ public final class CommonConfig {
     public static double masteryTechCostReduction()  { return M_TECH_COST; }
     public static double masteryTechCastReduction()  { return M_TECH_CAST; }
     public static double majinStatBonus()            { return MAJIN_STAT_BONUS; }
+    public static double potentialUnlockTpMult()     { return PU_TP_MULT; }
+    public static int    potentialUnlockAlignmentReq() { return PU_ALIGNMENT_REQ; }
+
 
     public static double kiCostPerPower()    { return KI_COST_PER_POWER; }
     public static double meleeStaminaPerHit() { return MELEE_STAMINA_PER_HIT; }

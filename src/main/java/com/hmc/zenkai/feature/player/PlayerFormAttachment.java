@@ -1,10 +1,8 @@
 package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.feature.Race;
-import com.hmc.zenkai.feature.forms.FormDef;
-import com.hmc.zenkai.feature.forms.FormIds;
-import com.hmc.zenkai.feature.forms.FormRegistry;
-import com.hmc.zenkai.feature.forms.KaiokenTier;
+import com.hmc.zenkai.feature.forms.*;
+import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SuperForms;
@@ -40,6 +38,18 @@ public class PlayerFormAttachment {
 
     /** Radio del grito del kaioken, en bloques. */
     private static final double SHOUT_RANGE = 32.0;
+    
+    /** Techo acoplado de Potential Unlock, resuelto en servidor y sincronizado. Lo refresca
+      *  FormSystem cada tick; el cliente solo lo lee. No se recalcula en cada consumidor
+      *  porque drainPerTick no tiene Player y es público para la GUI. */
+    private double puCeiling = 0.0;
+
+    public double getPuCeiling() { return puCeiling; }
+
+    /** Servidor: recalcula el techo. Barato (recorre como mucho 5 formas). */
+    public void refreshPotentialCeiling(Player p) {
+        this.puCeiling = PotentialUnlock.referenceCeiling(p);
+    }
 
     // ── Estado ───────────────────────────────────────────────────────────────
 
@@ -118,6 +128,10 @@ public class PlayerFormAttachment {
 
     /** Fracción que la FORMA suma al multiplicador, ya interpolada por maestría. */
     public double formStatPercent() {
+        // Potential Unlock no saca su % del JSON: va acoplado al techo del jugador.
+        if (FormIds.POTENTIAL_UNLOCK.equals(formId)) {
+            return PotentialUnlock.statPercent(puCeiling, activeMastery());
+        }
         FormDef d = activeDef();
         return d == null ? 0.0 : d.statPercent(activeMastery());
     }
@@ -147,6 +161,7 @@ public class PlayerFormAttachment {
         if (kaiokenSwitch) {
             return !isStrained(p.level().getGameTime()) && nextKaiokenTier(p) != null;
         }
+        if (potentialTarget(p) != null) return true;
         ResourceLocation target = targetForm(p, race);
         if (target == null) return false;
 
@@ -166,7 +181,9 @@ public class PlayerFormAttachment {
         Race race = stats.getRace();
         if (!canAdvance(p, race)) return clearProgress(false);
 
-        return kaiokenSwitch ? tickKaiokenLadder(p) : tickFormLadder(p, race);
+        if (kaiokenSwitch) return tickKaiokenLadder(p);
+        if (SkillToggles.isOn(p, SkillEffects.POTENTIAL_UNLOCK)) return tickPotentialLadder(p);
+        return tickFormLadder(p, race);
     }
 
     /**
@@ -277,6 +294,32 @@ public class PlayerFormAttachment {
         }
         return null;
     }
+    
+    /**
+    * Destino de la escalera de Potential Unlock: solo desde BASE y solo con el interruptor
+    * puesto. Exigir BASE es lo que hace que sea "el estado definitivo" y no una capa más
+    * encima de SSJ: hay que bajar antes de sacarlo.
+    */
+    private ResourceLocation potentialTarget(Player p) {
+        if (!SkillToggles.isOn(p, SkillEffects.POTENTIAL_UNLOCK)) return null;
+        if (!FormIds.BASE.equals(formId)) return null;
+        return FormRegistry.get(FormIds.POTENTIAL_UNLOCK) == null
+                            ? null : FormIds.POTENTIAL_UNLOCK;
+    }
+
+    /** Escalera de Potential Unlock: un solo escalón, del que se baja con el toque corto. */
+    private boolean tickPotentialLadder(Player p) {
+        ResourceLocation target = potentialTarget(p);
+        if (target == null) return clearProgress(false);
+        FormDef d = FormRegistry.get(target);
+            int required = (d == null) ? 0 : d.holdTicks();
+            if (required <= 0) return clearProgress(false);
+        boolean was = transforming;
+        if (advanceHold(required)) return progressDirty(was);
+        setFormId(target);
+        finishHold();
+        return true;
+    }
 
     /** Helper para CLIENTE/UI: mismo juez que el servidor, así la animación no miente. */
     public static boolean canTransformFrom(Player p, Race race, ResourceLocation current) {
@@ -384,6 +427,7 @@ public class PlayerFormAttachment {
         tag.putInt("kaioken", getKaioken().ordinal());
         tag.putBoolean("kaiokenSwitch", kaiokenSwitch);
         tag.putLong("strainUntil", strainUntil);
+        tag.putDouble("puCeiling", puCeiling);
         if (selectedForm != null) tag.putString("selectedForm", selectedForm.toString());
 
         CompoundTag fm = new CompoundTag();
@@ -398,6 +442,9 @@ public class PlayerFormAttachment {
         this.holdTicks = tag.getInt("holdTicks");
         this.cooldownTicks = tag.getInt("cooldownTicks");
 
+
+
+
         ResourceLocation rl = tag.contains("formId")
                 ? ResourceLocation.tryParse(tag.getString("formId")) : null;
         this.formId = (rl == null) ? FormIds.BASE : rl;
@@ -407,7 +454,7 @@ public class PlayerFormAttachment {
         this.selectedForm = tag.contains("selectedForm")
                 ? ResourceLocation.tryParse(tag.getString("selectedForm")) : null;
         this.strainUntil = tag.getLong("strainUntil");
-
+        this.puCeiling = tag.getDouble("puCeiling");
         formMastery.clear();
         if (tag.contains("formMastery")) {
             CompoundTag fm = tag.getCompound("formMastery");
@@ -415,30 +462,44 @@ public class PlayerFormAttachment {
                 formMastery.put(k, Math.min(100f, Math.max(0f, fm.getFloat(k))));
             }
         }
+        // MIGRACIÓN: la maestría de kaioken era por escalón (zenkai:kaioken/x2, /x20...).
+        // Se colapsa al MÁXIMO y no a la media: quien solo entrenó los escalones altos no
+        // debe perder progreso por un cambio de modelo que no pidió.
+        String general = kaiokenMasteryKey().toString();
+        float best = formMastery.getOrDefault(general, 0f);
+        var it = formMastery.entrySet().iterator();
+        while (it.hasNext()) {
+            var e = it.next();
+            if (e.getKey().startsWith(general + "/")) {
+                best = Math.max(best, e.getValue());
+                it.remove();
+            }
+        }
+        if (best > 0f) formMastery.put(general, Math.min(100f, best));
         // La forma guardada puede haber desaparecido del datapack entre partidas. No se valida
         // aquí (el registro aún no está cargado al leer NBT): lo hace validateOrReset en el tick.
     }
 
     /**
-     * Clave sintética de maestría para un escalón de Kaioken. NO es una forma real: vive en
-     * el mismo mapa formMastery para heredar persistencia NBT, sync y borrado en respec sin
-     * tocar save/load ni añadir packets. validateOrReset no toca el mapa, así que es estable.
+     * Clave sintética de la maestría de Kaioken. NO es una forma real: vive en el mismo mapa
+     * formMastery para heredar persistencia NBT, sync y borrado en respec sin tocar save/load
+     * ni añadir packets. validateOrReset no toca el mapa, así que es estable.
+     * GENERAL, no por escalón: el kaioken se domina como técnica, no escalón a escalón. Lo que
+     * sigue diferenciándolos es el RITMO de ganancia (MasteryTicker.kaiokenGainMul): x20 entrena
+     * tres veces más rápido que x2, así que farmear en el escalón barato es posible pero malo.
      */
-    public static ResourceLocation kaiokenMasteryKey(KaiokenTier tier) {
-        return ResourceLocation.fromNamespaceAndPath(
-                com.hmc.zenkai.Zenkai.MOD_ID, "kaioken/" + tier.name().toLowerCase(java.util.Locale.ROOT));
+    public static ResourceLocation kaiokenMasteryKey() {
+        return ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "kaioken");
     }
 
-    /** Maestría (0..100) del escalón indicado. */
-    public float getKaiokenMastery(KaiokenTier tier) {
-        if (tier == null || !tier.isOn()) return 0f;
-        return formMastery.getOrDefault(kaiokenMasteryKey(tier).toString(), 0f);
+    /** Maestría (0..100) del Kaioken, común a todos los escalones. */
+    public float getKaiokenMastery() {
+        return formMastery.getOrDefault(kaiokenMasteryKey().toString(), 0f);
     }
 
-    /** Por ESCALÓN, no global: dominar x20 exige usar x20 (si no, se farmearía x2 en AFK). */
-    public void addKaiokenMastery(KaiokenTier tier, float delta) {
-        if (tier == null || !tier.isOn() || delta <= 0) return;
-        String k = kaiokenMasteryKey(tier).toString();
+    public void addKaiokenMastery(float delta) {
+        if (delta <= 0) return;
+        String k = kaiokenMasteryKey().toString();
         formMastery.merge(k, delta, Float::sum);
         formMastery.computeIfPresent(k, (key, v) -> Math.min(100f, v));
     }

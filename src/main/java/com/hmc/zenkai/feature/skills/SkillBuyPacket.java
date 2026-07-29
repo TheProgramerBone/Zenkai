@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.skills;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.forms.PotentialUnlock;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
@@ -56,6 +57,11 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
                     ? SuperForms.tpCostForLevel(sp, next) : def.tpCost();
 
             if (att.getAttribute(ZenkaiAttributes.MIND) < def.mindReqFor(next)) return;
+            // Potential Unlock exige alineamiento. Gate propio y no campo genérico en
+            // SkillDef porque de momento es el único caso; si aparece un segundo, toca
+            // convertirlo en 'alignment_req' del JSON en vez de acumular ifs aquí.
+            if (SkillEffects.POTENTIAL_UNLOCK.equals(def.id())
+            && !PotentialUnlock.canPurchase(sp)) return;
             if (att.getTP() < cost) return;
 
             att.addTP(-cost);

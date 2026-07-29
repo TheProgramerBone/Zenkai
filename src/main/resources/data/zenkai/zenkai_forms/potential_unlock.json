@@ -1,0 +1,16 @@
+{
+  "races": ["saiyan", "human", "namekian", "arcosian", "majin"],
+  "kind": "divine",
+  "tp_cost": 0,
+  "hold_ticks": 80,
+  "mastery_gain": 0.17,
+  "stat_percent_untrained": 1.5,
+  "stat_percent_mastered": 1.5,
+  "ki_drain_untrained": 0.0,
+  "ki_drain_mastered": 0.0,
+  "hair_items": {},
+  "body_items": {},
+  "aura_type": "ssj",
+  "aura_rgb": "0xFFFFFF",
+  "scale": 1.0
+}

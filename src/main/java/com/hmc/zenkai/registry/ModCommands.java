@@ -537,14 +537,16 @@ public class ModCommands {
     };
 
     /**
-     * Admite tres formatos: "x20" (escalón de kaioken), "ssj4" (forma sin namespace) y
-     * "zenkai:ssj4" (completo). Los escalones se traducen a su clave sintética, que es como
-     * viven dentro del mismo mapa de maestría que las formas.
+     * Admite: "kaioken" o cualquier etiqueta de escalón ("x20"), "ssj4" (forma sin namespace)
+     * y "zenkai:ssj4" (completo). Las etiquetas de escalón se siguen aceptando por comodidad
+     * y compatibilidad con lo que ya estuviera escrito, pero todas apuntan a la MISMA clave:
+     * la maestría de kaioken ya no se guarda por escalón.
      */
     private static ResourceLocation resolveMasteryId(String raw) {
         String s = raw.toLowerCase(java.util.Locale.ROOT).trim();
+        if (s.equals("kaioken")) return PlayerFormAttachment.kaiokenMasteryKey();
         for (KaiokenTier t : KaiokenTier.values()) {
-            if (t.isOn() && t.label().equals(s)) return PlayerFormAttachment.kaiokenMasteryKey(t);
+            if (t.isOn() && t.label().equals(s)) return PlayerFormAttachment.kaiokenMasteryKey();
         }
         return ResourceLocation.tryParse(s.contains(":") ? s : Zenkai.MOD_ID + ":" + s);
     }

@@ -50,7 +50,9 @@ public final class MasteryTicker {
             }
             // Capas independientes: transformado CON kaioken entrena las dos a la vez.
             if (tier.isOn()) {
-                form.addKaiokenMastery(tier,
+                // La maestría es general, pero el ESCALÓN decide el ritmo: es lo único que
+                // impide dominar el x20 haciendo AFK en x2.
+                form.addKaiokenMastery(
                         (float) (KAIOKEN_MASTERY_PER_MINUTE / 60.0 * kaiokenGainMul(tier)));
             }
         }
