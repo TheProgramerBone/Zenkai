@@ -30,7 +30,7 @@
   "item.zenkai.scouter": "Scouter",
   "item.zenkai.scouter_radar_upgrade": "Radar Upgrade",
   "item.zenkai.goku_weights": "Goku's Training Weights",
-  "item.zenkai.piccolo_weights": "Piccolo's Weighted Cape",
+  "item.zenkai.weight_cape": "Weight Cape",
   "item.zenkai.weight.tooltip.current": "Weight: %s t",
   "item.zenkai.weight.tooltip.range": "Range: %s - %s t",
   "item.zenkai.weight.tooltip.hint": "Sneak + right click to adjust",

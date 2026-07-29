@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "zenkai:item/piccolo_weights"
+    "layer0": "zenkai:item/weight_cape"
   }
 }

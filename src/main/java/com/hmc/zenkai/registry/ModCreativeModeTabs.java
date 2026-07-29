@@ -29,7 +29,8 @@ public class ModCreativeModeTabs {
 
                         // Items a mostrar.
                         Set<Item> raceMaterialExceptions = new HashSet<>(List.of(
-                                ModItems.HALO.get()
+                                ModItems.HALO.get(),
+                                ModItems.WEIGHT_CAPE.get()
                         ));
 
                         // Items a ocultar

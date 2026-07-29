@@ -126,10 +126,10 @@ public class ModItems {
                     "textures/models/armor/goku_weights.png",
                     5.0, 100.0));
 
-    public static final DeferredItem<WeightArmorItem> PICCOLO_WEIGHTS =
-            ITEMS.register("piccolo_weights", () -> new WeightArmorItem(
-                    "geo/piccolo_weights.geo.json",
-                    "textures/models/armor/piccolo_weights.png",
+    public static final DeferredItem<WeightArmorItem> WEIGHT_CAPE =
+            ITEMS.register("weight_cape", () -> new WeightArmorItem(
+                    "geo/weight_cape.geo.json",
+                    "textures/models/armor/weight_cape.png",
                     100.0, 2000.0));
 
 
