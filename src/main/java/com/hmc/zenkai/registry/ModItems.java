@@ -117,28 +117,42 @@ public class ModItems {
     public static final DeferredItem<Item> ISAAC_SPAWN_EGG = ITEMS.register("isaac_spawn_egg",
     () -> new DeferredSpawnEggItem(ModEntities.ISAAC,0xe4c7c5,0x9c716f, new Item.Properties()));
 
+    // ── Pesas de entrenamiento ───────────────────────────────────────────────
+    // Los rangos son los que definen la escalera: el máximo de las de Goku es el mínimo de
+    // las de Piccolo, así que llevar las dos a tope da 2100 t y no hay hueco entre tramos.
+    public static final DeferredItem<WeightArmorItem> GOKU_WEIGHTS =
+            ITEMS.register("goku_weights", () -> new WeightArmorItem(
+                    "geo/goku_weights.geo.json",
+                    "textures/models/armor/goku_weights.png",
+                    5.0, 100.0));
+
+    public static final DeferredItem<WeightArmorItem> PICCOLO_WEIGHTS =
+            ITEMS.register("piccolo_weights", () -> new WeightArmorItem(
+                    "geo/piccolo_weights.geo.json",
+                    "textures/models/armor/piccolo_weights.png",
+                    100.0, 2000.0));
 
 
     /** Espada de ki. Equilibrada: alcance +1, velocidad de espada. */
-    public static final DeferredItem<Item> KI_SWORD = ITEMS.registerItem("ki_sword",
-            p -> new KiWeaponItem(p, SkillEffects.KI_SWORD), new Item.Properties()
+    public static final DeferredItem<Item> KI_BLADE = ITEMS.registerItem("ki_blade",
+            p -> new KiWeaponItem(p, SkillEffects.KI_BLADE,"ki_blade"), new Item.Properties()
                     .attributes(ItemAttributeModifiers.builder()
                             .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_sword_dmg"),
+                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_blade_dmg"),
                                             3.0, AttributeModifier.Operation.ADD_VALUE),
                                     EquipmentSlotGroup.MAINHAND)
                             .add(Attributes.ATTACK_SPEED, new AttributeModifier(
-                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_sword_spd"),
+                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_blade_spd"),
                                             -2.4, AttributeModifier.Operation.ADD_VALUE),
                                     EquipmentSlotGroup.MAINHAND)
                             .add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(
-                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_sword_reach"),
+                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_blade_reach"),
                                             1.0, AttributeModifier.Operation.ADD_VALUE),
                                     EquipmentSlotGroup.MAINHAND).build()));
 
         /** Guadaña de ki. Más daño y alcance, más lenta y mucho más cara en ki. */
         public static final DeferredItem<Item> KI_SCYTHE = ITEMS.registerItem("ki_scythe",
-                        p -> new KiWeaponItem(p, SkillEffects.KI_SCYTHE), new Item.Properties()
+                        p -> new KiWeaponItem(p, SkillEffects.KI_SCYTHE,"ki_scythe"), new Item.Properties()
                         .attributes(ItemAttributeModifiers.builder()
                                 .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(
                                         ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_scythe_dmg"),

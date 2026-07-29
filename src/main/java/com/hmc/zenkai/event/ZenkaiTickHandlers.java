@@ -1,16 +1,6 @@
 package com.hmc.zenkai.event;
 
-import com.hmc.zenkai.event.tick.DownedSystem;
-import com.hmc.zenkai.event.tick.FlightSystem;
-import com.hmc.zenkai.event.tick.FormSystem;
-import com.hmc.zenkai.event.tick.GroundMovementSystem;
-import com.hmc.zenkai.event.tick.KaiokenSystem;
-import com.hmc.zenkai.event.tick.KiChargeSystem;
-import com.hmc.zenkai.event.tick.PersistentEffectsSystem;
-import com.hmc.zenkai.event.tick.PlayerTickState;
-import com.hmc.zenkai.event.tick.RaceGateSystem;
-import com.hmc.zenkai.event.tick.RegenSystem;
-import com.hmc.zenkai.event.tick.TickCtx;
+import com.hmc.zenkai.event.tick.*;
 import com.hmc.zenkai.feature.aura.TurboServerState;
 import com.hmc.zenkai.feature.combat.DownedDeathGuard;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
@@ -18,13 +8,13 @@ import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 /**
  * ORQUESTADOR del tick de jugador. No contiene lógica: resuelve el contexto, llama a los
  * sistemas de event.tick en ORDEN y sincroniza al final.
- *
  * EL ORDEN ES SEMÁNTICA, NO ESTILO:
  *   - los efectos persistentes van ANTES de cualquier corte (deben aplicarse siempre);
  *   - los tres gates (raza / derribado / body 0) cortan el tick por completo;
@@ -50,6 +40,9 @@ public class ZenkaiTickHandlers {
         if (DownedSystem.handleDowned(c))      return;
         if (DownedSystem.handleBodyDepleted(c)) return;
 
+        // Antes de vuelo/movimiento: ambos leen el factor que este sistema escribe.
+        WeightLoadSystem.tick(c);
+
         boolean turboOn = p instanceof ServerPlayer sp && TurboServerState.isOn(sp);
 
         FlightSystem.tick(c, turboOn);
@@ -65,10 +58,20 @@ public class ZenkaiTickHandlers {
         PlayerLifeCycle.syncIfServer(p);
     }
 
+    /** Intención de salto -> WeightLoadSystem. jumpFromGround() se ejecuta aunque
+     *  JUMP_STRENGTH esté a 0, así que el evento llega igual con el jugador sobrecargado. */
+    @SubscribeEvent
+    public static void onLivingJump(LivingEvent.LivingJumpEvent e) {
+        if (e.getEntity() instanceof Player p && !p.level().isClientSide()) {
+            WeightLoadSystem.noteJump(p);
+        }
+    }
+
     /** Limpia el estado transitorio por jugador al desloguear. */
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
         DownedDeathGuard.forget(e.getEntity().getUUID());
         PlayerTickState.forget(e.getEntity().getUUID());
+        WeightLoadSystem.forget(e.getEntity().getUUID());
     }
 }

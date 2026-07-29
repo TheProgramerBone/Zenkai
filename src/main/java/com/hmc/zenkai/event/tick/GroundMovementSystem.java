@@ -3,6 +3,7 @@ package com.hmc.zenkai.event.tick;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.weights.WeightSystem;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -10,12 +11,10 @@ import net.minecraft.world.entity.player.Player;
 
 /**
  * Movimiento en tierra: coste de estamina del turbo y multiplicador de velocidad.
- *
  * La velocidad YA NO sale de DEX. El techo lo pone la habilidad Run (curva speed_mult del
  * datapack) y punto. Motivo: DEX alimentaba a la vez defensa, velocidad y vuelo, así que
  * cualquier retoque de balance defensivo movía la velocidad de rebote. Ahora DEX es
  * puramente defensivo (ver RaceStatTable) y la velocidad se compra con TP en Run.
- *
  * El TURBO multiplica al final, fuera del escalón de control: así su efecto es visible
  * siempre (+35 %) en lugar de depender del build y del % de poder.
  */
@@ -47,6 +46,9 @@ public final class GroundMovementSystem {
                 SkillEffects.runSpeedFactor(p)) - 1.0;
         double moveMult = 1.0 + maxBonus * PerformanceTier.of(control) * att.powerFraction();
         if (groundTurbo) moveMult *= TURBO_SPEED_MULT;
+
+        // Las pesas multiplican al FINAL, después del turbo: la carga te frena vayas como vayas.
+        moveMult *= WeightSystem.moveFactor(att.getWeightLoad());
 
         AttributeInstance moveAttr = p.getAttribute(Attributes.MOVEMENT_SPEED);
         if (moveAttr != null) {

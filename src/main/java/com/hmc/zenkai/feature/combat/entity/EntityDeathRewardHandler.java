@@ -4,7 +4,9 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.training.TrainingHooks;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -47,6 +49,11 @@ public final class EntityDeathRewardHandler {
         }
         if (reward <= 0) return;
 
+        // Ruta única: el reward pasa por el mismo embudo que el resto del entrenamiento, así
+        // fatiga, HTC y pesas se aplican una sola vez y en un solo sitio.
+        if (killer instanceof ServerPlayer sp) {
+            TrainingHooks.grantFromKill(sp, reward);
+        }
         ka.addTP(reward);
         PlayerLifeCycle.syncIfServer(killer);
     }

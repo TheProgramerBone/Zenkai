@@ -1,0 +1,111 @@
+{
+  "credit": "Made with Blockbench",
+  "parent": "builtin/entity",
+  "texture_size": [
+    32,
+    32
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "translation": [
+        -1.25,
+        -12.25,
+        -1.5
+      ]
+    },
+    "thirdperson_lefthand": {
+      "translation": [
+        1.25,
+        -12.25,
+        -1.5
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        60,
+        0,
+        0
+      ],
+      "translation": [
+        -2.5,
+        0,
+        -5.25
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        60,
+        0,
+        0
+      ],
+      "translation": [
+        -2.5,
+        0,
+        -5.25
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        -12,
+        0
+      ]
+    },
+    "gui": {
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "translation": [
+        -2,
+        -2,
+        0
+      ]
+    },
+    "head": {
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "translation": [
+        -2.5,
+        11,
+        -20.25
+      ],
+      "scale": [
+        2,
+        2,
+        2
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "translation": [
+        -1,
+        0,
+        -13
+      ]
+    },
+    "on_shelf": {
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        -12.75
+      ]
+    }
+  },
+  "textures": {
+    "particle": "zenkai:item/ki_blade"
+  }
+}

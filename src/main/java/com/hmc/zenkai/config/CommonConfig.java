@@ -275,6 +275,38 @@ public final class CommonConfig {
             BUILDER.comment("Training: efficiency floor (never drops to 0)")
                     .defineInRange("training.min_efficiency", 0.05D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue WEIGHT_CAP_DIV_RAW =
+            BUILDER.comment("Weights: carry capacity (tons) = (cleanPL / divisor) ^ exponent")
+                    .defineInRange("training.weight_capacity_divisor", 3.4D, 0.01D, 10000.0D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_CAP_EXP_RAW =
+            BUILDER.comment("Weights: capacity exponent. Below 1 keeps weights relevant at high PL")
+                    .defineInRange("training.weight_capacity_exponent", 0.6D, 0.05D, 4.0D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_STAT_PEN_RAW =
+            BUILDER.comment("Weights: melee/defense/ki power lost at full load (0.25 = -25%)")
+                    .defineInRange("training.weight_stat_penalty", 0.25D, 0.0D, 0.95D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_MOVE_PEN_RAW =
+            BUILDER.comment("Weights: ground/fly speed lost at full load")
+                    .defineInRange("training.weight_move_penalty", 0.60D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_JUMP_PEN_RAW =
+            BUILDER.comment("Weights: jump height lost at full load")
+                    .defineInRange("training.weight_jump_penalty", 0.40D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_TP_BONUS_RAW =
+            BUILDER.comment("Weights: extra TP at full load (1.5 = x2.5 TP)")
+                    .defineInRange("training.weight_tp_bonus", 1.5D, 0.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_OVER_THRESH_RAW =
+            BUILDER.comment("Weights: load ratio above which the player is overloaded")
+                    .defineInRange("training.weight_overload_threshold", 1.2D, 1.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_OVER_MOVE_RAW =
+            BUILDER.comment("Weights: movement multiplier while overloaded (drag)")
+                    .defineInRange("training.weight_overload_move_factor", 0.15D, 0.0D, 1.0D);
+
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -330,6 +362,9 @@ public final class CommonConfig {
             TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.01D,
             TRAIN_HTC_MULT = 2.0D, TRAIN_MIN_EFF = 0.05D;
     private static volatile int TRAIN_AIR_TICKS = 10;
+    private static volatile double WEIGHT_CAP_DIV = 3.4D, WEIGHT_CAP_EXP = 0.6D,
+            WEIGHT_STAT_PEN = 0.25D, WEIGHT_MOVE_PEN = 0.60D, WEIGHT_JUMP_PEN = 0.40D,
+            WEIGHT_TP_BONUS = 1.5D, WEIGHT_OVER_THRESH = 1.2D, WEIGHT_OVER_MOVE = 0.15D;
 
     // =====================================================================
     // CARGA
@@ -394,6 +429,15 @@ public final class CommonConfig {
         TRAIN_DECAY     = TRAIN_DECAY_RAW.get();
         TRAIN_HTC_MULT  = TRAIN_HTC_MULT_RAW.get();
         TRAIN_MIN_EFF   = TRAIN_MIN_EFF_RAW.get();
+
+        WEIGHT_CAP_DIV     = WEIGHT_CAP_DIV_RAW.get();
+        WEIGHT_CAP_EXP     = WEIGHT_CAP_EXP_RAW.get();
+        WEIGHT_STAT_PEN    = WEIGHT_STAT_PEN_RAW.get();
+        WEIGHT_MOVE_PEN    = WEIGHT_MOVE_PEN_RAW.get();
+        WEIGHT_JUMP_PEN    = WEIGHT_JUMP_PEN_RAW.get();
+        WEIGHT_TP_BONUS    = WEIGHT_TP_BONUS_RAW.get();
+        WEIGHT_OVER_THRESH = WEIGHT_OVER_THRESH_RAW.get();
+        WEIGHT_OVER_MOVE   = WEIGHT_OVER_MOVE_RAW.get();
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
@@ -482,6 +526,15 @@ public final class CommonConfig {
     public static double trainingFatigueDecayPerMinute() { return TRAIN_DECAY; }
     public static double trainingHtcMultiplier()         { return TRAIN_HTC_MULT; }
     public static double trainingMinEfficiency()         { return TRAIN_MIN_EFF; }
+
+    public static double weightCapacityDivisor()   { return WEIGHT_CAP_DIV; }
+    public static double weightCapacityExponent()  { return WEIGHT_CAP_EXP; }
+    public static double weightStatPenalty()       { return WEIGHT_STAT_PEN; }
+    public static double weightMovePenalty()       { return WEIGHT_MOVE_PEN; }
+    public static double weightJumpPenalty()       { return WEIGHT_JUMP_PEN; }
+    public static double weightTpBonus()           { return WEIGHT_TP_BONUS; }
+    public static double weightOverloadThreshold() { return WEIGHT_OVER_THRESH; }
+    public static double weightOverloadMoveFactor(){ return WEIGHT_OVER_MOVE; }
 
     // =====================================================================
     // HELPERS

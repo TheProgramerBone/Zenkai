@@ -1,4 +1,6 @@
-// 1.21.1	2026-06-12T21:11:02.2342185	Registries
+// 1.21.1	2026-07-29T10:53:19.2485965	Registries
 3b81c73c058ea99ddd8e13ca2bbf973d03040d66 data/zenkai/neoforge/biome_modifier/add_terragem_ore.json
+75a0eedb27aaff49c0ef02ee5f823da081371ed4 data/zenkai/worldgen/biome/rocky_wasteland.json
 3b4dcf94c46edd29f48828c4b8b84953de79c0a7 data/zenkai/worldgen/configured_feature/terragem_ore.json
+c559a4e8e52fdc466fe13bc00c2764e7fb5a1bea data/zenkai/worldgen/placed_feature/rocky_dead_bush.json
 48356b45ccc3316cab43ef26d5335eb7bcfaab55 data/zenkai/worldgen/placed_feature/terragem_ore_placed.json

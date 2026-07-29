@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * Números de las armas de ki, recargables con /reload.
- *   data/&lt;ns&gt;/zenkai_ki_weapons/ki_sword.json
+ *   data/&lt;ns&gt;/zenkai_ki_weapons/ki_blade.json
  *   { "damage_mult": 1.60, "ki_cost_mult": 1.40 }
  *
  * La clave es el nombre del archivo, que coincide con el id del interruptor y del item. No se

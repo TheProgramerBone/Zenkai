@@ -36,6 +36,14 @@ public final class ModDataComponents {
                     .networkSynchronized(GlobalPos.STREAM_CODEC)
                     .build());
 
+    /** Peso configurado de una pesa de entrenamiento, en toneladas. Vive en el stack para
+     *  que cada pesa se ajuste por separado y el valor sobreviva a morir/guardar. */
+    public static final Supplier<DataComponentType<Double>> WEIGHT_TONS =
+            COMPONENTS.register("weight_tons", () -> DataComponentType.<Double>builder()
+                    .persistent(Codec.DOUBLE)
+                    .networkSynchronized(ByteBufCodecs.DOUBLE)
+                    .build());
+
     public static void register(IEventBus modBus) {
         COMPONENTS.register(modBus);
     }

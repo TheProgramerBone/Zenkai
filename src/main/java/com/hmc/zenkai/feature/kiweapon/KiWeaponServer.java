@@ -2,16 +2,19 @@ package com.hmc.zenkai.feature.kiweapon;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.item.KiWeaponItem;
+import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ModItems;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -44,7 +47,7 @@ public final class KiWeaponServer {
 
     /** La variante que el jugador quiere, o null. Los dos interruptores son excluyentes. */
     public static String wantedVariant(Player p) {
-        if (wants(p, SkillEffects.KI_SWORD))  return SkillEffects.KI_SWORD;
+        if (wants(p, SkillEffects.KI_BLADE))  return SkillEffects.KI_BLADE;
         if (wants(p, SkillEffects.KI_SCYTHE)) return SkillEffects.KI_SCYTHE;
         return null;
     }
@@ -56,7 +59,7 @@ public final class KiWeaponServer {
 
     private static Item itemFor(String variant) {
         return SkillEffects.KI_SCYTHE.equals(variant)
-                ? ModItems.KI_SCYTHE.get() : ModItems.KI_SWORD.get();
+                ? ModItems.KI_SCYTHE.get() : ModItems.KI_BLADE.get();
     }
 
     /**
@@ -98,5 +101,12 @@ public final class KiWeaponServer {
                 && ie.getItem().getItem() instanceof KiWeaponItem) {
             e.setCanceled(true);
         }
+    }
+
+    public static void refreshTint(Player p, ItemStack stack) {
+            int rgb = AuraColors.resolve(p) & 0xFFFFFF;
+            DyedItemColor current = stack.get(DataComponents.DYED_COLOR);
+            if (current != null && (current.rgb() & 0xFFFFFF) == rgb) return;
+            stack.set(DataComponents.DYED_COLOR, new DyedItemColor(rgb, false));
     }
 }

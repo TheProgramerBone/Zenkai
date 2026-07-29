@@ -8,7 +8,11 @@ public class ModSurfaceRules {
         Block rockyBlock = ModBlocks.ROCKY_BLOCK.get();
         SurfaceRules.RuleSource rockySurface = SurfaceRules.state(rockyBlock.defaultBlockState());
 
-        return SurfaceRules.sequence(
+        // abovePreliminarySurface() acota la regla a la superficie REAL del terreno.
+        // Sin él, ON_FLOOR/UNDER_FLOOR también aciertan en el suelo de cada cueva y el
+        // bloque rocoso tapiza la columna entera hasta la bedrock.
+        return SurfaceRules.ifTrue(
+                SurfaceRules.abovePreliminarySurface(),                      // ⚠ API
                 SurfaceRules.ifTrue(
                         SurfaceRules.isBiome(ModBiomes.ROCKY_WASTELAND),
                         SurfaceRules.sequence(

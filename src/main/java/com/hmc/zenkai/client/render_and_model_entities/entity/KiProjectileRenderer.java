@@ -1,4 +1,4 @@
-package com.hmc.zenkai.client.render_and_model_entities;
+package com.hmc.zenkai.client.render_and_model_entities.entity;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;

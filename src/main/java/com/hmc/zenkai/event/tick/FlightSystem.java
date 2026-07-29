@@ -3,6 +3,7 @@ package com.hmc.zenkai.event.tick;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.weights.WeightSystem;
 import net.minecraft.world.entity.player.Player;
 
 /** Vuelo: habilitación, velocidad, coste de ki y hitbox del boost. */
@@ -20,7 +21,9 @@ public final class FlightSystem {
 
         var ab = p.getAbilities();
         // La habilidad Fly HABILITA el vuelo: sin ella no se vuela aunque el toggle esté activo.
-        boolean shouldFly = att.isFlyEnabled() && SkillEffects.canFly(p);
+        // Sobrecargado NO se despega del suelo: la carga te clava.
+        boolean overloaded = WeightSystem.isOverloaded(att.getWeightLoad());
+        boolean shouldFly = att.isFlyEnabled() && SkillEffects.canFly(p) && !overloaded;
         if (ab.mayfly != shouldFly) {
             ab.mayfly = shouldFly;
             if (!shouldFly) ab.flying = false;
@@ -38,6 +41,8 @@ public final class FlightSystem {
                 * PerformanceTier.of(control) * att.powerFraction();
         // El turbo multiplica FUERA del escalón: efecto constante y perceptible.
         if (flyTurbo) mult *= TURBO_SPEED_MULT;
+        // Pesas al final, igual que en tierra.
+        mult *= WeightSystem.moveFactor(att.getWeightLoad());
 
         float newSpeed = (float) (CommonConfig.flyBaseSpeed() * mult);
         // Player.getFlyingSpeed() DUPLICA la velocidad al esprintar, y Control ES la tecla de

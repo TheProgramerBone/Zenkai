@@ -14,6 +14,7 @@ import com.hmc.zenkai.feature.ki.KiChargePacket;
 import com.hmc.zenkai.feature.ki.PowerPercentPacket;
 import com.hmc.zenkai.feature.ki.ToggleFlyPacket;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.stats.TransformHoldPacket;
 import net.minecraft.client.KeyMapping;
@@ -168,6 +169,14 @@ public final class KeyBindings {
         CombatModeClientState.tick(mc);
         PlayerStatsAttachment stats = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         stats.setStatMultiplier(MasteryEffects.formStatFactor(player));
+        // Espejo cliente de las pesas: weightLoad y weightFactor son derivados de servidor y
+        // NO viajan en el sync de stats. Sin esto, el menú y el scouter mostrarían el PL sin
+        // penalizar mientras el servidor aplica la penalización de verdad.
+        // Va DESPUÉS de setStatMultiplier: computeLoad pide el PL limpio, que lo lleva dentro.
+        double weightLoad = WeightSystem.computeLoad(player);
+        stats.setWeightLoad(weightLoad);
+        stats.setWeightFactor(WeightSystem.statFactor(weightLoad));
+
         boolean hasRace = stats.isRaceChosen();
 
         if (LOCK_ON != null) {

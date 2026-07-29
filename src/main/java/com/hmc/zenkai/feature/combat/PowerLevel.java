@@ -31,11 +31,19 @@ public final class PowerLevel {
 
     /** PL a partir de cualquier portador de stats (jugador o entidad). */
     public static long compute(ZenkaiCombatStats s) {
-        double pl = W_STR * s.computeMeleeFinal()
-                + W_CON * s.computeConFinal()
-                + W_DEX * s.computeDefenseFinal()
-                + W_WIL * s.computeKiPowerFinal()
-                + W_SPI * s.computeKiPoolFinal();
+        return compute(s.computeMeleeFinal(), s.computeConFinal(), s.computeDefenseFinal(),
+                s.computeKiPowerFinal(), s.computeKiPoolFinal());
+    }
+
+    /** Núcleo de la fórmula. Existe aparte para que el PL LIMPIO de las pesas (sin el factor
+     *  de carga) no tenga que duplicar los pesos ni dividir por el factor a posteriori. */
+    public static long compute(double melee, double con, double defense,
+                               double kiPower, double kiPool) {
+        double pl = W_STR * melee
+                + W_CON * con
+                + W_DEX * defense
+                + W_WIL * kiPower
+                + W_SPI * kiPool;
         return Math.max(0L, Math.round(pl));
     }
 

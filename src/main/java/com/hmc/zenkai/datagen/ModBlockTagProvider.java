@@ -38,6 +38,11 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.NAMEKIAN_DIRT.get())
                 ;
 
+        tag(BlockTags.STONE_ORE_REPLACEABLES)
+                .add(ModBlocks.ROCKY_BLOCK.get());
+
+        tag(BlockTags.BASE_STONE_OVERWORLD)
+                .add(ModBlocks.ROCKY_BLOCK.get());
 
         tag(BlockTags.DEAD_BUSH_MAY_PLACE_ON)
                 .add(ModBlocks.ROCKY_BLOCK.get());

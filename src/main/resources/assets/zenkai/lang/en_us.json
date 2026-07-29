@@ -29,6 +29,11 @@
   "item.zenkai.yemma_spawn_egg": "Yemma Spawn Egg",
   "item.zenkai.scouter": "Scouter",
   "item.zenkai.scouter_radar_upgrade": "Radar Upgrade",
+  "item.zenkai.goku_weights": "Goku's Training Weights",
+  "item.zenkai.piccolo_weights": "Piccolo's Weighted Cape",
+  "item.zenkai.weight.tooltip.current": "Weight: %s t",
+  "item.zenkai.weight.tooltip.range": "Range: %s - %s t",
+  "item.zenkai.weight.tooltip.hint": "Sneak + right click to adjust",
 
   "scouter.zenkai.mode.power": "POWER",
   "scouter.zenkai.mode.strongest": "STRONGEST",
@@ -166,8 +171,7 @@
   "messages.zenkai.wish_desc.revive_pet": "the revival of %s",
   "messages.zenkai.wish_desc.stack": "%s x %s",
   "messages.zenkai.wish_desc.enchant_villager": "a librarian with %s",
-
-
+  "messages.zenkai.weight.overloaded": "Too much load for your body",
   "messages.zenkai.pet_revived": "§2§lShenlong:§6 Your companion returns to you.",
   "messages.zenkai.pet_revive_failed": "§cThe revival failed.",
   "messages.zenkai.zone_protected": "§6This zone is protected by %s",
@@ -258,7 +262,17 @@
   "screen.zenkai.style.spiritualist": "Spiritualist",
   "screen.zenkai.style.spiritualist.desc": "Master of Ki energy. Low physical strength, overwhelming Ki power.",
   "screen.zenkai.choose_race.title": "Choose your race",
-
+  "screen.zenkai.weight.title": "Training Weights",
+  "screen.zenkai.weight.field": "Weight in tons",
+  "screen.zenkai.weight.load": "Load: %s / %s t (%s%%)",
+  "screen.zenkai.weight.speed": "Speed: %s",
+  "screen.zenkai.weight.jump": "Jump: %s",
+  "screen.zenkai.weight.stats": "Combat stats: %s",
+  "screen.zenkai.weight.tp": "Training gain: x%s",
+  "screen.zenkai.weight.pl_needed": "Comfortable at PL %s",
+  "screen.zenkai.weight.overloaded": "Too much load for your body",
+  "screen.zenkai.stats_screen.stat.load": "Load: %s / %s t (%s%%)",
+  "screen.zenkai.stats_screen.stat.weight_tp": "Weight bonus: x%s",
   "screen.zenkai.stats_screen.form": "Form: ",
   "screen.zenkai.stats_screen.effective": "Stats",
   "screen.zenkai.stats_screen.alignment": "Alignment",
@@ -338,9 +352,9 @@
   "skill.zenkai.ki_fist": "Ki Fist",
   "skill.zenkai.ki_fist.desc": "Wrap your fists in ki. Melee attacks and physical techniques hit harder the more spirit you have, spending ki on top of their usual stamina cost.",
 
-  "skill.zenkai.ki_sword": "Ki Sword",
+  "skill.zenkai.ki_blade": "Ki Blade",
   "skill.zenkai.ki_scythe": "Ki Scythe",
-  "item.zenkai.ki_sword": "Ki Sword",
+  "item.zenkai.ki_blade": "Ki Blade",
   "item.zenkai.ki_scythe": "Ki Scythe",
   "skill.zenkai.potential_unlock": "Potential Unlock",
   "skill.zenkai.potential_unlock.desc": "Draw out the power sleeping inside you. Costs no ki to hold, but locks you out of every other transformation.",
@@ -463,5 +477,5 @@
   "gamerule.zenkai_enableTransformations": "Allow Players To Transform",
 
   "curios.identifier.scouter": "Scouter",
-  "curios.identifier.weight": "Weight"
+  "curios.identifier.weight": "Training Weights"
 }

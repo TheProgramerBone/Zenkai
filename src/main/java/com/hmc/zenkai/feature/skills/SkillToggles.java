@@ -60,10 +60,10 @@ public final class SkillToggles {
         // dos. Van agrupadas en su propia rama de la rueda porque son variantes de una misma
         // cosa, no dos interruptores independientes.
         Set<String> weaponReq = Set.of(SkillEffects.KI_FIST, SkillEffects.KI_INFUSE);
-        register(new Toggle(SkillEffects.KI_SWORD,  false, weaponReq,
+        register(new Toggle(SkillEffects.KI_BLADE,  false, weaponReq,
                 Set.of(SkillEffects.KI_SCYTHE), CAT_KI_WEAPONS));
         register(new Toggle(SkillEffects.KI_SCYTHE, false, weaponReq,
-                Set.of(SkillEffects.KI_SWORD),  CAT_KI_WEAPONS));
+                Set.of(SkillEffects.KI_BLADE),  CAT_KI_WEAPONS));
 
         register(new Toggle(SkillEffects.POTENTIAL_UNLOCK, true, Set.of(), Set.of(), null));
     }

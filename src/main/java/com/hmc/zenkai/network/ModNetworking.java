@@ -22,6 +22,7 @@ import com.hmc.zenkai.feature.skills.SkillTogglePacket;
 import com.hmc.zenkai.feature.stats.*;
 import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.feature.training.TrainingSwingPacket;
+import com.hmc.zenkai.feature.weights.SetWeightPacket;
 import com.hmc.zenkai.feature.wheel.WheelSelectPacket;
 import com.hmc.zenkai.feature.wishes.*;
 import com.hmc.zenkai.network.vehicle.VehicleControlPayload;
@@ -324,5 +325,10 @@ public class ModNetworking {
                 SkillTogglePacket.TYPE,
                 SkillTogglePacket.STREAM_CODEC,
                 SkillTogglePacket::handle);
+
+        registrar.playToServer(
+                SetWeightPacket.TYPE,
+                SetWeightPacket.STREAM_CODEC,
+                SetWeightPacket::handle);
     }
 }

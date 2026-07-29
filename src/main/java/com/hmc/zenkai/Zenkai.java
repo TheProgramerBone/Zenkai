@@ -10,7 +10,7 @@ import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.client.particle.KiImpactParticle;
 import com.hmc.zenkai.client.particle.KiSparkParticle;
-import com.hmc.zenkai.client.render_and_model_entities.KiProjectileRenderer;
+import com.hmc.zenkai.client.render_and_model_entities.entity.KiProjectileRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBallsRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.entity.*;
 import com.hmc.zenkai.event.ZenkaiTickHandlers;

@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.Style;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.client.gui.AlignmentPalette;
 import com.hmc.zenkai.client.gui.ScreenTitle;
@@ -232,6 +233,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     // ── Popup de stats efectivas ─────────────────────────────────────────────
     private void renderEffectiveStatsPopup(GuiGraphics g, Font font) {
+        assert mc.player != null;
         boolean majin = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).isMajinControlled();
         List<Component> lines = buildEffectiveStats();
 
@@ -285,6 +287,18 @@ public class StatsScreen extends ZenkaiMenuScreen {
         out.add(Component.translatable("screen.zenkai.stats_screen.stat.ki_power", fmt(kiPower)));
         out.add(Component.translatable("screen.zenkai.stats_screen.stat.running", (int) Math.round(moveMult * 100)));
         out.add(Component.translatable("screen.zenkai.stats_screen.stat.flying",  (int) Math.round(flyMult  * 100)));
+
+        // Carga: solo aparece si lleva pesas. Dos líneas en vez de una para no desbordar
+        // el ancho del popup. Los números salen de WeightSystem, nunca de una fórmula local.
+        double load = att.getWeightLoad();
+        if (load > 0.0) {
+            out.add(Component.translatable("screen.zenkai.stats_screen.stat.load",
+                    String.format(Locale.ROOT, "%.2f", WeightSystem.equippedTons(mc.player)),
+                    String.format(Locale.ROOT, "%.2f", WeightSystem.capacityTons(att.getPowerLevelRaw())),
+                    (int) Math.round(load * 100)));
+            out.add(Component.translatable("screen.zenkai.stats_screen.stat.weight_tp",
+                    String.format(Locale.ROOT, "%.2f", WeightSystem.tpFactor(load))));
+        }
         return out;
     }
 

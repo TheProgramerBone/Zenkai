@@ -52,12 +52,23 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     }
 
     /** Multiplicador de forma + kaioken + majin. DERIVADO: no va a NBT, lo recalcula
-     *  TickHandlers.tickForms cada tick. Un solo punto de escritura, así ningún camino
-     *  se queda sin él (la lección del gamerule de griefing). */
+     *  FormSystem cada tick. Un solo punto de escritura, así ningún camino se queda sin él. */
     private double statMultiplier = 1.0;
+
+    /** Penalización de las pesas de entrenamiento. DERIVADO igual que statMultiplier, pero
+     *  APARTE a propósito: el PL limpio (capacidad de carga, TP) necesita poder mirar los
+     *  stats sin este factor, y si estuviera fusionado en statMultiplier sería irrecuperable. */
+    private double weightFactor = 1.0;
+    /** Carga relativa r = toneladas / capacidad. Derivado; lo escribe WeightLoadSystem. */
+    private double weightLoad = 0.0;
 
     public void setStatMultiplier(double m) { this.statMultiplier = Math.max(0.0, m); }
     public double getStatMultiplier() { return statMultiplier; }
+
+    public void setWeightFactor(double f) { this.weightFactor = Math.max(0.0, f); }
+    public double getWeightFactor() { return weightFactor; }
+    public void setWeightLoad(double r) { this.weightLoad = Math.max(0.0, r); }
+    public double getWeightLoad() { return weightLoad; }
 
     // ── Acceso estático ──────────────────────────────────────────────────────
     public static PlayerStatsAttachment get(Player p) {
@@ -150,17 +161,33 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     // ── Stats de combate ─────────────────────────────────────────────────────
     // El multiplicador de forma escala SOLO STR, DEX y WIL (como DBC). CON y SPI se quedan
     // crudos: transformarse no te da más vida ni más pool de ki, te hace pegar más fuerte.
+    // Las pesas (weightFactor) montan encima y siguen la MISMA regla: castigan lo ofensivo
+    // y lo defensivo, no el pool ni el body.
     public double getMeleeBonus()       { return raceStats.getMeleeBonus(); }
-    public double computeMeleeFinal()   { return raceStats.computeMeleeFinal()   * powerFraction() * statMultiplier; }
-    public double computeDefenseFinal() { return raceStats.computeDefenseFinal() * powerFraction() * statMultiplier; }
-    public double computeKiPowerFinal() { return raceStats.computeKiPowerFinal() * powerFraction() * statMultiplier; }
+
+    public double computeMeleeUnweighted()   { return raceStats.computeMeleeFinal()   * powerFraction() * statMultiplier; }
+    public double computeDefenseUnweighted() { return raceStats.computeDefenseFinal() * powerFraction() * statMultiplier; }
+    public double computeKiPowerUnweighted() { return raceStats.computeKiPowerFinal() * powerFraction() * statMultiplier; }
+
+    public double computeMeleeFinal()   { return computeMeleeUnweighted()   * weightFactor; }
+    public double computeDefenseFinal() { return computeDefenseUnweighted() * weightFactor; }
+    public double computeKiPowerFinal() { return computeKiPowerUnweighted() * weightFactor; }
     public double computeSpeedFinal()   { return raceStats.computeSpeedFinal()   * statMultiplier; }
     public double computeFlyFinal()     { return raceStats.computeFlyFinal()     * statMultiplier; }
     public double computeKiPoolFinal()  { return raceStats.computeKiPoolFinal(); }
     public double computeConFinal()     { return raceStats.computeConFinal(); }
     /** Escala con forma y % de poder igual que el melee: Ki Fist se beneficia de transformarse. */
-    public double computeSpiritMeleeFinal() { return raceStats.computeSpiritMeleeFinal() * powerFraction() * statMultiplier; }
+    public double computeSpiritMeleeFinal() { return raceStats.computeSpiritMeleeFinal() * powerFraction() * statMultiplier * weightFactor; }
     public boolean isCombatActive() { return isRaceChosen(); }
+
+    /** PL SIN la penalización de las pesas. Lo consumen la capacidad de carga y el TP: si
+     *  usaran el PL penalizado, ponerte pesas bajaría tu capacidad, lo que subiría r, lo que
+     *  bajaría más el PL... bucle. Misma fórmula que getPowerLevel(), un solo sitio. */
+    public long getPowerLevelRaw() {
+        return com.hmc.zenkai.feature.combat.PowerLevel.compute(
+                computeMeleeUnweighted(), computeConFinal(), computeDefenseUnweighted(),
+                computeKiPowerUnweighted(), computeKiPoolFinal());
+    }
 
     // ── Body ─────────────────────────────────────────────────────────────────
     public int  getBody()            { return pools.getBody(); }
@@ -342,7 +369,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public int getEffectiveAttribute(ZenkaiAttributes a) {
         int raw = raceStats.getAttribute(a);
         return switch (a) {
-            case STRENGTH, DEXTERITY, WILLPOWER -> (int) Math.round(raw * statMultiplier);
+            case STRENGTH, DEXTERITY, WILLPOWER -> (int) Math.round(raw * statMultiplier * weightFactor);
             default -> raw; // CON y SPI no escalan con la forma; MIND tampoco
         };
     }
