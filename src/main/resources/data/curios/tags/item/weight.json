@@ -1,7 +1,7 @@
 {
   "replace": false,
   "values": [
-    "zenkai:goku_weights",
-    "zenkai:weight_cape"
+    "zenkai:weighted_straps",
+    "zenkai:weighted_cape"
   ]
 }

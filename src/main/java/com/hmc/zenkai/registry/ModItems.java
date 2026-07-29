@@ -120,16 +120,16 @@ public class ModItems {
     // ── Pesas de entrenamiento ───────────────────────────────────────────────
     // Los rangos son los que definen la escalera: el máximo de las de Goku es el mínimo de
     // las de Piccolo, así que llevar las dos a tope da 2100 t y no hay hueco entre tramos.
-    public static final DeferredItem<WeightArmorItem> GOKU_WEIGHTS =
-            ITEMS.register("goku_weights", () -> new WeightArmorItem(
-                    "geo/goku_weights.geo.json",
-                    "textures/models/armor/goku_weights.png",
+    public static final DeferredItem<WeightArmorItem> WEIGHTED_STRAPS =
+            ITEMS.register("weighted_straps", () -> new WeightArmorItem(
+                    "geo/weighted_straps.geo.json",
+                    "textures/models/armor/weighted_straps.png",
                     5.0, 100.0));
 
-    public static final DeferredItem<WeightArmorItem> WEIGHT_CAPE =
+    public static final DeferredItem<WeightArmorItem> WEIGHTED_CAPE =
             ITEMS.register("weight_cape", () -> new WeightArmorItem(
-                    "geo/weight_cape.geo.json",
-                    "textures/models/armor/weight_cape.png",
+                    "geo/weighted_cape.geo.json",
+                    "textures/models/armor/weighted_cape.png",
                     100.0, 2000.0));
 
 

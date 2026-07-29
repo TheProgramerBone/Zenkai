@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "zenkai:item/goku_weights"
+    "layer0": "zenkai:item/weighted_cape"
   }
 }

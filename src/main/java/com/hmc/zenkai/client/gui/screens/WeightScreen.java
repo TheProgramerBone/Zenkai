@@ -24,7 +24,7 @@ import java.util.Locale;
  * Ajuste del peso de una pesa de entrenamiento, sobre common_screen.
  * ORDEN DE RENDER (convención del mod, ver TechniqueEditScreen):
  *   renderBackground() -> dim + blit del panel.
- *   render()           -> super.render() PRIMERO (fondo + widgets) y el texto DESPUÉS.
+ *   render() -> super.render() PRIMERO (fondo + widgets) y el texto DESPUÉS.
  * Al revés, los widgets se pintan encima del texto y el título sale lavado por el dim.
  * Los botones de acción van FUERA del panel (Y_BUTTONS = BG_H + 4), como el resto de
  * pantallas: dentro chocarían con el bloque de previsualización.
@@ -74,7 +74,7 @@ public class WeightScreen extends Screen {
         this.tons = tons;
     }
 
-    /** Punto de entrada desde WeightArmorItem.use(). Solo se llama en cliente. */
+    /** Punto de entrada desde WeightArmorItem. Use(). Solo se llama en cliente. */
     public static void open(InteractionHand hand, WeightArmorItem item, double tons) {
         Minecraft.getInstance().setScreen(new WeightScreen(hand, item, tons));
     }

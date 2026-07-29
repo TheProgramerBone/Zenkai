@@ -44,28 +44,35 @@ public final class SkillToggles {
      *                      otra en vez de dejar un estado imposible que alguien tenga que
      *                      resolver más tarde.
      * @param category      subcategoría de la rueda, o null para colgar de la raíz
+     * @param enabled       false deja el interruptor FUERA DE JUEGO por completo: no aparece
+     *                      en la rueda, isOn devuelve false y lo que dependiera de él se
+     *                      apaga solo. Es el interruptor maestro para aparcar una habilidad
+     *                      a medio terminar sin arrancar su código ni tocar los guardados.
      */
     public record Toggle(String id, boolean needsOwnSkill, Set<String> requires,
-                         Set<String> conflicts, @Nullable String category) {}
+                         Set<String> conflicts, @Nullable String category, boolean enabled) {}
 
     private static final Map<String, Toggle> REGISTRY = new LinkedHashMap<>();
 
     private static void register(Toggle t) { REGISTRY.put(t.id(), t); }
 
     static {
-        register(new Toggle(SkillEffects.KI_INFUSE, true, Set.of(), Set.of(), null));
-        register(new Toggle(SkillEffects.KI_FIST,   true, Set.of(), Set.of(), null));
+        register(new Toggle(SkillEffects.KI_INFUSE, true, Set.of(), Set.of(), null, true));
+        register(new Toggle(SkillEffects.KI_FIST,   true, Set.of(), Set.of(), null, true));
 
         // Las armas de ki no son habilidades comprables: son lo que pasa cuando tienes las
         // dos. Van agrupadas en su propia rama de la rueda porque son variantes de una misma
         // cosa, no dos interruptores independientes.
         Set<String> weaponReq = Set.of(SkillEffects.KI_FIST, SkillEffects.KI_INFUSE);
+        // APARCADAS: enabled=false hasta que estén los modelos y las animaciones. El código
+        // sigue compilado y probado; solo deja de ser alcanzable. Volver a activarlas es
+        // cambiar estos dos false por true.
         register(new Toggle(SkillEffects.KI_BLADE,  false, weaponReq,
-                Set.of(SkillEffects.KI_SCYTHE), CAT_KI_WEAPONS));
+                Set.of(SkillEffects.KI_SCYTHE), CAT_KI_WEAPONS, false));
         register(new Toggle(SkillEffects.KI_SCYTHE, false, weaponReq,
-                Set.of(SkillEffects.KI_BLADE),  CAT_KI_WEAPONS));
+                Set.of(SkillEffects.KI_BLADE),  CAT_KI_WEAPONS, false));
 
-        register(new Toggle(SkillEffects.POTENTIAL_UNLOCK, true, Set.of(), Set.of(), null));
+        register(new Toggle(SkillEffects.POTENTIAL_UNLOCK, true, Set.of(), Set.of(), null, true));
     }
 
     /** En orden de registro (orden en la rueda). */
@@ -79,7 +86,7 @@ public final class SkillToggles {
     public static boolean available(Player p, String id) {
         if (p == null) return false;
         Toggle t = REGISTRY.get(id);
-        if (t == null) return false;
+        if (t == null || !t.enabled()) return false;
         if (t.needsOwnSkill() && SkillEffects.level(p, id) <= 0) return false;
         for (String req : t.requires()) {
             if (SkillEffects.level(p, req) <= 0) return false;
