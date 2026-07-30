@@ -9,6 +9,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
 import net.minecraft.world.level.levelgen.structure.templatesystem.RuleTest;
 import net.minecraft.world.level.levelgen.structure.templatesystem.TagMatchTest;
@@ -19,6 +20,7 @@ public class ModConfiguredFeatures {
     // CF -> PF -> BM
 
     public static final ResourceKey<ConfiguredFeature<?, ?>> OVERWORLD_TERRAGEM_ORE_KEY = registerKey("terragem_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> OTHERWORLD_CLOUDS_KEY = registerKey("otherworld_clouds");
 
     public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
         RuleTest stoneReplaceables = new TagMatchTest(BlockTags.STONE_ORE_REPLACEABLES);
@@ -29,6 +31,9 @@ public class ModConfiguredFeatures {
                 OreConfiguration.target(deepslateReplaceables, ModBlocks.DEEPSLATE_TERRAGEM_ORE.get().defaultBlockState()));
 
         register(context, OVERWORLD_TERRAGEM_ORE_KEY, Feature.ORE, new OreConfiguration(overworldWarenaiOres, 9));
+
+        register(context, OTHERWORLD_CLOUDS_KEY,
+                ModFeatures.CLOUD_LAYER.get(), NoneFeatureConfiguration.INSTANCE);
 
     }
 

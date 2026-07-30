@@ -23,6 +23,9 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
 
     private static final int CELL = 20;
     private static final int ROW_H = 26;
+    /** Y de la fila de 9 celdas. Las filas de técnica cuelgan de aquí. */
+    private static final int CELLS_Y = CONTENT_TOP;
+    private static final int ROWS_Y  = CELLS_Y + CELL + 10;
 
     /** Técnica armada para asignar, o null. */
     private PhysicalTechnique assigning = null;
@@ -43,7 +46,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
 
         // ── Fila de 9 celdas de posición (arriba, como en la pestaña ki) ──
         int bx = panelLeft + (BG_W - (9 * CELL + 8 * 2)) / 2;
-        int by = panelTop + 40;
+        int by = panelTop + CELLS_Y;
         for (int p = 0; p < PlayerTechniques.BIND_POSITIONS; p++) {
             final int pos = p;
             this.addRenderableWidget(new TextOnlyButton(bx, by, CELL, CELL,
@@ -65,7 +68,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
         }
 
         // ── Filas por técnica ──
-        int y = panelTop + 40 + CELL + 10;
+        int y = panelTop + ROWS_Y;
         for (PhysicalTechnique t : PhysicalTechnique.values()) {
             if (!t.enabled()) continue; // sin JSON: no se muestra
             if (!tech.isUnlocked(t)) {
@@ -126,7 +129,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
 
         // Contenido de las 9 celdas (ícono ki o físico del ocupante + número).
         int bx = panelLeft + (BG_W - (9 * CELL + 8 * 2)) / 2;
-        int by = panelTop + 40;
+        int by = panelTop + CELLS_Y;
         for (int p = 0; p < PlayerTechniques.BIND_POSITIONS; p++) {
             KiTechnique ki = tech.slot(tech.binding(p));
             PhysicalTechnique ph = tech.physicalBinding(p);
@@ -142,7 +145,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
         }
 
         // Filas: ícono + nombre + estado.
-        int y = panelTop + 40 + CELL + 10;
+        int y = panelTop + ROWS_Y;
         for (PhysicalTechnique t : PhysicalTechnique.values()) {
             PhysicalIcons.draw(g, panelLeft + 16, y - 2, t);
             g.drawString(this.font, Component.translatable(t.nameKey()),

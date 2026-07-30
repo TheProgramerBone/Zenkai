@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.TabIconButton;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -38,6 +39,9 @@ public abstract class ZenkaiMenuScreen extends Screen {
     protected PlayerStatsAttachment att;
     protected int panelLeft;
     protected int panelTop;
+
+    /** Ver ScreenTitle.CONTENT_TOP. Reexpuesto aquí para que las hijas no importen la clase. */
+    protected static final int CONTENT_TOP = ScreenTitle.CONTENT_TOP;
 
     protected ZenkaiMenuScreen(Component title) {
         super(title);

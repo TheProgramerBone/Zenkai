@@ -30,8 +30,8 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
     private static final int ROW_H = 26;
     private static final int CELL = 20;
     private static final int CELL_GAP = 2;
-    private static final int BIND_Y_OFF = 52;  // barra de posiciones
-    private static final int LIST_Y_OFF = 84;  // inicio de la lista
+    private static final int BIND_Y_OFF = CONTENT_TOP + 14;  // barra de posiciones
+    private static final int LIST_Y_OFF = CONTENT_TOP + 46;  // inicio de la lista
 
     /** Índice de técnica seleccionada para asignar; -1 = ninguna. */
     private int assigning = -1;
@@ -124,7 +124,7 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
         if (att == null) return;
         g.drawString(this.font, Component.literal("TP: " + att.getTP()),
-                panelLeft + 16, panelTop + 38, 0xFFFFD700, true);
+                panelLeft + 16, panelTop + CONTENT_TOP, 0xFFFFD700, true);
 
         // ── Decoración de la barra de posiciones (sobre los botones) ──
         int n = PlayerTechniques.BIND_POSITIONS;

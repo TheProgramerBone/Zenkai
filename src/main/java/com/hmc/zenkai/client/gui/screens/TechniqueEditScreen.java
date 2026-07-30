@@ -80,9 +80,9 @@ public class TechniqueEditScreen extends Screen {
     private static final int BTN_H = 25;
     private static final int X_SIZE = 12;
 
-    private static final int Y_NAME  = 28;
-    private static final int Y_TABS  = 48;
-    private static final int Y_ROWS  = 70;
+    private static final int Y_NAME  = ScreenTitle.CONTENT_TOP;
+    private static final int Y_TABS  = Y_NAME + 20;
+    private static final int Y_ROWS  = Y_TABS + 22;
     private static final int Y_BLOCK = 148;   // previews de combate
     private static final int Y_PREVIEW = 150; // caja de animación (STYLE); la fila 4 acaba en 142
     private static final int PREVIEW_H = 58;

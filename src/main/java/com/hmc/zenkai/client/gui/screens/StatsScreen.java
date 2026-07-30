@@ -48,18 +48,15 @@ public class StatsScreen extends ZenkaiMenuScreen {
     );
 
     // ── Layout ────────────────────────────────────────────────────────────────
-    private static final int HEADER_Y   = 30;  // 1ª línea de cabecera (rel. panelTop)
-    private static final int DIV_Y      = 54;  // divisor bajo cabecera
-    private static final int ATTR_Y0    = 66;  // 1ª fila de atributos
-    private static final int ATTR_STEP  = 20;  // paso entre filas
-    private static final int PREVIEW_X1 = 150, PREVIEW_X2 = 244; // zona del render (rel. panelLeft)
-    private static final int PREVIEW_Y1 = 62,  PREVIEW_Y2 = 186; // (rel. panelTop)
-    private static final int ALIGN_BAR_W = 130, ALIGN_BAR_H = 7;
-    /** Ancho del botón +. El texto del atributo arranca DESPUÉS de él, así que los números
-    *  largos crecen hacia la derecha sin empujar nada: con el + detrás, un STR de seis
-    *  cifras se comía el botón. */
+    private static final int HEADER_Y   = CONTENT_TOP;      // 1ª línea de cabecera (rel. panelTop)
+    private static final int DIV_Y      = HEADER_Y + 24;    // divisor bajo cabecera
+    private static final int ATTR_Y0    = DIV_Y + 12;       // 1ª fila de atributos
+    private static final int ATTR_STEP  = 20;               // paso entre filas
     private static final int PLUS_W     = 12;
     private static final int ATTR_TEXT_X = 16 + PLUS_W + 4;
+    private static final int PREVIEW_X1 = 150, PREVIEW_X2 = 244;
+    private static final int PREVIEW_Y1 = 48,  PREVIEW_Y2 = 172;
+    private static final int ALIGN_BAR_W = 130, ALIGN_BAR_H = 7;
 
     // Popup de stats efectivas
     private static final int POPUP_W = 118, POPUP_H = 104;
@@ -248,7 +245,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         int x = panelLeft + BG_W + 6;
         if (x + POPUP_W > this.width - 2) x = panelLeft - POPUP_W - 6;
-        int y = panelTop + 40;
+        int y = panelTop + CONTENT_TOP + 10;
 
         g.fill(x, y, x + POPUP_W, y + h, 0xE81E1410);
         g.fill(x, y, x + POPUP_W, y + 1, 0xFFFFAA33);

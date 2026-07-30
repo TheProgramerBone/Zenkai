@@ -32,7 +32,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
     private static final int ROW_H = 42;   // 33 px de texto + 9 de aire entre habilidades
     private static final int PLUS_SIZE = 12;   // tamaño de PlusIconButton
 
-    private static final int LIST_TOP_OFF = 58;      // bajo cabecera de TP/MND
+    private static final int LIST_TOP_OFF = CONTENT_TOP + 18;   // bajo cabecera de TP/MND
     private static final int LIST_BOTTOM_MARGIN = 14;
     private static final int TEXT_X_OFF = 16;
     private static final int SCROLLBAR_W = 4;
@@ -216,7 +216,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         g.drawString(this.font,
                 Component.translatable("screen.zenkai.skills.resources",
                         st.getTP(), st.getAttribute(ZenkaiAttributes.MIND)),
-                panelLeft + 16, panelTop + 40, 0xFFFFD966, true);
+                panelLeft + 16, panelTop + CONTENT_TOP, 0xFFFFD966, true);
 
         if (rowIds.isEmpty()) {
             g.drawCenteredString(this.font, Component.translatable("screen.zenkai.skills.empty"),

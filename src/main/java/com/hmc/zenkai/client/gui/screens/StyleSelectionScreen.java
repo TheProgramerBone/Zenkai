@@ -48,7 +48,7 @@ public class StyleSelectionScreen extends Screen {
     private static final int COLOR_BOX_W = 20;
     private static final int COLOR_BOX_H = 12;
 
-    private static final int S_TITLE_Y = IN_Y1 + 8;
+    private static final int S_TITLE_Y = ScreenTitle.CONTENT_TOP;
     private static final int S_VALUE_Y = S_TITLE_Y + TITLE_H;
     private static final int DIV1_Y    = S_VALUE_Y + 14;
     private static final int DESC_Y    = DIV1_Y + 6;

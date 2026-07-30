@@ -27,17 +27,14 @@ import java.util.Locale;
 /**
  * Pestaña MAESTRÍAS. Existe porque la maestría se acumulaba desde hace mucho y no se veía en
  * ningún sitio: el jugador entrenaba a ciegas sin saber ni cuánto llevaba ni qué le daba.
- *
  * QUÉ RESPONDE ESTA PANTALLA, y por qué es distinta del tooltip de stats: aquí no interesa
  * "cuánto valgo ahora" (eso ya lo dice el tooltip del render en Stats, con el multiplicador
  * efectivo y el ki/s reales), sino "QUÉ ME QUEDA POR GANAR". Por eso cada fila muestra el
  * valor ACTUAL y el valor AL 100 %: sin el segundo, un 40 % de maestría es un número sin
  * significado.
- *
  * Solo se listan cosas que el jugador YA TIENE: formas compradas, técnicas con JSON activo,
  * kaioken si tiene la habilidad. Enseñar en gris lo que no posee convertiría la pantalla en un
  * catálogo y no en un registro de progreso.
- *
  * FILAS DE ALTURA FIJA, cabeceras incluidas. Desperdicia unos píxeles en las cabeceras, pero
  * permite reutilizar tal cual el scroll por filas enteras de SkillsScreen: con alturas
  * variables habría que llevar índices y offsets aparte, y aparecen medias filas cortadas.
@@ -45,7 +42,7 @@ import java.util.Locale;
 public class MasteryScreen extends ZenkaiMenuScreen {
 
     private static final int ROW_H = 26;
-    private static final int LIST_TOP_OFF = 44;
+    private static final int LIST_TOP_OFF = CONTENT_TOP;
     private static final int LIST_BOTTOM_MARGIN = 14;
     private static final int TEXT_X_OFF = 16;
     private static final int SCROLLBAR_W = 4;
@@ -249,8 +246,6 @@ public class MasteryScreen extends ZenkaiMenuScreen {
         }
 
         int textX = panelLeft + TEXT_X_OFF;
-        // Recorte a la ventana: una fila a medio salir se corta en vez de pintarse sobre el
-        // borde del panel.
         g.enableScissor(panelLeft, listTop(), panelLeft + BG_W, listTop() + viewHeight());
 
         int last = Math.min(rows.size(), scrollRow + visibleRows());

@@ -97,10 +97,14 @@
   "entity.zenkai.ki_projectile": "Ki Technique",
 
   "--- BIOMAS ---": "--- BIOMAS ---",
+  "biome.zenkai.hfil_badlands": "HFIL Badlands",
+  "biome.zenkai.hfil_wastes": "HFIL Wastes",
+  "biome.zenkai.hfil_dunes": "HFIL Dunes",
   "biome.zenkai.rocky_wasteland": "Rocky Wasteland",
   "biome.zenkai.namek_mid": "Namek Mid Biome",
   "biome.zenkai.namek_plains": "Namek Plains Biome",
   "biome.zenkai.namek_hills": "Namek Hills Biome",
+
 
   "--- EFECTOS ---": "--- EFECTOS ---",
   "effect.zenkai.immortality": "Immortality",
@@ -382,6 +386,7 @@
   "screen.zenkai.physical.pick_slot": "Click a slot above",
 
   "--- MENSAJES Y NOTIFICACIONES DE CHAT ---": "--- MENSAJES Y NOTIFICACIONES DE CHAT ---",
+  "message.zenkai.alignment_too_low": "Your heart is not pure enough (%s alignment required)",
   "messages.zenkai.dragon_ball_radar_on": "§bRadar activated",
   "messages.zenkai.dragon_ball_radar_off": "§7Radar deactivated",
   "messages.zenkai.shenron_summon": "§2§lCome forth Shenron and grant my wish!",

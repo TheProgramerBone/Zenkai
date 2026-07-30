@@ -24,7 +24,7 @@ public class EnchantVillagerWishScreen extends Screen {
 
     private static final int BG_W = 256, BG_H = 256;
     private static final int ARROW_W = 12;
-    private static final int COLOR_TITLE = 0x04a500, COLOR_VALUE = 0xFFFFFF, COLOR_SUB = 0x5A4636;
+    private static final int COLOR_TITLE = 0x04a500, COLOR_VALUE = 0xFFFFFF, COLOR_SUB = 0xFFF149;
 
     private final Screen parent;
     private List<Holder.Reference<Enchantment>> enchants = List.of();

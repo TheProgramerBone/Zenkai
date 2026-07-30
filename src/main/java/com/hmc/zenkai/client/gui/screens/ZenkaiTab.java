@@ -9,7 +9,7 @@ public enum ZenkaiTab {
     SKILLS(160,0),
     KI_TECHNIQUES(40,20),
     PHYSICAL_TECHNIQUES(120,20),
-    MASTERY(60,20),
+    MASTERY(160,20),
     STORY(20,20),
     PARTY(80,20),
     CONFIG(100,20);

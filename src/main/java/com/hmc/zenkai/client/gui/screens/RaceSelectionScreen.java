@@ -43,7 +43,7 @@ public class RaceSelectionScreen extends Screen {
     private static final int ARROW_W = 12;
     private static final int TITLE_H = 11;
 
-    private static final int B1_TITLE_Y = IN_Y1 + 8;
+    private static final int B1_TITLE_Y = ScreenTitle.CONTENT_TOP;
     private static final int B1_VALUE_Y = B1_TITLE_Y + TITLE_H;
     private static final int DIV1_Y     = B1_VALUE_Y + 14;
     private static final int B2_TITLE_Y = DIV1_Y + 6;

@@ -1,11 +1,13 @@
 package com.hmc.zenkai.feature.skills;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.forms.PotentialUnlock;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -57,11 +59,15 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
                     ? SuperForms.tpCostForLevel(sp, next) : def.tpCost();
 
             if (att.getAttribute(ZenkaiAttributes.MIND) < def.mindReqFor(next)) return;
-            // Potential Unlock exige alineamiento. Gate propio y no campo genérico en
-            // SkillDef porque de momento es el único caso; si aparece un segundo, toca
-            // convertirlo en 'alignment_req' del JSON en vez de acumular ifs aquí.
-            if (SkillEffects.POTENTIAL_UNLOCK.equals(def.id())
-            && !PotentialUnlock.canPurchase(sp)) return;
+            // Potential Unlock exige alineamiento. Único caso con mensaje explícito: los
+            // demás rechazos (TP, MND) el jugador los ve venir en la GUI, pero el
+            // alineamiento no sale por ningún lado y fallar en silencio parece un bug.
+            if (SkillEffects.POTENTIAL_UNLOCK.equals(def.id()) && !PotentialUnlock.canPurchase(sp)) {
+                sp.displayClientMessage(Component.translatable(
+                        "message.zenkai.alignment_too_low",
+                        CommonConfig.potentialUnlockAlignmentReq()), true);
+                return;
+            }
             if (att.getTP() < cost) return;
 
             att.addTP(-cost);

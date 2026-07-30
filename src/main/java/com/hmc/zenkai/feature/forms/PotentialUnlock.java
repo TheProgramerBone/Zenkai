@@ -13,20 +13,17 @@ import java.util.List;
 /**
  * Potential Unlock: el potencial dormido, sacado a la fuerza. No es un escalón más de la
  * cadena — es un estado paralelo que bloquea las demás transformaciones y no consume ki.
- *
  * EL MULTIPLICADOR VA ACOPLADO, no fijado en el JSON. Se calcula como una fracción del techo
  * de la mejor forma que el jugador HAYA COMPRADO, evaluada a maestría 100 (su tope teórico,
  * no su maestría actual). Dos consecuencias buscadas:
  *   - Comprar SSJ4 sube tu Potential Unlock aunque nunca lo uses: es literalmente "tu
  *     potencial", así que crece con lo que tu cuerpo es capaz de alcanzar.
  *   - No hay una tabla por raza que recalibrar cada vez que se añada una forma nueva.
- *
  * Y POR ESO HAY UN SUELO. Un humano o un namekiano sin transformaciones registradas tendría
  * un techo de 0 y su Potential Unlock no haría absolutamente nada, cuando para ellos es LA
  * transformación definitiva. El suelo es el stat_percent_mastered del propio JSON de la
  * forma, que deja de ser el valor final para pasar a ser el mínimo garantizado. En cuanto
  * esas razas tengan cadena, el acoplado la adelanta solo y el suelo deja de aplicar.
- *
  * La maestría interpola entre el 30 % y el 85 % de ese techo. El 85 % es el "levemente
  * inferior a tu mejor forma" del diseño: dominar Potential Unlock te deja casi al nivel de tu
  * cima, pero sin drenaje de ki y sin poder subir más — a cambio de renunciar a lo demás.

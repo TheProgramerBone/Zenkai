@@ -44,10 +44,9 @@ public class WeightScreen extends Screen {
     private static final int BG_W = 256;
     private static final int BG_H = 256;
     private static final int MARGIN = 16;
-
-    private static final int Y_LABEL  = 34;
-    private static final int Y_FIELD  = 48;
-    private static final int Y_INFO   = 84;
+    private static final int Y_LABEL  = ScreenTitle.CONTENT_TOP;
+    private static final int Y_FIELD  = Y_LABEL + 14;
+    private static final int Y_INFO   = Y_FIELD + 36;
     private static final int LINE_H   = 13;
     private static final int Y_WARN   = Y_INFO + LINE_H * 6 + 6;
 

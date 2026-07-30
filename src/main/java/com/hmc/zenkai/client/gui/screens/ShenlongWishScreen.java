@@ -27,10 +27,9 @@ public class ShenlongWishScreen extends Screen {
 
     private static final int BG_W = 256;
     private static final int BG_H = 256;
-
     private static final int BTN_W = 170;
     private static final int BTN_H = 16;
-    private static final int FIRST_BTN_DY = 50; // desde el top del panel
+    private static final int FIRST_BTN_DY = ScreenTitle.CONTENT_TOP + 16;
     private static final int BTN_STEP      = 22;
 
     // Colores de texto (consistentes con las otras pantallas, legibles sobre el beige).
@@ -122,7 +121,7 @@ public class ShenlongWishScreen extends Screen {
         int remaining = getNearbyWishesRemaining();
         if (remaining >= 0) {
             Component rem = Component.translatable("screen.zenkai.shenlong_wish.remaining", remaining);
-            drawCenteredNoShadow(g, rem, panelLeft + BG_W / 2, panelTop + 37, 0x4A3726);
+            drawCenteredNoShadow(g, rem, panelLeft + BG_W / 2, panelTop + ScreenTitle.CONTENT_TOP, 0x4A3726);
         }
 
         super.render(g, mouseX, mouseY, partialTick);
