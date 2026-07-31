@@ -36,6 +36,6 @@ public final class ZenkaiCreditsTooltip {
                 : credit.author() + " (" + credit.detail() + ")";
 
         event.getToolTip().add(Component.translatable("tooltip.zenkai.credits", text)
-                .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+                .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC, ChatFormatting.BOLD));
     }
 }

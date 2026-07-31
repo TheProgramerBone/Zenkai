@@ -96,6 +96,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                 this::createRedstoneOreDrops);
         add(ModBlocks.NAMEKIAN_LAPIS_ORE.get(),
                 this::createLapisOreDrops);
+        add(ModBlocks.NAMEKIAN_DIRT_PATH.get(),
+                b -> createSingleItemTable(ModBlocks.NAMEKIAN_DIRT.get()));
 
         dropSelf(ModBlocks.AJISA_LOG.get());
         dropSelf(ModBlocks.AJISA_WOOD.get());
@@ -176,6 +178,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                                 .apply(SetItemCountFunction.setCount(UniformGenerator.between(4.0F, 9.0F)))
                                 .apply(ApplyBonusCount.addOreBonusCount(
                                         registries.holderOrThrow(Enchantments.FORTUNE))))));
+
+
 
         dropSelf(ModBlocks.NAMEK_CRYSTAL_BLOCK.get());
         dropSelf(ModBlocks.ENERGY_CRYSTAL_BLOCK.get());

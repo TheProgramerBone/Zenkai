@@ -1,0 +1,10 @@
+{
+  "structures": [ { "structure": "zenkai:namek_village", "weight": 1 } ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 913274655,
+    "spacing": 56,
+    "separation": 24,
+    "spread_type": "linear"
+  }
+}

@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-30T23:54:06.8601735	Block States: zenkai
+// 1.21.1	2026-07-31T14:29:44.7255851	Block States: zenkai
 a94084a882e8e97f815eec1bcc0de31216c39653 assets/zenkai/blockstates/ajisa_button.json
 1941064c3fa3ef874b3f58b16d1e5260b932f041 assets/zenkai/blockstates/ajisa_door.json
 7b6b9fc8b8aecaa2d034bb21ffc7f4b12a529146 assets/zenkai/blockstates/ajisa_fence.json
@@ -23,6 +23,7 @@ fa9c35c56b7519e4ac4848347d148fd6726e17d2 assets/zenkai/blockstates/namekian_cobb
 577bb5e72fc67c33fd398401c600428ff4e37470 assets/zenkai/blockstates/namekian_copper_ore.json
 8bd40b7903612b982929ca990c87c442978f105a assets/zenkai/blockstates/namekian_diamond_ore.json
 8df7327bfeb0ed68204dd24470c8fff3cb344f58 assets/zenkai/blockstates/namekian_dirt.json
+a89cd6151395cb98f8d7d6b85c515687a1ea6aa1 assets/zenkai/blockstates/namekian_dirt_path.json
 217dffd7d894ffd9649fb46b70e741d7c9f5e42c assets/zenkai/blockstates/namekian_gold_ore.json
 6f7b16614d895482ebd2bbe1a34ce895128ea042 assets/zenkai/blockstates/namekian_gravel.json
 4802190e2a984a45b064c6ea4033b5e8fe751232 assets/zenkai/blockstates/namekian_herb_crop.json
@@ -114,6 +115,7 @@ b3e6c74bdf4625d4af7468bc77a2a974d7fb7306 assets/zenkai/models/block/namekian_coa
 a95a9775eb0be063d143579e94bcd6f480e3ba8f assets/zenkai/models/block/namekian_copper_ore.json
 d10f3731e6121c9f06e31458a25f49d3ba324986 assets/zenkai/models/block/namekian_diamond_ore.json
 d34c7c3a88b3e4c47ef3966007a4abd485b64d48 assets/zenkai/models/block/namekian_dirt.json
+cfc0bcf80d3122ccfecd504f60363f2ec6566abc assets/zenkai/models/block/namekian_dirt_path.json
 6af95473f7958f0180ce2da5bae45be138cd8fcf assets/zenkai/models/block/namekian_gold_ore.json
 734b39523baa713495907e15e2be426054d7135e assets/zenkai/models/block/namekian_gravel.json
 c5b0aed806d579a6fc696ae19628f1e88ee96a22 assets/zenkai/models/block/namekian_herb_crop_stage0.json
@@ -195,6 +197,7 @@ d5ace1175e61ae190da2a844de85d57d8f916615 assets/zenkai/models/item/htc_block.jso
 bbb7cc97dc6e5baf33cb3a0770ee1ccc5640e990 assets/zenkai/models/item/namekian_copper_ore.json
 8a2379436dec2fcc7501d44e7502c64f48aabec5 assets/zenkai/models/item/namekian_diamond_ore.json
 d0832ae29674999ef0dc70497a2f90eb3eb781cf assets/zenkai/models/item/namekian_dirt.json
+5aaa9ac9f627db60b8658ba43199d64c47538e91 assets/zenkai/models/item/namekian_dirt_path.json
 f7958a309baeb231e08a6ea187d0010236a895d0 assets/zenkai/models/item/namekian_gold_ore.json
 4afc9d465e54696855253b14633045292147858c assets/zenkai/models/item/namekian_gravel.json
 9799065a2f539950b32dd7430c2097ce05dbc1e1 assets/zenkai/models/item/namekian_iron_ore.json

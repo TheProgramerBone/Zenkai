@@ -28,15 +28,28 @@ public class ModDataMapProvider extends DataMapProvider {
                 .add(ModBlocks.AJISA_WOOD.getKey(), new Strippable(ModBlocks.STRIPPED_AJISA_WOOD.get()), false);
 
         // ── Créditos de modelos y texturas ───────────────────────────────────
-        // Añade aquí una línea por cada asset con autoría. Vale cualquier item o bloque:
-        // para un bloque se pasa el bloque directamente y se resuelve su BlockItem.
         credit(ModItems.ARCOSIAN_RACE_HELMET.get(), "Kirbro", "All Arcosian Model and Texture");
         credit(ModItems.ARCOSIAN_RACE_CHESTPLATE.get(), "Kirbro", "All Arcosian Model and Texture");
         credit(ModItems.ARCOSIAN_RACE_LEGGINGS.get(), "Kirbro", "All Arcosian Model and Texture");
         credit(ModItems.ARCOSIAN_RACE_BOOTS.get(), "Kirbro", "All Arcosian Model and Texture");
+        credit(ModBlocks.DRAGON_BALL_1.get(), "Kirbro", "Texture");
+        credit(ModBlocks.DRAGON_BALL_2.get(), "Kirbro", "Texture");
+        credit(ModBlocks.DRAGON_BALL_3.get(), "Kirbro", "Texture");
+        credit(ModBlocks.DRAGON_BALL_4.get(), "Kirbro", "Texture");
+        credit(ModBlocks.DRAGON_BALL_5.get(), "Kirbro", "Texture");
+        credit(ModBlocks.DRAGON_BALL_6.get(), "Kirbro", "Texture");
+        credit(ModBlocks.DRAGON_BALL_7.get(), "Kirbro", "Texture");
+        credit(ModBlocks.NAMEK_DRAGON_BALL_1.get(), "Kirbro", "Texture");
+        credit(ModBlocks.NAMEK_DRAGON_BALL_2.get(), "Kirbro", "Texture");
+        credit(ModBlocks.NAMEK_DRAGON_BALL_3.get(), "Kirbro", "Texture");
+        credit(ModBlocks.NAMEK_DRAGON_BALL_4.get(), "Kirbro", "Texture");
+        credit(ModBlocks.NAMEK_DRAGON_BALL_5.get(), "Kirbro", "Texture");
+        credit(ModBlocks.NAMEK_DRAGON_BALL_6.get(), "Kirbro", "Texture");
+        credit(ModBlocks.NAMEK_DRAGON_BALL_7.get(), "Kirbro", "Texture");
         credit(ModItems.SHENLONG_SPAWN_EGG, "Kirbro", "Entity Model");
         credit(ModItems.ISAAC_SPAWN_EGG, "Kirbro", "Entity Model");
         credit(ModBlocks.NAMEKIAN_GRASS_BLOCK,"IxWolxz","Texture");
+        credit(ModItems.SCOUTER,"IxWolxz","Texture");
     }
 
     /** Registra el crédito de un item o del BlockItem de un bloque. */

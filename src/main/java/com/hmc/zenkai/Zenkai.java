@@ -30,6 +30,7 @@ import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.TippableArrowRenderer;
+import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FireBlock;
 import net.neoforged.api.distmarker.Dist;
@@ -119,7 +120,6 @@ public class Zenkai {
             fire.setFlammable(ModBlocks.AJISA_FENCE_GATE.get(), 5, 20);
             fire.setFlammable(ModBlocks.AJISA_LEAVES.get(), 30, 60);
         });
-
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {

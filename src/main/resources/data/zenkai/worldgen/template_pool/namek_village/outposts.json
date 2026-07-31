@@ -1,0 +1,12 @@
+{
+  "name": "zenkai:namek_village/outposts",
+  "fallback": "minecraft:empty",
+  "elements": [
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_outpost_1", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_outpost_2", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_outpost_3", "processors": "minecraft:empty", "projection": "rigid" } }
+  ]
+}

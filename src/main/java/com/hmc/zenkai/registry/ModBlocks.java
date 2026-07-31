@@ -2,6 +2,7 @@ package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.block.HtcPortalBlock;
+import com.hmc.zenkai.content.block.NamekianDirtPathBlock;
 import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
 import com.hmc.zenkai.content.blockentity.AllDragonBalls.AllDragonBallsBlock;
 import com.hmc.zenkai.content.blockentity.DragonBalls.DragonBalls;
@@ -332,6 +333,14 @@ public class ModBlocks {
                     .strength(0.5f)
                     .sound(SoundType.GRAVEL)
                     .mapColor(MapColor.DIRT)));
+
+    public static final DeferredBlock<Block> NAMEKIAN_DIRT_PATH = registerBlock("namekian_dirt_path",
+            ()-> new NamekianDirtPathBlock(BlockBehaviour.Properties.of()
+                    .strength(0.65f)
+                    .sound(SoundType.GRASS)
+                    .mapColor(MapColor.DIRT)
+                    .isViewBlocking((s, l, p) -> true)
+                    .isSuffocating((s, l, p) -> true)));
 
     public static final DeferredBlock<Block> NAMEKIAN_GRASS_BLOCK = registerBlock("namekian_grass_block",
             ()-> new NamekianGrassBlock(Block.Properties.of()

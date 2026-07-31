@@ -21,6 +21,10 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.TERRAGEM_ORE);
         blockWithItem(ModBlocks.DEEPSLATE_TERRAGEM_ORE);
         blockWithItem(ModBlocks.NAMEKIAN_DIRT);
+        simpleBlockWithItem(ModBlocks.NAMEKIAN_DIRT_PATH.get(),
+                models().withExistingParent("namekian_dirt_path", mcLoc("block/dirt_path"))
+                        .texture("top",  modLoc("block/namekian_dirt_path_top"))
+                        .texture("side", modLoc("block/namekian_dirt_path_side")));
         blockWithItem(ModBlocks.NAMEKIAN_STONE);
         blockWithItem(ModBlocks.NAMEKIAN_COBBLESTONE);
         blockWithItem(ModBlocks.NAMEKIAN_SAND);

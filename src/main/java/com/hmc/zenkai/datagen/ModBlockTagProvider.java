@@ -67,6 +67,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL).add(
                 ModBlocks.NAMEKIAN_DIRT.get(),
+                ModBlocks.NAMEKIAN_DIRT_PATH.get(),
                 ModBlocks.NAMEKIAN_GRASS_BLOCK.get(),
                 ModBlocks.NAMEKIAN_SAND.get(),
                 ModBlocks.NAMEKIAN_GRAVEL.get()

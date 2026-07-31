@@ -1,0 +1,10 @@
+{
+  "structures": [ { "structure": "zenkai:namek_dragon_ball_stone", "weight": 1 } ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 771008,
+    "spacing": 40,
+    "separation": 10,
+    "spread_type": "linear"
+  }
+}

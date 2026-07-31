@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/dirt_path",
+  "textures": {
+    "side": "zenkai:block/namekian_dirt_path_side",
+    "top": "zenkai:block/namekian_dirt_path_top"
+  }
+}

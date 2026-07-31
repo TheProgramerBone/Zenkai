@@ -1,0 +1,20 @@
+{
+  "name": "zenkai:namek_village/dragon_ball",
+  "fallback": "minecraft:empty",
+  "elements": [
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_ball_1", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_ball_2", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_ball_3", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_ball_4", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_ball_5", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_ball_6", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_ball_7", "processors": "minecraft:empty", "projection": "rigid" } }
+  ]
+}

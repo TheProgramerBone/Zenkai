@@ -1,0 +1,12 @@
+{
+  "name": "zenkai:namek_village/starts",
+  "fallback": "minecraft:empty",
+  "elements": [
+    { "weight": 50, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_village_small", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 35, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_village_medium", "processors": "minecraft:empty", "projection": "rigid" } },
+    { "weight": 15, "element": { "element_type": "minecraft:single_pool_element",
+      "location": "zenkai:namek_village_large", "processors": "minecraft:empty", "projection": "rigid" } }
+  ]
+}
