@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-31T00:09:06.507371	Item Models: zenkai
+// 1.21.1	2026-07-31T08:40:31.7348464	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -64,6 +64,7 @@ cbc58156863501ef3999d1f3f7a691697efd9c13 assets/zenkai/models/item/sacred_stone_
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/saibaman_spawn_egg.json
 8a2c41f065a7df96ee3642e71ebc4ae4056347ea assets/zenkai/models/item/scouter_radar_upgrade.json
 340e5a499537ca1c3856387e5dbacb789e98e351 assets/zenkai/models/item/senzu_bean.json
+63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/shenlong_spawn_egg.json
 b2b33d40b8094e7f9ef4314e5b8c7c9f0ecb27c0 assets/zenkai/models/item/space_pod_item.json
 473d8df53841e77634ca9d63306d43ca492a958b assets/zenkai/models/item/stripped_ajisa_log.json
 7397baab3cc0cf09fa8484a957d0aed2538445f0 assets/zenkai/models/item/stripped_ajisa_wood.json

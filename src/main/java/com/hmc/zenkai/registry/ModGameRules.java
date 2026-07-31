@@ -50,7 +50,6 @@ public final class ModGameRules {
             GameRules.register("zenkai_enableKiGriefing", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
-
     // ── Init ─────────────────────────────────────────────────────────────────
     public static void init() {
         // Fuerza la carga estática de las claves antes de arrancar el servidor.
@@ -79,7 +78,7 @@ public final class ModGameRules {
     }
 
     public static boolean enableStructureProtection(MinecraftServer server) {
-        return server.getGameRules().getBoolean(ENABLE_STRUCTURE_PROTECTION);
+        return !server.getGameRules().getBoolean(ENABLE_STRUCTURE_PROTECTION);
     }
 
     public static boolean keepStructureNpcs(MinecraftServer server) {

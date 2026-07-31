@@ -1,5 +1,7 @@
 package com.hmc.zenkai.content.entity;
 
+import com.hmc.zenkai.registry.ModBlocks;
+import com.hmc.zenkai.registry.ModItems;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.VillagerTrades;
@@ -12,96 +14,95 @@ import net.minecraft.world.level.ItemLike;
 import java.util.Optional;
 
 /**
- * Tradeos del aldeano namekiano.
+ * Tradeos del namekiano.
+ * La moneda es el CRISTAL DE NAMEK, no la esmeralda: la esmeralda no existe en Namek a
+ * propósito, para que la economía del planeta sea suya y no un apéndice del overworld.
  * Convenciones:
- *  - buy(...)  = el jugador PAGA y RECIBE algo.
- *  - sellFor(...) = el jugador VENDE algo y recibe esmeraldas.
- *  - priceMultiplier 0.05 = poca inflación; 0.0 = precio fijo (ideal para ítems clave).
- *  - Temática Namekian: agua, curación (Dende/Guru), naturaleza y esferas del dragón.
- * Están agrupados por NIVEL de profesión (1..5). Si tu registro usa un array plano,
+ *  - buy(...)     = el jugador PAGA cristales y RECIBE algo.
+ *  - sellFor(...) = el jugador ENTREGA material y RECIBE cristales.
+ *  - priceMultiplier 0.05 = poca inflación; 0.0 = precio fijo, para lo que es clave.
+ * Anclaje de precios: 1 diamante = 5 cristales. Lo demás cuelga de ahí. Vender carbón
+ * rinde 0,06 cristales por unidad, así que comerciar nunca supera a minar; es un colchón
+ * para cuando el jugador tiene de sobra de una cosa y le falta otra.
  */
 public final class ModVillagerTrades {
     private ModVillagerTrades() {}
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    /** Comprar: pagar `cost` x`costN` -> recibir `result` x`resultN`. */
-    private static VillagerTrades.ItemListing buy(ItemLike cost, int costN,
+    private static ItemLike currency() { return ModItems.NAMEK_CRYSTAL.get(); }
+
+    /** Comprar: pagar `crystals` -> recibir `result` x`resultN`. */
+    private static VillagerTrades.ItemListing buy(int crystals,
                                                   ItemLike result, int resultN,
                                                   int maxUses, int xp, float mult) {
         return (Entity e, RandomSource r) -> new MerchantOffer(
-                new ItemCost(cost, costN),
+                new ItemCost(currency(), crystals),
                 new ItemStack(result, resultN),
                 maxUses, xp, mult);
     }
 
-    /** Comprar con DOS costos (p. ej. esmeraldas + un ítem). */
-    private static VillagerTrades.ItemListing buy2(ItemLike costA, int aN,
+    /** Comprar con un segundo coste además de los cristales. */
+    private static VillagerTrades.ItemListing buy2(int crystals,
                                                    ItemLike costB, int bN,
                                                    ItemLike result, int resultN,
                                                    int maxUses, int xp, float mult) {
         return (Entity e, RandomSource r) -> new MerchantOffer(
-                new ItemCost(costA, aN),
+                new ItemCost(currency(), crystals),
                 Optional.of(new ItemCost(costB, bN)),
                 new ItemStack(result, resultN),
                 maxUses, xp, mult);
     }
 
-    /** Vender: entregar `give` x`giveN` -> recibir esmeraldas x`emeralds`. */
+    /** Vender: entregar `give` x`giveN` -> recibir cristales. */
     private static VillagerTrades.ItemListing sellFor(ItemLike give, int giveN,
-                                                      int emeralds,
+                                                      int crystals,
                                                       int maxUses, int xp, float mult) {
         return (Entity e, RandomSource r) -> new MerchantOffer(
                 new ItemCost(give, giveN),
-                new ItemStack(Items.EMERALD, emeralds),
+                new ItemStack(currency().asItem(), crystals),
                 maxUses, xp, mult);
     }
 
-    // ── Tradeos por nivel ───────────────────────────────────────────────────────
+    // ── Tradeos por nivel ─────────────────────────────────────────────────────
 
-    /** Nivel 1 — Novato: agua, comida y compra de recursos básicos. */
+    /** Nivel 1 — Novato: lo barato, para que la primera aldea ya sirva de algo. */
     public static final VillagerTrades.ItemListing[] LEVEL_1 = {
-            // Namekians "viven del agua": vende agua barata y compra cultivos.
-            buy(Items.EMERALD, 1, Items.WATER_BUCKET, 1, 16, 2, 0.05f),
-            sellFor(Items.MELON_SLICE, 12, 1, 16, 2, 0.05f),
-            sellFor(Items.KELP, 16, 1, 16, 2, 0.05f),
-            // TODO: comprar tu semilla/planta namekiana:
-            // sellFor(ModItems.AJISSA_SEED.get(), 8, 1, 16, 2, 0.05f),
+            buy(2, ModBlocks.AJISA_SAPLING.get(), 1, 16, 2, 0.05f),
+            buy(2, ModBlocks.NAMEKIAN_SAND.get(), 8, 16, 2, 0.05f),
+            sellFor(Items.COAL, 16, 1, 16, 2, 0.05f),
     };
 
-    /** Nivel 2 — Aprendiz: curación básica (Dende sana). */
+    /** Nivel 2 — Aprendiz: la hierba medicinal y el hierro. */
     public static final VillagerTrades.ItemListing[] LEVEL_2 = {
-            buy(Items.EMERALD, 3, Items.GLISTERING_MELON_SLICE, 4, 12, 5, 0.05f),
-            buy2(Items.EMERALD, 2, Items.GLASS_BOTTLE, 1, Items.HONEY_BOTTLE, 1, 12, 5, 0.05f),
-            sellFor(Items.LAPIS_LAZULI, 10, 1, 12, 5, 0.05f),
+            buy(3, ModItems.NAMEKIAN_HERB_SEEDS.get(), 2, 12, 5, 0.05f),
+            sellFor(Items.RAW_IRON, 12, 2, 12, 5, 0.05f),
     };
 
-    /** Nivel 3 — Oficial: pociones de curación y materiales raros. */
+    /** Nivel 3 — Oficial: material de construcción de templos. */
     public static final VillagerTrades.ItemListing[] LEVEL_3 = {
-            // Poción de curación embotellada (Dende). Precio fijo por ser clave.
-            buy(Items.EMERALD, 6, Items.GLOWSTONE, 4, 8, 10, 0.0f),
-            buy(Items.EMERALD, 5, Items.ENDER_PEARL, 2, 8, 10, 0.05f),
-            // TODO: vender un ítem curativo del mod (p. ej. semilla senzu limitada):
-            // buy(Items.EMERALD, 32, ModItems.SENZU_BEAN.get(), 1, 2, 15, 0.0f),
+            buy(4, ModBlocks.SACRED_STONE_BLOCK.get(), 8, 12, 10, 0.05f),
+            sellFor(Items.RAW_GOLD, 8, 3, 12, 10, 0.05f),
     };
 
-    /** Nivel 4 — Experto: cosas relacionadas con las esferas del dragón. */
+    /** Nivel 4 — Experto: las variantes trabajadas y el diamante. */
     public static final VillagerTrades.ItemListing[] LEVEL_4 = {
-            buy(Items.EMERALD, 12, Items.GOLD_BLOCK, 1, 6, 15, 0.05f),
-            // TODO: pistas/fragmentos del sistema de esferas del dragón, radar, etc.:
-            // buy2(Items.EMERALD, 24, Items.DIAMOND, 2, ModItems.DRAGON_RADAR.get(), 1, 2, 20, 0.0f),
+            buy(5, ModBlocks.POLISHED_SACRED_STONE.get(), 8, 8, 15, 0.05f),
+            buy(6, ModBlocks.SACRED_STONE_BRICKS.get(), 8, 8, 15, 0.05f),
+            sellFor(Items.DIAMOND, 2, 10, 8, 15, 0.05f),
     };
 
-    /** Nivel 5 — Maestro: objeto de prestigio caro y limitado. */
+    /**
+     * Nivel 5 — Maestro. Precio fijo (mult 0.0) en los dos: son la meta del comercio y no
+     * deben moverse por reputación ni por demanda.
+     */
     public static final VillagerTrades.ItemListing[] LEVEL_5 = {
-            buy(Items.EMERALD, 16, Items.EXPERIENCE_BOTTLE, 6, 8, 30, 0.05f),
-            // TODO: recompensa top del mod (armadura namekiana, esfera, etc.):
-            // buy2(Items.EMERALD, 48, Items.DIAMOND, 4, ModItems.NAMEKIAN_RELIC.get(), 1, 1, 30, 0.0f),
+            buy(24, ModItems.ENERGY_CRYSTAL.get(), 1, 4, 30, 0.0f),
+            buy(48, ModItems.SCOUTER_RADAR_UPGRADE.get(), 1, 2, 30, 0.0f),
     };
 
-    // ── Utilidades de consumo ────────────────────────────────────────────────────
+    // ── Utilidades de consumo ─────────────────────────────────────────────────
 
-    /** Devuelve los tradeos de un nivel (1..5); vacío si fuera de rango. */
     public static VillagerTrades.ItemListing[] byLevel(int level) {
         return switch (level) {
             case 1 -> LEVEL_1;
@@ -113,7 +114,6 @@ public final class ModVillagerTrades {
         };
     }
 
-    /** Todos juntos, por si tu registro usa un único array plano. */
     public static final VillagerTrades.ItemListing[] NAMEKIAN_TRADES = concat(
             LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5);
 

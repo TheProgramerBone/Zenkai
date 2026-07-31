@@ -32,7 +32,7 @@ public final class ProtectedZoneMessageHandler {
         Level level = player.level();
         if (level.isClientSide) return;
 
-        if (level.getServer() != null && !ModGameRules.enableStructureProtection(level.getServer())) {
+        if (level.getServer() != null && ModGameRules.enableStructureProtection(level.getServer())) {
             LAST_ZONE.remove(player.getUUID());
             return;
         }

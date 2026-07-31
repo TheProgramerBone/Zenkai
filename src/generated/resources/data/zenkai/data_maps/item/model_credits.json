@@ -1,0 +1,32 @@
+{
+  "values": {
+    "zenkai:arcosian_race_boots": {
+      "author": "Kirbro",
+      "detail": "All Arcosian Model and Texture"
+    },
+    "zenkai:arcosian_race_chestplate": {
+      "author": "Kirbro",
+      "detail": "All Arcosian Model and Texture"
+    },
+    "zenkai:arcosian_race_helmet": {
+      "author": "Kirbro",
+      "detail": "All Arcosian Model and Texture"
+    },
+    "zenkai:arcosian_race_leggings": {
+      "author": "Kirbro",
+      "detail": "All Arcosian Model and Texture"
+    },
+    "zenkai:isaac_spawn_egg": {
+      "author": "Kirbro",
+      "detail": "Entity Model"
+    },
+    "zenkai:namekian_grass_block": {
+      "author": "IxWolxz",
+      "detail": "Texture"
+    },
+    "zenkai:shenlong_spawn_egg": {
+      "author": "Kirbro",
+      "detail": "Entity Model"
+    }
+  }
+}

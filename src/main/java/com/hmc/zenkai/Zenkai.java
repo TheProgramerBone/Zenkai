@@ -1,6 +1,8 @@
 package com.hmc.zenkai;
 
 
+import com.hmc.zenkai.client.gui.screens.ClientConfigScreen;
+import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.event.ClientZenkaiHooks;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
@@ -34,6 +36,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
@@ -44,6 +47,7 @@ import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
 import terrablender.api.Regions;
@@ -83,6 +87,7 @@ public class Zenkai {
 
         // Configs
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
         modEventBus.addListener(ServerConfig::onConfigLoad);
         modEventBus.addListener(CommonConfig::onConfigLoad);
@@ -132,6 +137,11 @@ public class Zenkai {
 
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
+
+            ModLoadingContext.get().getActiveContainer().registerExtensionPoint(
+                    IConfigScreenFactory.class,
+                    (container, parent) -> new ClientConfigScreen(parent));
+
             // Block entities
             BlockEntityRenderers.register(
                     ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(),

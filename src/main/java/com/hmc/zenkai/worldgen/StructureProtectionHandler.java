@@ -102,7 +102,7 @@ public final class StructureProtectionHandler {
 
     private static boolean isProtectedArea(Level level, BlockPos pos) {
         if (level.getServer() == null) return true;
-        if (!ModGameRules.enableStructureProtection(level.getServer())) return true;
+        if (ModGameRules.enableStructureProtection(level.getServer())) return true;
         return !NoHostileSpawnZones.isProtected(level.dimension(), pos.getX(), pos.getY(), pos.getZ());
     }
 
@@ -113,7 +113,7 @@ public final class StructureProtectionHandler {
     public static void onExplosionDetonate(ExplosionEvent.Detonate event) {
         Level level = event.getLevel();
         if (level.isClientSide || level.getServer() == null) return;
-        if (!ModGameRules.enableStructureProtection(level.getServer())) return;
+        if (ModGameRules.enableStructureProtection(level.getServer())) return;
 
         if (level.dimension() == ModDimensions.HTC_LEVEL) {
             event.getAffectedBlocks().clear();

@@ -73,6 +73,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent(ModItems.WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.YEMMA_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.SAIBAMAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
+        withExistingParent(ModItems.SHENLONG_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.ISAAC_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
 
         basicItem(ModItems.NAMEK_CRYSTAL.get());

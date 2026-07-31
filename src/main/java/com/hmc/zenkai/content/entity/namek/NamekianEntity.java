@@ -42,7 +42,7 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
     }
 
     @Override
-    public @NotNull InteractionResult mobInteract(Player player, InteractionHand hand) {
+    public @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (!this.level().isClientSide && !this.isTrading() && !this.isBaby()) {
             this.setTradingPlayer(player);
             this.openTradingScreen(player, this.getDisplayName(), 1);
@@ -92,5 +92,20 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
     @Override
     public boolean hurt(@NotNull DamageSource source, float amount) {
         return super.hurt(source, amount);
+    }
+
+    /** 20 minutos de juego. En Namek el tiempo está fijo a mediodía y no se puede dormir,
+     *  así que el ciclo de vainilla (dormir para renovar) no sirve. */
+    private static final int RESTOCK_INTERVAL = 24000;
+
+    private int restockTimer = 0;
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!this.level().isClientSide() && ++restockTimer >= RESTOCK_INTERVAL) {
+            restockTimer = 0;
+            this.getOffers().forEach(MerchantOffer::resetUses);
+        }
     }
 }

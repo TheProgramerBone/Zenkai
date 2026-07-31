@@ -151,6 +151,9 @@ public class ModItems {
     public static final DeferredItem<Item> SAIBAMAN_SPAWN_EGG = ITEMS.register("saibaman_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.SAIBAMAN,0xd3cf5d,0x18460d, new Item.Properties()));
 
+    public static final DeferredItem<Item> SHENLONG_SPAWN_EGG = ITEMS.register("shenlong_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.SHENLONG,0x2E8B57,0xD2B48C,new Item.Properties()));
+
     public static final DeferredItem<Item> ISAAC_SPAWN_EGG = ITEMS.register("isaac_spawn_egg",
     () -> new DeferredSpawnEggItem(ModEntities.ISAAC,0xe4c7c5,0x9c716f, new Item.Properties()));
 
