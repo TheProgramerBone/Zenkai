@@ -14,25 +14,11 @@ import com.hmc.zenkai.client.render_and_model_entities.entity.KiProjectileRender
 import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBallsRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.entity.*;
 import com.hmc.zenkai.event.ZenkaiTickHandlers;
-import com.hmc.zenkai.registry.ModBlocks;
-import com.hmc.zenkai.registry.ModBlockEntities;
-import com.hmc.zenkai.registry.ModEffects;
-import com.hmc.zenkai.registry.ModEntities;
-import com.hmc.zenkai.registry.ModDataComponents;
-import com.hmc.zenkai.registry.ModItems;
-import com.hmc.zenkai.registry.ModParticles;
-import com.hmc.zenkai.registry.ModSounds;
-import com.hmc.zenkai.registry.ModCommands;
-import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.registry.*;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.network.ModNetworking;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
-import com.hmc.zenkai.registry.ZenkaiDataAttachments;
-import com.hmc.zenkai.registry.ModCreativeModeTabs;
-import com.hmc.zenkai.registry.ModFeatures;
-import com.hmc.zenkai.registry.ModOverworldRegion;
-import com.hmc.zenkai.registry.ModSurfaceRules;
 import com.mojang.logging.LogUtils;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
@@ -42,6 +28,8 @@ import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.TippableArrowRenderer;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FireBlock;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -80,6 +68,7 @@ public class Zenkai {
 
         // Contenido
         ModCreativeModeTabs.register(modEventBus);
+        ModWoodTypes.init();
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
@@ -112,6 +101,19 @@ public class Zenkai {
 
     // ── Setup común (servidor + cliente) ─────────────────────────────────────
     private void commonSetup(final FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            FireBlock fire = (FireBlock) Blocks.FIRE;
+            fire.setFlammable(ModBlocks.AJISA_LOG.get(), 5, 5);
+            fire.setFlammable(ModBlocks.AJISA_WOOD.get(), 5, 5);
+            fire.setFlammable(ModBlocks.STRIPPED_AJISA_LOG.get(), 5, 5);
+            fire.setFlammable(ModBlocks.STRIPPED_AJISA_WOOD.get(), 5, 5);
+            fire.setFlammable(ModBlocks.AJISA_PLANKS.get(), 5, 20);
+            fire.setFlammable(ModBlocks.AJISA_SLAB.get(), 5, 20);
+            fire.setFlammable(ModBlocks.AJISA_STAIRS.get(), 5, 20);
+            fire.setFlammable(ModBlocks.AJISA_FENCE.get(), 5, 20);
+            fire.setFlammable(ModBlocks.AJISA_FENCE_GATE.get(), 5, 20);
+            fire.setFlammable(ModBlocks.AJISA_LEAVES.get(), 30, 60);
+        });
 
     }
 

@@ -51,6 +51,16 @@ public class ModItems {
     public static final DeferredItem<Item> SHADOW_KINTOUN_ITEM = ITEMS.registerItem("kintoun_shadow_item",
             ShadowKintounItem::new, new Item.Properties().stacksTo(1));
 
+    // ── Recursos exclusivos de Namek ─────────────────────────────────────────
+    public static final DeferredItem<Item> NAMEK_CRYSTAL = ITEMS.registerItem("namek_crystal",
+            Item::new, new Item.Properties());
+
+    public static final DeferredItem<Item> ENERGY_CRYSTAL = ITEMS.registerItem("energy_crystal",
+            Item::new, new Item.Properties());
+
+    public static final DeferredItem<Item> SACRED_STONE = ITEMS.registerItem("sacred_stone",
+            Item::new, new Item.Properties());
+
     public static final DeferredItem<Item> TERRAGEM = ITEMS.registerItem("terragem",
             Item::new, new Item.Properties());
 

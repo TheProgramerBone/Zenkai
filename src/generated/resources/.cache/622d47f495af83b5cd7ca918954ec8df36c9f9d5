@@ -1,11 +1,25 @@
-// 1.21.1	2026-07-29T10:53:19.2455963	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-07-30T19:40:14.8949024	Tags for minecraft:item mod id zenkai
 bc1c8630810639acf3b6c830e48ea4a2367ddc77 data/minecraft/tags/item/axes.json
 597965b3bad01dbd14308ae360d34ff03aba1ce4 data/minecraft/tags/item/dyeable.json
 b059aedfc662d77aac2804619e91866ee9cf4ecc data/minecraft/tags/item/enchantable/armor.json
+98d5f1f9c43437de3d89e57fa387c66a5a6405bf data/minecraft/tags/item/fence_gates.json
 fe6536c3d36f31cf01d7dc10cf4c8ec5e59a4f91 data/minecraft/tags/item/hoes.json
+7e85adb63a2a408a9c60a9ed3d9d155ebacc5a81 data/minecraft/tags/item/leaves.json
+9f343c7e578238b731c8e2ae90110c3eae28dffc data/minecraft/tags/item/logs_that_burn.json
 d7db6457ffd848ca21aaf9c4d3ba6644eced4cfa data/minecraft/tags/item/pickaxes.json
+cdd3617c7cf6df75b2afdcd664a01219e6b36a36 data/minecraft/tags/item/planks.json
+1f60c81073ae1365563f3cb183dd446e7e04b752 data/minecraft/tags/item/saplings.json
 074574c8d827ad3c25c8c505ab46e2bc0efc7c81 data/minecraft/tags/item/shovels.json
+9dfac68a481565637dcfb2d36ac5275ada80f5e0 data/minecraft/tags/item/small_flowers.json
 49608cfb38c6b9bcc97695d8cfcb75db8e722bf7 data/minecraft/tags/item/swords.json
 b059aedfc662d77aac2804619e91866ee9cf4ecc data/minecraft/tags/item/trimmable_armor.json
+955e6811c5bb3ae05014661b2509d95fa30b6e07 data/minecraft/tags/item/wooden_buttons.json
+8a3d56980dfaf98214018d6ec099f55b3003dc94 data/minecraft/tags/item/wooden_doors.json
+694ba63bff1eb3f8e9db92fc132516115083b6bb data/minecraft/tags/item/wooden_fences.json
+4dcbd10eb440667ca54a40683a34f6ffe15f9813 data/minecraft/tags/item/wooden_pressure_plates.json
+d287a79e872d1dc165e145206a990705a3cfd757 data/minecraft/tags/item/wooden_slabs.json
+75c8737a6f3024ee2ab0d55d157d1d314eeea305 data/minecraft/tags/item/wooden_stairs.json
+f51b1d519ecda61e7e1bab31ee1cad68f9fee275 data/minecraft/tags/item/wooden_trapdoors.json
+9f343c7e578238b731c8e2ae90110c3eae28dffc data/zenkai/tags/item/ajisa_logs.json
 35a86cae77384b327c7e666ab7e608609c407cce data/zenkai/tags/item/dragon_balls_item.json
 d4eb231243436be934303d94d7c3f718d875b9ed data/zenkai/tags/item/keeps_hair.json

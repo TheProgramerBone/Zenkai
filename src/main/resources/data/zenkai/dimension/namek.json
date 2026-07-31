@@ -7,27 +7,43 @@
       "type": "minecraft:multi_noise",
       "biomes": [
         {
-          "biome": "zenkai:namek_plains",
+          "biome": "zenkai:namek_ocean",
           "parameters": {
-            "temperature": [-1.0, 1.0],
-            "humidity": [-1.0, 1.0],
-            "continentalness": [-0.11, 1.0],
-            "erosion": [0.05, 1.0],
-            "depth": [0.0, 1.0],
-            "weirdness": [-1.0, 1.0],
-            "offset": 0.0
+            "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
+            "continentalness": [-1.2, -0.19], "erosion": [-1.0, 1.0],
+            "depth": [0.0, 1.0], "weirdness": [-1.0, 1.0], "offset": 0.0
+          }
+        },
+        {
+          "biome": "zenkai:namek_shore",
+          "parameters": {
+            "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
+            "continentalness": [-0.19, -0.18], "erosion": [-1.0, 1.0],
+            "depth": [0.0, 1.0], "weirdness": [-1.0, 1.0], "offset": 0.0
           }
         },
         {
           "biome": "zenkai:namek_hills",
           "parameters": {
-            "temperature": [-1.0, 1.0],
-            "humidity": [-1.0, 1.0],
-            "continentalness": [0.03, 1.0],
-            "erosion": [-1.0, 0.05],
-            "depth": [0.0, 1.0],
-            "weirdness": [-1.0, 1.0],
-            "offset": 0.0
+            "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
+            "continentalness": [-0.15, 1.0], "erosion": [-1.0, 0.05],
+            "depth": [0.0, 1.0], "weirdness": [-1.0, 1.0], "offset": 0.0
+          }
+        },
+        {
+          "biome": "zenkai:namek_forest",
+          "parameters": {
+            "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
+            "continentalness": [-0.15, 1.0], "erosion": [0.05, 1.0],
+            "depth": [0.0, 1.0], "weirdness": [-1.0, 1.0], "vegetation": [0.1, 1.0], "offset": 0.0
+          }
+        },
+        {
+          "biome": "zenkai:namek_plains",
+          "parameters": {
+            "temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0],
+            "continentalness": [-0.15, 1.0], "erosion": [0.05, 1.0],
+            "depth": [0.0, 1.0], "weirdness": [-1.0, 1.0], "vegetation": [-1.0, 0.1], "offset": 0.0
           }
         }
       ]

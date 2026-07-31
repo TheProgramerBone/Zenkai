@@ -204,6 +204,82 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('L', Items.LAPIS_LAZULI)
                 .define('C', itemtag("c:circuits/advanced"))
                 .unlockedBy("has_advanced",has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+
+        // ── Ajisa ────────────────────────────────────────────────────────────
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.BUILDING_BLOCKS, ModBlocks.AJISA_PLANKS.get(), 4)
+                .requires(ModTags.Items.AJISA_LOGS)
+                .unlockedBy("has_ajisa_log", has(ModTags.Items.AJISA_LOGS)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.AJISA_WOOD.get(), 3)
+                .pattern("LL").pattern("LL")
+                .define('L', ModBlocks.AJISA_LOG.get())
+                .unlockedBy("has_ajisa_log", has(ModBlocks.AJISA_LOG.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.STRIPPED_AJISA_WOOD.get(), 3)
+                .pattern("LL").pattern("LL")
+                .define('L', ModBlocks.STRIPPED_AJISA_LOG.get())
+                .unlockedBy("has_stripped_ajisa_log", has(ModBlocks.STRIPPED_AJISA_LOG.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.AJISA_STAIRS.get(), 4)
+                .pattern("P  ").pattern("PP ").pattern("PPP")
+                .define('P', ModBlocks.AJISA_PLANKS.get())
+                .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.AJISA_SLAB.get(), 6)
+                .pattern("PPP")
+                .define('P', ModBlocks.AJISA_PLANKS.get())
+                .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.AJISA_FENCE.get(), 3)
+                .pattern("PSP").pattern("PSP")
+                .define('P', ModBlocks.AJISA_PLANKS.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, ModBlocks.AJISA_FENCE_GATE.get(), 1)
+                .pattern("SPS").pattern("SPS")
+                .define('P', ModBlocks.AJISA_PLANKS.get())
+                .define('S', Items.STICK)
+                .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, ModBlocks.AJISA_DOOR.get(), 3)
+                .pattern("PP").pattern("PP").pattern("PP")
+                .define('P', ModBlocks.AJISA_PLANKS.get())
+                .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, ModBlocks.AJISA_TRAPDOOR.get(), 2)
+                .pattern("PPP").pattern("PPP")
+                .define('P', ModBlocks.AJISA_PLANKS.get())
+                .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.REDSTONE, ModBlocks.AJISA_BUTTON.get(), 1)
+                .requires(ModBlocks.AJISA_PLANKS.get())
+                .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.REDSTONE, ModBlocks.AJISA_PRESSURE_PLATE.get(), 1)
+                .pattern("PP")
+                .define('P', ModBlocks.AJISA_PLANKS.get())
+                .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
+
+        // ── Menas de Namek ───────────────────────────────────────────────────
+        // Solo hacen falta para el bloque con Toque de Seda: al picarlas normal sueltan ya
+        // el item vanilla, que tiene sus propias recetas de fundido.
+
+        oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_IRON_ORE.get()),   RecipeCategory.MISC, Items.IRON_INGOT,   0.7f, 200, "namekian_iron");
+        oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_IRON_ORE.get()),   RecipeCategory.MISC, Items.IRON_INGOT,   0.7f, 100, "namekian_iron");
+        oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_GOLD_ORE.get()),   RecipeCategory.MISC, Items.GOLD_INGOT,   1.0f, 200, "namekian_gold");
+        oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_GOLD_ORE.get()),   RecipeCategory.MISC, Items.GOLD_INGOT,   1.0f, 100, "namekian_gold");
+        oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_COPPER_ORE.get()), RecipeCategory.MISC, Items.COPPER_INGOT, 0.7f, 200, "namekian_copper");
+        oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_COPPER_ORE.get()), RecipeCategory.MISC, Items.COPPER_INGOT, 0.7f, 100, "namekian_copper");
+        oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_COAL_ORE.get()),   RecipeCategory.MISC, Items.COAL,         0.1f, 200, "namekian_coal");
+        oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_COAL_ORE.get()),   RecipeCategory.MISC, Items.COAL,         0.1f, 100, "namekian_coal");
+        oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_LAPIS_ORE.get()),  RecipeCategory.MISC, Items.LAPIS_LAZULI, 0.2f, 200, "namekian_lapis");
+        oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_LAPIS_ORE.get()),  RecipeCategory.MISC, Items.LAPIS_LAZULI, 0.2f, 100, "namekian_lapis");
+        oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_REDSTONE_ORE.get()), RecipeCategory.MISC, Items.REDSTONE,   0.7f, 200, "namekian_redstone");
+        oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_REDSTONE_ORE.get()), RecipeCategory.MISC, Items.REDSTONE,   0.7f, 100, "namekian_redstone");
+        oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_DIAMOND_ORE.get()),  RecipeCategory.MISC, Items.DIAMOND,    1.0f, 200, "namekian_diamond");
+        oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_DIAMOND_ORE.get()),  RecipeCategory.MISC, Items.DIAMOND,    1.0f, 100, "namekian_diamond");
     }
 
     protected static void oreSmelting(@NotNull RecipeOutput recipeOutput, List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult,

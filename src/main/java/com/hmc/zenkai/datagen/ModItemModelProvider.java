@@ -1,6 +1,7 @@
 package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.registry.ModBlocks;
 import com.hmc.zenkai.registry.ModItems;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
@@ -36,6 +37,23 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.HALO.get());
         basicItem(ModItems.SCOUTER_RADAR_UPGRADE.get());
 
+        // El item de la puerta es una textura plana propia, no el modelo de bloque.
+        basicItem(ModBlocks.AJISA_DOOR.get().asItem());
+
+        withExistingParent("ajisa_fence", mcLoc("block/fence_inventory"))
+                .texture("texture", modLoc("block/ajisa_planks"));
+        withExistingParent("ajisa_button", mcLoc("block/button_inventory"))
+                .texture("texture", modLoc("block/ajisa_planks"));
+        withExistingParent("ajisa_log", modLoc("block/ajisa_log"));
+        withExistingParent("stripped_ajisa_log", modLoc("block/stripped_ajisa_log"));
+        withExistingParent("ajisa_wood", modLoc("block/ajisa_wood"));
+        withExistingParent("stripped_ajisa_wood", modLoc("block/stripped_ajisa_wood"));
+        withExistingParent("ajisa_stairs", modLoc("block/ajisa_stairs"));
+        withExistingParent("ajisa_slab", modLoc("block/ajisa_slab"));
+        withExistingParent("ajisa_fence_gate", modLoc("block/ajisa_fence_gate"));
+        withExistingParent("ajisa_trapdoor", modLoc("block/ajisa_trapdoor_bottom"));
+        withExistingParent("ajisa_pressure_plate", modLoc("block/ajisa_pressure_plate"));
+
         handheldItem(ModItems.TERRAGEM_SWORD);
         handheldItem(ModItems.TERRAGEM_PICKAXE);
         handheldItem(ModItems.TERRAGEM_AXE);
@@ -53,6 +71,26 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent(ModItems.YEMMA_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.SAIBAMAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.ISAAC_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
+
+        basicItem(ModItems.NAMEK_CRYSTAL.get());
+        basicItem(ModItems.ENERGY_CRYSTAL.get());
+        basicItem(ModItems.SACRED_STONE.get());
+
+        // Escaleras y losas heredan del modelo de bloque; los muros necesitan el modelo
+        // "inventory" de vainilla, porque el de bloque son piezas sueltas sin forma completa.
+        withExistingParent("sacred_stone_stairs", modLoc("block/sacred_stone_stairs"));
+        withExistingParent("sacred_stone_slab", modLoc("block/sacred_stone_slab"));
+        withExistingParent("polished_sacred_stone_stairs", modLoc("block/polished_sacred_stone_stairs"));
+        withExistingParent("polished_sacred_stone_slab", modLoc("block/polished_sacred_stone_slab"));
+        withExistingParent("sacred_stone_brick_stairs", modLoc("block/sacred_stone_brick_stairs"));
+        withExistingParent("sacred_stone_brick_slab", modLoc("block/sacred_stone_brick_slab"));
+
+        withExistingParent("sacred_stone_wall", mcLoc("block/wall_inventory"))
+                .texture("wall", modLoc("block/sacred_stone_block"));
+        withExistingParent("polished_sacred_stone_wall", mcLoc("block/wall_inventory"))
+                .texture("wall", modLoc("block/polished_sacred_stone"));
+        withExistingParent("sacred_stone_brick_wall", mcLoc("block/wall_inventory"))
+                .texture("wall", modLoc("block/sacred_stone_bricks"));
     }
 
     private void trimmedArmorItem(DeferredItem<ArmorItem> itemDeferredItem) {

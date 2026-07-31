@@ -13,6 +13,11 @@ public class ModBiomes {
     public static final ResourceKey<Biome> HFIL_BADLANDS = register("hfil_badlands");
     public static final ResourceKey<Biome> HFIL_WASTES   = register("hfil_wastes");
     public static final ResourceKey<Biome> HFIL_DUNES    = register("hfil_dunes");
+    public static final ResourceKey<Biome> NAMEK_PLAINS = register("namek_plains");
+    public static final ResourceKey<Biome> NAMEK_HILLS  = register("namek_hills");
+    public static final ResourceKey<Biome> NAMEK_OCEAN  = register("namek_ocean");
+    public static final ResourceKey<Biome> NAMEK_SHORE  = register("namek_shore");
+    public static final ResourceKey<Biome> NAMEK_FOREST = register("namek_forest");
 
         private static ResourceKey<Biome> register(String name)
         {

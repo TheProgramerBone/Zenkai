@@ -9,12 +9,14 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.levelgen.structure.Structure;
 
 public class ModTags {
     public static class Blocks {
         public static final TagKey<Block> NEEDS_TERRAGEM_TOOL = createTag("needs_terragem_tool");
         public static final TagKey<Block> INCORRECT_FOR_TERRAGEM_TOOL = createTag("incorrect_for_terragem_tool");
         public static final TagKey<Block> DRAGON_BALLS_BLOCK = createTag("dragon_balls_block");
+        public static final TagKey<Block> NAMEKIAN_ORE_REPLACEABLES = createTag("namekian_ore_replaceables");
 
         private static TagKey<Block> createTag(String name) {
             return BlockTags.create(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,name));
@@ -26,6 +28,7 @@ public class ModTags {
 
         public static final TagKey<Item> DRAGON_BALLS_ITEM = createTag("dragon_balls_item");
         public static final TagKey<Item> KEEPS_HAIR = createTag("keeps_hair");
+        public static final TagKey<Item> AJISA_LOGS = createTag("ajisa_logs");
 
         private static TagKey<Item> createTag(String name) {
             return ItemTags.create(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,name));
@@ -34,7 +37,7 @@ public class ModTags {
     }
 
     public static class Structures {
-        public static final TagKey<net.minecraft.world.level.levelgen.structure.Structure> DRAGON_BALLS =
+        public static final TagKey<Structure> DRAGON_BALLS =
                 TagKey.create(Registries.STRUCTURE,
                         ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "dragon_balls"));
     }

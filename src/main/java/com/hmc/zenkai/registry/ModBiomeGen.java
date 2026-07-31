@@ -33,6 +33,8 @@ public final class ModBiomeGen {
     private static final int SKY_COLOR       = 3803658; // #3A0A0A
     private static final int WATER_COLOR     = 9044739; // #8A0303
     private static final int WATER_FOG_COLOR = 4849921; // #4A0101
+    private static final int NAMEK_GRASS   = 1725043; // #1A5273
+    private static final int NAMEK_FOLIAGE = 2055820; // #1F5E8C
 
     public static void bootstrap(BootstrapContext<Biome> ctx) {
         HolderGetter<PlacedFeature> features = ctx.lookup(Registries.PLACED_FEATURE);
@@ -43,6 +45,11 @@ public final class ModBiomeGen {
         ctx.register(ModBiomes.HFIL_WASTES,     hfilWastes(features, carvers));
         ctx.register(ModBiomes.HFIL_DUNES,      hfilDunes(features, carvers));
         ctx.register(ModBiomes.OTHERWORLD, otherworld(features, carvers));
+        ctx.register(ModBiomes.NAMEK_PLAINS, namek(features, carvers, NamekVeg.PLAINS));
+        ctx.register(ModBiomes.NAMEK_FOREST, namek(features, carvers, NamekVeg.FOREST));
+        ctx.register(ModBiomes.NAMEK_HILLS,  namek(features, carvers, NamekVeg.HILLS));
+        ctx.register(ModBiomes.NAMEK_SHORE,  namek(features, carvers,NamekVeg.SHORE));
+        ctx.register(ModBiomes.NAMEK_OCEAN,  namek(features, carvers, NamekVeg.OCEAN));
     }
 
     // ── Overworld ────────────────────────────────────────────────────────────
@@ -197,6 +204,86 @@ public final class ModBiomeGen {
                         .waterFogColor(4849664)
                         .grassColorOverride(6344510)
                         .foliageColorOverride(5028651)
+                        .build())
+                .mobSpawnSettings(new MobSpawnSettings.Builder().build())
+                .generationSettings(gen.build())
+                .build();
+    }
+
+    /** Qué vegetación lleva cada bioma de Namek. OCEAN no lleva ninguna. */
+    private enum NamekVeg { PLAINS, FOREST, HILLS, SHORE, OCEAN }
+
+    /**
+     * Los cinco biomas de Namek comparten cielo, niebla y agua a propósito: la identidad la
+     * dan el agua verde y la hierba, no una paleta distinta por bioma. Solo varía el tono de
+     * hierba de las colinas.
+     */
+    private static Biome namek(HolderGetter<PlacedFeature> features,
+                               HolderGetter<ConfiguredWorldCarver<?>> carvers,
+                               NamekVeg veg) {
+        BiomeGenerationSettings.Builder gen = new BiomeGenerationSettings.Builder(features, carvers);
+
+        // Carvers propios, con la probabilidad recortada. En el océano no se excava.
+        if (veg != NamekVeg.OCEAN) {
+            gen.addCarver(GenerationStep.Carving.AIR, ModCarvers.NAMEK_CAVE);   // ⚠ firma
+            gen.addCarver(GenerationStep.Carving.AIR, ModCarvers.NAMEK_CANYON);
+        }
+
+        BiomeDefaultFeatures.addDefaultMonsterRoom(gen);
+        BiomeDefaultFeatures.addDefaultUndergroundVariety(gen);
+        BiomeDefaultFeatures.addDefaultSprings(gen);
+
+        // Menas de Namek. El orden es el de vainilla y estas features son namespace zenkai,
+        // así que no pueden entrar en conflicto de orden con ningún bioma ajeno.
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_COAL_UPPER);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_COAL_LOWER);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_IRON_UPPER);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_IRON_MIDDLE);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_IRON_SMALL);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_COPPER);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_GOLD);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_GOLD_LOWER);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_REDSTONE);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_REDSTONE_LOWER);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_LAPIS);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_LAPIS_BURIED);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_DIAMOND);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_DIAMOND_MEDIUM);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_DIAMOND_LARGE);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_DIAMOND_BURIED);
+
+        // Vegetación. Árboles primero y matas después, que es el orden de vainilla: si la
+        // hierba fuera antes, los troncos brotarían encima y la borrarían.
+        switch (veg) {
+            case FOREST -> {
+                gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.AJISA_FOREST);
+                gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.AJISA_FLOWERS);
+                gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.NAMEK_GRASS);
+            }
+            case PLAINS -> {
+                gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.AJISA_PLAINS);
+                gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.AJISA_FLOWERS);
+                gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.NAMEK_GRASS);
+            }
+            case HILLS -> {
+                gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.AJISA_HILLS);
+                gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.NAMEK_GRASS);
+            }
+            case SHORE -> gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.AJISA_SHORE);
+            case OCEAN -> { }
+        }
+
+        return new Biome.BiomeBuilder()
+                .hasPrecipitation(false)
+                .temperature(0.8F)
+                .downfall(0.0F)
+                .specialEffects(new BiomeSpecialEffects.Builder()
+                        .skyColor(3977375)
+                        .fogColor(3969183)
+                        .waterColor(2529116)
+                        .waterFogColor(6870166)
+                        .grassColorOverride(NAMEK_GRASS)
+                        .foliageColorOverride(NAMEK_FOLIAGE)
                         .build())
                 .mobSpawnSettings(new MobSpawnSettings.Builder().build())
                 .generationSettings(gen.build())

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "zenkai:block/stripped_ajisa_log",
+    "side": "zenkai:block/stripped_ajisa_log"
+  }
+}

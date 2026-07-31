@@ -1,5 +1,15 @@
-// 1.21.1	2026-07-29T10:53:19.2405967	Item Models: zenkai
+// 1.21.1	2026-07-30T18:51:26.343809	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
+ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
+f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
+255e7cf47fba1ee904ea72d9c27f6c4ca045d48e assets/zenkai/models/item/ajisa_fence.json
+4146f1a2380f049304f9b509ea324a2a8d1a4f38 assets/zenkai/models/item/ajisa_fence_gate.json
+70c2ae46d88c17390cfa0a4998d4e1afaeeb15e9 assets/zenkai/models/item/ajisa_log.json
+b0a7b354964342f073a660039265a4d01642e767 assets/zenkai/models/item/ajisa_pressure_plate.json
+d3a6d02ab262b3d35ec2bb2693eb67ee7045e1e0 assets/zenkai/models/item/ajisa_slab.json
+797d65aa66b272ff60b4d440d14910bf129b7a32 assets/zenkai/models/item/ajisa_stairs.json
+a357c265f4415eb8935da83ae9525e556c9976fa assets/zenkai/models/item/ajisa_trapdoor.json
+54318e2547f738f15df6acb221c4de98c891566a assets/zenkai/models/item/ajisa_wood.json
 e679a4c9273e0f8ec5861c5d4a448f2b69437bca assets/zenkai/models/item/basic_circuit.json
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
 c6fdd6445bc58722d479b71d0c927092b728dc33 assets/zenkai/models/item/halo.json
@@ -12,6 +22,8 @@ cf0c021ac47f4c96a569e2497d53258d04d5a607 assets/zenkai/models/item/kintoun_item.
 8a2c41f065a7df96ee3642e71ebc4ae4056347ea assets/zenkai/models/item/scouter_radar_upgrade.json
 340e5a499537ca1c3856387e5dbacb789e98e351 assets/zenkai/models/item/senzu_bean.json
 b2b33d40b8094e7f9ef4314e5b8c7c9f0ecb27c0 assets/zenkai/models/item/space_pod_item.json
+473d8df53841e77634ca9d63306d43ca492a958b assets/zenkai/models/item/stripped_ajisa_log.json
+7397baab3cc0cf09fa8484a957d0aed2538445f0 assets/zenkai/models/item/stripped_ajisa_wood.json
 6597c75a48f1a408e92c3ea1aef5faec47f11f0f assets/zenkai/models/item/terragem.json
 ffe3edd9855cafb3d9bfecd0f6c05503377d77e3 assets/zenkai/models/item/terragem_axe.json
 da6df73379099f2151c636a9a62694906fe894f1 assets/zenkai/models/item/terragem_boots.json
