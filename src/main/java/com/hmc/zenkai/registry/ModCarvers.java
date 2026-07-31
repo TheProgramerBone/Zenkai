@@ -36,8 +36,8 @@ public final class ModCarvers {
     public static void bootstrap(BootstrapContext<ConfiguredWorldCarver<?>> ctx) {
         HolderGetter<Block> blocks = ctx.lookup(Registries.BLOCK);
 
-        ctx.register(NAMEK_CAVE, WorldCarver.CAVE.configured(new CaveCarverConfiguration(   // ⚠ API
-                0.08F,
+        ctx.register(NAMEK_CAVE, WorldCarver.CAVE.configured(new CaveCarverConfiguration(
+                0.10F,
                 UniformHeight.of(VerticalAnchor.aboveBottom(8), VerticalAnchor.absolute(180)),
                 UniformFloat.of(0.1F, 0.9F),
                 VerticalAnchor.aboveBottom(8),

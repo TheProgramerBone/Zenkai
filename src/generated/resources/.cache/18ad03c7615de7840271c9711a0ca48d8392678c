@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-30T18:51:26.343809	Item Models: zenkai
+// 1.21.1	2026-07-30T22:06:03.40953	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -12,12 +12,24 @@ a357c265f4415eb8935da83ae9525e556c9976fa assets/zenkai/models/item/ajisa_trapdoo
 54318e2547f738f15df6acb221c4de98c891566a assets/zenkai/models/item/ajisa_wood.json
 e679a4c9273e0f8ec5861c5d4a448f2b69437bca assets/zenkai/models/item/basic_circuit.json
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
+b6f3572016d27a67567a73dd90a74cf43defc6f7 assets/zenkai/models/item/energy_crystal.json
 c6fdd6445bc58722d479b71d0c927092b728dc33 assets/zenkai/models/item/halo.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/isaac_spawn_egg.json
 cf0c021ac47f4c96a569e2497d53258d04d5a607 assets/zenkai/models/item/kintoun_item.json
 46caf766bc191626aa6f23e3bb63262dbb2d2895 assets/zenkai/models/item/kintoun_shadow_item.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_warrior_spawn_egg.json
+5a63dbd9692fed9a90b4c6604d7ffcfebe3555cc assets/zenkai/models/item/namek_crystal.json
+225803ef861e83026d9156f3f42284f5cdfa9d38 assets/zenkai/models/item/polished_sacred_stone_slab.json
+9ae932bb2ddc11cb7be4cc6f97f8af866d320233 assets/zenkai/models/item/polished_sacred_stone_stairs.json
+1aadc798c09d7d4459915d777d51a0e3940a2211 assets/zenkai/models/item/polished_sacred_stone_wall.json
+2c9476ba6af9b117de6bb1e6d746c5e800e6c9b8 assets/zenkai/models/item/sacred_stone.json
+a21c89c45fd490a4a84157f210dee37391ac16fc assets/zenkai/models/item/sacred_stone_brick_slab.json
+0d8bb44a60c67db7e77866a7575b3d13c10c69ab assets/zenkai/models/item/sacred_stone_brick_stairs.json
+b1b44d67f3636fa4da9814085ddda7d70b935768 assets/zenkai/models/item/sacred_stone_brick_wall.json
+86e89c8f387405946211feebb1bce2272550c1b9 assets/zenkai/models/item/sacred_stone_slab.json
+15937199fbe16d3d8e7f675c3b4e111143f13a7c assets/zenkai/models/item/sacred_stone_stairs.json
+cbc58156863501ef3999d1f3f7a691697efd9c13 assets/zenkai/models/item/sacred_stone_wall.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/saibaman_spawn_egg.json
 8a2c41f065a7df96ee3642e71ebc4ae4056347ea assets/zenkai/models/item/scouter_radar_upgrade.json
 340e5a499537ca1c3856387e5dbacb789e98e351 assets/zenkai/models/item/senzu_bean.json

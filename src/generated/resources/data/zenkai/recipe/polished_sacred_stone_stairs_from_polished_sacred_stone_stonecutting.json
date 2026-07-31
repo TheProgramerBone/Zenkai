@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:polished_sacred_stone"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:polished_sacred_stone_stairs"
+  }
+}

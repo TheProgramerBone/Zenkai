@@ -47,6 +47,9 @@ public class ModConfiguredFeatures {
     public static final ResourceKey<ConfiguredFeature<?, ?>> AJISA_TREE = registerKey("ajisa_tree");
     public static final ResourceKey<ConfiguredFeature<?, ?>> AJISA_FLOWER_PATCH = registerKey("ajisa_flower_patch");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_GRASS_PATCH  = registerKey("namek_grass_patch");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_CRYSTAL_ORE  = registerKey("namek_crystal_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> ENERGY_CRYSTAL_ORE = registerKey("energy_crystal_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> SACRED_STONE_ORE   = registerKey("sacred_stone_ore");
 
     public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
         RuleTest stoneReplaceables = new TagMatchTest(BlockTags.STONE_ORE_REPLACEABLES);
@@ -79,6 +82,9 @@ public class ModConfiguredFeatures {
         namekOre(context, NAMEK_DIAMOND_MEDIUM, namekRock, ModBlocks.NAMEKIAN_DIAMOND_ORE,   8, 0.5F);
         namekOre(context, NAMEK_DIAMOND_LARGE,  namekRock, ModBlocks.NAMEKIAN_DIAMOND_ORE,  12, 0.7F);
         namekOre(context, NAMEK_DIAMOND_BURIED, namekRock, ModBlocks.NAMEKIAN_DIAMOND_ORE,   8, 1.0F);
+        namekOre(context, NAMEK_CRYSTAL_ORE,  namekRock, ModBlocks.NAMEK_CRYSTAL_ORE,   5, 0.0F);
+        namekOre(context, ENERGY_CRYSTAL_ORE, namekRock, ModBlocks.ENERGY_CRYSTAL_ORE,  4, 0.5F);
+        namekOre(context, SACRED_STONE_ORE,   namekRock, ModBlocks.SACRED_STONE_ORE,   12, 0.0F);
 
         register(context, AJISA_TREE, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
                 BlockStateProvider.simple(ModBlocks.AJISA_LOG.get()),

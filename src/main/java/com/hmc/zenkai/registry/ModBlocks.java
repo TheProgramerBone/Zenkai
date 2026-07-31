@@ -386,13 +386,6 @@ public class ModBlocks {
     public static final DeferredBlock<Block> NAMEKIAN_DIAMOND_ORE = registerBlock("namekian_diamond_ore",
             ()-> new DropExperienceBlock(UniformInt.of(3, 7), oreProps()));
 
-    public static final DeferredBlock<Block> NAMEKIAN_STRUCTURE_BLOCK = registerBlock("namekian_structure_block",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.QUARTZ)));
-
     // ── Ajisa (madera de Namek) ──────────────────────────────────────────────
 
     /** Generador del sapling. La ConfiguredFeature se registra en la fase 2b; hasta

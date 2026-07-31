@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "bottom": "zenkai:block/sacred_stone_bricks",
+    "side": "zenkai:block/sacred_stone_bricks",
+    "top": "zenkai:block/sacred_stone_bricks"
+  }
+}

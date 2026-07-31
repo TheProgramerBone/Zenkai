@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-30T18:40:26.6140633	Tags for minecraft:block mod id zenkai
+// 1.21.1	2026-07-30T22:06:03.4180381	Tags for minecraft:block mod id zenkai
 859f95cec43ca2e9aa57c8607cfde9edbafb8fbc data/minecraft/tags/block/dead_bush_may_place_on.json
 b9a230b994fbd179ce5a7ba0bfdf6b8618083e4d data/minecraft/tags/block/dirt.json
 98d5f1f9c43437de3d89e57fa387c66a5a6405bf data/minecraft/tags/block/fence_gates.json
@@ -6,15 +6,19 @@ b9a230b994fbd179ce5a7ba0bfdf6b8618083e4d data/minecraft/tags/block/dirt.json
 9f343c7e578238b731c8e2ae90110c3eae28dffc data/minecraft/tags/block/logs_that_burn.json
 3e87509d10ac46f3d7da08f41f893b23826b85a3 data/minecraft/tags/block/mineable/axe.json
 7e85adb63a2a408a9c60a9ed3d9d155ebacc5a81 data/minecraft/tags/block/mineable/hoe.json
-eb2a688235fbc8a37cbe23c7802d4f6b62b3e054 data/minecraft/tags/block/mineable/pickaxe.json
-7df6380350e878ae716bfc7d574b47cd7ea4d369 data/minecraft/tags/block/mineable/shovel.json
-beedc6158a3b73d5c546ae40c0d3e8a9f75d678a data/minecraft/tags/block/needs_iron_tool.json
-a324089ebe08b40905888c21f479ed04f212ede3 data/minecraft/tags/block/needs_stone_tool.json
+3b81f6515e4998107a8c12e9efcbec376b9d489c data/minecraft/tags/block/mineable/pickaxe.json
+2aaed46652e03e8f8b19925fc297fb7c1abf4acf data/minecraft/tags/block/mineable/shovel.json
+2c7b0f41fde8197ba2a1e7904713ca936e3f3247 data/minecraft/tags/block/needs_diamond_tool.json
+b005e7a225b167e6bbc43c6957a09c2f923c6d99 data/minecraft/tags/block/needs_iron_tool.json
+41d95f82f2231027773b9dd22de108ac1849d222 data/minecraft/tags/block/needs_stone_tool.json
 47b1e781a380a609b727e3314838b7154444a6de data/minecraft/tags/block/overworld_carver_replaceables.json
 cdd3617c7cf6df75b2afdcd664a01219e6b36a36 data/minecraft/tags/block/planks.json
 1f60c81073ae1365563f3cb183dd446e7e04b752 data/minecraft/tags/block/saplings.json
 33c0b4afe0099a0962fd120a2b69d17e9798ac0f data/minecraft/tags/block/sculk_replaceable.json
+104a5ce74badec7438234762582e8c8c6d0a37a2 data/minecraft/tags/block/slabs.json
 9dfac68a481565637dcfb2d36ac5275ada80f5e0 data/minecraft/tags/block/small_flowers.json
+599a69b603564e35a02894f05e69d4afa8da24f0 data/minecraft/tags/block/stairs.json
+f251e92937555b4b142772d348ebcde45092c8e9 data/minecraft/tags/block/walls.json
 955e6811c5bb3ae05014661b2509d95fa30b6e07 data/minecraft/tags/block/wooden_buttons.json
 8a3d56980dfaf98214018d6ec099f55b3003dc94 data/minecraft/tags/block/wooden_doors.json
 694ba63bff1eb3f8e9db92fc132516115083b6bb data/minecraft/tags/block/wooden_fences.json

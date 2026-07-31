@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 1.0,
+  "group": "namek_crystal",
+  "ingredient": {
+    "item": "zenkai:namek_crystal_ore"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:namek_crystal"
+  }
+}

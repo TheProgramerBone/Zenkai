@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "zenkai:energy_crystal_block"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "zenkai:blocks/energy_crystal_block"
+}

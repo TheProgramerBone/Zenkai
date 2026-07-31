@@ -56,6 +56,10 @@ public class ModPlacedFeatures {
     public static final ResourceKey<PlacedFeature> AJISA_SHORE  = registerKey("ajisa_shore");
     public static final ResourceKey<PlacedFeature> AJISA_FLOWERS = registerKey("ajisa_flowers");
     public static final ResourceKey<PlacedFeature> NAMEK_GRASS   = registerKey("namek_grass");
+    public static final ResourceKey<PlacedFeature> NAMEK_CRYSTAL       = registerKey("namek_crystal");
+    public static final ResourceKey<PlacedFeature> ENERGY_CRYSTAL      = registerKey("energy_crystal");
+    public static final ResourceKey<PlacedFeature> ENERGY_CRYSTAL_RARE = registerKey("energy_crystal_rare");
+    public static final ResourceKey<PlacedFeature> SACRED_STONE        = registerKey("sacred_stone");
 
     public static void bootstrap(BootstrapContext<PlacedFeature> context) {
         var configuredFeatures = context.lookup(Registries.CONFIGURED_FEATURE);
@@ -150,6 +154,26 @@ public class ModPlacedFeatures {
                 ModOrePlacement.rareOrePlacement(30, HeightRangePlacement.triangle(VerticalAnchor.aboveBottom(-80), VerticalAnchor.aboveBottom(80))));
         register(context, NAMEK_DIAMOND_BURIED, configuredFeatures.getOrThrow(ModConfiguredFeatures.NAMEK_DIAMOND_BURIED),
                 ModOrePlacement.commonOrePlacement(1, HeightRangePlacement.triangle(VerticalAnchor.aboveBottom(-80), VerticalAnchor.aboveBottom(80))));
+        // Cristal de Namek: en todos los biomas, franja media, frecuencia tipo hierro.
+        register(context, NAMEK_CRYSTAL, configuredFeatures.getOrThrow(ModConfiguredFeatures.NAMEK_CRYSTAL_ORE),
+                ModOrePlacement.commonOrePlacement(8,
+                        HeightRangePlacement.triangle(VerticalAnchor.absolute(-48), VerticalAnchor.absolute(48))));
+
+        // Cristal Energético: solo capas profundas, pico en y=-40. Es energía del planeta,
+        // así que cuanto más cerca del núcleo, más hay.
+        register(context, ENERGY_CRYSTAL, configuredFeatures.getOrThrow(ModConfiguredFeatures.ENERGY_CRYSTAL_ORE),
+                ModOrePlacement.commonOrePlacement(4,
+                        HeightRangePlacement.triangle(VerticalAnchor.absolute(-64), VerticalAnchor.absolute(-16))));
+
+        // La variante de plains y forest: misma franja, la mitad de vetas.
+        register(context, ENERGY_CRYSTAL_RARE, configuredFeatures.getOrThrow(ModConfiguredFeatures.ENERGY_CRYSTAL_ORE),
+                ModOrePlacement.commonOrePlacement(2,
+                        HeightRangePlacement.triangle(VerticalAnchor.absolute(-64), VerticalAnchor.absolute(-16))));
+
+        // Piedra Sagrada: pegada a la superficie y muy abundante.
+        register(context, SACRED_STONE, configuredFeatures.getOrThrow(ModConfiguredFeatures.SACRED_STONE_ORE),
+                ModOrePlacement.commonOrePlacement(14,
+                        HeightRangePlacement.uniform(VerticalAnchor.absolute(0), VerticalAnchor.absolute(128))));
 
         Holder<ConfiguredFeature<?, ?>> ajisa = configuredFeatures.getOrThrow(ModConfiguredFeatures.AJISA_TREE);
 

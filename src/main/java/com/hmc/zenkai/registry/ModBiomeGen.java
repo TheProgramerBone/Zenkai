@@ -171,7 +171,6 @@ public final class ModBiomeGen {
     /**
      * Islas flotantes sobre el mar de nubes. Sin carvers ni ores: son plataformas, no un mundo
      * subterráneo.
-     *
      * addCherryGroveVegetation trae cerezos, flores de cerezo, hierba y pétalos rosas en el
      * orden canónico de vainilla, que es lo que evita el "Feature order cycle". Las dos
      * features propias van después porque llevan namespace zenkai y no aparecen en ningún
@@ -223,9 +222,8 @@ public final class ModBiomeGen {
                                NamekVeg veg) {
         BiomeGenerationSettings.Builder gen = new BiomeGenerationSettings.Builder(features, carvers);
 
-        // Carvers propios, con la probabilidad recortada. En el océano no se excava.
         if (veg != NamekVeg.OCEAN) {
-            gen.addCarver(GenerationStep.Carving.AIR, ModCarvers.NAMEK_CAVE);   // ⚠ firma
+            gen.addCarver(GenerationStep.Carving.AIR, ModCarvers.NAMEK_CAVE);
             gen.addCarver(GenerationStep.Carving.AIR, ModCarvers.NAMEK_CANYON);
         }
 
@@ -251,6 +249,20 @@ public final class ModBiomeGen {
         gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_DIAMOND_MEDIUM);
         gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_DIAMOND_LARGE);
         gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_DIAMOND_BURIED);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.NAMEK_CRYSTAL);
+
+        if (veg != NamekVeg.OCEAN) {
+            gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.SACRED_STONE);
+        }
+
+        switch (veg) {
+            // Las colinas son la única fuente decente de Cristal Energético.
+            case HILLS -> gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.ENERGY_CRYSTAL);
+            // Llanura y bosque, la mitad.
+            case PLAINS, FOREST -> gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.ENERGY_CRYSTAL_RARE);
+            // Orilla y océano, nada.
+            case SHORE, OCEAN -> { }
+        }
 
         // Vegetación. Árboles primero y matas después, que es el orden de vainilla: si la
         // hierba fuera antes, los troncos brotarían encima y la borrarían.

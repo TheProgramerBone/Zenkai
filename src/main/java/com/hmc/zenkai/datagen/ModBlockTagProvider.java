@@ -34,7 +34,6 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.ROCKY_BLOCK.get(),
                 ModBlocks.NAMEKIAN_STONE.get(),
                 ModBlocks.NAMEKIAN_COBBLESTONE.get(),
-                ModBlocks.NAMEKIAN_STRUCTURE_BLOCK.get(),
 
                 // Minerales de Namek
                 ModBlocks.NAMEKIAN_COAL_ORE.get(),

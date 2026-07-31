@@ -35,7 +35,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.ROCKY_BLOCK);
         blockWithItem(ModBlocks.HTC_BLOCK);
         blockWithItem(ModBlocks.HTC_PORTAL);
-        blockWithItem(ModBlocks.NAMEKIAN_STRUCTURE_BLOCK);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_BLACK);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_BLUE);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_BROWN);

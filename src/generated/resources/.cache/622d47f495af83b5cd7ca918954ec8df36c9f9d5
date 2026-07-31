@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-30T19:40:14.8949024	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-07-30T22:06:03.4135305	Tags for minecraft:item mod id zenkai
 bc1c8630810639acf3b6c830e48ea4a2367ddc77 data/minecraft/tags/item/axes.json
 597965b3bad01dbd14308ae360d34ff03aba1ce4 data/minecraft/tags/item/dyeable.json
 b059aedfc662d77aac2804619e91866ee9cf4ecc data/minecraft/tags/item/enchantable/armor.json
@@ -10,9 +10,12 @@ d7db6457ffd848ca21aaf9c4d3ba6644eced4cfa data/minecraft/tags/item/pickaxes.json
 cdd3617c7cf6df75b2afdcd664a01219e6b36a36 data/minecraft/tags/item/planks.json
 1f60c81073ae1365563f3cb183dd446e7e04b752 data/minecraft/tags/item/saplings.json
 074574c8d827ad3c25c8c505ab46e2bc0efc7c81 data/minecraft/tags/item/shovels.json
+104a5ce74badec7438234762582e8c8c6d0a37a2 data/minecraft/tags/item/slabs.json
 9dfac68a481565637dcfb2d36ac5275ada80f5e0 data/minecraft/tags/item/small_flowers.json
+599a69b603564e35a02894f05e69d4afa8da24f0 data/minecraft/tags/item/stairs.json
 49608cfb38c6b9bcc97695d8cfcb75db8e722bf7 data/minecraft/tags/item/swords.json
 b059aedfc662d77aac2804619e91866ee9cf4ecc data/minecraft/tags/item/trimmable_armor.json
+f251e92937555b4b142772d348ebcde45092c8e9 data/minecraft/tags/item/walls.json
 955e6811c5bb3ae05014661b2509d95fa30b6e07 data/minecraft/tags/item/wooden_buttons.json
 8a3d56980dfaf98214018d6ec099f55b3003dc94 data/minecraft/tags/item/wooden_doors.json
 694ba63bff1eb3f8e9db92fc132516115083b6bb data/minecraft/tags/item/wooden_fences.json

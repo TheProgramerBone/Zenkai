@@ -5,6 +5,7 @@ import com.hmc.zenkai.registry.ModBlocks;
 import com.hmc.zenkai.registry.ModItems;
 import com.hmc.zenkai.registry.ModTags;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
@@ -14,6 +15,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -149,15 +151,6 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('P', ModItems.TERRAGEM_PICKAXE)
                 .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS,ModBlocks.NAMEKIAN_STRUCTURE_BLOCK.get(),8)
-                .pattern("SSS")
-                .pattern("SQS")
-                .pattern("SSS")
-                .define('S', ModBlocks.NAMEKIAN_STONE)
-                .define('Q',Items.QUARTZ)
-                .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
-
-
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.DRAGON_BALL_RADAR.get(),1)
                 .pattern("ICI")
                 .pattern("ADA")
@@ -263,8 +256,59 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_ajisa_planks", has(ModBlocks.AJISA_PLANKS.get())).save(recipeOutput);
 
         // ── Menas de Namek ───────────────────────────────────────────────────
-        // Solo hacen falta para el bloque con Toque de Seda: al picarlas normal sueltan ya
-        // el item vanilla, que tiene sus propias recetas de fundido.
+        // ── Compactado de cristales ──────────────────────────────────────────
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.NAMEK_CRYSTAL_BLOCK.get(), 1)
+                .pattern("CCC").pattern("CCC").pattern("CCC")
+                .define('C', ModItems.NAMEK_CRYSTAL.get())
+                .unlockedBy("has_namek_crystal", has(ModItems.NAMEK_CRYSTAL.get())).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.NAMEK_CRYSTAL.get(), 9)
+                .requires(ModBlocks.NAMEK_CRYSTAL_BLOCK.get())
+                .unlockedBy("has_namek_crystal_block", has(ModBlocks.NAMEK_CRYSTAL_BLOCK.get()))
+                .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "namek_crystal_from_block"));
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.ENERGY_CRYSTAL_BLOCK.get(), 1)
+                .pattern("CCC").pattern("CCC").pattern("CCC")
+                .define('C', ModItems.ENERGY_CRYSTAL.get())
+                .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL.get())).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.ENERGY_CRYSTAL.get(), 9)
+                .requires(ModBlocks.ENERGY_CRYSTAL_BLOCK.get())
+                .unlockedBy("has_energy_crystal_block", has(ModBlocks.ENERGY_CRYSTAL_BLOCK.get()))
+                .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "energy_crystal_from_block"));
+
+        // ── Piedra Sagrada ───────────────────────────────────────────────────
+        // 4 items -> 1 bloque, no 9: es material de construcción y a 9 por bloque no daría
+        // para levantar un templo con lo que suelta una veta.
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.SACRED_STONE_BLOCK.get(), 1)
+                .pattern("SS").pattern("SS")
+                .define('S', ModItems.SACRED_STONE.get())
+                .unlockedBy("has_sacred_stone", has(ModItems.SACRED_STONE.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.POLISHED_SACRED_STONE.get(), 4)
+                .pattern("SS").pattern("SS")
+                .define('S', ModBlocks.SACRED_STONE_BLOCK.get())
+                .unlockedBy("has_sacred_stone_block", has(ModBlocks.SACRED_STONE_BLOCK.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.SACRED_STONE_BRICKS.get(), 4)
+                .pattern("SS").pattern("SS")
+                .define('S', ModBlocks.POLISHED_SACRED_STONE.get())
+                .unlockedBy("has_polished_sacred_stone", has(ModBlocks.POLISHED_SACRED_STONE.get())).save(recipeOutput);
+
+        sacredFamily(recipeOutput, ModBlocks.SACRED_STONE_BLOCK.get(),
+                ModBlocks.SACRED_STONE_STAIRS.get(), ModBlocks.SACRED_STONE_SLAB.get(), ModBlocks.SACRED_STONE_WALL.get());
+        sacredFamily(recipeOutput, ModBlocks.POLISHED_SACRED_STONE.get(),
+                ModBlocks.POLISHED_SACRED_STONE_STAIRS.get(), ModBlocks.POLISHED_SACRED_STONE_SLAB.get(), ModBlocks.POLISHED_SACRED_STONE_WALL.get());
+        sacredFamily(recipeOutput, ModBlocks.SACRED_STONE_BRICKS.get(),
+                ModBlocks.SACRED_STONE_BRICK_STAIRS.get(), ModBlocks.SACRED_STONE_BRICK_SLAB.get(), ModBlocks.SACRED_STONE_BRICK_WALL.get());
+
+        // Cantero: cada variante puede saltar directamente a las siguientes de la cadena,
+        // igual que la piedra vanilla. Ahorra pasos intermedios y es lo que espera el jugador.
+        stonecut(recipeOutput, ModBlocks.SACRED_STONE_BLOCK.get(), ModBlocks.POLISHED_SACRED_STONE.get(), 1);
+        stonecut(recipeOutput, ModBlocks.SACRED_STONE_BLOCK.get(), ModBlocks.SACRED_STONE_BRICKS.get(), 1);
+        stonecut(recipeOutput, ModBlocks.POLISHED_SACRED_STONE.get(), ModBlocks.SACRED_STONE_BRICKS.get(), 1);
 
         oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_IRON_ORE.get()),   RecipeCategory.MISC, Items.IRON_INGOT,   0.7f, 200, "namekian_iron");
         oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_IRON_ORE.get()),   RecipeCategory.MISC, Items.IRON_INGOT,   0.7f, 100, "namekian_iron");
@@ -280,6 +324,12 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_REDSTONE_ORE.get()), RecipeCategory.MISC, Items.REDSTONE,   0.7f, 100, "namekian_redstone");
         oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_DIAMOND_ORE.get()),  RecipeCategory.MISC, Items.DIAMOND,    1.0f, 200, "namekian_diamond");
         oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_DIAMOND_ORE.get()),  RecipeCategory.MISC, Items.DIAMOND,    1.0f, 100, "namekian_diamond");
+        oreSmelting(recipeOutput, List.of(ModBlocks.NAMEK_CRYSTAL_ORE.get()),  RecipeCategory.MISC, ModItems.NAMEK_CRYSTAL.get(),  1.0f, 200, "namek_crystal");
+        oreBlasting(recipeOutput, List.of(ModBlocks.NAMEK_CRYSTAL_ORE.get()),  RecipeCategory.MISC, ModItems.NAMEK_CRYSTAL.get(),  1.0f, 100, "namek_crystal");
+        oreSmelting(recipeOutput, List.of(ModBlocks.ENERGY_CRYSTAL_ORE.get()), RecipeCategory.MISC, ModItems.ENERGY_CRYSTAL.get(), 1.0f, 200, "energy_crystal");
+        oreBlasting(recipeOutput, List.of(ModBlocks.ENERGY_CRYSTAL_ORE.get()), RecipeCategory.MISC, ModItems.ENERGY_CRYSTAL.get(), 1.0f, 100, "energy_crystal");
+        oreSmelting(recipeOutput, List.of(ModBlocks.SACRED_STONE_ORE.get()),   RecipeCategory.MISC, ModItems.SACRED_STONE.get(),   0.2f, 200, "sacred_stone");
+        oreBlasting(recipeOutput, List.of(ModBlocks.SACRED_STONE_ORE.get()),   RecipeCategory.MISC, ModItems.SACRED_STONE.get(),   0.2f, 100, "sacred_stone");
     }
 
     protected static void oreSmelting(@NotNull RecipeOutput recipeOutput, List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult,
@@ -307,4 +357,36 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         }
     }
 
+    /** Escalera, losa y muro de una variante, con la geometría de vainilla. */
+    private static void sacredFamily(RecipeOutput out, Block base, Block stairs, Block slab, Block wall) {
+        String baseName = BuiltInRegistries.BLOCK.getKey(base).getPath();
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, stairs, 4)
+                .pattern("B  ").pattern("BB ").pattern("BBB")
+                .define('B', base)
+                .unlockedBy("has_" + baseName, has(base)).save(out);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, slab, 6)
+                .pattern("BBB")
+                .define('B', base)
+                .unlockedBy("has_" + baseName, has(base)).save(out);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, wall, 6)
+                .pattern("BBB").pattern("BBB")
+                .define('B', base)
+                .unlockedBy("has_" + baseName, has(base)).save(out);
+
+        // Cantero: la losa sale a 2 por bloque, el resto a 1. Igual que la piedra vanilla.
+        stonecut(out, base, stairs, 1);
+        stonecut(out, base, slab, 2);
+        stonecut(out, base, wall, 1);
+    }
+
+    private static void stonecut(RecipeOutput out, ItemLike input, ItemLike result, int count) {
+        String in  = BuiltInRegistries.ITEM.getKey(input.asItem()).getPath();
+        String res = BuiltInRegistries.ITEM.getKey(result.asItem()).getPath();
+        SingleItemRecipeBuilder.stonecutting(Ingredient.of(input), RecipeCategory.BUILDING_BLOCKS, result, count)
+                .unlockedBy("has_" + in, has(input))
+                .save(out, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, res + "_from_" + in + "_stonecutting"));
+    }
 }
