@@ -94,6 +94,8 @@ public class ModItemModelProvider extends ItemModelProvider {
                 .texture("wall", modLoc("block/polished_sacred_stone"));
         withExistingParent("sacred_stone_brick_wall", mcLoc("block/wall_inventory"))
                 .texture("wall", modLoc("block/sacred_stone_bricks"));
+
+        registerRaceSkinModels();
     }
 
     private void trimmedArmorItem(DeferredItem<ArmorItem> itemDeferredItem) {
