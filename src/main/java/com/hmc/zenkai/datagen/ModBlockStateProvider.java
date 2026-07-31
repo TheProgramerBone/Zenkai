@@ -1,10 +1,10 @@
 package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
 import com.hmc.zenkai.registry.ModBlocks;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
@@ -53,6 +53,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_ORANGE);
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED);
         blockWithItem(ModBlocks.OTHERWORLD_CLOUD);
+        blockWithItem(ModBlocks.NAMEKIAN_LAMP);
+        makeCrop((CropBlock) ModBlocks.NAMEKIAN_HERB_CROP.get(), "namekian_herb_crop_stage", "namekian_herb_crop_stage");
         logBlock((RotatedPillarBlock) ModBlocks.AJISA_LOG.get());
         logBlock((RotatedPillarBlock) ModBlocks.STRIPPED_AJISA_LOG.get());
         axisBlock((RotatedPillarBlock) ModBlocks.AJISA_WOOD.get(),
@@ -107,12 +109,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
         simpleBlockWithItem(deferredBlock.get(), cubeAll(deferredBlock.get()));
     }
 
-    private void makeTallPlant(DoublePlantBlock block, String name) {
+    private void makeCrop(CropBlock block, String modelName, String textureName) {
         getVariantBuilder(block).forAllStates(state -> {
-            String half = state.getValue(DoublePlantBlock.HALF) == DoubleBlockHalf.LOWER ? "bottom" : "top";
+            int age = state.getValue(NamekianHerbCropBlock.AGE);
             return ConfiguredModel.builder().modelFile(
-                    models().cross(name + "_" + half, modLoc("block/" + name + "_" + half))
-                            .renderType("cutout")).build();
+                    models().crop(modelName + age, modLoc("block/" + textureName + age)).renderType("cutout")).build();
         });
     }
 }

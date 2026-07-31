@@ -1,7 +1,9 @@
 package com.hmc.zenkai.datagen;
 
+import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
 import com.hmc.zenkai.registry.ModBlocks;
 import com.hmc.zenkai.registry.ModItems;
+import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -19,6 +21,8 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
+import net.minecraft.world.level.storage.loot.predicates.LootItemBlockStatePropertyCondition;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +52,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_6.get());
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_7.get());
         dropSelf(ModBlocks.TERRAGEM_BLOCK.get());
-        dropSelf(ModBlocks.ALL_DRAGON_BALLS.get());
+        add(ModBlocks.ALL_DRAGON_BALLS.get(), noDrop());
         dropSelf(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
         dropSelf(ModBlocks.NAMEKIAN_DIRT.get());
         dropSelf(ModBlocks.ROCKY_BLOCK.get());
@@ -70,6 +74,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_PINK.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_ORANGE.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED.get());
+        dropSelf(ModBlocks.NAMEKIAN_LAMP.get());
 
         add(ModBlocks.NAMEKIAN_STONE.get(),
                 createSingleItemTableWithSilkTouch(ModBlocks.NAMEKIAN_STONE.get(), ModBlocks.NAMEKIAN_COBBLESTONE));
@@ -138,6 +143,18 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                 ModBlocks.NAMEK_DRAGON_BALL_6.get(),
                 ModBlocks.NAMEK_DRAGON_BALL_7.get()
         ));
+
+        // Madura suelta 1-2 hierbas y 1-2 semillas; verde solo la semilla.
+        LootItemCondition.Builder grown = LootItemBlockStatePropertyCondition
+                .hasBlockStateProperties(ModBlocks.NAMEKIAN_HERB_CROP.get())
+                .setProperties(StatePropertiesPredicate.Builder.properties()
+                        .hasProperty(NamekianHerbCropBlock.AGE, NamekianHerbCropBlock.MAX_AGE));
+
+        add(ModBlocks.NAMEKIAN_HERB_CROP.get(),
+                createCropDrops(ModBlocks.NAMEKIAN_HERB_CROP.get(),
+                        ModItems.NAMEKIAN_HERB.get(),
+                        ModItems.NAMEKIAN_HERB_SEEDS.get(),
+                        grown));
 
         // Cristal de Namek: 1 con fortuna, como el diamante. Ciclo cortísimo mena -> moneda.
         add(ModBlocks.NAMEK_CRYSTAL_ORE.get(),

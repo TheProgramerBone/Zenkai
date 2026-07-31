@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-30T22:06:03.4135305	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-07-30T23:54:06.8696787	Tags for minecraft:item mod id zenkai
 bc1c8630810639acf3b6c830e48ea4a2367ddc77 data/minecraft/tags/item/axes.json
 597965b3bad01dbd14308ae360d34ff03aba1ce4 data/minecraft/tags/item/dyeable.json
 b059aedfc662d77aac2804619e91866ee9cf4ecc data/minecraft/tags/item/enchantable/armor.json
@@ -15,6 +15,7 @@ cdd3617c7cf6df75b2afdcd664a01219e6b36a36 data/minecraft/tags/item/planks.json
 599a69b603564e35a02894f05e69d4afa8da24f0 data/minecraft/tags/item/stairs.json
 49608cfb38c6b9bcc97695d8cfcb75db8e722bf7 data/minecraft/tags/item/swords.json
 b059aedfc662d77aac2804619e91866ee9cf4ecc data/minecraft/tags/item/trimmable_armor.json
+652e8c424d5fc995d9d99eb6aeb6394748171847 data/minecraft/tags/item/villager_plantable_seeds.json
 f251e92937555b4b142772d348ebcde45092c8e9 data/minecraft/tags/item/walls.json
 955e6811c5bb3ae05014661b2509d95fa30b6e07 data/minecraft/tags/item/wooden_buttons.json
 8a3d56980dfaf98214018d6ec099f55b3003dc94 data/minecraft/tags/item/wooden_doors.json

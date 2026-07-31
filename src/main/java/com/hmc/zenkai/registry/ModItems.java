@@ -5,9 +5,12 @@ import com.hmc.zenkai.content.item.*;
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
@@ -29,6 +32,10 @@ public class ModItems {
             new Item.Properties()
                     .stacksTo(1)
                     .rarity(Rarity.UNCOMMON));
+
+    public static final DeferredItem<Item> ALL_DRAGON_BALLS_ITEM = ITEMS.registerItem("all_dragon_balls",
+            props -> new BlockItem(ModBlocks.ALL_DRAGON_BALLS.get(), props),
+            new Item.Properties().stacksTo(1));
 
     public static final DeferredItem<Item> BASIC_CIRCUIT = ITEMS.registerItem("basic_circuit",
             Item::new, new Item.Properties());
@@ -60,6 +67,26 @@ public class ModItems {
 
     public static final DeferredItem<Item> SACRED_STONE = ITEMS.registerItem("sacred_stone",
             Item::new, new Item.Properties());
+
+    /** Semilla. ItemNameBlockItem hace que el item se llame como él y coloque el cultivo. */
+    public static final DeferredItem<Item> NAMEKIAN_HERB_SEEDS = ITEMS.registerItem("namekian_herb_seeds",
+            props -> new ItemNameBlockItem(ModBlocks.NAMEKIAN_HERB_CROP.get(), props),
+            new Item.Properties());
+
+    /** Producto de la cosecha. Ingrediente del líquido curativo. */
+    public static final DeferredItem<Item> NAMEKIAN_HERB = ITEMS.registerItem("namekian_herb",
+            Item::new, new Item.Properties());
+
+    /** El agua curativa de la saga de Namek. Se bebe, regeneración media, devuelve botella. */
+    public static final DeferredItem<Item> HEALING_WATER_BOTTLE = ITEMS.registerItem("healing_water_bottle",
+            HealingWaterItem::new, new Item.Properties()
+                    .stacksTo(16)
+                    .food(new FoodProperties.Builder()
+                            .nutrition(0)
+                            .saturationModifier(0f)
+                            .alwaysEdible()
+                            .effect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1), 1.0f)
+                            .build()));
 
     public static final DeferredItem<Item> TERRAGEM = ITEMS.registerItem("terragem",
             Item::new, new Item.Properties());

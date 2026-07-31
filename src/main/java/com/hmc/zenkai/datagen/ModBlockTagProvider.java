@@ -61,7 +61,8 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.SACRED_STONE_BRICKS.get(),
                 ModBlocks.SACRED_STONE_BRICK_STAIRS.get(),
                 ModBlocks.SACRED_STONE_BRICK_SLAB.get(),
-                ModBlocks.SACRED_STONE_BRICK_WALL.get()
+                ModBlocks.SACRED_STONE_BRICK_WALL.get(),
+                ModBlocks.NAMEKIAN_LAMP.get()
         );
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL).add(
@@ -180,6 +181,9 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.NAMEKIAN_COBBLESTONE.get(),
                 ModBlocks.NAMEKIAN_DIRT.get()
         );
+
+        tag(BlockTags.CROPS).add(
+                ModBlocks.NAMEKIAN_HERB_CROP.get());
 
         tag(BlockTags.DEAD_BUSH_MAY_PLACE_ON).add(
                 ModBlocks.ROCKY_BLOCK.get()

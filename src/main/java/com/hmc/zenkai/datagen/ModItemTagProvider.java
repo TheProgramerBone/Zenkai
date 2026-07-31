@@ -81,6 +81,7 @@ public class ModItemTagProvider extends ItemTagsProvider {
         tag(ItemTags.WOODEN_BUTTONS).add(ModBlocks.AJISA_BUTTON.get().asItem());
         tag(ItemTags.WOODEN_PRESSURE_PLATES).add(ModBlocks.AJISA_PRESSURE_PLATE.get().asItem());
         tag(ItemTags.SMALL_FLOWERS).add(ModBlocks.AJISA_FLOWER.get().asItem());
+        tag(ItemTags.VILLAGER_PLANTABLE_SEEDS).add(ModItems.NAMEKIAN_HERB_SEEDS.get());
 
         // ==========================================
         // 4. BLOQUES DE CONSTRUCCIÓN (ÍTEMS)

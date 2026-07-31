@@ -36,6 +36,9 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.SHADOW_KINTOUN_ITEM.get());
         basicItem(ModItems.HALO.get());
         basicItem(ModItems.SCOUTER_RADAR_UPGRADE.get());
+        basicItem(ModItems.NAMEKIAN_HERB.get());
+        basicItem(ModItems.NAMEKIAN_HERB_SEEDS.get());
+        basicItem(ModItems.HEALING_WATER_BOTTLE.get());
 
         // El item de la puerta es una textura plana propia, no el modelo de bloque.
         basicItem(ModBlocks.AJISA_DOOR.get().asItem());
@@ -150,5 +153,52 @@ public class ModItemModelProvider extends ItemModelProvider {
         trimMaterials.put(TrimMaterials.DIAMOND, 0.8F);
         trimMaterials.put(TrimMaterials.LAPIS, 0.9F);
         trimMaterials.put(TrimMaterials.AMETHYST, 1.0F);
+    }
+
+    /**
+     * Modelos de inventario de los geo items (skins de raza, pelo, guadaña de ki).
+     * GeckoLib los dibuja puestos en el jugador, pero en el inventario Minecraft sigue
+     * pidiendo un modelo de item normal; sin él salen como cubo morado y llenan el log de
+     * "Unable to load model".
+     * Las tres razas comparten cuatro siluetas genéricas: en el inventario estas piezas son
+     * un marcador de posición, no un objeto que el jugador vaya a comparar entre sí. Las
+     * variantes _colorable y _female tampoco se distinguen ahí, porque lo que cambian es el
+     * tinte y el modelo geo en el mundo.
+     */
+    private void registerRaceSkinModels() {
+        flatGroup("race_helmet",
+                "human_race_helmet", "human_race_helmet_colorable",
+                "human_race_helmet_female", "human_race_helmet_colorable_female",
+                "namekian_race_helmet", "namekian_race_helmet_colorable",
+                "arcosian_race_helmet");
+
+        flatGroup("race_chestplate",
+                "human_race_chestplate", "human_race_chestplate_colorable",
+                "human_race_chestplate_female", "human_race_chestplate_colorable_female",
+                "namekian_race_chestplate", "namekian_race_chestplate_colorable",
+                "arcosian_race_chestplate");
+
+        flatGroup("race_leggings",
+                "human_race_leggings", "human_race_leggings_colorable",
+                "human_race_leggings_female", "human_race_leggings_colorable_female",
+                "namekian_race_leggings", "namekian_race_leggings_colorable",
+                "arcosian_race_leggings");
+
+        flatGroup("race_boots",
+                "human_race_boots", "human_race_boots_colorable",
+                "human_race_boots_female", "human_race_boots_colorable_female",
+                "namekian_race_boots", "namekian_race_boots_colorable",
+                "arcosian_race_boots");
+
+        flatGroup("hair_1");
+        flatGroup("ssj_hair1");
+        flatGroup("ki_scythe");
+    }
+
+    private void flatGroup(String texture, String... names) {
+        ResourceLocation tex = modLoc("item/" + texture);
+        for (String name : names) {
+            withExistingParent(name, mcLoc("item/generated")).texture("layer0", tex);
+        }
     }
 }

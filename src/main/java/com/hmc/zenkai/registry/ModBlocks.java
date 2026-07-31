@@ -2,10 +2,11 @@ package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.block.HtcPortalBlock;
+import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
 import com.hmc.zenkai.content.blockentity.AllDragonBalls.AllDragonBallsBlock;
 import com.hmc.zenkai.content.blockentity.DragonBalls.DragonBalls;
 import com.hmc.zenkai.content.blockentity.DragonBalls.NamekDragonBalls;
-import com.hmc.zenkai.content.blockentity.DragonBalls.NamekianGrassBlock;
+import com.hmc.zenkai.content.blockentity.NamekianGrassBlock;
 import net.minecraft.util.ColorRGBA;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.effect.MobEffects;
@@ -552,6 +553,25 @@ public class ModBlocks {
                 .ignitedByLava()
                 .mapColor(MapColor.PLANT);
     }
+
+    /** Lámpara namekiana: luz 15, la iluminación de las aldeas. */
+    public static final DeferredBlock<Block> NAMEKIAN_LAMP = registerBlock("namekian_lamp",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5f, 6.0f)
+                    .requiresCorrectToolForDrops()
+                    .lightLevel(s -> 15)
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.QUARTZ)));
+
+    /** Hierba medicinal namekiana. Se registra SIN item de bloque: se planta con la semilla,
+     *  igual que las zanahorias o el trigo. */
+    public static final DeferredBlock<Block> NAMEKIAN_HERB_CROP = MOD_BLOCKS.register("namekian_herb_crop",
+            ()-> new NamekianHerbCropBlock(BlockBehaviour.Properties.of()
+                    .noCollission()
+                    .randomTicks()
+                    .instabreak()
+                    .sound(SoundType.CROP)
+                    .pushReaction(PushReaction.DESTROY)));
 
     public static final DeferredBlock<Block> OTHERWORLD_CLOUD = registerBlock("otherworld_cloud",
             () -> new Block(BlockBehaviour.Properties.of()

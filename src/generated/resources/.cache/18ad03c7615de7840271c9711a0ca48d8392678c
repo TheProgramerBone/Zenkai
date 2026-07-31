@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-30T22:06:03.40953	Item Models: zenkai
+// 1.21.1	2026-07-31T00:01:13.806108	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -14,9 +14,12 @@ e679a4c9273e0f8ec5861c5d4a448f2b69437bca assets/zenkai/models/item/basic_circuit
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
 b6f3572016d27a67567a73dd90a74cf43defc6f7 assets/zenkai/models/item/energy_crystal.json
 c6fdd6445bc58722d479b71d0c927092b728dc33 assets/zenkai/models/item/halo.json
+17a629df4615b9fbb9b20f489f1053784acc77a2 assets/zenkai/models/item/healing_water_bottle.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/isaac_spawn_egg.json
 cf0c021ac47f4c96a569e2497d53258d04d5a607 assets/zenkai/models/item/kintoun_item.json
 46caf766bc191626aa6f23e3bb63262dbb2d2895 assets/zenkai/models/item/kintoun_shadow_item.json
+a7eb31052d9770be29b58b1eb62ca855d914d4cf assets/zenkai/models/item/namekian_herb.json
+f227c9fe001ded01b8122fcb53b0b3a09020991f assets/zenkai/models/item/namekian_herb_seeds.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/namekian_warrior_spawn_egg.json
 5a63dbd9692fed9a90b4c6604d7ffcfebe3555cc assets/zenkai/models/item/namek_crystal.json

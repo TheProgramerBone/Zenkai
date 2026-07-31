@@ -1,5 +1,5 @@
 {
   "variants": {
-    "": {"model": "zenkai:block/all_dragon_balls.geo"}
+    "": { "model": "minecraft:block/air" }
   }
 }

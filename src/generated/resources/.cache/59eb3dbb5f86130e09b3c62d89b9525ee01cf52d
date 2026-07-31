@@ -1,4 +1,4 @@
-// 1.21.1	2026-07-30T22:06:03.4145278	Loot Tables
+// 1.21.1	2026-07-30T23:54:06.8696787	Loot Tables
 ce23c9d992d0b026612247c98fab09e9a4c77d13 data/zenkai/loot_table/blocks/ajisa_button.json
 1c902309ab65853161114f52ae7b2f3a4f2a0bde data/zenkai/loot_table/blocks/ajisa_door.json
 71d1a278b29aa52b81445b0040480b6679e0148b data/zenkai/loot_table/blocks/ajisa_fence.json
@@ -13,7 +13,7 @@ f6ad36a09d04331236b03d5873a91fbea5fb67d6 data/zenkai/loot_table/blocks/ajisa_lea
 74a3f5d9cf176bf9069f60a38ce773edf2e767da data/zenkai/loot_table/blocks/ajisa_stairs.json
 754239bfddfc6f2e0041e1923eeb149e58dbc86a data/zenkai/loot_table/blocks/ajisa_trapdoor.json
 c9e63e1b6863ce9111db981ecd8ce33738af8cd5 data/zenkai/loot_table/blocks/ajisa_wood.json
-791a5bbb5f0db832d221f9fd8ca4d08ec1179591 data/zenkai/loot_table/blocks/all_dragon_balls.json
+4fa0c2882e3f65831249b582ce656ad3bb10ff40 data/zenkai/loot_table/blocks/all_dragon_balls.json
 ed313aafc37c5dd3314e6dece41ad5cc06d11dba data/zenkai/loot_table/blocks/deepslate_terragem_ore.json
 2bf7afe0c9eb29d1b5475818357b20f1f2017019 data/zenkai/loot_table/blocks/dragon_ball_1.json
 14bbcb47a65500b12b9624011db20ac965090cb2 data/zenkai/loot_table/blocks/dragon_ball_2.json
@@ -33,7 +33,9 @@ ed9ea6d499e0637e2cfb30ed81ad64970ced274c data/zenkai/loot_table/blocks/namekian_
 f26517c1d107892c0158931e5c0bb48afb51a148 data/zenkai/loot_table/blocks/namekian_gold_ore.json
 d25c5353299d1c95cd3a2746937a45a4edc4d517 data/zenkai/loot_table/blocks/namekian_grass_block.json
 09afc5cf1b970eeca4011ba08f55fdcd5b6e8a35 data/zenkai/loot_table/blocks/namekian_gravel.json
+dede49b3fc674d331b901ca4e5b73e7bba273e0c data/zenkai/loot_table/blocks/namekian_herb_crop.json
 bdbd2feecd9aed92286406f15ac4c07cd67f9fc7 data/zenkai/loot_table/blocks/namekian_iron_ore.json
+3d53b8e1306e191f89aa34fbcc2b02d5d6a5682b data/zenkai/loot_table/blocks/namekian_lamp.json
 1de1b42e6a2791ee07bcd65bb984bedc43d34fc7 data/zenkai/loot_table/blocks/namekian_lapis_ore.json
 36e3adb6cc8b0576f1811e178b58609f7a9bcb29 data/zenkai/loot_table/blocks/namekian_redstone_ore.json
 f4b60ebb9c0a37a63dff3445622bbcd522ec5237 data/zenkai/loot_table/blocks/namekian_sand.json

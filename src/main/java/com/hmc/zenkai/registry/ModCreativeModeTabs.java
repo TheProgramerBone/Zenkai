@@ -36,6 +36,7 @@ public class ModCreativeModeTabs {
 
                         // Items a ocultar
                         Set<Item> ItemsExtraExcluded = new HashSet<>(List.of(
+                                ModItems.ALL_DRAGON_BALLS_ITEM.get(),
                                 ModItems.HAIR_1.get(),
                                 ModItems.SSJ1_HAIR1.get(),
                                 ModItems.KI_BLADE.get(),

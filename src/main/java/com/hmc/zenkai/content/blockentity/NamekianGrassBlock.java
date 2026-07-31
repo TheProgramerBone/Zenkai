@@ -1,4 +1,4 @@
-package com.hmc.zenkai.content.blockentity.DragonBalls;
+package com.hmc.zenkai.content.blockentity;
 
 import com.hmc.zenkai.registry.ModBlocks;
 import com.mojang.serialization.MapCodec;

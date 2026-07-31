@@ -23,10 +23,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.RenderShape;
-import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -40,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class AllDragonBallsBlock extends BaseEntityBlock {
+public class AllDragonBallsBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
     public AllDragonBallsBlock(Properties properties) {
         super(properties);
     }
@@ -63,7 +60,6 @@ public class AllDragonBallsBlock extends BaseEntityBlock {
     public @Nullable BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
         return new AllDragonBallsEntity(pos, state);
     }
-
 
     @Override
     protected @NotNull MapCodec<? extends BaseEntityBlock> codec() {

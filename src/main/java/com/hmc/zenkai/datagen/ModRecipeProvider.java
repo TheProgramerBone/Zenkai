@@ -161,6 +161,19 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('C', itemtag("c:circuits/advanced"))
                 .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.NAMEKIAN_LAMP.get(), 1)
+                .pattern(" S ")
+                .pattern("SCS")
+                .pattern(" S ")
+                .define('S', ModItems.SACRED_STONE.get())
+                .define('C', ModItems.ENERGY_CRYSTAL.get())
+                .unlockedBy("has_energy_crystal", has(ModItems.ENERGY_CRYSTAL.get())).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.FOOD, ModItems.HEALING_WATER_BOTTLE.get(), 1)
+                .requires(Items.POTION)
+                .requires(ModItems.NAMEKIAN_HERB.get(), 2)
+                .unlockedBy("has_namekian_herb", has(ModItems.NAMEKIAN_HERB.get())).save(recipeOutput);
+
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.SPACE_POD_ITEM.get(),1)
                 .pattern("IRI")
