@@ -1,9 +1,13 @@
 package com.hmc.zenkai.content.block;
 
 import com.hmc.zenkai.content.blockentity.NpcMarkerBlockEntity;
+import com.hmc.zenkai.network.OpenNpcMarkerPayload;
 import com.hmc.zenkai.registry.ModBlockEntities;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -15,6 +19,8 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,5 +61,20 @@ public class NpcMarkerBlock extends BaseEntityBlock {
         if (level.isClientSide()) return null;
         return createTickerHelper(type, ModBlockEntities.NPC_MARKER.get(),
                 (lvl, pos, st, be) -> be.serverTick());
+    }
+
+    @Override
+    protected @NotNull InteractionResult useWithoutItem(@NotNull BlockState state, Level level,
+                                                        @NotNull BlockPos pos, @NotNull Player player,
+                                                        @NotNull BlockHitResult hit) {
+        if (!(level.getBlockEntity(pos) instanceof NpcMarkerBlockEntity be)) return InteractionResult.PASS;
+        if (!player.canUseGameMasterBlocks()) return InteractionResult.PASS;
+        if (!(player instanceof ServerPlayer sp)) return InteractionResult.SUCCESS;
+
+        PacketDistributor.sendToPlayer(sp, new OpenNpcMarkerPayload(
+                pos,
+                be.getNpcType() == null ? "" : be.getNpcType().toString(),
+                be.getYaw(), be.getOffX(), be.getOffY(), be.getOffZ()));
+        return InteractionResult.CONSUME;
     }
 }

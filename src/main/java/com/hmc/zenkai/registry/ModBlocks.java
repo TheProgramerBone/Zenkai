@@ -606,7 +606,7 @@ public class ModBlocks {
                     .lightLevel(s -> 10)
                     .noOcclusion()));
 
-    public static final DeferredBlock<Block> NPC_MARKER = MOD_BLOCKS.register("npc_marker",
+    public static final DeferredBlock<Block> NPC_MARKER = registerBlock("npc_marker",
             () -> new NpcMarkerBlock(NpcMarkerBlock.markerProperties()));
 
     public static void register(IEventBus eventBus) {

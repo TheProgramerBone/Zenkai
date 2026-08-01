@@ -14,6 +14,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
@@ -26,6 +27,7 @@ public class NpcMarkerBlockEntity extends BlockEntity {
 
     private ResourceLocation npcType;
     private float yaw = 0.0F;
+    private double offX = 0.0D, offY = 0.0D, offZ = 0.0D;
     private UUID npcUuid;
     private int missed = 0;
 
@@ -45,12 +47,41 @@ public class NpcMarkerBlockEntity extends BlockEntity {
         }
         if (++missed < GRACE_CHECKS) return;
 
+        spawnNpc(server);
+    }
+
+    /** Aplica los valores del editor. Limpia el UUID: lo guardado deja de ser válido. */
+    public void applyFrom(ResourceLocation type, float newYaw, double x, double y, double z) {
+        this.npcType = type;
+        this.yaw = newYaw;
+        this.offX = x;
+        this.offY = y;
+        this.offZ = z;
+        this.npcUuid = null;
+        this.missed = 0;
+        setChanged();
+    }
+
+    /** Mata el NPC actual y lo vuelve a crear ya, para ver el cambio sin esperar al tick. */
+    public void forceRespawn() {
+        if (!(level instanceof ServerLevel server)) return;
+        if (npcUuid != null) {
+            Entity old = server.getEntity(npcUuid);
+            if (old != null) old.discard();
+            npcUuid = null;
+        }
+        spawnNpc(server);
+    }
+
+    private void spawnNpc(ServerLevel server) {
+        if (npcType == null) return;
         EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(npcType);
-        if (type == null) return;
         if (!(type.create(server) instanceof Mob mob)) return;
 
-        mob.moveTo(worldPosition.getX() + 0.5D, worldPosition.getY(),
-                worldPosition.getZ() + 0.5D, yaw, 0.0F);
+        mob.moveTo(worldPosition.getX() + 0.5D + offX,
+                worldPosition.getY() + offY,
+                worldPosition.getZ() + 0.5D + offZ,
+                yaw, 0.0F);
         mob.setYBodyRot(yaw);
         mob.setYHeadRot(yaw);
         mob.setPersistenceRequired();
@@ -64,19 +95,31 @@ public class NpcMarkerBlockEntity extends BlockEntity {
         setChanged();
     }
 
+    public ResourceLocation getNpcType() { return npcType; }
+    public float getYaw() { return yaw; }
+    public double getOffX() { return offX; }
+    public double getOffY() { return offY; }
+    public double getOffZ() { return offZ; }
+
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+    protected void loadAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries) {
         super.loadAdditional(tag, registries);
         npcType = tag.contains("NpcType") ? ResourceLocation.tryParse(tag.getString("NpcType")) : null;
         yaw = tag.getFloat("Yaw");
+        offX = tag.getDouble("OffX");
+        offY = tag.getDouble("OffY");
+        offZ = tag.getDouble("OffZ");
         npcUuid = tag.hasUUID("NpcUuid") ? tag.getUUID("NpcUuid") : null;
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+    protected void saveAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries) {
         super.saveAdditional(tag, registries);
         if (npcType != null) tag.putString("NpcType", npcType.toString());
         tag.putFloat("Yaw", yaw);
+        tag.putDouble("OffX", offX);
+        tag.putDouble("OffY", offY);
+        tag.putDouble("OffZ", offZ);
         if (npcUuid != null) tag.putUUID("NpcUuid", npcUuid);
     }
 }
