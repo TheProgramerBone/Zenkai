@@ -58,6 +58,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED);
         blockWithItem(ModBlocks.OTHERWORLD_CLOUD);
         blockWithItem(ModBlocks.NAMEKIAN_LAMP);
+        blockWithItem(ModBlocks.NPC_MARKER);
         makeCrop((CropBlock) ModBlocks.NAMEKIAN_HERB_CROP.get(), "namekian_herb_crop_stage", "namekian_herb_crop_stage");
         logBlock((RotatedPillarBlock) ModBlocks.AJISA_LOG.get());
         logBlock((RotatedPillarBlock) ModBlocks.STRIPPED_AJISA_LOG.get());

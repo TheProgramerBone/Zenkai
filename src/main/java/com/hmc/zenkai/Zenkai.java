@@ -74,6 +74,7 @@ public class Zenkai {
         // Contenido
         ModCreativeModeTabs.register(modEventBus);
         ModWoodTypes.init();
+        ModStructures.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);

@@ -26,8 +26,7 @@ public final class NoHostileSpawnHandler {
         ServerLevel level = event.getLevel().getLevel();
         if (ModGameRules.enableStructureProtection(level.getServer())) return;
 
-        ResourceKey<Level> dim = level.dimension();
-        if (NoHostileSpawnZones.isProtected(dim, event.getX(), event.getY(), event.getZ())) {
+        if (ProtectedZones.protectorAt(level, event.getX(), event.getY(), event.getZ()) != null) {
             event.setResult(MobSpawnEvent.PositionCheck.Result.FAIL);
         }
     }

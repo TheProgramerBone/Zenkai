@@ -37,8 +37,9 @@ public final class ProtectedZoneMessageHandler {
             return;
         }
 
-        String current = NoHostileSpawnZones.getProtector(
-                level.dimension(), player.getX(), player.getY(), player.getZ());
+        String current = ProtectedZones.protectorAt(
+                (net.minecraft.server.level.ServerLevel) level,
+                player.getX(), player.getY(), player.getZ());
         String prev = LAST_ZONE.get(player.getUUID());
 
         if (current != null && !current.equals(prev)) {

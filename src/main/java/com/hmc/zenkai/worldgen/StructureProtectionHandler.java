@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.registry.ModDimensions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -31,8 +32,7 @@ public final class StructureProtectionHandler {
         if (level.isClientSide || level.getServer() == null) return;
 
         BlockPos pos = event.getPos();
-        boolean inZone = NoHostileSpawnZones.isProtected(
-                level.dimension(), pos.getX(), pos.getY(), pos.getZ());
+        boolean inZone = ProtectedZones.isProtected((net.minecraft.server.level.ServerLevel) level, pos);
 
         // Más allá: FUERA de las zonas del palacio no se construye (creativo sí puede).
         // Nota: no depende de la gamerule de protección, es una regla propia del más allá.
@@ -76,8 +76,8 @@ public final class StructureProtectionHandler {
             event.setCanceled(true);              // bloque original de la estructura → protegido
             resyncAfterCancel(player, pos);
 
-            String protector = NoHostileSpawnZones.getProtector(
-                    level.dimension(), pos.getX(), pos.getY(), pos.getZ());
+            String protector = ProtectedZones.protectorAt(
+                    (net.minecraft.server.level.ServerLevel) level, pos);
             player.displayClientMessage(
                     protector != null
                             ? Component.translatable("messages.zenkai.cannot_break",
@@ -103,7 +103,7 @@ public final class StructureProtectionHandler {
     private static boolean isProtectedArea(Level level, BlockPos pos) {
         if (level.getServer() == null) return true;
         if (ModGameRules.enableStructureProtection(level.getServer())) return true;
-        return !NoHostileSpawnZones.isProtected(level.dimension(), pos.getX(), pos.getY(), pos.getZ());
+        return !ProtectedZones.isProtected((net.minecraft.server.level.ServerLevel) level, pos);
     }
 
     /** NINGUNA explosión (ki, TNT, creeper...) rompe bloques protegidos: toda la HTC, y
@@ -122,7 +122,7 @@ public final class StructureProtectionHandler {
 
         PlayerPlacedBlocks placed = PlayerPlacedBlocks.get(level.getServer());
         event.getAffectedBlocks().removeIf(pos ->
-                NoHostileSpawnZones.isProtected(level.dimension(), pos.getX(), pos.getY(), pos.getZ())
+                ProtectedZones.isProtected((ServerLevel) level, pos)
                         && !placed.contains(level.dimension(), pos));
     }
 }

@@ -14,25 +14,6 @@ public final class ModStructureSegments {
 
     public static final int KAMI_Y_OFFSET = 0;
     // Bioma donde debe aparecer Kami (cámbialo al que quieras)
-    public static final ResourceKey<Biome> KAMI_BIOME = Biomes.PLAINS;
-    // Caja de protección RELATIVA a la base de Kami (offset desde la base + tamaño)
-    public static final int KAMI_NO_SPAWN_OFF_X = -64, KAMI_NO_SPAWN_OFF_Y = 0, KAMI_NO_SPAWN_OFF_Z = -64;
-    public static final int KAMI_NO_SPAWN_SX = 160, KAMI_NO_SPAWN_SY = 360, KAMI_NO_SPAWN_SZ = 160;
-
-    // ── Búsqueda del sitio de Kami (sistema único) ────────────────────────────
-    // Distancia MÍNIMA al spawn del mundo (bloques): obliga a explorar un poco.
-    public static final int KAMI_MIN_DIST_FROM_SPAWN = 500;
-    // Radio de búsqueda del bioma en cada intento (desde cada punto del anillo).
-    public static final int KAMI_BIOME_SEARCH_RADIUS = 1500;
-    // Radio (bloques) alrededor del punto del bioma donde se busca el pad válido.
-    public static final int KAMI_SITE_SEARCH_RADIUS = 96;
-    // Paso del barrido de candidatos (más pequeño = más fino, más chunks generados).
-    public static final int KAMI_SITE_STEP = 4;
-    // Lado del pad que debe ser césped plano con dirt debajo (5 = 5x5).
-    public static final int KAMI_PAD_SIZE = 5;
-    // Rango de altura aceptado para la superficie del pad ("alrededor de 60").
-    public static final int KAMI_PAD_MIN_Y = 58;
-    public static final int KAMI_PAD_MAX_Y = 72;
 
     public static final List<Segment> KAMI = List.of(
             Segment.of("kami_1",  0, 0, 0),   // 15×48×15

@@ -15,6 +15,7 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
+import com.hmc.zenkai.worldgen.ProtectedZones;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -163,6 +164,7 @@ public class ModCommands {
                                                     var pos = BlockPosArgument.getLoadedBlockPos(ctx, "pos");
                                                     String which = StringArgumentType.getString(ctx, "which");
                                                     boolean ok = com.hmc.zenkai.worldgen.ZenkaiStructurePlacement.forcePlace(lvl, which, pos);
+                                                    ProtectedZones.invalidateAll();
                                                     ctx.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal(
                                                             ok ? "[Zenkai] Colocado " + which : "[Zenkai] Falló (revisa NBT/offsets)"), true);
                                                     return ok ? 1 : 0;

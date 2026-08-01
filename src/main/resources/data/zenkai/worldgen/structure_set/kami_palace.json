@@ -1,0 +1,11 @@
+{
+  "structures": [
+    { "structure": "zenkai:kami_palace", "weight": 1 }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 80,
+    "separation": 64,
+    "salt": 774411
+  }
+}

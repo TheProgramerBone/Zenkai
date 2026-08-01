@@ -7,7 +7,6 @@ import java.util.Locale;
  *  - name() = clave NBT / packets.
  *  - ordinal() = celda del ícono en technique_icons.png (NO reordenar).
  *  - la estela 3D se queda aquí (es visual, no balance).
- *
  * Todos los NÚMEROS viven en datapack: data/&lt;ns&gt;/zenkai_techniques/ki/&lt;id&gt;.json
  * (ver TechniqueDef / TechniqueManager). Sin JSON, enabled() es false y la técnica
  * no se puede desbloquear, guardar ni disparar.

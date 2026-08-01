@@ -1,6 +1,7 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.block.NpcMarkerBlock;
 import com.hmc.zenkai.content.block.HtcPortalBlock;
 import com.hmc.zenkai.content.block.NamekianDirtPathBlock;
 import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
@@ -604,6 +605,9 @@ public class ModBlocks {
                     .noLootTable()
                     .lightLevel(s -> 10)
                     .noOcclusion()));
+
+    public static final DeferredBlock<Block> NPC_MARKER = MOD_BLOCKS.register("npc_marker",
+            () -> new NpcMarkerBlock(NpcMarkerBlock.markerProperties()));
 
     public static void register(IEventBus eventBus) {
         MOD_BLOCKS.register(eventBus);
