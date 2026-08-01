@@ -6,7 +6,7 @@
       "weight": 1,
       "element": {
         "element_type": "minecraft:single_pool_element",
-        "location": "zenkai:dragon_ball_stone_star_structure",
+        "location": "zenkai:dragon_ball_stone_structure",
         "processors": "minecraft:empty",
         "projection": "rigid"
       }
