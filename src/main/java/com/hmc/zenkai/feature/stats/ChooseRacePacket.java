@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.stats;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
@@ -12,6 +13,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.Locale;
 
 
 public record ChooseRacePacket(Race race) implements CustomPacketPayload {
@@ -48,11 +51,13 @@ public record ChooseRacePacket(Race race) implements CustomPacketPayload {
                 );
                 return;
             }
-
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             att.setRace(pkt.race());
             att.setRaceChosen(true);
             att.setStyleChosen(false);
+            ZenkaiTriggers.RACE_CHOSEN.get().trigger(sp,
+                    pkt.race().name().toLowerCase(Locale.ROOT), null);
+
             PlayerLifeCycle.sync(sp);
             PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
         });

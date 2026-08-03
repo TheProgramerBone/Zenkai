@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.wishes;
 
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -48,6 +49,7 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
                 OtherworldManager.revive(target); // misma lógica que el comando
                 target.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
                 invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
+                ZenkaiTriggers.WISH_GRANTED.get().trigger(invoker, "revive_player");
             });
         }
     }

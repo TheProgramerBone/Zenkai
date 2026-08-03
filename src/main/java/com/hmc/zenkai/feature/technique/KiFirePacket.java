@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.config.CommonConfig;
@@ -68,8 +69,12 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
             // Clamp a maxChargeTicks ANTES de convertir: un cliente modificado podría mandar
             // 99999 ticks y disparar al 5000%.
             int maxTicks = KiCombatServer.maxChargeTicks(reqCharge);
-            double ratio = type.defensive() ? 1.0
-                    : KiCombatServer.chargeRatio(Mth.clamp(pkt.chargeTicks(), 0, maxTicks), reqCharge);
+            // Carga REAL vs carga EFECTIVA. Para el daño, BARRIER ignora la carga y va siempre
+            // al 100%. Pero los logros tienen que ver lo que el jugador de verdad cargó: con la
+            // efectiva, un Barrier a carga mínima concedería "carga llena" sin cargar nada.
+            double rawRatio = KiCombatServer.chargeRatio(
+                    Mth.clamp(pkt.chargeTicks(), 0, maxTicks), reqCharge);
+            double ratio = type.defensive() ? 1.0 : rawRatio;
             if (ratio < KiTechniqueType.MIN_CHARGE) return;
 
             boolean explosive = tech.explosive() && !type.defensive();
@@ -95,6 +100,10 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
                     spawnProjectile(sp, tech, damage, explosive, i);
                 }
             }
+            // Aquí y no antes: ya pasó cooldown, coste y spawn. Disparar al empezar a cargar
+            // daría el logro por apretar el botón y soltarlo.
+            ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
+                    type.name().toLowerCase(java.util.Locale.ROOT), rawRatio);
             PlayerLifeCycle.syncIfServer(sp);
         });
     }

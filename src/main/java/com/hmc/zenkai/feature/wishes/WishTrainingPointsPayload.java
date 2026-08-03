@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.wishes;
 
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -41,6 +42,7 @@ public record WishTrainingPointsPayload() implements CustomPacketPayload {
 
                 WishFinalizer.finalizeWish(player, Component.translatable(
                         "messages.zenkai.wish_desc.training_points", amount));
+                ZenkaiTriggers.WISH_GRANTED.get().trigger(player, "training_points");
             });
         }
     }

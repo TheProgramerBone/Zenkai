@@ -1,0 +1,34 @@
+{
+  "parent": "zenkai:pl_100k",
+  "criteria": {
+    "pl": {
+      "conditions": {
+        "power_level": 1000000
+      },
+      "trigger": "zenkai:stat_threshold"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.pl_1m.description"
+    },
+    "frame": "challenge",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "zenkai:sacred_stone"
+    },
+    "title": {
+      "translate": "advancements.zenkai.pl_1m.title"
+    }
+  },
+  "requirements": [
+    [
+      "pl"
+    ]
+  ],
+  "rewards": {
+    "experience": 100
+  },
+  "sends_telemetry_event": true
+}

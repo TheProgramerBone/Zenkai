@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.wishes;
 
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.core.particles.ParticleTypes;
@@ -85,6 +86,7 @@ public record WishRevivePetPayload(int index) implements CustomPacketPayload {
                 player.displayClientMessage(Component.translatable("messages.zenkai.pet_revived"), false);
                 WishFinalizer.finalizeWish(player, Component.translatable(
                         "messages.zenkai.wish_desc.revive_pet", entity.getDisplayName()));
+                ZenkaiTriggers.WISH_GRANTED.get().trigger(player, "revive_pet");
             });
         }
     }

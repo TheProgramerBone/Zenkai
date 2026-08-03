@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.wishes;
 
 import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -68,6 +69,7 @@ public record StackWishPayload() implements CustomPacketPayload {
                 WishFinalizer.finalizeWish(player, Component.translatable(
                         "messages.zenkai.wish_desc.stack",
                         resolved.getCount(), resolved.getHoverName()));
+                ZenkaiTriggers.WISH_GRANTED.get().trigger(player, "stack");
             });
         }
     }

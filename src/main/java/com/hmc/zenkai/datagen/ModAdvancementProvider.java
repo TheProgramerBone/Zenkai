@@ -1,0 +1,311 @@
+package com.hmc.zenkai.datagen;
+
+import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
+import com.hmc.zenkai.registry.ModBlocks;
+import com.hmc.zenkai.registry.ModDimensions;
+import com.hmc.zenkai.registry.ModItems;
+import com.hmc.zenkai.registry.ModTags;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.AdvancementRewards;
+import net.minecraft.advancements.AdvancementType;
+import net.minecraft.advancements.Criterion;
+import net.minecraft.advancements.critereon.ChangeDimensionTrigger;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
+import net.minecraft.advancements.critereon.ItemPredicate;
+import net.minecraft.advancements.critereon.PlayerTrigger;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.PackOutput;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
+import net.neoforged.neoforge.common.data.AdvancementProvider;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+
+/**
+ * Los 28 logros de Zenkai, en UNA sola pestaña.
+ * POR QUÉ UNA PESTAÑA. Tres pestañas de un mod en la pantalla de logros gritan "conversión
+ * total", y ese es justo el problema que el resto del diseño se esfuerza en no tener.
+ * LA RAÍZ OTORGA EL MUNDO al entrar (trigger `tick` de vanilla, igual que la raíz de
+ * la historia de Minecraft). No es decoración: la selección de raza vive detrás de un keybind y
+ * NADA en el juego se lo dice al jugador. El toast de la raíz es el tutorial, y usa el sistema
+ * que Minecraft ya tiene en vez de inventar una GUI. Quien no quiera tocar el mod ignora el
+ * toast y sigue jugando: la raíz no obliga a nada.
+ * RECOMPENSAS: casi ninguna. Un logro que da poder deja de ser un marcador y pasa a ser una
+ * checklist obligatoria, y la economía de TP ya está calibrada. Solo XP en los dos challenge, y
+ * a mano — el frame `challenge` da el mensaje morado y el sonido, pero NO da experiencia solo.
+ */
+public class ModAdvancementProvider extends AdvancementProvider {
+
+    public ModAdvancementProvider(PackOutput output,
+                                  CompletableFuture<HolderLookup.Provider> registries,
+                                  ExistingFileHelper existingFileHelper) {
+        super(output, registries, existingFileHelper, List.of(new ZenkaiAdvancements()));
+    }
+
+    private static final class ZenkaiAdvancements implements AdvancementProvider.AdvancementGenerator {
+
+        private static final ResourceLocation BACKGROUND =
+                ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/advancements/backgrounds/zenkai.png");
+
+        @Override
+        public void generate(HolderLookup.@NotNull Provider registries, @NotNull Consumer<AdvancementHolder> saver,
+                             @NotNull ExistingFileHelper efh) {
+
+            // ── RAÍZ ────────────────────────────────────────────────────────
+            AdvancementHolder root = Advancement.Builder.advancement()
+                    .display(ModItems.SENZU_BEAN.get(), title("awakening"), desc("awakening"),
+                            BACKGROUND, AdvancementType.TASK, true, true, false)
+                    .addCriterion("tick", PlayerTrigger.TriggerInstance.tick())
+                    .save(saver, id("awakening"), efh);
+
+            AdvancementHolder chooseRace = child(saver, efh, root, "choose_race",
+                    ModItems.SPACE_POD_ITEM.get(), AdvancementType.TASK, false,
+                    "race", raceChosen());
+
+            // ── PODER ───────────────────────────────────────────────────────
+            AdvancementHolder firstTp = child(saver, efh, chooseRace, "first_tp",
+                    net.minecraft.world.item.Items.EXPERIENCE_BOTTLE, AdvancementType.TASK, false,
+                    "tp", tp(1));
+
+            AdvancementHolder pl1k = child(saver, efh, firstTp, "pl_1000",
+                    ModItems.ENERGY_CRYSTAL.get(), AdvancementType.TASK, false,
+                    "pl", powerLevel(1_000));
+
+            AdvancementHolder pl100k = child(saver, efh, pl1k, "pl_100k",
+                    ModItems.NAMEK_CRYSTAL.get(), AdvancementType.TASK, false,
+                    "pl", powerLevel(100_000));
+
+            Advancement.Builder.advancement().parent(pl100k)
+                    .display(ModItems.SACRED_STONE.get(), title("pl_1m"), desc("pl_1m"),
+                            null, AdvancementType.CHALLENGE, true, true, true)
+                    .rewards(AdvancementRewards.Builder.experience(100))
+                    .addCriterion("pl", powerLevel(1_000_000))
+                    .save(saver, id("pl_1m"), efh);
+
+            // ── ENTRENAMIENTO ───────────────────────────────────────────────
+            AdvancementHolder weights = child(saver, efh, chooseRace, "weights",
+                    ModItems.WEIGHTED_STRAPS.get(), AdvancementType.TASK, false,
+                    "equip", hasItems(ModItems.WEIGHTED_STRAPS.get()));
+
+            child(saver, efh, weights, "max_load",
+                    ModItems.WEIGHTED_CAPE.get(), AdvancementType.GOAL, false,
+                    "load", weightLoad(1.0));
+
+            // ── HABILIDADES ─────────────────────────────────────────────────
+            child(saver, efh, chooseRace, "fly",
+                    ModItems.KINTOUN_ITEM.get(), AdvancementType.TASK, false,
+                    "skill", skill("fly", 1));
+
+            AdvancementHolder kiSense = child(saver, efh, chooseRace, "ki_sense",
+                    net.minecraft.world.item.Items.ENDER_EYE, AdvancementType.TASK, false,
+                    "skill", skill("ki_sense", 1));
+
+            child(saver, efh, kiSense, "scouter",
+                    ModItems.SCOUTER.get(), AdvancementType.TASK, false,
+                    "get", hasItems(ModItems.SCOUTER.get()));
+
+            child(saver, efh, chooseRace, "kaioken",
+                    net.minecraft.world.item.Items.BLAZE_POWDER, AdvancementType.TASK, false,
+                    "skill", skill("kaioken", 1));
+
+            AdvancementHolder allSkills = Advancement.Builder.advancement().parent(chooseRace)
+                    .display(ModItems.ELITE_CIRCUIT.get(), title("all_skills"), desc("all_skills"),
+                            null, AdvancementType.GOAL, true, true, true)
+                    .addCriterion("skills", allSkills(false))
+                    .save(saver, id("all_skills"), efh);
+
+            Advancement.Builder.advancement().parent(allSkills)
+                    .display(ModItems.TERRAGEM.get(), title("all_skills_max"), desc("all_skills_max"),
+                            null, AdvancementType.CHALLENGE, true, true, true)
+                    .rewards(AdvancementRewards.Builder.experience(100))
+                    .addCriterion("skills", allSkills(true))
+                    .save(saver, id("all_skills_max"), efh);
+
+            // ── TÉCNICAS ────────────────────────────────────────────────────
+            AdvancementHolder firstTech = child(saver, efh, chooseRace, "first_technique",
+                    net.minecraft.world.item.Items.FIRE_CHARGE, AdvancementType.TASK, false,
+                    "use", technique(0.0));
+
+            AdvancementHolder fullCharge = child(saver, efh, firstTech, "full_charge",
+                    net.minecraft.world.item.Items.GLOWSTONE_DUST, AdvancementType.TASK, false,
+                    "use", technique(1.0));
+
+            child(saver, efh, fullCharge, "overcharge",
+                    ModBlocks.ENERGY_CRYSTAL_BLOCK.get(), AdvancementType.GOAL, false,
+                    "use", technique(2.0));
+
+            // ── OCULTOS DE COMBATE ──────────────────────────────────────────
+            Advancement.Builder.advancement().parent(chooseRace)
+                    .display(Items.POLISHED_BLACKSTONE, title("black_flash"), desc("black_flash"),
+                            null, AdvancementType.GOAL, true, true, true)
+                    .addCriterion("proc", milestone(ZenkaiTriggers.Kinds.BLACK_FLASH))
+                    .save(saver, id("black_flash"), efh);
+
+            Advancement.Builder.advancement().parent(chooseRace)
+                    .display(net.minecraft.world.item.Items.TOTEM_OF_UNDYING, title("revived"), desc("revived"),
+                            null, AdvancementType.TASK, true, true, true)
+                    .addCriterion("revived", milestone(ZenkaiTriggers.Kinds.REVIVED))
+                    .save(saver, id("revived"), efh);
+
+            // ── ESFERAS DEL DRAGÓN ──────────────────────────────────────────
+            AdvancementHolder firstBall = child(saver, efh, chooseRace, "first_ball",
+                    ModBlocks.DRAGON_BALL_4.get(), AdvancementType.TASK, false,
+                    "ball", hasTag(ModTags.Items.DRAGON_BALLS_ITEM));
+
+            AdvancementHolder radar = child(saver, efh, firstBall, "radar",
+                    ModItems.DRAGON_BALL_RADAR.get(), AdvancementType.TASK, false,
+                    "get", hasItems(ModItems.DRAGON_BALL_RADAR.get()));
+
+            AdvancementHolder sevenEarth = child(saver, efh, radar, "seven_earth",
+                    ModItems.ALL_DRAGON_BALLS_ITEM.get(), AdvancementType.GOAL, false,
+                    "seven", hasItems(
+                            ModBlocks.DRAGON_BALL_1.get(), ModBlocks.DRAGON_BALL_2.get(),
+                            ModBlocks.DRAGON_BALL_3.get(), ModBlocks.DRAGON_BALL_4.get(),
+                            ModBlocks.DRAGON_BALL_5.get(), ModBlocks.DRAGON_BALL_6.get(),
+                            ModBlocks.DRAGON_BALL_7.get()));
+
+            child(saver, efh, radar, "seven_namek",
+                    ModBlocks.NAMEK_DRAGON_BALL_7.get(), AdvancementType.GOAL, false,
+                    "seven", hasItems(
+                            ModBlocks.NAMEK_DRAGON_BALL_1.get(), ModBlocks.NAMEK_DRAGON_BALL_2.get(),
+                            ModBlocks.NAMEK_DRAGON_BALL_3.get(), ModBlocks.NAMEK_DRAGON_BALL_4.get(),
+                            ModBlocks.NAMEK_DRAGON_BALL_5.get(), ModBlocks.NAMEK_DRAGON_BALL_6.get(),
+                            ModBlocks.NAMEK_DRAGON_BALL_7.get()));
+
+            AdvancementHolder firstWish = child(saver, efh, sevenEarth, "first_wish",
+                    ModBlocks.ALL_DRAGON_BALLS.get(), AdvancementType.TASK, false,
+                    "wish", wish(null));
+
+            // Los seis criterios y ninguna llamada a requirements(): el default de vanilla es
+            // AND, o sea que hacen falta LOS SEIS. Es justo lo que queremos aquí.
+            Advancement.Builder.advancement().parent(firstWish)
+                    .display(net.minecraft.world.item.Items.DRAGON_EGG, title("all_wishes"), desc("all_wishes"),
+                            null, AdvancementType.CHALLENGE, true, true, false)
+                    .rewards(AdvancementRewards.Builder.experience(100))
+                    .addCriterion("immortality", wish("immortality"))
+                    .addCriterion("training_points", wish("training_points"))
+                    .addCriterion("revive_player", wish("revive_player"))
+                    .addCriterion("revive_pet", wish("revive_pet"))
+                    .addCriterion("enchant_villager", wish("enchant_villager"))
+                    .addCriterion("stack", wish("stack"))
+                    .save(saver, id("all_wishes"), efh);
+
+            // ── LUGARES ─────────────────────────────────────────────────────
+            child(saver, efh, chooseRace, "namek",
+                    ModBlocks.NAMEKIAN_GRASS_BLOCK.get(), AdvancementType.TASK, false,
+                    "go", ChangeDimensionTrigger.TriggerInstance.changedDimensionTo(ModDimensions.NAMEK_LEVEL));
+
+            child(saver, efh, chooseRace, "htc",
+                    ModBlocks.HTC_BLOCK.get(), AdvancementType.TASK, false,
+                    "go", ChangeDimensionTrigger.TriggerInstance.changedDimensionTo(ModDimensions.HTC_LEVEL));
+
+            Advancement.Builder.advancement().parent(chooseRace)
+                    .display(ModItems.HALO.get(), title("otherworld"), desc("otherworld"),
+                            null, AdvancementType.TASK, true, true, true)
+                    .addCriterion("go", ChangeDimensionTrigger.TriggerInstance
+                            .changedDimensionTo(ModDimensions.OTHERWORLD_LEVEL))
+                    .save(saver, id("otherworld"), efh);
+        }
+
+        // =================================================================
+        // HELPERS
+        // =================================================================
+
+        /** Un logro corriente colgado de otro. Existe para que las 20 llamadas de arriba quepan
+         *  en una línea y las excepciones (challenge, oculto, recompensa) se vean de lejos. */
+        private static AdvancementHolder child(Consumer<AdvancementHolder> saver, ExistingFileHelper efh,
+                                               AdvancementHolder parent, String name, ItemLike icon,
+                                               AdvancementType type, boolean hidden,
+                                               String critName, Criterion<?> crit) {
+            return Advancement.Builder.advancement().parent(parent)
+                    .display(icon, title(name), desc(name), null, type, true, true, hidden)
+                    .addCriterion(critName, crit)
+                    .save(saver, id(name), efh);
+        }
+
+        /** El overload de save() que acepta ExistingFileHelper es la extensión de NeoForge y
+         *  pide ResourceLocation; el de String es el de vanilla, que no valida el padre. */
+        private static ResourceLocation id(String name) {
+            return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, name);
+        }
+        private static Component title(String name) { return Component.translatable("advancements.zenkai." + name + ".title"); }
+        private static Component desc(String name)  { return Component.translatable("advancements.zenkai." + name + ".description"); }
+
+        // ── Criterios de Zenkai ──────────────────────────────────────────
+
+        private static Criterion<?> raceChosen() {
+            return ZenkaiTriggers.RACE_CHOSEN.get().createCriterion(
+                    new ZenkaiTriggers.RaceChosen.Instance(Optional.empty(), Optional.empty(), Optional.empty()));
+        }
+
+        private static Criterion<?> stat(Optional<Long> pl, Optional<Integer> tp, Optional<Double> load,
+                                         Optional<String> skill, Optional<Integer> skillLvl,
+                                         Optional<Boolean> all, Optional<Boolean> allMax) {
+            return ZenkaiTriggers.STAT_THRESHOLD.get().createCriterion(
+                    new ZenkaiTriggers.StatThreshold.Instance(Optional.empty(), pl, tp, load, skill, skillLvl, all, allMax));
+        }
+
+        private static Criterion<?> powerLevel(long v) {
+            return stat(Optional.of(v), Optional.empty(), Optional.empty(),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        }
+
+        private static Criterion<?> tp(int v) {
+            return stat(Optional.empty(), Optional.of(v), Optional.empty(),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        }
+
+        private static Criterion<?> weightLoad(double v) {
+            return stat(Optional.empty(), Optional.empty(), Optional.of(v),
+                    Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        }
+
+        private static Criterion<?> skill(String id, int lvl) {
+            return stat(Optional.empty(), Optional.empty(), Optional.empty(),
+                    Optional.of(id), Optional.of(lvl), Optional.empty(), Optional.empty());
+        }
+
+        private static Criterion<?> allSkills(boolean maxed) {
+            return stat(Optional.empty(), Optional.empty(), Optional.empty(),
+                    Optional.empty(), Optional.empty(),
+                    maxed ? Optional.empty() : Optional.of(true),
+                    maxed ? Optional.of(true) : Optional.empty());
+        }
+
+        private static Criterion<?> technique(double charge) {
+            return ZenkaiTriggers.TECHNIQUE_USED.get().createCriterion(
+                    new ZenkaiTriggers.TechniqueUsed.Instance(Optional.empty(), Optional.empty(),
+                            charge <= 0.0 ? Optional.empty() : Optional.of(charge)));
+        }
+
+        private static Criterion<?> wish(String id) {
+            return ZenkaiTriggers.WISH_GRANTED.get().createCriterion(
+                    new ZenkaiTriggers.WishGranted.Instance(Optional.empty(), Optional.ofNullable(id)));
+        }
+
+        private static Criterion<?> milestone(String kind) {
+            return ZenkaiTriggers.MILESTONE.get().createCriterion(
+                    new ZenkaiTriggers.Milestone.Instance(Optional.empty(), Optional.of(kind)));
+        }
+
+        // ── Criterios de vanilla ─────────────────────────────────────────
+
+        private static Criterion<?> hasItems(ItemLike... items) {
+            return InventoryChangeTrigger.TriggerInstance.hasItems(items);
+        }
+
+        private static Criterion<?> hasTag(net.minecraft.tags.TagKey<net.minecraft.world.item.Item> tag) {
+            return InventoryChangeTrigger.TriggerInstance.hasItems(
+                    ItemPredicate.Builder.item().of(tag));
+        }
+    }
+}

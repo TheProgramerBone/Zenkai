@@ -1,0 +1,26 @@
+{
+  "parent": "zenkai:choose_race",
+  "criteria": {
+    "use": {
+      "trigger": "zenkai:technique_used"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.first_technique.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:fire_charge"
+    },
+    "title": {
+      "translate": "advancements.zenkai.first_technique.title"
+    }
+  },
+  "requirements": [
+    [
+      "use"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

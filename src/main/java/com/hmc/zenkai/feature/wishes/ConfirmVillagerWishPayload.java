@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.wishes;
 
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
@@ -142,6 +143,7 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
                 WishFinalizer.finalizeWish(player, Component.translatable(
                         "messages.zenkai.wish_desc.enchant_villager",
                         Component.translatable(holder.value().description().getString())));
+                ZenkaiTriggers.WISH_GRANTED.get().trigger(player, "enchant_villager");
             });
         }
     }

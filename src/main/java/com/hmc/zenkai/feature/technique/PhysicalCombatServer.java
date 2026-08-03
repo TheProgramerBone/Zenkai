@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.KiFist;
 import com.hmc.zenkai.feature.combat.KiInfusion;
 import com.hmc.zenkai.registry.ModParticles;
@@ -162,6 +163,11 @@ public final class PhysicalCombatServer {
             case HEAVY_BLOW -> heavyBlow(sp, str, t);
             case KIAI -> kiai(sp, str, t);
         }
+        // Carga 0.0 y no 1.0: las técnicas físicas NO tienen carga. Con 1.0, un Dash Punch
+        // concedería los logros de carga llena y sobrecarga, que son del sistema de ki.
+        // El criterio de "primera técnica" no filtra por carga, así que casa igual.
+        ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
+                t.name().toLowerCase(java.util.Locale.ROOT), 0.0);
         PlayerLifeCycle.sync(sp);
     }
 

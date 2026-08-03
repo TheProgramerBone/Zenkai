@@ -2,6 +2,7 @@ package com.hmc.zenkai.event;
 
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.content.item.KiWeaponItem;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.*;
 import com.hmc.zenkai.feature.kiweapon.KiWeaponServer;
 import com.hmc.zenkai.registry.ModGameRules;
@@ -361,6 +362,7 @@ public class CombatZenkaiHooks {
 
         // Levanta al aliado con el 20% del body.
         tAtt.setBody(downedReviveBody(tAtt));
+        ZenkaiTriggers.MILESTONE.get().trigger(target, ZenkaiTriggers.Kinds.REVIVED);
         PlayerLifeCycle.sync(target);
 
         e.setCanceled(true);

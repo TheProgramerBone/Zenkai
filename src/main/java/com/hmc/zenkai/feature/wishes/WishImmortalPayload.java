@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.wishes;
 
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModEffects;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -38,6 +39,7 @@ public record WishImmortalPayload() implements CustomPacketPayload {
 
                 WishFinalizer.finalizeWish(player, Component.translatable(
                         "messages.zenkai.wish_desc.immortal"));
+                ZenkaiTriggers.WISH_GRANTED.get().trigger(player, "immortality");
             });
         }
     }

@@ -1,0 +1,30 @@
+{
+  "parent": "zenkai:choose_race",
+  "criteria": {
+    "go": {
+      "conditions": {
+        "to": "zenkai:otherworld"
+      },
+      "trigger": "minecraft:changed_dimension"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.otherworld.description"
+    },
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "zenkai:halo"
+    },
+    "title": {
+      "translate": "advancements.zenkai.otherworld.title"
+    }
+  },
+  "requirements": [
+    [
+      "go"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

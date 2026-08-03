@@ -1,0 +1,52 @@
+{
+  "parent": "zenkai:radar",
+  "criteria": {
+    "seven": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:dragon_ball_1"
+          },
+          {
+            "items": "zenkai:dragon_ball_2"
+          },
+          {
+            "items": "zenkai:dragon_ball_3"
+          },
+          {
+            "items": "zenkai:dragon_ball_4"
+          },
+          {
+            "items": "zenkai:dragon_ball_5"
+          },
+          {
+            "items": "zenkai:dragon_ball_6"
+          },
+          {
+            "items": "zenkai:dragon_ball_7"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.seven_earth.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "zenkai:all_dragon_balls"
+    },
+    "title": {
+      "translate": "advancements.zenkai.seven_earth.title"
+    }
+  },
+  "requirements": [
+    [
+      "seven"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

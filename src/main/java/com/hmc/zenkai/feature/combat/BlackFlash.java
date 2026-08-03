@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.combat;
 
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModParticles;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -103,6 +104,7 @@ public final class BlackFlash {
                 + st.computeBestMeleeFinal() * chargeF * CommonConfig.blackFlashStatFactor();
 
         fx(sp, victim);
+        ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.BLACK_FLASH);
         return boosted;
     }
 

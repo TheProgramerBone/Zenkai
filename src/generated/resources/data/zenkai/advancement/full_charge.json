@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:first_technique",
+  "criteria": {
+    "use": {
+      "conditions": {
+        "charge": 1.0
+      },
+      "trigger": "zenkai:technique_used"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.full_charge.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:glowstone_dust"
+    },
+    "title": {
+      "translate": "advancements.zenkai.full_charge.title"
+    }
+  },
+  "requirements": [
+    [
+      "use"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

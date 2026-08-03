@@ -3,6 +3,7 @@ package com.hmc.zenkai;
 
 import com.hmc.zenkai.client.gui.screens.ClientConfigScreen;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.datagen.ModAdvancementProvider;
 import com.hmc.zenkai.event.ClientZenkaiHooks;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
@@ -16,6 +17,7 @@ import com.hmc.zenkai.client.render_and_model_entities.entity.KiProjectileRender
 import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBallsRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.entity.*;
 import com.hmc.zenkai.event.ZenkaiTickHandlers;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.*;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.config.ServerConfig;
@@ -87,6 +89,7 @@ public class Zenkai {
         ModMenuTypes.MENUS.register(modEventBus);
         ModDataComponents.register(modEventBus);
         ModParticles.register(modEventBus);
+        ZenkaiTriggers.register(modEventBus);
 
         // Configs
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);

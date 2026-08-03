@@ -1,0 +1,30 @@
+{
+  "parent": "zenkai:weights",
+  "criteria": {
+    "load": {
+      "conditions": {
+        "weight_load": 1.0
+      },
+      "trigger": "zenkai:stat_threshold"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.max_load.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "zenkai:weighted_cape"
+    },
+    "title": {
+      "translate": "advancements.zenkai.max_load.title"
+    }
+  },
+  "requirements": [
+    [
+      "load"
+    ]
+  ],
+  "sends_telemetry_event": true
+}
