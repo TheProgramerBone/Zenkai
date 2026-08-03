@@ -3,6 +3,6 @@
   "fallback": "minecraft:empty",
   "elements": [
     { "weight": 1, "element": { "element_type": "minecraft:single_pool_element",
-      "location": "zenkai:namek_dragon_ball_5_structure", "processors": "minecraft:empty", "projection": "rigid" } }
+      "location": "zenkai:namek_dragon_ball_5_star_structure", "processors": "minecraft:empty", "projection": "rigid" } }
   ]
 }

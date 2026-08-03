@@ -1,0 +1,110 @@
+ZENKAI — ASSET AND DATA LICENCE
+==============================
+
+This file covers everything in the Zenkai project that is NOT source code.
+The source code is licensed separately under the Mozilla Public License 2.0;
+see LICENSE.txt.
+
+
+1. ASSETS — ALL RIGHTS RESERVED
+-------------------------------
+
+The following are original works and are All Rights Reserved:
+
+  src/main/resources/assets/zenkai/textures/**
+  src/main/resources/assets/zenkai/models/**
+  src/main/resources/assets/zenkai/geo/**
+  src/main/resources/assets/zenkai/animations/**
+  src/main/resources/assets/zenkai/player_animations/**
+  src/main/resources/assets/zenkai/particles/**
+  src/main/resources/assets/zenkai/sounds/**
+  src/main/resources/assets/zenkai/*.png
+  src/main/resources/data/zenkai/structure/**   (.nbt structure files)
+
+You MAY NOT copy, redistribute, modify, re-texture, re-model, or include these
+files in any other project, resource pack, modpack asset override, or
+derivative work, without prior written permission from the copyright holder.
+
+Depending on Zenkai from an addon and referencing these assets at runtime
+(through resource locations, model paths, or the datapack fields Zenkai
+exposes) is NOT copying, and is permitted. Shipping copies of the files is not.
+
+
+2. DATAPACK JSON — MIT
+----------------------
+
+The following are licensed under the MIT License:
+
+  src/main/resources/data/zenkai/**/*.json
+  src/main/resources/assets/zenkai/lang/*.json
+
+This is deliberate. These files are configuration, and the whole point of the
+format is that other people can write their own. Copy them, learn from them,
+fork them, ship them in your own addon. Attribution appreciated, not required.
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of these files and associated documentation files (the "Files"), to deal in
+  the Files without restriction, including without limitation the rights to
+  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+  of the Files, and to permit persons to whom the Files are furnished to do so,
+  subject to the following condition: the above copyright notice and this
+  permission notice shall be included in all copies or substantial portions of
+  the Files.
+
+  THE FILES ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE FILES OR THE USE OR OTHER DEALINGS IN THE
+  FILES.
+
+
+3. ADDONS — EXPLICITLY PERMITTED
+--------------------------------
+
+You may create, publish, and monetise mods and datapacks that depend on Zenkai.
+No permission is required. This includes:
+
+  - Java mods that declare Zenkai as a dependency and call into it.
+  - Datapacks that add forms, skills, or entity stats through Zenkai's
+    data-driven registries.
+  - Resource packs that replace Zenkai's textures locally, for personal or
+    server use.
+
+It does not include redistributing Zenkai's own jar or assets as part of your
+project.
+
+
+4. REDISTRIBUTION
+-----------------
+
+The compiled Zenkai jar may be distributed only through CurseForge and
+Modrinth. Reuploading it elsewhere, publishing ports or backports, or bundling
+it into a paywalled product is not permitted without prior written permission.
+
+Inclusion in publicly available modpacks: permitted, provided the modpack is
+free to download and Zenkai is credited with a link back to the project page.
+
+
+5. DRAGON BALL INTELLECTUAL PROPERTY
+------------------------------------
+
+Zenkai is an unofficial, non-commercial fan project. It is not affiliated with,
+endorsed by, or sponsored by Toei Animation, Bird Studio, Shueisha, Bandai
+Namco, or any other Dragon Ball rights holder.
+
+Dragon Ball and all associated names, characters, concepts and designs are the
+property of their respective owners. This licence covers only the original code
+and original artwork of this project. It grants no rights whatsoever over
+Dragon Ball itself, and makes no claim of ownership over it.
+
+
+6. CONFLICTS
+------------
+
+Where this file conflicts with the licence displayed on the Zenkai CurseForge
+project page, the CurseForge licence governs.
+
+
+Copyright (c) 2026 HMC / Zenkai. All rights reserved except as stated above.

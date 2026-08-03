@@ -1,8 +1,7 @@
 {
-  "replace": {
-    "minecraft:arrow": "zenkai:ki_arrow"
-  },
+  "replace": {},
   "scaled": [
+    "minecraft:arrow",
     "minecraft:spectral_arrow",
     "minecraft:trident",
     "minecraft:snowball",

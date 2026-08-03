@@ -73,15 +73,19 @@ public class CombatZenkaiHooks {
         MinecraftServer server = e.getEntity().getServer();
         if (server == null || !ModGameRules.enableRaceBoosts(server)) return;
 
+        // La mitigación vanilla se lee AQUÍ, antes de que computeAttackDamage descarte el
+        // daño entrante. Después ya es tarde: el ratio vive en el número que sustituimos.
+        double armorMult = VanillaArmor.multiplier(e);
+
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
         float dmg = computeAttackDamage(e, atkStats);
 
         ZenkaiCombatStats defStats = ZenkaiStats.of(e.getEntity());
         if (defStats != null && defStats.isCombatActive()) {
-            applyToZenkaiVictim(e, atkStats, defStats, dmg);
+            applyToZenkaiVictim(e, atkStats, defStats, dmg, armorMult);
             return;
         }
-        applyToVanillaVictim(e, dmg);
+        applyToVanillaVictim(e, dmg, armorMult);
     }
 
     // =====================================================================
@@ -101,12 +105,18 @@ public class CombatZenkaiHooks {
         if (PhysicalCombatServer.isFiring()) return dmg;
 
         // GOLPE INDIRECTO (flecha, tridente, bola de nieve): el daño NO es el melee del
-        // tirador. Sin esto caía en playerMeleeDamage y una flecha pegaba el STR completo
-        // gastando estamina, con el arco actuando de "arma" del multiplicador. Lo que lleva
-        // es su daño vanilla más lo que Ki Infuse le puso AL LANZARLA.
+        // tirador. Lo que lleva es su daño vanilla más lo que Ki Infuse le puso AL LANZARLA.
+        // EL ARCO MULTIPLICA EL BONUS, no se le suma: sumando, Poder V añadía ~3 puntos a un
+        // bonus de miles y el encantamiento era invisible en el juego aunque estuviera en el
+        // código. Mismo arreglo que weaponMultiplier hizo con las espadas.
         Entity direct = e.getSource().getDirectEntity();
         if (direct != null && direct != e.getSource().getEntity()) {
-            return dmg + (float) KiInfusedShot.of(direct).bonusDamage();
+            KiInfusedShot shot = KiInfusedShot.of(direct);
+            if (!shot.isInfused()) return dmg;
+            // El daño ORIGINAL (pre-armadura) es donde vive lo que puso Poder; dmg ya viene
+            // mitigado y la armadura se cobra aparte en VanillaArmor.
+            double mult = KiInfusion.projectileMultiplier(VanillaArmor.originalDamage(e));
+            return dmg + (float) (shot.bonusDamage() * mult);
         }
 
         double strDamage = atkStats.computeMeleeFinal();
@@ -184,63 +194,57 @@ public class CombatZenkaiHooks {
     // =====================================================================
 
     /** Víctima CON stats zenkai: mitiga con DEF y el daño va al pool body. */
+    /** Víctima CON stats zenkai: mitiga con DEF y el daño va al pool body. */
     private static void applyToZenkaiVictim(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
-                                            ZenkaiCombatStats defStats, float dmg) {
+                                            ZenkaiCombatStats defStats, float dmg,
+                                            double armorMult) {
         if (dmg > 0f) {
-            double finalDamage = mitigate(e, atkStats, defStats, dmg);
+            double finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult);
 
             int bodyBefore = defStats.getBody();
             defStats.addBody(-(int) Math.ceil(finalDamage));
-            // La barra vanilla sigue al pool: sin esto la de los jefes no se movía nunca.
-            // Solo para no-jugadores; el jugador mantiene su vida vanilla llena a propósito
-            // (su daño vive en el pool y la GUI del mod es la que lo muestra).
             if (!(e.getEntity() instanceof Player)) {
                 defStats.mirrorToVanilla(e.getEntity());
             }
 
-            // Entrenamiento: TP por daño EFECTIVO (post-defensa y post-barrera,
-            // capado por el pool restante -> sin exploit de overkill ni de derribados).
             grantTraining(e, Math.min(finalDamage, bodyBefore));
         }
 
         if (e.getEntity() instanceof Player victim) {
-            // El jugador nunca recibe daño vanilla; el daño vive en el pool body.
             e.setNewDamage(0.0F);
             if (defStats.getBody() <= 0) onBodyDepleted(victim, PlayerStatsAttachment.get(victim));
             PlayerLifeCycle.syncIfServer(victim);
             return;
         }
 
-        // Entidad con stats: el body es su vida real (esquiva el cap de MC).
         if (defStats.getBody() <= 0) {
-            // Golpe letal: dejamos pasar daño vanilla real -> muerte con loot/XP/killer correctos.
             e.setNewDamage(Math.max(e.getEntity().getHealth(), 1.0F));
         } else {
-            e.setNewDamage(0.0F); // absorbido por el pool body
+            e.setNewDamage(0.0F);
         }
     }
 
     /** Aplica DEF, bloqueo y barrera. @return daño que llega al body. */
+    /** Aplica DEF, armadura vanilla, bloqueo y barrera. @return daño que llega al body. */
     private static double mitigate(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
-                                   ZenkaiCombatStats defStats, float dmg) {
+                                   ZenkaiCombatStats defStats, float dmg, double armorMult) {
         double defense = computeDefense(e, atkStats, defStats, dmg);
 
-        // Reducción PORCENTUAL relativa al golpe entrante, no resta.
-        // Con resta, melee y defensa tenían que vivir en escalas separadas a mano: un
-        // Arcosian recién creado tenía defensa 74 contra melee 75 y necesitaba 47 golpes
-        // para matar a otro Arcosian. Además esto se autoescala: la misma fórmula vale con
-        // STR 10 y con STR 200.000, sin recalibrar nada.
-        // defensa == daño  ->  50% de reducción.
         double finalDamage = (defense <= 0.0)
                 ? dmg
                 : dmg * (1.0 - defense / (defense + dmg));
+
+        // Armadura vanilla DESPUÉS de la DEF y ANTES del suelo. Multiplica en vez de restar
+        // por el mismo motivo que el arma: 20 puntos de armadura contra un golpe de 20.000
+        // son ruido, un x0.63 vale igual a cualquier escala. Y que el suelo se aplique al
+        // final es lo que impide volverse inmune apilando armadura sobre DEF.
+        finalDamage *= armorMult;
         finalDamage = Math.max(finalDamage, dmg * CommonConfig.minDamagePercent());
 
         if (e.getEntity() instanceof ServerPlayer defSp && KiCombatServer.isBlocking(defSp)) {
             finalDamage *= SkillEffects.blockDamageMultiplier(defSp);
         }
 
-        // Barrera ki: absorbe ANTES de tocar el body (solo jugadores).
         if (e.getEntity() instanceof ServerPlayer defSp) {
             finalDamage = KiCombatServer.absorb(defSp, finalDamage);
         }
@@ -272,11 +276,14 @@ public class CombatZenkaiHooks {
         return defense;
     }
 
-    /** Víctima SIN stats (mob vanilla): recibe en su vida el daño ya recalculado. */
-    private static void applyToVanillaVictim(LivingDamageEvent.Pre e, float dmg) {
-        e.setNewDamage(dmg);
-        // Entrenamiento vs mobs vanilla: capado por la vida restante (sin overkill).
-        if (dmg > 0f) grantTraining(e, Math.min(dmg, e.getEntity().getHealth()));
+    /** Víctima SIN stats (mob vanilla): recibe el daño recalculado, con SU armadura contando.
+     *  Sin el multiplicador aquí, setNewDamage también le tiraba la reducción a la basura y
+     *  un golem de hierro encajaba lo mismo que una gallina. */
+    private static void applyToVanillaVictim(LivingDamageEvent.Pre e, float dmg, double armorMult) {
+        float finalDamage = (float) Math.max(dmg * armorMult,
+                dmg * CommonConfig.minDamagePercent());
+        e.setNewDamage(finalDamage);
+        if (finalDamage > 0f) grantTraining(e, Math.min(finalDamage, e.getEntity().getHealth()));
     }
 
     /** TP de entrenamiento al atacante, si es un jugador distinto de la víctima. */

@@ -90,6 +90,30 @@ public final class KiInfusion {
         return 1.0 + extra * CommonConfig.weaponScale();
     }
 
+    /**
+     * PROYECTIL COMO MULTIPLICADOR. Hermano de weaponMultiplier, pero RELATIVO y no absoluto,
+     * y esa diferencia es el arreglo: attack_damage en vanilla llega a ~10 y admite una escala
+     * pequeña, pero el daño de una flecha va de 6 a 9 y con escala absoluta Poder V — un
+     * encantamiento de nivel máximo — valía un +30% de nada. En relativo la regla es una frase:
+     * un encantamiento del arco aporta a la infusión la misma proporción que le aporta a la
+     * flecha. Con scale 1.0, Poder V vale x1.50 aquí igual que vale x1.50 allí, y si Mojang
+     * retoca la fórmula de Poder esto no se entera.
+     * Solo escala el BONUS. El daño vanilla del proyectil ya va sumado aparte en
+     * computeAttackDamage; multiplicarlo también sería cobrar el mismo encantamiento dos veces.
+     * El cap no es decorativo: un arco de otro mod con 30 de daño daría x5 sobre un bonus de
+     * cuatro cifras. Por abajo NO hay suelo a propósito — media carga da x0.5, que es el mismo
+     * castigo al spam que aplica chargeF en melee.
+     *
+     * @param originalVanillaDamage daño del proyectil ANTES de armadura (VanillaArmor.originalDamage).
+     */
+    public static double projectileMultiplier(double originalVanillaDamage) {
+        double base = CommonConfig.projectileBaseDamage();
+        if (base <= 0.0 || originalVanillaDamage <= 0.0) return 1.0;
+
+        double mult = 1.0 + (originalVanillaDamage / base - 1.0) * CommonConfig.projectileScale();
+        return Math.max(0.0, Math.min(mult, CommonConfig.projectileMultCap()));
+    }
+
     /** Coste en ki del EXTRA que aporta el arma de ki sobre pegar a mano limpia. Se cobra
     *  aparte porque, si no, el multiplicador saldría gratis y no habría decisión que tomar
     *  entre invocarla o no. */

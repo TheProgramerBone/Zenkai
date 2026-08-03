@@ -187,6 +187,22 @@ public final class CommonConfig {
             BUILDER.comment("Weapon damage as a MULTIPLIER on melee: mult = 1 + (attack_damage - 1) * scale. 0.04 = diamond sword x1.28. Set to 0 to make weapons irrelevant again.")
                     .defineInRange("combat.weapon_scale", 0.04D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue VANILLA_ARMOR_WEIGHT_RAW =
+            BUILDER.comment("How much of vanilla's own damage reduction (armor points, toughness, Protection, Resistance) carries over to Zenkai damage. 0.0 = armor ignored (old behaviour). 1.0 = full vanilla reduction, netherite + Prot IV cuts ~91%. 0.5 = ~45%.")
+                    .defineInRange("combat.vanilla_armor_weight", 0.50D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue PROJECTILE_BASE_DAMAGE_RAW =
+            BUILDER.comment("Reference damage of a clean unenchanted arrow at full draw (vanilla: 2.0 base x 3.0 velocity). The Ki Infuse bonus on projectiles scales against this.")
+                    .defineInRange("combat.projectile_base_damage", 6.0D, 0.1D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue PROJECTILE_SCALE_RAW =
+            BUILDER.comment("How much a projectile's own damage scales the Ki Infuse bonus: mult = 1 + (damage / projectile_base_damage - 1) * scale. 1.0 = a bow enchantment helps the infusion exactly as much as it helps the arrow (Power V = x1.5). 0 = enchantments irrelevant.")
+                    .defineInRange("combat.projectile_scale", 1.0D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue PROJECTILE_MULT_CAP_RAW =
+            BUILDER.comment("Hard ceiling on the projectile multiplier. Vanilla never reaches 2.0; the cap exists so a modded bow with 30 base damage cannot multiply a four-digit ki bonus by 5.")
+                    .defineInRange("combat.projectile_mult_cap", 3.0D, 1.0D, 100.0D);
+
     private static final ModConfigSpec.DoubleValue KI_PER_BONUS_DAMAGE_RAW =
             BUILDER.comment("Ki spent per point of BONUS damage added by Ki Infuse / Ki Fist. Higher = fewer empowered hits per bar.")
                     .defineInRange("cost.ki_per_bonus_damage", 0.50D, 0.0D, 10.0D);
@@ -353,6 +369,10 @@ public final class CommonConfig {
     private static volatile double MELEE_STAMINA_PER_HIT = 0.10D;
     private static volatile double MELEE_KI_PER_HIT = 0.10D;
     private static volatile double WEAPON_SCALE = 0.04D;
+    private static volatile double VANILLA_ARMOR_WEIGHT = 0.50D;
+    private static volatile double PROJECTILE_BASE_DAMAGE = 6.0D;
+    private static volatile double PROJECTILE_SCALE = 1.0D;
+    private static volatile double PROJECTILE_MULT_CAP = 3.0D;
     private static volatile double KI_PER_BONUS_DAMAGE = 0.50D;
     private static volatile double COMBAT_ATTACK_SPEED = 1.6D;
     private static volatile double OVERCHARGE_TIME_MULT = 2.5D;
@@ -455,6 +475,10 @@ public final class CommonConfig {
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
         MELEE_KI_PER_HIT      = MELEE_KI_PER_HIT_RAW.get();
         WEAPON_SCALE          = WEAPON_SCALE_RAW.get();
+        VANILLA_ARMOR_WEIGHT   = VANILLA_ARMOR_WEIGHT_RAW.get();
+        PROJECTILE_BASE_DAMAGE = PROJECTILE_BASE_DAMAGE_RAW.get();
+        PROJECTILE_SCALE       = PROJECTILE_SCALE_RAW.get();
+        PROJECTILE_MULT_CAP    = PROJECTILE_MULT_CAP_RAW.get();
         KI_PER_BONUS_DAMAGE   = KI_PER_BONUS_DAMAGE_RAW.get();
         COMBAT_ATTACK_SPEED   = COMBAT_ATTACK_SPEED_RAW.get();
         OVERCHARGE_TIME_MULT  = OVERCHARGE_TIME_MULT_RAW.get();
@@ -522,6 +546,10 @@ public final class CommonConfig {
 
     /** El arma como multiplicador del golpe, no como suma. Ver KiInfusion. */
     public static double weaponScale()       { return WEAPON_SCALE; }
+    public static double vanillaArmorWeight()  { return VANILLA_ARMOR_WEIGHT; }
+    public static double projectileBaseDamage(){ return PROJECTILE_BASE_DAMAGE; }
+    public static double projectileScale()     { return PROJECTILE_SCALE; }
+    public static double projectileMultCap()   { return PROJECTILE_MULT_CAP; }
     /** Ki por punto de daño EXTRA de Ki Infuse / Ki Fist. */
     public static double kiPerBonusDamage()  { return KI_PER_BONUS_DAMAGE; }
 

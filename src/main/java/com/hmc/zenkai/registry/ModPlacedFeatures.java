@@ -18,8 +18,6 @@ import net.minecraft.world.level.levelgen.placement.*;
 import java.util.List;
 
 public class ModPlacedFeatures {
-    // CF -> PF -> BM
-
     public static final ResourceKey<PlacedFeature> TERRAGEM_ORE_PLACED_KEY = registerKey("terragem_ore_placed");
 
     /** Matojos secos del rocky_wasteland. Antes era un JSON suelto; vive aquí porque el
@@ -177,13 +175,14 @@ public class ModPlacedFeatures {
 
         Holder<ConfiguredFeature<?, ?>> ajisa = configuredFeatures.getOrThrow(ModConfiguredFeatures.AJISA_TREE);
 
-        // Bosque cerrado: unos 7 intentos por chunk.
+        // Bosque: arboledas con claros. Antes era countExtra(6, 0.1F, 2) —unos 7 intentos por
+        // chunk— y salía jungla, no bosque.
         register(context, AJISA_FOREST, ajisa,
-                treePlacement(PlacementUtils.countExtra(6, 0.1F, 2)));
-        // Llanura: grupos sueltos. noise_threshold_count crea claros y arboledas en vez de
-        // reparto uniforme, que es lo que hace que se lean como bosquecillos.
-        register(context, AJISA_PLAINS, ajisa,
                 treePlacement(NoiseThresholdCountPlacement.of(-0.5D, 0, 3)));
+        // Llanura: árbol suelto. Mismo modificador de ruido para que sigan saliendo agrupados
+        // en vez de repartidos uniformemente, pero con techo de 1 por chunk.
+        register(context, AJISA_PLAINS, ajisa,
+                treePlacement(NoiseThresholdCountPlacement.of(-0.5D, 0, 1)));
         // Colinas: muy pocos.
         register(context, AJISA_HILLS, ajisa,
                 treePlacement(RarityFilter.onAverageOnceEvery(12)));

@@ -65,37 +65,9 @@ public final class KiProjectileRules {
     /** Trato que le toca a este tipo de proyectil. */
     public static Mode modeFor(EntityType<?> type) {
         ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        if (key == null || BLOCKED.contains(key)) return Mode.NONE;
+        if (BLOCKED.contains(key)) return Mode.NONE;
         if (REPLACE.containsKey(key)) return Mode.REPLACE;
         return SCALED.contains(key) ? Mode.SCALED : Mode.NONE;
-    }
-
-    /**
-     * Construye el sustituto de un proyectil, copiando su estado por NBT: posición, vector de
-     * vuelo, daño base, crítico, perforación, efectos de la flecha con punta y de qué arma
-     * salió. Copiar por NBT y no campo a campo es lo que hace que una flecha de Poder V con
-     * efecto de veneno siga siendo eso al infusionarse.
-     * Se le quita el UUID antes de cargar: si no, las dos entidades comparten identidad y el
-     * nivel se lía al eliminar la original.
-     * @return null si el tipo destino no existe o no es un proyectil (JSON mal puesto).
-     */
-    public static Projectile buildReplacement(Projectile original) {
-        ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(original.getType());
-        ResourceLocation targetId = key == null ? null : REPLACE.get(key);
-        if (targetId == null) return null;
-
-        EntityType<?> target = BuiltInRegistries.ENTITY_TYPE.get(targetId);
-        if (target == null) return null;
-
-        Entity created = target.create(original.level());
-        if (!(created instanceof Projectile p)) return null;
-
-        // ⚠ API a verificar al compilar: Entity#saveWithoutId y Entity#load (públicos en 1.21.1).
-        CompoundTag tag = original.saveWithoutId(new CompoundTag());
-        tag.remove("UUID");
-        p.load(tag);
-        p.setOwner(original.getOwner());   // explícito: no dependemos de cómo serialice el dueño
-        return p;
     }
 
     private static final class Loader extends SimplePreparableReloadListener<Loader.Data> {

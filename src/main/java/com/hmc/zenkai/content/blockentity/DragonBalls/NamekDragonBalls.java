@@ -52,10 +52,9 @@ public class NamekDragonBalls extends HorizontalDirectionalBlock implements Simp
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         // Si se coloca dentro de agua, nace ya inundada en vez de desplazar el fluido.
-        boolean water = context.getLevel().getFluidState(context.getClickedPos()).getType() == Fluids.WATER;
+        // boolean water = context.getLevel().getFluidState(context.getClickedPos()).getType() == Fluids.WATER;
         return this.defaultBlockState()
-                .setValue(FACING, context.getHorizontalDirection().getOpposite())
-                .setValue(BlockStateProperties.WATERLOGGED, water);
+                .setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 
     /** Sin esto el agua adyacente rompe el bloque al intentar fluir a través de él. */
