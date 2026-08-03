@@ -62,6 +62,15 @@ versionRange = "[1.1.5,)"
 ordering = "AFTER"
 side = "BOTH"
 
+# Configured (opcional)
+[[dependencies.${mod_id}]]
+modId="configured"
+type="optional"
+reason="Añade la pantalla de configuración con acceso a common y server desde la lista de mods"
+versionRange="[2.6.3,)"
+ordering="AFTER"
+side="CLIENT"
+
 [modproperties.${mod_id}]
 catalogueImageIcon="assets/zenkai/icon.png"
 

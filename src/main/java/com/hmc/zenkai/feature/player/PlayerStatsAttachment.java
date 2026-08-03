@@ -178,6 +178,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public double computeConFinal()     { return raceStats.computeConFinal(); }
     /** Escala con forma y % de poder igual que el melee: Ki Fist se beneficia de transformarse. */
     public double computeSpiritMeleeFinal() { return raceStats.computeSpiritMeleeFinal() * powerFraction() * statMultiplier * weightFactor; }
+    /** Escala con forma, % de poder y pesas igual que el melee: el Black Flash se beneficia
+     *  de transformarse, como lo demás. */
+    @Override
+    public double computeBestMeleeFinal() {
+        return raceStats.computeBestMeleeFinal() * powerFraction() * statMultiplier * weightFactor;
+    }
     public boolean isCombatActive() { return isRaceChosen(); }
 
     /** PL SIN la penalización de las pesas. Lo consumen la capacidad de carga y el TP: si

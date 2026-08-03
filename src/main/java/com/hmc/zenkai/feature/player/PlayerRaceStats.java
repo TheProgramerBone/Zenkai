@@ -166,6 +166,18 @@ public class PlayerRaceStats {
     public double computeSpiritMeleeFinal() {
         return attributes.get(ZenkaiAttributes.SPIRIT) * RaceStatTable.melee(race, style);
     }
+
+    /** Mejor atributo ofensivo en escala de melee. El coeficiente es SIEMPRE el de melee, no
+     *  el de ki_damage: si cada atributo trajera su propio coeficiente estaríamos comparando
+     *  escalas distintas y el "mejor" dependería de la tabla, no del jugador. */
+    public double computeBestMeleeFinal() {
+        int best = Math.max(attributes.get(ZenkaiAttributes.STRENGTH),
+                Math.max(attributes.get(ZenkaiAttributes.WILLPOWER),
+                        attributes.get(ZenkaiAttributes.SPIRIT)));
+        return best * RaceStatTable.melee(race, style);
+    }
+
+
     // computeSpeedFinal / computeFlyFinal: ya no se usan para velocidad. Si algo más los
     // llama, que devuelvan defensa o se eliminen.
     public double computeSpeedFinal() {

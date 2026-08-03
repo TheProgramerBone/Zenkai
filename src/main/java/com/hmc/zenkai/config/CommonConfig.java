@@ -147,6 +147,14 @@ public final class CommonConfig {
     // SPEC — Combate, técnicas y detección
     // =====================================================================
 
+    private static final ModConfigSpec.BooleanValue MIRROR_HEALTH_RAW =
+            BUILDER.comment("Mirror the body pool onto the vanilla health bar: 50% body = 10 hearts. Makes the heart bar meaningful again and feeds any third-party HUD correct ratios. false = old behaviour, hearts stay full and the bar is decorative.")
+                    .define("combat.mirror_health", true);
+
+    private static final ModConfigSpec.DoubleValue ABSORPTION_WEIGHT_RAW =
+            BUILDER.comment("Vanilla absorption hearts as a shield over the body pool. 1.0 = an absorption heart is worth the same fraction of your body pool as a real heart, so a golden apple is worth 20% of your body at any power level - identical to vanilla in relative terms. 0 = absorption does nothing (hearts stay decorative).")
+                    .defineInRange("combat.absorption_weight", 1.0D, 0.0D, 5.0D);
+
     private static final ModConfigSpec.DoubleValue MIN_DAMAGE_PERCENT_RAW =
             BUILDER.comment("Damage floor as a fraction of the incoming hit, after defense reduction. 0.05 = 5%")
                     .defineInRange("combat.min_damage_percent", 0.05D, 0.0D, 1.0D);
@@ -218,6 +226,30 @@ public final class CommonConfig {
     private static final ModConfigSpec.DoubleValue OVERCHARGE_COST_MULT_RAW =
             BUILDER.comment("Ki cost multiplier applied ONLY to the overcharged portion. 1.5 = every point past 100% costs 50% more than a normal one.")
                     .defineInRange("cost.overcharge_cost_mult", 1.5D, 1.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue BF_CHANCE_RAW =
+            BUILDER.comment("Black Flash: base proc chance on a PERFECT (100% charge) Ki Infuse melee hit. Scaled down hard by charge, see black_flash.charge_exponent. 0 disables the mechanic.")
+                    .defineInRange("black_flash.chance", 0.03D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue BF_MULTIPLIER_RAW =
+            BUILDER.comment("Black Flash: damage multiplier, applied to the RAW hit before defense. Because defense is proportional, x3 raw lands between x3.9 (even match) and x7.3 (against a mastered SSJ4) in effective terms - but absolute damage still DROPS the more outclassed you are, so this is not a giant-killer. It turns a useless hit into a normal one.")
+                    .defineInRange("black_flash.multiplier", 3.0D, 1.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue BF_CHARGE_EXPONENT_RAW =
+            BUILDER.comment("Black Flash: chance = base * charge^exponent, using the RAW vanilla attack ticker. 3.0 means a 75% charge hit is at 42% of the chance and a 50% hit at 12.5%. Lower it to reward timing less; 0 makes charge irrelevant and turns the mechanic into a spam lottery.")
+                    .defineInRange("black_flash.charge_exponent", 3.0D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue BF_LUCK_FACTOR_RAW =
+            BUILDER.comment("Black Flash: how much each point of the vanilla LUCK attribute multiplies the chance. 0.5 = Luck I takes 3% to 4.5%, Unlucky takes it to 1.5%. Any mod that grants luck feeds into this for free. 0 ignores luck.")
+                    .defineInRange("black_flash.luck_factor", 0.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue BF_MAX_CHANCE_RAW =
+            BUILDER.comment("Black Flash: hard ceiling after luck is applied. Exists because LUCK is unbounded - a modded +40 luck would otherwise mean a proc on every perfect hit.")
+                    .defineInRange("black_flash.max_chance", 0.25D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue BF_STAT_FACTOR_RAW =
+            BUILDER.comment("Black Flash: extra damage pulled from the player's BEST of STR/WIL/SPI, valued in melee scale, added on top of the multiplier. Exists so a WIL build - whose bare fists are worthless - gets a Black Flash worth landing. 1.0 = adds one full best-stat hit at the current charge. 0 disables the term and leaves a pure multiplier.")
+                    .defineInRange("black_flash.stat_factor", 1.0D, 0.0D, 10.0D);
 
     // =====================================================================
     // SPEC — Maestría y efecto Majin
@@ -361,6 +393,9 @@ public final class CommonConfig {
     private static volatile double VANILLA_PL_FACTOR = 1.0D;
     private static volatile int    SCOUTER_RANGE = 64;
 
+    private static volatile boolean MIRROR_HEALTH = true;
+    private static volatile double ABSORPTION_WEIGHT = 1.0D;
+
     private static volatile double FORM_MASTERY_PER_MINUTE = 0.5D;
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
     private static volatile double M_FORM_STAT = 0.20D, M_FORM_DRAIN = 0.50D,
@@ -385,6 +420,13 @@ public final class CommonConfig {
     private static volatile double VANILLA_HOSTILE_FACTOR = 12.0D;
     private static volatile double VANILLA_BOSS_FACTOR = 40.0D;
     private static volatile double VANILLA_DAMAGE_RATIO = 0.4D;
+    private static volatile double BF_CHANCE = 0.03D;
+    private static volatile double BF_MULTIPLIER = 0.03D;
+    private static volatile double BF_CHARGE_EXPONENT = 0.03D;
+    private static volatile double BF_LUCK_FACTOR = 0.03D;
+    private static volatile double BF_MAX_CHANCE = 0.03D;
+    private static volatile double BF_STAT_FACTOR = 1.0D;
+
 
     private static volatile double TRAIN_DMG_TP = 0.02D, TRAIN_AIR_TP = 0.0001D,
             TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.01D,
@@ -459,6 +501,8 @@ public final class CommonConfig {
         TRAIN_DECAY     = TRAIN_DECAY_RAW.get();
         TRAIN_HTC_MULT  = TRAIN_HTC_MULT_RAW.get();
         TRAIN_MIN_EFF   = TRAIN_MIN_EFF_RAW.get();
+        MIRROR_HEALTH = MIRROR_HEALTH_RAW.get();
+        ABSORPTION_WEIGHT = ABSORPTION_WEIGHT_RAW.get();
 
         WEIGHT_CAP_DIV     = WEIGHT_CAP_DIV_RAW.get();
         WEIGHT_CAP_EXP     = WEIGHT_CAP_EXP_RAW.get();
@@ -483,6 +527,12 @@ public final class CommonConfig {
         COMBAT_ATTACK_SPEED   = COMBAT_ATTACK_SPEED_RAW.get();
         OVERCHARGE_TIME_MULT  = OVERCHARGE_TIME_MULT_RAW.get();
         OVERCHARGE_COST_MULT  = OVERCHARGE_COST_MULT_RAW.get();
+        BF_LUCK_FACTOR = BF_LUCK_FACTOR_RAW.get();
+        BF_CHANCE          = BF_CHANCE_RAW.get();
+        BF_CHARGE_EXPONENT = BF_CHARGE_EXPONENT_RAW.get();
+        BF_MAX_CHANCE        = BF_MAX_CHANCE_RAW.get();
+        BF_MULTIPLIER        = BF_MULTIPLIER_RAW.get();
+        BF_STAT_FACTOR        = BF_STAT_FACTOR_RAW.get();
     }
 
     // =====================================================================
@@ -501,6 +551,8 @@ public final class CommonConfig {
     public static double flyKiDrainPerTick()        { return FLY_KI_DRAIN; }
     public static double turboDrainPctPerSec()      { return TURBO_DRAIN_PCT_PER_SEC; }
 
+    public static boolean mirrorHealth() { return !MIRROR_HEALTH; }
+    public static double absorptionWeight() { return ABSORPTION_WEIGHT; }
     public static boolean vanillaStatsFallback()   { return VANILLA_STATS_FALLBACK; }
     public static double  vanillaBodyFactor()      { return VANILLA_BODY_FACTOR; }
     public static double  vanillaDamageFactor()    { return VANILLA_DAMAGE_RATIO; }
@@ -552,6 +604,13 @@ public final class CommonConfig {
     public static double projectileMultCap()   { return PROJECTILE_MULT_CAP; }
     /** Ki por punto de daño EXTRA de Ki Infuse / Ki Fist. */
     public static double kiPerBonusDamage()  { return KI_PER_BONUS_DAMAGE; }
+
+    public static double blackFlashChance() {return BF_CHANCE;}
+    public static double blackFlashMaxChance() {return BF_MAX_CHANCE;}
+    public static double blackFlashMultiplier() {return BF_MULTIPLIER;}
+    public static double blackFlashChargeExponent() {return BF_CHARGE_EXPONENT;}
+    public static double blackFlashLuckFactor() {return BF_LUCK_FACTOR;}
+    public static double blackFlashStatFactor() { return BF_STAT_FACTOR; }
 
     /** attack_speed objetivo en modo combate. Por debajo de 4.0 o vanilla esconde el indicador. */
     public static double combatAttackSpeed() { return COMBAT_ATTACK_SPEED; }

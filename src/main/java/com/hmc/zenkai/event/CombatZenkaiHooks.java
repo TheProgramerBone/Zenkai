@@ -18,10 +18,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingHealEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 
@@ -75,7 +77,7 @@ public class CombatZenkaiHooks {
 
         // La mitigación vanilla se lee AQUÍ, antes de que computeAttackDamage descarte el
         // daño entrante. Después ya es tarde: el ratio vive en el número que sustituimos.
-        double armorMult = VanillaArmor.multiplier(e);
+        double armorMult = VanillaMitigation.armorMultiplier(e);
 
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
         float dmg = computeAttackDamage(e, atkStats);
@@ -114,15 +116,15 @@ public class CombatZenkaiHooks {
             KiInfusedShot shot = KiInfusedShot.of(direct);
             if (!shot.isInfused()) return dmg;
             // El daño ORIGINAL (pre-armadura) es donde vive lo que puso Poder; dmg ya viene
-            // mitigado y la armadura se cobra aparte en VanillaArmor.
-            double mult = KiInfusion.projectileMultiplier(VanillaArmor.originalDamage(e));
+            // mitigado y la armadura se cobra aparte en VanillaMitigation.
+            double mult = KiInfusion.projectileMultiplier(VanillaMitigation.originalDamage(e));
             return dmg + (float) (shot.bonusDamage() * mult);
         }
 
         double strDamage = atkStats.computeMeleeFinal();
 
         if (e.getSource().getEntity() instanceof Player attacker) {
-            return playerMeleeDamage(attacker, atkStats, strDamage, dmg);
+            return playerMeleeDamage(e.getEntity(), attacker, atkStats, strDamage, dmg);
         }
         // Entidad: su STR es la fuente única del daño melee (sin gate de stamina en Fase 2).
         return (float) strDamage;
@@ -135,65 +137,64 @@ public class CombatZenkaiHooks {
      * sin ellas; el KI paga solo lo que Ki Fist y Ki Infuse AÑADEN. Golpear cansa igual;
      * pegar más fuerte es lo que cuesta ki.
      */
-    private static float playerMeleeDamage(Player attacker, ZenkaiCombatStats atkStats,
+    private static float playerMeleeDamage(LivingEntity victim, Player attacker,
+                                           ZenkaiCombatStats atkStats,
                                            double strDamage, float vanillaDmg) {
         boolean zenkaiMelee = attacker instanceof ServerPlayer atkSp
                 && CombatModeServerState.isActive(atkSp.getUUID());
         if (!zenkaiMelee) return vanillaDmg;
 
-        // Sin fondo de estamina: solo pega el arma vanilla, sin el STR zenkai, sin
-        // multiplicador y sin bonus. No se puede machacar cuando estás seco, pero tampoco
-        // quedas indefenso.
         if (atkStats.getStamina() <= 0) {
             return (float) KiInfusion.attackDamageOf(attacker);
         }
 
-        // Cooldown de golpe estilo espada: misma curva que Player.attack(), 20% de daño con
-        // el ticker a cero y 100% lleno. Cuadrática a propósito: castiga el spam mucho más
-        // que un lineal. A mano porque este hook REEMPLAZA el daño entrante y vanilla ya la
-        // aplicó sobre el valor que estamos descartando.
         float scale = consumeAttackScale(attacker);
         double chargeF = 0.2 + scale * scale * 0.8;
 
         double base = strDamage * KiInfusion.weaponMultiplier(attacker) * chargeF;
 
-        // El arma de ki cobra su propio extra: el multiplicador ya está dentro de `base`,
-                // así que aquí solo se paga. Sin ki, el arma se retira sola en el siguiente tick.
-                        double kiWeaponExtra = KiInfusion.kiWeaponExtra(attacker, strDamage, chargeF);
+        double kiWeaponExtra = KiInfusion.kiWeaponExtra(attacker, strDamage, chargeF);
         if (kiWeaponExtra > 0.0) {
-                KiWeaponItem w = KiWeaponServer.heldWeapon(attacker);
-                int wCost = (int) Math.ceil(KiInfusion.kiCost(atkStats, kiWeaponExtra)
-                                * (w == null ? 1.0 : w.def().kiCostMult()));
-                if (atkStats.getEnergy() >= wCost) {
-                        atkStats.consumeEnergy(wCost);
-                } else {
-                    base = strDamage * chargeF;   // sin ki: pega como si fuera a mano limpia
-                }
+            KiWeaponItem w = KiWeaponServer.heldWeapon(attacker);
+            int wCost = (int) Math.ceil(KiInfusion.kiCost(atkStats, kiWeaponExtra)
+                    * (w == null ? 1.0 : w.def().kiCostMult()));
+            if (atkStats.getEnergy() >= wCost) {
+                atkStats.consumeEnergy(wCost);
+            } else {
+                base = strDamage * chargeF;   // sin ki: pega como si fuera a mano limpia
+            }
         }
 
-        // Los dos bonus se suman y se cobran por separado: con los dos interruptores puestos
-        // pagas dos veces en ki y pegas las dos cosas. Cada spend* cae en silencio a 0 si el
-        // interruptor está apagado o si no queda ki, sin tocar el golpe base.
-        double bonus = KiFist.spendForMelee(attacker, atkStats, chargeF)
-                + KiInfusion.spendForMelee(attacker, atkStats, chargeF);
+        // Los dos bonus se calculan POR SEPARADO porque el Black Flash se engancha SOLO a
+        // Ki Fist: con el interruptor puesto pero sin energía, spendForMelee cae a 0 en
+        // silencio, y sin este desglose habría procs gratis con la barra vacía.
+        double fistBonus   = KiFist.spendForMelee(attacker, atkStats, chargeF);
+        double infuseBonus = KiInfusion.spendForMelee(attacker, atkStats, chargeF);
+        double bonus = fistBonus + infuseBonus;
 
-        // Estamina siempre, y del STR PELADO: el arma no cansa más, y lo que añaden las
-        // habilidades ya se pagó en ki. Que escale igual que el daño es deliberado: el spam
-        // pierde DPS pero no malgasta recurso, así el incentivo a esperar es el daño y no un
-        // castigo doble.
         int staminaCost = (int) Math.ceil(strDamage * chargeF
                 * CommonConfig.meleeStaminaPerHit() * atkStats.staminaCostMult());
         if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
 
+        double total = base + bonus;
+
+        // BLACK FLASH sobre el golpe COMPLETO y en crudo: lo que sale de aquí es lo que entra
+        // a mitigate(), o sea antes de defensa, armadura y barreras.
+        // Gatea en fistBonus y NO en el total: es una mecánica de puño. Ki Infuse queda fuera
+        // a propósito (y además exige arma en mano por su propio hasWeapon, así que a puño
+        // limpio su bonus siempre es 0).
+        if (fistBonus > 0.0 && attacker instanceof ServerPlayer atkSp) {
+            total = BlackFlash.apply(atkSp, victim, scale, chargeF, atkStats, total);
+        }
+
         PlayerLifeCycle.syncIfServer(attacker);
-        return (float) (base + bonus);
+        return (float) total;
     }
 
     // =====================================================================
     // LADO DEFENSOR
     // =====================================================================
 
-    /** Víctima CON stats zenkai: mitiga con DEF y el daño va al pool body. */
     /** Víctima CON stats zenkai: mitiga con DEF y el daño va al pool body. */
     private static void applyToZenkaiVictim(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
                                             ZenkaiCombatStats defStats, float dmg,
@@ -224,8 +225,8 @@ public class CombatZenkaiHooks {
         }
     }
 
-    /** Aplica DEF, bloqueo y barrera. @return daño que llega al body. */
-    /** Aplica DEF, armadura vanilla, bloqueo y barrera. @return daño que llega al body. */
+    /** Aplica DEF, armadura vanilla, bloqueo, barrera de ki y absorción.
+     *  @return daño que llega al body. */
     private static double mitigate(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
                                    ZenkaiCombatStats defStats, float dmg, double armorMult) {
         double defense = computeDefense(e, atkStats, defStats, dmg);
@@ -234,10 +235,6 @@ public class CombatZenkaiHooks {
                 ? dmg
                 : dmg * (1.0 - defense / (defense + dmg));
 
-        // Armadura vanilla DESPUÉS de la DEF y ANTES del suelo. Multiplica en vez de restar
-        // por el mismo motivo que el arma: 20 puntos de armadura contra un golpe de 20.000
-        // son ruido, un x0.63 vale igual a cualquier escala. Y que el suelo se aplique al
-        // final es lo que impide volverse inmune apilando armadura sobre DEF.
         finalDamage *= armorMult;
         finalDamage = Math.max(finalDamage, dmg * CommonConfig.minDamagePercent());
 
@@ -246,7 +243,10 @@ public class CombatZenkaiHooks {
         }
 
         if (e.getEntity() instanceof ServerPlayer defSp) {
+            // Barrera de ki (habilidad activa) ANTES que la absorción (consumible): lo que
+            // gastas gestionando tú se consume antes que lo que te comiste hace diez minutos.
             finalDamage = KiCombatServer.absorb(defSp, finalDamage);
+            finalDamage = VanillaMitigation.consumeAbsorption(defSp, defStats, finalDamage);
         }
         return finalDamage;
     }
@@ -312,7 +312,6 @@ public class CombatZenkaiHooks {
         // (antes solo se hacía `return`, dejando body=0 y la barra bugueada en "HP 0/max").
         if (att.isImmortal()) {
             att.setBody(att.getBodyMax());
-            sp.setHealth(sp.getMaxHealth());
             PlayerLifeCycle.sync(sp);
             return;
         }
@@ -421,5 +420,20 @@ public class CombatZenkaiHooks {
         if (PlayerStatsAttachment.get(target).flags().isDowned()) {
             e.setCanceled(true);
         }
+    }
+
+    /**
+     * Con el espejo puesto, la regeneración natural de vanilla es un problema silencioso: sube
+     * la vida (que el siguiente sync vuelve a bajar) y de paso QUEMA saturación para curar algo
+     * que no existe. El jugador pierde comida a cambio de nada.
+     * La curación de verdad entra por el pool (RegenSystem, senzu, ImmortalityEffect) y el
+     * espejo la refleja sola. Sin raza no se toca: ahí manda vanilla.
+     */
+    @SubscribeEvent
+    public static void onHeal(LivingHealEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        if (!CommonConfig.mirrorHealth()) return;
+        if (!PlayerStatsAttachment.get(sp).isRaceChosen()) return;
+        e.setCanceled(true);
     }
 }

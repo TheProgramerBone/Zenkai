@@ -296,6 +296,7 @@
   "gui.zenkai.apply_respawn": "Apply & respawn",
   "gui.zenkai.save_only": "Save only",
   "screen.zenkai.client_config.title": "Client Settings",
+  "screen.zenkai.client_config.more_options": "Gameplay options: config/zenkai-common.toml",
   "screen.zenkai.gui.save": "Save",
   "screen.zenkai.shenlong_wish": "§2§lShenlong:§6§l State your wish",
   "screen.zenkai.option.stack": "I want more of...",
@@ -450,7 +451,8 @@
   "screen.zenkai.physical.pick_slot": "Click a slot above",
 
   "--- MENSAJES Y NOTIFICACIONES DE CHAT ---": "--- MENSAJES Y NOTIFICACIONES DE CHAT ---",
-  "message.zenkai.alignment_too_low": "Your heart is not pure enough (%s alignment required)",
+  "messages.zenkai.alignment_too_low": "Your heart is not pure enough (%s alignment required)",
+  "messages.zenkai.black_flash": "§4§lBLACK FLASH",
   "messages.zenkai.dragon_ball_radar_on": "§bRadar activated",
   "messages.zenkai.dragon_ball_radar_off": "§7Radar deactivated",
   "messages.zenkai.shenron_summon": "§2§lCome forth Shenron and grant my wish!",

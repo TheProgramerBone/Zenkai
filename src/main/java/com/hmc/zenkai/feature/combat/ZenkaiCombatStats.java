@@ -72,4 +72,8 @@ public interface ZenkaiCombatStats {
         float target = le.getMaxHealth() * (getBody() / (float) max);
         le.setHealth(Math.max(1.0F, Math.min(le.getMaxHealth(), target)));
     }
+
+    /** El MEJOR de STR/WIL/SPI, valorado en escala de MELEE (Black Flash). Default: el melee
+     *  de siempre, que es lo correcto para entidades — no tienen build ni especialización. */
+    default double computeBestMeleeFinal() { return computeMeleeFinal(); }
 }

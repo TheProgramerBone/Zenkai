@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -123,6 +124,14 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
             int y = panelTop + CONTENT_TOP + i * ROW_H + 6;
             g.drawString(this.font, Component.translatable(e.titleKey()),
                     panelLeft + MARGIN, y, 0xFFFFFFFF, true);
+        }
+
+        // Sin Configured no hay GUI para common/server. Decir dónde están es más honesto que
+        // dejar creer que esta pantalla es toda la configuración del mod.
+        if (!ModList.get().isLoaded("configured")) {
+            g.drawCenteredString(this.font,
+                    Component.translatable("screen.zenkai.client_config.more_options"),
+                    this.width / 2, panelTop + BG_H - 14, 0xA0A0A0);
         }
     }
 

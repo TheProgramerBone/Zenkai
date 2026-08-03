@@ -79,12 +79,15 @@ public class SenzuBean extends Item {
                 // Opcional: también sincronizar al cliente
                 PlayerLifeCycle.syncIfServer(player);
 
-                // === Ajuste vanilla para que sea consistente
-                // Vida vanilla al máximo (por si acaso)
-                player.setHealth(player.getMaxHealth());
+                // === Ajuste vanilla ===
+                // Sin raza no hay pool que curar: la senzu es un objeto de curación normal y
+                // la vida vanilla es lo único que puede rellenar. CON raza, la vida la escribe
+                // el espejo dentro de sync() y tocarla aquí sería el segundo escritor.
+                if (!att.isRaceChosen()) {
+                    player.setHealth(player.getMaxHealth());
+                }
                 // Hambre y saturación como en DBC (lleno total)
                 player.getFoodData().eat(20, 1.0F);
-
                 // Puedes mantener los efectos si quieres partículas/cross-compat
                 player.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, 0));
                 player.addEffect(new MobEffectInstance(MobEffects.SATURATION, 1, 255));
@@ -114,9 +117,10 @@ public class SenzuBean extends Item {
 
         int bodyMissing = att.getBodyMax() - att.getBody();
         if (bodyMissing > 0) att.addBody(bodyMissing);
+        if (!att.isRaceChosen()) targetPlayer.setHealth(targetPlayer.getMaxHealth());
         att.addStamina(att.getStaminaMax());
         att.addEnergy(att.getEnergyMax());
-        targetPlayer.setHealth(targetPlayer.getMaxHealth());
+        if (!att.isRaceChosen()) targetPlayer.setHealth(targetPlayer.getMaxHealth());
         PlayerLifeCycle.syncIfServer(targetPlayer);
 
         user.getCooldowns().addCooldown(this, 20 * 7);

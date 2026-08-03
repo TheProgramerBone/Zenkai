@@ -54,16 +54,8 @@ public class ImmortalityEffect extends MobEffect {
         att.addBody(regen); // addBody ya hace clamp a [0, bodyMax]
         int newBody = att.getBody();
 
-        // Sincronizar corazones vanilla para que reflejen el body actual
-        float maxHealth = player.getMaxHealth();
-        float ratio     = (float) newBody / (float) bodyMax;
-        float newHealth = maxHealth * ratio;
-
-        // Evitar números raros
-        newHealth = Math.max(0.0F, Math.min(maxHealth, newHealth));
-        player.setHealth(newHealth);
-
-        // Sync stats al cliente
+        // El espejo body -> corazones vive en PlayerLifeCycle.sync(). Aquí ya no se toca la
+        // vida vanilla: era la segunda copia de la misma fórmula.
         PlayerLifeCycle.syncIfServer(player);
 
         return true;

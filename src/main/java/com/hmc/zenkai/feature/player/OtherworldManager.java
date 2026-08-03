@@ -27,7 +27,6 @@ public final class OtherworldManager {
 
     /** Cura vida vanilla + pools (incluida la barra HP/body) y limpia estado de daño. */
     private static void fullHeal(ServerPlayer player) {
-        player.setHealth(player.getMaxHealth());
         player.getFoodData().setFoodLevel(20);
         player.removeAllEffects();
         player.setRemainingFireTicks(0);
@@ -36,6 +35,7 @@ public final class OtherworldManager {
         player.setDeltaMovement(Vec3.ZERO);
         // Restaura los pools (body=HP, stamina, energy) → arregla la barra "HP 0/20".
         player.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).refillOnRespawn();
+        PlayerLifeCycle.sync(player);
     }
 
     private static void teleportToOtherworld(ServerPlayer player) {

@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.player;
 
+import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.registry.ModEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.level.ServerPlayer;
@@ -69,9 +70,34 @@ public class PlayerLifeCycle {
 
 
     public static void sync(ServerPlayer sp) {
+        mirrorHealth(sp);
         var pkt = SyncPlayerStatsPacket.from(sp);
         PacketDistributor.sendToPlayer(sp, pkt);
         PacketDistributor.sendToPlayersTrackingEntity(sp, pkt);
+    }
+
+    /**
+     * ESPEJO BODY -> CORAZONES. Va DENTRO de sync() y no en cada sitio que toca el body, que
+     * es lo mismo que hace ZenkaiCombatStats.mirrorToVanilla con las entidades: toda ruta que
+     * cambia el pool ya termina llamando aquí, así que el espejo no se puede olvidar.
+     * Esto SUSTITUYE a los setHealth(getMaxHealth()) sueltos repartidos por DownedDeathGuard,
+     * SenzuBean, OtherworldManager, CombatZenkaiHooks e ImmortalityEffect: si sobrevive alguno,
+     * hay dos escritores de la vida y vuelven a descuadrarse.
+     * NUNCA baja de 1.0F (medio corazón). Poner 0 mata al jugador y se salta el derribado
+     * entero; quien mata de verdad es DownedSystem, deliberadamente y en un solo sitio.
+     * Sin raza no se toca nada: sin sistema zenkai la vida vanilla es suya.
+     */
+    private static void mirrorHealth(ServerPlayer sp) {
+        if (CommonConfig.mirrorHealth()) return;
+
+        PlayerStatsAttachment att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        if (!att.isRaceChosen()) return;
+
+        int max = att.getBodyMax();
+        if (max <= 0) return;
+
+        float target = sp.getMaxHealth() * (att.getBody() / (float) max);
+        sp.setHealth(Math.max(1.0F, Math.min(sp.getMaxHealth(), target)));
     }
 
     public static void syncIfServer(Player p) {
@@ -93,7 +119,6 @@ public class PlayerLifeCycle {
      * Útil: cuando cambies raza o raceSkin en servidor, llama esto para que:
      * - el jugador se vea a sí mismo
      * - y todos los que lo están viendo también
-     *
      * Si tu NeoForge no tiene este helper exacto en PacketDistributor, te digo abajo qué hacer.
      */
     public static void syncVisualToTrackersAndSelf(ServerPlayer target) {
@@ -122,5 +147,4 @@ public class PlayerLifeCycle {
         PacketDistributor.sendToPlayer(target, pkt);
         PacketDistributor.sendToPlayersTrackingEntity(target, pkt);
     }
-
 }

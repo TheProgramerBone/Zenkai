@@ -77,7 +77,7 @@ public final class DownedDeathGuard {
         if (att.isImmortal()) {
             e.setCanceled(true);
             att.setBody(att.getBodyMax());
-            sp.setHealth(sp.getMaxHealth());
+
             var form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
             form.resetAll();
             form.clearStrain();               // ser rescatado a full limpia la fatiga
@@ -90,7 +90,7 @@ public final class DownedDeathGuard {
 
         // La vida vanilla TIENE que volver a >0: con 0 el jugador vuelve a morir al tick
         // siguiente y el cliente se queda en la pantalla de muerte a medias.
-        sp.setHealth(sp.getMaxHealth());
+
         att.setBody(0);
 
         if (!att.flags().isDowned()) {

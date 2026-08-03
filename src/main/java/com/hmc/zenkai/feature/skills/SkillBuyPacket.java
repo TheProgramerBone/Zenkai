@@ -64,7 +64,7 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
             // alineamiento no sale por ningún lado y fallar en silencio parece un bug.
             if (SkillEffects.POTENTIAL_UNLOCK.equals(def.id()) && !PotentialUnlock.canPurchase(sp)) {
                 sp.displayClientMessage(Component.translatable(
-                        "message.zenkai.alignment_too_low",
+                        "messages.zenkai.alignment_too_low",
                         CommonConfig.potentialUnlockAlignmentReq()), true);
                 return;
             }

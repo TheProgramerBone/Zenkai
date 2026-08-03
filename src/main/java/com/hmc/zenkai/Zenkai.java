@@ -37,6 +37,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
@@ -139,9 +140,19 @@ public class Zenkai {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
 
-            ModLoadingContext.get().getActiveContainer().registerExtensionPoint(
-                    IConfigScreenFactory.class,
-                    (container, parent) -> new ClientConfigScreen(parent));
+            // El botón "Config" de la lista de mods es un extension point ÚNICO: solo cabe una
+            // pantalla. Configured funciona ocupando ese hueco en los mods que NO lo declaran, y
+            // cuando lo ocupa da acceso a los TRES specs. Al declararlo nosotros, Configured se
+            // apartaba y el botón abría una pantalla que solo edita ClientConfig — una sola
+            // opción — dejando Common (~130 claves) y Server (~30) sin ninguna vía gráfica.
+            // Con Configured presente le cedemos el sitio. Sin él, nuestra pantalla es mejor que
+            // ningún botón. En ambos casos ClientConfigScreen sigue siendo la pestaña CONFIG del
+            // menú Zenkai, que es donde se usa de verdad (en partida, sin pausar).
+            if (!ModList.get().isLoaded("configured")) {
+                ModLoadingContext.get().getActiveContainer().registerExtensionPoint(
+                        IConfigScreenFactory.class,
+                        (container, parent) -> new ClientConfigScreen(parent));
+            }
 
             // Block entities
             BlockEntityRenderers.register(
@@ -264,6 +275,13 @@ public class Zenkai {
                     KiImpactParticle.Provider::new);
             event.registerSpriteSet(ModParticles.KI_SPARK.get(),
                     KiSparkParticle.Provider::new);
+            // El Black Flash no necesita clase propia: KiImpactParticle ya hace exactamente
+            // lo que pide (quieto, 6 frames por edad, tinte de las opciones). Solo cambian
+            // el sprite set, el color y la escala.
+            event.registerSpriteSet(ModParticles.BLACK_FLASH_CORE.get(),
+                    KiImpactParticle.Provider::new);
+            event.registerSpriteSet(ModParticles.BLACK_FLASH_RIM.get(),
+                    KiImpactParticle.Provider::new);
         }
 
         @SubscribeEvent
