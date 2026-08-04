@@ -88,7 +88,7 @@ public class PlayerLifeCycle {
      * Sin raza no se toca nada: sin sistema zenkai la vida vanilla es suya.
      */
     private static void mirrorHealth(ServerPlayer sp) {
-        if (CommonConfig.mirrorHealth()) return;
+        if (!CommonConfig.mirrorHealth()) return;
 
         PlayerStatsAttachment att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         if (!att.isRaceChosen()) return;

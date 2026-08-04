@@ -91,11 +91,6 @@ public final class CommonConfig {
                             "Off = they stay vanilla-scaled and PvE becomes irrelevant past character creation")
                     .define("entity.vanilla_stats_fallback", true);
 
-    private static final ModConfigSpec.DoubleValue VANILLA_BODY_FACTOR_RAW =
-            BUILDER.comment("Fallback mobs: CON (and therefore bodyMax) = maxHealth * factor")
-                    .defineInRange("entity.vanilla_body_factor", 15.0D, 0.1D, 1000.0D);
-
-
     private static final ModConfigSpec.DoubleValue VANILLA_TP_REWARD_FACTOR_RAW =
             BUILDER.comment("Fallback mobs: TP reward as a fraction of the automatic one (PL-based).",
                             "Every mob starts granting TP once the fallback is on, so mob farms can outpace training")
@@ -454,7 +449,6 @@ public final class CommonConfig {
     private static volatile double OVERCHARGE_COST_MULT = 1.5D;
     private static volatile double MAJIN_STAT_BONUS = 0.10D;
     private static volatile boolean VANILLA_STATS_FALLBACK = true;
-    private static volatile double  VANILLA_BODY_FACTOR = 15.0D;
     private static volatile double  VANILLA_TP_REWARD_FACTOR = 0.25D;
     private static volatile double VANILLA_PASSIVE_FACTOR = 1.0D;
     private static volatile double VANILLA_HOSTILE_FACTOR = 12.0D;
@@ -515,7 +509,6 @@ public final class CommonConfig {
         FOOD_STAMINA_PCT = FOOD_STAMINA_RAW.get();
 
         VANILLA_STATS_FALLBACK   = VANILLA_STATS_FALLBACK_RAW.get();
-        VANILLA_BODY_FACTOR      = VANILLA_BODY_FACTOR_RAW.get();
         VANILLA_DAMAGE_RATIO = VANILLA_DAMAGE_RATIO_RAW.get();
         VANILLA_TP_REWARD_FACTOR = VANILLA_TP_REWARD_FACTOR_RAW.get();
         VANILLA_PASSIVE_FACTOR = VANILLA_PASSIVE_FACTOR_RAW.get();
@@ -605,11 +598,9 @@ public final class CommonConfig {
     public static double flyKiDrainPerTick()        { return FLY_KI_DRAIN; }
     public static double turboDrainPctPerSec()      { return TURBO_DRAIN_PCT_PER_SEC; }
 
-    public static boolean mirrorHealth() { return !MIRROR_HEALTH; }
+    public static boolean mirrorHealth() { return MIRROR_HEALTH; }
     public static double absorptionWeight() { return ABSORPTION_WEIGHT; }
     public static boolean vanillaStatsFallback()   { return VANILLA_STATS_FALLBACK; }
-    public static double  vanillaBodyFactor()      { return VANILLA_BODY_FACTOR; }
-    public static double  vanillaDamageFactor()    { return VANILLA_DAMAGE_RATIO; }
     public static double  vanillaTpRewardFactor()  { return VANILLA_TP_REWARD_FACTOR; }
     public static double vanillaPassiveFactor() { return VANILLA_PASSIVE_FACTOR; }
     public static double vanillaHostileFactor() { return VANILLA_HOSTILE_FACTOR; }
