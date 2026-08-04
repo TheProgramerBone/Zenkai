@@ -46,7 +46,7 @@ public final class EntityStats implements ZenkaiCombatStats {
     }
 
     /** Resuelve los stats desde el plano JSON (spawn). */
-    public void applyDef(EntityStatDef def) {
+    public void applyDef(EntityStatDef def, LivingEntity le) {
         EntityArchetype arch = EntityArchetype.get(def.archetype());
         EnumMap<ZenkaiAttributes, Integer> solved = PowerLevel.solveAttributes(def.powerLevel(), arch);
 
@@ -66,9 +66,26 @@ public final class EntityStats implements ZenkaiCombatStats {
         kiMult   = arch.kiMult()   * def.kiMultOverride();
 
         recalc();
-        body = bodyMax; stamina = staminaMax; energy = energyMax;
+
+        // El pool arranca EN PROPORCIÓN a la vida vanilla actual, no siempre lleno. En un spawn
+        // normal la entidad viene entera y esto da body = bodyMax, igual que antes. Donde
+        // importa es en las entidades que YA estaban en el mundo y entran aquí sin inicializar:
+        // mundo anterior al mod, tipo que no tenía JSON hasta ahora, o el fallback recién
+        // encendido. Con `body = bodyMax` a secas, un mob que dejaste herido estrenaba pool
+        // completo con la barra a la mitad.
+        float maxHp = le.getMaxHealth();
+        float hpRatio = maxHp > 0f ? Math.min(1.0f, le.getHealth() / maxHp) : 1.0f;
+        body    = Math.max(1, Math.round(bodyMax * hpRatio));
+        stamina = staminaMax;
+        energy  = energyMax;
+
         tpReward = resolveReward(def.rewardTp(), getPowerLevel());
         initialized = true;
+
+        // Y el espejo en la otra dirección, para que vida y pool arranquen de acuerdo aunque el
+        // redondeo del ratio los haya separado un punto. Aquí es donde `le` deja de ser un
+        // parámetro sin usar: hasta ahora se pasaba y no se tocaba.
+        mirrorToVanilla(le);
     }
 
     private static int resolveReward(String raw, long pl) {
@@ -164,10 +181,22 @@ public final class EntityStats implements ZenkaiCombatStats {
         bodyMult = 1.0;
         kiMult   = 1.0;
         recalc();
-        body = bodyMax; stamina = staminaMax; energy = energyMax;
+        // Mismo criterio que applyDef: el pool arranca EN PROPORCIÓN a la vida vanilla actual,
+        // no siempre lleno. En un spawn normal la entidad viene entera y esto da body = bodyMax.
+        // Donde importa es en las entidades que YA estaban en el mundo y entran aquí sin
+        // inicializar: mundo anterior al mod, tipo que no tenía JSON hasta ahora, o el fallback
+        // recién encendido. Con `body = bodyMax` a secas, un zombi que dejaste a dos corazones
+        // estrenaba pool COMPLETO con la barra a dos corazones.
+        float maxHp = (float) hp;
+        float hpRatio = maxHp > 0f ? Math.min(1.0f, le.getHealth() / maxHp) : 1.0f;
+        body    = Math.max(1, Math.round(bodyMax * hpRatio));
+        stamina = staminaMax;
+        energy  = energyMax;
+
         tpReward = (int) Math.max(0, Math.round(getPowerLevel() * TP_PER_PL
                 * CommonConfig.vanillaTpRewardFactor()));
         initialized = true;
+        mirrorToVanilla(le);
     }
 
     /**
@@ -187,15 +216,77 @@ public final class EntityStats implements ZenkaiCombatStats {
         return inst == null ? fallback : inst.getValue();
     }
 
+// ── ESPEJO A LA VIDA VANILLA ──────────────────────────────────────────────
+
+    /** Vida vanilla mínima mientras quede body. Solo tiene que ser > 0. */
+    private static final float MIN_MIRROR_HEALTH = 0.01f;
+
     /**
-     * Refleja el pool del mod en la vida vanilla, conservando el RATIO. Sin esto, las
-     * entidades con lógica propia sobre getHealth() (dragón, wither, warden) no morían
-     * nunca: su barra se quedaba llena mientras el body bajaba en paralelo.
-     * No baja de 1: matarlas es cosa del pipeline de daño, no de este espejo.
+     * Última vida que escribimos NOSOTROS y el maxHealth con el que se calculó. Con estos dos
+     * reconcile() distingue "esta vida la puso el espejo" de "esta vida la ha tocado otro".
+     * No van a NBT a propósito: al cargar valen NaN y el primer reconcile los resiembra.
+     */
+    private float lastMirrored  = Float.NaN;
+    private float lastMaxHealth = Float.NaN;
+
+    /**
+     * Proyecta el body sobre la vida vanilla conservando el RATIO. Lo que lea
+     * getHealth()/getMaxHealth() (barra del Wither, del dragón, corazones de montura, HUDs de
+     * terceros) queda correcto sin tocar nada suyo.
+     * EL SUELO YA NO ES 1.0. Con 1.0, un mob de 20 de vida no podía enseñar menos del 5% de
+     * barra, y reconcile leía ese 5% como curación externa y le devolvía body: los mobs
+     * pequeños se curaban solos al borde de la muerte. Basta con que sea > 0 para que
+     * isDeadOrDying() siga siendo false; matar sigue siendo cosa del pipeline de daño.
      */
     public void mirrorToVanilla(LivingEntity le) {
         if (bodyMax <= 0) return;
-        float target = le.getMaxHealth() * (body / (float) bodyMax);
-        le.setHealth(Math.max(1.0F, Math.min(le.getMaxHealth(), target)));
+        float maxHp = le.getMaxHealth();
+        if (maxHp <= 0f) return;
+
+        float target = maxHp * (body / (float) bodyMax);
+        le.setHealth(Math.max(MIN_MIRROR_HEALTH, Math.min(maxHp, target)));
+
+        lastMirrored  = le.getHealth();   // se relee: setHealth clampa por su cuenta
+        lastMaxHealth = maxHp;
+    }
+
+    /**
+     * Reconciliación por tick. Traduce a body las escrituras de vida que NO hemos hecho
+     * nosotros (cristales del End, /data, otro mod) y vuelve a proyectar.
+     * NO SE RECONCILIA A UN MUERTO. En el tick en el que la entidad muere, su vida vanilla es 0
+     * y lastMirrored todavía es la de antes del golpe: el delta se leería como una escritura
+     * externa enorme, el suelo de 1 punto devolvería el pool a 1 y la proyección le pondría
+     * vida otra vez. Y eso no es solo un parpadeo — die() ya ha corrido, pero al volver
+     * isDeadOrDying() a false, baseTick deja de llamar a tickDeath() y la entidad no se elimina
+     * NUNCA. Es exactamente el bug de "el mob no muere".
+     * Las otras dos reglas siguen igual: umbral RELATIVO al maxHealth (el ruido de coma
+     * flotante no cuenta como curación) y un delta que redondea a 0 puntos de body se descarta
+     * en vez de forzarse a ±1.
+     */
+    public void reconcile(LivingEntity le) {
+        if (!initialized || bodyMax <= 0) return;
+        if (body <= 0 || le.isDeadOrDying() || le.isRemoved()) return;
+
+        float maxHp = le.getMaxHealth();
+        if (maxHp <= 0f) return;
+
+        // Primera pasada tras cargar del disco, o alguien ha cambiado MAX_HEALTH: no hay delta
+        // que interpretar, solo se resiembra la proyección.
+        if (Float.isNaN(lastMirrored) || lastMaxHealth != maxHp) {
+            mirrorToVanilla(le);
+            return;
+        }
+
+        float delta = le.getHealth() - lastMirrored;
+        float minDelta = Math.max(0.05f, maxHp * 0.005f);
+        if (Math.abs(delta) < minDelta) return;
+
+        int bodyDelta = (int) Math.round(delta * (bodyMax / maxHp));
+        if (bodyDelta == 0) return;
+
+        // MATAR NO ES COSA DE AQUÍ: una escritura externa puede vaciar el pool pero no rematar.
+        // El suelo es 1 y el pipeline de daño se encarga del golpe final.
+        body = MathUtil.clamp(body + bodyDelta, 1, bodyMax);
+        mirrorToVanilla(le);
     }
 }

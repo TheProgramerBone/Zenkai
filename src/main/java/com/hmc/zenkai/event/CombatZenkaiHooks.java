@@ -238,18 +238,18 @@ public class CombatZenkaiHooks {
     private static void applyToZenkaiVictim(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
                                             ZenkaiCombatStats defStats, float dmg,
                                             double armorMult) {
+        int bodySpent = 0;
         if (dmg > 0f) {
             double finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult);
 
             int bodyBefore = defStats.getBody();
             defStats.addBody(-(int) Math.ceil(finalDamage));
-            if (!(e.getEntity() instanceof Player)) {
-                defStats.mirrorToVanilla(e.getEntity());
-            }
+            bodySpent = bodyBefore - defStats.getBody();
 
             grantTraining(e, Math.min(finalDamage, bodyBefore));
         }
 
+        // JUGADOR: sin cambios. Su vida vanilla la escribe PlayerLifeCycle y el daño se anula.
         if (e.getEntity() instanceof Player victim) {
             e.setNewDamage(0.0F);
             if (defStats.getBody() <= 0) onBodyDepleted(victim, PlayerStatsAttachment.get(victim));
@@ -257,11 +257,27 @@ public class CombatZenkaiHooks {
             return;
         }
 
+        // ENTIDAD: el golpe YA NO SE ANULA. El body sigue siendo la vida real, pero lo que se
+        // le ha quitado se traduce a su equivalente en vida vanilla y lo aplica VANILLA por su
+        // propio camino.
+        // Anularlo era lo que dejaba fuera de juego lo que escucha el pipeline: barras
+        // de jefe (vanilla y de otros mods), umbrales de fase, HUD de terceros, advancements y
+        // LivingDamageEvent.Post. Para todos ellos la entidad nunca había recibido un golpe.
+        // El número es el MISMO que escribía el espejo, solo cambia quién lo escribe; y
+        // EntityHealthSync.onDamagePost vuelve a cuadrar la vida con el pool después, así que
+        // el redondeo de vanilla no puede acumular deriva.
+        LivingEntity le = e.getEntity();
         if (defStats.getBody() <= 0) {
-            e.setNewDamage(Math.max(e.getEntity().getHealth(), 1.0F));
-        } else {
-            e.setNewDamage(0.0F);
+            e.setNewDamage(Math.max(le.getHealth(), 1.0F));
+            return;
         }
+
+        int max = defStats.getBodyMax();
+        float equivalent = (max <= 0) ? 0.0F : le.getMaxHealth() * (bodySpent / (float) max);
+        // Techo: con body > 0 la entidad NO puede morir por esta vía. Matar sigue siendo cosa
+        // de la rama de arriba, que es la única que lee el pool agotado.
+        float ceiling = Math.max(0.0F, le.getHealth() - 0.01F);
+        e.setNewDamage(Math.min(equivalent, ceiling));
     }
 
     /** Aplica DEF, armadura vanilla, bloqueo, barrera de ki y absorción.

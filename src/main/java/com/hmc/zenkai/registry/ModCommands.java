@@ -3,6 +3,8 @@ package com.hmc.zenkai.registry;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.combat.ZenkaiStats;
+import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
@@ -19,6 +21,7 @@ import com.hmc.zenkai.worldgen.ProtectedZones;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -29,9 +32,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
@@ -242,6 +250,16 @@ public class ModCommands {
                                 .executes(ctx -> masteryList(ctx, ctx.getSource().getPlayerOrException()))
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> masteryList(ctx, EntityArgument.getPlayer(ctx, "player"))))))
+
+
+                // ── /zenkai debug entity ─────────────────────────────────────────
+                // Vuelca vida vanilla + pool zenkai de la entidad en el punto de mira.
+                .then(Commands.literal("debug")
+                        .then(Commands.literal("entity")
+                                .executes(ModCommands::debugEntity)))
+
+
+
         );
     }
 
@@ -586,6 +604,39 @@ public class ModCommands {
                 .sorted(java.util.Map.Entry.comparingByKey())
                 .forEach(en -> ctx.getSource().sendSuccess(() -> Component.literal(
                         String.format("§7- §f%s §7%.1f%%", en.getKey(), en.getValue())), false));
+        return 1;
+    }
+
+    private static int debugEntity(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        Vec3 start = sp.getEyePosition();
+        Vec3 end   = start.add(sp.getLookAngle().scale(64.0));
+        AABB sweep = sp.getBoundingBox().expandTowards(sp.getLookAngle().scale(64.0)).inflate(1.0);
+
+        EntityHitResult hit = ProjectileUtil.getEntityHitResult(sp.level(), sp, start, end, sweep,
+                x -> x instanceof LivingEntity le && le.isAlive() && x != sp);
+
+        if (hit == null || !(hit.getEntity() instanceof LivingEntity le)) {
+            ctx.getSource().sendFailure(Component.literal("Sin entidad en el punto de mira (64 bloques)."));
+            return 0;
+        }
+
+        EntityStats st = ZenkaiStats.entityStats(le);
+        String body = (st == null)
+                ? "SIN STATS ZENKAI (fuera del pipeline)"
+                : st.getBody() + " / " + st.getBodyMax()
+                + " (" + String.format("%.2f", 100.0 * st.getBody() / Math.max(1, st.getBodyMax())) + "%)"
+                + " | PL " + st.getPowerLevel()
+                + " | STR " + Math.round(st.computeMeleeFinal())
+                + " | DEF " + Math.round(st.computeDefenseFinal());
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                le.getName().getString()
+                        + "\n  vida  : " + String.format("%.2f", le.getHealth())
+                        + " / " + String.format("%.2f", le.getMaxHealth())
+                        + " (" + String.format("%.2f", 100.0 * le.getHealth() / Math.max(1f, le.getMaxHealth())) + "%)"
+                        + "\n  body  : " + body
+        ).withStyle(ChatFormatting.AQUA), false);
         return 1;
     }
 }

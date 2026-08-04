@@ -33,7 +33,7 @@ public final class EntitySpawnStatsHandler {
         if (stats.isInitialized()) return;
 
         if (def != null && !def.displayOnly()) {
-            stats.applyDef(def);
+            stats.applyDef(def, le);
         } else if (def == null && CommonConfig.vanillaStatsFallback()) {
             // Sin JSON: se derivan de sus atributos vanilla. Los display_only se quedan
             // fuera a propósito (PL para el scouter, sin stats de combate).
