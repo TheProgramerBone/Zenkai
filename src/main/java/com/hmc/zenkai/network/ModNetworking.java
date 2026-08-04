@@ -18,6 +18,7 @@ import com.hmc.zenkai.feature.player.SyncPlayerStatsPacket;
 import com.hmc.zenkai.feature.player.SyncPlayerVisualPacket;
 import com.hmc.zenkai.feature.race.UpdatePlayerVisualPacket;
 import com.hmc.zenkai.feature.sense.*;
+import com.hmc.zenkai.feature.skills.ForgetSkillPacket;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.feature.skills.SkillSyncPacket;
 import com.hmc.zenkai.feature.skills.SkillTogglePacket;
@@ -355,5 +356,10 @@ public class ModNetworking {
                     be.applyFrom(type, payload.yaw(), payload.offX(), payload.offY(), payload.offZ());
                     if (payload.respawn()) be.forceRespawn();
                 }));
+
+        registrar.playToServer(
+                ForgetSkillPacket.TYPE,
+                ForgetSkillPacket.STREAM_CODEC,
+                ForgetSkillPacket::handle);
     }
 }

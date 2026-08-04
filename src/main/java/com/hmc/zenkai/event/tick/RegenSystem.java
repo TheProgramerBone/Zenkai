@@ -15,7 +15,10 @@ public final class RegenSystem {
         if (p.tickCount % 20 != 0) return;
 
         var food = p.getFoodData();
-        if (!p.isCreative() && food.getFoodLevel() <= 0) return;
+        // Suelo de comida: antes se regeneraba hasta dejarte en 1 de hambre, así que era
+        // imposible acumular reserva. Vanilla corta su regen por debajo de 18; aquí se corta
+        // mucho más abajo para poder curarse con hambre, pero no hasta vaciarte.
+        if (!p.isCreative() && food.getFoodLevel() <= CommonConfig.regenMinFoodLevel()) return;
 
         // carry[0] lo comparte KaiokenSystem: si el kaioken está activo, lo que sumamos aquí
         // se resta de su quema (mecánica intencional, ver PlayerTickState#carry).
@@ -44,8 +47,8 @@ public final class RegenSystem {
         }
 
         if (!p.isCreative()) {
-            if (didBody)    food.addExhaustion(2.4F);
-            if (didStamina) food.addExhaustion(0.6F);
+            if (didBody)    food.addExhaustion((float) CommonConfig.regenBodyExhaustion());
+            if (didStamina) food.addExhaustion((float) CommonConfig.regenStaminaExhaustion());
         }
     }
 

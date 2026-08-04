@@ -1,6 +1,6 @@
 {
-  "entity": "minecraft:vindicator",
-  "power_level": 445,
+  "entity": "minecraft:magma_cube",
+  "power_level": 215,
   "archetype": "brawler",
   "moveset": {
     "melee": true

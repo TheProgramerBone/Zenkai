@@ -1,6 +1,6 @@
 {
   "entity": "minecraft:ravager",
-  "power_level": 728,
+  "power_level": 715,
   "archetype": "tank",
   "moveset": {
     "melee": true

@@ -1,6 +1,6 @@
 {
   "entity": "minecraft:hoglin",
-  "power_level": 310,
+  "power_level": 305,
   "archetype": "brawler",
   "moveset": {
     "melee": true

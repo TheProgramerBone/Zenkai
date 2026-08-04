@@ -1,9 +1,9 @@
 {
   "entity": "minecraft:evoker",
-  "power_level": 456,
-  "archetype": "ki_user",
+  "power_level": 760,
+  "archetype": "balanced",
   "moveset": {
-    "melee": false
+    "melee": true
   },
   "rewards": {
     "tp": "auto"

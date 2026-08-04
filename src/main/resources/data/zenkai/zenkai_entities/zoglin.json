@@ -1,6 +1,6 @@
 {
-  "entity": "minecraft:vindicator",
-  "power_level": 445,
+  "entity": "minecraft:zoglin",
+  "power_level": 305,
   "archetype": "brawler",
   "moveset": {
     "melee": true

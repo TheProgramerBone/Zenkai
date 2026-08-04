@@ -203,22 +203,27 @@ public final class SenseKiOverlayRenderer {
                                     SenseKiDataPacket.Entry en, Minecraft mc, float yTop) {
         pose.pushPose();
         pose.translate(0f, yTop, 0f);
-        // X negada: deshace el espejo del espacio (por eso quad() usa winding invertido) y de
-        // paso invierte el winding, que es lo que deja los glifos de CARA. Sin esto el cull de
-        // textSeeThrough se los come y no se pinta nada.
-        pose.scale(-NUM_SCALE, NUM_SCALE, NUM_SCALE);
+        // Escala UNIFORME Y POSITIVA. La X ya viene negada de billboard(), que aplica el mismo
+        // scale(-0.025, -0.025, 0.025) que usa vanilla para los nametags. Negarla otra vez aquí
+        // dejaba la X en positivo y el texto salía en ESPEJO. (El comentario anterior decía que
+        // sin la negación el cull se comía los glifos: eso era el bug del backgroundColor = 0,
+        // que hacía el texto invisible por otra razón. La captura lo confirma — con la doble
+        // negación los glifos se pintan, así que no hay nada culleando.)
+        pose.scale(NUM_SCALE, NUM_SCALE, NUM_SCALE);
         Matrix4f m = pose.last().pose();
 
+        // Y CRECIENTE: las tres líneas iban las tres a y=0, superpuestas. lh se calculaba y no
+        // se usaba. +Y va hacia abajo tras el scale de nametag, igual que en barsBottom().
         float lh = mc.font.lineHeight + 1f;
         line(mc, m, buffers,
                 Component.translatable("ki_sense.zenkai.attack", ZenkaiNumbers.format(en.melee())),
                 0f, C_ATK);
         line(mc, m, buffers,
                 Component.translatable("ki_sense.zenkai.defense", ZenkaiNumbers.format(en.defense())),
-                0f, C_DEF);
+                lh, C_DEF);
         line(mc, m, buffers,
                 Component.translatable("ki_sense.zenkai.ki_power", ZenkaiNumbers.format(en.kiPower())),
-                0f, C_KIP);
+                lh * 2f, C_KIP);
         pose.popPose();
     }
 

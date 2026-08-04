@@ -1,9 +1,9 @@
 {
   "entity": "minecraft:breeze",
-  "power_level": 380,
+  "power_level": 665,
   "archetype": "speedster",
   "moveset": {
-    "melee": false
+    "melee": true
   },
   "rewards": {
     "tp": "auto"

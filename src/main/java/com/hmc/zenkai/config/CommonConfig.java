@@ -26,12 +26,24 @@ public final class CommonConfig {
     // =====================================================================
 
     private static final ModConfigSpec.DoubleValue TP_COEFFICIENT_RAW =
-            BUILDER.comment("TP cost growth: cost = points * (1 + coef * avgInvested)")
-                    .defineInRange("tp.coefficient", 0.00001D, 0.0D, 100D);
+            BUILDER.comment("Attribute cost growth: cost = points * (stats.attribute_base_cost + coef * invested). Sets the LATE ceiling; the base cost sets the early pace. At the old 0.00001 the curve did not bend until 100,000 invested points, so a point cost the same at the start and at the end of the game.")
+                    .defineInRange("stats.tp_coefficient", 0.005D, 0.0D, 100D);
 
     private static final ModConfigSpec.IntValue GLOBAL_ATTRIBUTE_CAP_RAW =
             BUILDER.comment("Max per attribute. 5 counted attrs x 200000 = PL cap 1,000,000")
                     .defineInRange("caps.global_attribute", 200000, 1, 1000000);
+
+    private static final ModConfigSpec.DoubleValue ATTRIBUTE_BASE_COST_RAW =
+            BUILDER.comment("TP cost of the very first attribute point. Sets the EARLY pace; stats.tp_coefficient sets the late ceiling. At 1.0 (the old hardcoded value) two zombies multiplied a fresh Saiyan's melee by 6.7 - base attributes are 8-14, so any cheap investment is multiplicative.")
+                    .defineInRange("stats.attribute_base_cost", 5.0D, 0.1D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue TRAINING_PL_RATIO_FLOOR_RAW =
+            BUILDER.comment("Minimum TP multiplier when killing something far below your power level. Full formula: clamp(victimPL / yourPL, floor, 1.0). Keeps farming trash from ever being worth more per minute than fighting something your size, without making it literally zero.")
+                    .defineInRange("training.pl_ratio_floor", 0.05D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue TRAINING_PL_RATIO_FULL_RAW =
+            BUILDER.comment("Power ratio (victimPL / yourPL) at which a kill is worth FULL TP. Not 1.0: a player's PL is 31-65% ki pool because ki_reserves coefficients are 40-78 per point, while a mob splits its PL over a flat 100-point archetype shape. Measured against the actual curve, an even fight sits near 0.25 and stays there as both sides grow. Below this, TP decays linearly to training.pl_ratio_floor.")
+                    .defineInRange("training.pl_ratio_full", 0.25D, 0.01D, 1.0D);
 
     // =====================================================================
     // SPEC — Movimiento y vuelo
@@ -143,6 +155,18 @@ public final class CommonConfig {
             BUILDER.comment("Stamina restored per nutrition point when finishing a food item, as % of staminaMax (3.0 = 3%)")
                     .defineInRange("regen.food.stamina_percent_per_nutrition", 3.0D, 0.0D, 100.0D);
 
+    private static final ModConfigSpec.DoubleValue REGEN_BODY_EXHAUSTION_RAW =
+            BUILDER.comment("Exhaustion per second while body is regenerating. Reference: 4.0 exhaustion = 1 food point, and sprinting costs about 0.56/s. The old hardcoded 2.4 meant a full body heal cost 40 food points - the whole bar plus saturation - against 30 for a full heal in vanilla.")
+                    .defineInRange("regen.food.body_exhaustion", 1.2D, 0.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue REGEN_STAMINA_EXHAUSTION_RAW =
+            BUILDER.comment("Exhaustion per second while stamina is regenerating. Kept low on purpose: stamina is spent by every swing, so in combat this charge never stops - unlike body regen, which only runs while you are hurt.")
+                    .defineInRange("regen.food.stamina_exhaustion", 0.15D, 0.0D, 20.0D);
+
+    private static final ModConfigSpec.IntValue REGEN_MIN_FOOD_RAW =
+            BUILDER.comment("Body and stamina stop regenerating at or below this food level. Vanilla stops natural regen below 18; this stops far lower so you can still heal while hungry, but you can no longer be drained to zero by standing still.")
+                    .defineInRange("regen.food.min_food_level", 6, 0, 20);
+
     // =====================================================================
     // SPEC — Combate, técnicas y detección
     // =====================================================================
@@ -198,6 +222,14 @@ public final class CommonConfig {
     private static final ModConfigSpec.DoubleValue VANILLA_ARMOR_WEIGHT_RAW =
             BUILDER.comment("How much of vanilla's own damage reduction (armor points, toughness, Protection, Resistance) carries over to Zenkai damage. 0.0 = armor ignored (old behaviour). 1.0 = full vanilla reduction, netherite + Prot IV cuts ~91%. 0.5 = ~45%.")
                     .defineInRange("combat.vanilla_armor_weight", 0.50D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue MOB_PROJECTILE_FACTOR_RAW =
+            BUILDER.comment("Fraction of a mob's melee power that its vanilla projectiles deal (arrows, fireballs, shulker bullets, potions). Without this, ranged mobs deal raw vanilla damage against a four-digit body pool and are effectively unarmed. Does not apply to players - their path is Ki Infuse.")
+                    .defineInRange("combat.mob_projectile_factor", 0.60D, 0.0D, 2.0D);
+
+    private static final ModConfigSpec.DoubleValue EXPLOSION_REFERENCE_DAMAGE_RAW =
+            BUILDER.comment("Vanilla damage of a point-blank creeper blast, used to recover explosion distance falloff. The pipeline replaces explosion damage with the mob's STR, which discarded vanilla's own distance and cover calculation; this restores it as a proportion.")
+                    .defineInRange("combat.explosion_reference_damage", 22.0D, 1.0D, 200.0D);
 
     private static final ModConfigSpec.DoubleValue PROJECTILE_BASE_DAMAGE_RAW =
             BUILDER.comment("Reference damage of a clean unenchanted arrow at full draw (vanilla: 2.0 base x 3.0 velocity). The Ki Infuse bonus on projectiles scales against this.")
@@ -370,7 +402,7 @@ public final class CommonConfig {
     // CACHÉ VOLÁTIL — cada valor inicial DEBE igualar el default de su *_RAW
     // =====================================================================
 
-    private static volatile double TP_COEFFICIENT = 0.00001D;
+    private static volatile double TP_COEFFICIENT = 0.005D;
     private static volatile int    GLOBAL_ATTRIBUTE_CAP = 200000;
 
     private static volatile double SPEED_MULT_CAP = 3.0D;
@@ -385,6 +417,8 @@ public final class CommonConfig {
     private static volatile double BODY_SCALE = 1.0D, STAMINA_SCALE = 1.0D, ENERGY_SCALE = 1.0D;
     private static volatile double REGEN_BODY = 1.5, REGEN_STAMINA = 3.0, REGEN_ENERGY = 1.0;
     private static volatile double FOOD_KI_PCT = 2.0, FOOD_STAMINA_PCT = 3.0;
+    private static volatile double MOB_PROJECTILE_FACTOR = 0.6D;
+    private static volatile double EXPLOSION_REFERENCE_DAMAGE = 22.0D;
 
     private static volatile double MIN_DAMAGE_PERCENT = 0.05D;
     private static volatile int    TECHNIQUE_MAX_SLOTS = 12;
@@ -392,6 +426,12 @@ public final class CommonConfig {
     private static volatile double SENSE_KI_SIMILAR = 0.8D;
     private static volatile double VANILLA_PL_FACTOR = 1.0D;
     private static volatile int    SCOUTER_RANGE = 64;
+    private static volatile double ATTRIBUTE_BASE_COST = 5.0D;
+    private static volatile double TRAINING_PL_RATIO_FLOOR = 0.05D;
+    private static volatile double TRAINING_PL_RATIO_FULL = 0.25D;
+    private static volatile double REGEN_BODY_EXHAUSTION = 1.2D;
+    private static volatile double REGEN_STAMINA_EXHAUSTION = 0.15D;
+    private static volatile int    REGEN_MIN_FOOD = 6;
 
     private static volatile boolean MIRROR_HEALTH = true;
     private static volatile double ABSORPTION_WEIGHT = 1.0D;
@@ -421,10 +461,10 @@ public final class CommonConfig {
     private static volatile double VANILLA_BOSS_FACTOR = 40.0D;
     private static volatile double VANILLA_DAMAGE_RATIO = 0.4D;
     private static volatile double BF_CHANCE = 0.03D;
-    private static volatile double BF_MULTIPLIER = 0.03D;
-    private static volatile double BF_CHARGE_EXPONENT = 0.03D;
-    private static volatile double BF_LUCK_FACTOR = 0.03D;
-    private static volatile double BF_MAX_CHANCE = 0.03D;
+    private static volatile double BF_MULTIPLIER = 3.0D;
+    private static volatile double BF_CHARGE_EXPONENT = 3.0D;
+    private static volatile double BF_LUCK_FACTOR = 0.5D;
+    private static volatile double BF_MAX_CHANCE = 0.25D;
     private static volatile double BF_STAT_FACTOR = 1.0D;
 
 
@@ -449,6 +489,8 @@ public final class CommonConfig {
 
         TP_COEFFICIENT       = TP_COEFFICIENT_RAW.get();
         GLOBAL_ATTRIBUTE_CAP = GLOBAL_ATTRIBUTE_CAP_RAW.get();
+        ATTRIBUTE_BASE_COST = ATTRIBUTE_BASE_COST_RAW.get();
+        TRAINING_PL_RATIO_FLOOR = TRAINING_PL_RATIO_FLOOR_RAW.get();
 
         SPEED_MULT_CAP    = SPEED_MULT_CAP_RAW.get();
         MOVE_SCALING      = MOVE_SCALING_RAW.get();
@@ -458,6 +500,10 @@ public final class CommonConfig {
         FLY_BASE_SPEED    = FLY_BASE_SPEED_RAW.get();
         FLY_KI_DRAIN      = FLY_KI_DRAIN_RAW.get();
         TURBO_DRAIN_PCT_PER_SEC = TURBO_DRAIN_PCT_PER_SEC_RAW.get();
+        TRAINING_PL_RATIO_FULL   = TRAINING_PL_RATIO_FULL_RAW.get();
+        REGEN_BODY_EXHAUSTION    = REGEN_BODY_EXHAUSTION_RAW.get();
+        REGEN_STAMINA_EXHAUSTION = REGEN_STAMINA_EXHAUSTION_RAW.get();
+        REGEN_MIN_FOOD           = REGEN_MIN_FOOD_RAW.get();
 
         BODY_SCALE    = BODY_SCALE_RAW.get();
         STAMINA_SCALE = STAMINA_SCALE_RAW.get();
@@ -475,6 +521,8 @@ public final class CommonConfig {
         VANILLA_PASSIVE_FACTOR = VANILLA_PASSIVE_FACTOR_RAW.get();
         VANILLA_BOSS_FACTOR = VANILLA_BOSS_FACTOR_RAW.get();
         VANILLA_HOSTILE_FACTOR = VANILLA_HOSTILE_FACTOR_RAW.get();
+        EXPLOSION_REFERENCE_DAMAGE = EXPLOSION_REFERENCE_DAMAGE_RAW.get();
+        MOB_PROJECTILE_FACTOR = MOB_PROJECTILE_FACTOR_RAW.get();
 
 
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
@@ -541,6 +589,12 @@ public final class CommonConfig {
 
     public static double tpCoefficient()   { return TP_COEFFICIENT; }
     public static int globalAttributeCap() { return GLOBAL_ATTRIBUTE_CAP; }
+    public static double attributeBaseCost() { return ATTRIBUTE_BASE_COST; }
+    public static double trainingPlRatioFloor() {return TRAINING_PL_RATIO_FLOOR;}
+    public static double trainingPlRatioFull()     { return TRAINING_PL_RATIO_FULL; }
+    public static double regenBodyExhaustion()     { return REGEN_BODY_EXHAUSTION; }
+    public static double regenStaminaExhaustion()  { return REGEN_STAMINA_EXHAUSTION; }
+    public static int    regenMinFoodLevel()       { return REGEN_MIN_FOOD; }
 
     public static double speedMultiplierCap()       { return SPEED_MULT_CAP; }
     public static double movementScaling()          { return MOVE_SCALING; }
@@ -561,6 +615,8 @@ public final class CommonConfig {
     public static double vanillaHostileFactor() { return VANILLA_HOSTILE_FACTOR; }
     public static double vanillaBossFactor() { return VANILLA_BOSS_FACTOR; }
     public static double vanillaDamageRatio() { return VANILLA_DAMAGE_RATIO; }
+    public static double mobProjectileFactor() { return MOB_PROJECTILE_FACTOR; }
+    public static double explosionReferenceDamage() {return EXPLOSION_REFERENCE_DAMAGE;}
 
     public static double bodyScale()      { return BODY_SCALE; }
     public static double staminaScale()   { return STAMINA_SCALE; }

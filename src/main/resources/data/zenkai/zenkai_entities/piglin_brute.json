@@ -1,10 +1,10 @@
 {
   "entity": "minecraft:piglin_brute",
-  "power_level": 558,
+  "power_level": 445,
   "archetype": "brawler",
   "overrides": {
     "attributes": {
-      "strength": "+20%"
+      "strength": "+15%"
     }
   },
   "moveset": {

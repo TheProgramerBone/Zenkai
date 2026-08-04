@@ -4,11 +4,13 @@ import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.ForgetSkillPacket;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.skills.SuperForms;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -82,6 +84,10 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         if (st == null || def == null || !def.purchasable()) return;
         int lvl = st.skills().level(id);
         if (lvl >= maxLevelOf(def) || !canAfford(st, def, lvl)) return;
+        if (Screen.hasShiftDown()) {
+            PacketDistributor.sendToServer(new ForgetSkillPacket(id));
+            return;
+        }
         PacketDistributor.sendToServer(new SkillBuyPacket(id));
     }
 
@@ -134,7 +140,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
     /** ¿Se puede pagar el siguiente nivel de esta habilidad? */
     private boolean canAfford(PlayerStatsAttachment st, SkillDef def, int currentLevel) {
         return st.getTP() >= costOf(def, currentLevel + 1)
-                && st.getAttribute(ZenkaiAttributes.MIND) >= def.mindReqFor(currentLevel + 1);
+                && st.mindFree() >= def.mindReqFor(currentLevel + 1) - def.mindReqFor(currentLevel);
     }
 
     /** Recorta a una línea con puntos suspensivos: sin esto las descripciones largas
@@ -215,7 +221,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
         g.drawString(this.font,
                 Component.translatable("screen.zenkai.skills.resources",
-                        st.getTP(), st.getAttribute(ZenkaiAttributes.MIND)),
+                        st.getTP(), st.mindFree(), st.getAttribute(ZenkaiAttributes.MIND)),
                 panelLeft + 16, panelTop + CONTENT_TOP, 0xFFFFD966, true);
 
         if (rowIds.isEmpty()) {
@@ -279,7 +285,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
             }
             g.drawString(this.font,
                     Component.translatable("screen.zenkai.skills.cost",
-                            costOf(def, lvl + 1), def.mindReqFor(lvl + 1)),
+                            costOf(def, lvl + 1), def.mindReqFor(lvl + 1) - def.mindReqFor(lvl)),
                     textX, y + 22, canAfford(st, def, lvl) ? COL_COST : COL_POOR, true);
         }
         g.disableScissor();

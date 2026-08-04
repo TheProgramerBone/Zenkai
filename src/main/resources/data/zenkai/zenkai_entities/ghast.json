@@ -1,9 +1,9 @@
 {
   "entity": "minecraft:ghast",
-  "power_level": 399,
-  "archetype": "ki_user",
+  "power_level": 760,
+  "archetype": "balanced",
   "moveset": {
-    "melee": false
+    "melee": true
   },
   "rewards": {
     "tp": "auto"

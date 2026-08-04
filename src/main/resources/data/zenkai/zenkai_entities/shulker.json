@@ -1,9 +1,9 @@
 {
   "entity": "minecraft:shulker",
-  "power_level": 210,
+  "power_level": 545,
   "archetype": "balanced",
   "moveset": {
-    "melee": false
+    "melee": true
   },
   "rewards": {
     "tp": "auto"

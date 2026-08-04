@@ -379,4 +379,14 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             default -> raw; // CON y SPI no escalan con la forma; MIND tampoco
         };
     }
+
+    /** MIND ocupada por las habilidades actuales. */
+    public int mindUsed() { return skills.mindUsed(); }
+
+    /** MIND libre. Puede salir NEGATIVA si un datapack sube los mind_req por debajo de los
+     *  pies del jugador: no se corrige aquí a propósito, porque taparlo escondería el
+     *  problema. Quien compra ya lo trata como "no te llega". */
+    public int mindFree() {
+        return getAttribute(ZenkaiAttributes.MIND) - skills.mindUsed();
+    }
 }

@@ -113,11 +113,15 @@ public class PlayerRaceStats {
         return closedCost(totalInv, add, coeff);
     }
 
-    /** Coste total en O(1): add*(1 + coef*(inv + (add-1)/2)), UN solo redondeo.
-     *  (El bucle anterior era O(n) por compra — inviable comprando miles — y con coefs
-     *  pequeños inflaba ~+1 por punto por el ceil por término. Cambio de balance Fase 4.) */
+    /** Coste total en O(1): add*(base + coef*(inv + (add-1)/2)), UN solo redondeo.
+     *  El `base` era un 1.0 hardcodeado, y con coef 0.00001 eso dejaba el punto de atributo a
+     *  1 TP durante el juego real: la curva no se doblaba hasta las 100.000 inversiones.
+     *  Partiendo de atributos base de 8-14, los primeros 80 TP multiplicaban el daño por 6.7.
+     *  Ahora el suelo es configurable y es lo que fija el ritmo temprano; el coeficiente sigue
+     *  siendo lo que fija el techo. */
     private static int closedCost(int inv, int add, double coeff) {
-        double total = add * (1.0 + coeff * (inv + (add - 1) / 2.0));
+        double base = CommonConfig.attributeBaseCost();
+        double total = add * (base + coeff * (inv + (add - 1) / 2.0));
         return (int) Math.min(Integer.MAX_VALUE, Math.ceil(total));
     }
 

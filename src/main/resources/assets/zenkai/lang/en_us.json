@@ -471,6 +471,8 @@
   "screen.zenkai.skills.resources": "TP: %s    MND: %s",
   "screen.zenkai.skills.cost": "Next level: %s TP · %s MND",
   "screen.zenkai.skills.maxed": "Max level",
+  "screen.zenkai.skills.header": "TP: %s    MIND: %s / %s free",
+  "screen.zenkai.skills.forget_hint": "Shift-click to forget one level",
   "screen.zenkai.technique.tab.combat": "Combat",
   "screen.zenkai.technique.tab.style": "Style",
   "screen.zenkai.technique.position": "Position",

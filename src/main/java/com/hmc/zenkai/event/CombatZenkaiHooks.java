@@ -16,6 +16,7 @@ import com.hmc.zenkai.feature.technique.PhysicalCombatServer;
 import com.hmc.zenkai.feature.training.TrainingHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -107,19 +108,38 @@ public class CombatZenkaiHooks {
         if (e.getSource().getDirectEntity() instanceof KiProjectileEntity) return dmg;
         if (PhysicalCombatServer.isFiring()) return dmg;
 
-        // GOLPE INDIRECTO (flecha, tridente, bola de nieve): el daño NO es el melee del
-        // tirador. Lo que lleva es su daño vanilla más lo que Ki Infuse le puso AL LANZARLA.
-        // EL ARCO MULTIPLICA EL BONUS, no se le suma: sumando, Poder V añadía ~3 puntos a un
-        // bonus de miles y el encantamiento era invisible en el juego aunque estuviera en el
-        // código. Mismo arreglo que weaponMultiplier hizo con las espadas.
+        // GOLPE INDIRECTO (flecha, tridente, bola de fuego, bala de shulker): el daño NO es el
+        // melee del tirador. Dos casos, y hasta ahora solo estaba resuelto el primero.
         Entity direct = e.getSource().getDirectEntity();
         if (direct != null && direct != e.getSource().getEntity()) {
             KiInfusedShot shot = KiInfusedShot.of(direct);
-            if (!shot.isInfused()) return dmg;
+
+            // 1) INFUSIONADO: daño vanilla del proyectil + lo que Ki Infuse le puso AL LANZARLO.
+            // EL ARCO MULTIPLICA EL BONUS, no se le suma: sumando, Poder V añadía ~3 puntos a un
+            // bonus de miles y el encantamiento era invisible en el juego aunque estuviera en el
+            // código. Mismo arreglo que weaponMultiplier hizo con las espadas.
             // El daño ORIGINAL (pre-armadura) es donde vive lo que puso Poder; dmg ya viene
             // mitigado y la armadura se cobra aparte en VanillaMitigation.
-            double mult = KiInfusion.projectileMultiplier(VanillaMitigation.originalDamage(e));
-            return dmg + (float) (shot.bonusDamage() * mult);
+            if (shot.isInfused()) {
+                double mult = KiInfusion.projectileMultiplier(VanillaMitigation.originalDamage(e));
+                return dmg + (float) (shot.bonusDamage() * mult);
+            }
+
+            // 2) PROYECTIL VANILLA DE UNA ENTIDAD. Esta rama devolvía `dmg` tal cual, o sea daño
+            // VANILLA sin tocar: una flecha de esqueleto hacía 3 puntos contra un pool de tres
+            // cifras. Por eso esqueletos, blazes, ghasts, brujas, evokers, guardianes y
+            // pillagers estaban desarmados en la práctica — y por eso cambiarles el arquetipo no
+            // arreglaba nada: su share de STR sube, pero nunca pegan cuerpo a cuerpo.
+            // Escala con el STR del tirador, reducido por config: un ataque a distancia debe
+            // pegar menos que el puño del mismo bicho.
+            // SOLO ENTIDADES: para el jugador el camino es Ki Infuse, y escalar aquí también
+            // dejaría a esa habilidad sin razón de existir.
+            // El guard de dmg > 0 protege lo que vanilla ya considera inofensivo (bolas de
+            // nieve, huevos): sin él, un muñeco de nieve pasaría a matar.
+            if (dmg > 0f && !(e.getSource().getEntity() instanceof Player)) {
+                return (float) (atkStats.computeMeleeFinal() * CommonConfig.mobProjectileFactor());
+            }
+            return dmg;
         }
 
         double strDamage = atkStats.computeMeleeFinal();
@@ -127,6 +147,23 @@ public class CombatZenkaiHooks {
         if (e.getSource().getEntity() instanceof Player attacker) {
             return playerMeleeDamage(e.getEntity(), attacker, atkStats, strDamage, dmg);
         }
+
+        // EXPLOSIÓN PROPIA (creeper): vanilla ya atenuó el daño por distancia y por cobertura, y
+        // sustituirlo por strDamage a secas tiraba ese cálculo — los creeper hacía daño completo
+        // a 1 bloque y a 6. Reusamos la proporción que vanilla calculó, mismo criterio que
+        // VanillaMitigation con la armadura: no recalculamos nada suyo, leemos lo que ya decidió.
+        // Solo entra aquí la explosión donde el creeper ES el proyectil (direct == entity). Una
+        // bola de ghast tiene direct = LargeFireball, así que cae en la rama indirecta de arriba
+        // y se escala como proyectil, que es lo correcto.
+        // ⚠ API a verificar al compilar: DamageTypeTags.IS_EXPLOSION en 1.21.1.
+        if (e.getSource().is(DamageTypeTags.IS_EXPLOSION)) {
+            double full = CommonConfig.explosionReferenceDamage();
+            double falloff = full <= 0.0
+                    ? 1.0
+                    : Math.min(1.0, VanillaMitigation.originalDamage(e) / full);
+            return (float) (strDamage * falloff);
+        }
+
         // Entidad: su STR es la fuente única del daño melee (sin gate de stamina en Fase 2).
         return (float) strDamage;
     }
@@ -184,7 +221,8 @@ public class CombatZenkaiHooks {
         // Gatea en fistBonus y NO en el total: es una mecánica de puño. Ki Infuse queda fuera
         // a propósito (y además exige arma en mano por su propio hasWeapon, así que a puño
         // limpio su bonus siempre es 0).
-        if (fistBonus > 0.0 && attacker instanceof ServerPlayer atkSp) {
+        if (fistBonus > 0.0) {
+            ServerPlayer atkSp = (ServerPlayer) attacker;
             total = BlackFlash.apply(atkSp, victim, scale, chargeF, atkStats, total);
         }
 
@@ -291,8 +329,16 @@ public class CombatZenkaiHooks {
     private static void grantTraining(LivingDamageEvent.Pre e, double amount) {
         Entity source = e.getSource().getEntity();
         if (source instanceof ServerPlayer trainer && trainer != e.getEntity()) {
-            TrainingHooks.grantFromDamage(trainer, amount);
+            TrainingHooks.grantFromDamage(trainer, amount, victimPowerLevel(e.getEntity()));
         }
+    }
+
+    /** PL de la víctima para el factor de diferencia de poder. Mismo fallback que
+     *  EntityDeathRewardHandler: sin stats zenkai se deriva de la vida máxima. */
+    private static long victimPowerLevel(LivingEntity victim) {
+        ZenkaiCombatStats st = ZenkaiStats.of(victim);
+        if (st != null) return PowerLevel.compute(st);
+        return Math.max(1L, Math.round(victim.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor()));
     }
 
     // =====================================================================

@@ -1,6 +1,6 @@
 {
   "entity": "minecraft:iron_golem",
-  "power_level": 780,
+  "power_level": 715,
   "archetype": "tank",
   "overrides": {
     "attributes": {

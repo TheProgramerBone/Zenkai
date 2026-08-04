@@ -1,6 +1,6 @@
 {
-  "entity": "minecraft:vindicator",
-  "power_level": 445,
+  "entity": "minecraft:zombie_villager",
+  "power_level": 215,
   "archetype": "brawler",
   "moveset": {
     "melee": true

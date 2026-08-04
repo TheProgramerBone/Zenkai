@@ -1,6 +1,6 @@
 {
   "entity": "minecraft:pillager",
-  "power_level": 180,
+  "power_level": 665,
   "archetype": "balanced",
   "moveset": {
     "melee": true

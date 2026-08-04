@@ -49,13 +49,23 @@ public final class EntityDeathRewardHandler {
         }
         if (reward <= 0) return;
 
-        // Ruta única: el reward pasa por el mismo embudo que el resto del entrenamiento, así
-        // fatiga, HTC y pesas se aplican una sola vez y en un solo sitio.
+        // Ruta ÚNICA. Antes había un ka.addTP(reward) debajo de esta llamada que concedía el
+        // reward por segunda vez Y se saltaba el embudo entero, así que esa mitad no acumulaba
+        // fatiga y no decaía nunca. El comentario ya decía "ruta única"; la segunda ruta era un
+        // resto de antes de que existiera grantFromKill.
         if (killer instanceof ServerPlayer sp) {
-            TrainingHooks.grantFromKill(sp, reward);
+            TrainingHooks.grantFromKill(sp, reward, victimPowerLevel(dead));
         }
-        ka.addTP(reward);
-        PlayerLifeCycle.syncIfServer(killer);
+    }
+
+    /** PL de la víctima para el factor de diferencia. Sin stats zenkai se deriva de la vida
+     *  máxima, igual que el reward de arriba. */
+    private static long victimPowerLevel(LivingEntity dead) {
+        var st = dead.getData(ZenkaiDataAttachments.ENTITY_STATS.get());
+        if (dead.hasData(ZenkaiDataAttachments.ENTITY_STATS.get()) && st.isInitialized()) {
+            return st.getPowerLevel();
+        }
+        return Math.max(1L, Math.round(dead.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor()));
     }
 
     private static Player resolveKiller(DamageSource src) {

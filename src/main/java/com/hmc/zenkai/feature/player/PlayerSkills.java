@@ -135,4 +135,44 @@ public final class PlayerSkills {
     }
 
     public void clearToggles() { toggles.clear(); }
+
+    /**
+     * MIND que ocupan AHORA MISMO las habilidades. Lectura A: mind_req[n-1] es el TOTAL que
+     * ocupa la habilidad EN el nivel n, no lo que cuesta subir a él — por eso se suma
+     * mindReqFor(nivelActual) y no la lista entera.
+     * Se calcula, no se guarda: derivarlo cada vez evita que el número quede desfasado cuando
+     * un datapack cambia los mind_req, y el cliente puede reproducirlo con los mismos datos
+     * (SkillDef ya viaja al cliente).
+     * Los niveles otorgados por maestro CUENTAN igual que los comprados: ocupar concentración
+     * no depende de cómo aprendiste.
+     */
+    public int mindUsed() {
+        int total = 0;
+        for (var e : levels.entrySet()) {
+            com.hmc.zenkai.feature.skills.SkillDef def =
+                    com.hmc.zenkai.feature.skills.SkillDef.get(e.getKey());
+            if (def != null) total += def.mindReqFor(e.getValue());
+        }
+        return total;
+    }
+
+    /**
+     * Baja UN nivel; desde el nivel 1 la olvida. Nunca baja del suelo otorgado por un
+     * maestro: si pudiera, el jugador borraría lo que le enseñó Kami sin forma de recuperarlo,
+     * y el respec ya tiene esa misma regla.
+     * @return el nivel que se acaba de quitar (para reembolsar su TP), o 0 si no se pudo.
+     */
+    public int lower(String id) {
+        int cur = level(id);
+        if (cur <= 0) return 0;
+        if (cur <= grantedFloor.getOrDefault(id, 0)) return 0;
+
+        if (cur == 1) {
+            levels.remove(id);
+            toggles.remove(id);   // sin habilidad no hay interruptor que valga
+        } else {
+            levels.put(id, cur - 1);
+        }
+        return cur;
+    }
 }

@@ -1,9 +1,9 @@
 {
   "entity": "minecraft:blaze",
-  "power_level": 256,
-  "archetype": "ki_user",
+  "power_level": 665,
+  "archetype": "balanced",
   "moveset": {
-    "melee": false
+    "melee": true
   },
   "rewards": {
     "tp": "auto"

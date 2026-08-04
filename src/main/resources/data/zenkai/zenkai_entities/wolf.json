@@ -1,6 +1,6 @@
 {
-  "entity": "minecraft:enderman",
-  "power_level": 540,
+  "entity": "minecraft:wolf",
+  "power_level": 280,
   "archetype": "speedster",
   "moveset": {
     "melee": true

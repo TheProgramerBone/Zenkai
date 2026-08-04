@@ -1,6 +1,6 @@
 {
-  "entity": "minecraft:witch",
-  "power_level": 595,
+  "entity": "minecraft:skeleton",
+  "power_level": 500,
   "archetype": "balanced",
   "moveset": {
     "melee": true

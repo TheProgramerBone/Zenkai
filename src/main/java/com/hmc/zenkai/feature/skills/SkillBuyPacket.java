@@ -58,10 +58,12 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
             int cost = def.levelsFromForms()
                     ? SuperForms.tpCostForLevel(sp, next) : def.tpCost();
 
-            if (att.getAttribute(ZenkaiAttributes.MIND) < def.mindReqFor(next)) return;
-            // Potential Unlock exige alineamiento. Único caso con mensaje explícito: los
-            // demás rechazos (TP, MND) el jugador los ve venir en la GUI, pero el
-            // alineamiento no sale por ningún lado y fallar en silencio parece un bug.
+            // LECTURA A: mind_req[n-1] es el TOTAL que la habilidad ocupa EN ese nivel. Subir
+            // del 4 al 5 libera los 26 del 4 y ocupa los 34 del 5: hacen falta 8 LIBRES.
+            // Antes se comparaba mindReqFor(next) contra la MIND total, o sea un umbral — y por
+            // eso MIND dejaba de significar nada en cuanto pasabas el listón más alto.
+            int mindDelta = def.mindReqFor(next) - def.mindReqFor(current);
+            if (att.mindFree() < mindDelta) return;
             if (SkillEffects.POTENTIAL_UNLOCK.equals(def.id()) && !PotentialUnlock.canPurchase(sp)) {
                 sp.displayClientMessage(Component.translatable(
                         "messages.zenkai.alignment_too_low",

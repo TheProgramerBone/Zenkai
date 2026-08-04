@@ -1,6 +1,6 @@
 {
   "entity": "minecraft:piglin",
-  "power_level": 217,
+  "power_level": 265,
   "archetype": "brawler",
   "moveset": {
     "melee": true
