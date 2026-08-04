@@ -55,7 +55,7 @@ public record ScouterScanPacket() implements CustomPacketPayload {
                 long hp    = zenkai ? st.getBody()    : Math.round(target.getHealth());
                 long hpMax = zenkai ? st.getBodyMax() : Math.round(target.getMaxHealth());
 
-                PacketDistributor.sendToPlayer(sp, new ScouterDataPacket(true, pl,
+                PacketDistributor.sendToPlayer(sp, new ScouterDataPacket(true, target.getId(), pl,
                         b == null ? 0L : b[0], b == null ? 0L : b[1], b == null ? 0L : b[2],
                         hp, hpMax));
             } else {

@@ -92,13 +92,13 @@ public final class ScouterOverlay {
                 if (ScouterClientState.hasTarget()) {
                     long pl = ScouterClientState.targetPowerLevel();
                     main = styled(Component.literal("PL " + ZenkaiNumbers.format(pl)));
-                    // Vida + etiqueta en la misma línea: el sub va a 1x y cabe de sobra.
-                    // body/bodyMax siempre vienen (pool del mod o vida vanilla), así que
-                    // esto no depende de hasBreakdown().
+                    // Vida + etiqueta + distancia. body/bodyMax siempre vienen (pool del mod o
+                    // vida vanilla), así que esto no depende de hasBreakdown().
                     sub = styled(Component.translatable("scouter.zenkai.hp_label",
-                            ZenkaiNumbers.format(ScouterClientState.targetBody()),
-                            ZenkaiNumbers.format(ScouterClientState.targetBodyMax()),
-                            Component.translatable(powerLabelKey(mc, pl))));
+                                    ZenkaiNumbers.format(ScouterClientState.targetBody()),
+                                    ZenkaiNumbers.format(ScouterClientState.targetBodyMax()),
+                                    Component.translatable(powerLabelKey(mc, pl)))
+                            .append(distanceSuffix(mc)));
                 } else {
                     main = styled(Component.literal("PL ---"));
                     sub = null;
@@ -112,12 +112,14 @@ public final class ScouterOverlay {
                     main = styled(Component.translatable("scouter.zenkai.atk",
                             ZenkaiNumbers.format(ScouterClientState.targetMelee())));
                     sub = styled(Component.translatable("scouter.zenkai.def_ki",
-                            ZenkaiNumbers.format(ScouterClientState.targetDefense()),
-                            ZenkaiNumbers.format(ScouterClientState.targetKiPower())));
+                                    ZenkaiNumbers.format(ScouterClientState.targetDefense()),
+                                    ZenkaiNumbers.format(ScouterClientState.targetKiPower()))
+                            .append(distanceSuffix(mc)));
                 } else if (ScouterClientState.hasTarget()) {
                     // Hay objetivo pero no tiene stats del mod (mob vanilla sin JSON).
                     main = styled(Component.literal("---"));
-                    sub = styled(Component.translatable("scouter.zenkai.no_data"));
+                    sub = styled(Component.translatable("scouter.zenkai.no_data")
+                            .append(distanceSuffix(mc)));
                 } else {
                     main = styled(Component.literal("---"));
                     sub = null;
@@ -208,6 +210,16 @@ public final class ScouterOverlay {
         double dy = ScouterClientState.areaY() - mc.player.getEyeY();
         double dz = ScouterClientState.areaZ() - mc.player.getZ();
         return Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz));
+    }
+
+    /** " · 14m" del objetivo APUNTADO, o vacío si el cliente aún no tiene esa entidad.
+     *  Los modos de área tienen su propia distancia (distanceTo) porque allí no hay entidad
+     *  resuelta, solo una posición cacheada. */
+    private static Component distanceSuffix(Minecraft mc) {
+        long d = ScouterClientState.targetDistance(mc);
+        if (d < 0L) return Component.empty();
+        return Component.literal(" · ")
+                .append(Component.translatable("scouter.zenkai.meters", d));
     }
 
     // ------------------------------------------------------------------ dibujo

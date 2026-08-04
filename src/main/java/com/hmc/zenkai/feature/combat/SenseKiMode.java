@@ -27,4 +27,9 @@ public enum SenseKiMode {
             SenseKiMode[] v = values();
             return v[(ordinal() + 1) % v.length];
         }
+
+    public SenseKiMode prev() {
+        SenseKiMode[] v = values();
+        return v[(ordinal() - 1 + v.length) % v.length];
+    }
 }

@@ -20,6 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
             StreamCodec.of((buf, pkt) -> {}, buf -> new SenseKiScanPacket());
 
     @Override
-    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(SenseKiScanPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -60,32 +61,14 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
             double r = CommonConfig.senseKiRange() * SkillEffects.senseRangeFactor(sp);
             AABB box = AABB.ofSize(sp.position(), r * 2, r * 2, r * 2);
 
-            // Quién puede ver números exactos y de quién: al máximo de Ki Sense, y solo del fijado.
-            boolean numbers = SkillEffects.senseShowsNumbers(sp);
-            int locked = numbers ? SenseServerState.lockOf(sp) : -1;
-
             List<SenseKiDataPacket.Entry> out = new ArrayList<>();
             for (LivingEntity le : sp.serverLevel().getEntitiesOfClass(LivingEntity.class, box,
                     e -> e != sp && e.isAlive() && !e.isSpectator())) {
-                out.add(buildEntry(le, le.getId() == locked));
+                out.add(buildBase(le));
                 if (out.size() >= 128) break; // techo de seguridad del paquete
             }
             PacketDistributor.sendToPlayer(sp, new SenseKiDataPacket(out));
         });
-    }
-
-    private static SenseKiDataPacket.Entry buildEntry(LivingEntity le, boolean withBreakdown) {
-        SenseKiDataPacket.Entry base = buildBase(le);
-        if (!withBreakdown) return base;
-
-        long[] b = ZenkaiStats.resolveBreakdown(le);
-        if (b == null) return base;   // sin stats del mod: no hay nada que desglosar
-        return new SenseKiDataPacket.Entry(base.entityId(),
-                base.body(), base.bodyMax(),
-                base.stamina(), base.staminaMax(),
-                base.energy(), base.energyMax(),
-                base.alignment(), base.powerLevel(), base.isPlayer(),
-                b[0], b[1], b[2], true);
     }
 
     private static SenseKiDataPacket.Entry buildBase(LivingEntity le) {

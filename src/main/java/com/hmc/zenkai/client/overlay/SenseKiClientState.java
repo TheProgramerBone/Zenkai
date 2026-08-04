@@ -9,6 +9,7 @@ import com.hmc.zenkai.feature.sense.SenseKiScanPacket;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -58,12 +59,16 @@ public final class SenseKiClientState {
         return mc.player == null ? 0 : SkillEffects.senseLevel(mc.player);
     }
 
-    /** Pulsación de F4 (desde KeyBindings). */
+    /** Pulsación de F4 (desde KeyBindings). Shift invierte el sentido del ciclo. */
     public static void onKeyPress(Minecraft mc) {
         if (mc.player == null) return;
 
+        // Shift se lee del estado de la ventana, no de un KeyMapping aparte: una sola tecla
+        // en el menú de controles y el modificador funciona con la que el jugador rebindee.
+        boolean backwards = Screen.hasShiftDown();
+
         if (isScouterEquipped(mc)) {
-            ScouterClientState.toggle(mc); // F4 con scouter puesto = toggle del overlay de PL
+            ScouterClientState.cycle(mc, backwards);
             return;
         }
         // Sin la habilidad no se siente nada. El scouter es la vía alternativa: por eso
@@ -76,7 +81,7 @@ public final class SenseKiClientState {
             return;
         }
 
-        mode = mode.next();
+        mode = backwards ? mode.prev() : mode.next();
         if (mode == SenseKiMode.OFF) SENSED.clear();
 
         mc.player.displayClientMessage(

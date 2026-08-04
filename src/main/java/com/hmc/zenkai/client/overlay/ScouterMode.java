@@ -25,6 +25,11 @@ public enum ScouterMode {
         return VALUES[(ordinal() + 1) % VALUES.length];
     }
 
+    /** Modo anterior (Shift+F4). OFF sigue dentro del ciclo en las dos direcciones. */
+    public ScouterMode prev() {
+        return VALUES[(ordinal() - 1 + VALUES.length) % VALUES.length];
+    }
+
     /** Clave de traducción del título del modo (no aplica a OFF). */
     public String titleKey() {
         return "scouter.zenkai.mode." + name().toLowerCase();

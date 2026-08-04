@@ -6,14 +6,12 @@ import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.combat.SenseKiMode;
 import com.hmc.zenkai.feature.sense.SenseKiDataPacket;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -74,8 +72,6 @@ public final class SenseKiOverlayRenderer {
     /** La fuente mide 9 de alto y las barras 4: a tamaño normal el bloque taparía el overlay. */
     private static final float NUM_SCALE = 0.5f;
     private static final int C_ATK = 0xFFFF7060;
-    private static final int C_DEF = 0xFF70B0FF;
-    private static final int C_KIP = 0xFFC080FF;
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent e) {
@@ -107,20 +103,6 @@ public final class SenseKiOverlayRenderer {
             pose.popPose();
         }
         buffers.endBatch(RenderType.textBackgroundSeeThrough());
-
-        // PASADA 2: el texto, DESPUÉS de todos los quads. Con NO_DEPTH_TEST manda el orden
-        // de envío, no la distancia: si se intercalara, las barras de una entidad taparían
-        // los números de otra.
-        for (SenseKiDataPacket.Entry entry : SenseKiClientState.sensed().values()) {
-            if (!entry.hasBreakdown()) continue;
-            LivingEntity le = resolve(entry, mc);
-            if (le == null) continue;
-            pose.pushPose();
-            billboard(pose, le, cam, camPos, pt);
-            drawNumbers(pose, buffers, entry, mc, barsBottom(entry, lvl) + BAR_GAP);
-            pose.popPose();
-        }
-        buffers.endBatch();
     }
 
     /** Entidad viva y visible detrás de una entrada, o null si no toca pintarla. */
@@ -138,15 +120,6 @@ public final class SenseKiOverlayRenderer {
         pose.translate(p.x - camPos.x, p.y - camPos.y, p.z - camPos.z);
         pose.mulPose(cam.rotation());
         pose.scale(-0.025f, -0.025f, 0.025f);
-    }
-
-    /** Altura a la que terminan las barras, para saber dónde empieza el bloque numérico. */
-    private static float barsBottom(SenseKiDataPacket.Entry en, int lvl) {
-        float y = 0f;
-        if (lvl >= 2) y += BAR_H + BAR_GAP;
-        if (lvl >= 4 && en.isPlayer()) y += BAR_H + BAR_GAP;
-        if (lvl >= 5 && en.isPlayer()) y += BAR_H + BAR_GAP;
-        return y;
     }
 
     /** Marcadores y barras. Solo quads: el texto va en la segunda pasada. */
@@ -192,50 +165,6 @@ public final class SenseKiOverlayRenderer {
         if (en.powerLevel() < myPl * t) return C_WEAKER;
         if (en.powerLevel() > myPl / t) return C_STRONGER;
         return C_SIMILAR;
-    }
-
-    /**
-     * Tres líneas con el desglose del PL (sus tres sumandos con pesos 1.0).
-     * Empuja su propia matriz porque necesita otra escala, y usa Font.drawInBatch en modo
-     * SEE_THROUGH para compartir el bufferSource con los quads y respetar el ver-a-través.
-     */
-    private static void drawNumbers(PoseStack pose, MultiBufferSource buffers,
-                                    SenseKiDataPacket.Entry en, Minecraft mc, float yTop) {
-        pose.pushPose();
-        pose.translate(0f, yTop, 0f);
-        // Escala UNIFORME Y POSITIVA. La X ya viene negada de billboard(), que aplica el mismo
-        // scale(-0.025, -0.025, 0.025) que usa vanilla para los nametags. Negarla otra vez aquí
-        // dejaba la X en positivo y el texto salía en ESPEJO. (El comentario anterior decía que
-        // sin la negación el cull se comía los glifos: eso era el bug del backgroundColor = 0,
-        // que hacía el texto invisible por otra razón. La captura lo confirma — con la doble
-        // negación los glifos se pintan, así que no hay nada culleando.)
-        pose.scale(NUM_SCALE, NUM_SCALE, NUM_SCALE);
-        Matrix4f m = pose.last().pose();
-
-        // Y CRECIENTE: las tres líneas iban las tres a y=0, superpuestas. lh se calculaba y no
-        // se usaba. +Y va hacia abajo tras el scale de nametag, igual que en barsBottom().
-        float lh = mc.font.lineHeight + 1f;
-        line(mc, m, buffers,
-                Component.translatable("ki_sense.zenkai.attack", ZenkaiNumbers.format(en.melee())),
-                0f, C_ATK);
-        line(mc, m, buffers,
-                Component.translatable("ki_sense.zenkai.defense", ZenkaiNumbers.format(en.defense())),
-                lh, C_DEF);
-        line(mc, m, buffers,
-                Component.translatable("ki_sense.zenkai.ki_power", ZenkaiNumbers.format(en.kiPower())),
-                lh * 2f, C_KIP);
-        pose.popPose();
-    }
-
-    /** Una línea centrada. SEE_THROUGH con backgroundColor 0 deja el texto invisible: ese
-     *  modo tiñe el glifo contra el fondo, y vanilla siempre lo usa con un fondo con alfa
-     *  (es lo que hace con los nametags). Por eso va un negro semitransparente y no 0. */
-    private static void line(Minecraft mc, Matrix4f m, MultiBufferSource buffers,
-                             Component text, float y, int color) {
-        float x = -mc.font.width(text) / 2f;
-        mc.font.drawInBatch(text, x, y, color, false, m, buffers,
-                net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH,
-                0x40000000, FULL_BRIGHT);
     }
 
     /** Marcador cuadrado con borde (mismo criterio anti z-fighting que las barras). */

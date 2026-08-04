@@ -7,9 +7,11 @@ import com.hmc.zenkai.feature.sense.ScouterAreaScanPacket;
 import com.hmc.zenkai.feature.sense.ScouterScanPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
@@ -29,6 +31,7 @@ public final class ScouterClientState {
 
     private static final int SCAN_INTERVAL = 5;  // ticks (la mira cambia rápido)
     private static final int AREA_INTERVAL = 20; // ticks (posiciones cambian lento; flecha es per-frame)
+    private static int targetEntityId = -1;
 
     private static ScouterMode mode = ScouterMode.OFF;
     private static int tickCounter = 0;
@@ -95,10 +98,10 @@ public final class ScouterClientState {
         return rgb & 0xFFFFFF;
     }
 
-    /** F4 con scouter puesto: cicla el modo (silencioso; el panel muestra el modo actual). */
-    public static void toggle(Minecraft mc) {
+    /** F4 avanza, Shift+F4 retrocede. Silencioso: el feedback es el propio panel. */
+    public static void cycle(Minecraft mc, boolean backwards) {
         if (mc.player == null) return;
-        mode = mode.next();
+        mode = backwards ? mode.prev() : mode.next();
         clearCaches();
         tickCounter = Integer.MAX_VALUE - 1; // fuerza scan inmediato del nuevo modo
         if (mode != ScouterMode.OFF) {
@@ -138,9 +141,11 @@ public final class ScouterClientState {
     }
 
     /** Respuesta del servidor: raycast de la mira (modos PODER y STATS). */
-    public static void onData(boolean found, long pl, long melee, long defense, long kiPower,
+    public static void onData(boolean found, int entityId, long pl,
+                              long melee, long defense, long kiPower,
                               long body, long bodyMax) {
         targetFound = found;
+        targetEntityId = entityId;
         targetPl = pl;
         targetMelee = melee;
         targetDefense = defense;
@@ -169,7 +174,21 @@ public final class ScouterClientState {
         targetKiPower = 0L;
         targetBody = 0L;
         targetBodyMax = 0L;
+        targetEntityId = -1;
         areaStatus = ScouterAreaDataPacket.STATUS_NONE;
         areaPl = 0L;
+    }
+
+    /**
+     * Distancia al objetivo apuntado, en bloques. −1 si no hay o el cliente no lo tiene.
+     * Se calcula CADA FRAME desde la entidad real y no viaja en el paquete: mandada por el
+     * server se quedaría congelada los 5 ticks del scan y daría saltos al caminar.
+     */
+    public static long targetDistance(Minecraft mc) {
+        if (!targetFound || targetEntityId < 0 || mc.player == null || mc.level == null) return -1L;
+        Entity ent = mc.level.getEntity(targetEntityId);
+        if (ent == null) return -1L;
+        Vec3 mid = ent.position().add(0.0, ent.getBbHeight() / 2.0, 0.0);
+        return Math.round(mc.player.getEyePosition().distanceTo(mid));
     }
 }

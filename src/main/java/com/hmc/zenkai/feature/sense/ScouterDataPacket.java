@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
  * body/bodyMax son el pool del mod si la entidad lo tiene, y la vida vanilla si no: así el
  * modo PODER siempre puede mostrar vida, tenga stats el objetivo o no.
  */
-public record ScouterDataPacket(boolean found, long powerLevel,
+public record ScouterDataPacket(boolean found, int entityId, long powerLevel,
                                 long melee, long defense, long kiPower,
                                 long body, long bodyMax) implements CustomPacketPayload {
 
@@ -29,6 +29,7 @@ public record ScouterDataPacket(boolean found, long powerLevel,
             StreamCodec.of(
                     (buf, pkt) -> {
                         buf.writeBoolean(pkt.found());
+                        buf.writeVarInt(pkt.entityId());
                         buf.writeLong(pkt.powerLevel());
                         buf.writeLong(pkt.melee());
                         buf.writeLong(pkt.defense());
@@ -36,13 +37,13 @@ public record ScouterDataPacket(boolean found, long powerLevel,
                         buf.writeLong(pkt.body());
                         buf.writeLong(pkt.bodyMax());
                     },
-                    buf -> new ScouterDataPacket(buf.readBoolean(), buf.readLong(),
+                    buf -> new ScouterDataPacket(buf.readBoolean(), buf.readVarInt(), buf.readLong(),
                             buf.readLong(), buf.readLong(), buf.readLong(),
                             buf.readLong(), buf.readLong()));
 
     /** Sin objetivo en la mira. */
     public static ScouterDataPacket empty() {
-        return new ScouterDataPacket(false, 0L, 0L, 0L, 0L, 0L, 0L);
+        return new ScouterDataPacket(false, -1, 0L, 0L, 0L, 0L, 0L, 0L);
     }
 
     /** ¿Trae desglose utilizable? */
@@ -55,7 +56,8 @@ public record ScouterDataPacket(boolean found, long powerLevel,
 
     public static void handle(ScouterDataPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> ScouterClientState.onData(
-                pkt.found(), pkt.powerLevel(), pkt.melee(), pkt.defense(), pkt.kiPower(),
+                pkt.found(), pkt.entityId(), pkt.powerLevel(),
+                pkt.melee(), pkt.defense(), pkt.kiPower(),
                 pkt.body(), pkt.bodyMax()));
     }
 }

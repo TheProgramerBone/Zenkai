@@ -317,9 +317,6 @@
   "scouter.zenkai.def_ki": "DEF %s · KI POWER %s",
   "scouter.zenkai.no_data": "NO DATA",
   "scouter.zenkai.hp_label": "HP %s/%s · %s",
-  "ki_sense.zenkai.attack": "ATK %s",
-  "ki_sense.zenkai.defense": "DEF %s",
-  "ki_sense.zenkai.ki_power": "KI POWER %s",
 
   "--- CONTROLES Y TECLAS (KEYBINDINGS) ---": "--- CONTROLES Y TECLAS (KEYBINDINGS) ---",
   "key.categories.zenkai": "Zenkai",
