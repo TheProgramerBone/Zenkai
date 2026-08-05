@@ -47,6 +47,8 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     // Texturas preset opcionales (para razas con presets pintados, p. ej. Namekian/Arcosian).
     // Si es null se usa siempre texturePath.
     @Nullable private ResourceLocation[] presetTextures = null;
+    // Textura que depende del ESTADO DEL STACK (p. ej. scouter roto). null = la de siempre.
+    @Nullable private java.util.function.Function<ItemStack, ResourceLocation> stackTexture = null;
     // Si true, el renderer añade los overlays de cara (ojos/boca/nariz). Solo para items de cuerpo.
     private boolean faceOverlays = false;
     // Si true, el renderer añade la capa de tinte de cuerpo (detalle + líneas) — razas multicolor (Namek).
@@ -69,6 +71,25 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     public GeoLayerArmorItem channel(ColorChannel channel) {
         this.colorChannel = channel;
         return this;
+    }
+
+    /** Textura según el estado del stack. Devolver null desde la función = usar la normal. */
+    public GeoLayerArmorItem stackTexture(java.util.function.Function<ItemStack, ResourceLocation> f) {
+        this.stackTexture = f;
+        return this;
+    }
+
+    /**
+     * Textura efectiva para ESTE stack. EMBUDO ÚNICO: el renderer y la capa de tinte pasan por
+     * aquí. Si solo lo hiciera el renderer, un scouter roto saldría con la base agrietada y la
+     * máscara _tint de la sana, dejando el cristal flotando sobre un armazón partido.
+     */
+    public ResourceLocation resolveTexture(@Nullable ItemStack stack, int preset) {
+        if (stackTexture != null && stack != null && !stack.isEmpty()) {
+            ResourceLocation r = stackTexture.apply(stack);
+            if (r != null) return r;
+        }
+        return getTexture(preset);
     }
 
     /** Define controladores de animación personalizados. Devuelve this para encadenar. */

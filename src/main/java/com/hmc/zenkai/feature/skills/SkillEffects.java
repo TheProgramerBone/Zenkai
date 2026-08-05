@@ -110,11 +110,6 @@ public final class SkillEffects {
         return KaiokenTier.highestFor(level(p, KAIOKEN));
     }
 
-    /** Los números exactos del objetivo fijado se desbloquean al máximo (curva del datapack). */
-    public static boolean senseShowsNumbers(Player p) {
-        return curve(p, KI_SENSE, "numbers", 0.0) >= 1.0;
-    }
-
     /** true si el jugador NO puede fijar objetivo (sin la habilidad). Se llamaba canLockOn
      *  y devolvía justo lo contrario de lo que su nombre prometía. */
     public static boolean lockOnBlocked(Player p) { return level(p, KI_SENSE) <= 0; }

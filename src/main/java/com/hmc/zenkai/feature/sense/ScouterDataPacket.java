@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public record ScouterDataPacket(boolean found, int entityId, long powerLevel,
                                 long melee, long defense, long kiPower,
-                                long body, long bodyMax) implements CustomPacketPayload {
+                                long body, long bodyMax, boolean overload) implements CustomPacketPayload {
 
     public static final Type<ScouterDataPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "scouter_data"));
@@ -36,14 +36,15 @@ public record ScouterDataPacket(boolean found, int entityId, long powerLevel,
                         buf.writeLong(pkt.kiPower());
                         buf.writeLong(pkt.body());
                         buf.writeLong(pkt.bodyMax());
+                        buf.writeBoolean(pkt.overload());
                     },
                     buf -> new ScouterDataPacket(buf.readBoolean(), buf.readVarInt(), buf.readLong(),
                             buf.readLong(), buf.readLong(), buf.readLong(),
-                            buf.readLong(), buf.readLong()));
+                            buf.readLong(), buf.readLong(),buf.readBoolean()));
 
     /** Sin objetivo en la mira. */
     public static ScouterDataPacket empty() {
-        return new ScouterDataPacket(false, -1, 0L, 0L, 0L, 0L, 0L, 0L);
+        return new ScouterDataPacket(false, -1, 0L, 0L, 0L, 0L, 0L, 0L,false);
     }
 
     /** ¿Trae desglose utilizable? */
@@ -58,6 +59,6 @@ public record ScouterDataPacket(boolean found, int entityId, long powerLevel,
         ctx.enqueueWork(() -> ScouterClientState.onData(
                 pkt.found(), pkt.entityId(), pkt.powerLevel(),
                 pkt.melee(), pkt.defense(), pkt.kiPower(),
-                pkt.body(), pkt.bodyMax()));
+                pkt.body(), pkt.bodyMax(), pkt.overload()));
     }
 }

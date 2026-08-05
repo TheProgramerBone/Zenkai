@@ -5,6 +5,7 @@ import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.aura.TurboServerState;
 import com.hmc.zenkai.feature.combat.DownedDeathGuard;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.feature.sense.ScouterOverload;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -80,5 +81,6 @@ public class ZenkaiTickHandlers {
         DownedDeathGuard.forget(e.getEntity().getUUID());
         PlayerTickState.forget(e.getEntity().getUUID());
         WeightLoadSystem.forget(e.getEntity().getUUID());
+        if (e.getEntity() instanceof ServerPlayer sp) ScouterOverload.forget(sp);
     }
 }

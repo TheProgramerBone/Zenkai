@@ -30,9 +30,7 @@ import org.joml.Matrix4f;
  *   nv3  + marcador de alineamiento (gradiente de AlignmentPalette, el mismo de StatsScreen)
  *   nv4  + barra de ki
  *   nv5  + barra de estamina
- * Y al MÁXIMO, el desglose numérico (ATK/DEF/KI) de la entidad que tengas FIJADA. Ese gate
- * no se comprueba aquí: el servidor solo manda esos números para el objetivo del lock-on y
- * con la habilidad al tope, así que si el Entry los trae, se pintan y punto.
+ * El ki sense NUNCA muestra un número: la cifra exacta de PL es cosa del scouter.
  * Render: RenderType.textBackgroundSeeThrough() + bufferSource del juego (el camino de los
  * fondos de nametag). Reglas aprendidas EN JUEGO de este RenderType:
  *  - Cullea: el winding de quad(...) es el frontal correcto para nuestra transformación.
@@ -67,11 +65,6 @@ public final class SenseKiOverlayRenderer {
     // Pools (nv4, nv5).
     private static final int C_KI      = 0xFF40A0FF;
     private static final int C_STAMINA = 0xFFB0F040;
-
-    // Desglose numérico del objetivo fijado.
-    /** La fuente mide 9 de alto y las barras 4: a tamaño normal el bloque taparía el overlay. */
-    private static final float NUM_SCALE = 0.5f;
-    private static final int C_ATK = 0xFFFF7060;
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent e) {

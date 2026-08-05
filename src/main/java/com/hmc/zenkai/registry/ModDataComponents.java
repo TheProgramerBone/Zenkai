@@ -1,6 +1,7 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.sense.ScouterUpgrades;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponentType;
@@ -42,6 +43,21 @@ public final class ModDataComponents {
             COMPONENTS.register("weight_tons", () -> DataComponentType.<Double>builder()
                     .persistent(Codec.DOUBLE)
                     .networkSynchronized(ByteBufCodecs.DOUBLE)
+                    .build());
+
+    /** Mejoras del scouter. Ausente = ScouterUpgrades.NONE: los scouters de mundos anteriores
+     *  no se rompen al cargar, simplemente arrancan sin mejoras. */
+    public static final Supplier<DataComponentType<ScouterUpgrades>> SCOUTER_UPGRADES =
+            COMPONENTS.register("scouter_upgrades", () -> DataComponentType.<ScouterUpgrades>builder()
+                    .persistent(ScouterUpgrades.CODEC)
+                    .networkSynchronized(ScouterUpgrades.STREAM_CODEC)
+                    .build());
+
+    /** Scouter reventado. El stack NO se destruye: conserva nivel y tinte para la reparación. */
+    public static final Supplier<DataComponentType<Boolean>> SCOUTER_BROKEN =
+            COMPONENTS.register("scouter_broken", () -> DataComponentType.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .networkSynchronized(ByteBufCodecs.BOOL)
                     .build());
 
     public static void register(IEventBus modBus) {

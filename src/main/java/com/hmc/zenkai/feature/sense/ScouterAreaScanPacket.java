@@ -66,13 +66,16 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
     public static void handle(ScouterAreaScanPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
-            // Autoritativo: sin scouter puesto no hay respuesta.
-            ItemStack helmet = sp.getItemBySlot(EquipmentSlot.HEAD);
-            if (!(helmet.getItem() instanceof ScouterItem)) return;
+
+            // Autoritativo y por el MISMO embudo que el resto: getItemBySlot(HEAD) a pelo
+            // ignoraba el slot de Curios (estos dos modos no funcionaban con el scouter ahí)
+            // y no comprobaba si el aparato estaba roto.
+            ItemStack scouter = ScouterStacks.equipped(sp);
+            if (scouter.isEmpty() || ScouterStacks.isBroken(scouter)) return;
 
             switch (pkt.mode()) {
-                case MODE_STRONGEST -> handleStrongest(sp);
-                case MODE_RADAR -> handleRadar(sp, helmet);
+                case MODE_STRONGEST -> handleStrongest(sp, scouter);
+                case MODE_RADAR -> handleRadar(sp, scouter);
                 default -> { /* byte desconocido: ignorar */ }
             }
         });
@@ -80,13 +83,19 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
 
     // ------------------------------------------------------------------ STRONGEST
 
-    private static void handleStrongest(ServerPlayer sp) {
+    private static void handleStrongest(ServerPlayer sp, ItemStack scouter) {
+        if (!ScouterStacks.has(scouter, ScouterUpgrade.AREA_SCANNER)) {
+            reply(sp, MODE_STRONGEST, ScouterAreaDataPacket.STATUS_UNAVAILABLE, Vec3.ZERO, 0L);
+            return;
+        }
         if (sp.getServer() == null || !ModGameRules.enableRaceBoosts(sp.getServer())) {
             reply(sp, MODE_STRONGEST, ScouterAreaDataPacket.STATUS_NONE, Vec3.ZERO, 0L);
             return;
         }
 
-        double r = CommonConfig.scouterRange();
+        // El alcance del área también sale de la mejora, no solo de la config: si no, un
+        // scouter sin mejorar encontraría al más fuerte a 64 bloques y no lo vería a 20.
+        double r = Math.min(CommonConfig.scouterRange(), ScouterStacks.range(scouter));
         AABB box = AABB.ofSize(sp.position(), r * 2, r * 2, r * 2);
 
         LivingEntity best = null;

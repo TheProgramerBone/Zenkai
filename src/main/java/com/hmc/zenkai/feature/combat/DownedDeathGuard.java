@@ -2,10 +2,12 @@ package com.hmc.zenkai.feature.combat;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
+import com.hmc.zenkai.feature.sense.ScouterOverload;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;

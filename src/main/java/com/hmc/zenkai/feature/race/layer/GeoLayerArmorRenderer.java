@@ -64,6 +64,7 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
         int preset = (wearer instanceof Player player)
                 ? player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).getSkinPreset()
                 : 0;
-        return animatable.getTexture(preset);
+        // ⚠ VERIFICAR GeckoLib 4.8.4: getCurrentStack() — ya se usa en DyedTintGeoLayer.
+        return animatable.resolveTexture(getCurrentStack(), preset);
     }
 }

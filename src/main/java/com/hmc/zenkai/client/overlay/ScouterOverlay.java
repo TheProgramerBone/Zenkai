@@ -20,7 +20,6 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 /**
  * GUI del scouter (estilo DragonBlockC): lado IZQUIERDO, centrado verticalmente.
  * Tres líneas dentro del panel: título del modo (1x) + línea principal (2x) + subtítulo (1x).
- *
  * Modos ({@link ScouterMode}, F4 cicla):
  *  - PODER:      "PL 1.2M" + etiqueta DÉBIL (menos del 80% de tu PL) / FORMIDABLE (80-100%) /
  *                AMENAZA (te supera).
@@ -28,7 +27,6 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
  *                del server cada 20 ticks) + PL y distancia. ▲/▼ si está claramente arriba/abajo.
  *  - RADAR:      flecha + distancia a la esfera más cercana; "MEJORA NO DISPONIBLE" sin la
  *                mejora de herrería.
- *
  * Marco de textura en 2 capas (mismo patrón que el ícono del ítem):
  *  - textures/gui/scouter/frame.png       -> base, sin teñir.
  *  - textures/gui/scouter/frame_tint.png  -> máscara en grises, teñida con el color del cristal.
@@ -48,15 +46,27 @@ public final class ScouterOverlay {
     private static final double WEAK_BELOW = 0.8; // <80% débil; 80-100% formidable; >125% amenaza
     private static final double THREAT_ABOVE = 1.5;
 
-    // --- Marco de textura (Juan ajusta a su PNG) ---
+    // --- Marco de textura ---
     private static final ResourceLocation FRAME_TEX =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/scouter/frame.png");
     private static final ResourceLocation FRAME_TINT_TEX =
             RaceTextureUtil.deriveMask(FRAME_TEX, "_tint");
-    private static final int FRAME_W = 300;
-    private static final int FRAME_H = 199;
+
+    /** Grieta del scouter reventado. Mismo lienzo y misma posición que el marco: es la misma
+     *  pieza de cristal, solo que rota. */
+    private static final ResourceLocation CRACKED_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/scouter/cracked.png");
+    private static final ResourceLocation CRACKED_TINT_TEX =
+            RaceTextureUtil.deriveMask(CRACKED_TEX, "_tint");
+
+    // El PNG mide 400×266. Estaba declarado a 300×199 y se reescalaba en cada blit.
+    private static final int FRAME_W = 400;
+    private static final int FRAME_H = 266;
     private static final int TEXT_OFF_X = 50;
     private static final int TEXT_OFF_Y = 70;
+
+    /** Medio segundo encendido, medio apagado. */
+    private static final long OVERLOAD_BLINK_MS = 500L;
 
     // --- Comunes / panel plano de respaldo ---
     private static final int MARGIN_X = 0;
@@ -65,7 +75,7 @@ public final class ScouterOverlay {
     private static final int SUB_SCALE = 1;   // subtítulo (etiqueta/distancia)
     private static final int PAD_X = 6;
     private static final int PAD_Y = 5;
-    private static final int LINE_GAP = 2;
+    private static final int LINE_GAP = 10;
 
     // Caché de existencia del marco (recheck periódico: recoge F3+T sin costo por frame).
     private static boolean frameExists = false;
@@ -75,10 +85,26 @@ public final class ScouterOverlay {
     public static void onRenderGui(RenderGuiEvent.Post e) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
-        if (!ScouterClientState.isOverlayOn() || !ScouterClientState.isScouterEquipped(mc)) return;
-
         GuiGraphics g = e.getGuiGraphics();
         int tint = ScouterClientState.scouterTint(mc);
+
+        long now = System.currentTimeMillis();
+        if (now >= nextCheckMs) {
+            nextCheckMs = now + 2000;
+            frameExists = RaceTextureUtil.resourceExists(FRAME_TEX);
+        }
+
+        // GRIETA: no es un modo ni un toggle, es un trozo de cristal roto delante del ojo.
+        // Se dibuja SIEMPRE que lleves un scouter reventado, tengas el ki sense encendido o
+        // no, y sin marco ni texto: un aparato muerto que siguiera enseñando su interfaz
+        // vacía parecería un fallo del mod, no una avería del scouter.
+        if (ScouterClientState.isScouterEquipped(mc) && !ScouterClientState.isScouterUsable(mc)) {
+            drawCracked(g, tint);
+            return;
+        }
+
+        if (!ScouterClientState.isOverlayOn() || !ScouterClientState.isScouterUsable(mc)) return;
+
         int textColor = 0xFF000000 | readableTint(tint);
 
         // ---- Contenido según modo ----
@@ -87,18 +113,38 @@ public final class ScouterOverlay {
         Component main;
         Component sub;
 
+        // Modo sin su mejora: se anuncia el modo y lo que falta. Es publicidad del banco de
+        // scouter, no un castigo — por eso el ciclo deja llegar hasta aquí.
+        if (!ScouterClientState.isModeUnlocked(mc, mode)) {
+            main = styled(Component.literal("---"));
+            sub = styled(Component.translatable("scouter.zenkai.upgrade_unavailable"));
+            if (frameExists) drawFrame(g, mc, tint, textColor, title, main, sub);
+            else drawFlatPanel(g, mc, tint, textColor, title, main, sub);
+            return;
+        }
+
         switch (mode) {
             case POWER -> {
                 if (ScouterClientState.hasTarget()) {
                     long pl = ScouterClientState.targetPowerLevel();
-                    main = styled(Component.literal("PL " + ZenkaiNumbers.format(pl)));
-                    // Vida + etiqueta + distancia. body/bodyMax siempre vienen (pool del mod o
-                    // vida vanilla), así que esto no depende de hasBreakdown().
-                    sub = styled(Component.translatable("scouter.zenkai.hp_label",
-                                    ZenkaiNumbers.format(ScouterClientState.targetBody()),
-                                    ZenkaiNumbers.format(ScouterClientState.targetBodyMax()),
-                                    Component.translatable(powerLabelKey(mc, pl)))
-                            .append(distanceSuffix(mc)));
+
+                    // SOBRECARGA: la cifra se vuelve loca y el subtítulo grita OVERLOAD. El PL
+                    // real sigue en targetPl — no se pisa — porque si el jugador aparta la
+                    // mirada y vuelve, la lectura debe reanudarse desde el número bueno.
+                    if (ScouterClientState.isOverloading()) {
+                        main = styled(Component.literal("PL " + ScouterClientState.scrambledPl()));
+                        boolean on = (System.currentTimeMillis() / OVERLOAD_BLINK_MS) % 2 == 0;
+                        sub = on ? styled(Component.translatable("scouter.zenkai.overload")) : null;
+                    } else {
+                        main = styled(Component.literal("PL " + ZenkaiNumbers.format(pl)));
+                        // Vida + etiqueta + distancia. body/bodyMax siempre vienen (pool del mod
+                        // o vida vanilla), así que esto no depende de hasBreakdown().
+                        sub = styled(Component.translatable("scouter.zenkai.hp_label",
+                                        ZenkaiNumbers.format(ScouterClientState.targetBody()),
+                                        ZenkaiNumbers.format(ScouterClientState.targetBodyMax()),
+                                        Component.translatable(powerLabelKey(mc, pl)))
+                                .append(distanceSuffix(mc)));
+                    }
                 } else {
                     main = styled(Component.literal("PL ---"));
                     sub = null;
@@ -152,12 +198,8 @@ public final class ScouterOverlay {
         }
 
         // ---- Marco o panel plano ----
-        long now = System.currentTimeMillis();
-        if (now >= nextCheckMs) {
-            nextCheckMs = now + 2000;
-            frameExists = RaceTextureUtil.resourceExists(FRAME_TEX);
-        }
-
+        // La rama de modo bloqueado (arriba) dibuja y sale por su cuenta; esta es la salida
+        // de todos los demás. frameExists ya se refrescó al principio.
         if (frameExists) {
             drawFrame(g, mc, tint, textColor, title, main, sub);
         } else {
@@ -310,5 +352,21 @@ public final class ScouterOverlay {
 
     private static int lift(int c) {
         return c + (255 - c) * 2 / 5; // +40% hacia blanco
+    }
+
+    /** Solo la grieta, teñida con el color del cristal. Sin marco, sin texto. */
+    private static void drawCracked(GuiGraphics g, int tint) {
+        if (!RaceTextureUtil.resourceExists(CRACKED_TEX)) return;
+
+        int x = MARGIN_X;
+        int y = (g.guiHeight() - FRAME_H) / 2;
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+        g.blit(CRACKED_TEX, x, y, 0, 0, FRAME_W, FRAME_H, FRAME_W, FRAME_H);
+
+        if (!RaceTextureUtil.resourceExists(CRACKED_TINT_TEX)) return;
+        g.setColor(((tint >> 16) & 0xFF) / 255f, ((tint >> 8) & 0xFF) / 255f, (tint & 0xFF) / 255f, 1f);
+        g.blit(CRACKED_TINT_TEX, x, y, 0, 0, FRAME_W, FRAME_H, FRAME_W, FRAME_H);
+        g.setColor(1f, 1f, 1f, 1f);
     }
 }

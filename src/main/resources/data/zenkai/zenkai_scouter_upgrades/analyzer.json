@@ -1,0 +1,5 @@
+{
+  "levels": [
+    { "energy": 0, "materials": [ { "item": "zenkai:elite_circuit", "count": 1 }, { "item": "minecraft:comparator", "count": 2 }, { "tag": "c:ingots/gold", "count": 4 } ] }
+  ]
+}

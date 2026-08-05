@@ -18,6 +18,7 @@ import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBall
 import com.hmc.zenkai.client.render_and_model_entities.entity.*;
 import com.hmc.zenkai.event.ZenkaiTickHandlers;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
+import com.hmc.zenkai.feature.sense.ScouterStacks;
 import com.hmc.zenkai.registry.*;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.config.ServerConfig;
@@ -32,6 +33,8 @@ import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.TippableArrowRenderer;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FireBlock;
@@ -156,6 +159,12 @@ public class Zenkai {
                         IConfigScreenFactory.class,
                         (container, parent) -> new ClientConfigScreen(parent));
             }
+
+            // Icono del scouter roto: propiedad 0/1 que dispara el override del modelo.
+            // Un item aparte habría partido el tag de tinte, la receta y el slot de Curios.
+            ItemProperties.register(ModItems.SCOUTER.get(),
+                    ResourceLocation.fromNamespaceAndPath(MOD_ID, "broken"),
+                    (stack, lvl, ent, seed) -> ScouterStacks.isBroken(stack) ? 1.0F : 0.0F);
 
             // Block entities
             BlockEntityRenderers.register(

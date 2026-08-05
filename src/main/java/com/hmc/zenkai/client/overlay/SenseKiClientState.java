@@ -22,10 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *  - Modo actual (ciclo F4; ver SenseKiMode). Cada cambio se anuncia en la actionbar.
  *  - Caché de entidades sentidas (respuestas del servidor), consumida por SenseKiOverlayRenderer.
  *  - Tick: cada SCAN_INTERVAL ticks con modo != OFF manda un SenseKiScanPacket.
- * Gate del F4: si el jugador lleva SCOUTER en la cabeza, F4 es del scouter (fase futura);
- * si no, F4 cicla el sentir el ki. isScouterEquipped() es el gancho (hoy: siempre false).
- * NIVELES (futuro sistema de habilidades/MIND): nivel 1 = solo barras. senseKiLevel() es el
- * gancho (hoy: 1). Niveles superiores: +rango, vida numérica, alineamiento.
+ * Gate del F4: si el jugador lleva un scouter FUNCIONAL, F4 es del scouter; si no lleva, o el
+ * que lleva está reventado, F4 cicla el sentir el ki.
+ * NIVELES: SkillEffects.senseLevel(player) manda. 0 = sin la habilidad, no se siente nada.
  */
 public final class SenseKiClientState {
     private SenseKiClientState() {}
@@ -67,7 +66,7 @@ public final class SenseKiClientState {
         // en el menú de controles y el modificador funciona con la que el jugador rebindee.
         boolean backwards = Screen.hasShiftDown();
 
-        if (isScouterEquipped(mc)) {
+        if (isScouterUsable(mc)) {
             ScouterClientState.cycle(mc, backwards);
             return;
         }
@@ -120,15 +119,13 @@ public final class SenseKiClientState {
     public static boolean passesFilter(SenseKiDataPacket.Entry e, Minecraft mc) {
         if (mc.player == null) return false;
         return switch (mode) {
-            case OFF            -> false;
-            case ALL            -> true;
-            case PLAYERS        -> e.isPlayer();
-            case MOBS           -> !e.isPlayer();
-            case PLAYERS_STRONG -> e.isPlayer()  && isStrong(e, mc);
-            case MOBS_STRONG    -> !e.isPlayer() && isStrong(e, mc);
+            case OFF     -> false;
+            case ALL     -> true;
+            case PLAYERS -> e.isPlayer();
+            case MOBS    -> !e.isPlayer();
             // Sin lock activo, targetId() es -1 y no pasa nadie: la pantalla queda limpia,
             // que es justo la señal de "no estás fijando a nadie".
-            case LOCKED         -> e.entityId() == LockOnClientState.targetId();
+            case LOCKED  -> e.entityId() == LockOnClientState.targetId();
         };
     }
 
@@ -140,5 +137,11 @@ public final class SenseKiClientState {
                 : Math.round(mc.player.getMaxHealth());
         double threshold = CommonConfig.senseKiSimilarThreshold();
         return e.powerLevel() >= Math.round(myPl * threshold);
+    }
+
+    /** ¿Lleva un scouter que FUNCIONA? Es lo que decide de quién es la tecla F4.
+     *  Uno roto NO cuenta: un aparato muerto no debe bloquearte el sentido. */
+    public static boolean isScouterUsable(Minecraft mc) {
+        return ScouterClientState.isScouterUsable(mc);
     }
 }

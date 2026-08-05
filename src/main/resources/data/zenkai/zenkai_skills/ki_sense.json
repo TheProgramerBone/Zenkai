@@ -5,7 +5,6 @@
   "purchasable": true,
   "master": "kami",
   "values": {
-    "range_mult": [1.0, 1.25, 1.5, 1.75, 2.0],
-    "numbers":    [0, 0, 0, 0, 1]
+    "range_mult": [1.0, 1.25, 1.5, 1.75, 2.0]
   }
 }

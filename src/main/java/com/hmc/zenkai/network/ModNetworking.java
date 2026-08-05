@@ -361,5 +361,10 @@ public class ModNetworking {
                 ForgetSkillPacket.TYPE,
                 ForgetSkillPacket.STREAM_CODEC,
                 ForgetSkillPacket::handle);
+
+        registrar.playToClient(
+                ScouterUpgradeSyncPacket.TYPE,
+                ScouterUpgradeSyncPacket.STREAM_CODEC,
+                ScouterUpgradeSyncPacket::handle);
     }
 }

@@ -1,0 +1,9 @@
+{
+  "levels": [
+    { "energy": 0,   "materials": [ { "tag": "c:ingots/iron", "count": 2 }, { "item": "minecraft:redstone", "count": 4 } ] },
+    { "energy": 0,   "materials": [ { "tag": "c:ingots/gold", "count": 3 }, { "item": "minecraft:redstone", "count": 12 } ] },
+    { "energy": 0,   "materials": [ { "item": "zenkai:elite_circuit", "count": 1 }, { "item": "minecraft:redstone_block", "count": 2 } ] },
+    { "energy": 0,   "materials": [ { "item": "zenkai:elite_circuit", "count": 2 }, { "tag": "c:ingots/netherite", "count": 1 } ] },
+    { "energy": 0,   "materials": [ { "item": "zenkai:elite_circuit", "count": 4 }, { "item": "zenkai:namek_crystal", "count": 3 } ] }
+  ]
+}

@@ -3,5 +3,8 @@
   "textures": {
     "layer0": "zenkai:item/scouter",
     "layer1": "zenkai:item/scouter_tint"
-  }
+  },
+  "overrides": [
+    { "predicate": { "zenkai:broken": 1 }, "model": "zenkai:item/scouter_broken" }
+  ]
 }
