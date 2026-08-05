@@ -44,6 +44,9 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
 
     // Tinte: por defecto NONE (sin tinte)
     private ColorChannel colorChannel = ColorChannel.NONE;
+    // Opacidad de la pasada de tinte por tintes vanilla, 0-255. 255 = opaca (comportamiento
+    // de siempre). Por debajo, la capa pasa a RenderType translúcido.
+    private int dyeTintAlpha = 255;
     // Texturas preset opcionales (para razas con presets pintados, p. ej. Namekian/Arcosian).
     // Si es null se usa siempre texturePath.
     @Nullable private ResourceLocation[] presetTextures = null;
@@ -200,6 +203,17 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
         this.dyeTintDefault = defaultColor;
         return this;
     }
+
+    /**
+     * Opacidad del tinte, 0-255. Requiere que la textura BASE tenga esa zona transparente:
+     * si no, el alfa mezcla contra el armazón y solo se ve un cristal aguado.
+     */
+    public GeoLayerArmorItem dyeTintAlpha(int alpha) {
+        this.dyeTintAlpha = Math.max(0, Math.min(255, alpha));
+        return this;
+    }
+
+    public int getDyeTintAlpha() { return dyeTintAlpha; }
 
     public boolean hasDyeTint()       { return dyeTint; }
     public int     getDyeTintDefault(){ return dyeTintDefault; }

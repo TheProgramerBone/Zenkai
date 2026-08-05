@@ -49,9 +49,15 @@ public class DyedTintGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         int rgb = (stack != null && stack.has(DataComponents.DYED_COLOR))
                 ? DyedItemColor.getOrDefault(stack, animatable.getDyeTintDefault())
                 : animatable.getDyeTintDefault();
-        int argb = 0xFF000000 | (rgb & 0xFFFFFF);
+        int alpha = animatable.getDyeTintAlpha();
+        int argb = (alpha << 24) | (rgb & 0xFFFFFF);
 
-        RenderType rt = RaceRenderTypes.viewOffset(tint);
+        // Translúcido solo si de verdad hace falta: el cutout es más barato y es lo correcto
+        // para lo que no sea cristal.
+        RenderType rt = alpha >= 255
+                ? RaceRenderTypes.viewOffset(tint)
+                : RaceRenderTypes.translucent(tint);
+
         this.getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, rt,
                 bufferSource.getBuffer(rt), partialTick, packedLight, packedOverlay, argb);
     }

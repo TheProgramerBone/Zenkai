@@ -31,6 +31,7 @@ public class ScouterItem extends GeoLayerArmorItem {
                        String modelPath, String texturePath) {
         super(material, ArmorItem.Type.HELMET, properties, modelPath, texturePath, "");
         this.dyeTint(DEFAULT_TINT);
+        this.dyeTintAlpha(140);
         this.stackTexture(stack -> ScouterStacks.isBroken(stack) ? BROKEN_TEX : null);
     }
 }
