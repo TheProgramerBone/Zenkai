@@ -1,11 +1,13 @@
 package com.hmc.zenkai.client.gui;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.menu.ScouterBenchMenu;
 import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -19,6 +21,10 @@ public class ModMenuTypes {
                             StackWishMenu::new,
                             FeatureFlags.VANILLA_SET
                     ));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<ScouterBenchMenu>> SCOUTER_BENCH =
+            MENUS.register("scouter_bench",
+                    () -> IMenuTypeExtension.create(ScouterBenchMenu::new));
 
     public static void register(IEventBus bus) {
         MENUS.register(bus);

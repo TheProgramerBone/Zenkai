@@ -1,10 +1,7 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.content.block.NpcMarkerBlock;
-import com.hmc.zenkai.content.block.HtcPortalBlock;
-import com.hmc.zenkai.content.block.NamekianDirtPathBlock;
-import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
+import com.hmc.zenkai.content.block.*;
 import com.hmc.zenkai.content.blockentity.AllDragonBalls.AllDragonBallsBlock;
 import com.hmc.zenkai.content.blockentity.DragonBalls.DragonBalls;
 import com.hmc.zenkai.content.blockentity.DragonBalls.NamekDragonBalls;
@@ -328,6 +325,14 @@ public class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.SAND)));
+
+    public static final DeferredBlock<Block> SCOUTER_BENCH = registerBlock("scouter_bench",
+            () -> new ScouterBenchBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion()));
 
     public static final DeferredBlock<Block> NAMEKIAN_DIRT = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()

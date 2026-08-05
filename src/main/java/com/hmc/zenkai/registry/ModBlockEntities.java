@@ -3,6 +3,7 @@ package com.hmc.zenkai.registry;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.blockentity.AllDragonBalls.AllDragonBallsEntity;
 import com.hmc.zenkai.content.blockentity.NpcMarkerBlockEntity;
+import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -20,12 +21,16 @@ public class ModBlockEntities {
             () -> new BlockEntityType<>(
                     AllDragonBallsEntity::new,
                     Set.of(ModBlocks.ALL_DRAGON_BALLS.get()),
-                    null
-            ));
+                    null));
 
     public static final Supplier<BlockEntityType<NpcMarkerBlockEntity>> NPC_MARKER =
             BLOCK_ENTITIES.register("npc_marker", () -> BlockEntityType.Builder
                     .of(NpcMarkerBlockEntity::new, ModBlocks.NPC_MARKER.get())
+                    .build(null));
+
+    public static final Supplier<BlockEntityType<ScouterBenchBlockEntity>> SCOUTER_BENCH =
+            BLOCK_ENTITIES.register("scouter_bench", () -> BlockEntityType.Builder
+                    .of(ScouterBenchBlockEntity::new, ModBlocks.SCOUTER_BENCH.get())
                     .build(null));
 
     public static void register(IEventBus eventBus) {

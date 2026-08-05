@@ -2,8 +2,9 @@ package com.hmc.zenkai;
 
 
 import com.hmc.zenkai.client.gui.screens.ClientConfigScreen;
+import com.hmc.zenkai.client.gui.screens.ScouterBenchScreen;
+import com.hmc.zenkai.client.render_and_model_entities.blockentity.ScouterBenchRenderer;
 import com.hmc.zenkai.config.ClientConfig;
-import com.hmc.zenkai.datagen.ModAdvancementProvider;
 import com.hmc.zenkai.event.ClientZenkaiHooks;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
@@ -141,6 +142,7 @@ public class Zenkai {
         @SubscribeEvent
         public static void registerScreens(RegisterMenuScreensEvent event) {
             event.register(ModMenuTypes.STACK_WISH.get(), StackWishScreen::new);
+            event.register(ModMenuTypes.SCOUTER_BENCH.get(), ScouterBenchScreen::new);
         }
 
         @SubscribeEvent
@@ -170,6 +172,11 @@ public class Zenkai {
             BlockEntityRenderers.register(
                     ModBlockEntities.ALL_DRAGON_BALLS_ENTITY.get(),
                     AllDragonBallsRenderer::new
+            );
+
+            BlockEntityRenderers.register(
+                    ModBlockEntities.SCOUTER_BENCH.get(),
+                    ScouterBenchRenderer::new
             );
 
             // Entidades
