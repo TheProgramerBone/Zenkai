@@ -200,7 +200,7 @@ public final class SenseKiOverlayRenderer {
      * bestiario — el dato principal desaparecía justo en el caso común. La fuerza se lee en el
      * latido y en el brillo, que basta.
      */
-    private static int flameColor(SenseKiDataPacket.Entry en, long myPl) {
+    public static int flameColor(SenseKiDataPacket.Entry en, long myPl) {
         int rgb = AlignmentPalette.vividForAlignment(en.alignment()) & 0xFFFFFF;
         float t = strengthT(en, myPl);
 
@@ -219,7 +219,7 @@ public final class SenseKiOverlayRenderer {
 
     /** 0 = muy por debajo de ti, 0.5 = parejo, 1 = muy por encima. Escala logarítmica porque
      *  el PL crece por órdenes de magnitud: en lineal, lo tuyo sería 0 o 1. */
-    private static float strengthT(SenseKiDataPacket.Entry en, long myPl) {
+    public static float strengthT(SenseKiDataPacket.Entry en, long myPl) {
         if (myPl <= 0 || en.powerLevel() <= 0) return 0.5f;
         double octaves = Math.log((double) en.powerLevel() / myPl) / Math.log(2);
         return 0.5f + 0.5f * Mth.clamp((float) (octaves / STRENGTH_SPAN), -1f, 1f);
