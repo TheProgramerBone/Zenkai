@@ -73,6 +73,7 @@ side="CLIENT"
 
 [modproperties.${mod_id}]
 catalogueImageIcon="assets/zenkai/icon.png"
+catalogueBackground = "assets/zenkai/background.png"
 
 [[mixins]]
 config="assets/zenkai/zenkai.mixins.json"
