@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *
  * ⚠ Verifica la firma de setup en tu IDE (Ctrl+click sobre Camera). En 1.21.1 debería ser
  * (BlockGetter, Entity, boolean, boolean, float). Si no coincide, ajusta los parámetros de
- * zenkai$senseShake: @Inject exige que coincidan EXACTAMENTE con los del método destino.
+ * zenkai$senseShake: @Inject exige que coincidan EXACTAMENTE con los del destino.
  */
 @Mixin(Camera.class)
 public abstract class CameraShakeMixin {
