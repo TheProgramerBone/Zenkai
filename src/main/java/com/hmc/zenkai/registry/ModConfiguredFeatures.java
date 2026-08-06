@@ -25,14 +25,33 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 
 import java.util.List;
 
+/**
+ * Cadena de worldgen: CF -> PF -> BM (configured feature, placed feature, biome modifier).
+ * Aquí se define QUÉ se genera y de qué tamaño; el DÓNDE y el CUÁNTO viven en
+ * ModPlacedFeatures, y a qué biomas llega, en ModBiomeModifiers.
+ *
+ * Sobre el segundo parámetro float de OreConfiguration (discardChanceOnAirExposure): NO
+ * regula cuánto mineral hay. Solo descarta los bloques de la veta que quedan tocando aire,
+ * que bajo tierra son una minoría. Su efecto real es si la veta ASOMA en la pared de una
+ * cueva o hay que picarla a ciegas. Por eso las variantes "que se buscan" van a 0.0F y las
+ * de fondo a 0.5F.
+ */
 public class ModConfiguredFeatures {
-    // CF -> PF -> BM
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_KEY     = registerKey("katchin_ore");
+    // ── Katchin ──────────────────────────────────────────────────────────────
+    /** Overworld genérico. Calibrado contra el diamante. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_KEY         = registerKey("katchin_ore");
+    /** Rocky wasteland. Calibrado contra el oro y visible en cuevas. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_EXPOSED_KEY = registerKey("katchin_ore_exposed");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_OW_KEY  = registerKey("katchin_ore_otherworld");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_SKY_KEY = registerKey("katchin_ore_sky");
+    /** HFIL, el subsuelo del Otherworld. Calibrado contra el hierro. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_OW_KEY      = registerKey("katchin_ore_otherworld");
+    /** Islas flotantes del Otherworld. Veta pequeña, ver abajo. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_SKY_KEY     = registerKey("katchin_ore_sky");
+
+    // ── Otherworld ───────────────────────────────────────────────────────────
     public static final ResourceKey<ConfiguredFeature<?, ?>> OTHERWORLD_CLOUDS_KEY = registerKey("otherworld_clouds");
+
+    // ── Namek: menas ─────────────────────────────────────────────────────────
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL            = registerKey("namek_coal");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL_BURIED     = registerKey("namek_coal_buried");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_IRON            = registerKey("namek_iron");
@@ -47,21 +66,60 @@ public class ModConfiguredFeatures {
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_DIAMOND_MEDIUM  = registerKey("namek_diamond_medium");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_DIAMOND_LARGE   = registerKey("namek_diamond_large");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_DIAMOND_BURIED  = registerKey("namek_diamond_buried");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> AJISA_TREE = registerKey("ajisa_tree");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_CRYSTAL_ORE     = registerKey("namek_crystal_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> ENERGY_CRYSTAL_ORE    = registerKey("energy_crystal_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> SACRED_STONE_ORE      = registerKey("sacred_stone_ore");
+
+    // ── Namek: vegetación ────────────────────────────────────────────────────
+    public static final ResourceKey<ConfiguredFeature<?, ?>> AJISA_TREE         = registerKey("ajisa_tree");
     public static final ResourceKey<ConfiguredFeature<?, ?>> AJISA_FLOWER_PATCH = registerKey("ajisa_flower_patch");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_GRASS_PATCH  = registerKey("namek_grass_patch");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_CRYSTAL_ORE  = registerKey("namek_crystal_ore");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> ENERGY_CRYSTAL_ORE = registerKey("energy_crystal_ore");
-    public static final ResourceKey<ConfiguredFeature<?, ?>> SACRED_STONE_ORE   = registerKey("sacred_stone_ore");
 
     public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
-        RuleTest stoneReplaceables = new TagMatchTest(BlockTags.STONE_ORE_REPLACEABLES);
+        RuleTest stoneReplaceables     = new TagMatchTest(BlockTags.STONE_ORE_REPLACEABLES);
         RuleTest deepslateReplaceables = new TagMatchTest(BlockTags.DEEPSLATE_ORE_REPLACEABLES);
-        //register(context, OVERWORLD_TERRAGEM_ORE_KEY, Feature.ORE, new OreConfiguration(overworldWarenaiOres, 9));
 
+        // ── Katchin ──────────────────────────────────────────────────────────
+        // DOS objetivos: piedra y deepslate. Hacen falta los dos porque la banda del overworld
+        // va de y=-144 a y=16, o sea casi toda por debajo de la transición a deepslate. Con
+        // solo stoneReplaceables no saldría prácticamente nada donde más se busca.
+        List<OreConfiguration.TargetBlockState> katchinOres = List.of(
+                OreConfiguration.target(stoneReplaceables,
+                        ModBlocks.KATCHIN_ORE.get().defaultBlockState()),
+                OreConfiguration.target(deepslateReplaceables,
+                        ModBlocks.DEEPSLATE_KATCHIN_ORE.get().defaultBlockState()));
+
+        // Overworld genérico: veta de 6 con descarte del 50% al aire. No la encuentras
+        // paseando por una cueva; hay que picar. Es el goteo, no la fuente.
+        register(context, KATCHIN_ORE_KEY, Feature.ORE,
+                new OreConfiguration(katchinOres, 6, 0.5F));
+
+        // Rocky wasteland: veta mayor y SIN descarte. Esa es la diferencia real del bioma —
+        // aquí el katchin se ve en la pared de la cueva. Se SUMA a la genérica, no la
+        // sustituye: el bioma está en is_overworld y recibe las dos.
+        register(context, KATCHIN_ORE_EXPOSED_KEY, Feature.ORE,
+                new OreConfiguration(katchinOres, 9, 0.0F));
+
+        // Otherworld (HFIL): UN solo objetivo porque el default_block de esa dimensión es
+        // stone en el rango — no hay deepslate que reemplazar, así que DEEPSLATE_KATCHIN_ORE
+        // es exclusivo del overworld. Veta de 9 para igualar al hierro: vainilla reparte
+        // 10x9 + 10x4 = 130 en la franja profunda y aquí son 15 tiradas x 9 = 135.
+        register(context, KATCHIN_ORE_OW_KEY, Feature.ORE, new OreConfiguration(
+                List.of(OreConfiguration.target(stoneReplaceables,
+                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 9, 0.0F));
+
+        // Islas flotantes: mismo objetivo que HFIL pero NO su tamaño, y por eso es una
+        // configured feature aparte. En una plataforma de pocos bloques de grosor una veta de
+        // 9 no cabe: asoma por las dos caras y la isla queda con costra de mineral.
+        register(context, KATCHIN_ORE_SKY_KEY, Feature.ORE, new OreConfiguration(
+                List.of(OreConfiguration.target(stoneReplaceables,
+                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 4, 0.0F));
+
+        // ── Otherworld ───────────────────────────────────────────────────────
         register(context, OTHERWORLD_CLOUDS_KEY,
                 ModFeatures.CLOUD_LAYER.get(), NoneFeatureConfiguration.INSTANCE);
 
+        // ── Namek: menas ─────────────────────────────────────────────────────
         // Todas apuntan al tag PROPIO: ningún mod que añada menas al overworld puede colarse
         // en Namek, y estas no pueden aparecer en el overworld.
         RuleTest namekRock = new TagMatchTest(ModTags.Blocks.NAMEKIAN_ORE_REPLACEABLES);
@@ -80,35 +138,11 @@ public class ModConfiguredFeatures {
         namekOre(context, NAMEK_DIAMOND_MEDIUM, namekRock, ModBlocks.NAMEKIAN_DIAMOND_ORE,   8, 0.5F);
         namekOre(context, NAMEK_DIAMOND_LARGE,  namekRock, ModBlocks.NAMEKIAN_DIAMOND_ORE,  12, 0.7F);
         namekOre(context, NAMEK_DIAMOND_BURIED, namekRock, ModBlocks.NAMEKIAN_DIAMOND_ORE,   8, 1.0F);
-        namekOre(context, NAMEK_CRYSTAL_ORE,  namekRock, ModBlocks.NAMEK_CRYSTAL_ORE,   5, 0.0F);
-        namekOre(context, ENERGY_CRYSTAL_ORE, namekRock, ModBlocks.ENERGY_CRYSTAL_ORE,  4, 0.5F);
-        namekOre(context, SACRED_STONE_ORE,   namekRock, ModBlocks.SACRED_STONE_ORE,   12, 0.0F);
+        namekOre(context, NAMEK_CRYSTAL_ORE,    namekRock, ModBlocks.NAMEK_CRYSTAL_ORE,      5, 0.0F);
+        namekOre(context, ENERGY_CRYSTAL_ORE,   namekRock, ModBlocks.ENERGY_CRYSTAL_ORE,     4, 0.5F);
+        namekOre(context, SACRED_STONE_ORE,     namekRock, ModBlocks.SACRED_STONE_ORE,      12, 0.0F);
 
-        // Overworld: veta de 3 y descarte del 50% si toca aire. Igual que la escoria antigua,
-        // no la encuentras paseando por una cueva — hay que picar.
-        List<OreConfiguration.TargetBlockState> katchinOres = List.of(
-                OreConfiguration.target(stoneReplaceables, ModBlocks.KATCHIN_ORE.get().defaultBlockState()),
-                OreConfiguration.target(deepslateReplaceables, ModBlocks.DEEPSLATE_KATCHIN_ORE.get().defaultBlockState()));
-
-        register(context, KATCHIN_ORE_KEY, Feature.ORE, new OreConfiguration(katchinOres, 6, 0.5F));
-        // Variante del rocky wasteland: veta más grande y SIN descarte por exposición al
-        // aire. Es la diferencia de verdad entre el bioma y el resto del mundo — aquí el
-        // katchin se ve en la pared de la cueva en vez de haber que picarlo a ciegas.
-        register(context, KATCHIN_ORE_EXPOSED_KEY, Feature.ORE, new OreConfiguration(katchinOres, 9, 0.0F));
-
-        // Otherworld: el bloque por defecto de esa dimensión es stone entero en el rango, así
-        // que solo aplica la variante de piedra. Vetas de 5 y sin descarte: es la fuente real.
-        register(context, KATCHIN_ORE_OW_KEY, Feature.ORE, new OreConfiguration(
-                List.of(OreConfiguration.target(stoneReplaceables,
-                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 5, 0.0F));
-
-        // Islas flotantes: veta pequeña. Comparte target con HFIL pero NO su tamaño: en una
-        // plataforma de pocos bloques de grosor una veta de 9 no cabe, asoma por las dos caras
-        // y la isla queda con costra de mineral.
-        register(context, KATCHIN_ORE_SKY_KEY, Feature.ORE, new OreConfiguration(
-                List.of(OreConfiguration.target(stoneReplaceables,
-                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 4, 0.0F));
-
+        // ── Namek: vegetación ────────────────────────────────────────────────
         register(context, AJISA_TREE, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
                 BlockStateProvider.simple(ModBlocks.AJISA_LOG.get()),
                 new CherryTrunkPlacer(                                        // ⚠ firma
@@ -144,15 +178,16 @@ public class ModConfiguredFeatures {
                         PlacementUtils.onlyWhenEmpty(Feature.SIMPLE_BLOCK,
                                 new SimpleBlockConfiguration(
                                         BlockStateProvider.simple(Blocks.SHORT_GRASS)))));
-
     }
 
     public static ResourceKey<ConfiguredFeature<?, ?>> registerKey(String name) {
-        return ResourceKey.create(Registries.CONFIGURED_FEATURE, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, name));
+        return ResourceKey.create(Registries.CONFIGURED_FEATURE,
+                ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, name));
     }
 
-    private static <FC extends FeatureConfiguration, F extends Feature<FC>> void register(BootstrapContext<ConfiguredFeature<?, ?>> context,
-                                                                                          ResourceKey<ConfiguredFeature<?, ?>> key, F feature, FC configuration) {
+    private static <FC extends FeatureConfiguration, F extends Feature<FC>> void register(
+            BootstrapContext<ConfiguredFeature<?, ?>> context,
+            ResourceKey<ConfiguredFeature<?, ?>> key, F feature, FC configuration) {
         context.register(key, new ConfiguredFeature<>(feature, configuration));
     }
 
