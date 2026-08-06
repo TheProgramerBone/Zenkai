@@ -59,8 +59,21 @@ public final class StaticStructurePlacer {
             }
             StructureTemplate tpl = opt.get();
             BlockPos pos = base.offset(seg.offset());
-            StructurePlaceSettings settings = new StructurePlaceSettings().addProcessor(ignore);
-            tpl.placeInWorld(level, pos, pos, settings, level.getRandom(), Block.UPDATE_CLIENTS);
+
+            StructurePlaceSettings settings = new StructurePlaceSettings()
+                    .addProcessor(ignore)
+                    // Hojas persistentes: si no, decaen solas durante los minutos siguientes
+                    // y llenan el sitio de palos y retoños.
+                    .addProcessor(PersistentLeavesProcessor.INSTANCE)
+                    // knownShape corta la pasada de shape-update de los bordes, que es
+                    // exactamente lo que tira pétalos, flores y antorchas sin soporte. El flag
+                    // de colocación NO la evita: es una pasada aparte al final de placeInWorld.
+                    .setKnownShape(true);
+
+            // UPDATE_SUPPRESS_DROPS: red de seguridad. Si aun así algo se rompe, que
+            // desaparezca en vez de convertirse en una entidad de ítem que nadie recogerá.
+            tpl.placeInWorld(level, pos, pos, settings, level.getRandom(),
+                    Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
             placedAny = true;
         }
         return placedAny;

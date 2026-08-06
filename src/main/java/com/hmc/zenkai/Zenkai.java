@@ -94,6 +94,7 @@ public class Zenkai {
         ModDataComponents.register(modEventBus);
         ModParticles.register(modEventBus);
         ZenkaiTriggers.register(modEventBus);
+        ModStructureProcessors.register(modEventBus);
 
         // Configs
         modContainer.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
