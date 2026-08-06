@@ -27,6 +27,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -204,12 +205,21 @@ public class ModCommands {
                         .then(Commands.literal("give")
                                 .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("id", StringArgumentType.string())
+                                                .suggests(SKILL_IDS)
+                                                // Sin nivel: sube uno, como antes.
                                                 .executes(ctx -> forEach(ctx, targets(ctx),
                                                         (c, sp) -> skillGive(c, sp,
-                                                                StringArgumentType.getString(c, "id")))))))
+                                                                StringArgumentType.getString(c, "id"), -1)))
+                                                // Con nivel: fija ese nivel exacto, recortado al techo.
+                                                .then(Commands.argument("level", IntegerArgumentType.integer(1))
+                                                        .executes(ctx -> forEach(ctx, targets(ctx),
+                                                                (c, sp) -> skillGive(c, sp,
+                                                                        StringArgumentType.getString(c, "id"),
+                                                                        IntegerArgumentType.getInteger(c, "level"))))))))
                         .then(Commands.literal("revoke")
                                 .then(Commands.argument("player", EntityArgument.players())
                                         .then(Commands.argument("id", StringArgumentType.string())
+                                                .suggests(SKILL_IDS)
                                                 .executes(ctx -> forEach(ctx, targets(ctx),
                                                         (c, sp) -> skillRevoke(c, sp,
                                                                 StringArgumentType.getString(c, "id")))))))
@@ -239,12 +249,12 @@ public class ModCommands {
                 .then(Commands.literal("mastery")
                         .then(Commands.literal("set")
                                 .then(Commands.argument("player", EntityArgument.players())
-                                        .then(Commands.argument("id", StringArgumentType.string())
+                                        .then(Commands.argument("id", ResourceLocationArgument.id())
                                                 .suggests(MASTERY_IDS)
                                                 .then(Commands.argument("value", IntegerArgumentType.integer(0, 100))
                                                         .executes(ctx -> forEach(ctx, targets(ctx),
                                                                 (c, sp) -> masterySet(c, sp,
-                                                                        StringArgumentType.getString(c, "id"),
+                                                                        ResourceLocationArgument.getId(c, "id"),
                                                                         IntegerArgumentType.getInteger(c, "value"))))))))
                         .then(Commands.literal("list")
                                 .executes(ctx -> masteryList(ctx, ctx.getSource().getPlayerOrException()))
@@ -442,23 +452,50 @@ public class ModCommands {
         return 1;
     }
 
-    private static int skillGive(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, String id) {
+    /**
+     * Otorga una habilidad SIN TP (vía maestros/NPC: es grant, sobrevive al respec).
+     *
+     * @param requested nivel exacto que se quiere dejar, o -1 para "sube uno".
+     *                  Se RECORTA al techo en vez de fallar: si el máximo es 5 y pides 10,
+     *                  te quedas en 5. Fallar ahí solo obliga a consultar el max a mano.
+     */
+    private static int skillGive(CommandContext<CommandSourceStack> ctx, ServerPlayer sp,
+                                 String id, int requested) {
         SkillDef def = SkillDef.get(id);
         if (def == null) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] Unknown skill: " + id));
             return 0;
         }
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
-        if (att.skills().level(id) >= def.maxLevel()) {
-            ctx.getSource().sendFailure(Component.literal("[Zenkai] "
-                    + sp.getGameProfile().getName() + " already maxed: " + id));
+
+        // Mismo techo que SkillBuyPacket y giveAll: con levels_from_forms manda la cadena de
+        // formas de SU raza, no el max_level del JSON.
+        int max = def.levelsFromForms()
+                ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
+        if (max <= 0) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] '" + id
+                    + "' no está disponible para la raza de " + sp.getGameProfile().getName()));
             return 0;
         }
-        final int next = att.skills().level(id) + 1;
-        att.skills().grant(id, next); // otorgada, no comprada: sobrevive al respec
+
+        int cur = att.skills().level(id);
+        int target = Math.min(requested < 0 ? cur + 1 : requested, max);
+
+        if (target <= cur) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] "
+                    + sp.getGameProfile().getName() + " ya está en lvl " + cur + " de " + id
+                    + " (máx " + max + ")"));
+            return 0;
+        }
+
+        att.skills().grant(id, target);
         PlayerLifeCycle.sync(sp);
+
+        final int t = target;
+        final boolean capped = requested > max;
         ctx.getSource().sendSuccess(() -> Component.literal(
-                "[Zenkai] Skill '" + id + "' lvl " + next + " → " + sp.getGameProfile().getName()), true);
+                "[Zenkai] Skill '" + id + "' lvl " + t + " → " + sp.getGameProfile().getName()
+                        + (capped ? " (recortado desde " + requested + ")" : "")), true);
         return 1;
     }
 
@@ -556,32 +593,39 @@ public class ModCommands {
         return SharedSuggestionProvider.suggest(ids, b);
     };
 
+    /** Ids del datapack de habilidades. Sin namespace: el id de una SkillDef es la ruta del
+     *  archivo, no un ResourceLocation. */
+    private static final SuggestionProvider<CommandSourceStack> SKILL_IDS = (ctx, b) -> {
+        List<String> ids = new ArrayList<>();
+        for (SkillDef d : SkillDef.all()) ids.add(d.id());
+        return SharedSuggestionProvider.suggest(ids, b);
+    };
+
     /**
-     * Admite: "kaioken" o cualquier etiqueta de escalón ("x20"), "ssj4" (forma sin namespace)
-     * y "zenkai:ssj4" (completo). Las etiquetas de escalón se siguen aceptando por comodidad
-     * y compatibilidad con lo que ya estuviera escrito, pero todas apuntan a la MISMA clave:
-     * la maestría de kaioken ya no se guarda por escalón.
+     * Admite "kaioken", cualquier etiqueta de escalón ("x20"), "ssj4" y "zenkai:ssj4".
+     * Brigadier resuelve un id sin namespace como minecraft:, así que ese caso se reinterpreta
+     * como zenkai: — es lo que quiere decir el jugador el 100% de las veces.
+     * Las etiquetas de escalón siguen aceptándose por comodidad, pero todas apuntan a la MISMA
+     * clave: la maestría de kaioken ya no se guarda por escalón.
      */
-    private static ResourceLocation resolveMasteryId(String raw) {
-        String s = raw.toLowerCase(java.util.Locale.ROOT).trim();
-        if (s.equals("kaioken")) return PlayerFormAttachment.kaiokenMasteryKey();
+    private static ResourceLocation resolveMasteryId(ResourceLocation raw) {
+        String path = raw.getPath();
+        if (path.equals("kaioken")) return PlayerFormAttachment.kaiokenMasteryKey();
         for (KaiokenTier t : KaiokenTier.values()) {
-            if (t.isOn() && t.label().equals(s)) return PlayerFormAttachment.kaiokenMasteryKey();
+            if (t.isOn() && t.label().equals(path)) return PlayerFormAttachment.kaiokenMasteryKey();
         }
-        return ResourceLocation.tryParse(s.contains(":") ? s : Zenkai.MOD_ID + ":" + s);
+        return "minecraft".equals(raw.getNamespace())
+                ? ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path)
+                : raw;
     }
 
     private static int masterySet(CommandContext<CommandSourceStack> ctx, ServerPlayer sp,
-                                  String rawId, int value) {
+                                  ResourceLocation rawId, int value) {
         ResourceLocation id = resolveMasteryId(rawId);
-        if (id == null) {
-            ctx.getSource().sendFailure(Component.literal("[Zenkai] Invalid id: " + rawId));
-            return 0;
-        }
         var form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         form.setMastery(id, value);
-        // syncForm y NO sync: la maestría vive en PLAYER_FORM. Con sync() el cliente
-        // seguiría mostrando el valor viejo en la pantalla de stats.
+        // syncForm y NO sync: la maestría vive en PLAYER_FORM. Con sync() el cliente seguiría
+        // mostrando el valor viejo en la pantalla de stats.
         PlayerLifeCycle.syncForm(sp);
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] " + id + " mastery = " + value + "% → " + sp.getGameProfile().getName()), true);

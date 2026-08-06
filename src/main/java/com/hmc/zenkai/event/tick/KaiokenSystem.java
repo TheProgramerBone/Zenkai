@@ -36,12 +36,7 @@ import net.minecraft.world.entity.player.Player;
 public final class KaiokenSystem {
     private KaiokenSystem() {}
 
-    /**
-     * Calibración global del coste. Con 2.5 y ratio CON/poder = 1.5: x20 dura ~10 s sin
-     * maestría y ~23 s dominado. Subirlo acorta TODOS los escalones proporcionalmente.
-     * (Candidato natural a mudarse a StatsConfig junto a bodyScale/regenBody.)
-     */
-    private static final double KAIOKEN_DRAIN_SCALE = 2.5;
+    private static final double KAIOKEN_DRAIN_SCALE = 5;
 
     /** Multiplicador del drenaje con el escalón dominado al 100 %. */
     private static final double MASTERED_DRAIN_FACTOR = 0.5;
@@ -126,7 +121,6 @@ public final class KaiokenSystem {
      * de la forma. Lineal sería letal (black_form da +1400 % -> x15 de coste); con raíz, ssj4
      * cuesta ~3.2x lo que en base, así que x20 queda como ráfaga de segundos mientras x2-x4
      * siguen siendo sostenibles. Dominar la forma la encarece un poco, porque da más stats.
-     *
      * Usa formStatPercent() y NO totalStatPercent(): el segundo INCLUYE el % del propio
      * kaioken, así que el drenaje se retroalimentaría (x20 multiplicaría su coste por ~20).
      */

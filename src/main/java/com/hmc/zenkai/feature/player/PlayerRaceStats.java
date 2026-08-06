@@ -136,21 +136,26 @@ public class PlayerRaceStats {
     public record RecalcResult(int bodyMax, int staminaMax, int energyMax,
                                double speed, double flySpeed) {}
 
-    public RecalcResult recalcAll() {
-        int con = attributes.get(ZenkaiAttributes.CONSTITUTION);
-        int spi = attributes.get(ZenkaiAttributes.SPIRIT);
-
-        // RaceStatTable reparte por raza/estilo; las *Scale de config siguen siendo el mando
-        // global de time-to-kill (y las comparten los mobs vía EntityStats).
+    /**
+     * Máximos de los tres pools para una combinación arbitraria. Estático y sin estado a
+     * propósito: lo llaman tanto el recalc del jugador como la pantalla de creación, y si
+     * cada uno llevara su copia de las fórmulas se separarían al primer rebalanceo.
+     */
+    public static RecalcResult pools(Race race, Style style, int con, int spi) {
         int bodyMax    = (int) Math.max(1, Math.round(
                 10 + con * RaceStatTable.health(race, style)  * CommonConfig.bodyScale()));
         int staminaMax = (int) Math.max(1, Math.round(
                 90 + con * RaceStatTable.stamina(race, style) * CommonConfig.staminaScale()));
         int energyMax  = (int) Math.max(1, Math.round(
                 90 + spi * RaceStatTable.kiReserves(race, style) * CommonConfig.energyScale()));
-
-        // speed/flySpeed ya no salen de DEX: los gobiernan las habilidades Run y Fly.
         return new RecalcResult(bodyMax, staminaMax, energyMax, 0.0, 0.0);
+    }
+
+    public RecalcResult recalcAll() {
+        // speed/flySpeed ya no salen de DEX: los gobiernan las habilidades Run y Fly.
+        return pools(race, style,
+                attributes.get(ZenkaiAttributes.CONSTITUTION),
+                attributes.get(ZenkaiAttributes.SPIRIT));
     }
 
     // ── Stats de combate ─────────────────────────────────────────────────────

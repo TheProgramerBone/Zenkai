@@ -391,6 +391,21 @@ public class PlayerFormAttachment {
     }
 
     /**
+     * Apaga SOLO la capa de kaioken y deja la forma intacta.
+     * No aplica strain: castigar el apagado voluntario no tiene sentido — el strain existe
+     * para que no reenciendas dos segundos después de caer agotado, y de eso ya se encarga
+     * KaiokenSystem cuando el body llega a 1.
+     * @return true si había algo que apagar. El que llama lo usa para decidir si además
+     *         hay que destransformar.
+     */
+    public boolean dropKaioken() {
+        if (!kaioken.isOn()) return false;
+        setKaioken(KaiokenTier.OFF);
+        cooldownTicks = 10;
+        return true;
+    }
+
+    /**
      * Si la forma guardada ya no existe en el datapack o esa raza no puede usarla, vuelve a
      * base. También limpia una selección que dejó de ser válida, que si no se queda apuntando
      * a una forma fantasma y la tecla no responde sin decir por qué.

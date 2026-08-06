@@ -6,6 +6,7 @@ import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.skills.SuperForms;
@@ -411,5 +412,21 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     @Override
     public long getApparentPowerLevel() {
         return PowerLevel.suppress(getPowerLevel(), powerFraction());
+    }
+
+    /**
+     * PL LIBERABLE: lo máximo que este jugador puede sacar HOY, o sea el crudo por el techo
+     * de Ki Control. No es ninguno de los otros tres:
+     *   - getPowerLevelRaw()      = potencial total, aunque no puedas usarlo
+     *   - getApparentPowerLevel() = lo que estás mostrando ahora mismo (el slider)
+     *   - este                    = tu tope real
+     * Lo consumen los maestros y los logros de PL. Con el crudo, un jugador con 1600 de
+     * potencial y Ki Control al 50% desbloqueaba el logro de 1000 teniendo 800 usables.
+     * Sin pesas, por la misma razón que getPowerLevelRaw: entrenar con lastre no debe
+     * alejarte de los hitos.
+     */
+    public long getReleasablePowerLevel() {
+        int cap = Math.min(100, SkillEffects.maxPowerPercent(this));
+        return Math.round(getPowerLevelRaw() * (cap / 100.0));
     }
 }

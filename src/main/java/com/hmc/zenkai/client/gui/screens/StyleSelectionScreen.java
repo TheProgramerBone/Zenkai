@@ -7,6 +7,11 @@ import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
+import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.RaceStatTable;
+import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.combat.PowerLevel;
+import com.hmc.zenkai.feature.player.PlayerRaceStats;
 import com.hmc.zenkai.network.ChooseStylePacket;
 import com.hmc.zenkai.feature.Style;
 import com.hmc.zenkai.feature.stats.ChooseRacePacket;
@@ -61,6 +66,18 @@ public class StyleSelectionScreen extends Screen {
     private static final int COLOR_VALUE  = 0xFFFFFF; // blanco+sombra → valor seleccionado (Martial Artist, ...)
     private static final int COLOR_DESC   = 0x5A4636; // marrón medio  → cuerpo de la descripción
     private static final int COLOR_SWATCH = 0x8A6A1E; // bronce/dorado → etiqueta de swatch (Ki Color)
+
+    // ── Bloque de estadísticas (a la derecha del preview) ─────────────────────
+    private static final int STATS_X    = IN_X1 + PAD + PREVIEW_W + 6;   // 94
+    private static final int STATS_R    = IN_X2 - PAD;                   // 237
+    private static final int COL_BASE_R = STATS_X + 44;
+    private static final int COL_COEF_R = STATS_X + 92;
+    /** Justo debajo del swatch de Ki Color. */
+    private static final int STATS_Y    = DIV2_Y + 8 + 14 + COLOR_BOX_H + 6;
+    private static final int STAT_ROW_H = 9;
+
+    private static final int COLOR_HEADER = 0x7A6450; // cabecera de columna, muy tenue
+    private static final int COLOR_POOL   = 0x4A3726; // pools, mismo tono que los títulos
 
     @Nullable private final AppearanceScreen appearanceScreen;
     private final CompoundTag statsSnapshot;
@@ -217,6 +234,9 @@ public class StyleSelectionScreen extends Screen {
             g.disableScissor();
         }
 
+        drawStatBlock(g, mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).getRace(),
+                s, lp, tp);
+
         // Label "Ki Color" encima del swatch
         drawCenteredNoShadow(g, Component.literal("Ki Color"), kiAreaCX, tp + DIV2_Y + 8, COLOR_SWATCH);
 
@@ -229,6 +249,102 @@ public class StyleSelectionScreen extends Screen {
     private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
         var font = Minecraft.getInstance().font;
         g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
+    }
+
+    /**
+     * Atributos de salida, cuánto rinde cada punto y el stat efectivo resultante, para la
+     * combinación raza+estilo que el jugador está mirando ahora mismo.
+     *
+     * Los VALORES BASE son de la raza y no cambian al girar la flecha; lo que cambia son los
+     * coeficientes y, por tanto, las dos columnas de la derecha. Por eso la base va en el
+     * tono apagado y el efectivo en blanco: se ve de un vistazo qué está eligiendo.
+     *
+     * El PL sale de PowerLevel.compute, no de una suma a mano: si mañana tocas los pesos del
+     * medidor, esta pantalla cambia sola en vez de mentir.
+     */
+    private void drawStatBlock(GuiGraphics g, Race race, Style style, int lp, int tp) {
+        var font = Minecraft.getInstance().font;
+        int[] base = RaceStatTable.baseAttributes(race);
+
+        int str = base[ZenkaiAttributes.STRENGTH.ordinal()];
+        int con = base[ZenkaiAttributes.CONSTITUTION.ordinal()];
+        int dex = base[ZenkaiAttributes.DEXTERITY.ordinal()];
+        int wil = base[ZenkaiAttributes.WILLPOWER.ordinal()];
+        int spi = base[ZenkaiAttributes.SPIRIT.ordinal()];
+
+        double melee  = str * RaceStatTable.melee(race, style);
+        double body   = con * RaceStatTable.health(race, style);
+        double defe   = dex * RaceStatTable.defense(race, style);
+        double kiDmg  = wil * RaceStatTable.kiDamage(race, style);
+        double kiPool = spi * RaceStatTable.kiReserves(race, style);
+
+        long pl = PowerLevel.compute(melee, body, defe, kiDmg, kiPool);
+
+        int y = tp + STATS_Y;
+
+        // Titular: el número que el jugador va a comparar entre estilos.
+        drawCenteredNoShadow(g, Component.translatable("screen.zenkai.style.power", pl),
+                lp + (STATS_X + STATS_R) / 2, y, COLOR_VALUE);
+        y += 11;
+
+        drawRight(g, Component.translatable("screen.zenkai.style.col_base"),
+                lp + COL_BASE_R, y, COLOR_HEADER);
+        drawRight(g, Component.translatable("screen.zenkai.style.col_per"),
+                lp + COL_COEF_R, y, COLOR_HEADER);
+        drawRight(g, Component.translatable("screen.zenkai.style.col_total"),
+                lp + STATS_R, y, COLOR_HEADER);
+        y += 10;
+
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) {
+            g.drawString(font, Component.translatable("attr.zenkai." + a.name().toLowerCase() + ".short"),
+                    lp + STATS_X, y, COLOR_TITLE, false);
+
+            drawRight(g, Component.literal(String.valueOf(base[a.ordinal()])),
+                    lp + COL_BASE_R, y, COLOR_DESC);
+
+            RaceStatTable.Col col = RaceStatTable.colFor(a);
+            if (col == null) {
+                // MND no da stat de combate: es requisito de habilidades.
+                drawRight(g, Component.literal("—"), lp + COL_COEF_R, y, COLOR_DESC);
+                drawRight(g, Component.literal("—"), lp + STATS_R, y, COLOR_DESC);
+            } else {
+                double coef = RaceStatTable.get(race, style, col);
+                drawRight(g, Component.literal("×" + trim(coef)), lp + COL_COEF_R, y, COLOR_DESC);
+                drawRight(g, Component.literal(String.valueOf(Math.round(base[a.ordinal()] * coef))),
+                        lp + STATS_R, y, COLOR_VALUE);
+            }
+            y += STAT_ROW_H;
+        }
+
+        y += 3;
+        g.fill(lp + STATS_X, y, lp + STATS_R, y + 1, 0x44FFFFFF);
+        y += 4;
+
+        // Los pools no son stats de combate: llevan offset y su propia escala de config, así
+        // que salen del mismo sitio que los del jugador real y no de una fórmula copiada.
+        var p = PlayerRaceStats.pools(race, style, con, spi);
+        drawPool(g, "screen.zenkai.style.body",    p.bodyMax(),    lp, y);
+        drawPool(g, "screen.zenkai.style.stamina", p.staminaMax(), lp, y + STAT_ROW_H);
+        drawPool(g, "screen.zenkai.style.ki",      p.energyMax(),  lp, y + STAT_ROW_H * 2);
+    }
+
+    private void drawPool(GuiGraphics g, String key, int value, int lp, int y) {
+        var font = Minecraft.getInstance().font;
+        g.drawString(font, Component.translatable(key), lp + STATS_X, y, COLOR_POOL, false);
+        drawRight(g, Component.literal(String.valueOf(value)), lp + STATS_R, y, COLOR_VALUE);
+    }
+
+    /** Texto alineado a la derecha de x. Los números en columna solo se leen así. */
+    private void drawRight(GuiGraphics g, Component text, int x, int y, int color) {
+        var font = Minecraft.getInstance().font;
+        g.drawString(font, text, x - font.width(text), y, color, color == COLOR_VALUE);
+    }
+
+    /** 11.0 -> "11", 9.4 -> "9.4". Un decimal muerto ocupa columna y no dice nada. */
+    private static String trim(double d) {
+        return d == Math.rint(d)
+                ? String.valueOf((long) d)
+                : String.format(java.util.Locale.ROOT, "%.1f", d);
     }
 
     @Override

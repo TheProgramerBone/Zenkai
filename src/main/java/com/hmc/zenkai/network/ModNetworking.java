@@ -366,5 +366,8 @@ public class ModNetworking {
                 ScouterUpgradeSyncPacket.TYPE,
                 ScouterUpgradeSyncPacket.STREAM_CODEC,
                 ScouterUpgradeSyncPacket::handle);
+
+        registrar.playToClient(OpenMasterPayload.TYPE, OpenMasterPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandlers.openMaster(payload)));
     }
 }

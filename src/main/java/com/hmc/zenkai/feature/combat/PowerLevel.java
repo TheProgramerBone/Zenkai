@@ -27,10 +27,10 @@ public final class PowerLevel {
     // de arquetipo suman 100, el reparto queda literalmente stat = PL × (shape/100).
     // Así ningún stat supera el PL y el daño es proporcional al número de poder.
     public static final double W_STR = 1.0; // melee
-    public static final double W_CON = 1.0; // body
+    public static final double W_CON = 0.6; // body
     public static final double W_DEX = 1.0; // defensa
     public static final double W_WIL = 1.0; // ki power
-    public static final double W_SPI = 1.0; // ki pool
+    public static final double W_SPI = 0.25; // ki pool
 
     // ── REPARTIDOR ───────────────────────────────────────────────────────────
     // Solo los usa solveAttributes. Cambiarlos SÍ rebalancea el bestiario; cambiar los W_* no.

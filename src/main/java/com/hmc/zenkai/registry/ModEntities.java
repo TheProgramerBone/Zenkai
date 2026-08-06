@@ -1,6 +1,8 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.entity.master.KaioEntity;
+import com.hmc.zenkai.content.entity.master.KamiEntity;
 import com.hmc.zenkai.content.entity.misc.IsaacEntity;
 import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianEntity;
@@ -74,6 +76,14 @@ public class ModEntities {
     public static final Supplier<EntityType<YemmaEntity>> YEMMA =
             ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)
                     .sized(4, 10.0f).build("yemma"));
+
+    public static final Supplier<EntityType<KamiEntity>> KAMI =
+            ENTITY_TYPES.register("kami", () -> EntityType.Builder.of(KamiEntity::new, MobCategory.MISC)
+                    .sized(0.6f, 1.9f).build("kami"));
+
+    public static final Supplier<EntityType<KaioEntity>> KAIO =
+            ENTITY_TYPES.register("kaio", () -> EntityType.Builder.of(KaioEntity::new, MobCategory.MISC)
+                    .sized(0.8f, 1.4f).build("kaio"));
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);

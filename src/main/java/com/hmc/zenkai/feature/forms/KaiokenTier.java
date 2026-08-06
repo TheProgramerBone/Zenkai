@@ -15,10 +15,10 @@ package com.hmc.zenkai.feature.forms;
 public enum KaiokenTier {
     OFF ("",     0.0,  0.0, 0),
     X2  ("x2",   0.1,  0.8, 1),
-    X3  ("x3",   0.15,  1.5, 3),
-    X4  ("x4",   0.2,  2.5, 5),
-    X10 ("x10",  0.5,  8.0, 7),
-    X20 ("x20", 1.0, 20.0, 10);
+    X3  ("x3",   0.15,  1.5, 1),
+    X4  ("x4",   0.2,  2.5, 1),
+    X10 ("x10",  0.5,  8.0, 1),
+    X20 ("x20", 1.0, 20.0, 1);
 
     private final String label;
     private final double statPercent;

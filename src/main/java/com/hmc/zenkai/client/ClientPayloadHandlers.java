@@ -1,6 +1,8 @@
 package com.hmc.zenkai.client;
 
+import com.hmc.zenkai.client.gui.screens.MasterScreen;
 import com.hmc.zenkai.client.gui.screens.NpcMarkerScreen;
+import com.hmc.zenkai.network.OpenMasterPayload;
 import com.hmc.zenkai.network.OpenNpcMarkerPayload;
 import net.minecraft.client.Minecraft;
 
@@ -12,5 +14,9 @@ public final class ClientPayloadHandlers {
     public static void openNpcMarker(OpenNpcMarkerPayload p) {
         Minecraft.getInstance().setScreen(new NpcMarkerScreen(
                 p.pos(), p.npcType(), p.yaw(), p.offX(), p.offY(), p.offZ()));
+    }
+
+    public static void openMaster(OpenMasterPayload p) {
+        Minecraft.getInstance().setScreen(new MasterScreen(p.masterId(), p.entityId()));
     }
 }

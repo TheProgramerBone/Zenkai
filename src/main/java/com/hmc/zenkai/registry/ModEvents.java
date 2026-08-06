@@ -1,6 +1,7 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.entity.ZenkaiMasterEntity;
 import com.hmc.zenkai.content.entity.misc.IsaacEntity;
 import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianEntity;
@@ -33,6 +34,8 @@ public class ModEvents {
         event.put(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounEntity.createAttributes().build());
         event.put(ModEntities.ISAAC.get(), IsaacEntity.createAttributes().build());
         event.put(ModEntities.YEMMA.get(), YemmaEntity.createAttributes().build());
+        event.put(ModEntities.KAMI.get(), ZenkaiMasterEntity.createAttributes().build());
+        event.put(ModEntities.KAIO.get(), ZenkaiMasterEntity.createAttributes().build());
     }
 
 

@@ -56,9 +56,14 @@ public final class SkillEffects {
 
     public static double runSpeedFactor(Player p) { return curve(p, RUN, "speed_mult", 1.0); }
 
-    /** Techo del % de poder: 50 bases + 5 por nivel de Ki Control (nivel 10 = 100). */
+    /** Misma fórmula leyendo el attachment directamente. La necesita el PL liberable, que
+     *  se calcula dentro del propio attachment y no tiene un Player a mano. */
+    public static int maxPowerPercent(PlayerStatsAttachment att) {
+        return 50 + 5 * att.skills().level(KI_CONTROL);
+    }
+
     public static int maxPowerPercent(Player p) {
-        return 50 + 5 * level(p, KI_CONTROL);
+        return maxPowerPercent(PlayerStatsAttachment.get(p));
     }
 
     // ── Meditación ───────────────────────────────────────────────────────────

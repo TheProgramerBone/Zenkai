@@ -1,10 +1,10 @@
 {
   "base_attributes": {
-    "str": 10,
-    "con": 8,
-    "dex": 10,
-    "wil": 8,
-    "spi": 10,
+    "str": 5,
+    "con": 4,
+    "dex": 5,
+    "wil": 4,
+    "spi": 5,
     "mnd": 10
   },
   "warrior": {

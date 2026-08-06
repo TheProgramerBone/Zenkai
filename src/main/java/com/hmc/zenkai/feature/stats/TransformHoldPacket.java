@@ -54,9 +54,12 @@ public record TransformHoldPacket(Action action, boolean active) implements Cust
             }
 
             if (pkt.action() == Action.DETRANSFORM) {
-                // Solo si está transformado
-                if (!FormIds.BASE.equals(form.getFormId())) {
-                    form.forceBase(); // lo creamos abajo
+                // Se pela por CAPAS, y en este orden: el kaioken va ENCIMA de la forma, así
+                // que el primer toque lo quita y el segundo devuelve a base. Antes solo se
+                // miraba el formId; como el kaioken no es una forma sino otra capa, estando
+                // en base la condición era falsa y el toque no hacía absolutamente nada.
+                if (!form.dropKaioken() && !FormIds.BASE.equals(form.getFormId())) {
+                    form.forceBase();
                 }
                 PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
                 return;

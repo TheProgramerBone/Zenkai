@@ -19,6 +19,7 @@ import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBall
 import com.hmc.zenkai.client.render_and_model_entities.entity.*;
 import com.hmc.zenkai.event.ZenkaiTickHandlers;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
+import com.hmc.zenkai.feature.mining.PowerMining;
 import com.hmc.zenkai.feature.sense.ScouterStacks;
 import com.hmc.zenkai.registry.*;
 import com.hmc.zenkai.config.CommonConfig;
@@ -129,7 +130,7 @@ public class Zenkai {
             fire.setFlammable(ModBlocks.AJISA_FENCE.get(), 5, 20);
             fire.setFlammable(ModBlocks.AJISA_FENCE_GATE.get(), 5, 20);
             fire.setFlammable(ModBlocks.AJISA_LEAVES.get(), 30, 60);
-            com.hmc.zenkai.feature.mining.PowerMining.bootstrap();
+            PowerMining.bootstrap();
         });
     }
 
@@ -227,6 +228,12 @@ public class Zenkai {
 
             EntityRenderers.register(ModEntities.YEMMA.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("yemma", true), 4f));
+
+            EntityRenderers.register(ModEntities.KAMI.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("kami", true), 0.5f));
+
+            EntityRenderers.register(ModEntities.KAIO.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("kaio", true), 0.5f));
 
 
             // Worldgen (Terrablender)

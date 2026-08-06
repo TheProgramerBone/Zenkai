@@ -2,8 +2,10 @@ package com.hmc.zenkai.feature.skills;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.content.entity.ZenkaiMasterEntity;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.forms.PotentialUnlock;
+import com.hmc.zenkai.feature.master.MasterManager;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
@@ -13,14 +15,20 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * C2S: comprar una habilidad. Validación 100% servidor (el cliente solo pide):
- * existe, raza elegida, no comprada ya, MIND suficiente y TP suficiente.
- * addTP(-coste) es seguro: clampa a 0, pero el check previo de getTP() evita compras gratis.
+ * C2S: comprar una habilidad. Validación 100% servidor (el cliente solo pide).
+ * masterId vacío = compra normal desde la pantalla de habilidades (nivel 2 en adelante).
+ * masterId presente = compra ANTE UN MAESTRO, que es la única forma de conseguir el nivel 1
+ * de una habilidad con maestro. La admisión no se repite aquí: se delega en MasterManager,
+ * que es el mismo embudo que usó la entidad para abrir la tienda.
  */
-public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
+public record SkillBuyPacket(String skillId, String masterId) implements CustomPacketPayload {
+
+    /** Compra sin maestro (pantalla de habilidades). */
+    public SkillBuyPacket(String skillId) { this(skillId, ""); }
 
     public static final Type<SkillBuyPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "skill_buy"));
@@ -28,6 +36,7 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
     public static final StreamCodec<FriendlyByteBuf, SkillBuyPacket> STREAM_CODEC =
             StreamCodec.composite(
                     ByteBufCodecs.STRING_UTF8, SkillBuyPacket::skillId,
+                    ByteBufCodecs.STRING_UTF8, SkillBuyPacket::masterId,
                     SkillBuyPacket::new);
 
     @Override
@@ -52,7 +61,23 @@ public record SkillBuyPacket(String skillId) implements CustomPacketPayload {
             int current = att.skills().level(def.id());
             if (current >= max) return;                        // ya al máximo
             // El nivel 1 de una habilidad CON maestro solo lo da el maestro.
-            if (current <= 0 && def.master() != null) return;
+            // El nivel 1 de una habilidad CON maestro solo lo da SU maestro, en persona.
+            if (current <= 0 && def.master() != null) {
+                if (!def.master().equals(pkt.masterId())) return;
+
+                Entity master = null;
+                for (Entity e : sp.level().getEntities(sp,
+                        sp.getBoundingBox().inflate(MasterManager.INTERACT_RANGE))) {
+                    if (e instanceof ZenkaiMasterEntity m && def.master().equals(m.masterId())) {
+                        master = e;
+                        break;
+                    }
+                }
+                if (master == null) return;                       // no estás delante de él
+
+                MasterManager.Result r = MasterManager.check(sp, def.master(), master);
+                if (!r.ok()) { MasterManager.tell(sp, def.master(), r); return; }
+            }
 
             int next = current + 1;
             int cost = def.levelsFromForms()

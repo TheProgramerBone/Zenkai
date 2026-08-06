@@ -140,7 +140,7 @@ public final class ZenkaiTriggers {
                 // PL LIMPIO, sin la penalización de las pesas. Con el penalizado, ponerte pesas
                 // te alejaría del logro de PL justo cuando estás entrenando más — y además
                 // chocaría con el logro de carga máxima, que quiere lo contrario.
-                if (powerLevel.isPresent() && att.getPowerLevelRaw() < powerLevel.get()) return false;
+                if (powerLevel.isPresent() && att.getReleasablePowerLevel() < powerLevel.get()) return false;
                 if (tp.isPresent() && att.getTP() < tp.get()) return false;
                 if (weightLoad.isPresent() && WeightSystem.computeLoad(sp) < weightLoad.get()) return false;
 

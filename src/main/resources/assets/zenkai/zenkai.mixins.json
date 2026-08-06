@@ -6,7 +6,9 @@
   "client": [
     "client.PlayerModelHideMixin",
     "client.MouseHandlerMixin",
-    "client.CameraShakeMixin"
+    "client.CameraShakeMixin",
+    "client.DamageEventMarkMixin",
+    "client.SyncHurtFlashMixin"
   ],
   "mixins": [],
   "injectors": {
