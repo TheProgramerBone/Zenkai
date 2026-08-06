@@ -628,7 +628,9 @@ public class ModCommands {
                 + " (" + String.format("%.2f", 100.0 * st.getBody() / Math.max(1, st.getBodyMax())) + "%)"
                 + " | PL " + st.getPowerLevel()
                 + " | STR " + Math.round(st.computeMeleeFinal())
-                + " | DEF " + Math.round(st.computeDefenseFinal());
+                + " | DEF " + Math.round(st.computeDefenseFinal())
+                + " | PL " + st.getPowerLevel()
+                + " (ap " + st.getApparentPowerLevel() + ")";
 
         ctx.getSource().sendSuccess(() -> Component.literal(
                 le.getName().getString()

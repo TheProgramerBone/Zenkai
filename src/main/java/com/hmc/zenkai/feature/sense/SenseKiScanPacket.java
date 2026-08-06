@@ -89,7 +89,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
                         att.getStamina(), att.getStaminaMax(),
                         att.getEnergy(), att.getEnergyMax(),
                         att.getAlignment(),
-                        att.getPowerLevel(), true);
+                        att.getApparentPowerLevel(), true);
             }
             return vanillaEntry(le, true);
         }
@@ -100,7 +100,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
             return new SenseKiDataPacket.Entry(le.getId(),
                     stats.getBody(), stats.getBodyMax(),
                     0,0,0,0,entityAlignment(le),
-                    stats.getPowerLevel(), false);
+                    stats.getApparentPowerLevel(), false);
         }
 
         // JSON display_only: PL fijo, vida vanilla.

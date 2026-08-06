@@ -53,7 +53,9 @@ public final class ZenkaiStats {
 
         ZenkaiCombatStats stats = of(le);
         if (stats != null && stats.isCombatActive()) {
-            return stats.getPowerLevel();
+            // APARENTE: esto existe para alimentar scouter y sentir el ki, que son
+            // justo los aparatos a los que la supresión debe engañar.
+            return stats.getApparentPowerLevel();
         }
         if (!(le instanceof Player)) {
             ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(le.getType());

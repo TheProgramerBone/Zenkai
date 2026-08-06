@@ -37,8 +37,20 @@ public interface ZenkaiCombatStats {
     int  getEnergyMax();
 
     // ── Power Level: derivado, mismo cálculo para jugador y entidad ───────────
+
+    /** PL REAL: lo que de verdad puedes hacer. Nunca lo toca la supresión. Progresión, TP,
+     *  recompensas y compuertas de raza usan ESTE. */
     default long getPowerLevel() {
         return PowerLevel.compute(this);
+    }
+
+    /**
+     * PL APARENTE: lo que otros LEEN de ti (scouter, sentir el ki, "el más fuerte en rango").
+     * Por defecto es el real — las entidades no saben esconder su ki. Solo el jugador lo
+     * sobrescribe, porque solo él tiene Ki Control.
+     */
+    default long getApparentPowerLevel() {
+        return getPowerLevel();
     }
 
     // ── Multiplicadores de coste por raza/estilo ──────────────────────────────

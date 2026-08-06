@@ -200,7 +200,7 @@ public final class ClientZenkaiHooks {
         }
 
         g.drawString(mc.font, Component.literal(
-                        stats.getPowerPercent() + "%  PL " + ZenkaiNumbers.format(stats.getPowerLevel())),
+                        stats.getPowerPercent() + "%  PL " + ZenkaiNumbers.format(stats.getApparentPowerLevel())),
                 PANEL_X, PANEL_Y + panelH + 4, 0xFFFFE066);
     }
 

@@ -2,7 +2,6 @@ package com.hmc.zenkai.feature.sense;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.registry.ModDataComponents;
-import com.hmc.zenkai.content.item.ScouterItem;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.combat.entity.EntityStatDef;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
@@ -19,7 +18,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -29,20 +27,18 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * C2S: escaneo por ÁREA del scouter. Dos modos:
- *
  *  - STRONGEST: entidad con MÁS PL en scouter.range. Solo cuentan jugadores con raza y
  *    entidades con stats Zenkai (EntityStats aplicado o JSON display_only). Los mobs vanilla
  *    se ignoran (el scouter "no lee" ki sin firma). Gamerule de boosts apagado -> SIN SEÑAL.
- *
  *  - RADAR: esfera del dragón más cercana (tag zenkai:dragon_balls) en RADAR_RADIUS.
  *    Requiere la mejora (data component zenkai:radar_upgrade en el casco); sin ella responde
  *    UNAVAILABLE. Búsqueda EFICIENTE: solo chunks YA CARGADOS (getChunkNow, jamás fuerza
  *    carga síncrona) y filtro por paleta de sección (maybeHas) antes de iterar bloques —
  *    la sección de 16³ solo se recorre si su paleta contiene alguna esfera.
- *
  * Responde ScouterAreaDataPacket (posición para la flecha del cliente + PL si aplica).
  */
 public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
@@ -61,7 +57,7 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
                     buf -> new ScouterAreaScanPacket(buf.readByte()));
 
     @Override
-    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(ScouterAreaScanPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -124,10 +120,10 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
     private static long zenkaiPowerLevel(LivingEntity le) {
         if (le instanceof Player p) {
             PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
-            return att.isRaceChosen() ? att.getPowerLevel() : -1L;
+            return att.isRaceChosen() ? att.getApparentPowerLevel() : -1L;
         }
         EntityStats stats = ZenkaiStats.entityStats(le);
-        if (stats != null) return stats.getPowerLevel();
+        if (stats != null) return stats.getApparentPowerLevel();
 
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(le.getType());
         EntityStatDef def = EntityStatsManager.get(id);

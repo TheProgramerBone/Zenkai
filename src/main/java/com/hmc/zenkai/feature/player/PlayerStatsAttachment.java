@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.player;
 
+import com.hmc.zenkai.feature.combat.PowerLevel;
 import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
@@ -172,8 +173,11 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public double computeMeleeFinal()   { return computeMeleeUnweighted()   * weightFactor; }
     public double computeDefenseFinal() { return computeDefenseUnweighted() * weightFactor; }
     public double computeKiPowerFinal() { return computeKiPowerUnweighted() * weightFactor; }
-    public double computeSpeedFinal()   { return raceStats.computeSpeedFinal()   * statMultiplier; }
-    public double computeFlyFinal()     { return raceStats.computeFlyFinal()     * statMultiplier; }
+    // Stats SIN supresión: el % de Ki Control es una máscara hacia fuera, no una rebaja de lo
+    // que eres. Lo que mide poder de verdad (PL real, capacidad de carga, TP) usa estos.
+    private double meleeUnsuppressed()   { return raceStats.computeMeleeFinal()   * statMultiplier * weightFactor; }
+    private double defenseUnsuppressed() { return raceStats.computeDefenseFinal() * statMultiplier * weightFactor; }
+    private double kiPowerUnsuppressed() { return raceStats.computeKiPowerFinal() * statMultiplier * weightFactor; }
     public double computeKiPoolFinal()  { return raceStats.computeKiPoolFinal(); }
     public double computeConFinal()     { return raceStats.computeConFinal(); }
     /** Escala con forma y % de poder igual que el melee: Ki Fist se beneficia de transformarse. */
@@ -186,13 +190,19 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     }
     public boolean isCombatActive() { return isRaceChosen(); }
 
-    /** PL SIN la penalización de las pesas. Lo consumen la capacidad de carga y el TP: si
-     *  usaran el PL penalizado, ponerte pesas bajaría tu capacidad, lo que subiría r, lo que
-     *  bajaría más el PL... bucle. Misma fórmula que getPowerLevel(), un solo sitio. */
+    /** PL SIN la penalización de las pesas Y SIN supresión. Lo consumen la capacidad de carga
+     *  y el TP.
+     *  Sin pesas: si usaran el PL penalizado, ponerte pesas bajaría tu capacidad, lo que
+     *  subiría r, lo que bajaría más el PL... bucle.
+     *  Sin supresión: llevaba powerFraction dentro, así que bajar el % de Ki Control te
+     *  recortaba la capacidad de carga y el TP. Esconder el ki no te hace más débil. */
     public long getPowerLevelRaw() {
-        return com.hmc.zenkai.feature.combat.PowerLevel.compute(
-                computeMeleeUnweighted(), computeConFinal(), computeDefenseUnweighted(),
-                computeKiPowerUnweighted(), computeKiPoolFinal());
+        return PowerLevel.compute(
+                raceStats.computeMeleeFinal()   * statMultiplier,
+                computeConFinal(),
+                raceStats.computeDefenseFinal() * statMultiplier,
+                raceStats.computeKiPowerFinal() * statMultiplier,
+                computeKiPoolFinal());
     }
 
     // ── Body ─────────────────────────────────────────────────────────────────
@@ -388,5 +398,18 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
      *  problema. Quien compra ya lo trata como "no te llega". */
     public int mindFree() {
         return getAttribute(ZenkaiAttributes.MIND) - skills.mindUsed();
+    }
+
+    /** PL REAL. No lo baja esconder el ki. */
+    @Override
+    public long getPowerLevel() {
+        return PowerLevel.compute(meleeUnsuppressed(), computeConFinal(), defenseUnsuppressed(),
+                kiPowerUnsuppressed(), computeKiPoolFinal());
+    }
+
+    /** PL APARENTE: el real por el % de Ki Control, con suelo. Es lo único que ven los demás. */
+    @Override
+    public long getApparentPowerLevel() {
+        return PowerLevel.suppress(getPowerLevel(), powerFraction());
     }
 }
