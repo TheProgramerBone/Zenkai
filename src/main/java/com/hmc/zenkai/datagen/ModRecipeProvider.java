@@ -86,20 +86,9 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .requires(ModBlocks.NAMEK_DRAGON_BALL_1)
                 .unlockedBy("has_namek_dragon_ball_1", has(ModBlocks.NAMEK_DRAGON_BALL_1)).save(recipeOutput);
 
-        List<ItemLike> TERRAGEM_SMELTABLES = List.of(ModItems.TERRAGEM_DUST,
-                ModBlocks.TERRAGEM_ORE, ModBlocks.DEEPSLATE_TERRAGEM_ORE);
         List<ItemLike> NAMEKIAN_COBBLESTONE = List.of(ModBlocks.NAMEKIAN_COBBLESTONE);
 
         oreSmelting(recipeOutput, NAMEKIAN_COBBLESTONE, RecipeCategory.MISC, ModBlocks.NAMEKIAN_STONE.get(), 0.1f, 200, "namekian");
-        oreSmelting(recipeOutput, TERRAGEM_SMELTABLES, RecipeCategory.MISC, ModItems.TERRAGEM.get(), 0.25f, 200, "terragem");
-        oreBlasting(recipeOutput, TERRAGEM_SMELTABLES, RecipeCategory.MISC, ModItems.TERRAGEM.get(), 0.25f, 100, "terragem");
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.TERRAGEM_BLOCK.get(),1)
-                .pattern("WWW")
-                .pattern("WWW")
-                .pattern("WWW")
-                .define('W', ModItems.TERRAGEM.get())
-                .unlockedBy("has_terragem", has(ModItems.TERRAGEM)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.HALO.get(),1)
                 .pattern("YYY")
@@ -129,28 +118,6 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('E',Items.EMERALD)
                 .unlockedBy("has_scouter", has(ModItems.SCOUTER)).save(recipeOutput);
 
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.TERRAGEM.get(), 9)
-                .requires(ModBlocks.TERRAGEM_BLOCK)
-                .unlockedBy("has_terragem_block", has(ModBlocks.TERRAGEM_BLOCK)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.TERRAGEM_TEMPLATE.get(),2)
-                .pattern("WTW")
-                .pattern("WRW")
-                .pattern("WWW")
-                .define('W', ModItems.TERRAGEM.get())
-                .define('R', ModBlocks.ROCKY_BLOCK.get())
-                .define('T',ModItems.TERRAGEM_TEMPLATE.get())
-                .unlockedBy("has_terragem",has(ModItems.TERRAGEM_TEMPLATE)).save(recipeOutput);
-
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.TERRAGEM_HAMMER.get(),1)
-                .pattern(" WP")
-                .pattern(" SW")
-                .pattern("S  ")
-                .define('S', Items.STICK)
-                .define('W', ModItems.TERRAGEM)
-                .define('P', ModItems.TERRAGEM_PICKAXE)
-                .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
-
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.DRAGON_BALL_RADAR.get(),1)
                 .pattern("ICI")
                 .pattern("ADA")
@@ -159,7 +126,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('I', Items.IRON_INGOT)
                 .define('A', Items.AMETHYST_SHARD)
                 .define('C', itemtag("c:circuits/advanced"))
-                .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
+                .unlockedBy("has_terragem",has(Items.AMETHYST_SHARD)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.NAMEKIAN_LAMP.get(), 1)
                 .pattern(" S ")
@@ -183,7 +150,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('B', itemtag("c:circuits/basic"))
                 .define('R', Items.RED_DYE)
                 .define('C', itemtag("c:circuits/advanced"))
-                .unlockedBy("has_terragem",has(ModItems.TERRAGEM)).save(recipeOutput);
+                .unlockedBy("has_terragem",has(Items.IRON_INGOT)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.BASIC_CIRCUIT.get(),1)
                 .pattern(" C ")

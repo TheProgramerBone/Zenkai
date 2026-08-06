@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-01T10:36:39.2402031	Block States: zenkai
+// 1.21.1	2026-08-05T22:51:59.9706848	Block States: zenkai
 a94084a882e8e97f815eec1bcc0de31216c39653 assets/zenkai/blockstates/ajisa_button.json
 1941064c3fa3ef874b3f58b16d1e5260b932f041 assets/zenkai/blockstates/ajisa_door.json
 7b6b9fc8b8aecaa2d034bb21ffc7f4b12a529146 assets/zenkai/blockstates/ajisa_fence.json
@@ -13,7 +13,6 @@ aa317d2407700d1878e4857e08a765f60c7e5f92 assets/zenkai/blockstates/ajisa_log.jso
 024f0800cfe084bf0793cb41746494e885b47f32 assets/zenkai/blockstates/ajisa_stairs.json
 fd46ec8bbcc33d004cf77d4adbce703444c7a16e assets/zenkai/blockstates/ajisa_trapdoor.json
 64979c52680530ed04c03e286c67bd3003c40fdd assets/zenkai/blockstates/ajisa_wood.json
-d9cb25aba30c4602c429224f6b93e510b5d98124 assets/zenkai/blockstates/deepslate_terragem_ore.json
 4b101cc9e8e48e3c95e2dbd58fa0d32733178194 assets/zenkai/blockstates/energy_crystal_block.json
 52903f2caa61c8a2cbe7876fa2d3f743d689031b assets/zenkai/blockstates/energy_crystal_ore.json
 ae86d7472bb7bfc89f08fdad987a8518e483ee21 assets/zenkai/blockstates/htc_block.json
@@ -70,8 +69,6 @@ e21e6c76ac661a1ea79f35e2aad73ee1290a82b6 assets/zenkai/blockstates/structural_co
 196168ca9e6f6acf6d645dfb5df96796085efd36 assets/zenkai/blockstates/structural_concrete_red.json
 e52a363d406378cd00b09bd36db1c1ff90089427 assets/zenkai/blockstates/structural_concrete_white.json
 9c30a484bdb77c92d593633fed0bc80b2da96d66 assets/zenkai/blockstates/structural_concrete_yellow.json
-ecadf14a4fd7f0a8699f1a89c06168a868b95831 assets/zenkai/blockstates/terragem_block.json
-d42635e000b2b6fda5e1ef66265d18dd8a68f6fa assets/zenkai/blockstates/terragem_ore.json
 96c6c715600a5a86ab4da13b1e1a44efd825e4fc assets/zenkai/models/block/ajisa_button.json
 e50ad7a50f49da2452cef7a381eb14bd6252bbf1 assets/zenkai/models/block/ajisa_button_pressed.json
 cc389f8f79b04280b1a0570be021cafbf67f3c3d assets/zenkai/models/block/ajisa_door_bottom_left.json
@@ -106,7 +103,6 @@ cd55caf033c55f25c2694bc8fbd0d9f49c08be8a assets/zenkai/models/block/ajisa_stairs
 06562eae6100ffea4e3ebf08fa5d29290449b094 assets/zenkai/models/block/ajisa_trapdoor_top.json
 776ca6530e90ced033b18cefff81753f26b00db3 assets/zenkai/models/block/ajisa_wood.json
 540b8bc79183a34f18730263cb7f4b5c1e75cf72 assets/zenkai/models/block/ajisa_wood_horizontal.json
-eaf30610b9bdae5f7bd986695f36228114d8fab9 assets/zenkai/models/block/deepslate_terragem_ore.json
 89a9541efc3601d05807a6f5541112336221e0e8 assets/zenkai/models/block/energy_crystal_block.json
 6582e1631d0020175642b2a9a9629be7c852daff assets/zenkai/models/block/energy_crystal_ore.json
 270e890716d85116689785ac94f37d446978f7b3 assets/zenkai/models/block/htc_block.json
@@ -183,13 +179,10 @@ bb629c03cc8bf278a72d459edbf838e9d2ec2a86 assets/zenkai/models/block/structural_c
 30f18d7b001adf5eb1effae49458e08d4b6f15f2 assets/zenkai/models/block/structural_concrete_red.json
 768105384df8b674738be383df82b2effae00057 assets/zenkai/models/block/structural_concrete_white.json
 7013946bdd2dc12eac17a4de2493fd13e9254c14 assets/zenkai/models/block/structural_concrete_yellow.json
-8ccd69df1523033024a95c021ce504335c73d530 assets/zenkai/models/block/terragem_block.json
-81e37e51b8c8031b1aaf9efbf0ab7e8e5d462b70 assets/zenkai/models/block/terragem_ore.json
 b0337e6b1e7be531ed9f2cf5020bacdc16039325 assets/zenkai/models/item/ajisa_flower.json
 048cd5652ed65fd689a7afe5a08ca297b06485e6 assets/zenkai/models/item/ajisa_leaves.json
 02107abff1ec6291d1b10f32e4e20aae374a5701 assets/zenkai/models/item/ajisa_planks.json
 422be478ac42ce2a788a5f525c4149ea961ffd85 assets/zenkai/models/item/ajisa_sapling.json
-cbec59c6fcf5db17ba8793024a9180530f350700 assets/zenkai/models/item/deepslate_terragem_ore.json
 394d49f6d6e2962082a6bbe23a296f099fb98135 assets/zenkai/models/item/energy_crystal_block.json
 a1cb559bcbc7e566ae9cc296238497cf9224f95d assets/zenkai/models/item/energy_crystal_ore.json
 d5ace1175e61ae190da2a844de85d57d8f916615 assets/zenkai/models/item/htc_block.json
@@ -234,5 +227,3 @@ e7b4fc3327feaa46f9d8adfb2d385c7e53a201db assets/zenkai/models/item/structural_co
 ba955aee94b5d50f2f9511c84b053ca5ad702d2b assets/zenkai/models/item/structural_concrete_red.json
 4bbdde520fd107feea5bdc2ae2a59ae148d9eb2f assets/zenkai/models/item/structural_concrete_white.json
 a553db983d9792796ab1bd7a6e4380bf26dc7fa1 assets/zenkai/models/item/structural_concrete_yellow.json
-bff41c319edc03117b5a7bcc48884661c572b5a1 assets/zenkai/models/item/terragem_block.json
-ff3605b2bbe3b471b006a81a4695c583f05f82e2 assets/zenkai/models/item/terragem_ore.json

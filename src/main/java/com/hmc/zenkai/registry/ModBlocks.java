@@ -159,29 +159,6 @@ public class ModBlocks {
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
 
-    public static final DeferredBlock<Block> TERRAGEM_BLOCK = registerBlock("terragem_block",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(2f,3f)
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.METAL)
-                    .mapColor(MapColor.COLOR_BROWN)));
-
-    public static final DeferredBlock<Block> TERRAGEM_ORE = registerBlock("terragem_ore",
-            ()-> new DropExperienceBlock(UniformInt.of(2,4),
-                    BlockBehaviour.Properties.of()
-                            .strength(2f,3f)
-                            .requiresCorrectToolForDrops()
-                            .sound(SoundType.STONE)
-                            .mapColor(MapColor.STONE)));
-
-    public static final DeferredBlock<Block> DEEPSLATE_TERRAGEM_ORE = registerBlock("deepslate_terragem_ore",
-            ()-> new DropExperienceBlock(UniformInt.of(3,5),
-                    BlockBehaviour.Properties.of()
-                            .strength(3f,3f)
-                            .requiresCorrectToolForDrops()
-                            .sound(SoundType.DEEPSLATE)
-                            .mapColor(MapColor.DEEPSLATE)));
-
 
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BLACK = registerBlock("structural_concrete_black",
             ()-> new Block(BlockBehaviour.Properties.of()

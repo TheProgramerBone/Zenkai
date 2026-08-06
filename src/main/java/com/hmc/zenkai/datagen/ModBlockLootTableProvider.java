@@ -51,7 +51,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_5.get());
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_6.get());
         dropSelf(ModBlocks.NAMEK_DRAGON_BALL_7.get());
-        dropSelf(ModBlocks.TERRAGEM_BLOCK.get());
         dropSelf(ModBlocks.SCOUTER_BENCH.get());
         add(ModBlocks.ALL_DRAGON_BALLS.get(), noDrop());
         dropSelf(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
@@ -121,11 +120,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         // Hojas: sapling con la probabilidad de vainilla y palos con la suya.
         add(ModBlocks.AJISA_LEAVES.get(),
                 b -> createLeavesDrops(b, ModBlocks.AJISA_SAPLING.get(), NORMAL_LEAVES_SAPLING_CHANCES));
-
-        add(ModBlocks.TERRAGEM_ORE.get(),
-                block -> createMultipleOreDrops(ModBlocks.TERRAGEM_ORE.get(), ModItems.TERRAGEM.get(), 1, 4));
-        add(ModBlocks.DEEPSLATE_TERRAGEM_ORE.get(),
-                block -> createMultipleOreDrops(ModBlocks.DEEPSLATE_TERRAGEM_ORE.get(), ModItems.TERRAGEM.get(), 1, 4));
 
         addRandomDrops(ModBlocks.DRAGON_BALL_STONE.get(), List.of(
                 ModBlocks.DRAGON_BALL_1.get(),

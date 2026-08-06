@@ -16,7 +16,7 @@
     "hidden": true,
     "icon": {
       "count": 1,
-      "id": "zenkai:terragem"
+      "id": "minecraft:nether_star"
     },
     "title": {
       "translate": "advancements.zenkai.all_skills_max.title"

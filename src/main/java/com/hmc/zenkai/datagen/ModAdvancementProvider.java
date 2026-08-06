@@ -124,7 +124,7 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     .save(saver, id("all_skills"), efh);
 
             Advancement.Builder.advancement().parent(allSkills)
-                    .display(ModItems.TERRAGEM.get(), title("all_skills_max"), desc("all_skills_max"),
+                    .display(Items.NETHER_STAR, title("all_skills_max"), desc("all_skills_max"),
                             null, AdvancementType.CHALLENGE, true, true, true)
                     .rewards(AdvancementRewards.Builder.experience(100))
                     .addCriterion("skills", allSkills(true))

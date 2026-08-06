@@ -17,9 +17,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        blockWithItem(ModBlocks.TERRAGEM_BLOCK);
-        blockWithItem(ModBlocks.TERRAGEM_ORE);
-        blockWithItem(ModBlocks.DEEPSLATE_TERRAGEM_ORE);
         blockWithItem(ModBlocks.NAMEKIAN_DIRT);
         simpleBlockWithItem(ModBlocks.NAMEKIAN_DIRT_PATH.get(),
                 models().withExistingParent("namekian_dirt_path", mcLoc("block/dirt_path"))

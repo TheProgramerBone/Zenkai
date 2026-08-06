@@ -28,9 +28,6 @@ public class ModBlockTagProvider extends BlockTagsProvider {
 
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                 // Bloques base y de construcción
-                ModBlocks.TERRAGEM_BLOCK.get(),
-                ModBlocks.TERRAGEM_ORE.get(),
-                ModBlocks.DEEPSLATE_TERRAGEM_ORE.get(),
                 ModBlocks.ROCKY_BLOCK.get(),
                 ModBlocks.NAMEKIAN_STONE.get(),
                 ModBlocks.NAMEKIAN_COBBLESTONE.get(),
@@ -105,9 +102,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         );
 
         tag(BlockTags.NEEDS_IRON_TOOL).add(
-                ModBlocks.TERRAGEM_BLOCK.get(),
-                ModBlocks.TERRAGEM_ORE.get(),
-                ModBlocks.DEEPSLATE_TERRAGEM_ORE.get(),
+
                 ModBlocks.NAMEKIAN_GOLD_ORE.get(),
                 ModBlocks.NAMEKIAN_REDSTONE_ORE.get(),
                 ModBlocks.NAMEKIAN_DIAMOND_ORE.get(),

@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-01T15:30:58.2854474	Registries
+// 1.21.1	2026-08-05T22:51:59.9806827	Registries
 3b81c73c058ea99ddd8e13ca2bbf973d03040d66 data/zenkai/neoforge/biome_modifier/add_terragem_ore.json
 b880aa7158b738a1c85382099ada61df57896392 data/zenkai/worldgen/biome/hfil_badlands.json
 4f56ef89eadb86f8aa32e046fd17c3ed12b89486 data/zenkai/worldgen/biome/hfil_dunes.json
@@ -33,7 +33,6 @@ f6150d0174f5752a547fed46223d302ab95ebdf9 data/zenkai/worldgen/configured_feature
 aab8f4bd59e6d3b68e110b5af5189a432d62d91c data/zenkai/worldgen/configured_feature/namek_redstone.json
 e182e09eca906ecb0dd5e40ea80abea748dd67e2 data/zenkai/worldgen/configured_feature/otherworld_clouds.json
 c9e9453dca8a3004a018215e848bc22ef6dc2b23 data/zenkai/worldgen/configured_feature/sacred_stone_ore.json
-3b4dcf94c46edd29f48828c4b8b84953de79c0a7 data/zenkai/worldgen/configured_feature/terragem_ore.json
 8db16eb294952ddaf3708b3978f775db3ce7b569 data/zenkai/worldgen/placed_feature/ajisa_flowers.json
 90db674c04c37326c94601b659a6ec4e35f81495 data/zenkai/worldgen/placed_feature/ajisa_forest.json
 889630543eed600ca38289748176d20054882728 data/zenkai/worldgen/placed_feature/ajisa_hills.json

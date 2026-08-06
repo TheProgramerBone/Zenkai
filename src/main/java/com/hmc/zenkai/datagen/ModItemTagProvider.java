@@ -30,25 +30,6 @@ public class ModItemTagProvider extends ItemTagsProvider {
         // 1. HERRAMIENTAS Y ARMADURAS
         // ==========================================
 
-        tag(ItemTags.SWORDS).add(ModItems.TERRAGEM_SWORD.get());
-        tag(ItemTags.PICKAXES).add(ModItems.TERRAGEM_PICKAXE.get());
-        tag(ItemTags.AXES).add(ModItems.TERRAGEM_AXE.get());
-        tag(ItemTags.SHOVELS).add(ModItems.TERRAGEM_SHOVEL.get());
-        tag(ItemTags.HOES).add(ModItems.TERRAGEM_HOE.get());
-
-        tag(ItemTags.TRIMMABLE_ARMOR).add(
-                ModItems.TERRAGEM_HELMET.get(),
-                ModItems.TERRAGEM_CHESTPLATE.get(),
-                ModItems.TERRAGEM_LEGGINGS.get(),
-                ModItems.TERRAGEM_BOOTS.get()
-        );
-
-        tag(ItemTags.ARMOR_ENCHANTABLE).add(
-                ModItems.TERRAGEM_HELMET.get(),
-                ModItems.TERRAGEM_CHESTPLATE.get(),
-                ModItems.TERRAGEM_LEGGINGS.get(),
-                ModItems.TERRAGEM_BOOTS.get()
-        );
 
         // ==========================================
         // 2. ÍTEMS ESPECIALES Y COSMÉTICOS

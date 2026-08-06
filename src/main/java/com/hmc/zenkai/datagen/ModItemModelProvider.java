@@ -25,12 +25,9 @@ public class ModItemModelProvider extends ItemModelProvider {
     @Override
     protected void registerModels() {
         basicItem(ModItems.SENZU_BEAN.get());
-        basicItem(ModItems.TERRAGEM.get());
-        basicItem(ModItems.TERRAGEM_DUST.get());
         basicItem(ModItems.BASIC_CIRCUIT.get());
         basicItem(ModItems.ADVANCED_CIRCUIT.get());
         basicItem(ModItems.ELITE_CIRCUIT.get());
-        basicItem(ModItems.TERRAGEM_TEMPLATE.get());
         basicItem(ModItems.SPACE_POD_ITEM.get());
         basicItem(ModItems.KINTOUN_ITEM.get());
         basicItem(ModItems.SHADOW_KINTOUN_ITEM.get());
@@ -56,19 +53,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("ajisa_fence_gate", modLoc("block/ajisa_fence_gate"));
         withExistingParent("ajisa_trapdoor", modLoc("block/ajisa_trapdoor_bottom"));
         withExistingParent("ajisa_pressure_plate", modLoc("block/ajisa_pressure_plate"));
-
-        handheldItem(ModItems.TERRAGEM_SWORD);
-        handheldItem(ModItems.TERRAGEM_PICKAXE);
-        handheldItem(ModItems.TERRAGEM_AXE);
-        handheldItem(ModItems.TERRAGEM_SHOVEL);
-        handheldItem(ModItems.TERRAGEM_HOE);
-        handheldItem(ModItems.TERRAGEM_HAMMER);
-
-        trimmedArmorItem(ModItems.TERRAGEM_HELMET);
-        trimmedArmorItem(ModItems.TERRAGEM_CHESTPLATE);
-        trimmedArmorItem(ModItems.TERRAGEM_LEGGINGS);
-        trimmedArmorItem(ModItems.TERRAGEM_BOOTS);
-
+        
         withExistingParent(ModItems.NAMEKIAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.YEMMA_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));

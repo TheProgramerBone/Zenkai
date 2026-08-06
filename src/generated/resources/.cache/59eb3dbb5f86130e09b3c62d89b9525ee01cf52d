@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-05T19:53:49.7676041	Loot Tables
+// 1.21.1	2026-08-05T22:51:59.9706848	Loot Tables
 ce23c9d992d0b026612247c98fab09e9a4c77d13 data/zenkai/loot_table/blocks/ajisa_button.json
 1c902309ab65853161114f52ae7b2f3a4f2a0bde data/zenkai/loot_table/blocks/ajisa_door.json
 71d1a278b29aa52b81445b0040480b6679e0148b data/zenkai/loot_table/blocks/ajisa_fence.json
@@ -14,7 +14,6 @@ f6ad36a09d04331236b03d5873a91fbea5fb67d6 data/zenkai/loot_table/blocks/ajisa_lea
 754239bfddfc6f2e0041e1923eeb149e58dbc86a data/zenkai/loot_table/blocks/ajisa_trapdoor.json
 c9e63e1b6863ce9111db981ecd8ce33738af8cd5 data/zenkai/loot_table/blocks/ajisa_wood.json
 4fa0c2882e3f65831249b582ce656ad3bb10ff40 data/zenkai/loot_table/blocks/all_dragon_balls.json
-ed313aafc37c5dd3314e6dece41ad5cc06d11dba data/zenkai/loot_table/blocks/deepslate_terragem_ore.json
 2bf7afe0c9eb29d1b5475818357b20f1f2017019 data/zenkai/loot_table/blocks/dragon_ball_1.json
 14bbcb47a65500b12b9624011db20ac965090cb2 data/zenkai/loot_table/blocks/dragon_ball_2.json
 8c89899a586b4e9a7965cdb700b020edd5797c88 data/zenkai/loot_table/blocks/dragon_ball_3.json
@@ -85,5 +84,3 @@ e7786d83f87dee89e1a9c29fefe9618e45d15dca data/zenkai/loot_table/blocks/structura
 9929263930d1988df66eea755f5b2e2735fc31dc data/zenkai/loot_table/blocks/structural_concrete_red.json
 f637fba9c785a2f2950a527c7e6e4d085950cacb data/zenkai/loot_table/blocks/structural_concrete_white.json
 56de73ea10a0f0942ae820d16f88ae4cc3aacf1e data/zenkai/loot_table/blocks/structural_concrete_yellow.json
-16a15cf28b5f8371bbca8b4c125832294354e31e data/zenkai/loot_table/blocks/terragem_block.json
-e5145007cadd438b284b0aa1d6045e5f714d2451 data/zenkai/loot_table/blocks/terragem_ore.json
