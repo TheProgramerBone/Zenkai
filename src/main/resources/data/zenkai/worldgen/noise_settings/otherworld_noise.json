@@ -1,11 +1,11 @@
 {
-  "sea_level": 63,
+  "sea_level": -64,
+  "default_fluid": { "Name": "minecraft:air" },
   "disable_mob_generation": true,
   "aquifers_enabled": false,
   "ore_veins_enabled": false,
   "legacy_random_source": false,
   "default_block": { "Name": "minecraft:stone" },
-  "default_fluid": { "Name": "minecraft:water", "Properties": { "level": "0" } },
   "spawn_target": [],
   "noise": { "min_y": -64, "height": 256, "size_horizontal": 1, "size_vertical": 1 },
   "noise_router": {

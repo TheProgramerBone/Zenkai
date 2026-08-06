@@ -13,8 +13,8 @@ import net.neoforged.neoforge.common.world.BiomeModifiers;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 public class ModBiomeModifiers {
-    // CF -> PF -> BM
     public static final ResourceKey<BiomeModifier> ADD_KATCHIN_ORE = registerKey("add_katchin_ore");
+    public static final ResourceKey<BiomeModifier> ADD_KATCHIN_ORE_ROCKY = registerKey("add_katchin_ore_rocky");
 
     public static void bootstrap(BootstrapContext<BiomeModifier> context) {
         var placedFeatures = context.lookup(Registries.PLACED_FEATURE);
@@ -23,6 +23,11 @@ public class ModBiomeModifiers {
         context.register(ADD_KATCHIN_ORE, new BiomeModifiers.AddFeaturesBiomeModifier(
                 biomes.getOrThrow(BiomeTags.IS_OVERWORLD),
                 HolderSet.direct(placedFeatures.getOrThrow(ModPlacedFeatures.KATCHIN_ORE_OVERWORLD)),
+                GenerationStep.Decoration.UNDERGROUND_ORES));
+
+        context.register(ADD_KATCHIN_ORE_ROCKY, new BiomeModifiers.AddFeaturesBiomeModifier(
+                HolderSet.direct(biomes.getOrThrow(ModBiomes.ROCKY_WASTELAND)),
+                HolderSet.direct(placedFeatures.getOrThrow(ModPlacedFeatures.KATCHIN_ORE_ROCKY)),
                 GenerationStep.Decoration.UNDERGROUND_ORES));
     }
 

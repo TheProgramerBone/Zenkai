@@ -29,7 +29,9 @@ public class ModConfiguredFeatures {
     // CF -> PF -> BM
 
     public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_KEY     = registerKey("katchin_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_EXPOSED_KEY = registerKey("katchin_ore_exposed");
     public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_OW_KEY  = registerKey("katchin_ore_otherworld");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_SKY_KEY = registerKey("katchin_ore_sky");
     public static final ResourceKey<ConfiguredFeature<?, ?>> OTHERWORLD_CLOUDS_KEY = registerKey("otherworld_clouds");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL            = registerKey("namek_coal");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL_BURIED     = registerKey("namek_coal_buried");
@@ -88,13 +90,24 @@ public class ModConfiguredFeatures {
                 OreConfiguration.target(stoneReplaceables, ModBlocks.KATCHIN_ORE.get().defaultBlockState()),
                 OreConfiguration.target(deepslateReplaceables, ModBlocks.DEEPSLATE_KATCHIN_ORE.get().defaultBlockState()));
 
-        register(context, KATCHIN_ORE_KEY, Feature.ORE, new OreConfiguration(katchinOres, 3, 0.5F));
+        register(context, KATCHIN_ORE_KEY, Feature.ORE, new OreConfiguration(katchinOres, 6, 0.5F));
+        // Variante del rocky wasteland: veta más grande y SIN descarte por exposición al
+        // aire. Es la diferencia de verdad entre el bioma y el resto del mundo — aquí el
+        // katchin se ve en la pared de la cueva en vez de haber que picarlo a ciegas.
+        register(context, KATCHIN_ORE_EXPOSED_KEY, Feature.ORE, new OreConfiguration(katchinOres, 9, 0.0F));
 
         // Otherworld: el bloque por defecto de esa dimensión es stone entero en el rango, así
         // que solo aplica la variante de piedra. Vetas de 5 y sin descarte: es la fuente real.
         register(context, KATCHIN_ORE_OW_KEY, Feature.ORE, new OreConfiguration(
                 List.of(OreConfiguration.target(stoneReplaceables,
                         ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 5, 0.0F));
+
+        // Islas flotantes: veta pequeña. Comparte target con HFIL pero NO su tamaño: en una
+        // plataforma de pocos bloques de grosor una veta de 9 no cabe, asoma por las dos caras
+        // y la isla queda con costra de mineral.
+        register(context, KATCHIN_ORE_SKY_KEY, Feature.ORE, new OreConfiguration(
+                List.of(OreConfiguration.target(stoneReplaceables,
+                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 4, 0.0F));
 
         register(context, AJISA_TREE, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
                 BlockStateProvider.simple(ModBlocks.AJISA_LOG.get()),

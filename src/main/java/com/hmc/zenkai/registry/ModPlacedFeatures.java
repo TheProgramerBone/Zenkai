@@ -19,8 +19,10 @@ import java.util.List;
 
 public class ModPlacedFeatures {
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_OVERWORLD  = registerKey("katchin_ore_overworld");
+    public static final ResourceKey<PlacedFeature> KATCHIN_ORE_ROCKY = registerKey("katchin_ore_rocky");
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_HFIL       = registerKey("katchin_ore_hfil");
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_SKY        = registerKey("katchin_ore_sky");
+
 
     /** Matojos secos del rocky_wasteland. Antes era un JSON suelto; vive aquí porque el
      *  bootstrap del bioma lo resuelve con getOrThrow y solo ve el registro de datagen. */
@@ -64,18 +66,28 @@ public class ModPlacedFeatures {
     public static void bootstrap(BootstrapContext<PlacedFeature> context) {
         var configuredFeatures = context.lookup(Registries.CONFIGURED_FEATURE);
 
-        // Overworld: una veta cada 24 chunks de media, solo por debajo de y=-32, donde ya
-        // no hay piedra normal. Es un goteo, no una fuente.
+        // Overworld general: calibrado contra el diamante. Anclajes CLAVADOS a los suyos
+        // (aboveBottom -80/80): con un fondo de -64 eso son y=-144..16, así que la mitad baja
+        // del triángulo cae fuera del mundo y se pierde, y el pico efectivo queda en y≈-59.
+        // Copiar los anclajes y no un rango "equivalente" es lo que iguala la FORMA de la
+        // distribución, no solo el total.
         register(context, KATCHIN_ORE_OVERWORLD, configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_KEY),
-                ModOrePlacement.rareOrePlacement(24, HeightRangePlacement.triangle(
-                        VerticalAnchor.absolute(-64), VerticalAnchor.absolute(-32))));
+                ModOrePlacement.commonOrePlacement(14, HeightRangePlacement.triangle(
+                        VerticalAnchor.aboveBottom(-80), VerticalAnchor.aboveBottom(80))));
+
+        // Rocky wasteland: SE SUMA a la del overworld, no la sustituye — el bioma está en
+        // is_overworld, así que recibe las dos. El 6 está puesto para que el total aterrice
+        // en la zona del oro, no para ser el oro por sí solo.
+        register(context, KATCHIN_ORE_ROCKY, configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_EXPOSED_KEY),
+                ModOrePlacement.commonOrePlacement(6, HeightRangePlacement.triangle(
+                        VerticalAnchor.aboveBottom(-64), VerticalAnchor.absolute(32))));
 
         // HFIL: el subsuelo del Otherworld. Aquí sí es abundante — es de donde se saca.
         register(context, KATCHIN_ORE_HFIL, configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_OW_KEY),
-                ModOrePlacement.commonOrePlacement(10, HeightRangePlacement.uniform(
+                ModOrePlacement.commonOrePlacement(15, HeightRangePlacement.uniform(
                         VerticalAnchor.absolute(-60), VerticalAnchor.absolute(120))));
 
-        // Islas flotantes: menos, porque son plataformas finas y una veta de 5 se sale.
+        // Islas flotantes: pocas tiradas y veta propia más pequeña (KATCHIN_ORE_SKY_KEY).
         register(context, KATCHIN_ORE_SKY, configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_OW_KEY),
                 ModOrePlacement.commonOrePlacement(3, HeightRangePlacement.uniform(
                         VerticalAnchor.absolute(130), VerticalAnchor.absolute(190))));
