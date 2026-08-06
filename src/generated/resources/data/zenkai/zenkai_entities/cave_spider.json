@@ -1,0 +1,12 @@
+{
+  "alignment": -40,
+  "archetype": "speedster",
+  "entity": "minecraft:cave_spider",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 300,
+  "rewards": {
+    "tp": "auto"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "alignment": 70,
+  "archetype": "tank",
+  "entity": "minecraft:iron_golem",
+  "moveset": {
+    "melee": true
+  },
+  "overrides": {
+    "attributes": {
+      "strength": "+25%"
+    }
+  },
+  "power_level": 715,
+  "rewards": {
+    "tp": "auto"
+  }
+}

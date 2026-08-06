@@ -186,10 +186,6 @@ public final class CommonConfig {
             BUILDER.comment("Sense Ki: range in blocks")
                     .defineInRange("sense_ki.range", 64, 8, 256);
 
-    private static final ModConfigSpec.DoubleValue SENSE_KI_SIMILAR_RAW =
-            BUILDER.comment("Sense Ki: 'similar or stronger' = fraction of your PL")
-                    .defineInRange("sense_ki.similar_threshold", 0.8D, 0.0D, 10.0D);
-
     private static final ModConfigSpec.DoubleValue VANILLA_PL_FACTOR_RAW =
             BUILDER.comment("PL of vanilla mobs / raceless players = max_health * factor")
                     .defineInRange("power_level.vanilla_factor", 1.0D, 0.0D, 1000.0D);
@@ -418,7 +414,6 @@ public final class CommonConfig {
     private static volatile double MIN_DAMAGE_PERCENT = 0.05D;
     private static volatile int    TECHNIQUE_MAX_SLOTS = 12;
     private static volatile int    SENSE_KI_RANGE = 64;
-    private static volatile double SENSE_KI_SIMILAR = 0.8D;
     private static volatile double VANILLA_PL_FACTOR = 1.0D;
     private static volatile int    SCOUTER_RANGE = 64;
     private static volatile double ATTRIBUTE_BASE_COST = 5.0D;
@@ -521,7 +516,6 @@ public final class CommonConfig {
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
         SENSE_KI_RANGE      = SENSE_KI_RANGE_RAW.get();
-        SENSE_KI_SIMILAR    = SENSE_KI_SIMILAR_RAW.get();
         VANILLA_PL_FACTOR   = VANILLA_PL_FACTOR_RAW.get();
         SCOUTER_RANGE       = SCOUTER_RANGE_RAW.get();
 
@@ -621,7 +615,6 @@ public final class CommonConfig {
     public static double minDamagePercent()        { return MIN_DAMAGE_PERCENT; }
     public static int techniqueMaxSlots()          { return TECHNIQUE_MAX_SLOTS; }
     public static int senseKiRange()               { return SENSE_KI_RANGE; }
-    public static double senseKiSimilarThreshold() { return SENSE_KI_SIMILAR; }
     public static double vanillaPowerLevelFactor() { return VANILLA_PL_FACTOR; }
     public static int scouterRange()               { return SCOUTER_RANGE; }
 

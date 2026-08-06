@@ -1,0 +1,12 @@
+{
+  "alignment": -55,
+  "archetype": "brawler",
+  "entity": "minecraft:husk",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 240,
+  "rewards": {
+    "tp": "auto"
+  }
+}

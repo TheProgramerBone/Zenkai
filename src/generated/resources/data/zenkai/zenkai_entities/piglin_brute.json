@@ -1,0 +1,17 @@
+{
+  "alignment": -55,
+  "archetype": "brawler",
+  "entity": "minecraft:piglin_brute",
+  "moveset": {
+    "melee": true
+  },
+  "overrides": {
+    "attributes": {
+      "strength": "+15%"
+    }
+  },
+  "power_level": 445,
+  "rewards": {
+    "tp": "auto"
+  }
+}

@@ -90,12 +90,25 @@ public final class SkillEffects {
     /** Multiplicador del rango de sentido. 1.0 sin la habilidad. */
     public static double senseRangeFactor(Player p) { return curve(p, KI_SENSE, "range_mult", 1.0); }
 
-    // Lo que se PERCIBE por nivel. Son umbrales de estructura, no números a balancear,
-    // así que viven aquí y no como listas de 0/1 en el datapack (fáciles de descuadrar).
-    public static boolean senseShowsHealth(Player p)    { return level(p, KI_SENSE) >= 2; }
-    public static boolean senseShowsAlignment(Player p) { return level(p, KI_SENSE) >= 3; }
-    public static boolean senseShowsKi(Player p)        { return level(p, KI_SENSE) >= 4; }
-    public static boolean senseShowsStamina(Player p)   { return level(p, KI_SENSE) >= 5; }
+    /** La vida se lee en el llenado de la llama desde el nivel 1; a partir del 2 es continua
+     *  en vez de por tramos. Nunca hay barra: el ki sense no dibuja rectángulos. */
+    public static boolean sensePreciseHealth(Player p) { return level(p, KI_SENSE) >= 2; }
+
+    /** Siluetas a través de paredes. */
+    public static boolean senseShowsSilhouettes(Player p) { return level(p, KI_SENSE) >= 3; }
+
+    /** Cuántas siluetas como mucho a la vez. 0 = ninguna. */
+    public static int senseSilhouetteCap(Player p) {
+        return (int) Math.round(curve(p, KI_SENSE, "silhouette_cap", 0.0));
+    }
+
+    /** Radio de las siluetas como FRACCIÓN del rango del sentido. */
+    public static double senseSilhouetteRangeFrac(Player p) {
+        return curve(p, KI_SENSE, "silhouette_range_frac", 0.0);
+    }
+
+    /** Avisos no visuales. */
+    public static boolean senseShowsWarnings(Player p) { return level(p, KI_SENSE) >= 5; }
 
     // ── Kaioken ──────────────────────────────────────────────────────────────
     public static int kaiokenLevel(Player p) { return level(p, KAIOKEN); }

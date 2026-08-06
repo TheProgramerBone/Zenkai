@@ -1,0 +1,12 @@
+{
+  "alignment": -50,
+  "archetype": "balanced",
+  "entity": "minecraft:guardian",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 595,
+  "rewards": {
+    "tp": "auto"
+  }
+}

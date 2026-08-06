@@ -1,0 +1,12 @@
+{
+  "alignment": -45,
+  "archetype": "speedster",
+  "entity": "minecraft:phantom",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 280,
+  "rewards": {
+    "tp": "auto"
+  }
+}

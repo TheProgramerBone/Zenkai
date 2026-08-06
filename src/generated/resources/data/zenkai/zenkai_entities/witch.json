@@ -1,0 +1,12 @@
+{
+  "alignment": -60,
+  "archetype": "balanced",
+  "entity": "minecraft:witch",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 595,
+  "rewards": {
+    "tp": "auto"
+  }
+}

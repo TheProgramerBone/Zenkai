@@ -8,10 +8,8 @@ import java.util.EnumMap;
 /**
  * Power Level = SUMA PONDERADA LINEAL de los stats de combate (predecible; el daño NO depende del PL).
  * MIND queda fuera (es para habilidades). Una sola fórmula para jugador y entidades.
- *
  * Los pesos por ATRIBUTO fijan la escala del PL (tuneables en Fase 4 / config):
  *   PL = wSTR·melee + wCON·con + wDEX·defensa + wWIL·kiPower + wSPI·kiPool
- *
  * El back-solver invierte esta misma fórmula: dado un PL objetivo + la "forma" (shape) de un
  * arquetipo, reparte los atributos para que el PL calculado dé justo ese objetivo.
  */

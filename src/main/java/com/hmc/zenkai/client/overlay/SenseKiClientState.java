@@ -129,16 +129,6 @@ public final class SenseKiClientState {
         };
     }
 
-    private static boolean isStrong(SenseKiDataPacket.Entry e, Minecraft mc) {
-        assert mc.player != null;
-        PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
-        long myPl = att.isRaceChosen()
-                ? att.getPowerLevel()
-                : Math.round(mc.player.getMaxHealth());
-        double threshold = CommonConfig.senseKiSimilarThreshold();
-        return e.powerLevel() >= Math.round(myPl * threshold);
-    }
-
     /** ¿Lleva un scouter que FUNCIONA? Es lo que decide de quién es la tecla F4.
      *  Uno roto NO cuenta: un aparato muerto no debe bloquearte el sentido. */
     public static boolean isScouterUsable(Minecraft mc) {

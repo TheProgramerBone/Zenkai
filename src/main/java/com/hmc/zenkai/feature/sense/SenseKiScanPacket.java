@@ -124,8 +124,16 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
                 pl, isPlayer);
     }
 
-    /** Las entidades no tienen alineamiento propio: los hostiles se sienten malvados. */
+    /**
+     * Alineamiento de una entidad no jugadora, -100..+100.
+     * Lo manda el datapack (zenkai_entities). El heurístico de hostilidad es solo el respaldo
+     * para lo que no tenga ficha: daba exactamente dos colores para el bestiario, y la
+     * paleta tiene doscientas posiciones.
+     */
     private static int entityAlignment(LivingEntity le) {
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(le.getType());
+        EntityStatDef def = EntityStatsManager.get(id);
+        if (def != null && def.hasAlignment()) return def.alignment();
         return le instanceof net.minecraft.world.entity.monster.Enemy ? -60 : 0;
     }
 }

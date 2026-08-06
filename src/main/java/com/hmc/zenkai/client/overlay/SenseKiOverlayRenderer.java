@@ -2,8 +2,8 @@ package com.hmc.zenkai.client.overlay;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.AlignmentPalette;
-import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.combat.SenseKiMode;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.sense.SenseKiDataPacket;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -12,6 +12,8 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -22,49 +24,49 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 
 /**
- * Overlay flotante del SENTIR EL KI. Billboards sobre la cabeza, visibles A TRAVÉS de paredes.
- * Lo que se ve depende del nivel de la habilidad Ki Sense (percepción CUALITATIVA; la cifra
- * exacta de PL es cosa del scouter):
- *   nv1  marcador de fuerza relativa (rojo más fuerte / amarillo similar / verde más débil)
- *   nv2  + barra de vida
- *   nv3  + marcador de alineamiento (gradiente de AlignmentPalette, el mismo de StatsScreen)
- *   nv4  + barra de ki
- *   nv5  + barra de estamina
- * El ki sense NUNCA muestra un número: la cifra exacta de PL es cosa del scouter.
- * Render: RenderType.textBackgroundSeeThrough() + bufferSource del juego (el camino de los
- * fondos de nametag). Reglas aprendidas EN JUEGO de este RenderType:
- *  - Cullea: el winding de quad(...) es el frontal correcto para nuestra transformación.
- *  - Las capas NO deben superponerse: quads coplanares en el mismo plano hacían z-fighting
- *    (titileo). Por eso el layout es SIN solapamiento: relleno hasta pct, fondo desde pct,
- *    y el borde en 4 tiras alrededor.
- * OJO con el eje Y: tras el scale de nametag (-0.025 en Y) el +Y va HACIA ABAJO. Por eso los
- * marcadores viven en Y negativa y las barras van sumando hacia abajo.
+ * Overlay del SENTIR EL KI: una llama de ki sobre cada entidad percibida, visible a través de
+ * paredes. Percepción CUALITATIVA — aquí no se dibuja ni un número; la cifra exacta de PL es
+ * lenguaje del scouter.
+ *
+ * Tres canales, y ni uno más:
+ *  - POSICIÓN: dónde arde la llama.
+ *  - COLOR:    fuerza relativa a la tuya (verde más débil / amarillo parejo / rojo más fuerte).
+ *  - LLENADO:  vida restante. La llama se apaga de arriba abajo; lo perdido queda como brasa.
+ *
+ * La vida NO es una barra. Una barra es un instrumento de medida y este sentido no mide: ver a
+ * alguien con la llama medio consumida dice "está malherido" sin decir 43/120.
+ *
+ * TAMAÑO FIJO EN PANTALLA: la escala se compensa con la distancia. Una llama que encoge con la
+ * distancia se vuelve ilegible justo cuando más falta hace, que es cuando la cosa está lejos.
+ *
+ * OJO con el eje Y: tras el scale de nametag (-0.025 en Y) el +Y va HACIA ABAJO. Por eso el
+ * quad va de -FLAME_H (punta) a 0 (base).
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class SenseKiOverlayRenderer {
     private SenseKiOverlayRenderer() {}
 
-    // Diales (unidades tras el scale de nametag 0.025: 36 px ≈ 0.9 bloques de ancho).
-    private static final float BAR_W    = 36f;
-    private static final float BAR_H    = 4f;
-    private static final float BAR_GAP  = 2f;   // separación vertical entre barras
-    private static final float MARK     = 6f;   // lado del marcador cuadrado
-    private static final float Y_OFFSET = 0.75f;
+    private static final ResourceLocation FLAME_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/sense/ki_flame.png");
 
-    private static final int C_BG   = 0xB0101010;
-    private static final int C_EDGE = 0xFF303030;
+    /** Fotogramas de la tira vertical y velocidad del bucle. */
+    private static final int FRAMES = 8;
+    private static final float FRAME_FPS = 8f;
+
+    // Unidades tras el scale de nametag (0.025): 40 ≈ 1 bloque.
+    private static final float FLAME_W = 34f;
+    private static final float FLAME_H = 44f;
+    private static final float Y_OFFSET = 0.55f;
+
+    /** Distancia a la que la llama tiene su tamaño nominal, y topes de compensación. */
+    private static final float REF_DIST = 10f;
+    private static final float SCALE_MIN = 0.55f;
+    private static final float SCALE_MAX = 5.0f;
+
+    /** Brasa: lo que ya no arde. Se ve, pero no compite con la parte viva. */
+    private static final int C_EMBER = 0x55282828;
+
     private static final int FULL_BRIGHT = 0xF000F0; // LightTexture.FULL_BRIGHT
-
-    // Fuerza relativa (nv1).
-    private static final int C_STRONGER = 0xFFFF4040;
-    private static final int C_SIMILAR  = 0xFFFFD040;
-    private static final int C_WEAKER   = 0xFF50E050;
-
-    // El alineamiento usa AlignmentPalette (la misma que la barra de StatsScreen).
-
-    // Pools (nv4, nv5).
-    private static final int C_KI      = 0xFF40A0FF;
-    private static final int C_STAMINA = 0xFFB0F040;
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent e) {
@@ -82,20 +84,30 @@ public final class SenseKiOverlayRenderer {
         Vec3 camPos = cam.getPosition();
         PoseStack pose = e.getPoseStack();
         float pt = e.getPartialTick().getGameTimeDeltaPartialTick(true);
+        float time = (mc.level.getGameTime() + pt);
+
+        long myPl = ownPowerLevel(mc);
+        boolean precise = SkillEffects.sensePreciseHealth(mc.player);
+
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
 
-        // PASADA 1: los quads de TODAS las entidades. Sin texto de por medio, el buffer
-        // no se cierra a mitad y basta con pedirlo una vez.
-        VertexConsumer vc = buffers.getBuffer(RenderType.textBackgroundSeeThrough());
+        // ⚠ VERIFICAR 1.21.1: textSeeThrough(tex) es el RenderType texturizado SIN test de
+        // profundidad (es el que usan los nametags). Nos da "a través de paredes" y color por
+        // vértice sin inventar un RenderType propio, que dejaría de dibujarse con Iris/Oculus.
+        RenderType rt = RenderType.textSeeThrough(FLAME_TEX);
+        VertexConsumer vc = buffers.getBuffer(rt);
+
         for (SenseKiDataPacket.Entry entry : SenseKiClientState.sensed().values()) {
             LivingEntity le = resolve(entry, mc);
             if (le == null) continue;
+            // A partir de 2B, las entidades con silueta se saltan la llama aquí.
+
             pose.pushPose();
-            billboard(pose, le, cam, camPos, pt);
-            drawQuads(pose.last().pose(), vc, entry, mc, lvl);
+            float dist = billboard(pose, le, cam, camPos, pt);
+            drawFlame(pose.last().pose(), vc, entry, myPl, precise, time, dist);
             pose.popPose();
         }
-        buffers.endBatch(RenderType.textBackgroundSeeThrough());
+        buffers.endBatch(rt);
     }
 
     /** Entidad viva y visible detrás de una entrada, o null si no toca pintarla. */
@@ -107,115 +119,125 @@ public final class SenseKiOverlayRenderer {
         return le;
     }
 
-    /** Coloca el PoseStack sobre la cabeza de la entidad, mirando a la cámara. */
-    private static void billboard(PoseStack pose, LivingEntity le, Camera cam, Vec3 camPos, float pt) {
+    /**
+     * Coloca el PoseStack sobre la cabeza, mirando a la cámara, con la escala compensada por
+     * distancia para que la llama ocupe siempre lo mismo en pantalla.
+     * @return distancia a la cámara, en bloques.
+     */
+    private static float billboard(PoseStack pose, LivingEntity le, Camera cam, Vec3 camPos, float pt) {
         Vec3 p = le.getPosition(pt).add(0, le.getBbHeight() + Y_OFFSET, 0);
-        pose.translate(p.x - camPos.x, p.y - camPos.y, p.z - camPos.z);
+        double dx = p.x - camPos.x, dy = p.y - camPos.y, dz = p.z - camPos.z;
+        float dist = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+        pose.translate(dx, dy, dz);
         pose.mulPose(cam.rotation());
-        pose.scale(-0.025f, -0.025f, 0.025f);
-    }
 
-    /** Marcadores y barras. Solo quads: el texto va en la segunda pasada. */
-    private static void drawQuads(Matrix4f m, VertexConsumer vc,
-                                  SenseKiDataPacket.Entry en, Minecraft mc, int lvl) {
-        boolean showAlign = lvl >= 3;
-        float markY0 = -(MARK + 2f), markY1 = -2f;
-        if (showAlign) {
-            drawMark(m, vc, -(MARK + 1f), markY0, -1f, markY1, strengthColor(en, mc));
-            drawMark(m, vc, 1f, markY0, MARK + 1f, markY1,
-                    AlignmentPalette.forAlignment(en.alignment()));
-        } else {
-            drawMark(m, vc, -MARK / 2f, markY0, MARK / 2f, markY1, strengthColor(en, mc));
-        }
-
-        float y = 0f;
-        if (lvl >= 2) {
-            drawBar(m, vc, y, en.body(), en.bodyMax(), 0);
-            y += BAR_H + BAR_GAP;
-        }
-        if (lvl >= 4 && en.isPlayer()) {
-            drawBar(m, vc, y, en.energy(), en.energyMax(), C_KI);
-            y += BAR_H + BAR_GAP;
-        }
-        if (lvl >= 5 && en.isPlayer()) {
-            drawBar(m, vc, y, en.stamina(), en.staminaMax(), C_STAMINA);
-        }
-    }
-
-    /** Rojo si es más fuerte que tú, amarillo si va parejo, verde si es más débil. */
-    private static int strengthColor(SenseKiDataPacket.Entry en, Minecraft mc) {
-        if (mc.player == null) return C_SIMILAR;
-        var att = com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(mc.player);
-        long myPl = att.isRaceChosen()
-                ? att.getPowerLevel()
-                : Math.round(mc.player.getMaxHealth());
-        if (myPl <= 0) return C_SIMILAR;
-
-        double t = CommonConfig.senseKiSimilarThreshold();
-        if (t <= 0.0 || t >= 1.0) t = 0.8; // banda inválida en config: valor sensato
-
-        // La banda de "similar" es simétrica: [myPl*t, myPl/t].
-        if (en.powerLevel() < myPl * t) return C_WEAKER;
-        if (en.powerLevel() > myPl / t) return C_STRONGER;
-        return C_SIMILAR;
-    }
-
-    /** Marcador cuadrado con borde (mismo criterio anti z-fighting que las barras). */
-    private static void drawMark(Matrix4f m, VertexConsumer vc,
-                                 float x0, float y0, float x1, float y1, int color) {
-        quad(vc, m, x0, y0, x1, y1, color);
-        quad(vc, m, x0 - 1, y0 - 1, x1 + 1, y0,     C_EDGE); // arriba
-        quad(vc, m, x0 - 1, y1,     x1 + 1, y1 + 1, C_EDGE); // abajo
-        quad(vc, m, x0 - 1, y0,     x0,     y1,     C_EDGE); // izquierda
-        quad(vc, m, x1,     y0,     x1 + 1, y1,     C_EDGE); // derecha
+        float k = Mth.clamp(dist / REF_DIST, SCALE_MIN, SCALE_MAX);
+        pose.scale(-0.025f * k, -0.025f * k, 0.025f * k);
+        return dist;
     }
 
     /**
-     * Barra en la altura yTop. Layout SIN solapamiento (anti z-fighting):
-     *   - relleno: desde la izquierda hasta pct (opaco)
-     *   - fondo:   desde pct hasta la derecha (translúcido)
-     *   - borde:   4 tiras alrededor, fuera del interior
-     * @param color 0 = degradado verde->rojo según el llenado (vida); si no, color fijo.
+     * La llama, en dos pasadas sobre el MISMO quad partido por la vida:
+     *  - de la punta hasta el corte: brasa (lo perdido)
+     *  - del corte hasta la base: color vivo (lo que queda)
+     * Los dos tramos no se solapan, así que no hay z-fighting entre ellos.
      */
-    private static void drawBar(Matrix4f m, VertexConsumer vc, float yTop,
-                                int cur, int max, int color) {
-        float half = BAR_W / 2f;
-        float pct  = (max > 0) ? Math.max(0f, Math.min(1f, cur / (float) max)) : 0f;
+    private static void drawFlame(Matrix4f m, VertexConsumer vc, SenseKiDataPacket.Entry en,
+                                  long myPl, boolean precise, float time, float dist) {
+        float health = healthFraction(en, precise);
+        int color = flameColor(en, myPl);
 
-        float left = -half, right = half;
-        float fillEnd = left + BAR_W * pct;
-        float yBot = yTop + BAR_H;
+        // Latido: cuanto más fuerte es la entidad, más rápido arde. El PL que llega ya es el
+        // APARENTE (suprimido incluido), así que alguien ocultando su ki late como un civil.
+        double ratio = myPl > 0 ? en.powerLevel() / (double) myPl : 1.0;
+        float hz = (float) Mth.clamp(0.6 + 0.55 * Math.log(1.0 + Math.max(0.0, ratio)) / Math.log(2), 0.6, 3.0);
+        float pulse = 1f + 0.09f * Mth.sin(time / 20f * hz * Mth.TWO_PI);
 
-        int fill;
-        if (color == 0) {
-            // Verde (llena) -> rojo (vacía).
-            int r = Math.min(255, (int) (255 * (1f - pct)));
-            int g = Math.min(255, (int) (220 * pct) + 35);
-            fill = 0xFF000000 | (r << 16) | (g << 8) | 0x20;
-        } else {
-            fill = color;
+        float w = FLAME_W * pulse * 0.5f;
+        float h = FLAME_H * pulse;
+
+        // Fotograma actual, desfasado por entidad para que no ardan todas al unísono.
+        int frame = (int) ((time / 20f * FRAME_FPS) + (en.entityId() * 3)) % FRAMES;
+        if (frame < 0) frame += FRAMES;
+        float v0 = frame / (float) FRAMES;
+        float v1 = (frame + 1) / (float) FRAMES;
+
+        // +Y hacia abajo: la punta está en -h y la base en 0.
+        float yTip = -h, yBase = 0f;
+        // health=1 -> el corte está en la PUNTA (arde entera); health=0 -> en la base (apagada).
+        float yCut = Mth.lerp(health, yBase, yTip);
+        float vCut = Mth.lerp(health, v1, v0);
+
+        if (health < 1f) {
+            quad(vc, m, -w, yTip, w, yCut, v0, vCut, C_EMBER);
         }
-
-        // Interior: dos tramos que NO se tocan entre sí.
-        if (pct > 0f)  quad(vc, m, left,    yTop, fillEnd, yBot, fill);
-        if (pct < 1f)  quad(vc, m, fillEnd, yTop, right,   yBot, C_BG);
-
-        // Borde: 4 tiras alrededor del interior (sin pisarlo).
-        quad(vc, m, left - 1, yTop - 1, right + 1, yTop,     C_EDGE); // arriba
-        quad(vc, m, left - 1, yBot,     right + 1, yBot + 1, C_EDGE); // abajo
-        quad(vc, m, left - 1, yTop,     left,      yBot,     C_EDGE); // izquierda
-        quad(vc, m, right,    yTop,     right + 1, yBot,     C_EDGE); // derecha
+        if (health > 0f) {
+            quad(vc, m, -w, yCut, w, yBase, vCut, v1, color);
+        }
     }
 
     /**
-     * Quad de UNA cara, con el winding que el RenderType considera frontal con nuestra
-     * transformación de billboard (verificado en juego: el orden inverso lo culleaba).
+     * Vida restante, 0..1. Al nivel 1 se redondea a tercios: el sentido en bruto distingue
+     * "entero / tocado / agonizando" y poco más. Del 2 en adelante es continua.
      */
+    private static float healthFraction(SenseKiDataPacket.Entry en, boolean precise) {
+        if (en.bodyMax() <= 0) return 1f;
+        float f = Mth.clamp(en.body() / (float) en.bodyMax(), 0f, 1f);
+        if (precise) return f;
+        if (f > 0.66f) return 1f;
+        if (f > 0.33f) return 0.66f;
+        return 0.33f;
+    }
+
+    /** Ancho de la rampa de fuerza, en octavas: ×4 tu PL satura, ÷4 lo apaga. */
+    private static final float STRENGTH_SPAN = 2.0f;
+
+    /**
+     * Color de la llama: TONO por alineamiento (paleta viva) e INTENSIDAD por fuerza relativa.
+     * El tono NO se lava nunca. Antes se desaturaba hacia gris con las entidades débiles, y
+     * como generalmente está por debajo del jugador, el resultado era un pegote gris para el
+     * bestiario — el dato principal desaparecía justo en el caso común. La fuerza se lee en el
+     * latido y en el brillo, que basta.
+     */
+    private static int flameColor(SenseKiDataPacket.Entry en, long myPl) {
+        int rgb = AlignmentPalette.vividForAlignment(en.alignment()) & 0xFFFFFF;
+        float t = strengthT(en, myPl);
+
+        // Solo hacia ARRIBA: por encima de ti se sobreexpone hacia blanco (ki que ciega).
+        // Por debajo, el color se mantiene entero y solo baja algo de brillo.
+        int col = (t > 0.5f)
+                ? AlignmentPalette.lerpRgb(rgb, 0xFFFFFF, (t - 0.5f) * 0.55f)
+                : rgb;
+
+        float k = 0.82f + 0.18f * t;   // suelo alto a propósito: nunca un pegote oscuro
+        int r = Mth.clamp((int) (((col >> 16) & 0xFF) * k), 0, 255);
+        int g = Mth.clamp((int) (((col >> 8) & 0xFF) * k), 0, 255);
+        int b = Mth.clamp((int) ((col & 0xFF) * k), 0, 255);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+
+    /** 0 = muy por debajo de ti, 0.5 = parejo, 1 = muy por encima. Escala logarítmica porque
+     *  el PL crece por órdenes de magnitud: en lineal, lo tuyo sería 0 o 1. */
+    private static float strengthT(SenseKiDataPacket.Entry en, long myPl) {
+        if (myPl <= 0 || en.powerLevel() <= 0) return 0.5f;
+        double octaves = Math.log((double) en.powerLevel() / myPl) / Math.log(2);
+        return 0.5f + 0.5f * Mth.clamp((float) (octaves / STRENGTH_SPAN), -1f, 1f);
+    }
+
+    private static long ownPowerLevel(Minecraft mc) {
+        assert mc.player != null;
+        var att = PlayerStatsAttachment.get(mc.player);
+        return att.isRaceChosen() ? att.getPowerLevel() : Math.round(mc.player.getMaxHealth());
+    }
+
+    /** Quad texturizado de una cara, con el winding que este RenderType considera frontal. */
     private static void quad(VertexConsumer vc, Matrix4f m,
-                             float x0, float y0, float x1, float y1, int argb) {
-        vc.addVertex(m, x1, y0, 0).setColor(argb).setLight(FULL_BRIGHT);
-        vc.addVertex(m, x1, y1, 0).setColor(argb).setLight(FULL_BRIGHT);
-        vc.addVertex(m, x0, y1, 0).setColor(argb).setLight(FULL_BRIGHT);
-        vc.addVertex(m, x0, y0, 0).setColor(argb).setLight(FULL_BRIGHT);
+                             float x0, float y0, float x1, float y1,
+                             float v0, float v1, int argb) {
+        vc.addVertex(m, x1, y0, 0).setColor(argb).setUv(1f, v0).setLight(FULL_BRIGHT);
+        vc.addVertex(m, x1, y1, 0).setColor(argb).setUv(1f, v1).setLight(FULL_BRIGHT);
+        vc.addVertex(m, x0, y1, 0).setColor(argb).setUv(0f, v1).setLight(FULL_BRIGHT);
+        vc.addVertex(m, x0, y0, 0).setColor(argb).setUv(0f, v0).setLight(FULL_BRIGHT);
     }
 }

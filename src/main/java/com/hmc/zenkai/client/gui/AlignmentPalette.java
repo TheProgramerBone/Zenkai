@@ -33,4 +33,26 @@ public final class AlignmentPalette {
         int r = (int) (ar + (br - ar) * t), gg = (int) (ag + (bg - ag) * t), bl = (int) (ab + (bb - ab) * t);
         return (r << 16) | (gg << 8) | bl;
     }
+
+    // ── Variante VIVA (fuego) ────────────────────────────────────────────────
+    // Mismos tres anclajes conceptuales, pero pensados para algo que ARDE. El neutral no
+    // puede ser gris aquí: una llama sin alineamiento no es incolora, es blanca al rojo.
+    // Vive en esta clase y no suelta en el renderer para que las dos lecturas del mismo dato
+    // sigan siendo obviamente la misma escala si alguien retoca los anclajes.
+
+    public static final int VIVID_EVIL    = 0xFF3A32;
+    public static final int VIVID_NEUTRAL = 0xFFF0C4;
+    public static final int VIVID_GOOD    = 0x4FB4FF;
+
+    public static int vividGradient(float t) {
+        t = Math.max(0f, Math.min(1f, t));
+        return (t < 0.5f)
+                ? lerpRgb(VIVID_EVIL, VIVID_NEUTRAL, t * 2f)
+                : lerpRgb(VIVID_NEUTRAL, VIVID_GOOD, (t - 0.5f) * 2f);
+    }
+
+    /** ARGB opaco y saturado de un alineamiento (-100..+100), para llamas y siluetas. */
+    public static int vividForAlignment(int alignment) {
+        return 0xFF000000 | vividGradient((alignment + 100) / 200f);
+    }
 }

@@ -9,12 +9,12 @@ import java.util.List;
 /**
  * Definición de stats de una entidad, tal cual viene del JSON de datapack
  * (data/&lt;ns&gt;/zenkai_entities/*.json). Es solo el "plano"; el runtime resuelto es EntityStats.
- *
  * Ejemplo:
  * {
  *   "entity": "zenkai:saibaman",
  *   "power_level": 1200,
  *   "archetype": "brawler",
+ *   "alignment": -80,
  *   "overrides": { "attributes": { "spirit": "+20%", "strength": 250 },
  *                  "body_mult": 1.1, "ki_mult": 1.0 },
  *   "moveset": {
@@ -32,6 +32,7 @@ public record EntityStatDef(
         long powerLevel,
         boolean displayOnly,       // true = solo PL de display (sin stats de combate); "display_only" en JSON
         String archetype,
+        Integer alignment,         // null = no declarado; se cae al heurístico por hostilidad
         EnumMap<ZenkaiAttributes, AttrOverride> attributeOverrides,
         double bodyMultOverride,   // 1.0 = usar el del arquetipo
         double kiMultOverride,     // 1.0 = usar el del arquetipo
@@ -44,4 +45,8 @@ public record EntityStatDef(
 
     /** ¿La entidad tiene al menos un ataque de ki definido? */
     public boolean hasKiAttacks() { return kiAttacks != null && !kiAttacks.isEmpty(); }
+
+    /** Alineamiento -100..+100. Si el JSON no lo declara, lo decide quien pregunte
+     *  (SenseKiScanPacket) según si la entidad es hostil. */
+    public boolean hasAlignment() { return alignment != null; }
 }

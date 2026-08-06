@@ -5,6 +5,8 @@
   "purchasable": true,
   "master": "kami",
   "values": {
-    "range_mult": [1.0, 1.25, 1.5, 1.75, 2.0]
+    "range_mult": [1.0, 1.35, 1.6, 1.85, 2.2],
+    "silhouette_cap": [0, 0, 8, 24, 24],
+    "silhouette_range_frac": [0.0, 0.0, 0.35, 0.5, 0.5]
   }
 }

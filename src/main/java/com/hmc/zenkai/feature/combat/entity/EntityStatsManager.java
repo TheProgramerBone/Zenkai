@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -93,6 +94,9 @@ public final class EntityStatsManager {
         long powerLevel = o.get("power_level").getAsLong();
         boolean displayOnly = o.has("display_only") && o.get("display_only").getAsBoolean();
         String archetype = o.has("archetype") ? o.get("archetype").getAsString() : "balanced";
+        Integer alignment = o.has("alignment")
+                ? Mth.clamp(o.get("alignment").getAsInt(), -100, 100)
+                : null;
 
         EnumMap<ZenkaiAttributes, EntityStatDef.AttrOverride> attrOv = new EnumMap<>(ZenkaiAttributes.class);
         double bodyMult = 1.0, kiMult = 1.0;
@@ -139,8 +143,8 @@ public final class EntityStatsManager {
             if (rw.has("tp")) rewardTp = rw.get("tp").getAsString();
         }
 
-        return new EntityStatDef(entity, powerLevel, displayOnly, archetype, attrOv, bodyMult, kiMult,
-                kiAttacks, melee, rewardTp);
+        return new EntityStatDef(entity, powerLevel, displayOnly, archetype, alignment,
+                attrOv, bodyMult, kiMult, kiAttacks, melee, rewardTp);
     }
 
     /** "+20%" / "-10%" -> relativo; "250" -> absoluto. */
