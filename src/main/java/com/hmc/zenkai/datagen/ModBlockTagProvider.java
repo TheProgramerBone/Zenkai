@@ -151,13 +151,22 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         tag(BlockTags.WALLS).add(
                 ModBlocks.SACRED_STONE_WALL.get(),
                 ModBlocks.POLISHED_SACRED_STONE_WALL.get(),
-                ModBlocks.SACRED_STONE_BRICK_WALL.get()
+                ModBlocks.SACRED_STONE_BRICK_WALL.get(),
+                ModBlocks.CUT_KATCHIN_WALL.get()
         );
 
         tag(BlockTags.STAIRS).add(
                 ModBlocks.SACRED_STONE_STAIRS.get(),
                 ModBlocks.POLISHED_SACRED_STONE_STAIRS.get(),
-                ModBlocks.SACRED_STONE_BRICK_STAIRS.get()
+                ModBlocks.SACRED_STONE_BRICK_STAIRS.get(),
+                ModBlocks.CUT_KATCHIN_STAIRS.get()
+        );
+
+        tag(BlockTags.SLABS).add(
+                ModBlocks.SACRED_STONE_SLAB.get(),
+                ModBlocks.POLISHED_SACRED_STONE_SLAB.get(),
+                ModBlocks.SACRED_STONE_BRICK_SLAB.get(),
+                ModBlocks.CUT_KATCHIN_SLAB.get()
         );
 
         tag(BlockTags.SLABS).add(
@@ -197,12 +206,16 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         // 6. TAGS PERSONALIZADOS DEL MOD (ZENKAI)
         // ==========================================
 
-        tag(ModTags.Blocks.NEEDS_TERRAGEM_TOOL)
-                .addTag(BlockTags.NEEDS_IRON_TOOL);
-
-        tag(ModTags.Blocks.INCORRECT_FOR_TERRAGEM_TOOL)
-                .addTag(BlockTags.INCORRECT_FOR_IRON_TOOL)
-                .remove(ModTags.Blocks.NEEDS_TERRAGEM_TOOL);
+        tag(ModTags.Blocks.KI_INDESTRUCTIBLE).add(
+                ModBlocks.KATCHIN_ORE.get(),
+                ModBlocks.DEEPSLATE_KATCHIN_ORE.get(),
+                ModBlocks.KATCHIN_BLOCK.get(),
+                ModBlocks.CUT_KATCHIN.get(),
+                ModBlocks.CUT_KATCHIN_STAIRS.get(),
+                ModBlocks.CUT_KATCHIN_SLAB.get(),
+                ModBlocks.CUT_KATCHIN_WALL.get(),
+                ModBlocks.KATCHIN_PILLAR.get()
+        );
 
         tag(ModTags.Blocks.NAMEKIAN_ORE_REPLACEABLES).add(
                 ModBlocks.NAMEKIAN_STONE.get()

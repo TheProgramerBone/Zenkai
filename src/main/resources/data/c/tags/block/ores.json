@@ -1,11 +1,5 @@
 {
   "values": [
-    {
-      "id": "zenkai:terragem_ore",
-      "required": false
-    },{
-      "id": "zenkai:deepslate_terragem_ore",
-      "required": false
-    }
+    "#c:ores/katchin"
   ]
 }

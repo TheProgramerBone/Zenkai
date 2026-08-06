@@ -58,6 +58,15 @@ public class ModItems {
     public static final DeferredItem<Item> SHADOW_KINTOUN_ITEM = ITEMS.registerItem("kintoun_shadow_item",
             ShadowKintounItem::new, new Item.Properties().stacksTo(1));
 
+    /** Mineral en bruto. Solo la fundición lo convierte en lingote. */
+    public static final DeferredItem<Item> RAW_KATCHIN = ITEMS.registerItem("raw_katchin",
+            Item::new, new Item.Properties());
+
+    /** El metal más duro del Universo 7. No es un tier de herramienta: es material
+     *  estructural y de equipo. Ver PowerMining para por qué no se pica con un pico. */
+    public static final DeferredItem<Item> KATCHIN_INGOT = ITEMS.registerItem("katchin_ingot",
+            Item::new, new Item.Properties().rarity(Rarity.RARE));
+
     // ── Recursos exclusivos de Namek ─────────────────────────────────────────
     public static final DeferredItem<Item> NAMEK_CRYSTAL = ITEMS.registerItem("namek_crystal",
             Item::new, new Item.Properties());

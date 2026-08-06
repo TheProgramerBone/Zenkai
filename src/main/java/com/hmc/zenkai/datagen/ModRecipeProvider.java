@@ -87,8 +87,9 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_namek_dragon_ball_1", has(ModBlocks.NAMEK_DRAGON_BALL_1)).save(recipeOutput);
 
         List<ItemLike> NAMEKIAN_COBBLESTONE = List.of(ModBlocks.NAMEKIAN_COBBLESTONE);
-
         oreSmelting(recipeOutput, NAMEKIAN_COBBLESTONE, RecipeCategory.MISC, ModBlocks.NAMEKIAN_STONE.get(), 0.1f, 200, "namekian");
+        oreBlasting(recipeOutput, List.of(ModItems.RAW_KATCHIN), RecipeCategory.MISC,
+                ModItems.KATCHIN_INGOT.get(), 1.5f, 400, "katchin");
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.HALO.get(),1)
                 .pattern("YYY")
@@ -126,7 +127,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('I', Items.IRON_INGOT)
                 .define('A', Items.AMETHYST_SHARD)
                 .define('C', itemtag("c:circuits/advanced"))
-                .unlockedBy("has_terragem",has(Items.AMETHYST_SHARD)).save(recipeOutput);
+                .unlockedBy("has_amethyst",has(Items.AMETHYST_SHARD)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.NAMEKIAN_LAMP.get(), 1)
                 .pattern(" S ")
@@ -150,7 +151,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('B', itemtag("c:circuits/basic"))
                 .define('R', Items.RED_DYE)
                 .define('C', itemtag("c:circuits/advanced"))
-                .unlockedBy("has_terragem",has(Items.IRON_INGOT)).save(recipeOutput);
+                .unlockedBy("has_amethyst",has(Items.IRON_INGOT)).save(recipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.BASIC_CIRCUIT.get(),1)
                 .pattern(" C ")
@@ -177,6 +178,47 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('L', Items.LAPIS_LAZULI)
                 .define('C', itemtag("c:circuits/advanced"))
                 .unlockedBy("has_advanced",has(ModItems.ADVANCED_CIRCUIT)).save(recipeOutput);
+
+        // ── Katchin ──────────────────────────────────────────────────────────
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.KATCHIN_BLOCK.get(), 1)
+                .pattern("KK").pattern("KK")
+                .define('K', ModItems.KATCHIN_INGOT.get())
+                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.KATCHIN_INGOT.get(), 4)
+                .requires(ModBlocks.KATCHIN_BLOCK)
+                .unlockedBy("has_katchin_block", has(ModBlocks.KATCHIN_BLOCK))
+                .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "katchin_ingot_from_block"));
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CUT_KATCHIN.get(), 4)
+                .pattern("KK")
+                .pattern("KK")
+                .define('K', ModBlocks.KATCHIN_BLOCK.get())
+                .unlockedBy("has_katchin_block", has(ModBlocks.KATCHIN_BLOCK.get())).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.KATCHIN_PILLAR.get(), 2)
+                .pattern("K")
+                .pattern("K")
+                .define('K', ModBlocks.CUT_KATCHIN.get())
+                .unlockedBy("has_cut_katchin", has(ModBlocks.CUT_KATCHIN.get())).save(recipeOutput);
+
+        sacredFamily(recipeOutput, ModBlocks.CUT_KATCHIN.get(),
+                ModBlocks.CUT_KATCHIN_STAIRS.get(), ModBlocks.CUT_KATCHIN_SLAB.get(), ModBlocks.CUT_KATCHIN_WALL.get());
+        stonecut(recipeOutput, ModBlocks.KATCHIN_BLOCK.get(), ModBlocks.CUT_KATCHIN.get(), 4);
+        stonecut(recipeOutput, ModBlocks.KATCHIN_BLOCK.get(), ModBlocks.KATCHIN_PILLAR.get(), 4);
+
+        // Las pesas: el lastre es katchin. Es lo que le da su primer uso al material.
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WEIGHTED_STRAPS.get(), 1)
+                .pattern("LKL").pattern("K K").pattern("LKL")
+                .define('K', ModItems.KATCHIN_INGOT.get())
+                .define('L', Items.LEATHER)
+                .unlockedBy("has_katchin_ingot", has(ModItems.KATCHIN_INGOT)).save(recipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WEIGHTED_CAPE.get(), 1)
+                .pattern("WKW").pattern("KKK").pattern("WKW")
+                .define('K', ModItems.KATCHIN_INGOT.get())
+                .define('W', Items.WHITE_WOOL)
+                .unlockedBy("has_weighted_straps", has(ModItems.WEIGHTED_STRAPS)).save(recipeOutput);
 
         // ── Ajisa ────────────────────────────────────────────────────────────
 

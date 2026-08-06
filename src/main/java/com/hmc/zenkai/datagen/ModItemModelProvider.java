@@ -36,6 +36,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.NAMEKIAN_HERB.get());
         basicItem(ModItems.NAMEKIAN_HERB_SEEDS.get());
         basicItem(ModItems.HEALING_WATER_BOTTLE.get());
+        basicItem(ModItems.RAW_KATCHIN.get());
+        basicItem(ModItems.KATCHIN_INGOT.get());
 
         // El item de la puerta es una textura plana propia, no el modelo de bloque.
         basicItem(ModBlocks.AJISA_DOOR.get().asItem());
@@ -53,7 +55,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("ajisa_fence_gate", modLoc("block/ajisa_fence_gate"));
         withExistingParent("ajisa_trapdoor", modLoc("block/ajisa_trapdoor_bottom"));
         withExistingParent("ajisa_pressure_plate", modLoc("block/ajisa_pressure_plate"));
-        
+
         withExistingParent(ModItems.NAMEKIAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.YEMMA_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
@@ -73,6 +75,11 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("polished_sacred_stone_slab", modLoc("block/polished_sacred_stone_slab"));
         withExistingParent("sacred_stone_brick_stairs", modLoc("block/sacred_stone_brick_stairs"));
         withExistingParent("sacred_stone_brick_slab", modLoc("block/sacred_stone_brick_slab"));
+        withExistingParent("cut_katchin_stairs", modLoc("block/cut_katchin_stairs"));
+        withExistingParent("cut_katchin_slab", modLoc("block/cut_katchin_slab"));
+        withExistingParent("cut_katchin_wall", mcLoc("block/wall_inventory"))
+                .texture("wall", modLoc("block/cut_katchin"));
+        withExistingParent("katchin_pillar", modLoc("block/katchin_pillar"));
 
         withExistingParent("sacred_stone_wall", mcLoc("block/wall_inventory"))
                 .texture("wall", modLoc("block/sacred_stone_block"));

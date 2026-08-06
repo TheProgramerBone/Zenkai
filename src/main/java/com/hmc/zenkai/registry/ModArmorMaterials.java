@@ -29,6 +29,8 @@ public class ModArmorMaterials {
             }), 0, 0, 0, ModItems.SENZU_BEAN);
 
 
+
+
     private static Holder<ArmorMaterial> register(String name, EnumMap<ArmorItem.Type, Integer> typeProtection,
                                                   int enchantability, float toughness, float knockbackResistance,
                                                   Supplier<Item> ingredientItem) {

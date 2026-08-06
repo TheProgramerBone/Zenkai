@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-05T22:51:59.9706848	Item Models: zenkai
+// 1.21.1	2026-08-06T09:19:36.1028056	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -15,6 +15,9 @@ a357c265f4415eb8935da83ae9525e556c9976fa assets/zenkai/models/item/ajisa_trapdoo
 f96129e0583ae0240b05de3b51b397520126f065 assets/zenkai/models/item/arcosian_race_helmet.json
 cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/arcosian_race_leggings.json
 e679a4c9273e0f8ec5861c5d4a448f2b69437bca assets/zenkai/models/item/basic_circuit.json
+c9ddcca4c2a0a45ed79a77a1f53cdfe7bf1d226d assets/zenkai/models/item/cut_katchin_slab.json
+a9b51103f161b3eef77d29a93de6b85e65eb7b5f assets/zenkai/models/item/cut_katchin_stairs.json
+9b881ba4f96466161b54c784e47f70d5a5f06e78 assets/zenkai/models/item/cut_katchin_wall.json
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
 b6f3572016d27a67567a73dd90a74cf43defc6f7 assets/zenkai/models/item/energy_crystal.json
 c6fdd6445bc58722d479b71d0c927092b728dc33 assets/zenkai/models/item/halo.json
@@ -36,6 +39,8 @@ cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/human_race_le
 cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/human_race_leggings_colorable_female.json
 cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/human_race_leggings_female.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/isaac_spawn_egg.json
+67665220fa8330606df92ab7371d9d2d047a560f assets/zenkai/models/item/katchin_ingot.json
+4773d6a28dcbc680c3ed76a73308e83d3cb92b7e assets/zenkai/models/item/katchin_pillar.json
 cf0c021ac47f4c96a569e2497d53258d04d5a607 assets/zenkai/models/item/kintoun_item.json
 46caf766bc191626aa6f23e3bb63262dbb2d2895 assets/zenkai/models/item/kintoun_shadow_item.json
 a7eb31052d9770be29b58b1eb62ca855d914d4cf assets/zenkai/models/item/namekian_herb.json
@@ -54,6 +59,7 @@ cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/namekian_race
 225803ef861e83026d9156f3f42284f5cdfa9d38 assets/zenkai/models/item/polished_sacred_stone_slab.json
 9ae932bb2ddc11cb7be4cc6f97f8af866d320233 assets/zenkai/models/item/polished_sacred_stone_stairs.json
 1aadc798c09d7d4459915d777d51a0e3940a2211 assets/zenkai/models/item/polished_sacred_stone_wall.json
+b290a2ac4143d0dabfb39df34cb0c6cc9968d8d1 assets/zenkai/models/item/raw_katchin.json
 2c9476ba6af9b117de6bb1e6d746c5e800e6c9b8 assets/zenkai/models/item/sacred_stone.json
 a21c89c45fd490a4a84157f210dee37391ac16fc assets/zenkai/models/item/sacred_stone_brick_slab.json
 0d8bb44a60c67db7e77866a7575b3d13c10c69ab assets/zenkai/models/item/sacred_stone_brick_stairs.json

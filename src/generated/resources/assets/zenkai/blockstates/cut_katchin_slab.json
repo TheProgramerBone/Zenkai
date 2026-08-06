@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "zenkai:block/cut_katchin_slab"
+    },
+    "type=double": {
+      "model": "zenkai:block/cut_katchin"
+    },
+    "type=top": {
+      "model": "zenkai:block/cut_katchin_slab_top"
+    }
+  }
+}

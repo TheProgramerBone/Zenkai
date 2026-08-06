@@ -68,22 +68,27 @@ public class ModItemTagProvider extends ItemTagsProvider {
         // 4. BLOQUES DE CONSTRUCCIÓN (ÍTEMS)
         // ==========================================
 
+
+
         tag(ItemTags.WALLS).add(
                 ModBlocks.SACRED_STONE_WALL.get().asItem(),
                 ModBlocks.POLISHED_SACRED_STONE_WALL.get().asItem(),
-                ModBlocks.SACRED_STONE_BRICK_WALL.get().asItem()
+                ModBlocks.SACRED_STONE_BRICK_WALL.get().asItem(),
+                ModBlocks.CUT_KATCHIN_WALL.get().asItem()
         );
 
         tag(ItemTags.STAIRS).add(
                 ModBlocks.SACRED_STONE_STAIRS.get().asItem(),
                 ModBlocks.POLISHED_SACRED_STONE_STAIRS.get().asItem(),
-                ModBlocks.SACRED_STONE_BRICK_STAIRS.get().asItem()
+                ModBlocks.SACRED_STONE_BRICK_STAIRS.get().asItem(),
+                ModBlocks.CUT_KATCHIN_STAIRS.get().asItem()
         );
 
         tag(ItemTags.SLABS).add(
                 ModBlocks.SACRED_STONE_SLAB.get().asItem(),
                 ModBlocks.POLISHED_SACRED_STONE_SLAB.get().asItem(),
-                ModBlocks.SACRED_STONE_BRICK_SLAB.get().asItem()
+                ModBlocks.SACRED_STONE_BRICK_SLAB.get().asItem(),
+                ModBlocks.CUT_KATCHIN_SLAB.get().asItem()
         );
 
         // ==========================================

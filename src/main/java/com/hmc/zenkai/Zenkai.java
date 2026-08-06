@@ -129,6 +129,7 @@ public class Zenkai {
             fire.setFlammable(ModBlocks.AJISA_FENCE.get(), 5, 20);
             fire.setFlammable(ModBlocks.AJISA_FENCE_GATE.get(), 5, 20);
             fire.setFlammable(ModBlocks.AJISA_LEAVES.get(), 30, 60);
+            com.hmc.zenkai.feature.mining.PowerMining.bootstrap();
         });
     }
 

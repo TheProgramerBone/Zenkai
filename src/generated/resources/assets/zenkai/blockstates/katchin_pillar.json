@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "zenkai:block/katchin_pillar_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "zenkai:block/katchin_pillar"
+    },
+    "axis=z": {
+      "model": "zenkai:block/katchin_pillar_horizontal",
+      "x": 90
+    }
+  }
+}

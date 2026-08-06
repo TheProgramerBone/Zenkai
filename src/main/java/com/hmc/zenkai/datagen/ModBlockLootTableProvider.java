@@ -74,6 +74,12 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_PINK.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_ORANGE.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED.get());
+        dropSelf(ModBlocks.KATCHIN_BLOCK.get());
+        dropSelf(ModBlocks.CUT_KATCHIN.get());
+        dropSelf(ModBlocks.CUT_KATCHIN_STAIRS.get());
+        dropSelf(ModBlocks.CUT_KATCHIN_WALL.get());
+        dropSelf(ModBlocks.KATCHIN_PILLAR.get());
+        add(ModBlocks.CUT_KATCHIN_SLAB.get(), this::createSlabItemTable);
         dropSelf(ModBlocks.NAMEKIAN_LAMP.get());
 
         add(ModBlocks.NAMEKIAN_STONE.get(),
@@ -98,6 +104,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                 this::createLapisOreDrops);
         add(ModBlocks.NAMEKIAN_DIRT_PATH.get(),
                 b -> createSingleItemTable(ModBlocks.NAMEKIAN_DIRT.get()));
+        add(ModBlocks.KATCHIN_ORE.get(),
+                b -> createOreDrop(b, ModItems.RAW_KATCHIN.get()));
+        add(ModBlocks.DEEPSLATE_KATCHIN_ORE.get(),
+                b -> createOreDrop(b, ModItems.RAW_KATCHIN.get()));
 
         dropSelf(ModBlocks.AJISA_LOG.get());
         dropSelf(ModBlocks.AJISA_WOOD.get());

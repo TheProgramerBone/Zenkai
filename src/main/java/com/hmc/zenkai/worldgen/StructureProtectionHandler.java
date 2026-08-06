@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.registry.ModDimensions;
+import com.hmc.zenkai.registry.ModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -113,8 +114,13 @@ public final class StructureProtectionHandler {
     public static void onExplosionDetonate(ExplosionEvent.Detonate event) {
         Level level = event.getLevel();
         if (level.isClientSide || level.getServer() == null) return;
-        if (ModGameRules.enableStructureProtection(level.getServer())) return;
 
+        // Katchin: ninguna explosión lo mueve, ni ki ni TNT ni creeper. Va aquí arriba
+        // porque es una propiedad del MATERIAL, no de la zona, y no depende de gamerules.
+        event.getAffectedBlocks().removeIf(pos ->
+                level.getBlockState(pos).is(ModTags.Blocks.KI_INDESTRUCTIBLE));
+
+        if (ModGameRules.enableStructureProtection(level.getServer())) return;
         if (level.dimension() == ModDimensions.HTC_LEVEL) {
             event.getAffectedBlocks().clear();
             return;

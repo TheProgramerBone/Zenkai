@@ -28,7 +28,8 @@ import java.util.List;
 public class ModConfiguredFeatures {
     // CF -> PF -> BM
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> OVERWORLD_TERRAGEM_ORE_KEY = registerKey("terragem_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_KEY     = registerKey("katchin_ore");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_OW_KEY  = registerKey("katchin_ore_otherworld");
     public static final ResourceKey<ConfiguredFeature<?, ?>> OTHERWORLD_CLOUDS_KEY = registerKey("otherworld_clouds");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL            = registerKey("namek_coal");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL_BURIED     = registerKey("namek_coal_buried");
@@ -80,6 +81,20 @@ public class ModConfiguredFeatures {
         namekOre(context, NAMEK_CRYSTAL_ORE,  namekRock, ModBlocks.NAMEK_CRYSTAL_ORE,   5, 0.0F);
         namekOre(context, ENERGY_CRYSTAL_ORE, namekRock, ModBlocks.ENERGY_CRYSTAL_ORE,  4, 0.5F);
         namekOre(context, SACRED_STONE_ORE,   namekRock, ModBlocks.SACRED_STONE_ORE,   12, 0.0F);
+
+        // Overworld: veta de 3 y descarte del 50% si toca aire. Igual que la escoria antigua,
+        // no la encuentras paseando por una cueva — hay que picar.
+        List<OreConfiguration.TargetBlockState> katchinOres = List.of(
+                OreConfiguration.target(stoneReplaceables, ModBlocks.KATCHIN_ORE.get().defaultBlockState()),
+                OreConfiguration.target(deepslateReplaceables, ModBlocks.DEEPSLATE_KATCHIN_ORE.get().defaultBlockState()));
+
+        register(context, KATCHIN_ORE_KEY, Feature.ORE, new OreConfiguration(katchinOres, 3, 0.5F));
+
+        // Otherworld: el bloque por defecto de esa dimensión es stone entero en el rango, así
+        // que solo aplica la variante de piedra. Vetas de 5 y sin descarte: es la fuente real.
+        register(context, KATCHIN_ORE_OW_KEY, Feature.ORE, new OreConfiguration(
+                List.of(OreConfiguration.target(stoneReplaceables,
+                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 5, 0.0F));
 
         register(context, AJISA_TREE, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
                 BlockStateProvider.simple(ModBlocks.AJISA_LOG.get()),

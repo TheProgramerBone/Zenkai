@@ -159,6 +159,38 @@ public class ModBlocks {
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
 
+    // ── Katchin ──────────────────────────────────────────────────────────────
+    // Resistencia 1200 (obsidiana) por si algo se salta el tag, y SIN
+    // requiresCorrectToolForDrops: aquí el permiso lo da PowerMining, no el tier del pico.
+    // Si lo has roto, lo sueltas.
+
+    public static final DeferredBlock<Block> KATCHIN_ORE = registerBlock("katchin_ore",
+            ()-> new DropExperienceBlock(UniformInt.of(3,7),
+                    BlockBehaviour.Properties.of()
+                            .strength(25f, 1200f)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .mapColor(MapColor.STONE)));
+
+    public static final DeferredBlock<Block> DEEPSLATE_KATCHIN_ORE = registerBlock("deepslate_katchin_ore",
+            ()-> new DropExperienceBlock(UniformInt.of(3,7),
+                    BlockBehaviour.Properties.of()
+                            .strength(30f, 1200f)
+                            .sound(SoundType.NETHERITE_BLOCK)
+                            .mapColor(MapColor.DEEPSLATE)));
+
+    public static final DeferredBlock<Block> KATCHIN_BLOCK = registerBlock("katchin_block",
+            ()-> new Block(katchinProps().strength(50f, 3600000f)));
+
+    public static final DeferredBlock<Block> CUT_KATCHIN = registerBlock("cut_katchin",
+            ()-> new Block(katchinProps()));
+    public static final DeferredBlock<Block> CUT_KATCHIN_STAIRS = registerBlock("cut_katchin_stairs",
+            ()-> new StairBlock(CUT_KATCHIN.get().defaultBlockState(), katchinProps()));
+    public static final DeferredBlock<Block> CUT_KATCHIN_SLAB = registerBlock("cut_katchin_slab",
+            ()-> new SlabBlock(katchinProps()));
+    public static final DeferredBlock<Block> CUT_KATCHIN_WALL = registerBlock("cut_katchin_wall",
+            ()-> new WallBlock(katchinProps()));
+    public static final DeferredBlock<Block> KATCHIN_PILLAR = registerBlock("katchin_pillar",
+            ()-> new RotatedPillarBlock(katchinProps()));
 
     public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BLACK = registerBlock("structural_concrete_black",
             ()-> new Block(BlockBehaviour.Properties.of()
@@ -520,32 +552,6 @@ public class ModBlocks {
     public static final DeferredBlock<Block> SACRED_STONE_BRICK_WALL = registerBlock("sacred_stone_brick_wall",
             ()-> new WallBlock(sacredProps()));
 
-    private static BlockBehaviour.Properties sacredProps() {
-        return BlockBehaviour.Properties.of()
-                .strength(2.0f, 6.0f)
-                .requiresCorrectToolForDrops()
-                .sound(SoundType.STONE)
-                .mapColor(MapColor.QUARTZ);
-    }
-
-    private static BlockBehaviour.Properties logProps() {
-        return BlockBehaviour.Properties.of()
-                .strength(2.0f)
-                .sound(SoundType.WOOD)
-                .instrument(NoteBlockInstrument.BASS)
-                .ignitedByLava()
-                .mapColor(MapColor.PLANT);
-    }
-
-    private static BlockBehaviour.Properties plankProps() {
-        return BlockBehaviour.Properties.of()
-                .strength(2.0f, 3.0f)
-                .sound(SoundType.WOOD)
-                .instrument(NoteBlockInstrument.BASS)
-                .ignitedByLava()
-                .mapColor(MapColor.PLANT);
-    }
-
     /** Lámpara namekiana: luz 15, la iluminación de las aldeas. */
     public static final DeferredBlock<Block> NAMEKIAN_LAMP = registerBlock("namekian_lamp",
             ()-> new Block(BlockBehaviour.Properties.of()
@@ -601,5 +607,38 @@ public class ModBlocks {
                 .requiresCorrectToolForDrops()
                 .sound(SoundType.STONE)
                 .mapColor(MapColor.SAND);
+    }
+
+    private static BlockBehaviour.Properties sacredProps() {
+        return BlockBehaviour.Properties.of()
+                .strength(2.0f, 6.0f)
+                .requiresCorrectToolForDrops()
+                .sound(SoundType.STONE)
+                .mapColor(MapColor.QUARTZ);
+    }
+
+    private static BlockBehaviour.Properties logProps() {
+        return BlockBehaviour.Properties.of()
+                .strength(2.0f)
+                .sound(SoundType.WOOD)
+                .instrument(NoteBlockInstrument.BASS)
+                .ignitedByLava()
+                .mapColor(MapColor.PLANT);
+    }
+
+    private static BlockBehaviour.Properties plankProps() {
+        return BlockBehaviour.Properties.of()
+                .strength(2.0f, 3.0f)
+                .sound(SoundType.WOOD)
+                .instrument(NoteBlockInstrument.BASS)
+                .ignitedByLava()
+                .mapColor(MapColor.PLANT);
+    }
+
+    private static BlockBehaviour.Properties katchinProps() {
+        return BlockBehaviour.Properties.of()
+                .strength(30f, 1200f)
+                .sound(SoundType.NETHERITE_BLOCK)
+                .mapColor(MapColor.COLOR_BLACK);
     }
 }

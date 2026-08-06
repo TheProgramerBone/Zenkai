@@ -22,6 +22,15 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 models().withExistingParent("namekian_dirt_path", mcLoc("block/dirt_path"))
                         .texture("top",  modLoc("block/namekian_dirt_path_top"))
                         .texture("side", modLoc("block/namekian_dirt_path_side")));
+        blockWithItem(ModBlocks.KATCHIN_ORE);
+        blockWithItem(ModBlocks.DEEPSLATE_KATCHIN_ORE);
+        blockWithItem(ModBlocks.KATCHIN_BLOCK);
+        blockWithItem(ModBlocks.CUT_KATCHIN);
+        stairsBlock((StairBlock) ModBlocks.CUT_KATCHIN_STAIRS.get(), modLoc("block/cut_katchin"));
+        slabBlock((SlabBlock) ModBlocks.CUT_KATCHIN_SLAB.get(), modLoc("block/cut_katchin"), modLoc("block/cut_katchin"));
+        wallBlock((WallBlock) ModBlocks.CUT_KATCHIN_WALL.get(), modLoc("block/cut_katchin"));
+        axisBlock((RotatedPillarBlock) ModBlocks.KATCHIN_PILLAR.get(),
+                modLoc("block/katchin_pillar"), modLoc("block/katchin_pillar_top"));
         blockWithItem(ModBlocks.NAMEKIAN_STONE);
         blockWithItem(ModBlocks.NAMEKIAN_COBBLESTONE);
         blockWithItem(ModBlocks.NAMEKIAN_SAND);

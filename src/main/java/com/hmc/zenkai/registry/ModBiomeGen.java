@@ -106,6 +106,7 @@ public final class ModBiomeGen {
         BiomeDefaultFeatures.addDefaultUndergroundVariety(gen);
         BiomeDefaultFeatures.addDefaultSprings(gen);
         BiomeDefaultFeatures.addDefaultOres(gen);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.KATCHIN_ORE_HFIL);
         return gen;
     }
 
@@ -185,8 +186,8 @@ public final class ModBiomeGen {
         gen.addFeature(GenerationStep.Decoration.RAW_GENERATION,
                 ModPlacedFeatures.OTHERWORLD_CLOUDS_KEY);
 
-        BiomeDefaultFeatures.addCherryGroveVegetation(gen);                 // ⚠ API
-
+        BiomeDefaultFeatures.addCherryGroveVegetation(gen);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.KATCHIN_ORE_SKY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.OTHERWORLD_FLOWERS_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,

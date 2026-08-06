@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:katchin_block"
+  },
+  "result": {
+    "count": 4,
+    "id": "zenkai:katchin_pillar"
+  }
+}

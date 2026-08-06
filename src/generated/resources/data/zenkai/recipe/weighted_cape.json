@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "K": {
+      "item": "zenkai:katchin_ingot"
+    },
+    "W": {
+      "item": "minecraft:white_wool"
+    }
+  },
+  "pattern": [
+    "WKW",
+    "KKK",
+    "WKW"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:weighted_cape"
+  }
+}

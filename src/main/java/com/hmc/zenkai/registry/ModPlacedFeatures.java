@@ -18,7 +18,9 @@ import net.minecraft.world.level.levelgen.placement.*;
 import java.util.List;
 
 public class ModPlacedFeatures {
-    public static final ResourceKey<PlacedFeature> TERRAGEM_ORE_PLACED_KEY = registerKey("terragem_ore_placed");
+    public static final ResourceKey<PlacedFeature> KATCHIN_ORE_OVERWORLD  = registerKey("katchin_ore_overworld");
+    public static final ResourceKey<PlacedFeature> KATCHIN_ORE_HFIL       = registerKey("katchin_ore_hfil");
+    public static final ResourceKey<PlacedFeature> KATCHIN_ORE_SKY        = registerKey("katchin_ore_sky");
 
     /** Matojos secos del rocky_wasteland. Antes era un JSON suelto; vive aquí porque el
      *  bootstrap del bioma lo resuelve con getOrThrow y solo ve el registro de datagen. */
@@ -62,8 +64,21 @@ public class ModPlacedFeatures {
     public static void bootstrap(BootstrapContext<PlacedFeature> context) {
         var configuredFeatures = context.lookup(Registries.CONFIGURED_FEATURE);
 
-        register(context, TERRAGEM_ORE_PLACED_KEY, configuredFeatures.getOrThrow(ModConfiguredFeatures.OVERWORLD_TERRAGEM_ORE_KEY),
-                ModOrePlacement.commonOrePlacement(12, HeightRangePlacement.triangle(VerticalAnchor.absolute(-64), VerticalAnchor.absolute(80))));
+        // Overworld: una veta cada 24 chunks de media, solo por debajo de y=-32, donde ya
+        // no hay piedra normal. Es un goteo, no una fuente.
+        register(context, KATCHIN_ORE_OVERWORLD, configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_KEY),
+                ModOrePlacement.rareOrePlacement(24, HeightRangePlacement.triangle(
+                        VerticalAnchor.absolute(-64), VerticalAnchor.absolute(-32))));
+
+        // HFIL: el subsuelo del Otherworld. Aquí sí es abundante — es de donde se saca.
+        register(context, KATCHIN_ORE_HFIL, configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_OW_KEY),
+                ModOrePlacement.commonOrePlacement(10, HeightRangePlacement.uniform(
+                        VerticalAnchor.absolute(-60), VerticalAnchor.absolute(120))));
+
+        // Islas flotantes: menos, porque son plataformas finas y una veta de 5 se sale.
+        register(context, KATCHIN_ORE_SKY, configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_OW_KEY),
+                ModOrePlacement.commonOrePlacement(3, HeightRangePlacement.uniform(
+                        VerticalAnchor.absolute(130), VerticalAnchor.absolute(190))));
 
         register(context, ROCKY_DEAD_BUSH_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.PATCH_DEAD_BUSH),

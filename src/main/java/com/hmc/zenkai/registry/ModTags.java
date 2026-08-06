@@ -13,10 +13,9 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 
 public class ModTags {
     public static class Blocks {
-        public static final TagKey<Block> NEEDS_TERRAGEM_TOOL = createTag("needs_terragem_tool");
-        public static final TagKey<Block> INCORRECT_FOR_TERRAGEM_TOOL = createTag("incorrect_for_terragem_tool");
         public static final TagKey<Block> DRAGON_BALLS_BLOCK = createTag("dragon_balls_block");
         public static final TagKey<Block> NAMEKIAN_ORE_REPLACEABLES = createTag("namekian_ore_replaceables");
+        public static final TagKey<Block> KI_INDESTRUCTIBLE = createTag("ki_indestructible");
 
         private static TagKey<Block> createTag(String name) {
             return BlockTags.create(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,name));
