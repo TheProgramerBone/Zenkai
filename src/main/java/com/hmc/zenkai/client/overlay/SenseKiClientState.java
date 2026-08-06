@@ -99,6 +99,7 @@ public final class SenseKiClientState {
 
         // Perdió la habilidad (respec, /zenkai skill revoke): se apaga solo.
         if (SkillEffects.senseLevel(mc.player) <= 0) {
+            SenseKiWarnings.forget();
             forceOff();
             return;
         }
@@ -111,6 +112,8 @@ public final class SenseKiClientState {
 
     /** Respuesta del servidor: reemplaza la caché entera (lo que ya no viene, dejó el rango). */
     public static void onData(List<SenseKiDataPacket.Entry> entries) {
+        // Los avisos van ANTES del filtro y del refresco de caché: un peligro no se filtra.
+        SenseKiWarnings.onScan(Minecraft.getInstance(), entries);
         SENSED.clear();
         for (SenseKiDataPacket.Entry e : entries) SENSED.put(e.entityId(), e);
     }

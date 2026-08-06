@@ -350,6 +350,8 @@
   "hud.zenkai.combat.no_techniques": "Assign techniques in the Ki Techniques menu",
   "config.zenkai.show_model_credits": "Model credits",
   "config.zenkai.show_model_credits.desc": "Show model and texture credits in item tooltips",
+  "config.zenkai.ki_sense_camera_shake": "Ki Sense camera shake",
+  "config.zenkai.ki_sense_camera_shake.desc": "Shake the camera when your ki sense warns you of a threat. The warning sound is unaffected.",
   "wheel.zenkai.title": "Power Wheel",
   "wheel.zenkai.forms": "Forms",
   "wheel.zenkai.kaioken.on": "Kaioken ON (%s)",

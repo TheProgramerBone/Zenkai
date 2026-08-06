@@ -47,11 +47,17 @@ public final class ClientConfig {
             defineBool("tooltips.show_model_credits", "show_model_credits",
                     "Show model and texture credits in item tooltips", true);
 
+    private static final ModConfigSpec.BooleanValue KI_SENSE_CAMERA_SHAKE =
+            defineBool("sense.ki_sense_camera_shake", "ki_sense_camera_shake",
+                    "Shake the camera when your ki sense warns you of a nearby threat", true);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     // ── Lectura ──────────────────────────────────────────────────────────────
 
     public static boolean showModelCredits() { return SHOW_MODEL_CREDITS.get(); }
+
+    public static boolean kiSenseCameraShake() { return KI_SENSE_CAMERA_SHAKE.get(); }
 
     /** Lista inmutable para la pantalla. */
     public static List<BoolEntry> entries() { return Collections.unmodifiableList(ENTRIES); }
