@@ -8,6 +8,7 @@ import com.hmc.zenkai.feature.sense.ScouterStacks;
 import com.hmc.zenkai.feature.sense.ScouterUpgrade;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
@@ -18,7 +19,6 @@ import java.util.random.RandomGenerator;
 
 /**
  * Estado CLIENTE del scouter.
- *
  *  - F4 con scouter FUNCIONAL puesto cicla el modo: OFF -> PODER -> STATS -> MÁS FUERTE ->
  *    RADAR -> OFF. Silencioso: el feedback es el propio panel. Al salir de OFF apaga el sentir
  *    el ki (mutuamente excluyentes).
@@ -27,7 +27,6 @@ import java.util.random.RandomGenerator;
  *  - MÁS FUERTE / RADAR: mandan ScouterAreaScanPacket cada AREA_INTERVAL ticks.
  *  - Un modo SIN su mejora no manda nada: el overlay lo dice y el servidor lo rechazaría igual.
  *  - Si te quitas el scouter, o se rompe, vuelve a OFF solo.
- *
  * SOBRECARGA: el servidor avisa con el flag `overload` del ScouterDataPacket. Mientras dura,
  * la cifra se baraja aquí (nunca en el paquete: mandar 5 números falsos por segundo por la red
  * sería absurdo) y el overlay pinta OVERLOAD parpadeando.
@@ -42,7 +41,11 @@ public final class ScouterClientState {
      *  que son números y no da tiempo a leer cuáles. Por frame sería un borrón gris. */
     private static final int SCRAMBLE_INTERVAL = 4;
 
-    private static final RandomGenerator RNG = RandomGenerator.getDefault();
+    /** RandomSource de Minecraft y no RandomGenerator.getDefault(): ese último pide al JRE
+     *  el algoritmo L32X64MixRandom, que no está en todos los runtimes (JREs recortados por
+     *  jlink o empaquetados por launchers). Como el campo es static, cuando falta revienta
+     *  en el <clinit> y se lleva por delante el tick de cliente entero. */
+    private static final RandomSource RANDOM = RandomSource.create();
 
     private static ScouterMode mode = ScouterMode.OFF;
     private static int tickCounter = 0;
@@ -200,7 +203,7 @@ public final class ScouterClientState {
     private static String scramble(String real) {
         char[] out = real.toCharArray();
         for (int i = 0; i < out.length; i++) {
-            if (out[i] >= '0' && out[i] <= '9') out[i] = (char) ('0' + RNG.nextInt(10));
+            if (out[i] >= '0' && out[i] <= '9') out[i] = (char) ('0' + RANDOM.nextInt(10));
         }
         return new String(out);
     }

@@ -36,6 +36,8 @@ public final class ZenkaiStructurePlacement {
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
         NoHostileSpawnZones.clear();
+        ServerLevel ow = event.getServer().getLevel(ModDimensions.OTHERWORLD_LEVEL);
+        if (ow != null) ensureOtherworldPalace(ow);
         NoHostileSpawnZones.addFromBase(ModDimensions.OTHERWORLD_LEVEL,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_MIN,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SX,
@@ -48,6 +50,7 @@ public final class ZenkaiStructurePlacement {
                 ModStructureSegments.HTC_NO_SPAWN_SY,
                 ModStructureSegments.HTC_NO_SPAWN_SZ,
                 "protector.zenkai.htc");
+
     }
 
 
@@ -68,7 +71,12 @@ public final class ZenkaiStructurePlacement {
         ZenkaiWorldData data = ZenkaiWorldData.get(server);
         if (data.isPlaced(key)) return;
         boolean ok = StaticStructurePlacer.place(level, base, segments, true);
-        if (ok) data.markPlaced(key);
+        if (ok) {
+            data.markPlaced(key);
+        } else {
+            // Sin esto, un fallo se reintenta en CADA muerte para siempre y en silencio.
+            LOGGER.error("[Zenkai] No se pudo colocar '{}' en {}. Se reintentará.", key, base);
+        }
     }
 
     /** Colocación forzada (para pruebas de offsets): ignora el flag de "ya colocada" e ilumina el aire. */

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "zenkai:sacred_stone_block"
+    }
+  ],
+  "result": {
+    "count": 4,
+    "id": "zenkai:sacred_stone"
+  }
+}

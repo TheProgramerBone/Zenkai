@@ -24,20 +24,34 @@ public class DataGenerators {
         PackOutput packOutput = generator.getPackOutput();
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
+
         generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Collections.emptySet(),
                 List.of(new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK)), lookupProvider));
         generator.addProvider(event.includeServer(), new ModRecipeProvider(packOutput, lookupProvider));
+
         BlockTagsProvider blockTagsProvider = new ModBlockTagProvider(packOutput, lookupProvider, existingFileHelper);
         generator.addProvider(event.includeServer(), blockTagsProvider);
         generator.addProvider(event.includeServer(), new ModItemTagProvider(packOutput, lookupProvider, blockTagsProvider.contentsGetter(), existingFileHelper));
         generator.addProvider(event.includeServer(), new ModDataMapProvider(packOutput, lookupProvider));
-        generator.addProvider(event.includeServer(), new ModDatapackProvider(packOutput, lookupProvider));
+
+        // En variable porque su lookup ENRIQUECIDO es lo único que conoce los biomas,
+        // dimensiones y features que él mismo crea. El de event.getLookupProvider() solo
+        // tiene los registros estáticos y los dinámicos de vainilla.
+        ModDatapackProvider datapackProvider = new ModDatapackProvider(packOutput, lookupProvider);
+        generator.addProvider(event.includeServer(), datapackProvider);
+
         generator.addProvider(event.includeClient(), new ModBlockStateProvider(packOutput, existingFileHelper));
         generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, existingFileHelper));
         generator.addProvider(event.includeServer(),
                 new ModAdvancementProvider(packOutput, lookupProvider, existingFileHelper));
         generator.addProvider(event.includeServer(), new ModEntityStatsProvider(packOutput));
+
+        // OJO: el lookup del datapackProvider, NO el base. rocky_wasteland es un bioma de
+        // datapack, así que en el lookup base no existe y TagsProvider aborta el datagen
+        // entero con "missing following references: zenkai:rocky_wasteland". Va después de
+        // registrar el datapackProvider: este futuro se completa cuando aquel ha corrido.
         generator.addProvider(event.includeServer(),
-                new ModBiomeTagProvider(packOutput, lookupProvider, existingFileHelper));
+                new ModBiomeTagProvider(packOutput, datapackProvider.getRegistryProvider(),
+                        existingFileHelper));
     }
 }

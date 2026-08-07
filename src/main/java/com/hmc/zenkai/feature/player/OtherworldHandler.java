@@ -42,8 +42,12 @@ public final class OtherworldHandler {
     }
 
     /**
-     * Tras pulsar "Reaparecer" en la pantalla de muerte: si el jugador quedó marcado para el
-     * otro mundo, lo redirigimos allí (en vez de a su cama/spawn). Si no, respawn vanilla normal.
+     * Tras pulsar "Reaparecer": si el jugador quedó marcado para el otro mundo, lo
+     * redirigimos allí en vez de a su cama/spawn.
+     * El teletransporte va DIFERIDO un tick a propósito. Este evento se dispara con la
+     * entidad nueva ya colocada pero con el cliente todavía procesando la secuencia de
+     * reaparición; cambiar de dimensión ahí dentro lo deja a veces colgado en la pantalla de
+     * muerte. Y "a veces" es peor que siempre: en un jugador no se reproduce y en servidor sí.
      */
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
@@ -51,6 +55,13 @@ public final class OtherworldHandler {
         if (event.isEndConquered()) return;                          // salir del End: no aplica
         if (!OtherworldManager.isInOtherworld(player)) return;
 
-        OtherworldManager.respawnIntoOtherworld(player);
+        player.server.execute(() -> {
+            // Se pudo haber ido en ese tick; teletransportar a un jugador desconectado deja
+            // basura en el nivel destino.
+            if (player.hasDisconnected()) return;                    // ⚠ firma
+            // Recomprobamos: entre el evento y este tick alguien pudo revivirlo por comando.
+            if (!OtherworldManager.isInOtherworld(player)) return;
+            OtherworldManager.respawnIntoOtherworld(player);
+        });
     }
 }

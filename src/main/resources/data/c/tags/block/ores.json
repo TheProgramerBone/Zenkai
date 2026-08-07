@@ -1,5 +1,8 @@
 {
   "values": [
-    "#c:ores/katchin"
+    "#c:ores/katchin",
+    "#c:ores/namek_crystal",
+    "#c:ores/energy_crystal",
+    "#c:ores/sacred_stone"
   ]
 }

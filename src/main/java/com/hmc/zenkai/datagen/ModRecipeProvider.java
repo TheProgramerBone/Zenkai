@@ -301,13 +301,16 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "energy_crystal_from_block"));
 
         // ── Piedra Sagrada ───────────────────────────────────────────────────
-        // 4 items -> 1 bloque, no 9: es material de construcción y a 9 por bloque no daría
-        // para levantar un templo con lo que suelta una veta.
-
+        
         ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.SACRED_STONE_BLOCK.get(), 1)
                 .pattern("SS").pattern("SS")
                 .define('S', ModItems.SACRED_STONE.get())
                 .unlockedBy("has_sacred_stone", has(ModItems.SACRED_STONE.get())).save(recipeOutput);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.SACRED_STONE.get(), 4)
+                .requires(ModBlocks.SACRED_STONE_BLOCK.get())
+                .unlockedBy("has_sacred_stone_block", has(ModBlocks.SACRED_STONE_BLOCK.get()))
+                .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "sacred_stone_from_block"));
 
         ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.POLISHED_SACRED_STONE.get(), 4)
                 .pattern("SS").pattern("SS")

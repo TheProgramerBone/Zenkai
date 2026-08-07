@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.race.RaceTextureUtil;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -35,6 +36,13 @@ public final class PhysicalIcons {
                     t.name().substring(0, 1), x + 7, y + 6, 0xFFFFFFFF, true);
             return;
         }
+        // Estado explícito: setColor es GLOBAL y cualquier widget dibujado antes en el frame
+        // puede haber dejado un alfa < 1 sin resetear. Sin esto el ícono hereda esa
+        // transparencia y aparece medio invisible según qué pantalla esté abierta.
+        RenderSystem.enableBlend();
+        g.setColor(1f, 1f, 1f, 1f);
         g.blit(ATLAS, x, y, t.ordinal() * CELL, 0, CELL, CELL, ATLAS_W, ATLAS_H);
+        g.setColor(1f, 1f, 1f, 1f);
+        RenderSystem.disableBlend();
     }
 }

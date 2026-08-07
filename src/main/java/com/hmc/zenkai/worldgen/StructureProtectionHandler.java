@@ -26,6 +26,15 @@ import net.neoforged.neoforge.event.level.ExplosionEvent;
 public final class StructureProtectionHandler {
     private StructureProtectionHandler() {}
 
+    /**
+     * Altura por debajo de la cual el Otherworld deja de ser "el más allá" y pasa a ser HFIL,
+     * o sea subsuelo minable. Las islas viven de y=130 a 190 y HFIL de -60 a 120, así que el
+     * corte cae en tierra de nadie.
+     * Existe porque prohibir construir en toda la dimensión hacía imposible minar el katchin,
+     * que genera ahí abajo: sin antorchas ni puentes no se baja a una veta.
+     */
+    private static final int OTHERWORLD_SURFACE_Y = 128;
+
     @SubscribeEvent
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
@@ -35,10 +44,15 @@ public final class StructureProtectionHandler {
         BlockPos pos = event.getPos();
         boolean inZone = ProtectedZones.isProtected((net.minecraft.server.level.ServerLevel) level, pos);
 
-        // Más allá: FUERA de las zonas del palacio no se construye (creativo sí puede).
-        // Nota: no depende de la gamerule de protección, es una regla propia del más allá.
+        // Arriba (islas, palacio de Yemma) no se construye fuera de las zonas. Abajo (HFIL)
+        // sí: es la mina. La comprobación de dimensión va aparte del flag porque el flag
+        // sigue puesto mientras el jugador está muerto, y sin ella bloquearía también la
+        // construcción en cualquier otro sitio al que acabara yendo con el flag activo.
         if (!player.isCreative() && player instanceof ServerPlayer sp
-                && OtherworldManager.isInOtherworld(sp) && !inZone) {
+                && OtherworldManager.isInOtherworld(sp)
+                && sp.level().dimension().equals(ModDimensions.OTHERWORLD_LEVEL)
+                && pos.getY() >= OTHERWORLD_SURFACE_Y
+                && !inZone) {
             event.setCanceled(true);
             resyncAfterCancel(player, pos);
             return;
