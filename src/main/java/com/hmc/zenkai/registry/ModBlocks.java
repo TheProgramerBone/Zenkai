@@ -21,6 +21,8 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -192,141 +194,57 @@ public class ModBlocks {
     public static final DeferredBlock<Block> KATCHIN_PILLAR = registerBlock("katchin_pillar",
             ()-> new RotatedPillarBlock(katchinProps()));
 
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BLACK = registerBlock("structural_concrete_black",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    .requiresCorrectToolForDrops()
-                    
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_BLACK)));
+    /** Una variante de concreto estructural con sus tres piezas de construcción. */
+    public record ConcreteFamily(String name,
+                                 DeferredBlock<Block> block,
+                                 DeferredBlock<StairBlock> stairs,
+                                 DeferredBlock<SlabBlock> slab,
+                                 DeferredBlock<WallBlock> wall) {}
 
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BLUE = registerBlock("structural_concrete_blue",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_BLUE)));
+    /** Todas las variantes, en orden de registro. El datagen itera sobre esto en vez de
+     *  listar 68 constantes a mano: añadir un color nuevo solo toca este archivo. */
+    public static final List<ConcreteFamily> STRUCTURAL_CONCRETE_FAMILIES = new ArrayList<>();
 
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BROWN = registerBlock("structural_concrete_brown",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_BROWN)));
+    private static BlockBehaviour.Properties concreteProps(MapColor color) {
+        return BlockBehaviour.Properties.of()
+                .strength(3f, 100f)
+                .requiresCorrectToolForDrops()
+                .sound(SoundType.STONE)
+                .mapColor(color);
+    }
 
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_CYAN = registerBlock("structural_concrete_cyan",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_CYAN)));
+    /** Registra base + escaleras + losa + muro y devuelve la base (para la constante pública). */
+    private static DeferredBlock<Block> structuralConcrete(String color, MapColor mapColor) {
+        String base = "structural_concrete_" + color;
+        DeferredBlock<Block> block = registerBlock(base,
+                () -> new Block(concreteProps(mapColor)));
+        DeferredBlock<StairBlock> stairs = registerBlock(base + "_stairs",
+                () -> new StairBlock(block.get().defaultBlockState(), concreteProps(mapColor)));
+        DeferredBlock<SlabBlock> slab = registerBlock(base + "_slab",
+                () -> new SlabBlock(concreteProps(mapColor)));
+        DeferredBlock<WallBlock> wall = registerBlock(base + "_wall",
+                () -> new WallBlock(concreteProps(mapColor)));
+        STRUCTURAL_CONCRETE_FAMILIES.add(new ConcreteFamily(base, block, stairs, slab, wall));
+        return block;
+    }
 
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_DARK_GREEN = registerBlock("structural_concrete_dark_green",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.TERRACOTTA_GREEN)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_DARK_RED = registerBlock("structural_concrete_dark_red",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.NETHER)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_GRAY = registerBlock("structural_concrete_gray",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_GRAY)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_GREEN = registerBlock("structural_concrete_green",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_GREEN)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_LIGHT_BLUE = registerBlock("structural_concrete_light_blue",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_LIGHT_BLUE)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_LIGHT_GRAY = registerBlock("structural_concrete_light_gray",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_LIGHT_GRAY)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_MAGENTA = registerBlock("structural_concrete_magenta",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_MAGENTA)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_ORANGE = registerBlock("structural_concrete_orange",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_ORANGE)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_PINK = registerBlock("structural_concrete_pink",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_PINK)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_PURPLE = registerBlock("structural_concrete_purple",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_PURPLE)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_RED = registerBlock("structural_concrete_red",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_RED)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_WHITE = registerBlock("structural_concrete_white",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.TERRACOTTA_WHITE)));
-
-    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_YELLOW = registerBlock("structural_concrete_yellow",
-            ()-> new Block(BlockBehaviour.Properties.of()
-                    .strength(3f,100f)
-                    
-                    .requiresCorrectToolForDrops()
-                    .sound(SoundType.STONE)
-                    .mapColor(MapColor.COLOR_YELLOW)));
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BLACK      = structuralConcrete("black", MapColor.COLOR_BLACK);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BLUE       = structuralConcrete("blue", MapColor.COLOR_BLUE);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_BROWN      = structuralConcrete("brown", MapColor.COLOR_BROWN);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_CYAN       = structuralConcrete("cyan", MapColor.COLOR_CYAN);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_DARK_GREEN = structuralConcrete("dark_green", MapColor.TERRACOTTA_GREEN);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_DARK_RED   = structuralConcrete("dark_red", MapColor.NETHER);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_GRAY       = structuralConcrete("gray", MapColor.COLOR_GRAY);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_GREEN      = structuralConcrete("green", MapColor.COLOR_GREEN);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_LIGHT_BLUE = structuralConcrete("light_blue", MapColor.COLOR_LIGHT_BLUE);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_LIGHT_GRAY = structuralConcrete("light_gray", MapColor.COLOR_LIGHT_GRAY);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_MAGENTA    = structuralConcrete("magenta", MapColor.COLOR_MAGENTA);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_ORANGE     = structuralConcrete("orange", MapColor.COLOR_ORANGE);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_PINK       = structuralConcrete("pink", MapColor.COLOR_PINK);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_PURPLE     = structuralConcrete("purple", MapColor.COLOR_PURPLE);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_RED        = structuralConcrete("red", MapColor.COLOR_RED);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_WHITE      = structuralConcrete("white", MapColor.TERRACOTTA_WHITE);
+    public static final DeferredBlock<Block> STRUCTURAL_CONCRETE_YELLOW     = structuralConcrete("yellow", MapColor.COLOR_YELLOW);
 
     public static final DeferredBlock<Block> ROCKY_BLOCK = registerBlock("rocky_block",
             ()-> new Block(BlockBehaviour.Properties.of()

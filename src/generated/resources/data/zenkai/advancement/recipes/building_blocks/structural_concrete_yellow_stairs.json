@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_structural_concrete_yellow": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:structural_concrete_yellow"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:structural_concrete_yellow_stairs"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_structural_concrete_yellow"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:structural_concrete_yellow_stairs"
+    ]
+  }
+}

@@ -37,6 +37,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.NAMEKIAN_HERB_SEEDS.get());
         basicItem(ModItems.HEALING_WATER_BOTTLE.get());
         basicItem(ModItems.RAW_KATCHIN.get());
+        basicItem(ModItems.DIRTY_RAW_KATCHIN.get());
         basicItem(ModItems.KATCHIN_INGOT.get());
 
         // El item de la puerta es una textura plana propia, no el modelo de bloque.
@@ -87,7 +88,13 @@ public class ModItemModelProvider extends ItemModelProvider {
                 .texture("wall", modLoc("block/polished_sacred_stone"));
         withExistingParent("sacred_stone_brick_wall", mcLoc("block/wall_inventory"))
                 .texture("wall", modLoc("block/sacred_stone_bricks"));
-
+        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+            withExistingParent(fam.name() + "_stairs", modLoc("block/" + fam.name() + "_stairs"));
+            withExistingParent(fam.name() + "_slab",   modLoc("block/" + fam.name() + "_slab"));
+            // El muro no tiene modelo de inventario propio: se monta con la textura base.
+            withExistingParent(fam.name() + "_wall", mcLoc("block/wall_inventory"))
+                    .texture("wall", modLoc("block/" + fam.name()));
+        }
         registerRaceSkinModels();
     }
 

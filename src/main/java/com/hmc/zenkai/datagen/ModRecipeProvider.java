@@ -355,6 +355,11 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         oreBlasting(recipeOutput, List.of(ModBlocks.ENERGY_CRYSTAL_ORE.get()), RecipeCategory.MISC, ModItems.ENERGY_CRYSTAL.get(), 1.0f, 100, "energy_crystal");
         oreSmelting(recipeOutput, List.of(ModBlocks.SACRED_STONE_ORE.get()),   RecipeCategory.MISC, ModItems.SACRED_STONE.get(),   0.2f, 200, "sacred_stone");
         oreBlasting(recipeOutput, List.of(ModBlocks.SACRED_STONE_ORE.get()),   RecipeCategory.MISC, ModItems.SACRED_STONE.get(),   0.2f, 100, "sacred_stone");
+
+        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+            sacredFamily(recipeOutput, fam.block().get(),
+                    fam.stairs().get(), fam.slab().get(), fam.wall().get());
+        }
     }
 
     protected static void oreSmelting(@NotNull RecipeOutput recipeOutput, List<ItemLike> pIngredients, @NotNull RecipeCategory pCategory, @NotNull ItemLike pResult,

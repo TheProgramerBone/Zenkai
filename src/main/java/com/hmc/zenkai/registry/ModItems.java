@@ -62,6 +62,12 @@ public class ModItems {
     public static final DeferredItem<Item> RAW_KATCHIN = ITEMS.registerItem("raw_katchin",
             Item::new, new Item.Properties());
 
+    /** Intermedio de la cadena de Mekanism: mena machacada, todavía con roca pegada.
+     *  NO es polvo de katchin — el metal no se pulveriza; lo que se rompe es la piedra que
+     *  lo envuelve, igual que la escoria antigua en la cadena de netherita. */
+    public static final DeferredItem<Item> DIRTY_RAW_KATCHIN = ITEMS.registerItem("dirty_raw_katchin",
+            Item::new, new Item.Properties());
+
     /** El metal más duro del Universo 7. No es un tier de herramienta: es material
      *  estructural y de equipo. Ver PowerMining para por qué no se pica con un pico. */
     public static final DeferredItem<Item> KATCHIN_INGOT = ITEMS.registerItem("katchin_ingot",

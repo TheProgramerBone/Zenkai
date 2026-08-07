@@ -30,6 +30,12 @@ public class ZenkaiTickHandlers {
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         Player p = e.getEntity();
         if (p.level().isClientSide()) return;
+        // MUERTE REAL EN CURSO: el jugador está en la pantalla de muerte esperando respawn.
+        // Si seguimos ticando, el sync final -> mirrorHealth le devuelve 1 de vida y el
+        // servidor IGNORA la petición de reaparecer (exige getHealth() <= 0). Las muertes
+        // CANCELADAS (derribado, otro mundo) restauran la vida antes de sync, así que al
+        // tick siguiente ya llegan vivas y no las corta.
+        if (p.isDeadOrDying()) return;
 
         TickCtx c = new TickCtx(p,
                 p.getData(ZenkaiDataAttachments.PLAYER_STATS.get()),

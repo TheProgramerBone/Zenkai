@@ -6,6 +6,7 @@ import com.hmc.zenkai.registry.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
+import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import org.jetbrains.annotations.NotNull;
@@ -174,6 +175,44 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.POLISHED_SACRED_STONE_SLAB.get(),
                 ModBlocks.SACRED_STONE_BRICK_SLAB.get()
         );
+
+        tag(Tags.Blocks.ORES_COAL).add(
+                ModBlocks.NAMEKIAN_COAL_ORE.get()
+        );
+
+        tag(Tags.Blocks.ORES_IRON).add(
+                ModBlocks.NAMEKIAN_IRON_ORE.get()
+        );
+
+        tag(Tags.Blocks.ORES_LAPIS).add(
+                ModBlocks.NAMEKIAN_LAPIS_ORE.get()
+        );
+
+        tag(Tags.Blocks.ORES_REDSTONE).add(
+                ModBlocks.NAMEKIAN_REDSTONE_ORE.get()
+        );
+
+        tag(Tags.Blocks.ORES_COPPER).add(
+                ModBlocks.NAMEKIAN_COPPER_ORE.get()
+        );
+
+        tag(Tags.Blocks.ORES_GOLD).add(
+                ModBlocks.NAMEKIAN_GOLD_ORE.get()
+        );
+
+        tag(Tags.Blocks.ORES_DIAMOND).add(
+                ModBlocks.NAMEKIAN_DIAMOND_ORE.get()
+        );
+
+        // Concreto estructural: pico obligatorio (lo pide requiresCorrectToolForDrops) y
+        // tags de familia para que funcionen recetas, cantero y mods de construcción.
+        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+            tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
+                    fam.block().get(), fam.stairs().get(), fam.slab().get(), fam.wall().get());
+            tag(BlockTags.STAIRS).add(fam.stairs().get());
+            tag(BlockTags.SLABS).add(fam.slab().get());
+            tag(BlockTags.WALLS).add(fam.wall().get());
+        }
 
         // ==========================================
         // 5. GENERACIÓN DE MUNDO Y ENTORNO

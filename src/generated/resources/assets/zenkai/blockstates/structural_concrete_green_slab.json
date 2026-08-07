@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "zenkai:block/structural_concrete_green_slab"
+    },
+    "type=double": {
+      "model": "zenkai:block/structural_concrete_green"
+    },
+    "type=top": {
+      "model": "zenkai:block/structural_concrete_green_slab_top"
+    }
+  }
+}

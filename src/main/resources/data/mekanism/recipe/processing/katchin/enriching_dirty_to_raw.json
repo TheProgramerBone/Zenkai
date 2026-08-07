@@ -1,0 +1,8 @@
+{
+  "neoforge:conditions": [
+    { "type": "neoforge:mod_loaded", "modid": "mekanism" }
+  ],
+  "type": "mekanism:enriching",
+  "input": { "count": 1, "item": "zenkai:dirty_raw_katchin" },
+  "output": { "count": 1, "id": "zenkai:raw_katchin" }
+}

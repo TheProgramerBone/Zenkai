@@ -3,6 +3,23 @@
     "zenkai:sacred_stone_slab",
     "zenkai:polished_sacred_stone_slab",
     "zenkai:sacred_stone_brick_slab",
-    "zenkai:cut_katchin_slab"
+    "zenkai:cut_katchin_slab",
+    "zenkai:structural_concrete_black_slab",
+    "zenkai:structural_concrete_blue_slab",
+    "zenkai:structural_concrete_brown_slab",
+    "zenkai:structural_concrete_cyan_slab",
+    "zenkai:structural_concrete_dark_green_slab",
+    "zenkai:structural_concrete_dark_red_slab",
+    "zenkai:structural_concrete_gray_slab",
+    "zenkai:structural_concrete_green_slab",
+    "zenkai:structural_concrete_light_blue_slab",
+    "zenkai:structural_concrete_light_gray_slab",
+    "zenkai:structural_concrete_magenta_slab",
+    "zenkai:structural_concrete_orange_slab",
+    "zenkai:structural_concrete_pink_slab",
+    "zenkai:structural_concrete_purple_slab",
+    "zenkai:structural_concrete_red_slab",
+    "zenkai:structural_concrete_white_slab",
+    "zenkai:structural_concrete_yellow_slab"
   ]
 }

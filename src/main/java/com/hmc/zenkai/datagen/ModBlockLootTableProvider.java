@@ -82,6 +82,13 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         add(ModBlocks.CUT_KATCHIN_SLAB.get(), this::createSlabItemTable);
         dropSelf(ModBlocks.NAMEKIAN_LAMP.get());
 
+        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+            dropSelf(fam.block().get());
+            dropSelf(fam.stairs().get());
+            dropSelf(fam.wall().get());
+            add(fam.slab().get(), this::createSlabItemTable);
+        }
+
         add(ModBlocks.NAMEKIAN_STONE.get(),
                 createSingleItemTableWithSilkTouch(ModBlocks.NAMEKIAN_STONE.get(), ModBlocks.NAMEKIAN_COBBLESTONE));
         add(ModBlocks.NAMEKIAN_GRASS_BLOCK.get(),

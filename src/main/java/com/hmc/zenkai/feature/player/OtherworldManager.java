@@ -35,6 +35,8 @@ public final class OtherworldManager {
         player.setDeltaMovement(Vec3.ZERO);
         // Restaura los pools (body=HP, stamina, energy) → arregla la barra "HP 0/20".
         player.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).refillOnRespawn();
+        // Vida vanilla explícita ANTES del sync (mirrorHealth ya no revive a vida <= 0).
+        player.setHealth(player.getMaxHealth());
         PlayerLifeCycle.sync(player);
     }
 

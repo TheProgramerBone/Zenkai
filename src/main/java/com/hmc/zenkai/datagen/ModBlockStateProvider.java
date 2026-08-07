@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
 import com.hmc.zenkai.registry.ModBlocks;
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.*;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
@@ -45,23 +46,13 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.ROCKY_BLOCK);
         blockWithItem(ModBlocks.HTC_BLOCK);
         blockWithItem(ModBlocks.HTC_PORTAL);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_BLACK);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_BLUE);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_BROWN);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_CYAN);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_GRAY);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_LIGHT_BLUE);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_LIGHT_GRAY);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_DARK_GREEN);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_RED);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_YELLOW);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_MAGENTA);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_WHITE);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_PURPLE);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_GREEN);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_PINK);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_ORANGE);
-        blockWithItem(ModBlocks.STRUCTURAL_CONCRETE_DARK_RED);
+        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+            ResourceLocation tex = modLoc("block/" + fam.name());
+            blockWithItem(fam.block());
+            stairsBlock(fam.stairs().get(), tex);
+            slabBlock(fam.slab().get(), tex, tex);
+            wallBlock(fam.wall().get(), tex);
+        }
         blockWithItem(ModBlocks.OTHERWORLD_CLOUD);
         blockWithItem(ModBlocks.NAMEKIAN_LAMP);
         blockWithItem(ModBlocks.NPC_MARKER);

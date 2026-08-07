@@ -10,7 +10,9 @@ import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.level.block.Block;
+import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.common.data.internal.NeoForgeItemTagsProvider;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -68,7 +70,33 @@ public class ModItemTagProvider extends ItemTagsProvider {
         // 4. BLOQUES DE CONSTRUCCIÓN (ÍTEMS)
         // ==========================================
 
+        tag(Tags.Items.ORES_COAL).add(
+                ModBlocks.NAMEKIAN_COAL_ORE.asItem()
+        );
 
+        tag(Tags.Items.ORES_IRON).add(
+                ModBlocks.NAMEKIAN_IRON_ORE.asItem()
+        );
+
+        tag(Tags.Items.ORES_LAPIS).add(
+                ModBlocks.NAMEKIAN_LAPIS_ORE.asItem()
+        );
+
+        tag(Tags.Items.ORES_REDSTONE).add(
+                ModBlocks.NAMEKIAN_REDSTONE_ORE.asItem()
+        );
+
+        tag(Tags.Items.ORES_COPPER).add(
+                ModBlocks.NAMEKIAN_COPPER_ORE.asItem()
+        );
+
+        tag(Tags.Items.ORES_GOLD).add(
+                ModBlocks.NAMEKIAN_GOLD_ORE.asItem()
+        );
+
+        tag(Tags.Items.ORES_DIAMOND).add(
+                ModBlocks.NAMEKIAN_DIAMOND_ORE.asItem()
+        );
 
         tag(ItemTags.WALLS).add(
                 ModBlocks.SACRED_STONE_WALL.get().asItem(),
@@ -90,6 +118,12 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 ModBlocks.SACRED_STONE_BRICK_SLAB.get().asItem(),
                 ModBlocks.CUT_KATCHIN_SLAB.get().asItem()
         );
+
+        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+            tag(ItemTags.STAIRS).add(fam.stairs().get().asItem());
+            tag(ItemTags.SLABS).add(fam.slab().get().asItem());
+            tag(ItemTags.WALLS).add(fam.wall().get().asItem());
+        }
 
         // ==========================================
         // 5. TAGS PERSONALIZADOS DEL MOD (ZENKAI)

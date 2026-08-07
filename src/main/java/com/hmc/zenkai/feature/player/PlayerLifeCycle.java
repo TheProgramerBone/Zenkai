@@ -89,6 +89,9 @@ public class PlayerLifeCycle {
      */
     private static void mirrorHealth(ServerPlayer sp) {
         if (!CommonConfig.mirrorHealth()) return;
+        // Nunca se resucita a un muerto: subirle la vida rompe el respawn (ver arriba).
+        // isDeadOrDying cubre vida <= 0 y el flag dead de una muerte ya consumada.
+        if (sp.isDeadOrDying()) return;
 
         PlayerStatsAttachment att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         if (!att.isRaceChosen()) return;

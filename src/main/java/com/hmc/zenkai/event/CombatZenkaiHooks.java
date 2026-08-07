@@ -68,7 +68,16 @@ public class CombatZenkaiHooks {
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent.Pre e) {
         if (e.getEntity().level().isClientSide()) return;
-        // I-frames: va lo PRIMERO, antes de tocar defensa o pools. Un dash esquiva de verdad.
+
+        // Daño que vainilla declara inesquivable: /kill y el vacío. Sale de aquí sin tocar
+        // nada para que lo aplique vanilla tal cual.
+        // Va lo PRIMERO, antes incluso que los i-frames: no tiene sentido esquivar un /kill.
+        // Sin esto, /kill entraba al pool como un golpe más y dejaba al jugador derribado en
+        // vez de muerto — y a un inmortal ni eso.
+        // ⚠ API a verificar al compilar: DamageTypeTags.BYPASSES_INVULNERABILITY en 1.21.1.
+        if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+
+        // I-frames: antes de tocar defensa o pools. Un dash esquiva de verdad.
         if (e.getEntity() instanceof ServerPlayer dodger
                 && PhysicalCombatServer.hasIFrames(dodger.getUUID())) {
             e.setNewDamage(0.0F);
@@ -363,21 +372,18 @@ public class CombatZenkaiHooks {
 
     /**
      * Body agotado. En vez de morir al instante:
-     *  - inmortal: no cae.
      *  - ya en el otro mundo: se re-ancla ahí (sin reiniciar su temporizador de Yemma).
      *  - vivo: entra en "derribado" (acostado) 5 s. Si lo curan (senzu propio/aliado) revive;
      *    si nadie lo cura, el tick de TickHandlers lo mata de verdad y pasa al otro mundo.
+     *
+     * LA INMORTALIDAD NO SE MIRA AQUÍ. Antes había una rama que rellenaba el body al máximo si
+     * el flag estaba puesto, y entre eso y la cancelación de muerte de DownedDeathGuard el
+     * jugador era literalmente inmatable, /kill incluido. Ahora un inmortal cae derribado como
+     * cualquiera y se levanta solo porque ImmortalityEffect le devuelve body muy rápido: mismo
+     * resultado en la práctica, pero por una vía que se puede superar con daño suficiente.
      */
     private static void onBodyDepleted(Player victim, PlayerStatsAttachment att) {
         if (!(victim instanceof ServerPlayer sp)) return;
-
-        // Inmortal: no cae NUNCA y no debe quedarse a 0. Rellenamos el body al máximo
-        // (antes solo se hacía `return`, dejando body=0 y la barra bugueada en "HP 0/max").
-        if (att.isImmortal()) {
-            att.setBody(att.getBodyMax());
-            PlayerLifeCycle.sync(sp);
-            return;
-        }
 
         if (att.isInOtherworld()) {
             OtherworldManager.keepInOtherworld(sp);

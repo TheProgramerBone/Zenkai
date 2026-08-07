@@ -73,27 +73,27 @@ public final class DownedDeathGuard {
         if (!att.isRaceChosen()) return;
 
         // En el otro mundo la muerte sigue su curso normal: allí ya no hay derribado.
-        if (att.isInOtherworld()) return;
+        //if (att.isInOtherworld()) return;
 
         // Inmortal: no cae nunca, y no puede quedarse con el body a 0 (barra bugueada).
         if (att.isImmortal()) {
             e.setCanceled(true);
             att.setBody(att.getBodyMax());
-
+            sp.setHealth(sp.getMaxHealth());   // explícito: mirrorHealth ya no toca a vida <= 0
             var form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
             form.resetAll();
-            form.clearStrain();               // ser rescatado a full limpia la fatiga
+            form.clearStrain();
             PlayerLifeCycle.sync(sp);
-            PlayerLifeCycle.syncForm(sp);     // resetAll toca PLAYER_FORM, no basta con sync()
+            PlayerLifeCycle.syncForm(sp);
             return;
         }
 
         e.setCanceled(true);
 
-        // La vida vanilla TIENE que volver a >0: con 0 el jugador vuelve a morir al tick
+        // La vida vanilla TIENE que volver a >0 AQUÍ. Con 0 el jugador vuelve a morir al tick
         // siguiente y el cliente se queda en la pantalla de muerte a medias.
-
         att.setBody(0);
+        sp.setHealth(1.0F);
 
         if (!att.flags().isDowned()) {
             att.flags().setDowned(true);
