@@ -149,6 +149,22 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.NAMEKIAN_GRASS_BLOCK.get()
         );
 
+        tag(Tags.Blocks.SANDS).add(
+                ModBlocks.NAMEKIAN_SAND.get()
+        );
+
+        tag(Tags.Blocks.GRAVELS).add(
+                ModBlocks.NAMEKIAN_GRAVEL.get()
+        );
+
+        tag(Tags.Blocks.STONES).add(
+                ModBlocks.NAMEKIAN_STONE.get()
+        );
+
+        tag(Tags.Blocks.COBBLESTONES).add(
+                ModBlocks.NAMEKIAN_COBBLESTONE.get()
+        );
+
         tag(BlockTags.WALLS).add(
                 ModBlocks.SACRED_STONE_WALL.get(),
                 ModBlocks.POLISHED_SACRED_STONE_WALL.get(),

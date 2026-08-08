@@ -69,10 +69,16 @@ public class ModBlockStateProvider extends BlockStateProvider {
         simpleBlockWithItem(ModBlocks.AJISA_LEAVES.get(),
                 models().cubeAll("ajisa_leaves", modLoc("block/ajisa_leaves")).renderType("cutout_mipped"));
 
-        simpleBlockWithItem(ModBlocks.AJISA_SAPLING.get(),
+        simpleBlock(ModBlocks.AJISA_SAPLING.get(),
                 models().cross("ajisa_sapling", modLoc("block/ajisa_sapling")).renderType("cutout"));
-        simpleBlockWithItem(ModBlocks.AJISA_FLOWER.get(),
+        itemModels().getBuilder("ajisa_sapling")
+                .parent(itemModels().getExistingFile(mcLoc("item/generated")))
+                .texture("layer0", modLoc("block/ajisa_sapling"));
+        simpleBlock(ModBlocks.AJISA_FLOWER.get(),
                 models().cross("ajisa_flower", modLoc("block/ajisa_flower")).renderType("cutout"));
+        itemModels().getBuilder("ajisa_flower")
+                .parent(itemModels().getExistingFile(mcLoc("item/generated")))
+                .texture("layer0", modLoc("block/ajisa_flower"));
 
         stairsBlock((StairBlock) ModBlocks.AJISA_STAIRS.get(), modLoc("block/ajisa_planks"));
         slabBlock((SlabBlock) ModBlocks.AJISA_SLAB.get(), modLoc("block/ajisa_planks"), modLoc("block/ajisa_planks"));

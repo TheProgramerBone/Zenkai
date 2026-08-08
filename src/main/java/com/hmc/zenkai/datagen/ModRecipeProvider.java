@@ -16,6 +16,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -355,6 +356,25 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         oreBlasting(recipeOutput, List.of(ModBlocks.ENERGY_CRYSTAL_ORE.get()), RecipeCategory.MISC, ModItems.ENERGY_CRYSTAL.get(), 1.0f, 100, "energy_crystal");
         oreSmelting(recipeOutput, List.of(ModBlocks.SACRED_STONE_ORE.get()),   RecipeCategory.MISC, ModItems.SACRED_STONE.get(),   0.2f, 200, "sacred_stone");
         oreBlasting(recipeOutput, List.of(ModBlocks.SACRED_STONE_ORE.get()),   RecipeCategory.MISC, ModItems.SACRED_STONE.get(),   0.2f, 100, "sacred_stone");
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_WHITE.get(),      Blocks.WHITE_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_LIGHT_GRAY.get(), Blocks.LIGHT_GRAY_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_GRAY.get(),       Blocks.GRAY_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_BLACK.get(),      Blocks.BLACK_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_BROWN.get(),      Blocks.BROWN_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_RED.get(),        Blocks.RED_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_ORANGE.get(),     Blocks.ORANGE_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_YELLOW.get(),     Blocks.YELLOW_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_GREEN.get(),      Blocks.GREEN_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_CYAN.get(),       Blocks.CYAN_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_LIGHT_BLUE.get(), Blocks.LIGHT_BLUE_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_BLUE.get(),       Blocks.BLUE_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_PURPLE.get(),     Blocks.PURPLE_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_MAGENTA.get(),    Blocks.MAGENTA_CONCRETE);
+        structuralConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_PINK.get(),       Blocks.PINK_CONCRETE);
+        tintedConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_DARK_GREEN.get(),
+                ModBlocks.STRUCTURAL_CONCRETE_GREEN.get(), Items.BLACK_DYE);
+        tintedConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_DARK_RED.get(),
+                ModBlocks.STRUCTURAL_CONCRETE_RED.get(), Items.BLACK_DYE);
 
         for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
             sacredFamily(recipeOutput, fam.block().get(),
@@ -418,5 +438,25 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         SingleItemRecipeBuilder.stonecutting(Ingredient.of(input), RecipeCategory.BUILDING_BLOCKS, result, count)
                 .unlockedBy("has_" + in, has(input))
                 .save(out, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, res + "_from_" + in + "_stonecutting"));
+    }
+
+    /** Hormigón armado: 8 de hormigón vainilla del mismo color rodeando 1 lingote de hierro. */
+    private static void structuralConcrete(RecipeOutput out, Block result, ItemLike vanillaConcrete) {
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, result, 8)
+                .pattern("CCC").pattern("CIC").pattern("CCC")
+                .define('C', vanillaConcrete)
+                .define('I', Tags.Items.INGOTS_IRON)   // tag: compatible con hierro de otros mods
+                .unlockedBy(getHasName(vanillaConcrete), has(vanillaConcrete))
+                .save(out);
+    }
+
+    /** Tonos que no existen en vainilla: se tiñen desde el structural claro equivalente,
+     *  que ya lleva el refuerzo de hierro dentro. */
+    private static void tintedConcrete(RecipeOutput out, Block result, Block base, ItemLike dye) {
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.BUILDING_BLOCKS, result, 8)
+                .requires(base, 8)
+                .requires(dye)
+                .unlockedBy(getHasName(base), has(base))
+                .save(out);
     }
 }

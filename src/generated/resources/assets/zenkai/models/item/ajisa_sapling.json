@@ -1,3 +1,6 @@
 {
-  "parent": "zenkai:block/ajisa_sapling"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zenkai:block/ajisa_sapling"
+  }
 }
