@@ -416,10 +416,14 @@ public class ModBlocks {
     public static final DeferredBlock<Block> NAMEK_CRYSTAL_ORE = registerBlock("namek_crystal_ore",
             ()-> new DropExperienceBlock(UniformInt.of(2, 5), oreProps()));
 
-    /** Emite luz 6: en una cueva a oscuras se insinúa a lo lejos sin iluminar la sala.
-     *  Ojo, la luz también impide que aparezcan mobs justo encima. */
+    /** Emite luz 6 apagada: en una cueva a oscuras se insinúa a lo lejos sin iluminar la sala.
+     *  Al golpearla, pisarla o clicarla sube a 12 y se apaga sola con el random tick.
+     *  randomTicks() es obligatorio aunque isRandomlyTicking esté sobreescrito: sin él la
+     *  sección del chunk puede no entrar en el sorteo de ticks aleatorios. */
     public static final DeferredBlock<Block> ENERGY_CRYSTAL_ORE = registerBlock("energy_crystal_ore",
-            ()-> new DropExperienceBlock(UniformInt.of(3, 7), oreProps().lightLevel(s -> 6)));
+            ()-> new EnergyCrystalOreBlock(oreProps()
+                    .randomTicks()
+                    .lightLevel(s -> s.getValue(EnergyCrystalOreBlock.LIT) ? 12 : 6)));
 
     public static final DeferredBlock<Block> SACRED_STONE_ORE = registerBlock("sacred_stone_ore",
             ()-> new DropExperienceBlock(UniformInt.of(1, 3), oreProps()));
@@ -470,12 +474,12 @@ public class ModBlocks {
     public static final DeferredBlock<Block> SACRED_STONE_BRICK_WALL = registerBlock("sacred_stone_brick_wall",
             ()-> new WallBlock(sacredProps()));
 
-    /** Lámpara namekiana: luz 15, la iluminación de las aldeas. */
+    /** Lámpara namekiana: luz 15, la iluminación de las aldeas. Se apaga con click derecho. */
     public static final DeferredBlock<Block> NAMEKIAN_LAMP = registerBlock("namekian_lamp",
-            ()-> new Block(BlockBehaviour.Properties.of()
+            ()-> new NamekianLampBlock(BlockBehaviour.Properties.of()
                     .strength(1.5f, 6.0f)
                     .requiresCorrectToolForDrops()
-                    .lightLevel(s -> 15)
+                    .lightLevel(s -> s.getValue(NamekianLampBlock.LIT) ? 15 : 0)
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.QUARTZ)));
 
