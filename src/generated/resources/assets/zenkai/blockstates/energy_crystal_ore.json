@@ -1,6 +1,9 @@
 {
   "variants": {
-    "": {
+    "lit=false": {
+      "model": "zenkai:block/energy_crystal_ore"
+    },
+    "lit=true": {
       "model": "zenkai:block/energy_crystal_ore"
     }
   }

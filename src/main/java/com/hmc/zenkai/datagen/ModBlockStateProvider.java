@@ -2,6 +2,7 @@ package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
+import com.hmc.zenkai.content.block.NamekianLampBlock;
 import com.hmc.zenkai.registry.ModBlocks;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -54,7 +55,18 @@ public class ModBlockStateProvider extends BlockStateProvider {
             wallBlock(fam.wall().get(), tex);
         }
         blockWithItem(ModBlocks.OTHERWORLD_CLOUD);
-        blockWithItem(ModBlocks.NAMEKIAN_LAMP);
+        var energyOreModel = models().cubeAll("energy_crystal_ore", modLoc("block/energy_crystal_ore"));
+        getVariantBuilder(ModBlocks.ENERGY_CRYSTAL_ORE.get())
+                .forAllStates(s -> ConfiguredModel.builder().modelFile(energyOreModel).build());
+        simpleBlockItem(ModBlocks.ENERGY_CRYSTAL_ORE.get(), energyOreModel);
+
+        var lampOn  = models().cubeAll("namekian_lamp", modLoc("block/namekian_lamp"));
+        var lampOff = models().cubeAll("namekian_lamp_off", modLoc("block/namekian_lamp_off"));
+        getVariantBuilder(ModBlocks.NAMEKIAN_LAMP.get())
+                .forAllStates(s -> ConfiguredModel.builder()
+                        .modelFile(s.getValue(NamekianLampBlock.LIT) ? lampOn : lampOff)
+                        .build());
+        simpleBlockItem(ModBlocks.NAMEKIAN_LAMP.get(), lampOn);
         blockWithItem(ModBlocks.NPC_MARKER);
         makeCrop((CropBlock) ModBlocks.NAMEKIAN_HERB_CROP.get(), "namekian_herb_crop_stage", "namekian_herb_crop_stage");
         logBlock((RotatedPillarBlock) ModBlocks.AJISA_LOG.get());
@@ -92,7 +104,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         pressurePlateBlock((PressurePlateBlock) ModBlocks.AJISA_PRESSURE_PLATE.get(), modLoc("block/ajisa_planks"));
 
         blockWithItem(ModBlocks.NAMEK_CRYSTAL_ORE);
-        blockWithItem(ModBlocks.ENERGY_CRYSTAL_ORE);
         blockWithItem(ModBlocks.SACRED_STONE_ORE);
         blockWithItem(ModBlocks.NAMEK_CRYSTAL_BLOCK);
         blockWithItem(ModBlocks.ENERGY_CRYSTAL_BLOCK);

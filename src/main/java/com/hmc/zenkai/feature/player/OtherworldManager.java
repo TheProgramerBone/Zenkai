@@ -19,7 +19,7 @@ public final class OtherworldManager {
     public static final long REVIVE_DELAY_TICKS = 6000L; // 5 min (20 tps * 60 * 5)
 
     /** Posición de aparición en el otro mundo (ajusta a la entrada de tu estructura). */
-    public static final BlockPos OTHERWORLD_SPAWN = new BlockPos(57, 147, 3);
+    public static final BlockPos OTHERWORLD_SPAWN = new BlockPos(66, 147, 13);
 
     public static boolean isInOtherworld(ServerPlayer player) {
         return player.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).isInOtherworld();

@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-07T12:25:41.3853383	Registries
+// 1.21.1	2026-08-08T00:05:36.3330659	Registries
 bd6f2330be43a5be1fb54ce493e83bbd2148fe7e data/zenkai/neoforge/biome_modifier/add_katchin_ore.json
 017292215ebf76ee49087a29e74d2a2ed4ff7b48 data/zenkai/neoforge/biome_modifier/add_katchin_ore_rocky.json
 ea1d42e8fc6129337ee16afbc8a261619759f0a2 data/zenkai/worldgen/biome/hfil_badlands.json
@@ -15,7 +15,7 @@ b48835706289c8578fe3a9eab71dab80a89ffe7a data/zenkai/worldgen/biome/otherworld.j
 8af5b791ace8537d555369072ce50f848936b95c data/zenkai/worldgen/configured_carver/namek_cave.json
 0de6c30a22167a05c26f923f235c020299a627cb data/zenkai/worldgen/configured_feature/ajisa_flower_patch.json
 b3254ce8a370560ff589782cebcd470cf0a8784a data/zenkai/worldgen/configured_feature/ajisa_tree.json
-229d34b6a3bbd889293df530818f338826978120 data/zenkai/worldgen/configured_feature/energy_crystal_ore.json
+bb224562aef3b94f2bb9a3664a3beb90e99cc9ad data/zenkai/worldgen/configured_feature/energy_crystal_ore.json
 208074126598b9b63c79a1ec3f5982c67381ae9b data/zenkai/worldgen/configured_feature/katchin_ore.json
 8f21273421dd0d8bd51952ad81ce6ae62bc87781 data/zenkai/worldgen/configured_feature/katchin_ore_exposed.json
 ae056fdf00aa418070c6bc751b3e4d9a8e2b4c58 data/zenkai/worldgen/configured_feature/katchin_ore_otherworld.json
