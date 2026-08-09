@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-08T17:07:04.4812965	Registries
+// 1.21.1	2026-08-09T09:36:03.5314066	Registries
 bd6f2330be43a5be1fb54ce493e83bbd2148fe7e data/zenkai/neoforge/biome_modifier/add_katchin_ore.json
 017292215ebf76ee49087a29e74d2a2ed4ff7b48 data/zenkai/neoforge/biome_modifier/add_katchin_ore_rocky.json
 ea1d42e8fc6129337ee16afbc8a261619759f0a2 data/zenkai/worldgen/biome/hfil_badlands.json
@@ -9,7 +9,7 @@ d128f5cdd06a4a37ac4b50d801ca565b4dc0d739 data/zenkai/worldgen/biome/hfil_dunes.j
 c33b67c63d6e03f9be5f304c17340801f85b7e6d data/zenkai/worldgen/biome/namek_ocean.json
 b8f08c2c684526949d16197a47009ee913c1c1c2 data/zenkai/worldgen/biome/namek_plains.json
 58e3a87af24847ce1272dbe7b4b535fb3e95a517 data/zenkai/worldgen/biome/namek_shore.json
-b88fd35062029fcae3bf0ad0e628d8c873410f20 data/zenkai/worldgen/biome/otherworld.json
+2d18c8f8218662fec7becf2798be502b3d2e2523 data/zenkai/worldgen/biome/otherworld.json
 75a0eedb27aaff49c0ef02ee5f823da081371ed4 data/zenkai/worldgen/biome/rocky_wasteland.json
 9666f5c30bac06e6126cb8c2b4c34f2c42c5b0b9 data/zenkai/worldgen/configured_carver/namek_canyon.json
 8af5b791ace8537d555369072ce50f848936b95c data/zenkai/worldgen/configured_carver/namek_cave.json
@@ -69,11 +69,8 @@ dd026df68878b2787d1258b8007816d48b5d263e data/zenkai/worldgen/placed_feature/nam
 75fcdf11039aa9b8e6e997d056f6ad6506673633 data/zenkai/worldgen/placed_feature/namek_lapis_buried.json
 40196c71d07154c64624c35f1c5bac065a598179 data/zenkai/worldgen/placed_feature/namek_redstone.json
 997419f637bf78b5c5fd18eb4977d4ba16966bb9 data/zenkai/worldgen/placed_feature/namek_redstone_lower.json
-e297f97cee08ee46d6cad9d4504bf5b122ab0722 data/zenkai/worldgen/placed_feature/otherworld_cherry_flowers.json
-d355b820f64821d136c94210e3dba0bada0aeba0 data/zenkai/worldgen/placed_feature/otherworld_cherry_trees.json
 a72aaade5bdbc774b258217a0b124cc3f51b9e49 data/zenkai/worldgen/placed_feature/otherworld_clouds.json
-c8f01434345c9322309b17984b8c5e62ef88b878 data/zenkai/worldgen/placed_feature/otherworld_dead_bush.json
-b0d1a4ae16ddc4c871c45d093b2897e9563cd62d data/zenkai/worldgen/placed_feature/otherworld_flowers.json
-d1e7b6d49b031f65ba99c3a03d222eaaff96deb1 data/zenkai/worldgen/placed_feature/otherworld_grass.json
+095971aa27fbd115031e36914b984b819eb7081c data/zenkai/worldgen/placed_feature/otherworld_dead_bush.json
+6e34999581c1be08f6af627dcdb5394aa3766a7f data/zenkai/worldgen/placed_feature/otherworld_flowers.json
 c559a4e8e52fdc466fe13bc00c2764e7fb5a1bea data/zenkai/worldgen/placed_feature/rocky_dead_bush.json
 72a638610ff7d59b52d806b1bbe89512d55d2930 data/zenkai/worldgen/placed_feature/sacred_stone.json
