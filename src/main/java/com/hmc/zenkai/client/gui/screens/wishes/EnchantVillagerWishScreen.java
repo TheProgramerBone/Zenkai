@@ -1,110 +1,129 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
-import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
-import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
+import com.hmc.zenkai.client.gui.screens.ZenkaiPanelScreen;
 import com.hmc.zenkai.feature.wishes.ConfirmVillagerWishPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.enchantment.Enchantment;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
-public class EnchantVillagerWishScreen extends Screen {
+/**
+ * Deseo del aldeano bibliotecario con un libro encantado.
+ * El problema real de esta pantalla no era estético: recorría el registro ENTERO de
+ * encantamientos con dos flechas, una a una. Con vanilla ya son ~40 y con cualquier modpack se
+ * pasa de 100 — llegar a "Fortuna" costaba cincuenta clics y no había forma de saber cuántos
+ * quedaban. Ahora hay una caja de búsqueda que filtra por nombre traducido, las flechas se
+ * mueven dentro del resultado filtrado y un contador dice dónde estás.
+ * Se ordena por el nombre TRADUCIDO y no por el ResourceLocation: el jugador busca "Filo", no
+ * "minecraft:sharpness", y con el orden por id los encantamientos del mismo mod salían juntos
+ * pero alfabéticamente desordenados en pantalla.
+ */
+public class EnchantVillagerWishScreen extends ZenkaiPanelScreen {
 
-    private static final ResourceLocation BG =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+    private static final int BOX_W = 150, BOX_H = 18;
 
-    private static final int BG_W = 256, BG_H = 256;
-    private static final int ARROW_W = 12;
-    private static final int COLOR_TITLE = 0x04a500, COLOR_VALUE = 0xFFFFFF, COLOR_SUB = 0xFFF149;
-
-    private final Screen parent;
-    private List<Holder.Reference<Enchantment>> enchants = List.of();
+    private List<Holder.Reference<Enchantment>> all = List.of();
+    private List<Holder.Reference<Enchantment>> filtered = List.of();
     private int index = 0;
-    private int panelLeft, panelTop;
+
+    private EditBox searchBox;
+    private ArrowIconButton leftArrow, rightArrow;
 
     public EnchantVillagerWishScreen(Screen parent) {
-        super(Component.translatable("screen.zenkai.wish.enchant_villager"));
-        this.parent = parent;
+        super(Component.translatable("screen.zenkai.wish.enchant_villager"), parent);
     }
+
+    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
 
     @Override
-    protected void init() {
-        this.clearWidgets();
-        this.panelLeft = (this.width  - BG_W) / 2;
-        this.panelTop  = (this.height - BG_H) / 2;
-
-        // Cargar lista de encantamientos del registro (cliente).
-        Minecraft mc = Minecraft.getInstance();
+    protected void initContent() {
         if (mc.level != null) {
             var reg = mc.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-            this.enchants = reg.listElements()
-                    .sorted(Comparator.comparing(h -> h.key().location().toString()))
+            this.all = reg.listElements()
+                    .sorted(Comparator.comparing(h -> h.value().description().getString()))
                     .toList();
         }
-        if (index >= enchants.size()) index = 0;
+        this.filtered = all;
 
-        int cx = panelLeft + BG_W / 2;
-        int valueY = panelTop + 50;
-        int arrowY = valueY - 1;
+        int y = panelTop + CONTENT_TOP + 10;
+        searchBox = new EditBox(this.font, centerX() - BOX_W / 2, y, BOX_W, BOX_H,
+                Component.translatable("screen.zenkai.enchant.search"));
+        searchBox.setHint(Component.translatable("screen.zenkai.enchant.search"));
+        searchBox.setResponder(this::applyFilter);
+        addRenderableWidget(searchBox);
 
-        // Flechas ← valor →
-        addRenderableWidget(new ArrowIconButton(cx - 90, arrowY, ArrowIconButton.Dir.LEFT,
-                () -> { if (!enchants.isEmpty()) index = (index - 1 + enchants.size()) % enchants.size(); }));
-        addRenderableWidget(new ArrowIconButton(cx + 90 - ARROW_W, arrowY, ArrowIconButton.Dir.RIGHT,
-                () -> { if (!enchants.isEmpty()) index = (index + 1) % enchants.size(); }));
-
-        // Confirmar / Volver
-        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 190, 120, 16,
-                Component.translatable("screen.zenkai.gui.confirm"), this::confirm)
-                .textColors(0xFFFFFF, 0xFFF149, 0xA0A0A0));
-        addRenderableWidget(new TextOnlyButton(cx - 60, panelTop + 210, 120, 16,
-                Component.translatable("screen.zenkai.gui.back"), this::onClose)
-                .textColors(0xFFFFFF, 0xFFF149, 0xA0A0A0));
+        int arrowY = y + BOX_H + 26;
+        leftArrow  = new ArrowIconButton(centerX() - 92, arrowY, ArrowIconButton.Dir.LEFT,  () -> cycle(-1));
+        rightArrow = new ArrowIconButton(centerX() + 80, arrowY, ArrowIconButton.Dir.RIGHT, () -> cycle(1));
+        addRenderableWidget(leftArrow);
+        addRenderableWidget(rightArrow);
     }
 
-    private void confirm() {
-        if (enchants.isEmpty()) { onClose(); return; }
-        ResourceLocation id = enchants.get(index).key().location();
+    private void applyFilter(String query) {
+        String q = query.trim().toLowerCase(Locale.ROOT);
+        filtered = q.isEmpty() ? all : all.stream()
+                .filter(h -> h.value().description().getString().toLowerCase(Locale.ROOT).contains(q)
+                        || h.key().location().getPath().contains(q))
+                .toList();
+        index = 0;
+    }
+
+    private void cycle(int delta) {
+        if (filtered.isEmpty()) return;
+        index = (index + delta + filtered.size()) % filtered.size();
+    }
+
+    @Override protected boolean confirmEnabled() { return !filtered.isEmpty(); }
+
+    @Override
+    protected void onConfirm() {
+        if (filtered.isEmpty()) return;
+        ResourceLocation id = filtered.get(index).key().location();
         var conn = Minecraft.getInstance().getConnection();
         if (conn != null) conn.send(new ConfirmVillagerWishPayload(id));
         onClose();
     }
 
     @Override
-    public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.renderBackground(g, mouseX, mouseY, partialTick);
-        g.blit(BG, panelLeft, panelTop, 0, 0, BG_W, BG_H);
+    protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        boolean any = !filtered.isEmpty();
+        if (leftArrow != null)  leftArrow.visible  = filtered.size() > 1;
+        if (rightArrow != null) rightArrow.visible = filtered.size() > 1;
 
-        int cx = panelLeft + BG_W / 2;
-        drawCentered(g, this.title, cx, panelTop + 25, COLOR_TITLE);
+        int y = searchBox.getY() + BOX_H + 20;
 
-        if (enchants.isEmpty()) {
-            drawCentered(g, Component.translatable("screen.zenkai.no_enchantments"), cx, panelTop + 70, COLOR_VALUE);
-        } else {
-            Holder.Reference<Enchantment> h = enchants.get(index);
-            drawCentered(g, h.value().description(), cx, panelTop + 50, COLOR_VALUE);
-            drawCentered(g, Component.translatable("screen.zenkai.enchant.max_level", h.value().getMaxLevel()),
-                    cx, panelTop + 70, COLOR_SUB);
+        if (!any) {
+            drawCenteredOnPanel(g, Component.translatable("screen.zenkai.no_enchantments"),
+                    y, ZenkaiPalette.MUTED_ON_PANEL);
+            return;
         }
 
-        super.render(g, mouseX, mouseY, partialTick);
+        Holder.Reference<Enchantment> h = filtered.get(index);
+
+        drawCenteredOnPanel(g, h.value().description(), y, ZenkaiPalette.LABEL_ON_PANEL);
+        y += this.font.lineHeight + 6;
+        drawCenteredOnPanel(g, Component.translatable("screen.zenkai.enchant.max_level",
+                h.value().getMaxLevel()), y, ZenkaiPalette.BODY_ON_PANEL);
+        y += this.font.lineHeight + 4;
+
+        // El id completo, atenuado. Con varios mods hay nombres traducidos idénticos y esto es
+        // lo único que distingue "Fortuna" de un mod de la de otro.
+        drawCenteredOnPanel(g, Component.literal(h.key().location().toString()),
+                y, ZenkaiPalette.MUTED_ON_PANEL);
+
+        drawCenteredOnPanel(g,
+                Component.translatable("screen.zenkai.enchant.index", index + 1, filtered.size()),
+                contentBottom() - this.font.lineHeight - 4, ZenkaiPalette.MUTED_ON_PANEL);
     }
-
-    @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
-
-    private void drawCentered(GuiGraphics g, Component text, int cx, int y, int color) {
-        g.drawString(this.font, text, cx - this.font.width(text) / 2, y, color, true);
-    }
-
-    @Override public void onClose() { if (minecraft != null) minecraft.setScreen(parent); }
-    @Override public boolean isPauseScreen() { return false; }
 }

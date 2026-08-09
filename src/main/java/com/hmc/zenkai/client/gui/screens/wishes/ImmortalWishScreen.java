@@ -1,43 +1,54 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
+import com.hmc.zenkai.client.gui.screens.ZenkaiPanelScreen;
 import com.hmc.zenkai.feature.wishes.WishImmortalPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-public class ImmortalWishScreen extends Screen {
-    private final Screen parent;
+/**
+ * Deseo de inmortalidad. Confirmación pura: no hay nada que elegir.
+ *
+ * Además del panel, esta pantalla gana lo que le faltaba de verdad: decir QUÉ hace el deseo.
+ * La versión anterior mostraba una sola línea que además decía lo contrario de lo que quería
+ * decir ("podrás morir si recibes más daño del que puedes aguantar"). Ahora son dos bloques
+ * separados — lo que concede y lo que NO — porque un deseo irreversible que el jugador
+ * malinterpreta es peor que uno que no entiende.
+ */
+public class ImmortalWishScreen extends ZenkaiPanelScreen {
+
     public ImmortalWishScreen(Screen parent) {
-        super(Component.translatable("screen.zenkai.wish.immortal"));
-        this.parent = parent;
+        super(Component.translatable("screen.zenkai.wish.immortal"), parent);
+    }
+
+    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
+
+    @Override
+    protected void initContent() { /* solo el pie de página estándar */ }
+
+    @Override
+    protected void onConfirm() {
+        var conn = Minecraft.getInstance().getConnection();
+        if (conn != null) conn.send(new WishImmortalPayload());
+        onClose();
     }
 
     @Override
-    protected void init() {
-        int cx = this.width / 2;
-        int cy = this.height / 2;
+    protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        int y = panelTop + CONTENT_TOP + 24;
 
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.confirm"), b -> {
-            var conn = Minecraft.getInstance().getConnection();
-            if (conn != null) conn.send(new WishImmortalPayload()); // <-- envia al server
-            this.onClose();
-        }).bounds(cx - 60, cy, 120, 20).build());
+        y = drawWrappedOnPanel(g, Component.translatable("screen.zenkai.wish.immortal.desc"),
+                y, ZenkaiPalette.LABEL_ON_PANEL);
 
-        this.addRenderableWidget(Button.builder(Component.translatable("screen.zenkai.gui.back"), b -> this.onClose())
-                .bounds(cx - 60, cy + 24, 120, 20).build());
-    }
+        y += 10;
+        drawDivider(g, y);
+        y += 10;
 
-    @Override public void onClose() { this.minecraft.setScreen(parent); }
-    @Override public boolean isPauseScreen() { return false; }
-
-    @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partial) {
-        this.renderBackground(g,mouseX,mouseY,partial);
-        super.render(g, mouseX, mouseY, partial);
-        g.drawCenteredString(this.font, this.title, this.width/2, 20, 0xFFFFFF);
-        g.drawCenteredString(this.font, Component.translatable("screen.zenkai.wish.immortal.desc"),
-                this.width/2, this.height/2 - 20, 0xAAAAAA);
+        // El límite del deseo, aparte y en rojo. Es la parte que el jugador recordará mal si se
+        // le cuenta en la misma frase que el beneficio.
+        drawWrappedOnPanel(g, Component.translatable("screen.zenkai.wish.immortal.warning"),
+                y, ZenkaiPalette.DENIED);
     }
 }

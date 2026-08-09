@@ -1,5 +1,13 @@
 {
   "values": [
+    "zenkai:katchin_ore",
+    "zenkai:deepslate_katchin_ore",
+    "zenkai:katchin_block",
+    "zenkai:cut_katchin",
+    "zenkai:cut_katchin_stairs",
+    "zenkai:cut_katchin_slab",
+    "zenkai:cut_katchin_wall",
+    "zenkai:katchin_pillar",
     "zenkai:energy_crystal_ore",
     "zenkai:energy_crystal_block"
   ]

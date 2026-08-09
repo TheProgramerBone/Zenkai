@@ -112,6 +112,14 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         );
 
         tag(BlockTags.NEEDS_DIAMOND_TOOL).add(
+                ModBlocks.KATCHIN_ORE.get(),
+                ModBlocks.DEEPSLATE_KATCHIN_ORE.get(),
+                ModBlocks.KATCHIN_BLOCK.get(),
+                ModBlocks.CUT_KATCHIN.get(),
+                ModBlocks.CUT_KATCHIN_STAIRS.get(),
+                ModBlocks.CUT_KATCHIN_SLAB.get(),
+                ModBlocks.CUT_KATCHIN_WALL.get(),
+                ModBlocks.KATCHIN_PILLAR.get(),
                 ModBlocks.ENERGY_CRYSTAL_ORE.get(),
                 ModBlocks.ENERGY_CRYSTAL_BLOCK.get()
         );

@@ -44,6 +44,15 @@ public final class ScreenTitle {
         drawCentered(g, font, title, cx, Math.max(2, panelTop - ABOVE));
     }
 
+    /** Igual que drawAbovePanel pero con color explícito. Lo usan las pantallas de deseo,
+     *  que necesitan el verde dragón sin meter §2§l dentro del archivo de idioma: los códigos
+     *  de formato del lang sobrevivían al toUpperCase de styled() y hacían que el color del
+     *  título dependiera de la traducción. */
+    public static void drawAbovePanel(GuiGraphics g, Font font, Component title,
+                                      int cx, int panelTop, int color) {
+        drawCentered(g, font, title, cx, Math.max(2, panelTop - ABOVE), color);
+    }
+
     /** drawCenteredString no admite el flag de sombra, por eso se centra a mano. */
     public static void drawCentered(GuiGraphics g, Font font, Component title, int cx, int y) {
         drawCentered(g, font, title, cx, y, COLOR);

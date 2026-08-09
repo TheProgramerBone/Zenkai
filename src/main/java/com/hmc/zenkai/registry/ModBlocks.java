@@ -161,22 +161,26 @@ public class ModBlocks {
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
 
-    // ── Katchin ──────────────────────────────────────────────────────────────
-    // Resistencia 1200 (obsidiana) por si algo se salta el tag, y SIN
-    // requiresCorrectToolForDrops: aquí el permiso lo da PowerMining, no el tier del pico.
-    // Si lo has roto, lo sueltas.
+    // Katchin
+    // Resistencia 1200 (obsidiana) por si algo se salta el tag de inmunidad al ki, y
+    // requiresCorrectToolForDrops porque el permiso lo da el TIER DEL PICO: ver
+    // ModBlockTagProvider, donde entran en NEEDS_DIAMOND_TOOL.
+    // Durezas calcadas a la escoria antigua (30) y al bloque de netherita (50): es el
+    // referente correcto para "lo más duro que hay", y ya está balanceado por vainilla.
 
     public static final DeferredBlock<Block> KATCHIN_ORE = registerBlock("katchin_ore",
             ()-> new DropExperienceBlock(UniformInt.of(3,7),
                     BlockBehaviour.Properties.of()
-                            .strength(25f, 1200f)
+                            .strength(30f, 1200f)
+                            .requiresCorrectToolForDrops()
                             .sound(SoundType.NETHERITE_BLOCK)
                             .mapColor(MapColor.STONE)));
 
     public static final DeferredBlock<Block> DEEPSLATE_KATCHIN_ORE = registerBlock("deepslate_katchin_ore",
             ()-> new DropExperienceBlock(UniformInt.of(3,7),
                     BlockBehaviour.Properties.of()
-                            .strength(30f, 1200f)
+                            .strength(35f, 1200f)
+                            .requiresCorrectToolForDrops()
                             .sound(SoundType.NETHERITE_BLOCK)
                             .mapColor(MapColor.DEEPSLATE)));
 
@@ -559,7 +563,11 @@ public class ModBlocks {
 
     private static BlockBehaviour.Properties katchinProps() {
         return BlockBehaviour.Properties.of()
-                .strength(30f, 1200f)
+                // 15 y no 30: el set tallado se coloca a puñados y se remodela. Con la dureza
+                // de la mena, rehacer una pared del dojo son 5,6 s por bloque y el jugador
+                // deja de construir con él. Sigue siendo inmune al ki, que es para lo que se pone.
+                .strength(15f, 1200f)
+                .requiresCorrectToolForDrops()
                 .sound(SoundType.NETHERITE_BLOCK)
                 .mapColor(MapColor.COLOR_BLACK);
     }

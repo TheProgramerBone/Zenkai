@@ -19,7 +19,6 @@ import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBall
 import com.hmc.zenkai.client.render_and_model_entities.entity.*;
 import com.hmc.zenkai.event.ZenkaiTickHandlers;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
-import com.hmc.zenkai.feature.mining.PowerMining;
 import com.hmc.zenkai.feature.sense.ScouterStacks;
 import com.hmc.zenkai.registry.*;
 import com.hmc.zenkai.config.CommonConfig;
@@ -130,7 +129,6 @@ public class Zenkai {
             fire.setFlammable(ModBlocks.AJISA_FENCE.get(), 5, 20);
             fire.setFlammable(ModBlocks.AJISA_FENCE_GATE.get(), 5, 20);
             fire.setFlammable(ModBlocks.AJISA_LEAVES.get(), 30, 60);
-            PowerMining.bootstrap();
         });
     }
 

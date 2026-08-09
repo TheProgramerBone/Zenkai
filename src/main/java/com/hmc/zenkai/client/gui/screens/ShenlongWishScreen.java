@@ -1,152 +1,158 @@
 package com.hmc.zenkai.client.gui.screens;
 
-import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.screens.wishes.EnchantVillagerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.ImmortalWishScreen;
-import com.hmc.zenkai.client.gui.screens.wishes.RevivePlayerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.RevivePetWishScreen;
+import com.hmc.zenkai.client.gui.screens.wishes.RevivePlayerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.TrainingPointsWishScreen;
-import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.config.ServerConfig.WishType;
+import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.feature.wishes.ClientWishToggles;
 import com.hmc.zenkai.feature.wishes.OpenStackWishPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
 
-public class ShenlongWishScreen extends Screen {
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
-    private static final ResourceLocation BG =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+/**
+ * Menú de deseos de Shenlong.
+ * Cambios respecto a la versión anterior:
+ *   - hereda de ZenkaiPanelScreen, así que el panel, el título y el fondo dejan de estar
+ *     duplicados aquí;
+ *   - los deseos ya NO son texto suelto: cada uno es una fila con fondo que se ilumina al
+ *     pasar el ratón, con un número de orden. Antes eran seis líneas centradas idénticas y no
+ *     había forma de saber cuál estaba bajo el cursor hasta que cambiaba de color el texto;
+ *   - el contador de deseos restantes pasa a ser una fila propia con separador, en vez de un
+ *     texto marrón oscuro sobre la marca de agua 悟 (donde era casi ilegible);
+ *   - sin pie de página: aquí no hay nada que confirmar, se elige un deseo. Un "Confirmar"
+ *     en esta pantalla no tendría a qué aplicarse.
+ * El título va en verde dragón por titleColor(), no con §2§l dentro del archivo de idioma:
+ * los códigos de formato en el lang sobrevivían al toUpperCase de ScreenTitle y hacían que el
+ * color del título dependiera de la traducción.
+ */
+public class ShenlongWishScreen extends ZenkaiPanelScreen {
 
-    private static final int BG_W = 256;
-    private static final int BG_H = 256;
-    private static final int BTN_W = 170;
-    private static final int BTN_H = 16;
-    private static final int FIRST_BTN_DY = ScreenTitle.CONTENT_TOP + 16;
-    private static final int BTN_STEP      = 22;
+    private static final int ROW_H = 22;
+    private static final int ROW_GAP = 4;
+    private static final int LIST_TOP = CONTENT_TOP + 24;
 
-    // Colores de texto (consistentes con las otras pantallas, legibles sobre el beige).
-    private static final int TXT_NORMAL  = 0xFFFFFF;
-    private static final int TXT_HOVER   = 0xFFF149;
-    private static final int TXT_INACTIVE= 0xA0A0A0;
+    /** Una entrada del menú. El registro existe para poder pintar la fila y el botón juntos. */
+    private record WishRow(TextOnlyButton button, Component label) {}
 
-    private int panelLeft, panelTop;
+    private final List<WishRow> rows = new ArrayList<>();
     private TextOnlyButton stackWishButton;
 
-    // Cursor vertical para ir apilando solo los deseos habilitados (sin huecos).
-    private int btnX, btnY;
-
     public ShenlongWishScreen() {
-        super(Component.translatable("screen.zenkai.shenlong_wish"));
+        super(Component.translatable("screen.zenkai.shenlong_wish"), null);
     }
 
+    @Override protected boolean hasFooter() { return false; }
+    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
+
     @Override
-    protected void init() {
-        this.clearWidgets();
-        this.stackWishButton = null;
-        this.panelLeft = (this.width  - BG_W) / 2;
-        this.panelTop  = (this.height - BG_H) / 2;
+    protected void initContent() {
+        rows.clear();
+        stackWishButton = null;
 
-        int cx = panelLeft + BG_W / 2;
-        this.btnX = cx - BTN_W / 2;
-        this.btnY = panelTop + FIRST_BTN_DY;
+        int w = contentWidth() - 8;
+        int x = centerX() - w / 2;
+        int y = panelTop + LIST_TOP;
 
-        // Solo se crean los botones de deseos habilitados (toggles sincronizados del server).
+        // Solo se crean los deseos habilitados; el cursor avanza sin dejar huecos.
         if (ClientWishToggles.isEnabled(WishType.STACK)) {
-            this.stackWishButton = addWish("screen.zenkai.option.stack", () -> {
+            stackWishButton = addWish(x, y, w, "screen.zenkai.option.stack", () -> {
                 var conn = Minecraft.getInstance().getConnection();
                 if (conn != null) conn.send(new OpenStackWishPayload());
             });
+            y += ROW_H + ROW_GAP;
         }
         if (ClientWishToggles.isEnabled(WishType.REVIVE_PLAYER)) {
-            addWish("screen.zenkai.wish.revive_player",
-                    () -> { if (minecraft != null) minecraft.setScreen(new RevivePlayerWishScreen(this)); });
+            addWish(x, y, w, "screen.zenkai.wish.revive_player",
+                    () -> mc.setScreen(new RevivePlayerWishScreen(this)));
+            y += ROW_H + ROW_GAP;
         }
         if (ClientWishToggles.isEnabled(WishType.ENCHANT_VILLAGER)) {
-            addWish("screen.zenkai.wish.enchant_villager",
-                    () -> { if (minecraft != null) minecraft.setScreen(new EnchantVillagerWishScreen(this)); });
+            addWish(x, y, w, "screen.zenkai.wish.enchant_villager",
+                    () -> mc.setScreen(new EnchantVillagerWishScreen(this)));
+            y += ROW_H + ROW_GAP;
         }
         if (ClientWishToggles.isEnabled(WishType.IMMORTAL)) {
-            addWish("screen.zenkai.wish.immortal",
-                    () -> { if (minecraft != null) minecraft.setScreen(new ImmortalWishScreen(this)); });
+            addWish(x, y, w, "screen.zenkai.wish.immortal",
+                    () -> mc.setScreen(new ImmortalWishScreen(this)));
+            y += ROW_H + ROW_GAP;
         }
         if (ClientWishToggles.isEnabled(WishType.TRAINING_POINTS)) {
-            addWish("screen.zenkai.wish.training_points",
-                    () -> { if (minecraft != null) minecraft.setScreen(new TrainingPointsWishScreen(this)); });
+            addWish(x, y, w, "screen.zenkai.wish.training_points",
+                    () -> mc.setScreen(new TrainingPointsWishScreen(this)));
+            y += ROW_H + ROW_GAP;
         }
-        // Revivir mascota: sin toggle de config (siempre disponible).
-        addWish("screen.zenkai.wish.revive_pet",
-                () -> { if (minecraft != null) minecraft.setScreen(new RevivePetWishScreen(this)); });
+        // Revivir mascota no tiene toggle de configuración: siempre disponible.
+        addWish(x, y, w, "screen.zenkai.wish.revive_pet",
+                () -> mc.setScreen(new RevivePetWishScreen(this)));
     }
 
-    /** Crea un botón de deseo en el cursor actual y avanza el cursor. */
-    private TextOnlyButton addWish(String langKey, Runnable onClick) {
-        TextOnlyButton b = addRenderableWidget(new TextOnlyButton(
-                btnX, btnY, BTN_W, BTN_H,
-                Component.translatable(langKey),
-                onClick).textColors(TXT_NORMAL, TXT_HOVER, TXT_INACTIVE));
-        btnY += BTN_STEP;
+    private TextOnlyButton addWish(int x, int y, int w, String langKey, Runnable onClick) {
+        Component label = Component.translatable(langKey);
+        TextOnlyButton b = addRenderableWidget(new TextOnlyButton(x, y, w, ROW_H, label, onClick)
+                .textColors(ZenkaiPalette.TEXT, ZenkaiPalette.TEXT_HOVER, ZenkaiPalette.TEXT_OFF));
+        rows.add(new WishRow(b, label));
         return b;
     }
 
     @Override
     public void tick() {
         super.tick();
-        var mc = Minecraft.getInstance();
         boolean full = mc.player != null && mc.player.getInventory().getFreeSlot() == -1;
-
-        if (this.stackWishButton != null) {
-            this.stackWishButton.active = !full;
-            this.stackWishButton.setTooltip(full
+        if (stackWishButton != null) {
+            stackWishButton.active = !full;
+            stackWishButton.setTooltip(full
                     ? Tooltip.create(Component.translatable("screen.zenkai.need_inventory_space"))
                     : null);
         }
     }
 
     @Override
-    public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.renderBackground(g, mouseX, mouseY, partialTick);
-        g.blit(BG, panelLeft, panelTop, 0, 0, BG_W, BG_H);
-
-        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
-
-        // Deseos restantes del dragón más cercano (valor sincronizado del servidor).
-        int remaining = getNearbyWishesRemaining();
+    protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        // Cabecera: deseos restantes + separador.
+        int remaining = nearbyWishesRemaining();
         if (remaining >= 0) {
-            Component rem = Component.translatable("screen.zenkai.shenlong_wish.remaining", remaining);
-            drawCenteredNoShadow(g, rem, panelLeft + BG_W / 2, panelTop + ScreenTitle.CONTENT_TOP, 0x4A3726);
+            drawCenteredOnPanel(g,
+                    Component.translatable("screen.zenkai.shenlong_wish.remaining", remaining),
+                    panelTop + CONTENT_TOP, ZenkaiPalette.LABEL_ON_PANEL);
         }
+        drawDivider(g, panelTop + CONTENT_TOP + 14);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        // Fondo de cada fila: hundido en reposo, iluminado bajo el cursor. Es lo que convierte
+        // una lista de texto en una lista de opciones.
+        for (int i = 0; i < rows.size(); i++) {
+            TextOnlyButton b = rows.get(i).button();
+            boolean hovered = b.active && mouseX >= b.getX() && mouseX < b.getX() + b.getWidth()
+                    && mouseY >= b.getY() && mouseY < b.getY() + b.getHeight();
+
+            g.fill(b.getX(), b.getY(), b.getX() + b.getWidth(), b.getY() + b.getHeight(),
+                    hovered ? 0x50FFD966 : 0x22AC421B);
+            // Cinta izquierda: ancla la vista y da a la fila un lado "fuerte".
+            g.fill(b.getX(), b.getY(), b.getX() + 2, b.getY() + b.getHeight(),
+                    hovered ? ZenkaiPalette.BORDER_OUT : ZenkaiPalette.BORDER_IN);
+
+            g.drawString(this.font, String.valueOf(i + 1), b.getX() + 6,
+                    b.getY() + (ROW_H - 8) / 2, ZenkaiPalette.MUTED_ON_PANEL, false);
+        }
     }
 
-    /** Lee wishesRemaining del ShenLongEntity más cercano en el cliente; -1 si no hay ninguno. */
-    private int getNearbyWishesRemaining() {
-        var mc = Minecraft.getInstance();
+    /** wishesRemaining del ShenLongEntity más cercano en cliente; -1 si no hay ninguno. */
+    private int nearbyWishesRemaining() {
         if (mc.player == null || mc.level == null) return -1;
-        return mc.level.getEntitiesOfClass(
-                        ShenLongEntity.class, mc.player.getBoundingBox().inflate(48))
+        return mc.level.getEntitiesOfClass(ShenLongEntity.class, mc.player.getBoundingBox().inflate(48))
                 .stream()
-                .min(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(mc.player)))
+                .min(Comparator.comparingDouble(e -> e.distanceToSqr(mc.player)))
                 .map(ShenLongEntity::getWishesRemaining)
                 .orElse(-1);
-    }
-
-    @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
-
-    private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
-        g.drawString(this.font, text, cx - this.font.width(text) / 2, y, color, false);
-    }
-
-    @Override
-    public boolean isPauseScreen() {
-        return false;
     }
 }

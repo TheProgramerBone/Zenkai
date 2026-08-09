@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-09T09:36:03.5303988	Tags for minecraft:block mod id zenkai
+// 1.21.1	2026-08-09T09:54:52.4837266	Tags for minecraft:block mod id zenkai
 8912682f310bd3f4d32caa8aa6602d47f7ae797a data/c/tags/block/cobblestones.json
 e35360f19a76a691d096e179818b83ba31bea13e data/c/tags/block/gravels.json
 8efd9671ff1e5d6ddad69c2dfe87dccbd556b2c3 data/c/tags/block/ores/coal.json
@@ -20,7 +20,7 @@ b9a230b994fbd179ce5a7ba0bfdf6b8618083e4d data/minecraft/tags/block/dirt.json
 7e85adb63a2a408a9c60a9ed3d9d155ebacc5a81 data/minecraft/tags/block/mineable/hoe.json
 cfdb2c6f693aa583c2edb1b58c436b2d16583d70 data/minecraft/tags/block/mineable/pickaxe.json
 c62abb1334f9ca0813dfb4322014b891089b5ffd data/minecraft/tags/block/mineable/shovel.json
-2c7b0f41fde8197ba2a1e7904713ca936e3f3247 data/minecraft/tags/block/needs_diamond_tool.json
+123c2a73449b3761267dafaaaa57ec7367b8fb6b data/minecraft/tags/block/needs_diamond_tool.json
 6c5e571bde1b915329deb80156cc65fcb1f21e83 data/minecraft/tags/block/needs_iron_tool.json
 41d95f82f2231027773b9dd22de108ac1849d222 data/minecraft/tags/block/needs_stone_tool.json
 47b1e781a380a609b727e3314838b7154444a6de data/minecraft/tags/block/overworld_carver_replaceables.json
