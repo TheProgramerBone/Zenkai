@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-09T09:36:03.5314066	Registries
+// 1.21.1	2026-08-09T09:42:20.9917004	Registries
 bd6f2330be43a5be1fb54ce493e83bbd2148fe7e data/zenkai/neoforge/biome_modifier/add_katchin_ore.json
 017292215ebf76ee49087a29e74d2a2ed4ff7b48 data/zenkai/neoforge/biome_modifier/add_katchin_ore_rocky.json
 ea1d42e8fc6129337ee16afbc8a261619759f0a2 data/zenkai/worldgen/biome/hfil_badlands.json
@@ -9,7 +9,7 @@ d128f5cdd06a4a37ac4b50d801ca565b4dc0d739 data/zenkai/worldgen/biome/hfil_dunes.j
 c33b67c63d6e03f9be5f304c17340801f85b7e6d data/zenkai/worldgen/biome/namek_ocean.json
 b8f08c2c684526949d16197a47009ee913c1c1c2 data/zenkai/worldgen/biome/namek_plains.json
 58e3a87af24847ce1272dbe7b4b535fb3e95a517 data/zenkai/worldgen/biome/namek_shore.json
-2d18c8f8218662fec7becf2798be502b3d2e2523 data/zenkai/worldgen/biome/otherworld.json
+b48835706289c8578fe3a9eab71dab80a89ffe7a data/zenkai/worldgen/biome/otherworld.json
 75a0eedb27aaff49c0ef02ee5f823da081371ed4 data/zenkai/worldgen/biome/rocky_wasteland.json
 9666f5c30bac06e6126cb8c2b4c34f2c42c5b0b9 data/zenkai/worldgen/configured_carver/namek_canyon.json
 8af5b791ace8537d555369072ce50f848936b95c data/zenkai/worldgen/configured_carver/namek_cave.json

@@ -24,6 +24,9 @@
     [],
     [],
     [
+      "minecraft:patch_grass_plain",
+      "minecraft:flower_cherry",
+      "minecraft:trees_cherry",
       "zenkai:otherworld_flowers",
       "zenkai:otherworld_dead_bush"
     ]
