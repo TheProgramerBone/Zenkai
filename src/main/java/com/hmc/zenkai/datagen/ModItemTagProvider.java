@@ -9,6 +9,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
@@ -129,9 +130,23 @@ public class ModItemTagProvider extends ItemTagsProvider {
         // 5. TAGS PERSONALIZADOS DEL MOD (ZENKAI)
         // ==========================================
 
-        tag(ModTags.Items.KEEPS_HAIR).add(
-                ModItems.HALO.get(),
-                ModItems.SCOUTER.get()
+        tag(ModTags.Items.WORLDGEN_DEBRIS)
+                .add(
+                        Items.STICK,
+                        Items.SHORT_GRASS,
+                        Items.TALL_GRASS,
+                        Items.DEAD_BUSH,
+                        Items.PINK_PETALS
+                )
+                .addTag(ItemTags.SMALL_FLOWERS)
+                .addTag(ItemTags.SAPLINGS)
+                .addTag(ItemTags.LEAVES);
+
+        tag(ModTags.Items.WORLDGEN_DEBRIS).add(
+                Items.SHORT_GRASS,
+                Items.TALL_GRASS,
+                Items.DEAD_BUSH,
+                Items.PINK_PETALS
         );
 
         tag(ModTags.Items.AJISA_LOGS).add(

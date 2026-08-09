@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/outer_stairs",
-  "textures": {
-    "bottom": "zenkai:block/ajisa_planks",
-    "side": "zenkai:block/ajisa_planks",
-    "top": "zenkai:block/ajisa_planks"
-  }
-}

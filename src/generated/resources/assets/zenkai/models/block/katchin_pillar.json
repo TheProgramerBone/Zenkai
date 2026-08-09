@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "textures": {
-    "end": "zenkai:block/katchin_pillar_top",
-    "side": "zenkai:block/katchin_pillar"
-  }
-}

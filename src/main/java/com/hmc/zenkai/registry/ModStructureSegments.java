@@ -45,14 +45,14 @@ public final class ModStructureSegments {
     // ── OTHERWORLD (dimensión del otro mundo, estructura única) ────────────────
     // Palacio + serpentina: 3×3 piezas de 48×40×48 (palacio) y luego parejas de 2
     // avanzando en +Z hasta z=912. Extensión total: X 0..143, Y 0..39, Z 0..926.
-    public static final BlockPos OTHERWORLD_BASE = new BlockPos(0, 145, 0);
+    public static final BlockPos OTHERWORLD_BASE = new BlockPos(0, 195, 0);
 
     // Planeta de Kaiosama: cubo 2×2×2 de 48³ (esfera de r=40 centrada en su local 41,41,41).
     // Estos 3 valores son el único mando: mueven el planeta entero respecto a OTHERWORLD_BASE.
     // Ahora mismo: centrado en X sobre la punta de la serpentina (x 31..49), ecuador a la
     // altura de la calzada (y 25..27) y pegado justo detrás del último bloque de camino (z 914).
     private static final int KAIO_DX = -1;
-    private static final int KAIO_DY = 70;
+    private static final int KAIO_DY = 0;
     private static final int KAIO_DZ = 914;
 
     public static final BlockPos OTHERWORLD_NO_SPAWN_MIN = new BlockPos(

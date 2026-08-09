@@ -28,6 +28,7 @@ public class ModTags {
         public static final TagKey<Item> DRAGON_BALLS_ITEM = createTag("dragon_balls_item");
         public static final TagKey<Item> KEEPS_HAIR = createTag("keeps_hair");
         public static final TagKey<Item> AJISA_LOGS = createTag("ajisa_logs");
+        public static final TagKey<Item> WORLDGEN_DEBRIS = createTag("worldgen_debris");
 
         private static TagKey<Item> createTag(String name) {
             return ItemTags.create(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,name));

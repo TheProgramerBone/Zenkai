@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "textures": {
-    "end": "zenkai:block/ajisa_log_top",
-    "side": "zenkai:block/ajisa_log"
-  }
-}

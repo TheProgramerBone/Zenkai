@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/outer_stairs",
-  "textures": {
-    "bottom": "zenkai:block/structural_concrete_light_gray",
-    "side": "zenkai:block/structural_concrete_light_gray",
-    "top": "zenkai:block/structural_concrete_light_gray"
-  }
-}

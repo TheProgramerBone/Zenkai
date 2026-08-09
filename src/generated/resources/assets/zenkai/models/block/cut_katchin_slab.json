@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab",
-  "textures": {
-    "bottom": "zenkai:block/cut_katchin",
-    "side": "zenkai:block/cut_katchin",
-    "top": "zenkai:block/cut_katchin"
-  }
-}

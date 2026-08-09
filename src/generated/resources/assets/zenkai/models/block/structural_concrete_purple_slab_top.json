@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab_top",
-  "textures": {
-    "bottom": "zenkai:block/structural_concrete_purple",
-    "side": "zenkai:block/structural_concrete_purple",
-    "top": "zenkai:block/structural_concrete_purple"
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab_top",
-  "textures": {
-    "bottom": "zenkai:block/polished_sacred_stone",
-    "side": "zenkai:block/polished_sacred_stone",
-    "top": "zenkai:block/polished_sacred_stone"
-  }
-}

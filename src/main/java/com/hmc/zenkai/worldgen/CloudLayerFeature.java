@@ -71,7 +71,9 @@ public class CloudLayerFeature extends Feature<NoneFeatureConfiguration> {
 
                 for (int ly = 0; ly < thickness; ly++) {
                     m.set(wx, startY + ly, wz);
-                    level.setBlock(m, cloud, 2);
+                    // Solo aire: la nube NO puede comerse la parte baja de las islas
+                    // (la superficie empieza en y130 y la banda de nube llega a y138).
+                    if (level.isEmptyBlock(m)) level.setBlock(m, cloud, 2);
                 }
             }
         }

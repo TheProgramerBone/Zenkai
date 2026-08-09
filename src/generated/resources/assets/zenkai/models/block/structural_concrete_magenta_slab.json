@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/slab",
-  "textures": {
-    "bottom": "zenkai:block/structural_concrete_magenta",
-    "side": "zenkai:block/structural_concrete_magenta",
-    "top": "zenkai:block/structural_concrete_magenta"
-  }
-}

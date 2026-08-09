@@ -172,12 +172,13 @@ public final class ModBiomeGen {
     /**
      * Islas flotantes sobre el mar de nubes. Sin carvers ni ores: son plataformas, no un mundo
      * subterráneo.
-     * addCherryGroveVegetation trae cerezos, flores de cerezo, hierba y pétalos rosas en el
-     * orden canónico de vainilla, que es lo que evita el "Feature order cycle". Las dos
-     * features propias van después porque llevan namespace zenkai y no aparecen en ningún
-     * otro bioma: una placed feature que solo usa tu mod nunca puede entrar en conflicto de
-     * orden con nadie. Esa es la regla general — las de vainilla siguen el orden de vainilla,
-     * las tuyas van donde quieras.
+     * Ya NO se usa addCherryGroveVegetation: metía las placed features de vainilla
+     * (trees_cherry, flower_cherry, patch_grass_plain) y a esas no se les puede añadir el
+     * modificador que veta la huella del palacio sin pisar el JSON de Minecraft. En su lugar
+     * van tres copias zenkai con los mismos configured features y el mismo orden relativo de
+     * vainilla (árboles → flores → hierba). Al ser namespace zenkai y no aparecer en ningún
+     * otro bioma, no pueden entrar en conflicto de orden con nadie: no hay riesgo de
+     * "Feature order cycle found".
      */
     private static Biome otherworld(HolderGetter<PlacedFeature> features,
                                     HolderGetter<ConfiguredWorldCarver<?>> carvers) {
@@ -186,8 +187,8 @@ public final class ModBiomeGen {
         gen.addFeature(GenerationStep.Decoration.RAW_GENERATION,
                 ModPlacedFeatures.OTHERWORLD_CLOUDS_KEY);
 
-        BiomeDefaultFeatures.addCherryGroveVegetation(gen);
         gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.KATCHIN_ORE_SKY);
+
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.OTHERWORLD_FLOWERS_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,

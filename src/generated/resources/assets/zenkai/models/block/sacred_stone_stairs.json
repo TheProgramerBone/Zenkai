@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/stairs",
-  "textures": {
-    "bottom": "zenkai:block/sacred_stone_block",
-    "side": "zenkai:block/sacred_stone_block",
-    "top": "zenkai:block/sacred_stone_block"
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/stairs",
-  "textures": {
-    "bottom": "zenkai:block/structural_concrete_green",
-    "side": "zenkai:block/structural_concrete_green",
-    "top": "zenkai:block/structural_concrete_green"
-  }
-}
