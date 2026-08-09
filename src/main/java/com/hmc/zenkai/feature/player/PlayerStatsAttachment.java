@@ -127,6 +127,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         return ok;
     }
 
+    public int refundPoint(ZenkaiAttributes attr) {
+        int given = raceStats.refundPoint(attr);
+        if (given >= 0) applyRecalc();
+        return given;
+    }
+
     public int  previewTpCost(ZenkaiAttributes attr, int points) {
         return raceStats.previewTpCost(attr, points);
     }

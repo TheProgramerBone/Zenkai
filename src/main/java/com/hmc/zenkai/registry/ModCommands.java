@@ -107,6 +107,11 @@ public class ModCommands {
                                 .then(Commands.argument("player", EntityArgument.players())
                                         .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::maxAllAttr)))))
 
+                .then(Commands.literal("respec")
+                        .executes(ctx -> respec(ctx, ctx.getSource().getPlayerOrException()))
+                        .then(Commands.argument("player", EntityArgument.players())
+                                .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::respec))))
+
                 // ── /zenkai race ──────────────────────────────────────────────────
                 // Fuerza la raza de un jugador desde el servidor.
                 // Uso: /zenkai race set [objetivos] <raza>
@@ -683,6 +688,17 @@ public class ModCommands {
                         + " (" + String.format("%.2f", 100.0 * le.getHealth() / Math.max(1f, le.getMaxHealth())) + "%)"
                         + "\n  body  : " + body
         ).withStyle(ChatFormatting.AQUA), false);
+        return 1;
+    }
+
+    private static int respec(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        int before = att.getTP();
+        att.respec();
+        int refunded = att.getTP() - before;
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.translatable(
+                "command.zenkai.respec.done", refunded, sp.getName()), true);
         return 1;
     }
 }

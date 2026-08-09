@@ -4,7 +4,9 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.TechniqueAnimSets;
 import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
+import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -109,8 +111,9 @@ public class TechniqueEditScreen extends Screen {
     private boolean deleteArmed = false;
 
     private EditBox nameBox;
-    private TextOnlyButton unlockButton;
+    private PanelButton unlockButton;
     private TextOnlyButton saveButton;
+
     @Nullable private ColorPickerWidget picker = null;
     private int leftPos, topPos;
 
@@ -183,7 +186,7 @@ public class TechniqueEditScreen extends Screen {
 
         // ── X de cerrar, esquina superior derecha del panel ──
         addRenderableWidget(new TextOnlyButton(
-                leftPos + BG_W - MARGIN - X_SIZE, topPos + 10, X_SIZE, X_SIZE,
+                leftPos + BG_W - MARGIN - X_SIZE, topPos + ScreenTitle.CONTENT_TOP - 2, X_SIZE, X_SIZE,
                 Component.empty(), TEX_X, TEX_X_HL, this::close));
 
         // ── Pestañas ──
@@ -197,11 +200,14 @@ public class TechniqueEditScreen extends Screen {
         else initStyleTab(x, contentW);
 
         // ── Unlock (solo si el tipo está bloqueado) ──
-        unlockButton = new TextOnlyButton(x, topPos + Y_UNLOCK, contentW, 12,
+        unlockButton = new PanelButton(
+                x + (contentW - PanelButton.W) / 2, topPos + Y_UNLOCK,
+                PanelButton.W, PanelButton.H,
                 type.mindReq() > 0
                         ? Component.translatable("screen.zenkai.technique.unlock_mnd",
                         type.tpCost(), type.mindReq())
                         : Component.translatable("screen.zenkai.technique.unlock", type.tpCost()),
+                PanelButton.Kind.PRIMARY,
                 () -> PacketDistributor.sendToServer(TechniquePacket.unlock(type)));
         addRenderableWidget(unlockButton);
 
@@ -467,8 +473,10 @@ public class TechniqueEditScreen extends Screen {
         info(g, iy += 11, "screen.zenkai.technique.cooldown",
                 Component.literal(fmt(type.cooldownTicks() / 20.0) + " sec"));
 
-        g.drawString(this.font, Component.literal("TP: " + att.getTP()),
-                leftPos + MARGIN, topPos + Y_UNLOCK - 14, 0xFFFFD700, true);
+        Component tpLine = Component.translatable("screen.zenkai.technique.tp", att.getTP());
+        g.drawString(this.font, tpLine,
+                leftPos + BG_W - MARGIN - this.font.width(tpLine), topPos + Y_UNLOCK - 14,
+                ZenkaiPalette.VALUE, true);
 
         renderTechniquePreview(g, partialTick);
     }
@@ -487,7 +495,8 @@ public class TechniqueEditScreen extends Screen {
         // (sin packet) para que el resto de jugadores no la vea.
         int cx = leftPos + BG_W / 2;
         int top = topPos + Y_PREVIEW;
-        g.fill(cx - 44, top, cx + 44, top + PREVIEW_H, 0x40000000);
+        g.fill(cx - 45, top - 1, cx + 45, top + PREVIEW_H + 1, ZenkaiPalette.BORDER_IN);
+        g.fill(cx - 44, top, cx + 44, top + PREVIEW_H, ZenkaiPalette.BEIGE_DEEP);
         if (mc.player != null) {
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     g, cx - 40, top + 2, cx + 40, top + PREVIEW_H - 2,

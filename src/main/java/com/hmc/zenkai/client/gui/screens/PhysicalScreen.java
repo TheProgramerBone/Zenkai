@@ -1,35 +1,62 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.PhysicalIcons;
-import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
+import com.hmc.zenkai.client.gui.widgets.BindBar;
+import com.hmc.zenkai.client.gui.widgets.SlotCell;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.player.PlayerTechniques;
-import com.hmc.zenkai.feature.technique.PhysicalTechniquePacket;
-import com.hmc.zenkai.feature.technique.KiTechnique;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
+import com.hmc.zenkai.feature.technique.PhysicalTechniquePacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 /**
- * Pestaña Técnicas Físicas: lista predefinida desbloqueable por TP + bindeo a las 9
- * posiciones del overlay (compartidas con las ki). Flujo de asignación estilo pestaña ki:
- * "Asignar" arma el modo asignación -> click en una celda 1-9. Optimista + sync confirma.
+ * Pestaña Técnicas Físicas: lista predefinida desbloqueable por TP + asignación a las nueve
+ * posiciones (compartidas con las ki).
+ *
+ * QUÉ CAMBIA:
+ *
+ *  - Comparte BindBar con la pestaña ki. Antes cada una construía su propia fila de celdas con
+ *    constantes duplicadas, y en la física los íconos de 20x20 sobre celdas de 20x20 tapaban
+ *    los números de posición por completo.
+ *
+ *  - Las técnicas bloqueadas NO mostraban absolutamente nada más que su nombre y el precio.
+ *    El jugador tenía que pagar 300 TP para descubrir qué hacía "Barrage". Ahora cada fila
+ *    muestra daño, coste de estamina, enfriamiento y alcance, estén desbloqueadas o no: es
+ *    información que ya existe en el datapack y que decide la compra.
+ *
+ *  - Las técnicas sin JSON se listaban en la fila de dibujo (bucle sobre values() completo)
+ *    pero no en la de widgets (que filtraba por enabled()), así que el nombre aparecía sin su
+ *    botón y las filas siguientes quedaban desplazadas medio renglón respecto a sus botones.
+ *    Ahora hay UNA lista de técnicas visibles y los dos bucles la recorren.
+ *
+ *  - El botón de desbloqueo apagado no decía por qué. Ahora el requisito de MND que no se
+ *    cumple se pinta en rojo, y el TP también.
  */
 public class PhysicalScreen extends ZenkaiMenuScreen {
 
-    private static final int CELL = 20;
-    private static final int ROW_H = 26;
-    /** Y de la fila de 9 celdas. Las filas de técnica cuelgan de aquí. */
-    private static final int CELLS_Y = CONTENT_TOP;
-    private static final int ROWS_Y  = CELLS_Y + CELL + 10;
+    private static final int ROW_H = 34;
+    private static final int BAR_Y_OFF  = CONTENT_TOP + 24;
+    private static final int LIST_Y_OFF = BAR_Y_OFF + SlotCell.SIZE + 16;
+    private static final int TEXT_X_OFF = 16;
+    private static final int ICON = 18;
 
     /** Técnica armada para asignar, o null. */
     private PhysicalTechnique assigning = null;
     private int builtUnlocked = -1;
+
+    private BindBar bindBar;
+    /** Técnicas con JSON activo. Fuente ÚNICA para widgets y dibujo. */
+    private final List<PhysicalTechnique> visible = new ArrayList<>();
 
     public PhysicalScreen() {
         super(Component.translatable(ZenkaiTab.PHYSICAL_TECHNIQUES.titleKey()));
@@ -38,81 +65,101 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
     @Override
     protected ZenkaiTab currentTab() { return ZenkaiTab.PHYSICAL_TECHNIQUES; }
 
+    private int rightEdge() { return panelLeft + BG_W - 14; }
+    private int rowTop(int i) { return panelTop + LIST_Y_OFF + i * ROW_H; }
+
     @Override
     protected void initContent() {
         if (att == null) return;
         PlayerTechniques tech = att.techniques();
+
+        visible.clear();
+        for (PhysicalTechnique t : PhysicalTechnique.values()) {
+            if (t.enabled()) visible.add(t);
+        }
         builtUnlocked = countUnlocked();
 
-        // ── Fila de 9 celdas de posición (arriba, como en la pestaña ki) ──
-        int bx = panelLeft + (BG_W - (9 * CELL + 8 * 2)) / 2;
-        int by = panelTop + CELLS_Y;
-        for (int p = 0; p < PlayerTechniques.BIND_POSITIONS; p++) {
-            final int pos = p;
-            this.addRenderableWidget(new TextOnlyButton(bx, by, CELL, CELL,
-                    Component.empty(), () -> {
-                if (assigning != null) {
-                    att.techniques().bindPhysical(pos, assigning);          // optimista
-                    PacketDistributor.sendToServer(PhysicalTechniquePacket.bind(assigning, pos));
-                    assigning = null;
-                } else {
-                    PhysicalTechnique occ = att.techniques().physicalBinding(pos);
-                    if (occ != null) {
-                        att.techniques().bindPhysical(-1, occ);             // optimista
-                        PacketDistributor.sendToServer(PhysicalTechniquePacket.bind(occ, -1));
-                    }
-                }
-                rebuildWidgets();
-            }));
-            bx += CELL + 2;
-        }
+        // ── Barra de las nueve posiciones ──
+        bindBar = BindBar.create(
+                panelLeft + (BG_W - BindBar.WIDTH) / 2, panelTop + BAR_Y_OFF,
+                att,
+                () -> assigning != null,
+                this::onPositionClicked,
+                this::addRenderableWidget);
 
-        // ── Filas por técnica ──
-        int y = panelTop + ROWS_Y;
-        for (PhysicalTechnique t : PhysicalTechnique.values()) {
-            if (!t.enabled()) continue; // sin JSON: no se muestra
+        // ── Filas ──
+        for (int i = 0; i < visible.size(); i++) {
+            final PhysicalTechnique t = visible.get(i);
+            int y = rowTop(i) + 4;
+
             if (!tech.isUnlocked(t)) {
-                TextOnlyButton unlock = new TextOnlyButton(panelLeft + BG_W - 106, y, 90, 16,
+                TextOnlyButton unlock = new TextOnlyButton(rightEdge() - 96, y, 96, 16,
                         t.mindReq() > 0
                                 ? Component.translatable("screen.zenkai.physical.unlock_mnd",
                                 t.tpCost(), t.mindReq())
                                 : Component.translatable("screen.zenkai.physical.unlock", t.tpCost()),
-                        () -> {
-                            PacketDistributor.sendToServer(PhysicalTechniquePacket.unlock(t));
-                        });
-                unlock.active = att.getTP() >= t.tpCost()
-                        && att.getAttribute(ZenkaiAttributes.MIND) >= t.mindReq();
-                this.addRenderableWidget(unlock);
+                        () -> PacketDistributor.sendToServer(PhysicalTechniquePacket.unlock(t)))
+                        .textColors(ZenkaiPalette.VALUE, ZenkaiPalette.TEXT_HOVER, ZenkaiPalette.DENIED);
+                unlock.active = canAfford(t);
+                addRenderableWidget(unlock);
             } else {
-                this.addRenderableWidget(new TextOnlyButton(panelLeft + BG_W - 106, y, 60, 16,
+                addRenderableWidget(new TextOnlyButton(rightEdge() - 96, y-5, 60, 16,
                         Component.translatable(assigning == t
                                 ? "screen.zenkai.physical.assigning"
                                 : "screen.zenkai.physical.assign"),
                         () -> {
                             assigning = (assigning == t) ? null : t;
                             rebuildWidgets();
-                        }));
-                if (att.techniques().positionOf(t) >= 0) {
-                    this.addRenderableWidget(new TextOnlyButton(panelLeft + BG_W - 42, y, 16, 16,
-                            Component.literal("✕"), () -> {
-                        att.techniques().bindPhysical(-1, t);               // optimista
-                        PacketDistributor.sendToServer(PhysicalTechniquePacket.bind(t, -1));
-                        rebuildWidgets();
-                    }));
+                        })
+                        .textColors(ZenkaiPalette.TEXT, ZenkaiPalette.TEXT_HOVER, ZenkaiPalette.TEXT_OFF));
+
+                if (tech.positionOf(t) >= 0) {
+                    addRenderableWidget(new TextOnlyButton(rightEdge() - 14, y, 14, 16,
+                            Component.literal("✖"),
+                            () -> {
+                                att.techniques().bindPhysical(-1, t);           // optimista
+                                PacketDistributor.sendToServer(PhysicalTechniquePacket.bind(t, -1));
+                                rebuildWidgets();
+                            })
+                            .textColors(ZenkaiPalette.TEXT_DIM, ZenkaiPalette.DENIED, ZenkaiPalette.TEXT_OFF));
                 }
             }
-            y += ROW_H;
+        }
+    }
+
+    private boolean canAfford(PhysicalTechnique t) {
+        return att != null && att.getTP() >= t.tpCost()
+                && att.getAttribute(ZenkaiAttributes.MIND) >= t.mindReq();
+    }
+
+    private void onPositionClicked(int pos) {
+        if (att == null) return;
+        if (assigning != null) {
+            att.techniques().bindPhysical(pos, assigning);                      // optimista
+            PacketDistributor.sendToServer(PhysicalTechniquePacket.bind(assigning, pos));
+            assigning = null;
+            rebuildWidgets();
+        } else {
+            PhysicalTechnique occ = att.techniques().physicalBinding(pos);
+            if (occ != null) {
+                att.techniques().bindPhysical(-1, occ);                         // optimista
+                PacketDistributor.sendToServer(PhysicalTechniquePacket.bind(occ, -1));
+                rebuildWidgets();
+            }
+            // Sin ocupante y sin nada armado no hay nada que hacer: NO se reconstruye. La
+            // versión anterior llamaba a rebuildWidgets() siempre, y eso reseteaba el foco y
+            // el estado de hover en cada click en vacío.
         }
     }
 
     @Override
     public void tick() {
         super.tick();
-        // Sync confirmó un unlock (u otro cambio de conteo): reconstruir.
         if (att != null && countUnlocked() != builtUnlocked) rebuildWidgets();
     }
 
     private int countUnlocked() {
+        if (att == null) return 0;
         int c = 0;
         for (PhysicalTechnique t : PhysicalTechnique.values()) {
             if (att.techniques().isUnlocked(t)) c++;
@@ -127,33 +174,87 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
         if (att == null) return;
         PlayerTechniques tech = att.techniques();
 
-        // Contenido de las 9 celdas (ícono ki o físico del ocupante + número).
-        int bx = panelLeft + (BG_W - (9 * CELL + 8 * 2)) / 2;
-        int by = panelTop + CELLS_Y;
-        for (int p = 0; p < PlayerTechniques.BIND_POSITIONS; p++) {
-            KiTechnique ki = tech.slot(tech.binding(p));
-            PhysicalTechnique ph = tech.physicalBinding(p);
-            if (ki != null) TechniqueIcons.draw(g, bx, by, ki);
-            else if (ph != null) PhysicalIcons.draw(g, bx, by, ph);
-            g.drawString(this.font, String.valueOf(p + 1), bx + 2, by + 1, 0xFFAAAAAA, true);
-            bx += CELL + 2;
+        // ── Cabecera ──
+        g.drawString(this.font, Component.translatable("screen.zenkai.technique.tp", att.getTP()),
+                panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.VALUE, true);
+
+        Component mnd = Component.translatable("screen.zenkai.physical.mnd",
+                att.getAttribute(ZenkaiAttributes.MIND));
+        g.drawString(this.font, mnd, rightEdge() - this.font.width(mnd), panelTop + CONTENT_TOP,
+                ZenkaiPalette.MUTED_ON_PANEL, false);
+
+        // ── Barra de posiciones ──
+        if (bindBar != null) {
+            bindBar.refreshIcons(att);
+            bindBar.renderFrame(g, this.font, null);
         }
         if (assigning != null) {
             g.drawCenteredString(this.font,
                     Component.translatable("screen.zenkai.physical.pick_slot"),
-                    panelLeft + BG_W / 2, by + CELL + 2, 0xFFFFFF55);
+                    panelLeft + BG_W / 2, panelTop + BAR_Y_OFF + SlotCell.SIZE + 7,
+                    ZenkaiPalette.VALUE);
         }
 
-        // Filas: ícono + nombre + estado.
-        int y = panelTop + ROWS_Y;
-        for (PhysicalTechnique t : PhysicalTechnique.values()) {
-            PhysicalIcons.draw(g, panelLeft + 16, y - 2, t);
-            g.drawString(this.font, Component.translatable(t.nameKey()),
-                    panelLeft + 42, y + 2, tech.isUnlocked(t) ? 0xFF7CFC7C : 0xFFAAAAAA, true);
-            y += ROW_H;
+        // ── Filas ──
+        if (visible.isEmpty()) {
+            g.drawCenteredString(this.font, Component.translatable("screen.zenkai.physical.empty"),
+                    panelLeft + BG_W / 2, panelTop + LIST_Y_OFF + 24, ZenkaiPalette.MUTED_ON_PANEL);
+            return;
         }
 
-        g.drawString(this.font, Component.literal("TP: " + att.getTP()),
-                panelLeft + 16, panelTop + BG_H - 24, 0xFFFFD75C, true);
+        int textX = panelLeft + TEXT_X_OFF;
+        for (int i = 0; i < visible.size(); i++) {
+            PhysicalTechnique t = visible.get(i);
+            int y = rowTop(i);
+            boolean unlocked = tech.isUnlocked(t);
+
+            if (assigning == t) {
+                g.fill(panelLeft + 10, y, panelLeft + BG_W - 10, y + ROW_H - 4,
+                        ZenkaiPalette.SELECT_VEIL);
+            }
+
+            PhysicalIcons.draw(g, textX, y + 3, ICON, t);
+
+            int nameX = textX + ICON + 4;
+            g.drawString(this.font, Component.translatable(t.nameKey()), nameX, y + 3,
+                    unlocked ? ZenkaiPalette.OK : ZenkaiPalette.MUTED_ON_PANEL, false);
+
+            int pos = tech.positionOf(t);
+            if (pos >= 0) {
+                Component key = Component.literal("[" + (pos + 1) + "]");
+                g.drawString(this.font, key, nameX + this.font.width(
+                        Component.translatable(t.nameKey())) + 6, y + 3, ZenkaiPalette.OK, false);
+            }
+
+            // Ficha técnica: lo que decide si vale la pena pagarla.
+            Component stats = Component.translatable("screen.zenkai.physical.stats",
+                    fmt(t.dmgMult()),
+                    fmt(t.staminaPct() * 100.0),
+                    fmt(t.cooldownTicks() / 20.0),
+                    fmt(t.range()));
+            g.drawString(this.font, stats, nameX, y + 14,
+                    unlocked ? ZenkaiPalette.BODY_ON_PANEL : ZenkaiPalette.MUTED_ON_PANEL, false);
+
+            // Requisito no cumplido, en rojo y explícito. Un botón gris sin motivo obliga a
+            // adivinar si falta TP o falta MND.
+            if (!unlocked && !canAfford(t)) {
+                Component missing = att.getTP() < t.tpCost()
+                        ? Component.translatable("screen.zenkai.physical.need_tp", t.tpCost())
+                        : Component.translatable("screen.zenkai.physical.need_mnd", t.mindReq());
+                g.drawString(this.font, missing,
+                        rightEdge() - this.font.width(missing), y + 22, ZenkaiPalette.DENIED, false);
+            }
+
+            if (i < visible.size() - 1) {
+                g.fill(textX, y + ROW_H - 5, rightEdge(), y + ROW_H - 4, ZenkaiPalette.SEPARATOR);
+            }
+        }
+
+        Component barTip = (bindBar != null) ? bindBar.tooltipAt(att, mouseX, mouseY) : null;
+        if (barTip != null) g.renderTooltip(this.font, barTip, mouseX, mouseY);
+    }
+
+    private static String fmt(double v) {
+        return String.format(Locale.ROOT, v == Math.floor(v) ? "%.0f" : "%.1f", v);
     }
 }

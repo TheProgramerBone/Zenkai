@@ -116,6 +116,11 @@ public class ModNetworking {
                 SpendTpPacket::handle);
 
         registrar.playToServer(
+                RefundTpPacket.TYPE,
+                RefundTpPacket.STREAM_CODEC,
+                RefundTpPacket::handle);
+
+        registrar.playToServer(
                 ToggleFlyPacket.TYPE,
                 ToggleFlyPacket.STREAM_CODEC,
                 ToggleFlyPacket::handle);
@@ -369,5 +374,7 @@ public class ModNetworking {
 
         registrar.playToClient(OpenMasterPayload.TYPE, OpenMasterPayload.STREAM_CODEC,
                 (payload, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandlers.openMaster(payload)));
+
+
     }
 }

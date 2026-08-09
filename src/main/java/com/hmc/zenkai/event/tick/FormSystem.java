@@ -40,10 +40,16 @@ public final class FormSystem {
             att.skills().grant(SuperForms.SKILL, 1);
             PlayerLifeCycle.syncIfServer(p);
         }
-        // ÚNICO punto donde se escribe el multiplicador de stats (forma + kaioken + majin).
-        // Va cada tick porque la maestría sube de forma continua y el kaioken puede apagarse
-        // solo. Con esto el PL y la pantalla de stats se actualizan sin tocar nada más.
-        att.setStatMultiplier(MasteryEffects.formStatFactor(p));
+        // ÚNICO punto donde se escribe el multiplicador de stats (forma + kaioken + majin +
+        // zenkai). Va cada tick porque la maestría sube de forma continua, el kaioken puede
+        // apagarse solo y el zenkai caduca por tiempo. Con esto el PL y la pantalla de stats
+        // se actualizan sin tocar nada más.
+        //
+        // El zenkai se multiplica AQUÍ y no dentro de formStatFactor a propósito: esa función
+        // es sobre maestría, y el zenkai no depende de ninguna — es un estado temporal de la
+        // raza. Meterlo allí obligaría a MasteryEffects a conocer RacePassiveSystem.
+        att.setStatMultiplier(MasteryEffects.formStatFactor(p)
+                * RacePassiveSystem.zenkaiMultiplier(p));
 
         if (form.serverTick(p, att, c.visual())) {
             PlayerLifeCycle.syncFormIfServer(p);

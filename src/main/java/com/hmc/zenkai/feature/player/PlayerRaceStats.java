@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.RaceStatTable;
+import com.hmc.zenkai.feature.StatSynergy;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
@@ -23,6 +24,23 @@ public class PlayerRaceStats {
     private int tp = 0;
     private final EnumMap<ZenkaiAttributes, Integer> attributes = new EnumMap<>(ZenkaiAttributes.class);
     private final EnumMap<ZenkaiAttributes, Integer> invested   = new EnumMap<>(ZenkaiAttributes.class);
+
+    /**
+     * TP REALMENTE gastado en atributos. Es lo que devuelve el respec.
+     *
+     * Antes el respec devolvía `sum(invested)`, o sea el NÚMERO DE PUNTOS. Con la curva
+     * cuadrática de closedCost eso significaba que un jugador que había pagado 999 TP por 500
+     * puntos recuperaba 500: se le confiscaba la mitad de su progreso sin avisarle en ninguna
+     * parte. En escenarios de compra punto a punto la pérdida llegaba al 50 %.
+     *
+     * Es un double y no un int por el botón de devolución: el reembolso de UN punto es una
+     * fracción del gasto, y redondeando a entero en cada pulsación se perdía hasta 1 TP por
+     * clic (con 50.000 puntos, 50.000 TP evaporados). El acarreo vive en refundCarry.
+     */
+    private double tpSpent = 0.0;
+
+    /** Fracción de TP pendiente de entregar por la devolución. Nunca se persiste redondeada. */
+    private double refundCarry = 0.0;
 
     public PlayerRaceStats() {
         for (ZenkaiAttributes a : ZenkaiAttributes.values()) {
@@ -54,8 +72,6 @@ public class PlayerRaceStats {
     // ── Atributos base ────────────────────────────────────────────────────────
     public void applyRaceBaseAttributes() {
         // Indexado por ZenkaiAttributes.ordinal(): STR, CON, DEX, WIL, SPI, MND.
-        // El array de config venía documentado como [STR, DEX, CON, ...] pero se leía como
-        // [STR, CON, DEX, ...], así que CON y DEX salían cambiadas en las cinco razas.
         int[] base = RaceStatTable.baseAttributes(this.race);
         BalanceUtil.setBase(attributes,
                 base[ZenkaiAttributes.STRENGTH.ordinal()],
@@ -84,10 +100,20 @@ public class PlayerRaceStats {
     public int  getTP() { return tp; }
     public void addTP(int amount) { this.tp = Math.max(0, this.tp + amount); }
 
+    /** TP gastado en atributos (redondeado hacia abajo). Lo enseña la pantalla de stats. */
+    public int getTpSpent() { return (int) Math.floor(tpSpent); }
+
+    /** Puntos invertidos en total. Es el índice de la curva de coste. */
+    public int totalInvested() {
+        return invested.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
+    public int investedIn(ZenkaiAttributes a) { return invested.getOrDefault(a, 0); }
+
     public boolean spendTP(ZenkaiAttributes attr, int points) {
         if (points <= 0) return false;
         double coeff    = CommonConfig.tpCoefficient();
-        int    totalInv = invested.values().stream().mapToInt(Integer::intValue).sum();
+        int    totalInv = totalInvested();
         int    cap      = CommonConfig.globalAttributeCap();
         int    cur      = attributes.get(attr);
         int    add      = Math.min(points, cap - cur);
@@ -99,13 +125,14 @@ public class PlayerRaceStats {
         attributes.put(attr, cur + add);
         invested.compute(attr, (k, v) -> v + add);
         tp -= totalCost;
+        tpSpent += totalCost;
         return true;
     }
 
     public int previewTpCost(ZenkaiAttributes attr, int points) {
         if (points <= 0) return 0;
         double coeff    = CommonConfig.tpCoefficient();
-        int    totalInv = invested.values().stream().mapToInt(Integer::intValue).sum();
+        int    totalInv = totalInvested();
         int    cap      = CommonConfig.globalAttributeCap();
         int    cur      = attributes.get(attr);
         int    add      = Math.min(points, cap - cur);
@@ -113,21 +140,71 @@ public class PlayerRaceStats {
         return closedCost(totalInv, add, coeff);
     }
 
-    /** Coste total en O(1): add*(base + coef*(inv + (add-1)/2)), UN solo redondeo.
-     *  El `base` era un 1.0 hardcodeado, y con coef 0.00001 eso dejaba el punto de atributo a
-     *  1 TP durante el juego real: la curva no se doblaba hasta las 100.000 inversiones.
-     *  Partiendo de atributos base de 8-14, los primeros 80 TP multiplicaban el daño por 6.7.
-     *  Ahora el suelo es configurable y es lo que fija el ritmo temprano; el coeficiente sigue
-     *  siendo lo que fija el techo. */
+    /**
+     * Devuelve UN punto invertido y reembolsa la parte del gasto que le corresponde.
+     *
+     * NO se calcula como "el coste marginal del punto N" con closedCost: closedCost redondea
+     * hacia arriba el bloque entero, así que comprar 100 puntos de golpe cuesta 101 TP pero
+     * devolverlos de uno en uno pagaría ~200. Eso es TP infinito con dos clics, y la
+     * simulación lo confirmó en tres de los cuatro patrones de compra probados.
+     *
+     * El reparto correcto es PROPORCIONAL a la curva teórica: el último punto se lleva la
+     * fracción 1 − coste(N−1)/coste(N) de lo que el jugador tiene gastado. Devolviendo todos
+     * los puntos uno a uno se reconstruye el gasto exacto (±1 TP por acarreo), venga de compras
+     * de una en una o de bloques de diez mil.
+     *
+     * @return TP devuelto, o -1 si no había nada que devolver en ese atributo.
+     */
+    public int refundPoint(ZenkaiAttributes attr) {
+        int inv = invested.getOrDefault(attr, 0);
+        if (inv <= 0) return -1;
+
+        int n = totalInvested();
+        if (n <= 0) return -1;
+
+        double coeff = CommonConfig.tpCoefficient();
+        double after = theoreticalCost(n - 1, coeff);
+        double now   = theoreticalCost(n, coeff);
+        double frac  = (now > 0.0) ? 1.0 - (after / now) : 1.0;
+
+        double refund = tpSpent * frac;
+        tpSpent = Math.max(0.0, tpSpent - refund);
+
+        refundCarry += refund;
+        int whole = (int) refundCarry;
+        refundCarry -= whole;
+
+        attributes.compute(attr, (k, v) -> Math.max(0, v - 1));
+        invested.put(attr, inv - 1);
+        tp += whole;
+        return whole;
+    }
+
+    /** ¿Se puede devolver un punto de este atributo? Lo consulta la pantalla para el botón −. */
+    public boolean canRefund(ZenkaiAttributes attr) {
+        return invested.getOrDefault(attr, 0) > 0;
+    }
+
+    /** Coste total en O(1): add*(base + coef*(inv + (add-1)/2)), UN solo redondeo. */
     private static int closedCost(int inv, int add, double coeff) {
         double base = CommonConfig.attributeBaseCost();
         double total = add * (base + coeff * (inv + (add - 1) / 2.0));
         return (int) Math.min(Integer.MAX_VALUE, Math.ceil(total));
     }
 
+    /** Coste acumulado EXACTO (sin redondear) de los primeros n puntos. Solo para el reparto
+     *  proporcional del reembolso: aquí el redondeo es justo lo que abría el exploit. */
+    private static double theoreticalCost(int n, double coeff) {
+        if (n <= 0) return 0.0;
+        double base = CommonConfig.attributeBaseCost();
+        return n * (base + coeff * (n - 1) / 2.0);
+    }
+
+    /** Respec completo: devuelve completo el TP gastado en atributos y restaura las bases. */
     public void respec() {
-        int refund = invested.values().stream().mapToInt(i -> i).sum();
-        tp += refund;
+        tp += (int) Math.floor(tpSpent + refundCarry);
+        tpSpent = 0.0;
+        refundCarry = 0.0;
         invested.replaceAll((k, v) -> 0);
         applyRaceBaseAttributes();
     }
@@ -159,17 +236,35 @@ public class PlayerRaceStats {
     }
 
     // ── Stats de combate ─────────────────────────────────────────────────────
+    // Las contribuciones cruzadas viven en StatSynergy, no aquí: el editor de técnicas, la
+    // pantalla de creación de personaje y el scouter necesitan las MISMAS fórmulas, y con la
+    // aritmética repetida en cada sitio se separaban al primer ajuste.
+
     public double computeMeleeFinal() {
-        return attributes.get(ZenkaiAttributes.STRENGTH) * RaceStatTable.melee(race, style);
+        return StatSynergy.melee(
+                attributes.get(ZenkaiAttributes.STRENGTH),
+                attributes.get(ZenkaiAttributes.WILLPOWER),
+                RaceStatTable.melee(race, style));
     }
+
     public double computeDefenseFinal() {
-        return attributes.get(ZenkaiAttributes.DEXTERITY) * RaceStatTable.defense(race, style);
+        return StatSynergy.defense(
+                attributes.get(ZenkaiAttributes.DEXTERITY),
+                attributes.get(ZenkaiAttributes.CONSTITUTION),
+                RaceStatTable.defense(race, style));
     }
+
     public double computeKiPowerFinal() {
-        return attributes.get(ZenkaiAttributes.WILLPOWER) * RaceStatTable.kiDamage(race, style);
+        return StatSynergy.kiPower(
+                attributes.get(ZenkaiAttributes.WILLPOWER),
+                attributes.get(ZenkaiAttributes.SPIRIT),
+                RaceStatTable.kiDamage(race, style));
     }
+
     public double computeKiPoolFinal() {
-        return attributes.get(ZenkaiAttributes.SPIRIT) * RaceStatTable.kiReserves(race, style);
+        return StatSynergy.kiPool(
+                attributes.get(ZenkaiAttributes.SPIRIT),
+                RaceStatTable.kiReserves(race, style));
     }
 
     public double computeSpiritMeleeFinal() {
@@ -186,25 +281,23 @@ public class PlayerRaceStats {
         return best * RaceStatTable.melee(race, style);
     }
 
-
-    // computeSpeedFinal / computeFlyFinal: ya no se usan para velocidad. Si algo más los
-    // llama, que devuelvan defensa o se eliminen.
-    public double computeSpeedFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY),  race, style, ZenkaiAttributes.DEXTERITY);
-    }
-    public double computeFlyFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY),  race, style, ZenkaiAttributes.DEXTERITY);
-    }
-
-
-
     /** CON efectiva (lineal, sin el offset del pool). La usa el Power Level. */
     public double computeConFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.CONSTITUTION), race, style, ZenkaiAttributes.CONSTITUTION);
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.CONSTITUTION),
+                race, style, ZenkaiAttributes.CONSTITUTION);
     }
 
     public double getMeleeBonus() {
         return attributes.get(ZenkaiAttributes.STRENGTH);
+    }
+
+    // computeSpeedFinal / computeFlyFinal: ya no se usan para velocidad. Si algo más los
+    // llama, que devuelvan defensa o se eliminen.
+    public double computeSpeedFinal() {
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY), race, style, ZenkaiAttributes.DEXTERITY);
+    }
+    public double computeFlyFinal() {
+        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY), race, style, ZenkaiAttributes.DEXTERITY);
     }
 
     // ── NBT ──────────────────────────────────────────────────────────────────
@@ -215,6 +308,8 @@ public class PlayerRaceStats {
         tag.putBoolean("raceChosen",  raceChosen);
         tag.putBoolean("styleChosen", styleChosen);
         tag.putInt("tp", tp);
+        tag.putDouble("tpSpent", tpSpent);
+        tag.putDouble("refundCarry", refundCarry);
 
         CompoundTag attrs = new CompoundTag();
         for (var e : attributes.entrySet()) attrs.putInt(e.getKey().name(), e.getValue());
@@ -242,5 +337,19 @@ public class PlayerRaceStats {
 
         CompoundTag inv = tag.getCompound("invested");
         for (ZenkaiAttributes a : ZenkaiAttributes.values()) invested.put(a, inv.getInt(a.name()));
+
+        this.refundCarry = tag.getDouble("refundCarry");
+
+        if (tag.contains("tpSpent")) {
+            this.tpSpent = tag.getDouble("tpSpent");
+        } else {
+            // MIGRACIÓN de saves anteriores a tpSpent: se reconstruye el gasto suponiendo que
+            // se compró de una vez. Es una ESTIMACIÓN A LA BAJA — el redondeo hacia arriba
+            // de cada compra real siempre suma por encima de la curva continua — así que nadie
+            // sale ganando TP al actualizar, que es el único error inaceptable aquí. En los
+            // patrones simulados el defecto va del 0 % (compra en bloque) al 50 % (compra punto
+            // a punto durante toda la partida).
+            this.tpSpent = closedCost(0, totalInvested(), CommonConfig.tpCoefficient());
+        }
     }
 }

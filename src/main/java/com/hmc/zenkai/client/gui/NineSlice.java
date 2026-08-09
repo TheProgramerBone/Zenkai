@@ -34,7 +34,6 @@ public final class NineSlice {
     /**
      * Nueve regiones: 4 esquinas a tamaño natural, 4 bordes estirados en un eje, centro
      * estirado en los dos.
-     *
      * Si el destino es más pequeño que las dos esquinas juntas, se reparte a medias en vez de
      * dejar que el borde se solape con la esquina opuesta y salga un churro: un botón de 16 px
      * de alto con esquinas de 12 es un caso REAL (los ✖ de las listas), no un extremo teórico.

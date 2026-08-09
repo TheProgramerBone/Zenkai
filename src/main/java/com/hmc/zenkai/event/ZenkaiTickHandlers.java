@@ -58,8 +58,8 @@ public class ZenkaiTickHandlers {
 
         if (FormSystem.tick(c)) return;
         KaiokenSystem.tick(c);
-
         KiChargeSystem.tick(c);
+        RacePassiveSystem.tick(c);
         RegenSystem.tick(c);
         // Sondeo de logros: 1x/s. No va por evento porque los stats cambian por media docena
         // de vías (entrenar, comprar, transformarse, ponerse pesas) y enganchar todas sería
@@ -86,6 +86,7 @@ public class ZenkaiTickHandlers {
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
         DownedDeathGuard.forget(e.getEntity().getUUID());
         PlayerTickState.forget(e.getEntity().getUUID());
+        RacePassiveSystem.forget(e.getEntity().getUUID());
         WeightLoadSystem.forget(e.getEntity().getUUID());
         if (e.getEntity() instanceof ServerPlayer sp) ScouterOverload.forget(sp);
     }

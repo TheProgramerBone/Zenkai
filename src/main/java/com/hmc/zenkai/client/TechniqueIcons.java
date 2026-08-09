@@ -3,20 +3,22 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.race.RaceTextureUtil;
 import com.hmc.zenkai.feature.technique.KiTechnique;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 /**
  * Íconos de técnicas para GUI/HUD (overlay de combate, menú, barra de asignación).
- *
- * Atlas: textures/gui/technique_icons.png (160x20, celdas 20x20):
- *  - Celdas 0-6: ícono por tipo, en orden del enum (WAVE, BLAST, LAZER, SPIRAL,
- *    BIG_BLAST, BARRIER, BURST), dibujados en BLANCO/grises -> se TIÑEN con el color
- *    de la técnica.
- *  - Celda 7: base EXPLOSIVA (se dibuja debajo del ícono, SIN teñir).
- *
- * Composición (pedida por Juan): [base explosiva si aplica] + [ícono del tipo teñido].
- * Fallback: sin el atlas, dibuja el cuadrito de color de siempre (nada se rompe).
+ * Atlas: textures/gui/technique_icons.png (180x20, celdas 20x20):
+ *  - Celdas 0-6: ícono por tipo, en orden del enum (WAVE, BLAST, LAZER, SPIRAL, BIG_BLAST,
+ *    BARRIER, BURST), dibujados en BLANCO/grises -> se TIÑEN con el color de la técnica.
+ *  - Celda 8: base EXPLOSIVA (se dibuja debajo del ícono, SIN teñir).
+ * NUEVO: overload con tamaño. Los íconos son 20x20 y las celdas de la barra de asignación
+ * también, así que dibujados a tamaño natural ocupaban la celda ENTERA y se comían el marco
+ * y el número de la posición. Con el marco ahora dentro de SlotCell hace falta poder pedirlos
+ * a 16x16 sin recortarlos.
+ * Se hereda el estado de blend explícito que ya tenía PhysicalIcons: setColor es GLOBAL y
+ * cualquier widget anterior del frame puede haber dejado un alfa < 1 sin resetear.
  */
 public final class TechniqueIcons {
     private TechniqueIcons() {}
@@ -32,8 +34,15 @@ public final class TechniqueIcons {
     private static boolean atlasExists = false;
     private static long nextCheckMs = 0L;
 
-    /** Dibuja el ícono de la técnica en (x, y), tamaño 20x20. */
+    /** Ícono a tamaño natural (20x20). */
     public static void draw(GuiGraphics g, int x, int y, KiTechnique t) {
+        draw(g, x, y, CELL, t);
+    }
+
+    /** Ícono escalado a un cuadrado de lado {@code size}. */
+    public static void draw(GuiGraphics g, int x, int y, int size, KiTechnique t) {
+        if (size <= 0) return;
+
         long now = System.currentTimeMillis();
         if (now >= nextCheckMs) {
             nextCheckMs = now + 2000;
@@ -41,24 +50,36 @@ public final class TechniqueIcons {
         }
 
         if (!atlasExists) {
-            // Fallback: cuadrito de color (con marquito si es explosiva).
+            // Fallback proporcional al tamaño pedido: con los márgenes fijos de antes, a 16 px
+            // el cuadrito interior quedaba de 10 y a 12 px desaparecía.
+            int m1 = Math.max(1, size / 20);
+            int m3 = Math.max(2, size * 3 / 20);
             if (t.explosive()) {
-                g.fill(x + 1, y + 1, x + CELL - 1, y + CELL - 1, 0xFFFF6622);
+                g.fill(x + m1, y + m1, x + size - m1, y + size - m1, 0xFFFF6622);
             }
-            g.fill(x + 3, y + 3, x + CELL - 3, y + CELL - 3, 0xFF000000 | t.rgb());
+            g.fill(x + m3, y + m3, x + size - m3, y + size - m3, 0xFF000000 | t.rgb());
             return;
         }
 
+        RenderSystem.enableBlend();
+
         // Base explosiva (sin teñir).
         if (t.explosive()) {
-            g.blit(ATLAS, x, y, EXPLOSIVE_CELL * CELL, 0, CELL, CELL, ATLAS_W, ATLAS_H);
+            blit(g, x, y, size, EXPLOSIVE_CELL * CELL);
         }
 
         // Ícono del tipo, teñido con el color de la técnica.
         int rgb = t.rgb();
         g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f,
                 (rgb & 0xFF) / 255f, 1f); // ⚠ GuiGraphics.setColor (1.21.1)
-        g.blit(ATLAS, x, y, t.type().ordinal() * CELL, 0, CELL, CELL, ATLAS_W, ATLAS_H);
+        blit(g, x, y, size, t.type().ordinal() * CELL);
         g.setColor(1f, 1f, 1f, 1f);
+
+        RenderSystem.disableBlend();
+    }
+
+    /** ⚠ API: overload de blit de 11 argumentos, el que ESCALA (el de 9 recorta 1:1). */
+    private static void blit(GuiGraphics g, int x, int y, int size, int u) {
+        g.blit(ATLAS, x, y, size, size, (float) u, 0f, CELL, CELL, ATLAS_W, ATLAS_H);
     }
 }

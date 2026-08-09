@@ -2,6 +2,7 @@ package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.race.RacePassives;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import net.minecraft.world.entity.player.Player;
 
@@ -27,14 +28,19 @@ public final class RegenSystem {
 
         int bodyCur = att.getBody(), bodyMax = att.getBodyMax();
         if (bodyCur > 0 && bodyCur < bodyMax) {
-            int gain = accrue(carry, 0, bodyMax * (CommonConfig.baseRegenBody() / 100.0));
-            if (gain > 0) { att.addBody(gain); didBody = true; }
+            int gain = accrue(carry, 0, bodyMax * (CommonConfig.baseRegenBody() / 100.0)
+                    * RacePassives.bodyRegenMult(p));
+            if (gain > 0) {
+                att.addBody(gain);
+                didBody = true;
+                RacePassiveSystem.chargeNamekianRegen(p, att, gain);
+            }
         }
 
-        // Correr en turbo drena estamina: no se regenera a la vez o se anularían entre sí.
         int stCur = att.getStamina(), stMax = att.getStaminaMax();
         if (stCur < stMax && !p.isSprinting()) {
-            int gain = accrue(carry, 1, stMax * (CommonConfig.baseRegenStamina() / 100.0));
+            int gain = accrue(carry, 1, stMax * (CommonConfig.baseRegenStamina() / 100.0)
+                    * RacePassives.staminaRegenMult(p));
             if (gain > 0) { att.addStamina(gain); didStamina = true; }
         }
 
