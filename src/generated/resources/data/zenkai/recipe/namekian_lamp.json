@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "zenkai:energy_crystal"
+    },
+    "S": {
+      "item": "zenkai:sacred_stone"
+    }
+  },
+  "pattern": [
+    " S ",
+    "SCS",
+    " S "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:namekian_lamp"
+  }
+}

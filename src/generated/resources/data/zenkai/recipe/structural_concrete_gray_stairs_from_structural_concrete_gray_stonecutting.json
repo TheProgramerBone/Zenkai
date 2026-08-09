@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:structural_concrete_gray"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:structural_concrete_gray_stairs"
+  }
+}

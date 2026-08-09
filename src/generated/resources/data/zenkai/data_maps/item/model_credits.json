@@ -1,0 +1,92 @@
+{
+  "values": {
+    "zenkai:arcosian_race_boots": {
+      "author": "Kirbro",
+      "detail": "All Arcosian Model and Texture"
+    },
+    "zenkai:arcosian_race_chestplate": {
+      "author": "Kirbro",
+      "detail": "All Arcosian Model and Texture"
+    },
+    "zenkai:arcosian_race_helmet": {
+      "author": "Kirbro",
+      "detail": "All Arcosian Model and Texture"
+    },
+    "zenkai:arcosian_race_leggings": {
+      "author": "Kirbro",
+      "detail": "All Arcosian Model and Texture"
+    },
+    "zenkai:dragon_ball_1": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:dragon_ball_2": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:dragon_ball_3": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:dragon_ball_4": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:dragon_ball_5": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:dragon_ball_6": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:dragon_ball_7": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:isaac_spawn_egg": {
+      "author": "Kirbro",
+      "detail": "Entity Model"
+    },
+    "zenkai:namek_dragon_ball_1": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:namek_dragon_ball_2": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:namek_dragon_ball_3": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:namek_dragon_ball_4": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:namek_dragon_ball_5": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:namek_dragon_ball_6": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:namek_dragon_ball_7": {
+      "author": "Kirbro",
+      "detail": "Texture"
+    },
+    "zenkai:namekian_grass_block": {
+      "author": "IxWolxz",
+      "detail": "Texture"
+    },
+    "zenkai:scouter": {
+      "author": "IxWolxz",
+      "detail": "Texture"
+    },
+    "zenkai:shenlong_spawn_egg": {
+      "author": "Kirbro",
+      "detail": "Entity Model"
+    }
+  }
+}

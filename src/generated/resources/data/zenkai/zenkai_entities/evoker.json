@@ -1,0 +1,12 @@
+{
+  "alignment": -80,
+  "archetype": "balanced",
+  "entity": "minecraft:evoker",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 760,
+  "rewards": {
+    "tp": "auto"
+  }
+}

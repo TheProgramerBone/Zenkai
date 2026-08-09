@@ -1,0 +1,47 @@
+{
+  "carvers": {},
+  "downfall": 0.0,
+  "effects": {
+    "fog_color": 16751563,
+    "foliage_color": 5028651,
+    "grass_color": 6344510,
+    "sky_color": 16773514,
+    "water_color": 9109504,
+    "water_fog_color": 4849664
+  },
+  "features": [
+    [
+      "zenkai:otherworld_clouds"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "zenkai:katchin_ore_sky"
+    ],
+    [],
+    [],
+    [
+      "zenkai:otherworld_cherry_trees",
+      "zenkai:otherworld_cherry_flowers",
+      "zenkai:otherworld_grass",
+      "zenkai:otherworld_flowers",
+      "zenkai:otherworld_dead_bush"
+    ]
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 2.0
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "zenkai:block/cut_katchin",
+    "side": "zenkai:block/cut_katchin",
+    "top": "zenkai:block/cut_katchin"
+  }
+}

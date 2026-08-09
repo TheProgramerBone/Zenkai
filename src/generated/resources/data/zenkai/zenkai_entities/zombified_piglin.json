@@ -1,0 +1,12 @@
+{
+  "alignment": -20,
+  "archetype": "brawler",
+  "entity": "minecraft:zombified_piglin",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 265,
+  "rewards": {
+    "tp": "auto"
+  }
+}

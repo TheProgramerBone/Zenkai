@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "zenkai:block/namekian_lamp_off"
+    },
+    "lit=true": {
+      "model": "zenkai:block/namekian_lamp"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "alignment": -95,
+  "archetype": "boss",
+  "entity": "minecraft:wither",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 9300,
+  "rewards": {
+    "tp": "auto"
+  }
+}

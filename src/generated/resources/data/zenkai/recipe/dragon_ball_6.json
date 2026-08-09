@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "zenkai:dragon_ball_5"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:dragon_ball_6"
+  }
+}

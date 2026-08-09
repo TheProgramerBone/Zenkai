@@ -1,0 +1,82 @@
+{
+  "carvers": {
+    "air": [
+      "zenkai:namek_cave",
+      "zenkai:namek_canyon"
+    ]
+  },
+  "downfall": 0.0,
+  "effects": {
+    "fog_color": 3969183,
+    "foliage_color": 2055820,
+    "grass_color": 1725043,
+    "sky_color": 3977375,
+    "water_color": 2529116,
+    "water_fog_color": 6870166
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [
+      "minecraft:monster_room",
+      "minecraft:monster_room_deep"
+    ],
+    [],
+    [],
+    [
+      "minecraft:ore_dirt",
+      "minecraft:ore_gravel",
+      "minecraft:ore_granite_upper",
+      "minecraft:ore_granite_lower",
+      "minecraft:ore_diorite_upper",
+      "minecraft:ore_diorite_lower",
+      "minecraft:ore_andesite_upper",
+      "minecraft:ore_andesite_lower",
+      "minecraft:ore_tuff",
+      "zenkai:namek_coal_upper",
+      "zenkai:namek_coal_lower",
+      "zenkai:namek_iron_upper",
+      "zenkai:namek_iron_middle",
+      "zenkai:namek_iron_small",
+      "zenkai:namek_copper",
+      "zenkai:namek_gold",
+      "zenkai:namek_gold_lower",
+      "zenkai:namek_redstone",
+      "zenkai:namek_redstone_lower",
+      "zenkai:namek_lapis",
+      "zenkai:namek_lapis_buried",
+      "zenkai:namek_diamond",
+      "zenkai:namek_diamond_medium",
+      "zenkai:namek_diamond_large",
+      "zenkai:namek_diamond_buried",
+      "zenkai:namek_crystal",
+      "zenkai:sacred_stone",
+      "zenkai:energy_crystal_rare"
+    ],
+    [],
+    [
+      "minecraft:spring_water",
+      "minecraft:spring_lava"
+    ],
+    [
+      "minecraft:glow_lichen",
+      "zenkai:ajisa_forest",
+      "zenkai:ajisa_flowers",
+      "zenkai:namek_grass"
+    ]
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 0.8
+}

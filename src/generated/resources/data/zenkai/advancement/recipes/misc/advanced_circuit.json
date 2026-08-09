@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_basic": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:basic_circuit"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:advanced_circuit"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_basic"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:advanced_circuit"
+    ]
+  }
+}

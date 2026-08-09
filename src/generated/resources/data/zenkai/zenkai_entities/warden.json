@@ -1,0 +1,17 @@
+{
+  "alignment": -60,
+  "archetype": "tank",
+  "entity": "minecraft:warden",
+  "moveset": {
+    "melee": true
+  },
+  "overrides": {
+    "attributes": {
+      "strength": "+30%"
+    }
+  },
+  "power_level": 13000,
+  "rewards": {
+    "tp": "auto"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "alignment": -80,
+  "archetype": "brawler",
+  "entity": "minecraft:vindicator",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 445,
+  "rewards": {
+    "tp": "auto"
+  }
+}

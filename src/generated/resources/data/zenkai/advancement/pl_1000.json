@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:first_tp",
+  "criteria": {
+    "pl": {
+      "conditions": {
+        "power_level": 1000
+      },
+      "trigger": "zenkai:stat_threshold"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.pl_1000.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "zenkai:energy_crystal"
+    },
+    "title": {
+      "translate": "advancements.zenkai.pl_1000.title"
+    }
+  },
+  "requirements": [
+    [
+      "pl"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

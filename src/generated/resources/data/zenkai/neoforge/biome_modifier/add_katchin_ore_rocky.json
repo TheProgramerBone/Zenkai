@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "zenkai:rocky_wasteland",
+  "features": "zenkai:katchin_ore_rocky",
+  "step": "underground_ores"
+}

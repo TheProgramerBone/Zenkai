@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "zenkai:namek_dragon_ball_2"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:namek_dragon_ball_3"
+  }
+}

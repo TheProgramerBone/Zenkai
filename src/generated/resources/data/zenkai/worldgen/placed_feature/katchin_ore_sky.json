@@ -1,0 +1,27 @@
+{
+  "feature": "zenkai:katchin_ore_sky",
+  "placement": [
+    {
+      "type": "minecraft:count",
+      "count": 3
+    },
+    {
+      "type": "minecraft:in_square"
+    },
+    {
+      "type": "minecraft:height_range",
+      "height": {
+        "type": "minecraft:uniform",
+        "max_inclusive": {
+          "absolute": 190
+        },
+        "min_inclusive": {
+          "absolute": 130
+        }
+      }
+    },
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

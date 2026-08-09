@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    {
+      "item": "zenkai:structural_concrete_red"
+    },
+    {
+      "item": "zenkai:structural_concrete_red"
+    },
+    {
+      "item": "zenkai:structural_concrete_red"
+    },
+    {
+      "item": "zenkai:structural_concrete_red"
+    },
+    {
+      "item": "zenkai:structural_concrete_red"
+    },
+    {
+      "item": "zenkai:structural_concrete_red"
+    },
+    {
+      "item": "zenkai:structural_concrete_red"
+    },
+    {
+      "item": "zenkai:structural_concrete_red"
+    },
+    {
+      "item": "minecraft:black_dye"
+    }
+  ],
+  "result": {
+    "count": 8,
+    "id": "zenkai:structural_concrete_dark_red"
+  }
+}

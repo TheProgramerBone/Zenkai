@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:choose_race",
+  "criteria": {
+    "go": {
+      "conditions": {
+        "to": "zenkai:namek"
+      },
+      "trigger": "minecraft:changed_dimension"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.namek.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "zenkai:namekian_grass_block"
+    },
+    "title": {
+      "translate": "advancements.zenkai.namek.title"
+    }
+  },
+  "requirements": [
+    [
+      "go"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

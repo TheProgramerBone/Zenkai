@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/door_top_left",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "bottom": "zenkai:block/ajisa_door_bottom",
+    "top": "zenkai:block/ajisa_door_top"
+  }
+}

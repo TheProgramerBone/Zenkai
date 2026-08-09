@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "zenkai:block/sacred_stone_brick_slab"
+    },
+    "type=double": {
+      "model": "zenkai:block/sacred_stone_bricks"
+    },
+    "type=top": {
+      "model": "zenkai:block/sacred_stone_brick_slab_top"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "alignment": -50,
+  "archetype": "brawler",
+  "entity": "minecraft:zombie",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 215,
+  "rewards": {
+    "tp": "auto"
+  }
+}

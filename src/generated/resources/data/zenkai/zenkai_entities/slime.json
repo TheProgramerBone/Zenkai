@@ -1,0 +1,12 @@
+{
+  "alignment": -10,
+  "archetype": "balanced",
+  "entity": "minecraft:slime",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 280,
+  "rewards": {
+    "tp": "auto"
+  }
+}

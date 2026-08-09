@@ -1,0 +1,12 @@
+{
+  "alignment": -15,
+  "archetype": "brawler",
+  "entity": "minecraft:polar_bear",
+  "moveset": {
+    "melee": true
+  },
+  "power_level": 265,
+  "rewards": {
+    "tp": "auto"
+  }
+}

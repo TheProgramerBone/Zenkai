@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_structural_concrete_light_blue": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:structural_concrete_light_blue"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:structural_concrete_light_blue_stairs_from_structural_concrete_light_blue_stonecutting"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_structural_concrete_light_blue"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:structural_concrete_light_blue_stairs_from_structural_concrete_light_blue_stonecutting"
+    ]
+  }
+}

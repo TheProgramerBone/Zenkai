@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_dragon_ball_6": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:dragon_ball_6"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:dragon_ball_7"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_dragon_ball_6"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:dragon_ball_7"
+    ]
+  }
+}
