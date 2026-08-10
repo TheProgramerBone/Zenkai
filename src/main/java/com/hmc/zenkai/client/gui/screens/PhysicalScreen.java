@@ -106,7 +106,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                 unlock.active = canAfford(t);
                 addRenderableWidget(unlock);
             } else {
-                addRenderableWidget(new TextOnlyButton(rightEdge() - 96, y, 60, 16,
+                addRenderableWidget(new TextOnlyButton(rightEdge() - 96, y - 5, 60, 16,
                         Component.translatable(assigning == t
                                 ? "screen.zenkai.physical.assigning"
                                 : "screen.zenkai.physical.assign"),

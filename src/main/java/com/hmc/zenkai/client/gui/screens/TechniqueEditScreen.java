@@ -37,18 +37,15 @@ import java.util.Locale;
 
 /**
  * Editor de técnicas ki (crear con slot = -1, editar con slot >= 0), sobre common_screen.
- *
  * DOS PESTAÑAS dentro del MISMO Screen (excepción a "un Screen por pestaña"): el borrador a
  * medio editar tiene que sobrevivir al cambio de pestaña, y partirlo en dos pantallas
  * obligaría a sacar ese estado fuera para nada.
  *   - COMBAT: tipo, efecto, tamaño, posición de salida + las previews de números.
  *   - STYLE:  color, sonido de carga, sonido de disparo, set de animación + preview.
- *
  * El nombre y los botones viven fuera de las pestañas: aplican a las dos.
  * Guardar/Cancelar van FUERA del panel; la X de arriba cierra. Borrar NO comparte fila con
  * Guardar: es una papelera dentro del panel, en la esquina inferior izquierda, y necesita
  * dos pulsaciones.
- *
  * El ColorPickerWidget se abre FUERA del panel (a la derecha, o a la izquierda si no cabe),
  * igual que en StyleSelectionScreen y AppearanceScreen. Antes se abría encima del bloque de
  * preview y obligaba a esconder media pestaña mientras estaba abierto.
@@ -158,7 +155,7 @@ public class TechniqueEditScreen extends Screen {
 
     private static int indexOf(List<ResourceLocation> list, ResourceLocation id) {
         int i = list.indexOf(id);
-        return i < 0 ? 0 : i;
+        return Math.max(i, 0);
     }
 
     // ── Construcción ─────────────────────────────────────────────────────────
@@ -177,7 +174,7 @@ public class TechniqueEditScreen extends Screen {
 
         // ── Nombre (común a las dos pestañas) ──
         String prevName = nameBox != null ? nameBox.getValue() : initialName();
-        nameBox = new EditBox(this.font, x + 44, topPos + Y_NAME, contentW - 44, 14,
+        nameBox = new EditBox(this.font, x + 35, topPos + Y_NAME, contentW - 60, 14,
                 Component.translatable("screen.zenkai.technique.name"));
         nameBox.setMaxLength(KiTechnique.MAX_NAME_LENGTH);
         nameBox.setValue(prevName);
@@ -186,7 +183,7 @@ public class TechniqueEditScreen extends Screen {
 
         // ── X de cerrar, esquina superior derecha del panel ──
         addRenderableWidget(new TextOnlyButton(
-                leftPos + BG_W - MARGIN - X_SIZE, topPos + ScreenTitle.CONTENT_TOP - 2, X_SIZE, X_SIZE,
+                leftPos + BG_W - MARGIN - X_SIZE, topPos + ScreenTitle.CONTENT_TOP, X_SIZE, X_SIZE,
                 Component.empty(), TEX_X, TEX_X_HL, this::close));
 
         // ── Pestañas ──
