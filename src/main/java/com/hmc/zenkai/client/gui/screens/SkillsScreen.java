@@ -1,6 +1,8 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -40,13 +42,10 @@ public class SkillsScreen extends ZenkaiMenuScreen {
     private static final int SCROLLBAR_W = 4;
     private static final int TOOLTIP_W = 200;
 
-    private static final int COL_NAME  = 0xFF7CFC7C;
-    private static final int COL_DESC  = 0xFFAAAAAA;
-    private static final int COL_COST  = 0xFFFFD966;
-    private static final int COL_POOR  = 0xFFCC6666;
-    /** Azul: al máximo. Antes era verde y se confundía con el nombre de la habilidad. */
-    private static final int COL_MAXED = 0xFF7FD4FF;
-    private static final int COL_SEP   = 0x22FFFFFF;
+    // Los colores salen de ZenkaiPalette, no de literales locales. Antes esta pantalla usaba
+    // 0xFF7CFC7C para el nombre y 0xFFFFD966 para el coste: dos tonos pensados para leerse
+    // sobre negro que, sobre el beige del panel y con sombra debajo, quedaban lavados.
+    // MasteryScreen tenía SUS PROPIAS copias de los mismos valores con nombres distintos.
 
     private final List<String> rowIds = new ArrayList<>();
     private final List<PlusIconButton> plusButtons = new ArrayList<>();
@@ -143,14 +142,9 @@ public class SkillsScreen extends ZenkaiMenuScreen {
                 && st.mindFree() >= def.mindReqFor(currentLevel + 1) - def.mindReqFor(currentLevel);
     }
 
-    /** Recorta a una línea con puntos suspensivos: sin esto las descripciones largas
-     *  se salían del panel por la derecha. */
+    /** Delega en PanelText: el criterio de recorte estaba copiado en tres pantallas. */
     private Component fit(Component c, int maxW) {
-        if (maxW <= 0) return Component.empty();
-        if (this.font.width(c) <= maxW) return c;
-        int dots = this.font.width("...");
-        String cut = this.font.plainSubstrByWidth(c.getString(), Math.max(0, maxW - dots));
-        return Component.literal(cut + "...");
+        return PanelText.fit(this.font, c, maxW);
     }
 
     // ── Scroll ───────────────────────────────────────────────────────────────
@@ -188,11 +182,11 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
         int x = panelLeft + BG_W - 10;
         int top = listTop(), h = viewHeight();
-        g.fill(x, top, x + SCROLLBAR_W, top + h, 0x40000000);
+        g.fill(x, top, x + SCROLLBAR_W, top + h, ZenkaiPalette.BAR_BG);
 
         int thumbH = Math.max(12, h * visibleRows() / rowIds.size());
         int thumbY = top + (h - thumbH) * scrollRow / max;
-        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, 0xFFFFD966);
+        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.VALUE_ON_PANEL);
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -219,14 +213,26 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
         if (st == null) return;
 
-        g.drawString(this.font,
-                Component.translatable("screen.zenkai.skills.resources",
-                        st.getTP(), st.mindFree(), st.getAttribute(ZenkaiAttributes.MIND)),
-                panelLeft + 16, panelTop + CONTENT_TOP, 0xFFFFD966, true);
+        // TP y MIND en DOS textos, cada uno con su color de rol. Juntos en una sola clave
+        // compartían el amarillo y no se distinguían de un vistazo, que es justo lo que se
+        // necesita al decidir si una habilidad está a tu alcance.
+        Component tp = Component.translatable("screen.zenkai.skills.tp", st.getTP());
+        PanelText.onPanel(g, this.font, tp, panelLeft + 16, panelTop + CONTENT_TOP,
+                ZenkaiPalette.TP_ON_PANEL);
+
+        int free = st.mindFree();
+        PanelText.onPanel(g, this.font,
+                Component.translatable("screen.zenkai.skills.mind",
+                        free, st.getAttribute(ZenkaiAttributes.MIND)),
+                panelLeft + 16 + this.font.width(tp) + 10, panelTop + CONTENT_TOP,
+                // El déficit se señala en rojo: un MIND negativo es un problema real, no un
+                // valor bajo.
+                free < 0 ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.MIND_ON_PANEL);
 
         if (rowIds.isEmpty()) {
-            g.drawCenteredString(this.font, Component.translatable("screen.zenkai.skills.empty"),
-                    panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, 0xFFAAAAAA);
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.skills.empty"),
+                    panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, ZenkaiPalette.MUTED_ON_PANEL);
             return;
         }
 
@@ -259,11 +265,11 @@ public class SkillsScreen extends ZenkaiMenuScreen {
             } else {
                 name = fit(base, maxW);
             }
-            g.drawString(this.font, name, textX, y, COL_NAME, true);
+            PanelText.onPanel(g, this.font, name, textX, y, ZenkaiPalette.OWNED_ON_PANEL);
 
             // Separador tenue: sin él las filas se leen como un solo bloque de texto.
             if (i < last - 1) {
-                g.fill(textX, y + ROW_H - 6, plusX() + PLUS_SIZE, y + ROW_H - 5, COL_SEP);
+                g.fill(textX, y + ROW_H - 6, plusX() + PLUS_SIZE, y + ROW_H - 5, ZenkaiPalette.SEPARATOR);
             }
 
             if (mouseY >= y && mouseY < y + ROW_H && mouseX >= textX && mouseX < plusX()) {
@@ -272,21 +278,24 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
             if (def == null) continue;
 
-            g.drawString(this.font, fit(Component.translatable(def.descKey()), maxW),
-                    textX, y + 11, COL_DESC, true);
+            PanelText.onPanel(g, this.font, fit(Component.translatable(def.descKey()), maxW),
+                    textX, y + 11, ZenkaiPalette.BODY_ON_PANEL);
 
             boolean canLevel = def.purchasable() && lvl < maxLevelOf(def);
             if (!canLevel) {
                 if (lvl >= maxLevelOf(def)) {
-                    g.drawString(this.font, Component.translatable("screen.zenkai.skills.maxed"),
-                            textX, y + 22, COL_MAXED, true);
+                    PanelText.onPanel(g, this.font,
+                            Component.translatable("screen.zenkai.skills.maxed"),
+                            textX, y + 22, ZenkaiPalette.MAXED_ON_PANEL);
                 }
                 continue;
             }
-            g.drawString(this.font,
+            PanelText.onPanel(g, this.font,
                     Component.translatable("screen.zenkai.skills.cost",
                             costOf(def, lvl + 1), def.mindReqFor(lvl + 1) - def.mindReqFor(lvl)),
-                    textX, y + 22, canAfford(st, def, lvl) ? COL_COST : COL_POOR, true);
+                    textX, y + 22,
+                    canAfford(st, def, lvl) ? ZenkaiPalette.TP_ON_PANEL
+                            : ZenkaiPalette.DENIED_ON_PANEL);
         }
         g.disableScissor();
         drawScrollbar(g);

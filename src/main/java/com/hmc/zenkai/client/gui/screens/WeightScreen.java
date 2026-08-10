@@ -1,7 +1,9 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.content.item.WeightArmorItem;
@@ -142,9 +144,9 @@ public class WeightScreen extends Screen {
         int cx = leftPos + BG_W / 2;
         ScreenTitle.drawAbovePanel(g, this.font, this.title, cx, topPos);
 
-        g.drawString(this.font, Component.translatable("screen.zenkai.weight.field"),
-                cx - this.font.width(Component.translatable("screen.zenkai.weight.field")) / 2,
-                topPos + Y_LABEL, 0xFFFFFFFF, true);
+        PanelText.centeredOnPanel(g, this.font,
+                Component.translatable("screen.zenkai.weight.field"),
+                cx, topPos + Y_LABEL, ZenkaiPalette.LABEL_ON_PANEL);
 
         if (mc.player == null) return;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(mc.player);
@@ -156,30 +158,38 @@ public class WeightScreen extends Screen {
         int x = leftPos + MARGIN + 8;
         int y = topPos + Y_INFO;
 
-        line(g, x, y, "screen.zenkai.weight.load", over ? 0xFFFF5555 : 0xFFFFFFFF,
+        line(g, x, y, "screen.zenkai.weight.load",
+                over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL,
                 fmt(tons), fmt(cap), (int) Math.round(r * 100));
         y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.speed", 0xFFDDDDDD, pct(WeightSystem.moveFactor(r)));
+        line(g, x, y, "screen.zenkai.weight.speed", ZenkaiPalette.BODY_ON_PANEL,
+                pct(WeightSystem.moveFactor(r)));
         y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.jump", 0xFFDDDDDD, pct(WeightSystem.jumpFactor(r)));
+        line(g, x, y, "screen.zenkai.weight.jump", ZenkaiPalette.BODY_ON_PANEL,
+                pct(WeightSystem.jumpFactor(r)));
         y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.stats", 0xFFDDDDDD, pct(WeightSystem.statFactor(r)));
+        line(g, x, y, "screen.zenkai.weight.stats", ZenkaiPalette.BODY_ON_PANEL,
+                pct(WeightSystem.statFactor(r)));
         y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.tp", over ? 0xFFFF5555 : 0xFF77FF99,
+        // El bono de TP es la recompensa de llevar lastre: verde cuando cuenta, rojo cuando te
+        // has pasado y deja de contar.
+        line(g, x, y, "screen.zenkai.weight.tp",
+                over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.OK_ON_PANEL,
                 fmt(WeightSystem.tpFactor(r)));
         y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.pl_needed", 0xFFAAAAAA,
+        line(g, x, y, "screen.zenkai.weight.pl_needed", ZenkaiPalette.MUTED_ON_PANEL,
                 ZenkaiNumbers.format(WeightSystem.plForTons(tons)));
 
         if (over) {
-            Component warn = Component.translatable("screen.zenkai.weight.overloaded");
-            g.drawString(this.font, warn, cx - this.font.width(warn) / 2,
-                    topPos + Y_WARN, 0xFFFF5555, true);
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.weight.overloaded"),
+                    cx, topPos + Y_WARN, ZenkaiPalette.DENIED_ON_PANEL);
         }
     }
 
+    /** Fila de la ficha. Va SIN sombra: esto se dibuja sobre el beige del panel. */
     private void line(GuiGraphics g, int x, int y, String key, int color, Object... args) {
-        g.drawString(this.font, Component.translatable(key, args), x, y, color, true);
+        PanelText.onPanel(g, this.font, Component.translatable(key, args), x, y, color);
     }
 
     @Override

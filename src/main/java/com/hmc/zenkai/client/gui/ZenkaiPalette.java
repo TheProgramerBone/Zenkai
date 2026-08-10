@@ -14,6 +14,24 @@ package com.hmc.zenkai.client.gui;
  * La escala tierra sustituye a los pasteles que había antes (0xFFFFD966, 0xFF7CFC7C…). Aquellos
  * estaban pensados para leerse sobre negro, y sobre el beige un amarillo claro con un TP de diez
  * cifras al lado era prácticamente invisible.
+ * ═══ CÓMO ELEGIR ═══
+ * No se elige "un color bonito", se elige el ROL de lo que se dibuja y el fondo sobre el que va:
+ *   ¿qué es?                    sobre panel            sobre oscuro
+ *   ─────────────────────────────────────────────────────────────────
+ *   etiqueta de campo           LABEL_ON_PANEL         TEXT_DIM
+ *   descripción, detalle        BODY_ON_PANEL          TEXT_DIM
+ *   texto secundario            MUTED_ON_PANEL         TEXT_OFF
+ *   TP                          TP_ON_PANEL            TP_ON_DARK
+ *   MIND                        MIND_ON_PANEL          MIND_ON_DARK
+ *   nombre de algo que posees   OWNED_ON_PANEL         OK
+ *   al máximo                   MAXED_ON_PANEL         MAXED
+ *   no puedes pagarlo           DENIED_ON_PANEL        DENIED
+ *   valor en negativo, error    DENIED_ON_PANEL        ERROR
+ *   forma / estado especial     SPECIAL_ON_PANEL       MAXED
+ * Si un rol nuevo no encaja en la tabla, se añade AQUÍ una constante con su nombre — no un
+ * literal en la pantalla. Un hexadecimal suelto en un Screen es siempre un fallo pendiente.
+ * Y el dibujo pasa por PanelText, no por GuiGraphics directamente: drawCenteredString dibuja
+ * sombra SIEMPRE, y una sombra negra bajo un color tierra sobre beige es un borrón.
  */
 public final class ZenkaiPalette {
     private ZenkaiPalette() {}
@@ -61,7 +79,7 @@ public final class ZenkaiPalette {
     /** Rojo intenso: valor en negativo que señala un problema real (mindFree). */
     public static final int ERROR     = 0xFFFF5555;
     public static final int MAXED     = 0xFF7FD4FF;
-    /** Verde dragón. UN solo verde para lo de Shenlong. */
+    /** Verde dragón. UN solo verde para Shenlong. */
     public static final int SHENLONG  = 0xFF23B14C;
 
     // ── Barras de recurso ────────────────────────────────────────────────────
@@ -78,6 +96,26 @@ public final class ZenkaiPalette {
     public static final int BAR_KI      = 0xFF2E8FBE;
     public static final int BAR_CONTROL = 0xFFD9922B;
     public static final int BAR_MASTERY = 0xFF3E86A8;
+
+    // ── Roles fijos: SIEMPRE este color, en TODAS las pantallas ──────────────
+    //
+    // No son alias por comodidad: son la respuesta a que TP y MND salían los dos amarillos en
+    // pantallas distintas y no se distinguían de un vistazo. Cualquier pantalla que muestre uno
+    // de estos valores usa la constante, no elige color.
+
+    /** Puntos de entrenamiento. Dorado quemado, en cualquier pantalla y contexto de panel. */
+    public static final int TP_ON_PANEL   = VALUE_ON_PANEL;
+    /** Puntos de entrenamiento sobre fondo oscuro. */
+    public static final int TP_ON_DARK    = VALUE;
+    /** MIND / mente. Azul pizarra: nunca comparte color con el TP. */
+    public static final int MIND_ON_PANEL = ACCENT_ON_PANEL;
+    /** MIND sobre fondo oscuro. */
+    public static final int MIND_ON_DARK  = MAXED;
+
+    /** Nombre de una cosa que el jugador posee (habilidad, técnica, forma). */
+    public static final int OWNED_ON_PANEL = OK_ON_PANEL;
+    /** Estado "al máximo". NO es un verde distinto: lo dice el texto, no el tono. */
+    public static final int MAXED_ON_PANEL = ACCENT_ON_PANEL;
 
     // ── Utilidades ───────────────────────────────────────────────────────────
     public static final int SEPARATOR   = 0x44AC421B;

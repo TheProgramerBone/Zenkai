@@ -1,6 +1,9 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.StatBar;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.event.tick.KaiokenSystem;
 import com.hmc.zenkai.feature.Race;
@@ -48,14 +51,10 @@ public class MasteryScreen extends ZenkaiMenuScreen {
     private static final int SCROLLBAR_W = 4;
     private static final int BAR_H = 3;
 
-    private static final int COL_HEADER = 0xFFFFD966;
-    private static final int COL_NAME   = 0xFF7CFC7C;
-    private static final int COL_DETAIL = 0xFFAAAAAA;
-    private static final int COL_PCT    = 0xFFFFFFFF;
-    private static final int COL_BAR_BG = 0x40000000;
-    private static final int COL_BAR_FG = 0xFF7FD4FF;
-    private static final int COL_BAR_MAX = 0xFF7CFC7C;
-    private static final int COL_SEP    = 0x22FFFFFF;
+    // Colores desde ZenkaiPalette. Esta pantalla tenía COL_NAME y COL_BAR_MAX con el MISMO
+    // valor (0xFF7CFC7C) significando cosas distintas —el nombre de la maestría y "al 100%"—,
+    // así que una barra llena y su etiqueta eran indistinguibles. Ahora "al máximo" lo dice el
+    // color de la barra (azul pizarra) y el nombre conserva el verde de "algo que posees".
 
     /** Una fila: cabecera de sección (mastery &lt; 0) o entrada con progreso. */
     private record Row(Component name, Component detail, float mastery) {
@@ -174,12 +173,12 @@ public class MasteryScreen extends ZenkaiMenuScreen {
 
     /** "x1.40 -> x2.50" : multiplicador de stats actual y con la forma dominada. */
     private static String statsRange(double now, double mastered) {
-        return "x" + f2(1.0 + now) + " \u2192 x" + f2(1.0 + mastered);
+        return "x" + f2(1.0 + now) + " → x" + f2(1.0 + mastered);
     }
 
     /** "0.40 -> 0.10 ki/s": el drenaje BAJA al dominar, de ahí que el orden parezca al revés. */
     private static String drainRange(double now, double mastered) {
-        return f2(now * 20.0) + " \u2192 " + f2(mastered * 20.0) + " ki/s";
+        return f2(now * 20.0) + " → " + f2(mastered * 20.0) + " ki/s";
     }
 
     private static String noDrainLabel() { return "0 ki/s"; }
@@ -240,8 +239,9 @@ public class MasteryScreen extends ZenkaiMenuScreen {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
 
         if (rows.isEmpty()) {
-            g.drawCenteredString(this.font, Component.translatable("screen.zenkai.mastery.empty"),
-                    panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, 0xFFAAAAAA);
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.mastery.empty"),
+                    panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, ZenkaiPalette.MUTED_ON_PANEL);
             return;
         }
 
@@ -254,26 +254,27 @@ public class MasteryScreen extends ZenkaiMenuScreen {
             int y = rowTop(i);
 
             if (r.isHeader()) {
-                g.drawString(this.font, r.name(), textX, y + 8, COL_HEADER, true);
-                g.fill(textX, y + 20, panelLeft + BG_W - TEXT_X_OFF, y + 21, COL_SEP);
+                PanelText.onPanel(g, this.font, r.name(), textX, y + 8, ZenkaiPalette.LABEL_ON_PANEL);
+                g.fill(textX, y + 20, panelLeft + BG_W - TEXT_X_OFF, y + 21, ZenkaiPalette.SEPARATOR);
                 continue;
             }
 
-            g.drawString(this.font, r.name(), textX + 4, y + 1, COL_NAME);
+            PanelText.onPanel(g, this.font, r.name(), textX + 4, y + 1, ZenkaiPalette.OWNED_ON_PANEL);
 
+            // El porcentaje al 100% se tiñe: es la única señal de "terminado" que queda tras
+            // colapsar los verdes, y tiene que verse sin comparar barras.
             String pctText = f1(r.mastery()) + "%";
-            int pctX = panelLeft + BG_W - TEXT_X_OFF - this.font.width(pctText);
-            g.drawString(this.font, pctText, pctX, y + 1, COL_PCT);
+            boolean maxed = r.mastery() >= 100f;
+            PanelText.rightOnPanel(g, this.font, Component.literal(pctText),
+                    panelLeft + BG_W - TEXT_X_OFF, y + 1,
+                    maxed ? ZenkaiPalette.MAXED_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL);
 
-            g.drawString(this.font, r.detail(), textX + 4, y + 11, COL_DETAIL);
+            PanelText.onPanel(g, this.font, r.detail(), textX + 4, y + 11, ZenkaiPalette.BODY_ON_PANEL);
 
-            int bx = textX + 4, by = y + 21, bw = barW();
-            g.fill(bx, by, bx + bw, by + BAR_H, COL_BAR_BG);
-            int filled = (int) (bw * Mth.clamp(r.mastery() / 100f, 0f, 1f));
-            if (filled > 0) {
-                g.fill(bx, by, bx + filled, by + BAR_H,
-                        r.mastery() >= 100f ? COL_BAR_MAX : COL_BAR_FG);
-            }
+            // La barra pasa por StatBar: mismo marco y mismo canal que las de la pantalla de
+            // stats, en vez de un fill negro que sobre el beige abría un agujero.
+            StatBar.draw(g, textX + 4, y + 21, barW(), BAR_H, r.mastery(), 100.0,
+                    maxed ? ZenkaiPalette.MAXED_ON_PANEL : ZenkaiPalette.BAR_MASTERY);
         }
 
         g.disableScissor();
@@ -285,9 +286,9 @@ public class MasteryScreen extends ZenkaiMenuScreen {
         if (max <= 0) return;
         int x = panelLeft + BG_W - 10;
         int top = listTop(), h = viewHeight();
-        g.fill(x, top, x + SCROLLBAR_W, top + h, COL_BAR_BG);
+        g.fill(x, top, x + SCROLLBAR_W, top + h, ZenkaiPalette.BAR_BG);
         int thumbH = Math.max(12, h * visibleRows() / rows.size());
         int thumbY = top + (h - thumbH) * scrollRow / max;
-        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, COL_HEADER);
+        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.VALUE_ON_PANEL);
     }
 }

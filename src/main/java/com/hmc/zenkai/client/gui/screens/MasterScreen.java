@@ -1,10 +1,12 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
-import net.minecraft.ChatFormatting;
+import com.hmc.zenkai.client.gui.PanelText;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -41,15 +43,18 @@ public class MasterScreen extends Screen {
     /** Separación bajo el título antes de la primera fila. */
     private static final int CONTENT_TOP = 30;
 
-    private static final int COL_BG      = 0xF0100D14;
-    private static final int COL_BORDER  = 0xFF3B3550;
-    private static final int COL_PANEL   = 0x40000000;
-    private static final int COL_TITLE   = 0xFFFFD966;
-    private static final int COL_NAME    = 0xFFFFFFFF;
-    private static final int COL_LEARNED = 0xFF808080;
-    private static final int COL_COST_OK = 0xFFB9E36C;
-    private static final int COL_COST_NO = 0xFFE05A5A;
-    private static final int COL_HINT    = 0xFF9A93AD;
+    // ═══ PALETA UNIFICADA ═══
+    //
+    // Esta pantalla tenía paleta propia —fondo 0xF0100D14, borde 0xFF3B3550, pistas
+    // 0xFF9A93AD— que no aparecía en ningún otro sitio del mod: los maestros parecían de otro
+    // mod. Era deuda visual, no una decisión. Ahora el fondo oscuro se mantiene (esta pantalla
+    // sí es un diálogo sobre el mundo, no un panel beige) pero los colores de ESTADO salen de
+    // la paleta común, que es lo que hace que "no te llega el TP" se vea igual aquí que en la
+    // pestaña de habilidades.
+    //
+    // Fondo y marco: el mismo lenguaje de tres anillos del popup lateral de la ficha.
+    private static final int COL_BG      = ZenkaiPalette.POPUP_BG;
+    private static final int COL_PANEL   = ZenkaiPalette.BAR_BG_DARK;
 
     private final String masterId;
     private final int entityId;
@@ -109,24 +114,38 @@ public class MasterScreen extends Screen {
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(g, mouseX, mouseY, partialTick);
 
+        // Marco de tres anillos, como el popup lateral de la ficha y el retrato del jugador:
+        // es lo que ata visualmente esta pantalla al resto del mod sin renunciar al fondo
+        // oscuro, que aquí sí hace falta porque flota sobre el mundo.
+        g.fill(left - 2, top - 2, left + BG_W + 2, top + BG_H + 2, ZenkaiPalette.BORDER_IN);
+        g.fill(left - 1, top - 1, left + BG_W + 1, top + BG_H + 1, ZenkaiPalette.BORDER_MID);
         g.fill(left, top, left + BG_W, top + BG_H, COL_BG);
-        g.renderOutline(left, top, BG_W, BG_H, COL_BORDER);
         g.fill(left + PADDING / 2, top + PADDING / 2,
                 left + PORTRAIT_W, top + BG_H - PADDING / 2, COL_PANEL);
 
         renderMaster(g, mouseX, mouseY);
 
-        g.drawString(this.font, this.title, listLeft(), top + PADDING, COL_TITLE, true);
+        PanelText.onDark(g, this.font, ScreenTitle.styled(this.title), listLeft(), top + PADDING,
+                ZenkaiPalette.GOLD);
 
         PlayerStatsAttachment st = stats();
         if (st != null) {
-            Component tp = Component.translatable("screen.zenkai.master.tp", st.getTP(), st.mindFree());
-            g.drawString(this.font, tp, listLeft(), top + PADDING + 11, COL_HINT, true);
+            // TP y MIND separados y con SUS colores de rol, igual que en SkillsScreen: aquí
+            // salían los dos en el mismo gris malva y había que leerlos para distinguirlos.
+            Component tp = Component.translatable("screen.zenkai.skills.tp", st.getTP());
+            PanelText.onDark(g, this.font, tp, listLeft(), top + PADDING + 11,
+                    ZenkaiPalette.TP_ON_DARK);
+            int free = st.mindFree();
+            PanelText.onDark(g, this.font,
+                    Component.translatable("screen.zenkai.skills.mind",
+                            free, st.getAttribute(com.hmc.zenkai.feature.ZenkaiAttributes.MIND)),
+                    listLeft() + this.font.width(tp) + 10, top + PADDING + 11,
+                    free < 0 ? ZenkaiPalette.ERROR : ZenkaiPalette.MIND_ON_DARK);
         }
 
         if (rows.isEmpty()) {
-            g.drawString(this.font, Component.translatable("screen.zenkai.master.nothing"),
-                    listLeft(), listTop(), COL_HINT, true);
+            PanelText.onDark(g, this.font, Component.translatable("screen.zenkai.master.nothing"),
+                    listLeft(), listTop(), ZenkaiPalette.TEXT_OFF);
         }
 
         for (int i = 0; i < rows.size(); i++) {
@@ -143,30 +162,32 @@ public class MasterScreen extends Screen {
         boolean hovered = !learned && mouseX >= listLeft() && mouseX <= listRight()
                 && mouseY >= y && mouseY < y + ROW_H;
 
-        if (hovered) g.fill(listLeft() - 2, y - 1, listRight(), y + ROW_H - 3, 0x30FFFFFF);
+        if (hovered) {
+            g.fill(listLeft() - 2, y - 1, listRight(), y + ROW_H - 3, ZenkaiPalette.HOVER_VEIL);
+        }
 
         Component name = Component.translatable(def.nameKey());
-        g.drawString(this.font, name, listLeft(), y + 2,
-                learned ? COL_LEARNED : COL_NAME, true);
+        // Aprendida = apagada; disponible = verde de "algo tuyo", el MISMO que usa la pestaña
+        // de habilidades para lo mismo.
+        PanelText.onDark(g, this.font, name, listLeft(), y + 2,
+                learned ? ZenkaiPalette.TEXT_OFF : ZenkaiPalette.OK);
 
         Component right;
         int color;
         if (learned) {
-            right = Component.translatable("screen.zenkai.master.learned")
-                    .withStyle(ChatFormatting.GRAY);
-            color = COL_LEARNED;
+            right = Component.translatable("screen.zenkai.master.learned");
+            color = ZenkaiPalette.TEXT_OFF;
         } else {
-            boolean afford = canAfford(st, def);
             right = Component.translatable("screen.zenkai.master.cost",
                     def.tpCost(), def.mindReqFor(1));
-            color = afford ? COL_COST_OK : COL_COST_NO;
+            color = canAfford(st, def) ? ZenkaiPalette.TP_ON_DARK : ZenkaiPalette.DENIED;
         }
-        g.drawString(this.font, right, listRight() - this.font.width(right), y + 2, color, true);
+        PanelText.rightOnDark(g, this.font, right, listRight(), y + 2, color);
 
         // Descripción en pequeño bajo el nombre, recortada al ancho disponible.
-        Component desc = Component.translatable(def.descKey());
-        String cut = this.font.plainSubstrByWidth(desc.getString(), listRight() - listLeft());
-        g.drawString(this.font, cut, listLeft(), y + 12, COL_HINT, false);
+        Component desc = PanelText.fit(this.font, Component.translatable(def.descKey()),
+                listRight() - listLeft());
+        PanelText.onDark(g, this.font, desc, listLeft(), y + 12, ZenkaiPalette.TEXT_DIM);
     }
 
     /**
@@ -191,8 +212,8 @@ public class MasterScreen extends Screen {
                 mouseX, mouseY,
                 le);
 
-        Component name = le.getDisplayName();
-        g.drawCenteredString(this.font, name, cx, cyBot - 10, COL_NAME);
+        PanelText.centeredOnDark(g, this.font, le.getDisplayName(), cx, cyBot - 10,
+                ZenkaiPalette.TEXT);
     }
 
     // ── Entrada ──────────────────────────────────────────────────────────────

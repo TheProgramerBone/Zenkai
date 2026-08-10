@@ -75,7 +75,6 @@ public class HudPlacementScreen extends Screen {
 
     /**
      * Cambiar de orientación conserva el ancla y REINICIA el desplazamiento.
-     *
      * Un offset ajustado para una columna vertical de 196 px no significa nada para una fila
      * horizontal de 196 px de ancho: el bloque acabaría fuera de la pantalla o encima del chat.
      * Volver al ancla limpio deja al jugador reajustando desde un punto sensato.
@@ -131,7 +130,6 @@ public class HudPlacementScreen extends Screen {
 
     /**
      * Recalcula ancla y desplazamiento para que el bloque quede en (targetX, targetY).
-     *
      * El ancla se reelige en CADA movimiento, no solo al soltar: así el indicador de abajo va
      * cambiando mientras se arrastra y el jugador ve a qué borde se va a enganchar antes de
      * decidir. Elegirla al final sería una sorpresa.
@@ -160,7 +158,11 @@ public class HudPlacementScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         // Velo MUY tenue: hay que seguir viendo el mundo para juzgar dónde estorba la barra.
-        g.fill(0, 0, this.width, this.height, 0x50000000);
+        g.fill(0, 0, this.width, this.height, 0x30000000);
+        // Banda oscura bajo el pie: los botones van sobre el mundo, y con un cielo claro detrás
+        // el texto blanco desaparece. Es el único sitio de esta pantalla donde tapar es correcto.
+        int footTop = this.height - PanelButton.H - 16;
+        g.fill(0, footTop, this.width, this.height, 0xA0000000);
 
         drawAnchorGuides(g);
 
@@ -191,6 +193,10 @@ public class HudPlacementScreen extends Screen {
                 Component.translatable(orientation.nameKey())
                         .append(Component.literal("   " + offsetX + ", " + offsetY)),
                 this.width / 2, y, ZenkaiPalette.TEXT_DIM);
+        // Los widgets van AL FINAL: por encima del velo, de las guías y del bloque arrastrable.
+        // Sin esta llamada los botones existen y responden a nada, porque Screen solo los pinta
+        // aquí — que es justo lo que pasaba: el pie entero era invisible.
+        super.render(g, mouseX, mouseY, partialTick);
     }
 
     private void drawInfo(GuiGraphics g, int y, String key, int color) {
@@ -217,6 +223,18 @@ public class HudPlacementScreen extends Screen {
         if (parent != null && this.minecraft != null) this.minecraft.setScreen(parent);
         else super.onClose();
     }
+
+    /**
+     * Fondo anulado a propósito.
+     * Screen#renderBackground aplica el desenfoque de pantalla de pausa y el velo de menú, y lo
+     * hace ANTES de render(), así que lo que dibuja esta pantalla quedaba por debajo: el
+     * mundo salía borroso y la barra que se está colocando, con él. Aquí el mundo nítido no es
+     * decorativo — es la referencia contra la que el jugador decide dónde estorba menos la
+     * barra, y un fondo desenfocado hace esa decisión imposible.
+     * El velo tenue y la banda del pie los pinta render() por su cuenta.
+     */
+    @Override
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {}
 
     @Override
     public boolean isPauseScreen() { return false; }
