@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -12,6 +13,7 @@ import com.hmc.zenkai.feature.technique.KiTechnique;
 import com.hmc.zenkai.feature.technique.TechniquePacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
@@ -21,24 +23,18 @@ import java.util.List;
 
 /**
  * Pestaña Técnicas Ki.
- *
  * QUÉ CAMBIA respecto a la versión anterior:
- *
  *  - La barra de las nueve posiciones era un TextOnlyButton vacío por celda con el ícono y el
  *    número dibujados ENCIMA en un bucle aparte. Resultado: una posición libre no se veía (solo
  *    flotaba su número) y una ocupada tenía el ícono de 20x20 sobre una celda de 20x20, tapando
  *    el número. Ahora es un BindBar de SlotCell, compartido con la pestaña física.
- *
  *  - La lista NO tenía scroll. Con techniqueMaxSlots por encima de 7 las últimas técnicas se
  *    dibujaban fuera del panel y sus botones quedaban sobre el mundo. Ahora scrollea por filas
  *    enteras, igual que Skills y Mastery.
- *
  *  - "Nueva técnica" viajaba con la lista y acababa donde acabase la última fila. Ahora es un
  *    botón fijo en el pie, que es donde el jugador lo busca.
- *
  *  - El modo asignación solo se anunciaba con un texto bajo la barra. Ahora la fila armada se
  *    resalta Y las celdas libres pulsan (SlotCell lo hace solo), así que se ve dónde soltar.
- *
  *  - Cada fila enseña coste y tamaño además del tipo. Antes la sub-línea era solo el tipo, que
  *    ya se deduce del ícono: la fila entera no aportaba un dato nuevo.
  */
@@ -51,6 +47,12 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
     private static final int TEXT_X_OFF = 16;
     private static final int ICON = 18;
     private static final int SCROLLBAR_W = 4;
+    private static final int X_SIZE = 12;
+
+    private static final ResourceLocation TEX_X =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x.png");
+    private static final ResourceLocation TEX_X_HL =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x_highlight.png");
 
     /** Índice de técnica armada para asignar; -1 = ninguna. */
     private int assigning = -1;
@@ -80,8 +82,8 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
     private boolean onScreen(int i) { int r = i - scrollRow; return r >= 0 && r < visibleRows(); }
 
     private int rightEdge()   { return panelLeft + BG_W - 14; }
-    private int xDelete()     { return rightEdge() - 14; }
-    private int xEdit()       { return xDelete() - 4 - 40; }
+    private int xDelete()     { return rightEdge() - X_SIZE; }
+    private int xEdit()       { return xDelete() - 6 - 40; }
     private int xAssign()     { return xEdit() - 4 - 44; }
     private int textMaxWidth(){ return xAssign() - 6 - (panelLeft + TEXT_X_OFF + ICON + 4); }
 
@@ -116,15 +118,17 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
                     () -> mc.setScreen(new TechniqueEditScreen(idx)))
                     .textColors(ZenkaiPalette.TEXT, ZenkaiPalette.TEXT_HOVER, ZenkaiPalette.TEXT_OFF)));
 
-            rowButtons.add(addRenderableWidget(new TextOnlyButton(xDelete(), y, 14, 16,
-                    Component.literal("✖"),
+            // La ✖ del mod, no el glifo Unicode: el "✖" dependía de la fuente instalada y a
+            // GUI Scale bajo se veía como un aspa borrosa de otro tamaño que el resto de iconos.
+            rowButtons.add(addRenderableWidget(new TextOnlyButton(
+                    xDelete(), y + (16 - X_SIZE) / 2, X_SIZE, X_SIZE,
+                    Component.empty(), TEX_X, TEX_X_HL,
                     () -> {
                         att.techniques().removeSlot(idx);                       // optimista
                         PacketDistributor.sendToServer(TechniquePacket.delete(idx));
                         assigning = -1;
                         this.rebuildWidgets();
-                    })
-                    .textColors(ZenkaiPalette.TEXT_DIM, ZenkaiPalette.DENIED, ZenkaiPalette.TEXT_OFF)));
+                    })));
         }
 
         // ── Pie: crear técnica ──
@@ -145,9 +149,57 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
         }
     }
 
+    // ── Ratón: el BindBar mira primero ───────────────────────────────────────
+    // Tiene que interceptar ANTES que super porque distinguir un clic de un arrastre exige
+    // esperar al mouseReleased, y AbstractWidget dispara su acción ya en el mouseClicked.
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (bindBar != null && bindBar.mouseClicked(att, mouseX, mouseY, button)) return true;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        if (bindBar != null && bindBar.mouseDragged(att, mouseX, mouseY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        // true = era un arrastre y ya está resuelto. false = era un clic simple, y entonces se
+        // deja pasar a super para que la celda ejecute su acción normal.
+        if (bindBar != null && bindBar.mouseReleased(att, mouseX, mouseY)) return true;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    /**
+     * Teclas 1-9 mientras hay una técnica armada.
+         * Es el mismo gesto que se usará en combate para lanzarla, así que asignar con la tecla que
+     * la va a disparar deja la asociación hecha en la cabeza del jugador. Solo funciona en modo
+     * asignación: fuera de él, los números no deben hacer nada aquí.
+     */
+    @Override
+    public boolean keyPressed(int key, int scan, int mods) {
+        if (assigning >= 0) {
+            // 49..57 = teclas 1..9 de la fila superior; 321..329 = las del teclado numérico.
+            int pos = (key >= 49 && key <= 57) ? key - 49
+                    : (key >= 321 && key <= 329) ? key - 321
+                    : -1;
+            if (pos >= 0) {
+                onPositionClicked(pos);
+                return true;
+            }
+        }
+        return super.keyPressed(key, scan, mods);
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (maxScroll() > 0 && scrollY != 0) {
+            // Un arrastre en curso se cancela: las filas se mueven bajo el cursor y el destino
+            // dejaría de ser el que el jugador estaba mirando.
+            if (bindBar != null) bindBar.cancelDrag();
             scrollRow = Mth.clamp(scrollRow - (int) Math.signum(scrollY), 0, maxScroll());
             return true;
         }
@@ -195,13 +247,13 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
 
         // ── Cabecera: TP + ocupación de slots ──
         g.drawString(this.font, Component.translatable("screen.zenkai.technique.tp", att.getTP()),
-                panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.VALUE, true);
+                panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.VALUE, false);
 
         Component slotsLabel = Component.translatable("screen.zenkai.technique.slots_used",
                 att.techniques().slotCount(), CommonConfig.techniqueMaxSlots());
         g.drawString(this.font, slotsLabel,
                 rightEdge() - this.font.width(slotsLabel), panelTop + CONTENT_TOP,
-                ZenkaiPalette.LABEL_ON_PANEL, false);
+                ZenkaiPalette.MUTED_ON_PANEL, false);
 
         // ── Barra de posiciones ──
         if (bindBar != null) {
@@ -276,6 +328,10 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
         Component barTip = (bindBar != null) ? bindBar.tooltipAt(att, mouseX, mouseY) : null;
         if (barTip != null) g.renderTooltip(this.font, barTip, mouseX, mouseY);
         else if (hovered != null) g.renderTooltip(this.font, hovered, mouseX, mouseY);
+
+        // El icono que viaja con el cursor va el ÚLTIMO: por encima de las celdas, de
+        // la lista y de los tooltips.
+        if (bindBar != null) bindBar.renderDragGhost(g, mouseX, mouseY);
     }
 
     private void drawScrollbar(GuiGraphics g) {

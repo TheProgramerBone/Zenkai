@@ -8,29 +8,44 @@ import net.minecraft.util.Mth;
 import java.util.Locale;
 
 /**
- * Barra de recurso: marco + fondo + relleno, opcionalmente con etiqueta y valor.
- *
- * Hasta ahora había tres implementaciones distintas del mismo dibujo — la de alineamiento en
- * StatsScreen, la de maestría en MasteryScreen y la del scrollbar de Skills — con alturas,
- * marcos y colores de fondo diferentes. Aquí se define una sola vez para que Body, Stamina, Ki,
- * Ki Control y maestría se lean como el mismo objeto de interfaz.
- *
- * El marco NO es opcional a propósito: sobre el beige del panel una barra sin marco pierde el
- * borde inferior cuando el relleno está casi lleno, y el jugador no distingue 95 % de 100 %.
+ * Barra de recurso: marco + canal + relleno, opcionalmente con etiqueta y valor.
+ * Había tres implementaciones del mismo dibujo (alineamiento en StatsScreen, maestría en
+ * MasteryScreen, scrollbar de Skills) con alturas, marcos y fondos distintos. Aquí se define
+ * una vez para que Body, Stamina, Ki, Ki Control y maestría se lean como el mismo objeto.
+ * DOS CONTEXTOS, y no dan lo mismo: sobre el beige del panel el marco es el marrón del borde y
+ * el canal un beige hundido; sobre un popup oscuro el canal es negro translúcido. Con un solo
+ * juego de colores, la versión de panel abría un agujero negro en el beige y la de popup se
+ * perdía sobre el fondo.
+ * El marco NO es opcional: sin él una barra casi llena pierde el borde derecho contra el fondo
+ * y el jugador no distingue 95 % de 100 %.
  */
 public final class StatBar {
     private StatBar() {}
 
-    /** Alto estándar de las barras de recurso. Constante para que no diverjan por pantalla. */
-    public static final int H = 6;
-    /** Alto de las barras finas (maestría, progreso dentro de una fila de lista). */
+    /** Alto de las barras de recurso del panel principal. Finas a propósito: acompañan a los
+     *  atributos, no compiten con ellos. */
+    public static final int H = 4;
+    /** Alto de las barras protagonistas (Ki Control, popups). */
+    public static final int H_WIDE = 6;
+    /** Alto de las barras de progreso dentro de una fila de lista. */
     public static final int H_THIN = 3;
 
-    /** Barra desnuda: marco de 1 px + fondo + relleno. Devuelve el alto total ocupado. */
+    /** Barra sobre el BEIGE del panel. */
     public static int draw(GuiGraphics g, int x, int y, int w, int h,
                            double value, double max, int fillColor) {
+        return draw(g, x, y, w, h, value, max, fillColor, ZenkaiPalette.BAR_BG);
+    }
+
+    /** Barra sobre un fondo OSCURO (popup, tooltip). */
+    public static int drawOnDark(GuiGraphics g, int x, int y, int w, int h,
+                                 double value, double max, int fillColor) {
+        return draw(g, x, y, w, h, value, max, fillColor, ZenkaiPalette.BAR_BG_DARK);
+    }
+
+    private static int draw(GuiGraphics g, int x, int y, int w, int h,
+                            double value, double max, int fillColor, int channel) {
         g.fill(x - 1, y - 1, x + w + 1, y + h + 1, ZenkaiPalette.BAR_FRAME);
-        g.fill(x, y, x + w, y + h, ZenkaiPalette.BAR_BG);
+        g.fill(x, y, x + w, y + h, channel);
 
         float ratio = (max <= 0) ? 0f : Mth.clamp((float) (value / max), 0f, 1f);
         int filled = Math.round(w * ratio);
@@ -42,41 +57,26 @@ public final class StatBar {
     }
 
     /**
-     * Barra con etiqueta encima y "actual/máximo" alineado a la derecha.
-     * Devuelve el alto total consumido, para que el llamante apile sin contar píxeles.
+     * Fila compacta: etiqueta a la izquierda, barra en medio, valor pegado a la derecha.
+     * Es el formato del panel principal — cabe en una línea de texto por recurso.
      */
-    public static int drawLabeled(GuiGraphics g, Font font, int x, int y, int w,
-                                  Component label, double value, double max, int fillColor) {
-        g.drawString(font, label, x, y, ZenkaiPalette.LABEL_ON_PANEL, false);
+    public static void row(GuiGraphics g, Font font, int labelX, int barX, int barW,
+                           int rightEdge, int y, Component label,
+                           double value, double max, int fillColor) {
+        g.drawString(font, label, labelX, y, ZenkaiPalette.LABEL_ON_PANEL, false);
+
+        // La barra se centra sobre la línea de texto: con lineHeight 9 y alto 4, +2 la deja
+        // ópticamente alineada con las mayúsculas de la etiqueta.
+        draw(g, barX, y + 2, barW, H, value, max, fillColor);
 
         Component amount = Component.literal(fmt(value) + "/" + fmt(max));
-        g.drawString(font, amount, x + w - font.width(amount), y, ZenkaiPalette.BODY_ON_PANEL, false);
-
-        int barY = y + font.lineHeight + 1;
-        draw(g, x, barY, w, H, value, max, fillColor);
-        return (barY + H + 2) - y;
+        g.drawString(font, amount, rightEdge - font.width(amount), y,
+                ZenkaiPalette.BODY_ON_PANEL, false);
     }
 
-    /**
-     * Barra con etiqueta y porcentaje (Ki Control, maestría). Distinta de drawLabeled porque
-     * "50 %" y "220/440" no son el mismo dato: el primero es una decisión del jugador y el
-     * segundo un consumible.
-     */
-    public static int drawPercent(GuiGraphics g, Font font, int x, int y, int w,
-                                  Component label, double percent, int fillColor) {
-        g.drawString(font, label, x, y, ZenkaiPalette.LABEL_ON_PANEL, false);
-
-        Component pct = Component.literal(Math.round(percent) + "%");
-        g.drawString(font, pct, x + w - font.width(pct), y, ZenkaiPalette.BODY_ON_PANEL, false);
-
-        int barY = y + font.lineHeight + 1;
-        draw(g, x, barY, w, H, percent, 100.0, fillColor);
-        return (barY + H + 2) - y;
-    }
-
-    /** Barra fina sin texto, para meter dentro de una fila de lista. */
+    /** Barra fina sin marco, para meter dentro de una fila de lista. */
     public static void thin(GuiGraphics g, int x, int y, int w, double value, double max, int fill) {
-        g.fill(x, y, x + w, y + H_THIN, ZenkaiPalette.BAR_BG);
+        g.fill(x, y, x + w, y + H_THIN, ZenkaiPalette.BAR_BG_DARK);
         float ratio = (max <= 0) ? 0f : Mth.clamp((float) (value / max), 0f, 1f);
         int filled = Math.round(w * ratio);
         if (filled > 0) g.fill(x, y, x + filled, y + H_THIN, fill);

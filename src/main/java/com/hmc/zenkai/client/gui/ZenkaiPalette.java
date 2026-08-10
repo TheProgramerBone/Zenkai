@@ -2,16 +2,18 @@ package com.hmc.zenkai.client.gui;
 
 /**
  * ÚNICA fuente de colores de la GUI del mod.
- * Antes cada pantalla llevaba sus literales: 0x4A3726 aparecía en StyleSelectionScreen,
- * ShenlongWishScreen y RaceSelectionScreen; 0xFFF149 en cuatro sitios; 0xFFD966 en Skills y
- * Mastery con el mismo papel pero nombres distintos ("COL_COST" / "COL_HEADER"). Con los
- * literales repartidos, un retoque de paleta obliga a un grep por hexadecimales y siempre se
- * escapa alguno — que es exactamente lo que pasó con el verde de Shenlong (0x04a500 en
- * RevivePet y EnchantVillager, 0x00a135 en StackWish: dos verdes distintos para lo mismo).
- * Los valores salen de common_screen.png, no están inventados: BEIGE/BEIGE_DEEP son el relleno
- * y su sombreado, y BORDER_* son los tres anillos del marco.
- * Convención: los nombres terminados en _ON_PANEL son para texto DENTRO del beige (necesitan
- * ser oscuros y van SIN sombra); el resto es para texto sobre fondo oscuro (van CON sombra).
+ * ═══ REGLA DE SOMBRA (vale para TODAS las pantallas) ═══
+ *   Sobre el beige del panel  → SIN sombra. Los colores de esta sección son oscuros y
+ *                               saturados; una sombra negra bajo un marrón sobre beige claro
+ *                               solo emborrona el glifo.
+ *   Sobre fondo oscuro        → CON sombra. Popups, tooltips, títulos fuera del panel, HUD.
+ * Los nombres lo dicen: lo que acaba en _ON_PANEL va sin sombra, el resto con ella. Si
+ * hay que elegir a ojo entre dos colores, es que uno de los dos está en el grupo equivocado.
+ * Los tonos del panel salen de common_screen.png, no están inventados: BEIGE/BEIGE_DEEP son el
+ * relleno y su sombreado, y BORDER_* son los tres anillos del marco.
+ * La escala tierra sustituye a los pasteles que había antes (0xFFFFD966, 0xFF7CFC7C…). Aquellos
+ * estaban pensados para leerse sobre negro, y sobre el beige un amarillo claro con un TP de diez
+ * cifras al lado era prácticamente invisible.
  */
 public final class ZenkaiPalette {
     private ZenkaiPalette() {}
@@ -25,13 +27,24 @@ public final class ZenkaiPalette {
     public static final int BORDER_OUT  = 0xFFF1D839;   // anillo exterior
     public static final int BORDER_HI   = 0xFFFDF099;   // brillo de esquina
 
-    // ── Texto sobre el beige (SIN sombra) ────────────────────────────────────
+    // ── Texto sobre el beige — ESCALA TIERRA, SIEMPRE SIN SOMBRA ─────────────
     /** Etiquetas de campo: "Race:", "Alignment", "Attributes". */
     public static final int LABEL_ON_PANEL = 0xFF4A3726;
     /** Cuerpo de descripción, más suave que la etiqueta. */
     public static final int BODY_ON_PANEL  = 0xFF5A4636;
-    /** Cabecera de columna, casi al borde de la legibilidad a propósito. */
-    public static final int MUTED_ON_PANEL = 0xFF7A6450;
+    /** Cabecera de columna y texto secundario. Al borde de la legibilidad a propósito. */
+    public static final int MUTED_ON_PANEL = 0xFF8A755E;
+
+    /** Valor numérico destacado (TP, costes asumibles). Dorado QUEMADO, no amarillo claro. */
+    public static final int VALUE_ON_PANEL = 0xFF8A5A08;
+    /** Positivo: disponible, poseído, ventaja. Verde bosque. */
+    public static final int OK_ON_PANEL    = 0xFF2E6B26;
+    /** Negativo: no se puede pagar, déficit, aviso. Granate. */
+    public static final int DENIED_ON_PANEL = 0xFF9A2B1E;
+    /** Estado especial / transformación. Ciruela. */
+    public static final int SPECIAL_ON_PANEL = 0xFF6B3A78;
+    /** Enlace conceptual (nivel máximo, valor derivado). Azul pizarra. */
+    public static final int ACCENT_ON_PANEL = 0xFF1F5C7A;
 
     // ── Texto sobre fondo oscuro / con sombra ────────────────────────────────
     public static final int TEXT       = 0xFFFFFFFF;
@@ -39,35 +52,39 @@ public final class ZenkaiPalette {
     public static final int TEXT_HOVER = 0xFFFFF149;
     public static final int TEXT_OFF   = 0xFFA0A0A0;
 
-    // ── Semánticos ───────────────────────────────────────────────────────────
-    /** Dorado del mod: títulos, TP, cabeceras de sección. */
+    // ── Semánticos sobre oscuro (popups, tooltips, HUD) ──────────────────────
+    /** Dorado del mod: títulos, cabeceras de sección en popup. */
     public static final int GOLD      = 0xFFFFC94A;
-    /** Amarillo de valor numérico (costes asumibles, TP disponible). */
     public static final int VALUE     = 0xFFFFD966;
-    /** Verde: disponible, poseído, al máximo en positivo. */
     public static final int OK        = 0xFF7CFC7C;
-    /** Rojo apagado: no se puede pagar, déficit. */
     public static final int DENIED    = 0xFFCC6666;
     /** Rojo intenso: valor en negativo que señala un problema real (mindFree). */
     public static final int ERROR     = 0xFFFF5555;
-    /** Azul: nivel máximo alcanzado. Verde no vale aquí: choca con el nombre. */
     public static final int MAXED     = 0xFF7FD4FF;
     /** Verde dragón. UN solo verde para lo de Shenlong. */
     public static final int SHENLONG  = 0xFF23B14C;
 
     // ── Barras de recurso ────────────────────────────────────────────────────
-    public static final int BAR_BG      = 0x80241A12;
-    public static final int BAR_FRAME   = 0xFF3A2A18;
-    public static final int BAR_BODY    = 0xFFE44B3A;   // rojo carne
-    public static final int BAR_STAMINA = 0xFF7CD44B;   // verde
-    public static final int BAR_KI      = 0xFF4BB6E4;   // azul ki
-    public static final int BAR_CONTROL = 0xFFFFB03A;   // naranja: % de Ki Control
-    public static final int BAR_MASTERY = 0xFF7FD4FF;
+    /** Marco: el marrón del panel, NO negro. Sobre beige el negro recorta como un agujero. */
+    public static final int BAR_FRAME   = BORDER_IN;
+    /** Fondo del canal: beige hundido, no negro translúcido. */
+    public static final int BAR_BG      = 0xFFB39676;
+    /** Fondo cuando la barra va sobre un popup oscuro. */
+    public static final int BAR_BG_DARK = 0x80241A12;
+
+    // Rellenos: apagados un punto respecto a los originales para no gritar sobre el beige.
+    public static final int BAR_BODY    = 0xFFC43C2E;
+    public static final int BAR_STAMINA = 0xFF5EA83A;
+    public static final int BAR_KI      = 0xFF2E8FBE;
+    public static final int BAR_CONTROL = 0xFFD9922B;
+    public static final int BAR_MASTERY = 0xFF3E86A8;
 
     // ── Utilidades ───────────────────────────────────────────────────────────
-    public static final int SEPARATOR   = 0x33AC421B;
+    public static final int SEPARATOR   = 0x44AC421B;
     public static final int HOVER_VEIL  = 0x30FFFFFF;
     public static final int SELECT_VEIL = 0x40FFD966;
+    /** Relleno del popup lateral. */
+    public static final int POPUP_BG    = 0xF01E1410;
 
     /** Mismo color con alfa distinto. Evita recalcular literales a mano. */
     public static int withAlpha(int argb, int alpha) {

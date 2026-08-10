@@ -7,20 +7,18 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 /**
  * Botón CON fondo, a cualquier tamaño, usando btn_wide.png en 9-slice.
- *
  * TextOnlyButton sigue existiendo y sigue siendo lo correcto para elementos que viven dentro
  * de una lista (una fila de habilidad, un deseo del menú de Shenlong): ahí el marco añadiría
  * ruido. PanelButton es para las acciones TERMINALES — Confirmar, Volver, Guardar, Cancelar —
  * donde el jugador necesita ver dónde pulsar sin barrer la pantalla con el ratón.
- *
  * Ese era el fallo de las pantallas de deseo: "Confirm" y "Back" eran texto suelto en mitad
  * del beige, indistinguible de la descripción que tenían justo encima.
- *
  * Dos jerarquías:
  *   PRIMARY   → la acción que el jugador vino a hacer (Confirmar). Texto dorado.
  *   SECONDARY → la salida (Volver, Cancelar). Texto blanco.
@@ -56,19 +54,20 @@ public class PanelButton extends AbstractButton {
     public void onPress() { onClick.run(); }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        NineSlice.button(g, getX(), getY(), getWidth(), getHeight());
-
+    protected void renderWidget(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         boolean hovered = this.active && isMouseOver(mouseX, mouseY);
 
-        // Un botón inactivo se apaga con un velo, no cambiando de textura: así el jugador ve
-        // que el botón ESTÁ ahí y que le falta algo (TP, un nombre escrito) en vez de creer
-        // que la pantalla no tiene esa acción.
-        if (!this.active) {
-            g.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), 0x70201810);
-        } else if (hovered) {
-            g.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), ZenkaiPalette.HOVER_VEIL);
-        }
+        // Un botón inactivo se apaga TIÑENDO la textura, no pintando un velo sobre su rect.
+        // Btn_wide tiene las esquinas recortadas, igual que el marco del panel, así que un
+        // g.fill dejaba cuatro muescas oscuras sobre el beige alrededor del botón. setColor
+        // multiplica solo los píxeles que se dibujan.
+        //
+        // Se apaga en vez de ocultarse para que el jugador vea que la acción EXISTE y le falta
+        // algo (TP, un nombre escrito), en vez de creer que la pantalla no la tiene.
+        if (!this.active) g.setColor(0.55f, 0.55f, 0.55f, 0.8f);
+        else if (hovered) g.setColor(1.15f, 1.15f, 1.15f, 1f);
+        NineSlice.button(g, getX(), getY(), getWidth(), getHeight());
+        g.setColor(1f, 1f, 1f, 1f);
 
         int color = !this.active
                 ? ZenkaiPalette.TEXT_OFF
@@ -82,7 +81,7 @@ public class PanelButton extends AbstractButton {
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput out) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput out) {
         defaultButtonNarrationText(out);
     }
 }

@@ -51,20 +51,19 @@ public class ToggleButton extends AbstractButton {
 
     @Override
     protected void renderWidget(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        NineSlice.button(g, getX(), getY(), getWidth(), getHeight());
-
         boolean on = state.getAsBoolean();
         boolean hovered = this.active && isMouseOver(mouseX, mouseY);
 
-        // Velo del estado apagado: oscurece el interior sin tocar el marco, que sigue siendo
-        // el mismo objeto. Así ON y OFF se leen como dos estados de UNA cosa y no como dos
-        // botones distintos.
-        if (!on) {
-            g.fill(getX() + 2, getY() + 2, getX() + getWidth() - 2, getY() + getHeight() - 2, 0x60201810);
-        }
-        if (hovered) {
-            g.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), ZenkaiPalette.HOVER_VEIL);
-        }
+        // Teñido, no velo: btn_wide tiene las esquinas recortadas y un g.fill sobre el rect
+        // dejaba muescas oscuras alrededor del botón. Mismo criterio que PanelButton y
+        // MinusIconButton — el estado se expresa sobre la textura, nunca sobre el fondo.
+        //
+        // ON y OFF comparten marco a propósito: son dos estados de UNA cosa, no dos botones.
+        if (!this.active) g.setColor(0.55f, 0.55f, 0.55f, 0.8f);
+        else if (!on) g.setColor(0.72f, 0.72f, 0.72f, 1f);
+        else if (hovered) g.setColor(1.15f, 1.15f, 1.15f, 1f);
+        NineSlice.button(g, getX(), getY(), getWidth(), getHeight());
+        g.setColor(1f, 1f, 1f, 1f);
 
         int color = !this.active ? ZenkaiPalette.TEXT_OFF
                 : on ? ZenkaiPalette.OK

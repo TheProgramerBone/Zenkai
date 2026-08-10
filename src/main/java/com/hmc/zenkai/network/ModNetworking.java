@@ -53,25 +53,19 @@ public class ModNetworking {
         registrar.playToClient(
                 OpenWishScreenPayload.TYPE,
                 OpenWishScreenPayload.STREAM_CODEC,
-                (payload, context) -> {
-                    context.enqueueWork(() -> {
-                        Minecraft.getInstance().setScreen(new ShenlongWishScreen());
-                    });
-                }
+                (payload, context) -> context.enqueueWork(() -> Minecraft.getInstance().setScreen(new ShenlongWishScreen()))
         );
 
         registrar.playToServer(
                 OpenStackWishPayload.TYPE,
                 OpenStackWishPayload.STREAM_CODEC,
-                (payload, context) -> {
-                    context.enqueueWork(() -> {
-                        ServerPlayer sp = (ServerPlayer) context.player();
-                        sp.openMenu(new SimpleMenuProvider(
-                                (id, inv, ply) -> new StackWishMenu(id, inv),
-                                Component.translatable("screen.zenkai.option.stack")
-                        ));
-                    });
-                }
+                (payload, context) -> context.enqueueWork(() -> {
+                    ServerPlayer sp = (ServerPlayer) context.player();
+                    sp.openMenu(new SimpleMenuProvider(
+                            (id, inv, ply) -> new StackWishMenu(id, inv),
+                            Component.translatable("screen.zenkai.option.stack")
+                    ));
+                })
         );
 
         registrar.playToServer(
@@ -115,10 +109,13 @@ public class ModNetworking {
                 SpendTpPacket.STREAM_CODEC,
                 SpendTpPacket::handle);
 
-        registrar.playToServer(
-                RefundTpPacket.TYPE,
+        registrar.playToServer(RefundTpPacket.TYPE,
                 RefundTpPacket.STREAM_CODEC,
                 RefundTpPacket::handle);
+
+        registrar.playToServer(SetPowerPercentPacket.TYPE,
+                SetPowerPercentPacket.STREAM_CODEC,
+                SetPowerPercentPacket::handle);
 
         registrar.playToServer(
                 ToggleFlyPacket.TYPE,

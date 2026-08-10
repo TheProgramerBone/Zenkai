@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.PhysicalIcons;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -12,6 +13,7 @@ import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.hmc.zenkai.feature.technique.PhysicalTechniquePacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,23 +24,18 @@ import java.util.Locale;
 /**
  * Pestaña Técnicas Físicas: lista predefinida desbloqueable por TP + asignación a las nueve
  * posiciones (compartidas con las ki).
- *
  * QUÉ CAMBIA:
- *
  *  - Comparte BindBar con la pestaña ki. Antes cada una construía su propia fila de celdas con
  *    constantes duplicadas, y en la física los íconos de 20x20 sobre celdas de 20x20 tapaban
  *    los números de posición por completo.
- *
  *  - Las técnicas bloqueadas NO mostraban absolutamente nada más que su nombre y el precio.
  *    El jugador tenía que pagar 300 TP para descubrir qué hacía "Barrage". Ahora cada fila
  *    muestra daño, coste de estamina, enfriamiento y alcance, estén desbloqueadas o no: es
  *    información que ya existe en el datapack y que decide la compra.
- *
  *  - Las técnicas sin JSON se listaban en la fila de dibujo (bucle sobre values() completo)
  *    pero no en la de widgets (que filtraba por enabled()), así que el nombre aparecía sin su
  *    botón y las filas siguientes quedaban desplazadas medio renglón respecto a sus botones.
  *    Ahora hay UNA lista de técnicas visibles y los dos bucles la recorren.
- *
  *  - El botón de desbloqueo apagado no decía por qué. Ahora el requisito de MND que no se
  *    cumple se pinta en rojo, y el TP también.
  */
@@ -49,6 +46,12 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
     private static final int LIST_Y_OFF = BAR_Y_OFF + SlotCell.SIZE + 16;
     private static final int TEXT_X_OFF = 16;
     private static final int ICON = 18;
+    private static final int X_SIZE = 12;
+
+    private static final ResourceLocation TEX_X =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x.png");
+    private static final ResourceLocation TEX_X_HL =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x_highlight.png");
 
     /** Técnica armada para asignar, o null. */
     private PhysicalTechnique assigning = null;
@@ -103,7 +106,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                 unlock.active = canAfford(t);
                 addRenderableWidget(unlock);
             } else {
-                addRenderableWidget(new TextOnlyButton(rightEdge() - 96, y-5, 60, 16,
+                addRenderableWidget(new TextOnlyButton(rightEdge() - 96, y, 60, 16,
                         Component.translatable(assigning == t
                                 ? "screen.zenkai.physical.assigning"
                                 : "screen.zenkai.physical.assign"),
@@ -114,14 +117,16 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                         .textColors(ZenkaiPalette.TEXT, ZenkaiPalette.TEXT_HOVER, ZenkaiPalette.TEXT_OFF));
 
                 if (tech.positionOf(t) >= 0) {
-                    addRenderableWidget(new TextOnlyButton(rightEdge() - 14, y, 14, 16,
-                            Component.literal("✖"),
+                    // La ✖ del mod, no el glifo Unicode: el "✖" dependía de la fuente instalada
+                    // y desentonaba con el resto de iconos.
+                    addRenderableWidget(new TextOnlyButton(
+                            rightEdge() - X_SIZE, y + (16 - X_SIZE) / 2, X_SIZE, X_SIZE,
+                            Component.empty(), TEX_X, TEX_X_HL,
                             () -> {
                                 att.techniques().bindPhysical(-1, t);           // optimista
                                 PacketDistributor.sendToServer(PhysicalTechniquePacket.bind(t, -1));
                                 rebuildWidgets();
-                            })
-                            .textColors(ZenkaiPalette.TEXT_DIM, ZenkaiPalette.DENIED, ZenkaiPalette.TEXT_OFF));
+                            }));
                 }
             }
         }
@@ -152,6 +157,43 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
         }
     }
 
+    // ── Ratón: el BindBar mira primero ───────────────────────────────────────
+    // Tiene que interceptar ANTES que super porque distinguir un clic de un arrastre exige
+    // esperar al mouseReleased, y AbstractWidget dispara su acción ya en el mouseClicked.
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (bindBar != null && bindBar.mouseClicked(att, mouseX, mouseY, button)) return true;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        if (bindBar != null && bindBar.mouseDragged(att, mouseX, mouseY)) return true;
+        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (bindBar != null && bindBar.mouseReleased(att, mouseX, mouseY)) return true;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    /** Teclas 1-9 con una técnica armada: la misma tecla que la disparará en combate. */
+    @Override
+    public boolean keyPressed(int key, int scan, int mods) {
+        if (assigning != null) {
+            int pos = (key >= 49 && key <= 57) ? key - 49
+                    : (key >= 321 && key <= 329) ? key - 321
+                    : -1;
+            if (pos >= 0) {
+                onPositionClicked(pos);
+                return true;
+            }
+        }
+        return super.keyPressed(key, scan, mods);
+    }
+
     @Override
     public void tick() {
         super.tick();
@@ -176,7 +218,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
 
         // ── Cabecera ──
         g.drawString(this.font, Component.translatable("screen.zenkai.technique.tp", att.getTP()),
-                panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.VALUE, true);
+                panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.VALUE, false);
 
         Component mnd = Component.translatable("screen.zenkai.physical.mnd",
                 att.getAttribute(ZenkaiAttributes.MIND));
@@ -219,11 +261,14 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
             g.drawString(this.font, Component.translatable(t.nameKey()), nameX, y + 3,
                     unlocked ? ZenkaiPalette.OK : ZenkaiPalette.MUTED_ON_PANEL, false);
 
+            // La marca [n] va en una COLUMNA FIJA, no pegada al final del nombre: midiendo el
+            // nombre traducido se solapaba en cuanto el texto era largo (visible en es_mx con
+            // "Ráfaga de golpes"), y además la columna bailaba de fila en fila.
             int pos = tech.positionOf(t);
             if (pos >= 0) {
                 Component key = Component.literal("[" + (pos + 1) + "]");
-                g.drawString(this.font, key, nameX + this.font.width(
-                        Component.translatable(t.nameKey())) + 6, y + 3, ZenkaiPalette.OK, false);
+                g.drawString(this.font, key, rightEdge() - 96 - 8 - this.font.width(key), y + 3,
+                        ZenkaiPalette.OK_ON_PANEL, false);
             }
 
             // Ficha técnica: lo que decide si vale la pena pagarla.
@@ -252,6 +297,9 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
 
         Component barTip = (bindBar != null) ? bindBar.tooltipAt(att, mouseX, mouseY) : null;
         if (barTip != null) g.renderTooltip(this.font, barTip, mouseX, mouseY);
+
+        // El icono que viaja con el cursor va el ÚLTIMO.
+        if (bindBar != null) bindBar.renderDragGhost(g, mouseX, mouseY);
     }
 
     private static String fmt(double v) {

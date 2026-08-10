@@ -27,12 +27,10 @@ public class PlayerRaceStats {
 
     /**
      * TP REALMENTE gastado en atributos. Es lo que devuelve el respec.
-     *
      * Antes el respec devolvía `sum(invested)`, o sea el NÚMERO DE PUNTOS. Con la curva
      * cuadrática de closedCost eso significaba que un jugador que había pagado 999 TP por 500
      * puntos recuperaba 500: se le confiscaba la mitad de su progreso sin avisarle en ninguna
      * parte. En escenarios de compra punto a punto la pérdida llegaba al 50 %.
-     *
      * Es un double y no un int por el botón de devolución: el reembolso de UN punto es una
      * fracción del gasto, y redondeando a entero en cada pulsación se perdía hasta 1 TP por
      * clic (con 50.000 puntos, 50.000 TP evaporados). El acarreo vive en refundCarry.
@@ -142,17 +140,14 @@ public class PlayerRaceStats {
 
     /**
      * Devuelve UN punto invertido y reembolsa la parte del gasto que le corresponde.
-     *
      * NO se calcula como "el coste marginal del punto N" con closedCost: closedCost redondea
      * hacia arriba el bloque entero, así que comprar 100 puntos de golpe cuesta 101 TP pero
      * devolverlos de uno en uno pagaría ~200. Eso es TP infinito con dos clics, y la
      * simulación lo confirmó en tres de los cuatro patrones de compra probados.
-     *
      * El reparto correcto es PROPORCIONAL a la curva teórica: el último punto se lleva la
      * fracción 1 − coste(N−1)/coste(N) de lo que el jugador tiene gastado. Devolviendo todos
      * los puntos uno a uno se reconstruye el gasto exacto (±1 TP por acarreo), venga de compras
      * de una en una o de bloques de diez mil.
-     *
      * @return TP devuelto, o -1 si no había nada que devolver en ese atributo.
      */
     public int refundPoint(ZenkaiAttributes attr) {
@@ -180,6 +175,26 @@ public class PlayerRaceStats {
         return whole;
     }
 
+    /**
+     * Devuelve hasta {@code points} puntos de golpe. Devuelve el TP total reembolsado.
+     * Es un bucle sobre refundPoint y no una fórmula cerrada porque cada punto sale de una
+     * posición distinta de la curva: no hay un "precio del bloque" que calcular de una vez, del
+     * mismo modo que comprar cien de golpe no cuesta cien veces el primero. El acarreo decimal
+     * vive en refundPoint, así que encadenar llamadas no pierde fracciones por el camino.
+     * Se para en cuanto el atributo se queda sin puntos invertidos: pedir cien teniendo cuarenta
+     * devuelve cuarenta, no falla. Quien llama decide si eso le vale (al servidor le vale: el
+     * cliente puede tener el número desfasado un tick).
+     */
+    public int refundPoints(ZenkaiAttributes attr, int points) {
+        int total = 0;
+        for (int i = 0; i < points; i++) {
+            int given = refundPoint(attr);
+            if (given < 0) break;
+            total += given;
+        }
+        return total;
+    }
+
     /** ¿Se puede devolver un punto de este atributo? Lo consulta la pantalla para el botón −. */
     public boolean canRefund(ZenkaiAttributes attr) {
         return invested.getOrDefault(attr, 0) > 0;
@@ -200,7 +215,7 @@ public class PlayerRaceStats {
         return n * (base + coeff * (n - 1) / 2.0);
     }
 
-    /** Respec completo: devuelve completo el TP gastado en atributos y restaura las bases. */
+    /** Respec completo: devuelve el TP gastado en atributos y restaura las bases. */
     public void respec() {
         tp += (int) Math.floor(tpSpent + refundCarry);
         tpSpent = 0.0;
