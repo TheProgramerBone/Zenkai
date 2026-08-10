@@ -382,7 +382,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
     public double powerFraction() { return powerPercent / 100.0; }
 
-    /** Clampa a [50, techo por skill]. Devuelve true si cambió. */
+    /** Clampa a [0, techo por skill]. Devuelve true si cambió. */
     public boolean setPowerPercent(int pct, int maxAllowed) {
         int clamped = Math.max(0, Math.min(maxAllowed, pct));
         if (clamped == powerPercent) return false;
