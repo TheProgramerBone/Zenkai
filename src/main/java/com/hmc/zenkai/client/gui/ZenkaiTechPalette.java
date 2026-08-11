@@ -90,6 +90,9 @@ public final class ZenkaiTechPalette {
     /** Velo sobre un slot señalado (materiales de la mejora bajo el cursor). */
     public static final int SELECT_VEIL  = 0x5056B0C8;
     public static final int ROW_BAND     = 0x18A8B2C6;
+    /** Separador entre filas de una lista. Deliberadamente casi invisible: marca el corte
+     *  sin dibujar una reja. */
+    public static final int ROW_SEP = 0x14A8B2C6;
     public static final int TOOLTIP_BG   = 0xF00E1218;
     public static final int TOOLTIP_EDGE = STEEL;
 

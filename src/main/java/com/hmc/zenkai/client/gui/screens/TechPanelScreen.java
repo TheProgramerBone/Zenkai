@@ -76,6 +76,10 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
+        // Tooltip del ÍTEM bajo el cursor. Sin esta línea los slots no dicen ni el nombre.
+        // Va antes de renderFloating para que el tooltip propio quede por encima si ambos
+        // cayeran en el mismo punto.
+        renderTooltip(g, mouseX, mouseY);
         renderFloating(g, mouseX, mouseY);
     }
 
@@ -116,6 +120,17 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
         if (filled > 0) {
             g.fill(x, y, x + filled, y + h, ZenkaiTechPalette.BAR_FILL);
         }
+    }
+
+    /**
+     * Barra vertical, llena de abajo arriba. Es la orientación de un depósito: la energía
+     * "sube" y "baja", y una barra horizontal para eso se lee como progreso.
+     */
+    protected void drawVBar(GuiGraphics g, int x, int y, int w, int h, float fraction, int fill) {
+        g.fill(x - 1, y - 1, x + w + 1, y + h + 1, ZenkaiTechPalette.BAR_FRAME);
+        g.fill(x, y, x + w, y + h, ZenkaiTechPalette.BAR_BG);
+        int filled = Math.round(h * Math.max(0f, Math.min(1f, fraction)));
+        if (filled > 0) g.fill(x, y + h - filled, x + w, y + h, fill);
     }
 
     /**

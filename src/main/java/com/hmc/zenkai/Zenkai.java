@@ -50,6 +50,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -133,7 +134,14 @@ public class Zenkai {
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        // Reservado para futuros capabilities
+        // El banco de scouter acepta FE por las seis caras. No hay lado privilegiado: es un
+        // consumidor, y obligar a conectar por una cara concreta solo estorba al construir.
+        // ⚠ Verificar en NeoForge 1.21.1: Capabilities.EnergyStorage.BLOCK y la firma
+        // registerBlockEntity(cap, blockEntityType, (be, side) -> handler).
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.SCOUTER_BENCH.get(),
+                (be, side) -> be.energyHandler());
     }
 
     // ── Setup exclusivo de cliente ────────────────────────────────────────────

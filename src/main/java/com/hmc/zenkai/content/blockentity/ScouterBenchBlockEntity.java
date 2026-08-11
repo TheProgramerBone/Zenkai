@@ -66,22 +66,29 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
 
     private int job = JOB_NONE;
     private int progress = 0;
-    private boolean paused = false;
+    private PauseReason pause = PauseReason.NONE;
+
+    private final BenchEnergy energy = new BenchEnergy();
+    /** FE ya cobrada del trabajo en curso. Con el progreso decide cuánto toca este tick. */
+    private int energySpent = 0;
     @Nullable private UUID owner = null;
 
-    /** Lo que ve la GUI. Índices: 0 progreso, 1 duración, 2 trabajo, 3 pausado. */
+    /** Lo que ve la GUI. Índices: 0 progreso, 1 duración, 2 trabajo, 3 motivo de pausa,
+     *  4 energía, 5 capacidad. */
     private final ContainerData data = new ContainerData() {
         @Override public int get(int i) {
             return switch (i) {
                 case 0 -> progress;
                 case 1 -> WORK_TICKS;
                 case 2 -> job;
-                case 3 -> paused ? 1 : 0;
+                case 3 -> pause.ordinal();
+                case 4 -> energy.get();
+                case 5 -> energy.capacity();
                 default -> 0;
             };
         }
         @Override public void set(int i, int v) { /* solo lectura desde el cliente */ }
-        @Override public int getCount() { return 4; }
+        @Override public int getCount() { return ScouterBenchMenu.DATA_SLOTS; }
     };
 
     public ScouterBenchBlockEntity(BlockPos pos, BlockState state) {
@@ -134,7 +141,11 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
 
     public int job()          { return job; }
     public int progress()     { return progress; }
-    public boolean isPaused() { return paused; }
+    public PauseReason pauseReason() { return pause; }
+    public boolean isPaused()        { return pause.isPaused(); }
+
+    /** Para el capability. El banco solo recibe: nadie puede vaciarlo desde fuera. */
+    public BenchEnergy energyHandler() { return energy; }
 
     /**
      * Arranca un trabajo. Devuelve false si no se puede (ya hay uno, no hay scouter, la mejora
@@ -158,19 +169,25 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
 
         job = newJob;
         progress = 0;
-        paused = false;
+        energySpent = 0;
+        // Arranca aunque el búfer esté vacío: el primer tick lo dejará en PAUSE_ENERGY con
+        // progreso 0 y seguirá esperando corriente. Una máquina sin alimentar se para, no
+        // rechaza el trabajo — y los materiales tampoco se reservan al empezar.
+        pause = PauseReason.NONE;
         owner = sp.getUUID();
         setWorkingState(true);
         sync();
         return true;
     }
 
-    /** Cancela sin cobrar ni devolver nada: nunca se retiró material. */
+    /** Cancela sin cobrar ni devolver nada: nunca se retiró material, y la FE gastada hasta
+     *  aquí se pierde, que es lo que pasa con la corriente de una máquina que se apaga. */
     public void cancelJob() {
         if (job == JOB_NONE) return;
         job = JOB_NONE;
         progress = 0;
-        paused = false;
+        energySpent = 0;
+        pause = PauseReason.NONE;
         setWorkingState(false);
         sync();
     }
@@ -188,27 +205,44 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         ServerPlayer sp = be.ownerPlayer(level);
         ScouterUpgradeCost cost = be.currentCost();
 
-        // Pausa (no cancelación): el jugador se fue o gastó los materiales en otra cosa.
-        // El progreso se conserva porque perderlo por desconectarse sería un castigo por algo
-        // que no es una decisión de juego.
-        boolean canWork = sp != null && cost.canAfford(sp.getInventory());
-        if (be.paused != !canWork) {
-            be.paused = !canWork;
+        // Orden de comprobación = orden de gravedad. Sin dueño no se puede ni mirar el
+        // inventario, así que va primero; la energía la última porque es la que se arregla
+        // sola en cuanto llega corriente.
+        PauseReason reason = PauseReason.NONE;
+        int due = 0;
+        if (sp == null) {
+            reason = PauseReason.OWNER;
+        } else if (!cost.canAfford(sp.getInventory())) {
+            reason = PauseReason.MATERIALS;
+        } else {
+            // Cuánta FE DEBERÍA llevar gastada al terminar este tick. Restando lo ya gastado
+            // sale lo que toca ahora, y al llegar a WORK_TICKS el objetivo es exactamente el
+            // total del JSON: se cobra 20.001 y no 20.000 ni 20.002, sin acumulador aparte.
+            long total = cost.energy();
+            int target = (int) (total * (be.progress + 1) / WORK_TICKS);
+            due = target - be.energySpent;
+            if (!be.energy.spend(due)) reason = PauseReason.ENERGY;
+        }
+
+        if (be.pause != reason) {
+            be.pause = reason;
             be.markDirty();
         }
-        if (!canWork) return;
+        if (reason.isPaused()) return;
 
+        be.energySpent += due;
         be.progress++;
         if (be.progress < WORK_TICKS) {
             be.markDirty();   // guardar sí, difundir no: el progreso va por ContainerData
             return;
         }
 
-        // Terminado: cobrar y aplicar, en ese orden.
+        // Terminado: cobrar materiales y aplicar, en ese orden.
         cost.consume(sp.getInventory());
         be.applyJob();
         be.job = JOB_NONE;
         be.progress = 0;
+        be.energySpent = 0;
         be.setWorkingState(false);
         be.sync();            // aquí SÍ: el stack de la mesa ha cambiado y se ve desde fuera
     }
@@ -279,7 +313,9 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         ContainerHelper.loadAllItems(tag, items, reg);
         job = tag.contains("Job") ? tag.getInt("Job") : JOB_NONE;
         progress = tag.getInt("Progress");
-        paused = tag.getBoolean("Paused");
+        pause = PauseReason.byId(tag.getInt("Pause"));
+        energySpent = tag.getInt("EnergySpent");
+        energy.load(tag);
         owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
     }
 
@@ -289,7 +325,9 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         ContainerHelper.saveAllItems(tag, items, reg);
         tag.putInt("Job", job);
         tag.putInt("Progress", progress);
-        tag.putBoolean("Paused", paused);
+        tag.putInt("Pause", pause.ordinal());
+        tag.putInt("EnergySpent", energySpent);
+        energy.save(tag);
         if (owner != null) tag.putUUID("Owner", owner);
     }
 
