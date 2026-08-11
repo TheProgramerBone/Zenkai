@@ -124,6 +124,30 @@ public final class ZenkaiPalette {
     /** Relleno del popup lateral. */
     public static final int POPUP_BG    = 0xF01E1410;
 
+    // ── Fondos de zona ───────────────────────────────────────────────────────
+    // Los últimos literales sueltos del barrido. No son colores de texto, pero se repetían con
+    // valores casi iguales en sitios distintos (0x18AC421B, 0x22AC421B) y son exactamente el
+    // tipo de cosa que vuelve a divergir si no tiene nombre.
+
+    /** Banda alterna de una fila de lista sobre el panel. */
+    public static final int ROW_BAND    = 0x18AC421B;
+    /** Fondo hundido de un grupo dentro del panel (la fila de nueve posiciones). */
+    public static final int INSET_BG    = 0x22AC421B;
+    /** Fila resaltada bajo el cursor, sobre el panel. */
+    public static final int ROW_HOVER   = 0x50FFD966;
+    /** Velo de un bloque agarrable en reposo, sobre fondo oscuro. */
+    public static final int GRAB_IDLE   = 0x30FFFFFF;
+    /** El mismo bloque, agarrado o bajo el cursor. */
+    public static final int GRAB_ACTIVE = 0x60FFD966;
+    /** Separador dentro de un popup oscuro. SEPARATOR es su equivalente sobre el panel. */
+    public static final int SEPARATOR_DARK = 0x33FFFFFF;
+    /** Guía tenue sobre el mundo (anclas del HUD, referencias de colocación). */
+    public static final int GUIDE       = 0x40FFFFFF;
+    /** Cortina de una pantalla que trabaja sobre el mundo sin taparlo. */
+    public static final int WORLD_VEIL  = 0x50000000;
+    /** Banda opaca para texto que va sobre el mundo (cabecera y pie de colocación). */
+    public static final int WORLD_BAND  = 0x90000000;
+
     /** Mismo color con alfa distinto. Evita recalcular literales a mano. */
     public static int withAlpha(int argb, int alpha) {
         return (Math.max(0, Math.min(255, alpha)) << 24) | (argb & 0x00FFFFFF);

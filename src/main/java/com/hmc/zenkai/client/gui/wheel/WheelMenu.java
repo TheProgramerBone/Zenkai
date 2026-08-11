@@ -10,6 +10,7 @@ import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -34,11 +35,14 @@ public final class WheelMenu {
 
     public static final String KAIOKEN_SKILL = "kaioken";
 
-    private static final int COL_FORMS = 0xFF7CFC7C;
-    private static final int COL_BASE  = 0xFFBBBBBB;
-    private static final int COL_ON    = 0xFF3FD24A; // interruptor encendido
-    private static final int COL_OFF   = 0xFFE02020; // interruptor apagado
-    private static final int COL_CATEGORY = 0xFF7CC8FC; // submenús de interruptores
+    // Paleta común. La rueda vive sobre el mundo, así que usa la escala CLARA de la paleta,
+    // no la tierra. Antes tenía cuatro colores propios —incluido un tercer verde para
+    // "encendido" distinto del verde de las formas— que no aparecían en ninguna otra pantalla.
+    private static final int COL_FORMS    = ZenkaiPalette.OK;
+    private static final int COL_BASE     = ZenkaiPalette.TEXT_DIM;
+    private static final int COL_ON       = ZenkaiPalette.OK;      // interruptor encendido
+    private static final int COL_OFF      = ZenkaiPalette.DENIED;  // interruptor apagado
+    private static final int COL_CATEGORY = ZenkaiPalette.MAXED;   // submenús de interruptores
 
     public static WheelNode build(Player p) {
         List<WheelNode> roots = new ArrayList<>();
@@ -56,17 +60,17 @@ public final class WheelMenu {
         // kind TOGGLE con el mismo id, esté donde esté la hoja.
         Map<String, List<WheelNode>> categories = new LinkedHashMap<>();
         for (SkillToggles.Toggle t : SkillToggles.all()) {
-                WheelNode n = toggleNode(p, t.id());
-                if (n == null) continue;
-                if (t.category() == null) roots.add(n);
-                else categories.computeIfAbsent(t.category(), k -> new ArrayList<>()).add(n);
-            }
+            WheelNode n = toggleNode(p, t.id());
+            if (n == null) continue;
+            if (t.category() == null) roots.add(n);
+            else categories.computeIfAbsent(t.category(), k -> new ArrayList<>()).add(n);
+        }
         for (var entry : categories.entrySet()) {
-                roots.add(WheelNode.category(
-                                Component.translatable("wheel.zenkai." + entry.getKey()),
-                                COL_CATEGORY, entry.getValue()));
-            }
-        return WheelNode.category(Component.empty(), 0xFFFFFFFF, roots);
+            roots.add(WheelNode.category(
+                    Component.translatable("wheel.zenkai." + entry.getKey()),
+                    COL_CATEGORY, entry.getValue()));
+        }
+        return WheelNode.category(Component.empty(), ZenkaiPalette.TEXT, roots);
     }
 
     /** Cadena de formas. 'active' = la que está SELECCIONADA, no la que lleva puesta. */
@@ -121,8 +125,8 @@ public final class WheelMenu {
         if (!SkillToggles.available(p, id)) return null;
         boolean on = SkillToggles.isOn(p, id);
         Component label = Component.translatable(
-        on ? "wheel.zenkai.toggle.on" : "wheel.zenkai.toggle.off",
-        Component.translatable("skill.zenkai." + id));
+                on ? "wheel.zenkai.toggle.on" : "wheel.zenkai.toggle.off",
+                Component.translatable("skill.zenkai." + id));
         return WheelNode.leaf(WheelNode.Kind.TOGGLE, id, label, on ? COL_ON : COL_OFF, true, on);
     }
 }

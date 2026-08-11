@@ -42,7 +42,10 @@ public class ScouterBenchBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty WORKING = BooleanProperty.create("working");
 
-    private static final VoxelShape SHAPE = Block.box(0.0, 0.0, 0.0, 16.0, 13.0, 16.0);
+    // 16 y no 25: el modelo sobresale por encima del bloque a propósito, pero la colisión se
+    // queda dentro de su celda. Con 25 no podías poner nada encima del banco y el jugador
+    // chocaba con aire un bloque más arriba.
+    private static final VoxelShape SHAPE = Block.box(0.0, 0.0, 0.0, 16.0, 16.0, 16.0);
 
     public ScouterBenchBlock(Properties properties) {
         super(properties);

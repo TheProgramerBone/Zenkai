@@ -1,6 +1,8 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.PanelText;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +31,7 @@ public class ComingSoonScreen extends ZenkaiMenuScreen {
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
-        g.drawCenteredString(this.font, Component.translatable("screen.zenkai.coming_soon"),
-                panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, 0xFFAAAAAA);
+        PanelText.centeredOnPanel(g, this.font, Component.translatable("screen.zenkai.coming_soon"),
+                panelLeft + BG_W / 2, panelTop + BG_H / 2 - 4, ZenkaiPalette.MUTED_ON_PANEL);
     }
 }

@@ -7,6 +7,8 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.hmc.zenkai.client.gui.PanelText;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -44,7 +46,10 @@ public class WheelScreen extends Screen {
     private static final int   SEGMENTS  = 28;
     private static final float GAP_DEG   = 2.2f; // aire entre sectores: el look segmentado
 
-    private static final int COL_OUTLINE  = 0xE6000000;
+    /** Contorno de sector: casi negro para que los sectores no se fundan entre sí sobre el
+     *  mundo. Es estructura de la rueda, no un color de estado, pero se nombra desde la paleta
+     *  para que no quede como un literal huérfano. */
+    private static final int COL_OUTLINE  = ZenkaiPalette.withAlpha(0xFF000000, 0xE6);
     private static final int COL_DISABLED = 0x606068;
     /** Base oscura sobre la que se tiñe cada sector. */
     private static final int COL_BACKDROP = 0x101014;
@@ -154,8 +159,8 @@ public class WheelScreen extends Screen {
 
         List<WheelNode> rs = roots();
         if (rs.isEmpty()) {
-            g.drawCenteredString(this.font, Component.translatable("wheel.zenkai.empty"),
-                    (int) cx(), (int) cy() - 4, 0xFFAAAAAA);
+            PanelText.centeredOnDark(g, this.font, Component.translatable("wheel.zenkai.empty"),
+                    (int) cx(), (int) cy() - 4, ZenkaiPalette.TEXT_OFF);
             return;
         }
 
@@ -214,7 +219,7 @@ public class WheelScreen extends Screen {
 
         // 3) Filo exterior del seleccionado, en su propio color y a tope de brillo.
         if (active && enabled) {
-            arc(g, start, size, out - 2f, out, withAlpha(color, 0xFF), 0xFFFFFFFF);
+            arc(g, start, size, out - 2f, out, withAlpha(color, 0xFF), ZenkaiPalette.TEXT);
         }
     }
 
@@ -230,10 +235,10 @@ public class WheelScreen extends Screen {
         return (alpha << 24) | (rgb & 0x00FFFFFF);
     }
 
-    /** El seleccionado escribe en su propio color; el resto en blanco. */
+    /** El seleccionado escribe en su propio color; el resto en blanco. Deshabilitado, apagado. */
     private static int labelColor(WheelNode n) {
-        if (!n.enabled()) return 0xFF6A6A72;
-        return n.active() ? withAlpha(n.color(), 0xFF) : 0xFFFFFFFF;
+        if (!n.enabled()) return ZenkaiPalette.TEXT_OFF;
+        return n.active() ? withAlpha(n.color(), 0xFF) : ZenkaiPalette.TEXT;
     }
 
     private void labelAt(GuiGraphics g, Component text, float angDeg, float radius, int color) {

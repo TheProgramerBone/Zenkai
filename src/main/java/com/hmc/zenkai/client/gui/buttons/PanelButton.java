@@ -7,7 +7,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -54,11 +53,11 @@ public class PanelButton extends AbstractButton {
     public void onPress() { onClick.run(); }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         boolean hovered = this.active && isMouseOver(mouseX, mouseY);
 
         // Un botón inactivo se apaga TIÑENDO la textura, no pintando un velo sobre su rect.
-        // Btn_wide tiene las esquinas recortadas, igual que el marco del panel, así que un
+        // btn_wide tiene las esquinas recortadas, igual que el marco del panel, así que un
         // g.fill dejaba cuatro muescas oscuras sobre el beige alrededor del botón. setColor
         // multiplica solo los píxeles que se dibujan.
         //
@@ -74,14 +73,17 @@ public class PanelButton extends AbstractButton {
                 : hovered ? ZenkaiPalette.TEXT_HOVER
                 : (kind == Kind.PRIMARY ? ZenkaiPalette.GOLD : ZenkaiPalette.TEXT);
 
-        g.drawCenteredString(Minecraft.getInstance().font, getMessage(),
-                getX() + getWidth() / 2,
+        var font = Minecraft.getInstance().font;
+        // Sombra SÍ: el texto va sobre la textura del botón, que es oscura y ornamentada.
+        // Explícito y no drawCenteredString para que la decisión quede escrita.
+        g.drawString(font, getMessage(),
+                getX() + getWidth() / 2 - font.width(getMessage()) / 2,
                 getY() + (getHeight() - 8) / 2,
-                color);
+                color, true);
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput out) {
+    protected void updateWidgetNarration(NarrationElementOutput out) {
         defaultButtonNarrationText(out);
     }
 }

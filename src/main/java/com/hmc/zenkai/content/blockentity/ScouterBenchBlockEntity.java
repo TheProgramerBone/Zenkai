@@ -334,13 +334,19 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
 
     // ── GeckoLib ─────────────────────────────────────────────────────────────
 
+    /**
+     * Un solo controlador y una sola animación. Antes caía en un RawAnimation "idle" que NO
+     * existe en scouter_bench.animation.json: el banco está parado casi siempre, así
+     * que GeckoLib reclamaba una animación ausente en cada tick de render. Parado = STOP, que
+     * es lo que significa de verdad "sin animación".
+     */
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 5, state ->
-                state.setAndContinue(
-                        getBlockState().hasProperty(ScouterBenchBlock.WORKING)
-                                && getBlockState().getValue(ScouterBenchBlock.WORKING)
-                                ? WORKING : IDLE)));
+        controllers.add(new AnimationController<>(this, "controller", 5, state -> {
+            boolean working = getBlockState().hasProperty(ScouterBenchBlock.WORKING)
+                    && getBlockState().getValue(ScouterBenchBlock.WORKING);
+            return working ? state.setAndContinue(WORKING) : PlayState.STOP;
+        }));
     }
 
     @Override

@@ -16,6 +16,8 @@ import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;
+import com.hmc.zenkai.client.gui.PanelText;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -68,9 +70,12 @@ public class AppearanceScreen extends Screen {
     private static final int PREVIEW_W    = 80;
     private static final int PREVIEW_SIZE = 45;
 
-    private static final int COLOR_TITLE  = 0x4A3726;
-    private static final int COLOR_VALUE  = 0xFFFFFF;
-    private static final int COLOR_SWATCH = 0x4A3726;
+    /** Etiqueta del bloque. Antes 0x4A3726: el valor correcto pero SIN canal alfa. */
+    private static final int COLOR_TITLE  = ZenkaiPalette.LABEL_ON_PANEL;
+    /** Valor elegido. Era blanco CON sombra sobre el beige: ilegible. Ahora dorado
+     *  quemado y sin sombra, como el resto de valores del mod. */
+    private static final int COLOR_VALUE  = ZenkaiPalette.VALUE_ON_PANEL;
+    private static final int COLOR_SWATCH = ZenkaiPalette.LABEL_ON_PANEL;
 
     // Tonos de piel Human/Saiyan/Majin. Las razas multicolor sacan de los JSON de capa.
     private static final int[] SKIN_TONES = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
@@ -84,6 +89,9 @@ public class AppearanceScreen extends Screen {
     private int divY, bottomZoneY, skinAreaCX;
 
     private int eyeIndex = 0, hairIndex = 0, mouthIndex = 0, noseIndex = 0;
+    // Valores por defecto del ASPECTO del personaje, no de la interfaz: son datos que el
+    // jugador edita con el selector de color. No pertenecen a ZenkaiPalette y no deben salir
+    // de ella — si algún día se cambia la paleta de la GUI, el pelo negro sigue siendo negro.
     private int skinColor = 0xFFD5A07A, eyeColor = 0xFF2E86C1;
     private int hairColor = 0xFF1A1A1A;
     private boolean customSkinColor = false;
@@ -171,7 +179,9 @@ public class AppearanceScreen extends Screen {
                 pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
                 TEX_BTN, null,
-                () -> { goingBack = true; if (raceScreen != null) mc.setScreen(raceScreen); else mc.setScreen(null); }));
+                () -> { goingBack = true;
+                    mc.setScreen(raceScreen);
+                }));
 
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20,
@@ -256,7 +266,7 @@ public class AppearanceScreen extends Screen {
             addRenderableWidget(new TextOnlyButton(skinAreaCX - 30, naturalY, 60, 14,
                     Component.literal("Default"),
                     () -> { customSkinColor = false; closePicker(); applyPreview(); })
-                    .textColors(0xFFFFFF, 0xFFF149, 0xA0A0A0));
+                    .onPanel());
 
             genderTitleY = naturalY + 16;
             genderValueY = genderTitleY + 11;
@@ -405,7 +415,7 @@ public class AppearanceScreen extends Screen {
         blockTop = renderField(g, mc, pl, blockTop, "Mouth", CustomizationAssets.mouthLabel(mouthIndex));
         blockTop = renderField(g, mc, pl, blockTop, "Nose",  CustomizationAssets.noseLabel(noseIndex));
 
-        g.fill(pl + IN_X1 + PAD, divY, pl + IN_X2 - PAD, divY + 1, 0x44FFFFFF);
+        g.fill(pl + IN_X1 + PAD, divY, pl + IN_X2 - PAD, divY + 1, ZenkaiPalette.SEPARATOR);
 
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 g,
@@ -426,7 +436,8 @@ public class AppearanceScreen extends Screen {
 
         if (showGender) {
             drawCenteredNoShadow(g, Component.literal("Gender"), skinAreaCX, genderTitleY, COLOR_SWATCH);
-            g.drawCenteredString(mc.font, Component.literal(genderFemale ? "Female" : "Male"),
+            PanelText.centeredOnPanel(g, mc.font,
+                    Component.literal(genderFemale ? "Female" : "Male"),
                     skinAreaCX, genderValueY, COLOR_VALUE);
         }
 
@@ -436,13 +447,14 @@ public class AppearanceScreen extends Screen {
     private int renderField(GuiGraphics g, Minecraft mc, int pl, int blockTop, String label, String value) {
         int cx = pl + BG_W / 2;
         drawCenteredNoShadow(g, Component.literal(label), cx, blockTop, COLOR_TITLE);
-        g.drawCenteredString(mc.font, Component.literal(value), cx, blockTop + TITLE_H, COLOR_VALUE);
+        PanelText.centeredOnPanel(g, mc.font,
+                Component.literal(value), cx, blockTop + TITLE_H, COLOR_VALUE);
         return blockTop + BLOCK_H;
     }
 
+    /** Delega en PanelText: la regla de sombra vive en un solo sitio. */
     private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
-        var font = Minecraft.getInstance().font;
-        g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
+        PanelText.centeredOnPanel(g, Minecraft.getInstance().font, text, cx, y, color);
     }
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}

@@ -100,16 +100,14 @@ public class StatsScreen extends ZenkaiMenuScreen {
     /** Escalón del arrastre de Ki Control. Coincide con el de la tecla de carga. */
     private static final int KI_STEP     = 5;
     /**
-     * Suelo del % de Ki Control. NO es cero: setPowerPercent está definido sobre [0, techo] y
+     * Suelo del % de Ki Control. NO es cero: setPowerPercent está definido sobre [50, techo] y
      * la tecla de carga nunca baja de ahí. La versión anterior de esta barra mapeaba el
      * arrastre sobre 0..100, así que dejaba llegar a 0 —un estado que el resto del juego no
      * produce— y comprimía el rango útil hasta hacerlo inservible: con Ki Control a nivel 0 el
-     * techo es 0, o sea que mínimo y máximo coinciden y no hay NADA que arrastrar.
+     * techo es 50, o sea que mínimo y máximo coinciden y no hay NADA que arrastrar.
      * ⚠ Si SkillEffects expone una constante para esto, usar aquella y borrar esta.
      */
-    private static final int KI_MIN      = 0;
-    /** Punto neutro de referencia: el valor con el que arranca personaje. */
-    private static final int KI_NEUTRAL  = 50;
+    private static final int KI_MIN      = 50;
 
     // Popups laterales
     private static final int POPUP_W = 136;
@@ -181,13 +179,11 @@ public class StatsScreen extends ZenkaiMenuScreen {
         addRenderableWidget(new TextOnlyButton(bx, by, bw, POPUP_BTN_H,
                 Component.translatable("screen.zenkai.stats_screen.popup.stats"),
                 () -> showStats = !showStats)
-                .textColors(ZenkaiPalette.LABEL_ON_PANEL, ZenkaiPalette.DENIED_ON_PANEL,
-                        ZenkaiPalette.MUTED_ON_PANEL));
+                .onPanel());
         addRenderableWidget(new TextOnlyButton(bx + bw + 4, by, bw, POPUP_BTN_H,
                 Component.translatable("screen.zenkai.stats_screen.popup.progress"),
                 () -> showProgress = !showProgress)
-                .textColors(ZenkaiPalette.LABEL_ON_PANEL, ZenkaiPalette.DENIED_ON_PANEL,
-                        ZenkaiPalette.MUTED_ON_PANEL));
+                .onPanel());
 
         kiBarX = panelLeft + BG_W - MARGIN - KI_BAR_W;
         kiBarY = panelTop + KI_BAR_Y;
@@ -439,14 +435,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         // jugador al tope de su habilidad viera la barra a medias y creyera que le faltaba algo.
         StatBar.draw(g, kiBarX, kiBarY, KI_BAR_W, StatBar.H_WIDE,
                 kiFraction(shown), 1.0, ZenkaiPalette.BAR_CONTROL);
-        // Zona de riesgo: por debajo del neutro los stats de combate se van reduciendo a cero.
-        int nx = kiBarX + Math.round(KI_BAR_W * kiFraction(KI_NEUTRAL));
-        for (int i = kiBarX; i < nx; i += 3) {
-            g.fill(i, kiBarY, i + 1, kiBarY + StatBar.H_WIDE,
-                    ZenkaiPalette.withAlpha(ZenkaiPalette.DENIED_ON_PANEL, 70));
-        }
-        g.fill(nx, kiBarY - 2, nx + 1, kiBarY + StatBar.H_WIDE + 2,
-                ZenkaiPalette.withAlpha(ZenkaiPalette.LABEL_ON_PANEL, 200));
+
         if (adjustable) {
             // Muescas en cada escalón de 5. Aquí sí caben: el rango útil son pocos escalones
             // repartidos en 88 px, no veinte como pasaría sobre 0..100.
@@ -570,7 +559,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
             if (r.isHeader()) {
                 // El separador va con aire ARRIBA, no pegado al texto anterior: es lo que
                 // convierte una lista continua en secciones.
-                g.fill(tx, ty + 3, tr, ty + 4, 0x33FFFFFF);
+                g.fill(tx, ty + 3, tr, ty + 4, ZenkaiPalette.SEPARATOR_DARK);
                 g.drawString(font, r.label(), tx, ty + 7, ZenkaiPalette.TEXT_OFF, true);
                 ty += headerH;
                 continue;

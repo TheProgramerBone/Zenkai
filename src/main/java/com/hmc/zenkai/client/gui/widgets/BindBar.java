@@ -247,7 +247,7 @@ public final class BindBar {
      * combate, así que aquí tiene que parecerse a aquello.
      */
     public void renderFrame(GuiGraphics g, Font font, Component label) {
-        g.fill(x - 4, y - 4, x + WIDTH + 4, y + HEIGHT + 4, 0x22AC421B);
+        g.fill(x - 4, y - 4, x + WIDTH + 4, y + HEIGHT + 4, ZenkaiPalette.INSET_BG);
         g.fill(x - 4, y - 4, x + WIDTH + 4, y - 3, ZenkaiPalette.SEPARATOR);
         g.fill(x - 4, y + HEIGHT + 3, x + WIDTH + 4, y + HEIGHT + 4, ZenkaiPalette.SEPARATOR);
         if (label != null) {

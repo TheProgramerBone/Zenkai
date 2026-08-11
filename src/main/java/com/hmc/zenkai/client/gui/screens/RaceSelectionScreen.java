@@ -14,6 +14,8 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;
+import com.hmc.zenkai.client.gui.PanelText;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -51,8 +53,11 @@ public class RaceSelectionScreen extends Screen {
     private static final int DIV2_Y     = B2_VALUE_Y + 14;
     private static final int PREVIEW_SIZE = 50;
 
-    private static final int COLOR_TITLE   = 0x4A3726;
-    private static final int COLOR_VALUE   = 0xFFFFFF;
+    /** Etiqueta del bloque. Antes 0x4A3726: el valor correcto pero SIN canal alfa. */
+    private static final int COLOR_TITLE  = ZenkaiPalette.LABEL_ON_PANEL;
+    /** Valor elegido. Era blanco CON sombra sobre el beige: ilegible. Ahora dorado
+     *  quemado y sin sombra, como el resto de valores del mod. */
+    private static final int COLOR_VALUE  = ZenkaiPalette.VALUE_ON_PANEL;
     private static final int COLOR_SECTION = 0xB5401A;
     private static final int COLOR_DESC    = 0x5A4636;
 
@@ -149,23 +154,23 @@ public class RaceSelectionScreen extends Screen {
 
         drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.race"),
                 cx, pt + B1_TITLE_Y, COLOR_TITLE);
-        g.drawCenteredString(mc.font,
+        PanelText.centeredOnPanel(g, mc.font,
                 Component.translatable("screen.zenkai.race." + r.name().toLowerCase()),
                 cx, pt + B1_VALUE_Y, COLOR_VALUE);
 
-        g.fill(pl + IN_X1 + PAD, pt + DIV1_Y, pl + IN_X2 - PAD, pt + DIV1_Y + 1, 0x44FFFFFF);
+        g.fill(pl + IN_X1 + PAD, pt + DIV1_Y, pl + IN_X2 - PAD, pt + DIV1_Y + 1, ZenkaiPalette.SEPARATOR);
 
         if (humanSaiyan) {
             drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.skin"),
                     cx, pt + B2_TITLE_Y, COLOR_TITLE);
-            g.drawCenteredString(mc.font,
+            PanelText.centeredOnPanel(g, mc.font,
                     Component.translatable(useCustomSkin
                             ? "screen.zenkai.skin.custom"
                             : "screen.zenkai.skin.vanilla"),
                     cx, pt + B2_VALUE_Y, COLOR_VALUE);
         }
 
-        g.fill(pl + IN_X1 + PAD, pt + DIV2_Y, pl + IN_X2 - PAD, pt + DIV2_Y + 1, 0x44FFFFFF);
+        g.fill(pl + IN_X1 + PAD, pt + DIV2_Y, pl + IN_X2 - PAD, pt + DIV2_Y + 1, ZenkaiPalette.SEPARATOR);
 
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 g,
@@ -194,9 +199,9 @@ public class RaceSelectionScreen extends Screen {
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
     public void markConfirmed() { this.confirmed = true; }
 
+    /** Delega en PanelText: la regla de sombra vive en un solo sitio. */
     private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
-        var font = Minecraft.getInstance().font;
-        g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
+        PanelText.centeredOnPanel(g, Minecraft.getInstance().font, text, cx, y, color);
     }
 
     @Override

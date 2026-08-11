@@ -18,6 +18,8 @@ import com.hmc.zenkai.feature.stats.ChooseRacePacket;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.race.UpdatePlayerVisualPacket;
 import net.minecraft.client.Minecraft;
+import com.hmc.zenkai.client.gui.PanelText;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -62,10 +64,13 @@ public class StyleSelectionScreen extends Screen {
     private static final int PREVIEW_SIZE = 45;
 
     // ── Colores de texto ──────────────────────────────────────────────────────
-    private static final int COLOR_TITLE  = 0x4A3726; // marrón oscuro → título de campo (Fighting Style)
-    private static final int COLOR_VALUE  = 0xFFFFFF; // blanco+sombra → valor seleccionado (Martial Artist, ...)
+    /** Etiqueta del bloque. Antes 0x4A3726: el valor correcto pero SIN canal alfa. */
+    private static final int COLOR_TITLE  = ZenkaiPalette.LABEL_ON_PANEL; // marrón oscuro → título de campo (Fighting Style)
+    /** Valor elegido. Era blanco CON sombra sobre el beige: ilegible. Ahora dorado
+     *  quemado y sin sombra, como el resto de valores del mod. */
+    private static final int COLOR_VALUE  = ZenkaiPalette.VALUE_ON_PANEL; // blanco+sombra → valor seleccionado (Martial Artist, ...)
     private static final int COLOR_DESC   = 0x5A4636; // marrón medio  → cuerpo de la descripción
-    private static final int COLOR_SWATCH = 0x8A6A1E; // bronce/dorado → etiqueta de swatch (Ki Color)
+    private static final int COLOR_SWATCH = ZenkaiPalette.LABEL_ON_PANEL; // bronce/dorado → etiqueta de swatch (Ki Color)
 
     // ── Bloque de estadísticas (a la derecha del preview) ─────────────────────
     private static final int STATS_X    = IN_X1 + PAD + PREVIEW_W + 6;   // 94
@@ -91,6 +96,8 @@ public class StyleSelectionScreen extends Screen {
     private int styleIndex = 0;
 
     private int kiAreaCX;
+    /** Color de aura por defecto. NO es paleta de interfaz: es un dato del personaje que el
+     *  jugador va a cambiar con el selector, igual que el color de piel o de pelo. */
     private int kiColor = 0xFF33CCFF;
     private boolean kiPickerOpen = false;
     @Nullable private ColorPickerWidget picker = null;
@@ -149,7 +156,9 @@ public class StyleSelectionScreen extends Screen {
                 lp + IN_X1, tp + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
                 TEX_BTN, null,
-                () -> { goingBack = true; if (appearanceScreen != null) mc.setScreen(appearanceScreen); else mc.setScreen(null); }));
+                () -> { goingBack = true;
+                    mc.setScreen(appearanceScreen);
+                }));
 
         addRenderableWidget(new TextOnlyButton(
                 lp + IN_X2 - BTN_W, tp + BTN_BAR_Y, BTN_W, 20,
@@ -202,10 +211,11 @@ public class StyleSelectionScreen extends Screen {
         // Bloque estilo — título arriba, valor (entre flechas) debajo
         drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.style"),
                 cx, tp + S_TITLE_Y, COLOR_TITLE);
-        g.drawCenteredString(mc.font, Component.translatable(styleKey),
+        PanelText.centeredOnPanel(g, mc.font,
+                Component.translatable(styleKey),
                 cx, tp + S_VALUE_Y, COLOR_VALUE);
 
-        g.fill(lp + IN_X1 + PAD, tp + DIV1_Y, lp + IN_X2 - PAD, tp + DIV1_Y + 1, 0x44FFFFFF);
+        g.fill(lp + IN_X1 + PAD, tp + DIV1_Y, lp + IN_X2 - PAD, tp + DIV1_Y + 1, ZenkaiPalette.SEPARATOR);
 
         // Descripción
         String[] lines = wrapText(Component.translatable(styleKey + ".desc").getString(),
@@ -215,7 +225,7 @@ public class StyleSelectionScreen extends Screen {
                     lp + IN_X1 + PAD, tp + DESC_Y + i * 11, COLOR_DESC, false);
         }
 
-        g.fill(lp + IN_X1 + PAD, tp + DIV2_Y, lp + IN_X2 - PAD, tp + DIV2_Y + 1, 0x44FFFFFF);
+        g.fill(lp + IN_X1 + PAD, tp + DIV2_Y, lp + IN_X2 - PAD, tp + DIV2_Y + 1, ZenkaiPalette.SEPARATOR);
 
         // Preview jugador — izquierda zona inferior (con aura de ki EN VIVO)
         int pvX1 = lp + IN_X1 + PAD;
@@ -245,20 +255,17 @@ public class StyleSelectionScreen extends Screen {
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
 
-    /** Texto centrado sin sombra — para colores oscuros que se leen limpios sobre el beige. */
+    /** Delega en PanelText: la regla de sombra vive en un solo sitio. */
     private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
-        var font = Minecraft.getInstance().font;
-        g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
+        PanelText.centeredOnPanel(g, Minecraft.getInstance().font, text, cx, y, color);
     }
 
     /**
      * Atributos de salida, cuánto rinde cada punto y el stat efectivo resultante, para la
      * combinación raza+estilo que el jugador está mirando ahora mismo.
-     *
      * Los VALORES BASE son de la raza y no cambian al girar la flecha; lo que cambia son los
      * coeficientes y, por tanto, las dos columnas de la derecha. Por eso la base va en el
      * tono apagado y el efectivo en blanco: se ve de un vistazo qué está eligiendo.
-     *
      * El PL sale de PowerLevel.compute, no de una suma a mano: si mañana tocas los pesos del
      * medidor, esta pantalla cambia sola en vez de mentir.
      */
@@ -317,7 +324,7 @@ public class StyleSelectionScreen extends Screen {
         }
 
         y += 3;
-        g.fill(lp + STATS_X, y, lp + STATS_R, y + 1, 0x44FFFFFF);
+        g.fill(lp + STATS_X, y, lp + STATS_R, y + 1, ZenkaiPalette.SEPARATOR);
         y += 4;
 
         // Los pools no son stats de combate: llevan offset y su propia escala de config, así

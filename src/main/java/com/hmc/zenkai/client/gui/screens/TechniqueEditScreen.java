@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.TechniqueAnimSets;
 import com.hmc.zenkai.client.TechniqueIcons;
+import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
@@ -439,16 +440,18 @@ public class TechniqueEditScreen extends Screen {
         refreshButtons(); // el desbloqueo llega por sync asíncrono
 
         ScreenTitle.drawAbovePanel(g, this.font, this.title, leftPos + BG_W / 2, topPos);
-        g.drawString(this.font, Component.translatable("screen.zenkai.technique.name").append(":"),
-                leftPos + MARGIN, topPos + Y_NAME + 3, 0xFFFFFFFF, true);
+        PanelText.onPanel(g, this.font,
+                Component.translatable("screen.zenkai.technique.name").append(":"),
+                leftPos + MARGIN, topPos + Y_NAME + 3, ZenkaiPalette.LABEL_ON_PANEL);
 
         if (tab == Tab.COMBAT) renderCombatTab(g, partialTick);
         else renderStyleTab(g, mouseX, mouseY);
 
         if (deleteArmed && slot >= 0) {
-            g.drawCenteredString(this.font,
+            // Fuera del panel (Y_BUTTONS cuelga por debajo): fondo oscuro, CON sombra.
+            PanelText.centeredOnDark(g, this.font,
                     Component.translatable("screen.zenkai.technique.delete_confirm"),
-                    leftPos + BG_W / 2, topPos + Y_BUTTONS - 11, 0xFFFF5555);
+                    leftPos + BG_W / 2, topPos + Y_BUTTONS - 11, ZenkaiPalette.ERROR);
         }
     }
 
@@ -470,10 +473,10 @@ public class TechniqueEditScreen extends Screen {
         info(g, iy += 11, "screen.zenkai.technique.cooldown",
                 Component.literal(fmt(type.cooldownTicks() / 20.0) + " sec"));
 
-        Component tpLine = Component.translatable("screen.zenkai.technique.tp", att.getTP());
-        g.drawString(this.font, tpLine,
-                leftPos + BG_W - MARGIN - this.font.width(tpLine), topPos + Y_UNLOCK - 14,
-                ZenkaiPalette.VALUE, true);
+        // TP con su color de rol y SIN sombra: va sobre el beige del panel, no sobre el mundo.
+        PanelText.rightOnPanel(g, this.font,
+                Component.translatable("screen.zenkai.technique.tp", att.getTP()),
+                leftPos + BG_W - MARGIN, topPos + Y_UNLOCK - 14, ZenkaiPalette.TP_ON_PANEL);
 
         renderTechniquePreview(g, partialTick);
     }
@@ -483,7 +486,9 @@ public class TechniqueEditScreen extends Screen {
         int sy = topPos + Y_ROWS;
         int right = leftPos + BG_W - MARGIN;
         KiTechnique previewTech = new KiTechnique(" ", type, rgb, size, explosive);
-        g.fill(right - 40, sy + 1, right - 26, sy + 13, 0xFF000000);
+        // Marco marrón del panel, no negro: sobre el beige un borde negro recorta como un
+        // agujero. El interior sí es el color crudo de la técnica, que es el dato.
+        g.fill(right - 40, sy + 1, right - 26, sy + 13, ZenkaiPalette.BORDER_IN);
         g.fill(right - 39, sy + 2, right - 27, sy + 12, 0xFF000000 | rgb);
         TechniqueIcons.draw(g, right - 18, sy - 3, previewTech);
 
@@ -501,9 +506,16 @@ public class TechniqueEditScreen extends Screen {
         }
     }
 
+    /**
+     * Fila de la ficha de la técnica. La etiqueta y el valor se dibujan por separado para que
+     * el número lleve el peso: antes iban en un solo drawString gris claro con sombra sobre
+     * beige, y ni la etiqueta ni la cifra se leían bien.
+     */
     private void info(GuiGraphics g, int y, String key, Component value) {
-        g.drawString(this.font, Component.translatable(key).append(": ").append(value),
-                leftPos + MARGIN, y, 0xFFCCCCCC, true);
+        Component label = Component.translatable(key).append(": ");
+        PanelText.onPanel(g, this.font, label, leftPos + MARGIN, y, ZenkaiPalette.BODY_ON_PANEL);
+        PanelText.onPanel(g, this.font, value,
+                leftPos + MARGIN + this.font.width(label), y, ZenkaiPalette.LABEL_ON_PANEL);
     }
 
     private Component speedLabel() {

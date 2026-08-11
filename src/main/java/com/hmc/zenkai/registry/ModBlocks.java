@@ -6,6 +6,7 @@ import com.hmc.zenkai.content.blockentity.AllDragonBalls.AllDragonBallsBlock;
 import com.hmc.zenkai.content.blockentity.DragonBalls.DragonBalls;
 import com.hmc.zenkai.content.blockentity.DragonBalls.NamekDragonBalls;
 import com.hmc.zenkai.content.blockentity.NamekianGrassBlock;
+import com.hmc.zenkai.content.item.ScouterBenchBlockItem;
 import net.minecraft.util.ColorRGBA;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.effect.MobEffects;
@@ -24,6 +25,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class ModBlocks {
@@ -263,7 +265,8 @@ public class ModBlocks {
                     .sound(SoundType.METAL)
                     .strength(3.5f, 6f)
                     .requiresCorrectToolForDrops()
-                    .noOcclusion()));
+                    .noOcclusion()),
+            b -> new ScouterBenchBlockItem(b.get(), new Item.Properties()));
 
     public static final DeferredBlock<Block> NAMEKIAN_DIRT = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()
@@ -570,5 +573,14 @@ public class ModBlocks {
                 .requiresCorrectToolForDrops()
                 .sound(SoundType.NETHERITE_BLOCK)
                 .mapColor(MapColor.COLOR_BLACK);
+    }
+
+    /** Variante para bloques cuyo ítem no es un BlockItem normal — hoy solo el banco de
+     *  scouter, que necesita ser GeoItem para poder enseñar su modelo 3D. */
+    private static <T extends Block> DeferredBlock<T> registerBlock(
+            String name, Supplier<T> block, Function<DeferredBlock<T>, Item> itemFactory) {
+        DeferredBlock<T> toReturn = MOD_BLOCKS.register(name, block);
+        ModItems.ITEMS.register(name, () -> itemFactory.apply(toReturn));
+        return toReturn;
     }
 }

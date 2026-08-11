@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.widgets;
 
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -34,7 +35,9 @@ public class ColorBoxButton extends AbstractWidget {
         int bh = getHeight();
 
         // Borde: naranja si activo, blanco si no
-        int borderColor = active ? 0xFFFFAA00 : 0xFFFFFFFF;
+        // Marco del mod al estar activo. El naranja suelto de antes era un quinto tono
+        // anaranjado distinto de los tres del panel.
+        int borderColor = active ? ZenkaiPalette.BORDER_MID : ZenkaiPalette.TEXT;
         g.fill(bx - 1, by - 1, bx + bw + 1, by + bh + 1, borderColor);
 
         // Color interior

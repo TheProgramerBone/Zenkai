@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.screens.wishes.EnchantVillagerWishScreen;
@@ -100,7 +101,7 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
     private TextOnlyButton addWish(int x, int y, int w, String langKey, Runnable onClick) {
         Component label = Component.translatable(langKey);
         TextOnlyButton b = addRenderableWidget(new TextOnlyButton(x, y, w, ROW_H, label, onClick)
-                .textColors(ZenkaiPalette.TEXT, ZenkaiPalette.TEXT_HOVER, ZenkaiPalette.TEXT_OFF));
+                .onPanel());
         rows.add(new WishRow(b, label));
         return b;
     }
@@ -136,13 +137,13 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
                     && mouseY >= b.getY() && mouseY < b.getY() + b.getHeight();
 
             g.fill(b.getX(), b.getY(), b.getX() + b.getWidth(), b.getY() + b.getHeight(),
-                    hovered ? 0x50FFD966 : 0x22AC421B);
+                    hovered ? ZenkaiPalette.ROW_HOVER : ZenkaiPalette.INSET_BG);
             // Cinta izquierda: ancla la vista y da a la fila un lado "fuerte".
             g.fill(b.getX(), b.getY(), b.getX() + 2, b.getY() + b.getHeight(),
                     hovered ? ZenkaiPalette.BORDER_OUT : ZenkaiPalette.BORDER_IN);
 
-            g.drawString(this.font, String.valueOf(i + 1), b.getX() + 6,
-                    b.getY() + (ROW_H - 8) / 2, ZenkaiPalette.MUTED_ON_PANEL, false);
+            PanelText.onPanel(g, this.font, String.valueOf(i + 1), b.getX() + 6,
+                    b.getY() + (ROW_H - 8) / 2, ZenkaiPalette.MUTED_ON_PANEL);
         }
     }
 

@@ -2,6 +2,7 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.TechniqueIcons;
+import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
@@ -83,8 +84,8 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
 
     private int rightEdge()   { return panelLeft + BG_W - 14; }
     private int xDelete()     { return rightEdge() - X_SIZE; }
-    private int xEdit()       { return xDelete() - 6 - 40; }
-    private int xAssign()     { return xEdit() - 4 - 44; }
+    private int xEdit()       { return xDelete() - 6 - 40; }   // 40 = "[ Edit ]" en negrita
+    private int xAssign()     { return xEdit() - 4 - 52; }   // 52 = "[ Assign ]" en negrita
     private int textMaxWidth(){ return xAssign() - 6 - (panelLeft + TEXT_X_OFF + ICON + 4); }
 
     @Override
@@ -108,15 +109,17 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
             final int idx = i;
             int y = rowTop(i) + 5;
 
-            rowButtons.add(addRenderableWidget(new TextOnlyButton(xAssign(), y, 44, 16,
+            // asAction() los envuelve en corchetes y negrita: sin eso son texto suelto a la
+            // derecha de una fila que ya lleva nombre y sub-línea, y nada dice que se pulsen.
+            rowButtons.add(addRenderableWidget(new TextOnlyButton(xAssign(), y, 52, 16,
                     Component.translatable("screen.zenkai.technique.assign"),
                     () -> assigning = (assigning == idx) ? -1 : idx)
-                    .textColors(ZenkaiPalette.TEXT, ZenkaiPalette.TEXT_HOVER, ZenkaiPalette.TEXT_OFF)));
+                    .onPanel().asAction()));
 
             rowButtons.add(addRenderableWidget(new TextOnlyButton(xEdit(), y, 40, 16,
                     Component.translatable("screen.zenkai.technique.edit"),
                     () -> mc.setScreen(new TechniqueEditScreen(idx)))
-                    .textColors(ZenkaiPalette.TEXT, ZenkaiPalette.TEXT_HOVER, ZenkaiPalette.TEXT_OFF)));
+                    .onPanel().asAction()));
 
             // La ✖ del mod, no el glifo Unicode: el "✖" dependía de la fuente instalada y a
             // GUI Scale bajo se veía como un aspa borrosa de otro tamaño que el resto de iconos.
@@ -246,14 +249,14 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
         if (att == null) return;
 
         // ── Cabecera: TP + ocupación de slots ──
-        g.drawString(this.font, Component.translatable("screen.zenkai.technique.tp", att.getTP()),
-                panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.VALUE, false);
+        PanelText.onPanel(g, this.font,
+                Component.translatable("screen.zenkai.technique.tp", att.getTP()),
+                panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.TP_ON_PANEL);
 
         Component slotsLabel = Component.translatable("screen.zenkai.technique.slots_used",
                 att.techniques().slotCount(), CommonConfig.techniqueMaxSlots());
-        g.drawString(this.font, slotsLabel,
-                rightEdge() - this.font.width(slotsLabel), panelTop + CONTENT_TOP,
-                ZenkaiPalette.MUTED_ON_PANEL, false);
+        PanelText.rightOnPanel(g, this.font, slotsLabel, rightEdge(), panelTop + CONTENT_TOP,
+                ZenkaiPalette.MUTED_ON_PANEL);
 
         // ── Barra de posiciones ──
         if (bindBar != null) {
@@ -261,16 +264,17 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
             bindBar.renderFrame(g, this.font, null);
         }
         if (assigning >= 0) {
-            g.drawCenteredString(this.font,
+            PanelText.centeredOnPanel(g, this.font,
                     Component.translatable("screen.zenkai.technique.assign_hint"),
                     panelLeft + BG_W / 2, panelTop + BAR_Y_OFF + SlotCell.SIZE + 7,
-                    ZenkaiPalette.VALUE);
+                    ZenkaiPalette.TP_ON_PANEL);
         }
 
         // ── Lista ──
         var slots = att.techniques().slots();
         if (slots.isEmpty()) {
-            g.drawCenteredString(this.font, Component.translatable("screen.zenkai.technique.empty"),
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.technique.empty"),
                     panelLeft + BG_W / 2, listTop() + viewHeight() / 2 - 4,
                     ZenkaiPalette.MUTED_ON_PANEL);
             return;
@@ -295,7 +299,7 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
 
             int nameX = textX + ICON + 4;
             Component name = fit(t.displayName(), textMaxWidth());
-            g.drawString(this.font, name, nameX, y + 4, ZenkaiPalette.LABEL_ON_PANEL, false);
+            PanelText.onPanel(g, this.font, name, nameX, y + 4, ZenkaiPalette.LABEL_ON_PANEL);
 
             // Sub-línea: tipo · tamaño · posición asignada. El tipo solo ya se deduce del ícono;
             // lo que el jugador no puede ver de otro modo es el tamaño y a qué tecla va.
@@ -303,13 +307,14 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
             Component sub = Component.translatable(t.type().nameKey())
                     .append(Component.literal(" · "))
                     .append(Component.translatable("screen.zenkai.technique.size", t.size()));
-            g.drawString(this.font, fit(sub, textMaxWidth()), nameX, y + 15,
-                    ZenkaiPalette.MUTED_ON_PANEL, false);
+            PanelText.onPanel(g, this.font, fit(sub, textMaxWidth()), nameX, y + 15,
+                    ZenkaiPalette.MUTED_ON_PANEL);
 
             if (pos >= 0) {
                 Component key = Component.literal("[" + (pos + 1) + "]");
-                g.drawString(this.font, key, nameX + textMaxWidth() - this.font.width(key), y + 15,
-                        ZenkaiPalette.OK, false);
+                PanelText.onPanel(g, this.font, key,
+                        nameX + textMaxWidth() - this.font.width(key), y + 15,
+                        ZenkaiPalette.OK_ON_PANEL);
             }
 
             if (i < last - 1) {
@@ -342,15 +347,11 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
         g.fill(x, top, x + SCROLLBAR_W, top + h, ZenkaiPalette.BAR_BG);
         int thumbH = Math.max(12, h * visibleRows() / rowCount());
         int thumbY = top + (h - thumbH) * scrollRow / max;
-        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.VALUE);
+        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.VALUE_ON_PANEL);
     }
 
-    /** Recorta a una línea con puntos suspensivos. Mismo criterio que SkillsScreen. */
+    /** Delega en PanelText: el criterio de recorte estaba copiado en tres pantallas. */
     private Component fit(Component c, int maxW) {
-        if (maxW <= 0) return Component.empty();
-        if (this.font.width(c) <= maxW) return c;
-        int dots = this.font.width("...");
-        String cut = this.font.plainSubstrByWidth(c.getString(), Math.max(0, maxW - dots));
-        return Component.literal(cut + "...");
+        return PanelText.fit(this.font, c, maxW);
     }
 }

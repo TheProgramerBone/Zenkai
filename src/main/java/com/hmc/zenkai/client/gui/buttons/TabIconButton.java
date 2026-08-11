@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.buttons;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -13,7 +14,6 @@ import java.util.function.Supplier;
 /**
  * Pestaña con ícono del atlas textures/gui/icons.png (270x270), sin texto.
  * El nombre de la pestaña va como tooltip (setTooltip desde fuera si se quiere).
- *
  * Estados: seleccionada -> marcador inferior + ícono pleno; hover -> velo claro;
  * normal -> ícono ligeramente atenuado (para que la activa destaque).
  */
@@ -50,12 +50,13 @@ public class TabIconButton extends AbstractButton {
 
         if (!selected.get() && isHoveredOrFocused()) {
             // Hover: velo claro.
-            g.fill(getX(), getY(), getX() + iconSize, getY() + iconSize, 0x30FFFFFF);
+            g.fill(getX(), getY(), getX() + iconSize, getY() + iconSize, ZenkaiPalette.HOVER_VEIL);
         }
 
         if (selected.get()) {
             // Marcador bajo la pestaña activa.
-            g.fill(getX(), getY() + iconSize + 1, getX() + iconSize, getY() + iconSize + 2, 0xFFFFFFFF);
+            g.fill(getX(), getY() + iconSize + 1, getX() + iconSize, getY() + iconSize + 2,
+                    ZenkaiPalette.TEXT);
         }
     }
     @Override

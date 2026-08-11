@@ -1,11 +1,13 @@
 package com.hmc.zenkai.client.gui.buttons;
 
 import net.minecraft.client.Minecraft;
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -24,9 +26,23 @@ public class TextOnlyButton extends AbstractButton {
     @Nullable private final ResourceLocation texNormal; // fondo opcional (estado normal)
     @Nullable private final ResourceLocation texHover;  // fondo opcional (hover); si null usa texNormal
 
-    private int colorNormal   = 0xFFFFFFFF; // blanco        → texto normal
-    private int colorHover    = 0xFFFFE070; // dorado cálido → texto con el ratón encima
-    private int colorInactive = 0xFFA0A0A0; // gris          → botón deshabilitado
+    // Valores por defecto pensados para FONDO OSCURO. Toda pantalla que ponga este botón sobre
+    // el panel beige debe llamar a textColors(...) con la escala tierra — que es lo que hacen
+    // ya las de técnicas y la de configuración. Se dejan en claro y no en tierra porque un
+    // botón sin configurar sobre el mundo tiene que verse; sobre el beige, al menos, canta lo
+    // suficiente como para que se note que falta configurarlo.
+    private int colorNormal   = ZenkaiPalette.TEXT;
+    private int colorHover    = ZenkaiPalette.TEXT_HOVER;
+    private int colorInactive = ZenkaiPalette.TEXT_OFF;
+
+    /**
+     * Sombra bajo el texto. Por defecto sí, porque por defecto los colores son los de fondo
+     * oscuro y ahí la sombra es lo correcto.
+     * La sombra y la escala de color van SIEMPRE juntas: un color tierra con sombra negra sobre
+     * beige es un borrón, y un blanco sin sombra sobre el mundo desaparece. Por eso no se
+     * exponen por separado — se usa onPanel() u onDark() y quedan las dos cosas hechas.
+     */
+    private boolean shadow = true;
 
     /** Botón de solo texto, tamaño estándar 60x30, sin textura. */
     public TextOnlyButton(int x, int y, Component message, Runnable onClick) {
@@ -62,8 +78,52 @@ public class TextOnlyButton extends AbstractButton {
         onClick.run();
     }
 
+    /**
+     * Configura el botón para vivir SOBRE EL PANEL BEIGE: escala tierra y sin sombra.
+     * Una sola forma para las dos cosas a propósito. Cuando eran ajustes independientes se
+     * ponían los colores tierra y se olvidaba la sombra, que es exactamente lo que pasó en las
+     * pestañas de técnicas: "Assign" y "Edit" en color correcto y con sombra negra debajo.
+     */
+    public TextOnlyButton onPanel() {
+        this.colorNormal   = ZenkaiPalette.LABEL_ON_PANEL;
+        this.colorHover    = ZenkaiPalette.DENIED_ON_PANEL;
+        this.colorInactive = ZenkaiPalette.MUTED_ON_PANEL;
+        this.shadow = false;
+        return this;
+    }
+
+    /** Explícito para fondo oscuro. Es el estado por defecto; existe para poder volver a él. */
+    public TextOnlyButton onDark() {
+        this.colorNormal   = ZenkaiPalette.TEXT;
+        this.colorHover    = ZenkaiPalette.TEXT_HOVER;
+        this.colorInactive = ZenkaiPalette.TEXT_OFF;
+        this.shadow = true;
+        return this;
+    }
+
+    /** Colores a medida. Apaga la sombra si los tres son de la escala tierra. */
+    public TextOnlyButton noShadow() {
+        this.shadow = false;
+        return this;
+    }
+
+    /**
+     * Marca este botón como ACCIÓN: negrita y corchetes.
+     * Un TextOnlyButton sin textura es texto suelto, y sobre una fila que ya lleva nombre y
+     * ficha técnica no hay nada que lo distinga de una etiqueta más. Los corchetes son el
+     * lenguaje que el propio juego usa para lo pulsable en los libros escritos, y la negrita
+     * lo separa del texto de datos, que va en regular. Juntos convierten "Assign" en algo que
+     * se lee como un control sin necesidad de dibujarle un marco que competiría con el panel.
+     */
+    public TextOnlyButton asAction() {
+        this.action = true;
+        return this;
+    }
+
+    private boolean action = false;
+
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         boolean hovered = this.isMouseOver(mouseX, mouseY);
 
         // Fondo: solo si se proporcionó textura (jamás el fondo gris de vanilla)
@@ -72,17 +132,23 @@ public class TextOnlyButton extends AbstractButton {
             g.blit(tex, getX(), getY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight());
         }
 
-        // Texto centrado (con sombra, como el resto de valores)
+        // Texto centrado. drawCenteredString NO sirve aquí: dibuja sombra siempre y no tiene
+        // parámetro para quitarla, así que los botones sobre el panel beige salían con una
+        // sombra negra bajo un color tierra.
         int color = !this.active ? colorInactive : (hovered ? colorHover : colorNormal);
         var font = Minecraft.getInstance().font;
-        g.drawCenteredString(font, getMessage(),
-                getX() + getWidth() / 2,
+        Component msg = action
+                ? Component.literal("[ ").append(getMessage()).append(" ]")
+                .withStyle(net.minecraft.ChatFormatting.BOLD)
+                : getMessage();
+        g.drawString(font, msg,
+                getX() + getWidth() / 2 - font.width(msg) / 2,
                 getY() + (getHeight() - 8) / 2,
-                color);
+                color, shadow);
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput out) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput out) {
         defaultButtonNarrationText(out);
     }
 }

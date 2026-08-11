@@ -23,11 +23,24 @@ import org.jetbrains.annotations.NotNull;
  *  id 0..N-1 = mejora por ordinal de ScouterUpgrade
  *  id 99     = reparar
  *  id 100    = cancelar
+ *
+ * LAS COORDENADAS DE SLOT SON PARTE DEL ASSET, no un detalle interno: cada una tiene su pozo
+ * pintado en scouter_bench.png. El pozo se dibuja en (x-1, y-1) y mide 18x18, así que tocar
+ * un número de aquí obliga a repintar la textura. Están agrupadas arriba por eso.
  */
 public class ScouterBenchMenu extends AbstractContainerMenu {
 
     public static final int BTN_REPAIR = ScouterBenchBlockEntity.JOB_REPAIR;
     public static final int BTN_CANCEL = 100;
+
+    // ── Layout de slots (debe coincidir con scouter_bench.png) ───────────────
+    private static final int SCOUTER_X = 18, SCOUTER_Y = 32;
+    private static final int INV_X = 47, INV_Y = 162, HOTBAR_Y = 220;
+
+    /** Primer y último+1 índice del inventario del jugador dentro de this.slots.
+     *  Lo usa la pantalla para resaltar los slots que llevan el material pedido. */
+    public static final int INV_FIRST = 1;
+    public static final int INV_END = 37;
 
     private final Container container;
     private final ContainerData data;
@@ -43,7 +56,7 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
         this.container = container;
         this.data = data;
 
-        addSlot(new Slot(container, 0, 20, 40) {
+        addSlot(new Slot(container, 0, SCOUTER_X, SCOUTER_Y) {
             @Override public boolean mayPlace(@NotNull ItemStack stack) {
                 return stack.getItem() instanceof ScouterItem;
             }
@@ -57,11 +70,11 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
     private void addPlayerInventory(Inventory inv) {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(inv, col + row * 9 + 9, 48 + col * 18, 166 + row * 18));
+                addSlot(new Slot(inv, col + row * 9 + 9, INV_X + col * 18, INV_Y + row * 18));
             }
         }
         for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inv, col, 48 + col * 18, 224));
+            addSlot(new Slot(inv, col, INV_X + col * 18, HOTBAR_Y));
         }
     }
 
@@ -100,7 +113,7 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
 
         if (index == 0) {
             // Del banco al jugador.
-            if (!moveItemStackTo(raw, 1, slots.size(), true)) return ItemStack.EMPTY;
+            if (!moveItemStackTo(raw, INV_FIRST, slots.size(), true)) return ItemStack.EMPTY;
         } else if (raw.getItem() instanceof ScouterItem) {
             // Shift+click de un scouter: entra al banco.
             if (!moveItemStackTo(raw, 0, 1, false)) return ItemStack.EMPTY;

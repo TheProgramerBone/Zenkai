@@ -22,14 +22,14 @@ import java.util.List;
 /**
  * Pestaña de configuración de cliente.
  * Las filas salen de ClientConfig.entries(), así que añadir una opción no toca este archivo.
- * Entry es una interfaz sellada de tres casos y el switch los cubre s: si algún día aparece
+ * Entry es una interfaz sellada de tres casos y el switch los cubre todos: si algún día aparece
  * un cuarto tipo, el compilador obliga a pasar por aquí. Ese es el punto de que sea sellada —
  * una opción sin control visible existiría en el toml y sería invisible en la GUI.
  * ═══ TEXTO SIN SOMBRA SOBRE EL BEIGE ═══
- *  el dibujo pasa por PanelText. La versión anterior usaba GuiGraphics#drawCenteredString
+ * El dibujo pasa por PanelText. La versión anterior usaba GuiGraphics#drawCenteredString
  * para el aviso de cambios, y esa firma dibuja SIEMPRE con sombra: una sombra negra bajo un
- * dorado quemado sobre beige claro es un borrón. El helper no deja equivocarse porque la manera
- * obvia ya hace lo correcto.
+ * dorado quemado sobre beige claro es un borrón. El helper no deja equivocarse porque el
+ * proceso obvio ya hace lo correcto.
  * ═══ LA DESCRIPCIÓN COMPLETA ESTÁ EN EL TOOLTIP ═══
  * En la fila solo cabe una línea, y recortarla dejaba frases a medias ("Show model and
  * texture…"). El texto entero aparece al pasar el ratón por la fila, reutilizando la MISMA
@@ -163,8 +163,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
                 return PanelText.fit(ClientConfigScreen.this.font,
                         Component.translatable(enumNameKey(stagedEnum(entry, index))), labelW - 2);
             }
-        }.textColors(ZenkaiPalette.LABEL_ON_PANEL, ZenkaiPalette.DENIED_ON_PANEL,
-                ZenkaiPalette.MUTED_ON_PANEL));
+        }.onPanel());
 
         addRenderableWidget(new ArrowIconButton(rowRight() - ARROW_W, y + 1,
                 ArrowIconButton.Dir.RIGHT, () -> cycleStaged(entry, index, 1)));
@@ -195,7 +194,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
                 return Component.literal(String.valueOf((Integer) staged.get(index)));
             }
         }.textColors(ZenkaiPalette.LABEL_ON_PANEL, ZenkaiPalette.LABEL_ON_PANEL,
-                ZenkaiPalette.MUTED_ON_PANEL));
+                ZenkaiPalette.MUTED_ON_PANEL).noShadow());
 
         addRenderableWidget(new ArrowIconButton(rowRight() - ARROW_W, y + 1,
                 ArrowIconButton.Dir.RIGHT, () -> stepStaged(entry, index, entry.step())));
@@ -290,7 +289,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
             // pertenece a qué texto en cuanto hay más de tres opciones.
             if ((index & 1) == 0) {
                 g.fill(panelLeft + MARGIN - 4, rowY, panelLeft + BG_W - MARGIN + 4,
-                        rowY + ROW_H - 2, 0x18AC421B);
+                        rowY + ROW_H - 2, ZenkaiPalette.ROW_BAND);
             }
 
             PanelText.onPanel(g, this.font, Component.translatable(e.titleKey()),
