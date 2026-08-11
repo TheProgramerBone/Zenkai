@@ -75,4 +75,15 @@ public final class NineSlice {
                              int u, int v, int uW, int vH, int texW, int texH) {
         g.blit(tex, x, y, w, h, (float) u, (float) v, uW, vH, texW, texH);   // ⚠ API
     }
+
+    /** Esquina de btn_tech.png: 8 px, lo justo para que el remache no se estire. */
+    public static final int BTN_TECH_CORNER = 8;
+
+    public static final ResourceLocation BTN_TECH =
+            ResourceLocation.fromNamespaceAndPath("zenkai", "textures/gui/btn_tech.png");
+
+    /** btn_tech con sus medidas ya puestas. Familia tecnológica (TechButton). */
+    public static void techButton(GuiGraphics g, int x, int y, int w, int h) {
+        draw(g, BTN_TECH, x, y, w, h, BTN_TEX_W, BTN_TEX_H, BTN_TECH_CORNER);
+    }
 }
