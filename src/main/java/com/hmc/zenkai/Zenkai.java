@@ -4,7 +4,9 @@ package com.hmc.zenkai;
 import com.hmc.zenkai.client.gui.screens.ClientConfigScreen;
 import com.hmc.zenkai.client.gui.screens.ScouterBenchScreen;
 import com.hmc.zenkai.client.render_and_model_entities.blockentity.ScouterBenchRenderer;
+import com.hmc.zenkai.client.sound.ScouterBenchSounds;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import com.hmc.zenkai.event.ClientZenkaiHooks;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
@@ -170,6 +172,8 @@ public class Zenkai {
                         IConfigScreenFactory.class,
                         (container, parent) -> new ClientConfigScreen(parent));
             }
+
+            ScouterBenchBlockEntity.clientTickHook = ScouterBenchSounds::tick;
 
             // Icono del scouter roto: propiedad 0/1 que dispara el override del modelo.
             // Un item aparte habría partido el tag de tinte, la receta y el slot de Curios.

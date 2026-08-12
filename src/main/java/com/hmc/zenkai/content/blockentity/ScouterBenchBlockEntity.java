@@ -5,6 +5,7 @@ import com.hmc.zenkai.content.block.ScouterBenchBlock;
 import com.hmc.zenkai.content.item.ScouterItem;
 import com.hmc.zenkai.feature.sense.*;
 import com.hmc.zenkai.registry.ModBlockEntities;
+import com.hmc.zenkai.registry.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
@@ -14,6 +15,8 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -63,6 +66,19 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(1, ItemStack.EMPTY);
 
+    /**
+     * Puente al lado cliente. El BE es código común y no puede referenciar SoundInstance ni
+     * Minecraft: en un servidor dedicado esas clases no existen. El cliente rellena este
+     * hook en su setup y el servidor lo deja vacío.
+     */
+    public static java.util.function.Consumer<ScouterBenchBlockEntity> clientTickHook = be -> {};
+
+    /** Ticker de cliente. Solo lleva el sonido; la lógica del trabajo es del servidor. */
+    public static void clientTick(Level level, BlockPos pos, BlockState state,
+                                  ScouterBenchBlockEntity be) {
+        clientTickHook.accept(be);
+    }
+
     private int job = JOB_NONE;
     private int progress = 0;
     private PauseReason pause = PauseReason.NONE;
@@ -70,6 +86,10 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
     private final BenchEnergy energy = new BenchEnergy();
     /** FE ya cobrada del trabajo en curso. Con el progreso decide cuánto toca este tick. */
     private int energySpent = 0;
+
+    /** Para distinguir "metieron scouter" de "lo sacaron" cuando cambia el slot. */
+    private boolean hadScouter = false;
+
     @Nullable private UUID owner = null;
 
     /** Lo que ve la GUI. Índices: 0 progreso, 1 duración, 2 trabajo, 3 motivo de pausa,
@@ -117,7 +137,7 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
     }
 
     /** El scouter que hay dentro, o EMPTY. */
-    public ItemStack scouter() { return items.get(0); }
+    public ItemStack scouter() { return items.getFirst(); }
 
     // ── Reserva de uso ───────────────────────────────────────────────────────
 
@@ -169,13 +189,21 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         if (s.isEmpty()) return false;
 
         if (newJob == JOB_REPAIR) {
-            if (!ScouterStacks.isBroken(s)) return false;
+            if (!ScouterStacks.isBroken(s)){
+                playAt(ModSounds.SCOUTER_BENCH_FAIL.get(), 0.7f);
+                return false;}
         } else {
             // Un scouter reventado no se mejora: primero se arregla. Mejorar un aparato roto
             // dejaría al jugador pagando por algo que no puede ni encender.
-            if (ScouterStacks.isBroken(s)) return false;
+            if (ScouterStacks.isBroken(s)) {
+                playAt(ModSounds.SCOUTER_BENCH_FAIL.get(), 0.7f);
+                return false;
+            }
             ScouterUpgrade u = upgradeOf(newJob);
-            if (u == null || ScouterStacks.upgrades(s).nextLevel(u) < 0) return false;
+            if (u == null || ScouterStacks.upgrades(s).nextLevel(u) < 0) {
+                playAt(ModSounds.SCOUTER_BENCH_FAIL.get(), 0.7f);
+                return false;
+            }
         }
 
         job = newJob;
@@ -188,6 +216,7 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         owner = sp.getUUID();
         setWorkingState(true);
         sync();
+        playAt(ModSounds.SCOUTER_BENCH_START.get(), 0.7f);
         return true;
     }
 
@@ -200,6 +229,7 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         energySpent = 0;
         pause = PauseReason.NONE;
         setWorkingState(false);
+        playAt(ModSounds.SCOUTER_BENCH_CANCEL.get(), 0.6f);
         sync();
     }
 
@@ -237,7 +267,10 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
 
         if (be.pause != reason) {
             be.pause = reason;
-            be.markDirty();
+            // sync() y no markDirty(): el cliente necesita enterarse de la pausa para callar
+            // el bucle de sonido. Pasa pocas veces —cuando falta corriente o material—, así
+            // que el paquete de bloque no es un coste real.
+            be.sync();
         }
         if (reason.isPaused()) return;
 
@@ -249,13 +282,15 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         }
 
         // Terminado: cobrar materiales y aplicar, en ese orden.
+        assert sp != null;
         cost.consume(sp.getInventory());
         be.applyJob();
         be.job = JOB_NONE;
         be.progress = 0;
         be.energySpent = 0;
         be.setWorkingState(false);
-        be.sync();            // aquí SÍ: el stack de la mesa ha cambiado y se ve desde fuera
+        be.playAt(ModSounds.SCOUTER_BENCH_FINISH.get(), 0.8f);
+        be.sync();
     }
 
     private void applyJob() {
@@ -328,6 +363,10 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         energySpent = tag.getInt("EnergySpent");
         energy.load(tag);
         owner = tag.hasUUID("Owner") ? tag.getUUID("Owner") : null;
+        // Arranca con el estado REAL del slot. Sin esto, cargar una partida con el scouter
+        // dentro haría sonar "insert" en el primer setChanged, porque hadScouter estaría en
+        // false y el banco creería que acaban de meterlo.
+        hadScouter = !scouter().isEmpty();
     }
 
     @Override
@@ -361,12 +400,35 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
         if (level != null) level.blockEntityChanged(worldPosition);
     }
 
-    /** Guarda Y difunde. Para lo que se ve desde fuera de la GUI: el scouter de la mesa. */
+    /** Un solo sitio para reproducir sonidos del banco. Categoría BLOCKS y posición del
+     *  bloque: el banco es la fuente, no el jugador. */
+    private void playAt(SoundEvent sound, float volume) {
+        if (level == null || level.isClientSide) return;
+        level.playSound(null, worldPosition, sound, SoundSource.BLOCKS, volume, 1.0f);
+    }
+
+    /** Suena al meter o sacar el aparato. Se compara contra el estado anterior porque
+     *  setChanged no dice QUÉ cambió, solo que algo cambió. */
+    private void checkScouterSound() {
+        if (level == null || level.isClientSide) return;
+        boolean now = !scouter().isEmpty();
+        if (now != hadScouter) {
+            hadScouter = now;
+            playAt(now ? ModSounds.SCOUTER_BENCH_INSERT.get()
+                    : ModSounds.SCOUTER_BENCH_REMOVE.get(), 0.6f);
+        }
+    }
+
+    /**
+     * Guarda Y difunde. Hoy es un alias de setChanged(), que ya hace las dos cosas — se
+     * mantiene como manera aparte porque nombra la INTENCIÓN en los sitios donde el cliente
+     * tiene que enterarse sí o sí: el scouter de la mesa, el fin del trabajo y el motivo de
+     * pausa (que apaga el bucle de sonido).
+     * Antes difundía por su cuenta ADEMÁS de lo que hace setChanged, y salían dos paquetes
+     * de bloque por cada cambio.
+     */
     private void sync() {
         setChanged();
-        if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-        }
     }
 
     /**
@@ -377,6 +439,7 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
     public void setChanged() {
         super.setChanged();
         if (level != null && !level.isClientSide) {
+            checkScouterSound();
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
     }

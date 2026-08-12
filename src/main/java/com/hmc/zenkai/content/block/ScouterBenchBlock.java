@@ -2,10 +2,12 @@ package com.hmc.zenkai.content.block;
 
 import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import com.hmc.zenkai.registry.ModBlockEntities;
+import com.hmc.zenkai.registry.ModSounds;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -29,7 +31,6 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Banco de scouter: mejora y repara el aparato. Bloque GeckoLib con block entity.
- *
  * WORKING vive en el BLOCKSTATE y no solo en el block entity: así el cliente se entera del
  * cambio por el camino normal de sincronización de bloques y el controlador de animación puede
  * leerlo sin inventarse un paquete. El progreso concreto sí es del BE — no cabe en un estado
@@ -86,10 +87,12 @@ public class ScouterBenchBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(
             @NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
-        // Solo servidor: el trabajo es autoritativo y sigue con la GUI cerrada.
-        if (level.isClientSide) return null;
+        // El trabajo es autoritativo y solo corre en servidor. En cliente hay un ticker
+        // aparte que no toca lógica: solo enciende y apaga el bucle de sonido, y tiene que
+        // correr aunque el jugador mire hacia otro lado.
         return createTickerHelper(type, ModBlockEntities.SCOUTER_BENCH.get(),
-                ScouterBenchBlockEntity::serverTick);
+                level.isClientSide ? ScouterBenchBlockEntity::clientTick
+                        : ScouterBenchBlockEntity::serverTick);
     }
 
     @Override
@@ -110,6 +113,8 @@ public class ScouterBenchBlock extends BaseEntityBlock {
         }
 
         be.claim(player);
+        level.playSound(null, pos, ModSounds.SCOUTER_BENCH_OPEN.get(),
+                SoundSource.BLOCKS, 0.5f, 1.0f);
         player.openMenu(be, pos);
         return InteractionResult.CONSUME;
     }

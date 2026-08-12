@@ -17,6 +17,14 @@
       "zenkai:dragon_ball_radar_near"
     ]
   },
+  "scouter_bench_open":    { "subtitle": "sounds.zenkai.scouter_bench_open",    "sounds": ["zenkai:scouter_bench_open"] },
+  "scouter_bench_insert":  { "subtitle": "sounds.zenkai.scouter_bench_insert",  "sounds": ["zenkai:scouter_bench_insert"] },
+  "scouter_bench_remove":  { "subtitle": "sounds.zenkai.scouter_bench_remove",  "sounds": ["zenkai:scouter_bench_remove"] },
+  "scouter_bench_start":   { "subtitle": "sounds.zenkai.scouter_bench_start",   "sounds": ["zenkai:scouter_bench_start"] },
+  "scouter_bench_working": { "subtitle": "sounds.zenkai.scouter_bench_working", "sounds": [{ "name": "zenkai:scouter_bench_working", "stream": false }] },
+  "scouter_bench_finish":  { "subtitle": "sounds.zenkai.scouter_bench_finish",  "sounds": ["zenkai:scouter_bench_finish"] },
+  "scouter_bench_cancel":  { "subtitle": "sounds.zenkai.scouter_bench_cancel",  "sounds": ["zenkai:scouter_bench_cancel"] },
+  "scouter_bench_fail":    { "subtitle": "sounds.zenkai.scouter_bench_fail",    "sounds": ["zenkai:scouter_bench_fail"] },
   "specialist": {
     "subtitle": "sounds.zenkai.specialist",
     "sounds": [
