@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-09T09:36:03.5238911	Recipes
+// 1.21.1	2026-08-11T19:20:32.6185875	Recipes
 35fcf343d1718408855c2a7524fbde94ce69ec14 data/zenkai/advancement/recipes/building_blocks/ajisa_planks.json
 a80a6248767ca58b97d738e8cb4a61a517584a19 data/zenkai/advancement/recipes/building_blocks/ajisa_slab.json
 bd0eedf661059414b8023faef1090c62ab64c10b data/zenkai/advancement/recipes/building_blocks/ajisa_stairs.json
@@ -208,6 +208,7 @@ b516d084e097802e939e1bd73f25445571514cbf data/zenkai/advancement/recipes/misc/re
 1df71d6346a75e7695ae77df58c7786b1120a841 data/zenkai/advancement/recipes/misc/sacred_stone_from_blasting_sacred_stone_ore.json
 55dd5d042670bb039e36209db9b58d1f3b3e67ea data/zenkai/advancement/recipes/misc/sacred_stone_from_block.json
 b1c4e1ec8e36f1799fb3532590ab1bf683829dba data/zenkai/advancement/recipes/misc/sacred_stone_from_smelting_sacred_stone_ore.json
+0fb7ac96f4b79e5a37eadaff27bad35e7f2f88dd data/zenkai/advancement/recipes/misc/scouter_bench.json
 11676fc3e89ee0ca4eb53923ce9a0863ef99891e data/zenkai/advancement/recipes/misc/scouter_radar_upgrade.json
 7b9bb6e27092441890a9b03ecf2130e380337a59 data/zenkai/advancement/recipes/misc/space_pod_item.json
 8a23bd4d0a902c6be43fe64413246428c626eb44 data/zenkai/advancement/recipes/misc/weighted_cape.json
@@ -313,6 +314,7 @@ d6e270c613bee3d1c3c4b5e5aa1c0a4cd6d51b90 data/zenkai/recipe/sacred_stone_stairs.
 3e16f935df1858d1d6dcb5e740a9b30b9ec31352 data/zenkai/recipe/sacred_stone_wall.json
 609c961230196caa4c84d806751d4a7eb592cdaf data/zenkai/recipe/sacred_stone_wall_from_sacred_stone_block_stonecutting.json
 8069093361572736e67e4654185c6f38c477e9f5 data/zenkai/recipe/scouter.json
+807546b8ed05bbf59128fc04b0f503fac5255779 data/zenkai/recipe/scouter_bench.json
 e64f4d05c79c82b1fda37ac7664bdb4a18f3d0fd data/zenkai/recipe/scouter_radar_upgrade.json
 1da6168f67c0a8f7336de73f704277b2a2666ea3 data/zenkai/recipe/space_pod_item.json
 fa2dce1aea84010d4ed1be99b8f7884ab1145b9e data/zenkai/recipe/stripped_ajisa_wood.json

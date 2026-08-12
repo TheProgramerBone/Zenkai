@@ -92,6 +92,16 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         oreBlasting(recipeOutput, List.of(ModItems.RAW_KATCHIN), RecipeCategory.MISC,
                 ModItems.KATCHIN_INGOT.get(), 1.5f, 400, "katchin");
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.SCOUTER_BENCH.get(), 1)
+                .pattern("ICI")
+                .pattern("CAC")
+                .pattern("IGI")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('G',Tags.Items.GLASS_BLOCKS)
+                .define('C',Tags.Items.INGOTS_COPPER)
+                .define('A',ModItems.ADVANCED_CIRCUIT)
+                .unlockedBy("has_scouter",has(ModItems.SCOUTER)).save(recipeOutput);
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.HALO.get(),1)
                 .pattern("YYY")
                 .pattern("Y Y")

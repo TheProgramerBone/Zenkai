@@ -15,7 +15,7 @@ public class ScouterBenchItemModel extends GeoModel<ScouterBenchBlockItem> {
 
     @Override
     public ResourceLocation getModelResource(ScouterBenchBlockItem item) {
-        return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "geo/scouter_bench.geo.json");
+        return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "geo/scouter_bench_item.geo.json");
     }
 
     @Override

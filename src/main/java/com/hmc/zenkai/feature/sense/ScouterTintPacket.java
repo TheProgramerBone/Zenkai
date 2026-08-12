@@ -15,12 +15,10 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * C2S: aplicar un tinte al scouter que hay en el banco, o quitárselo.
- *
  * POR QUÉ UN PAQUETE Y NO clickMenuButton: el id de botón de vanilla viaja como UN BYTE, y un
  * color son 24 bits. No hay forma de meterlo ahí sin inventar una tabla de índices, que es
  * peor que un paquete honesto.
- *
- * TODO SE REVALIDA AQUÍ. El cliente calcula el precio para el tooltip, pero este método vuelve
+ * SE REVALIDA AQUÍ. El cliente calcula el precio para el tooltip, pero esta manera vuelve
  * a calcularlo con los mismos datos sincronizados y con el inventario real: un cliente
  * modificado no puede teñir gratis.
  */

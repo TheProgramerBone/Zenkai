@@ -81,7 +81,7 @@ public record ScouterTintCost(int energy, int minMaterials, int maxMaterials, fl
 
     /**
      * El precio de este color. Se llama en el cliente para el tooltip mientras se arrastra el
-     * picker y en el servidor para cobrar: mismo método, mismos datos sincronizados, así que
+     * picker y en el servidor para cobrar: misma manera, mismos datos sincronizados, así que
      * no puede enseñar un precio y cobrar otro.
      */
     public Quote quote(int rgb) {

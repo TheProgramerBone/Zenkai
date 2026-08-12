@@ -57,7 +57,6 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
     public static final int JOB_NONE   = -1;
     public static final int JOB_REPAIR = 99;
 
-    private static final RawAnimation IDLE    = RawAnimation.begin().thenLoop("idle");
     private static final RawAnimation WORKING = RawAnimation.begin().thenLoop("working");
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);

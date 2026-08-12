@@ -1,6 +1,5 @@
 package com.hmc.zenkai.client.render_and_model_entities.blockentity;
 
-import com.hmc.zenkai.client.gui.screens.ScouterBenchScreen;
 import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -10,6 +9,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.GeoBlockRenderer;
@@ -18,11 +18,9 @@ import java.util.Optional;
 
 /**
  * Banco de scouter + el scouter que tenga dentro, flotando sobre la bandeja y girando despacio.
- *
  * Se renderiza el ItemStack REAL, no una textura aparte: así el tinte del cristal (el color
  * handler del icono) y el modelo agrietado (el override de "broken") se aplican solos, sin
  * duplicar aquí la lógica que ya vive en ScouterItemColors y en scouter.json.
- *
  * DÓNDE FLOTA. La altura sale del MODELO, no de un número elegido a ojo. El valor anterior
  * (0.95) dejaba el scouter dentro del cuerpo de la máquina, porque el banco mide 25 px de alto
  * y no 16. Dos fuentes, en este orden:
@@ -32,7 +30,6 @@ import java.util.Optional;
  *      [8,3,16], cuyo techo está en y=18 —, más un pelo de aire.
  * El bone "detalles" NO sirve para esto: su pivote es [0,0,0], el mismo que el del modelo
  * entero, así que anclar ahí es anclar al suelo del bloque.
- *
  * ⚠ VERIFICAR en GeckoLib 4.8.4: GeoModel#getBone(String) -> Optional<GeoBone> y
  * GeoBone#getPivotX/Y/Z() en unidades de modelo. Si no compila, se borran las cuatro líneas
  * del bloque `anchor.isPresent()` y queda solo la constante derivada, que es lo que se usa hoy
@@ -60,8 +57,9 @@ public class ScouterBenchRenderer extends GeoBlockRenderer<ScouterBenchBlockEnti
     }
 
     @Override
-    public void render(ScouterBenchBlockEntity be, float partialTick, PoseStack poseStack,
-                       MultiBufferSource buffers, int packedLight, int packedOverlay) {
+    public void render(@NotNull ScouterBenchBlockEntity be, float partialTick, @NotNull PoseStack poseStack,
+                       @NotNull MultiBufferSource buffers, int packedLight, int packedOverlay) {
+        ScouterBenchGlowLayer.warmUp();
         super.render(be, partialTick, poseStack, buffers, packedLight, packedOverlay);
 
         ItemStack stack = be.scouter();
