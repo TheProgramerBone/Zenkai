@@ -14,13 +14,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * S2C: los costes de las mejoras del scouter (login y /reload). El cliente los necesita para
- * pintar los tooltips del banco y apagar el + de lo que no puedes pagar SIN preguntar al
- * servidor por cada fila y cada tick.
+ * S2C: los costes del scouter (login y /reload). Tres cosas en un solo paquete —mejoras,
+ * reparación y tinte— porque las tres salen del mismo /reload y el cliente las necesita para
+ * lo mismo: pintar precios y apagar botones SIN preguntar al servidor por cada fila y cada
+ * frame. Separarlas en tres paquetes abriría la puerta a que llegue uno y no los otros.
  *
  * El servidor revalida el coste antes de cobrar: esto es presentación, no autoridad.
  */
-public record ScouterUpgradeSyncPacket(Map<ScouterUpgrade, List<ScouterUpgradeCost>> costs)
+public record ScouterUpgradeSyncPacket(Map<ScouterUpgrade, List<ScouterUpgradeCost>> costs,
+                                       ScouterRepairCost repair,
+                                       ScouterTintCost tint)
         implements CustomPacketPayload {
 
     public static final Type<ScouterUpgradeSyncPacket> TYPE =
@@ -36,6 +39,11 @@ public record ScouterUpgradeSyncPacket(Map<ScouterUpgrade, List<ScouterUpgradeCo
             buf.writeVarInt(e.getValue().size());
             for (ScouterUpgradeCost c : e.getValue()) ScouterUpgradeCost.encode(buf, c);
         }
+        // El ORDEN de estos dos tiene que ser el mismo aquí y en decode(): son campos de
+        // ancho variable sin marca de tipo, así que invertirlos no da error de compilación,
+        // da basura en el cliente.
+        ScouterRepairCost.encode(buf, pkt.repair());
+        ScouterTintCost.encode(buf, pkt.tint());
     }
 
     private static ScouterUpgradeSyncPacket decode(RegistryFriendlyByteBuf buf) {
@@ -50,13 +58,19 @@ public record ScouterUpgradeSyncPacket(Map<ScouterUpgrade, List<ScouterUpgradeCo
             // igual (arriba) y se descarta la entrada, en vez de desincronizar el buffer.
             if (u != null) map.put(u, List.copyOf(list));
         }
-        return new ScouterUpgradeSyncPacket(map);
+        return new ScouterUpgradeSyncPacket(map,
+                ScouterRepairCost.decode(buf),
+                ScouterTintCost.decode(buf));
     }
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(ScouterUpgradeSyncPacket pkt, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> ScouterUpgradeCost.replaceAll(pkt.costs()));
+        ctx.enqueueWork(() -> {
+            ScouterUpgradeCost.replaceAll(pkt.costs());
+            ScouterRepairCost.replace(pkt.repair());
+            ScouterTintCost.replace(pkt.tint());
+        });
     }
 }

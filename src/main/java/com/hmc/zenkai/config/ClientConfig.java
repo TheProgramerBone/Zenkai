@@ -134,6 +134,14 @@ public final class ClientConfig {
             defineHiddenInt("hud.technique_offset_y",
                     "Vertical offset from the anchor, in GUI pixels", 0, -4096, 4096);
 
+    // El último color elegido en el banco de scouter. Oculto: no es una opción que se toque
+    // en una lista, es memoria de lo que hiciste la última vez. Y va en config de cliente y
+    // no en el banco porque lo que el jugador quiere recordar es SU color, no el del bloque.
+    private static final ModConfigSpec.IntValue SCOUTER_TINT =
+            defineHiddenInt("scouter.last_tint",
+                    "Last colour picked in the scouter bench, as 0xRRGGBB",
+                    0xd82624, 0x000000, 0xFFFFFF);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     // ── Lectura ──────────────────────────────────────────────────────────────
@@ -146,6 +154,12 @@ public final class ClientConfig {
     public static boolean hudAvoidHotbar() { return HUD_AVOID_HOTBAR.get(); }
     public static int hudOffsetX() { return HUD_OFFSET_X.get(); }
     public static int hudOffsetY() { return HUD_OFFSET_Y.get(); }
+    public static int scouterLastTint() { return SCOUTER_TINT.get(); }
+
+    public static void setScouterLastTint(int rgb) {
+        SCOUTER_TINT.set(rgb & 0xFFFFFF);
+        SPEC.save();   // ⚠ API
+    }
 
     /** Guarda la colocación completa de una vez. Lo llama la pantalla de colocación al aceptar. */
     public static void setHudPlacement(HudAnchor anchor, HudOrientation orientation,

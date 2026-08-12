@@ -59,6 +59,24 @@ public class ColorPickerWidget extends AbstractWidget {
     // ── Label ─────────────────────────────────────────────────────────────────
     private final String label; // ej: "Ki Color", "Hair Color"
 
+    /**
+     * Familia visual. La lógica de color es la misma; cambian el marco, el cursor y la
+     * etiqueta. Dos widgets separados habrían divergido a la tercera corrección.
+     */
+    public enum Style {
+        ZENKAI(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF),
+        TECH(0xFF8CECFF, 0xFFA8B2C6, 0xFFDCE6F0);
+
+        public final int label, frame, cursor;
+        Style(int label, int frame, int cursor) {
+            this.label = label; this.frame = frame; this.cursor = cursor;
+        }
+    }
+
+    private Style style = Style.ZENKAI;
+
+    public ColorPickerWidget style(Style s) { this.style = s; return this; }
+
     public ColorPickerWidget(int x, int y, int initialArgb, String label, Consumer<Integer> onChange) {
         super(x, y, TOTAL_W, TOTAL_H, Component.empty());
         this.label    = label;
@@ -104,7 +122,7 @@ public class ColorPickerWidget extends AbstractWidget {
         if (label != null && !label.isEmpty()) {
             g.drawString(Minecraft.getInstance().font,
                     Component.literal(label),
-                    x, y - 10, 0xFFFFFF, true);
+                    x, y - 10, style.label, true);
         }
 
         // ── Cuadrado SV ──────────────────────────────────────────────────────
@@ -114,8 +132,8 @@ public class ColorPickerWidget extends AbstractWidget {
         int svCurX = x + (int)(saturation * (SV_SIZE - 1));
         int svCurY = y + (int)((1f - value) * (SV_SIZE - 1));
         // Círculo de cursor (cruz 5x5)
-        g.fill(svCurX - 2, svCurY,     svCurX + 3, svCurY + 1, 0xFFFFFFFF);
-        g.fill(svCurX,     svCurY - 2, svCurX + 1, svCurY + 3, 0xFFFFFFFF);
+        g.fill(svCurX - 2, svCurY,     svCurX + 3, svCurY + 1, style.cursor);
+        g.fill(svCurX,     svCurY - 2, svCurX + 1, svCurY + 3, style.cursor);
 
         // ── Barra de Hue ─────────────────────────────────────────────────────
         int hueX = x + SV_SIZE + HUE_GAP;
@@ -123,13 +141,13 @@ public class ColorPickerWidget extends AbstractWidget {
 
         // Cursor en la barra de hue
         int hueCurY = y + (int)(hue / 360f * (SV_SIZE - 1));
-        g.fill(hueX - 1,       hueCurY,     hueX + HUE_W + 1, hueCurY + 1, 0xFFFFFFFF);
+        g.fill(hueX - 1,       hueCurY,     hueX + HUE_W + 1, hueCurY + 1, style.cursor);
 
         // ── Preview ──────────────────────────────────────────────────────────
         int prevX = hueX + HUE_W + HUE_GAP;
         int prevY = y;
         int currentRgb = hsvToRgb(hue, saturation, value);
-        g.fill(prevX - 1, prevY - 1, prevX + PREVIEW_W + 1, prevY + PREVIEW_H + 1, 0xFFFFFFFF);
+        g.fill(prevX - 1, prevY - 1, prevX + PREVIEW_W + 1, prevY + PREVIEW_H + 1, style.frame);
         g.fill(prevX, prevY, prevX + PREVIEW_W, prevY + PREVIEW_H, 0xFF000000 | currentRgb);
 
         // ── HEX input ────────────────────────────────────────────────────────

@@ -1,0 +1,8 @@
+{
+  "materials": [
+    { "tag": "c:ingots/iron", "count": 3 },
+    { "item": "minecraft:redstone", "count": 1 }
+  ],
+  "energy": 6000,
+  "anvil_levels": 5
+}

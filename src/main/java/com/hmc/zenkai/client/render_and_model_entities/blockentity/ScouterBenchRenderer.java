@@ -1,12 +1,15 @@
 package com.hmc.zenkai.client.render_and_model_entities.blockentity;
 
+import com.hmc.zenkai.client.gui.screens.ScouterBenchScreen;
 import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider.Context;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import org.joml.Quaternionf;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.GeoBlockRenderer;
@@ -47,6 +50,9 @@ public class ScouterBenchRenderer extends GeoBlockRenderer<ScouterBenchBlockEnti
 
     private static final float SPIN_DEG_PER_TICK = 2f;
     private static final float ITEM_SCALE = 0.6f;
+    /** Color de vista previa mientras el picker está abierto, en cliente y nada más. Ni un
+     *  paquete mientras se arrastra: el stack real solo cambia al confirmar. */
+    public static int previewTint = -1;
 
     public ScouterBenchRenderer(Context context) {
         super(new ScouterBenchModel());
@@ -78,6 +84,15 @@ public class ScouterBenchRenderer extends GeoBlockRenderer<ScouterBenchBlockEnti
         poseStack.translate(0.5 + ax / 16.0, ay / 16.0, 0.5 + az / 16.0);
         poseStack.scale(ITEM_SCALE, ITEM_SCALE, ITEM_SCALE);
         poseStack.rotateAround(new Quaternionf().rotationY((float) Math.toRadians(spin)), 0, 0, 0);
+
+        // Vista previa del tinte: copia del stack con el color puesto, solo en cliente y solo
+        // mientras el picker está abierto. El stack real no se toca hasta confirmar.
+        // El campo vive AQUÍ y no en la pantalla: el renderer se dibuja siempre y la pantalla
+        // existe a ratos, así que la dependencia tiene que ir en este sentido.
+        if (previewTint >= 0) {
+            stack = stack.copy();
+            stack.set(DataComponents.DYED_COLOR, new DyedItemColor(previewTint, false));
+        }
 
         Minecraft.getInstance().getItemRenderer().renderStatic(
                 stack, ItemDisplayContext.GROUND, packedLight, packedOverlay,

@@ -21,22 +21,33 @@ import java.io.BufferedReader;
 import java.util.*;
 
 /**
- * Carga los COSTES de las mejoras del scouter desde datapack
- * (data/&lt;ns&gt;/zenkai_scouter_upgrades/&lt;id&gt;.json) y los sincroniza al cliente, igual
- * que SkillManager y TechniqueManager.
- *
- * El nombre del archivo DEBE coincidir con el id de un ScouterUpgrade; cualquier otro se
- * ignora con aviso. El catálogo no se descubre por datapack: existe en código y esto solo
- * le pone precio.
- *
- * JSON:
- * {
- *   "levels": [
- *     { "energy": 0, "materials": [ { "item": "minecraft:redstone", "count": 8 },
- *                                   { "tag":  "c:ingots/iron",     "count": 4 } ] }
- *   ]
- * }
- * levels[0] = coste de subir del nivel 0 al 1. Sobran entradas = se ignoran; faltan = gratis.
+ * Carga desde datapack los COSTES del scouter y los sincroniza al cliente, igual que
+ * SkillManager y TechniqueManager. Dos cosas distintas, un solo listener:
+ *  1. MEJORAS — data/&lt;ns&gt;/zenkai_scouter_upgrades/&lt;id&gt;.json, un fichero por mejora.
+ *     El nombre del archivo DEBE coincidir con el id de un ScouterUpgrade; cualquier otro se
+ *     ignora con aviso. El catálogo no se descubre por datapack: existe en código y esto solo
+ *     le pone precio.
+ *     {
+ *       "levels": [
+ *         { "energy": 1500, "materials": [ { "item": "minecraft:redstone", "count": 8 },
+ *                                          { "tag":  "c:ingots/iron",     "count": 4 } ] }
+ *       ]
+ *     }
+ *     levels[0] = coste de subir del nivel 0 al 1. Sobran entradas = se ignoran;
+ *     faltan = ese nivel sale gratis.
+ *  2. REPARACIÓN — data/&lt;ns&gt;/zenkai_scouter_repair.json, fichero único.
+ *     {
+ *       "materials": [ { "tag": "c:ingots/iron", "count": 3 },
+ *                      { "item": "minecraft:redstone", "count": 1 } ],
+ *       "energy": 6000,
+ *       "anvil_levels": 5
+ *     }
+ *     Va FUERA de la carpeta de mejoras a propósito: ahí dentro, listResources lo recogería y
+ *     el bucle lo rechazaría por no corresponder a ninguna mejora. Y al leerse con
+ *     getResource, un datapack de encima lo sobreescribe entero, que es el comportamiento que
+ *     se quiere para un fichero único.
+ * Las dos cargas van juntas porque se aplican y se sincronizan juntas: separarlas abriría la
+ * puerta a que un /reload actualice una y no la otra.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class ScouterUpgradeManager {
@@ -44,6 +55,12 @@ public final class ScouterUpgradeManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Zenkai-ScouterUpgrades");
     private static final String FOLDER = "zenkai_scouter_upgrades";
+    private static final String REPAIR_FILE = "zenkai_scouter_repair.json";
+    private static final String TINT_FILE = "zenkai_scouter_tint.json";
+
+    private record Loaded(Map<ScouterUpgrade, List<ScouterUpgradeCost>> upgrades,
+                          ScouterRepairCost repair,
+                          ScouterTintCost tint) {}
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
@@ -52,7 +69,8 @@ public final class ScouterUpgradeManager {
 
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent event) {
-        ScouterUpgradeSyncPacket pkt = new ScouterUpgradeSyncPacket(ScouterUpgradeCost.snapshot());
+        ScouterUpgradeSyncPacket pkt = new ScouterUpgradeSyncPacket(
+                ScouterUpgradeCost.snapshot(), ScouterRepairCost.get(), ScouterTintCost.get());
         if (event.getPlayer() != null) {
             PacketDistributor.sendToPlayer(event.getPlayer(), pkt);
         } else {
@@ -60,13 +78,38 @@ public final class ScouterUpgradeManager {
         }
     }
 
-    private static final class Loader
-            extends SimplePreparableReloadListener<Map<ScouterUpgrade, List<ScouterUpgradeCost>>> {
+    private static final class Loader extends SimplePreparableReloadListener<Loaded> {
 
         @Override
-        protected @NotNull Map<ScouterUpgrade, List<ScouterUpgradeCost>> prepare(
-                @NotNull ResourceManager rm, @NotNull ProfilerFiller profiler) {
+        protected @NotNull Loaded prepare(@NotNull ResourceManager rm,
+                                          @NotNull ProfilerFiller profiler) {
+            return new Loaded(prepareUpgrades(rm), prepareRepair(rm), prepareTint(rm));
+        }
 
+        /** Economía del tinte. Cuatro números, no una lista de recetas: el algoritmo vive en
+         *  Java y el datapack solo mueve la curva. */
+        private ScouterTintCost prepareTint(ResourceManager rm) {
+            ResourceLocation file =
+                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, TINT_FILE);
+            var res = rm.getResource(file);
+            if (res.isEmpty()) return ScouterTintCost.DEFAULT;
+            try (BufferedReader reader = res.get().openAsReader()) {
+                JsonObject o = JsonParser.parseReader(reader).getAsJsonObject();
+                return ScouterTintCost.clamped(
+                        GsonHelper.getAsInt(o, "energy", 1000),
+                        GsonHelper.getAsInt(o, "min_materials", 1),
+                        GsonHelper.getAsInt(o, "max_materials", 3),
+                        GsonHelper.getAsFloat(o, "material_scale", 1.0f));
+            } catch (Exception ex) {
+                LOGGER.error("[Zenkai] No se pudo leer {}: {}. Coste de tinte por defecto.",
+                        file, ex.toString());
+                return ScouterTintCost.DEFAULT;
+            }
+        }
+
+        // ── Mejoras ──────────────────────────────────────────────────────────
+
+        private Map<ScouterUpgrade, List<ScouterUpgradeCost>> prepareUpgrades(ResourceManager rm) {
             Map<ScouterUpgrade, List<ScouterUpgradeCost>> out = new EnumMap<>(ScouterUpgrade.class);
             var found = rm.listResources(FOLDER, loc -> loc.getPath().endsWith(".json"));
 
@@ -87,22 +130,8 @@ public final class ScouterUpgradeManager {
 
                     for (var el : GsonHelper.getAsJsonArray(o, "levels")) {
                         JsonObject lo = el.getAsJsonObject();
-                        List<ScouterUpgradeCost.Material> mats = new ArrayList<>();
-
-                        if (lo.has("materials")) {
-                            for (var mEl : lo.getAsJsonArray("materials")) {
-                                JsonObject mo = mEl.getAsJsonObject();
-                                boolean isTag = mo.has("tag");
-                                String raw = isTag
-                                        ? GsonHelper.getAsString(mo, "tag")
-                                        : GsonHelper.getAsString(mo, "item");
-                                ResourceLocation rl = ResourceLocation.parse(raw);
-                                mats.add(new ScouterUpgradeCost.Material(
-                                        rl, isTag, Math.max(1, GsonHelper.getAsInt(mo, "count", 1))));
-                            }
-                        }
-
-                        levels.add(new ScouterUpgradeCost(List.copyOf(mats),
+                        levels.add(new ScouterUpgradeCost(
+                                List.copyOf(readMaterials(lo)),
                                 Math.max(0, GsonHelper.getAsInt(lo, "energy", 0))));
                     }
 
@@ -119,12 +148,65 @@ public final class ScouterUpgradeManager {
             return out;
         }
 
+        // ── Reparación ───────────────────────────────────────────────────────
+
+        /**
+         * ⚠ VERIFICAR 1.21.1: ResourceManager#getResource(ResourceLocation) -> Optional&lt;Resource&gt;.
+         */
+        private ScouterRepairCost prepareRepair(ResourceManager rm) {
+            ResourceLocation file =
+                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, REPAIR_FILE);
+            var res = rm.getResource(file);
+            if (res.isEmpty()) {
+                LOGGER.warn("[Zenkai] No hay {}; se usa el coste de reparación por defecto.", file);
+                return ScouterRepairCost.DEFAULT;
+            }
+            try (BufferedReader reader = res.get().openAsReader()) {
+                JsonObject o = JsonParser.parseReader(reader).getAsJsonObject();
+                // clamped() aplica el suelo AQUÍ, una vez: lo que se guarda, lo que viaja por
+                // red y lo que pinta el tooltip son el mismo objeto ya saneado, así que no hay
+                // forma de que el cliente enseñe un precio y el servidor cobre otro.
+                return ScouterRepairCost.clamped(
+                        readMaterials(o),
+                        GsonHelper.getAsInt(o, "energy", 0),
+                        GsonHelper.getAsInt(o, "anvil_levels", 0));
+            } catch (Exception ex) {
+                LOGGER.error("[Zenkai] No se pudo leer {}: {}. Se usa el coste por defecto.",
+                        file, ex.toString());
+                return ScouterRepairCost.DEFAULT;
+            }
+        }
+
+        // ── Común ────────────────────────────────────────────────────────────
+
+        /** Bloque "materials" de un objeto. Lo comparten las mejoras y la reparación: el
+         *  formato es idéntico y tenerlo dos veces garantizaba que acabaran divergiendo. */
+        private List<ScouterUpgradeCost.Material> readMaterials(JsonObject o) {
+            List<ScouterUpgradeCost.Material> mats = new ArrayList<>();
+            if (!o.has("materials")) return mats;
+            for (var mEl : o.getAsJsonArray("materials")) {
+                JsonObject mo = mEl.getAsJsonObject();
+                boolean isTag = mo.has("tag");
+                String raw = isTag ? GsonHelper.getAsString(mo, "tag")
+                        : GsonHelper.getAsString(mo, "item");
+                mats.add(new ScouterUpgradeCost.Material(
+                        ResourceLocation.parse(raw), isTag,
+                        Math.max(1, GsonHelper.getAsInt(mo, "count", 1))));
+            }
+            return mats;
+        }
+
+        // ── Aplicación ───────────────────────────────────────────────────────
+
         @Override
-        protected void apply(@NotNull Map<ScouterUpgrade, List<ScouterUpgradeCost>> costs,
-                             @NotNull ResourceManager rm, @NotNull ProfilerFiller profiler) {
-            ScouterUpgradeCost.replaceAll(costs);
-            LOGGER.info("[Zenkai] Mejoras de scouter con coste cargado: {}/{}.",
-                    costs.size(), ScouterUpgrade.values().length);
+        protected void apply(@NotNull Loaded loaded, @NotNull ResourceManager rm,
+                             @NotNull ProfilerFiller profiler) {
+            ScouterTintCost.replace(loaded.tint());
+            ScouterUpgradeCost.replaceAll(loaded.upgrades());
+            ScouterRepairCost.replace(loaded.repair());
+            LOGGER.info("[Zenkai] Mejoras de scouter con coste cargado: {}/{}. Reparación: {} FE, {} niveles.",
+                    loaded.upgrades().size(), ScouterUpgrade.values().length,
+                    loaded.repair().energy(), loaded.repair().anvilLevels());
         }
     }
 }

@@ -2,11 +2,20 @@ package com.hmc.zenkai.content.item;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
+import com.hmc.zenkai.feature.sense.ScouterRepairCost;
 import com.hmc.zenkai.feature.sense.ScouterStacks;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Scouter: casco GeckoLib que REUSA la infraestructura de las armaduras de raza (patrón HALO).
@@ -33,5 +42,27 @@ public class ScouterItem extends GeoLayerArmorItem {
         this.dyeTint(DEFAULT_TINT);
         this.dyeTintAlpha(140);
         this.stackTexture(stack -> ScouterStacks.isBroken(stack) ? BROKEN_TEX : null);
+    }
+
+    /**
+     * Solo cuando está roto. En un scouter sano esta información es ruido; en uno roto es la
+     * única pista de que la rotura tiene arreglo y de que hay dos formas de conseguirlo.
+     * ⚠ VERIFICAR 1.21.1: firma appendHoverText(ItemStack, TooltipContext, List<Component>,
+     * TooltipFlag).
+     */
+    @Override
+    public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext ctx,
+                                @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+        super.appendHoverText(stack, ctx, tooltip, flag);
+        if (!ScouterStacks.isBroken(stack)) return;
+
+        ScouterRepairCost repair = ScouterRepairCost.get();
+        tooltip.add(Component.translatable("item.zenkai.scouter.broken")
+                .withStyle(ChatFormatting.RED));
+        tooltip.add(Component.translatable("item.zenkai.scouter.repair_anvil",
+                repair.anvilLevels()).withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.translatable("item.zenkai.scouter.repair_bench",
+                        String.format(Locale.ROOT, "%,d", repair.energy()))
+                .withStyle(ChatFormatting.DARK_GRAY));
     }
 }

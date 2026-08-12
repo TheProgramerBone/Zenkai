@@ -54,9 +54,12 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
     private static final int VANILLA_HELMET_INDEX = 39;
 
     // ── Layout de slots (debe coincidir con scouter_bench.png) ───────────────
-    private static final int BENCH_X = 18, BENCH_Y = 32;
-    private static final int CURIOS_X = 40, CURIOS_Y = 32;
-    private static final int HELMET_X = 62, HELMET_Y = 32;
+    // Fila superior: tres pozos + el botón de tinte, con margen de 3 y huecos de 5. La
+    // pantalla se estrechó a x=94 justo para que esta fila respirara — con la pantalla en 86
+    // los cuatro elementos de 18 px no cabían y quedaban pegados unos a otros.
+    private static final int BENCH_X = 4, BENCH_Y = 32;
+    private static final int CURIOS_X = 27, CURIOS_Y = 32;
+    private static final int HELMET_X = 50, HELMET_Y = 32;
     private static final int INV_X = 47, INV_Y = 172, HOTBAR_Y = 230;
 
     /** Primer y último+1 índice del inventario del jugador dentro de this.slots. */
@@ -65,6 +68,8 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
     public static final int SLOT_CURIOS = 1;
     public static final int SLOT_HELMET = 2;
     public static final int INV_END = 39;
+
+
 
     private final Container container;
     private final ContainerData data;
@@ -149,6 +154,18 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
     }
 
     public ItemStack scouter()  { return container.getItem(0); }
+    /** Gasto de FE fuera del ciclo de trabajo. Solo servidor: en cliente el contenedor es
+     *  ficticio y devuelve false, que es justo lo que debe pasar. */
+    public boolean spendEnergy(int amount) {
+        return container instanceof ScouterBenchBlockEntity be && be.spendEnergyNow(amount);
+    }
+
+    /** El scouter cambió sin pasar por un slot (lo tiñó el paquete de tinte). Hay que avisar
+     *  o el modelo de la mesa se queda con el color anterior. */
+    public void setScouterChanged() {
+        container.setChanged();
+        broadcastChanges();
+    }
     public int progress()       { return data.get(0); }
     public int duration()       { return Math.max(1, data.get(1)); }
     public int job()            { return data.get(2); }

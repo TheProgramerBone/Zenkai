@@ -148,6 +148,18 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
     public BenchEnergy energyHandler() { return energy; }
 
     /**
+     * Gasto puntual de FE, fuera del ciclo de trabajo. Lo usa el tinte, que es instantáneo:
+     * pasar por un trabajo de 100 ticks para algo cosmético bloquearía el banco cinco
+     * segundos por cambiar de color.
+     * Devuelve false si no hay suficiente, y entonces no se cobra nada más.
+     */
+    public boolean spendEnergyNow(int amount) {
+        if (!energy.spend(amount)) return false;
+        markDirty();
+        return true;
+    }
+
+    /**
      * Arranca un trabajo. Devuelve false si no se puede (ya hay uno, no hay scouter, la mejora
      * está al máximo o el scouter está roto y esto no es una reparación).
      * NO cobra nada: el cobro es al terminar.

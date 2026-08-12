@@ -372,6 +372,7 @@ public class ModNetworking {
         registrar.playToClient(OpenMasterPayload.TYPE, OpenMasterPayload.STREAM_CODEC,
                 (payload, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandlers.openMaster(payload)));
 
-
+        registrar.playToServer(ScouterTintPacket.TYPE, ScouterTintPacket.STREAM_CODEC,
+                ScouterTintPacket::handle);
     }
 }

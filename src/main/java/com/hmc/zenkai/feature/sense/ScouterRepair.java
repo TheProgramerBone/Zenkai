@@ -2,20 +2,20 @@ package com.hmc.zenkai.feature.sense;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.item.ScouterItem;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AnvilUpdateEvent;
-import net.minecraft.world.item.ItemStack;
-
-import java.util.List;
 
 /**
  * Reparación del scouter. Dos vías, mismo material y misma promesa: el aparato vuelve entero
  * CON sus mejoras y su tinte, porque la rotura nunca destruyó el stack.
  *  - Yunque: materiales + niveles de experiencia. Es la vía de urgencia, en cualquier sitio.
- *  - Banco:  solo materiales, con barra de progreso. Es la vía barata, si tienes el banco.
- *
+ *  - Banco:  materiales + FE, con barra de progreso. Es la vía de infraestructura.
+ * ESTA CLASE YA NO DEFINE EL PRECIO. Antes tenía IRON_COUNT y ANVIL_LEVELS y era la fuente
+ * real del coste, con el resto del banco leyendo de datapack: dos sistemas para lo mismo.
+ * Ahora sale de ScouterRepairCost, que se carga de
+ * data/zenkai/zenkai_scouter_repair.json y se sincroniza al cliente.
  * NO se toca RepairCost. Con un objeto que se rompe por diseño una y otra vez, el "demasiado
  * caro" acumulativo de vanilla lo mataría a las cinco o seis reparaciones y el jugador
  * perdería mejoras que ya pagó.
@@ -24,18 +24,15 @@ import java.util.List;
 public final class ScouterRepair {
     private ScouterRepair() {}
 
-    /** Coste fijo en niveles. No escala con las mejoras: castigar por tener un buen scouter
-     *  es exactamente al revés de lo que se quiere premiar. */
-    public static final int ANVIL_LEVELS = 5;
-
-    private static final int IRON_COUNT = 3;
-    private static final ResourceLocation IRON_TAG =
-            ResourceLocation.fromNamespaceAndPath("c", "ingots/iron");
-
-    /** Mismo material en las dos vías. */
+    /** Coste en el banco: materiales + FE. Lo cobra el block entity con el mismo código que
+     *  una mejora, así que no hay una segunda ruta de cobro que mantener. */
     public static ScouterUpgradeCost benchCost() {
-        return new ScouterUpgradeCost(
-                List.of(new ScouterUpgradeCost.Material(IRON_TAG, true, IRON_COUNT)), 0);
+        return ScouterRepairCost.get().cost();
+    }
+
+    /** Niveles de experiencia del yunque. */
+    public static int anvilLevels() {
+        return ScouterRepairCost.get().anvilLevels();
     }
 
     /**
@@ -52,15 +49,23 @@ public final class ScouterRepair {
         if (!(left.getItem() instanceof ScouterItem)) return;
         if (!ScouterStacks.isBroken(left)) return;
 
-        ScouterUpgradeCost.Material iron =
-                new ScouterUpgradeCost.Material(IRON_TAG, true, IRON_COUNT);
-        if (!iron.matches(right) || right.getCount() < IRON_COUNT) return;
+        ScouterRepairCost repair = ScouterRepairCost.get();
+
+        // EL YUNQUE SOLO TIENE UN SLOT DE MATERIAL, así que solo puede cobrar el PRIMERO de
+        // la lista. Es una limitación de vanilla, no una decisión: el resto del coste se
+        // ignora aquí y sí se cobra entero en el banco. Por eso el material principal debe ir
+        // primero en el JSON, y por eso la experiencia existe — es lo que compensa que la vía
+        // del yunque cobre menos materia.
+        var mats = repair.materials();
+        if (mats.isEmpty()) return;
+        ScouterUpgradeCost.Material main = mats.getFirst();
+        if (!main.matches(right) || right.getCount() < main.count()) return;
 
         ItemStack out = left.copy();
         ScouterStacks.repair(out);
 
         event.setOutput(out);
-        event.setMaterialCost(IRON_COUNT);
-        event.setCost(ANVIL_LEVELS);
+        event.setMaterialCost(main.count());
+        event.setCost(repair.anvilLevels());
     }
 }

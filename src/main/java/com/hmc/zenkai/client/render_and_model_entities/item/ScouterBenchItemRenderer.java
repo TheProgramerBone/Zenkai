@@ -37,6 +37,7 @@ public class ScouterBenchItemRenderer extends GeoItemRenderer<ScouterBenchBlockI
     @Override
     public void renderByItem(ItemStack stack, ItemDisplayContext context, PoseStack poseStack,
                              MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
+
         poseStack.pushPose();
         poseStack.translate(0f, -MODEL_HALF_HEIGHT / 16f, 0f);
         super.renderByItem(stack, context, poseStack, bufferSource, packedLight, packedOverlay);
