@@ -1,6 +1,5 @@
 package com.hmc.zenkai.client.gui.screens;
 
-import com.hmc.zenkai.client.gui.AlignmentPalette;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.StatBar;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -25,6 +24,7 @@ import com.hmc.zenkai.feature.stats.RefundTpPacket;
 import com.hmc.zenkai.feature.stats.SpendTpPacket;
 import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -100,14 +100,14 @@ public class StatsScreen extends ZenkaiMenuScreen {
     /** Escalón del arrastre de Ki Control. Coincide con el de la tecla de carga. */
     private static final int KI_STEP     = 5;
     /**
-     * Suelo del % de Ki Control. NO es cero: setPowerPercent está definido sobre [50, techo] y
+     * Suelo del % de Ki Control. NO es cero: setPowerPercent está definido sobre [0, techo] y
      * la tecla de carga nunca baja de ahí. La versión anterior de esta barra mapeaba el
      * arrastre sobre 0..100, así que dejaba llegar a 0 —un estado que el resto del juego no
      * produce— y comprimía el rango útil hasta hacerlo inservible: con Ki Control a nivel 0 el
      * techo es 50, o sea que mínimo y máximo coinciden y no hay NADA que arrastrar.
      * ⚠ Si SkillEffects expone una constante para esto, usar aquella y borrar esta.
      */
-    private static final int KI_MIN      = 50;
+    private static final int KI_MIN = 0;
 
     // Popups laterales
     private static final int POPUP_W = 136;
@@ -318,9 +318,13 @@ public class StatsScreen extends ZenkaiMenuScreen {
         for (ZenkaiAttributes a : ORDER) {
             int raw = att.getAttribute(a);
             int eff = att.getEffectiveAttribute(a);
+            // Compacto en cuanto los números crecen: con una transformación activa, el efectivo
+            // y el crudo juntos ("921047 (200000)") se salían de la columna y quedaban debajo
+            // del retrato. El valor exacto pasa al tooltip, que es donde se consulta y no donde
+            // se ojea.
             Component line = (eff != raw)
-                    ? getAttributeLabel(a, eff + " (" + raw + ")")
-                    : getAttributeLabel(a, String.valueOf(raw));
+                    ? getAttributeLabel(a, attrText(eff) + " (" + attrText(raw) + ")")
+                    : getAttributeLabel(a, attrText(raw));
 
             // MND en déficit se ve en la LISTA, no solo en el tooltip: es un problema, y un
             // problema que hay que descubrir pasando el ratón por encima no está señalado.
@@ -404,7 +408,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         Component label = Component.translatable("screen.zenkai.stats_screen.power_level");
         g.drawString(font, label, left, y, ZenkaiPalette.LABEL_ON_PANEL, false);
 
-        Component value = Component.literal(compact(releasable));
+        Component value = Component.literal(ZenkaiNumbers.format(releasable));
         int vx = left + font.width(label);
         g.drawString(font, value, vx, y, ZenkaiPalette.VALUE_ON_PANEL, false);
 
@@ -414,7 +418,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         // El aparente solo aparece cuando DIFIERE: si estás al tope, repetirlo es ruido.
         if (apparent != releasable) {
-            Component ap = Component.literal(" (" + compact(apparent) + ")");
+            Component ap = Component.literal(" (" + ZenkaiNumbers.format(apparent) + ")");
             g.drawString(font, ap, vx + font.width(value), y, ZenkaiPalette.MUTED_ON_PANEL, false);
             plLabelW += font.width(ap);
         }
@@ -462,12 +466,18 @@ public class StatsScreen extends ZenkaiMenuScreen {
         }
     }
 
-    /** Miles y millones abreviados: un PL de siete cifras no cabe en la cabecera. */
-    private static String compact(long v) {
-        if (v < 10_000) return String.valueOf(v);
-        if (v < 1_000_000) return String.format(Locale.ROOT, "%.1fK", v / 1_000.0);
-        if (v < 1_000_000_000L) return String.format(Locale.ROOT, "%.2fM", v / 1_000_000.0);
-        return String.format(Locale.ROOT, "%.2fB", v / 1_000_000_000.0);
+    /**
+     * Umbral a partir del cual un atributo se muestra compacto.
+         * 20.000 y no antes: por debajo, "18500" cabe de sobra y el número exacto es más útil que
+     * "18.5K" cuando el jugador está decidiendo dónde meter puntos. Por encima, el efectivo de
+     * una transformación mete seis o siete cifras y la columna se desborda sobre el retrato —
+     * que es justo lo que pasaba con 921047 (200000).
+     */
+    private static final int COMPACT_FROM = 20_000;
+
+    /** Compacto por encima del umbral, exacto por debajo. */
+    private static String attrText(int v) {
+        return Math.abs(v) >= COMPACT_FROM ? ZenkaiNumbers.format(v) : String.valueOf(v);
     }
 
     // ── Pools ────────────────────────────────────────────────────────────────
@@ -512,7 +522,10 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     /** Fila de popup. bar >= 0 dibuja además una barra de progreso bajo el texto. */
     private record Row(Component label, Component value, int color, float bar, int barColor) {
-        static Row header(Component l) { return new Row(l, null, 0, -1f, 0); }
+        /** Cabecera de sección. El color lo pone quien la crea, desde ZenkaiPalette.SECTION_*. */
+        static Row header(String key, int color) {
+            return new Row(Component.translatable(key), null, color, -1f, 0);
+        }
         static Row of(Component l, Component v, int c) { return new Row(l, v, c, -1f, 0); }
         static Row bar(Component l, Component v, int c, float pct, int bc) {
             return new Row(l, v, c, pct, bc);
@@ -529,14 +542,24 @@ public class StatsScreen extends ZenkaiMenuScreen {
      */
     private void renderPopup(GuiGraphics g, Font font, boolean leftSide,
                              List<Row> rows, Component title) {
-        // Alturas de fila. Antes eran 10/12/16 y las líneas se tocaban: con lineHeight 9, una
-        // fila de 10 deja UN píxel entre el trazo inferior de una y el superior de la
-        // siguiente, y con dos columnas de texto por fila el bloque se lee como un muro.
-        final int rowH = 12, headerH = 15, barExtra = 8;
+        // Alturas. La cabecera necesita AIRE ARRIBA, no solo debajo: pegada a la última fila de
+        // la sección anterior, "Combat" y "Melee" se leían como una sola cosa de dos líneas
+        // —igual que "Mobility/Running" e "Investment/TP spent"— y el popup perdía la
+        // estructura que las cabeceras existen para dar. Lo que separa bloques es el espacio
+        // por ENCIMA del título, así que va ahí y no repartido.
+        final int rowH = 11, headerH = 22, barExtra = 8, firstHeaderH = 14;
 
         int h = 7 + 13;
-        for (Row r : rows) h += r.isHeader() ? headerH : (rowH + (r.hasBar() ? barExtra : 0));
-        h += 7;
+        boolean first = true;
+        for (Row r : rows) {
+            if (r.isHeader()) {
+                h += first ? firstHeaderH : headerH;
+                first = false;
+            } else {
+                h += rowH + (r.hasBar() ? barExtra : 0);
+            }
+        }
+        h += 8;
 
         int x = leftSide
                 ? panelLeft - POPUP_W - POPUP_GAP
@@ -555,20 +578,33 @@ public class StatsScreen extends ZenkaiMenuScreen {
         g.drawString(font, ScreenTitle.styled(title), tx, ty, ZenkaiPalette.GOLD, true);
         ty += 13;
 
+        first = true;
         for (Row r : rows) {
             if (r.isHeader()) {
-                // El separador va con aire ARRIBA, no pegado al texto anterior: es lo que
-                // convierte una lista continua en secciones.
-                g.fill(tx, ty + 3, tr, ty + 4, ZenkaiPalette.SEPARATOR_DARK);
-                g.drawString(font, r.label(), tx, ty + 7, ZenkaiPalette.TEXT_OFF, true);
-                ty += headerH;
+                int gap = first ? 2 : 10;   // aire antes de la cabecera
+                // Filete del color de la sección a la izquierda del título: marca el bloque en
+                // vertical aunque el jugador esté mirando la fila de abajo.
+                g.fill(tx, ty + gap, tx + 2, ty + gap + font.lineHeight, r.color());
+                g.drawString(font, ScreenTitle.styled(r.label()), tx + 6, ty + gap + 1,
+                        r.color(), true);
+                // Línea tenue bajo el título, del mismo color y muy atenuada.
+                g.fill(tx, ty + gap + font.lineHeight + 3, tr, ty + gap + font.lineHeight + 4,
+                        ZenkaiPalette.withAlpha(r.color(), 60));
+                ty += first ? firstHeaderH : headerH;
+                first = false;
                 continue;
             }
-            g.drawString(font, r.label(), tx, ty, ZenkaiPalette.TEXT_DIM, true);
-            g.drawString(font, r.value(), tr - font.width(r.value()), ty, r.color(), true);
+            // La etiqueta en NEGRITA hereda el color del valor: es la señal de que esa fila ES
+            // el dato, no la descripción de otro (el alineamiento, el nombre de la forma). El
+            // resto van en gris para que el ojo caiga en la columna de la derecha.
+            boolean emphasized = r.label().getStyle().isBold();
+            g.drawString(font, r.label(), tx + 6, ty + 4,
+                    emphasized ? r.color() : ZenkaiPalette.TEXT_DIM, true);
+            g.drawString(font, r.value(), tr - font.width(r.value()), ty + 4, r.color(), true);
             ty += rowH;
             if (r.hasBar()) {
-                StatBar.drawOnDark(g, tx, ty - 2, tr - tx, StatBar.H_THIN, r.bar(), 100.0, r.barColor());
+                StatBar.drawOnDark(g, tx + 6, ty + 5, tr - tx - 6, StatBar.H_THIN,
+                        r.bar(), 100.0, r.barColor());
                 ty += barExtra;
             }
         }
@@ -579,7 +615,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         List<Row> out = new ArrayList<>();
         boolean majin = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).isMajinControlled();
 
-        out.add(Row.header(Component.translatable("screen.zenkai.stats_screen.section.offense")));
+        out.add(Row.header("screen.zenkai.stats_screen.section.offense", ZenkaiPalette.SECTION_COMBAT));
         out.add(val("screen.zenkai.stats_screen.stat.melee", fmt(att.computeMeleeFinal()), ZenkaiPalette.TEXT));
         out.add(val("screen.zenkai.stats_screen.stat.defense", fmt(att.computeDefenseFinal()), ZenkaiPalette.TEXT));
         out.add(val("screen.zenkai.stats_screen.stat.ki_power", fmt(att.computeKiPowerFinal()), ZenkaiPalette.TEXT));
@@ -588,7 +624,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
                     "+" + Math.round(CommonConfig.majinStatBonus() * 100) + "%", ZenkaiPalette.ERROR));
         }
 
-        out.add(Row.header(Component.translatable("screen.zenkai.stats_screen.section.mobility")));
+        out.add(Row.header("screen.zenkai.stats_screen.section.mobility", ZenkaiPalette.SECTION_MOBILITY));
         out.add(val("screen.zenkai.stats_screen.stat.running",
                 Math.round(att.getMoveMultiplier() * 100) + "%", ZenkaiPalette.TEXT));
         out.add(val("screen.zenkai.stats_screen.stat.flying",
@@ -598,7 +634,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         // local, o la pantalla y el juego se separarían al primer ajuste.
         double load = att.getWeightLoad();
         if (load > 0.0) {
-            out.add(Row.header(Component.translatable("screen.zenkai.stats_screen.section.load")));
+            out.add(Row.header("screen.zenkai.stats_screen.section.load", ZenkaiPalette.SECTION_LOAD));
             out.add(val("screen.zenkai.stats_screen.stat.load_short",
                     String.format(Locale.ROOT, "%.2f / %.2f t",
                             WeightSystem.equippedTons(mc.player),
@@ -610,7 +646,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
                     "x" + fmt2(WeightSystem.tpFactor(load)), ZenkaiPalette.OK));
         }
 
-        out.add(Row.header(Component.translatable("screen.zenkai.stats_screen.section.investment")));
+        out.add(Row.header("screen.zenkai.stats_screen.section.investment", ZenkaiPalette.SECTION_INVESTMENT));
         out.add(val("screen.zenkai.stats_screen.tp_spent",
                 String.valueOf(att.raceStats().getTpSpent()), ZenkaiPalette.VALUE));
         out.add(val("screen.zenkai.stats_screen.points_invested",
@@ -618,12 +654,12 @@ public class StatsScreen extends ZenkaiMenuScreen {
         return out;
     }
 
-    /** Popup derecho: Lo que ANTES vivía en el tooltip del render y se perdía al moverse. */
+    /** Popup derecho: lo que ANTES vivía en el tooltip del render y se perdía al moverse. */
     private List<Row> buildProgressRows(PlayerFormAttachment form) {
         assert mc.player != null;
         List<Row> out = new ArrayList<>();
 
-        out.add(Row.header(Component.translatable("screen.zenkai.stats_screen.section.form")));
+        out.add(Row.header("screen.zenkai.stats_screen.section.form", ZenkaiPalette.SECTION_FORM));
         out.add(Row.of(formName(form.getFormId()),
                 Component.literal("x" + fmt2(att.getStatMultiplier())), ZenkaiPalette.OK));
         out.add(Row.bar(Component.translatable("screen.zenkai.stats_screen.mastery_short.label"),
@@ -639,7 +675,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         KaiokenTier tier = form.getKaioken();
         if (tier.isOn()) {
-            out.add(Row.header(Component.translatable("screen.zenkai.stats_screen.section.kaioken")));
+            out.add(Row.header("screen.zenkai.stats_screen.section.kaioken", ZenkaiPalette.SECTION_KAIOKEN));
             double hpPerSecond = KaiokenSystem.drainPerTick(att, form,
                     SkillEffects.kaiokenDrainFactor(mc.player)) * 20.0;
             out.add(Row.of(Component.literal(tier.label()),
@@ -658,7 +694,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         // Pasiva racial: permanente, así que va en su propia sección.
         if (att.isRaceChosen()) {
-            out.add(Row.header(Component.translatable("screen.zenkai.stats_screen.section.race")));
+            out.add(Row.header("screen.zenkai.stats_screen.section.race", ZenkaiPalette.SECTION_RACE));
             out.add(Row.of(Component.translatable(RacePassives.nameKey(att.getRace())),
                     Component.empty(), ZenkaiPalette.MAXED));
             if (RacePassiveSystem.zenkaiActive(mc.player)) {
@@ -668,13 +704,22 @@ public class StatsScreen extends ZenkaiMenuScreen {
         }
 
         // Alineamiento: se mueve aquí desde el pie del panel, que estaba apretado.
-        out.add(Row.header(Component.translatable("screen.zenkai.stats_screen.alignment")));
+        out.add(Row.header("screen.zenkai.stats_screen.alignment", ZenkaiPalette.SECTION_ALIGNMENT));
+        // El NOMBRE lleva el color del estado, no solo el número. Antes "Neutral" salía en el
+        // gris genérico de etiqueta y el color solo teñía el 0 de la derecha, así que el dato
+        // más legible de la fila era el que menos dice.
+        //
+        // Tres colores discretos y no el degradado: en la barra la posición es continua y el
+        // degradado tiene sentido, pero un nombre en un azul ligeramente distinto según tengas
+        // 40 o 60 no comunica nada y hace el texto menos reconocible.
         int al = att.getAlignment();
-        out.add(Row.of(Component.translatable(al > 20 ? "screen.zenkai.alignment.good"
+        int alColor = ZenkaiPalette.alignmentColor(al);
+        out.add(new Row(
+                Component.translatable(al > 20 ? "screen.zenkai.alignment.good"
                         : al < -20 ? "screen.zenkai.alignment.evil"
-                        : "screen.zenkai.alignment.neutral"),
+                        : "screen.zenkai.alignment.neutral").withStyle(net.minecraft.ChatFormatting.BOLD),
                 Component.literal((al > 0 ? "+" : "") + al),
-                0xFF000000 | AlignmentPalette.gradient((al + 100) / 200f)));
+                alColor, -1f, 0));
         return out;
     }
 
@@ -768,6 +813,20 @@ public class StatsScreen extends ZenkaiMenuScreen {
         Race race = att.getRace();
         Style style = att.getStyle();
         List<Component> out = new ArrayList<>();
+
+        // Valor EXACTO, y solo cuando la lista lo ha abreviado: repetir "STR: 5" en el tooltip
+        // de una fila que ya dice "STR: 5" es ruido. Con separadores de miles, que es como se
+        // lee un número de siete cifras sin contarlas.
+        int raw = att.getAttribute(attr), eff = att.getEffectiveAttribute(attr);
+        if (Math.abs(raw) >= COMPACT_FROM || Math.abs(eff) >= COMPACT_FROM) {
+            out.add(Component.literal(ZenkaiNumbers.exact(raw))
+                    .withStyle(net.minecraft.ChatFormatting.WHITE));
+            if (eff != raw) {
+                out.add(Component.translatable("tooltip.zenkai.attr.effective",
+                        ZenkaiNumbers.exact(eff)).withStyle(net.minecraft.ChatFormatting.GOLD));
+            }
+            out.add(Component.empty());
+        }
 
         switch (attr) {
             case STRENGTH -> out.add(Component.translatable("tooltip.zenkai.attr.str",

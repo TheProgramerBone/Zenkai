@@ -3,7 +3,6 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.PhysicalIcons;
 import com.hmc.zenkai.client.gui.PanelText;
-import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
@@ -152,7 +151,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                     // La ✖ del mod, no el glifo Unicode: el "✖" dependía de la fuente instalada
                     // y desentonaba con el resto de iconos.
                     addRenderableWidget(new TextOnlyButton(
-                            rightEdge() - X_SIZE, y + 15, X_SIZE, X_SIZE,
+                            rightEdge() - X_SIZE, y + 11, X_SIZE, X_SIZE,
                             Component.empty(), TEX_X, TEX_X_HL,
                             () -> {
                                 att.techniques().bindPhysical(-1, t);           // optimista

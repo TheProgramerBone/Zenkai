@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.gui;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.util.Mth;
 
 import java.util.Locale;
@@ -69,7 +70,12 @@ public final class StatBar {
         // ópticamente alineada con las mayúsculas de la etiqueta.
         draw(g, barX, y + 2, barW, H, value, max, fillColor);
 
-        Component amount = Component.literal(fmt(value) + "/" + fmt(max));
+        // SIEMPRE compacto: "6.8M/6.8M" en vez de "6800010/6800010". Con siete cifras por
+        // lado el texto invadía la barra y se leían encima el uno del otro (visible en juego
+        // con un personaje de PL alto). El valor exacto está en el tooltip, no aquí: esta línea
+        // sirve para ver de un vistazo cuánto queda, no para auditar el número.
+        Component amount = Component.literal(
+                ZenkaiNumbers.format(Math.round(value)) + "/" + ZenkaiNumbers.format(Math.round(max)));
         g.drawString(font, amount, rightEdge - font.width(amount), y,
                 ZenkaiPalette.BODY_ON_PANEL, false);
     }
@@ -82,7 +88,7 @@ public final class StatBar {
         if (filled > 0) g.fill(x, y, x + filled, y + H_THIN, fill);
     }
 
-    /** Sin decimales si el número es entero: "440" y no "440.0" en una barra de ki. */
+    /** Sin decimales si el número es entero: "440" y no "440.0". Lo usa drawLabeled. */
     private static String fmt(double d) {
         return (d == Math.rint(d)) ? String.valueOf((long) d) : String.format(Locale.ROOT, "%.1f", d);
     }

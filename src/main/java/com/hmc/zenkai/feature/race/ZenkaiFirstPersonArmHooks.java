@@ -31,11 +31,9 @@ import software.bernie.geckolib.util.Color;
  * Brazo en 1ª persona usando el MISMO modelo del cuerpo (reusado): oculta todos los huesos
  * menos el del brazo y lo renderiza en la pose que da RenderArmEvent. Así hereda automáticamente
  * cualquier cambio de modelo (transformaciones, género, etc.) sin assets extra.
- *
  * Para razas con tinte multicapa (bodyTint: Namek, y futuras Majin/Arcosian) pinta además las
  * pasadas _detail y _lines sobre el brazo, igual que BodyTintGeoLayer hace en 3ª persona — si no,
  * el brazo se vería "hueco" donde la textura base es transparente.
- *
  * ⚠ API de GeckoLib 4.8.4 a verificar al compilar:
  *   · GeoObjectRenderer (constructor + firma de render(...))
  *   · GeoModel.getBakedModel(...) / BakedGeoModel.topLevelBones()
@@ -63,6 +61,21 @@ public final class ZenkaiFirstPersonArmHooks {
 
     @SubscribeEvent
     public static void onRenderArm(RenderArmEvent e) {
+        // Mientras PAL tiene una animación en THIRD_PERSON_MODEL, el cuerpo entero ya se dibuja:
+        // la mano vanilla sobra. Se CANCELA — hacer solo `return` la dejaba pasar, que es lo que
+        // metía el brazo + manga de la skin vanilla en cámara.
+        // isFirstPersonPass() no sirve aquí: es false durante renderHandsWithItems. Hay que
+        // preguntarle al gestor de animación de PAL, que es lo que consulta el propio PAL en su
+        // ItemInHandRendererMixin.
+        var mgr = ((com.zigythebird.playeranim.accessors.IAnimatedPlayer) e.getPlayer())
+                .playerAnimLib$getAnimManager();
+        if (mgr != null && mgr.isActive()
+                && mgr.getFirstPersonMode()
+                == com.zigythebird.playeranimcore.api.firstPerson.FirstPersonMode.THIRD_PERSON_MODEL) {
+            e.setCanceled(true);
+            return;
+        }
+
         Player player = e.getPlayer();
         var visual = player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         var stats  = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
@@ -73,7 +86,7 @@ public final class ZenkaiFirstPersonArmHooks {
 
         e.setCanceled(true); // ocultar el brazo vanilla
 
-        if (RENDERER == null) RENDERER = new com.hmc.zenkai.feature.race.ZenkaiFirstPersonArmHooks.ArmRenderer();
+        if (RENDERER == null) RENDERER = new ArmRenderer();
         RENDERER.renderArm(item, player, e.getArm(), e.getPoseStack(),
                 e.getMultiBufferSource(), e.getPackedLight());
     }

@@ -66,7 +66,7 @@ public final class ClientZenkaiPalTick {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
-
+        ZenkaiPalAnimations.applyFirstPersonPolicy(mc.player);
         for (AbstractClientPlayer p : mc.level.players()) {
             tickPlayer(mc, p);
         }

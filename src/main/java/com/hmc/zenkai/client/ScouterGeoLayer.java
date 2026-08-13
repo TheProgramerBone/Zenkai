@@ -44,7 +44,9 @@ public class ScouterGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                        @NotNull AbstractClientPlayer player,
                        float limbSwing, float limbSwingAmount, float partialTick,
                        float ageInTicks, float netHeadYaw, float headPitch) {
-
+        // Modelo físico fuera de la cámara. El HUD/overlay del scouter no pasa por aquí
+        // y sigue funcionando en 1ª persona (efecto visor).
+        if (com.hmc.zenkai.feature.race.ZenkaiFirstPersonBody.hideHeadAttachments(player)) return;
         if (player.isInvisible()) return;
         // Si ya lo lleva como casco, la capa de armadura normal ya lo pinta: no duplicar.
         if (player.getItemBySlot(EquipmentSlot.HEAD).getItem() instanceof ScouterItem) return;

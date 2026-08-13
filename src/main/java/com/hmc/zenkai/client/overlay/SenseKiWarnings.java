@@ -166,10 +166,7 @@ public final class SenseKiWarnings {
     }
 
     private static void purge(long now) {
-        Iterator<Map.Entry<Integer, Track>> it = TRACKS.entrySet().iterator();
-        while (it.hasNext()) {
-            if (now - it.next().getValue().lastSeen > PURGE_TICKS) it.remove();
-        }
+        TRACKS.entrySet().removeIf(integerTrackEntry -> now - integerTrackEntry.getValue().lastSeen > PURGE_TICKS);
     }
 
     // ── Sacudida ─────────────────────────────────────────────────────────────

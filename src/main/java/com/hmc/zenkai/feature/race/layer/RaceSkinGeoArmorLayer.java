@@ -52,7 +52,11 @@ public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, Pla
         // Invisibilidad completa → no renderizar armadura racial
         if (player.isInvisible()) return;
 
-        ItemStack head  = RaceBodyResolver.resolve(player, EquipmentSlot.HEAD);
+        // En la pasada corporal FP la cabeza no existe (contrato de ZenkaiFirstPersonBody):
+        // si la reinyectáramos aquí, la cara volvería a entrar en cámara.
+        ItemStack head  = com.hmc.zenkai.feature.race.ZenkaiFirstPersonBody.isBodyPass(player)
+                ? ItemStack.EMPTY
+                : RaceBodyResolver.resolve(player, EquipmentSlot.HEAD);
         ItemStack chest = RaceBodyResolver.resolve(player, EquipmentSlot.CHEST);
         ItemStack legs  = RaceBodyResolver.resolve(player, EquipmentSlot.LEGS);
         ItemStack feet  = RaceBodyResolver.resolve(player, EquipmentSlot.FEET);

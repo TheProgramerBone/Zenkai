@@ -44,7 +44,7 @@ public class HaloGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
                        @NotNull AbstractClientPlayer player,
                        float limbSwing, float limbSwingAmount, float partialTick,
                        float ageInTicks, float netHeadYaw, float headPitch) {
-
+        if (com.hmc.zenkai.feature.race.ZenkaiFirstPersonBody.hideHeadAttachments(player)) return;
         // Solo si está en el otro mundo (flag sincronizado vía PlayerStatsAttachment).
         if (!player.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).isInOtherworld()) return;
         if (player.isInvisible()) return;

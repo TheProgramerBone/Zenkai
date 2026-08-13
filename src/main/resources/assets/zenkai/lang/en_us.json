@@ -298,6 +298,7 @@
   "attr.zenkai.spirit.short": "SPI",
   "attr.zenkai.mind.short": "MND",
 
+
   "--- SKILLS ---": "--- SKILLS ---",
   "skill.zenkai.focus": "Focus",
   "skill.zenkai.focus.desc": "Test skill (no effect yet).",
@@ -811,6 +812,7 @@
   "tooltip.zenkai.attr.spi.cross": "Also grants %s ki power per point",
   "tooltip.zenkai.attr.mnd.free": "Free: %s",
   "tooltip.zenkai.attr.invested": "Invested here: %s points",
+  "tooltip.zenkai.attr.effective": "With boost: %s",
 
   "--- SOUNDS ---": "--- SOUNDS ---",
   "sounds.zenkai.dragon_ball_radar_use": "Used Radar",

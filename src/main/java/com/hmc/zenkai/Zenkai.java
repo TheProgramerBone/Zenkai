@@ -7,10 +7,8 @@ import com.hmc.zenkai.client.render_and_model_entities.blockentity.ScouterBenchR
 import com.hmc.zenkai.client.sound.ScouterBenchSounds;
 import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
-import com.hmc.zenkai.event.ClientZenkaiHooks;
+import com.hmc.zenkai.event.*;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
-import com.hmc.zenkai.event.CombatZenkaiHooks;
-import com.hmc.zenkai.event.ZenkaiPalLayers;
 import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
@@ -19,7 +17,6 @@ import com.hmc.zenkai.client.particle.KiSparkParticle;
 import com.hmc.zenkai.client.render_and_model_entities.entity.KiProjectileRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBallsRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.entity.*;
-import com.hmc.zenkai.event.ZenkaiTickHandlers;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.sense.ScouterStacks;
 import com.hmc.zenkai.registry.*;
@@ -256,52 +253,28 @@ public class Zenkai {
                 );
             });
 
-            // Animaciones de jugador
+            // Animaciones de jugador. La política de 1ª persona vive en ZenkaiPalAnimations,
+            // NO aquí y NO en cada animación: las cinco capas comparten exactamente la misma.
             event.enqueueWork(() -> {
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                        ZenkaiPalLayers.TRANSFORM_LAYER,
-                        1000,
-                        player -> {
-                            PlayerAnimationController c = new PlayerAnimationController(
-                                    player, (controller, state, animSetter) -> PlayState.STOP);
-                            c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
-                            c.setFirstPersonConfiguration(new FirstPersonConfiguration()
-                                    .setShowLeftArm(true)
-                                    .setShowRightArm(true));
-                            return c;
-                        }
-                );
-                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                        ZenkaiPalLayers.FLY_LAYER,
-                        800,
-                        player -> new PlayerAnimationController(
-                                player,
-                                (controller, state, animSetter) -> PlayState.STOP
-                        )
-                );
+                        ZenkaiPalLayers.TRANSFORM_LAYER, 1000,
+                        ZenkaiPalAnimations::newFirstPersonController);
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                        ZenkaiPalLayers.BLOCK_LAYER,
-                        1200,
-                        player -> new PlayerAnimationController(
-                                player, (controller, state, animSetter) -> PlayState.STOP)
-                );
+                        ZenkaiPalLayers.FLY_LAYER, 800,
+                        ZenkaiPalAnimations::newFirstPersonController);
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                        ZenkaiPalLayers.COMBAT_LAYER,
-                        900,
-                        player -> new PlayerAnimationController(
-                                player,(controller, state, animSetter) -> PlayState.STOP)
-
-                );
+                        ZenkaiPalLayers.BLOCK_LAYER, 1200,
+                        ZenkaiPalAnimations::newFirstPersonController);
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                        ZenkaiPalLayers.PHYS_LAYER,
-                        950, // sobre la pose de combate (900), bajo transform/fly/block
-                        player -> new PlayerAnimationController(
-                                player, (controller, state, animSetter) -> PlayState.STOP)
-                );
+                        ZenkaiPalLayers.COMBAT_LAYER, 900,
+                        ZenkaiPalAnimations::newFirstPersonController);
 
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.PHYS_LAYER, 950,
+                        ZenkaiPalAnimations::newFirstPersonController);
 
 
             });

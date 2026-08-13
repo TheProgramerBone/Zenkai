@@ -37,7 +37,7 @@ public class HairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
                        @NotNull AbstractClientPlayer player,
                        float limbSwing, float limbSwingAmount, float partialTick,
                        float ageInTicks, float netHeadYaw, float headPitch) {
-
+        if (com.hmc.zenkai.feature.race.ZenkaiFirstPersonBody.hideHeadAttachments(player)) return;
         // El pelo solo desaparece bajo un casco DE VERDAD. Los accesorios que no cubren el
         // cráneo se declaran en #zenkai:keeps_hair y conviven con el peinado.
         ItemStack head = player.getInventory().getArmor(3);

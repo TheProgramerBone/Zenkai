@@ -20,4 +20,9 @@ public final class ZenkaiPalLayers {
 
     public static final ResourceLocation PHYS_LAYER =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "phys");
+
+    /** Todas las capas del mod, para aplicarles políticas comunes de una pasada. */
+    public static final ResourceLocation[] ALL = {
+            TRANSFORM_LAYER, FLY_LAYER, BLOCK_LAYER, COMBAT_LAYER, PHYS_LAYER
+    };
 }

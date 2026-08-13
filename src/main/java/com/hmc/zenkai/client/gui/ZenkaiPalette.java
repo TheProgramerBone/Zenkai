@@ -117,6 +117,49 @@ public final class ZenkaiPalette {
     /** Estado "al máximo". NO es un verde distinto: lo dice el texto, no el tono. */
     public static final int MAXED_ON_PANEL = ACCENT_ON_PANEL;
 
+    // ── Secciones de popup ───────────────────────────────────────────────────
+    //
+    // Cada bloque de un popup tiene su color. Con todas las cabeceras en gris había que LEER
+    // "Combat", "Mobility", "Investment" para saber en qué sección se estaba; con color, el
+    // ojo salta directo al bloque que busca. Los tonos son claros porque el popup es oscuro.
+    //
+    // La asignación no es decorativa: rojo = lo que hace daño, azul = lo que te mueve, celeste
+    // = lo que has gastado, ciruela = transformación, verde = lo innato de tu raza. Repetir un
+    // color en dos secciones distintas anularía justo la ventaja que se busca.
+
+    /** Combate: melee, defensa, poder de ki. */
+    public static final int SECTION_COMBAT     = 0xFFE87066;
+    /** Movilidad: correr, volar. */
+    public static final int SECTION_MOBILITY   = 0xFF6BA8E8;
+    /** Inversión: TP gastado, puntos. */
+    public static final int SECTION_INVESTMENT = 0xFF7FD4FF;
+    /** Pesas de entrenamiento. */
+    public static final int SECTION_LOAD       = 0xFFE0A94A;
+    /** Forma y maestría. */
+    public static final int SECTION_FORM       = 0xFFC58BD8;
+    /** Kaioken. Rojo más intenso que el de combate: es un estado, no una estadística. */
+    public static final int SECTION_KAIOKEN    = 0xFFFF6B5B;
+    /** Raza y su pasiva. */
+    public static final int SECTION_RACE       = 0xFF7CE0A0;
+    /** Alineamiento. */
+    public static final int SECTION_ALIGNMENT  = 0xFFD8D0C0;
+
+    // ── Alineamiento ─────────────────────────────────────────────────────────
+    // Tres colores planos, no un degradado. El número ya tiene el degradado de AlignmentPalette;
+    // el NOMBRE necesita ser uno de tres estados reconocibles, y un verde-azulado a medio camino
+    // entre bueno y neutro no dice nada que el número no diga mejor.
+
+    public static final int ALIGN_GOOD    = 0xFF6BA8E8;   // azul
+    public static final int ALIGN_NEUTRAL = 0xFFBBBBBB;   // gris
+    public static final int ALIGN_EVIL    = 0xFFE05A5A;   // rojo
+
+    /** Color del NOMBRE del alineamiento. Umbrales iguales a los de la clave de traducción. */
+    public static int alignmentColor(int alignment) {
+        if (alignment > 20) return ALIGN_GOOD;
+        if (alignment < -20) return ALIGN_EVIL;
+        return ALIGN_NEUTRAL;
+    }
+
     // ── Utilidades ───────────────────────────────────────────────────────────
     public static final int SEPARATOR   = 0x44AC421B;
     public static final int HOVER_VEIL  = 0x30FFFFFF;
