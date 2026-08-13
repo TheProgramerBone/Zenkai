@@ -3,6 +3,7 @@ package com.hmc.zenkai.feature;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.aura.AuraCeiling;
 import com.hmc.zenkai.feature.stats.RaceStatSyncPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -213,6 +214,7 @@ public final class RaceStatManager {
             // o el arranque del mundo con la lista de lo que falta. Capturarla aquí devolvería
             // el mod al comportamiento anterior: seguir jugando con datos incompletos.
             RaceStatTable.replaceAll(loaded.rows());
+            AuraCeiling.invalidate();
             RaceStatTable.replaceBases(loaded.bases());
             LOGGER.info("[Zenkai] Stats de raza cargadas: {} raza(s), {} con atributos base.",
                     loaded.rows().size(), loaded.bases().size());

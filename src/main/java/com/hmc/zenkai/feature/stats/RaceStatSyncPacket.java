@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.Style;
+import com.hmc.zenkai.feature.aura.AuraCeiling;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -96,6 +97,7 @@ public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
     public static void handle(RaceStatSyncPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             RaceStatTable.replaceAll(pkt.table());
+            AuraCeiling.invalidate();
             RaceStatTable.replaceBases(pkt.bases());
         });
     }

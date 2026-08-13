@@ -5,7 +5,6 @@ import com.hmc.zenkai.client.CombatModeClientState;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.aura.TurboPacket;
-import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
@@ -94,17 +93,19 @@ public final class AuraClientState {
         return REMOTE_TURBO.contains(p.getId());
     }
 
+    /** ¿Este jugador está en turbo AHORA? El local incluye el estado optimista para
+     *  no esperar el round-trip; los remotos van por el sync del servidor. */
+    public static boolean isTurbo(AbstractClientPlayer p) {
+        if (p == Minecraft.getInstance().player) {
+            return localTurbo || REMOTE_TURBO.contains(p.getId());
+        }
+        return REMOTE_TURBO.contains(p.getId());
+    }
+
     /** Color del aura. Delega en AuraColors (core) para que servidor y cliente no se
      *  separen: las partículas de impacto resuelven el tinte. */
     public static int resolveColor(AbstractClientPlayer p) {
         return AuraColors.resolve(p);
     }
 
-    /** Clave de tipo de aura de la forma activa ("default", "ssj", "divine", "dark").
-     *  El kaioken NO enmascara el tipo: es capa de color (AuraColors.Layers); la
-     *  FORMA decide la silueta. Sin forma → "default". */
-    public static String resolveAuraType(AbstractClientPlayer p) {
-        FormDef def = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).activeDef();
-        return def == null ? "default" : def.auraType();
-    }
 }

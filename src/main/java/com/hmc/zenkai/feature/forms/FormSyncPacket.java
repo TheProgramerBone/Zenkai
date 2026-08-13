@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.forms;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.aura.AuraCeiling;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -34,6 +35,7 @@ public record FormSyncPacket(List<FormDef> forms) implements CustomPacketPayload
             Map<ResourceLocation, FormDef> map = new LinkedHashMap<>();
             for (FormDef d : pkt.forms()) map.put(d.id(), d);
             FormDef.replaceAll(map);
+            AuraCeiling.invalidate();
             FormRegistry.rebuild(); // los índices derivados también en cliente
         });
     }

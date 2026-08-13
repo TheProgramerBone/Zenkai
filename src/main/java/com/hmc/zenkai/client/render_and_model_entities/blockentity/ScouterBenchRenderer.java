@@ -59,7 +59,6 @@ public class ScouterBenchRenderer extends GeoBlockRenderer<ScouterBenchBlockEnti
     @Override
     public void render(@NotNull ScouterBenchBlockEntity be, float partialTick, @NotNull PoseStack poseStack,
                        @NotNull MultiBufferSource buffers, int packedLight, int packedOverlay) {
-        ScouterBenchGlowLayer.warmUp();
         super.render(be, partialTick, poseStack, buffers, packedLight, packedOverlay);
 
         ItemStack stack = be.scouter();

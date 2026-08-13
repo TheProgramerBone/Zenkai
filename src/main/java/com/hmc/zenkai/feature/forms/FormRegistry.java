@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.forms;
 
 import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.aura.AuraCeiling;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import java.util.Map;
  * Consultas sobre las formas. Ya NO define nada: los datos vienen del datapack (FormDef /
  * FormManager) y aquí solo se cachean los índices derivados, que se recalculan en cada
  * /reload mediante rebuild().
- *
  * Índices que se derivan de los datos:
  *  - primera forma por raza: la de kind SUPER sin parent que admite esa raza.
  *  - hijo de cada forma: la cadena del datapack apunta hacia atrás (parent), así que el
@@ -40,6 +40,7 @@ public final class FormRegistry {
         }
         FIRST_BY_RACE = Collections.unmodifiableMap(first);
         CHILDREN = Collections.unmodifiableMap(children);
+        AuraCeiling.invalidate();
     }
 
     /** Datos de una forma. null en BASE o si no está definida (BASE es el estado neutro). */

@@ -1,6 +1,12 @@
 package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.aura.AuraFormula;
+import com.hmc.zenkai.feature.aura.AuraLod;
+import com.hmc.zenkai.feature.aura.AuraModifier;
+import com.hmc.zenkai.feature.aura.AuraProfile;
+import com.hmc.zenkai.feature.aura.AuraSkirts;
+import com.hmc.zenkai.feature.aura.AuraState;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -11,13 +17,17 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 
 /**
- * Muestra el aura EN VIVO sobre el personaje del preview 3D del StyleSelectionScreen.
+ * Aura EN VIVO sobre el personaje del preview 3D del StyleSelectionScreen.
  *
- * El preview usa InventoryScreen.renderEntityInInventoryFollowsMouse, que dibuja al jugador
- * y dispara RenderLivingEvent. La pantalla pone {@link #ACTIVE}=true SOLO alrededor de esa
- * llamada; este hook detecta esa pasada y dibuja el cono con el color de ki actual (que el
- * ColorPickerWidget actualiza en vivo en el attachment). En el mundo NO interfiere: durante
- * el render de mundo la bandera está en false.
+ * El preview usa InventoryScreen.renderEntityInInventoryFollowsMouse, que dispara
+ * RenderLivingEvent. La pantalla activa {@link #ACTIVE} SOLO alrededor de esa llamada;
+ * durante el render de mundo la bandera está en false, así que no interfiere.
+ *
+ * ESTADO FIJO A PROPÓSITO. Antes llamaba a AuraRenderer.drawAura, que usaba el estilo
+ * por defecto. Ahora usa un AuraState constante (poder liberado, control alto, ki lleno,
+ * sin kaioken) en vez del estado real del jugador: si dependiera de él, un maestro y un
+ * novato verían previews distintas del MISMO color y el selector dejaría de servir para
+ * comparar tintes.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class AuraPreviewRenderer {
@@ -25,8 +35,14 @@ public final class AuraPreviewRenderer {
 
     /** La pantalla la activa SOLO durante el render del preview. */
     public static boolean ACTIVE = false;
-    /** Escala del aura en el preview (menor que en el mundo para caber en el recuadro). */
-    public static float PREVIEW_SCALE = 1.30f; // = AURA_SCALE del mundo → proporción real
+    /** Escala del aura en el preview. = AURA_SCALE del mundo -> proporción real. */
+    public static float PREVIEW_SCALE = 1.30f;
+
+    private static final AuraState PREVIEW_STATE = AuraFormula.state(
+            100_000L, 231L, 4_534_321L, 100, 100, 8, 1f, 0f, 0f);
+
+    private static final AuraProfile PREVIEW_PROFILE =
+            AuraFormula.profile(PREVIEW_STATE, AuraModifier.NONE);
 
     @SubscribeEvent
     public static void onRenderLivingPost(RenderLivingEvent.Post<?, ?> e) {
@@ -34,16 +50,25 @@ public final class AuraPreviewRenderer {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
         if (!(e.getEntity() instanceof AbstractClientPlayer p)) return;
-        if (p != mc.player) return; // solo el propio jugador del preview
+        if (p != mc.player) return;
 
         int rgb = AuraClientState.resolveColor(p); // color de ki en vivo (attachment)
-        long t = mc.level.getGameTime();
-        float pt = e.getPartialTick();
+        double ticks = mc.level.getGameTime() + e.getPartialTick();
+
+        // Distancia 0 y banda NEAR forzada: en una GUI queremos el detalle completo.
+        AuraSkirts.Plan plan =
+                AuraSkirts.plan(PREVIEW_PROFILE, 0.0, AuraLod.NEAR, rgb, -1);
+        if (plan.isEmpty()) return;
 
         MultiBufferSource buffers = e.getMultiBufferSource();
         PoseStack pose = e.getPoseStack();
-        // drawAura elige aditivo/oscuro y hace el crossfade igual que en el mundo.
-        AuraRenderer.drawAura(pose, buffers, rgb, PREVIEW_SCALE, t, pt, p.getId());
-        // El flush lo hace renderEntityInInventoryFollowsMouse al terminar (endBatch global).
+
+        pose.pushPose();
+        pose.scale(PREVIEW_SCALE, PREVIEW_SCALE, PREVIEW_SCALE);
+        // Sin atenuación frontal: en el preview no hay que proteger la lectura de nadie.
+        AuraSkirtRenderer.render(pose, buffers, plan, ticks,
+                (float) (ticks / 20.0), p.getId(), Float.NaN, Float.NaN);
+        pose.popPose();
+        // El flush lo hace renderEntityInInventoryFollowsMouse al terminar.
     }
 }

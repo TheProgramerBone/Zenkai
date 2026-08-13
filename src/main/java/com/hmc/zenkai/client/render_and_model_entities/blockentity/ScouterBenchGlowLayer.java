@@ -5,81 +5,41 @@ import com.hmc.zenkai.content.block.ScouterBenchBlock;
 import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
-import software.bernie.geckolib.cache.texture.AutoGlowingTexture;
 import software.bernie.geckolib.renderer.GeoRenderer;
-import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
+import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
 /**
  * Luz del banco. Emisiva SOLO mientras WORKING está puesto.
- * El estado se lee del BLOCKSTATE y no del block entity a propósito: WORKING ya viaja al
- * cliente por la sincronización normal de bloques (por eso vive ahí y no solo en el BE), así
- * que la capa no necesita ningún paquete propio ni saber nada del trabajo en curso.
- * DOS SALVAGUARDAS, cada una por un fallo que ya ocurrió:
- *   - hasMask(): sin scouter_bench_glowmask.png, GeckoLib construye una textura emisiva vacía
- *     y la pinta sobre el modelo entero, que se volvía NEGRO justo al empezar a trabajar. Si
- *     la máscara falta, la capa no dibuja nada y el banco se ve normal, sin brillo.
- *   - warmUp(): la textura emisiva se genera la primera vez que se pide, y como esta capa
- *     solo se dibuja con WORKING en true, esa primera vez caía en el frame de arranque y el
- *     modelo parpadeaba. Precalentándola desde el render normal, el coste se paga cuando el
- *     banco entra en pantalla.
- * ⚠ VERIFICAR en GeckoLib 4.8.4:
- *   - AutoGlowingGeoLayer busca la máscara en <textura>_glowmask.png. Si la versión usa otro
- *     sufijo, se renombra el asset y la constante MASK; el resto no cambia.
- *   - AutoGlowingTexture.getEmissiveResource(ResourceLocation).
- *   - Firma de GeoRenderLayer#render(PoseStack, T, BakedGeoModel, RenderType,
- *     MultiBufferSource, VertexConsumer, float, int, int).
+ * POR QUÉ NO ES UN AutoGlowingGeoLayer, que sería lo obvio: esa clase, al construir la
+ * textura emisiva, BORRA de la textura base los píxeles marcados en el glowmask. Lo hace para
+ * que no se pinten dos veces y el emisivo no salga quemado, y da por supuesto que la capa se
+ * dibuja SIEMPRE, así que el hueco siempre queda tapado.
+ * Aquí la capa se salta cuando el banco está parado, y entonces esos huecos quedaban al aire:
+ * el panel se veía calado con la máquina apagada y correcto solo mientras trabajaba.
+ * Esta versión no toca la textura base. Dibuja el modelo otra vez usando el GLOWMASK como
+ * textura —transparente salvo en los píxeles que emiten— con un RenderType emisivo. Apagado
+ * se ve la base entera; encendido se le suma el brillo encima.
+ * RenderType.eyes() es aditivo y se salta la iluminación del mundo, que es justo el
+ * comportamiento de un piloto encendido: se ve igual de noche y en una cueva.
+ * ⚠ VERIFICAR en GeckoLib 4.8.4: firma de GeoRenderer#reRender(BakedGeoModel, PoseStack,
+ * MultiBufferSource, T, RenderType, VertexConsumer, float, int, int, int). Si el último
+ * parámetro de color no existe en tu versión, se quita.
  */
-public class ScouterBenchGlowLayer extends AutoGlowingGeoLayer<ScouterBenchBlockEntity> {
+public class ScouterBenchGlowLayer extends GeoRenderLayer<ScouterBenchBlockEntity> {
 
-    /** Textura base del bloque. La emisiva se deriva de ella. */
-    private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
-                    "textures/block/scouter_bench.png");
-
-    /** Máscara emisiva. Sin ella la capa se apaga entera. */
-    private static final ResourceLocation MASK =
+    /** Máscara emisiva. Es una TEXTURA aquí, no una máscara que GeckoLib interprete. */
+    private static final ResourceLocation GLOW =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
                     "textures/block/scouter_bench_glowmask.png");
 
-    private static Boolean maskPresent;
-    private static boolean warmed;
-
     public ScouterBenchGlowLayer(GeoRenderer<ScouterBenchBlockEntity> renderer) {
         super(renderer);
-    }
-
-    /**
-     * ¿Existe la máscara? Se consulta UNA vez y se recuerda: un getResource por frame y por
-     * banco es caro para una respuesta que no cambia en toda la sesión.
-         * ⚠ El caché no se invalida con F3+T. Si añades la máscara con el juego abierto, hay que
-     * reiniciar. Aceptable para algo que solo cambia mientras se desarrolla.
-     */
-    private static boolean hasMask() {
-        if (maskPresent == null) {
-            maskPresent = Minecraft.getInstance().getResourceManager()
-                    .getResource(MASK).isPresent();
-            if (!maskPresent) {
-                Zenkai.LOGGER.warn("[Zenkai] Falta {}: la capa emisiva del banco queda apagada.",
-                        MASK);
-            }
-        }
-        return maskPresent;
-    }
-
-    /**
-     * Fuerza la creación de la textura emisiva ANTES de que haga falta. Lo llama
-     * ScouterBenchRenderer en cada render, no solo al trabajar: ese es justo el punto.
-     */
-    public static void warmUp() {
-        if (warmed || !hasMask()) return;
-        warmed = true;
-        AutoGlowingTexture.getEmissiveResource(TEXTURE);
     }
 
     @Override
@@ -87,14 +47,15 @@ public class ScouterBenchGlowLayer extends AutoGlowingGeoLayer<ScouterBenchBlock
                        BakedGeoModel bakedModel, RenderType renderType,
                        MultiBufferSource bufferSource, VertexConsumer buffer,
                        float partialTick, int packedLight, int packedOverlay) {
-        if (!hasMask()) return;
-
         BlockState state = animatable.getBlockState();
         if (!state.hasProperty(ScouterBenchBlock.WORKING)
                 || !state.getValue(ScouterBenchBlock.WORKING)) {
             return;
         }
-        super.render(poseStack, animatable, bakedModel, renderType, bufferSource, buffer,
-                partialTick, packedLight, packedOverlay);
+
+        RenderType glow = RenderType.eyes(GLOW);
+        getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, glow,
+                bufferSource.getBuffer(glow), partialTick,
+                LightTexture.FULL_BRIGHT, packedOverlay, -1);
     }
 }
