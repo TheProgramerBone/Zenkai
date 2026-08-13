@@ -76,9 +76,6 @@ public final class AuraSkirts {
 
     /**
      * Construye el plan. Es el único punto de entrada del renderer al sistema de aura.
-         * @param profile     perfil sin compensar (de AuraManager.profileOf)
-     * @param distanceSq  distancia al cuadrado del jugador a la cámara
-     * @param qualityFloor banda mínima según la calidad configurada; null = sin límite
      */
     public static final Plan EMPTY =
             new Plan(AuraProfile.OFF, List.of(), AuraLod.SIGNATURE, 0xFFFFFF, -1, -1);
