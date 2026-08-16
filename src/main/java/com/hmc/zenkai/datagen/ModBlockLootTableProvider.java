@@ -81,6 +81,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.KATCHIN_PILLAR.get());
         add(ModBlocks.CUT_KATCHIN_SLAB.get(), this::createSlabItemTable);
         dropSelf(ModBlocks.NAMEKIAN_LAMP.get());
+        dropSelf(ModBlocks.ENERGY_GENERATOR.get());
 
         for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
             dropSelf(fam.block().get());

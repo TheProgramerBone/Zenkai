@@ -67,6 +67,7 @@ public class PlayerVisualAttachment {
         return switch (race) {
             case NAMEKIAN -> 0x2DC31E;
             case ARCOSIAN -> 0xEDEDED;
+            case MAJIN    -> 0xF2A0C4;
             default        -> 0xD5A07A;
         };
     }

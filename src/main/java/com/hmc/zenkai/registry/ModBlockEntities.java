@@ -2,6 +2,7 @@ package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.blockentity.AllDragonBalls.AllDragonBallsEntity;
+import com.hmc.zenkai.content.blockentity.EnergyGeneratorBlockEntity;
 import com.hmc.zenkai.content.blockentity.NpcMarkerBlockEntity;
 import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import net.minecraft.core.registries.Registries;
@@ -31,6 +32,11 @@ public class ModBlockEntities {
     public static final Supplier<BlockEntityType<ScouterBenchBlockEntity>> SCOUTER_BENCH =
             BLOCK_ENTITIES.register("scouter_bench", () -> BlockEntityType.Builder
                     .of(ScouterBenchBlockEntity::new, ModBlocks.SCOUTER_BENCH.get())
+                    .build(null));
+
+    public static final Supplier<BlockEntityType<EnergyGeneratorBlockEntity>> ENERGY_GENERATOR =
+            BLOCK_ENTITIES.register("energy_generator", () -> BlockEntityType.Builder
+                    .of(EnergyGeneratorBlockEntity::new, ModBlocks.ENERGY_GENERATOR.get())
                     .build(null));
 
     public static void register(IEventBus eventBus) {

@@ -2,6 +2,7 @@ package com.hmc.zenkai.event;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.aura.AuraClientState;
+import com.hmc.zenkai.feature.combat.InCombatState;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -72,6 +73,7 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_LEGENDARY = IconUV.grid(9, 0);
     private static final IconUV ICON_KAIOKEN = IconUV.grid(10, 0);
     private static final IconUV ICON_STRAIN = IconUV.grid(1, 0);
+    private static final IconUV ICON_IN_COMBAT = IconUV.grid(0, 1);
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
@@ -185,6 +187,13 @@ public final class ClientZenkaiHooks {
 
         if (stats.isLegendary()) {
             drawBadge(g, iconX, iconY, ICON_LEGENDARY);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        if (InCombatState.isInCombat(mc.player)) {
+            drawBadge(g, iconX, iconY, ICON_IN_COMBAT);
+            drawBadgeLabel(g, iconX, iconY,
+                    InCombatState.secondsLeft(mc.player) + "s", 0xFFFF8866);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 

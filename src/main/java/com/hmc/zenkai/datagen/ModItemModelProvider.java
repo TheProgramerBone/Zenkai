@@ -56,6 +56,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("ajisa_fence_gate", modLoc("block/ajisa_fence_gate"));
         withExistingParent("ajisa_trapdoor", modLoc("block/ajisa_trapdoor_bottom"));
         withExistingParent("ajisa_pressure_plate", modLoc("block/ajisa_pressure_plate"));
+        withExistingParent("energy_generator", modLoc("block/energy_generator"));
 
         withExistingParent(ModItems.NAMEKIAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));

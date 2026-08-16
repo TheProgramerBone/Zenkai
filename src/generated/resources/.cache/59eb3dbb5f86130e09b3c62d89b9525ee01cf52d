@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-09T09:36:03.5218827	Loot Tables
+// 1.21.1	2026-08-16T11:08:40.8397533	Loot Tables
 ce23c9d992d0b026612247c98fab09e9a4c77d13 data/zenkai/loot_table/blocks/ajisa_button.json
 1c902309ab65853161114f52ae7b2f3a4f2a0bde data/zenkai/loot_table/blocks/ajisa_door.json
 71d1a278b29aa52b81445b0040480b6679e0148b data/zenkai/loot_table/blocks/ajisa_fence.json
@@ -29,6 +29,7 @@ d2c997d00f17faeaae572c09dcd67fc4e6cd8a9b data/zenkai/loot_table/blocks/dragon_ba
 6ea1e849ac1b201eb6228b7045175c0205c0a091 data/zenkai/loot_table/blocks/dragon_ball_stone.json
 ce8cca083bef96b4f2d3b3a58bc6093f9af2b051 data/zenkai/loot_table/blocks/energy_crystal_block.json
 cff0e575a86028efc4eb153db5e50e2637a43090 data/zenkai/loot_table/blocks/energy_crystal_ore.json
+d66c5980db2d83837ff27eec069a528a11cadef8 data/zenkai/loot_table/blocks/energy_generator.json
 0172500224a82631d77dfe2ad347db6cef3918af data/zenkai/loot_table/blocks/katchin_block.json
 e88ca1078419e500c7e9d486de1c41b753457a7b data/zenkai/loot_table/blocks/katchin_ore.json
 de55618210d7bb73a3fb1d67a1de2482ba3763fb data/zenkai/loot_table/blocks/katchin_pillar.json

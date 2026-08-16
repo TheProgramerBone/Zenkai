@@ -46,8 +46,18 @@ public final class RaceSkinSlots {
                 default    -> ItemStack.EMPTY;
             };
         }
+        if (race == Race.MAJIN) {
+            boolean female = PlayerVisualAttachment.get(player).getGender()
+                    == PlayerVisualAttachment.Gender.FEMALE;
+            return switch (slot) {
+                case HEAD  -> (female ? ModItems.MAJIN_RACE_HELMET_FEMALE     : ModItems.MAJIN_RACE_HELMET).get().getDefaultInstance();
+                case CHEST -> (female ? ModItems.MAJIN_RACE_CHESTPLATE_FEMALE : ModItems.MAJIN_RACE_CHESTPLATE).get().getDefaultInstance();
+                case LEGS  -> (female ? ModItems.MAJIN_RACE_LEGGINGS_FEMALE   : ModItems.MAJIN_RACE_LEGGINGS).get().getDefaultInstance();
+                case FEET  -> (female ? ModItems.MAJIN_RACE_BOOTS_FEMALE      : ModItems.MAJIN_RACE_BOOTS).get().getDefaultInstance();
+                default    -> ItemStack.EMPTY;
+            };
+        }
 
-        // Majin: pendiente de items propios → sin skin de raza por ahora
         return ItemStack.EMPTY;
     }
 

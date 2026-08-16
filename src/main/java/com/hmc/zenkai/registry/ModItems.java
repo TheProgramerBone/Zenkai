@@ -427,6 +427,82 @@ public class ModItems {
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
+    // Majin. Cuatro variantes como Human/Saiyan (género x color) porque comparte con ellos
+    // la silueta humanoide y el selector de género de AppearanceScreen, que ya lo incluye en
+    // isTintRace. A diferencia de ellos NO tiene pelo: HairResolver filtra por raza y el
+    // majin no entra, que es lo correcto — su "pelo" será una capa propia, no un peinado.
+    public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_HELMET =
+            ITEMS.register("majin_race_helmet", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/races/majin_player.geo.json",
+                            "textures/models/races/majin_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_CHESTPLATE =
+            ITEMS.register("majin_race_chestplate", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/races/majin_player.geo.json",
+                            "textures/models/races/majin_player_layer_0.png",
+                            "animations/majin.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_LEGGINGS =
+            ITEMS.register("majin_race_leggings", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/races/majin_player.geo.json",
+                            "textures/models/races/majin_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_BOOTS =
+            ITEMS.register("majin_race_boots", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/races/majin_player.geo.json",
+                            "textures/models/races/majin_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_HELMET_FEMALE =
+            ITEMS.register("majin_race_helmet_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/races/majin_player_female.geo.json",
+                            "textures/models/races/majin_player_female_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_CHESTPLATE_FEMALE =
+            ITEMS.register("majin_race_chestplate_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/races/majin_player_female.geo.json",
+                            "textures/models/races/majin_player_female_layer_0.png",
+                            "animations/majin.animation.json"
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_LEGGINGS_FEMALE =
+            ITEMS.register("majin_race_leggings_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/races/majin_player_female.geo.json",
+                            "textures/models/races/majin_player_female_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_BOOTS_FEMALE =
+            ITEMS.register("majin_race_boots_female", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/races/majin_player_female.geo.json",
+                            "textures/models/races/majin_player_female_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
     //Halo
     public static final DeferredItem<GeoLayerArmorItem> HALO =
             ITEMS.register("halo", () -> new GeoLayerArmorItem(

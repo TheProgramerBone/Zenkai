@@ -1,6 +1,7 @@
 package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.block.EnergyGeneratorBlock;
 import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
 import com.hmc.zenkai.content.block.NamekianLampBlock;
 import com.hmc.zenkai.registry.ModBlocks;
@@ -122,6 +123,20 @@ public class ModBlockStateProvider extends BlockStateProvider {
         stairsBlock((StairBlock) ModBlocks.SACRED_STONE_BRICK_STAIRS.get(), modLoc("block/sacred_stone_bricks"));
         slabBlock((SlabBlock) ModBlocks.SACRED_STONE_BRICK_SLAB.get(), modLoc("block/sacred_stone_bricks"), modLoc("block/sacred_stone_bricks"));
         wallBlock((WallBlock) ModBlocks.SACRED_STONE_BRICK_WALL.get(), modLoc("block/sacred_stone_bricks"));
+
+        // Un modelo POR ESTADO y con nombre propio. Generar los dos con el mismo nombre hace
+        // que el segundo sobrescriba al primero en disco y el bloque apagado acabe con la
+        // textura encendida — sin error de compilación ni aviso en el log.
+        horizontalBlock(ModBlocks.ENERGY_GENERATOR.get(), state ->
+                state.getValue(EnergyGeneratorBlock.LIT)
+                        ? models().orientable("energy_generator_on",
+                        modLoc("block/energy_generator_side_on"),
+                        modLoc("block/energy_generator_front"),
+                        modLoc("block/energy_generator_top"))
+                        : models().orientable("energy_generator",
+                        modLoc("block/energy_generator_side"),
+                        modLoc("block/energy_generator_front"),
+                        modLoc("block/energy_generator_top")));
     }
 
     private void blockWithItem(DeferredBlock<?> deferredBlock) {

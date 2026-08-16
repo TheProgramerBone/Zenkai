@@ -61,14 +61,24 @@ public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC {
     protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (!this.level().isClientSide && player instanceof ServerPlayer sp) {
             MasterManager.Result r = MasterManager.check(sp, masterId(), this);
-            if (r.ok()) {
-                PacketDistributor.sendToPlayer(sp, new OpenMasterPayload(masterId(), this.getId()));
-            } else {
+            if (!r.ok()) {
                 MasterManager.tell(sp, masterId(), r);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
+            // Agachado = el favor del maestro (Korin y sus semillas); de pie = su tienda.
+            // Separados porque son dos cosas distintas y mezclarlas en un clic hace que el
+            // jugador nunca sepa cuál va a pasar.
+            if (player.isShiftKeyDown() && offerFavor(sp)) {
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
+            }
+            PacketDistributor.sendToPlayer(sp, new OpenMasterPayload(masterId(), this.getId()));
         }
         return InteractionResult.sidedSuccess(this.level().isClientSide);
     }
+
+    /** Lo que este maestro da además de enseñar. Por defecto nada: devolver false hace que
+     *  el shift-clic caiga en la tienda, así que un maestro sin favor no se queda mudo. */
+    protected boolean offerFavor(ServerPlayer sp) { return false; }
 
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes()

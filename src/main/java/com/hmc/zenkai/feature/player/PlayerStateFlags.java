@@ -29,6 +29,10 @@ public class PlayerStateFlags {
     /** gameTime en que fue enviado al otro mundo (para el contador de Yemma). */
     private long otherworldSince = 0L;
 
+    /** gameTime en que expira el estado "en combate". Ver InCombatState: es un instante
+     *  futuro y no un contador para no tener que decrementarlo cada tick. */
+    private long inCombatUntil = 0L;
+
     /** El jugador está "derribado" (acostado, transición previa al otro mundo). */
     private boolean downed = false;
     /** gameTime en que el derribado termina y muere de verdad si no lo curan. */
@@ -46,6 +50,8 @@ public class PlayerStateFlags {
     public long getOtherworldSince() { return otherworldSince; }
     public boolean isDowned()     { return downed; }
     public long getDownedUntil()  { return downedUntil; }
+    public long getInCombatUntil()  { return inCombatUntil; }
+    public void setInCombatUntil(long t) { this.inCombatUntil = t; }
 
     public void setImmortal(boolean v)  { this.isImmortal  = v; }
     public void setDivine(boolean v)    { this.isDivine    = v; }
@@ -73,6 +79,7 @@ public class PlayerStateFlags {
         tag.putLong("otherworldSince", otherworldSince);
         tag.putBoolean("downed", downed);
         tag.putLong("downedUntil", downedUntil);
+        tag.putLong("inCombatUntil", inCombatUntil);
         return tag;
     }
 
@@ -87,5 +94,6 @@ public class PlayerStateFlags {
         this.otherworldSince = tag.getLong("otherworldSince");
         this.downed = tag.getBoolean("downed");
         this.downedUntil = tag.getLong("downedUntil");
+        this.inCombatUntil = tag.getLong("inCombatUntil");
     }
 }

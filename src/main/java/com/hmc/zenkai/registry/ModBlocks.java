@@ -268,6 +268,15 @@ public class ModBlocks {
                     .noOcclusion()),
             b -> new ScouterBenchBlockItem(b.get(), new Item.Properties()));
 
+    public static final DeferredBlock<Block> ENERGY_GENERATOR = registerBlock("energy_generator",
+            () -> new EnergyGeneratorBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .sound(SoundType.METAL)
+                    .strength(3.5f, 6f)
+                    .requiresCorrectToolForDrops()
+                    // La luz sale del blockstate: apagado no ilumina, encendido sí.
+                    .lightLevel(s -> s.getValue(EnergyGeneratorBlock.LIT) ? 13 : 0)));
+
     public static final DeferredBlock<Block> NAMEKIAN_DIRT = registerBlock("namekian_dirt",
             ()-> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5f)

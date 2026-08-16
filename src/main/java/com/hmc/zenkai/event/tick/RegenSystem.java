@@ -1,6 +1,7 @@
 package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.combat.CombatRegen;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.race.RacePassives;
 import com.hmc.zenkai.feature.skills.SkillEffects;
@@ -29,7 +30,8 @@ public final class RegenSystem {
         int bodyCur = att.getBody(), bodyMax = att.getBodyMax();
         if (bodyCur > 0 && bodyCur < bodyMax) {
             int gain = accrue(carry, 0, bodyMax * (CommonConfig.baseRegenBody() / 100.0)
-                    * RacePassives.bodyRegenMult(p));
+                    * RacePassives.bodyRegenMult(p)
+                    * CombatRegen.bodyMult(p));
             if (gain > 0) {
                 att.addBody(gain);
                 didBody = true;

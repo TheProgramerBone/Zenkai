@@ -71,7 +71,7 @@ public final class RacePassives {
     private static Race raceOf(Player p) {
         if (p == null) return null;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
-        return (att == null || !att.isRaceChosen()) ? null : att.getRace();
+        return !att.isRaceChosen() ? null : att.getRace();
     }
 
     public static boolean is(Player p, Race race) { return raceOf(p) == race; }
@@ -79,6 +79,13 @@ public final class RacePassives {
     /** Multiplicador de la regeneración de body por raza. Lo consulta RegenSystem. */
     public static double bodyRegenMult(Player p) {
         return is(p, Race.NAMEKIAN) ? NAMEKIAN_REGEN_MULT : 1.0;
+    }
+
+    /** ¿La regeneración de esta raza ES su pasiva? Lo consulta CombatRegen para no anularla
+     *  completamente en combate. No es lo mismo que "tiene bonus de regen": el humano recupera
+     *  estamina más rápido y aun así no entra aquí, porque su identidad no es curarse. */
+    public static boolean hasRegenIdentity(Player p) {
+        return is(p, Race.NAMEKIAN) || is(p, Race.MAJIN);
     }
 
     /** Ki que cuesta la regeneración extra namekiana, dados los puntos de body regenerados. */

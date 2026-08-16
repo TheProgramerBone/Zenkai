@@ -17,6 +17,26 @@
       "zenkai:dragon_ball_radar_near"
     ]
   },
+  "hit": {
+    "subtitle": "sounds.zenkai.hit",
+    "sounds": ["zenkai:hit_1", "zenkai:hit_2", "zenkai:hit_3"]
+  },
+  "ki_charge": {
+    "subtitle": "sounds.zenkai.ki_charge",
+    "sounds": [{ "name": "zenkai:ki_charge", "stream": false }]
+  },
+  "turbo_loop": {
+    "subtitle": "sounds.zenkai.turbo_loop",
+    "sounds": [{ "name": "zenkai:turbo_loop", "stream": false }]
+  },
+  "ki_attack_charge_1": { "subtitle": "sounds.zenkai.ki_attack_charge", "sounds": ["zenkai:ki_attack_charge_1"] },
+  "ki_attack_charge_2": { "subtitle": "sounds.zenkai.ki_attack_charge", "sounds": ["zenkai:ki_attack_charge_2"] },
+  "ki_attack_charge_3": { "subtitle": "sounds.zenkai.ki_attack_charge", "sounds": ["zenkai:ki_attack_charge_3"] },
+  "ki_attack_charge_4": { "subtitle": "sounds.zenkai.ki_attack_charge", "sounds": ["zenkai:ki_attack_charge_4"] },
+  "ki_attack_release_1": { "subtitle": "sounds.zenkai.ki_attack_release", "sounds": ["zenkai:ki_attack_release_1"] },
+  "ki_attack_release_2": { "subtitle": "sounds.zenkai.ki_attack_release", "sounds": ["zenkai:ki_attack_release_2"] },
+  "ki_attack_release_3": { "subtitle": "sounds.zenkai.ki_attack_release", "sounds": ["zenkai:ki_attack_release_3"] },
+  "ki_attack_release_4": { "subtitle": "sounds.zenkai.ki_attack_release", "sounds": ["zenkai:ki_attack_release_4"] },
   "scouter_bench_open":    { "subtitle": "sounds.zenkai.scouter_bench_open",    "sounds": ["zenkai:scouter_bench_open"] },
   "scouter_bench_insert":  { "subtitle": "sounds.zenkai.scouter_bench_insert",  "sounds": ["zenkai:scouter_bench_insert"] },
   "scouter_bench_remove":  { "subtitle": "sounds.zenkai.scouter_bench_remove",  "sounds": ["zenkai:scouter_bench_remove"] },

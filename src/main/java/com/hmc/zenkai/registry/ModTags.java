@@ -29,6 +29,8 @@ public class ModTags {
         public static final TagKey<Item> KEEPS_HAIR = createTag("keeps_hair");
         public static final TagKey<Item> AJISA_LOGS = createTag("ajisa_logs");
         public static final TagKey<Item> WORLDGEN_DEBRIS = createTag("worldgen_debris");
+        /** Combustibles EXTRA del generador, además de los quemables de vanilla. El cristal
+         *  de energía entra por aquí: no es leña, pero arde mucho más. */
 
         private static TagKey<Item> createTag(String name) {
             return ItemTags.create(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,name));

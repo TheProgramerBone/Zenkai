@@ -1,8 +1,7 @@
 package com.hmc.zenkai.client.gui;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.gui.menu.ScouterBenchMenu;
-import com.hmc.zenkai.client.gui.menu.StackWishMenu;
+import com.hmc.zenkai.client.gui.menu.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
@@ -25,6 +24,10 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<ScouterBenchMenu>> SCOUTER_BENCH =
             MENUS.register("scouter_bench",
                     () -> IMenuTypeExtension.create(ScouterBenchMenu::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<EnergyGeneratorMenu>> ENERGY_GENERATOR =
+            MENUS.register("energy_generator",
+                    () -> IMenuTypeExtension.create(EnergyGeneratorMenu::new));
 
     public static void register(IEventBus bus) {
         MENUS.register(bus);

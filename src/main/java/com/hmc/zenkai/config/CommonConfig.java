@@ -178,6 +178,18 @@ public final class CommonConfig {
             BUILDER.comment("Damage floor as a fraction of the incoming hit, after defense reduction. 0.05 = 5%")
                     .defineInRange("combat.min_damage_percent", 0.05D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.IntValue IN_COMBAT_TICKS_RAW =
+            BUILDER.comment("Ticks que dura el estado 'en combate' desde el ultimo dano dado o recibido. 160 = 8 s.")
+                    .defineInRange("combat.in_combat_ticks", 160, 0, 12000);
+
+    private static final ModConfigSpec.DoubleValue IN_COMBAT_BODY_REGEN_MULT_RAW =
+            BUILDER.comment("Multiplicador de la regeneración de BODY mientras estas en combate. 0.5 = la mitad, 0.0 = no te curas peleando, 1.0 = desactiva la penalizacion. Solo body: la estamina y el ki son con lo que se pelea.")
+                    .defineInRange("combat.in_combat_body_regen_mult", 0.5D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue IN_COMBAT_RACIAL_REGEN_FLOOR_RAW =
+            BUILDER.comment("Suelo del multiplicador anterior para las razas cuya regeneración ES su pasiva (namekiano, majin). Aunque el mult general este a 0, ellos siguen curandose a este ritmo: si no, dejarian de ser esa raza en combate, que es justo donde su identidad tiene que notarse.")
+                    .defineInRange("combat.in_combat_racial_regen_floor", 0.25D, 0.0D, 1.0D);
+
     private static final ModConfigSpec.IntValue TECHNIQUE_MAX_SLOTS_RAW =
             BUILDER.comment("Ki techniques: max technique slots per player")
                     .defineInRange("technique.max_slots", 12, 1, 24);
@@ -395,6 +407,9 @@ public final class CommonConfig {
 
     private static volatile double TP_COEFFICIENT = 1.0D;
     private static volatile int    GLOBAL_ATTRIBUTE_CAP = 200000;
+    private static volatile int    IN_COMBAT_TICKS = 160;
+    private static volatile double IN_COMBAT_BODY_REGEN_MULT = 0.5D;
+    private static volatile double IN_COMBAT_RACIAL_REGEN_FLOOR = 0.25D;
 
     private static volatile double SPEED_MULT_CAP = 3.0D;
     private static volatile double MOVE_SCALING = 1.0D;
@@ -480,6 +495,9 @@ public final class CommonConfig {
         GLOBAL_ATTRIBUTE_CAP = GLOBAL_ATTRIBUTE_CAP_RAW.get();
         ATTRIBUTE_BASE_COST = ATTRIBUTE_BASE_COST_RAW.get();
         TRAINING_PL_RATIO_FLOOR = TRAINING_PL_RATIO_FLOOR_RAW.get();
+        IN_COMBAT_TICKS              = IN_COMBAT_TICKS_RAW.get();
+        IN_COMBAT_BODY_REGEN_MULT    = IN_COMBAT_BODY_REGEN_MULT_RAW.get();
+        IN_COMBAT_RACIAL_REGEN_FLOOR = IN_COMBAT_RACIAL_REGEN_FLOOR_RAW.get();
 
         SPEED_MULT_CAP    = SPEED_MULT_CAP_RAW.get();
         MOVE_SCALING      = MOVE_SCALING_RAW.get();
@@ -591,6 +609,9 @@ public final class CommonConfig {
     public static double flyBaseSpeed()             { return FLY_BASE_SPEED; }
     public static double flyKiDrainPerTick()        { return FLY_KI_DRAIN; }
     public static double turboDrainPctPerSec()      { return TURBO_DRAIN_PCT_PER_SEC; }
+    public static int    inCombatTicks()             { return IN_COMBAT_TICKS; }
+    public static double inCombatBodyRegenMult()     { return IN_COMBAT_BODY_REGEN_MULT; }
+    public static double inCombatRacialRegenFloor()  { return IN_COMBAT_RACIAL_REGEN_FLOOR; }
 
     public static boolean mirrorHealth() { return MIRROR_HEALTH; }
     public static double absorptionWeight() { return ABSORPTION_WEIGHT; }

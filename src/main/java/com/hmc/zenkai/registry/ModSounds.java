@@ -30,6 +30,12 @@ public class ModSounds {
     public static final Supplier<SoundEvent> KI_ATTACK_RELEASE_2 = registerSoundEvent("ki_attack_release_2");
     public static final Supplier<SoundEvent> KI_ATTACK_RELEASE_3 = registerSoundEvent("ki_attack_release_3");
     public static final Supplier<SoundEvent> KI_ATTACK_RELEASE_4 = registerSoundEvent("ki_attack_release_4");
+    /** Golpe físico normal. UN evento con tres variantes en sounds.json: el motor alterna
+     *  solo. Tres eventos separados podrían desincronizarse en volumen o subtítulo. */
+    public static final Supplier<SoundEvent> HIT = registerSoundEvent("hit");
+    /** Bucle de turbo (R). Distinto del de carga de ki: son dos estados distintos y el
+     *  jugador tiene que poder oír cuál está activo sin mirar el HUD. */
+    public static final Supplier<SoundEvent> TURBO_LOOP = registerSoundEvent("turbo_loop");
 
     // ── Banco de scouter ─────────────────────────────────────────────────────
     public static final Supplier<SoundEvent> SCOUTER_BENCH_OPEN    = registerSoundEvent("scouter_bench_open");

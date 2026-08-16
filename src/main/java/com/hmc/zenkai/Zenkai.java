@@ -2,6 +2,7 @@ package com.hmc.zenkai;
 
 
 import com.hmc.zenkai.client.gui.screens.ClientConfigScreen;
+import com.hmc.zenkai.client.gui.screens.EnergyGeneratorScreen;
 import com.hmc.zenkai.client.gui.screens.ScouterBenchScreen;
 import com.hmc.zenkai.client.render_and_model_entities.blockentity.ScouterBenchRenderer;
 import com.hmc.zenkai.client.sound.ScouterBenchSounds;
@@ -25,17 +26,12 @@ import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.network.ModNetworking;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.mojang.logging.LogUtils;
-import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
-import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonConfiguration;
-import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonMode;
-import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.TippableArrowRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FireBlock;
 import net.neoforged.api.distmarker.Dist;
@@ -141,6 +137,21 @@ public class Zenkai {
                 Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.SCOUTER_BENCH.get(),
                 (be, side) -> be.energyHandler());
+
+        // El generador expone su búfer por las seis caras para que un cable de Mekanism
+        // pueda tirar de él. El reparto a bloques pegados NO va por aquí: eso lo empuja el
+        // propio BE en su tick, porque el banco de scouter no sabe pedir energía.
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.ENERGY_GENERATOR.get(),
+                (be, side) -> be.energyHandler());
+
+        // Cara de automatización. El handler filtra: entra combustible, sale solo lo que ya
+        // no arde. Ver AutomationHandler en el block entity.
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.ENERGY_GENERATOR.get(),
+                (be, side) -> be.automationHandler());
     }
 
     // ── Setup exclusivo de cliente ────────────────────────────────────────────
@@ -151,6 +162,7 @@ public class Zenkai {
         public static void registerScreens(RegisterMenuScreensEvent event) {
             event.register(ModMenuTypes.STACK_WISH.get(), StackWishScreen::new);
             event.register(ModMenuTypes.SCOUTER_BENCH.get(), ScouterBenchScreen::new);
+            event.register(ModMenuTypes.ENERGY_GENERATOR.get(), EnergyGeneratorScreen::new);
         }
 
         @SubscribeEvent

@@ -1,6 +1,7 @@
 package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.combat.CombatRegen;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.race.RacePassives;
 import net.minecraft.network.chat.Component;
@@ -133,7 +134,10 @@ public final class RacePassiveSystem {
         int cur = att.getBody(), max = att.getBodyMax();
         if (cur <= 0 || cur >= max) return;
 
-        s.regenCarry += max * RacePassives.MAJIN_PASSIVE_REGEN;
+        // El canal del majin es propio y no pasa por RegenSystem, así que la penalización de
+        // combate hay que aplicarla también aquí o el majin sería el único que se cura a
+        // ritmo normal peleando. CombatRegen ya le garantiza el suelo racial.
+        s.regenCarry += max * RacePassives.MAJIN_PASSIVE_REGEN * CombatRegen.bodyMult(p);
         int whole = (int) s.regenCarry;
         if (whole > 0) {
             s.regenCarry -= whole;

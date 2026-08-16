@@ -249,8 +249,9 @@ public class RaceSelectionScreen extends Screen {
             // Los demás colores por capa ya NO se siembran aquí: salen del JSON de cada capa
             // (layerColors vacío => cada capa usa su default) tras el clearLayerColors() de arriba.
             visual.setSkinColorRgb(seedSkinColorFor(mc.player, r));
-            // Namek/Arcosian = tinte multicapa (siempre coloreable); Human/Saiyan/Majin arrancan natural.
-            visual.setCustomSkinColor(r == Race.NAMEKIAN || r == Race.ARCOSIAN);
+            // Majin entra aquí con Namek/Arcosian: su color ES la identidad del personaje
+            // (rosa, azul, gordo) y arrancar en tono de piel humano no tiene sentido.
+            visual.setCustomSkinColor(r == Race.NAMEKIAN || r == Race.ARCOSIAN || r == Race.MAJIN);
         }
 
         setVisible(skinLeft, humanSaiyan);
