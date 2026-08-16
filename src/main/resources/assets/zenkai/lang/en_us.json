@@ -702,6 +702,7 @@
   "screen.zenkai.technique.effect": "Effect",
   "screen.zenkai.technique.effect.none": "No",
   "screen.zenkai.technique.effect.explosive": "Explosive",
+  "screen.zenkai.technique.forget": "Forget (refund %s TP)",
   "screen.zenkai.technique.color": "Color",
   "screen.zenkai.technique.speed": "Speed",
   "screen.zenkai.technique.speed.slow": "Slow",
@@ -732,7 +733,8 @@
   "screen.zenkai.physical.assigning": "Pick 1-9…",
   "screen.zenkai.physical.pick_slot": "Click a slot, press 1-9, or drag to reorder",
   "screen.zenkai.physical.unlock_action": "Unlock",
-
+  "screen.zenkai.physical.forget": "Forget (refund %s TP)",
+  "screen.zenkai.physical.mnd_free": "MND %s/%s",
 
   "--- CHAT MESSAGES AND NOTIFICATIONS ---": "--- CHAT MESSAGES AND NOTIFICATIONS ---",
   "messages.zenkai.alignment_too_low": "Your heart is not pure enough (%s alignment required)",
@@ -778,6 +780,7 @@
   "messages.zenkai.yemma_wait": "It's not your time yet. You must stay here %s longer.",
   "messages.zenkai.yemma_revive": "Your time is up. Return to the world of the living.",
   "messages.zenkai.yemma_not_dead": "You have no business being here yet.",
+  "messages.zenkai.yemma_hardcore": "Yemma shakes his head. Your ledger is closed — no soul returns from a hardcore death by my hand.",
   "messages.zenkai.sense_ki.off": "Sense Ki: Off",
   "messages.zenkai.sense_ki.all": "Sense Ki: All",
   "messages.zenkai.sense_ki.players": "Sense Ki: Players Only",

@@ -53,6 +53,11 @@ public class YemmaEntity extends ZenkaiDefaultNPC {
                 sp.displayClientMessage(Component.translatable("messages.zenkai.yemma_not_dead")
                         .withStyle(ChatFormatting.GRAY), false);
             } else {
+                if (stats.isHardcoreDeath()) {
+                    sp.displayClientMessage(Component.translatable("messages.zenkai.yemma_hardcore")
+                            .withStyle(ChatFormatting.DARK_RED), false);
+                    return InteractionResult.sidedSuccess(this.level().isClientSide);
+                }
                 long remaining = OtherworldManager.REVIVE_DELAY_TICKS
                         - (this.level().getGameTime() - stats.getOtherworldSince());
 

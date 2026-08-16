@@ -10,6 +10,9 @@ public class PlayerStateFlags {
     private boolean isLegendary = false;
     private boolean flyEnabled  = false;
     private boolean chargingKi  = false;
+    /** Murió en un mundo hardcore. Yemma no revive a estos: su trato es con las almas que
+     *  aún tienen cuerpo al que volver. Solo las esferas del dragón lo deshacen. */
+    private boolean hardcoreDeath = false;
 
     /**
      * El jugador está en BOOST de vuelo -> pose/hitbox horizontal ("acostado").
@@ -52,6 +55,8 @@ public class PlayerStateFlags {
     public long getDownedUntil()  { return downedUntil; }
     public long getInCombatUntil()  { return inCombatUntil; }
     public void setInCombatUntil(long t) { this.inCombatUntil = t; }
+    public boolean isHardcoreDeath() { return hardcoreDeath; }
+    public void setHardcoreDeath(boolean v) { this.hardcoreDeath = v; }
 
     public void setImmortal(boolean v)  { this.isImmortal  = v; }
     public void setDivine(boolean v)    { this.isDivine    = v; }
@@ -80,6 +85,7 @@ public class PlayerStateFlags {
         tag.putBoolean("downed", downed);
         tag.putLong("downedUntil", downedUntil);
         tag.putLong("inCombatUntil", inCombatUntil);
+        tag.putBoolean("hardcoreDeath", hardcoreDeath);
         return tag;
     }
 
@@ -95,5 +101,6 @@ public class PlayerStateFlags {
         this.downed = tag.getBoolean("downed");
         this.downedUntil = tag.getLong("downedUntil");
         this.inCombatUntil = tag.getLong("inCombatUntil");
+        this.hardcoreDeath = tag.getBoolean("hardcoreDeath");
     }
 }

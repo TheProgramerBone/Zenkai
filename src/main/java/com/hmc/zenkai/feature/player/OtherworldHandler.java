@@ -39,6 +39,9 @@ public final class OtherworldHandler {
         // Otro mundo ACTIVO: NO cancelamos la muerte -> sale la pantalla de muerte "sí o sí".
         // Solo marcamos el destino; el teletransporte real ocurre en el respawn (onPlayerRespawn).
         OtherworldManager.markPendingOtherworld(player);
+        // Abre el permiso del mixin de hardcore. Se cierra en onPlayerRespawn, pase lo que
+        // pase con el teletransporte: la ventana protege el instante del respawn, no el viaje.
+        HardcoreRespawnWindow.open(player);
     }
 
     /**
@@ -52,16 +55,36 @@ public final class OtherworldHandler {
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (event.isEndConquered()) return;                          // salir del End: no aplica
-        if (!OtherworldManager.isInOtherworld(player)) return;
+
+        if (event.isEndConquered() || !OtherworldManager.isInOtherworld(player)) {
+            HardcoreRespawnWindow.close(player);                     // no va al otro mundo
+            return;
+        }
 
         player.server.execute(() -> {
-            // Se pudo haber ido en ese tick; teletransportar a un jugador desconectado deja
-            // basura en el nivel destino.
-            if (player.hasDisconnected()) return;                    // ⚠ firma
-            // Recomprobamos: entre el evento y este tick alguien pudo revivirlo por comando.
-            if (!OtherworldManager.isInOtherworld(player)) return;
-            OtherworldManager.respawnIntoOtherworld(player);
+            try {
+                // Se pudo haber ido en ese tick; teletransportar a un jugador desconectado deja
+                // basura en el nivel destino.
+                if (player.hasDisconnected()) return;                // ⚠ firma
+                // Recomprobamos: entre el evento y este tick alguien pudo revivirlo por comando.
+                if (!OtherworldManager.isInOtherworld(player)) return;
+                OtherworldManager.respawnIntoOtherworld(player);
+            } finally {
+                // La ventana se cierra DESPUÉS del traslado, no en el evento: cerrarla antes
+                // dejaba al mixin sin permiso justo durante el tramo que tenía que vigilar.
+                // En finally porque una ventana que se queda abierta secuestra /gamemode para
+                // ese jugador el resto de la sesión.
+                HardcoreRespawnWindow.close(player);
+            }
         });
+    }
+
+    /** Red de seguridad: quien se desconecta entre la muerte y el respawn dejaría su ventana
+     *  abierta para siempre, y al volver a entrar el mixin le bloquearía /gamemode spectator. */
+    @SubscribeEvent
+    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            HardcoreRespawnWindow.close(player);
+        }
     }
 }

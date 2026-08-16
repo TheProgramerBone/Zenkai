@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
@@ -36,6 +37,10 @@ public record PhysicalTechniquePacket(int op, int tech, int position) implements
         return new PhysicalTechniquePacket(1, t.ordinal(), position);
     }
 
+    public static PhysicalTechniquePacket forget(PhysicalTechnique t) {
+        return new PhysicalTechniquePacket(2, t.ordinal(), -1);
+    }
+
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
@@ -48,13 +53,22 @@ public record PhysicalTechniquePacket(int op, int tech, int position) implements
 
             if (pkt.op() == 0) {
                 if (att.techniques().isUnlocked(t)) return;
-                if (att.getAttribute(ZenkaiAttributes.MIND) < t.mindReq()) return;
+                // MIND como capacidad: ocupa mientras la tengas. Ver MindBudget.
+                if (!MindBudget.canUnlock(att, t)) return;
                 if (att.getTP() < t.tpCost()) return;
                 att.addTP(-t.tpCost());
                 att.techniques().unlock(t);
             } else if (pkt.op() == 1) {
                 if (!att.techniques().isUnlocked(t)) return;
                 att.techniques().bindPhysical(pkt.position(), t);
+            } else if (pkt.op() == 2) {
+                // Olvidar: reembolso íntegro y liberación de MIND. Ver handleForget en
+                // TechniquePacket para el porqué de no penalizar.
+                if (!att.techniques().isUnlocked(t)) return;
+                att.techniques().forget(t);
+                att.addTP(t.tpCost());
+            } else {
+                return;
             }
             PlayerLifeCycle.sync(sp);
         });

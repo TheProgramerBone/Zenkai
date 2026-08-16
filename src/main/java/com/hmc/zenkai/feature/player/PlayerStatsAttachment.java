@@ -275,6 +275,10 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public void setInOtherworld(boolean v) { flags.setInOtherworld(v); }
     public long getOtherworldSince()       { return flags.getOtherworldSince(); }
     public void setOtherworldSince(long t) { flags.setOtherworldSince(t); }
+    /** Murió en un mundo hardcore. Lo consulta Yemma para negarse a revivirlo; solo las
+     *  esferas del dragón lo deshacen. Ver OtherworldManager#markPendingOtherworld. */
+    public boolean isHardcoreDeath()        { return flags.isHardcoreDeath(); }
+    public void setHardcoreDeath(boolean v) { flags.setHardcoreDeath(v); }
 
     // ── Ciclo de vida ────────────────────────────────────────────────────────
     public void refillOnRespawn() { pools.refillAll(); }
@@ -403,15 +407,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         };
     }
 
-    /** MIND ocupada por las habilidades actuales. */
-    public int mindUsed() { return skills.mindUsed(); }
+    /** MIND ocupada por habilidades Y técnicas. Ver MindBudget: es el único sitio donde se
+     *  suman los tres orígenes. */
+    public int mindUsed() { return MindBudget.used(this); }
 
-    /** MIND libre. Puede salir NEGATIVA si un datapack sube los mind_req por debajo de los
-     *  pies del jugador: no se corrige aquí a propósito, porque taparlo escondería el
-     *  problema. Quien compra ya lo trata como "no te llega". */
-    public int mindFree() {
-        return getAttribute(ZenkaiAttributes.MIND) - skills.mindUsed();
-    }
+    /** MIND libre. Puede salir NEGATIVA y no se corrige a propósito — ver MindBudget#free. */
+    public int mindFree() { return MindBudget.free(this); }
 
     /** PL REAL. No lo baja esconder el ki. */
     @Override

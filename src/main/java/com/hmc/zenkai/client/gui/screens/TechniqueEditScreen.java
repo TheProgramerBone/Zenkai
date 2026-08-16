@@ -10,6 +10,7 @@ import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
+import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.technique.TechniqueAssets;
@@ -75,6 +76,8 @@ public class TechniqueEditScreen extends Screen {
     private static final int MARGIN = 16;
     private static final int ROW_H = 18;
     private static final int ARROW_W = 12;
+
+    private PanelButton forgetButton;
 
     private static final int BTN_W = 60;
     private static final int BTN_H = 25;
@@ -208,6 +211,16 @@ public class TechniqueEditScreen extends Screen {
                 PanelButton.Kind.PRIMARY,
                 () -> PacketDistributor.sendToServer(TechniquePacket.unlock(type)));
         addRenderableWidget(unlockButton);
+
+        // Mismo sitio que el de desbloquear: nunca se ven los dos a la vez, y así el jugador
+        // no tiene que buscar en otro lado la operación inversa.
+        forgetButton = new PanelButton(
+                x + (contentW - PanelButton.W) / 2, topPos + Y_UNLOCK,
+                PanelButton.W, PanelButton.H,
+                Component.translatable("screen.zenkai.technique.forget", type.tpCost()),
+                PanelButton.Kind.PRIMARY,
+                () -> PacketDistributor.sendToServer(TechniquePacket.forget(type)));
+        addRenderableWidget(forgetButton);
 
         initBottomBar();
         refreshButtons();
@@ -426,8 +439,9 @@ public class TechniqueEditScreen extends Screen {
         unlockButton.visible = !unlocked && type.enabled();
         unlockButton.active = !unlocked && type.enabled() && att != null
                 && att.getTP() >= type.tpCost()
-                && att.getAttribute(ZenkaiAttributes.MIND)
-                >= type.mindReq();
+                && MindBudget.canUnlock(att, type);
+        forgetButton.visible = unlocked && type.enabled();
+        forgetButton.active = unlocked && type.enabled();
         // El nombre vacío YA NO bloquea: se guarda vacío y se muestra el nombre del tipo.
         saveButton.active = unlocked && type.enabled();
     }

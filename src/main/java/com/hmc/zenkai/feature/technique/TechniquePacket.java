@@ -3,6 +3,7 @@ package com.hmc.zenkai.feature.technique;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
@@ -33,6 +34,7 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
     public static final byte OP_SAVE = 1;
     public static final byte OP_DELETE = 2;
     public static final byte OP_BIND = 3;
+    public static final byte OP_FORGET = 4;
 
     private static final int SOUND_ID_MAX = 128;
 
@@ -66,6 +68,10 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
     // ---- Constructores de conveniencia (cliente) ----
     public static TechniquePacket unlock(KiTechniqueType t) {
         return new TechniquePacket(OP_UNLOCK, -1, t.name(), "", 0, 0, false, 0, "", "", 1);
+    }
+    /** Olvidar un tipo de ki: libera su MIND y devuelve el TP. */
+    public static TechniquePacket forget(KiTechniqueType t) {
+        return new TechniquePacket(OP_FORGET, -1, t.name(), "", 0, 0, false, 0, "", "", 1);
     }
 
     public static TechniquePacket save(int slot, KiTechniqueType t, String name,
@@ -109,6 +115,7 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
                     if (ok) att.techniques().bind(pkt.size(), pkt.slot());
                     yield ok;
                 }
+                case OP_FORGET -> handleForget(att, pkt);
                 default -> false;
             };
             if (changed) PlayerLifeCycle.syncIfServer(sp);
@@ -118,10 +125,30 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
     private static boolean handleUnlock(PlayerStatsAttachment att, TechniquePacket pkt) {
         KiTechniqueType type = KiTechniqueType.byName(pkt.typeName());
         if (type == null || !type.enabled() || att.techniques().isUnlocked(type)) return false;
-        if (att.getAttribute(ZenkaiAttributes.MIND) < type.mindReq()) return false;
+        // MIND como CAPACIDAD, no como umbral: la técnica OCUPA su mind_req mientras la tengas.
+        // Antes bastaba con superar el listón una vez y a partir de ahí todas eran gratis.
+        if (!MindBudget.canUnlock(att, type)) return false;
         if (att.getTP() < type.tpCost()) return false;
         att.addTP(-type.tpCost());
         att.techniques().unlock(type);
+        return true;
+    }
+
+    /**
+     * Olvidar un tipo de ki. Devuelve el TP completo y libera la MIND.
+     * REEMBOLSO ÍNTEGRO, sin penalización, por el mismo motivo que en ForgetSkillPacket: la
+     * decisión ya pesa por la concentración que ocupa mientras la tienes. Cobrar además por
+     * rectificar solo castiga experimentar, y ahora que el MIND es finito el jugador NECESITA
+     * poder rectificar — si no, un mal reparto en la hora 3 es irreversible.
+     * BORRA LAS INSTANCIAS GUARDADAS de ese tipo. Sin esto el jugador conserva sus técnicas
+     * en los slots y las sigue lanzando: handleSave valida el desbloqueo, pero el disparo no.
+     */
+    private static boolean handleForget(PlayerStatsAttachment att, TechniquePacket pkt) {
+        KiTechniqueType type = KiTechniqueType.byName(pkt.typeName());
+        if (type == null || !att.techniques().isUnlocked(type)) return false;
+
+        att.techniques().forget(type);
+        att.addTP(type.tpCost());
         return true;
     }
 

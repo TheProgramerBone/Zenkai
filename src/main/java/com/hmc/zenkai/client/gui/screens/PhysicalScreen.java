@@ -9,6 +9,7 @@ import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.BindBar;
 import com.hmc.zenkai.client.gui.widgets.SlotCell;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerTechniques;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.hmc.zenkai.feature.technique.PhysicalTechniquePacket;
@@ -178,8 +179,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
     }
 
     private boolean canAfford(PhysicalTechnique t) {
-        return att != null && att.getTP() >= t.tpCost()
-                && att.getAttribute(ZenkaiAttributes.MIND) >= t.mindReq();
+        return att != null && att.getTP() >= t.tpCost() && MindBudget.canUnlock(att, t);
     }
 
     private void onPositionClicked(int pos) {
@@ -266,12 +266,14 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                 Component.translatable("screen.zenkai.technique.tp", att.getTP()),
                 panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.TP_ON_PANEL);
 
-        Component mnd = Component.translatable("screen.zenkai.physical.mnd",
-                att.getAttribute(ZenkaiAttributes.MIND));
-        // MIND en azul pizarra, nunca en el dorado del TP: son los dos recursos que decides
-        // comparar al mirar si puedes desbloquear algo.
+        // Libre / total, no solo el total: con MIND finito el número que decide una compra es
+        // lo que queda, y obligar al jugador a restar de cabeza es pedirle que haga la cuenta
+        // que ya hace el servidor.
+        int free = MindBudget.free(att);
+        Component mnd = Component.translatable("screen.zenkai.physical.mnd_free",
+                free, MindBudget.total(att));
         PanelText.rightOnPanel(g, this.font, mnd, rightEdge(), panelTop + CONTENT_TOP,
-                ZenkaiPalette.MIND_ON_PANEL);
+                free < 0 ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.MIND_ON_PANEL);
 
         // ── Barra de posiciones ──
         if (bindBar != null) {
@@ -375,9 +377,10 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                 lines.add(Component.translatable("screen.zenkai.physical.need_tp",
                         t.tpCost() - att.getTP()).withStyle(net.minecraft.ChatFormatting.RED));
             }
-            if (att.getAttribute(ZenkaiAttributes.MIND) < t.mindReq()) {
+            int mindCost = MindBudget.costOf(t);
+            if (MindBudget.free(att) < mindCost) {
                 lines.add(Component.translatable("screen.zenkai.physical.need_mnd",
-                        t.mindReq()).withStyle(net.minecraft.ChatFormatting.RED));
+                        mindCost - MindBudget.free(att)).withStyle(net.minecraft.ChatFormatting.RED));
             }
             g.renderComponentTooltip(this.font, lines, mouseX, mouseY);
             return;

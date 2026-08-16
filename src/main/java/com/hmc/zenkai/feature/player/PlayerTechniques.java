@@ -49,6 +49,28 @@ public final class PlayerTechniques {
     public boolean isUnlocked(PhysicalTechnique t) { return unlockedPhysical.contains(t); }
     public void unlock(PhysicalTechnique t)        { unlockedPhysical.add(t); }
 
+    /**
+     * Olvida un tipo de ki Y BORRA sus instancias guardadas.
+     * Las instancias tienen que irse con el tipo: si se quedan, el jugador sigue lanzándolas
+     * desde la barra porque el disparo no revalida el desbloqueo — solo lo hace el guardado.
+     * Se recorre hacia atrás para que removeSlot pueda reparar los bindings sin que los
+     * índices que faltan por visitar se muevan bajo los pies del bucle.
+     */
+    public boolean forget(KiTechniqueType t) {
+        if (!unlockedTypes.remove(t)) return false;
+        for (int i = slots.size() - 1; i >= 0; i--) {
+            if (slots.get(i).type() == t) removeSlot(i);
+        }
+        return true;
+    }
+
+    /** Olvida una técnica física y la quita de la barra. */
+    public boolean forget(PhysicalTechnique t) {
+        if (!unlockedPhysical.remove(t)) return false;
+        bindPhysical(-1, t);   // -1 desasigna de donde estuviera
+        return true;
+    }
+
     public List<KiTechnique> slots()             { return Collections.unmodifiableList(slots); }
     public KiTechnique slot(int i)               { return (i >= 0 && i < slots.size()) ? slots.get(i) : null; }
     public int slotCount()                       { return slots.size(); }

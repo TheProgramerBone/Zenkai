@@ -1,10 +1,12 @@
 package com.hmc.zenkai.feature.player;
 
+import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.registry.ModDimensions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -77,12 +79,15 @@ public final class OtherworldManager {
         PlayerStatsAttachment stats = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         stats.setInOtherworld(true);
         stats.setOtherworldSince(player.serverLevel().getGameTime());
+        // Se apunta AQUÍ y no en el mixin: aquí sabemos que es una muerte de verdad, y el
+        // mixin corre en el respawn, cuando ya no hay forma de distinguirla de un traslado.
+        if (player.server.isHardcore()) stats.setHardcoreDeath(true);
     }
 
     /**
      * Coloca en el otro mundo a un jugador que ACABA DE REAPARECER con el flag activo.
      * NO reinicia el flag ni el temporizador de Yemma (ya se fijaron al morir): solo cura,
-     * limpia el derribado residual y teletransporta a la entrada.
+     * limpia el derribado residual, corrige el modo de juego y teletransporta a la entrada.
      */
     public static void respawnIntoOtherworld(ServerPlayer player) {
         PlayerStatsAttachment stats = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
@@ -90,6 +95,18 @@ public final class OtherworldManager {
         player.setInvulnerable(false);
         stats.flags().setDowned(false);
         stats.flags().setDownedUntil(0L);
+
+        // El espectador forzado del hardcore se deshace AQUÍ y no en el mixin. Interceptar el
+        // setGameMode de PlayerList#respawn exige acertar con un punto del bytecode de vanilla
+        // que cambia entre versiones; esto corre un tick después, con el respawn ya terminado,
+        // y solo tiene que leer el estado final. Lo que no se puede fallar es esto.
+        //
+        // Se condiciona a isSpectator y no a isHardcore a propósito: así un admin que muera en
+        // creativo o que esté mirando de espectador a voluntad no se ve arrastrado a survival.
+        if (player.isSpectator() && shouldSurviveHardcore(player)) {
+            player.setGameMode(GameType.SURVIVAL);
+        }
+
         teleportToOtherworld(player);
         PlayerLifeCycle.sync(player);
     }
@@ -119,6 +136,9 @@ public final class OtherworldManager {
 
         stats.setInOtherworld(false);
         stats.setOtherworldSince(0L);
+        // Las esferas SÍ deshacen la muerte hardcore. Es el único camino de vuelta y por eso
+        // vale la pena buscarlas.
+        stats.setHardcoreDeath(false);
         player.setInvulnerable(false);
         fullHeal(player);
 
@@ -133,5 +153,17 @@ public final class OtherworldManager {
 
         PlayerLifeCycle.sync(player);
         return true;
+    }
+
+    /**
+     * ¿Este jugador debe reaparecer en SURVIVAL pese al hardcore? Lo pregunta
+     * PlayerListHardcoreMixin justo antes del setGameMode(SPECTATOR) forzado.
+     * La gamerule manda: con el Otro Mundo apagado el hardcore se comporta como siempre y el
+     * jugador se queda de espectador. La regla vive AQUÍ y no en el mixin porque el mixin no
+     * debe saber de gamerules — solo preguntar si a este jugador le toca.
+     */
+    public static boolean shouldSurviveHardcore(ServerPlayer player) {
+        if (!ModGameRules.enableOtherworld(player.server)) return false;
+        return isInOtherworld(player);
     }
 }
