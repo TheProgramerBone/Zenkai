@@ -7,14 +7,12 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.technique.KiCombatServer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -51,7 +49,7 @@ public final class CombatModeServerState {
         } else {
             ACTIVE.remove(sp.getUUID());
         }
-        if (!active) KiCombatServer.setBlocking(sp, false);
+        if (!active) KiCombatServer.applyBlocking(sp, false);
         applyAttackSpeed(sp, active);
         if (active) LAST_MAINHAND.put(sp.getUUID(), sp.getMainHandItem().getItem());
             else        LAST_MAINHAND.remove(sp.getUUID());
@@ -164,7 +162,7 @@ public final class CombatModeServerState {
     }
 
     private static void clear(ServerPlayer sp) {
-        KiCombatServer.setBlocking(sp, false);
+        KiCombatServer.applyBlocking(sp, false);
         applyAttackSpeed(sp, false);
         LAST_MAINHAND.remove(sp.getUUID());
         if (ACTIVE.remove(sp.getUUID()) != null) {

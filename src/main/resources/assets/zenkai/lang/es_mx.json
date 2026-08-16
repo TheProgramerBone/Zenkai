@@ -407,7 +407,7 @@
   "scouter.zenkai.upgrade.area_scanner.desc": "Desbloquea el modo MÁS FUERTE",
   "scouter.zenkai.upgrade.dragon_radar": "Radar del Dragón",
   "scouter.zenkai.upgrade.dragon_radar.desc": "Desbloquea el modo RADAR",
-  "scouter.zenkai.radar.unavailable": "MEJORA NO DISPONIBLE",
+  "scouter.zenkai.radar.unavailable": "RADAR NO DISPONIBLE",
   "scouter.zenkai.meters": "%sm",
   "scouter.zenkai.mode.attributes": "ESTADÍSTICAS",
   "scouter.zenkai.atk": "ATQ %s",

@@ -1,6 +1,10 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.action.ActionRules;
+import com.hmc.zenkai.feature.action.ActionType;
+import com.hmc.zenkai.feature.action.ServerActionContext;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.config.CommonConfig;
@@ -60,6 +64,8 @@ public final class KiCombatServer {
         return kiPower * type.damageMult() * sizeFactor(size);
     }
 
+
+
     /** Coste de ki del disparo a carga completa. Escala con el PODER (WIL), no con el pool:
      *  así subir WIL sube daño Y coste, y SPI (el pool) decide cuántas veces lo sostienes.
      *  Recibe el objeto de stats y no el kiPower suelto para que el multiplicador de
@@ -118,7 +124,24 @@ public final class KiCombatServer {
         slots.put(slot, now + cooldownTicks);
         return true;
     }
+    /**
+     * ¿Puede disparar ese slot AHORA? Consulta pura: no registra nada ni arranca cooldowns.
+     * Espeja exactamente las dos comprobaciones de tryFire (global anti-spam + por slot);
+     * si una cambia, la otra tiene que cambiar con ella — por eso están pegadas.
+     * La usan ActionRules (para dar el motivo correcto del rechazo) y KiChargeServer.start
+     * (para no dejar cargar una técnica que al soltar iba a rebotar por cooldown).
+     */
+    public static boolean isReady(ServerPlayer sp, int slot) {
+        long now = sp.level().getGameTime();
 
+        Long last = LAST_FIRE.get(sp.getUUID());
+        if (last != null && now - last < GLOBAL_COOLDOWN_TICKS) return false;
+
+        Map<Integer, Long> slots = SLOT_READY_AT.get(sp.getUUID());
+        if (slots == null) return true;
+        Long readyAt = slots.get(slot);
+        return readyAt == null || now >= readyAt;
+    }
     // ── Barrera ──────────────────────────────────────────────────────────────
 
     public static final double BARRIER_ABSORB_MULT = 3.0;  // pool = kiPower * mult * sizeF
@@ -186,11 +209,8 @@ public final class KiCombatServer {
 
     private static final Set<UUID> BLOCKING = ConcurrentHashMap.newKeySet();
 
-    public static void setBlocking(ServerPlayer sp, boolean blocking) {
-        // Autoritativo: defender exige las manos vacías.
-        if (blocking && (!sp.getMainHandItem().isEmpty() || !sp.getOffhandItem().isEmpty())) {
-            blocking = false;
-        }
+    /** Aplica la mecánica de defensa. NO VALIDA: lo hizo ActionResolver. */
+    public static void applyBlocking(ServerPlayer sp, boolean blocking) {
         boolean changed = blocking
                 ? BLOCKING.add(sp.getUUID())
                 : BLOCKING.remove(sp.getUUID());
@@ -202,7 +222,6 @@ public final class KiCombatServer {
             if (blocking) speed.addTransientModifier(BLOCK_SLOW);
         }
 
-        // Los demás clientes reproducen la animación de defensa.
         PacketDistributor.sendToPlayersTrackingEntity(sp,
                 new BlockingSyncPacket(sp.getId(), blocking));
     }

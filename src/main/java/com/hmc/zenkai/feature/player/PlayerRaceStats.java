@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.StatSynergy;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
+import com.hmc.zenkai.feature.stats.TpCurve;
 import com.hmc.zenkai.util.BalanceUtil;
 import com.hmc.zenkai.util.MathUtil;
 import net.minecraft.nbt.CompoundTag;
@@ -39,6 +40,15 @@ public class PlayerRaceStats {
 
     /** Fracción de TP pendiente de entregar por la devolución. Nunca se persiste redondeada. */
     private double refundCarry = 0.0;
+    /**
+     * Curva vigente ANTES de que el coste pasara a ser 1 + n. Solo la usa la migración de
+     * tpSpent, y por eso son literales y no CommonConfig: reconstruyen lo que un save viejo
+     * pagó de verdad, y ese número no cambia porque hoy la config diga otra cosa. Evaluar la
+     * curva actual sobre puntos comprados con la antigua inflaba el reembolso del respec
+     * varios órdenes de magnitud.
+     */
+    private static final double LEGACY_BASE  = 5.0;
+    private static final double LEGACY_COEFF = 0.005;
 
     public PlayerRaceStats() {
         for (ZenkaiAttributes a : ZenkaiAttributes.values()) {
@@ -110,14 +120,13 @@ public class PlayerRaceStats {
 
     public boolean spendTP(ZenkaiAttributes attr, int points) {
         if (points <= 0) return false;
-        double coeff    = CommonConfig.tpCoefficient();
-        int    totalInv = totalInvested();
-        int    cap      = CommonConfig.globalAttributeCap();
-        int    cur      = attributes.get(attr);
-        int    add      = Math.min(points, cap - cur);
+        int totalInv = totalInvested();
+        int cap      = CommonConfig.globalAttributeCap();
+        int cur      = attributes.get(attr);
+        int add      = Math.min(points, cap - cur);
         if (add <= 0) return false;
 
-        int totalCost = closedCost(totalInv, add, coeff);
+        int totalCost = TpCurve.cost(totalInv, add);
         if (tp < totalCost) return false;
 
         attributes.put(attr, cur + add);
@@ -129,13 +138,11 @@ public class PlayerRaceStats {
 
     public int previewTpCost(ZenkaiAttributes attr, int points) {
         if (points <= 0) return 0;
-        double coeff    = CommonConfig.tpCoefficient();
-        int    totalInv = totalInvested();
-        int    cap      = CommonConfig.globalAttributeCap();
-        int    cur      = attributes.get(attr);
-        int    add      = Math.min(points, cap - cur);
+        int cap = CommonConfig.globalAttributeCap();
+        int cur = attributes.get(attr);
+        int add = Math.min(points, cap - cur);
         if (add <= 0) return 0;
-        return closedCost(totalInv, add, coeff);
+        return TpCurve.cost(totalInvested(), add);
     }
 
     /**
@@ -157,9 +164,8 @@ public class PlayerRaceStats {
         int n = totalInvested();
         if (n <= 0) return -1;
 
-        double coeff = CommonConfig.tpCoefficient();
-        double after = theoreticalCost(n - 1, coeff);
-        double now   = theoreticalCost(n, coeff);
+        double after = TpCurve.theoretical(n - 1);
+        double now   = TpCurve.theoretical(n);
         double frac  = (now > 0.0) ? 1.0 - (after / now) : 1.0;
 
         double refund = tpSpent * frac;
@@ -200,20 +206,7 @@ public class PlayerRaceStats {
         return invested.getOrDefault(attr, 0) > 0;
     }
 
-    /** Coste total en O(1): add*(base + coef*(inv + (add-1)/2)), UN solo redondeo. */
-    private static int closedCost(int inv, int add, double coeff) {
-        double base = CommonConfig.attributeBaseCost();
-        double total = add * (base + coeff * (inv + (add - 1) / 2.0));
-        return (int) Math.min(Integer.MAX_VALUE, Math.ceil(total));
-    }
 
-    /** Coste acumulado EXACTO (sin redondear) de los primeros n puntos. Solo para el reparto
-     *  proporcional del reembolso: aquí el redondeo es justo lo que abría el exploit. */
-    private static double theoreticalCost(int n, double coeff) {
-        if (n <= 0) return 0.0;
-        double base = CommonConfig.attributeBaseCost();
-        return n * (base + coeff * (n - 1) / 2.0);
-    }
 
     /** Respec completo: devuelve el TP gastado en atributos y restaura las bases. */
     public void respec() {
@@ -358,13 +351,14 @@ public class PlayerRaceStats {
         if (tag.contains("tpSpent")) {
             this.tpSpent = tag.getDouble("tpSpent");
         } else {
-            // MIGRACIÓN de saves anteriores a tpSpent: se reconstruye el gasto suponiendo que
-            // se compró de una vez. Es una ESTIMACIÓN A LA BAJA — el redondeo hacia arriba
-            // de cada compra real siempre suma por encima de la curva continua — así que nadie
-            // sale ganando TP al actualizar, que es el único error inaceptable aquí. En los
-            // patrones simulados el defecto va del 0 % (compra en bloque) al 50 % (compra punto
-            // a punto durante toda la partida).
-            this.tpSpent = closedCost(0, totalInvested(), CommonConfig.tpCoefficient());
-        }
+        // MIGRACIÓN de saves anteriores a tpSpent: se reconstruye el gasto suponiendo que
+        // se compró de una vez, CON LA CURVA VIEJA. Es una ESTIMACIÓN A LA BAJA — el
+        // redondeo hacia arriba de cada compra real siempre suma por encima de la curva
+        // continua — así que nadie sale ganando TP al actualizar, que es el único error
+        // inaceptable aquí. En los patrones simulados el defecto va del 0 % (compra en
+        // bloque) al 50 % (compra punto a punto durante toda la partida).
+        int n = totalInvested();
+        this.tpSpent = n <= 0 ? 0.0 : n * (LEGACY_BASE + LEGACY_COEFF * (n - 1) / 2.0);
+    }
     }
 }

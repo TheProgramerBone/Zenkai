@@ -92,7 +92,7 @@ public final class ModBiomeGen {
     // ── HFIL ─────────────────────────────────────────────────────────────────
 
     /**
-     * Base común de las tres variantes de HFIL: cuevas, lagos de lava, dungeons, líquenes
+     * Base común de las tres variantes de HFIL: cuevas, lagos de lava, líquenes
      * (única fuente de luz ahí abajo), manantiales y TODOS los ores vanilla.
      * Sin discos blandos: arcilla y arena junto al agua no pegan en el infierno.
      */
@@ -100,7 +100,6 @@ public final class ModBiomeGen {
                                                             HolderGetter<ConfiguredWorldCarver<?>> carvers) {
         BiomeGenerationSettings.Builder gen = new BiomeGenerationSettings.Builder(features, carvers);
         BiomeDefaultFeatures.addDefaultCarversAndLakes(gen);
-        BiomeDefaultFeatures.addDefaultMonsterRoom(gen);
         BiomeDefaultFeatures.addDefaultUndergroundVariety(gen);
         BiomeDefaultFeatures.addDefaultSprings(gen);
         BiomeDefaultFeatures.addDefaultOres(gen);
@@ -226,7 +225,6 @@ public final class ModBiomeGen {
             gen.addCarver(GenerationStep.Carving.AIR, ModCarvers.NAMEK_CANYON);
         }
 
-        BiomeDefaultFeatures.addDefaultMonsterRoom(gen);
         BiomeDefaultFeatures.addDefaultUndergroundVariety(gen);
         BiomeDefaultFeatures.addDefaultSprings(gen);
 

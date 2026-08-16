@@ -26,16 +26,16 @@ public final class CommonConfig {
     // =====================================================================
 
     private static final ModConfigSpec.DoubleValue TP_COEFFICIENT_RAW =
-            BUILDER.comment("Attribute cost growth: cost = points * (stats.attribute_base_cost + coef * invested). Sets the LATE ceiling; the base cost sets the early pace. At the old 0.00001 the curve did not bend until 100,000 invested points, so a point cost the same at the start and at the end of the game.")
-                    .defineInRange("stats.tp_coefficient", 0.005D, 0.0D, 100D);
+            BUILDER.comment("m de la recta de coste: cost(n) = attribute_base_cost + coef * n. A 1.0 el punto n cuesta 1+n TP, o sea el coste sube de uno en uno. Bajarlo aplana la curva; subirlo la endurece de golpe, porque es lineal y no exponencial.")
+                    .defineInRange("stats.tp_coefficient", 1.0D, 0.0D, 100D);
 
     private static final ModConfigSpec.IntValue GLOBAL_ATTRIBUTE_CAP_RAW =
             BUILDER.comment("Max per attribute. 5 counted attrs x 200000 = PL cap 1,000,000")
                     .defineInRange("caps.global_attribute", 200000, 1, 1000000);
 
     private static final ModConfigSpec.DoubleValue ATTRIBUTE_BASE_COST_RAW =
-            BUILDER.comment("TP cost of the very first attribute point. Sets the EARLY pace; stats.tp_coefficient sets the late ceiling. At 1.0 (the old hardcoded value) two zombies multiplied a fresh Saiyan's melee by 6.7 - base attributes are 8-14, so any cheap investment is multiplicative.")
-                    .defineInRange("stats.attribute_base_cost", 5.0D, 0.1D, 1000.0D);
+            BUILDER.comment("b de la recta de coste: lo que cuesta el primer punto, con cero invertidos.")
+                    .defineInRange("stats.attribute_base_cost", 1.0D, 0.1D, 1000.0D);
 
     private static final ModConfigSpec.DoubleValue TRAINING_PL_RATIO_FLOOR_RAW =
             BUILDER.comment("Minimum TP multiplier when killing something far below your power level. Full formula: clamp(victimPL / yourPL, floor, 1.0). Keeps farming trash from ever being worth more per minute than fighting something your size, without making it literally zero.")
@@ -393,7 +393,7 @@ public final class CommonConfig {
     // CACHÉ VOLÁTIL — cada valor inicial DEBE igualar el default de su *_RAW
     // =====================================================================
 
-    private static volatile double TP_COEFFICIENT = 0.005D;
+    private static volatile double TP_COEFFICIENT = 1.0D;
     private static volatile int    GLOBAL_ATTRIBUTE_CAP = 200000;
 
     private static volatile double SPEED_MULT_CAP = 3.0D;
@@ -416,7 +416,7 @@ public final class CommonConfig {
     private static volatile int    SENSE_KI_RANGE = 64;
     private static volatile double VANILLA_PL_FACTOR = 1.0D;
     private static volatile int    SCOUTER_RANGE = 64;
-    private static volatile double ATTRIBUTE_BASE_COST = 5.0D;
+    private static volatile double ATTRIBUTE_BASE_COST = 1.0D;
     private static volatile double TRAINING_PL_RATIO_FLOOR = 0.05D;
     private static volatile double TRAINING_PL_RATIO_FULL = 0.25D;
     private static volatile double REGEN_BODY_EXHAUSTION = 1.2D;

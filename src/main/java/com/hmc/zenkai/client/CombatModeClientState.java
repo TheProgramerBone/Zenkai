@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.action.ActionStateClient;
 import com.hmc.zenkai.event.ZenkaiPalAnimations;
 import com.hmc.zenkai.feature.combat.BlockingPacket;
 import com.hmc.zenkai.feature.combat.CombatModePacket;
@@ -158,23 +159,33 @@ public final class CombatModeClientState {
             PhysicalTechnique phys = techniques.physicalBinding(selected);
             if (phys != null) {
                 // Física: instantánea (con cooldown local optimista + anim).
+                // La carga ya se canceló arriba, al detectar que la casilla era física.
                 long now = mc.level.getGameTime();
-                // Espeja PhysicalCombatServer.tryExecute LLAMANDO a su fórmula, no copiándola.
-                // Si alguna guarda falla no se manda el packet NI se arranca el cooldown
-                // local: si no, la tecla quedaba muerta por un ataque que nunca ocurrió.
-                boolean blocked = lastBlockingSent || att.flags().isDowned();
-                // Solo la estamina decide si el movimiento sale: Ki Fist no cambia el recurso,
-                // únicamente añade un bonus que se cobra en ki DESPUÉS de haberlo pagado. Sin ki
-                // el movimiento sale igual, así que el ki no entra en esta predicción.
                 int cost = PhysicalCombatServer.staminaCost(att, phys);
-                boolean canFire = phys.enabled() && !blocked && att.getStamina() >= cost;
-                if (canFire && PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now) {
+
+                // MISMAS reglas que el servidor: lo único propio del cliente es de dónde
+                // salen los booleanos; la decisión la toma ActionRules. Antes esta rama
+                // reimplementaba las guardas a mano y se desincronizaba.
+                var ctx = com.hmc.zenkai.client.action.ActionStateClient.contextOf(
+                        mc.player, active, lastBlockingSent);
+
+                var verdict = com.hmc.zenkai.feature.action.ActionRules.canFirePhysical(
+                        ctx,
+                        phys.enabled(),
+                        att.techniques().isUnlocked(phys),
+                        PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now,
+                        cost,
+                        att.getStamina());
+
+                if (verdict.ok()) {
                     PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
                     PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks()); // optimista
-                    ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: pendiente)
+                    ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: fase 6)
                 }
             } else if (chargingSlot < 0) {
                 int bound = techniques.binding(selected);
+                // El cooldown bloquea la carga, no solo el disparo: así la tecla no responde
+                // en vez de dejar cargar para rechazar al soltar.
                 if (bound >= 0 && cooldownFraction(mc, bound) <= 0) {
                     chargingSlot = bound;
                     chargingKey = selected;
@@ -279,6 +290,7 @@ public final class CombatModeClientState {
         lastBlockingSent = false;
         REMOTES.clear();
         REMOTE_BLOCKING.clear();
+        ActionStateClient.clear();
         KiChargeClientState.clear();
     }
 
@@ -296,5 +308,20 @@ public final class CombatModeClientState {
         var att = PlayerStatsAttachment.get(mc.player);
         double castF = MasteryEffects.techCastFactor(att, t.type().name());
         return Math.max(1, (int) Math.round(base * castF));
+    }
+
+    /** El servidor rechazó una acción que ya habíamos predicho: deshacer el cooldown
+     *  optimista. La animación se corta con blend en la fase 5; hoy se deja terminar. */
+    public static void onRejected(com.hmc.zenkai.feature.action.ActionType type,
+                                  com.hmc.zenkai.feature.action.ActionReject reason,
+                                  int payload) {
+        switch (type) {
+            case PHYSICAL -> { if (payload >= 0) PHYS_READY_AT.remove(payload); }
+            case KI_TECHNIQUE -> {
+                if (payload >= 0) READY_AT.remove(payload);
+                cancelCharge();
+            }
+            default -> { }
+        }
     }
 }

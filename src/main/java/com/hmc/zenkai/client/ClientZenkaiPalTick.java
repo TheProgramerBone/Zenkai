@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client;
 
+import com.hmc.zenkai.client.action.ActionStateClient;
 import com.hmc.zenkai.event.ZenkaiPalAnimations;
 import com.hmc.zenkai.event.ZenkaiPalAnimations.FlyDir;
 import com.hmc.zenkai.client.input.KeyBindings;
@@ -72,6 +73,7 @@ public final class ClientZenkaiPalTick {
         }
 
         STATES.keySet().removeIf(uuid -> mc.level.getPlayerByUUID(uuid) == null);
+        ActionStateClient.prune(mc.level);
         ClientFlyAnimState.prune(mc.level);
     }
 

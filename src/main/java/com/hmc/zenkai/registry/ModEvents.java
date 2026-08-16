@@ -36,6 +36,7 @@ public class ModEvents {
         event.put(ModEntities.YEMMA.get(), YemmaEntity.createAttributes().build());
         event.put(ModEntities.KAMI.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.KAIO.get(), ZenkaiMasterEntity.createAttributes().build());
+        event.put(ModEntities.KORIN.get(), ZenkaiMasterEntity.createAttributes().build());
     }
 
 

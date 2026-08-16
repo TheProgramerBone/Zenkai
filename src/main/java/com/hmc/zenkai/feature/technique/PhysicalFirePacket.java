@@ -27,7 +27,7 @@ public record PhysicalFirePacket(int tech) implements CustomPacketPayload {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
             PhysicalTechnique t = PhysicalTechnique.byOrdinal(pkt.tech());
-            if (t != null) PhysicalCombatServer.tryExecute(sp, t);
+            com.hmc.zenkai.feature.action.ActionResolver.firePhysical(sp, t);
         });
     }
 }

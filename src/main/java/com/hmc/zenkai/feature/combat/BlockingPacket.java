@@ -28,7 +28,7 @@ public record BlockingPacket(boolean blocking) implements CustomPacketPayload {
     public static void handle(BlockingPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (ctx.player() instanceof ServerPlayer sp) {
-                KiCombatServer.setBlocking(sp, pkt.blocking());
+                com.hmc.zenkai.feature.action.ActionResolver.setBlocking(sp, pkt.blocking());
             }
         });
     }

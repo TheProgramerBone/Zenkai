@@ -92,6 +92,12 @@ public final class PhysicalCombatServer {
         Active a = ACTIVE.get(id);
         return a != null && a.tech == PhysicalTechnique.DASH_PUNCH && a.ticksLeft > 0;
     }
+
+    /** ¿Hay un movimiento CON DURACIÓN en curso? Lo consulta ServerActionContext. */
+    public static boolean isBusy(java.util.UUID id) {
+        return ACTIVE.containsKey(id);
+    }
+
     public static double currentDefenseScale() { return defenseScale; }
 
     /**
@@ -109,33 +115,34 @@ public final class PhysicalCombatServer {
                 Math.min(raw, att.getStaminaMax() * MAX_COST_PCT_OF_POOL)));
     }
 
-    public static void tryExecute(ServerPlayer sp, PhysicalTechnique t) {
+    /** Consulta pura de cooldown. NO lo arranca. La usa ActionResolver. */
+    public static boolean isReady(ServerPlayer sp, PhysicalTechnique t) {
+        long[] cds = COOLDOWNS.get(sp.getUUID());
+        return cds == null || sp.level().getGameTime() >= cds[t.ordinal()];
+    }
+
+    /** Corta el movimiento con duración en curso, si lo hay. */
+    public static void cancelActive(ServerPlayer sp) {
+        ACTIVE.remove(sp.getUUID());
+    }
+
+    /**
+     * Ejecuta el movimiento. NO VALIDA: las guardas, la Matriz A y las cancelaciones ya las
+     * resolvió ActionResolver. Llamar desde otro sitio se salta eso.
+     */
+    public static void execute(ServerPlayer sp, PhysicalTechnique t, int staminaCost) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (!att.isCombatActive() || !CombatModeServerState.isActive(sp.getUUID())) return;
-        if (KiCombatServer.isBlocking(sp) || att.flags().isDowned()) return;
-        if (!sp.getMainHandItem().isEmpty() || !sp.getOffhandItem().isEmpty()) return;
-        if (!att.techniques().isUnlocked(t)) return;
-        if (!t.enabled()) return; // sin JSON: técnica desactivada
-        if (ACTIVE.containsKey(sp.getUUID())) return; // un movimiento a la vez
 
         long now = sp.level().getGameTime();
         long[] cds = COOLDOWNS.computeIfAbsent(sp.getUUID(),
                 k -> new long[PhysicalTechnique.values().length]);
-        if (now < cds[t.ordinal()]) return;
 
-        // La ESTAMINA se cobra siempre y sale del STR: Ki Fist no cambia el recurso del
-        // movimiento, solo añade daño encima. Si no hay fondo, el movimiento no sale.
-        int cost = staminaCost(att, t);
-        if (att.getStamina() < cost) return;
-
-        att.consumeStamina(cost);
+        att.consumeStamina(staminaCost);
         cds[t.ordinal()] = now + t.cooldownTicks();
         att.addTechniqueMastery(t.name(), (float) CommonConfig.techMasteryPerUse());
 
-        // Ki Fist: bonus aparte, cobrado en KI. El coste se calcula sobre el bonus YA
-        // multiplicado por la potencia del movimiento, porque eso es lo que acaba pegando.
-        // Sin ki suficiente no hay bonus y el movimiento sale igual: la estamina ya se pagó,
-        // así que quedarse seco de ki nunca puede tragarse una técnica.
+        // Ki Fist: bonus aparte, cobrado en KI. Sin ki suficiente no hay bonus y el
+        // movimiento sale igual: la estamina ya se pagó.
         double fistBonus = 0.0;
         double raw = KiFist.rawBonus(sp, att);
         if (raw > 0.0) {
@@ -148,8 +155,6 @@ public final class PhysicalCombatServer {
             }
         }
 
-        // computeMeleeFinal YA incluye el multiplicador de forma/kaioken (statMultiplier).
-        // Volver a aplicar formStatFactor aquí lo contaría dos veces.
         double str = (att.computeMeleeFinal() + fistBonus)
                 * MasteryEffects.techDamageFactor(att, t.name());
         Vec3 look = sp.getLookAngle();
@@ -163,9 +168,6 @@ public final class PhysicalCombatServer {
             case HEAVY_BLOW -> heavyBlow(sp, str, t);
             case KIAI -> kiai(sp, str, t);
         }
-        // Carga 0.0 y no 1.0: las técnicas físicas NO tienen carga. Con 1.0, un Dash Punch
-        // concedería los logros de carga llena y sobrecarga, que son del sistema de ki.
-        // El criterio de "primera técnica" no filtra por carga, así que casa igual.
         ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
                 t.name().toLowerCase(java.util.Locale.ROOT), 0.0);
         PlayerLifeCycle.sync(sp);
@@ -183,6 +185,8 @@ public final class PhysicalCombatServer {
                 || KiCombatServer.isBlocking(sp) || !CombatModeServerState.isActive(sp.getUUID());
         if (cancel) {
             ACTIVE.remove(sp.getUUID());
+            com.hmc.zenkai.feature.action.ActionStateServer.clearIf(
+                    sp, com.hmc.zenkai.feature.action.ActionType.PHYSICAL);
             return;
         }
 
@@ -207,7 +211,13 @@ public final class PhysicalCombatServer {
             }
             default -> a.ticksLeft = 0; // no debería: los instantáneos no se registran
         }
-        if (a.ticksLeft <= 0) ACTIVE.remove(sp.getUUID());
+        if (a.ticksLeft <= 0) {
+            ACTIVE.remove(sp.getUUID());
+            // El movimiento terminó por las buenas. Sin esto, ActionState se queda en
+            // PHYSICAL/ACTIVE de forma permanente y la Matriz A rechaza lo demás salvo BLOCK.
+            com.hmc.zenkai.feature.action.ActionStateServer.clearIf(
+                    sp, com.hmc.zenkai.feature.action.ActionType.PHYSICAL);
+        }
     }
 
     // ── Efectos ──────────────────────────────────────────────────────────────
@@ -408,6 +418,9 @@ public final class PhysicalCombatServer {
                 });
     }
 
+    /** Limpieza de mecánica al morir/desconectar. ActionState NO se toca aquí: lo limpian
+     *  LivingDeathEvent y PlayerLoggedOutEvent en ActionStateServer, que sí pueden avisar
+     *  al sync. */
     public static void clear(UUID id) {
         COOLDOWNS.remove(id);
         ACTIVE.remove(id);

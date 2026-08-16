@@ -27,20 +27,11 @@ public final class KiChargeServer {
 
     public static boolean isCharging(ServerPlayer sp) { return ACTIVE.containsKey(sp.getUUID()); }
 
-    /** Empieza a cargar: valida el slot, avisa a los que le ven y lanza el sonido. */
-    public static void start(ServerPlayer sp, int slot) {
-        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (att == null) return;
-
-        KiTechnique tech = att.techniques().slot(slot);
-        if (tech == null || !tech.type().enabled()) return;
-        if (!att.techniques().isUnlocked(tech.type())) return;
-
-        ACTIVE.put(sp.getUUID(), new Charging(slot, sp.level().getGameTime()));
+    /** Arranca la carga. NO VALIDA: lo hizo ActionResolver. Solo mecánica y difusión. */
+    public static void begin(ServerPlayer sp, KiTechnique tech) {
+        ACTIVE.put(sp.getUUID(), new Charging(-1, sp.level().getGameTime()));
         broadcast(sp, tech, true);
 
-        // Una vez al empezar, no en bucle: un sonido repetido necesita instancia persistente
-        // en cliente y aquí lo que importa es que TODOS lo oigan arrancar.
         SoundEvent snd = TechniqueAssets.soundOf(tech.chargeSound());
         if (snd != null) {
             sp.level().playSound(null, sp.getX(), sp.getEyeY(), sp.getZ(),
@@ -48,11 +39,8 @@ public final class KiChargeServer {
         }
     }
 
-    /**
-     * Deja de cargar. Idempotente a propósito: lo llaman el packet, el disparo, la muerte y
-     * la desconexión, y ninguno debería tener que preguntar antes.
-     */
-    public static void stop(ServerPlayer sp) {
+    /** Apaga la bola. Idempotente: lo llaman el resolver, la muerte y la desconexión. */
+    public static void end(ServerPlayer sp) {
         if (ACTIVE.remove(sp.getUUID()) == null) return;
         broadcastStop(sp);
     }

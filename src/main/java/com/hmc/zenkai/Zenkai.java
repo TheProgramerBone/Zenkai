@@ -242,6 +242,9 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.KAIO.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("kaio", true), 0.5f));
 
+            EntityRenderers.register(ModEntities.KORIN.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("korin", true), 0.5f));
+
 
             // Worldgen (Terrablender)
             event.enqueueWork(() -> {

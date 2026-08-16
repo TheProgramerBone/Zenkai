@@ -374,5 +374,21 @@ public class ModNetworking {
 
         registrar.playToServer(ScouterTintPacket.TYPE, ScouterTintPacket.STREAM_CODEC,
                 ScouterTintPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.action.ActionStateSyncPacket.TYPE,
+                com.hmc.zenkai.feature.action.ActionStateSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.action.ActionStateSyncPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.action.ActionRejectPacket.TYPE,
+                com.hmc.zenkai.feature.action.ActionRejectPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.action.ActionRejectPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.stats.TpCurveSyncPacket.TYPE,
+                com.hmc.zenkai.feature.stats.TpCurveSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.stats.TpCurveSyncPacket::handle);
+
     }
 }

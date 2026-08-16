@@ -44,8 +44,8 @@ public record TransformHoldPacket(Action action, boolean active) implements Cust
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
 
-            var stats  = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
-            var form   = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+            var stats = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+            var form  = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
 
             if (!stats.isRaceChosen()) {
                 form.resetAll();
@@ -65,8 +65,10 @@ public record TransformHoldPacket(Action action, boolean active) implements Cust
                 return;
             }
 
-            // Acción normal: hold transformación (ALT + C)
-            form.setTransformHeld(pkt.active());
+            // Hold de transformación. Las cancelaciones (carga de ki, turbo, carga de técnica
+            // en curso) las hace ActionResolver por Matriz A y B: aquí no se repiten.
+            // setTransformHeld lo escribe el resolver, no este handler.
+            com.hmc.zenkai.feature.action.ActionResolver.setTransformHeld(sp, pkt.active());
             PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
         });
     }

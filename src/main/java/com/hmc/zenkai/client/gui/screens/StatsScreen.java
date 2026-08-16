@@ -362,16 +362,20 @@ public class StatsScreen extends ZenkaiMenuScreen {
                 canAffordStep() ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.DENIED_ON_PANEL, false);
 
         // ══ Popups ══
+        pendingTip = null;
         if (showStats)    renderPopup(g, font, true,  buildStatRows(),
-                Component.translatable("screen.zenkai.stats_screen.popup.stats"));
+                Component.translatable("screen.zenkai.stats_screen.popup.stats"), mouseX, mouseY);
         if (showProgress) renderPopup(g, font, false, buildProgressRows(form),
-                Component.translatable("screen.zenkai.stats_screen.popup.progress"));
+                Component.translatable("screen.zenkai.stats_screen.popup.progress"), mouseX, mouseY);
 
         // ══ Tooltips ══
         renderAttributeTooltip(g, mouseX, mouseY);
         renderTpStepTooltip(g, mouseX, mouseY);
         renderPowerTooltip(g, mouseX, mouseY);
         renderKiBarTooltip(g, mouseX, mouseY);
+        if (pendingTip != null) {
+            g.renderTooltip(this.font, this.font.split(pendingTip, 180), mouseX, mouseY); // ⚠ firma
+        }
     }
 
     /**
@@ -520,19 +524,29 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     // ── Popups laterales ─────────────────────────────────────────────────────
 
-    /** Fila de popup. bar >= 0 dibuja además una barra de progreso bajo el texto. */
-    private record Row(Component label, Component value, int color, float bar, int barColor) {
+    /** Fila de popup. bar >= 0 dibuja además una barra de progreso bajo el texto.
+     *  tip != null cuelga una explicación del ratón: el popup no tiene ancho para meter dos
+     *  líneas de descripción dentro de la fila, y el nombre a secas no dice qué hace. */
+    private record Row(Component label, Component value, int color, float bar, int barColor,
+                       Component tip) {
         /** Cabecera de sección. El color lo pone quien la crea, desde ZenkaiPalette.SECTION_*. */
         static Row header(String key, int color) {
-            return new Row(Component.translatable(key), null, color, -1f, 0);
+            return new Row(Component.translatable(key), null, color, -1f, 0, null);
         }
-        static Row of(Component l, Component v, int c) { return new Row(l, v, c, -1f, 0); }
+        static Row of(Component l, Component v, int c) { return new Row(l, v, c, -1f, 0, null); }
         static Row bar(Component l, Component v, int c, float pct, int bc) {
-            return new Row(l, v, c, pct, bc);
+            return new Row(l, v, c, pct, bc, null);
+        }
+        static Row tip(Component l, Component v, int c, Component tip) {
+            return new Row(l, v, c, -1f, 0, tip);
         }
         boolean isHeader() { return value == null; }
         boolean hasBar() { return bar >= 0f; }
     }
+
+    /** Tooltip que una fila de popup ha reclamado este frame. Se resuelve DESPUÉS de pintar
+     *  los dos popups: si se dibujara dentro de renderPopup, el popup derecho lo taparía. */
+    private Component pendingTip;
 
     /**
      * Popup lateral. El izquierdo y el derecho pueden estar abiertos a la vez y ninguno tapa el
@@ -541,7 +555,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
      * preferible eso a esconder la información.
      */
     private void renderPopup(GuiGraphics g, Font font, boolean leftSide,
-                             List<Row> rows, Component title) {
+                             List<Row> rows, Component title, int mouseX, int mouseY) {
         // Alturas. La cabecera necesita AIRE ARRIBA, no solo debajo: pegada a la última fila de
         // la sección anterior, "Combat" y "Melee" se leían como una sola cosa de dos líneas
         // —igual que "Mobility/Running" e "Investment/TP spent"— y el popup perdía la
@@ -601,6 +615,10 @@ public class StatsScreen extends ZenkaiMenuScreen {
             g.drawString(font, r.label(), tx + 6, ty + 4,
                     emphasized ? r.color() : ZenkaiPalette.TEXT_DIM, true);
             g.drawString(font, r.value(), tr - font.width(r.value()), ty + 4, r.color(), true);
+            if (r.tip() != null && mouseX >= tx && mouseX <= tr
+                    && mouseY >= ty + 2 && mouseY < ty + 2 + rowH) {
+                pendingTip = r.tip();
+            }
             ty += rowH;
             if (r.hasBar()) {
                 StatBar.drawOnDark(g, tx + 6, ty + 5, tr - tx - 6, StatBar.H_THIN,
@@ -692,11 +710,17 @@ public class StatsScreen extends ZenkaiMenuScreen {
                     ZenkaiPalette.ERROR));
         }
 
-        // Pasiva racial: permanente, así que va en su propia sección.
+        // Pasiva racial: permanente, así que va en su propia sección. El nombre en la fila y
+        // la descripción en el hover — meterla en el popup costaría tres filas y empujaría el
+        // alineamiento fuera de la pantalla en resoluciones bajas.
         if (att.isRaceChosen()) {
-            out.add(Row.header("screen.zenkai.stats_screen.section.race", ZenkaiPalette.SECTION_RACE));
-            out.add(Row.of(Component.translatable(RacePassives.nameKey(att.getRace())),
-                    Component.empty(), ZenkaiPalette.MAXED));
+            out.add(Row.header("screen.zenkai.stats_screen.section.race_passive",
+                    ZenkaiPalette.SECTION_RACE));
+            out.add(Row.tip(
+                    Component.translatable(RacePassives.nameKey(att.getRace()))
+                            .withStyle(net.minecraft.ChatFormatting.BOLD),
+                    Component.empty(), ZenkaiPalette.MAXED,
+                    Component.translatable(RacePassives.descKey(att.getRace()))));
             if (RacePassiveSystem.zenkaiActive(mc.player)) {
                 out.add(val("screen.zenkai.stats_screen.zenkai_short",
                         RacePassiveSystem.zenkaiSecondsLeft(mc.player) + "s", ZenkaiPalette.VALUE));
@@ -719,7 +743,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
                         : al < -20 ? "screen.zenkai.alignment.evil"
                         : "screen.zenkai.alignment.neutral").withStyle(net.minecraft.ChatFormatting.BOLD),
                 Component.literal((al > 0 ? "+" : "") + al),
-                alColor, -1f, 0));
+                alColor, -1f, 0, null));
         return out;
     }
 

@@ -2,6 +2,7 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.feature.race.RacePassives;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.feature.Race;
@@ -51,7 +52,12 @@ public class RaceSelectionScreen extends Screen {
     private static final int B2_TITLE_Y = DIV1_Y + 6;
     private static final int B2_VALUE_Y = B2_TITLE_Y + TITLE_H;
     private static final int DIV2_Y     = B2_VALUE_Y + 14;
-    private static final int PREVIEW_SIZE = 50;
+    /** Bajado de 50 para hacer sitio al bloque de pasiva sin recortar al jugador por la cintura. */
+    private static final int PREVIEW_SIZE = 40;
+    /** Alto reservado al bloque de texto inferior (raza + pasiva). */
+    private static final int TEXT_BLOCK_H = 92;
+    private static final int MAX_RACE_DESC_LINES    = 2;
+    private static final int MAX_PASSIVE_DESC_LINES = 3;
 
     /** Etiqueta del bloque. Antes 0x4A3726: el valor correcto pero SIN canal alfa. */
     private static final int COLOR_TITLE  = ZenkaiPalette.LABEL_ON_PANEL;
@@ -175,23 +181,35 @@ public class RaceSelectionScreen extends Screen {
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 g,
                 cx - 50, pt + DIV2_Y + 6,
-                cx + 50, pt + IN_Y2 - 52,
+                cx + 50, pt + IN_Y2 - TEXT_BLOCK_H,
                 PREVIEW_SIZE, 0.0625f,
                 (float) mouseX, (float) mouseY, mc.player);
 
         int descX = pl + IN_X1 + PAD + 2;
-        int descY = pt + IN_Y2 - 48;
-        g.drawString(mc.font,
-                Component.translatable("screen.zenkai.race." + r.name().toLowerCase()),
-                descX, descY, COLOR_SECTION, false);
+        int descW = IN_X2 - IN_X1 - PAD * 2;
+        int y = pt + IN_Y2 - TEXT_BLOCK_H + 4;
+        String key = r.name().toLowerCase();
 
-        String[] lines = wrapText(
-                Component.translatable("screen.zenkai.race." + r.name().toLowerCase() + ".desc").getString(),
-                mc.font, IN_X2 - IN_X1 - PAD * 2);
-        for (int i = 0; i < lines.length; i++) {
-            g.drawString(mc.font, Component.literal(lines[i]),
-                    descX, descY + 12 + i * 10, COLOR_DESC, false);
-        }
+        // Bloque 1: qué es la raza.
+        g.drawString(mc.font, Component.translatable("screen.zenkai.race." + key),
+                descX, y, COLOR_SECTION, false);
+        y += 12;
+        y = drawWrapped(g, mc.font,
+                Component.translatable("screen.zenkai.race." + key + ".desc").getString(),
+                descX, y, descW, MAX_RACE_DESC_LINES);
+
+        // Bloque 2: qué HACE la raza. Separado del anterior a propósito: la descripción es
+        // sabor y la pasiva es mecánica, y el jugador está eligiendo por lo segundo.
+        y += 4;
+        g.fill(descX, y, descX + descW, y + 1, ZenkaiPalette.SEPARATOR);
+        y += 5;
+        g.drawString(mc.font,
+                Component.translatable("screen.zenkai.race.passive_label",
+                        Component.translatable(RacePassives.nameKey(r))),
+                descX, y, COLOR_SECTION, false);
+        y += 12;
+        drawWrapped(g, mc.font, Component.translatable(RacePassives.descKey(r)).getString(),
+                descX, y, descW, MAX_PASSIVE_DESC_LINES);
 
         super.render(g, mouseX, mouseY, partialTick);
     }
@@ -287,6 +305,19 @@ public class RaceSelectionScreen extends Screen {
         }
         if (!line.isEmpty()) lines.add(line.toString());
         return lines.toArray(new String[0]);
+    }
+
+    /** Pinta el texto envuelto y devuelve la Y siguiente. El tope de líneas no es estético:
+     *  sin él una traducción larga se sale por debajo del panel y no hay forma de leerla. */
+    private int drawWrapped(GuiGraphics g, net.minecraft.client.gui.Font font, String text,
+                            int x, int y, int maxWidth, int maxLines) {
+        String[] lines = wrapText(text, font, maxWidth);
+        int n = Math.min(lines.length, maxLines);
+        for (int i = 0; i < n; i++) {
+            String s = (i == maxLines - 1 && lines.length > maxLines) ? lines[i] + "..." : lines[i];
+            g.drawString(font, Component.literal(s), x, y + i * 10, COLOR_DESC, false);
+        }
+        return y + n * 10;
     }
 
     @Override public boolean isPauseScreen() { return false; }

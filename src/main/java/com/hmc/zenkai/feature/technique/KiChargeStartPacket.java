@@ -34,8 +34,11 @@ public record KiChargeStartPacket(int slot, boolean charging) implements CustomP
     public static void handle(KiChargeStartPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
-            if (pkt.charging()) KiChargeServer.start(sp, pkt.slot());
-            else KiChargeServer.stop(sp);
+            if (pkt.charging()) {
+                com.hmc.zenkai.feature.action.ActionResolver.startKiCharge(sp, pkt.slot());
+            } else {
+                com.hmc.zenkai.feature.action.ActionResolver.cancelKiCharge(sp);
+            }
         });
     }
 }

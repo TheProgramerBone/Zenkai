@@ -3,6 +3,8 @@ package com.hmc.zenkai.feature.skills;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.stats.TpCurveSyncPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
@@ -41,14 +43,20 @@ public final class SkillManager {
         event.addListener(new Loader());
     }
 
-    /** Login de un jugador (getPlayer() != null) o /reload (null = broadcast). */
+    /** Login de un jugador (getPlayer() != null) o /reload (null = broadcast).
+     *  Aprovecha el mismo disparo para mandar la curva de TP: CommonConfig no viaja al
+     *  cliente y la pantalla de stats necesita el precio real. Ver TpCurve. */
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent event) {
         SkillSyncPacket pkt = new SkillSyncPacket(List.copyOf(SkillDef.all()));
+        TpCurveSyncPacket curve = new TpCurveSyncPacket(
+                CommonConfig.attributeBaseCost(), CommonConfig.tpCoefficient());
         if (event.getPlayer() != null) {
             PacketDistributor.sendToPlayer(event.getPlayer(), pkt);
+            PacketDistributor.sendToPlayer(event.getPlayer(), curve);
         } else {
             PacketDistributor.sendToAllPlayers(pkt);
+            PacketDistributor.sendToAllPlayers(curve);
         }
     }
 
