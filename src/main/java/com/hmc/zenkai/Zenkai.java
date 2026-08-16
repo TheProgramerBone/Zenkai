@@ -291,7 +291,9 @@ public class Zenkai {
                         ZenkaiPalLayers.PHYS_LAYER, 950,
                         ZenkaiPalAnimations::newFirstPersonController);
 
-
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.KI_LAYER, 960,
+                        ZenkaiPalAnimations::newFirstPersonController);
             });
         }
 

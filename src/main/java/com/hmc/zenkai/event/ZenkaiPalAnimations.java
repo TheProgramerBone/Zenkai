@@ -1,6 +1,7 @@
 package com.hmc.zenkai.event;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.TechniqueAnimSets;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
@@ -192,5 +193,47 @@ public final class ZenkaiPalAnimations {
         var c = (PlayerAnimationController) PlayerAnimationAccess
                 .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
         if (c != null) c.triggerAnimation(PHYS_ANIMS[t.ordinal()]);
+    }
+
+    // ── Técnicas de ki ───────────────────────────────────────────────────────
+
+    public static PlayerAnimationController kiController(AbstractClientPlayer player) {
+        return (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.KI_LAYER);
+    }
+
+    public static void playKiCharge(AbstractClientPlayer p, int animSet) {
+        var c = kiController(p);
+        if (c != null) c.triggerAnimation(TechniqueAnimSets.charge(animSet));
+    }
+
+    public static void playKiOvercharge(AbstractClientPlayer p, int animSet) {
+        var c = kiController(p);
+        if (c != null) c.triggerAnimation(TechniqueAnimSets.overcharge(animSet));
+    }
+
+    public static void playKiRelease(AbstractClientPlayer p, int animSet) {
+        var c = kiController(p);
+        if (c != null) c.triggerAnimation(TechniqueAnimSets.release(animSet));
+    }
+
+    public static void playKiBarrier(AbstractClientPlayer p) {
+        var c = kiController(p);
+        if (c != null) c.triggerAnimation(TechniqueAnimSets.BARRIER);
+    }
+
+    public static void stopKi(AbstractClientPlayer p) {
+        var c = kiController(p);
+        if (c != null) c.stopTriggeredAnimation();
+    }
+
+    // ── Subir ki (tecla C). Reutiliza COMBAT_LAYER: nunca coinciden, porque el resolver
+    //    cancela la pose de combate al empezar a cargar. ─────────────────────
+    public static void playChargeKiStart(AbstractClientPlayer p) {
+        combatController(p).triggerAnimation(TechniqueAnimSets.KI_CHARGE_START);
+    }
+
+    public static void playChargeKiLoop(AbstractClientPlayer p) {
+        combatController(p).triggerAnimation(TechniqueAnimSets.KI_CHARGE_LOOP);
     }
 }

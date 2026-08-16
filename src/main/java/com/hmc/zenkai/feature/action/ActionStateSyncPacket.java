@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
  * de nombres que KiChargeStatePacket (typeOrdinal / positionOrdinal).
  */
 public record ActionStateSyncPacket(int entityId, int typeOrdinal, int phaseOrdinal,
-                                    long startTick, int payload)
+                                    long startTick, int payload, int visual)
         implements CustomPacketPayload {
 
     public static final Type<ActionStateSyncPacket> TYPE =
@@ -31,18 +31,19 @@ public record ActionStateSyncPacket(int entityId, int typeOrdinal, int phaseOrdi
                         buf.writeByte(pkt.typeOrdinal());
                         buf.writeByte(pkt.phaseOrdinal());
                         buf.writeVarLong(pkt.startTick());
-                        buf.writeVarInt(pkt.payload() + 1); // +1: el -1 no cabe en VarInt sin coste
+                        buf.writeVarInt(pkt.payload() + 1);
+                        buf.writeVarInt(pkt.visual());
                     },
                     buf -> new ActionStateSyncPacket(
                             buf.readVarInt(), buf.readByte(), buf.readByte(),
-                            buf.readVarLong(), buf.readVarInt() - 1));
+                            buf.readVarLong(), buf.readVarInt() - 1, buf.readVarInt()));
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static ActionStateSyncPacket of(int entityId, ActionState st) {
         return new ActionStateSyncPacket(entityId, st.type().ordinal(), st.phase().ordinal(),
-                st.startTick(), st.payload());
+                st.startTick(), st.payload(), st.visual());
     }
 
     public ActionState toState() {
@@ -52,7 +53,7 @@ public record ActionStateSyncPacket(int entityId, int typeOrdinal, int phaseOrdi
                 ? types[typeOrdinal] : ActionType.NONE;
         ActionPhase p = (phaseOrdinal >= 0 && phaseOrdinal < phases.length)
                 ? phases[phaseOrdinal] : ActionPhase.NONE;
-        return new ActionState(t, p, startTick, payload);
+        return new ActionState(t, p, startTick, payload, visual);
     }
 
     public static void handle(ActionStateSyncPacket pkt, IPayloadContext ctx) {

@@ -27,6 +27,7 @@ import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Comparator;
@@ -71,9 +72,9 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
 
                 // 2) Nivel máximo y precio (desde WishConfig)
                 int levelChosen = Math.max(1, holder.value().getMaxLevel());
-                int base = Math.max(1, ServerConfig.villagerBookBasePrice());
+                int base_price = Math.max(1, ServerConfig.villagerBookBasePrice());
                 int perLevel = Math.max(0, ServerConfig.villagerBookPricePerLevel());
-                int price = Math.min(64, Math.max(1, base + perLevel * (levelChosen - 1)));
+                int price = Math.min(64, Math.max(1, base_price + perLevel * (levelChosen - 1)));
 
                 // 3) Libro encantado
                 var book = EnchantedBookItem.createForEnchantment(new EnchantmentInstance(holder, levelChosen));
@@ -109,24 +110,12 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
                 offers.add(offer);
                 villager.setOffers(offers);
 
-                // --- Entrada cinematográfica: aparece ~3 bloques sobre las esferas
-                //     (usamos el Shenlong más cercano como referencia, que está sobre ellas),
-                //     con caída lenta (sin daño) y una columna de partículas de encantamiento. ---
-                ShenLongEntity dragon = level.getEntitiesOfClass(
-                                ShenLongEntity.class, player.getBoundingBox().inflate(48))
-                        .stream()
-                        .min(Comparator.comparingDouble(e -> e.distanceToSqr(player)))
-                        .orElse(null);
-
-                double baseX, baseY, baseZ;
-                if (dragon != null) {
-                    baseX = dragon.getX(); baseY = dragon.getY(); baseZ = dragon.getZ();
-                } else {
-                    // Fallback: junto al jugador si no se encuentra el dragón.
-                    baseX = player.getX() + 1.0; baseY = player.getY(); baseZ = player.getZ() + 1.0;
-                }
+                // --- Entrada cinematográfica: aparece ~5 bloques sobre las esferas (el
+                //     Shenlong más cercano está sobre ellas), con caída lenta (sin daño) y una
+                //     columna de partículas de encantamiento. ---
+                Vec3 base = WishSpawnPoint.origin(level, player);
+                double baseX = base.x, baseY = base.y, baseZ = base.z;
                 double spawnY = baseY + 5.0;
-
                 villager.moveTo(baseX, spawnY, baseZ, player.getYRot(), 0);
                 villager.fallDistance = 0.0F;
                 villager.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 600, 255, false, false, false));

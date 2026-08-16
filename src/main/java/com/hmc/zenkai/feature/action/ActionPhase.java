@@ -12,6 +12,7 @@ public enum ActionPhase {
     ACTIVE,
     INSTANT,
     CHARGING,
+    OVERCHARGING,   // técnica de ki por encima del 100%
     RELEASING,
     STARTING,
     HOLDING

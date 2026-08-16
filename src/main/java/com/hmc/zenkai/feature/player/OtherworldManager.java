@@ -4,6 +4,7 @@ import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.registry.ModDimensions;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameType;
@@ -127,10 +128,33 @@ public final class OtherworldManager {
     }
 
     /**
-     * Revive al jugador: quita el flag y lo devuelve a su punto de respawn
-     * (cama/ancla o spawn del mundo). Devuelve false si no estaba en el otro mundo.
+     * Revive al jugador y lo devuelve a su punto de respawn (cama/ancla o spawn del mundo).
+     * Lo usan Yemma y /zenkai revive: los dos representan "vuelve a tu vida", no "ven aquí".
      */
     public static boolean revive(ServerPlayer player) {
+        ServerLevel dest = player.server.getLevel(player.getRespawnDimension());
+        if (dest == null) dest = player.server.overworld();
+        BlockPos pos = player.getRespawnPosition();
+        if (pos == null) pos = dest.getSharedSpawnPos();
+        return reviveTo(player, dest, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+    }
+
+    /**
+     * Revive al jugador y lo deja en el sitio indicado. Lo usa el deseo: las esferas no te
+     * mandan a casa, te traen de vuelta al mundo donde se pidió el deseo.
+     */
+    public static boolean reviveAt(ServerPlayer player, ServerLevel level,
+                                   double x, double y, double z) {
+        return reviveTo(player, level, x, y, z);
+    }
+
+    /**
+     * El acto de resucitar. Los dos caminos públicos pasan por aquí y solo se diferencian en
+     * el destino: si cada uno hiciera su propia limpieza, arreglar un fallo en el reseteo del
+     * flag hardcoreDeath en un sitio dejaría el otro roto sin que nadie se enterara.
+     */
+    private static boolean reviveTo(ServerPlayer player, ServerLevel level,
+                                    double x, double y, double z) {
         PlayerStatsAttachment stats = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         if (!stats.isInOtherworld()) return false;
 
@@ -142,14 +166,12 @@ public final class OtherworldManager {
         player.setInvulnerable(false);
         fullHeal(player);
 
-        ServerLevel dest = player.server.getLevel(player.getRespawnDimension());
-        if (dest == null) dest = player.server.overworld();
-        BlockPos pos = player.getRespawnPosition();
-        if (pos == null) pos = dest.getSharedSpawnPos();
+        // Espectador residual: si el mixin de hardcore no llegó a tiempo por lo que sea,
+        // resucitar es el momento de arreglarlo. Un revivido fantasma no está revivido.
+        if (player.isSpectator()) player.setGameMode(GameType.SURVIVAL);
 
-        player.teleportTo(dest,
-                pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5,
-                player.getYRot(), player.getXRot());
+        ServerLevel dest = (level != null) ? level : player.server.overworld();
+        player.teleportTo(dest, x, y, z, player.getYRot(), player.getXRot());
 
         PlayerLifeCycle.sync(player);
         return true;
@@ -165,5 +187,14 @@ public final class OtherworldManager {
     public static boolean shouldSurviveHardcore(ServerPlayer player) {
         if (!ModGameRules.enableOtherworld(player.server)) return false;
         return isInOtherworld(player);
+    }
+
+    /** Columna de partículas en el punto de llegada. Sin esto, un jugador apareciendo de
+     *  la nada a dos bloques es indistinguible de alguien que acaba de entrar al servidor. */
+    private static void spawnParticles(ServerLevel level, Vec3 at) {
+        for (int i = 0; i <= 6; i++) {
+            level.sendParticles(ParticleTypes.ENCHANT,
+                    at.x, at.y + i * 0.5, at.z, 12, 0.3, 0.2, 0.3, 0.05);
+        }
     }
 }

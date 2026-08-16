@@ -63,17 +63,18 @@ public final class ClientZenkaiHooks {
     // =========================
     // Íconos
     // =========================
-    private static final IconUV ICON_FLY = IconUV.grid(3, 0);
-    private static final IconUV ICON_KI_CHARGE = IconUV.grid(2, 0);
-    private static final IconUV ICON_TURBO = IconUV.grid(7, 1);
-    private static final IconUV ICON_TRANSFORMING = IconUV.grid(7, 0);
     private static final IconUV ICON_DIVINE = IconUV.grid(5, 0);
-    private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
+    private static final IconUV ICON_FLY = IconUV.grid(3, 0);
+    private static final IconUV ICON_POTENTIAL_UNLOCKED = IconUV.grid(6,3);
     private static final IconUV ICON_IMMORTAL = IconUV.grid(11, 0);
-    private static final IconUV ICON_LEGENDARY = IconUV.grid(9, 0);
-    private static final IconUV ICON_KAIOKEN = IconUV.grid(10, 0);
-    private static final IconUV ICON_STRAIN = IconUV.grid(1, 0);
-    private static final IconUV ICON_IN_COMBAT = IconUV.grid(0, 1);
+    private static final IconUV ICON_IN_COMBAT = IconUV.grid(0, 0);
+    private static final IconUV ICON_KAIOKEN = IconUV.grid(2, 2);
+    private static final IconUV ICON_KI_CHARGE = IconUV.grid(0, 2);
+    private static final IconUV ICON_LEGENDARY = IconUV.grid(5, 2);
+    private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
+    private static final IconUV ICON_STRAIN = IconUV.grid(10, 0);
+    private static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);
+    private static final IconUV ICON_TURBO = IconUV.grid(1, 2);
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {

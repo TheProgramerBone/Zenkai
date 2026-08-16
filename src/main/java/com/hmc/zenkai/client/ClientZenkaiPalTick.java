@@ -4,8 +4,11 @@ import com.hmc.zenkai.client.action.ActionStateClient;
 import com.hmc.zenkai.event.ZenkaiPalAnimations;
 import com.hmc.zenkai.event.ZenkaiPalAnimations.FlyDir;
 import com.hmc.zenkai.client.input.KeyBindings;
+import com.hmc.zenkai.feature.action.ActionPhase;
+import com.hmc.zenkai.feature.action.ActionType;
 import com.hmc.zenkai.feature.ki.FlyBoostPacket;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -32,6 +35,12 @@ public final class ClientZenkaiPalTick {
         boolean combatPlaying = false;
         int combatStyle = -1;      // ordinal del Style con el que se posó
         int combatStartTicks = 0;  // cuenta atrás del start antes del loop
+        // Ki: se reacciona a CAMBIOS de fase, no se re-dispara cada tick.
+        ActionPhase kiPhase = null;
+        int kiSet = -1;
+        // Subir ki: start -> loop, y solo quieto.
+        boolean chargeKiPlaying = false;
+        int chargeKiStartTicks = 0;
     }
 
     private static final Map<UUID, AnimState> STATES = new HashMap<>();
@@ -79,14 +88,14 @@ public final class ClientZenkaiPalTick {
 
     private static void tickPlayer(Minecraft mc, AbstractClientPlayer p) {
         var form  = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
-        var stats = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        PlayerStatsAttachment stats = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
 
-        // Derribado: forzamos la pose acostada del jugador local (los demás la reciben por DATA_POSE).
         AnimState st = STATES.computeIfAbsent(p.getUUID(), k -> new AnimState());
 
         // Derribado: forzamos la pose acostada del jugador local (los demás la reciben por DATA_POSE).
         if (stats.flags().isDowned()) {
-            tickCombatIdle(p, st, -1); // corta la pose ofensiva si estaba activa
+            tickCombatIdle(p, st, -1);       // corta la pose ofensiva si estaba activa
+            tickChargeKi(p, st, false);      // y la de subir ki
             if (p == mc.player) {
                 applyLocalBoost(p, false); // por si se derriba en pleno boost (limpia hitbox/cámara)
                 p.setPose(Pose.SWIMMING);
@@ -171,15 +180,22 @@ public final class ClientZenkaiPalTick {
             }
         }
 
+        // ── Quieto en tierra: condición compartida por la pose ofensiva y por subir ki ──
+        boolean still = p.onGround() && p.walkAnimation.speed() < 0.05f && !p.isSwimming();
+
+        // ── Subir ki (tecla C) ──
+        // Cargar en movimiento SÍ está permitido; lo que no se reproduce es la pose, porque
+        // una pose sostenida sobre un jugador andando da resultados raros.
+        // Va ANTES de la pose ofensiva y tiene prioridad: comparten COMBAT_LAYER, así que si
+        // se evaluaran al revés se pisarían cuando estás agachado en modo combate pulsando C.
+        boolean chargeKi = stats.isChargingKi() && still;
+        tickChargeKi(p, st, chargeKi);
+
         // ── Pose ofensiva del modo combate (SHIFT + quieto en tierra; start -> loop, por estilo) ──
         // Si se mueve con shift pulsado, walkAnimation.speed() sube -> se cancela sola.
         int combatStyleOrd = -1;
         boolean sneaking = (p == mc.player) ? p.isShiftKeyDown() : p.isCrouching();
-        boolean combatStill = sneaking
-                && p.onGround()
-                && p.walkAnimation.speed() < 0.05f
-                && !p.isSwimming();
-        if (combatStill) {
+        if (still && sneaking && !chargeKi) {
             if (p == mc.player) {
                 if (CombatModeClientState.isActive() && stats.isStyleChosen()) {
                     combatStyleOrd = stats.getStyle().ordinal();
@@ -190,6 +206,9 @@ public final class ClientZenkaiPalTick {
             }
         }
         tickCombatIdle(p, st, combatStyleOrd);
+
+        // ── Técnicas de ki: local y remotos por igual, desde el estado sincronizado ──
+        tickKiAnim(p, st);
 
         // ── Animación de defensa (local: estado propio instantáneo; remotos: sync) ──
         boolean blockingNow = (p == mc.player)
@@ -208,7 +227,7 @@ public final class ClientZenkaiPalTick {
     private static final int CRUISE_START = 0, CRUISE_LOOP = 1, BOOST_START = 2, BOOST_LOOP = 3;
     // Duración (ticks) de cada START antes de su loop. Ajústalas a la longitud real de tus animaciones.
     private static final int FLY_CRUISE_START_TICKS = 6; // ~0.3 s
-    private static final int FLY_BOOST_START_TICKS  = 6;
+    private static final int FLY_BOOST_START_TICKS  = 6; // ~0.3 s
 
     /** Estado de vuelo para otros sistemas (p.ej. la inclinación del aura).
      *  dir = null cuando NO está en animación de vuelo. Funciona para el jugador
@@ -220,7 +239,7 @@ public final class ClientZenkaiPalTick {
         if (st == null || !st.flyPlaying) return new FlyPose(null, false);
         boolean boosting = st.flyBoostState == BOOST_START || st.flyBoostState == BOOST_LOOP;
         return new FlyPose(st.flyDir, boosting);
-    }// ~0.3 s
+    }
 
     /**
      * Máquina de estados de la animación de vuelo del jugador local.
@@ -332,7 +351,7 @@ public final class ClientZenkaiPalTick {
     /** Duración (ticks) del start antes del loop. Ajústala a tus animaciones. */
     private static final int COMBAT_START_TICKS = 6; // ~0.3 s
 
-    /** styleOrd < 0 = sin pose (fuera de modo combate / derribado / sin estilo). */
+    /** styleOrd < 0 = sin pose (fuera de modo combate / derribado / sin estilo / subiendo ki). */
     private static void tickCombatIdle(AbstractClientPlayer p, AnimState st, int styleOrd) {
         if (styleOrd < 0) {
             if (st.combatPlaying) {
@@ -352,6 +371,55 @@ public final class ClientZenkaiPalTick {
         }
         if (st.combatStartTicks > 0 && --st.combatStartTicks == 0) {
             ZenkaiPalAnimations.playCombatIdleLoop(p, styleOrd);
+        }
+    }
+
+    /**
+     * Animación de técnica de ki. Funciona igual para el jugador local y los remotos porque
+     * ambos leen de ActionStateClient: no hay que inferir nada ni mandar paquetes aparte.
+     * El animSet viaja en el canal `visual` del estado, que es la única forma que tiene un
+     * observador de saber qué set eligió el otro jugador en su editor.
+     */
+    private static void tickKiAnim(AbstractClientPlayer p, AnimState st) {
+        var action = ActionStateClient.of(p.getId());
+        ActionPhase phase = (action.type() == ActionType.KI_TECHNIQUE) ? action.phase() : null;
+
+        if (phase == st.kiPhase) return; // sin cambio: no re-disparar
+
+        st.kiPhase = phase;
+        if (phase == null) {
+            // Cancelación: corte seco. El fundido llega con la fase 5.
+            ZenkaiPalAnimations.stopKi(p);
+            st.kiSet = -1;
+            return;
+        }
+
+        st.kiSet = TechniqueAnimSets.clamp(action.visual());
+        switch (phase) {
+            case CHARGING     -> ZenkaiPalAnimations.playKiCharge(p, st.kiSet);
+            case OVERCHARGING -> ZenkaiPalAnimations.playKiOvercharge(p, st.kiSet);
+            case RELEASING    -> ZenkaiPalAnimations.playKiRelease(p, st.kiSet);
+            default           -> ZenkaiPalAnimations.stopKi(p);
+        }
+    }
+
+    /**
+     * Subir ki (tecla C). El llamante decide si toca (flag + quieto); aquí solo se encadena
+     * start -> loop y se corta. Comparte COMBAT_LAYER con la pose ofensiva, que se suprime
+     * mientras esto esté activo.
+     */
+    private static void tickChargeKi(AbstractClientPlayer p, AnimState st, boolean want) {
+        if (want && !st.chargeKiPlaying) {
+            st.chargeKiPlaying = true;
+            st.chargeKiStartTicks = COMBAT_START_TICKS;
+            ZenkaiPalAnimations.playChargeKiStart(p);
+        } else if (!want && st.chargeKiPlaying) {
+            st.chargeKiPlaying = false;
+            st.chargeKiStartTicks = 0;
+            ZenkaiPalAnimations.stopCombatIdle(p);
+        } else if (st.chargeKiPlaying && st.chargeKiStartTicks > 0
+                && --st.chargeKiStartTicks == 0) {
+            ZenkaiPalAnimations.playChargeKiLoop(p);
         }
     }
 }

@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Almacén AUTORITATIVO de la acción exclusiva. Lo escribe SOLO ActionResolver.
- *
  * En el paso 1 esto derivaba el estado de los almacenes existentes cada tick. Ya no: la
  * dependencia está invertida y el derive() desapareció. Lo que queda del tick es únicamente
  * la red de seguridad de derribo/muerte, que son gates globales y pueden llegar por vías que
@@ -60,12 +59,39 @@ public final class ActionStateServer {
                 ActionStateSyncPacket.of(sp.getId(), st));
     }
 
+    /** Cuánto dura visualmente el disparo antes de limpiar el estado. Solo presentación:
+     *  el proyectil ya salió y el coste ya se cobró. */
+    public static final int RELEASE_TICKS = 20;
+
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
-        if (STATES.get(sp.getUUID()) == null) return;
+        ActionState cur = STATES.get(sp.getUUID());
+        if (cur == null) return;
+
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (att.flags().isDowned()) clear(sp);
+        if (att.flags().isDowned()) { clear(sp); return; }
+
+        long now = sp.level().getGameTime();
+
+        // El disparo se limpia solo: nadie manda un paquete de "ya terminó la animación".
+        if (cur.type() == ActionType.KI_TECHNIQUE && cur.phase() == ActionPhase.RELEASING) {
+            if (cur.elapsed(now) >= RELEASE_TICKS) clear(sp);
+            return;
+        }
+
+        // CHARGING → OVERCHARGING al cruzar el 100%. Se decide AQUÍ y no en el cliente porque
+        // el umbral depende del castFactor de maestría, que no se sincroniza a los
+        // observadores: derivarlo en cliente daría una pose distinta para cada uno.
+        if (cur.type() == ActionType.KI_TECHNIQUE && cur.phase() == ActionPhase.CHARGING) {
+            var tech = att.techniques().slot(cur.payload());
+            if (tech != null) {
+                double castF = com.hmc.zenkai.feature.mastery.MasteryEffects
+                        .techCastFactor(att, tech.type().name());
+                int req = Math.max(1, (int) Math.round(tech.type().chargeTicks() * castF));
+                if (cur.elapsed(now) >= req) set(sp, cur.withPhase(ActionPhase.OVERCHARGING));
+            }
+        }
     }
 
     @SubscribeEvent

@@ -15,20 +15,16 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * EMBUDO ÚNICO de acciones. Nadie llama a los ejecutores salvo esta clase.
- *
  *   Input (packet) → ActionResolver → ActionRules → ActionState → ejecutor
- *
  * Lo que hace en cada petición, SIEMPRE en este orden:
  *   1. Construir el contexto y pedirle el veredicto a ActionRules (guardas).
  *   2. Consultar la Matriz A: ¿puede interrumpir lo que hay en curso?
  *   3. Cancelar la acción en curso y los estados sostenidos que toque (Matriz B).
  *   4. Escribir el ActionState nuevo (que se sincroniza solo).
  *   5. Ejecutar.
- *
  * Puntos de entrada TIPADOS en vez de un ActionRequest genérico: cada acción necesita datos
  * distintos y una bolsa de payload sin tipo obligaría a un switch gigante aquí dentro. La
  * propiedad que importa —una sola ruta hacia los ejecutores— se conserva igual.
- *
  * La prioridad de PAL no aparece por ningún lado, y es el objetivo: PAL representa lo que
  * este archivo decidió, nunca al revés.
  */
@@ -40,7 +36,6 @@ public final class ActionResolver {
 
     public static ActionResult firePhysical(ServerPlayer sp, PhysicalTechnique t) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (att == null) return ActionResult.fail(ActionReject.NO_RACE);
 
         ActionContext ctx = ServerActionContext.of(sp);
         int cost = PhysicalCombatServer.staminaCost(att, t);
@@ -64,7 +59,7 @@ public final class ActionResolver {
         // en el mismo tick: registrarlos dejaría un estado que nadie limpia.
         if (PhysicalCombatServer.isBusy(sp.getUUID())) {
             ActionState st = new ActionState(ActionType.PHYSICAL, ActionPhase.ACTIVE,
-                    sp.level().getGameTime(), t.ordinal());
+                    sp.level().getGameTime(), t.ordinal(),-1);
             ActionStateServer.set(sp, st);
             return ActionResult.ok(st);
         }
@@ -75,7 +70,6 @@ public final class ActionResolver {
 
     public static ActionResult startKiCharge(ServerPlayer sp, int slot) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (att == null) return ActionResult.fail(ActionReject.NO_RACE);
 
         KiTechnique tech = att.techniques().slot(slot);
         if (tech == null) return ActionResult.fail(ActionReject.DISABLED);
@@ -98,7 +92,7 @@ public final class ActionResolver {
         cancelSustained(sp, att, ActionType.KI_TECHNIQUE);
 
         long now = sp.level().getGameTime();
-        ActionState st = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.CHARGING, now, slot);
+        ActionState st = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.CHARGING, now, slot, tech.animSet());
         ActionStateServer.set(sp, st);
         KiChargeServer.begin(sp, tech);   // sonido + difusión de la bola
         return ActionResult.ok(st);
@@ -114,7 +108,6 @@ public final class ActionResolver {
 
     public static ActionResult releaseKi(ServerPlayer sp, int slot) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (att == null) return ActionResult.fail(ActionReject.NO_RACE);
 
         ActionState cur = ActionStateServer.get(sp);
         long now = sp.level().getGameTime();
@@ -154,14 +147,19 @@ public final class ActionResolver {
         if (!verdict.ok()) return reject(sp, ActionType.KI_TECHNIQUE, verdict, slot);
 
         KiFirePacket.execute(sp, att, tech, slot, ratio, rawRatio, cost, explosive);
-        return ActionResult.ok();
+
+        // Estado de disparo: es lo que distingue "soltó y salió" de "canceló" para los
+        // observadores. Se limpia solo en ActionStateServer tras RELEASE_TICKS.
+        ActionState fired = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.RELEASING,
+                sp.level().getGameTime(), slot, tech.animSet());
+        ActionStateServer.set(sp, fired);
+        return ActionResult.ok(fired);
     }
 
     // ── Defensa ──────────────────────────────────────────────────────────────
 
     public static ActionResult setBlocking(ServerPlayer sp, boolean blocking) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (att == null) return ActionResult.fail(ActionReject.NO_RACE);
 
         ActionState cur = ActionStateServer.get(sp);
 
@@ -186,7 +184,7 @@ public final class ActionResolver {
         cancelSustained(sp, att, ActionType.BLOCK);
 
         ActionState st = new ActionState(ActionType.BLOCK, ActionPhase.ACTIVE,
-                sp.level().getGameTime(), -1);
+                sp.level().getGameTime(), -1,-1);
         ActionStateServer.set(sp, st);
         KiCombatServer.applyBlocking(sp, true);
         return ActionResult.ok(st);
@@ -196,7 +194,6 @@ public final class ActionResolver {
 
     public static ActionResult setTransformHeld(ServerPlayer sp, boolean held) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (att == null) return ActionResult.fail(ActionReject.NO_RACE);
 
         ActionState cur = ActionStateServer.get(sp);
 
@@ -216,7 +213,7 @@ public final class ActionResolver {
         cancelSustained(sp, att, ActionType.TRANSFORM); // aquí SÍ se apaga el turbo
 
         ActionState st = new ActionState(ActionType.TRANSFORM, ActionPhase.HOLDING,
-                sp.level().getGameTime(), -1);
+                sp.level().getGameTime(), -1,-1);
         ActionStateServer.set(sp, st);
         sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).setTransformHeld(true);
         return ActionResult.ok(st);

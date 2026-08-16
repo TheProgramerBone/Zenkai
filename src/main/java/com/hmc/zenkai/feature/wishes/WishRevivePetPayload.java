@@ -19,6 +19,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Comparator;
@@ -59,12 +60,8 @@ public record WishRevivePetPayload(int index) implements CustomPacketPayload {
                 }
 
                 // Posición cinematográfica sobre las esferas (Shenlong) o junto al jugador.
-                ShenLongEntity dragon = level.getEntitiesOfClass(
-                                ShenLongEntity.class, player.getBoundingBox().inflate(48))
-                        .stream().min(Comparator.comparingDouble(e -> e.distanceToSqr(player))).orElse(null);
-                double bx, by, bz;
-                if (dragon != null) { bx = dragon.getX(); by = dragon.getY(); bz = dragon.getZ(); }
-                else { bx = player.getX() + 1.0; by = player.getY(); bz = player.getZ() + 1.0; }
+                Vec3 base = WishSpawnPoint.origin(level, player);
+                double bx = base.x, by = base.y, bz = base.z;
 
                 entity.moveTo(bx, by + 3.0, bz, player.getYRot(), 0);
                 entity.fallDistance = 0.0F;
