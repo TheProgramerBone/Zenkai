@@ -50,7 +50,15 @@ public final class AuraTrailRenderer {
                               AbstractClientPlayer p, Vec3 at, Vec3 camPos, int rgb,
                               AuraTiltController.Motion mo) {
         var trail = TRAILS.computeIfAbsent(p.getId(), k -> new ArrayDeque<>());
-        Vec3 head = at.add(0, p.getBbHeight() * 0.5, 0);
+        // El ancla sigue al cuerpo INCLINADO, no a la vertical de la hitbox.
+        //
+        // Dos motivos: durante el boost BoostSizeHandler encoge la hitbox pero NO el modelo,
+        // así que bbHeight*0.5 caía a la altura de las rodillas; y con el cuerpo tumbado 90°
+        // el centro del modelo ya no está sobre los pies, sino desplazado hacia delante.
+        //
+        // El hueso `body` pivota a 12 px del suelo (0.75 bloques); desde ahí se levanta el
+        // vector hasta el centro del modelo, ya rotado por pitch y roll.
+        Vec3 head = bodyFeet(p, at);
 
         boolean moving = mo.flying() && mo.vel().length() > MIN_SPEED;
         if (moving) {
@@ -116,5 +124,38 @@ public final class AuraTrailRenderer {
                 .setOverlay(OverlayTexture.NO_OVERLAY)
                 .setLight(AuraQuads.FULL_BRIGHT)
                 .setNormal(mat, 0f, 1f, 0f);
+    }
+
+    /** Altura del MODELO (no de la hitbox, que el boost encoge). */
+    private static final double MODEL_HEIGHT = 1.8;
+    /** Pivote del hueso `body` en PAL: 12 px = 0.75 bloques. */
+    private static final double BODY_PIVOT_Y = 0.75;
+
+    /**
+     * Punto de nacimiento de la estela: LOS PIES del jugador, siguiendo la inclinación.
+     * Se calcula desde el pivote del hueso `body` (0.75 bloques) bajando por el eje "abajo"
+     * del cuerpo ya rotado, no restando en vertical: con el cuerpo tumbado 90° en boost los
+     * pies quedan DETRÁS, y ahí es donde tiene que nacer la cinta.
+     * Se usa MODEL_HEIGHT y no bbHeight porque BoostSizeHandler encoge la hitbox y deja el
+     * modelo intacto; con bbHeight el ancla se caía a media pierna al entrar en boost.
+     */
+    private static Vec3 bodyFeet(AbstractClientPlayer p, Vec3 at) {
+        var o = com.hmc.zenkai.client.fly.FlightController.of(p.getUUID());
+        Vec3 pivot = at.add(0, BODY_PIVOT_Y, 0);
+
+        double yaw = Math.toRadians(p.yBodyRot);
+        Vec3 fwd = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
+        Vec3 right = new Vec3(Math.cos(yaw), 0, Math.sin(yaw));
+
+        double cp = Math.cos(o.pitch()), sp = Math.sin(o.pitch());
+        double cr = Math.cos(o.roll()),  sr = Math.sin(o.roll());
+
+        // Eje "arriba" del cuerpo tras cabeceo y alabeo. Los pies van en el sentido opuesto.
+        Vec3 up = new Vec3(0, cp * cr, 0)
+                .add(fwd.scale(sp))
+                .add(right.scale(sr * cp));
+        if (up.lengthSqr() < 1.0e-6) up = new Vec3(0, 1, 0);
+
+        return pivot.subtract(up.normalize().scale(BODY_PIVOT_Y));
     }
 }

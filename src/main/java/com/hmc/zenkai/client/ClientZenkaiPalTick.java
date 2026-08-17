@@ -125,6 +125,8 @@ public final class ClientZenkaiPalTick {
                     && mc.options.keySprint.isDown()
                     && mc.player.input.forwardImpulse > 0.1f;
             applyLocalBoost(p, boosting);
+            net.minecraft.client.player.LocalPlayer lp = (net.minecraft.client.player.LocalPlayer) p;
+            com.hmc.zenkai.client.fly.FlightMovement.tick(lp, flying);
             ClientFlyAnimState.sendIfChanged(flying, boosting);
             com.hmc.zenkai.client.fly.FlightController.tick(p, flying, boosting);
             driveFly(p, st, flying, boosting);

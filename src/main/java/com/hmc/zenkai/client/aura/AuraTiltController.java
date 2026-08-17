@@ -57,27 +57,32 @@ public final class AuraTiltController {
         return new Motion(vel, alpha, flying);
     }
 
-    /** Grados desde la vertical hacia el FRENTE del cuerpo. Índice 0 del array. */
-    private static final float CRUISE_PITCH_DEG = 15f;
-    /** Tope de inclinación lateral por giro, en grados. */
-    private static final float MAX_BANK_DEG = 12f;
-    /** Cuánto banquea por grado de giro del cuerpo y tick. */
-    private static final float BANK_PER_DEG = 1.5f;
+    /** Por debajo de esta velocidad (bloques/tick) no se inclina nada: en hover el aura
+     *  tiene que subir recta. */
+    private static final double TILT_MIN_SPEED = 0.08;
+    /** Velocidad a la que la inclinación es del 100%. Entre el mínimo y esta, escala. */
+    private static final double TILT_FULL_SPEED = 0.45;
 
     /**
-     * Ángulos del aura derivados de la mirada y del giro, no de una dirección discreta.
-     * pitchDeg: grados desde la vertical hacia el FRENTE del cuerpo (negativo = atrás).
-     * sideDeg: grados hacia la DERECHA del cuerpo (negativo = izquierda).
-     * En boost reproduce de forma CONTINUA la tabla que ya estaba calibrada: FORWARD daba 90°,
-     * UP 45° y DOWN 135°, que es exactamente 90 + xRot/2 (xRot es positivo mirando abajo).
-     * Ahora los valores intermedios existen en vez de saltar entre tres casillas.
-     * El lateral sale del giro del cuerpo — inclinarse hacia el interior de la curva — y
-     * sustituye a los ±8° fijos de LEFT/RIGHT, que ya no tienen dirección de la que salir.
+     * Ángulos del aura tomados del FlightController: la MISMA orientación que se aplica al
+     * cuerpo, no un cálculo paralelo.
+     * Antes esto tenía su propia tabla (15° fijos en crucero, 90+xRot/2 en boost) y, desde que
+     * el cuerpo se inclina de forma continua, ambos decían cosas distintas: avanzando despacio
+     * el aura ya se tumbaba 15° mientras el cuerpo apenas se movía.
+     * Además escala con la velocidad real: quieto en el aire no hay inclinación que valga.
+     * pitchDeg: grados desde la vertical hacia el FRENTE del cuerpo.
+     * sideDeg: grados hacia la DERECHA del cuerpo.
      */
-    private static float[] anglesFor(AbstractClientPlayer p, boolean boosting) {
-        float pitch = boosting ? 90f + p.getXRot() * 0.5f : CRUISE_PITCH_DEG;
-        float turn = Mth.wrapDegrees(p.yBodyRot - p.yBodyRotO);
-        float side = Mth.clamp(turn * BANK_PER_DEG, -MAX_BANK_DEG, MAX_BANK_DEG);
+    private static float[] anglesFor(AbstractClientPlayer p, Motion mo) {
+        var o = com.hmc.zenkai.client.fly.FlightController.of(p.getUUID());
+
+        double speed = mo.vel().length();
+        float scale = (float) Mth.clamp(
+                (speed - TILT_MIN_SPEED) / (TILT_FULL_SPEED - TILT_MIN_SPEED), 0.0, 1.0);
+        if (scale <= 0f) return new float[]{0f, 0f};
+
+        float pitch = (float) Math.toDegrees(o.pitch()) * scale;
+        float side = (float) Math.toDegrees(o.roll()) * scale;
         return new float[]{pitch, side};
     }
 
@@ -86,7 +91,7 @@ public final class AuraTiltController {
         Vector3f target = new Vector3f(0f, 1f, 0f);
         var fp = ClientZenkaiPalTick.flyPoseOf(p.getUUID());
         if (mo.flying() && fp.flying()) {
-            float[] ang = anglesFor(p, fp.boosting());
+            float[] ang = anglesFor(p, mo);
             float pitch = (float) Math.toRadians(ang[0]);
             float side = (float) Math.toRadians(ang[1]);
             if (Math.abs(pitch) > 1.0e-3f || Math.abs(side) > 1.0e-3f) {
@@ -109,6 +114,18 @@ public final class AuraTiltController {
         axis.normalize();
 
         if (axis.y > 0.9999f) return;
+        // La rotación va alrededor del PIVOTE DEL HUESO `body` (12 px = 0.75 bloques), no de
+        // los pies. El PoseStack llega trasladado a `at`, que es el suelo del jugador; rotar
+        // ahí desplaza el aura respecto al torso casi un bloque entero cuando el cuerpo se
+        // tumba 90° en boost, y el cono sale disparado por debajo y por detrás.
+        //
+        // Mismo pivote que usa AuraTrailRenderer.bodyCenter: los tres —cuerpo, estela y
+        // aura— tienen que girar sobre el mismo punto o no hay forma de que casen.
+        pose.translate(0.0, BODY_PIVOT_Y, 0.0);
         pose.mulPose(new Quaternionf().rotationTo(0f, 1f, 0f, axis.x, axis.y, axis.z));
+        pose.translate(0.0, -BODY_PIVOT_Y, 0.0);
     }
+
+    /** Pivote del hueso `body` en PAL: 12 px = 0.75 bloques. */
+    private static final double BODY_PIVOT_Y = 0.75;
 }

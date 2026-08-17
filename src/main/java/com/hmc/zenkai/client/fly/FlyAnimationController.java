@@ -27,7 +27,7 @@ public class FlyAnimationController extends PlayerAnimationController {
      * te entra en cámara, ponlo en false: se pierde el efecto en 1ª persona pero el cuerpo
      * sigue inclinándose para los demás.
      */
-    private static final boolean APPLY_IN_FIRST_PERSON = true;
+    private static final boolean APPLY_IN_FIRST_PERSON = false;
 
     public FlyAnimationController(AbstractClientPlayer player, AnimationStateHandler handler) {
         super(player, handler);

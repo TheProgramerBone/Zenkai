@@ -57,8 +57,12 @@ public final class ZenkaiPalAnimations {
     public static PlayerAnimationController newFlightController(AbstractClientPlayer player) {
         var c = new com.hmc.zenkai.client.fly.FlyAnimationController(
                 player, (controller, state, animSetter) -> PlayState.STOP);
-        c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
-        c.setFirstPersonConfiguration(FP_VANILLA); // se corrige en el primer tick
+        // FUERA de la 1ª persona, a diferencia de las otras cinco capas. La pose de vuelo pone
+        // los brazos extendidos a la altura del pecho, y en boost el cuerpo se tumba 90°: en
+        // primera persona eso es el torso cruzando el plano de cámara. Con NONE, volando se
+        // ven las manos vanilla y el cuerpo sigue animándose para los demás.
+        c.setFirstPersonMode(FirstPersonMode.NONE);
+        c.setFirstPersonConfiguration(FP_VANILLA);
         return c;
     }
 
