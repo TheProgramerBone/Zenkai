@@ -209,14 +209,21 @@ public final class KiCombatServer {
 
     private static final Set<UUID> BLOCKING = ConcurrentHashMap.newKeySet();
 
-    /** Aplica la mecánica de defensa. NO VALIDA: lo hizo ActionResolver. */
-    public static void applyBlocking(ServerPlayer sp, boolean blocking) {
-        boolean changed = blocking
-                ? BLOCKING.add(sp.getUUID())
-                : BLOCKING.remove(sp.getUUID());
-        if (!changed) return;
+    // El set BLOCKING desapareció: defender es una acción exclusiva y su identidad vive en
+    // ActionState. Mantener aquí un Set<UUID> en paralelo era exactamente el patrón que este
+    // refactor existe para eliminar — dos sitios que podían discrepar sobre lo mismo.
 
+    /** Aplica la mecánica de defensa. NO VALIDA ni registra estado: ambas cosas las hizo
+     *  ActionResolver. Aquí solo el modificador de velocidad y el aviso a los trackers. */
+    public static void applyBlocking(ServerPlayer sp, boolean blocking) {
         AttributeInstance speed = sp.getAttribute(Attributes.MOVEMENT_SPEED);
+
+        // Idempotencia a partir del propio modificador, que es el efecto real, en vez de un
+        // booleano guardado aparte. Si ya está como se pide, no hay nada que hacer ni que
+        // difundir.
+        boolean had = speed != null && speed.getModifier(BLOCK_SLOW_ID) != null;
+        if (had == blocking) return;
+
         if (speed != null) {
             speed.removeModifier(BLOCK_SLOW_ID);
             if (blocking) speed.addTransientModifier(BLOCK_SLOW);
@@ -226,8 +233,9 @@ public final class KiCombatServer {
                 new BlockingSyncPacket(sp.getId(), blocking));
     }
 
-    /** ¿Está este jugador defendiendo? (consulta del pipeline de daño). */
+    /** ¿Está defendiendo? Fuente única: ActionState. */
     public static boolean isBlocking(ServerPlayer sp) {
-        return BLOCKING.contains(sp.getUUID());
+        return com.hmc.zenkai.feature.action.ActionStateServer.get(sp).type()
+                == com.hmc.zenkai.feature.action.ActionType.BLOCK;
     }
 }

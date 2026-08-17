@@ -107,6 +107,8 @@ public class TechniqueEditScreen extends Screen {
     private int chargeIdx;   // índice en soundList(true), 0 = ninguno
     private int releaseIdx;
     private int animSet;
+    /** Bucle de animación del preview. Local, sin paquete: nadie más lo ve. */
+    private final TechniqueAnimPreview animPreview = new TechniqueAnimPreview();
 
     private Tab tab = Tab.COMBAT;
     private boolean deleteArmed = false;
@@ -507,8 +509,8 @@ public class TechniqueEditScreen extends Screen {
         TechniqueIcons.draw(g, right - 18, sy - 3, previewTech);
 
         // El preview ya NO se esconde con el picker abierto: el picker está fuera del panel.
-        // MAQUETADO: hoy pinta el modelo quieto; falta lanzar la animación PAL en LOCAL
-        // (sin packet) para que el resto de jugadores no la vea.
+        // La animación la lleva animPreview desde tick(): carga → sobrecarga → disparo → pausa,
+        // en bucle y en local. Aquí solo se pinta el modelo, que PAL ya trae posado.
         int cx = leftPos + BG_W / 2;
         int top = topPos + Y_PREVIEW;
         g.fill(cx - 45, top - 1, cx + 45, top + PREVIEW_H + 1, ZenkaiPalette.BORDER_IN);
@@ -606,4 +608,16 @@ public class TechniqueEditScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() { return false; }
+
+    @Override
+    public void tick() {
+        super.tick();
+        animPreview.tick(animSet, type.defensive());
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        animPreview.stop();
+    }
 }

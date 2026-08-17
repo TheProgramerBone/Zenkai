@@ -14,7 +14,7 @@ public enum ZenkaiTab {
     PARTY(80,20),
     CONFIG(100,20);
 
-    /** Esquina del ícono de la pestaña dentro de textures/gui/icons.png (270x270). */
+    /** Esquina del ícono de la pestaña dentro de textures/gui/icons.png (256x256). */
     public final int u, v;
 
     ZenkaiTab(int u, int v) {

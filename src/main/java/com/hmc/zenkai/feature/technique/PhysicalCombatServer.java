@@ -181,7 +181,11 @@ public final class PhysicalCombatServer {
         if (a == null) return;
 
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        boolean cancel = !sp.isAlive() || att.flags().isDowned()
+        // isBlocking ya no puede ser cierto aquí: si el jugador empieza a defender, el
+        // resolver llama a cancelActive() antes de escribir BLOCK, así que ACTIVE ya está
+        // vacío. Se deja como red de seguridad por si alguna ruta futura pone BLOCK sin
+        // pasar por el resolver — que es justo lo que no debe ocurrir.
+        boolean cancel = att.flags().isDowned()
                 || KiCombatServer.isBlocking(sp) || !CombatModeServerState.isActive(sp.getUUID());
         if (cancel) {
             ACTIVE.remove(sp.getUUID());

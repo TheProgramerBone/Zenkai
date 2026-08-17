@@ -7,6 +7,7 @@ import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -15,14 +16,14 @@ import java.util.function.Supplier;
  * Pestaña con ícono del atlas textures/gui/icons.png (270x270), sin texto.
  * El nombre de la pestaña va como tooltip (setTooltip desde fuera si se quiere).
  * Estados: seleccionada -> marcador inferior + ícono pleno; hover -> velo claro;
- * normal -> ícono ligeramente atenuado (para que la activa destaque).
+ * normal -> ícono ligeramente atenuado (para qué la activa destaque).
  */
 public class TabIconButton extends AbstractButton {
 
     private static final ResourceLocation ATLAS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
-    private static final int ATLAS_W = 270;
-    private static final int ATLAS_H = 270;
+    private static final int ATLAS_W = 256;
+    private static final int ATLAS_H = 256;
 
     private final int u, v;               // esquina del ícono dentro del atlas
     private final int iconSize;           // celda cuadrada (px en el atlas y en pantalla)
@@ -60,6 +61,6 @@ public class TabIconButton extends AbstractButton {
         }
     }
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput out) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput out) {
     }
 }
