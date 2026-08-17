@@ -112,7 +112,8 @@ public final class TechniqueManager {
                             Math.max(0, GsonHelper.getAsInt(o, "count", 1)),
                             GsonHelper.getAsBoolean(o, "defensive", false),
                             readRgb(o, "default_rgb"),
-                            GsonHelper.getAsDouble(o, "range", 3.0));
+                            GsonHelper.getAsDouble(o, "range", 3.0),
+                            Math.max(1, GsonHelper.getAsInt(o, "anim_ticks", 12)));
                     if (out.put(kind.name() + "/" + id, def) != null) {
                         LOGGER.warn("[Zenkai] Técnica duplicada '{}/{}': gana {}.", kind.folder(), id, file);
                     }

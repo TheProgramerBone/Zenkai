@@ -13,25 +13,26 @@ import java.util.Map;
  *   data/&lt;ns&gt;/zenkai_techniques/ki/&lt;id&gt;.json
  *   data/&lt;ns&gt;/zenkai_techniques/physical/&lt;id&gt;.json
  * y se sincronizan al cliente con TechniqueSyncPacket (ver TechniqueManager).
- *
  * El id es el nombre del enum en minúsculas. Los enums (KiTechniqueType /
  * PhysicalTechnique) siguen siendo la IDENTIDAD: nombre = clave NBT, ordinal = celda
  * del atlas de íconos, y la estela sigue codificada ahí (es visual, no balance).
- *
  * SIN JSON = TÉCNICA DESACTIVADA: no se puede desbloquear, ni guardar, ni disparar,
  * y no aparece en las pantallas. Los getters del enum devuelven valores neutros y
  * los costes devuelven Integer.MAX_VALUE para que nada sea "asequible" por accidente.
- *
  * Campos según kind (los que no aplican quedan a 0):
  *  - KI:       damage_mult, ki_cost_mult, charge_ticks, cooldown_ticks, speed, count,
  *              defensive, default_rgb
  *  - PHYSICAL: damage_mult, stamina_pct, cooldown_ticks, range
- * Comunes: tp_cost (coste de desbloqueo), mind_req (MND mínimo para desbloquear).
+ * Comunes: tp_cost (coste de desbloqueo), mind_req (MND mínimo para desbloquear),
+ *          anim_ticks (duración del ESTADO VISUAL sincronizado; ver abajo).
+ * anim_ticks NO es duración de gameplay. El golpe instantáneo sigue resolviéndose en su
+ * tick: el daño, el coste y el cooldown no dependen de esto. Solo dice cuánto se mantiene
+ * el ActionState para que los demás jugadores vean la animación completa.
  */
 public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq,
                            double damageMult, double kiCostMult, double staminaPct,
                            int chargeTicks, int cooldownTicks, double speed,
-                           int count, boolean defensive, int defaultRgb, double range) {
+                           int count, boolean defensive, int defaultRgb, double range, int animTicks) {
 
     public enum Kind {
         KI, PHYSICAL;
@@ -78,6 +79,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq,
                 buf.writeBoolean(d.defensive());
                 buf.writeInt(d.defaultRgb());
                 buf.writeDouble(d.range());
+                buf.writeVarInt(d.animTicks());
             },
             buf -> {
                 String id = buf.readUtf();
@@ -88,6 +90,6 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq,
                         buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readVarInt(), buf.readVarInt(),
                         buf.readDouble(), buf.readVarInt(), buf.readBoolean(),
-                        buf.readInt(), buf.readDouble());
+                        buf.readInt(), buf.readDouble(), buf.readVarInt());
             });
 }

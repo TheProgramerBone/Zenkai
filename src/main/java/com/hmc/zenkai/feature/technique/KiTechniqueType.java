@@ -107,4 +107,7 @@ public enum KiTechniqueType {
             default -> 0f;
         };
     }
+
+    /** Duración del estado de disparo (RELEASING) para los observadores. */
+    public int animTicks() { TechniqueDef d = def(); return d == null ? 20 : d.animTicks(); }
 }

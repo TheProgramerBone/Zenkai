@@ -4,5 +4,6 @@
   "damage_mult": 0.28,
   "stamina_pct": 3.1,
   "cooldown_ticks": 160,
-  "range": 3.0
+  "range": 3.0,
+  "anim_ticks": 12
 }

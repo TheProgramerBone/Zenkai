@@ -1,0 +1,37 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "zenkai.ki_attack_1_release": {
+            "animation_length": 0.5,
+            "bones": {
+                "right_arm": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                -90,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.5": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        }
+                    }
+                },
+                "right_leg": {
+                    "rotation": {
+                        "vector": [
+                            0,
+                            0,
+                            0
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

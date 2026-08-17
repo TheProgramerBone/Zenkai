@@ -277,7 +277,7 @@ public class Zenkai {
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.FLY_LAYER, 800,
-                        ZenkaiPalAnimations::newFirstPersonController);
+                        ZenkaiPalAnimations::newFlightController);
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.BLOCK_LAYER, 1200,

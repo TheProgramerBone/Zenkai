@@ -1,0 +1,29 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "zenkai.ki_attack_2_charge": {
+            "loop": "hold_on_last_frame",
+            "animation_length": 0.5,
+            "bones": {
+                "left_arm": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.5": {
+                            "vector": [
+                                -90,
+                                0,
+                                0
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -2,6 +2,7 @@ package com.hmc.zenkai.event;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.TechniqueAnimSets;
+import com.hmc.zenkai.client.ZenkaiTransitions;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
@@ -48,6 +49,19 @@ public final class ZenkaiPalAnimations {
         return c;
     }
 
+    /**
+     * La capa de vuelo usa un controlador propio que aplica la orientación dinámica encima de
+     * la animación. Misma política de 1ª persona que las demás: applyFirstPersonPolicy itera
+     * ZenkaiPalLayers.ALL, así que esta capa también recibe la configuración al cambiar.
+     */
+    public static PlayerAnimationController newFlightController(AbstractClientPlayer player) {
+        var c = new com.hmc.zenkai.client.fly.FlyAnimationController(
+                player, (controller, state, animSetter) -> PlayState.STOP);
+        c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
+        c.setFirstPersonConfiguration(FP_VANILLA); // se corrige en el primer tick
+        return c;
+    }
+
     /** Último valor aplicado al jugador local (evita reescribir las cinco capas cada tick). */
     private static Boolean lastFpPolicy = null;
 
@@ -77,33 +91,6 @@ public final class ZenkaiPalAnimations {
     private static final ResourceLocation BLOCK_ANIM =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.block");
 
-    /** Direcciones de vuelo. Cada una tiene 3 animaciones del PAL (créalas en player_animations/):
-     *   cruise     = "fly.<dir>"              (crucero, sin Control)
-     *   boostStart = "fly.<dir>_boost_start"  (INTERMEDIA: transición al pulsar Control, se ve una vez)
-     *   boost      = "fly.<dir>_boost"         (boost a tope, loop)
-     *  Las que no hagas, reapunta el campo a otra (p.ej. boostStart = cruise). */
-    public enum FlyDir {
-        IDLE("fly.idle"),
-        FORWARD("fly.forward"),   BACK("fly.back"),
-        LEFT("fly.left"),         RIGHT("fly.right"),
-        UP("fly.up"),             DOWN("fly.down"),
-        FORWARD_LEFT("fly.forward_left"),  FORWARD_RIGHT("fly.forward_right"),
-        BACK_LEFT("fly.back_left"),        BACK_RIGHT("fly.back_right");
-
-        public final ResourceLocation cruise;
-        public final ResourceLocation cruiseStart;
-        public final ResourceLocation boostStart;
-        public final ResourceLocation boost;
-        FlyDir(String base) {
-            this.cruiseStart = rl(base + "_start");
-            this.cruise = rl(base);
-            this.boostStart = rl(base + "_boost_start");
-            this.boost      = rl(base + "_boost");
-        }
-        private static ResourceLocation rl(String path) {
-            return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path);
-        }
-    }
 
     public static PlayerAnimationController controller(AbstractClientPlayer player) {
         return (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(player, ZenkaiPalLayers.TRANSFORM_LAYER);
@@ -114,19 +101,24 @@ public final class ZenkaiPalAnimations {
     }
 
     public static void playFly(AbstractClientPlayer player, ResourceLocation anim) {
-        flyController(player).triggerAnimation(anim);
+        ZenkaiTransitions.play(flyController(player), anim, ZenkaiTransitions.FLY);
     }
 
     public static void stopFly(AbstractClientPlayer player) {
-        flyController(player).stopTriggeredAnimation();
+        ZenkaiTransitions.stop(flyController(player), ZenkaiTransitions.FLY);
     }
 
     public static void playTransformStart(AbstractClientPlayer player) {
-        controller(player).triggerAnimation(TRANSFORMATION_1);
+        ZenkaiTransitions.play(controller(player), TRANSFORMATION_1, ZenkaiTransitions.TRANSFORM);
     }
 
     public static void playTransformLoop(AbstractClientPlayer player) {
-        controller(player).triggerAnimation(TRANSFORMATION_2);
+        // start -> loop también funde: sin esto el salto al loop es un tirón visible.
+        ZenkaiTransitions.play(controller(player), TRANSFORMATION_2, ZenkaiTransitions.TRANSFORM);
+    }
+
+    public static void stopTransform(AbstractClientPlayer player) {
+        ZenkaiTransitions.stop(controller(player), ZenkaiTransitions.TRANSFORM);
     }
 
     public static PlayerAnimationController blockController(AbstractClientPlayer player) {
@@ -134,11 +126,13 @@ public final class ZenkaiPalAnimations {
     }
 
     public static void playBlock(AbstractClientPlayer player) {
-        blockController(player).triggerAnimation(BLOCK_ANIM);
+        ZenkaiTransitions.play(blockController(player), BLOCK_ANIM, ZenkaiTransitions.BLOCK_IN);
     }
 
     public static void stopBlock(AbstractClientPlayer player) {
-        blockController(player).stopTriggeredAnimation();
+        // El fundido de salida NO retrasa el input: dejar de defender ya se resolvió en
+        // servidor cuando esto se ejecuta. Es solo la representación la que se toma 4 ticks.
+        ZenkaiTransitions.stop(blockController(player), ZenkaiTransitions.BLOCK_OUT);
     }
 
     // ── Pose ofensiva del modo combate ───────────────────────────────────────
@@ -163,16 +157,18 @@ public final class ZenkaiPalAnimations {
 
     public static void playCombatIdleStart(AbstractClientPlayer player, int styleOrdinal) {
         if (styleOrdinal < 0 || styleOrdinal >= COMBAT_IDLE_START.length) return;
-        combatController(player).triggerAnimation(COMBAT_IDLE_START[styleOrdinal]);
+        ZenkaiTransitions.play(combatController(player), COMBAT_IDLE_START[styleOrdinal],
+                ZenkaiTransitions.COMBAT);
     }
 
     public static void playCombatIdleLoop(AbstractClientPlayer player, int styleOrdinal) {
         if (styleOrdinal < 0 || styleOrdinal >= COMBAT_IDLE_LOOP.length) return;
-        combatController(player).triggerAnimation(COMBAT_IDLE_LOOP[styleOrdinal]);
+        ZenkaiTransitions.play(combatController(player), COMBAT_IDLE_LOOP[styleOrdinal],
+                ZenkaiTransitions.COMBAT);
     }
 
     public static void stopCombatIdle(AbstractClientPlayer player) {
-        combatController(player).stopTriggeredAnimation();
+        ZenkaiTransitions.stop(combatController(player), ZenkaiTransitions.COMBAT);
     }
 
     // ── Técnicas físicas: una animación one-shot por técnica (sin loop):
@@ -188,11 +184,12 @@ public final class ZenkaiPalAnimations {
         }
     }
 
-    public static void playPhysical(AbstractClientPlayer player,
-                                    PhysicalTechnique t) {
+    public static void playPhysical(AbstractClientPlayer player, PhysicalTechnique t) {
         var c = (PlayerAnimationController) PlayerAnimationAccess
                 .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
-        if (c != null) c.triggerAnimation(PHYS_ANIMS[t.ordinal()]);
+        // 2 ticks: el golpe tiene que salir seco. Fundir más se siente como lag aunque el
+        // daño se haya resuelto en el tick 0.
+        ZenkaiTransitions.play(c, PHYS_ANIMS[t.ordinal()], ZenkaiTransitions.PHYS);
     }
 
     // ── Técnicas de ki ───────────────────────────────────────────────────────
@@ -203,37 +200,37 @@ public final class ZenkaiPalAnimations {
     }
 
     public static void playKiCharge(AbstractClientPlayer p, int animSet) {
-        var c = kiController(p);
-        if (c != null) c.triggerAnimation(TechniqueAnimSets.charge(animSet));
+        ZenkaiTransitions.play(kiController(p), TechniqueAnimSets.charge(animSet),
+                ZenkaiTransitions.KI_CHARGE);
     }
 
     public static void playKiOvercharge(AbstractClientPlayer p, int animSet) {
-        var c = kiController(p);
-        if (c != null) c.triggerAnimation(TechniqueAnimSets.overcharge(animSet));
+        // charge -> overcharge es un cambio de pose sostenida: funde como la carga.
+        ZenkaiTransitions.play(kiController(p), TechniqueAnimSets.overcharge(animSet),
+                ZenkaiTransitions.KI_CHARGE);
     }
 
     public static void playKiRelease(AbstractClientPlayer p, int animSet) {
-        var c = kiController(p);
-        if (c != null) c.triggerAnimation(TechniqueAnimSets.release(animSet));
+        ZenkaiTransitions.play(kiController(p), TechniqueAnimSets.release(animSet),
+                ZenkaiTransitions.KI_RELEASE);
     }
 
     public static void playKiBarrier(AbstractClientPlayer p) {
-        var c = kiController(p);
-        if (c != null) c.triggerAnimation(TechniqueAnimSets.BARRIER);
+        ZenkaiTransitions.play(kiController(p), TechniqueAnimSets.BARRIER,
+                ZenkaiTransitions.KI_CHARGE);
     }
 
     public static void stopKi(AbstractClientPlayer p) {
-        var c = kiController(p);
-        if (c != null) c.stopTriggeredAnimation();
+        ZenkaiTransitions.stop(kiController(p), ZenkaiTransitions.KI_CHARGE);
     }
 
-    // ── Subir ki (tecla C). Reutiliza COMBAT_LAYER: nunca coinciden, porque el resolver
-    //    cancela la pose de combate al empezar a cargar. ─────────────────────
     public static void playChargeKiStart(AbstractClientPlayer p) {
-        combatController(p).triggerAnimation(TechniqueAnimSets.KI_CHARGE_START);
+        ZenkaiTransitions.play(combatController(p), TechniqueAnimSets.KI_CHARGE_START,
+                ZenkaiTransitions.KI_CHARGE);
     }
 
     public static void playChargeKiLoop(AbstractClientPlayer p) {
-        combatController(p).triggerAnimation(TechniqueAnimSets.KI_CHARGE_LOOP);
+        ZenkaiTransitions.play(combatController(p), TechniqueAnimSets.KI_CHARGE_LOOP,
+                ZenkaiTransitions.KI_CHARGE);
     }
 }

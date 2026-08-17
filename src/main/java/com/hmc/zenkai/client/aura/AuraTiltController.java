@@ -1,7 +1,6 @@
 package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
-import com.hmc.zenkai.event.ZenkaiPalAnimations;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -14,14 +13,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Inclinación del aura en vuelo. TRASLADO LITERAL del código que ya funcionaba: no se
- * ha rediseñado nada, solo se ha sacado del monolito.
- *
- * El eje del aura se inclina copiando la POSE de las animaciones de vuelo de PAL, no
- * adivinando por velocidad — así el aura y el cuerpo cuentan lo mismo. Suavizado
- * exponencial; al frenar o aterrizar vuelve gradualmente a la vertical.
- *
- * Es ortogonal al rework: no lee AuraProfile ni AuraState.
+ * Inclinación del aura en vuelo.
+ * El eje del aura se inclina siguiendo la MIRADA y el giro del cuerpo, no una dirección
+ * discreta. Antes copiaba la pose de las 19 animaciones de vuelo de PAL; con el rediseño solo
+ * quedan crucero y boost, así que la orientación se deriva igual que la del cuerpo: del
+ * jugador, no de qué animación esté sonando. Suavizado exponencial; al frenar o aterrizar
+ * vuelve gradualmente a la vertical.
+ * Es ortogonal al rework del aura: no lee AuraProfile ni AuraState.
  */
 public final class AuraTiltController {
     private AuraTiltController() {}
@@ -59,46 +57,49 @@ public final class AuraTiltController {
         return new Motion(vel, alpha, flying);
     }
 
+    /** Grados desde la vertical hacia el FRENTE del cuerpo. Índice 0 del array. */
+    private static final float CRUISE_PITCH_DEG = 15f;
+    /** Tope de inclinación lateral por giro, en grados. */
+    private static final float MAX_BANK_DEG = 12f;
+    /** Cuánto banquea por grado de giro del cuerpo y tick. */
+    private static final float BANK_PER_DEG = 1.5f;
+
     /**
-     * Ángulos del aura por estado de animación de vuelo.
+     * Ángulos del aura derivados de la mirada y del giro, no de una dirección discreta.
      * pitchDeg: grados desde la vertical hacia el FRENTE del cuerpo (negativo = atrás).
      * sideDeg: grados hacia la DERECHA del cuerpo (negativo = izquierda).
+     * En boost reproduce de forma CONTINUA la tabla que ya estaba calibrada: FORWARD daba 90°,
+     * UP 45° y DOWN 135°, que es exactamente 90 + xRot/2 (xRot es positivo mirando abajo).
+     * Ahora los valores intermedios existen en vez de saltar entre tres casillas.
+     * El lateral sale del giro del cuerpo — inclinarse hacia el interior de la curva — y
+     * sustituye a los ±8° fijos de LEFT/RIGHT, que ya no tienen dirección de la que salir.
      */
-    private static float[] anglesFor(ZenkaiPalAnimations.FlyDir dir, boolean boosting) {
-        if (dir == null) return new float[]{0f, 0f};
-        return switch (dir) {
-            case IDLE    -> new float[]{0f, 0f};
-            case FORWARD -> boosting ? new float[]{90f, 0f} : new float[]{15f, 0f};
-            case BACK    -> new float[]{-15f, 0f};
-            case LEFT    -> new float[]{0f, -8f};
-            case RIGHT   -> new float[]{0f, 8f};
-            case UP      -> boosting ? new float[]{45f, 0f} : new float[]{0f, 0f};
-            case DOWN    -> boosting ? new float[]{135f, 0f} : new float[]{8f, 0f};
-            case FORWARD_LEFT, BACK_RIGHT, FORWARD_RIGHT, BACK_LEFT -> null;
-        };
+    private static float[] anglesFor(AbstractClientPlayer p, boolean boosting) {
+        float pitch = boosting ? 90f + p.getXRot() * 0.5f : CRUISE_PITCH_DEG;
+        float turn = Mth.wrapDegrees(p.yBodyRot - p.yBodyRotO);
+        float side = Mth.clamp(turn * BANK_PER_DEG, -MAX_BANK_DEG, MAX_BANK_DEG);
+        return new float[]{pitch, side};
     }
 
     /** Aplica la inclinación al PoseStack, ya trasladado al jugador. */
     public static void apply(PoseStack pose, AbstractClientPlayer p, Motion mo) {
         Vector3f target = new Vector3f(0f, 1f, 0f);
         var fp = ClientZenkaiPalTick.flyPoseOf(p.getUUID());
-        if (mo.flying() && fp.dir() != null) {
-            float[] ang = anglesFor(fp.dir(), fp.boosting());
-            if (ang != null) {
-                float pitch = (float) Math.toRadians(ang[0]);
-                float side = (float) Math.toRadians(ang[1]);
-                if (Math.abs(pitch) > 1.0e-3f || Math.abs(side) > 1.0e-3f) {
-                    float yaw = (float) Math.toRadians(Mth.lerp(1f, p.yBodyRotO, p.yBodyRot));
-                    float sinY = (float) Math.sin(yaw), cosY = (float) Math.cos(yaw);
-                    Vector3f fwd = new Vector3f(-sinY, 0f, cosY);
-                    Vector3f rgt = new Vector3f(cosY, 0f, sinY);
-                    target.set(
-                            fwd.x * (float) Math.sin(pitch) + rgt.x * (float) Math.sin(side),
-                            (float) (Math.cos(pitch) * Math.cos(side)),
-                            fwd.z * (float) Math.sin(pitch) + rgt.z * (float) Math.sin(side));
-                    if (target.lengthSquared() < 1.0e-4f) target.set(0f, 1f, 0f);
-                    target.normalize();
-                }
+        if (mo.flying() && fp.flying()) {
+            float[] ang = anglesFor(p, fp.boosting());
+            float pitch = (float) Math.toRadians(ang[0]);
+            float side = (float) Math.toRadians(ang[1]);
+            if (Math.abs(pitch) > 1.0e-3f || Math.abs(side) > 1.0e-3f) {
+                float yaw = (float) Math.toRadians(Mth.lerp(1f, p.yBodyRotO, p.yBodyRot));
+                float sinY = (float) Math.sin(yaw), cosY = (float) Math.cos(yaw);
+                Vector3f fwd = new Vector3f(-sinY, 0f, cosY);
+                Vector3f rgt = new Vector3f(cosY, 0f, sinY);
+                target.set(
+                        fwd.x * (float) Math.sin(pitch) + rgt.x * (float) Math.sin(side),
+                        (float) (Math.cos(pitch) * Math.cos(side)),
+                        fwd.z * (float) Math.sin(pitch) + rgt.z * (float) Math.sin(side));
+                if (target.lengthSquared() < 1.0e-4f) target.set(0f, 1f, 0f);
+                target.normalize();
             }
         }
 

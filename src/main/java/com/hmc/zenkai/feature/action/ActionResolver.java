@@ -53,17 +53,27 @@ public final class ActionResolver {
         cancelCurrent(sp, cur);
         cancelSustained(sp, att, ActionType.PHYSICAL);
 
-        PhysicalCombatServer.execute(sp, t, cost);
-
         // Solo los movimientos CON DURACIÓN ocupan el estado. Heavy blow y kiai se resuelven
         // en el mismo tick: registrarlos dejaría un estado que nadie limpia.
+        PhysicalCombatServer.execute(sp, t, cost);
+
+        long now = sp.level().getGameTime();
         if (PhysicalCombatServer.isBusy(sp.getUUID())) {
+            // Movimiento CON DURACIÓN (dash, barrage): lo limpia PhysicalCombatServer.onPlayerTick
+            // cuando se agotan sus ticks de gameplay.
             ActionState st = new ActionState(ActionType.PHYSICAL, ActionPhase.ACTIVE,
-                    sp.level().getGameTime(), t.ordinal(),-1);
+                    now, t.ordinal(), t.animTicks());
             ActionStateServer.set(sp, st);
             return ActionResult.ok(st);
         }
-        return ActionResult.ok();
+
+        // Movimiento INSTANTÁNEO (heavy blow, kiai): el daño ya está resuelto, pero sin estado
+        // los observadores no verían nada. Se registra con su duración de animación y lo limpia
+        // solo ActionStateServer. La Matriz A deja pasar sobre INSTANT, así que no bloquea.
+        ActionState st = new ActionState(ActionType.PHYSICAL, ActionPhase.INSTANT,
+                now, t.ordinal(), t.animTicks());
+        ActionStateServer.set(sp, st);
+        return ActionResult.ok(st);
     }
 
     // ── Técnicas de ki ───────────────────────────────────────────────────────
@@ -92,7 +102,11 @@ public final class ActionResolver {
         cancelSustained(sp, att, ActionType.KI_TECHNIQUE);
 
         long now = sp.level().getGameTime();
-        ActionState st = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.CHARGING, now, slot, tech.animSet());
+        // visual = 0 marca técnica DEFENSIVA: los animSet reales empiezan en 1, así que el 0
+        // queda libre como centinela. El cliente no recibe el KiTechniqueType, y sincronizarlo
+        // solo para esto no compensa.
+        int visual = tech.type().defensive() ? 0 : tech.animSet();
+        ActionState st = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.CHARGING, now, slot, visual);
         ActionStateServer.set(sp, st);
         KiChargeServer.begin(sp, tech);   // sonido + difusión de la bola
         return ActionResult.ok(st);
@@ -151,7 +165,8 @@ public final class ActionResolver {
         // Estado de disparo: es lo que distingue "soltó y salió" de "canceló" para los
         // observadores. Se limpia solo en ActionStateServer tras RELEASE_TICKS.
         ActionState fired = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.RELEASING,
-                sp.level().getGameTime(), slot, tech.animSet());
+                sp.level().getGameTime(), slot,
+                type.defensive() ? 0 : tech.animSet());
         ActionStateServer.set(sp, fired);
         return ActionResult.ok(fired);
     }

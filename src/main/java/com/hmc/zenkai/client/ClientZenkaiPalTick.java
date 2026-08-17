@@ -1,8 +1,8 @@
 package com.hmc.zenkai.client;
 
+import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.action.ActionStateClient;
 import com.hmc.zenkai.event.ZenkaiPalAnimations;
-import com.hmc.zenkai.event.ZenkaiPalAnimations.FlyDir;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.feature.action.ActionPhase;
 import com.hmc.zenkai.feature.action.ActionType;
@@ -12,6 +12,7 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -27,10 +28,9 @@ public final class ClientZenkaiPalTick {
     private static final class AnimState {
         boolean lastHeld = false;
         int chainTicks = 0;
-        boolean flyPlaying = false;
-        FlyDir flyDir = null;
-        int flyBoostState = 0; // ver constantes CRUISE_START/CRUISE_LOOP/BOOST_START/BOOST_LOOP
-        int flyBoostTicks = 0; // cuenta atrás de la intermedia antes de pasar al loop
+        // Vuelo: cuatro animaciones, un estado y un temporizador. Ya no hay dirección.
+        int flyState = FLY_OFF;
+        int flyTimer = 0;          // cuenta atrás de start/stop hacia su siguiente estado
         boolean blockPlaying = false;
         boolean combatPlaying = false;
         int combatStyle = -1;      // ordinal del Style con el que se posó
@@ -41,6 +41,8 @@ public final class ClientZenkaiPalTick {
         // Subir ki: start -> loop, y solo quieto.
         boolean chargeKiPlaying = false;
         int chargeKiStartTicks = 0;
+        // Físicas: solo remotos. El jugador local anima por predicción, no por sync.
+        long physSeenStart = -1L;
     }
 
     private static final Map<UUID, AnimState> STATES = new HashMap<>();
@@ -82,6 +84,7 @@ public final class ClientZenkaiPalTick {
         }
 
         STATES.keySet().removeIf(uuid -> mc.level.getPlayerByUUID(uuid) == null);
+        com.hmc.zenkai.client.fly.FlightController.prune(mc.level);
         ActionStateClient.prune(mc.level);
         ClientFlyAnimState.prune(mc.level);
     }
@@ -96,6 +99,8 @@ public final class ClientZenkaiPalTick {
         if (stats.flags().isDowned()) {
             tickCombatIdle(p, st, -1);       // corta la pose ofensiva si estaba activa
             tickChargeKi(p, st, false);      // y la de subir ki
+            com.hmc.zenkai.client.fly.FlightController.tick(p, false, false);
+            driveFly(p, st, false, false);   // y aterriza la animación de vuelo
             if (p == mc.player) {
                 applyLocalBoost(p, false); // por si se derriba en pleno boost (limpia hitbox/cámara)
                 p.setPose(Pose.SWIMMING);
@@ -109,34 +114,26 @@ public final class ClientZenkaiPalTick {
             return;
         }
 
-        // ── Animación de vuelo direccional + aceleración ──
+        // ── Animación de vuelo ──
+        // Ya no se resuelve dirección: la postura es una sola y la orientación la pondrá el
+        // FlightController. Boost = Ctrl + adelante, que es lo único que sigue siendo binario.
         if (p == mc.player) {
             boolean flying = !p.isCreative() && !p.isSpectator()
                     && stats.isFlyEnabled()
                     && p.getAbilities().flying;
-            if (flying) {
-                handleFlyAnim(mc, p, st);
-            } else if (st.flyPlaying) {
-                st.flyPlaying = false;
-                st.flyDir = null;
-                st.flyBoostState = 0;
-                st.flyBoostTicks = 0;
-                applyLocalBoost(p, false); // deja de volar -> hitbox/cámara vuelven a normal
-                ClientFlyAnimState.sendIfChanged(false, null, false); // avisa a los demás
-                ZenkaiPalAnimations.stopFly(p);
-            }
+            boolean boosting = flying
+                    && mc.options.keySprint.isDown()
+                    && mc.player.input.forwardImpulse > 0.1f;
+            applyLocalBoost(p, boosting);
+            ClientFlyAnimState.sendIfChanged(flying, boosting);
+            com.hmc.zenkai.client.fly.FlightController.tick(p, flying, boosting);
+            driveFly(p, st, flying, boosting);
         } else {
-            // Jugadores REMOTOS: mismo estado-máquina, alimentado por el estado sincronizado.
             ClientFlyAnimState.Remote rs = ClientFlyAnimState.get(p.getId());
-            if (rs != null && rs.flying()) {
-                driveFly(p, st, rs.dir(), rs.boosting());
-            } else if (st.flyPlaying) {
-                st.flyPlaying = false;
-                st.flyDir = null;
-                st.flyBoostState = 0;
-                st.flyBoostTicks = 0;
-                ZenkaiPalAnimations.stopFly(p);
-            }
+            boolean rFlying = rs != null && rs.flying();
+            boolean rBoosting = rs != null && rs.boosting();
+            com.hmc.zenkai.client.fly.FlightController.tick(p, rFlying, rBoosting);
+            driveFly(p, st, rFlying, rBoosting);
         }
 
         boolean heldNow = form.isTransformHeld();
@@ -149,7 +146,7 @@ public final class ClientZenkaiPalTick {
             if (st.lastHeld) {
                 st.lastHeld = false;
                 st.chainTicks = 0;
-                ZenkaiPalAnimations.controller(p).stopTriggeredAnimation();
+                ZenkaiPalAnimations.stopTransform(p);
             }
         } else {
             if (heldNow && p == mc.player) {
@@ -169,7 +166,7 @@ public final class ClientZenkaiPalTick {
             if (!heldNow && st.lastHeld) {
                 st.lastHeld = false;
                 st.chainTicks = 0;
-                ZenkaiPalAnimations.controller(p).stopTriggeredAnimation();
+                ZenkaiPalAnimations.stopTransform(p);
             }
 
             if (heldNow && st.chainTicks > 0) {
@@ -209,6 +206,7 @@ public final class ClientZenkaiPalTick {
 
         // ── Técnicas de ki: local y remotos por igual, desde el estado sincronizado ──
         tickKiAnim(p, st);
+        if (p != mc.player) tickPhysAnim(p, st);
 
         // ── Animación de defensa (local: estado propio instantáneo; remotos: sync) ──
         boolean blockingNow = (p == mc.player)
@@ -223,128 +221,88 @@ public final class ClientZenkaiPalTick {
         }
     }
 
-    // ── Estados de la animación de vuelo ─────────────────────────────────────
-    private static final int CRUISE_START = 0, CRUISE_LOOP = 1, BOOST_START = 2, BOOST_LOOP = 3;
-    // Duración (ticks) de cada START antes de su loop. Ajústalas a la longitud real de tus animaciones.
-    private static final int FLY_CRUISE_START_TICKS = 6; // ~0.3 s
-    private static final int FLY_BOOST_START_TICKS  = 6; // ~0.3 s
+    // ── Vuelo ────────────────────────────────────────────────────────────────
+    /**
+     * CUATRO animaciones, no 19. La animación aporta la POSTURA; la orientación (pitch, yaw,
+     * roll, inclinación por aceleración) la calcula el código.
+     * El enum FlyDir con sus 11 direcciones × 4 variantes se retiró a propósito: cada
+     * combinación nueva de WASD+Ctrl+Espacio pedía otra animación, y los saltos entre ellas
+     * eran el problema que este rediseño existe para resolver.
+     */
+    private static final ResourceLocation FLY_START =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.fly_start");
+    private static final ResourceLocation FLY_CRUISE =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.fly");
+    private static final ResourceLocation FLY_BOOST =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.fly_boost");
+    private static final ResourceLocation FLY_STOP =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.fly_stop");
 
-    /** Estado de vuelo para otros sistemas (p.ej. la inclinación del aura).
-     *  dir = null cuando NO está en animación de vuelo. Funciona para el jugador
-     *  local y los remotos (ambos alimentan la misma máquina de estados). */
-    public record FlyPose(ZenkaiPalAnimations.FlyDir dir, boolean boosting) {}
+    private static final int FLY_OFF = 0, FLY_STARTING = 1, FLY_CRUISING = 2,
+            FLY_BOOSTING = 3, FLY_STOPPING = 4;
+
+    /** Longitud de los one-shot. Ajústalas a la duración real de fly_start / fly_stop.
+     *  Con el fundido de ZenkaiTransitions.FLY (6 ticks) incluido dentro de esta cuenta,
+     *  si el start se corta a sí mismo, sube estos números. */
+    private static final int FLY_START_TICKS = 8;
+    private static final int FLY_STOP_TICKS  = 8;
+
+    /**
+     * Máquina de estados del vuelo, COMÚN a local y remotos:
+     *   OFF → fly_start → fly ⇄ fly_boost → fly_stop → OFF
+     */
+    private static void driveFly(AbstractClientPlayer p, AnimState st,
+                                 boolean flying, boolean boosting) {
+        if (!flying) {
+            if (st.flyState == FLY_OFF) return;
+            if (st.flyState != FLY_STOPPING) {
+                ZenkaiPalAnimations.playFly(p, FLY_STOP);
+                st.flyState = FLY_STOPPING;
+                st.flyTimer = FLY_STOP_TICKS;
+                return;
+            }
+            if (--st.flyTimer <= 0) {
+                ZenkaiPalAnimations.stopFly(p);
+                st.flyState = FLY_OFF;
+            }
+            return;
+        }
+
+        switch (st.flyState) {
+            case FLY_OFF, FLY_STOPPING -> {
+                // Volver a despegar durante el aterrizaje corta el fly_stop: es lo correcto,
+                // el jugador ya está en el aire otra vez.
+                ZenkaiPalAnimations.playFly(p, FLY_START);
+                st.flyState = FLY_STARTING;
+                st.flyTimer = FLY_START_TICKS;
+            }
+            case FLY_STARTING -> {
+                if (--st.flyTimer <= 0) enterCruiseOrBoost(p, st, boosting);
+            }
+            case FLY_CRUISING -> {
+                if (boosting) enterCruiseOrBoost(p, st, true);
+            }
+            case FLY_BOOSTING -> {
+                if (!boosting) enterCruiseOrBoost(p, st, false);
+            }
+            default -> { }
+        }
+    }
+
+    private static void enterCruiseOrBoost(AbstractClientPlayer p, AnimState st, boolean boosting) {
+        ZenkaiPalAnimations.playFly(p, boosting ? FLY_BOOST : FLY_CRUISE);
+        st.flyState = boosting ? FLY_BOOSTING : FLY_CRUISING;
+        st.flyTimer = 0;
+    }
+
+    /** Estado de vuelo para otros sistemas (la inclinación del aura). Ya no hay dirección:
+     *  la orientación se deriva de la mirada y del movimiento real. */
+    public record FlyPose(boolean flying, boolean boosting) {}
 
     public static FlyPose flyPoseOf(java.util.UUID playerId) {
         AnimState st = STATES.get(playerId);
-        if (st == null || !st.flyPlaying) return new FlyPose(null, false);
-        boolean boosting = st.flyBoostState == BOOST_START || st.flyBoostState == BOOST_LOOP;
-        return new FlyPose(st.flyDir, boosting);
-    }
-
-    /**
-     * Máquina de estados de la animación de vuelo del jugador local.
-     * Resolución (dirección, boost) según tus inputs:
-     *   Shift+Control+W -> DOWN boost (down_boost)   ·  Espacio+Control+W -> UP boost (up_boost)
-     *   Shift            -> DOWN (cualquier dir)      ·  W+Control -> FORWARD boost
-     *   W -> FORWARD (cubre A/D)  ·  S -> BACK  ·  A -> LEFT  ·  D -> RIGHT  ·  Espacio -> UP  ·  nada -> IDLE
-     * Todas las direcciones pasan por su START -> LOOP (idle no tiene start). En cambio de dirección
-     * TAMBIÉN se respeta el start (era lo que se saltaba). El timer garantiza el paso start->loop.
-     */
-    private static void handleFlyAnim(Minecraft mc, AbstractClientPlayer p, AnimState st) {
-        assert mc.player != null;
-        var in = mc.player.input;
-        boolean f = in.forwardImpulse >  0.1f, b = in.forwardImpulse < -0.1f;
-        boolean l = in.leftImpulse    >  0.1f, r = in.leftImpulse    < -0.1f;
-        boolean up = in.jumping, down = in.shiftKeyDown;
-        boolean ctrl = mc.options.keySprint.isDown();
-
-        FlyDir dir;
-        boolean boosting;
-        if (down && ctrl && f)   { dir = FlyDir.DOWN;    boosting = true;  } // down_boost: shift+control+W
-        else if (up && ctrl && f){ dir = FlyDir.UP;      boosting = true;  } // up_boost: espacio+control+W
-        else if (down)           { dir = FlyDir.DOWN;    boosting = false; } // shift solo (cualquier dir)
-        else if (f && ctrl)      { dir = FlyDir.FORWARD; boosting = true;  } // forward_boost: W+control
-        else if (f)              { dir = FlyDir.FORWARD; boosting = false; } // W (cubre A/D)
-        else if (b)              { dir = FlyDir.BACK;    boosting = false; }
-        else if (l)              { dir = FlyDir.LEFT;    boosting = false; }
-        else if (r)              { dir = FlyDir.RIGHT;   boosting = false; }
-        else if (up)             { dir = FlyDir.UP;      boosting = false; } // espacio solo
-        else                     { dir = FlyDir.IDLE;    boosting = false; }
-
-        // Hitbox + cámara "acostado" durante el boost. NO tocamos la pose (eso frenaba el vuelo):
-        // el tamaño/altura-de-ojos se ajustan por EntityEvent.Size (BoostSizeHandler) según este flag.
-        applyLocalBoost(p, boosting);
-
-        // Publica el estado propio a los demás (solo si cambió).
-        ClientFlyAnimState.sendIfChanged(true, dir, boosting);
-
-        driveFly(p, st, dir, boosting);
-    }
-
-    /**
-     * Estado-máquina de la animación de vuelo, COMÚN a local y remotos: entrada, cambio de
-     * dirección, transiciones de boost y avance de los starts hacia sus loops.
-     */
-    private static void driveFly(AbstractClientPlayer p, AnimState st, FlyDir dir, boolean boosting) {
-        boolean inBoost = (st.flyBoostState == BOOST_START || st.flyBoostState == BOOST_LOOP);
-
-        // Arranque de vuelo
-        if (!st.flyPlaying) {
-            st.flyPlaying = true;
-            st.flyDir = dir;
-            enterDir(p, st, dir, boosting);
-            return;
-        }
-
-        // Cambio de dirección: entra a la nueva dirección RESPETANDO su start (idle va directo al loop).
-        if (dir != st.flyDir) {
-            st.flyDir = dir;
-            enterDir(p, st, dir, boosting);
-            return;
-        }
-
-        // Misma dirección: transiciones de Control + avance de los starts.
-        if (boosting && !inBoost) {
-            enterBoostStart(p, st, dir);        // entrar a boost -> boost_start -> boost
-        } else if (!boosting && inBoost) {
-            enterDir(p, st, dir, false);        // salir de boost -> <dir>_start -> <dir>
-        } else if (st.flyBoostState == CRUISE_START) {
-            if (--st.flyBoostTicks <= 0) {
-                ZenkaiPalAnimations.playFly(p, dir.cruise);
-                st.flyBoostState = CRUISE_LOOP;
-            }
-        } else if (st.flyBoostState == BOOST_START) {
-            if (--st.flyBoostTicks <= 0) {
-                ZenkaiPalAnimations.playFly(p, dir.boost);
-                st.flyBoostState = BOOST_LOOP;
-            }
-        }
-    }
-
-    /** Entra a una dirección: boost_start (si boost), o <dir>_start->loop; idle va directo (no tiene start). */
-    private static void enterDir(AbstractClientPlayer p, AnimState st, FlyDir dir, boolean boosting) {
-        if (boosting) {
-            enterBoostStart(p, st, dir);
-        } else if (dir == FlyDir.IDLE) {
-            ZenkaiPalAnimations.playFly(p, dir.cruise); // idle no tiene start
-            st.flyBoostState = CRUISE_LOOP;
-        } else {
-            enterCruiseStart(p, st, dir);
-        }
-    }
-
-    /** Dispara el <dir>_boost_start y arma el timer hacia el loop de boost. */
-    private static void enterBoostStart(AbstractClientPlayer p, AnimState st, FlyDir dir) {
-        ZenkaiPalAnimations.playFly(p, dir.boostStart);
-        st.flyBoostState = BOOST_START;
-        st.flyBoostTicks = FLY_BOOST_START_TICKS;
-    }
-
-    /** Dispara el <dir>_start y arma el timer hacia el loop de crucero. */
-    private static void enterCruiseStart(AbstractClientPlayer p, AnimState st, FlyDir dir) {
-        ZenkaiPalAnimations.playFly(p, dir.cruiseStart);
-        st.flyBoostState = CRUISE_START;
-        st.flyBoostTicks = FLY_CRUISE_START_TICKS;
+        if (st == null || st.flyState == FLY_OFF) return new FlyPose(false, false);
+        return new FlyPose(true, st.flyState == FLY_BOOSTING);
     }
 
     // ── Pose ofensiva del modo combate ───────────────────────────────────────
@@ -385,12 +343,21 @@ public final class ClientZenkaiPalTick {
         ActionPhase phase = (action.type() == ActionType.KI_TECHNIQUE) ? action.phase() : null;
 
         if (phase == st.kiPhase) return; // sin cambio: no re-disparar
-
+        ActionPhase prev = st.kiPhase;
         st.kiPhase = phase;
+
         if (phase == null) {
-            // Cancelación: corte seco. El fundido llega con la fase 5.
             ZenkaiPalAnimations.stopKi(p);
             st.kiSet = -1;
+            return;
+        }
+
+        // visual == 0 → técnica defensiva: animación ÚNICA, sin par charge/release. Se lanza
+        // al entrar al estado y no se vuelve a disparar al cambiar de fase, o el paso
+        // CHARGING → RELEASING la reiniciaría a media reproducción.
+        if (action.visual() == 0) {
+            st.kiSet = 0;
+            if (prev == null) ZenkaiPalAnimations.playKiBarrier(p);
             return;
         }
 
@@ -421,5 +388,28 @@ public final class ClientZenkaiPalTick {
                 && --st.chargeKiStartTicks == 0) {
             ZenkaiPalAnimations.playChargeKiLoop(p);
         }
+    }
+
+    /**
+     * Animación de técnica física de un jugador REMOTO, desde el estado sincronizado.
+     * El jugador LOCAL no pasa por aquí a propósito: anima por predicción en el instante del
+     * input (CombatModeClientState), sin esperar el round-trip. Si entrara, el ActionState de
+     * vuelta relanzaría la animación a mitad y se vería un tirón. Un rechazo del servidor lo
+     * atiende onRejected, que corta la predicción.
+     * Se dispara por CAMBIO de startTick, no por fase: dos barrages seguidos son dos estados
+     * PHYSICAL/ACTIVE distintos y ambos deben animarse.
+     */
+    private static void tickPhysAnim(AbstractClientPlayer p, AnimState st) {
+        var action = ActionStateClient.of(p.getId());
+
+        if (action.type() != ActionType.PHYSICAL) {
+            st.physSeenStart = -1L;
+            return;
+        }
+        if (action.startTick() == st.physSeenStart) return; // ya animado
+
+        st.physSeenStart = action.startTick();
+        var t = com.hmc.zenkai.feature.technique.PhysicalTechnique.byOrdinal(action.payload());
+        if (t != null) ZenkaiPalAnimations.playPhysical(p, t);
     }
 }

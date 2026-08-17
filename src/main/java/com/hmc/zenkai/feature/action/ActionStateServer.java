@@ -59,9 +59,8 @@ public final class ActionStateServer {
                 ActionStateSyncPacket.of(sp.getId(), st));
     }
 
-    /** Cuánto dura visualmente el disparo antes de limpiar el estado. Solo presentación:
-     *  el proyectil ya salió y el coste ya se cobró. */
-    public static final int RELEASE_TICKS = 20;
+    /** Fallback si la técnica no declara anim_ticks. */
+    private static final int DEFAULT_ANIM_TICKS = 20;
 
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post e) {
@@ -74,9 +73,19 @@ public final class ActionStateServer {
 
         long now = sp.level().getGameTime();
 
-        // El disparo se limpia solo: nadie manda un paquete de "ya terminó la animación".
+        // Estados que se apagan SOLOS por tiempo: nadie manda un paquete de "ya terminó la
+        // animación". Son puramente visuales; el gameplay ya se resolvió.
+        if (cur.type() == ActionType.PHYSICAL && cur.phase() == ActionPhase.INSTANT) {
+            int dur = cur.visual() > 0 ? cur.visual() : DEFAULT_ANIM_TICKS;
+            if (cur.elapsed(now) >= dur) clear(sp);
+            return;
+        }
+
         if (cur.type() == ActionType.KI_TECHNIQUE && cur.phase() == ActionPhase.RELEASING) {
-            if (cur.elapsed(now) >= RELEASE_TICKS) clear(sp);
+            int dur = DEFAULT_ANIM_TICKS;
+            var tech = att.techniques().slot(cur.payload());
+            if (tech != null) dur = tech.type().animTicks();
+            if (cur.elapsed(now) >= dur) clear(sp);
             return;
         }
 

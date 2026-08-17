@@ -61,4 +61,9 @@ public enum PhysicalTechnique {
 
     /** Alcance en bloques (rayo/cono según la técnica). */
     public double range() { TechniqueDef d = def(); return d == null ? 0.0 : d.range(); }
+
+    /** Duración del ESTADO VISUAL sincronizado (ticks). No afecta al daño ni al cooldown:
+     *  el golpe instantáneo sigue resolviéndose en su tick. Solo determina cuánto se mantiene
+     *  el ActionState para que los demás vean la animación entera. */
+    public int animTicks() { TechniqueDef d = def(); return d == null ? 12 : d.animTicks(); }
 }

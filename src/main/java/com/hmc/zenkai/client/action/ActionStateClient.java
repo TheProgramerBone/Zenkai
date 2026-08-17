@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Espejo cliente de ActionState, por id de entidad. Lo llena ActionStateSyncPacket.
- *
  * Sirve para dos cosas: que la predicción del jugador local use el MISMO ActionContext que
  * evalúa el servidor, y que las capas PAL sepan qué está haciendo un jugador remoto sin que
  * PAL tenga que inferirlo (base de la fase 6).
@@ -47,8 +46,7 @@ public final class ActionStateClient {
     /**
      * ActionContext del jugador local. Las guardas las evalúa ActionRules, igual que en el
      * servidor; lo único propio de este lado es de dónde salen los booleanos.
-     *
-     * physBusy y chargingSlot ya NO se inventan: llegan del servidor por sync. Era el ⚠ que
+         * physBusy y chargingSlot ya NO se inventan: llegan del servidor por sync. Era el ⚠ que
      * quedaba pendiente del paso 2.
      */
     public static ActionContext contextOf(AbstractClientPlayer p, boolean combatMode,

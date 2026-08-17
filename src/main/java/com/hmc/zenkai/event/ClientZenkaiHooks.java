@@ -29,8 +29,8 @@ public final class ClientZenkaiHooks {
     private static final int C_BODY_KAIOKEN = 0xFFFF6633;  // quemando vida
     private static final int C_BODY_STRAIN  = 0xFF9966CC;  // fatiga, stats penalizadas
 
-    private static final int ICONS_TEX_W = 270;
-    private static final int ICONS_TEX_H = 270;
+    private static final int ICONS_TEX_W = 256;
+    private static final int ICONS_TEX_H = 256;
 
     private static final int ICON_CELL = 20;     // tamaño real de celda en el atlas
     private static final int ICON_DRAW = 20;     // tamaño al dibujar el icono
