@@ -7,14 +7,11 @@ import net.minecraft.resources.ResourceLocation;
 /**
  * Una técnica CREADA por el jugador (vive en un slot de PlayerTechniques).
  * Nombre + tipo + color + tamaño + explosiva + posición de salida + sonidos + set de anim.
- *
  * Explosiva: al impactar genera daño en área (radio y daño escalan con el tamaño) y cuesta
  * más ki (KiFirePacket). Ignorada en tipos defensivos (BARRIER).
- *
  * El NOMBRE PUEDE ESTAR VACÍO: displayName() cae al nombre del tipo. Se guarda vacío a
  * propósito en vez de materializar la traducción, para que cada jugador lo lea en su idioma
  * en vez de congelar el del que la creó.
- *
  * EXTENSIBLE: los campos nuevos se leen con contains() en load() y se escriben siempre en
  * save() — los saves viejos cargan con defaults y nada se rompe.
  */
@@ -30,8 +27,10 @@ public final class KiTechnique {
     private int size;  // MIN_SIZE..MAX_SIZE
     private boolean explosive;
 
-    /** Desde dónde sale el disparo (mano, boca, frente...). */
-    private TechniquePosition position;
+    // La posición YA NO es un campo: se deriva del animSet (TechniqueAnimSet). Era editable y
+    // eso permitía combinaciones imposibles — una animación a dos manos disparando por la boca.
+    // Como no tiene ninguna consecuencia mecánica (el proyectil vuela por la mirada pase lo que
+    // pase), una posición que no casa con la animación solo podía estar mal.
     /** null = sin sonido. Se validan contra el registro al guardar. */
     private ResourceLocation chargeSound;
     private ResourceLocation releaseSound;
@@ -39,21 +38,25 @@ public final class KiTechnique {
     private int animSet;
 
     public KiTechnique(String name, KiTechniqueType type, int rgb, int size, boolean explosive) {
-        this(name, type, rgb, size, explosive, TechniquePosition.RIGHT_HAND, null, null, 1);
+        this(name, type, rgb, size, explosive, null, null, 1);
     }
 
     public KiTechnique(String name, KiTechniqueType type, int rgb, int size, boolean explosive,
-                       TechniquePosition position, ResourceLocation chargeSound,
-                       ResourceLocation releaseSound, int animSet) {
-        set(name, type, rgb, size, explosive, position, chargeSound, releaseSound, animSet);
+                       ResourceLocation chargeSound, ResourceLocation releaseSound, int animSet) {
+        set(name, type, rgb, size, explosive, chargeSound, releaseSound, animSet);
     }
 
     public String name()                  { return name; }
     public KiTechniqueType type()         { return type; }
     public int rgb()                      { return rgb; }
     public int size()                     { return size; }
+    /** Consecuencia del set de animación, no una elección. BARRIER va aparte porque no tiene
+     *  set (su visual es 0) y su animación es única. */
+    public TechniquePosition position() {
+        return type.defensive() ? TechniqueAnimSet.BARRIER_POSITION
+                : TechniqueAnimSet.positionOf(animSet);
+    }
     public boolean explosive()            { return explosive; }
-    public TechniquePosition position()   { return position; }
     public ResourceLocation chargeSound() { return chargeSound; }
     public ResourceLocation releaseSound(){ return releaseSound; }
     public int animSet()                  { return animSet; }
@@ -64,22 +67,19 @@ public final class KiTechnique {
     }
 
     public void set(String name, KiTechniqueType type, int rgb, int size, boolean explosive) {
-        set(name, type, rgb, size, explosive, this.position, this.chargeSound,
-                this.releaseSound, this.animSet);
+        set(name, type, rgb, size, explosive, this.chargeSound, this.releaseSound, this.animSet);
     }
 
     public void set(String name, KiTechniqueType type, int rgb, int size, boolean explosive,
-                    TechniquePosition position, ResourceLocation chargeSound,
-                    ResourceLocation releaseSound, int animSet) {
+                    ResourceLocation chargeSound, ResourceLocation releaseSound, int animSet) {
         this.name = sanitizeName(name);
         this.type = type;
         this.rgb = rgb & 0xFFFFFF;
         this.size = clampSize(size);
         this.explosive = explosive;
-        this.position = (position == null) ? TechniquePosition.RIGHT_HAND : position;
         this.chargeSound = TechniqueAssets.isValidCharge(chargeSound) ? chargeSound : null;
         this.releaseSound = TechniqueAssets.isValidRelease(releaseSound) ? releaseSound : null;
-        this.animSet = Math.max(1, animSet);
+        this.animSet = TechniqueAnimSet.clamp(animSet);
     }
 
     public CompoundTag save() {
@@ -89,7 +89,6 @@ public final class KiTechnique {
         tag.putInt("rgb", rgb);
         tag.putInt("size", size);
         tag.putBoolean("explosive", explosive);
-        tag.putInt("position", position.ordinal());
         tag.putInt("animSet", animSet);
         if (chargeSound != null) tag.putString("chargeSound", chargeSound.toString());
         if (releaseSound != null) tag.putString("releaseSound", releaseSound.toString());
@@ -103,7 +102,7 @@ public final class KiTechnique {
         return new KiTechnique(
                 tag.getString("name"), type, tag.getInt("rgb"),
                 tag.getInt("size"), tag.getBoolean("explosive"),
-                TechniquePosition.byOrdinal(tag.getInt("position")),
+                // "position" de saves viejos se ignora: la técnica pasa a la del su animSet.
                 readId(tag, "chargeSound"), readId(tag, "releaseSound"),
                 tag.contains("animSet") ? tag.getInt("animSet") : 1);
     }

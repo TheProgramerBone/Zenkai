@@ -11,11 +11,12 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 /**
  * S2C: "este jugador está cargando ESTA técnica". Va a los que le ven (trackers) y a él.
  * Lleva el ASPECTO, no una referencia al slot: los demás clientes no tienen las técnicas
- * ajenas, así que sin color/tamaño/tipo/posición no podrían dibujar nada. Es el mismo
+ * ajenas, así que sin color/tamaño/tipo/set de animación no podrían dibujar nada. Es el mismo
  * criterio que el aura: lo derivado viaja resuelto.
+ * El animSet es la representación común entre ActionState.visual, la animación de PAL y el origen de la bola; el cliente resuelve el origen con TechniqueAnimSet.
  */
 public record KiChargeStatePacket(int playerId, boolean charging, int rgb, int size,
-                                  int typeOrdinal, int positionOrdinal)
+                                  int typeOrdinal, int animSet)
         implements CustomPacketPayload {
 
     public static final Type<KiChargeStatePacket> TYPE =
@@ -29,7 +30,7 @@ public record KiChargeStatePacket(int playerId, boolean charging, int rgb, int s
                         buf.writeInt(pkt.rgb());
                         buf.writeVarInt(pkt.size());
                         buf.writeVarInt(pkt.typeOrdinal());
-                        buf.writeVarInt(pkt.positionOrdinal());
+                        buf.writeVarInt(pkt.animSet());
                     },
                     buf -> new KiChargeStatePacket(buf.readVarInt(), buf.readBoolean(),
                             buf.readInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));

@@ -47,9 +47,18 @@ public final class ActionRules {
             // Los movimientos con duración (dash, barrage) solo los corta defender.
             // Los instantáneos (heavy blow, kiai) no dejan estado: no bloquean nada.
             case PHYSICAL -> phase == ActionPhase.INSTANT || incoming == ActionType.BLOCK;
-            // Cargando: cualquier cosa cancela, salvo transformar. Otra técnica de ki también
-            // cancela — y la nueva empieza desde 0, sin heredar progreso.
-            case KI_TECHNIQUE -> phase == ActionPhase.CHARGING && incoming != ActionType.TRANSFORM;
+            // Cargando o SOBRECARGANDO: cualquier cosa cancela, salvo transformar. Otra técnica
+            // de ki también cancela — y la nueva empieza desde 0, sin heredar progreso.
+            // OVERCHARGING es carga: dejarlo fuera hacía que pasar del 100% te dejara sin poder
+            // defender ni cambiar de técnica, que no era la intención de la matriz.
+            // Disparando: el estado es recovery visual. Solo defender lo corta; cortarlo con
+            // BLOCK sustituye el ActionState y el cliente funde la animación de release a la
+            // de bloqueo. PHYS, otra técnica y TRANSFORM siguen esperando a que expire.
+            case KI_TECHNIQUE -> switch (phase) {
+                case CHARGING, OVERCHARGING -> incoming != ActionType.TRANSFORM;
+                case RELEASING              -> incoming == ActionType.BLOCK;
+                default                     -> false;
+            };
             case TRANSFORM -> false;
             default -> true;
         };

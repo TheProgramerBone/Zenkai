@@ -27,19 +27,16 @@ public final class TechniqueIcons {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/technique_icons.png");
     private static final int CELL = 20;
     private static final int ATLAS_W = 180;
-    private static final int ATLAS_H = 20;
+    private static final int ATLAS_H = 40; // ◄ Ampliado a 40px para 2 filas
     private static final int EXPLOSIVE_CELL = 8;
 
-    // Caché de existencia (recheck periódico: recoge F3+T).
     private static boolean atlasExists = false;
     private static long nextCheckMs = 0L;
 
-    /** Ícono a tamaño natural (20x20). */
     public static void draw(GuiGraphics g, int x, int y, KiTechnique t) {
         draw(g, x, y, CELL, t);
     }
 
-    /** Ícono escalado a un cuadrado de lado {@code size}. */
     public static void draw(GuiGraphics g, int x, int y, int size, KiTechnique t) {
         if (size <= 0) return;
 
@@ -50,8 +47,6 @@ public final class TechniqueIcons {
         }
 
         if (!atlasExists) {
-            // Fallback proporcional al tamaño pedido: con los márgenes fijos de antes, a 16 px
-            // el cuadrito interior quedaba de 10 y a 12 px desaparecía.
             int m1 = Math.max(1, size / 20);
             int m3 = Math.max(2, size * 3 / 20);
             if (t.explosive()) {
@@ -63,23 +58,27 @@ public final class TechniqueIcons {
 
         RenderSystem.enableBlend();
 
-        // Base explosiva (sin teñir).
+        // 0. Base explosiva (sin teñir, en Y = 0)
         if (t.explosive()) {
-            blit(g, x, y, size, EXPLOSIVE_CELL * CELL);
+            blit(g, x, y, size, EXPLOSIVE_CELL * CELL, 0);
         }
 
-        // Ícono del tipo, teñido con el color de la técnica.
+        int u = t.type().ordinal() * CELL;
+
+        // 1. CAPA BASE: Se tiñe con el color RGB de la técnica (Fila 0, Y = 0)
         int rgb = t.rgb();
-        g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f,
-                (rgb & 0xFF) / 255f, 1f); // ⚠ GuiGraphics.setColor (1.21.1)
-        blit(g, x, y, size, t.type().ordinal() * CELL);
-        g.setColor(1f, 1f, 1f, 1f);
+        g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
+        blit(g, x, y, size, u, 0);
+
+        // 2. CAPA SUPERIOR: Detalle/Brillo blanco puro SIN teñir (Fila 1, Y = CELL)
+        g.setColor(1f, 1f, 1f, 1f); // Reset del tinte a blanco
+        blit(g, x, y, size, u, CELL);
 
         RenderSystem.disableBlend();
     }
 
-    /** ⚠ API: overload de blit de 11 argumentos, el que ESCALA (el de 9 recorta 1:1). */
-    private static void blit(GuiGraphics g, int x, int y, int size, int u) {
-        g.blit(ATLAS, x, y, size, size, (float) u, 0f, CELL, CELL, ATLAS_W, ATLAS_H);
+    /** Overload de blit adaptado para recibir coordenada V (fila). */
+    private static void blit(GuiGraphics g, int x, int y, int size, int u, int v) {
+        g.blit(ATLAS, x, y, size, size, (float) u, (float) v, CELL, CELL, ATLAS_W, ATLAS_H);
     }
 }

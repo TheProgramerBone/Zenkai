@@ -112,10 +112,15 @@ public final class ActionResolver {
         return ActionResult.ok(st);
     }
 
-    /** Soltar sin disparar (cambio de casilla, salir de combate, manos ocupadas...). */
+    /** Soltar sin disparar (cambio de casilla, salir de combate, manos ocupadas...).
+     *  SOLO cancela una CARGA. Si lo que hay ya es RELEASING, el disparo salió y ese estado
+     *  ES la representación del disparo: borrarlo aquí mata la animación de release para el
+     *  tirador y para todos los observadores. Y pasa siempre, no a veces: el cliente manda
+     *  KiFirePacket y, en el mismo tick, KiChargeStartPacket(slot,false) desde
+     *  CombatModeClientState.cancelCharge(). */
     public static void cancelKiCharge(ServerPlayer sp) {
         ActionState cur = ActionStateServer.get(sp);
-        if (cur.type() != ActionType.KI_TECHNIQUE) return;
+        if (cur.chargingSlot() < 0) return;   // NONE, RELEASING u otra acción: no es una carga
         KiChargeServer.end(sp);
         ActionStateServer.clear(sp);
     }
@@ -127,11 +132,13 @@ public final class ActionResolver {
         long now = sp.level().getGameTime();
 
         // La bola se apaga pase lo que pase, incluso si el disparo se rechaza.
+        // El ActionState NO se limpia aquí: si el disparo sale, lo sustituye RELEASING sin
+        // pasar por NONE. Un NONE intermedio hace que el cliente ejecute stopKi() y, si los
+        // dos paquetes caen en frames distintos, se ve el corte a mitad del disparo.
         KiChargeServer.end(sp);
-        if (cur.type() == ActionType.KI_TECHNIQUE) ActionStateServer.clear(sp);
 
         KiTechnique tech = att.techniques().slot(slot);
-        if (tech == null) return ActionResult.fail(ActionReject.DISABLED);
+        if (tech == null) { abortKi(sp, cur); return ActionResult.fail(ActionReject.DISABLED); }
         KiTechniqueType type = tech.type();
 
         double castF = com.hmc.zenkai.feature.mastery.MasteryEffects
@@ -158,7 +165,10 @@ public final class ActionResolver {
                 ctx, slot, type.enabled(), att.techniques().isUnlocked(type),
                 KiCombatServer.isReady(sp, slot), ratio, KiTechniqueType.MIN_CHARGE,
                 att.getEnergy(), cost);
-        if (!verdict.ok()) return reject(sp, ActionType.KI_TECHNIQUE, verdict, slot);
+        if (!verdict.ok()) {
+            abortKi(sp, cur);
+            return reject(sp, ActionType.KI_TECHNIQUE, verdict, slot);
+        }
 
         KiFirePacket.execute(sp, att, tech, slot, ratio, rawRatio, cost, explosive);
 
@@ -259,5 +269,11 @@ public final class ActionResolver {
                                        ActionReject reason, int payload) {
         PacketDistributor.sendToPlayer(sp, ActionRejectPacket.of(type, reason, payload));
         return ActionResult.fail(reason);
+    }
+
+    /** Salida fallida de releaseKi: la carga se cae y no hay estado que la sustituya.
+     *  Único sitio que limpia el estado de ki en el camino de disparo. */
+    private static void abortKi(ServerPlayer sp, ActionState cur) {
+        if (cur.type() == ActionType.KI_TECHNIQUE) ActionStateServer.clear(sp);
     }
 }

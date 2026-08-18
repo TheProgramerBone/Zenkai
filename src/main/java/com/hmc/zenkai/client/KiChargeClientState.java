@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.feature.technique.KiChargeStatePacket;
+import com.hmc.zenkai.feature.technique.TechniqueAnimSet;
 import com.hmc.zenkai.feature.technique.TechniquePosition;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import net.minecraft.client.Minecraft;
@@ -36,8 +37,14 @@ public final class KiChargeClientState {
         long now = Minecraft.getInstance().level == null
                 ? 0L : Minecraft.getInstance().level.getGameTime();
 
-        ACTIVE.put(pkt.playerId(), new Charge(pkt.rgb(), pkt.size(), type,
-                TechniquePosition.byOrdinal(pkt.positionOrdinal()), now));
+        // El origen se DERIVA del set, igual que en el servidor (KiTechnique.position()): las
+        // dos puntas resuelven con TechniqueAnimSet, así que la bola y el proyectil no pueden
+        // discrepar. BARRIER no tiene set y va por su constante.
+        TechniquePosition pos = type.defensive()
+                ? TechniqueAnimSet.BARRIER_POSITION
+                : TechniqueAnimSet.positionOf(pkt.animSet());
+
+        ACTIVE.put(pkt.playerId(), new Charge(pkt.rgb(), pkt.size(), type, pos, now));
     }
 
     public static Charge of(Player p) { return ACTIVE.get(p.getId()); }

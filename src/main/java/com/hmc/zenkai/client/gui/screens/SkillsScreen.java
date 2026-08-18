@@ -77,16 +77,23 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         scrollRow = Mth.clamp(scrollRow, 0, maxScroll());
     }
 
+    /** Shift = olvidar, sin shift = comprar. El shift se mira ANTES que las guardas de compra:
+     *  son de comprar, no de olvidar, y ponerlas delante hacía imposible olvidar justo cuando
+     *  más falta hace — una habilidad al máximo (lvl >= max) o estando sin TP (!canAfford).
+     *  Quién puede bajar de nivel lo valida el servidor en ForgetSkillPacket y el suelo de
+     *  maestro en PlayerSkills.lower(); aquí no se duplica esa regla. */
     private void buy(String id) {
         PlayerStatsAttachment st = stats();
         SkillDef def = SkillDef.get(id);
         if (st == null || def == null || !def.purchasable()) return;
-        int lvl = st.skills().level(id);
-        if (lvl >= maxLevelOf(def) || !canAfford(st, def, lvl)) return;
+
         if (Screen.hasShiftDown()) {
             PacketDistributor.sendToServer(new ForgetSkillPacket(id));
             return;
         }
+
+        int lvl = st.skills().level(id);
+        if (lvl >= maxLevelOf(def) || !canAfford(st, def, lvl)) return;
         PacketDistributor.sendToServer(new SkillBuyPacket(id));
     }
 

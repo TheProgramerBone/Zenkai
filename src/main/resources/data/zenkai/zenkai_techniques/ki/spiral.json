@@ -8,5 +8,6 @@
   "speed": 1.0,
   "count": 1,
   "defensive": false,
-  "default_rgb": "0xAA77FF"
+  "default_rgb": "0xAA77FF",
+  "anim_ticks": 16
 }

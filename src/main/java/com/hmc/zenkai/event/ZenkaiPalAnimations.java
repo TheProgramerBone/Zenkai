@@ -237,4 +237,53 @@ public final class ZenkaiPalAnimations {
         ZenkaiTransitions.play(combatController(p), TechniqueAnimSets.KI_CHARGE_LOOP,
                 ZenkaiTransitions.KI_CHARGE);
     }
+
+    // ── Capa de PREVIEW (editores) ───────────────────────────────────────────
+
+    /**
+     * Controlador de la capa de preview. FirstPersonMode.NONE, igual que la capa de vuelo y
+     * por la misma razón: hay poses que no tienen sentido pegadas a la cámara. Aquí además
+     * es el objetivo, no un efecto lateral — el preview del editor debe verse SOLO en el
+     * modelo renderizado, nunca en las manos del jugador.
+     * No comparte controlador con KI_LAYER a propósito: conmutar el modo de la capa real al
+     * abrir y cerrar la pantalla deja estados inconsistentes si el cierre no llega.
+     */
+    public static PlayerAnimationController newPreviewController(AbstractClientPlayer player) {
+        PlayerAnimationController c = new PlayerAnimationController(
+                player, (controller, state, animSetter) -> PlayState.STOP);
+        c.setFirstPersonMode(FirstPersonMode.NONE);
+        c.setFirstPersonConfiguration(FP_VANILLA);
+        return c;
+    }
+
+    private static PlayerAnimationController previewController(AbstractClientPlayer p) {
+        return (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(p, ZenkaiPalLayers.PREVIEW_LAYER);
+    }
+
+    /** Mismos clips y mismos fundidos que la capa de ki real: el preview tiene que enseñar
+     *  lo que se va a ver en combate, no una versión suya. */
+    public static void playPreviewCharge(AbstractClientPlayer p, int animSet) {
+        ZenkaiTransitions.play(previewController(p), TechniqueAnimSets.charge(animSet),
+                ZenkaiTransitions.KI_CHARGE);
+    }
+
+    public static void playPreviewOvercharge(AbstractClientPlayer p, int animSet) {
+        ZenkaiTransitions.play(previewController(p), TechniqueAnimSets.overcharge(animSet),
+                ZenkaiTransitions.KI_CHARGE);
+    }
+
+    public static void playPreviewRelease(AbstractClientPlayer p, int animSet) {
+        ZenkaiTransitions.play(previewController(p), TechniqueAnimSets.release(animSet),
+                ZenkaiTransitions.KI_RELEASE);
+    }
+
+    public static void playPreviewBarrier(AbstractClientPlayer p) {
+        ZenkaiTransitions.play(previewController(p), TechniqueAnimSets.BARRIER,
+                ZenkaiTransitions.KI_CHARGE);
+    }
+
+    public static void stopPreview(AbstractClientPlayer p) {
+        ZenkaiTransitions.stop(previewController(p), ZenkaiTransitions.KI_CHARGE);
+    }
 }

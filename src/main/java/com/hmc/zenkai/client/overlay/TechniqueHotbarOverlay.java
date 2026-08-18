@@ -222,7 +222,7 @@ public final class TechniqueHotbarOverlay {
     private static void renderBlockIcon(GuiGraphics g) {
         if (!CombatModeClientState.isBlockingLocal()) return;
         g.blit(ICONS_TEX, g.guiWidth() / 2 - 10, g.guiHeight() / 2 - 10 - 16,
-                BLOCK_ICON_U, BLOCK_ICON_V, 20, 20, 270, 270);
+                BLOCK_ICON_U, BLOCK_ICON_V, 20, 20, 256, 256);
     }
 
     /** Daño estimado del disparo actual (espeja KiFirePacket + KiCombatServer.computeDamage). */
