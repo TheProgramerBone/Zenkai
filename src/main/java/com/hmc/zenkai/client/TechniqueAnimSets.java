@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.technique.TechniqueAnimOverride;
 import com.hmc.zenkai.feature.technique.TechniqueAnimSet;
 import net.minecraft.resources.ResourceLocation;
 
@@ -41,6 +42,17 @@ public final class TechniqueAnimSets {
     public static ResourceLocation charge(int set)     { return rl("zenkai.ki_attack_" + clamp(set) + "_charge"); }
     public static ResourceLocation overcharge(int set) { return rl("zenkai.ki_attack_" + clamp(set) + "_overcharge"); }
     public static ResourceLocation release(int set)    { return rl("zenkai.ki_attack_" + clamp(set) + "_release"); }
+    /** Clips de los tipos que imponen animación. La barrera solo tiene uno; la explosión, los
+     *  tres, porque sí se carga y sí estalla. */
+    public static ResourceLocation overrideCharge(TechniqueAnimOverride o) {
+        return o == TechniqueAnimOverride.EXPLOSION ? rl("zenkai.ki_explosion_charge") : BARRIER;
+    }
+    public static ResourceLocation overrideOvercharge(TechniqueAnimOverride o) {
+        return o == TechniqueAnimOverride.EXPLOSION ? rl("zenkai.ki_explosion_overcharge") : BARRIER;
+    }
+    public static ResourceLocation overrideRelease(TechniqueAnimOverride o) {
+        return o == TechniqueAnimOverride.EXPLOSION ? rl("zenkai.ki_explosion_release") : BARRIER;
+    }
 
     /** BARRIER ignora la carga y tiene una animación única, sin par charge/release. */
     public static final ResourceLocation BARRIER = rl("zenkai.ki_barrier");

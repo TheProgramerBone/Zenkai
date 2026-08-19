@@ -72,9 +72,10 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
      *  cooldown. La clave que usa tryFire tiene que ser la MISMA que consulta isReady. */
     public static void execute(ServerPlayer sp, PlayerStatsAttachment att, KiTechnique tech,
                                int slot, double ratio, double rawRatio, int cost,
-                               boolean explosive) {
+                               TechniqueEffect effect) {
         KiTechniqueType type = tech.type();
-        if (!KiCombatServer.tryFire(sp, slot, type.cooldownTicks())) return;
+        if (!KiCombatServer.tryFire(sp, slot,
+                KiCombatServer.cooldownTicksFor(type, tech.size()))) return;
 
         att.addEnergy(-cost);
         att.addTechniqueMastery(type.name(), (float) CommonConfig.techMasteryPerUse());
@@ -82,10 +83,14 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
         double kiPower = att.computeKiPowerFinal();
         if (type.defensive()) {
             KiCombatServer.activateBarrier(sp, tech, kiPower);
+        } else if (type == KiTechniqueType.EXPLOSION) {
+            double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio;
+            spawnAttached(sp, tech, damage, effect);
+            selfDamage(sp, att, rawRatio);
         } else {
             double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio;
             for (int i = 0; i < Math.max(1, type.count()); i++) {
-                spawnProjectile(sp, tech, damage, explosive, i);
+                spawnProjectile(sp, tech, damage, effect, i);
             }
         }
         ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
@@ -93,8 +98,46 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
         PlayerLifeCycle.syncIfServer(sp);
     }
 
+    /**
+     * Precio de la autodetonación. Se cobra sobre el CUERPO directamente y no por hurt(), para
+     * que ignore la defensa: es daño verdadero, no un golpe recibido — si pasara por la
+     * mitigación, un tanque se autodetonaría gratis.
+     * A carga máxima la fracción vale 1.0 y el cuerpo queda a cero. Que eso signifique quedar
+     * ABATIDO y no muerto lo decide DownedDeathGuard interceptando LivingDeathEvent, igual que
+     * con cualquier otra muerte: aquí no se duplica esa regla.
+     * ⚠ VERIFICAR EN JUEGO: mirrorHealth no toca la vida cuando queda <= 0, así que bajar el
+     *   cuerpo a cero puede NO disparar el evento de muerte. Por eso se fuerza con un hurt
+     *   masivo. Si el guardia no salta, dime y lo resuelvo por la vía que use tu pipeline.
+     */
+    private static void selfDamage(ServerPlayer sp, PlayerStatsAttachment att, double rawRatio) {
+        int max = att.getBodyMax();
+        int loss = (int) Math.ceil(max * KiCombatServer.selfDamageFraction(rawRatio));
+        att.addBody(-loss);
+
+        if (att.getBody() <= 0) {
+            att.setBody(0);
+            sp.hurt(sp.damageSources().magic(), Float.MAX_VALUE);   // ⚠ ver arriba
+        }
+    }
+
+    /** Entidad pegada al dueño: la explosión no viaja. `life` es la MECHA, y coincide con el
+     *  clip de disparo para que el estallido caiga cuando el cuerpo se abre. */
+    private static void spawnAttached(ServerPlayer sp, KiTechnique tech, double damage,
+                                      TechniqueEffect effect) {
+        KiProjectileEntity proj = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sp.level());
+        proj.configure(sp, tech.type(), tech.rgb(), tech.size(), damage,
+                tech.type().animTicks(), effect);
+        Vec3 c = sp.position().add(0, sp.getBbHeight() * 0.5, 0);
+        proj.setPos(c.x, c.y - proj.getBbHeight() * 0.5, c.z);
+        sp.level().addFreshEntity(proj);
+
+        SoundEvent snd = TechniqueAssets.soundOf(tech.releaseSound());
+        if (snd != null) {
+            sp.level().playSound(null, c.x, c.y, c.z, snd, SoundSource.PLAYERS, 1.0f, 1.0f);
+        }
+    }
     private static void spawnProjectile(ServerPlayer sp, KiTechnique tech, double damage,
-                                        boolean explosive, int index) {
+                                        TechniqueEffect effect, int index) {
         KiTechniqueType type = tech.type();
         KiProjectileEntity proj = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sp.level());
 
@@ -111,7 +154,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
         // un poco hacia delante para que no nazca dentro del propio modelo.
         Vec3 spawn = tech.position().origin(sp).add(dir.scale(0.45));
 
-        proj.configure(sp, type, tech.rgb(), tech.size(), damage, 100, explosive);
+        proj.configure(sp, type, tech.rgb(), tech.size(), damage, 100, effect);
         proj.setPos(spawn.x, spawn.y, spawn.z);
         proj.setDeltaMovement(dir.scale(type.speed()));
         sp.level().addFreshEntity(proj);

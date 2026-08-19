@@ -1,0 +1,151 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "zenkai.ki_attack_7_charge": {
+            "loop": "hold_on_last_frame",
+            "animation_length": 0.7,
+            "bones": {
+                "right_arm": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.35": {
+                            "vector": [
+                                -60,
+                                0,
+                                16
+                            ]
+                        },
+                        "0.7": {
+                            "vector": [
+                                -93,
+                                0,
+                                13
+                            ]
+                        }
+                    }
+                },
+                "left_arm": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.35": {
+                            "vector": [
+                                -60,
+                                0,
+                                -16
+                            ]
+                        },
+                        "0.7": {
+                            "vector": [
+                                -93,
+                                0,
+                                -13
+                            ]
+                        }
+                    }
+                },
+                "torso": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.7": {
+                            "vector": [
+                                5,
+                                0,
+                                0
+                            ]
+                        }
+                    }
+                },
+                "head": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.7": {
+                            "vector": [
+                                -3,
+                                0,
+                                0
+                            ]
+                        }
+                    }
+                },
+                "right_leg": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.7": {
+                            "vector": [
+                                0,
+                                0,
+                                6
+                            ]
+                        }
+                    }
+                },
+                "left_leg": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.7": {
+                            "vector": [
+                                0,
+                                0,
+                                -6
+                            ]
+                        }
+                    }
+                },
+                "body": {
+                    "position": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.7": {
+                            "vector": [
+                                0,
+                                -0.09,
+                                0
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

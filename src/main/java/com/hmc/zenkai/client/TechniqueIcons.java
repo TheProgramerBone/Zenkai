@@ -49,8 +49,8 @@ public final class TechniqueIcons {
         if (!atlasExists) {
             int m1 = Math.max(1, size / 20);
             int m3 = Math.max(2, size * 3 / 20);
-            if (t.explosive()) {
-                g.fill(x + m1, y + m1, x + size - m1, y + size - m1, 0xFFFF6622);
+            if (t.effect().borderRgb() != 0) {
+                g.fill(x, y, x + size, y + size, t.effect().borderRgb());
             }
             g.fill(x + m3, y + m3, x + size - m3, y + size - m3, 0xFF000000 | t.rgb());
             return;
@@ -58,9 +58,16 @@ public final class TechniqueIcons {
 
         RenderSystem.enableBlend();
 
-        // 0. Base explosiva (sin teñir, en Y = 0)
-        if (t.explosive()) {
-            blit(g, x, y, size, EXPLOSIVE_CELL * CELL, 0);
+        // El efecto ya NO se dibuja debajo del icono: la celda 8 la ocupa ahora el tipo
+        // EXPLOSION. Va como marco de 1 px alrededor, que además funciona igual en el HUD, en
+        // el menú y en la barra de asignación sin robarle sitio al icono.
+        int border = t.effect().borderRgb();
+        if (border != 0) {
+            int w = Math.max(1, size / 20);
+            g.fill(x, y, x + size, y + w, border);
+            g.fill(x, y + size - w, x + size, y + size, border);
+            g.fill(x, y + w, x + w, y + size - w, border);
+            g.fill(x + size - w, y + w, x + size, y + size - w, border);
         }
 
         int u = t.type().ordinal() * CELL;

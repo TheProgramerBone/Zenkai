@@ -304,16 +304,15 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
             // Sub-línea: tipo · tamaño · posición asignada. El tipo solo ya se deduce del ícono;
             // lo que el jugador no puede ver de otro modo es el tamaño y a qué tecla va.
             int pos = att.techniques().positionOf(i);
-            Component sub = Component.translatable(t.type().nameKey())
-                    .append(Component.literal(" · "))
-                    .append(Component.translatable("screen.zenkai.technique.size", t.size()));
+            Component sub = Component.translatable("screen.zenkai.technique.size", t.size())
+                    .append(Component.literal(" · "));
             PanelText.onPanel(g, this.font, fit(sub, textMaxWidth()), nameX, y + 15,
                     ZenkaiPalette.MUTED_ON_PANEL);
 
             if (pos >= 0) {
                 Component key = Component.literal("[" + (pos + 1) + "]");
                 PanelText.onPanel(g, this.font, key,
-                        nameX + textMaxWidth() - this.font.width(key), y + 15,
+                        nameX + textMaxWidth() - this.font.width(key)-30, y + 15,
                         ZenkaiPalette.OK_ON_PANEL);
             }
 

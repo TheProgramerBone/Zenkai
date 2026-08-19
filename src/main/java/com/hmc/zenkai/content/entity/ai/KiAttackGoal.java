@@ -1,5 +1,6 @@
 package com.hmc.zenkai.content.entity.ai;
 
+import com.hmc.zenkai.feature.technique.TechniqueEffect;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.feature.combat.entity.EntityKiAttack;
@@ -126,7 +127,7 @@ public class KiAttackGoal<T extends Mob & GeoEntity> extends Goal {
         KiProjectileEntity proj =
                 new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), mob.level());
         proj.configure(mob, chosen.type(), chosen.rgb(), chosen.size(),
-                damage, 100, false); // los mobs no lanzan versión explosiva (por ahora)
+                damage, 100, TechniqueEffect.NONE); // los mobs no rompen terreno (por ahora)
         Vec3 spawn = eye.add(dir.scale(0.9));
         proj.setPos(spawn.x, spawn.y, spawn.z);
         proj.setDeltaMovement(dir.scale(chosen.type().speed()));

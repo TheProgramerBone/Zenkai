@@ -2,13 +2,7 @@ package com.hmc.zenkai.feature.action;
 
 import com.hmc.zenkai.feature.aura.TurboServerState;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.technique.KiChargeServer;
-import com.hmc.zenkai.feature.technique.KiCombatServer;
-import com.hmc.zenkai.feature.technique.KiFirePacket;
-import com.hmc.zenkai.feature.technique.KiTechnique;
-import com.hmc.zenkai.feature.technique.KiTechniqueType;
-import com.hmc.zenkai.feature.technique.PhysicalCombatServer;
-import com.hmc.zenkai.feature.technique.PhysicalTechnique;
+import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -143,7 +137,8 @@ public final class ActionResolver {
 
         double castF = com.hmc.zenkai.feature.mastery.MasteryEffects
                 .techCastFactor(att, type.name());
-        int reqCharge = Math.max(1, (int) Math.round(type.chargeTicks() * castF));
+        int reqCharge = Math.max(1, (int) Math.round(
+                KiCombatServer.chargeTicksFor(type, tech.size()) * castF));
         int maxTicks = KiCombatServer.maxChargeTicks(reqCharge);
 
         // CARGA AUTORITATIVA: del ActionState, no del cliente. cur.elapsed() ya está escrito
@@ -153,9 +148,9 @@ public final class ActionResolver {
         double rawRatio = KiCombatServer.chargeRatio(realTicks, reqCharge);
         double ratio = type.defensive() ? 1.0 : rawRatio;
 
-        boolean explosive = tech.explosive() && !type.defensive();
+        TechniqueEffect effect = tech.effect();
         int cost = (int) Math.max(1, Math.ceil(
-                KiCombatServer.computeCost(att, type, tech.size(), explosive)
+                KiCombatServer.computeCost(att, type, tech.size(), effect)
                         * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()));
 
         // El contexto se construye con la instantánea de ANTES de limpiar: si no, chargingSlot
@@ -170,13 +165,14 @@ public final class ActionResolver {
             return reject(sp, ActionType.KI_TECHNIQUE, verdict, slot);
         }
 
-        KiFirePacket.execute(sp, att, tech, slot, ratio, rawRatio, cost, explosive);
+        KiFirePacket.execute(sp, att, tech, slot, ratio, rawRatio, cost, effect);
 
         // Estado de disparo: es lo que distingue "soltó y salió" de "canceló" para los
         // observadores. Se limpia solo en ActionStateServer tras RELEASE_TICKS.
         ActionState fired = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.RELEASING,
                 sp.level().getGameTime(), slot,
-                type.defensive() ? 0 : tech.animSet());
+                type.animOverride() != null
+                        ? type.animOverride().encode() : tech.animSet());
         ActionStateServer.set(sp, fired);
         return ActionResult.ok(fired);
     }

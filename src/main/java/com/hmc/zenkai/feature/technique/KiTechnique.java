@@ -19,13 +19,15 @@ public final class KiTechnique {
 
     public static final int MAX_NAME_LENGTH = 24;
     public static final int MIN_SIZE = 1;
-    public static final int MAX_SIZE = 7;
+    /** Bajado de 7 a 5: siete escalones para un ×2.5 eran saltos que no se distinguían entre
+     *  vecinos. Las técnicas guardadas con 6 o 7 se recortan al cargar (ver load). */
+    public static final int MAX_SIZE = 5;
 
     private String name;
     private KiTechniqueType type;
     private int rgb;   // 0xRRGGBB
     private int size;  // MIN_SIZE..MAX_SIZE
-    private boolean explosive;
+    private TechniqueEffect effect;
 
     // La posición YA NO es un campo: se deriva del animSet (TechniqueAnimSet). Era editable y
     // eso permitía combinaciones imposibles — una animación a dos manos disparando por la boca.
@@ -37,26 +39,30 @@ public final class KiTechnique {
     /** Set de animación PAL: carga y disparo van emparejados con el mismo número. */
     private int animSet;
 
-    public KiTechnique(String name, KiTechniqueType type, int rgb, int size, boolean explosive) {
-        this(name, type, rgb, size, explosive, null, null, 1);
+    public KiTechnique(String name, KiTechniqueType type, int rgb, int size,
+                       TechniqueEffect effect) {
+        this(name, type, rgb, size, effect, null, null, 1);
     }
 
-    public KiTechnique(String name, KiTechniqueType type, int rgb, int size, boolean explosive,
-                       ResourceLocation chargeSound, ResourceLocation releaseSound, int animSet) {
-        set(name, type, rgb, size, explosive, chargeSound, releaseSound, animSet);
+    public KiTechnique(String name, KiTechniqueType type, int rgb, int size,
+                       TechniqueEffect effect, ResourceLocation chargeSound,
+                       ResourceLocation releaseSound, int animSet) {
+        set(name, type, rgb, size, effect, chargeSound, releaseSound, animSet);
     }
 
     public String name()                  { return name; }
     public KiTechniqueType type()         { return type; }
     public int rgb()                      { return rgb; }
     public int size()                     { return size; }
-    /** Consecuencia del set de animación, no una elección. BARRIER va aparte porque no tiene
-     *  set (su visual es 0) y su animación es única. */
+    /** Consecuencia del set de animación, no una elección. Los tipos que IMPONEN animación
+     *  (barrera, explosión) no tienen set, así que su origen sale de la constante: preguntar
+     *  por defensive() dejaba fuera a la explosión, que no es defensiva. */
     public TechniquePosition position() {
-        return type.defensive() ? TechniqueAnimSet.BARRIER_POSITION
+        return type.animOverride() != null
+                ? TechniqueAnimSet.BARRIER_POSITION
                 : TechniqueAnimSet.positionOf(animSet);
     }
-    public boolean explosive()            { return explosive; }
+    public TechniqueEffect effect()       { return effect; }
     public ResourceLocation chargeSound() { return chargeSound; }
     public ResourceLocation releaseSound(){ return releaseSound; }
     public int animSet()                  { return animSet; }
@@ -66,17 +72,21 @@ public final class KiTechnique {
         return name.isEmpty() ? Component.translatable(type.nameKey()) : Component.literal(name);
     }
 
-    public void set(String name, KiTechniqueType type, int rgb, int size, boolean explosive) {
-        set(name, type, rgb, size, explosive, this.chargeSound, this.releaseSound, this.animSet);
+    public void set(String name, KiTechniqueType type, int rgb, int size, TechniqueEffect effect) {
+        set(name, type, rgb, size, effect, this.chargeSound, this.releaseSound, this.animSet);
     }
 
-    public void set(String name, KiTechniqueType type, int rgb, int size, boolean explosive,
+    public void set(String name, KiTechniqueType type, int rgb, int size, TechniqueEffect effect,
                     ResourceLocation chargeSound, ResourceLocation releaseSound, int animSet) {
         this.name = sanitizeName(name);
         this.type = type;
         this.rgb = rgb & 0xFFFFFF;
         this.size = clampSize(size);
-        this.explosive = explosive;
+        // El tipo tiene la última palabra: si no admite el efecto, se cae a NONE aquí y no en
+        // cada sitio que lo lea. Una técnica no puede quedar guardada en un estado imposible,
+        // y así la migración de NBT viejo no necesita validar nada por su cuenta.
+        this.effect = (effect == null || !type.allowsEffect(effect))
+                ? TechniqueEffect.NONE : effect;
         this.chargeSound = TechniqueAssets.isValidCharge(chargeSound) ? chargeSound : null;
         this.releaseSound = TechniqueAssets.isValidRelease(releaseSound) ? releaseSound : null;
         this.animSet = TechniqueAnimSet.clamp(animSet);
@@ -88,7 +98,7 @@ public final class KiTechnique {
         tag.putString("type", type.name());
         tag.putInt("rgb", rgb);
         tag.putInt("size", size);
-        tag.putBoolean("explosive", explosive);
+        tag.putInt("effect", effect.ordinal());
         tag.putInt("animSet", animSet);
         if (chargeSound != null) tag.putString("chargeSound", chargeSound.toString());
         if (releaseSound != null) tag.putString("releaseSound", releaseSound.toString());
@@ -101,7 +111,8 @@ public final class KiTechnique {
         if (type == null) return null;
         return new KiTechnique(
                 tag.getString("name"), type, tag.getInt("rgb"),
-                tag.getInt("size"), tag.getBoolean("explosive"),
+                clampSize(tag.getInt("size")),   // recorta los 6 y 7 de partidas viejas
+                readEffect(tag),
                 // "position" de saves viejos se ignora: la técnica pasa a la del su animSet.
                 readId(tag, "chargeSound"), readId(tag, "releaseSound"),
                 tag.contains("animSet") ? tag.getInt("animSet") : 1);
@@ -109,6 +120,14 @@ public final class KiTechnique {
 
     private static ResourceLocation readId(CompoundTag tag, String key) {
         return tag.contains(key) ? ResourceLocation.tryParse(tag.getString(key)) : null;
+    }
+
+    /** Efecto guardado, con migración del boolean viejo. Un `explosive` sobre un tipo que ahora
+     *  lo prohíbe (disco, barrera, ráfaga) se ignora en silencio: el set() lo volvería a NONE
+     *  de todos modos, y avisar de algo que el jugador no eligió no aporta nada. */
+    private static TechniqueEffect readEffect(CompoundTag tag) {
+        if (tag.contains("effect")) return TechniqueEffect.byOrdinal(tag.getInt("effect"));
+        return tag.getBoolean("explosive") ? TechniqueEffect.EXPLOSIVE : TechniqueEffect.NONE;
     }
 
     public static int clampSize(int s) {

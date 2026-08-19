@@ -4,6 +4,7 @@ import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
+import com.hmc.zenkai.client.gui.buttons.XIconButton;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.ForgetSkillPacket;
@@ -49,6 +50,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
     private final List<String> rowIds = new ArrayList<>();
     private final List<PlusIconButton> plusButtons = new ArrayList<>();
+    private final List<XIconButton> forgetButtons = new ArrayList<>();
 
     private int scrollRow = 0;
 
@@ -66,35 +68,44 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         PlayerStatsAttachment st = stats();
         if (st == null) return;
 
+        forgetButtons.clear();
         rowIds.addAll(st.skills().all());
         for (int i = 0; i < rowIds.size(); i++) {
             final String id = rowIds.get(i);
             PlusIconButton b = new PlusIconButton(plusX(), rowTop(i) + 2, () -> buy(id));
             plusButtons.add(b);
             addRenderableWidget(b);
+
+            XIconButton x = new XIconButton(forgetX(), rowTop(i) + 2, () -> forget(id));
+            x.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                    Component.translatable("screen.zenkai.skills.forget")));
+            forgetButtons.add(x);
+            addRenderableWidget(x);
         }
         // Si la lista encogió (respec, revoke), el scroll viejo puede quedar fuera de rango.
         scrollRow = Mth.clamp(scrollRow, 0, maxScroll());
     }
 
-    /** Shift = olvidar, sin shift = comprar. El shift se mira ANTES que las guardas de compra:
-     *  son de comprar, no de olvidar, y ponerlas delante hacía imposible olvidar justo cuando
-     *  más falta hace — una habilidad al máximo (lvl >= max) o estando sin TP (!canAfford).
-     *  Quién puede bajar de nivel lo valida el servidor en ForgetSkillPacket y el suelo de
-     *  maestro en PlayerSkills.lower(); aquí no se duplica esa regla. */
+    /** Comprar el siguiente nivel. Olvidar tiene su propio botón: forget(). */
     private void buy(String id) {
         PlayerStatsAttachment st = stats();
         SkillDef def = SkillDef.get(id);
         if (st == null || def == null || !def.purchasable()) return;
 
-        if (Screen.hasShiftDown()) {
-            PacketDistributor.sendToServer(new ForgetSkillPacket(id));
-            return;
-        }
-
         int lvl = st.skills().level(id);
         if (lvl >= maxLevelOf(def) || !canAfford(st, def, lvl)) return;
         PacketDistributor.sendToServer(new SkillBuyPacket(id));
+    }
+
+    /** Bajar un nivel; desde el 1 la borra. Quién PUEDE bajar lo valida el servidor
+     *  (ForgetSkillPacket) y el suelo de maestro PlayerSkills.lower(): aquí no se duplica esa
+     *  regla, solo se comprueba que haya algo que quitar. */
+    private void forget(String id) {
+        PlayerStatsAttachment st = stats();
+        SkillDef def = SkillDef.get(id);
+        if (st == null || def == null || !def.purchasable()) return;
+        if (st.skills().level(id) <= 0) return;
+        PacketDistributor.sendToServer(new ForgetSkillPacket(id));
     }
 
     /** Attachment fresco: tras comprar, el server sincroniza y esto refleja el cambio solo. */
@@ -105,6 +116,8 @@ public class SkillsScreen extends ZenkaiMenuScreen {
     // ── Geometría de la lista ────────────────────────────────────────────────
 
     private int plusX()      { return panelLeft + BG_W - 16 - PLUS_SIZE; }
+    /** La X va a la izquierda del +, con 3 px de aire. */
+    private int forgetX()    { return plusX() - PLUS_SIZE - 3; }
     private int listTop()    { return panelTop + LIST_TOP_OFF; }
     private int listHeight() { return BG_H - LIST_TOP_OFF - LIST_BOTTOM_MARGIN; }
     private int visibleRows(){ return Math.max(1, listHeight() / ROW_H); }
@@ -116,7 +129,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
     private int rowTop(int index) { return listTop() + (index - scrollRow) * ROW_H; }
 
     /** Ancho útil de texto: desde el margen izquierdo hasta justo antes del botón +. */
-    private int textMaxWidth() { return plusX() - 6 - (panelLeft + TEXT_X_OFF); }
+    private int textMaxWidth() { return forgetX() - 6 - (panelLeft + TEXT_X_OFF); }
 
     private boolean onScreen(int index) {
         int rel = index - scrollRow;
@@ -180,6 +193,13 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
             b.visible = canLevel && onScreen(i);
             b.active = b.visible && canAfford(st, def, lvl);
+
+            // La X NO comparte condición con el +: al nivel máximo el + se apaga y la X debe
+            // seguir ahí, que es cuando más falta hace. Solo se oculta si no hay nivel que bajar.
+            XIconButton x = forgetButtons.get(i);
+            x.setPosition(forgetX(), rowTop(i) + 2);
+            x.visible = def != null && def.purchasable() && lvl > 0 && onScreen(i);
+            x.active = x.visible;
         }
     }
 

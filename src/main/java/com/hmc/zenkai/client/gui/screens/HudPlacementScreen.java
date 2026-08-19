@@ -38,8 +38,12 @@ public class HudPlacementScreen extends Screen {
     @Nullable private final Screen parent;
 
     private HudAnchor anchor;
-    private HudOrientation orientation;
     private int offsetX, offsetY;
+    private HudOrientation orientation;
+    /** Se edita aquí porque es parte de la colocación, no una preferencia suelta. En la
+     *  PREVISUALIZACIÓN se ignora a propósito (ver layout()): ahí interesa ver el bloque donde
+     *  se suelta, no dónde acabará esquivando la hotbar. */
+    private boolean avoidHotbar;
 
     /** Desfase entre la esquina del bloque y el punto donde se agarró. */
     private int grabDX, grabDY;
@@ -50,6 +54,7 @@ public class HudPlacementScreen extends Screen {
         this.parent = parent;
         this.anchor = ClientConfig.hudAnchor();
         this.orientation = ClientConfig.hudOrientation();
+        this.avoidHotbar = ClientConfig.hudAvoidHotbar();
         this.offsetX = ClientConfig.hudOffsetX();
         this.offsetY = ClientConfig.hudOffsetY();
     }
@@ -58,7 +63,7 @@ public class HudPlacementScreen extends Screen {
     protected void init() {
         int y = this.height - 8 - PanelButton.H;
         int gap = 8;
-        int total = PanelButton.W * 3 + gap * 2;
+        int total = PanelButton.W * 4 + gap * 3;
         int x = this.width / 2 - total / 2;
 
         addRenderableWidget(PanelButton.secondary(x, y,
@@ -69,6 +74,14 @@ public class HudPlacementScreen extends Screen {
 
         addRenderableWidget(PanelButton.primary(x + (PanelButton.W + gap) * 2, y,
                 Component.translatable("screen.zenkai.gui.save"), this::save));
+
+        addRenderableWidget(PanelButton.secondary(x + (PanelButton.W + gap) * 2, y,
+                // options.on/off son claves VANILLA: ya traducidas a todos los idiomas y las
+                // mismas que usa ToggleButton, así que el interruptor de aquí y los de la lista
+                // de config dicen exactamente lo mismo.
+                Component.translatable("screen.zenkai.hud.avoid_hotbar",
+                        Component.translatable(avoidHotbar ? "options.on" : "options.off")),
+                () -> { avoidHotbar = !avoidHotbar; rebuildWidgets(); }));
     }
 
     /**
@@ -85,7 +98,7 @@ public class HudPlacementScreen extends Screen {
     }
 
     private void save() {
-        ClientConfig.setHudPlacement(anchor, orientation, offsetX, offsetY);
+        ClientConfig.setHudPlacement(anchor, orientation, offsetX, offsetY, avoidHotbar);
         onClose();
     }
 

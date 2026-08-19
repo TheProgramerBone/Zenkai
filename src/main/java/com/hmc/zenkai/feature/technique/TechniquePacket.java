@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
  * cliente puede mandar cualquier id, así que aquí se comprueba que esté registrado.
  */
 public record TechniquePacket(byte op, int slot, String typeName, String name,
-                              int rgb, int size, boolean explosive, String chargeSound, String releaseSound, int animSet)
+                              int rgb, int size, int effect, String chargeSound, String releaseSound, int animSet)
         implements CustomPacketPayload {
 
     public static final byte OP_UNLOCK = 0;
@@ -47,14 +47,14 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
                         buf.writeUtf(pkt.name(), KiTechnique.MAX_NAME_LENGTH * 4);
                         buf.writeInt(pkt.rgb());
                         buf.writeVarInt(pkt.size());
-                        buf.writeBoolean(pkt.explosive());
+                        buf.writeVarInt(pkt.effect());
                         buf.writeUtf(pkt.chargeSound(), SOUND_ID_MAX);
                         buf.writeUtf(pkt.releaseSound(), SOUND_ID_MAX);
                         buf.writeVarInt(pkt.animSet());
                     },
                     buf -> new TechniquePacket(buf.readByte(), buf.readVarInt(),
                             buf.readUtf(32), buf.readUtf(KiTechnique.MAX_NAME_LENGTH * 4),
-                            buf.readInt(), buf.readVarInt(), buf.readBoolean(),
+                            buf.readInt(), buf.readVarInt(), buf.readVarInt(),
                             buf.readUtf(SOUND_ID_MAX), buf.readUtf(SOUND_ID_MAX),
                             buf.readVarInt()));
 
@@ -63,32 +63,33 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
 
     // ---- Constructores de conveniencia (cliente) ----
     public static TechniquePacket unlock(KiTechniqueType t) {
-        return new TechniquePacket(OP_UNLOCK, -1, t.name(), "", 0, 0, false, "", "", 1);
+        return new TechniquePacket(OP_UNLOCK, -1, t.name(), "", 0, 0, 0, "", "", 1);
     }
 
     /** Olvidar un tipo de ki: libera su MIND y devuelve el TP. */
     public static TechniquePacket forget(KiTechniqueType t) {
-        return new TechniquePacket(OP_FORGET, -1, t.name(), "", 0, 0, false, "", "", 1);
+        return new TechniquePacket(OP_FORGET, -1, t.name(), "", 0, 0, 0, "", "", 1);
     }
 
     public static TechniquePacket save(int slot, KiTechniqueType t, String name,
-                                       int rgb, int size, boolean explosive,
+                                       int rgb, int size, TechniqueEffect effect,
                                        ResourceLocation chargeSound,
                                        ResourceLocation releaseSound,
                                        int animSet) {
-        return new TechniquePacket(OP_SAVE, slot, t.name(), name, rgb, size, explosive,
+        return new TechniquePacket(OP_SAVE, slot, t.name(), name, rgb, size,
+                effect == null ? TechniqueEffect.NONE.ordinal() : effect.ordinal(),
                 chargeSound == null ? "" : chargeSound.toString(),
                 releaseSound == null ? "" : releaseSound.toString(),
                 animSet);
     }
 
     public static TechniquePacket delete(int slot) {
-        return new TechniquePacket(OP_DELETE, slot, "", "", 0, 0, false, "", "", 1);
+        return new TechniquePacket(OP_DELETE, slot, "", "", 0, 0, 0, "", "", 1);
     }
 
     /** position 0..8 del overlay; -1 = desasignar. Ojo: viaja en 'size', no en 'position'. */
     public static TechniquePacket bind(int slot, int overlayPosition) {
-        return new TechniquePacket(OP_BIND, slot, "", "", 0, overlayPosition, false, "", "", 1);
+        return new TechniquePacket(OP_BIND, slot, "", "", 0, overlayPosition, 0, "", "", 1);
     }
 
     public static void handle(TechniquePacket pkt, IPayloadContext ctx) {
@@ -149,12 +150,14 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
 
         if (pkt.slot() < 0) { // crear
             if (att.techniques().slotCount() >= CommonConfig.techniqueMaxSlots()) return false;
-            att.techniques().addSlot(new KiTechnique(name, type, rgb, size, pkt.explosive(), charge, release, animSet));
+            att.techniques().addSlot(new KiTechnique(name, type, rgb, size,
+                    TechniqueEffect.byOrdinal(pkt.effect()), charge, release, animSet));
             return true;
         }
         KiTechnique existing = att.techniques().slot(pkt.slot()); // editar
         if (existing == null) return false;
-        existing.set(name, type, rgb, size, pkt.explosive(), charge, release, animSet);
+        existing.set(name, type, rgb, size, TechniqueEffect.byOrdinal(pkt.effect()),
+                charge, release, animSet);
         return true;
     }
 

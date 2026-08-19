@@ -20,11 +20,9 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
  * Bola de ki mientras se carga una técnica, en el punto que diga su TechniquePosition
  * (mano, boca, frente...). La ven todos, no solo quien carga: los datos llegan por
  * KiChargeStatePacket y el crecimiento se deriva del tick de inicio.
- *
  * DOS PASADAS, relleno + borde, cada una con su textura. El contorno nítido sale de tener
  * el borde dibujado en su sitio, no de meter una quad blanca encima: así el color que eligió
  * el jugador se respeta entero y una técnica oscura sigue teniendo silueta.
- *
  * Va en AFTER_PARTICLES como el aura (misma oclusión y misma luz), pero con energyCrisp y no
  * con energy: aquí la textura se magnifica muchísimo (media pantalla a un palmo de la cara)
  * y el filtrado bilineal del aura la convertía en un borrón. Sin filtro, se ve el píxel.
@@ -78,14 +76,27 @@ public final class KiChargeRenderer {
 
             float progress = KiChargeClientState.progress(c, now);
 
-            // Posición interpolada: con p.position() cruda la bola vibra al andar.
-            Vec3 origin = c.position().origin(p, p.getPosition(pt));
-            if (p == mc.player && mc.options.getCameraType().isFirstPerson()) {
-                Vec3 look = p.getLookAngle().normalize();
-                Vec3 right = new Vec3(-look.z, 0.0, look.x).normalize();
-                origin = origin.add(look.scale(FP_FORWARD))
-                        .add(right.scale(FP_SIDE))
-                        .subtract(0.0, FP_DOWN, 0.0);
+            // ANCLA AL HUESO cuando hay dato de este frame. Es lo que hace que la esfera nazca
+            // en las manos y viaje CON ellas mientras el brazo se coloca: el clip de Kamehameha
+            // tarda 18 ticks en llegar a la cadera y con un punto fijo la esfera se quedaría
+            // flotando en el pecho ese rato.
+            // El respaldo es el offset estático de TechniquePosition, que es lo que había antes
+            // y lo que sigue usando el servidor para el spawn del proyectil.
+            var anchors = PlayerHandTracker.get(p.getId());
+            Vec3 origin;
+            if (anchors != null) {
+                origin = camPos.add(anchors.resolve(c.position()));
+            } else {
+                // Sin dato de hueso: primera persona (PAL filtra la capa), fuera de pantalla o
+                // culling. Posición interpolada, que con p.position() cruda la bola vibra al andar.
+                origin = c.position().origin(p, p.getPosition(pt));
+                if (p == mc.player && mc.options.getCameraType().isFirstPerson()) {
+                    Vec3 look = p.getLookAngle().normalize();
+                    Vec3 right = new Vec3(-look.z, 0.0, look.x).normalize();
+                    origin = origin.add(look.scale(FP_FORWARD))
+                            .add(right.scale(FP_SIDE))
+                            .subtract(0.0, FP_DOWN, 0.0);
+                }
             }
 
             float radius = (BASE_RADIUS + SIZE_RADIUS * c.size())
@@ -96,6 +107,10 @@ public final class KiChargeRenderer {
             float g = ((c.rgb() >> 8) & 0xFF) / 255f;
             float b = (c.rgb() & 0xFF) / 255f;
 
+            // El renderer es el único que sabe dónde acabó la esfera (hueso o respaldo), así
+            // que es quien tiene que dejarlo apuntado para el desvanecido al soltar.
+            KiChargeClientState.rememberDrawn(p.getId(), origin, radius);
+
             pose.pushPose();
             pose.translate(origin.x - camPos.x, origin.y - camPos.y, origin.z - camPos.z);
             pose.mulPose(cam.rotation()); // billboard: siempre de cara
@@ -104,15 +119,36 @@ public final class KiChargeRenderer {
             // así que el orden de estas dos llamadas ES el orden de dibujo.
             quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL)),
                     pose.last(), radius, r, g, b, ALPHA);
-            if (BORDER_ALPHA > 0f) {
-                quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL_BORDER)),
-                        pose.last(), radius, r, g, b, BORDER_ALPHA);
-            }
+            quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL_BORDER)),
+                    pose.last(), radius, r, g, b, BORDER_ALPHA);
 
             pose.popPose();
             drew = true;
         }
+        // Esferas apagándose: sitio y tamaño congelados, alfa bajando. Tapan el salto entre
+        // donde estaba la esfera (hueso) y donde nace el proyectil (offset del servidor).
+        for (Player p : mc.level.players()) {
+            var f = KiChargeClientState.fadeOf(p);
+            if (f == null) continue;
 
+            float a = KiChargeClientState.fadeAlpha(f, now, pt);
+            if (a <= 0f) { KiChargeClientState.dropFade(p.getId()); continue; }
+
+            float r = ((f.rgb() >> 16) & 0xFF) / 255f;
+            float g = ((f.rgb() >> 8) & 0xFF) / 255f;
+            float b = (f.rgb() & 0xFF) / 255f;
+            float radius = f.radius() * (0.6f + 0.4f * a);   // encoge mientras se apaga
+
+            pose.pushPose();
+            pose.translate(f.origin().x - camPos.x, f.origin().y - camPos.y, f.origin().z - camPos.z);
+            pose.mulPose(cam.rotation());
+            quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL)),
+                    pose.last(), radius, r, g, b, ALPHA * a);
+            quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL_BORDER)),
+                    pose.last(), radius, r, g, b, BORDER_ALPHA * a);
+            pose.popPose();
+            drew = true;
+        }
         if (drew) buffers.endBatch();
     }
 

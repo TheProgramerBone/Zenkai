@@ -1,0 +1,41 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "animation.zenkai.ki_attack_8_charge": {
+            "loop": "hold_on_last_frame",
+            "animation_length": 0.8,
+            "bones": {
+                "body": {
+                    "position": {
+                        "0.0": [0, 0, 0],
+                        "0.8": [0, -0.1, 0]
+                    }
+                },
+                "torso": {
+                    "rotation": {
+                        "0.0": [0, 0, 0],
+                        "0.8": [-12, 18, 0]
+                    }
+                },
+                "head": {
+                    "rotation": {
+                        "0.0": [0, 0, 0],
+                        "0.8": [-15, -10, 0]
+                    }
+                },
+                "right_arm": {
+                    "rotation": {
+                        "0.0": [0, 0, 0],
+                        "0.8": [-45, 0, -28]
+                    }
+                },
+                "left_arm": {
+                    "rotation": {
+                        "0.0": [0, 0, 0],
+                        "0.8": [-35, 0, -8]
+                    }
+                }
+            }
+        }
+    }
+}

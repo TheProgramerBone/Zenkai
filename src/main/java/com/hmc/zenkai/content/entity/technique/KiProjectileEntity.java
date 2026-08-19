@@ -1,6 +1,7 @@
 package com.hmc.zenkai.content.entity.technique;
 
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
+import com.hmc.zenkai.feature.technique.TechniqueEffect;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import net.minecraft.core.particles.ParticleTypes;
@@ -64,7 +65,7 @@ public class KiProjectileEntity extends Projectile {
 
     private double damage = 0;
     private int life = 100;
-    private boolean explosive = false;
+    private TechniqueEffect effect = TechniqueEffect.NONE;
 
     public KiProjectileEntity(EntityType<? extends KiProjectileEntity> type, Level level) {
         super(type, level);
@@ -73,14 +74,15 @@ public class KiProjectileEntity extends Projectile {
 
     /** Configuración al disparar (solo servidor; el data syncer propaga al cliente). */
     public void configure(LivingEntity owner, KiTechniqueType type, int rgb, int size,
-                          double damage, int lifeTicks, boolean explosive) {
+                          double damage, int lifeTicks, TechniqueEffect effect) {
         setOwner(owner);
         this.entityData.set(DATA_TYPE, (byte) type.ordinal());
         this.entityData.set(DATA_RGB, rgb & 0xFFFFFF);
         this.entityData.set(DATA_SIZE, (byte) size);
         this.damage = damage;
         this.life = lifeTicks;
-        this.explosive = explosive && !type.defensive();
+        this.effect = (effect == null || !type.allowsEffect(effect))
+                ? TechniqueEffect.NONE : effect;
         this.noCulling = true; // la estela sobresale del hitbox: sin esto desaparece al salir la bola de cámara
         refreshDimensions();
     }
@@ -109,9 +111,9 @@ public class KiProjectileEntity extends Projectile {
 
     @Override
     public @NotNull EntityDimensions getDimensions(@NotNull Pose pose) {
-        float d = techniqueType() == KiTechniqueType.BARRIER
-                ? 2.4f + 0.2f * size()
-                : 0.3f + 0.15f * size();
+        // Un tamaño 5 no significa lo mismo en un láser que en un big blast: la escala vive en
+        // el tipo, que es quien conoce su propia proporción.
+        float d = (float) techniqueType().projectileSize(size());
         return EntityDimensions.scalable(d, d);
     }
 
@@ -119,8 +121,10 @@ public class KiProjectileEntity extends Projectile {
     public void tick() {
         super.tick();
 
-        if (techniqueType() == KiTechniqueType.BARRIER) {
-            tickBarrier();
+        // Lo que no viaja va pegado al dueño. La barrera expira sin más; la explosión DETONA
+        // al expirar — su `life` es la mecha, no su duración.
+        if (!techniqueType().travels()) {
+            tickAttached();
             return;
         }
 
@@ -156,7 +160,7 @@ public class KiProjectileEntity extends Projectile {
     }
 
     /** Sigue el centro del dueño; muere al expirar o si el dueño desaparece. */
-    private void tickBarrier() {
+    private void tickAttached() {
         Entity owner = getOwner();
         if (owner == null || !owner.isAlive()) {
             if (!level().isClientSide) discard();
@@ -164,7 +168,11 @@ public class KiProjectileEntity extends Projectile {
         }
         Vec3 c = owner.position().add(0, owner.getBbHeight() * 0.5, 0);
         setPos(c.x, c.y - getBbHeight() * 0.5, c.z);
-        if (!level().isClientSide && --life <= 0) discard();
+
+        if (!level().isClientSide && --life <= 0) {
+            if (techniqueType() == KiTechniqueType.EXPLOSION) detonate(c, null);
+            discard();
+        }
     }
 
     @Override
@@ -184,7 +192,7 @@ public class KiProjectileEntity extends Projectile {
             return;
         }
 
-        if (explosive) explode(hit.getEntity().position(), hit.getEntity());
+        detonate(hit.getEntity().position(), hit.getEntity());
         discard();
     }
 
@@ -192,7 +200,7 @@ public class KiProjectileEntity extends Projectile {
     protected void onHit(@NotNull HitResult hit) {
         super.onHit(hit);
         if (!level().isClientSide && hit.getType() == HitResult.Type.BLOCK) {
-            if (explosive) explode(hit.getLocation(), null);
+            detonate(hit.getLocation(), null);
             discard();
         }
     }
@@ -205,105 +213,60 @@ public class KiProjectileEntity extends Projectile {
     public double refPower() { return refPower; }
 
     /**
-     * Radio de la explosión (Radio = Diámetro / 2).
-     * Escala según el tamaño (size) y se limita o multiplica según el tipo de técnica (KiTechniqueType).
+     * Impacto: daño en ÁREA siempre, rotura de bloques solo con el efecto EXPLOSIVE.
+     * ANTES el área y la destrucción iban juntas bajo la marca `explosive`; separarlas es lo
+     * que hace que la marca signifique una cosa sola. Consecuencia asumida: ahora TODA técnica
+     * reparte algo de área, según el aoeFactor de su tipo (un láser, un 20 %).
+     * El objetivo directo y el dueño quedan fuera del área: el primero ya cobró el golpe
+     * entero y el segundo nunca se daña a sí mismo — el autodaño de la explosión es otra cosa
+     * y se aplica en KiFirePacket.
      */
-    /**
-     * Radio de la explosión (Radio = Diámetro / 2).
-     * Escala con el tamaño (size) y aplica multiplicadores + límites máximos según la técnica.
-     */
-    private double explosionRadius() {
-        double baseRadius = 1.2 * size();
-
-        return switch (techniqueType()) {
-            case WAVE -> {
-                // Kamehameha: Onda potente de impacto amplio (Diámetro máx: 10 bloques)
-                yield Math.min(baseRadius * 1.3, 5.0);
-            }
-            case BLAST -> {
-                // Bola estándar (Diámetro máx: 7 bloques)
-                yield Math.min(baseRadius, 3.5);
-            }
-            case LAZER -> {
-                // Láser: Superconcentrado y penetrante, explosión muy reducida (Diámetro máx: 3 bloques)
-                yield Math.min(baseRadius * 0.5, 1.5);
-            }
-            case SPIRAL -> {
-                // Espiral: Onda de choque expansiva (Diámetro máx: 8.5 bloques)
-                yield Math.min(baseRadius * 1.1, 4.25);
-            }
-            case BIG_BLAST -> {
-                // Enorme y lento: Explosión masiva (Diámetro máx: 16 bloques)
-                yield Math.min(baseRadius * 2.2, 8.0);
-            }
-            case BURST -> {
-                // Ráfaga pequeña: Múltiples disparos con explosiones pequeñas (Diámetro máx: 4 bloques)
-                yield Math.min(baseRadius * 0.6, 2.0);
-            }
-            case DISK -> {
-                // Disco cortante: Impacto muy localizado (Diámetro máx: 4 bloques)
-                yield Math.min(baseRadius * 0.7, 2.0);
-            }
-            case BARRIER -> 0.0; // Burbuja defensiva: sin explosión
-        };
-    }
-
-    /**
-     * Porcentaje del daño directo que se transmite como daño en área (AoE).
-     * Ej: 0.80 = 80% del daño base repartido en la zona.
-     */
-    private double explosionAoeFactor() {
-        return switch (techniqueType()) {
-            case WAVE      -> 0.75; // 75% del daño en área (Onda destructiva)
-            case BIG_BLAST -> 0.85; // 85% del daño en área (Devastador)
-            case BLAST     -> 0.50; // 50% del daño en área (Balanceado)
-            case SPIRAL    -> 0.60; // 60% del daño en área
-            case DISK      -> 0.40; // 40% del daño en área (Daño más centrado en el corte)
-            case BURST     -> 0.35; // 35% por cada bolita (Acumulable por cantidad)
-            case LAZER     -> 0.20; // 20% en área (El daño es single-target)
-            case BARRIER   -> 0.00;
-        };
-    }
-
-    private void explode(Vec3 center, Entity directHit) {
+    private void detonate(Vec3 center, Entity directHit) {
         if (!(level() instanceof ServerLevel sl)) return;
-        double radius = explosionRadius();
-        double aoeFactor = explosionAoeFactor(); // <-- Leemos el factor dinámico
+
+        double radius = techniqueType().explosionRadius(size());
+        if (radius <= 0.0) return;
+
+        double aoe = techniqueType().aoeFactor();
+        double edge = techniqueType().aoeEdgeFalloff();
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
 
-        if (ModGameRules.enableKiDamage(sl.getServer())) {
+        if (aoe > 0.0 && ModGameRules.enableKiDamage(sl.getServer())) {
             for (LivingEntity target : sl.getEntitiesOfClass(LivingEntity.class,
                     AABB.ofSize(center, radius * 2, radius * 2, radius * 2),
                     t -> t.isAlive() && t != getOwner() && t != directHit)) {
                 double dist = target.position().add(0, target.getBbHeight() * 0.5, 0)
                         .distanceTo(center);
                 if (dist > radius) continue;
-                double falloff = 1.0 - dist / radius;
-
-                // Aplicamos aoeFactor en lugar de la constante
+                // Los proyectiles caen a cero en el borde; la explosión conserva `edge`, que es
+                // lo que la convierte en una zona de muerte y no en un golpe con halo.
+                double falloff = 1.0 - (1.0 - edge) * (dist / radius);
                 target.hurt(damageSources().mobProjectile(this, owner),
-                        (float) (damage * aoeFactor * falloff));
+                        (float) (damage * aoe * falloff));
             }
         }
 
-        if (ModGameRules.enableKiGriefing(sl.getServer())) {
+        boolean grief = effect == TechniqueEffect.EXPLOSIVE
+                && ModGameRules.enableKiGriefing(sl.getServer());
+        if (grief) {
             sl.explode(this, null,
                     new SimpleExplosionDamageCalculator(true, false,
                             Optional.empty(), Optional.empty()),
                     center.x, center.y, center.z, (float) radius, false,
                     Level.ExplosionInteraction.TNT);
-        } else {
-            int emitters = 1 + size() / 2;
-            double spread = radius * 0.35;
-            sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z,
-                    emitters, spread, spread, spread, 0);
-            int puffs = 8 + size() * 6;
-            sl.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z,
-                    puffs, radius * 0.5, radius * 0.5, radius * 0.5, 0);
-            sl.playSound(null, center.x, center.y, center.z,
-                    SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS,
-                    1.2f + 0.15f * size(), 1.25f - 0.06f * size());
+            return;
         }
+
+        int emitters = 1 + size() / 2;
+        double spread = radius * 0.35;
+        sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z,
+                emitters, spread, spread, spread, 0);
+        int puffs = 8 + size() * 6;
+        sl.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z,
+                puffs, radius * 0.5, radius * 0.5, radius * 0.5, 0);
+        sl.playSound(null, center.x, center.y, center.z,
+                SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS,
+                1.2f + 0.15f * size(), 1.25f - 0.06f * size());
     }
 
     @Override
@@ -316,7 +279,7 @@ public class KiProjectileEntity extends Projectile {
         super.addAdditionalSaveData(tag);
         tag.putDouble("damage", damage);
         tag.putInt("life", life);
-        tag.putBoolean("explosive", explosive);
+        tag.putInt("effect", effect.ordinal());
         tag.putByte("ktype", this.entityData.get(DATA_TYPE));
         tag.putInt("rgb", rgb());
         tag.putByte("size", (byte) size());
@@ -327,7 +290,8 @@ public class KiProjectileEntity extends Projectile {
         super.readAdditionalSaveData(tag);
         damage = tag.getDouble("damage");
         life = tag.getInt("life");
-        explosive = tag.getBoolean("explosive");
+        effect = tag.contains("effect") ? TechniqueEffect.byOrdinal(tag.getInt("effect"))
+                : (tag.getBoolean("explosive") ? TechniqueEffect.EXPLOSIVE : TechniqueEffect.NONE);
         this.entityData.set(DATA_TYPE, tag.getByte("ktype"));
         this.entityData.set(DATA_RGB, tag.getInt("rgb"));
         this.entityData.set(DATA_SIZE, tag.getByte("size"));
@@ -341,14 +305,11 @@ public class KiProjectileEntity extends Projectile {
         return false; // los proyectiles ki no reciben daño
     }
 
-    /**
-     * ¿Se puede desviar con kiai? La BARRIER no: no viaja, es el visual de la burbuja y
-     * tickBarrier() la pega a su dueño cada tick. Cambiarle el dueño le movería la esfera
-     * al que desvía mientras el pool de absorción (BARRIERS, por UUID) sigue protegiendo
-     * al original. Se exige damage > 0 por lo mismo: lo que no hace daño no se devuelve.
-     */
+    /** Solo se devuelve lo que VIAJA. Ni la barrera ni la explosión: la primera es el visual de
+     *  una burbuja pegada a su dueño y devolverla movería la esfera sin mover el pool de
+     *  absorción; la segunda es una autodetonación, y devolvérsela a alguien no significa nada. */
     public boolean canBeDeflected() {
-        return !techniqueType().defensive() && damage > 0.0;
+        return techniqueType().travels() && damage > 0.0;
     }
 
     /**

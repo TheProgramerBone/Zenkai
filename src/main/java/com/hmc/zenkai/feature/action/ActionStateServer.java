@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.action;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.technique.KiCombatServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -97,7 +98,8 @@ public final class ActionStateServer {
             if (tech != null) {
                 double castF = com.hmc.zenkai.feature.mastery.MasteryEffects
                         .techCastFactor(att, tech.type().name());
-                int req = Math.max(1, (int) Math.round(tech.type().chargeTicks() * castF));
+                int req = Math.max(1, (int) Math.round(
+                        KiCombatServer.chargeTicksFor(tech.type(), tech.size()) * castF));
                 if (cur.elapsed(now) >= req) set(sp, cur.withPhase(ActionPhase.OVERCHARGING));
             }
         }

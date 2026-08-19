@@ -20,10 +20,27 @@ package com.hmc.zenkai.feature.technique;
  * el NBT de las técnicas guardadas. Los sets nuevos van AL FINAL.
  */
 public enum TechniqueAnimSet {
-    /** Un brazo al frente. */
+    /** Brazo derecho al frente. */
     SET_1(TechniquePosition.RIGHT_HAND),
-    /** Ambas manos al costado, tipo Kamehameha. */
-    SET_2(TechniquePosition.BOTH_HANDS);
+    /** Brazo izquierdo al frente: el reflejo del 1, no una pose distinta. */
+    SET_2(TechniquePosition.LEFT_HAND),
+    /** Final Flash: brazos abiertos a los lados que se juntan al disparar. */
+    SET_3(TechniquePosition.BOTH_HANDS),
+    /** Rayo mortal: un brazo al frente, quieto. */
+    SET_4(TechniquePosition.RIGHT_HAND),
+    /** Kamehameha: manos a la cadera derecha, empuje frontal. */
+    SET_5(TechniquePosition.BOTH_HANDS),
+    /** Death Ball: brazo derecho recto arriba, esfera sobre la palma. */
+    SET_6(TechniquePosition.RIGHT_HAND),
+    /** Doble palma frontal: las dos manos abiertas al frente. */
+    SET_7(TechniquePosition.BOTH_HANDS),
+    /** Galick Gun: manos juntas al costado, a la altura de la cintura. */
+    SET_8(TechniquePosition.BOTH_HANDS),
+    /** Makankosappo. La carga tiene DOS tiempos —postura tensa y luego los dedos subiendo a
+     *  la frente— y por eso su clip dura 20 ticks en vez de los 14-18 del resto. Único set que
+     *  ancla en la cabeza: la esfera vive en la frente desde el primer frame hasta el disparo,
+     *  sin cambiar de sitio a mitad de la secuencia. */
+    SET_9(TechniquePosition.FOREHEAD);
 
     /**
      * BARRIER no tiene set: su animación es única y en el estado se marca con visual == 0.
@@ -43,6 +60,11 @@ public enum TechniqueAnimSet {
 
     /** Número de set tal como viaja por la red y se guarda (1..N). */
     public int number() { return ordinal() + 1; }
+
+    /** Nombre visible del set. Un set no es un número: son tres clips y un origen, y en el
+     *  editor "Animation: 4" no le dice nada a nadie. La clave se deriva del número para que
+     *  añadir un set siga siendo añadir UNA constante aquí y UNA línea en el lang. */
+    public String langKey() { return "technique.zenkai.anim_set." + number(); }
 
     public static int count() { return values().length; }
 

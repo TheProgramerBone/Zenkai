@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.TechniqueAnimSets;
 import com.hmc.zenkai.client.ZenkaiTransitions;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
+import com.hmc.zenkai.feature.technique.TechniqueAnimOverride;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranim.api.PlayerAnimationAccess;
 import com.zigythebird.playeranimcore.api.firstPerson.FirstPersonConfiguration;
@@ -236,6 +237,21 @@ public final class ZenkaiPalAnimations {
     public static void playChargeKiLoop(AbstractClientPlayer p) {
         ZenkaiTransitions.play(combatController(p), TechniqueAnimSets.KI_CHARGE_LOOP,
                 ZenkaiTransitions.KI_CHARGE);
+    }
+
+    public static void playOverrideCharge(AbstractClientPlayer p, TechniqueAnimOverride ov) {
+        ZenkaiTransitions.play(kiController(p), TechniqueAnimSets.overrideCharge(ov),
+                ZenkaiTransitions.KI_CHARGE);
+    }
+
+    public static void playOverrideOvercharge(AbstractClientPlayer p, TechniqueAnimOverride ov) {
+        ZenkaiTransitions.play(kiController(p), TechniqueAnimSets.overrideOvercharge(ov),
+                ZenkaiTransitions.KI_CHARGE);
+    }
+
+    public static void playOverrideRelease(AbstractClientPlayer p, TechniqueAnimOverride ov) {
+        ZenkaiTransitions.play(kiController(p), TechniqueAnimSets.overrideRelease(ov),
+                ZenkaiTransitions.KI_RELEASE);
     }
 
     // ── Capa de PREVIEW (editores) ───────────────────────────────────────────

@@ -36,6 +36,17 @@ public final class ClientConfig {
     public record BoolEntry(ModConfigSpec.BooleanValue value, String titleKey, String tooltipKey)
             implements Entry {}
 
+    /** Declara sin registrar en la GUI: para valores que se editan por otra vía. */
+    private static ModConfigSpec.BooleanValue defineHiddenBool(String path, String comment,
+                                                               boolean def) {
+        return BUILDER.comment(comment).define(path, def);
+    }
+
+    private static <T extends Enum<T>> ModConfigSpec.EnumValue<T> defineHiddenEnum(
+            String path, String comment, T def) {
+        return BUILDER.comment(comment).defineEnum(path, def);
+    }
+
     /**
      * Opción de lista. Guarda la clase del enum porque ModConfigSpec.EnumValue no la expone y
      * la pantalla necesita poder recorrer los valores para ciclar entre ellos.
@@ -108,18 +119,23 @@ public final class ClientConfig {
 
     // ── HUD de técnicas ──────────────────────────────────────────────────────
 
+    // NINGUNA de las tres aparece como fila. La colocación entera se decide en
+    // HudPlacementScreen, que es donde se VE lo que se está eligiendo, y se guarda de una vez
+    // por setHudPlacement(). Tenerlas además en la lista daba dos vías de escritura para el
+    // mismo valor: el buffer staged de ClientConfigScreen se construye al abrir la pantalla, y
+    // al volver de colocar el HUD ese buffer es viejo — pulsar Save revertía la colocación
+    // recién hecha.
     private static final ModConfigSpec.EnumValue<HudAnchor> HUD_ANCHOR =
-            defineEnum("hud.technique_anchor", "hud_anchor",
-                    "Screen corner or edge the technique bar hangs from",
-                    HudAnchor.MIDDLE_RIGHT, HudAnchor.class);
+            defineHiddenEnum("hud.technique_anchor",
+                    "Screen corner or edge the technique bar hangs from", HudAnchor.MIDDLE_RIGHT);
 
     private static final ModConfigSpec.EnumValue<HudOrientation> HUD_ORIENTATION =
-            defineEnum("hud.technique_orientation", "hud_orientation",
+            defineHiddenEnum("hud.technique_orientation",
                     "Whether the technique bar stacks vertically or horizontally",
-                    HudOrientation.VERTICAL, HudOrientation.class);
+                    HudOrientation.VERTICAL);
 
     private static final ModConfigSpec.BooleanValue HUD_AVOID_HOTBAR =
-            defineBool("hud.technique_avoid_hotbar", "hud_avoid_hotbar",
+            defineHiddenBool("hud.technique_avoid_hotbar",
                     "Push the technique bar above the vanilla hotbar instead of overlapping it",
                     true);
 
@@ -161,13 +177,15 @@ public final class ClientConfig {
         SPEC.save();   // ⚠ API
     }
 
-    /** Guarda la colocación completa de una vez. Lo llama la pantalla de colocación al aceptar. */
+    /** Guarda la colocación COMPLETA de una vez: es la única vía de escritura de estos cuatro
+     *  valores, así que no puede quedar ninguno fuera o volvería la doble autoridad. */
     public static void setHudPlacement(HudAnchor anchor, HudOrientation orientation,
-                                       int offsetX, int offsetY) {
+                                       int offsetX, int offsetY, boolean avoidHotbar) {
         HUD_ANCHOR.set(anchor);
         HUD_ORIENTATION.set(orientation);
         HUD_OFFSET_X.set(offsetX);
         HUD_OFFSET_Y.set(offsetY);
+        HUD_AVOID_HOTBAR.set(avoidHotbar);
         SPEC.save();   // ⚠ API
     }
 

@@ -102,7 +102,8 @@ public final class CombatModeClientState {
         if (now >= ready) return 0;
         KiTechnique t = mc.player == null ? null
                 : PlayerStatsAttachment.get(mc.player).techniques().slot(slot);
-        int total = t == null ? 20 : Math.max(1, t.type().cooldownTicks());
+        int total = t == null ? 20
+                : Math.max(1, KiCombatServer.cooldownTicksFor(t.type(), t.size()));
         return Math.min(1.0, (ready - now) / (double) total);
     }
 
@@ -210,15 +211,15 @@ public final class CombatModeClientState {
                 boolean defensive = t.type().defensive();
                 int fCost = (int) Math.max(1, Math.ceil(
                         KiCombatServer.computeCost(
-                                fAtt, t.type(), t.size(),
-                                t.explosive() && !defensive)
+                                fAtt, t.type(), t.size(), t.effect())
                                 * (defensive ? 1.0 : KiCombatServer.chargeCostFactor(ratio))
                                 * fAtt.powerFraction()));
                 if (ratio >= KiTechniqueType.MIN_CHARGE && fAtt.getEnergy() >= fCost) {
                     PacketDistributor.sendToServer(new KiFirePacket(chargingSlot, chargeTicks));
                     if (mc.level != null) {
                         READY_AT.put(chargingSlot,
-                                mc.level.getGameTime() + t.type().cooldownTicks());
+                                mc.level.getGameTime()
+                                        + KiCombatServer.cooldownTicksFor(t.type(), t.size()));
                     }
                 }
                 cancelCharge();
@@ -303,7 +304,7 @@ public final class CombatModeClientState {
 
     /** Ticks de carga requeridos, ya reducidos por la maestría de la técnica. */
     private static int reqChargeFor(Minecraft mc, KiTechnique t) {
-        int base = Math.max(1, t.type().chargeTicks());
+        int base = Math.max(1, KiCombatServer.chargeTicksFor(t.type(), t.size()));
         if (mc.player == null) return base;
         var att = PlayerStatsAttachment.get(mc.player);
         double castF = MasteryEffects.techCastFactor(att, t.type().name());

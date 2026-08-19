@@ -59,7 +59,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
 
     /**
      * Valor en edición de cada opción, sin escribir todavía en el toml.
-         * Object y no Boolean porque hay tres tipos de opción. El tipo real se recupera del Entry
+     * Object y no Boolean porque hay tres tipos de opción. El tipo real se recupera del Entry
      * correspondiente.
      */
     private final List<Object> staged = new ArrayList<>();
@@ -87,7 +87,13 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
     private int listTop()    { return panelTop + CONTENT_TOP; }
     private int listHeight() { return BG_H - CONTENT_TOP - MARGIN - SAVE_H - 24; }
     private int visibleRows(){ return Math.max(1, listHeight() / ROW_H); }
-    private int maxScroll()  { return Math.max(0, ClientConfig.entries().size() - visibleRows()); }
+    /** Filas de la pantalla = opciones + UNA fila de acción al final (colocar el HUD).
+     *  La fila de acción NO está en ClientConfig.entries(): ese modelo es de valores con buffer
+     *  y guardado, y una acción no tiene ninguna de las dos cosas. La lista visual es cosa de
+     *  la pantalla; el modelo de configuración se queda limpio. */
+    private int rowCount()   { return ClientConfig.entries().size() + 1; }
+    private int actionRow()  { return ClientConfig.entries().size(); }
+    private int maxScroll()  { return Math.max(0, rowCount() - visibleRows()); }
     private int rowRight()   { return panelLeft + BG_W - MARGIN; }
     private int textRight()  { return rowRight() - CONTROL_W - 8; }
     private int textWidth()  { return textRight() - (panelLeft + MARGIN); }
@@ -99,30 +105,32 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
         var entries = ClientConfig.entries();
         scroll = Mth.clamp(scroll, 0, maxScroll());
 
-        int shown = Math.min(visibleRows(), entries.size() - scroll);
+        int shown = Math.min(visibleRows(), rowCount() - scroll);
         for (int i = 0; i < shown; i++) {
             final int index = scroll + i;
-            addControlFor(entries.get(index), index, listTop() + i * ROW_H);
+            int rowY = listTop() + i * ROW_H;
+            if (index == actionRow()) addActionRow(rowY);
+            else addControlFor(entries.get(index), index, rowY);
         }
 
         int footY = panelTop + BG_H - MARGIN - SAVE_H;
-        int gap = 8;
-        int totalW = SAVE_W * 2 + gap;
-        int footX = panelLeft + (BG_W - totalW) / 2;
-
-        // Colocación del HUD: no es una fila de la lista porque no es un valor que se elige, es
-        // una pantalla a la que se va. Meterla como opción obligaría a inventar un control para
-        // algo que no tiene estados.
-        //
-        // Se pasa THIS como padre: al volver, el buffer staged sigue intacto y no hace falta
-        // guardar a la fuerza antes de salir.
-        addRenderableWidget(PanelButton.secondary(footX, footY,
-                Component.translatable("screen.zenkai.client_config.place_hud"),
-                () -> mc.setScreen(new HudPlacementScreen(this))));
-
-        saveButton = PanelButton.primary(footX + SAVE_W + gap, footY,
+        saveButton = PanelButton.primary(panelLeft + (BG_W - SAVE_W) / 2, footY,
                 Component.translatable("screen.zenkai.gui.save"), this::save);
         addRenderableWidget(saveButton);
+    }
+
+    /**
+     * Fila de acción: rótulo a la izquierda como cualquier opción, botón en la columna de
+     * control. No tiene valor en staged porque no hay nada que guardar aquí — la pantalla de
+     * colocación escribe sola por setHudPlacement().
+     * Se pasa THIS como padre: al volver, el buffer staged sigue intacto y no hace falta
+     * guardar a la fuerza antes de salir.
+     */
+    private void addActionRow(int rowY) {
+        int y = rowY + (ROW_H - PanelButton.H) / 2;
+        addRenderableWidget(PanelButton.secondary(rowRight() - PanelButton.W, y,
+                Component.translatable("screen.zenkai.client_config.hud_layout.open"),
+                () -> mc.setScreen(new HudPlacementScreen(this))));
     }
 
     /** Crea el control de una fila según su tipo. */
@@ -143,7 +151,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
 
     /**
      * Ciclador de enumerado: [<] valor [>].
-         * Genérico auxiliar para poder nombrar el tipo del enum: EnumEntry&lt;?&gt; no deja llamar
+     * Genérico auxiliar para poder nombrar el tipo del enum: EnumEntry&lt;?&gt; no deja llamar
      * a cycle(), que necesita saber que el valor y la lista son del mismo tipo.
      */
     private <T extends Enum<T>> void addCycler(ClientConfig.EnumEntry<T> entry, int index, int rowY) {
@@ -276,12 +284,11 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
 
         var entries = ClientConfig.entries();
-        int shown = Math.min(visibleRows(), entries.size() - scroll);
+        int shown = Math.min(visibleRows(), rowCount() - scroll);
         rowAreas.clear();
 
         for (int i = 0; i < shown; i++) {
             int index = scroll + i;
-            var e = entries.get(index);
             int rowY = listTop() + i * ROW_H;
             rowAreas.add(new RowArea(index, rowY));
 
@@ -292,11 +299,21 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
                         rowY + ROW_H - 2, ZenkaiPalette.ROW_BAND);
             }
 
-            PanelText.onPanel(g, this.font, Component.translatable(e.titleKey()),
+            String titleKey;
+            String descKey;
+            if (index == actionRow()) {
+                titleKey = "screen.zenkai.client_config.hud_layout";
+                descKey = "screen.zenkai.client_config.hud_layout.desc";
+            } else {
+                var e = entries.get(index);
+                titleKey = e.titleKey();
+                descKey = e.titleKey() + ".desc";
+            }
+
+            PanelText.onPanel(g, this.font, Component.translatable(titleKey),
                     panelLeft + MARGIN, rowY + 5, ZenkaiPalette.LABEL_ON_PANEL);
 
             // Descripción: una línea recortada. La completa va en el tooltip de la fila.
-            String descKey = e.titleKey() + ".desc";
             if (hasTranslation(descKey)) {
                 Component desc = Component.translatable(descKey);
                 PanelText.onPanel(g, this.font, PanelText.fit(this.font, desc, textWidth()),
@@ -325,7 +342,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
 
     /**
      * Descripción completa al pasar el ratón por la fila.
-         * Se envuelve a 220 px y no al ancho de la fila: el tooltip flota libre y puede permitirse
+     * Se envuelve a 220 px y no al ancho de la fila: el tooltip flota libre y puede permitirse
      * ser más ancho que la columna donde no cabía el texto — que es justo el motivo de que
      * exista.
      */
@@ -336,12 +353,21 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
         for (RowArea area : rowAreas) {
             if (my < area.y() || my >= area.y() + ROW_H - 2) continue;
 
-            var e = entries.get(area.index());
-            String descKey = e.titleKey() + ".desc";
+            String titleKey;
+            String descKey;
+            if (area.index() == actionRow()) {
+                titleKey = "screen.zenkai.client_config.hud_layout";
+                descKey = "screen.zenkai.client_config.hud_layout.desc";
+            } else {
+                var e = entries.get(area.index());
+                titleKey = e.titleKey();
+                descKey = e.titleKey() + ".desc";
+            }
+
             if (!hasTranslation(descKey)) return;
 
             List<Component> lines = new ArrayList<>();
-            lines.add(Component.translatable(e.titleKey()));
+            lines.add(Component.translatable(titleKey));
             for (var l : this.font.getSplitter().splitLines(
                     Component.translatable(descKey), 220, net.minecraft.network.chat.Style.EMPTY)) {
                 lines.add(Component.literal(l.getString())
@@ -362,7 +388,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
         int x = panelLeft + BG_W - 10;
         int top = listTop(), h = visibleRows() * ROW_H;
         g.fill(x, top, x + SCROLLBAR_W, top + h, ZenkaiPalette.BAR_BG);
-        int thumbH = Math.max(12, h * visibleRows() / ClientConfig.entries().size());
+        int thumbH = Math.max(12, h * visibleRows() / rowCount());
         int thumbY = top + (h - thumbH) * scroll / max;
         g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.VALUE_ON_PANEL);
     }

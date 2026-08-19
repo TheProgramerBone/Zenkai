@@ -1,11 +1,9 @@
 package com.hmc.zenkai.client;
 
-import com.hmc.zenkai.feature.technique.KiChargeStatePacket;
-import com.hmc.zenkai.feature.technique.TechniqueAnimSet;
-import com.hmc.zenkai.feature.technique.TechniquePosition;
-import com.hmc.zenkai.feature.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.technique.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,9 +23,45 @@ public final class KiChargeClientState {
 
     private static final Map<Integer, Charge> ACTIVE = new ConcurrentHashMap<>();
 
+    /** Ticks que la esfera sigue visible tras soltarse, encogiendo en su ÚLTIMA posición.
+     *  El proyectil nace en el servidor, que no tiene huesos, así que sale del offset estático
+     *  de TechniquePosition: en el Kamehameha eso es medio bloque de salto en un frame. Tres
+     *  ticks de desvanecido tapan el corte sin que se lea como una segunda esfera. */
+    public static final int FADE_TICKS = 3;
+
+    /** Esfera apagándose. Congela el sitio y el tamaño que tenía al soltarse. */
+    public record Fade(int rgb, Vec3 origin, float radius, long startTick) {}
+
+    private static final Map<Integer, Fade> FADING = new ConcurrentHashMap<>();
+
+    /** Última posición y radio pintados, por jugador. Lo escribe el renderer cada frame: es el
+     *  único que sabe si acabó anclando al hueso o al respaldo. */
+    private record Last(Vec3 origin, float radius) {}
+    private static final Map<Integer, Last> LAST = new ConcurrentHashMap<>();
+
+    public static void rememberDrawn(int entityId, Vec3 origin, float radius) {
+        LAST.put(entityId, new Last(origin, radius));
+    }
+
+    public static Fade fadeOf(Player p) { return FADING.get(p.getId()); }
+
+    /** 1 → 0 a lo largo de FADE_TICKS. Fuera de rango, la entrada se retira. */
+    public static float fadeAlpha(Fade f, long now, float partialTick) {
+        float t = (now - f.startTick() + partialTick) / FADE_TICKS;
+        return Math.max(0f, 1f - t);
+    }
+
+    public static void dropFade(int entityId) { FADING.remove(entityId); }
+
     public static void accept(KiChargeStatePacket pkt) {
         if (!pkt.charging()) {
             ACTIVE.remove(pkt.playerId());
+            Last last = LAST.remove(pkt.playerId());
+            if (last != null) {
+                long t = Minecraft.getInstance().level == null
+                        ? 0L : Minecraft.getInstance().level.getGameTime();
+                FADING.put(pkt.playerId(), new Fade(pkt.rgb(), last.origin(), last.radius(), t));
+            }
             return;
         }
         KiTechniqueType[] types = KiTechniqueType.values();
@@ -51,10 +85,10 @@ public final class KiChargeClientState {
 
     /** 0..1. Se queda en 1 cuando ya está a tope: la bola deja de crecer, no desaparece. */
     public static float progress(Charge c, long now) {
-        int max = Math.max(1, c.type().chargeTicks());
+        int max = Math.max(1, KiCombatServer.chargeTicksFor(c.type(), c.size()));
         return Math.min(1.0f, (now - c.startTick()) / (float) max);
     }
 
     /** Al cambiar de mundo/dimensión los ids de entidad dejan de valer. */
-    public static void clear() { ACTIVE.clear(); }
+    public static void clear() { ACTIVE.clear(); FADING.clear(); LAST.clear(); }
 }

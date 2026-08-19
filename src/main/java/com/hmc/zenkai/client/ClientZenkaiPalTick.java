@@ -9,6 +9,7 @@ import com.hmc.zenkai.feature.action.ActionType;
 import com.hmc.zenkai.feature.ki.FlyBoostPacket;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.technique.TechniqueAnimOverride;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -382,9 +383,21 @@ public final class ClientZenkaiPalTick {
         // visual == 0 → técnica defensiva: animación ÚNICA, sin par charge/release. Se lanza
         // al entrar a la INSTANCIA, no al cambiar de fase, o el paso CHARGING → RELEASING la
         // reiniciaría a media reproducción.
-        if (visual == 0) {
+        // Tipos que imponen animación. La barrera es un clip único que se lanza al entrar a la
+        // instancia y se deja; la explosión sí tiene las tres fases.
+        TechniqueAnimOverride ov = TechniqueAnimOverride.decode(visual);
+        if (ov != null) {
             st.kiSet = 0;
-            if (start != prevStart) ZenkaiPalAnimations.playKiBarrier(p);
+            if (ov == TechniqueAnimOverride.BARRIER) {
+                if (start != prevStart) ZenkaiPalAnimations.playKiBarrier(p);
+            } else {
+                switch (phase) {
+                    case CHARGING     -> ZenkaiPalAnimations.playOverrideCharge(p, ov);
+                    case OVERCHARGING -> ZenkaiPalAnimations.playOverrideOvercharge(p, ov);
+                    case RELEASING    -> ZenkaiPalAnimations.playOverrideRelease(p, ov);
+                    default           -> ZenkaiPalAnimations.stopKi(p);
+                }
+            }
             return;
         }
 

@@ -208,8 +208,7 @@ public final class TechniqueHotbarOverlay {
         // Coste de ki EN VIVO (azul): crece con la carga igual que el daño, así el jugador no
         // adivina cuánto le va a costar soltar ahora mismo.
         if (t != null) {
-            int fullCost = KiCombatServer.computeCost(att, t.type(), t.size(),
-                    t.explosive() && !t.type().defensive());
+            int fullCost = KiCombatServer.computeCost(att, t.type(), t.size(), t.effect());
             int cost = (int) Math.max(1, Math.ceil(
                     fullCost * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()));
             boolean affordable = att.getEnergy() >= cost;

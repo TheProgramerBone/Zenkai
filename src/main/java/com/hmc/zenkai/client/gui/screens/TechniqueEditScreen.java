@@ -12,12 +12,8 @@ import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
-import com.hmc.zenkai.feature.technique.TechniqueAssets;
-import com.hmc.zenkai.feature.technique.TechniquePacket;
-import com.hmc.zenkai.feature.technique.KiCombatServer;
-import com.hmc.zenkai.feature.technique.KiTechnique;
-import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
@@ -98,7 +94,7 @@ public class TechniqueEditScreen extends Screen {
     private KiTechniqueType type;
     private int rgb;
     private int size;
-    private boolean explosive;
+    private TechniqueEffect effect;
     private int chargeIdx;   // índice en soundList(true), 0 = ninguno
     private int releaseIdx;
     private int animSet;
@@ -125,7 +121,7 @@ public class TechniqueEditScreen extends Screen {
             type = existing.type();
             rgb = existing.rgb();
             size = existing.size();
-            explosive = existing.explosive();
+            effect = existing.effect();
             chargeIdx = indexOf(soundList(true), existing.chargeSound());
             releaseIdx = indexOf(soundList(false), existing.releaseSound());
             animSet = TechniqueAnimSets.clamp(existing.animSet());
@@ -133,7 +129,7 @@ public class TechniqueEditScreen extends Screen {
             type = KiTechniqueType.BLAST;
             rgb = type.defaultRgb();
             size = KiTechnique.MIN_SIZE;
-            explosive = false;
+            effect = TechniqueEffect.NONE;
             chargeIdx = 0;
             releaseIdx = 0;
             animSet = 1;
@@ -234,10 +230,19 @@ public class TechniqueEditScreen extends Screen {
 
         cyclerRow(x, y, contentW,
                 Component.translatable("screen.zenkai.technique.effect").append(": ")
-                        .append(Component.translatable(explosive
-                                ? "screen.zenkai.technique.effect.explosive"
-                                : "screen.zenkai.technique.effect.none")),
-                dir -> { explosive = !explosive; rebuildWidgets(); });
+                        .append(Component.translatable(effect.langKey())),
+                dir -> {
+                    // Salta los efectos que este tipo no admite: ciclar por opciones que el
+                    // set() va a revertir a NONE es enseñar una elección que no existe.
+                    TechniqueEffect[] all = TechniqueEffect.values();
+                    TechniqueEffect next = effect;
+                    for (int i = 0; i < all.length; i++) {
+                        next = all[Math.floorMod(next.ordinal() + dir, all.length)];
+                        if (type.allowsEffect(next)) break;
+                    }
+                    if (type.allowsEffect(next)) effect = next;
+                    rebuildWidgets();
+                });
         y += ROW_H;
 
         cyclerRow(x, y, contentW,
@@ -273,8 +278,24 @@ public class TechniqueEditScreen extends Screen {
         y += ROW_H;
 
         List<Integer> sets = TechniqueAnimSets.available();
+
+        // El ORIGEN va en la misma fila que el set, no en una línea aparte: son el mismo dato.
+        // Desde que la posición dejó de ser elegible es una consecuencia del set, y enseñarla
+        // justo donde se cicla hace visible esa relación — cambias de animación y ves cambiar
+        // de dónde sale. Además no hay hueco: entre esta fila (acaba en 142) y la caja del
+        // preview (Y_PREVIEW = 150) quedan 8 px, y por debajo de la caja está Y_UNLOCK.
+        // BARRIER no tiene set (su visual es 0), así que su origen sale de la constante.
+        Component animLabel = Component.translatable("screen.zenkai.technique.anim",
+                        Component.translatable(TechniqueAnimSet.byNumber(animSet).langKey()))
+                .append(" · ")
+                .append(Component.translatable(type.defensive()
+                        ? TechniqueAnimSet.BARRIER_POSITION.langKey()
+                        : TechniqueAnimSet.positionOf(animSet).langKey()));
+
+        // El botón central mide contentW - (ARROW_W + 2) * 2. Con nombres largos el texto se
+        // sale de la fila, así que se recorta con el mismo criterio que el resto del mod.
         cyclerRow(x, y, contentW,
-                Component.translatable("screen.zenkai.technique.anim", animSet),
+                PanelText.fit(this.font, animLabel, contentW - (ARROW_W + 2) * 2 - 6),
                 dir -> {
                     int i = sets.indexOf(animSet);
                     if (i < 0) i = 0;
@@ -322,15 +343,15 @@ public class TechniqueEditScreen extends Screen {
         PlayerStatsAttachment a = att();
         if (a != null) {
             if (slot < 0) {
-                a.techniques().addSlot(new KiTechnique(n, type, rgb, size, explosive,
+                a.techniques().addSlot(new KiTechnique(n, type, rgb, size, effect,
                         cs, rs, animSet));
             } else {
                 KiTechnique ex = a.techniques().slot(slot);
-                if (ex != null) ex.set(n, type, rgb, size, explosive, cs, rs, animSet);
+                if (ex != null) ex.set(n, type, rgb, size, effect, cs, rs, animSet);
             }
         }
         PacketDistributor.sendToServer(TechniquePacket.save(
-                slot, type, nameBox.getValue(), rgb, size, explosive, cs, rs, animSet));
+                slot, type, nameBox.getValue(), rgb, size, effect, cs, rs, animSet));
         close();
     }
 
@@ -440,16 +461,16 @@ public class TechniqueEditScreen extends Screen {
         double kiPower = att.computeKiPowerFinal();
         double dmg = KiCombatServer.computeDamage(kiPower, type, size) * Math.max(1, type.count());
         int cost = KiCombatServer.computeCost(att, type, size,
-                explosive && !type.defensive());
+                effect);
 
         int iy = topPos + Y_BLOCK;
         info(g, iy, "screen.zenkai.technique.speed", speedLabel());
         info(g, iy += 11, "screen.zenkai.technique.damage", Component.literal(fmt(dmg)));
         info(g, iy += 11, "screen.zenkai.technique.cost", Component.literal(String.valueOf(cost)));
         info(g, iy += 11, "screen.zenkai.technique.casttime",
-                Component.literal(fmt(type.chargeTicks() / 20.0) + " sec"));
+                Component.literal(fmt(KiCombatServer.chargeTicksFor(type, size) / 20.0) + " sec"));
         info(g, iy += 11, "screen.zenkai.technique.cooldown",
-                Component.literal(fmt(type.cooldownTicks() / 20.0) + " sec"));
+                Component.literal(fmt(KiCombatServer.cooldownTicksFor(type, size) / 20.0) + " sec"));
 
         PanelText.rightOnPanel(g, this.font,
                 Component.translatable("screen.zenkai.technique.tp", att.getTP()),
@@ -461,7 +482,7 @@ public class TechniqueEditScreen extends Screen {
     private void renderStyleTab(GuiGraphics g, int mouseX, int mouseY) {
         int sy = topPos + Y_ROWS;
         int right = leftPos + BG_W - MARGIN;
-        KiTechnique previewTech = new KiTechnique(" ", type, rgb, size, explosive);
+        KiTechnique previewTech = new KiTechnique(" ", type, rgb, size, effect);
         g.fill(right - 40, sy + 1, right - 26, sy + 13, ZenkaiPalette.BORDER_IN);
         g.fill(right - 39, sy + 2, right - 27, sy + 12, 0xFF000000 | rgb);
         TechniqueIcons.draw(g, right - 18, sy - 3, previewTech);

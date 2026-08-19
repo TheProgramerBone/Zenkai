@@ -42,41 +42,83 @@ public final class KiCombatServer {
 
     // ── Fórmulas compartidas ─────────────────────────────────────────────────
 
-    public static final double BASE_COST_PCT = 0.04;
-    public static final double EXPLOSIVE_COST_MULT = 1.5;
+    /**
+     * CURVAS DE TAMAÑO (1..5). Índice = tamaño - 1.
+     * El problema que arreglan: antes el daño subía más deprisa que el coste y el tamaño no
+     * costaba tiempo, así que el tamaño máximo daba 2.5x de DPS Y era un 13 % más eficiente por
+     * ki. No había ninguna razón para elegir pequeño; el selector era un "sube esto al tope".
+     * Con estas cuatro curvas el DPS sostenido queda PLANO (±3 %), la eficiencia por ki CAE un
+     * 24 % del tamaño 1 al 5, y el daño por disparo SUBE un 132 %. La decisión pasa a ser real:
+     * pequeño para pelear sostenido sin quedarte sin ki, grande para el golpe que no puedes
+     * fallar. El peso del coste temporal lo lleva la carga; el enfriamiento sube solo un 52 %
+     * en el rango.
+     * Verificado por simulación antes de entregar. No tocar una sola de las cuatro sin
+     * recalcular las otras tres: la planitud del DPS depende de las cuatro a la vez.
+     */
+    private static final double[] SIZE_DMG  = {1.00, 1.30, 1.62, 1.96, 2.32};
+    private static final double[] SIZE_COST = {1.00, 1.42, 1.90, 2.44, 3.05};
+    private static final double[] SIZE_CAST = {1.00, 1.35, 1.75, 2.20, 2.70};
+    private static final double[] SIZE_CD   = {1.00, 1.10, 1.22, 1.36, 1.52};
+
+    private static double curve(double[] c, int size) {
+        return c[Math.min(c.length - 1, Math.max(0, size - 1))];
+    }
+
+    public static double sizeFactor(int size)     { return curve(SIZE_DMG, size); }
+    public static double costSizeFactor(int size) { return curve(SIZE_COST, size); }
+
+    /** AUTORIDAD ÚNICA del tiempo de carga. El tipo pone la base y el tamaño la estira: es lo
+     *  que impide que una bola enorme salga tan rápido como una pequeña. Doce sitios entre
+     *  servidor, HUD, predicción y editor tienen que pasar por aquí o el jugador verá una
+     *  barra que no coincide con lo que el servidor cobra. */
+    public static int chargeTicksFor(KiTechniqueType type, int size) {
+        return Math.max(1, (int) Math.round(type.chargeTicks() * curve(SIZE_CAST, size)));
+    }
+
+    /** Ídem para el enfriamiento. */
+    public static int cooldownTicksFor(KiTechniqueType type, int size) {
+        return Math.max(0, (int) Math.round(type.cooldownTicks() * curve(SIZE_CD, size)));
+    }
 
     /** Techo de carga: 2.0 = 200%. Como el daño escala lineal con el ratio, sobrecargar
      *  al máximo dobla el daño del disparo. */
     public static final double MAX_CHARGE = 2.0;
-
-    /** Escalado del DAÑO por tamaño (1..7): 1.0 .. 2.5. */
-    public static double sizeFactor(int size) {
-        return 1.0 + 0.25 * (size - 1);
-    }
-
-    /** Escalado del COSTE por tamaño: 1.0 .. 2.2 (algo más barato que el daño). */
-    public static double costSizeFactor(int size) {
-        return 1.0 + 0.2 * (size - 1);
-    }
 
     /** Daño por proyectil a carga completa. */
     public static double computeDamage(double kiPower, KiTechniqueType type, int size) {
         return kiPower * type.damageMult() * sizeFactor(size);
     }
 
-
-
     /** Coste de ki del disparo a carga completa. Escala con el PODER (WIL), no con el pool:
      *  así subir WIL sube daño Y coste, y SPI (el pool) decide cuántas veces lo sostienes.
      *  Recibe el objeto de stats y no el kiPower suelto para que el multiplicador de
      *  raza/estilo no se pueda olvidar en ningún call site. */
     public static int computeCost(ZenkaiCombatStats stats, KiTechniqueType type, int size,
-                                  boolean explosive) {
+                                  TechniqueEffect effect) {
         return (int) Math.ceil(stats.computeKiPowerFinal() * CommonConfig.kiCostPerPower()
                 * stats.kiCostMult()
                 * type.kiCostMult() * costSizeFactor(size)
-                * (explosive ? EXPLOSIVE_COST_MULT : 1.0));
+                * (effect == null ? 1.0 : effect.costMult()));
     }
+
+    /**
+     * Fracción del CUERPO MÁXIMO que se cobra a sí mismo quien detona una EXPLOSION.
+     *   f = 0.10 + 0.90 · ((ratio − MIN_CHARGE) / (MAX_CHARGE − MIN_CHARGE))²
+     * Cuadrática a propósito: cargar poco casi no duele y el precio se dispara en el tramo de
+     * sobrecarga. Vale EXACTAMENTE 1.0 en el tope, así que a 200 % el golpe es letal sin
+     * ningún escalón artificial — no es "a partir de aquí mueres", es que a esa carga te has
+     * gastado entero. Que morir signifique quedar ABATIDO y no muerto no se decide aquí: lo
+     * hace DownedDeathGuard interceptando LivingDeathEvent, como con cualquier otra muerte.
+     * IGNORA LA DEFENSA en el sitio donde se aplica: es daño verdadero sobre el cuerpo, no un
+     * golpe recibido; si pasara por computeDefenseFinal un tanque se autodetonaría gratis.
+     */
+    public static double selfDamageFraction(double ratio) {
+        double t = (Math.min(MAX_CHARGE, Math.max(MIN_CHARGE_D, ratio)) - MIN_CHARGE_D)
+                / (MAX_CHARGE - MIN_CHARGE_D);
+        return 0.10 + 0.90 * t * t;
+    }
+
+    private static final double MIN_CHARGE_D = KiTechniqueType.MIN_CHARGE;
 
     // ── Carga y sobrecarga ───────────────────────────────────────────────────
 
@@ -160,7 +202,7 @@ public final class KiCombatServer {
 
         KiProjectileEntity visual = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sp.level());
         visual.configure(sp, KiTechniqueType.BARRIER, tech.rgb(), tech.size(),
-                0, BARRIER_DURATION_TICKS, false);
+                0, BARRIER_DURATION_TICKS, TechniqueEffect.NONE);
         visual.setPos(sp.getX(), sp.getY(), sp.getZ());
         sp.level().addFreshEntity(visual);
 
