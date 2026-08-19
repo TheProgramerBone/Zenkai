@@ -1,7 +1,9 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.event.ZenkaiPalAnimations;
+import com.hmc.zenkai.feature.technique.TechniqueAnimOverride;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Ciclo de animación del preview del editor de técnicas: carga → sobrecarga → disparo → pausa,
@@ -36,30 +38,44 @@ public final class TechniqueAnimPreview {
 
     private int t = -1;
     private int lastSet = Integer.MIN_VALUE;
-    private boolean lastDefensive;
+    @Nullable private TechniqueAnimOverride lastOverride;
 
-    /** Un tick del bucle. Llamar desde Screen.tick(). */
-    public void tick(int animSet, boolean defensive) {
+    /**
+     * Un tick del bucle. Llamar desde Screen.tick().
+     * Recibe la ANULACIÓN y no un booleano de "es defensiva": hay tres casos, no dos. La
+     * barrera es clip único, la explosión tiene las tres fases igual que un set normal, y el
+     * resto usa el set que eligió el jugador. Con el booleano, la explosión —que no es
+     * defensiva— caía por la rama normal y el recuadro enseñaba el set 1.
+     */
+    public void tick(int animSet, @Nullable TechniqueAnimOverride override) {
         var p = Minecraft.getInstance().player;
         if (p == null) return;
 
         // Cambiar de set o de tipo reinicia el ciclo: al pulsar la flecha de animación se ve
         // la nueva en el acto en vez de esperar a que termine la anterior.
-        if (animSet != lastSet || defensive != lastDefensive) {
+        if (animSet != lastSet || override != lastOverride) {
             lastSet = animSet;
-            lastDefensive = defensive;
+            lastOverride = override;
             t = -1;
         }
         t++;
 
-        // Las defensivas tienen una animación única, sin par carga/disparo: se lanza al
-        // comenzar la instancia y se deja. Mismo contrato que visual == 0 en ClientZenkaiPalTick.
-        if (defensive) {
+        // La barrera tiene animación única, sin par carga/disparo: se lanza al comenzar la
+        // instancia y se deja.
+        if (override == TechniqueAnimOverride.BARRIER) {
             if (t == 0) ZenkaiPalAnimations.playPreviewBarrier(p);
             return;
         }
 
         int phase = t % CYCLE;
+        if (override != null) {
+            if (phase == 0)                 ZenkaiPalAnimations.playPreviewOverrideCharge(p, override);
+            else if (phase == T_OVERCHARGE) ZenkaiPalAnimations.playPreviewOverrideOvercharge(p, override);
+            else if (phase == T_RELEASE)    ZenkaiPalAnimations.playPreviewOverrideRelease(p, override);
+            else if (phase == T_PAUSE)      ZenkaiPalAnimations.stopPreview(p);
+            return;
+        }
+
         if (phase == 0)                 ZenkaiPalAnimations.playPreviewCharge(p, animSet);
         else if (phase == T_OVERCHARGE) ZenkaiPalAnimations.playPreviewOvercharge(p, animSet);
         else if (phase == T_RELEASE)    ZenkaiPalAnimations.playPreviewRelease(p, animSet);
@@ -72,5 +88,6 @@ public final class TechniqueAnimPreview {
         if (p != null) ZenkaiPalAnimations.stopPreview(p);
         t = -1;
         lastSet = Integer.MIN_VALUE;
+        lastOverride = null;
     }
 }

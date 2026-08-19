@@ -1,7 +1,7 @@
 {
     "format_version": "1.8.0",
     "animations": {
-        "animation.zenkai.ki_attack_5_charge": {
+        "zenkai.ki_attack_5_charge": {
             "loop": "hold_on_last_frame",
             "animation_length": 0.9,
             "bones": {
@@ -14,25 +14,25 @@
                 "torso": {
                     "rotation": {
                         "0.0": [0, 0, 0],
-                        "0.9": [5, -5, 0]
+                        "0.9": [5, 12, 0]
                     }
                 },
                 "head": {
                     "rotation": {
                         "0.0": [0, 0, 0],
-                        "0.9": [0, 5, 0]
+                        "0.9": [0, -10, 0]
                     }
                 },
                 "right_arm": {
                     "rotation": {
                         "0.0": [0, 0, 0],
-                        "0.9": [15, 0, -12]
+                        "0.9": [30, 0, -10]
                     }
                 },
                 "left_arm": {
                     "rotation": {
                         "0.0": [0, 0, 0],
-                        "0.9": [18, 0, 20]
+                        "0.9": [25, 0, 28]
                     }
                 }
             }

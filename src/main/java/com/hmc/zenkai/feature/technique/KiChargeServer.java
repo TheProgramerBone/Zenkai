@@ -47,7 +47,7 @@ public final class KiChargeServer {
     private static void broadcast(ServerPlayer sp, KiTechnique tech, boolean charging) {
         PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, new KiChargeStatePacket(
                 sp.getId(), charging, tech.rgb(), tech.size(),
-                tech.type().ordinal(), tech.animSet()));
+                tech.type().ordinal(), tech.visual()));
     }
 
     private static void broadcastStop(ServerPlayer sp) {

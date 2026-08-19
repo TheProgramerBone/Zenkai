@@ -294,9 +294,28 @@ public final class ZenkaiPalAnimations {
                 ZenkaiTransitions.KI_RELEASE);
     }
 
+    /** Clip único de la barrera. Se mantiene aparte porque no tiene par carga/disparo. */
     public static void playPreviewBarrier(AbstractClientPlayer p) {
         ZenkaiTransitions.play(previewController(p), TechniqueAnimSets.BARRIER,
                 ZenkaiTransitions.KI_CHARGE);
+    }
+
+    // Anulaciones con las tres fases (explosión). Mismos clips y mismos fundidos que en
+    // combate: el preview enseña lo que se va a ver, no una versión suya.
+
+    public static void playPreviewOverrideCharge(AbstractClientPlayer p, TechniqueAnimOverride ov) {
+        ZenkaiTransitions.play(previewController(p), TechniqueAnimSets.overrideCharge(ov),
+                ZenkaiTransitions.KI_CHARGE);
+    }
+
+    public static void playPreviewOverrideOvercharge(AbstractClientPlayer p, TechniqueAnimOverride ov) {
+        ZenkaiTransitions.play(previewController(p), TechniqueAnimSets.overrideOvercharge(ov),
+                ZenkaiTransitions.KI_CHARGE);
+    }
+
+    public static void playPreviewOverrideRelease(AbstractClientPlayer p, TechniqueAnimOverride ov) {
+        ZenkaiTransitions.play(previewController(p), TechniqueAnimSets.overrideRelease(ov),
+                ZenkaiTransitions.KI_RELEASE);
     }
 
     public static void stopPreview(AbstractClientPlayer p) {

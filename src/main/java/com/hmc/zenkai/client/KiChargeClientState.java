@@ -74,9 +74,11 @@ public final class KiChargeClientState {
         // El origen se DERIVA del set, igual que en el servidor (KiTechnique.position()): las
         // dos puntas resuelven con TechniqueAnimSet, así que la bola y el proyectil no pueden
         // discrepar. BARRIER no tiene set y va por su constante.
-        TechniquePosition pos = type.defensive()
+        // Mismo criterio que KiTechnique.position(): lo que decide es si el tipo IMPONE
+        // animación, no si es defensivo — la explosión no lo es y también tiene la suya.
+        TechniquePosition pos = type.animOverride() != null
                 ? TechniqueAnimSet.BARRIER_POSITION
-                : TechniqueAnimSet.positionOf(pkt.animSet());
+                : TechniqueAnimSet.positionOf(Math.max(1, pkt.animSet()));
 
         ACTIVE.put(pkt.playerId(), new Charge(pkt.rgb(), pkt.size(), type, pos, now));
     }

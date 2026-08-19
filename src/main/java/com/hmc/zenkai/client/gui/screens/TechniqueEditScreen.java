@@ -285,23 +285,40 @@ public class TechniqueEditScreen extends Screen {
         // de dónde sale. Además no hay hueco: entre esta fila (acaba en 142) y la caja del
         // preview (Y_PREVIEW = 150) quedan 8 px, y por debajo de la caja está Y_UNLOCK.
         // BARRIER no tiene set (su visual es 0), así que su origen sale de la constante.
-        Component animLabel = Component.translatable("screen.zenkai.technique.anim",
+        // El tipo puede IMPONER su animación (barrera, explosión). En ese caso no hay nada que
+        // ciclar: en vez de una fila muerta con flechas que no hacen nada, se enseña el nombre
+        // de la técnica y su origen como texto plano. Ocultarla dejaría al jugador sin
+        // saber por qué esa técnica no tiene la opción que sí tienen las demás.
+        TechniqueAnimOverride ov = type.animOverride();
+        Component animLabel = ov != null
+                ? Component.translatable("screen.zenkai.technique.anim",
+                        Component.translatable(type.nameKey()))
+                .append(" · ")
+                .append(Component.translatable(
+                        TechniqueAnimSet.BARRIER_POSITION.langKey()))
+                : Component.translatable("screen.zenkai.technique.anim",
                         Component.translatable(TechniqueAnimSet.byNumber(animSet).langKey()))
                 .append(" · ")
-                .append(Component.translatable(type.defensive()
-                        ? TechniqueAnimSet.BARRIER_POSITION.langKey()
-                        : TechniqueAnimSet.positionOf(animSet).langKey()));
+                .append(Component.translatable(
+                        TechniqueAnimSet.positionOf(animSet).langKey()));
 
         // El botón central mide contentW - (ARROW_W + 2) * 2. Con nombres largos el texto se
         // sale de la fila, así que se recorta con el mismo criterio que el resto del mod.
-        cyclerRow(x, y, contentW,
-                PanelText.fit(this.font, animLabel, contentW - (ARROW_W + 2) * 2 - 6),
-                dir -> {
-                    int i = sets.indexOf(animSet);
-                    if (i < 0) i = 0;
-                    animSet = sets.get(Math.floorMod(i + dir, sets.size()));
-                    rebuildWidgets();
-                });
+        Component fitted = PanelText.fit(this.font, animLabel, contentW - (ARROW_W + 2) * 2 - 6);
+
+        if (ov != null) {
+            // Sin flechas y sin acción: la fila queda como etiqueta.
+            addRenderableWidget(new TextOnlyButton(x + ARROW_W + 2, y,
+                    contentW - (ARROW_W + 2) * 2, 14, fitted, () -> {}));
+        } else {
+            cyclerRow(x, y, contentW, fitted,
+                    dir -> {
+                        int i = sets.indexOf(animSet);
+                        if (i < 0) i = 0;
+                        animSet = sets.get(Math.floorMod(i + dir, sets.size()));
+                        rebuildWidgets();
+                    });
+        }
     }
 
     /** Cancelar | papelera | Guardar, FUERA del panel. */
@@ -581,7 +598,7 @@ public class TechniqueEditScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        animPreview.tick(animSet, type.defensive());
+        animPreview.tick(animSet, type.animOverride());
     }
 
     @Override

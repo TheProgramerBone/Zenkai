@@ -66,6 +66,16 @@ public final class KiTechnique {
     public ResourceLocation chargeSound() { return chargeSound; }
     public ResourceLocation releaseSound(){ return releaseSound; }
     public int animSet()                  { return animSet; }
+    /**
+     * Valor que viaja en ActionState.visual y en el paquete de carga.
+     * AUTORIDAD ÚNICA de la codificación: lo calculaban por su cuenta el arranque de carga, el
+     * disparo y KiChargeServer, y los tres se desincronizaron en cuanto el centinela dejó de
+     * ser 0 — la barrera empezaba a cargar como set 1 y solo el disparo usaba su clip propio.
+     */
+    public int visual() {
+        TechniqueAnimOverride ov = type.animOverride();
+        return ov != null ? ov.encode() : animSet;
+    }
 
     /** Lo que se ENSEÑA: el nombre puesto por el jugador o, si lo dejó vacío, el del tipo. */
     public Component displayName() {

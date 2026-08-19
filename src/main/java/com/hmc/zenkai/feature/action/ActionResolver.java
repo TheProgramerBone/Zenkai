@@ -96,10 +96,9 @@ public final class ActionResolver {
         cancelSustained(sp, att, ActionType.KI_TECHNIQUE);
 
         long now = sp.level().getGameTime();
-        // visual = 0 marca técnica DEFENSIVA: los animSet reales empiezan en 1, así que el 0
-        // queda libre como centinela. El cliente no recibe el KiTechniqueType, y sincronizarlo
-        // solo para esto no compensa.
-        int visual = tech.type().defensive() ? 0 : tech.animSet();
+        // El cliente no recibe el KiTechniqueType, así que la animación viaja resuelta:
+        // positivo = set elegido, negativo = animación impuesta por el tipo.
+        int visual = tech.visual();
         ActionState st = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.CHARGING, now, slot, visual);
         ActionStateServer.set(sp, st);
         KiChargeServer.begin(sp, tech);   // sonido + difusión de la bola
@@ -171,8 +170,7 @@ public final class ActionResolver {
         // observadores. Se limpia solo en ActionStateServer tras RELEASE_TICKS.
         ActionState fired = new ActionState(ActionType.KI_TECHNIQUE, ActionPhase.RELEASING,
                 sp.level().getGameTime(), slot,
-                type.animOverride() != null
-                        ? type.animOverride().encode() : tech.animSet());
+                tech.visual());
         ActionStateServer.set(sp, fired);
         return ActionResult.ok(fired);
     }
