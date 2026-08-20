@@ -84,9 +84,12 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
         if (type.defensive()) {
             KiCombatServer.activateBarrier(sp, tech, kiPower);
         } else if (type == KiTechniqueType.EXPLOSION) {
-            double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio;
+            // El sacrificio se cobra PRIMERO porque es parte de la munición: el daño no se
+            // puede calcular hasta saber cuánta vida se ha quemado.
+            int spent = selfDamage(sp, att, rawRatio);
+            double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio
+                    + KiCombatServer.explosionSacrificeDamage(spent);
             spawnAttached(sp, tech, damage, effect);
-            selfDamage(sp, att, rawRatio);
         } else {
             double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio;
             for (int i = 0; i < Math.max(1, type.count()); i++) {
@@ -108,16 +111,18 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
      * ⚠ VERIFICAR EN JUEGO: mirrorHealth no toca la vida cuando queda <= 0, así que bajar el
      *   cuerpo a cero puede NO disparar el evento de muerte. Por eso se fuerza con un hurt
      *   masivo. Si el guardia no salta, dime y lo resuelvo por la vía que use tu pipeline.
-     */
-    private static void selfDamage(ServerPlayer sp, PlayerStatsAttachment att, double rawRatio) {
+    /** @return puntos de cuerpo realmente gastados, que alimentan el daño del estallido. */
+    private static int selfDamage(ServerPlayer sp, PlayerStatsAttachment att, double rawRatio) {
         int max = att.getBodyMax();
-        int loss = (int) Math.ceil(max * KiCombatServer.selfDamageFraction(rawRatio));
+        int loss = Math.min(att.getBody(),
+                (int) Math.ceil(max * KiCombatServer.selfDamageFraction(rawRatio)));
         att.addBody(-loss);
 
         if (att.getBody() <= 0) {
             att.setBody(0);
             sp.hurt(sp.damageSources().magic(), Float.MAX_VALUE);   // ⚠ ver arriba
         }
+        return loss;
     }
 
     /** Entidad pegada al dueño: la explosión no viaja. `life` es la MECHA, y coincide con el

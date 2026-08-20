@@ -542,22 +542,21 @@ public class TechniqueEditScreen extends Screen {
 
         int cx = leftPos + 208;
         int cy = topPos + Y_BLOCK + 26;
-        boolean spiral = type == KiTechniqueType.SPIRAL;
-        if (spiral) cy += (int) (Math.sin(t * 0.35) * 3);
 
         RenderSystem.enableBlend();
 
-        if (type.hasTrail()) {
+        com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual visual =
+                com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual.of(type);
+        if (visual.hasTrail()) {
             int trailLen = switch (type) { case LAZER -> 57; case WAVE -> 42; default -> 48; };
-            int trailW = (int) Math.max(6, (10 + 2 * size) * type.trailWidth());
+            int trailW = (int) Math.max(6, (10 + 2 * size) * visual.trailWidth());
             int seg = trailLen / 3;
             float[] alphas = {0.65f, 0.4f, 0.18f};
             for (int i = 0; i < 3; i++) {
                 float segCx = cx - seg * (i + 0.5f);
-                float segCy = cy + (spiral ? (float) Math.sin(t * 0.35 - (i + 1) * 1.1) * 3 : 0);
                 RenderSystem.setShaderColor(cr, cg, cb, alphas[i]);
                 g.pose().pushPose();
-                g.pose().translate(segCx, segCy, 0);
+                g.pose().translate(segCx, cy, 0);
                 g.pose().mulPose(Axis.ZP.rotationDegrees(90));
                 g.blit(PREVIEW_TRAIL, -trailW / 2, -seg / 2, trailW, seg, 0f, 0f, 32, 64, 32, 64);
                 g.pose().popPose();

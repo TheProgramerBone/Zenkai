@@ -214,10 +214,6 @@ public final class CommonConfig {
             BUILDER.comment("Stamina per point of melee damage (STR). Higher = fewer hits, CON matters more.")
                     .defineInRange("cost.melee_stamina_per_hit", 0.10D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue MELEE_KI_PER_HIT_RAW =
-            BUILDER.comment("Ki per point of melee damage (STR) when Ki Fist replaces stamina. Mirror of cost.melee_stamina_per_hit for the ki pool.")
-                    .defineInRange("cost.melee_ki_per_hit", 0.10D, 0.0D, 10.0D);
-
     private static final ModConfigSpec.DoubleValue WEAPON_SCALE_RAW =
             BUILDER.comment("Weapon damage as a MULTIPLIER on melee: mult = 1 + (attack_damage - 1) * scale. 0.04 = diamond sword x1.28. Set to 0 to make weapons irrelevant again.")
                     .defineInRange("combat.weapon_scale", 0.04D, 0.0D, 1.0D);
@@ -253,6 +249,10 @@ public final class CommonConfig {
     private static final ModConfigSpec.DoubleValue COMBAT_ATTACK_SPEED_RAW =
             BUILDER.comment("Attack speed while in combat mode. Vanilla base is 4.0 (5-tick recharge); anything BELOW 4.0 enables the vanilla swing cooldown and the crosshair indicator. 1.6 = sword-like, 12.5 ticks.")
                     .defineInRange("combat.attack_speed", 1.6D, 0.1D, 4.0D);
+
+    private static final ModConfigSpec.DoubleValue EXPLOSION_SACRIFICE_CONVERSION_RAW =
+            BUILDER.comment("Damage per point of health sacrificed by an Explosion technique")
+                    .defineInRange("combat.explosion_sacrifice",0.5,0,1);
 
     private static final ModConfigSpec.DoubleValue OVERCHARGE_TIME_MULT_RAW =
             BUILDER.comment("Extra charge time for the 100%->200% overcharge stretch, as a multiple of the base cast time. 2.5 = the second 100% takes 2.5x as long as the first.")
@@ -297,10 +297,6 @@ public final class CommonConfig {
     private static final ModConfigSpec.DoubleValue TECH_MASTERY_PER_USE_RAW =
             BUILDER.comment("Technique mastery gained per use (percent points, 0-100 scale)")
                     .defineInRange("mastery.technique_per_use", 0.2D, 0.0D, 100.0D);
-
-    private static final ModConfigSpec.DoubleValue MASTERY_FORM_STAT_BONUS_RAW =
-            BUILDER.comment("At 100% form mastery: bonus fraction to combat stats while transformed (0.20 = +20%)")
-                    .defineInRange("mastery.form_stat_bonus", 0.20D, 0.0D, 5.0D);
 
     private static final ModConfigSpec.DoubleValue MASTERY_FORM_DRAIN_RED_RAW =
             BUILDER.comment("At 100% form mastery: fraction of form ki drain removed (0.50 = -50%)")
@@ -398,6 +394,12 @@ public final class CommonConfig {
             BUILDER.comment("Minimum alignment (-100..100) required to BUY Potential Unlock. Not checked afterwards.")
                     .defineInRange("skills.potential_unlock_alignment_req", 50, -100, 100);
 
+    private static final ModConfigSpec.ConfigValue<String> TECH_DUMP_DIR_RAW =
+            BUILDER.comment("DEV ONLY. Extra folder where /zenkai tech dump also writes the technique JSONs,",
+                            "on top of the world datapack. Point it at src/main/resources/data/zenkai/zenkai_techniques",
+                            "to keep in-game tuning. Empty = disabled.")
+                    .define("dev.technique_dump_dir", "");
+
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -443,11 +445,10 @@ public final class CommonConfig {
 
     private static volatile double FORM_MASTERY_PER_MINUTE = 0.5D;
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
-    private static volatile double M_FORM_STAT = 0.20D, M_FORM_DRAIN = 0.50D,
+    private static volatile double M_FORM_DRAIN = 0.50D,
             M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
     private static volatile double KI_COST_PER_POWER = 0.70D;
     private static volatile double MELEE_STAMINA_PER_HIT = 0.10D;
-    private static volatile double MELEE_KI_PER_HIT = 0.10D;
     private static volatile double WEAPON_SCALE = 0.04D;
     private static volatile double VANILLA_ARMOR_WEIGHT = 0.50D;
     private static volatile double PROJECTILE_BASE_DAMAGE = 6.0D;
@@ -470,6 +471,7 @@ public final class CommonConfig {
     private static volatile double BF_LUCK_FACTOR = 0.5D;
     private static volatile double BF_MAX_CHANCE = 0.25D;
     private static volatile double BF_STAT_FACTOR = 1.0D;
+    private static volatile double EXPLOSION_SACRIFICE_CONVERSION = 0.5;
 
 
     private static volatile double TRAIN_DMG_TP = 0.02D, TRAIN_AIR_TP = 0.0001D,
@@ -481,6 +483,7 @@ public final class CommonConfig {
             WEIGHT_TP_BONUS = 1.5D, WEIGHT_OVER_THRESH = 1.2D, WEIGHT_OVER_MOVE = 0.15D;
     private static volatile double PU_TP_MULT = 0.50D;
     private static volatile int    PU_ALIGNMENT_REQ = 50;
+    private static volatile String TECH_DUMP_DIR = "";
 
     // =====================================================================
     // CARGA
@@ -529,7 +532,7 @@ public final class CommonConfig {
         VANILLA_HOSTILE_FACTOR = VANILLA_HOSTILE_FACTOR_RAW.get();
         EXPLOSION_REFERENCE_DAMAGE = EXPLOSION_REFERENCE_DAMAGE_RAW.get();
         MOB_PROJECTILE_FACTOR = MOB_PROJECTILE_FACTOR_RAW.get();
-
+        EXPLOSION_SACRIFICE_CONVERSION = EXPLOSION_SACRIFICE_CONVERSION_RAW.get();
 
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
@@ -539,7 +542,6 @@ public final class CommonConfig {
 
         FORM_MASTERY_PER_MINUTE = FORM_MASTERY_PER_MINUTE_RAW.get();
         TECH_MASTERY_PER_USE    = TECH_MASTERY_PER_USE_RAW.get();
-        M_FORM_STAT      = MASTERY_FORM_STAT_BONUS_RAW.get();
         M_FORM_DRAIN     = MASTERY_FORM_DRAIN_RED_RAW.get();
         M_TECH_DMG       = MASTERY_TECH_DMG_RAW.get();
         M_TECH_COST      = MASTERY_TECH_COST_RAW.get();
@@ -570,7 +572,6 @@ public final class CommonConfig {
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
-        MELEE_KI_PER_HIT      = MELEE_KI_PER_HIT_RAW.get();
         WEAPON_SCALE          = WEAPON_SCALE_RAW.get();
         VANILLA_ARMOR_WEIGHT   = VANILLA_ARMOR_WEIGHT_RAW.get();
         PROJECTILE_BASE_DAMAGE = PROJECTILE_BASE_DAMAGE_RAW.get();
@@ -586,6 +587,7 @@ public final class CommonConfig {
         BF_MAX_CHANCE        = BF_MAX_CHANCE_RAW.get();
         BF_MULTIPLIER        = BF_MULTIPLIER_RAW.get();
         BF_STAT_FACTOR        = BF_STAT_FACTOR_RAW.get();
+        TECH_DUMP_DIR    = TECH_DUMP_DIR_RAW.get();
     }
 
     // =====================================================================
@@ -641,7 +643,6 @@ public final class CommonConfig {
 
     public static double formMasteryPerMinute()      { return FORM_MASTERY_PER_MINUTE; }
     public static double techMasteryPerUse()         { return TECH_MASTERY_PER_USE; }
-    public static double masteryFormStatBonus()      { return M_FORM_STAT; }
     public static double masteryFormDrainReduction() { return M_FORM_DRAIN; }
     public static double masteryTechDamageBonus()    { return M_TECH_DMG; }
     public static double masteryTechCostReduction()  { return M_TECH_COST; }
@@ -653,9 +654,7 @@ public final class CommonConfig {
 
     public static double kiCostPerPower()    { return KI_COST_PER_POWER; }
     public static double meleeStaminaPerHit() { return MELEE_STAMINA_PER_HIT; }
-
-    /** Ki por punto de daño STR cuando Ki Fist sustituye a la estamina. */
-    public static double meleeKiPerHit()      { return MELEE_KI_PER_HIT; }
+    public static double explosionSacrificeConversion() {return EXPLOSION_SACRIFICE_CONVERSION;}
 
     /** El arma como multiplicador del golpe, no como suma. Ver KiInfusion. */
     public static double weaponScale()       { return WEAPON_SCALE; }
@@ -698,6 +697,7 @@ public final class CommonConfig {
     public static double weightTpBonus()           { return WEIGHT_TP_BONUS; }
     public static double weightOverloadThreshold() { return WEIGHT_OVER_THRESH; }
     public static double weightOverloadMoveFactor(){ return WEIGHT_OVER_MOVE; }
+    public static String techniqueDumpDir()          { return TECH_DUMP_DIR; }
 
     // =====================================================================
     // HELPERS

@@ -299,15 +299,6 @@ public class PlayerRaceStats {
         return attributes.get(ZenkaiAttributes.STRENGTH);
     }
 
-    // computeSpeedFinal / computeFlyFinal: ya no se usan para velocidad. Si algo más los
-    // llama, que devuelvan defensa o se eliminen.
-    public double computeSpeedFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY), race, style, ZenkaiAttributes.DEXTERITY);
-    }
-    public double computeFlyFinal() {
-        return BalanceUtil.computeStat(attributes.get(ZenkaiAttributes.DEXTERITY), race, style, ZenkaiAttributes.DEXTERITY);
-    }
-
     // ── NBT ──────────────────────────────────────────────────────────────────
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();

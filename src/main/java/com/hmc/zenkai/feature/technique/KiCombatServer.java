@@ -20,7 +20,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -116,6 +115,22 @@ public final class KiCombatServer {
         double t = (Math.min(MAX_CHARGE, Math.max(MIN_CHARGE_D, ratio)) - MIN_CHARGE_D)
                 / (MAX_CHARGE - MIN_CHARGE_D);
         return 0.10 + 0.90 * t * t;
+    }
+
+    /**
+     * Daño extra que aporta la vida sacrificada en una autodetonación.
+     * POR QUÉ EXISTE
+     * --------------
+     * El daño de una técnica de ki sale de WIL y el autodaño sale de CON. Sin este término, un
+     * build de CON alto paga un número absoluto enorme y devuelve una miseria: el precio lo
+     * pone una estadística y el premio otra. Convirtiendo el cuerpo gastado en daño, quien
+     * tiene vida que quemar se vuelve el mejor detonador, que es lo que el concepto pedía.
+     * OJO A LA MAGNITUD: EXPLOSION reparte aoeFactor 1.00 con 65 % en el borde y radio de hasta
+     * 18 bloques, así que este término lo cobra ENTERO cada objetivo del área. Subir con
+     * cuidado y probando en grupo, no en un muñeco.
+     */
+    public static double explosionSacrificeDamage(int bodySpent) {
+        return Math.max(0, bodySpent) * CommonConfig.explosionSacrificeConversion();
     }
 
     private static final double MIN_CHARGE_D = KiTechniqueType.MIN_CHARGE;
@@ -248,12 +263,6 @@ public final class KiCombatServer {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "block_slow");
     private static final AttributeModifier BLOCK_SLOW = new AttributeModifier(
             BLOCK_SLOW_ID, -0.6, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
-
-    private static final Set<UUID> BLOCKING = ConcurrentHashMap.newKeySet();
-
-    // El set BLOCKING desapareció: defender es una acción exclusiva y su identidad vive en
-    // ActionState. Mantener aquí un Set<UUID> en paralelo era exactamente el patrón que este
-    // refactor existe para eliminar — dos sitios que podían discrepar sobre lo mismo.
 
     /** Aplica la mecánica de defensa. NO VALIDA ni registra estado: ambas cosas las hizo
      *  ActionResolver. Aquí solo el modificador de velocidad y el aviso a los trackers. */

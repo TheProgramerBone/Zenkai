@@ -36,7 +36,9 @@ import java.util.Optional;
  * (kiPower × dmgMult × sizeF, ver KiFirePacket) y entra al pipeline de combate como
  * proyectil: CombatZenkaiHooks NO lo recalcula como melee (bypass por instanceof).
  * Tipos especiales:
- *  - SPIRAL: oscilación perpendicular a la trayectoria (server mueve, cliente interpola).
+ *  - SPIRAL: vuela recto. El nombre viene de la forma helicoidal (ver KiVisual/KiMeshFactory),
+ *    no de la trayectoria — llevó oscilación perpendicular y se retiró porque además torcía la
+ *    estela.
  *  - BARRIER: no se mueve ni golpea; sigue el centro del dueño y muere al expirar
  *    (la absorción de daño vive en KiCombatServer, esta entidad es solo el visual).
  * Explosiva: al impactar (bloque o entidad) genera daño en ÁREA con caída lineal —
@@ -58,6 +60,19 @@ public class KiProjectileEntity extends Projectile {
     //    Lo llena tick() y lo lee KiProjectileRenderer. En server queda vacío. ──
     private final java.util.ArrayDeque<Vec3> trail = new java.util.ArrayDeque<>();
     public java.util.Deque<Vec3> trailHistory() { return trail; }
+
+    /** Techo del historial de estela. Es el máximo que cualquier KiVisual puede pedir; grabar
+     *  de más cuesta un Vec3 por tick y ahorra tener el largo declarado en dos sitios. */
+    public static final int TRAIL_MAX = 34;
+
+    /** Desduplicador de efectos por tick para el renderer, que corre por FRAME. Devuelve true
+     *  una sola vez por tick. Cliente: en servidor nadie lo llama. */
+    private int lastFxTick = -1;
+    public boolean consumeFxTick() {
+        if (lastFxTick == tickCount) return false;
+        lastFxTick = tickCount;
+        return true;
+    }
 
     // ── DISK: ids de entidades ya atravesadas (solo server, para no re-golpear).
     //    No persiste en NBT a propósito: el proyectil vive segundos. ──
@@ -139,21 +154,15 @@ public class KiProjectileEntity extends Projectile {
         Vec3 vel = getDeltaMovement();
         Vec3 next = position().add(vel);
 
-        // Espiral: oscilación perpendicular a la trayectoria (delta entre este tick y el anterior).
-        if (techniqueType() == KiTechniqueType.SPIRAL && vel.lengthSqr() > 1.0e-4) {
-            Vec3 perp = vel.cross(new Vec3(0, 1, 0)).normalize();
-            double amp = 0.12 + 0.04 * size();
-            double w = 0.55; // rad/tick
-            double delta = Math.cos(tickCount * w) - Math.cos((tickCount - 1) * w);
-            next = next.add(perp.scale(amp * delta * 8));
-        }
-
         setPos(next.x, next.y, next.z);
 
-        // Estela: historial de posiciones en cliente (cabeza primero, longitud por tipo).
-        if (level().isClientSide && techniqueType().hasTrail()) {
+        // Estela: historial de posiciones en cliente (cabeza primero). Se graba SIEMPRE hasta
+        // TRAIL_MAX y es el cliente (KiVisual) quien decide cuántos puntos dibuja y con qué
+        // ancho. Antes la longitud la mandaba el enum, que es código común: con eso, activar
+        // una estela era tocar código de identidad compartido con el servidor.
+        if (level().isClientSide) {
             trail.addFirst(position().add(0, getBbHeight() * 0.5, 0));
-            while (trail.size() > techniqueType().trailPoints()) trail.removeLast();
+            while (trail.size() > TRAIL_MAX) trail.removeLast();
         }
 
         if (!level().isClientSide && --life <= 0) discard();

@@ -21,7 +21,6 @@ import java.util.List;
  *  - Otherworld: una vez, justo antes de mandar al primer jugador allí
  *    (ensureOtherworldPalace, llamado desde OtherworldManager).
  * El flag de "ya colocada" vive en ZenkaiWorldData (una vez por mundo).
- * Los NPC de estructura (Yemma, etc.) los gestiona StructureNpcManager.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class ZenkaiStructurePlacement {
