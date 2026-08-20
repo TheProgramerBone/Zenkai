@@ -25,6 +25,11 @@ public final class TechniqueHudLayout {
     private static final int HOTBAR_H = 23;
     /** Media anchura de la hotbar vanilla (182 px de ancho total). */
     private static final int HOTBAR_HALF_W = 91;
+    /** Alto que añaden encima de la hotbar las barras vanilla de vida y armadura (Gui.leftHeight:
+     *  +10 por la fila de corazones, +10 más si hay armadura puesta). Se reserva FIJO, aunque el
+     *  jugador no lleve armadura en este instante: si el hueco cambiara de tamaño cada vez que se
+     *  pone o quita una pieza, el bloque saltaría de sitio solo en pleno combate. */
+    private static final int HEALTH_ARMOR_H = 20;
 
     private final int x, y, w, h;
     private final boolean horizontal;
@@ -91,14 +96,15 @@ public final class TechniqueHudLayout {
     }
 
     /**
-     * Sube el bloque por encima de la hotbar vanilla si se le echaría encima.
+     * Sube el bloque por encima de la hotbar vanilla (y de vida/armadura, que se dibujan justo
+     * encima de ella a la izquierda) si se le echaría encima.
      * Solo actúa si hay solape REAL en los dos ejes: un bloque abajo-izquierda en una pantalla
      * ancha no toca la hotbar, que está centrada y mide 182 px, y subirlo "por si acaso" lo
-     * dejaría flotando sin motivo. Se comprueba contra el rect de la hotbar, no contra la mitad
-     * inferior de la pantalla.
+     * dejaría flotando sin motivo. Se comprueba contra el rect combinado (hotbar + vida +
+     * armadura), no contra la mitad inferior de la pantalla.
      */
     private static int pushAboveHotbar(int x, int y, int w, int h, int screenW, int screenH) {
-        int hotbarTop = screenH - HOTBAR_H;
+        int hotbarTop = screenH - HOTBAR_H - HEALTH_ARMOR_H;
         int hotbarLeft = screenW / 2 - HOTBAR_HALF_W;
         int hotbarRight = screenW / 2 + HOTBAR_HALF_W;
 

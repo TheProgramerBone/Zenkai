@@ -75,7 +75,7 @@ public class HudPlacementScreen extends Screen {
         addRenderableWidget(PanelButton.primary(x + (PanelButton.W + gap) * 2, y,
                 Component.translatable("screen.zenkai.gui.save"), this::save));
 
-        addRenderableWidget(PanelButton.secondary(x + (PanelButton.W + gap) * 2, y,
+        addRenderableWidget(PanelButton.secondary(x + (PanelButton.W + gap) * 3, y,
                 // options.on/off son claves VANILLA: ya traducidas a todos los idiomas y las
                 // mismas que usa ToggleButton, así que el interruptor de aquí y los de la lista
                 // de config dicen exactamente lo mismo.
