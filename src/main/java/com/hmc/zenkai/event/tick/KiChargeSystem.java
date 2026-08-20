@@ -3,8 +3,6 @@ package com.hmc.zenkai.event.tick;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 /** Carga de ki (mantener R) y subida del % de poder por concentración. */
@@ -30,13 +28,13 @@ public final class KiChargeSystem {
         }
 
         // Tras 1 s cargando, el % sube de 5 en 5 cada segundo hasta el techo de Ki Control.
+        // Ya no avisa por action bar: el cascarón circular del HUD (KiChargeGaugeOverlay) lee
+        // isChargingKi()+powerPercent del sync de fin de tick (ZenkaiTickHandlers) y se rellena
+        // en vivo, así que un mensaje de texto aparte solo repetiría la misma información con
+        // más parpadeo.
         int t = PlayerTickState.bumpCharge(p.getUUID());
         if (t > 20 && (t - 20) % 20 == 0) {
-            if (att.setPowerPercent(att.getPowerPercent() + 5, SkillEffects.maxPowerPercent(p))
-                    && p instanceof ServerPlayer sp) {
-                sp.displayClientMessage(Component.translatable("messages.zenkai.power_percent",
-                        att.getPowerPercent(), SkillEffects.maxPowerPercent(p)), true);
-            }
+            att.setPowerPercent(att.getPowerPercent() + 5, SkillEffects.maxPowerPercent(p));
         }
     }
 }

@@ -71,6 +71,16 @@ public final class PlayerTechniques {
         return true;
     }
 
+    /** Reset full: olvida (tipos ki, técnicas físicas, instancias y bindings). A
+     *  diferencia de forget() por tipo/técnica, no hay nada que reparar índice a índice
+     *  porque no queda nada en pie. */
+    public void clearAll() {
+        unlockedTypes.clear();
+        unlockedPhysical.clear();
+        slots.clear();
+        Arrays.fill(bindings, -1);
+    }
+
     public List<KiTechnique> slots()             { return Collections.unmodifiableList(slots); }
     public KiTechnique slot(int i)               { return (i >= 0 && i < slots.size()) ? slots.get(i) : null; }
     public int slotCount()                       { return slots.size(); }

@@ -10,6 +10,7 @@
   "stat_percent_mastered": 2.5,
   "ki_drain_untrained": 0.45,
   "ki_drain_mastered": 0.15,
+  "spi_req": 87,
   "parent": "zenkai:third_form",
   "body_items": {},
   "aura_type": "arcosian",

@@ -13,6 +13,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -148,6 +149,20 @@ public final class CombatModeServerState {
 
     @SubscribeEvent
     public static void onRespawn(PlayerEvent.PlayerRespawnEvent e) {
+        if (e.getEntity() instanceof ServerPlayer sp) clear(sp);
+    }
+
+    /** Morir corta el modo combate en el acto, sin esperar al respawn: el atacante que lo
+     *  mató no debería ver el golpe de gracia con el cooldown de golpe todavía rebajado. */
+    @SubscribeEvent
+    public static void onDeath(LivingDeathEvent e) {
+        if (e.getEntity() instanceof ServerPlayer sp) clear(sp);
+    }
+
+    /** Red de seguridad al entrar: un cierre anómalo del servidor a mitad de combate no debe
+     *  dejar al jugador con el attack_speed rebajado desde antes de reconectar. */
+    @SubscribeEvent
+    public static void onLogin(PlayerEvent.PlayerLoggedInEvent e) {
         if (e.getEntity() instanceof ServerPlayer sp) clear(sp);
     }
 

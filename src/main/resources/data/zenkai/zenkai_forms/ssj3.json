@@ -10,6 +10,7 @@
   "stat_percent_mastered": 6.0,
   "ki_drain_untrained": 1.3,
   "ki_drain_mastered": 0.45,
+  "spi_req": 95,
   "parent": "zenkai:ssj2",
   "body_items": {},
   "aura_type": "dark",

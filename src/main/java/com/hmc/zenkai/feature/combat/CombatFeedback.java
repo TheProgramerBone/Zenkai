@@ -8,7 +8,9 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
@@ -77,7 +79,26 @@ energy_generator     * Cuenta el daño de cualquier origen y no solo el melee: u
      *  y la curación penalizada durante los primeros segundos de vida nueva. */
     @SubscribeEvent
     public static void onRespawn(PlayerEvent.PlayerRespawnEvent e) {
-        if (e.getEntity() instanceof net.minecraft.server.level.ServerPlayer sp) {
+        if (e.getEntity() instanceof ServerPlayer sp) {
+            InCombatState.clear(sp);
+        }
+    }
+
+    /** Corte inmediato en el instante de morir, sin esperar al respawn (ver mismo razonamiento
+     *  en CombatModeServerState.onDeath). */
+    @SubscribeEvent
+    public static void onDeath(LivingDeathEvent e) {
+        if (e.getEntity() instanceof ServerPlayer sp) {
+            InCombatState.clear(sp);
+        }
+    }
+
+    /** Red de seguridad al entrar: inCombatUntil es un gameTime absoluto, así que en teoría
+     *  expira solo, pero si el jugador reconecta muy rápido dentro de la ventana no debería
+     *  aparecer "en combate" antes de haber hecho nada esta sesión. */
+    @SubscribeEvent
+    public static void onLogin(PlayerEvent.PlayerLoggedInEvent e) {
+        if (e.getEntity() instanceof ServerPlayer sp) {
             InCombatState.clear(sp);
         }
     }

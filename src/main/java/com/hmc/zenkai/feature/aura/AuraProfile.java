@@ -85,7 +85,7 @@ public record AuraProfile(
 
     /**
      * Tamaño en el instante t de la pulsación. Kaioken es el único que hace que esto
-     * se note: sin él la amplitud es ±4% a 0.6 Hz (respiración), a x20 es ±22% a 3 Hz.
+     * se note: sin él la amplitud es ±4% a 0.6 Hz (respiración), a x20 es ±12% a 1.68 Hz.
      * @param seconds tiempo continuo en segundos (gameTime/20 + partialTick/20)
      */
     public float pulsedSize(float seconds) {

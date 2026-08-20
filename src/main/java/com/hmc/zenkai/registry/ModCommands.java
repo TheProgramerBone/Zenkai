@@ -12,10 +12,12 @@ import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
+import com.hmc.zenkai.feature.aura.TurboServerState;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.skills.SkillDef;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.hmc.zenkai.worldgen.ProtectedZones;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -35,7 +37,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
@@ -404,6 +405,9 @@ public class ModCommands {
         // ── Stats ─────────────────────────────────────────────────────────────
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         att.skills().clear();
+        // Técnicas físicas y de ki aprendidas: submódulo aparte de las habilidades, así que
+        // skills().clear() no las toca. Un reset "full" que las dejara vivas no sería full.
+        att.techniques().clearAll();
         att.setRace(Race.HUMAN);
         att.setStyle(Style.MARTIAL_ARTIST);
         att.respec();
@@ -418,6 +422,14 @@ public class ModCommands {
         att.setDivine(false);
         att.setAlignment(0);
         att.setLastSummonTick(ServerConfig.summonCooldownTicks());
+        // No se queda cargando ki ni con el % de poder subido: vuelve al 50% base (el mismo
+        // que da SkillEffects.maxPowerPercent con Ki Control en 0, que es donde acaba de
+        // dejarlo skills().clear() de arriba).
+        att.setChargingKi(false);
+        att.setPowerPercent(50, SkillEffects.maxPowerPercent(sp));
+        // El turbo vive en un mapa estático aparte (TurboServerState), no en el attachment:
+        // sin esto el jugador seguía drenando ki con el modo turbo encendido tras el reset.
+        TurboServerState.set(sp, false);
 
         AttributeInstance scaleAttr = sp.getAttribute(Attributes.SCALE);
         if (scaleAttr != null) {

@@ -130,6 +130,7 @@ public final class FormManager {
                             GsonHelper.getAsDouble(o, "stat_percent_mastered", 0.0),
                             GsonHelper.getAsDouble(o, "ki_drain_untrained", 0.0),
                             GsonHelper.getAsDouble(o, "ki_drain_mastered", 0.0),
+                            Math.max(0, GsonHelper.getAsInt(o, "spi_req", 0)),
                             readItemMap(o, "hair_items"),
                             readItemMap(o, "body_items"),
                             GsonHelper.getAsString(o, "aura_type", "default"),

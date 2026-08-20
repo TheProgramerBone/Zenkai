@@ -832,7 +832,6 @@
   "messages.zenkai.scouter_bench.busy": "Alguien más está usando este banco",
   "messages.zenkai.cannot_break": "§cEste bloque está protegido por %s",
   "messages.zenkai.cannot_break_generic": "§cEste bloque está protegido",
-  "messages.zenkai.power_percent": "§bPoder: %s%% / %s%%",
   "messages.zenkai.lock_on.targeted": "%s ha fijado su objetivo en ti",
   "messages.zenkai.kaioken.exhausted": "Tu cuerpo no lo soporta más — El Kaio-ken se ha desactivado",
   "messages.zenkai.master.too_weak": "%s: Necesitas volverte más fuerte antes de que pueda enseñarte algo.",

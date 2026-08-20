@@ -35,6 +35,7 @@ public class PlayerLifeCycle {
         att.setImmortal(false);
         sp.removeEffect(ModEffects.IMMORTALITY);
         sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).setMajinControlled(false);
+        sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).clearStrain();
         sp.removeEffect(ModEffects.MAJIN);
         att.skills().clearToggles();
     }

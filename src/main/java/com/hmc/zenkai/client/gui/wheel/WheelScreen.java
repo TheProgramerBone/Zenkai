@@ -1,23 +1,16 @@
 package com.hmc.zenkai.client.gui.wheel;
 
+import com.hmc.zenkai.client.overlay.RadialGauge;
 import com.hmc.zenkai.feature.wheel.WheelSelectPacket;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
 
 import java.util.List;
 
@@ -43,7 +36,6 @@ public class WheelScreen extends Screen {
 
     private static final float HOVER_POP = 3f;   // el sector apuntado sobresale
     private static final float OUTLINE   = 1.5f; // grosor del contorno negro
-    private static final int   SEGMENTS  = 28;
     private static final float GAP_DEG   = 2.2f; // aire entre sectores: el look segmentado
 
     /** Contorno de sector: casi negro para que los sectores no se fundan entre sí sobre el
@@ -196,8 +188,12 @@ public class WheelScreen extends Screen {
     }
 
     /**
-     * Un sector completo: contorno negro por detrás, relleno con degradado radial y, si está
-     * seleccionado, una banda clara en el borde exterior que hace de "canto" iluminado.
+     * Un sector completo: contorno negro por detrás, relleno con degradado radial y un filo
+     * en el borde exterior — TENUE siempre que esté habilitado, a tope si está seleccionado.
+     * El filo permanente es la diferencia con la versión vieja: un sector sin ÉL en reposo se
+     * leía como un gajo de color plano pegado sobre el mundo; con él, hasta el que no tiene el
+     * ratón encima insinúa el mismo bisel que ahora comparten los anillos de carga del HUD
+     * (ver RadialGauge, de donde sale el primitivo de arco con degradado).
      */
     private void sector(GuiGraphics g, float start, float size, float rIn, float rOut,
                         int color, boolean enabled, boolean hovered, boolean active) {
@@ -214,31 +210,24 @@ public class WheelScreen extends Screen {
         int alpha = enabled ? (hovered ? 0xF2 : 0xB8) : 0x70;
         float t = hovered ? TINT_HOVER : TINT_IDLE;
         arc(g, start, size, in, out,
-                withAlpha(mix(COL_BACKDROP, tone, t * 0.55f), alpha),
-                withAlpha(mix(COL_BACKDROP, tone, t), alpha));
+                RadialGauge.withAlpha(RadialGauge.mix(COL_BACKDROP, tone, t * 0.55f), alpha),
+                RadialGauge.withAlpha(RadialGauge.mix(COL_BACKDROP, tone, t), alpha));
 
-        // 3) Filo exterior del seleccionado, en su propio color y a tope de brillo.
-        if (active && enabled) {
-            arc(g, start, size, out - 2f, out, withAlpha(color, 0xFF), ZenkaiPalette.TEXT);
-        }
-    }
-
-    /** Interpola dos RGB (ignora el alfa de entrada). t=0 devuelve 'a', t=1 devuelve 'b'. */
-    private static int mix(int a, int b, float t) {
-        int r = Mth.lerpInt(t, (a >> 16) & 0xFF, (b >> 16) & 0xFF);
-        int g = Mth.lerpInt(t, (a >> 8) & 0xFF, (b >> 8) & 0xFF);
-        int bl = Mth.lerpInt(t, a & 0xFF, b & 0xFF);
-        return (r << 16) | (g << 8) | bl;
-    }
-
-    private static int withAlpha(int rgb, int alpha) {
-        return (alpha << 24) | (rgb & 0x00FFFFFF);
+        // 3) Filo exterior: siempre presente si el sector está habilitado (apagado y estrecho
+        //    en reposo, más ancho y claro al pasar el ratón, a tope de brillo si es el activo).
+        if (!enabled) return;
+        int rimAlpha = active ? 0xFF : (hovered ? 0xC0 : 0x70);
+        float rimWidth = active ? 2f : 1.2f;
+        int rimTone = active ? color : RadialGauge.mix(COL_BACKDROP, color, hovered ? 0.9f : 0.65f);
+        arc(g, start, size, out - rimWidth, out,
+                RadialGauge.withAlpha(rimTone, rimAlpha),
+                RadialGauge.withAlpha(active ? ZenkaiPalette.TEXT : 0xFFFFFF, rimAlpha));
     }
 
     /** El seleccionado escribe en su propio color; el resto en blanco. Deshabilitado, apagado. */
     private static int labelColor(WheelNode n) {
         if (!n.enabled()) return ZenkaiPalette.TEXT_OFF;
-        return n.active() ? withAlpha(n.color(), 0xFF) : ZenkaiPalette.TEXT;
+        return n.active() ? RadialGauge.withAlpha(n.color(), 0xFF) : ZenkaiPalette.TEXT;
     }
 
     private void labelAt(GuiGraphics g, Component text, float angDeg, float radius, int color) {
@@ -263,30 +252,12 @@ public class WheelScreen extends Screen {
 
     /**
      * Sector anular relleno, con color propio para el borde interior y el exterior (de ahí
-     * el degradado). Va por Tesselator porque GuiGraphics solo pinta rectángulos y un arco
-     * hecho de rectángulos se ve escalonado.
-     * ⚠ API de BufferBuilder/Tesselator: es la que más cambia entre versiones.
+     * el degradado). Delega en RadialGauge.arc: mismo primitivo de Tesselator que usan los
+     * anillos de carga del HUD, para que el Wheel y esos anillos compartan exactamente el
+     * mismo trazo en vez de dos copias que puedan divergir.
      */
     private void arc(GuiGraphics g, float startDeg, float sizeDeg,
                      float rIn, float rOut, int argbIn, int argbOut) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader); // ⚠
-
-        Matrix4f m = g.pose().last().pose();
-        BufferBuilder bb = Tesselator.getInstance()
-                .begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR); // ⚠
-
-        for (int i = 0; i <= SEGMENTS; i++) {
-            float rad = (float) Math.toRadians(startDeg + sizeDeg * ((float) i / SEGMENTS));
-            float cos = Mth.cos(rad), sin = Mth.sin(rad);
-            bb.addVertex(m, cx() + cos * rIn,  cy() + sin * rIn,  0f).setColor(argbIn);  // ⚠
-            bb.addVertex(m, cx() + cos * rOut, cy() + sin * rOut, 0f).setColor(argbOut);
-        }
-
-        BufferUploader.drawWithShader(bb.buildOrThrow()); // ⚠
-        RenderSystem.enableCull();
-        RenderSystem.disableBlend();
+        RadialGauge.arc(g, cx(), cy(), rIn, rOut, startDeg, sizeDeg, argbIn, argbOut);
     }
 }

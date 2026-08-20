@@ -10,6 +10,7 @@
   "stat_percent_mastered": 0.5,
   "ki_drain_untrained": 0.2,
   "ki_drain_mastered": 0.05,
+  "spi_req": 35,
   "body_items": {},
   "aura_type": "arcosian",
   "aura_rgb": "0xC080FF",

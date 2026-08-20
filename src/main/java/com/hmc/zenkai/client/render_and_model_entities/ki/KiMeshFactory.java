@@ -52,6 +52,16 @@ public final class KiMeshFactory {
         return CACHE.computeIfAbsent(key, k -> build(v));
     }
 
+    /** Esfera desnuda de radio 0.5, sin cabeza ni estrechamiento: la malla de la bola que se
+     *  carga en la mano. Cargando, la técnica AÚN no tiene forma — un Kamehameha no es un tubo
+     *  en la palma, es energía que se contiene y solo se estira en un haz al soltarse — así que
+     *  la carga es siempre esta esfera sea cual sea {@link KiVisual#shape()} de la técnica; lo
+     *  que SÍ toma de su KiVisual real son color, bandas y alfas, para que sea reconociblemente
+     *  la misma energía que el proyectil que sale después. */
+    private static final KiMesh CHARGE_SPHERE = sphere(0.5f, 0f);
+
+    public static KiMesh chargeSphere() { return CHARGE_SPHERE; }
+
     private static KiMesh build(KiVisual v) {
         float len = v.meshLength();
         boolean tip = v.anchorTip();

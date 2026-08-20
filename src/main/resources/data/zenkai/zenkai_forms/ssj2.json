@@ -10,6 +10,7 @@
   "stat_percent_mastered": 3.0,
   "ki_drain_untrained": 0.7,
   "ki_drain_mastered": 0.2,
+  "spi_req": 60,
   "parent": "zenkai:ssj1",
   "hair_items": {
     "hair1": "zenkai:ssj1_hair1"

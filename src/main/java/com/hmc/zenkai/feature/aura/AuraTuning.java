@@ -115,10 +115,15 @@ public final class AuraTuning {
     public static final float CHAOS_VIS_PER_PRESENCE = 0.65f;
 
     // ── Kaioken: firma TEMPORAL. No crece, late. ─────────────────────────────
+    // *_PER_KI recortado a ~45% del original (feedback en juego: a x20 el latido — antes
+    // ±22% de tamaño a 3 Hz — se leía como un temblor demasiado brusco, no como pulso).
+    // Con este recorte x20 queda en ±12% a 1.68 Hz: se sigue notando el latido, pero ya
+    // no sacude el aura. La base (sin kaioken, ±4% a 0.6 Hz) no se toca — solo se reduce
+    // la parte que crece CON el escalón.
     public static final float PULSE_HZ_BASE     = 0.6f;
-    public static final float PULSE_HZ_PER_KI   = 2.4f;
+    public static final float PULSE_HZ_PER_KI   = 0.4f;
     public static final float PULSE_AMP_BASE    = 0.04f;
-    public static final float PULSE_AMP_PER_KI  = 0.18f;
+    public static final float PULSE_AMP_PER_KI  = 0.08f;
 
     // ── Cadencia de textura ──────────────────────────────────────────────────
     // No es un parámetro del perfil: se DERIVA de turbulence. Cuanto más

@@ -27,12 +27,21 @@ import java.util.Map;
  * La cadena de formas apunta HACIA ATRÁS (parent). Así añadir una rama nueva es crear un
  * archivo sin tocar el de la forma anterior, que es la gracia de los datapacks; la cadena
  * hacia delante se reconstruye al cargar (FormRegistry.nextFrom).
+ *
+ * SPI_REQ no es un candado: la forma se puede activar con cualquier SPI, pero el drenaje base
+ * (ya interpolado por maestría) se multiplica por drainMultiplier(spi), que sube hasta 3x con
+ * SPI muy por debajo del requisito y baja hasta 0.5x muy por encima. Antes el drenaje era un
+ * número fijo del datapack sin relación con SPI, así que con la maestría dominada CUALQUIER
+ * transformación (incluida la última de la cadena) se sostenía indefinidamente con el SPI base
+ * de raza sin invertir un solo punto: el regen (1% del pool/seg) escala con el pool, que escala
+ * con SPI, así que un pool minúsculo ya bastaba para superar un drenaje fijo minúsculo. spi_req
+ * = 0 desactiva el multiplicador (queda en 1.0 siempre), para no romper datapacks viejos.
  */
 public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
                       double masteryGain,
                       double statPercentUntrained, double statPercentMastered,
-                      double kiDrainUntrained, double kiDrainMastered,
+                      double kiDrainUntrained, double kiDrainMastered, int spiReq,
                       Map<String, ResourceLocation> hairItems,
                       Map<String, ResourceLocation> bodyItems,
                       String auraType, int auraRgb, int hairRgb, double scale) {
@@ -75,9 +84,34 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
         return lerp(statPercentUntrained, statPercentMastered, mastery0to100 / 100.0);
     }
 
-    /** Ki drenado por tick, según la maestría (baja al dominarla). */
+    /** Ki drenado por tick, según la maestría (baja al dominarla). SIN el multiplicador de
+     *  SPI: es el número "de catálogo" que ya usaba la pantalla de maestrías. */
     public double kiDrainPerTick(double mastery0to100) {
         return lerp(kiDrainUntrained, kiDrainMastered, mastery0to100 / 100.0);
+    }
+
+    /** Techo/suelo del multiplicador de drenaje por SPI. Fuera de estos límites ni una
+     *  inversión enorme abarata más el sostenimiento, ni un SPI ínfimo lo encarece sin límite. */
+    private static final double MIN_DRAIN_MULT = 0.5;
+    private static final double MAX_DRAIN_MULT = 3.0;
+
+    /**
+     * Multiplicador de drenaje según cuánto SPI tenga el jugador respecto al requisito de la
+     * forma. spi_req = 0 -> 1.0 siempre (forma sin requisito, o dato de un datapack viejo).
+     * SPI en el requisito -> 1.0 (paridad con el drenaje base). Por debajo escala hasta 3x;
+     * por encima, hasta 0.5x. La curva es intencionalmente simple (razón inversa) para que se
+     * pueda razonar de cabeza: la mitad del requisito ya duplica el drenaje.
+     */
+    public double drainMultiplier(int spi) {
+        if (spiReq <= 0) return 1.0;
+        double raw = spiReq / (double) Math.max(spi, 1);
+        return Math.max(MIN_DRAIN_MULT, Math.min(MAX_DRAIN_MULT, raw));
+    }
+
+    /** Ki drenado por tick YA CON el multiplicador de SPI aplicado: el número real que se
+     *  resta del pool en FormSystem. */
+    public double effectiveKiDrainPerTick(double mastery0to100, int spi) {
+        return kiDrainPerTick(mastery0to100) * drainMultiplier(spi);
     }
 
     public boolean allows(Race race) { return race != null && races.contains(race); }
@@ -122,6 +156,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeDouble(d.statPercentMastered());
                 buf.writeDouble(d.kiDrainUntrained());
                 buf.writeDouble(d.kiDrainMastered());
+                buf.writeVarInt(d.spiReq());
                 writeMap(buf, d.hairItems());
                 writeMap(buf, d.bodyItems());
                 buf.writeUtf(d.auraType());
@@ -145,7 +180,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readVarInt(), buf.readVarInt(),
                         buf.readDouble(),
                         buf.readDouble(), buf.readDouble(),
-                        buf.readDouble(), buf.readDouble(),
+                        buf.readDouble(), buf.readDouble(), buf.readVarInt(),
                         readMap(buf), readMap(buf),
                         buf.readUtf(), buf.readInt(), buf.readInt(), buf.readDouble());
             });

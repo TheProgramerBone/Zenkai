@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.forms.*;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -141,10 +142,11 @@ public class PlayerFormAttachment {
         return formStatPercent() + getKaioken().statPercent();
     }
 
-    /** Ki drenado por tick por la forma activa, ya interpolado por maestría. */
-    public double formKiDrainPerTick() {
+    /** Ki drenado por tick por la forma activa, ya interpolado por maestría y con el
+     *  multiplicador de SPI aplicado (ver FormDef.drainMultiplier). */
+    public double formKiDrainPerTick(int spi) {
         FormDef d = activeDef();
-        return d == null ? 0.0 : d.kiDrainPerTick(activeMastery());
+        return d == null ? 0.0 : d.effectiveKiDrainPerTick(activeMastery(), spi);
     }
 
     // ── Máquina de estados del hold ──────────────────────────────────────────
@@ -325,6 +327,32 @@ public class PlayerFormAttachment {
     public static boolean canTransformFrom(Player p, Race race, ResourceLocation current) {
         PlayerFormAttachment fm = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         return fm.canAdvance(p, race);
+    }
+
+    /**
+     * Ticks de hold que exige el destino, y color de aura de ESE destino (no de la forma
+     * actual): para el anillo de progreso del HUD (TransformGaugeOverlay), que así se pinta
+     * del color de la forma a la que se está accediendo — rojo si es un escalón de kaioken
+     * (mismo AuraColors.KAIOKEN_RGB que tiñe el aura real), o el aura_rgb del datapack de la
+     * forma/potencial destino (blanco en potential_unlock, amarillo en los SSJ...). NUNCA se
+     * inventa un color aparte: es el mismo dato que ya gobierna el aura de verdad.
+     * holdTicks() == 0 si no hay nada en marcha que mostrar.
+     */
+    public record HoldTarget(int holdTicks, int auraRgb) {
+        public boolean isEmpty() { return holdTicks <= 0; }
+    }
+
+    /** MISMA rama que serverTick, en el MISMO orden (kaioken > potencial > forma): el cliente
+     *  no decide nada nuevo, solo repite el juicio del servidor sobre datos ya sincronizados
+     *  (formId, kaiokenSwitch, holdTicks). */
+    public HoldTarget currentHoldTarget(Player p, Race race) {
+        if (!transforming) return new HoldTarget(0, -1);
+        if (kaiokenSwitch) return new HoldTarget(KAIOKEN_HOLD_TICKS, AuraColors.KAIOKEN_RGB);
+
+        ResourceLocation target = SkillToggles.isOn(p, SkillEffects.POTENTIAL_UNLOCK)
+                ? potentialTarget(p) : targetForm(p, race);
+        FormDef d = target == null ? null : FormRegistry.get(target);
+        return d == null ? new HoldTarget(0, -1) : new HoldTarget(d.holdTicks(), d.auraRgb());
     }
 
     // ── Anuncios ─────────────────────────────────────────────────────────────

@@ -685,7 +685,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
                 ZenkaiPalette.GOLD, form.getFormMastery(form.getFormId()), ZenkaiPalette.BAR_MASTERY));
 
         if (!FormIds.BASE.equals(form.getFormId())) {
-            double kiPerSecond = form.formKiDrainPerTick() * 20.0;
+            double kiPerSecond = form.formKiDrainPerTick(att.getAttribute(ZenkaiAttributes.SPIRIT)) * 20.0;
             out.add(val("screen.zenkai.stats_screen.drain_short",
                     kiPerSecond > 0.0 ? "-" + fmt(kiPerSecond) + " ki/s" : "—",
                     kiPerSecond > 0.0 ? ZenkaiPalette.MAXED : ZenkaiPalette.TEXT_DIM));

@@ -6,12 +6,10 @@ import net.minecraft.util.Mth;
 
 /**
  * DÓNDE va cada celda del HUD de técnicas. Cálculo puro, sin dibujar nada.
- *
  * Existe separado del overlay porque hay DOS consumidores que tienen que coincidir al píxel:
  * el HUD real y la pantalla de colocación, donde el jugador arrastra el bloque. Con la
  * aritmética duplicada, el fantasma que se arrastra acabaría a unos píxeles de donde luego se
  * dibuja el HUD, y esa diferencia es justo lo que el jugador está intentando ajustar.
- *
  * EL DESPLAZAMIENTO ES EN PÍXELES DE GUI, no de pantalla: los mismos que usa GuiGraphics. Así
  * un offset de 10 significa lo mismo con GUI Scale 2 que con 4 — en píxeles reales serían 20 o
  * 40, pero el jugador ajusta mirando la interfaz, no el monitor.
@@ -25,6 +23,13 @@ public final class TechniqueHudLayout {
     private static final int HOTBAR_H = 23;
     /** Media anchura de la hotbar vanilla (182 px de ancho total). */
     private static final int HOTBAR_HALF_W = 91;
+    /** Alto de la barra de experiencia vanilla, que se dibuja justo encima de la hotbar y por
+     *  debajo de la fila de vida. Faltaba en la reserva: el bloque se calculaba como si la vida
+     *  empezara pegada a la hotbar, así que en partida (con la barra de XP siempre presente en
+     *  survival, vacía o no) quedaba justo esos píxeles más bajo de lo previsto y la fila de
+     *  armadura, que va encima de la vida, se lo comía. Fija por el mismo motivo que
+     *  HEALTH_ARMOR_H: no depende de cuánta experiencia tenga el jugador ahora mismo. */
+    private static final int EXPERIENCE_BAR_H = 10;
     /** Alto que añaden encima de la hotbar las barras vanilla de vida y armadura (Gui.leftHeight:
      *  +10 por la fila de corazones, +10 más si hay armadura puesta). Se reserva FIJO, aunque el
      *  jugador no lleve armadura en este instante: si el hueco cambiara de tamaño cada vez que se
@@ -49,6 +54,15 @@ public final class TechniqueHudLayout {
 
     public boolean contains(double mx, double my) {
         return mx >= x && mx < x + w && my >= y && my < y + h;
+    }
+
+    /** Alto reservado por la hotbar vanilla + su barra de XP + la fila de vida/armadura, medido
+     *  desde el borde inferior de pantalla. Fijo aunque el jugador no lleve armadura ahora
+     *  mismo, por el mismo motivo que HEALTH_ARMOR_H: que el bloque no salte de sitio solo por
+     *  ponerse o quitarse una pieza. Público para que otros overlays (KiChargeGaugeOverlay) se
+     *  apoyen encima sin duplicar los cuatro números. */
+    public static int vanillaBottomReserve() {
+        return HOTBAR_H + EXPERIENCE_BAR_H + HEALTH_ARMOR_H;
     }
 
     /** Tamaño del bloque de nueve celdas en la orientación dada. */
@@ -104,7 +118,7 @@ public final class TechniqueHudLayout {
      * armadura), no contra la mitad inferior de la pantalla.
      */
     private static int pushAboveHotbar(int x, int y, int w, int h, int screenW, int screenH) {
-        int hotbarTop = screenH - HOTBAR_H - HEALTH_ARMOR_H;
+        int hotbarTop = screenH - vanillaBottomReserve();
         int hotbarLeft = screenW / 2 - HOTBAR_HALF_W;
         int hotbarRight = screenW / 2 + HOTBAR_HALF_W;
 

@@ -29,8 +29,11 @@ public final class KiChargeClientState {
      *  ticks de desvanecido tapan el corte sin que se lea como una segunda esfera. */
     public static final int FADE_TICKS = 3;
 
-    /** Esfera apagándose. Congela el sitio y el tamaño que tenía al soltarse. */
-    public record Fade(int rgb, Vec3 origin, float radius, long startTick) {}
+    /** Esfera apagándose. Congela el sitio y el tamaño que tenía al soltarse.
+     *  Lleva el tipo de técnica por la misma razón que {@link Charge}: el renderer dibuja el
+     *  mismo cuerpo con {@code KiVisual}, y sin el tipo el apagado caería siempre en la técnica
+     *  por defecto en vez de conservar sus bandas y alfas propias. */
+    public record Fade(int rgb, Vec3 origin, float radius, KiTechniqueType type, long startTick) {}
 
     private static final Map<Integer, Fade> FADING = new ConcurrentHashMap<>();
 
@@ -55,12 +58,16 @@ public final class KiChargeClientState {
 
     public static void accept(KiChargeStatePacket pkt) {
         if (!pkt.charging()) {
-            ACTIVE.remove(pkt.playerId());
+            Charge ending = ACTIVE.remove(pkt.playerId());
             Last last = LAST.remove(pkt.playerId());
             if (last != null) {
                 long t = Minecraft.getInstance().level == null
                         ? 0L : Minecraft.getInstance().level.getGameTime();
-                FADING.put(pkt.playerId(), new Fade(pkt.rgb(), last.origin(), last.radius(), t));
+                // ending puede ser null si el paquete de fin llega sin que hubiera carga activa
+                // registrada (reconexión a mitad de carga); el tipo por defecto es la misma red
+                // de seguridad que usa KiVisual para un ordinal desconocido.
+                KiTechniqueType type = ending != null ? ending.type() : KiTechniqueType.values()[0];
+                FADING.put(pkt.playerId(), new Fade(pkt.rgb(), last.origin(), last.radius(), type, t));
             }
             return;
         }

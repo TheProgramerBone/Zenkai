@@ -1,14 +1,17 @@
 package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.aura.ModAuraRenderType;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiRenderTypes;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -20,26 +23,24 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
  * Bola de ki mientras se carga una técnica, en el punto que diga su TechniquePosition
  * (mano, boca, frente...). La ven todos, no solo quien carga: los datos llegan por
  * KiChargeStatePacket y el crecimiento se deriva del tick de inicio.
- * DOS PASADAS, relleno + borde, cada una con su textura. El contorno nítido sale de tener
- * el borde dibujado en su sitio, no de meter una quad blanca encima: así el color que eligió
- * el jugador se respeta entero y una técnica oscura sigue teniendo silueta.
- * Va en AFTER_PARTICLES como el aura (misma oclusión y misma luz), pero con energyCrisp y no
- * con energy: aquí la textura se magnifica muchísimo (media pantalla a un palmo de la cara)
- * y el filtrado bilineal del aura la convertía en un borrón. Sin filtro, se ve el píxel.
+ *
+ * EL CUERPO SALE DE {@link KiBodyRenderer}, el mismo que dibuja el proyectil ya disparado.
+ * Antes esto era un quad plano orientado a cámara con ki_ball.png y sin banda ni volumen: en
+ * tercera persona no se parecía a la bola con núcleo y contorno que sale después, y en primera
+ * persona, pegado a la cara y sin nada que le dé profundidad, se leía como una mancha sólida
+ * bloqueada en vez de una esfera de energía. Con la misma malla+shader que el proyectil, cargar
+ * y disparar son el MISMO cuerpo a distinto tamaño, y una esfera real (a diferencia de un
+ * billboard) se lee correctamente desde cualquier ángulo — incluido "un palmo de la cámara".
+ *
+ * LA MALLA ES SIEMPRE UNA ESFERA DESNUDA (KiMeshFactory.chargeSphere()), aunque la técnica
+ * dispare un haz o un disco: cargando, la energía todavía no tiene forma — un Kamehameha no es
+ * un tubo en la palma, es energía contenida que solo se estira al soltarse. Color, bandas y
+ * alfas SÍ salen del KiVisual real de la técnica (ver KiChargeClientState.Charge.type()), para
+ * que sea reconociblemente la misma energía que el proyectil que sale después.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class KiChargeRenderer {
     private KiChargeRenderer() {}
-
-    private static final ResourceLocation BALL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_ball.png");
-    /** Borde en su propia textura. Si aún no está dibujada, pon BORDER_ALPHA a 0 y se salta
-     *  la pasada (si no, Minecraft pinta la textura de "falta" en morado y negro). */
-    private static final ResourceLocation BALL_BORDER =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_ball_border.png");
-
-    private static final float ALPHA = 0.85f;
-    private static final float BORDER_ALPHA = 1.0f;
 
     private static final int FULL_BRIGHT = 0xF000F0;
 
@@ -75,6 +76,7 @@ public final class KiChargeRenderer {
             if (c == null) continue;
 
             float progress = KiChargeClientState.progress(c, now);
+            KiVisual v = KiVisual.of(c.type());
 
             // ANCLA AL HUESO cuando hay dato de este frame. Es lo que hace que la esfera nazca
             // en las manos y viaje CON ellas mientras el brazo se coloca: el clip de Kamehameha
@@ -111,18 +113,7 @@ public final class KiChargeRenderer {
             // que es quien tiene que dejarlo apuntado para el desvanecido al soltar.
             KiChargeClientState.rememberDrawn(p.getId(), origin, radius);
 
-            pose.pushPose();
-            pose.translate(origin.x - camPos.x, origin.y - camPos.y, origin.z - camPos.z);
-            pose.mulPose(cam.rotation()); // billboard: siempre de cara
-
-            // Relleno primero, borde encima. Pedir un render type distinto vuelca el anterior,
-            // así que el orden de estas dos llamadas ES el orden de dibujo.
-            quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL)),
-                    pose.last(), radius, r, g, b, ALPHA);
-            quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL_BORDER)),
-                    pose.last(), radius, r, g, b, BORDER_ALPHA);
-
-            pose.popPose();
+            drawBall(pose, buffers, cam, camPos, origin, v, radius, 1f, r, g, b, now, pt);
             drew = true;
         }
         // Esferas apagándose: sitio y tamaño congelados, alfa bajando. Tapan el salto entre
@@ -134,30 +125,50 @@ public final class KiChargeRenderer {
             float a = KiChargeClientState.fadeAlpha(f, now, pt);
             if (a <= 0f) { KiChargeClientState.dropFade(p.getId()); continue; }
 
+            KiVisual v = KiVisual.of(f.type());
             float r = ((f.rgb() >> 16) & 0xFF) / 255f;
             float g = ((f.rgb() >> 8) & 0xFF) / 255f;
             float b = (f.rgb() & 0xFF) / 255f;
             float radius = f.radius() * (0.6f + 0.4f * a);   // encoge mientras se apaga
 
-            pose.pushPose();
-            pose.translate(f.origin().x - camPos.x, f.origin().y - camPos.y, f.origin().z - camPos.z);
-            pose.mulPose(cam.rotation());
-            quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL)),
-                    pose.last(), radius, r, g, b, ALPHA * a);
-            quad(buffers.getBuffer(ModAuraRenderType.energyCrisp(BALL_BORDER)),
-                    pose.last(), radius, r, g, b, BORDER_ALPHA * a);
-            pose.popPose();
+            drawBall(pose, buffers, cam, camPos, f.origin(), v, radius, a, r, g, b, now, pt);
             drew = true;
         }
         if (drew) buffers.endBatch();
     }
 
-    private static void quad(VertexConsumer vc, PoseStack.Pose m, float half,
-                             float r, float g, float b, float a) {
-        vert(vc, m, -half, -half, 0f, 1f, r, g, b, a);
-        vert(vc, m,  half, -half, 1f, 1f, r, g, b, a);
-        vert(vc, m,  half,  half, 1f, 0f, r, g, b, a);
-        vert(vc, m, -half,  half, 0f, 0f, r, g, b, a);
+    /**
+     * Cuerpo (esfera real, no billboard) + halo. El cuerpo se lee bien desde cualquier ángulo
+     * sin orientarlo a cámara — es geometría 3D, no un sprite plano — así que solo el halo,
+     * que sí es un billboard aditivo, necesita encararla.
+     */
+    private static void drawBall(PoseStack pose, MultiBufferSource.BufferSource buffers,
+                                 Camera cam, Vec3 camPos, Vec3 origin, KiVisual v, float radius,
+                                 float alphaMul, float r, float g, float b, long now, float pt) {
+        // La malla de KiMeshFactory mide radio 0.5 en espacio propio: escalar por el diámetro
+        // deja el radio en pantalla igual a `radius`.
+        float size = radius * 2f;
+
+        pose.pushPose();
+        pose.translate(origin.x - camPos.x, origin.y - camPos.y, origin.z - camPos.z);
+        KiBodyRenderer.render(buffers, v, KiMeshFactory.chargeSphere(), pose, size, r, g, b);
+        pose.popPose();
+
+        if (v.haloAlpha() <= 0f) return;
+        float pulse = 1f + 0.07f * Mth.sin((now + pt) * 0.22f);
+        float half = radius * v.haloScale() * pulse;
+
+        pose.pushPose();
+        pose.translate(origin.x - camPos.x, origin.y - camPos.y, origin.z - camPos.z);
+        pose.mulPose(cam.rotation());
+        PoseStack.Pose mat = pose.last();
+        VertexConsumer vc = buffers.getBuffer(KiRenderTypes.additive(KiRenderTypes.HALO_TEXTURE));
+        float a = v.haloAlpha() * alphaMul;
+        vert(vc, mat, -half, -half, 0f, 1f, r, g, b, a);
+        vert(vc, mat,  half, -half, 1f, 1f, r, g, b, a);
+        vert(vc, mat,  half,  half, 1f, 0f, r, g, b, a);
+        vert(vc, mat, -half,  half, 0f, 0f, r, g, b, a);
+        pose.popPose();
     }
 
     private static void vert(VertexConsumer vc, PoseStack.Pose m, float x, float y,

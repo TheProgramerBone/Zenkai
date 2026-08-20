@@ -1,7 +1,6 @@
 package com.hmc.zenkai.client.render_and_model_entities.entity;
 
-import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.aura.ModAuraRenderType;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiMesh;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiRenderTypes;
@@ -14,7 +13,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -29,17 +27,11 @@ import java.util.List;
 /**
  * Render de proyectil de ki, v2.
  *
- * DOS RUTAS, misma fuente de parámetros. Con el shader disponible se emiten el cuerpo y su
- * envolvente y las tres bandas (núcleo blanco, color de la técnica, contorno profundo) las
- * calcula el fragment por píxel. Sin él se cae a la ruta vieja: cáscara teñida + segunda
- * emisión encogida y lavada a blanco, que aproxima lo mismo con geometría. Las dos leen
- * {@link KiVisual}, así que un parámetro nuevo no puede quedar aplicado solo en una.
- *
- * POR QUÉ EL LOTE SE VUELCA A MANO EN LA RUTA DEL SHADER. Un ShaderInstance es único y sus
- * uniforms valen para el draw que se EJECUTA. Con el batching normal, diez proyectiles se
- * dibujarían todos con los uniforms del último. Por eso se emite y se hace endBatch por
- * proyectil. Si el MultiBufferSource no permite volcar (pases especiales como el contorno de
- * espectador), se usa la ruta de respaldo: es mejor que arriesgar uniforms cruzados.
+ * EL CUERPO (malla + envolvente, shader o respaldo) VIVE EN {@link KiBodyRenderer}, compartido
+ * con la bola que se carga en la mano antes de soltarse: es lo que hace que cargar y disparar
+ * se lean como la MISMA energía en vez de cambiar de aspecto en el instante del disparo. Lo que
+ * sí es exclusivo de aquí — porque solo tienen sentido con un proyectil que VUELA — es la
+ * estela, las chispas y la orientación por velocidad.
  *
  * LA ESCALA ES UNIFORME. La longitud de los haces va HORNEADA en la malla (ver KiMeshFactory):
  * escalar Z aparte estiraba también el tubo de las hélices y convertía las cintas de la onda
@@ -49,8 +41,6 @@ import java.util.List;
  */
 public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
 
-    private static final ResourceLocation BALL_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_ball.png");
     private static final int FULL_BRIGHT = 0xF000F0;
 
     /** Techo global de chispas por tick entre TODOS los proyectiles. Una ráfaga de veinte bolas
@@ -113,72 +103,13 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         }
 
         KiMesh mesh = KiMeshFactory.get(v);
-        boolean shaded = KiRenderTypes.available()
-                && buffer instanceof MultiBufferSource.BufferSource;
-        if (shaded) {
-            renderShaded((MultiBufferSource.BufferSource) buffer, v, mesh, pose, size, r, g, b);
-        } else {
-            renderFallback(buffer, v, mesh, pose, size, r, g, b);
-        }
+        KiBodyRenderer.render(buffer, v, mesh, pose, size, r, g, b);
 
         pose.popPose();
 
         spawnSparks(entity, v, rgb);
 
         super.render(entity, entityYaw, partialTick, pose, buffer, packedLight);
-    }
-
-    // ── Cuerpo ──────────────────────────────────────────────────────────────
-
-    /**
-     * Envolvente + cuerpo en UNA sola emisión de lote. Las dos comparten uniforms, así que no
-     * hace falta un segundo volcado: la única diferencia es la escala y el alfa del vértice.
-     * La envolvente es lo que quita el aspecto de canica sobrepuesta — el shader ya disuelve el
-     * borde del cuerpo, pero una segunda capa más grande y casi invisible es lo que da el
-     * volumen difuso alrededor, y a diferencia del halo es geometría real: rodea el proyectil
-     * en tres dimensiones en vez de encarar siempre a la cámara.
-     */
-    private void renderShaded(MultiBufferSource.BufferSource buffer, KiVisual v, KiMesh mesh,
-                              PoseStack pose, float size, float r, float g, float b) {
-        RenderType type = KiRenderTypes.fresnel();
-        KiRenderTypes.setupFresnel(v);
-        VertexConsumer vc = buffer.getBuffer(type);
-
-        if (v.hasEnvelope()) {
-            pose.pushPose();
-            float es = size * v.envelopeScale();
-            pose.scale(es, es, es);
-            mesh.emit(vc, pose.last(), r, g, b, v.envelopeAlpha(), 0f, false);
-            pose.popPose();
-        }
-
-        pose.pushPose();
-        pose.scale(size, size, size);
-        // whiteMul 0: el tinte llega puro. La blancura horneada en la malla es la aproximación
-        // de la ruta vieja y aquí sobra — el shader ya sabe dónde está el núcleo.
-        mesh.emit(vc, pose.last(), r, g, b, v.shellAlpha(), 0f, false);
-        pose.popPose();
-
-        buffer.endBatch(type);
-    }
-
-    /** Ruta de respaldo: la de siempre. Cáscara teñida + núcleo encogido y lavado a blanco. */
-    private void renderFallback(MultiBufferSource buffer, KiVisual v, KiMesh mesh,
-                                PoseStack pose, float size, float r, float g, float b) {
-        VertexConsumer vc = buffer.getBuffer(ModAuraRenderType.energyCrisp(BALL_TEXTURE));
-
-        pose.pushPose();
-        pose.scale(size, size, size);
-        mesh.emit(vc, pose.last(), r, g, b, v.shellAlpha(), 1.0f, true);
-        pose.popPose();
-
-        if (v.coreAlpha() > 0f) {
-            pose.pushPose();
-            float cs = size * v.coreScale();
-            pose.scale(cs, cs, cs);
-            mesh.emit(vc, pose.last(), r, g, b, v.coreAlpha(), 4.0f, true);
-            pose.popPose();
-        }
     }
 
     // ── Halo ────────────────────────────────────────────────────────────────
@@ -357,6 +288,6 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
 
     @Override
     public ResourceLocation getTextureLocation(KiProjectileEntity entity) {
-        return BALL_TEXTURE;
+        return KiBodyRenderer.BALL_TEXTURE;
     }
 }

@@ -832,7 +832,6 @@
   "messages.zenkai.scouter_bench.busy": "Someone else is using this bench",
   "messages.zenkai.cannot_break": "§cThis block is protected by %s",
   "messages.zenkai.cannot_break_generic": "§cThis block is protected",
-  "messages.zenkai.power_percent": "§bPower: %s%% / %s%%",
   "messages.zenkai.lock_on.targeted": "%s has locked on to you",
   "messages.zenkai.kaioken.exhausted": "Your body gives out — Kaioken released",
   "messages.zenkai.master.too_weak": "%s: You need to become stronger before I can teach you.",

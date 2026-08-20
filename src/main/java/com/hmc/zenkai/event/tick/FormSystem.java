@@ -2,6 +2,7 @@ package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
@@ -68,9 +69,11 @@ public final class FormSystem {
                     form.forceBase();
             } else {
                 activeDef = def;
-                // El drenaje ya viene interpolado por maestría desde el datapack
-                // (ki_drain_untrained -> ki_drain_mastered): no lleva factor extra.
-                double drain = form.formKiDrainPerTick();
+                // El drenaje viene interpolado por maestría desde el datapack
+                // (ki_drain_untrained -> ki_drain_mastered) y multiplicado por SPI frente al
+                // spi_req de la forma (FormDef.drainMultiplier): sin invertir en SPI, incluso
+                // una forma ya dominada puede seguir costando caro de sostener.
+                double drain = form.formKiDrainPerTick(att.getAttribute(ZenkaiAttributes.SPIRIT));
                 if (drain > 0.0) {
                     int before = att.getKiCurrent();
                     att.addKi(-drain);

@@ -10,6 +10,7 @@
   "stat_percent_mastered": 7.0,
   "ki_drain_untrained": 1.5,
   "ki_drain_mastered": 0.5,
+  "spi_req": 134,
   "parent": "zenkai:final_form",
   "body_items": {},
   "aura_type": "golden",
