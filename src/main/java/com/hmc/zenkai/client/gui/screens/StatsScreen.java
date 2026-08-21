@@ -488,15 +488,14 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     private void renderPools(GuiGraphics g, Font font, int left, int right, int y) {
         int barX = left + 34;
-        int barW = (right - 50) - barX;
 
-        StatBar.row(g, font, left, barX, barW, right, y,
+        StatBar.row(g, font, left, barX, right, y,
                 Component.translatable("screen.zenkai.stats_screen.stat.body_short"),
                 att.getBody(), att.getBodyMax(), ZenkaiPalette.BAR_BODY);
-        StatBar.row(g, font, left, barX, barW, right, y + POOL_STEP,
+        StatBar.row(g, font, left, barX, right, y + POOL_STEP,
                 Component.translatable("screen.zenkai.stats_screen.stat.stamina_short"),
                 att.getStamina(), att.getStaminaMax(), ZenkaiPalette.BAR_STAMINA);
-        StatBar.row(g, font, left, barX, barW, right, y + POOL_STEP * 2,
+        StatBar.row(g, font, left, barX, right, y + POOL_STEP * 2,
                 Component.translatable("screen.zenkai.stats_screen.stat.ki_short"),
                 att.getEnergy(), att.getEnergyMax(), ZenkaiPalette.BAR_KI);
     }

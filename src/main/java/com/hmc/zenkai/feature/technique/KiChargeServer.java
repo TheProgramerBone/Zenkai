@@ -22,8 +22,6 @@ public final class KiChargeServer {
 
     private static final Set<UUID> ACTIVE = ConcurrentHashMap.newKeySet();
 
-    public static boolean isCharging(ServerPlayer sp) { return ACTIVE.contains(sp.getUUID()); }
-
     /** Arranca la bola. NO VALIDA: lo hizo ActionResolver. */
     public static void begin(ServerPlayer sp, KiTechnique tech) {
         if (!ACTIVE.add(sp.getUUID())) return;

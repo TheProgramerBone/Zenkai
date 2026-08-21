@@ -76,6 +76,8 @@ public class SkillsScreen extends ZenkaiMenuScreen {
             plusButtons.add(b);
             addRenderableWidget(b);
 
+            // Tooltip real (fijo/"locked") lo pone layoutRows() cada frame, según pueda o no
+            // bajar de nivel: aquí basta un valor inicial, se sobrescribe antes del primer render.
             XIconButton x = new XIconButton(forgetX(), rowTop(i) + 2, () -> forget(id));
             x.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
                     Component.translatable("screen.zenkai.skills.forget")));
@@ -196,10 +198,23 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
             // La X NO comparte condición con el +: al nivel máximo el + se apaga y la X debe
             // seguir ahí, que es cuando más falta hace. Solo se oculta si no hay nivel que bajar.
+            //
+            // ACTIVO exige además boughtLevels() > 0. lower() se niega en seco si el nivel
+            // actual no supera el suelo otorgado (maestro/admin) — PlayerSkills.lower(). Antes
+            // el botón se quedaba SIEMPRE activo con solo lvl > 0, así que en una skill 100%
+            // otorgada (p. ej. dada con /zenkai skill give o giveall) parecía un botón normal,
+            // el clic mandaba el paquete, el servidor lo rechazaba en silencio y el jugador no
+            // tenía forma de saber si había pulsado mal o si el botón estaba roto.
+            String id = rowIds.get(i);
+            boolean canForget = def != null && def.purchasable() && lvl > 0
+                    && st.skills().boughtLevels(id) > 0;
+
             XIconButton x = forgetButtons.get(i);
             x.setPosition(forgetX(), rowTop(i) + 2);
             x.visible = def != null && def.purchasable() && lvl > 0 && onScreen(i);
-            x.active = x.visible;
+            x.active = x.visible && canForget;
+            x.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable(
+                    canForget ? "screen.zenkai.skills.forget" : "screen.zenkai.skills.forget.locked")));
         }
     }
 
@@ -299,7 +314,13 @@ public class SkillsScreen extends ZenkaiMenuScreen {
                 g.fill(textX, y + ROW_H - 6, plusX() + PLUS_SIZE, y + ROW_H - 5, ZenkaiPalette.SEPARATOR);
             }
 
-            if (mouseY >= y && mouseY < y + ROW_H && mouseX >= textX && mouseX < plusX()) {
+            // < forgetX(), NO < plusX(): el botón de olvidar (X) vive justo antes del +, dentro
+            // de ese rango. Con < plusX() el hit-test de la descripción lo incluía, así que pasar
+            // el ratón por la X disparaba A LA VEZ el tooltip manual de esta fila (renderTooltip,
+            // inmediato) Y el tooltip propio del XIconButton (setTooltip → cola de GuiGraphics,
+            // se pinta al final del frame) — los dos en el mismo (mouseX, mouseY), superpuestos
+            // en un mismo bloque de texto ilegible.
+            if (mouseY >= y && mouseY < y + ROW_H && mouseX >= textX && mouseX < forgetX()) {
                 hoveredDesc = def != null ? Component.translatable(def.descKey()) : null;
             }
 

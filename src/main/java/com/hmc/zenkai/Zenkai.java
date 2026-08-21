@@ -40,6 +40,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
@@ -72,7 +73,16 @@ public class Zenkai {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModNetworking::register);
         modEventBus.addListener(Zenkai::registerCapabilities);
-        modEventBus.addListener(ClientModEvents::onKeyMappingRegister);
+        // NO añadir aquí un modEventBus.addListener(ClientModEvents::onKeyMappingRegister) (ni
+        // ninguna otra referencia manual a ClientModEvents): esa clase ya se registra sola vía
+        // @EventBusSubscriber(value = Dist.CLIENT), que SÍ es dist-aware y no la toca en un
+        // dedicated server. Una referencia manual como esa es incondicional en todos los dist:
+        // tomarla obliga a cargar la clase entera, y cargarla verifica también onClientSetup(),
+        // que registra EntityRenderers de cliente — el RuntimeDistCleaner de NeoForge aborta ahí
+        // mismo con BootstrapMethodError en DEDICATED_SERVER. Esto (junto con un lambda inline
+        // equivalente que había en ModNetworking, ver su historial) dejaba el mod incapaz de
+        // arrancar en NINGÚN server sin cliente — nadie lo había notado porque nadie había
+        // arrancado nunca uno hasta el gametest de esta sesión.
 
         // Contenido
         ModCreativeModeTabs.register(modEventBus);
@@ -106,9 +116,16 @@ public class Zenkai {
         forgeBus.register(ZenkaiTickHandlers.class);
         forgeBus.register(ModCommands.class);
 
-        // Cliente
-        forgeBus.register(ClientZenkaiHooks.class);
-        forgeBus.register(ClientZenkaiPalTick.class);
+        // Cliente. Ninguna de las dos tiene @EventBusSubscriber(Dist.CLIENT) — a diferencia de
+        // ClientModEvents, dependen de este forgeBus.register(Class) manual, así que hay que
+        // gatearlo a mano: EventBus.register(Class) escanea con reflexión TODOS los métodos de
+        // la clase para encontrar los @SubscribeEvent, y esa reflexión resuelve también los
+        // parámetros de métodos que reciben eventos solo-cliente (ver historial de este
+        // constructor) — sin el guard, un dedicated server abortaba aquí mismo.
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            forgeBus.register(ClientZenkaiHooks.class);
+            forgeBus.register(ClientZenkaiPalTick.class);
+        }
     }
 
     // ── Setup común (servidor + cliente) ─────────────────────────────────────

@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.widgets;
 
+import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -62,9 +63,12 @@ public class ColorPickerWidget extends AbstractWidget {
     /**
      * Familia visual. La lógica de color es la misma; cambian el marco, el cursor y la
      * etiqueta. Dos widgets separados habrían divergido a la tercera corrección.
+     * ZENKAI llevaba blanco puro en los tres desde antes de que existiera ZenkaiPalette: sin
+     * marco alrededor y con esos tres blancos, el widget flotaba como un control de sistema
+     * operativo pegado sobre el mundo, la única pieza de toda la GUI sin el lenguaje del mod.
      */
     public enum Style {
-        ZENKAI(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF),
+        ZENKAI(ZenkaiPalette.GOLD, ZenkaiPalette.BORDER_MID, 0xFFFFFFFF),
         TECH(0xFF8CECFF, 0xFFA8B2C6, 0xFFDCE6F0);
 
         public final int label, frame, cursor;
@@ -112,11 +116,18 @@ public class ColorPickerWidget extends AbstractWidget {
         });
     }
 
+    /** Aire entre el contenido y el marco. */
+    private static final int FRAME_PAD = 7;
+    /** Alto reservado arriba para la etiqueta, que se dibuja en y-10. */
+    private static final int FRAME_LABEL_H = 12;
+
     // ── Render ────────────────────────────────────────────────────────────────
     @Override
     protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         int x = getX();
         int y = getY();
+
+        renderFrame(g, x, y);
 
         // Label encima
         if (label != null && !label.isEmpty()) {
@@ -152,6 +163,23 @@ public class ColorPickerWidget extends AbstractWidget {
 
         // ── HEX input ────────────────────────────────────────────────────────
         hexInput.render(g, mouseX, mouseY, partialTick);
+    }
+
+    /**
+     * Marco de popup (dos anillos + fondo oscuro), mismo lenguaje que StatsScreen/MasterScreen.
+     * Va PRIMERO: es el fondo sobre el que se dibuja todo lo demás, así que si se pintara
+     * después taparía el cuadrado SV, la barra de hue y el resto.
+     * DIALOG_BG, opaco, y NO POPUP_BG (alfa parcial): este widget se abre FUERA del panel de la
+     * pantalla que lo invoca — junto al mundo, sin ningún panel opaco pegado detrás — que es
+     * justo la situación para la que existe DIALOG_BG y no POPUP_BG (ver ZenkaiPalette). Con
+     * alfa parcial aquí el mundo se colaba bajo el cuadrado SV y el HEX input.
+     */
+    private void renderFrame(GuiGraphics g, int x, int y) {
+        int x1 = x - FRAME_PAD, y1 = y - FRAME_LABEL_H;
+        int x2 = x + TOTAL_W + FRAME_PAD, y2 = y + TOTAL_H + FRAME_PAD;
+        g.fill(x1 - 2, y1 - 2, x2 + 2, y2 + 2, ZenkaiPalette.BORDER_IN);
+        g.fill(x1 - 1, y1 - 1, x2 + 1, y2 + 1, ZenkaiPalette.BORDER_MID);
+        g.fill(x1, y1, x2, y2, ZenkaiPalette.DIALOG_BG);
     }
 
     /**

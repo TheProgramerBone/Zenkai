@@ -5,9 +5,14 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import net.minecraft.world.entity.player.Player;
 
-/** Carga de ki (mantener R) y subida del % de poder por concentración. */
+/** Carga de ki (mantener C) y subida del % de poder por concentración. */
 public final class KiChargeSystem {
     private KiChargeSystem() {}
+
+    /** Ticks entre cada escalón de subida, tras el primer segundo cargando. */
+    private static final int STEP_INTERVAL = 10; // 0.5 s
+    /** Cuánto sube el % de poder por escalón. */
+    private static final int STEP_AMOUNT = 10;
 
     public static void tick(TickCtx c) {
         Player p = c.p();
@@ -27,14 +32,14 @@ public final class KiChargeSystem {
             att.addKi(perTick * chargeMul);
         }
 
-        // Tras 1 s cargando, el % sube de 5 en 5 cada segundo hasta el techo de Ki Control.
-        // Ya no avisa por action bar: el cascarón circular del HUD (KiChargeGaugeOverlay) lee
-        // isChargingKi()+powerPercent del sync de fin de tick (ZenkaiTickHandlers) y se rellena
-        // en vivo, así que un mensaje de texto aparte solo repetiría la misma información con
-        // más parpadeo.
+        // Tras 1 s cargando, el % sube de STEP_AMOUNT en STEP_AMOUNT cada STEP_INTERVAL ticks
+        // hasta el techo de Ki Control. Ya no avisa por action bar: el cascarón circular del HUD
+        // (KiChargeGaugeOverlay) lee isChargingKi()+powerPercent del sync de fin de tick
+        // (ZenkaiTickHandlers) y se rellena en vivo, así que un mensaje de texto aparte solo
+        // repetiría la misma información con más parpadeo.
         int t = PlayerTickState.bumpCharge(p.getUUID());
-        if (t > 20 && (t - 20) % 20 == 0) {
-            att.setPowerPercent(att.getPowerPercent() + 5, SkillEffects.maxPowerPercent(p));
+        if (t > 20 && (t - 20) % STEP_INTERVAL == 0) {
+            att.setPowerPercent(att.getPowerPercent() + STEP_AMOUNT, SkillEffects.maxPowerPercent(p));
         }
     }
 }

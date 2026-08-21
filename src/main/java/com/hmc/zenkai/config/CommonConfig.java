@@ -33,6 +33,10 @@ public final class CommonConfig {
             BUILDER.comment("Max per attribute. 5 counted attrs x 200000 = PL cap 1,000,000")
                     .defineInRange("caps.global_attribute", 200000, 1, 1000000);
 
+    private static final ModConfigSpec.DoubleValue AURA_REFERENCE_TP_RAW =
+            BUILDER.comment("Aura presence scale: total TP an endgame player is expected to have invested. The ONLY reference number AuraCeiling needs to normalize the log10 presence scale - it does NOT change when a form/Kaioken step is added, the ceiling recomputes from the whole registry on its own. Raise it if TP income outpaces this and auras start looking maxed out too early; lower it if the top of the scale never gets reached.")
+                    .defineInRange("aura.reference_tp", 5_000_000D, 1.0D, 1.0E12D);
+
     private static final ModConfigSpec.DoubleValue ATTRIBUTE_BASE_COST_RAW =
             BUILDER.comment("b de la recta de coste: lo que cuesta el primer punto, con cero invertidos.")
                     .defineInRange("stats.attribute_base_cost", 1.0D, 0.1D, 1000.0D);
@@ -323,8 +327,23 @@ public final class CommonConfig {
     // =====================================================================
 
     private static final ModConfigSpec.DoubleValue TRAIN_DMG_TP_RAW =
-            BUILDER.comment("Training: TP per point of effective damage dealt")
-                    .defineInRange("training.damage_tp_factor", 0.02D, 0.0D, 10.0D);
+            BUILDER.comment("Training: TP per point of effective damage dealt.",
+                            "Recalibrado 2026-08-20 (0.02 -> 0.10, x5): la simulacion de .claude/pendiente/economia-tp.md",
+                            "mostro que con el valor viejo, incluso ELIMINANDO la fatiga del todo, un jugador tardaba ~112h",
+                            "en llegar a los 5,000,000 TP de referencia peleando a ritmo moderado (15s/kill) -- muy por",
+                            "encima de las 20-40h que el usuario fijo como objetivo. Va de la mano con entity.tp_per_pl",
+                            "y training.fatigue_decay_per_minute; no tocar uno sin mirar los otros dos.")
+                    .defineInRange("training.damage_tp_factor", 0.10D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue TP_PER_PL_RAW =
+            BUILDER.comment("Recompensa TP 'auto' al matar CUALQUIER entidad con stats Zenkai (zenkai_entities con",
+                            "rewards.tp=\"auto\", y el fallback vanilla) = PL de la victima x este factor. Antes vivia",
+                            "hardcodeado y DUPLICADO en EntityStats.TP_PER_PL y EntityDeathRewardHandler.VANILLA_TP_PER_PL",
+                            "(0.05 en los dos, sin pasar por config); se migro aqui para poder recalibrarlo sin recompilar",
+                            "y para dejar de tener el mismo numero mantenido a mano en dos sitios.",
+                            "Recalibrado 2026-08-20 (0.05 -> 0.25, x5) junto con training.damage_tp_factor -- ver el",
+                            "comentario de esa entrada para el porque.")
+                    .defineInRange("entity.tp_per_pl", 0.25D, 0.0D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue TRAIN_AIR_TP_RAW =
             BUILDER.comment("Training: TP per air punch = own PL * factor")
@@ -343,8 +362,15 @@ public final class CommonConfig {
                     .defineInRange("training.fatigue_half_life", 0.10D, 0.001D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue TRAIN_DECAY_RAW =
-            BUILDER.comment("Training: fatigue recovered per real minute of play")
-                    .defineInRange("training.fatigue_decay_per_minute", 0.01D, 0.0D, 10.0D);
+            BUILDER.comment("Training: fatigue recovered per real minute of play.",
+                            "Recalibrado 2026-08-20 (0.01 -> 0.2, x20): es la palanca DOMINANTE del sistema. En granjeo",
+                            "sostenido, TP/hora = 60 x este valor x tu PL -- el ritmo de combate (rapido o lento) se",
+                            "cancela solo y NO afecta ese numero (comprobado por simulacion: de 2s a 40s por kill daba",
+                            "el mismo resultado con el 0.01 viejo). Subir damage_tp_factor/entity.tp_per_pl sin tocar",
+                            "esto no sirve de mucho: el reward extra se cancela con la fatiga extra que genera.",
+                            "Sigue siendo una ESTIMACION del modelo (asume ~15s por kill 'de nivel'); hace falta",
+                            "playtesting real para afinarlo -- ver .claude/pendiente/economia-tp.md.")
+                    .defineInRange("training.fatigue_decay_per_minute", 0.20D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue TRAIN_HTC_MULT_RAW =
             BUILDER.comment("Training: TP multiplier while inside the HTC")
@@ -409,6 +435,7 @@ public final class CommonConfig {
 
     private static volatile double TP_COEFFICIENT = 1.0D;
     private static volatile int    GLOBAL_ATTRIBUTE_CAP = 200000;
+    private static volatile double AURA_REFERENCE_TP = 5_000_000D;
     private static volatile int    IN_COMBAT_TICKS = 160;
     private static volatile double IN_COMBAT_BODY_REGEN_MULT = 0.5D;
     private static volatile double IN_COMBAT_RACIAL_REGEN_FLOOR = 0.25D;
@@ -474,9 +501,10 @@ public final class CommonConfig {
     private static volatile double EXPLOSION_SACRIFICE_CONVERSION = 0.5;
 
 
-    private static volatile double TRAIN_DMG_TP = 0.02D, TRAIN_AIR_TP = 0.0001D,
-            TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.01D,
+    private static volatile double TRAIN_DMG_TP = 0.10D, TRAIN_AIR_TP = 0.0001D,
+            TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.20D,
             TRAIN_HTC_MULT = 2.0D, TRAIN_MIN_EFF = 0.05D;
+    private static volatile double TP_PER_PL = 0.25D;
     private static volatile int TRAIN_AIR_TICKS = 10;
     private static volatile double WEIGHT_CAP_DIV = 3.4D, WEIGHT_CAP_EXP = 0.6D,
             WEIGHT_STAT_PEN = 0.25D, WEIGHT_MOVE_PEN = 0.60D, WEIGHT_JUMP_PEN = 0.40D,
@@ -496,6 +524,7 @@ public final class CommonConfig {
 
         TP_COEFFICIENT       = TP_COEFFICIENT_RAW.get();
         GLOBAL_ATTRIBUTE_CAP = GLOBAL_ATTRIBUTE_CAP_RAW.get();
+        AURA_REFERENCE_TP    = AURA_REFERENCE_TP_RAW.get();
         ATTRIBUTE_BASE_COST = ATTRIBUTE_BASE_COST_RAW.get();
         TRAINING_PL_RATIO_FLOOR = TRAINING_PL_RATIO_FLOOR_RAW.get();
         IN_COMBAT_TICKS              = IN_COMBAT_TICKS_RAW.get();
@@ -549,6 +578,7 @@ public final class CommonConfig {
         MAJIN_STAT_BONUS = MAJIN_STAT_BONUS_RAW.get();
 
         TRAIN_DMG_TP    = TRAIN_DMG_TP_RAW.get();
+        TP_PER_PL       = TP_PER_PL_RAW.get();
         TRAIN_AIR_TP    = TRAIN_AIR_TP_RAW.get();
         TRAIN_AIR_COST  = TRAIN_AIR_COST_RAW.get();
         TRAIN_AIR_TICKS = TRAIN_AIR_TICKS_RAW.get();
@@ -596,6 +626,8 @@ public final class CommonConfig {
 
     public static double tpCoefficient()   { return TP_COEFFICIENT; }
     public static int globalAttributeCap() { return GLOBAL_ATTRIBUTE_CAP; }
+    /** TP total de referencia para el techo de presencia del aura. Ver AuraCeiling. */
+    public static double auraReferenceTp() { return AURA_REFERENCE_TP; }
     public static double attributeBaseCost() { return ATTRIBUTE_BASE_COST; }
     public static double trainingPlRatioFloor() {return TRAINING_PL_RATIO_FLOOR;}
     public static double trainingPlRatioFull()     { return TRAINING_PL_RATIO_FULL; }
@@ -681,6 +713,8 @@ public final class CommonConfig {
     public static double overchargeCostMult() { return OVERCHARGE_COST_MULT; }
 
     public static double trainingDamageTpFactor()        { return TRAIN_DMG_TP; }
+    /** PL de la victima x esto = recompensa TP "auto" al matarla (zenkai_entities y fallback vanilla). */
+    public static double tpPerPl()                       { return TP_PER_PL; }
     public static double trainingAirTpFactor()           { return TRAIN_AIR_TP; }
     public static double trainingAirStaminaCostPct()     { return TRAIN_AIR_COST; }
     public static int    trainingAirMinTicks()           { return TRAIN_AIR_TICKS; }

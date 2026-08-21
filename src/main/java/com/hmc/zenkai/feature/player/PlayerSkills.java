@@ -10,9 +10,14 @@ import java.util.*;
 /**
  * Submódulo de PlayerStatsAttachment: habilidades y su NIVEL actual.
  *  - levels: nivel actual de cada habilidad (ausente = 0 = no la tiene).
- *  - grantedFloor: nivel mínimo otorgado por maestros/NPC/comando. El respec devuelve el TP
- *    de los niveles comprados por encima de ese suelo y baja hasta él; solo el reset full o
- *    /zenkai skill revoke lo borran.
+ *  - grantedFloor: nivel mínimo por debajo del cual lower() (el botón "olvidar") se niega en
+ *    seco. El respec devuelve el TP de los niveles comprados por encima de ese suelo y baja
+ *    hasta él; solo el reset full o /zenkai skill revoke lo borran.
+ * OJO: la compra normal ante un maestro (SkillBuyPacket) usa raise(), NO grant() — no toca
+ * grantedFloor, ni siquiera para el nivel 1 que solo el maestro puede vender. Es a propósito:
+ * los maestros son la ÚNICA forma de conseguir una skill en el juego, así que si esa compra
+ * pusiera suelo, NINGUNA skill del mod podría olvidarse nunca desde la UI. grant()/
+ * grantAdmin() son para progresión que sí debe quedar protegida (ver sus javadocs).
  * Viaja dentro del save/load del attachment -> persiste, se copia al morir y se sincroniza
  * al cliente por el mismo canal que el resto de stats.
  */
@@ -38,10 +43,35 @@ public final class PlayerSkills {
         levels.put(id, lvl);
     }
 
-    /** El maestro enseña: sube el suelo otorgado y el nivel si hace falta. */
+    /**
+     * Otorga un nivel PERMANENTE: sube el suelo Y el nivel a la vez, así que lower() nunca
+     * podrá bajar de aquí. Para progresión que no debe poder deshacerse desde la UI —
+     * hoy solo FormSystem, al conceder el primer nivel de super_forms cuando el jugador
+     * desbloquea su primera transformación. NO es lo que usa la compra normal ante un
+     * maestro (esa es raise(), ver el javadoc de la clase). Para dar niveles de prueba por
+     * comando de admin sin bloquearlos todos, usa grantAdmin().
+     */
     public void grant(String id, int lvl) {
         if (lvl <= 0) return;
         grantedFloor.merge(id, lvl, Math::max);
+        levels.merge(id, lvl, Math::max);
+    }
+
+    /**
+     * Comando de admin (/zenkai skill give, /zenkai skill giveall): da el nivel pedido para
+     * pruebas rápidas, pero protege SOLO el nivel 1, no el nivel completo dado.
+     * Con grant(id, lvl) el suelo quedaría en lvl y CADA nivel entregado quedaría bloqueado
+     * para siempre en la UI — y como los maestros son la única vía normal de conseguir una
+     * skill, eso habría convertido "te di esto para probar" en "esto ya no se puede tocar
+     * nunca más". floor=1 basta para lo que el suelo existe a proteger (que un /give no se
+     * pueda vaciar del todo por accidente) sin impedir que el resto se olvide con
+     * normalidad. OJO: los niveles entre 2 y lvl SÍ se reembolsan en TP al olvidarlos aunque
+     * nunca se pagaron — aceptable para autoprobarte cosas, no para repartir esto como
+     * recompensa a jugadores si te importa que no farmeen TP gratis con ello.
+     */
+    public void grantAdmin(String id, int lvl) {
+        if (lvl <= 0) return;
+        grantedFloor.merge(id, 1, Math::max);
         levels.merge(id, lvl, Math::max);
     }
 

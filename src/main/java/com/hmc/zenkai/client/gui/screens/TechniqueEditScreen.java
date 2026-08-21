@@ -10,18 +10,20 @@ import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
@@ -60,10 +62,6 @@ public class TechniqueEditScreen extends Screen {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_trash.png");
     private static final ResourceLocation TEX_TRASH_HL =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_trash_highlight.png");
-    private static final ResourceLocation PREVIEW_BALL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_ball.png");
-    private static final ResourceLocation PREVIEW_TRAIL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_trail.png");
 
     private static final int BG_W = 256;
     private static final int BG_H = 256;
@@ -181,11 +179,15 @@ public class TechniqueEditScreen extends Screen {
                 Component.empty(), TEX_X, TEX_X_HL, this::close));
 
         // ── Pestañas ──
+        // .onPanel(): sin esto quedan con los colores por defecto de TextOnlyButton (blanco +
+        // sombra), pensados para fondo oscuro — exactamente el "borrón sobre beige" que
+        // ZenkaiPalette y PanelText documentan y que el resto de pantallas (Stats, Config) evita
+        // llamando a este método. Es lo que hacía que el editor se viera plano frente a Stats.
         int tabW = contentW / 2 - 2;
         addRenderableWidget(new TextOnlyButton(x, topPos + Y_TABS, tabW, 14,
-                tabLabel(Tab.COMBAT), () -> switchTab(Tab.COMBAT)));
+                tabLabel(Tab.COMBAT), () -> switchTab(Tab.COMBAT)).onPanel());
         addRenderableWidget(new TextOnlyButton(x + tabW + 4, topPos + Y_TABS, tabW, 14,
-                tabLabel(Tab.STYLE), () -> switchTab(Tab.STYLE)));
+                tabLabel(Tab.STYLE), () -> switchTab(Tab.STYLE)).onPanel());
 
         if (tab == Tab.COMBAT) initCombatTab(x, contentW);
         else initStyleTab(x, contentW);
@@ -211,9 +213,15 @@ public class TechniqueEditScreen extends Screen {
     private void initCombatTab(int x, int contentW) {
         int y = topPos + Y_ROWS;
 
+        // El valor va en negrita y en dorado (VALUE_ON_PANEL), como el nombre de la forma en
+        // Stats: sin esto "Type: Blast" era una sola línea plana y el ojo no distinguía la
+        // etiqueta de lo que de verdad se está eligiendo.
         cyclerRow(x, y, contentW,
-                Component.translatable("screen.zenkai.technique.type")
-                        .append(": ").append(Component.translatable(type.nameKey())),
+                Component.translatable("screen.zenkai.technique.type").append(": ")
+                        .append(Component.translatable(type.nameKey())
+                                .withStyle(s -> s.withBold(true)
+                                        .withColor(TextColor.fromRgb(
+                                                ZenkaiPalette.VALUE_ON_PANEL & 0xFFFFFF)))),
                 dir -> {
                     KiTechniqueType[] all = KiTechniqueType.values();
                     KiTechniqueType next = type;
@@ -228,9 +236,16 @@ public class TechniqueEditScreen extends Screen {
                 });
         y += ROW_H;
 
+        // Ciruela + negrita solo cuando hay un efecto elegido: mismo trato que SPECIAL_ON_PANEL
+        // le da a la forma en Stats ("estado especial"). En NONE se queda apagado a propósito,
+        // para que la fila misma diga "no hay nada especial aquí" sin necesidad de leer el texto.
+        int effectColor = effect == TechniqueEffect.NONE
+                ? ZenkaiPalette.MUTED_ON_PANEL : ZenkaiPalette.SPECIAL_ON_PANEL;
         cyclerRow(x, y, contentW,
                 Component.translatable("screen.zenkai.technique.effect").append(": ")
-                        .append(Component.translatable(effect.langKey())),
+                        .append(Component.translatable(effect.langKey())
+                                .withStyle(s -> s.withBold(effect != TechniqueEffect.NONE)
+                                        .withColor(TextColor.fromRgb(effectColor & 0xFFFFFF)))),
                 dir -> {
                     // Salta los efectos que este tipo no admite: ciclar por opciones que el
                     // set() va a revertir a NONE es enseñar una elección que no existe.
@@ -260,7 +275,8 @@ public class TechniqueEditScreen extends Screen {
 
         // Color: botón a la izquierda, swatch + icono a la derecha. El picker se abre fuera.
         addRenderableWidget(new TextOnlyButton(x, y, 60, 14,
-                Component.translatable("screen.zenkai.technique.color"), this::togglePicker));
+                Component.translatable("screen.zenkai.technique.color"), this::togglePicker)
+                .onPanel());
         y += ROW_H;
 
         List<ResourceLocation> charges = soundList(true);
@@ -309,7 +325,7 @@ public class TechniqueEditScreen extends Screen {
         if (ov != null) {
             // Sin flechas y sin acción: la fila queda como etiqueta.
             addRenderableWidget(new TextOnlyButton(x + ARROW_W + 2, y,
-                    contentW - (ARROW_W + 2) * 2, 14, fitted, () -> {}));
+                    contentW - (ARROW_W + 2) * 2, 14, fitted, () -> {}).onPanel());
         } else {
             cyclerRow(x, y, contentW, fitted,
                     dir -> {
@@ -428,7 +444,7 @@ public class TechniqueEditScreen extends Screen {
         addRenderableWidget(new ArrowIconButton(x, y, ArrowIconButton.Dir.LEFT,
                 () -> onCycle.accept(-1)));
         addRenderableWidget(new TextOnlyButton(x + ARROW_W + 2, y, w - (ARROW_W + 2) * 2, 14,
-                label, () -> onCycle.accept(1)));
+                label, () -> onCycle.accept(1)).onPanel());
         addRenderableWidget(new ArrowIconButton(x + w - ARROW_W, y, ArrowIconButton.Dir.RIGHT,
                 () -> onCycle.accept(1)));
     }
@@ -515,11 +531,13 @@ public class TechniqueEditScreen extends Screen {
         }
     }
 
+    /** Etiqueta marrón + valor destacado: mismo par que drawField() en StatsScreen (Race, Style,
+     *  TP...), en vez de dos tonos de marrón casi indistinguibles entre sí. */
     private void info(GuiGraphics g, int y, String key, Component value) {
         Component label = Component.translatable(key).append(": ");
-        PanelText.onPanel(g, this.font, label, leftPos + MARGIN, y, ZenkaiPalette.BODY_ON_PANEL);
+        PanelText.onPanel(g, this.font, label, leftPos + MARGIN, y, ZenkaiPalette.LABEL_ON_PANEL);
         PanelText.onPanel(g, this.font, value,
-                leftPos + MARGIN + this.font.width(label), y, ZenkaiPalette.LABEL_ON_PANEL);
+                leftPos + MARGIN + this.font.width(label), y, ZenkaiPalette.VALUE_ON_PANEL);
     }
 
     private Component speedLabel() {
@@ -534,6 +552,20 @@ public class TechniqueEditScreen extends Screen {
         return String.format(Locale.ROOT, v == Math.floor(v) ? "%.0f" : "%.1f", v);
     }
 
+    /**
+     * Cuerpo REAL de KiBodyRenderer, el mismo que ves cargando en el mundo (KiChargeRenderer):
+     * esfera con fresnel de tres bandas si el shader está disponible, cáscara + núcleo si no.
+     * ANTES esto era un blit a mano de ki_ball.png con pulso hecho aquí a pelo y una estela de
+     * franjas — el sistema VIEJO, anterior a KiBodyRenderer/KiMeshFactory/KiVisual. La malla es
+     * SIEMPRE la esfera desnuda de la carga (KiMeshFactory.chargeSphere()) sea cual sea la forma
+     * final de la técnica en vuelo — así lo hace también KiChargeRenderer, porque cargando la
+     * energía todavía no tiene forma — así que este preview no aproxima haces ni discos: enseña
+     * exactamente lo que el jugador va a ver en la mano al cargar, para cualquier tipo.
+     * SIN proyección propia: el PoseStack de GuiGraphics ya sirve para geometría 3D dentro de la
+     * GUI — es el mismo truco que usa InventoryScreen.renderEntityInInventory (translate + scale,
+     * sin cámara real), y el shader de ki no depende de nada del mundo (ver ki_fresnel.json: solo
+     * ModelViewMat/ProjMat que la propia GuiGraphics ya sube).
+     */
     private void renderTechniquePreview(GuiGraphics g, float partialTick) {
         float t = (mc.player != null ? mc.player.tickCount : 0) + partialTick;
         float cr = ((rgb >> 16) & 0xFF) / 255f;
@@ -543,42 +575,24 @@ public class TechniqueEditScreen extends Screen {
         int cx = leftPos + 208;
         int cy = topPos + Y_BLOCK + 26;
 
-        RenderSystem.enableBlend();
-
-        com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual visual =
-                com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual.of(type);
-        if (visual.hasTrail()) {
-            int trailLen = switch (type) { case LAZER -> 57; case WAVE -> 42; default -> 48; };
-            int trailW = (int) Math.max(6, (10 + 2 * size) * visual.trailWidth());
-            int seg = trailLen / 3;
-            float[] alphas = {0.65f, 0.4f, 0.18f};
-            for (int i = 0; i < 3; i++) {
-                float segCx = cx - seg * (i + 0.5f);
-                RenderSystem.setShaderColor(cr, cg, cb, alphas[i]);
-                g.pose().pushPose();
-                g.pose().translate(segCx, cy, 0);
-                g.pose().mulPose(Axis.ZP.rotationDegrees(90));
-                g.blit(PREVIEW_TRAIL, -trailW / 2, -seg / 2, trailW, seg, 0f, 0f, 32, 64, 32, 64);
-                g.pose().popPose();
-            }
-        }
-
+        // Mismo pulso que antes (respiración suave), no el de KiChargeRenderer: aquí no hay un
+        // progreso de carga que animar, es una foto fija de "así se ve esta técnica".
         float pulse = 1f + 0.06f * (float) Math.sin(t * 0.3);
-        boolean barrier = type == KiTechniqueType.BARRIER;
-        RenderSystem.setShaderColor(cr, cg, cb, barrier ? 0.45f : 1f);
-        if (type == KiTechniqueType.BURST) {
-            int d = (int) ((10 + 2 * size) * pulse);
-            int[][] off = {{0, 0}, {-13, -9}, {-9, 10}};
-            for (int[] o : off) {
-                g.blit(PREVIEW_BALL, cx + o[0] - d / 2, cy + o[1] - d / 2, d, d, 0f, 0f, 64, 64, 64, 64);
-            }
-        } else {
-            int base = barrier ? 34 + 2 * size : 16 + 4 * size;
-            int d = (int) (base * pulse);
-            g.blit(PREVIEW_BALL, cx - d / 2, cy - d / 2, d, d, 0f, 0f, 64, 64, 64, 64);
-        }
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        RenderSystem.disableBlend();
+        float diameterPx = (16 + 4 * size) * pulse;
+
+        KiVisual visual = KiVisual.of(type);
+
+        g.pose().pushPose();
+        g.pose().translate(cx, cy, 100.0);
+        // Z invertida, igual que renderEntityInInventory: mantiene la misma quiralidad que usa
+        // el resto del juego para geometría 3D metida en la GUI. La esfera es simétrica así que
+        // no CAMBIA su silueta, pero el fresnel lee normales contra la cámara y conviene no
+        // improvisar un espacio distinto al que ya está probado.
+        g.pose().scale(1f, 1f, -1f);
+        KiBodyRenderer.render(g.bufferSource(), visual, KiMeshFactory.chargeSphere(),
+                g.pose(), diameterPx, cr, cg, cb);
+        g.flush();
+        g.pose().popPose();
     }
 
     @Override

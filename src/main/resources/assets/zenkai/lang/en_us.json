@@ -259,6 +259,9 @@
   "entity.zenkai.wish_librarian": "Special Librarian",
   "entity.zenkai.saibaman": "Saibaman",
   "entity.zenkai.ki_projectile": "Ki Technique",
+  "entity.zenkai.kami": "Kami",
+  "entity.zenkai.kaio": "King Kai",
+  "entity.zenkai.korin": "Korin",
   "master.zenkai.kami": "Kami",
   "master.zenkai.kaio": "King Kai",
   "master.zenkai.korin": "Korin",
@@ -584,6 +587,7 @@
   "screen.zenkai.skills.maxed": "Max level",
   "screen.zenkai.skills.header": "TP: %s    MIND: %s / %s free",
   "screen.zenkai.skills.forget": "Forget one level (refunds TP and MND)",
+  "screen.zenkai.skills.forget.locked": "Granted by a master or admin: can't be forgotten",
 
   "--- GUI: TECHNIQUES ---": "--- GUI: TECHNIQUES ---",
   "screen.zenkai.technique.tab.combat": "Combat",

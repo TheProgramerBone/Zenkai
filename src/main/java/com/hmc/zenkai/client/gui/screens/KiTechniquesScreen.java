@@ -299,20 +299,27 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
 
             int nameX = textX + ICON + 4;
             Component name = fit(t.displayName(), textMaxWidth());
-            PanelText.onPanel(g, this.font, name, nameX, y + 4, ZenkaiPalette.LABEL_ON_PANEL);
+            // OWNED_ON_PANEL, no LABEL_ON_PANEL: cada fila de esta lista es una técnica que el
+            // jugador ya creó, el mismo estado "esto es tuyo" que Physical Techniques (nombre
+            // desbloqueado) y Mastery pintan en verde. Con el marrón neutro, la única lista de
+            // técnicas ki del mod desentonaba de sus dos hermanas sin razón semántica.
+            PanelText.onPanel(g, this.font, name, nameX, y + 4, ZenkaiPalette.OWNED_ON_PANEL);
 
             // Sub-línea: tipo · tamaño · posición asignada. El tipo solo ya se deduce del ícono;
             // lo que el jugador no puede ver de otro modo es el tamaño y a qué tecla va.
+            // La tecla va PEGADA al separador, no anclada cerca del borde derecho con un hueco
+            // fijo: con "Size: 5 · " corto y el "-30" a mano quedaba un salto vacío entre los
+            // dos y "[1]" se leía suelto, sin relación visual con lo que anuncia.
             int pos = att.techniques().positionOf(i);
-            Component sub = Component.translatable("screen.zenkai.technique.size", t.size())
-                    .append(Component.literal(" · "));
-            PanelText.onPanel(g, this.font, fit(sub, textMaxWidth()), nameX, y + 15,
-                    ZenkaiPalette.MUTED_ON_PANEL);
+            Component sizeLabel = Component.translatable("screen.zenkai.technique.size", t.size());
+            Component sub = pos >= 0 ? sizeLabel.copy().append(" · ") : sizeLabel;
+            Component fittedSub = fit(sub, textMaxWidth());
+            PanelText.onPanel(g, this.font, fittedSub, nameX, y + 15, ZenkaiPalette.MUTED_ON_PANEL);
 
             if (pos >= 0) {
                 Component key = Component.literal("[" + (pos + 1) + "]");
                 PanelText.onPanel(g, this.font, key,
-                        nameX + textMaxWidth() - this.font.width(key)-30, y + 15,
+                        nameX + this.font.width(fittedSub), y + 15,
                         ZenkaiPalette.OK_ON_PANEL);
             }
 

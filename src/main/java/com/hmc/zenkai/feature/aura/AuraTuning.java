@@ -188,14 +188,11 @@ public final class AuraTuning {
     public static final float UV_INSET = 0.0015f;
 
     // ── Normalización del PL ─────────────────────────────────────────────────
-    /**
-     * ÚNICO número de referencia del sistema: TP total que se espera que invierta un
-     * jugador de endgame. PROVISIONAL — pendiente de verificar contra la progresión
-     * real de TP. No hay que tocarlo al añadir formas: AuraCeiling recorre el registro
-     * entero, así que una transformación nueva sube el techo sola.
-     * TODO: mover a CommonConfig cuando se confirme el valor.
-     */
-    public static final double REFERENCE_TP = 5_000_000d;
+    // El número de referencia (TP total que se espera que invierta un jugador de endgame)
+    // vive en CommonConfig.auraReferenceTp(), NO aquí — es la única constante de aura que
+    // sale de este archivo pese al "único sitio donde viven" de la clase: no es aspecto
+    // (mass/spike/turb/...), es economía de progresión, y esa sí necesita poder ajustarse
+    // por config/mundo sin recompilar. Ver AuraCeiling, que es quien la consume.
 
     /** Suelo de la escala: PL de un personaje recién creado. */
     public static final long PL_FLOOR_FALLBACK = 231L;

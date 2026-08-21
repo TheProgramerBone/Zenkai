@@ -2,7 +2,6 @@ package com.hmc.zenkai.network;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.ClientPayloadHandlers;
-import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import com.hmc.zenkai.content.blockentity.NpcMarkerBlockEntity;
 import com.hmc.zenkai.feature.aura.TurboPacket;
@@ -29,7 +28,6 @@ import com.hmc.zenkai.feature.weights.SetWeightPacket;
 import com.hmc.zenkai.feature.wheel.WheelSelectPacket;
 import com.hmc.zenkai.feature.wishes.*;
 import com.hmc.zenkai.network.vehicle.VehicleControlPayload;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -53,7 +51,13 @@ public class ModNetworking {
         registrar.playToClient(
                 OpenWishScreenPayload.TYPE,
                 OpenWishScreenPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> Minecraft.getInstance().setScreen(new ShenlongWishScreen()))
+                // Delegado a ClientPayloadHandlers, NO inline: un new ShenlongWishScreen() (subclase
+                // de Screen) metido a mano en este lambda vive dentro de ModNetworking, y cargar esta
+                // clase para tomar el método register() (Zenkai.<init>) verificaba también ese cuerpo
+                // — RuntimeDistCleaner abortaba con BootstrapMethodError en cualquier dedicated
+                // server, sin que ningún cliente lo notara nunca. El resto de playToClient de este
+                // archivo ya delega en ClientPayloadHandlers por esta misma razón (ver su javadoc).
+                (payload, context) -> context.enqueueWork(ClientPayloadHandlers::openWishScreen)
         );
 
         registrar.playToServer(

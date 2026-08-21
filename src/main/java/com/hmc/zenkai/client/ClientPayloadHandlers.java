@@ -2,6 +2,7 @@ package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.client.gui.screens.MasterScreen;
 import com.hmc.zenkai.client.gui.screens.NpcMarkerScreen;
+import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.network.OpenMasterPayload;
 import com.hmc.zenkai.network.OpenNpcMarkerPayload;
 import net.minecraft.client.Minecraft;
@@ -18,5 +19,9 @@ public final class ClientPayloadHandlers {
 
     public static void openMaster(OpenMasterPayload p) {
         Minecraft.getInstance().setScreen(new MasterScreen(p.masterId(), p.entityId()));
+    }
+
+    public static void openWishScreen() {
+        Minecraft.getInstance().setScreen(new ShenlongWishScreen());
     }
 }

@@ -23,9 +23,6 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 public final class EntityDeathRewardHandler {
     private EntityDeathRewardHandler() {}
 
-    /** Reward de mobs vanilla: PL = vida máx × vanilla_factor (misma fórmula que el scouter). */
-    private static final double VANILLA_TP_PER_PL = 0.05;
-
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event) {
         if (event.getEntity().level().isClientSide()) return;
@@ -45,7 +42,7 @@ public final class EntityDeathRewardHandler {
         } else {
             // Mob vanilla (sin stats): PL derivado de su vida máxima. Mínimo 1 TP.
             double vanillaPl = dead.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor();
-            reward = (int) Math.max(1, Math.round(vanillaPl * VANILLA_TP_PER_PL));
+            reward = (int) Math.max(1, Math.round(vanillaPl * CommonConfig.tpPerPl()));
         }
         if (reward <= 0) return;
 

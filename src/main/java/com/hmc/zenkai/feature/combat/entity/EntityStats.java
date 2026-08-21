@@ -26,9 +26,6 @@ import java.util.EnumMap;
  */
 public final class EntityStats implements ZenkaiCombatStats {
 
-    /** Recompensa de TP "auto" = PL × esto (placeholder tuneable; el "mundo TP" real va después). */
-    private static final double TP_PER_PL = 0.05;
-
     private final EnumMap<ZenkaiAttributes, Integer> attr = new EnumMap<>(ZenkaiAttributes.class);
     private double bodyMult = 1.0;
     private double kiMult   = 1.0;
@@ -89,7 +86,7 @@ public final class EntityStats implements ZenkaiCombatStats {
     }
 
     private static int resolveReward(String raw, long pl) {
-        int auto = (int) Math.max(1, Math.round(pl * TP_PER_PL));
+        int auto = (int) Math.max(1, Math.round(pl * CommonConfig.tpPerPl()));
         if (raw == null || raw.equalsIgnoreCase("auto")) return auto;
         try { return Math.max(0, Integer.parseInt(raw.trim())); }
         catch (Exception ex) { return auto; }
@@ -193,7 +190,7 @@ public final class EntityStats implements ZenkaiCombatStats {
         stamina = staminaMax;
         energy  = energyMax;
 
-        tpReward = (int) Math.max(0, Math.round(getPowerLevel() * TP_PER_PL
+        tpReward = (int) Math.max(0, Math.round(getPowerLevel() * CommonConfig.tpPerPl()
                 * CommonConfig.vanillaTpRewardFactor()));
         initialized = true;
         mirrorToVanilla(le);

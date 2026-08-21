@@ -470,7 +470,10 @@ public class ModCommands {
     }
 
     /**
-     * Otorga una habilidad SIN TP (vía maestros/NPC: es grant, sobrevive al respec).
+     * Otorga una habilidad SIN TP para pruebas de admin (grantAdmin: sobrevive al respec,
+     * pero solo el nivel 1 queda protegido de olvidarse por la X de SkillsScreen — el resto
+     * del nivel dado se puede bajar y reembolsa TP con normalidad. Ver
+     * PlayerSkills.grantAdmin()).
      *
      * @param requested nivel exacto que se quiere dejar, o -1 para "sube uno".
      *                  Se RECORTA al techo en vez de fallar: si el máximo es 5 y pides 10,
@@ -505,7 +508,10 @@ public class ModCommands {
             return 0;
         }
 
-        att.skills().grant(id, target);
+        // grantAdmin(), no grant(): protege solo el nivel 1, no "target" entero — si no, un
+        // /give de prueba a nivel alto quedaría bloqueado en la UI de olvidar de arriba abajo.
+        // Ver el javadoc de PlayerSkills.grantAdmin().
+        att.skills().grantAdmin(id, target);
         PlayerLifeCycle.sync(sp);
 
         final int t = target;
@@ -531,8 +537,10 @@ public class ModCommands {
     }
 
     /**
-     * Otorga TODAS las habilidades del datapack al máximo. Son "granted", no compradas:
-     * sobreviven al respec y no consumen TP.
+     * Otorga TODAS las habilidades del datapack al máximo. Son "granted" (grantAdmin), no
+     * compradas: sobreviven al respec y no consumen TP — pero solo el nivel 1 de cada una
+     * queda protegido de olvidarse por la X de SkillsScreen, el resto se puede bajar con
+     * normalidad. Ver PlayerSkills.grantAdmin().
      * OJO con levels_from_forms: su techo real NO es def.maxLevel(), sino la cadena de
      * formas de SU raza (misma regla que SkillBuyPacket). Sin este mínimo, un humano
      * acabaría con niveles de super_forms que no existen para él.
@@ -550,7 +558,7 @@ public class ModCommands {
                     ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
             if (max <= 0) { capped++; continue; }   // raza sin cadena de formas
             if (att.skills().level(def.id()) >= max) continue;
-            att.skills().grant(def.id(), max);
+            att.skills().grantAdmin(def.id(), max);   // solo protege el nivel 1, ver javadoc
             granted++;
         }
         PlayerLifeCycle.sync(sp);

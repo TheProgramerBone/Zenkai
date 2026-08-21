@@ -584,6 +584,7 @@
   "screen.zenkai.skills.maxed": "Nivel máximo",
   "screen.zenkai.skills.header": "PE: %s    MENTE: %s / %s libre",
   "screen.zenkai.skills.forget": "Olvidar un nivel (reembolsa PE y MEN)",
+  "screen.zenkai.skills.forget.locked": "Otorgado por un maestro o admin: no se puede olvidar",
 
   "--- GUI: TECHNIQUES ---": "--- INTERFAZ: TÉCNICAS ---",
   "screen.zenkai.technique.tab.combat": "Combate",

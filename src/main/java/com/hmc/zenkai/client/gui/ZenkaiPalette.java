@@ -164,8 +164,22 @@ public final class ZenkaiPalette {
     public static final int SEPARATOR   = 0x44AC421B;
     public static final int HOVER_VEIL  = 0x30FFFFFF;
     public static final int SELECT_VEIL = 0x40FFD966;
-    /** Relleno del popup lateral. */
+    /** Relleno del popup lateral. Alfa parcial A PROPÓSITO: este popup flota junto al panel
+     *  PRINCIPAL de Stats, que ya es opaco (common_screen.png) — un pelín de traslucidez ahí es
+     *  un acabado, no un problema de legibilidad, porque el fondo real es el panel, no el mundo.
+     *  NO USAR para una pantalla que no tiene ningún ancla opaca detrás: ver DIALOG_BG. */
     public static final int POPUP_BG    = 0xF01E1410;
+    /**
+     * Fondo OPACO para un diálogo independiente sobre el mundo (MasterScreen y similares) que,
+     * a diferencia de los popups de Stats, no tiene ningún panel opaco al lado. Mismo tono que
+     * POPUP_BG pero con alfa a tope: con alfa parcial el mundo de detrás —a veces tan vivo como
+     * un atardecer— se colaba bajo cada línea de texto y la volvía ilegible; no es la posición
+     * de las filas lo que fallaba, es que el fondo nunca llegó a tapar lo que hay detrás.
+     */
+    public static final int DIALOG_BG    = 0xFF1E1410;
+    /** Panel del retrato dentro de un diálogo independiente. Mismo tono que BAR_BG_DARK
+     *  (pensado para ir SOBRE un fondo ya opaco) pero opaco por la misma razón que DIALOG_BG. */
+    public static final int DIALOG_PANEL = 0xFF241A12;
 
     // ── Fondos de zona ───────────────────────────────────────────────────────
     // Los últimos literales sueltos del barrido. No son colores de texto, pero se repetían con

@@ -57,18 +57,26 @@ public final class StatBar {
         return h + 2;
     }
 
+    /** Hueco mínimo entre el final de la barra y el arranque del texto. */
+    private static final int ROW_GAP = 3;
+    /** Por debajo de esto la barra ya no aporta nada legible: mejor cederle todo el ancho al
+     *  número que dejar una barra de dos píxeles que nadie puede leer. */
+    private static final int ROW_MIN_BAR_W = 10;
+
     /**
      * Fila compacta: etiqueta a la izquierda, barra en medio, valor pegado a la derecha.
      * Es el formato del panel principal — cabe en una línea de texto por recurso.
+         * El ancho de la barra se calcula AQUÍ, después de medir el texto — no lo fija el
+     * llamador de antemano. Con un hueco fijo reservado para el texto ("15.6M/15.6M" ya no
+     * cabe en 50px que sobraban de sobra con "5M/5M"), el texto empezaba antes de donde
+     * terminaba la barra y las dos capas se solapaban en cuanto el número crecía. Midiendo el
+     * texto primero, la barra se encoge sola y nunca invade la columna de números, sin importar
+     * cuántas cifras tenga.
      */
-    public static void row(GuiGraphics g, Font font, int labelX, int barX, int barW,
+    public static void row(GuiGraphics g, Font font, int labelX, int barX,
                            int rightEdge, int y, Component label,
                            double value, double max, int fillColor) {
         g.drawString(font, label, labelX, y, ZenkaiPalette.LABEL_ON_PANEL, false);
-
-        // La barra se centra sobre la línea de texto: con lineHeight 9 y alto 4, +2 la deja
-        // ópticamente alineada con las mayúsculas de la etiqueta.
-        draw(g, barX, y + 2, barW, H, value, max, fillColor);
 
         // SIEMPRE compacto: "6.8M/6.8M" en vez de "6800010/6800010". Con siete cifras por
         // lado el texto invadía la barra y se leían encima el uno del otro (visible en juego
@@ -76,8 +84,13 @@ public final class StatBar {
         // sirve para ver de un vistazo cuánto queda, no para auditar el número.
         Component amount = Component.literal(
                 ZenkaiNumbers.format(Math.round(value)) + "/" + ZenkaiNumbers.format(Math.round(max)));
-        g.drawString(font, amount, rightEdge - font.width(amount), y,
-                ZenkaiPalette.BODY_ON_PANEL, false);
+        int amountW = font.width(amount);
+        g.drawString(font, amount, rightEdge - amountW, y, ZenkaiPalette.BODY_ON_PANEL, false);
+
+        // La barra se centra sobre la línea de texto: con lineHeight 9 y alto 4, +2 la deja
+        // ópticamente alineada con las mayúsculas de la etiqueta.
+        int barW = Math.max(ROW_MIN_BAR_W, (rightEdge - amountW - ROW_GAP) - barX);
+        draw(g, barX, y + 2, barW, H, value, max, fillColor);
     }
 
     /** Barra fina sin marco, para meter dentro de una fila de lista. */

@@ -33,15 +33,24 @@ import java.util.List;
  */
 public class MasterScreen extends Screen {
 
-    private static final int BG_W = 320;
-    private static final int BG_H = 180;
+    // 320×180 con filas de 22px solo daba sitio a "Be able to fly using k…" antes de recortar:
+    // la descripción no cabía ni truncada a una palabra útil. Se agranda el diálogo entero
+    // (mismo lenguaje visual, solo más aire) en vez de encoger más el texto.
+    private static final int BG_W = 360;
+    private static final int BG_H = 210;
 
-    /** Ancho del panel del maestro (izquierda). El resto es la lista. */
-    private static final int PORTRAIT_W = 108;
+    /** Ancho del panel del maestro (izquierda): retrato + su nombre debajo. */
+    private static final int PORTRAIT_W = 116;
     private static final int PADDING    = 10;
-    private static final int ROW_H      = 22;
-    /** Separación bajo el título antes de la primera fila. */
-    private static final int CONTENT_TOP = 30;
+    /** Una sola línea por fila (nombre + coste): la descripción vive en el tooltip. */
+    private static final int ROW_H      = 24;
+    /** Separación bajo el título/TP/MND antes de la primera fila. */
+    private static final int CONTENT_TOP = 34;
+
+    private static final int SCROLLBAR_W   = 4;
+    /** Aire entre el texto de coste y la barra: sin esto el número roza el thumb. */
+    private static final int SCROLLBAR_GAP = 6;
+    private static final int TOOLTIP_W     = 200;
 
     // ═══ PALETA UNIFICADA ═══
     //
@@ -52,9 +61,15 @@ public class MasterScreen extends Screen {
     // la paleta común, que es lo que hace que "no te llega el TP" se vea igual aquí que en la
     // pestaña de habilidades.
     //
-    // Fondo y marco: el mismo lenguaje de tres anillos del popup lateral de la ficha.
-    private static final int COL_BG      = ZenkaiPalette.POPUP_BG;
-    private static final int COL_PANEL   = ZenkaiPalette.BAR_BG_DARK;
+    // Fondo y marco: el mismo lenguaje de tres anillos del popup lateral de la ficha, pero
+    // OPACOS (DIALOG_BG/DIALOG_PANEL) y no los POPUP_BG/BAR_BG_DARK de alfa parcial que usa ese
+    // popup. Aquella traslucidez es correcta ahí porque el popup flota junto al panel PRINCIPAL
+    // de Stats, que ya es opaco — el fondo real es el panel, no el mundo. MasterScreen no tiene
+    // ningún panel opaco detrás: con alfa parcial el mundo se colaba bajo cada fila y volvía
+    // ilegible toda la lista de habilidades, un "desorden" que no era de posición sino de que el
+    // fondo nunca llegó a tapar lo que había detrás.
+    private static final int COL_BG      = ZenkaiPalette.DIALOG_BG;
+    private static final int COL_PANEL   = ZenkaiPalette.DIALOG_PANEL;
 
     private final String masterId;
     private final int entityId;
@@ -83,12 +98,20 @@ public class MasterScreen extends Screen {
     // ── Geometría ────────────────────────────────────────────────────────────
 
     private int listLeft()   { return left + PORTRAIT_W + PADDING; }
-    private int listRight()  { return left + BG_W - PADDING; }
+    /** Borde exterior de la lista, donde la scrollbar queda a ras. */
+    private int trackRight() { return left + BG_W - PADDING; }
+    private int scrollbarX() { return trackRight() - SCROLLBAR_W; }
+    /** Borde derecho REAL del texto (nombre/coste/hover): deja sitio fijo a la scrollbar,
+     *  se dibuje o no, para que la fila no salte de ancho al aparecer un maestro con más
+     *  habilidades de las que caben. */
+    private int listRight()  { return scrollbarX() - SCROLLBAR_GAP; }
     private int listTop()    { return top + CONTENT_TOP; }
     private int listHeight() { return BG_H - CONTENT_TOP - PADDING; }
     private int visibleRows(){ return Math.max(1, listHeight() / ROW_H); }
     private int maxScroll()  { return Math.max(0, rows.size() - visibleRows()); }
     private int rowTop(int i){ return listTop() + (i - scroll) * ROW_H; }
+    /** Y del texto de una fila, centrado verticalmente en ROW_H (fuente ≈ 9px de alto). */
+    private int rowTextY(int y) { return y + (ROW_H - 9) / 2; }
 
     private boolean onScreen(int i) {
         int rel = i - scroll;
@@ -109,10 +132,19 @@ public class MasterScreen extends Screen {
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
+    //
+    // ORDEN DE RENDER (convención del mod, ver WeightScreen/TechniqueEditScreen):
+    //   renderBackground() -> dim de vanilla + marco/fondo del panel.
+    //   render() -> super.render() PRIMERO (dispara renderBackground()) y el contenido DESPUÉS.
+    // Esta pantalla llamaba a this.renderBackground(...) A MANO al principio de render() Y
+    // ADEMÁS terminaba con super.render(...), que vuelve a invocar renderBackground() por su
+    // cuenta: el dim/blur de vanilla se pintaba DOS veces, la segunda ya con el retrato, el
+    // título y las filas dibujados encima — por eso se veía borroso el panel entero y no solo
+    // el mundo de fondo.
 
     @Override
-    public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g, mouseX, mouseY, partialTick);
+    public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(g, mouseX, mouseY, partialTick);
 
         // Marco de tres anillos, como el popup lateral de la ficha y el retrato del jugador:
         // es lo que ata visualmente esta pantalla al resto del mod sin renunciar al fondo
@@ -122,6 +154,11 @@ public class MasterScreen extends Screen {
         g.fill(left, top, left + BG_W, top + BG_H, COL_BG);
         g.fill(left + PADDING / 2, top + PADDING / 2,
                 left + PORTRAIT_W, top + BG_H - PADDING / 2, COL_PANEL);
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        super.render(g, mouseX, mouseY, partialTick);
 
         renderMaster(g, mouseX, mouseY);
 
@@ -148,28 +185,45 @@ public class MasterScreen extends Screen {
                     listLeft(), listTop(), ZenkaiPalette.TEXT_OFF);
         }
 
+        // Recorte a la ventana visible: con scrollbar de verdad hace falta, o una fila a medio
+        // salir se pintaría encima del marco superior/inferior del diálogo.
+        g.enableScissor(left, listTop(), left + BG_W, listTop() + visibleRows() * ROW_H);
+        SkillDef hoveredDef = null;
         for (int i = 0; i < rows.size(); i++) {
             if (!onScreen(i)) continue;
-            renderRow(g, st, rows.get(i), rowTop(i), mouseX, mouseY);
+            int y = rowTop(i);
+            renderRow(g, st, rows.get(i), y, i, mouseX, mouseY);
+            if (mouseX >= listLeft() - 2 && mouseX <= listRight()
+                    && mouseY >= y && mouseY < y + ROW_H - 1) {
+                hoveredDef = rows.get(i);
+            }
         }
+        g.disableScissor();
+        drawScrollbar(g);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        // El tooltip va fuera del scissor (y del todo al final) o se recortaría o quedaría
+        // tapado por la siguiente fila.
+        if (hoveredDef != null) {
+            Component desc = Component.translatable(hoveredDef.descKey());
+            g.renderTooltip(this.font, this.font.split(desc, TOOLTIP_W), mouseX, mouseY);
+        }
     }
 
-    private void renderRow(GuiGraphics g, PlayerStatsAttachment st, SkillDef def, int y,
+    private void renderRow(GuiGraphics g, PlayerStatsAttachment st, SkillDef def, int y, int index,
                            int mouseX, int mouseY) {
         boolean learned = st != null && st.skills().level(def.id()) > 0;
-        boolean hovered = !learned && mouseX >= listLeft() && mouseX <= listRight()
-                && mouseY >= y && mouseY < y + ROW_H;
+        boolean hovered = !learned && mouseX >= listLeft() - 2 && mouseX <= listRight()
+                && mouseY >= y && mouseY < y + ROW_H - 1;
 
         if (hovered) {
-            g.fill(listLeft() - 2, y - 1, listRight(), y + ROW_H - 3, ZenkaiPalette.HOVER_VEIL);
+            g.fill(listLeft() - 2, y, listRight(), y + ROW_H - 1, ZenkaiPalette.HOVER_VEIL);
         }
 
         Component name = Component.translatable(def.nameKey());
         // Aprendida = apagada; disponible = verde de "algo tuyo", el MISMO que usa la pestaña
         // de habilidades para lo mismo.
-        PanelText.onDark(g, this.font, name, listLeft(), y + 2,
+        int nameY = rowTextY(y);
+        PanelText.onDark(g, this.font, name, listLeft(), nameY,
                 learned ? ZenkaiPalette.TEXT_OFF : ZenkaiPalette.OK);
 
         Component right;
@@ -182,12 +236,30 @@ public class MasterScreen extends Screen {
                     def.tpCost(), def.mindReqFor(1));
             color = canAfford(st, def) ? ZenkaiPalette.TP_ON_DARK : ZenkaiPalette.DENIED;
         }
-        PanelText.rightOnDark(g, this.font, right, listRight(), y + 2, color);
+        PanelText.rightOnDark(g, this.font, right, listRight(), nameY, color);
 
-        // Descripción en pequeño bajo el nombre, recortada al ancho disponible.
-        Component desc = PanelText.fit(this.font, Component.translatable(def.descKey()),
-                listRight() - listLeft());
-        PanelText.onDark(g, this.font, desc, listLeft(), y + 12, ZenkaiPalette.TEXT_DIM);
+        // Separador tenue bajo cada fila salvo la última visible: sin él, con una sola línea
+        // por skill, la lista se lee como un bloque continuo en vez de habilidades separadas.
+        boolean lastVisible = index == rows.size() - 1 || !onScreen(index + 1);
+        if (!lastVisible) {
+            g.fill(listLeft() - 2, y + ROW_H - 1, listRight(), y + ROW_H, ZenkaiPalette.SEPARATOR_DARK);
+        }
+    }
+
+    /** Barra de scroll a la derecha de la lista; oculta si todo cabe sin desplazar. Mismo
+     *  patrón que SkillsScreen.drawScrollbar, con colores de fondo oscuro (BAR_BG_DARK/
+     *  TP_ON_DARK) en vez de los de panel beige que usa aquella pantalla. */
+    private void drawScrollbar(GuiGraphics g) {
+        int max = maxScroll();
+        if (max <= 0) return;
+
+        int x = scrollbarX();
+        int trackTop = listTop(), trackH = visibleRows() * ROW_H;
+        g.fill(x, trackTop, x + SCROLLBAR_W, trackTop + trackH, ZenkaiPalette.BAR_BG_DARK);
+
+        int thumbH = Math.max(12, trackH * visibleRows() / rows.size());
+        int thumbY = trackTop + (trackH - thumbH) * scroll / max;
+        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.TP_ON_DARK);
     }
 
     /**
@@ -226,7 +298,7 @@ public class MasterScreen extends Screen {
                 if (!onScreen(i)) continue;
                 int y = rowTop(i);
                 if (mouseX < listLeft() - 2 || mouseX > listRight()) continue;
-                if (mouseY < y - 1 || mouseY >= y + ROW_H - 3) continue;
+                if (mouseY < y || mouseY >= y + ROW_H - 1) continue;
 
                 SkillDef def = rows.get(i);
                 if (st != null && st.skills().level(def.id()) > 0) return true;  // ya aprendida
