@@ -34,17 +34,29 @@ public final class KiBodyRenderer {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_ball.png");
 
     /**
-     * Punto de entrada único: elige ruta y dibuja envolvente + cuerpo.
+     * Punto de entrada único: elige ruta y dibuja envolvente + cuerpo, a fuerza completa.
      * @param size escala uniforme aplicada a la malla (radio 0.5 en espacio de malla, salvo
      *             la esfera "desnuda" de la carga, que también mide 0.5).
      */
     public static void render(MultiBufferSource buffer, KiVisual v, KiMesh mesh,
                               PoseStack pose, float size, float r, float g, float b) {
+        render(buffer, v, mesh, pose, size, r, g, b, 1f);
+    }
+
+    /**
+     * Igual que {@link #render(MultiBufferSource, KiVisual, KiMesh, PoseStack, float, float,
+     * float, float)} pero con un multiplicador de alfa sobre TODAS las capas (envolvente,
+     * cáscara y núcleo). Lo usa KiChargeRenderer para el ajuste de opacidad en primera persona
+     * y para que el desvanecido al soltar la carga atenúe también el cuerpo, no solo el halo.
+     */
+    public static void render(MultiBufferSource buffer, KiVisual v, KiMesh mesh,
+                              PoseStack pose, float size, float r, float g, float b,
+                              float alphaMul) {
         boolean shaded = KiRenderTypes.available() && buffer instanceof MultiBufferSource.BufferSource;
         if (shaded) {
-            renderShaded((MultiBufferSource.BufferSource) buffer, v, mesh, pose, size, r, g, b);
+            renderShaded((MultiBufferSource.BufferSource) buffer, v, mesh, pose, size, r, g, b, alphaMul);
         } else {
-            renderFallback(buffer, v, mesh, pose, size, r, g, b);
+            renderFallback(buffer, v, mesh, pose, size, r, g, b, alphaMul);
         }
     }
 
@@ -57,7 +69,8 @@ public final class KiBodyRenderer {
      * tres dimensiones en vez de encarar siempre a la cámara.
      */
     private static void renderShaded(MultiBufferSource.BufferSource buffer, KiVisual v, KiMesh mesh,
-                                     PoseStack pose, float size, float r, float g, float b) {
+                                     PoseStack pose, float size, float r, float g, float b,
+                                     float alphaMul) {
         RenderType type = KiRenderTypes.fresnel();
         KiRenderTypes.setupFresnel(v);
         VertexConsumer vc = buffer.getBuffer(type);
@@ -66,7 +79,7 @@ public final class KiBodyRenderer {
             pose.pushPose();
             float es = size * v.envelopeScale();
             pose.scale(es, es, es);
-            mesh.emit(vc, pose.last(), r, g, b, v.envelopeAlpha(), 0f, false);
+            mesh.emit(vc, pose.last(), r, g, b, v.envelopeAlpha() * alphaMul, 0f, false);
             pose.popPose();
         }
 
@@ -74,7 +87,7 @@ public final class KiBodyRenderer {
         pose.scale(size, size, size);
         // whiteMul 0: el tinte llega puro. La blancura horneada en la malla es la aproximación
         // de la ruta vieja y aquí sobra — el shader ya sabe dónde está el núcleo.
-        mesh.emit(vc, pose.last(), r, g, b, v.shellAlpha(), 0f, false);
+        mesh.emit(vc, pose.last(), r, g, b, v.shellAlpha() * alphaMul, 0f, false);
         pose.popPose();
 
         buffer.endBatch(type);
@@ -82,19 +95,20 @@ public final class KiBodyRenderer {
 
     /** Ruta de respaldo: cáscara teñida + núcleo encogido y lavado a blanco. */
     private static void renderFallback(MultiBufferSource buffer, KiVisual v, KiMesh mesh,
-                                       PoseStack pose, float size, float r, float g, float b) {
+                                       PoseStack pose, float size, float r, float g, float b,
+                                       float alphaMul) {
         VertexConsumer vc = buffer.getBuffer(ModAuraRenderType.energyCrisp(BALL_TEXTURE));
 
         pose.pushPose();
         pose.scale(size, size, size);
-        mesh.emit(vc, pose.last(), r, g, b, v.shellAlpha(), 1.0f, true);
+        mesh.emit(vc, pose.last(), r, g, b, v.shellAlpha() * alphaMul, 1.0f, true);
         pose.popPose();
 
         if (v.coreAlpha() > 0f) {
             pose.pushPose();
             float cs = size * v.coreScale();
             pose.scale(cs, cs, cs);
-            mesh.emit(vc, pose.last(), r, g, b, v.coreAlpha(), 4.0f, true);
+            mesh.emit(vc, pose.last(), r, g, b, v.coreAlpha() * alphaMul, 4.0f, true);
             pose.popPose();
         }
     }

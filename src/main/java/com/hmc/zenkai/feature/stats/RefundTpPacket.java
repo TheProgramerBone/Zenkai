@@ -30,7 +30,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public record RefundTpPacket(String attrName, int points) implements CustomPacketPayload {
 
     /** Coincide con el paso mayor del selector de la pantalla de stats. */
-    public static final int MAX_POINTS = 100_000;
+    public static final int MAX_POINTS = 1_000;
 
     public static final Type<RefundTpPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "refund_tp"));

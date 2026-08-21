@@ -408,6 +408,9 @@ public class ModCommands {
         // Técnicas físicas y de ki aprendidas: submódulo aparte de las habilidades, así que
         // skills().clear() no las toca. Un reset "full" que las dejara vivas no sería full.
         att.techniques().clearAll();
+        // Maestría de técnica: la de forma/kaioken ya se limpia abajo vía
+        // PLAYER_FORM.clearProgression(), pero esa no toca la de PlayerStatsAttachment.
+        att.clearTechniqueMastery();
         att.setRace(Race.HUMAN);
         att.setStyle(Style.MARTIAL_ARTIST);
         att.respec();

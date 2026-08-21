@@ -147,7 +147,10 @@ public class MasteryScreen extends ZenkaiMenuScreen {
 
     private void addKiTechniques(PlayerStatsAttachment st) {
         List<Row> out = new ArrayList<>();
-        for (KiTechniqueType t : KiTechniqueType.values()) {
+        // Orden de desbloqueo, no KiTechniqueType.values(): ese enum es solo identidad/orden
+        // de atlas ("NO reordenar"), no refleja en qué orden las compró este jugador.
+        // unlockedTypesOrdered() ya solo trae lo que el jugador realmente tiene.
+        for (KiTechniqueType t : st.techniques().unlockedTypesOrdered()) {
             if (!t.enabled()) continue;
             float m = st.getTechniqueMastery(t.name());
             out.add(new Row(Component.translatable(t.nameKey()), techDetail(m, true), m));
@@ -159,7 +162,8 @@ public class MasteryScreen extends ZenkaiMenuScreen {
 
     private void addPhysical(PlayerStatsAttachment st) {
         List<Row> out = new ArrayList<>();
-        for (PhysicalTechnique t : PhysicalTechnique.values()) {
+        // Mismo motivo que addKiTechniques: orden real de desbloqueo, no el orden fijo del enum.
+        for (PhysicalTechnique t : st.techniques().unlockedPhysicalOrdered()) {
             if (!t.enabled()) continue;
             float m = st.getTechniqueMastery(t.name());
             out.add(new Row(Component.translatable(t.nameKey()), techDetail(m, false), m));

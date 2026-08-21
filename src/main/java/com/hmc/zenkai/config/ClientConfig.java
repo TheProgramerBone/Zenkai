@@ -117,6 +117,25 @@ public final class ClientConfig {
             defineBool("sense.ki_sense_camera_shake", "ki_sense_camera_shake",
                     "Shake the camera when your ki sense warns you of a nearby threat", true);
 
+    /** 0 = igual que el comportamiento de siempre: el aura de uno mismo no se dibuja en
+     *  primera persona (ver AuraRenderer). Por encima de 0 deja de ser un simple on/off — el
+     *  jugador que quiera verla aunque sea tenue puede subirla sin llegar al 100%. */
+    private static final ModConfigSpec.IntValue AURA_FP_OPACITY =
+            defineInt("aura.first_person_opacity", "aura_first_person_opacity",
+                    "Opacity, in percent, of your OWN aura as seen in first person. 0 hides it "
+                            + "completely (previous behaviour), 100 shows it at full strength",
+                    0, 0, 100, 10);
+
+    /** 100 = igual que el comportamiento de siempre: la bola de ki que cargas/sueltas se ve a
+     *  máxima fuerza en primera persona. Por debajo de eso es para quien la encuentra
+     *  demasiado grande pegada a la cámara pero no quiere perderla. */
+    private static final ModConfigSpec.IntValue KI_FP_OPACITY =
+            defineInt("ki.first_person_opacity", "ki_first_person_opacity",
+                    "Opacity, in percent, of your OWN charging/releasing ki ball as seen in "
+                            + "first person. 0 hides it completely, 100 shows it at full strength "
+                            + "(previous behaviour)",
+                    100, 0, 100, 10);
+
     // ── HUD de técnicas ──────────────────────────────────────────────────────
 
     // NINGUNA de las tres aparece como fila. La colocación entera se decide en
@@ -164,6 +183,10 @@ public final class ClientConfig {
 
     public static boolean showModelCredits() { return SHOW_MODEL_CREDITS.get(); }
     public static boolean kiSenseCameraShake() { return KI_SENSE_CAMERA_SHAKE.get(); }
+
+    /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
+    public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }
+    public static float kiFirstPersonOpacityFrac() { return KI_FP_OPACITY.get() / 100f; }
 
     public static HudAnchor hudAnchor() { return HUD_ANCHOR.get(); }
     public static HudOrientation hudOrientation() { return HUD_ORIENTATION.get(); }

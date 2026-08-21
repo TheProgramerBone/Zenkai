@@ -49,6 +49,17 @@ public final class PlayerTechniques {
     public boolean isUnlocked(PhysicalTechnique t) { return unlockedPhysical.contains(t); }
     public void unlock(PhysicalTechnique t)        { unlockedPhysical.add(t); }
 
+    /** Vista de solo lectura, en el orden en que se desbloquearon (LinkedHashSet). Para
+     *  MasteryScreen: listar por orden de desbloqueo en vez del orden fijo del enum. */
+    public Set<KiTechniqueType> unlockedTypesOrdered() {
+        return Collections.unmodifiableSet(unlockedTypes);
+    }
+
+    /** Igual que {@link #unlockedTypesOrdered()} pero para técnicas físicas. */
+    public Set<PhysicalTechnique> unlockedPhysicalOrdered() {
+        return Collections.unmodifiableSet(unlockedPhysical);
+    }
+
     /**
      * Olvida un tipo de ki Y BORRA sus instancias guardadas.
      * Las instancias tienen que irse con el tipo: si se quedan, el jugador sigue lanzándolas

@@ -84,6 +84,19 @@ public record AuraProfile(
     public boolean isVisible() { return size > 0.01f && alpha > 0.01f; }
 
     /**
+     * Perfil atenuado a una fracción de visibilidad, para el ajuste de opacidad en primera
+     * persona (ver ClientConfig#auraFirstPersonOpacityFrac). Escala el bloque de PODER
+     * igual que hace {@link AuraLod#compensate}, así que un 50% se lee como "la mitad de
+     * fuerte" y no como una forma distinta — la FORMA (mass..density) no se toca.
+     */
+    public AuraProfile faded(float frac) {
+        return new AuraProfile(mass, spike, turbulence, spread, height, density,
+                pulseHz, pulseAmp, frameTicks, groundSpin,
+                size, alpha * frac, core * frac,
+                Math.round(wisps * frac), sparksPerSecond * frac, ground * frac);
+    }
+
+    /**
      * Tamaño en el instante t de la pulsación. Kaioken es el único que hace que esto
      * se note: sin él la amplitud es ±4% a 0.6 Hz (respiración), a x20 es ±12% a 1.68 Hz.
      * @param seconds tiempo continuo en segundos (gameTime/20 + partialTick/20)

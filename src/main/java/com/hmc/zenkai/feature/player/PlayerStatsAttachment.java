@@ -339,6 +339,11 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         techMastery.computeIfPresent(key, (k, v) -> Math.min(100f, v));
     }
 
+    /** Reset full: la maestría de técnica se pierde igual que la de forma/kaioken
+     *  (PlayerFormAttachment.clearProgression()). No hay equivalente en el respec de stats:
+     *  ese solo devuelve TP, no borra progreso de uso. */
+    public void clearTechniqueMastery() { techMastery.clear(); }
+
     // ── NBT ──────────────────────────────────────────────────────────────────
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();

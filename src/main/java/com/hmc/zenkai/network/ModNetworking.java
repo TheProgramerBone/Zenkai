@@ -398,5 +398,10 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.generator.GeneratorFuelSyncPacket.TYPE,
                 com.hmc.zenkai.feature.generator.GeneratorFuelSyncPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.generator.GeneratorFuelSyncPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.party.PartySyncPacket.TYPE,
+                com.hmc.zenkai.feature.party.PartySyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.party.PartySyncPacket::handle);
     }
 }

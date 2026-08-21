@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.aura.AuraLod;
 import com.hmc.zenkai.feature.aura.AuraManager;
@@ -64,7 +65,13 @@ public final class AuraRenderer {
         for (Player pl : mc.level.players()) {
             if (!(pl instanceof AbstractClientPlayer p)) continue;
             if (!AuraClientState.isAuraActive(p)) continue;
-            if (p == mc.player && mc.options.getCameraType().isFirstPerson()) continue;
+
+            // Ajuste de opacidad SOLO para el propio jugador en primera persona: los demás se
+            // ven siempre a fuerza completa. Con la opción al 0% (comportamiento de siempre) ni
+            // se calcula el perfil, para no gastar nada en un aura que no se va a dibujar.
+            boolean selfFirstPerson = p == mc.player && mc.options.getCameraType().isFirstPerson();
+            float fpOpacity = selfFirstPerson ? ClientConfig.auraFirstPersonOpacityFrac() : 1f;
+            if (selfFirstPerson && fpOpacity <= 0f) continue;
 
             Vec3 at = p.getPosition(pt);
             double distSq = camPos.distanceToSqr(at);
@@ -72,6 +79,7 @@ public final class AuraRenderer {
             // 1. Estado -> perfil. El significado se resuelve aquí dentro.
             float turbo = AuraClientState.isTurbo(p) ? 1f : 0f;
             AuraProfile profile = AuraManager.profileOf(p, turbo);
+            if (fpOpacity < 1f) profile = profile.faded(fpOpacity);
             if (!profile.isVisible()) continue;
 
             // 2. Color: AuraColors sigue siendo la única autoridad del tinte.

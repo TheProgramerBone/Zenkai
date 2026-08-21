@@ -52,7 +52,7 @@ import java.util.Locale;
  * Sobre el beige del panel se dibuja SIN sombra y con la escala tierra de ZenkaiPalette; en los
  * popups, CON sombra y con la escala clara. Ver ZenkaiPalette.
  * ═══ SELECTOR DE PASO COMPARTIDO ═══
- * El multiplicador (x1 … x100000) gobierna el + Y el −. Es un solo control para una sola idea
+ * El multiplicador (x1 … x1000) gobierna el + Y el −. Es un solo control para una sola idea
  * ("de cuánto en cuánto me muevo"), y con dos selectores separados el jugador acabaría
  * comprando de cien en cien y devolviendo de uno en uno sin darse cuenta.
  */
@@ -113,7 +113,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
     private static final int POPUP_W = 136;
     private static final int POPUP_GAP = 8;
 
-    private static final int[] TP_STEPS = {1, 10, 100, 1000, 10000, 100000};
+    private static final int[] TP_STEPS = {1, 10, 100, 1000};
     private int tpStepIndex = 0;
 
     private int tpcLabelX, tpcLabelY, tpcLabelW, tpcLabelH;
@@ -168,7 +168,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         Font font = this.font;
         tpcLabelX = panelLeft + MARGIN;
         tpcLabelY = panelTop + FOOT_Y;
-        tpcLabelW = font.width(Component.translatable("screen.zenkai.stats_screen.tpx", 100000));
+        tpcLabelW = font.width(Component.translatable("screen.zenkai.stats_screen.tpx", 1000));
         tpcLabelH = font.lineHeight;
         addRenderableWidget(new PlusIconButton(tpcLabelX + tpcLabelW + 6, tpcLabelY - 2, this::cycleTpStep));
 
@@ -193,8 +193,8 @@ public class StatsScreen extends ZenkaiMenuScreen {
         PacketDistributor.sendToServer(new SpendTpPacket(attrName, points));
     }
 
-    /** La cantidad va en el paquete y el bucle lo hace el servidor: con el paso a x100000, un
-     *  paquete por punto serían cien mil mensajes por clic. Ver RefundTpPacket. */
+    /** La cantidad va en el paquete y el bucle lo hace el servidor: con el paso a x1000, un
+     *  paquete por punto serían mil mensajes por clic. Ver RefundTpPacket. */
     private void refund(String attrName, int points) {
         PacketDistributor.sendToServer(new RefundTpPacket(attrName, points));
     }

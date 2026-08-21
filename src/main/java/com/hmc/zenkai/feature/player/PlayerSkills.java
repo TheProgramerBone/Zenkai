@@ -110,8 +110,18 @@ public final class PlayerSkills {
 
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
-        CompoundTag lv = new CompoundTag();
-        levels.forEach(lv::putInt);
+        // "levels" viaja como ListTag de pares (id, lvl), NO como CompoundTag: el CompoundTag
+        // de Minecraft guarda sus claves en un HashMap interno, así que un mapa ahí NO
+        // conserva el orden de inserción — all() decía "en orden de desbloqueo" pero en
+        // cuanto esto pasaba por un sync o un guardado (o sea, en cada compra) el orden se
+        // barajaba. ListTag sí conserva el orden en que se añaden los elementos.
+        ListTag lv = new ListTag();
+        for (var e : levels.entrySet()) {
+            CompoundTag entry = new CompoundTag();
+            entry.putString("id", e.getKey());
+            entry.putInt("lvl", e.getValue());
+            lv.add(entry);
+        }
         tag.put("levels", lv);
         CompoundTag gf = new CompoundTag();
         grantedFloor.forEach(gf::putInt);
@@ -126,8 +136,18 @@ public final class PlayerSkills {
         levels.clear();
         grantedFloor.clear();
         if (tag.contains("levels")) {
-            CompoundTag lv = tag.getCompound("levels");
-            for (String k : lv.getAllKeys()) levels.put(k, lv.getInt(k));
+            Tag levelsTag = tag.get("levels");
+            if (levelsTag instanceof ListTag lv) {
+                for (int i = 0; i < lv.size(); i++) {
+                    CompoundTag entry = lv.getCompound(i);
+                    levels.put(entry.getString("id"), entry.getInt("lvl"));
+                }
+            } else if (levelsTag instanceof CompoundTag lv) {
+                // Migración de partidas guardadas con el formato viejo (sin orden garantizado).
+                // Se cargan igual; la próxima vez que algo cambie (compra/olvido) ya se
+                // reguarda en el formato nuevo ordenado.
+                for (String k : lv.getAllKeys()) levels.put(k, lv.getInt(k));
+            }
         }
         if (tag.contains("grantedFloor")) {
             CompoundTag gf = tag.getCompound("grantedFloor");

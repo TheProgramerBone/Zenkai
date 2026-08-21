@@ -8,8 +8,8 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Placeholder de las pestañas aún sin contenido (Técnicas Físicas, Historia, Party, Config).
- * Los pasos 5+ del release las reemplazan en ZenkaiMenuScreen.createScreen.
+ * Placeholder de las pestañas aún sin contenido (Historia, y las que no tengan case propio
+ * en ZenkaiMenuScreen.createScreen). Party dejó de usar esto — ver PartyScreen.
  */
 public class ComingSoonScreen extends ZenkaiMenuScreen {
 

@@ -5,6 +5,7 @@ import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiRenderTypes;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual;
+import com.hmc.zenkai.config.ClientConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
@@ -75,6 +76,13 @@ public final class KiChargeRenderer {
             KiChargeClientState.Charge c = KiChargeClientState.of(p);
             if (c == null) continue;
 
+            // Ajuste de opacidad SOLO para la propia bola en primera persona: la de otros
+            // jugadores siempre se ve a fuerza completa. El origen y el desvanecido al soltar
+            // (más abajo) se siguen calculando igual aunque esto valga 0 — es puramente si se
+            // dibuja o no, para que la memoria de PlayerHandTracker/fadeOf no se desincronice.
+            boolean selfFirstPerson = p == mc.player && mc.options.getCameraType().isFirstPerson();
+            float fpOpacity = selfFirstPerson ? ClientConfig.kiFirstPersonOpacityFrac() : 1f;
+
             float progress = KiChargeClientState.progress(c, now);
             KiVisual v = KiVisual.of(c.type());
 
@@ -92,9 +100,17 @@ public final class KiChargeRenderer {
                 // Sin dato de hueso: primera persona (PAL filtra la capa), fuera de pantalla o
                 // culling. Posición interpolada, que con p.position() cruda la bola vibra al andar.
                 origin = c.position().origin(p, p.getPosition(pt));
-                if (p == mc.player && mc.options.getCameraType().isFirstPerson()) {
-                    Vec3 look = p.getLookAngle().normalize();
-                    Vec3 right = new Vec3(-look.z, 0.0, look.x).normalize();
+                if (selfFirstPerson) {
+                    // Yaw DEL CUERPO, no de la cámara. Antes usaba getLookAngle(), que lleva el
+                    // pitch de la vista: mover el ratón arriba/abajo movía "forward" en vertical
+                    // y la esfera se desplazaba con la cámara en vez de quedarse pegada al
+                    // personaje. yBodyRot es horizontal puro y sigue al cuerpo (con el lag de
+                    // giro normal de vanilla, no el de la cabeza), así que la esfera ahora viaja
+                    // con el jugador y es indiferente a hacia dónde mires.
+                    float bodyYaw = Mth.lerp(pt, p.yBodyRotO, p.yBodyRot);
+                    double rad = Math.toRadians(bodyYaw);
+                    Vec3 look = new Vec3(-Math.sin(rad), 0.0, Math.cos(rad));
+                    Vec3 right = new Vec3(-look.z, 0.0, look.x);
                     origin = origin.add(look.scale(FP_FORWARD))
                             .add(right.scale(FP_SIDE))
                             .subtract(0.0, FP_DOWN, 0.0);
@@ -113,8 +129,10 @@ public final class KiChargeRenderer {
             // que es quien tiene que dejarlo apuntado para el desvanecido al soltar.
             KiChargeClientState.rememberDrawn(p.getId(), origin, radius);
 
-            drawBall(pose, buffers, cam, camPos, origin, v, radius, 1f, r, g, b, now, pt);
-            drew = true;
+            if (fpOpacity > 0f) {
+                drawBall(pose, buffers, cam, camPos, origin, v, radius, fpOpacity, r, g, b, now, pt);
+                drew = true;
+            }
         }
         // Esferas apagándose: sitio y tamaño congelados, alfa bajando. Tapan el salto entre
         // donde estaba la esfera (hueso) y donde nace el proyectil (offset del servidor).
@@ -125,14 +143,21 @@ public final class KiChargeRenderer {
             float a = KiChargeClientState.fadeAlpha(f, now, pt);
             if (a <= 0f) { KiChargeClientState.dropFade(p.getId()); continue; }
 
+            // El desvanecido de expiración (a) sigue su curso siempre, para que dropFade se
+            // dispare en su momento; la opacidad de primera persona solo decide si se pinta.
+            boolean selfFirstPerson = p == mc.player && mc.options.getCameraType().isFirstPerson();
+            float alpha = a * (selfFirstPerson ? ClientConfig.kiFirstPersonOpacityFrac() : 1f);
+
             KiVisual v = KiVisual.of(f.type());
             float r = ((f.rgb() >> 16) & 0xFF) / 255f;
             float g = ((f.rgb() >> 8) & 0xFF) / 255f;
             float b = (f.rgb() & 0xFF) / 255f;
             float radius = f.radius() * (0.6f + 0.4f * a);   // encoge mientras se apaga
 
-            drawBall(pose, buffers, cam, camPos, f.origin(), v, radius, a, r, g, b, now, pt);
-            drew = true;
+            if (alpha > 0f) {
+                drawBall(pose, buffers, cam, camPos, f.origin(), v, radius, alpha, r, g, b, now, pt);
+                drew = true;
+            }
         }
         if (drew) buffers.endBatch();
     }
@@ -151,7 +176,7 @@ public final class KiChargeRenderer {
 
         pose.pushPose();
         pose.translate(origin.x - camPos.x, origin.y - camPos.y, origin.z - camPos.z);
-        KiBodyRenderer.render(buffers, v, KiMeshFactory.chargeSphere(), pose, size, r, g, b);
+        KiBodyRenderer.render(buffers, v, KiMeshFactory.chargeSphere(), pose, size, r, g, b, alphaMul);
         pose.popPose();
 
         if (v.haloAlpha() <= 0f) return;
