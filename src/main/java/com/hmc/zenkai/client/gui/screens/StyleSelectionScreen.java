@@ -69,7 +69,9 @@ public class StyleSelectionScreen extends Screen {
     /** Valor elegido. Era blanco CON sombra sobre el beige: ilegible. Ahora dorado
      *  quemado y sin sombra, como el resto de valores del mod. */
     private static final int COLOR_VALUE  = ZenkaiPalette.VALUE_ON_PANEL; // blanco+sombra → valor seleccionado (Martial Artist, ...)
-    private static final int COLOR_DESC   = 0x5A4636; // marrón medio  → cuerpo de la descripción
+    /** Cuerpo de la descripción. Era 0x5A4636 suelto — el mismo valor que BODY_ON_PANEL,
+     *  copiado a mano en vez de referenciado (RaceSelectionScreen tenía el mismo duplicado). */
+    private static final int COLOR_DESC   = ZenkaiPalette.BODY_ON_PANEL; // marrón medio  → cuerpo de la descripción
     private static final int COLOR_SWATCH = ZenkaiPalette.LABEL_ON_PANEL; // bronce/dorado → etiqueta de swatch (Ki Color)
 
     // ── Bloque de estadísticas (a la derecha del preview) ─────────────────────
@@ -81,8 +83,14 @@ public class StyleSelectionScreen extends Screen {
     private static final int STATS_Y    = DIV2_Y + 8 + 14 + COLOR_BOX_H + 6;
     private static final int STAT_ROW_H = 9;
 
-    private static final int COLOR_HEADER = 0x7A6450; // cabecera de columna, muy tenue
-    private static final int COLOR_POOL   = 0x4A3726; // pools, mismo tono que los títulos
+    /** Cabecera de columna, muy tenue. Era 0x7A6450 suelto — el mismo ROL que
+     *  ZenkaiPalette.MUTED_ON_PANEL ya documenta ("Cabecera de columna y texto secundario"),
+     *  reinventado con un hex ligeramente distinto en vez de reusar el nombrado. */
+    private static final int COLOR_HEADER = ZenkaiPalette.MUTED_ON_PANEL;
+    /** Pools (Body/Stamina/Ki), mismo tono que los títulos de campo — antes un segundo literal
+     *  0x4A3726 idéntico a COLOR_TITLE en vez de reusarla, pese a que el propio comentario ya
+     *  decía "mismo tono que los títulos". */
+    private static final int COLOR_POOL   = COLOR_TITLE;
 
     @Nullable private final AppearanceScreen appearanceScreen;
     private final CompoundTag statsSnapshot;
@@ -317,7 +325,7 @@ public class StyleSelectionScreen extends Screen {
             } else {
                 double coef = RaceStatTable.get(race, style, col);
                 drawRight(g, Component.literal("×" + trim(coef)), lp + COL_COEF_R, y, COLOR_DESC);
-                drawRight(g, Component.literal(String.valueOf(Math.round(base[a.ordinal()] * coef))),
+                drawRight(g, boldValue(String.valueOf(Math.round(base[a.ordinal()] * coef))),
                         lp + STATS_R, y, COLOR_VALUE);
             }
             y += STAT_ROW_H;
@@ -338,13 +346,27 @@ public class StyleSelectionScreen extends Screen {
     private void drawPool(GuiGraphics g, String key, int value, int lp, int y) {
         var font = Minecraft.getInstance().font;
         g.drawString(font, Component.translatable(key), lp + STATS_X, y, COLOR_POOL, false);
-        drawRight(g, Component.literal(String.valueOf(value)), lp + STATS_R, y, COLOR_VALUE);
+        drawRight(g, boldValue(String.valueOf(value)), lp + STATS_R, y, COLOR_VALUE);
     }
 
-    /** Texto alineado a la derecha de x. Los números en columna solo se leen así. */
+    /**
+     * Texto alineado a la derecha de x. Los números en columna solo se leen así.
+     * SIEMPRE sin sombra: sobre el beige del panel la regla del mod es sin sombra para
+     * cualquier color _ON_PANEL (ver cabecera de ZenkaiPalette), sea cual sea. Antes esto
+     * activaba sombra "cuando color == COLOR_VALUE" — la columna Total y los pools salían
+     * con una sombra que ningún otro valor del mod lleva sobre beige. El realce que se
+     * buscaba con eso sale ahora de negrita en el propio Component (ver boldValue), no de
+     * romper la regla de sombra.
+     */
     private void drawRight(GuiGraphics g, Component text, int x, int y, int color) {
         var font = Minecraft.getInstance().font;
-        g.drawString(font, text, x - font.width(text), y, color, color == COLOR_VALUE);
+        g.drawString(font, text, x - font.width(text), y, color, false);
+    }
+
+    /** El total calculado (columna Total, pools): el número que el jugador realmente compara
+     *  entre estilos, así que lleva más peso visual que la base/coeficiente de al lado. */
+    private static Component boldValue(String s) {
+        return Component.literal(s).withStyle(net.minecraft.ChatFormatting.BOLD);
     }
 
     /** 11.0 -> "11", 9.4 -> "9.4". Un decimal muerto ocupa columna y no dice nada. */

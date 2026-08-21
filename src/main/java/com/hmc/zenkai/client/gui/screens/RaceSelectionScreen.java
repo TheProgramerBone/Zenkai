@@ -52,8 +52,17 @@ public class RaceSelectionScreen extends Screen {
     private static final int B2_TITLE_Y = DIV1_Y + 6;
     private static final int B2_VALUE_Y = B2_TITLE_Y + TITLE_H;
     private static final int DIV2_Y     = B2_VALUE_Y + 14;
+    /** Hueco tras DIV1 cuando NO hay bloque de Skin Mode (razas que no son Human/Saiyan):
+     *  antes DIV2_Y se quedaba fijo igualmente y el bloque de arriba se limitaba a no
+     *  dibujar su título/valor, dejando una banda beige vacía del tamaño de ese bloque entero
+     *  (~31px) entre los dos separadores. Ahora, sin el bloque, no hay NADA que separar de
+     *  nada: se pinta un solo separador (DIV1) y el resto sube para ocupar el hueco. */
+    private static final int DIV2_Y_COLLAPSED = DIV1_Y + 16;
     /** Bajado de 50 para hacer sitio al bloque de pasiva sin recortar al jugador por la cintura. */
     private static final int PREVIEW_SIZE = 40;
+    /** El hueco que libera el colapso de arriba (~21px) se reinvierte aquí: el retrato crece
+     *  un poco en vez de quedarse con el mismo tamaño flotando en más aire vacío. */
+    private static final int PREVIEW_SIZE_COLLAPSED = PREVIEW_SIZE + 6;
     /** Alto reservado al bloque de texto inferior (raza + pasiva). */
     private static final int TEXT_BLOCK_H = 92;
     private static final int MAX_RACE_DESC_LINES    = 2;
@@ -64,8 +73,13 @@ public class RaceSelectionScreen extends Screen {
     /** Valor elegido. Era blanco CON sombra sobre el beige: ilegible. Ahora dorado
      *  quemado y sin sombra, como el resto de valores del mod. */
     private static final int COLOR_VALUE  = ZenkaiPalette.VALUE_ON_PANEL;
-    private static final int COLOR_SECTION = 0xB5401A;
-    private static final int COLOR_DESC    = 0x5A4636;
+    /** Cabecera de sub-bloque (nombre de raza, "Passive: X") dentro del texto de descripción.
+     *  Era un hex suelto (0xB5401A) inventado a ojo, a un pelo de BORDER_IN sin ser el mismo
+     *  valor — se reusa el del marco en vez de mantener un tono casi-igual sin nombre. */
+    private static final int COLOR_SECTION = ZenkaiPalette.BORDER_IN;
+    /** Cuerpo de la descripción. Era 0x5A4636 suelto: el mismo valor que BODY_ON_PANEL, copiado
+     *  a mano en vez de referenciado (StyleSelectionScreen tenía el mismo literal duplicado). */
+    private static final int COLOR_DESC    = ZenkaiPalette.BODY_ON_PANEL;
 
     private int panelLeft, panelTop;
     private CompoundTag statsSnapshot, visualSnapshot;
@@ -166,6 +180,9 @@ public class RaceSelectionScreen extends Screen {
 
         g.fill(pl + IN_X1 + PAD, pt + DIV1_Y, pl + IN_X2 - PAD, pt + DIV1_Y + 1, ZenkaiPalette.SEPARATOR);
 
+        // Sin Skin Mode no hay un segundo bloque que cerrar con su propio separador: una raza
+        // como Arcosian solo tiene UN separador (tras Race), no dos con nada en medio.
+        int div2Y = humanSaiyan ? DIV2_Y : DIV2_Y_COLLAPSED;
         if (humanSaiyan) {
             drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.skin"),
                     cx, pt + B2_TITLE_Y, COLOR_TITLE);
@@ -174,15 +191,15 @@ public class RaceSelectionScreen extends Screen {
                             ? "screen.zenkai.skin.custom"
                             : "screen.zenkai.skin.vanilla"),
                     cx, pt + B2_VALUE_Y, COLOR_VALUE);
+            g.fill(pl + IN_X1 + PAD, pt + div2Y, pl + IN_X2 - PAD, pt + div2Y + 1, ZenkaiPalette.SEPARATOR);
         }
 
-        g.fill(pl + IN_X1 + PAD, pt + DIV2_Y, pl + IN_X2 - PAD, pt + DIV2_Y + 1, ZenkaiPalette.SEPARATOR);
-
+        int previewSize = humanSaiyan ? PREVIEW_SIZE : PREVIEW_SIZE_COLLAPSED;
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 g,
-                cx - 50, pt + DIV2_Y + 6,
+                cx - 50, pt + div2Y + 6,
                 cx + 50, pt + IN_Y2 - TEXT_BLOCK_H,
-                PREVIEW_SIZE, 0.0625f,
+                previewSize, 0.0625f,
                 (float) mouseX, (float) mouseY, mc.player);
 
         int descX = pl + IN_X1 + PAD + 2;

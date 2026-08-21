@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
@@ -11,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -28,8 +30,8 @@ import java.util.List;
  *   - nivel 0 y no puedes     -> coste en ROJO, clic no hace nada
  *   - nivel >= 1              -> gris, "Aprendida" (el maestro solo da el nivel 1; los
  *                                siguientes se suben con TP desde la pantalla de skills)
- * El panel es dibujado, no una textura: así no bloquea a que exista el asset. Cambiar a
- * blit() es una línea cuando tengas el fondo.
+ * Fondo: master_screen.png (ver tools/gen_master_screen.py), compartido por todos los
+ * maestros — lo que distingue a cada uno es su retrato 3D, no el fondo.
  */
 public class MasterScreen extends Screen {
 
@@ -52,24 +54,28 @@ public class MasterScreen extends Screen {
     private static final int SCROLLBAR_GAP = 6;
     private static final int TOOLTIP_W     = 200;
 
-    // ═══ PALETA UNIFICADA ═══
+    // ═══ FONDO: TEXTURA, NO DIBUJADO ═══
     //
     // Esta pantalla tenía paleta propia —fondo 0xF0100D14, borde 0xFF3B3550, pistas
     // 0xFF9A93AD— que no aparecía en ningún otro sitio del mod: los maestros parecían de otro
-    // mod. Era deuda visual, no una decisión. Ahora el fondo oscuro se mantiene (esta pantalla
-    // sí es un diálogo sobre el mundo, no un panel beige) pero los colores de ESTADO salen de
-    // la paleta común, que es lo que hace que "no te llega el TP" se vea igual aquí que en la
-    // pestaña de habilidades.
+    // mod. Era deuda visual, no una decisión. Luego pasó a dibujar el marco de tres anillos y
+    // los rellenos a mano con g.fill() (ver historial), con los colores ya de ZenkaiPalette,
+    // para no bloquear a que existiera el asset. Ahora existe: master_screen.png, generado por
+    // tools/gen_master_screen.py (ÚNICA fuente, no editar el PNG a mano), con el mismo marco de
+    // tres anillos IN/MID/OUT + brillo de esquina y el panel del retrato ya horneados dentro.
+    // Es UN solo archivo para TODOS los maestros —Kami, Kaio, Korin y los que añada el
+    // datapack—, igual que common_screen.png es uno solo para todas las pestañas del menú: lo
+    // que distingue a cada maestro es su retrato 3D, no el fondo.
     //
-    // Fondo y marco: el mismo lenguaje de tres anillos del popup lateral de la ficha, pero
-    // OPACOS (DIALOG_BG/DIALOG_PANEL) y no los POPUP_BG/BAR_BG_DARK de alfa parcial que usa ese
-    // popup. Aquella traslucidez es correcta ahí porque el popup flota junto al panel PRINCIPAL
-    // de Stats, que ya es opaco — el fondo real es el panel, no el mundo. MasterScreen no tiene
-    // ningún panel opaco detrás: con alfa parcial el mundo se colaba bajo cada fila y volvía
-    // ilegible toda la lista de habilidades, un "desorden" que no era de posición sino de que el
-    // fondo nunca llegó a tapar lo que había detrás.
-    private static final int COL_BG      = ZenkaiPalette.DIALOG_BG;
-    private static final int COL_PANEL   = ZenkaiPalette.DIALOG_PANEL;
+    // Sigue siendo opaco (no el POPUP_BG/BAR_BG_DARK de alfa parcial del popup lateral de la
+    // ficha): ese popup flota junto al panel PRINCIPAL de Stats, que ya es opaco, así que un
+    // pelín de transparencia ahí es acabado. MasterScreen no tiene ningún panel opaco detrás:
+    // con alfa parcial el mundo se colaba bajo cada fila y la volvía ilegible.
+    //
+    // ACOPLAMIENTO A VIGILAR: BG_W/BG_H/PORTRAIT_W/PADDING de aquí abajo están DUPLICADOS en el
+    // script Python (no puede leer las constantes Java). Si cambian aquí, regenerar la textura.
+    private static final ResourceLocation BG_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/master_screen.png");
 
     private final String masterId;
     private final int entityId;
@@ -145,15 +151,7 @@ public class MasterScreen extends Screen {
     @Override
     public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
-
-        // Marco de tres anillos, como el popup lateral de la ficha y el retrato del jugador:
-        // es lo que ata visualmente esta pantalla al resto del mod sin renunciar al fondo
-        // oscuro, que aquí sí hace falta porque flota sobre el mundo.
-        g.fill(left - 2, top - 2, left + BG_W + 2, top + BG_H + 2, ZenkaiPalette.BORDER_IN);
-        g.fill(left - 1, top - 1, left + BG_W + 1, top + BG_H + 1, ZenkaiPalette.BORDER_MID);
-        g.fill(left, top, left + BG_W, top + BG_H, COL_BG);
-        g.fill(left + PADDING / 2, top + PADDING / 2,
-                left + PORTRAIT_W, top + BG_H - PADDING / 2, COL_PANEL);
+        g.blit(BG_TEX, left, top, 0, 0, BG_W, BG_H, BG_W, BG_H);
     }
 
     @Override

@@ -587,7 +587,7 @@
   "screen.zenkai.skills.maxed": "Max level",
   "screen.zenkai.skills.header": "TP: %s    MIND: %s / %s free",
   "screen.zenkai.skills.forget": "Forget one level (refunds TP and MND)",
-  "screen.zenkai.skills.forget.locked": "Granted by a master or admin: can't be forgotten",
+  "screen.zenkai.skills.forget.locked": "Can't be forgotten",
 
   "--- GUI: TECHNIQUES ---": "--- GUI: TECHNIQUES ---",
   "screen.zenkai.technique.tab.combat": "Combat",
