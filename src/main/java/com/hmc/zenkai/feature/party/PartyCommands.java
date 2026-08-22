@@ -73,6 +73,14 @@ public final class PartyCommands {
                         .executes(ctx -> PartyService.disband(
                                 ctx.getSource().getServer(), ctx.getSource().getPlayerOrException()) ? 1 : 0))
 
+                .then(Commands.literal("friendlyfire")
+                        .then(Commands.literal("on")
+                                .executes(ctx -> PartyService.setFriendlyFire(ctx.getSource().getServer(),
+                                        ctx.getSource().getPlayerOrException(), true) ? 1 : 0))
+                        .then(Commands.literal("off")
+                                .executes(ctx -> PartyService.setFriendlyFire(ctx.getSource().getServer(),
+                                        ctx.getSource().getPlayerOrException(), false) ? 1 : 0)))
+
                 .then(Commands.literal("list")
                         .executes(ctx -> PartyService.list(
                                 ctx.getSource().getServer(), ctx.getSource().getPlayerOrException()) ? 1 : 0))

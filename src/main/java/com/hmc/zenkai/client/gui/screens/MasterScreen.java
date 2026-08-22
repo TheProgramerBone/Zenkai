@@ -199,7 +199,7 @@ public class MasterScreen extends Screen {
         g.disableScissor();
         drawScrollbar(g);
 
-        // El tooltip va fuera del scissor (y del todo al final) o se recortaría o quedaría
+        // El tooltip va fuera del scissor (y al final) o se recortaría o quedaría
         // tapado por la siguiente fila.
         if (hoveredDef != null) {
             Component desc = Component.translatable(hoveredDef.descKey());
@@ -244,7 +244,7 @@ public class MasterScreen extends Screen {
         }
     }
 
-    /** Barra de scroll a la derecha de la lista; oculta si todo cabe sin desplazar. Mismo
+    /** Barra de scroll a la derecha de la lista; oculta si cabe sin desplazar. Mismo
      *  patrón que SkillsScreen.drawScrollbar, con colores de fondo oscuro (BAR_BG_DARK/
      *  TP_ON_DARK) en vez de los de panel beige que usa aquella pantalla. */
     private void drawScrollbar(GuiGraphics g) {
@@ -277,7 +277,7 @@ public class MasterScreen extends Screen {
         InventoryScreen.renderEntityInInventoryFollowsMouse(          // ⚠ firma
                 g,
                 left + PADDING / 2, cyTop, left + PORTRAIT_W, cyBot,
-                26,                    // escala; ajústala al alto real del geo
+                50,                    // escala; ajústala al alto real del geo
                 0.0625F,
                 mouseX, mouseY,
                 le);

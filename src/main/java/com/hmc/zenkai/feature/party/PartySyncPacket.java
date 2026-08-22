@@ -22,8 +22,8 @@ import java.util.UUID;
  * vaciar PartyScreen, así que leaderId/members van vacíos en ese caso — no hace falta
  * mandarlos y así el paquete es más corto en el caso común de "no tengo party".
  */
-public record PartySyncPacket(boolean inParty, @Nullable UUID leaderId, List<Member> members)
-        implements CustomPacketPayload {
+public record PartySyncPacket(boolean inParty, @Nullable UUID leaderId, boolean friendlyFire,
+                              List<Member> members) implements CustomPacketPayload {
 
     public record Member(UUID id, String name) {}
 
@@ -37,6 +37,7 @@ public record PartySyncPacket(boolean inParty, @Nullable UUID leaderId, List<Mem
         buf.writeBoolean(pkt.inParty());
         if (!pkt.inParty()) return;
         buf.writeUUID(pkt.leaderId());
+        buf.writeBoolean(pkt.friendlyFire());
         buf.writeVarInt(pkt.members().size());
         for (Member m : pkt.members()) {
             buf.writeUUID(m.id());
@@ -46,14 +47,15 @@ public record PartySyncPacket(boolean inParty, @Nullable UUID leaderId, List<Mem
 
     private static PartySyncPacket decode(FriendlyByteBuf buf) {
         boolean inParty = buf.readBoolean();
-        if (!inParty) return new PartySyncPacket(false, null, List.of());
+        if (!inParty) return new PartySyncPacket(false, null, false, List.of());
         UUID leader = buf.readUUID();
+        boolean friendlyFire = buf.readBoolean();
         int n = buf.readVarInt();
         List<Member> members = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             members.add(new Member(buf.readUUID(), buf.readUtf(32)));
         }
-        return new PartySyncPacket(true, leader, members);
+        return new PartySyncPacket(true, leader, friendlyFire, members);
     }
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }

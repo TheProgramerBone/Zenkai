@@ -5,6 +5,7 @@ import com.hmc.zenkai.content.item.KiWeaponItem;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.*;
 import com.hmc.zenkai.feature.kiweapon.KiWeaponServer;
+import com.hmc.zenkai.feature.party.PartyService;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.OtherworldManager;
@@ -76,6 +77,18 @@ public class CombatZenkaiHooks {
         // vez de muerto — y a un inmortal ni eso.
         // ⚠ API a verificar al compilar: DamageTypeTags.BYPASSES_INVULNERABILITY en 1.21.1.
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+
+        // FUEGO AMIGO DE PARTY: antes que cualquier otra cosa, incluidos los i-frames de
+        // abajo — un golpe bloqueado aquí no debe consumir el dash de nadie ni contar como
+        // "casi me pega". Cubre lo que llega por LivingDamageEvent con el atacante
+        // puesto: melee, ki (blasts, proyectiles, Kiai) y técnicas por igual, porque todas
+        // esas rutas pasan por este mismo evento. Ver PartyService.friendlyFireBlocked.
+        if (e.getSource().getEntity() instanceof ServerPlayer attacker
+                && e.getEntity() instanceof ServerPlayer victim
+                && PartyService.friendlyFireBlocked(attacker, victim)) {
+            e.setNewDamage(0.0F);
+            return;
+        }
 
         // I-frames: antes de tocar defensa o pools. Un dash esquiva de verdad.
         if (e.getEntity() instanceof ServerPlayer dodger

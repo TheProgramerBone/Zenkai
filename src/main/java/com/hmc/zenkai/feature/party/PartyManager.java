@@ -34,6 +34,9 @@ public class PartyManager extends SavedData {
         public final UUID id;
         public UUID leaderId;
         public final LinkedHashSet<UUID> members = new LinkedHashSet<>();
+        /** Si es false (default), un miembro no puede dañar a otro miembro — ver
+         *  PartyService.friendlyFireBlocked(), el único sitio que lee este campo para decidir. */
+        public boolean friendlyFire = false;
 
         Party(UUID id, UUID leaderId) {
             this.id = id;
@@ -105,6 +108,11 @@ public class PartyManager extends SavedData {
     public void invite(UUID invitee, UUID partyId) { pendingInvites.put(invitee, partyId); }
     public void clearInvite(UUID invitee) { pendingInvites.remove(invitee); }
 
+    public void setFriendlyFire(Party party, boolean on) {
+        party.friendlyFire = on;
+        setDirty();
+    }
+
     // ── Persistencia ─────────────────────────────────────────────────────────
 
     public static PartyManager load(CompoundTag tag, HolderLookup.Provider registries) {
@@ -116,6 +124,7 @@ public class PartyManager extends SavedData {
                 CompoundTag entry = parties.getCompound(key);
                 UUID leader = entry.getUUID("leader");
                 Party party = new Party(id, leader);
+                party.friendlyFire = entry.getBoolean("friendlyFire");
 
                 ListTag membersTag = entry.getList("members", Tag.TAG_INT_ARRAY);
                 for (int i = 0; i < membersTag.size(); i++) {
@@ -138,6 +147,7 @@ public class PartyManager extends SavedData {
         for (Party p : partiesById.values()) {
             CompoundTag entry = new CompoundTag();
             entry.putUUID("leader", p.leaderId);
+            entry.putBoolean("friendlyFire", p.friendlyFire);
             ListTag membersTag = new ListTag();
             for (UUID m : p.members) membersTag.add(NbtUtils.createUUID(m));
             entry.put("members", membersTag);

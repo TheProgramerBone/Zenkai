@@ -59,7 +59,7 @@ public class RaceSelectionScreen extends Screen {
      *  nada: se pinta un solo separador (DIV1) y el resto sube para ocupar el hueco. */
     private static final int DIV2_Y_COLLAPSED = DIV1_Y + 16;
     /** Bajado de 50 para hacer sitio al bloque de pasiva sin recortar al jugador por la cintura. */
-    private static final int PREVIEW_SIZE = 40;
+    private static final int PREVIEW_SIZE = 30;
     /** El hueco que libera el colapso de arriba (~21px) se reinvierte aquí: el retrato crece
      *  un poco en vez de quedarse con el mismo tamaño flotando en más aire vacío. */
     private static final int PREVIEW_SIZE_COLLAPSED = PREVIEW_SIZE + 6;

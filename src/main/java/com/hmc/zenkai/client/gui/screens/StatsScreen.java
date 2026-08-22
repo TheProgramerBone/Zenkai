@@ -170,7 +170,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         tpcLabelY = panelTop + FOOT_Y;
         tpcLabelW = font.width(Component.translatable("screen.zenkai.stats_screen.tpx", 1000));
         tpcLabelH = font.lineHeight;
-        addRenderableWidget(new PlusIconButton(tpcLabelX + tpcLabelW + 6, tpcLabelY - 2, this::cycleTpStep));
+        addRenderableWidget(new PlusIconButton(tpcLabelX + tpcLabelW - 50, tpcLabelY - 2, this::cycleTpStep));
 
         // Dos botones bajo el render, uno por popup.
         int bw = (PREVIEW_X2 - PREVIEW_X1 - 4) / 2;
@@ -356,7 +356,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         // ══ Pie: paso + coste, en UNA línea ══
         g.drawString(font, Component.translatable("screen.zenkai.stats_screen.tpx", getCurrentTpStep()),
-                tpcLabelX, tpcLabelY, ZenkaiPalette.LABEL_ON_PANEL, false);
+                tpcLabelX+20, tpcLabelY+1, ZenkaiPalette.LABEL_ON_PANEL, false);
         Component cost = Component.translatable("screen.zenkai.stats_screen.cost", computeCurrentTpCost());
         g.drawString(font, cost, right - font.width(cost), tpcLabelY,
                 canAffordStep() ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.DENIED_ON_PANEL, false);
@@ -788,7 +788,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
     }
 
     private void renderTpStepTooltip(GuiGraphics g, int mouseX, int mouseY) {
-        if (mouseX >= tpcLabelX && mouseX < tpcLabelX + tpcLabelW &&
+        if (mouseX >= tpcLabelX + 20 && mouseX < tpcLabelX + tpcLabelW &&
                 mouseY >= tpcLabelY && mouseY < tpcLabelY + tpcLabelH) {
             g.renderTooltip(this.font, Component.translatable("screen.zenkai.stats_screen.tp_des"),
                     mouseX, mouseY);

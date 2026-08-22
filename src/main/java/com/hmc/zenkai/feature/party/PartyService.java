@@ -203,6 +203,46 @@ public final class PartyService {
         return true;
     }
 
+    // ── Fuego amigo ──────────────────────────────────────────────────────────
+
+    /**
+     * Único punto de decisión de si un golpe entre dos jugadores debe anularse por ir entre
+     * miembros de la misma party. Lo consulta CombatZenkaiHooks.onDamage ANTES de calcular
+     * nada — mismo hueco que los i-frames — así que cubre daño cuerpo a cuerpo, ki (blasts,
+     * proyectiles, Kiai) y técnicas por igual: pasa por ese mismo LivingDamageEvent.Pre,
+     * sin importar el origen.
+     */
+    public static boolean friendlyFireBlocked(ServerPlayer attacker, ServerPlayer victim) {
+        if (attacker == victim) return false;
+        var mgr = PartyManager.get(attacker.server);
+        PartyManager.Party party = mgr.partyOf(attacker.getUUID());
+        if (party == null || !party.members.contains(victim.getUUID())) return false;
+        return !party.friendlyFire;
+    }
+
+    /** Solo el líder. Por defecto una party nace con friendlyFire=false (protegidos); esto
+     *  es lo único que lo cambia. */
+    public static boolean setFriendlyFire(MinecraftServer server, ServerPlayer leader, boolean on) {
+        var mgr = PartyManager.get(server);
+        PartyManager.Party party = mgr.partyOf(leader.getUUID());
+        if (party == null || !party.leaderId.equals(leader.getUUID())) {
+            leader.sendSystemMessage(Component.translatable("command.zenkai.party.not_leader"));
+            return false;
+        }
+        if (party.friendlyFire == on) {
+            leader.sendSystemMessage(Component.translatable(on
+                    ? "command.zenkai.party.ff.already_on"
+                    : "command.zenkai.party.ff.already_off"));
+            return false;
+        }
+        mgr.setFriendlyFire(party, on);
+        broadcast(server, party, Component.translatable(on
+                ? "command.zenkai.party.ff.on"
+                : "command.zenkai.party.ff.off", leader.getGameProfile().getName()));
+        syncAll(server, party);
+        return true;
+    }
+
     // ── Chat y listado ───────────────────────────────────────────────────────
 
     /**
@@ -297,10 +337,11 @@ public final class PartyService {
         for (UUID m : party.members) {
             members.add(new PartySyncPacket.Member(m, resolveName(sp.server, m)));
         }
-        PacketDistributor.sendToPlayer(sp, new PartySyncPacket(true, party.leaderId, members));
+        PacketDistributor.sendToPlayer(sp,
+                new PartySyncPacket(true, party.leaderId, party.friendlyFire, members));
     }
 
     private static void sendEmptySync(ServerPlayer sp) {
-        PacketDistributor.sendToPlayer(sp, new PartySyncPacket(false, null, List.of()));
+        PacketDistributor.sendToPlayer(sp, new PartySyncPacket(false, null, false, List.of()));
     }
 }
