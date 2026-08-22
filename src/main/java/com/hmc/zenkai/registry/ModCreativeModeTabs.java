@@ -24,13 +24,19 @@ import java.util.function.Supplier;
  *
  * El orden tiene DOS niveles y es lo único que estructura la pestaña, ya que la rejilla de
  * vainilla no admite cabeceras de sección:
- *   1. ÍTEMS antes que BLOQUES. Es el corte más visible sin dibujar nada.
- *   2. Dentro de cada mitad, por FAMILIA (ver {@link #FAMILIES}), etapa y variante, de forma
- *      que un material y lo que se fabrica con él salen seguidos.
+ *   1. OBJETOS antes que BLOQUES. Es el corte más visible sin dibujar nada.
+ *   2. Dentro de cada mitad, el orden de REGISTRO: tal cual se fueron añadiendo los campos en
+ *      {@code ModItems.java} y luego en {@code ModBlocks.java} (el ítem de bloque de cada
+ *      bloque se registra justo detrás de él, así que ambos archivos comparten un único
+ *      registro — {@link ModItems#ITEMS} — y su orden de inserción real ya es "ModItems
+ *      primero, ModBlocks después"). No hace falta leer nada de {@code ModBlockEntities}: ese
+ *      archivo no registra ítems ni bloques nuevos, solo el {@code BlockEntityType} de bloques
+ *      que ya existen, así que no aporta ninguna posición.
  *
- * Nada de esto es una lista escrita a mano de 157 entradas: se decide por reglas sobre el id de
- * registro, así que un bloque nuevo cae solo donde le toca. Es justo el fallo que tiene
- * cualquier lista manual a los tres meses.
+ * La única excepción es el grupo de las esferas del dragón (ver {@link #dragonBallsGroup()}):
+ * son BlockItem de verdad, pero el jugador las vive como coleccionables, no como algo que
+ * coloca, así que se fuerzan a la mitad de objetos y se agrupan entre ellas en vez de quedar
+ * sueltas donde les tocaría por registro.
  */
 public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TAB =
@@ -49,7 +55,7 @@ public class ModCreativeModeTabs {
                     .displayItems((params, output) -> fill(output))
                     .build());
 
-    // ── Excepciones ──────────────────────────────────────────────────────────
+    // ── Excepciones de visibilidad ──────────────────────────────────────────
 
     /**
      * Armaduras con RACE_ARMOR_MATERIAL que SÍ se muestran. El material se usa para las pieles
@@ -74,6 +80,56 @@ public class ModCreativeModeTabs {
                 ModBlocks.HTC_PORTAL.get().asItem());
     }
 
+    // ── Excepción de sección: esferas del dragón ────────────────────────────
+
+    /**
+     * Cada esfera (namekiana o no) es un bloque de verdad —tiene luz, colisión propia, y se
+     * coloca— pero para el jugador es una pieza que se recoge, no material de construcción.
+     * Se listan en el orden en que deben salir juntas: el de sus bloques en
+     * {@code ModBlocks.java}, con {@code ALL_DRAGON_BALLS_ITEM} (que vive en
+     * {@code ModItems.java}, no en ModBlocks, porque {@code ALL_DRAGON_BALLS} se registra sin
+     * BlockItem automático) intercalado donde cae su propio bloque.
+     *
+     * Hoy este grupo está completo dentro de {@link #hidden()}, así que no se ve — pero la
+     * regla de sección/orden queda correcta por si alguna vez se destapa.
+     */
+    private static List<Item> dragonBallsGroup() {
+        return List.of(
+                ModBlocks.DRAGON_BALL_STONE.get().asItem(),
+                ModBlocks.DRAGON_BALL_1.get().asItem(),
+                ModBlocks.DRAGON_BALL_2.get().asItem(),
+                ModBlocks.DRAGON_BALL_3.get().asItem(),
+                ModBlocks.DRAGON_BALL_4.get().asItem(),
+                ModBlocks.DRAGON_BALL_5.get().asItem(),
+                ModBlocks.DRAGON_BALL_6.get().asItem(),
+                ModBlocks.DRAGON_BALL_7.get().asItem(),
+                ModItems.ALL_DRAGON_BALLS_ITEM.get(),
+                ModBlocks.NAMEK_DRAGON_BALL_STONE.get().asItem(),
+                ModBlocks.NAMEK_DRAGON_BALL_1.get().asItem(),
+                ModBlocks.NAMEK_DRAGON_BALL_2.get().asItem(),
+                ModBlocks.NAMEK_DRAGON_BALL_3.get().asItem(),
+                ModBlocks.NAMEK_DRAGON_BALL_4.get().asItem(),
+                ModBlocks.NAMEK_DRAGON_BALL_5.get().asItem(),
+                ModBlocks.NAMEK_DRAGON_BALL_6.get().asItem(),
+                ModBlocks.NAMEK_DRAGON_BALL_7.get().asItem());
+    }
+
+    /** Posición de cada esfera dentro de {@link #dragonBallsGroup()}, para mantenerlas juntas
+     *  y en ese orden dentro de la mitad de objetos. */
+    private static Map<Item, Integer> dragonBallRank() {
+        List<Item> group = dragonBallsGroup();
+        Map<Item, Integer> rank = new HashMap<>();
+        for (int i = 0; i < group.size(); i++) rank.put(group.get(i), i);
+        return rank;
+    }
+
+    /** Semilla namekiana: técnicamente ItemNameBlockItem (coloca el cultivo), pero es una
+     *  semilla — un objeto — y ya vive en su sitio natural dentro de ModItems.java, así que
+     *  solo hace falta moverla de mitad, no de posición. */
+    private static boolean isForcedItem(Item item, Map<Item, Integer> dragonBallRank) {
+        return dragonBallRank.containsKey(item) || item == ModItems.NAMEKIAN_HERB_SEEDS.get();
+    }
+
     // ── Relleno ──────────────────────────────────────────────────────────────
 
     private static void fill(CreativeModeTab.Output output) {
@@ -92,134 +148,53 @@ public class ModCreativeModeTabs {
 
             // Registrado siempre —el registro no admite condiciones y debe coincidir entre
             // cliente y servidor— pero invisible si el mod que le da sentido no está.
-            if (!mekanism && item == ModItems.DIRTY_RAW_KATCHIN.get()) continue;   // ⚠ ítem nuevo
+            if (!mekanism && item == ModItems.DIRTY_RAW_KATCHIN.get()) continue;
 
             items.add(item);
         }
 
-        items.sort(order());
+        items.sort(order(insertionOrder(), dragonBallRank()));
         items.forEach(output::accept);
     }
 
     // ── Orden ────────────────────────────────────────────────────────────────
 
-    /**
-     * Familias, EN EL ORDEN en que aparecen dentro de su mitad. La primera cuyo nombre esté
-     * contenido en el id gana, así que el orden de esta lista importa dos veces: decide la
-     * posición y desempata solapes.
-     *
-     * Lo que no encaje en ninguna cae al final, agrupado por su propio id. Es un fallback
-     * sano: un bloque nuevo nunca desaparece, solo queda al fondo hasta que lo clasifiques.
-     */
-    private static final List<String> FAMILIES = List.of(
-            "dragon_ball", "katchin", "structural_concrete", "ajisa", "sacred_stone",
-            "namek_crystal", "energy_crystal", "namekian", "scouter", "circuit",
-            "spawn_egg", "htc", "kintoun");
-
-    /** Sufijos de pieza y su orden dentro de una variante. El orden es el de vainilla al
-     *  mirar un set de construcción: bloque, escaleras, losa, muro, y luego lo redstone. */
-    private static final List<Map.Entry<String, Integer>> PARTS = List.of(
-            Map.entry("_stairs", 4), Map.entry("_slab", 5), Map.entry("_wall", 6),
-            Map.entry("_fence_gate", 8), Map.entry("_fence", 7), Map.entry("_door", 9),
-            Map.entry("_trapdoor", 10), Map.entry("_pressure_plate", 11), Map.entry("_button", 12));
+    /** Índice de inserción de cada ítem dentro de {@link ModItems#ITEMS}. Como
+     *  {@code registerBlockItem} en ModBlocks.java registra el BlockItem de cada bloque ahí
+     *  mismo, este único mapa ya refleja "orden de ModItems.java, luego orden de
+     *  ModBlocks.java" sin tener que combinar dos registros a mano. */
+    private static Map<Item, Integer> insertionOrder() {
+        Map<Item, Integer> order = new HashMap<>();
+        int i = 0;
+        for (Supplier<? extends Item> supplier : ModItems.ITEMS.getEntries()) {
+            order.put(supplier.get(), i++);
+        }
+        return order;
+    }
 
     /**
-     * Corte principal: 0 = ítems, 1 = bloques.
+     * Mitad → orden de registro (con las esferas del dragón ancladas juntas).
      *
-     * Es lo más parecido a una sección que permite la rejilla de vainilla. Va por delante de la
-     * familia a propósito: se ve de un vistazo dónde acaban las cosas que se llevan en la mano
-     * y empiezan las que se colocan, aunque eso separe el lingote de katchin de su bloque.
+     * Mitad: 0 = objetos, 1 = bloques. {@code isForcedItem} manda las esferas y la semilla
+     * namekiana a objetos aunque sean BlockItem.
+     *
+     * Dentro de cada mitad, las esferas usan como posición la que le tocaría a
+     * ALL_DRAGON_BALLS_ITEM (así caen juntas en vez de dispersarse por su propio índice de
+     * registro) y se desempatan por su rango dentro del grupo; lo demás usa directamente
+     * su índice de inserción. El id final es solo una red de seguridad para que el orden sea
+     * total y estable entre sesiones.
      */
+    private static Comparator<Item> order(Map<Item, Integer> insertionOrder, Map<Item, Integer> dragonBallRank) {
+        int dragonBallsAnchor = insertionOrder.get(ModItems.ALL_DRAGON_BALLS_ITEM.get());
+        return Comparator
+                .<Item>comparingInt(i -> isForcedItem(i, dragonBallRank) ? 0 : half(i))
+                .thenComparingInt(i -> dragonBallRank.containsKey(i) ? dragonBallsAnchor : insertionOrder.get(i))
+                .thenComparingInt(i -> dragonBallRank.getOrDefault(i, 0))
+                .thenComparing(ModCreativeModeTabs::path);
+    }
+
     private static int half(Item item) {
         return item instanceof BlockItem ? 1 : 0;
-    }
-
-    private static int familyIndex(String path) {
-        for (int i = 0; i < FAMILIES.size(); i++) {
-            if (path.contains(FAMILIES.get(i))) return i;
-        }
-        return FAMILIES.size();
-    }
-
-    /** Nombre de familia, o el propio id para los que no encajan (así al menos se agrupan
-     *  consigo mismos en vez de mezclarse todos al final). */
-    private static String familyName(String path) {
-        for (String f : FAMILIES) {
-            if (path.contains(f)) return f;
-        }
-        return path;
-    }
-
-    private static String partSuffix(String path) {
-        for (var e : PARTS) {
-            if (path.endsWith(e.getKey())) return e.getKey();
-        }
-        return null;
-    }
-
-    private static int partRank(String path) {
-        for (var e : PARTS) {
-            if (path.endsWith(e.getKey())) return e.getValue();
-        }
-        return 0;
-    }
-
-    /** Etapa dentro de la familia: material suelto, mena, bloque base, decoración. */
-    private static int stage(Item item, String path) {
-        if (!(item instanceof BlockItem)) return 0;
-        if (path.contains("_ore")) return 1;
-        if (path.endsWith("_block") || path.endsWith("_planks")
-                || path.endsWith("_log") || path.endsWith("_wood")) return 2;
-        return 3;
-    }
-
-    /** Desempate dentro de la etapa: la mena normal antes que la de deepslate, y el tronco
-     *  antes que las tablas. Sin esto salía deepslate_katchin_ore delante de katchin_ore. */
-    private static int stageSub(Item item, String path) {
-        int stage = stage(item, path);
-        if (stage == 1) return path.startsWith("deepslate") ? 1 : 0;
-        if (stage == 2) {
-            if (path.endsWith("_log") || path.endsWith("_wood")) return 0;
-            return path.endsWith("_planks") ? 1 : 2;
-        }
-        return 0;
-    }
-
-    /**
-     * Nombre de la variante, sin la pieza ni los prefijos que no cambian el material.
-     * Es lo que mantiene juntos "cut_katchin" y sus escaleras, y "ajisa_log" con
-     * "stripped_ajisa_log". La 's' final se recorta para que "sacred_stone_bricks" y
-     * "sacred_stone_brick_stairs" cuenten como la misma variante.
-     */
-    private static String variant(String path) {
-        String suffix = partSuffix(path);
-        String v = suffix != null ? path.substring(0, path.length() - suffix.length()) : path;
-        if (path.endsWith("_ore")) v = path.substring(0, path.length() - 4);
-        if (v.startsWith("deepslate_")) v = v.substring("deepslate_".length());
-        if (v.startsWith("stripped_")) v = v.substring("stripped_".length());
-        return v.endsWith("s") ? v.substring(0, v.length() - 1) : v;
-    }
-
-    /**
-     * Mitad → familia → etapa → variante → pieza → id.
-     *
-     * El id al final no es adorno: garantiza que el orden sea total y estable. Sin él, dos
-     * entradas que empaten en lo demás podrían salir en orden distinto entre sesiones.
-     *
-     * Se ordena por el path del id y NO por el nombre traducido: el nombre depende del idioma
-     * cargado y esto también corre en servidor, así que ordenar por él daría pestañas distintas
-     * según quién mire.
-     */
-    private static Comparator<Item> order() {
-        return Comparator
-                .comparingInt(ModCreativeModeTabs::half)
-                .thenComparingInt(i -> familyIndex(path(i)))
-                .thenComparing(i -> familyName(path(i)))
-                .thenComparingInt(i -> stage(i, path(i)))
-                .thenComparingInt(i -> stageSub(i, path(i)))
-                .thenComparing(i -> variant(path(i)))
-                .thenComparingInt(i -> partRank(path(i)))
-                .thenComparing(ModCreativeModeTabs::path);
     }
 
     // ── Utilidades ───────────────────────────────────────────────────────────
