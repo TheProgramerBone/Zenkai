@@ -151,8 +151,8 @@ public class PartyManager extends SavedData {
                 party.maxSize = entry.contains("maxSize") ? entry.getInt("maxSize") : DEFAULT_MAX_SIZE;
 
                 ListTag membersTag = entry.getList("members", Tag.TAG_INT_ARRAY);
-                for (int i = 0; i < membersTag.size(); i++) {
-                    UUID m = NbtUtils.loadUUID(membersTag.get(i));
+                for (Tag value : membersTag) {
+                    UUID m = NbtUtils.loadUUID(value);
                     party.members.add(m);
                     d.partyOfPlayer.put(m, id);
                 }
