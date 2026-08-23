@@ -43,16 +43,12 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
     private static final int ROW_H = 30;
     private static final int SAVE_W = 84, SAVE_H = 20;
     private static final int SCROLLBAR_W = 4;
-    /**
-     * Ancho reservado al control de la derecha, igual para los tres tipos o las columnas
-     * bailarían de fila en fila. 96 y no 72: con 72 el texto útil del ciclador eran 44 px y
-     * "Bottom right" ocupa 60, así que el valor se metía debajo de las flechas.
-     */
-    private static final int CONTROL_W = 96;
-    /** Lado de ArrowIconButton. No lo expone como constante, así que se replica aquí. */
-    private static final int ARROW_W = 12;
+    /** Ancho reservado al control de la derecha (reducido para no invadir el texto). */
+    private static final int CONTROL_W = 64;
+    /** Lado real del icono de la flecha. */
+    private static final int ARROW_W = 14;
     /** Separación entre la flecha y el valor. */
-    private static final int ARROW_GAP = 3;
+    private static final int ARROW_GAP = 2;
 
     /** Pantalla desde la que se abrió, si vino de la lista de mods. Null si es una pestaña. */
     @Nullable private final Screen returnTo;
@@ -121,16 +117,16 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
 
     /**
      * Fila de acción: rótulo a la izquierda como cualquier opción, botón en la columna de
-     * control. No tiene valor en staged porque no hay nada que guardar aquí — la pantalla de
-     * colocación escribe sola por setHudPlacement().
-     * Se pasa THIS como padre: al volver, el buffer staged sigue intacto y no hace falta
-     * guardar a la fuerza antes de salir.
+     * control ajustado a CONTROL_W para no invadir el texto.
      */
     private void addActionRow(int rowY) {
         int y = rowY + (ROW_H - PanelButton.H) / 2;
-        addRenderableWidget(PanelButton.secondary(rowRight() - PanelButton.W, y,
+        int x = rowRight() - CONTROL_W;
+        var actionBtn = PanelButton.secondary(x, y,
                 Component.translatable("screen.zenkai.client_config.hud_layout.open"),
-                () -> mc.setScreen(new HudPlacementScreen(this))));
+                () -> mc.setScreen(new HudPlacementScreen(this)));
+        actionBtn.setWidth(CONTROL_W);
+        addRenderableWidget(actionBtn);
     }
 
     /** Crea el control de una fila según su tipo. */
@@ -162,8 +158,6 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
         addRenderableWidget(new ArrowIconButton(x, y + 1, ArrowIconButton.Dir.LEFT,
                 () -> cycleStaged(entry, index, -1)));
 
-        // El propio valor es clicable y avanza: es lo que la mitad de la gente intenta antes de
-        // fijarse en las flechas.
         addRenderableWidget(new TextOnlyButton(x + ARROW_W + ARROW_GAP, y, labelW, 14,
                 Component.empty(), () -> cycleStaged(entry, index, 1)) {
             @Override
@@ -175,15 +169,6 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
 
         addRenderableWidget(new ArrowIconButton(rowRight() - ARROW_W, y + 1,
                 ArrowIconButton.Dir.RIGHT, () -> cycleStaged(entry, index, 1)));
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T extends Enum<T>> T stagedEnum(ClientConfig.EnumEntry<T> entry, int index) {
-        return (T) staged.get(index);
-    }
-
-    private <T extends Enum<T>> void cycleStaged(ClientConfig.EnumEntry<T> entry, int index, int dir) {
-        staged.set(index, entry.cycle(stagedEnum(entry, index), dir));
     }
 
     /** Selector numérico: [<] valor [>], saltando de step en step y sin dar la vuelta. */
@@ -206,6 +191,15 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
 
         addRenderableWidget(new ArrowIconButton(rowRight() - ARROW_W, y + 1,
                 ArrowIconButton.Dir.RIGHT, () -> stepStaged(entry, index, entry.step())));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Enum<T>> T stagedEnum(ClientConfig.EnumEntry<T> entry, int index) {
+        return (T) staged.get(index);
+    }
+
+    private <T extends Enum<T>> void cycleStaged(ClientConfig.EnumEntry<T> entry, int index, int dir) {
+        staged.set(index, entry.cycle(stagedEnum(entry, index), dir));
     }
 
     /** Los números NO dan la vuelta: pasar de 100 a 0 por un clic de más sería una trampa. */
@@ -310,7 +304,9 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
                 descKey = e.titleKey() + ".desc";
             }
 
-            PanelText.onPanel(g, this.font, Component.translatable(titleKey),
+            // Título recortado si sobrepasa el ancho disponible antes de los controles
+            Component titleComp = PanelText.fit(this.font, Component.translatable(titleKey), textWidth());
+            PanelText.onPanel(g, this.font, titleComp,
                     panelLeft + MARGIN, rowY + 5, ZenkaiPalette.LABEL_ON_PANEL);
 
             // Descripción: una línea recortada. La completa va en el tooltip de la fila.

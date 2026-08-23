@@ -1,6 +1,6 @@
 {
   "levels": [
-    { "energy": 3000, "materials": [ { "item": "c:glass_panes", "count": 4 }, { "tag": "c:ingots/copper", "count": 4 } ] },
+    { "energy": 3000, "materials": [ { "tag": "c:glass_panes", "count": 4 }, { "tag": "c:ingots/copper", "count": 4 } ] },
     { "energy": 6000, "materials": [ { "item": "minecraft:amethyst_shard", "count": 6 }, { "tag": "c:ingots/gold", "count": 4 } ] },
     { "energy": 12000, "materials": [ { "item": "zenkai:elite_circuit", "count": 1 }, { "item": "minecraft:amethyst_block", "count": 2 } ] },
     { "energy": 24000, "materials": [ { "item": "zenkai:elite_circuit", "count": 3 }, { "item": "zenkai:namek_crystal", "count": 2 } ] },

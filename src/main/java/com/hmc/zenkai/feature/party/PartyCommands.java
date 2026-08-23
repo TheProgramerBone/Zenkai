@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.party;
 
 import com.hmc.zenkai.Zenkai;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.commands.CommandSourceStack;
@@ -80,6 +81,13 @@ public final class PartyCommands {
                         .then(Commands.literal("off")
                                 .executes(ctx -> PartyService.setFriendlyFire(ctx.getSource().getServer(),
                                         ctx.getSource().getPlayerOrException(), false) ? 1 : 0)))
+
+                .then(Commands.literal("maxsize")
+                        .then(Commands.argument("size", IntegerArgumentType.integer(1))
+                                .executes(ctx -> PartyService.setMaxSize(
+                                        ctx.getSource().getServer(),
+                                        ctx.getSource().getPlayerOrException(),
+                                        IntegerArgumentType.getInteger(ctx, "size")) ? 1 : 0)))
 
                 .then(Commands.literal("list")
                         .executes(ctx -> PartyService.list(

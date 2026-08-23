@@ -6,6 +6,7 @@ import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.forms.FormDef;
+import com.hmc.zenkai.feature.party.PartyService;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.skills.SuperForms;
@@ -270,9 +271,21 @@ public class ModCommands {
 
                 // ── /zenkai debug entity ─────────────────────────────────────────
                 // Vuelca vida vanilla + pool zenkai de la entidad en el punto de mira.
+                //
+                // ── /zenkai debug party add [nombre] ─────────────────────────────
+                // TEMPORAL — solo para probar PartyScreen en singleplayer, donde no hay con
+                // quién formar grupo de verdad. Añade un miembro con UUID aleatorio a tu party
+                // (la crea si hace falta). Ver PartyService.debugAddFakeMember y el javadoc de
+                // PartyDebug para qué borrar cuando el menú ya esté verificado.
                 .then(Commands.literal("debug")
                         .then(Commands.literal("entity")
-                                .executes(ModCommands::debugEntity)))
+                                .executes(ModCommands::debugEntity))
+                        .then(Commands.literal("party")
+                                .then(Commands.literal("add")
+                                        .executes(ctx -> debugPartyAdd(ctx, null))
+                                        .then(Commands.argument("name", StringArgumentType.word())
+                                                .executes(ctx -> debugPartyAdd(ctx,
+                                                        StringArgumentType.getString(ctx, "name")))))))
 
 
 
@@ -712,6 +725,14 @@ public class ModCommands {
                         + "\n  body  : " + body
         ).withStyle(ChatFormatting.AQUA), false);
         return 1;
+    }
+
+    /** TEMPORAL — ver el comentario de "/zenkai debug party add" arriba y el javadoc de
+     *  PartyService.debugAddFakeMember. {@code name} null → nombre autogenerado. */
+    private static int debugPartyAdd(CommandContext<CommandSourceStack> ctx, String name)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        return PartyService.debugAddFakeMember(ctx.getSource().getServer(), sp, name) ? 1 : 0;
     }
 
     private static int respec(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {

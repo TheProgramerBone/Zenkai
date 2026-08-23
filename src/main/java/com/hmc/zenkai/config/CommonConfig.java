@@ -87,6 +87,14 @@ public final class CommonConfig {
                     .defineInRange("aura.turbo_drain_pct_per_sec", 0.005D, 0.0D, 1.0D);
 
     // =====================================================================
+    // SPEC — Party
+    // =====================================================================
+
+    private static final ModConfigSpec.IntValue PARTY_MAX_SIZE_CEILING_RAW =
+            BUILDER.comment("Hard ceiling admins can set for /zparty maxsize (the per-party cap a LEADER can dial up to with the PartyConfig icon). 32 is the protocol's own hard cap (PartySyncPacket.MAX_MEMBERS) - this can only lower that, never raise it.")
+                    .defineInRange("party.max_size_ceiling", 32, 1, 32);
+
+    // =====================================================================
     // SPEC — Entidades sin stats propias
     // =====================================================================
 
@@ -466,6 +474,7 @@ public final class CommonConfig {
     private static volatile double REGEN_BODY_EXHAUSTION = 1.2D;
     private static volatile double REGEN_STAMINA_EXHAUSTION = 0.15D;
     private static volatile int    REGEN_MIN_FOOD = 6;
+    private static volatile int    PARTY_MAX_SIZE_CEILING = 32;
 
     private static volatile boolean MIRROR_HEALTH = true;
     private static volatile double ABSORPTION_WEIGHT = 1.0D;
@@ -543,6 +552,7 @@ public final class CommonConfig {
         REGEN_BODY_EXHAUSTION    = REGEN_BODY_EXHAUSTION_RAW.get();
         REGEN_STAMINA_EXHAUSTION = REGEN_STAMINA_EXHAUSTION_RAW.get();
         REGEN_MIN_FOOD           = REGEN_MIN_FOOD_RAW.get();
+        PARTY_MAX_SIZE_CEILING   = PARTY_MAX_SIZE_CEILING_RAW.get();
 
         BODY_SCALE    = BODY_SCALE_RAW.get();
         STAMINA_SCALE = STAMINA_SCALE_RAW.get();
@@ -634,6 +644,8 @@ public final class CommonConfig {
     public static double regenBodyExhaustion()     { return REGEN_BODY_EXHAUSTION; }
     public static double regenStaminaExhaustion()  { return REGEN_STAMINA_EXHAUSTION; }
     public static int    regenMinFoodLevel()       { return REGEN_MIN_FOOD; }
+    /** Tope admin para /zparty maxsize — ver el comentario de PARTY_MAX_SIZE_CEILING_RAW. */
+    public static int    partyMaxSizeCeiling()     { return PARTY_MAX_SIZE_CEILING; }
 
     public static double speedMultiplierCap()       { return SPEED_MULT_CAP; }
     public static double movementScaling()          { return MOVE_SCALING; }

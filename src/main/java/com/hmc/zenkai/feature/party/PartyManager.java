@@ -27,8 +27,19 @@ public class PartyManager extends SavedData {
 
     private static final String ID = "zenkai_party";
 
-    /** Miembros por party, líder incluido. Ajustable si hace falta otro tamaño. */
-    public static final int MAX_SIZE = 4;
+    /** Tamaño con el que nace toda party nueva. El líder puede subirlo después con
+     *  /zparty maxsize (PartyService.setMaxSize, botón PartyConfig en PartyScreen), hasta el
+     *  tope admin de CommonConfig.partyMaxSizeCeiling(). */
+    public static final int DEFAULT_MAX_SIZE = 4;
+
+    /**
+     * Tope técnico absoluto del protocolo: DUPLICADO a propósito en
+     * CommonConfig.PARTY_MAX_SIZE_CEILING_RAW (su límite superior de defineInRange) — el admin
+     * solo puede BAJAR este número, nunca subirlo. Mismo criterio que las texturas
+     * generadas (tools/gen_*.py): dos sitios con el mismo literal, comentado en los dos, en vez
+     * de una dependencia cruzada config -> feature para ahorrarse una constante.
+     */
+    public static final int HARD_CAP = 32;
 
     public static final class Party {
         public final UUID id;
@@ -37,6 +48,9 @@ public class PartyManager extends SavedData {
         /** Si es false (default), un miembro no puede dañar a otro miembro — ver
          *  PartyService.friendlyFireBlocked(), el único sitio que lee este campo para decidir. */
         public boolean friendlyFire = false;
+        /** Tamaño máximo de ESTA party. Por-party y no global: cada líder ajusta el suyo (ver
+         *  PartyService.setMaxSize), acotado a [members.size(), CommonConfig.partyMaxSizeCeiling()]. */
+        public int maxSize = DEFAULT_MAX_SIZE;
 
         Party(UUID id, UUID leaderId) {
             this.id = id;
@@ -113,6 +127,13 @@ public class PartyManager extends SavedData {
         setDirty();
     }
 
+    /** Sin validar rango: PartyService.setMaxSize ya acotó contra el tope admin y el tamaño
+     *  actual del grupo antes de llamar aquí — este method solo aplica y persiste. */
+    public void setMaxSize(Party party, int size) {
+        party.maxSize = size;
+        setDirty();
+    }
+
     // ── Persistencia ─────────────────────────────────────────────────────────
 
     public static PartyManager load(CompoundTag tag, HolderLookup.Provider registries) {
@@ -125,6 +146,9 @@ public class PartyManager extends SavedData {
                 UUID leader = entry.getUUID("leader");
                 Party party = new Party(id, leader);
                 party.friendlyFire = entry.getBoolean("friendlyFire");
+                // Ausente en guardados de antes de esta feature: cae al default de siempre,
+                // no a 0 (que dejaría la party sin poder aceptar a nadie ni siquiera al líder).
+                party.maxSize = entry.contains("maxSize") ? entry.getInt("maxSize") : DEFAULT_MAX_SIZE;
 
                 ListTag membersTag = entry.getList("members", Tag.TAG_INT_ARRAY);
                 for (int i = 0; i < membersTag.size(); i++) {
@@ -148,6 +172,7 @@ public class PartyManager extends SavedData {
             CompoundTag entry = new CompoundTag();
             entry.putUUID("leader", p.leaderId);
             entry.putBoolean("friendlyFire", p.friendlyFire);
+            entry.putInt("maxSize", p.maxSize);
             ListTag membersTag = new ListTag();
             for (UUID m : p.members) membersTag.add(NbtUtils.createUUID(m));
             entry.put("members", membersTag);

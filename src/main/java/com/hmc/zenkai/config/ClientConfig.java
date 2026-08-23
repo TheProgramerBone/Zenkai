@@ -124,7 +124,7 @@ public final class ClientConfig {
             defineInt("aura.first_person_opacity", "aura_first_person_opacity",
                     "Opacity, in percent, of your OWN aura as seen in first person. 0 hides it "
                             + "completely (previous behaviour), 100 shows it at full strength",
-                    0, 0, 100, 10);
+                    30, 0, 100, 10);
 
     /** 100 = igual que el comportamiento de siempre: la bola de ki que cargas/sueltas se ve a
      *  máxima fuerza en primera persona. Por debajo de eso es para quien la encuentra

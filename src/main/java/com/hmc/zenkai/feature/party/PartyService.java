@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.party;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.config.CommonConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -68,9 +69,9 @@ public final class PartyService {
             inviter.sendSystemMessage(Component.translatable("command.zenkai.party.not_leader"));
             return false;
         }
-        if (party.members.size() >= PartyManager.MAX_SIZE) {
+        if (party.members.size() >= party.maxSize) {
             inviter.sendSystemMessage(Component.translatable(
-                    "command.zenkai.party.invite.full", PartyManager.MAX_SIZE));
+                    "command.zenkai.party.invite.full", party.maxSize));
             return false;
         }
 
@@ -101,7 +102,7 @@ public final class PartyService {
             return false;
         }
         PartyManager.Party party = mgr.party(partyId);
-        if (party == null || party.members.size() >= PartyManager.MAX_SIZE) {
+        if (party == null || party.members.size() >= party.maxSize) {
             sp.sendSystemMessage(Component.translatable("command.zenkai.party.accept.gone"));
             return false;
         }
@@ -203,6 +204,46 @@ public final class PartyService {
         return true;
     }
 
+    // ── Debug (temporal) ─────────────────────────────────────────────────────
+
+    /**
+     * SOLO PARA PRUEBAS: añade un miembro con un UUID aleatorio (no un jugador real) a la
+     * party de quien ejecuta el comando, creándola si hace falta. Bypasa invite()/accept() a
+     * propósito — sirve para probar PartyScreen en singleplayer, donde no hay con quién formar
+     * grupo de verdad. Ver el javadoc de {@link PartyDebug} para qué más borrar junto a esto.
+     * Comando: {@code /zenkai debug party add [nombre]}, gated por el permiso 2 del root
+     * /zenkai (ver ModCommands) — no expuesto en /zparty, que es de cualquier jugador.
+     */
+    public static boolean debugAddFakeMember(MinecraftServer server, ServerPlayer leader,
+                                             @Nullable String fakeName) {
+        var mgr = PartyManager.get(server);
+        PartyManager.Party party = mgr.partyOf(leader.getUUID());
+        if (party == null) {
+            party = mgr.createFor(leader.getUUID());
+        } else if (!party.leaderId.equals(leader.getUUID())) {
+            leader.sendSystemMessage(Component.translatable("command.zenkai.party.not_leader"));
+            return false;
+        }
+        if (party.members.size() >= party.maxSize) {
+            leader.sendSystemMessage(Component.translatable(
+                    "command.zenkai.party.invite.full", party.maxSize));
+            return false;
+        }
+
+        String name = (fakeName == null || fakeName.isBlank())
+                ? "TestBot" + party.members.size() : fakeName;
+        // Recortado al mismo tope que PartySyncPacket acepta (ver su MAX_NAME_LEN): un
+        // nombre de prueba más largo que eso reventaba el encoder en CADA login mientras la
+        // party siguiera guardada — justo el bug que dejó esto aquí, no algo hipotético.
+        if (name.length() > 32) name = name.substring(0, 32);
+        UUID fakeId = UUID.randomUUID();
+        PartyDebug.register(fakeId, name);
+        mgr.addMember(party, fakeId);
+        leader.sendSystemMessage(Component.literal("[Zenkai DEBUG] Added fake party member: " + name));
+        syncAll(server, party);
+        return true;
+    }
+
     // ── Fuego amigo ──────────────────────────────────────────────────────────
 
     /**
@@ -243,6 +284,47 @@ public final class PartyService {
         return true;
     }
 
+    // ── Tamaño máximo ────────────────────────────────────────────────────────
+
+    /**
+     * Solo el líder. Acotado a [members.size() actual, CommonConfig.partyMaxSizeCeiling()]:
+     * ni por debajo de la gente que ya está dentro (los expulsaría en silencio) ni por encima
+     * del tope que el admin del servidor haya fijado. El icono PartyConfig de PartyScreen ya
+     * lee ese mismo tope del último PartySyncPacket para no dejar arrastrar el picker más allá
+     * (ver PartySyncPacket.maxSizeCeiling), pero el servidor es quien de verdad decide: un
+     * cliente desincronizado o modificado no puede colarse por encima.
+     */
+    public static boolean setMaxSize(MinecraftServer server, ServerPlayer leader, int size) {
+        var mgr = PartyManager.get(server);
+        PartyManager.Party party = mgr.partyOf(leader.getUUID());
+        if (party == null || !party.leaderId.equals(leader.getUUID())) {
+            leader.sendSystemMessage(Component.translatable("command.zenkai.party.not_leader"));
+            return false;
+        }
+        int ceiling = CommonConfig.partyMaxSizeCeiling();
+        if (size < 1 || size > ceiling) {
+            leader.sendSystemMessage(Component.translatable(
+                    "command.zenkai.party.maxsize.out_of_range", 1, ceiling));
+            return false;
+        }
+        if (size < party.members.size()) {
+            leader.sendSystemMessage(Component.translatable(
+                    "command.zenkai.party.maxsize.too_small", party.members.size()));
+            return false;
+        }
+        if (size == party.maxSize) {
+            leader.sendSystemMessage(Component.translatable(
+                    "command.zenkai.party.maxsize.same", size));
+            return false;
+        }
+
+        mgr.setMaxSize(party, size);
+        broadcast(server, party, Component.translatable(
+                "command.zenkai.party.maxsize.done", leader.getGameProfile().getName(), size));
+        syncAll(server, party);
+        return true;
+    }
+
     // ── Chat y listado ───────────────────────────────────────────────────────
 
     /**
@@ -275,7 +357,7 @@ public final class PartyService {
             return false;
         }
         sp.sendSystemMessage(Component.translatable(
-                "command.zenkai.party.list.header", party.members.size(), PartyManager.MAX_SIZE)
+                "command.zenkai.party.list.header", party.members.size(), party.maxSize)
                 .withStyle(ChatFormatting.GOLD));
         for (UUID m : party.members) {
             String name = resolveName(server, m);
@@ -315,6 +397,8 @@ public final class PartyService {
     private static String resolveName(MinecraftServer server, UUID id) {
         ServerPlayer online = server.getPlayerList().getPlayer(id);
         if (online != null) return online.getGameProfile().getName();
+        String debugName = PartyDebug.nameOf(id);   // SOLO PRUEBAS, ver PartyDebug
+        if (debugName != null) return debugName;
         return id.toString();
     }
 
@@ -338,10 +422,11 @@ public final class PartyService {
             members.add(new PartySyncPacket.Member(m, resolveName(sp.server, m)));
         }
         PacketDistributor.sendToPlayer(sp,
-                new PartySyncPacket(true, party.leaderId, party.friendlyFire, members));
+                new PartySyncPacket(true, party.leaderId, party.friendlyFire,
+                        party.maxSize, CommonConfig.partyMaxSizeCeiling(), members));
     }
 
     private static void sendEmptySync(ServerPlayer sp) {
-        PacketDistributor.sendToPlayer(sp, new PartySyncPacket(false, null, false, List.of()));
+        PacketDistributor.sendToPlayer(sp, new PartySyncPacket(false, null, false, 0, 0, List.of()));
     }
 }
