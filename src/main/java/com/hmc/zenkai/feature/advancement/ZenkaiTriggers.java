@@ -64,8 +64,9 @@ public final class ZenkaiTriggers {
     /** Kinds de MILESTONE. Constantes y no enum: un addon puede inventar los suyos. */
     public static final class Kinds {
         private Kinds() {}
-        public static final String BLACK_FLASH = "black_flash";
-        public static final String REVIVED     = "revived";
+        public static final String BLACK_FLASH    = "black_flash";
+        public static final String REVIVED        = "revived";
+        public static final String COMBAT_STANCE  = "combat_stance";
     }
 
     // =====================================================================

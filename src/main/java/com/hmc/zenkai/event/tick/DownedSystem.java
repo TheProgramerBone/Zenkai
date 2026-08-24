@@ -1,14 +1,20 @@
 package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.event.CombatZenkaiHooks; // ⚠ ajustar si CombatZenkaiHooks quedó en feature.combat
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.DownedDeathGuard;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /** Derribado y body a 0: los dos cortes de tick más agresivos. */
 public final class DownedSystem {
@@ -40,6 +46,17 @@ public final class DownedSystem {
             clearDowned(p, att);
             PlayerLifeCycle.syncIfServer(p);
         } else if (p.level().getGameTime() >= att.flags().getDownedUntil()) {
+            // Único punto de muerte REAL del mod (el daño normal nunca llega a matar: se
+            // anula en CombatZenkaiHooks.applyToZenkaiVictim). Es también el único sitio donde
+            // vanilla revisaría un Totem of Undying si la muerte pasara por hurt()/
+            // actuallyHurt() — como no pasa, el chequeo se replica a mano aquí.
+            if (p instanceof ServerPlayer sp && consumeTotem(sp)) {
+                att.setBody(CombatZenkaiHooks.downedReviveBody(att));
+                clearDowned(p, att);
+                ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.REVIVED);
+                PlayerLifeCycle.syncIfServer(p);
+                return true;
+            }
             clearDowned(p, att);
             if (p instanceof ServerPlayer sp) {
                 // health=0 ANTES de die(): sin esto la muerte "no cuaja" (el cliente nunca ve
@@ -52,6 +69,24 @@ public final class DownedSystem {
             }
         }
         return true;
+    }
+
+    /** Busca un Totem of Undying en mano principal u offhand (mismo orden que vanilla) y lo
+     *  consume, replicando la animación (evento de entidad 35, la misma que usa
+     *  LivingEntity.checkTotemDeathProtection) y el sonido de vanilla. No podemos invocar ese
+     *  método protegido desde aquí, así que se reconstruye el efecto a mano. */
+    private static boolean consumeTotem(ServerPlayer sp) {
+        for (InteractionHand hand : InteractionHand.values()) {
+            ItemStack stack = sp.getItemInHand(hand);
+            if (stack.is(Items.TOTEM_OF_UNDYING)) {
+                stack.shrink(1);
+                sp.serverLevel().broadcastEntityEvent(sp, (byte) 35); // TOTEM_USE_ANIMATION
+                sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                        SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Body a 0: derriba, o lo mantiene en el otro mundo. @return true si hay que cortar. */

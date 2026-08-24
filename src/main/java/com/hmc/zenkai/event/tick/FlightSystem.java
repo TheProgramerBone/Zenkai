@@ -20,15 +20,32 @@ public final class FlightSystem {
         if (p.isCreative() || p.isSpectator()) return;
 
         var ab = p.getAbilities();
-        // La habilidad Fly HABILITA el vuelo: sin ella no se vuela aunque el toggle esté activo.
-        // Sobrecargado NO se despega del suelo: la carga te clava.
+        // mayfly = CAPACIDAD, sin toggle intermedio: igual que el vuelo creativo, en cuanto se
+        // tiene la habilidad Fly (y no se está sobrecargado) el doble salto NATIVO de vanilla
+        // despega y aterriza por su cuenta. Antes había un flag propio (isFlyEnabled) que un
+        // keybind ponía en true ANTES de que mayfly se activara, y el propio doble salto que
+        // el jugador usaba para pedir ese toggle competía con el doble salto que vanilla
+        // necesita ver con mayfly YA en true para despegar de verdad — el toggle llegaba un
+        // tick tarde (viaje de paquete de por medio) y esa ventana de doble salto ya se había
+        // cerrado: el jugador se caía con el ícono de "modo" encendido, y cada intento
+        // siguiente volvía a alternar el flag sin nunca despegar (ver CLAUDE.md, sección de
+        // vuelo). Quitar el intermedio y dejar que mayfly refleje solo la capacidad arregla
+        // la carrera de raíz.
         boolean overloaded = WeightSystem.isOverloaded(att.getWeightLoad());
-        boolean shouldFly = att.isFlyEnabled() && SkillEffects.canFly(p) && !overloaded;
-        if (ab.mayfly != shouldFly) {
-            ab.mayfly = shouldFly;
-            if (!shouldFly) ab.flying = false;
+        boolean canFlyNow = SkillEffects.canFly(p) && !overloaded;
+        if (ab.mayfly != canFlyNow) {
+            ab.mayfly = canFlyNow;
+            if (!canFlyNow) ab.flying = false;
             p.onUpdateAbilities();
         }
+
+        // isFlyEnabled ahora es un ESPEJO de solo lectura de ab.flying, no algo que el
+        // jugador active: abilities.flying es fiable para el jugador local pero NO viaja a
+        // los clientes que trackean a este jugador (no es un dato sincronizado de entidad),
+        // así que ZenkaiCommonAnimations/AuraTiltController/ClientZenkaiPalTick leen este
+        // flag —que sí sincroniza PlayerStatsAttachment— para saber si un jugador REMOTO
+        // está volando de verdad en este preciso tick.
+        if (att.isFlyEnabled() != ab.flying) att.setFlyEnabled(ab.flying);
 
         boolean control  = att.flags().isFlyBoosting();   // Ctrl+W en vuelo
         boolean flyTurbo = ab.flying && control && turboOn;
@@ -66,11 +83,14 @@ public final class FlightSystem {
         if (!ab.flying) att.flags().setFlyBoosting(false);
     }
 
-    /** Hitbox/cámara "acostado" durante el boost de vuelo. */
+    /** Hitbox/cámara "acostado" durante el boost de vuelo. Se llama justo después de tick(),
+     *  así que el espejo isFlyEnabled ya quedó al día este mismo tick — pero aquí se lee
+     *  getAbilities().flying directo porque esta instancia SÍ es la autoritativa (no una
+     *  copia remota), no la sincronizada. */
     public static void tickBoostHitbox(TickCtx c) {
         Player p = c.p();
         PlayerStatsAttachment att = c.att();
-        boolean flyingNow = att.isFlyEnabled() && p.getAbilities().flying && !p.isSpectator();
+        boolean flyingNow = p.getAbilities().flying && !p.isSpectator();
         if (!flyingNow) att.flags().setFlyBoosting(false);
 
         boolean prone = att.flags().isFlyBoosting();

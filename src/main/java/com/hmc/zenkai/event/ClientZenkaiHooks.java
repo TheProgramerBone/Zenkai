@@ -72,7 +72,7 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_KI_CHARGE = IconUV.grid(0, 2);
     private static final IconUV ICON_LEGENDARY = IconUV.grid(5, 2);
     private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
-    private static final IconUV ICON_STRAIN = IconUV.grid(10, 0);
+    private static final IconUV ICON_STRAIN = IconUV.grid(10, 1);
     private static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);
     private static final IconUV ICON_TURBO = IconUV.grid(1, 2);
 
@@ -178,6 +178,10 @@ public final class ClientZenkaiHooks {
         if (tier.isOn()) {
             drawBadge(g, iconX, iconY, ICON_KAIOKEN);
             drawBadgeLabel(g, iconX, iconY, tier.label(), 0xFFFF8866);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        } else if (strained) {
+            drawBadge(g, iconX, iconY, ICON_STRAIN);
+            drawBadgeLabel(g, iconX, iconY, Math.round(form.strainSecondsLeft(now)) + "s", C_BODY_STRAIN);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 

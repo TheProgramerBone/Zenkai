@@ -14,10 +14,12 @@ import java.util.function.Supplier;
 
 /**
  * Data components del mod.
- * RADAR_UPGRADE: mejora del scouter para buscar esferas del dragón. Se aplica en mesa de
- * herrería (plantilla + scouter + radar del dragón, ver recipe scouter_radar_upgrade.json)
- * y vive en el ItemStack -> sobrevive a morir/guardar/comerciar, y cada scouter se mejora
- * individualmente.
+ * RADAR_UPGRADE: LEGACY, sin uso. Era la mejora del scouter para buscar esferas del dragón,
+ * aplicada en mesa de herrería (plantilla + scouter + radar del dragón). Esa receta se
+ * eliminó a propósito: el modo RADAR ahora depende SOLO de ScouterUpgrade.DRAGON_RADAR,
+ * comprado en el banco de scouter (ver ScouterAreaScanPacket.handleRadar). El componente
+ * sigue registrado únicamente para no romper stacks guardados de antes del cambio; ningún
+ * código nuevo debe leerlo ni escribirlo.
  */
 public final class ModDataComponents {
     private ModDataComponents() {}

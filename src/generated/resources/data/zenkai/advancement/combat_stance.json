@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:choose_race",
+  "criteria": {
+    "stance": {
+      "conditions": {
+        "kind": "combat_stance"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.combat_stance.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:iron_sword"
+    },
+    "title": {
+      "translate": "advancements.zenkai.combat_stance.title"
+    }
+  },
+  "requirements": [
+    [
+      "stance"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

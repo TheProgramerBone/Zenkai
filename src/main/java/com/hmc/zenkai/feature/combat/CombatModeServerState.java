@@ -3,6 +3,7 @@ package com.hmc.zenkai.feature.combat;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.technique.KiCombatServer;
 import net.minecraft.resources.ResourceLocation;
@@ -47,6 +48,9 @@ public final class CombatModeServerState {
         byte style = (byte) PlayerStatsAttachment.get(sp).getStyle().ordinal();
         if (active) {
             ACTIVE.put(sp.getUUID(), style);
+            // Tutorial de la tecla X: dispara en cada activación (vanilla deduplica el toast
+            // una vez obtenido), no solo la primera vez, igual que technique()/wish().
+            ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.COMBAT_STANCE);
         } else {
             ACTIVE.remove(sp.getUUID());
         }

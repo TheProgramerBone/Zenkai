@@ -14,6 +14,7 @@ import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
 import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
 import com.hmc.zenkai.content.entity.technique.KiArrowEntity;
+import com.hmc.zenkai.content.entity.technique.KiLingeringZoneEntity;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
@@ -65,6 +66,16 @@ public class ModEntities {
                     .clientTrackingRange(8)
                     .updateInterval(1)
                     .build("ki_projectile"));
+
+    /** LINGERING (TechniqueEffect): zona de daño periódico, nace donde impacta la técnica.
+     *  clientTrackingRange(0): nunca se manda al cliente, así que no hace falta renderer — ver
+     *  el javadoc de KiLingeringZoneEntity. */
+    public static final Supplier<EntityType<KiLingeringZoneEntity>> KI_LINGERING_ZONE =
+            ENTITY_TYPES.register("ki_lingering_zone", () -> EntityType.Builder
+                    .of(KiLingeringZoneEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(0)
+                    .build("ki_lingering_zone"));
 
     public static final Supplier<EntityType<KiArrowEntity>> KI_ARROW =
             ENTITY_TYPES.register("ki_arrow", () -> EntityType.Builder

@@ -32,11 +32,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * Estado CLIENTE del modo combate.
  *  - X: entra/sale. 1-9: mueven SOLO la selección del overlay (clicks consumidos en
  *    ClientTickEvent.Pre, antes de handleKeybinds). Rueda: solo hotbar vanilla.
- *  - CARGA (estilo DBC): R + click derecho SOSTENIDOS cargan la técnica del slot
- *    seleccionado (cast time por tipo); SOLTAR el click derecho dispara si la carga
- *    llegó al 25%; soltar R primero CANCELA. La barra central la dibuja
- *    TechniqueHotbarOverlay con chargeRatio().
- *  - DEFENSA: click derecho SIN R + manos vacías = bloquear (edge-triggered al server).
+ *  - EJECUCIÓN/CARGA: se pulsa la tecla de número del slot elegido. Física = se ejecuta
+ *    A LA PRIMERA pulsación. Ki = la PRIMERA pulsación solo selecciona; con esa casilla ya
+ *    seleccionada, VOLVER a pulsarla arranca la carga (cast time por tipo) y hay que
+ *    SOSTENER esa misma tecla de número para seguir cargando; soltarla dispara si la carga
+ *    llegó al mínimo (25%), o cancela si no. La barra central la dibuja
+ *    TechniqueHotbarOverlay con chargeRatio(). R no interviene aquí — es la tecla de Turbo
+ *    de movimiento (AuraClientState), sin relación con disparar o cargar técnicas.
+ *  - DEFENSA: click derecho sin estar cargando + manos vacías = bloquear (edge-triggered
+ *    al server).
  *  - COOLDOWNS espejo: al disparar se anota localmente ready-at por slot (el servidor
  *    es autoritativo; esto es solo para pintar el overlay y no cargar en vano).
  *  - REMOTES / REMOTE_BLOCKING: estados de otros jugadores para las poses PAL.

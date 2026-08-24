@@ -1,7 +1,10 @@
 package com.hmc.zenkai.content.entity.technique;
 
+import com.hmc.zenkai.feature.combat.SenseServerState;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.technique.TechniqueEffect;
+import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import net.minecraft.core.particles.ParticleTypes;
@@ -10,6 +13,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
@@ -45,6 +49,16 @@ import java.util.Optional;
  * radio 1.5 + 0.35×size, daño AoE = 60% del directo. Sin daño a bloques (griefing off).
  * El objetivo directo recibe el daño completo y se excluye del AoE (no doble golpe);
  * el dueño también se excluye (sin auto-daño).
+ * Efectos (TechniqueEffect; UNO SOLO por técnica, ver KiTechniqueType.allowsEffect para qué
+ * tipo admite cuál):
+ *  - PIERCING: atraviesa la primera entidad golpeada y sigue (mismo `pierced` que ya usa
+ *    DISK sin necesidad de marcar nada — ver onHitEntity).
+ *  - HOMING: applyHoming() curva el rumbo hacia el lock de Ki Sense del dueño, un poco cada
+ *    tick.
+ *  - FRAGMENTATION: al detonar, spawnFragments() suelta 3-4 bolas hijas más débiles y sin
+ *    efecto propio.
+ *  - LINGERING: al detonar, spawnLingeringZone() deja una KiLingeringZoneEntity que sigue
+ *    dañando unos segundos.
  * Sin gravedad; muere al chocar o al agotar la vida.
  */
 public class KiProjectileEntity extends Projectile {
@@ -74,8 +88,9 @@ public class KiProjectileEntity extends Projectile {
         return true;
     }
 
-    // ── DISK: ids de entidades ya atravesadas (solo server, para no re-golpear).
-    //    No persiste en NBT a propósito: el proyectil vive segundos. ──
+    // ── DISK (siempre) y PIERCING (si se eligió ese efecto): ids de entidades ya atravesadas
+    //    (solo server, para no re-golpear). No persiste en NBT a propósito: el proyectil vive
+    //    segundos. ──
     private final java.util.Set<Integer> pierced = new java.util.HashSet<>();
 
     private double damage = 0;
@@ -144,6 +159,8 @@ public class KiProjectileEntity extends Projectile {
         }
 
         if (!level().isClientSide) {
+            if (effect == TechniqueEffect.HOMING) applyHoming();
+
             HitResult hit = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
             if (hit.getType() != HitResult.Type.MISS) {
                 onHit(hit);
@@ -194,15 +211,52 @@ public class KiProjectileEntity extends Projectile {
             hit.getEntity().hurt(damageSources().mobProjectile(this, owner), (float) damage);
         }
 
-        if (techniqueType() == KiTechniqueType.DISK) {
-            // Perforante: marca al objetivo y sigue volando. Si es explosiva, la explosión
-            // queda para el impacto con bloque (onHit) — nada de tren de explosiones.
+        // DISK atraviesa SIEMPRE (es su identidad de tipo, ver KiTechniqueType.allowsEffect);
+        // PIERCING pone el mismo mecanismo a disposición de los demás tipos como una elección.
+        // En los dos casos: marca al objetivo y sigue volando, sin detonar — el impacto con
+        // bloque (onHit) sigue siendo lo único que dispara la explosión de un proyectil
+        // perforante, nada de un tren de explosiones por cada entidad de por medio.
+        if (techniqueType() == KiTechniqueType.DISK || effect == TechniqueEffect.PIERCING) {
             pierced.add(hit.getEntity().getId());
             return;
         }
 
         detonate(hit.getEntity().position(), hit.getEntity());
         discard();
+    }
+
+    /**
+     * HOMING: si el dueño tiene un lock de Ki Sense (tecla de fijar), curva el rumbo hacia el
+     * objetivo un poco cada tick — corrección SUAVE (HOMING_TURN), no un misil de persecución
+     * perfecta. Atado a la HABILIDAD, no al MODO: basta con tener Ki Sense desbloqueado
+     * (SkillEffects.lockOnBlocked, el mismo gate que ya usa el fijado en cliente —
+     * LockOnClientState/SkillEffects.lockOnBlocked) para fijar y para que esto funcione; NO
+     * hace falta tener el sentir el ki encendido (SenseServerState.senseActive es una cosa
+     * distinta: si el escaneo periódico de modo sigue llegando, no si HAY lock). Sin la
+     * habilidad o sin lock, no corrige nada y vuela recto como cualquier otro proyectil.
+     */
+    private static final double HOMING_TURN = 0.12;
+
+    private void applyHoming() {
+        if (!(getOwner() instanceof ServerPlayer sp)) return;
+        if (SkillEffects.lockOnBlocked(sp)) return;
+        int lockId = SenseServerState.lockOf(sp);
+        if (lockId < 0) return;
+
+        Entity target = level().getEntity(lockId);
+        if (!(target instanceof LivingEntity le) || !le.isAlive() || target == getOwner()) return;
+
+        Vec3 toTarget = le.getBoundingBox().getCenter().subtract(position());
+        if (toTarget.lengthSqr() < 1.0E-4) return;
+
+        Vec3 vel = getDeltaMovement();
+        double speed = vel.length();
+        if (speed <= 0.0) return;
+
+        Vec3 newDir = vel.normalize().scale(1.0 - HOMING_TURN)
+                .add(toTarget.normalize().scale(HOMING_TURN))
+                .normalize();
+        setDeltaMovement(newDir.scale(speed));
     }
 
     @Override
@@ -255,6 +309,13 @@ public class KiProjectileEntity extends Projectile {
             }
         }
 
+        // Van ANTES del branch de grief (que puede cortar con `return`) porque EXPLOSIVE,
+        // FRAGMENTATION y LINGERING son efectos MUTUAMENTE EXCLUYENTES (uno solo por técnica,
+        // ver TechniqueEffect): si `effect` es FRAGMENTATION o LINGERING, nunca es EXPLOSIVE,
+        // así que este orden no cambia nada salvo garantizar que sí se ejecutan.
+        if (effect == TechniqueEffect.FRAGMENTATION) spawnFragments(center, owner);
+        if (effect == TechniqueEffect.LINGERING) spawnLingeringZone(center, owner);
+
         boolean grief = effect == TechniqueEffect.EXPLOSIVE
                 && ModGameRules.enableKiGriefing(sl.getServer());
         if (grief) {
@@ -276,6 +337,57 @@ public class KiProjectileEntity extends Projectile {
         sl.playSound(null, center.x, center.y, center.z,
                 SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS,
                 1.2f + 0.15f * size(), 1.25f - 0.06f * size());
+    }
+
+    /**
+     * FRAGMENTATION: 3-4 bolas pequeñas adicionales, más débiles, en direcciones dispersas.
+     * SIN EFECTO propio a propósito (TechniqueEffect.NONE): dejarlas heredar FRAGMENTATION
+     * las haría fragmentarse otra vez al impactar, y así hasta el infinito.
+     */
+    private void spawnFragments(Vec3 center, LivingEntity owner) {
+        if (!(level() instanceof ServerLevel sl) || owner == null) return;
+
+        KiTechniqueType type = techniqueType();
+        int count = 3 + random.nextInt(2); // 3 o 4
+        int fragSize = Math.max(1, size() - 2);
+        double fragDamage = damage * 0.30;
+
+        for (int i = 0; i < count; i++) {
+            KiProjectileEntity frag = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sl);
+            frag.configure(owner, type, rgb(), fragSize, fragDamage, 30, TechniqueEffect.NONE);
+            frag.setPos(center.x, center.y, center.z);
+            frag.setDeltaMovement(randomSpread().scale(type.speed() * 0.8));
+            sl.addFreshEntity(frag);
+        }
+    }
+
+    /** Vector unitario disperso: mayormente hacia fuera y algo hacia arriba, nunca hacia abajo
+     *  del todo — una esquirla que solo pica hacia el suelo se lee como un fallo de física. */
+    private Vec3 randomSpread() {
+        double theta = random.nextDouble() * Math.PI * 2.0;
+        double phi = Math.acos(2.0 * random.nextDouble() - 1.0);
+        double y = Math.abs(Math.cos(phi)) * 0.6 + 0.2;
+        return new Vec3(Math.sin(phi) * Math.cos(theta), y, Math.sin(phi) * Math.sin(theta)).normalize();
+    }
+
+    /**
+     * LINGERING: zona de daño periódico en el punto de impacto (ver KiLingeringZoneEntity).
+     * Radio y duración escalan con el tamaño de la técnica, igual que explosionRadius; el
+     * daño por golpe es una FRACCIÓN pequeña del directo porque pega varias veces seguidas —
+     * un DoT que iguala al golpe directo cada tick duplicaría el daño total sin avisar.
+     */
+    private void spawnLingeringZone(Vec3 center, LivingEntity owner) {
+        if (!(level() instanceof ServerLevel sl)) return;
+
+        double radius = 1.2 + 0.35 * size();
+        double dmgPerHit = Math.max(0.5, damage * 0.10);
+        int lifeTicks = 60 + size() * 10; // 3-6.5s según tamaño
+
+        KiLingeringZoneEntity zone =
+                new KiLingeringZoneEntity(ModEntities.KI_LINGERING_ZONE.get(), sl);
+        zone.configure(owner, dmgPerHit, radius, lifeTicks);
+        zone.setPos(center.x, center.y, center.z);
+        sl.addFreshEntity(zone);
     }
 
     @Override

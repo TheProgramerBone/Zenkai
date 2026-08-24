@@ -1,0 +1,30 @@
+{
+  "parent": "zenkai:choose_race",
+  "criteria": {
+    "skill": {
+      "conditions": {
+        "skill": "super_forms",
+        "skill_level": 1
+      },
+      "trigger": "zenkai:stat_threshold"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.transformation.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:golden_apple"
+    },
+    "title": {
+      "translate": "advancements.zenkai.transformation.title"
+    }
+  },
+  "requirements": [
+    [
+      "skill"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

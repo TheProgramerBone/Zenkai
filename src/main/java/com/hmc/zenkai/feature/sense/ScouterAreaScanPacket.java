@@ -1,7 +1,6 @@
 package com.hmc.zenkai.feature.sense;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.registry.ModDataComponents;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.combat.entity.EntityStatDef;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
@@ -35,8 +34,10 @@ import org.jetbrains.annotations.NotNull;
  *    entidades con stats Zenkai (EntityStats aplicado o JSON display_only). Los mobs vanilla
  *    se ignoran (el scouter "no lee" ki sin firma). Gamerule de boosts apagado -> SIN SEÑAL.
  *  - RADAR: esfera del dragón más cercana (tag zenkai:dragon_balls) en RADAR_RADIUS.
- *    Requiere la mejora (data component zenkai:radar_upgrade en el casco); sin ella responde
- *    UNAVAILABLE. Búsqueda EFICIENTE: solo chunks YA CARGADOS (getChunkNow, jamás fuerza
+ *    Requiere la mejora DRAGON_RADAR del banco de scouter (ScouterUpgrade.DRAGON_RADAR, ver
+ *    ScouterStacks.has); sin ella responde UNAVAILABLE. Ya NO se desbloquea en mesa de
+ *    herrería — esa receta (scouter_radar_upgrade_smithing.json) se eliminó a propósito para
+ *    que el banco sea el único camino. Búsqueda EFICIENTE: solo chunks YA CARGADOS (getChunkNow, jamás fuerza
  *    carga síncrona) y filtro por paleta de sección (maybeHas) antes de iterar bloques —
  *    la sección de 16³ solo se recorre si su paleta contiene alguna esfera.
  * Responde ScouterAreaDataPacket (posición para la flecha del cliente + PL si aplica).
@@ -135,7 +136,7 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
     // ------------------------------------------------------------------ RADAR
 
     private static void handleRadar(ServerPlayer sp, ItemStack helmet) {
-        if (!Boolean.TRUE.equals(helmet.get(ModDataComponents.RADAR_UPGRADE.get()))) {
+        if (!ScouterStacks.has(helmet, ScouterUpgrade.DRAGON_RADAR)) {
             reply(sp, MODE_RADAR, ScouterAreaDataPacket.STATUS_UNAVAILABLE, Vec3.ZERO, 0L);
             return;
         }

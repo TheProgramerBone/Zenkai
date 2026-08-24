@@ -15,6 +15,7 @@ import com.hmc.zenkai.content.item.ScouterItem;
 import com.hmc.zenkai.feature.sense.*;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -647,13 +648,18 @@ public class ScouterBenchScreen extends TechPanelScreen<ScouterBenchMenu> {
         return lines;
     }
 
-    /** "4x Iron Ingot" con su icono, en verde si lo tienes y en rojo si no. */
+    /** "4x Iron Ingot" con su icono, en verde si lo tienes y en rojo si no. Si el material es
+     *  un TAG con varios items válidos, icono y nombre van ROTANDO cada segundo entre ellos
+     *  (mismo ritmo que usa vanilla en las tiras fantasma del libro de recetas) — mostrar
+     *  siempre el primero de la lista daría a entender que ese ítem concreto es el único que
+     *  vale, cuando el coste en realidad acepta el tag entero. */
     private TipLine materialLine(ScouterUpgradeCost.Material m) {
         List<Item> items = m.displayItems();
-        ItemStack icon = items.isEmpty() ? ItemStack.EMPTY : new ItemStack(items.getFirst());
-        Component name = items.isEmpty()
+        Item item = items.isEmpty() ? null : rotatingItem(items);
+        ItemStack icon = item == null ? ItemStack.EMPTY : new ItemStack(item);
+        Component name = item == null
                 ? Component.literal(m.id().toString())
-                : items.getFirst().getDescription();
+                : item.getDescription();
 
         boolean have = minecraft != null && minecraft.player != null
                 && m.countIn(minecraft.player.getInventory()) >= m.count();
@@ -661,6 +667,13 @@ public class ScouterBenchScreen extends TechPanelScreen<ScouterBenchMenu> {
         Component text = Component.literal(m.count() + "x ").append(name)
                 .withStyle(have ? ChatFormatting.GREEN : ChatFormatting.RED);
         return new TipLine(icon.isEmpty() ? null : icon, text);
+    }
+
+    /** Un item por segundo, en orden, dando la vuelta al llegar al final. */
+    private static Item rotatingItem(List<Item> items) {
+        if (items.size() == 1) return items.getFirst();
+        int idx = (int) (Util.getMillis() / 1000L % items.size());
+        return items.get(idx);
     }
 
     // ── Tinte ────────────────────────────────────────────────────────────────
@@ -677,9 +690,13 @@ public class ScouterBenchScreen extends TechPanelScreen<ScouterBenchMenu> {
                 : ClientConfig.scouterLastTint();
 
         tintOpen = true;
+        // .noFrame(): drawTintBackdrop (en renderBg) ya pinta el fondo y el borde de esta
+        // zona; el marco propio del picker no lo sabe y se sale del hueco por encima, tapando
+        // el título y la fila de slots (ver el javadoc de noFrame()).
         picker = new ColorPickerWidget(leftPos + PICKER_X, topPos + PICKER_Y,
                 0xFF000000 | tintColor, "", c -> tintColor = c & 0xFFFFFF)
-                .style(ColorPickerWidget.Style.TECH);
+                .style(ColorPickerWidget.Style.TECH)
+                .noFrame();
         addRenderableWidget(picker);
 
         // Ocupan el sitio de Repair y Cancel, que quedan ocultos: es el mismo pie y no tiene

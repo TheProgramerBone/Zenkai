@@ -37,6 +37,9 @@ public enum KiTechniqueType {
 
     public String nameKey() { return "technique.zenkai." + id; }
 
+    /** Clave de traducción de la descripción corta (tooltip del selector en el editor). */
+    public String descKey() { return nameKey() + ".desc"; }
+
     // ── Naturaleza del tipo ──────────────────────────────────────────────────
 
     /** ¿El proyectil VIAJA? La barrera sigue al dueño y la explosión estalla donde estás.
@@ -52,14 +55,34 @@ public enum KiTechniqueType {
         };
     }
 
-    /** ¿Admite este efecto? Un disco que explota deja de ser un disco, una ráfaga multiplicaría
-     *  la destrucción por el número de bolas, y una barrera no impacta contra nada.
-     *  El LÁSER SÍ lo admite. */
+    /**
+     * ¿Admite este efecto? Antes era "estos tres tipos no admiten NINGUNO"; con más de un
+     * efecto cada tipo necesita su propia combinación — no todos los "no encajan" son el mismo
+     * motivo, así que cada rama explica el suyo.
+     */
     public boolean allowsEffect(TechniqueEffect effect) {
         if (effect == TechniqueEffect.NONE) return true;
         return switch (this) {
-            case DISK, BARRIER, BURST -> false;
-            default -> true;
+            // El disco YA perfora sin marcar nada (KiProjectileEntity.onHitEntity): PIERCING
+            // sería una opción que no cambia nada, y EXPLOSIVE/FRAGMENTATION le quitan la
+            // identidad ("un disco que explota deja de ser un disco"). HOMING y LINGERING no
+            // chocan con esa identidad.
+            case DISK -> effect == TechniqueEffect.HOMING || effect == TechniqueEffect.LINGERING;
+            // No impacta contra nada: no hay efecto de impacto que aplicar.
+            case BARRIER -> false;
+            // Una ráfaga multiplica cualquier efecto de área/impacto por el número de bolas —
+            // con EXPLOSIVE ya se consideró demasiado. FRAGMENTATION es la excepción: es la
+            // identidad propia del tipo (bolas que sueltan más bolas), así que es el único que
+            // se habilita aquí.
+            case BURST -> effect == TechniqueEffect.FRAGMENTATION;
+            // No viaja: no hay un "primer impacto" que perforar, corregir o fragmentar. Solo
+            // tiene sentido lo que pasa EN el punto de detonación (romper bloques, o dejar
+            // rescoldo ardiendo ahí mismo).
+            case EXPLOSION -> effect == TechniqueEffect.EXPLOSIVE || effect == TechniqueEffect.LINGERING;
+            // WAVE, BLAST, LAZER, SPIRAL, BIG_BLAST: admiten todo salvo FRAGMENTATION, que es
+            // la identidad reservada a BURST (una sola bola soltando más bolas no es "una
+            // ráfaga", es solo confuso).
+            default -> effect != TechniqueEffect.FRAGMENTATION;
         };
     }
 

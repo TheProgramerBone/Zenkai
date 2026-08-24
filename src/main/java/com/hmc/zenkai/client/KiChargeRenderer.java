@@ -6,6 +6,7 @@ import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiRenderTypes;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.feature.technique.TechniquePosition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
@@ -96,25 +97,39 @@ public final class KiChargeRenderer {
             Vec3 origin;
             if (anchors != null) {
                 origin = camPos.add(anchors.resolve(c.position()));
-            } else {
-                // Sin dato de hueso: primera persona (PAL filtra la capa), fuera de pantalla o
-                // culling. Posición interpolada, que con p.position() cruda la bola vibra al andar.
-                origin = c.position().origin(p, p.getPosition(pt));
-                if (selfFirstPerson) {
-                    // Yaw DEL CUERPO, no de la cámara. Antes usaba getLookAngle(), que lleva el
-                    // pitch de la vista: mover el ratón arriba/abajo movía "forward" en vertical
-                    // y la esfera se desplazaba con la cámara en vez de quedarse pegada al
-                    // personaje. yBodyRot es horizontal puro y sigue al cuerpo (con el lag de
-                    // giro normal de vanilla, no el de la cabeza), así que la esfera ahora viaja
-                    // con el jugador y es indiferente a hacia dónde mires.
-                    float bodyYaw = Mth.lerp(pt, p.yBodyRotO, p.yBodyRot);
-                    double rad = Math.toRadians(bodyYaw);
-                    Vec3 look = new Vec3(-Math.sin(rad), 0.0, Math.cos(rad));
+            } else if (selfFirstPerson) {
+                // Sin dato de hueso Y es la cámara local: caso de PAL filtrando la capa en
+                // primera persona (ver PlayerHandTracker.get). Yaw DEL CUERPO, no de la cabeza,
+                // para TODO el cálculo — el de TechniquePosition.origin incluido. Antes solo el
+                // offset de aquí abajo usaba yBodyRot; la BASE seguía saliendo de
+                // TechniquePosition.origin(p, feet), que por dentro usa getLookAngle() (con
+                // pitch), así que mirar hacia abajo desplazaba la esfera por ESE lado aunque el
+                // offset extra no se moviera — de ahí el bug de "la esfera se mueve al mirar
+                // abajo". yBodyRot es horizontal puro y sigue al cuerpo (con el lag de giro
+                // normal de vanilla, no el de la cabeza), así que pasándolo a los dos sitios la
+                // esfera queda del todo indiferente a hacia dónde mires.
+                float bodyYaw = Mth.lerp(pt, p.yBodyRotO, p.yBodyRot);
+                double rad = Math.toRadians(bodyYaw);
+                Vec3 look = new Vec3(-Math.sin(rad), 0.0, Math.cos(rad));
+                origin = c.position().origin(p, p.getPosition(pt), look);
+
+                // El offset extra (mano-hacia-cámara) solo tiene sentido para posiciones de
+                // MANO: MOUTH/FOREHEAD/EYES ya caen a un palmo del ojo por diseño propio de
+                // TechniquePosition, así que sumarles el mismo desplazamiento pensado para
+                // "brazo estirado a la altura de la cintura" las mandaba a un sitio que no
+                // correspondía a ningún hueso real — la causa más visible de mala alineación en
+                // primera persona para Masenko/Makankosappo.
+                if (isHandAnchored(c.position())) {
                     Vec3 right = new Vec3(-look.z, 0.0, look.x);
                     origin = origin.add(look.scale(FP_FORWARD))
                             .add(right.scale(FP_SIDE))
                             .subtract(0.0, FP_DOWN, 0.0);
                 }
+            } else {
+                // Sin dato de hueso y NO es la cámara local: jugador fuera de pantalla o
+                // culling. Posición interpolada, que con p.position() cruda la bola vibra al
+                // andar.
+                origin = c.position().origin(p, p.getPosition(pt));
             }
 
             float radius = (BASE_RADIUS + SIZE_RADIUS * c.size())
@@ -160,6 +175,17 @@ public final class KiChargeRenderer {
             }
         }
         if (drew) buffers.endBatch();
+    }
+
+    /** ¿Esta posición sale de una mano? Decide si el ajuste extra de primera persona
+     *  (FP_FORWARD/FP_SIDE/FP_DOWN, calibrado a ojo para "brazo estirado") aplica — a
+     *  MOUTH/FOREHEAD/EYES, ya pegadas al ojo por diseño de TechniquePosition, ese mismo
+     *  desplazamiento las saca de sitio en vez de alinearlas. */
+    private static boolean isHandAnchored(TechniquePosition pos) {
+        return switch (pos) {
+            case RIGHT_HAND, LEFT_HAND, BOTH_HANDS -> true;
+            case MOUTH, FOREHEAD, EYES -> false;
+        };
     }
 
     /**

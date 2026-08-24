@@ -12,7 +12,6 @@ import com.hmc.zenkai.client.gui.wheel.WheelScreen;
 import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.ki.KiChargePacket;
 import com.hmc.zenkai.feature.ki.PowerPercentPacket;
-import com.hmc.zenkai.feature.ki.ToggleFlyPacket;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -29,7 +28,6 @@ public final class KeyBindings {
     private KeyBindings() {}
 
     public static KeyMapping OPEN_STATS;
-    public static KeyMapping TOGGLE_FLY;
     public static KeyMapping CHARGE_KI;
     public static KeyMapping SENSE_KI;
     public static KeyMapping TURBO;
@@ -53,6 +51,14 @@ public final class KeyBindings {
     private static final int FORM_TAP_MAX_TICKS = 6;
     private static int formHeldTicks = 0;
 
+    // Vuelo: SIN keybind propio. Reemplaza al viejo G (chocaba con el inventario de Curios) y
+    // a un intento posterior de detectar el doble salto a mano aquí mismo — ese intento
+    // competía por el mismo gesto que el doble salto NATIVO de vanilla necesita para
+    // despegar de verdad, y llegaba un tick tarde. Ahora `FlightSystem.tick()` deja
+    // `abilities.mayfly` en true en cuanto el jugador TIENE la capacidad (skill Fly, no
+    // sobrecargado) — sin ningún "modo" intermedio — y el propio doble salto de vanilla
+    // hace el resto, igual que en creativo. Ver CLAUDE.md, sección de vuelo.
+
     // Llamado SOLO desde tu evento RegisterKeyMappingsEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         if (REGISTERED) return;
@@ -64,13 +70,6 @@ public final class KeyBindings {
                 "key.categories.zenkai"
         );
         event.register(OPEN_STATS);
-
-        TOGGLE_FLY = new KeyMapping(
-                "key.zenkai.toggle_fly",
-                GLFW.GLFW_KEY_G,
-                "key.categories.zenkai"
-        );
-        event.register(TOGGLE_FLY);
 
         // C = cargar KI (se mantiene)
         CHARGE_KI = new KeyMapping(
@@ -130,7 +129,6 @@ public final class KeyBindings {
         if (mc.player == null) return;
 
         PlayerStatsAttachment stats = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
-        boolean hasRace = stats.isRaceChosen();
 
         // OPEN_STATS (V)
         if (OPEN_STATS != null && OPEN_STATS.consumeClick()) {
@@ -142,11 +140,6 @@ public final class KeyBindings {
                 mc.setScreen(new StatsScreen());
             }
             return;
-        }
-
-        // TOGGLE_FLY (G)
-        if (hasRace && TOGGLE_FLY != null && TOGGLE_FLY.consumeClick()) {
-            PacketDistributor.sendToServer(new ToggleFlyPacket());
         }
 
         if (SENSE_KI != null && SENSE_KI.consumeClick()) {

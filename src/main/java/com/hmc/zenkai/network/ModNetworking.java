@@ -122,11 +122,6 @@ public class ModNetworking {
                 SetPowerPercentPacket::handle);
 
         registrar.playToServer(
-                ToggleFlyPacket.TYPE,
-                ToggleFlyPacket.STREAM_CODEC,
-                ToggleFlyPacket::handle);
-
-        registrar.playToServer(
                 KiChargePacket.TYPE,
                 KiChargePacket.STREAM_CODEC,
                 KiChargePacket::handle);

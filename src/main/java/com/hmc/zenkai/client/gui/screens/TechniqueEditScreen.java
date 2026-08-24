@@ -20,6 +20,7 @@ import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
@@ -216,24 +217,39 @@ public class TechniqueEditScreen extends Screen {
         // El valor va en negrita y en dorado (VALUE_ON_PANEL), como el nombre de la forma en
         // Stats: sin esto "Type: Blast" era una sola línea plana y el ojo no distinguía la
         // etiqueta de lo que de verdad se está eligiendo.
-        cyclerRow(x, y, contentW,
-                Component.translatable("screen.zenkai.technique.type").append(": ")
-                        .append(Component.translatable(type.nameKey())
-                                .withStyle(s -> s.withBold(true)
-                                        .withColor(TextColor.fromRgb(
-                                                ZenkaiPalette.VALUE_ON_PANEL & 0xFFFFFF)))),
-                dir -> {
-                    KiTechniqueType[] all = KiTechniqueType.values();
-                    KiTechniqueType next = type;
-                    for (int i = 0; i < all.length; i++) {
-                        next = all[Math.floorMod(next.ordinal() + dir, all.length)];
-                        if (next.enabled()) break;
-                    }
-                    if (!next.enabled()) return;
-                    type = next;
-                    rgb = type.defaultRgb();
-                    rebuildWidgets();
-                });
+        Component typeLabel = Component.translatable("screen.zenkai.technique.type").append(": ")
+                .append(Component.translatable(type.nameKey())
+                        .withStyle(s -> s.withBold(true)
+                                .withColor(TextColor.fromRgb(
+                                        ZenkaiPalette.VALUE_ON_PANEL & 0xFFFFFF))));
+        Component typeTooltip = Component.translatable(type.descKey());
+        if (slot >= 0) {
+            // Editando una técnica ya creada: el tipo NO se puede tocar aquí. Decide daño,
+            // coste, animación y qué efectos admite, así que reasignarlo a mitad de vida es más
+            // "borrar y crear otra" que "editar" — y el servidor lo rechaza igual
+            // (TechniquePacket.handleSave ignora el tipo del paquete en modo edición), así que
+            // dejar las flechas activas solo enseñaría un cambio que luego no se guarda. Sin
+            // flechas y sin acción es el mismo lenguaje que ya usa este editor para "este campo
+            // está fijo" (ver la fila de animación en initStyleTab cuando el tipo la impone).
+            TextOnlyButton lockedType = new TextOnlyButton(x + ARROW_W + 2, y,
+                    contentW - (ARROW_W + 2) * 2, 14, typeLabel, () -> {}).onPanel();
+            lockedType.setTooltip(Tooltip.create(typeTooltip));
+            addRenderableWidget(lockedType);
+        } else {
+            cyclerRow(x, y, contentW, typeLabel, typeTooltip,
+                    dir -> {
+                        KiTechniqueType[] all = KiTechniqueType.values();
+                        KiTechniqueType next = type;
+                        for (int i = 0; i < all.length; i++) {
+                            next = all[Math.floorMod(next.ordinal() + dir, all.length)];
+                            if (next.enabled()) break;
+                        }
+                        if (!next.enabled()) return;
+                        type = next;
+                        rgb = type.defaultRgb();
+                        rebuildWidgets();
+                    });
+        }
         y += ROW_H;
 
         // Ciruela + negrita solo cuando hay un efecto elegido: mismo trato que SPECIAL_ON_PANEL
@@ -246,6 +262,7 @@ public class TechniqueEditScreen extends Screen {
                         .append(Component.translatable(effect.langKey())
                                 .withStyle(s -> s.withBold(effect != TechniqueEffect.NONE)
                                         .withColor(TextColor.fromRgb(effectColor & 0xFFFFFF)))),
+                Component.translatable(effect.descKey()),
                 dir -> {
                     // Salta los efectos que este tipo no admite: ciclar por opciones que el
                     // set() va a revertir a NONE es enseñar una elección que no existe.
@@ -441,12 +458,29 @@ public class TechniqueEditScreen extends Screen {
 
     private void cyclerRow(int x, int y, int w, Component label,
                            java.util.function.IntConsumer onCycle) {
-        addRenderableWidget(new ArrowIconButton(x, y, ArrowIconButton.Dir.LEFT,
-                () -> onCycle.accept(-1)));
-        addRenderableWidget(new TextOnlyButton(x + ARROW_W + 2, y, w - (ARROW_W + 2) * 2, 14,
-                label, () -> onCycle.accept(1)).onPanel());
-        addRenderableWidget(new ArrowIconButton(x + w - ARROW_W, y, ArrowIconButton.Dir.RIGHT,
-                () -> onCycle.accept(1)));
+        cyclerRow(x, y, w, label, null, onCycle);
+    }
+
+    /** Igual, con un tooltip opcional (qué hace el valor actual) puesto en las tres piezas de
+     *  la fila — flechas incluidas, para que no haga falta acertar el pelo de texto exacto
+     *  para que aparezca. */
+    private void cyclerRow(int x, int y, int w, Component label, @Nullable Component tooltip,
+                           java.util.function.IntConsumer onCycle) {
+        ArrowIconButton left = new ArrowIconButton(x, y, ArrowIconButton.Dir.LEFT,
+                () -> onCycle.accept(-1));
+        TextOnlyButton mid = new TextOnlyButton(x + ARROW_W + 2, y, w - (ARROW_W + 2) * 2, 14,
+                label, () -> onCycle.accept(1)).onPanel();
+        ArrowIconButton right = new ArrowIconButton(x + w - ARROW_W, y, ArrowIconButton.Dir.RIGHT,
+                () -> onCycle.accept(1));
+        if (tooltip != null) {
+            Tooltip t = Tooltip.create(tooltip);
+            left.setTooltip(t);
+            mid.setTooltip(t);
+            right.setTooltip(t);
+        }
+        addRenderableWidget(left);
+        addRenderableWidget(mid);
+        addRenderableWidget(right);
     }
 
     private String initialName() {

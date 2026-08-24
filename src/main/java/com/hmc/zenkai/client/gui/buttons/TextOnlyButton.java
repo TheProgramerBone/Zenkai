@@ -122,6 +122,21 @@ public class TextOnlyButton extends AbstractButton {
 
     private boolean action = false;
 
+    /**
+     * Marca este botón como SELECCIONADO: dibuja una barra fina bajo el texto en vez de
+     * cambiar el label. asAction() (corchetes + negrita) ensancha el texto, y en un botón
+     * angosto (los 45px de Stats/Progress en StatsScreen) el label ensanchado desborda su
+     * propio ancho y se solapa con el botón de al lado — justo lo que pasaba antes de este
+     * método. La barra no cambia el ancho del texto, así que nunca desborda.
+     * Mismo lenguaje visual que TabIconButton.selected (barra bajo el ícono activo).
+     */
+    public TextOnlyButton selected(boolean selected) {
+        this.selected = selected;
+        return this;
+    }
+
+    private boolean selected = false;
+
     @Override
     protected void renderWidget(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         boolean hovered = this.isMouseOver(mouseX, mouseY);
@@ -145,6 +160,11 @@ public class TextOnlyButton extends AbstractButton {
                 getX() + getWidth() / 2 - font.width(msg) / 2,
                 getY() + (getHeight() - 8) / 2,
                 color, shadow);
+
+        if (selected) {
+            g.fill(getX() + 4, getY() + getHeight() - 2, getX() + getWidth() - 4, getY() + getHeight() - 1,
+                    ZenkaiPalette.GOLD);
+        }
     }
 
     @Override

@@ -27,6 +27,7 @@ import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -172,18 +173,30 @@ public class StatsScreen extends ZenkaiMenuScreen {
         tpcLabelH = font.lineHeight;
         addRenderableWidget(new PlusIconButton(tpcLabelX + tpcLabelW - 50, tpcLabelY - 2, this::cycleTpStep));
 
-        // Dos botones bajo el render, uno por popup.
+        // Dos botones bajo el render, uno por popup. .selected(...) (barra bajo el texto, no
+        // corchetes) porque a 45px de ancho el label con corchetes desborda el botón y se
+        // solapa con el de al lado — mismo lenguaje visual que TabIconButton.selected.
         int bw = (PREVIEW_X2 - PREVIEW_X1 - 4) / 2;
         int bx = panelLeft + PREVIEW_X1;
         int by = panelTop + POPUP_BTN_Y;
-        addRenderableWidget(new TextOnlyButton(bx, by, bw, POPUP_BTN_H,
+
+        TextOnlyButton statsBtn = new TextOnlyButton(bx, by, bw, POPUP_BTN_H,
                 Component.translatable("screen.zenkai.stats_screen.popup.stats"),
-                () -> showStats = !showStats)
-                .onPanel());
-        addRenderableWidget(new TextOnlyButton(bx + bw + 4, by, bw, POPUP_BTN_H,
+                () -> { showStats = !showStats; rebuildWidgets(); })
+                .onPanel()
+                .selected(showStats);
+        statsBtn.setTooltip(Tooltip.create(
+                Component.translatable("screen.zenkai.stats_screen.popup.stats.tooltip")));
+        addRenderableWidget(statsBtn);
+
+        TextOnlyButton progressBtn = new TextOnlyButton(bx + bw + 4, by, bw, POPUP_BTN_H,
                 Component.translatable("screen.zenkai.stats_screen.popup.progress"),
-                () -> showProgress = !showProgress)
-                .onPanel());
+                () -> { showProgress = !showProgress; rebuildWidgets(); })
+                .onPanel()
+                .selected(showProgress);
+        progressBtn.setTooltip(Tooltip.create(
+                Component.translatable("screen.zenkai.stats_screen.popup.progress.tooltip")));
+        addRenderableWidget(progressBtn);
 
         kiBarX = panelLeft + BG_W - MARGIN - KI_BAR_W;
         kiBarY = panelTop + KI_BAR_Y;
@@ -704,9 +717,11 @@ public class StatsScreen extends ZenkaiMenuScreen {
                     "-" + fmt(hpPerSecond) + " HP/s", ZenkaiPalette.ERROR));
         }
         if (form.isStrained(mc.player.level().getGameTime())) {
-            out.add(val("screen.zenkai.stats_screen.strain_short",
-                    fmt(form.strainSecondsLeft(mc.player.level().getGameTime())) + "s",
-                    ZenkaiPalette.ERROR));
+            out.add(Row.tip(
+                    Component.translatable("screen.zenkai.stats_screen.strain_short.label"),
+                    Component.literal(fmt(form.strainSecondsLeft(mc.player.level().getGameTime())) + "s"),
+                    ZenkaiPalette.ERROR,
+                    Component.translatable("screen.zenkai.stats_screen.strain_short.desc")));
         }
 
         // Pasiva racial: permanente, así que va en su propia sección. El nombre en la fila y

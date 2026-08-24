@@ -40,25 +40,54 @@ public final class FlightMovement {
     private static final double ASCEND_GAIN  = 2;
     private static final double DESCEND_GAIN = 2;
 
+    /** Umbral de coseno por encima del cual se considera "casi nivelado": ahí SÍ nos fiamos
+     *  de la velocidad en vivo para refrescar la referencia (ver REF_SPEED). */
+    private static final double LEVEL_COS = 0.9;
+
+    /**
+     * Referencia de velocidad de crucero, para evitar la retroalimentación que hacía que
+     * subir en vertical "se quedara sin fuerza" cuanto más se sostenía la mirada hacia
+     * arriba (el reporte era exactamente ese: "el ir hacia arriba... se hace lento").
+     * ANTES `horiz` salía de leer el delta de ESTE mismo tick, que el tick ANTERIOR ya había
+     * encogido por coseno; con la mirada sostenida hacia arriba eso se retroalimenta —cada
+     * tick parte de un x/z ya más chico que el anterior, lo encoge otra vez, y la magnitud
+     * total cae en picada cuanto más dura el ascenso, aunque ASCEND_GAIN sea 2. Guardar la
+     * velocidad de crucero aparte (medida SOLO mientras se vuela casi nivelado, o al detectar
+     * que acaba de subir por un boost/turbo) le da al reparto vertical una base que no depende
+     * de su propio recorte de ticks anteriores.
+     * Campo simple y no un mapa por UUID: FlightMovement es SOLO jugador local (ver doc de
+     * clase), no hace falta más que una instancia.
+     */
+    private static double refSpeed = 0.0;
+
     public static void tick(LocalPlayer p, boolean flying) {
-        if (!flying) return;
+        // Sin vuelo, sin avance o con control vertical manual (space/shift) no hay referencia
+        // de crucero que conservar: la próxima vez que se enganche el ascenso por mirada debe
+        // partir de una medición fresca, no de un crucero de hace rato.
+        if (!flying || Math.abs(p.input.forwardImpulse) < INPUT_DEADZONE
+                || p.input.jumping || p.input.shiftKeyDown) {
+            refSpeed = 0.0;
+            return;
+        }
 
         float fwd = p.input.forwardImpulse;
-        if (Math.abs(fwd) < INPUT_DEADZONE) return;
-        // Control vertical manual: tiene prioridad sobre la mirada.
-        if (p.input.jumping || p.input.shiftKeyDown) return;
-
         double pitch = Math.toRadians(p.getXRot());   // xRot positivo = mirando ABAJO
         double sinUp = -Math.sin(pitch);              // mirar arriba -> componente +Y
         double cos = Math.max(MIN_COS, Math.cos(pitch));
 
         Vec3 d = p.getDeltaMovement();
         double horiz = Math.sqrt(d.x * d.x + d.z * d.z);
-        if (horiz < 1.0e-3) return;
+        if (horiz < 1.0e-3 && refSpeed < 1.0e-3) return;
+
+        // Vuelo casi nivelado: la medida en vivo es de fiar, así que se adopta como crucero.
+        // Fuera de ahí (pitch pronunciado) NO se deja bajar por el propio recorte de este
+        // método — solo se deja SUBIR, para no capar un boost/turbo que acaba de activarse.
+        if (cos > LEVEL_COS || horiz > refSpeed) refSpeed = horiz;
 
         // El módulo se reparte entre horizontal y vertical en vez de sumarse: mirar arriba
-        // no debe ir más rápido que mirar al frente.
-        double targetY = horiz * sinUp * Math.signum(fwd);
+        // no debe ir más rápido que mirar al frente. Se reparte desde refSpeed (estable) y
+        // no desde horiz (que este mismo método ya redujo en el tick anterior).
+        double targetY = refSpeed * sinUp * Math.signum(fwd);
         targetY *= (targetY >= 0 ? ASCEND_GAIN : DESCEND_GAIN);
         double newY = Mth.lerp(VERTICAL_LERP, d.y, targetY);
 

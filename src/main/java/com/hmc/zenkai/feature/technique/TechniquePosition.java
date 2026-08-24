@@ -55,13 +55,25 @@ public enum TechniquePosition {
      * (p.getPosition(partialTick)): con la cruda del tick, la bola de carga vibra al andar.
      */
     public Vec3 origin(Player p, Vec3 feet) {
+        return origin(p, feet, p.getLookAngle());
+    }
+
+    /**
+     * Igual, pero con un vector de mirada EXPLÍCITO en vez del real (getLookAngle) del
+     * jugador. Para qué hace falta: el real lleva el pitch de la cámara, y KiChargeRenderer
+     * necesita desactivarlo en su respaldo de primera persona — mirar hacia abajo pitchaba
+     * también el offset "forward" de aquí (además del propio de la cámara), así que la esfera
+     * se desplazaba dos veces con el mismo gesto. Pasando un `look` puramente horizontal
+     * (derivado del yaw del CUERPO, no de la cabeza) ese offset deja de moverse con la mirada.
+     */
+    public Vec3 origin(Player p, Vec3 feet, Vec3 look) {
         Vec3 eye = feet.add(0.0, p.getEyeHeight(), 0.0);
-        Vec3 look = p.getLookAngle().normalize();
-        Vec3 right = new Vec3(-look.z, 0.0, look.x).normalize();
+        Vec3 lookN = look.normalize();
+        Vec3 right = new Vec3(-lookN.z, 0.0, lookN.x).normalize();
         double scale = p.getScale(); // ⚠ acompaña a la escala de la forma
 
         return eye.add(right.scale(side * scale))
                 .add(0.0, up * scale, 0.0)
-                .add(look.scale(forward * scale));
+                .add(lookN.scale(forward * scale));
     }
 }

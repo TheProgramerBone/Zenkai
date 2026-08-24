@@ -81,6 +81,21 @@ public class ColorPickerWidget extends AbstractWidget {
 
     public ColorPickerWidget style(Style s) { this.style = s; return this; }
 
+    /**
+     * Sin marco propio. `renderFrame` pinta un DIALOG_BG opaco con su propio relleno
+     * (FRAME_PAD/FRAME_LABEL_H) pensado para cuando el picker flota JUNTO al panel, sobre el
+     * mundo, sin nada opaco detrás (AppearanceScreen, StyleSelectionScreen, TechniqueEditScreen:
+     * los tres lo colocan a `panelLeft + BG_W + 8`, fuera de cualquier fondo — ver el javadoc de
+     * renderFrame). Si el que llama ya pinta su propio fondo/borde alrededor del hueco donde
+     * mete el picker, ese relleno extra se sale de ese hueco en vez de quedarse dentro: pasó en
+     * ScouterBenchScreen, cuyo drawTintBackdrop ya delimita la zona y no dejaba margen para un
+     * segundo marco — el resultado era un rectángulo opaco tapando el título y la fila de
+     * slots. `.noFrame()` es para ese caso: la caja de colisión/arrastre no cambia (ya era solo
+     * TOTAL_W x TOTAL_H, sin el relleno), así que layouts existentes no se mueven.
+     */
+    public ColorPickerWidget noFrame() { this.drawFrame = false; return this; }
+    private boolean drawFrame = true;
+
     public ColorPickerWidget(int x, int y, int initialArgb, String label, Consumer<Integer> onChange) {
         super(x, y, TOTAL_W, TOTAL_H, Component.empty());
         this.label    = label;
@@ -127,7 +142,7 @@ public class ColorPickerWidget extends AbstractWidget {
         int x = getX();
         int y = getY();
 
-        renderFrame(g, x, y);
+        if (drawFrame) renderFrame(g, x, y);
 
         // Label encima
         if (label != null && !label.isEmpty()) {
@@ -173,6 +188,9 @@ public class ColorPickerWidget extends AbstractWidget {
      * pantalla que lo invoca — junto al mundo, sin ningún panel opaco pegado detrás — que es
      * justo la situación para la que existe DIALOG_BG y no POPUP_BG (ver ZenkaiPalette). Con
      * alfa parcial aquí el mundo se colaba bajo el cuadrado SV y el HEX input.
+     * Si la pantalla que llama YA tiene su propio fondo/borde alrededor del hueco del picker,
+     * pasa `.noFrame()` al construirlo — este marco no sabe del hueco que lo rodea, así que
+     * dentro de uno ya delimitado su propio relleno se sale por encima (ver noFrame()).
      */
     private void renderFrame(GuiGraphics g, int x, int y) {
         int x1 = x - FRAME_PAD, y1 = y - FRAME_LABEL_H;

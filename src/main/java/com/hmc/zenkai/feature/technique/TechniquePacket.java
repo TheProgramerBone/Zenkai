@@ -156,7 +156,13 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         }
         KiTechnique existing = att.techniques().slot(pkt.slot()); // editar
         if (existing == null) return false;
-        existing.set(name, type, rgb, size, TechniqueEffect.byOrdinal(pkt.effect()),
+        // El TIPO no se puede cambiar una vez creada la técnica: es lo que decide daño, coste,
+        // animación y qué efectos admite, así que reasignarlo a mitad de vida es más "borrar y
+        // crear otra" que "editar" — y el TextOnlyButton del cliente ya no deja tocarlo en este
+        // caso (TechniqueEditScreen), pero el servidor es quien manda: un pkt.typeName() de otro
+        // tipo (cliente modificado, o un draft viejo aún abierto cuando el tipo cambió en otro
+        // sitio) se IGNORA en vez de aplicarse.
+        existing.set(name, existing.type(), rgb, size, TechniqueEffect.byOrdinal(pkt.effect()),
                 charge, release, animSet);
         return true;
     }

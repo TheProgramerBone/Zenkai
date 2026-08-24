@@ -2,6 +2,7 @@ package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
+import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.registry.ModBlocks;
 import com.hmc.zenkai.registry.ModDimensions;
 import com.hmc.zenkai.registry.ModItems;
@@ -117,6 +118,12 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     net.minecraft.world.item.Items.BLAZE_POWDER, AdvancementType.TASK, false,
                     "skill", skill("kaioken", 1));
 
+            // No oculto por el mismo motivo que combat_stance: la tecla H no se adivina, y su
+            // descripción tiene que poder leerse ANTES de desbloquear la primera forma.
+            child(saver, efh, chooseRace, "transformation",
+                    net.minecraft.world.item.Items.GOLDEN_APPLE, AdvancementType.TASK, false,
+                    "skill", skill(SuperForms.SKILL, 1));
+
             AdvancementHolder allSkills = Advancement.Builder.advancement().parent(chooseRace)
                     .display(ModItems.ELITE_CIRCUIT.get(), title("all_skills"), desc("all_skills"),
                             null, AdvancementType.GOAL, true, true, true)
@@ -129,6 +136,14 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     .rewards(AdvancementRewards.Builder.experience(100))
                     .addCriterion("skills", allSkills(true))
                     .save(saver, id("all_skills_max"), efh);
+
+            // ── COMBATE ─────────────────────────────────────────────────────
+            // No oculto a propósito: su descripción (qué tecla entra/sale de la postura de
+            // combate, y qué hacen 1-9/click derecho una vez dentro) tiene que poder leerse
+            // en la pantalla de logros ANTES de completarlo, si no no sirve de tutorial.
+            child(saver, efh, chooseRace, "combat_stance",
+                    net.minecraft.world.item.Items.IRON_SWORD, AdvancementType.TASK, false,
+                    "stance", milestone(ZenkaiTriggers.Kinds.COMBAT_STANCE));
 
             // ── TÉCNICAS ────────────────────────────────────────────────────
             AdvancementHolder firstTech = child(saver, efh, chooseRace, "first_technique",

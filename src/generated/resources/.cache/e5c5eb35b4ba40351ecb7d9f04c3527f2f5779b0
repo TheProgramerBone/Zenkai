@@ -1,10 +1,11 @@
-// 1.21.1	2026-08-09T09:36:03.5334165	Advancements
+// 1.21.1	2026-08-23T14:49:38.4476112	Advancements
 f9a5c0de397f24c185f402bcbc5d5ecb1b6aafa8 data/zenkai/advancement/all_skills.json
 1e4b0aa0238e933eb91f3567c473703ef287a782 data/zenkai/advancement/all_skills_max.json
 5c11b5aaa82f4098d857b7a660bd16cebe7f2b0a data/zenkai/advancement/all_wishes.json
 e3117552d9526e721612d45ccccde69b2e4b7728 data/zenkai/advancement/awakening.json
 78c8c32cc2a526b2d9c299122b11e9b1632b49bf data/zenkai/advancement/black_flash.json
 e39a1cd99e6f8879d4ecd17a000e8d9e6f197621 data/zenkai/advancement/choose_race.json
+b746e7a731a6deecda5091c777867021ccfe0dda data/zenkai/advancement/combat_stance.json
 e3c3b1f212ab3425cf53261a3aecdb1a93596e01 data/zenkai/advancement/first_ball.json
 e58b44fe8e725095c057b4ed44303f1520f54c36 data/zenkai/advancement/first_technique.json
 04e1731a8150b1508615b97efaf1fe02ea7430b4 data/zenkai/advancement/first_tp.json
@@ -26,4 +27,5 @@ d55afc0bd95d1be163b060a143d62304861557a8 data/zenkai/advancement/radar.json
 cc036db5917930a88443cc8e87db6a6ac71ff60c data/zenkai/advancement/scouter.json
 4a2de562afab87fe34b38a2265a44196527023f3 data/zenkai/advancement/seven_earth.json
 7f5340696a9fe7173747db7d5562f3e89c04857e data/zenkai/advancement/seven_namek.json
+a7767fb344157961da14783c6e8da931166995e5 data/zenkai/advancement/transformation.json
 32e4d84f397f1043f6beb48844b3ff6515d92cac data/zenkai/advancement/weights.json
