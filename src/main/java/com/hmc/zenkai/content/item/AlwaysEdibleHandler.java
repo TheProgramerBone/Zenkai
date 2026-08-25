@@ -9,7 +9,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 
 /**
- * Hace que TODA la comida se pueda comer con la barra de hambre llena.
+ * Hace que la comida entera se pueda comer con la barra de hambre llena.
  * Motivo: desde que la comida repone ki y estamina (FoodEnergyHandler), bloquear el
  * comer por estar saciado dejaría al jugador sin forma de recuperar ki en pleno combate.
  * Comer pasa a ser una decisión de recursos, no solo de hambre.

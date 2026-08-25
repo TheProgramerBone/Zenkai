@@ -16,7 +16,7 @@ import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 /**
  * Biomas del mod construidos en datagen.
  * POR QUÉ NO SON JSON A MANO: el juego construye UNA ordenación global de features por paso
- * de decoración mezclando todos los biomas cargados. Si dos biomas discrepan sobre el orden
+ * de decoración mezclando el conjunto de biomas cargados. Si dos biomas discrepan sobre el orden
  * relativo de dos features compartidas, no existe orden global válido y el arranque muere
  * con "Feature order cycle found". Llamar a BiomeDefaultFeatures da ese orden por
  * construcción. Bonus: aquí un id de vainilla equivocado es error de compilación, no un
@@ -93,7 +93,7 @@ public final class ModBiomeGen {
 
     /**
      * Base común de las tres variantes de HFIL: cuevas, lagos de lava, líquenes
-     * (única fuente de luz ahí abajo), manantiales y TODOS los ores vanilla.
+     * (única fuente de luz ahí abajo), manantiales y cada uno de los ores vanilla.
      * Sin discos blandos: arcilla y arena junto al agua no pegan en el infierno.
      */
     private static BiomeGenerationSettings.Builder hfilBase(HolderGetter<PlacedFeature> features,

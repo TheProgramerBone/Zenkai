@@ -3,7 +3,7 @@ package com.hmc.zenkai.client.gui;
 /**
  * Paleta ÚNICA del alineamiento (-100..+100): rojo (malvado) -> gris (neutral) -> azul (bondadoso).
  *
- * Vive aquí y no duplicada en cada pantalla porque el mismo dato debe verse igual en todas
+ * Vive aquí y no duplicada en cada pantalla porque el mismo dato debe verse igual en cualquier
  * partes: la barra de StatsScreen y el marcador del sentir el ki tienen que hablar el mismo
  * idioma, y si cada uno lleva sus constantes acaban divergiendo al primer retoque.
  */

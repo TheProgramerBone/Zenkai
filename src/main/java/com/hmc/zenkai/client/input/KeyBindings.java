@@ -178,7 +178,7 @@ public final class KeyBindings {
         LockOnClientState.tick(mc);
 
         // Gate: sin raza, cortar y vaciar colas. Sin el drenaje, los clicks se acumulan
-        // y se disparan todos de golpe la próxima vez que alguien los consuma.
+        // y se disparan en conjunto de golpe la próxima vez que alguien los consuma.
         if (!hasRace) {
             stopChargeIfNeeded();
             stopTransformHoldIfNeeded();

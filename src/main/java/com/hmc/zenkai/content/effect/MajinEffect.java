@@ -41,7 +41,7 @@ public class MajinEffect extends MobEffect {
         PlayerVisualAttachment visual = PlayerVisualAttachment.get(sp);
         if (!visual.isMajinControlled()) {
             visual.setMajinControlled(true);
-            // A trackers Y a sí mismo: el aura roja y el badge los ven todos.
+            // A trackers Y a sí mismo: el aura roja y el badge los ve cualquiera cerca.
             PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
         }
         return true;

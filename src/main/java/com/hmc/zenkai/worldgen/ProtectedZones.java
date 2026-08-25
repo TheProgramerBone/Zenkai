@@ -69,7 +69,7 @@ public final class ProtectedZones {
         return null;
     }
 
-    /** Recolecta una vez por chunk las cajas de todas las estructuras protegidas que lo tocan. */
+    /** Recolecta una vez por chunk las cajas de cada una de las estructuras protegidas que lo tocan. */
     private static List<Entry> build(ServerLevel level, BlockPos pos) {
         List<Entry> out = new ArrayList<>();
         var registry = level.registryAccess().registryOrThrow(Registries.STRUCTURE);

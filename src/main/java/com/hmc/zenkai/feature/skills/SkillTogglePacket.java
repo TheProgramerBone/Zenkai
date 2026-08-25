@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * C2S: alternar un interruptor de habilidad. UNO SOLO para todos los interruptores
+ * C2S: alternar un interruptor de habilidad. UNO SOLO para el conjunto de interruptores
  * presentes y futuros — la carga útil es el id, así que añadir Ki Fist, el arma de ki o lo
  * que venga después no obliga a registrar otro payload (ni a tocar ModNetworking otra vez).
  *

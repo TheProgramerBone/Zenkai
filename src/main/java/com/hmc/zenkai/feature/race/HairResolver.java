@@ -52,7 +52,7 @@ public final class  HairResolver {
         }
         if (stack.isEmpty()) return ItemStack.EMPTY;
 
-        // 3) Tinte de la forma: con el pelo en escala de grises, un modelo sirve para todas.
+        // 3) Tinte de la forma: con el pelo en escala de grises, un modelo sirve para cualquiera.
         //    Se tiñe TAMBIÉN el pelo base, que es justo la gracia: SSJ1 puede reusar hair1
         //    y limitarse a declarar hair_rgb, sin necesitar un item propio.
         if (def != null && def.tintsHair()) {

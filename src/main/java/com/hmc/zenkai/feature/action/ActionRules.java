@@ -79,7 +79,7 @@ public final class ActionRules {
 
     // ── Guardas comunes ───────────────────────────────────────────────────────
 
-    /** Guardas que comparten TODAS las acciones de combate. */
+    /** Guardas que comparte el conjunto de acciones de combate. */
     private static ActionReject common(ActionContext ctx) {
         if (!ctx.raceChosen()) return ActionReject.NO_RACE;
         if (ctx.downed())      return ActionReject.DOWNED;

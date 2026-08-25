@@ -12,7 +12,7 @@ import net.minecraft.world.entity.player.Player;
 /**
  * ADAPTADOR entre el jugador y el aura.
  *   PlayerStatsAttachment -> AuraState -> (C_v2 + Δforma + Δraza) -> AuraProfile
- * Aquí NO hay aritmética: toda vive en AuraFormula, que no importa nada del juego y por
+ * Aquí NO hay aritmética: vive entera en AuraFormula, que no importa nada del juego y por
  * eso se puede verificar con AuraSelfTest sin arrancar Minecraft. Esta clase solo saca
  * números del Player y los pasa. Si hay que tocar una fórmula va en AuraTuning; si hay
  * que tocar cómo se combinan, en AuraFormula.

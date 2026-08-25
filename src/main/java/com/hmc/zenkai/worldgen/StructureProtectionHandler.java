@@ -30,7 +30,7 @@ public final class StructureProtectionHandler {
      * Altura por debajo de la cual el Otherworld deja de ser "el más allá" y pasa a ser HFIL,
      * o sea subsuelo minable. Las islas viven de y=130 a 190 y HFIL de -60 a 120, así que el
      * corte cae en tierra de nadie.
-     * Existe porque prohibir construir en toda la dimensión hacía imposible minar el katchin,
+     * Existe porque prohibir construir en la dimensión completa hacía imposible minar el katchin,
      * que genera ahí abajo: sin antorchas ni puentes no se baja a una veta.
      */
     private static final int OTHERWORLD_SURFACE_Y = 128;
@@ -121,7 +121,7 @@ public final class StructureProtectionHandler {
         return !ProtectedZones.isProtected((net.minecraft.server.level.ServerLevel) level, pos);
     }
 
-    /** NINGUNA explosión (ki, TNT, creeper...) rompe bloques protegidos: toda la HTC, y
+    /** NINGUNA explosión (ki, TNT, creeper...) rompe bloques protegidos: la HTC completa, y
      *  dentro de las zonas de Kami/Yemma solo sobreviven los bloques puestos por jugadores.
      *  (Antes las explosiones se saltaban la protección: solo se cubría la rotura manual.) */
     @SubscribeEvent

@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * KiChargeRenderer.
  * POR QUÉ HACE FALTA CAPTURAR Y NO SE PUEDE LEER DIRECTAMENTE
  * ----------------------------------------------------------
- * PlayerRenderer y su PlayerModel son UNA instancia compartida por todos los jugadores: leer
+ * PlayerRenderer y su PlayerModel son UNA instancia compartida por el conjunto de jugadores: leer
  * model.rightArm desde RenderLevelStageEvent daría la pose del ÚLTIMO dibujado, así que con
  * dos jugadores cargando a la vez ambas esferas irían a la mano del mismo.
  * ESPACIO Y VIGENCIA

@@ -94,7 +94,7 @@ public final class AuraRenderer {
             // Estela: coordenadas de mundo, antes del translate al jugador.
             AuraTrailRenderer.render(pose, buffers, p, at, camPos, layers.inner(), mo);
 
-            // Emisores anclados al mundo: se dibujan luego, todos juntos.
+            // Emisores anclados al mundo: se dibujan luego, en conjunto.
             AuraWispRenderer.spawn(p, at, plan, t);
             AuraSparkRenderer.spawn(p, at, plan, t, dtTicks);
 
@@ -115,7 +115,7 @@ public final class AuraRenderer {
             pose.popPose();
         }
 
-        // Wisps y chispas de TODOS los jugadores: siguen vivas aunque el aura se apague,
+        // Wisps y chispas del conjunto de jugadores: siguen vivas aunque el aura se apague,
         // así que se simulan y dibujan fuera del bucle.
         AuraWispRenderer.renderAll(pose, buffers, cam, camPos, t, pt);
         AuraSparkRenderer.renderAll(pose, buffers, cam, camPos, t, pt);

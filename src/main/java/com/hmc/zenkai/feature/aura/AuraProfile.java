@@ -52,7 +52,7 @@ public record AuraProfile(
                     0f, 0f, 0f, 0, 0f, 0f);
 
     /**
-     * Constructor compacto: clampa TODO. Un spread de -0.3 o un density de 2.7 venidos
+     * Constructor compacto: clampa por completo. Un spread de -0.3 o un density de 2.7 venidos
      * de un datapack no llegan al renderer — se recortan aquí y punto. Es imposible
      * construir un AuraProfile inválido, así que el renderer no necesita defenderse.
      */

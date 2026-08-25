@@ -6,7 +6,7 @@ import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Contexto de un tick de jugador: los cuatro objetos que casi todos los sistemas necesitan,
+ * Contexto de un tick de jugador: los cuatro objetos que casi cualquier sistema necesita,
  * resueltos UNA vez por el orquestador (antes cada sección los volvía a pedir).
  * turboOn NO va aquí a propósito: se calcula después de los gates y solo lo usan
  * FlightSystem y GroundMovementSystem, así que viaja como parámetro explícito.

@@ -31,7 +31,7 @@ final class ZenkaiGameTestHelpers {
      * Jugador de prueba con raza elegida (HUMAN) y TP en 0. Cada test añade el TP que necesite
      * con {@code att.addTP(...)} — no se fija aquí para que quede explícito en cada caso cuánto
      * hace falta.
-     * NO usa GameTestHelper#makeMockServerPlayerInLevel(): ese método hace un join COMPLETO vía
+     * NO usa GameTestHelper#makeMockServerPlayerInLevel(): esa función hace un join COMPLETO vía
      * PlayerList.placeNewPlayer, que dispara eventos de login ANTES de que el jugador quede
      * registrado en ninguna lista — en este modpack, un listener de Moonlight manda un payload
      * propio en ese punto, y el canal embebido del gametest no ha negociado NINGÚN payload (no
@@ -39,7 +39,7 @@ final class ZenkaiGameTestHelpers {
      * placeNewPlayer entero sin que el jugador llegue a existir en ningún sitio recuperable.
      * Aquí se monta la MISMA maquinaria (Connection + EmbeddedChannel + ServerGamePacketListenerImpl,
      * calcada de GameTestHelper.makeMockServerPlayerInLevel) pero SIN pasar por placeNewPlayer:
-     * se registra directamente con ServerLevel#addNewPlayer. Ese método SÍ dispara su propio
+     * se registra directamente con ServerLevel#addNewPlayer. Esa función SÍ dispara su propio
      * evento de entidad-añadida (Curios, en la práctica, sincroniza su inventario ahí) y por
      * tanto puede tropezar con el MISMO NetworkRegistry.checkPacket que Moonlight — pero a estas
      * alturas el jugador YA está en el nivel (el evento se dispara después de añadirlo), así que
@@ -103,7 +103,7 @@ final class ZenkaiGameTestHelpers {
      * es justo donde vivía el bug de grant() vs raise() que este paquete de tests quiere volver
      * a detectar solo. enqueueWork() se ejecuta SÍNCRONAMENTE: en el juego real se pasa al hilo
      * principal del server, pero aquí ya estamos en ese hilo (el propio gametest corre en él).
-     * El resto de métodos del interfaz no los usa ninguno de los handlers testeados aquí; lanzan
+     * El resto de funciones del interfaz no las usa ninguno de los handlers testeados aquí; lanzan
      * si algún día alguno empieza a necesitarlos, en vez de fallar en silencio.
      */
     static IPayloadContext fakeCtx(ServerPlayer sp) {

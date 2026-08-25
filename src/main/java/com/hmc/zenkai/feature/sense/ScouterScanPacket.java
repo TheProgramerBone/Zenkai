@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
  * (atraviesa paredes, como el sentir ki). Responde ScouterDataPacket con el PL del objetivo
  * (o "sin objetivo").
  * El alcance y el tope de PL salen de ScouterStacks (mejoras del stack), no de un nivel global.
- * TODAS las salidas de este forma pasan por ScouterOverload.tick: quedarse sin objetivo,
+ * Cada una de las salidas de este forma pasa por ScouterOverload.tick: quedarse sin objetivo,
  * mirar a algo legible o quitarse el scouter CANCELAN la cuenta atrás. Si alguna rama se
  * saltara la llamada, la sobrecarga se quedaría congelada esperando al mismo objetivo y
  * reventaría el aparato la próxima vez que lo mirases, aunque fuese media hora después.

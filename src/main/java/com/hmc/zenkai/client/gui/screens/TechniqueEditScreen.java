@@ -183,7 +183,7 @@ public class TechniqueEditScreen extends Screen {
         // .onPanel(): sin esto quedan con los colores por defecto de TextOnlyButton (blanco +
         // sombra), pensados para fondo oscuro — exactamente el "borrón sobre beige" que
         // ZenkaiPalette y PanelText documentan y que el resto de pantallas (Stats, Config) evita
-        // llamando a este método. Es lo que hacía que el editor se viera plano frente a Stats.
+        // llamando a esta función. Es lo que hacía que el editor se viera plano frente a Stats.
         int tabW = contentW / 2 - 2;
         addRenderableWidget(new TextOnlyButton(x, topPos + Y_TABS, tabW, 14,
                 tabLabel(Tab.COMBAT), () -> switchTab(Tab.COMBAT)).onPanel());

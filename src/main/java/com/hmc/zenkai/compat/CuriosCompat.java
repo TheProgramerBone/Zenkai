@@ -8,7 +8,7 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import java.util.Optional;
 
 /**
- * Puente opcional con Curios. TODA referencia a clases de Curios vive en la clase interna
+ * Puente opcional con Curios. Cualquier referencia a clases de Curios vive en la clase interna
  * Impl: si el mod no está, esa clase nunca se carga y no hay NoClassDefFoundError.
  * Por eso handler() devuelve IItemHandlerModifiable, que es de NeoForge, y no el
  * ICurioStacksHandler de Curios: en cuanto un tipo de Curios aparece en una firma pública,

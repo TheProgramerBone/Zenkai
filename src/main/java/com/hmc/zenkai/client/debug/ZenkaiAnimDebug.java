@@ -32,7 +32,7 @@ public final class ZenkaiAnimDebug {
 
     private ZenkaiAnimDebug() {}
 
-    /** Interruptor maestro. A false no cuesta nada: todas las entradas salen en la primera línea. */
+    /** Interruptor maestro. A false no cuesta nada: cada entrada sale en la primera línea. */
     public static final boolean ENABLED = false;
 
     /** Volcado de campos del controlador. Es verboso: solo en stop y en el play siguiente. */

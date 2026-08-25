@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Pestaña de configuración de cliente.
  * Las filas salen de ClientConfig.entries(), así que añadir una opción no toca este archivo.
- * Entry es una interfaz sellada de tres casos y el switch los cubre todos: si algún día aparece
+ * Entry es una interfaz sellada de tres casos y el switch los cubre por completo: si algún día aparece
  * un cuarto tipo, el compilador obliga a pasar por aquí. Ese es el punto de que sea sellada —
  * una opción sin control visible existiría en el toml y sería invisible en la GUI.
  * ═══ TEXTO SIN SOMBRA SOBRE EL BEIGE ═══

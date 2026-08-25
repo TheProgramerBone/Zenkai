@@ -42,7 +42,7 @@ public enum PhysicalTechnique {
 
     public TechniqueDef def() { return TechniqueDef.get(TechniqueDef.Kind.PHYSICAL, id); }
 
-    /** false = sin JSON: técnica desactivada en todas partes. */
+    /** false = sin JSON: técnica desactivada en cualquier parte. */
     public boolean enabled() { return def() != null; }
 
     /** TP de desbloqueo. MAX_VALUE si está desactivada. */
@@ -56,6 +56,10 @@ public enum PhysicalTechnique {
 
     /** Multiplicador de daño sobre STR. */
     public double dmgMult() { TechniqueDef d = def(); return d == null ? 0.0 : d.damageMult(); }
+
+    /** "" = desbloqueable con TP normalmente. Con un id, SOLO ese maestro la enseña — ver
+     *  PhysicalTechniquePacket.handle (op UNLOCK) y el javadoc de TechniqueDef ("TÉCNICA FIRMA"). */
+    public String master() { TechniqueDef d = def(); return d == null ? "" : d.master(); }
 
     public int cooldownTicks() { TechniqueDef d = def(); return d == null ? 20 : d.cooldownTicks(); }
 

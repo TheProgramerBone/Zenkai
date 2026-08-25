@@ -12,7 +12,7 @@ import java.util.Locale;
  * QUÉ HACE HOY CADA UNO
  * ----------------------
  * EXPLOSIVE:   SOLO romper bloques en el radio de la explosión. El daño en ÁREA ya no depende
- *              de la marca: toda técnica que impacta lo reparte según el aoeFactor de su tipo.
+ *              de la marca: cualquier técnica que impacta lo reparte según el aoeFactor de su tipo.
  *              Por eso el recargo baja de ×1.5 a ×1.15 — destruir terreno no vale lo que valía
  *              "área + terreno". Consecuencia: con la gamerule de griefing apagada este efecto
  *              NO HACE NADA, y por eso el editor debe deshabilitarlo en ese caso en vez de

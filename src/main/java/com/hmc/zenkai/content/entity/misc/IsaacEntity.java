@@ -116,7 +116,7 @@ public class IsaacEntity extends ZenkaiDefaultMob {
         this.wasDancing = dancing;
 
         if (dancing) {
-            // Bloquea TODA la rotación por IA (cuerpo y cabeza). La animación manda.
+            // Bloquea la rotación entera por IA (cuerpo y cabeza). La animación manda.
             this.setYRot(danceYaw);
             this.yRotO = danceYaw;
             this.setYBodyRot(danceYaw);

@@ -13,7 +13,7 @@ import net.minecraft.world.entity.player.Player;
  *    maestría: vive en el datapack (zenkai_forms, totalStatPercent()) y es fijo por forma.
  *  - Técnica: daño  x (1 + dmgBonus  * m/100)  ·  costo   x (1 - costRed  * m/100)
  *             cast  x (1 - castRed   * m/100)  (solo ki: reduce los ticks de carga requeridos)
- * Todos los factores devuelven 1.0 en base/maestría 0, así que aplicarlos siempre es seguro.
+ * Cada factor devuelve 1.0 en base/maestría 0, así que aplicarlos siempre es seguro.
  */
 public final class MasteryEffects {
     private MasteryEffects() {}

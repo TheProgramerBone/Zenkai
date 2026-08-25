@@ -18,7 +18,7 @@ public final class ZenkaiPalAnimations {
 
     /**
      * Política de 1ª persona. Los brazos vanilla van APAGADOS cuando hay cuerpo racial.
-     * PAL (PlayerModelMixin, inject at RETURN de setupAnim) apaga todas las partes del modelo
+     * PAL (PlayerModelMixin, inject at RETURN de setupAnim) apaga cada una de las partes del modelo
      * en la pasada FP y vuelve a encender rightArm/leftArm — y con ellos sus mangas de segunda
      * capa — según esta configuración. Corre DESPUÉS de cualquier evento o mixin nuestro, así
      * que la visibilidad de los brazos SOLO se controla desde aquí; intentar apagarlos con

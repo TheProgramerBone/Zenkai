@@ -15,7 +15,7 @@ import com.hmc.zenkai.util.BalanceUtil;
  * Techo y suelo de la escala de presencia. Se DERIVAN; no se escriben a mano.
  * EL PROBLEMA QUE RESUELVE: normalizar el PL con log10 necesita un techo, y un techo
  * escrito a mano se queda obsoleto en cuanto alguien añade una transformación. Aquí el
- * techo recorre el registro ENTERO de formas y todos los escalones de Kaioken, así que
+ * techo recorre el registro ENTERO de formas y cada uno de los escalones de Kaioken, así que
  * una forma nueva lo sube sola. El único número de referencia es CommonConfig.auraReferenceTp(),
  * y ese no cambia al añadir formas: dice cuánto TP invierte un jugador de endgame, no
  * cuánto poder existe.
@@ -25,7 +25,7 @@ import com.hmc.zenkai.util.BalanceUtil;
  * menor que (1 + statPercent): SSJ4 es nominal ×13 pero efectivo ×7.93, y Black nominal
  * ×15 pero efectivo ×9.85. Por eso el techo se calcula con la fórmula completa en vez de
  * multiplicar un PL base por el porcentaje mayor — esa cuenta daría un techo ~35% alto y
- * aplastaría toda la escala de presencia.
+ * aplastaría la escala entera de presencia.
  * Se cachea porque recorre razas × estilos × formas × escalones. Hay que invalidarlo al
  * recargar datapacks (RaceStatManager / FormRegistry.rebuild) y al recibir el sync en
  * cliente.

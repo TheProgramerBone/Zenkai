@@ -8,7 +8,7 @@ import java.util.Locale;
  *  - ordinal() = celda del ícono en technique_icons.png (NO reordenar). EXPLOSION ocupa la
  *    celda 8, que antes era la base de la marca explosiva; el atlas no cambia de tamaño.
  *  - la estela 3D se queda aquí (es visual, no balance).
- * Todos los NÚMEROS viven en datapack: data/&lt;ns&gt;/zenkai_techniques/ki/&lt;id&gt;.json
+ * Cada NÚMERO vive en datapack: data/&lt;ns&gt;/zenkai_techniques/ki/&lt;id&gt;.json
  * (ver TechniqueDef / TechniqueManager). Sin JSON, enabled() es false y la técnica
  * no se puede desbloquear, guardar ni disparar.
  */
@@ -57,7 +57,7 @@ public enum KiTechniqueType {
 
     /**
      * ¿Admite este efecto? Antes era "estos tres tipos no admiten NINGUNO"; con más de un
-     * efecto cada tipo necesita su propia combinación — no todos los "no encajan" son el mismo
+     * efecto cada tipo necesita su propia combinación — no cualquier "no encaja" es el mismo
      * motivo, así que cada rama explica el suyo.
      */
     public boolean allowsEffect(TechniqueEffect effect) {
@@ -79,7 +79,7 @@ public enum KiTechniqueType {
             // tiene sentido lo que pasa EN el punto de detonación (romper bloques, o dejar
             // rescoldo ardiendo ahí mismo).
             case EXPLOSION -> effect == TechniqueEffect.EXPLOSIVE || effect == TechniqueEffect.LINGERING;
-            // WAVE, BLAST, LAZER, SPIRAL, BIG_BLAST: admiten todo salvo FRAGMENTATION, que es
+            // WAVE, BLAST, LAZER, SPIRAL, BIG_BLAST: admiten el resto salvo FRAGMENTATION, que es
             // la identidad reservada a BURST (una sola bola soltando más bolas no es "una
             // ráfaga", es solo confuso).
             default -> effect != TechniqueEffect.FRAGMENTATION;
@@ -90,7 +90,15 @@ public enum KiTechniqueType {
 
     /** Diámetro del proyectil en bloques. Un tamaño 5 NO significa lo mismo en un láser que en
      *  un big blast: cada tipo tiene su base y su paso, y por eso esto no puede ser una
-     *  fórmula única aplicada fuera. */
+     *  fórmula única aplicada fuera.
+     *  EXPLOSION y BIG_BLAST están calibrados contra el diámetro VISUAL en pantalla, no este
+     *  número crudo: KiProjectileRenderer escala la malla a getBbWidth() * 1.5 (ver
+     *  "breathe" en KiProjectileRenderer.render), así que el diámetro que de verdad se ve es
+     *  este valor × 1.5. EXPLOSION ancla tamaño 1 a ~1.8 bloques visuales (la altura de un
+     *  jugador de pie: 1.2 × 1.5) y crece hasta ~3.9 en tamaño 5 (2.6 × 1.5) — antes tamaño 1
+     *  ya eran 3.0 bloques visuales y tamaño 5 llegaba a 9.0, mucho más que "del tamaño de un
+     *  jugador y creciendo poco a poco". BIG_BLAST sube el arranque (1.5 × 1.5 = 2.25 visual,
+     *  antes 1.8) y suaviza el crecimiento hasta 4.35 en tamaño 5 (antes 5.1). */
     public double projectileSize(int size) {
         int s = Math.max(1, size) - 1;
         return switch (this) {
@@ -100,8 +108,8 @@ public enum KiTechniqueType {
             case BLAST     -> 0.45 + 0.18 * s;
             case DISK      -> 0.60 + 0.20 * s;
             case WAVE      -> 0.70 + 0.30 * s;
-            case BIG_BLAST -> 1.20 + 0.55 * s;
-            case EXPLOSION -> 2.00 + 1.00 * s;
+            case BIG_BLAST -> 1.50 + 0.35 * s;
+            case EXPLOSION -> 1.20 + 0.35 * s;
             case BARRIER   -> 2.60 + 0.20 * s;   // como estaba
         };
     }
@@ -128,7 +136,7 @@ public enum KiTechniqueType {
     }
 
     /** Fracción del daño directo que se reparte en el área, EN EL CENTRO. Ya no depende de la
-     *  marca de efecto: toda técnica que impacta reparte área. */
+     *  marca de efecto: cualquier técnica que impacta reparte área. */
     public double aoeFactor() {
         return switch (this) {
             case EXPLOSION -> 1.00;   // la explosión ES la técnica: no hay golpe directo que descontar
@@ -163,7 +171,7 @@ public enum KiTechniqueType {
 
     public TechniqueDef def() { return TechniqueDef.get(TechniqueDef.Kind.KI, id); }
 
-    /** false = sin JSON: técnica desactivada en todas partes. */
+    /** false = sin JSON: técnica desactivada en cualquier parte. */
     public boolean enabled() { return def() != null; }
 
     /** TP de desbloqueo. MAX_VALUE si está desactivada (nunca asequible). */
@@ -187,8 +195,13 @@ public enum KiTechniqueType {
     /** BARRIER no dispara: crea la burbuja alrededor del jugador. */
     public boolean defensive() { TechniqueDef d = def(); return d != null && d.defensive(); }
 
-    /** Color inicial de una instancia recién creada (editable). */
+    /** Color inicial de una instancia recién creada. Editable salvo que {@link #master()} no
+     *  esté vacío: en ese caso es el color FIJO de la técnica (ver TechniquePacket.handleSave). */
     public int defaultRgb() { TechniqueDef d = def(); return d == null ? 0xFFFFFF : d.defaultRgb(); }
+
+    /** "" = desbloqueable con TP normalmente. Con un id, SOLO ese maestro la enseña — ver
+     *  TechniquePacket.handleUnlock y el javadoc de TechniqueDef ("TÉCNICA FIRMA"). */
+    public String master() { TechniqueDef d = def(); return d == null ? "" : d.master(); }
 
     /** CASTTIME: ticks para cargar al 100%. Se puede soltar desde MIN_CHARGE. */
     public int chargeTicks() { TechniqueDef d = def(); return d == null ? 20 : d.chargeTicks(); }

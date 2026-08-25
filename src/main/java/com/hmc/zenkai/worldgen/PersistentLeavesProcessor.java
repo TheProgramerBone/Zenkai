@@ -13,7 +13,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Marca como PERSISTENTES todas las hojas que coloca una plantilla.
+ * Marca como PERSISTENTES cada una de las hojas que coloca una plantilla.
  *
  * Las hojas guardadas en un NBT conservan persistent=false, así que al colocarlas empiezan a
  * decaer por random tick y van soltando palos y retoños durante los minutos siguientes. En el

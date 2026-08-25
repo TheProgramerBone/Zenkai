@@ -42,7 +42,7 @@ public final class ScouterClientState {
     private static final int SCRAMBLE_INTERVAL = 4;
 
     /** RandomSource de Minecraft y no RandomGenerator.getDefault(): ese último pide al JRE
-     *  el algoritmo L32X64MixRandom, que no está en todos los runtimes (JREs recortados por
+     *  el algoritmo L32X64MixRandom, que no está en cada uno de los runtimes (JREs recortados por
      *  jlink o empaquetados por launchers). Como el campo es static, cuando falta revienta
      *  en el <clinit> y se lleva por delante el tick de cliente entero. */
     private static final RandomSource RANDOM = RandomSource.create();

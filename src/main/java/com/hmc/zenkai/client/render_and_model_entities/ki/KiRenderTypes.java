@@ -85,9 +85,32 @@ public final class KiRenderTypes extends RenderType {
                             .setWriteMaskState(COLOR_WRITE)                              // ⚠ no escribe profundidad
                             .createCompositeState(false)));
 
+    /** Igual que {@link #FRESNEL} pero con culling normal en vez de NO_CULL: solo dibuja la cara
+     *  que mira a la cámara. Ver {@code KiVisual.backfaceCull} para el porqué (BARRIER, cáscara
+     *  que la cámara puede llegar a atravesar por dentro). */
+    private static final Function<ResourceLocation, RenderType> FRESNEL_CULLED =
+            Util.memoize(tex -> RenderType.create(
+                    "zenkai_ki_fresnel_culled",
+                    DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256,
+                    false, true,
+                    RenderType.CompositeState.builder()
+                            .setShaderState(new ShaderStateShard(() -> fresnelShader))
+                            .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                            .setCullState(CULL)                                          // ⚠ única diferencia con FRESNEL
+                            .setLightmapState(LIGHTMAP)
+                            .setOverlayState(OVERLAY)
+                            .setDepthTestState(LEQUAL_DEPTH_TEST)
+                            .setWriteMaskState(COLOR_WRITE)
+                            .createCompositeState(false)));
+
     /** El fresnel NO muestrea textura: las bandas son geometría, no píxeles. La ResourceLocation
      *  solo entra como clave del memoize para no crear un RenderType nuevo por llamada. */
     public static RenderType fresnel() { return FRESNEL.apply(SHADER_ID); }
+
+    /** @param backfaceCull true = {@link #FRESNEL_CULLED} (ver KiVisual.backfaceCull). */
+    public static RenderType fresnel(boolean backfaceCull) {
+        return backfaceCull ? FRESNEL_CULLED.apply(SHADER_ID) : FRESNEL.apply(SHADER_ID);
+    }
 
     /**
      * Sube los uniforms de la técnica. Hay que llamarlo ANTES de volcar el lote (ver

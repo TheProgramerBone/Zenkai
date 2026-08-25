@@ -40,6 +40,14 @@ public record KiVisual(
         Band band,
         /** Alfa del cuerpo. Bajo = energía; alto = plástico. */
         float shellAlpha,
+        /** true = culling normal (solo se dibuja la cara que mira a la cámara), en vez del
+         *  NO_CULL de las demás formas. Pensado para cáscaras que la CÁMARA puede llegar a
+         *  atravesar (BARRIER envuelve al dueño): como las caras siempre miran hacia fuera del
+         *  centro, con culling normal quien está DENTRO no ve ninguna -todas miran "en
+         *  contra"- y la cáscara deja de tapar la pantalla entera; quien la mira desde fuera la
+         *  ve exactamente igual que con NO_CULL. No tocar en formas que no van a envolver la
+         *  cámara: ahí NO_CULL es lo correcto (ver KiRenderTypes, comentario de ADITIVO/NO_CULL). */
+        boolean backfaceCull,
 
         // ── Envolvente ──────────────────────────────────────────────────────
         /** La misma malla agrandada, con alfa mínimo. Da el límite gaseoso EN 3D, que un
@@ -58,7 +66,7 @@ public record KiVisual(
         /** Cuánto se lava el núcleo a blanco (0 = tinte puro, 1 = blanco). */
         float coreWhite,
         /** Cuánto se oscurece el contorno respecto al tinte. Valores bajos en tintes pálidos
-         *  producen un anillo pardo alrededor: no todas las formas quieren contorno profundo. */
+         *  producen un anillo pardo alrededor: no cualquier forma quiere contorno profundo. */
         float outlineDark,
         /** Anchura del desvanecido del borde. Pequeño = silueta dura de objeto sólido. */
         float edgeFade,
@@ -162,14 +170,23 @@ public record KiVisual(
         put(KiTechniqueType.BARRIER, b(KiShape.SPHERE)
                 .band(Band.RIM).shell(0.40f).envelope(0f, 0f).core(0f, 0f)
                 .bands(0.55f, 0.22f, 0.05f).tone(0.85f, 0.62f).edge(0.30f).wobble(0.55f)
-                .halo(1.5f, 0.14f).trail(0, 0f, 0f, 0f, 0f).sparks(0.10f));
+                .halo(1.5f, 0.14f).trail(0, 0f, 0f, 0f, 0f).sparks(0.10f)
+                // El dueño vive DENTRO de su propia burbuja: sin esto, NO_CULL dibuja también la
+                // cara interior y el RIM (pensado para verse desde fuera) se lee a rasante en
+                // el campo de visión, un muro de luz a máxima intensidad pegado a la cara.
+                .backfaceCull());
 
         // EXPLOSION: no viaja; es la mecha antes de detonar. Hervor alto y envolvente ancha —
         // lo que tiene que comunicar es inestabilidad inminente.
         put(KiTechniqueType.EXPLOSION, b(KiShape.SPHERE)
                 .shell(0.46f).envelope(1.50f, 0.18f).core(0.68f, 0.90f)
                 .bands(0.76f, 0.32f, 0.04f).tone(0.94f, 0.50f).edge(0.36f).wobble(1.5f)
-                .halo(3.0f, 0.30f).trail(0, 0f, 0f, 0f, 0f).sparks(1.20f));
+                .halo(3.0f, 0.30f).trail(0, 0f, 0f, 0f, 0f).sparks(1.20f)
+                // El suelo de tamaño de KiChargeRenderer (PLAYER_RADIUS) hace que la bola en el
+                // pecho, en primera persona, YA envuelva la cámara mientras se carga — mismo
+                // caso que BARRIER: sin esto, NO_CULL pinta también la cara interior y satura
+                // la pantalla entera en vez de solo el filo visto desde fuera.
+                .backfaceCull());
 
         // Red de seguridad: un tipo nuevo sin entrada se dibuja como una bola estándar en vez
         // de reventar con un null.
@@ -211,6 +228,7 @@ public record KiVisual(
         private float meshLength = 1.0f, meshRadius = 0.5f, headScale = 0f;
         private boolean anchorTip = false;
         private float shellAlpha = 0.50f;
+        private boolean backfaceCull = false;
         private float envelopeScale = 1.35f, envelopeAlpha = 0.15f;
         private float coreScale = 0.62f, coreAlpha = 0.85f;
         private float bandCore = 0.75f, bandBorder = 0.30f, bandOutline = 0.05f;
@@ -228,6 +246,7 @@ public record KiVisual(
         }
         Builder anchored() { this.anchorTip = true; return this; }
         Builder shell(float v) { this.shellAlpha = v; return this; }
+        Builder backfaceCull() { this.backfaceCull = true; return this; }
         Builder envelope(float scale, float alpha) { envelopeScale = scale; envelopeAlpha = alpha; return this; }
         Builder core(float scale, float alpha) { coreScale = scale; coreAlpha = alpha; return this; }
         Builder bands(float c, float b, float o) { bandCore = c; bandBorder = b; bandOutline = o; return this; }
@@ -244,7 +263,7 @@ public record KiVisual(
 
         KiVisual build() {
             return new KiVisual(shape, meshLength, meshRadius, headScale, anchorTip, band,
-                    shellAlpha, envelopeScale, envelopeAlpha, coreScale, coreAlpha,
+                    shellAlpha, backfaceCull, envelopeScale, envelopeAlpha, coreScale, coreAlpha,
                     bandCore, bandBorder, bandOutline, coreWhite, outlineDark, edgeFade, wobble,
                     haloScale, haloAlpha,
                     trailPoints, trailWidth, trailAlpha, trailInnerMul, trailScroll, sparkRate);

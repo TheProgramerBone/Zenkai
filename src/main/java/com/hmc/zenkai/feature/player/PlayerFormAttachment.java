@@ -535,7 +535,7 @@ public class PlayerFormAttachment {
         return ResourceLocation.fromNamespaceAndPath(com.hmc.zenkai.Zenkai.MOD_ID, "kaioken");
     }
 
-    /** Maestría (0..100) del Kaioken, común a todos los escalones. */
+    /** Maestría (0..100) del Kaioken, común a cada uno de los escalones. */
     public float getKaiokenMastery() {
         return formMastery.getOrDefault(kaiokenMasteryKey().toString(), 0f);
     }
@@ -565,7 +565,7 @@ public class PlayerFormAttachment {
         formMastery.put(key.toString(), Math.max(0f, Math.min(100f, value)));
     }
 
-    /** Vista de solo lectura de TODAS las entradas de maestría (formas + kaioken). */
+    /** Vista de solo lectura del conjunto de entradas de maestría (formas + kaioken). */
     public Map<String, Float> masteryView() {
         return java.util.Collections.unmodifiableMap(formMastery);
     }

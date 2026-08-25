@@ -168,7 +168,7 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
      * Botón de acción anclado a la DERECHA y del ancho de su texto.
          * Con ancho fijo de 96 px, "Assign" (30 px) quedaba centrado en una caja invisible tres
      * veces mayor que él y se leía descolgado del borde. Dimensionar al contenido hace que
-     * todos los botones de la columna terminen en la misma vertical, que es la alineación que
+     * cada uno de los botones de la columna termine en la misma vertical, que es la alineación que
      * el ojo sí percibe.
          * Se suma el ancho de los corchetes y la negrita que añade asAction(), o el texto se
      * saldría de la zona clicable.

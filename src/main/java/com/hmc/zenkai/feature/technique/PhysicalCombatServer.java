@@ -352,7 +352,7 @@ public final class PhysicalCombatServer {
 
     /** ÚNICO sitio donde se dibuja el impacto de una técnica física.
      *  El tinte sale del aura del ATACANTE, resuelto en servidor: viaja en el packet
-     *  de partículas, así que todos los clientes ven el mismo color. */
+     *  de partículas, así que el conjunto de clientes ve el mismo color. */
     private static void impactFx(ServerPlayer sp, LivingEntity e, PhysicalTechnique t) {
         record Fx(float flash, int sparks, double spread,
                   net.minecraft.sounds.SoundEvent sound, float vol, float pitch) {}

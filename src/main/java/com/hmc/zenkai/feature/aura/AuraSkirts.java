@@ -17,7 +17,7 @@ public final class AuraSkirts {
 
     /**
      * Conjunto C_v2. El orden ES la identidad: AuraLod referencia los faldones por
-     * índice, así que insertar uno en medio recolocaría todas las bandas en silencio.
+     * índice, así que insertar uno en medio recolocaría el conjunto de bandas en silencio.
      * Añadir SIEMPRE al final.
          *   0  faldón bajo, muy abierto (tilt 52) — la falda alrededor de los pies
      *   1  cuerpo medio                        — sostiene la silueta

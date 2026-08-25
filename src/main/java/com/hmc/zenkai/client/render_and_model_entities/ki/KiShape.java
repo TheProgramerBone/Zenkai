@@ -3,7 +3,7 @@ package com.hmc.zenkai.client.render_and_model_entities.ki;
 /**
  * Forma geométrica con la que se dibuja una técnica. DECISIÓN DE RENDER, por eso vive en
  * cliente: el servidor no dibuja nada.
- * Antes todos los tipos eran el mismo billboard, así que un láser, un disco y una bola se veían
+ * Antes cada tipo era el mismo billboard, así que un láser, un disco y una bola se veían
  * idénticos. La silueta es lo primero que hace que una técnica se reconozca, y por eso cada
  * forma tiene que significar UNA cosa: la hélice es la firma del spiral, y meterla también
  * alrededor de la onda le robaba identidad a las dos.

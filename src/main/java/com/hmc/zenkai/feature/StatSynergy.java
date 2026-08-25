@@ -5,7 +5,7 @@ package com.hmc.zenkai.feature;
  * POR QUÉ EXISTE: hasta ahora cada atributo alimentaba exactamente una columna (STR→melee,
  * DEX→defensa, WIL→ki_dmg, SPI→pool). La consecuencia era que cada estilo tenía una sola vía
  * óptima y el resto de atributos eran dinero tirado: un spiritualist no tenía NINGÚN motivo
- * para tocar STR en toda la partida, y un warrior ninguno para tocar SPI más allá del pool.
+ * para tocar STR en la partida entera, y un warrior ninguno para tocar SPI más allá del pool.
  * Con seis atributos y tres estilos eso deja quince builds que en la práctica son tres.
  * QUÉ NO ES: no es una segunda fuente de poder. Los coeficientes son deliberadamente bajos —
  * el atributo principal de cada columna sigue rindiendo entre seis y doce veces más que el

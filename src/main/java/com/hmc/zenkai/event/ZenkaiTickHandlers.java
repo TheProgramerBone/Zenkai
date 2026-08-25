@@ -62,7 +62,7 @@ public class ZenkaiTickHandlers {
         RacePassiveSystem.tick(c);
         RegenSystem.tick(c);
         // Sondeo de logros: 1x/s. No va por evento porque los stats cambian por media docena
-        // de vías (entrenar, comprar, transformarse, ponerse pesas) y enganchar todas sería
+        // de vías (entrenar, comprar, transformarse, ponerse pesas) y enganchar cada una sería
         // garantizar que se olvida una. Misma cadencia que el trigger de localización vanilla.
         if (p instanceof ServerPlayer sp && p.tickCount % 20 == 0) {
             ZenkaiTriggers.STAT_THRESHOLD.get().trigger(sp);

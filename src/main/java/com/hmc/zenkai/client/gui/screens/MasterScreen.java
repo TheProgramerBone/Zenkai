@@ -30,7 +30,7 @@ import java.util.List;
  *   - nivel 0 y no puedes     -> coste en ROJO, clic no hace nada
  *   - nivel >= 1              -> gris, "Aprendida" (el maestro solo da el nivel 1; los
  *                                siguientes se suben con TP desde la pantalla de skills)
- * Fondo: master_screen.png (ver tools/gen_master_screen.py), compartido por todos los
+ * Fondo: master_screen.png (ver tools/gen_master_screen.py), compartido por el conjunto de
  * maestros — lo que distingue a cada uno es su retrato 3D, no el fondo.
  */
 public class MasterScreen extends Screen {
@@ -63,8 +63,8 @@ public class MasterScreen extends Screen {
     // para no bloquear a que existiera el asset. Ahora existe: master_screen.png, generado por
     // tools/gen_master_screen.py (ÚNICA fuente, no editar el PNG a mano), con el mismo marco de
     // tres anillos IN/MID/OUT + brillo de esquina y el panel del retrato ya horneados dentro.
-    // Es UN solo archivo para TODOS los maestros —Kami, Kaio, Korin y los que añada el
-    // datapack—, igual que common_screen.png es uno solo para todas las pestañas del menú: lo
+    // Es UN solo archivo para el conjunto de maestros —Kami, Kaio, Korin y los que añada el
+    // datapack—, igual que common_screen.png es uno solo para el conjunto de pestañas del menú: lo
     // que distingue a cada maestro es su retrato 3D, no el fondo.
     //
     // Sigue siendo opaco (no el POPUP_BG/BAR_BG_DARK de alfa parcial del popup lateral de la
@@ -263,7 +263,7 @@ public class MasterScreen extends Screen {
     /**
      * El maestro real, rotando hacia el ratón. Si la entidad ya no está cargada (te alejaste,
      * el chunk se descargó) el panel se queda vacío en vez de petar: la pantalla sigue siendo
-     * usable y el servidor rechazará la compra por distancia de todas formas.
+     * usable y el servidor rechazará la compra por distancia en cualquier caso.
      */
     private void renderMaster(GuiGraphics g, int mouseX, int mouseY) {
         if (minecraft == null || minecraft.level == null) return;

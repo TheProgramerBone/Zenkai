@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * CombatZenkaiHooks.onBodyDepleted solo corre cuando llega un golpe por LivingDamageEvent.
  * Lo que mate al jugador por otra vía (vacío, /kill, /damage, efectos, otro mod, un
  * setHealth ajeno) se saltaba el derribado y lo mandaba a morir de verdad.
- * LivingEntity.die() es el embudo por el que pasan TODAS las muertes, y NeoForge lo expone
+ * LivingEntity.die() es el embudo por el que pasa cualquier muerte, y NeoForge lo expone
  * con LivingDeathEvent cancelable, así que no hace falta mixin: se cancela la muerte, se
  * devuelve la vida vanilla a tope (si se queda en 0 el jugador vuelve a morir cada tick) y
  * se entra en derribado. A partir de ahí manda TickHandlers.handleDowned, como siempre.

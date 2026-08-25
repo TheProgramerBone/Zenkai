@@ -27,7 +27,7 @@ public class PartyManager extends SavedData {
 
     private static final String ID = "zenkai_party";
 
-    /** Tamaño con el que nace toda party nueva. El líder puede subirlo después con
+    /** Tamaño con el que nace cualquier party nueva. El líder puede subirlo después con
      *  /zparty maxsize (PartyService.setMaxSize, botón PartyConfig en PartyScreen), hasta el
      *  tope admin de CommonConfig.partyMaxSizeCeiling(). */
     public static final int DEFAULT_MAX_SIZE = 4;

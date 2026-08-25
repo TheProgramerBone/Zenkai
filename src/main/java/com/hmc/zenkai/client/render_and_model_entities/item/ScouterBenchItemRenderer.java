@@ -12,8 +12,8 @@ import software.bernie.geckolib.renderer.GeoItemRenderer;
  * El geo mide 16x25x16 con el origen en la base (y de 0 a 25), como cualquier modelo de
  * Blockbench hecho para un bloque. Vanilla, en cambio, renderiza los ítems alrededor del
  * CENTRO de un cubo de 16: un modelo de bloque normal va de -8 a 8 en los tres ejes.
- * Sin corregirlo, el banco aparecería hundido medio bloque y desbordando por arriba en todos
- * los contextos, y habría que compensarlo en cada transform del JSON por separado — seis
+ * Sin corregirlo, el banco aparecería hundido medio bloque y desbordando por arriba en cada uno
+ * de los contextos, y habría que compensarlo en cada transform del JSON por separado — seis
  * traslaciones distintas para decir lo mismo, que se desincronizan a la primera.
  * Aquí se baja UNA vez, en unidades del modelo, y los display transforms del JSON quedan
  * siendo los de un bloque vanilla con la escala corregida por la altura extra.

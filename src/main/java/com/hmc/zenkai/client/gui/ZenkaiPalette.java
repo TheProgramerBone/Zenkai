@@ -2,7 +2,7 @@ package com.hmc.zenkai.client.gui;
 
 /**
  * ÚNICA fuente de colores de la GUI del mod.
- * ═══ REGLA DE SOMBRA (vale para TODAS las pantallas) ═══
+ * ═══ REGLA DE SOMBRA (vale para el conjunto de pantallas) ═══
  *   Sobre el beige del panel  → SIN sombra. Los colores de esta sección son oscuros y
  *                               saturados; una sombra negra bajo un marrón sobre beige claro
  *                               solo emborrona el glifo.
@@ -97,7 +97,7 @@ public final class ZenkaiPalette {
     public static final int BAR_CONTROL = 0xFFD9922B;
     public static final int BAR_MASTERY = 0xFF3E86A8;
 
-    // ── Roles fijos: SIEMPRE este color, en TODAS las pantallas ──────────────
+    // ── Roles fijos: SIEMPRE este color, en cada una de las pantallas ──────────────
     //
     // No son alias por comodidad: son la respuesta a que TP y MND salían los dos amarillos en
     // pantallas distintas y no se distinguían de un vistazo. Cualquier pantalla que muestre uno
@@ -119,7 +119,7 @@ public final class ZenkaiPalette {
 
     // ── Secciones de popup ───────────────────────────────────────────────────
     //
-    // Cada bloque de un popup tiene su color. Con todas las cabeceras en gris había que LEER
+    // Cada bloque de un popup tiene su color. Con el conjunto de cabeceras en gris había que LEER
     // "Combat", "Mobility", "Investment" para saber en qué sección se estaba; con color, el
     // ojo salta directo al bloque que busca. Los tonos son claros porque el popup es oscuro.
     //

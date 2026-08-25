@@ -6,7 +6,7 @@ import net.minecraft.client.Minecraft;
  * Discrimina, en cliente, entre una bajada de vida por DAÑO REAL y una por sincronización.
  * Existe porque el espejo body→vanilla hace que cualquier drenaje (kaioken, y lo que venga
  * después) llegue como ClientboundSetHealthPacket, y LocalPlayer.hurtTo pone hurtTime a 10
- * en toda bajada. Con el kaioken drenando varios puntos POR TICK eso es un flash rojo y un
+ * en cada bajada. Con el kaioken drenando varios puntos POR TICK eso es un flash rojo y un
  * tilt de cámara continuos: no es información, es ruido, y marea.
  * La animación de hurtTo es redundante para el daño real: ese ya trae su propio
  * ClientboundDamageEventPacket, que además pone el sonido y la dirección del golpe. Así que

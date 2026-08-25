@@ -5,7 +5,7 @@ package com.hmc.zenkai.feature.master;
  * ver MasterManager) y NO viaja al cliente: los requisitos solo se comprueban en servidor y
  * el rechazo llega por chat. Lo que la pantalla necesita (qué enseña y a qué precio) ya está
  * en las SkillDef, que sí se sincronizan.
- * JSON (todos los campos opcionales):
+ * JSON (cada campo opcional):
  * <pre>
  * {
  *   "pl_req": 5000,

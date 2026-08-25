@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * Antes el flag isImmortal también cancelaba la muerte en DownedDeathGuard y rellenaba el body
  * en CombatZenkaiHooks.onBodyDepleted, así que el jugador no solo se curaba rápido: no podía
- * morir de ninguna forma, ni con /kill. Esas dos ramas se han eliminado y toda la inmortalidad
+ * morir de ninguna forma, ni con /kill. Esas dos ramas se han eliminado y la inmortalidad entera
  * vive aquí.
  *
  * Consecuencia buscada: un inmortal cae derribado como cualquiera, pero se levanta solo casi al

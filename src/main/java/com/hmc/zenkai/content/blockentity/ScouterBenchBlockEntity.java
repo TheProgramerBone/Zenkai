@@ -53,7 +53,7 @@ import java.util.UUID;
  */
 public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements GeoBlockEntity {
 
-    /** Fijo para todas las mejoras y para la reparación. */
+    /** Fijo para cada una de las mejoras y para la reparación. */
     public static final int WORK_TICKS = 100; // 5 s
 
     /** Valores de `job` que no son una mejora. */

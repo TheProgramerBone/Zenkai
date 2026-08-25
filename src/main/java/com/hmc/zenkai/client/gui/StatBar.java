@@ -59,7 +59,7 @@ public final class StatBar {
 
     /** Hueco mínimo entre el final de la barra y el arranque del texto. */
     private static final int ROW_GAP = 3;
-    /** Por debajo de esto la barra ya no aporta nada legible: mejor cederle todo el ancho al
+    /** Por debajo de esto la barra ya no aporta nada legible: mejor cederle el ancho entero al
      *  número que dejar una barra de dos píxeles que nadie puede leer. */
     private static final int ROW_MIN_BAR_W = 10;
 

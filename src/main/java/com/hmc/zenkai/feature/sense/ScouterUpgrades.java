@@ -12,7 +12,7 @@ import net.minecraft.network.codec.StreamCodec;
  * Campos explícitos y no un Map<String,Integer>: las mejoras están hardcodeadas (ScouterUpgrade),
  * así que un mapa solo añadiría claves basura cuando alguien renombre algo y una capa de
  * indirección que no compra nada.
- * Todos los campos son NIVELES. Las binarias valen 0 o 1: un solo tipo de dato en el
+ * Cada campo es NIVEL. Las binarias valen 0 o 1: un solo tipo de dato en el
  * sistema, sin ramas de "esta es booleana".
  */
 public record ScouterUpgrades(int range, int plCap, int analyzer, int areaScanner, int dragonRadar) {

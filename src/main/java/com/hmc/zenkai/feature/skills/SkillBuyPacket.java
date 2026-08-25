@@ -2,7 +2,6 @@ package com.hmc.zenkai.feature.skills;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
-import com.hmc.zenkai.content.entity.ZenkaiMasterEntity;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.forms.PotentialUnlock;
 import com.hmc.zenkai.feature.master.MasterManager;
@@ -65,14 +64,7 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
             if (current <= 0 && def.master() != null) {
                 if (!def.master().equals(pkt.masterId())) return;
 
-                Entity master = null;
-                for (Entity e : sp.level().getEntities(sp,
-                        sp.getBoundingBox().inflate(MasterManager.INTERACT_RANGE))) {
-                    if (e instanceof ZenkaiMasterEntity m && def.master().equals(m.masterId())) {
-                        master = e;
-                        break;
-                    }
-                }
+                Entity master = MasterManager.findNearby(sp, def.master());
                 if (master == null) return;                       // no estás delante de él
 
                 MasterManager.Result r = MasterManager.check(sp, def.master(), master);

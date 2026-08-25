@@ -28,7 +28,7 @@ import java.util.*;
  * extensión ("focus", "masters/kaio_fist") — si dos namespaces definen el mismo path,
  * gana el último y se avisa por log.
  *
- * JSON: { "tp_cost": 100, "mind_req": 5, "purchasable": true }  (todos opcionales;
+ * JSON: { "tp_cost": 100, "mind_req": 5, "purchasable": true }  (cada uno opcional;
  * purchasable=false -> solo maestros / /zenkai skill give).
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
@@ -78,7 +78,7 @@ public final class SkillManager {
                     if (o.has("mind_req") && o.get("mind_req").isJsonArray()) {
                         for (var el : o.getAsJsonArray("mind_req")) mind.add(el.getAsInt());
                     } else {
-                        // Compat con el formato viejo: un solo número = mismo MND en todos los niveles.
+                        // Compat con el formato viejo: un solo número = mismo MND en cada nivel.
                         int flat = GsonHelper.getAsInt(o, "mind_req", 0);
                         if (flat > 0) mind.add(flat);
                     }

@@ -18,6 +18,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
@@ -43,7 +44,7 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
 
     private static final int FULL_BRIGHT = 0xF000F0;
 
-    /** Techo global de chispas por tick entre TODOS los proyectiles. Una ráfaga de veinte bolas
+    /** Techo global de chispas por tick entre cada uno de los proyectiles. Una ráfaga de veinte bolas
      *  grandes pedía cientos de partículas por tick y hundía los frames sin que se notara la
      *  diferencia visual. Se reinicia con el tick del cliente. */
     private static final int SPARK_BUDGET_PER_TICK = 24;
@@ -62,6 +63,8 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         float r = ((rgb >> 16) & 0xFF) / 255f;
         float g = ((rgb >> 8) & 0xFF) / 255f;
         float b = (rgb & 0xFF) / 255f;
+
+        if (!entity.techniqueType().travels()) alignToOwner(entity, partialTick, pose);
 
         if (v.hasTrail() && entity.trailHistory().size() >= 2) {
             renderTrail(entity, v, partialTick, pose, buffer, r, g, b);
@@ -110,6 +113,28 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         spawnSparks(entity, v, rgb);
 
         super.render(entity, entityYaw, partialTick, pose, buffer, packedLight);
+    }
+
+    /**
+     * Lo que NO viaja (BARRIER, la mecha de EXPLOSION) fija su posición una vez por TICK de
+     * juego, igualando la del dueño (ver KiProjectileEntity.tickAttached) — así que la
+     * interpolación normal de esta entidad la deja un frame por detrás de la posición REAL del
+     * dueño entre dos ticks. Para BARRIER, cuya cáscara envuelve la cámara, ese desfase de
+     * pocos centímetros se ve como un ligero "nado" al moverse: la superficie está demasiado
+     * cerca del ojo para que el desfase pase desapercibido.
+     * Se corrige compensando el PoseStack (ya trasladado por el dispatcher a la posición
+     * interpolada de ESTA entidad) hasta la posición interpolada DEL DUEÑO — la misma fuente
+     * que ya usa el propio render del dueño (y, si es el jugador local, la cámara) — en vez de
+     * fiarse de la interpolación tick-a-tick de esta entidad. Mismo desplazamiento vertical que
+     * tickAttached: centro del dueño menos la mitad de la altura de esta entidad.
+     */
+    private static void alignToOwner(KiProjectileEntity entity, float partialTick, PoseStack pose) {
+        Entity owner = entity.getOwner();
+        if (owner == null) return;
+        Vec3 wantFeet = owner.getPosition(partialTick)
+                .add(0, owner.getBbHeight() * 0.5 - entity.getBbHeight() * 0.5, 0);
+        Vec3 haveFeet = entity.getPosition(partialTick);
+        pose.translate(wantFeet.x - haveFeet.x, wantFeet.y - haveFeet.y, wantFeet.z - haveFeet.z);
     }
 
     // ── Halo ────────────────────────────────────────────────────────────────

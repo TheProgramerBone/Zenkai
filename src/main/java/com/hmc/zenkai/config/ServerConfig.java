@@ -72,7 +72,7 @@ public class ServerConfig {
                         obj -> true);
         WHITELIST_ITEMS_RAW = BUILDER
                 .comment("Whitelist de ítems permitidos en el deseo de stack.",
-                        "Si está VACÍA, se permiten todos salvo la blacklist.",
+                        "Si está VACÍA, se permite cualquiera salvo la blacklist.",
                         "Si tiene ítems, SOLO se permiten esos (la blacklist sigue teniendo prioridad).")
                 .defineListAllowEmpty("whitelist_items",
                         List.of(),

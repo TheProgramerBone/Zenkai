@@ -32,7 +32,7 @@ public final class ZenkaiPalLayers {
     public static final ResourceLocation PREVIEW_LAYER =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "preview");
 
-    /** Todas las capas del mod, para aplicarles políticas comunes de una pasada. */
+    /** El conjunto de capas del mod, para aplicarles políticas comunes de una pasada. */
     public static final ResourceLocation[] ALL = {
             TRANSFORM_LAYER, FLY_LAYER, BLOCK_LAYER, COMBAT_LAYER, PHYS_LAYER, KI_LAYER
     };

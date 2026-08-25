@@ -206,7 +206,7 @@ public class ModCommands {
                 // ── /zenkai skill ─────────────────────────────────────────────────
                 // Otorga/revoca habilidades sin TP (la vía de maestros/NPCs).
                 // Uso: /zenkai skill give|revoke <objetivos> <id>
-                //      /zenkai skill giveall [objetivos]   → todas al máximo
+                //      /zenkai skill giveall [objetivos]   → cada una al máximo
                 //      /zenkai skill list [jugador]        → consulta (un solo jugador)
                 .then(Commands.literal("skill")
                         .then(Commands.literal("give")
@@ -293,7 +293,7 @@ public class ModCommands {
     }
 
     // ── Selectores múltiples ─────────────────────────────────────────────────
-    // Todos los <player> usan EntityArgument.players(), así que aceptan @a, @p, @r, @s,
+    // Cada uno de los <player> usa EntityArgument.players(), así que aceptan @a, @p, @r, @s,
     // @e[type=player] o un nombre suelto. La acción corre UNA VEZ por objetivo y cada
     // implementación se queda tal cual (firma de un solo ServerPlayer).
 
@@ -455,7 +455,7 @@ public class ModCommands {
 
         PlayerLifeCycle.sync(sp);
         // ── Visual (pelo, ojos, colores, índices) ─────────────────────────────
-        // Cargar un attachment limpio con todos los valores por defecto
+        // Cargar un attachment limpio con el conjunto de valores por defecto
         var visual = sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.load(new PlayerVisualAttachment().save());
         PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
@@ -553,7 +553,7 @@ public class ModCommands {
     }
 
     /**
-     * Otorga TODAS las habilidades del datapack al máximo. Son "granted" (grantAdmin), no
+     * Otorga el conjunto de habilidades del datapack al máximo. Son "granted" (grantAdmin), no
      * compradas: sobreviven al respec y no consumen TP — pero solo el nivel 1 de cada una
      * queda protegido de olvidarse por la X de SkillsScreen, el resto se puede bajar con
      * normalidad. Ver PlayerSkills.grantAdmin().
@@ -646,7 +646,7 @@ public class ModCommands {
      * Admite "kaioken", cualquier etiqueta de escalón ("x20"), "ssj4" y "zenkai:ssj4".
      * Brigadier resuelve un id sin namespace como minecraft:, así que ese caso se reinterpreta
      * como zenkai: — es lo que quiere decir el jugador el 100% de las veces.
-     * Las etiquetas de escalón siguen aceptándose por comodidad, pero todas apuntan a la MISMA
+     * Las etiquetas de escalón siguen aceptándose por comodidad, pero cada una apunta a la MISMA
      * clave: la maestría de kaioken ya no se guarda por escalón.
      */
     private static ResourceLocation resolveMasteryId(ResourceLocation raw) {

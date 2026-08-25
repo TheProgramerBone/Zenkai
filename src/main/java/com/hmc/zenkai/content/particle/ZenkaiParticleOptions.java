@@ -11,11 +11,11 @@ import net.minecraft.network.codec.StreamCodec;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Opciones compartidas por TODAS las partículas del mod: color (RGB, sin alfa) y escala.
+ * Opciones compartidas por el conjunto de partículas del mod: color (RGB, sin alfa) y escala.
  * Él {@code type} viaja en el record, pero NO se serializa: lo aporta el ParticleType al
  * construir su propio codec, así una sola clase sirve para ki_impact, ki_spark y las que vengan.
  * El color lo resuelve el SERVIDOR con AuraColors.resolve(player) y viaja en el packet de
- * partículas, así que todos los clientes ven el mismo tinte sin sincronizar nada extra.
+ * partículas, así que el conjunto de clientes ve el mismo tinte sin sincronizar nada extra.
  */
 public record ZenkaiParticleOptions(ParticleType<ZenkaiParticleOptions> type, int rgb, float scale)
         implements ParticleOptions {

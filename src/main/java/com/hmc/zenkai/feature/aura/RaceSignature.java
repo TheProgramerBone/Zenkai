@@ -43,7 +43,7 @@ public final class RaceSignature {
                 0.80f, 0.75f, 1.00f));
 
         // Namekian — con cuerpo, movimiento suave. Más masa, menos punta, más baja.
-        // Todas las ganancias por debajo de 1: es la aura que menos se altera.
+        // Cada ganancia por debajo de 1: es la aura que menos se altera.
         SIGNATURES.put(Race.NAMEKIAN, new AuraModifier(
                 0.07f, -0.10f, -0.06f, 0.00f, -0.06f, 0.00f,
                 0.75f, 0.80f, 0.80f));

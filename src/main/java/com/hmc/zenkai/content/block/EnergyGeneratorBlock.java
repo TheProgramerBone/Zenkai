@@ -69,7 +69,7 @@ public class EnergyGeneratorBlock extends BaseEntityBlock {
 
     /** Rotate y mirror no son opcionales aunque nadie use /rotate: las estructuras del mod
      *  se colocan con rotación aleatoria, y un bloque que las ignora sale mirando al norte
-     *  en todas las variantes de la misma sala. */
+     *  en cada una de las variantes de la misma sala. */
     @Override
     protected @NotNull BlockState rotate(@NotNull BlockState state, @NotNull Rotation rot) {
         return state.setValue(FACING, rot.rotate(state.getValue(FACING)));

@@ -106,7 +106,7 @@ public final class ZenkaiTriggers {
     /**
      * Umbrales de progresión. Se dispara por SONDEO, una vez por segundo desde el tick del
      * jugador — no por evento, porque los stats cambian por media docena de vías (entrenar,
-     * comprar, transformarse, ponerse pesas) y engancharlas todas sería garantizar que se
+     * comprar, transformarse, ponerse pesas) y engancharlas cada una sería garantizar que se
      * olvida una. Un sondeo por segundo es la misma cadencia que usa vanilla para su trigger
      * de localización.
      * Las condiciones se leen del jugador dentro de matches(), no se pasan por parámetro: así
@@ -154,7 +154,7 @@ public final class ZenkaiTriggers {
                 return !allSkillsMax.orElse(false) || hasAll(att, true);
             }
 
-            /** Todas las habilidades COMPRABLES. Las de grant() quedan fuera a propósito: llegan
+            /** El conjunto de habilidades COMPRABLES. Las de grant() quedan fuera a propósito: llegan
              *  solas con la raza y contarlas haría el logro más fácil para unas razas que otras. */
             private static boolean hasAll(PlayerStatsAttachment att, boolean maxed) {
                 for (SkillDef d : SkillDef.all()) {

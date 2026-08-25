@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
  * Genera data/zenkai/zenkai_entities/*.json — las fichas de stats de entidades.
  * POR QUÉ EN CÓDIGO Y NO A MANO: son 45 fichas que comparten el 90% de su forma. Sueltas, cada
  * campo nuevo (como `alignment`) obliga a abrir 45 archivos y basta un olvido para que una
- * entidad se comporte distinto sin que nadie sepa por qué. Aquí los PL están todos en la misma
+ * entidad se comporte distinto sin que nadie sepa por qué. Aquí los PL están en conjunto en la misma
  * pantalla, que es lo que hace falta para calibrarlos unos contra otros.
  * ⚠ ANTES DE USARLO: borra src/main/resources/data/zenkai/zenkai_entities/ entero. Los dos
  * directorios de recursos se montan juntos y tendrías cada ficha duplicada.

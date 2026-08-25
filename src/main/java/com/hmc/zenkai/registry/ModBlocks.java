@@ -207,7 +207,7 @@ public class ModBlocks {
                                  DeferredBlock<SlabBlock> slab,
                                  DeferredBlock<WallBlock> wall) {}
 
-    /** Todas las variantes, en orden de registro. El datagen itera sobre esto en vez de
+    /** El conjunto de variantes, en orden de registro. El datagen itera sobre esto en vez de
      *  listar 68 constantes a mano: añadir un color nuevo solo toca este archivo. */
     public static final List<ConcreteFamily> STRUCTURAL_CONCRETE_FAMILIES = new ArrayList<>();
 

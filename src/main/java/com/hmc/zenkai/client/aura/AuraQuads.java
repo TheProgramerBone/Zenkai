@@ -6,7 +6,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 
 /**
- * Primitivas de emisión compartidas por todas las capas del aura. Sin lógica: solo
+ * Primitivas de emisión compartidas por el conjunto de capas del aura. Sin lógica: solo
  * convierte parámetros en vértices.
  * Antes vivían dentro del AuraRenderer monolítico, y cada capa que se añadía tenía que
  * copiarlas o llamar a una manera privada. Aquí las comparten skirts, wisps, sparks y

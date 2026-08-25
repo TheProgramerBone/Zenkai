@@ -23,7 +23,7 @@ import java.util.Random;
  *
  * Traslado del código que ya funcionaba, con tres cambios:
  *  1. La CANTIDAD la manda el Plan (profile.wisps(), 6–24 según presencia) en vez de un
- *     tope fijo de 24 igual para todos. Un novato suelta pocas; un endgame, muchas.
+ *     tope fijo de 24 igual para cualquiera. Un novato suelta pocas; un endgame, muchas.
  *  2. RELOJ UNIFICADO. Antes el cono usaba (gameTime/frameTicks) y las lenguas
  *     (gameTime/2): dos relojes distintos para el mismo efecto. Ahora ambos usan
  *     frameTicks del perfil, así que un aura turbulenta suelta lenguas más seguido sin
@@ -98,7 +98,7 @@ public final class AuraWispRenderer {
     }
 
     /**
-     * Avanza la simulación y dibuja todas las lenguas vivas de todos los jugadores.
+     * Avanza la simulación y dibuja cada lengua viva del conjunto de jugadores.
      * Se llama UNA vez por frame, fuera del bucle de jugadores: las lenguas están en
      * coordenadas de mundo y no dependen del pose de nadie.
      */
@@ -126,7 +126,7 @@ public final class AuraWispRenderer {
             if (WISPS.isEmpty()) return;
         }
 
-        // Reloj de hoja propio: las lenguas de todos los jugadores comparten frame, que
+        // Reloj de hoja propio: las lenguas del conjunto de jugadores comparten frame, que
         // es más barato que un buffer por jugador y visualmente indistinguible.
         int frame = (int) ((t / 2) % AuraTuning.SHEET_FRAMES);
         VertexConsumer vc = buffers.getBuffer(

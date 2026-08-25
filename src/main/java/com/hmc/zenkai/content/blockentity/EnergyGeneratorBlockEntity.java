@@ -89,7 +89,7 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
 
         @Override
         public void set(int index, int value) {
-            // Nada que fijar desde el cliente: todos los campos son de lectura. Dejarlo vacío
+            // Nada que fijar desde el cliente: cada campo es de lectura. Dejarlo vacío
             // es la implementación correcta, no un pendiente.
         }
 

@@ -278,7 +278,7 @@ public class KiProjectileEntity extends Projectile {
     /**
      * Impacto: daño en ÁREA siempre, rotura de bloques solo con el efecto EXPLOSIVE.
      * ANTES el área y la destrucción iban juntas bajo la marca `explosive`; separarlas es lo
-     * que hace que la marca signifique una cosa sola. Consecuencia asumida: ahora TODA técnica
+     * que hace que la marca signifique una cosa sola. Consecuencia asumida: ahora cualquier técnica
      * reparte algo de área, según el aoeFactor de su tipo (un láser, un 20 %).
      * El objetivo directo y el dueño quedan fuera del área: el primero ya cobró el golpe
      * entero y el segundo nunca se daña a sí mismo — el autodaño de la explosión es otra cosa
@@ -362,7 +362,7 @@ public class KiProjectileEntity extends Projectile {
     }
 
     /** Vector unitario disperso: mayormente hacia fuera y algo hacia arriba, nunca hacia abajo
-     *  del todo — una esquirla que solo pica hacia el suelo se lee como un fallo de física. */
+     *  por completo — una esquirla que solo pica hacia el suelo se lee como un fallo de física. */
     private Vec3 randomSpread() {
         double theta = random.nextDouble() * Math.PI * 2.0;
         double phi = Math.acos(2.0 * random.nextDouble() - 1.0);

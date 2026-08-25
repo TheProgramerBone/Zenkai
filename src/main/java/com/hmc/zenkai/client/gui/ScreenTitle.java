@@ -32,7 +32,7 @@ public final class ScreenTitle {
      * Primer Y utilizable dentro del panel, relativo a su borde superior. El título va FUERA
      * (drawAbovePanel), así que aquí NO hay que reservarle sitio: los 30-50 px que tenían las
      * pantallas eran el hueco del título cuando se dibujaba dentro, y cada una eligió el suyo.
-     * Un solo número para todas, o vuelven a divergir en la siguiente pantalla.
+     * Un solo número para el conjunto, o vuelven a divergir en la siguiente pantalla.
      */
     public static final int CONTENT_TOP = 16;
 

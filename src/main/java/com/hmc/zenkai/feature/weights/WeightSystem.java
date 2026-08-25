@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * ÚNICO dueño de las matemáticas de las pesas. Nadie más calcula capacidad, carga,
- * penalización ni bono: todos los sitios (tick, movimiento, vuelo, TP, GUI, pantalla de
+ * penalización ni bono: cada uno de los sitios (tick, movimiento, vuelo, TP, GUI, pantalla de
  * ajuste) leen de aquí. Si algún día cambia la curva, cambia en un solo archivo.
  *
  * Modelo:
@@ -111,7 +111,7 @@ public final class WeightSystem {
         return Math.max(0.0, 1.0 - CommonConfig.weightJumpPenalty() * effective(load));
     }
 
-    /** Multiplicador de TODA ganancia de TP. 1.0 en sobrecarga: la carga muerta no entrena. */
+    /** Multiplicador de cualquier ganancia de TP. 1.0 en sobrecarga: la carga muerta no entrena. */
     public static double tpFactor(double load) {
         if (isOverloaded(load)) return 1.0;
         return 1.0 + CommonConfig.weightTpBonus() * effective(load);

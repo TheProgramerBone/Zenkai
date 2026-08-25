@@ -26,7 +26,7 @@ public class TextOnlyButton extends AbstractButton {
     @Nullable private final ResourceLocation texNormal; // fondo opcional (estado normal)
     @Nullable private final ResourceLocation texHover;  // fondo opcional (hover); si null usa texNormal
 
-    // Valores por defecto pensados para FONDO OSCURO. Toda pantalla que ponga este botón sobre
+    // Valores por defecto pensados para FONDO OSCURO. Cualquier pantalla que ponga este botón sobre
     // el panel beige debe llamar a textColors(...) con la escala tierra — que es lo que hacen
     // ya las de técnicas y la de configuración. Se dejan en claro y no en tierra porque un
     // botón sin configurar sobre el mundo tiene que verse; sobre el beige, al menos, canta lo
@@ -127,7 +127,7 @@ public class TextOnlyButton extends AbstractButton {
      * cambiar el label. asAction() (corchetes + negrita) ensancha el texto, y en un botón
      * angosto (los 45px de Stats/Progress en StatsScreen) el label ensanchado desborda su
      * propio ancho y se solapa con el botón de al lado — justo lo que pasaba antes de este
-     * método. La barra no cambia el ancho del texto, así que nunca desborda.
+     * función. La barra no cambia el ancho del texto, así que nunca desborda.
      * Mismo lenguaje visual que TabIconButton.selected (barra bajo el ícono activo).
      */
     public TextOnlyButton selected(boolean selected) {

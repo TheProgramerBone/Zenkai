@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * CADA MAESTRO ES SU PROPIO EntityType. Es a propósito y no es un capricho de diseño:
  * NpcMarkerBlockEntity spawnea por ResourceLocation de EntityType y no tiene ranura para
- * pasar un id. Con una sola entidad parametrizada, todos los maestros colocados con el
+ * pasar un id. Con una sola entidad parametrizada, cada maestro colocado con el
  * marcador saldrían siendo el mismo. Así una subclase son ocho líneas y el marcador funciona
  * sin tocarlo.
  *

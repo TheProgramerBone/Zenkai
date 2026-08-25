@@ -40,7 +40,7 @@ public final class AuraTiltController {
     public record Motion(Vec3 vel, float alpha, boolean flying) {}
 
     /**
-     * Velocidad REAL por delta de posición: getDeltaMovement no refleja todos los modos
+     * Velocidad REAL por delta de posición: getDeltaMovement no refleja cada uno de los modos
      * de vuelo (por ejemplo descender con ctrl+shift+WASD). En bloques/tick.
      */
     public static Motion sample(AbstractClientPlayer p, Vec3 at) {

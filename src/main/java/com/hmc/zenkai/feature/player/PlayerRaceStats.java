@@ -152,7 +152,7 @@ public class PlayerRaceStats {
      * devolverlos de uno en uno pagaría ~200. Eso es TP infinito con dos clics, y la
      * simulación lo confirmó en tres de los cuatro patrones de compra probados.
      * El reparto correcto es PROPORCIONAL a la curva teórica: el último punto se lleva la
-     * fracción 1 − coste(N−1)/coste(N) de lo que el jugador tiene gastado. Devolviendo todos
+     * fracción 1 − coste(N−1)/coste(N) de lo que el jugador tiene gastado. Devolviendo cada uno de
      * los puntos uno a uno se reconstruye el gasto exacto (±1 TP por acarreo), venga de compras
      * de una en una o de bloques de diez mil.
      * @return TP devuelto, o -1 si no había nada que devolver en ese atributo.
@@ -347,7 +347,7 @@ public class PlayerRaceStats {
         // redondeo hacia arriba de cada compra real siempre suma por encima de la curva
         // continua — así que nadie sale ganando TP al actualizar, que es el único error
         // inaceptable aquí. En los patrones simulados el defecto va del 0 % (compra en
-        // bloque) al 50 % (compra punto a punto durante toda la partida).
+        // bloque) al 50 % (compra punto a punto durante la partida entera).
         int n = totalInvested();
         this.tpSpent = n <= 0 ? 0.0 : n * (LEGACY_BASE + LEGACY_COEFF * (n - 1) / 2.0);
     }

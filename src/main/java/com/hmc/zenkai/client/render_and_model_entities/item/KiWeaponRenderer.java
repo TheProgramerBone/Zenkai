@@ -13,8 +13,8 @@ import software.bernie.geckolib.util.Color;
  * El color sale de un componente del propio ItemStack (DYED_COLOR), no de mirar quién la
  * empuña. Motivo: un GeoItemRenderer no sabe de quién es el item que está dibujando — se le
  * llama igual para la mano en primera persona, la de otro jugador a treinta bloques, un NPC o
- * el icono del inventario. Poniendo el color EN el stack, el servidor decide una vez y todos
- * los clientes dibujan lo mismo, incluidos los NPC que la usen algún día.
+ * el icono del inventario. Poniendo el color EN el stack, el servidor decide una vez y el
+ * conjunto de clientes dibuja lo mismo, incluidos los NPC que la usen algún día.
  *
  * El tinte MULTIPLICA sobre la textura, así que la textura vive en grises: el blanco se
  * convierte en el color de ki y el negro se queda negro. Eso también significa que la textura

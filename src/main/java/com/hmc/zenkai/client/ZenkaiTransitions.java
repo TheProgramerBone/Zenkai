@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 
 /**
  * AUTORIDAD ÚNICA de las transiciones entre animaciones. Ninguna capa decide su propia
- * duración de fundido: todas piden aquí.
+ * duración de fundido: cada una pide aquí.
  * CRITERIO de duraciones: lo reactivo va corto y lo sostenido va largo. Un golpe con 6 ticks
  * de fundido se siente lento aunque el daño salga en el tick 0; una pose de combate con 2 se
  * ve como un tirón. Nada supera 6 ticks (0.3 s).
@@ -75,7 +75,7 @@ public final class ZenkaiTransitions {
      * Si algún día se quiere recuperar la salida suave, NO se vuelve al fundido hacia null:
      * se funde hacia un clip neutro con fadeIn(), que es la ruta que sí se limpia sola.
      * ⚠ stopTriggeredAnimation(): si el fork no lo expone en PlayerAnimationController, pásame
-     *   los métodos públicos de parada de AnimationController y lo sustituyo.
+     *   las funciones públicas de parada de AnimationController y lo sustituyo.
      */
     public static void stop(PlayerAnimationController c, int ticks) {
         if (c == null) {

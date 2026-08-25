@@ -33,7 +33,7 @@ import java.util.Map;
 public final class RaceStatTable {
     private RaceStatTable() {}
 
-    /** Se lanza cuando el datapack no cubre todas las razas o estilos. */
+    /** Se lanza cuando el datapack no cubre cada una de las razas o estilos. */
     public static class MissingRaceStatsException extends IllegalStateException {
         public MissingRaceStatsException(String message) { super(message); }
     }
@@ -121,7 +121,7 @@ public final class RaceStatTable {
         if (row == null) {
             // No se lanza aquí: esto se llama desde el constructor del attachment, que corre
             // antes del primer sync en el cliente. Devolver ceros es visible al instante
-            // (todos los atributos a 0 en la pantalla) y se corrige solo cuando llega el
+            // (cada atributo a 0 en la pantalla) y se corrige solo cuando llega el
             // paquete; lanzar reventaría el login por una condición transitoria y normal.
             return new int[BASE_ATTRS];
         }

@@ -337,7 +337,7 @@ public final class CommonConfig {
     private static final ModConfigSpec.DoubleValue TRAIN_DMG_TP_RAW =
             BUILDER.comment("Training: TP per point of effective damage dealt.",
                             "Recalibrado 2026-08-20 (0.02 -> 0.10, x5): la simulacion de .claude/pendiente/economia-tp.md",
-                            "mostro que con el valor viejo, incluso ELIMINANDO la fatiga del todo, un jugador tardaba ~112h",
+                            "mostro que con el valor viejo, incluso ELIMINANDO la fatiga por completo, un jugador tardaba ~112h",
                             "en llegar a los 5,000,000 TP de referencia peleando a ritmo moderado (15s/kill) -- muy por",
                             "encima de las 20-40h que el usuario fijo como objetivo. Va de la mano con entity.tp_per_pl",
                             "y training.fatigue_decay_per_minute; no tocar uno sin mirar los otros dos.")

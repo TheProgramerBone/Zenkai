@@ -147,7 +147,7 @@ public final class ClientZenkaiHooks {
         );
 
         // ========================
-        // TODOS LOS ICONOS EN UNA SOLA LÍNEA (debajo del panel)
+        // CADA ICONO EN UNA SOLA LÍNEA (debajo del panel)
         // ========================
         int iconX = PANEL_X;
         int iconY = PANEL_Y + panelH + 12;

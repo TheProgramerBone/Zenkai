@@ -11,7 +11,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
  * reducciones, y computeAttackDamage descarta ese número para sustituirlo por el daño de STR o
  * de ki. Lo que vanilla había calculado se iba a la basura: un jugador con netherite
  * encantada aguantaba lo mismo que desnudo, y los corazones amarillos de una manzana dorada se
- * dibujaban sin llegar a gastarse nunca. Toda la progresión de equipo de Minecraft moría en el
+ * dibujaban sin llegar a gastarse nunca. La progresión entera de equipo de Minecraft moría en el
  * instante de elegir raza.
  * EL CRITERIO COMÚN: no recalculamos nada de vanilla — leemos lo que vanilla ya decidió y lo
  * traducimos a la escala del mod. Sale gratis lo que vanilla (u otro mod) meta en esas

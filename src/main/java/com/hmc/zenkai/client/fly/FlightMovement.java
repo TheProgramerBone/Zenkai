@@ -81,12 +81,12 @@ public final class FlightMovement {
 
         // Vuelo casi nivelado: la medida en vivo es de fiar, así que se adopta como crucero.
         // Fuera de ahí (pitch pronunciado) NO se deja bajar por el propio recorte de este
-        // método — solo se deja SUBIR, para no capar un boost/turbo que acaba de activarse.
+        // función — solo se deja SUBIR, para no capar un boost/turbo que acaba de activarse.
         if (cos > LEVEL_COS || horiz > refSpeed) refSpeed = horiz;
 
         // El módulo se reparte entre horizontal y vertical en vez de sumarse: mirar arriba
         // no debe ir más rápido que mirar al frente. Se reparte desde refSpeed (estable) y
-        // no desde horiz (que este mismo método ya redujo en el tick anterior).
+        // no desde horiz (que esta misma función ya redujo en el tick anterior).
         double targetY = refSpeed * sinUp * Math.signum(fwd);
         targetY *= (targetY >= 0 ? ASCEND_GAIN : DESCEND_GAIN);
         double newY = Mth.lerp(VERTICAL_LERP, d.y, targetY);

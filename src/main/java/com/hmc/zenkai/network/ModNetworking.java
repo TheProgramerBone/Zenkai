@@ -53,7 +53,7 @@ public class ModNetworking {
                 OpenWishScreenPayload.STREAM_CODEC,
                 // Delegado a ClientPayloadHandlers, NO inline: un new ShenlongWishScreen() (subclase
                 // de Screen) metido a mano en este lambda vive dentro de ModNetworking, y cargar esta
-                // clase para tomar el método register() (Zenkai.<init>) verificaba también ese cuerpo
+                // clase para tomar la función register() (Zenkai.<init>) verificaba también ese cuerpo
                 // — RuntimeDistCleaner abortaba con BootstrapMethodError en cualquier dedicated
                 // server, sin que ningún cliente lo notara nunca. El resto de playToClient de este
                 // archivo ya delega en ClientPayloadHandlers por esta misma razón (ver su javadoc).

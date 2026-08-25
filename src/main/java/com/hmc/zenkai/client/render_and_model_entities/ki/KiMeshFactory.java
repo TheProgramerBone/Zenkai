@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Genera y CACHEA las mallas de ki. La clave lleva todos los parámetros de geometría, así que
+ * Genera y CACHEA las mallas de ki. La clave lleva el conjunto de parámetros de geometría, así que
  * dos técnicas con la misma forma comparten malla sin recalcular nada.
 // * LA LONGITUD SE HORNEA EN LA MALLA, no se aplica escalando Z en el PoseStack. Con el escalado
  * no uniforme un cilindro aguanta (es un tubo sobre Z y su sección no cambia), pero el TUBO DE
@@ -282,7 +282,7 @@ public final class KiMeshFactory {
 
     /** La U lleva el RADIO NORMALIZADO (0 centro → 1 filo), no una coordenada de textura: es lo
      *  que el shader usa como coordenada de banda en el modo RADIAL. Un disco es plano y el
-     *  ángulo con la cámara es el mismo en toda su cara, así que sin esto saldría de un solo
+     *  ángulo con la cámara es el mismo en su cara entera, así que sin esto saldría de un solo
      *  color liso. La V lleva el ángulo, que alimenta el hervor. */
     private static void diskVert(Buf b, float radius, double theta, float z, float nz, float w) {
         float x = (float) Math.cos(theta) * radius;

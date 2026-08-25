@@ -10,7 +10,7 @@ import com.hmc.zenkai.registry.ModDimensions;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Métodos de entrenamiento TP (v1.0: combate).
+ * Funciones de entrenamiento TP (v1.0: combate).
  * Fuentes (las TRES pasan por grant(), así que fatiga, HTC y pesas se aplican una sola vez
  * y en un solo sitio):
  *  - Daño EFECTIVO infligido (post-defensa, capado por el pool restante de la víctima ->

@@ -32,7 +32,7 @@ import java.util.Locale;
  * pantallas: dentro chocarían con el bloque de previsualización.
  * Pantalla de cliente pura + un packet al aceptar: no hay inventario que sincronizar, así
  * que un AbstractContainerMenu sería el doble de código para lo mismo.
- * Ninguna cifra se calcula aquí: todas salen de WeightSystem, el mismo sitio que las aplica
+ * Ninguna cifra se calcula aquí: cada una sale de WeightSystem, el mismo sitio que las aplica
  * en el juego. Así la previsualización no puede mentir.
  */
 

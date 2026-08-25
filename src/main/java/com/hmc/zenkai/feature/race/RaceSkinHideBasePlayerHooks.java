@@ -61,7 +61,7 @@ public final class RaceSkinHideBasePlayerHooks {
         PlayerModel<AbstractClientPlayer> model = e.getRenderer().getModel();
 
         // Ocultar skin parts (cape, etc.) y modelo base completo
-        // — aplica para TODAS las razas cuando customSkin=true,
+        // — aplica para cada una de las razas cuando customSkin=true,
         //   incluyendo Human (su "Race Skin" reemplaza el modelo vanilla)
         if (SKIN_PARTS != null) {
             byte old = player.getEntityData().get(SKIN_PARTS);

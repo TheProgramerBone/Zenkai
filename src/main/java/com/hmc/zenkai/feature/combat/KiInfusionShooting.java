@@ -118,7 +118,7 @@ public final class KiInfusionShooting {
     /**
      * FOGONAZO DE SALIDA. Mismo criterio y mismas fábricas que PhysicalCombatServer.impactFx:
      * destello + chispas tintados con AuraColors.resolve y resueltos en SERVIDOR, para que
-     * todos los clientes vean el mismo color y no cada uno el suyo.
+     * el conjunto de clientes vea el mismo color y no cada uno el suyo.
      * POR QUÉ EXISTE: Ki Infuse cobra al lanzar y en silencio. Sin señal de salida, el jugador
      * no sabe si acaba de gastar ki hasta que mira la barra — el mismo problema de ambigüedad
      * por el que el disparo sin ki se CANCELA en vez de salir a secas.

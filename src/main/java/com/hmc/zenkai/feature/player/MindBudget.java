@@ -11,7 +11,7 @@ import com.hmc.zenkai.feature.technique.PhysicalTechnique;
  *   - Habilidades: MIND como CAPACIDAD. Cada nivel ocupa un hueco que no vuelve.
  *   - Técnicas: MIND como UMBRAL. Bastaba con tener el número; no ocupaba nada.
  * Con el umbral, MIND dejaba de significar algo en cuanto pasabas el listón más alto: a partir
- * de ahí todas las técnicas eran gratis en concentración y el atributo era un peaje de una vez.
+ * de ahí cada técnica era gratis en concentración y el atributo era un peaje de una vez.
  * Ahora los tres orígenes comparten la misma bolsa y MIND vuelve a ser una decisión sostenida:
  * lo que dedicas a técnicas no lo tienes para habilidades.
  * LOS TRES ORÍGENES SUMAN EN EL MISMO SITIO a propósito. Con el cálculo repetido en cada

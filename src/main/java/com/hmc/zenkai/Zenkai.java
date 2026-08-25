@@ -76,7 +76,7 @@ public class Zenkai {
         // NO añadir aquí un modEventBus.addListener(ClientModEvents::onKeyMappingRegister) (ni
         // ninguna otra referencia manual a ClientModEvents): esa clase ya se registra sola vía
         // @EventBusSubscriber(value = Dist.CLIENT), que SÍ es dist-aware y no la toca en un
-        // dedicated server. Una referencia manual como esa es incondicional en todos los dist:
+        // dedicated server. Una referencia manual como esa es incondicional en cada dist:
         // tomarla obliga a cargar la clase entera, y cargarla verifica también onClientSetup(),
         // que registra EntityRenderers de cliente — el RuntimeDistCleaner de NeoForge aborta ahí
         // mismo con BootstrapMethodError en DEDICATED_SERVER. Esto (junto con un lambda inline
@@ -118,9 +118,9 @@ public class Zenkai {
 
         // Cliente. Ninguna de las dos tiene @EventBusSubscriber(Dist.CLIENT) — a diferencia de
         // ClientModEvents, dependen de este forgeBus.register(Class) manual, así que hay que
-        // gatearlo a mano: EventBus.register(Class) escanea con reflexión TODOS los métodos de
-        // la clase para encontrar los @SubscribeEvent, y esa reflexión resuelve también los
-        // parámetros de métodos que reciben eventos solo-cliente (ver historial de este
+        // gatearlo a mano: EventBus.register(Class) escanea con reflexión cada una de las
+        // funciones de la clase para encontrar los @SubscribeEvent, y esa reflexión resuelve
+        // también los parámetros de funciones que reciben eventos solo-cliente (ver historial de este
         // constructor) — sin el guard, un dedicated server abortaba aquí mismo.
         if (FMLEnvironment.dist == Dist.CLIENT) {
             forgeBus.register(ClientZenkaiHooks.class);

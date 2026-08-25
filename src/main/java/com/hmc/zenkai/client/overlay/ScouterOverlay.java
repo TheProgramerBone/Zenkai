@@ -199,7 +199,7 @@ public final class ScouterOverlay {
 
         // ---- Marco o panel plano ----
         // La rama de modo bloqueado (arriba) dibuja y sale por su cuenta; esta es la salida
-        // de todos los demás. frameExists ya se refrescó al principio.
+        // del resto. frameExists ya se refrescó al principio.
         if (frameExists) {
             drawFrame(g, mc, tint, textColor, title, main, sub);
         } else {

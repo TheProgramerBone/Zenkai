@@ -4,7 +4,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.GameRules;
 
 /**
- * Gamerules del mod. Todas true por defecto — el mod funciona completo
+ * Gamerules del mod. Cada una en true por defecto — el mod funciona completo
  * sin tocar nada. Los admins pueden desactivar partes con /gamerule.
  */
 public final class ModGameRules {

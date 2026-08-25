@@ -17,7 +17,7 @@ import java.util.List;
  * crear el valor lo apunta en ENTRIES. ClientConfigScreen recorre esa lista, así que una opción
  * nueva aparece sola en la GUI sin tocar la pantalla. La alternativa —hurgar en el
  * ModConfigSpec por reflexión— funcionaría hoy y se rompería en la próxima versión.
- * TRES TIPOS DE OPCIÓN. Antes solo había booleanos y la pantalla podía asumir que toda fila era
+ * TRES TIPOS DE OPCIÓN. Antes solo había booleanos y la pantalla podía asumir que cada fila era
  * un ON/OFF. Al llegar la colocación del HUD hicieron falta enumerados y números, así que Entry
  * pasa a ser una interfaz sellada: la pantalla hace un switch sobre los tres casos y el
  * compilador avisa si algún día se añade un cuarto y alguien olvida pintarlo.

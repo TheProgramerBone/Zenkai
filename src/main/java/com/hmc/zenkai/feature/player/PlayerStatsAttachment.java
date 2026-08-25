@@ -85,7 +85,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public PlayerTechniques    techniques() { return techniques; }
 
     // ────────────────────────────────────────────────────────────────────────
-    // API de compatibilidad — mantiene todas las llamadas existentes sin cambios
+    // API de compatibilidad — mantiene el conjunto de llamadas existentes sin cambios
     // ────────────────────────────────────────────────────────────────────────
 
     // ── Raza / Estilo ────────────────────────────────────────────────────────

@@ -68,7 +68,7 @@ import org.jetbrains.annotations.NotNull;
  * Mismo patrón que SkillsScreen (scrollRow + rueda del ratón + una barra de scroll DIBUJADA,
  * sin arrastre) — no hacía falta reinventarlo. El hint de "/zparty chat" solo se dibuja
  * cuando NO hace falta scroll (maxScroll()==0): con la lista llena no hay hueco para él y de
- * todos modos el comando sigue funcionando sin el recordatorio visual.
+ * cualquier caso el comando sigue funcionando sin el recordatorio visual.
  * PARTYCONFIG (ícono de engranaje, solo líder): abre un popup pequeño y oscuro FUERA del
  * panel beige, a su IZQUIERDA (popupLeft()) — no dentro de su contorno y no centrado. Mismo
  * caso EXACTO que el popup lateral de StatsScreen.renderPopup: mismo hueco (POPUP_GAP),
@@ -85,7 +85,7 @@ import org.jetbrains.annotations.NotNull;
  * una ida y vuelta aparte). Confirmar/Cancelar son el MISMO checkmark verde / X roja que
  * FriendlyFireIconButton (celdas CHECK_U/CANCEL_U de icons.png), no btn_x.png — así los cuatro
  * íconos del popup salen del mismo atlas que el resto de la pantalla. Se cierra de TRES formas
- * equivalentes, todas sin aplicar nada salvo Confirmar: Cancelar, un clic FUERA de la caja
+ * equivalentes, cada una sin aplicar nada salvo Confirmar: Cancelar, un clic FUERA de la caja
  * (mouseClicked hace hit-test contra popupLeft()/popupTop()) o un segundo clic sobre el propio
  * engranaje (que alterna configOpen, ver initContent — por eso el engranaje sigue visible
  * mientras el popup está abierto, a diferencia de fuego amigo y el pie). Confirmar manda
@@ -172,7 +172,7 @@ public class PartyScreen extends ZenkaiMenuScreen {
     private int scrollRow = 0;
 
     /** ¿Está abierto el popup de PartyConfig? Vive en la instancia, no en un campo estático:
-     *  rebuildWidgets() (tick(), cualquier click) recrea TODOS los widgets desde cero, así
+     *  rebuildWidgets() (tick(), cualquier click) recrea el conjunto de widgets desde cero, así
      *  que este flag es lo único que sobrevive de un rebuild al siguiente para saber qué
      *  conjunto de widgets tocaba construir. */
     private boolean configOpen = false;
@@ -186,7 +186,7 @@ public class PartyScreen extends ZenkaiMenuScreen {
         super.tick();
         if (ClientPartyState.current() != lastSeenState) {
             // rebuildWidgets() = clearWidgets() + init() + setInitialFocus(): reconstruye
-            // TODOS los widgets (pestañas incluidas) desde cero, igual que un resize de
+            // el conjunto de widgets (pestañas incluidas) desde cero, igual que un resize de
             // ventana. Para una party de hasta 32 no compensa la complejidad de un camino de
             // actualización parcial.
             this.rebuildWidgets();

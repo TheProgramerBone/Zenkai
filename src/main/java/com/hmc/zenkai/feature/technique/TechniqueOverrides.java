@@ -47,7 +47,7 @@ public final class TechniqueOverrides extends SavedData {
 
     // ── Lectura ──────────────────────────────────────────────────────────────
 
-    /** Todos los overrides, por clave "KIND/id". */
+    /** El conjunto de overrides, por clave "KIND/id". */
     public Map<String, EnumMap<TechniqueField, Object>> all() {
         return Collections.unmodifiableMap(map);
     }

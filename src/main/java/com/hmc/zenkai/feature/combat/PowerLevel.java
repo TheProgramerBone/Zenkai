@@ -14,7 +14,7 @@ import java.util.EnumMap;
  *  - MEDIDOR (W_*): "cuánto poder de pelea tiene esto". Es lo que lee el scouter.
  *  - REPARTIDOR (B_*): dado un PL objetivo, reparte atributos por la forma del arquetipo.
  * Compartiéndolos, tocar el medidor rebalanceaba las 82 fichas de entidades en silencio: al
- * quitar un peso, el denominador de solveAttributes encogía, k subía y TODOS los atributos
+ * quitar un peso, el denominador de solveAttributes encogía, k subía y cada uno de los atributos
  * crecían. Ahora el repartidor tiene los suyos y no se entera de lo que haga el medidor.
  *
  * Arrancan con los mismos valores a propósito: este cambio no debe mover un solo mob.

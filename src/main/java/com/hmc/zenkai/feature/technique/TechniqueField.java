@@ -31,11 +31,20 @@ import java.util.Map;
  * bits) más un suelo por campo que antes no existía porque el JSON lo escribía yo y nunca
  * ponía negativos. Un comando sí puede: {@code charge_ticks} a 0 divide por cero en el
  * progreso de carga del cliente, y un coste negativo regala TP.
+ * MASTER es el único campo STRING: id de maestro, o "" para "desbloqueable normal". Es el
+ * cimiento de "técnica firma" (ver su propio comentario más abajo) — no cambia nada del tipo
+ * ni de la malla, solo QUIÉN puede concederla.
  */
 public enum TechniqueField {
 
     TP_COST       ("tp_cost",        ValueType.INT,    0,        0, Integer.MAX_VALUE, Kind.KI, Kind.PHYSICAL),
     MIND_REQ      ("mind_req",       ValueType.INT,    0,        0, Integer.MAX_VALUE, Kind.KI, Kind.PHYSICAL),
+    /** "" = desbloqueable normal (TP, sin maestro). Con un id, solo SU maestro la enseña — ver
+     *  TechniquePacket/PhysicalTechniquePacket.handleUnlock, mismo embudo que SkillDef.master()
+     *  ya usa para el nivel 1 de una habilidad con maestro (SkillBuyPacket). Es el cimiento de
+     *  "técnica firma": una técnica normal en lo demás (mismo tipo, mismo código), pero
+     *  que un jugador no puede autodesbloquearse desde el editor. */
+    MASTER        ("master",        ValueType.STRING, "",                              Kind.KI, Kind.PHYSICAL),
     DAMAGE_MULT   ("damage_mult",    ValueType.DOUBLE, 1.0,    0.0, Double.MAX_VALUE,  Kind.KI, Kind.PHYSICAL),
     KI_COST_MULT  ("ki_cost_mult",   ValueType.DOUBLE, 1.0,    0.0, Double.MAX_VALUE,  Kind.KI),
     STAMINA_PCT   ("stamina_pct",    ValueType.DOUBLE, 0.0,    0.0, Double.MAX_VALUE,  Kind.PHYSICAL),
@@ -49,7 +58,7 @@ public enum TechniqueField {
     ANIM_TICKS    ("anim_ticks",     ValueType.INT,    12,       1, Integer.MAX_VALUE, Kind.KI, Kind.PHYSICAL);
 
     /** Tipo de dato del campo. Decide parseo, clamp, formato y cómo viaja a JSON/NBT. */
-    public enum ValueType { INT, DOUBLE, BOOL, RGB }
+    public enum ValueType { INT, DOUBLE, BOOL, RGB, STRING }
 
     private final String key;
     private final ValueType type;
@@ -71,6 +80,10 @@ public enum TechniqueField {
     }
 
     TechniqueField(String key, ValueType type, int factory, Kind... kinds) {
+        this(key, type, (Object) factory, 0.0, 0.0, set(kinds));
+    }
+
+    TechniqueField(String key, ValueType type, String factory, Kind... kinds) {
         this(key, type, (Object) factory, 0.0, 0.0, set(kinds));
     }
 
@@ -111,7 +124,7 @@ public enum TechniqueField {
 
     // ── Valor ────────────────────────────────────────────────────────────────
 
-    /** Ajusta al rango legal del campo. Se aplica en TODA entrada: JSON, NBT y comando. */
+    /** Ajusta al rango legal del campo. Se aplica en cualquier entrada: JSON, NBT y comando. */
     public Object clamp(Object raw) {
         return switch (type) {
             case INT -> {
@@ -121,6 +134,12 @@ public enum TechniqueField {
             case DOUBLE -> Math.max(min, Math.min(max, ((Number) raw).doubleValue()));
             case BOOL -> (Boolean) raw;
             case RGB -> ((Number) raw).intValue() & 0xFFFFFF;
+            // Id de maestro: minúsculas (mismo formato que MasterDef/ZenkaiMasterEntity#masterId)
+            // y recortado a 32 -- igual que el resto de ids cortos que viajan por packet en el mod.
+            case STRING -> {
+                String s = ((String) raw).trim().toLowerCase(Locale.ROOT);
+                yield s.length() > 32 ? s.substring(0, 32) : s;
+            }
         };
     }
 
@@ -140,6 +159,7 @@ public enum TechniqueField {
                 throw new IllegalArgumentException("se esperaba true o false");
             }
             case RGB -> clamp(Integer.decode(s.replace("#", "0x")));
+            case STRING -> clamp(s);
         };
     }
 
@@ -158,6 +178,7 @@ public enum TechniqueField {
                 }
                 yield el.getAsInt() & 0xFFFFFF;
             }
+            case STRING -> clamp(GsonHelper.getAsString(o, key));
         };
     }
 
@@ -168,6 +189,7 @@ public enum TechniqueField {
             case DOUBLE -> o.addProperty(key, ((Number) v).doubleValue());
             case BOOL -> o.addProperty(key, (Boolean) v);
             case RGB -> o.addProperty(key, format(v));
+            case STRING -> o.addProperty(key, (String) v);
         }
     }
 
@@ -176,6 +198,7 @@ public enum TechniqueField {
             case INT, RGB -> tag.putInt(key, ((Number) v).intValue());
             case DOUBLE -> tag.putDouble(key, ((Number) v).doubleValue());
             case BOOL -> tag.putBoolean(key, (Boolean) v);
+            case STRING -> tag.putString(key, (String) v);
         }
     }
 
@@ -186,6 +209,7 @@ public enum TechniqueField {
             case INT, RGB -> clamp(tag.getInt(key));
             case DOUBLE -> clamp(tag.getDouble(key));
             case BOOL -> tag.getBoolean(key);
+            case STRING -> clamp(tag.getString(key));
         };
     }
 
@@ -201,6 +225,7 @@ public enum TechniqueField {
                         ? String.format(Locale.ROOT, "%.1f", d)
                         : String.valueOf(d);
             }
+            case STRING -> (String) v;
         };
     }
 
@@ -210,6 +235,7 @@ public enum TechniqueField {
         return switch (this) {
             case TP_COST -> d.tpCost();
             case MIND_REQ -> d.mindReq();
+            case MASTER -> d.master();
             case DAMAGE_MULT -> d.damageMult();
             case KI_COST_MULT -> d.kiCostMult();
             case STAMINA_PCT -> d.staminaPct();
@@ -250,7 +276,7 @@ public enum TechniqueField {
      *  Los campos ausentes (los que no aplican al kind) quedan en su valor neutro. */
     public static TechniqueDef build(String id, Kind kind, Map<TechniqueField, Object> v) {
         return new TechniqueDef(id, kind,
-                i(v, TP_COST), i(v, MIND_REQ),
+                i(v, TP_COST), i(v, MIND_REQ), s(v, MASTER),
                 d(v, DAMAGE_MULT), d(v, KI_COST_MULT), d(v, STAMINA_PCT),
                 i(v, CHARGE_TICKS), i(v, COOLDOWN_TICKS),
                 d(v, SPEED), i(v, COUNT), b(v, DEFENSIVE),
@@ -270,5 +296,10 @@ public enum TechniqueField {
     private static boolean b(Map<TechniqueField, Object> v, TechniqueField f) {
         Object o = v.get(f);
         return o instanceof Boolean bo && bo;
+    }
+
+    private static String s(Map<TechniqueField, Object> v, TechniqueField f) {
+        Object o = v.get(f);
+        return o instanceof String str ? str : "";
     }
 }

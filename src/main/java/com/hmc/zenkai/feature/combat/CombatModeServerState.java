@@ -74,10 +74,10 @@ public final class CombatModeServerState {
      * equipada), no contra getBaseValue(). Con la base, nuestro -2.4 se sumaba al -2.4 propio
      * de una espada y el total caía a -0.8; ATTACK_SPEED tiene mínimo 0.0, así que se saneaba
      * a 0, el delay pasaba a ser 1/0 = infinito y getAttackStrengthScale devolvía 0 para
-     * siempre: el indicador no cargaba nunca y todos los golpes pegaban al 20%.
+     * siempre: el indicador no cargaba nunca y cada golpe pegaba al 20%.
      * Quitamos primero el nuestro para que getValue() sea la lectura limpia del arma.
      * Si el arma YA es más lenta que el objetivo no tocamos nada: el modo combate marca un
-     * suelo de lentitud, no obliga a todas las armas a golpear igual.
+     * suelo de lentitud, no obliga a cualquier arma a golpear igual.
      * Transient a propósito — no se persiste, así que un crash en pleno combate no deja a
      * nadie golpeando lento para siempre.
      */

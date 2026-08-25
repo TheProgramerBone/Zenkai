@@ -202,7 +202,7 @@ public final class AuraLodSelfTest {
         checkSizeFloor();
         report();
         if (failures == 0) {
-            System.out.println("\nOK: todas las invariantes del LOD se cumplen.");
+            System.out.println("\nOK: cada invariante del LOD se cumple.");
         } else {
             System.out.println("\n" + failures + " comprobaciones fallidas.");
             System.exit(1);

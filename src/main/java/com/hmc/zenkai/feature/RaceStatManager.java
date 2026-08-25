@@ -50,7 +50,7 @@ import java.util.Map;
  * existe (ver RaceStatTable), así que aquí no hay a qué caer.
  *
  * Ahora: de la CAPA INFERIOR del propio datapack. Se usa listResourceStacks, que devuelve
- * todas las versiones del mismo archivo ordenadas de menor a mayor prioridad, y se fusionan en
+ * el conjunto de versiones del mismo archivo ordenadas de menor a mayor prioridad, y se fusionan en
  * ese orden. Los JSON que viajan dentro del jar son la capa de abajo y hacen de referencia; un
  * datapack que solo quiera retocar la vida de los majin escribe únicamente esa clave y el
  * resto sigue viniendo de la capa base.
@@ -101,7 +101,7 @@ public final class RaceStatManager {
             Map<Race, Map<Style, double[]>> out = new EnumMap<>(Race.class);
             Map<Race, int[]> bases = new EnumMap<>(Race.class);
 
-            // ⚠ API: listResourceStacks devuelve TODAS las capas del mismo path, de menor a
+            // ⚠ API: listResourceStacks devuelve el conjunto de capas del mismo path, de menor a
             // mayor prioridad. listResources (sin Stacks) devolvería solo la de arriba.
             Map<ResourceLocation, List<Resource>> found =
                     rm.listResourceStacks(FOLDER, loc -> loc.getPath().endsWith(".json"));

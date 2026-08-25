@@ -16,7 +16,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Enciende y apaga los bucles de carga de ki (C) y de turbo (R) de TODOS los jugadores
+ * Enciende y apaga los bucles de carga de ki (C) y de turbo (R) del conjunto de jugadores
  * visibles, no solo del propio. Si solo sonara el local, un jugador cargando delante de ti
  * sería mudo y el aura no tendría sonido.
 energy_generator * MISMO PATRÓN QUE ScouterBenchSounds y por el mismo motivo: el mapa por jugador impide

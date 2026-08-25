@@ -125,7 +125,7 @@ public final class AuraSelfTest {
                 new float[]{0.590400f, 0.520000f, 0.120000f, 0.030000f, 1.014800f, 0.702000f, 0.600000f, 0.040000f, 2.054800f, 14.000000f, 0.860000f, 1.180000f, 0.448000f, 0.000000f, 0.000000f});
         checkNeutrality();
         if (failures == 0) {
-            System.out.println("OK: todos los vectores coinciden con la simulacion.");
+            System.out.println("OK: cada vector coincide con la simulacion.");
         } else {
             System.out.println(failures + " comprobaciones fallidas.");
             System.exit(1);

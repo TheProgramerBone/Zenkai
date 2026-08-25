@@ -65,7 +65,7 @@ public class ColorPickerWidget extends AbstractWidget {
      * etiqueta. Dos widgets separados habrían divergido a la tercera corrección.
      * ZENKAI llevaba blanco puro en los tres desde antes de que existiera ZenkaiPalette: sin
      * marco alrededor y con esos tres blancos, el widget flotaba como un control de sistema
-     * operativo pegado sobre el mundo, la única pieza de toda la GUI sin el lenguaje del mod.
+     * operativo pegado sobre el mundo, la única pieza de la GUI entera sin el lenguaje del mod.
      */
     public enum Style {
         ZENKAI(ZenkaiPalette.GOLD, ZenkaiPalette.BORDER_MID, 0xFFFFFFFF),
@@ -182,7 +182,7 @@ public class ColorPickerWidget extends AbstractWidget {
 
     /**
      * Marco de popup (dos anillos + fondo oscuro), mismo lenguaje que StatsScreen/MasterScreen.
-     * Va PRIMERO: es el fondo sobre el que se dibuja todo lo demás, así que si se pintara
+     * Va PRIMERO: es el fondo sobre el que se dibuja el resto, así que si se pintara
      * después taparía el cuadrado SV, la barra de hue y el resto.
      * DIALOG_BG, opaco, y NO POPUP_BG (alfa parcial): este widget se abre FUERA del panel de la
      * pantalla que lo invoca — junto al mundo, sin ningún panel opaco pegado detrás — que es

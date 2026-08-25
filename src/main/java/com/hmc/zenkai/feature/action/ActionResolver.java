@@ -108,7 +108,7 @@ public final class ActionResolver {
     /** Soltar sin disparar (cambio de casilla, salir de combate, manos ocupadas...).
      *  SOLO cancela una CARGA. Si lo que hay ya es RELEASING, el disparo salió y ese estado
      *  ES la representación del disparo: borrarlo aquí mata la animación de release para el
-     *  tirador y para todos los observadores. Y pasa siempre, no a veces: el cliente manda
+     *  tirador y para el resto de observadores. Y pasa siempre, no a veces: el cliente manda
      *  KiFirePacket y, en el mismo tick, KiChargeStartPacket(slot,false) desde
      *  CombatModeClientState.cancelCharge(). */
     public static void cancelKiCharge(ServerPlayer sp) {

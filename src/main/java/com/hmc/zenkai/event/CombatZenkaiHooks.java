@@ -81,7 +81,7 @@ public class CombatZenkaiHooks {
         // FUEGO AMIGO DE PARTY: antes que cualquier otra cosa, incluidos los i-frames de
         // abajo — un golpe bloqueado aquí no debe consumir el dash de nadie ni contar como
         // "casi me pega". Cubre lo que llega por LivingDamageEvent con el atacante
-        // puesto: melee, ki (blasts, proyectiles, Kiai) y técnicas por igual, porque todas
+        // puesto: melee, ki (blasts, proyectiles, Kiai) y técnicas por igual, porque cada una de
         // esas rutas pasan por este mismo evento. Ver PartyService.friendlyFireBlocked.
         if (e.getSource().getEntity() instanceof ServerPlayer attacker
                 && e.getEntity() instanceof ServerPlayer victim
@@ -284,7 +284,7 @@ public class CombatZenkaiHooks {
         // propio camino.
         // Anularlo era lo que dejaba fuera de juego lo que escucha el pipeline: barras
         // de jefe (vanilla y de otros mods), umbrales de fase, HUD de terceros, advancements y
-        // LivingDamageEvent.Post. Para todos ellos la entidad nunca había recibido un golpe.
+        // LivingDamageEvent.Post. Para el conjunto de ellos la entidad nunca había recibido un golpe.
         // El número es el MISMO que escribía el espejo, solo cambia quién lo escribe; y
         // EntityHealthSync.onDamagePost vuelve a cuadrar la vida con el pool después, así que
         // el redondeo de vanilla no puede acumular deriva.
@@ -470,7 +470,7 @@ public class CombatZenkaiHooks {
      * Escalado de fuerza de golpe capturado al inicio de Player.attack().
      * Hay que guardarlo aquí porque attack() llama a resetAttackStrengthTicker() ANTES de
      * hurt(), así que cuando corre LivingDamageEvent el ticker ya volvió a cero y
-     * getAttackStrengthScale devolvería ~0 para todos los golpes.
+     * getAttackStrengthScale devolvería ~0 para cualquier golpe.
      * El valor guardado es {escala, tickCount}: el tick sirve para descartar una entrada
      * vieja y que un daño que NO venga de attack() (fuego, caída) no herede una escala baja.
      */

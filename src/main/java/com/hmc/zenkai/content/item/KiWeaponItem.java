@@ -30,7 +30,7 @@ import java.util.function.Consumer;
  * Pero es un item que NO DEBE PODER EXISTIR fuera de la mano de su dueño: no se craftea, no
  * se da, no se tira y no se guarda. En vez de tapar cada ruta de fuga por separado
  * (arrastrarlo en el inventario, meterlo en un cofre, morir, un mod que lo mueva, /give), el
- * guard está donde pasan todas: inventoryTick se ejecuta sobre cada stack del inventario cada
+ * guard está donde pasa cualquiera: inventoryTick se ejecuta sobre cada stack del inventario cada
  * tick, así que si el arma no está donde debe o su dueño ya no la quiere, se borra sola.
  *
  * OJO: inventoryTick solo corre para inventarios de jugador. Los mobs que la lleven equipada

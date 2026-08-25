@@ -122,7 +122,7 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
 
     /**
      * Hueco de Curios. SIEMPRE se añade un slot, aunque no haya handler: el número de slots
-     * tiene que ser idéntico en cliente y servidor o los índices de todo lo demás se
+     * tiene que ser idéntico en cliente y servidor o los índices del resto se
      * desplazan y el menú se desincroniza. Si no hay handler, el slot queda muerto
      * (mayPlace false) sobre un contenedor de usar y tirar.
      *

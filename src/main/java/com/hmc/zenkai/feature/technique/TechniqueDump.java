@@ -24,7 +24,7 @@ import java.util.Set;
  * {@link CommonConfig#techniqueDumpDir()} añade una COPIA en una ruta suelta como comodidad
  * de desarrollo; vacío = desactivado, y su fallo no invalida el volcado principal.
  *
- * QUÉ SE ESCRIBE: el def EFECTIVO completo (todos los campos que aplican al kind), no solo
+ * QUÉ SE ESCRIBE: el def EFECTIVO completo (cada uno de los campos que aplican al kind), no solo
  * los campos overrideados. Un JSON parcial dependería de que el JSON de fábrica siga igual,
  * y el volcado existe justamente para congelar un estado reproducible.
  *

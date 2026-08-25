@@ -201,7 +201,7 @@ public class KintounEntity extends Animal implements GeoEntity, VerticalControlV
     public boolean isControlledByLocalInstance() {
         // Solo el cliente del conductor predice el movimiento (y envía el paquete de vehículo al
         // servidor). Los demás clientes reciben la posición por tracking. Antes devolvía siempre
-        // true, así que TODOS los clientes simulaban el vehículo -> desincronización en multijugador.
+        // true, así que cada cliente simulaba el vehículo -> desincronización en multijugador.
         return getControllingPassenger() instanceof Player p && p.isLocalPlayer();
     }
 
@@ -219,7 +219,7 @@ public class KintounEntity extends Animal implements GeoEntity, VerticalControlV
     // Inmunidades (#2): no se ahoga ni muere por pociones
     // -------------------------
 
-    /** Inmune a TODOS los efectos de poción (veneno, wither, etc.). */
+    /** Inmune a cualquier efecto de poción (veneno, wither, etc.). */
     @Override
     public boolean canBeAffected(@NotNull MobEffectInstance effect) {
         return false;

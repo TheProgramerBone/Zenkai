@@ -81,7 +81,7 @@ public class ModConfiguredFeatures {
 
         // ── Katchin ──────────────────────────────────────────────────────────
         // DOS objetivos: piedra y deepslate. Hacen falta los dos porque la banda del overworld
-        // va de y=-144 a y=16, o sea casi toda por debajo de la transición a deepslate. Con
+        // va de y=-144 a y=16, o sea casi entera por debajo de la transición a deepslate. Con
         // solo stoneReplaceables no saldría prácticamente nada donde más se busca.
         List<OreConfiguration.TargetBlockState> katchinOres = List.of(
                 OreConfiguration.target(stoneReplaceables,
@@ -120,7 +120,7 @@ public class ModConfiguredFeatures {
                 ModFeatures.CLOUD_LAYER.get(), NoneFeatureConfiguration.INSTANCE);
 
         // ── Namek: menas ─────────────────────────────────────────────────────
-        // Todas apuntan al tag PROPIO: ningún mod que añada menas al overworld puede colarse
+        // Cada una apunta al tag PROPIO: ningún mod que añada menas al overworld puede colarse
         // en Namek, y estas no pueden aparecer en el overworld.
         RuleTest namekRock = new TagMatchTest(ModTags.Blocks.NAMEKIAN_ORE_REPLACEABLES);
 

@@ -131,7 +131,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
     }
 
     /** ¿Esta forma tiñe el pelo? -1 = no lo toca (el pelo va con su color propio).
-     *  Con el pelo en escala de grises, un solo modelo sirve para todas las formas. */
+     *  Con el pelo en escala de grises, un solo modelo sirve para cualquier forma. */
     public boolean tintsHair() { return hairRgb >= 0; }
 
     /** Item de cuerpo para un slot ("head", "chest", "legs", "feet"). null = no lo cambia. */

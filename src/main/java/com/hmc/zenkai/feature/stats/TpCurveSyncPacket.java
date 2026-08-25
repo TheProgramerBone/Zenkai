@@ -13,7 +13,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * Existe porque CommonConfig no viaja al cliente y la pantalla de stats necesita enseñar el
  * precio ANTES de mandar el packet de compra. Ver TpCurve para el detalle.
  * Lo envía SkillManager#onDatapackSync, que ya corre en login y en /reload y ya sabe
- * distinguir "un jugador" de "todos". Montar un segundo listener para dos doubles habría
+ * distinguir "un jugador" de "el conjunto". Montar un segundo listener para dos doubles habría
  * duplicado esa lógica de reparto.
  */
 public record TpCurveSyncPacket(double base, double coeff) implements CustomPacketPayload {

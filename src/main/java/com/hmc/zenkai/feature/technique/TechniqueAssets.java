@@ -40,7 +40,7 @@ public final class TechniqueAssets {
     }
 
     /**
-     * Todos los sonidos del mod cuyo path empieza por el prefijo, en orden natural
+     * Cada uno de los sonidos del mod cuyo path empieza por el prefijo, en orden natural
      * (…_2 antes que …_10, que es lo que un orden alfabético haría mal).
      */
     private static List<ResourceLocation> discover(String prefix) {

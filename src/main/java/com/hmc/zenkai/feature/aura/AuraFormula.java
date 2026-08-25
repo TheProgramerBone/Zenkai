@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.aura;
 
 /**
- * TODA la aritmetica del aura. CERO imports: ni Minecraft, ni renderer, ni GeckoLib, ni
+ * La aritmetica entera del aura. CERO imports: ni Minecraft, ni renderer, ni GeckoLib, ni
  * texturas, ni siquiera el resto del mod.
  * Esta separacion no es estetica. La curva de presencia, el mapeo a parametros y las
  * firmas raciales se calibraron en una simulacion fuera de Java; AuraSelfTest le mete a

@@ -13,7 +13,7 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 /**
  * La vida vanilla de una entidad es una PROYECCIÓN del pool body. Dos vías, y cada una cubre
  * lo que la otra no puede:
- *  - LivingHealEvent: toda curación que pase por heal() (el +1/s del Wither, Regeneración,
+ *  - LivingHealEvent: cualquier curación que pase por heal() (el +1/s del Wither, Regeneración,
  *    dar de comer a un lobo). Es EXACTA y se cancela para no contarla dos veces.
  *  - reconcile() en el tick: red para quien escribe setHealth() a pelo, que no dispara ningún
  *    evento (los cristales del End, comandos, otros mods).

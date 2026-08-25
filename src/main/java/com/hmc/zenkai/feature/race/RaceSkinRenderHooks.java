@@ -49,7 +49,7 @@ public final class RaceSkinRenderHooks {
 
             List<RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>> removedArmor = new ArrayList<>();
 
-            // Remueve todas las HumanoidArmorLayer para reinsertarlas al final
+            // Remueve cada una de las HumanoidArmorLayer para reinsertarlas al final
             layers.removeIf(l -> {
                 if (l instanceof HumanoidArmorLayer<?, ?, ?>) {
                     removedArmor.add(l);

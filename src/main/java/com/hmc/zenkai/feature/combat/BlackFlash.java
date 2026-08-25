@@ -109,7 +109,7 @@ public final class BlackFlash {
     }
 
     /** ÚNICO sitio donde se dibuja el Black Flash. Mismo criterio que
-     *  PhysicalCombatServer.impactFx (resuelto en servidor, todos los clientes ven lo mismo),
+     *  PhysicalCombatServer.impactFx (resuelto en servidor, el conjunto de clientes ve lo mismo),
      *  pero con paleta FIJA en vez de la del aura: la lectura del efecto depende del contraste
      *  entre el negro y el rojo, y con un aura roja el núcleo se volvería invisible. */
     private static void fx(ServerPlayer sp, LivingEntity victim) {

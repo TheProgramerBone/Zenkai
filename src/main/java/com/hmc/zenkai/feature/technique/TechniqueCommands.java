@@ -30,7 +30,7 @@ import java.util.Set;
  *   /zenkai tech dump [ki|physical|all]
  *
  * Existe para acortar el ciclo de balance: cambiar un número, verlo aplicado en el mismo tick
- * a todos los conectados, y volcarlo a JSON cuando el número es el bueno.
+ * al conjunto de conectados, y volcarlo a JSON cuando el número es el bueno.
  *
  * VIVE FUERA DE ModCommands a propósito y se cuelga del mismo literal {@code /zenkai}:
  * Brigadier fusiona los hijos cuando dos registros comparten raíz (precedente:
@@ -215,7 +215,7 @@ public final class TechniqueCommands {
     }
 
     /** Un reset puede dejar sin def a una técnica que solo existía por overrides. Eso la
-     *  desactiva en todas partes, así que no puede pasar en silencio. */
+     *  desactiva en cualquier parte, así que no puede pasar en silencio. */
     private static void warnIfDisabled(CommandContext<CommandSourceStack> ctx, Kind kind, String id) {
         if (TechniqueDef.get(kind, id) == null) {
             ctx.getSource().sendSuccess(() -> Component.literal(

@@ -7,7 +7,7 @@ import net.minecraft.world.entity.player.Player;
 /**
  * ÚNICO sitio donde se decide el color de energía de un jugador. Vive en core (no en client)
  * porque el SERVIDOR también lo necesita: las partículas de impacto llevan el tinte dentro
- * del packet, así que se resuelve una vez en el servidor y llega igual a todos los clientes.
+ * del packet, así que se resuelve una vez en el servidor y llega igual al conjunto de clientes.
  * AuraClientState.resolveColor delega aquí: si cambian las prioridades, cambian en los dos
  * sitios a la vez.
  */

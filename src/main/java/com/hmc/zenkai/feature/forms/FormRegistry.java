@@ -69,7 +69,7 @@ public final class FormRegistry {
         return null;
     }
 
-    /** Todas las ramas que salen de una forma (para la rueda). Nunca null. */
+    /** El conjunto de ramas que salen de una forma (para la rueda). Nunca null. */
     public static List<ResourceLocation> childrenOf(ResourceLocation id) {
         return CHILDREN.getOrDefault(id, List.of());
     }

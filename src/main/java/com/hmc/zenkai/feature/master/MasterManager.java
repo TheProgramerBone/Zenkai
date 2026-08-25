@@ -3,6 +3,7 @@ package com.hmc.zenkai.feature.master;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.content.entity.ZenkaiMasterEntity;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -91,6 +92,17 @@ public final class MasterManager {
 
         if (!def.alignmentOk(att.getAlignment())) return Result.BAD_ALIGNMENT;
         return Result.OK;
+    }
+
+    /** Entidad de ESE maestro cerca del jugador, o null si no está delante de él. Compartido
+     *  por cualquier flujo "solo se consigue en persona": antes vivía como bucle duplicado
+     *  dentro de SkillBuyPacket; TechniquePacket/PhysicalTechniquePacket lo reusan igual para
+     *  el nivel 1 de una técnica firma (ver TechniqueDef, "TÉCNICA FIRMA"). */
+    public static Entity findNearby(ServerPlayer sp, String masterId) {
+        for (Entity e : sp.level().getEntities(sp, sp.getBoundingBox().inflate(INTERACT_RANGE))) {
+            if (e instanceof ZenkaiMasterEntity m && masterId.equals(m.masterId())) return e;
+        }
+        return null;
     }
 
     /** Manda el mensaje de rechazo al CHAT (no a la action bar) con el nombre del maestro

@@ -79,7 +79,7 @@ public class PlayerLifeCycle {
 
     /**
      * ESPEJO BODY -> CORAZONES. Va DENTRO de sync() y no en cada sitio que toca el body, que
-     * es lo mismo que hace ZenkaiCombatStats.mirrorToVanilla con las entidades: toda ruta que
+     * es lo mismo que hace ZenkaiCombatStats.mirrorToVanilla con las entidades: cualquier ruta que
      * cambia el pool ya termina llamando aquí, así que el espejo no se puede olvidar.
      * Esto SUSTITUYE a los setHealth(getMaxHealth()) sueltos repartidos por DownedDeathGuard,
      * SenzuBean, OtherworldManager, CombatZenkaiHooks e ImmortalityEffect: si sobrevive alguno,
@@ -122,7 +122,7 @@ public class PlayerLifeCycle {
     /**
      * Útil: cuando cambies raza o raceSkin en servidor, llama esto para que:
      * - el jugador se vea a sí mismo
-     * - y todos los que lo están viendo también
+     * - y el resto de quienes lo están viendo también
      * Si tu NeoForge no tiene este helper exacto en PacketDistributor, te digo abajo qué hacer.
      */
     public static void syncVisualToTrackersAndSelf(ServerPlayer target) {

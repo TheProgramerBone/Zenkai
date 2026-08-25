@@ -49,7 +49,7 @@ public final class PlayerSkills {
      * hoy solo FormSystem, al conceder el primer nivel de super_forms cuando el jugador
      * desbloquea su primera transformación. NO es lo que usa la compra normal ante un
      * maestro (esa es raise(), ver el javadoc de la clase). Para dar niveles de prueba por
-     * comando de admin sin bloquearlos todos, usa grantAdmin().
+     * comando de admin sin bloquearlos en conjunto, usa grantAdmin().
      */
     public void grant(String id, int lvl) {
         if (lvl <= 0) return;
@@ -64,7 +64,7 @@ public final class PlayerSkills {
      * para siempre en la UI — y como los maestros son la única vía normal de conseguir una
      * skill, eso habría convertido "te di esto para probar" en "esto ya no se puede tocar
      * nunca más". floor=1 basta para lo que el suelo existe a proteger (que un /give no se
-     * pueda vaciar del todo por accidente) sin impedir que el resto se olvide con
+     * pueda vaciar por completo por accidente) sin impedir que el resto se olvide con
      * normalidad. OJO: los niveles entre 2 y lvl SÍ se reembolsan en TP al olvidarlos aunque
      * nunca se pagaron — aceptable para autoprobarte cosas, no para repartir esto como
      * recompensa a jugadores si te importa que no farmeen TP gratis con ello.
@@ -90,7 +90,7 @@ public final class PlayerSkills {
         return levels.remove(id) != null;
     }
 
-    /** Todas las que tiene, en orden de desbloqueo. Para la GUI. */
+    /** El conjunto que tiene, en orden de desbloqueo. Para la GUI. */
     public Set<String> all() { return Collections.unmodifiableSet(levels.keySet()); }
 
     public Map<String, Integer> allLevels() { return Collections.unmodifiableMap(levels); }
@@ -105,7 +105,7 @@ public final class PlayerSkills {
         });
     }
 
-    /** Reset full: todas. */
+    /** Reset full: el conjunto entero. */
     public void clear() { levels.clear(); grantedFloor.clear(); toggles.clear(); }
 
     public CompoundTag save() {

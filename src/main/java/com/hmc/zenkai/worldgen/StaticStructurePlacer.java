@@ -39,7 +39,7 @@ public final class StaticStructurePlacer {
     }
 
     /**
-     * Coloca todos los segmentos en base+offset. Si airToLight es true, convierte
+     * Coloca cada uno de los segmentos en base+offset. Si airToLight es true, convierte
      * las celdas de aire en bloques de luz (ilumina interiores que quedaron como aire).
      * flags = 2 (Block.UPDATE_CLIENTS) para no disparar updates costosos de vecinos.
      */

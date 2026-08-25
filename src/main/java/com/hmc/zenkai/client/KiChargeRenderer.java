@@ -6,6 +6,7 @@ import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiRenderTypes;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import com.hmc.zenkai.feature.technique.TechniquePosition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -23,7 +24,7 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
 /**
  * Bola de ki mientras se carga una técnica, en el punto que diga su TechniquePosition
- * (mano, boca, frente...). La ven todos, no solo quien carga: los datos llegan por
+ * (mano, boca, frente...). La ve el resto, no solo quien carga: los datos llegan por
  * KiChargeStatePacket y el crecimiento se deriva del tick de inicio.
  *
  * EL CUERPO SALE DE {@link KiBodyRenderer}, el mismo que dibuja el proyectil ya disparado.
@@ -49,12 +50,51 @@ public final class KiChargeRenderer {
     /** Radio en bloques: base + aporte del tamaño de la técnica. */
     private static final float BASE_RADIUS = 0.16f;
     private static final float SIZE_RADIUS = 0.05f;
-    /** Al 0% ya se ve algo: una bola que nace de la nada se lee como un parpadeo. */
+    /** Al 0% ya se ve algo: una bola que nace de la nada se lee como un parpadeo.
+     *  No aplica a EXPLOSION: ver PLAYER_RADIUS. */
     private static final float START_SCALE = 0.35f;
+
+    /** Suelo de EXPLOSION: nunca por debajo del tamaño de un jugador de pie, NI al empezar a
+     *  cargar NI al soltarse (~1.8 bloques de diámetro → radio 0.9). */
+    private static final float PLAYER_RADIUS = 0.90f;
+
+    /**
+     * Radio final (a carga completa / al soltarse) para el tamaño de técnica elegido, antes del
+     * pulso de respiración. Para la mayoría de técnicas es el genérico BASE_RADIUS/SIZE_RADIUS:
+     * energía de mano, que no pretende anticipar el tamaño del proyectil final.
+     * EXPLOSION es la excepción a propósito: no sale de una mano, ancla al PECHO (ver
+     * TechniquePosition) simulando que la esfera que va a detonar ya se está formando encima
+     * del cuerpo — así que apunta al mismo radio visual que tendrá el proyectil ya soltado
+     * (KiProjectileRenderer escala la misma malla a getBbWidth() × 1.5; radio = diámetro / 2),
+     * en vez de al genérico.
+     */
+    private static float targetRadius(KiChargeClientState.Charge c) {
+        if (c.type() == KiTechniqueType.EXPLOSION) {
+            return (float) (c.type().projectileSize(c.size()) * 1.5 * 0.5);
+        }
+        return BASE_RADIUS + SIZE_RADIUS * c.size();
+    }
+
+    /**
+     * Radio de la bola de carga a un progreso dado (0 = empieza a cargar, 1 = carga completa).
+     * GENÉRICO: crece desde START_SCALE del radio de mano (un puntito que no se lee como
+     * parpadeo) hasta el radio de mano completo — animación de energía apareciendo en la palma.
+     * EXPLOSION: nunca por debajo de PLAYER_RADIUS, ni al empezar a cargar ni al soltarse.
+     * Crece desde ese suelo hasta el radio de la técnica según el tamaño elegido
+     * (targetRadius); en tamaño 1 el suelo y el objetivo coinciden, así que se queda constante
+     * toda la carga en vez de nacer pequeña como las demás técnicas.
+     */
+    private static float chargeRadius(KiChargeClientState.Charge c, float progress) {
+        float target = targetRadius(c);
+        if (c.type() == KiTechniqueType.EXPLOSION) {
+            return Mth.lerp(progress, PLAYER_RADIUS, Math.max(PLAYER_RADIUS, target));
+        }
+        return target * (START_SCALE + (1f - START_SCALE) * progress);
+    }
 
     /** Ajuste SOLO visual y SOLO en primera persona: el modelo que ves ahí no está donde
      *  está tu modelo real. NO toca el spawn del proyectil, que es autoritativo del
-     *  servidor y debe ser igual para todos. Toca estos tres a ojo hasta que cuadre. */
+     *  servidor y debe ser igual para cualquiera. Toca estos tres a ojo hasta que cuadre. */
     private static final float FP_FORWARD = 0.35f;
     private static final float FP_SIDE    = 0.10f;
     private static final float FP_DOWN    = 0.25f;
@@ -100,14 +140,14 @@ public final class KiChargeRenderer {
             } else if (selfFirstPerson) {
                 // Sin dato de hueso Y es la cámara local: caso de PAL filtrando la capa en
                 // primera persona (ver PlayerHandTracker.get). Yaw DEL CUERPO, no de la cabeza,
-                // para TODO el cálculo — el de TechniquePosition.origin incluido. Antes solo el
+                // para el cálculo completo — el de TechniquePosition.origin incluido. Antes solo el
                 // offset de aquí abajo usaba yBodyRot; la BASE seguía saliendo de
                 // TechniquePosition.origin(p, feet), que por dentro usa getLookAngle() (con
                 // pitch), así que mirar hacia abajo desplazaba la esfera por ESE lado aunque el
                 // offset extra no se moviera — de ahí el bug de "la esfera se mueve al mirar
                 // abajo". yBodyRot es horizontal puro y sigue al cuerpo (con el lag de giro
                 // normal de vanilla, no el de la cabeza), así que pasándolo a los dos sitios la
-                // esfera queda del todo indiferente a hacia dónde mires.
+                // esfera queda por completo indiferente a hacia dónde mires.
                 float bodyYaw = Mth.lerp(pt, p.yBodyRotO, p.yBodyRot);
                 double rad = Math.toRadians(bodyYaw);
                 Vec3 look = new Vec3(-Math.sin(rad), 0.0, Math.cos(rad));
@@ -132,8 +172,7 @@ public final class KiChargeRenderer {
                 origin = c.position().origin(p, p.getPosition(pt));
             }
 
-            float radius = (BASE_RADIUS + SIZE_RADIUS * c.size())
-                    * (START_SCALE + (1f - START_SCALE) * progress)
+            float radius = chargeRadius(c, progress)
                     * (1f + 0.05f * (float) Math.sin((now + pt) * 0.4));
 
             float r = ((c.rgb() >> 16) & 0xFF) / 255f;

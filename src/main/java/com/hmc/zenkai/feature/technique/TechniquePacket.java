@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.feature.master.MasterManager;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -10,12 +11,16 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * C2S del sistema de técnicas (validación 100% servidor).
- * op = UNLOCK: desbloquear un tipo (cuesta type.tpCost).
+ * op = UNLOCK: desbloquear un tipo (cuesta type.tpCost). Si el tipo tiene master() (técnica
+ *              firma, ver TechniqueDef), 'name' se REUTILIZA para llevar el id del maestro
+ *              delante de quien se está comprando ("" = ninguno) — mismo truco que ya usa BIND
+ *              con 'size'; UNLOCK no usa 'name' para nada más.
  * op = SAVE:   crear (slot = -1) o editar (slot >= 0) una instancia.
  * op = DELETE: borrar el slot indicado (las asignaciones se reparan solas).
  * op = BIND:   asignar el slot a una posición del overlay (usa 'size' como posición 0..8;
@@ -62,8 +67,15 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
     public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     // ---- Constructores de conveniencia (cliente) ----
+    /** Desbloqueo normal (sin maestro delante). Para una técnica firma, usar la otra
+     *  sobrecarga con el id del maestro — esta manda "" y el servidor la rechazará. */
     public static TechniquePacket unlock(KiTechniqueType t) {
-        return new TechniquePacket(OP_UNLOCK, -1, t.name(), "", 0, 0, 0, "", "", 1);
+        return unlock(t, "");
+    }
+
+    /** Desbloqueo ANTE UN MAESTRO: 'masterId' viaja en 'name' (ver comentario de la clase). */
+    public static TechniquePacket unlock(KiTechniqueType t, String masterId) {
+        return new TechniquePacket(OP_UNLOCK, -1, t.name(), masterId, 0, 0, 0, "", "", 1);
     }
 
     /** Olvidar un tipo de ki: libera su MIND y devuelve el TP. */
@@ -99,7 +111,7 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
             if (!att.isRaceChosen()) return;
 
             boolean changed = switch (pkt.op()) {
-                case OP_UNLOCK -> handleUnlock(att, pkt);
+                case OP_UNLOCK -> handleUnlock(sp, att, pkt);
                 case OP_SAVE -> handleSave(att, pkt);
                 case OP_DELETE -> {
                     boolean ok = att.techniques().slot(pkt.slot()) != null;
@@ -118,10 +130,24 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         });
     }
 
-    private static boolean handleUnlock(PlayerStatsAttachment att, TechniquePacket pkt) {
+    private static boolean handleUnlock(ServerPlayer sp, PlayerStatsAttachment att, TechniquePacket pkt) {
         KiTechniqueType type = KiTechniqueType.byName(pkt.typeName());
         if (type == null || !type.enabled() || att.techniques().isUnlocked(type)) return false;
         if (!MindBudget.canUnlock(att, type)) return false;
+
+        // Técnica firma (ver TechniqueDef, "TÉCNICA FIRMA"): solo SU maestro la enseña, en
+        // persona. Mismo embudo que SkillBuyPacket usa para el nivel 1 de una habilidad con
+        // maestro — un cliente que no manda el masterId correcto (o lo manda sin estar
+        // delante) se queda exactamente igual que si no hubiera pedido nada.
+        String master = type.master();
+        if (!master.isEmpty()) {
+            if (!master.equals(pkt.name())) return false; // 'name' reutilizado como masterId
+            Entity masterEntity = MasterManager.findNearby(sp, master);
+            if (masterEntity == null) return false;
+            MasterManager.Result r = MasterManager.check(sp, master, masterEntity);
+            if (!r.ok()) { MasterManager.tell(sp, master, r); return false; }
+        }
+
         if (att.getTP() < type.tpCost()) return false;
         att.addTP(-type.tpCost());
         att.techniques().unlock(type);
@@ -143,7 +169,11 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
 
         String name = KiTechnique.sanitizeName(pkt.name());
         int size = KiTechnique.clampSize(pkt.size());
-        int rgb = pkt.rgb() & 0xFFFFFF;
+        // Técnica firma: el color es su identidad (p.ej. "morada"), no una elección del
+        // jugador — se ignora lo que mande el cliente y se fuerza el de fábrica, igual que el
+        // TIPO se ignora más abajo en modo edición. Nombre y tamaño SÍ siguen editables: lo
+        // que se bloquea es la identidad visual, no el ajuste de coste/potencia.
+        int rgb = type.master().isEmpty() ? (pkt.rgb() & 0xFFFFFF) : type.defaultRgb();
         ResourceLocation charge = validSound(pkt.chargeSound(), true);
         ResourceLocation release = validSound(pkt.releaseSound(), false);
         int animSet = TechniqueAnimSet.clamp(pkt.animSet());

@@ -57,7 +57,7 @@ public final class FormManager {
 
     private static EnumSet<Race> readRaces(JsonObject o) {
         EnumSet<Race> out = EnumSet.noneOf(Race.class);
-        if (!o.has("races")) return EnumSet.allOf(Race.class); // sin lista = todas
+        if (!o.has("races")) return EnumSet.allOf(Race.class); // sin lista = cualquiera
         JsonArray arr = GsonHelper.getAsJsonArray(o, "races");
         for (var el : arr) {
             String s = el.getAsString().toUpperCase(Locale.ROOT);

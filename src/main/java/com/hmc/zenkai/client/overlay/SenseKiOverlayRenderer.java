@@ -157,7 +157,7 @@ public final class SenseKiOverlayRenderer {
         float w = FLAME_W * pulse * 0.5f;
         float h = FLAME_H * pulse;
 
-        // Fotograma actual, desfasado por entidad para que no ardan todas al unísono.
+        // Fotograma actual, desfasado por entidad para que no ardan en conjunto al unísono.
         int frame = (int) ((time / 20f * FRAME_FPS) + (en.entityId() * 3)) % FRAMES;
         if (frame < 0) frame += FRAMES;
         float v0 = frame / (float) FRAMES;

@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.aura;
 
 /**
- * TODAS las constantes del sistema de aura, y el ÚNICO sitio donde viven.
+ * El conjunto de constantes del sistema de aura, y el ÚNICO sitio donde viven.
  * Los números NO son inventados: salen de una calibración hecha antes de escribir esto
  * (generador procedural de siluetas + simulación del pipeline de render + réplica exacta
  * de la cadena PL). Cambiar uno cambia el aspecto del mod, así que cada bloque

@@ -74,7 +74,7 @@ public final class DownedSystem {
     /** Busca un Totem of Undying en mano principal u offhand (mismo orden que vanilla) y lo
      *  consume, replicando la animación (evento de entidad 35, la misma que usa
      *  LivingEntity.checkTotemDeathProtection) y el sonido de vanilla. No podemos invocar ese
-     *  método protegido desde aquí, así que se reconstruye el efecto a mano. */
+     *  función protegida desde aquí, así que se reconstruye el efecto a mano. */
     private static boolean consumeTotem(ServerPlayer sp) {
         for (InteractionHand hand : InteractionHand.values()) {
             ItemStack stack = sp.getItemInHand(hand);

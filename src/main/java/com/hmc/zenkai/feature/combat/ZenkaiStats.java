@@ -45,7 +45,7 @@ public final class ZenkaiStats {
      *  3. Fallback vanilla -> vida_max * factor (config power_level.vanilla_factor).
      */
     public static long resolveDisplayPowerLevel(LivingEntity le) {
-        // Game rule apagado: la capa Zenkai no aplica -> PL vanilla (vida_max x factor) para todos.
+        // Game rule apagado: la capa Zenkai no aplica -> PL vanilla (vida_max x factor) para cualquiera.
         if (le.getServer() == null
                 || !ModGameRules.enableRaceBoosts(le.getServer())) {
             return Math.round(le.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor());

@@ -45,7 +45,7 @@ public final class KiBodyRenderer {
 
     /**
      * Igual que {@link #render(MultiBufferSource, KiVisual, KiMesh, PoseStack, float, float,
-     * float, float)} pero con un multiplicador de alfa sobre TODAS las capas (envolvente,
+     * float, float)} pero con un multiplicador de alfa sobre el conjunto de capas (envolvente,
      * cáscara y núcleo). Lo usa KiChargeRenderer para el ajuste de opacidad en primera persona
      * y para que el desvanecido al soltar la carga atenúe también el cuerpo, no solo el halo.
      */
@@ -71,7 +71,7 @@ public final class KiBodyRenderer {
     private static void renderShaded(MultiBufferSource.BufferSource buffer, KiVisual v, KiMesh mesh,
                                      PoseStack pose, float size, float r, float g, float b,
                                      float alphaMul) {
-        RenderType type = KiRenderTypes.fresnel();
+        RenderType type = KiRenderTypes.fresnel(v.backfaceCull());
         KiRenderTypes.setupFresnel(v);
         VertexConsumer vc = buffer.getBuffer(type);
 

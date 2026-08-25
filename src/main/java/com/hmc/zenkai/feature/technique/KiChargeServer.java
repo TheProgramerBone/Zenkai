@@ -28,7 +28,7 @@ public final class KiChargeServer {
         broadcast(sp, tech, true);
 
         // Una vez al empezar, no en bucle: un sonido sostenido necesitaría instancia
-        // persistente en cliente, y aquí lo que importa es que todos lo oigan arrancar.
+        // persistente en cliente, y aquí lo que importa es que cualquiera lo oiga arrancar.
         SoundEvent snd = TechniqueAssets.soundOf(tech.chargeSound());
         if (snd != null) {
             sp.level().playSound(null, sp.getX(), sp.getEyeY(), sp.getZ(),

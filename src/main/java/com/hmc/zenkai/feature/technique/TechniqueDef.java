@@ -23,13 +23,33 @@ import java.util.Map;
  *  - KI:       damage_mult, ki_cost_mult, charge_ticks, cooldown_ticks, speed, count,
  *              defensive, default_rgb
  *  - PHYSICAL: damage_mult, stamina_pct, cooldown_ticks, range
- * Comunes: tp_cost (coste de desbloqueo), mind_req (MND mínimo para desbloquear),
+ * Comunes: tp_cost (coste de desbloqueo), mind_req (MND mínimo para desbloquear), master
+ *          (id de maestro; "" = desbloqueable normal, ver abajo),
  *          anim_ticks (duración del ESTADO VISUAL sincronizado; ver abajo).
  * anim_ticks NO es duración de gameplay. El golpe instantáneo sigue resolviéndose en su
  * tick: el daño, el coste y el cooldown no dependen de esto. Solo dice cuánto se mantiene
  * el ActionState para que los demás jugadores vean la animación completa.
+ *
+ * TÉCNICA FIRMA (cimiento para "el maestro X enseña la técnica Y", ver conversación de
+ * diseño): con {@code master} puesto, el tipo/técnica sigue siendo EXACTAMENTE el mismo
+ * código (mismo KiTechniqueType o PhysicalTechnique, mismo KiVisual, mismo proyectil) pero
+ * dos cosas cambian:
+ *  1) {@link KiTechniqueType#master()}/{@link PhysicalTechnique#master()} != "" bloquea el
+ *     desbloqueo genérico por TP (TechniquePacket/PhysicalTechniquePacket.handleUnlock): solo
+ *     se puede desbloquear delante de ESE maestro, mismo embudo (MasterManager.check) que ya
+ *     usa SkillDef.master() para el nivel 1 de una habilidad con maestro.
+ *  2) Para ki, el COLOR de la instancia queda fijo a {@code default_rgb} — TechniquePacket.
+ *     handleSave lo fuerza igual que ya fuerza el TIPO en modo edición. El resto (nombre,
+ *     tamaño, efecto, sonidos, animSet) sigue siendo elección normal del jugador.
+ * Para una técnica de verdad más fuerte que las genéricas del mismo tipo (más daño, más
+ * radio de explosión que cualquier size 5...) hace falta además su PROPIO KiTechniqueType/
+ * PhysicalTechnique (nuevo valor de enum, con su propio switch en KiVisual/
+ * KiTechniqueType#projectileSize etc. — igual que EXPLOSION o BARRIER hoy) apuntando a este
+ * mismo id de maestro: el número base de ESE tipo puede partir ya por encima de lo que
+ * cualquier size 1..5 del tipo genérico alcanza (mismo patrón que EXPLOSION/BIG_BLAST, ver
+ * git history). Ningún tipo nuevo se ha añadido todavía — esto es solo el mecanismo.
  */
-public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq,
+public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String master,
                            double damageMult, double kiCostMult, double staminaPct,
                            int chargeTicks, int cooldownTicks, double speed,
                            int count, boolean defensive, int defaultRgb, double range, int animTicks) {
@@ -69,6 +89,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq,
                 buf.writeVarInt(d.kind().ordinal());
                 buf.writeVarInt(d.tpCost());
                 buf.writeVarInt(d.mindReq());
+                buf.writeUtf(d.master(), 32);
                 buf.writeDouble(d.damageMult());
                 buf.writeDouble(d.kiCostMult());
                 buf.writeDouble(d.staminaPct());
@@ -86,7 +107,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq,
                 int k = buf.readVarInt();
                 Kind kind = (k >= 0 && k < Kind.values().length) ? Kind.values()[k] : Kind.KI;
                 return new TechniqueDef(id, kind,
-                        buf.readVarInt(), buf.readVarInt(),
+                        buf.readVarInt(), buf.readVarInt(), buf.readUtf(32),
                         buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readVarInt(), buf.readVarInt(),
                         buf.readDouble(), buf.readVarInt(), buf.readBoolean(),

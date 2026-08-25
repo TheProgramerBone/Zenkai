@@ -220,7 +220,7 @@ public class PlayerVisualAttachment {
 
     public int layerColorCount() { return layerColors.size(); }
 
-    /** Olvida TODOS los overrides de capas (vuelven a los defaults del JSON). Usar al cambiar de raza. */
+    /** Olvida el conjunto de overrides de capas (vuelven a los defaults del JSON). Usar al cambiar de raza. */
     public void clearLayerColors() {
         layerColors.clear();
     }

@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Difunde los mensajes públicos de Shenlong (invocación y deseos concedidos) a todos los
+ * Difunde los mensajes públicos de Shenlong (invocación y deseos concedidos) al conjunto de
  * jugadores dentro del radio configurado, para que en multijugador se sepa qué pidió cada uno.
  * Radio 0 = solo el jugador que interactúa. Los errores y confirmaciones personales NO pasan
  * por aquí: siguen siendo privados.

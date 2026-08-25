@@ -6,7 +6,7 @@ import net.minecraft.world.entity.player.Player;
 
 /**
  * Consulta centralizada de los efectos de habilidad (el equivalente a MasteryEffects).
- * Todos los números salen de las curvas del datapack vía SkillDef#value, así que
+ * Cada número sale de las curvas del datapack vía SkillDef#value, así que
  * balancear es editar el JSON y hacer /reload, nunca tocar esta clase.
  */
 public final class SkillEffects {

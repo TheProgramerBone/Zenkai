@@ -40,7 +40,7 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
                 .triggerableAnim("ki_shoot",  ZenkaiCommonAnimations.ATTACK_SHOOT));
     }
 
-    /** Melee: dispara el strike triggereado en todos los clientes que ven al mob. */
+    /** Melee: dispara el strike triggereado en el conjunto de clientes que ven al mob. */
     @Override
     public boolean doHurtTarget(@org.jetbrains.annotations.NotNull net.minecraft.world.entity.Entity target) {
         boolean hit = super.doHurtTarget(target);

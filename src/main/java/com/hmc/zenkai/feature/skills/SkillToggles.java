@@ -22,7 +22,7 @@ import java.util.Set;
  * ÚNICO LECTOR: {@link #isOn(Player, String)}. Nadie debe leer el bit crudo del attachment,
  * porque isOn valida ADEMÁS que el interruptor siga siendo legítimo (habilidad revocada,
  * prerrequisito perdido, respec). Así un bit obsoleto en el NBT no puede activar nada:
- * el guard está en el punto de lectura, que es por donde pasan todos los consumidores,
+ * el guard está en el punto de lectura, que es por donde pasa cada uno de los consumidores,
  * en vez de repartido por cada sitio que quiera consultar el estado.
  *
  * Añadir un interruptor nuevo = una línea en el bloque static. Ni la rueda, ni el packet,

@@ -28,7 +28,7 @@ import software.bernie.geckolib.renderer.GeoObjectRenderer;
 import software.bernie.geckolib.util.Color;
 
 /**
- * Brazo en 1ª persona usando el MISMO modelo del cuerpo (reusado): oculta todos los huesos
+ * Brazo en 1ª persona usando el MISMO modelo del cuerpo (reusado): oculta cada uno de los huesos
  * menos el del brazo y lo renderiza en la pose que da RenderArmEvent. Así hereda automáticamente
  * cualquier cambio de modelo (transformaciones, género, etc.) sin assets extra.
  * Para razas con tinte multicapa (bodyTint: Namek, y futuras Majin/Arcosian) pinta además las
@@ -158,7 +158,7 @@ public final class ZenkaiFirstPersonArmHooks {
             }
         }
 
-        /** Oculta/muestra un hueso y TODA su descendencia (no solo un nivel). */
+        /** Oculta/muestra un hueso y su descendencia entera (no solo un nivel). */
         private static void setBranchHidden(GeoBone bone, boolean hidden) {
             bone.setHidden(hidden);
             bone.setChildrenHidden(hidden);

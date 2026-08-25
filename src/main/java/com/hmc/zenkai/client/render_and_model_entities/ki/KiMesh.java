@@ -29,7 +29,7 @@ public record KiMesh(float[] data, int quadCount) {
      * @param whiteMul escala la blancura horneada. 1 = cáscara teñida como se generó;
      *                 valores altos lavan la malla a blanco y la convierten en NÚCLEO;
      *                 0 deja el tinte puro (ruta del shader).
-     * @param flatUv   true = todos los vértices muestrean el centro de la textura.
+     * @param flatUv   true = cada vértice muestrea el centro de la textura.
      *                 La decisión vive AQUÍ y no en el generador porque depende de con qué se
      *                 va a dibujar la malla, no de cómo se construyó: {@code ki_ball.png} es un
      *                 glow de billboard y estirado sobre una esfera pinta un disco de otro

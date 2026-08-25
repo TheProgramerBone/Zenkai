@@ -68,7 +68,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
     /** Efecto del disparo. NO VALIDA: lo hizo ActionResolver, que además calculó ratio y
      *  coste con la carga autoritativa.
      *  El slot llega como parámetro A PROPÓSITO: es la clave del cooldown por slot, y
-     *  deducirlo aquí del KiTechnique ya provocó que todas las técnicas compartieran
+     *  deducirlo aquí del KiTechnique ya provocó que el conjunto de técnicas compartiera
      *  cooldown. La clave que usa tryFire tiene que ser la MISMA que consulta isReady. */
     public static void execute(ServerPlayer sp, PlayerStatsAttachment att, KiTechnique tech,
                                int slot, double ratio, double rawRatio, int cost,
@@ -165,7 +165,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
         sp.level().addFreshEntity(proj);
 
         // Sonido de disparo: solo con el primer proyectil, o una ráfaga lo solaparía cinco
-        // veces. Desde el servidor y con player=null, así lo oyen todos los de alrededor.
+        // veces. Desde el servidor y con player=null, así lo oye cualquiera de alrededor.
         if (index == 0) {
             SoundEvent snd = TechniqueAssets.soundOf(tech.releaseSound());
             if (snd != null) {

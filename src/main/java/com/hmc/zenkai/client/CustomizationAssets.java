@@ -83,7 +83,7 @@ public final class CustomizationAssets {
     // ── Recarga ───────────────────────────────────────────────────────────────
 
     /**
-     * Recarga todos los assets desde el ResourceManager.
+     * Recarga el conjunto de assets desde el ResourceManager.
      * Llamar desde ClientTickEvent la primera vez, o en ResourceReloadEvent.
      */
     public static void reload() {

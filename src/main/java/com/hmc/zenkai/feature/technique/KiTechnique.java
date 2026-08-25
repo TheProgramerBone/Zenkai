@@ -134,7 +134,7 @@ public final class KiTechnique {
 
     /** Efecto guardado, con migración del boolean viejo. Un `explosive` sobre un tipo que ahora
      *  lo prohíbe (disco, barrera, ráfaga) se ignora en silencio: el set() lo volvería a NONE
-     *  de todos modos, y avisar de algo que el jugador no eligió no aporta nada. */
+     *  en cualquier caso, y avisar de algo que el jugador no eligió no aporta nada. */
     private static TechniqueEffect readEffect(CompoundTag tag) {
         if (tag.contains("effect")) return TechniqueEffect.byOrdinal(tag.getInt("effect"));
         return tag.getBoolean("explosive") ? TechniqueEffect.EXPLOSIVE : TechniqueEffect.NONE;
