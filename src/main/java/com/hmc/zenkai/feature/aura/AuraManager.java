@@ -69,21 +69,14 @@ public final class AuraManager {
     }
 
     /**
-     * Modificador de una forma. Hoy devuelve NONE: FormDef todavía no lleva estos
-     * campos. Se deja aislado en una forma para que añadirlos en L6 sea tocar aquí y
-     * el codec del datapack, y nada más.
-         * DEUDA EXPLÍCITA DE L6, no una implementación provisional escondida. Hasta
-     * entonces la forma sigue influyendo por la vía del PL -> presence, así que un
-     * SSJ4 ya se ve distinto de un base; lo que le falta es firma ESTRUCTURAL propia.
-     * No se debe compensar metiendo dMass/dSpike en el renderer "para que se note":
-     * eso saltaría por encima de la arquitectura y la neutralidad dejaría de estar
-     * garantizada por construcción.
-         * El campo `aura_type` de los diez JSON NO se elimina: en L6 pasa a identificar
-     * el AuraModifier registrado (aura_type -> AuraModifier -> AuraProfile), así que
-     * no hay campo muerto ni migración de datapacks que hacer.
+     * Modificador de una forma: lookup de su aura_type en AuraSignatureRegistry.
+     * aura_type -> AuraModifier -> AuraProfile (datapack data/<ns>/zenkai_aura_signatures/
+     * <aura_type>.json, cargado por AuraSignatureManager). "default" y cualquier aura_type
+     * sin datapack asociado caen en AuraModifier.NONE.
      */
     public static AuraModifier formModifier(FormDef def) {
-        return AuraModifier.NONE;
+        if (def == null) return AuraModifier.NONE;
+        return AuraSignatureRegistry.of(def.auraType());
     }
 
     public static AuraProfile profileOf(Player p, float turbo) {

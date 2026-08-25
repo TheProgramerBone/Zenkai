@@ -21,6 +21,11 @@ package com.hmc.zenkai.feature.aura;
  *   *Gain  multiplican la respuesta DINÁMICA -> solo se nota al perder el control
  * Por eso un Majin no necesita parecer más poderoso en reposo para desintegrarse de
  * forma característica cuando se le va el ki de las manos.
+ *
+ * SIN IMPORTS DE MINECRAFT A PROPÓSITO: junto con AuraFormula, es lo que permite que
+ * AuraSelfTest se ejecute sin arrancar el juego (ver su javadoc). El codec de red para
+ * sincronizar este tipo (AuraSignatureSyncPacket) vive fuera de esta clase precisamente
+ * para no forzar la carga de clases de Minecraft en el <clinit> de este record.
  */
 public record AuraModifier(
         float dMass,

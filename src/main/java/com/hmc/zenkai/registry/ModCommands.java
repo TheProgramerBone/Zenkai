@@ -405,6 +405,11 @@ public class ModCommands {
         // vive en otro attachment.
         sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).clearProgression();
         PlayerLifeCycle.sync(sp);
+        // clearProgression() ya deja formId en BASE en el attachment del SERVIDOR, pero
+        // PlayerLifeCycle.sync() solo manda SyncPlayerStatsPacket: sin este sync aparte, el
+        // cliente (propio y quien lo esté trackeando) se queda con la forma vieja cacheada y
+        // sigue renderizando la transformación anterior encima del respec.
+        PlayerLifeCycle.syncForm(sp);
         ctx.getSource().sendSuccess(
                 () -> Component.literal("[Zenkai] Stats respec done → " + sp.getGameProfile().getName()), true);
         return 1;
@@ -428,6 +433,7 @@ public class ModCommands {
         att.setStyle(Style.MARTIAL_ARTIST);
         att.respec();
         sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).clearProgression();
+        sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).forceBase();
         att.addTP(-att.getTP());
         att.setRaceChosen(false);
         att.setStyleChosen(false);
@@ -454,6 +460,12 @@ public class ModCommands {
         }
 
         PlayerLifeCycle.sync(sp);
+        // clearProgression()+forceBase() ya dejan formId en BASE en el attachment del
+        // SERVIDOR, pero PlayerLifeCycle.sync() solo manda SyncPlayerStatsPacket: sin este
+        // sync aparte, el cliente (propio y quien lo esté trackeando) se queda con la forma
+        // vieja cacheada — así es como un reset full seguido de elegir una raza nueva podía
+        // dejar, por ejemplo, a un Human recién creado con el aura/escala/pelo de un SSJ4.
+        PlayerLifeCycle.syncForm(sp);
         // ── Visual (pelo, ojos, colores, índices) ─────────────────────────────
         // Cargar un attachment limpio con el conjunto de valores por defecto
         var visual = sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());

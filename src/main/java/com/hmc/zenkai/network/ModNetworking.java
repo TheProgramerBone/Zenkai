@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.ClientPayloadHandlers;
 import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import com.hmc.zenkai.content.blockentity.NpcMarkerBlockEntity;
+import com.hmc.zenkai.feature.aura.AuraSignatureSyncPacket;
 import com.hmc.zenkai.feature.aura.TurboPacket;
 import com.hmc.zenkai.feature.aura.TurboSyncPacket;
 import com.hmc.zenkai.feature.combat.BlockingPacket;
@@ -306,6 +307,11 @@ public class ModNetworking {
                 FormSyncPacket.TYPE,
                 FormSyncPacket.STREAM_CODEC,
                 FormSyncPacket::handle);
+
+        registrar.playToClient(
+                AuraSignatureSyncPacket.TYPE,
+                AuraSignatureSyncPacket.STREAM_CODEC,
+                AuraSignatureSyncPacket::handle);
 
         registrar.playToServer(
                 WheelSelectPacket.TYPE,

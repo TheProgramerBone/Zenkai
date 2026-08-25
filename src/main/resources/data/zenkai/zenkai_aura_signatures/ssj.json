@@ -1,0 +1,11 @@
+{
+  "d_mass": 0.05,
+  "d_spike": 0.18,
+  "d_turb": 0.10,
+  "d_spread": 0.02,
+  "d_height": 0.05,
+  "d_density": 0.00,
+  "turb_gain": 1.25,
+  "spread_gain": 1.05,
+  "pulse_gain": 1.35
+}

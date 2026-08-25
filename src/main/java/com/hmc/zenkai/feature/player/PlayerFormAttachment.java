@@ -62,8 +62,11 @@ public class PlayerFormAttachment {
     private ResourceLocation formId = FormIds.BASE;
     private KaiokenTier kaioken = KaiokenTier.OFF;
 
-    /** Forma OBJETIVO elegida en la rueda. null = sin límite: la tecla sube un escalón por
-     *  vez como antes. Ponlo a FormIds.BASE si quieres que pasar por la rueda sea obligatorio. */
+    /** Forma OBJETIVO elegida en la rueda: ATAJO de un solo uso, no un techo. null = sin
+     *  límite, la tecla sube un escalón por vez como antes. Ponlo a FormIds.BASE si quieres
+     *  que pasar por la rueda sea obligatorio. Al ALCANZAR la forma elegida se consume sola
+     *  (vuelve a null, ver tickFormLadder) para que mantener la tecla siga subiendo la
+     *  escalera un escalón a la vez sin tener que volver a la rueda por cada fase. */
     private ResourceLocation selectedForm = null;
 
     /** Interruptor del Kaioken: decide QUÉ escalera sube la tecla de transformar. */
@@ -205,6 +208,13 @@ public class PlayerFormAttachment {
         if (advanceHold(required)) return progressDirty(was); // aún cargando
 
         setFormId(target);
+        // La selección de la rueda es un ATAJO de un solo uso, no un techo permanente: al
+        // alcanzarla se consume (selectedForm vuelve a null) para que targetForm() caiga en
+        // resolveNextForm() en el siguiente hold. Sin esto, seleccionar SSJ2 y llegar a SSJ2
+        // dejaba selectedForm apuntando ahí para siempre — target.equals(formId) hacía que
+        // canAdvance() devolviera false en cuanto se llegaba, y mantener la tecla pulsada ya
+        // no subía más escalones sin volver a la rueda a elegir SSJ3 a mano.
+        if (target.equals(selectedForm)) selectedForm = null;
         finishHold();
         return true;
     }
