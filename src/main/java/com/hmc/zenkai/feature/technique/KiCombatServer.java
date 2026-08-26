@@ -32,7 +32,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *    coste 1:1 hasta el 100% y con recargo por encima. chargeRatio/chargeCostFactor son la
  *    ÚNICA conversión del mod: servidor, HUD, predicción de cliente y editor las comparten.
  *  - Cooldown: global anti-spam (5 ticks) + POR SLOT según type.cooldownTicks.
- *  - Barrera: pool = kiPower × 3 × sizeF, 10 s; absorb() desde CombatZenkaiHooks.
+ *  - Barrera: pool base = kiPower × 3 × sizeF, duración base 10 s; los dos escalan con la carga
+ *    (repartida entre ambos vía chargeSplitFactor, ver esa función). absorb() desde
+ *    CombatZenkaiHooks.
  *  - Bloqueo: manos vacías + click derecho; -60% velocidad (modificador transitorio) y
  *    difusión a trackers para la animación PAL.
  */
@@ -208,24 +210,46 @@ public final class KiCombatServer {
 
     private static final Map<UUID, Barrier> BARRIERS = new ConcurrentHashMap<>();
 
-    /** Vida/absorción total de la barrera para el tamaño y poder dados — la fórmula real que
-     *  usa activateBarrier, expuesta para que TechniqueEditScreen y el HUD de carga puedan
+    /**
+     * Reparto de la carga entre pool y duración de BARRIER: cada uno escala con sqrt(ratio) en
+     * vez de con el ratio directo, así el PRODUCTO pool×duración (la "defensa total" que da la
+     * barrera) escala LINEAL con la carga — igual que el daño de una técnica ofensiva
+     * (computeDamage(...) × ratio) — pero repartido en dos números en vez de concentrado en
+     * uno solo, porque BARRIER no tiene un único "daño" al que aplicárselo entero. A ratio 1.0
+     * (100%, carga "normal") vale 1.0 exacto: el comportamiento de antes de introducir esto no
+     * cambia para quien siempre soltaba a carga completa sin sobrecargar. Clampa al rango de
+     * carga válido (MIN_CHARGE..MAX_CHARGE) por si algún llamador pasa algo fuera de rango.
+     */
+    private static double chargeSplitFactor(double ratio) {
+        double r = Math.max(MIN_CHARGE_D, Math.min(MAX_CHARGE, ratio));
+        return Math.sqrt(r);
+    }
+
+    /** Vida/absorción total de la barrera para el tamaño, poder y carga dados — la fórmula real
+     *  que usa activateBarrier, expuesta para que TechniqueEditScreen y el HUD de carga puedan
      *  previsualizarla SIN reimplementarla (misma razón que PhysicalCombatServer.staminaCost:
      *  "El cliente NO reimplementa la fórmula"). */
-    public static double barrierPool(double kiPower, int size) {
-        return kiPower * BARRIER_ABSORB_MULT * sizeFactor(size);
+    public static double barrierPool(double kiPower, int size, double ratio) {
+        return kiPower * BARRIER_ABSORB_MULT * sizeFactor(size) * chargeSplitFactor(ratio);
+    }
+
+    /** Duración activa de la barrera para la carga dada — mismo reparto que barrierPool, ver
+     *  chargeSplitFactor. Expuesta por la misma razón que barrierPool. */
+    public static int barrierDurationTicks(double ratio) {
+        return Math.max(1, (int) Math.round(BARRIER_DURATION_TICKS * chargeSplitFactor(ratio)));
     }
 
     /** Activa (o reemplaza) la barrera del jugador y crea su visual. */
-    public static void activateBarrier(ServerPlayer sp, KiTechnique tech, double kiPower) {
+    public static void activateBarrier(ServerPlayer sp, KiTechnique tech, double kiPower, double ratio) {
         removeBarrier(sp); // una sola barrera activa
 
-        double pool = barrierPool(kiPower, tech.size());
-        long expiry = sp.level().getGameTime() + BARRIER_DURATION_TICKS;
+        double pool = barrierPool(kiPower, tech.size(), ratio);
+        int durationTicks = barrierDurationTicks(ratio);
+        long expiry = sp.level().getGameTime() + durationTicks;
 
         KiProjectileEntity visual = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sp.level());
         visual.configure(sp, KiTechniqueType.BARRIER, tech.rgb(), tech.size(),
-                0, BARRIER_DURATION_TICKS, TechniqueEffect.NONE);
+                0, durationTicks, TechniqueEffect.NONE);
         visual.setPos(sp.getX(), sp.getY(), sp.getZ());
         sp.level().addFreshEntity(visual);
 

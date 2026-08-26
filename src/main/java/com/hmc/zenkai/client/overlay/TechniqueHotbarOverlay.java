@@ -198,13 +198,12 @@ public final class TechniqueHotbarOverlay {
 
         if (t != null) {
             // BARRIER no hace daño: en vez de dejar este hueco vacío (como antes), muestra su
-            // vida/absorción real. Sin escalar por `ratio` — BARRIER ignora la carga y siempre
-            // sale a pool completo (ver KiFirePacket.execute, activateBarrier no multiplica por
-            // ratio) — así que el número es el mismo desde el primer frame. `releasable` sigue
-            // siendo información real aunque el número no cambie: decide si YA se puede soltar.
+            // vida/absorción real EN VIVO — escala con `ratio` igual que el daño de las técnicas
+            // ofensivas (ver KiCombatServer.chargeSplitFactor: la carga se reparte entre pool y
+            // duración, así que este número sí sube mientras sigues cargando/sobrecargando).
             boolean isBarrier = t.type().defensive();
             double value = isBarrier
-                    ? KiCombatServer.barrierPool(att.computeKiPowerFinal(), t.size())
+                    ? KiCombatServer.barrierPool(att.computeKiPowerFinal(), t.size(), ratio)
                     : previewDamage(mc, att, t, ratio);
             String txt = String.format("%.1f", value);
             if (!isBarrier && t.type().count() > 1) txt = txt + " x" + t.type().count();

@@ -535,7 +535,10 @@ public class TechniqueEditScreen extends Screen {
         boolean isBarrier = type.defensive();
         double dmg = isBarrier ? 0
                 : KiCombatServer.computeDamage(kiPower, type, size) * Math.max(1, type.count());
-        double life = isBarrier ? KiCombatServer.barrierPool(kiPower, size) : 0;
+        // 1.0 = referencia a carga normal (100%, sin sobrecarga), mismo criterio que dmg de
+        // arriba (computeDamage sin multiplicar por ratio): el editor enseña el número base,
+        // no una sobrecarga que el jugador aún no ha elegido.
+        double life = isBarrier ? KiCombatServer.barrierPool(kiPower, size, 1.0) : 0;
         int cost = KiCombatServer.computeCost(att, type, size,
                 effect);
 

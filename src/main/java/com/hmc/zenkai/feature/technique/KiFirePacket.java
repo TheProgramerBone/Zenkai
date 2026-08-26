@@ -37,8 +37,9 @@ import org.jetbrains.annotations.NotNull;
  * Ratio 0..2.0 (SOBRECARGA hasta el 200%) vía KiCombatServer.chargeRatio. El daño escala
  * LINEAL con la carga; el coste 1:1 hasta el 100% y con recargo por encima
  * (chargeCostFactor), así sobrecargar dobla el daño pero cuesta 2.5x y tarda 3.5x.
- * BARRIER ignora la carga (siempre completa). Fórmulas en KiCombatServer, compartidas con
- * las previews del editor.
+ * BARRIER también escala con la carga, pero repartida entre pool y duración en vez de
+ * concentrada en un solo número (ver KiCombatServer.chargeSplitFactor). Fórmulas en
+ * KiCombatServer, compartidas con las previews del editor.
  */
 public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPayload {
 
@@ -83,7 +84,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
 
         double kiPower = att.computeKiPowerFinal();
         if (type.defensive()) {
-            KiCombatServer.activateBarrier(sp, tech, kiPower);
+            KiCombatServer.activateBarrier(sp, tech, kiPower, ratio);
         } else if (type == KiTechniqueType.EXPLOSION) {
             // El sacrificio se cobra PRIMERO porque es parte de la munición: el daño no se
             // puede calcular hasta saber cuánta vida se ha quemado.
