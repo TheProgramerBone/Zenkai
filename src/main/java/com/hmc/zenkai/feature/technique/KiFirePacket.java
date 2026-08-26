@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
+import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.config.CommonConfig;
@@ -120,7 +121,10 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
 
         if (att.getBody() <= 0) {
             att.setBody(0);
-            sp.hurt(sp.damageSources().magic(), Float.MAX_VALUE);   // ⚠ ver arriba
+            // Fuente propia (KI_SELF_DESTRUCT) en vez de magic() genérico: así, si esto es lo
+            // que finalmente lo mata (ver DeathCauseTracker), el mensaje dice "se autodestruyó"
+            // en vez del genérico "murió".
+            sp.hurt(sp.damageSources().source(ModDamageTypes.KI_SELF_DESTRUCT, sp), Float.MAX_VALUE);
         }
         return loss;
     }

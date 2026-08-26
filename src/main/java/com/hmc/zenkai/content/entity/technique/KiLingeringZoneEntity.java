@@ -1,5 +1,6 @@
 package com.hmc.zenkai.content.entity.technique;
 
+import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModGameRules;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -35,6 +36,10 @@ public class KiLingeringZoneEntity extends Entity {
     private double radius = 2.0;
     private int life = 60;
     private UUID ownerId;
+    /** Solo para atribuir el mensaje de muerte (ver ModDamageTypes.KI_FIRE); NO se persiste,
+     *  igual que el resto del estado de esta entidad — si vuelve de un guardado a mitad de vida
+     *  simplemente pierde la atribución y el daño cae al genérico, nada crítico. */
+    private LivingEntity owner;
 
     public KiLingeringZoneEntity(EntityType<? extends KiLingeringZoneEntity> type, Level level) {
         super(type, level);
@@ -45,6 +50,7 @@ public class KiLingeringZoneEntity extends Entity {
     /** Configuración al nacer (solo servidor). */
     public void configure(LivingEntity owner, double damagePerHit, double radius, int lifeTicks) {
         this.ownerId = owner != null ? owner.getUUID() : null;
+        this.owner = owner;
         this.damagePerHit = damagePerHit;
         this.radius = radius;
         this.life = lifeTicks;
@@ -70,7 +76,7 @@ public class KiLingeringZoneEntity extends Entity {
                 if (position().distanceTo(target.position()) > radius) continue;
                 // magic(): mismo criterio que el resto del mod para daño "verdadero" que no
                 // hace falta atribuir a un atacante concreto (ver KiFirePacket.selfDamage).
-                target.hurt(damageSources().magic(), (float) damagePerHit);
+                target.hurt(damageSources().source(ModDamageTypes.KI_FIRE, owner), (float) damagePerHit);
                 // El fuego de verdad es lo que hace que "quema" se LEA como quemadura y no como
                 // un tic de daño invisible — el overlay naranja y el sonido de fuego vienen
                 // gratis con esto.

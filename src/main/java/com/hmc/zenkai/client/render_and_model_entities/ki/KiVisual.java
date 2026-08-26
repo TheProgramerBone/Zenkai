@@ -210,6 +210,23 @@ public record KiVisual(
     /** El valor que espera el uniform ZenkaiShape. */
     public float bandMode() { return band.ordinal(); }
 
+    /** Dampen extra, encima del ajuste general de ClientConfig.kiFirstPersonOpacityFrac(), para
+     *  la vista en primera persona de la PROPIA técnica. Reutiliza {@link #backfaceCull}: ese
+     *  campo ya marca justo las formas cuya cáscara puede envolver la cámara (BARRIER,
+     *  EXPLOSION — ver su comentario). Sin este dampen, el 100 % por defecto de esa opción deja
+     *  la bola de EXPLOSION (que KiChargeRenderer fuerza a tamaño de jugador desde que empieza a
+     *  cargar, y que KiProjectileRenderer sigue dibujando pegada al pecho mientras es la mecha)
+     *  tapando buena parte de la pantalla; las demás técnicas, pequeñas en la mano, no lo
+     *  necesitan.
+     *  Usan esto KiChargeRenderer (bola cargando/soltándose) y KiProjectileRenderer (mecha
+     *  pegada al dueño, KiTechniqueType.travels() == false) — las dos rutas que dibujan la
+     *  PROPIA técnica en primera persona. */
+    public float firstPersonOpacity(float baseFrac) {
+        return backfaceCull ? baseFrac * WRAP_CAMERA_FP_DAMPEN : baseFrac;
+    }
+
+    private static final float WRAP_CAMERA_FP_DAMPEN = 0.35f;
+
     // ── Constructor fluido ──────────────────────────────────────────────────
 
     private static void put(KiTechniqueType type, Builder b) {

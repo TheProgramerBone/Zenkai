@@ -174,9 +174,12 @@ public final class CombatModeServerState {
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
         if (e.getEntity() instanceof ServerPlayer sp) {
             clear(sp);
-            // La escala de golpe capturada se guarda por UUID: sin esto queda una entrada
-            // por cada jugador que haya entrado al servidor alguna vez.
+            // La escala de golpe capturada, la causa de muerte pendiente y el proc de Black
+            // Flash sin consumir se guardan por UUID: sin esto queda una entrada por cada
+            // jugador que haya entrado al servidor alguna vez.
             CombatZenkaiHooks.forgetAttackScale(sp.getUUID());
+            DeathCauseTracker.forget(sp.getUUID());
+            BlackFlash.forget(sp.getUUID());
         }
     }
 

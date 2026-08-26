@@ -2,11 +2,13 @@ package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.event.CombatZenkaiHooks; // ⚠ ajustar si CombatZenkaiHooks quedó en feature.combat
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
+import com.hmc.zenkai.feature.combat.DeathCauseTracker;
 import com.hmc.zenkai.feature.combat.DownedDeathGuard;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -21,8 +23,10 @@ public final class DownedSystem {
     private DownedSystem() {}
 
     /**
-     * Derribado: acostado e inmóvil 5 s. Si lo curan (body > 0) se levanta; si expira,
-     * muere de verdad y LivingDeathEvent lo manda al otro mundo.
+     * Derribado: acostado e inmóvil 5 s. Si lo curan (body > 0) se levanta; si expira, muere de
+     * verdad y LivingDeathEvent lo manda al otro mundo — salvo que YA esté en el otro mundo, en
+     * cuyo caso expirar solo lo cura y reancla ahí (ver OtherworldManager.keepInOtherworld): no
+     * hay una segunda muerte que dar.
      * @return true si hay que cortar el tick.
      */
     public static boolean handleDowned(TickCtx c) {
@@ -46,6 +50,17 @@ public final class DownedSystem {
             clearDowned(p, att);
             PlayerLifeCycle.syncIfServer(p);
         } else if (p.level().getGameTime() >= att.flags().getDownedUntil()) {
+            // En el Otro Mundo no hay una segunda muerte que dar: ya está muerto. El derribado
+            // termina en el mismo reseteo (cura + reancla en la entrada) que OtherworldManager
+            // ya aplica a cualquier golpe que lo tumbe allí — antes esto se saltaba entero y el
+            // combate/entrenamiento en el Otherworld no tenía ninguna consecuencia visible; con
+            // el derribado normal de por medio, al menos hay pose, ventana y posibilidad de que
+            // te curen antes de perder. Sin gastar totem: no hay muerte real de la que salvarse.
+            if (p instanceof ServerPlayer sp && att.isInOtherworld()) {
+                clearDowned(p, att);
+                OtherworldManager.keepInOtherworld(sp);
+                return true;
+            }
             // Único punto de muerte REAL del mod (el daño normal nunca llega a matar: se
             // anula en CombatZenkaiHooks.applyToZenkaiVictim). Es también el único sitio donde
             // vanilla revisaría un Totem of Undying si la muerte pasara por hurt()/
@@ -65,7 +80,11 @@ public final class DownedSystem {
                 // convertirla otra vez en derribado (sería un bucle infinito).
                 DownedDeathGuard.allowRealDeath(sp);
                 sp.setHealth(0.0F);
-                sp.die(sp.damageSources().generic());
+                // Causa real del golpe que lo tumbó (ki, técnica física...), si CombatZenkaiHooks
+                // llegó a guardarla; sin eso (ahogamiento, /kill fuera de este camino, etc.) cae
+                // al genérico de siempre. Ver DeathCauseTracker.
+                DamageSource cause = DeathCauseTracker.take(sp.getUUID());
+                sp.die(cause != null ? cause : sp.damageSources().generic());
             }
         }
         return true;

@@ -648,6 +648,7 @@
   "screen.zenkai.technique.speed.fast": "Fast",
   "screen.zenkai.technique.speed.none": "—",
   "screen.zenkai.technique.damage": "Damage",
+  "screen.zenkai.technique.life": "Life",
   "screen.zenkai.technique.cost": "Energy Cost",
   "screen.zenkai.technique.casttime": "Cast time",
   "screen.zenkai.technique.cooldown": "Cooldown",
@@ -998,5 +999,22 @@
   "protector.zenkai.kaiosama": "King Kai",
   "protector.zenkai.htc": "Hyperbolic Time Chamber",
   "curios.identifier.scouter": "Scouter",
-  "curios.identifier.weight": "Training Weights"
+  "curios.identifier.weight": "Training Weights",
+
+  "--- DEATH MESSAGES ---": "--- DEATH MESSAGES ---",
+  "death.attack.ki_blast": "%1$s was blasted apart by %2$s's ki",
+  "death.attack.ki_disk": "%1$s was sliced in two by %2$s's disk",
+  "death.attack.ki_wave": "%1$s was disintegrated by %2$s's wave",
+  "death.attack.ki_lazer": "%1$s was pierced by %2$s's lazer",
+  "death.attack.ki_spiral": "%1$s was drilled through by %2$s's spiral",
+  "death.attack.ki_big_blast": "%1$s was engulfed by %2$s's big blast",
+  "death.attack.ki_burst": "%1$s was riddled by %2$s's burst",
+  "death.attack.ki_explosion": "%1$s was caught in %2$s's explosion",
+  "death.attack.ki_fire": "%1$s was burned to ash by %2$s's ki",
+  "death.attack.ki_self_destruct": "%1$s blew themself to pieces",
+  "death.attack.dash_punch": "%1$s was flattened by %2$s's charge",
+  "death.attack.heavy_blow": "%1$s was smashed to pieces by %2$s",
+  "death.attack.barrage": "%1$s was torn apart by %2$s's barrage",
+  "death.attack.kiai": "%1$s was blown away by %2$s's kiai",
+  "death.attack.black_flash": "%1$s was erased by a Black Flash from %2$s"
 }

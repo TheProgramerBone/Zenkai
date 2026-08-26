@@ -4,6 +4,7 @@ import com.hmc.zenkai.feature.combat.SenseServerState;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.technique.TechniqueEffect;
+import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
@@ -208,7 +209,9 @@ public class KiProjectileEntity extends Projectile {
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
 
         if (level().getServer() == null || ModGameRules.enableKiDamage(Objects.requireNonNull(level().getServer()))) {
-            hit.getEntity().hurt(damageSources().mobProjectile(this, owner), (float) damage);
+            hit.getEntity().hurt(
+                    damageSources().source(ModDamageTypes.forKiHit(techniqueType()), this, owner),
+                    (float) damage);
         }
 
         // DISK atraviesa SIEMPRE (es su identidad de tipo, ver KiTechniqueType.allowsEffect);
@@ -304,7 +307,7 @@ public class KiProjectileEntity extends Projectile {
                 // Los proyectiles caen a cero en el borde; la explosión conserva `edge`, que es
                 // lo que la convierte en una zona de muerte y no en un golpe con halo.
                 double falloff = 1.0 - (1.0 - edge) * (dist / radius);
-                target.hurt(damageSources().mobProjectile(this, owner),
+                target.hurt(damageSources().source(ModDamageTypes.KI_EXPLOSION, this, owner),
                         (float) (damage * aoe * falloff));
             }
         }
@@ -319,7 +322,11 @@ public class KiProjectileEntity extends Projectile {
         boolean grief = effect == TechniqueEffect.EXPLOSIVE
                 && ModGameRules.enableKiGriefing(sl.getServer());
         if (grief) {
-            sl.explode(this, null,
+            // DamageSource explícito (antes null) para que esta rama dé el MISMO mensaje de
+            // muerte que la de arriba: con null, vanilla construye su propio DamageSource de
+            // explosión atribuido a `this` (el proyectil), y "explotó por el Ki Projectile" en
+            // vez del dueño era justo el tipo de mensaje raro que este sistema quiere evitar.
+            sl.explode(this, damageSources().source(ModDamageTypes.KI_EXPLOSION, this, owner),
                     new SimpleExplosionDamageCalculator(true, false,
                             Optional.empty(), Optional.empty()),
                     center.x, center.y, center.z, (float) radius, false,

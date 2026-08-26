@@ -9,7 +9,8 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Inmortalidad: REGENERACIÓN MUY ALTA. Nada más.
+ * Inmortalidad: REGENERACIÓN MUY ALTA. Nada más — esta clase no decide si un inmortal puede
+ * morir, solo lo cura rápido cuando puede.
  *
  * Antes el flag isImmortal también cancelaba la muerte en DownedDeathGuard y rellenaba el body
  * en CombatZenkaiHooks.onBodyDepleted, así que el jugador no solo se curaba rápido: no podía
@@ -17,9 +18,14 @@ import org.jetbrains.annotations.NotNull;
  * vive aquí.
  *
  * Consecuencia buscada: un inmortal cae derribado como cualquiera, pero se levanta solo casi al
- * instante porque la regeneración le devuelve body durante el propio derribado. Sobrevive a
- * Lo que no lo mate de golpe, que es lo que un jugador entiende por inmortal, y sigue
- * siendo matable con daño suficiente en poco tiempo.
+ * instante porque la regeneración le devuelve body durante el propio derribado. Sigue siendo
+ * matable de dos formas, las dos en CombatZenkaiHooks y no aquí:
+ *  1) Golpe único ≥ CommonConfig.immortalOverkillFraction() × su body máximo — el "golpe mayor
+ *     de lo que tu cuerpo puede absorber" que avisa el propio deseo — se resuelve al instante,
+ *     sin pasar por el derribado (isOverkillOnImmortal/killImmortalOutright).
+ *  2) DPS sostenido que mantenga el body en 0 los 5 s completos del derribado sin que esta
+ *     regeneración logre sacarlo — el camino que YA existía antes de (1), y sigue vivo para
+ *     cualquier combinación de golpes que no llegue de uno solo al umbral de (1).
  */
 public class ImmortalityEffect extends MobEffect {
 

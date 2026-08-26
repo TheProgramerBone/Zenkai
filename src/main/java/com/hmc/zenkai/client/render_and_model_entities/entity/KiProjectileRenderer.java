@@ -64,13 +64,31 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         float g = ((rgb >> 8) & 0xFF) / 255f;
         float b = (rgb & 0xFF) / 255f;
 
-        if (!entity.techniqueType().travels()) alignToOwner(entity, partialTick, pose);
+        // Lo que no viaja (BARRIER, la mecha de EXPLOSION — las dos ÚNICAS que devuelven false
+        // en KiTechniqueType.travels()) va pegado al dueño, y en primera persona su cáscara
+        // puede llegar a envolver la cámara. Pedido explícito: en primera persona propia esta
+        // fase se OCULTA TOTALMENTE, no solo atenuada — ni con el slider "Ki Ball Opacity" al
+        // mínimo se veía bien, la cáscara pegada a la cámara y el halo aditivo quedaban feos
+        // igual. La carga (antes de soltar, KiChargeRenderer) no pasa por aquí y sigue las
+        // reglas normales — salvo EXPLOSION, que allí también se oculta TOTALMENTE por el mismo
+        // pedido (ver su comentario, el suelo de tamaño-jugador la pega a la cámara desde que
+        // empieza a cargar).
+        float alphaMul = 1f;
+        float haloOpacity = 1f;
+        if (!entity.techniqueType().travels()) {
+            alignToOwner(entity, partialTick, pose);
+            Minecraft mc = Minecraft.getInstance();
+            if (entity.getOwner() == mc.player && mc.options.getCameraType().isFirstPerson()) {
+                alphaMul = 0f;
+                haloOpacity = 0f;
+            }
+        }
 
         if (v.hasTrail() && entity.trailHistory().size() >= 2) {
             renderTrail(entity, v, partialTick, pose, buffer, r, g, b);
         }
 
-        renderHalo(entity, v, partialTick, pose, buffer, r, g, b);
+        renderHalo(entity, v, partialTick, pose, buffer, r, g, b, haloOpacity);
 
         // Respiración: una energía contenida no está nunca perfectamente quieta. Es lo bastante
         // lenta y pequeña para no leerse como parpadeo, y a cambio quita el aspecto de objeto.
@@ -99,14 +117,26 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
             // canto): desde detrás el disco se reducía a una raya, porque un plano sin espesor
             // no tiene nada que enseñar de perfil. El espesor lo arregla la lente de
             // KiMeshFactory; la orientación tiene que priorizar la silueta reconocible.
-            pose.mulPose(Axis.XP.rotationDegrees(24f));   // ladeo: elipse escorzada, no círculo
+            //
+            // El ladeo (antes 24f) es lo único que saca al disco de "cara exactamente al
+            // frente": con un ángulo pequeño, visto de perfil (perpendicular al vuelo, que es
+            // como se ve desde el lateral o mientras cruza por delante) apenas se distinguía del
+            // canto — se leía como una hoja/espada vertical, no como un disco. Con un ladeo
+            // mayor la cara se inclina hacia arriba/abajo, así que de perfil se ve como un plato
+            // tumbado (elipse ancha y baja) en vez de una lámina de pie — la silueta de "disco
+            // volador" que se buscaba. Sigue sin ser 90° (quedaría plano totalmente y perdería
+            // profundidad al mirarlo de frente): ajustar a ojo en juego si 60° no cuadra.
+            // KiChargeRenderer.DISK_CANT_DEGREES repite este mismo valor para cuando el disco
+            // ya toma esta forma MIENTRAS CARGA (en vez de la esfera genérica) — tocar uno sin
+            // el otro deja "cargar" y "disparar" con un ladeo distinto.
+            pose.mulPose(Axis.XP.rotationDegrees(60f));
             // El giro es sobre la normal y en un disco simétrico no cambia la silueta: lo que
             // mueve es el patrón de hervor, que se muestrea con la UV angular.
             pose.mulPose(Axis.ZP.rotationDegrees((entity.tickCount + partialTick) * 22f));
         }
 
         KiMesh mesh = KiMeshFactory.get(v);
-        KiBodyRenderer.render(buffer, v, mesh, pose, size, r, g, b);
+        KiBodyRenderer.render(buffer, v, mesh, pose, size, r, g, b, alphaMul);
 
         pose.popPose();
 
@@ -146,10 +176,18 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
      * VA FLOJO A PROPÓSITO. Es aditivo y se dibuja sobre el cuerpo, así que subirlo lava el
      * color de la técnica hasta dejarlo blanco y convierte el conjunto en un disco plano con
      * un anillo. El brillo lo pone el núcleo del shader; esto solo es el desbordamiento.
+     *
+     * `haloOpacity` NO es el `alphaMul` del cuerpo: para primera persona propia de una técnica
+     * que puede envolver la cámara (KiVisual.backfaceCull, BARRIER/EXPLOSION), el cuerpo aplica
+     * un dampen extra (KiVisual.firstPersonOpacity) pensado para su alfa normal. El halo es
+     * SIEMPRE aditivo (KiRenderTypes.ADDITIVE_TRANSPARENCY suma luz, no mezcla), así que se
+     * rige directo por el valor crudo del slider "Ki Ball Opacity" — sin ese dampen extra — para
+     * que sea ese único número, ajustable por el jugador, el que decida qué tan marcado se ve.
      */
     private void renderHalo(KiProjectileEntity e, KiVisual v, float partialTick, PoseStack pose,
-                            MultiBufferSource buffer, float r, float g, float b) {
-        if (v.haloAlpha() <= 0f) return;
+                            MultiBufferSource buffer, float r, float g, float b,
+                            float haloOpacity) {
+        if (v.haloAlpha() <= 0f || haloOpacity <= 0f) return;
 
         float pulse = 1f + 0.07f * Mth.sin((e.tickCount + partialTick) * 0.22f);
         float half = e.getBbWidth() * v.haloScale() * 0.5f * pulse;
@@ -160,7 +198,7 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         PoseStack.Pose mat = pose.last();
 
         VertexConsumer vc = buffer.getBuffer(KiRenderTypes.additive(KiRenderTypes.HALO_TEXTURE));
-        float a = v.haloAlpha();
+        float a = v.haloAlpha() * haloOpacity;
         vert(vc, mat, -half, -half, 0, r, g, b, a, 0f, 1f);
         vert(vc, mat,  half, -half, 0, r, g, b, a, 1f, 1f);
         vert(vc, mat,  half,  half, 0, r, g, b, a, 1f, 0f);

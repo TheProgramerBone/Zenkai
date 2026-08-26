@@ -196,11 +196,19 @@ public final class TechniqueHotbarOverlay {
         g.drawCenteredString(mc.font, Component.literal((int) Math.round(ratio * 100) + "%"),
                 g.guiWidth() / 2, by + CHARGE_H + 3, over ? 0xFFFFD24A : 0xFFFFFFFF);
 
-        if (t != null && !t.type().defensive()) {
-            double dmg = previewDamage(mc, att, t, ratio);
-            String dmgTxt = String.format("%.1f", dmg);
-            if (t.type().count() > 1) dmgTxt = dmgTxt + " x" + t.type().count();
-            g.drawCenteredString(mc.font, Component.literal(dmgTxt),
+        if (t != null) {
+            // BARRIER no hace daño: en vez de dejar este hueco vacío (como antes), muestra su
+            // vida/absorción real. Sin escalar por `ratio` — BARRIER ignora la carga y siempre
+            // sale a pool completo (ver KiFirePacket.execute, activateBarrier no multiplica por
+            // ratio) — así que el número es el mismo desde el primer frame. `releasable` sigue
+            // siendo información real aunque el número no cambie: decide si YA se puede soltar.
+            boolean isBarrier = t.type().defensive();
+            double value = isBarrier
+                    ? KiCombatServer.barrierPool(att.computeKiPowerFinal(), t.size())
+                    : previewDamage(mc, att, t, ratio);
+            String txt = String.format("%.1f", value);
+            if (!isBarrier && t.type().count() > 1) txt = txt + " x" + t.type().count();
+            g.drawCenteredString(mc.font, Component.literal(txt),
                     g.guiWidth() / 2, by + CHARGE_H + 13,
                     releasable ? (0xFF000000 | rgb) : 0xA0FFFFFF);
         }

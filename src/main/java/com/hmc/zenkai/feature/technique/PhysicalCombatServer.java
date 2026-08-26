@@ -11,10 +11,13 @@ import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.registry.ModDamageTypes;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -380,9 +383,20 @@ public final class PhysicalCombatServer {
      *  Las partículas salen aunque el daño esté desactivado por gamerule. */
     private static void hit(ServerPlayer sp, LivingEntity e, double dmg, PhysicalTechnique t) {
         if (damageEnabled(sp)) {
-            e.hurt(sp.damageSources().playerAttack(sp), (float) dmg);
+            e.hurt(sp.damageSources().source(damageTypeOf(t), sp), (float) dmg);
         }
         impactFx(sp, e, t);
+    }
+
+    /** Un DamageType propio por técnica (ver ModDamageTypes): así el mensaje de muerte nombra
+     *  la técnica concreta ("aplastado por un Heavy Blow") en vez del genérico de un puñetazo. */
+    private static ResourceKey<DamageType> damageTypeOf(PhysicalTechnique t) {
+        return switch (t) {
+            case DASH_PUNCH -> ModDamageTypes.DASH_PUNCH;
+            case HEAVY_BLOW -> ModDamageTypes.HEAVY_BLOW;
+            case BARRAGE -> ModDamageTypes.BARRAGE;
+            case KIAI -> ModDamageTypes.KIAI;
+        };
     }
 
     private static boolean damageEnabled(ServerPlayer sp) {

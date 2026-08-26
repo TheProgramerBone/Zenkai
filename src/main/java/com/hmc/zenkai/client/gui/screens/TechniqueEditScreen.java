@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.KiChargeRenderer;
 import com.hmc.zenkai.client.TechniqueAnimSets;
 import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.PanelText;
@@ -12,11 +13,13 @@ import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiShape;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -526,13 +529,21 @@ public class TechniqueEditScreen extends Screen {
         if (att == null) return;
 
         double kiPower = att.computeKiPowerFinal();
-        double dmg = KiCombatServer.computeDamage(kiPower, type, size) * Math.max(1, type.count());
+        // BARRIER no hace daño (damage_mult 0.0 en su datapack): "Damage: 0" no le dice nada
+        // útil al jugador. Muestra su vida/absorción real en el mismo hueco — mismo patrón que
+        // speedLabel() ya usa (type.defensive(), no una comparación literal al tipo).
+        boolean isBarrier = type.defensive();
+        double dmg = isBarrier ? 0
+                : KiCombatServer.computeDamage(kiPower, type, size) * Math.max(1, type.count());
+        double life = isBarrier ? KiCombatServer.barrierPool(kiPower, size) : 0;
         int cost = KiCombatServer.computeCost(att, type, size,
                 effect);
 
         int iy = topPos + Y_BLOCK;
         info(g, iy, "screen.zenkai.technique.speed", speedLabel());
-        info(g, iy += 11, "screen.zenkai.technique.damage", Component.literal(fmt(dmg)));
+        info(g, iy += 11,
+                isBarrier ? "screen.zenkai.technique.life" : "screen.zenkai.technique.damage",
+                Component.literal(fmt(isBarrier ? life : dmg)));
         info(g, iy += 11, "screen.zenkai.technique.cost", Component.literal(String.valueOf(cost)));
         info(g, iy += 11, "screen.zenkai.technique.casttime",
                 Component.literal(fmt(KiCombatServer.chargeTicksFor(type, size) / 20.0) + " sec"));
@@ -591,10 +602,11 @@ public class TechniqueEditScreen extends Screen {
      * esfera con fresnel de tres bandas si el shader está disponible, cáscara + núcleo si no.
      * ANTES esto era un blit a mano de ki_ball.png con pulso hecho aquí a pelo y una estela de
      * franjas — el sistema VIEJO, anterior a KiBodyRenderer/KiMeshFactory/KiVisual. La malla es
-     * SIEMPRE la esfera desnuda de la carga (KiMeshFactory.chargeSphere()) sea cual sea la forma
-     * final de la técnica en vuelo — así lo hace también KiChargeRenderer, porque cargando la
-     * energía todavía no tiene forma — así que este preview no aproxima haces ni discos: enseña
-     * exactamente lo que el jugador va a ver en la mano al cargar, para cualquier tipo.
+     * la esfera desnuda de la carga (KiMeshFactory.chargeSphere()) para casi cualquier tipo —
+     * cargando, la energía todavía no tiene forma — salvo DISK, que es la única excepción
+     * también en KiChargeRenderer: un disco ya se reconoce como disco desde que se condensa, así
+     * que aquí también usa su malla real y el mismo ladeo (ver DISK_CANT_DEGREES en
+     * KiChargeRenderer) para que la vista previa no mienta sobre lo que se ve al cargar.
      * SIN proyección propia: el PoseStack de GuiGraphics ya sirve para geometría 3D dentro de la
      * GUI — es el mismo truco que usa InventoryScreen.renderEntityInInventory (translate + scale,
      * sin cámara real), y el shader de ki no depende de nada del mundo (ver ki_fresnel.json: solo
@@ -615,6 +627,11 @@ public class TechniqueEditScreen extends Screen {
         float diameterPx = (16 + 4 * size) * pulse;
 
         KiVisual visual = KiVisual.of(type);
+        // DISK: misma excepción que KiChargeRenderer (ver su DISK_CANT_DEGREES). Sin una
+        // dirección real que mirar (esto es un icono fijo, no hay mundo ni cámara), el ladeo se
+        // aplica sobre el eje fijo de la GUI y se deja girar despacio con `t` — no hay marco de
+        // referencia (suelo, trayectoria) contra el que pueda leerse "mal orientado" aquí.
+        boolean asDisk = visual.shape() == KiShape.DISK;
 
         g.pose().pushPose();
         g.pose().translate(cx, cy, 100.0);
@@ -623,7 +640,12 @@ public class TechniqueEditScreen extends Screen {
         // no CAMBIA su silueta, pero el fresnel lee normales contra la cámara y conviene no
         // improvisar un espacio distinto al que ya está probado.
         g.pose().scale(1f, 1f, -1f);
-        KiBodyRenderer.render(g.bufferSource(), visual, KiMeshFactory.chargeSphere(),
+        if (asDisk) {
+            g.pose().mulPose(Axis.XP.rotationDegrees(KiChargeRenderer.DISK_CANT_DEGREES));
+            g.pose().mulPose(Axis.ZP.rotationDegrees(t * 8f));
+        }
+        KiBodyRenderer.render(g.bufferSource(), visual,
+                asDisk ? KiMeshFactory.get(visual) : KiMeshFactory.chargeSphere(),
                 g.pose(), diameterPx, cr, cg, cb);
         g.flush();
         g.pose().popPose();

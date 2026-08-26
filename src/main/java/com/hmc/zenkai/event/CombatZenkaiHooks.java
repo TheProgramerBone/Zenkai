@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.*;
 import com.hmc.zenkai.feature.kiweapon.KiWeaponServer;
 import com.hmc.zenkai.feature.party.PartyService;
+import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.OtherworldManager;
@@ -18,6 +19,7 @@ import com.hmc.zenkai.feature.training.TrainingHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -106,9 +108,15 @@ public class CombatZenkaiHooks {
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
         float dmg = computeAttackDamage(e, atkStats);
 
+        // Se consume AQUÍ, inmediatamente después de computeAttackDamage (el único sitio que
+        // puede haberlo marcado, vía BlackFlash.apply dentro de playerMeleeDamage) y ANTES de
+        // repartir a applyToZenkaiVictim/applyToVanillaVictim — así nunca sobrevive de un golpe
+        // a otro. Ver BlackFlash.consumeProc.
+        boolean blackFlash = BlackFlash.consumeProc(e.getEntity().getUUID());
+
         ZenkaiCombatStats defStats = ZenkaiStats.of(e.getEntity());
         if (defStats != null && defStats.isCombatActive()) {
-            applyToZenkaiVictim(e, atkStats, defStats, dmg, armorMult);
+            applyToZenkaiVictim(e, atkStats, defStats, dmg, armorMult, blackFlash);
             return;
         }
         applyToVanillaVictim(e, dmg, armorMult);
@@ -259,10 +267,11 @@ public class CombatZenkaiHooks {
     /** Víctima CON stats zenkai: mitiga con DEF y el daño va al pool body. */
     private static void applyToZenkaiVictim(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
                                             ZenkaiCombatStats defStats, float dmg,
-                                            double armorMult) {
+                                            double armorMult, boolean blackFlash) {
         int bodySpent = 0;
+        double finalDamage = 0.0;
         if (dmg > 0f) {
-            double finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult);
+            finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult);
 
             int bodyBefore = defStats.getBody();
             defStats.addBody(-(int) Math.ceil(finalDamage));
@@ -274,7 +283,26 @@ public class CombatZenkaiHooks {
         // JUGADOR: sin cambios. Su vida vanilla la escribe PlayerLifeCycle y el daño se anula.
         if (e.getEntity() instanceof Player victim) {
             e.setNewDamage(0.0F);
-            if (defStats.getBody() <= 0) onBodyDepleted(victim, PlayerStatsAttachment.get(victim));
+            if (defStats.getBody() <= 0 && victim instanceof ServerPlayer sp) {
+                // La muerte real (si llega) pasa por DownedSystem 5 s después de esto, ya sin
+                // rastro del golpe que la causó — DeathCauseTracker es lo que le permite al
+                // mensaje de muerte nombrar la causa en vez de caer en el genérico.
+                // Black Flash es la única excepción a "usa e.getSource() tal cual": el golpe
+                // base sigue siendo playerAttack de vanilla (mismo entity, atacante), pero con
+                // el proc queremos que el mensaje lo diga — de ahí el DamageType propio en vez
+                // del que trae el evento.
+                DamageSource cause = blackFlash
+                        ? sp.damageSources().source(ModDamageTypes.BLACK_FLASH, e.getSource().getEntity())
+                        : e.getSource();
+                DeathCauseTracker.record(sp, cause);
+
+                PlayerStatsAttachment vAtt = PlayerStatsAttachment.get(sp);
+                if (isOverkillOnImmortal(vAtt, finalDamage)) {
+                    killImmortalOutright(sp, vAtt);
+                } else {
+                    onBodyDepleted(sp, vAtt);
+                }
+            }
             PlayerLifeCycle.syncIfServer(victim);
             return;
         }
@@ -384,24 +412,56 @@ public class CombatZenkaiHooks {
     // =====================================================================
 
     /**
-     * Body agotado. En vez de morir al instante:
-     *  - ya en el otro mundo: se re-ancla ahí (sin reiniciar su temporizador de Yemma).
-     *  - vivo: entra en "derribado" (acostado) 5 s. Si lo curan (senzu propio/aliado) revive;
-     *    si nadie lo cura, el tick de TickHandlers lo mata de verdad y pasa al otro mundo.
-     *
-     * LA INMORTALIDAD NO SE MIRA AQUÍ. Antes había una rama que rellenaba el body al máximo si
-     * el flag estaba puesto, y entre eso y la cancelación de muerte de DownedDeathGuard el
-     * jugador era literalmente inmatable, /kill incluido. Ahora un inmortal cae derribado como
-     * cualquiera y se levanta solo porque ImmortalityEffect le devuelve body muy rápido: mismo
-     * resultado en la práctica, pero por una vía que se puede superar con daño suficiente.
+     * ¿Este golpe, por sí solo, es "mayor de lo que el cuerpo puede absorber"? Es la promesa del
+     * deseo de inmortalidad (screen.zenkai.wish.immortal.warning) tomada al pie de la letra: se
+     * compara contra el body MÁXIMO (la capacidad, no lo que quedaba antes del golpe), así que
+     * un rival rematando un body ya casi vacío con un golpe pequeño NO cuenta como overkill — el
+     * cuerpo entero de este jugador, a plena carga, tampoco habría aguantado ese golpe. Con
+     * finalDamage por debajo del umbral, la inmortalidad sigue funcionando como siempre: cae
+     * derribado y ImmortalityEffect lo levanta.
      */
-    private static void onBodyDepleted(Player victim, PlayerStatsAttachment att) {
-        if (!(victim instanceof ServerPlayer sp)) return;
+    private static boolean isOverkillOnImmortal(PlayerStatsAttachment att, double finalDamage) {
+        return att.isImmortal()
+                && finalDamage >= att.getBodyMax() * CommonConfig.immortalOverkillFraction();
+    }
 
+    /**
+     * Un inmortal acaba de recibir un golpe overkill: ni el derribado ni la regeneración de
+     * ImmortalityEffect le dan una oportunidad. Vivo, esto es una muerte real (mismo camino que
+     * DownedSystem usa al expirar un derribado normal — allowRealDeath primero, o
+     * DownedDeathGuard la cancelaría igual que cancelaría cualquier otra). En el Otro Mundo no
+     * hay una segunda muerte que dar: el equivalente es el mismo reseteo que ya usa
+     * OtherworldManager para cualquier golpe que lo tumbe allí.
+     */
+    private static void killImmortalOutright(ServerPlayer sp, PlayerStatsAttachment att) {
         if (att.isInOtherworld()) {
             OtherworldManager.keepInOtherworld(sp);
             return;
         }
+        DownedDeathGuard.allowRealDeath(sp);
+        sp.setHealth(0.0F);
+        DamageSource cause = DeathCauseTracker.take(sp.getUUID());
+        sp.die(cause != null ? cause : sp.damageSources().generic());
+    }
+
+    /**
+     * Body agotado: entra en "derribado" (acostado) 5 s, EN EL OTRO MUNDO IGUAL QUE EN EL VIVO
+     * — antes se saltaba el derribado allí y se reanclaba en silencio nada más tocar 0, así que
+     * el combate/entrenamiento en el Otherworld no tenía ninguna consecuencia visible. Lo único
+     * que cambia según dónde esté es el DESENLACE al expirar los 5 s sin curarse, y eso lo
+     * decide DownedSystem.handleDowned, no aquí: vivo, muere de verdad y pasa al otro mundo; ya
+     * en el otro mundo, no hay una segunda muerte que dar — se re-ancla igual que antes, solo
+     * que ahora tras pasar por el mismo derribado (con su ventana para que lo curen) en vez de
+     * saltárselo entero.
+     * LA INMORTALIDAD NO SE MIRA AQUÍ TAMPOCO. Un inmortal cae derribado como cualquiera y se
+     * levanta solo porque ImmortalityEffect le devuelve body muy rápido — salvo que el golpe que
+     * lo tumbó sea "mayor de lo que su cuerpo puede absorber" (ver
+     * CombatZenkaiHooks.isOverkillOnImmortal), caso que ni siquiera llega a esta clase: se
+     * resuelve antes, en applyToZenkaiVictim, precisamente para que ni el derribado ni la
+     * regeneración le den una oportunidad.
+     */
+    private static void onBodyDepleted(Player victim, PlayerStatsAttachment att) {
+        if (!(victim instanceof ServerPlayer sp)) return;
 
         if (att.flags().isDowned()) return; // ya está derribado
 

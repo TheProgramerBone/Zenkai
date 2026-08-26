@@ -10,6 +10,10 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * BLACK FLASH. Proc raro sobre un golpe de KI FIST: multiplica el golpe en CRUDO, le suma un
  * extra sacado del MEJOR atributo ofensivo del jugador, y dibuja un impacto negro y rojo.
@@ -58,6 +62,30 @@ public final class BlackFlash {
     private static final int   SPARKS     = 26;
 
     /**
+     * Puente hacia CombatZenkaiHooks: ¿el golpe que ACABA de llegarle a este UUID (víctima) fue
+     * un proc de Black Flash? Solo así el mensaje de muerte puede decir "borrado por un Black
+     * Flash" en vez del playerAttack genérico — el golpe base sigue siendo melee de vanilla, sin
+     * un hurt() propio del mod donde enganchar un DamageType directamente.
+     * Se consume SIEMPRE en el mismo evento que lo marca (onDamage, justo después de
+     * computeAttackDamage), letal o no: sin ese consumo inmediato, un proc en un golpe que NO
+     * mata se quedaría marcado hasta el PRÓXIMO golpe letal contra este jugador — que podría ser
+     * un ataque completamente distinto, de otro atacante, minutos después.
+     */
+    private static final Set<UUID> PROCCED_ON = ConcurrentHashMap.newKeySet();
+
+    /** ¿Hubo un proc de Black Flash contra este jugador? Lo borra al leerlo. */
+    public static boolean consumeProc(UUID victimId) {
+        return PROCCED_ON.remove(victimId);
+    }
+
+    /** Red de seguridad al desconectar, mismo criterio que CombatZenkaiHooks.forgetAttackScale:
+     *  en el camino normal esto se consume en el mismo tick que se marca, pero sin esto una
+     *  desconexión a mitad de evento dejaría la entrada huérfana. */
+    public static void forget(UUID id) {
+        PROCCED_ON.remove(id);
+    }
+
+    /**
      * Probabilidad efectiva del proc. Pública para que la GUI pueda mostrarla algún día sin
      * reimplementar la fórmula.
      * @param scale ticker de ataque CRUDO de vanilla, 0..1.
@@ -103,6 +131,7 @@ public final class BlackFlash {
         double boosted = total * CommonConfig.blackFlashMultiplier()
                 + st.computeBestMeleeFinal() * chargeF * CommonConfig.blackFlashStatFactor();
 
+        PROCCED_ON.add(victim.getUUID());
         fx(sp, victim);
         ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.BLACK_FLASH);
         return boosted;

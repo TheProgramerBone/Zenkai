@@ -208,11 +208,19 @@ public final class KiCombatServer {
 
     private static final Map<UUID, Barrier> BARRIERS = new ConcurrentHashMap<>();
 
+    /** Vida/absorción total de la barrera para el tamaño y poder dados — la fórmula real que
+     *  usa activateBarrier, expuesta para que TechniqueEditScreen y el HUD de carga puedan
+     *  previsualizarla SIN reimplementarla (misma razón que PhysicalCombatServer.staminaCost:
+     *  "El cliente NO reimplementa la fórmula"). */
+    public static double barrierPool(double kiPower, int size) {
+        return kiPower * BARRIER_ABSORB_MULT * sizeFactor(size);
+    }
+
     /** Activa (o reemplaza) la barrera del jugador y crea su visual. */
     public static void activateBarrier(ServerPlayer sp, KiTechnique tech, double kiPower) {
         removeBarrier(sp); // una sola barrera activa
 
-        double pool = kiPower * BARRIER_ABSORB_MULT * sizeFactor(tech.size());
+        double pool = barrierPool(kiPower, tech.size());
         long expiry = sp.level().getGameTime() + BARRIER_DURATION_TICKS;
 
         KiProjectileEntity visual = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sp.level());

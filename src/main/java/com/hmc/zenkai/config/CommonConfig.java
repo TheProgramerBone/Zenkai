@@ -190,6 +190,15 @@ public final class CommonConfig {
             BUILDER.comment("Damage floor as a fraction of the incoming hit, after defense reduction. 0.05 = 5%")
                     .defineInRange("combat.min_damage_percent", 0.05D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue IMMORTAL_OVERKILL_FRACTION_RAW =
+            BUILDER.comment("The Immortality wish warns a blow bigger than your body can absorb will still "
+                    + "kill you - this is that threshold. A single mitigated hit whose damage is >= "
+                    + "body_max * this fraction skips the downed grace period and ImmortalityEffect's "
+                    + "regen entirely: real death (or, in the Otherworld, the same reset combat there "
+                    + "already applies). 1.0 = a hit that would empty a FULL body bar. Below that, "
+                    + "immortals still fall, regen, and stand back up like anyone else.")
+                    .defineInRange("combat.immortal_overkill_fraction", 1.0D, 0.01D, 100.0D);
+
     private static final ModConfigSpec.IntValue IN_COMBAT_TICKS_RAW =
             BUILDER.comment("Ticks que dura el estado 'en combate' desde el ultimo dano dado o recibido. 160 = 8 s.")
                     .defineInRange("combat.in_combat_ticks", 160, 0, 12000);
@@ -239,8 +248,8 @@ public final class CommonConfig {
                     .defineInRange("combat.mob_projectile_factor", 0.60D, 0.0D, 2.0D);
 
     private static final ModConfigSpec.DoubleValue EXPLOSION_REFERENCE_DAMAGE_RAW =
-            BUILDER.comment("Vanilla damage of a point-blank creeper blast, used to recover explosion distance falloff. The pipeline replaces explosion damage with the mob's STR, which discarded vanilla's own distance and cover calculation; this restores it as a proportion.")
-                    .defineInRange("combat.explosion_reference_damage", 22.0D, 1.0D, 200.0D);
+            BUILDER.comment("Vanilla damage of a point-blank creeper blast, used to recover explosion distance falloff. The pipeline replaces explosion damage with the mob's STR, which discarded vanilla's own distance and cover calculation; this restores it as a proportion. Lower than the literal point-blank value (22) on purpose: a self-detonating mob only ever gets ONE hit, unlike a melee mob's repeated swings, so it needs to reach full falloff (1.0) well before true point-blank or it reads as harmless against a fresh player's body pool.")
+                    .defineInRange("combat.explosion_reference_damage", 12.0D, 1.0D, 200.0D);
 
     private static final ModConfigSpec.DoubleValue PROJECTILE_BASE_DAMAGE_RAW =
             BUILDER.comment("Reference damage of a clean unenchanted arrow at full draw (vanilla: 2.0 base x 3.0 velocity). The Ki Infuse bonus on projectiles scales against this.")
@@ -461,9 +470,10 @@ public final class CommonConfig {
     private static volatile double REGEN_BODY = 1.5, REGEN_STAMINA = 3.0, REGEN_ENERGY = 1.0;
     private static volatile double FOOD_KI_PCT = 2.0, FOOD_STAMINA_PCT = 3.0;
     private static volatile double MOB_PROJECTILE_FACTOR = 0.6D;
-    private static volatile double EXPLOSION_REFERENCE_DAMAGE = 22.0D;
+    private static volatile double EXPLOSION_REFERENCE_DAMAGE = 12.0D;
 
     private static volatile double MIN_DAMAGE_PERCENT = 0.05D;
+    private static volatile double IMMORTAL_OVERKILL_FRACTION = 1.0D;
     private static volatile int    TECHNIQUE_MAX_SLOTS = 12;
     private static volatile int    SENSE_KI_RANGE = 64;
     private static volatile double VANILLA_PL_FACTOR = 1.0D;
@@ -574,6 +584,7 @@ public final class CommonConfig {
         EXPLOSION_SACRIFICE_CONVERSION = EXPLOSION_SACRIFICE_CONVERSION_RAW.get();
 
         MIN_DAMAGE_PERCENT  = MIN_DAMAGE_PERCENT_RAW.get();
+        IMMORTAL_OVERKILL_FRACTION = IMMORTAL_OVERKILL_FRACTION_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
         SENSE_KI_RANGE      = SENSE_KI_RANGE_RAW.get();
         VANILLA_PL_FACTOR   = VANILLA_PL_FACTOR_RAW.get();
@@ -680,6 +691,7 @@ public final class CommonConfig {
     public static double foodStaminaPercentPerNutrition() { return FOOD_STAMINA_PCT; }
 
     public static double minDamagePercent()        { return MIN_DAMAGE_PERCENT; }
+    public static double immortalOverkillFraction() { return IMMORTAL_OVERKILL_FRACTION; }
     public static int techniqueMaxSlots()          { return TECHNIQUE_MAX_SLOTS; }
     public static int senseKiRange()               { return SENSE_KI_RANGE; }
     public static double vanillaPowerLevelFactor() { return VANILLA_PL_FACTOR; }

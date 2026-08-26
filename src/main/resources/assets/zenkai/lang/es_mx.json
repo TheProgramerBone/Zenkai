@@ -645,6 +645,7 @@
   "screen.zenkai.technique.speed.fast": "Rápida",
   "screen.zenkai.technique.speed.none": "—",
   "screen.zenkai.technique.damage": "Daño",
+  "screen.zenkai.technique.life": "Vida",
   "screen.zenkai.technique.cost": "Costo de Energía",
   "screen.zenkai.technique.casttime": "Tiempo de carga",
   "screen.zenkai.technique.cooldown": "Enfriamiento",
@@ -993,5 +994,22 @@
   "protector.zenkai.kaiosama": "Kaio-sama",
   "protector.zenkai.htc": "Habitación del Tiempo",
   "curios.identifier.scouter": "Rastreador",
-  "curios.identifier.weight": "Pesos de Entrenamiento"
+  "curios.identifier.weight": "Pesos de Entrenamiento",
+
+  "--- DEATH MESSAGES ---": "--- MENSAJES DE MUERTE ---",
+  "death.attack.ki_blast": "%1$s fue destrozado por un ataque de ki de %2$s",
+  "death.attack.ki_disk": "%1$s fue cortado en dos por el disco de %2$s",
+  "death.attack.ki_wave": "%1$s fue desintegrado por la onda de %2$s",
+  "death.attack.ki_lazer": "%1$s fue atravesado por el láser de %2$s",
+  "death.attack.ki_spiral": "%1$s fue perforado por la espiral de %2$s",
+  "death.attack.ki_big_blast": "%1$s fue engullido por la bola gigante de %2$s",
+  "death.attack.ki_burst": "%1$s fue acribillado por la ráfaga de %2$s",
+  "death.attack.ki_explosion": "%1$s quedó atrapado en la explosión de %2$s",
+  "death.attack.ki_fire": "%1$s se quemó vivo con el ki de %2$s",
+  "death.attack.ki_self_destruct": "%1$s se autodestruyó",
+  "death.attack.dash_punch": "%1$s fue arrollado por la embestida de %2$s",
+  "death.attack.heavy_blow": "%1$s fue hecho pedazos por %2$s",
+  "death.attack.barrage": "%1$s fue acribillado por la ráfaga de golpes de %2$s",
+  "death.attack.kiai": "%1$s salió volando por el kiai de %2$s",
+  "death.attack.black_flash": "%1$s fue borrado por un Black Flash de %2$s"
 }
