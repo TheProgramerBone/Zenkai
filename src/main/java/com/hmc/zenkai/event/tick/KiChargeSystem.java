@@ -38,7 +38,7 @@ public final class KiChargeSystem {
             att.addKi(perTick * chargeMul);
         }
 
-        // Subir el % por encima de 100 SIEMPRE exige Shift sostenido, en TODO momento — no solo
+        // Subir el % por encima de 100 SIEMPRE exige Shift sostenido, siempre — no solo
         // para romper el candado la primera vez de esta subida. Cargar ki solo (sin Shift) sigue
         // funcionando normal (el regen de arriba no depende de esto), pero el % nunca sube más
         // allá de 100 sin Shift, ni siquiera si ya se había forzado antes y luego se soltó: al

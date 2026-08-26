@@ -16,7 +16,7 @@ public final class PlayerTickState {
     private static final Map<UUID, Integer> CHARGE_TICKS = new HashMap<>();
 
     /** Ticks seguidos sosteniendo Shift+cargar YA al tope de 100%, por jugador ("temblando"
-     *  antes de romper el límite). Se resetea en cuanto se suelta Shift, se suelta C del todo,
+     *  antes de romper el límite). Se resetea en cuanto se suelta Shift, se suelta C completamente,
      *  o el % deja de estar exactamente en 100 — ver KiChargeSystem. */
     private static final Map<UUID, Integer> FORCE_TICKS = new HashMap<>();
 

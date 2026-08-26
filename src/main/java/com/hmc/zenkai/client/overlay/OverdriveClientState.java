@@ -41,7 +41,7 @@ public final class OverdriveClientState {
     }
 
     /** Actualiza lastState/transitionStart si la condición cambió. Idempotente dentro del mismo
-     *  tick — todo lo demás de esta clase llama esto primero. */
+     *  tick — lo demás de esta clase llama esto primero. */
     private static void refresh(long now) {
         boolean active = trembling();
         if (active != lastState) {
