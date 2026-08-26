@@ -43,6 +43,14 @@ public final class ZenkaiStructurePlacement {
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SY,
                 ModStructureSegments.OTHERWORLD_NO_SPAWN_SZ,
                 "protector.zenkai.yemma");
+        // Zona propia para el planeta de Kaiosama, al final de la serpentina: antes quedaba
+        // dentro de la caja de arriba y ese tramo se anunciaba protegido por Yemma.
+        NoHostileSpawnZones.addFromBase(ModDimensions.OTHERWORLD_LEVEL,
+                ModStructureSegments.KAIO_NO_SPAWN_MIN,
+                ModStructureSegments.KAIO_NO_SPAWN_SX,
+                ModStructureSegments.KAIO_NO_SPAWN_SY,
+                ModStructureSegments.KAIO_NO_SPAWN_SZ,
+                "protector.zenkai.kaiosama");
         NoHostileSpawnZones.addFromBase(ModDimensions.HTC_LEVEL,
                 ModStructureSegments.HTC_NO_SPAWN_MIN,
                 ModStructureSegments.HTC_NO_SPAWN_SX,

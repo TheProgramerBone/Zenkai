@@ -59,7 +59,20 @@ public final class ModStructureSegments {
             OTHERWORLD_BASE.getX() - 16,
             OTHERWORLD_BASE.getY() - 16,
             OTHERWORLD_BASE.getZ() - 16);
-    public static final int OTHERWORLD_NO_SPAWN_SX = 176, OTHERWORLD_NO_SPAWN_SY = 120, OTHERWORLD_NO_SPAWN_SZ = 1056;
+    // SZ se corta justo donde empieza la zona de Kaiosama (ver KAIO_NO_SPAWN_MIN más abajo):
+    // antes esta caja llegaba hasta z=1040 y se comía también el planeta de Kaiosama, así que
+    // ese tramo (incluido el planeta) quedaba protegido a nombre de Yemma.
+    public static final int OTHERWORLD_NO_SPAWN_SX = 176, OTHERWORLD_NO_SPAWN_SY = 120, OTHERWORLD_NO_SPAWN_SZ = 914;
+
+    // Zona de no-spawn/protección propia del planeta de Kaiosama, separada de la de Yemma
+    // (arriba) para que el protector mostrado en ese tramo sea Kaiosama y no Yemma.
+    // Envuelve el cubo 2×2×2 de piezas de 48³ (ver comentario de KAIO_DX/DY/DZ) con el mismo
+    // margen de 16 que usa la zona de Yemma.
+    public static final BlockPos KAIO_NO_SPAWN_MIN = new BlockPos(
+            OTHERWORLD_BASE.getX() + KAIO_DX - 16,
+            OTHERWORLD_BASE.getY() + KAIO_DY - 16,
+            OTHERWORLD_BASE.getZ() + KAIO_DZ - 16);
+    public static final int KAIO_NO_SPAWN_SX = 128, KAIO_NO_SPAWN_SY = 128, KAIO_NO_SPAWN_SZ = 128;
 
     public static final List<Segment> OTHERWORLD = List.of(
             Segment.of("otherworld_palace_1",   0, 0,   0),
