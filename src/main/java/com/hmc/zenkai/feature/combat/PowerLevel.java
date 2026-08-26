@@ -73,10 +73,14 @@ public final class PowerLevel {
      * solo tiraba el número un 26%. El control de poder no servía para nada.
      * Los POOLS no se tocan: esconder el ki no te quita corazones ni vacía tu barra, solo
      * cambia lo que el aparato del otro dice.
+     *
+     * fraction puede superar 1.0 desde que existe la banda de "forzar" (powerPercent > 100%,
+     * ver OverdriveSystem): forzar por encima de tu 100% ya no es esconderte, es lo contrario,
+     * así que el PL aparente debe leer MÁS que el real, no clavarse en él. Antes había un atajo
+     * (fraction >= 1.0 -> realPl) que lo impedía — se quitó a propósito, no reintroducirlo.
      */
     public static long suppress(long realPl, double fraction) {
         if (realPl <= 0L) return 0L;                 // sin raza / sin stats: no hay nada que esconder
-        if (fraction >= 1.0) return realPl;
         long shown = Math.round(realPl * Math.max(0.0, fraction));
         return Math.max(SUPPRESSED_FLOOR, shown);
     }

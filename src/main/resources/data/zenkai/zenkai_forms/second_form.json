@@ -8,11 +8,15 @@
   "mastery_gain": 1.2,
   "stat_percent_untrained": 0.35,
   "stat_percent_mastered": 0.5,
-  "ki_drain_untrained": 0.2,
-  "ki_drain_mastered": 0.05,
+  "ki_drain_untrained": 0.0,
+  "ki_drain_mastered": 0.0,
   "spi_req": 35,
   "body_items": {},
   "aura_type": "arcosian",
   "aura_rgb": "0xC080FF",
-  "scale": 1.15
+  "scale": 1.15,
+  "descendable": true,
+  "overdrive_ceiling_bonus": 20.0,
+  "overdrive_drain_mult_untrained": 1.3,
+  "overdrive_drain_mult_mastered": 1.1
 }

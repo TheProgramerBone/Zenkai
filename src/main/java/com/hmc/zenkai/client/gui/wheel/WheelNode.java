@@ -17,7 +17,7 @@ import java.util.List;
 public record WheelNode(Kind kind, String value, Component label, int color,
                         boolean enabled, boolean active, List<WheelNode> children) {
 
-    public enum Kind { CATEGORY, FORM, KAIOKEN, TOGGLE }
+    public enum Kind { CATEGORY, FORM, KAIOKEN, TOGGLE, DESCEND }
 
     public boolean isLeaf() { return children.isEmpty(); }
 

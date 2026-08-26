@@ -43,6 +43,10 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     /** Último tick (gameTime) en que este jugador invocó a Shenlong. Cooldown por jugador. */
     private long lastSummonTick = Long.MIN_VALUE;
 
+    /** Último tick (gameTime) en que este jugador usó "Descender" en la rueda. Cooldown corto
+     *  (2-3s) contra spam, mismo patrón que lastSummonTick. */
+    private long lastDescendTick = Long.MIN_VALUE;
+
     /** NBT completo de las mascotas muertas del jugador (para el deseo de revivir). Más reciente al final. */
     private static final int MAX_DEAD_PETS = 6;
     private final List<CompoundTag> deadPets = new ArrayList<>();
@@ -259,6 +263,8 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     // ── Flags ────────────────────────────────────────────────────────────────
     public boolean isFlyEnabled()    { return flags.isFlyEnabled(); }
     public boolean isChargingKi()    { return flags.isChargingKi(); }
+    public boolean isOverdriveCharging()   { return flags.isOverdriveCharging(); }
+    public boolean hasBrokenOverdriveOnce() { return flags.hasBrokenOverdriveOnce(); }
     public boolean isImmortal()      { return flags.isImmortal(); }
     public boolean isDivine()        { return flags.isDivine(); }
     public boolean isMajin()         { return flags.isMajin(); }
@@ -266,6 +272,8 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
     public void setFlyEnabled(boolean v)  { flags.setFlyEnabled(v); }
     public void setChargingKi(boolean v)  { flags.setChargingKi(v); }
+    public void setOverdriveCharging(boolean v)    { flags.setOverdriveCharging(v); }
+    public void setHasBrokenOverdriveOnce(boolean v) { flags.setHasBrokenOverdriveOnce(v); }
     public void setImmortal(boolean v)    { flags.setImmortal(v); }
     public void setDivine(boolean v)      { flags.setDivine(v); }
     public void setMajin(boolean v)       { flags.setMajin(v); }
@@ -287,6 +295,10 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     /** Long.MIN_VALUE => nunca ha invocado (sin cooldown). */
     public long getLastSummonTick()       { return lastSummonTick; }
     public void setLastSummonTick(long t) { this.lastSummonTick = t; }
+
+    // ── Cooldown de "Descender" (rueda) ──────────────────────────────────────
+    public long getLastDescendTick()       { return lastDescendTick; }
+    public void setLastDescendTick(long t) { this.lastDescendTick = t; }
 
     // ── Mascotas muertas (deseo de revivir) ──────────────────────────────────
     /** Lista de solo lectura del NBT de mascotas muertas (la más reciente al final). */
@@ -353,6 +365,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         tag.put("skills",     skills.save());
         tag.put("techniques", techniques.save());
         tag.putLong("lastSummonTick", lastSummonTick);
+        tag.putLong("lastDescendTick", lastDescendTick);
         ListTag pets = new ListTag();
         pets.addAll(deadPets);
         tag.put("deadPets", pets);
@@ -371,6 +384,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         if (tag.contains("skills"))     skills.load(tag.getCompound("skills"));
         if (tag.contains("techniques")) techniques.load(tag.getCompound("techniques"));
         lastSummonTick = tag.contains("lastSummonTick") ? tag.getLong("lastSummonTick") : Long.MIN_VALUE;
+        lastDescendTick = tag.contains("lastDescendTick") ? tag.getLong("lastDescendTick") : Long.MIN_VALUE;
         setAlignment(tag.contains("alignment") ? tag.getInt("alignment") : 0);
         techMastery.clear();
         if (tag.contains("techMastery")) {

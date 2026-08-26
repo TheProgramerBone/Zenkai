@@ -11,7 +11,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Sacudida de cámara del aviso del sentir el ki.
+ * Sacudida de cámara del aviso del sentir el ki. El temblor de romper el 100% forzando
+ * (OverdriveClientState) deliberadamente NO usa este mixin — se quedó solo en el jitter del
+ * gauge (KiChargeGaugeOverlay), sin mover la cámara, a petición explícita: mover la cámara
+ * mientras el jugador intenta tantear con cuánto puede forzar resultaba molesto.
  *
  * Va al FINAL de Camera.setup y no en ViewportEvent.ComputeCameraAngles: ese evento existe para
  * ángulos, y usarlo para POSICIÓN depende de en qué punto exacto lo dispare NeoForge respecto

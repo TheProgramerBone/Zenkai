@@ -27,6 +27,24 @@ public class PlayerStateFlags {
      */
     private boolean boostSizeApplied = false;
 
+    /**
+     * El jugador sostiene Shift + la tecla de cargar ki ("forzar" el 100%). A diferencia de
+     * flyBoosting, esto SÍ tiene que ir en save()/load(): SyncPlayerStatsPacket usa exactamente
+     * ese round-trip de NBT como transporte de red cada tick (PlayerLifeCycle.syncIfServer, vía
+     * ZenkaiTickHandlers) — flyBoosting se libra de necesitar sync porque su efecto visual viaja
+     * por la Pose vanilla ya sincronizada aparte, esto no tiene ese atajo y el cliente lo
+     * necesita para el temblor del gauge/cámara. Mismo tratamiento que chargingKi (también
+     * persistido pese a ser en esencia un estado de input) por el mismo motivo. Lo escribe
+     * OverdriveChargePacket, edge-triggered desde el cliente (mismo patrón que FlyBoostPacket).
+     */
+    private boolean overdriveCharging = false;
+
+    /** Ya rompió el 100% de powerPercent alguna vez (persistente). Determina cuánto tarda el
+     *  temblor de romper el límite las siguientes veces (ver OverdriveTuning/KiChargeSystem) —
+     *  el mod no vuelve a preguntarle al sistema de logros de Minecraft si ya lo completó en
+     *  ningún otro sitio, así que aquí tampoco: es nuestro propio flag. */
+    private boolean hasBrokenOverdriveOnce = false;
+
     /** El jugador está muerto / en el otro mundo. */
     private boolean inOtherworld = false;
     /** gameTime en que fue enviado al otro mundo (para el contador de Yemma). */
@@ -49,6 +67,8 @@ public class PlayerStateFlags {
     public boolean isChargingKi()  { return chargingKi; }
     public boolean isFlyBoosting() { return flyBoosting; }
     public boolean isBoostSizeApplied() { return boostSizeApplied; }
+    public boolean isOverdriveCharging() { return overdriveCharging; }
+    public boolean hasBrokenOverdriveOnce() { return hasBrokenOverdriveOnce; }
     public boolean isInOtherworld() { return inOtherworld; }
     public long getOtherworldSince() { return otherworldSince; }
     public boolean isDowned()     { return downed; }
@@ -66,6 +86,8 @@ public class PlayerStateFlags {
     public void setChargingKi(boolean v)  { this.chargingKi  = v; }
     public void setFlyBoosting(boolean v) { this.flyBoosting = v; }
     public void setBoostSizeApplied(boolean v) { this.boostSizeApplied = v; }
+    public void setOverdriveCharging(boolean v) { this.overdriveCharging = v; }
+    public void setHasBrokenOverdriveOnce(boolean v) { this.hasBrokenOverdriveOnce = v; }
     public void setInOtherworld(boolean v) { this.inOtherworld = v; }
     public void setOtherworldSince(long t) { this.otherworldSince = t; }
     public void setDowned(boolean v)     { this.downed = v; }
@@ -86,6 +108,8 @@ public class PlayerStateFlags {
         tag.putLong("downedUntil", downedUntil);
         tag.putLong("inCombatUntil", inCombatUntil);
         tag.putBoolean("hardcoreDeath", hardcoreDeath);
+        tag.putBoolean("hasBrokenOverdriveOnce", hasBrokenOverdriveOnce);
+        tag.putBoolean("overdriveCharging", overdriveCharging);
         return tag;
     }
 
@@ -102,5 +126,7 @@ public class PlayerStateFlags {
         this.downedUntil = tag.getLong("downedUntil");
         this.inCombatUntil = tag.getLong("inCombatUntil");
         this.hardcoreDeath = tag.getBoolean("hardcoreDeath");
+        this.hasBrokenOverdriveOnce = tag.getBoolean("hasBrokenOverdriveOnce");
+        this.overdriveCharging = tag.getBoolean("overdriveCharging");
     }
 }

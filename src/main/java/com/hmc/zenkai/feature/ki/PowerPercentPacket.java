@@ -1,9 +1,12 @@
 package com.hmc.zenkai.feature.ki;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.event.tick.OverdriveSystem;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -33,7 +36,10 @@ public record PowerPercentPacket() implements CustomPacketPayload {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             if (!att.isRaceChosen()) return;
-            if (att.setPowerPercent(att.getPowerPercent() - 5, SkillEffects.maxPowerPercent(sp))) {
+            PlayerFormAttachment fm = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+            int ceiling = (int) Math.round(Math.max(SkillEffects.maxPowerPercent(sp),
+                    OverdriveSystem.ceilingFor(fm.activeDef())));
+            if (att.setPowerPercent(att.getPowerPercent() - 5, ceiling)) {
                 PlayerLifeCycle.syncIfServer(sp);
             }
         });

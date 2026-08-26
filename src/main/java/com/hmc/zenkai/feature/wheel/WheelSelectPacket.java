@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.wheel;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
@@ -57,6 +58,7 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
                 // false para no disparar además el sync de FORMA, que aquí no cambió.
                 case "TOGGLE"  -> {
                     SkillToggles.flip(sp, pkt.value()); yield false;}
+                case "DESCEND" -> descend(sp, st, fm);
                 default        -> false;
             };
             if (changed) PlayerLifeCycle.syncFormIfServer(sp);
@@ -93,6 +95,32 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
     private static boolean toggleKaioken(ServerPlayer sp, PlayerFormAttachment fm) {
         if (SkillEffects.level(sp, "kaioken") <= 0) return false;
         fm.setKaiokenSwitch(!fm.isKaiokenSwitch());
+        return true;
+    }
+
+    /** Cooldown de "Descender": 50 ticks (~2.5s), server-side, contra spam desde la rueda. */
+    private static final long DESCEND_COOLDOWN_TICKS = 50;
+
+    /**
+     * "Descender": mismo efecto que el tap-to-revert de siempre (forceBase()), solo que
+     * expuesto también como botón de rueda, con cooldown. Revalida descendable() aquí (no
+     * basta con que WheelMenu no lo enseñe): un cliente modificado no puede tumbar Golden/Black
+     * con esto. Si estaba forzando (powerPercent > 100), también lo baja a 100 de golpe — al
+     * volver a Base ya no hay forma que sostenga forzar más allá del techo genérico.
+     */
+    private static boolean descend(ServerPlayer sp, PlayerStatsAttachment st, PlayerFormAttachment fm) {
+        FormDef active = fm.activeDef();
+        if (active == null || !active.descendable()) return false;
+
+        long now = sp.level().getGameTime();
+        if (now - st.getLastDescendTick() < DESCEND_COOLDOWN_TICKS) return false;
+
+        fm.forceBase();
+        st.setLastDescendTick(now);
+        // Vuelta a Base: el techo ya no es el de la forma (bonus perdido), es 100 sin más.
+        if (st.getPowerPercent() > 100 && st.setPowerPercent(100, 100)) {
+            PlayerLifeCycle.syncIfServer(sp);
+        }
         return true;
     }
 }

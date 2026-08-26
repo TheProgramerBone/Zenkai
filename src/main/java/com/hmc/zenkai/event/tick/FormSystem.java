@@ -86,6 +86,12 @@ public final class FormSystem {
         }
         applyFormScale(p, att.getRace(), activeDef);
 
+        // Banda de forzar (powerPercent > 100%): genérica, drena ki aparte del de la forma.
+        // Va AQUÍ y no puede esperar al siguiente tick sin cortar: form.isTransforming() puede
+        // devolver true justo debajo y cortar el resto del tick (incluida la carga de ki)
+        // durante el hold de Golden/Black, y el drenaje de forzar no debe pausarse esos ~60 ticks.
+        OverdriveSystem.tick(c, activeDef);
+
         if (form.isTransforming()) {
             MovementLocks.transform(p, true);
             MovementLocks.clearSpeedMult(p);

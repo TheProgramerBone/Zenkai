@@ -67,6 +67,7 @@ public final class ZenkaiTriggers {
         public static final String BLACK_FLASH    = "black_flash";
         public static final String REVIVED        = "revived";
         public static final String COMBAT_STANCE  = "combat_stance";
+        public static final String OVERDRIVE      = "overdrive";
     }
 
     // =====================================================================

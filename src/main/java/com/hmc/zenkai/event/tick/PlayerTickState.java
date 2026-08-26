@@ -15,6 +15,15 @@ public final class PlayerTickState {
     /** Ticks seguidos cargando ki, por jugador. */
     private static final Map<UUID, Integer> CHARGE_TICKS = new HashMap<>();
 
+    /** Ticks seguidos sosteniendo Shift+cargar YA al tope de 100%, por jugador ("temblando"
+     *  antes de romper el límite). Se resetea en cuanto se suelta Shift, se suelta C del todo,
+     *  o el % deja de estar exactamente en 100 — ver KiChargeSystem. */
+    private static final Map<UUID, Integer> FORCE_TICKS = new HashMap<>();
+
+    /** Ticks seguidos YA por encima de 100% (candado roto, cadencia propia más lenta que la
+     *  subida 0-100) — ver KiChargeSystem/OverdriveTuning.OVERDRIVE_STEP_INTERVAL_TICKS. */
+    private static final Map<UUID, Integer> OVERDRIVE_STEP_TICKS = new HashMap<>();
+
     /**
      * Restos fraccionarios de regen por jugador [body, stamina, ki]. Sin esto, un 1%/s
      * sobre un pool pequeño se redondeaba a 0 y la config no servía de nada.
@@ -39,9 +48,29 @@ public final class PlayerTickState {
         CHARGE_TICKS.remove(id);
     }
 
+    /** Suma un tick de temblor (Shift+cargar al tope de 100%) y devuelve el total acumulado. */
+    public static int bumpForce(UUID id) {
+        return FORCE_TICKS.merge(id, 1, Integer::sum);
+    }
+
+    public static void resetForce(UUID id) {
+        FORCE_TICKS.remove(id);
+    }
+
+    /** Suma un tick de subida-en-overdrive y devuelve el total acumulado desde el último paso. */
+    public static int bumpOverdriveStep(UUID id) {
+        return OVERDRIVE_STEP_TICKS.merge(id, 1, Integer::sum);
+    }
+
+    public static void resetOverdriveStep(UUID id) {
+        OVERDRIVE_STEP_TICKS.remove(id);
+    }
+
     /** Limpieza al desloguear. */
     public static void forget(UUID id) {
         CHARGE_TICKS.remove(id);
+        FORCE_TICKS.remove(id);
+        OVERDRIVE_STEP_TICKS.remove(id);
         REGEN_CARRY.remove(id);
     }
 }

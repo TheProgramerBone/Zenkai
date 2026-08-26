@@ -14,8 +14,10 @@ import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.StatSynergy;
 import com.hmc.zenkai.feature.Style;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
+import com.hmc.zenkai.feature.forms.OverdriveTuning;
 import com.hmc.zenkai.feature.ki.SetPowerPercentPacket;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.race.RacePassives;
@@ -701,6 +703,22 @@ public class StatsScreen extends ZenkaiMenuScreen {
             out.add(val("screen.zenkai.stats_screen.drain_short",
                     kiPerSecond > 0.0 ? "-" + fmt(kiPerSecond) + " ki/s" : "—",
                     kiPerSecond > 0.0 ? ZenkaiPalette.MAXED : ZenkaiPalette.TEXT_DIM));
+        }
+
+        // Forzando por encima de 100%: mismo dato que ya drena OverdriveSystem cada tick, aquí
+        // solo se MUESTRA — el multiplicador de coste sale de la forma puesta (si da alguno,
+        // ver FormDef.overdriveDrainMult), igual que hace OverdriveSystem.drainMultFor.
+        if (att.getPowerPercent() > 100) {
+            out.add(Row.header("screen.zenkai.stats_screen.section.overdrive",
+                    ZenkaiPalette.SECTION_OVERDRIVE));
+            FormDef activeDef = form.activeDef();
+            double mult = activeDef == null ? 1.0 : activeDef.overdriveDrainMult(form.activeMastery());
+            double overPct = att.getPowerPercent() - 100;
+            double kiPerSecondOverdrive = OverdriveTuning.costPerTick(overPct, mult) * 20.0;
+            out.add(val("screen.zenkai.stats_screen.overdrive_pct_short",
+                    "+" + Math.round(overPct) + "%", ZenkaiPalette.SECTION_OVERDRIVE));
+            out.add(val("screen.zenkai.stats_screen.drain_short",
+                    "-" + fmt(kiPerSecondOverdrive) + " ki/s", ZenkaiPalette.SECTION_OVERDRIVE));
         }
 
         KaiokenTier tier = form.getKaioken();

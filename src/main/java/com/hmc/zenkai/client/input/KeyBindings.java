@@ -11,6 +11,7 @@ import com.hmc.zenkai.client.gui.wheel.WheelMenu;
 import com.hmc.zenkai.client.gui.wheel.WheelScreen;
 import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.ki.KiChargePacket;
+import com.hmc.zenkai.feature.ki.OverdriveChargePacket;
 import com.hmc.zenkai.feature.ki.PowerPercentPacket;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.weights.WeightSystem;
@@ -18,6 +19,7 @@ import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.stats.TransformHoldPacket;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -45,6 +47,7 @@ public final class KeyBindings {
     private static boolean REGISTERED = false;
 
     private static boolean lastChargeSent = false;
+    private static boolean lastForceSent = false;
     private static boolean lastTransformSent = false;
 
     /** Soltar FORM antes de esto = toque (destransformar). Más largo = intento de transformación. */
@@ -181,6 +184,7 @@ public final class KeyBindings {
         // y se disparan en conjunto de golpe la próxima vez que alguien los consuma.
         if (!hasRace) {
             stopChargeIfNeeded();
+            stopForceIfNeeded();
             stopTransformHoldIfNeeded();
             drainClicks(CHARGE_KI);
             drainClicks(POWER_DOWN);
@@ -227,10 +231,11 @@ public final class KeyBindings {
             }
         }
 
-        // ── C: cargar ki (el % de poder sube solo). Sin modificadores. ─────
+        // ── C: cargar ki (el % de poder sube solo). Shift+C, ya al 100%, fuerza por encima. ──
         if (formDown) {
             // Transformando no se carga ki: respeta la animación de transformación.
             stopChargeIfNeeded();
+            stopForceIfNeeded();
             drainClicks(CHARGE_KI);
         } else if (CHARGE_KI != null) {
             drainClicks(CHARGE_KI); // se lee por isDown(): hay que vaciar la cola igual
@@ -238,6 +243,15 @@ public final class KeyBindings {
             if (now != lastChargeSent) {
                 lastChargeSent = now;
                 PacketDistributor.sendToServer(new KiChargePacket(now));
+            }
+
+            // Shift se lee del estado de la ventana, no de un KeyMapping aparte: una sola tecla
+            // en el menú de controles y el modificador funciona con la que el jugador rebindee
+            // (mismo criterio que SenseKiClientState usa para Shift+F4).
+            boolean wantForce = now && Screen.hasShiftDown();
+            if (wantForce != lastForceSent) {
+                lastForceSent = wantForce;
+                PacketDistributor.sendToServer(new OverdriveChargePacket(wantForce));
             }
         }
 
@@ -269,6 +283,13 @@ public final class KeyBindings {
         if (lastChargeSent) {
             lastChargeSent = false;
             PacketDistributor.sendToServer(new KiChargePacket(false));
+        }
+    }
+
+    private static void stopForceIfNeeded() {
+        if (lastForceSent) {
+            lastForceSent = false;
+            PacketDistributor.sendToServer(new OverdriveChargePacket(false));
         }
     }
 

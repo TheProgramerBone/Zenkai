@@ -171,6 +171,12 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     .addCriterion("revived", milestone(ZenkaiTriggers.Kinds.REVIVED))
                     .save(saver, id("revived"), efh);
 
+            Advancement.Builder.advancement().parent(chooseRace)
+                    .display(net.minecraft.world.item.Items.NETHER_STAR, title("overdrive"), desc("overdrive"),
+                            null, AdvancementType.GOAL, true, true, true)
+                    .addCriterion("overdrive", milestone(ZenkaiTriggers.Kinds.OVERDRIVE))
+                    .save(saver, id("overdrive"), efh);
+
             // ── ESFERAS DEL DRAGÓN ──────────────────────────────────────────
             AdvancementHolder firstBall = child(saver, efh, chooseRace, "first_ball",
                     ModBlocks.DRAGON_BALL_4.get(), AdvancementType.TASK, false,

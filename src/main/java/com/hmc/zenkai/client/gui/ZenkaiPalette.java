@@ -143,6 +143,9 @@ public final class ZenkaiPalette {
     public static final int SECTION_RACE       = 0xFF7CE0A0;
     /** Alineamiento. */
     public static final int SECTION_ALIGNMENT  = 0xFFD8D0C0;
+    /** Forzar el 100% (powerPercent > 100). Mismo naranja que KiChargeGaugeOverlay.C_FILL_
+     *  OVERDRIVE a propósito: el mismo dato debe leerse igual en el HUD y en el popup. */
+    public static final int SECTION_OVERDRIVE  = 0xFFFF6633;
 
     // ── Alineamiento ─────────────────────────────────────────────────────────
     // Tres colores planos, no un degradado. El número ya tiene el degradado de AlignmentPalette;

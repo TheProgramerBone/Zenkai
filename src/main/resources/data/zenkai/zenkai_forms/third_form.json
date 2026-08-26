@@ -8,12 +8,16 @@
   "mastery_gain": 1.0,
   "stat_percent_untrained": 0.9,
   "stat_percent_mastered": 1.2,
-  "ki_drain_untrained": 0.3,
-  "ki_drain_mastered": 0.1,
+  "ki_drain_untrained": 0.0,
+  "ki_drain_mastered": 0.0,
   "spi_req": 55,
   "parent": "zenkai:second_form",
   "body_items": {},
   "aura_type": "arcosian",
   "aura_rgb": "0xB060FF",
-  "scale": 1.1
+  "scale": 1.1,
+  "descendable": true,
+  "overdrive_ceiling_bonus": 40.0,
+  "overdrive_drain_mult_untrained": 1.1,
+  "overdrive_drain_mult_mastered": 0.85
 }

@@ -43,6 +43,7 @@ public final class WheelMenu {
     private static final int COL_ON       = ZenkaiPalette.OK;      // interruptor encendido
     private static final int COL_OFF      = ZenkaiPalette.DENIED;  // interruptor apagado
     private static final int COL_CATEGORY = ZenkaiPalette.MAXED;   // submenús de interruptores
+    private static final int COL_DESCEND  = ZenkaiPalette.DENIED;  // "Descender": acción, no interruptor
 
     public static WheelNode build(Player p) {
         List<WheelNode> roots = new ArrayList<>();
@@ -55,6 +56,9 @@ public final class WheelMenu {
 
         WheelNode kaioken = kaiokenToggle(p);
         if (kaioken != null) roots.add(kaioken);
+
+        WheelNode descend = descendNode(p);
+        if (descend != null) roots.add(descend);
         // Interruptores: los sueltos cuelgan de la raíz, los que declaran categoría se
         // agrupan en su propia rama. Agrupar es SOLO presentación: el packet manda el mismo
         // kind TOGGLE con el mismo id, esté donde esté la hoja.
@@ -119,6 +123,20 @@ public final class WheelMenu {
 
         return WheelNode.leaf(WheelNode.Kind.KAIOKEN, "", label,
                 on ? COL_ON : COL_OFF, true, on);
+    }
+
+    /**
+     * "Descender": vuelve a Base al instante desde una forma de CONTENCIÓN (second_form/
+     * third_form/final_form del arcosiano hoy — FormDef.descendable()). Golden/Black no lo
+     * llevan a propósito: esas se revierten con el tap de siempre, no con este atajo.
+     * null si la forma actual no es descendable: no se enseña una acción sin efecto.
+     */
+    private static WheelNode descendNode(Player p) {
+        PlayerFormAttachment fm = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        FormDef active = fm.activeDef();
+        if (active == null || !active.descendable()) return null;
+        return WheelNode.leaf(WheelNode.Kind.DESCEND, "",
+                Component.translatable("wheel.zenkai.descend"), COL_DESCEND, true, false);
     }
 
     private static WheelNode toggleNode(Player p, String id) {

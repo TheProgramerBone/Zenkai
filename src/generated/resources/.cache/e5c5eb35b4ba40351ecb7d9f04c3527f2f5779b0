@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-23T14:49:38.4476112	Advancements
+// 1.21.1	2026-08-26T14:14:42.6747054	Advancements
 f9a5c0de397f24c185f402bcbc5d5ecb1b6aafa8 data/zenkai/advancement/all_skills.json
 1e4b0aa0238e933eb91f3567c473703ef287a782 data/zenkai/advancement/all_skills_max.json
 5c11b5aaa82f4098d857b7a660bd16cebe7f2b0a data/zenkai/advancement/all_wishes.json
@@ -19,6 +19,7 @@ cc9f5f009871b4de3cf13fc2b4fa8aaaf0dc4444 data/zenkai/advancement/fly.json
 756a598ca396bee95d2729eb3a0df5aa1dd86e30 data/zenkai/advancement/namek.json
 48701ae6c32eae76a8e532ea43c9ed0d39c6bd5a data/zenkai/advancement/otherworld.json
 04cfb5c45d47e712576e769ea18086de3fd66130 data/zenkai/advancement/overcharge.json
+4116f67e0fc5d136bbff345ddf738dedce291c89 data/zenkai/advancement/overdrive.json
 79fde8b74dc47a61f5c5d3367a7496970a9dddd0 data/zenkai/advancement/pl_1000.json
 738c59852ebc70fcfea049c30d04c19417fd4253 data/zenkai/advancement/pl_100k.json
 284a6c4b63cbe7f691379e5c9ecf61cf569ebff9 data/zenkai/advancement/pl_1m.json

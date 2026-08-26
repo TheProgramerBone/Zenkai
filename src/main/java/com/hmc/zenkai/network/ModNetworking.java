@@ -127,6 +127,10 @@ public class ModNetworking {
                 KiChargePacket.STREAM_CODEC,
                 KiChargePacket::handle);
         registrar.playToServer(
+                OverdriveChargePacket.TYPE,
+                OverdriveChargePacket.STREAM_CODEC,
+                OverdriveChargePacket::handle);
+        registrar.playToServer(
                 PowerPercentPacket.TYPE,
                 PowerPercentPacket.STREAM_CODEC,
                 PowerPercentPacket::handle);

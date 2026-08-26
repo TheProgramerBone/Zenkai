@@ -2,8 +2,8 @@ package com.hmc.zenkai.client.overlay;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.CombatModeClientState;
+import com.hmc.zenkai.client.gui.AlignmentPalette;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.skills.SkillEffects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -43,6 +43,9 @@ public final class KiChargeGaugeOverlay {
 
     private static final int C_BG   = 0x66000000;
     private static final int C_FILL = 0xFF33A0FF;   // mismo azul que la barra de KI del panel
+    /** Relleno mientras se está FORZANDO (powerPercent > 100%): distinto del azul normal para
+     *  que no se confunda con "anillo lleno" al 100% sostenible. */
+    private static final int C_FILL_OVERDRIVE = 0xFFFF6633;
 
     private static int lastSeenPercent = Integer.MIN_VALUE;
     private static long lastChangeTick = Long.MIN_VALUE;
@@ -80,14 +83,31 @@ public final class KiChargeGaugeOverlay {
             if (overlapsX && overlapsY) cy = bar.y() - GAP - R_OUT;
         }
 
-        int max = Math.max(1, SkillEffects.maxPowerPercent(mc.player));
-        float progress = pct / (float) max;
+        // Techo del anillo: SIEMPRE 100 fijo, a propósito — el anillo representa "cuánto de tu
+        // 100% sostenible estás usando", no el techo real (que puede superar 100 forzando). Con
+        // el techo dinámico de antes el anillo "nunca se veía lleno" al 100% de verdad.
+        float progress = Math.min(1f, pct / 100f);
 
-        RadialGauge.ring(g, cx, cy, R_IN, R_OUT, progress, C_BG, C_FILL);
+        // Jitter mientras se tiembla rompiendo el candado (Shift+cargar ya al tope de 100%,
+        // antes de que el % empiece a subir de verdad): crece según OverdriveClientState.
+        // breakProgress, más marcado justo antes de romper.
+        float pt = e.getPartialTick().getGameTimeDeltaPartialTick(true);
+        float[] jitter = OverdriveClientState.hudJitter(pt);
+        float jx = cx + jitter[0];
+        float jy = cy + jitter[1];
+
+        // Color: azul normal -> naranja de forzar, en degradado según cuánto falta para romper
+        // el candado (0 = recién llegado a 100%, 1 = a punto de romperlo). Pasado el 100% de
+        // verdad ya es naranja fijo — no hace falta el degradado, el candado ya se rompió.
+        int fill = pct > 100 ? C_FILL_OVERDRIVE
+                : (0xFF000000 | AlignmentPalette.lerpRgb(C_FILL, C_FILL_OVERDRIVE,
+                        OverdriveClientState.breakProgress(now)));
+
+        RadialGauge.ring(g, jx, jy, R_IN, R_OUT, progress, C_BG, fill);
 
         // Encima del anillo y no dentro: el número compite con el propio relleno del gauge
         // cuando va por la mitad (el texto blanco se pierde sobre el arco claro).
         g.drawCenteredString(mc.font, Component.literal(pct + "%"),
-                Math.round(cx), Math.round(cy - R_OUT) - mc.font.lineHeight - 2, 0xFFFFFFFF);
+                Math.round(jx), Math.round(jy - R_OUT) - mc.font.lineHeight - 2, 0xFFFFFFFF);
     }
 }

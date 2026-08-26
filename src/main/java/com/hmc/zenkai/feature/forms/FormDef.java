@@ -36,6 +36,14 @@ import java.util.Map;
  * de raza sin invertir un solo punto: el regen (1% del pool/seg) escala con el pool, que escala
  * con SPI, así que un pool minúsculo ya bastaba para superar un drenaje fijo minúsculo. spi_req
  * = 0 desactiva el multiplicador (queda en 1.0 siempre), para no romper datapacks viejos.
+ *
+ * Los últimos 4 campos son del sistema de "forzar" (powerPercent por encima de 100%, ver
+ * OverdriveSystem): DESCENDABLE marca formas que el botón "Descender" de la rueda puede tumbar
+ * de golpe a base (hoy solo second_form/third_form/final_form del arcosiano; Golden/Black no lo
+ * llevan a propósito, se revierten con el tap de siempre). overdriveCeilingBonus y los dos
+ * overdriveDrainMult solo tienen efecto MIENTRAS esa forma está puesta (no por tenerla comprada):
+ * amplían cuánto se puede forzar y abaratan el coste de hacerlo. Defaults (false/0/1.0/1.0) no
+ * afectan a ninguna forma existente que no los declare en su JSON.
  */
 public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
@@ -44,7 +52,9 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       double kiDrainUntrained, double kiDrainMastered, int spiReq,
                       Map<String, ResourceLocation> hairItems,
                       Map<String, ResourceLocation> bodyItems,
-                      String auraType, int auraRgb, int hairRgb, double scale) {
+                      String auraType, int auraRgb, int hairRgb, double scale,
+                      boolean descendable, double overdriveCeilingBonus,
+                      double overdriveDrainMultUntrained, double overdriveDrainMultMastered) {
 
     public enum Kind {
         /** Innata por raza: no la enseña ningún maestro. */
@@ -114,6 +124,13 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
         return kiDrainPerTick(mastery0to100) * drainMultiplier(spi);
     }
 
+    /** Multiplicador del coste de FORZAR (powerPercent > 100%) mientras esta forma está puesta,
+     *  interpolado por maestría igual que statPercent/kiDrainPerTick. 1.0 = sin efecto (default
+     *  de una forma que no declara estos campos). */
+    public double overdriveDrainMult(double mastery0to100) {
+        return lerp(overdriveDrainMultUntrained, overdriveDrainMultMastered, mastery0to100 / 100.0);
+    }
+
     public boolean allows(Race race) { return race != null && races.contains(race); }
 
     // ── Visuales ────────────────────────────────────────────────────────────
@@ -163,6 +180,10 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeInt(d.auraRgb());
                 buf.writeInt(d.hairRgb());
                 buf.writeDouble(d.scale());
+                buf.writeBoolean(d.descendable());
+                buf.writeDouble(d.overdriveCeilingBonus());
+                buf.writeDouble(d.overdriveDrainMultUntrained());
+                buf.writeDouble(d.overdriveDrainMultMastered());
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -182,7 +203,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readDouble(), buf.readDouble(),
                         buf.readDouble(), buf.readDouble(), buf.readVarInt(),
                         readMap(buf), readMap(buf),
-                        buf.readUtf(), buf.readInt(), buf.readInt(), buf.readDouble());
+                        buf.readUtf(), buf.readInt(), buf.readInt(), buf.readDouble(),
+                        buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble());
             });
 
     private static void writeMap(FriendlyByteBuf buf, Map<String, ResourceLocation> map) {
