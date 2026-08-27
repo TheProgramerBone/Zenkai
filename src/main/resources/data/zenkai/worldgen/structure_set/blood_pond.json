@@ -1,0 +1,11 @@
+{
+  "structures": [
+    { "structure": "zenkai:blood_pond", "weight": 1 }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 48,
+    "separation": 20,
+    "salt": 20260827
+  }
+}

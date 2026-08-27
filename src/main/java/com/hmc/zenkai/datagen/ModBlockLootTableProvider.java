@@ -56,6 +56,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.NAMEKIAN_GRASS_BLOCK.get());
         dropSelf(ModBlocks.NAMEKIAN_DIRT.get());
         dropSelf(ModBlocks.ROCKY_BLOCK.get());
+        dropSelf(ModBlocks.HFIL_SCORCHED_STONE.get());
+        dropSelf(ModBlocks.HFIL_SPIKE_ROCK.get());
+        dropSelf(ModBlocks.HFIL_CINDER_SAND.get());
+        dropSelf(ModBlocks.HFIL_CINDER_SANDSTONE.get());
         dropSelf(ModBlocks.NAMEKIAN_COBBLESTONE.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_BLACK.get());
         dropSelf(ModBlocks.STRUCTURAL_CONCRETE_BLUE.get());

@@ -46,6 +46,10 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.NAMEKIAN_LAPIS_ORE);
         blockWithItem(ModBlocks.NAMEKIAN_DIAMOND_ORE);
         blockWithItem(ModBlocks.ROCKY_BLOCK);
+        blockWithItem(ModBlocks.HFIL_SCORCHED_STONE);
+        blockWithItem(ModBlocks.HFIL_SPIKE_ROCK);
+        blockWithItem(ModBlocks.HFIL_CINDER_SAND);
+        blockWithItem(ModBlocks.HFIL_CINDER_SANDSTONE);
         blockWithItem(ModBlocks.HTC_BLOCK);
         blockWithItem(ModBlocks.HTC_PORTAL);
         for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
@@ -137,6 +141,17 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         modLoc("block/energy_generator_side"),
                         modLoc("block/energy_generator_front"),
                         modLoc("block/energy_generator_top")));
+
+        // El fluido en sí lo pinta LiquidBlockRenderer (ver HealingWaterFluidClientExtensions),
+        // NUNCA este modelo — pero BlockStateModelLoader igual pide un modelo para CADA valor
+        // de LEVEL (0-15) de este bloque, y sin blockstate/modelo propios lanzaba "missing
+        // model for variant" 16 veces en el log. Mismo patrón que minecraft:water: un modelo
+        // sin "elements" (invisible) que solo declara la textura "particle", usada para las
+        // partículas de goteo/salpicadura, no para el render del bloque.
+        var healingWaterModel = models().getBuilder("healing_water")
+                .texture("particle", mcLoc("block/water_still"));
+        getVariantBuilder(ModBlocks.HEALING_WATER_BLOCK.get())
+                .forAllStates(s -> ConfiguredModel.builder().modelFile(healingWaterModel).build());
     }
 
     private void blockWithItem(DeferredBlock<?> deferredBlock) {

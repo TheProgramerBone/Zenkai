@@ -1,0 +1,9 @@
+{
+  "type": "zenkai:blood_pond",
+  "biomes": "#zenkai:has_structure/blood_pond",
+  "step": "surface_structures",
+  "terrain_adaptation": "none",
+  "spawn_overrides": {
+    "monster": { "bounding_box": "full", "spawns": [] }
+  }
+}

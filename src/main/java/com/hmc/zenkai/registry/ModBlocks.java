@@ -259,6 +259,45 @@ public class ModBlocks {
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.SAND)));
 
+    // Rediseño HFIL (ver .claude/pendiente/hfil-infierno-rediseno.md, fase 1). Roca base
+    // CÁLIDA: sustituye a minecraft:stone como default_block del Otherworld
+    // (otherworld_noise.json) — arregla de paso la "mancha de piedra" (CLAUDE.md pendiente #2):
+    // si algo se escapa del gate above_preliminary_surface, lo que se ve ya no es piedra gris
+    // vainilla fuera de lugar, es roca calcinada propia del bioma.
+    public static final DeferredBlock<Block> HFIL_SCORCHED_STONE = registerBlock("hfil_scorched_stone",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.NETHERRACK)
+                    .mapColor(MapColor.NETHER)));
+
+    // Roca FRÍA (azul-grisácea/violeta), solo para las formaciones de pinchos
+    // (HfilSpikeFeature) — el contraste frío/cálido contra HFIL_SCORCHED_STONE replica las
+    // siluetas de pinchos de las 4 imágenes de referencia de la sesión de diseño.
+    public static final DeferredBlock<Block> HFIL_SPIKE_ROCK = registerBlock("hfil_spike_rock",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(3.5f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.BASALT)
+                    .mapColor(MapColor.COLOR_BLACK)));
+
+    // Rediseño HFIL, Fase 4 (ver .claude/pendiente/hfil-rework-propuesta.md, secciones 3.3/5.3) —
+    // hfil_dunes -> hfil_cinder_dunes: reemplaza red_sand/red_sandstone vainilla por ceniza
+    // propia. HFIL_CINDER_SAND cae como arena de verdad (ColoredFallingBlock, mismo patrón que
+    // NAMEKIAN_SAND) — es la capa de superficie. HFIL_CINDER_SANDSTONE es la capa compactada
+    // debajo (mismo rol que red_sandstone en la surface_rule), sólida, sin gravedad.
+    public static final DeferredBlock<Block> HFIL_CINDER_SAND = registerBlock("hfil_cinder_sand",
+            ()-> new ColoredFallingBlock(new ColorRGBA(9013641), BlockBehaviour.Properties.of()   // ⚠ API
+                    .strength(0.5f)
+                    .sound(SoundType.SAND)
+                    .mapColor(MapColor.COLOR_GRAY)));
+
+    public static final DeferredBlock<Block> HFIL_CINDER_SANDSTONE = registerBlock("hfil_cinder_sandstone",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.8f)
+                    .sound(SoundType.STONE)
+                    .mapColor(MapColor.COLOR_GRAY)));
+
     public static final DeferredBlock<Block> SCOUTER_BENCH = registerBlock("scouter_bench",
             () -> new ScouterBenchBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.METAL)

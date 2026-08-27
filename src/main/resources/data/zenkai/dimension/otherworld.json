@@ -19,7 +19,7 @@
           }
         },
         {
-          "biome": "zenkai:hfil_wastes",
+          "biome": "zenkai:hfil_needle_wastes",
           "parameters": {
             "temperature": [-1.0, -0.15],
             "humidity": [-1.0, 1.0],
@@ -31,7 +31,7 @@
           }
         },
         {
-          "biome": "zenkai:hfil_badlands",
+          "biome": "zenkai:hfil_blood_shore",
           "parameters": {
             "temperature": [-0.15, 0.4],
             "humidity": [-1.0, 1.0],
@@ -43,7 +43,7 @@
           }
         },
         {
-          "biome": "zenkai:hfil_dunes",
+          "biome": "zenkai:hfil_cinder_dunes",
           "parameters": {
             "temperature": [0.4, 1.0],
             "humidity": [-1.0, 1.0],

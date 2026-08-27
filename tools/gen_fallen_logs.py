@@ -1,6 +1,6 @@
 """Genera 3 estructuras NBT de troncos caídos (madera vanilla) directamente en
 data/zenkai/structure/, sin abrir Minecraft — decoración escasa para biomas sin
-árboles (rocky_wasteland, hfil_wastes/badlands/dunes; ver FallenLogFeature).
+árboles (rocky_wasteland, hfil_needle_wastes/blood_shore/cinder_dunes; ver FallenLogFeature).
 
 FORMATO: un structure template de Minecraft es un compound NBT raíz (nombre
 vacío, gzip) con:

@@ -1,0 +1,52 @@
+{
+  "variants": {
+    "level=0": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=1": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=10": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=11": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=12": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=13": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=14": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=15": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=2": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=3": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=4": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=5": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=6": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=7": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=8": {
+      "model": "zenkai:block/healing_water"
+    },
+    "level=9": {
+      "model": "zenkai:block/healing_water"
+    }
+  }
+}

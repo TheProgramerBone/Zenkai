@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-16T11:16:11.7267728	Block States: zenkai
+// 1.21.1	2026-08-27T14:14:03.2165936	Block States: zenkai
 a94084a882e8e97f815eec1bcc0de31216c39653 assets/zenkai/blockstates/ajisa_button.json
 1941064c3fa3ef874b3f58b16d1e5260b932f041 assets/zenkai/blockstates/ajisa_door.json
 7b6b9fc8b8aecaa2d034bb21ffc7f4b12a529146 assets/zenkai/blockstates/ajisa_fence.json
@@ -21,6 +21,11 @@ fd46ec8bbcc33d004cf77d4adbce703444c7a16e assets/zenkai/blockstates/ajisa_trapdoo
 4b101cc9e8e48e3c95e2dbd58fa0d32733178194 assets/zenkai/blockstates/energy_crystal_block.json
 90c2bcf3f6bed5efed85f97f1864cac6b859da18 assets/zenkai/blockstates/energy_crystal_ore.json
 266b1031d52102148a76a5d891200b3bc69b463d assets/zenkai/blockstates/energy_generator.json
+1236ddfce94e8a5dafbe1f4b65c94104b0c4cfa8 assets/zenkai/blockstates/healing_water.json
+efd29fa65b5dba709464a3ab5972b4b64400a082 assets/zenkai/blockstates/hfil_cinder_sand.json
+5f97e3ae314831304eef746018059281fc1e0dde assets/zenkai/blockstates/hfil_cinder_sandstone.json
+8d4e622ae0f00af9c4b5905c96f532fbbb3dd768 assets/zenkai/blockstates/hfil_scorched_stone.json
+d9c0d705c412fc53588d7543b2dc5fe1eb3d396b assets/zenkai/blockstates/hfil_spike_rock.json
 ae86d7472bb7bfc89f08fdad987a8518e483ee21 assets/zenkai/blockstates/htc_block.json
 db3d742379ca8e4147182eaab826cee150797fb2 assets/zenkai/blockstates/htc_portal.json
 43e7eb5c1f9d4e9f1c3d36fd04f4115559afbbe3 assets/zenkai/blockstates/katchin_block.json
@@ -177,6 +182,11 @@ ab4faf3c521b572f0ea1810d1016f66ba0a46458 assets/zenkai/models/block/cut_katchin_
 6582e1631d0020175642b2a9a9629be7c852daff assets/zenkai/models/block/energy_crystal_ore.json
 55d8186c41be40e7330b772af12a67c20bf9669e assets/zenkai/models/block/energy_generator.json
 4f75e2227f9c3cb26af4474e2093a764398d161d assets/zenkai/models/block/energy_generator_on.json
+50812bd51e14ec5ea223afe239c89730a63e43b1 assets/zenkai/models/block/healing_water.json
+a4049e21f431e8b765901cd9db28afeff3547b81 assets/zenkai/models/block/hfil_cinder_sand.json
+b1125d20becd04964702e69a03a3a47e88df7731 assets/zenkai/models/block/hfil_cinder_sandstone.json
+860f2e956092374ec1e869e574eee5a90bb71900 assets/zenkai/models/block/hfil_scorched_stone.json
+d9ac38fa3d9d09f9a3d241db80b75b8c0c3b19f8 assets/zenkai/models/block/hfil_spike_rock.json
 270e890716d85116689785ac94f37d446978f7b3 assets/zenkai/models/block/htc_block.json
 17280709590c484c48a9944f75a62d6e8818e860 assets/zenkai/models/block/htc_portal.json
 ef492d02c7f2e9f03b97471a03cbcd8b2f7d0581 assets/zenkai/models/block/katchin_block.json
@@ -400,6 +410,10 @@ af7748effbdc472dacfe7c5ac9ec9be8e8db731b assets/zenkai/models/item/cut_katchin.j
 19d6ad82c12709954fe6e08af7960b923ca88244 assets/zenkai/models/item/deepslate_katchin_ore.json
 394d49f6d6e2962082a6bbe23a296f099fb98135 assets/zenkai/models/item/energy_crystal_block.json
 a1cb559bcbc7e566ae9cc296238497cf9224f95d assets/zenkai/models/item/energy_crystal_ore.json
+80659201aab9bbc4a74a39f8f6f8d436db011939 assets/zenkai/models/item/hfil_cinder_sand.json
+08fddaa2948edf36756b514a51a6d83f932d91da assets/zenkai/models/item/hfil_cinder_sandstone.json
+c52391bc2c69e3d2f35e83d5db6e3144d18f03e3 assets/zenkai/models/item/hfil_scorched_stone.json
+df34a74c9f9ba9ce4ff2e773faa5ecf8ca144241 assets/zenkai/models/item/hfil_spike_rock.json
 d5ace1175e61ae190da2a844de85d57d8f916615 assets/zenkai/models/item/htc_block.json
 318991a80f390b55a717c59ce34e4ccd2bab4c2d assets/zenkai/models/item/htc_portal.json
 e831ddf1410be0a3ca4ea5e78e62d093a9b44175 assets/zenkai/models/item/katchin_block.json

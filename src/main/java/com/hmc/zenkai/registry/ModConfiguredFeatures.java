@@ -56,6 +56,25 @@ public class ModConfiguredFeatures {
      *  y los 3 biomas de HFIL — el reparto de rareza vive en ModPlacedFeatures. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> FALLEN_LOG_KEY = registerKey("fallen_log");
 
+    /** Clúster de pinchos altos del HFIL. Ver HfilSpikeFeature. Solo hfil_needle_wastes hoy (ver
+     *  ModBiomeGen) — el reparto de rareza vive en ModPlacedFeatures. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_SPIKE_KEY = registerKey("hfil_spike");
+
+    /** Montón de huesos/calavera del HFIL. Ver HfilBonePileFeature. Los 3 biomas HFIL — el
+     *  reparto de rareza vive en ModPlacedFeatures. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_BONE_PILE_KEY = registerKey("hfil_bone_pile");
+
+    /** Charco de "sangre" (agua vainilla — el tinte lo pone WATER_COLOR del bioma, ver
+     *  ModBiomeGen.hfilEffects). Compartido por los 3 biomas HFIL, en el mismo paso LAKES que
+     *  ya usan los lagos de lava de BiomeDefaultFeatures.addDefaultCarversAndLakes — al ser dos
+     *  features independientes en el mismo paso, se intercalan solas por el terreno sin
+     *  necesitar lógica propia que alterne entre una y otra. Fase 5 del rework (ver
+     *  .claude/pendiente/hfil-rework-propuesta.md): usa HfilBloodPoolFeature en vez de
+     *  Feature.LAKE — LakeFeature.Configuration solo expone fluido+barrier, no la forma del
+     *  hueco, y en juego se veía como un disco tapado en vez de un charco abierto. Ver
+     *  HfilBloodPoolFeature para el detalle. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_LAKE_BLOOD_KEY = registerKey("hfil_lake_blood");
+
     // ── Namek: menas ─────────────────────────────────────────────────────────
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL            = registerKey("namek_coal");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL_BURIED     = registerKey("namek_coal_buried");
@@ -105,8 +124,9 @@ public class ModConfiguredFeatures {
         register(context, KATCHIN_ORE_EXPOSED_KEY, Feature.ORE,
                 new OreConfiguration(katchinOres, 9, 0.0F));
 
-        // Otherworld (HFIL): UN solo objetivo porque el default_block de esa dimensión es
-        // stone en el rango — no hay deepslate que reemplazar, así que DEEPSLATE_KATCHIN_ORE
+        // Otherworld (HFIL): UN solo objetivo porque el default_block de esa dimensión es un
+        // único bloque en todo el rango (HFIL_SCORCHED_STONE desde el rediseño de atmósfera,
+        // ver ModBlocks) — no hay deepslate que reemplazar, así que DEEPSLATE_KATCHIN_ORE
         // es exclusivo del overworld. Veta de 9 para igualar al hierro: vainilla reparte
         // 10x9 + 10x4 = 130 en la franja profunda y aquí son 15 tiradas x 9 = 135.
         register(context, KATCHIN_ORE_OW_KEY, Feature.ORE, new OreConfiguration(
@@ -127,6 +147,16 @@ public class ModConfiguredFeatures {
         // ── Decoración de biomas sin árboles ─────────────────────────────────
         register(context, FALLEN_LOG_KEY,
                 ModFeatures.FALLEN_LOG.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_SPIKE_KEY,
+                ModFeatures.HFIL_SPIKE.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_BONE_PILE_KEY,
+                ModFeatures.HFIL_BONE_PILE.get(), NoneFeatureConfiguration.INSTANCE);
+
+        // Ya NO es Feature.LAKE (ver comentario de la key arriba) — HfilBloodPoolFeature cava y
+        // rellena a mano, sin capa de barrier por encima del agua, para que el charco quede
+        // siempre abierto en vez de tapado.
+        register(context, HFIL_LAKE_BLOOD_KEY,
+                ModFeatures.HFIL_BLOOD_POOL.get(), NoneFeatureConfiguration.INSTANCE);
 
         // ── Namek: menas ─────────────────────────────────────────────────────
         // Cada una apunta al tag PROPIO: ningún mod que añada menas al overworld puede colarse

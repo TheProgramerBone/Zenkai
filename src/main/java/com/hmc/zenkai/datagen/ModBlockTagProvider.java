@@ -30,6 +30,9 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                 // Bloques base y de construcción
                 ModBlocks.ROCKY_BLOCK.get(),
+                ModBlocks.HFIL_SCORCHED_STONE.get(),
+                ModBlocks.HFIL_SPIKE_ROCK.get(),
+                ModBlocks.HFIL_CINDER_SANDSTONE.get(),
                 ModBlocks.NAMEKIAN_STONE.get(),
                 ModBlocks.NAMEKIAN_COBBLESTONE.get(),
                 ModBlocks.SCOUTER_BENCH.get(),
@@ -70,7 +73,8 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.NAMEKIAN_DIRT_PATH.get(),
                 ModBlocks.NAMEKIAN_GRASS_BLOCK.get(),
                 ModBlocks.NAMEKIAN_SAND.get(),
-                ModBlocks.NAMEKIAN_GRAVEL.get()
+                ModBlocks.NAMEKIAN_GRAVEL.get(),
+                ModBlocks.HFIL_CINDER_SAND.get()
         );
 
         tag(BlockTags.MINEABLE_WITH_AXE).add(
@@ -160,7 +164,8 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         );
 
         tag(Tags.Blocks.SANDS).add(
-                ModBlocks.NAMEKIAN_SAND.get()
+                ModBlocks.NAMEKIAN_SAND.get(),
+                ModBlocks.HFIL_CINDER_SAND.get()
         );
 
         tag(Tags.Blocks.GRAVELS).add(
@@ -285,6 +290,36 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         tag(ModTags.Blocks.NAMEKIAN_ORE_REPLACEABLES).add(
                 ModBlocks.NAMEKIAN_STONE.get()
         );
+
+        // CRÍTICO: HFIL_SCORCHED_STONE pasa a ser el default_block de otherworld_noise.json
+        // (todo el relleno subterráneo del Otherworld, no solo una veneer de superficie como
+        // ROCKY_BLOCK). Los ores vanilla del HFIL (BiomeDefaultFeatures.addDefaultOres) Y el
+        // Katchin propio (KATCHIN_ORE_HFIL, ver ModConfiguredFeatures) buscan bloque objetivo
+        // vía este mismo tag — sin esta entrada, NINGÚN ore del HFIL encontraría dónde
+        // generarse, exactamente el bug ya documentado en CLAUDE.md (ronda 6, ahí fue solo
+        // Katchin porque el default_block seguía siendo minecraft:stone; aquí sería TODOS).
+        tag(BlockTags.STONE_ORE_REPLACEABLES).add(
+                ModBlocks.HFIL_SCORCHED_STONE.get()
+        );
+
+        // IGUAL DE CRÍTICO y encontrado tarde (bug reportado en juego, "no hay cuevas, todo
+        // está cubierto por scorched stone"): los carvers (cave/cave_extra_underground/canyon,
+        // vía BiomeDefaultFeatures.addDefaultCarversAndLakes en ModBiomeGen.hfilBase) solo
+        // pueden tallar aire en bloques listados en este tag — es el mismo mecanismo que
+        // STONE_ORE_REPLACEABLES arriba pero para EXCAVAR en vez de para generar menas. Sin
+        // esta entrada, un carver que se topa con HFIL_SCORCHED_STONE simplemente no lo toca:
+        // el hueco de la cueva nunca se abre, aunque el carver "pase por ahí" con normalidad.
+        tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES).add(
+                ModBlocks.HFIL_SCORCHED_STONE.get()
+        );
+
+        // HFIL_CINDER_SAND/SANDSTONE (Fase 4 del rework, hfil_cinder_dunes) NO llevan estos dos
+        // tags a propósito, a diferencia de HFIL_SCORCHED_STONE arriba: son solo una veneer
+        // superficial de ~6-7 bloques (ver la surface_rule de otherworld_noise.json), no el
+        // default_block de la dimensión — exactamente igual que minecraft:red_sand/
+        // red_sandstone, a los que sustituyen, TAMPOCO están en estos tags en vainilla. Los ores
+        // y carvers del HFIL ya funcionan sobre HFIL_SCORCHED_STONE, que empieza justo debajo de
+        // esta veneer.
 
         tag(ModTags.Blocks.DRAGON_BALLS_BLOCK).add(
                 ModBlocks.DRAGON_BALL_1.get(),

@@ -10,9 +10,9 @@ public class ModBiomes {
 
     public static final ResourceKey<Biome> ROCKY_WASTELAND = register("rocky_wasteland");
     public static final ResourceKey<Biome> OTHERWORLD = register("otherworld");
-    public static final ResourceKey<Biome> HFIL_BADLANDS = register("hfil_badlands");
-    public static final ResourceKey<Biome> HFIL_WASTES   = register("hfil_wastes");
-    public static final ResourceKey<Biome> HFIL_DUNES    = register("hfil_dunes");
+    public static final ResourceKey<Biome> HFIL_BLOOD_SHORE = register("hfil_blood_shore");
+    public static final ResourceKey<Biome> HFIL_NEEDLE_WASTES = register("hfil_needle_wastes");
+    public static final ResourceKey<Biome> HFIL_CINDER_DUNES = register("hfil_cinder_dunes");
     public static final ResourceKey<Biome> NAMEK_PLAINS = register("namek_plains");
     public static final ResourceKey<Biome> NAMEK_HILLS  = register("namek_hills");
     public static final ResourceKey<Biome> NAMEK_OCEAN  = register("namek_ocean");

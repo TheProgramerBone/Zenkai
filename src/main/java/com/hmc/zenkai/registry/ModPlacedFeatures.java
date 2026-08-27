@@ -38,8 +38,11 @@ public class ModPlacedFeatures {
      *  "hfil_*", dejando el hueco residual reportado en juego (menos frecuente que el bug
      *  original porque solo afecta a las columnas de nube más bajas, no a todas). Deja margen
      *  de sobra sobre el techo real del suelo (los ores de KATCHIN_ORE_HFIL llegan como mucho
-     *  a y=120, ver más abajo). */
-    private static final int HFIL_FLOOR_MAX_Y =
+     *  a y=120, ver más abajo). Público: BloodPondStructure (Fase 6 del rework del HFIL) lo
+     *  reutiliza como techo de búsqueda de suelo al buscar dónde generar el landmark — mismo
+     *  problema de fondo (una isla flotante por encima no debe confundirse con el suelo real),
+     *  una sola constante para las dos cosas. */
+    public static final int HFIL_FLOOR_MAX_Y =
             CloudLayerFeature.CLOUD_BASE_Y - CloudLayerFeature.BASE_VARIATION - 1;
 
     //  Katchin
@@ -56,6 +59,15 @@ public class ModPlacedFeatures {
     //  Troncos caídos (biomas sin árboles)
     public static final ResourceKey<PlacedFeature> FALLEN_LOG_ROCKY_KEY = registerKey("fallen_log_rocky");
     public static final ResourceKey<PlacedFeature> FALLEN_LOG_HFIL_KEY  = registerKey("fallen_log_hfil");
+
+    //  Pinchos del HFIL (rediseño "infierno de Dragon Ball", ver ModBiomeGen)
+    public static final ResourceKey<PlacedFeature> HFIL_SPIKE_KEY = registerKey("hfil_spike");
+
+    //  Lago de sangre del HFIL (mismo rediseño, punto 3 — se intercala con los lagos de lava)
+    public static final ResourceKey<PlacedFeature> HFIL_LAKE_BLOOD_KEY = registerKey("hfil_lake_blood");
+
+    //  Montón de huesos/calavera del HFIL (mismo rediseño, punto 5)
+    public static final ResourceKey<PlacedFeature> HFIL_BONE_PILE_KEY = registerKey("hfil_bone_pile");
 
     public static final ResourceKey<PlacedFeature> OTHERWORLD_CLOUDS_KEY    = registerKey("otherworld_clouds");
     public static final ResourceKey<PlacedFeature> OTHERWORLD_FLOWERS_KEY   = registerKey("otherworld_flowers");
@@ -129,9 +141,14 @@ public class ModPlacedFeatures {
                         SurfaceWaterDepthFilter.forMaxDepth(0),
                         BiomeFilter.biome()));
 
+        // Rediseño de identidad HFIL, Fase 3 (ver .claude/pendiente/hfil-rework-propuesta.md):
+        // bajado de (2, 8) a (1, 3) intentos por chunk — la hierba pasa de cobertura densa a
+        // matojos dispersos, para que en hfil_needle_wastes el terreno base se lea "yermo
+        // rocoso" y los pinchos (HFIL_SPIKE_KEY, más abajo) sean lo primero que define el
+        // horizonte, no una pradera de fondo compitiendo con ellos.
         register(context, HFIL_DRY_GRASS_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.PATCH_TAIGA_GRASS),
-                List.of(NoiseThresholdCountPlacement.of(-0.4D, 2, 8),
+                List.of(NoiseThresholdCountPlacement.of(-0.4D, 1, 3),
                         InSquarePlacement.spread(),
                         ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
                         BiomeFilter.biome()));
@@ -169,6 +186,44 @@ public class ModPlacedFeatures {
         register(context, FALLEN_LOG_HFIL_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.FALLEN_LOG_KEY),
                 List.of(RarityFilter.onAverageOnceEvery(12),
+                        InSquarePlacement.spread(),
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
+                        BiomeFilter.biome()));
+
+        // Más raro que los troncos/matas a propósito: son formaciones dramáticas pensadas para
+        // dominar el horizonte, no decoración de relleno — ver HfilSpikeFeature. Mismo
+        // ClampedHeightmapPlacement que el resto del suelo del HFIL (evita que el origen del
+        // clúster herede la altura de una isla flotante del Otherworld).
+        // Rediseño de identidad HFIL, Fase 3 (ver .claude/pendiente/hfil-rework-propuesta.md):
+        // subido de 1/120 a 1/40 — con la identidad "Needle Wastes", los pinchos deben ser lo
+        // que define el horizonte nada más entrar al bioma, no un evento raro/accesorio como
+        // en el rediseño anterior. Sigue siendo bastante más raro que HFIL_BONE_PILE_KEY (1/16)
+        // o los troncos (1/12): es la pieza dramática del paisaje, no relleno.
+        register(context, HFIL_SPIKE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_SPIKE_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(40),
+                        InSquarePlacement.spread(),
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
+                        BiomeFilter.biome()));
+
+        // Mismo chance (200) que minecraft:lake_lava_surface — al vivir en el mismo paso LAKES
+        // que los lagos de lava (BiomeDefaultFeatures.addDefaultCarversAndLakes, ver
+        // ModBiomeGen.hfilBase) con la misma probabilidad, ninguna de las dos domina sobre la
+        // otra: se intercalan por el terreno solas. A diferencia del lago de lava vainilla, que
+        // usa el heightmap WORLD_SURFACE_WG (puede capturar la altura de una isla flotante del
+        // Otherworld en vez del suelo real del HFIL — mismo problema de fondo que ya resolvió
+        // ClampedHeightmapPlacement para el resto de esta lista), este SÍ usa el clamp propio.
+        register(context, HFIL_LAKE_BLOOD_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_LAKE_BLOOD_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(200),
+                        InSquarePlacement.spread(),
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
+                        BiomeFilter.biome()));
+
+        // Decoración puntual barata: más común que los troncos, en línea con matas/hierba.
+        register(context, HFIL_BONE_PILE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_BONE_PILE_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(16),
                         InSquarePlacement.spread(),
                         ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
                         BiomeFilter.biome()));
