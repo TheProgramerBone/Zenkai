@@ -10,6 +10,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -102,6 +104,17 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('A',ModItems.ADVANCED_CIRCUIT)
                 .unlockedBy("has_scouter",has(ModItems.SCOUTER)).save(recipeOutput);
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.ENERGY_GENERATOR.get(), 1)
+                .pattern("III")
+                .pattern("PKP")
+                .pattern("CFC")
+                .define('I', Tags.Items.INGOTS_IRON)
+                .define('P', ItemTags.PLANKS)
+                .define('C',Tags.Items.INGOTS_COPPER)
+                .define('F',Blocks.FURNACE)
+                .define('K',ModItems.KATCHIN_INGOT)
+                .unlockedBy("has_scouter",has(Blocks.FURNACE)).save(recipeOutput);
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.HALO.get(),1)
                 .pattern("YYY")
                 .pattern("Y Y")
@@ -151,6 +164,12 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         ShapelessRecipeBuilder.shapeless(RecipeCategory.FOOD, ModItems.HEALING_WATER_BOTTLE.get(), 1)
                 .requires(Items.POTION)
                 .requires(ModItems.NAMEKIAN_HERB.get(), 2)
+                .unlockedBy("has_namekian_herb", has(ModItems.NAMEKIAN_HERB.get())).save(recipeOutput);
+
+        // Cubo entero, no una dosis: más hierbas que la botella (2).
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.HEALING_WATER_BUCKET.get(), 1)
+                .requires(Items.WATER_BUCKET)
+                .requires(ModItems.NAMEKIAN_HERB.get(), 4)
                 .unlockedBy("has_namekian_herb", has(ModItems.NAMEKIAN_HERB.get())).save(recipeOutput);
 
 

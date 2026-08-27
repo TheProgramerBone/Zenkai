@@ -51,6 +51,11 @@ public class ModConfiguredFeatures {
     // ── Otherworld ───────────────────────────────────────────────────────────
     public static final ResourceKey<ConfiguredFeature<?, ?>> OTHERWORLD_CLOUDS_KEY = registerKey("otherworld_clouds");
 
+    // ── Decoración de biomas sin árboles ────────────────────────────────────
+    /** Tronco caído, madera vanilla. Ver FallenLogFeature. Compartida por rocky_wasteland
+     *  y los 3 biomas de HFIL — el reparto de rareza vive en ModPlacedFeatures. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> FALLEN_LOG_KEY = registerKey("fallen_log");
+
     // ── Namek: menas ─────────────────────────────────────────────────────────
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL            = registerKey("namek_coal");
     public static final ResourceKey<ConfiguredFeature<?, ?>> NAMEK_COAL_BURIED     = registerKey("namek_coal_buried");
@@ -118,6 +123,10 @@ public class ModConfiguredFeatures {
         // ── Otherworld ───────────────────────────────────────────────────────
         register(context, OTHERWORLD_CLOUDS_KEY,
                 ModFeatures.CLOUD_LAYER.get(), NoneFeatureConfiguration.INSTANCE);
+
+        // ── Decoración de biomas sin árboles ─────────────────────────────────
+        register(context, FALLEN_LOG_KEY,
+                ModFeatures.FALLEN_LOG.get(), NoneFeatureConfiguration.INSTANCE);
 
         // ── Namek: menas ─────────────────────────────────────────────────────
         // Cada una apunta al tag PROPIO: ningún mod que añada menas al overworld puede colarse

@@ -10,6 +10,7 @@ import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import com.hmc.zenkai.event.*;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
+import com.hmc.zenkai.client.fluid.HealingWaterFluidClientExtensions;
 import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
@@ -52,6 +53,7 @@ import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
@@ -89,6 +91,7 @@ public class Zenkai {
         ModWoodTypes.init();
         ModStructures.register(modEventBus);
         ModItems.register(modEventBus);
+        ModFluids.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModSounds.register(modEventBus);
@@ -96,6 +99,7 @@ public class Zenkai {
         ModEffects.register(modEventBus);
         ZenkaiDataAttachments.REGISTER.register(modEventBus);
         ModFeatures.register(modEventBus);
+        ModPlacementModifierTypes.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
         ModDataComponents.register(modEventBus);
         ModParticles.register(modEventBus);
@@ -344,6 +348,12 @@ public class Zenkai {
         @SubscribeEvent
         public static void onKeyInput(InputEvent.Key event) {
             KeyBindings.handleKeyInput(event);
+        }
+
+        /** Textura (agua vanilla) + tinte del agua curativa. Ver HealingWaterFluidClientExtensions. */
+        @SubscribeEvent
+        public static void registerFluidExtensions(RegisterClientExtensionsEvent event) {
+            event.registerFluidType(HealingWaterFluidClientExtensions.INSTANCE, ModFluids.HEALING_WATER_TYPE.get());
         }
     }
 }

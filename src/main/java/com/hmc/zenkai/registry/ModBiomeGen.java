@@ -72,6 +72,8 @@ public final class ModBiomeGen {
 
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.ROCKY_DEAD_BUSH_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.FALLEN_LOG_ROCKY_KEY);
 
         return new Biome.BiomeBuilder()
                 .hasPrecipitation(false)
@@ -134,6 +136,8 @@ public final class ModBiomeGen {
         BiomeGenerationSettings.Builder gen = hfilBase(features, carvers);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_DEAD_BUSH_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.FALLEN_LOG_HFIL_KEY);
         return hfilBuild(hfilEffects(6034452).build(), gen); // #5C1414
     }
 
@@ -149,6 +153,8 @@ public final class ModBiomeGen {
                 ModPlacedFeatures.HFIL_DRY_GRASS_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_DEAD_BUSH_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.FALLEN_LOG_HFIL_KEY);
 
         BiomeSpecialEffects effects = hfilEffects(5118482)   // #4E1A12
                 .grassColorOverride(8016432)                 // #7A5230 ocre pardo
@@ -163,6 +169,8 @@ public final class ModBiomeGen {
         BiomeGenerationSettings.Builder gen = hfilBase(features, carvers);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_DEAD_BUSH_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.FALLEN_LOG_HFIL_KEY);
         return hfilBuild(hfilEffects(7219736).build(), gen); // #6E2A18
     }
 

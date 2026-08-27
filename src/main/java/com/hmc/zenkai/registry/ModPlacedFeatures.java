@@ -1,6 +1,8 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.worldgen.CloudLayerFeature;
+import com.hmc.zenkai.worldgen.placement.ClampedHeightmapPlacement;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -26,7 +28,21 @@ import java.util.List;
  */
 public class ModPlacedFeatures {
 
-    //  Katchin 
+    /** Techo del suelo del HFIL para ClampedHeightmapPlacement: por DEBAJO del punto más bajo
+     *  posible de las islas flotantes, no solo de su base nominal. CloudLayerFeature varía la
+     *  altura de arranque de cada columna de nube en ±BASE_VARIATION respecto a CLOUD_BASE_Y
+     *  (128), así que una nube puede empezar en y=124, no solo en 128 — con el clamp puesto
+     *  en CLOUD_BASE_Y-1=127 (como estaba antes), el escaneo desde 127 hacia abajo todavía
+     *  podía toparse con el bloque de nube de una columna baja ANTES de llegar al suelo real
+     *  del HFIL; el BiomeFilter descartaba esa colocación por bioma "otherworld" en vez de
+     *  "hfil_*", dejando el hueco residual reportado en juego (menos frecuente que el bug
+     *  original porque solo afecta a las columnas de nube más bajas, no a todas). Deja margen
+     *  de sobra sobre el techo real del suelo (los ores de KATCHIN_ORE_HFIL llegan como mucho
+     *  a y=120, ver más abajo). */
+    private static final int HFIL_FLOOR_MAX_Y =
+            CloudLayerFeature.CLOUD_BASE_Y - CloudLayerFeature.BASE_VARIATION - 1;
+
+    //  Katchin
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_OVERWORLD = registerKey("katchin_ore_overworld");
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_ROCKY     = registerKey("katchin_ore_rocky");
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_HFIL      = registerKey("katchin_ore_hfil");
@@ -36,6 +52,10 @@ public class ModPlacedFeatures {
     public static final ResourceKey<PlacedFeature> ROCKY_DEAD_BUSH_KEY   = registerKey("rocky_dead_bush");
     public static final ResourceKey<PlacedFeature> HFIL_DRY_GRASS_KEY    = registerKey("hfil_dry_grass");
     public static final ResourceKey<PlacedFeature> HFIL_DEAD_BUSH_KEY    = registerKey("hfil_dead_bush");
+
+    //  Troncos caídos (biomas sin árboles)
+    public static final ResourceKey<PlacedFeature> FALLEN_LOG_ROCKY_KEY = registerKey("fallen_log_rocky");
+    public static final ResourceKey<PlacedFeature> FALLEN_LOG_HFIL_KEY  = registerKey("fallen_log_hfil");
 
     public static final ResourceKey<PlacedFeature> OTHERWORLD_CLOUDS_KEY    = registerKey("otherworld_clouds");
     public static final ResourceKey<PlacedFeature> OTHERWORLD_FLOWERS_KEY   = registerKey("otherworld_flowers");
@@ -95,31 +115,63 @@ public class ModPlacedFeatures {
                 ModOrePlacement.commonOrePlacement(3, HeightRangePlacement.uniform(
                         VerticalAnchor.absolute(130), VerticalAnchor.absolute(190))));
 
-        // Vegetación de superficie 
+        // Vegetación de superficie
+        // HEIGHTMAP_OCEAN_FLOOR + SurfaceWaterDepthFilter(0), no HEIGHTMAP_WORLD_SURFACE: ese
+        // heightmap cuenta el agua como "superficie" (cualquier bloque no-aire cuenta), así
+        // que en una columna con laguna/costa la mata se colocaba flotando en la lámina de
+        // agua — mismo bug que los troncos caídos de abajo, mismo arreglo que ya usa
+        // correctamente treePlacement() para los árboles de Namek.
         register(context, ROCKY_DEAD_BUSH_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.PATCH_DEAD_BUSH),
                 List.of(NoiseThresholdCountPlacement.of(-0.8D, 0, 7),
                         InSquarePlacement.spread(),
-                        PlacementUtils.HEIGHTMAP_WORLD_SURFACE,
+                        PlacementUtils.HEIGHTMAP_OCEAN_FLOOR,
+                        SurfaceWaterDepthFilter.forMaxDepth(0),
                         BiomeFilter.biome()));
 
         register(context, HFIL_DRY_GRASS_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.PATCH_TAIGA_GRASS),
                 List.of(NoiseThresholdCountPlacement.of(-0.4D, 2, 8),
                         InSquarePlacement.spread(),
-                        PlacementUtils.HEIGHTMAP_WORLD_SURFACE,
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
                         BiomeFilter.biome()));
 
         register(context, HFIL_DEAD_BUSH_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.PATCH_DEAD_BUSH),
                 List.of(NoiseThresholdCountPlacement.of(-0.8D, 0, 4),
                         InSquarePlacement.spread(),
-                        PlacementUtils.HEIGHTMAP_WORLD_SURFACE,
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
                         BiomeFilter.biome()));
 
         register(context, OTHERWORLD_CLOUDS_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.OTHERWORLD_CLOUDS_KEY),
                 List.of());
+
+        //  Troncos caídos: decoración puntual para poder hacerse un set de madera básico, no
+        // un bosque, pero sin pasarse de escasos — parte de los intentos se descartan en
+        // FallenLogFeature.groundIsFlatEnough (terreno irregular), así que la rareza de aquí
+        // ya cuenta con que no todos los intentos llegan a colocar nada. Dos placed features
+        // por si algún día se quiere ajustar la rareza de cada lado por separado, aunque hoy
+        // comparten configured feature.
+        // Mismo motivo que ROCKY_DEAD_BUSH_KEY arriba: HEIGHTMAP_WORLD_SURFACE deja pasar
+        // columnas de agua, así que el origen del tronco se colocaba sobre la lámina en vez
+        // de rechazarse. groundIsFlatEnough (dentro de FallenLogFeature) ya comprueba el
+        // fondo real bajo las 4 esquinas del hueco tras rotar/desplazar; este filtro cubre la
+        // columna de ORIGEN antes de eso.
+        register(context, FALLEN_LOG_ROCKY_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.FALLEN_LOG_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(14),
+                        InSquarePlacement.spread(),
+                        PlacementUtils.HEIGHTMAP_OCEAN_FLOOR,
+                        SurfaceWaterDepthFilter.forMaxDepth(0),
+                        BiomeFilter.biome()));
+
+        register(context, FALLEN_LOG_HFIL_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.FALLEN_LOG_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(12),
+                        InSquarePlacement.spread(),
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
+                        BiomeFilter.biome()));
 
         register(context, OTHERWORLD_FLOWERS_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.FLOWER_DEFAULT),

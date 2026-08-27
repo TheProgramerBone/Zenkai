@@ -103,6 +103,13 @@ public class ModItems {
                             .effect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1), 1.0f)
                             .build()));
 
+    /** Cubo del agua curativa en forma de fluido (ver ModFluids/HealingWaterBlock). Se
+     *  coloca/recoge igual que un cubo de agua normal: BucketItem vanilla ya cubre eso, no
+     *  hace falta subclase propia. */
+    public static final DeferredItem<Item> HEALING_WATER_BUCKET = ITEMS.registerItem("healing_water_bucket",
+            p -> new BucketItem(ModFluids.HEALING_WATER.get(), p),
+            new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET));
+
     public static final DeferredItem<Item> WARRIOR_SPAWN_EGG = ITEMS.register("namekian_warrior_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN_WARRIOR,0x28ad1b ,0x26b9fe, new Item.Properties()));
 

@@ -1,11 +1,9 @@
 {
-  "feature": "minecraft:patch_dead_bush",
+  "feature": "zenkai:fallen_log",
   "placement": [
     {
-      "type": "minecraft:noise_threshold_count",
-      "above_noise": 7,
-      "below_noise": 0,
-      "noise_level": -0.8
+      "type": "minecraft:rarity_filter",
+      "chance": 14
     },
     {
       "type": "minecraft:in_square"

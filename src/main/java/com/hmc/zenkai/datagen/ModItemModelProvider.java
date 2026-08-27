@@ -36,6 +36,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.NAMEKIAN_HERB.get());
         basicItem(ModItems.NAMEKIAN_HERB_SEEDS.get());
         basicItem(ModItems.HEALING_WATER_BOTTLE.get());
+        basicItem(ModItems.HEALING_WATER_BUCKET.get());
         basicItem(ModItems.RAW_KATCHIN.get());
         basicItem(ModItems.DIRTY_RAW_KATCHIN.get());
         basicItem(ModItems.KATCHIN_INGOT.get());

@@ -2,6 +2,7 @@ package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.worldgen.CloudLayerFeature;
+import com.hmc.zenkai.worldgen.FallenLogFeature;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -21,6 +22,9 @@ public final class ModFeatures {
 
     public static final DeferredHolder<Feature<?>, CloudLayerFeature> CLOUD_LAYER =
             FEATURES.register("cloud_layer", () -> new CloudLayerFeature(NoneFeatureConfiguration.CODEC));
+
+    public static final DeferredHolder<Feature<?>, FallenLogFeature> FALLEN_LOG =
+            FEATURES.register("fallen_log", () -> new FallenLogFeature(NoneFeatureConfiguration.CODEC));
 
     public static void register(IEventBus modEventBus) {
         FEATURES.register(modEventBus);

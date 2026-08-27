@@ -535,6 +535,21 @@ public class ModBlocks {
     public static final DeferredBlock<Block> NPC_MARKER = registerBlock("npc_marker",
             () -> new NpcMarkerBlock(NpcMarkerBlock.markerProperties()));
 
+    /** Agua curativa. Se registra SIN item de bloque, igual que NAMEKIAN_HERB_CROP: un
+     *  fluido no se coloca desde el inventario como bloque, solo desde su cubo. Tipado como
+     *  DeferredBlock&lt;HealingWaterBlock&gt; (no &lt;Block&gt;) a propósito: ModFluids lo pasa a
+     *  BaseFlowingFluid.Properties.block(...), que exige Supplier&lt;? extends LiquidBlock&gt;. */
+    public static final DeferredBlock<HealingWaterBlock> HEALING_WATER_BLOCK = MOD_BLOCKS.register("healing_water",
+            () -> new HealingWaterBlock(ModFluids.HEALING_WATER.get(), BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_CYAN)
+                    .replaceable()
+                    .noCollission()
+                    .strength(100f)
+                    .liquid()
+                    .sound(SoundType.EMPTY)
+                    .pushReaction(PushReaction.DESTROY)
+                    .noLootTable()));
+
     public static void register(IEventBus eventBus) {
         MOD_BLOCKS.register(eventBus);
     }

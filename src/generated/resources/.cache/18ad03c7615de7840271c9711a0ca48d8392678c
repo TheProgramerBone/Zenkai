@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-16T11:16:11.7217333	Item Models: zenkai
+// 1.21.1	2026-08-26T19:57:57.7608554	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -24,6 +24,7 @@ b6f3572016d27a67567a73dd90a74cf43defc6f7 assets/zenkai/models/item/energy_crysta
 b3483a3b592995f3901669b8a260cde0e5b6a537 assets/zenkai/models/item/energy_generator.json
 c6fdd6445bc58722d479b71d0c927092b728dc33 assets/zenkai/models/item/halo.json
 17a629df4615b9fbb9b20f489f1053784acc77a2 assets/zenkai/models/item/healing_water_bottle.json
+abee47a8f46a87476d43b6d2d9b86e4841c2e9bb assets/zenkai/models/item/healing_water_bucket.json
 591a65dc0fb399f79cfbf922850025b7e4bac0bf assets/zenkai/models/item/human_race_boots.json
 591a65dc0fb399f79cfbf922850025b7e4bac0bf assets/zenkai/models/item/human_race_boots_colorable.json
 591a65dc0fb399f79cfbf922850025b7e4bac0bf assets/zenkai/models/item/human_race_boots_colorable_female.json

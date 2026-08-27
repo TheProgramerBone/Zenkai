@@ -65,7 +65,8 @@
     ],
     [
       "minecraft:glow_lichen",
-      "zenkai:hfil_dead_bush"
+      "zenkai:hfil_dead_bush",
+      "zenkai:fallen_log_hfil"
     ]
   ],
   "has_precipitation": false,

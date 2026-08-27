@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:water_bucket"
+    },
+    {
+      "item": "zenkai:namekian_herb"
+    },
+    {
+      "item": "zenkai:namekian_herb"
+    },
+    {
+      "item": "zenkai:namekian_herb"
+    },
+    {
+      "item": "zenkai:namekian_herb"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:healing_water_bucket"
+  }
+}

@@ -11,8 +11,8 @@
       "type": "minecraft:in_square"
     },
     {
-      "type": "minecraft:heightmap",
-      "heightmap": "WORLD_SURFACE_WG"
+      "type": "zenkai:clamped_heightmap",
+      "max_y": 123
     },
     {
       "type": "minecraft:biome"
