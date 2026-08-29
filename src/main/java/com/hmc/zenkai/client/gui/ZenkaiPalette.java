@@ -158,9 +158,11 @@ public final class ZenkaiPalette {
 
     /** Color del NOMBRE del alineamiento. Umbrales iguales a los de la clave de traducción. */
     public static int alignmentColor(int alignment) {
-        if (alignment > 20) return ALIGN_GOOD;
-        if (alignment < -20) return ALIGN_EVIL;
-        return ALIGN_NEUTRAL;
+        return switch (com.hmc.zenkai.feature.alignment.AlignmentTier.of(alignment)) {
+            case GOOD -> ALIGN_GOOD;
+            case EVIL -> ALIGN_EVIL;
+            case NEUTRAL -> ALIGN_NEUTRAL;
+        };
     }
 
     // ── Utilidades ───────────────────────────────────────────────────────────
@@ -183,6 +185,29 @@ public final class ZenkaiPalette {
     /** Panel del retrato dentro de un diálogo independiente. Mismo tono que BAR_BG_DARK
      *  (pensado para ir SOBRE un fondo ya opaco) pero opaco por la misma razón que DIALOG_BG. */
     public static final int DIALOG_PANEL = 0xFF241A12;
+
+    // ── Paleta fría del diálogo de maestro (master_screen.png) ──────────────
+    // MasterScreen es un diálogo con un NPC, no un menú del jugador: usa el mismo lenguaje
+    // estructural que common_screen.png (marco de tres anillos + sombreado por bandas + marca
+    // de agua sutil, ver tools/gen_master_screen.py) pero con una paleta VIOLETA/CIRUELA en vez
+    // del naranja/dorado de BORDER_*/DIALOG_* — así un diálogo con un maestro se lee distinto de
+    // un panel propio del jugador de un vistazo, sin depender del retrato para notarlo.
+    // Un primer intento usó azul/cian (0xFF5FAFC4 de anillo exterior, 0xFF10161C de fondo) y
+    // resultó ser casi el mismo tono que ZenkaiTechPalette.CYAN (0xFF56B0C8) y SCREEN_BG
+    // (0xFF12161E): el diálogo de un maestro se leía como un panel de máquina (scouter bench,
+    // energy generator), no como un personaje sabio — la familia de colores estaba ya ocupada
+    // por la temática tecnológica del mod. El violeta/ciruela de aquí abajo REUTILIZA el tono
+    // que ZenkaiPalette ya asocia a "forma y maestría" (SPECIAL_ON_PANEL/SECTION_FORM, ver el
+    // popup de StatsScreen) en vez de competir con ese significado — y no colisiona con nada
+    // más de la paleta (tech = azul/cian, alineamiento = rojo/gris/azul, menús = naranja/dorado).
+    // Los roles semánticos de texto (TP_ON_DARK, OK, DENIED...) NO cambian aquí: siguen siendo
+    // los mismos en cualquier pantalla, solo cambia el marco/fondo.
+    public static final int MASTER_BORDER_IN  = 0xFF3A1B4A;   // anillo interior: ciruela oscuro
+    public static final int MASTER_BORDER_MID = 0xFF6B3A78;   // == SPECIAL_ON_PANEL, mismo "ciruela"
+    public static final int MASTER_BORDER_OUT = 0xFFAF7FC4;   // anillo exterior: violeta claro
+    public static final int MASTER_BORDER_HI  = 0xFFE8D0F0;   // brillo de esquina: lila pálido
+    public static final int MASTER_DIALOG_BG    = 0xFF160F1A;
+    public static final int MASTER_DIALOG_PANEL = 0xFF1F1723;
 
     // ── Fondos de zona ───────────────────────────────────────────────────────
     // Los últimos literales sueltos del barrido. No son colores de texto, pero se repetían con

@@ -3,6 +3,7 @@ package com.hmc.zenkai.datagen;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.registry.ModBiomes;
 import com.hmc.zenkai.registry.ModBlocks;
 import com.hmc.zenkai.registry.ModDimensions;
 import com.hmc.zenkai.registry.ModItems;
@@ -15,13 +16,18 @@ import net.minecraft.advancements.Criterion;
 import net.minecraft.advancements.critereon.ChangeDimensionTrigger;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.advancements.critereon.ItemPredicate;
+import net.minecraft.advancements.critereon.LocationPredicate;
 import net.minecraft.advancements.critereon.PlayerTrigger;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.biome.Biome;
 import net.neoforged.neoforge.common.data.AdvancementProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * Los 28 logros de Zenkai, en UNA sola pestaña.
+ * Los 29 logros de Zenkai, en UNA sola pestaña.
  * POR QUÉ UNA PESTAÑA. Tres pestañas de un mod en la pantalla de logros gritan "conversión
  * total", y ese es justo el problema que el resto del diseño se esfuerza en no tener.
  * LA RAÍZ OTORGA EL MUNDO al entrar (trigger `tick` de vanilla, igual que la raíz de
@@ -60,6 +66,8 @@ public class ModAdvancementProvider extends AdvancementProvider {
         @Override
         public void generate(HolderLookup.@NotNull Provider registries, @NotNull Consumer<AdvancementHolder> saver,
                              @NotNull ExistingFileHelper efh) {
+
+            HolderGetter<Biome> biomes = registries.lookupOrThrow(Registries.BIOME);
 
             // ── RAÍZ ────────────────────────────────────────────────────────
             AdvancementHolder root = Advancement.Builder.advancement()
@@ -229,12 +237,24 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     ModBlocks.HTC_BLOCK.get(), AdvancementType.TASK, false,
                     "go", ChangeDimensionTrigger.TriggerInstance.changedDimensionTo(ModDimensions.HTC_LEVEL));
 
-            Advancement.Builder.advancement().parent(chooseRace)
+            AdvancementHolder otherworld = Advancement.Builder.advancement().parent(chooseRace)
                     .display(ModItems.HALO.get(), title("otherworld"), desc("otherworld"),
                             null, AdvancementType.TASK, true, true, true)
                     .addCriterion("go", ChangeDimensionTrigger.TriggerInstance
                             .changedDimensionTo(ModDimensions.OTHERWORLD_LEVEL))
                     .save(saver, id("otherworld"), efh);
+
+            // Los 3 criterios y ninguna llamada a requirements(): el default de vanilla es AND
+            // (mismo patrón que all_wishes arriba), o sea que hacen falta LOS TRES biomas.
+            // Primer uso de LocationTrigger/LocationPredicate de vanilla en el mod — no hace
+            // falta ningún trigger propio de Zenkai para "el jugador está en tal bioma".
+            Advancement.Builder.advancement().parent(otherworld)
+                    .display(Items.BONE_BLOCK, title("hfil_biomes"), desc("hfil_biomes"),
+                            null, AdvancementType.TASK, true, true, true)
+                    .addCriterion("blood_shore", inBiome(biomes, ModBiomes.HFIL_BLOOD_SHORE))
+                    .addCriterion("needle_wastes", inBiome(biomes, ModBiomes.HFIL_NEEDLE_WASTES))
+                    .addCriterion("cinder_dunes", inBiome(biomes, ModBiomes.HFIL_CINDER_DUNES))
+                    .save(saver, id("hfil_biomes"), efh);
         }
 
         // =================================================================
@@ -327,6 +347,16 @@ public class ModAdvancementProvider extends AdvancementProvider {
         private static Criterion<?> hasTag(net.minecraft.tags.TagKey<net.minecraft.world.item.Item> tag) {
             return InventoryChangeTrigger.TriggerInstance.hasItems(
                     ItemPredicate.Builder.item().of(tag));
+        }
+
+        /** El jugador está actualmente en el bioma dado — mismo trigger CriteriaTriggers.LOCATION
+         *  de vanilla que ya usa PlayerTrigger.TriggerInstance.located(...) para "pisando tal
+         *  bloque"; aquí con un LocationPredicate de bioma en vez de bloque. Sondeo periódico de
+         *  vanilla, misma cadencia que StatThreshold (ver su javadoc en ZenkaiTriggers). Usado
+         *  por hfil_biomes; no hace falta ningún trigger propio de Zenkai para esto. */
+        private static Criterion<?> inBiome(HolderGetter<Biome> biomes, ResourceKey<Biome> biome) {
+            return PlayerTrigger.TriggerInstance.located(
+                    LocationPredicate.Builder.inBiome(biomes.getOrThrow(biome)));
         }
     }
 }

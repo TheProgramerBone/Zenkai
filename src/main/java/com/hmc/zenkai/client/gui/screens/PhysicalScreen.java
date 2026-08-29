@@ -122,7 +122,11 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                 // El botón dice solo "Unlock". El precio y lo que falta viven en el tooltip:
                 // en la fila ya hay nombre y ficha técnica, y meter "Unlock · 300 TP · 10 MND"
                 // en la misma línea la convertía en tres datos compitiendo por el mismo sitio.
-                boolean afford = canAfford(t);
+                // Técnica firma (t.master() no vacío): el servidor SIEMPRE rechaza este botón
+                // (manda masterId="", y PhysicalTechniquePacket.handle exige el del maestro
+                // real) — sin este chequeo quedaba activo y clickeable, fallando en silencio.
+                boolean masterGated = !t.master().isEmpty();
+                boolean afford = canAfford(t) && !masterGated;
                 TextOnlyButton unlock = actionButton(
                         Component.translatable("screen.zenkai.physical.unlock_action"), y,
                         () -> PacketDistributor.sendToServer(PhysicalTechniquePacket.unlock(t)))
@@ -371,16 +375,24 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
                     : Component.translatable("screen.zenkai.physical.unlock", t.tpCost())
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
 
-            // Solo se enumera lo que falta, no lo que se pide: si le sobra el MND, leer
-            // "necesitas 6 MND" cuando tiene 10 es ruido que compite con el dato que importa.
-            if (att.getTP() < t.tpCost()) {
-                lines.add(Component.translatable("screen.zenkai.physical.need_tp",
-                        t.tpCost() - att.getTP()).withStyle(net.minecraft.ChatFormatting.RED));
-            }
-            int mindCost = MindBudget.costOf(t);
-            if (MindBudget.free(att) < mindCost) {
-                lines.add(Component.translatable("screen.zenkai.physical.need_mnd",
-                        mindCost - MindBudget.free(att)).withStyle(net.minecraft.ChatFormatting.RED));
+            if (!t.master().isEmpty()) {
+                // Técnica firma: el bloqueo real es "ve a hablar con tu maestro", no TP/MND —
+                // mostrar el déficit de fondos aquí sería engañoso (podría sobrarle de sobra).
+                lines.add(Component.translatable("screen.zenkai.technique.masterOnly",
+                        Component.translatable("master.zenkai." + t.master()))
+                        .withStyle(net.minecraft.ChatFormatting.RED));
+            } else {
+                // Solo se enumera lo que falta, no lo que se pide: si le sobra el MND, leer
+                // "necesitas 6 MND" cuando tiene 10 es ruido que compite con el dato que importa.
+                if (att.getTP() < t.tpCost()) {
+                    lines.add(Component.translatable("screen.zenkai.physical.need_tp",
+                            t.tpCost() - att.getTP()).withStyle(net.minecraft.ChatFormatting.RED));
+                }
+                int mindCost = MindBudget.costOf(t);
+                if (MindBudget.free(att) < mindCost) {
+                    lines.add(Component.translatable("screen.zenkai.physical.need_mnd",
+                            mindCost - MindBudget.free(att)).withStyle(net.minecraft.ChatFormatting.RED));
+                }
             }
             g.renderComponentTooltip(this.font, lines, mouseX, mouseY);
             return;

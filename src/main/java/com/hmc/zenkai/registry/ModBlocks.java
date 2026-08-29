@@ -259,7 +259,7 @@ public class ModBlocks {
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.SAND)));
 
-    // Rediseño HFIL (ver .claude/pendiente/hfil-infierno-rediseno.md, fase 1). Roca base
+    // Rediseño HFIL (ver .claude/pendiente/hfil-rework-propuesta.md, fase 1). Roca base
     // CÁLIDA: sustituye a minecraft:stone como default_block del Otherworld
     // (otherworld_noise.json) — arregla de paso la "mancha de piedra" (CLAUDE.md pendiente #2):
     // si algo se escapa del gate above_preliminary_surface, lo que se ve ya no es piedra gris
@@ -549,7 +549,7 @@ public class ModBlocks {
                     .pushReaction(PushReaction.DESTROY)));
 
     public static final DeferredBlock<Block> OTHERWORLD_CLOUD = registerBlock("otherworld_cloud",
-            () -> new Block(BlockBehaviour.Properties.of()
+            () -> new OtherworldCloudBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_YELLOW)
                     .sound(SoundType.WOOL)
                     .strength(-1.0f, 3600000)

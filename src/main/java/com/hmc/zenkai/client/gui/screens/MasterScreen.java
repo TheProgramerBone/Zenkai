@@ -1,10 +1,17 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.PhysicalIcons;
+import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.feature.skills.SkillDef;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.technique.PhysicalTechnique;
+import com.hmc.zenkai.feature.technique.PhysicalTechniquePacket;
+import com.hmc.zenkai.feature.technique.TechniquePacket;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -21,19 +28,30 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Tienda de un maestro. Pantalla PROPIA, no una pestaña de ZenkaiMenuScreen: es apaisada
  * (el maestro ocupa el tercio izquierdo) y no comparte navegación con el menú del jugador.
- * Solo se listan las habilidades cuyo campo "master" es este maestro. Estado por fila:
- *   - nivel 0 y puedes pagar  -> coste en blanco, clic compra
- *   - nivel 0 y no puedes     -> coste en ROJO, clic no hace nada
- *   - nivel >= 1              -> gris, "Aprendida" (el maestro solo da el nivel 1; los
- *                                siguientes se suben con TP desde la pantalla de skills)
+ *
+ * HUB de dos botones grandes ("Skills"/"Técnicas") que llevan a la lista correspondiente:
+ *   - Skills: habilidades cuyo campo "master" es este maestro (sin cambios respecto a antes).
+ *   - Técnicas: KiTechniqueType/PhysicalTechnique cuyo master() es este maestro ("técnica
+ *     firma", ver TechniqueDef). Un botón cuyo maestro no vende nada de ese tipo se ve
+ *     oscurecido con tooltip en vez de desaparecer — mismo patrón que SkillsScreen usa para
+ *     "Forget" bajo el suelo permanente: el layout no salta de tamaño según el maestro.
+ * Estado por fila (ambas listas comparten el mismo lenguaje):
+ *   - no aprendida y puedes pagar  -> coste en blanco, clic compra
+ *   - no aprendida y no puedes     -> coste en ROJO, clic no hace nada
+ *   - aprendida                    -> gris, "Aprendida" (el maestro solo da el nivel 1/la
+ *                                     técnica; el resto se gestiona desde las pantallas del
+ *                                     jugador — SkillsScreen, TechniqueEditScreen, PhysicalScreen)
  * Fondo: master_screen.png (ver tools/gen_master_screen.py), compartido por el conjunto de
  * maestros — lo que distingue a cada uno es su retrato 3D, no el fondo.
  */
 public class MasterScreen extends Screen {
+
+    private enum Mode { HUB, SKILLS, TECHNIQUES }
 
     // 320×180 con filas de 22px solo daba sitio a "Be able to fly using k…" antes de recortar:
     // la descripción no cabía ni truncada a una palabra útil. Se agranda el diálogo entero
@@ -48,6 +66,14 @@ public class MasterScreen extends Screen {
     private static final int ROW_H      = 24;
     /** Separación bajo el título/TP/MND antes de la primera fila. */
     private static final int CONTENT_TOP = 34;
+    /** Icono de fila de la lista de técnicas — las de Skills no llevan icono, propio de cada
+     *  tipo de fila. */
+    private static final int ROW_ICON     = 16;
+    private static final int ROW_ICON_GAP = 4;
+    /** Alto de la fila "‹ Back" que aparece sobre la lista en modo SKILLS/TECHNIQUES. */
+    private static final int BACK_ROW_H = 12;
+    /** Separación entre los dos botones grandes del hub. */
+    private static final int HUB_GAP = 8;
 
     private static final int SCROLLBAR_W   = 4;
     /** Aire entre el texto de coste y la barra: sin esto el número roza el thumb. */
@@ -62,7 +88,9 @@ public class MasterScreen extends Screen {
     // los rellenos a mano con g.fill() (ver historial), con los colores ya de ZenkaiPalette,
     // para no bloquear a que existiera el asset. Ahora existe: master_screen.png, generado por
     // tools/gen_master_screen.py (ÚNICA fuente, no editar el PNG a mano), con el mismo marco de
-    // tres anillos IN/MID/OUT + brillo de esquina y el panel del retrato ya horneados dentro.
+    // tres anillos IN/MID/OUT + brillo de esquina y el panel del retrato ya horneados dentro,
+    // esta vez con la paleta fría/azulada de ZenkaiPalette.MASTER_* (ver su comentario): un
+    // diálogo con un NPC se lee distinto del naranja/dorado de los paneles del jugador.
     // Es UN solo archivo para el conjunto de maestros —Kami, Kaio, Korin y los que añada el
     // datapack—, igual que common_screen.png es uno solo para el conjunto de pestañas del menú: lo
     // que distingue a cada maestro es su retrato 3D, no el fondo.
@@ -77,10 +105,22 @@ public class MasterScreen extends Screen {
     private static final ResourceLocation BG_TEX =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/master_screen.png");
 
+    // Icono del hub: "Skills" reutiliza el ya existente de ZenkaiTab.SKILLS (mismo concepto
+    // visual que la pestaña del menú del jugador); "Técnicas" es nuevo (ver
+    // tools/gen_master_icons.py), fila v=80, primera libre del atlas.
+    private static final ResourceLocation ICONS_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
+    private static final int ICONS_ATLAS = 256;
+    private static final int ICON_CELL = 20;
+    private static final int ICON_SKILLS_U = 160, ICON_SKILLS_V = 0;
+    private static final int ICON_TECHNIQUES_U = 0, ICON_TECHNIQUES_V = 80;
+
     private final String masterId;
     private final int entityId;
 
-    private final List<SkillDef> rows = new ArrayList<>();
+    private Mode mode = Mode.HUB;
+    private final List<SkillDef> skillRows = new ArrayList<>();
+    private final List<TechEntry> techRows = new ArrayList<>();
     private int scroll = 0;
 
     private int left, top;
@@ -91,13 +131,69 @@ public class MasterScreen extends Screen {
         this.entityId = entityId;
     }
 
+    /**
+     * Una fila de la lista TECHNIQUES puede ser ki o física: KiTechniqueType/PhysicalTechnique
+     * no comparten ninguna interfaz común (son enums de identidad independientes, ver sus
+     * javadocs), así que este record envuelve el que corresponda y despacha por {@code ki} en
+     * vez de duplicar el render/hit-test de la fila para cada uno.
+     */
+    private record TechEntry(boolean ki, KiTechniqueType kiType, PhysicalTechnique physType) {
+        String nameKey() { return ki ? kiType.nameKey() : physType.nameKey(); }
+        int tpCost()     { return ki ? kiType.tpCost() : physType.tpCost(); }
+        int mindReq()    { return ki ? kiType.mindReq() : physType.mindReq(); }
+
+        boolean unlocked(PlayerStatsAttachment st) {
+            return ki ? st.techniques().isUnlocked(kiType) : st.techniques().isUnlocked(physType);
+        }
+
+        /** Mismo criterio que valida el servidor (TP + MindBudget), igual que
+         *  TechniqueEditScreen/PhysicalScreen ya usan para sus propios botones de desbloqueo. */
+        boolean canAfford(PlayerStatsAttachment st) {
+            if (st == null || st.getTP() < tpCost()) return false;
+            return ki ? MindBudget.canUnlock(st, kiType) : MindBudget.canUnlock(st, physType);
+        }
+
+        void sendUnlock(String masterId) {
+            if (ki) PacketDistributor.sendToServer(TechniquePacket.unlock(kiType, masterId));
+            else    PacketDistributor.sendToServer(PhysicalTechniquePacket.unlock(physType, masterId));
+        }
+
+        void drawIcon(GuiGraphics g, int x, int y, int size) {
+            if (ki) TechniqueIcons.draw(g, x, y, size, kiType, kiType.defaultRgb());
+            else    PhysicalIcons.draw(g, x, y, size, physType);
+        }
+
+        /** Descripción del tooltip: las ki tienen su propia clave .desc; las físicas no (ver
+         *  PhysicalTechnique), así que se muestra su ficha técnica en su lugar — mismo formato
+         *  que ya usa la fila de PhysicalScreen. */
+        Component tooltip() {
+            if (ki) return Component.translatable(kiType.descKey());
+            return Component.translatable("screen.zenkai.physical.stats",
+                    fmt(physType.dmgMult()), fmt(Math.round(physType.staminaPct() * 1000.0) / 10.0),
+                    fmt(physType.cooldownTicks() / 20.0), fmt(physType.range()));
+        }
+    }
+
+    private static String fmt(double v) {
+        return String.format(Locale.ROOT, v == Math.floor(v) ? "%.0f" : "%.1f", v);
+    }
+
     @Override
     protected void init() {
         left = (this.width - BG_W) / 2;
         top  = (this.height - BG_H) / 2;
 
-        rows.clear();
-        rows.addAll(SkillDef.taughtBy(masterId));
+        skillRows.clear();
+        skillRows.addAll(SkillDef.taughtBy(masterId));
+
+        techRows.clear();
+        for (KiTechniqueType t : KiTechniqueType.values()) {
+            if (masterId.equals(t.master())) techRows.add(new TechEntry(true, t, null));
+        }
+        for (PhysicalTechnique t : PhysicalTechnique.values()) {
+            if (masterId.equals(t.master())) techRows.add(new TechEntry(false, null, t));
+        }
+
         scroll = Mth.clamp(scroll, 0, maxScroll());
     }
 
@@ -111,17 +207,36 @@ public class MasterScreen extends Screen {
      *  se dibuje o no, para que la fila no salte de ancho al aparecer un maestro con más
      *  habilidades de las que caben. */
     private int listRight()  { return scrollbarX() - SCROLLBAR_GAP; }
+    /** Techo del área de contenido (bajo el título/TP/MND). En el hub los dos botones grandes
+     *  arrancan aquí; en las listas es donde va la fila "‹ Back". */
     private int listTop()    { return top + CONTENT_TOP; }
-    private int listHeight() { return BG_H - CONTENT_TOP - PADDING; }
+    /** Techo de las FILAS propiamente dichas: bajo la fila "Back" en SKILLS/TECHNIQUES, sin
+     *  desplazamiento en el hub (que no tiene filas). */
+    private int rowsTop()    { return listTop() + (mode == Mode.HUB ? 0 : BACK_ROW_H); }
+    private int listHeight() { return BG_H - CONTENT_TOP - PADDING - (mode == Mode.HUB ? 0 : BACK_ROW_H); }
     private int visibleRows(){ return Math.max(1, listHeight() / ROW_H); }
-    private int maxScroll()  { return Math.max(0, rows.size() - visibleRows()); }
-    private int rowTop(int i){ return listTop() + (i - scroll) * ROW_H; }
+
+    private int rowCount() {
+        return switch (mode) {
+            case SKILLS -> skillRows.size();
+            case TECHNIQUES -> techRows.size();
+            case HUB -> 0;
+        };
+    }
+
+    private int maxScroll()  { return Math.max(0, rowCount() - visibleRows()); }
+    private int rowTop(int i){ return rowsTop() + (i - scroll) * ROW_H; }
     /** Y del texto de una fila, centrado verticalmente en ROW_H (fuente ≈ 9px de alto). */
     private int rowTextY(int y) { return y + (ROW_H - 9) / 2; }
 
     private boolean onScreen(int i) {
         int rel = i - scroll;
         return rel >= 0 && rel < visibleRows();
+    }
+
+    private boolean backHovered(int mouseX, int mouseY) {
+        return mode != Mode.HUB && mouseX >= listLeft() - 2 && mouseX <= listRight()
+                && mouseY >= listTop() && mouseY < listTop() + BACK_ROW_H;
     }
 
     // ── Estado de una fila ───────────────────────────────────────────────────
@@ -178,22 +293,80 @@ public class MasterScreen extends Screen {
                     free < 0 ? ZenkaiPalette.ERROR : ZenkaiPalette.MIND_ON_DARK);
         }
 
-        if (rows.isEmpty()) {
-            PanelText.onDark(g, this.font, Component.translatable("screen.zenkai.master.nothing"),
-                    listLeft(), listTop(), ZenkaiPalette.TEXT_OFF);
+        switch (mode) {
+            case HUB -> renderHub(g, mouseX, mouseY);
+            case SKILLS -> renderSkillsList(g, mouseX, mouseY);
+            case TECHNIQUES -> renderTechniquesList(g, mouseX, mouseY);
         }
+    }
+
+    // ── Hub ──────────────────────────────────────────────────────────────────
+
+    private void renderHub(GuiGraphics g, int mouseX, int mouseY) {
+        int cLeft = listLeft(), cRight = trackRight(), cTop = listTop(), cBottom = top + BG_H - PADDING;
+        int btnW = (cRight - cLeft - HUB_GAP) / 2;
+        int btnH = cBottom - cTop;
+
+        renderHubOption(g, cLeft, cTop, btnW, btnH, ICON_SKILLS_U, ICON_SKILLS_V,
+                Component.translatable("screen.zenkai.tab.skills"), !skillRows.isEmpty(),
+                mouseX, mouseY);
+        renderHubOption(g, cLeft + btnW + HUB_GAP, cTop, btnW, btnH, ICON_TECHNIQUES_U, ICON_TECHNIQUES_V,
+                Component.translatable("screen.zenkai.master.hub.techniques"), !techRows.isEmpty(),
+                mouseX, mouseY);
+    }
+
+    private void renderHubOption(GuiGraphics g, int x, int y, int w, int h, int iconU, int iconV,
+                                  Component label, boolean enabled, int mouseX, int mouseY) {
+        boolean hoveredRect = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        boolean hovered = enabled && hoveredRect;
+
+        g.fill(x, y, x + w, y + h, ZenkaiPalette.MASTER_DIALOG_PANEL);
+        if (hovered) g.fill(x, y, x + w, y + h, ZenkaiPalette.HOVER_VEIL);
+        // Marco de 1px, mismo tono frío que el resto del diálogo (ZenkaiPalette.MASTER_BORDER_IN).
+        g.fill(x, y, x + w, y + 1, ZenkaiPalette.MASTER_BORDER_IN);
+        g.fill(x, y + h - 1, x + w, y + h, ZenkaiPalette.MASTER_BORDER_IN);
+        g.fill(x, y, x + 1, y + h, ZenkaiPalette.MASTER_BORDER_IN);
+        g.fill(x + w - 1, y, x + w, y + h, ZenkaiPalette.MASTER_BORDER_IN);
+
+        int iconX = x + (w - ICON_CELL) / 2;
+        int iconY = y + h / 2 - ICON_CELL - 4;
+        if (!enabled) g.setColor(0.5F, 0.5F, 0.5F, 1.0F);
+        g.blit(ICONS_TEX, iconX, iconY, iconU, iconV, ICON_CELL, ICON_CELL, ICONS_ATLAS, ICONS_ATLAS);
+        if (!enabled) g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        PanelText.centeredOnDark(g, this.font, label, x + w / 2, iconY + ICON_CELL + 6,
+                enabled ? ZenkaiPalette.TEXT : ZenkaiPalette.TEXT_OFF);
+
+        if (!enabled && hoveredRect) {
+            Component tip = Component.translatable("screen.zenkai.master.hub.locked");
+            g.renderTooltip(this.font, this.font.split(tip, TOOLTIP_W), mouseX, mouseY);
+        }
+    }
+
+    // ── Lista de habilidades ────────────────────────────────────────────────
+
+    private void renderSkillsList(GuiGraphics g, int mouseX, int mouseY) {
+        renderBackRow(g, mouseX, mouseY);
+
+        if (skillRows.isEmpty()) {
+            PanelText.onDark(g, this.font, Component.translatable("screen.zenkai.master.nothing"),
+                    listLeft(), rowsTop(), ZenkaiPalette.TEXT_OFF);
+            return;
+        }
+
+        PlayerStatsAttachment st = stats();
 
         // Recorte a la ventana visible: con scrollbar de verdad hace falta, o una fila a medio
         // salir se pintaría encima del marco superior/inferior del diálogo.
-        g.enableScissor(left, listTop(), left + BG_W, listTop() + visibleRows() * ROW_H);
+        g.enableScissor(left, rowsTop(), left + BG_W, rowsTop() + visibleRows() * ROW_H);
         SkillDef hoveredDef = null;
-        for (int i = 0; i < rows.size(); i++) {
+        for (int i = 0; i < skillRows.size(); i++) {
             if (!onScreen(i)) continue;
             int y = rowTop(i);
-            renderRow(g, st, rows.get(i), y, i, mouseX, mouseY);
+            renderSkillRow(g, st, skillRows.get(i), y, i, mouseX, mouseY);
             if (mouseX >= listLeft() - 2 && mouseX <= listRight()
                     && mouseY >= y && mouseY < y + ROW_H - 1) {
-                hoveredDef = rows.get(i);
+                hoveredDef = skillRows.get(i);
             }
         }
         g.disableScissor();
@@ -207,7 +380,7 @@ public class MasterScreen extends Screen {
         }
     }
 
-    private void renderRow(GuiGraphics g, PlayerStatsAttachment st, SkillDef def, int y, int index,
+    private void renderSkillRow(GuiGraphics g, PlayerStatsAttachment st, SkillDef def, int y, int index,
                            int mouseX, int mouseY) {
         boolean learned = st != null && st.skills().level(def.id()) > 0;
         boolean hovered = !learned && mouseX >= listLeft() - 2 && mouseX <= listRight()
@@ -238,26 +411,87 @@ public class MasterScreen extends Screen {
 
         // Separador tenue bajo cada fila salvo la última visible: sin él, con una sola línea
         // por skill, la lista se lee como un bloque continuo en vez de habilidades separadas.
-        boolean lastVisible = index == rows.size() - 1 || !onScreen(index + 1);
+        boolean lastVisible = index == skillRows.size() - 1 || !onScreen(index + 1);
         if (!lastVisible) {
             g.fill(listLeft() - 2, y + ROW_H - 1, listRight(), y + ROW_H, ZenkaiPalette.SEPARATOR_DARK);
         }
     }
 
-    /** Barra de scroll a la derecha de la lista; oculta si cabe sin desplazar. Mismo
-     *  patrón que SkillsScreen.drawScrollbar, con colores de fondo oscuro (BAR_BG_DARK/
-     *  TP_ON_DARK) en vez de los de panel beige que usa aquella pantalla. */
-    private void drawScrollbar(GuiGraphics g) {
-        int max = maxScroll();
-        if (max <= 0) return;
+    // ── Lista de técnicas ───────────────────────────────────────────────────
 
-        int x = scrollbarX();
-        int trackTop = listTop(), trackH = visibleRows() * ROW_H;
-        g.fill(x, trackTop, x + SCROLLBAR_W, trackTop + trackH, ZenkaiPalette.BAR_BG_DARK);
+    private void renderTechniquesList(GuiGraphics g, int mouseX, int mouseY) {
+        renderBackRow(g, mouseX, mouseY);
 
-        int thumbH = Math.max(12, trackH * visibleRows() / rows.size());
-        int thumbY = trackTop + (trackH - thumbH) * scroll / max;
-        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.TP_ON_DARK);
+        if (techRows.isEmpty()) {
+            PanelText.onDark(g, this.font, Component.translatable("screen.zenkai.master.nothing"),
+                    listLeft(), rowsTop(), ZenkaiPalette.TEXT_OFF);
+            return;
+        }
+
+        PlayerStatsAttachment st = stats();
+
+        g.enableScissor(left, rowsTop(), left + BG_W, rowsTop() + visibleRows() * ROW_H);
+        TechEntry hovered = null;
+        for (int i = 0; i < techRows.size(); i++) {
+            if (!onScreen(i)) continue;
+            int y = rowTop(i);
+            renderTechRow(g, st, techRows.get(i), y, i, mouseX, mouseY);
+            if (mouseX >= listLeft() - 2 && mouseX <= listRight()
+                    && mouseY >= y && mouseY < y + ROW_H - 1) {
+                hovered = techRows.get(i);
+            }
+        }
+        g.disableScissor();
+        drawScrollbar(g);
+
+        if (hovered != null) {
+            g.renderTooltip(this.font, this.font.split(hovered.tooltip(), TOOLTIP_W), mouseX, mouseY);
+        }
+    }
+
+    private void renderTechRow(GuiGraphics g, PlayerStatsAttachment st, TechEntry entry, int y, int index,
+                                int mouseX, int mouseY) {
+        boolean learned = st != null && entry.unlocked(st);
+        boolean hovered = !learned && mouseX >= listLeft() - 2 && mouseX <= listRight()
+                && mouseY >= y && mouseY < y + ROW_H - 1;
+
+        if (hovered) {
+            g.fill(listLeft() - 2, y, listRight(), y + ROW_H - 1, ZenkaiPalette.HOVER_VEIL);
+        }
+
+        int iconY = y + (ROW_H - ROW_ICON) / 2;
+        entry.drawIcon(g, listLeft(), iconY, ROW_ICON);
+
+        int textX = listLeft() + ROW_ICON + ROW_ICON_GAP;
+        Component name = Component.translatable(entry.nameKey());
+        int nameY = rowTextY(y);
+        PanelText.onDark(g, this.font, name, textX, nameY,
+                learned ? ZenkaiPalette.TEXT_OFF : ZenkaiPalette.OK);
+
+        Component right;
+        int color;
+        if (learned) {
+            right = Component.translatable("screen.zenkai.master.learned");
+            color = ZenkaiPalette.TEXT_OFF;
+        } else {
+            right = Component.translatable("screen.zenkai.master.cost", entry.tpCost(), entry.mindReq());
+            color = entry.canAfford(st) ? ZenkaiPalette.TP_ON_DARK : ZenkaiPalette.DENIED;
+        }
+        PanelText.rightOnDark(g, this.font, right, listRight(), nameY, color);
+
+        boolean lastVisible = index == techRows.size() - 1 || !onScreen(index + 1);
+        if (!lastVisible) {
+            g.fill(listLeft() - 2, y + ROW_H - 1, listRight(), y + ROW_H, ZenkaiPalette.SEPARATOR_DARK);
+        }
+    }
+
+    // ── "‹ Back" (SKILLS/TECHNIQUES -> HUB) ─────────────────────────────────
+
+    private void renderBackRow(GuiGraphics g, int mouseX, int mouseY) {
+        boolean hovered = backHovered(mouseX, mouseY);
+        Component text = Component.literal("‹ ").append(Component.translatable("screen.zenkai.back"));
+        PanelText.onDark(g, this.font, text, listLeft(), listTop() + 1,
+                hovered ? ZenkaiPalette.TEXT_HOVER : ZenkaiPalette.TEXT_OFF);
     }
 
     /**
@@ -286,27 +520,93 @@ public class MasterScreen extends Screen {
                 ZenkaiPalette.TEXT);
     }
 
+    /** Barra de scroll a la derecha de la lista; oculta si cabe sin desplazar. Mismo
+     *  patrón que SkillsScreen.drawScrollbar, con colores de fondo oscuro (BAR_BG_DARK/
+     *  TP_ON_DARK) en vez de los de panel beige que usa aquella pantalla. */
+    private void drawScrollbar(GuiGraphics g) {
+        int max = maxScroll();
+        if (max <= 0) return;
+
+        int x = scrollbarX();
+        int trackTop = rowsTop(), trackH = visibleRows() * ROW_H;
+        g.fill(x, trackTop, x + SCROLLBAR_W, trackTop + trackH, ZenkaiPalette.BAR_BG_DARK);
+
+        int count = rowCount();
+        int thumbH = Math.max(12, trackH * visibleRows() / count);
+        int thumbY = trackTop + (trackH - thumbH) * scroll / max;
+        g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.TP_ON_DARK);
+    }
+
     // ── Entrada ──────────────────────────────────────────────────────────────
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            PlayerStatsAttachment st = stats();
-            for (int i = 0; i < rows.size(); i++) {
-                if (!onScreen(i)) continue;
-                int y = rowTop(i);
-                if (mouseX < listLeft() - 2 || mouseX > listRight()) continue;
-                if (mouseY < y || mouseY >= y + ROW_H - 1) continue;
-
-                SkillDef def = rows.get(i);
-                if (st != null && st.skills().level(def.id()) > 0) return true;  // ya aprendida
-                if (!canAfford(st, def)) return true;                            // sin fondos
-
-                PacketDistributor.sendToServer(new SkillBuyPacket(def.id(), masterId));
+            if (mode != Mode.HUB && backHovered((int) mouseX, (int) mouseY)) {
+                mode = Mode.HUB;
                 return true;
             }
+            boolean handled = switch (mode) {
+                case HUB -> clickHub(mouseX, mouseY);
+                case SKILLS -> clickSkills(mouseX, mouseY);
+                case TECHNIQUES -> clickTechniques(mouseX, mouseY);
+            };
+            if (handled) return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private boolean clickHub(double mouseX, double mouseY) {
+        int cLeft = listLeft(), cRight = trackRight(), cTop = listTop(), cBottom = top + BG_H - PADDING;
+        int btnW = (cRight - cLeft - HUB_GAP) / 2;
+        if (mouseY < cTop || mouseY >= cBottom) return false;
+
+        if (mouseX >= cLeft && mouseX < cLeft + btnW) {
+            if (!skillRows.isEmpty()) { mode = Mode.SKILLS; scroll = 0; }
+            return true;
+        }
+        int techX = cLeft + btnW + HUB_GAP;
+        if (mouseX >= techX && mouseX < techX + btnW) {
+            if (!techRows.isEmpty()) { mode = Mode.TECHNIQUES; scroll = 0; }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean clickSkills(double mouseX, double mouseY) {
+        PlayerStatsAttachment st = stats();
+        for (int i = 0; i < skillRows.size(); i++) {
+            if (!onScreen(i)) continue;
+            int y = rowTop(i);
+            if (mouseX < listLeft() - 2 || mouseX > listRight()) continue;
+            if (mouseY < y || mouseY >= y + ROW_H - 1) continue;
+
+            SkillDef def = skillRows.get(i);
+            if (st != null && st.skills().level(def.id()) > 0) return true;  // ya aprendida
+            if (!canAfford(st, def)) return true;                            // sin fondos
+
+            PacketDistributor.sendToServer(new SkillBuyPacket(def.id(), masterId));
+            return true;
+        }
+        return false;
+    }
+
+    private boolean clickTechniques(double mouseX, double mouseY) {
+        PlayerStatsAttachment st = stats();
+        for (int i = 0; i < techRows.size(); i++) {
+            if (!onScreen(i)) continue;
+            int y = rowTop(i);
+            if (mouseX < listLeft() - 2 || mouseX > listRight()) continue;
+            if (mouseY < y || mouseY >= y + ROW_H - 1) continue;
+
+            TechEntry entry = techRows.get(i);
+            if (st != null && entry.unlocked(st)) return true;   // ya aprendida
+            if (!entry.canAfford(st)) return true;                // sin fondos
+
+            entry.sendUnlock(masterId);
+            return true;
+        }
+        return false;
     }
 
     @Override

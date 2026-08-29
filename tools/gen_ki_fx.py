@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Genera las texturas del pipeline visual de ki (halo y estela) directamente en
-src/main/resources/assets/zenkai/textures/entity/.
+"""Genera las texturas del pipeline visual de ki (halo, estela y detalle de superficie)
+directamente en src/main/resources/assets/zenkai/textures/entity/.
 
-Ambas son BLANCAS con toda la información en el canal alfa: el tinte lo pone el color por
-vértice (ver KiProjectileRenderer), así una sola textura sirve para las nueve técnicas y para
-cualquier color que elija el jugador. Son degradados continuos a propósito — excepción a la
-regla pixel-art del mod, igual que la hoja del aura.
+Las tres son BLANCAS con toda la información en el canal alfa: el tinte lo pone el color por
+vértice (ver KiProjectileRenderer/ki_fresnel.fsh), así una sola textura sirve para las nueve
+técnicas y para cualquier color que elija el jugador. Son degradados continuos a propósito —
+excepción a la regla pixel-art del mod, igual que la hoja del aura.
 
-Este script es la ÚNICA fuente de estas dos texturas. Antes hubo dos PNG distintos con el mismo
+Este script es la ÚNICA fuente de estas tres texturas. Antes hubo dos PNG distintos con el mismo
 nombre y se perdió una ronda entera por eso; que solo exista este generador evita que se repita.
 Ejecutar con: python tools/gen_ki_fx.py
 """
@@ -25,6 +25,7 @@ OUT_DIR = os.path.join(
 HALO_SIZE = 128
 TRAIL_W = 64
 TRAIL_H = 64
+DETAIL_SIZE = 64
 
 
 def smoothstep(edge0, edge1, x):
@@ -73,6 +74,30 @@ def gen_trail_soft():
     return img
 
 
+def gen_detail():
+    """Variación de brillo tileable para la capa de detalle de superficie (ZenkaiDetail en
+    ki_fresnel.fsh, ver KiVisual.detailStrength). Suma de senos con frecuencia ENTERA en u y v:
+    eso garantiza que la textura repite SIN COSTURA en ambos ejes cuando el shader la muestrea
+    con UV escalada/desplazada en el tiempo — a diferencia del hervor (flameField), que es
+    dominio 3D evaluado por píxel y no necesita tileado, esto SÍ es una textura horneada.
+    alpha = clamp(0.5 + suma_de_senos, 0, 1); las amplitudes suman 1.0 para no saturar."""
+    img = Image.new("RGBA", (DETAIL_SIZE, DETAIL_SIZE))
+    px = img.load()
+    for y in range(DETAIL_SIZE):
+        v = y / DETAIL_SIZE
+        for x in range(DETAIL_SIZE):
+            u = x / DETAIL_SIZE
+            n = 0.0
+            n += math.sin(2 * math.pi * (3 * u + 2 * v)) * 0.35
+            n += math.sin(2 * math.pi * (5 * u - 3 * v + 0.30)) * 0.25
+            n += math.sin(2 * math.pi * (-2 * u + 7 * v + 0.60)) * 0.20
+            n += math.sin(2 * math.pi * (8 * u + 8 * v + 0.15)) * 0.20
+            alpha = max(0.0, min(1.0, 0.5 + n))
+            a = round(alpha * 255)
+            px[x, y] = (255, 255, 255, a)
+    return img
+
+
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -83,6 +108,10 @@ def main():
     trail_path = os.path.join(OUT_DIR, "ki_trail_soft.png")
     gen_trail_soft().save(trail_path)
     print(f"Escrito {trail_path} ({TRAIL_W}x{TRAIL_H})")
+
+    detail_path = os.path.join(OUT_DIR, "ki_detail.png")
+    gen_detail().save(detail_path)
+    print(f"Escrito {detail_path} ({DETAIL_SIZE}x{DETAIL_SIZE})")
 
 
 if __name__ == "__main__":

@@ -496,7 +496,12 @@ public class TechniqueEditScreen extends Screen {
         PlayerStatsAttachment att = att();
         boolean unlocked = att != null && att.techniques().isUnlocked(type);
         unlockButton.visible = !unlocked && type.enabled();
-        unlockButton.active = !unlocked && type.enabled() && att != null
+        // Técnica firma (type.master() no vacío): el desbloqueo genérico por TP SIEMPRE lo
+        // rechaza el servidor (TechniquePacket.handleUnlock exige el masterId del maestro
+        // real, y este botón manda "" — ver TechniquePacket.unlock(type) de 1 argumento).
+        // Sin este chequeo el botón quedaba activo y clickeable, fallando en silencio: el
+        // jugador no recibía ningún aviso de que hacía falta ir a hablar con su maestro.
+        unlockButton.active = !unlocked && type.enabled() && type.master().isEmpty() && att != null
                 && att.getTP() >= type.tpCost()
                 && MindBudget.canUnlock(att, type);
         saveButton.active = unlocked && type.enabled();
@@ -521,6 +526,17 @@ public class TechniqueEditScreen extends Screen {
             PanelText.centeredOnDark(g, this.font,
                     Component.translatable("screen.zenkai.technique.delete_confirm"),
                     leftPos + BG_W / 2, topPos + Y_BUTTONS - 11, ZenkaiPalette.ERROR);
+        }
+
+        // Un widget INACTIVO no muestra su Tooltip.create() propio (mismo hallazgo que
+        // PhysicalScreen.renderUnlockTooltip), así que el aviso de "solo lo enseña tu maestro"
+        // se dibuja a mano al pasar el ratón, igual que aquella pantalla.
+        if (unlockButton.visible && !unlockButton.active && !type.master().isEmpty()
+                && mouseX >= unlockButton.getX() && mouseX < unlockButton.getX() + unlockButton.getWidth()
+                && mouseY >= unlockButton.getY() && mouseY < unlockButton.getY() + unlockButton.getHeight()) {
+            Component tip = Component.translatable("screen.zenkai.technique.masterOnly",
+                    Component.translatable("master.zenkai." + type.master()));
+            g.renderTooltip(this.font, this.font.split(tip, 200), mouseX, mouseY);
         }
     }
 

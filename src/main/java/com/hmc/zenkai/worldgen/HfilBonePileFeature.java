@@ -16,7 +16,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 
 /**
  * Huesos/cráneos dispersos del HFIL (rediseño "infierno de Dragon Ball", ver
- * .claude/pendiente/hfil-infierno-rediseno.md, punto 5) — las almas que no lograron cruzar
+ * .claude/pendiente/hfil-rework-propuesta.md, punto 5) — las almas que no lograron cruzar
  * Snake Way. Decoración puntual barata, mismo estilo ligero que FallenLogFeature/
  * HfilSpikeFeature: sin jigsaw ni structure_set (eso es solo para estructuras grandes tipo
  * dragon ball). A diferencia de FallenLogFeature no hace falta un StructureTemplate NBT — un

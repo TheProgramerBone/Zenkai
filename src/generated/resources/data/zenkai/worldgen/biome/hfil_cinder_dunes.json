@@ -19,7 +19,7 @@
       "options": {
         "type": "minecraft:ash"
       },
-      "probability": 0.00625
+      "probability": 0.011
     },
     "sky_color": 3803658,
     "water_color": 9044739,
@@ -29,8 +29,7 @@
     [],
     [
       "minecraft:lake_lava_underground",
-      "minecraft:lake_lava_surface",
-      "zenkai:hfil_lake_blood"
+      "minecraft:lake_lava_surface"
     ],
     [],
     [],
@@ -68,13 +67,15 @@
     [],
     [
       "minecraft:spring_water",
-      "minecraft:spring_lava"
+      "minecraft:spring_lava",
+      "zenkai:hfil_lava_spring_bonus"
     ],
     [
       "minecraft:glow_lichen",
+      "zenkai:hfil_cinder_spike",
       "zenkai:hfil_dead_bush",
-      "zenkai:fallen_log_hfil",
-      "zenkai:hfil_bone_pile"
+      "zenkai:hfil_bone_pile",
+      "zenkai:hfil_ore_boulder_rare"
     ]
   ],
   "has_precipitation": false,

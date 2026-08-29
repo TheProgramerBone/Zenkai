@@ -3,6 +3,7 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.race.RaceTextureUtil;
 import com.hmc.zenkai.feature.technique.KiTechnique;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
@@ -26,7 +27,10 @@ public final class TechniqueIcons {
     private static final ResourceLocation ATLAS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/technique_icons.png");
     private static final int CELL = 20;
-    private static final int ATLAS_W = 180;
+    // Ampliado de 180 a 200 (9 -> 10 celdas) al añadir SPIRIT_BOMB (KiTechniqueType.ordinal 9,
+    // ver tools/gen_spirit_bomb_icon.py). ACOPLAMIENTO: si el atlas cambia de ancho otra vez,
+    // esta constante y el script Python tienen que actualizarse juntos.
+    private static final int ATLAS_W = 200;
     private static final int ATLAS_H = 40; // ◄ Ampliado a 40px para 2 filas
     private static final int EXPLOSIVE_CELL = 8;
 
@@ -79,6 +83,39 @@ public final class TechniqueIcons {
 
         // 2. CAPA SUPERIOR: Detalle/Brillo blanco puro SIN teñir (Fila 1, Y = CELL)
         g.setColor(1f, 1f, 1f, 1f); // Reset del tinte a blanco
+        blit(g, x, y, size, u, CELL);
+
+        RenderSystem.disableBlend();
+    }
+
+    /**
+     * Vista previa de un TIPO aún sin instancia (p. ej. una fila de MasterScreen antes de
+     * comprarlo): sin KiTechnique no hay efecto ni color elegido todavía, así que dibuja solo
+     * las dos capas base con el rgb que se le pase (para una técnica firma, el {@code rgb} es
+     * fijo = {@code type.defaultRgb()}) y sin el marco de efecto.
+     */
+    public static void draw(GuiGraphics g, int x, int y, int size, KiTechniqueType type, int rgb) {
+        if (size <= 0) return;
+
+        long now = System.currentTimeMillis();
+        if (now >= nextCheckMs) {
+            nextCheckMs = now + 2000;
+            atlasExists = RaceTextureUtil.resourceExists(ATLAS);
+        }
+
+        if (!atlasExists) {
+            int m3 = Math.max(2, size * 3 / 20);
+            g.fill(x + m3, y + m3, x + size - m3, y + size - m3, 0xFF000000 | rgb);
+            return;
+        }
+
+        RenderSystem.enableBlend();
+        int u = type.ordinal() * CELL;
+
+        g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
+        blit(g, x, y, size, u, 0);
+
+        g.setColor(1f, 1f, 1f, 1f);
         blit(g, x, y, size, u, CELL);
 
         RenderSystem.disableBlend();

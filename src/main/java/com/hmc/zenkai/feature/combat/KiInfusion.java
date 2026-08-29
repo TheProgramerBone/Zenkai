@@ -91,6 +91,39 @@ public final class KiInfusion {
     }
 
     /**
+     * BONUS DE DAÑO DE VANILLA COMO MULTIPLICADOR, RELATIVO igual que projectileMultiplier (no
+     * absoluto como weaponMultiplier). Cubre Filo/Aspereza/Perjuicio de los Artrópodos, el bonus
+     * de la maza por distancia de caída (Densidad y Grieta incluidos — vanilla lo suma al mismo
+     * float, vía {@code Item.getAttackDamageBonus}, ANTES del crítico), y cualquier
+     * encantamiento/atributo de OTRO MOD que toque ese mismo número: no hace falta listarlos uno
+     * a uno, se lee la PROPORCIÓN que vanilla ya calculó, igual que armorMultiplier lee la
+     * proporción de la armadura en vez de recalcularla.
+     * Fuerza/Debilidad NO se cuentan aparte porque ya viven en el propio atributo ATTACK_DAMAGE
+     * (attackDamageOf las incluye), así que el cociente de abajo las cancela solo.
+     * <p>
+     * {@code mult = 1 + (originalVanillaDamage / (attackDamageOf(e) * critMultiplier) - 1) * scale}
+     * <p>
+     * Con scale 1.0, Filo V vale aquí lo mismo que vale en el golpe vanilla; con una maza
+     * cayendo de mucha altura el cociente crece con la altura porque el numerador (daño vanilla
+     * ya con el bonus de caída sumado) crece y el denominador no — el golpe STR también crece
+     * con la altura sin que este archivo sepa qué es una maza.
+     *
+     * @param originalVanillaDamage daño ANTES de armadura (VanillaMitigation.originalDamage) —
+     *        ya incluye crítico, encantamientos y cualquier bonus situacional del arma.
+     * @param critMultiplier el mismo multiplicador de CriticalHitEvent que CombatZenkaiHooks ya
+     *        le aplica a `total` — hay que descontarlo aquí o el crítico se contaría dos veces.
+     */
+    public static double enchantMultiplier(LivingEntity e, double originalVanillaDamage,
+                                           double critMultiplier) {
+        double scale = CommonConfig.meleeEnchantScale();
+        double baseline = attackDamageOf(e) * Math.max(critMultiplier, 1.0e-6);
+        if (scale <= 0.0 || baseline <= 0.0 || originalVanillaDamage <= 0.0) return 1.0;
+
+        double mult = 1.0 + (originalVanillaDamage / baseline - 1.0) * scale;
+        return Math.max(0.0, Math.min(mult, CommonConfig.meleeEnchantMultCap()));
+    }
+
+    /**
      * PROYECTIL COMO MULTIPLICADOR. Hermano de weaponMultiplier, pero RELATIVO y no absoluto,
      * y esa diferencia es el arreglo: attack_damage en vanilla llega a ~10 y admite una escala
      * pequeña, pero el daño de una flecha va de 6 a 9 y con escala absoluta Poder V — un

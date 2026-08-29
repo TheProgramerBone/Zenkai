@@ -1,0 +1,14 @@
+{
+  "tp_cost": 6000,
+  "mind_req": 80,
+  "master": "kaio",
+  "damage_mult": 3.2,
+  "ki_cost_mult": 3.5,
+  "charge_ticks": 140,
+  "cooldown_ticks": 240,
+  "speed": 0.4,
+  "count": 1,
+  "defensive": false,
+  "default_rgb": "0xFFFCE0",
+  "anim_ticks": 30
+}

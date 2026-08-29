@@ -19,7 +19,7 @@
       "options": {
         "type": "minecraft:ash"
       },
-      "probability": 0.00625
+      "probability": 0.0035
     },
     "sky_color": 3803658,
     "water_color": 9044739,
@@ -28,8 +28,6 @@
   "features": [
     [],
     [
-      "minecraft:lake_lava_underground",
-      "minecraft:lake_lava_surface",
       "zenkai:hfil_lake_blood"
     ],
     [],
@@ -63,7 +61,8 @@
       "minecraft:ore_lapis_buried",
       "minecraft:ore_copper",
       "minecraft:underwater_magma",
-      "zenkai:katchin_ore_hfil"
+      "zenkai:katchin_ore_hfil",
+      "zenkai:katchin_ore_hfil_exposed"
     ],
     [],
     [
@@ -72,9 +71,8 @@
     ],
     [
       "minecraft:glow_lichen",
-      "zenkai:hfil_dead_bush",
-      "zenkai:fallen_log_hfil",
-      "zenkai:hfil_bone_pile"
+      "zenkai:hfil_bone_pile",
+      "zenkai:hfil_ore_boulder_common"
     ]
   ],
   "has_precipitation": false,

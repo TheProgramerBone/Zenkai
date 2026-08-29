@@ -2,6 +2,7 @@ package com.hmc.zenkai.content.entity.namek;
 
 import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.content.entity.ModVillagerTrades;
+import com.hmc.zenkai.feature.alignment.AlignmentFearGoals;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -35,6 +36,7 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new PanicGoal(this, 1D));
         this.goalSelector.addGoal(1, new FloatGoal(this));
+        this.goalSelector.addGoal(2, AlignmentFearGoals.avoidingEvilPlayers(this));
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));

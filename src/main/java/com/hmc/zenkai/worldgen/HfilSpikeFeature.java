@@ -1,6 +1,5 @@
 package com.hmc.zenkai.worldgen;
 
-import com.hmc.zenkai.registry.ModBlocks;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -11,6 +10,8 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
+import java.util.function.Supplier;
+
 /**
  * Formaciones de pinchos del HFIL — altas y dramáticas, pensadas para leerse como silueta de
  * horizonte, réplica del contraste frío/cálido que se ve en las 4 imágenes de referencia de la
@@ -20,6 +21,13 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  *
  * Un solo placement genera un CLÚSTER de 1-3 pinchos (no un cono solitario): las referencias
  * muestran varias agujas de altura desigual agrupadas, no una sola torre uniforme.
+ *
+ * El bloque de roca es un parámetro del constructor, no una constante hardcodeada: la clase se
+ * reutiliza tal cual para dos formaciones con paleta distinta (ver ModFeatures) — la roca fría
+ * azul-violeta (HFIL_SPIKE_ROCK) exclusiva de needle_wastes, y la arenisca cálida propia de las
+ * dunas (HFIL_CINDER_SANDSTONE) exclusiva de cinder_dunes — sin duplicar el algoritmo de forma.
+ * DeferredBlock ya implementa Supplier&lt;Block&gt;, así que un campo ModBlocks.* se puede pasar
+ * directamente sin envoltorio extra.
  */
 public class HfilSpikeFeature extends Feature<NoneFeatureConfiguration> {
 
@@ -38,8 +46,11 @@ public class HfilSpikeFeature extends Feature<NoneFeatureConfiguration> {
      *  circular de un cono liso no se parece a las referencias (cristales angulosos, fracturados). */
     private static final float EDGE_ERODE_CHANCE = 0.35f;
 
-    public HfilSpikeFeature(Codec<NoneFeatureConfiguration> codec) {
+    private final Supplier<Block> rockBlock;
+
+    public HfilSpikeFeature(Codec<NoneFeatureConfiguration> codec, Supplier<Block> rockBlock) {
         super(codec);
+        this.rockBlock = rockBlock;
     }
 
     @Override
@@ -60,17 +71,17 @@ public class HfilSpikeFeature extends Feature<NoneFeatureConfiguration> {
             int groundY = LocalGroundProbe.findGroundY(level, x, origin.getY(), z, GROUND_SEARCH_RADIUS);
             if (groundY == Integer.MIN_VALUE) continue; // sin suelo real cerca: no se coloca este pincho
 
-            placeSpike(level, random, x, groundY, z);
+            placeSpike(level, random, x, groundY, z, rockBlock.get());
             placedAny = true;
         }
         return placedAny;
     }
 
-    private static void placeSpike(WorldGenLevel level, RandomSource random, int baseX, int baseY, int baseZ) {
+    private static void placeSpike(WorldGenLevel level, RandomSource random, int baseX, int baseY, int baseZ, Block rockBlock) {
         int height = MIN_HEIGHT + random.nextInt(MAX_HEIGHT - MIN_HEIGHT + 1);
         int baseRadius = MIN_BASE_RADIUS + random.nextInt(MAX_BASE_RADIUS - MIN_BASE_RADIUS + 1);
         int maxY = level.getMaxBuildHeight() - 1;
-        BlockState rock = ModBlocks.HFIL_SPIKE_ROCK.get().defaultBlockState();
+        BlockState rock = rockBlock.defaultBlockState();
 
         for (int dy = 0; dy < height; dy++) {
             int y = baseY + dy;

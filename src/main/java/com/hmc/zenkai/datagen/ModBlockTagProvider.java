@@ -313,13 +313,21 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.HFIL_SCORCHED_STONE.get()
         );
 
-        // HFIL_CINDER_SAND/SANDSTONE (Fase 4 del rework, hfil_cinder_dunes) NO llevan estos dos
-        // tags a propósito, a diferencia de HFIL_SCORCHED_STONE arriba: son solo una veneer
-        // superficial de ~6-7 bloques (ver la surface_rule de otherworld_noise.json), no el
-        // default_block de la dimensión — exactamente igual que minecraft:red_sand/
-        // red_sandstone, a los que sustituyen, TAMPOCO están en estos tags en vainilla. Los ores
-        // y carvers del HFIL ya funcionan sobre HFIL_SCORCHED_STONE, que empieza justo debajo de
-        // esta veneer.
+        // HFIL_CINDER_SANDSTONE (Fase 4 del rework, hfil_cinder_dunes) SÍ lleva estos dos tags,
+        // a diferencia de la decisión original — la capa sólida bajo la arena de las dunas
+        // (~6-7 bloques, ver la surface_rule de otherworld_noise.json) es la MISMA profundidad
+        // estructural que HFIL_SCORCHED_STONE en blood_shore, pero sin el tag no era ni minable
+        // (ningún ore, ni vanilla ni Katchin, la reemplaza) ni excavable por carvers — una franja
+        // "muerta" cerca de la superficie de cinder_dunes que no existía en los otros dos biomas.
+        // HFIL_CINDER_SAND (la capa de arriba, la que cae de verdad) se queda FUERA de ambos
+        // tags a propósito, igual que minecraft:red_sand tampoco los lleva en vainilla — solo la
+        // roca sólida debajo debe ser minable/excavable, no la arena suelta.
+        tag(BlockTags.STONE_ORE_REPLACEABLES).add(
+                ModBlocks.HFIL_CINDER_SANDSTONE.get()
+        );
+        tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES).add(
+                ModBlocks.HFIL_CINDER_SANDSTONE.get()
+        );
 
         tag(ModTags.Blocks.DRAGON_BALLS_BLOCK).add(
                 ModBlocks.DRAGON_BALL_1.get(),

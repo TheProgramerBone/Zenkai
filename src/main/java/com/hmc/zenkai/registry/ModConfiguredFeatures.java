@@ -45,6 +45,8 @@ public class ModConfiguredFeatures {
     public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_EXPOSED_KEY = registerKey("katchin_ore_exposed");
     /** HFIL, el subsuelo del Otherworld. Calibrado contra el hierro. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_OW_KEY      = registerKey("katchin_ore_otherworld");
+    /** Solo hfil_blood_shore, se SUMA a KATCHIN_ORE_OW_KEY — veta mayor, mismo patrón que KATCHIN_ORE_EXPOSED_KEY. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_OW_EXPOSED_KEY = registerKey("katchin_ore_otherworld_exposed");
     /** Islas flotantes del Otherworld. Veta pequeña, ver abajo. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> KATCHIN_ORE_SKY_KEY     = registerKey("katchin_ore_sky");
 
@@ -60,9 +62,18 @@ public class ModConfiguredFeatures {
      *  ModBiomeGen) — el reparto de rareza vive en ModPlacedFeatures. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_SPIKE_KEY = registerKey("hfil_spike");
 
+    /** Misma forma que HFIL_SPIKE_KEY pero con la roca cálida de las dunas (ver
+     *  ModFeatures.HFIL_CINDER_SPIKE) — exclusiva de hfil_cinder_dunes. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_CINDER_SPIKE_KEY = registerKey("hfil_cinder_spike");
+
     /** Montón de huesos/calavera del HFIL. Ver HfilBonePileFeature. Los 3 biomas HFIL — el
      *  reparto de rareza vive en ModPlacedFeatures. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_BONE_PILE_KEY = registerKey("hfil_bone_pile");
+
+    /** Afloramiento de Katchin visible en superficie del HFIL, DELIBERADO — ver
+     *  HfilOreBoulderFeature. Los 3 biomas HFIL, el reparto de rareza (más frecuente en
+     *  blood_shore, más raro en needle_wastes/cinder_dunes) vive en ModPlacedFeatures. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_BOULDER_KEY = registerKey("hfil_ore_boulder");
 
     /** Charco de "sangre" (agua vainilla — el tinte lo pone WATER_COLOR del bioma, ver
      *  ModBiomeGen.hfilEffects). Compartido por los 3 biomas HFIL, en el mismo paso LAKES que
@@ -133,6 +144,14 @@ public class ModConfiguredFeatures {
                 List.of(OreConfiguration.target(stoneReplaceables,
                         ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 9, 0.0F));
 
+        // hfil_blood_shore: veta mayor, se SUMA a KATCHIN_ORE_OW_KEY (no la sustituye) — mismo
+        // patrón que KATCHIN_ORE_EXPOSED_KEY con la genérica del overworld. Refuerza a propósito
+        // la peculiaridad "se ve mineral en la costa de sangre" (que ya salía sola de la
+        // surface_rule, floor=HFIL_SCORCHED_STONE sin capa de tierra encima en este bioma).
+        register(context, KATCHIN_ORE_OW_EXPOSED_KEY, Feature.ORE, new OreConfiguration(
+                List.of(OreConfiguration.target(stoneReplaceables,
+                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 12, 0.0F));
+
         // Islas flotantes: mismo objetivo que HFIL pero NO su tamaño, y por eso es una
         // configured feature aparte. En una plataforma de pocos bloques de grosor una veta de
         // 9 no cabe: asoma por las dos caras y la isla queda con costra de mineral.
@@ -149,8 +168,12 @@ public class ModConfiguredFeatures {
                 ModFeatures.FALLEN_LOG.get(), NoneFeatureConfiguration.INSTANCE);
         register(context, HFIL_SPIKE_KEY,
                 ModFeatures.HFIL_SPIKE.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_CINDER_SPIKE_KEY,
+                ModFeatures.HFIL_CINDER_SPIKE.get(), NoneFeatureConfiguration.INSTANCE);
         register(context, HFIL_BONE_PILE_KEY,
                 ModFeatures.HFIL_BONE_PILE.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_ORE_BOULDER_KEY,
+                ModFeatures.HFIL_ORE_BOULDER.get(), NoneFeatureConfiguration.INSTANCE);
 
         // Ya NO es Feature.LAKE (ver comentario de la key arriba) — HfilBloodPoolFeature cava y
         // rellena a mano, sin capa de barrier por encima del agua, para que el charco quede

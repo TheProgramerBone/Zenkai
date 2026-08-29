@@ -17,6 +17,18 @@ public final class RegenSystem {
         if (p.tickCount % 20 != 0) return;
 
         var food = p.getFoodData();
+
+        // "Muerto" (atrapado en el otro mundo, ver OtherworldManager.isInOtherworld): el hambre
+        // no tiene sentido ahí — comida y saturación al máximo cada segundo, y exhaustion a 0
+        // para que no se acumule entre correcciones y se coma un punto de golpe justo antes del
+        // siguiente refresco. No corta el resto del regen de abajo: solo el hambre deja de
+        // importar, body/stamina/ki siguen funcionando con normalidad.
+        if (att.isInOtherworld()) {
+            food.setFoodLevel(20);
+            food.setSaturation(20f);
+            food.setExhaustion(0f);
+        }
+
         // Suelo de comida: antes se regeneraba hasta dejarte en 1 de hambre, así que era
         // imposible acumular reserva. Vanilla corta su regen por debajo de 18; aquí se corta
         // mucho más abajo para poder curarse con hambre, pero no hasta vaciarte.

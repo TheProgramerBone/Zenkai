@@ -20,6 +20,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -29,6 +30,7 @@ import net.minecraft.world.food.FoodData;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingHealEvent;
+import net.neoforged.neoforge.event.entity.player.CriticalHitEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 
@@ -106,7 +108,7 @@ public class CombatZenkaiHooks {
         double armorMult = VanillaMitigation.armorMultiplier(e);
 
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
-        float dmg = computeAttackDamage(e, atkStats);
+        float dmg = computeAttackDamage(e, atkStats, armorMult);
 
         // Se consume AQUÍ, inmediatamente después de computeAttackDamage (el único sitio que
         // puede haberlo marcado, vía BlackFlash.apply dentro de playerMeleeDamage) y ANTES de
@@ -116,10 +118,24 @@ public class CombatZenkaiHooks {
 
         ZenkaiCombatStats defStats = ZenkaiStats.of(e.getEntity());
         if (defStats != null && defStats.isCombatActive()) {
-            applyToZenkaiVictim(e, atkStats, defStats, dmg, armorMult, blackFlash);
+            applyToZenkaiVictim(e, atkStats, defStats, dmg, armorMult, blackFlash,
+                    isEnvironmentalHazard(e.getSource()));
             return;
         }
         applyToVanillaVictim(e, dmg, armorMult);
+    }
+
+    /**
+     * Lava, fuego (la etiqueta vanilla IS_FIRE cubre in_fire/on_fire/lava/hot_floor) y
+     * ahogamiento: la fuente NO tiene entidad atacante. Ni STR (no hay quién pegue) ni DEF (está
+     * calibrada para un rival cuyo golpe también escala con Power Level) tienen nada que hacer
+     * ahí — un chorro FIJO de daño vanilla (4 de lava, 2 de ahogamiento, por medio segundo)
+     * quedaba aplastado a nada contra la DEF de cualquier personaje con algo de progresión.
+     * Ver mitigate() para cómo se traduce en su lugar.
+     */
+    private static boolean isEnvironmentalHazard(DamageSource src) {
+        return src.getEntity() == null
+                && (src.is(DamageTypeTags.IS_FIRE) || src.is(DamageTypes.DROWN));
     }
 
     // =====================================================================
@@ -131,7 +147,8 @@ public class CombatZenkaiHooks {
      * así que no se recalculan aquí.
      * @return el daño que entra al lado defensor.
      */
-    private static float computeAttackDamage(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats) {
+    private static float computeAttackDamage(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
+                                             double armorMult) {
         float dmg = e.getNewDamage();
 
         if (atkStats == null || !atkStats.isCombatActive()) return dmg;
@@ -150,9 +167,18 @@ public class CombatZenkaiHooks {
             // código. Mismo arreglo que weaponMultiplier hizo con las espadas.
             // El daño ORIGINAL (pre-armadura) es donde vive lo que puso Poder; dmg ya viene
             // mitigado y la armadura se cobra aparte en VanillaMitigation.
+            // OJO CON EL DOBLE CONTEO: `dmg` (armadura del objetivo YA aplicada por vanilla,
+            // ver LivingDamageEvent.Pre#getContainer) vuelve a pasar por mitigate(), que
+            // multiplica TODO lo que sale de aquí por armorMult otra vez — necesario para las
+            // ramas que sustituyen dmg por un número nuevo (STR/ki), pero aquí seguimos
+            // devolviendo el propio dmg vanilla. Se cancela dividiendo por armorMult ahora, así
+            // mitigate() lo deja tal y como vanilla ya lo dejó, una sola vez. El bonus de ki SÍ
+            // debe recibir armorMult (tu armadura también debería frenar la parte ki de la
+            // flecha), así que a él NO se le aplica esta corrección.
             if (shot.isInfused()) {
                 double mult = KiInfusion.projectileMultiplier(VanillaMitigation.originalDamage(e));
-                return dmg + (float) (shot.bonusDamage() * mult);
+                float vanillaPart = armorMult > 1.0e-6 ? (float) (dmg / armorMult) : dmg;
+                return vanillaPart + (float) (shot.bonusDamage() * mult);
             }
 
             // 2) PROYECTIL VANILLA DE UNA ENTIDAD. Esta rama devolvía `dmg` tal cual, o sea daño
@@ -169,13 +195,16 @@ public class CombatZenkaiHooks {
             if (dmg > 0f && !(e.getSource().getEntity() instanceof Player)) {
                 return (float) (atkStats.computeMeleeFinal() * CommonConfig.mobProjectileFactor());
             }
-            return dmg;
+            // Flecha vanilla (sin infusionar) disparada por un jugador: mismo doble conteo de
+            // armadura que la rama infusionada de arriba, mismo arreglo.
+            return armorMult > 1.0e-6 ? (float) (dmg / armorMult) : dmg;
         }
 
         double strDamage = atkStats.computeMeleeFinal();
 
         if (e.getSource().getEntity() instanceof Player attacker) {
-            return playerMeleeDamage(e.getEntity(), attacker, atkStats, strDamage, dmg);
+            return playerMeleeDamage(e.getEntity(), attacker, atkStats, strDamage, dmg,
+                    VanillaMitigation.originalDamage(e));
         }
 
         // EXPLOSIÓN PROPIA (creeper): vanilla ya atenuó el daño por distancia y por cobertura, y
@@ -207,19 +236,36 @@ public class CombatZenkaiHooks {
      */
     private static float playerMeleeDamage(LivingEntity victim, Player attacker,
                                            ZenkaiCombatStats atkStats,
-                                           double strDamage, float vanillaDmg) {
+                                           double strDamage, float vanillaDmg,
+                                           double originalVanillaDamage) {
         boolean zenkaiMelee = attacker instanceof ServerPlayer atkSp
                 && CombatModeServerState.isActive(atkSp.getUUID());
         if (!zenkaiMelee) return vanillaDmg;
 
+        // Crítico vanilla (salto+caída, x1.5 por defecto): capturado en CriticalHitEvent, que
+        // dispara DENTRO de Player.attack() antes que este evento — ver onCriticalHit. Sin esto,
+        // el golpe se reconstruía entero desde STR y el crítico de vanilla (partículas y sonido
+        // incluidos) no cambiaba ni un punto de daño.
+        float critMult = consumeCritMultiplier(attacker);
+
         if (atkStats.getStamina() <= 0) {
-            return (float) KiInfusion.attackDamageOf(attacker);
+            return (float) (KiInfusion.attackDamageOf(attacker) * critMult);
         }
 
         float scale = consumeAttackScale(attacker);
         double chargeF = 0.2 + scale * scale * 0.8;
 
-        double base = strDamage * KiInfusion.weaponMultiplier(attacker) * chargeF;
+        // Bonus de daño de vanilla (Filo, Aspereza, el "smash" de la maza por altura de caída,
+        // cualquier otro mod que toque el mismo número) como multiplicador sobre STR — ver
+        // KiInfusion.enchantMultiplier. Un arma de ki NO pasa por aquí: su multiplicador ya es
+        // un número de datapack (weaponMultiplier), ajeno al atributo attack_damage en el que
+        // se basa este cociente.
+        KiWeaponItem heldKiWeapon = KiWeaponServer.heldWeapon(attacker);
+        double enchantMult = heldKiWeapon == null
+                ? KiInfusion.enchantMultiplier(attacker, originalVanillaDamage, critMult)
+                : 1.0;
+
+        double base = strDamage * KiInfusion.weaponMultiplier(attacker) * enchantMult * chargeF;
 
         double kiWeaponExtra = KiInfusion.kiWeaponExtra(attacker, strDamage, chargeF);
         if (kiWeaponExtra > 0.0) {
@@ -244,7 +290,9 @@ public class CombatZenkaiHooks {
                 * CommonConfig.meleeStaminaPerHit() * atkStats.staminaCostMult());
         if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
 
-        double total = base + bonus;
+        // El crítico multiplica el golpe COMPLETO (base de arma + bonus de ki), igual que en
+        // vanilla multiplica el float final antes de hurt() — no solo la parte de STR.
+        double total = (base + bonus) * critMult;
 
         // BLACK FLASH sobre el golpe COMPLETO y en crudo: lo que sale de aquí es lo que entra
         // a mitigate(), o sea antes de defensa, armadura y barreras.
@@ -267,11 +315,12 @@ public class CombatZenkaiHooks {
     /** Víctima CON stats zenkai: mitiga con DEF y el daño va al pool body. */
     private static void applyToZenkaiVictim(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
                                             ZenkaiCombatStats defStats, float dmg,
-                                            double armorMult, boolean blackFlash) {
+                                            double armorMult, boolean blackFlash,
+                                            boolean environmental) {
         int bodySpent = 0;
         double finalDamage = 0.0;
         if (dmg > 0f) {
-            finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult);
+            finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult, environmental);
 
             int bodyBefore = defStats.getBody();
             defStats.addBody(-(int) Math.ceil(finalDamage));
@@ -330,18 +379,37 @@ public class CombatZenkaiHooks {
         e.setNewDamage(Math.min(equivalent, ceiling));
     }
 
-    /** Aplica DEF, armadura vanilla, bloqueo, barrera de ki y absorción.
+    /** Aplica DEF (salvo ambiental), armadura vanilla, bloqueo, barrera de ki y absorción.
      *  @return daño que llega al body. */
     private static double mitigate(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
-                                   ZenkaiCombatStats defStats, float dmg, double armorMult) {
-        double defense = computeDefense(e, atkStats, defStats, dmg);
+                                   ZenkaiCombatStats defStats, float dmg, double armorMult,
+                                   boolean environmental) {
+        double finalDamage;
 
-        double finalDamage = (defense <= 0.0)
-                ? dmg
-                : dmg * (1.0 - defense / (defense + dmg));
+        if (environmental) {
+            // AMBIENTAL (lava, fuego, ahogamiento): sin atacante, así que ni STR (no hay quién
+            // pegue) ni DEF (calibrada para un rival cuyo golpe TAMBIÉN escala con Power Level)
+            // tienen sentido — un chorro fijo de vanilla (4 de lava, 2 de ahogamiento) quedaba
+            // aplastado a nada contra la DEF de cualquier personaje con progresión. En su lugar
+            // se traduce al MISMO % de vida vanilla que este golpe se habría llevado, aplicado
+            // sobre el bodyMax: el % de vida perdido por un peligro del mundo es igual con PL
+            // 300 o con PL 3.000.000, que es justo lo que un peligro ambiental (no un rival)
+            // debería hacer.
+            // `dmg` YA es post-armadura (vanilla la aplicó antes de este evento, ver
+            // LivingDamageEvent.Pre#getContainer) — NO se multiplica por armorMult otra vez
+            // aquí, o Protección/Resistencia se cobrarían dos veces sobre esta rama.
+            float vanillaMax = e.getEntity().getMaxHealth();
+            double pct = vanillaMax > 0f ? (dmg / vanillaMax) : 0.0;
+            finalDamage = pct * defStats.getBodyMax();
+        } else {
+            double defense = computeDefense(e, atkStats, defStats, dmg);
+            finalDamage = (defense <= 0.0)
+                    ? dmg
+                    : dmg * (1.0 - defense / (defense + dmg));
 
-        finalDamage *= armorMult;
-        finalDamage = Math.max(finalDamage, dmg * CommonConfig.minDamagePercent());
+            finalDamage *= armorMult;
+            finalDamage = Math.max(finalDamage, dmg * CommonConfig.minDamagePercent());
+        }
 
         if (e.getEntity() instanceof ServerPlayer defSp && KiCombatServer.isBlocking(defSp)) {
             finalDamage *= SkillEffects.blockDamageMultiplier(defSp);
@@ -553,6 +621,35 @@ public class CombatZenkaiHooks {
     /** Llamar al desconectar: si no, queda una entrada por jugador que haya entrado alguna vez. */
     public static void forgetAttackScale(UUID playerId) {
         ATTACK_SCALE.remove(playerId);
+        CRIT_MULT.remove(playerId);
+    }
+
+    // =====================================================================
+    // CRÍTICO VANILLA (salto+caída)
+    // =====================================================================
+
+    /**
+     * Multiplicador de crítico capturado en CriticalHitEvent — dispara DENTRO de
+     * Player.attack(), antes que LivingDamageEvent.Pre, exactamente igual que ATTACK_SCALE de
+     * arriba y por la misma razón: para cuando corre este evento ya no queda ninguna señal de
+     * "fue crítico" que leer del lado vanilla. Guarda {multiplicador, tickCount}: el tick
+     * descarta una entrada vieja para que un daño que no venga de un golpe de Player.attack()
+     * (una técnica, un proyectil a distancia) no herede un crítico ajeno.
+     */
+    private static final Map<UUID, float[]> CRIT_MULT = new ConcurrentHashMap<>();
+
+    @SubscribeEvent
+    public static void onCriticalHit(CriticalHitEvent e) {
+        if (e.getEntity().level().isClientSide()) return;
+        float mult = e.isCriticalHit() ? e.getDamageMultiplier() : 1.0f;
+        CRIT_MULT.put(e.getEntity().getUUID(), new float[]{ mult, e.getEntity().tickCount });
+    }
+
+    /** Consume el multiplicador crítico capturado. 1.0 (neutro) si no hay uno fresco. */
+    private static float consumeCritMultiplier(Player p) {
+        float[] v = CRIT_MULT.remove(p.getUUID());
+        if (v == null || p.tickCount - v[1] > 1) return 1.0f;
+        return v[0];
     }
 
     /** Nadie FIJA a un jugador derribado. Complemento del barrido de TickHandlers, que es

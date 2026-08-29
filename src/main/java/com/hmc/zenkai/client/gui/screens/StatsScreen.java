@@ -770,10 +770,13 @@ public class StatsScreen extends ZenkaiMenuScreen {
         // 40 o 60 no comunica nada y hace el texto menos reconocible.
         int al = att.getAlignment();
         int alColor = ZenkaiPalette.alignmentColor(al);
+        String alignmentKey = switch (com.hmc.zenkai.feature.alignment.AlignmentTier.of(al)) {
+            case GOOD -> "screen.zenkai.alignment.good";
+            case EVIL -> "screen.zenkai.alignment.evil";
+            case NEUTRAL -> "screen.zenkai.alignment.neutral";
+        };
         out.add(new Row(
-                Component.translatable(al > 20 ? "screen.zenkai.alignment.good"
-                        : al < -20 ? "screen.zenkai.alignment.evil"
-                        : "screen.zenkai.alignment.neutral").withStyle(net.minecraft.ChatFormatting.BOLD),
+                Component.translatable(alignmentKey).withStyle(net.minecraft.ChatFormatting.BOLD),
                 Component.literal((al > 0 ? "+" : "") + al),
                 alColor, -1f, 0, null));
         return out;

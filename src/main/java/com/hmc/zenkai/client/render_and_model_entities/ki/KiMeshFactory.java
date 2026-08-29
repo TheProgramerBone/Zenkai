@@ -222,6 +222,25 @@ public final class KiMeshFactory {
         return b.done();
     }
 
+    /**
+     * Ángulo de una hebra de la hélice horneada por {@link #helix}, medido HACIA ATRÁS desde la
+     * PUNTA (z=0 con {@code anchorTip}): {@code d=0} en la punta, {@code d=length} en la cola de
+     * la malla. Se puede evaluar con {@code d > length}, más allá de la cola, para que
+     * {@code KiProjectileRenderer} continúe la MISMA torsión en la estela sin discontinuidad
+     * visible en la costura donde la malla horneada termina y la estela empieza — ver
+     * {@code KiVisual#helixTrail}. {@code phase} es la fase de la hebra (0 o {@code Math.PI},
+     * una por cada de las dos que dibuja {@link #helix}).
+     * Nota: el ángulo NO depende de {@code length} salvo para fijar dónde cae {@code d=0} — la
+     * fórmula de {@link #helix} es {@code phase + 2π·HELIX_TWISTS_PER_UNIT·length·(i/steps)},
+     * y {@code i/steps} es la fracción de {@code length} recorrida desde la cola
+     * ({@code (length-d)/length}); al multiplicar por {@code length} este factor se cancela y
+     * queda una velocidad angular constante por unidad de distancia, la misma dentro y fuera de
+     * la malla.
+     */
+    public static double helixAngleFromTip(float length, double d, double phase) {
+        return phase + 2 * Math.PI * HELIX_TWISTS_PER_UNIT * (length - d);
+    }
+
     private static void tubeVert(Buf b, float radius, float tube,
                                  double along, float z, double around, float v, int ri) {
         float cx = (float) (Math.cos(along) * radius);

@@ -21,7 +21,10 @@ public enum KiTechniqueType {
     BARRIER,    // burbuja defensiva
     BURST,      // ráfaga de bolas pequeñas
     DISK,       // disco destructor
-    EXPLOSION;  // autodetonación centrada en el lanzador: no viaja, no apunta
+    EXPLOSION,  // autodetonación centrada en el lanzador: no viaja, no apunta
+    SPIRIT_BOMB; // Genki Dama: técnica firma de Kaio (ver TechniqueDef "TÉCNICA FIRMA"). Va
+    // AL FINAL a propósito: ordinal() es la celda del icono en technique_icons.png, así que
+    // añadirla aquí no reordena las 9 celdas ya existentes.
 
     /** Fracción mínima de carga para poder disparar (estilo DBC). */
     public static final double MIN_CHARGE = 0.25;
@@ -111,6 +114,9 @@ public enum KiTechniqueType {
             case BIG_BLAST -> 1.50 + 0.35 * s;
             case EXPLOSION -> 1.20 + 0.35 * s;
             case BARRIER   -> 2.60 + 0.20 * s;   // como estaba
+            // Técnica firma: arranca por encima del techo de BIG_BLAST (~2.9 en tamaño 5) y
+            // sigue creciendo, mismo patrón documentado arriba para EXPLOSION/BIG_BLAST.
+            case SPIRIT_BOMB -> 3.20 + 0.40 * s;
         };
     }
 
@@ -132,6 +138,7 @@ public enum KiTechniqueType {
             case DISK      -> 0.70;
             case BURST     -> 0.60;
             case BARRIER   -> 0.00;
+            case SPIRIT_BOMB -> 3.20;   // por encima del 2.40 de BIG_BLAST
         };
     }
 
@@ -148,6 +155,7 @@ public enum KiTechniqueType {
             case BURST     -> 0.35;
             case LAZER     -> 0.20;
             case BARRIER   -> 0.00;
+            case SPIRIT_BOMB -> 0.90;   // casi todo el daño en el área: es una bola, no un golpe directo
         };
     }
 
@@ -213,7 +221,7 @@ public enum KiTechniqueType {
 
     /** ¿Este tipo dibuja estela detrás del proyectil? */
     public boolean hasTrail() {
-        return travels() && (this == LAZER || this == WAVE || this == SPIRAL);
+        return travels() && (this == LAZER || this == WAVE || this == SPIRAL || this == SPIRIT_BOMB);
     }
 
     /** Longitud de la estela en puntos (≈ ticks de historia). */
@@ -222,6 +230,7 @@ public enum KiTechniqueType {
             case LAZER -> 34;   // haz largo y fino
             case WAVE  -> 18;   // haz corto y grueso
             case SPIRAL -> 26;  // la oscilación dibuja la espiral sola
+            case SPIRIT_BOMB -> 22;   // cola de cometa, más corta que el láser
             default -> 0;
         };
     }
@@ -232,6 +241,7 @@ public enum KiTechniqueType {
             case LAZER -> 1.0f;
             case WAVE  -> 2.4f;
             case SPIRAL -> 1.4f;
+            case SPIRIT_BOMB -> 2.0f;
             default -> 0f;
         };
     }

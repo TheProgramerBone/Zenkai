@@ -239,6 +239,14 @@ public final class CommonConfig {
             BUILDER.comment("Weapon damage as a MULTIPLIER on melee: mult = 1 + (attack_damage - 1) * scale. 0.04 = diamond sword x1.28. Set to 0 to make weapons irrelevant again.")
                     .defineInRange("combat.weapon_scale", 0.04D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue MELEE_ENCHANT_SCALE_RAW =
+            BUILDER.comment("How much of the ATTACKER's own melee damage bonus (Sharpness/Smite/Bane of Arthropods, a mace's fall-distance smash bonus, Strength, or any other mod that changes the vanilla attack damage float) carries over as a multiplier on the STR-based hit: mult = 1 + (vanillaOriginalDamage / (attackDamageAttribute * critMultiplier) - 1) * scale. Ratio-based like projectile_scale, so it stays correct at any Power Level without hardcoding a specific enchantment. 1.0 = Sharpness/mace fall damage helps exactly as much here as it helps the vanilla number. 0 = ignored.")
+                    .defineInRange("combat.melee_enchant_scale", 1.0D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue MELEE_ENCHANT_MULT_CAP_RAW =
+            BUILDER.comment("Hard ceiling on the melee enchant/mace-fall multiplier above. A mace smash from a very long fall can push the vanilla ratio into double digits; the cap keeps one swing from trivializing the defense formula outright.")
+                    .defineInRange("combat.melee_enchant_mult_cap", 5.0D, 1.0D, 200.0D);
+
     private static final ModConfigSpec.DoubleValue VANILLA_ARMOR_WEIGHT_RAW =
             BUILDER.comment("How much of vanilla's own damage reduction (armor points, toughness, Protection, Resistance) carries over to Zenkai damage. 0.0 = armor ignored (old behaviour). 1.0 = full vanilla reduction, netherite + Prot IV cuts ~91%. 0.5 = ~45%.")
                     .defineInRange("combat.vanilla_armor_weight", 0.50D, 0.0D, 1.0D);
@@ -496,6 +504,8 @@ public final class CommonConfig {
     private static volatile double KI_COST_PER_POWER = 0.70D;
     private static volatile double MELEE_STAMINA_PER_HIT = 0.10D;
     private static volatile double WEAPON_SCALE = 0.04D;
+    private static volatile double MELEE_ENCHANT_SCALE = 1.0D;
+    private static volatile double MELEE_ENCHANT_MULT_CAP = 5.0D;
     private static volatile double VANILLA_ARMOR_WEIGHT = 0.50D;
     private static volatile double PROJECTILE_BASE_DAMAGE = 6.0D;
     private static volatile double PROJECTILE_SCALE = 1.0D;
@@ -624,6 +634,8 @@ public final class CommonConfig {
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
         WEAPON_SCALE          = WEAPON_SCALE_RAW.get();
+        MELEE_ENCHANT_SCALE    = MELEE_ENCHANT_SCALE_RAW.get();
+        MELEE_ENCHANT_MULT_CAP = MELEE_ENCHANT_MULT_CAP_RAW.get();
         VANILLA_ARMOR_WEIGHT   = VANILLA_ARMOR_WEIGHT_RAW.get();
         PROJECTILE_BASE_DAMAGE = PROJECTILE_BASE_DAMAGE_RAW.get();
         PROJECTILE_SCALE       = PROJECTILE_SCALE_RAW.get();
@@ -714,6 +726,10 @@ public final class CommonConfig {
 
     /** El arma como multiplicador del golpe, no como suma. Ver KiInfusion. */
     public static double weaponScale()       { return WEAPON_SCALE; }
+    /** Cuánto del bonus de daño melee de vanilla (Filo/Aspereza/mace por caída/pociones/otros
+     *  mods) se traduce como multiplicador sobre el golpe STR. Ver KiInfusion.enchantMultiplier. */
+    public static double meleeEnchantScale()   { return MELEE_ENCHANT_SCALE; }
+    public static double meleeEnchantMultCap() { return MELEE_ENCHANT_MULT_CAP; }
     public static double vanillaArmorWeight()  { return VANILLA_ARMOR_WEIGHT; }
     public static double projectileBaseDamage(){ return PROJECTILE_BASE_DAMAGE; }
     public static double projectileScale()     { return PROJECTILE_SCALE; }

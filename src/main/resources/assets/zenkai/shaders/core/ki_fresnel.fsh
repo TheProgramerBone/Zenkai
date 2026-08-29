@@ -30,6 +30,13 @@
 // parámetro que separa "energía" de "objeto": con un valor pequeño la silueta queda nítida y el
 // proyectil se ve como una canica sobrepuesta en la escena por muy bien que estén las bandas de
 // dentro.
+//
+// CAPA DE DETALLE (ZenkaiDetail, ver KiVisual.detailStrength). Inspirada en el `texBlend` de
+// DragonMineZ (kiattack.fsh) pero adaptada al invariante de este archivo: la textura NUNCA
+// aporta su propio color (sería un color fijo peleando con el tinte del vértice, que es lo que
+// permite que un solo shader sirva para cualquier color de técnica) — `ki_detail.png` es blanca
+// con el patrón en alfa, igual que halo/estela, y solo modula BRILLO. `ZenkaiDetail` 0 = capa
+// desactivada (la mayoría de técnicas hoy); es una mejora opcional por tipo, no global.
 
 in vec4 vColor;
 in vec3 vNormal;
@@ -37,12 +44,14 @@ in vec3 vViewDir;
 in vec2 vUv;
 in vec3 vField;
 
+uniform sampler2D Sampler0; // ki_detail.png — SOLO variación de brillo, ver ZenkaiDetail
 uniform vec4 ColorModulator;
 uniform float GameTime;
 uniform float ZenkaiShape;
 uniform vec3 ZenkaiBands;   // x = nivel del núcleo, y = del cuerpo, z = del contorno
 uniform vec3 ZenkaiTone;    // x = blancura del núcleo, y = oscurecido del contorno, z = edgeFade
 uniform float ZenkaiWobble; // amplitud del hervor (0 = bandas perfectamente quietas)
+uniform float ZenkaiDetail; // 0 = sin capa de detalle (la mayoría de técnicas hoy)
 
 out vec4 fragColor;
 
@@ -99,6 +108,18 @@ void main() {
     // Parpadeo de intensidad, más fuerte en el núcleo. Es lo que impide que la técnica se vea
     // como plástico pintado cuando el proyectil está quieto respecto a la cámara.
     col *= 1.0 + flameCore * mix(0.08, 0.20, toCore) * ZenkaiWobble;
+
+    // Detalle de superficie: variación de brillo tileable, deslizándose sobre la malla en el
+    // tiempo (misma idea que el scroll de UV de la estela). `fract()` a mano en vez de fiarse
+    // del wrap de la textura: no todos los ejes UV de todas las formas dan la vuelta completa
+    // (ver KiMeshFactory), así que envolver aquí es lo único que garantiza tileado sin costura
+    // en cualquier forma. Puramente multiplicativo — nunca mezcla hacia el color de la textura,
+    // ver comentario de cabecera.
+    if (ZenkaiDetail > 0.0) {
+        vec2 detailUv = fract(vUv * 3.0 + vec2(t * 0.006, -t * 0.010));
+        float d = texture(Sampler0, detailUv).a;
+        col *= mix(1.0, 0.65 + 0.70 * d, ZenkaiDetail);
+    }
 
     float edge = g + flameOutline * WOBBLE_OUTLINE * ZenkaiWobble;
     float alpha = vColor.a * smoothstep(0.0, max(1.0e-3, ZenkaiTone.z), edge);

@@ -231,6 +231,11 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         float scroll = -(e.tickCount + partialTick) * v.trailScroll() * 0.05f;
         float outer = e.getBbWidth() * v.trailWidth();
 
+        if (v.helixTrail()) {
+            renderHelixTrail(e, v, pts, feet, cam, outer, scroll, r, g, b, pose.last(), buffer);
+            return;
+        }
+
         ribbon(buffer.getBuffer(KiRenderTypes.soft(KiRenderTypes.TRAIL_TEXTURE)),
                 pose.last(), pts, feet, cam, outer, scroll, r, g, b, v.trailAlpha());
 
@@ -244,6 +249,58 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
                     pose.last(), pts, feet, cam, outer * v.trailInnerMul(), scroll,
                     cr, cg, cb, v.trailAlpha() * 0.70f);
         }
+    }
+
+    /**
+     * Estela en doble hélice CONTINUA ({@link KiVisual#helixTrail}, hoy solo SPIRAL): en vez de
+     * una cinta plana, cada una de las dos hebras desplaza los puntos históricos con la MISMA
+     * fórmula de torsión que ya hornea {@code KiMeshFactory.helix} en la malla del proyectil
+     * ({@link KiMeshFactory#helixAngleFromTip}), evaluada más allá de {@code meshLength} — así
+     * la estela SIGUE girando en el mismo sentido y al mismo ritmo en vez de cortar a una cinta
+     * recta justo donde termina la malla horneada.
+     * La base perpendicular (derecha/arriba) sale de {@link KiProjectileEntity#helixBasis()},
+     * fijada una sola vez al disparar: recalcularla contra la dirección instantánea retorcería
+     * la hélice de golpe en cuanto el proyectil gire (HOMING).
+     * Reutiliza {@code ribbon()} tal cual (misma capa exterior teñida + núcleo blanco aditivo
+     * opcional) — lo único que cambia es la LISTA de puntos que recibe cada llamada, no la
+     * textura ni el RenderType.
+     */
+    private void renderHelixTrail(KiProjectileEntity e, KiVisual v, List<Vec3> pts, Vec3 feet,
+                                  Vec3 cam, float outer, float scroll,
+                                  float r, float g, float b,
+                                  PoseStack.Pose mat, MultiBufferSource buffer) {
+        Vec3[] basis = e.helixBasis();
+        Vec3 right = basis[0], up = basis[1];
+        float radius = v.meshRadius();
+        float length = v.meshLength();
+
+        VertexConsumer outerVc = buffer.getBuffer(KiRenderTypes.soft(KiRenderTypes.TRAIL_TEXTURE));
+        VertexConsumer innerVc = v.hasTrailCore()
+                ? buffer.getBuffer(KiRenderTypes.additive(KiRenderTypes.TRAIL_TEXTURE)) : null;
+        float cr = r + (1f - r) * 0.55f, cg = g + (1f - g) * 0.55f, cb = b + (1f - b) * 0.55f;
+
+        for (int s = 0; s < 2; s++) {
+            double phase = Math.PI * s;
+            List<Vec3> strand = new ArrayList<>(pts.size());
+            double d = 0;
+            strand.add(helixOffset(pts.get(0), right, up, radius,
+                    KiMeshFactory.helixAngleFromTip(length, 0, phase)));
+            for (int i = 1; i < pts.size(); i++) {
+                d += pts.get(i - 1).distanceTo(pts.get(i));
+                strand.add(helixOffset(pts.get(i), right, up, radius,
+                        KiMeshFactory.helixAngleFromTip(length, d, phase)));
+            }
+            ribbon(outerVc, mat, strand, feet, cam, outer, scroll, r, g, b, v.trailAlpha());
+            if (innerVc != null) {
+                ribbon(innerVc, mat, strand, feet, cam, outer * v.trailInnerMul(), scroll,
+                        cr, cg, cb, v.trailAlpha() * 0.70f);
+            }
+        }
+    }
+
+    private static Vec3 helixOffset(Vec3 center, Vec3 right, Vec3 up, float radius, double angle) {
+        return center.add(right.scale(radius * Math.cos(angle)))
+                .add(up.scale(radius * Math.sin(angle)));
     }
 
     /**

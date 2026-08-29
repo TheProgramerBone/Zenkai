@@ -7,8 +7,8 @@ import com.hmc.zenkai.feature.technique.TechniqueEffect;
 import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.registry.ModParticles;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -87,6 +87,31 @@ public class KiProjectileEntity extends Projectile {
         if (lastFxTick == tickCount) return false;
         lastFxTick = tickCount;
         return true;
+    }
+
+    // ── Base perpendicular ESTABLE para la estela en doble hélice (SOLO cliente, ver
+    //    KiVisual.helixTrail / KiProjectileRenderer.renderTrail). Se fija UNA SOLA VEZ, la
+    //    primera vez que hace falta, a partir de la dirección de vuelo EN ESE INSTANTE — nunca
+    //    se recalcula después. Si se recalculara contra la dirección instantánea, un giro
+    //    brusco del proyectil (p. ej. HOMING corrigiendo el rumbo) retorcería la hélice de
+    //    golpe en vez de dejarla girar suavemente (misma lección que FlightMovement.refSpeed:
+    //    no derivar "cómo debería ser esto ahora" de un valor que cambia tick a tick). ──
+    private Vec3 helixRight, helixUp;
+
+    /** @return [derecha, arriba] — perpendiculares entre sí y a la dirección de vuelo fijada en
+     *  el primer uso. */
+    public Vec3[] helixBasis() {
+        if (helixRight == null) {
+            Vec3 dir = getDeltaMovement();
+            if (dir.lengthSqr() < 1.0e-6) dir = new Vec3(0, 0, 1);
+            dir = dir.normalize();
+            // "Arriba" de referencia: el eje mundo Y, salvo que el proyectil vuele casi vertical
+            // (dir paralelo a Y), donde ese cruce degenera a un vector casi nulo.
+            Vec3 worldUp = Math.abs(dir.y) > 0.999 ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
+            helixRight = dir.cross(worldUp).normalize();
+            helixUp = helixRight.cross(dir).normalize();
+        }
+        return new Vec3[]{helixRight, helixUp};
     }
 
     // ── DISK (siempre) y PIERCING (si se eligió ese efecto): ids de entidades ya atravesadas
@@ -312,6 +337,32 @@ public class KiProjectileEntity extends Projectile {
             }
         }
 
+        // Destello teñido del color de LA TÉCNICA, siempre — sea cual sea el efecto y pase lo
+        // que pase después (grief, fragmentos, zona persistente). ANTES el impacto de un blast
+        // caía siempre en el humo gris genérico de vainilla: una bola cargada y disparada de un
+        // color concreto explotaba en gris, rompiendo la identidad de color que SÍ tienen la
+        // carga (KiChargeRenderer) y el vuelo (KiProjectileRenderer). Mismo ModParticles.impact/
+        // spark que ya usan PhysicalCombatServer (golpes físicos) y KiInfusionShooting
+        // (infusión de ki) para su propio destello de impacto.
+        //
+        // TOPE DELIBERADO en 3.0. `ki_impact_*.png` es un icono pixel-art de estrella/diamante
+        // de 32x32 con bordes dentados A PROPÓSITO (pensado para golpes físicos, que lo usan en
+        // 0.7-2.0) — NO es un degradado suave como ki_halo.png. Un intento anterior lo escalaba
+        // por `radius` sin tope (pasando de 10x en una EXPLOSION grande) para competir en tamaño
+        // con el humo/escombros de vainilla de más abajo; una vez QUITADO ese humo (ver el
+        // comentario de la rama sin grief) esa razón ya no existe, y escalarlo tanto solo
+        // agranda un icono dentado hasta que se le notan los bordes — CON shaders de bloom
+        // (Iris) esos bordes se difuminan y se ve bien, SIN shaders se ve un "sol" con anillos
+        // duros (confirmado con capturas del usuario). Mantenerlo en un rango donde el icono se
+        // ve bien CON O SIN shaders, en vez de perseguir un tamaño que dependía de que hubiera
+        // bloom para disimularlo.
+        float flashScale = Math.min(3.0f, 1.0f + (float) radius * 0.18f);
+        sl.sendParticles(ModParticles.impact(rgb(), flashScale),
+                center.x, center.y, center.z, 1, 0.0, 0.0, 0.0, 0.0);
+        sl.sendParticles(ModParticles.spark(rgb(), 1.0f),
+                center.x, center.y, center.z, 6 + (int) Math.round(radius * 2.0),
+                radius * 0.3, radius * 0.3, radius * 0.3, 0.15);
+
         // Van ANTES del branch de grief (que puede cortar con `return`) porque EXPLOSIVE,
         // FRAGMENTATION y LINGERING son efectos MUTUAMENTE EXCLUYENTES (uno solo por técnica,
         // ver TechniqueEffect): si `effect` es FRAGMENTATION o LINGERING, nunca es EXPLOSIVE,
@@ -334,13 +385,10 @@ public class KiProjectileEntity extends Projectile {
             return;
         }
 
-        int emitters = 1 + size() / 2;
-        double spread = radius * 0.35;
-        sl.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z,
-                emitters, spread, spread, spread, 0);
-        int puffs = 8 + size() * 6;
-        sl.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z,
-                puffs, radius * 0.5, radius * 0.5, radius * 0.5, 0);
+        // SIN humo/escombros de vainilla a propósito: ParticleTypes.EXPLOSION_EMITTER/EXPLOSION
+        // son una nube gris grande que opacaba el destello teñido de arriba (era justo la queja
+        // — "el efecto que puse se ve opacado"), y el escalado por `radius` seguía sin bastar en
+        // los tamaños grandes. El sonido se queda: es lo único que faltaría si se quita del todo.
         sl.playSound(null, center.x, center.y, center.z,
                 SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS,
                 1.2f + 0.15f * size(), 1.25f - 0.06f * size());

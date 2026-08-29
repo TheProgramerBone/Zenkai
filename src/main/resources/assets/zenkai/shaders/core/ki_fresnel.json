@@ -9,6 +9,9 @@
     "UV2",
     "Normal"
   ],
+  "samplers": [
+    { "name": "Sampler0" }
+  ],
   "uniforms": [
     { "name": "ModelViewMat",   "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
     { "name": "ProjMat",        "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
@@ -17,6 +20,7 @@
     { "name": "ZenkaiShape",    "type": "float", "count": 1, "values": [ 0.0 ] },
     { "name": "ZenkaiBands",    "type": "float", "count": 3, "values": [ 0.75, 0.30, 0.05 ] },
     { "name": "ZenkaiTone",     "type": "float", "count": 3, "values": [ 0.90, 0.55, 0.30 ] },
-    { "name": "ZenkaiWobble",   "type": "float", "count": 1, "values": [ 1.0 ] }
+    { "name": "ZenkaiWobble",   "type": "float", "count": 1, "values": [ 1.0 ] },
+    { "name": "ZenkaiDetail",   "type": "float", "count": 1, "values": [ 0.0 ] }
   ]
 }

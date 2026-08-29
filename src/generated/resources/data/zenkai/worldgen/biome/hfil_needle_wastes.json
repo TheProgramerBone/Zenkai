@@ -29,11 +29,7 @@
   },
   "features": [
     [],
-    [
-      "minecraft:lake_lava_underground",
-      "minecraft:lake_lava_surface",
-      "zenkai:hfil_lake_blood"
-    ],
+    [],
     [],
     [],
     [],
@@ -78,7 +74,8 @@
       "zenkai:hfil_dry_grass",
       "zenkai:hfil_dead_bush",
       "zenkai:fallen_log_hfil",
-      "zenkai:hfil_bone_pile"
+      "zenkai:hfil_bone_pile",
+      "zenkai:hfil_ore_boulder_rare"
     ]
   ],
   "has_precipitation": false,

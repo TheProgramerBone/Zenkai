@@ -3,10 +3,12 @@ package com.hmc.zenkai.worldgen;
 import com.hmc.zenkai.registry.ModBlocks;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
@@ -46,6 +48,14 @@ public class HfilBloodPoolFeature extends Feature<NoneFeatureConfiguration> {
     /** Probabilidad de "morder" el borde (charco y orilla) — mismo espíritu que
      *  HfilSpikeFeature.EDGE_ERODE_CHANCE, para que el contorno no sea un círculo perfecto. */
     private static final float EDGE_ERODE_CHANCE = 0.3f;
+    /** Probabilidad de que ESTE charco (no todos) lleve huesos hundidos en el borde — variedad
+     *  "cementerio", no un adorno garantizado en cada lago. */
+    private static final float SUNKEN_BONES_CHANCE = 0.35f;
+    private static final int MIN_SUNKEN_BONES = 1;
+    private static final int MAX_SUNKEN_BONES = 3;
+    /** Ventana de sondeo local para los huesos hundidos — mismo motivo que GROUND_SEARCH_RADIUS
+     *  de arriba, más pequeña porque solo hace falta encontrar el borde inmediato del charco. */
+    private static final int SUNKEN_BONES_GROUND_SEARCH_RADIUS = 3;
 
     public HfilBloodPoolFeature(Codec<NoneFeatureConfiguration> codec) {
         super(codec);
@@ -57,7 +67,44 @@ public class HfilBloodPoolFeature extends Feature<NoneFeatureConfiguration> {
         BlockPos origin = ctx.origin();
         RandomSource random = ctx.random();
         int radius = MIN_RADIUS + random.nextInt(MAX_RADIUS - MIN_RADIUS + 1);
-        return carve(level, random, origin, radius, MAX_DEPTH, GROUND_SEARCH_RADIUS, EDGE_ERODE_CHANCE, null);
+        boolean placed = carve(level, random, origin, radius, MAX_DEPTH, GROUND_SEARCH_RADIUS, EDGE_ERODE_CHANCE, null);
+        if (placed && random.nextFloat() < SUNKEN_BONES_CHANCE) {
+            placeSunkenBones(level, random, origin, radius);
+        }
+        return placed;
+    }
+
+    /**
+     * Huesos hundidos en el borde del charco — variedad "cementerio", pieza 4 de
+     * .claude/pendiente (sesión de variedad por bioma). Nota de diseño explícita: NO se apoyan en
+     * HFIL_SCORCHED_STONE (el rojo de esa piedra no combina con el agua roja del charco) sino en
+     * un pequeño parche de arena — encaja además con el propio nombre "Blood Shore" (orilla).
+     * Solo afecta a la decoración normal ({@code place()}), no a {@code carve()} (compartido con
+     * BloodPondPiece, el landmark de la Fase 6, que ya tiene sus propios marcadores de
+     * hueso/calavera) — así el landmark no se ve afectado por este cambio.
+     */
+    private static void placeSunkenBones(WorldGenLevel level, RandomSource random, BlockPos origin, int poolRadius) {
+        int boneCount = MIN_SUNKEN_BONES + random.nextInt(MAX_SUNKEN_BONES - MIN_SUNKEN_BONES + 1);
+        for (int i = 0; i < boneCount; i++) {
+            // Ángulo aleatorio, distancia entre medio radio y justo al filo del charco — que
+            // queden cerca del agua, no dispersos por toda la orilla.
+            double angle = random.nextDouble() * Math.PI * 2;
+            double dist = poolRadius * (0.5 + random.nextDouble() * 0.6);
+            int x = origin.getX() + (int) Math.round(Math.cos(angle) * dist);
+            int z = origin.getZ() + (int) Math.round(Math.sin(angle) * dist);
+
+            int groundY = LocalGroundProbe.findGroundY(level, x, origin.getY(), z, SUNKEN_BONES_GROUND_SEARCH_RADIUS);
+            if (groundY == Integer.MIN_VALUE) continue;
+
+            BlockPos bonePos = new BlockPos(x, groundY, z);
+            if (!level.getBlockState(bonePos).isAir()) continue;
+
+            level.setBlock(bonePos.below(), Blocks.SAND.defaultBlockState(),
+                    Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+            Direction.Axis axis = Direction.Axis.values()[random.nextInt(3)];
+            BlockState bone = Blocks.BONE_BLOCK.defaultBlockState().setValue(RotatedPillarBlock.AXIS, axis);
+            level.setBlock(bonePos, bone, Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+        }
     }
 
     /**

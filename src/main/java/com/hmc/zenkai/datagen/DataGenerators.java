@@ -42,8 +42,13 @@ public class DataGenerators {
 
         generator.addProvider(event.includeClient(), new ModBlockStateProvider(packOutput, existingFileHelper));
         generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, existingFileHelper));
+        // El lookup del datapackProvider, NO el base (lookupProvider) — igual que
+        // ModBiomeTagProvider más abajo. El logro hfil_biomes necesita resolver
+        // zenkai:hfil_blood_shore/needle_wastes/cinder_dunes vía HolderGetter<Biome>, y esos son
+        // biomas de datapack: en el lookup base no existen ("Missing element ResourceKey[...
+        // zenkai:hfil_blood_shore]"), solo en el enriquecido del propio datapackProvider.
         generator.addProvider(event.includeServer(),
-                new ModAdvancementProvider(packOutput, lookupProvider, existingFileHelper));
+                new ModAdvancementProvider(packOutput, datapackProvider.getRegistryProvider(), existingFileHelper));
         generator.addProvider(event.includeServer(), new ModEntityStatsProvider(packOutput));
 
         // OJO: el lookup del datapackProvider, NO el base. rocky_wasteland es un bioma de

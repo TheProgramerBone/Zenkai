@@ -41,6 +41,10 @@ public final class KiRenderTypes extends RenderType {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_halo.png");
     public static final ResourceLocation TRAIL_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_trail_soft.png");
+    /** ki_fresnel.fsh la sample como Sampler0 para la capa de detalle opcional
+     *  (KiVisual.detailStrength) — ver setupFresnel/ZenkaiDetail. */
+    public static final ResourceLocation DETAIL_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/ki_detail.png");
 
     private static final ResourceLocation SHADER_ID =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_fresnel");
@@ -77,6 +81,10 @@ public final class KiRenderTypes extends RenderType {
                     false, true,
                     RenderType.CompositeState.builder()
                             .setShaderState(new ShaderStateShard(() -> fresnelShader))   // ⚠
+                            // Sampler0 de ki_fresnel.fsh: la capa de detalle opcional
+                            // (ZenkaiDetail). blur=true porque, igual que halo/estela, es un
+                            // degradado continuo, no pixel art.
+                            .setTextureState(new TextureStateShard(tex, true, false))     // ⚠
                             .setTransparencyState(TRANSLUCENT_TRANSPARENCY)              // ⚠
                             .setCullState(NO_CULL)                                       // ⚠
                             .setLightmapState(LIGHTMAP)                                  // ⚠
@@ -95,6 +103,7 @@ public final class KiRenderTypes extends RenderType {
                     false, true,
                     RenderType.CompositeState.builder()
                             .setShaderState(new ShaderStateShard(() -> fresnelShader))
+                            .setTextureState(new TextureStateShard(tex, true, false))
                             .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
                             .setCullState(CULL)                                          // ⚠ única diferencia con FRESNEL
                             .setLightmapState(LIGHTMAP)
@@ -103,13 +112,14 @@ public final class KiRenderTypes extends RenderType {
                             .setWriteMaskState(COLOR_WRITE)
                             .createCompositeState(false)));
 
-    /** El fresnel NO muestrea textura: las bandas son geometría, no píxeles. La ResourceLocation
-     *  solo entra como clave del memoize para no crear un RenderType nuevo por llamada. */
-    public static RenderType fresnel() { return FRESNEL.apply(SHADER_ID); }
+    /** Las BANDAS del fresnel son geometría, no píxeles — pero desde que existe la capa de
+     *  detalle opcional (ZenkaiDetail) el RenderType SÍ liga una textura real de verdad
+     *  ({@link #DETAIL_TEXTURE}) en el sampler0, no solo una clave de memoize sin usar. */
+    public static RenderType fresnel() { return FRESNEL.apply(DETAIL_TEXTURE); }
 
     /** @param backfaceCull true = {@link #FRESNEL_CULLED} (ver KiVisual.backfaceCull). */
     public static RenderType fresnel(boolean backfaceCull) {
-        return backfaceCull ? FRESNEL_CULLED.apply(SHADER_ID) : FRESNEL.apply(SHADER_ID);
+        return backfaceCull ? FRESNEL_CULLED.apply(DETAIL_TEXTURE) : FRESNEL.apply(DETAIL_TEXTURE);
     }
 
     /**
@@ -127,6 +137,7 @@ public final class KiRenderTypes extends RenderType {
         s.safeGetUniform("ZenkaiBands").set(v.bandCore(), v.bandBorder(), v.bandOutline()); // ⚠
         s.safeGetUniform("ZenkaiTone").set(v.coreWhite(), v.outlineDark(), v.edgeFade());   // ⚠
         s.safeGetUniform("ZenkaiWobble").set(v.wobble());                                   // ⚠
+        s.safeGetUniform("ZenkaiDetail").set(v.detailStrength());                          // ⚠
     }
 
     // ── Halo y estela ───────────────────────────────────────────────────────

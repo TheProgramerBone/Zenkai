@@ -5,6 +5,8 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BiomeDefaultFeatures;
 import net.minecraft.data.worldgen.BootstrapContext;
+import net.minecraft.data.worldgen.Carvers;
+import net.minecraft.data.worldgen.placement.MiscOverworldPlacements;
 import net.minecraft.world.level.biome.AmbientMoodSettings;
 import net.minecraft.world.level.biome.AmbientParticleSettings;
 import net.minecraft.world.level.biome.Biome;
@@ -36,14 +38,20 @@ public final class ModBiomeGen {
     private static final int NAMEK_GRASS   = 1725043; // #1A5273
     private static final int NAMEK_FOLIAGE = 2055820; // #1F5E8C
 
-    // Rediseño HFIL fase 1, punto 2 (ver .claude/pendiente/hfil-infierno-rediseno.md): ceniza
+    // Rediseño HFIL fase 1, punto 2 (ver .claude/pendiente/hfil-rework-propuesta.md): ceniza
     // cayendo pasivamente, nativo de BiomeSpecialEffects (sin entidad ni tick propio que
-    // mantener). Solo blood_shore/needle_wastes — dunas queda fuera, ya se lee como "arena en el aire"
-    // sin necesitarlo (mismo reparto que HFIL_SPIKE_KEY). Probabilidad calcada de
-    // minecraft:nether_wastes (0.00625) en vez de inventar un número — incluso en un bioma
-    // pensado para verse denso, esta cifra ya se lee claramente sin saturar la pantalla.
+    // mantener). Probabilidad base calcada de minecraft:nether_wastes (0.00625) en vez de
+    // inventar un número — incluso en un bioma pensado para verse denso, esa cifra ya se lee
+    // claramente sin saturar la pantalla.
+    // Personalidad por bioma (ver .claude/pendiente): la densidad ya no es un único valor
+    // uniforme en los 3 biomas — blood_shore es un charco tranquilo (ceniza ligera), cinder_dunes
+    // es viento y ceniza en el aire por diseño (densa), needle_wastes se queda con el valor base.
+    private static final AmbientParticleSettings HFIL_ASH_PARTICLES_LIGHT =
+            new AmbientParticleSettings(ParticleTypes.ASH, 0.0035F);
     private static final AmbientParticleSettings HFIL_ASH_PARTICLES =
             new AmbientParticleSettings(ParticleTypes.ASH, 0.00625F);
+    private static final AmbientParticleSettings HFIL_ASH_PARTICLES_DENSE =
+            new AmbientParticleSettings(ParticleTypes.ASH, 0.011F);
 
     public static void bootstrap(BootstrapContext<Biome> ctx) {
         HolderGetter<PlacedFeature> features = ctx.lookup(Registries.PLACED_FEATURE);
@@ -105,19 +113,23 @@ public final class ModBiomeGen {
     // ── HFIL ─────────────────────────────────────────────────────────────────
 
     /**
-     * Base común de las tres variantes de HFIL: cuevas, lagos de lava, líquenes
-     * (única fuente de luz ahí abajo), manantiales y cada uno de los ores vanilla.
+     * Base común de las tres variantes de HFIL: cuevas, líquenes (única fuente de luz ahí
+     * abajo), manantiales y cada uno de los ores vanilla + Katchin.
      * Sin discos blandos: arcilla y arena junto al agua no pegan en el infierno.
+     * NO incluye lagos (ni de lava ni de sangre): personalidad por bioma (ver
+     * .claude/pendiente) — cada variante decide su propio lago exclusivo en su función, en vez
+     * de que los 3 compartan el mismo set. BiomeDefaultFeatures.addDefaultCarversAndLakes NO
+     * separa cuevas de lagos en dos funciones públicas (verificado en su fuente: un único
+     * método que añade los 3 carvers Y los 2 lagos de lava juntos), así que aquí se replican a
+     * mano solo las 3 llamadas a builder.addCarver(...) — las cuevas SÍ se quedan comunes a los
+     * 3 biomas; los lagos de lava vanilla los añade únicamente hfilCinderDunes.
      */
     private static BiomeGenerationSettings.Builder hfilBase(HolderGetter<PlacedFeature> features,
                                                             HolderGetter<ConfiguredWorldCarver<?>> carvers) {
         BiomeGenerationSettings.Builder gen = new BiomeGenerationSettings.Builder(features, carvers);
-        BiomeDefaultFeatures.addDefaultCarversAndLakes(gen);
-        // Lago de sangre propio, punto 3 del rediseño de atmósfera (ver
-        // .claude/pendiente/hfil-infierno-rediseno.md): mismo paso LAKES que los lagos de lava
-        // que addDefaultCarversAndLakes ya añadió arriba, para que se intercalen por el terreno
-        // sin lógica propia — ver el comentario de HFIL_LAKE_BLOOD_KEY en ModPlacedFeatures.
-        gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_LAKE_BLOOD_KEY);
+        gen.addCarver(GenerationStep.Carving.AIR, Carvers.CAVE);
+        gen.addCarver(GenerationStep.Carving.AIR, Carvers.CAVE_EXTRA_UNDERGROUND);
+        gen.addCarver(GenerationStep.Carving.AIR, Carvers.CANYON);
         BiomeDefaultFeatures.addDefaultUndergroundVariety(gen);
         BiomeDefaultFeatures.addDefaultSprings(gen);
         BiomeDefaultFeatures.addDefaultOres(gen);
@@ -155,6 +167,19 @@ public final class ModBiomeGen {
      * (HFIL_SCORCHED_STONE, ver la surface_rule de otherworld_noise.json). El rename es solo de
      * identidad — la forma de terreno/densidad no cambia (ver la sección 2 de la propuesta, no se
      * toca la función de densidad por el riesgo documentado en CLAUDE.md).
+     * Personalidad por bioma (ver .claude/pendiente): el lago de sangre pasa a ser EXCLUSIVO de
+     * aquí (ya no lo comparte con needle_wastes/cinder_dunes vía hfilBase — ver el javadoc de
+     * hfilBase). Se quitan los troncos caídos (se quedan solo en needle_wastes, ver esa función)
+     * y las matas secas (un charco húmedo no pega con vegetación árida); la decoración de
+     * superficie queda reducida a solo huesos. La peculiaridad "el mineral se ve en la pared de
+     * la costa" ya salía sola de la surface_rule (floor=HFIL_SCORCHED_STONE sin capa de tierra
+     * encima, a diferencia de los otros dos biomas) — aquí se refuerza a propósito con una veta
+     * de Katchin adicional más grande (KATCHIN_ORE_HFIL_EXPOSED, se SUMA a la base de hfilBase,
+     * mismo patrón que rocky_wasteland con KATCHIN_ORE_EXPOSED_KEY), y la ceniza ambiental baja
+     * de densidad (HFIL_ASH_PARTICLES_LIGHT): un charco es quieto, no una tormenta de ceniza.
+     * Además del accidente de la veta subterránea asomando, ahora también un afloramiento de
+     * Katchin DELIBERADO en superficie (HFIL_ORE_BOULDER_COMMON_KEY, ver HfilOreBoulderFeature)
+     * — más frecuente aquí que en needle/dunes, reforzando la identidad minera del bioma.
      */
     private static Biome hfilBloodShore(HolderGetter<PlacedFeature> features,
                                         HolderGetter<ConfiguredWorldCarver<?>> carvers) {
@@ -166,14 +191,15 @@ public final class ModBiomeGen {
         // este bioma (ver la surface_rule), pero la decisión de no mezclar el tinte frío de los
         // pinchos con la paleta cálida del charco de sangre sigue siendo válida, así que se
         // mantiene. Los pinchos se quedan solo en hfil_needle_wastes.
-        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
-                ModPlacedFeatures.HFIL_DEAD_BUSH_KEY);
-        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
-                ModPlacedFeatures.FALLEN_LOG_HFIL_KEY);
+        gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_LAKE_BLOOD_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_BONE_PILE_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.HFIL_ORE_BOULDER_COMMON_KEY);
+        gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES,
+                ModPlacedFeatures.KATCHIN_ORE_HFIL_EXPOSED);
         BiomeSpecialEffects effects = hfilEffects(6034452)   // #5C1414
-                .ambientParticle(HFIL_ASH_PARTICLES)
+                .ambientParticle(HFIL_ASH_PARTICLES_LIGHT)
                 .build();
         return hfilBuild(effects, gen);
     }
@@ -190,6 +216,12 @@ public final class ModBiomeGen {
      * PENDIENTE DE DECISIÓN DE ARTE (ver la propuesta, sección 3.2): las imágenes de referencia
      * muestran pinchos sobre colinas VERDES o sobre suelo BLANCO/nevado, ninguna sobre este
      * ocre/pardo — esta fase NO toca la paleta de superficie, solo la densidad de decoración.
+     * Personalidad por bioma (ver .claude/pendiente): los troncos caídos (FALLEN_LOG_HFIL_KEY)
+     * pasan a ser EXCLUSIVOS de este bioma — se quitaron de blood_shore y cinder_dunes (ver esas
+     * funciones), así que un tronco caído en el HFIL ahora identifica needle_wastes por sí solo.
+     * También su primer gancho minero propio: un afloramiento raro de Katchin en superficie
+     * (HFIL_ORE_BOULDER_RARE_KEY, ver HfilOreBoulderFeature) — mucho menos frecuente que en
+     * blood_shore, que ya tiene la veta expuesta como seña de identidad.
      */
     private static Biome hfilNeedleWastes(HolderGetter<PlacedFeature> features,
                                           HolderGetter<ConfiguredWorldCarver<?>> carvers) {
@@ -207,6 +239,8 @@ public final class ModBiomeGen {
                 ModPlacedFeatures.FALLEN_LOG_HFIL_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_BONE_PILE_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.HFIL_ORE_BOULDER_RARE_KEY);
 
         BiomeSpecialEffects effects = hfilEffects(5118482)   // #4E1A12
                 .grassColorOverride(8016432)                 // #7A5230 ocre pardo
@@ -227,18 +261,41 @@ public final class ModBiomeGen {
      * HFIL_ASH_PARTICLES aquí también (antes era el único de los 3 sin ceniza ambiental — la
      * razón original, "ya se lee como arena en el aire", se debilita ahora que la arena misma es
      * ceniza). Sin vegetación salvo algún matojo.
+     * Personalidad por bioma (ver .claude/pendiente): los lagos de lava vanilla (las mismas 2
+     * placed features que BiomeDefaultFeatures.addDefaultCarversAndLakes añadía antes en
+     * hfilBase, compartidas por los 3 — ver el javadoc de hfilBase) pasan a ser EXCLUSIVOS de
+     * aquí — dunas de ceniza con huecos de lava, no el charco de sangre. Se quitan los troncos
+     * caídos (se quedan solo en needle_wastes) y sube la densidad de ceniza ambiental
+     * (HFIL_ASH_PARTICLES_DENSE): un desierto de ceniza se lee más "viento cargado" que los
+     * otros dos.
+     * Además: su propia formación rocosa (HFIL_CINDER_SPIKE_KEY, misma clase que HFIL_SPIKE_KEY
+     * pero con HFIL_CINDER_SANDSTONE — cálida, nunca la roca fría de needle_wastes ni
+     * HFIL_SCORCHED_STONE, compartida con blood_shore, para no competir visualmente con
+     * ninguno), un afloramiento raro de Katchin en superficie (HFIL_ORE_BOULDER_RARE_KEY, su
+     * primer gancho minero propio, igual de escaso que en needle_wastes) y un manantial de lava
+     * extra (HFIL_LAVA_SPRING_BONUS_KEY, PlacedFeature propia, ver su javadoc en
+     * ModPlacedFeatures — NO se puede lograr esto re-añadiendo minecraft:spring_lava una segunda
+     * vez a la lista del bioma: eso rompe el arranque con "Feature order cycle found", porque
+     * FeatureSorter identifica cada PlacedFeature por su propio Holder.value() y una entrada
+     * duplicada genera una arista de la feature hacia sí misma) para que la lava suelta se
+     * sienta más presente aquí que en los otros dos biomas.
      */
     private static Biome hfilCinderDunes(HolderGetter<PlacedFeature> features,
                                          HolderGetter<ConfiguredWorldCarver<?>> carvers) {
         BiomeGenerationSettings.Builder gen = hfilBase(features, carvers);
+        gen.addFeature(GenerationStep.Decoration.LAKES, MiscOverworldPlacements.LAKE_LAVA_UNDERGROUND);
+        gen.addFeature(GenerationStep.Decoration.LAKES, MiscOverworldPlacements.LAKE_LAVA_SURFACE);
+        gen.addFeature(GenerationStep.Decoration.FLUID_SPRINGS, ModPlacedFeatures.HFIL_LAVA_SPRING_BONUS_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.HFIL_CINDER_SPIKE_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_DEAD_BUSH_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
-                ModPlacedFeatures.FALLEN_LOG_HFIL_KEY);
-        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_BONE_PILE_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.HFIL_ORE_BOULDER_RARE_KEY);
         BiomeSpecialEffects effects = hfilEffects(7219736)   // #6E2A18
-                .ambientParticle(HFIL_ASH_PARTICLES)
+                .ambientParticle(HFIL_ASH_PARTICLES_DENSE)
                 .build();
         return hfilBuild(effects, gen);
     }

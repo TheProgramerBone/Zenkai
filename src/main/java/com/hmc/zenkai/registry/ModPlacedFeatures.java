@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
+import net.minecraft.data.worldgen.features.MiscOverworldFeatures;
 import net.minecraft.data.worldgen.features.TreeFeatures;
 import net.minecraft.data.worldgen.features.VegetationFeatures;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
@@ -18,6 +19,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.heightproviders.VeryBiasedToBottomHeight;
 import net.minecraft.world.level.levelgen.placement.*;
 
 import java.util.List;
@@ -49,6 +51,8 @@ public class ModPlacedFeatures {
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_OVERWORLD = registerKey("katchin_ore_overworld");
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_ROCKY     = registerKey("katchin_ore_rocky");
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_HFIL      = registerKey("katchin_ore_hfil");
+    /** Solo hfil_blood_shore, se SUMA a KATCHIN_ORE_HFIL — ver ModConfiguredFeatures.KATCHIN_ORE_OW_EXPOSED_KEY. */
+    public static final ResourceKey<PlacedFeature> KATCHIN_ORE_HFIL_EXPOSED = registerKey("katchin_ore_hfil_exposed");
     public static final ResourceKey<PlacedFeature> KATCHIN_ORE_SKY       = registerKey("katchin_ore_sky");
 
     //  Vegetación de superficie 
@@ -62,12 +66,33 @@ public class ModPlacedFeatures {
 
     //  Pinchos del HFIL (rediseño "infierno de Dragon Ball", ver ModBiomeGen)
     public static final ResourceKey<PlacedFeature> HFIL_SPIKE_KEY = registerKey("hfil_spike");
+    /** Misma forma, roca cálida propia de las dunas — exclusiva de cinder_dunes. */
+    public static final ResourceKey<PlacedFeature> HFIL_CINDER_SPIKE_KEY = registerKey("hfil_cinder_spike");
 
     //  Lago de sangre del HFIL (mismo rediseño, punto 3 — se intercala con los lagos de lava)
     public static final ResourceKey<PlacedFeature> HFIL_LAKE_BLOOD_KEY = registerKey("hfil_lake_blood");
 
+    /** Manantial de lava EXTRA, exclusivo de cinder_dunes, se SUMA al minecraft:spring_lava que
+     *  ya llega a los 3 biomas vía BiomeDefaultFeatures.addDefaultSprings (ver ModBiomeGen). NO
+     *  se puede lograr esto re-añadiendo la MISMA PlacedFeature vanilla (MiscOverworldPlacements.
+     *  SPRING_LAVA) una segunda vez en la lista de un bioma — FeatureSorter.buildFeaturesPerStep
+     *  identifica cada PlacedFeature por su propio Holder.value() y añade una arista "esta
+     *  entrada debe ir antes que la siguiente" por cada par consecutivo del listado del bioma;
+     *  dos entradas iguales generan una arista de la feature hacia SÍ MISMA, que el DFS de
+     *  ordenación lee como ciclo y crashea el arranque con "Feature order cycle found" (visto en
+     *  juego). Por eso esta es una PlacedFeature propia, con identidad distinta, que envuelve el
+     *  MISMO configured feature vanilla (MiscOverworldFeatures.SPRING_LAVA_OVERWORLD) con los
+     *  mismos placement modifiers que usa MiscOverworldPlacements.SPRING_LAVA, solo con menos
+     *  tiradas — un "extra", no una réplica del original. */
+    public static final ResourceKey<PlacedFeature> HFIL_LAVA_SPRING_BONUS_KEY = registerKey("hfil_lava_spring_bonus");
+
     //  Montón de huesos/calavera del HFIL (mismo rediseño, punto 5)
     public static final ResourceKey<PlacedFeature> HFIL_BONE_PILE_KEY = registerKey("hfil_bone_pile");
+
+    //  Afloramiento de Katchin visible en superficie del HFIL — mismo configured feature, dos
+    //  rarezas distintas (ver ModBiomeGen): frecuente en blood_shore, raro en needle/dunes.
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_BOULDER_COMMON_KEY = registerKey("hfil_ore_boulder_common");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_BOULDER_RARE_KEY   = registerKey("hfil_ore_boulder_rare");
 
     public static final ResourceKey<PlacedFeature> OTHERWORLD_CLOUDS_KEY    = registerKey("otherworld_clouds");
     public static final ResourceKey<PlacedFeature> OTHERWORLD_FLOWERS_KEY   = registerKey("otherworld_flowers");
@@ -120,6 +145,13 @@ public class ModPlacedFeatures {
         register(context, KATCHIN_ORE_HFIL,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_OW_KEY),
                 ModOrePlacement.commonOrePlacement(15, HeightRangePlacement.uniform(
+                        VerticalAnchor.absolute(-60), VerticalAnchor.absolute(120))));
+
+        // Solo hfil_blood_shore (ver ModBiomeGen.hfilBloodShore) — se SUMA a KATCHIN_ORE_HFIL,
+        // menos tiradas que la base porque ya reciben las 15 comunes vía hfilBase.
+        register(context, KATCHIN_ORE_HFIL_EXPOSED,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.KATCHIN_ORE_OW_EXPOSED_KEY),
+                ModOrePlacement.commonOrePlacement(5, HeightRangePlacement.uniform(
                         VerticalAnchor.absolute(-60), VerticalAnchor.absolute(120))));
 
         register(context, KATCHIN_ORE_SKY,
@@ -206,6 +238,16 @@ public class ModPlacedFeatures {
                         ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
                         BiomeFilter.biome()));
 
+        // Mismo espíritu que HFIL_SPIKE_KEY (elemento dramático de horizonte, no relleno) — le
+        // da a cinder_dunes su propia formación rocosa, con la piedra cálida de la propia duna
+        // en vez de la roca fría de needle_wastes (ver HfilSpikeFeature/ModFeatures).
+        register(context, HFIL_CINDER_SPIKE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_CINDER_SPIKE_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(40),
+                        InSquarePlacement.spread(),
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
+                        BiomeFilter.biome()));
+
         // Mismo chance (200) que minecraft:lake_lava_surface — al vivir en el mismo paso LAKES
         // que los lagos de lava (BiomeDefaultFeatures.addDefaultCarversAndLakes, ver
         // ModBiomeGen.hfilBase) con la misma probabilidad, ninguna de las dos domina sobre la
@@ -220,10 +262,42 @@ public class ModPlacedFeatures {
                         ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
                         BiomeFilter.biome()));
 
+        // Manantial de lava extra, exclusivo de cinder_dunes — ver el javadoc de la key para el
+        // porqué es una PlacedFeature propia en vez de re-añadir MiscOverworldPlacements.
+        // SPRING_LAVA una segunda vez (eso causaba "Feature order cycle found" al arrancar).
+        // Mismo configured feature vanilla y mismos placement modifiers que SPRING_LAVA, solo
+        // con menos tiradas (8 en vez de 20) — un extra, no una réplica exacta.
+        register(context, HFIL_LAVA_SPRING_BONUS_KEY,
+                configuredFeatures.getOrThrow(MiscOverworldFeatures.SPRING_LAVA_OVERWORLD),
+                List.of(CountPlacement.of(8),
+                        InSquarePlacement.spread(),
+                        HeightRangePlacement.of(VeryBiasedToBottomHeight.of(
+                                VerticalAnchor.bottom(), VerticalAnchor.belowTop(8), 8)),
+                        BiomeFilter.biome()));
+
         // Decoración puntual barata: más común que los troncos, en línea con matas/hierba.
         register(context, HFIL_BONE_PILE_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_BONE_PILE_KEY),
                 List.of(RarityFilter.onAverageOnceEvery(16),
+                        InSquarePlacement.spread(),
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
+                        BiomeFilter.biome()));
+
+        // Mineral visible en superficie, DELIBERADO (ver HfilOreBoulderFeature) — mismo
+        // configured feature, dos rarezas: frecuente en blood_shore (ya tiene identidad minera
+        // fuerte con la veta expuesta), raro en needle_wastes/cinder_dunes (su primer gancho
+        // minero propio). Mismo patrón que FALLEN_LOG_HFIL_KEY/FALLEN_LOG_ROCKY_KEY reusando un
+        // único configured feature con dos placed features.
+        register(context, HFIL_ORE_BOULDER_COMMON_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_ORE_BOULDER_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(70),
+                        InSquarePlacement.spread(),
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
+                        BiomeFilter.biome()));
+
+        register(context, HFIL_ORE_BOULDER_RARE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_ORE_BOULDER_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(200),
                         InSquarePlacement.spread(),
                         ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
                         BiomeFilter.biome()));

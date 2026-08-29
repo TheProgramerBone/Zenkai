@@ -107,6 +107,10 @@ public class StyleSelectionScreen extends Screen {
     /** Color de aura por defecto. NO es paleta de interfaz: es un dato del personaje que el
      *  jugador va a cambiar con el selector, igual que el color de piel o de pelo. */
     private int kiColor = 0xFF33CCFF;
+    // Solo se activa al TOCAR el picker (ver openKiPicker) — si se activara al confirmar sin
+    // tocarlo, cualquiera que solo pasara por esta pantalla perdería el tinte por alineamiento
+    // (AuraColors) la primera vez, sin haber elegido nunca un color propio.
+    private boolean auraColorTouched = false;
     private boolean kiPickerOpen = false;
     @Nullable private ColorPickerWidget picker = null;
 
@@ -132,6 +136,7 @@ public class StyleSelectionScreen extends Screen {
         var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
 
         kiColor = visual.getAuraColorRgb() | 0xFF000000;
+        auraColorTouched = visual.isCustomAuraColor();
 
         Style cur = stats.getStyle();
         for (int i = 0; i < styles.length; i++) {
@@ -188,6 +193,7 @@ public class StyleSelectionScreen extends Screen {
             pickerX = leftPos - ColorPickerWidget.TOTAL_W - 8;
         picker = new ColorPickerWidget(pickerX, topPos + IN_Y1, kiColor, "Ki Color", argb -> {
             kiColor = argb;
+            auraColorTouched = true;
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null)
                 mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).setAuraColorRgb(argb & 0xFFFFFF);
@@ -406,6 +412,7 @@ public class StyleSelectionScreen extends Screen {
         var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.setAuraColorRgb(kiColor & 0xFFFFFF);
+        visual.setCustomAuraColor(auraColorTouched);
         PacketDistributor.sendToServer(new ChooseRacePacket(stats.getRace()));
         PacketDistributor.sendToServer(UpdatePlayerVisualPacket.from(visual));
         PacketDistributor.sendToServer(new ChooseStylePacket(styles[styleIndex]));

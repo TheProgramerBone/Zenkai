@@ -36,6 +36,9 @@ public class PlayerVisualAttachment {
     private boolean customSkinColor = false; // Human/Saiyan/Majin: false=natural, true=color custom (tinte)
     private int     skinPreset      = 0;     // Namekian/Arcosian: índice de textura preset
 
+    // ── Aura: modo ────────────────────────────────────────────────────────────
+    private boolean customAuraColor = false; // false=tinte por AlignmentTier (ver AuraColors), true=color fijado por el jugador
+
     // ── Género (Human/Saiyan/Majin): cambia modelo + textura ───────────────────
     public enum Gender { MALE, FEMALE }
     private Gender gender = Gender.MALE;
@@ -85,6 +88,9 @@ public class PlayerVisualAttachment {
 
     public int  getAuraColorRgb()              { return auraColorRgb; }
     public void setAuraColorRgb(int rgb)       { this.auraColorRgb   = rgb & 0xFFFFFF; }
+
+    public boolean isCustomAuraColor()           { return customAuraColor; }
+    public void    setCustomAuraColor(boolean v) { this.customAuraColor = v; }
 
     // ── Piel: modo y preset API ───────────────────────────────────────────────
     public boolean isCustomSkinColor()         { return customSkinColor; }
@@ -154,6 +160,7 @@ public class PlayerVisualAttachment {
         tag.putInt("formStage", formStage);
 
         tag.putBoolean("customSkinColor", customSkinColor);
+        tag.putBoolean("customAuraColor", customAuraColor);
         tag.putInt("skinPreset", skinPreset);
         tag.putString("gender", gender.name());
         tag.putBoolean("majinControlled", majinControlled);
@@ -189,6 +196,7 @@ public class PlayerVisualAttachment {
         this.majinControlled = tag.contains("majinControlled") && tag.getBoolean("majinControlled");
 
         if (tag.contains("customSkinColor")) this.customSkinColor = tag.getBoolean("customSkinColor");
+        if (tag.contains("customAuraColor")) this.customAuraColor = tag.getBoolean("customAuraColor");
         if (tag.contains("skinPreset"))      this.skinPreset      = Math.max(0, tag.getInt("skinPreset"));
         if (tag.contains("gender")) {
             try { this.gender = Gender.valueOf(tag.getString("gender")); } catch (IllegalArgumentException ignored) {}

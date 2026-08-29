@@ -91,6 +91,21 @@ public record KiVisual(
         float trailInnerMul,
         /** Velocidad de desplazamiento de las UV a lo largo de la cinta. */
         float trailScroll,
+        /** true = la estela sigue la MISMA torsión que {@code KiMeshFactory.helix} hornea en la
+         *  malla, en vez de una cinta plana (ver {@code KiMeshFactory.helixAngleFromTip} /
+         *  {@code KiProjectileRenderer.renderTrail}). Solo tiene sentido con {@code shape() ==
+         *  HELIX}, pero es un flag EXPLÍCITO (no una inferencia por shape) — igual que
+         *  {@link #backfaceCull}: deja a un futuro HELIX no-espiral no llevar esta estela sin
+         *  tener que ramificar por tipo. */
+        boolean helixTrail,
+
+        /** 0 = sin capa de detalle (la mayoría de técnicas hoy). >0 = cuánto modula en brillo
+         *  la textura de detalle tileable (ki_detail.png) sobre el color ya calculado por
+         *  bandas — ver ki_fresnel.fsh, sección "CAPA DE DETALLE". NUNCA aporta su propio
+         *  color, solo variación de brillo: mantiene el invariante de que el tinte sale
+         *  siempre del vértice. Inspirado en el `texBlend` de DragonMineZ (kiattack.fsh), pero
+         *  sin su color fijo — ver .claude/pendiente/technique-visuals-referencia-mods.md. */
+        float detailStrength,
 
         // ── Partículas ──────────────────────────────────────────────────────
         /** Chispas por tick a tamaño 1. Escala con el tamaño en el renderer. */
@@ -131,14 +146,17 @@ public record KiVisual(
         put(KiTechniqueType.SPIRAL, b(KiShape.HELIX)
                 .mesh(2.4f, 0.28f, 0.26f).anchored().shell(0.56f).envelope(1.32f, 0.15f).core(0.62f, 0.85f)
                 .bands(0.70f, 0.28f, 0.06f).tone(0.92f, 0.48f).edge(0.26f).wobble(1.35f)
-                .halo(0f, 0f).trail(26, 1.3f, 0.68f, 0.32f, 1.5f).sparks(0.65f));
+                .halo(0f, 0f).trail(26, 1.3f, 0.68f, 0.32f, 1.5f).helixTrail().sparks(0.65f));
 
         // BLAST: la bola estándar. Núcleo blanco DENTRO del 25 % central y lo demás del
         // color de la técnica: al revés, el tinte del jugador se pierde.
+        // .detail(): BANCO DE PRUEBAS de la capa de detalle de superficie (ver ki_fresnel.fsh);
+        // es el único tipo que la lleva por ahora — confirmar en juego antes de extenderla al
+        // resto de tipos (0.30 es un valor de partida, no calibrado a ojo todavía).
         put(KiTechniqueType.BLAST, b(KiShape.SPHERE)
                 .shell(0.50f).envelope(1.35f, 0.15f).core(0.62f, 0.85f)
                 .bands(0.75f, 0.30f, 0.05f).tone(0.90f, 0.55f).edge(0.30f).wobble(1.0f)
-                .halo(2.2f, 0.24f).trail(12, 1.0f, 0.70f, 0.30f, 1.0f).sparks(0.35f));
+                .halo(2.2f, 0.24f).trail(12, 1.0f, 0.70f, 0.30f, 1.0f).detail(0.30f).sparks(0.35f));
 
         // BIG_BLAST: enorme y lento. Estela CORTA, TENUE y SIN núcleo blanco: con los alfas del
         // resto salía una cuña blanca opaca detrás de la bola, que a este tamaño se lee como un
@@ -253,6 +271,8 @@ public record KiVisual(
         private float haloScale = 2.2f, haloAlpha = 0.24f;
         private int trailPoints = 0;
         private float trailWidth = 0f, trailAlpha = 0.70f, trailInnerMul = 0.30f, trailScroll = 1.0f;
+        private boolean helixTrail = false;
+        private float detailStrength = 0f;
         private float sparkRate = 0.35f;
 
         Builder(KiShape shape) { this.shape = shape; }
@@ -276,6 +296,8 @@ public record KiVisual(
             trailInnerMul = innerMul; trailScroll = scroll;
             return this;
         }
+        Builder helixTrail() { this.helixTrail = true; return this; }
+        Builder detail(float v) { this.detailStrength = v; return this; }
         Builder sparks(float v) { this.sparkRate = v; return this; }
 
         KiVisual build() {
@@ -283,7 +305,8 @@ public record KiVisual(
                     shellAlpha, backfaceCull, envelopeScale, envelopeAlpha, coreScale, coreAlpha,
                     bandCore, bandBorder, bandOutline, coreWhite, outlineDark, edgeFade, wobble,
                     haloScale, haloAlpha,
-                    trailPoints, trailWidth, trailAlpha, trailInnerMul, trailScroll, sparkRate);
+                    trailPoints, trailWidth, trailAlpha, trailInnerMul, trailScroll, helixTrail,
+                    detailStrength, sparkRate);
         }
     }
 }
