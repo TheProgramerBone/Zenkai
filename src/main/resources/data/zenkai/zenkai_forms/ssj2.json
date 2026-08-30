@@ -12,9 +12,6 @@
   "ki_drain_mastered": 0.2,
   "spi_req": 60,
   "parent": "zenkai:ssj1",
-  "hair_items": {
-    "hair1": "zenkai:ssj_hair1"
-  },
   "body_items": {},
   "aura_type": "divine",
   "aura_rgb": "0xFFF089",

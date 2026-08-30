@@ -12,7 +12,12 @@
   "ki_drain_mastered": 0.1,
   "spi_req": 58,
   "parent": "zenkai:namek_giant",
-  "body_items": {},
+  "body_items": {
+    "head": "zenkai:namek_orange_helmet",
+    "chest": "zenkai:namek_orange_chestplate",
+    "legs": "zenkai:namek_orange_leggings",
+    "feet": "zenkai:namek_orange_boots"
+  },
   "aura_type": "default",
   "aura_rgb": "0xFF9933",
   "scale": 1.5

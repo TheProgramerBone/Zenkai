@@ -11,9 +11,6 @@
   "ki_drain_untrained": 0.4,
   "ki_drain_mastered": 0.1,
   "spi_req": 39,
-  "hair_items": {
-    "hair1": "zenkai:ssj_hair1"
-  },
   "body_items": {},
   "aura_type": "ssj",
   "aura_rgb": "0xFFE55C",

@@ -23,6 +23,7 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 
 public class RaceSelectionScreen extends Screen {
@@ -58,13 +59,20 @@ public class RaceSelectionScreen extends Screen {
      *  (~31px) entre los dos separadores. Ahora, sin el bloque, no hay NADA que separar de
      *  nada: se pinta un solo separador (DIV1) y el resto sube para ocupar el hueco. */
     private static final int DIV2_Y_COLLAPSED = DIV1_Y + 16;
-    /** Bajado de 50 para hacer sitio al bloque de pasiva sin recortar al jugador por la cintura. */
-    private static final int PREVIEW_SIZE = 30;
-    /** El hueco que libera el colapso de arriba (~21px) se reinvierte aquí: el retrato crece
-     *  un poco en vez de quedarse con el mismo tamaño flotando en más aire vacío. */
-    private static final int PREVIEW_SIZE_COLLAPSED = PREVIEW_SIZE + 6;
-    /** Alto reservado al bloque de texto inferior (raza + pasiva). */
-    private static final int TEXT_BLOCK_H = 92;
+
+    // ── Preview y bloque de texto: DINÁMICOS, mismo sistema que HeadAppearanceScreen/
+    // BodyColorsScreen — el hueco real que queda entre el segundo divisor y el texto se mide
+    // (boxH), y tanto el ancho como el "size" (zoom) del preview se derivan de ahí con una
+    // proporción + un suelo/techo, en vez de un valor fijo pensado para el peor caso. Antes
+    // esta pantalla elegía entre dos constantes fijas (PREVIEW_SIZE/PREVIEW_SIZE_COLLAPSED)
+    // según humanSaiyan, con un TEXT_BLOCK_H fijo (92, el peor caso de 2+3 líneas) que
+    // desperdiciaba espacio en cualquier raza con descripción/pasiva más cortas. ──
+    private static final float PREVIEW_W_RATIO    = 1.3f;   // centrado en el ancho fijo de antes (100px)
+    private static final int   PREVIEW_W_MIN = 90, PREVIEW_W_MAX = 110;
+    // Calibrado contra los dos valores fijos de antes (30 con boxH=70, 36 con boxH=85): las
+    // dos proporciones salían ≈0.43, así que un único ratio reproduce casi exacto ambos casos.
+    private static final float PREVIEW_SIZE_RATIO = 0.43f;
+    private static final int   PREVIEW_SIZE_MIN = 30, PREVIEW_SIZE_MAX = 40;
     private static final int MAX_RACE_DESC_LINES    = 2;
     private static final int MAX_PASSIVE_DESC_LINES = 3;
 
@@ -194,18 +202,32 @@ public class RaceSelectionScreen extends Screen {
             g.fill(pl + IN_X1 + PAD, pt + div2Y, pl + IN_X2 - PAD, pt + div2Y + 1, ZenkaiPalette.SEPARATOR);
         }
 
-        int previewSize = humanSaiyan ? PREVIEW_SIZE : PREVIEW_SIZE_COLLAPSED;
+        int descX = pl + IN_X1 + PAD + 2;
+        int descW = IN_X2 - IN_X1 - PAD * 2;
+        String key = r.name().toLowerCase();
+
+        // Cuántas líneas usa REALMENTE la descripción/pasiva de esta raza (capadas a los
+        // máximos de siempre) — de ahí sale cuánto alto reserva el bloque de texto, en vez de
+        // un TEXT_BLOCK_H fijo pensado para el peor caso (2+3 líneas).
+        int nDescLines    = Math.min(wrapText(Component.translatable("screen.zenkai.race." + key + ".desc").getString(), mc.font, descW).length, MAX_RACE_DESC_LINES);
+        int nPassiveLines = Math.min(wrapText(Component.translatable(RacePassives.descKey(r)).getString(), mc.font, descW).length, MAX_PASSIVE_DESC_LINES);
+        // 34 = label raza(12) + separador(4+1+5) + label pasiva(12); +8 de margen arriba/abajo.
+        // Reproduce EXACTO el TEXT_BLOCK_H=92 viejo cuando nDesc=2 y nPassive=3.
+        int textBlockH = 42 + (nDescLines + nPassiveLines) * 10;
+
+        int boxTop    = pt + div2Y + 6;
+        int boxBottom = pt + IN_Y2 - textBlockH;
+        int boxH      = Math.max(1, boxBottom - boxTop);
+        int previewW    = Mth.clamp(Math.round(boxH * PREVIEW_W_RATIO), PREVIEW_W_MIN, PREVIEW_W_MAX);
+        int previewSize = Mth.clamp(Math.round(boxH * PREVIEW_SIZE_RATIO), PREVIEW_SIZE_MIN, PREVIEW_SIZE_MAX);
         InventoryScreen.renderEntityInInventoryFollowsMouse(
                 g,
-                cx - 50, pt + div2Y + 6,
-                cx + 50, pt + IN_Y2 - TEXT_BLOCK_H,
+                cx - previewW / 2, boxTop,
+                cx + previewW / 2, boxBottom,
                 previewSize, 0.0625f,
                 (float) mouseX, (float) mouseY, mc.player);
 
-        int descX = pl + IN_X1 + PAD + 2;
-        int descW = IN_X2 - IN_X1 - PAD * 2;
-        int y = pt + IN_Y2 - TEXT_BLOCK_H + 4;
-        String key = r.name().toLowerCase();
+        int y = pt + IN_Y2 - textBlockH + 4;
 
         // Bloque 1: qué es la raza.
         g.drawString(mc.font, Component.translatable("screen.zenkai.race." + key),

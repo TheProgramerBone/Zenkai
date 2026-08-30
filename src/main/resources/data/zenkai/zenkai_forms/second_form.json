@@ -11,7 +11,12 @@
   "ki_drain_untrained": 0.0,
   "ki_drain_mastered": 0.0,
   "spi_req": 35,
-  "body_items": {},
+  "body_items": {
+    "head": "zenkai:arcosian_second_form_helmet",
+    "chest": "zenkai:arcosian_second_form_chestplate",
+    "legs": "zenkai:arcosian_second_form_leggings",
+    "feet": "zenkai:arcosian_second_form_boots"
+  },
   "aura_type": "arcosian",
   "aura_rgb": "0xC080FF",
   "scale": 1.15,

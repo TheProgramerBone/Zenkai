@@ -1,32 +1,65 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.CustomizationAssets;
 import com.hmc.zenkai.client.gui.ScreenTitle;
-import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
+import com.hmc.zenkai.client.gui.buttons.AtlasIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
-import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
-import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
-import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
-import com.hmc.zenkai.feature.race.layer.RaceLayerDiscovery;
-import com.hmc.zenkai.feature.race.RaceSkinSlots;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Personalización de aspecto tras elegir raza en RaceSelectionScreen — HUB de 3 filas
+ * verticales ("Head"/"Body & Colors"/"Gender") que llevan a la sección correspondiente:
+ *   - Head ({@link HeadAppearanceScreen}): ojos (estilo+color), pelo (estilo+color, solo
+ *     Human/Saiyan), boca, nariz.
+ *   - Body & Colors ({@link BodyColorsScreen}): tono de piel (Human/Saiyan/Majin) o filas de
+ *     capa (Namek/Arcosian).
+ *   - Gender: NO es una pantalla — fila inline aquí mismo, mismo lenguaje visual que Head/Body
+ *     (icono a la izquierda + etiqueta), pero en vez de navegar a un sitio, un click en la fila
+ *     ALTERNA Male/Female directamente y el icono cambia para reflejarlo (ICON_GENDER_MALE_U/V
+ *     e ICON_GENDER_FEMALE_U/V, celdas reservadas en icons.png para arte hecho a mano — ver
+ *     tools/gen_appearance_icons.py; dos rondas de icono generado, un badge pintado y luego un
+ *     glifo ♂/♀ con fill(), no convencieron, así que esta vez no se genera). Solo razas de
+ *     tinte simple tienen assets distintos por género hoy (isTintRace) — la fila aparece
+ *     oscurecida con tooltip para Namek/Arcosian, mismo lenguaje que
+ *     MasterScreen.renderHubOption para un maestro sin ese tipo de fila.
+ * Antes esto era una sola clase con un enum Mode (ver git history) — se volvió a 3 Screen
+ * separadas porque, en juego, tener un "‹ Back" pequeño (volver al hub) Y un "Back" grande
+ * abajo (salir del paso de apariencia) en la MISMA pantalla resultaba confuso, y separarlas da
+ * a Head/Body mucho más espacio propio para su contenido (Body & Colors en concreto: Arcosiano
+ * tiene 6 filas de color, ver BodyColorsScreen). Por la misma razón, Head/Body NO tienen un
+ * "‹ Back" propio arriba — solo el "Back" de la barra inferior, que en esas dos pantallas
+ * vuelve aquí (al hub) en vez de a RaceSelectionScreen; un único botón "Back" por pantalla,
+ * siempre "sube un nivel" (Hub -> RaceSelectionScreen, Head/Body -> Hub).
+ * SINCRONIZACIÓN: la edición sigue siendo 100% local — cada pantalla escribe en su propio
+ * PlayerVisualAttachment vía SU applyPreview() (aquí, solo el género); el ÚNICO paquete de red
+ * del flujo Race→Appearance→Style sigue siendo el que manda
+ * StyleSelectionScreen.onConfirm(). El Hub se REUTILIZA (Head/Body vuelven con
+ * mc.setScreen(hubScreen), nunca crean uno nuevo) — mismo patrón que raceScreen ya usa hoy.
+ * Head/Body en cambio se crean SIEMPRE de cero al entrar desde aquí (relo Head/Body no guardan
+ * nada que no esté ya en el attachment). Cada pantalla marca un flag ANTES de cualquier
+ * mc.setScreen(...) propio, y removed() (revierte contra statsSnapshot/visualSnapshot) solo
+ * actúa si NINGÚN flag de salida intencional se marcó — igual que
+ * RaceSelectionScreen/StyleSelectionScreen ya hacen. Como el Hub SÍ vuelve a mostrarse de
+ * verdad tras un viaje a Head/Body, init() resetea sus propios flags cada vez (mismo patrón que
+ * RaceSelectionScreen.init() ya resetea goingNext) — si no, un goingToHead=true de una visita
+ * anterior protegería de un revert legítimo la próxima vez que el jugador cierre con Escape
+ * estando de vuelta en el hub.
+ */
 public class AppearanceScreen extends Screen {
 
     private static final ResourceLocation BG =
@@ -35,82 +68,68 @@ public class AppearanceScreen extends Screen {
     private static final ResourceLocation TEX_BTN =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_wide.png");
 
+    // Iconos de fila: v=80 de icons.png — (0,80)/(20,80) ya las usa MasterScreen (Técnicas/
+    // Servicios). 40/60 = Head/Body (pintados por gen_appearance_icons.py). 80/100 = Gender
+    // Male/Female — RESERVADAS, sin generar: el usuario las dibuja a mano (ver el propio
+    // script, dos rondas de icono generado para esta fila no convencieron).
+    private static final ResourceLocation ICONS_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
+    private static final int ICONS_ATLAS = 256;
+    private static final int ICON_CELL = 20;
+    private static final int ICON_HEAD_U = 40, ICON_HEAD_V = 80;
+    private static final int ICON_BODY_U = 60, ICON_BODY_V = 80;
+    private static final int ICON_GENDER_MALE_U   = 80,  ICON_GENDER_MALE_V   = 80;
+    private static final int ICON_GENDER_FEMALE_U = 100, ICON_GENDER_FEMALE_V = 80;
+
     private static final int BG_W = 256;
     private static final int BG_H = 256;
     private static final int IN_X1 = 10;
     private static final int IN_Y1 = 10;
     private static final int IN_X2 = 245;
     private static final int IN_Y2 = 240;
-    private static final int IN_W  = IN_X2 - IN_X1;
     private static final int BTN_BAR_Y = 260;
     private static final int BTN_W     = 60;
 
-    /** Primera fila de campos. El título va FUERA del panel, así que no le roba altura. */
     private static final int CONTENT_Y0 = IN_Y1 + 6;
+    private static final int PAD = 8;
 
-    private static final int PAD          = 8;
-    private static final int ARROW_W      = 12;
-    private static final int TITLE_H      = 11;
-    private static final int BLOCK_H      = 27;
-    private static final int COLOR_BOX_W  = 12;
-    private static final int COLOR_BOX_H  = 10;
-    private static final int PRESET_BOX_W = 12;
-    private static final int PRESET_BOX_H = 10;
+    // 3 filas fijas: Head / Body & Colors / Gender, mismo alto — ninguna raza cambia cuántas
+    // hay (Gender simplemente se ve oscurecida para Namek/Arcosian, el layout no salta de
+    // tamaño, mismo principio que MasterScreen documenta en su propio comentario).
+    private static final int HUB_ROW_H = 32;
+    private static final int HUB_GAP   = 8;
+    private static final int ROW1_Y = CONTENT_Y0;                      // Head
+    private static final int ROW2_Y = ROW1_Y + HUB_ROW_H + HUB_GAP;    // Body & Colors
+    private static final int ROW3_Y = ROW2_Y + HUB_ROW_H + HUB_GAP;    // Gender
+    private static final int DIV_Y  = ROW3_Y + HUB_ROW_H + 6;
 
-    private static final int SKIN_SECTION_DY = 12;
+    /** Preview CENTRADO bajo las 3 filas — a diferencia de las 3 pantallas anteriores, aquí no
+     *  hay nada más compartiendo esa franja, así que puede ocupar el centro entero. */
+    private static final int PREVIEW_W_HUB    = 90;
+    private static final int PREVIEW_SIZE_HUB = 55;
 
-    // Paso vertical base entre filas de capas (label + presets). Cada capa puede sumarle
-    // su propio "dy" desde el JSON para ajuste fino de posición.
-    private static final int LAYER_DY = 24;
-
-    private static final int ARROW_LX            = IN_X1 + PAD;
-    private static final int ARROW_RX_NO_COLOR   = IN_X2 - PAD - ARROW_W;
-    private static final int ARROW_RX_WITH_COLOR = IN_X2 - PAD - ARROW_W - COLOR_BOX_W - 4;
-
-    private static final int PREVIEW_W    = 80;
-    private static final int PREVIEW_SIZE = 45;
-
-    /** Etiqueta del bloque. Antes 0x4A3726: el valor correcto pero SIN canal alfa. */
-    private static final int COLOR_TITLE  = ZenkaiPalette.LABEL_ON_PANEL;
-    /** Valor elegido. Era blanco CON sombra sobre el beige: ilegible. Ahora dorado
-     *  quemado y sin sombra, como el resto de valores del mod. */
-    private static final int COLOR_VALUE  = ZenkaiPalette.VALUE_ON_PANEL;
-    private static final int COLOR_SWATCH = ZenkaiPalette.LABEL_ON_PANEL;
-
-    // Tonos de piel Human/Saiyan/Majin. Las razas multicolor sacan de los JSON de capa.
-    private static final int[] SKIN_TONES = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
+    // ── Zoom con rueda sobre el preview + botón de reset (lupa) — mismo criterio que
+    // HeadAppearanceScreen/BodyColorsScreen (ver su javadoc): el recuadro no cambia con el
+    // zoom, solo el "size"/escala del jugador dentro. A diferencia de esas dos, este Hub se
+    // REUTILIZA (no se crea de cero en cada visita) — zoomMult persiste entre viajes a
+    // Head/Body y vuelta, en vez de resetearse a 1.0 cada vez, igual que "race"/"genderFemale"
+    // ya sobreviven a esos viajes.
+    private static final float ZOOM_MIN = 0.6f, ZOOM_MAX = 1.8f, ZOOM_STEP = 0.1f;
+    private static final int ZOOMED_SIZE_MIN = 20, ZOOMED_SIZE_MAX = 110;
+    // Misma celda reservada que Head/Body (ver su javadoc): pintada a mano por el usuario.
+    private static final int ICON_RESET_VIEW_U = 0, ICON_RESET_VIEW_V = 100;
 
     @Nullable private final RaceSelectionScreen raceScreen;
     private final CompoundTag statsSnapshot;
     private final CompoundTag visualSnapshot;
 
     private boolean confirmed = false, goingBack = false, goingNext = false;
+    private boolean goingToHead = false, goingToBody = false;
     private int panelLeft, panelTop;
-    private int divY, bottomZoneY, skinAreaCX;
+    private float zoomMult = 1.0f;
 
-    private int eyeIndex = 0, hairIndex = 0, mouthIndex = 0, noseIndex = 0;
-    // Valores por defecto del ASPECTO del personaje, no de la interfaz: son datos que el
-    // jugador edita con el selector de color. No pertenecen a ZenkaiPalette y no deben salir
-    // de ella — si algún día se cambia la paleta de la GUI, el pelo negro sigue siendo negro.
-    private int skinColor = 0xFFD5A07A, eyeColor = 0xFF2E86C1;
-    private int hairColor = 0xFF1A1A1A;
-    private boolean customSkinColor = false;
-    private int     skinPreset      = 0;
-    private boolean genderFemale    = false;
-    private boolean showGender       = false;
-    private int     genderTitleY, genderValueY;
-
-    // ── Estado genérico de capas de tinte (razas multicolor) ──────────────────
-    // index 0 = piel (escribe skinColorRgb); index >= 1 = capas (escriben layerColors[index]).
-    private final java.util.List<RaceLayerDiscovery.Layer> tintLayers = new java.util.ArrayList<>();
-    private final java.util.Map<Integer, Integer> layerArgb   = new java.util.HashMap<>(); // index -> ARGB actual
-    private final java.util.Map<Integer, Integer> layerLabelY = new java.util.HashMap<>(); // index -> Y de la etiqueta
-    private int activeLayerIndex = -1; // capa con picker abierto (-1 = ninguna)
-
-    private enum ColorChannel { SKIN, EYE, HAIR }
-    @Nullable private ColorChannel    activeChannel = null;
-    @Nullable private ColorPickerWidget picker      = null;
     private Race race = Race.HUMAN;
+    private boolean genderFemale = false;
 
     public AppearanceScreen(@Nullable RaceSelectionScreen raceScreen,
                             @Nullable CompoundTag statsSnapshot,
@@ -129,54 +148,17 @@ public class AppearanceScreen extends Screen {
         this.clearWidgets();
         this.panelLeft = (this.width  - BG_W) / 2;
         this.panelTop  = (this.height - BG_H) / 2;
+        // El hub SÍ vuelve a mostrarse de verdad (Head/Body regresan a esta misma instancia) —
+        // sin este reset, un flag de una visita anterior protegería de un revert legítimo.
+        goingBack = goingNext = goingToHead = goingToBody = false;
 
         var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
-
-        this.race   = stats.getRace();
-        skinColor   = visual.getSkinColorRgb()   | 0xFF000000;
-        eyeColor    = visual.getEyeColorRgb()    | 0xFF000000;
-        hairColor   = visual.getHairColorRgb()   | 0xFF000000;
-        eyeIndex    = visual.getEyeIndex();
-        hairIndex   = visual.getHairIndex();
-        mouthIndex  = visual.getMouthIndex();
-        noseIndex   = visual.getNoseIndex();
-        customSkinColor = visual.isCustomSkinColor();
-        skinPreset      = visual.getSkinPreset();
-        genderFemale    = visual.getGender() == PlayerVisualAttachment.Gender.FEMALE;
-
-        CustomizationAssets.reload();
-
-        int pl = panelLeft;
-        int pt = panelTop;
-        int blockTop = pt + CONTENT_Y0;
-
-        blockTop = addField(pl, blockTop, ColorChannel.EYE,
-                () -> eyeIndex = (eyeIndex - 1 + CustomizationAssets.eyesCount()) % CustomizationAssets.eyesCount(),
-                () -> eyeIndex = (eyeIndex + 1) % CustomizationAssets.eyesCount());
-
-        if (race == Race.HUMAN || race == Race.SAIYAN) {
-            blockTop = addField(pl, blockTop, ColorChannel.HAIR,
-                    () -> hairIndex = (hairIndex - 1 + CustomizationAssets.hairCount()) % CustomizationAssets.hairCount(),
-                    () -> hairIndex = (hairIndex + 1) % CustomizationAssets.hairCount());
-        }
-
-        blockTop = addField(pl, blockTop, null,
-                () -> mouthIndex = (mouthIndex - 1 + CustomizationAssets.mouthCount()) % CustomizationAssets.mouthCount(),
-                () -> mouthIndex = (mouthIndex + 1) % CustomizationAssets.mouthCount());
-
-        blockTop = addField(pl, blockTop, null,
-                () -> noseIndex = (noseIndex - 1 + CustomizationAssets.noseCount()) % CustomizationAssets.noseCount(),
-                () -> noseIndex = (noseIndex + 1) % CustomizationAssets.noseCount());
-
-        this.divY        = blockTop + 2;
-        this.bottomZoneY = divY + 8;
-        this.skinAreaCX  = 25 + pl + IN_X1 + PAD + PREVIEW_W + (IN_W - PAD * 2 - PREVIEW_W) / 2;
-
-        buildSkinSection();
+        this.race = stats.getRace();
+        this.genderFemale = visual.getGender() == PlayerVisualAttachment.Gender.FEMALE;
 
         addRenderableWidget(new TextOnlyButton(
-                pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
+                panelLeft + IN_X1, panelTop + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
                 TEX_BTN, null,
                 () -> { goingBack = true;
@@ -184,321 +166,158 @@ public class AppearanceScreen extends Screen {
                 }));
 
         addRenderableWidget(new TextOnlyButton(
-                pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20,
+                panelLeft + IN_X2 - BTN_W, panelTop + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.next"),
                 TEX_BTN, null,
                 this::goToStyle));
+
+        int[] rect = previewRect();
+        var resetViewBtn = new AtlasIconButton(rect[2] - 18, rect[1] + 2,
+                ICON_RESET_VIEW_U, ICON_RESET_VIEW_V, () -> zoomMult = 1.0f);
+        resetViewBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.appearance.reset_view")));
+        addRenderableWidget(resetViewBtn);
     }
 
-    private int addField(int pl, int blockTop, @Nullable ColorChannel channel,
-                         Runnable onLeft, Runnable onRight) {
-        int arrowY = blockTop + TITLE_H - 1;
-        addRenderableWidget(new ArrowIconButton(
-                pl + ARROW_LX, arrowY,
-                ArrowIconButton.Dir.LEFT, () -> { onLeft.run(); applyPreview(); }));
-
-        int rightX = pl + (channel != null ? ARROW_RX_WITH_COLOR : ARROW_RX_NO_COLOR);
-        addRenderableWidget(new ArrowIconButton(
-                rightX, arrowY,
-                ArrowIconButton.Dir.RIGHT, () -> { onRight.run(); applyPreview(); }));
-
-        if (channel != null) {
-            final ColorChannel ch = channel;
-            addRenderableWidget(new ColorBoxButton(
-                    pl + IN_X2 - PAD - COLOR_BOX_W, arrowY,
-                    COLOR_BOX_W, COLOR_BOX_H,
-                    () -> colorForChannel(ch) & 0xFFFFFF,
-                    () -> activeChannel == ch,
-                    () -> togglePicker(ch)));
-        }
-        return blockTop + BLOCK_H;
-    }
+    private boolean genderSupported() { return isTintRace(race); }
 
     private boolean isTintRace(Race r) {
         return r == Race.HUMAN || r == Race.SAIYAN || r == Race.MAJIN;
     }
 
-    private boolean isMultiTintRace(Race r) {
-        return r == Race.NAMEKIAN || r == Race.ARCOSIAN;
+    /** Recuadro (x1,y1,x2,y2) del preview — el mismo que dibuja render(), extraído para que
+     *  init() (botón de reset) y mouseScrolled() (hover) no dupliquen la fórmula. Independiente
+     *  de zoomMult: el recuadro no cambia con el zoom, solo el "size" del jugador dentro. */
+    private int[] previewRect() {
+        int previewCX = panelLeft + BG_W / 2;
+        int x1 = previewCX - PREVIEW_W_HUB / 2, x2 = previewCX + PREVIEW_W_HUB / 2;
+        int y1 = panelTop + DIV_Y + 8, y2 = panelTop + IN_Y2 - 4;
+        return new int[] { x1, y1, x2, y2 };
     }
 
-    private void buildSkinSection() {
-        if (isMultiTintRace(race)) { buildLayerSections(); return; }
-
-        int[] presets = SKIN_TONES;
-        boolean tint  = isTintRace(race);
-        int perRow = 4, gap = 4;
-        int total  = presets.length + (tint ? 1 : 0);
-        int gridY  = bottomZoneY + SKIN_SECTION_DY + 12;
-
-        for (int i = 0; i < total; i++) {
-            int row = i / perRow, col = i % perRow;
-            int countInRow = Math.min(perRow, total - row * perRow);
-            int rowW   = countInRow * COLOR_BOX_W + (countInRow - 1) * gap;
-            int startX = skinAreaCX - rowW / 2;
-            int x = startX + col * (COLOR_BOX_W + gap);
-            int y = gridY + row * (COLOR_BOX_H + gap);
-
-            if (tint && i == presets.length) {
-                addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
-                        () -> skinColor & 0xFFFFFF,
-                        () -> activeChannel == ColorChannel.SKIN,
-                        () -> togglePicker(ColorChannel.SKIN)));
-            } else if (tint) {
-                final int c = presets[i];
-                addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
-                        () -> c,
-                        () -> customSkinColor && (skinColor & 0xFFFFFF) == c,
-                        () -> { customSkinColor = true; skinColor = 0xFF000000 | c; closePicker(); applyPreview(); }));
-            } else {
-                final int idx = i, c = presets[i];
-                addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
-                        () -> c,
-                        () -> skinPreset == idx,
-                        () -> { skinPreset = idx; applyPreview(); }));
-            }
-        }
-
-        showGender = tint;
-        if (tint) {
-            int rows = (total + perRow - 1) / perRow;
-            int naturalY = gridY + rows * (COLOR_BOX_H + gap) - 2;
-            addRenderableWidget(new TextOnlyButton(skinAreaCX - 30, naturalY, 60, 14,
-                    Component.literal("Default"),
-                    () -> { customSkinColor = false; closePicker(); applyPreview(); })
-                    .onPanel());
-
-            genderTitleY = naturalY + 16;
-            genderValueY = genderTitleY + 11;
-            int gw = 84;
-            int arrowY = genderValueY - 1;
-            addRenderableWidget(new ArrowIconButton((skinAreaCX - gw / 2), arrowY,
-                    ArrowIconButton.Dir.LEFT,  () -> { genderFemale = !genderFemale; applyPreview(); }));
-            addRenderableWidget(new ArrowIconButton((skinAreaCX + gw / 2 - ARROW_W), arrowY,
-                    ArrowIconButton.Dir.RIGHT, () -> { genderFemale = !genderFemale; applyPreview(); }));
-        }
-    }
-
-    /**
-     * Razas multicolor: una fila de color por CAPA descubierta (genérico, data-driven).
-     * index 0 = piel (escribe skinColorRgb); index >= 1 = capa (escribe layerColors[index]).
-     * Etiqueta y presets salen del JSON de cada capa. Añadir/quitar capas = soltar PNG+JSON.
-     */
-    private void buildLayerSections() {
-        showGender = false;
-        customSkinColor = true; // multicolor siempre coloreable
-        tintLayers.clear();
-        layerArgb.clear();
-        layerLabelY.clear();
-
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return;
-        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
-
-        ItemStack body = RaceSkinSlots.getVirtualRaceArmor(mc.player, EquipmentSlot.CHEST);
-        if (!(body.getItem() instanceof GeoLayerArmorItem gi)) return;
-
-        int startY = bottomZoneY + SKIN_SECTION_DY - 17;
-        int row = 0;
-        for (RaceLayerDiscovery.Layer L : RaceLayerDiscovery.layersFor(gi)) {
-            // La clave es SIEMPRE L.index(): layerArgb, layerLabelY, buildLayerRow y
-            // applyPreview la comparten. Cualquier desplazamiento aquí rompe el resto.
-            int idx = L.index();
-            int cur = (idx == 0)
-                    ? visual.getSkinColorRgb()
-                    : (visual.hasLayerColor(idx) ? visual.getLayerColorRgb(idx) : L.defaultRgb());
-            layerArgb.put(idx, 0xFF000000 | (cur & 0xFFFFFF));
-
-            int labelY = startY + row * LAYER_DY + L.dy();
-            layerLabelY.put(idx, labelY);
-            tintLayers.add(L);
-            buildLayerRow(L, labelY + 10);
-            row++;
-        }
-    }
-
-    private void buildLayerRow(RaceLayerDiscovery.Layer L, int y) {
-        int[] presets = L.presets();
-        int gap = 3;
-        int rowW = presets.length * (PRESET_BOX_W + gap) + COLOR_BOX_W;
-        int x = skinAreaCX - rowW / 2;
-
-        for (int c : presets) {
-            final int col = c;
-            addRenderableWidget(new ColorBoxButton(x, (y + (COLOR_BOX_H - PRESET_BOX_H) / 2),
-                    PRESET_BOX_W, PRESET_BOX_H,
-                    () -> col,
-                    () -> (layerCurrent(L) & 0xFFFFFF) == col,
-                    () -> { layerArgb.put(L.index(), 0xFF000000 | col); closePicker(); applyPreview(); }));
-            x += PRESET_BOX_W + gap;
-        }
-
-        addRenderableWidget(new ColorBoxButton(x, y, COLOR_BOX_W, COLOR_BOX_H,
-                () -> layerCurrent(L) & 0xFFFFFF,
-                () -> activeLayerIndex == L.index(),
-                () -> toggleLayerPicker(L)));
-    }
-
-    /** ARGB actual de una capa (o su default si aún no se tocó). */
-    private int layerCurrent(RaceLayerDiscovery.Layer L) {
-        return layerArgb.getOrDefault(L.index(), 0xFF000000 | L.defaultRgb());
-    }
-
-    private void toggleLayerPicker(RaceLayerDiscovery.Layer L) {
-        if (activeLayerIndex == L.index() && picker != null) { closePicker(); return; }
-        openLayerPicker(L);
-    }
-
-    private void openLayerPicker(RaceLayerDiscovery.Layer L) {
-        closePicker();
-        activeLayerIndex = L.index();
-        int pickerX = panelLeft + BG_W + 8;
-        if (pickerX + ColorPickerWidget.TOTAL_W > this.width - 4)
-            pickerX = panelLeft - ColorPickerWidget.TOTAL_W - 8;
-        picker = new ColorPickerWidget(pickerX, panelTop + IN_Y1, layerCurrent(L), L.labelComponent().getString(), argb -> {
-            layerArgb.put(L.index(), 0xFF000000 | (argb & 0xFFFFFF));
-            applyPreview();
-        });
-        addRenderableWidget(picker);
-    }
-
-    private void togglePicker(ColorChannel ch) {
-        if (activeChannel == ch && picker != null) { closePicker(); return; }
-        openPicker(ch);
-    }
-
-    private void openPicker(ColorChannel channel) {
-        closePicker();
-        activeChannel = channel;
-        if (channel == ColorChannel.SKIN) customSkinColor = true;
-        String label = switch (channel) {
-            case SKIN -> "Skin Color"; case EYE -> "Eye Color";
-            case HAIR -> "Hair Color";
-        };
-        int pickerX = panelLeft + BG_W + 8;
-        if (pickerX + ColorPickerWidget.TOTAL_W > this.width - 4)
-            pickerX = panelLeft - ColorPickerWidget.TOTAL_W - 8;
-        picker = new ColorPickerWidget(pickerX, panelTop + IN_Y1, colorForChannel(channel), label, argb -> {
-            switch (channel) {
-                case SKIN -> { skinColor = argb; customSkinColor = true; }
-                case EYE -> eyeColor = argb;
-                case HAIR -> hairColor = argb;
-            }
-            applyPreview();
-        });
-        addRenderableWidget(picker);
-    }
-
-    private void closePicker() {
-        if (picker != null) { removeWidget(picker); picker = null; }
-        activeChannel = null;
-        activeLayerIndex = -1;
-    }
+    // ── Render ───────────────────────────────────────────────────────────────
 
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        int pl = panelLeft;
-        int pt = panelTop;
+        int pl = panelLeft, pt = panelTop;
 
         super.renderBackground(g, mouseX, mouseY, partialTick);
         g.blit(BG, pl, pt, 0, 0, BG_W, BG_H);
 
         ScreenTitle.drawAbovePanel(g, mc.font, this.title, pl + BG_W / 2, pt);
 
-        int blockTop = pt + CONTENT_Y0;
-        blockTop = renderField(g, mc, pl, blockTop, "Eyes", CustomizationAssets.eyeLabel(eyeIndex));
-        if (race == Race.HUMAN || race == Race.SAIYAN)
-            blockTop = renderField(g, mc, pl, blockTop, "Hair", CustomizationAssets.hairLabel(hairIndex));
-        blockTop = renderField(g, mc, pl, blockTop, "Mouth", CustomizationAssets.mouthLabel(mouthIndex));
-        blockTop = renderField(g, mc, pl, blockTop, "Nose",  CustomizationAssets.noseLabel(noseIndex));
+        renderHub(g, mouseX, mouseY);
 
-        g.fill(pl + IN_X1 + PAD, divY, pl + IN_X2 - PAD, divY + 1, ZenkaiPalette.SEPARATOR);
+        g.fill(pl + IN_X1 + PAD, pt + DIV_Y, pl + IN_X2 - PAD, pt + DIV_Y + 1, ZenkaiPalette.SEPARATOR);
 
+        int[] rect = previewRect();
+        int zoomedSize = Mth.clamp(Math.round(PREVIEW_SIZE_HUB * zoomMult), ZOOMED_SIZE_MIN, ZOOMED_SIZE_MAX);
         InventoryScreen.renderEntityInInventoryFollowsMouse(
-                g,
-                pl + IN_X1 + PAD,              bottomZoneY,
-                pl + IN_X1 + PAD + PREVIEW_W,  pt + IN_Y2 - 4,
-                PREVIEW_SIZE, 0.0625f,
+                g, rect[0], rect[1], rect[2], rect[3], zoomedSize, 0.0625f,
                 (float) mouseX, (float) mouseY, mc.player);
-
-        if (isMultiTintRace(race)) {
-            for (RaceLayerDiscovery.Layer L : tintLayers) {
-                Integer ly = layerLabelY.get(L.index());
-                if (ly != null) drawCenteredNoShadow(g, L.labelComponent(), skinAreaCX, ly, COLOR_SWATCH);
-            }
-        } else {
-            drawCenteredNoShadow(g, Component.literal(isTintRace(race) ? "Skin Color" : "Skin Preset"),
-                    skinAreaCX, bottomZoneY + SKIN_SECTION_DY, COLOR_SWATCH);
-        }
-
-        if (showGender) {
-            drawCenteredNoShadow(g, Component.literal("Gender"), skinAreaCX, genderTitleY, COLOR_SWATCH);
-            PanelText.centeredOnPanel(g, mc.font,
-                    Component.literal(genderFemale ? "Female" : "Male"),
-                    skinAreaCX, genderValueY, COLOR_VALUE);
-        }
 
         super.render(g, mouseX, mouseY, partialTick);
     }
 
-    private int renderField(GuiGraphics g, Minecraft mc, int pl, int blockTop, String label, String value) {
-        int cx = pl + BG_W / 2;
-        drawCenteredNoShadow(g, Component.literal(label), cx, blockTop, COLOR_TITLE);
-        PanelText.centeredOnPanel(g, mc.font,
-                Component.literal(value), cx, blockTop + TITLE_H, COLOR_VALUE);
-        return blockTop + BLOCK_H;
-    }
-
-    /** Delega en PanelText: la regla de sombra vive en un solo sitio. */
-    private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
-        PanelText.centeredOnPanel(g, Minecraft.getInstance().font, text, cx, y, color);
-    }
-
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
+
+    private void renderHub(GuiGraphics g, int mouseX, int mouseY) {
+        int x = panelLeft + IN_X1 + PAD;
+        int w = (panelLeft + IN_X2 - PAD) - x;
+
+        renderHubOption(g, x, panelTop + ROW1_Y, w, HUB_ROW_H, ICON_HEAD_U, ICON_HEAD_V,
+                Component.translatable("screen.zenkai.appearance.hub.head"), true, mouseX, mouseY);
+        renderHubOption(g, x, panelTop + ROW2_Y, w, HUB_ROW_H, ICON_BODY_U, ICON_BODY_V,
+                Component.translatable("screen.zenkai.appearance.hub.body"), true, mouseX, mouseY);
+
+        boolean genderEnabled = genderSupported();
+        renderHubOption(g, x, panelTop + ROW3_Y, w, HUB_ROW_H,
+                genderFemale ? ICON_GENDER_FEMALE_U : ICON_GENDER_MALE_U,
+                genderFemale ? ICON_GENDER_FEMALE_V : ICON_GENDER_MALE_V,
+                Component.translatable("screen.zenkai.appearance.hub.gender"), genderEnabled, mouseX, mouseY);
+    }
+
+    /** Botón grande horizontal (icono a la izquierda, etiqueta a la derecha) sobre el panel
+     *  beige — mismo fondo hundido/hover que ShenlongWishScreen usa para sus filas (INSET_BG/
+     *  ROW_HOVER). Deshabilitado = icono atenuado + etiqueta apagada + tooltip al pasar el
+     *  ratón. */
+    private void renderHubOption(GuiGraphics g, int x, int y, int w, int h, int iconU, int iconV,
+                                  Component label, boolean enabled, int mouseX, int mouseY) {
+        boolean hoveredRect = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        boolean hovered = enabled && hoveredRect;
+
+        g.fill(x, y, x + w, y + h, hovered ? ZenkaiPalette.ROW_HOVER : ZenkaiPalette.INSET_BG);
+        g.fill(x, y, x + w, y + 1, ZenkaiPalette.BORDER_IN);
+        g.fill(x, y + h - 1, x + w, y + h, ZenkaiPalette.BORDER_IN);
+        g.fill(x, y, x + 1, y + h, ZenkaiPalette.BORDER_IN);
+        g.fill(x + w - 1, y, x + w, y + h, ZenkaiPalette.BORDER_IN);
+
+        int iconX = x + 10;
+        int iconY = y + (h - ICON_CELL) / 2;
+        if (!enabled) g.setColor(0.6F, 0.6F, 0.6F, 1.0F);
+        g.blit(ICONS_TEX, iconX, iconY, iconU, iconV, ICON_CELL, ICON_CELL, ICONS_ATLAS, ICONS_ATLAS);
+        if (!enabled) g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        PanelText.onPanel(g, this.font, label, iconX + ICON_CELL + 8, y + (h - 8) / 2,
+                enabled ? ZenkaiPalette.LABEL_ON_PANEL : ZenkaiPalette.MUTED_ON_PANEL);
+
+        if (!enabled && hoveredRect) {
+            Component tip = Component.translatable("screen.zenkai.appearance.hub.locked");
+            g.renderTooltip(this.font, this.font.split(tip, 150), mouseX, mouseY);
+        }
+    }
+
+    // ── Entrada ──────────────────────────────────────────────────────────────
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
-        if (picker != null) {
-            boolean inside = mx >= picker.getX() && mx < picker.getX() + ColorPickerWidget.TOTAL_W
-                    && my >= picker.getY() && my < picker.getY() + ColorPickerWidget.TOTAL_H;
-            if (!inside) closePicker();
-        }
+        if (button == 0 && clickHub(mx, my)) return true;
         return super.mouseClicked(mx, my, button);
     }
 
-    private int colorForChannel(ColorChannel ch) {
-        return switch (ch) {
-            case SKIN -> skinColor; case EYE -> eyeColor;
-            case HAIR -> hairColor;
-        };
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double dx, double dy) {
+        int[] rect = previewRect();
+        if (mouseX >= rect[0] && mouseX < rect[2] && mouseY >= rect[1] && mouseY < rect[3]) {
+            zoomMult = Mth.clamp(zoomMult + (dy > 0 ? ZOOM_STEP : -ZOOM_STEP), ZOOM_MIN, ZOOM_MAX);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, dx, dy);
+    }
+
+    private boolean clickHub(double mouseX, double mouseY) {
+        int x = panelLeft + IN_X1 + PAD;
+        int w = (panelLeft + IN_X2 - PAD) - x;
+        if (mouseX < x || mouseX >= x + w) return false;
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mouseY >= panelTop + ROW1_Y && mouseY < panelTop + ROW1_Y + HUB_ROW_H) {
+            goingToHead = true;
+            mc.setScreen(new HeadAppearanceScreen(this, statsSnapshot, visualSnapshot));
+            return true;
+        }
+        if (mouseY >= panelTop + ROW2_Y && mouseY < panelTop + ROW2_Y + HUB_ROW_H) {
+            goingToBody = true;
+            mc.setScreen(new BodyColorsScreen(this, statsSnapshot, visualSnapshot));
+            return true;
+        }
+        if (mouseY >= panelTop + ROW3_Y && mouseY < panelTop + ROW3_Y + HUB_ROW_H) {
+            // Click en la fila entera = alterna Male/Female (si la raza lo soporta); no hay
+            // nada más que cazar dentro de la fila, a diferencia de Head/Body que navegan.
+            if (genderSupported()) { genderFemale = !genderFemale; applyPreview(); }
+            return true;
+        }
+        return false;
     }
 
     private void applyPreview() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
-        visual.setSkinColorRgb(skinColor & 0xFFFFFF);
-        visual.setEyeColorRgb(eyeColor & 0xFFFFFF);
-        visual.setHairColorRgb(hairColor & 0xFFFFFF);
-        visual.setEyeIndex(eyeIndex); visual.setHairIndex(hairIndex);
-        visual.setMouthIndex(mouthIndex); visual.setNoseIndex(noseIndex);
-        visual.setHairStyleId(hairIndex == 0 ? "hair0" : "hair" + hairIndex);
-        visual.setCustomSkinColor(customSkinColor);
-        visual.setSkinPreset(skinPreset);
         visual.setGender(genderFemale ? PlayerVisualAttachment.Gender.FEMALE
                 : PlayerVisualAttachment.Gender.MALE);
-
-        // Razas multicolor: capa 0 -> piel (skinColorRgb); capa >=1 -> layerColors[index].
-        if (isMultiTintRace(race)) {
-            for (var e : layerArgb.entrySet()) {
-                int idx = e.getKey(), rgb = e.getValue() & 0xFFFFFF;
-                if (idx == 0) visual.setSkinColorRgb(rgb);
-                else          visual.setLayerColorRgb(idx, rgb);
-            }
-        }
     }
 
     private void goToStyle() {
@@ -510,7 +329,7 @@ public class AppearanceScreen extends Screen {
 
     @Override
     public void removed() {
-        if (!confirmed && !goingNext && !goingBack) {
+        if (!confirmed && !goingNext && !goingBack && !goingToHead && !goingToBody) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
                 var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());

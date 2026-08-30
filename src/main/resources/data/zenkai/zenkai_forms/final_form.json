@@ -12,7 +12,12 @@
   "ki_drain_mastered": 0.0,
   "spi_req": 87,
   "parent": "zenkai:third_form",
-  "body_items": {},
+  "body_items": {
+    "head": "zenkai:arcosian_final_form_helmet",
+    "chest": "zenkai:arcosian_final_form_chestplate",
+    "legs": "zenkai:arcosian_final_form_leggings",
+    "feet": "zenkai:arcosian_final_form_boots"
+  },
   "aura_type": "arcosian",
   "aura_rgb": "0xE0E0FF",
   "scale": 1.0,
