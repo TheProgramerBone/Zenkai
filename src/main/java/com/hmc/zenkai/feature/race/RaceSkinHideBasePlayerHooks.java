@@ -57,6 +57,13 @@ public final class RaceSkinHideBasePlayerHooks {
         // Sin raza elegida o sin custom skin → vanilla completo, no tocamos nada
         if (!stats.isRaceChosen() || !customSkin) return;
 
+        // Sistema general "sin modelo GeckoLib -> vuelve al cuerpo por defecto" (ver
+        // RaceSkinSlots.backedOrEmpty): si la raza no tiene NINGÚN cuerpo con modelo real
+        // todavía (Majin hoy), no hay que ocultar el vanilla — sin esto, el jugador quedaba
+        // invisible (vanilla oculto + nada real que lo sustituya) en vez de mostrar el
+        // cuerpo por defecto.
+        if (!RaceSkinSlots.raceHasBackedBody(player)) return;
+
         TOUCHED_THIS_FRAME.add(player.getUUID());
         PlayerModel<AbstractClientPlayer> model = e.getRenderer().getModel();
 

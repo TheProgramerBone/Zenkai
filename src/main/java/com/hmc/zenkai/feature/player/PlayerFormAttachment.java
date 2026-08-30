@@ -28,6 +28,12 @@ import java.util.Map;
  * La RUEDA no transforma, solo elige (selectedForm / kaiokenSwitch). Aquí no hay números:
  * los tiempos y porcentajes vienen del datapack (FormDef) o del enum (KaiokenTier); esto es
  * únicamente la máquina de estados del hold y la maestría acumulada.
+ *
+ * EXCEPCIÓN a "una sola tecla": el ritual de Oozaru (Base -> Oozaru -> Super Oozaru -> SSJ4,
+ * ver OozaruSystem) mete un tercer disparador, oozaruForced, que NO es la tecla — lo escribe
+ * OozaruSystem cada tick por la condición ambiental (cola + luna llena) y tiene prioridad
+ * ABSOLUTA sobre cualquier escalera mientras el jugador esté en Base. Los tramos 2 y 3 sí son
+ * la tecla de siempre, con dos gates especiales en resolveNextForm/canAdvance (ver ahí).
  */
 public class PlayerFormAttachment {
 
@@ -72,6 +78,18 @@ public class PlayerFormAttachment {
     /** Interruptor del Kaioken: decide QUÉ escalera sube la tecla de transformar. */
     private boolean kaiokenSwitch = false;
 
+    /**
+     * Volcado cada tick por OozaruSystem (ver esa clase): condición ambiental (raza + cola +
+     * luna llena, OozaruConditions) para el PRIMER tramo del ritual de Oozaru. A diferencia de
+     * transformHeld (la tecla H), esto NO lo controla el jugador — tiene prioridad ABSOLUTA
+     * sobre cualquier otra escalera en serverTick() mientras esté en Base, igual que en el
+     * canon ver la luna anula el control voluntario del saiyan. Se sincroniza (save/load, ver
+     * abajo) porque currentHoldTarget() lo necesita en el CLIENTE para pintar el color correcto
+     * del gui de transformación (mismo motivo que chargingKi/overdriveCharging en
+     * PlayerStateFlags — ver el gotcha documentado en CLAUDE.md).
+     */
+    private boolean oozaruForced = false;
+
     /** Maestría por forma (clave = formId, 0..100). */
     private final Map<String, Float> formMastery = new HashMap<>();
 
@@ -87,6 +105,7 @@ public class PlayerFormAttachment {
     public ResourceLocation getFormId()   { return formId; }
     public ResourceLocation getSelectedForm() { return selectedForm; }
     public boolean isKaiokenSwitch()      { return kaiokenSwitch; }
+    public boolean isOozaruForced()       { return oozaruForced; }
 
     /**
      * Nunca null: es el embudo por el que pasa el mod (TickHandlers, aura, stats).
@@ -121,6 +140,9 @@ public class PlayerFormAttachment {
     public void setSelectedForm(ResourceLocation id) { this.selectedForm = id; }
 
     public void setKaiokenSwitch(boolean v) { this.kaiokenSwitch = v; }
+
+    /** Solo lo llama OozaruSystem. Ver el javadoc del campo. */
+    public void setOozaruForced(boolean v) { this.oozaruForced = v; }
 
     // ── Datos de la forma activa (del datapack) ──────────────────────────────
 
@@ -167,6 +189,12 @@ public class PlayerFormAttachment {
             return !isStrained(p.level().getGameTime()) && nextKaiokenTier(p) != null;
         }
         if (potentialTarget(p) != null) return true;
+        // Último tramo del ritual de Oozaru (ver resolveNextForm): SuperForms.unlocked(SSJ4)
+        // da FALSE hasta que el ritual está completo, así que exigirlo aquí lo haría imposible
+        // de completar — completar ESTE hold es justo lo que lo marca (completeSsj4Ritual).
+        if (FormIds.SUPER_OOZARU.equals(formId)) {
+            return FormRegistry.get(FormIds.SSJ4) != null;
+        }
         ResourceLocation target = targetForm(p, race);
         if (target == null) return false;
 
@@ -181,6 +209,15 @@ public class PlayerFormAttachment {
      */
     public boolean serverTick(Player p, PlayerStatsAttachment stats, PlayerVisualAttachment visual) {
         if (cooldownTicks > 0) cooldownTicks--;
+
+        // Oozaru tiene prioridad ABSOLUTA sobre cualquier otra escalera y NO depende de
+        // transformHeld: no hay tecla que pulsar, la activa OozaruSystem por la condición
+        // ambiental (ver oozaruForced). Solo aplica desde Base, y respeta el cooldown propio
+        // (forceBase() ya deja uno tras revertir, evitando un flicker si la condición oscila).
+        if (oozaruForced && FormIds.BASE.equals(formId) && cooldownTicks <= 0) {
+            return tickOozaruLadder();
+        }
+
         if (!transformHeld || cooldownTicks > 0) return clearProgress(false);
 
         Race race = stats.getRace();
@@ -189,6 +226,23 @@ public class PlayerFormAttachment {
         if (kaiokenSwitch) return tickKaiokenLadder(p);
         if (SkillToggles.isOn(p, SkillEffects.POTENTIAL_UNLOCK)) return tickPotentialLadder(p);
         return tickFormLadder(p, race);
+    }
+
+    /** Primer tramo del ritual de Oozaru: el "hold" lo activa OozaruSystem (oozaruForced), no
+     *  la tecla del jugador. Reusa holdTicks/transforming para que el HUD
+     *  (TransformGaugeOverlay) pinte la misma barra de progreso que cualquier otra
+     *  transformación, sin código de cliente nuevo — ver currentHoldTarget(). */
+    private boolean tickOozaruLadder() {
+        FormDef def = FormRegistry.get(FormIds.OOZARU);
+        int required = (def == null) ? 0 : def.holdTicks();
+        if (required <= 0) return clearProgress(false);
+
+        boolean was = transforming;
+        if (advanceHold(required)) return progressDirty(was);
+
+        setFormId(FormIds.OOZARU);
+        finishHold();
+        return true;
     }
 
     /**
@@ -206,6 +260,13 @@ public class PlayerFormAttachment {
 
         boolean was = transforming;
         if (advanceHold(required)) return progressDirty(was); // aún cargando
+
+        // Último tramo del ritual de Oozaru: llegar aquí ES lo que desbloquea SSJ4 para
+        // siempre (ver resolveNextForm/canAdvance, y completeSsj4Ritual más abajo). Antes de
+        // setFormId para que quede claro que es un efecto de ESTE hold completándose.
+        if (FormIds.SUPER_OOZARU.equals(formId) && FormIds.SSJ4.equals(target)) {
+            completeSsj4Ritual(p);
+        }
 
         setFormId(target);
         // La selección de la rueda es un ATAJO de un solo uso, no un techo permanente: al
@@ -291,10 +352,48 @@ public class PlayerFormAttachment {
      */
     private static ResourceLocation resolveNextForm(Player p, Race race, ResourceLocation current) {
         if (race == null) return null;
+
+        // Último tramo del ritual de Oozaru: Super Oozaru no declara 'parent' hacia SSJ4 en el
+        // datapack (SSJ4 ya es hijo de SSJ3 en la cadena normal, comprada con TP) — este salto
+        // es la excepción explícita. Se puede intentar en cuanto se llega a Super Oozaru
+        // (SuperForms.readyForSuperOozaru ya exigió el nivel máximo para llegar hasta aquí);
+        // completarlo MARCA el ritual (completeSsj4Ritual) — sin él, SuperForms.unlocked(SSJ4)
+        // sigue dando false aunque el nivel ya esté comprado.
+        if (FormIds.SUPER_OOZARU.equals(current)) {
+            return FormRegistry.get(FormIds.SSJ4) != null ? FormIds.SSJ4 : null;
+        }
+
         ResourceLocation next = FormRegistry.nextFrom(
                 current == null ? FormIds.BASE : current, race);
         if (next == null || !FormRegistry.isAllowed(race, next)) return null;
+        // Oozaru -> Super Oozaru exige tener YA comprado super_forms hasta el nivel MÁXIMO
+        // (SuperForms.readyForSuperOozaru): SuperForms.unlocked() por sí solo daría true de
+        // oficio (super_oozaru está fuera de la cadena, depthOf <= 0), así que sin este
+        // chequeo cualquier saiyan que llegara a Oozaru podría controlar la mutación sin haber
+        // entrenado nada. Este MISMO chequeo, aplicado a 'next' == SSJ4 vía
+        // SuperForms.unlocked() más abajo, es también lo que bloquea la cadena NORMAL
+        // (SSJ3 -sube la tecla-> SSJ4) hasta que el ritual esté hecho, aunque el nivel ya
+        // esté pagado: unlocked(SSJ4) exige AMBAS cosas (ver su javadoc).
+        if (FormIds.SUPER_OOZARU.equals(next) && !SuperForms.readyForSuperOozaru(p)) return null;
         return SuperForms.unlocked(p, next) ? next : null;
+    }
+
+    /**
+     * Marca el ritual de Oozaru como completado (PlayerStatsAttachment.hasSsj4Ritual,
+     * persistente). NO otorga ningún nivel de super_forms: el nivel máximo ya se pagó con TP
+     * para poder llegar hasta aquí (SuperForms.readyForSuperOozaru) — lo que faltaba era
+     * ESTO, la parte que SuperForms.unlocked(SSJ4) exige además del nivel. A partir de aquí
+     * SSJ4 queda desbloqueado/visible en la rueda para siempre (ver WheelMenu.forms), incluso
+     * si el nivel se pierde y hay que volver a comprarlo por un respec. No hace nada si ya
+     * estaba hecho (repetir el ritual no debe reanunciar).
+     */
+    private static void completeSsj4Ritual(Player p) {
+        if (p.level().isClientSide()) return;
+        PlayerStatsAttachment stats = PlayerStatsAttachment.get(p);
+        if (stats.hasSsj4Ritual()) return;
+        stats.setHasSsj4Ritual(true);
+        p.displayClientMessage(Component.translatable("message.zenkai.oozaru.ssj4_unlocked")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), true);
     }
 
     /** Siguiente escalón de kaioken por encima del actual que permita su nivel. null si tope. */
@@ -352,11 +451,17 @@ public class PlayerFormAttachment {
         public boolean isEmpty() { return holdTicks <= 0; }
     }
 
-    /** MISMA rama que serverTick, en el MISMO orden (kaioken > potencial > forma): el cliente
-     *  no decide nada nuevo, solo repite el juicio del servidor sobre datos ya sincronizados
-     *  (formId, kaiokenSwitch, holdTicks). */
+    /** MISMA rama que serverTick, en el MISMO orden (oozaru > kaioken > potencial > forma): el
+     *  cliente no decide nada nuevo, solo repite el juicio del servidor sobre datos ya
+     *  sincronizados (formId, oozaruForced, kaiokenSwitch, holdTicks). El tramo oozaru es el
+     *  ÚNICO que no pasa por targetForm()/resolveNextForm() (no hay tecla que lo dispare), así
+     *  que necesita su propia rama aquí para que el gui pinte el color/tiempo correctos. */
     public HoldTarget currentHoldTarget(Player p, Race race) {
         if (!transforming) return new HoldTarget(0, -1);
+        if (oozaruForced && FormIds.BASE.equals(formId)) {
+            FormDef d = FormRegistry.get(FormIds.OOZARU);
+            return d == null ? new HoldTarget(0, -1) : new HoldTarget(d.holdTicks(), d.auraRgb());
+        }
         if (kaiokenSwitch) return new HoldTarget(KAIOKEN_HOLD_TICKS, AuraColors.KAIOKEN_RGB);
 
         ResourceLocation target = SkillToggles.isOn(p, SkillEffects.POTENTIAL_UNLOCK)
@@ -420,6 +525,7 @@ public class PlayerFormAttachment {
         kaioken = KaiokenTier.OFF;
         kaiokenSwitch = false;
         selectedForm = null;
+        oozaruForced = false;
     }
 
     /** Vuelta forzada a base (ki agotado, forma inválida). Deja cooldown para no reencadenar. */
@@ -479,6 +585,7 @@ public class PlayerFormAttachment {
         tag.putString("formId", formId.toString());
         tag.putInt("kaioken", getKaioken().ordinal());
         tag.putBoolean("kaiokenSwitch", kaiokenSwitch);
+        tag.putBoolean("oozaruForced", oozaruForced);
         tag.putLong("strainUntil", strainUntil);
         tag.putDouble("puCeiling", puCeiling);
         if (selectedForm != null) tag.putString("selectedForm", selectedForm.toString());
@@ -504,6 +611,7 @@ public class PlayerFormAttachment {
 
         this.kaioken = KaiokenTier.byOrdinal(tag.getInt("kaioken"));
         this.kaiokenSwitch = tag.getBoolean("kaiokenSwitch");
+        this.oozaruForced = tag.getBoolean("oozaruForced");
         this.selectedForm = tag.contains("selectedForm")
                 ? ResourceLocation.tryParse(tag.getString("selectedForm")) : null;
         this.strainUntil = tag.getLong("strainUntil");

@@ -20,6 +20,8 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
  * EL ORDEN ES SEMÁNTICA, NO ESTILO:
  *   - los efectos persistentes van ANTES de cualquier corte (deben aplicarse siempre);
  *   - los tres gates (raza / derribado / body 0) cortan el tick por completo;
+ *   - oozaru va ANTES de forms: decide si el formId cambia por la luna antes de que forms
+ *     procese ese formId como el activo del tick;
  *   - forms corta si está transformando, así que va antes de kaioken/carga/regen/movimiento;
  *   - movimiento va al final porque escribe el modificador que forms pudo haber borrado.
  * Reordenar estas llamadas cambia el comportamiento del juego.
@@ -55,6 +57,11 @@ public class ZenkaiTickHandlers {
 
         FlightSystem.tick(c, turboOn);
         FlightSystem.tickBoostHitbox(c);
+
+        // Antes de FormSystem: decide si el saiyan entra/sale de Oozaru por la luna. Si entra
+        // aquí, FormSystem ya lo procesa como forma activa ESTE mismo tick (drenaje 0, forma
+        // válida); si sale, FormSystem ve Base normal el resto del tick.
+        OozaruSystem.tick(c);
 
         if (FormSystem.tick(c)) return;
         KaiokenSystem.tick(c);

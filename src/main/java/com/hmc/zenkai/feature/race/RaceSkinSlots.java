@@ -15,6 +15,23 @@ public final class RaceSkinSlots {
     private RaceSkinSlots() {}
 
     public static ItemStack getVirtualRaceArmor(Player player, EquipmentSlot slot) {
+        return backedOrEmpty(resolveRaw(player, slot));
+    }
+
+    /**
+     * ¿Tiene esta raza AL MENOS un cuerpo con modelo GeckoLib real? Se comprueba con una sola
+     * ranura de referencia (CHEST): las 4 de una misma raza se registran o faltan juntas en
+     * este mod, así que basta con mirar una. Usado por RaceSkinHideBasePlayerHooks para no
+     * ocultar el cuerpo vanilla cuando no hay nada real que ponga en su lugar (ver el mismo
+     * "sistema general" que backedOrEmpty aplica aquí abajo).
+     */
+    public static boolean raceHasBackedBody(Player player) {
+        return !getVirtualRaceArmor(player, EquipmentSlot.CHEST).isEmpty();
+    }
+
+    /** Resuelve el ítem "en teoría" para esa raza/ranura, SIN comprobar si su modelo existe
+     *  de verdad — eso lo hace backedOrEmpty() en el único punto de salida de arriba. */
+    private static ItemStack resolveRaw(Player player, EquipmentSlot slot) {
         Race race = PlayerStatsAttachment.get(player).getRace();
 
         if (race == Race.NAMEKIAN) {
@@ -59,6 +76,25 @@ public final class RaceSkinSlots {
         }
 
         return ItemStack.EMPTY;
+    }
+
+    /**
+     * SISTEMA GENERAL "sin modelo GeckoLib -> vuelve al cuerpo por defecto": un ítem puede
+     * estar perfectamente registrado en ModItems (para que el código ya exista mientras se
+     * modela con calma) sin que su .geo.json/textura existan todavía en disco. A diferencia
+     * de una textura ausente (GeckoLib la sustituye por el checkerboard de "missing texture",
+     * sin crashear), un .geo.json ausente hace que GeckoLib lance una RuntimeException sin
+     * capturar en pleno render — así es como Majin (MAJIN_RACE_*, sin modelo real todavía)
+     * crasheaba el juego en cuanto se le veía en la vista previa de RaceSelectionScreen.
+     * Este filtro es el único punto de salida de getVirtualRaceArmor(): protege CUALQUIER
+     * raza (no solo Majin) contra un futuro registro cuyo archivo aún no exista.
+     */
+    private static ItemStack backedOrEmpty(ItemStack stack) {
+        if (stack.getItem() instanceof GeoLayerArmorItem geo
+                && !RaceTextureUtil.resourceExists(geo.getModelPath())) {
+            return ItemStack.EMPTY;
+        }
+        return stack;
     }
 
     /** Selecciona el item de cuerpo Human/Saiyan según género y modo de color. null = slot no aplica. */

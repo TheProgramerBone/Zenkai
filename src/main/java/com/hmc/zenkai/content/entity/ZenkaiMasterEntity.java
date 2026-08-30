@@ -1,6 +1,7 @@
 package com.hmc.zenkai.content.entity;
 
 import com.hmc.zenkai.feature.master.MasterManager;
+import com.hmc.zenkai.feature.master.MasterService;
 import com.hmc.zenkai.network.OpenMasterPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -14,6 +15,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 /**
  * Base de los maestros. Extiende ZenkaiDefaultNPC (inmortal, quieto, animación idle) y añade
@@ -71,7 +74,8 @@ public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC {
             if (player.isShiftKeyDown() && offerFavor(sp)) {
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
-            PacketDistributor.sendToPlayer(sp, new OpenMasterPayload(masterId(), this.getId()));
+            PacketDistributor.sendToPlayer(sp, new OpenMasterPayload(masterId(), this.getId(),
+                    serviceEntries(sp)));
         }
         return InteractionResult.sidedSuccess(this.level().isClientSide);
     }
@@ -79,6 +83,29 @@ public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC {
     /** Lo que este maestro da además de enseñar. Por defecto nada: devolver false hace que
      *  el shift-clic caiga en la tienda, así que un maestro sin favor no se queda mudo. */
     protected boolean offerFavor(ServerPlayer sp) { return false; }
+
+    /** Lo que este maestro ofrece desde la pestaña "Servicios" de su pantalla. Por defecto
+     *  ninguno: el hub la enseña deshabilitada con el mismo candado que Skills/Técnicas
+     *  (ver MasterScreen, "locked" cuando la lista está vacía). */
+    protected List<MasterService> services() { return List.of(); }
+
+    /** Resuelve services() a lo que de verdad viaja por red — la etiqueta ya calculada para
+     *  ESTE jugador (ver MasterService.label). También la usa MasterServicePacket tras un
+     *  claim exitoso, para refrescar la pantalla sin reabrirla. */
+    public List<OpenMasterPayload.ServiceEntry> serviceEntries(ServerPlayer sp) {
+        return services().stream()
+                .map(s -> new OpenMasterPayload.ServiceEntry(s.id(), s.label(sp).getString()))
+                .toList();
+    }
+
+    /** El servicio con ese id, o null si este maestro no lo tiene. Usado por MasterServicePacket
+     *  para resolver un clic del cliente sin que el paquete tenga que llevar más que el id. */
+    public MasterService service(String id) {
+        for (MasterService s : services()) {
+            if (s.id().equals(id)) return s;
+        }
+        return null;
+    }
 
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes()

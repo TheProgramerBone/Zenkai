@@ -140,7 +140,8 @@ public final class FormManager {
                             GsonHelper.getAsBoolean(o, "descendable", false),
                             GsonHelper.getAsDouble(o, "overdrive_ceiling_bonus", 0.0),
                             GsonHelper.getAsDouble(o, "overdrive_drain_mult_untrained", 1.0),
-                            GsonHelper.getAsDouble(o, "overdrive_drain_mult_mastered", 1.0)));
+                            GsonHelper.getAsDouble(o, "overdrive_drain_mult_mastered", 1.0),
+                            GsonHelper.getAsBoolean(o, "wheel_selectable", true)));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }

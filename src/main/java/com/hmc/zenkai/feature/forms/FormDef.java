@@ -37,13 +37,21 @@ import java.util.Map;
  * con SPI, así que un pool minúsculo ya bastaba para superar un drenaje fijo minúsculo. spi_req
  * = 0 desactiva el multiplicador (queda en 1.0 siempre), para no romper datapacks viejos.
  *
- * Los últimos 4 campos son del sistema de "forzar" (powerPercent por encima de 100%, ver
- * OverdriveSystem): DESCENDABLE marca formas que el botón "Descender" de la rueda puede tumbar
- * de golpe a base (hoy solo second_form/third_form/final_form del arcosiano; Golden/Black no lo
- * llevan a propósito, se revierten con el tap de siempre). overdriveCeilingBonus y los dos
- * overdriveDrainMult solo tienen efecto MIENTRAS esa forma está puesta (no por tenerla comprada):
- * amplían cuánto se puede forzar y abaratan el coste de hacerlo. Defaults (false/0/1.0/1.0) no
- * afectan a ninguna forma existente que no los declare en su JSON.
+ * Los 4 campos antes de wheelSelectable son del sistema de "forzar" (powerPercent por encima
+ * de 100%, ver OverdriveSystem): DESCENDABLE marca formas que el botón "Descender" de la rueda
+ * puede tumbar de golpe a base (hoy solo second_form/third_form/final_form del arcosiano;
+ * Golden/Black no lo llevan a propósito, se revierten con el tap de siempre). overdriveCeilingBonus
+ * y los dos overdriveDrainMult solo tienen efecto MIENTRAS esa forma está puesta (no por tenerla
+ * comprada): amplían cuánto se puede forzar y abaratan el coste de hacerlo. Defaults
+ * (false/0/1.0/1.0) no afectan a ninguna forma existente que no los declare en su JSON.
+ *
+ * wheelSelectable (default true): si es false, WheelSelectPacket.selectForm() rechaza esta forma
+ * aunque un cliente modificado la pida por id — server-authoritative, igual que el candado de
+ * tipo de técnica documentado en CLAUDE.md. Pensado para formas "cadena" (kind divine, parent
+ * null) que no viven en la escalera normal de super_forms y se activan por su propio sistema en
+ * vez de por la rueda/tecla H (hoy: oozaru/super_oozaru, ver OozaruSystem). Sin este candado, la
+ * rueda ya no las enseña (FormRegistry.chainFor no las alcanza), pero nada impedía a un cliente
+ * modificado seleccionarlas igualmente por packet.
  */
 public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
@@ -54,7 +62,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       Map<String, ResourceLocation> bodyItems,
                       String auraType, int auraRgb, int hairRgb, double scale,
                       boolean descendable, double overdriveCeilingBonus,
-                      double overdriveDrainMultUntrained, double overdriveDrainMultMastered) {
+                      double overdriveDrainMultUntrained, double overdriveDrainMultMastered,
+                      boolean wheelSelectable) {
 
     public enum Kind {
         /** Innata por raza: no la enseña ningún maestro. */
@@ -184,6 +193,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeDouble(d.overdriveCeilingBonus());
                 buf.writeDouble(d.overdriveDrainMultUntrained());
                 buf.writeDouble(d.overdriveDrainMultMastered());
+                buf.writeBoolean(d.wheelSelectable());
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -204,7 +214,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readDouble(), buf.readDouble(), buf.readVarInt(),
                         readMap(buf), readMap(buf),
                         buf.readUtf(), buf.readInt(), buf.readInt(), buf.readDouble(),
-                        buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble());
+                        buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
+                        buf.readBoolean());
             });
 
     private static void writeMap(FriendlyByteBuf buf, Map<String, ResourceLocation> map) {

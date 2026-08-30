@@ -12,6 +12,8 @@ import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.hmc.zenkai.feature.technique.PhysicalTechniquePacket;
 import com.hmc.zenkai.feature.technique.TechniquePacket;
+import com.hmc.zenkai.network.MasterServicePacket;
+import com.hmc.zenkai.network.OpenMasterPayload;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -34,12 +36,19 @@ import java.util.Locale;
  * Tienda de un maestro. Pantalla PROPIA, no una pestaña de ZenkaiMenuScreen: es apaisada
  * (el maestro ocupa el tercio izquierdo) y no comparte navegación con el menú del jugador.
  *
- * HUB de dos botones grandes ("Skills"/"Técnicas") que llevan a la lista correspondiente:
+ * HUB de tres botones grandes ("Skills"/"Técnicas"/"Servicios") que llevan a la lista
+ * correspondiente:
  *   - Skills: habilidades cuyo campo "master" es este maestro (sin cambios respecto a antes).
  *   - Técnicas: KiTechniqueType/PhysicalTechnique cuyo master() es este maestro ("técnica
- *     firma", ver TechniqueDef). Un botón cuyo maestro no vende nada de ese tipo se ve
- *     oscurecido con tooltip en vez de desaparecer — mismo patrón que SkillsScreen usa para
- *     "Forget" bajo el suelo permanente: el layout no salta de tamaño según el maestro.
+ *     firma", ver TechniqueDef).
+ *   - Servicios: lo que ZenkaiMasterEntity.services() devuelva para este maestro — favores
+ *     puntuales sin nivel ni coste en TP (Kami: cola; Korin: semilla diaria; Kaiosama: pesas
+ *     de entrenamiento — ver feature/master/MasterService). Llega ya resuelto en
+ *     OpenMasterPayload (el constructor recibe la lista) y se refresca tras un claim con
+ *     MasterServicesUpdatePayload/updateServices(), sin reabrir la pantalla.
+ * Un botón cuyo maestro no ofrece nada de esa clase se ve oscurecido con tooltip en vez de
+ * desaparecer — mismo patrón que SkillsScreen usa para "Forget" bajo el suelo permanente: el
+ * layout no salta de tamaño según el maestro.
  * Estado por fila (ambas listas comparten el mismo lenguaje):
  *   - no aprendida y puedes pagar  -> coste en blanco, clic compra
  *   - no aprendida y no puedes     -> coste en ROJO, clic no hace nada
@@ -51,7 +60,7 @@ import java.util.Locale;
  */
 public class MasterScreen extends Screen {
 
-    private enum Mode { HUB, SKILLS, TECHNIQUES }
+    private enum Mode { HUB, SKILLS, TECHNIQUES, SERVICES }
 
     // 320×180 con filas de 22px solo daba sitio a "Be able to fly using k…" antes de recortar:
     // la descripción no cabía ni truncada a una palabra útil. Se agranda el diálogo entero
@@ -106,14 +115,15 @@ public class MasterScreen extends Screen {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/master_screen.png");
 
     // Icono del hub: "Skills" reutiliza el ya existente de ZenkaiTab.SKILLS (mismo concepto
-    // visual que la pestaña del menú del jugador); "Técnicas" es nuevo (ver
-    // tools/gen_master_icons.py), fila v=80, primera libre del atlas.
+    // visual que la pestaña del menú del jugador); "Técnicas" y "Servicios" son nuevos (ver
+    // tools/gen_master_icons.py), fila v=80, primera libre del atlas — (0,80) y (20,80).
     private static final ResourceLocation ICONS_TEX =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
     private static final int ICONS_ATLAS = 256;
     private static final int ICON_CELL = 20;
     private static final int ICON_SKILLS_U = 160, ICON_SKILLS_V = 0;
     private static final int ICON_TECHNIQUES_U = 0, ICON_TECHNIQUES_V = 80;
+    private static final int ICON_SERVICES_U = 20, ICON_SERVICES_V = 80;
 
     private final String masterId;
     private final int entityId;
@@ -121,14 +131,24 @@ public class MasterScreen extends Screen {
     private Mode mode = Mode.HUB;
     private final List<SkillDef> skillRows = new ArrayList<>();
     private final List<TechEntry> techRows = new ArrayList<>();
+    private final List<OpenMasterPayload.ServiceEntry> serviceRows = new ArrayList<>();
     private int scroll = 0;
 
     private int left, top;
 
-    public MasterScreen(String masterId, int entityId) {
+    public MasterScreen(String masterId, int entityId, List<OpenMasterPayload.ServiceEntry> services) {
         super(Component.translatable("master.zenkai." + masterId));
         this.masterId = masterId;
         this.entityId = entityId;
+        this.serviceRows.addAll(services);
+    }
+
+    /** Ver ClientPayloadHandlers.updateMasterServices: refresca solo las etiquetas (contador
+     *  de Korin, texto de Kami/Kaio) sin tocar mode/scroll — reabrir la pantalla entera
+     *  volvería siempre al hub, perdiendo dónde estaba mirando el jugador. */
+    public void updateServices(List<OpenMasterPayload.ServiceEntry> services) {
+        serviceRows.clear();
+        serviceRows.addAll(services);
     }
 
     /**
@@ -220,6 +240,7 @@ public class MasterScreen extends Screen {
         return switch (mode) {
             case SKILLS -> skillRows.size();
             case TECHNIQUES -> techRows.size();
+            case SERVICES -> serviceRows.size();
             case HUB -> 0;
         };
     }
@@ -297,14 +318,22 @@ public class MasterScreen extends Screen {
             case HUB -> renderHub(g, mouseX, mouseY);
             case SKILLS -> renderSkillsList(g, mouseX, mouseY);
             case TECHNIQUES -> renderTechniquesList(g, mouseX, mouseY);
+            case SERVICES -> renderServicesList(g, mouseX, mouseY);
         }
     }
 
     // ── Hub ──────────────────────────────────────────────────────────────────
 
+    /** Ancho de CADA UNO de los 3 botones del hub, repartiendo el mismo espacio total entre
+     *  3 en vez de 2 (dos huecos HUB_GAP, no uno) — el diálogo no crece, solo se reparte
+     *  distinto. Compartido por renderHub/clickHub para que nunca se desincronicen. */
+    private int hubButtonWidth() {
+        return (trackRight() - listLeft() - 2 * HUB_GAP) / 3;
+    }
+
     private void renderHub(GuiGraphics g, int mouseX, int mouseY) {
-        int cLeft = listLeft(), cRight = trackRight(), cTop = listTop(), cBottom = top + BG_H - PADDING;
-        int btnW = (cRight - cLeft - HUB_GAP) / 2;
+        int cLeft = listLeft(), cTop = listTop(), cBottom = top + BG_H - PADDING;
+        int btnW = hubButtonWidth();
         int btnH = cBottom - cTop;
 
         renderHubOption(g, cLeft, cTop, btnW, btnH, ICON_SKILLS_U, ICON_SKILLS_V,
@@ -312,6 +341,9 @@ public class MasterScreen extends Screen {
                 mouseX, mouseY);
         renderHubOption(g, cLeft + btnW + HUB_GAP, cTop, btnW, btnH, ICON_TECHNIQUES_U, ICON_TECHNIQUES_V,
                 Component.translatable("screen.zenkai.master.hub.techniques"), !techRows.isEmpty(),
+                mouseX, mouseY);
+        renderHubOption(g, cLeft + 2 * (btnW + HUB_GAP), cTop, btnW, btnH, ICON_SERVICES_U, ICON_SERVICES_V,
+                Component.translatable("screen.zenkai.master.hub.services"), !serviceRows.isEmpty(),
                 mouseX, mouseY);
     }
 
@@ -485,6 +517,49 @@ public class MasterScreen extends Screen {
         }
     }
 
+    // ── Lista de servicios ───────────────────────────────────────────────────
+    //
+    // Sin barra de nivel/coste como Skills/Técnicas a propósito: un servicio no se compra ni
+    // se sube de nivel, es una acción puntual — la fila entera es el label YA resuelto
+    // server-side (ver MasterService.label / OpenMasterPayload.ServiceEntry), no un nombre +
+    // un coste calculados aquí.
+
+    private void renderServicesList(GuiGraphics g, int mouseX, int mouseY) {
+        renderBackRow(g, mouseX, mouseY);
+
+        if (serviceRows.isEmpty()) {
+            PanelText.onDark(g, this.font, Component.translatable("screen.zenkai.master.nothing"),
+                    listLeft(), rowsTop(), ZenkaiPalette.TEXT_OFF);
+            return;
+        }
+
+        g.enableScissor(left, rowsTop(), left + BG_W, rowsTop() + visibleRows() * ROW_H);
+        for (int i = 0; i < serviceRows.size(); i++) {
+            if (!onScreen(i)) continue;
+            renderServiceRow(g, serviceRows.get(i), rowTop(i), i, mouseX, mouseY);
+        }
+        g.disableScissor();
+        drawScrollbar(g);
+    }
+
+    private void renderServiceRow(GuiGraphics g, OpenMasterPayload.ServiceEntry entry, int y, int index,
+                                  int mouseX, int mouseY) {
+        boolean hovered = mouseX >= listLeft() - 2 && mouseX <= listRight()
+                && mouseY >= y && mouseY < y + ROW_H - 1;
+
+        if (hovered) {
+            g.fill(listLeft() - 2, y, listRight(), y + ROW_H - 1, ZenkaiPalette.HOVER_VEIL);
+        }
+
+        PanelText.onDark(g, this.font, Component.literal(entry.label()), listLeft(), rowTextY(y),
+                hovered ? ZenkaiPalette.TEXT_HOVER : ZenkaiPalette.OK);
+
+        boolean lastVisible = index == serviceRows.size() - 1 || !onScreen(index + 1);
+        if (!lastVisible) {
+            g.fill(listLeft() - 2, y + ROW_H - 1, listRight(), y + ROW_H, ZenkaiPalette.SEPARATOR_DARK);
+        }
+    }
+
     // ── "‹ Back" (SKILLS/TECHNIQUES -> HUB) ─────────────────────────────────
 
     private void renderBackRow(GuiGraphics g, int mouseX, int mouseY) {
@@ -550,6 +625,7 @@ public class MasterScreen extends Screen {
                 case HUB -> clickHub(mouseX, mouseY);
                 case SKILLS -> clickSkills(mouseX, mouseY);
                 case TECHNIQUES -> clickTechniques(mouseX, mouseY);
+                case SERVICES -> clickServices(mouseX, mouseY);
             };
             if (handled) return true;
         }
@@ -557,8 +633,8 @@ public class MasterScreen extends Screen {
     }
 
     private boolean clickHub(double mouseX, double mouseY) {
-        int cLeft = listLeft(), cRight = trackRight(), cTop = listTop(), cBottom = top + BG_H - PADDING;
-        int btnW = (cRight - cLeft - HUB_GAP) / 2;
+        int cLeft = listLeft(), cTop = listTop(), cBottom = top + BG_H - PADDING;
+        int btnW = hubButtonWidth();
         if (mouseY < cTop || mouseY >= cBottom) return false;
 
         if (mouseX >= cLeft && mouseX < cLeft + btnW) {
@@ -568,6 +644,11 @@ public class MasterScreen extends Screen {
         int techX = cLeft + btnW + HUB_GAP;
         if (mouseX >= techX && mouseX < techX + btnW) {
             if (!techRows.isEmpty()) { mode = Mode.TECHNIQUES; scroll = 0; }
+            return true;
+        }
+        int servicesX = cLeft + 2 * (btnW + HUB_GAP);
+        if (mouseX >= servicesX && mouseX < servicesX + btnW) {
+            if (!serviceRows.isEmpty()) { mode = Mode.SERVICES; scroll = 0; }
             return true;
         }
         return false;
@@ -604,6 +685,20 @@ public class MasterScreen extends Screen {
             if (!entry.canAfford(st)) return true;                // sin fondos
 
             entry.sendUnlock(masterId);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean clickServices(double mouseX, double mouseY) {
+        for (int i = 0; i < serviceRows.size(); i++) {
+            if (!onScreen(i)) continue;
+            int y = rowTop(i);
+            if (mouseX < listLeft() - 2 || mouseX > listRight()) continue;
+            if (mouseY < y || mouseY >= y + ROW_H - 1) continue;
+
+            OpenMasterPayload.ServiceEntry entry = serviceRows.get(i);
+            PacketDistributor.sendToServer(new MasterServicePacket(masterId, entityId, entry.id()));
             return true;
         }
         return false;

@@ -97,9 +97,11 @@ public final class ZenkaiFirstPersonBody {
         if (player != Minecraft.getInstance().player) return;
         if (!isFirstPersonPass()) return;
 
-        var visual = player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
-        var stats  = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
-        boolean racial = visual.shouldRenderRaceSkin() && stats.isRaceChosen() && !player.isInvisible();
+        // hasRacialBody() ya comprueba (además de shouldRenderRaceSkin/isRaceChosen) que el
+        // cuerpo resuelto no esté vacío — sin eso, una raza sin modelo real todavía (ver
+        // RaceSkinSlots.backedOrEmpty) ocultaría el modelo vanilla ENTERO más abajo sin nada
+        // que lo sustituya, dejando al jugador invisible en primera persona.
+        boolean racial = hasRacialBody(player) && !player.isInvisible();
 
         // 1) Modelo vanilla. Con skin racial se va ENTERO: cuerpo, jacket, sleeves, pants y
         //    hat. Aquí sí surte efecto (corremos después de setModelProperties), a diferencia

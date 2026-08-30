@@ -4,7 +4,7 @@
     "skill": {
       "conditions": {
         "skill": "super_forms",
-        "skill_level": 1
+        "skill_level": 2
       },
       "trigger": "zenkai:stat_threshold"
     }

@@ -5,8 +5,12 @@ ZenkaiTab/TabIconButton/AtlasIconButton).
 
 Fila v=80 (primera fila completamente libre del atlas, confirmada por inspección directa de
 píxeles antes de escribir aquí — ver CLAUDE.md, filas 0/20/40/60 ya están ocupadas):
-    (0,80) = "Técnicas" — MasterScreen.ICON_TECHNIQUES_U/V, botón grande del hub que lleva a
-             la lista de KiTechniqueType/PhysicalTechnique que el maestro enseña.
+    (0,80)  = "Técnicas" — MasterScreen.ICON_TECHNIQUES_U/V, botón grande del hub que lleva a
+              la lista de KiTechniqueType/PhysicalTechnique que el maestro enseña.
+    (20,80) = "Servicios" — MasterScreen.ICON_SERVICES_U/V, tercer botón del hub (favores
+              puntuales de cada maestro: la cola con Kami, la semilla diaria con Korin, las
+              pesas con Kaiosama — ver feature/master/MasterService). Confirmado libre por el
+              mismo muestreo de píxeles antes de añadir esta celda.
 
 El botón "Skills" del mismo hub NO necesita ícono nuevo: reutiliza el ya existente de
 ZenkaiTab.SKILLS (u=160, v=0) tal cual, mismo concepto visual que la pestaña de habilidades
@@ -91,9 +95,37 @@ def gen_techniques():
     return _badge((224, 96, 48, 255), (176, 62, 28, 255), (64, 24, 10, 255), glyph)
 
 
+def gen_services():
+    """Caja de regalo: un favor puntual del maestro (no algo con nivel/coste como Skills o
+    Técnicas). Verde cálido para distinguirse tanto del naranja de Técnicas como del ícono de
+    Skills reutilizado — ningún otro botón del hub usa este tono."""
+    def glyph(d, cx, cy, r, outline):
+        white = (250, 245, 235, 255)
+        ribbon = (224, 96, 48, 255)
+
+        box0 = (cx - r * 0.42, cy - r * 0.05)
+        box1 = (cx + r * 0.42, cy + r * 0.55)
+        d.rectangle([box0, box1], fill=white, outline=outline, width=2)
+
+        lid0 = (cx - r * 0.50, cy - r * 0.28)
+        lid1 = (cx + r * 0.50, cy - r * 0.05)
+        d.rectangle([lid0, lid1], fill=white, outline=outline, width=2)
+
+        d.rectangle([cx - r * 0.08, box0[1], cx + r * 0.08, box1[1]], fill=ribbon)
+        d.rectangle([cx - r * 0.08, lid0[1], cx + r * 0.08, lid1[1]], fill=ribbon)
+
+        bow_y = lid0[1]
+        d.polygon([(cx, bow_y), (cx - r * 0.28, bow_y - r * 0.22), (cx - r * 0.06, bow_y)],
+                  fill=ribbon, outline=outline)
+        d.polygon([(cx, bow_y), (cx + r * 0.28, bow_y - r * 0.22), (cx + r * 0.06, bow_y)],
+                  fill=ribbon, outline=outline)
+    return _badge((72, 168, 120, 255), (48, 128, 88, 255), (16, 56, 36, 255), glyph)
+
+
 def main():
     im = Image.open(ICONS_PATH).convert("RGBA")
     im.paste(gen_techniques(), (0, 80))
+    im.paste(gen_services(), (20, 80))
     im.save(ICONS_PATH)
     print("Updated icons.png row v=80 ->", ICONS_PATH)
 

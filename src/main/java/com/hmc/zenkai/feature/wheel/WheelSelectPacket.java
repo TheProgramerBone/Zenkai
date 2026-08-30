@@ -8,6 +8,7 @@ import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillEffects;
@@ -59,6 +60,9 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
                 case "TOGGLE"  -> {
                     SkillToggles.flip(sp, pkt.value()); yield false;}
                 case "DESCEND" -> descend(sp, st, fm);
+                // Cambia PlayerVisualAttachment, no la forma: sincroniza aparte (mismo criterio
+                // que TOGGLE arriba) y devuelve false para no disparar además el sync de forma.
+                case "TAIL_MODE" -> { toggleTailStyle(sp, st); yield false; }
                 default        -> false;
             };
             if (changed) PlayerLifeCycle.syncFormIfServer(sp);
@@ -73,7 +77,14 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
 
         if (!FormIds.BASE.equals(target)) {
             if (!FormRegistry.isAllowed(race, target)) return false;
-            if (FormRegistry.get(target) == null) return false;
+            FormDef def = FormRegistry.get(target);
+            if (def == null) return false;
+            // Formas fuera de la escalera normal (oozaru/super_oozaru: kind divine, parent
+            // null, activadas por su propio sistema) declaran wheel_selectable=false. Sin este
+            // candado, isAllowed()+unlocked() (unlocked() da true de oficio en cualquier forma
+            // que no esté en la cadena de super_forms) las dejarían pasar aunque la rueda del
+            // cliente nunca las enseñe.
+            if (!def.wheelSelectable()) return false;
             if (!SuperForms.unlocked(sp, target)) return false;
         }
         if (target.equals(fm.getSelectedForm())) return false;
@@ -96,6 +107,19 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
         if (SkillEffects.level(sp, "kaioken") <= 0) return false;
         fm.setKaiokenSwitch(!fm.isKaiokenSwitch());
         return true;
+    }
+
+    /**
+     * Alterna el estilo de la cola ("loose"/"waist"). Revalida raza+cola aquí (nunca fiarse
+     * de lo que WheelMenu decidió mostrar en el cliente): un cliente modificado no puede
+     * ponerle estilo de cola a alguien sin cola o de otra raza.
+     */
+    private static void toggleTailStyle(ServerPlayer sp, PlayerStatsAttachment st) {
+        if (st.getRace() != Race.SAIYAN || !st.hasTail()) return;
+        PlayerVisualAttachment vis = sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        boolean waist = "waist".equals(vis.getTailStyleId());
+        vis.setTailStyleId(waist ? "loose" : "waist");
+        PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
     }
 
     /** Cooldown de "Descender": 50 ticks (~2.5s), server-side, contra spam desde la rueda. */

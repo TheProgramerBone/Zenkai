@@ -1,0 +1,18 @@
+{
+  "races": [
+    "majin"
+  ],
+  "kind": "super",
+  "tp_cost": 4500,
+  "hold_ticks": 60,
+  "mastery_gain": 1.1,
+  "stat_percent_untrained": 0.6,
+  "stat_percent_mastered": 0.9,
+  "ki_drain_untrained": 0.35,
+  "ki_drain_mastered": 0.1,
+  "spi_req": 38,
+  "body_items": {},
+  "aura_type": "dark",
+  "aura_rgb": "0xFF3399",
+  "scale": 0.95
+}

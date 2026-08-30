@@ -1,6 +1,8 @@
 package com.hmc.zenkai.feature.forms;
 
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
+import com.hmc.zenkai.feature.race.RaceTextureUtil;
+import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -38,6 +40,16 @@ public final class FormSkinResolver {
         ResourceLocation id = def.bodyItem(key);
         if (id == null) return ItemStack.EMPTY;
         Item item = BuiltInRegistries.ITEM.get(id);
-        return item == Items.AIR ? ItemStack.EMPTY : item.getDefaultInstance();
+        if (item == Items.AIR) return ItemStack.EMPTY;
+
+        // Sistema general "sin modelo GeckoLib -> vuelve al cuerpo por defecto" (ver
+        // RaceSkinSlots.backedOrEmpty): el ítem puede estar registrado (código ya escrito
+        // para una forma futura) sin que su .geo.json exista todavía en disco. Sin este
+        // chequeo, un datapack que apuntara body_items a un ítem así crashearía el render en
+        // vez de caer al cuerpo de la raza como si la forma no lo sobrescribiera.
+        if (item instanceof GeoLayerArmorItem geo && !RaceTextureUtil.resourceExists(geo.getModelPath())) {
+            return ItemStack.EMPTY;
+        }
+        return item.getDefaultInstance();
     }
 }

@@ -453,7 +453,12 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
                             "textures/models/races/majin_player_layer_0.png",
-                            "animations/majin.animation.json"
+                            // "" hasta que exista animations/majin.animation.json: con una ruta
+                            // no vacía apuntando a un archivo ausente, GeckoLib lanza al
+                            // intentar cargar el controlador de animación — el mismo tipo de
+                            // crash que el modelo pendiente (ver RaceSkinSlots.backedOrEmpty),
+                            // pero ESTE no lo cubre ese filtro porque no depende del .geo.json.
+                            ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_LEGGINGS =
@@ -489,7 +494,7 @@ public class ModItems {
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
                             "textures/models/races/majin_player_female_layer_0.png",
-                            "animations/majin.animation.json"
+                            "" // ver el comentario en MAJIN_RACE_CHESTPLATE
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> MAJIN_RACE_LEGGINGS_FEMALE =
@@ -545,6 +550,32 @@ public class ModItems {
                             "textures/customization/hair/ssj_hair_1.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.HAIR));
+
+    // Cola de Saiyan (dos variantes cosméticas, ver TailResolver/TailGeoLayer). PENDIENTE:
+    // sin .geo.json/textura todavía — registrados ya para que el código exista mientras se
+    // modelan con calma; el sistema de RaceSkinSlots.backedOrEmpty (mismo que protege a
+    // Majin) hace que no se vea/crashee nada hasta que los archivos existan de verdad.
+    // LEGGINGS y no HELMET: la ranura HEAD ya la comparten pelo+halo+scouter en secuencia; es
+    // solo el "vehículo" que usa HumanoidArmorLayer para invocar al renderer de GeckoLib —
+    // la geometría real la pone el .geo.json propio (Halo ya lo demuestra: HELMET pero flota
+    // sobre la cabeza, no "es" un casco).
+    public static final Supplier<GeoLayerArmorItem> TAIL_LOOSE =
+            ITEMS.register("tail_loose", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/tail/tail_loose.geo.json",
+                            "textures/customization/tail/tail_loose.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN));
+
+    public static final Supplier<GeoLayerArmorItem> TAIL_WAIST =
+            ITEMS.register("tail_waist", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/tail/tail_waist.geo.json",
+                            "textures/customization/tail/tail_waist.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

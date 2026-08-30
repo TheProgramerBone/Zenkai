@@ -31,6 +31,10 @@ public class PlayerVisualAttachment {
     private String hairStyleId = "hair1";
     private String auraStyleId = "none";
     private String outfitId    = "gi_default";
+    /** Estilo de la cola de Saiyan ("loose"/"waist"). Capricho cosmético SIN costo (rueda,
+     *  mantener X) — quien decide si HAY cola es PlayerStatsAttachment.hasTail(), servicio de
+     *  Kami. Sin efecto para nada que no sea Saiyan+hasTail (ver TailResolver). */
+    private String tailStyleId = "loose";
 
     // ── Piel: modo y preset ───────────────────────────────────────────────────
     private boolean customSkinColor = false; // Human/Saiyan/Majin: false=natural, true=color custom (tinte)
@@ -125,6 +129,9 @@ public class PlayerVisualAttachment {
     public String getOutfitId()                { return outfitId; }
     public void   setOutfitId(String id)       { if (id != null && !id.isEmpty()) this.outfitId    = id; }
 
+    public String getTailStyleId()             { return tailStyleId; }
+    public void   setTailStyleId(String id)    { if (id != null && !id.isEmpty()) this.tailStyleId = id; }
+
     // ── Transformación ───────────────────────────────────────────────────────
     public int  getFormStage()                 { return formStage; }
     public void setFormStage(int v)            { this.formStage = Math.max(0, v); }
@@ -156,6 +163,7 @@ public class PlayerVisualAttachment {
         tag.putString("hairStyleId", hairStyleId == null ? "base"       : hairStyleId);
         tag.putString("auraStyleId", auraStyleId == null ? "none"       : auraStyleId);
         tag.putString("outfitId",    outfitId    == null ? "gi_default" : outfitId);
+        tag.putString("tailStyleId", tailStyleId == null ? "loose"      : tailStyleId);
 
         tag.putInt("formStage", formStage);
 
@@ -191,6 +199,7 @@ public class PlayerVisualAttachment {
         if (tag.contains("hairStyleId")) this.hairStyleId = tag.getString("hairStyleId");
         if (tag.contains("auraStyleId")) this.auraStyleId = tag.getString("auraStyleId");
         if (tag.contains("outfitId"))    this.outfitId    = tag.getString("outfitId");
+        if (tag.contains("tailStyleId")) this.tailStyleId = tag.getString("tailStyleId");
 
         if (tag.contains("formStage")) this.formStage = Math.max(0, tag.getInt("formStage"));
         this.majinControlled = tag.contains("majinControlled") && tag.getBoolean("majinControlled");

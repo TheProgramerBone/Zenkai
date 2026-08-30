@@ -1,0 +1,19 @@
+{
+  "races": [
+    "human"
+  ],
+  "kind": "super",
+  "tp_cost": 4000,
+  "hold_ticks": 60,
+  "mastery_gain": 1.0,
+  "stat_percent_untrained": 0.5,
+  "stat_percent_mastered": 0.75,
+  "ki_drain_untrained": 0.2,
+  "ki_drain_mastered": 0.05,
+  "spi_req": 30,
+  "body_items": {},
+  "aura_type": "default",
+  "aura_rgb": "0x66CCFF",
+  "scale": 1.0,
+  "hair_rgb": "0x66CCFF"
+}

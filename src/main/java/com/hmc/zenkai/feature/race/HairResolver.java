@@ -7,6 +7,7 @@ import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -62,10 +63,15 @@ public final class  HairResolver {
     }
 
     /** Resuelve un id de item del datapack. Vacío si no existe: un JSON con una errata no
-     *  debe tumbar el render, solo dejar el visual sin aplicar. */
+     *  debe tumbar el render, solo dejar el visual sin aplicar. Misma red de seguridad si el
+     *  ítem SÍ existe pero su .geo.json todavía no (ver RaceSkinSlots.backedOrEmpty). */
     private static ItemStack itemFrom(ResourceLocation id) {
         if (id == null) return ItemStack.EMPTY;
         Item item = BuiltInRegistries.ITEM.get(id);
-        return item == Items.AIR ? ItemStack.EMPTY : item.getDefaultInstance();
+        if (item == Items.AIR) return ItemStack.EMPTY;
+        if (item instanceof GeoLayerArmorItem geo && !RaceTextureUtil.resourceExists(geo.getModelPath())) {
+            return ItemStack.EMPTY;
+        }
+        return item.getDefaultInstance();
     }
 }

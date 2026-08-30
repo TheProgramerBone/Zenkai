@@ -1,0 +1,21 @@
+{
+  "races": [
+    "saiyan"
+  ],
+  "kind": "divine",
+  "tp_cost": 0,
+  "hold_ticks": 100,
+  "mastery_gain": 0.4,
+  "stat_percent_untrained": 5.0,
+  "stat_percent_mastered": 6.5,
+  "ki_drain_untrained": 0.0,
+  "ki_drain_mastered": 0.0,
+  "spi_req": 0,
+  "parent": "zenkai:oozaru",
+  "body_items": {},
+  "aura_type": "ssj",
+  "aura_rgb": "0xFFD84D",
+  "scale": 3.3,
+  "descendable": false,
+  "wheel_selectable": false
+}

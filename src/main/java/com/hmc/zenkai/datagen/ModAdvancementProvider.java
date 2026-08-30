@@ -128,9 +128,13 @@ public class ModAdvancementProvider extends AdvancementProvider {
 
             // No oculto por el mismo motivo que combat_stance: la tecla H no se adivina, y su
             // descripción tiene que poder leerse ANTES de desbloquear la primera forma.
+            // Nivel 2, NO 1: el nivel 1 de super_forms es el suelo REGALADO a cualquier raza
+            // con transformaciones (ver SuperForms javadoc) — con el criterio en 1 el logro se
+            // completaba solo con elegir raza, sin haber comprado ni transformado nunca. El
+            // nivel 2 es la primera forma de verdad comprada.
             child(saver, efh, chooseRace, "transformation",
                     net.minecraft.world.item.Items.GOLDEN_APPLE, AdvancementType.TASK, false,
-                    "skill", skill(SuperForms.SKILL, 1));
+                    "skill", skill(SuperForms.SKILL, 2));
 
             AdvancementHolder allSkills = Advancement.Builder.advancement().parent(chooseRace)
                     .display(ModItems.ELITE_CIRCUIT.get(), title("all_skills"), desc("all_skills"),

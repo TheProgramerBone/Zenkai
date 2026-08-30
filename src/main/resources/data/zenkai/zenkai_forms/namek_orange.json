@@ -1,0 +1,19 @@
+{
+  "races": [
+    "namekian"
+  ],
+  "kind": "extension",
+  "tp_cost": 11000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.8,
+  "stat_percent_untrained": 1.2,
+  "stat_percent_mastered": 1.6,
+  "ki_drain_untrained": 0.3,
+  "ki_drain_mastered": 0.1,
+  "spi_req": 58,
+  "parent": "zenkai:namek_giant",
+  "body_items": {},
+  "aura_type": "default",
+  "aura_rgb": "0xFF9933",
+  "scale": 1.5
+}

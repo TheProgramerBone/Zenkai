@@ -67,7 +67,11 @@ public record TransformHoldPacket(Action action, boolean active) implements Cust
 
             // Hold de transformación. Las cancelaciones (carga de ki, turbo, carga de técnica
             // en curso) las hace ActionResolver por Matriz A y B: aquí no se repiten.
-            // setTransformHeld lo escribe el resolver, no este handler.
+            // setTransformHeld lo escribe el resolver, no este handler. El ritual de Oozaru
+            // (Base -> Oozaru -> Super Oozaru -> SSJ4) NO pasa por aquí para su primer tramo
+            // (lo fuerza OozaruSystem vía PlayerFormAttachment.oozaruForced, sin tecla), pero
+            // los tramos 2 y 3 SÍ son un hold normal de esta tecla — ver
+            // PlayerFormAttachment.tickFormLadder / resolveNextForm.
             com.hmc.zenkai.feature.action.ActionResolver.setTransformHeld(sp, pkt.active());
             PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
         });

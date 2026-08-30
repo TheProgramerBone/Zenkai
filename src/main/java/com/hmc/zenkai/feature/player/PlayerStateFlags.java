@@ -45,6 +45,31 @@ public class PlayerStateFlags {
      *  ningún otro sitio, así que aquí tampoco: es nuestro propio flag. */
     private boolean hasBrokenOverdriveOnce = false;
 
+    /**
+     * Completó el ritual de Oozaru al menos una vez (Oozaru -> Super Oozaru -> SSJ4, ver
+     * OozaruSystem/PlayerFormAttachment). Comprar super_forms hasta el nivel máximo con TP
+     * solo da DERECHO a intentar el ritual (SuperForms.readyForSuperOozaru); la forma en sí
+     * no queda utilizable/visible en la rueda hasta completarlo una vez — ver
+     * SuperForms.unlocked(SSJ4). Persistente: no hay que repetir el ritual cada partida ni
+     * cada respec, solo re-comprar el nivel si se pierde por respec.
+     */
+    private boolean hasSsj4Ritual = false;
+
+    /**
+     * Cola de saiyan: una de las tres condiciones de Oozaru (junto con raza y luna llena, ver
+     * OozaruConditions). PENDIENTE: hoy no existe ninguna pieza de GeckoLibArmor de cola
+     * todavía, así que el valor por defecto es true (todo saiyan la tiene) para no bloquear el
+     * sistema mientras se modela; cuando exista el ítem, algo (equipar/perder la cola) deberá
+     * poder ponerlo en false. No se restringe por raza aquí: PlayerStateFlags no conoce razas,
+     * ese filtro vive en OozaruConditions.
+     */
+    private boolean hasTail = true;
+
+    /** Ya recibió el servicio de pesas de Kaiosama (ver KaioEntity.services()). Regalo de una
+     *  sola vez: sin este flag, pedirlas repetidas veces sería una granja infinita de
+     *  WEIGHTED_STRAPS/WEIGHTED_CAPE gratis. */
+    private boolean receivedKaioWeights = false;
+
     /** El jugador está muerto / en el otro mundo. */
     private boolean inOtherworld = false;
     /** gameTime en que fue enviado al otro mundo (para el contador de Yemma). */
@@ -77,6 +102,12 @@ public class PlayerStateFlags {
     public void setInCombatUntil(long t) { this.inCombatUntil = t; }
     public boolean isHardcoreDeath() { return hardcoreDeath; }
     public void setHardcoreDeath(boolean v) { this.hardcoreDeath = v; }
+    public boolean hasTail() { return hasTail; }
+    public void setHasTail(boolean v) { this.hasTail = v; }
+    public boolean hasSsj4Ritual() { return hasSsj4Ritual; }
+    public void setHasSsj4Ritual(boolean v) { this.hasSsj4Ritual = v; }
+    public boolean hasReceivedKaioWeights() { return receivedKaioWeights; }
+    public void setReceivedKaioWeights(boolean v) { this.receivedKaioWeights = v; }
 
     public void setImmortal(boolean v)  { this.isImmortal  = v; }
     public void setDivine(boolean v)    { this.isDivine    = v; }
@@ -110,10 +141,19 @@ public class PlayerStateFlags {
         tag.putBoolean("hardcoreDeath", hardcoreDeath);
         tag.putBoolean("hasBrokenOverdriveOnce", hasBrokenOverdriveOnce);
         tag.putBoolean("overdriveCharging", overdriveCharging);
+        tag.putBoolean("hasTail", hasTail);
+        tag.putBoolean("hasSsj4Ritual", hasSsj4Ritual);
+        tag.putBoolean("receivedKaioWeights", receivedKaioWeights);
         return tag;
     }
 
     public void load(CompoundTag tag) {
+        // hasTail: default true. Una partida guardada ANTES de que este campo existiera no
+        // tiene la clave -> debe leer true igual (todo saiyan la tenía), no false por omisión
+        // como haría getBoolean() con una key ausente.
+        this.hasTail = !tag.contains("hasTail") || tag.getBoolean("hasTail");
+        this.hasSsj4Ritual = tag.getBoolean("hasSsj4Ritual");
+        this.receivedKaioWeights = tag.getBoolean("receivedKaioWeights");
         this.isImmortal  = tag.getBoolean("isImmortal");
         this.isDivine    = tag.getBoolean("isDivine");
         this.isMajin     = tag.getBoolean("isMajin");

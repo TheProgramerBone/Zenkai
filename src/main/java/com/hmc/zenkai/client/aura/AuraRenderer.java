@@ -12,6 +12,8 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -106,6 +108,20 @@ public final class AuraRenderer {
 
             pose.pushPose();
             pose.translate(at.x - camPos.x, at.y - camPos.y, at.z - camPos.z);
+            // El "size"/"pulsedSize" del perfil (AuraProfile) es PODER, no cuerpo — nunca
+            // depende de la escala de la forma a propósito (ver el javadoc de AuraProfile).
+            // Pero minecraft:generic.scale SÍ es el cuerpo real (FormSystem.applyFormScale ya
+            // lo escribe por forma), y el aura vive pegada a él: sin este escalado, un Oozaru a
+            // scale 3.0 queda con la misma aura de tamaño normal, minúscula sobre un cuerpo
+            // gigante. Se aplica ANTES del tilt a propósito: así el pivote de inclinación
+            // (BODY_PIVOT_Y) también escala con el cuerpo en vez de quedarse a la altura de un
+            // jugador normal.
+            // getAttribute (no getAttributeValue): el atributo puede faltar en algún borde
+            // (entidad recién creada, mod externo) y getAttributeValue no se defiende de un
+            // null ahí — mismo patrón defensivo que FormSystem.applyFormScale.
+            AttributeInstance scaleAttr = p.getAttribute(Attributes.SCALE);
+            float bodyScale = scaleAttr == null ? 1f : (float) scaleAttr.getValue();
+            if (bodyScale != 1f) pose.scale(bodyScale, bodyScale, bodyScale);
             AuraTiltController.apply(pose, p, mo);
 
             AuraGroundRenderer.render(pose, buffers, plan, p, ticks, seconds, p.getId());

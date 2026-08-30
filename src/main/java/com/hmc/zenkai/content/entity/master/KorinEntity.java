@@ -2,6 +2,7 @@ package com.hmc.zenkai.content.entity.master;
 
 import com.hmc.zenkai.content.entity.ZenkaiMasterEntity;
 import com.hmc.zenkai.feature.master.KorinSenzuData;
+import com.hmc.zenkai.feature.master.MasterService;
 import com.hmc.zenkai.registry.ModItems;
 import com.hmc.zenkai.registry.ModSounds;
 import net.minecraft.ChatFormatting;
@@ -13,6 +14,8 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+import java.util.List;
+
 /**
  * Korin. Enseña las habilidades de puño (ki_fist, ki_infuse) y, reparte semillas
  * del ermitaño: es la razón real por la que un jugador sube su torre.
@@ -20,6 +23,8 @@ import net.minecraft.world.level.Level;
  * por la que los requisitos de admisión viven en MasterManager: la entidad es el punto de
  * contacto, no la regla. Si el reparto estuviera en mobInteract, /zenkai o cualquier otro
  * camino que quiera dar semillas tendría que reimplementar el contador diario.
+ * offerFavor (shift-clic, camino histórico) y services() (pestaña Servicios de MasterScreen,
+ * camino nuevo) llaman al MISMO claimSenzu(): un solo punto de verdad, dos entradas.
  */
 public class KorinEntity extends ZenkaiMasterEntity {
 
@@ -32,6 +37,28 @@ public class KorinEntity extends ZenkaiMasterEntity {
 
     @Override
     protected boolean offerFavor(ServerPlayer sp) {
+        claimSenzu(sp);
+        return true;
+    }
+
+    @Override
+    protected List<MasterService> services() {
+        return List.of(new MasterService() {
+            @Override public String id() { return "senzu"; }
+
+            @Override public Component label(ServerPlayer sp) {
+                int left = KorinSenzuData.get(sp.server).remaining(sp.server, sp.getUUID());
+                return Component.translatable("master.zenkai.korin.service.senzu",
+                        left, KorinSenzuData.DAILY_LIMIT);
+            }
+
+            @Override public boolean claim(ServerPlayer sp) { return claimSenzu(sp); }
+        });
+    }
+
+    /** Único punto de verdad para dar la(s) semilla(s) del día — offerFavor y el servicio de
+     *  la pantalla llaman aquí, ninguno de los dos reimplementa el contador. */
+    private boolean claimSenzu(ServerPlayer sp) {
         KorinSenzuData data = KorinSenzuData.get(sp.server);
         int left = data.remaining(sp.server, sp.getUUID());
         if (left <= 0) {

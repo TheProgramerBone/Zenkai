@@ -1,0 +1,20 @@
+{
+  "races": [
+    "saiyan"
+  ],
+  "kind": "divine",
+  "tp_cost": 0,
+  "hold_ticks": 60,
+  "mastery_gain": 0.5,
+  "stat_percent_untrained": 3.0,
+  "stat_percent_mastered": 4.0,
+  "ki_drain_untrained": 0.0,
+  "ki_drain_mastered": 0.0,
+  "spi_req": 0,
+  "body_items": {},
+  "aura_type": "default",
+  "aura_rgb": "0xB0512A",
+  "scale": 3.0,
+  "descendable": false,
+  "wheel_selectable": false
+}

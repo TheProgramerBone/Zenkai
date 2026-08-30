@@ -21,6 +21,7 @@ import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.hmc.zenkai.worldgen.ProtectedZones;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -277,9 +278,18 @@ public class ModCommands {
                 // quién formar grupo de verdad. Añade un miembro con UUID aleatorio a tu party
                 // (la crea si hace falta). Ver PartyService.debugAddFakeMember y el javadoc de
                 // PartyDebug para qué borrar cuando el menú ya esté verificado.
+                // ── /zenkai debug tail <true|false> ──────────────────────────────
+                // TEMPORAL — para probar el ritual de Oozaru (ver OozaruSystem/
+                // OozaruConditions) sin esperar al ítem real de cola de GeckoLibArmor, que
+                // todavía no existe (ver PlayerStateFlags.hasTail, default true). Borrar esta
+                // rama cuando ese ítem exista y de verdad pueda ponerse/quitarse en juego.
                 .then(Commands.literal("debug")
                         .then(Commands.literal("entity")
                                 .executes(ModCommands::debugEntity))
+                        .then(Commands.literal("tail")
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(ctx -> debugSetTail(ctx,
+                                                BoolArgumentType.getBool(ctx, "value")))))
                         .then(Commands.literal("party")
                                 .then(Commands.literal("add")
                                         .executes(ctx -> debugPartyAdd(ctx, null))
@@ -329,6 +339,16 @@ public class ModCommands {
     }
 
     // ── Implementaciones ─────────────────────────────────────────────────────
+
+    /** Ver el comentario de la rama "debug tail" más arriba. Actúa sobre quien ejecuta. */
+    private static int debugSetTail(CommandContext<CommandSourceStack> ctx, boolean value) {
+        if (!(ctx.getSource().getEntity() instanceof ServerPlayer sp)) return 0;
+        sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).setHasTail(value);
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] hasTail = " + value + " → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
 
     private static int addTp(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, int amount) {
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
@@ -442,6 +462,16 @@ public class ModCommands {
         att.setMajin(false);
         att.setLegendary(false);
         att.setDivine(false);
+        // Ritual de Oozaru: un reset "full" que dejara esto vivo permitiría re-desbloquear
+        // SSJ4 sin repetir el ritual en cuanto se re-comprara el nivel — no sería full. La
+        // cola vuelve a su valor por defecto (true) por la misma razón de "estado limpio",
+        // aunque hoy solo /zenkai debug tail puede haberla puesto en false.
+        att.setHasSsj4Ritual(false);
+        att.setHasTail(true);
+        // Servicio de Kaiosama: un reset "full" también devuelve el derecho a pedir las
+        // pesas de nuevo, igual que borra todo lo demás — no sería full si dejara este
+        // regalo de una sola vez "ya gastado" para una vida completamente nueva.
+        att.setReceivedKaioWeights(false);
         att.setAlignment(0);
         att.setLastSummonTick(ServerConfig.summonCooldownTicks());
         // No se queda cargando ki ni con el % de poder subido: vuelve al 50% base (el mismo

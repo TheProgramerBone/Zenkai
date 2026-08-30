@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillEffects;
@@ -59,6 +60,9 @@ public final class WheelMenu {
 
         WheelNode descend = descendNode(p);
         if (descend != null) roots.add(descend);
+
+        WheelNode tailMode = tailStyleToggle(p);
+        if (tailMode != null) roots.add(tailMode);
         // Interruptores: los sueltos cuelgan de la raíz, los que declaran categoría se
         // agrupan en su propia rama. Agrupar es SOLO presentación: el packet manda el mismo
         // kind TOGGLE con el mismo id, esté donde esté la hoja.
@@ -137,6 +141,25 @@ public final class WheelMenu {
         if (active == null || !active.descendable()) return null;
         return WheelNode.leaf(WheelNode.Kind.DESCEND, "",
                 Component.translatable("wheel.zenkai.descend"), COL_DESCEND, true, false);
+    }
+
+    /**
+     * Estilo de la cola de Saiyan ("loose"/"cintura"): capricho cosmético SIN costo, no una
+     * habilidad — por eso no vive en SkillToggles.Toggle (que exige nivel de skill). Solo se
+     * enseña con raza Saiyan Y cola activa (PlayerStatsAttachment.hasTail(), servicio de
+     * Kami): no tiene sentido ofrecer un estilo de algo que no existe. Alterna entre los dos
+     * únicos estilos; no hay un tercer estado "sin cola" aquí, eso lo decide Kami aparte.
+     */
+    private static WheelNode tailStyleToggle(Player p) {
+        PlayerStatsAttachment st = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        if (st.getRace() != Race.SAIYAN || !st.hasTail()) return null;
+
+        PlayerVisualAttachment vis = p.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        boolean waist = "waist".equals(vis.getTailStyleId());
+        Component label = Component.translatable(
+                waist ? "wheel.zenkai.tail_mode.waist" : "wheel.zenkai.tail_mode.loose");
+        return WheelNode.leaf(WheelNode.Kind.TAIL_MODE, "", label,
+                waist ? COL_ON : COL_OFF, true, waist);
     }
 
     private static WheelNode toggleNode(Player p, String id) {

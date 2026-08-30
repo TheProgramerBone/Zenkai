@@ -1,11 +1,26 @@
 package com.hmc.zenkai.content.entity.master;
 
 import com.hmc.zenkai.content.entity.ZenkaiMasterEntity;
+import com.hmc.zenkai.feature.master.MasterService;
+import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
 
-/** Kamisama. Enseña fly, ki_sense, ki_block, ki_control, meditation y run. */
+import java.util.List;
+
+/**
+ * Kamisama. Enseña fly, ki_sense, ki_block, ki_control, meditation y run. Su servicio es la
+ * única forma de tocar la cola de un saiyan (PlayerStatsAttachment.hasTail(), servicio de
+ * OozaruConditions/TailResolver): quitarla o hacerla crecer de vuelta. El ESTILO
+ * suelta/cintura, en cambio, es gratis y libre desde la rueda (WheelMenu.tailStyleToggle) —
+ * Kami solo decide si hay cola, no cómo se lleva.
+ */
 public class KamiEntity extends ZenkaiMasterEntity {
 
     public KamiEntity(EntityType<? extends PathfinderMob> type, Level level) {
@@ -14,4 +29,30 @@ public class KamiEntity extends ZenkaiMasterEntity {
 
     @Override
     public String masterId() { return "kami"; }
+
+    @Override
+    protected List<MasterService> services() {
+        return List.of(new MasterService() {
+            @Override public String id() { return "tail"; }
+
+            @Override public Component label(ServerPlayer sp) {
+                boolean has = PlayerStatsAttachment.get(sp).hasTail();
+                return Component.translatable(has
+                        ? "master.zenkai.kami.service.tail.remove"
+                        : "master.zenkai.kami.service.tail.grow");
+            }
+
+            @Override public boolean claim(ServerPlayer sp) {
+                var stats = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+                boolean had = stats.hasTail();
+                stats.setHasTail(!had);
+                PlayerLifeCycle.sync(sp);
+                sp.sendSystemMessage(Component.translatable(had
+                                ? "messages.zenkai.kami.tail_removed"
+                                : "messages.zenkai.kami.tail_grown")
+                        .withStyle(ChatFormatting.GREEN));
+                return true;
+            }
+        });
+    }
 }

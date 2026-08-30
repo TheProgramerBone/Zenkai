@@ -3,6 +3,7 @@ package com.hmc.zenkai.event;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.aura.AuraClientState;
 import com.hmc.zenkai.feature.combat.InCombatState;
+import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -75,6 +76,7 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_STRAIN = IconUV.grid(10, 1);
     private static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);
     private static final IconUV ICON_TURBO = IconUV.grid(1, 2);
+    private static final IconUV ICON_MOON = IconUV.grid(6, 0);
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
@@ -192,6 +194,15 @@ public final class ClientZenkaiHooks {
 
         if (stats.isLegendary()) {
             drawBadge(g, iconX, iconY, ICON_LEGENDARY);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        // Oozaru/Super Oozaru: se dispara solo por la luna (OozaruSystem), no por la rueda, así
+        // que el jugador necesita un aviso propio — también mientras el gui de transformación
+        // automática está en curso (oozaruForced), antes incluso de que formId cambie.
+        ResourceLocation formId = form.getFormId();
+        if (form.isOozaruForced() || FormIds.OOZARU.equals(formId) || FormIds.SUPER_OOZARU.equals(formId)) {
+            drawBadge(g, iconX, iconY, ICON_MOON);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
 

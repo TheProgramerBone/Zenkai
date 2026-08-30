@@ -36,6 +36,13 @@ public final class FormIds {
     +     *  acoplado y el castigo de TP), así que es de los que sí van cableados. */
     public static final ResourceLocation POTENTIAL_UNLOCK = id("potential_unlock");
 
+    /** Oozaru / Super Oozaru: OozaruSystem las compara contra estos ids para forzar la
+     *  transformación (luna llena) y para revertirla; TransformHoldPacket compara contra
+     *  SUPER_OOZARU para el "ritual" que otorga SSJ4. Kind divine + parent null en su JSON:
+     *  viven FUERA de la cadena normal de super_forms (ver FormDef.wheelSelectable). */
+    public static final ResourceLocation OOZARU       = id("oozaru");
+    public static final ResourceLocation SUPER_OOZARU = id("super_oozaru");
+
     private static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path);
     }

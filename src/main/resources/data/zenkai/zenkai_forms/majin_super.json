@@ -1,0 +1,19 @@
+{
+  "races": [
+    "majin"
+  ],
+  "kind": "extension",
+  "tp_cost": 11500,
+  "hold_ticks": 60,
+  "mastery_gain": 0.85,
+  "stat_percent_untrained": 1.6,
+  "stat_percent_mastered": 2.1,
+  "ki_drain_untrained": 0.65,
+  "ki_drain_mastered": 0.25,
+  "spi_req": 62,
+  "parent": "zenkai:majin_pure_evil",
+  "body_items": {},
+  "aura_type": "default",
+  "aura_rgb": "0xFF66CC",
+  "scale": 1.05
+}

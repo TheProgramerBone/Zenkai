@@ -93,11 +93,33 @@ public final class SuperForms {
         return tpCostForLevel(raceOf(p), level);
     }
 
-    /** ¿Este jugador tiene desbloqueada esa forma? BASE siempre sí. */
+    /**
+     * ¿Este jugador tiene desbloqueada esa forma? BASE siempre sí.
+     * SSJ4 es la ÚNICA excepción de "solo el nivel importa": comprar super_forms hasta su
+     * nivel con TP da DERECHO a intentar el ritual de Oozaru (readyForSuperOozaru), pero la
+     * forma en sí no queda desbloqueada/visible en la rueda hasta completarlo una vez (ver
+     * PlayerStatsAttachment.hasSsj4Ritual, marcado por PlayerFormAttachment tras el hold
+     * Super Oozaru -> SSJ4). El nivel comprado sigue haciendo falta aparte: si se pierde por
+     * respec, hay que volver a comprarlo aunque el ritual ya esté hecho — no hay que repetir
+     * el ritual, solo el pago.
+     */
     public static boolean unlocked(Player p, ResourceLocation form) {
         if (form == null || FormIds.BASE.equals(form)) return true;
         Race race = raceOf(p);
         if (depthOf(race, form) <= 0) return true;
+        if (FormIds.SSJ4.equals(form) && !PlayerStatsAttachment.get(p).hasSsj4Ritual()) return false;
         return level(p) >= requiredLevel(race, form);
+    }
+
+    /**
+     * ¿Puede este saiyan intentar controlar la mutación Oozaru -> Super Oozaru (ver
+     * OozaruSystem/PlayerFormAttachment)? Hace falta tener super_forms comprado hasta el nivel
+     * MÁXIMO (el de SSJ4 incluido) con TP: ese pago es lo que "desbloquea" el DERECHO al
+     * ritual, no la forma en sí — completarlo de verdad (ver unlocked() arriba) es aparte.
+     */
+    public static boolean readyForSuperOozaru(Player p) {
+        Race race = raceOf(p);
+        int lvl = requiredLevel(race, FormIds.SSJ4);
+        return lvl != Integer.MAX_VALUE && level(p) >= lvl;
     }
 }

@@ -1,0 +1,19 @@
+{
+  "races": [
+    "majin"
+  ],
+  "kind": "extension",
+  "tp_cost": 29000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.6,
+  "stat_percent_untrained": 3.2,
+  "stat_percent_mastered": 4.2,
+  "ki_drain_untrained": 1.2,
+  "ki_drain_mastered": 0.45,
+  "spi_req": 92,
+  "parent": "zenkai:majin_super",
+  "body_items": {},
+  "aura_type": "divine",
+  "aura_rgb": "0xFFD0EA",
+  "scale": 1.1
+}

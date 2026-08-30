@@ -3,6 +3,7 @@ package com.hmc.zenkai.feature.race;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.race.layer.HairGeoLayer;
 import com.hmc.zenkai.feature.race.layer.RaceSkinGeoArmorLayer;
+import com.hmc.zenkai.feature.race.layer.TailGeoLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -68,6 +69,13 @@ public final class RaceSkinRenderHooks {
             // 3) Agregar layer de pelo Saiyan (también debajo de la armadura vanilla)
             //    (Solo renderiza cuando aplica; en otros casos hace return)
             renderer.addLayer(new HairGeoLayer(
+                    renderer,
+                    event.getEntityModels(),
+                    mc.getModelManager()
+            ));
+
+            // 3b) Cola de Saiyan, mismo criterio que el pelo (solo renderiza si aplica).
+            renderer.addLayer(new TailGeoLayer(
                     renderer,
                     event.getEntityModels(),
                     mc.getModelManager()

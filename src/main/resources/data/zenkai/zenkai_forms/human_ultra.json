@@ -1,0 +1,20 @@
+{
+  "races": [
+    "human"
+  ],
+  "kind": "extension",
+  "tp_cost": 10000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.75,
+  "stat_percent_untrained": 1.4,
+  "stat_percent_mastered": 1.9,
+  "ki_drain_untrained": 0.55,
+  "ki_drain_mastered": 0.2,
+  "spi_req": 55,
+  "parent": "zenkai:human_super",
+  "body_items": {},
+  "aura_type": "default",
+  "aura_rgb": "0x3399FF",
+  "scale": 1.0,
+  "hair_rgb": "0x3399FF"
+}
