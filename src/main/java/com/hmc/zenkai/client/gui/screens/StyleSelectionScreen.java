@@ -54,6 +54,12 @@ public class StyleSelectionScreen extends Screen {
 
     private static final int COLOR_BOX_W = 20;
     private static final int COLOR_BOX_H = 12;
+    /** Distancia del centro de la fila Ki Color al borde interior de cada flecha. Fija en los
+     *  dos estados (Default/Custom) a propósito: si dependiera del ancho del texto/swatch, las
+     *  flechas saltarían de sitio al alternar, el mismo "pop" que el resto del mod evita. */
+    private static final int KI_ROW_HALF = 44;
+    /** Separación entre el panel principal y el popup de Ki Color (antes 8: casi pegados). */
+    private static final int PICKER_GAP = 14;
 
     private static final int S_TITLE_Y = ScreenTitle.CONTENT_TOP;
     private static final int S_VALUE_Y = S_TITLE_Y + TITLE_H;
@@ -113,6 +119,8 @@ public class StyleSelectionScreen extends Screen {
     private boolean auraColorTouched = false;
     private boolean kiPickerOpen = false;
     @Nullable private ColorPickerWidget picker = null;
+    @Nullable private ColorBoxButton colorBox = null;
+    private int kiBoxY;
 
     public StyleSelectionScreen(@Nullable AppearanceScreen appearanceScreen,
                                 @Nullable CompoundTag statsSnapshot,
@@ -157,12 +165,23 @@ public class StyleSelectionScreen extends Screen {
                 ArrowIconButton.Dir.RIGHT,
                 () -> styleIndex = (styleIndex + 1) % styles.length));
 
-        // Swatch Ki Color — a la derecha del preview (patrón de AppearanceScreen)
+        // Fila Ki Color — a la derecha del preview (patrón de AppearanceScreen), MISMO lenguaje
+        // que la fila de Fighting Style de arriba: flechas a los lados, valor centrado. Default
+        // (el aura sigue el alineamiento, ver AuraColors) es el estado inicial; la flecha
+        // alterna a Custom y ahí abre el popup de color. Ver toggleKiColorMode.
         this.kiAreaCX = lp + IN_X1 + PAD + PREVIEW_W + (IN_W - PAD * 2 - PREVIEW_W) / 2;
         int kiBoxX = kiAreaCX - COLOR_BOX_W / 2;
-        int kiBoxY = tp + DIV2_Y + 8 + 14;
-        addRenderableWidget(new ColorBoxButton(kiBoxX, kiBoxY, COLOR_BOX_W, COLOR_BOX_H,
-                () -> kiColor & 0xFFFFFF, () -> kiPickerOpen, this::toggleKiPicker));
+        this.kiBoxY = tp + DIV2_Y + 8 + 14;
+        addRenderableWidget(new ArrowIconButton(
+                kiAreaCX - KI_ROW_HALF - ARROW_W, kiBoxY,
+                ArrowIconButton.Dir.LEFT, this::toggleKiColorMode));
+        addRenderableWidget(new ArrowIconButton(
+                kiAreaCX + KI_ROW_HALF, kiBoxY,
+                ArrowIconButton.Dir.RIGHT, this::toggleKiColorMode));
+        colorBox = new ColorBoxButton(kiBoxX, kiBoxY, COLOR_BOX_W, COLOR_BOX_H,
+                () -> kiColor & 0xFFFFFF, () -> kiPickerOpen, this::toggleKiPicker);
+        colorBox.visible = auraColorTouched;
+        addRenderableWidget(colorBox);
 
         // Botones en la barra inferior (solo texto, sin fondo gris de vanilla)
         addRenderableWidget(new TextOnlyButton(
@@ -188,9 +207,9 @@ public class StyleSelectionScreen extends Screen {
     private void openKiPicker() {
         closeKiPicker();
         kiPickerOpen = true;
-        int pickerX = leftPos + BG_W + 8;
+        int pickerX = leftPos + BG_W + PICKER_GAP;
         if (pickerX + ColorPickerWidget.TOTAL_W > this.width - 4)
-            pickerX = leftPos - ColorPickerWidget.TOTAL_W - 8;
+            pickerX = leftPos - ColorPickerWidget.TOTAL_W - PICKER_GAP;
         picker = new ColorPickerWidget(pickerX, topPos + IN_Y1, kiColor, "Ki Color", argb -> {
             kiColor = argb;
             auraColorTouched = true;
@@ -204,6 +223,24 @@ public class StyleSelectionScreen extends Screen {
     private void closeKiPicker() {
         if (picker != null) { removeWidget(picker); picker = null; }
         kiPickerOpen = false;
+    }
+
+    /**
+     * Flechas de la fila Ki Color: alternan Default (el aura sigue AuraColors/el alineamiento,
+     * ver el propio tooltip) y Custom (swatch + popup de color). Solo dos estados, así que las
+     * dos flechas hacen lo mismo — no hay "más allá" que recorrer en ningún sentido.
+     * Pasar a Custom abre el popup DE INMEDIATO (pedido explícito): no hace falta un segundo
+     * click en el swatch. Volver a Default cierra el popup si estaba abierto, pero NO toca
+     * `kiColor` — si el jugador vuelve a Custom más tarde, recupera el mismo color que dejó.
+     */
+    private void toggleKiColorMode() {
+        auraColorTouched = !auraColorTouched;
+        if (colorBox != null) colorBox.visible = auraColorTouched;
+        if (auraColorTouched) {
+            openKiPicker();
+        } else {
+            closeKiPicker();
+        }
     }
 
     @Override
@@ -248,6 +285,12 @@ public class StyleSelectionScreen extends Screen {
         int pvY2 = tp + IN_Y2 - 4;
         g.enableScissor(pvX1, pvY1, pvX2, pvY2);   // recorta el aura al recuadro del preview
         AuraPreviewRenderer.ACTIVE = true;         // el hook dibuja el aura SOLO en esta pasada
+        // El color de ki elegido aquí (Default/Custom + swatch) no se guarda en el attachment
+        // hasta onConfirm — sin este override el preview seguiría mostrando el tinte YA
+        // guardado (p. ej. el de alineamiento) aunque el jugador ya haya pasado a Custom.
+        AuraPreviewRenderer.colorOverrideActive = true;
+        AuraPreviewRenderer.colorOverrideCustom = auraColorTouched;
+        AuraPreviewRenderer.colorOverrideRgb = kiColor & 0xFFFFFF;
         try {
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     g, pvX1, pvY1, pvX2, pvY2,
@@ -255,16 +298,37 @@ public class StyleSelectionScreen extends Screen {
                     (float) mouseX, (float) mouseY, mc.player);
         } finally {
             AuraPreviewRenderer.ACTIVE = false;
+            AuraPreviewRenderer.colorOverrideActive = false;
             g.disableScissor();
         }
 
         drawStatBlock(g, mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).getRace(),
                 s, lp, tp);
 
-        // Label "Ki Color" encima del swatch
-        drawCenteredNoShadow(g, Component.literal("Ki Color"), kiAreaCX, tp + DIV2_Y + 8, COLOR_SWATCH);
+        // Label "Ki Color" encima de la fila de flechas
+        drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.ki_color"),
+                kiAreaCX, tp + DIV2_Y + 8, COLOR_SWATCH);
+
+        // Estado Default: el swatch (widget, ver init) está oculto y en su lugar se dibuja el
+        // texto "Default" — con tooltip manual porque no es un widget, mismo patrón que el
+        // resto de tooltips dibujados a mano en este mod (ver MasterScreen/SkillsScreen).
+        if (!auraColorTouched) {
+            PanelText.centeredOnPanel(g, mc.font,
+                    Component.translatable("screen.zenkai.ki_color.mode.default"),
+                    kiAreaCX, kiBoxY + 1, COLOR_VALUE);
+        }
 
         super.render(g, mouseX, mouseY, partialTick);
+
+        if (!auraColorTouched) {
+            int tx1 = kiAreaCX - KI_ROW_HALF, tx2 = kiAreaCX + KI_ROW_HALF;
+            int ty1 = kiBoxY, ty2 = ty1 + COLOR_BOX_H;
+            if (mouseX >= tx1 && mouseX < tx2 && mouseY >= ty1 && mouseY < ty2) {
+                g.renderTooltip(mc.font, mc.font.split(
+                        Component.translatable("screen.zenkai.ki_color.mode.default.tooltip"), 150),
+                        mouseX, mouseY);
+            }
+        }
     }
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}

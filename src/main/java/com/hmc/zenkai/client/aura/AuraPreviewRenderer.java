@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.aura.AuraFormula;
 import com.hmc.zenkai.feature.aura.AuraLod;
 import com.hmc.zenkai.feature.aura.AuraModifier;
@@ -38,6 +39,18 @@ public final class AuraPreviewRenderer {
     /** Escala del aura en el preview. = AURA_SCALE del mundo -> proporción real. */
     public static float PREVIEW_SCALE = 1.30f;
 
+    /**
+     * Override de color EN VIVO para StyleSelectionScreen: mientras el jugador elige
+     * Default/Custom y mueve el ColorPickerWidget, nada de eso está guardado todavía en el
+     * attachment (solo se escribe en onConfirm), así que sin esto el preview seguiría mostrando
+     * el color/alineamiento YA guardado en vez de lo que se está eligiendo ahora mismo. Ver
+     * AuraColors.resolveLayers(Player, boolean, boolean, int) — forma/kaioken/majin del jugador
+     * real siguen mandando igual que en juego, este override solo entra en el fallback final.
+     */
+    public static boolean colorOverrideActive = false;
+    public static boolean colorOverrideCustom = false;
+    public static int colorOverrideRgb = 0;
+
     private static final AuraState PREVIEW_STATE = AuraFormula.state(
             100_000L, 231L, 4_534_321L, 100, 100, 8, 1f, 0f, 0f);
 
@@ -52,7 +65,11 @@ public final class AuraPreviewRenderer {
         if (!(e.getEntity() instanceof AbstractClientPlayer p)) return;
         if (p != mc.player) return;
 
-        int rgb = AuraClientState.resolveColor(p); // color de ki en vivo (attachment)
+        // color de ki en vivo: attachment ya guardado, salvo que la pantalla esté forzando el
+        // estado que todavía no se ha confirmado (ver colorOverrideActive arriba).
+        int rgb = colorOverrideActive
+                ? AuraColors.resolve(p, colorOverrideCustom, colorOverrideRgb)
+                : AuraClientState.resolveColor(p);
         double ticks = mc.level.getGameTime() + e.getPartialTick();
 
         // Distancia 0 y banda NEAR forzada: en una GUI queremos el detalle completo.

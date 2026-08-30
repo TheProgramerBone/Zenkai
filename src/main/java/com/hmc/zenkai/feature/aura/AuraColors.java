@@ -32,6 +32,21 @@ public final class AuraColors {
     }
 
     public static Layers resolveLayers(Player p) {
+        return resolveLayers(p, false, false, 0);
+    }
+
+    /**
+     * Igual que {@link #resolveLayers(Player)}, pero permite INYECTAR el estado "custom"/color
+     * de ki propio sin haberlo guardado todavía en el attachment — lo usa el preview EN VIVO de
+     * StyleSelectionScreen mientras el jugador todavía está eligiendo (antes de Confirmar):
+     * {@code overrideCustom}/{@code overrideRgb} representan lo que {@code onConfirm} escribiría
+     * en el attachment SI se confirmara ahora mismo, para que el aura del preview reaccione al
+     * toggle Default/Custom y al color elegido en el popup sin esperar al guardado real.
+     * Forma/kaioken/majin siguen mandando igual que en juego real (leídos del estado REAL del
+     * jugador, esta pantalla no los edita) — el override solo puede ganar en el fallback final
+     * de alineamiento/color propio, nunca por encima de esos tres.
+     */
+    public static Layers resolveLayers(Player p, boolean overrideActive, boolean overrideCustom, int overrideRgb) {
         var visual = p.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         var form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         FormDef def = form.activeDef();
@@ -45,17 +60,26 @@ public final class AuraColors {
         // Tinte por alineamiento: solo si el jugador no ha fijado un color propio en
         // StyleSelectionScreen. GOOD cae al fallback de abajo sin más — el azul por defecto de
         // visual.getAuraColorRgb() YA lee como "bueno" (mismo azul que ZenkaiPalette.ALIGN_GOOD).
-        if (!visual.isCustomAuraColor()) {
+        boolean custom = overrideActive ? overrideCustom : visual.isCustomAuraColor();
+        if (!custom) {
             var stats = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
             AlignmentTier tier = AlignmentTier.of(stats.getAlignment());
             if (tier == AlignmentTier.EVIL) return new Layers(EVIL_RGB, -1);
             if (tier == AlignmentTier.NEUTRAL) return new Layers(NEUTRAL_RGB, -1);
         }
-        return new Layers(visual.getAuraColorRgb(), -1);
+        return new Layers(overrideActive ? overrideRgb : visual.getAuraColorRgb(), -1);
     }
 
     public static int resolve(Player p) {
-        Layers l = resolveLayers(p);
+        return resolve(resolveLayers(p));
+    }
+
+    /** Ver {@link #resolveLayers(Player, boolean, boolean, int)}. */
+    public static int resolve(Player p, boolean overrideCustom, int overrideRgb) {
+        return resolve(resolveLayers(p, true, overrideCustom, overrideRgb));
+    }
+
+    private static int resolve(Layers l) {
         return l.hasOuter() ? l.outer() : l.inner(); // partículas: bajo kaioken, rojo
     }
 }
