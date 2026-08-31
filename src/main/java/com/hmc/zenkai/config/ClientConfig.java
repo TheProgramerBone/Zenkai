@@ -109,10 +109,6 @@ public final class ClientConfig {
 
     // ── Opciones ─────────────────────────────────────────────────────────────
 
-    private static final ModConfigSpec.BooleanValue SHOW_MODEL_CREDITS =
-            defineBool("tooltips.show_model_credits", "show_model_credits",
-                    "Show model and texture credits in item tooltips", true);
-
     private static final ModConfigSpec.BooleanValue KI_SENSE_CAMERA_SHAKE =
             defineBool("sense.ki_sense_camera_shake", "ki_sense_camera_shake",
                     "Shake the camera when your ki sense warns you of a nearby threat", true);
@@ -181,7 +177,6 @@ public final class ClientConfig {
 
     // ── Lectura ──────────────────────────────────────────────────────────────
 
-    public static boolean showModelCredits() { return SHOW_MODEL_CREDITS.get(); }
     public static boolean kiSenseCameraShake() { return KI_SENSE_CAMERA_SHAKE.get(); }
 
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */

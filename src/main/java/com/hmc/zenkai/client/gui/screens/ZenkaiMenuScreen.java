@@ -97,6 +97,7 @@ public abstract class ZenkaiMenuScreen extends Screen {
             case MASTERY -> new MasteryScreen();
             case PARTY -> new PartyScreen();
             case CONFIG -> new ClientConfigScreen();
+            case CREDITS -> new CreditsScreen();
             default -> new ComingSoonScreen(t);
         };
     }
