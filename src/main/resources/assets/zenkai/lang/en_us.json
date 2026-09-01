@@ -485,6 +485,8 @@
   "config.zenkai.aura_first_person_opacity.desc": "How visible your own aura is to you in first person. 0% hides it completely, 100% shows it at full strength.",
   "config.zenkai.ki_first_person_opacity": "Ki ball opacity (1st person, %)",
   "config.zenkai.ki_first_person_opacity.desc": "How visible your own charging/releasing ki ball is to you in first person. 0% hides it completely, 100% shows it at full strength.",
+  "config.zenkai.hud_bars_scale": "Body/Stamina/Ki bar size (%)",
+  "config.zenkai.hud_bars_scale.desc": "Size of the Body/Stamina/Ki bars in the HUD, as a percent of their native texture size. Lower it if they look too big for your GUI Scale or screen resolution.",
   "config.zenkai.anchor.top_left": "Top left",
   "config.zenkai.anchor.top_center": "Top",
   "config.zenkai.anchor.top_right": "Top right",

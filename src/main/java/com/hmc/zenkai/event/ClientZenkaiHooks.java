@@ -2,6 +2,7 @@ package com.hmc.zenkai.event;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.aura.AuraClientState;
+import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.feature.combat.InCombatState;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
@@ -10,10 +11,12 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.util.ZenkaiNumbers;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
@@ -27,8 +30,48 @@ public final class ClientZenkaiHooks {
     public static final ResourceLocation ICONS_TEX =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
 
+    // =========================
+    // Barras Body/Stamina/Ki (bars_empty.png / bars_full.png)
+    // =========================
+    // Generadas por tools/gen_bars.py (medidor de poder estilo escáner: paralelogramo inclinado
+    // + punta de flecha, bordes duros) — ver ZenkaiUiCredits. Lienzo 256x64 CON alfa: cada barra
+    // es un paralelogramo con esquinas transparentes (verificado a nivel de píxel), no un
+    // rectángulo — cualquier overlay que se pinte encima tiene que respetar esa silueta (ver
+    // drawTintedOverlay) o se sale por las esquinas inclinadas. bars_empty es el contorno/interior
+    // vacío; bars_full es el mismo dibujo con el interior relleno de color sólido — el relleno
+    // proporcional se hace recortando el ANCHO de origen de bars_full (igual que una barra de
+    // maná/XP vanilla), así la punta derecha (el chevron) se queda vacía hasta que la barra está
+    // casi llena, que es el efecto correcto sin tratarla como caso aparte.
+    public static final ResourceLocation BARS_EMPTY_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/bars_empty.png");
+    public static final ResourceLocation BARS_FULL_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/bars_full.png");
+
+    // == tools/gen_bars.py (TEX_W/TEX_H/ROW_V/ROW_H): si esa geometría cambia ahí, regenerar el
+    // PNG con el script y actualizar estas constantes a mano — el script no puede escribir aquí.
+    private static final int BARS_TEX_W = 256;
+    private static final int BARS_TEX_H = 64;
+    private static final int BARS_SRC_V = 0;    // top del bloque de las 3 barras
+    private static final int BARS_SRC_H = 64;   // alto del bloque completo
+    private static final int BAR_ROW_H = 20;    // alto de cada banda individual
+    private static final int ROW_V_BODY = 0;
+    private static final int ROW_V_STAMINA = 22;
+    private static final int ROW_V_KI = 44;
+    // Ancho real de contenido por fila (SHEAR + BODY_W + TIP en el generador) — Body > Stamina >
+    // Ki, la misma "cascada" que dibuja el contorno. drawStatBar centra el texto cur/max sobre
+    // ESTE ancho (escalado), no sobre el ancho de bloque completo (igual para las 3 filas) — así
+    // el número seca la misma escalera que la barra en vez de quedar alineado al mismo punto en
+    // las tres filas. == tools/gen_bars.py ROW_CONTENT_W.
+    private static final int ROW_CONTENT_W_BODY = 242;
+    private static final int ROW_CONTENT_W_STAMINA = 224;
+    private static final int ROW_CONTENT_W_KI = 206;
+
     private static final int C_BODY_KAIOKEN = 0xFFFF6633;  // quemando vida
     private static final int C_BODY_STRAIN  = 0xFF9966CC;  // fatiga, stats penalizadas
+    /** Body crítico sin ningún otro estado activo: mismo lenguaje (lavado de color sobre el
+     *  relleno) que Kaioken/strain, pero pulsando en vez de fijo para que llame la atención. */
+    private static final int C_BODY_CRITICAL = 0xFFFF2A2A;
+    private static final float BODY_CRITICAL_FRAC = 0.2f;
 
     private static final int ICONS_TEX_W = 256;
     private static final int ICONS_TEX_H = 256;
@@ -44,22 +87,28 @@ public final class ClientZenkaiHooks {
     private static final int PANEL_X = 10;
     private static final int PANEL_Y = 10;
 
-    private static final int BAR_W = 120;
-    private static final int BAR_H = 8;
-    private static final int BAR_GAP = 10;
+    /** Hueco a la izquierda del bloque de barras para la etiqueta (HP/STM/KI). */
+    private static final int LABEL_GUTTER = 25;
 
-    private static final int TEXT_PAD = 6;
+    /** El texto de las barras (label, cur/max, PL) usaba SIEMPRE la fuente nativa de 9px, sin
+     *  importar cuánto creciera hudBarsScale — el bloque se agrandaba y el texto se quedaba fijo,
+     *  leyéndose cada vez más pequeño en proporción. Un primer intento ligó la escala de fuente a
+     *  `barsScale * multiplicador` con un suelo de 1f (nunca por debajo de la fuente nativa) — eso
+     *  es exactamente lo que rompía la alineación: con el slider bajo, la fila renderizada
+     *  (rowDestH) podía quedar MÁS BAJA que esos 9px nativos, así que el suelo forzaba un texto
+     *  más alto que su propia fila y `drawStatBar` lo clavaba arriba (offset 0) porque la resta
+     *  daba negativa, desbordándose sobre la fila de abajo en vez de quedar centrado.
+     *  computeTextScale() elimina el suelo: la fuente se deriva SIEMPRE del alto real de la fila
+     *  ya escalada (rowDestH), así el texto encaja y queda centrado para cualquier valor del
+     *  slider — crece o encoge exactamente igual que la textura, nunca por su cuenta. */
+    private static final float TEXT_FILL_FRAC = 0.7f;
 
-    // Colores (ARGB)
-    private static final int C_PANEL_BG   = 0xAA000000;
-    private static final int C_PANEL_EDGE = 0x55FFFFFF;
-
-    private static final int C_BAR_BG     = 0x66000000;
-    private static final int C_BAR_EDGE   = 0x55FFFFFF;
-
-    private static final int C_BODY_FILL  = 0xFFCC3333;
-    private static final int C_STAM_FILL  = 0xFF33CC66;
-    private static final int C_KI_FILL    = 0xFF33A0FF;
+    /** Escala de fuente que hace que el texto ocupe TEXT_FILL_FRAC del alto ya escalado de una
+     *  fila de barra — ver el javadoc de TEXT_FILL_FRAC para por qué ya no hay un suelo fijo. */
+    private static float computeTextScale(Minecraft mc, float barsScale) {
+        int rowDestH = Math.round(BAR_ROW_H * barsScale);
+        return (rowDestH * TEXT_FILL_FRAC) / mc.font.lineHeight;
+    }
 
     // =========================
     // Íconos
@@ -78,6 +127,33 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_TURBO = IconUV.grid(1, 2);
     private static final IconUV ICON_MOON = IconUV.grid(6, 0);
 
+    // =========================
+    // Relleno "vivo": el valor mostrado se desliza hacia el real en vez de saltar de golpe cada
+    // frame, para que perder/ganar Body/Stamina/Ki se sienta como un drenaje, no un corte.
+    // Estado por-cliente, no por-jugador: solo existe el jugador local aquí.
+    // =========================
+    private static float dispBody = -1f, dispStamina = -1f, dispKi = -1f;
+    private static float lastBodyMax = -1f, lastStaminaMax = -1f, lastKiMax = -1f;
+
+    /** Fracción por frame que el valor mostrado recorre hacia el real. Dependiente de framerate
+     *  a propósito (es un flourish visual, no un dato de gameplay) — a 60 FPS converge en pocos
+     *  frames, que es justo el efecto buscado. */
+    private static final float SMOOTH_RATE = 0.25f;
+
+    /**
+     * Desliza `prevDisplayed` hacia `target`, o SALTA directo si es la primera vez, si `max`
+     * cambió (cambio de forma/raza, no es un drenaje real) o si el salto es demasiado grande
+     * para leerse como un drenaje continuo (login, revivir, teletransporte) — sin esto un salto
+     * de 0 a full tras reconectar tardaría segundos en "rellenarse" en vez de aparecer ya lleno.
+     */
+    private static float smoothTowards(float prevDisplayed, float target, float max, float prevMax) {
+        if (prevDisplayed < 0f || max != prevMax || Math.abs(target - prevDisplayed) > max * 0.5f) {
+            return target;
+        }
+        float next = prevDisplayed + (target - prevDisplayed) * SMOOTH_RATE;
+        return Math.abs(next - target) < 0.05f ? target : next;
+    }
+
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
         Minecraft mc = Minecraft.getInstance();
@@ -94,65 +170,80 @@ public final class ClientZenkaiHooks {
         GuiGraphics g = e.getGuiGraphics();
 
         // ========================
-        // PANEL simple (sin textura)
+        // Barras (sin recuadro de fondo detrás: el propio arte de bars_empty.png ya hace de
+        // fondo de cada barra individual — un recuadro extra alrededor de las 3 solo añadía un
+        // segundo marco que no aportaba nada).
         // ========================
-        int panelW = 10 + BAR_W + 70; // barra + texto cur/max
-        int panelH = (BAR_H * 3) + (BAR_GAP * 2); // padding + gaps
+        float barsScale = ClientConfig.hudBarsScaleFrac();
+        float textScale = computeTextScale(mc, barsScale);
+        int barsDestW = Math.round(BARS_TEX_W * barsScale);
+        int barsDestH = Math.round(BARS_SRC_H * barsScale);
 
-        drawPanel(g, PANEL_X, PANEL_Y, panelW, panelH);
+        int panelH = barsDestH;
 
-        // Layout interno
-        int barX = PANEL_X + 25;
-        int barY = PANEL_Y + 8;
+        // Layout interno. LABEL_GUTTER se escala con textScale (no con barsScale) porque lo que
+        // tiene que caber ahí es el ANCHO DEL TEXTO ("STM"), que crece con textScale — a
+        // textScale > 1 un hueco fijo se quedaría corto y el label invadiría el borde izquierdo
+        // de la barra (a textScale < 1 sigue siendo válido, solo encoge el hueco de más).
+        int barBlockX = PANEL_X + Math.round(LABEL_GUTTER * textScale);
+        int barBlockY = PANEL_Y;
+
+        // Fondo (contorno + puntas) de las 3 barras, una sola vez.
+        g.blit(BARS_EMPTY_TEX, barBlockX, barBlockY, barsDestW, barsDestH,
+                0f, BARS_SRC_V, BARS_TEX_W, BARS_SRC_H, BARS_TEX_W, BARS_TEX_H);
 
         long now = mc.player.level().getGameTime();
         KaiokenTier tier = form.getKaioken();
         boolean strained = form.isStrained(now);
-        int bodyColor = tier.isOn() ? C_BODY_KAIOKEN : (strained ? C_BODY_STRAIN : C_BODY_FILL);
+        // El relleno ya es el color propio de cada barra (rojo/verde/cian, ver tools/gen_bars.py)
+        // — no se puede reteñir limpio como la silueta gris de TechniqueIcons — así que
+        // Kaioken/strain/crítico se avisan con un lavado translúcido encima del relleno
+        // (drawTintedFill respeta la silueta real del paralelogramo, no un rectángulo).
+        float bodyMax = stats.getBodyMax();
+        float bodyPctRaw = bodyMax > 0 ? Mth.clamp(stats.getBody() / bodyMax, 0f, 1f) : 0f;
+        int bodyOverlay = tier.isOn() ? (0x80000000 | (C_BODY_KAIOKEN & 0xFFFFFF))
+                : strained ? (0x80000000 | (C_BODY_STRAIN & 0xFFFFFF))
+                : (bodyPctRaw > 0f && bodyPctRaw <= BODY_CRITICAL_FRAC) ? criticalPulseColor() : 0;
+
+        dispBody = smoothTowards(dispBody, stats.getBody(), bodyMax, lastBodyMax);
+        lastBodyMax = bodyMax;
+        dispStamina = smoothTowards(dispStamina, stats.getStamina(), stats.getStaminaMax(), lastStaminaMax);
+        lastStaminaMax = stats.getStaminaMax();
+        dispKi = smoothTowards(dispKi, stats.getEnergy(), stats.getEnergyMax(), lastKiMax);
+        lastKiMax = stats.getEnergyMax();
 
         // ========================
         // 1) BODY
         // ========================
-        drawBarWithNumbers(
-                g,
-                barX, barY,
-                BAR_W, BAR_H,
-                stats.getBody(), stats.getBodyMax(),
-                bodyColor,
-                "HP"
-        );
+        drawStatBar(g, barBlockX, barBlockY, barsDestW, ROW_CONTENT_W_BODY, barsScale, textScale, ROW_V_BODY,
+                pctOf(dispBody, bodyMax), stats.getBody(), (int) bodyMax, "HP", bodyOverlay);
 
         // ========================
         // 2) STAMINA
         // ========================
-        barY += BAR_GAP;
-        drawBarWithNumbers(
-                g,
-                barX, barY,
-                BAR_W, BAR_H,
-                stats.getStamina(), stats.getStaminaMax(),
-                C_STAM_FILL,
-                "STM"
-        );
+        drawStatBar(g, barBlockX, barBlockY, barsDestW, ROW_CONTENT_W_STAMINA, barsScale, textScale, ROW_V_STAMINA,
+                pctOf(dispStamina, stats.getStaminaMax()), stats.getStamina(), stats.getStaminaMax(), "STM", 0);
 
         // ========================
         // 3) KI
         // ========================
-        barY += BAR_GAP;
-        drawBarWithNumbers(
-                g,
-                barX, barY,
-                BAR_W, BAR_H,
-                stats.getEnergy(), stats.getEnergyMax(),
-                C_KI_FILL,
-                "KI"
-        );
+        drawStatBar(g, barBlockX, barBlockY, barsDestW, ROW_CONTENT_W_KI, barsScale, textScale, ROW_V_KI,
+                pctOf(dispKi, stats.getEnergyMax()), stats.getEnergy(), stats.getEnergyMax(), "KI", 0);
+
+        // El % de poder en uso ya lo enseña KiChargeGaugeOverlay (el anillo sobre la hotbar) —
+        // aquí solo queda el PL, en el mismo sitio de siempre (mismo textScale que las barras).
+        int plY = PANEL_Y + panelH + 4;
+        drawScaledString(g, mc, "PL " + ZenkaiNumbers.format(stats.getApparentPowerLevel()),
+                PANEL_X, plY, textScale, 0xFFFFE066);
+        int plTextH = Math.round(mc.font.lineHeight * textScale);
 
         // ========================
-        // CADA ICONO EN UNA SOLA LÍNEA (debajo del panel)
+        // CADA ICONO EN UNA SOLA LÍNEA (debajo del panel; el PL ya puede ocupar más alto que los
+        // 9px nativos si textScale > 1, así que el hueco se calcula a partir de su altura real
+        // en vez de un +12 fijo, para no solaparse con la fila de badges).
         // ========================
         int iconX = PANEL_X;
-        int iconY = PANEL_Y + panelH + 12;
+        int iconY = plY + plTextH + 4;
 
         // --- Estados "especiales" (antes de acciones, misma altura) ---
         if (form.isTransforming()) {
@@ -223,56 +314,109 @@ public final class ClientZenkaiHooks {
             drawBadge(g, iconX, iconY, ICON_KI_CHARGE);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
-
-        g.drawString(mc.font, Component.literal(
-                        stats.getPowerPercent() + "%  PL " + ZenkaiNumbers.format(stats.getApparentPowerLevel())),
-                PANEL_X, PANEL_Y + panelH + 4, 0xFFFFE066);
     }
 
     // =========================================================
     // Helpers (Barras / Panel / Badges)
     // =========================================================
 
-    private static void drawPanel(GuiGraphics g, int x, int y, int w, int h) {
-        g.fill(x, y, x + w, y + h, C_PANEL_BG);
-        g.fill(x, y, x + w, y + 1, C_PANEL_EDGE);
-        g.fill(x, y + h - 1, x + w, y + h, C_PANEL_EDGE);
-        g.fill(x, y, x + 1, y + h, C_PANEL_EDGE);
-        g.fill(x + w - 1, y, x + w, y + h, C_PANEL_EDGE);
+    /** cur/max -> fracción 0..1, con guarda de max<=0 (evita NaN mientras stats.getXMax() está
+     *  sin inicializar en el primer frame tras elegir raza). */
+    private static float pctOf(float cur, float max) {
+        return max > 0f ? Mth.clamp(cur / max, 0f, 1f) : 0f;
     }
 
-    private static void drawBarWithNumbers(
-            GuiGraphics g,
-            int x, int y,
-            int w, int h,
-            int cur, int max,
-            int fillColor,
-            String label
-    ) {
+    /** Color del pulso de Body crítico: mismo ARGB base (C_BODY_CRITICAL) con el alfa
+     *  respirando con el reloj real (no el tick de juego, para que sea fluido a cualquier TPS). */
+    private static int criticalPulseColor() {
+        float t = (System.currentTimeMillis() % 900) / 900f;
+        float pulse = 0.5f + 0.5f * (float) Math.sin(t * Math.PI * 2);
+        int alpha = 0x50 + Math.round(pulse * 0x50); // ~0x50..0xA0
+        return (alpha << 24) | (C_BODY_CRITICAL & 0xFFFFFF);
+    }
+
+    /**
+     * Dibuja una fila (Body/Stamina/Ki) del bloque de barras: etiqueta a la izquierda, relleno
+     * proporcional recortado de bars_full.png sobre el fondo ya pintado por el llamador, texto
+     * cur/max CENTRADO dentro de la propia barra (mismo lenguaje que las referencias pedidas:
+     * el número vive en medio de la barra entera, no pegado a un borde), y un lavado de color
+     * opcional encima del relleno (Kaioken/strain/crítico).
+     *
+     * @param blockX  X del bloque de las 3 barras (ya pintado el fondo con bars_empty.png).
+     * @param blockY  Y del bloque.
+     * @param destW   ancho de destino del BLOQUE COMPLETO (ya escalado por hudBarsScale) — el que
+     *                usa el recorte del relleno (fillDestW), igual para las 3 filas porque
+     *                fillSrcW se mide contra BARS_TEX_W en el atlas, no contra el ancho real de
+     *                cada barra.
+     * @param rowContentW ancho NATIVO (sin escalar) del contenido real de ESTA fila
+     *                (ROW_CONTENT_W_BODY/STAMINA/KI) — usado SOLO para centrar el texto cur/max,
+     *                así el número sigue la misma cascada que el contorno de la barra en vez de
+     *                centrarse sobre el bloque completo (igual para las 3 filas).
+     * @param scale   mismo factor de escala, para pasar de píxeles de origen a píxeles de fila.
+     * @param textScale escala de fuente para label/cur-max de esta fila (ver computeTextScale) —
+     *                  crece con `scale` para que el texto no se quede fijo en 9px nativos
+     *                  mientras la barra que lo rodea sí se agranda.
+     * @param rowV    V de origen de esta fila en el atlas (ROW_V_BODY/STAMINA/KI).
+     * @param fillPct fracción 0..1 a rellenar — YA suavizada (ver smoothTowards), distinta del
+     *                cur/max real que se enseña como texto para que el número nunca mienta
+     *                mientras la barra todavía está deslizándose hacia él.
+     * @param overlayColor ARGB traslúcido a superponer sobre el relleno, o 0 para ninguno.
+     */
+    private static void drawStatBar(GuiGraphics g, int blockX, int blockY, int destW, int rowContentW,
+            float scale, float textScale, int rowV, float fillPct, int cur, int max, String label, int overlayColor) {
         Minecraft mc = Minecraft.getInstance();
-        g.drawString(mc.font, Component.literal(label), x-20, y, 0xFFFFFFFF);
+        int rowOffsetDest = Math.round((rowV - BARS_SRC_V) * scale);
+        int rowDestH = Math.round(BAR_ROW_H * scale);
+        int rowY = blockY + rowOffsetDest;
+        int textH = Math.round(mc.font.lineHeight * textScale);
+        int textY = rowY + Math.max(0, (rowDestH - textH) / 2) + 1;
 
-        // bar bg
-        g.fill(x, y, x + w, y + h, C_BAR_BG);
+        drawScaledString(g, mc, label, PANEL_X, textY, textScale, 0xFFFFFFFF);
 
-        // fill
-        if (max > 0) {
-            float pct = Math.max(0f, Math.min(1f, cur / (float) max));
-            int filled = (int) (w * pct);
-            if (filled > 0) {
-                g.fill(x, y, x + filled, y + h, fillColor);
+        int fillSrcW = Math.round(BARS_TEX_W * fillPct);
+        int fillDestW = Math.round(destW * fillPct);
+        if (fillSrcW > 0 && fillDestW > 0) {
+            g.blit(BARS_FULL_TEX, blockX, rowY, fillDestW, rowDestH,
+                    0f, (float) rowV, fillSrcW, BAR_ROW_H, BARS_TEX_W, BARS_TEX_H);
+            if (overlayColor != 0) {
+                // Reteñido del MISMO recorte, no un g.fill() rectangular: la barra es un
+                // paralelogramo con esquinas transparentes (ver el javadoc de clase), así que un
+                // rectángulo se saldría por esas esquinas. RenderSystem.setShaderColor multiplica
+                // el texel (color + su propio alfa) por este tinte, así el lavado queda recortado
+                // exactamente a la silueta real sin necesitar una segunda textura de máscara.
+                float a = ((overlayColor >>> 24) & 0xFF) / 255f;
+                float r = ((overlayColor >> 16) & 0xFF) / 255f;
+                float gr = ((overlayColor >> 8) & 0xFF) / 255f;
+                float b = (overlayColor & 0xFF) / 255f;
+                RenderSystem.setShaderColor(r, gr, b, a);
+                g.blit(BARS_FULL_TEX, blockX, rowY, fillDestW, rowDestH,
+                        0f, (float) rowV, fillSrcW, BAR_ROW_H, BARS_TEX_W, BARS_TEX_H);
+                RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
             }
         }
 
-        // borde
-        g.fill(x, y, x + w, y + 1, C_BAR_EDGE);
-        g.fill(x, y + h - 1, x + w, y + h, C_BAR_EDGE);
-        g.fill(x, y, x + 1, y + h, C_BAR_EDGE);
-        g.fill(x + w - 1, y, x + w, y + h, C_BAR_EDGE);
-
-        // texto cur/max
+        // texto cur/max, CENTRADO sobre el ancho real de ESTA barra (rowContentW ya escalado) —
+        // no sobre el bloque completo, para que el número "escalone" igual que el contorno.
         String txt = ZenkaiNumbers.format(cur) + "/" + ZenkaiNumbers.format(max);
-        g.drawString(mc.font, Component.literal(txt), x + w + TEXT_PAD, y - 1, 0xFFFFFFFF);
+        int textW = Math.round(mc.font.width(txt) * textScale);
+        int contentDestW = Math.round(rowContentW * scale);
+        int textX = blockX + Math.round((contentDestW - textW) / 2f);
+        drawScaledString(g, mc, txt, textX, textY, textScale, 0xFFFFFFFF);
+    }
+
+    /**
+     * Dibuja texto escalado (label/cur-max de las barras, PL), mismo patrón que
+     * ScouterOverlay.drawScaled: traslada el origen y escala el PoseStack, así el string se pinta
+     * en (0,0) del espacio ya escalado y (x,y) se mantiene como su esquina superior izquierda en
+     * coordenadas de pantalla reales — permite alinear texto escalado igual que uno sin escalar.
+     */
+    private static void drawScaledString(GuiGraphics g, Minecraft mc, String text, int x, int y,
+            float scale, int color) {
+        g.pose().pushPose();
+        g.pose().translate(x, y, 0);
+        g.pose().scale(scale, scale, 1f);
+        g.drawString(mc.font, Component.literal(text), 0, 0, color);
+        g.pose().popPose();
     }
 
     private static void drawBadge(GuiGraphics g, int x, int y, IconUV icon) {

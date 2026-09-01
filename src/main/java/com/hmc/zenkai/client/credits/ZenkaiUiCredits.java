@@ -85,26 +85,60 @@ public final class ZenkaiUiCredits {
         credit(Category.UI, "StackWishScreen", AUTHOR, "Screen design");
         credit(Category.UI, "EnchantVillagerWishScreen", AUTHOR, "Screen design");
         credit(Category.UI, "TrainingPointsWishScreen", AUTHOR, "Screen design");
+        // No es una Screen (no tiene panel/pestaña propia): es el overlay de HUD en juego
+        // (RenderGuiEvent) — iconos de estado, barra de body/ki, etc. Mismo criterio de "diseño
+        // de UI propio" que las Screens de arriba.
+        credit(Category.UI, "ClientZenkaiHooks", "Spongtari", "HUD overlay design");
+        // Rediseño 2026-08: sustituye el arte pintado a mano original de Spongtari por un
+        // medidor generado (tools/gen_bars.py, bordes duros, mismo lenguaje que el resto de la
+        // GUI). Si se recupera un arte hecho a mano en el futuro, devolver este crédito a su
+        // autor real en vez de AUTHOR.
+        credit(Category.UI, "bars_empty.png / bars_full.png", AUTHOR, "HUD Body/Stamina/Ki bar art (tools/gen_bars.py)");
 
         // ── Íconos (textures/gui/icons.png, textures/gui/technique_icons.png) ───
         // Una línea por celda de atlas identificada como arte propio (no vainilla), con su (u,v)
         // real para que CreditsScreen pinte la miniatura tal cual se ve en el atlas — mismo
         // espíritu que Modelos pinta el ItemStack. El usuario decide caso a caso si un ícono
         // generado por script (tools/gen_*.py) cuenta como "con autor" o no.
-        creditIcon("icon_head", AUTHOR, 40, 80, "icons.png (40,80) — AppearanceScreen.ICON_HEAD_U/V");
-        creditIcon("icon_body_colors", AUTHOR, 60, 80, "icons.png (60,80) — AppearanceScreen.ICON_BODY_U/V");
-        creditIcon("icon_gender_male", AUTHOR, 80, 80, "icons.png (80,80) — hand-painted");
-        creditIcon("icon_gender_female", AUTHOR, 100, 80, "icons.png (100,80) — hand-painted");
-        creditIcon("icon_reset_view", AUTHOR, 0, 100, "icons.png (0,100) — hand-painted");
-        creditIcon("icon_master_techniques", AUTHOR, 0, 80, "icons.png (0,80) — MasterScreen.ICON_TECHNIQUES_U/V");
-        creditIcon("icon_master_services", AUTHOR, 20, 80, "icons.png (20,80) — MasterScreen.ICON_SERVICES_U/V");
+        // Iconos de la barra de pestañas del menú principal (ver ZenkaiTab/ZenkaiMenuScreen).
+        creditIcon("icon_tab_stats", AUTHOR, 0, 20, "icons.png (0,20)");
+        creditIcon("icon_tab_skills", AUTHOR, 160, 0, "icons.png (160,0)");
+        creditIcon("icon_tab_ki_techniques", AUTHOR, 40, 20, "icons.png (40,20)");
+        creditIcon("icon_tab_physical_techniques", AUTHOR, 120, 20, "icons.png (120,20)");
+        creditIcon("icon_tab_mastery", AUTHOR, 160, 20, "icons.png (160,20)");
+        creditIcon("icon_tab_story", AUTHOR, 20, 20, "icons.png (20,20)");
+        creditIcon("icon_tab_party", AUTHOR, 80, 20, "icons.png (80,20)");
+        creditIcon("icon_tab_config", AUTHOR, 100, 20, "icons.png (100,20)");
+        creditIcon("icon_head", AUTHOR, 40, 80, "icons.png (40,80)");
+        creditIcon("icon_body_colors", AUTHOR, 60, 80, "icons.png (60,80)");
+        creditIcon("icon_gender_male", AUTHOR, 80, 80, "icons.png (80,80)");
+        creditIcon("icon_gender_female", AUTHOR, 100, 80, "icons.png (100,80)");
+        creditIcon("icon_reset_view", AUTHOR, 0, 100, "icons.png (0,100)");
+        creditIcon("icon_master_techniques", AUTHOR, 0, 80, "icons.png (0,80)");
+        creditIcon("icon_master_services", AUTHOR, 20, 80, "icons.png (20,80)");
         creditIcon("icon_friendly_fire_off", AUTHOR, 0, 60, "icons.png (0,60)");
         creditIcon("icon_friendly_fire_on", AUTHOR, 20, 60, "icons.png (20,60)");
         creditIcon("icon_party_invite", AUTHOR, 40, 60, "icons.png (40,60)");
         creditIcon("icon_party_config", AUTHOR, 80, 60, "icons.png (80,60)");
-        creditIcon("icon_credits_tab", AUTHOR, 120, 80, "icons.png (120,80) — ZenkaiTab.CREDITS");
+        creditIcon("icon_credits_tab", AUTHOR, 120, 80, "icons.png (120,80)");
+        // Íconos de estado del HUD (ClientZenkaiHooks, RenderGuiEvent) — mismo atlas icons.png,
+        // coordenadas leídas de sus propios IconUV.grid(col,row) (u=col*20, v=row*20).
+        creditIcon("icon_hud_divine", AUTHOR, 100, 0, "icons.png (100,0)");
+        creditIcon("icon_hud_fly", AUTHOR, 60, 0, "icons.png (60,0)");
+        creditIcon("icon_hud_potential_unlocked", AUTHOR, 120, 60, "icons.png (120,60)");
+        creditIcon("icon_hud_immortal", AUTHOR, 220, 0, "icons.png (220,0)");
+        creditIcon("icon_hud_in_combat", AUTHOR, 0, 0, "icons.png (0,0)");
+        creditIcon("icon_hud_kaioken", AUTHOR, 40, 40, "icons.png (40,40)");
+        creditIcon("icon_hud_ki_charge", AUTHOR, 0, 40, "icons.png (0,40)");
+        creditIcon("icon_hud_legendary", AUTHOR, 100, 40, "icons.png (100,40)");
+        creditIcon("icon_hud_majin", AUTHOR, 80, 0, "icons.png (80,0)");
+        creditIcon("icon_hud_strain", AUTHOR, 200, 20, "icons.png (200,20)");
+        creditIcon("icon_hud_transforming", AUTHOR, 80, 40, "icons.png (80,40)");
+        creditIcon("icon_hud_turbo", AUTHOR, 20, 40, "icons.png (20,40)");
+        creditIcon("icon_hud_moon", AUTHOR, 120, 0, "icons.png (120,0)");
         // Sin (u,v) propio: son varios íconos en OTRO archivo (technique_icons.png), no una celda.
-        credit(Category.ICONS, "technique_icons_atlas", "No Specific Author", "technique_icons.png — one icon per KiTechniqueType");
+        credit(Category.ICONS, "technique_icons_atlas", "@Sor_Sylvie", "technique_icons.png — one icon per KiTechniqueType");
+        credit(Category.ICONS, "physical_icons_atlas", "@Sor_Sylvie", "physical_icons.png — one icon per PhysicalTechniqueType");
 
         // ── Animaciones de jugador (assets/zenkai/player_animations/*.animation.json) ──
         // Una entrada por clip. Reproducidos por PAL, autoría son quienes los modelan en

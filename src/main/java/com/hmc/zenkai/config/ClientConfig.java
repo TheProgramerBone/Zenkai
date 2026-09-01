@@ -132,6 +132,18 @@ public final class ClientConfig {
                             + "(previous behaviour)",
                     100, 0, 100, 10);
 
+    /** 100 = tamaño nativo de bars_empty.png/bars_full.png (256x64 el bloque de las 3 barras).
+     *  Pedido para que el HUD de Body/Stamina/Ki no se salga de pantalla con un GUI Scale alto
+     *  o una ventana pequeña — el arte se pensó a un GUI Scale concreto y el resto de jugadores
+     *  necesitan poder achicarlo. Tope subido de 100 a 150 (y por defecto de 80 a 100) a petición
+     *  del usuario para poder ver el bloque más grande; el texto de cada fila escala con este
+     *  mismo valor (ver ClientZenkaiHooks.drawStatBar/TEXT_SCALE_MULT) así que no se queda
+     *  pequeño al subir el tamaño. */
+    private static final ModConfigSpec.IntValue HUD_BARS_SCALE =
+            defineInt("hud.bars_scale", "hud_bars_scale",
+                    "Size, in percent of the native texture, of the Body/Stamina/Ki bars in the HUD",
+                    100, 20, 150, 5);
+
     // ── HUD de técnicas ──────────────────────────────────────────────────────
 
     // NINGUNA de las tres aparece como fila. La colocación entera se decide en
@@ -182,6 +194,7 @@ public final class ClientConfig {
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }
     public static float kiFirstPersonOpacityFrac() { return KI_FP_OPACITY.get() / 100f; }
+    public static float hudBarsScaleFrac() { return HUD_BARS_SCALE.get() / 100f; }
 
     public static HudAnchor hudAnchor() { return HUD_ANCHOR.get(); }
     public static HudOrientation hudOrientation() { return HUD_ORIENTATION.get(); }
