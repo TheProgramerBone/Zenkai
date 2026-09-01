@@ -70,6 +70,11 @@ public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, Pla
         ItemStack oldLegs  = inv.getArmor(1);
         ItemStack oldFeet  = inv.getArmor(0);
 
+        // Capturado ANTES del swap: aquí oldHead todavía es el casco/objeto REAL del jugador
+        // (si lo hay), no la pieza racial virtual que estamos a punto de meter en su lugar.
+        // GeoLayerArmorModel.setCustomAnimations lo lee para ocultar cuernos/antenas/cresta.
+        GeoLayerArmorModel.wearerHasRealHeadwear = !oldHead.isEmpty();
+
         inv.armor.set(3, head);
         inv.armor.set(2, chest);
         inv.armor.set(1, legs);

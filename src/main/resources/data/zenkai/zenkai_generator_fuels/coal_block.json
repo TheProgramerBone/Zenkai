@@ -1,1 +1,1 @@
-{ "item": "minecraft:coal_block", "fe_per_tick": 8, "ticks": 2000 }
+{ "tag": "c:storage_blocks/coal", "fe_per_tick": 8, "ticks": 2000 }

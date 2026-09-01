@@ -28,12 +28,17 @@ You decide when you are playing Minecraft and when you are playing Zenkai.
   (Warrior / Martial Artist / Spiritualist) and their own stat curves.
 - **Stat progression** — Training Points earned by fighting, spent across six attributes.
   Diminishing returns per session so grinding has a shape.
-- **Transformations** — Super Saiyan 1–4, Arcosian forms, Golden, Black, Potential Unlock,
-  each with mastery, ki drain and its own aura.
+- **Transformations** — Super Saiyan 1–4, Arcosian forms (including the Golden and Black lines),
+  Potential Unlock, and the Saiyan-only Oozaru → Super Oozaru moonlight ritual (grows a real
+  tail, needs a full moon), each with mastery, ki drain and its own aura.
 - **Ki techniques** — chargeable blasts, waves, discs, spirals, barriers, plus physical
   techniques (dash, barrage, kiai, heavy blow).
 - **Skills** — Flight, Kaioken, Ki Sense, Ki Control, Ki Fist, Ki Infuse, Ki Block, Meditation.
 - **Dragon Balls** — Earth and Namek sets, radar, Shenlong and a wish system.
+- **Masters** — Korin, Kami, Kaiosama and more, each offering skills, techniques and one-off
+  services (senzu beans, growing/removing your tail, training weights).
+- **Party system** — invite, accept, leave, kick, disband and a friendly-fire toggle for
+  grouping up with other players.
 - **Two dimensions** — Namek and the Otherworld, plus the Hyperbolic Time Chamber.
 - **Gear** — Scouter, weighted training equipment (Curios), senzu beans, Kintoun.
 
@@ -44,9 +49,9 @@ You decide when you are playing Minecraft and when you are playing Zenkai.
 | Minecraft | 1.21.1 |
 | NeoForge | see `gradle.properties` |
 | GeckoLib | 4.8.4+ |
-| Player Animation Library (zigythebird fork) | required |
+| Player Animation Library (zigythebird fork) | 1.1.5+ |
 | TerraBlender | 4.1.0.8+ |
-| Curios API | 9.0.0+ |
+| Curios API | 9.5.1+ |
 
 ---
 
@@ -79,6 +84,7 @@ datapack, no Java required, using these folders under `data/<your_namespace>/`:
 | Folder | What it defines |
 |---|---|
 | `zenkai_forms/` | Transformations — cost, mastery, stat %, ki drain, aura, hair |
+| `zenkai_aura_signatures/` | Per-aura-type visual shape tuning for the aura shader |
 | `zenkai_skills/` | Skills — levels, TP cost, requirements, per-level value curves |
 | `zenkai_race_stats/` | Base attributes and specialisation coefficients per race |
 | `zenkai_techniques/ki/`, `zenkai_techniques/physical/` | Technique tuning |
@@ -86,6 +92,9 @@ datapack, no Java required, using these folders under `data/<your_namespace>/`:
 | `zenkai_ki_weapons/` | Ki weapon definitions |
 | `zenkai_ki_projectiles/` | Which projectiles accept Ki Infuse and how |
 | `zenkai_alignment/` | Alignment thresholds and effects |
+| `zenkai_masters/` | Per-master admission gates (power level, alignment) |
+| `zenkai_scouter_upgrades/` | Per-tier scouter upgrade costs |
+| `zenkai_generator_fuels/` | Fuel values for the energy generator block |
 
 Look at Zenkai's own files in `src/main/resources/data/zenkai/` — the shipped content uses the
 exact same format an addon would.

@@ -95,6 +95,18 @@ public final class CommonConfig {
                     .defineInRange("party.max_size_ceiling", 32, 1, 32);
 
     // =====================================================================
+    // SPEC — Generador de energía
+    // =====================================================================
+
+    private static final ModConfigSpec.IntValue ENERGY_GENERATOR_CAPACITY_RAW =
+            BUILDER.comment("Búfer de FE del bloque generador de energía. Ver GeneratorEnergy.")
+                    .defineInRange("energy.generator_capacity", 100_000, 1, 10_000_000);
+
+    private static final ModConfigSpec.IntValue ENERGY_GENERATOR_MAX_EXTRACT_RAW =
+            BUILDER.comment("Techo de FE por tick y por cara que el generador empuja a un vecino. Deja ver la barra bajar en vez de vaciarse de golpe al conectar una máquina hambrienta.")
+                    .defineInRange("energy.generator_max_extract", 1_000, 1, 1_000_000);
+
+    // =====================================================================
     // SPEC — Entidades sin stats propias
     // =====================================================================
 
@@ -493,6 +505,8 @@ public final class CommonConfig {
     private static volatile double REGEN_STAMINA_EXHAUSTION = 0.15D;
     private static volatile int    REGEN_MIN_FOOD = 6;
     private static volatile int    PARTY_MAX_SIZE_CEILING = 32;
+    private static volatile int    ENERGY_GENERATOR_CAPACITY = 100_000;
+    private static volatile int    ENERGY_GENERATOR_MAX_EXTRACT = 1_000;
 
     private static volatile boolean MIRROR_HEALTH = true;
     private static volatile double ABSORPTION_WEIGHT = 1.0D;
@@ -573,6 +587,8 @@ public final class CommonConfig {
         REGEN_STAMINA_EXHAUSTION = REGEN_STAMINA_EXHAUSTION_RAW.get();
         REGEN_MIN_FOOD           = REGEN_MIN_FOOD_RAW.get();
         PARTY_MAX_SIZE_CEILING   = PARTY_MAX_SIZE_CEILING_RAW.get();
+        ENERGY_GENERATOR_CAPACITY    = ENERGY_GENERATOR_CAPACITY_RAW.get();
+        ENERGY_GENERATOR_MAX_EXTRACT = ENERGY_GENERATOR_MAX_EXTRACT_RAW.get();
 
         BODY_SCALE    = BODY_SCALE_RAW.get();
         STAMINA_SCALE = STAMINA_SCALE_RAW.get();
@@ -669,6 +685,10 @@ public final class CommonConfig {
     public static int    regenMinFoodLevel()       { return REGEN_MIN_FOOD; }
     /** Tope admin para /zparty maxsize — ver el comentario de PARTY_MAX_SIZE_CEILING_RAW. */
     public static int    partyMaxSizeCeiling()     { return PARTY_MAX_SIZE_CEILING; }
+    /** Búfer de FE del generador de energía. Ver GeneratorEnergy. */
+    public static int    energyGeneratorCapacity()   { return ENERGY_GENERATOR_CAPACITY; }
+    /** Techo de FE por tick y por cara que el generador empuja a un vecino. */
+    public static int    energyGeneratorMaxExtract() { return ENERGY_GENERATOR_MAX_EXTRACT; }
 
     public static double speedMultiplierCap()       { return SPEED_MULT_CAP; }
     public static double movementScaling()          { return MOVE_SCALING; }

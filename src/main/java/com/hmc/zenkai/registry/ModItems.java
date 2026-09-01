@@ -188,7 +188,8 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint()
+                            .hideOnHelmet("antena1", "antena2", "oreja", "oreja2"));
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE =
             ITEMS.register("namekian_race_chestplate", () ->
@@ -224,7 +225,8 @@ public class ModItems {
                             "geo/races/namekian_player.geo.json",
                             "textures/models/races/namekian_player_layer_0.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
+                            .hideOnHelmet("antena1", "antena2", "oreja", "oreja2"));
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE_COLORABLE =
             ITEMS.register("namekian_race_chestplate_colorable", () ->
@@ -447,7 +449,8 @@ public class ModItems {
                             "geo/races/arcosian_first_form_player.geo.json",
                             "textures/models/races/arcosian_first_form_player_layer_0.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
+                            .hideOnHelmet("casco", "cacho", "cacho2", "cacho3"));
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_CHESTPLATE =
             ITEMS.register("arcosian_race_chestplate", () ->

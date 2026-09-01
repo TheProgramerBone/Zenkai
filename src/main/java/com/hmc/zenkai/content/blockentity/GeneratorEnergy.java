@@ -1,5 +1,6 @@
 package com.hmc.zenkai.content.blockentity;
 
+import com.hmc.zenkai.config.CommonConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
@@ -14,29 +15,25 @@ energy_generator * receiveEnergy devuelve 0 de cara al exterior pero generate() 
  */
 public class GeneratorEnergy implements IEnergyStorage {
 
-    public static final int CAPACITY = 100_000;
-    /** Techo de salida por tick y por destino. Deja ver la barra bajar en vez de vaciarse
-     *  de golpe cuando conectas una máquina hambrienta. */
-    public static final int MAX_EXTRACT = 1_000;
-
     private int energy;
 
     public int get() { return energy; }
-    public int capacity() { return CAPACITY; }
+    public int capacity() { return CommonConfig.energyGeneratorCapacity(); }
 
     /** Producción interna. Devuelve lo que realmente cupo: si el búfer está lleno, el
      *  generador debe SABERLO para no seguir quemando combustible a cambio de nada. */
     public int generate(int amount) {
         if (amount <= 0) return 0;
-        int accepted = Math.min(amount, CAPACITY - energy);
+        int accepted = Math.min(amount, capacity() - energy);
+        if (accepted <= 0) return 0;
         energy += accepted;
         return accepted;
     }
 
-    public boolean isFull() { return energy >= CAPACITY; }
+    public boolean isFull() { return energy >= capacity(); }
 
     public void load(CompoundTag tag) {
-        energy = Math.max(0, Math.min(CAPACITY, tag.getInt("Energy")));
+        energy = Math.max(0, Math.min(capacity(), tag.getInt("Energy")));
     }
 
     public void save(CompoundTag tag) {
@@ -50,14 +47,14 @@ public class GeneratorEnergy implements IEnergyStorage {
 
     @Override
     public int extractEnergy(int maxExtract, boolean simulate) {
-        int given = Math.min(energy, Math.min(MAX_EXTRACT, maxExtract));
+        int given = Math.min(energy, Math.min(CommonConfig.energyGeneratorMaxExtract(), maxExtract));
         if (given <= 0) return 0;
         if (!simulate) energy -= given;
         return given;
     }
 
     @Override public int getEnergyStored() { return energy; }
-    @Override public int getMaxEnergyStored() { return CAPACITY; }
+    @Override public int getMaxEnergyStored() { return capacity(); }
     @Override public boolean canExtract() { return true; }
     @Override public boolean canReceive() { return false; }
 }

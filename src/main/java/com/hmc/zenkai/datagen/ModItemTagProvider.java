@@ -42,6 +42,15 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 ModItems.SCOUTER.get()
         );
 
+        // Accesorios de cabeza que NO cubren el cráneo (ver HairGeoLayer): el scouter es un
+        // visor sobre un ojo y el halo flota por encima, ninguno de los dos reemplaza el
+        // cráneo como sí hacen los cuerpos raciales (que también son HELMET pero SON la
+        // cabeza, no van sobre ella) — esos dos siguen ocultando el pelo sin necesidad de tag.
+        tag(ModTags.Items.KEEPS_HAIR).add(
+                ModItems.SCOUTER.get(),
+                ModItems.HALO.get()
+        );
+
         // ==========================================
         // 3. SET DE MADERA DE AJISA Y VEGETACIÓN
         // ==========================================

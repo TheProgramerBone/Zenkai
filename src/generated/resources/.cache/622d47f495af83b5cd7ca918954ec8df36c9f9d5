@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-16T11:57:12.0958756	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-08-31T21:28:34.3990451	Tags for minecraft:item mod id zenkai
 8efd9671ff1e5d6ddad69c2dfe87dccbd556b2c3 data/c/tags/item/ores/coal.json
 9273e8bfa89f601c46b0d948c38e3f045b6ecaa8 data/c/tags/item/ores/copper.json
 a01632d4ffbe62919844c93d1a65e677efe8fa4d data/c/tags/item/ores/diamond.json
@@ -26,4 +26,5 @@ d287a79e872d1dc165e145206a990705a3cfd757 data/minecraft/tags/item/wooden_slabs.j
 f51b1d519ecda61e7e1bab31ee1cad68f9fee275 data/minecraft/tags/item/wooden_trapdoors.json
 9f343c7e578238b731c8e2ae90110c3eae28dffc data/zenkai/tags/item/ajisa_logs.json
 35a86cae77384b327c7e666ab7e608609c407cce data/zenkai/tags/item/dragon_balls_item.json
+ffbe12e8b2f49ccaf3290ac63cc2fb50397e8e69 data/zenkai/tags/item/keeps_hair.json
 e3cf37fbd4109eb5b7e8ea41ea0216697f3e4bc8 data/zenkai/tags/item/worldgen_debris.json

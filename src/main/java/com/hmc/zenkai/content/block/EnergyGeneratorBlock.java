@@ -34,7 +34,6 @@ import org.jetbrains.annotations.Nullable;
  * para cambiar la textura y emitir luz. Sin GeckoLib — no tiene partes que se muevan y un
  * modelo animado costaría el mismo mantenimiento que el banco (ver la deuda del geo del ítem)
  * a cambio de nada.
- *
  * INTERACCIÓN SIN GUI:
  *   clic derecho con combustible  -> lo mete
  *   clic derecho con la mano      -> saca lo que quede sin quemar

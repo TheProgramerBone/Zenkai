@@ -58,6 +58,12 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     private boolean bodyTint = false;
     // Controladores de animación personalizados; si es null se usa el idle genérico (cuando hay animación)
     @Nullable private Consumer<AnimatableManager.ControllerRegistrar> controllerFactory = null;
+    // Huesos (con su descendencia) que este item oculta cuando el jugador lleva puesto un objeto
+    // REAL en la ranura HEAD por encima (cuernos/antenas/cresta que asomarían a través de un
+    // casco). Solo tiene sentido en la pieza de cabeza de una raza; vacío por defecto = no oculta
+    // nada. Ver GeoLayerArmorModel.setCustomAnimations, que es quien lo consume.
+    private static final String[] NO_HIDE_BONES = new String[0];
+    private String[] hideOnHelmetBones = NO_HIDE_BONES;
 
     public GeoLayerArmorItem(Holder<ArmorMaterial> material, Type type, Properties properties,
                              String modelPath, String texturePath, String animationPath) {
@@ -137,6 +143,19 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     }
 
     public boolean hasBodyTint() { return bodyTint; }
+
+    /**
+     * Marca huesos de este item para que se oculten cuando el jugador lleva puesto un objeto
+     * REAL (no la pieza racial virtual) en la ranura HEAD — p. ej. las antenas/orejas de
+     * Namekian o la cresta/cuernos de Arcosian, para que no asomen a través del casco.
+     * Encadenable.
+     */
+    public GeoLayerArmorItem hideOnHelmet(String... boneNames) {
+        this.hideOnHelmetBones = (boneNames == null || boneNames.length == 0) ? NO_HIDE_BONES : boneNames;
+        return this;
+    }
+
+    public String[] getHideOnHelmetBones() { return hideOnHelmetBones; }
 
     // ── Getters ───────────────────────────────────────────────────────────────
 
