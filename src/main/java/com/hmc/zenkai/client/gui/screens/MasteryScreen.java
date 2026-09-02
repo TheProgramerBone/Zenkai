@@ -9,6 +9,7 @@ import com.hmc.zenkai.event.tick.KaiokenSystem;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
+import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.forms.PotentialUnlock;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -23,9 +24,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Pestaña MAESTRÍAS. Existe porque la maestría se acumulaba desde hace mucho y no se veía en
@@ -100,16 +105,33 @@ public class MasteryScreen extends ZenkaiMenuScreen {
         Race race = st.getRace();
         List<Row> out = new ArrayList<>();
 
-        for (ResourceLocation id : SuperForms.chain(race)) {
-            if (!SuperForms.unlocked(mc.player, id)) continue;
-            FormDef d = FormDef.get(id);
-            if (d == null) continue;
-            float m = form.getFormMastery(id);
-            out.add(new Row(
-                    Component.translatable("form.zenkai." + id.getPath()),
-                    Component.literal(statsRange(d.statPercent(m), d.statPercentMastered())
-                            + "  " + drainRange(d.kiDrainPerTick(m), d.kiDrainMastered())),
-                    m));
+        // Recorre el ÁRBOL de verdad (FormRegistry.childrenOf), no el camino único de
+        // SuperForms.chain: con hermanas equivalentes en la rama divina (ssj_blue/ssj_rose,
+        // ver DivineForms) el camino único se comería una de las dos y su maestría no se
+        // podría trackear aquí — mismo arreglo que WheelMenu.forms().
+        Set<ResourceLocation> seenForms = new HashSet<>();
+        Deque<ResourceLocation> formQueue = new ArrayDeque<>();
+        ResourceLocation firstForm = FormRegistry.firstFormFor(race);
+        if (firstForm != null) formQueue.add(firstForm);
+        while (!formQueue.isEmpty()) {
+            ResourceLocation id = formQueue.poll();
+            if (!seenForms.add(id)) continue; // corta ciclos de un datapack roto
+
+            if (SuperForms.unlocked(mc.player, id)) {
+                FormDef d = FormDef.get(id);
+                if (d != null) {
+                    float m = form.getFormMastery(id);
+                    out.add(new Row(
+                            Component.translatable("form.zenkai." + id.getPath()),
+                            Component.literal(statsRange(d.statPercent(m), d.statPercentMastered())
+                                    + "  " + drainRange(d.kiDrainPerTick(m), d.kiDrainMastered())),
+                            m));
+                }
+            }
+            for (ResourceLocation child : FormRegistry.childrenOf(id)) {
+                FormDef cd = FormDef.get(child);
+                if (cd != null && cd.allows(race)) formQueue.add(child);
+            }
         }
 
         // Potential Unlock va aparte: no está en la cadena (es divine) y su techo no sale del

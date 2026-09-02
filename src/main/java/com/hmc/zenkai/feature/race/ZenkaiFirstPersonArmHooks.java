@@ -45,7 +45,9 @@ public final class ZenkaiFirstPersonArmHooks {
 
     private ZenkaiFirstPersonArmHooks() {}
 
-    // Ajustes de alineación. MUTABLES en runtime vía el comando /zenkaiarm (calibración en vivo).
+    // ── Brazo DERECHO — calibración original, MUTABLE en runtime vía /zenkaiarmright. Se deja
+    // intacta a propósito como copia de seguridad: es la única calibración que existió hasta
+    // ahora y todo lo de abajo se deriva de ella, nunca al revés. ──
     public static float OFF_X = -1.55f;
     public static float OFF_Y = 0.65f;
     public static float OFF_Z = -0.5f;
@@ -53,6 +55,80 @@ public final class ZenkaiFirstPersonArmHooks {
     public static float ROT_X = 0.0f;
     public static float ROT_Y = 0.0f;
     public static float ROT_Z = 0.0f;
+
+    // Copia INMUTABLE de los valores de arriba, solo para /zenkaiarmright reset — si alguien
+    // "juega" con los campos mutables en una sesión de calibración y pierde la cuenta de por
+    // dónde iba, esto es el punto de vuelta conocido-bueno. Nunca se lee en el render, solo en
+    // resetRight().
+    private static final float ORIGINAL_OFF_X = -1.55f;
+    private static final float ORIGINAL_OFF_Y = 0.65f;
+    private static final float ORIGINAL_OFF_Z = -0.5f;
+    private static final float ORIGINAL_SCALE = 1.0f;
+    private static final float ORIGINAL_ROT_X = 0.0f;
+    private static final float ORIGINAL_ROT_Y = 0.0f;
+    private static final float ORIGINAL_ROT_Z = 0.0f;
+
+    // ── Brazo IZQUIERDO — espejo del derecho, MUTABLE en runtime vía /zenkaiarmleft. ──
+    // El brazo izquierdo NUNCA usó estas constantes hasta ahora: renderArm() reutilizaba el
+    // set de arriba para los dos brazos, solo invirtiendo pivotX (-5 vs 5, el pivote real de
+    // bipedRightArm/bipedLeftArm en *_player.geo.json). Eso deja el codo bien anclado pero la
+    // pose (offset + rotación de 3 ejes, calibrada a ojo SOLO para el brazo derecho con
+    // /zenkaiarmright) sale mal en el izquierdo, porque un offset/rotación no se copia igual
+    // entre dos huesos que son espejo geométrico el uno del otro.
+    // Verificado contra ".claude/mods de referencia/firstperson.geo.json" (un rig de mano en
+    // 1ª persona de otro mod, ajeno a este): sus huesos "rightarm"/"leftarm" SÍ son el mismo
+    // espejo que bipedRightArm/bipedLeftArm de aquí (pivot X negado, Y/Z de pivot iguales;
+    // rotation X igual, Y/Z negados) — mismo patrón que un espejo respecto al plano X=0.
+    // Las cifras de ese geo no son reutilizables tal cual (es un rig propio con otro origen y
+    // otra escala), pero confirman la fórmula de espejo para Y/Z de posición y para las tres
+    // rotaciones — Y y Z de offset SÍ salieron correctos calibrando en juego (0.65 / -0.5,
+    // idénticos al espejo). El offset X, en cambio, NO: la fórmula predice -OFF_X = 1.55, pero
+    // calibrado en juego (2026-09-01) el valor que de verdad alinea el brazo izquierdo es 0.6 —
+    // mismo signo, magnitud muy distinta. La malla del brazo (bipedLeftArm) no es un espejo
+    // perfecto de bipedRightArm solo en ese eje (alguna asimetría del propio modelo/mirror UV
+    // que la fórmula de pivote no captura), así que LEFT_OFF_X queda con el valor EMPÍRICO, no
+    // el derivado — no "corregir" esto de vuelta a -OFF_X sin recalibrar en juego.
+    public static float LEFT_OFF_X = 0.6f;
+    public static float LEFT_OFF_Y = OFF_Y;
+    public static float LEFT_OFF_Z = OFF_Z;
+    public static float LEFT_SCALE = SCALE;
+    public static float LEFT_ROT_X = ROT_X;
+    public static float LEFT_ROT_Y = -ROT_Y;
+    public static float LEFT_ROT_Z = -ROT_Z;
+
+    // Copia INMUTABLE de la calibración izquierda CONFIRMADA EN JUEGO (2026-09-01), no de la
+    // fórmula de espejo (que para X predice 1.55, no 0.6 — ver comentario arriba). Punto de
+    // vuelta de /zenkaiarmleft reset.
+    private static final float ORIGINAL_LEFT_OFF_X = 0.6f;
+    private static final float ORIGINAL_LEFT_OFF_Y = 0.65f;
+    private static final float ORIGINAL_LEFT_OFF_Z = -0.5f;
+    private static final float ORIGINAL_LEFT_SCALE = 1.0f;
+    private static final float ORIGINAL_LEFT_ROT_X = 0.0f;
+    private static final float ORIGINAL_LEFT_ROT_Y = 0.0f;
+    private static final float ORIGINAL_LEFT_ROT_Z = 0.0f;
+
+    /** Restaura el brazo DERECHO a su calibración original de fábrica. */
+    public static void resetRight() {
+        OFF_X = ORIGINAL_OFF_X;
+        OFF_Y = ORIGINAL_OFF_Y;
+        OFF_Z = ORIGINAL_OFF_Z;
+        SCALE = ORIGINAL_SCALE;
+        ROT_X = ORIGINAL_ROT_X;
+        ROT_Y = ORIGINAL_ROT_Y;
+        ROT_Z = ORIGINAL_ROT_Z;
+    }
+
+    /** Restaura el brazo IZQUIERDO a su calibración original de fábrica (la confirmada en
+     *  juego, no la de la fórmula de espejo — ver {@link #ORIGINAL_LEFT_OFF_X}). */
+    public static void resetLeft() {
+        LEFT_OFF_X = ORIGINAL_LEFT_OFF_X;
+        LEFT_OFF_Y = ORIGINAL_LEFT_OFF_Y;
+        LEFT_OFF_Z = ORIGINAL_LEFT_OFF_Z;
+        LEFT_SCALE = ORIGINAL_LEFT_SCALE;
+        LEFT_ROT_X = ORIGINAL_LEFT_ROT_X;
+        LEFT_ROT_Y = ORIGINAL_LEFT_ROT_Y;
+        LEFT_ROT_Z = ORIGINAL_LEFT_ROT_Z;
+    }
 
     private static final String RIGHT_ARM_BONE = "bipedRightArm";
     private static final String LEFT_ARM_BONE  = "bipedLeftArm";
@@ -121,15 +197,25 @@ public final class ZenkaiFirstPersonArmHooks {
                 ResourceLocation baseTex = model.getTextureResource(item);
                 RenderType rt = RenderType.entityTranslucent(baseTex);
 
-                float pivotX = (arm == HumanoidArm.RIGHT) ? -5f : 5f;
+                boolean isRight = (arm == HumanoidArm.RIGHT);
+                float pivotX = isRight ? -5f : 5f;
                 float pivotY = 22f;
+                // Cada brazo usa SU PROPIA calibración (derecha original / izquierda espejo,
+                // ver comentario de los campos arriba) — nunca la misma para los dos.
+                float offX = isRight ? OFF_X : LEFT_OFF_X;
+                float offY = isRight ? OFF_Y : LEFT_OFF_Y;
+                float offZ = isRight ? OFF_Z : LEFT_OFF_Z;
+                float rotX = isRight ? ROT_X : LEFT_ROT_X;
+                float rotY = isRight ? ROT_Y : LEFT_ROT_Y;
+                float rotZ = isRight ? ROT_Z : LEFT_ROT_Z;
+                float scale = isRight ? SCALE : LEFT_SCALE;
 
                 poseStack.pushPose();
-                poseStack.translate(OFF_X, OFF_Y, OFF_Z);
-                poseStack.mulPose(Axis.XP.rotationDegrees(ROT_X));
-                poseStack.mulPose(Axis.YP.rotationDegrees(ROT_Y));
-                poseStack.mulPose(Axis.ZP.rotationDegrees(ROT_Z));
-                poseStack.scale(SCALE, SCALE, SCALE);
+                poseStack.translate(offX, offY, offZ);
+                poseStack.mulPose(Axis.XP.rotationDegrees(rotX));
+                poseStack.mulPose(Axis.YP.rotationDegrees(rotY));
+                poseStack.mulPose(Axis.ZP.rotationDegrees(rotZ));
+                poseStack.scale(scale, scale, scale);
                 poseStack.scale(1f, -1f, 1f);
                 poseStack.translate(-pivotX / 16f, -pivotY / 16f, 0f);
 

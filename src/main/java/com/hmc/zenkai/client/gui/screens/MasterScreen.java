@@ -6,6 +6,8 @@ import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.DivineForms;
+import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
@@ -204,7 +206,17 @@ public class MasterScreen extends Screen {
         top  = (this.height - BG_H) / 2;
 
         skillRows.clear();
-        skillRows.addAll(SkillDef.taughtBy(masterId));
+        // god_ki lo enseña Kami a cualquier raza (una sola skill, ver DivineForms), pero no le
+        // sirve de nada a una raza sin ninguna forma divina (Arcosiano hoy) — no tiene sentido
+        // enseñársela en la tienda si comprarla no desbloquearía nada.
+        PlayerStatsAttachment raceCheck = stats();
+        for (SkillDef d : SkillDef.taughtBy(masterId)) {
+            if (DivineForms.SKILL.equals(d.id())
+                    && raceCheck != null && !DivineForms.appliesTo(raceCheck.getRace())) {
+                continue;
+            }
+            skillRows.add(d);
+        }
 
         techRows.clear();
         for (KiTechniqueType t : KiTechniqueType.values()) {
@@ -267,10 +279,13 @@ public class MasterScreen extends Screen {
                 : minecraft.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
     }
 
-    /** ¿Le alcanza para el nivel 1? Mismo criterio que valida el servidor: TP y MIND libre. */
+    /** ¿Le alcanza para el nivel 1? Mismo criterio que valida el servidor: TP y MIND libre.
+     *  El maestro solo vende nivel 1, así que el coste real (crudo o derivado de formas si la
+     *  skill es levels_from_forms, como god_ki) es siempre el de ESE nivel. */
     private boolean canAfford(PlayerStatsAttachment st, SkillDef def) {
-        if (st == null) return false;
-        return st.getTP() >= def.tpCost() && st.mindFree() >= def.mindReqFor(1);
+        if (st == null || minecraft == null || minecraft.player == null) return false;
+        return st.getTP() >= FormDrivenSkills.tpCostForLevel(def, minecraft.player, 1)
+                && st.mindFree() >= def.mindReqFor(1);
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -435,8 +450,10 @@ public class MasterScreen extends Screen {
             right = Component.translatable("screen.zenkai.master.learned");
             color = ZenkaiPalette.TEXT_OFF;
         } else {
+            int tpCost = (minecraft != null && minecraft.player != null)
+                    ? FormDrivenSkills.tpCostForLevel(def, minecraft.player, 1) : def.tpCost();
             right = Component.translatable("screen.zenkai.master.cost",
-                    def.tpCost(), def.mindReqFor(1));
+                    tpCost, def.mindReqFor(1));
             color = canAfford(st, def) ? ZenkaiPalette.TP_ON_DARK : ZenkaiPalette.DENIED;
         }
         PanelText.rightOnDark(g, this.font, right, listRight(), nameY, color);

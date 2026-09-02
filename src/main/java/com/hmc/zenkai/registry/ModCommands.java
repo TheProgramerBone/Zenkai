@@ -9,7 +9,7 @@ import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.party.PartyService;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
@@ -290,6 +290,41 @@ public class ModCommands {
                                 .then(Commands.argument("value", BoolArgumentType.bool())
                                         .executes(ctx -> debugSetTail(ctx,
                                                 BoolArgumentType.getBool(ctx, "value")))))
+                        // ── /zenkai debug divine|legendary <true|false> ──────────────
+                        // TEMPORAL — igual que "debug tail" de arriba: la vía REAL de conseguir
+                        // cada uno de estos dos estados (PlayerStateFlags.isDivine/isLegendary,
+                        // hoy solo leídos por el HUD — ver ClientZenkaiHooks) no existe todavía
+                        // (Divino se piensa como "tomarse un té de agua divina", un ítem que
+                        // aún no existe). Hasta que esa vía real exista, este comando es la
+                        // única forma de probar el HUD. Borrar cada rama cuando su mecanismo
+                        // real quede implementado. NO hay un tercer estado "majin" aparte de
+                        // isMajinControlled (ver la rama "majin" más abajo) — PlayerStateFlags
+                        // llegó a tener un campo isMajin aparte que no representaba nada real;
+                        // se eliminó (junto con su reset en resetFull()) para no volver a
+                        // confundir los dos.
+                        .then(Commands.literal("divine")
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(ctx -> debugSetSpecialState(ctx, "isDivine",
+                                                PlayerStatsAttachment::setDivine,
+                                                BoolArgumentType.getBool(ctx, "value")))))
+                        .then(Commands.literal("legendary")
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(ctx -> debugSetSpecialState(ctx, "isLegendary",
+                                                PlayerStatsAttachment::setLegendary,
+                                                BoolArgumentType.getBool(ctx, "value")))))
+                        // ── /zenkai debug majin <true|false> ─────────────────────────
+                        // A diferencia de divine/legendary de arriba, "majin" SÍ tiene un
+                        // mecanismo real ya implementado: PersistentEffectsSystem.tick()
+                        // reaplica ModEffects.MAJIN cada tick mientras
+                        // PlayerVisualAttachment.isMajinControlled() sea true (solo la muerte
+                        // lo borra de verdad). Este comando solo ahorra tener que pasar por lo
+                        // que sea que hoy active ese flag durante pruebas — no es un
+                        // placeholder de algo que falte por construir, así que no hay nada
+                        // "que borrar más adelante".
+                        .then(Commands.literal("majin")
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(ctx -> debugSetMajinControlled(ctx,
+                                                BoolArgumentType.getBool(ctx, "value")))))
                         .then(Commands.literal("party")
                                 .then(Commands.literal("add")
                                         .executes(ctx -> debugPartyAdd(ctx, null))
@@ -347,6 +382,33 @@ public class ModCommands {
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] hasTail = " + value + " → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /** Ver el comentario de las ramas "debug divine/majin/legendary" más arriba. Actúa sobre
+     *  quien ejecuta, igual que "debug tail". Un solo helper para los tres en vez de triplicar
+     *  el mismo cuerpo — solo cambia la etiqueta y qué setter de PlayerStatsAttachment llamar. */
+    private static int debugSetSpecialState(CommandContext<CommandSourceStack> ctx, String label,
+                                            java.util.function.BiConsumer<PlayerStatsAttachment, Boolean> setter,
+                                            boolean value) {
+        if (!(ctx.getSource().getEntity() instanceof ServerPlayer sp)) return 0;
+        var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        setter.accept(att, value);
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] " + label + " = " + value + " → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /** Ver el comentario de la rama "debug majin" más arriba. A diferencia de
+     *  debugSetSpecialState, esto vive en PlayerVisualAttachment (isMajinControlled), no en
+     *  PlayerStatsAttachment — son dos attachments distintos. */
+    private static int debugSetMajinControlled(CommandContext<CommandSourceStack> ctx, boolean value) {
+        if (!(ctx.getSource().getEntity() instanceof ServerPlayer sp)) return 0;
+        sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).setMajinControlled(value);
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] isMajinControlled = " + value + " → " + sp.getGameProfile().getName()), true);
         return 1;
     }
 
@@ -459,9 +521,12 @@ public class ModCommands {
         att.setStyleChosen(false);
         att.setFlyEnabled(false);
         att.setImmortal(false);
-        att.setMajin(false);
         att.setLegendary(false);
         att.setDivine(false);
+        // "Majin" no tiene flag propio en PlayerStatsAttachment (ese campo se eliminó por
+        // vestigial, no representaba nada) — el estado real es
+        // PlayerVisualAttachment.isMajinControlled, y ese YA queda limpio más abajo cuando el
+        // reset recarga el attachment visual entero con los valores por defecto.
         // Ritual de Oozaru: un reset "full" que dejara esto vivo permitiría re-desbloquear
         // SSJ4 sin repetir el ritual en cuanto se re-comprara el nivel — no sería full. La
         // cola vuelve a su valor por defecto (true) por la misma razón de "estado limpio",
@@ -547,9 +612,9 @@ public class ModCommands {
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
 
         // Mismo techo que SkillBuyPacket y giveAll: con levels_from_forms manda la cadena de
-        // formas de SU raza, no el max_level del JSON.
-        int max = def.levelsFromForms()
-                ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
+        // formas de SU raza, no el max_level del JSON — y FormDrivenSkills es quien sabe si esa
+        // cadena es la de super_forms o la de god_ki (u otra futura), no siempre la primera.
+        int max = FormDrivenSkills.maxLevel(def, sp);
         if (max <= 0) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] '" + id
                     + "' no está disponible para la raza de " + sp.getGameProfile().getName()));
@@ -600,8 +665,11 @@ public class ModCommands {
      * queda protegido de olvidarse por la X de SkillsScreen, el resto se puede bajar con
      * normalidad. Ver PlayerSkills.grantAdmin().
      * OJO con levels_from_forms: su techo real NO es def.maxLevel(), sino la cadena de
-     * formas de SU raza (misma regla que SkillBuyPacket). Sin este mínimo, un humano
-     * acabaría con niveles de super_forms que no existen para él.
+     * formas de SU raza (misma regla que SkillBuyPacket, vía FormDrivenSkills — que además
+     * decide CUÁL cadena, super_forms o god_ki). Sin este mínimo, un humano acabaría con
+     * niveles de super_forms que no existen para él, o cualquier raza con niveles de god_ki
+     * que no existen para ella (ver el bug real: god_ki quedó en 5/2 porque este método
+     * comparaba SIEMPRE contra SuperForms.maxLevel, sin importar qué skill fuera).
      */
     private static int skillGiveAll(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
         if (SkillDef.all().isEmpty()) {
@@ -612,8 +680,7 @@ public class ModCommands {
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         int granted = 0, capped = 0;
         for (SkillDef def : SkillDef.all()) {
-            int max = def.levelsFromForms()
-                    ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
+            int max = FormDrivenSkills.maxLevel(def, sp);
             if (max <= 0) { capped++; continue; }   // raza sin cadena de formas
             if (att.skills().level(def.id()) >= max) continue;
             att.skills().grantAdmin(def.id(), max);   // solo protege el nivel 1, ver javadoc
@@ -639,8 +706,7 @@ public class ModCommands {
                         "[Zenkai] " + all.size() + " skill(s) — " + sp.getGameProfile().getName())
                 .withStyle(ChatFormatting.GOLD), false);
         for (SkillDef def : all) {
-            int max = def.levelsFromForms()
-                    ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
+            int max = FormDrivenSkills.maxLevel(def, sp);
             int lvl = att.skills().level(def.id());
             String extra = (def.master() != null ? " §8master:" + def.master() : "")
                     + (def.purchasable() ? "" : " §8[no comprable]")

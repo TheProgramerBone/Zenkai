@@ -54,11 +54,14 @@ public record ForgetSkillPacket(String skillId) implements CustomPacketPayload {
 
             // ⚠ Verificar la sobrecarga: SkillBuyPacket usa tpCostForLevel(sp, nivel), respec()
             // usa tpCostForLevel(race, nivel). Aquí hace falta la misma que usó la compra.
-            int refund = def.levelsFromForms()
-                    ? SuperForms.tpCostForLevel(sp, removed)
-                    : def.tpCost();
+            // FormDrivenSkills decide además CUÁL proveedor (super_forms o god_ki) preguntar.
+            int refund = FormDrivenSkills.tpCostForLevel(def, sp, removed);
 
-            att.addTP(refund);
+            // MAX_VALUE significa "ese nivel no tiene coste real definido" (p. ej. un nivel de
+            // sobra que quedó por encima del techo real, ver el bug ya arreglado en
+            // ModCommands.skillGive/giveAll/skillList) — sumarlo tal cual desbordaría el TP del
+            // jugador a un número absurdo. Nada que reembolsar en ese caso, ni robar ni regalar.
+            if (refund != Integer.MAX_VALUE) att.addTP(refund);
             PlayerLifeCycle.syncIfServer(sp);
         });
     }

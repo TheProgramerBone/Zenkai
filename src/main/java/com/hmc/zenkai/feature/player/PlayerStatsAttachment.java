@@ -9,7 +9,7 @@ import com.hmc.zenkai.feature.Style;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillDef;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -161,9 +161,10 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             if (def.levelsFromForms()) {
                 // Coste por nivel derivado de las formas: hay que sumar nivel a nivel. Con
                 // def.tpCost() (que aquí es 0) el respec se quedaría con el TP invertido.
+                // FormDrivenSkills decide además CUÁL proveedor (super_forms o god_ki) preguntar.
                 int top = skills.level(id);
                 for (int lvl = top - bought + 1; lvl <= top; lvl++) {
-                    int c = SuperForms.tpCostForLevel(getRace(), lvl);
+                    int c = FormDrivenSkills.tpCostForLevel(def, getRace(), lvl);
                     if (c != Integer.MAX_VALUE) skillRefund += c;
                 }
             } else {
@@ -267,7 +268,6 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public boolean hasBrokenOverdriveOnce() { return flags.hasBrokenOverdriveOnce(); }
     public boolean isImmortal()      { return flags.isImmortal(); }
     public boolean isDivine()        { return flags.isDivine(); }
-    public boolean isMajin()         { return flags.isMajin(); }
     public boolean isLegendary()     { return flags.isLegendary(); }
     public boolean hasTail()         { return flags.hasTail(); }
     public boolean hasSsj4Ritual()   { return flags.hasSsj4Ritual(); }
@@ -282,7 +282,6 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public void setHasBrokenOverdriveOnce(boolean v) { flags.setHasBrokenOverdriveOnce(v); }
     public void setImmortal(boolean v)    { flags.setImmortal(v); }
     public void setDivine(boolean v)      { flags.setDivine(v); }
-    public void setMajin(boolean v)       { flags.setMajin(v); }
     public void setLegendary(boolean v)   { flags.setLegendary(v); }
 
     public boolean isInOtherworld()        { return flags.isInOtherworld(); }

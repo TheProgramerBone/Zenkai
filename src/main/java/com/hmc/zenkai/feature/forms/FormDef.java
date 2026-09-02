@@ -52,6 +52,13 @@ import java.util.Map;
  * vez de por la rueda/tecla H (hoy: oozaru/super_oozaru, ver OozaruSystem). Sin este candado, la
  * rueda ya no las enseña (FormRegistry.chainFor no las alcanza), pero nada impedía a un cliente
  * modificado seleccionarlas igualmente por packet.
+ *
+ * divineTier (default false): marca un peldaño de energía divina (hoy: human_god/namek_god/
+ * majin_god, ssj_god/ssj_blue/ssj_rose) — su acceso NO sale de super_forms sino de la skill
+ * "god_ki" (ver feature.skills.DivineForms/SuperForms), aunque siga viviendo en la misma
+ * cadena parent/hijo que el resto para efectos de la rueda y la maestría. Dos formas con el
+ * MISMO parent y ambas divineTier son hermanas EQUIVALENTES a la misma profundidad divina
+ * (ssj_blue/ssj_rose): el jugador elige cuál llevar puesta, no hay que comprarlas por separado.
  */
 public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
@@ -63,7 +70,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       String auraType, int auraRgb, int hairRgb, double scale,
                       boolean descendable, double overdriveCeilingBonus,
                       double overdriveDrainMultUntrained, double overdriveDrainMultMastered,
-                      boolean wheelSelectable) {
+                      boolean wheelSelectable, boolean divineTier) {
 
     public enum Kind {
         /** Innata por raza: no la enseña ningún maestro. */
@@ -194,6 +201,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeDouble(d.overdriveDrainMultUntrained());
                 buf.writeDouble(d.overdriveDrainMultMastered());
                 buf.writeBoolean(d.wheelSelectable());
+                buf.writeBoolean(d.divineTier());
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -215,7 +223,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         readMap(buf), readMap(buf),
                         buf.readUtf(), buf.readInt(), buf.readInt(), buf.readDouble(),
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
-                        buf.readBoolean());
+                        buf.readBoolean(), buf.readBoolean());
             });
 
     private static void writeMap(FriendlyByteBuf buf, Map<String, ResourceLocation> map) {

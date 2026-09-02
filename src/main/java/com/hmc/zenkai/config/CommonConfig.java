@@ -335,6 +335,14 @@ public final class CommonConfig {
             BUILDER.comment("Form mastery gained per minute while transformed (percent points, 0-100 scale)")
                     .defineInRange("mastery.form_per_minute", 0.5D, 0.0D, 100.0D);
 
+    private static final ModConfigSpec.BooleanValue SSJ_BLUE_ROSE_SHARE_MASTERY_RAW =
+            BUILDER.comment("Saiyan divine siblings ssj_blue/ssj_rose (see DivineForms — same",
+                            "god_ki level, mutually exclusive, player picks which to wear) track ONE",
+                            "shared mastery value when true (training either one raises both), or two",
+                            "independent values when false. Switching which one is worn always keeps",
+                            "the higher of the two accumulated values, whichever this is set to.")
+                    .define("mastery.ssj_blue_rose_share", true);
+
     private static final ModConfigSpec.DoubleValue TECH_MASTERY_PER_USE_RAW =
             BUILDER.comment("Technique mastery gained per use (percent points, 0-100 scale)")
                     .defineInRange("mastery.technique_per_use", 0.2D, 0.0D, 100.0D);
@@ -512,6 +520,7 @@ public final class CommonConfig {
     private static volatile double ABSORPTION_WEIGHT = 1.0D;
 
     private static volatile double FORM_MASTERY_PER_MINUTE = 0.5D;
+    private static volatile boolean SSJ_BLUE_ROSE_SHARE_MASTERY = true;
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
     private static volatile double M_FORM_DRAIN = 0.50D,
             M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
@@ -617,6 +626,7 @@ public final class CommonConfig {
         SCOUTER_RANGE       = SCOUTER_RANGE_RAW.get();
 
         FORM_MASTERY_PER_MINUTE = FORM_MASTERY_PER_MINUTE_RAW.get();
+        SSJ_BLUE_ROSE_SHARE_MASTERY = SSJ_BLUE_ROSE_SHARE_MASTERY_RAW.get();
         TECH_MASTERY_PER_USE    = TECH_MASTERY_PER_USE_RAW.get();
         M_FORM_DRAIN     = MASTERY_FORM_DRAIN_RED_RAW.get();
         M_TECH_DMG       = MASTERY_TECH_DMG_RAW.get();
@@ -730,6 +740,7 @@ public final class CommonConfig {
     public static int scouterRange()               { return SCOUTER_RANGE; }
 
     public static double formMasteryPerMinute()      { return FORM_MASTERY_PER_MINUTE; }
+    public static boolean ssjBlueRoseShareMastery()  { return SSJ_BLUE_ROSE_SHARE_MASTERY; }
     public static double techMasteryPerUse()         { return TECH_MASTERY_PER_USE; }
     public static double masteryFormDrainReduction() { return M_FORM_DRAIN; }
     public static double masteryTechDamageBonus()    { return M_TECH_DMG; }

@@ -146,6 +146,9 @@ public final class ZenkaiPalette {
     /** Forzar el 100% (powerPercent > 100). Mismo naranja que KiChargeGaugeOverlay.C_FILL_
      *  OVERDRIVE a propósito: el mismo dato debe leerse igual en el HUD y en el popup. */
     public static final int SECTION_OVERDRIVE  = 0xFFFF6633;
+    /** Estados especiales del jugador (Divino/Legendario/Majin) — blanco-lavanda pálido,
+     *  ninguna otra sección usa un tono tan poco saturado. */
+    public static final int SECTION_STATUS     = 0xFFE8E8FF;
 
     // ── Alineamiento ─────────────────────────────────────────────────────────
     // Tres colores planos, no un degradado. El número ya tiene el degradado de AlignmentPalette;

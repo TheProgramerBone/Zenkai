@@ -10,6 +10,9 @@ import com.hmc.zenkai.feature.forms.PotentialUnlock;
 import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.DivineForms;
+import com.hmc.zenkai.feature.skills.FormDrivenSkills;
+import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.skills.SuperForms;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -41,6 +44,23 @@ public final class FormSystem {
             att.skills().grant(SuperForms.SKILL, 1);
             PlayerLifeCycle.syncIfServer(p);
         }
+
+        // Autocorrección: ninguna skill levels_from_forms debería tener MÁS nivel que su techo
+        // real (FormDrivenSkills.maxLevel, que sabe si el proveedor es super_forms o god_ki).
+        // Repara solo las partidas que ya quedaran con un nivel de sobra por el bug real de
+        // ModCommands.skillGive/giveAll/skillList (comparaban SIEMPRE contra
+        // SuperForms.maxLevel, sin importar qué skill fuera — así "God Ki" podía acabar en 5/2)
+        // — ya arreglado ahí, esto solo normaliza lo que ya quedó mal guardado. setLevel() no
+        // toca el suelo otorgado, así que no desprotege nada que ya estuviera bloqueado.
+        for (SkillDef def : SkillDef.all()) {
+            if (!def.levelsFromForms()) continue;
+            int max = FormDrivenSkills.maxLevel(def, p);
+            int lvl = att.skills().level(def.id());
+            if (lvl > max) {
+                att.skills().setLevel(def.id(), max);
+                PlayerLifeCycle.syncIfServer(p);
+            }
+        }
         // ÚNICO punto donde se escribe el multiplicador de stats (forma + kaioken + majin +
         // zenkai). Va cada tick porque la maestría sube de forma continua, el kaioken puede
         // apagarse solo y el zenkai caduca por tiempo. Con esto el PL y la pantalla de stats
@@ -66,8 +86,28 @@ public final class FormSystem {
             // se vuelve a base. Antes solo se saltaba el drenaje, así que el jugador se
             // quedaba transformado GRATIS.
             if (def == null || !def.allows(att.getRace()) || !SuperForms.unlocked(p, currentFormId) || !PotentialUnlock.canRemain(p, currentFormId)) {
+                // Antes de forzar Base del todo: si lo único que cambió es que dejó de ser la
+                // hermana divina que le corresponde (isDivine se volteó mientras la llevaba
+                // puesta — ver DivineForms), pasar a la hermana correcta en vez de desvestirlo.
+                // pendingSiblingSwap ya comprueba que la hermana SÍ esté desbloqueada, así que
+                // si el problema real es otro (p. ej. perdió el nivel de god_ki) devuelve null
+                // y se sigue cayendo a Base como siempre.
+                ResourceLocation swap = DivineForms.pendingSiblingSwap(p, currentFormId);
+                if (swap != null && FormRegistry.get(swap) != null) {
+                    form.setFormId(swap);
+                    currentFormId = swap;
+                    def = FormRegistry.get(swap);
+                    PlayerLifeCycle.syncFormIfServer(p);
+                } else {
                     form.forceBase();
-            } else {
+                    // Sin esto, el bloque de abajo seguiría viendo el 'def'/'currentFormId'
+                    // VIEJOS (forceBase() no los toca, son variables locales de este método) y
+                    // aplicaría el drenaje de una forma de la que el jugador ya salió.
+                    currentFormId = FormIds.BASE;
+                    def = null;
+                }
+            }
+            if (currentFormId != null && !FormIds.BASE.equals(currentFormId) && def != null) {
                 activeDef = def;
                 // El drenaje viene interpolado por maestría desde el datapack
                 // (ki_drain_untrained -> ki_drain_mastered) y multiplicado por SPI frente al

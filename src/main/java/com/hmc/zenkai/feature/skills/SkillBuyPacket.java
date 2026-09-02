@@ -53,9 +53,9 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
             if (!att.isRaceChosen()) return;
 
             // Con levels_from_forms el techo y el precio salen de la cadena de formas de SU
-            // raza: un saiyan no puede comprar el nivel que solo existe para arcosianos.
-            int max  = def.levelsFromForms()
-                    ? Math.min(def.maxLevel(), SuperForms.maxLevel(sp)) : def.maxLevel();
+            // raza: un saiyan no puede comprar el nivel que solo existe para arcosianos. Hay
+            // DOS proveedores posibles (super_forms, god_ki) — FormDrivenSkills decide cuál.
+            int max = FormDrivenSkills.maxLevel(def, sp);
 
             int current = att.skills().level(def.id());
             if (current >= max) return;                        // ya al máximo
@@ -72,8 +72,7 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
             }
 
             int next = current + 1;
-            int cost = def.levelsFromForms()
-                    ? SuperForms.tpCostForLevel(sp, next) : def.tpCost();
+            int cost = FormDrivenSkills.tpCostForLevel(def, sp, next);
 
             // LECTURA A: mind_req[n-1] es el TOTAL que la habilidad ocupa EN ese nivel. Subir
             // del 4 al 5 libera los 26 del 4 y ocupa los 34 del 5: hacen falta 8 LIBRES.

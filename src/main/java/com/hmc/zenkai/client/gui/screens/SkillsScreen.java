@@ -11,7 +11,7 @@ import com.hmc.zenkai.feature.skills.ForgetSkillPacket;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.skills.SkillDef;
-import com.hmc.zenkai.feature.skills.SuperForms;
+import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -144,18 +144,15 @@ public class SkillsScreen extends ZenkaiMenuScreen {
      * un max_level fijo mostraría niveles que ese jugador no puede desbloquear nunca.
      */
     private int maxLevelOf(SkillDef def) {
-        if (def == null) return 0;
-        return def.levelsFromForms() && mc.player != null
-                ? Math.min(def.maxLevel(), SuperForms.maxLevel(mc.player))
-                : def.maxLevel();
+        if (def == null || mc.player == null) return def == null ? 0 : def.maxLevel();
+        return FormDrivenSkills.maxLevel(def, mc.player);
     }
 
     /** Coste en TP de subir al nivel indicado (derivado de la forma que desbloquea, si aplica). */
     private int costOf(SkillDef def, int nextLevel) {
         if (def == null) return Integer.MAX_VALUE;
-        return def.levelsFromForms() && mc.player != null
-                ? SuperForms.tpCostForLevel(mc.player, nextLevel)
-                : def.tpCost();
+        if (mc.player == null) return def.tpCost();
+        return FormDrivenSkills.tpCostForLevel(def, mc.player, nextLevel);
     }
 
     /** ¿Se puede pagar el siguiente nivel de esta habilidad? */

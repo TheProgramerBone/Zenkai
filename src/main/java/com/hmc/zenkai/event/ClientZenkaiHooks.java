@@ -121,6 +121,9 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_KAIOKEN = IconUV.grid(2, 2);
     private static final IconUV ICON_KI_CHARGE = IconUV.grid(0, 2);
     private static final IconUV ICON_LEGENDARY = IconUV.grid(5, 2);
+    // "Majin" en el HUD es SOLO PlayerVisualAttachment.isMajinControlled (la maldición/
+    // posesión, ver MajinEffect/PersistentEffectsSystem). PlayerStateFlags llegó a tener un
+    // campo isMajin aparte que no representaba nada real; se eliminó para no confundir los dos.
     private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
     private static final IconUV ICON_STRAIN = IconUV.grid(10, 1);
     private static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);

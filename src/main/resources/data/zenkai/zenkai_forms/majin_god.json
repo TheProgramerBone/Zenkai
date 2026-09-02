@@ -15,5 +15,6 @@
   "body_items": {},
   "aura_type": "divine",
   "aura_rgb": "0xFFD0EA",
-  "scale": 1.1
+  "scale": 1.1,
+  "divine_tier": true
 }

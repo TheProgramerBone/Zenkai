@@ -121,10 +121,17 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
     private int tpcLabelX, tpcLabelY, tpcLabelW, tpcLabelH;
     private int plLabelX, plLabelY, plLabelW;
+    private int tpFieldX, tpFieldY, tpFieldW;
     private int kiBarX, kiBarY;
 
-    private boolean showStats = false;
-    private boolean showProgress = false;
+    // STATIC a propósito: cada visita a la pestaña Stats (volver de otra pestaña, reabrir con
+    // la tecla) crea una StatsScreen NUEVA (ver ZenkaiMenuScreen.createScreen) — con un campo
+    // de instancia normal, los popups se "cerraban solos" cada vez que el jugador se iba y
+    // volvía, aunque nunca hubiera pulsado el botón para cerrarlos. Con static sobreviven
+    // mientras dure la sesión de cliente, y solo el propio jugador los cierra clicando de
+    // nuevo el botón.
+    private static boolean showStats = false;
+    private static boolean showProgress = false;
     /**
      * Valor en curso del arrastre de Ki Control, o -1 si no se está arrastrando.
          * Es la FUENTE DE VERDAD mientras dura el gesto, en vez de escribir en el attachment y
@@ -142,6 +149,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
     }
     private final List<AttrArea> attrAreas = new ArrayList<>();
     private final List<MinusIconButton> minusButtons = new ArrayList<>();
+    private final List<PlusIconButton> plusButtons = new ArrayList<>();
 
     public StatsScreen() { super(Component.translatable("screen.zenkai.stats_screen.title")); }
 
@@ -152,6 +160,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
     @Override
     protected void initContent() {
         minusButtons.clear();
+        plusButtons.clear();
         int x = panelLeft + MARGIN;
         int y = panelTop + ATTR_Y0;
 
@@ -162,8 +171,13 @@ public class StatsScreen extends ZenkaiMenuScreen {
             minusButtons.add(minus);
             addRenderableWidget(minus);
 
-            addRenderableWidget(new PlusIconButton(x + BTN_W + 3, y,
-                    () -> spend(name, getCurrentTpStep())));
+            // .disabledAsCross(): sin TP suficiente para el punto, se ve como una cruz oscura
+            // en vez de solo un + atenuado — layoutSpendButtons() decide active/tooltip cada
+            // frame, aquí solo se fija el MODO de "inactivo" (no cambia por frame).
+            PlusIconButton plus = new PlusIconButton(x + BTN_W + 3, y,
+                    () -> spend(name, getCurrentTpStep())).disabledAsCross();
+            plusButtons.add(plus);
+            addRenderableWidget(plus);
             y += ATTR_STEP;
         }
 
@@ -218,6 +232,29 @@ public class StatsScreen extends ZenkaiMenuScreen {
         if (att == null) return;
         for (int i = 0; i < minusButtons.size() && i < ORDER.size(); i++) {
             minusButtons.get(i).active = att.raceStats().canRefund(ORDER.get(i));
+        }
+    }
+
+    /** El coste de un punto es el MISMO para los seis atributos (depende del total invertido,
+     *  no del atributo — ver computeCurrentTpCost), salvo que ESE atributo en concreto ya esté
+     *  en el tope: ahí previewTpCost() devuelve 0 para él aunque los demás cuesten TP de sobra.
+     *  Por eso el coste se calcula POR ATRIBUTO aquí, no reutilizando computeCurrentTpCost(). */
+    private void layoutSpendButtons() {
+        if (att == null) return;
+        for (int i = 0; i < plusButtons.size() && i < ORDER.size(); i++) {
+            ZenkaiAttributes a = ORDER.get(i);
+            PlusIconButton plus = plusButtons.get(i);
+            int cost = att.previewTpCost(a, getCurrentTpStep());
+            boolean atCap = cost <= 0;               // sin margen: ya en el tope global
+            boolean canBuy = !atCap && att.getTP() >= cost;
+            plus.active = canBuy;
+            if (canBuy) {
+                plus.setTooltip(null);
+            } else {
+                plus.setTooltip(Tooltip.create(Component.translatable(atCap
+                        ? "screen.zenkai.stats_screen.attr.maxed"
+                        : "screen.zenkai.stats_screen.attr.no_tp")));
+            }
         }
     }
 
@@ -299,6 +336,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         att = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         PlayerFormAttachment form = mc.player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         layoutRefundButtons();
+        layoutSpendButtons();
 
         super.render(g, mouseX, mouseY, partialTick);
 
@@ -316,8 +354,15 @@ public class StatsScreen extends ZenkaiMenuScreen {
                 styleName(), ZenkaiPalette.OK_ON_PANEL);
         drawField(g, left, panelTop + HEADER_Y2, "screen.zenkai.stats_screen.form",
                 formName(form.getFormId()), ZenkaiPalette.SPECIAL_ON_PANEL);
+        // Compacto en la cabecera ("982.1M"), exacto en el tooltip al pasar el ratón — mismo
+        // reparto que ya usa el Power Level (renderPowerTooltip) para números grandes.
+        Component tpLabel = Component.translatable("screen.zenkai.stats_screen.tp");
+        Component tpValue = Component.literal(ZenkaiNumbers.format(att.getTP()));
         drawField(g, col2, panelTop + HEADER_Y2, "screen.zenkai.stats_screen.tp",
-                Component.literal(String.valueOf(att.getTP())), ZenkaiPalette.VALUE_ON_PANEL);
+                tpValue, ZenkaiPalette.VALUE_ON_PANEL);
+        tpFieldX = col2;
+        tpFieldY = panelTop + HEADER_Y2;
+        tpFieldW = font.width(tpLabel) + font.width(tpValue);
 
         renderPowerBlock(g, font, left, right);
 
@@ -372,7 +417,8 @@ public class StatsScreen extends ZenkaiMenuScreen {
         // ══ Pie: paso + coste, en UNA línea ══
         g.drawString(font, Component.translatable("screen.zenkai.stats_screen.tpx", getCurrentTpStep()),
                 tpcLabelX+20, tpcLabelY+1, ZenkaiPalette.LABEL_ON_PANEL, false);
-        Component cost = Component.translatable("screen.zenkai.stats_screen.cost", computeCurrentTpCost());
+        Component cost = Component.translatable("screen.zenkai.stats_screen.cost",
+                ZenkaiNumbers.format(computeCurrentTpCost()));
         g.drawString(font, cost, right - font.width(cost), tpcLabelY,
                 canAffordStep() ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.DENIED_ON_PANEL, false);
 
@@ -388,6 +434,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         renderTpStepTooltip(g, mouseX, mouseY);
         renderPowerTooltip(g, mouseX, mouseY);
         renderKiBarTooltip(g, mouseX, mouseY);
+        renderTpFieldTooltip(g, mouseX, mouseY);
         if (pendingTip != null) {
             g.renderTooltip(this.font, this.font.split(pendingTip, 180), mouseX, mouseY); // ⚠ firma
         }
@@ -468,6 +515,22 @@ public class StatsScreen extends ZenkaiMenuScreen {
                         ZenkaiPalette.withAlpha(ZenkaiPalette.BORDER_IN, 90));
                 g.fill(qx, kiBarY + StatBar.H_WIDE - 1, qx + 1, kiBarY + StatBar.H_WIDE,
                         ZenkaiPalette.withAlpha(ZenkaiPalette.BORDER_IN, 90));
+            }
+
+            // Marca fija en el 50%: a diferencia de las muescas de cada escalón (arriba, todas
+            // iguales y discretas), esta es de línea completa y en color de acento — un punto
+            // de referencia siempre en el mismo sitio para volver a él a ojo sin leer el número,
+            // en vez de tener que calcular "¿dónde cae la mitad?" cada vez a mano. Solo se pinta
+            // si el 50% cae dentro del rango útil de este jugador (cap >= 50); por debajo de eso
+            // ese punto todavía no es alcanzable para él.
+            if (cap >= 50) {
+                int mx = kiBarX + Math.round(KI_BAR_W * kiFraction(50));
+                // Contorno oscuro + núcleo dorado (3px en vez de 1): el dorado a secas se
+                // perdía contra el relleno de la barra, de la MISMA familia ámbar — el
+                // contorno es lo que de verdad la separa del fondo, el grosor es lo que la
+                // hace notar sin mirar con lupa.
+                g.fill(mx - 1, kiBarY - 3, mx + 2, kiBarY + StatBar.H_WIDE + 3, ZenkaiPalette.BORDER_IN);
+                g.fill(mx, kiBarY - 2, mx + 1, kiBarY + StatBar.H_WIDE + 2, ZenkaiPalette.GOLD);
             }
 
             // Agarradera: hace evidente que la barra se arrastra.
@@ -656,6 +719,18 @@ public class StatsScreen extends ZenkaiMenuScreen {
                     "+" + Math.round(CommonConfig.majinStatBonus() * 100) + "%", ZenkaiPalette.ERROR));
         }
 
+        // Sección de estados especiales: solo aparece si hay algo que enseñar, igual que la
+        // sección de Carga solo aparece con pesas puestas — nada de una cabecera vacía.
+        boolean divine = att.isDivine();
+        boolean legendary = att.isLegendary();
+        if (divine || legendary || majin) {
+            out.add(Row.header("screen.zenkai.stats_screen.section.status", ZenkaiPalette.SECTION_STATUS));
+            String active = Component.translatable("screen.zenkai.stats_screen.status.active").getString();
+            if (divine) out.add(val("screen.zenkai.stats_screen.status.divine", active, ZenkaiPalette.GOLD));
+            if (legendary) out.add(val("screen.zenkai.stats_screen.status.legendary", active, ZenkaiPalette.OK));
+            if (majin) out.add(val("screen.zenkai.stats_screen.status.majin", active, ZenkaiPalette.ERROR));
+        }
+
         out.add(Row.header("screen.zenkai.stats_screen.section.mobility", ZenkaiPalette.SECTION_MOBILITY));
         out.add(val("screen.zenkai.stats_screen.stat.running",
                 Math.round(att.getMoveMultiplier() * 100) + "%", ZenkaiPalette.TEXT));
@@ -679,8 +754,12 @@ public class StatsScreen extends ZenkaiMenuScreen {
         }
 
         out.add(Row.header("screen.zenkai.stats_screen.section.investment", ZenkaiPalette.SECTION_INVESTMENT));
-        out.add(val("screen.zenkai.stats_screen.tp_spent",
-                String.valueOf(att.raceStats().getTpSpent()), ZenkaiPalette.VALUE));
+        // Compacto en la fila ("17.4M"), exacto en el tooltip al pasar el ratón — mismo
+        // reparto que ya usa el Power Level (renderPowerTooltip) para números grandes.
+        int tpSpent = att.raceStats().getTpSpent();
+        out.add(Row.tip(Component.translatable("screen.zenkai.stats_screen.tp_spent.label"),
+                Component.literal(ZenkaiNumbers.format(tpSpent)), ZenkaiPalette.VALUE,
+                Component.translatable("screen.zenkai.stats_screen.exact_tp", tpSpent)));
         out.add(val("screen.zenkai.stats_screen.points_invested",
                 String.valueOf(att.raceStats().totalInvested()), ZenkaiPalette.TEXT));
         return out;
@@ -811,6 +890,13 @@ public class StatsScreen extends ZenkaiMenuScreen {
         lines.add(Component.translatable("screen.zenkai.stats_screen.pl.apparent",
                 String.valueOf(att.getApparentPowerLevel())));
         g.renderComponentTooltip(this.font, lines, mouseX, mouseY);
+    }
+
+    private void renderTpFieldTooltip(GuiGraphics g, int mouseX, int mouseY) {
+        if (mouseX < tpFieldX || mouseX >= tpFieldX + tpFieldW
+                || mouseY < tpFieldY || mouseY >= tpFieldY + this.font.lineHeight) return;
+        g.renderTooltip(this.font, Component.translatable(
+                "screen.zenkai.stats_screen.exact_tp", att.getTP()), mouseX, mouseY);
     }
 
     private void renderKiBarTooltip(GuiGraphics g, int mouseX, int mouseY) {

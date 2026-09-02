@@ -16,5 +16,6 @@
   "aura_type": "divine",
   "aura_rgb": "0xFFFFFF",
   "scale": 1.0,
-  "hair_rgb": "0xFFFFFF"
+  "hair_rgb": "0xFFFFFF",
+  "divine_tier": true
 }

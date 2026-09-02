@@ -38,9 +38,26 @@ public final class SuperForms {
         return FormRegistry.chainFor(race);
     }
 
-    /** Niveles que la habilidad puede llegar a tener para esa raza (1 + nº de formas). */
+    /**
+     * Cadena "comprable" con TP normal de super_forms: la cadena completa cortada en el
+     * primer peldaño divine_tier (ver DivineForms) — a partir de ahí, esa rama ya no la cobra
+     * ni la cuenta esta skill, sino "god_ki". Sin esto, la última forma de Humano/Namekiano/
+     * Majin (y las tres del Saiyan) seguirían comprándose como un rango más de super_forms.
+     */
+    private static List<ResourceLocation> purchasableChain(Race race) {
+        List<ResourceLocation> out = new java.util.ArrayList<>();
+        for (ResourceLocation id : chain(race)) {
+            FormDef d = FormDef.get(id);
+            if (d != null && d.divineTier()) break;
+            out.add(id);
+        }
+        return out;
+    }
+
+    /** Niveles que la habilidad puede llegar a tener para esa raza (1 + nº de formas
+     *  "mortales", sin contar la rama divina). */
     public static int maxLevel(Race race) {
-        return 1 + chain(race).size();
+        return 1 + purchasableChain(race).size();
     }
 
     /**
@@ -50,7 +67,7 @@ public final class SuperForms {
      */
     public static int tpCostForLevel(Race race, int level) {
         if (level <= 1) return 0;
-        List<ResourceLocation> c = chain(race);
+        List<ResourceLocation> c = purchasableChain(race);
         int i = level - 2;
         if (i >= c.size()) return Integer.MAX_VALUE;
         FormDef fd = FormDef.get(c.get(i));
@@ -106,6 +123,8 @@ public final class SuperForms {
     public static boolean unlocked(Player p, ResourceLocation form) {
         if (form == null || FormIds.BASE.equals(form)) return true;
         Race race = raceOf(p);
+        FormDef def = FormDef.get(form);
+        if (def != null && def.divineTier()) return DivineForms.unlocked(p, form);
         if (depthOf(race, form) <= 0) return true;
         if (FormIds.SSJ4.equals(form) && !PlayerStatsAttachment.get(p).hasSsj4Ritual()) return false;
         return level(p) >= requiredLevel(race, form);

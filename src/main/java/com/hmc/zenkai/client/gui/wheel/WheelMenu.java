@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.gui.wheel;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
+import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -16,10 +17,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Construye el árbol de la rueda. ÚNICO sitio donde se decide qué aparece y en qué orden.
@@ -94,16 +99,33 @@ public final class WheelMenu {
                 Component.translatable("wheel.zenkai.base"), COL_BASE,
                 true, FormIds.BASE.equals(selected)));
 
-        for (ResourceLocation id : SuperForms.chain(race)) {
+        // Recorre el ÁRBOL de verdad (FormRegistry.childrenOf, TODOS los hijos) en vez del
+        // camino único de SuperForms.chain/FormRegistry.nextFrom (que solo sigue el primer
+        // hijo): con hermanas equivalentes en la rama divina (ssj_blue/ssj_rose, mismo parent
+        // ssj_god — ver DivineForms) el camino único se comería una de las dos en silencio, y
+        // aquí SÍ hace falta ofrecer las dos para que el jugador elija cuál llevar puesta.
+        Set<ResourceLocation> seen = new HashSet<>();
+        Deque<ResourceLocation> queue = new ArrayDeque<>();
+        ResourceLocation first = FormRegistry.firstFormFor(race);
+        if (first != null) queue.add(first);
+        while (!queue.isEmpty()) {
+            ResourceLocation id = queue.poll();
+            if (!seen.add(id)) continue; // corta ciclos de un datapack roto
+
             // Solo se enseña lo que ya se tiene. Con super_forms a nivel 1, un saiyan ve
             // SSJ1 y nada más: SSJ2/3/4 no existen para él hasta comprarlos. Enseñarlos en
             // gris adelantaba la progresión y llenaba la rueda de opciones muertas.
-            if (!SuperForms.unlocked(p, id)) continue;
-            FormDef def = FormDef.get(id);
-            int color = def == null ? COL_FORMS : (0xFF000000 | def.auraRgb());
-            out.add(WheelNode.leaf(WheelNode.Kind.FORM, id.toString(),
-                    Component.translatable("form.zenkai." + id.getPath()), color,
-                    true,id.equals(selected)));
+            if (SuperForms.unlocked(p, id)) {
+                FormDef def = FormDef.get(id);
+                int color = def == null ? COL_FORMS : (0xFF000000 | def.auraRgb());
+                out.add(WheelNode.leaf(WheelNode.Kind.FORM, id.toString(),
+                        Component.translatable("form.zenkai." + id.getPath()), color,
+                        true, id.equals(selected)));
+            }
+            for (ResourceLocation child : FormRegistry.childrenOf(id)) {
+                FormDef cd = FormDef.get(child);
+                if (cd != null && cd.allows(race)) queue.add(child);
+            }
         }
         return out;
     }

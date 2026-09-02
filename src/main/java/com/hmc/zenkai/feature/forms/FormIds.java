@@ -43,6 +43,12 @@ public final class FormIds {
     public static final ResourceLocation OOZARU       = id("oozaru");
     public static final ResourceLocation SUPER_OOZARU = id("super_oozaru");
 
+    /** Hermanas equivalentes de la rama divina Saiyan (mismo parent ssj_god, mismos números —
+     *  ver feature.skills.DivineForms). PlayerFormAttachment compara contra estos ids para
+     *  decidir si comparten maestría (CommonConfig.ssjBlueRoseShareMastery()). */
+    public static final ResourceLocation SSJ_BLUE = id("ssj_blue");
+    public static final ResourceLocation SSJ_ROSE = id("ssj_rose");
+
     private static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path);
     }

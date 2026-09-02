@@ -1,10 +1,12 @@
 package com.hmc.zenkai.feature.player;
 
+import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.forms.*;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.skills.DivineForms;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SuperForms;
 import net.minecraft.ChatFormatting;
@@ -375,6 +377,12 @@ public class PlayerFormAttachment {
         // (SSJ3 -sube la tecla-> SSJ4) hasta que el ritual esté hecho, aunque el nivel ya
         // esté pagado: unlocked(SSJ4) exige AMBAS cosas (ver su javadoc).
         if (FormIds.SUPER_OOZARU.equals(next) && !SuperForms.readyForSuperOozaru(p)) return null;
+        // FormRegistry.nextFrom solo sabe seguir "el primer hijo" — con hermanas divinas
+        // (ssj_blue/ssj_rose) eso siempre sería la misma, sin importar si este jugador es
+        // divino. DivineForms.resolveForPlayer cambia 'next' por la hermana que de verdad le
+        // corresponde antes de comprobar unlocked(); para cualquier forma sin hermanas, la
+        // devuelve tal cual.
+        next = DivineForms.resolveForPlayer(p, next);
         return SuperForms.unlocked(p, next) ? next : null;
     }
 
@@ -498,7 +506,24 @@ public class PlayerFormAttachment {
     // ── Maestría ─────────────────────────────────────────────────────────────
 
     public float getFormMastery(ResourceLocation form) {
-        return form == null ? 0f : formMastery.getOrDefault(form.toString(), 0f);
+        if (form == null) return 0f;
+        // SSJ Blue/Rose son hermanas equivalentes (mismo parent, mismos números — ver
+        // feature.skills.DivineForms): con el config activo se leen como una sola pista de
+        // maestría, la MAYOR de las dos ya acumuladas. Esto también resuelve solo el caso de
+        // "el config acaba de cambiar de false a true con las dos ya divergidas" — no hace
+        // falta migrar nada aparte, el propio getter ya las trata como una.
+        if (isBlueRoseSibling(form) && CommonConfig.ssjBlueRoseShareMastery()) {
+            return Math.max(rawMastery(FormIds.SSJ_BLUE), rawMastery(FormIds.SSJ_ROSE));
+        }
+        return rawMastery(form);
+    }
+
+    private float rawMastery(ResourceLocation form) {
+        return formMastery.getOrDefault(form.toString(), 0f);
+    }
+
+    private static boolean isBlueRoseSibling(ResourceLocation form) {
+        return FormIds.SSJ_BLUE.equals(form) || FormIds.SSJ_ROSE.equals(form);
     }
 
     /** El ritmo lo marca la propia forma (mastery_gain del datapack). */
@@ -508,6 +533,17 @@ public class PlayerFormAttachment {
         float scaled = delta * (def == null ? 1f : (float) def.masteryGain());
         if (scaled <= 0) return;
 
+        if (isBlueRoseSibling(form) && CommonConfig.ssjBlueRoseShareMastery()) {
+            // Sumar a las DOS a la vez las mantiene iguales desde ya: si el config se apaga
+            // más tarde no hace falta ninguna migración, ya estaban sincronizadas.
+            addRawMastery(FormIds.SSJ_BLUE, scaled);
+            addRawMastery(FormIds.SSJ_ROSE, scaled);
+            return;
+        }
+        addRawMastery(form, scaled);
+    }
+
+    private void addRawMastery(ResourceLocation form, float scaled) {
         String k = form.toString();
         formMastery.merge(k, scaled, Float::sum);
         formMastery.computeIfPresent(k, (key, v) -> Math.min(100f, v));
