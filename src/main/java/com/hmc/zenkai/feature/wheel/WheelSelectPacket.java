@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.wheel;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
@@ -51,6 +52,10 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
             PlayerStatsAttachment st = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
             PlayerFormAttachment fm = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
             if (st == null || fm == null || !st.isRaceChosen()) return;
+
+            // Tutorial de "mantén X para el menú radial": dispara en cada uso, no solo la
+            // primera vez, mismo criterio que COMBAT_STANCE en CombatModeServerState.
+            ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.WHEEL_USED);
 
             boolean changed = switch (pkt.kind()) {
                 case "FORM"    -> selectForm(sp, st.getRace(), fm, pkt.value());

@@ -94,7 +94,8 @@ public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC {
      *  claim exitoso, para refrescar la pantalla sin reabrirla. */
     public List<OpenMasterPayload.ServiceEntry> serviceEntries(ServerPlayer sp) {
         return services().stream()
-                .map(s -> new OpenMasterPayload.ServiceEntry(s.id(), s.label(sp).getString()))
+                .map(s -> new OpenMasterPayload.ServiceEntry(s.id(), s.label(sp).getString(),
+                        s.available(sp), s.tooltip(sp).getString()))
                 .toList();
     }
 

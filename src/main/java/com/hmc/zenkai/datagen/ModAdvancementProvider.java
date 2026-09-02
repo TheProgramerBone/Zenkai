@@ -153,9 +153,17 @@ public class ModAdvancementProvider extends AdvancementProvider {
             // No oculto a propósito: su descripción (qué tecla entra/sale de la postura de
             // combate, y qué hacen 1-9/click derecho una vez dentro) tiene que poder leerse
             // en la pantalla de logros ANTES de completarlo, si no no sirve de tutorial.
-            child(saver, efh, chooseRace, "combat_stance",
+            AdvancementHolder combatStance = child(saver, efh, chooseRace, "combat_stance",
                     net.minecraft.world.item.Items.IRON_SWORD, AdvancementType.TASK, false,
                     "stance", milestone(ZenkaiTriggers.Kinds.COMBAT_STANCE));
+
+            // No oculto por el mismo motivo que combat_stance: MANTENER pulsada la X (en vez de
+            // solo pulsarla) es un gesto que nadie adivina, y su descripción tiene que poder
+            // leerse ANTES de completarlo. Colgado de combat_stance porque es la misma tecla,
+            // un paso más — pulsar entra en combate, mantener abre el menú radial.
+            child(saver, efh, combatStance, "wheel_menu",
+                    net.minecraft.world.item.Items.COMPASS, AdvancementType.TASK, false,
+                    "wheel", milestone(ZenkaiTriggers.Kinds.WHEEL_USED));
 
             // ── TÉCNICAS ────────────────────────────────────────────────────
             AdvancementHolder firstTech = child(saver, efh, chooseRace, "first_technique",

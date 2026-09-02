@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-30T10:12:17.5499678	Advancements
+// 1.21.1	2026-09-01T22:53:12.1709837	Advancements
 f9a5c0de397f24c185f402bcbc5d5ecb1b6aafa8 data/zenkai/advancement/all_skills.json
 1e4b0aa0238e933eb91f3567c473703ef287a782 data/zenkai/advancement/all_skills_max.json
 5c11b5aaa82f4098d857b7a660bd16cebe7f2b0a data/zenkai/advancement/all_wishes.json
@@ -31,3 +31,4 @@ cc036db5917930a88443cc8e87db6a6ac71ff60c data/zenkai/advancement/scouter.json
 7f5340696a9fe7173747db7d5562f3e89c04857e data/zenkai/advancement/seven_namek.json
 bf898751ad4557dbafe4dabd718bf687c59042b9 data/zenkai/advancement/transformation.json
 32e4d84f397f1043f6beb48844b3ff6515d92cac data/zenkai/advancement/weights.json
+30682735c4b278140550cd7f5d5407197e3938bf data/zenkai/advancement/wheel_menu.json

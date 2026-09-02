@@ -551,25 +551,42 @@ public class MasterScreen extends Screen {
         }
 
         g.enableScissor(left, rowsTop(), left + BG_W, rowsTop() + visibleRows() * ROW_H);
+        OpenMasterPayload.ServiceEntry hoveredLocked = null;
         for (int i = 0; i < serviceRows.size(); i++) {
             if (!onScreen(i)) continue;
-            renderServiceRow(g, serviceRows.get(i), rowTop(i), i, mouseX, mouseY);
+            int y = rowTop(i);
+            OpenMasterPayload.ServiceEntry entry = serviceRows.get(i);
+            renderServiceRow(g, entry, y, i, mouseX, mouseY);
+            if (!entry.enabled() && mouseX >= listLeft() - 2 && mouseX <= listRight()
+                    && mouseY >= y && mouseY < y + ROW_H - 1) {
+                hoveredLocked = entry;
+            }
         }
         g.disableScissor();
         drawScrollbar(g);
+
+        // Mismo criterio que renderSkillsList/renderTechniquesList: el tooltip va fuera del
+        // scissor (y al final) o se recortaría o quedaría tapado por la siguiente fila.
+        if (hoveredLocked != null) {
+            Component tip = Component.literal(hoveredLocked.tooltip());
+            g.renderTooltip(this.font, this.font.split(tip, TOOLTIP_W), mouseX, mouseY);
+        }
     }
 
     private void renderServiceRow(GuiGraphics g, OpenMasterPayload.ServiceEntry entry, int y, int index,
                                   int mouseX, int mouseY) {
-        boolean hovered = mouseX >= listLeft() - 2 && mouseX <= listRight()
+        boolean hovered = entry.enabled() && mouseX >= listLeft() - 2 && mouseX <= listRight()
                 && mouseY >= y && mouseY < y + ROW_H - 1;
 
         if (hovered) {
             g.fill(listLeft() - 2, y, listRight(), y + ROW_H - 1, ZenkaiPalette.HOVER_VEIL);
         }
 
-        PanelText.onDark(g, this.font, Component.literal(entry.label()), listLeft(), rowTextY(y),
-                hovered ? ZenkaiPalette.TEXT_HOVER : ZenkaiPalette.OK);
+        // Deshabilitado (p. ej. cola: solo Saiyan) = mismo lenguaje que "no aprendida y no
+        // puedes pagar" en Skills/Técnicas: apagado/rojo en vez de verde, clic sin efecto.
+        int color = !entry.enabled() ? ZenkaiPalette.DENIED
+                : hovered ? ZenkaiPalette.TEXT_HOVER : ZenkaiPalette.OK;
+        PanelText.onDark(g, this.font, Component.literal(entry.label()), listLeft(), rowTextY(y), color);
 
         boolean lastVisible = index == serviceRows.size() - 1 || !onScreen(index + 1);
         if (!lastVisible) {
@@ -715,6 +732,7 @@ public class MasterScreen extends Screen {
             if (mouseY < y || mouseY >= y + ROW_H - 1) continue;
 
             OpenMasterPayload.ServiceEntry entry = serviceRows.get(i);
+            if (!entry.enabled()) return true;   // deshabilitado: absorbe el clic, no manda nada
             PacketDistributor.sendToServer(new MasterServicePacket(masterId, entityId, entry.id()));
             return true;
         }

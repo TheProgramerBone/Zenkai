@@ -269,6 +269,25 @@ public class ModCommands {
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> masteryList(ctx, EntityArgument.getPlayer(ctx, "player"))))))
 
+                // ── /zenkai alignment ────────────────────────────────────────────
+                // Fija el alineamiento directamente (rango real -100..+100, ver
+                // AlignmentManager). Sin cota en el argumento a propósito: un valor fuera de
+                // rango no rechaza el comando, se satura al extremo más cercano — mismo
+                // comportamiento que PlayerStatsAttachment.setAlignment(int) ya tiene
+                // internamente (Math.max(-100, Math.min(100, v))), así que basta con
+                // reenviarle lo que sea y dejar que clampe.
+                // Uso: /zenkai alignment set [objetivos] <valor>
+                .then(Commands.literal("alignment")
+                        .then(Commands.literal("set")
+                                .then(Commands.argument("value", IntegerArgumentType.integer())
+                                        .executes(ctx -> alignmentSet(ctx,
+                                                ctx.getSource().getPlayerOrException(),
+                                                IntegerArgumentType.getInteger(ctx, "value"))))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .then(Commands.argument("value", IntegerArgumentType.integer())
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> alignmentSet(c, sp,
+                                                                IntegerArgumentType.getInteger(c, "value"))))))))
 
                 // ── /zenkai debug entity ─────────────────────────────────────────
                 // Vuelca vida vanilla + pool zenkai de la entidad en el punto de mira.
@@ -434,6 +453,19 @@ public class ModCommands {
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(
                 () -> Component.literal("[Zenkai] " + a + " = " + value + " → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /** Ver el comentario de la rama "alignment" más arriba. {@code value} llega SIN acotar:
+     *  setAlignment() ya lo satura a [-100, 100], así que un admin puede pedir 9999 o -9999
+     *  sin que el comando falle — simplemente queda en el extremo correspondiente. */
+    private static int alignmentSet(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, int value) {
+        var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        att.setAlignment(value);
+        PlayerLifeCycle.sync(sp);
+        int applied = att.getAlignment();
+        ctx.getSource().sendSuccess(
+                () -> Component.literal("[Zenkai] Alignment = " + applied + " → " + sp.getGameProfile().getName()), true);
         return 1;
     }
 

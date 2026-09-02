@@ -24,13 +24,17 @@ import java.util.List;
 public record OpenMasterPayload(String masterId, int entityId, List<ServiceEntry> services)
         implements CustomPacketPayload {
 
-    /** label ya como String resuelto (no Component): un servicio manda su propio texto
-     *  final ("3/5 hoy"), no una clave de traducción que el cliente tenga que rellenar. */
-    public record ServiceEntry(String id, String label) {
+    /** label/tooltip ya como String resuelto (no Component): un servicio manda su propio texto
+     *  final ("3/5 hoy"), no una clave de traducción que el cliente tenga que rellenar.
+     *  enabled = MasterService.available() para este jugador; tooltip solo se enseña
+     *  cuando enabled es false (ver MasterScreen.renderServiceRow). */
+    public record ServiceEntry(String id, String label, boolean enabled, String tooltip) {
         public static final StreamCodec<FriendlyByteBuf, ServiceEntry> STREAM_CODEC =
                 StreamCodec.composite(
                         ByteBufCodecs.STRING_UTF8, ServiceEntry::id,
                         ByteBufCodecs.stringUtf8(256), ServiceEntry::label,
+                        ByteBufCodecs.BOOL, ServiceEntry::enabled,
+                        ByteBufCodecs.stringUtf8(256), ServiceEntry::tooltip,
                         ServiceEntry::new);
     }
 

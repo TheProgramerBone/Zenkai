@@ -726,7 +726,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         if (divine || legendary || majin) {
             out.add(Row.header("screen.zenkai.stats_screen.section.status", ZenkaiPalette.SECTION_STATUS));
             String active = Component.translatable("screen.zenkai.stats_screen.status.active").getString();
-            if (divine) out.add(val("screen.zenkai.stats_screen.status.divine", active, ZenkaiPalette.GOLD));
+            if (divine) out.add(val("screen.zenkai.stats_screen.status.divine", active, ZenkaiPalette.MAXED));
             if (legendary) out.add(val("screen.zenkai.stats_screen.status.legendary", active, ZenkaiPalette.OK));
             if (majin) out.add(val("screen.zenkai.stats_screen.status.majin", active, ZenkaiPalette.ERROR));
         }

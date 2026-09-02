@@ -24,7 +24,19 @@ public interface MasterService {
      *  vuelve a calcular nada, solo la enseña. Se recalcula en cada apertura/refresco. */
     Component label(ServerPlayer sp);
 
+    /** ¿Puede este jugador usarlo ahora mismo? Por defecto sí — un servicio sin restricción
+     *  propia (Korin, Kaiosama) no necesita sobrescribirlo. Cuando es false, MasterScreen
+     *  pinta la fila oscurecida y no envía el clic; el candado de verdad sigue siendo
+     *  claim() (ver su javadoc), esto es solo la señal para la UI. */
+    default boolean available(ServerPlayer sp) { return true; }
+
+    /** Motivo mostrado en tooltip cuando available() es false (p. ej. "Solo los Saiyan tienen
+     *  cola"). Ignorado si available() es true. Vacío por defecto. */
+    default Component tooltip(ServerPlayer sp) { return Component.empty(); }
+
     /** Intenta usarlo. true si tuvo efecto (ya se encargó de avisar al jugador por chat o
-     *  action bar); false si no había nada que dar (p. ej. cupo diario agotado). */
+     *  action bar); false si no había nada que dar (p. ej. cupo diario agotado).
+     *  SIEMPRE revalida aquí lo mismo que available() ya filtró para la UI — un cliente
+     *  modificado puede mandar el packet sin haber visto la pantalla nunca. */
     boolean claim(ServerPlayer sp);
 }

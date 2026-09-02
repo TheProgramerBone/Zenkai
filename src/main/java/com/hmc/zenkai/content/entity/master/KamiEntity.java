@@ -1,6 +1,7 @@
 package com.hmc.zenkai.content.entity.master;
 
 import com.hmc.zenkai.content.entity.ZenkaiMasterEntity;
+import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.master.MasterService;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -42,7 +43,23 @@ public class KamiEntity extends ZenkaiMasterEntity {
                         : "master.zenkai.kami.service.tail.grow");
             }
 
+            // Solo los Saiyan tienen cola de verdad (PlayerStatsAttachment.hasTail() no existe
+            // como concepto para el resto de razas) — sin este candado cualquier raza podía
+            // marcarse hasTail=true y quedar con la lógica de cola (OozaruConditions,
+            // TailResolver) activa sin sentido.
+            @Override public boolean available(ServerPlayer sp) {
+                return PlayerStatsAttachment.get(sp).getRace() == Race.SAIYAN;
+            }
+
+            @Override public Component tooltip(ServerPlayer sp) {
+                return available(sp) ? Component.empty()
+                        : Component.translatable("master.zenkai.kami.service.tail.locked");
+            }
+
             @Override public boolean claim(ServerPlayer sp) {
+                // Revalida aquí lo mismo que available() ya filtró para la UI: un cliente
+                // modificado puede mandar MasterServicePacket sin haber visto la fila oscurecida.
+                if (!available(sp)) return false;
                 var stats = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
                 boolean had = stats.hasTail();
                 stats.setHasTail(!had);

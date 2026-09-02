@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:combat_stance",
+  "criteria": {
+    "wheel": {
+      "conditions": {
+        "kind": "wheel_used"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.wheel_menu.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:compass"
+    },
+    "title": {
+      "translate": "advancements.zenkai.wheel_menu.title"
+    }
+  },
+  "requirements": [
+    [
+      "wheel"
+    ]
+  ],
+  "sends_telemetry_event": true
+}
