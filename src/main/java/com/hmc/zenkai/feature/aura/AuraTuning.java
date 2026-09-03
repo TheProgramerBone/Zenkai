@@ -166,6 +166,35 @@ public final class AuraTuning {
     public static final float OUTER_SCALE_MUL = 1.26f;
     public static final float OUTER_ALPHA_MUL = 0.85f;
 
+    /**
+     * Pasada aditiva opcional (AuraModifier.additiveGlow, PRUEBA DE VIABILIDAD 2026-09-02).
+     * Deliberadamente MÁS PEQUEÑA que la interior (0.55 contra el 1.0 de la interior, muy
+     * lejos del 1.26 de la exterior): la idea es un núcleo caliente pegado al cuerpo, no una
+     * silueta más grande — si fuera del mismo tamaño que la interior, sumar luz aditiva sobre
+     * esa área entera arriesgaría lavar al jugador a blanco en vez de darle brillo. Alpha bajo
+     * (0.40) por el mismo motivo: aditivo se ve MUCHO más fuerte de lo que el número sugiere
+     * porque suma en vez de mezclar, así que hace falta partir bajo y subir solo si en juego
+     * se ve tímido, nunca al revés.
+     */
+    public static final float GLOW_SCALE_MUL = 0.55f;
+    public static final float GLOW_ALPHA_MUL = 0.40f;
+
+    // ── Jitter de altura por lengua de llama ─────────────────────────────────
+    // AuraSkirtRenderer ya hacía que cada plano de cada faldón re-ruede su altura por
+    // separado (jitter × wobble, fase distinta por plano) — eso es lo que hace que las
+    // "lenguas" no salten a coro. Lo que faltaba es que la INTENSIDAD de ese jitter
+    // dependiera de la forma: hoy s.jitter() es un valor fijo del faldón (C_V2), igual
+    // para cualquier aura del juego. jitterMul reescala esa intensidad según turbulence
+    // ya calculado: una forma serena (turbulence bajo, ej. divine) apenas mueve sus
+    // lenguas; una violenta (turbulence alto, ej. ascension/dark) las hace bailar mucho
+    // más — sin datapack nuevo, reutilizando turbulence que ya viaja en AuraProfile.
+    // Rango de turbulence en reposo real: ~0.10 (formas calmadas) a ~0.45+ (descontrol/
+    // kaioken alto) — ver AuraSelfTest para vectores concretos.
+    public static final float JITTER_TURB_LO = 0.10f;
+    public static final float JITTER_TURB_HI = 0.45f;
+    public static final float JITTER_MUL_MIN = 0.55f;
+    public static final float JITTER_MUL_MAX = 1.90f;
+
     // ── Atenuación del sector frontal ────────────────────────────────────────
     // Los planos entre cámara y jugador se atenúan para que el jugador se lea
     // siempre. Sin esto el aura se lo come a corta distancia.
@@ -235,6 +264,13 @@ public final class AuraTuning {
     /** Grados por segundo que gira el anillo de energía de suelo. */
     public static float groundSpin(float presence) {
         return GROUND_SPIN_BASE + GROUND_SPIN_PER_PRESENCE * clamp01(presence);
+    }
+
+    /** Multiplicador del jitter de altura por lengua de llama, derivado de turbulence.
+     *  Ver el bloque de constantes JITTER_* arriba. */
+    public static float jitterMul(float turbulence) {
+        float t = clamp01((turbulence - JITTER_TURB_LO) / (JITTER_TURB_HI - JITTER_TURB_LO));
+        return JITTER_MUL_MIN + (JITTER_MUL_MAX - JITTER_MUL_MIN) * t;
     }
 
     /** Luminancia percibida de un RGB empaquetado. */

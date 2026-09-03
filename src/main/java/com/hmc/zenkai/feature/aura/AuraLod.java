@@ -134,7 +134,8 @@ public enum AuraLod {
                 p.core() * coreMul,
                 wisps ? p.wisps() : 0,
                 sparks ? p.sparksPerSecond() : 0f,
-                ground ? p.ground() : 0f);
+                ground ? p.ground() : 0f,
+                p.additiveGlow(), p.electricSparks(), p.fireEmbers());
     }
 
     /** Coste en quads del cono en esta banda. Para presupuestar y para depurar. */

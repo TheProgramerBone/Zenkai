@@ -3,6 +3,7 @@ package com.hmc.zenkai.event;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.aura.AuraClientState;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.client.InstantTransmissionClientState;
 import com.hmc.zenkai.feature.combat.InCombatState;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
@@ -129,6 +130,10 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);
     private static final IconUV ICON_TURBO = IconUV.grid(1, 2);
     private static final IconUV ICON_MOON = IconUV.grid(6, 0);
+    /** Celda reservada para el cooldown de Transmisión Instantánea. Sin arte propio todavía
+     *  (pendiente, ver .claude/pendiente/instant-transmission-pendiente.md) — hoy pinta lo que
+     *  haya en esa celda del atlas hasta que se genere un ícono real. */
+    private static final IconUV ICON_INSTANT_TRANSMISSION = IconUV.grid(9, 0);
 
     // =========================
     // Relleno "vivo": el valor mostrado se desliza hacia el real en vez de saltar de golpe cada
@@ -315,6 +320,13 @@ public final class ClientZenkaiHooks {
 
         if (stats.isChargingKi()) {
             drawBadge(g, iconX, iconY, ICON_KI_CHARGE);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        if (InstantTransmissionClientState.onCooldown()) {
+            drawBadge(g, iconX, iconY, ICON_INSTANT_TRANSMISSION);
+            int secondsLeft = (InstantTransmissionClientState.cooldownTicks() + 19) / 20;
+            drawBadgeLabel(g, iconX, iconY, secondsLeft + "s", 0xFFAAAAFF);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
     }

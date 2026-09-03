@@ -52,6 +52,27 @@ public final class AuraQuads {
         vert(vc, m, -w / 2f, h,  zOffset, uA, vLo, r, g, b, a);
     }
 
+    /**
+     * Igual que {@link #plane} pero para una textura QUE NO ES la hoja compartida de
+     * faldones — sin offset de celda (AuraTuning.CELL_U/CELL_V), UV 0..1 con el mismo
+     * inset para no sangrar en los bordes. Pensado para efectos con su propia imagen
+     * dedicada en vez de un cuadrante del atlas (p. ej. el rayo de Rose, el ascua de God).
+     */
+    public static void planeFull(VertexConsumer vc, PoseStack.Pose m, float w, float h,
+                                 boolean mirror, float zOffset,
+                                 float r, float g, float b, float a) {
+        float in = AuraTuning.UV_INSET;
+        float uLo = in, uHi = 1f - in;
+        float uA = mirror ? uHi : uLo;
+        float uB = mirror ? uLo : uHi;
+        float vLo = in, vHi = 1f - in;
+
+        vert(vc, m, -w / 2f, 0f, zOffset, uA, vHi, r, g, b, a);
+        vert(vc, m,  w / 2f, 0f, zOffset, uB, vHi, r, g, b, a);
+        vert(vc, m,  w / 2f, h,  zOffset, uB, vLo, r, g, b, a);
+        vert(vc, m, -w / 2f, h,  zOffset, uA, vLo, r, g, b, a);
+    }
+
     /** Quad horizontal centrado en el origen, en el plano XZ. Para la energía de suelo. */
     public static void ground(VertexConsumer vc, PoseStack.Pose m, float half, float y,
                               float u0, float v0, float r, float g, float b, float a) {

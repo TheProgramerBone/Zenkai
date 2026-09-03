@@ -1,0 +1,14 @@
+{
+  "d_mass": 0.03,
+  "d_spike": 0.22,
+  "d_turb": 0.22,
+  "d_spread": 0.05,
+  "d_height": 0.10,
+  "d_density": 0.08,
+  "turb_gain": 1.60,
+  "spread_gain": 1.20,
+  "pulse_hz_gain": 0.50,
+  "pulse_amp_gain": 1.60,
+  "additive_glow": false,
+  "fire_embers": true
+}

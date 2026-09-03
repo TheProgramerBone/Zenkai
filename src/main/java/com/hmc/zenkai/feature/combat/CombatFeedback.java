@@ -1,7 +1,9 @@
 package com.hmc.zenkai.feature.combat;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.technique.KiCombatServer;
 import com.hmc.zenkai.registry.ModSounds;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -26,9 +28,14 @@ energy_generator * EL SONIDO VA EN AttackEntityEvent y no en el evento de daño:
  * no el de cualquier daño. Con LivingDamageEvent sonaría un puñetazo al caerse de una
  * escalera o al quemarse. Suena aunque el golpe acabe mitigado a cero, igual que en vanilla:
  * el jugador oye que ha conectado, y si no ha hecho daño ya lo dice la barra.
-energy_generator * LA VARIACIÓN NO SE SORTEA AQUÍ. zenkai:hit declara tres archivos en sounds.json y el motor
- * elige uno por reproducción. Rotarlo en Java significaría mandar tres SoundEvents distintos
- * y que cada uno pudiera desincronizarse de los demás en volumen o en subtítulo.
+energy_generator * LA VARIACIÓN NO SE SORTEA AQUÍ. zenkai:hit declara cuatro archivos y zenkai:block tres en
+ * sounds.json, y el motor elige uno por reproducción. Rotarlo en Java significaría mandar
+ * varios SoundEvents distintos y que cada uno pudiera desincronizarse de los demás en volumen
+ * o en subtítulo.
+ * HIT vs BLOCK se decide leyendo KiCombatServer.isBlocking(target) directamente, no
+ * e.isCanceled(): el evento también se cancela por motivos ajenos al bloqueo (barrera de
+ * Shenlong en ModEvents.onAttackEntity) y el orden entre listeners de la misma prioridad
+ * (este y CombatZenkaiHooks.onAttackWhileBlocking) no está garantizado.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class CombatFeedback {
@@ -42,13 +49,22 @@ public final class CombatFeedback {
     @SubscribeEvent
     public static void onAttack(AttackEntityEvent e) {
         Player p = e.getEntity();
-        if (p.level().isClientSide() || e.isCanceled()) return;
+        if (p.level().isClientSide()) return;
+
+        // El defensor bloqueando manda sobre cualquier otra razón de cancelación: si está
+        // bloqueando, suena BLOCK aunque el evento esté cancelado (lo está, precisamente por
+        // eso). Si está cancelado por OTRO motivo (barrera de Shenlong, etc.) no suena nada,
+        // igual que antes de este cambio.
+        boolean blocked = e.getTarget() instanceof ServerPlayer defSp
+                && KiCombatServer.isBlocking(defSp);
+        if (!blocked && e.isCanceled()) return;
 
         float pitch = PITCH_MIN + p.getRandom().nextFloat() * (PITCH_MAX - PITCH_MIN);
+        SoundEvent sound = blocked ? ModSounds.BLOCK.get() : ModSounds.HIT.get();
         // null como jugador excluido: lo oye el mundo, incluido quien pega. Pasar sp
         // aquí es el error clásico — el atacante se queda sin el sonido de su propio golpe.
         p.level().playSound(null, e.getTarget().getX(), e.getTarget().getY(), e.getTarget().getZ(),
-                ModSounds.HIT.get(), SoundSource.PLAYERS, 1.0f, pitch);
+                sound, SoundSource.PLAYERS, 1.0f, pitch);
     }
 
     /**

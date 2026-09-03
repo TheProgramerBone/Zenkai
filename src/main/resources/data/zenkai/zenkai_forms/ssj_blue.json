@@ -14,8 +14,9 @@
   "parent": "zenkai:ssj_god",
   "body_items": {},
   "aura_type": "divine",
-  "aura_rgb": "0x4FC3F7",
+  "aura_rgb": "0x5FE8FF",
   "scale": 1.0,
-  "hair_rgb": "0x2E6FBF",
-  "divine_tier": true
+  "hair_rgb": "0x1FB8C4",
+  "divine_tier": true,
+  "aura_outer_rgb": "0x1B3F9E"
 }

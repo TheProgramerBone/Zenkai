@@ -414,5 +414,15 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.party.PartySyncPacket.TYPE,
                 com.hmc.zenkai.feature.party.PartySyncPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.party.PartySyncPacket::handle);
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.teleport.InstantTransmissionHoldPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionHoldPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionHoldPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket::handle);
     }
 }

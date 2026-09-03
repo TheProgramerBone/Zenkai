@@ -41,7 +41,19 @@ public record AuraProfile(
         float core,
         int wisps,
         float sparksPerSecond,
-        float ground
+        float ground,
+        /** FORMA, no PODER: pide una pasada extra aditiva sobre el cono (ver
+         *  AuraSkirtRenderer). No mueve size/alpha/core — solo decide una técnica de
+         *  dibujado, igual que mass/spike/... Ver el javadoc del campo homónimo en
+         *  AuraModifier para el porqué (prueba de viabilidad 2026-09-02). */
+        boolean additiveGlow,
+        /** FORMA, no PODER: cambia la geometría de las chispas a un rayo quebrado
+         *  aditivo (ver AuraSparkRenderer y el javadoc del campo homónimo en
+         *  AuraModifier). No mueve sparksPerSecond — solo cómo se dibuja cada una. */
+        boolean electricSparks,
+        /** FORMA, no PODER: activa el emisor de ascuas con textura propia (ver
+         *  AuraEmberRenderer y el javadoc del campo homónimo en AuraModifier). */
+        boolean fireEmbers
 ) {
     /** Perfil apagado. El renderer puede descartarlo sin mirar nada más. */
     public static final AuraProfile OFF =
@@ -49,7 +61,7 @@ public record AuraProfile(
                     AuraTuning.C_SPREAD, AuraTuning.C_HEIGHT, AuraTuning.C_DENSITY,
                     AuraTuning.PULSE_HZ_BASE, AuraTuning.PULSE_AMP_BASE,
                     AuraTuning.FRAME_TICKS_BASE, AuraTuning.GROUND_SPIN_BASE,
-                    0f, 0f, 0f, 0, 0f, 0f);
+                    0f, 0f, 0f, 0, 0f, 0f, false, false, false);
 
     /**
      * Constructor compacto: clampa por completo. Un spread de -0.3 o un density de 2.7 venidos
@@ -93,7 +105,8 @@ public record AuraProfile(
         return new AuraProfile(mass, spike, turbulence, spread, height, density,
                 pulseHz, pulseAmp, frameTicks, groundSpin,
                 size, alpha * frac, core * frac,
-                Math.round(wisps * frac), sparksPerSecond * frac, ground * frac);
+                Math.round(wisps * frac), sparksPerSecond * frac, ground * frac,
+                additiveGlow, electricSparks, fireEmbers);
     }
 
     /**

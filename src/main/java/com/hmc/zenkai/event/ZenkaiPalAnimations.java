@@ -254,6 +254,31 @@ public final class ZenkaiPalAnimations {
                 ZenkaiTransitions.KI_RELEASE);
     }
 
+    // ── Transmisión Instantánea (TAB sostenido) ─────────────────────────────
+
+    /** Pose de carga, sostenida mientras dura el hold — tanto si termina en blink (toque
+     *  rápido) como si llega a los 5s que arman el menú. Nombre de archivo/clip fijado en el
+     *  plan de la Fase 1 antes de que existiera el .animation.json: ver
+     *  .claude/pendiente/instant-transmission-pendiente.md. */
+    private static final ResourceLocation INSTANT_TRANSMISSION_CHARGE =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.instant_transmission_charge");
+
+    public static PlayerAnimationController transmissionController(AbstractClientPlayer player) {
+        return (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.TRANSMISSION_LAYER);
+    }
+
+    public static void playInstantTransmissionCharge(AbstractClientPlayer p) {
+        ZenkaiTransitions.play(transmissionController(p), INSTANT_TRANSMISSION_CHARGE,
+                ZenkaiTransitions.KI_CHARGE);
+    }
+
+    /** Corte SIEMPRE en seco (nunca fade-to-null, ver ZenkaiTransitions.stop). Se llama tanto
+     *  al soltar TAB (con o sin blink) como al cancelar el hold a medio camino. */
+    public static void stopInstantTransmissionCharge(AbstractClientPlayer p) {
+        ZenkaiTransitions.stop(transmissionController(p), ZenkaiTransitions.KI_CHARGE);
+    }
+
     // ── Capa de PREVIEW (editores) ───────────────────────────────────────────
 
     /**

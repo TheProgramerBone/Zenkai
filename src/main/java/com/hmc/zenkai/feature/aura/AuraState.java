@@ -19,9 +19,9 @@ package com.hmc.zenkai.feature.aura;
  * presence usa el PL APARENTE, no el real: un jugador suprimiendo su ki debe verse
  * débil aunque tenga millones de PL. Eso es intencional y encaja con el scouter.
  *
- * NOTA sobre pulseHz/pulseAmp: NO están aquí. El pulso final depende de pulseGain, que
- * es un AuraModifier; si viviera en AuraState, AuraState tendría que conocer la raza.
- * Vive en AuraProfile, que es donde se resuelve la representación.
+ * NOTA sobre pulseHz/pulseAmp: NO están aquí. El pulso final depende de pulseHzGain/
+ * pulseAmpGain, que son de un AuraModifier; si vivieran en AuraState, AuraState tendría
+ * que conocer la raza. Viven en AuraProfile, que es donde se resuelve la representación.
  */
 public record AuraState(
         float release,

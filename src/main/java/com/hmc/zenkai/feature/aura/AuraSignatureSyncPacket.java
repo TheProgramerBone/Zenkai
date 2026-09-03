@@ -45,12 +45,17 @@ public record AuraSignatureSyncPacket(List<Entry> entries) implements CustomPack
                     buf.writeFloat(m.dDensity());
                     buf.writeFloat(m.turbGain());
                     buf.writeFloat(m.spreadGain());
-                    buf.writeFloat(m.pulseGain());
+                    buf.writeFloat(m.pulseHzGain());
+                    buf.writeFloat(m.pulseAmpGain());
+                    buf.writeBoolean(m.additiveGlow());
+                    buf.writeBoolean(m.electricSparks());
+                    buf.writeBoolean(m.fireEmbers());
                 },
                 buf -> new Entry(buf.readUtf(MAX_TYPE_LEN), new AuraModifier(
                         buf.readFloat(), buf.readFloat(), buf.readFloat(),
                         buf.readFloat(), buf.readFloat(), buf.readFloat(),
-                        buf.readFloat(), buf.readFloat(), buf.readFloat())));
+                        buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(),
+                        buf.readBoolean(), buf.readBoolean(), buf.readBoolean())));
     }
 
     public static final Type<AuraSignatureSyncPacket> TYPE =

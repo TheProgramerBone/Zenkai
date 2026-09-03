@@ -3,6 +3,7 @@ package com.hmc.zenkai.registry;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.content.effect.MajinEffect;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.forms.FormDef;
@@ -331,15 +332,29 @@ public class ModCommands {
                                         .executes(ctx -> debugSetSpecialState(ctx, "isLegendary",
                                                 PlayerStatsAttachment::setLegendary,
                                                 BoolArgumentType.getBool(ctx, "value")))))
+                        // ── /zenkai debug immortal <true|false> ───────────────────────
+                        // A diferencia de divine/legendary, "immortal" también tiene un
+                        // mecanismo real (PlayerStatsAttachment.isImmortal +
+                        // PersistentEffectsSystem reaplicando ModEffects.IMMORTALITY mientras
+                        // el flag siga puesto) — mismo espíritu que "debug majin": solo ahorra
+                        // pasar por lo que sea que hoy dé inmortalidad, para pruebas rápidas.
+                        .then(Commands.literal("immortal")
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(ctx -> debugSetSpecialState(ctx, "isImmortal",
+                                                PlayerStatsAttachment::setImmortal,
+                                                BoolArgumentType.getBool(ctx, "value")))))
                         // ── /zenkai debug majin <true|false> ─────────────────────────
                         // A diferencia de divine/legendary de arriba, "majin" SÍ tiene un
                         // mecanismo real ya implementado: PersistentEffectsSystem.tick()
                         // reaplica ModEffects.MAJIN cada tick mientras
-                        // PlayerVisualAttachment.isMajinControlled() sea true (solo la muerte
-                        // lo borra de verdad). Este comando solo ahorra tener que pasar por lo
-                        // que sea que hoy active ese flag durante pruebas — no es un
-                        // placeholder de algo que falte por construir, así que no hay nada
-                        // "que borrar más adelante".
+                        // PlayerVisualAttachment.isMajinControlled() sea true, Y AHORA TAMBIÉN
+                        // lo retira en cuanto el flag pasa a false (antes solo lo hacía la
+                        // rama "true" — sin remove, MajinEffect.applyEffectTick() reactivaba el
+                        // flag solo, deshaciendo tanto este comando como /zenkai reset un tick
+                        // después; ver el comentario de PersistentEffectsSystem.tick()). Este
+                        // comando solo ahorra tener que pasar por lo que sea que hoy active ese
+                        // flag durante pruebas — no es un placeholder de algo que falte por
+                        // construir, así que no hay nada "que borrar más adelante".
                         .then(Commands.literal("majin")
                                 .then(Commands.argument("value", BoolArgumentType.bool())
                                         .executes(ctx -> debugSetMajinControlled(ctx,
@@ -424,8 +439,10 @@ public class ModCommands {
      *  PlayerStatsAttachment — son dos attachments distintos. */
     private static int debugSetMajinControlled(CommandContext<CommandSourceStack> ctx, boolean value) {
         if (!(ctx.getSource().getEntity() instanceof ServerPlayer sp)) return 0;
-        sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).setMajinControlled(value);
-        PlayerLifeCycle.sync(sp);
+        // MajinEffect.setControlled hace TRES cosas juntas y SÍNCRONAS: flag, MobEffectInstance
+        // y sync visual. No basta con tocar solo el flag (ver el javadoc de ese método para la
+        // condición de carrera exacta que eso produce con el propio tick del efecto).
+        MajinEffect.setControlled(sp, value);
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] isMajinControlled = " + value + " → " + sp.getGameProfile().getName()), true);
         return 1;
@@ -598,6 +615,13 @@ public class ModCommands {
         var visual = sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.load(new PlayerVisualAttachment().save());
         PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
+        // El load() de arriba ya deja majinControlled=false en el attachment, pero NO quita el
+        // MobEffectInstance si el jugador tenía Majin activo — sin este removeEffect síncrono,
+        // el propio tick del efecto (MajinEffect.applyEffectTick, que corre ANTES que
+        // PersistentEffectsSystem dentro del mismo tick de juego) lo detecta todavía presente y
+        // vuelve a poner el flag en true, deshaciendo el reset. Ver el javadoc de
+        // MajinEffect.setControlled para el porqué exacto de la condición de carrera.
+        sp.removeEffect(ModEffects.MAJIN);
 
         ctx.getSource().sendSuccess(
                 () -> Component.literal("[Zenkai] Full reset done → " + sp.getGameProfile().getName()), true);

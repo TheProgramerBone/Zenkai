@@ -316,6 +316,10 @@ public class Zenkai {
                         ZenkaiPalLayers.KI_LAYER, 960,
                         ZenkaiPalAnimations::newFirstPersonController);
 
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.TRANSMISSION_LAYER, 970,
+                        ZenkaiPalAnimations::newFirstPersonController);
+
                 // Prioridad 1500: por encima de BLOCK_LAYER (1200), que era la más alta. El
                 // preview del editor tiene que verse pase lo que pase; no compite con gameplay
                 // porque solo está viva mientras hay una pantalla de edición abierta.

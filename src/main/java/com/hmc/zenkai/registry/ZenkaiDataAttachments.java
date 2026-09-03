@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.feature.teleport.InstantTransmissionAttachment;
 import com.hmc.zenkai.feature.training.TrainingData;
 import com.mojang.serialization.Codec;
 import net.minecraft.nbt.CompoundTag;
@@ -100,5 +101,22 @@ public class ZenkaiDataAttachments {
                             .serialize(TRAINING_CODEC)
                             .copyOnDeath()
                             .build());
-    
+
+    public static final Codec<InstantTransmissionAttachment> INSTANT_TRANSMISSION_CODEC =
+            CompoundTag.CODEC.xmap(
+                    tag -> {
+                        var att = new InstantTransmissionAttachment();
+                        att.load(tag);
+                        return att;
+                    },
+                    InstantTransmissionAttachment::save
+            );
+
+    public static final Supplier<AttachmentType<InstantTransmissionAttachment>> INSTANT_TRANSMISSION =
+            REGISTER.register("instant_transmission", () ->
+                    AttachmentType.builder(InstantTransmissionAttachment::new)
+                            .serialize(INSTANT_TRANSMISSION_CODEC)
+                            .copyOnDeath()
+                            .build());
+
 }

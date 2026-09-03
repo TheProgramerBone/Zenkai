@@ -30,37 +30,38 @@ public final class RaceSignature {
     private static final Map<Race, AuraModifier> SIGNATURES = new EnumMap<>(Race.class);
 
     static {
-        // Saiyan — agresiva y pulsante. Puntas marcadas y, pulseGain: es la
-        // raza cuya aura late. Encaja con que sea la dueña del Kaioken.
+        // Saiyan — agresiva y pulsante. Puntas marcadas y pulseGain (hz y amp
+        // simétricos, sin pedir ninguna asimetría propia): es la raza cuya aura late.
+        // Encaja con que sea la dueña del Kaioken.
         SIGNATURES.put(Race.SAIYAN, new AuraModifier(
                 0.01f, 0.10f, 0.04f, 0.00f, 0.00f, 0.00f,
-                1.10f, 1.00f, 1.30f));
+                1.10f, 1.00f, 1.30f, 1.30f, false, false, false));
 
         // Human — compacta y estable. Poca dispersión y ganancias por debajo de 1: es la
         // que mejor aguanta cuando pierde el control. Su virtud es no romperse.
         SIGNATURES.put(Race.HUMAN, new AuraModifier(
                 0.05f, 0.00f, -0.05f, -0.06f, 0.00f, -0.05f,
-                0.80f, 0.75f, 1.00f));
+                0.80f, 0.75f, 1.00f, 1.00f, false, false, false));
 
         // Namekian — con cuerpo, movimiento suave. Más masa, menos punta, más baja.
         // Cada ganancia por debajo de 1: es la aura que menos se altera.
         SIGNATURES.put(Race.NAMEKIAN, new AuraModifier(
                 0.07f, -0.10f, -0.06f, 0.00f, -0.06f, 0.00f,
-                0.75f, 0.80f, 0.80f));
+                0.75f, 0.80f, 0.80f, 0.80f, false, false, false));
 
         // Arcosian — afilada y concentrada. Menos masa pero más densidad y más alta:
         // pegada al cuerpo y elegante en vez de explosiva. spreadGain 0.70 la mantiene
         // recogida incluso descontrolada.
         SIGNATURES.put(Race.ARCOSIAN, new AuraModifier(
                 -0.04f, 0.09f, 0.00f, -0.07f, 0.04f, 0.13f,
-                1.00f, 0.70f, 1.00f));
+                1.00f, 0.70f, 1.00f, 1.00f, false, false, false));
 
         // Majin — orgánica y turbulenta. Poca punta, mucha turbulencia y dispersión, y
         // las ganancias más altas del juego: en reposo es solo blanda, descontrolada se
         // desintegra. Es la raza que peor esconde que está al límite.
         SIGNATURES.put(Race.MAJIN, new AuraModifier(
                 0.00f, -0.08f, 0.09f, 0.07f, 0.00f, 0.00f,
-                1.30f, 1.25f, 1.15f));
+                1.30f, 1.25f, 1.15f, 1.15f, false, false, false));
     }
 
     /** NONE si la raza es null (jugador sin raza elegida todavía). */

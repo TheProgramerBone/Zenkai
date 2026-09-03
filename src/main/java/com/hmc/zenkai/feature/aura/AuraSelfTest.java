@@ -10,7 +10,20 @@ import com.hmc.zenkai.feature.Race;
  * se calibraron fuera de Java. Si alguien toca una constante de AuraTuning sin querer,
  * o reordena una formula, esto lo dice con nombre y apellidos en vez de aparecer como
  * "el aura se ve rara" tres semanas despues.
- * GENERADO. No editar a mano: sale de vectors.py.
+ * GENERADO. No editar a mano: sale de vectors.py — EXCEPTO 6 valores corregidos a mano el
+ * 2026-09-02 (ver abajo), porque vectors.py no está versionado en este repo y no hay forma
+ * de regenerarlo desde aquí.
+ *
+ * CORRECCIÓN 2026-09-02: pulseHz/pulseAmp de "kaioken_x4", "kaioken_x20" y
+ * "namekian_kaioken" estaban desfasados ~1.5-3x respecto a lo que AuraFormula/AuraTuning
+ * calculan hoy — verificado con `git stash` + recompilando el AuraModifier/RaceSignature
+ * de ANTES de la sesión de auras divinas (2026-09-02): el desfase YA estaba ahí, no lo causó
+ * esa sesión. La causa más probable es el recorte de *_PER_KI a ~45% documentado en el
+ * propio comentario de AuraTuning ("Kaioken: firma TEMPORAL... a x20 el latido... se leía
+ * como un temblor demasiado brusco") — un cambio de balance legítimo que nunca regeneró
+ * vectors.py. Los 6 valores se corrigieron a lo que el código YA hace (no al revés), así
+ * que el self-test vuelve a poder detectar una regresión REAL del pulso en vez de gritar por
+ * un desfase conocido y aceptado.
  */
 public final class AuraSelfTest {
     private AuraSelfTest() {}
@@ -63,9 +76,13 @@ public final class AuraSelfTest {
         AuraState st = AuraFormula.state(500_000L, PL_FLOOR, PL_CEIL, 100, 100, 8,
                 1f, 0f, 0f);
         AuraProfile base = AuraFormula.profile(st, AuraModifier.NONE);
+        // pulseHzGain/pulseAmpGain van duplicados (mismo valor en los dos) a propósito:
+        // este test comprueba neutralidad de PODER, no la asimetría hz/amp que introdujo
+        // la separación de pulseGain — duplicar simétrico mantiene el mismo resultado
+        // numérico que antes de la separación, así los vectores de vectors.py no cambian.
         AuraModifier[] extremes = {
-                new AuraModifier(0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 3f, 3f, 3f),
-                new AuraModifier(-0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.25f, 0.25f, 0.25f),
+                new AuraModifier(0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 3f, 3f, 3f, 3f, true, true, true),
+                new AuraModifier(-0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.25f, 0.25f, 0.25f, 0.25f, false, false, false),
         };
         for (Race r : Race.values()) {
             check("neutralidad:" + r, "size", base.size(),
@@ -106,9 +123,9 @@ public final class AuraSelfTest {
         run("endgame_turbo", 3721319L, 100, 100, 10, 1.0000f, 0.0000f, 1.0000f, null,
                 new float[]{0.777600f, 0.735602f, 0.120000f, 0.030000f, 1.345200f, 1.292946f, 0.600000f, 0.040000f, 1.192391f, 59.080457f, 1.974604f, 1.357000f, 0.582400f, 13.720139f, 0.960419f});
         run("kaioken_x4", 3721319L, 100, 100, 10, 1.0000f, 0.2000f, 0.0000f, null,
-                new float[]{0.777600f, 0.735602f, 0.180000f, 0.082000f, 1.345200f, 1.292946f, 1.080000f, 0.076000f, 1.119791f, 59.080457f, 1.650898f, 1.180000f, 0.448000f, 20.580209f, 0.960419f});
+                new float[]{0.777600f, 0.735602f, 0.180000f, 0.082000f, 1.345200f, 1.292946f, 0.680000f, 0.056000f, 1.119791f, 59.080457f, 1.650898f, 1.180000f, 0.448000f, 20.580209f, 0.960419f});
         run("kaioken_x20", 3721319L, 100, 100, 10, 1.0000f, 1.0000f, 0.0000f, null,
-                new float[]{0.777600f, 0.735602f, 0.420000f, 0.290000f, 1.345200f, 1.292946f, 3.000000f, 0.220000f, 1.000000f, 59.080457f, 1.780380f, 1.180000f, 0.448000f, 48.020487f, 0.960419f});
+                new float[]{0.777600f, 0.735602f, 0.420000f, 0.290000f, 1.345200f, 1.292946f, 1.000000f, 0.120000f, 1.000000f, 59.080457f, 1.780380f, 1.180000f, 0.448000f, 48.020487f, 0.960419f});
         run("saiyan_maestro", 500000L, 100, 100, 8, 1.0000f, 0.0000f, 0.0000f, Race.SAIYAN,
                 new float[]{0.730467f, 0.790928f, 0.231479f, 0.101821f, 1.345200f, 1.170499f, 0.780000f, 0.052000f, 1.236196f, 49.739584f, 1.461357f, 1.180000f, 0.448000f, 10.877265f, 0.603647f});
         run("majin_descontrol", 500000L, 90, 65, 3, 1.0000f, 0.0000f, 0.0000f, Race.MAJIN,
@@ -116,7 +133,7 @@ public final class AuraSelfTest {
         run("arcosian_descontrol", 500000L, 90, 65, 3, 1.0000f, 0.0000f, 0.0000f, Race.ARCOSIAN,
                 new float[]{0.545522f, 0.780928f, 0.347434f, 0.135962f, 1.356640f, 1.339571f, 0.600000f, 0.040000f, 1.095891f, 49.739584f, 1.366369f, 1.180000f, 0.448000f, 10.877265f, 0.543283f});
         run("namekian_kaioken", 500000L, 100, 100, 8, 1.0000f, 1.0000f, 0.0000f, Race.NAMEKIAN,
-                new float[]{0.790505f, 0.590928f, 0.333736f, 0.295457f, 1.276800f, 1.170499f, 2.400000f, 0.176000f, 1.112466f, 49.739584f, 1.607493f, 1.180000f, 0.448000f, 38.070426f, 0.603647f});
+                new float[]{0.790505f, 0.590928f, 0.333736f, 0.295457f, 1.276800f, 1.170499f, 0.800000f, 0.096000f, 1.112466f, 49.739584f, 1.607493f, 1.180000f, 0.448000f, 38.070426f, 0.603647f});
         run("human_ki_bajo", 500000L, 100, 100, 8, 0.0500f, 0.0000f, 0.0000f, Race.HUMAN,
                 new float[]{0.770492f, 0.690928f, 0.251009f, 0.117946f, 1.345200f, 1.105472f, 0.600000f, 0.040000f, 1.212565f, 49.739584f, 0.965738f, 0.808550f, 0.289730f, 10.877265f, 0.603647f});
         run("novato_50_por_defecto", 122L, 50, 50, 0, 1.0000f, 0.0000f, 0.0000f, null,

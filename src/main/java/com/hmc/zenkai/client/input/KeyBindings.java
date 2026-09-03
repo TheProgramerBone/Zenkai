@@ -17,6 +17,7 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.stats.TransformHoldPacket;
+import com.hmc.zenkai.feature.teleport.InstantTransmissionHoldPacket;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -37,6 +38,13 @@ public final class KeyBindings {
     public static KeyMapping LOCK_ON;
     private static final int WHEEL_HOLD_TICKS = 6; // igual que el umbral de B
     private static int xHoldTicks = 0;
+
+    /** TAB: toque/soltar = blink de Transmisión Instantánea, mantener quieto 5s = arma el
+     *  menú de planetas (Fase 2). Deliberadamente coexiste con el binding vanilla de la
+     *  lista de jugadores (key.playerlist) en la misma tecla física — decisión del usuario,
+     *  ver .claude/pendiente/instant-transmission-pendiente.md. */
+    public static KeyMapping INSTANT_TRANSMISSION;
+    private static boolean lastInstantTransmissionSent = false;
 
     /** Z: baja el % de poder en escalones (Ki Control). */
     public static KeyMapping POWER_DOWN;
@@ -121,6 +129,13 @@ public final class KeyBindings {
                 "key.categories.zenkai"
         );
         event.register(LOCK_ON);
+
+        INSTANT_TRANSMISSION = new KeyMapping(
+                "key.zenkai.instant_transmission",
+                GLFW.GLFW_KEY_TAB,
+                "key.categories.zenkai"
+        );
+        event.register(INSTANT_TRANSMISSION);
     }
 
     /**
@@ -186,10 +201,12 @@ public final class KeyBindings {
             stopChargeIfNeeded();
             stopForceIfNeeded();
             stopTransformHoldIfNeeded();
+            stopInstantTransmissionIfNeeded();
             drainClicks(CHARGE_KI);
             drainClicks(POWER_DOWN);
             drainClicks(FORM);
             drainClicks(COMBAT_MODE);
+            drainClicks(INSTANT_TRANSMISSION);
             formHeldTicks = 0;
             return;
         }
@@ -255,6 +272,18 @@ public final class KeyBindings {
             }
         }
 
+        // TAB: solo el flanco viaja al servidor (mismo criterio que B/FORM). El progreso real
+        // (quieto/no quieto, blink al soltar, armar el menú) es servidor-autoritativo: aquí no
+        // se cuentan ticks ni se decide nada, solo se refleja si la tecla está pulsada o no.
+        if (INSTANT_TRANSMISSION != null) {
+            drainClicks(INSTANT_TRANSMISSION);
+            boolean itDown = INSTANT_TRANSMISSION.isDown();
+            if (itDown != lastInstantTransmissionSent) {
+                lastInstantTransmissionSent = itDown;
+                PacketDistributor.sendToServer(new InstantTransmissionHoldPacket(itDown));
+            }
+        }
+
         // X: toque = modo combate · mantenido = rueda. El toggle pasa a dispararse al SOLTAR,
         // porque hasta entonces no sabemos si era toque o mantenido.
         drainClicks(COMBAT_MODE);
@@ -290,6 +319,13 @@ public final class KeyBindings {
         if (lastForceSent) {
             lastForceSent = false;
             PacketDistributor.sendToServer(new OverdriveChargePacket(false));
+        }
+    }
+
+    private static void stopInstantTransmissionIfNeeded() {
+        if (lastInstantTransmissionSent) {
+            lastInstantTransmissionSent = false;
+            PacketDistributor.sendToServer(new InstantTransmissionHoldPacket(false));
         }
     }
 

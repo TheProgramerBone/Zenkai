@@ -21,6 +21,7 @@ public final class SkillEffects {
     public static final String KAIOKEN = "kaioken";
     public static final String KI_INFUSE = "ki_infuse";
     public static final String KI_FIST   = "ki_fist";
+    public static final String INSTANT_TRANSMISSION = "instant_transmission";
     /** No es una habilidad comprable: se desbloquea por tener Ki Fist + Ki Infuse. */
     public static final String POTENTIAL_UNLOCK = "potential_unlock";
     /** No son habilidades comprables: se desbloquean por tener Ki Fist + Ki Infuse. */
@@ -142,5 +143,25 @@ public final class SkillEffects {
     /** Fracción del SPI (en escala de melee) que suma un golpe con los puños de ki. */
     public static double kiFistFactor(Player p) {
         return curve(p, KI_FIST, "damage_factor", 0.0);
+    }
+
+    // ── Instant Transmission ─────────────────────────────────────────────────
+    public static int instantTransmissionLevel(Player p) { return level(p, INSTANT_TRANSMISSION); }
+
+    /** Ki que cuesta un blink en el nivel actual. Fallback alto (nivel 1) por si faltara la
+     *  curva: mejor caro que gratis. */
+    public static double instantTransmissionKiCost(Player p) {
+        return curve(p, INSTANT_TRANSMISSION, "ki_cost", 40.0);
+    }
+
+    /** Cooldown tras un blink, en ticks. */
+    public static int instantTransmissionCooldownTicks(Player p) {
+        return (int) Math.round(curve(p, INSTANT_TRANSMISSION, "cooldown_ticks", 200.0));
+    }
+
+    /** Rango del blink (lock-on o raytrace), en bloques. Sube con el nivel hasta un máximo de
+     *  64 en el nivel más alto — pedido explícito del usuario. */
+    public static double instantTransmissionRange(Player p) {
+        return curve(p, INSTANT_TRANSMISSION, "range", 8.0);
     }
 }

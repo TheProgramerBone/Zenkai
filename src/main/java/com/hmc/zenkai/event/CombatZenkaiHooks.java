@@ -8,6 +8,7 @@ import com.hmc.zenkai.feature.kiweapon.KiWeaponServer;
 import com.hmc.zenkai.feature.party.PartyService;
 import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.registry.ModSounds;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
@@ -18,6 +19,7 @@ import com.hmc.zenkai.feature.technique.PhysicalCombatServer;
 import com.hmc.zenkai.feature.training.TrainingHooks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -506,6 +508,7 @@ public class CombatZenkaiHooks {
             OtherworldManager.keepInOtherworld(sp);
             return;
         }
+        playKnockout(sp);
         DownedDeathGuard.allowRealDeath(sp);
         sp.setHealth(0.0F);
         DamageSource cause = DeathCauseTracker.take(sp.getUUID());
@@ -533,9 +536,18 @@ public class CombatZenkaiHooks {
 
         if (att.flags().isDowned()) return; // ya está derribado
 
+        playKnockout(sp);
         att.flags().setDowned(true);
         att.flags().setDownedUntil(sp.serverLevel().getGameTime() + DOWNED_TICKS);
         PlayerLifeCycle.sync(sp);
+    }
+
+    /** El golpe que derriba o mata de verdad a un jugador — ver onBodyDepleted y
+     *  killImmortalOutright, los dos únicos sitios que lo llaman. NO se llama desde
+     *  DownedSystem: el timeout de 5 s sin curarse no es un golpe, es un temporizador. */
+    private static void playKnockout(ServerPlayer sp) {
+        sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                ModSounds.KNOCKOUT.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
     }
 
     /**

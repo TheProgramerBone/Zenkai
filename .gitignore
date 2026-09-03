@@ -17,6 +17,10 @@ out
 build
 .gradle
 
+# python (tools/gen_*.py scripts)
+__pycache__/
+*.pyc
+
 # other
 eclipse
 run

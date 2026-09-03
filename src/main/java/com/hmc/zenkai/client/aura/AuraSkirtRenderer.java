@@ -72,6 +72,17 @@ public final class AuraSkirtRenderer {
                     AuraTuning.OUTER_ALPHA_MUL, stepIdx, seed + 7, toCamX, toCamZ);
         }
         cone(pose, vc, plan, plan.innerColor(), scale, 1f, stepIdx, seed, toCamX, toCamZ);
+
+        // Pasada aditiva opcional (AuraModifier.additiveGlow, PRUEBA DE VIABILIDAD
+        // 2026-09-02): un núcleo caliente MÁS PEQUEÑO que la interior, sumando luz en vez
+        // de mezclarla con el cielo — ver AuraTuning.GLOW_SCALE_MUL/GLOW_ALPHA_MUL para el
+        // porqué del tamaño/alpha reducidos. Nunca sustituye al cono translúcido normal,
+        // solo se añade encima; el cuerpo/silueta del aura no cambia si esto se revierte.
+        if (p.additiveGlow()) {
+            VertexConsumer glowVc = buffers.getBuffer(ModAuraRenderType.energyAdditive(SHEET[frame]));
+            cone(pose, glowVc, plan, plan.innerColor(), scale * AuraTuning.GLOW_SCALE_MUL,
+                    AuraTuning.GLOW_ALPHA_MUL, stepIdx, seed + 13, toCamX, toCamZ);
+        }
     }
 
     private static void cone(PoseStack pose, VertexConsumer vc, AuraSkirts.Plan plan,
@@ -84,6 +95,10 @@ public final class AuraSkirtRenderer {
         float cr = AuraQuads.red(coreRgb), cg = AuraQuads.green(coreRgb),
                 cb = AuraQuads.blue(coreRgb);
         boolean fade = !Float.isNaN(toCamX);
+        // Intensidad del jitter de altura: una forma serena (turbulence bajo, ej. divine)
+        // apenas mueve sus lenguas; una violenta (ascension/dark) las hace bailar mucho
+        // más. Una sola vez por cone(), no por plano — es constante para todo el conjunto.
+        float jitterMul = AuraTuning.jitterMul(plan.profile().turbulence());
 
         int si = 0;
         for (AuraSkirt s : plan.skirts()) {
@@ -93,13 +108,17 @@ public final class AuraSkirtRenderer {
             float u0 = AuraQuads.cellU(s.tex());
             float vMass = AuraQuads.cellV(s.tex());
             float vCore = AuraQuads.coreCellV(s.tex());
+            // Tope defensivo: con jitter*mul >= 1 el plano podría llegar a altura cero o
+            // negativa (quad degenerado/invertido). s.jitter() hoy nunca pasa de 0.22 y
+            // JITTER_MUL_MAX de 1.90 (máx. 0.418), pero el tope no depende de eso.
+            float jitterAmt = Math.min(0.9f, s.jitter() * jitterMul);
 
             for (int i = 0; i < s.count(); i++) {
                 // Jitter por plano: re-rueda cada 2 steps, con fase desfasada por plano
                 // (i*7 + si*13) para que las llamas no salten a coro.
                 int jStep = (stepIdx + i * 7 + si * 13) >> 1;
                 float wobble = AuraQuads.hash01(i, si, seed, jStep);
-                float h = s.height() * scale * (1f - s.jitter() * wobble);
+                float h = s.height() * scale * (1f - jitterAmt * wobble);
                 boolean mirror = AuraQuads.hash01(i + 31, si, seed, jStep) > 0.5f;
                 float ang = s.offsetDeg() + i * step;
 

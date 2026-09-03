@@ -13,9 +13,10 @@
   "spi_req": 190,
   "parent": "zenkai:ssj4",
   "body_items": {},
-  "aura_type": "divine",
-  "aura_rgb": "0xC0392B",
+  "aura_type": "ascension",
+  "aura_rgb": "0xFFB300",
   "scale": 1.0,
-  "hair_rgb": "0xB33A2E",
-  "divine_tier": true
+  "hair_rgb": "0xC0392B",
+  "divine_tier": true,
+  "aura_outer_rgb": "0xFF3300"
 }

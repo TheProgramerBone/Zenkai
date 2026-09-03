@@ -33,6 +33,7 @@ public final class ClientZenkaiPalTick {
         int flyState = FLY_OFF;
         int flyTimer = 0;          // cuenta atrás de start/stop hacia su siguiente estado
         boolean blockPlaying = false;
+        boolean itPlaying = false;    // Transmisión Instantánea: pose de carga (TAB sostenido)
         boolean combatPlaying = false;
         int combatStyle = -1;      // ordinal del Style con el que se posó
         int combatStartTicks = 0;  // cuenta atrás del start antes del loop
@@ -226,6 +227,22 @@ public final class ClientZenkaiPalTick {
             com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "BLOCK", "stop");
             st.blockPlaying = false;
             ZenkaiPalAnimations.stopBlock(p);
+        }
+
+        // ── Transmisión Instantánea (TAB): predicción local, mismo criterio que las técnicas
+        // físicas ("el jugador local anima por predicción, no por sync") — un solo clip
+        // sostenido mientras la tecla esté pulsada, sin esperar a que el servidor confirme
+        // nada (el blink en sí SIEMPRE lo decide el servidor; esto es solo la pose). ──
+        if (p == mc.player) {
+            boolean itHeld = KeyBindings.INSTANT_TRANSMISSION != null
+                    && KeyBindings.INSTANT_TRANSMISSION.isDown();
+            if (itHeld && !st.itPlaying) {
+                st.itPlaying = true;
+                ZenkaiPalAnimations.playInstantTransmissionCharge(p);
+            } else if (!itHeld && st.itPlaying) {
+                st.itPlaying = false;
+                ZenkaiPalAnimations.stopInstantTransmissionCharge(p);
+            }
         }
     }
 

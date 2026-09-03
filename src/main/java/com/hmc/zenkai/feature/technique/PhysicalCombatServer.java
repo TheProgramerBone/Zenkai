@@ -6,6 +6,7 @@ import com.hmc.zenkai.feature.combat.KiFist;
 import com.hmc.zenkai.feature.combat.KiInfusion;
 import com.hmc.zenkai.registry.ModParticles;
 import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.registry.ModSounds;
 import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.combat.CombatModeServerState;
@@ -355,16 +356,18 @@ public final class PhysicalCombatServer {
 
     /** ÚNICO sitio donde se dibuja el impacto de una técnica física.
      *  El tinte sale del aura del ATACANTE, resuelto en servidor: viaja en el packet
-     *  de partículas, así que el conjunto de clientes ve el mismo color. */
+     *  de partículas, así que el conjunto de clientes ve el mismo color.
+     *  El SONIDO es uno solo por bloqueado/no bloqueado (PHYSICAL_IMPACT/_BLOCK, ver ModSounds)
+     *  — antes eran sonidos vanilla distintos por técnica, marcados como placeholder; el
+     *  volumen/pitch propio de cada técnica se mantiene en el record Fx. */
     private static void impactFx(ServerPlayer sp, LivingEntity e, PhysicalTechnique t) {
-        record Fx(float flash, int sparks, double spread,
-                  net.minecraft.sounds.SoundEvent sound, float vol, float pitch) {}
+        record Fx(float flash, int sparks, double spread, float vol, float pitch) {}
 
         Fx fx = switch (t) {
-            case DASH_PUNCH -> new Fx(1.0f,  8, 0.25, SoundEvents.PLAYER_ATTACK_STRONG,    1.0f, 1.1f); // ⚠
-            case HEAVY_BLOW -> new Fx(2.0f, 18, 0.45, SoundEvents.PLAYER_ATTACK_CRIT,      1.0f, 0.8f); // ⚠
-            case BARRAGE    -> new Fx(0.7f,  4, 0.18, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 0.7f, 1.6f); // ⚠
-            case KIAI       -> new Fx(1.4f, 10, 0.35, SoundEvents.PLAYER_ATTACK_SWEEP,     0.9f, 1.4f); // ⚠
+            case DASH_PUNCH -> new Fx(1.0f,  8, 0.25, 1.0f, 1.1f);
+            case HEAVY_BLOW -> new Fx(2.0f, 18, 0.45, 1.0f, 0.8f);
+            case BARRAGE    -> new Fx(0.7f,  4, 0.18, 0.7f, 1.6f);
+            case KIAI       -> new Fx(1.4f, 10, 0.35, 0.9f, 1.4f);
         };
 
         var lvl = sp.serverLevel();
@@ -376,7 +379,10 @@ public final class PhysicalCombatServer {
                 x, y, z, 1, 0.0, 0.0, 0.0, 0.0);
         lvl.sendParticles(ModParticles.spark(rgb, 1.0f),
                 x, y, z, fx.sparks(), s, 0.2, s, fx.spread());
-        lvl.playSound(null, x, y, z, fx.sound(), SoundSource.PLAYERS, fx.vol(), fx.pitch());
+
+        boolean blocked = e instanceof ServerPlayer defSp && KiCombatServer.isBlocking(defSp);
+        var sound = blocked ? ModSounds.PHYSICAL_IMPACT_BLOCK.get() : ModSounds.PHYSICAL_IMPACT.get();
+        lvl.playSound(null, x, y, z, sound, SoundSource.PLAYERS, fx.vol(), fx.pitch());
     }
 
     /** Funnel de daño físico: aquí (y SOLO aquí) se pega y se dibuja el impacto.

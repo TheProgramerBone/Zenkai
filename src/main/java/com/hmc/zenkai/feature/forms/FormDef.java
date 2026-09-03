@@ -59,6 +59,13 @@ import java.util.Map;
  * cadena parent/hijo que el resto para efectos de la rueda y la maestría. Dos formas con el
  * MISMO parent y ambas divineTier son hermanas EQUIVALENTES a la misma profundidad divina
  * (ssj_blue/ssj_rose): el jugador elige cuál llevar puesta, no hay que comprarlas por separado.
+ *
+ * auraOuterRgb (default -1 = sin capa exterior): tinte de una SEGUNDA capa de aura que
+ * ENVUELVE a la principal (auraRgb), el mismo mecanismo que ya usaba solo Kaioken-sobre-forma
+ * (ver AuraColors.resolveLayers) — ahora una forma puede pedirlo por su cuenta sin necesitar
+ * Kaioken encima. Pensado para auras de dos tonos (SSJ Rose/Goku Black: magenta por dentro,
+ * granate oscuro por fuera). Si la forma está activa CON Kaioken, Kaioken sigue ganando la capa
+ * exterior (KAIOKEN_RGB) — este campo solo se usa cuando la forma no lleva Kaioken encima.
  */
 public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
@@ -70,7 +77,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       String auraType, int auraRgb, int hairRgb, double scale,
                       boolean descendable, double overdriveCeilingBonus,
                       double overdriveDrainMultUntrained, double overdriveDrainMultMastered,
-                      boolean wheelSelectable, boolean divineTier) {
+                      boolean wheelSelectable, boolean divineTier, int auraOuterRgb) {
 
     public enum Kind {
         /** Innata por raza: no la enseña ningún maestro. */
@@ -167,6 +174,9 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
      *  Con el pelo en escala de grises, un solo modelo sirve para cualquier forma. */
     public boolean tintsHair() { return hairRgb >= 0; }
 
+    /** ¿Esta forma pide su propia capa exterior de aura (dos tonos)? -1 = solo capa simple. */
+    public boolean hasAuraOuter() { return auraOuterRgb >= 0; }
+
     /** Item de cuerpo para un slot ("head", "chest", "legs", "feet"). null = no lo cambia. */
     public ResourceLocation bodyItem(String slot) {
         return slot == null ? null : bodyItems.get(slot.toLowerCase(Locale.ROOT));
@@ -202,6 +212,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeDouble(d.overdriveDrainMultMastered());
                 buf.writeBoolean(d.wheelSelectable());
                 buf.writeBoolean(d.divineTier());
+                buf.writeInt(d.auraOuterRgb());
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -223,7 +234,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         readMap(buf), readMap(buf),
                         buf.readUtf(), buf.readInt(), buf.readInt(), buf.readDouble(),
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
-                        buf.readBoolean(), buf.readBoolean());
+                        buf.readBoolean(), buf.readBoolean(), buf.readInt());
             });
 
     private static void writeMap(FriendlyByteBuf buf, Map<String, ResourceLocation> map) {

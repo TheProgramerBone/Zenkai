@@ -142,7 +142,7 @@ public final class ClientConfig {
     private static final ModConfigSpec.IntValue HUD_BARS_SCALE =
             defineInt("hud.bars_scale", "hud_bars_scale",
                     "Size, in percent of the native texture, of the Body/Stamina/Ki bars in the HUD",
-                    100, 20, 150, 5);
+                    65, 20, 150, 5);
 
     // ── HUD de técnicas ──────────────────────────────────────────────────────
 

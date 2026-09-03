@@ -101,10 +101,13 @@ public final class AuraFormula {
                 * (AuraTuning.DENSITY_BASE + AuraTuning.DENSITY_PER_PRESENCE * st.presence());
 
         // ── COMPORTAMIENTO ───────────────────────────────────────────────────
+        // pulseHzGain y pulseAmpGain son independientes a propósito: una firma "lenta e
+        // imponente" quiere hz bajo (respiración pausada) Y amp alto (swing grande) a la
+        // vez, algo que un único pulseGain no podía expresar (ver AuraModifier).
         float pulseHz = (AuraTuning.PULSE_HZ_BASE
-                + AuraTuning.PULSE_HZ_PER_KI * st.kaiokenIntensity()) * m.pulseGain();
+                + AuraTuning.PULSE_HZ_PER_KI * st.kaiokenIntensity()) * m.pulseHzGain();
         float pulseAmp = (AuraTuning.PULSE_AMP_BASE
-                + AuraTuning.PULSE_AMP_PER_KI * st.kaiokenIntensity()) * m.pulseGain();
+                + AuraTuning.PULSE_AMP_PER_KI * st.kaiokenIntensity()) * m.pulseAmpGain();
 
         // La cadencia mira turbulence Y presence: un maestro tiene chaos 0, y atarla
         // solo al descontrol dejaba al jugador más poderoso con el aura más plana.
@@ -133,7 +136,8 @@ public final class AuraFormula {
 
         return new AuraProfile(mass, spike, turbulence, spread, height, density,
                 pulseHz, pulseAmp, frameTicks, groundSpin,
-                size, alpha, core, wisps, sparks, ground);
+                size, alpha, core, wisps, sparks, ground,
+                m.additiveGlow(), m.electricSparks(), m.fireEmbers());
     }
 
     private static float getSize(AuraState st) {

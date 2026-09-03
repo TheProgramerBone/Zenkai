@@ -7,5 +7,6 @@
   "d_density": 0.00,
   "turb_gain": 1.25,
   "spread_gain": 1.05,
-  "pulse_gain": 1.35
+  "pulse_hz_gain": 1.35,
+  "pulse_amp_gain": 1.35
 }

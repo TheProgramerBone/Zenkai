@@ -24,6 +24,12 @@ public final class ZenkaiPalLayers {
     public static final ResourceLocation KI_LAYER =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki");
 
+    /** Pose de carga de la Transmisión Instantánea (TAB sostenido). Capa propia y no KI_LAYER:
+     *  conceptualmente parecida (un hold que gasta ki) pero es un gesto independiente que no
+     *  debe competir por la misma capa si algún día se permite combinarlo con cargar ki. */
+    public static final ResourceLocation TRANSMISSION_LAYER =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "transmission");
+
     /** Preview de los editores (técnicas, y lo que venga). NO es una capa de gameplay:
      *  la escribe únicamente TechniqueAnimPreview y su controlador va en FirstPersonMode.NONE,
      *  así que la animación no entra en la pasada de 1ª persona.
@@ -34,6 +40,7 @@ public final class ZenkaiPalLayers {
 
     /** El conjunto de capas del mod, para aplicarles políticas comunes de una pasada. */
     public static final ResourceLocation[] ALL = {
-            TRANSFORM_LAYER, FLY_LAYER, BLOCK_LAYER, COMBAT_LAYER, PHYS_LAYER, KI_LAYER
+            TRANSFORM_LAYER, FLY_LAYER, BLOCK_LAYER, COMBAT_LAYER, PHYS_LAYER, KI_LAYER,
+            TRANSMISSION_LAYER
     };
 }

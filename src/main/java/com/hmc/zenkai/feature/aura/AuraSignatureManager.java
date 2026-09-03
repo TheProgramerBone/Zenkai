@@ -62,6 +62,10 @@ public final class AuraSignatureManager {
         return o.has(key) ? GsonHelper.getAsFloat(o, key, fallback) : fallback;
     }
 
+    private static boolean readBool(JsonObject o, String key, boolean fallback) {
+        return o.has(key) ? GsonHelper.getAsBoolean(o, key, fallback) : fallback;
+    }
+
     private static final class Loader extends SimplePreparableReloadListener<Map<String, AuraModifier>> {
 
         @Override
@@ -96,7 +100,11 @@ public final class AuraSignatureManager {
                             readFloat(o, "d_density", 0f),
                             readFloat(o, "turb_gain", 1f),
                             readFloat(o, "spread_gain", 1f),
-                            readFloat(o, "pulse_gain", 1f)));
+                            readFloat(o, "pulse_hz_gain", 1f),
+                            readFloat(o, "pulse_amp_gain", 1f),
+                            readBool(o, "additive_glow", false),
+                            readBool(o, "electric_sparks", false),
+                            readBool(o, "fire_embers", false)));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la firma de aura en {}: {}", file, ex.toString());
                 }

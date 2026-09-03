@@ -51,10 +51,14 @@ public final class AuraColors {
         var form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         FormDef def = form.activeDef();
         boolean kaio = form.getKaioken().isOn();
-        // Kaioken SOBRE una forma: rojo por FUERA envolviendo el color de la forma.
+        // Kaioken SOBRE una forma: rojo por FUERA envolviendo el color de la forma, siempre
+        // ganando sobre la capa exterior propia de la forma (si tuviera una) — un jugador
+        // forzando Kaioken quiere verlo, no que se lo tape su propio aura de dos tonos.
         if (kaio && def != null) return new Layers(def.auraRgb(), KAIOKEN_RGB);
         if (kaio) return new Layers(KAIOKEN_RGB, -1);
-        if (def != null) return new Layers(def.auraRgb(), -1);
+        // Forma sin Kaioken: su propia capa exterior si la declara (aura de dos tonos, ver
+        // FormDef.auraOuterRgb), o -1 (capa única) si no.
+        if (def != null) return new Layers(def.auraRgb(), def.auraOuterRgb());
         // Majin solo tiñe el aura en BASE (con forma activa manda la forma).
         if (visual.isMajinControlled()) return new Layers(MAJIN_RGB, -1);
         // Tinte por alineamiento: solo si el jugador no ha fijado un color propio en

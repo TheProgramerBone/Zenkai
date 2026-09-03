@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.aura;
 
+import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.aura.AuraSkirts;
 import com.hmc.zenkai.feature.aura.AuraTuning;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -8,6 +9,7 @@ import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -26,21 +28,44 @@ import java.util.Random;
  * es exactamente su firma: no crece, se descontrola.
  * Las chispas sobreviven hasta la banda FAR a propósito: cuando el aura ya no se
  * distingue, siguen diciendo "ese está forzando algo".
- * TODO(assets): hoy usan el cuadrante de penacho de la hoja de llamas, muy estirado y
- * corto de vida, que da un destello afilado aceptable. Cuando existan hojas propias de
- * rayo (rayo_0..2), sustituir la celda y subir la vida: para los rayos GRANDES el plan
- * es geometría segmentada, no billboards.
+ * Las chispas NORMALES usan el cuadrante de penacho de la hoja de llamas compartida —
+ * muy estirado y corto de vida, da un destello afilado aceptable.
+ *
+ * RAYOS QUEBRADOS (AuraModifier.electricSparks, hoy solo rose.json): TEXTURA PROPIA
+ * (aura_rayo.png, ver tools/gen_aura_particles.py — un segmento recto que se afina en
+ * las dos puntas), no el cuadrante de penacho de la hoja de llamas — ese fue un
+ * placeholder aceptable mientras no existía nada mejor, pero seguía siendo geometría de
+ * llama, no de rayo. En vez de un quad recto se dibujan 3 segmentos encadenados con
+ * quiebro lateral alternado (zigzag, la "geometría segmentada" que el diseño original ya
+ * apuntaba), en ADITIVO (`ModAuraRenderType.energyAdditive`) en vez de translúcido, y
+ * tintados siempre con el color INTERIOR del plan (para Rose, violeta — garantizado, no
+ * el sorteo inner/outer/core normal). El resto de la vida (spawn, física, expiración) es
+ * EXACTAMENTE el mismo sistema que las chispas normales; solo cambia cómo se dibuja una
+ * chispa concreta. Aditivo aquí es más seguro que en AuraSkirtRenderer.additiveGlow
+ * (viabilidad descartada, ver AuraTuning.GLOW_*): son quads pequeños, dispersos en un
+ * radio alrededor del jugador (nunca centrados en su cuerpo) y de vida cortísima (2-5
+ * ticks), no un cono grande solapando la silueta entera.
  */
 public final class AuraSparkRenderer {
     private AuraSparkRenderer() {}
 
+    private static final ResourceLocation RAYO_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/aura_rayo.png");
+
     private static final float ALPHA_MUL = 1.35f;
     private static final int MAX_PER_PLAYER = 32;
+
+    /** Alfa de cada segmento del rayo quebrado. Más bajo que ALPHA_MUL porque es
+     *  aditivo (suma, no mezcla) y son 3 segmentos que se solapan en las esquinas. */
+    private static final float JAGGED_ALPHA_MUL = 0.85f;
+    /** Desplazamiento lateral del quiebro, como fracción del ancho de la chispa. */
+    private static final float JAGGED_KICK = 2.4f;
 
     private static final class Spark {
         double x, y, z, vx, vy, vz;
         float age, life, w, h, roll, r, g, b;
         boolean mirror;
+        boolean jagged;
     }
 
     private static final Random RNG = new Random();
@@ -73,11 +98,17 @@ public final class AuraSparkRenderer {
             double rad = (0.30 + 0.45 * RNG.nextDouble()) * eff;
             double y0 = (0.35 + 1.75 * RNG.nextDouble()) * eff;
 
-            int rgb = (plan.hasOuter() && RNG.nextBoolean())
-                    ? plan.outerColor()
-                    : (plan.hasCore() ? plan.coreColor() : plan.innerColor());
+            boolean jagged = plan.profile().electricSparks();
+            // El rayo quebrado siempre usa el color INTERIOR (para Rose, violeta
+            // garantizado) — nada de sortear outer/core, que diluiría el "morado" que
+            // pidió el brief de arte en un carmesí o un blanco al azar.
+            int rgb = jagged ? plan.innerColor()
+                    : (plan.hasOuter() && RNG.nextBoolean())
+                            ? plan.outerColor()
+                            : (plan.hasCore() ? plan.coreColor() : plan.innerColor());
 
             Spark s = new Spark();
+            s.jagged = jagged;
             s.x = at.x + Math.sin(ang) * rad;
             s.y = at.y + y0;
             s.z = at.z + Math.cos(ang) * rad;
@@ -122,8 +153,13 @@ public final class AuraSparkRenderer {
         }
 
         int frame = (int) ((t / 2) % AuraTuning.SHEET_FRAMES);
-        VertexConsumer vc = buffers.getBuffer(
-                ModAuraRenderType.energy(AuraSkirtRenderer.sheet(frame)));
+        ResourceLocation sheet = AuraSkirtRenderer.sheet(frame);
+        VertexConsumer vc = buffers.getBuffer(ModAuraRenderType.energy(sheet));
+        // Textura PROPIA para el rayo (aura_rayo.png), no la hoja compartida — solo se
+        // pide si hace falta (algún jugador con electricSparks activo), pero pedirla de
+        // más no cuesta nada: getBuffer es un fetch memoizado, no un draw call, el draw
+        // call real solo ocurre si algo se escribe en el buffer.
+        VertexConsumer vcGlow = buffers.getBuffer(ModAuraRenderType.energyAdditive(RAYO_TEXTURE));
         float yaw = -cam.getYRot();
         float u0 = AuraQuads.cellU(2), v0 = AuraQuads.cellV(2);
 
@@ -134,17 +170,52 @@ public final class AuraSparkRenderer {
                 float lf = 1f - Math.min(1f, (s.age + pt) / s.life);
                 // Cuadrática: la chispa muere de golpe en vez de desvanecerse.
                 float fade = lf * lf;
+                float h = s.h * (0.5f + 0.5f * lf);
 
                 pose.pushPose();
                 pose.translate(s.x + s.vx * pt, s.y + s.vy * pt, s.z + s.vz * pt);
                 pose.mulPose(Axis.YP.rotationDegrees(yaw));
                 pose.mulPose(Axis.ZP.rotationDegrees(s.roll));
-                AuraQuads.plane(vc, pose.last(), s.w, s.h * (0.5f + 0.5f * lf), u0, v0,
-                        s.mirror, 0f, s.r, s.g, s.b,
-                        AuraSkirts.BASE_ALPHA * ALPHA_MUL * fade);
+                if (s.jagged) {
+                    drawJagged(vcGlow, pose, s, h, fade);
+                } else {
+                    AuraQuads.plane(vc, pose.last(), s.w, h, u0, v0,
+                            s.mirror, 0f, s.r, s.g, s.b,
+                            AuraSkirts.BASE_ALPHA * ALPHA_MUL * fade);
+                }
                 pose.popPose();
             }
         }
         pose.popPose();
+    }
+
+    /**
+     * Rayo quebrado: 3 segmentos encadenados subiendo desde el origen de la chispa, con
+     * quiebro lateral alternado (zigzag) — la "geometría segmentada" del TODO de clase.
+     * El pose ya está trasladado/rotado al billboard de la chispa (ver renderAll); cada
+     * segmento solo añade su propio quiebro lateral encima.
+     */
+    private static void drawJagged(VertexConsumer vc, PoseStack pose, Spark s, float totalH,
+                                   float fade) {
+        int segs = 3;
+        float segH = totalH / segs;
+        float kick = s.w * JAGGED_KICK;
+        float a = AuraSkirts.BASE_ALPHA * JAGGED_ALPHA_MUL * fade;
+
+        for (int seg = 0; seg < segs; seg++) {
+            float lateral = (seg % 2 == 0 ? 1f : -1f) * kick;
+            pose.pushPose();
+            pose.translate(lateral, seg * segH, 0f);
+            // Quiebro angular además del lateral: sin esto los 3 segmentos siguen leyéndose
+            // como un solo quad recto desplazado, no como un rayo roto.
+            pose.mulPose(Axis.ZP.rotationDegrees(seg % 2 == 0 ? 16f : -16f));
+            // Segmentos ligeramente más largos que totalH/segs para que se solapen en las
+            // uniones — si no, el quiebro lateral deja huecos entre segmento y segmento.
+            // planeFull: textura propia (aura_rayo.png), sin offset de celda de la hoja
+            // compartida.
+            AuraQuads.planeFull(vc, pose.last(), s.w, segH * 1.3f,
+                    s.mirror, 0f, s.r, s.g, s.b, a);
+            pose.popPose();
+        }
     }
 }

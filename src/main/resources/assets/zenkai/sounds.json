@@ -19,15 +19,43 @@
   },
   "hit": {
     "subtitle": "sounds.zenkai.hit",
-    "sounds": ["zenkai:hit_1", "zenkai:hit_2", "zenkai:hit_3"]
+    "sounds": ["zenkai:hit1", "zenkai:hit2", "zenkai:hit3", "zenkai:hit4"]
+  },
+  "block": {
+    "subtitle": "sounds.zenkai.block",
+    "sounds": ["zenkai:block1", "zenkai:block2", "zenkai:block3"]
+  },
+  "knockout": {
+    "subtitle": "sounds.zenkai.knockout",
+    "sounds": ["zenkai:knockout"]
+  },
+  "physical_impact": {
+    "subtitle": "sounds.zenkai.physical_impact",
+    "sounds": ["zenkai:physicalimpact"]
+  },
+  "physical_impact_block": {
+    "subtitle": "sounds.zenkai.physical_impact_block",
+    "sounds": ["zenkai:physicalimpactblock"]
+  },
+  "teleport": {
+    "subtitle": "sounds.zenkai.teleport",
+    "sounds": ["zenkai:teleport"]
+  },
+  "ki_charge_start": {
+    "subtitle": "sounds.zenkai.ki_charge_start",
+    "sounds": ["zenkai:ki_charge_start"]
   },
   "ki_charge": {
     "subtitle": "sounds.zenkai.ki_charge",
-    "sounds": [{ "name": "zenkai:ki_charge", "stream": false }]
+    "sounds": [{ "name": "zenkai:ki_charge_loop", "stream": false }]
   },
   "turbo_loop": {
     "subtitle": "sounds.zenkai.turbo_loop",
-    "sounds": [{ "name": "zenkai:turbo_loop", "stream": false }]
+    "sounds": [{ "name": "zenkai:ki_charge_loop", "stream": false }]
+  },
+  "detransform": {
+    "subtitle": "sounds.zenkai.detransform",
+    "sounds": ["zenkai:detransform"]
   },
   "ki_attack_charge_1": { "subtitle": "sounds.zenkai.ki_attack_charge", "sounds": ["zenkai:ki_attack_charge_1"] },
   "ki_attack_charge_2": { "subtitle": "sounds.zenkai.ki_attack_charge", "sounds": ["zenkai:ki_attack_charge_2"] },

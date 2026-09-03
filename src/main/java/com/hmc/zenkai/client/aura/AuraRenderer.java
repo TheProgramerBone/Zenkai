@@ -99,6 +99,7 @@ public final class AuraRenderer {
             // Emisores anclados al mundo: se dibujan luego, en conjunto.
             AuraWispRenderer.spawn(p, at, plan, t);
             AuraSparkRenderer.spawn(p, at, plan, t, dtTicks);
+            AuraEmberRenderer.spawn(p, at, plan, t);
 
             // Dirección jugador->cámara en XZ, para atenuar el sector frontal.
             double dcx = camPos.x - at.x, dcz = camPos.z - at.z;
@@ -135,6 +136,7 @@ public final class AuraRenderer {
         // así que se simulan y dibujan fuera del bucle.
         AuraWispRenderer.renderAll(pose, buffers, cam, camPos, t, pt);
         AuraSparkRenderer.renderAll(pose, buffers, cam, camPos, t, pt);
+        AuraEmberRenderer.renderAll(pose, buffers, cam, camPos, t, pt);
 
         buffers.endBatch();
     }
@@ -152,5 +154,7 @@ public final class AuraRenderer {
         AuraTrailRenderer.clear(id);
         AuraWispRenderer.clear(id);
         AuraSparkRenderer.clear(id);
+        AuraEmberRenderer.clear(id);
+        AuraRimRenderer.clear(id);
     }
 }
