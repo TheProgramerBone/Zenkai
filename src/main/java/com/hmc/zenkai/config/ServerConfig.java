@@ -47,6 +47,10 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PORUNGA_WISHES;
     public static final ModConfigSpec.IntValue BROADCAST_RADIUS;
 
+    // ── Transmisión Instantánea: dos toggles independientes (2) ─────────────────
+    public static final ModConfigSpec.BooleanValue INSTANT_TRANSMISSION_ENABLED;
+    public static final ModConfigSpec.BooleanValue INSTANT_TRANSMISSION_MENU_ENABLED;
+
     public static final ModConfigSpec SPEC;
 
     static {
@@ -116,6 +120,20 @@ public class ServerConfig {
                         "de Shenlong: invocación y deseo concedido (con qué se pidió).",
                         "0 = solo el jugador que interactúa.")
                 .defineInRange("broadcast_radius", 32, 0, 256);
+        BUILDER.pop();
+
+        BUILDER.push("instant_transmission");
+        INSTANT_TRANSMISSION_ENABLED = BUILDER
+                .comment("Habilita o deshabilita por completo la técnica de Transmisión Instantánea",
+                        "(comprarla, el blink, todo). Pensado para un server/modpack que la vea",
+                        "demasiado rota/OP y prefiera apagarla entera en vez de tocar números.")
+                .define("technique_enabled", true);
+        INSTANT_TRANSMISSION_MENU_ENABLED = BUILDER
+                .comment("Habilita o deshabilita SOLO el menú de planetas (quedarse quieto para",
+                        "armarlo, saltos entre dimensiones, TP a la party). El blink de nivel 1",
+                        "(mirar un punto y confirmar) sigue funcionando aunque esto esté apagado —",
+                        "es un toggle independiente de technique_enabled, no un sub-caso.")
+                .define("menu_enabled", true);
         BUILDER.pop();
 
         SPEC = BUILDER.build();
@@ -210,6 +228,8 @@ public class ServerConfig {
     public static int shenlongWishCount()        { return SHENLONG_WISHES.get(); }
     public static int porungaWishCount()           { return PORUNGA_WISHES.get(); }
     public static int broadcastRadius()          { return BROADCAST_RADIUS.get(); }
+    public static boolean instantTransmissionEnabled()     { return INSTANT_TRANSMISSION_ENABLED.get(); }
+    public static boolean instantTransmissionMenuEnabled() { return INSTANT_TRANSMISSION_MENU_ENABLED.get(); }
 
     // === LÓGICA FINAL: aplica overrides con las nuevas opciones ===
     public static ItemStack resolveWishStack(ItemStack chosen) {

@@ -261,7 +261,17 @@ public final class ZenkaiPalAnimations {
      *  plan de la Fase 1 antes de que existiera el .animation.json: ver
      *  .claude/pendiente/instant-transmission-pendiente.md. */
     private static final ResourceLocation INSTANT_TRANSMISSION_CHARGE =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.instant_transmission_charge");
+                ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.instant_transmission_charge");
+
+    /** Clip de salida (el brazo baja solo) cuando el blink SÍ se ejecutó — ver
+     *  ClientZenkaiPalTick.onInstantTransmissionTeleported. Mismo patrón que el par charge/
+     *  release de las técnicas de ki (TechniqueAnimSets): un clip SOSTENIDO (hold_on_last_frame)
+     *  para la espera y un clip CORTO, de un solo disparo (sin loop), para el cierre — nunca un
+     *  fade-to-null (ver la prohibición documentada en ZenkaiTransitions.stop). Archivo pendiente
+     *  de crear en Blockbench por el usuario: sin él, ZenkaiTransitions.play devuelve false y el
+     *  llamador cae al corte en seco de siempre — no revienta nada. */
+    private static final ResourceLocation INSTANT_TRANSMISSION_RELEASE =
+                ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.instant_transmission_release");
 
     public static PlayerAnimationController transmissionController(AbstractClientPlayer player) {
         return (PlayerAnimationController) PlayerAnimationAccess
@@ -273,8 +283,20 @@ public final class ZenkaiPalAnimations {
                 ZenkaiTransitions.KI_CHARGE);
     }
 
-    /** Corte SIEMPRE en seco (nunca fade-to-null, ver ZenkaiTransitions.stop). Se llama tanto
-     *  al soltar TAB (con o sin blink) como al cancelar el hold a medio camino. */
+    /** @return true si el clip de salida existe y se lanzó — false si el asset todavía no
+     *  existe, para que el llamador caiga a stopInstantTransmissionCharge (corte en seco) en vez
+     *  de dejar la pose de carga congelada para siempre sin ningún camino de salida. */
+    public static boolean playInstantTransmissionRelease(AbstractClientPlayer p) {
+        return ZenkaiTransitions.play(transmissionController(p), INSTANT_TRANSMISSION_RELEASE,
+                ZenkaiTransitions.KI_RELEASE);
+    }
+
+    /** Corte SIEMPRE en seco (nunca fade-to-null, ver ZenkaiTransitions.stop). Reservado para
+     *  cuando el hold NO termina en un blink real: se cancela a medio camino, se arma el menú en
+     *  vez de blinkear, o el clip de salida (arriba) todavía no existe — ver
+     *  ClientZenkaiPalTick.onInstantTransmissionTeleported/onInstantTransmissionMenuOpened y el
+     *  timeout IT_AWAIT_TIMEOUT_TICKS. Cuando SÍ hay blink real, usar
+     *  playInstantTransmissionRelease en su lugar para que el brazo baje solo. */
     public static void stopInstantTransmissionCharge(AbstractClientPlayer p) {
         ZenkaiTransitions.stop(transmissionController(p), ZenkaiTransitions.KI_CHARGE);
     }

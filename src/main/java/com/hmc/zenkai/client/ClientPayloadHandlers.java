@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client;
 
+import com.hmc.zenkai.client.gui.screens.InstantTransmissionMenuScreen;
 import com.hmc.zenkai.client.gui.screens.MasterScreen;
 import com.hmc.zenkai.client.gui.screens.NpcMarkerScreen;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
@@ -33,5 +34,12 @@ public final class ClientPayloadHandlers {
 
     public static void openWishScreen() {
         Minecraft.getInstance().setScreen(new ShenlongWishScreen());
+    }
+
+    public static void openInstantTransmissionMenu() {
+        // El hold de TAB terminó en menú, no en blink — resuelve la espera de animación con un
+        // corte en seco (no hay "teletransportación" que bajar el brazo suavemente aquí).
+        ClientZenkaiPalTick.onInstantTransmissionMenuOpened();
+        Minecraft.getInstance().setScreen(new InstantTransmissionMenuScreen());
     }
 }

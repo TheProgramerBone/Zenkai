@@ -316,13 +316,21 @@ public class Zenkai {
                         ZenkaiPalLayers.KI_LAYER, 960,
                         ZenkaiPalAnimations::newFirstPersonController);
 
+                // Prioridad 1250, por encima de BLOCK_LAYER (1200) — pedido explícito del
+                // usuario: quiere que la pose de carga se vea SIEMPRE, incluso volando (FLY_LAYER,
+                // 800). AnimationStack.get3DTransform aplica las capas en orden ascendente de
+                // prioridad y cada una transforma el hueso que dejó la anterior ("Highest index =
+                // it can override everything else", PAL AnimationStack.java) — con 970 ya le
+                // ganaba a FLY_LAYER numéricamente, pero se sube más para que sea inequívocamente
+                // la capa dominante de gameplay (justo debajo de PREVIEW, que es la única que
+                // debe estar siempre por encima de todo).
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
-                        ZenkaiPalLayers.TRANSMISSION_LAYER, 970,
+                        ZenkaiPalLayers.TRANSMISSION_LAYER, 1250,
                         ZenkaiPalAnimations::newFirstPersonController);
 
-                // Prioridad 1500: por encima de BLOCK_LAYER (1200), que era la más alta. El
-                // preview del editor tiene que verse pase lo que pase; no compite con gameplay
-                // porque solo está viva mientras hay una pantalla de edición abierta.
+                // Prioridad 1500: por encima de TRANSMISSION_LAYER (1250), ahora la más alta de
+                // gameplay. El preview del editor tiene que verse pase lo que pase; no compite
+                // con gameplay porque solo está viva mientras hay una pantalla de edición abierta.
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.PREVIEW_LAYER, 1500,
                         ZenkaiPalAnimations::newPreviewController);
@@ -352,6 +360,14 @@ public class Zenkai {
         @SubscribeEvent
         public static void onKeyInput(InputEvent.Key event) {
             KeyBindings.handleKeyInput(event);
+        }
+
+        /** Clic derecho mientras TAB está pulsado = confirma el blink de Transmisión Instantánea
+         *  (ver KeyBindings.handleMouseButton) — MouseButton.Pre, no Post, porque hace falta poder
+         *  cancelar el clic para que no dispare además una interacción normal. */
+        @SubscribeEvent
+        public static void onMouseButton(InputEvent.MouseButton.Pre event) {
+            KeyBindings.handleMouseButton(event);
         }
 
         /** Textura (agua vanilla) + tinte del agua curativa. Ver HealingWaterFluidClientExtensions. */

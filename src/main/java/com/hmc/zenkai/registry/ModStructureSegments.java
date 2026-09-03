@@ -49,11 +49,22 @@ public final class ModStructureSegments {
 
     // Planeta de Kaiosama: cubo 2×2×2 de 48³ (esfera de r=40 centrada en su local 41,41,41).
     // Estos 3 valores son el único mando: mueven el planeta entero respecto a OTHERWORLD_BASE.
-    // Ahora mismo: centrado en X sobre la punta de la serpentina (x 31..49), ecuador a la
-    // altura de la calzada (y 25..27) y pegado justo detrás del último bloque de camino (z 914).
+    // Centrado en X sobre la punta de la serpentina (x 31..49), ecuador a la altura de la
+    // calzada (y 25..27).
+    // BUG corregido: KAIO_DZ estaba en 914 asumiendo que el último tramo del camino (piezas
+    // otherworld_palace_42/43) medía 48 de fondo como el resto — en realidad esas dos piezas
+    // miden solo 15 de fondo en Z (comprobado leyendo el tag "size" de su NBT), así que su
+    // contenido real termina en z=912+15=927, no en z=912+48=960. Con KAIO_DZ=914, la cara
+    // frontal de la esfera (KAIO_DZ+1=915, r=40 centrada en local 41) quedaba DENTRO del tramo
+    // real del camino (912..927) — al colocarse el palacio DESPUÉS que Kaiosama
+    // (ZenkaiStructurePlacement.ensureKaiosama corre antes que ensureOtherworldPalace, ver su
+    // comentario de orden), esa pieza sobrescribía un mordisco de la esfera con lo que hubiera
+    // en su NBT ahí, cortando un tramo visible del planeta. Subido a 935 (esfera al menos 8
+    // bloques por detrás del final real del camino, z=927) para dejar hueco de sobra sin
+    // pegarlo de nuevo al filo exacto.
     private static final int KAIO_DX = -1;
     private static final int KAIO_DY = 0;
-    private static final int KAIO_DZ = 914;
+    private static final int KAIO_DZ = 935;
 
     public static final BlockPos OTHERWORLD_NO_SPAWN_MIN = new BlockPos(
             OTHERWORLD_BASE.getX() - 16,
@@ -61,8 +72,10 @@ public final class ModStructureSegments {
             OTHERWORLD_BASE.getZ() - 16);
     // SZ se corta justo donde empieza la zona de Kaiosama (ver KAIO_NO_SPAWN_MIN más abajo):
     // antes esta caja llegaba hasta z=1040 y se comía también el planeta de Kaiosama, así que
-    // ese tramo (incluido el planeta) quedaba protegido a nombre de Yemma.
-    public static final int OTHERWORLD_NO_SPAWN_SX = 176, OTHERWORLD_NO_SPAWN_SY = 120, OTHERWORLD_NO_SPAWN_SZ = 914;
+    // ese tramo (incluido el planeta) quedaba protegido a nombre de Yemma. Debe coincidir
+    // siempre con KAIO_DZ (mismo valor) para que las dos zonas queden justo pegadas, sin hueco
+    // ni solape entre el protector de Yemma y el de Kaiosama.
+    public static final int OTHERWORLD_NO_SPAWN_SX = 176, OTHERWORLD_NO_SPAWN_SY = 120, OTHERWORLD_NO_SPAWN_SZ = 935;
 
     // Zona de no-spawn/protección propia del planeta de Kaiosama, separada de la de Yemma
     // (arriba) para que el protector mostrado en ese tramo sea Kaiosama y no Yemma.
@@ -74,7 +87,23 @@ public final class ModStructureSegments {
             OTHERWORLD_BASE.getZ() + KAIO_DZ - 16);
     public static final int KAIO_NO_SPAWN_SX = 128, KAIO_NO_SPAWN_SY = 128, KAIO_NO_SPAWN_SZ = 128;
 
-    public static final List<Segment> OTHERWORLD = List.of(
+    /** Punto de aterrizaje fijo del planeta de Kaiosama, para Instant Transmission (Fase 2):
+     *  centro X/Z del cubo 2×2×2 y justo encima del centro de la esfera (r=40, centrada en su
+     *  local 41,41,41 — ver el comentario de KAIO_DX/DY/DZ), para caer en la superficie de
+     *  arriba. Mismo espíritu que OtherworldManager.OTHERWORLD_SPAWN para Yemma: una posición
+     *  FIJA conocida en vez de calcularla en runtime, ver TeleportAnchors. */
+    public static final BlockPos KAIOSAMA_ENTRANCE = new BlockPos(
+            OTHERWORLD_BASE.getX() + KAIO_DX + 48,
+            OTHERWORLD_BASE.getY() + KAIO_DY + 48 + 41,
+            OTHERWORLD_BASE.getZ() + KAIO_DZ + 48);
+
+    // Separado de la lista de Kaiosama (ver KAIOSAMA más abajo) en la sesión de la Fase 2 de
+    // Instant Transmission: el sistema de "el jugador encontró esta estructura" necesita una
+    // clave de colocación PROPIA por estructura (ver ZenkaiStructurePlacement.ensureKaiosama),
+    // y las dos vivían fusionadas bajo el mismo placeOnce. El desplazamiento relativo a
+    // OTHERWORLD_BASE de cada pieza no cambió, así que el resultado en el mundo es idéntico a
+    // antes — solo se coloca en dos llamadas en vez de una.
+    public static final List<Segment> OTHERWORLD_PALACE = List.of(
             Segment.of("otherworld_palace_1",   0, 0,   0),
             Segment.of("otherworld_palace_2",  48, 0,   0),
             Segment.of("otherworld_palace_3",  96, 0,   0),
@@ -117,9 +146,12 @@ public final class ModStructureSegments {
             Segment.of("otherworld_palace_40", 48, 0, 864),
             Segment.of("otherworld_palace_41",  0, 0, 864),
             Segment.of("otherworld_palace_42", 48, 0, 912),
-            Segment.of("otherworld_palace_43",  0, 0, 912),
+            Segment.of("otherworld_palace_43",  0, 0, 912)
+    );
 
-            // Planeta de Kaiosama, al final de la serpentina.
+    // Planeta de Kaiosama, al final de la serpentina — clave de colocación propia
+    // (ZenkaiStructurePlacement.ensureKaiosama), separada del palacio de Yemma.
+    public static final List<Segment> KAIOSAMA = List.of(
             Segment.of("kaiosama_1", KAIO_DX,      KAIO_DY,      KAIO_DZ),
             Segment.of("kaiosama_2", KAIO_DX + 48, KAIO_DY,      KAIO_DZ),
             Segment.of("kaiosama_3", KAIO_DX,      KAIO_DY,      KAIO_DZ + 48),

@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.input;
 
+import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.client.CombatModeClientState;
 import com.hmc.zenkai.client.LockOnClientState;
 import com.hmc.zenkai.client.overlay.ScouterClientState;
@@ -16,8 +17,11 @@ import com.hmc.zenkai.feature.ki.PowerPercentPacket;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.stats.TransformHoldPacket;
+import com.hmc.zenkai.feature.teleport.InstantTransmissionConfirmPacket;
 import com.hmc.zenkai.feature.teleport.InstantTransmissionHoldPacket;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -39,10 +43,13 @@ public final class KeyBindings {
     private static final int WHEEL_HOLD_TICKS = 6; // igual que el umbral de B
     private static int xHoldTicks = 0;
 
-    /** TAB: toque/soltar = blink de Transmisión Instantánea, mantener quieto 5s = arma el
-     *  menú de planetas (Fase 2). Deliberadamente coexiste con el binding vanilla de la
-     *  lista de jugadores (key.playerlist) en la misma tecla física — decisión del usuario,
-     *  ver .claude/pendiente/instant-transmission-pendiente.md. */
+    /** TAB: mantener pulsado + CLIC DERECHO = blink de Transmisión Instantánea (ver
+     *  handleMouseButton — soltar TAB solo, sin clic derecho, ya NO teletransporta, pedido
+     *  explícito del usuario tras probar Dragon Block C, para evitar el blink accidental de
+     *  quien solo toca la tecla). Mantener quieto 2s SÍ sigue siendo solo la tecla: arma el
+     *  menú de planetas (Fase 2) y soltar lo abre sin necesitar clic derecho. Deliberadamente
+     *  coexiste con el binding vanilla de la lista de jugadores (key.playerlist) en la misma
+     *  tecla física — decisión del usuario, ver .claude/pendiente/instant-transmission-pendiente.md. */
     public static KeyMapping INSTANT_TRANSMISSION;
     private static boolean lastInstantTransmissionSent = false;
 
@@ -163,6 +170,32 @@ public final class KeyBindings {
         if (SENSE_KI != null && SENSE_KI.consumeClick()) {
             SenseKiClientState.onKeyPress(mc);
         }
+    }
+
+    /**
+     * Clic derecho + TAB sostenido = confirma el blink de Transmisión Instantánea (ver el
+     * javadoc de INSTANT_TRANSMISSION). Se engancha a MouseButton.Pre (ANTES de que vanilla
+     * procese el clic) para poder CANCELARLO: sin esto, el mismo clic también dispararía una
+     * interacción normal por debajo (abrir un cofre, comer, colocar un bloque) mientras dura
+     * este gesto, que es justo lo que se quiere evitar sosteniendo una tecla poco común. Solo
+     * consume el PRESS (no el release, que no nos interesa) y solo mientras el jugador tiene la
+     * skill de verdad — sin eso, sostener TAB (que en este mod también es la tecla de la lista
+     * de jugadores) no debe robarle el clic derecho a nadie que no haya comprado la habilidad.
+     * La animación de salida (el brazo baja solo) se predice AQUÍ MISMO, en el instante del
+     * clic — ver ClientZenkaiPalTick.onInstantTransmissionConfirmClicked — sin esperar a que el
+     * servidor confirme que el blink de verdad se ejecutó.
+     */
+    public static void handleMouseButton(InputEvent.MouseButton.Pre e) {
+        if (e.getButton() != GLFW.GLFW_MOUSE_BUTTON_RIGHT || e.getAction() != InputConstants.PRESS) return;
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.screen != null) return;
+        if (INSTANT_TRANSMISSION == null || !INSTANT_TRANSMISSION.isDown()) return;
+        if (SkillEffects.instantTransmissionLevel(mc.player) <= 0) return;
+
+        e.setCanceled(true);
+        PacketDistributor.sendToServer(new InstantTransmissionConfirmPacket());
+        ClientZenkaiPalTick.onInstantTransmissionConfirmClicked();
     }
 
     /**

@@ -33,7 +33,13 @@ public final class ClientZenkaiPalTick {
         int flyState = FLY_OFF;
         int flyTimer = 0;          // cuenta atrás de start/stop hacia su siguiente estado
         boolean blockPlaying = false;
-        boolean itPlaying = false;    // Transmisión Instantánea: pose de carga (TAB sostenido)
+        // Transmisión Instantánea: pose de carga (TAB sostenido). Soltar TAB sin haber
+        // confirmado con clic derecho corta en seco al instante (no hubo blink, nada que
+        // animar). El blink SÍ predice su salida de inmediato al hacer clic derecho — ver
+        // onInstantTransmissionConfirmClicked — sin esperar confirmación del servidor: pedido
+        // explícito del usuario (el retraso del viaje de ida y vuelta se notaba), aceptando que
+        // la animación de éxito se reproduzca igual si el blink termina fallando en silencio.
+        boolean itPlaying = false;
         boolean combatPlaying = false;
         int combatStyle = -1;      // ordinal del Style con el que se posó
         int combatStartTicks = 0;  // cuenta atrás del start antes del loop
@@ -229,10 +235,16 @@ public final class ClientZenkaiPalTick {
             ZenkaiPalAnimations.stopBlock(p);
         }
 
-        // ── Transmisión Instantánea (TAB): predicción local, mismo criterio que las técnicas
-        // físicas ("el jugador local anima por predicción, no por sync") — un solo clip
-        // sostenido mientras la tecla esté pulsada, sin esperar a que el servidor confirme
-        // nada (el blink en sí SIEMPRE lo decide el servidor; esto es solo la pose). ──
+        // ── Transmisión Instantánea (TAB): predicción local pura, tanto para EMPEZAR a cargar
+        // como para la SALIDA — mismo criterio que las técnicas físicas ("el jugador local anima
+        // por predicción, no por sync"). Soltar SIN haber confirmado con clic derecho corta en
+        // seco al instante: no hubo blink, nada que animar. El cierre "de éxito" (el brazo baja
+        // solo) NO se dispara aquí — lo dispara onInstantTransmissionConfirmClicked, llamado
+        // directamente desde KeyBindings.handleMouseButton en el mismo instante del clic derecho,
+        // sin esperar ninguna confirmación del servidor (pedido explícito del usuario: el
+        // pequeño retraso del viaje de ida y vuelta se notaba — se acepta que la animación de
+        // éxito se reproduzca igual si el blink termina fallando en silencio, sin ki/en
+        // cooldown). ──
         if (p == mc.player) {
             boolean itHeld = KeyBindings.INSTANT_TRANSMISSION != null
                     && KeyBindings.INSTANT_TRANSMISSION.isDown();
@@ -244,6 +256,53 @@ public final class ClientZenkaiPalTick {
                 ZenkaiPalAnimations.stopInstantTransmissionCharge(p);
             }
         }
+    }
+
+    /** Cierre común de la pose de carga con el swing de salida (el brazo baja solo) — clip corto
+     *  de un solo disparo si existe, corte en seco si el usuario aún no lo modela en Blockbench.
+     *  Compartido por los dos disparadores de abajo. */
+    private static void closeChargeWithRelease(AbstractClientPlayer p, AnimState st) {
+        st.itPlaying = false;
+        if (!ZenkaiPalAnimations.playInstantTransmissionRelease(p)) {
+            ZenkaiPalAnimations.stopInstantTransmissionCharge(p);
+        }
+    }
+
+    /** Disparador PRINCIPAL del swing de salida: predicción local inmediata en el mismo instante
+     *  del clic derecho (KeyBindings.handleMouseButton), sin esperar la confirmación real del
+     *  servidor — ver el javadoc del bloque de arriba para el porqué. Solo actúa si de verdad
+     *  había una pose de carga en curso (evita reaccionar a un clic derecho suelto sin TAB
+     *  pulsado, aunque KeyBindings ya filtra ese caso por su cuenta). */
+    public static void onInstantTransmissionConfirmClicked() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        AnimState st = STATES.get(mc.player.getUUID());
+        if (st == null || !st.itPlaying) return;
+        closeChargeWithRelease(mc.player, st);
+    }
+
+    /** Ya NO es el disparador principal (ver onInstantTransmissionConfirmClicked, que predice al
+     *  instante del clic) — el hold ya se corta en seco al soltar TAB por su cuenta, así que para
+     *  cuando llega esta confirmación del servidor `itPlaying` normalmente ya está en `false`.
+     *  Se deja como red de seguridad idempotente, no como el camino real. */
+    public static void onInstantTransmissionTeleported() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        AnimState st = STATES.get(mc.player.getUUID());
+        if (st == null || !st.itPlaying) return;
+        closeChargeWithRelease(mc.player, st);
+    }
+
+    /** Lo llama ClientPayloadHandlers al abrir el menú de planetas. El hold ya se corta en seco
+     *  al soltar TAB (ver el bloque de arriba), así que para cuando el menú llega a abrirse
+     *  `itPlaying` ya debería estar en `false` — se deja como red de seguridad idempotente. */
+    public static void onInstantTransmissionMenuOpened() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        AnimState st = STATES.get(mc.player.getUUID());
+        if (st == null || !st.itPlaying) return;
+        st.itPlaying = false;
+        ZenkaiPalAnimations.stopInstantTransmissionCharge(mc.player);
     }
 
     // ── Vuelo ────────────────────────────────────────────────────────────────

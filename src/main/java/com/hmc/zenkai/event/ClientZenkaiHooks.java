@@ -130,10 +130,11 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);
     private static final IconUV ICON_TURBO = IconUV.grid(1, 2);
     private static final IconUV ICON_MOON = IconUV.grid(6, 0);
-    /** Celda reservada para el cooldown de Transmisión Instantánea. Sin arte propio todavía
-     *  (pendiente, ver .claude/pendiente/instant-transmission-pendiente.md) — hoy pinta lo que
-     *  haya en esa celda del atlas hasta que se genere un ícono real. */
-    private static final IconUV ICON_INSTANT_TRANSMISSION = IconUV.grid(9, 0);
+    /** Celda del cooldown de Transmisión Instantánea — mismo ícono que
+     *  InstantTransmissionCrosshairOverlay pinta sobre la mira mientras se mantiene TAB (ver
+     *  drawInstantTransmissionIcon, expuesto para que la otra clase no duplique esta celda por
+     *  su cuenta). */
+    private static final IconUV ICON_INSTANT_TRANSMISSION = IconUV.grid(11, 1);
 
     // =========================
     // Relleno "vivo": el valor mostrado se desliza hacia el real en vez de saltar de golpe cada
@@ -359,14 +360,15 @@ public final class ClientZenkaiHooks {
      *
      * @param blockX  X del bloque de las 3 barras (ya pintado el fondo con bars_empty.png).
      * @param blockY  Y del bloque.
-     * @param destW   ancho de destino del BLOQUE COMPLETO (ya escalado por hudBarsScale) — el que
-     *                usa el recorte del relleno (fillDestW), igual para las 3 filas porque
-     *                fillSrcW se mide contra BARS_TEX_W en el atlas, no contra el ancho real de
-     *                cada barra.
+     * @param destW   ancho de destino del BLOQUE COMPLETO (ya escalado por hudBarsScale) — usado
+     *                solo para posicionar/pintar el fondo (bars_empty.png) en el llamador; el
+     *                relleno NO se recorta contra esto (ver rowContentW).
      * @param rowContentW ancho NATIVO (sin escalar) del contenido real de ESTA fila
-     *                (ROW_CONTENT_W_BODY/STAMINA/KI) — usado SOLO para centrar el texto cur/max,
-     *                así el número sigue la misma cascada que el contorno de la barra en vez de
-     *                centrarse sobre el bloque completo (igual para las 3 filas).
+     *                (ROW_CONTENT_W_BODY/STAMINA/KI) — es el denominador real tanto del recorte
+     *                del relleno (fillSrcW/fillDestW) como del centrado del texto cur/max, así el
+     *                relleno cubre 0..100% exactamente el ancho visible de ESTA fila (sin tramo
+     *                muerto al final) y el número sigue la misma cascada que el contorno de la
+     *                barra, en vez de medirse contra el bloque completo (igual para las 3 filas).
      * @param scale   mismo factor de escala, para pasar de píxeles de origen a píxeles de fila.
      * @param textScale escala de fuente para label/cur-max de esta fila (ver computeTextScale) —
      *                  crece con `scale` para que el texto no se quede fijo en 9px nativos
@@ -388,8 +390,17 @@ public final class ClientZenkaiHooks {
 
         drawScaledString(g, mc, label, PANEL_X, textY, textScale, 0xFFFFFFFF);
 
-        int fillSrcW = Math.round(BARS_TEX_W * fillPct);
-        int fillDestW = Math.round(destW * fillPct);
+        // Recorte medido contra el ancho REAL de contenido de esta fila (rowContentW), no contra
+        // el lienzo completo (BARS_TEX_W=256): más allá de rowContentW el atlas ya es transparente
+        // (relleno para que las 3 filas cascadeen en distinto ancho), así que medir contra 256
+        // hacía que fillSrcW alcanzara ese límite ANTES de fillPct=1 (87.5% en Stamina, 80.5% en
+        // Ki, 94.5% en Body) — la barra se veía llena entre ese % y el 100% real, sin ningún cambio
+        // visual en ese tramo. Con rowContentW como denominador, 0..1 de fillPct cubre exactamente
+        // el ancho visible, sin tramo muerto al final; la punta (chevron) sigue siendo la última en
+        // rellenarse por sí sola, solo por ser la parte más a la derecha del contenido.
+        int contentDestW = Math.round(rowContentW * scale);
+        int fillSrcW = Math.round(rowContentW * fillPct);
+        int fillDestW = Math.round(contentDestW * fillPct);
         if (fillSrcW > 0 && fillDestW > 0) {
             g.blit(BARS_FULL_TEX, blockX, rowY, fillDestW, rowDestH,
                     0f, (float) rowV, fillSrcW, BAR_ROW_H, BARS_TEX_W, BARS_TEX_H);
@@ -414,7 +425,6 @@ public final class ClientZenkaiHooks {
         // no sobre el bloque completo, para que el número "escalone" igual que el contorno.
         String txt = ZenkaiNumbers.format(cur) + "/" + ZenkaiNumbers.format(max);
         int textW = Math.round(mc.font.width(txt) * textScale);
-        int contentDestW = Math.round(rowContentW * scale);
         int textX = blockX + Math.round((contentDestW - textW) / 2f);
         drawScaledString(g, mc, txt, textX, textY, textScale, 0xFFFFFFFF);
     }
@@ -436,6 +446,17 @@ public final class ClientZenkaiHooks {
 
     private static void drawBadge(GuiGraphics g, int x, int y, IconUV icon) {
         g.blit(ICONS_TEX, x, y, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_TEX_W, ICONS_TEX_H);
+    }
+
+    /** Dibuja el MISMO ícono que el badge de cooldown de esta clase (ICON_INSTANT_TRANSMISSION)
+     *  — expuesto para que InstantTransmissionCrosshairOverlay pinte exactamente el mismo ícono
+     *  sobre la mira mientras se mantiene TAB, sin duplicar la celda del atlas por su cuenta.
+     *  Esa duplicación (dos constantes con la misma pareja u/v repetida a mano en dos clases)
+     *  fue justo lo que hizo que las dos pantallas dejaran de coincidir la última vez que esta
+     *  celda se movió — con este único punto de dibujo, un futuro cambio de celda solo se toca
+     *  aquí y las dos vistas siguen mostrando lo mismo automáticamente. */
+    public static void drawInstantTransmissionIcon(GuiGraphics g, int x, int y) {
+        drawBadge(g, x, y, ICON_INSTANT_TRANSMISSION);
     }
 
     private record IconUV(int u, int v) {

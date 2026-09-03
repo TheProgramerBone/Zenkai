@@ -67,6 +67,7 @@ public class ZenkaiTickHandlers {
         KaiokenSystem.tick(c);
         KiChargeSystem.tick(c);
         InstantTransmissionSystem.tick(c);
+        TeleportDiscoverySystem.tick(c);
         RacePassiveSystem.tick(c);
         RegenSystem.tick(c);
         // Sondeo de logros: 1x/s. No va por evento porque los stats cambian por media docena

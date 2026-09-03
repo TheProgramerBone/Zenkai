@@ -420,9 +420,44 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.teleport.InstantTransmissionHoldPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.teleport.InstantTransmissionHoldPacket::handle);
 
+        registrar.playToServer(
+                com.hmc.zenkai.feature.teleport.InstantTransmissionConfirmPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionConfirmPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionConfirmPacket::handle);
+
         registrar.playToClient(
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket.TYPE,
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.teleport.OpenInstantTransmissionMenuPayload.TYPE,
+                com.hmc.zenkai.feature.teleport.OpenInstantTransmissionMenuPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(ClientPayloadHandlers::openInstantTransmissionMenu));
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.teleport.TeleportRequestPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.TeleportRequestPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.TeleportRequestPacket::handle);
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.teleport.GenericDimensionTeleportPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.GenericDimensionTeleportPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.GenericDimensionTeleportPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.teleport.InstantTransmissionBlocklistSyncPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionBlocklistSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionBlocklistSyncPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.teleport.InstantTransmissionMenuStatePacket.TYPE,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionMenuStatePacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionMenuStatePacket::handle);
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.teleport.PartyTeleportRequestPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.PartyTeleportRequestPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.PartyTeleportRequestPacket::handle);
     }
 }

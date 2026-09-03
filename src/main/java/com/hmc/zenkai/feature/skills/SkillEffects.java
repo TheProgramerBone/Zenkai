@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.skills;
 
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.world.entity.player.Player;
@@ -146,7 +147,14 @@ public final class SkillEffects {
     }
 
     // ── Instant Transmission ─────────────────────────────────────────────────
-    public static int instantTransmissionLevel(Player p) { return level(p, INSTANT_TRANSMISSION); }
+    /** Nivel real, o 0 si el admin apagó la técnica entera por config
+     *  (ServerConfig.instantTransmissionEnabled) — ÚNICO gate de config que vive en esta clase,
+     *  a propósito: cada otra consulta de la técnica (blink, menú, HUD) ya deriva de este nivel,
+     *  así que apagarlo aquí basta para inutilizarla entera sin tener que repetir el chequeo en
+     *  cada sitio que la usa, aunque el jugador ya la hubiera comprado antes de que se apagara. */
+    public static int instantTransmissionLevel(Player p) {
+        return ServerConfig.instantTransmissionEnabled() ? level(p, INSTANT_TRANSMISSION) : 0;
+    }
 
     /** Ki que cuesta un blink en el nivel actual. Fallback alto (nivel 1) por si faltara la
      *  curva: mejor caro que gratis. */
@@ -164,4 +172,45 @@ public final class SkillEffects {
     public static double instantTransmissionRange(Player p) {
         return curve(p, INSTANT_TRANSMISSION, "range", 8.0);
     }
+
+    // ── Fase 2: umbrales de progresión del menú (fijos, no curvas del datapack — son
+    // desbloqueos puntuales, no números que escalen gradualmente) ──────────────────────────
+    private static final int MENU_MIN_LEVEL = 3;
+    private static final int CROSS_DIMENSION_MIN_LEVEL = 6;
+    private static final int PARTY_MIN_LEVEL = 8;
+
+    /** Nivel 3+: mantener TAB quieto 2s arma el menú de planetas en vez de solo cancelar el
+     *  blink (por debajo de este nivel, quedarse quieto no hace nada especial). Además del
+     *  nivel, exige ServerConfig.instantTransmissionMenuEnabled — un segundo toggle
+     *  INDEPENDIENTE de instantTransmissionEnabled (ver instantTransmissionLevel): un admin
+     *  puede apagar SOLO el menú (saltos entre dimensiones, TP a party) sin tocar el blink
+     *  básico de nivel 1, que sigue funcionando igual. */
+    public static boolean instantTransmissionMenuUnlocked(Player p) {
+        return ServerConfig.instantTransmissionMenuEnabled() && instantTransmissionLevel(p) >= MENU_MIN_LEVEL;
+    }
+
+    /** Nivel 6+: el menú permite elegir destinos en OTRA dimensión de la actual (un salto de IDA
+     *  de verdad, no un TP dentro de la misma dimensión ni un regreso al Overworld — esos dos NO
+     *  necesitan este nivel, ver TeleportDestination.executableThisPhase). Por debajo de este
+     *  nivel esas filas se ven pero bloqueadas con el tooltip "requiere nivel %s". */
+    public static boolean instantTransmissionCrossDimensionUnlocked(Player p) {
+        return instantTransmissionLevel(p) >= CROSS_DIMENSION_MIN_LEVEL;
+    }
+
+    /** El número crudo detrás de {@link #instantTransmissionCrossDimensionUnlocked}, para el
+     *  tooltip "screen.zenkai.instant_transmission.locked.level" (necesita el número real, no
+     *  solo el booleano) — InstantTransmissionMenuScreen es el único consumidor hoy. */
+    public static int crossDimensionMinLevel() { return CROSS_DIMENSION_MIN_LEVEL; }
+
+    /** Nivel 8+: TP a miembros de party — su posición EN VIVO, sin descubrimiento previo (ver
+     *  PartyTeleportRequestPacket/TeleportAnchors, que no lo cubre por ser el único destino sin
+     *  ancla fija). */
+    public static boolean instantTransmissionPartyUnlocked(Player p) {
+        return instantTransmissionLevel(p) >= PARTY_MIN_LEVEL;
+    }
+
+    /** El número crudo detrás de {@link #instantTransmissionPartyUnlocked}, para el tooltip
+     *  "screen.zenkai.instant_transmission.locked.level" — InstantTransmissionMenuScreen es el
+     *  único consumidor hoy (mismo patrón que crossDimensionMinLevel). */
+    public static int partyMinLevel() { return PARTY_MIN_LEVEL; }
 }

@@ -212,6 +212,21 @@ public final class ZenkaiPalette {
     public static final int MASTER_DIALOG_BG    = 0xFF160F1A;
     public static final int MASTER_DIALOG_PANEL = 0xFF1F1723;
 
+    // ── Paleta cósmica del menú de Transmisión Instantánea (instant_transmission_menu.png) ──
+    // Mismo motivo que la paleta de MasterScreen arriba (un diálogo con identidad propia se lee
+    // distinto de un vistazo) pero para un menú "de mapa/portal" en vez de un NPC: ÍNDIGO/
+    // VIOLETA oscuro con un acento CIAN-HELADO, deliberadamente NO el cian plano de
+    // ZenkaiTechPalette (máquina/scouter) ni el ciruela cálido de MASTER_* (personaje) — ver
+    // tools/gen_instant_transmission_menu.py para la comparación completa. El acento
+    // (TRANSMISSION_ACCENT) reutiliza el mismo tono "destello" que la propia Transmisión
+    // Instantánea ya usa en otras partes del mod (0x7FE0FF) en vez de inventar un cian nuevo.
+    public static final int TRANSMISSION_BORDER_IN  = 0xFF120C38;   // anillo interior: índigo casi negro
+    public static final int TRANSMISSION_BORDER_MID = 0xFF3D2E86;   // anillo medio: violeta-azul
+    public static final int TRANSMISSION_ACCENT     = 0xFF7FE0FF;   // anillo exterior + título: el "destello" propio de la skill
+    public static final int TRANSMISSION_BORDER_HI  = 0xFFEAF7FF;   // brillo de esquina: casi blanco, tinte helado
+    public static final int TRANSMISSION_DIALOG_BG    = 0xFF0A0E1E;
+    public static final int TRANSMISSION_DIALOG_PANEL = 0xFF141230;
+
     // ── Fondos de zona ───────────────────────────────────────────────────────
     // Los últimos literales sueltos del barrido. No son colores de texto, pero se repetían con
     // valores casi iguales en sitios distintos (0x18AC421B, 0x22AC421B) y son exactamente el
