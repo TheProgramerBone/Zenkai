@@ -1,0 +1,6 @@
+{
+  "_comment": "Example datapack file for Zenkai's Instant Transmission dimension blocklist. Any number of files can live in this folder (data/<any namespace>/zenkai_instant_transmission_blocklist/*.json) - from this mod, a modpack's own datapack, or another mod's datapack - and every file's \"dimensions\" array is merged together, so different datapacks can each block their own dimensions without overwriting one another's file. A blocked dimension simply never appears in the Instant Transmission planets menu - not greyed out, not shown with a lock tooltip - it is treated exactly like a dimension the player has never visited. It is also rejected server-side if a modified client tries to request it anyway. Reload with /reload to pick up changes without restarting the server.",
+  "dimensions": [
+    "minecraft:the_end"
+  ]
+}
