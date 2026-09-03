@@ -134,7 +134,8 @@ public final class ClientZenkaiHooks {
      *  InstantTransmissionCrosshairOverlay pinta sobre la mira mientras se mantiene TAB (ver
      *  drawInstantTransmissionIcon, expuesto para que la otra clase no duplique esta celda por
      *  su cuenta). */
-    private static final IconUV ICON_INSTANT_TRANSMISSION = IconUV.grid(11, 1);
+    private static final IconUV ICON_INSTANT_TRANSMISSION = IconUV.grid(1, 5);
+    private static final IconUV ICON_INSTANT_TRANSMISSION_CHARGED = IconUV.grid(2, 5);
 
     // =========================
     // Relleno "vivo": el valor mostrado se desliza hacia el real en vez de saltar de golpe cada

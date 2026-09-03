@@ -2,10 +2,9 @@ package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.feature.teleport.InstantTransmissionAttachment;
 import com.hmc.zenkai.feature.teleport.InstantTransmissionMenuSync;
-import com.hmc.zenkai.feature.teleport.TeleportAnchors;
+import com.hmc.zenkai.feature.teleport.StructureAnchors;
 import com.hmc.zenkai.feature.teleport.TeleportDestination;
 import com.hmc.zenkai.worldgen.ProtectedZones;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -22,12 +21,16 @@ import net.minecraft.server.level.ServerPlayer;
  * Revisión tras la Fase 2: las posiciones de destino son FIJAS (TeleportAnchors) — este sistema
  * ya no graba coordenadas por jugador, solo booleanos — y el "planeta" en sí no aparece en el
  * selector del menú hasta que el jugador haya pisado esa dimensión al menos una vez.
+ * Este tick es también el único sitio que llama a StructureAnchors.flushPending: no hace falta
+ * un tick global aparte, porque cualquier jugador online ya tica aquí una vez por tick — barato
+ * incluso cuando no hay nada pendiente que volcar.
  */
 public final class TeleportDiscoverySystem {
     private TeleportDiscoverySystem() {}
 
     public static void tick(TickCtx c) {
         if (!(c.p() instanceof ServerPlayer sp)) return;
+        StructureAnchors.flushPending(sp.server);
         InstantTransmissionAttachment att = InstantTransmissionAttachment.get(sp);
 
         boolean changed = att.markDimensionVisited(sp.level().dimension());
@@ -38,18 +41,14 @@ public final class TeleportDiscoverySystem {
         // jugador, no un punto fijo compartido) — ver GenericDimensionRow en
         // InstantTransmissionMenuScreen. Solo Overworld/Otherworld conservan destinos con
         // ancla fija que de verdad hace falta "descubrir" (Kami/Yemma/Kaiosama, abajo).
+        // Kami's Palace ya no necesita ningún caso especial aquí: su posición ahora sale de un
+        // marcador de datos capturado en generación (StructureAnchors), no de dónde estuviera
+        // parado el jugador que la descubre — descubrir solo marca el booleano, igual que
+        // Yemma/Kaiosama.
         String protector = ProtectedZones.protectorAt(sp.serverLevel(), sp.getX(), sp.getY(), sp.getZ());
         if (protector != null) {
             TeleportDestination dest = TeleportDestination.byProtectorKey(protector);
-            if (dest != null) {
-                if (dest == TeleportDestination.KAMI_PALACE) {
-                    // Fija la posición compartida la primera vez que CUALQUIER jugador la
-                    // encuentra — a partir de ahí es un punto fijo para todo el mundo, no algo
-                    // que se recalcule por jugador.
-                    TeleportAnchors.fixKamiPalaceIfNeeded(sp.server, BlockPos.containing(sp.getX(), sp.getY(), sp.getZ()));
-                }
-                if (att.markDiscovered(dest)) changed = true;
-            }
+            if (dest != null && att.markDiscovered(dest)) changed = true;
         }
 
         // Solo resincroniza cuando algo cambió de verdad — nunca en bucle cada tick.

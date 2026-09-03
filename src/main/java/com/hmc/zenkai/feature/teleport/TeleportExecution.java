@@ -49,6 +49,15 @@ public final class TeleportExecution {
 
         sp.teleportTo(destLevel, dest.x, dest.y, dest.z, sp.getYRot(), sp.getXRot());
 
+        // Red de seguridad ADEMÁS de TeleportUtil.isSafe evitando portales de verdad: sp.
+        // teleportTo(...) es el overload de posición pura, no pasa por ServerPlayer.
+        // changeDimension(...), así que nunca pone el cooldown de portal que vainilla sí aplica
+        // tras cruzar uno normal — sin esto, aterrizar cerca de CUALQUIER portal (uno que
+        // TeleportUtil no conociera, o simplemente muy pegado) puede volver a cruzarlo al
+        // instante. Mismo método que usa el propio vainilla tras un cruce real (300 ticks para
+        // un jugador que no va montado en nada).
+        sp.setPortalCooldown();
+
         destLevel.playSound(null, dest.x, dest.y, dest.z,
                 ModSounds.TELEPORT.get(), SoundSource.PLAYERS, 0.7f, 1.0f);
 

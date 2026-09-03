@@ -21,7 +21,11 @@ public final class OtherworldManager {
 
     public static final long REVIVE_DELAY_TICKS = 6000L; // 5 min (20 tps * 60 * 5)
 
-    /** Posición de aparición en el otro mundo (ajusta a la entrada de tu estructura). */
+    /** Posición de aparición en el otro mundo (ajusta a la entrada de tu estructura). EDITAR
+     *  AQUÍ para cambiar dónde reaparece un jugador tras morir/revivir en el Otherworld — Y
+     *  también dónde llega Instant Transmission al elegir "Yemma's Palace" en el menú de
+     *  planetas (TeleportAnchors.of reusa esta misma constante para ese destino, no hay una
+     *  segunda posición separada que ajustar). */
     public static final BlockPos OTHERWORLD_SPAWN = new BlockPos(66, 197, 13);
 
     public static boolean isInOtherworld(ServerPlayer player) {

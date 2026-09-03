@@ -44,7 +44,6 @@ import java.util.UUID;
  * (TeleportRequestPacket.handle / GenericDimensionTeleportPacket.handle) — un cliente sin
  * modificar nunca debería poder pulsar algo que el servidor fuera a rechazar, pero el rechazo
  * real vive del lado servidor de todos modos.
- *
  * REALMS mezcla TRES tipos de fila en un único espacio de índices (ver {@link RealmRow}):
  *  - CURADOS (Overworld/Otherworld, {@link TeleportRealm}): tienen varios destinos con ancla fija
  *    compartida (Home/Kami's Palace; Yemma/Kaiosama) — abren DESTINATIONS al pulsarlos.
@@ -57,7 +56,6 @@ import java.util.UUID;
  *    tuviera que ir después — ese placeholder se retiró al generalizar el sistema: ahora
  *    cualquier dimensión de un mod de terceros aparece como una fila GENÉRICA real, con ícono de
  *    reserva si no se reconoce, en vez de una fila fija "sin implementar todavía").
- *
  * Scroll (los tres modos): MISMO patrón que MasterScreen (scroll/rowCount/maxScroll/onScreen +
  * scissor + drawScrollbar) — con más de una dimensión modeada visitada, o una party grande, la
  * lista se desplaza en vez de salirse del marco del diálogo.

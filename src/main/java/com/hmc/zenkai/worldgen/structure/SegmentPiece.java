@@ -1,5 +1,6 @@
 package com.hmc.zenkai.worldgen.structure;
 
+import com.hmc.zenkai.feature.teleport.StructureAnchors;
 import com.hmc.zenkai.registry.ModStructures;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -40,7 +41,9 @@ public class SegmentPiece extends TemplateStructurePiece {
     @Override
     protected void handleDataMarker(String name, BlockPos pos, ServerLevelAccessor level,
                                     RandomSource random, BoundingBox box) {
-        // Sin marcadores de datos por ahora. Gancho listo para la fase 3 si prefieres
-        // structure blocks de tipo DATA en vez del bloque marcador.
+        // Structure Block en modo Data -> punto de ancla nombrado (Instant Transmission, o
+        // cualquier otro sistema futuro que necesite un punto fijo dentro de una estructura de
+        // segmentos). Ver StructureAnchors para la guía de cómo añadir/mover uno sin tocar Java.
+        StructureAnchors.capture(name, pos);
     }
 }
