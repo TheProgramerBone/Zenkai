@@ -2,6 +2,9 @@ package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.feature.aura.AuraLod;
+import com.hmc.zenkai.feature.aura.AuraManager;
+import com.hmc.zenkai.feature.aura.AuraProfile;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -10,17 +13,20 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -86,6 +92,10 @@ public final class AuraRimRenderer extends RenderLayer<AbstractClientPlayer, Pla
 
     /** Alfa base del aro a ramp completo (1.0), antes de fpOpacity. */
     private static final float ALPHA = 0.75f;
+
+    /** Nº de picos angulares alrededor del eje Y cuando el shader de aura_rim está activo (ver
+     *  ZenkaiSpikeCount en aura_rim.json/.vsh). Mismo valor que el default del uniform. */
+    private static final float SPIKE_COUNT = 7f;
 
     /** Segundos para aparecer del todo una vez el aura se activa. Subido de 0.6 a 1.4
      *  tras feedback en juego ("aparece de golpe") — el aditivo agrava la sensación de
@@ -163,7 +173,34 @@ public final class AuraRimRenderer extends RenderLayer<AbstractClientPlayer, Pla
         boolean wasVisible = model.head.visible;
         if (!wasVisible) model.setAllVisible(true);
 
-        VertexConsumer vc = buffer.getBuffer(ModAuraRenderType.energyRim(player.getSkin().texture()));
+        // Picos angulares (aura_rim.vsh): solo en las dos bandas cercanas — el shader no sabe
+        // nada de LOD, la decisión de gastarlo o no la toma Java, mismo criterio que ya usa
+        // AuraSkirts.plan para el resto del aura (ver AuraLod). A distancia, o si el shader no
+        // compiló, energyRimSpiked() ya cae a energyRim() por su cuenta (ver su javadoc).
+        double distSq = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition()
+                .distanceToSqr(player.getPosition(partialTick));
+        AuraLod lod = AuraLod.byDistanceSq(distSq);
+        boolean wantSpikes = (lod == AuraLod.NEAR || lod == AuraLod.MID);
+
+        RenderType type = wantSpikes
+                ? ModAuraRenderType.energyRimSpiked(player.getSkin().texture())
+                : ModAuraRenderType.energyRim(player.getSkin().texture());
+        boolean usingSpikeShader = wantSpikes && ModAuraRenderType.auraRimSpikeShaderAvailable();
+
+        if (usingSpikeShader) {
+            // AuraProfile.spike() ya existe de punta a punta (datapack de aura_type -> aquí),
+            // pero hasta ahora ningún renderer lo leía — este es el primer consumidor real.
+            float turbo = AuraClientState.isTurbo(player) ? 1f : 0f;
+            AuraProfile profile = AuraManager.profileOf(player, turbo);
+            // Misma convención que LivingEntityRenderer.render() (180 - yaw de cuerpo
+            // interpolado); se sube la rotación OPUESTA para que aura_rim.vsh pueda deshacerla
+            // y medir el ángulo de los picos en espacio de modelo, estable frente al giro real.
+            float bodyYaw = Mth.rotLerp(partialTick, player.yBodyRotO, player.yBodyRot);
+            Matrix4f invBodyRot = new Matrix4f().rotationY((float) Math.toRadians(bodyYaw - 180.0F));
+            ModAuraRenderType.setupAuraRim(profile.spike(), SPIKE_COUNT, invBodyRot);
+        }
+
+        VertexConsumer vc = buffer.getBuffer(type);
 
         pose.pushPose();
         // Escala centrada en el TORSO, no en los pies (el origen del PoseStack aquí): si
@@ -176,6 +213,13 @@ public final class AuraRimRenderer extends RenderLayer<AbstractClientPlayer, Pla
         pose.translate(0f, -half, 0f);
         model.renderToBuffer(pose, vc, light, OverlayTexture.NO_OVERLAY, color);
         pose.popPose();
+
+        // El shader de picos es una instancia compartida: hay que volcar su lote AQUÍ, antes de
+        // que otra técnica (ki, u otro jugador con rim) vuelva a pisar sus uniforms — mismo
+        // motivo que KiBodyRenderer.renderShaded hace buffer.endBatch(type) tras emitir.
+        if (usingSpikeShader && buffer instanceof MultiBufferSource.BufferSource bufferSource) {
+            bufferSource.endBatch(type);
+        }
 
         if (!wasVisible) model.setAllVisible(false);
     }

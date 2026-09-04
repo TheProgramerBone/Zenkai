@@ -1,11 +1,18 @@
 package com.hmc.zenkai.client.aura;
 
+import com.hmc.zenkai.Zenkai;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterShadersEvent;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
 import java.util.function.Function;
@@ -22,6 +29,7 @@ import java.util.function.Function;
  * cuadrante y el renderer inserta las UV media téxel para que el filtro no sangre.
  * Memoizado por textura.
  */
+@EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class ModAuraRenderType extends RenderType {
     // Nunca se instancia: solo heredamos para acceder a los shards protegidos de RenderStateShard.
     private ModAuraRenderType() { super("", null, null, 0, false, false, null, null); }
@@ -150,4 +158,99 @@ public final class ModAuraRenderType extends RenderType {
             });
 
     public static RenderType energyRim(ResourceLocation tex) { return ENERGY_RIM.apply(tex); }
+
+    // ── Rim con picos angulares (aura_rim.vsh/fsh) ─────────────────────────────
+
+    private static final ResourceLocation AURA_RIM_SHADER_ID =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "aura_rim");
+
+    private static ShaderInstance auraRimShader;
+
+    /** Mismo patrón que KiRenderTypes.onRegisterShaders — copiado tal cual, incluida la misma
+     *  anotación @EventBusSubscriber sin bus explícito (RegisterShadersEvent es del mod bus; ese
+     *  patrón ya funciona en este mismo repo tanto ahí como en AuraRimRenderer.onAddLayers). Un
+     *  fallo de compilación (driver viejo, shaderpack) no puede hacer desaparecer el rim: cae a
+     *  energyRimSpiked()/energyRim() en silencio, ver el fallback más abajo. */
+    @SubscribeEvent
+    public static void onRegisterShaders(RegisterShadersEvent event) {
+        try {
+            event.registerShader(
+                    new ShaderInstance(event.getResourceProvider(), AURA_RIM_SHADER_ID,
+                            DefaultVertexFormat.NEW_ENTITY),
+                    instance -> {
+                        auraRimShader = instance;
+                        Zenkai.LOGGER.info("[Zenkai] Shader de aura_rim compilado: el rim de "
+                                + "aura puede mostrar picos angulares.");
+                    });
+        } catch (Exception ex) {
+            auraRimShader = null;
+            Zenkai.LOGGER.error("[Zenkai] El shader de aura_rim NO cargó ({}). El rim usará la "
+                    + "cáscara lisa de siempre.", ex.toString());
+        }
+    }
+
+    /** Única pregunta que hace AuraRimRenderer para decidir si intenta picos. */
+    public static boolean auraRimSpikeShaderAvailable() { return auraRimShader != null; }
+
+    /**
+     * Igual que {@link #ENERGY_RIM} (mismo truco de cull FRONT, mismo motivo — ver su javadoc)
+     * pero con {@code aura_rim.vsh}/{@code .fsh} en vez del shader emisivo vainilla, para poder
+     * desplazar la malla con picos angulares en el vertex shader. Memoizado por textura, igual
+     * que el resto de RenderType de esta clase.
+     */
+    private static final Function<ResourceLocation, RenderType> ENERGY_RIM_SPIKED =
+            Util.memoize(tex -> {
+                TextureStateShard texState = new TextureStateShard(tex, false, false);
+                ShaderStateShard shaderState = new ShaderStateShard(() -> auraRimShader);
+                return new RenderType(
+                        "zenkai_aura_rim_spiked",
+                        DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256,
+                        false, true,
+                        () -> {
+                            shaderState.setupRenderState();
+                            texState.setupRenderState();
+                            ADDITIVE_TRANSPARENCY.setupRenderState();
+                            LEQUAL_DEPTH_TEST.setupRenderState();
+                            COLOR_WRITE.setupRenderState();
+                            LIGHTMAP.setupRenderState();
+                            OVERLAY.setupRenderState();
+                            RenderSystem.enableCull();
+                            GL11.glCullFace(GL11.GL_FRONT); // ⚠ misma pieza que ENERGY_RIM
+                        },
+                        () -> {
+                            GL11.glCullFace(GL11.GL_BACK);
+                            RenderSystem.disableCull();
+                            OVERLAY.clearRenderState();
+                            LIGHTMAP.clearRenderState();
+                            COLOR_WRITE.clearRenderState();
+                            LEQUAL_DEPTH_TEST.clearRenderState();
+                            ADDITIVE_TRANSPARENCY.clearRenderState();
+                            texState.clearRenderState();
+                            shaderState.clearRenderState();
+                        }) {};
+            });
+
+    /** Rim con picos si el shader está disponible; si no, cae a {@link #energyRim} sin que el
+     *  llamador tenga que comprobar nada — mismo criterio defensivo que KiRenderTypes.available()
+     *  aplicado aquí a nivel de RenderType en vez de dejarlo solo al llamador. */
+    public static RenderType energyRimSpiked(ResourceLocation tex) {
+        return auraRimSpikeShaderAvailable() ? ENERGY_RIM_SPIKED.apply(tex) : energyRim(tex);
+    }
+
+    /**
+     * Sube los uniforms propios de aura_rim.fsh/vsh. Llamar ANTES de que el buffer haga
+     * endBatch, mismo motivo que KiRenderTypes.setupFresnel (el ShaderInstance es único, sus
+     * uniforms valen para el draw que se ejecuta).
+     * @param spikeAmount AuraProfile.spike() del jugador, 0..1.
+     * @param spikeCount  nº de picos alrededor del eje Y.
+     * @param invBodyRot  rotación de CUERPO del jugador, invertida (ver el javadoc de
+     *                    aura_rim.vsh para el porqué hace falta deshacerla).
+     */
+    public static void setupAuraRim(float spikeAmount, float spikeCount, Matrix4f invBodyRot) {
+        ShaderInstance s = auraRimShader;
+        if (s == null) return;
+        s.safeGetUniform("ZenkaiSpikeAmount").set(spikeAmount);
+        s.safeGetUniform("ZenkaiSpikeCount").set(spikeCount);
+        s.safeGetUniform("InvBodyRotMat").set(invBodyRot);
+    }
 }
