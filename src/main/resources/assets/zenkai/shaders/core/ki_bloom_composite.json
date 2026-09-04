@@ -1,0 +1,14 @@
+{
+  "vertex": "zenkai:ki_bloom_blur",
+  "fragment": "zenkai:ki_bloom_composite",
+  "attributes": [
+    "Position",
+    "UV0"
+  ],
+  "samplers": [
+    { "name": "Sampler0" }
+  ],
+  "uniforms": [
+    { "name": "Intensity", "type": "float", "count": 1, "values": [ 1.0 ] }
+  ]
+}

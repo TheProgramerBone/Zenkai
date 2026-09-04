@@ -1,0 +1,15 @@
+{
+  "vertex": "zenkai:ki_bloom_blur",
+  "fragment": "zenkai:ki_bloom_blur",
+  "attributes": [
+    "Position",
+    "UV0"
+  ],
+  "samplers": [
+    { "name": "Sampler0" }
+  ],
+  "uniforms": [
+    { "name": "TexelSize", "type": "float", "count": 2, "values": [ 0.0, 0.0 ] },
+    { "name": "BlurDir",   "type": "float", "count": 2, "values": [ 1.0, 0.0 ] }
+  ]
+}

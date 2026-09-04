@@ -132,6 +132,17 @@ public final class ClientConfig {
                             + "(previous behaviour)",
                     100, 0, 100, 10);
 
+    /** Apagado por defecto: es una capa EXTRA opcional sobre el aditivo de siempre (ver
+     *  KiBloomPipeline), no un reemplazo — el aditivo se sigue dibujando siempre pase lo que
+     *  pase con este toggle. Se ignora además si hay un shaderpack tipo Iris/Oculus cargado
+     *  (ver IrisCompat.shaderPackActive()), sin importar este valor. */
+    private static final ModConfigSpec.BooleanValue KI_BLOOM_ENABLED =
+            defineBool("ki.bloom_enabled", "ki_bloom_enabled",
+                    "Experimental extra blur/glow pass on top of the ki halo/trail, on top of "
+                            + "the additive glow that is always drawn. Off by default. "
+                            + "Automatically disabled if a shader pack (Iris/Oculus) is loaded",
+                    false);
+
     /** 100 = tamaño nativo de bars_empty.png/bars_full.png (256x64 el bloque de las 3 barras).
      *  Pedido para que el HUD de Body/Stamina/Ki no se salga de pantalla con un GUI Scale alto
      *  o una ventana pequeña — el arte se pensó a un GUI Scale concreto y el resto de jugadores
@@ -194,6 +205,7 @@ public final class ClientConfig {
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }
     public static float kiFirstPersonOpacityFrac() { return KI_FP_OPACITY.get() / 100f; }
+    public static boolean kiBloomEnabled() { return KI_BLOOM_ENABLED.get(); }
     public static float hudBarsScaleFrac() { return HUD_BARS_SCALE.get() / 100f; }
 
     public static HudAnchor hudAnchor() { return HUD_ANCHOR.get(); }

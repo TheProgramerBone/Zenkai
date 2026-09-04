@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.render_and_model_entities.entity;
 
+import com.hmc.zenkai.client.render_and_model_entities.ki.KiBloomPipeline;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiMesh;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
@@ -183,8 +184,11 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
     // ── Halo ────────────────────────────────────────────────────────────────
 
     /**
-     * Quad orientado a cámara con el degradado radial. Es el sustituto del bloom real: no
-     * cuesta un post-proceso ni pelea con Iris, y a cambio no tiñe el mundo alrededor.
+     * Quad orientado a cámara con el degradado radial. Es el sustituto del bloom real EN SU
+     * MODO NORMAL: no cuesta un post-proceso ni pelea con Iris, y a cambio no tiñe el mundo
+     * alrededor. Desde KiBloomPipeline, un bloom real SÍ existe como capa extra opt-in — ver
+     * ClientConfig#kiBloomEnabled y el javadoc de esa clase para el porqué está apagado por
+     * defecto y se rinde automáticamente si hay un shaderpack (IrisCompat).
      *
      * VA FLOJO A PROPÓSITO. Es aditivo y se dibuja sobre el cuerpo, así que subirlo lava el
      * color de la técnica hasta dejarlo blanco y convierte el conjunto en un disco plano con
@@ -218,6 +222,14 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         vert(vc, mat, -half,  half, 0, r, g, b, a, 0f, 0f);
 
         pose.popPose();
+
+        // Capa EXTRA opt-in, encima del aditivo de arriba que se acaba de dibujar igual que
+        // siempre — active() ya comprueba el toggle de cliente y IrisCompat, así que este
+        // registro es gratis (una comprobación de booleano) cuando está apagado.
+        if (KiBloomPipeline.active()) {
+            KiBloomPipeline.registerHaloQuad(
+                    e.getX(), e.getY() + e.getBbHeight() * 0.5, e.getZ(), half, r, g, b, a);
+        }
     }
 
     // ── Estela ──────────────────────────────────────────────────────────────
