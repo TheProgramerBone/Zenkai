@@ -1,4 +1,4 @@
-// 1.21.1	2026-09-04T12:37:48.8944683	Registries
+// 1.21.1	2026-09-04T13:13:24.5789509	Registries
 bd6f2330be43a5be1fb54ce493e83bbd2148fe7e data/zenkai/neoforge/biome_modifier/add_katchin_ore.json
 017292215ebf76ee49087a29e74d2a2ed4ff7b48 data/zenkai/neoforge/biome_modifier/add_katchin_ore_rocky.json
 57c8fb744f35c670c9e81be30d4f3c9ad1d9303d data/zenkai/worldgen/biome/hfil_blood_shore.json
@@ -91,5 +91,5 @@ a72aaade5bdbc774b258217a0b124cc3f51b9e49 data/zenkai/worldgen/placed_feature/oth
 095971aa27fbd115031e36914b984b819eb7081c data/zenkai/worldgen/placed_feature/otherworld_dead_bush.json
 6e34999581c1be08f6af627dcdb5394aa3766a7f data/zenkai/worldgen/placed_feature/otherworld_flowers.json
 639bf1985c081177f1b4afa552f238b960dd14ba data/zenkai/worldgen/placed_feature/rocky_dead_bush.json
-a65f771dc09e773e29dcf07c4a21af696b3e4268 data/zenkai/worldgen/placed_feature/rocky_wasteland_spire.json
+84f113baa015adbe7838a340d0af367845586041 data/zenkai/worldgen/placed_feature/rocky_wasteland_spire.json
 72a638610ff7d59b52d806b1bbe89512d55d2930 data/zenkai/worldgen/placed_feature/sacred_stone.json

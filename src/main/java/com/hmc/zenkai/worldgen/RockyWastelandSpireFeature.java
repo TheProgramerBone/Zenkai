@@ -43,6 +43,16 @@ public class RockyWastelandSpireFeature extends Feature<NoneFeatureConfiguration
     /** Ventana de sondeo local para encontrar el suelo real de CADA aguja — ver LocalGroundProbe
      *  para el porqué (no un heightmap global). */
     private static final int GROUND_SEARCH_RADIUS = 4;
+    /** Profundidad sólida mínima exigida DEBAJO del punto que LocalGroundProbe cree que es suelo,
+     *  antes de aceptarlo — ver el porqué en {@link #hasSolidFooting}. BUG real reportado en
+     *  juego (sesión 2026-09-04): agujas apareciendo flotando en el aire. LocalGroundProbe solo
+     *  encuentra el PRIMER bloque sólido escaneando hacia abajo desde el origen del clúster — en
+     *  el terreno ondulado de rocky_wasteland (EROSION_5, con cornisas/voladizos reales) ese
+     *  primer bloque puede ser el borde de una cornisa delgada con aire debajo, no el suelo de
+     *  verdad varios bloques más abajo. Sin verificar profundidad, la aguja se plantaba ENCIMA de
+     *  esa cornisa — sólidamente apoyada en ELLA, pero visualmente "flotando" sobre el terreno
+     *  real que queda más abajo. */
+    private static final int MIN_SOLID_DEPTH = 4;
     /** Probabilidad de "erosionar" un bloque del borde de cada capa — silueta fracturada/angulosa,
      *  no un cilindro perfectamente liso. */
     private static final float EDGE_ERODE_CHANCE = 0.3f;
@@ -74,11 +84,26 @@ public class RockyWastelandSpireFeature extends Feature<NoneFeatureConfiguration
 
             int groundY = LocalGroundProbe.findGroundY(level, x, origin.getY(), z, GROUND_SEARCH_RADIUS);
             if (groundY == Integer.MIN_VALUE) continue; // sin suelo real cerca (incluye océano abierto): no se coloca
+            if (!hasSolidFooting(level, x, groundY, z)) continue; // cornisa/voladizo delgado: no es suelo real, saltar
 
             placeSpire(level, random, x, groundY, z, rockBlock.get());
             placedAny = true;
         }
         return placedAny;
+    }
+
+    /** {@code groundY} es el primer bloque de AIRE por encima de lo que LocalGroundProbe cree que
+     *  es suelo — comprueba que los {@link #MIN_SOLID_DEPTH} bloques justo debajo son TODOS
+     *  sólidos y sin fluido, no solo el primero. Descarta cornisas/voladizos delgados (una capa de
+     *  roca con aire o una cueva debajo) que de otro modo se leerían como "suelo" válido y dejarían
+     *  la aguja apoyada en el aire desde el punto de vista del jugador parado en el terreno real,
+     *  más abajo. */
+    private static boolean hasSolidFooting(WorldGenLevel level, int x, int groundY, int z) {
+        for (int i = 1; i <= MIN_SOLID_DEPTH; i++) {
+            BlockState state = level.getBlockState(new BlockPos(x, groundY - i, z));
+            if (state.isAir() || !state.getFluidState().isEmpty()) return false;
+        }
+        return true;
     }
 
     private static void placeSpire(WorldGenLevel level, RandomSource random, int baseX, int baseY, int baseZ, Block rockBlock) {

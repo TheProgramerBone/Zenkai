@@ -182,12 +182,15 @@ public class ModPlacedFeatures {
         // y RockyWastelandSpireFeature además sondea el suelo real de CADA aguja por separado
         // (LocalGroundProbe) y se salta las que no encuentran suelo — doble filtro, a propósito,
         // dado el historial de este bioma con formaciones "flotando" en el mar (ver el pendiente).
-        // onAverageOnceEvery(20): más denso que HFIL_SPIKE_KEY (40) porque cada intento ya coloca
-        // un clúster de 2-5 agujas (RockyWastelandSpireFeature) — la referencia pide un cañón que
-        // se sienta poblado, no un evento raro aislado.
+        // Subido de 20 a 48 (sesión 2026-09-04, pedido explícito del usuario: "no los hagas tan
+        // comunes"). Con 20 salía más denso que HFIL_SPIKE_KEY (40) pese a que cada intento YA
+        // coloca un clúster de 2-5 agujas (RockyWastelandSpireFeature) — se sentía como relleno
+        // en vez de un cañón puntual y dramático. 48 lo deja más raro que HFIL_SPIKE_KEY incluso
+        // por intento, compensando que cada intento aquí sigue siendo un clúster de varias agujas,
+        // no una sola.
         register(context, ROCKY_WASTELAND_SPIRE_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.ROCKY_WASTELAND_SPIRE_KEY),
-                List.of(RarityFilter.onAverageOnceEvery(20),
+                List.of(RarityFilter.onAverageOnceEvery(48),
                         InSquarePlacement.spread(),
                         PlacementUtils.HEIGHTMAP_OCEAN_FLOOR,
                         SurfaceWaterDepthFilter.forMaxDepth(0),
