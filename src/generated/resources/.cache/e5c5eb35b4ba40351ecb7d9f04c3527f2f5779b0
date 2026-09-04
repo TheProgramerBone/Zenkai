@@ -1,4 +1,4 @@
-// 1.21.1	2026-09-01T22:53:12.1709837	Advancements
+// 1.21.1	2026-09-04T12:37:48.8975419	Advancements
 f9a5c0de397f24c185f402bcbc5d5ecb1b6aafa8 data/zenkai/advancement/all_skills.json
 1e4b0aa0238e933eb91f3567c473703ef287a782 data/zenkai/advancement/all_skills_max.json
 5c11b5aaa82f4098d857b7a660bd16cebe7f2b0a data/zenkai/advancement/all_wishes.json
@@ -14,6 +14,8 @@ cc9f5f009871b4de3cf13fc2b4fa8aaaf0dc4444 data/zenkai/advancement/fly.json
 06771dd28b1509e6c3229ef159705bb4bc1ae144 data/zenkai/advancement/full_charge.json
 6b3daa17bc38cef17b0228c326505c09c920a813 data/zenkai/advancement/hfil_biomes.json
 4e0182ac5bc952898432da9b2ac68677249dc6e5 data/zenkai/advancement/htc.json
+214d0a9b254ef118d44554fdd468c3c005fe95bf data/zenkai/advancement/instant_transmission.json
+a0f9e28622de2d5a61552382ebae69c5858454ed data/zenkai/advancement/instant_transmission_menu.json
 5740bdcd7458cd70dc7be96fa0e3c28a58eb971a data/zenkai/advancement/kaioken.json
 9c35d1b6ef6d152e3235f4c182fd66738d2f8404 data/zenkai/advancement/ki_sense.json
 5182ff82f2f8bbd4e622e92b74384a6e1793733d data/zenkai/advancement/max_load.json

@@ -1,5 +1,6 @@
 package com.hmc.zenkai.worldgen;
 
+import com.hmc.zenkai.feature.teleport.StructureAnchors;
 import com.hmc.zenkai.registry.ModDimensions;
 import com.hmc.zenkai.registry.ModStructureSegments;
 import net.minecraft.core.BlockPos;
@@ -37,7 +38,10 @@ public final class HtcTravel {
         // Asegurar que la estructura de la HTC exista (idempotente, una sola vez por mundo).
         ZenkaiStructurePlacement.ensureHtcStructure(htc);
 
-        BlockPos e = ModStructureSegments.HTC_ENTRANCE;
+        // "htc_spawn" (marcador de datos, ver StructureAnchors) si ya existe; si no, la
+        // constante fija de siempre como respaldo (mundo con piezas viejas sin el marcador).
+        BlockPos anchor = StructureAnchors.get(server, "htc_spawn");
+        BlockPos e = (anchor != null) ? anchor : ModStructureSegments.HTC_ENTRANCE;
         player.teleportTo(htc, e.getX() + 0.5, e.getY(), e.getZ() + 0.5, player.getYRot(), player.getXRot());
     }
 

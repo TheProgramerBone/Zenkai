@@ -147,6 +147,28 @@ public class Zenkai {
             fire.setFlammable(ModBlocks.AJISA_FENCE_GATE.get(), 5, 20);
             fire.setFlammable(ModBlocks.AJISA_LEAVES.get(), 30, 60);
         });
+
+        // Worldgen (TerraBlender) — BUG real encontrado y arreglado el 2026-09-04: esto vivía
+        // dentro de onClientSetup (FMLClientSetupEvent, Dist.CLIENT-only), así que en un servidor
+        // dedicado real ModOverworldRegion NUNCA se registraba con TerraBlender y rocky_wasteland
+        // (y sus reglas de superficie) jamás habría aparecido en generación — solo "funcionaba"
+        // en singleplayer porque el cliente integrado comparte JVM con el servidor integrado y los
+        // dos eventos de setup corren igual antes de cargar el mundo. Registrar regiones/reglas de
+        // superficie de worldgen es trabajo del SERVIDOR (es quien genera terreno de verdad, cliente
+        // integrado incluido) — pertenece a FMLCommonSetupEvent, no a FMLClientSetupEvent. Detectado
+        // al intentar reproducir el bug de "rocky_wasteland en océano" con runGameTestServer (un
+        // entorno solo-servidor, sin Dist.CLIENT): la región nunca se registraba ahí, 0 de ~21000
+        // celdas muestreadas en un barrido amplio le pertenecían a zenkai:overworld pese al weight
+        // ya arreglado — el síntoma llevó directo a este bug de scope, no al mecanismo de clima que
+        // se sospechaba al principio.
+        event.enqueueWork(() -> {
+            Regions.register(new ModOverworldRegion());
+            SurfaceRuleManager.addSurfaceRules(
+                    SurfaceRuleManager.RuleCategory.OVERWORLD,
+                    MOD_ID,
+                    ModSurfaceRules.makeRules()
+            );
+        });
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -277,17 +299,6 @@ public class Zenkai {
 
             EntityRenderers.register(ModEntities.KORIN.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("korin", true), 0.5f));
-
-
-            // Worldgen (Terrablender)
-            event.enqueueWork(() -> {
-                Regions.register(new ModOverworldRegion());
-                SurfaceRuleManager.addSurfaceRules(
-                        SurfaceRuleManager.RuleCategory.OVERWORLD,
-                        MOD_ID,
-                        ModSurfaceRules.makeRules()
-                );
-            });
 
             // Animaciones de jugador. La política de 1ª persona vive en ZenkaiPalAnimations,
             // NO aquí y NO en cada animación: las cinco capas comparten exactamente la misma.

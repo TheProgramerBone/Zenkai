@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:instant_transmission",
+  "criteria": {
+    "opened": {
+      "conditions": {
+        "kind": "instant_transmission_menu_opened"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.instant_transmission_menu.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:filled_map"
+    },
+    "title": {
+      "translate": "advancements.zenkai.instant_transmission_menu.title"
+    }
+  },
+  "requirements": [
+    [
+      "opened"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

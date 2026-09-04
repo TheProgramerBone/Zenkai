@@ -69,6 +69,8 @@ public final class ZenkaiTriggers {
         public static final String COMBAT_STANCE  = "combat_stance";
         public static final String OVERDRIVE      = "overdrive";
         public static final String WHEEL_USED     = "wheel_used";
+        public static final String INSTANT_TRANSMISSION_USED        = "instant_transmission_used";
+        public static final String INSTANT_TRANSMISSION_MENU_OPENED = "instant_transmission_menu_opened";
     }
 
     // =====================================================================

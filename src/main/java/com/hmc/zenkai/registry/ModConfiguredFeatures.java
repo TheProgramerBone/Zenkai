@@ -66,6 +66,10 @@ public class ModConfiguredFeatures {
      *  ModFeatures.HFIL_CINDER_SPIKE) — exclusiva de hfil_cinder_dunes. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_CINDER_SPIKE_KEY = registerKey("hfil_cinder_spike");
 
+    /** Cañón de agujas rocosas (hoodoos/mesas) de rocky_wasteland. Ver RockyWastelandSpireFeature
+     *  — el reparto de rareza vive en ModPlacedFeatures. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> ROCKY_WASTELAND_SPIRE_KEY = registerKey("rocky_wasteland_spire");
+
     /** Montón de huesos/calavera del HFIL. Ver HfilBonePileFeature. Los 3 biomas HFIL — el
      *  reparto de rareza vive en ModPlacedFeatures. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_BONE_PILE_KEY = registerKey("hfil_bone_pile");
@@ -170,6 +174,8 @@ public class ModConfiguredFeatures {
                 ModFeatures.HFIL_SPIKE.get(), NoneFeatureConfiguration.INSTANCE);
         register(context, HFIL_CINDER_SPIKE_KEY,
                 ModFeatures.HFIL_CINDER_SPIKE.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, ROCKY_WASTELAND_SPIRE_KEY,
+                ModFeatures.ROCKY_WASTELAND_SPIRE.get(), NoneFeatureConfiguration.INSTANCE);
         register(context, HFIL_BONE_PILE_KEY,
                 ModFeatures.HFIL_BONE_PILE.get(), NoneFeatureConfiguration.INSTANCE);
         register(context, HFIL_ORE_BOULDER_KEY,

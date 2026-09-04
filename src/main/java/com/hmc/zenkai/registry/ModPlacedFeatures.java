@@ -69,6 +69,9 @@ public class ModPlacedFeatures {
     /** Misma forma, roca cálida propia de las dunas — exclusiva de cinder_dunes. */
     public static final ResourceKey<PlacedFeature> HFIL_CINDER_SPIKE_KEY = registerKey("hfil_cinder_spike");
 
+    //  Cañón de agujas rocosas de rocky_wasteland (imagen de referencia, sesión 2026-09-04)
+    public static final ResourceKey<PlacedFeature> ROCKY_WASTELAND_SPIRE_KEY = registerKey("rocky_wasteland_spire");
+
     //  Lago de sangre del HFIL (mismo rediseño, punto 3 — se intercala con los lagos de lava)
     public static final ResourceKey<PlacedFeature> HFIL_LAKE_BLOOD_KEY = registerKey("hfil_lake_blood");
 
@@ -168,6 +171,23 @@ public class ModPlacedFeatures {
         register(context, ROCKY_DEAD_BUSH_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.PATCH_DEAD_BUSH),
                 List.of(NoiseThresholdCountPlacement.of(-0.8D, 0, 7),
+                        InSquarePlacement.spread(),
+                        PlacementUtils.HEIGHTMAP_OCEAN_FLOOR,
+                        SurfaceWaterDepthFilter.forMaxDepth(0),
+                        BiomeFilter.biome()));
+
+        // Cañón de agujas de rocky_wasteland (imagen de referencia, sesión 2026-09-04) — mismo
+        // filtro anti-flotación que ROCKY_DEAD_BUSH_KEY arriba (HEIGHTMAP_OCEAN_FLOOR +
+        // SurfaceWaterDepthFilter(0)): rechaza el ORIGEN del clúster si cae sobre agua abierta,
+        // y RockyWastelandSpireFeature además sondea el suelo real de CADA aguja por separado
+        // (LocalGroundProbe) y se salta las que no encuentran suelo — doble filtro, a propósito,
+        // dado el historial de este bioma con formaciones "flotando" en el mar (ver el pendiente).
+        // onAverageOnceEvery(20): más denso que HFIL_SPIKE_KEY (40) porque cada intento ya coloca
+        // un clúster de 2-5 agujas (RockyWastelandSpireFeature) — la referencia pide un cañón que
+        // se sienta poblado, no un evento raro aislado.
+        register(context, ROCKY_WASTELAND_SPIRE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.ROCKY_WASTELAND_SPIRE_KEY),
+                List.of(RarityFilter.onAverageOnceEvery(20),
                         InSquarePlacement.spread(),
                         PlacementUtils.HEIGHTMAP_OCEAN_FLOOR,
                         SurfaceWaterDepthFilter.forMaxDepth(0),

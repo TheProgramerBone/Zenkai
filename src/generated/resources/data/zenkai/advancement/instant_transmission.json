@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:choose_race",
+  "criteria": {
+    "used": {
+      "conditions": {
+        "kind": "instant_transmission_used"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.instant_transmission.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:ender_pearl"
+    },
+    "title": {
+      "translate": "advancements.zenkai.instant_transmission.title"
+    }
+  },
+  "requirements": [
+    [
+      "used"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

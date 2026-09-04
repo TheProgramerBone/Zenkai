@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * Los 29 logros de Zenkai, en UNA sola pestaña.
+ * Los 31 logros de Zenkai, en UNA sola pestaña.
  * POR QUÉ UNA PESTAÑA. Tres pestañas de un mod en la pantalla de logros gritan "conversión
  * total", y ese es justo el problema que el resto del diseño se esfuerza en no tener.
  * LA RAÍZ OTORGA EL MUNDO al entrar (trigger `tick` de vanilla, igual que la raíz de
@@ -125,6 +125,24 @@ public class ModAdvancementProvider extends AdvancementProvider {
             child(saver, efh, chooseRace, "kaioken",
                     net.minecraft.world.item.Items.BLAZE_POWDER, AdvancementType.TASK, false,
                     "skill", skill("kaioken", 1));
+
+            // No oculto por el mismo motivo que combat_stance/wheel_menu: mantener TAB (y encima
+            // hace falta clic derecho, no solo soltar la tecla) no se adivina, y su descripción
+            // tiene que poder leerse en la pantalla de logros ANTES de completarlo. Dispara al
+            // completar el gesto de verdad (InstantTransmissionSystem.tryBlink), no solo al
+            // comprar la skill — un jugador que compra el nivel 1 y nunca prueba la tecla no
+            // debería ver esto ya tachado.
+            AdvancementHolder instantTransmission = child(saver, efh, chooseRace, "instant_transmission",
+                    net.minecraft.world.item.Items.ENDER_PEARL, AdvancementType.TASK, false,
+                    "used", milestone(ZenkaiTriggers.Kinds.INSTANT_TRANSMISSION_USED));
+
+            // Colgado del anterior, mismo patrón que wheel_menu bajo combat_stance: es la misma
+            // tecla, un paso más — soltar tras el clic derecho blinkea, mantenerse quieto en vez
+            // de soltar arma el menú de planetas. Requiere nivel 3 (SkillEffects.
+            // instantTransmissionMenuUnlocked), así que este logro ya implica el anterior.
+            child(saver, efh, instantTransmission, "instant_transmission_menu",
+                    net.minecraft.world.item.Items.FILLED_MAP, AdvancementType.TASK, false,
+                    "opened", milestone(ZenkaiTriggers.Kinds.INSTANT_TRANSMISSION_MENU_OPENED));
 
             // No oculto por el mismo motivo que combat_stance: la tecla H no se adivina, y su
             // descripción tiene que poder leerse ANTES de desbloquear la primera forma.

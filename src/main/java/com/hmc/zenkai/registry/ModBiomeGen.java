@@ -89,6 +89,12 @@ public final class ModBiomeGen {
         BiomeDefaultFeatures.addExtraEmeralds(gen);
         BiomeDefaultFeatures.addInfestedStone(gen);
 
+        // Cañón de agujas primero, igual que en el HFIL (ver hfilNeedleWastes): es el elemento
+        // "grande" del paisaje que define el horizonte, la decoración pequeña va después. Imagen
+        // de referencia de Dragon Ball pedida por el usuario, sesión 2026-09-04 — ver
+        // RockyWastelandSpireFeature.
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.ROCKY_WASTELAND_SPIRE_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.ROCKY_DEAD_BUSH_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
