@@ -154,19 +154,27 @@ public final class AuraSparkRenderer {
 
         int frame = (int) ((t / 2) % AuraTuning.SHEET_FRAMES);
         ResourceLocation sheet = AuraSkirtRenderer.sheet(frame);
-        VertexConsumer vc = buffers.getBuffer(ModAuraRenderType.energy(sheet));
-        // Textura PROPIA para el rayo (aura_rayo.png), no la hoja compartida — solo se
-        // pide si hace falta (algún jugador con electricSparks activo), pero pedirla de
-        // más no cuesta nada: getBuffer es un fetch memoizado, no un draw call, el draw
-        // call real solo ocurre si algo se escribe en el buffer.
-        VertexConsumer vcGlow = buffers.getBuffer(ModAuraRenderType.energyAdditive(RAYO_TEXTURE));
         float yaw = -cam.getYRot();
         float u0 = AuraQuads.cellU(2), v0 = AuraQuads.cellV(2);
 
+        // DOS PASADAS, a propósito — CRASH REAL en la primera prueba en juego con chispas
+        // activas (sesión 2026-09-04): "IllegalStateException: Not building!" en
+        // AuraQuads.vert, sin relación con ningún cambio de esa sesión (confirmado leyendo
+        // el .java real de MultiBufferSource.BufferSource, decompilado de las fuentes de
+        // NeoForge: TODO RenderType custom no-fixed comparte UN solo sharedBuffer, y
+        // getBuffer(tipoDistinto) cierra automáticamente (endBatch) el tipo anterior antes
+        // de devolver el nuevo). La versión de una sola pasada pedía `vc` (energy(sheet)) y
+        // luego, ANTES de escribir nada en él, pedía `vcGlow` (energyAdditive) — eso cerraba
+        // `vc` en el acto, así que la primera chispa NO jagged que el bucle intentaba
+        // dibujar en `vc` reventaba, aunque ese frame no hubiera ninguna chispa jagged. Con
+        // dos pasadas, cada VertexConsumer se pide y se agota por completo antes de pedir
+        // el otro — nunca hay dos "tipos compartidos" abiertos a la vez.
+        VertexConsumer vc = buffers.getBuffer(ModAuraRenderType.energy(sheet));
         pose.pushPose();
         pose.translate(-camPos.x, -camPos.y, -camPos.z);
         for (List<Spark> list : SPARKS.values()) {
             for (Spark s : list) {
+                if (s.jagged) continue;
                 float lf = 1f - Math.min(1f, (s.age + pt) / s.life);
                 // Cuadrática: la chispa muere de golpe en vez de desvanecerse.
                 float fade = lf * lf;
@@ -176,13 +184,31 @@ public final class AuraSparkRenderer {
                 pose.translate(s.x + s.vx * pt, s.y + s.vy * pt, s.z + s.vz * pt);
                 pose.mulPose(Axis.YP.rotationDegrees(yaw));
                 pose.mulPose(Axis.ZP.rotationDegrees(s.roll));
-                if (s.jagged) {
-                    drawJagged(vcGlow, pose, s, h, fade);
-                } else {
-                    AuraQuads.plane(vc, pose.last(), s.w, h, u0, v0,
-                            s.mirror, 0f, s.r, s.g, s.b,
-                            AuraSkirts.BASE_ALPHA * ALPHA_MUL * fade);
-                }
+                AuraQuads.plane(vc, pose.last(), s.w, h, u0, v0,
+                        s.mirror, 0f, s.r, s.g, s.b,
+                        AuraSkirts.BASE_ALPHA * ALPHA_MUL * fade);
+                pose.popPose();
+            }
+        }
+        pose.popPose();
+
+        // Textura PROPIA para el rayo (aura_rayo.png), no la hoja compartida — pedida DESPUÉS
+        // de que la pasada de arriba ya terminó de escribir en `vc` por completo.
+        VertexConsumer vcGlow = buffers.getBuffer(ModAuraRenderType.energyAdditive(RAYO_TEXTURE));
+        pose.pushPose();
+        pose.translate(-camPos.x, -camPos.y, -camPos.z);
+        for (List<Spark> list : SPARKS.values()) {
+            for (Spark s : list) {
+                if (!s.jagged) continue;
+                float lf = 1f - Math.min(1f, (s.age + pt) / s.life);
+                float fade = lf * lf;
+                float h = s.h * (0.5f + 0.5f * lf);
+
+                pose.pushPose();
+                pose.translate(s.x + s.vx * pt, s.y + s.vy * pt, s.z + s.vz * pt);
+                pose.mulPose(Axis.YP.rotationDegrees(yaw));
+                pose.mulPose(Axis.ZP.rotationDegrees(s.roll));
+                drawJagged(vcGlow, pose, s, h, fade);
                 pose.popPose();
             }
         }

@@ -298,12 +298,11 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         Vec3 right = basis[0], up = basis[1];
         float radius = v.meshRadius();
         float length = v.meshLength();
-
-        VertexConsumer outerVc = buffer.getBuffer(KiRenderTypes.soft(KiRenderTypes.TRAIL_TEXTURE));
-        VertexConsumer innerVc = v.hasTrailCore()
-                ? buffer.getBuffer(KiRenderTypes.additive(KiRenderTypes.TRAIL_TEXTURE)) : null;
         float cr = r + (1f - r) * 0.55f, cg = g + (1f - g) * 0.55f, cb = b + (1f - b) * 0.55f;
 
+        // Las dos hebras no dependen de qué buffer se use, así que se calculan una sola vez
+        // y se reutilizan en las dos pasadas de abajo.
+        List<List<Vec3>> strands = new ArrayList<>(2);
         for (int s = 0; s < 2; s++) {
             double phase = Math.PI * s;
             List<Vec3> strand = new ArrayList<>(pts.size());
@@ -315,8 +314,24 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
                 strand.add(helixOffset(pts.get(i), right, up, radius,
                         KiMeshFactory.helixAngleFromTip(length, d, phase)));
             }
+            strands.add(strand);
+        }
+
+        // DOS PASADAS, no una con outerVc/innerVc simultáneos — mismo bug de fondo que
+        // causó el crash real de AuraSparkRenderer.renderAll (ver su comentario, sesión
+        // 2026-09-04): MultiBufferSource.BufferSource solo tiene un sharedBuffer para
+        // cualquier RenderType custom no-fixed, y pedir un tipo distinto (additive) antes
+        // de que el anterior (soft) haya escrito nada lo cierra en el acto. Encontrado
+        // auditando el mismo patrón en el resto del mod tras ese crash — SPIRAL con
+        // hasTrailCore nunca se había probado en juego, así que este nunca había saltado.
+        VertexConsumer outerVc = buffer.getBuffer(KiRenderTypes.soft(KiRenderTypes.TRAIL_TEXTURE));
+        for (List<Vec3> strand : strands) {
             ribbon(outerVc, mat, strand, feet, cam, outer, scroll, r, g, b, v.trailAlpha());
-            if (innerVc != null) {
+        }
+
+        if (v.hasTrailCore()) {
+            VertexConsumer innerVc = buffer.getBuffer(KiRenderTypes.additive(KiRenderTypes.TRAIL_TEXTURE));
+            for (List<Vec3> strand : strands) {
                 ribbon(innerVc, mat, strand, feet, cam, outer * v.trailInnerMul(), scroll,
                         cr, cg, cb, v.trailAlpha() * 0.70f);
             }
