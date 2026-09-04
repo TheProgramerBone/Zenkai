@@ -214,12 +214,24 @@ public final class AuraRimRenderer extends RenderLayer<AbstractClientPlayer, Pla
         model.renderToBuffer(pose, vc, light, OverlayTexture.NO_OVERLAY, color);
         pose.popPose();
 
-        // El shader de picos es una instancia compartida: hay que volcar su lote AQUÍ, antes de
-        // que otra técnica (ki, u otro jugador con rim) vuelva a pisar sus uniforms — mismo
-        // motivo que KiBodyRenderer.renderShaded hace buffer.endBatch(type) tras emitir.
-        if (usingSpikeShader && buffer instanceof MultiBufferSource.BufferSource bufferSource) {
-            bufferSource.endBatch(type);
-        }
+        // NO se hace buffer.endBatch(type) aquí, a propósito — CRASH REAL en la primera prueba
+        // en juego (sesión 2026-09-04): "IllegalStateException: Not building!" en
+        // AuraSparkRenderer.renderAll, un archivo sin relación. Causa real: zenkai_aura_rim_spiked
+        // es sortOnUpload=true (como el resto de RenderType translúcidos de aura), y este layer
+        // corre DURANTE el render de entidades — a mitad del frame, no al final. Volcar el lote
+        // aquí cierra prematuramente el mismo buffer compartido de translúcidos que otras capas
+        // del aura (chispas, wisps) todavía necesitaban seguir usando más tarde EN ESE MISMO
+        // FRAME, y su siguiente addVertex() revienta contra un builder ya cerrado.
+        // KiBodyRenderer.renderShaded SÍ puede hacerlo con seguridad porque KiProjectileRenderer
+        // es el dueño exclusivo de todo el render() de una entidad aislada — nadie más comparte
+        // ese buffer en ese instante. AuraRimRenderer, en cambio, es UNA capa más entre muchas
+        // dentro del render de UN jugador, con más aura y más jugadores todavía por dibujar
+        // el mismo frame — no es un contexto seguro para forzar un flush temprano.
+        // COSTE ACEPTADO: sin flush inmediato, si dos o más jugadores con picos activos (ambos en
+        // banda NEAR/MID) comparten el mismo lote diferido, el uniform (spike/rotación) que
+        // termine viéndose en el draw real puede ser el del ÚLTIMO que llamó setupAuraRim(), no
+        // el de cada jugador por separado — un roce visual raro y acotado (hacen falta 2+
+        // jugadores divinos cerca a la vez), preferible con mucho a un crash seguro.
 
         if (!wasVisible) model.setAllVisible(false);
     }
