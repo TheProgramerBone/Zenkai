@@ -51,6 +51,14 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
     private static int sparkBudget = SPARK_BUDGET_PER_TICK;
     private static long sparkBudgetTick = Long.MIN_VALUE;
 
+    /** Ticks tras el disparo en los que el cuerpo crece de 0 a tamaño completo (ver popScale en
+     *  render()) — inspirado en el "pop" de aparición de dbrebirth-0.3 (su kicyl.vsh escala la
+     *  malla entera con el mismo smoothstep sobre ticksexisted/5 en el vertex shader; aquí el
+     *  escalado de malla ya vive 100% en CPU vía PoseStack, así que basta multiplicar `size`, sin
+     *  tocar ki_fresnel.vsh). Solo afecta al CUERPO — el halo (renderHalo) mantiene su alfa/tamaño
+     *  normal desde el primer frame, a propósito, para no interferir con su propio pulse. */
+    private static final float POP_TICKS = 5f;
+
     public KiProjectileRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
     }
@@ -93,7 +101,12 @@ public class KiProjectileRenderer extends EntityRenderer<KiProjectileEntity> {
         // Respiración: una energía contenida no está nunca perfectamente quieta. Es lo bastante
         // lenta y pequeña para no leerse como parpadeo, y a cambio quita el aspecto de objeto.
         float breathe = 1f + 0.035f * Mth.sin((entity.tickCount + partialTick) * 0.31f);
-        float size = entity.getBbWidth() * 1.5f * breathe;   // el cuerpo sobresale del hitbox
+        // Pop de aparición: smoothstep de 0 a 1 en los primeros POP_TICKS tras el disparo, igual
+        // que la malla vuela a tamaño completo de golpe si se omite este factor. tickCount ya se
+        // usa arriba para breathe, así que no hace falta ningún dato nuevo por proyectil.
+        float popT = Mth.clamp((entity.tickCount + partialTick) / POP_TICKS, 0f, 1f);
+        float popScale = popT * popT * (3f - 2f * popT);
+        float size = entity.getBbWidth() * 1.5f * breathe * popScale;   // el cuerpo sobresale del hitbox
 
         pose.pushPose();
         pose.translate(0, entity.getBbHeight() * 0.5, 0);
