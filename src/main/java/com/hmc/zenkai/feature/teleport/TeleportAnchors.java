@@ -33,12 +33,19 @@ public final class TeleportAnchors {
      *  define este destino. Ver StructureAnchors para la lista completa de nombres en uso. */
     private static final String KAMI_LOOKOUT_ANCHOR = "kami_lookout";
 
-    /** Posición de `dest`, o null si aún no hay una (Kami's Palace antes de generarse con el
-     *  marcador puesto, ver StructureAnchors) o si `dest` es HOME (no aplica, ver arriba). */
+    /** Ídem, para la base de la misma estructura (Korin's Tower) — ver StructureAnchors, que ya
+     *  documentaba este nombre desde que se generalizó el sistema de anclas, aunque hasta ahora
+     *  ningún TeleportDestination lo consumiera. */
+    private static final String KORIN_TOWER_ANCHOR = "korins_tower";
+
+    /** Posición de `dest`, o null si aún no hay una (Kami's Palace/Korin's Tower antes de
+     *  generarse con el marcador puesto, ver StructureAnchors) o si `dest` es HOME (no aplica,
+     *  ver arriba). */
     public static BlockPos of(MinecraftServer server, TeleportDestination dest) {
         return switch (dest) {
             case HOME -> null;
             case KAMI_PALACE -> StructureAnchors.get(server, KAMI_LOOKOUT_ANCHOR);
+            case KORIN_TOWER -> StructureAnchors.get(server, KORIN_TOWER_ANCHOR);
             case YEMMA_PALACE -> OtherworldManager.OTHERWORLD_SPAWN;
             case KAIOSAMA_PLANET -> ModStructureSegments.KAIOSAMA_ENTRANCE;
         };

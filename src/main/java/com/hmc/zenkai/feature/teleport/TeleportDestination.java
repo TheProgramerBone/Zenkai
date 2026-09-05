@@ -14,7 +14,9 @@ import java.util.Locale;
  * jugador y mapear la respuesta aquí.
  * HOME es la excepción: no es una estructura del mundo, es el punto de reaparición del propio
  * jugador — no necesita descubrimiento (protectorKey null, requiresDiscovery false, siempre
- * disponible desde el nivel 3).
+ * disponible desde el nivel 3). KORIN_TOWER es la OTRA excepción a protectorKey no-null: SÍ
+ * necesita descubrimiento (requiresDiscovery true) pero su protectorKey es null porque comparte
+ * estructura física con KAMI_PALACE — ver el comentario junto a su declaración más abajo.
  * Ya NO incluye NETHER_PORTAL/END_SPAWN: al generalizar el sistema a cualquier dimensión (ver
  * GenericDimensionRow/DimensionEntryTracker), esos dos casos vainilla-específicos se fusionaron
  * en el mismo mecanismo genérico que cubre Nether/End y cualquier dimensión de un mod de
@@ -24,6 +26,16 @@ import java.util.Locale;
 public enum TeleportDestination {
     HOME(TeleportRealm.OVERWORLD, null, false),
     KAMI_PALACE(TeleportRealm.OVERWORLD, "protector.zenkai.kami_palace", true),
+    // KORIN_TOWER va A PROPÓSITO justo después de KAMI_PALACE (no al final): su columna en
+    // icons_instant_transmision.png (5 + ordinal, ver InstantTransmissionMenuScreen.destIcon) ya
+    // está pintada a mano en ese hueco exacto — insertarlo en cualquier otra posición del enum
+    // correría el resto de columnas y desalinearía TODOS los iconos posteriores (Yemma/Kaiosama)
+    // contra el atlas real. protectorKey=null porque comparte la MISMA caja de estructura/
+    // protector que Kami's Palace (es la misma pieza de worldgen, torre + mirador) — byProtectorKey
+    // nunca podría distinguir "estás en la base" de "estás arriba" aunque le diéramos la misma
+    // cadena, así que no lo intenta: el descubrimiento se concede en TeleportDiscoverySystem al
+    // mismo tiempo que KAMI_PALACE, ver el comentario de ese archivo.
+    KORIN_TOWER(TeleportRealm.OVERWORLD, null, true),
     YEMMA_PALACE(TeleportRealm.OTHERWORLD, "protector.zenkai.yemma", true),
     KAIOSAMA_PLANET(TeleportRealm.OTHERWORLD, "protector.zenkai.kaiosama", true);
 

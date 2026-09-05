@@ -449,15 +449,21 @@ public final class ClientZenkaiHooks {
         g.blit(ICONS_TEX, x, y, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_TEX_W, ICONS_TEX_H);
     }
 
-    /** Dibuja el MISMO ícono que el badge de cooldown de esta clase (ICON_INSTANT_TRANSMISSION)
+    /** Dibuja el MISMO ícono que el badge de cooldown de esta clase (ICON_INSTANT_TRANSMISSION,
+     *  o su variante YA PINTADA con aura ICON_INSTANT_TRANSMISSION_CHARGED si {@code charged})
      *  — expuesto para que InstantTransmissionCrosshairOverlay pinte exactamente el mismo ícono
      *  sobre la mira mientras se mantiene TAB, sin duplicar la celda del atlas por su cuenta.
      *  Esa duplicación (dos constantes con la misma pareja u/v repetida a mano en dos clases)
      *  fue justo lo que hizo que las dos pantallas dejaran de coincidir la última vez que esta
      *  celda se movió — con este único punto de dibujo, un futuro cambio de celda solo se toca
-     *  aquí y las dos vistas siguen mostrando lo mismo automáticamente. */
-    public static void drawInstantTransmissionIcon(GuiGraphics g, int x, int y) {
-        drawBadge(g, x, y, ICON_INSTANT_TRANSMISSION);
+     *  aquí y las dos vistas siguen mostrando lo mismo automáticamente.
+     *  {@code charged} reemplaza al marco dorado que dibujaba antes InstantTransmissionCrosshairOverlay
+     *  alrededor del ícono normal para avisar "menú armado": un marco cuadrado de bordes duros
+     *  sobre una silueta redondeada (puño) se leía como una "vaina" ajena pegada al ícono, así
+     *  que en vez de decorarlo por fuera se cambia la celda entera por una versión ya pintada
+     *  con aura. */
+    public static void drawInstantTransmissionIcon(GuiGraphics g, int x, int y, boolean charged) {
+        drawBadge(g, x, y, charged ? ICON_INSTANT_TRANSMISSION_CHARGED : ICON_INSTANT_TRANSMISSION);
     }
 
     private record IconUV(int u, int v) {

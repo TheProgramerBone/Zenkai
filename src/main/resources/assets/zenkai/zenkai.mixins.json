@@ -11,7 +11,9 @@
     "client.DamageEventMarkMixin",
     "client.SyncHurtFlashMixin"
   ],
-  "mixins": [],
+  "mixins": [
+    "EndGatewayBlockMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

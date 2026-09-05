@@ -33,23 +33,20 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
  * cualquier nivel (confirmar con clic derecho), así que el ícono avisa de que el gesto está
  * activo aunque el jugador no vaya a poder armar el menú todavía.
  *
- * Único matiz visual que sobrevive del anillo viejo: un marco fino dorado alrededor del ícono en
- * cuanto el hold lleva lo suficiente QUIETO como para haber armado el menú
+ * En cuanto el hold lleva lo suficiente QUIETO como para haber armado el menú
  * (InstantTransmissionAttachment.MENU_ARM_TICKS) — mismo dato servidor-autoritativo de siempre
- * (InstantTransmissionClientState.stillTicks(), sincronizado por InstantTransmissionSystem), solo
- * que ahora se lee como un umbral discreto en vez de un progreso continuo. Un MARCO, no un
- * reteñido del propio ícono (RenderSystem.setShaderColor multiplicando el texel): el ícono es
- * arte pintado real (piel + puño), no una silueta blanca/gris — multiplicarlo por un tinte lo
- * dejaría descolorido en vez de leerse como "listo".
+ * (InstantTransmissionClientState.stillTicks(), sincronizado por InstantTransmissionSystem), el
+ * ícono cambia de celda a una variante YA PINTADA con aura
+ * (ClientZenkaiHooks#drawInstantTransmissionIcon, parámetro charged) en vez de decorarse con un
+ * marco encima: un primer intento dibujaba un marco cuadrado de bordes duros alrededor del
+ * ícono normal, y sobre una silueta redondeada (puño) se leía como una "vaina" ajena pegada
+ * encima en vez de un aviso integrado — cambiar la celda entera evita ese problema de raíz.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class InstantTransmissionCrosshairOverlay {
     private InstantTransmissionCrosshairOverlay() {}
 
     private static final int ICON_SIZE = 20;
-
-    /** Tono del aviso "armado": mismo dorado que el resto del mod usa para "listo/disponible". */
-    private static final int C_ARMED = 0xFFFFD24A;
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiEvent.Post e) {
@@ -64,17 +61,7 @@ public final class InstantTransmissionCrosshairOverlay {
 
         boolean armed = SkillEffects.instantTransmissionMenuUnlocked(mc.player)
                 && InstantTransmissionClientState.stillTicks() >= InstantTransmissionAttachment.MENU_ARM_TICKS;
-        if (armed) drawFrame(g, x, y);
 
-        ClientZenkaiHooks.drawInstantTransmissionIcon(g, x, y);
-    }
-
-    /** Marco de 1px alrededor del ícono, sin tocar sus píxeles (ver el javadoc de clase). */
-    private static void drawFrame(GuiGraphics g, int x, int y) {
-        int x0 = x - 1, y0 = y - 1, x1 = x + ICON_SIZE + 1, y1 = y + ICON_SIZE + 1;
-        g.fill(x0, y0, x1, y0 + 1, C_ARMED);
-        g.fill(x0, y1 - 1, x1, y1, C_ARMED);
-        g.fill(x0, y0, x0 + 1, y1, C_ARMED);
-        g.fill(x1 - 1, y0, x1, y1, C_ARMED);
+        ClientZenkaiHooks.drawInstantTransmissionIcon(g, x, y, armed);
     }
 }

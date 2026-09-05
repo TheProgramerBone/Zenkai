@@ -40,26 +40,36 @@ public final class TeleportExecution {
 
         ServerLevel originLevel = sp.serverLevel();
         double ox = sp.getX(), oy = sp.getY(), oz = sp.getZ();
+        boolean crossingDimension = !originLevel.dimension().equals(destLevel.dimension());
 
         BlockPos safe = TeleportUtil.findSafeSpot(destLevel, rawTarget);
         Vec3 dest = TeleportUtil.footCenter(safe);
 
         originLevel.playSound(null, ox, oy, oz,
-                ModSounds.TELEPORT.get(), SoundSource.PLAYERS, 0.7f, 1.0f);
+                ModSounds.TELEPORT.get(), SoundSource.PLAYERS, 0.2f, 1.0f);
 
+        // sp.teleportTo(ServerLevel, ...) SÍ pasa por ServerPlayer.changeDimension(...) en cuanto
+        // destLevel es distinto del nivel actual (verificado leyendo el fuente real de NeoForm/
+        // NeoForge: la rama newLevel != this.level() de ese método construye un
+        // DimensionTransition y llama a changeDimension, que a su vez dispara
+        // PlayerChangedDimensionEvent) — DimensionEntryTracker está enganchado a ese evento para
+        // capturar la posición REAL del portal en un cruce genuino, así que hay que avisarle de
+        // que ESTE cruce concreto es nuestro (Instant Transmission), no una llegada real, o
+        // sobrescribiría su propia posición con el punto de llegada de este mismo teletransporte.
+        if (crossingDimension) DimensionEntryTracker.suppressNextEntry(sp);
         sp.teleportTo(destLevel, dest.x, dest.y, dest.z, sp.getYRot(), sp.getXRot());
 
-        // Red de seguridad ADEMÁS de TeleportUtil.isSafe evitando portales de verdad: sp.
-        // teleportTo(...) es el overload de posición pura, no pasa por ServerPlayer.
-        // changeDimension(...), así que nunca pone el cooldown de portal que vainilla sí aplica
-        // tras cruzar uno normal — sin esto, aterrizar cerca de CUALQUIER portal (uno que
-        // TeleportUtil no conociera, o simplemente muy pegado) puede volver a cruzarlo al
-        // instante. Mismo método que usa el propio vainilla tras un cruce real (300 ticks para
-        // un jugador que no va montado en nada).
+        // Red de seguridad ADEMÁS de TeleportUtil.isSafe evitando portales de verdad: el
+        // DimensionTransition que arma sp.teleportTo usa DO_NOTHING como post-transición, que no
+        // reproduce el cooldown de portal que sí aplica un cruce real (Entity.handleNetherPortal)
+        // — sin esto, aterrizar cerca de CUALQUIER portal (uno que TeleportUtil no conociera, o
+        // simplemente muy pegado) puede volver a cruzarlo al instante. Mismo valor que usa el
+        // propio vainilla tras un cruce real (300 ticks para un jugador que no va montado en
+        // nada).
         sp.setPortalCooldown();
 
         destLevel.playSound(null, dest.x, dest.y, dest.z,
-                ModSounds.TELEPORT.get(), SoundSource.PLAYERS, 0.7f, 1.0f);
+                ModSounds.TELEPORT.get(), SoundSource.PLAYERS, 0.2f, 1.0f);
 
         stats.addKi(-kiCost);
         att.setCooldownTicks(SkillEffects.instantTransmissionCooldownTicks(sp));

@@ -28,6 +28,7 @@ public final class InstantTransmissionMenuSync {
     public static void send(ServerPlayer sp) {
         InstantTransmissionAttachment att = InstantTransmissionAttachment.get(sp);
         PacketDistributor.sendToPlayer(sp, new InstantTransmissionMenuStatePacket(
-                List.copyOf(att.discoveredIdsView()), List.copyOf(att.visitedDimensionIdsView())));
+                List.copyOf(att.discoveredIdsView()), List.copyOf(att.visitedDimensionIdsView()),
+                List.copyOf(att.waypointIdsView())));
     }
 }

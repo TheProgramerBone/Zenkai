@@ -104,6 +104,18 @@ public class InstantTransmissionAttachment {
      *  toString(), mismo criterio que discoveredIds/visitedDimensionIds. Persistido en NBT. */
     private final Map<String, BlockPos> lastEntryPos = new HashMap<>();
 
+    /** Puntos especiales descubiertos por un mecanismo DISTINTO al cruce de dimensión — hoy solo
+     *  {@code "end_outer_island"} (ver EndGatewayBlockMixin/EndOuterIslandTracker): un End
+     *  Gateway mueve al jugador DENTRO de la misma dimensión (the_end -&gt; the_end), así que
+     *  nunca dispara PlayerChangedDimensionEvent y `lastEntryPos` de arriba jamás lo vería. Clave
+     *  = un id corto elegido por quien registra el waypoint (ver GenericSubDestination.Waypoint),
+     *  NO un ResourceKey&lt;Level&gt; — a diferencia de `lastEntryPos`, que es "un valor por
+     *  dimensión", esto es "un valor por MECANISMO de descubrimiento", así que dos dimensiones
+     *  distintas podrían compartir el mismo prefijo de clave sin colisionar mientras cada una use
+     *  su propio sufijo. Igual que discoveredIds, el booleano "¿existe ya este waypoint?" se
+     *  sincroniza al cliente (ver waypointIdsView) — la posición NUNCA sale del servidor. */
+    private final Map<String, BlockPos> waypoints = new HashMap<>();
+
     public static InstantTransmissionAttachment get(Player p) {
         return p.getData(ZenkaiDataAttachments.INSTANT_TRANSMISSION.get());
     }
@@ -179,6 +191,24 @@ public class InstantTransmissionAttachment {
         lastEntryPos.put(dim.location().toString(), pos);
     }
 
+    // ── Waypoints (ver el comentario del campo) ─────────────────────────────
+
+    public BlockPos getWaypoint(String key) { return waypoints.get(key); }
+
+    /** @return true si `key` no tenía ya EXACTAMENTE este valor — el llamador lo usa para saber
+     *  si hace falta resincronizar al cliente (mismo criterio que markDiscovered/
+     *  markDimensionVisited), en vez de resincronizar en cada tick que un Gateway siga activo. */
+    public boolean setWaypoint(String key, BlockPos pos) {
+        return !pos.equals(waypoints.put(key, pos));
+    }
+
+    public boolean hasWaypoint(String key) { return waypoints.containsKey(key); }
+
+    /** Vista de qué CLAVES de waypoint existen ya (sin posiciones) — lo que
+     *  InstantTransmissionMenuStatePacket sincroniza al cliente, mismo criterio que
+     *  discoveredIdsView. */
+    public Set<String> waypointIdsView() { return Set.copyOf(waypoints.keySet()); }
+
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         // "holding" NO se guarda: es intención de tecla en vivo, no estado persistente — se
@@ -195,6 +225,15 @@ public class InstantTransmissionAttachment {
             entries.add(entry);
         }
         tag.put("lastEntryPos", entries);
+
+        ListTag waypointEntries = new ListTag();
+        for (Map.Entry<String, BlockPos> e : waypoints.entrySet()) {
+            CompoundTag entry = new CompoundTag();
+            entry.putString("key", e.getKey());
+            entry.putLong("pos", e.getValue().asLong());
+            waypointEntries.add(entry);
+        }
+        tag.put("waypoints", waypointEntries);
         return tag;
     }
 
@@ -220,6 +259,15 @@ public class InstantTransmissionAttachment {
             for (int i = 0; i < entries.size(); i++) {
                 CompoundTag entry = entries.getCompound(i);
                 lastEntryPos.put(entry.getString("dim"), BlockPos.of(entry.getLong("pos")));
+            }
+        }
+
+        waypoints.clear();
+        if (tag.contains("waypoints")) {
+            ListTag entries = tag.getList("waypoints", Tag.TAG_COMPOUND);
+            for (int i = 0; i < entries.size(); i++) {
+                CompoundTag entry = entries.getCompound(i);
+                waypoints.put(entry.getString("key"), BlockPos.of(entry.getLong("pos")));
             }
         }
     }

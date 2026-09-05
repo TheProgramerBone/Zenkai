@@ -20,6 +20,7 @@ public final class InstantTransmissionClientState {
     private static Set<String> discoveredIds = Set.of();
     private static Set<String> visitedDimensionIds = Set.of();
     private static Set<String> blockedDimensionIds = Set.of();
+    private static Set<String> waypointIds = Set.of();
 
     public static void setCooldownTicks(int ticks) { cooldownTicks = Math.max(0, ticks); }
 
@@ -36,13 +37,20 @@ public final class InstantTransmissionClientState {
 
     public static int stillTicks() { return stillTicks; }
 
-    public static void applyMenuState(List<String> discovered, List<String> visitedDimensions) {
+    public static void applyMenuState(List<String> discovered, List<String> visitedDimensions, List<String> waypoints) {
         discoveredIds = new HashSet<>(discovered);
         visitedDimensionIds = new HashSet<>(visitedDimensions);
+        waypointIds = new HashSet<>(waypoints);
     }
 
     public static boolean isDiscovered(String destinationId) {
         return discoveredIds.contains(destinationId);
+    }
+
+    /** Espejo de InstantTransmissionAttachment.hasWaypoint — para GenericSubDestination.Waypoint,
+     *  igual que isDiscovered ya cubre TeleportDestination. */
+    public static boolean hasWaypoint(String waypointKey) {
+        return waypointIds.contains(waypointKey);
     }
 
     public static boolean hasVisitedDimension(String dimensionId) {

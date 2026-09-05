@@ -7,7 +7,9 @@ import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.party.ClientPartyState;
 import com.hmc.zenkai.feature.party.PartySyncPacket;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.teleport.GenericDimensionDestinations;
 import com.hmc.zenkai.feature.teleport.GenericDimensionTeleportPacket;
+import com.hmc.zenkai.feature.teleport.GenericSubDestination;
 import com.hmc.zenkai.feature.teleport.PartyTeleportRequestPacket;
 import com.hmc.zenkai.feature.teleport.TeleportDestination;
 import com.hmc.zenkai.feature.teleport.TeleportRealm;
@@ -17,6 +19,7 @@ import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -38,31 +41,39 @@ import java.util.UUID;
  * soltar TAB tras mantenerlo quieto 2s (InstantTransmissionAttachment.MENU_ARM_TICKS) con la
  * skill a nivel 3+ (ver InstantTransmissionSystem).
  * Sin panel opaco detrás (nada del mundo lo cubre): diálogo flotante estilo MasterScreen.
- * Tres niveles, mismo patrón hub->lista que MasterScreen: REALMS (planetas/dimensiones) ->
- * DESTINATIONS (estructuras dentro de un planeta CURADO) o PARTY_MEMBERS. El estado
- * (disponible/bloqueado) se resuelve aquí con la MISMA lógica que ya valida el servidor
+ * Cuatro modos, mismo patrón hub->lista que MasterScreen: REALMS (planetas/dimensiones) ->
+ * DESTINATIONS (estructuras dentro de un planeta CURADO), GENERIC_DESTINATIONS (sub-destinos de
+ * una dimensión GENÉRICA con 2+ entradas, ver GenericDimensionDestinations) o PARTY_MEMBERS. El
+ * estado (disponible/bloqueado) se resuelve aquí con la MISMA lógica que ya valida el servidor
  * (TeleportRequestPacket.handle / GenericDimensionTeleportPacket.handle) — un cliente sin
  * modificar nunca debería poder pulsar algo que el servidor fuera a rechazar, pero el rechazo
  * real vive del lado servidor de todos modos.
  * REALMS mezcla TRES tipos de fila en un único espacio de índices (ver {@link RealmRow}):
  *  - CURADOS (Overworld/Otherworld, {@link TeleportRealm}): tienen varios destinos con ancla fija
- *    compartida (Home/Kami's Palace; Yemma/Kaiosama) — abren DESTINATIONS al pulsarlos.
+ *    compartida (Home/Kami's Palace/Korin's Tower; Yemma/Kaiosama) — abren DESTINATIONS al
+ *    pulsarlos.
  *  - GENÉRICOS (cualquier OTRA dimensión visitada, de cualquier mod — pedido explícito del
  *    usuario: "el uv del ícono se guíe por el nombre de la dimensión independientemente del
  *    mod"): el Nether y el End YA NO son casos especiales, son el primer y segundo ejemplo de
- *    este mecanismo genérico. Un solo destino implícito ("tu última llegada a esa dimensión",
- *    ver DimensionEntryTracker) — pulsarlos teletransporta directamente, sin submenú.
+ *    este mecanismo genérico. La mayoría (incluido el Nether hoy) tienen un solo destino
+ *    implícito ("tu última llegada a esa dimensión", ver DimensionEntryTracker) y pulsarlas
+ *    teletransporta directamente, sin submenú — una dimensión con 2+ entradas propias en
+ *    GenericDimensionDestinations (el End: isla principal fija + islas exteriores por última
+ *    visita) abre en cambio GENERIC_DESTINATIONS, MISMO comportamiento visual que un realm
+ *    curado. Pedido explícito del usuario tras la Fase 2: "no se abre el submenú... limita mucho
+ *    para añadir nuevos tps" — antes de esta ronda una dimensión genérica solo podía tener un
+ *    destino posible.
  *  - PARTY: caso fijo, siempre la ÚLTIMA fila (ya no hay una fila "Dimensión Desconocida" que
  *    tuviera que ir después — ese placeholder se retiró al generalizar el sistema: ahora
  *    cualquier dimensión de un mod de terceros aparece como una fila GENÉRICA real, con ícono de
  *    reserva si no se reconoce, en vez de una fila fija "sin implementar todavía").
- * Scroll (los tres modos): MISMO patrón que MasterScreen (scroll/rowCount/maxScroll/onScreen +
+ * Scroll (los cuatro modos): MISMO patrón que MasterScreen (scroll/rowCount/maxScroll/onScreen +
  * scissor + drawScrollbar) — con más de una dimensión modeada visitada, o una party grande, la
  * lista se desplaza en vez de salirse del marco del diálogo.
  */
 public class InstantTransmissionMenuScreen extends Screen {
 
-    private enum Mode { REALMS, DESTINATIONS, PARTY_MEMBERS }
+    private enum Mode { REALMS, DESTINATIONS, GENERIC_DESTINATIONS, PARTY_MEMBERS }
 
     private static final int BG_W = 210;
     private static final int BG_H = 180;
@@ -89,6 +100,13 @@ public class InstantTransmissionMenuScreen extends Screen {
     // =========================
     private static final ResourceLocation ICONS_TEX = ResourceLocation
             .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons_instant_transmision.png");
+    /** Atlas COMPARTIDO del resto del mod (pestañas de ZenkaiMenuScreen, TabIconButton) — la fila
+     *  Party de este menú pide expresamente el MISMO ícono que ZenkaiTab.PARTY en vez de tener
+     *  su propia celda en icons_instant_transmision.png, así que necesita su propio par
+     *  textura+u/v en vez de ICONS_TEX. Mismo tamaño de grid (20px, 256x256) que ese atlas, así
+     *  que IconUV.grid(...) sirve igual para las dos texturas. */
+    private static final ResourceLocation SHARED_ICONS_TEX = ResourceLocation
+            .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
     private static final int ICONS_ATLAS = 256;
     private static final int ICON_CELL = 20;     // tamaño real de celda en el atlas
     private static final int ICON_DRAW = 20;     // tamaño al dibujar el icono (== ICON_CELL)
@@ -108,7 +126,14 @@ public class InstantTransmissionMenuScreen extends Screen {
             .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/instant_transmission_menu.png");
 
     private static void drawIcon(GuiGraphics g, int x, int y, IconUV icon) {
-        g.blit(ICONS_TEX, x, y, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_ATLAS, ICONS_ATLAS);
+        drawIcon(g, x, y, ICONS_TEX, icon);
+    }
+
+    /** Ídem, de una textura distinta a ICONS_TEX (ver SHARED_ICONS_TEX) — la fila Party es hoy
+     *  la única llamante, pero cualquier ícono futuro que deba salir de icons.png en vez del
+     *  atlas propio de este menú pasa por aquí igual. */
+    private static void drawIcon(GuiGraphics g, int x, int y, ResourceLocation tex, IconUV icon) {
+        g.blit(tex, x, y, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_ATLAS, ICONS_ATLAS);
     }
 
     /** Mismo drawIcon, atenuado (gris 55%, igual que el resto del mod trata una fila bloqueada)
@@ -119,13 +144,26 @@ public class InstantTransmissionMenuScreen extends Screen {
         if (dim) g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
-    // ── Destinos (Home/Kami/Yemma/Kaiosama): celdas 5..8 de la fila v=0, +5 = número de realms
-    // curados históricos — ver tools/gen_instant_transmission_icons.py. ──
+    /** Ídem, de SHARED_ICONS_TEX (ver el overload de arriba) — usado por la fila Party. */
+    private static void drawIcon(GuiGraphics g, int x, int y, ResourceLocation tex, IconUV icon, boolean dim) {
+        if (dim) g.setColor(0.55F, 0.55F, 0.55F, 1.0F);
+        drawIcon(g, x, y, tex, icon);
+        if (dim) g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    // ── Destinos (Home/Kami/Korin/Yemma/Kaiosama): celdas 5..9 de la fila v=0, +5 = número de
+    // realms curados históricos. El orden del enum TeleportDestination IMPORTA aquí: cada
+    // columna ya está pintada a mano en el atlas real (ver el comentario de KORIN_TOWER en ese
+    // enum), así que insertar un valor nuevo en cualquier posición que no sea "justo donde su
+    // columna ya existe" desalinea todos los destinos que van después de él. ──
     private static IconUV destIcon(TeleportDestination dest) { return IconUV.grid(5 + dest.ordinal(), 0); }
 
-    /** Celda 11 — la fila "Party" no es un TeleportRealm ni un TeleportDestination, así que no
-     *  sale de ningún ordinal, ver tools/gen_instant_transmission_icons.py. */
-    private static final IconUV ICON_PARTY = IconUV.grid(11, 0);
+    /** El MISMO ícono que la pestaña Party del menú Zenkai (ZenkaiTab.PARTY, u=80/v=20 dentro de
+     *  icons.png) — pedido explícito del usuario, en vez de una celda propia dentro de
+     *  icons_instant_transmision.png: las dos "Party" del mod (la pestaña y esta fila) deben
+     *  leerse como el mismo concepto, así que comparten arte en vez de tener cada una la suya.
+     *  Vive en SHARED_ICONS_TEX, no en ICONS_TEX — ver los overloads de drawIcon. */
+    private static final IconUV ICON_PARTY = new IconUV(ZenkaiTab.PARTY.u, ZenkaiTab.PARTY.v);
 
     /** Ícono de una dimensión GENÉRICA (Nether, End, o cualquier dimensión de un mod de
      *  terceros), resuelto por su ResourceLocation — pedido explícito del usuario: "que el uv
@@ -149,14 +187,21 @@ public class InstantTransmissionMenuScreen extends Screen {
      *  ResourceLocation ("the_nether" -> "The Nether", "frozen_realm" -> "Frozen Realm").
      *  Vainilla ya encaja razonablemente bien con este esquema sin necesitar caso especial. */
     private static Component genericDimName(ResourceLocation dim) {
-        String[] words = dim.getPath().replace('_', ' ').split(" ");
+        return Component.literal(humanize(dim.getPath()));
+    }
+
+    /** "the_nether" -> "The Nether", "outer_islands" -> "Outer Islands" — extraído de
+     *  genericDimName para que subDestName pueda reusar el mismo criterio sin necesitar
+     *  construir un ResourceLocation falso solo para pasárselo. */
+    private static String humanize(String path) {
+        String[] words = path.replace('_', ' ').split(" ");
         StringBuilder sb = new StringBuilder();
         for (String w : words) {
             if (w.isEmpty()) continue;
             if (!sb.isEmpty()) sb.append(' ');
             sb.append(Character.toUpperCase(w.charAt(0))).append(w.substring(1));
         }
-        return Component.literal(sb.toString());
+        return sb.toString();
     }
 
     // ── Filas de REALMS: un único espacio de índices para 3 tipos de fila — ver el javadoc de
@@ -171,6 +216,11 @@ public class InstantTransmissionMenuScreen extends Screen {
     private Mode mode = Mode.REALMS;
     private TeleportRealm selectedRealm;
     private List<TeleportDestination> destRows = List.of();
+
+    /** Análogo a selectedRealm/destRows, pero para el submenú de una dimensión GENÉRICA con 2+
+     *  sub-destinos (ver GenericDimensionDestinations) — Mode.GENERIC_DESTINATIONS. */
+    private ResourceLocation selectedGenericDim;
+    private List<GenericSubDestination> genericDestRows = List.of();
 
     /** Fila superior visible de la lista ACTUAL (unidad: filas, no píxeles) — un solo campo
      *  compartido por los tres modos, igual que MasterScreen.scroll; se resetea a 0 en cada
@@ -219,6 +269,7 @@ public class InstantTransmissionMenuScreen extends Screen {
         return switch (mode) {
             case REALMS -> realmRows().size();
             case DESTINATIONS -> destRows.size();
+            case GENERIC_DESTINATIONS -> genericDestRows.size();
             case PARTY_MEMBERS -> partyMemberRows(ClientPartyState.current()).size();
         };
     }
@@ -302,6 +353,7 @@ public class InstantTransmissionMenuScreen extends Screen {
         switch (mode) {
             case REALMS -> renderRealms(g, mouseX, mouseY);
             case DESTINATIONS -> renderDestinations(g, mouseX, mouseY);
+            case GENERIC_DESTINATIONS -> renderGenericDestinations(g, mouseX, mouseY);
             case PARTY_MEMBERS -> renderPartyMembers(g, mouseX, mouseY);
         }
     }
@@ -357,10 +409,13 @@ public class InstantTransmissionMenuScreen extends Screen {
         return null;
     }
 
-    /** Dimensión GENÉRICA (Nether/End/mod de terceros) — un solo destino implícito ("tu última
-     *  llegada ahí"), así que esta fila no tiene submenú: bloqueada solo por nivel de salto
-     *  entre dimensiones (crossDimensionOk), nunca por "no descubierta" (ya solo aparece aquí
-     *  si fue visitada, ver visibleGenericDimensions). */
+    /** Dimensión GENÉRICA (Nether/End/mod de terceros). La mayoría solo tienen un destino
+     *  implícito ("tu última llegada ahí") y esta fila las teletransporta directo al pulsarlas;
+     *  una dimensión con 2+ entradas en GenericDimensionDestinations (hoy, el End) abre en
+     *  cambio el submenú de nivel 2 (ver clickRealms/renderGenericDestinations) — MISMO criterio
+     *  visual que un realm curado, solo que resuelto por ResourceLocation en vez de enum.
+     *  Bloqueada solo por nivel de salto entre dimensiones (crossDimensionOk), nunca por "no
+     *  descubierta" (ya solo aparece aquí si fue visitada, ver visibleGenericDimensions). */
     private LockedTooltip paintGenericRow(GuiGraphics g, int y, ResourceLocation dim, int mouseX, int mouseY) {
         boolean enabled = crossDimensionOk(dim);
         boolean hovered = rowHovered(y, mouseX, mouseY);
@@ -392,7 +447,7 @@ public class InstantTransmissionMenuScreen extends Screen {
         if (hovered && enabled) g.fill(contentLeft() - 2, y, contentRight(), y + ROW_H - 1, ZenkaiPalette.HOVER_VEIL);
 
         int iconY = y + (ROW_H - ICON_DRAW) / 2;
-        drawIcon(g, contentLeft(), iconY, ICON_PARTY, !enabled);
+        drawIcon(g, contentLeft(), iconY, SHARED_ICONS_TEX, ICON_PARTY, !enabled);
 
         int textX = contentLeft() + ICON_DRAW + ROW_ICON_GAP;
         int textY = y + (ROW_H - 9) / 2;
@@ -460,6 +515,78 @@ public class InstantTransmissionMenuScreen extends Screen {
                         : Component.translatable(lock.tooltipKey());
             }
             if (i < destRows.size() - 1) {
+                g.fill(contentLeft() - 2, y + ROW_H - 1, contentRight(), y + ROW_H, ZenkaiPalette.SEPARATOR_DARK);
+            }
+        }
+        g.disableScissor();
+        drawScrollbar(g);
+
+        if (hoveredTooltip != null) {
+            g.renderTooltip(this.font, this.font.split(hoveredTooltip, TOOLTIP_W), mouseX, mouseY);
+        }
+    }
+
+    // ── Nivel 2 (variante genérica): sub-destinos de una dimensión GENÉRICA con 2+ entradas ──
+
+    /** Nombre legible de un sub-destino: clave propia si existe
+     *  ("screen.zenkai.instant_transmission.subdest.<path de la dimensión>.<id>"), o el id
+     *  humanizado como fallback — mismo criterio que genericDimName para no exigir una clave de
+     *  idioma por cada combinación dimensión×sub-destino que un mod de terceros pudiera definir
+     *  en el futuro (hoy solo el End del propio juego usa este mecanismo, así que sí tiene clave). */
+    private static Component subDestName(ResourceLocation dim, GenericSubDestination sub) {
+        String key = "screen.zenkai.instant_transmission.subdest." + dim.getPath() + "." + sub.id();
+        if (I18n.exists(key)) return Component.translatable(key);
+        return Component.literal(humanize(sub.id()));
+    }
+
+    /** Igual que lockStateOf (destinos curados), pero para un sub-destino GENÉRICO: un
+     *  {@link GenericSubDestination.Waypoint} sin waypoint grabado todavía (nunca se usó un End
+     *  Gateway de verdad, ver EndOuterIslandTracker) se bloquea como UNDISCOVERED — antes esta
+     *  fila se pintaba disponible con solo entrar a la dimensión, sin haber descubierto nada
+     *  todavía (bug real reportado por el usuario). Fixed/LastEntry no necesitan este chequeo
+     *  extra: están disponibles en cuanto la dimensión misma aparece en el menú. */
+    private LockState genericLockStateOf(ResourceLocation dim, GenericSubDestination sub) {
+        if (sub instanceof GenericSubDestination.Waypoint(String ignored, String key, int ignoredCol, int ignoredRow)
+                && !InstantTransmissionClientState.hasWaypoint(key)) {
+            return LockState.UNDISCOVERED;
+        }
+        if (!crossDimensionOk(dim)) return LockState.LEVEL_LOCKED;
+        return LockState.AVAILABLE;
+    }
+
+    private void renderGenericDestinations(GuiGraphics g, int mouseX, int mouseY) {
+        renderBackRow(g, mouseX, mouseY);
+        ResourceLocation dim = selectedGenericDim;
+
+        Component hoveredTooltip = null;
+        g.enableScissor(left, rowsTop(), left + BG_W, rowsTop() + visibleRows() * ROW_H);
+        for (int i = 0; i < genericDestRows.size(); i++) {
+            if (!onScreen(i)) continue;
+            int y = rowTop(i);
+            GenericSubDestination sub = genericDestRows.get(i);
+            LockState lock = genericLockStateOf(dim, sub);
+            boolean hovered = rowHovered(y, mouseX, mouseY);
+
+            if (hovered && lock == LockState.AVAILABLE) {
+                g.fill(contentLeft() - 2, y, contentRight(), y + ROW_H - 1, ZenkaiPalette.HOVER_VEIL);
+            }
+
+            int iconY = y + (ROW_H - ICON_DRAW) / 2;
+            drawIcon(g, contentLeft(), iconY, IconUV.grid(sub.iconColumn(), sub.iconRow()), lock != LockState.AVAILABLE);
+
+            int textX = contentLeft() + ICON_DRAW + ROW_ICON_GAP;
+            int textY = y + (ROW_H - 9) / 2;
+            int color = lock == LockState.AVAILABLE
+                    ? (hovered ? ZenkaiPalette.TEXT_HOVER : ZenkaiPalette.OK)
+                    : ZenkaiPalette.DENIED;
+            PanelText.onDark(g, this.font, subDestName(dim, sub), textX, textY, color);
+
+            if (lock != LockState.AVAILABLE && hovered) {
+                hoveredTooltip = lock == LockState.LEVEL_LOCKED
+                        ? Component.translatable(lock.tooltipKey(), SkillEffects.crossDimensionMinLevel())
+                        : Component.translatable(lock.tooltipKey());
+            }
+            if (i < genericDestRows.size() - 1) {
                 g.fill(contentLeft() - 2, y + ROW_H - 1, contentRight(), y + ROW_H, ZenkaiPalette.SEPARATOR_DARK);
             }
         }
@@ -630,6 +757,7 @@ public class InstantTransmissionMenuScreen extends Screen {
             boolean handled = switch (mode) {
                 case REALMS -> clickRealms(mouseX, mouseY);
                 case DESTINATIONS -> clickDestinations(mouseX, mouseY);
+                case GENERIC_DESTINATIONS -> clickGenericDestinations(mouseX, mouseY);
                 case PARTY_MEMBERS -> clickPartyMembers(mouseX, mouseY);
             };
             if (handled) return true;
@@ -666,8 +794,16 @@ public class InstantTransmissionMenuScreen extends Screen {
                 }
                 case GenericRow(ResourceLocation dim) -> {
                     if (!crossDimensionOk(dim)) return true; // bloqueada: absorbe el clic
-                    PacketDistributor.sendToServer(new GenericDimensionTeleportPacket(dim.toString()));
-                    onClose();
+                    List<GenericSubDestination> subs = GenericDimensionDestinations.of(dim);
+                    if (subs.size() >= 2) {
+                        selectedGenericDim = dim;
+                        genericDestRows = subs;
+                        mode = Mode.GENERIC_DESTINATIONS;
+                        scroll = 0;
+                    } else {
+                        PacketDistributor.sendToServer(GenericDimensionTeleportPacket.lastEntry(dim.toString()));
+                        onClose();
+                    }
                 }
                 case PartyRow ignored -> {
                     if (partyRowLock() != PartyRowLock.AVAILABLE) return true; // bloqueada: absorbe el clic
@@ -691,6 +827,24 @@ public class InstantTransmissionMenuScreen extends Screen {
             if (lockStateOf(dest) != LockState.AVAILABLE) return true; // bloqueado: absorbe el clic
 
             PacketDistributor.sendToServer(new TeleportRequestPacket(dest.id()));
+            onClose();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean clickGenericDestinations(double mouseX, double mouseY) {
+        ResourceLocation dim = selectedGenericDim;
+        for (int i = 0; i < genericDestRows.size(); i++) {
+            if (!onScreen(i)) continue;
+            int y = rowTop(i);
+            if (mouseX < contentLeft() - 2 || mouseX > contentRight()) continue;
+            if (mouseY < y || mouseY >= y + ROW_H - 1) continue;
+
+            GenericSubDestination sub = genericDestRows.get(i);
+            if (genericLockStateOf(dim, sub) != LockState.AVAILABLE) return true; // bloqueado: absorbe el clic
+
+            PacketDistributor.sendToServer(new GenericDimensionTeleportPacket(dim.toString(), sub.id()));
             onClose();
             return true;
         }

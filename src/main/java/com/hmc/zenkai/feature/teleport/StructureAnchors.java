@@ -34,10 +34,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * Nombres en uso hoy (ver {@link TeleportAnchors} para quién consume cada uno):
  *   - {@code "kami_lookout"} — Kami's Lookout, la cima de la torre. Ancla de
  *     {@code TeleportDestination.KAMI_PALACE}.
- *   - {@code "korins_tower"} — Korin's Tower. Capturado y persistido igual que el de arriba,
- *     pero sin destino propio en {@link TeleportAnchors}/{@code TeleportDestination} todavía —
- *     añadir ese destino es un paso aparte (nuevo valor de enum + fila de menú), no algo que
- *     este registro necesite saber.
+ *   - {@code "korins_tower"} — Korin's Tower. Capturado y persistido igual que el de arriba;
+ *     desde la generalización del menú de planetas es el ancla de
+ *     {@code TeleportDestination.KORIN_TOWER} (ver {@link TeleportAnchors}). Si tu mundo perdió
+ *     este marcador (p. ej. una pieza re-exportada sin él, o un mundo borrado), el destino
+ *     simplemente queda "descubierto pero sin llegar a ningún sitio" (clic sin efecto, ver
+ *     TeleportRequestPacket) hasta que vuelvas a colocar el Structure Block en modo Data
+ *     siguiendo los pasos de arriba.
  *
  * ── POR QUÉ NO SE ESCRIBE DIRECTO A {@link ZenkaiWorldData} DESDE handleDataMarker ──────────
  * {@code postProcess} (y por tanto {@code handleDataMarker}) corre durante la fase FEATURES de

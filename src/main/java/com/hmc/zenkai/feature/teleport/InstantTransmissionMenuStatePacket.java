@@ -12,15 +12,18 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import java.util.List;
 
 /**
- * S2C, self-only: qué destinos ha descubierto el jugador y qué dimensiones ha visitado alguna
- * vez — lo que InstantTransmissionMenuScreen necesita para pintar las filas del menú. El
- * attachment del servidor NUNCA llega solo por `getData(...)` en el cliente (no es un
- * attachment auto-sincronizado como PlayerStatsAttachment); sin este packet la pantalla vería
- * siempre los dos conjuntos vacíos y todo aparecería bloqueado/oculto pase lo que pase.
+ * S2C, self-only: qué destinos ha descubierto el jugador, qué dimensiones ha visitado alguna
+ * vez, y qué waypoints (ver InstantTransmissionAttachment) existen ya — lo que
+ * InstantTransmissionMenuScreen necesita para pintar las filas del menú. El attachment del
+ * servidor NUNCA llega solo por `getData(...)` en el cliente (no es un attachment
+ * auto-sincronizado como PlayerStatsAttachment); sin este packet la pantalla vería siempre los
+ * conjuntos vacíos y todo aparecería bloqueado/oculto pase lo que pase.
  * Se manda en el login (InstantTransmissionMenuSync) y cada vez que el servidor descubre algo
- * nuevo (TeleportDiscoverySystem) — nunca en bucle, solo en los cambios reales.
+ * nuevo (TeleportDiscoverySystem, EndOuterIslandTracker) — nunca en bucle, solo en los cambios
+ * reales.
  */
-public record InstantTransmissionMenuStatePacket(List<String> discoveredIds, List<String> visitedDimensionIds)
+public record InstantTransmissionMenuStatePacket(
+        List<String> discoveredIds, List<String> visitedDimensionIds, List<String> waypointIds)
         implements CustomPacketPayload {
 
     public static final Type<InstantTransmissionMenuStatePacket> TYPE = new Type<>(
@@ -32,6 +35,8 @@ public record InstantTransmissionMenuStatePacket(List<String> discoveredIds, Lis
                     InstantTransmissionMenuStatePacket::discoveredIds,
                     ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()),
                     InstantTransmissionMenuStatePacket::visitedDimensionIds,
+                    ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()),
+                    InstantTransmissionMenuStatePacket::waypointIds,
                     InstantTransmissionMenuStatePacket::new);
 
     @Override
@@ -39,6 +44,6 @@ public record InstantTransmissionMenuStatePacket(List<String> discoveredIds, Lis
 
     public static void handle(InstantTransmissionMenuStatePacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> InstantTransmissionClientState.applyMenuState(
-                pkt.discoveredIds(), pkt.visitedDimensionIds()));
+                pkt.discoveredIds(), pkt.visitedDimensionIds(), pkt.waypointIds()));
     }
 }
