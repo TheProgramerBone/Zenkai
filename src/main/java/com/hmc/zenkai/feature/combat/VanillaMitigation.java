@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.combat;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
@@ -33,7 +33,7 @@ public final class VanillaMitigation {
      * entrante ya no existe y el ratio no se puede recuperar.
      */
     public static double armorMultiplier(LivingDamageEvent.Pre e) {
-        double w = CommonConfig.vanillaArmorWeight();
+        double w = ServerConfig.vanillaArmorWeight();
         if (w <= 0.0) return 1.0;
 
         // ⚠ API a verificar al compilar: LivingDamageEvent.Pre#getContainer() y
@@ -84,7 +84,7 @@ public final class VanillaMitigation {
         int bodyMax = st.getBodyMax();
         if (maxHp <= 0.0F || bodyMax <= 0) return damage;
 
-        double perPoint = (bodyMax / (double) maxHp) * CommonConfig.absorptionWeight();
+        double perPoint = (bodyMax / (double) maxHp) * ServerConfig.absorptionWeight();
         if (perPoint <= 1.0e-9) return damage;
 
         double shield = abs * perPoint;

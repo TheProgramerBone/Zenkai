@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.combat.entity;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.combat.PowerLevel;
 import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
@@ -86,7 +86,7 @@ public final class EntityStats implements ZenkaiCombatStats {
     }
 
     private static int resolveReward(String raw, long pl) {
-        int auto = (int) Math.max(1, Math.round(pl * CommonConfig.tpPerPl()));
+        int auto = (int) Math.max(1, Math.round(pl * ServerConfig.tpPerPl()));
         if (raw == null || raw.equalsIgnoreCase("auto")) return auto;
         try { return Math.max(0, Integer.parseInt(raw.trim())); }
         catch (Exception ex) { return auto; }
@@ -97,9 +97,9 @@ public final class EntityStats implements ZenkaiCombatStats {
     private void recalc() {
         double con = getAttr(ZenkaiAttributes.CONSTITUTION);
         double spi = getAttr(ZenkaiAttributes.SPIRIT);
-        this.bodyMax    = (int) Math.max(1, Math.round(10 + con * bodyMult * CommonConfig.bodyScale()));
-        this.staminaMax = (int) Math.max(1, Math.round(90 + con * CommonConfig.staminaScale()));
-        this.energyMax  = (int) Math.max(1, Math.round(90 + spi * kiMult * CommonConfig.energyScale()));
+        this.bodyMax    = (int) Math.max(1, Math.round(10 + con * bodyMult * ServerConfig.bodyScale()));
+        this.staminaMax = (int) Math.max(1, Math.round(90 + con * ServerConfig.staminaScale()));
+        this.energyMax  = (int) Math.max(1, Math.round(90 + spi * kiMult * ServerConfig.energyScale()));
     }
 
     public int getAttr(ZenkaiAttributes a) { return attr.getOrDefault(a, 0); }
@@ -165,7 +165,7 @@ public final class EntityStats implements ZenkaiCombatStats {
         double hp    = le.getMaxHealth();
         double atk   = attrOr(le, Attributes.ATTACK_DAMAGE, 1.0);
         double armor = attrOr(le, Attributes.ARMOR, 0.0);
-        double dmgF  = f * CommonConfig.vanillaDamageRatio();
+        double dmgF  = f * ServerConfig.vanillaDamageRatio();
 
         attr.clear();
         attr.put(ZenkaiAttributes.CONSTITUTION, (int) Math.max(1, Math.round(hp * f)));
@@ -190,8 +190,8 @@ public final class EntityStats implements ZenkaiCombatStats {
         stamina = staminaMax;
         energy  = energyMax;
 
-        tpReward = (int) Math.max(0, Math.round(getPowerLevel() * CommonConfig.tpPerPl()
-                * CommonConfig.vanillaTpRewardFactor()));
+        tpReward = (int) Math.max(0, Math.round(getPowerLevel() * ServerConfig.tpPerPl()
+                * ServerConfig.vanillaTpRewardFactor()));
         initialized = true;
         mirrorToVanilla(le);
     }
@@ -202,10 +202,10 @@ public final class EntityStats implements ZenkaiCombatStats {
      * mobs uno a uno, y zenkai_entities/*.json sigue mandando por encima de esto.
      */
     private static double categoryFactor(LivingEntity le) {
-        if (le.getType().is(ModTags.EntityTypes.BOSSES)) return CommonConfig.vanillaBossFactor();
+        if (le.getType().is(ModTags.EntityTypes.BOSSES)) return ServerConfig.vanillaBossFactor();
         return le.getType().getCategory() == MobCategory.MONSTER
-                ? CommonConfig.vanillaHostileFactor()
-                : CommonConfig.vanillaPassiveFactor();
+                ? ServerConfig.vanillaHostileFactor()
+                : ServerConfig.vanillaPassiveFactor();
     }
 
     private static double attrOr(LivingEntity le, Holder<Attribute> a, double fallback) {

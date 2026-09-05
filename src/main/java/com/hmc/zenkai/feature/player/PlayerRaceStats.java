@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.player;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.StatSynergy;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
@@ -42,7 +42,7 @@ public class PlayerRaceStats {
     private double refundCarry = 0.0;
     /**
      * Curva vigente ANTES de que el coste pasara a ser 1 + n. Solo la usa la migración de
-     * tpSpent, y por eso son literales y no CommonConfig: reconstruyen lo que un save viejo
+     * tpSpent, y por eso son literales y no ServerConfig: reconstruyen lo que un save viejo
      * pagó de verdad, y ese número no cambia porque hoy la config diga otra cosa. Evaluar la
      * curva actual sobre puntos comprados con la antigua inflaba el reembolso del respec
      * varios órdenes de magnitud.
@@ -92,7 +92,7 @@ public class PlayerRaceStats {
     }
 
     private void capAll() {
-        int cap = CommonConfig.globalAttributeCap();
+        int cap = ServerConfig.globalAttributeCap();
         for (Map.Entry<ZenkaiAttributes, Integer> e : attributes.entrySet()) {
             e.setValue(Math.min(e.getValue(), cap));
         }
@@ -101,7 +101,7 @@ public class PlayerRaceStats {
     public int getAttribute(ZenkaiAttributes a) { return attributes.getOrDefault(a, 0); }
 
     public void setAttribute(ZenkaiAttributes a, int v) {
-        attributes.put(a, MathUtil.clamp(v, 0, CommonConfig.globalAttributeCap()));
+        attributes.put(a, MathUtil.clamp(v, 0, ServerConfig.globalAttributeCap()));
     }
 
     // ── TP ───────────────────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ public class PlayerRaceStats {
     public boolean spendTP(ZenkaiAttributes attr, int points) {
         if (points <= 0) return false;
         int totalInv = totalInvested();
-        int cap      = CommonConfig.globalAttributeCap();
+        int cap      = ServerConfig.globalAttributeCap();
         int cur      = attributes.get(attr);
         int add      = Math.min(points, cap - cur);
         if (add <= 0) return false;
@@ -138,7 +138,7 @@ public class PlayerRaceStats {
 
     public int previewTpCost(ZenkaiAttributes attr, int points) {
         if (points <= 0) return 0;
-        int cap = CommonConfig.globalAttributeCap();
+        int cap = ServerConfig.globalAttributeCap();
         int cur = attributes.get(attr);
         int add = Math.min(points, cap - cur);
         if (add <= 0) return 0;
@@ -228,11 +228,11 @@ public class PlayerRaceStats {
      */
     public static RecalcResult pools(Race race, Style style, int con, int spi) {
         int bodyMax    = (int) Math.max(1, Math.round(
-                10 + con * RaceStatTable.health(race, style)  * CommonConfig.bodyScale()));
+                10 + con * RaceStatTable.health(race, style)  * ServerConfig.bodyScale()));
         int staminaMax = (int) Math.max(1, Math.round(
-                90 + con * RaceStatTable.stamina(race, style) * CommonConfig.staminaScale()));
+                90 + con * RaceStatTable.stamina(race, style) * ServerConfig.staminaScale()));
         int energyMax  = (int) Math.max(1, Math.round(
-                90 + spi * RaceStatTable.kiReserves(race, style) * CommonConfig.energyScale()));
+                90 + spi * RaceStatTable.kiReserves(race, style) * ServerConfig.energyScale()));
         return new RecalcResult(bodyMax, staminaMax, energyMax, 0.0, 0.0);
     }
 

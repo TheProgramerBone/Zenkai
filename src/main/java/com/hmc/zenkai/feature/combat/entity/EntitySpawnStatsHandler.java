@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.combat.entity;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -34,7 +34,7 @@ public final class EntitySpawnStatsHandler {
 
         if (def != null && !def.displayOnly()) {
             stats.applyDef(def, le);
-        } else if (def == null && CommonConfig.vanillaStatsFallback()) {
+        } else if (def == null && ServerConfig.vanillaStatsFallback()) {
             // Sin JSON: se derivan de sus atributos vanilla. Los display_only se quedan
             // fuera a propósito (PL para el scouter, sin stats de combate).
             stats.applyVanilla(le);

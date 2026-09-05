@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.aura;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.StatSynergy;
@@ -16,7 +16,7 @@ import com.hmc.zenkai.util.BalanceUtil;
  * EL PROBLEMA QUE RESUELVE: normalizar el PL con log10 necesita un techo, y un techo
  * escrito a mano se queda obsoleto en cuanto alguien añade una transformación. Aquí el
  * techo recorre el registro ENTERO de formas y cada uno de los escalones de Kaioken, así que
- * una forma nueva lo sube sola. El único número de referencia es CommonConfig.auraReferenceTp(),
+ * una forma nueva lo sube sola. El único número de referencia es ServerConfig.auraReferenceTp(),
  * y ese no cambia al añadir formas: dice cuánto TP invierte un jugador de endgame, no
  * cuánto poder existe.
  * OJO CON UNA TRAMPA DE LA CADENA: statMultiplier se aplica a melee, defensa y ki_power,
@@ -77,8 +77,8 @@ public final class AuraCeiling {
     /** Inversa de la curva de coste de TP: cuántos puntos compra ese TP.
      *  coste(n) = n·(base + coeff·(n−1)/2)  ->  resolver n. */
     public static double pointsForTp(double tp) {
-        double coeff = CommonConfig.tpCoefficient();
-        double base = CommonConfig.attributeBaseCost();
+        double coeff = ServerConfig.tpCoefficient();
+        double base = ServerConfig.attributeBaseCost();
         if (coeff <= 0d) return base <= 0d ? 0d : tp / base;
         double a = coeff / 2d;
         double b = base - coeff / 2d;
@@ -93,7 +93,7 @@ public final class AuraCeiling {
                                     double statPercent) {
         int[] base = RaceStatTable.baseAttributes(race);
         double[] w = weights(style);
-        int cap = CommonConfig.globalAttributeCap();
+        int cap = ServerConfig.globalAttributeCap();
 
         int str = (int) Math.min(cap, base[0] + points * w[0]);
         int con = (int) Math.min(cap, base[1] + points * w[1]);
@@ -117,7 +117,7 @@ public final class AuraCeiling {
     private static long computeCeiling() {
         if (!RaceStatTable.isLoaded()) return AuraTuning.PL_CEIL_FALLBACK;
 
-        double points = pointsForTp(CommonConfig.auraReferenceTp());
+        double points = pointsForTp(ServerConfig.auraReferenceTp());
         double maxKaioken = maxKaiokenPercent();
 
         // El mayor statPercent que el datapack ofrece hoy. Recorrer el registro entero

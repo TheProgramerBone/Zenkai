@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.skills;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.forms.PotentialUnlock;
 import com.hmc.zenkai.feature.master.MasterManager;
@@ -83,7 +83,7 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
             if (SkillEffects.POTENTIAL_UNLOCK.equals(def.id()) && !PotentialUnlock.canPurchase(sp)) {
                 sp.displayClientMessage(Component.translatable(
                         "messages.zenkai.alignment_too_low",
-                        CommonConfig.potentialUnlockAlignmentReq()), true);
+                        ServerConfig.potentialUnlockAlignmentReq()), true);
                 return;
             }
             if (att.getTP() < cost) return;

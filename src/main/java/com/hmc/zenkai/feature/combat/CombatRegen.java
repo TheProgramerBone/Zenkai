@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.combat;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.race.RacePassives;
 import net.minecraft.world.entity.player.Player;
 
@@ -24,9 +24,9 @@ public final class CombatRegen {
     /** Multiplicador a aplicar a la regeneración de body. 1.0 fuera de combate. */
     public static double bodyMult(Player p) {
         if (!InCombatState.isInCombat(p)) return 1.0;
-        double m = CommonConfig.inCombatBodyRegenMult();
+        double m = ServerConfig.inCombatBodyRegenMult();
         if (RacePassives.hasRegenIdentity(p)) {
-            m = Math.max(m, CommonConfig.inCombatRacialRegenFloor());
+            m = Math.max(m, ServerConfig.inCombatRacialRegenFloor());
         }
         return m;
     }

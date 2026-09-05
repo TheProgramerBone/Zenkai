@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.combat;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.item.KiWeaponItem;
 import com.hmc.zenkai.feature.kiweapon.KiWeaponServer;
 import com.hmc.zenkai.feature.skills.SkillEffects;
@@ -58,7 +58,7 @@ public final class KiInfusion {
     public static int kiCost(ZenkaiCombatStats st, double bonus) {
         if (bonus <= 0.0) return 0;
         return (int) Math.max(1, Math.ceil(
-                bonus * CommonConfig.kiPerBonusDamage() * st.kiCostMult()));
+                bonus * ServerConfig.kiPerBonusDamage() * st.kiCostMult()));
     }
 
     /**
@@ -87,7 +87,7 @@ public final class KiInfusion {
             if (w != null) return w.def().damageMult();
         }
         double extra = Math.max(0.0, attackDamageOf(e) - 1.0);
-        return 1.0 + extra * CommonConfig.weaponScale();
+        return 1.0 + extra * ServerConfig.weaponScale();
     }
 
     /**
@@ -115,12 +115,12 @@ public final class KiInfusion {
      */
     public static double enchantMultiplier(LivingEntity e, double originalVanillaDamage,
                                            double critMultiplier) {
-        double scale = CommonConfig.meleeEnchantScale();
+        double scale = ServerConfig.meleeEnchantScale();
         double baseline = attackDamageOf(e) * Math.max(critMultiplier, 1.0e-6);
         if (scale <= 0.0 || baseline <= 0.0 || originalVanillaDamage <= 0.0) return 1.0;
 
         double mult = 1.0 + (originalVanillaDamage / baseline - 1.0) * scale;
-        return Math.max(0.0, Math.min(mult, CommonConfig.meleeEnchantMultCap()));
+        return Math.max(0.0, Math.min(mult, ServerConfig.meleeEnchantMultCap()));
     }
 
     /**
@@ -140,11 +140,11 @@ public final class KiInfusion {
      * @param originalVanillaDamage daño del proyectil ANTES de armadura (VanillaArmor.originalDamage).
      */
     public static double projectileMultiplier(double originalVanillaDamage) {
-        double base = CommonConfig.projectileBaseDamage();
+        double base = ServerConfig.projectileBaseDamage();
         if (base <= 0.0 || originalVanillaDamage <= 0.0) return 1.0;
 
-        double mult = 1.0 + (originalVanillaDamage / base - 1.0) * CommonConfig.projectileScale();
-        return Math.max(0.0, Math.min(mult, CommonConfig.projectileMultCap()));
+        double mult = 1.0 + (originalVanillaDamage / base - 1.0) * ServerConfig.projectileScale();
+        return Math.max(0.0, Math.min(mult, ServerConfig.projectileMultCap()));
     }
 
     /** Coste en ki del EXTRA que aporta el arma de ki sobre pegar a mano limpia. Se cobra

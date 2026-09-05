@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.combat.entity;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.training.TrainingHooks;
@@ -41,8 +41,8 @@ public final class EntityDeathRewardHandler {
             reward = dead.getData(ZenkaiDataAttachments.ENTITY_STATS.get()).getTpReward();
         } else {
             // Mob vanilla (sin stats): PL derivado de su vida máxima. Mínimo 1 TP.
-            double vanillaPl = dead.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor();
-            reward = (int) Math.max(1, Math.round(vanillaPl * CommonConfig.tpPerPl()));
+            double vanillaPl = dead.getMaxHealth() * ServerConfig.vanillaPowerLevelFactor();
+            reward = (int) Math.max(1, Math.round(vanillaPl * ServerConfig.tpPerPl()));
         }
         if (reward <= 0) return;
 
@@ -62,7 +62,7 @@ public final class EntityDeathRewardHandler {
         if (dead.hasData(ZenkaiDataAttachments.ENTITY_STATS.get()) && st.isInitialized()) {
             return st.getPowerLevel();
         }
-        return Math.max(1L, Math.round(dead.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor()));
+        return Math.max(1L, Math.round(dead.getMaxHealth() * ServerConfig.vanillaPowerLevelFactor()));
     }
 
     private static Player resolveKiller(DamageSource src) {

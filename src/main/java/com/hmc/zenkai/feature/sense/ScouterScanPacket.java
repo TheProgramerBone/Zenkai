@@ -2,7 +2,7 @@ package com.hmc.zenkai.feature.sense;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -54,7 +54,7 @@ public record ScouterScanPacket() implements CustomPacketPayload {
 
             // El alcance de la mira es el MENOR entre la config y el de la mejora: un scouter
             // sin mejorar no ve a 128 bloques por mucho que la config lo permita.
-            double range = Math.min(CommonConfig.scouterRange(), ScouterStacks.range(scouter));
+            double range = Math.min(ServerConfig.scouterRange(), ScouterStacks.range(scouter));
 
             Vec3 start = sp.getEyePosition();
             Vec3 end   = start.add(sp.getLookAngle().scale(range));

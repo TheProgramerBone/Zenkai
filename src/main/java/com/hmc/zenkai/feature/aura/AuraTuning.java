@@ -218,7 +218,7 @@ public final class AuraTuning {
 
     // ── Normalización del PL ─────────────────────────────────────────────────
     // El número de referencia (TP total que se espera que invierta un jugador de endgame)
-    // vive en CommonConfig.auraReferenceTp(), NO aquí — es la única constante de aura que
+    // vive en ServerConfig.auraReferenceTp(), NO aquí — es la única constante de aura que
     // sale de este archivo pese al "único sitio donde viven" de la clase: no es aspecto
     // (mass/spike/turb/...), es economía de progresión, y esa sí necesita poder ajustarse
     // por config/mundo sin recompilar. Ver AuraCeiling, que es quien la consume.

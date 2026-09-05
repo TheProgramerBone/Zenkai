@@ -1,6 +1,5 @@
 package com.hmc.zenkai.util;
 
-import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.RaceStatTable;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;

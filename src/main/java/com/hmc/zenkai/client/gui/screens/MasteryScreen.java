@@ -4,7 +4,7 @@ import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.StatBar;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.event.tick.KaiokenSystem;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
@@ -216,13 +216,13 @@ public class MasteryScreen extends ZenkaiMenuScreen {
      */
     private Component techDetail(float mastery, boolean ki) {
         double m = mastery / 100.0;
-        double dmg  = CommonConfig.masteryTechDamageBonus()   * m;
-        double cost = CommonConfig.masteryTechCostReduction()  * m;
+        double dmg  = ServerConfig.masteryTechDamageBonus()   * m;
+        double cost = ServerConfig.masteryTechCostReduction()  * m;
         StringBuilder sb = new StringBuilder();
         sb.append("+").append(pct(dmg * 100.0)).append(" dmg");
         sb.append("  -").append(pct(cost * 100.0)).append(" cost");
         if (ki) {
-            double cast = CommonConfig.masteryTechCastReduction() * m;
+            double cast = ServerConfig.masteryTechCastReduction() * m;
             sb.append("  -").append(pct(cast * 100.0)).append(" charge");
         }
         return Component.literal(sb.toString());

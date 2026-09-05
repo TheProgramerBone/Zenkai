@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.training;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -42,7 +42,7 @@ public final class TrainingHooks {
      *  @param victimPl PL de la víctima, para el factor de diferencia de poder. */
     public static void grantFromDamage(ServerPlayer sp, double effectiveDamage, long victimPl) {
         if (effectiveDamage <= 0) return;
-        grant(sp, effectiveDamage * CommonConfig.trainingDamageTpFactor(), victimPl);
+        grant(sp, effectiveDamage * ServerConfig.trainingDamageTpFactor(), victimPl);
     }
 
     /** TP por matar una entidad. El reward ya viene resuelto por EntityDeathRewardHandler.
@@ -59,16 +59,16 @@ public final class TrainingHooks {
 
         TrainingData td = sp.getData(ZenkaiDataAttachments.TRAINING.get());
         long now = sp.level().getGameTime();
-        if (now - td.getLastSwingTime() < CommonConfig.trainingAirMinTicks()) return;
+        if (now - td.getLastSwingTime() < ServerConfig.trainingAirMinTicks()) return;
 
-        int cost = (int) Math.ceil(att.getStaminaMax() * CommonConfig.trainingAirStaminaCostPct());
+        int cost = (int) Math.ceil(att.getStaminaMax() * ServerConfig.trainingAirStaminaCostPct());
         if (att.getStamina() < cost) return;
         att.consumeStamina(cost);
         td.setLastSwingTime(now);
 
         // victimPl 0 = sin objetivo. Golpear al aire no se castiga por diferencia de poder:
         // ya está limitado por estamina y por el cooldown del packet.
-        grant(sp, Math.max(1, att.getPowerLevelRaw()) * CommonConfig.trainingAirTpFactor(), 0L);
+        grant(sp, Math.max(1, att.getPowerLevelRaw()) * ServerConfig.trainingAirTpFactor(), 0L);
     }
 
     /** Núcleo: decay de fatiga, eficiencia, diferencia de poder, HTC, pesas, carry y sync. */
@@ -84,12 +84,12 @@ public final class TrainingHooks {
         // Lazy decay: minutos de juego desde el último evento.
         if (td.getLastDecayTime() > 0 && now > td.getLastDecayTime()) {
             double minutes = (now - td.getLastDecayTime()) / 1200.0;
-            td.setFatigue(td.getFatigue() - CommonConfig.trainingFatigueDecayPerMinute() * minutes);
+            td.setFatigue(td.getFatigue() - ServerConfig.trainingFatigueDecayPerMinute() * minutes);
         }
         td.setLastDecayTime(now);
 
-        double h = CommonConfig.trainingFatigueHalfLife();
-        double m = Math.max(CommonConfig.trainingMinEfficiency(), h / (h + td.getFatigue()));
+        double h = ServerConfig.trainingFatigueHalfLife();
+        double m = Math.max(ServerConfig.trainingMinEfficiency(), h / (h + td.getFatigue()));
 
         // Diferencia de poder. El divisor NO es 1.0: el PL del jugador y el de un mob no están
         // en la misma escala (el suyo es 31-65% pool de ki, el del mob un 10%), así que un
@@ -97,14 +97,14 @@ public final class TrainingHooks {
         // matarte en 8 golpes contaba como chusma desde el minuto uno.
         double plFactor = 1.0;
         if (victimPl > 0) {
-            double ratio = (victimPl / (double) pl) / CommonConfig.trainingPlRatioFull();
-            plFactor = Math.max(CommonConfig.trainingPlRatioFloor(), Math.min(1.0, ratio));
+            double ratio = (victimPl / (double) pl) / ServerConfig.trainingPlRatioFull();
+            plFactor = Math.max(ServerConfig.trainingPlRatioFloor(), Math.min(1.0, ratio));
         }
 
         double base = rawTp * m * plFactor;
         boolean inHtc = sp.level().dimension() == ModDimensions.HTC_LEVEL;
         double granted = base
-                * (inHtc ? CommonConfig.trainingHtcMultiplier() : 1.0)
+                * (inHtc ? ServerConfig.trainingHtcMultiplier() : 1.0)
                 * WeightSystem.tpFactor(att.getWeightLoad());
 
         // Potential Unlock: estás USANDO tu potencial, no entrenándolo. Se comprueba contra
@@ -113,7 +113,7 @@ public final class TrainingHooks {
         // acumulándose igual — quemas lo mismo y te llevas la mitad.
         if (FormIds.POTENTIAL_UNLOCK.equals(
                 sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId())) {
-            granted *= CommonConfig.potentialUnlockTpMult();
+            granted *= ServerConfig.potentialUnlockTpMult();
         }
 
         double total = granted + td.getCarry();

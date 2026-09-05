@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.combat;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,7 +29,7 @@ public final class InCombatState {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         if (!att.isRaceChosen()) return;
 
-        long until = sp.level().getGameTime() + CommonConfig.inCombatTicks();
+        long until = sp.level().getGameTime() + ServerConfig.inCombatTicks();
         boolean wasOut = !isInCombat(sp);
         att.flags().setInCombatUntil(until);
 

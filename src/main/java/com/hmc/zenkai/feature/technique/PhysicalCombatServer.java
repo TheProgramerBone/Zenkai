@@ -7,7 +7,7 @@ import com.hmc.zenkai.feature.combat.KiInfusion;
 import com.hmc.zenkai.registry.ModParticles;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.registry.ModSounds;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
@@ -112,7 +112,7 @@ public final class PhysicalCombatServer {
      * cuesta" — de ahí que sus valores estén en el rango 1.9-3.1 y no en 0.15-0.25.
      */
     public static int staminaCost(PlayerStatsAttachment att, PhysicalTechnique t) {
-        double raw = att.computeMeleeFinal() * CommonConfig.meleeStaminaPerHit()
+        double raw = att.computeMeleeFinal() * ServerConfig.meleeStaminaPerHit()
                 * att.staminaCostMult()
                 * t.staminaPct() * MasteryEffects.techCostFactor(att, t.name());
         return (int) Math.max(1, Math.ceil(
@@ -143,7 +143,7 @@ public final class PhysicalCombatServer {
 
         att.consumeStamina(staminaCost);
         cds[t.ordinal()] = now + t.cooldownTicks();
-        att.addTechniqueMastery(t.name(), (float) CommonConfig.techMasteryPerUse());
+        att.addTechniqueMastery(t.name(), (float) ServerConfig.techMasteryPerUse());
 
         // Ki Fist: bonus aparte, cobrado en KI. Sin ki suficiente no hay bonus y el
         // movimiento sale igual: la estamina ya se pagó.

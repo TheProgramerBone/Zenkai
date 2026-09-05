@@ -1,7 +1,7 @@
 package com.hmc.zenkai.content.blockentity;
 
 import com.hmc.zenkai.client.gui.menu.EnergyGeneratorMenu;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.block.EnergyGeneratorBlock;
 import com.hmc.zenkai.feature.generator.GeneratorFuel;
 import com.hmc.zenkai.feature.generator.GeneratorFuels;
@@ -234,7 +234,7 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
                     Capabilities.EnergyStorage.BLOCK, pos.relative(dir), dir.getOpposite());
             if (target == null || !target.canReceive()) continue;
 
-            int offered = Math.min(CommonConfig.energyGeneratorMaxExtract(), energy.getEnergyStored());
+            int offered = Math.min(ServerConfig.energyGeneratorMaxExtract(), energy.getEnergyStored());
             int accepted = target.receiveEnergy(offered, false);
             if (accepted > 0) energy.extractEnergy(accepted, false);
         }

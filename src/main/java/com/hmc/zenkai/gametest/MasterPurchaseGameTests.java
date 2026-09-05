@@ -1,7 +1,7 @@
 package com.hmc.zenkai.gametest;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.entity.master.KorinEntity;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -20,7 +20,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * Candidato #3 de .claude/pendiente/tests-automatizados.md: compra en maestro
  * (MasterManager.check() + SkillBuyPacket con masterId), cubriendo la validación de distancia.
  * Usa ki_fist (master: korin, tp_cost: 500) contra un korin.json real (pl_req: 800,
- * alignment [-20,100]). El jugador se sube a los atributos al tope de CommonConfig en vez de a
+ * alignment [-20,100]). El jugador se sube a los atributos al tope de ServerConfig en vez de a
  * un número calculado a mano, para no acoplar el test a la fórmula exacta de Power Level: solo
  * necesita estar MUY por encima de 800, no un valor concreto.
  */
@@ -41,7 +41,7 @@ public final class MasterPurchaseGameTests {
         IPayloadContext ctx = ZenkaiGameTestHelpers.fakeCtx(sp);
 
         // PL muy por encima de cualquier pl_req del datapack, sin acoplarse a la fórmula exacta.
-        int cap = CommonConfig.globalAttributeCap();
+        int cap = ServerConfig.globalAttributeCap();
         att.setAttribute(ZenkaiAttributes.STRENGTH, cap);
         att.setAttribute(ZenkaiAttributes.CONSTITUTION, cap);
         att.setAttribute(ZenkaiAttributes.DEXTERITY, cap);

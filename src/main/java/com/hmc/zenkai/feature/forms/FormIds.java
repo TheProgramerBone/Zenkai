@@ -45,7 +45,7 @@ public final class FormIds {
 
     /** Hermanas equivalentes de la rama divina Saiyan (mismo parent ssj_god, mismos números —
      *  ver feature.skills.DivineForms). PlayerFormAttachment compara contra estos ids para
-     *  decidir si comparten maestría (CommonConfig.ssjBlueRoseShareMastery()). */
+     *  decidir si comparten maestría (ServerConfig.ssjBlueRoseShareMastery()). */
     public static final ResourceLocation SSJ_BLUE = id("ssj_blue");
     public static final ResourceLocation SSJ_ROSE = id("ssj_rose");
 

@@ -401,11 +401,6 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.action.ActionRejectPacket::handle);
 
         registrar.playToClient(
-                com.hmc.zenkai.feature.stats.TpCurveSyncPacket.TYPE,
-                com.hmc.zenkai.feature.stats.TpCurveSyncPacket.STREAM_CODEC,
-                com.hmc.zenkai.feature.stats.TpCurveSyncPacket::handle);
-
-        registrar.playToClient(
                 com.hmc.zenkai.feature.generator.GeneratorFuelSyncPacket.TYPE,
                 com.hmc.zenkai.feature.generator.GeneratorFuelSyncPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.generator.GeneratorFuelSyncPacket::handle);

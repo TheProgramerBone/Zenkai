@@ -1,6 +1,6 @@
 package com.hmc.zenkai.event.tick;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.forms.OverdriveTuning;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -34,7 +34,7 @@ public final class KiChargeSystem {
         if (chargeMul > 0.0) {
             // Porcentual sobre el pool, igual que el regen pasivo: antes era un plano
             // getRegenEnergyPerTick() = 1.0, que ignoraba pool y config por completo.
-            double perTick = att.getEnergyMax() * (CommonConfig.baseRegenEnergy() / 100.0) / 20.0;
+            double perTick = att.getEnergyMax() * (ServerConfig.baseRegenEnergy() / 100.0) / 20.0;
             att.addKi(perTick * chargeMul);
         }
 

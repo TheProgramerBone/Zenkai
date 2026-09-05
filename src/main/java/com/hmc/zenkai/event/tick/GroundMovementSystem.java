@@ -1,6 +1,6 @@
 package com.hmc.zenkai.event.tick;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.weights.WeightSystem;
@@ -33,7 +33,7 @@ public final class GroundMovementSystem {
 
         // Solo el turbo cuesta estamina; esprintar normal es gratis.
         if (groundTurbo && p.tickCount % 20 == 0) {
-            double drain = CommonConfig.runStaminaDrainPerSecond()
+            double drain = ServerConfig.runStaminaDrainPerSecond()
                     * SkillEffects.runStaminaDrainFactor(p);
             if (drain > 0.0) {
                 att.addStamina(-(int) Math.max(1, Math.round(drain)));
@@ -42,7 +42,7 @@ public final class GroundMovementSystem {
         }
 
         // Techo = habilidad Run. Sin niveles de Run, speedMult() vale 1.0 -> velocidad vanilla.
-        double maxBonus = Math.min(CommonConfig.speedMultiplierCap(),
+        double maxBonus = Math.min(ServerConfig.speedMultiplierCap(),
                 SkillEffects.runSpeedFactor(p)) - 1.0;
         double moveMult = 1.0 + maxBonus * PerformanceTier.of(control) * att.powerFraction();
         if (groundTurbo) moveMult *= TURBO_SPEED_MULT;

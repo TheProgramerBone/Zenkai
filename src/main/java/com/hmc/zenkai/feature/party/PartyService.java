@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.party;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -287,7 +287,7 @@ public final class PartyService {
     // ── Tamaño máximo ────────────────────────────────────────────────────────
 
     /**
-     * Solo el líder. Acotado a [members.size() actual, CommonConfig.partyMaxSizeCeiling()]:
+     * Solo el líder. Acotado a [members.size() actual, ServerConfig.partyMaxSizeCeiling()]:
      * ni por debajo de la gente que ya está dentro (los expulsaría en silencio) ni por encima
      * del tope que el admin del servidor haya fijado. El icono PartyConfig de PartyScreen ya
      * lee ese mismo tope del último PartySyncPacket para no dejar arrastrar el picker más allá
@@ -301,7 +301,7 @@ public final class PartyService {
             leader.sendSystemMessage(Component.translatable("command.zenkai.party.not_leader"));
             return false;
         }
-        int ceiling = CommonConfig.partyMaxSizeCeiling();
+        int ceiling = ServerConfig.partyMaxSizeCeiling();
         if (size < 1 || size > ceiling) {
             leader.sendSystemMessage(Component.translatable(
                     "command.zenkai.party.maxsize.out_of_range", 1, ceiling));
@@ -423,7 +423,7 @@ public final class PartyService {
         }
         PacketDistributor.sendToPlayer(sp,
                 new PartySyncPacket(true, party.leaderId, party.friendlyFire,
-                        party.maxSize, CommonConfig.partyMaxSizeCeiling(), members));
+                        party.maxSize, ServerConfig.partyMaxSizeCeiling(), members));
     }
 
     private static void sendEmptySync(ServerPlayer sp) {

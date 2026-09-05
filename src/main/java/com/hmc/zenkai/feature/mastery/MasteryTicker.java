@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.mastery;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
@@ -46,7 +46,7 @@ public final class MasteryTicker {
         if (t % ACCRUE_EVERY == 0) {
             if (transformed) {
                 form.addFormMastery(form.getFormId(),
-                        (float) (CommonConfig.formMasteryPerMinute() / 60.0));
+                        (float) (ServerConfig.formMasteryPerMinute() / 60.0));
             }
             // Capas independientes: transformado CON kaioken entrena las dos a la vez.
             if (tier.isOn()) {

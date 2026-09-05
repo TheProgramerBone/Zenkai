@@ -21,7 +21,7 @@ import java.util.UUID;
  * inParty=false es "ya no tienes party" (kick, leave, disband): el cliente lo usa para
  * vaciar PartyScreen, así que leaderId/members van vacíos en ese caso — no hace falta
  * mandarlos y así el paquete es más corto en el caso común de "no tengo party".
- * maxSize (tope DE ESTA party) y maxSizeCeiling (tope admin, CommonConfig) viajan los dos:
+ * maxSize (tope DE ESTA party) y maxSizeCeiling (tope admin, ServerConfig) viajan los dos:
  * PartyScreen necesita maxSize para el encabezado ("Party — 2/6") y maxSizeCeiling para
  * acotar el picker de PartyConfig sin round-trip aparte — ver DrawMaxSizePopup.
  */

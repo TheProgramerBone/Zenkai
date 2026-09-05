@@ -9,7 +9,7 @@ import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.BindBar;
 import com.hmc.zenkai.client.gui.widgets.SlotCell;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.technique.KiTechnique;
 import com.hmc.zenkai.feature.technique.TechniquePacket;
 import net.minecraft.client.gui.GuiGraphics;
@@ -135,7 +135,7 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
         }
 
         // ── Pie: crear técnica ──
-        if (slots.size() < CommonConfig.techniqueMaxSlots()) {
+        if (slots.size() < ServerConfig.techniqueMaxSlots()) {
             addRenderableWidget(PanelButton.primary(
                     panelLeft + (BG_W - PanelButton.W) / 2,
                     panelTop + BG_H - 12 - PanelButton.H,
@@ -254,7 +254,7 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
                 panelLeft + TEXT_X_OFF, panelTop + CONTENT_TOP, ZenkaiPalette.TP_ON_PANEL);
 
         Component slotsLabel = Component.translatable("screen.zenkai.technique.slots_used",
-                att.techniques().slotCount(), CommonConfig.techniqueMaxSlots());
+                att.techniques().slotCount(), ServerConfig.techniqueMaxSlots());
         PanelText.rightOnPanel(g, this.font, slotsLabel, rightEdge(), panelTop + CONTENT_TOP,
                 ZenkaiPalette.MUTED_ON_PANEL);
 

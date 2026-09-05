@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.aura;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.server.level.ServerPlayer;
@@ -85,7 +85,7 @@ public final class TurboServerState {
     }
 
     private static int drainPerSecond(PlayerStatsAttachment att) {
-        return Math.max(1, (int) Math.ceil(att.getEnergyMax() * CommonConfig.turboDrainPctPerSec()));
+        return Math.max(1, (int) Math.ceil(att.getEnergyMax() * ServerConfig.turboDrainPctPerSec()));
     }
 
     private static void broadcast(ServerPlayer sp, boolean on) {

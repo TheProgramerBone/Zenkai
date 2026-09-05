@@ -1,6 +1,6 @@
 package com.hmc.zenkai.content.blockentity;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
@@ -18,7 +18,7 @@ public class GeneratorEnergy implements IEnergyStorage {
     private int energy;
 
     public int get() { return energy; }
-    public int capacity() { return CommonConfig.energyGeneratorCapacity(); }
+    public int capacity() { return ServerConfig.energyGeneratorCapacity(); }
 
     /** Producción interna. Devuelve lo que realmente cupo: si el búfer está lleno, el
      *  generador debe SABERLO para no seguir quemando combustible a cambio de nada. */
@@ -47,7 +47,7 @@ public class GeneratorEnergy implements IEnergyStorage {
 
     @Override
     public int extractEnergy(int maxExtract, boolean simulate) {
-        int given = Math.min(energy, Math.min(CommonConfig.energyGeneratorMaxExtract(), maxExtract));
+        int given = Math.min(energy, Math.min(ServerConfig.energyGeneratorMaxExtract(), maxExtract));
         if (given <= 0) return 0;
         if (!simulate) energy -= given;
         return given;

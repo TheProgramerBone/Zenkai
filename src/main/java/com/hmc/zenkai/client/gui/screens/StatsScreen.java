@@ -6,7 +6,7 @@ import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.event.tick.KaiokenSystem;
 import com.hmc.zenkai.event.tick.RacePassiveSystem;
 import com.hmc.zenkai.feature.Race;
@@ -716,7 +716,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         out.add(val("screen.zenkai.stats_screen.stat.ki_power", fmt(att.computeKiPowerFinal()), ZenkaiPalette.TEXT));
         if (majin) {
             out.add(val("screen.zenkai.stats_screen.majin_boost",
-                    "+" + Math.round(CommonConfig.majinStatBonus() * 100) + "%", ZenkaiPalette.ERROR));
+                    "+" + Math.round(ServerConfig.majinStatBonus() * 100) + "%", ZenkaiPalette.ERROR));
         }
 
         // Sección de estados especiales: solo aparece si hay algo que enseñar, igual que la

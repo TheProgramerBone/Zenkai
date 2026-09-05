@@ -29,12 +29,12 @@ public class PartyManager extends SavedData {
 
     /** Tamaño con el que nace cualquier party nueva. El líder puede subirlo después con
      *  /zparty maxsize (PartyService.setMaxSize, botón PartyConfig en PartyScreen), hasta el
-     *  tope admin de CommonConfig.partyMaxSizeCeiling(). */
+     *  tope admin de ServerConfig.partyMaxSizeCeiling(). */
     public static final int DEFAULT_MAX_SIZE = 4;
 
     /**
      * Tope técnico absoluto del protocolo: DUPLICADO a propósito en
-     * CommonConfig.PARTY_MAX_SIZE_CEILING_RAW (su límite superior de defineInRange) — el admin
+     * ServerConfig.PARTY_MAX_SIZE_CEILING_RAW (su límite superior de defineInRange) — el admin
      * solo puede BAJAR este número, nunca subirlo. Mismo criterio que las texturas
      * generadas (tools/gen_*.py): dos sitios con el mismo literal, comentado en los dos, en vez
      * de una dependencia cruzada config -> feature para ahorrarse una constante.
@@ -49,7 +49,7 @@ public class PartyManager extends SavedData {
          *  PartyService.friendlyFireBlocked(), el único sitio que lee este campo para decidir. */
         public boolean friendlyFire = false;
         /** Tamaño máximo de ESTA party. Por-party y no global: cada líder ajusta el suyo (ver
-         *  PartyService.setMaxSize), acotado a [members.size(), CommonConfig.partyMaxSizeCeiling()]. */
+         *  PartyService.setMaxSize), acotado a [members.size(), ServerConfig.partyMaxSizeCeiling()]. */
         public int maxSize = DEFAULT_MAX_SIZE;
 
         Party(UUID id, UUID leaderId) {

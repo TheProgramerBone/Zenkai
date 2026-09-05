@@ -81,7 +81,7 @@ import org.jetbrains.annotations.NotNull;
  * y no al revés. Dentro: número grande + Minus/PlusIconButton para ajuste fino, una rueda del
  * ratón que mueve el valor un paso por muesca, y una barra horizontal (pista + marcador) que
  * enseña dónde cae ese valor entre el tamaño actual del grupo y el tope del servidor
- * (CommonConfig.partyMaxSizeCeiling(), viaja en el propio PartySyncPacket para no necesitar
+ * (ServerConfig.partyMaxSizeCeiling(), viaja en el propio PartySyncPacket para no necesitar
  * una ida y vuelta aparte). Confirmar/Cancelar son el MISMO checkmark verde / X roja que
  * FriendlyFireIconButton (celdas CHECK_U/CANCEL_U de icons.png), no btn_x.png — así los cuatro
  * íconos del popup salen del mismo atlas que el resto de la pantalla. Se cierra de TRES formas

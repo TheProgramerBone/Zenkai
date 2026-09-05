@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.player;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.registry.ModEffects;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.level.ServerPlayer;
@@ -89,7 +89,7 @@ public class PlayerLifeCycle {
      * Sin raza no se toca nada: sin sistema zenkai la vida vanilla es suya.
      */
     private static void mirrorHealth(ServerPlayer sp) {
-        if (!CommonConfig.mirrorHealth()) return;
+        if (!ServerConfig.mirrorHealth()) return;
         // Nunca se resucita a un muerto: subirle la vida rompe el respawn (ver arriba).
         // isDeadOrDying cubre vida <= 0 y el flag dead de una muerte ya consumada.
         if (sp.isDeadOrDying()) return;

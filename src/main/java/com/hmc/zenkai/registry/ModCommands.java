@@ -1,7 +1,6 @@
 package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.effect.MajinEffect;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
@@ -488,7 +487,7 @@ public class ModCommands {
 
     private static int setAllAttr(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, int value) {
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
-        int v = Math.max(0, Math.min(value, CommonConfig.globalAttributeCap()));
+        int v = Math.max(0, Math.min(value, ServerConfig.globalAttributeCap()));
         for (ZenkaiAttributes a : ZenkaiAttributes.values()) att.setAttribute(a, v);
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(
@@ -497,7 +496,7 @@ public class ModCommands {
     }
 
     private static int maxAllAttr(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
-        return setAllAttr(ctx, sp, CommonConfig.globalAttributeCap());
+        return setAllAttr(ctx, sp, ServerConfig.globalAttributeCap());
     }
 
     private static int setRace(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, String raceName) {

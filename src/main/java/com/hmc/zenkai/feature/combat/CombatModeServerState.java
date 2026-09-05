@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.combat;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -86,7 +86,7 @@ public final class CombatModeServerState {
         if (attr == null) return;
         attr.removeModifier(COMBAT_ATTACK_SPEED_ID);   // idempotente: re-aplicar es seguro
         if (!active) return;
-        double target = CommonConfig.combatAttackSpeed();
+        double target = ServerConfig.combatAttackSpeed();
         double current = attr.getValue();   // sin el nuestro, CON el del arma
         double delta = target - current;
         if (delta >= 0.0) return;   // ya es igual de lento o más: nada que hacer

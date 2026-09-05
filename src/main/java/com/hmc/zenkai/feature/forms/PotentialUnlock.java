@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.forms;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
@@ -81,7 +81,7 @@ public final class PotentialUnlock {
     public static boolean canPurchase(Player p) {
         if (p == null) return false;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
-        return att.getAlignment() >= CommonConfig.potentialUnlockAlignmentReq();
+        return att.getAlignment() >= ServerConfig.potentialUnlockAlignmentReq();
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.combat;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.combat.entity.EntityStatDef;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.combat.entity.EntityStatsManager;
@@ -48,7 +48,7 @@ public final class ZenkaiStats {
         // Game rule apagado: la capa Zenkai no aplica -> PL vanilla (vida_max x factor) para cualquiera.
         if (le.getServer() == null
                 || !ModGameRules.enableRaceBoosts(le.getServer())) {
-            return Math.round(le.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor());
+            return Math.round(le.getMaxHealth() * ServerConfig.vanillaPowerLevelFactor());
         }
 
         ZenkaiCombatStats stats = of(le);
@@ -62,7 +62,7 @@ public final class ZenkaiStats {
             EntityStatDef def = EntityStatsManager.get(id);
             if (def != null && def.displayOnly()) return def.powerLevel();
         }
-        return Math.round(le.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor());
+        return Math.round(le.getMaxHealth() * ServerConfig.vanillaPowerLevelFactor());
     }
 
     /**

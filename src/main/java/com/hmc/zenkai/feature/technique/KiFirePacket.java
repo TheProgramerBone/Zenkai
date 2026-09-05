@@ -5,7 +5,7 @@ import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.network.FriendlyByteBuf;
@@ -80,7 +80,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
                 KiCombatServer.cooldownTicksFor(type, tech.size()))) return;
 
         att.addEnergy(-cost);
-        att.addTechniqueMastery(type.name(), (float) CommonConfig.techMasteryPerUse());
+        att.addTechniqueMastery(type.name(), (float) ServerConfig.techMasteryPerUse());
 
         double kiPower = att.computeKiPowerFinal();
         if (type.defensive()) {

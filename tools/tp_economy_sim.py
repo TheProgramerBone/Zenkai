@@ -6,12 +6,12 @@ Herramienta de calibracion, NO codigo del mod -- no se compila ni se ejecuta com
 build (`./gradlew build`). Se corre a mano con `python3 tools/tp_economy_sim.py`.
 
 Objetivo: estimar horas reales necesarias para llegar a los 5,000,000 TP de
-referencia de endgame (CommonConfig.auraReferenceTp), usando la MISMA formula
+referencia de endgame (ServerConfig.auraReferenceTp), usando la MISMA formula
 que TrainingHooks.grant() para fatiga/eficiencia/diferencia de poder, y
 probando distintos "loops de sesion" (granjeo continuo vs rafagas+descanso,
 con/sin HTC, con/sin pesas a full carga).
 
-Las constantes de mas abajo son una foto de los defaults de CommonConfig y
+Las constantes de mas abajo son una foto de los defaults de ServerConfig y
 EntityArchetype -- CALIBRADOS el 2026-08-20 tras esta misma simulacion (ver el
 pendiente): training.damage_tp_factor 0.02->0.10, entity.tp_per_pl 0.05->0.25,
 training.fatigue_decay_per_minute 0.01->0.20. Si vuelven a cambiar en el
@@ -47,7 +47,7 @@ Se prueban varios valores para acotar el rango.
 
 import math
 
-# ── Constantes (espejo de CommonConfig, defaults CALIBRADOS 2026-08-20) ─────
+# ── Constantes (espejo de ServerConfig, defaults CALIBRADOS 2026-08-20) ─────
 PL_RATIO_FLOOR   = 0.05
 PL_RATIO_FULL    = 0.25
 FATIGUE_HALFLIFE = 0.10

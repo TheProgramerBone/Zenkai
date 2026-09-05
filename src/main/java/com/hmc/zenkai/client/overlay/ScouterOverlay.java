@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client.overlay;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.sense.ScouterAreaDataPacket;
 import com.hmc.zenkai.feature.race.RaceTextureUtil;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -226,7 +226,7 @@ public final class ScouterOverlay {
         PlayerStatsAttachment att = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         return att.isRaceChosen()
                 ? att.getPowerLevel()
-                : Math.round(mc.player.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor());
+                : Math.round(mc.player.getMaxHealth() * ServerConfig.vanillaPowerLevelFactor());
     }
 
     /** Flecha de 8 direcciones hacia el objetivo cacheado, según TU yaw actual (per-frame). */

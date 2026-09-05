@@ -7,7 +7,7 @@ import com.hmc.zenkai.feature.action.ServerActionContext;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.combat.BlockingSyncPacket;
 import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
 import net.minecraft.resources.ResourceLocation;
@@ -96,7 +96,7 @@ public final class KiCombatServer {
      *  raza/estilo no se pueda olvidar en ningún call site. */
     public static int computeCost(ZenkaiCombatStats stats, KiTechniqueType type, int size,
                                   TechniqueEffect effect) {
-        return (int) Math.ceil(stats.computeKiPowerFinal() * CommonConfig.kiCostPerPower()
+        return (int) Math.ceil(stats.computeKiPowerFinal() * ServerConfig.kiCostPerPower()
                 * stats.kiCostMult()
                 * type.kiCostMult() * costSizeFactor(size)
                 * (effect == null ? 1.0 : effect.costMult()));
@@ -132,7 +132,7 @@ public final class KiCombatServer {
      * cuidado y probando en grupo, no en un muñeco.
      */
     public static double explosionSacrificeDamage(int bodySpent) {
-        return Math.max(0, bodySpent) * CommonConfig.explosionSacrificeConversion();
+        return Math.max(0, bodySpent) * ServerConfig.explosionSacrificeConversion();
     }
 
     private static final double MIN_CHARGE_D = KiTechniqueType.MIN_CHARGE;
@@ -143,7 +143,7 @@ public final class KiCombatServer {
      *  sobrecarga overchargeTimeMult veces más. Con 2.5 son 3.5x el cast base. */
     public static int maxChargeTicks(int reqCharge) {
         return (int) Math.ceil(reqCharge
-                * (1.0 + (MAX_CHARGE - 1.0) * CommonConfig.overchargeTimeMult()));
+                * (1.0 + (MAX_CHARGE - 1.0) * ServerConfig.overchargeTimeMult()));
     }
 
     /** Ticks acumulados -> ratio 0..MAX_CHARGE. Curva PARTIDA a propósito: hasta el 100% es
@@ -151,7 +151,7 @@ public final class KiCombatServer {
     public static double chargeRatio(int ticks, int reqCharge) {
         if (reqCharge <= 0 || ticks <= 0) return 0.0;
         if (ticks <= reqCharge) return ticks / (double) reqCharge;
-        double over = (ticks - reqCharge) / (reqCharge * CommonConfig.overchargeTimeMult());
+        double over = (ticks - reqCharge) / (reqCharge * ServerConfig.overchargeTimeMult());
         return Math.min(MAX_CHARGE, 1.0 + over);
     }
 
@@ -159,7 +159,7 @@ public final class KiCombatServer {
      *  pasa del 100% lleva recargo. Con 1.5, un disparo al 200% cuesta 2.5x el de 100%. */
     public static double chargeCostFactor(double ratio) {
         return Math.min(ratio, 1.0)
-                + Math.max(0.0, ratio - 1.0) * CommonConfig.overchargeCostMult();
+                + Math.max(0.0, ratio - 1.0) * ServerConfig.overchargeCostMult();
     }
 
     // ── Cooldowns (global anti-spam + por slot) ─────────────────────────────

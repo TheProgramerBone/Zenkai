@@ -1,7 +1,6 @@
 package com.hmc.zenkai.client.overlay;
 
 import com.hmc.zenkai.client.LockOnClientState;
-import com.hmc.zenkai.config.CommonConfig;
 import com.hmc.zenkai.feature.combat.SenseKiMode;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.sense.SenseKiDataPacket;

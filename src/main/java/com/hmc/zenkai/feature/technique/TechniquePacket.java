@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.master.MasterManager;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
@@ -179,7 +179,7 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         int animSet = TechniqueAnimSet.clamp(pkt.animSet());
 
         if (pkt.slot() < 0) { // crear
-            if (att.techniques().slotCount() >= CommonConfig.techniqueMaxSlots()) return false;
+            if (att.techniques().slotCount() >= ServerConfig.techniqueMaxSlots()) return false;
             att.techniques().addSlot(new KiTechnique(name, type, rgb, size,
                     TechniqueEffect.byOrdinal(pkt.effect()), charge, release, animSet));
             return true;

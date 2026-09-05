@@ -2,7 +2,7 @@ package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.feature.combat.PowerLevel;
 import com.hmc.zenkai.feature.combat.ZenkaiCombatStats;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.Style;
@@ -252,13 +252,13 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public double getFlySpeed()     { return pools.getFlySpeed(); }
 
     public double getFlyMultiplier() {
-        return pools.getFlyMultiplier(CommonConfig.flyMultiplierCap(),
-                CommonConfig.flyScaling(), statMultiplier);
+        return pools.getFlyMultiplier(ServerConfig.flyMultiplierCap(),
+                ServerConfig.flyScaling(), statMultiplier);
     }
 
     public double getMoveMultiplier() {
-        return pools.getMoveMultiplier(CommonConfig.speedMultiplierCap(),
-                CommonConfig.movementScaling(), statMultiplier);
+        return pools.getMoveMultiplier(ServerConfig.speedMultiplierCap(),
+                ServerConfig.movementScaling(), statMultiplier);
     }
 
     // ── Flags ────────────────────────────────────────────────────────────────

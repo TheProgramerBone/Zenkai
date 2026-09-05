@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.weights;
 
 import com.hmc.zenkai.compat.CuriosCompat;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.item.WeightArmorItem;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -59,8 +59,8 @@ public final class WeightSystem {
 
     /** Capacidad en toneladas para un PL limpio dado. Nunca 0 (evita división por cero). */
     public static double capacityTons(long cleanPl) {
-        double div = Math.max(0.0001, CommonConfig.weightCapacityDivisor());
-        double exp = CommonConfig.weightCapacityExponent();
+        double div = Math.max(0.0001, ServerConfig.weightCapacityDivisor());
+        double exp = ServerConfig.weightCapacityExponent();
         double base = Math.max(1.0, cleanPl) / div;
         return Math.max(0.01, Math.pow(base, exp));
     }
@@ -77,8 +77,8 @@ public final class WeightSystem {
     /** PL mínimo para que un peso dado quede en r = 1 (lo muestra la pantalla de ajuste). */
     public static long plForTons(double tons) {
         if (tons <= 0.0) return 0L;
-        double div = Math.max(0.0001, CommonConfig.weightCapacityDivisor());
-        double exp = CommonConfig.weightCapacityExponent();
+        double div = Math.max(0.0001, ServerConfig.weightCapacityDivisor());
+        double exp = ServerConfig.weightCapacityExponent();
         if (exp <= 0.0) return 0L;
         return Math.max(1L, Math.round(Math.pow(tons, 1.0 / exp) * div));
     }
@@ -86,34 +86,34 @@ public final class WeightSystem {
     // ── Factores derivados ───────────────────────────────────────────────────
 
     public static boolean isOverloaded(double load) {
-        return load > CommonConfig.weightOverloadThreshold();
+        return load > ServerConfig.weightOverloadThreshold();
     }
 
     /** r acotado al umbral: pasado el umbral la penalización ya no crece, la sobrecarga manda. */
     private static double effective(double load) {
-        return Math.min(Math.max(0.0, load), CommonConfig.weightOverloadThreshold());
+        return Math.min(Math.max(0.0, load), ServerConfig.weightOverloadThreshold());
     }
 
     /** Multiplicador de melee / defensa / ki power (y por tanto del PL mostrado). */
     public static double statFactor(double load) {
-        return Math.max(0.05, 1.0 - CommonConfig.weightStatPenalty() * effective(load));
+        return Math.max(0.05, 1.0 - ServerConfig.weightStatPenalty() * effective(load));
     }
 
     /** Multiplicador de velocidad de suelo, vuelo y turbo. */
     public static double moveFactor(double load) {
-        if (isOverloaded(load)) return CommonConfig.weightOverloadMoveFactor();
-        return Math.max(0.0, 1.0 - CommonConfig.weightMovePenalty() * effective(load));
+        if (isOverloaded(load)) return ServerConfig.weightOverloadMoveFactor();
+        return Math.max(0.0, 1.0 - ServerConfig.weightMovePenalty() * effective(load));
     }
 
     /** Multiplicador de altura de salto. 0 en sobrecarga: no despegas del suelo. */
     public static double jumpFactor(double load) {
         if (isOverloaded(load)) return 0.0;
-        return Math.max(0.0, 1.0 - CommonConfig.weightJumpPenalty() * effective(load));
+        return Math.max(0.0, 1.0 - ServerConfig.weightJumpPenalty() * effective(load));
     }
 
     /** Multiplicador de cualquier ganancia de TP. 1.0 en sobrecarga: la carga muerta no entrena. */
     public static double tpFactor(double load) {
         if (isOverloaded(load)) return 1.0;
-        return 1.0 + CommonConfig.weightTpBonus() * effective(load);
+        return 1.0 + ServerConfig.weightTpBonus() * effective(load);
     }
 }

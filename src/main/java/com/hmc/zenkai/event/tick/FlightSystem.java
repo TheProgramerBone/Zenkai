@@ -1,6 +1,6 @@
 package com.hmc.zenkai.event.tick;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.weights.WeightSystem;
@@ -52,7 +52,7 @@ public final class FlightSystem {
 
         // Techo = habilidad Fly. DEX ya NO interviene: alimentaba defensa, velocidad y vuelo
         // a la vez, así que tocar el balance defensivo movía la velocidad de rebote.
-        double max = Math.min(CommonConfig.flyMultiplierCap(), SkillEffects.flySpeedFactor(p));
+        double max = Math.min(ServerConfig.flyMultiplierCap(), SkillEffects.flySpeedFactor(p));
         // Se interpola desde 1.0 (vuelo vanilla): con 0% de poder el multiplicador cae a 1.0.
         double mult = 1.0 + (max - 1.0)
                 * PerformanceTier.of(control) * att.powerFraction();
@@ -61,7 +61,7 @@ public final class FlightSystem {
         // Pesas al final, igual que en tierra.
         mult *= WeightSystem.moveFactor(att.getWeightLoad());
 
-        float newSpeed = (float) (CommonConfig.flyBaseSpeed() * mult);
+        float newSpeed = (float) (ServerConfig.flyBaseSpeed() * mult);
         // Player.getFlyingSpeed() DUPLICA la velocidad al esprintar, y Control ES la tecla de
         // sprint: sin compensar, el escalón medio se llevaba un x2 gratis que rompía la
         // proporción entre escalones.
@@ -77,7 +77,7 @@ public final class FlightSystem {
         // Coste del vuelo turbo: ki por tick reducido por Fly. El drenaje base del aura lo
         // cobra TurboServerState por su cuenta, y se auto-apaga si el ki llega a 0.
         if (flyTurbo) {
-            double drain = CommonConfig.flyKiDrainPerTick() * SkillEffects.flyKiDrainFactor(p);
+            double drain = ServerConfig.flyKiDrainPerTick() * SkillEffects.flyKiDrainFactor(p);
             if (drain > 0.0) att.addKi(-drain);
         }
         if (!ab.flying) att.flags().setFlyBoosting(false);

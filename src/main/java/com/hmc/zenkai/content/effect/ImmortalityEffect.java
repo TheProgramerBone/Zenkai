@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
  * Consecuencia buscada: un inmortal cae derribado como cualquiera, pero se levanta solo casi al
  * instante porque la regeneración le devuelve body durante el propio derribado. Sigue siendo
  * matable de dos formas, las dos en CombatZenkaiHooks y no aquí:
- *  1) Golpe único ≥ CommonConfig.immortalOverkillFraction() × su body máximo — el "golpe mayor
+ *  1) Golpe único ≥ ServerConfig.immortalOverkillFraction() × su body máximo — el "golpe mayor
  *     de lo que tu cuerpo puede absorber" que avisa el propio deseo — se resuelve al instante,
  *     sin pasar por el derribado (isOverkillOnImmortal/killImmortalOutright).
  *  2) DPS sostenido que mantenga el body en 0 los 5 s completos del derribado sin que esta

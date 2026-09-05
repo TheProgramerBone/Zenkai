@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.mastery;
 
 import com.hmc.zenkai.content.effect.MajinEffect;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -22,25 +22,25 @@ public final class MasteryEffects {
     public static double formDrainFactor(Player p) {
         PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         double m = form.getFormMastery(form.getFormId()) / 100.0;
-        return Math.max(0.0, 1.0 - CommonConfig.masteryFormDrainReduction() * m);
+        return Math.max(0.0, 1.0 - ServerConfig.masteryFormDrainReduction() * m);
     }
 
     /** Multiplicador de daño de una técnica (clave = nombre del tipo). */
     public static double techDamageFactor(PlayerStatsAttachment att, String key) {
         double m = att.getTechniqueMastery(key) / 100.0;
-        return 1.0 + CommonConfig.masteryTechDamageBonus() * m;
+        return 1.0 + ServerConfig.masteryTechDamageBonus() * m;
     }
 
     /** Multiplicador del costo (ki o stamina) de una técnica. */
     public static double techCostFactor(PlayerStatsAttachment att, String key) {
         double m = att.getTechniqueMastery(key) / 100.0;
-        return Math.max(0.0, 1.0 - CommonConfig.masteryTechCostReduction() * m);
+        return Math.max(0.0, 1.0 - ServerConfig.masteryTechCostReduction() * m);
     }
 
     /** Multiplicador de los ticks de carga requeridos (solo ki; <1 = carga más rápido). */
     public static double techCastFactor(PlayerStatsAttachment att, String key) {
         double m = att.getTechniqueMastery(key) / 100.0;
-        return Math.max(0.05, 1.0 - CommonConfig.masteryTechCastReduction() * m);
+        return Math.max(0.05, 1.0 - ServerConfig.masteryTechCastReduction() * m);
     }
 
     /**
@@ -53,7 +53,7 @@ public final class MasteryEffects {
         PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         double f = 1.0 + form.totalStatPercent();
         if (MajinEffect.isActive(p)) {
-            f *= 1.0 + CommonConfig.majinStatBonus();
+            f *= 1.0 + ServerConfig.majinStatBonus();
         }
         // Fatiga por agotar el kaioken. Va aquí porque FormSystem vuelca este valor en
         // setStatMultiplier cada tick: así el castigo se propaga solo al PL, al daño y a la GUI.

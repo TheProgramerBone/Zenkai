@@ -6,7 +6,7 @@ import com.hmc.zenkai.feature.combat.entity.EntityStatDef;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.combat.entity.EntityStatsManager;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ModTags;
 import net.minecraft.core.BlockPos;
@@ -92,7 +92,7 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
 
         // El alcance del área también sale de la mejora, no solo de la config: si no, un
         // scouter sin mejorar encontraría al más fuerte a 64 bloques y no lo vería a 20.
-        double r = Math.min(CommonConfig.scouterRange(), ScouterStacks.range(scouter));
+        double r = Math.min(ServerConfig.scouterRange(), ScouterStacks.range(scouter));
         AABB box = AABB.ofSize(sp.position(), r * 2, r * 2, r * 2);
 
         LivingEntity best = null;

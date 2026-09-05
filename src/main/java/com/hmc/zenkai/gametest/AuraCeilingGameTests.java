@@ -8,10 +8,10 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
- * Candidato #4 de .claude/pendiente/tests-automatizados.md: una fórmula con CommonConfig detrás
+ * Candidato #4 de .claude/pendiente/tests-automatizados.md: una fórmula con ServerConfig detrás
  * y un comentario largo explicando por qué el número es el que es. AuraCeiling deriva el techo
  * de la escala de presencia recorriendo el registro entero de formas/razas/estilos a partir de
- * CommonConfig.auraReferenceTp() (ver el javadoc de la clase) — es justo el tipo de cálculo que
+ * ServerConfig.auraReferenceTp() (ver el javadoc de la clase) — es justo el tipo de cálculo que
  * se rompe en silencio si alguien retoca la config o el datapack sin leer el porqué.
  * No necesita jugador: RaceStatTable/FormDef ya están cargados por el propio arranque del
  * gameTestServer (carga real de datapacks), así que esto es lógica pura sobre datos reales.

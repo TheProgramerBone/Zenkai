@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.stats;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 
 /**
  * Curva de coste de atributos. ÚNICO sitio donde vive la fórmula.
@@ -8,38 +8,24 @@ import com.hmc.zenkai.config.CommonConfig;
  * y m = tp_coefficient. Comprar un bloque de {@code add} puntos partiendo de {@code inv}
  * invertidos se resuelve en O(1) con la suma de la progresión aritmética, no con un bucle:
  * un jugador puede pedir 10.000 puntos de golpe y el bucle se notaría en el tick del servidor.
- * POR QUÉ NO SE LEE CommonConfig DIRECTAMENTE DESDE LA PANTALLA:
- * CommonConfig es de tipo COMMON, y NeoForge NO envía las configs COMMON al cliente. En un
- * servidor dedicado con la curva retocada, el cliente calculaba el precio con SU archivo y
- * la pantalla de stats mostraba un número que no era el que iba a cobrar el servidor: el
- * botón se veía asequible, el packet se rechazaba y el jugador no tenía forma de saber por
- * qué. Aquí el servidor sigue leyendo la config y el cliente usa lo que le manda el servidor
- * (TpCurveSyncPacket, mismo canal que las SkillDef).
- * El servidor NUNCA recibe el packet, así que {@code synced} se queda en false y lee la
- * config, que es la autoridad real. En un mundo local ambos coinciden por construcción.
+ * Lee {@link ServerConfig#attributeBaseCost()}/{@link ServerConfig#tpCoefficient()} directamente
+ * en los dos lados: al ser ModConfig.Type.SERVER, NeoForge sincroniza el valor real al cliente
+ * al conectarse, así que la pantalla de stats y el cobro del servidor ven siempre el mismo
+ * número. Hasta 2026-09-04 estos dos valores vivían en CommonConfig (Type.COMMON, sin
+ * sincronizar) y hacía falta un packet a medida (TpCurveSyncPacket, ya borrado) para que el
+ * cliente no calculara el coste con su propia copia local desincronizada del servidor.
  */
 public final class TpCurve {
     private TpCurve() {}
 
-    private static volatile boolean synced = false;
-    private static volatile double syncedBase  = 1.0;
-    private static volatile double syncedCoeff = 1.0;
-
     /** b de la recta: lo que cuesta el primer punto. */
     public static double base() {
-        return synced ? syncedBase : CommonConfig.attributeBaseCost();
+        return ServerConfig.attributeBaseCost();
     }
 
     /** m de la recta: cuánto encarece cada punto ya invertido. */
     public static double coeff() {
-        return synced ? syncedCoeff : CommonConfig.tpCoefficient();
-    }
-
-    /** Lo llama TpCurveSyncPacket en el cliente. No tiene efecto en el servidor. */
-    public static void adopt(double b, double m) {
-        syncedBase  = b;
-        syncedCoeff = m;
-        synced      = true;
+        return ServerConfig.tpCoefficient();
     }
 
     /**

@@ -9,7 +9,7 @@ import com.hmc.zenkai.feature.party.PartyService;
 import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.registry.ModSounds;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -195,7 +195,7 @@ public class CombatZenkaiHooks {
             // El guard de dmg > 0 protege lo que vanilla ya considera inofensivo (bolas de
             // nieve, huevos): sin él, un muñeco de nieve pasaría a matar.
             if (dmg > 0f && !(e.getSource().getEntity() instanceof Player)) {
-                return (float) (atkStats.computeMeleeFinal() * CommonConfig.mobProjectileFactor());
+                return (float) (atkStats.computeMeleeFinal() * ServerConfig.mobProjectileFactor());
             }
             // Flecha vanilla (sin infusionar) disparada por un jugador: mismo doble conteo de
             // armadura que la rama infusionada de arriba, mismo arreglo.
@@ -218,7 +218,7 @@ public class CombatZenkaiHooks {
         // y se escala como proyectil, que es lo correcto.
         // ⚠ API a verificar al compilar: DamageTypeTags.IS_EXPLOSION en 1.21.1.
         if (e.getSource().is(DamageTypeTags.IS_EXPLOSION)) {
-            double full = CommonConfig.explosionReferenceDamage();
+            double full = ServerConfig.explosionReferenceDamage();
             double falloff = full <= 0.0
                     ? 1.0
                     : Math.min(1.0, VanillaMitigation.originalDamage(e) / full);
@@ -289,7 +289,7 @@ public class CombatZenkaiHooks {
         double bonus = fistBonus + infuseBonus;
 
         int staminaCost = (int) Math.ceil(strDamage * chargeF
-                * CommonConfig.meleeStaminaPerHit() * atkStats.staminaCostMult());
+                * ServerConfig.meleeStaminaPerHit() * atkStats.staminaCostMult());
         if (staminaCost > 0) atkStats.consumeStamina(staminaCost);
 
         // El crítico multiplica el golpe COMPLETO (base de arma + bonus de ki), igual que en
@@ -410,7 +410,7 @@ public class CombatZenkaiHooks {
                     : dmg * (1.0 - defense / (defense + dmg));
 
             finalDamage *= armorMult;
-            finalDamage = Math.max(finalDamage, dmg * CommonConfig.minDamagePercent());
+            finalDamage = Math.max(finalDamage, dmg * ServerConfig.minDamagePercent());
         }
 
         if (e.getEntity() instanceof ServerPlayer defSp && KiCombatServer.isBlocking(defSp)) {
@@ -456,7 +456,7 @@ public class CombatZenkaiHooks {
      *  un golem de hierro encajaba lo mismo que una gallina. */
     private static void applyToVanillaVictim(LivingDamageEvent.Pre e, float dmg, double armorMult) {
         float finalDamage = (float) Math.max(dmg * armorMult,
-                dmg * CommonConfig.minDamagePercent());
+                dmg * ServerConfig.minDamagePercent());
         e.setNewDamage(finalDamage);
         if (finalDamage > 0f) grantTraining(e, Math.min(finalDamage, e.getEntity().getHealth()));
     }
@@ -474,7 +474,7 @@ public class CombatZenkaiHooks {
     private static long victimPowerLevel(LivingEntity victim) {
         ZenkaiCombatStats st = ZenkaiStats.of(victim);
         if (st != null) return PowerLevel.compute(st);
-        return Math.max(1L, Math.round(victim.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor()));
+        return Math.max(1L, Math.round(victim.getMaxHealth() * ServerConfig.vanillaPowerLevelFactor()));
     }
 
     // =====================================================================
@@ -492,7 +492,7 @@ public class CombatZenkaiHooks {
      */
     private static boolean isOverkillOnImmortal(PlayerStatsAttachment att, double finalDamage) {
         return att.isImmortal()
-                && finalDamage >= att.getBodyMax() * CommonConfig.immortalOverkillFraction();
+                && finalDamage >= att.getBodyMax() * ServerConfig.immortalOverkillFraction();
     }
 
     /**
@@ -684,7 +684,7 @@ public class CombatZenkaiHooks {
     @SubscribeEvent
     public static void onHeal(LivingHealEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
-        if (!CommonConfig.mirrorHealth()) return;
+        if (!ServerConfig.mirrorHealth()) return;
         if (!PlayerStatsAttachment.get(sp).isRaceChosen()) return;
         e.setCanceled(true);
     }

@@ -1,7 +1,7 @@
 package com.hmc.zenkai.content.item;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.core.component.DataComponents;
@@ -38,9 +38,9 @@ public final class FoodEnergyHandler {
 
         int nutrition = food.nutrition();
         int ki = (int) Math.round(att.getEnergyMax()
-                * (CommonConfig.foodKiPercentPerNutrition() / 100.0) * nutrition);
+                * (ServerConfig.foodKiPercentPerNutrition() / 100.0) * nutrition);
         int stamina = (int) Math.round(att.getStaminaMax()
-                * (CommonConfig.foodStaminaPercentPerNutrition() / 100.0) * nutrition);
+                * (ServerConfig.foodStaminaPercentPerNutrition() / 100.0) * nutrition);
 
         if (ki <= 0 && stamina <= 0) return;
 

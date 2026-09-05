@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.player;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.forms.*;
@@ -512,7 +512,7 @@ public class PlayerFormAttachment {
         // maestría, la MAYOR de las dos ya acumuladas. Esto también resuelve solo el caso de
         // "el config acaba de cambiar de false a true con las dos ya divergidas" — no hace
         // falta migrar nada aparte, el propio getter ya las trata como una.
-        if (isBlueRoseSibling(form) && CommonConfig.ssjBlueRoseShareMastery()) {
+        if (isBlueRoseSibling(form) && ServerConfig.ssjBlueRoseShareMastery()) {
             return Math.max(rawMastery(FormIds.SSJ_BLUE), rawMastery(FormIds.SSJ_ROSE));
         }
         return rawMastery(form);
@@ -533,7 +533,7 @@ public class PlayerFormAttachment {
         float scaled = delta * (def == null ? 1f : (float) def.masteryGain());
         if (scaled <= 0) return;
 
-        if (isBlueRoseSibling(form) && CommonConfig.ssjBlueRoseShareMastery()) {
+        if (isBlueRoseSibling(form) && ServerConfig.ssjBlueRoseShareMastery()) {
             // Sumar a las DOS a la vez las mantiene iguales desde ya: si el config se apaga
             // más tarde no hace falta ninguna migración, ya estaban sincronizadas.
             addRawMastery(FormIds.SSJ_BLUE, scaled);

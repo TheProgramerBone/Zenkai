@@ -29,7 +29,7 @@ import java.util.List;
  * peldaño si el jugador ya es "divino" (PlayerStatsAttachment.isDivine — ver /zenkai debug
  * divine). Para un jugador divino, Blue directamente "no existe": resolveForPlayer() siempre
  * devuelve Rosé en su lugar, y viceversa. Por eso además comparten maestría por defecto
- * (CommonConfig.ssjBlueRoseShareMastery) — es la MISMA progresión vista con otro nombre, no dos
+ * (ServerConfig.ssjBlueRoseShareMastery) — es la MISMA progresión vista con otro nombre, no dos
  * logros independientes.
  *
  * Por qué NO se apoya en FormRegistry.chainFor/SuperForms.chain para nada de esto: esos dos son

@@ -1,6 +1,6 @@
 package com.hmc.zenkai.feature.combat;
 
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModParticles;
 import net.minecraft.network.chat.Component;
@@ -91,19 +91,19 @@ public final class BlackFlash {
      * @param scale ticker de ataque CRUDO de vanilla, 0..1.
      */
     public static double chance(ServerPlayer sp, double scale) {
-        double base = CommonConfig.blackFlashChance();
+        double base = ServerConfig.blackFlashChance();
         if (base <= 0.0) return 0.0;
 
         double f = Math.max(0.0, Math.min(1.0, scale));
-        double c = base * Math.pow(f, CommonConfig.blackFlashChargeExponent());
+        double c = base * Math.pow(f, ServerConfig.blackFlashChargeExponent());
 
         // ⚠ API a verificar al compilar: Player#getLuck() en 1.21.1 (lee Attributes.LUCK).
         // El max(0) es por Unlucky con amplificador alto: luck muy negativo daría un factor
         // negativo y, peor, positivo otra vez si alguien tocara el signo.
         double luck = sp.getLuck();
-        c *= Math.max(0.0, 1.0 + luck * CommonConfig.blackFlashLuckFactor());
+        c *= Math.max(0.0, 1.0 + luck * ServerConfig.blackFlashLuckFactor());
 
-        return Math.max(0.0, Math.min(c, CommonConfig.blackFlashMaxChance()));
+        return Math.max(0.0, Math.min(c, ServerConfig.blackFlashMaxChance()));
     }
 
     /**
@@ -128,8 +128,8 @@ public final class BlackFlash {
         if (c <= 0.0) return total;
         if (sp.getRandom().nextDouble() >= c) return total;
 
-        double boosted = total * CommonConfig.blackFlashMultiplier()
-                + st.computeBestMeleeFinal() * chargeF * CommonConfig.blackFlashStatFactor();
+        double boosted = total * ServerConfig.blackFlashMultiplier()
+                + st.computeBestMeleeFinal() * chargeF * ServerConfig.blackFlashStatFactor();
 
         PROCCED_ON.add(victim.getUUID());
         fx(sp, victim);

@@ -6,7 +6,7 @@ import com.hmc.zenkai.feature.combat.entity.EntityStatDef;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.combat.entity.EntityStatsManager;
 import com.hmc.zenkai.registry.ModGameRules;
-import com.hmc.zenkai.config.CommonConfig;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -58,7 +58,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
             if (SkillEffects.senseLevel(sp) <= 0) return;
             SenseServerState.markScan(sp);
 
-            double r = CommonConfig.senseKiRange() * SkillEffects.senseRangeFactor(sp);
+            double r = ServerConfig.senseKiRange() * SkillEffects.senseRangeFactor(sp);
             AABB box = AABB.ofSize(sp.position(), r * 2, r * 2, r * 2);
 
             List<SenseKiDataPacket.Entry> out = new ArrayList<>();
@@ -117,7 +117,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
     }
 
     private static SenseKiDataPacket.Entry vanillaEntry(LivingEntity le, boolean isPlayer) {
-        long pl = Math.round(le.getMaxHealth() * CommonConfig.vanillaPowerLevelFactor());
+        long pl = Math.round(le.getMaxHealth() * ServerConfig.vanillaPowerLevelFactor());
         return new SenseKiDataPacket.Entry(le.getId(),
                 Math.round(le.getHealth()), Math.round(le.getMaxHealth()),
                 0,0,0,0,entityAlignment(le),
