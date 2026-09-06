@@ -1,0 +1,21 @@
+{
+  "alignment": 0,
+  "archetype": "balanced",
+  "entity": "zenkai:shadow_clone",
+  "moveset": {
+    "ki_attacks": [
+      {
+        "type": "wave",
+        "cooldown": 90,
+        "range": 20,
+        "rgb": "0x552266",
+        "size": 3
+      }
+    ],
+    "melee": true
+  },
+  "power_level": 1000,
+  "rewards": {
+    "tp": "auto"
+  }
+}

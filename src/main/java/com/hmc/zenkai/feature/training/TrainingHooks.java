@@ -46,10 +46,12 @@ public final class TrainingHooks {
     }
 
     /** TP por matar una entidad. El reward ya viene resuelto por EntityDeathRewardHandler.
+     *  Devuelve el TP ENTERO concedido (0 si no llegó a sumar nada) — EntityDeathRewardHandler
+     *  lo usa para el aviso de "Train with your shadow" (cuánto TP dejó el clon).
      *  @param victimPl PL de la víctima, para el factor de diferencia de poder. */
-    public static void grantFromKill(ServerPlayer sp, int reward, long victimPl) {
-        if (reward <= 0) return;
-        grant(sp, reward, victimPl);
+    public static int grantFromKill(ServerPlayer sp, int reward, long victimPl) {
+        if (reward <= 0) return 0;
+        return grant(sp, reward, victimPl);
     }
 
     /** Golpe al aire con mano vacía (TrainingSwingPacket). Valida cooldown + stamina. */
@@ -71,11 +73,28 @@ public final class TrainingHooks {
         grant(sp, Math.max(1, att.getPowerLevelRaw()) * ServerConfig.trainingAirTpFactor(), 0L);
     }
 
-    /** Núcleo: decay de fatiga, eficiencia, diferencia de poder, HTC, pesas, carry y sync. */
-    private static void grant(ServerPlayer sp, double rawTp, long victimPl) {
-        if (rawTp <= 0) return;
+    /** TP de un minijuego de Training (Meditation/Ki Target Practice). `rawTp` ya viene
+     *  calculado/capado por el propio packet (ver MeditationSessionPacket/
+     *  TargetPracticeSessionPacket) a partir de desempeño CRUDO reportado por el cliente —
+     *  aquí solo se alimenta al núcleo compartido, igual que grantFromSwing (victimPl 0 = sin
+     *  rival que comparar). Devuelve el TP entero realmente concedido (ver grant()) para que el
+     *  packet se lo mande de vuelta al cliente como reward de la sesión (TrainingSessionRewardPacket). */
+    public static int grantFromMeditation(ServerPlayer sp, double rawTp) {
+        return grant(sp, rawTp, 0L);
+    }
+
+    public static int grantFromTargetPractice(ServerPlayer sp, double rawTp) {
+        return grant(sp, rawTp, 0L);
+    }
+
+    /** Núcleo: decay de fatiga, eficiencia, diferencia de poder, HTC, pesas, carry y sync.
+     *  Devuelve el TP ENTERO concedido en esta llamada (0 si no llegó a sumar nada, p. ej. se
+     *  quedó todo en el carry fraccional) — los llamadores de combate lo ignoran, los
+     *  minijuegos de Training lo reportan al cliente. */
+    private static int grant(ServerPlayer sp, double rawTp, long victimPl) {
+        if (rawTp <= 0) return 0;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (!att.isRaceChosen()) return;
+        if (!att.isRaceChosen()) return 0;
         long pl = Math.max(1, att.getPowerLevelRaw());
 
         TrainingData td = sp.getData(ZenkaiDataAttachments.TRAINING.get());
@@ -125,5 +144,6 @@ public final class TrainingHooks {
             att.addTP(whole);
             PlayerLifeCycle.syncIfServer(sp);
         }
+        return whole;
     }
 }

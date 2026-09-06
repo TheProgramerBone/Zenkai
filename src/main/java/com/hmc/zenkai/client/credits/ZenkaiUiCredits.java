@@ -103,8 +103,11 @@ public final class ZenkaiUiCredits {
         // Iconos de la barra de pestañas del menú principal (ver ZenkaiTab/ZenkaiMenuScreen).
         creditIcon("icon_tab_stats", AUTHOR, 0, 20, "icons.png (0,20)");
         creditIcon("icon_tab_skills", AUTHOR, 160, 0, "icons.png (160,0)");
-        creditIcon("icon_tab_ki_techniques", AUTHOR, 40, 20, "icons.png (40,20)");
-        creditIcon("icon_tab_physical_techniques", AUTHOR, 120, 20, "icons.png (120,20)");
+        // Ya no son íconos de PESTAÑA (KI_TECHNIQUES/PHYSICAL_TECHNIQUES se fusionaron en
+        // ZenkaiTab.TECHNIQUES, ver su javadoc) — siguen vivos como íconos de FILA en el hub
+        // TechniquesHubScreen, mismo asset/coordenada, solo cambió quién los pinta.
+        creditIcon("icon_ki_techniques_row", AUTHOR, 40, 20, "icons.png (40,20)");
+        creditIcon("icon_physical_techniques_row", AUTHOR, 120, 20, "icons.png (120,20)");
         creditIcon("icon_tab_mastery", AUTHOR, 160, 20, "icons.png (160,20)");
         creditIcon("icon_tab_story", AUTHOR, 20, 20, "icons.png (20,20)");
         creditIcon("icon_tab_party", AUTHOR, 80, 20, "icons.png (80,20)");

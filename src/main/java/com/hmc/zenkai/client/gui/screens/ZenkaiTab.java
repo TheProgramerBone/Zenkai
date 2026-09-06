@@ -7,8 +7,15 @@ package com.hmc.zenkai.client.gui.screens;
 public enum ZenkaiTab {
     STATS(0,20),
     SKILLS(160,0),
-    KI_TECHNIQUES(40,20),
-    PHYSICAL_TECHNIQUES(120,20),
+    /** Fusiona lo que antes eran KI_TECHNIQUES(40,20)/PHYSICAL_TECHNIQUES(120,20) en un solo
+     *  botón — abre {@link TechniquesHubScreen}, que redirige a KiTechniquesScreen/PhysicalScreen
+     *  (mismo patrón hub->subscreen que MasterScreen usa para su propio botón "Técnicas", de
+     *  ahí que reuse EXACTAMENTE su mismo ícono/coordenada en vez de uno de los dos viejos). */
+    TECHNIQUES(0,80),
+    /** Hub de minijuegos que dan TP (sombra/meditación/puntería) — ver TrainingHubScreen. Misma
+     *  fila v=20 que el resto de íconos de pestaña (0/20/40/80/100/120/160/200 ya ocupadas) —
+     *  220 es la siguiente celda libre a la derecha. */
+    TRAINING(220,20),
     MASTERY(160,20),
     STORY(20,20),
     PARTY(80,20),

@@ -4,6 +4,7 @@ import com.hmc.zenkai.client.gui.screens.InstantTransmissionMenuScreen;
 import com.hmc.zenkai.client.gui.screens.MasterScreen;
 import com.hmc.zenkai.client.gui.screens.NpcMarkerScreen;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
+import com.hmc.zenkai.client.gui.screens.TrainingMinigameScreen;
 import com.hmc.zenkai.network.MasterServicesUpdatePayload;
 import com.hmc.zenkai.network.OpenMasterPayload;
 import com.hmc.zenkai.network.OpenNpcMarkerPayload;
@@ -34,6 +35,14 @@ public final class ClientPayloadHandlers {
 
     public static void openWishScreen() {
         Minecraft.getInstance().setScreen(new ShenlongWishScreen());
+    }
+
+    /** El reward real de una sesión de Meditation/Ki Target Practice, tras
+     *  TrainingSessionRewardPacket. Igual que updateMasterServices: empuja el dato a la
+     *  pantalla YA abierta, no hace nada si el jugador ya cerró la screen entre medias. */
+    public static void onTrainingReward(int tpGranted) {
+        Screen current = Minecraft.getInstance().screen;
+        if (current instanceof TrainingMinigameScreen tms) tms.onRewardReceived(tpGranted);
     }
 
     public static void openInstantTransmissionMenu() {

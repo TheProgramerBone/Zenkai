@@ -80,6 +80,21 @@ public class ServerConfig {
     public static final ModConfigSpec.BooleanValue INSTANT_TRANSMISSION_ENABLED;
     public static final ModConfigSpec.BooleanValue INSTANT_TRANSMISSION_MENU_ENABLED;
 
+    // ── Minijuegos de Training (Meditation/Ki Target Practice): opción de baja
+    // frecuencia (.get() directo, sin caché volátil) — se leen UNA VEZ al final de cada
+    // sesión, no en hot-path, a diferencia del resto de training.* (ver Config pattern en
+    // CLAUDE.md sobre por qué esta sección concreta NO copia el patrón RAW+volátil de sus
+    // vecinos aunque comparta el mismo "training" temático). El cliente reporta desempeño
+    // CRUDO (notas/combo/orbes + duración), nunca un TP ya calculado — estos valores son el
+    // tope/tarifa que el SERVIDOR aplica sobre ese desempeño (ver TrainingHooks.grantFromMeditation/
+    // grantFromTargetPractice), mismo principio anti-trampa que training.air_tp_factor.
+    public static final ModConfigSpec.DoubleValue MEDITATION_TP_PER_COMBO;
+    public static final ModConfigSpec.IntValue MEDITATION_SESSION_TP_CAP;
+    public static final ModConfigSpec.IntValue MEDITATION_MIN_COOLDOWN_TICKS;
+    public static final ModConfigSpec.DoubleValue TARGET_PRACTICE_TP_PER_ORB;
+    public static final ModConfigSpec.IntValue TARGET_PRACTICE_SESSION_TP_CAP;
+    public static final ModConfigSpec.IntValue TARGET_PRACTICE_MIN_COOLDOWN_TICKS;
+
     static {
         BUILDER.comment("Habilita o deshabilita cada deseo de Shenlong de forma individual.")
                 .push("wishes_enabled");
@@ -161,6 +176,27 @@ public class ServerConfig {
                         "(mirar un punto y confirmar) sigue funcionando aunque esto esté apagado —",
                         "es un toggle independiente de technique_enabled, no un sub-caso.")
                 .define("menu_enabled", true);
+        BUILDER.pop();
+
+        BUILDER.push("training_minigames");
+        MEDITATION_TP_PER_COMBO = BUILDER
+                .comment("Meditation: TP por punto de racha (combo) al reportar el desempeño de una sesión.")
+                .defineInRange("meditation.tp_per_combo", 0.5D, 0.0D, 1000.0D);
+        MEDITATION_SESSION_TP_CAP = BUILDER
+                .comment("Meditation: tope de TP que UNA sola sesión puede otorgar, sin importar el combo reportado.")
+                .defineInRange("meditation.session_tp_cap", 500, 0, Integer.MAX_VALUE);
+        MEDITATION_MIN_COOLDOWN_TICKS = BUILDER
+                .comment("Meditation: ticks mínimos entre dos reportes de sesión del mismo jugador.")
+                .defineInRange("meditation.min_cooldown_ticks", 200, 0, 72000);
+        TARGET_PRACTICE_TP_PER_ORB = BUILDER
+                .comment("Ki Target Practice: TP por orbe reventado al reportar el desempeño de una sesión.")
+                .defineInRange("target_practice.tp_per_orb", 2.0D, 0.0D, 1000.0D);
+        TARGET_PRACTICE_SESSION_TP_CAP = BUILDER
+                .comment("Ki Target Practice: tope de TP que UNA sola sesión puede otorgar.")
+                .defineInRange("target_practice.session_tp_cap", 500, 0, Integer.MAX_VALUE);
+        TARGET_PRACTICE_MIN_COOLDOWN_TICKS = BUILDER
+                .comment("Ki Target Practice: ticks mínimos entre dos reportes de sesión del mismo jugador.")
+                .defineInRange("target_practice.min_cooldown_ticks", 200, 0, 72000);
         BUILDER.pop();
     }
 
@@ -894,6 +930,13 @@ public class ServerConfig {
     public static int broadcastRadius()          { return BROADCAST_RADIUS.get(); }
     public static boolean instantTransmissionEnabled()     { return INSTANT_TRANSMISSION_ENABLED.get(); }
     public static boolean instantTransmissionMenuEnabled() { return INSTANT_TRANSMISSION_MENU_ENABLED.get(); }
+
+    public static double meditationTpPerCombo()          { return MEDITATION_TP_PER_COMBO.get(); }
+    public static int meditationSessionTpCap()           { return MEDITATION_SESSION_TP_CAP.get(); }
+    public static int meditationMinCooldownTicks()        { return MEDITATION_MIN_COOLDOWN_TICKS.get(); }
+    public static double targetPracticeTpPerOrb()        { return TARGET_PRACTICE_TP_PER_ORB.get(); }
+    public static int targetPracticeSessionTpCap()        { return TARGET_PRACTICE_SESSION_TP_CAP.get(); }
+    public static int targetPracticeMinCooldownTicks()    { return TARGET_PRACTICE_MIN_COOLDOWN_TICKS.get(); }
 
     // =====================================================================
     // GETTERS hot-path (migrados desde CommonConfig) — leen SOLO la copia

@@ -82,8 +82,14 @@ public abstract class ZenkaiMenuScreen extends Screen {
         }
     }
 
+    /** Pestañas "hub": tienen subscreens propias (KiTechniquesScreen/PhysicalScreen) que también
+     *  reportan esta MISMA currentTab(), así que el guard de no-op de abajo tiene que eximirlas o
+     *  no habría forma de volver al hub pulsando la pestaña de nuevo estando ya dentro de una. */
+    private static final java.util.Set<ZenkaiTab> ALWAYS_REOPEN =
+            java.util.EnumSet.of(ZenkaiTab.TECHNIQUES, ZenkaiTab.TRAINING);
+
     private void open(ZenkaiTab t) {
-        if (t == currentTab()) return;
+        if (t == currentTab() && !ALWAYS_REOPEN.contains(t)) return;
         mc.setScreen(createScreen(t));
     }
 
@@ -92,8 +98,8 @@ public abstract class ZenkaiMenuScreen extends Screen {
         return switch (t) {
             case STATS -> new StatsScreen();
             case SKILLS -> new SkillsScreen();
-            case KI_TECHNIQUES -> new KiTechniquesScreen();
-            case PHYSICAL_TECHNIQUES -> new PhysicalScreen();
+            case TECHNIQUES -> new TechniquesHubScreen();
+            case TRAINING -> new TrainingHubScreen();
             case MASTERY -> new MasteryScreen();
             case PARTY -> new PartyScreen();
             case CONFIG -> new ClientConfigScreen();

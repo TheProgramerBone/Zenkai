@@ -2,10 +2,12 @@ package com.hmc.zenkai.feature.combat.entity;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.content.entity.misc.ShadowCloneEntity;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.training.TrainingHooks;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -51,7 +53,17 @@ public final class EntityDeathRewardHandler {
         // fatiga y no decaía nunca. El comentario ya decía "ruta única"; la segunda ruta era un
         // resto de antes de que existiera grantFromKill.
         if (killer instanceof ServerPlayer sp) {
-            TrainingHooks.grantFromKill(sp, reward, victimPowerLevel(dead));
+            int granted = TrainingHooks.grantFromKill(sp, reward, victimPowerLevel(dead));
+
+            // "Train with your shadow": aviso explícito de cuánto TP dejó el clon al caer,
+            // pedido por el usuario — sin esto el jugador solo veía subir el número de TP en
+            // el HUD, sin saber a qué golpe atribuirlo. Solo esta entidad concreta lo dispara;
+            // el resto de kills (mobs normales) no ganan un mensaje nuevo, mismo criterio que
+            // ya evita ruido de chat por cada zombi.
+            if (dead instanceof ShadowCloneEntity && granted > 0) {
+                sp.displayClientMessage(
+                        Component.translatable("messages.zenkai.shadow_defeated", granted), true);
+            }
         }
     }
 

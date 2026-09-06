@@ -24,6 +24,10 @@ import com.hmc.zenkai.feature.skills.SkillSyncPacket;
 import com.hmc.zenkai.feature.skills.SkillTogglePacket;
 import com.hmc.zenkai.feature.stats.*;
 import com.hmc.zenkai.feature.technique.*;
+import com.hmc.zenkai.feature.training.MeditationSessionPacket;
+import com.hmc.zenkai.feature.training.StartShadowTrainingPacket;
+import com.hmc.zenkai.feature.training.TargetPracticeSessionPacket;
+import com.hmc.zenkai.feature.training.TrainingSessionRewardPacket;
 import com.hmc.zenkai.feature.training.TrainingSwingPacket;
 import com.hmc.zenkai.feature.weights.SetWeightPacket;
 import com.hmc.zenkai.feature.wheel.WheelSelectPacket;
@@ -227,6 +231,29 @@ public class ModNetworking {
                 TrainingSwingPacket.TYPE,
                 TrainingSwingPacket.STREAM_CODEC,
                 TrainingSwingPacket::handle);
+
+        registrar.playToServer(
+                StartShadowTrainingPacket.TYPE,
+                StartShadowTrainingPacket.STREAM_CODEC,
+                StartShadowTrainingPacket::handle);
+
+        registrar.playToServer(
+                MeditationSessionPacket.TYPE,
+                MeditationSessionPacket.STREAM_CODEC,
+                MeditationSessionPacket::handle);
+
+        registrar.playToServer(
+                TargetPracticeSessionPacket.TYPE,
+                TargetPracticeSessionPacket.STREAM_CODEC,
+                TargetPracticeSessionPacket::handle);
+
+        // Delegado a ClientPayloadHandlers, no inline (ver el javadoc de ese archivo): toca
+        // Minecraft.getInstance().screen, una clase de cliente.
+        registrar.playToClient(
+                TrainingSessionRewardPacket.TYPE,
+                TrainingSessionRewardPacket.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(
+                        () -> ClientPayloadHandlers.onTrainingReward(payload.tpGranted())));
 
         registrar.playToServer(
                 FlyAnimPacket.TYPE,

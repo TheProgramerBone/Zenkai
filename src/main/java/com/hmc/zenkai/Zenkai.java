@@ -300,6 +300,8 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.KORIN.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("korin", true), 0.5f));
 
+            EntityRenderers.register(ModEntities.SHADOW_CLONE.get(), ShadowCloneRenderer::new);
+
             // Animaciones de jugador. La política de 1ª persona vive en ZenkaiPalAnimations,
             // NO aquí y NO en cada animación: las cinco capas comparten exactamente la misma.
             event.enqueueWork(() -> {

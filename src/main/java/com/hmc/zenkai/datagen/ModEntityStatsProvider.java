@@ -66,6 +66,16 @@ public class ModEntityStatsProvider implements DataProvider {
                 .ki("wave",  3, "0x49cc5d", 400, 20, null)
                 .ki("blast", 5, "0xFFAA00", 200, 24, 1.3));
 
+        // Sombra de entrenamiento (ShadowTrainingManager): power_level/archetype de aquí NO
+        // deciden su magnitud real — ShadowTrainingManager.start() sobreescribe sus stats en
+        // código (EntityStats.applyDef con un PL = tu propio PL limpio × dificultad elegida)
+        // ANTES de que la entidad entre al mundo, así que EntitySpawnStatsHandler nunca los
+        // toca (ver EntityStats.isInitialized()). Lo único que SÍ lee esta ficha es el kit de
+        // ki_attacks — ZenkaiDefaultMob.addKiAttackGoalIfDefined() lo busca por TIPO de entidad
+        // registrado, no por instancia.
+        put(out, "shadow_clone", Def.of("zenkai:shadow_clone", 1000, "balanced", 0)
+                .ki("wave", 3, "0x552266", 90, 20, null));
+
         // --- Jefes ----------------------------------------------------------
         put(out, "warden",         Def.of("minecraft:warden",         13000, "tank",  -60).attr("strength", "+30%"));
         put(out, "wither",         Def.of("minecraft:wither",          9300, "boss",  -95));

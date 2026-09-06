@@ -84,11 +84,11 @@ public class PhysicalScreen extends ZenkaiMenuScreen {
     private final List<PhysicalTechnique> visible = new ArrayList<>();
 
     public PhysicalScreen() {
-        super(Component.translatable(ZenkaiTab.PHYSICAL_TECHNIQUES.titleKey()));
+        super(Component.translatable("screen.zenkai.techniques_hub.row.physical"));
     }
 
     @Override
-    protected ZenkaiTab currentTab() { return ZenkaiTab.PHYSICAL_TECHNIQUES; }
+    protected ZenkaiTab currentTab() { return ZenkaiTab.TECHNIQUES; }
 
     private int rightEdge() { return panelLeft + BG_W - 14; }
     private int rowTop(int i) { return panelTop + LIST_Y_OFF + i * ROW_H; }

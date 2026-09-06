@@ -33,4 +33,11 @@ public final class ZenkaiNumbers {
     public static String exact(long v) {
         return String.format(Locale.ROOT, "%,d", v);
     }
+
+    /** Multiplicador con 2 decimales (p. ej. "2.50"), sin el "x" delante — quien lo llame lo
+     *  antepone. Antes vivía duplicado como método privado en StatsScreen; TrainingHubScreen
+     *  también lo necesita para el panel TP Modifiers, así que se movió aquí. */
+    public static String fmt2(double v) {
+        return String.format(Locale.ROOT, "%.2f", v);
+    }
 }

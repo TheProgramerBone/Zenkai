@@ -24,7 +24,6 @@ import com.hmc.zenkai.feature.race.RacePassives;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.stats.RefundTpPacket;
 import com.hmc.zenkai.feature.stats.SpendTpPacket;
-import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.gui.Font;
@@ -737,21 +736,9 @@ public class StatsScreen extends ZenkaiMenuScreen {
         out.add(val("screen.zenkai.stats_screen.stat.flying",
                 Math.round(att.getFlyMultiplier() * 100) + "%", ZenkaiPalette.TEXT));
 
-        // Carga: solo si lleva pesas. Los números salen de WeightSystem, nunca de una fórmula
-        // local, o la pantalla y el juego se separarían al primer ajuste.
-        double load = att.getWeightLoad();
-        if (load > 0.0) {
-            out.add(Row.header("screen.zenkai.stats_screen.section.load", ZenkaiPalette.SECTION_LOAD));
-            out.add(val("screen.zenkai.stats_screen.stat.load_short",
-                    String.format(Locale.ROOT, "%.2f / %.2f t",
-                            WeightSystem.equippedTons(mc.player),
-                            WeightSystem.capacityTons(att.getPowerLevelRaw())), ZenkaiPalette.TEXT));
-            out.add(Row.bar(Component.translatable("screen.zenkai.stats_screen.stat.load_pct.label"),
-                    Component.literal(Math.round(load * 100) + "%"), ZenkaiPalette.VALUE,
-                    (float) Math.min(100.0, load * 100), ZenkaiPalette.BAR_CONTROL));
-            out.add(val("screen.zenkai.stats_screen.stat.weight_tp",
-                    "x" + fmt2(WeightSystem.tpFactor(load)), ZenkaiPalette.OK));
-        }
+        // La sección de Carga (pesas) se migró entera a TrainingHubScreen ("TP Modifiers"), con
+        // sitio de sobra para mostrar TAMBIÉN el multiplicador de HTC — ver CLAUDE.md/el plan de
+        // la pestaña Training. Las lang keys stat.load_short/.load_pct/.weight_tp viven ahora ahí.
 
         out.add(Row.header("screen.zenkai.stats_screen.section.investment", ZenkaiPalette.SECTION_INVESTMENT));
         // Compacto en la fila ("17.4M"), exacto en el tooltip al pasar el ratón — mismo
@@ -772,7 +759,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         out.add(Row.header("screen.zenkai.stats_screen.section.form", ZenkaiPalette.SECTION_FORM));
         out.add(Row.of(formName(form.getFormId()),
-                Component.literal("x" + fmt2(att.getStatMultiplier())), ZenkaiPalette.OK));
+                Component.literal("x" + ZenkaiNumbers.fmt2(att.getStatMultiplier())), ZenkaiPalette.OK));
         out.add(Row.bar(Component.translatable("screen.zenkai.stats_screen.mastery_short.label"),
                 Component.literal(fmt(form.getFormMastery(form.getFormId())) + "%"),
                 ZenkaiPalette.GOLD, form.getFormMastery(form.getFormId()), ZenkaiPalette.BAR_MASTERY));
@@ -874,7 +861,6 @@ public class StatsScreen extends ZenkaiMenuScreen {
     }
 
     private static String fmt(double d) { return String.format(Locale.ROOT, "%.1f", d); }
-    private static String fmt2(double d) { return String.format(Locale.ROOT, "%.2f", d); }
 
     // ── Tooltips ─────────────────────────────────────────────────────────────
 

@@ -3,6 +3,7 @@ package com.hmc.zenkai.registry;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.entity.ZenkaiMasterEntity;
 import com.hmc.zenkai.content.entity.misc.IsaacEntity;
+import com.hmc.zenkai.content.entity.misc.ShadowCloneEntity;
 import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianWarriorEntity;
@@ -37,6 +38,7 @@ public class ModEvents {
         event.put(ModEntities.KAMI.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.KAIO.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.KORIN.get(), ZenkaiMasterEntity.createAttributes().build());
+        event.put(ModEntities.SHADOW_CLONE.get(), ShadowCloneEntity.createAttributes().build());
     }
 
 

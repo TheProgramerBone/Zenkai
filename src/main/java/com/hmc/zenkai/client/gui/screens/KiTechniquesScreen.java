@@ -65,11 +65,11 @@ public class KiTechniquesScreen extends ZenkaiMenuScreen {
     private final List<TextOnlyButton> rowButtons = new ArrayList<>();
 
     public KiTechniquesScreen() {
-        super(Component.translatable(ZenkaiTab.KI_TECHNIQUES.titleKey()));
+        super(Component.translatable("screen.zenkai.techniques_hub.row.ki"));
     }
 
     @Override
-    protected ZenkaiTab currentTab() { return ZenkaiTab.KI_TECHNIQUES; }
+    protected ZenkaiTab currentTab() { return ZenkaiTab.TECHNIQUES; }
 
     // ── Geometría ────────────────────────────────────────────────────────────
 
