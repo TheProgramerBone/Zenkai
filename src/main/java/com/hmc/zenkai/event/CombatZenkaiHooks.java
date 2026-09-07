@@ -521,11 +521,10 @@ public class CombatZenkaiHooks {
      * camino ya probado que usa el timeout del derribado normal — Otro Mundo, allowRealDeath,
      * causa real y reseteo completo de pose/lock incluidos.
      *
-     * Un Totem of Undying NO salva de este golpe. La muerte sale de un tick limpio, o sea fuera
-     * de hurt(), que es donde vanilla revisaría el totem; y handlePendingOutrightKill no replica
-     * el chequeo a mano como sí hace DownedSystem.handleDowned para el timeout del derribado.
-     * Es una decisión de balance abierta, no un descuido: cambiarla es añadir allí la misma
-     * llamada a consumeTotem() que ya usa handleDowned.
+     * Un Totem of Undying SÍ salva de este golpe. Como la muerte sale de un tick limpio, o sea
+     * fuera de hurt() — el único sitio donde vanilla revisa el totem —,
+     * handlePendingOutrightKill replica el chequeo a mano, exactamente igual que
+     * DownedSystem.handleDowned para el timeout del derribado.
      */
     private static void markImmortalOutrightKill(ServerPlayer sp) {
         playKnockout(sp);
