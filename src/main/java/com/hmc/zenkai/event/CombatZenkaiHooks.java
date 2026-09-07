@@ -584,6 +584,11 @@ public class CombatZenkaiHooks {
         if (!healer.getMainHandItem().isEmpty()) return;               // mano vacía
         if (!(e.getTarget() instanceof ServerPlayer target)) return;
 
+        // Un jugador derribado no puede revivir a nadie más — mismo chequeo que SenzuBean.
+        // interactLivingEntity, necesario aquí a mano porque PlayerInteractEvent tampoco pasa
+        // por ActionRules (el embudo que sí bloquea esto para bloquear/físicas/transformar).
+        if (PlayerStatsAttachment.get(healer).flags().isDowned()) return;
+
         PlayerStatsAttachment tAtt = PlayerStatsAttachment.get(target);
         if (!tAtt.flags().isDowned()) return;                          // solo si está derribado
 

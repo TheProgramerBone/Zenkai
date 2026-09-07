@@ -305,10 +305,25 @@ public class ModCommands {
                 .then(Commands.literal("debug")
                         .then(Commands.literal("entity")
                                 .executes(ModCommands::debugEntity))
+                        // Todas las ramas "set a flag" de abajo (tail/divine/legendary/immortal/
+                        // majin) aceptan ahora un <player> opcional, MISMO patrón que el resto de
+                        // /zenkai (ver "tp add"/"attr setall": sin argumento actúa sobre quien
+                        // ejecuta, con él acepta cualquier selector de EntityArgument.players()
+                        // — @a, @e[type=player], un nombre suelto...). Antes solo podían probarse
+                        // sobre uno mismo, así que depurar el HUD/estado de OTRO jugador (o de
+                        // varios a la vez) exigía pedirle que ejecutara el comando él mismo.
+                        // "entity"/"party add" se quedan self-only a propósito: el primero
+                        // raytracea la MIRADA de quien ejecuta y el segundo añade un miembro a SU
+                        // propia party, ninguno de los dos tiene sentido apuntado a otro jugador.
                         .then(Commands.literal("tail")
                                 .then(Commands.argument("value", BoolArgumentType.bool())
                                         .executes(ctx -> debugSetTail(ctx,
-                                                BoolArgumentType.getBool(ctx, "value")))))
+                                                ctx.getSource().getPlayerOrException(),
+                                                BoolArgumentType.getBool(ctx, "value")))
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> debugSetTail(c, sp,
+                                                                BoolArgumentType.getBool(c, "value")))))))
                         // ── /zenkai debug divine|legendary <true|false> ──────────────
                         // TEMPORAL — igual que "debug tail" de arriba: la vía REAL de conseguir
                         // cada uno de estos dos estados (PlayerStateFlags.isDivine/isLegendary,
@@ -323,14 +338,26 @@ public class ModCommands {
                         // confundir los dos.
                         .then(Commands.literal("divine")
                                 .then(Commands.argument("value", BoolArgumentType.bool())
-                                        .executes(ctx -> debugSetSpecialState(ctx, "isDivine",
+                                        .executes(ctx -> debugSetSpecialState(ctx,
+                                                ctx.getSource().getPlayerOrException(), "isDivine",
                                                 PlayerStatsAttachment::setDivine,
-                                                BoolArgumentType.getBool(ctx, "value")))))
+                                                BoolArgumentType.getBool(ctx, "value")))
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> debugSetSpecialState(c, sp, "isDivine",
+                                                                PlayerStatsAttachment::setDivine,
+                                                                BoolArgumentType.getBool(c, "value")))))))
                         .then(Commands.literal("legendary")
                                 .then(Commands.argument("value", BoolArgumentType.bool())
-                                        .executes(ctx -> debugSetSpecialState(ctx, "isLegendary",
+                                        .executes(ctx -> debugSetSpecialState(ctx,
+                                                ctx.getSource().getPlayerOrException(), "isLegendary",
                                                 PlayerStatsAttachment::setLegendary,
-                                                BoolArgumentType.getBool(ctx, "value")))))
+                                                BoolArgumentType.getBool(ctx, "value")))
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> debugSetSpecialState(c, sp, "isLegendary",
+                                                                PlayerStatsAttachment::setLegendary,
+                                                                BoolArgumentType.getBool(c, "value")))))))
                         // ── /zenkai debug immortal <true|false> ───────────────────────
                         // A diferencia de divine/legendary, "immortal" también tiene un
                         // mecanismo real (PlayerStatsAttachment.isImmortal +
@@ -339,9 +366,15 @@ public class ModCommands {
                         // pasar por lo que sea que hoy dé inmortalidad, para pruebas rápidas.
                         .then(Commands.literal("immortal")
                                 .then(Commands.argument("value", BoolArgumentType.bool())
-                                        .executes(ctx -> debugSetSpecialState(ctx, "isImmortal",
+                                        .executes(ctx -> debugSetSpecialState(ctx,
+                                                ctx.getSource().getPlayerOrException(), "isImmortal",
                                                 PlayerStatsAttachment::setImmortal,
-                                                BoolArgumentType.getBool(ctx, "value")))))
+                                                BoolArgumentType.getBool(ctx, "value")))
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> debugSetSpecialState(c, sp, "isImmortal",
+                                                                PlayerStatsAttachment::setImmortal,
+                                                                BoolArgumentType.getBool(c, "value")))))))
                         // ── /zenkai debug majin <true|false> ─────────────────────────
                         // A diferencia de divine/legendary de arriba, "majin" SÍ tiene un
                         // mecanismo real ya implementado: PersistentEffectsSystem.tick()
@@ -357,7 +390,12 @@ public class ModCommands {
                         .then(Commands.literal("majin")
                                 .then(Commands.argument("value", BoolArgumentType.bool())
                                         .executes(ctx -> debugSetMajinControlled(ctx,
-                                                BoolArgumentType.getBool(ctx, "value")))))
+                                                ctx.getSource().getPlayerOrException(),
+                                                BoolArgumentType.getBool(ctx, "value")))
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .executes(ctx -> forEach(ctx, targets(ctx),
+                                                        (c, sp) -> debugSetMajinControlled(c, sp,
+                                                                BoolArgumentType.getBool(c, "value")))))))
                         .then(Commands.literal("party")
                                 .then(Commands.literal("add")
                                         .executes(ctx -> debugPartyAdd(ctx, null))
@@ -409,8 +447,7 @@ public class ModCommands {
     // ── Implementaciones ─────────────────────────────────────────────────────
 
     /** Ver el comentario de la rama "debug tail" más arriba. Actúa sobre quien ejecuta. */
-    private static int debugSetTail(CommandContext<CommandSourceStack> ctx, boolean value) {
-        if (!(ctx.getSource().getEntity() instanceof ServerPlayer sp)) return 0;
+    private static int debugSetTail(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, boolean value) {
         sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).setHasTail(value);
         PlayerLifeCycle.sync(sp);
         ctx.getSource().sendSuccess(() -> Component.literal(
@@ -418,13 +455,13 @@ public class ModCommands {
         return 1;
     }
 
-    /** Ver el comentario de las ramas "debug divine/majin/legendary" más arriba. Actúa sobre
-     *  quien ejecuta, igual que "debug tail". Un solo helper para los tres en vez de triplicar
-     *  el mismo cuerpo — solo cambia la etiqueta y qué setter de PlayerStatsAttachment llamar. */
-    private static int debugSetSpecialState(CommandContext<CommandSourceStack> ctx, String label,
+    /** Ver el comentario de las ramas "debug divine/majin/legendary" más arriba. Un solo helper
+     *  para los tres en vez de triplicar el mismo cuerpo — solo cambia la etiqueta y qué setter
+     *  de PlayerStatsAttachment llamar. Acepta el objetivo como parámetro (en vez de derivarlo
+     *  de quien ejecuta) para poder usarse tanto self-only como con un <player> explícito. */
+    private static int debugSetSpecialState(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, String label,
                                             java.util.function.BiConsumer<PlayerStatsAttachment, Boolean> setter,
                                             boolean value) {
-        if (!(ctx.getSource().getEntity() instanceof ServerPlayer sp)) return 0;
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         setter.accept(att, value);
         PlayerLifeCycle.sync(sp);
@@ -436,8 +473,7 @@ public class ModCommands {
     /** Ver el comentario de la rama "debug majin" más arriba. A diferencia de
      *  debugSetSpecialState, esto vive en PlayerVisualAttachment (isMajinControlled), no en
      *  PlayerStatsAttachment — son dos attachments distintos. */
-    private static int debugSetMajinControlled(CommandContext<CommandSourceStack> ctx, boolean value) {
-        if (!(ctx.getSource().getEntity() instanceof ServerPlayer sp)) return 0;
+    private static int debugSetMajinControlled(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, boolean value) {
         // MajinEffect.setControlled hace TRES cosas juntas y SÍNCRONAS: flag, MobEffectInstance
         // y sync visual. No basta con tocar solo el flag (ver el javadoc de ese método para la
         // condición de carrera exacta que eso produce con el propio tick del efecto).

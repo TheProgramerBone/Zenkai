@@ -111,6 +111,13 @@ public class SenzuBean extends Item {
             return InteractionResult.PASS;
         }
 
+        // Un jugador derribado no puede curar/revivir a nadie más — no es distinto de cualquier
+        // otra acción bloqueada por ActionRules mientras isDowned() (bloquear, físicas,
+        // transformar...), solo que interactLivingEntity es un Item.use crudo que no pasa por
+        // ese embudo, así que hace falta el chequeo aquí a mano.
+        PlayerStatsAttachment userAtt = user.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        if (userAtt.flags().isDowned()) return InteractionResult.PASS;
+
         PlayerStatsAttachment att = targetPlayer.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         boolean needsHelp = att.flags().isDowned() || att.getBody() < att.getBodyMax();
         if (!needsHelp) return InteractionResult.PASS;

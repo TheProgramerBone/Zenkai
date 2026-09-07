@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:ki_sense",
+  "criteria": {
+    "lock": {
+      "conditions": {
+        "kind": "lock_on_used"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.lock_on.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:target"
+    },
+    "title": {
+      "translate": "advancements.zenkai.lock_on.title"
+    }
+  },
+  "requirements": [
+    [
+      "lock"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -122,6 +122,14 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     ModItems.SCOUTER.get(), AdvancementType.TASK, false,
                     "get", hasItems(ModItems.SCOUTER.get()));
 
+            // No oculto por el mismo motivo que combat_stance: Alt Izquierdo para fijar un
+            // objetivo no se adivina, y su descripción tiene que poder leerse en la pantalla de
+            // logros ANTES de completarlo. Dispara al fijar de verdad (LockOnPacket.handle), no
+            // solo al comprar Ki Sense.
+            child(saver, efh, kiSense, "lock_on",
+                    net.minecraft.world.item.Items.TARGET, AdvancementType.TASK, false,
+                    "lock", milestone(ZenkaiTriggers.Kinds.LOCK_ON_USED));
+
             child(saver, efh, chooseRace, "kaioken",
                     net.minecraft.world.item.Items.BLAZE_POWDER, AdvancementType.TASK, false,
                     "skill", skill("kaioken", 1));

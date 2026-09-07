@@ -1,7 +1,10 @@
 package com.hmc.zenkai.event.tick;
 
+import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.SenseServerState;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.teleport.InstantTransmissionAnimPacket;
 import com.hmc.zenkai.feature.teleport.InstantTransmissionAttachment;
 import com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket;
 import com.hmc.zenkai.feature.teleport.OpenInstantTransmissionMenuPayload;
@@ -16,6 +19,9 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
@@ -38,8 +44,24 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * BLOCK/PHYSICAL/KI_TECHNIQUE/TRANSFORM) — el único gate es tener la skill y no estar en
  * cooldown. Ver la nota de pendientes de la Fase 1 si en el futuro hace falta integrarlo.
  */
+@EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class InstantTransmissionSystem {
     private InstantTransmissionSystem() {}
+
+    /** Quien empieza a trackear a mitad de una carga (se acerca, entra en rango de render) debe
+     *  ver la pose desde el primer frame, no esperar al próximo flanco de holding — mismo
+     *  criterio que CombatModeServerState.onStartTracking ya usa para el modo combate. */
+    @SubscribeEvent
+    public static void onStartTracking(PlayerEvent.StartTracking e) {
+        if (!(e.getTarget() instanceof ServerPlayer target)) return;
+        if (!(e.getEntity() instanceof ServerPlayer tracker)) return;
+        InstantTransmissionAttachment att = InstantTransmissionAttachment.get(target);
+        boolean charging = att.isHolding() && SkillEffects.instantTransmissionLevel(target) > 0;
+        if (charging) {
+            PacketDistributor.sendToPlayer(tracker,
+                    new InstantTransmissionAnimPacket(target.getId(), true));
+        }
+    }
 
     public static void tick(TickCtx c) {
         if (!(c.p() instanceof ServerPlayer sp)) return;
@@ -78,7 +100,19 @@ public final class InstantTransmissionSystem {
             // nada: es exactamente el "toqué la tecla por error" que este cambio evita.
             if (att.isMenuArmed()) {
                 PacketDistributor.sendToPlayer(sp, new OpenInstantTransmissionMenuPayload());
+                ZenkaiTriggers.MILESTONE.get().trigger(sp,
+                        ZenkaiTriggers.Kinds.INSTANT_TRANSMISSION_MENU_OPENED);
             }
+        }
+
+        // Aviso a TRACKERS del flanco de la pose de carga (InstantTransmissionAnimPacket) — sin
+        // esto nadie fuera del propio jugador veía nunca el brazo alzado, porque
+        // ClientZenkaiPalTick solo animaba la predicción LOCAL de la tecla (ver el javadoc de
+        // ese archivo). Sin la skill, sostener TAB no cuenta como "cargando" para quien mira.
+        boolean chargingForAnim = holding && SkillEffects.instantTransmissionLevel(sp) > 0;
+        if (holding != wasHolding) {
+            PacketDistributor.sendToPlayersTrackingEntity(sp,
+                    new InstantTransmissionAnimPacket(sp.getId(), chargingForAnim));
         }
 
         if (!holding) att.resetGesture();
@@ -118,6 +152,9 @@ public final class InstantTransmissionSystem {
             // de verdad — ver InstantTransmissionSyncPacket y ClientZenkaiPalTick.
             // onInstantTransmissionTeleported (el brazo baja solo en vez de cortarse en seco).
             syncStateIfChanged(sp, att, true);
+            // Logro "instant_transmission": dispara aquí, en el blink de verdad, no al comprar
+            // el nivel 1 — ver el comentario de ese logro en ModAdvancementProvider.
+            ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.INSTANT_TRANSMISSION_USED);
         }
     }
 

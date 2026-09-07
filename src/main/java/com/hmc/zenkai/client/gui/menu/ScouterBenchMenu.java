@@ -233,4 +233,14 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
     public boolean stillValid(@NotNull Player player) {
         return container.stillValid(player);
     }
+
+    /** Libera la reserva de uso al cerrar la GUI (ver ScouterBenchBlockEntity.viewer/closedBy)
+     *  — sin esto la mesa se quedaba "ocupada" para cualquier otro jugador mientras un trabajo
+     *  en curso seguía su camino en segundo plano, aunque nadie tuviera el menú abierto de
+     *  verdad. El trabajo en sí no se ve afectado: sigue corriendo solo. */
+    @Override
+    public void removed(@NotNull Player player) {
+        super.removed(player);
+        if (container instanceof ScouterBenchBlockEntity be) be.closedBy(player);
+    }
 }

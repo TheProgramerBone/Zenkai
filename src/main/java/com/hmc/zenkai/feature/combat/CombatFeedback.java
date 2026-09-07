@@ -51,6 +51,12 @@ public final class CombatFeedback {
         Player p = e.getEntity();
         if (p.level().isClientSide()) return;
 
+        // Solo suena en modo combate (tecla X): fuera de él es un golpe cualquiera de un mob
+        // o de PvP casual, no el puñetazo estilizado que este sonido representa.
+        if (!(p instanceof ServerPlayer attackerSp) || !CombatModeServerState.isActive(attackerSp.getUUID())) {
+            return;
+        }
+
         // El defensor bloqueando manda sobre cualquier otra razón de cancelación: si está
         // bloqueando, suena BLOCK aunque el evento esté cancelado (lo está, precisamente por
         // eso). Si está cancelado por OTRO motivo (barrera de Shenlong, etc.) no suena nada,

@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.sense;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.SenseServerState;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.FriendlyByteBuf;
@@ -47,6 +48,9 @@ public record LockOnPacket(int targetId) implements CustomPacketPayload {
             if (sp.distanceTo(e) > SenseServerState.MAX_LOCK_DISTANCE) return;
 
             boolean isNew = SenseServerState.setLock(sp, pkt.targetId());
+            // Tutorial de Alt + Ki Sense: dispara en cada fijado nuevo, no solo la primera vez
+            // (vanilla deduplica el toast una vez obtenido), mismo patrón que COMBAT_STANCE.
+            if (isNew) ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.LOCK_ON_USED);
 
             if (isNew && e instanceof ServerPlayer victim && SenseServerState.senseActive(victim)) {
                 victim.displayClientMessage(

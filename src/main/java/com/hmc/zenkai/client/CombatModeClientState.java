@@ -89,12 +89,24 @@ public final class CombatModeClientState {
     public static int chargingSlot()   { return chargingSlot; }
 
     /** 0..MAX_CHARGE respecto al casttime del tipo cargándose (0 si no hay carga).
-     *  Puede pasar de 1.0: a partir de ahí el jugador está SOBRECARGANDO. */
+     *  Puede pasar de 1.0: a partir de ahí el jugador está SOBRECARGANDO.
+     *  CONGELADO POR KI: por encima de lo que el ki actual alcanza a pagar
+     *  (KiCombatServer.maxAffordableRatio), el ratio deja de subir con el tiempo sostenido —
+     *  sin esto la barra subía libremente hasta 200% y soltar rechazaba el disparo entero en
+     *  vez de salir al máximo que sí se podía pagar. BARRIER queda fuera: su coste no lleva el
+     *  factor de carga (ver el disparo en el bucle de tick), así que nunca se queda sin ki por
+     *  sobrecargar. */
     public static double chargeRatio(Minecraft mc) {
         if (chargingSlot < 0 || mc.player == null) return 0;
-        KiTechnique t = PlayerStatsAttachment.get(mc.player).techniques().slot(chargingSlot);
+        var att = PlayerStatsAttachment.get(mc.player);
+        KiTechnique t = att.techniques().slot(chargingSlot);
         if (t == null) return 0;
-        return KiCombatServer.chargeRatio(chargeTicks, reqChargeFor(mc, t));
+        double timeRatio = KiCombatServer.chargeRatio(chargeTicks, reqChargeFor(mc, t));
+        if (t.type().defensive()) return timeRatio;
+        double baseCostWithFraction = KiCombatServer.computeCost(att, t.type(), t.size(), t.effect())
+                * att.powerFraction();
+        double maxAffordable = KiCombatServer.maxAffordableRatio(baseCostWithFraction, att.getEnergy());
+        return Math.min(timeRatio, maxAffordable);
     }
 
     /** Fracción de cooldown RESTANTE del slot (0 = listo), para pintar el overlay. */
@@ -210,7 +222,10 @@ public final class CombatModeClientState {
                 cancelCharge();
             } else if (!held) {
                 // Soltar el número: DISPARA si llegó al mínimo y hay ki; si no, cancela.
-                double ratio = KiCombatServer.chargeRatio(chargeTicks, reqChargeFor(mc, t));
+                // chargeRatio(mc) ya viene congelado al máximo que el ki actual permite pagar
+                // (salvo BARRIER), así que este chequeo de energía es casi siempre una
+                // formalidad — sigue aquí como red de seguridad, no como la fuente del freeze.
+                double ratio = chargeRatio(mc);
                 var fAtt = PlayerStatsAttachment.get(mc.player);
                 boolean defensive = t.type().defensive();
                 int fCost = (int) Math.max(1, Math.ceil(

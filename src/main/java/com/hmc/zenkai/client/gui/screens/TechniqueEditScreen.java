@@ -242,6 +242,10 @@ public class TechniqueEditScreen extends Screen {
         } else {
             cyclerRow(x, y, contentW, typeLabel, typeTooltip,
                     dir -> {
+                        // Las técnicas firma (master() != "") solo las concede el maestro
+                        // correspondiente, no el editor genérico — igual que un tipo sin JSON
+                        // (!enabled()), no deben ni aparecer como opción al crear una técnica
+                        // nueva, no solo quedar con el botón de desbloqueo desactivado.
                         KiTechniqueType[] all = KiTechniqueType.values();
                         KiTechniqueType next = type;
                         for (int i = 0; i < all.length; i++) {

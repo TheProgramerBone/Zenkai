@@ -453,6 +453,16 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket::handle);
 
         registrar.playToClient(
+                com.hmc.zenkai.feature.teleport.InstantTransmissionAnimPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionAnimPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionAnimPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.teleport.InstantTransmissionReleaseAnimPacket.TYPE,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionReleaseAnimPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.teleport.InstantTransmissionReleaseAnimPacket::handle);
+
+        registrar.playToClient(
                 com.hmc.zenkai.feature.teleport.OpenInstantTransmissionMenuPayload.TYPE,
                 com.hmc.zenkai.feature.teleport.OpenInstantTransmissionMenuPayload.STREAM_CODEC,
                 (payload, ctx) -> ctx.enqueueWork(ClientPayloadHandlers::openInstantTransmissionMenu));

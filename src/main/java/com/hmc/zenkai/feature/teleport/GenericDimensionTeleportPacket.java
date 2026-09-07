@@ -4,9 +4,11 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.event.tick.InstantTransmissionSystem;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.registry.ModDimensions;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
@@ -84,7 +86,25 @@ public record GenericDimensionTeleportPacket(String dimensionId, String subId) i
             if (!att.hasVisitedDimension(dimKey)) return; // nunca ha estado ahí
 
             BlockPos target = resolveTarget(att, dimKey, loc, pkt.subId());
-            if (target == null) return; // visitada, pero sin punto que resolver todavía
+            if (target == null) {
+                // "Visitada" (TeleportDiscoverySystem la marca con solo estar un tick ahí) no es
+                // lo mismo que "tiene un punto de entrada grabado" (DimensionEntryTracker, que
+                // solo graba un cruce GENUINO de portal/PlayerChangedDimensionEvent real). Un
+                // jugador que llegó por otra vía (mod de terceros, comando, spawn de datapack sin
+                // pasar por un portal de verdad) puede tener lo primero sin lo segundo — antes
+                // esto fallaba en silencio, sin ninguna pista de por qué el destino no respondía.
+                // Deliberadamente NO se intenta "encontrar el portal más cercano": una dimensión
+                // modeada puede no tener portal alguno a propósito (viaje por comando/estructura
+                // propia), así que cualquier heurística de búsqueda arriesgaba fallar en silencio
+                // igual, solo que de forma menos predecible — un mensaje claro es compatible con
+                // CUALQUIER dimensión de CUALQUIER mod sin tener que adivinar su geometría.
+                if (isMissingEntryPoint(att, dimKey, loc, pkt.subId())) {
+                    sp.displayClientMessage(Component.translatable(
+                            "messages.zenkai.instant_transmission.no_entry_point")
+                            .withStyle(ChatFormatting.RED), true);
+                }
+                return;
+            }
 
             boolean crossOk = dimKey.equals(sp.serverLevel().dimension())
                     || SkillEffects.instantTransmissionCrossDimensionUnlocked(sp);
@@ -115,5 +135,17 @@ public record GenericDimensionTeleportPacket(String dimensionId, String subId) i
             case GenericSubDestination.Waypoint(String ignored, String key, int ignoredCol, int ignoredRow) ->
                     att.getWaypoint(key);
         };
+    }
+
+    /** true si el destino pedido depende de "última llegada" (subId vacío, o un sub-destino
+     *  {@link GenericSubDestination.LastEntry} explícito) y esa llegada nunca se grabó — el único
+     *  caso de resolveTarget()==null que merece avisar al jugador (ver el comentario en handle()
+     *  sobre por qué no se intenta adivinar/simular un portal). Los demás null (subId inventado,
+     *  Waypoint sin descubrir) son casos que un cliente sin modificar no puede provocar. */
+    private static boolean isMissingEntryPoint(InstantTransmissionAttachment att, ResourceKey<Level> dimKey,
+                                               ResourceLocation loc, String subId) {
+        if (subId.isEmpty()) return att.getLastEntryPos(dimKey) == null;
+        GenericSubDestination sub = GenericDimensionDestinations.byId(loc, subId);
+        return sub instanceof GenericSubDestination.LastEntry && att.getLastEntryPos(dimKey) == null;
     }
 }

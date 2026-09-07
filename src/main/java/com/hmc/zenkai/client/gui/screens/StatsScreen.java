@@ -710,9 +710,9 @@ public class StatsScreen extends ZenkaiMenuScreen {
         boolean majin = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).isMajinControlled();
 
         out.add(Row.header("screen.zenkai.stats_screen.section.offense", ZenkaiPalette.SECTION_COMBAT));
-        out.add(val("screen.zenkai.stats_screen.stat.melee", fmt(att.computeMeleeFinal()), ZenkaiPalette.TEXT));
-        out.add(val("screen.zenkai.stats_screen.stat.defense", fmt(att.computeDefenseFinal()), ZenkaiPalette.TEXT));
-        out.add(val("screen.zenkai.stats_screen.stat.ki_power", fmt(att.computeKiPowerFinal()), ZenkaiPalette.TEXT));
+        out.add(bigVal("screen.zenkai.stats_screen.stat.melee", att.computeMeleeFinal(), ZenkaiPalette.TEXT));
+        out.add(bigVal("screen.zenkai.stats_screen.stat.defense", att.computeDefenseFinal(), ZenkaiPalette.TEXT));
+        out.add(bigVal("screen.zenkai.stats_screen.stat.ki_power", att.computeKiPowerFinal(), ZenkaiPalette.TEXT));
         if (majin) {
             out.add(val("screen.zenkai.stats_screen.majin_boost",
                     "+" + Math.round(ServerConfig.majinStatBonus() * 100) + "%", ZenkaiPalette.ERROR));
@@ -748,7 +748,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
                 Component.literal(ZenkaiNumbers.format(tpSpent)), ZenkaiPalette.VALUE,
                 Component.translatable("screen.zenkai.stats_screen.exact_tp", tpSpent)));
         out.add(val("screen.zenkai.stats_screen.points_invested",
-                String.valueOf(att.raceStats().totalInvested()), ZenkaiPalette.TEXT));
+                attrText(att.raceStats().totalInvested()), ZenkaiPalette.TEXT));
         return out;
     }
 
@@ -858,6 +858,23 @@ public class StatsScreen extends ZenkaiMenuScreen {
      */
     private Row val(String key, String value, int color) {
         return Row.of(Component.translatable(key + ".label"), Component.literal(value), color);
+    }
+
+    /** Fila de un stat que puede crecer sin techo (melee/defensa/ki power escalan con el
+     *  power level, que a su vez llega a los millones — ver el logro pl_1m). Por debajo de
+     *  COMPACT_FROM se enseña el decimal exacto de siempre (fmt); por encima, compacto con
+     *  ZenkaiNumbers y el valor exacto en el tooltip — MISMO reparto que ya usa tp_spent unas
+     *  filas más abajo, y el mismo umbral que ya usa attrText() para los atributos. Por
+     *  convención del mod, cualquier número de screen/GUI que pueda llegar a esa magnitud pasa
+     *  por ZenkaiNumbers en vez de imprimirse en crudo. */
+    private Row bigVal(String key, double raw, int color) {
+        Component label = Component.translatable(key + ".label");
+        if (Math.abs(raw) < COMPACT_FROM) {
+            return Row.of(label, Component.literal(fmt(raw)), color);
+        }
+        long rounded = Math.round(raw);
+        return Row.tip(label, Component.literal(ZenkaiNumbers.format(rounded)), color,
+                Component.translatable("screen.zenkai.stats_screen.exact_tp", ZenkaiNumbers.exact(rounded)));
     }
 
     private static String fmt(double d) { return String.format(Locale.ROOT, "%.1f", d); }

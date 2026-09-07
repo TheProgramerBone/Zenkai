@@ -255,6 +255,33 @@ public final class ClientZenkaiPalTick {
                 st.itPlaying = false;
                 ZenkaiPalAnimations.stopInstantTransmissionCharge(p);
             }
+        } else {
+            tickInstantTransmissionRemoteAnim(p, st);
+        }
+    }
+
+    /**
+     * Transmisión Instantánea de un jugador REMOTO, desde el estado sincronizado
+     * (InstantTransmissionAnimPacket/InstantTransmissionReleaseAnimPacket) — mismo hueco que
+     * tickPhysAnim ya cubre para técnicas físicas. Antes de esto, ningún observador veía nunca
+     * la pose de carga ni el swing de salida de otro jugador usando esta técnica: solo se
+     * animaba la predicción LOCAL de la propia tecla (ver el bloque de arriba).
+     * El pulso de "acaba de blinkear" tiene prioridad sobre el estado de carga: un blink real
+     * SIEMPRE cierra con el swing de salida, aunque el paquete de "dejó de cargar" (que también
+     * viaja en el mismo tick, ver InstantTransmissionSystem.tick) llegue a la vez.
+     */
+    private static void tickInstantTransmissionRemoteAnim(AbstractClientPlayer p, AnimState st) {
+        if (InstantTransmissionClientState.consumeRemoteReleased(p.getId())) {
+            closeChargeWithRelease(p, st);
+            return;
+        }
+        boolean charging = InstantTransmissionClientState.isRemoteCharging(p.getId());
+        if (charging && !st.itPlaying) {
+            st.itPlaying = true;
+            ZenkaiPalAnimations.playInstantTransmissionCharge(p);
+        } else if (!charging && st.itPlaying) {
+            st.itPlaying = false;
+            ZenkaiPalAnimations.stopInstantTransmissionCharge(p);
         }
     }
 

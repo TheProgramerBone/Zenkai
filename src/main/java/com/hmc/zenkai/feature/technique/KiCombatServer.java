@@ -162,6 +162,29 @@ public final class KiCombatServer {
                 + Math.max(0.0, ratio - 1.0) * ServerConfig.overchargeCostMult();
     }
 
+    /**
+     * Ratio máximo (0..MAX_CHARGE) que el ki ACTUAL del jugador alcanza a pagar, dado el coste
+     * base ya multiplicado por powerFraction (computeCost(...) * att.powerFraction(), SIN el
+     * factor de carga todavía) — inversa de chargeCostFactor. COMPARTIDA entre la predicción de
+     * cliente (CombatModeClientState.chargeRatio, para congelar la barra en vez de dejarla subir
+     * a un nivel que luego el release no puede pagar) y el release autoritativo (ActionResolver.
+     * releaseKi, red de seguridad): sin esto, sostener la carga más allá de lo que el ki permite
+     * dejaba subir el % libremente hasta 200% y el disparo se rechazaba ENTERO al soltar,
+     * tirando toda la carga en vez de salir al máximo que sí se podía pagar.
+     * Presupuesto = floor(energy), no energy a pelo: el coste real redondea hacia arriba (ceil),
+     * así que frenar justo en el entero exacto de energía disponible evita que el release falle
+     * por una unidad de más tras ese redondeo.
+     */
+    public static double maxAffordableRatio(double baseCostWithFraction, double energy) {
+        if (baseCostWithFraction <= 0.0) return MAX_CHARGE;
+        double budget = Math.floor(Math.max(0.0, energy));
+        double factor = budget / baseCostWithFraction; // chargeCostFactor máximo pagable
+        if (factor <= 1.0) return Math.max(0.0, factor);
+        double mult = ServerConfig.overchargeCostMult();
+        if (mult <= 0.0) return MAX_CHARGE;
+        return Math.min(MAX_CHARGE, 1.0 + (factor - 1.0) / mult);
+    }
+
     // ── Cooldowns (global anti-spam + por slot) ─────────────────────────────
 
     private static final int GLOBAL_COOLDOWN_TICKS = 5;

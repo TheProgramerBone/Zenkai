@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * Cola de ejecución COMPARTIDA por las dos formas de teletransportarse de Instant
@@ -56,6 +57,12 @@ public final class TeleportExecution {
         // capturar la posición REAL del portal en un cruce genuino, así que hay que avisarle de
         // que ESTE cruce concreto es nuestro (Instant Transmission), no una llegada real, o
         // sobrescribiría su propia posición con el punto de llegada de este mismo teletransporte.
+        // Aviso a quien nos está viendo DESDE EL ORIGEN, antes de moverlo: el swing de salida
+        // (el brazo baja solo) de un observador remoto — ver InstantTransmissionReleaseAnimPacket
+        // y ClientZenkaiPalTick. Mandado aquí, en la cola COMPARTIDA de cualquier salto (blink de
+        // nivel 1 y menú de planetas por igual), en vez de en cada llamador por separado.
+        PacketDistributor.sendToPlayersTrackingEntity(sp, new InstantTransmissionReleaseAnimPacket(sp.getId()));
+
         if (crossingDimension) DimensionEntryTracker.suppressNextEntry(sp);
         sp.teleportTo(destLevel, dest.x, dest.y, dest.z, sp.getYRot(), sp.getXRot());
 

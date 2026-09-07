@@ -145,9 +145,24 @@ public final class ActionResolver {
         // la versión derivada del paso 1.
         int realTicks = ActionRules.authoritativeChargeTicks(cur.elapsed(now), maxTicks);
         double rawRatio = KiCombatServer.chargeRatio(realTicks, reqCharge);
-        double ratio = type.defensive() ? 1.0 : rawRatio;
 
         TechniqueEffect effect = tech.effect();
+
+        // Congelado por ki disponible (KiCombatServer.maxAffordableRatio): si el jugador
+        // sostuvo la carga más allá de lo que su ki actual aguanta, el disparo sale al máximo
+        // ratio que SÍ puede pagar en vez de rechazarse entero al soltar — mismo criterio que
+        // ya aplica el cliente en CombatModeClientState.chargeRatio para congelar la barra
+        // mientras carga, así que aquí solo hace falta la red de seguridad autoritativa.
+        // BARRIER queda fuera: su coste ignora el factor de carga (chargeCostFactor no se
+        // aplica más abajo), así que nunca puede quedarse sin ki por sobrecargar.
+        if (!type.defensive()) {
+            double baseCostWithFraction = KiCombatServer.computeCost(att, type, tech.size(), effect)
+                    * att.powerFraction();
+            rawRatio = Math.min(rawRatio,
+                    KiCombatServer.maxAffordableRatio(baseCostWithFraction, att.getEnergy()));
+        }
+        double ratio = type.defensive() ? 1.0 : rawRatio;
+
         int cost = (int) Math.max(1, Math.ceil(
                 KiCombatServer.computeCost(att, type, tech.size(), effect)
                         * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()));

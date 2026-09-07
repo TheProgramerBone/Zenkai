@@ -51,10 +51,13 @@ public class ImmortalityEffect extends MobEffect {
     public boolean applyEffectTick(@NotNull LivingEntity livingEntity, int amplifier) {
         if (!(livingEntity instanceof Player player)) return true;
         if (player.level().isClientSide()) return true;
-
-        // MURIENDO O YA MUERTO: no se cura a quien está en el camino de morir de verdad, y
-        // menos a quien ya espera respawn — ahí una curación no solo llega tarde, sino que
-        // escribe vida > 0 y deja el botón "Reaparecer" muerto (ver DeathScreenGuard).
+        // MURIENDO O YA MUERTO: un jugador "muerto" sigue existiendo como entidad hasta que de
+        // verdad reaparece — Player#tick no se corta solo porque muriera, y los
+        // MobEffectInstance activos pueden seguir tocando ese mismo tick o el siguiente si la
+        // retirada del efecto (PlayerLifeCycle.onPlayerDeath) todavía no ha llegado a
+        // procesarse. No se cura a quien está en el camino de morir de verdad, y menos a quien
+        // ya espera respawn — ahí una curación no solo llega tarde, sino que escribe vida > 0 y
+        // deja el botón "Reaparecer" muerto (ver DeathScreenGuard).
         if (player.isDeadOrDying() || DeathScreenGuard.isAwaitingRespawn(player)) return true;
         // Muerte overkill YA MARCADA (CombatZenkaiHooks.isOverkillOnImmortal) pero todavía sin
         // resolver: PersistentEffectsSystem ya documenta que el tick de efectos de poción de

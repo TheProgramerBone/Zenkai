@@ -92,6 +92,16 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
 
     @Nullable private UUID owner = null;
 
+    /** Quién tiene el menú abierto AHORA MISMO — null si nadie. Deliberadamente DISTINTO de
+     *  `owner` (a quién se le cobra el trabajo en curso, ver startJob/serverTick): la reserva
+     *  de uso es solo mientras hay un menú de verdad abierto, no mientras dura un trabajo en
+     *  segundo plano con la GUI ya cerrada — el trabajo SIGUE corriendo sin que nadie mire (ver
+     *  el javadoc de clase). Antes canBeUsedBy miraba job/owner: la mesa se quedaba "ocupada"
+     *  para cualquier otro jugador todo ese tiempo, y si el trabajo quedaba en PAUSA (sin dueño
+     *  conectado, sin materiales, sin energía) podía tardar en despejarse indefinidamente,
+     *  aunque no hubiera ningún menú abierto de verdad delante de la mesa. */
+    @Nullable private UUID viewer = null;
+
     /** Lo que ve la GUI. Índices: 0 progreso, 1 duración, 2 trabajo, 3 motivo de pausa,
      *  4 energía, 5 capacidad. */
     private final ContainerData data = new ContainerData() {
@@ -141,13 +151,26 @@ public class ScouterBenchBlockEntity extends BaseContainerBlockEntity implements
 
     // ── Reserva de uso ───────────────────────────────────────────────────────
 
-    /** Un solo jugador a la vez MIENTRAS haya trabajo. Con el banco parado, entra cualquiera. */
+    /** Un solo jugador a la vez, y SOLO mientras de verdad tenga el menú abierto — ver el
+     *  javadoc de `viewer`. Un trabajo en curso con la GUI cerrada ya no cuenta como "ocupado". */
     public boolean canBeUsedBy(Player player) {
-        return job == JOB_NONE || owner == null || owner.equals(player.getUUID());
+        return viewer == null || viewer.equals(player.getUUID());
     }
 
     public void claim(Player player) {
         if (job == JOB_NONE || owner == null) owner = player.getUUID();
+    }
+
+    /** Llamar justo antes de abrir el menú (ScouterBenchBlock.useWithoutItem). */
+    public void openedBy(Player player) { viewer = player.getUUID(); }
+
+    /** Llamar al cerrar el menú (ScouterBenchMenu.removed). Libera la reserva SOLO si quien
+     *  cierra es quien la tenía — un removed() tardío de un viewer viejo (dos aperturas casi a
+     *  la vez, ninguna debería pasar la validación de arriba, pero por si acaso) no debe robarle
+     *  la reserva al que la tiene de verdad ahora. El trabajo en curso, si lo hay, no se ve
+     *  afectado: serverTick no depende de `viewer` en ningún momento. */
+    public void closedBy(Player player) {
+        if (player.getUUID().equals(viewer)) viewer = null;
     }
 
     /** Cierra también la vía estándar de apertura, no solo la del bloque. */

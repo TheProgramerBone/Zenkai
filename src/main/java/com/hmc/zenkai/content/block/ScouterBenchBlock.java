@@ -113,6 +113,7 @@ public class ScouterBenchBlock extends BaseEntityBlock {
         }
 
         be.claim(player);
+        be.openedBy(player);
         level.playSound(null, pos, ModSounds.SCOUTER_BENCH_OPEN.get(),
                 SoundSource.BLOCKS, 0.5f, 1.0f);
         player.openMenu(be, pos);

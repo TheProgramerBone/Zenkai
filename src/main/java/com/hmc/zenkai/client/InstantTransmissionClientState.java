@@ -3,6 +3,7 @@ package com.hmc.zenkai.client;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Espejo cliente del estado de Transmisión Instantánea que el HUD y el menú de planetas
@@ -72,4 +73,26 @@ public final class InstantTransmissionClientState {
     public static boolean isBlocked(String dimensionId) {
         return blockedDimensionIds.contains(dimensionId);
     }
+
+    // ── Animación de OTROS jugadores (ver InstantTransmissionAnimPacket/
+    //    InstantTransmissionReleaseAnimPacket) ──────────────────────────────
+    // El propio jugador anima por predicción de su tecla (ClientZenkaiPalTick), nunca desde
+    // aquí — esto es solo lo que necesita un TRACKER para ver la misma pose en un jugador
+    // remoto, mismo hueco que KiChargeStatePacket/ActionState ya cubren para técnicas ki/físicas.
+
+    private static final Set<Integer> remoteCharging = ConcurrentHashMap.newKeySet();
+    private static final Set<Integer> remoteJustReleased = ConcurrentHashMap.newKeySet();
+
+    public static void setRemoteCharging(int entityId, boolean charging) {
+        if (charging) remoteCharging.add(entityId); else remoteCharging.remove(entityId);
+    }
+
+    public static boolean isRemoteCharging(int entityId) { return remoteCharging.contains(entityId); }
+
+    /** Pulso de "acaba de blinkear de verdad" — se marca al recibir el packet. */
+    public static void markRemoteReleased(int entityId) { remoteJustReleased.add(entityId); }
+
+    /** Consume (retira) la marca de esta entidad: se lee UNA sola vez por blink, igual que
+     *  justTeleported en InstantTransmissionSyncPacket para el propio jugador. */
+    public static boolean consumeRemoteReleased(int entityId) { return remoteJustReleased.remove(entityId); }
 }

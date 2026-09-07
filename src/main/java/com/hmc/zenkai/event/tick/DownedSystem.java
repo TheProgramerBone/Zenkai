@@ -107,6 +107,11 @@ public final class DownedSystem {
         DownedDeathGuard.allowRealDeath(sp);
         sp.setHealth(0.0F);
         DamageSource cause = DeathCauseTracker.take(sp.getUUID());
+        // Mismo registro manual que handleDowned, y por el mismo motivo: sin él el mensaje de
+        // muerte de este camino (overkill sobre un inmortal) caería siempre al genérico, porque
+        // applyToZenkaiVictim ya anuló el daño real antes de que LivingEntity.actuallyHurt
+        // pudiera llamar a recordDamage() por su cuenta.
+        if (cause != null) sp.getCombatTracker().recordDamage(cause, 1.0F);
         sp.die(cause != null ? cause : sp.damageSources().generic());
         return true;
     }
@@ -173,6 +178,17 @@ public final class DownedSystem {
                 // llegó a guardarla; sin eso (ahogamiento, /kill fuera de este camino, etc.) cae
                 // al genérico de siempre. Ver DeathCauseTracker.
                 DamageSource cause = DeathCauseTracker.take(sp.getUUID());
+                // Vanilla NO usa el DamageSource pasado a die() para el mensaje de muerte: lo
+                // saca de getCombatTracker().getDeathMessage(), que a su vez solo mira los
+                // CombatEntry que recordDamage() ya haya guardado — y applyToZenkaiVictim anula
+                // cualquier golpe de un jugador Zenkai (e.setNewDamage(0)) antes de que
+                // LivingEntity.actuallyHurt llegue a llamar a recordDamage (esa función solo
+                // registra si el daño final es != 0). Sin este registro manual, entries queda
+                // SIEMPRE vacío para cualquier muerte de este pipeline y el mensaje cae al
+                // genérico "murió" pase lo que pase — DeathCauseTracker guardaba la causa
+                // correcta, pero nada la traducía en un CombatEntry real. 1.0F es un valor
+                // cualquiera > 0: solo hace falta que recordDamage() no lo descarte.
+                if (cause != null) sp.getCombatTracker().recordDamage(cause, 1.0F);
                 sp.die(cause != null ? cause : sp.damageSources().generic());
             }
         }

@@ -6,6 +6,15 @@ import java.util.Locale;
  * Formateo de números grandes para el HUD/scouter (vidas y PL pueden llegar a millones/miles de
  * millones). Compacto: 950, 1.2K, 12.3K, 4.5M, 1.2B, 3.4T...
  * Para la pantalla de stats (donde quieres el valor exacto) usa {@link #exact(long)}.
+ *
+ * CONVENCIÓN POR DEFECTO DEL MOD: cualquier número que se dibuje en una screen/GUI y que pueda
+ * crecer sin techo real (TP, power level, melee/defensa/ki power — cualquiera derivado del
+ * power level, que ya llega a los millones, ver el logro pl_1m) pasa por aquí, no por
+ * String.valueOf/String.format a pelo. Por debajo de un umbral razonable (StatsScreen.
+ * COMPACT_FROM = 20 000 es el que ya usan los popups de Stats) el número exacto sin más ya es
+ * corto y legible — no hace falta compactarlo ni añadir tooltip. Por encima, compacto con
+ * format(long) MÁS un tooltip con exact(long) para quien necesite el valor real (mismo reparto
+ * que StatsScreen.bigVal/tp_spent ya usan) — nunca solo lo uno o solo lo otro.
  */
 public final class ZenkaiNumbers {
     private ZenkaiNumbers() {}
