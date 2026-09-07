@@ -22,35 +22,47 @@ import java.util.Locale;
  * en el mismo mecanismo genérico que cubre Nether/End y cualquier dimensión de un mod de
  * terceros — ya no necesitan una entrada propia aquí. Ver
  * .claude/pendiente/instant-transmission-pendiente.md para el porqué del cambio.
+ * `iconColumn`/`iconRow` son EXPLÍCITOS por entrada (ya no una fórmula `5 + ordinal()` fija a la
+ * fila v=0 de icons_instant_transmision.png) — mismo criterio que {@link GenericSubDestination}
+ * y {@link TeleportRealm}: cada destino puede vivir en cualquier celda del atlas sin depender de
+ * su posición dentro del enum, igual que ClientZenkaiHooks resuelve cada badge del HUD con su
+ * propia columna+fila libres.
  */
 public enum TeleportDestination {
-    HOME(TeleportRealm.OVERWORLD, null, false),
-    KAMI_PALACE(TeleportRealm.OVERWORLD, "protector.zenkai.kami_palace", true),
-    // KORIN_TOWER va A PROPÓSITO justo después de KAMI_PALACE (no al final): su columna en
-    // icons_instant_transmision.png (5 + ordinal, ver InstantTransmissionMenuScreen.destIcon) ya
-    // está pintada a mano en ese hueco exacto — insertarlo en cualquier otra posición del enum
-    // correría el resto de columnas y desalinearía TODOS los iconos posteriores (Yemma/Kaiosama)
-    // contra el atlas real. protectorKey=null porque comparte la MISMA caja de estructura/
-    // protector que Kami's Palace (es la misma pieza de worldgen, torre + mirador) — byProtectorKey
-    // nunca podría distinguir "estás en la base" de "estás arriba" aunque le diéramos la misma
-    // cadena, así que no lo intenta: el descubrimiento se concede en TeleportDiscoverySystem al
-    // mismo tiempo que KAMI_PALACE, ver el comentario de ese archivo.
-    KORIN_TOWER(TeleportRealm.OVERWORLD, null, true),
-    YEMMA_PALACE(TeleportRealm.OTHERWORLD, "protector.zenkai.yemma", true),
-    KAIOSAMA_PLANET(TeleportRealm.OTHERWORLD, "protector.zenkai.kaiosama", true);
+    HOME(TeleportRealm.OVERWORLD, null, false, 5, 0),
+    KAMI_PALACE(TeleportRealm.OVERWORLD, "protector.zenkai.kami_palace", true, 6, 0),
+    // protectorKey=null porque comparte la MISMA caja de estructura/protector que Kami's Palace
+    // (es la misma pieza de worldgen, torre + mirador) — byProtectorKey nunca podría distinguir
+    // "estás en la base" de "estás arriba" aunque le diéramos la misma cadena, así que no lo
+    // intenta: el descubrimiento se concede en TeleportDiscoverySystem al mismo tiempo que
+    // KAMI_PALACE, ver el comentario de ese archivo.
+    KORIN_TOWER(TeleportRealm.OVERWORLD, null, true, 7, 0),
+    YEMMA_PALACE(TeleportRealm.OTHERWORLD, "protector.zenkai.yemma", true, 8, 0),
+    KAIOSAMA_PLANET(TeleportRealm.OTHERWORLD, "protector.zenkai.kaiosama", true, 9, 0);
 
     private final TeleportRealm realm;
     private final String protectorKey;
     private final boolean requiresDiscovery;
+    private final int iconColumn;
+    private final int iconRow;
 
-    TeleportDestination(TeleportRealm realm, String protectorKey, boolean requiresDiscovery) {
+    TeleportDestination(TeleportRealm realm, String protectorKey, boolean requiresDiscovery,
+            int iconColumn, int iconRow) {
         this.realm = realm;
         this.protectorKey = protectorKey;
         this.requiresDiscovery = requiresDiscovery;
+        this.iconColumn = iconColumn;
+        this.iconRow = iconRow;
     }
 
     public TeleportRealm realm() { return realm; }
     public boolean requiresDiscovery() { return requiresDiscovery; }
+
+    /** Columna de icons_instant_transmision.png para este destino — ver el javadoc de clase. */
+    public int iconColumn() { return iconColumn; }
+
+    /** Fila de icons_instant_transmision.png para este destino — ver el javadoc de clase. */
+    public int iconRow() { return iconRow; }
 
     public String id() { return name().toLowerCase(Locale.ROOT); }
 

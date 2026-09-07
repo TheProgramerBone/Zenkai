@@ -261,6 +261,15 @@ public class ServerConfig {
             BUILDER.comment("Ki drained per TICK while flying in turbo (before the Fly skill reduction)")
                     .defineInRange("fly.ki_drain_per_tick", 0.15D, 0.0D, 100.0D);
 
+    private static final ModConfigSpec.DoubleValue FLY_TAKEOFF_IMPULSE_RAW =
+            BUILDER.comment("Vertical velocity (blocks/tick) granted once when flight starts from the",
+                            "ground (\"ki jump\"), on top of whatever vertical speed the player already has")
+                    .defineInRange("fly.takeoff_impulse", 0.55D, 0.0D, 3.0D);
+
+    private static final ModConfigSpec.DoubleValue FLY_TAKEOFF_KI_COST_RAW =
+            BUILDER.comment("One-time ki cost of the takeoff impulse (before the Fly skill reduction)")
+                    .defineInRange("fly.takeoff_ki_cost", 2.0D, 0.0D, 200.0D);
+
     private static final ModConfigSpec.DoubleValue TURBO_DRAIN_PCT_PER_SEC_RAW =
             BUILDER.comment("Energy drained per second while in turbo, as a fraction of energyMax (0.005 = 0.5%/s)")
                     .defineInRange("aura.turbo_drain_pct_per_sec", 0.005D, 0.0D, 1.0D);
@@ -684,6 +693,8 @@ public class ServerConfig {
     private static volatile double FLY_SCALING = 0.25D;
     private static volatile double FLY_BASE_SPEED = 0.05D;
     private static volatile double FLY_KI_DRAIN = 0.15D;
+    private static volatile double FLY_TAKEOFF_IMPULSE = 0.55D;
+    private static volatile double FLY_TAKEOFF_KI_COST = 2.0D;
     private static volatile double TURBO_DRAIN_PCT_PER_SEC = 0.005D;
 
     private static volatile double BODY_SCALE = 1.0D, STAMINA_SCALE = 1.0D, ENERGY_SCALE = 1.0D;
@@ -776,6 +787,8 @@ public class ServerConfig {
         FLY_SCALING       = FLY_SCALING_RAW.get();
         FLY_BASE_SPEED    = FLY_BASE_SPEED_RAW.get();
         FLY_KI_DRAIN      = FLY_KI_DRAIN_RAW.get();
+        FLY_TAKEOFF_IMPULSE = FLY_TAKEOFF_IMPULSE_RAW.get();
+        FLY_TAKEOFF_KI_COST = FLY_TAKEOFF_KI_COST_RAW.get();
         TURBO_DRAIN_PCT_PER_SEC = TURBO_DRAIN_PCT_PER_SEC_RAW.get();
         TRAINING_PL_RATIO_FULL   = TRAINING_PL_RATIO_FULL_RAW.get();
         REGEN_BODY_EXHAUSTION    = REGEN_BODY_EXHAUSTION_RAW.get();
@@ -967,6 +980,8 @@ public class ServerConfig {
     public static double flyScaling()               { return FLY_SCALING; }
     public static double flyBaseSpeed()             { return FLY_BASE_SPEED; }
     public static double flyKiDrainPerTick()        { return FLY_KI_DRAIN; }
+    public static double flyTakeoffImpulse()        { return FLY_TAKEOFF_IMPULSE; }
+    public static double flyTakeoffKiCost()         { return FLY_TAKEOFF_KI_COST; }
     public static double turboDrainPctPerSec()      { return TURBO_DRAIN_PCT_PER_SEC; }
     public static int    inCombatTicks()             { return IN_COMBAT_TICKS; }
     public static double inCombatBodyRegenMult()     { return IN_COMBAT_BODY_REGEN_MULT; }

@@ -17,28 +17,37 @@ import java.util.Locale;
  * cada uno como caso especial; se retiraron al generalizar el sistema (ver
  * .claude/pendiente/instant-transmission-pendiente.md) — un solo mecanismo cubre ahora
  * cualquier dimensión que no sea una de estas dos curadas.
- * `iconColumn` sustituye a `ordinal()` para la columna del atlas
- * (icons_instant_transmision.png, fila v=0): con el enum reducido a 2 valores, el ordinal ya no
- * coincide con la columna histórica de cada uno (Overworld=0, Otherworld=3) — las columnas 1/2/4
- * las usan ahora las filas genéricas (Nether/End/desconocida), ver
- * InstantTransmissionMenuScreen.iconColumnFor.
+ * `iconColumn`/`iconRow` sustituyen a `ordinal()` para la celda del atlas
+ * (icons_instant_transmision.png): con el enum reducido a 2 valores, el ordinal ya no coincide
+ * con la columna histórica de cada uno (Overworld=0, Otherworld=3) — las columnas 1/2/4 de la
+ * fila v=0 las usan ahora las filas genéricas (Nether/End/desconocida), ver
+ * InstantTransmissionMenuScreen.iconColumnFor. Cada realm guarda su PROPIA fila además de su
+ * columna (por defecto 0, la histórica) — mismo criterio que {@link GenericSubDestination}
+ * (columna+fila libres) en vez de asumir siempre v=0: un ícono nuevo puede vivir en cualquier
+ * celda del atlas sin más ceremonia que pasar ambos números al constructor, igual que
+ * ClientZenkaiHooks resuelve cada badge del HUD con su propia columna+fila libres.
  */
 public enum TeleportRealm {
-    OVERWORLD(Level.OVERWORLD, 0),
-    OTHERWORLD(com.hmc.zenkai.registry.ModDimensions.OTHERWORLD_LEVEL, 3);
+    OVERWORLD(Level.OVERWORLD, 0, 0),
+    OTHERWORLD(com.hmc.zenkai.registry.ModDimensions.OTHERWORLD_LEVEL, 3, 0);
 
     private final ResourceKey<Level> dimension;
     private final int iconColumn;
+    private final int iconRow;
 
-    TeleportRealm(ResourceKey<Level> dimension, int iconColumn) {
+    TeleportRealm(ResourceKey<Level> dimension, int iconColumn, int iconRow) {
         this.dimension = dimension;
         this.iconColumn = iconColumn;
+        this.iconRow = iconRow;
     }
 
     public ResourceKey<Level> dimension() { return dimension; }
 
-    /** Columna en la fila v=0 de icons_instant_transmision.png — ver el javadoc de clase. */
+    /** Columna de icons_instant_transmision.png — ver el javadoc de clase. */
     public int iconColumn() { return iconColumn; }
+
+    /** Fila de icons_instant_transmision.png — ver el javadoc de clase. */
+    public int iconRow() { return iconRow; }
 
     public String id() { return name().toLowerCase(Locale.ROOT); }
 

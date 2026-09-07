@@ -27,6 +27,15 @@ public class PlayerStateFlags {
     private boolean boostSizeApplied = false;
 
     /**
+     * Cuenta atrás (ticks, transitoria, NO se guarda) del aterrizaje de emergencia: cuando el
+     * jugador pierde la capacidad de volar a media altura (sobrecarga, respec de la skill Fly),
+     * FlightSystem.tick() no corta mayfly/flying en seco — mantiene el vuelo unos ticks más con
+     * velocidad recortada y descenso forzado hasta tocar el suelo o agotar esta cuenta. Ver
+     * FlightSystem para el detalle; 0 = no está en aterrizaje de emergencia.
+     */
+    private int emergencyLandingTicks = 0;
+
+    /**
      * El jugador sostiene Shift + la tecla de cargar ki ("forzar" el 100%). A diferencia de
      * flyBoosting, esto SÍ tiene que ir en save()/load(): SyncPlayerStatsPacket usa exactamente
      * ese round-trip de NBT como transporte de red cada tick (PlayerLifeCycle.syncIfServer, vía
@@ -90,6 +99,7 @@ public class PlayerStateFlags {
     public boolean isChargingKi()  { return chargingKi; }
     public boolean isFlyBoosting() { return flyBoosting; }
     public boolean isBoostSizeApplied() { return boostSizeApplied; }
+    public int  getEmergencyLandingTicks() { return emergencyLandingTicks; }
     public boolean isOverdriveCharging() { return overdriveCharging; }
     public boolean hasBrokenOverdriveOnce() { return hasBrokenOverdriveOnce; }
     public boolean isInOtherworld() { return inOtherworld; }
@@ -114,6 +124,7 @@ public class PlayerStateFlags {
     public void setChargingKi(boolean v)  { this.chargingKi  = v; }
     public void setFlyBoosting(boolean v) { this.flyBoosting = v; }
     public void setBoostSizeApplied(boolean v) { this.boostSizeApplied = v; }
+    public void setEmergencyLandingTicks(int v) { this.emergencyLandingTicks = v; }
     public void setOverdriveCharging(boolean v) { this.overdriveCharging = v; }
     public void setHasBrokenOverdriveOnce(boolean v) { this.hasBrokenOverdriveOnce = v; }
     public void setInOtherworld(boolean v) { this.inOtherworld = v; }

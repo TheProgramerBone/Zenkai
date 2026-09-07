@@ -151,12 +151,10 @@ public class InstantTransmissionMenuScreen extends Screen {
         if (dim) g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
-    // ── Destinos (Home/Kami/Korin/Yemma/Kaiosama): celdas 5..9 de la fila v=0, +5 = número de
-    // realms curados históricos. El orden del enum TeleportDestination IMPORTA aquí: cada
-    // columna ya está pintada a mano en el atlas real (ver el comentario de KORIN_TOWER en ese
-    // enum), así que insertar un valor nuevo en cualquier posición que no sea "justo donde su
-    // columna ya existe" desalinea todos los destinos que van después de él. ──
-    private static IconUV destIcon(TeleportDestination dest) { return IconUV.grid(5 + dest.ordinal(), 0); }
+    // ── Destinos (Home/Kami/Korin/Yemma/Kaiosama): cada uno guarda su PROPIA columna+fila (ver
+    // TeleportDestination.iconColumn/iconRow) en vez de derivarla de su posición en el enum, así
+    // que insertar un valor nuevo ya no desalinea a los que van después. ──
+    private static IconUV destIcon(TeleportDestination dest) { return IconUV.grid(dest.iconColumn(), dest.iconRow()); }
 
     /** El MISMO ícono que la pestaña Party del menú Zenkai (ZenkaiTab.PARTY, u=80/v=20 dentro de
      *  icons.png) — pedido explícito del usuario, en vez de una celda propia dentro de
@@ -172,14 +170,19 @@ public class InstantTransmissionMenuScreen extends Screen {
      *  tenían dibujadas a mano en el atlas cuando eran TeleportRealm.NETHER/END; cualquier otra
      *  dimensión cae en la columna 4 — el mismo "?" que antes era el placeholder fijo de
      *  "Dimensión Desconocida", reaprovechado como ícono de reserva de verdad en vez de una fila
-     *  aparte que nunca hacía nada. */
-    private static final Map<ResourceLocation, Integer> KNOWN_DIM_ICON_COLUMN = Map.of(
-            Level.NETHER.location(), 1,
-            Level.END.location(), 2);
-    private static final int DEFAULT_DIM_ICON_COLUMN = 4;
+     *  aparte que nunca hacía nada. Columna+fila EXPLÍCITAS por dimensión (ya no solo columna con
+     *  la fila v=0 fija a fuego) — mismo criterio que TeleportRealm/TeleportDestination: una
+     *  dimensión nueva puede reservar cualquier celda del atlas, igual que ClientZenkaiHooks
+     *  resuelve cada badge del HUD con su propia columna+fila libres. */
+    private static final Map<ResourceLocation, IconUV> KNOWN_DIM_ICON = Map.of(
+            Level.NETHER.location(), IconUV.grid(1, 0),
+            Level.END.location(), IconUV.grid(2, 0),
+            ResourceLocation.fromNamespaceAndPath("zenkai", "namek"), IconUV.grid(3, 0)
+    );
+    private static final IconUV DEFAULT_DIM_ICON = IconUV.grid(4, 0);
 
     private static IconUV genericDimIcon(ResourceLocation dim) {
-        return IconUV.grid(KNOWN_DIM_ICON_COLUMN.getOrDefault(dim, DEFAULT_DIM_ICON_COLUMN), 0);
+        return KNOWN_DIM_ICON.getOrDefault(dim, DEFAULT_DIM_ICON);
     }
 
     /** Nombre legible de una dimensión GENÉRICA sin lang key propia (no podemos tener una clave
@@ -214,7 +217,6 @@ public class InstantTransmissionMenuScreen extends Screen {
     private record LockedTooltip(String key, Object[] args) {}
 
     private Mode mode = Mode.REALMS;
-    private TeleportRealm selectedRealm;
     private List<TeleportDestination> destRows = List.of();
 
     /** Análogo a selectedRealm/destRows, pero para el submenú de una dimensión GENÉRICA con 2+
@@ -401,7 +403,7 @@ public class InstantTransmissionMenuScreen extends Screen {
         if (hovered) g.fill(contentLeft() - 2, y, contentRight(), y + ROW_H - 1, ZenkaiPalette.HOVER_VEIL);
 
         int iconY = y + (ROW_H - ICON_DRAW) / 2;
-        drawIcon(g, contentLeft(), iconY, IconUV.grid(realm.iconColumn(), 0));
+        drawIcon(g, contentLeft(), iconY, IconUV.grid(realm.iconColumn(), realm.iconRow()));
 
         int textX = contentLeft() + ICON_DRAW + ROW_ICON_GAP;
         int textY = y + (ROW_H - 9) / 2;
@@ -787,7 +789,6 @@ public class InstantTransmissionMenuScreen extends Screen {
                 case CuratedRow(TeleportRealm realm) -> {
                     List<TeleportDestination> dests = realm.destinations();
                     if (dests.isEmpty()) return true; // por si acaso; hoy ningún curado llega vacío
-                    selectedRealm = realm;
                     destRows = dests;
                     mode = Mode.DESTINATIONS;
                     scroll = 0;

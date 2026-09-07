@@ -61,6 +61,15 @@ public final class ClientZenkaiPalTick {
     private static boolean lastFlyBoostSent = false;
 
     /**
+     * Modo rápido de vuelo: Control ALTERNA (toggle), no hace falta mantenerlo pulsado. Se
+     * queda encendido incluso al aterrizar/despegar de nuevo, hasta que se vuelve a pulsar
+     * Control en pleno vuelo — pedido explícito del usuario (antes había que sostener
+     * Ctrl+adelante sin soltar, y combinado con mirar arriba/abajo se sentía mal). Solo
+     * jugador local: es un campo simple, no un mapa por UUID.
+     */
+    private static boolean fastFlightMode = false;
+
+    /**
      * Aplica el estado de boost del jugador LOCAL:
      *  - Avisa al servidor (bit autoritativo) solo cuando cambia.
      *  - Fija el flag local para que BoostSizeHandler encoja hitbox + baje la cámara sin esperar
@@ -132,10 +141,16 @@ public final class ClientZenkaiPalTick {
             boolean flying = !p.isCreative() && !p.isSpectator()
                     && stats.isFlyEnabled()
                     && p.getAbilities().flying;
-            boolean boosting = flying
-                    && mc.options.keySprint.isDown()
-                    && mc.player.input.forwardImpulse > 0.1f;
+
+            // Modo rápido: alternar con Control (ver doc de fastFlightMode). Se drena la cola
+            // de clicks SIEMPRE (aunque no se esté volando) para no arrastrar pulsaciones
+            // hechas en tierra hasta el próximo despegue.
+            while (mc.options.keySprint.consumeClick()) {
+                if (flying) fastFlightMode = !fastFlightMode;
+            }
+            boolean boosting = flying && fastFlightMode && mc.player.input.forwardImpulse > 0.1f;
             applyLocalBoost(p, boosting);
+
             net.minecraft.client.player.LocalPlayer lp = (net.minecraft.client.player.LocalPlayer) p;
             com.hmc.zenkai.client.fly.FlightMovement.tick(lp, flying);
             ClientFlyAnimState.sendIfChanged(flying, boosting);
