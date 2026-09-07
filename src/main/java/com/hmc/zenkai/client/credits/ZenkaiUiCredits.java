@@ -123,6 +123,9 @@ public final class ZenkaiUiCredits {
         creditIcon("icon_party_invite", AUTHOR, 40, 60, "icons.png (40,60)");
         creditIcon("icon_party_config", AUTHOR, 80, 60, "icons.png (80,60)");
         creditIcon("icon_credits_tab", AUTHOR, 120, 80, "icons.png (120,80)");
+        creditIcon("icon_training_shadow", AUTHOR, 0, 120, "icons.png (0,120)");
+        creditIcon("icon_training_meditation", AUTHOR, 20, 120, "icons.png (20,120)");
+        creditIcon("icon_training_target_practice", AUTHOR, 40, 120, "icons.png (40,120)");
         // Íconos de estado del HUD (ClientZenkaiHooks, RenderGuiEvent) — mismo atlas icons.png,
         // coordenadas leídas de sus propios IconUV.grid(col,row) (u=col*20, v=row*20).
         creditIcon("icon_hud_divine", AUTHOR, 100, 0, "icons.png (100,0)");

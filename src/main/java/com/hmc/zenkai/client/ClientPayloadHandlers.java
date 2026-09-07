@@ -3,7 +3,9 @@ package com.hmc.zenkai.client;
 import com.hmc.zenkai.client.gui.screens.InstantTransmissionMenuScreen;
 import com.hmc.zenkai.client.gui.screens.MasterScreen;
 import com.hmc.zenkai.client.gui.screens.NpcMarkerScreen;
+import com.hmc.zenkai.client.gui.screens.ShadowResultScreen;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
+import com.hmc.zenkai.client.gui.screens.TrainingHubScreen;
 import com.hmc.zenkai.client.gui.screens.TrainingMinigameScreen;
 import com.hmc.zenkai.network.MasterServicesUpdatePayload;
 import com.hmc.zenkai.network.OpenMasterPayload;
@@ -40,9 +42,32 @@ public final class ClientPayloadHandlers {
     /** El reward real de una sesión de Meditation/Ki Target Practice, tras
      *  TrainingSessionRewardPacket. Igual que updateMasterServices: empuja el dato a la
      *  pantalla YA abierta, no hace nada si el jugador ya cerró la screen entre medias. */
-    public static void onTrainingReward(int tpGranted) {
+    public static void onTrainingReward(int tpGranted, int record) {
         Screen current = Minecraft.getInstance().screen;
-        if (current instanceof TrainingMinigameScreen tms) tms.onRewardReceived(tpGranted);
+        if (current instanceof TrainingMinigameScreen tms) tms.onRewardReceived(tpGranted, record);
+    }
+
+    /** Récord + TP potencial de un minijuego de Training, tras TrainingInfoRequestPacket (ver su
+     *  javadoc) — igual que onTrainingReward, empuja a la pantalla YA abierta. `minigame` no se
+     *  reenvía: cada pantalla ya sabe qué minijuego es ella misma, solo le hacía falta el dato. */
+    public static void onTrainingInfo(int minigame, int record, int potentialTp) {
+        Screen current = Minecraft.getInstance().screen;
+        if (current instanceof TrainingMinigameScreen tms) tms.onTrainingInfoReceived(record, potentialTp);
+    }
+
+    /** Resumen de una pelea de "Train with your shadow" (ver ShadowSessionResultPacket) — a
+     *  diferencia de onTrainingReward/onTrainingInfo, esto SÍ abre una pantalla nueva en vez de
+     *  empujar a una ya abierta: Shadow no tiene GUI propia durante el combate (pasa en el mundo
+     *  con el HUD normal), así que este popup es la única forma de enseñar el resultado. */
+    public static void onShadowSessionResult(int earnedTp, int record) {
+        Minecraft.getInstance().setScreen(new ShadowResultScreen(earnedTp, record));
+    }
+
+    /** Eficiencia de entrenamiento actual (ver TrainingFatigueRequestPacket) — solo
+     *  TrainingHubScreen la pide, empujada a ella igual que onTrainingReward/onTrainingInfo. */
+    public static void onTrainingFatigue(double efficiency) {
+        Screen current = Minecraft.getInstance().screen;
+        if (current instanceof TrainingHubScreen ths) ths.onFatigueReceived(efficiency);
     }
 
     public static void openInstantTransmissionMenu() {

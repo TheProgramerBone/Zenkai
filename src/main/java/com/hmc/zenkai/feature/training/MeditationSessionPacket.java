@@ -43,15 +43,25 @@ public record MeditationSessionPacket(int notesHit, int maxCombo, int sessionDur
      *  necesite leer nunca. */
     private static final Map<UUID, Long> LAST_SESSION_END = new ConcurrentHashMap<>();
 
-    /** Techo generoso de densidad de notas: 1 cada 6 ticks (300ms) — más laxo que el intervalo
-     *  real del generador cliente (450ms), así que nunca penaliza una sesión legítima, solo
+    /** Techo generoso de densidad de notas: 1 cada 2 ticks (100ms) — más laxo que el intervalo
+     *  real del generador de Práctica libre (450ms) Y que la separación mínima entre dos notas
+     *  de un chart de canción (ver gen_meditation_chart.py, MIN_ONSET_GAP_S=150ms; Pigstep llega
+     *  a ~3.4 notas/s de media), así que nunca penaliza una sesión legítima de ningún modo, solo
      *  descarta un reporte imposible de un cliente modificado. */
-    private static final double MAX_NOTES_PER_TICK = 1.0 / 6.0;
-    private static final int MAX_SESSION_TICKS = 3600; // 3 minutos, techo defensivo
+    private static final double MAX_NOTES_PER_TICK = 1.0 / 2.0;
+    // 5 minutos: cubre práctica libre (30s) Y el modo Canción (discos vanilla de hasta ~3-4 min,
+    // ver el set curado de CuratedSong) con margen para añadir alguno más largo después.
+    private static final int MAX_SESSION_TICKS = 6000;
+    /** Duración de referencia (ticks) contra la que se expresa `meditationSessionTpCap()` — el
+     *  modo Canción reporta sesiones de varios minutos, no solo los 30s de práctica libre, así
+     *  que el techo de sesión escala con la duración real en vez de quedarse plano (ver F8 del
+     *  plan de pulido de Training): una canción de 2 minutos puede valer ~4× el techo base. */
+    private static final double CAP_BASELINE_TICKS = 600.0; // 30s
 
     public static void handle(MeditationSessionPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
+            TrainingData td = sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.TRAINING.get());
 
             int granted = 0;
             long now = sp.level().getGameTime();
@@ -65,12 +75,15 @@ public record MeditationSessionPacket(int notesHit, int maxCombo, int sessionDur
                 int maxCombo = Math.max(0, Math.min(pkt.maxCombo(), maxPossible));
 
                 double rawTp = Math.min(notesHit, maxCombo) * ServerConfig.meditationTpPerCombo();
-                rawTp = Math.min(rawTp, ServerConfig.meditationSessionTpCap());
+                double sessionCap = ServerConfig.meditationSessionTpCap() * (durationTicks / CAP_BASELINE_TICKS);
+                rawTp = Math.min(rawTp, sessionCap);
                 if (rawTp > 0) granted = TrainingHooks.grantFromMeditation(sp, rawTp);
+
+                if (granted > td.getBestMeditationTp()) td.setBestMeditationTp(granted);
             }
             // SIEMPRE se responde, aunque sea 0: la pantalla espera este packet para pasar a
             // resultados y nunca debe quedarse colgada por un cooldown o una sesión sin TP.
-            PacketDistributor.sendToPlayer(sp, new TrainingSessionRewardPacket(granted));
+            PacketDistributor.sendToPlayer(sp, new TrainingSessionRewardPacket(granted, td.getBestMeditationTp()));
         });
     }
 }

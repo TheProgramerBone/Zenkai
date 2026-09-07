@@ -30,10 +30,10 @@ import java.util.UUID;
  * NearestAttackableTargetGoal&lt;Player&gt; — el targetSelector de esta clase lleva ÚNICAMENTE
  * HurtByTargetGoal, así que nunca inicia el combate por su cuenta, solo responde a un golpe.
  *
- * MODELO PLACEHOLDER: sin .geo.json propio todavía (ver el pendiente de modelos GeckoLib del
- * mod) — reusa el modelo/textura/animación de {@link IsaacEntity} ("isaac", el humanoide ya
- * existente más parecido a una silueta de jugador) con un tinte oscuro aplicado por
- * ShadowCloneRenderer, en vez de crear arte nuevo para un placeholder.
+ * MODELO: usa el PlayerModel real + el skin del dueño (resuelto vía la tab list), SIN tinte
+ * oscuro — ver el javadoc de {@link com.hmc.zenkai.client.render_and_model_entities.entity.ShadowCloneRenderer}
+ * para el porqué (no hay hook limpio de tinte por entidad en LivingEntityRenderer). La única
+ * diferenciación visual hoy es el nombre flotante "&lt;Dueño&gt;'s Shadow".
  */
 public class ShadowCloneEntity extends ZenkaiDefaultMob {
 

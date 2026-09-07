@@ -7,6 +7,7 @@ import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.feature.training.StartShadowTrainingPacket;
+import com.hmc.zenkai.feature.training.TrainingInfoRequestPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -29,7 +30,7 @@ import java.util.List;
  * texto es fijo, no cambia por frame) y todo lo de abajo (stepper, Start/Back) se posiciona
  * relativo a esa altura MEDIDA, nunca a un número fijo adivinado.
  */
-public class ShadowTrainingScreen extends ZenkaiMenuScreen {
+public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMinigameScreen {
 
     private static final int[] STEPS_PCT = {5, 10, 25, 50, 75, 100, 125, 150, 175, 200};
     private static final int IN_X1 = 10;
@@ -41,6 +42,10 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen {
     private int descY;
     private int stepperY;
     private int startY;
+
+    /** -1 = todavía esperando TrainingInfoPacket (ver onTrainingInfoReceived) — Shadow no tiene
+     *  "TP potencial" fijo (sin techo de sesión discreto), solo récord. */
+    private int record = -1;
 
     public ShadowTrainingScreen() {
         super(Component.translatable("screen.zenkai.training_hub.row.shadow"));
@@ -69,6 +74,14 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen {
                 panelLeft + IN_X2 - PanelButton.W, panelTop + startY,
                 Component.translatable("screen.zenkai.training_hub.shadow.start"),
                 this::onStart));
+
+        record = -1;
+        PacketDistributor.sendToServer(new TrainingInfoRequestPacket(TrainingInfoRequestPacket.SHADOW));
+    }
+
+    @Override
+    public void onTrainingInfoReceived(int record, int potentialTp) {
+        this.record = record;
     }
 
     private void decrease() { stepIndex = Math.max(0, stepIndex - 1); }
@@ -98,5 +111,11 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen {
                 Component.translatable("screen.zenkai.training_hub.shadow.difficulty",
                         STEPS_PCT[stepIndex]),
                 cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
+
+        if (record >= 0) {
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.training_hub.record", record),
+                    cx, panelTop + stepperY + 14, ZenkaiPalette.MUTED_ON_PANEL);
+        }
     }
 }

@@ -17,6 +17,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -94,6 +95,10 @@ public final class ShadowTrainingManager {
 
         level.addFreshEntity(shadow);
         ACTIVE.put(sp.getUUID(), shadow.getUUID());
+
+        // Snapshot para poder calcular "TP ganado ESTA pelea" al morir el clon — ver
+        // TrainingData.shadowSessionStartTp y onShadowDeath() más abajo.
+        sp.getData(ZenkaiDataAttachments.TRAINING.get()).setShadowSessionStartTp(att.getTP());
     }
 
     /** ¿Sigue vivo el mob que rastreamos para este jugador? Si desapareció sin pasar por
@@ -108,7 +113,25 @@ public final class ShadowTrainingManager {
     public static void onShadowDeath(LivingDeathEvent e) {
         if (!(e.getEntity() instanceof ShadowCloneEntity shadow)) return;
         UUID ownerId = shadow.getOwnerId();
-        if (ownerId != null) ACTIVE.remove(ownerId, shadow.getUUID());
+        if (ownerId == null) return;
+        ACTIVE.remove(ownerId, shadow.getUUID());
+
+        // Resumen de la pelea (TP potencial/récord/obtenido, pedido explícito del usuario — ver
+        // Pista G del plan de pulido de Training): Shadow no tiene pantalla propia durante el
+        // combate, así que esto es lo único que dispara un aviso al terminar. Si el dueño se
+        // desconectó a mitad de la pelea, getPlayer() da null y simplemente no hay a quién
+        // avisar — nada que limpiar, despawnFor() ya corrió en onLogout.
+        if (!(shadow.level() instanceof ServerLevel level)) return;
+        ServerPlayer owner = level.getServer().getPlayerList().getPlayer(ownerId);
+        if (owner == null) return;
+
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(owner);
+        TrainingData td = owner.getData(ZenkaiDataAttachments.TRAINING.get());
+        int earned = Math.max(0, att.getTP() - td.getShadowSessionStartTp());
+        if (earned > td.getBestShadowTp()) td.setBestShadowTp(earned);
+
+        PacketDistributor.sendToPlayer(owner,
+                new ShadowSessionResultPacket(earned, td.getBestShadowTp()));
     }
 
     /** Morir a mitad de sesión despawnea la sombra en vez de dejarla abandonada peleando

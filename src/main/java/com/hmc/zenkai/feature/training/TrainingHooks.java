@@ -87,6 +87,30 @@ public final class TrainingHooks {
         return grant(sp, rawTp, 0L);
     }
 
+    /** "TP potencial: hasta X" de la pantalla INTRO de Meditation/Ki Target Practice — una
+     *  simulación de SOLO LECTURA de grant() con victimPl=0 (mismo caso que esos dos minijuegos,
+     *  ver arriba) y `rawTp = rawTpCap` (el techo de sesión de ServerConfig, la mejor sesión
+     *  posible). NO muta fatiga/carry/TP: es una lectura del estado ACTUAL de fatiga, así que el
+     *  número baja si el jugador ya viene fatigado de entrenar, igual que le pasaría de verdad.
+     *  Duplica a propósito el tramo de grant() en vez de reusarlo (grant() muta estado y no debe
+     *  poder "no mutar" con un flag) — si grant() cambia su fórmula, revisar también aquí. */
+    public static int estimatePotential(ServerPlayer sp, double rawTpCap) {
+        if (rawTpCap <= 0) return 0;
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        if (!att.isRaceChosen()) return 0;
+
+        double granted = rawTpCap * currentEfficiency(sp); // plFactor = 1.0 (victimPl 0, igual que grantFromMeditation/TargetPractice)
+        boolean inHtc = sp.level().dimension() == ModDimensions.HTC_LEVEL;
+        if (inHtc) granted *= ServerConfig.trainingHtcMultiplier();
+        granted *= WeightSystem.tpFactor(att.getWeightLoad());
+
+        if (FormIds.POTENTIAL_UNLOCK.equals(
+                sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId())) {
+            granted *= ServerConfig.potentialUnlockTpMult();
+        }
+        return (int) Math.floor(granted);
+    }
+
     /** Núcleo: decay de fatiga, eficiencia, diferencia de poder, HTC, pesas, carry y sync.
      *  Devuelve el TP ENTERO concedido en esta llamada (0 si no llegó a sumar nada, p. ej. se
      *  quedó todo en el carry fraccional) — los llamadores de combate lo ignoran, los
@@ -145,5 +169,17 @@ public final class TrainingHooks {
             PlayerLifeCycle.syncIfServer(sp);
         }
         return whole;
+    }
+
+    /** Multiplicador de eficiencia por fatiga ACTUAL — lee `TrainingData.fatigue` tal cual está
+     *  guardada, SIN aplicar el lazy-decay que sí corre dentro de grant() (esto es una consulta
+     *  de solo lectura para UI, ej. el panel "TP Modifiers" del hub vía TrainingFatiguePacket;
+     *  aplicar decay aquí mutaría estado del jugador solo por abrir una pantalla). Puede quedar
+     *  un poco desactualizado hasta el próximo grant() real — aceptable para un indicador, no
+     *  para el cálculo real de TP. Reusado por estimatePotential() de arriba. */
+    public static double currentEfficiency(ServerPlayer sp) {
+        TrainingData td = sp.getData(ZenkaiDataAttachments.TRAINING.get());
+        double h = ServerConfig.trainingFatigueHalfLife();
+        return Math.max(ServerConfig.trainingMinEfficiency(), h / (h + td.getFatigue()));
     }
 }

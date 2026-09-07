@@ -25,8 +25,13 @@ import com.hmc.zenkai.feature.skills.SkillTogglePacket;
 import com.hmc.zenkai.feature.stats.*;
 import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.feature.training.MeditationSessionPacket;
+import com.hmc.zenkai.feature.training.ShadowSessionResultPacket;
 import com.hmc.zenkai.feature.training.StartShadowTrainingPacket;
 import com.hmc.zenkai.feature.training.TargetPracticeSessionPacket;
+import com.hmc.zenkai.feature.training.TrainingFatiguePacket;
+import com.hmc.zenkai.feature.training.TrainingFatigueRequestPacket;
+import com.hmc.zenkai.feature.training.TrainingInfoPacket;
+import com.hmc.zenkai.feature.training.TrainingInfoRequestPacket;
 import com.hmc.zenkai.feature.training.TrainingSessionRewardPacket;
 import com.hmc.zenkai.feature.training.TrainingSwingPacket;
 import com.hmc.zenkai.feature.weights.SetWeightPacket;
@@ -253,7 +258,36 @@ public class ModNetworking {
                 TrainingSessionRewardPacket.TYPE,
                 TrainingSessionRewardPacket.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
-                        () -> ClientPayloadHandlers.onTrainingReward(payload.tpGranted())));
+                        () -> ClientPayloadHandlers.onTrainingReward(payload.tpGranted(), payload.record())));
+
+        registrar.playToServer(
+                TrainingInfoRequestPacket.TYPE,
+                TrainingInfoRequestPacket.STREAM_CODEC,
+                TrainingInfoRequestPacket::handle);
+
+        registrar.playToClient(
+                TrainingInfoPacket.TYPE,
+                TrainingInfoPacket.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(
+                        () -> ClientPayloadHandlers.onTrainingInfo(
+                                payload.minigame(), payload.record(), payload.potentialTp())));
+
+        registrar.playToClient(
+                ShadowSessionResultPacket.TYPE,
+                ShadowSessionResultPacket.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(
+                        () -> ClientPayloadHandlers.onShadowSessionResult(payload.earnedTp(), payload.record())));
+
+        registrar.playToServer(
+                TrainingFatigueRequestPacket.TYPE,
+                TrainingFatigueRequestPacket.STREAM_CODEC,
+                TrainingFatigueRequestPacket::handle);
+
+        registrar.playToClient(
+                TrainingFatiguePacket.TYPE,
+                TrainingFatiguePacket.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(
+                        () -> ClientPayloadHandlers.onTrainingFatigue(payload.efficiency())));
 
         registrar.playToServer(
                 FlyAnimPacket.TYPE,

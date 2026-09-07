@@ -47,6 +47,7 @@ public record TargetPracticeSessionPacket(int orbsPopped, int bombsHit, int sess
     public static void handle(TargetPracticeSessionPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
+            TrainingData td = sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.TRAINING.get());
 
             int granted = 0;
             long now = sp.level().getGameTime();
@@ -61,8 +62,10 @@ public record TargetPracticeSessionPacket(int orbsPopped, int bombsHit, int sess
                 double rawTp = orbsPopped * ServerConfig.targetPracticeTpPerOrb();
                 rawTp = Math.min(rawTp, ServerConfig.targetPracticeSessionTpCap());
                 if (rawTp > 0) granted = TrainingHooks.grantFromTargetPractice(sp, rawTp);
+
+                if (granted > td.getBestTargetPracticeTp()) td.setBestTargetPracticeTp(granted);
             }
-            PacketDistributor.sendToPlayer(sp, new TrainingSessionRewardPacket(granted));
+            PacketDistributor.sendToPlayer(sp, new TrainingSessionRewardPacket(granted, td.getBestTargetPracticeTp()));
         });
     }
 }

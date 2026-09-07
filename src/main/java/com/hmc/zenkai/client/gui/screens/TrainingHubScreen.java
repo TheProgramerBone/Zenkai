@@ -6,6 +6,7 @@ import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.StatBar;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.training.TrainingFatigueRequestPacket;
 import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.registry.ModDimensions;
 import com.hmc.zenkai.util.ZenkaiNumbers;
@@ -13,6 +14,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -29,13 +31,13 @@ import java.util.Locale;
  * izquierda, etiqueta a la derecha, y cada fila abre una Screen de verdad en vez de cambiar un
  * enum-Mode interno (ver el javadoc de AppearanceScreen para por qué se prefirió eso).
  *
- * El panel TP Modifiers no necesita ningún packet de sync nuevo: la carga de pesas ya viaja en
- * PlayerStatsAttachment (sincronizado por SyncPlayerStatsPacket) y la dimensión HTC es un dato
- * puramente local del cliente (siempre sabe en qué dimensión está su propio jugador) — ver el
- * comentario de ServerConfig.trainingHtcMultiplier() para el multiplicador, ya sincronizado
- * automáticamente por ser Type.SERVER. La fatiga (TrainingData.fatigue) queda FUERA a propósito:
- * hoy no tiene NINGÚN packet de sync (ver feature/training/TrainingData.java) — añadirla aquí
- * exigiría uno nuevo, dejado como mejora futura.
+ * La carga de pesas ya viaja en PlayerStatsAttachment (sincronizado por SyncPlayerStatsPacket) y
+ * la dimensión HTC es un dato puramente local del cliente (siempre sabe en qué dimensión está su
+ * propio jugador) — ver el comentario de ServerConfig.trainingHtcMultiplier() para el
+ * multiplicador, ya sincronizado automáticamente por ser Type.SERVER. La fatiga
+ * (TrainingData.fatigue) SÍ necesita un packet propio (no vive en ningún attachment ya
+ * sincronizado) — ver TrainingFatigueRequestPacket/onFatigueReceived, pedido explícito del
+ * usuario tras quedar fuera a propósito en la primera versión de este panel.
  */
 public class TrainingHubScreen extends ZenkaiMenuScreen {
 
@@ -43,13 +45,12 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
     private static final int ICONS_ATLAS = 256;
     private static final int ICON_CELL = 20;
-    // Celdas placeholder: reusan íconos ya existentes hasta que se generen unos propios (ver el
-    // pendiente de "íconos nuevos para las 3 filas" del plan) — evita bloquear el scaffolding en
-    // arte que todavía no existe. Ki-charge (0,40) para la sombra (combate ki), turbo (20,40)
-    // para meditación (ritmo/foco) y kaioken (40,40) para target practice (reflejos).
-    private static final int ICON_SHADOW_U = 0, ICON_SHADOW_V = 40;
-    private static final int ICON_MEDITATION_U = 20, ICON_MEDITATION_V = 40;
-    private static final int ICON_TARGET_PRACTICE_U = 40, ICON_TARGET_PRACTICE_V = 40;
+    // Íconos propios (tools/gen_training_hub_icons.py, fila v=120) — antes estas 3 filas
+    // reusaban celdas de otro concepto visual (ki-charge/turbo/kaioken del HUD de estado) como
+    // placeholder, y Shadow/Meditation acababan compartiendo literalmente el mismo glifo.
+    private static final int ICON_SHADOW_U = 140, ICON_SHADOW_V = 80;
+    private static final int ICON_MEDITATION_U = 160, ICON_MEDITATION_V = 80;
+    private static final int ICON_TARGET_PRACTICE_U = 180, ICON_TARGET_PRACTICE_V = 80;
 
     private static final int IN_X1 = 10;
     private static final int IN_X2 = 245;
@@ -62,6 +63,10 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     private static final int PANEL_Y = ROW3_Y + HUB_ROW_H + 10;
     private static final int PANEL_ROW_H = 12;
 
+    /** null hasta que responde TrainingFatigueRequestPacket — ver onFatigueReceived(). 1.0 =
+     *  sin penalización (fatiga en 0). */
+    private Double fatigueEfficiency;
+
     public TrainingHubScreen() {
         super(Component.translatable(ZenkaiTab.TRAINING.titleKey()));
     }
@@ -72,6 +77,16 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     @Override
     protected void initContent() {
         // Sin widgets propios: filas y panel se dibujan/hit-testean a mano.
+        fatigueEfficiency = null;
+        PacketDistributor.sendToServer(new TrainingFatigueRequestPacket());
+    }
+
+    /** Respuesta a TrainingFatigueRequestPacket (ver ClientPayloadHandlers.onTrainingFatigue) —
+     *  empujada aquí igual que TrainingMinigameScreen.onRewardReceived/onTrainingInfoReceived,
+     *  pero este hub no implementa esa interfaz (no es un minijuego), así que es un método
+     *  público normal en vez de una sobrescritura. */
+    public void onFatigueReceived(double efficiency) {
+        fatigueEfficiency = efficiency;
     }
 
     @Override
@@ -120,10 +135,20 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         }
     }
 
+    /** Margen derecho fijo para todo texto alineado a la derecha de este panel — pegado a `x+w`
+     *  a secas quedaba a ras del borde/las esquinas del panel (feedback de imagen: "ajusta el
+     *  margen de la letra"). */
+    private static final int PANEL_RIGHT_MARGIN = 3;
+    /** Alto de una línea de texto normal — usado para separar la barra de carga de su propio
+     *  porcentaje SIN que se pisen (antes ambos se dibujaban en la misma Y, ver el comentario de
+     *  imagen "evita solapamientos de texto"). */
+    private static final int TEXT_LINE_H = 9;
+
     /**
-     * Panel "TP Modifiers" — antigua sección "Carga" de StatsScreen, ampliada con HTC. Filas
-     * fijas: toneladas/capacidad, barra de carga %, multiplicador de pesas, y SI el jugador está
-     * en el HTC, el multiplicador de HTC + el efectivo combinado.
+     * Panel "TP Modifiers" — antigua sección "Carga" de StatsScreen, ampliada con HTC y fatiga.
+     * Filas fijas: toneladas/capacidad + barra + % (cada una en su propia línea, ver
+     * TEXT_LINE_H), multiplicador de pesas, fatiga de entrenamiento SI hay alguna penalización
+     * real, multiplicador de HTC si aplica, y el efectivo combinado de los tres.
      */
     private void renderModifiersPanel(GuiGraphics g, int x, int y, int w) {
         var player = mc.player;
@@ -133,7 +158,12 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         boolean inHtc = player.level().dimension() == ModDimensions.HTC_LEVEL;
         double weightMult = WeightSystem.tpFactor(load);
         double htcMult = ServerConfig.trainingHtcMultiplier();
-        double effectiveMult = weightMult * (inHtc ? htcMult : 1.0);
+        // fatigueEfficiency null (aún no respondió el servidor) se trata como "sin penalización"
+        // para el cálculo, pero la FILA de fatiga solo se dibuja cuando el dato ya llegó Y hay
+        // penalización real — ver más abajo.
+        double fatigueMult = fatigueEfficiency != null ? fatigueEfficiency : 1.0;
+        boolean showFatigueRow = fatigueEfficiency != null && fatigueEfficiency < 0.999;
+        double effectiveMult = weightMult * (inHtc ? htcMult : 1.0) * fatigueMult;
 
         int ty = y;
         PanelText.onPanel(g, this.font,
@@ -150,16 +180,19 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
                             WeightSystem.capacityTons(att.getPowerLevelRaw()))));
             ty += PANEL_ROW_H;
 
-            // Barra SOBRE EL BEIGE del panel: StatBar.draw(), no drawOnDark() — esa segunda
-            // usa un canal negro translúcido pensado para un popup oscuro, que sobre el beige
-            // pintaba un parche oscuro inesperado (ver feedback de imagen). VALUE_ON_PANEL en
-            // vez de VALUE por el mismo motivo: VALUE es amarillo pensado para fondo oscuro.
-            StatBar.draw(g, x, ty, w, StatBar.H_THIN,
-                    (float) Math.min(100.0, load * 100), 100.0, ZenkaiPalette.BAR_CONTROL);
+            // Porcentaje en SU PROPIA línea, ANTES de la barra — ya no comparte Y con ella (esa
+            // era la superposición del feedback de imagen).
             PanelText.rightOnPanel(g, this.font,
                     Component.literal(Math.round(load * 100) + "%"),
-                    x + w, ty - 1, ZenkaiPalette.VALUE_ON_PANEL);
-            ty += PANEL_ROW_H + 3;
+                    x + w - PANEL_RIGHT_MARGIN, ty, ZenkaiPalette.VALUE_ON_PANEL);
+            ty += TEXT_LINE_H;
+
+            // Barra SOBRE EL BEIGE del panel: StatBar.draw(), no drawOnDark() — esa segunda
+            // usa un canal negro translúcido pensado para un popup oscuro, que sobre el beige
+            // pintaba un parche oscuro inesperado (ver feedback de imagen).
+            StatBar.draw(g, x, ty, w, StatBar.H_THIN,
+                    (float) Math.min(100.0, load * 100), 100.0, ZenkaiPalette.BAR_CONTROL);
+            ty += StatBar.H_THIN + 5;
 
             panelRow(g, x, ty, w,
                     Component.translatable("screen.zenkai.stats_screen.stat.weight_tp.label"),
@@ -172,6 +205,13 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
             ty += PANEL_ROW_H;
         }
 
+        if (showFatigueRow) {
+            panelRow(g, x, ty, w,
+                    Component.translatable("screen.zenkai.training_hub.panel.fatigue_mult"),
+                    Component.literal("x" + ZenkaiNumbers.fmt2(fatigueMult)));
+            ty += PANEL_ROW_H;
+        }
+
         if (inHtc) {
             panelRow(g, x, ty, w,
                     Component.translatable("screen.zenkai.training_hub.panel.htc_mult"),
@@ -179,7 +219,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
             ty += PANEL_ROW_H;
         }
 
-        if (load > 0.0 || inHtc) {
+        if (load > 0.0 || inHtc || showFatigueRow) {
             panelRow(g, x, ty, w,
                     Component.translatable("screen.zenkai.training_hub.panel.effective_mult"),
                     Component.literal("x" + ZenkaiNumbers.fmt2(effectiveMult)));
@@ -188,7 +228,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
 
     private void panelRow(GuiGraphics g, int x, int y, int w, Component label, Component value) {
         PanelText.onPanel(g, this.font, label, x, y, ZenkaiPalette.MUTED_ON_PANEL);
-        PanelText.rightOnPanel(g, this.font, value, x + w, y, ZenkaiPalette.OK_ON_PANEL);
+        PanelText.rightOnPanel(g, this.font, value, x + w - PANEL_RIGHT_MARGIN, y, ZenkaiPalette.OK_ON_PANEL);
     }
 
     @Override
