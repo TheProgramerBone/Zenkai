@@ -25,6 +25,9 @@ import org.jetbrains.annotations.NotNull;
  * op = DELETE: borrar el slot indicado (las asignaciones se reparan solas).
  * op = BIND:   asignar el slot a una posición del overlay (usa 'size' como posición 0..8;
  *              -1 = quitar). Sí, reutiliza el campo.
+ * op = MOVE:   subir/bajar una instancia dentro de la lista (usa 'size' como dirección, -1 o
+ *              +1 — mismo campo reutilizado que BIND). No cambia las asignaciones: swapSlots
+ *              las arrastra con la técnica.
  * Los sonidos viajan como texto ("" = ninguno) y se validan contra TechniqueAssets: el
  * cliente puede mandar cualquier id, así que aquí se comprueba que esté registrado.
  */
@@ -37,8 +40,15 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
     public static final byte OP_DELETE = 2;
     public static final byte OP_BIND = 3;
     public static final byte OP_FORGET = 4;
+    public static final byte OP_MOVE = 5;
 
     private static final int SOUND_ID_MAX = 128;
+
+    /** Valores de partida de la instancia que se crea sola al aprender una técnica firma.
+     *  No son su identidad (el color sí lo es, y lo fuerza handleSave): el jugador puede
+     *  reajustar tamaño y animación en el editor como en cualquier otra técnica suya. */
+    private static final int SIGNATURE_DEFAULT_SIZE = 3;
+    private static final int SIGNATURE_DEFAULT_ANIM = 1;
 
     public static final Type<TechniquePacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "technique"));
@@ -104,6 +114,12 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         return new TechniquePacket(OP_BIND, slot, "", "", 0, overlayPosition, 0, "", "", 1);
     }
 
+    /** dir = -1 (subir una fila) o +1 (bajar). Ojo: viaja en 'size', igual que la posición
+     *  del overlay en bind() — el record no tiene un campo libre para esto. */
+    public static TechniquePacket move(int slot, int dir) {
+        return new TechniquePacket(OP_MOVE, slot, "", "", 0, dir, 0, "", "", 1);
+    }
+
     public static void handle(TechniquePacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
@@ -124,6 +140,10 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
                     yield ok;
                 }
                 case OP_FORGET -> handleForget(att, pkt);
+                case OP_MOVE -> {
+                    int dir = Integer.signum(pkt.size());
+                    yield dir != 0 && att.techniques().swapSlots(pkt.slot(), pkt.slot() + dir);
+                }
                 default -> false;
             };
             if (changed) PlayerLifeCycle.syncIfServer(sp);
@@ -151,6 +171,18 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         if (att.getTP() < type.tpCost()) return false;
         att.addTP(-type.tpCost());
         att.techniques().unlock(type);
+
+        // Una técnica firma no se "fabrica" en el editor como las genéricas: el maestro te la
+        // enseña ENTERA, así que su instancia se crea aquí mismo y aparece ya lista para
+        // asignar. El nombre se guarda VACÍO a propósito — displayName() cae al nombre
+        // traducido del tipo, y así cada jugador lo lee en su idioma (ver KiTechnique).
+        // Si la lista de ki está llena la instancia no se crea y el tipo queda desbloqueado
+        // igualmente: la pantalla de técnicas ofrece recrearla cuando el jugador haga hueco.
+        if (!master.isEmpty() && att.techniques().slotCount() < ServerConfig.techniqueMaxSlots()) {
+            att.techniques().addSlot(new KiTechnique("", type, type.defaultRgb(),
+                    SIGNATURE_DEFAULT_SIZE, TechniqueEffect.NONE, null, null,
+                    SIGNATURE_DEFAULT_ANIM));
+        }
         return true;
     }
 

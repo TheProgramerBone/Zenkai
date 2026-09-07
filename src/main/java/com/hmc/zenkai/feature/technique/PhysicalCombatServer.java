@@ -119,6 +119,38 @@ public final class PhysicalCombatServer {
                 Math.min(raw, att.getStaminaMax() * MAX_COST_PCT_OF_POOL)));
     }
 
+    /**
+     * Daño POR IMPACTO del movimiento, sin el bonus de Ki Fist. Misma razón de existir que
+     * {@link #staminaCost}: el cliente NO reimplementa la fórmula — la lista de técnicas la
+     * usa para enseñar el daño real del jugador en vez del multiplicador crudo del datapack
+     * ("x1.2 dmg" no dice nada sin saber contra qué se multiplica).
+     * Se excluye el bonus de Ki Fist a propósito: es condicional (hace falta ki suficiente en
+     * el momento del golpe) y se cobra aparte, así que meterlo en la vista previa prometería
+     * un número que el jugador no siempre va a ver.
+     * OJO, es daño POR IMPACTO: BARRAGE y DASH_PUNCH golpean varias veces por uso (ver
+     * {@link #hitsPerUse}), así que su número por separado se lee bajo a propósito.
+     */
+    public static double previewDamage(PlayerStatsAttachment att, PhysicalTechnique t) {
+        return att.computeMeleeFinal()
+                * MasteryEffects.techDamageFactor(att, t.name())
+                * t.dmgMult();
+    }
+
+    /**
+     * Cuántas veces golpea un uso. 1 para los instantáneos; BARRAGE pulsa cada 2 ticks durante
+     * BARRAGE_TICKS, y DASH_PUNCH puede golpear cada tick del trayecto (tope teórico: el
+     * trayecto se corta antes si choca con una pared, y hitAll no repite objetivo).
+     * Expuesto para que la vista previa pueda avisar de que el daño por impacto no es el daño
+     * por uso — sin esto, "x0.3" de BARRAGE se lee como una técnica inútil.
+     */
+    public static int hitsPerUse(PhysicalTechnique t) {
+        return switch (t) {
+            case BARRAGE -> BARRAGE_TICKS / 2;
+            case DASH_PUNCH -> 1;   // hitAll no repite objetivo: un blanco recibe UN golpe
+            default -> 1;
+        };
+    }
+
     /** Consulta pura de cooldown. NO lo arranca. La usa ActionResolver. */
     public static boolean isReady(ServerPlayer sp, PhysicalTechnique t) {
         long[] cds = COOLDOWNS.get(sp.getUUID());

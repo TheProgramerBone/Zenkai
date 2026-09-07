@@ -258,8 +258,14 @@ public class TechniqueEditScreen extends Screen {
         // Ciruela + negrita solo cuando hay un efecto elegido: mismo trato que SPECIAL_ON_PANEL
         // le da a la forma en Stats ("estado especial"). En NONE se queda apagado a propósito,
         // para que la fila misma diga "no hay nada especial aquí" sin necesidad de leer el texto.
+        // Cada efecto con SU color, no un morado común para los cinco: el color es identidad
+        // del efecto (ver TechniqueEffect.borderRgb, que ya pinta con él el marco de la casilla
+        // en el HUD y en la barra de asignación), así que la fila que lo elige tiene que usar
+        // el mismo lenguaje. panelRgb() y no borderRgb(): los de marco están calibrados para
+        // fondo oscuro y sobre el beige del panel el cian de PIERCING y el amarillo de
+        // FRAGMENTATION quedan literalmente invisibles (ratio de contraste 1.0).
         int effectColor = effect == TechniqueEffect.NONE
-                ? ZenkaiPalette.MUTED_ON_PANEL : ZenkaiPalette.SPECIAL_ON_PANEL;
+                ? ZenkaiPalette.MUTED_ON_PANEL : effect.panelRgb();
         cyclerRow(x, y, contentW,
                 Component.translatable("screen.zenkai.technique.effect").append(": ")
                         .append(Component.translatable(effect.langKey())
@@ -529,7 +535,7 @@ public class TechniqueEditScreen extends Screen {
         }
 
         // Un widget INACTIVO no muestra su Tooltip.create() propio (mismo hallazgo que
-        // PhysicalScreen.renderUnlockTooltip), así que el aviso de "solo lo enseña tu maestro"
+        // TechniquesScreen.drawHoverTips), así que el aviso de "solo lo enseña tu maestro"
         // se dibuja a mano al pasar el ratón, igual que aquella pantalla.
         if (unlockButton.visible && !unlockButton.active && !type.master().isEmpty()
                 && mouseX >= unlockButton.getX() && mouseX < unlockButton.getX() + unlockButton.getWidth()
@@ -677,7 +683,9 @@ public class TechniqueEditScreen extends Screen {
     }
 
     private void close() {
-        mc.setScreen(new KiTechniquesScreen());
+        // TechniquesScreen recuerda su categoría en un campo estático, así que el jugador
+        // vuelve a la lista de la que salió sin que haya que pasársela por el constructor.
+        mc.setScreen(new TechniquesScreen());
     }
 
     @Override

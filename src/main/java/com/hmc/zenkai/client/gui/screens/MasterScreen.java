@@ -56,7 +56,7 @@ import java.util.Locale;
  *   - no aprendida y no puedes     -> coste en ROJO, clic no hace nada
  *   - aprendida                    -> gris, "Aprendida" (el maestro solo da el nivel 1/la
  *                                     técnica; el resto se gestiona desde las pantallas del
- *                                     jugador — SkillsScreen, TechniqueEditScreen, PhysicalScreen)
+ *                                     jugador — SkillsScreen, TechniqueEditScreen, TechniquesScreen)
  * Fondo: master_screen.png (ver tools/gen_master_screen.py), compartido por el conjunto de
  * maestros — lo que distingue a cada uno es su retrato 3D, no el fondo.
  */
@@ -169,7 +169,8 @@ public class MasterScreen extends Screen {
         }
 
         /** Mismo criterio que valida el servidor (TP + MindBudget), igual que
-         *  TechniqueEditScreen/PhysicalScreen ya usan para sus propios botones de desbloqueo. */
+         *  TechniqueEditScreen/TechniquesScreen ya usan para sus propios botones de
+         *  desbloqueo. */
         boolean canAfford(PlayerStatsAttachment st) {
             if (st == null || st.getTP() < tpCost()) return false;
             return ki ? MindBudget.canUnlock(st, kiType) : MindBudget.canUnlock(st, physType);
@@ -187,7 +188,7 @@ public class MasterScreen extends Screen {
 
         /** Descripción del tooltip: las ki tienen su propia clave .desc; las físicas no (ver
          *  PhysicalTechnique), así que se muestra su ficha técnica en su lugar — mismo formato
-         *  que ya usa la fila de PhysicalScreen. */
+         *  que ya usa la fila física de TechniquesScreen. */
         Component tooltip() {
             if (ki) return Component.translatable(kiType.descKey());
             return Component.translatable("screen.zenkai.physical.stats",

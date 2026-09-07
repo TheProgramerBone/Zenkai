@@ -62,8 +62,7 @@ public final class ZenkaiUiCredits {
         credit(Category.UI, "MasterScreen", AUTHOR, "Screen design");
         credit(Category.UI, "StatsScreen", AUTHOR, "Screen design");
         credit(Category.UI, "SkillsScreen", AUTHOR, "Screen design");
-        credit(Category.UI, "KiTechniquesScreen", AUTHOR, "Screen design");
-        credit(Category.UI, "PhysicalScreen", AUTHOR, "Screen design");
+        credit(Category.UI, "TechniquesScreen", AUTHOR, "Screen design");
         credit(Category.UI, "MasteryScreen", AUTHOR, "Screen design");
         credit(Category.UI, "PartyScreen", AUTHOR, "Screen design");
         credit(Category.UI, "ClientConfigScreen", AUTHOR, "Screen design");
@@ -104,8 +103,8 @@ public final class ZenkaiUiCredits {
         creditIcon("icon_tab_stats", AUTHOR, 0, 20, "icons.png (0,20)");
         creditIcon("icon_tab_skills", AUTHOR, 160, 0, "icons.png (160,0)");
         // Ya no son íconos de PESTAÑA (KI_TECHNIQUES/PHYSICAL_TECHNIQUES se fusionaron en
-        // ZenkaiTab.TECHNIQUES, ver su javadoc) — siguen vivos como íconos de FILA en el hub
-        // TechniquesHubScreen, mismo asset/coordenada, solo cambió quién los pinta.
+        // ZenkaiTab.TECHNIQUES, ver su javadoc) — siguen vivos como íconos de CATEGORÍA en el
+        // selector de TechniquesScreen, mismo asset/coordenada, solo cambió quién los pinta.
         creditIcon("icon_ki_techniques_row", AUTHOR, 40, 20, "icons.png (40,20)");
         creditIcon("icon_physical_techniques_row", AUTHOR, 120, 20, "icons.png (120,20)");
         creditIcon("icon_tab_mastery", AUTHOR, 160, 20, "icons.png (160,20)");

@@ -66,6 +66,33 @@ public enum TechniqueEffect {
      *  Vive aquí y no en la GUI porque es identidad del efecto, no decoración de una pantalla. */
     public int borderRgb() { return borderRgb; }
 
+    /**
+     * Factor con el que {@link #panelRgb()} oscurece {@link #borderRgb()}.
+     * Los colores de marco están pensados para verse SOBRE FONDO OSCURO (el HUD, la casilla de
+     * la barra), y sobre el beige del panel son ilegibles: medidos contra ZenkaiPalette.BEIGE
+     * dan ratios de contraste de 1.0 a 2.6 — el cian de PIERCING y el amarillo de FRAGMENTATION
+     * literalmente 1.0, o sea invisibles. A 0.45 los cinco quedan en 4.2..7.5, dentro de la
+     * banda que ya ocupa la familia *_ON_PANEL de ZenkaiPalette (3.7..7.0), así que se leen
+     * igual de bien que cualquier otro texto del panel sin dejar de ser reconociblemente el
+     * mismo color del efecto.
+     * Se deriva en vez de listar cinco hexadecimales nuevos a mano para que el tono no se pueda
+     * desincronizar del marco si alguien retoca borderRgb.
+     */
+    private static final double PANEL_DARKEN = 0.45;
+
+    /**
+     * El color del efecto ADAPTADO al beige del panel (editor de técnicas, listas). Mismo tono
+     * que {@link #borderRgb()}, oscurecido — ver PANEL_DARKEN para el porqué y los números.
+     * NONE devuelve 0 igual que borderRgb: no es un efecto, no tiene color propio.
+     */
+    public int panelRgb() {
+        if (borderRgb == 0) return 0;
+        int r = (int) (((borderRgb >> 16) & 0xFF) * PANEL_DARKEN);
+        int g = (int) (((borderRgb >> 8) & 0xFF) * PANEL_DARKEN);
+        int b = (int) ((borderRgb & 0xFF) * PANEL_DARKEN);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+
     public String langKey() {
         return "technique.zenkai.effect." + name().toLowerCase(Locale.ROOT);
     }

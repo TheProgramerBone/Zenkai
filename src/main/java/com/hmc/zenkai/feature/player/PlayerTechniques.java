@@ -109,6 +109,26 @@ public final class PlayerTechniques {
         }
     }
 
+    /**
+     * Intercambia dos instancias de la lista Y ARRASTRA sus bindings con ellas.
+     * Mover una técnica dentro del inventario no debe cambiar a qué tecla responde: si el
+     * jugador tenía la Laser en la tecla 1 y la sube una fila, sigue en la tecla 1. Por eso no
+     * basta con Collections.swap — hay que reescribir los bindings que apuntaban a cada índice.
+     * Solo se usa con vecinos (las flechas de la pantalla de técnicas), pero vale para
+     * cualquier par válido.
+     * (Los bindings físicos son <= PHYS_BIND_BASE: ninguna rama los toca, igual que en
+     * removeSlot.)
+     */
+    public boolean swapSlots(int a, int b) {
+        if (a < 0 || b < 0 || a >= slots.size() || b >= slots.size() || a == b) return false;
+        Collections.swap(slots, a, b);
+        for (int p = 0; p < BIND_POSITIONS; p++) {
+            if (bindings[p] == a) bindings[p] = b;
+            else if (bindings[p] == b) bindings[p] = a;
+        }
+        return true;
+    }
+
     // ── Bindings (overlay de combate) ────────────────────────────────────────
 
     /** Valor crudo asignado a la posición (índice ki >= 0, físico <= -100), o -1. */

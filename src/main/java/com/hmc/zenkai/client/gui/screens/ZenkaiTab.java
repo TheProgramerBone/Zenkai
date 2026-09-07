@@ -8,9 +8,11 @@ public enum ZenkaiTab {
     STATS(0,20),
     SKILLS(160,0),
     /** Fusiona lo que antes eran KI_TECHNIQUES(40,20)/PHYSICAL_TECHNIQUES(120,20) en un solo
-     *  botón — abre {@link TechniquesHubScreen}, que redirige a KiTechniquesScreen/PhysicalScreen
-     *  (mismo patrón hub->subscreen que MasterScreen usa para su propio botón "Técnicas", de
-     *  ahí que reuse EXACTAMENTE su mismo ícono/coordenada en vez de uno de los dos viejos). */
+     *  botón — abre {@link TechniquesScreen}, la pantalla única de las tres familias (ki,
+     *  físicas y de maestro), que las reparte con su propio selector de categoría en vez de con
+     *  un hub aparte. Reusa EXACTAMENTE el ícono/coordenada del botón "Técnicas" de
+     *  MasterScreen en vez de uno de los dos viejos: es el mismo concepto. Las celdas 40,20 y
+     *  120,20 siguen en uso como los íconos de categoría de esa pantalla. */
     TECHNIQUES(0,80),
     /** Hub de minijuegos que dan TP (sombra/meditación/puntería) — ver TrainingHubScreen. Misma
      *  fila v=20 que el resto de íconos de pestaña (0/20/40/80/100/120/160/200 ya ocupadas) —

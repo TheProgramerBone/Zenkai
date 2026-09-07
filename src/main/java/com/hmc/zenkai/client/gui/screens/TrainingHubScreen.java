@@ -25,9 +25,9 @@ import java.util.Locale;
  * apretado de espacio y porque este es el sitio temático correcto para mostrar TODO lo que
  * afecta la ganancia de TP, pesas Y HTC juntos (HTC no se mostraba en ningún lado antes).
  *
- * Mismo idioma visual "hub de filas grandes" que {@link TechniquesHubScreen}/AppearanceScreen —
- * ver el javadoc de TechniquesHubScreen para por qué (ícono izq + etiqueta der, sin enum-Mode
- * interno).
+ * Mismo idioma visual "hub de filas grandes" que {@link AppearanceScreen} — ícono a la
+ * izquierda, etiqueta a la derecha, y cada fila abre una Screen de verdad en vez de cambiar un
+ * enum-Mode interno (ver el javadoc de AppearanceScreen para por qué se prefirió eso).
  *
  * El panel TP Modifiers no necesita ningún packet de sync nuevo: la carga de pesas ya viaja en
  * PlayerStatsAttachment (sincronizado por SyncPlayerStatsPacket) y la dimensión HTC es un dato
@@ -96,7 +96,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     }
 
     /** Botón grande horizontal (ícono izq + etiqueta der), mismo idioma que
-     *  TechniquesHubScreen/AppearanceScreen. `tooltip` opcional: el pedido explícito de "Train
+     *  AppearanceScreen. `tooltip` opcional: el pedido explícito de "Train
      *  with your shadow" es enseñar un resumen ANTES de entrar (qué es, para qué sirve). */
     private void renderHubOption(GuiGraphics g, int x, int y, int w, int h, int iconU, int iconV,
                                   Component label, int mouseX, int mouseY, Component tooltip) {
