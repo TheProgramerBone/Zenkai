@@ -1,6 +1,5 @@
 package com.hmc.zenkai.client.gui.screens;
 
-import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -19,7 +18,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
@@ -39,7 +37,8 @@ import java.util.Random;
  * hacia una zona de impacto fija; acertar en ventana sube la racha, fallar la corta. Dos modos:
  *
  *  - PRÁCTICA LIBRE (por defecto): generador procedural (spawnea una nota en un carril al azar a
- *    intervalo fijo) — evita tener que autorar charts, sesión corta de {@link #SESSION_DURATION_MS}.
+ *    intervalo fijo) — evita tener que autorar charts, duración elegible en INTRO
+ *    ({@link #DURATION_STEPS_SEC}).
  *  - MODO CANCIÓN (nuevo, pedido explícito del usuario): elige un disco vanilla curado
  *    ({@link CuratedSong}) y las notas siguen un chart real generado por
  *    tools/gen_meditation_chart.py (detección de onsets sobre el .ogg del disco) — la sesión dura
@@ -75,11 +74,21 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     };
     private static final String[] KEY_LABELS = {"A", "S", "D", "F"};
 
-    private static final long SESSION_DURATION_MS = 30_000;
     private static final long BASE_SPAWN_INTERVAL_MS = 450;
     private static final long TRAVEL_MS = 1400;
     /** Ventana de acierto: |ratio-1.0| <= esto se cuenta como golpe válido. */
     private static final double BASE_HIT_WINDOW = 0.12;
+
+    /** Colchón de silencio tras la primera tecla, antes de que "empiece de verdad" la sesión
+     *  (elapsed llega a 0) — pedido explícito del usuario tras un playtest real: en modo Canción,
+     *  la primera nota del chart (timeMs≈0) se spawneaba YA vencida en el primer tick (sesión
+     *  arrancaba en elapsed=0, y esa nota necesitaba TRAVEL_MS de aviso), así que caía en MISS
+     *  casi seguro sin que el jugador tuviera ninguna oportunidad real. Al ser mayor que
+     *  TRAVEL_MS, las notas más tempranas del chart tienen sus TRAVEL_MS completos de caída
+     *  ANTES de sonar de verdad — ver actuallyStart()/tick(). Aplica a los dos modos por igual
+     *  (pedido explícito), aunque Práctica Libre nunca tuvo el bug (su generador solo empieza a
+     *  spawnear tras spawnIntervalMs desde el arranque real). */
+    private static final long LEAD_IN_MS = 2000;
 
     /** Dificultad progresiva de PRÁCTICA LIBRE (pedido explícito del usuario, Pista C del plan
      *  de pulido de Training) — modo Canción NO usa esto, ahí la dificultad ES la canción
@@ -89,21 +98,37 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private long spawnIntervalMs = BASE_SPAWN_INTERVAL_MS;
     private double hitWindow = BASE_HIT_WINDOW;
 
+    /** Duración de sesión de PRÁCTICA LIBRE, elegible en INTRO (pedido explícito del usuario:
+     *  "un tiempo configurable para que el jugador pueda conseguir recompensas") — modo Canción
+     *  sigue sin usar esto, ahí la duración ES lo que dure el disco (ver sessionDurationMs()). */
+    private static final int[] DURATION_STEPS_SEC = {15, 30, 45, 60, 90, 120};
+    private int durationIndex = 1; // arranca en 30s, la duración fija que tenía antes
+
     private static final int LANE_W = 40;
     private static final int LANE_GAP = 8;
-    private static final int NOTE_H = 14;
+    /** Nota = cuadrado plano (fill + borde), no un sprite estirado — el sprite de corchea
+     *  (ver tools/gen_training_gameplay_icons.py, fila v=120) se dibujaba deliberadamente ANCHO/
+     *  BAJO (36x14 sobre una celda cuadrada de 20x20) y esa deformación se veía "achatada"
+     *  (queja explícita del usuario con captura). Un cuadrado sin textura no tiene proporción
+     *  que deformar, así que vuelve a la solución de fill() plano que ya usaban orbe/bomba de
+     *  Ki Target Practice ANTES de que existieran esos sprites. */
+    private static final int NOTE_SIZE = 22;
+    private static final int NOTE_OUTLINE = 0xFF8C6014; // ámbar oscuro, mismo tono que el borde del sprite retirado
     private static final int HIT_ZONE_Y_OFFSET = 60; // desde el borde inferior
+
+    /** Colchón mínimo entre dos notas seguidas del MISMO carril en modo Canción — defensa contra
+     *  charts demasiado densos (tools/gen_meditation_chart.py es detección automática de onsets
+     *  sin afinar a mano todavía, ver su javadoc de clase; Pigstep en particular amontona notas en
+     *  el mismo carril, confirmado por captura real del usuario). Una nota que cae dentro de este
+     *  margen del anterior golpe del mismo carril simplemente NO se spawnea — nunca penaliza al
+     *  jugador (una nota que no aparece no puede fallarse) y no toca los archivos de chart. */
+    private static final long MIN_LANE_GAP_MS = 150;
+    private final long[] lastLaneNoteMs = new long[LANES];
 
     private static final int IN_X1 = 10;
     private static final int IN_X2 = 245;
     private static final int SONG_ROW_H = 24;
     private static final int SONG_ROW_GAP = 6;
-
-    private static final ResourceLocation ICONS_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
-    private static final int ICON_NOTE_U = 40, ICON_NOTE_V = 120;
-    private static final int ICON_CELL = 20;
-    private static final int ICONS_ATLAS = 256;
 
     private record Note(int lane, long spawnMs) {}
 
@@ -116,6 +141,15 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private int notesHit = 0;
     private int combo = 0;
     private int maxCombo = 0;
+    /** Desglose por tier de cada golpe/fallo — pedido explícito del usuario ("precisión de 0 a
+     *  100% como en FNF... si son SICK son perfectos"). Por construcción, notesHit ==
+     *  sickCount+goodCount+okCount siempre (un golpe cae en exactamente un tier, ver
+     *  addHitJudgment()) — se reportan los 4 por separado al servidor (MeditationSessionPacket)
+     *  en vez de un % ya calculado, mismo principio anti-trampa que el resto del reporte. */
+    private int sickCount = 0;
+    private int goodCount = 0;
+    private int okCount = 0;
+    private int missCount = 0;
     private boolean reported = false;
     private Integer resultReward = null;
     private Integer resultRecord = null;
@@ -197,14 +231,21 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
         addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decreaseDifficulty));
         addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increaseDifficulty));
+        // Segundo stepper, mismo idioma que el de dificultad justo encima — duración de la
+        // sesión de Práctica libre (no aplica a modo Canción, ver DURATION_STEPS_SEC).
+        addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY + 20, this::decreaseDuration));
+        addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY + 20, this::increaseDuration));
 
         addRenderableWidget(PanelButton.secondary(
-                panelLeft + (ZenkaiMenuScreen.BG_W - PanelButton.W) / 2, panelTop + stepperY + 20,
+                panelLeft + (ZenkaiMenuScreen.BG_W - PanelButton.W) / 2, panelTop + stepperY + 40,
                 Component.translatable("screen.zenkai.meditation.choose_song"), this::openSongSelect));
     }
 
     private void decreaseDifficulty() { stepIndex = Math.max(0, stepIndex - 1); }
     private void increaseDifficulty() { stepIndex = Math.min(STEPS_PCT.length - 1, stepIndex + 1); }
+
+    private void decreaseDuration() { durationIndex = Math.max(0, durationIndex - 1); }
+    private void increaseDuration() { durationIndex = Math.min(DURATION_STEPS_SEC.length - 1, durationIndex + 1); }
 
     /** Más difícil = notas más seguidas y ventana de acierto más estrecha — los dos números que
      *  ya hacían de "perilla" implícita de Práctica libre, ahora escalados por el stepper en vez
@@ -292,6 +333,15 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         notesHit = 0;
         combo = 0;
         maxCombo = 0;
+        sickCount = 0;
+        goodCount = 0;
+        okCount = 0;
+        missCount = 0;
+        // Long.MIN_VALUE/2, NO Long.MIN_VALUE: el filtro hace `n.timeMs() - lastLaneNoteMs[...]`,
+        // y timeMs() - Long.MIN_VALUE desborda un long (se convierte en un negativo enorme, así
+        // que el filtro creería que la PRIMERA nota de cada carril está "demasiado cerca" y la
+        // descartaría). /2 deja margen de sobra sin arriesgar el desbordamiento.
+        Arrays.fill(lastLaneNoteMs, Long.MIN_VALUE / 2);
         reported = false;
         resultReward = null;
         resultRecord = null;
@@ -304,18 +354,17 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     /** Disparado por la primera tecla tras entrar en PLAYING (ver keyPressed()) — pedido
      *  explícito del usuario: hasta este momento no cae ninguna nota ni suena la canción, solo
-     *  se ve el prompt "PRESS ANY KEY TO START" (renderPlaying()). Aquí, y no en
-     *  startSongSession(), es donde arranca de verdad el disco: así el jugador nunca escucha
-     *  audio antes de estar listo. */
+     *  se ve el prompt "PRESS ANY KEY TO START" (renderPlaying()). El arranque REAL (elapsed=0)
+     *  no es este instante, sino LEAD_IN_MS después (ver su javadoc) — sessionStartMs ya queda
+     *  desplazado al futuro, así que elapsed empieza en -LEAD_IN_MS y el resto de tick() no
+     *  necesita saber nada de este colchón. La música ambiente vanilla SÍ se calla ya aquí (así
+     *  el colchón es silencio de verdad); el disco se reproduce más tarde, en tick(), justo
+     *  cuando elapsed cruza 0 (ver ahí el porqué). */
     private void actuallyStart() {
         waitingForStart = false;
-        sessionStartMs = System.currentTimeMillis();
+        sessionStartMs = System.currentTimeMillis() + LEAD_IN_MS;
         lastSpawnMs = sessionStartMs;
-        if (activeChart != null) {
-            muteVanillaMusic();
-            discSound = new MeditationDiscSound(activeSong.sound.value(), 1.0f);
-            Minecraft.getInstance().getSoundManager().play(discSound);
-        }
+        if (activeChart != null) muteVanillaMusic();
     }
 
     private void stopSongIfAny() {
@@ -327,7 +376,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     }
 
     private long sessionDurationMs() {
-        return activeChart != null ? activeChart.durationMs() : SESSION_DURATION_MS;
+        return activeChart != null ? activeChart.durationMs() : DURATION_STEPS_SEC[durationIndex] * 1000L;
     }
 
     @Override
@@ -345,6 +394,14 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             return;
         }
 
+        // El disco arranca justo cuando el colchón de LEAD_IN_MS termina (elapsed cruza 0), no en
+        // el instante de la tecla (ver actuallyStart()) — así coincide exactamente con el momento
+        // en que las notas pre-spawneadas durante el colchón llegan a la línea de acierto.
+        if (activeChart != null && discSound == null && elapsed >= 0) {
+            discSound = new MeditationDiscSound(activeSong.sound.value(), 1.0f);
+            Minecraft.getInstance().getSoundManager().play(discSound);
+        }
+
         if (activeChart != null) {
             List<MeditationChart.MeditationNote> chartNotes = activeChart.notes();
             // La nota debe APARECER TRAVEL_MS antes de su instante de golpe real, para que
@@ -353,7 +410,14 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             while (chartCursor < chartNotes.size()
                     && chartNotes.get(chartCursor).timeMs() - TRAVEL_MS <= elapsed) {
                 var n = chartNotes.get(chartCursor);
-                notes.add(new Note(n.lane(), sessionStartMs + n.timeMs() - TRAVEL_MS));
+                // Filtro anti-amontonamiento: si el chart mete dos notas del MISMO carril más
+                // juntas de lo humanamente jugable (ver MIN_LANE_GAP_MS), la segunda simplemente
+                // no se spawnea — nunca penaliza al jugador, ninguna nota "perdida" cuenta como
+                // fallo porque nunca llegó a existir.
+                if (n.timeMs() - lastLaneNoteMs[n.lane()] >= MIN_LANE_GAP_MS) {
+                    notes.add(new Note(n.lane(), sessionStartMs + n.timeMs() - TRAVEL_MS));
+                    lastLaneNoteMs[n.lane()] = n.timeMs();
+                }
                 chartCursor++;
             }
         } else if (now - lastSpawnMs >= spawnIntervalMs) {
@@ -370,9 +434,14 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
                 } else if (combo > 0) {
                     playMiss(); // Práctica libre: sin música real que clashee, sí lleva pitido
                 }
+                // Un solo judgment vivo por carril: si ya había uno (ej. dos MISS seguidas antes
+                // de que se apague el anterior), se sustituye en vez de apilarse ilegible encima
+                // (bug real visto en captura: dos "MISS" superpuestas en el mismo carril).
+                judgments.removeIf(j -> j.lane() == n.lane());
                 judgments.add(new Judgment(n.lane(), "MISS", ZenkaiPalette.ERROR, now));
                 laneBadUntil[n.lane()] = now + 150;
                 combo = 0;
+                missCount++;
                 return true;
             }
             return false;
@@ -385,8 +454,8 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         reported = true;
         long durationTicks = Math.max(1, Math.round(
                 (System.currentTimeMillis() - sessionStartMs) / 50.0));
-        PacketDistributor.sendToServer(
-                new MeditationSessionPacket(notesHit, maxCombo, (int) durationTicks));
+        PacketDistributor.sendToServer(new MeditationSessionPacket(
+                sickCount, goodCount, okCount, missCount, maxCombo, (int) durationTicks));
     }
 
     @Override
@@ -478,15 +547,34 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         if (delta <= hitWindow * 0.35) {
             text = "SICK!";
             color = ZenkaiPalette.VALUE;
+            sickCount++;
         } else if (delta <= hitWindow * 0.7) {
             text = "GOOD";
             color = ZenkaiPalette.OK;
+            goodCount++;
         } else {
             text = "OK";
             color = ZenkaiPalette.TEXT;
+            okCount++;
         }
+        // Un solo judgment vivo por carril — ver el mismo comentario en la rama de MISS de tick().
+        judgments.removeIf(j -> j.lane() == lane);
         judgments.add(new Judgment(lane, text, color, System.currentTimeMillis()));
         laneGoodUntil[lane] = System.currentTimeMillis() + 150;
+    }
+
+    /** % de precisión estilo FNF (SICK = perfecto) — pedido explícito del usuario, y factor real
+     *  del TP otorgado, no solo cosmético (ver el mismo cálculo, con las mismas constantes de
+     *  peso, en MeditationSessionPacket.handle()). En el caso honesto el número que ve el jugador
+     *  aquí coincide exactamente con el factor que aplicó el servidor; solo puede divergir si el
+     *  servidor tuvo que recortar un reporte imposible (cliente modificado). */
+    private int accuracyPercent() {
+        int judged = sickCount + goodCount + okCount + missCount;
+        if (judged == 0) return 100;
+        double weighted = sickCount * MeditationSessionPacket.WEIGHT_SICK
+                + goodCount * MeditationSessionPacket.WEIGHT_GOOD
+                + okCount * MeditationSessionPacket.WEIGHT_OK;
+        return (int) Math.round(weighted / judged * 100);
     }
 
     /** Notas musicales de Minecraft como feedback de Práctica libre (pedido explícito del
@@ -556,6 +644,9 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         PanelText.centeredOnPanel(g, this.font,
                 Component.translatable("screen.zenkai.training_hub.shadow.difficulty", STEPS_PCT[stepIndex]),
                 cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
+        PanelText.centeredOnPanel(g, this.font,
+                Component.translatable("screen.zenkai.meditation.session_length", DURATION_STEPS_SEC[durationIndex]),
+                cx, panelTop + stepperY + 22, ZenkaiPalette.LABEL_ON_PANEL);
     }
 
     private void renderSongSelect(GuiGraphics g, int mouseX, int mouseY) {
@@ -583,8 +674,11 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
             g.renderItem(new ItemStack(song.item), x + 4, y + (SONG_ROW_H - 16) / 2);
 
-            Component name = new ItemStack(song.item).getHoverName();
-            PanelText.onPanel(g, this.font, name, x + 26, y + 5, ZenkaiPalette.LABEL_ON_PANEL);
+            // El nombre de ítem de CUALQUIER disco vanilla es genérico ("Music Disc") — el
+            // nombre real de la canción vive en una traducción propia (ver CuratedSong.nameKey()),
+            // no en el ItemStack, para que las tres filas se distingan de verdad.
+            PanelText.onPanel(g, this.font, Component.translatable(song.nameKey()),
+                    x + 26, y + 5, ZenkaiPalette.LABEL_ON_PANEL);
             PanelText.rightOnPanel(g, this.font,
                     Component.translatable(song.difficulty.translationKey),
                     x + w - 6, y + 5, ZenkaiPalette.MUTED_ON_PANEL);
@@ -622,13 +716,17 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
         for (int lane = 0; lane < LANES; lane++) {
             int x = left + lane * (LANE_W + LANE_GAP);
-            int laneBg = ZenkaiPalette.POPUP_BG;
+            g.fill(x, 20, x + LANE_W, this.height - 20, ZenkaiPalette.POPUP_BG);
             // Flash breve de carril al acertar/fallar (pedido explícito del usuario: "no hay
             // marcadores... tampoco hay un efecto para cuando te equivocas") — mismo color que
-            // el judgment de texto, pero MUY translúcido para no tapar las notas que caen.
-            if (now < laneGoodUntil[lane]) laneBg = (ZenkaiPalette.OK & 0x00FFFFFF) | 0x50000000;
-            else if (now < laneBadUntil[lane]) laneBg = (ZenkaiPalette.ERROR & 0x00FFFFFF) | 0x50000000;
-            g.fill(x, 20, x + LANE_W, this.height - 20, laneBg);
+            // el judgment de texto, pero MUY translúcido para no tapar las notas que caen. Solo
+            // en una banda pegada a la línea de acierto (no la columna entera): pintar todo el
+            // carril era demasiado ruido visual justo encima de las notas que aún hay que leer
+            // (feedback real de captura de juego).
+            int flash = 0;
+            if (now < laneGoodUntil[lane]) flash = (ZenkaiPalette.OK & 0x00FFFFFF) | 0x50000000;
+            else if (now < laneBadUntil[lane]) flash = (ZenkaiPalette.ERROR & 0x00FFFFFF) | 0x50000000;
+            if (flash != 0) g.fill(x, Math.max(20, hitY - 50), x + LANE_W, this.height - 20, flash);
             g.fill(x, hitY, x + LANE_W, hitY + 4, ZenkaiPalette.OK);
             PanelText.onDark(g, this.font, Component.literal(KEY_LABELS[lane]),
                     x + LANE_W / 2 - 3, hitY + 8, ZenkaiPalette.TEXT);
@@ -647,10 +745,13 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
         for (Note n : notes) {
             double ratio = (now - n.spawnMs()) / (double) TRAVEL_MS;
-            int y = (int) (20 + ratio * (hitY - 20));
-            int x = left + n.lane() * (LANE_W + LANE_GAP);
-            g.blit(ICONS_TEX, x + 2, y, LANE_W - 4, NOTE_H,
-                    ICON_NOTE_U, ICON_NOTE_V, ICON_CELL, ICON_CELL, ICONS_ATLAS, ICONS_ATLAS);
+            int top = (int) (20 + ratio * (hitY - 20));
+            int x = left + n.lane() * (LANE_W + LANE_GAP) + (LANE_W - NOTE_SIZE) / 2;
+            g.fill(x, top, x + NOTE_SIZE, top + NOTE_SIZE, ZenkaiPalette.VALUE);
+            g.fill(x, top, x + NOTE_SIZE, top + 1, NOTE_OUTLINE); // borde arriba
+            g.fill(x, top + NOTE_SIZE - 1, x + NOTE_SIZE, top + NOTE_SIZE, NOTE_OUTLINE); // abajo
+            g.fill(x, top, x + 1, top + NOTE_SIZE, NOTE_OUTLINE); // izquierda
+            g.fill(x + NOTE_SIZE - 1, top, x + NOTE_SIZE, top + NOTE_SIZE, NOTE_OUTLINE); // derecha
         }
 
         // Judgments flotantes (SICK!/GOOD/OK/MISS) — suben y se desvanecen sobre su carril.
@@ -665,10 +766,24 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         }
 
         long elapsed = now - sessionStartMs;
+        if (elapsed < 0) {
+            // Colchón de LEAD_IN_MS (ver su javadoc): las notas ya caen normal debajo, pero
+            // Combo/tiempo restante saldrían con números sin sentido (elapsed negativo) — un
+            // aviso de cuenta atrás en su lugar, sin tapar la vista de los carriles.
+            int secondsToGo = (int) Math.ceil(-elapsed / 1000.0);
+            PanelText.centeredOnDark(g, this.font,
+                    Component.translatable("screen.zenkai.meditation.get_ready", secondsToGo)
+                            .copy().withStyle(ChatFormatting.BOLD),
+                    this.width / 2, 8, ZenkaiPalette.TEXT);
+            return;
+        }
         int secondsLeft = (int) Math.max(0, (sessionDurationMs() - elapsed) / 1000);
         PanelText.onDark(g, this.font,
                 Component.translatable("screen.zenkai.meditation.combo", combo),
                 left, 8, ZenkaiPalette.TEXT);
+        PanelText.onDark(g, this.font,
+                Component.translatable("screen.zenkai.meditation.accuracy", accuracyPercent()),
+                left, 18, ZenkaiPalette.TEXT);
         PanelText.rightOnDark(g, this.font,
                 Component.translatable("screen.zenkai.meditation.time_left", secondsLeft),
                 left + LANES * (LANE_W + LANE_GAP) - LANE_GAP, 8, ZenkaiPalette.TEXT);
@@ -688,6 +803,10 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         ty += 16;
         PanelText.centeredOnPanel(g, this.font,
                 Component.translatable("screen.zenkai.meditation.result.notes_hit", notesHit, maxCombo),
+                cx, ty, ZenkaiPalette.LABEL_ON_PANEL);
+        ty += 16;
+        PanelText.centeredOnPanel(g, this.font,
+                Component.translatable("screen.zenkai.meditation.accuracy", accuracyPercent()),
                 cx, ty, ZenkaiPalette.LABEL_ON_PANEL);
         ty += 16;
         Component reward = resultReward == null

@@ -16,24 +16,41 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * C2S: fin de una sesión de Meditation (MeditationScreen), al completarse o al cerrar antes de
- * tiempo. Lleva desempeño CRUDO (notas acertadas, mejor racha, duración) — NUNCA un TP ya
- * calculado, mismo principio anti-trampa que TrainingSwingPacket: el cliente mide, el SERVIDOR
- * decide cuánto vale eso (clamps + tarifa de ServerConfig) antes de llamar a
- * TrainingHooks.grantFromMeditation.
+ * tiempo. Lleva desempeño CRUDO (golpes desglosados por tier de precisión SICK/GOOD/OK, fallos,
+ * mejor racha, duración) — NUNCA un TP ni un % de precisión ya calculados, mismo principio
+ * anti-trampa que TrainingSwingPacket: el cliente mide, el SERVIDOR decide cuánto vale eso
+ * (clamps + tarifa de ServerConfig + el factor de precisión de {@link #handle}) antes de llamar a
+ * TrainingHooks.grantFromMeditation. `notesHit` ya no viaja como campo propio — se deriva de
+ * `sickCount+goodCount+okCount` (una sola fuente de verdad; MeditationScreen garantiza por
+ * construcción que un golpe cae en exactamente un tier).
  */
-public record MeditationSessionPacket(int notesHit, int maxCombo, int sessionDurationTicks)
+public record MeditationSessionPacket(
+        int sickCount, int goodCount, int okCount, int missCount, int maxCombo, int sessionDurationTicks)
         implements CustomPacketPayload {
 
     public static final Type<MeditationSessionPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "meditation_session"));
 
+    /** Peso de cada tier de precisión (0.0-1.0) al promediar el % de accuracy estilo FNF — SICK
+     *  cuenta como perfecto, MISS como 0 (implícito, sin constante). Públicos a propósito:
+     *  MeditationScreen usa EXACTAMENTE estos mismos números para el % que muestra en vivo/en
+     *  RESULTS, así que en el caso honesto el número que ve el jugador coincide con el factor que
+     *  de verdad aplicó el servidor sobre su TP (ver handle()). */
+    public static final double WEIGHT_SICK = 1.0;
+    public static final double WEIGHT_GOOD = 0.7;
+    public static final double WEIGHT_OK = 0.4;
+
     public static final StreamCodec<FriendlyByteBuf, MeditationSessionPacket> STREAM_CODEC =
             StreamCodec.of((buf, pkt) -> {
-                        buf.writeVarInt(pkt.notesHit());
+                        buf.writeVarInt(pkt.sickCount());
+                        buf.writeVarInt(pkt.goodCount());
+                        buf.writeVarInt(pkt.okCount());
+                        buf.writeVarInt(pkt.missCount());
                         buf.writeVarInt(pkt.maxCombo());
                         buf.writeVarInt(pkt.sessionDurationTicks());
                     },
-                    buf -> new MeditationSessionPacket(buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
+                    buf -> new MeditationSessionPacket(buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
+                            buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
@@ -71,10 +88,36 @@ public record MeditationSessionPacket(int notesHit, int maxCombo, int sessionDur
 
                 int durationTicks = Math.max(1, Math.min(pkt.sessionDurationTicks(), MAX_SESSION_TICKS));
                 int maxPossible = (int) Math.max(1, Math.round(durationTicks * MAX_NOTES_PER_TICK));
-                int notesHit = Math.max(0, Math.min(pkt.notesHit(), maxPossible));
+
+                int sick = Math.max(0, pkt.sickCount());
+                int good = Math.max(0, pkt.goodCount());
+                int ok = Math.max(0, pkt.okCount());
+                int miss = Math.max(0, pkt.missCount());
+                int totalJudged = sick + good + ok + miss;
+                // Mismo espíritu anti-trampa que el clamp de notesHit/maxCombo de antes, extendido
+                // a los 4 contadores nuevos: si el total reportado supera lo físicamente posible
+                // para la duración de la sesión, se reescalan los 4 proporcionalmente en vez de
+                // solo cortar en seco (así un cliente modificado no puede "esconder" golpes falsos
+                // detrás de un montón de MISS para inflar el denominador de precisión).
+                if (totalJudged > maxPossible && totalJudged > 0) {
+                    double scale = maxPossible / (double) totalJudged;
+                    sick = (int) (sick * scale);
+                    good = (int) (good * scale);
+                    ok = (int) (ok * scale);
+                    miss = (int) (miss * scale);
+                    totalJudged = sick + good + ok + miss;
+                }
+                int notesHit = sick + good + ok;
                 int maxCombo = Math.max(0, Math.min(pkt.maxCombo(), maxPossible));
 
-                double rawTp = Math.min(notesHit, maxCombo) * ServerConfig.meditationTpPerCombo();
+                // % de precisión estilo FNF (SICK = perfecto), pedido explícito del usuario como
+                // factor real de recompensa, no solo cosmético — ver WEIGHT_* y el mismo cálculo
+                // en MeditationScreen.accuracyPercent() (el que ve el jugador en vivo).
+                double accuracy = totalJudged > 0
+                        ? (sick * WEIGHT_SICK + good * WEIGHT_GOOD + ok * WEIGHT_OK) / totalJudged
+                        : 1.0;
+
+                double rawTp = Math.min(notesHit, maxCombo) * ServerConfig.meditationTpPerCombo() * accuracy;
                 double sessionCap = ServerConfig.meditationSessionTpCap() * (durationTicks / CAP_BASELINE_TICKS);
                 rawTp = Math.min(rawTp, sessionCap);
                 if (rawTp > 0) granted = TrainingHooks.grantFromMeditation(sp, rawTp);

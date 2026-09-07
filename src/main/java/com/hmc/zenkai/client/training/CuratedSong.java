@@ -25,6 +25,14 @@ public enum CuratedSong {
     PIGSTEP("pigstep", Items.MUSIC_DISC_PIGSTEP, SoundEvents.MUSIC_DISC_PIGSTEP, Difficulty.HARD),
     ;
 
+    /** Prefijo de la clave de traducción del nombre visible de cada disco (ver {@link #nameKey()}).
+     *  Hace falta esto y no simplemente `stack.getHoverName()` porque TODOS los discos vanilla
+     *  comparten el mismo nombre de ítem genérico "Music Disc" — el nombre real de la canción solo
+     *  vive como línea de descripción/tooltip ("C418 - mellohi"), nunca como el nombre del ítem.
+     *  Sin esto, las tres filas del selector se verían idénticas salvo por el ícono y la
+     *  etiqueta de dificultad (queja explícita del usuario). */
+    private static final String NAME_KEY_PREFIX = "screen.zenkai.meditation.song.";
+
     public enum Difficulty {
         EASY("screen.zenkai.meditation.song.difficulty.easy"),
         MEDIUM("screen.zenkai.meditation.song.difficulty.medium"),
@@ -44,5 +52,11 @@ public enum CuratedSong {
         this.item = item;
         this.sound = sound;
         this.difficulty = difficulty;
+    }
+
+    /** Clave de traducción del nombre real de la canción (ej. "Pigstep"), NO el nombre del ítem —
+     *  ver el porqué en el comentario de {@link #NAME_KEY_PREFIX}. */
+    public String nameKey() {
+        return NAME_KEY_PREFIX + discId + ".name";
     }
 }
