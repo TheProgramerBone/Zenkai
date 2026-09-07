@@ -55,8 +55,8 @@ public final class KiTechnique {
     public int rgb()                      { return rgb; }
     public int size()                     { return size; }
     /** Consecuencia del set de animación, no una elección. Los tipos que IMPONEN animación
-     *  (barrera, explosión) no tienen set, así que su origen sale de la constante: preguntar
-     *  por defensive() dejaba fuera a la explosión, que no es defensiva. */
+     *  (barrera, explosión, Genki Dama) no tienen set, así que su origen sale de la constante:
+     *  preguntar por defensive() dejaba fuera a la explosión, que no es defensiva. */
     public TechniquePosition position() {
         return type.animOverride() != null
                 ? TechniqueAnimSet.BARRIER_POSITION

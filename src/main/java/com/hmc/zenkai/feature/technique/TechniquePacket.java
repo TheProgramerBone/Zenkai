@@ -25,9 +25,9 @@ import org.jetbrains.annotations.NotNull;
  * op = DELETE: borrar el slot indicado (las asignaciones se reparan solas).
  * op = BIND:   asignar el slot a una posición del overlay (usa 'size' como posición 0..8;
  *              -1 = quitar). Sí, reutiliza el campo.
- * op = MOVE:   subir/bajar una instancia dentro de la lista (usa 'size' como dirección, -1 o
- *              +1 — mismo campo reutilizado que BIND). No cambia las asignaciones: swapSlots
- *              las arrastra con la técnica.
+ * op = MOVE:   subir/bajar una instancia dentro de la lista (usa 'size' como DESPLAZAMIENTO
+ *              con signo — mismo campo reutilizado que BIND). No cambia las asignaciones:
+ *              swapSlots las arrastra con la técnica.
  * Los sonidos viajan como texto ("" = ninguno) y se validan contra TechniqueAssets: el
  * cliente puede mandar cualquier id, así que aquí se comprueba que esté registrado.
  */
@@ -114,10 +114,17 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         return new TechniquePacket(OP_BIND, slot, "", "", 0, overlayPosition, 0, "", "", 1);
     }
 
-    /** dir = -1 (subir una fila) o +1 (bajar). Ojo: viaja en 'size', igual que la posición
-     *  del overlay en bind() — el record no tiene un campo libre para esto. */
-    public static TechniquePacket move(int slot, int dir) {
-        return new TechniquePacket(OP_MOVE, slot, "", "", 0, dir, 0, "", "", 1);
+    /**
+     * offset con signo: -1 sube una posición, +1 baja. Ojo: viaja en 'size', igual que la
+     * posición del overlay en bind() — el record no tiene un campo libre para esto.
+     * NO se limita a ±1 porque la pantalla ya no lista TODAS las instancias en la categoría
+     * ki (las de técnica firma viven en la de maestro), así que dos filas vecinas EN PANTALLA
+     * pueden estar a más de un slot de distancia y la flecha tiene que saltar por encima de
+     * lo que no se ve. No amplía lo que puede hacer un cliente modificado: encadenando ±1 ya
+     * podía llegar a cualquier par, y swapSlots valida los dos índices igual.
+     */
+    public static TechniquePacket move(int slot, int offset) {
+        return new TechniquePacket(OP_MOVE, slot, "", "", 0, offset, 0, "", "", 1);
     }
 
     public static void handle(TechniquePacket pkt, IPayloadContext ctx) {
@@ -141,8 +148,9 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
                 }
                 case OP_FORGET -> handleForget(att, pkt);
                 case OP_MOVE -> {
-                    int dir = Integer.signum(pkt.size());
-                    yield dir != 0 && att.techniques().swapSlots(pkt.slot(), pkt.slot() + dir);
+                    int offset = pkt.size();   // con signo, ver move(): no es solo ±1
+                    yield offset != 0
+                            && att.techniques().swapSlots(pkt.slot(), pkt.slot() + offset);
                 }
                 default -> false;
             };
@@ -170,6 +178,20 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
 
         if (att.getTP() < type.tpCost()) return false;
         att.addTP(-type.tpCost());
+        return grant(att, type);
+    }
+
+    /**
+     * Apunta el tipo como aprendido y, si es una técnica firma, le crea su instancia.
+     * SIN COBRAR NI VALIDAR NADA: quien llama ya decidió que se puede (aquí, tras comprobar
+     * TP/MND/maestro; en /zenkai tech unlock, porque es un comando de administrador).
+     * Existe como función aparte para que el comando no tenga que repetir la parte de la
+     * instancia — que es la mitad fácil de olvidar: sin ella el jugador tiene la técnica firma
+     * "aprendida" pero sin nada que asignar a una casilla, y no hay ningún error que lo diga.
+     * Devuelve false si el tipo ya estaba desbloqueado (nada que sincronizar).
+     */
+    public static boolean grant(PlayerStatsAttachment att, KiTechniqueType type) {
+        if (att.techniques().isUnlocked(type)) return false;
         att.techniques().unlock(type);
 
         // Una técnica firma no se "fabrica" en el editor como las genéricas: el maestro te la
@@ -178,7 +200,8 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         // traducido del tipo, y así cada jugador lo lee en su idioma (ver KiTechnique).
         // Si la lista de ki está llena la instancia no se crea y el tipo queda desbloqueado
         // igualmente: la pantalla de técnicas ofrece recrearla cuando el jugador haga hueco.
-        if (!master.isEmpty() && att.techniques().slotCount() < ServerConfig.techniqueMaxSlots()) {
+        if (!type.master().isEmpty()
+                && att.techniques().slotCount() < ServerConfig.techniqueMaxSlots()) {
             att.techniques().addSlot(new KiTechnique("", type, type.defaultRgb(),
                     SIGNATURE_DEFAULT_SIZE, TechniqueEffect.NONE, null, null,
                     SIGNATURE_DEFAULT_ANIM));
@@ -199,12 +222,21 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         KiTechniqueType type = KiTechniqueType.byName(pkt.typeName());
         if (type == null || !type.enabled() || !att.techniques().isUnlocked(type)) return false;
 
+        // TÉCNICA FIRMA: no se edita, punto. El maestro te la enseña ENTERA — ni nombre, ni
+        // tamaño, ni color, ni sonidos, ni animación. Antes solo se forzaba el color (su
+        // identidad visual) y el resto seguía siendo editable; desde 2026-09-06 el trato es
+        // "desbloquear o equipar, y ya", así que el editor no ofrece siquiera abrirla y esta
+        // línea es el respaldo del servidor para un cliente que lo intente igualmente.
+        // Se rechaza SOLO en modo edición: la creación (slot < 0) es como el jugador RECUPERA
+        // la instancia que borró con la papelera (TechniquesScreen.createSignature) y también
+        // el camino por el que se crea sola al aprenderla.
+        if (pkt.slot() >= 0 && !type.master().isEmpty()) return false;
+
         String name = KiTechnique.sanitizeName(pkt.name());
         int size = KiTechnique.clampSize(pkt.size());
-        // Técnica firma: el color es su identidad (p.ej. "morada"), no una elección del
-        // jugador — se ignora lo que mande el cliente y se fuerza el de fábrica, igual que el
-        // TIPO se ignora más abajo en modo edición. Nombre y tamaño SÍ siguen editables: lo
-        // que se bloquea es la identidad visual, no el ajuste de coste/potencia.
+        // El color de una técnica firma es su identidad (p.ej. "morada"), no una elección del
+        // jugador: se ignora lo que mande el cliente. Aquí solo puede llegar en modo creación,
+        // que es donde se reponen los valores de fábrica.
         int rgb = type.master().isEmpty() ? (pkt.rgb() & 0xFFFFFF) : type.defaultRgb();
         ResourceLocation charge = validSound(pkt.chargeSound(), true);
         ResourceLocation release = validSound(pkt.releaseSound(), false);

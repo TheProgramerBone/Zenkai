@@ -42,16 +42,32 @@ public final class TechniqueAnimSets {
     public static ResourceLocation charge(int set)     { return rl("zenkai.ki_attack_" + clamp(set) + "_charge"); }
     public static ResourceLocation overcharge(int set) { return rl("zenkai.ki_attack_" + clamp(set) + "_overcharge"); }
     public static ResourceLocation release(int set)    { return rl("zenkai.ki_attack_" + clamp(set) + "_release"); }
-    /** Clips de los tipos que imponen animación. La barrera solo tiene uno; la explosión, los
-     *  tres, porque sí se carga y sí estalla. */
+    /**
+     * Clips de los tipos que imponen animación. La barrera solo tiene UNO (no se carga ni se
+     * dispara: se pone), así que las tres funciones le devuelven el mismo; el resto tiene su
+     * trío charge/overcharge/release como cualquier set normal.
+     * El prefijo del archivo se deriva de la anulación en vez de encadenar ternarios: con dos
+     * casos colaba, con tres el ternario ya escondía cuál era el "else" de verdad.
+     */
+    private static String overridePrefix(TechniqueAnimOverride o) {
+        return switch (o) {
+            case EXPLOSION   -> "zenkai.ki_explosion";
+            case SPIRIT_BOMB -> "zenkai.ki_spirit_bomb";
+            case BARRIER     -> null;   // clip único, no hay trío
+        };
+    }
+
     public static ResourceLocation overrideCharge(TechniqueAnimOverride o) {
-        return o == TechniqueAnimOverride.EXPLOSION ? rl("zenkai.ki_explosion_charge") : BARRIER;
+        String prefix = overridePrefix(o);
+        return prefix == null ? BARRIER : rl(prefix + "_charge");
     }
     public static ResourceLocation overrideOvercharge(TechniqueAnimOverride o) {
-        return o == TechniqueAnimOverride.EXPLOSION ? rl("zenkai.ki_explosion_overcharge") : BARRIER;
+        String prefix = overridePrefix(o);
+        return prefix == null ? BARRIER : rl(prefix + "_overcharge");
     }
     public static ResourceLocation overrideRelease(TechniqueAnimOverride o) {
-        return o == TechniqueAnimOverride.EXPLOSION ? rl("zenkai.ki_explosion_release") : BARRIER;
+        String prefix = overridePrefix(o);
+        return prefix == null ? BARRIER : rl(prefix + "_release");
     }
 
     /** BARRIER ignora la carga y tiene una animación única, sin par charge/release. */

@@ -789,11 +789,20 @@ public class ModCommands {
         return 1;
     }
 
-    /** Autocompleta formas del datapack y escalones de kaioken por su etiqueta ("x20"). */
+    /**
+     * Autocompleta formas del datapack y la clave ÚNICA de kaioken.
+     * Sugería los cinco escalones por su etiqueta ("x2".."x20"), y eso ya no describe el
+     * modelo: la maestría de kaioken dejó de guardarse por escalón y las cinco entradas
+     * apuntaban a la MISMA clave (ver PlayerFormAttachment.kaiokenMasteryKey y la migración de
+     * su load()). Cinco sugerencias para un solo valor no son un atajo, son una mentira sobre
+     * cómo funciona: quien ponía x20 al 100% esperaba que x2 siguiera a cero.
+     * Los alias antiguos SIGUEN aceptándose al escribirlos (resolveMasteryId), solo dejan de
+     * ofrecerse.
+     */
     private static final SuggestionProvider<CommandSourceStack> MASTERY_IDS = (ctx, b) -> {
         List<String> ids = new ArrayList<>();
         for (FormDef d : FormDef.all()) ids.add(d.id().toString());
-        for (KaiokenTier t : KaiokenTier.values()) if (t.isOn()) ids.add(t.label());
+        ids.add(PlayerFormAttachment.kaiokenMasteryKey().toString());
         return SharedSuggestionProvider.suggest(ids, b);
     };
 

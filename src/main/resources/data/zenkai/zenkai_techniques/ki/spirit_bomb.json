@@ -6,7 +6,7 @@
   "ki_cost_mult": 3.5,
   "charge_ticks": 140,
   "cooldown_ticks": 240,
-  "speed": 0.4,
+  "speed": 0.7,
   "count": 1,
   "defensive": false,
   "default_rgb": "0xFFFCE0",

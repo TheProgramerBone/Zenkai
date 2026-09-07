@@ -75,8 +75,12 @@ public final class PlayerHandTracker {
         CACHE.put(entityId, new Anchors(right, left, mouth, forehead, eyes, frame));
     }
 
-    /** null si no hay dato de ESTE frame: primera persona (PAL filtra la capa), jugador fuera
-     *  de pantalla, o culling. El llamante cae al respaldo de TechniquePosition. */
+    /** null si no hay dato de ESTE frame: jugador fuera de pantalla, culling, o el jugador
+     *  local en 1ª persona SIN ninguna animación de PAL en modo THIRD_PERSON_MODEL activa (sin
+     *  pasada corporal no hay huesos que leer; tampoco hay técnica cargándose, así que no
+     *  importa). Durante la transición de entrada de esa pasada —PAL solo la marca con
+     *  getFirstPersonTransitionProgress() == 1— también sale null unos frames. El llamante cae
+     *  al respaldo de TechniquePosition. */
     @Nullable
     public static Anchors get(int entityId) {
         Anchors a = CACHE.get(entityId);
@@ -105,7 +109,8 @@ public final class PlayerHandTracker {
         for (PlayerSkin.Model skin : PlayerSkin.Model.values()) {
             PlayerRenderer renderer = event.getSkin(skin);
             if (renderer == null) continue;
-            renderer.addLayer(new HandAnchorLayer(renderer));
+            renderer.addLayer(new HandAnchorLayer(
+                    renderer, Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer()));
         }
     }
 }

@@ -43,9 +43,16 @@ public enum TechniqueAnimSet {
     SET_9(TechniquePosition.FOREHEAD);
 
     /**
-     * BARRIER no tiene set: su animación es única y en el estado se marca con visual == 0.
-     * Sale de ambas manos, igual que SET_2, y a propósito NO como una excepción escondida en
-     * el enum — es una constante con nombre para que se vea que es una regla aparte.
+     * Origen de CUALQUIER tipo que imponga su animación (ver TechniqueAnimOverride): no tienen
+     * set, así que tampoco heredan su posición. Conserva el nombre BARRIER_POSITION porque la
+     * barrera fue el primer caso, pero hoy lo comparten los tres — y a los tres les vale
+     * BOTH_HANDS: la barrera nace entre las manos, la explosión ni siquiera lo usa
+     * (KiChargeRenderer la ancla al centro del cuerpo) y la Genki Dama se sostiene con las dos
+     * manos en alto, que es justo el punto medio entre los dos huesos de mano
+     * (PlayerHandTracker.Anchors.resolve) — por eso la esfera sube con los brazos sola, sin
+     * ninguna posición nueva.
+     * A propósito NO es una excepción escondida en el enum: es una constante con nombre para
+     * que se vea que es una regla aparte.
      */
     public static final TechniquePosition BARRIER_POSITION = TechniquePosition.BOTH_HANDS;
 

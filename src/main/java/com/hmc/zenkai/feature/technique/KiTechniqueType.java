@@ -52,9 +52,10 @@ public enum KiTechniqueType {
     /** Animación impuesta por el tipo, o null si el jugador elige el set. */
     public TechniqueAnimOverride animOverride() {
         return switch (this) {
-            case BARRIER   -> TechniqueAnimOverride.BARRIER;
-            case EXPLOSION -> TechniqueAnimOverride.EXPLOSION;
-            default        -> null;
+            case BARRIER     -> TechniqueAnimOverride.BARRIER;
+            case EXPLOSION   -> TechniqueAnimOverride.EXPLOSION;
+            case SPIRIT_BOMB -> TechniqueAnimOverride.SPIRIT_BOMB;
+            default          -> null;
         };
     }
 
@@ -118,6 +119,24 @@ public enum KiTechniqueType {
             // sigue creciendo, mismo patrón documentado arriba para EXPLOSION/BIG_BLAST.
             case SPIRIT_BOMB -> 3.20 + 0.40 * s;
         };
+    }
+
+    /**
+     * ¿La bola de carga anticipa el TAMAÑO REAL del proyectil, en vez del tamaño genérico "de
+     * mano"? (Lo consume KiChargeRenderer.targetRadius.)
+     * La regla por defecto del mod es que NO: cargando, la energía todavía no tiene forma ni
+     * tamaño definitivos, y una esfera de mano se lee bien en las dos vistas. Pero para las
+     * técnicas cuyo proyectil es ENORME comparado con una mano, esa esfera pequeña miente
+     * sobre lo que estás a punto de soltar — y en una técnica que tarda entre 7 y 19 segundos
+     * en cargarse (Genki Dama), ver crecer lo que estás juntando ES la técnica.
+     * El criterio para meter un tipo aquí es ese, no "es cara": el proyectil tiene que ser
+     * varias veces el tamaño de una mano. Hoy son las tres que ya no salen de una mano.
+     * OJO en primera persona: una esfera de radio 2+ pegada a la cámara la envuelve. Quien
+     * dibuja resuelve eso apartándola (ver KiChargeRenderer.FP_CLEARANCE), no encogiéndola —
+     * encogerla sería justo deshacer lo que esta bandera pide.
+     */
+    public boolean chargeShowsRealSize() {
+        return this == EXPLOSION || this == BIG_BLAST || this == SPIRIT_BOMB;
     }
 
     /** Radio de la explosión en bloques. SIN TECHO a propósito: los techos por tipo aplastaban

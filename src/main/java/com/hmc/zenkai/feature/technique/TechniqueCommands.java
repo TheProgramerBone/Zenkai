@@ -6,16 +6,21 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -28,6 +33,7 @@ import java.util.Set;
  *   /zenkai tech &lt;ki|physical&gt; &lt;id&gt; set &lt;campo&gt; &lt;valor&gt;
  *   /zenkai tech &lt;ki|physical&gt; &lt;id&gt; reset &lt;campo|all&gt;
  *   /zenkai tech dump [ki|physical|all]
+ *   /zenkai tech unlock &lt;all|ki|physical|id&gt; [jugadores]
  *
  * Existe para acortar el ciclo de balance: cambiar un número, verlo aplicado en el mismo tick
  * al conjunto de conectados, y volcarlo a JSON cuando el número es el bueno.
@@ -55,6 +61,7 @@ public final class TechniqueCommands {
 
     private static LiteralArgumentBuilder<CommandSourceStack> tech() {
         return Commands.literal("tech")
+                .then(unlock())
                 .then(Commands.literal("dump")
                         .executes(ctx -> dump(ctx, Set.of(Kind.KI, Kind.PHYSICAL)))
                         .then(Commands.argument("scope", StringArgumentType.word())
@@ -80,6 +87,81 @@ public final class TechniqueCommands {
                                         .then(Commands.argument("field", StringArgumentType.word())
                                                 .suggests(FIELDS_OR_ALL)
                                                 .executes(TechniqueCommands::reset)))));
+    }
+
+    // ── unlock ───────────────────────────────────────────────────────────────
+
+    /**
+     * Aprende técnicas de golpe, para probar sin farmear TP.
+     * GRATIS Y SIN COMPROBAR NADA: no cobra TP, no mira el presupuesto de MIND y no exige
+     * maestro delante para las técnicas firma. Es un comando de administrador (permiso 2), y
+     * su razón de ser es justo saltarse el embudo que TechniquePacket.handleUnlock aplica al
+     * jugador. Que MindBudget.free() se quede en negativo es un efecto ESPERADO y ya
+     * contemplado (ver su javadoc): la pantalla lo enseña en rojo, no rompe nada.
+     * Sin contrapartida "lock" a propósito: olvidar una técnica ya se hace desde la papelera
+     * de TechniquesScreen, que además devuelve el TP.
+     */
+    private static LiteralArgumentBuilder<CommandSourceStack> unlock() {
+        return Commands.literal("unlock")
+                .then(Commands.argument("what", StringArgumentType.word()).suggests(UNLOCKABLES)
+                        .executes(ctx -> unlock(ctx,
+                                List.of(ctx.getSource().getPlayerOrException()),
+                                StringArgumentType.getString(ctx, "what")))
+                        .then(Commands.argument("players", EntityArgument.players())
+                                .executes(ctx -> unlock(ctx,
+                                        EntityArgument.getPlayers(ctx, "players"),
+                                        StringArgumentType.getString(ctx, "what")))));
+    }
+
+    private static int unlock(CommandContext<CommandSourceStack> ctx,
+                              Collection<ServerPlayer> targets, String what) {
+        String w = what.toLowerCase(Locale.ROOT);
+        List<KiTechniqueType> ki = new ArrayList<>();
+        List<PhysicalTechnique> phys = new ArrayList<>();
+
+        // Los ÁMBITOS se resuelven antes que los ids sueltos, y por separado: si "ki" cayera
+        // por el mismo camino que un id se confundiría con una técnica que se llamara así.
+        // Solo entran las que tienen JSON: sin def, una técnica no se puede disparar ni
+        // guardar, así que "desbloquearla" no significaría nada (ver TechniqueDef).
+        boolean allKi = w.equals(ALL) || w.equals(Kind.KI.folder());
+        boolean allPhys = w.equals(ALL) || w.equals(Kind.PHYSICAL.folder());
+        if (allKi) {
+            for (KiTechniqueType t : KiTechniqueType.values()) if (t.enabled()) ki.add(t);
+        }
+        if (allPhys) {
+            for (PhysicalTechnique t : PhysicalTechnique.values()) if (t.enabled()) phys.add(t);
+        }
+        if (!allKi && !allPhys) {
+            KiTechniqueType k = KiTechniqueType.byName(w);
+            PhysicalTechnique ph = PhysicalTechnique.byName(w);
+            if (k != null && k.enabled()) ki.add(k);
+            else if (ph != null && ph.enabled()) phys.add(ph);
+            else return fail(ctx, "técnica desconocida o sin JSON: " + what
+                    + " (all|ki|physical|<id>)");
+        }
+        if (ki.isEmpty() && phys.isEmpty()) {
+            return fail(ctx, "no hay ninguna técnica activa en ese ámbito: " + what);
+        }
+
+        int total = 0;
+        for (ServerPlayer sp : targets) {
+            PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+            int n = 0;
+            for (KiTechniqueType t : ki) {
+                if (TechniquePacket.grant(att, t)) n++;
+            }
+            for (PhysicalTechnique t : phys) {
+                if (!att.techniques().isUnlocked(t)) { att.techniques().unlock(t); n++; }
+            }
+            if (n > 0) PlayerLifeCycle.sync(sp);
+            total += n;
+            final int shown = n;
+            final String who = sp.getGameProfile().getName();
+            ctx.getSource().sendSuccess(() -> Component.literal(shown > 0
+                    ? "§6[Zenkai] §f" + shown + " técnica(s) §7→ §b" + who
+                    : "§8[Zenkai] " + who + " ya las tenía cada una."), true);
+        }
+        return total;
     }
 
     // ── info ─────────────────────────────────────────────────────────────────
@@ -292,6 +374,18 @@ public final class TechniqueCommands {
             return null;
         }
     }
+
+    /** Ámbitos + cada técnica con JSON, para que la barra de comandos sea el catálogo: es la
+     *  única lista donde se ven de una vez las de ki y las físicas que existen de verdad. */
+    private static final SuggestionProvider<CommandSourceStack> UNLOCKABLES = (ctx, b) -> {
+        List<String> out = new ArrayList<>();
+        out.add(ALL);
+        out.add(Kind.KI.folder());
+        out.add(Kind.PHYSICAL.folder());
+        for (KiTechniqueType t : KiTechniqueType.values()) if (t.enabled()) out.add(t.id());
+        for (PhysicalTechnique t : PhysicalTechnique.values()) if (t.enabled()) out.add(t.id());
+        return SharedSuggestionProvider.suggest(out, b);
+    };
 
     private static final SuggestionProvider<CommandSourceStack> KINDS =
             (ctx, b) -> SharedSuggestionProvider.suggest(List.of("ki", "physical"), b);

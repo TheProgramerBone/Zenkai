@@ -262,8 +262,15 @@ public class KiProjectileEntity extends Projectile {
      * hace falta tener el sentir el ki encendido (SenseServerState.senseActive es una cosa
      * distinta: si el escaneo periódico de modo sigue llegando, no si HAY lock). Sin la
      * habilidad o sin lock, no corrige nada y vuela recto como cualquier otro proyectil.
+     *
+     * HOMING_TURN es el PESO de la mezcla, no un ángulo: el giro máximo por tick sale de
+     * atan(t/(1-t)), así que subirlo un 20 % (0.12 -> 0.144, ajuste pedido en 2026-09-06) da
+     * algo más de un 20 % de ángulo — de 7.8° a 9.6° por tick. Se sube el peso y no el ángulo
+     * porque es lo que de verdad hay escrito en la fórmula; si algún día se quiere razonar en
+     * grados, hay que cambiar la mezcla por una rotación acotada, no reinterpretar esta
+     * constante.
      */
-    private static final double HOMING_TURN = 0.12;
+    private static final double HOMING_TURN = 0.144;
 
     private void applyHoming() {
         if (!(getOwner() instanceof ServerPlayer sp)) return;

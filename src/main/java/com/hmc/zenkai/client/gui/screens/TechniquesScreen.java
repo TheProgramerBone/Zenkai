@@ -116,10 +116,13 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     /**
      * Banda de pie, IGUAL en las tres categorías. Antes ki reservaba 34 px para un
      * PanelButton "New technique" a lo ancho y las otras dos solo 16, así que ki enseñaba una
-     * fila MENOS que sus hermanas sin ninguna razón de contenido. Con el botón convertido en
-     * un "+" de 12 px la banda basta para las tres y las tres caben a 5 filas.
-     * En esa banda conviven el aviso de asignación (centrado) y el "+" (a la derecha): no
-     * chocan porque el aviso solo aparece con algo armado y el "+" solo en la categoría ki.
+     * fila MENOS que sus hermanas sin ninguna razón de contenido.
+     * En esta banda conviven el "+" y el aviso de asignación, LOS DOS CENTRADOS y encima el uno
+     * del otro cuando hay algo armado. Es una decisión del usuario, no un descuido: la banda
+     * mide 9 px útiles (la lista acaba en y=234 y el beige de common_screen.png en y=242,
+     * muestreado), así que no caben lado a lado ni cabe uno entero, y probada la alternativa
+     * —el "+" arriba a la derecha, junto a los contadores— dijo que ahí "se pierde mucho".
+     * El aviso se dibuja DESPUÉS de super.render(), así que en el solape gana el texto.
      */
     private static final int LIST_BOTTOM = 22;
     private static final int SCROLLBAR_W = 4;
@@ -130,6 +133,11 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     private static final int TRASH = 16;
     /** Lado del botón "+" de nueva técnica (PlusIconButton es 12x12). */
     private static final int PLUS = 12;
+    /** Última fila de beige del panel, muestreada sobre common_screen.png. El "+" se ancla a
+     *  ella y no a footerY(): pegado al final de la lista se salía por debajo, encima del
+     *  marco naranja. Anclado aquí muerde 4 px del último renglón de la lista —vacíos: los
+     *  controles de una fila acaban en ROW_H-2— en vez de morder el marco. */
+    private static final int PANEL_BEIGE_BOTTOM = 242;
     /** Celda de icons.png (256x256, rejilla de 20) para el icono de la categoria. */
     private static final int CAT_ICON = 20;
 
@@ -214,6 +222,9 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * filas visibles). Con el contenido acabando en 238 la barra cabe entera sobre beige.
      */
     private int rightEdge()  { return panelLeft + BG_W - 18; }
+    /** Esquina del "+" de nueva técnica: centrado y pegado al último píxel de beige. */
+    private int xPlus()      { return panelLeft + (BG_W - PLUS) / 2; }
+    private int yPlus()      { return panelTop + PANEL_BEIGE_BOTTOM - PLUS; }
     /** X de la barra de scroll: pegada al borde del contenido, sobre el beige. */
     private int scrollbarX() { return rightEdge() + 1; }
     private int listTop()    { return panelTop + LIST_Y_OFF; }
@@ -221,8 +232,10 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     private int visibleRows(){ return Math.max(1, listHeight() / ROW_H); }
     private int viewHeight() { return visibleRows() * ROW_H; }
     private int rowTop(int i){ return listTop() + (i - scrollRow) * ROW_H; }
-    /** Y de la banda de pie (aviso de asignación y botón "+"). */
-    private int footerY()    { return listTop() + viewHeight() + 3; }
+    /** Y del aviso de asignación, lo único que queda en la banda de pie. Pegado a la lista y
+     *  no centrado en la banda: los 9 px útiles no dan para centrar 8 px de texto sin que los
+     *  trazos de abajo (la 'p' de "press") se coman el marco. */
+    private int footerY()    { return listTop() + viewHeight() + 1; }
     private int maxScroll()  { return Math.max(0, rows.size() - visibleRows()); }
     private boolean onScreen(int i) { int r = i - scrollRow; return r >= 0 && r < visibleRows(); }
 
@@ -289,7 +302,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         // hacían que ki enseñara una fila menos que las otras categorías.
         if (category == Category.KI
                 && att.techniques().slotCount() < ServerConfig.techniqueMaxSlots()) {
-            PlusIconButton add = new PlusIconButton(rightEdge() - PLUS, footerY(),
+            PlusIconButton add = new PlusIconButton(xPlus(), yPlus(),
                     () -> mc.setScreen(new TechniqueEditScreen(-1)));
             add.setTooltip(Tooltip.create(
                     Component.translatable("screen.zenkai.technique.create")));
@@ -302,7 +315,17 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         switch (category) {
             case KI -> {
                 List<KiTechnique> slots = tech.slots();
-                for (int i = 0; i < slots.size(); i++) rows.add(new Row.Ki(i, slots.get(i)));
+                for (int i = 0; i < slots.size(); i++) {
+                    // Las instancias de TÉCNICA FIRMA no salen aquí: su sitio es la categoría
+                    // Maestro y se quedan ahí también después de aprenderlas. Antes aparecían
+                    // en las DOS listas (la de maestro las lista por tipo, esta por instancia)
+                    // y la misma técnica se leía como dos cosas distintas — encima se "movía"
+                    // de pestaña justo al desbloquearla, que es cuando el jugador la está
+                    // buscando donde la vio. Siguen contando para el límite de instancias
+                    // (el contador "Ki n/max" es del presupuesto, no de esta lista).
+                    if (!slots.get(i).type().master().isEmpty()) continue;
+                    rows.add(new Row.Ki(i, slots.get(i)));
+                }
             }
             case PHYSICAL -> {
                 for (PhysicalTechnique t : PhysicalTechnique.values()) {
@@ -370,17 +393,17 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                     DY_ACTION, true);
 
             VArrowButton up = new VArrowButton(xArrows(), 0, VArrowButton.Dir.UP,
-                    () -> moveKi(slot, -1));
+                    () -> moveKi(index, slot, -1));
             up.setTooltip(Tooltip.create(
                     Component.translatable("screen.zenkai.technique.reorder_up")));
             VArrowButton down = new VArrowButton(xArrows(), 0, VArrowButton.Dir.DOWN,
-                    () -> moveKi(slot, 1));
+                    () -> moveKi(index, slot, 1));
             down.setTooltip(Tooltip.create(
                     Component.translatable("screen.zenkai.technique.reorder_down")));
             addRow(bucket, up, DY_ACTION, index > 0);
             addRow(bucket, down, DY_ICONS, index < rows.size() - 1);
 
-            buildKiIcons(bucket, slot, tech);
+            buildKiIcons(bucket, slot, tech, true);
 
         } else if (row instanceof Row.MasterKi(KiTechniqueType type, int slot)) {
             if (!tech.isUnlocked(type)) {
@@ -408,7 +431,8 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
 
             addRow(bucket, actionButton(assignLabel(armedKi == slot), () -> toggleKi(slot)),
                     DY_ACTION, true);
-            buildKiIcons(bucket, slot, tech);
+            // Sin lápiz: una técnica firma no se edita (ver buildKiIcons).
+            buildKiIcons(bucket, slot, tech, false);
 
         } else if (row instanceof Row.Phys(PhysicalTechnique t, boolean ignored)) {
             if (!tech.isUnlocked(t)) {
@@ -431,12 +455,26 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         }
     }
 
-    /** Lápiz, aspa y papelera de una instancia de ki. Idénticos en la categoría Ki y en la de
-     *  maestro: las dos enseñan LA MISMA instancia, así que sus controles no pueden divergir. */
-    private void buildKiIcons(List<RowWidget> bucket, int slot, PlayerTechniques tech) {
-        addRow(bucket, iconButton(xEdit(), TEX_PENCIL, TEX_PENCIL_HL, ICON_BTN,
-                "screen.zenkai.technique.edit",
-                () -> mc.setScreen(new TechniqueEditScreen(slot))), DY_ICONS, true);
+    /**
+     * Aspa y papelera de una instancia de ki, más el lápiz si es EDITABLE.
+     * Una técnica firma no lo es: la enseña un maestro entera y por eso el jugador no la
+     * fabrica ni la retoca — solo la desbloquea y la equipa. El lápiz simplemente no se
+     * construye en esa fila (el servidor lo respalda: TechniquePacket.handleSave rechaza
+     * editar una instancia de un tipo con maestro, así que un cliente modificado tampoco
+     * puede). La papelera SÍ se queda en las dos: borrar la instancia no cambia la técnica,
+     * solo libera uno de los huecos de la lista de ki, y la categoría de maestro ofrece
+     * recrearla gratis con [ Create ].
+     * El hueco que deja el lápiz no se recupera a propósito: xUnassign()/xTrash() son columnas
+     * FIJAS y moverlas solo en estas filas rompería la alineación del cluster entre filas
+     * vecinas — que es justo el defecto que este layout ya arregló una vez.
+     */
+    private void buildKiIcons(List<RowWidget> bucket, int slot, PlayerTechniques tech,
+                              boolean editable) {
+        if (editable) {
+            addRow(bucket, iconButton(xEdit(), TEX_PENCIL, TEX_PENCIL_HL, ICON_BTN,
+                    "screen.zenkai.technique.edit",
+                    () -> mc.setScreen(new TechniqueEditScreen(slot))), DY_ICONS, true);
+        }
 
         if (tech.positionOf(slot) >= 0) {
             addRow(bucket, iconButton(xUnassign(), TEX_X, TEX_X_HL, ICON_BTN,
@@ -627,17 +665,37 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * Mueve una técnica ki dentro de la lista. La asignación viaja CON ella (swapSlots
      * reescribe los bindings), así que subir una técnica no le cambia la tecla.
      */
-    private void moveKi(int slot, int dir) {
-        int dest = slot + dir;
+    private void moveKi(int rowIndex, int slot, int dir) {
+        int dest = neighbourKiSlot(slot, dir);
+        if (dest < 0) return;
         if (!att.techniques().swapSlots(slot, dest)) return;             // optimista
-        PacketDistributor.sendToServer(TechniquePacket.move(slot, dir));
+        PacketDistributor.sendToServer(TechniquePacket.move(slot, dest - slot));
         if (armedKi == slot) armedKi = dest;
         else if (armedKi == dest) armedKi = slot;
         // Que el destino no se vaya fuera de la ventana visible: si el jugador empuja una fila
         // contra el borde del scroll, la lista lo acompaña en vez de perderla de vista.
-        if (dest < scrollRow) scrollRow = dest;
-        else if (dest >= scrollRow + visibleRows()) scrollRow = dest - visibleRows() + 1;
+        // Se razona en FILAS y no en slots: desde que las técnicas firma no se listan aquí,
+        // el índice de slot y el de fila dejaron de ser el mismo número.
+        int destRow = rowIndex + dir;
+        if (destRow < scrollRow) scrollRow = destRow;
+        else if (destRow >= scrollRow + visibleRows()) scrollRow = destRow - visibleRows() + 1;
         rebuildWidgets();
+    }
+
+    /**
+     * Slot con el que intercambiar al pulsar una flecha: el siguiente en esa dirección que SE
+     * VEA en esta lista. Puede estar a más de una posición si en medio hay una instancia de
+     * técnica firma (no listada aquí, ver buildRows) — saltar por encima de ella es lo que
+     * evita que la flecha parezca rota: intercambiar con algo invisible no mueve nada en
+     * pantalla y no hay forma de saber por qué. -1 si no hay ninguno (la fila ya es el
+     * extremo, y su flecha va apagada de todas formas).
+     */
+    private int neighbourKiSlot(int slot, int dir) {
+        List<KiTechnique> slots = att.techniques().slots();
+        for (int i = slot + dir; i >= 0 && i < slots.size(); i += dir) {
+            if (slots.get(i).type().master().isEmpty()) return i;
+        }
+        return -1;
     }
 
     /** Clic en una casilla: asigna lo armado, o desasigna al ocupante si no hay nada armado. */
@@ -779,17 +837,16 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         drawScrollbar(g);
 
         if (armedKi >= 0 || armedPhys != null) {
-            // Centrado en el hueco QUE DEJA el "+", no en el panel entero: los dos comparten
-            // banda y en la categoría ki el botón se come el extremo derecho, así que un
-            // centrado ingenuo mete la última palabra del aviso debajo del icono. Se recorta
-            // además a ese hueco porque la longitud del aviso depende del idioma.
-            int hintRight = rightEdge() - PLUS - BTN_GAP;
+            // Centrado en el ancho ENTERO del contenido, sin esquivar el "+": los dos comparten
+            // el centro de la banda a propósito (ver LIST_BOTTOM). Se recorta a ese ancho
+            // porque la longitud del aviso depende del idioma.
+            int hintRight = rightEdge();
             int hintLeft = panelLeft + CONTENT_INSET;
             PanelText.centeredOnPanel(g, this.font,
                     PanelText.fit(this.font,
                             Component.translatable("screen.zenkai.technique.assign_hint"),
                             hintRight - hintLeft),
-                    (hintLeft + hintRight) / 2, footerY() + 2, ZenkaiPalette.TP_ON_PANEL);
+                    (hintLeft + hintRight) / 2, footerY(), ZenkaiPalette.TP_ON_PANEL);
         }
 
         // Los tooltips van FUERA del scissor o se recortarían con la lista.

@@ -8,7 +8,7 @@ import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
-import com.hmc.zenkai.client.gui.buttons.PanelButton;
+import com.hmc.zenkai.client.gui.buttons.LockIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
@@ -20,6 +20,7 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.mojang.math.Axis;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -107,7 +108,7 @@ public class TechniqueEditScreen extends Screen {
     private boolean deleteArmed = false;
 
     private EditBox nameBox;
-    private PanelButton unlockButton;
+    private LockIconButton unlockButton;
     private TextOnlyButton saveButton;
 
     @Nullable private ColorPickerWidget picker = null;
@@ -197,14 +198,14 @@ public class TechniqueEditScreen extends Screen {
         else initStyleTab(x, contentW);
 
         // ── Unlock (solo si el tipo está bloqueado) ──
-        unlockButton = new PanelButton(
-                x + (contentW - PanelButton.W) / 2, topPos + Y_UNLOCK,
-                PanelButton.W, PanelButton.H,
-                type.mindReq() > 0
-                        ? Component.translatable("screen.zenkai.technique.unlock_mnd",
-                        type.tpCost(), type.mindReq())
-                        : Component.translatable("screen.zenkai.technique.unlock", type.tpCost()),
-                PanelButton.Kind.PRIMARY,
+        // UN CANDADO, no un botón ancho con el precio escrito dentro. El PanelButton anterior
+        // llevaba su propio marco naranja —el mismo anillo que ya enmarca el panel, el motivo
+        // por el que PartyScreen y TechniquesScreen pasaron sus acciones a iconos— y encima
+        // "Unlock (6999 TP · 89 MND)" no le cabía: con TP/MND de cinco cifras el texto se
+        // salía por los dos lados de su propio marco. El precio se va al tooltip, que es
+        // donde puede crecer sin romper nada.
+        unlockButton = new LockIconButton(
+                leftPos + (BG_W - LockIconButton.SIZE) / 2, topPos + Y_UNLOCK,
                 () -> PacketDistributor.sendToServer(TechniquePacket.unlock(type)));
         addRenderableWidget(unlockButton);
 
@@ -245,9 +246,9 @@ public class TechniqueEditScreen extends Screen {
                         KiTechniqueType next = type;
                         for (int i = 0; i < all.length; i++) {
                             next = all[Math.floorMod(next.ordinal() + dir, all.length)];
-                            if (next.enabled()) break;
+                            if (selectable(next)) break;
                         }
-                        if (!next.enabled()) return;
+                        if (!selectable(next)) return;
                         type = next;
                         rgb = type.defaultRgb();
                         rebuildWidgets();
@@ -294,6 +295,19 @@ public class TechniqueEditScreen extends Screen {
                             + Math.floorMod(size - KiTechnique.MIN_SIZE + dir, span);
                     rebuildWidgets();
                 });
+    }
+
+    /**
+     * ¿Puede el jugador ELEGIR este tipo al crear una técnica?
+     * Sin JSON no existe (enabled()). Y una técnica firma (master() no vacío) tampoco se
+     * fabrica aquí: la enseña su maestro ENTERA y su instancia se crea sola al aprenderla
+     * (TechniquePacket.handleUnlock), así que ofrecerla en el selector solo enseñaba un tipo
+     * que el editor nunca iba a poder guardar — el candado sale apagado, Save sale apagado, y
+     * el jugador no tiene forma de saber desde aquí que el camino es ir a hablar con alguien.
+     * Su sitio es la categoría "Maestro" de TechniquesScreen, que sí explica ese trato.
+     */
+    private static boolean selectable(KiTechniqueType t) {
+        return t.enabled() && t.master().isEmpty();
     }
 
     private void initStyleTab(int x, int contentW) {
@@ -535,15 +549,51 @@ public class TechniqueEditScreen extends Screen {
         }
 
         // Un widget INACTIVO no muestra su Tooltip.create() propio (mismo hallazgo que
-        // TechniquesScreen.drawHoverTips), así que el aviso de "solo lo enseña tu maestro"
-        // se dibuja a mano al pasar el ratón, igual que aquella pantalla.
-        if (unlockButton.visible && !unlockButton.active && !type.master().isEmpty()
+        // TechniquesScreen.drawHoverTips), y aquí el tooltip es justo lo que hay que poder
+        // leer con el candado apagado: cuánto cuesta y qué te falta. Por eso se dibuja a mano
+        // en los DOS estados, en vez de dejárselo al widget.
+        if (unlockButton.visible
                 && mouseX >= unlockButton.getX() && mouseX < unlockButton.getX() + unlockButton.getWidth()
                 && mouseY >= unlockButton.getY() && mouseY < unlockButton.getY() + unlockButton.getHeight()) {
-            Component tip = Component.translatable("screen.zenkai.technique.masterOnly",
-                    Component.translatable("master.zenkai." + type.master()));
-            g.renderTooltip(this.font, this.font.split(tip, 200), mouseX, mouseY);
+            g.renderComponentTooltip(this.font, unlockTip(), mouseX, mouseY);
         }
+    }
+
+    /**
+     * Qué cuesta desbloquear este tipo y, si no se puede, por qué.
+     * Mismo contenido y mismo orden que TechniquesScreen.unlockTip para las filas bloqueadas:
+     * las dos pantallas enseñan el mismo trato, así que tienen que decirlo igual. Solo se
+     * enumera lo que FALTA — leer "necesitas 6 MND" teniendo 10 es ruido.
+     */
+    private List<Component> unlockTip() {
+        PlayerStatsAttachment att = att();
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.translatable(type.nameKey()));
+        lines.add((type.mindReq() > 0
+                ? Component.translatable("screen.zenkai.technique.unlock_mnd",
+                        type.tpCost(), type.mindReq())
+                : Component.translatable("screen.zenkai.technique.unlock", type.tpCost()))
+                .withStyle(ChatFormatting.GRAY));
+
+        if (!type.master().isEmpty()) {
+            // El bloqueo real es "ve a hablar con tu maestro", no TP/MND: enseñar un déficit
+            // de fondos aquí sería engañoso porque puede sobrarle de sobra y seguir sin poder.
+            lines.add(Component.translatable("screen.zenkai.technique.masterOnly",
+                    Component.translatable("master.zenkai." + type.master()))
+                    .withStyle(ChatFormatting.RED));
+            return lines;
+        }
+        if (att == null) return lines;
+        if (att.getTP() < type.tpCost()) {
+            lines.add(Component.translatable("screen.zenkai.physical.need_tp",
+                    type.tpCost() - att.getTP()).withStyle(ChatFormatting.RED));
+        }
+        int mindCost = MindBudget.costOf(type);
+        if (MindBudget.free(att) < mindCost) {
+            lines.add(Component.translatable("screen.zenkai.physical.need_mnd",
+                    mindCost - MindBudget.free(att)).withStyle(ChatFormatting.RED));
+        }
+        return lines;
     }
 
     private void renderCombatTab(GuiGraphics g, float partialTick) {

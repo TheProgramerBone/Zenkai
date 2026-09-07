@@ -64,6 +64,23 @@ public final class KiChargeRenderer {
      *  tamaño de carga (~1 bloque) ya no necesita nacer a tamaño jugador. */
     private static final float START_SCALE = 0.35f;
 
+    /**
+     * TECHO ABSOLUTO del radio de partida, en bloques. START_SCALE es una FRACCIÓN del radio
+     * final, y una fracción no describe "pequeño": el 35 % de una esfera de mano son 7 cm, pero
+     * el 35 % de una Genki Dama de 3 bloques de radio es un bola de más de dos bloques de
+     * diámetro YA en el primer frame de carga. La técnica que más tiempo pasa creciendo era
+     * justo la que menos parecía crecer — nacía enorme y solo se hinchaba un poco.
+     * Con el techo, la carga SIEMPRE empieza del tamaño de un puño y de ahí escala hasta lo que
+     * le toque: cuanto más grande es la técnica, más recorrido se ve. Para las técnicas
+     * pequeñas no cambia nada (su 35 % ya está por debajo de este valor), así que ningún
+     * encuadre ya calibrado se mueve.
+     * Se queda en LINEAL sobre el radio a propósito: lo que el ojo juzga es el área que ocupa
+     * en pantalla, que va con el CUADRADO del radio, así que un crecimiento lineal ya se
+     * percibe acelerando. Meterle además una curva de ease-in dejaría la primera mitad de una
+     * carga de 12 segundos pareciendo congelada.
+     */
+    private static final float START_RADIUS_CAP = 0.10f;
+
     /** Suelo de EXPLOSION: nunca por debajo del tamaño de un jugador de pie, NI al empezar a
      *  cargar NI al soltarse (~1.8 bloques de diámetro → radio 0.9). */
     private static final float PLAYER_RADIUS = 0.90f;
@@ -82,17 +99,20 @@ public final class KiChargeRenderer {
      * BARRIER usa su propio radio fijo (BARRIER_CHARGE_RADIUS), independiente del tamaño de la
      * técnica: no sale de una mano, pero tampoco tiene sentido anticipar su tamaño real (~2-2.5),
      * que en primera persona sería tan grande como EXPLOSION.
-     * EXPLOSION SÍ apunta al tamaño real: no sale de una mano, ancla al PECHO (ver
-     * TechniquePosition) simulando que la esfera que va a detonar ya se está formando encima
-     * del cuerpo — así que apunta al mismo radio visual que tendrá el proyectil ya soltado
-     * (KiProjectileRenderer escala la misma malla a getBbWidth() × 1.5; radio = diámetro / 2),
-     * en vez de al genérico.
+     * Los tipos con {@link KiTechniqueType#chargeShowsRealSize()} SÍ apuntan al tamaño real:
+     * el radio visual que tendrá el proyectil ya soltado (KiProjectileRenderer escala la misma
+     * malla a getBbWidth() × 1.5; radio = diámetro / 2), en vez del genérico. Empezó siendo
+     * una excepción de EXPLOSION —que ancla al PECHO y simula la esfera que va a detonar ya
+     * formándose encima del cuerpo— y pasó a ser una propiedad del tipo cuando se pidió lo
+     * mismo para BIG_BLAST: con el radio genérico, cargar una bola de 4 bloques de diámetro
+     * se veía exactamente igual que cargar un blast normal, y el tamaño elegido no se leía
+     * hasta que el proyectil ya estaba en el aire.
      */
     private static float targetRadius(KiChargeClientState.Charge c) {
         if (c.type() == KiTechniqueType.BARRIER) {
             return BARRIER_CHARGE_RADIUS;
         }
-        if (c.type() == KiTechniqueType.EXPLOSION) {
+        if (c.type().chargeShowsRealSize()) {
             return (float) (c.type().projectileSize(c.size()) * 1.5 * 0.5);
         }
         return BASE_RADIUS + SIZE_RADIUS * c.size();
@@ -100,9 +120,9 @@ public final class KiChargeRenderer {
 
     /**
      * Radio de la bola de carga a un progreso dado (0 = empieza a cargar, 1 = carga completa).
-     * GENÉRICO (incluye BARRIER, que ahora comparte esta rama): crece desde START_SCALE del
-     * radio final (un puntito que no se lee como parpadeo) hasta el radio final completo —
-     * animación de energía apareciendo/condensándose.
+     * GENÉRICO (incluye BARRIER, que ahora comparte esta rama): crece desde un puntito del
+     * tamaño de un puño (START_SCALE acotado por START_RADIUS_CAP) hasta el radio final
+     * completo — animación de energía apareciendo/condensándose.
      * EXPLOSION: nunca por debajo de PLAYER_RADIUS, ni al empezar a cargar ni al soltarse.
      * Crece desde ese suelo hasta el radio de la técnica según el tamaño elegido
      * (targetRadius); en tamaño 1 el suelo y el objetivo coinciden, así que se queda constante
@@ -113,7 +133,11 @@ public final class KiChargeRenderer {
         if (c.type() == KiTechniqueType.EXPLOSION) {
             return Mth.lerp(progress, PLAYER_RADIUS, Math.max(PLAYER_RADIUS, target));
         }
-        return target * (START_SCALE + (1f - START_SCALE) * progress);
+        // El radio de partida es el MENOR de los dos criterios: la fracción del final y el
+        // techo absoluto (ver START_RADIUS_CAP). Nunca por encima del objetivo, para que una
+        // técnica cuyo radio final fuera minúsculo no empezara más grande de lo que acaba.
+        float start = Math.min(target * START_SCALE, Math.min(START_RADIUS_CAP, target));
+        return Mth.lerp(progress, start, target);
     }
 
     /** Ajuste SOLO visual y SOLO en primera persona: el modelo que ves ahí no está donde
@@ -122,6 +146,36 @@ public final class KiChargeRenderer {
     private static final float FP_FORWARD = 0.35f;
     private static final float FP_SIDE    = 0.10f;
     private static final float FP_DOWN    = 0.25f;
+
+    /**
+     * Aire mínimo entre la CÁSCARA de la esfera y la cámara, en primera persona y SOLO para
+     * los tipos que anticipan su tamaño real ({@link KiTechniqueType#chargeShowsRealSize()}).
+     * Una Genki Dama de tamaño 5 son 3.4 bloques de radio: dibujada en su sitio real deja la
+     * cámara DENTRO de la esfera y la pantalla se vuelve una pared de color. La respuesta NO
+     * es encogerla —eso deshace justo lo que esa bandera pide— sino APARTARLA en la dirección
+     * en la que ya estaba, hasta que su superficie quede a esta distancia. El tamaño aparente
+     * se conserva monótono: el ángulo que ocupa en pantalla es asin(r/(r+aire)), que sigue
+     * creciendo con el radio (una bola de 0.4 ocupa ~33°, una de 2.4 ocupa ~61°), así que
+     * sigue leyéndose "más grande" aunque esté más lejos.
+     * No se aplica a las demás técnicas a propósito: sus esferas de mano ya caben delante de
+     * la cámara, y moverlas sería cambiar un encuadre que ya estaba calibrado.
+     */
+    private static final double FP_CLEARANCE = 0.35;
+
+    /**
+     * Radio a partir del cual la esfera deja de CENTRARSE en su punto de anclaje y pasa a
+     * DESCANSAR sobre él (se sube el centro por el exceso). 0.45 es un pelo más que la esfera
+     * de mano más grande que produce BASE_RADIUS/SIZE_RADIUS (0.41 en tamaño 5), así que para
+     * cualquier técnica que no anticipe su tamaño real esto vale exactamente 0 y no cambia
+     * nada de lo ya calibrado.
+     * Por qué hace falta: una esfera centrada en la mano funciona mientras quepa en la mano.
+     * La Genki Dama de tamaño 3 son 3 bloques de RADIO — centrada en el punto medio de las dos
+     * manos, el jugador queda DENTRO de su propia bola y la mitad inferior atraviesa el suelo.
+     * Subiéndola por el exceso, la mano queda en el borde de abajo: la pose de "la sostengo en
+     * alto" que dice la animación. EXPLOSION se queda fuera de esta regla porque su ancla ES
+     * el centro del cuerpo a propósito (envolverte es su gracia).
+     */
+    private static final float REST_ON_ANCHOR_RADIUS = 0.45f;
 
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent e) {
@@ -217,6 +271,23 @@ public final class KiChargeRenderer {
             float radius = chargeRadius(c, progress)
                     * (1f + 0.05f * (float) Math.sin((now + pt) * 0.4));
 
+            // Los dos ajustes que dependen del radio YA calculado, en este orden y los dos
+            // ANTES de rememberDrawn: así el desvanecido al soltar arranca exactamente donde
+            // estaba la esfera y no da un salto.
+            // 1) Descansar sobre el ancla en vez de centrarse en ella (ver
+            //    REST_ON_ANCHOR_RADIUS). Dos exclusiones: EXPLOSION, cuyo ancla ES el cuerpo,
+            //    y el respaldo de primera persona (sin dato de hueso), donde el "ancla" es un
+            //    punto sintético delante de la cara, no tus manos — subir la esfera por encima
+            //    de él la sacaría del encuadre para descansar sobre algo que no existe.
+            boolean fpFallback = selfFirstPerson && anchors == null;
+            if (c.type() != KiTechniqueType.EXPLOSION && !fpFallback) {
+                origin = origin.add(0, Math.max(0f, radius - REST_ON_ANCHOR_RADIUS), 0);
+            }
+            // 2) Apartar de la cámara lo que no cabe delante de ella (ver FP_CLEARANCE).
+            if (selfFirstPerson && c.type().chargeShowsRealSize()) {
+                origin = pushOutOfCamera(camPos, origin, radius);
+            }
+
             float r = ((c.rgb() >> 16) & 0xFF) / 255f;
             float g = ((c.rgb() >> 8) & 0xFF) / 255f;
             float b = (c.rgb() & 0xFF) / 255f;
@@ -270,6 +341,22 @@ public final class KiChargeRenderer {
             }
         }
         if (drew) buffers.endBatch();
+    }
+
+    /**
+     * Aleja el centro de la esfera hasta que su superficie quede a FP_CLEARANCE de la cámara,
+     * conservando la DIRECCIÓN en la que ya estaba. Si ya cabe, se devuelve tal cual.
+     * El centro exactamente EN la cámara no se toca: no hay dirección que conservar y
+     * normalizar un vector de longitud cero daría NaN — un frame con la esfera en su sitio es
+     * infinitamente mejor que uno con la geometría desaparecida. En la práctica no ocurre: el
+     * origen sale de un hueso o de un offset fijo, nunca del ojo.
+     */
+    private static Vec3 pushOutOfCamera(Vec3 camPos, Vec3 origin, float radius) {
+        Vec3 fromCam = origin.subtract(camPos);
+        double dist = fromCam.length();
+        double minDist = radius + FP_CLEARANCE;
+        if (dist >= minDist || dist < 1.0E-4) return origin;
+        return camPos.add(fromCam.scale(minDist / dist));
     }
 
     /** ¿Esta posición sale de una mano? Decide si el ajuste extra de primera persona
