@@ -4,6 +4,7 @@ import com.hmc.zenkai.event.tick.*;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.aura.TurboServerState;
 import com.hmc.zenkai.feature.combat.DownedDeathGuard;
+import com.hmc.zenkai.feature.player.DeathScreenGuard;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.sense.ScouterOverload;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -19,7 +20,10 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
  * sistemas de event.tick en ORDEN y sincroniza al final.
  * EL ORDEN ES SEMÁNTICA, NO ESTILO:
  *   - los efectos persistentes van ANTES de cualquier corte (deben aplicarse siempre);
- *   - los tres gates (raza / derribado / body 0) cortan el tick por completo;
+ *   - los cuatro gates (muerte overkill pendiente / raza / derribado / body 0) cortan el
+ *     tick por completo; la muerte overkill pendiente va PRIMERA porque es incondicional y
+ *     no debe depender de que el resto de gates la dejen pasar (ver DownedSystem.
+ *     handlePendingOutrightKill);
  *   - oozaru va ANTES de forms: decide si el formId cambia por la luna antes de que forms
  *     procese ese formId como el activo del tick;
  *   - forms corta si está transformando, así que va antes de kaioken/carga/regen/movimiento;
@@ -37,6 +41,13 @@ public class ZenkaiTickHandlers {
         // servidor IGNORA la petición de reaparecer (exige getHealth() <= 0). Las muertes
         // CANCELADAS (derribado, otro mundo) restauran la vida antes de sync, así que al
         // tick siguiente ya llegan vivas y no las corta.
+        //
+        // holdDead() va ANTES del isDeadOrDying() y no en su lugar: son cortes distintos.
+        // isDeadOrDying() es, para un jugador, "tiene la vida en 0" — deja de ser cierto en
+        // cuanto alguien le escribe vida > 0, que es justo el estado roto del que hay que
+        // salir. holdDead() se apoya en un marcador propio que sobrevive a esa escritura y
+        // además la deshace (ver DeathScreenGuard).
+        if (DeathScreenGuard.holdDead(p)) return;
         if (p.isDeadOrDying()) return;
 
         TickCtx c = new TickCtx(p,
@@ -46,6 +57,7 @@ public class ZenkaiTickHandlers {
 
         PersistentEffectsSystem.tick(c);
 
+        if (DownedSystem.handlePendingOutrightKill(c)) return;
         if (RaceGateSystem.handle(c))          return;
         if (DownedSystem.handleDowned(c))      return;
         if (DownedSystem.handleBodyDepleted(c)) return;
@@ -94,6 +106,7 @@ public class ZenkaiTickHandlers {
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
         DownedDeathGuard.forget(e.getEntity().getUUID());
+        DownedSystem.forgetOutrightKill(e.getEntity().getUUID());
         PlayerTickState.forget(e.getEntity().getUUID());
         RacePassiveSystem.forget(e.getEntity().getUUID());
         WeightLoadSystem.forget(e.getEntity().getUUID());

@@ -17,10 +17,22 @@ public class PlayerLifeCycle {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent e) {
         Player p = e.getEntity();
         if (p.level().isClientSide()) return;
+        // Explícito y no solo desde el manejador propio de DeathScreenGuard: los dos
+        // escuchan el MISMO evento a la misma prioridad, y el orden entre ellos no está
+        // definido. Sin esto, si DeathScreenGuard fuese el segundo, el sync de más abajo
+        // llegaría con el marcador todavía puesto y mirrorHealth se saltaría el cuerpo nuevo.
+        DeathScreenGuard.forget(p.getUUID());
         PlayerStatsAttachment att = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         att.setImmortal(false);
         p.removeEffect(ModEffects.IMMORTALITY);
         p.removeEffect(ModEffects.MAJIN);
+        // PLAYER_STATS usa copyOnDeath (ver OtherworldManager.markPendingOtherworld): el flag
+        // "derribado" sobrevive a la muerte y aterriza en el cuerpo nuevo tal cual estaba en el
+        // viejo. Cada camino de muerte real del mod ya llama a clearDowned() antes de sp.die(),
+        // así que esto es una red redundante — pero barata, y el respawn genérico es el único
+        // punto que corre SIEMPRE, pase por donde pase la muerte.
+        att.flags().setDowned(false);
+        att.flags().setDownedUntil(0L);
         att.refillOnRespawn();
         var visual = p.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.setMajinControlled(false);
@@ -91,8 +103,11 @@ public class PlayerLifeCycle {
     private static void mirrorHealth(ServerPlayer sp) {
         if (!ServerConfig.mirrorHealth()) return;
         // Nunca se resucita a un muerto: subirle la vida rompe el respawn (ver arriba).
-        // isDeadOrDying cubre vida <= 0 y el flag dead de una muerte ya consumada.
-        if (sp.isDeadOrDying()) return;
+        // Para un JUGADOR, isDeadOrDying() es solo "vida <= 0" — ServerPlayer#die no llega a
+        // poner el flag dead de LivingEntity — así que deja de ser cierto en cuanto cualquier
+        // otro escritor mete vida > 0, y a partir de ahí este guardia ya no protege nada. El
+        // marcador de DeathScreenGuard no depende de la vida y sigue puesto hasta el respawn.
+        if (sp.isDeadOrDying() || DeathScreenGuard.isAwaitingRespawn(sp)) return;
 
         PlayerStatsAttachment att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         if (!att.isRaceChosen()) return;

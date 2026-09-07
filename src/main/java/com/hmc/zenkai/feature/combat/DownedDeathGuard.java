@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
 import com.hmc.zenkai.feature.sense.ScouterOverload;
 import com.hmc.zenkai.registry.ModGameRules;
+import com.hmc.zenkai.feature.player.DeathScreenGuard;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -54,6 +55,20 @@ public final class DownedDeathGuard {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onDeath(LivingDeathEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+
+        // YA MUERTO Y ESPERANDO RESPAWN: esta es una SEGUNDA muerte para el mismo cuerpo, y no
+        // hay ninguna primera que no se haya consumado ya. Se cancela sin tocar NADA más — sin
+        // vida, sin flags, sin forma. Ese "sin tocar nada" es el punto: el setHealth(1.0F) de
+        // la rama de derribado de más abajo, ejecutado sobre un jugador que ya recibió el
+        // paquete de muerte, es justo lo que dejaba el botón "Reaparecer" sin efecto (vanilla
+        // ignora la petición de respawn de cualquier jugador con vida > 0). Ver DeathScreenGuard.
+        // Cancelar además evita repetir el mensaje de muerte y el drop del inventario, porque
+        // ServerPlayer#die no tiene guardia de reentrada y se ejecutaría entera otra vez.
+        if (DeathScreenGuard.isAwaitingRespawn(sp)) {
+            ALLOW_DEATH.remove(sp.getUUID());
+            e.setCanceled(true);
+            return;
+        }
 
         // Muerte provocada por el propio mod: dejarla pasar y limpiar la marca.
         if (ALLOW_DEATH.remove(sp.getUUID())) return;

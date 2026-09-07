@@ -1,5 +1,7 @@
 package com.hmc.zenkai.content.effect;
 
+import com.hmc.zenkai.event.tick.DownedSystem;
+import com.hmc.zenkai.feature.player.DeathScreenGuard;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.world.effect.MobEffect;
@@ -21,8 +23,9 @@ import org.jetbrains.annotations.NotNull;
  * instante porque la regeneración le devuelve body durante el propio derribado. Sigue siendo
  * matable de dos formas, las dos en CombatZenkaiHooks y no aquí:
  *  1) Golpe único ≥ ServerConfig.immortalOverkillFraction() × su body máximo — el "golpe mayor
- *     de lo que tu cuerpo puede absorber" que avisa el propio deseo — se resuelve al instante,
- *     sin pasar por el derribado (isOverkillOnImmortal/killImmortalOutright).
+ *     de lo que tu cuerpo puede absorber" que avisa el propio deseo — se resuelve casi al
+ *     instante, sin pasar por el derribado (isOverkillOnImmortal/markImmortalOutrightKill,
+ *     resuelto de verdad en DownedSystem.handlePendingOutrightKill al siguiente tick limpio).
  *  2) DPS sostenido que mantenga el body en 0 los 5 s completos del derribado sin que esta
  *     regeneración logre sacarlo — el camino que YA existía antes de (1), y sigue vivo para
  *     cualquier combinación de golpes que no llegue de uno solo al umbral de (1).
@@ -48,6 +51,18 @@ public class ImmortalityEffect extends MobEffect {
     public boolean applyEffectTick(@NotNull LivingEntity livingEntity, int amplifier) {
         if (!(livingEntity instanceof Player player)) return true;
         if (player.level().isClientSide()) return true;
+
+        // MURIENDO O YA MUERTO: no se cura a quien está en el camino de morir de verdad, y
+        // menos a quien ya espera respawn — ahí una curación no solo llega tarde, sino que
+        // escribe vida > 0 y deja el botón "Reaparecer" muerto (ver DeathScreenGuard).
+        if (player.isDeadOrDying() || DeathScreenGuard.isAwaitingRespawn(player)) return true;
+        // Muerte overkill YA MARCADA (CombatZenkaiHooks.isOverkillOnImmortal) pero todavía sin
+        // resolver: PersistentEffectsSystem ya documenta que el tick de efectos de poción de
+        // vanilla corre ANTES que PlayerTickEvent.Post dentro del MISMO tick de juego, así que
+        // sin este guardia un ciclo de regen podría sumar body justo antes de que
+        // DownedSystem.handlePendingOutrightKill llegue a cortar el tick — dándole a la muerte
+        // "incondicional" una segunda oportunidad que no debía tener.
+        if (DownedSystem.hasPendingOutrightKill(player)) return true;
 
         PlayerStatsAttachment att = PlayerStatsAttachment.get(player);
 

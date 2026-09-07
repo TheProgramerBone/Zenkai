@@ -17,6 +17,7 @@ import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.technique.KiCombatServer;
 import com.hmc.zenkai.feature.technique.PhysicalCombatServer;
 import com.hmc.zenkai.feature.training.TrainingHooks;
+import com.hmc.zenkai.event.tick.DownedSystem;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -349,7 +350,7 @@ public class CombatZenkaiHooks {
 
                 PlayerStatsAttachment vAtt = PlayerStatsAttachment.get(sp);
                 if (isOverkillOnImmortal(vAtt, finalDamage)) {
-                    killImmortalOutright(sp, vAtt);
+                    markImmortalOutrightKill(sp);
                 } else {
                     onBodyDepleted(sp, vAtt);
                 }
@@ -489,6 +490,15 @@ public class CombatZenkaiHooks {
      * cuerpo entero de este jugador, a plena carga, tampoco habría aguantado ese golpe. Con
      * finalDamage por debajo del umbral, la inmortalidad sigue funcionando como siempre: cae
      * derribado y ImmortalityEffect lo levanta.
+     *
+     * CONTRATO: `finalDamage` tiene que ser SIEMPRE la salida de mitigate(), es decir el daño
+     * ya pasado por defensa, armadura, suelo de minDamagePercent, BLOQUEO, barrera de ki y
+     * absorción — nunca el `dmg` crudo del evento. Es lo que hace que bloquear valga contra un
+     * one-shot: mitigate() aplica blockDamageMultiplier() (corta como mínimo un 20%, hasta un
+     * 50% con Ki Block al 5) DESPUÉS del suelo de minDamagePercent, así que un golpe que sin
+     * bloquear pasaría el umbral puede quedarse por debajo y resolverse como derribado normal
+     * — del que un inmortal se levanta solo. Pasar el daño crudo aquí haría que bloquear no
+     * cambiara nada frente a la única cosa de la que hay que defenderse.
      */
     private static boolean isOverkillOnImmortal(PlayerStatsAttachment att, double finalDamage) {
         return att.isImmortal()
@@ -497,22 +507,29 @@ public class CombatZenkaiHooks {
 
     /**
      * Un inmortal acaba de recibir un golpe overkill: ni el derribado ni la regeneración de
-     * ImmortalityEffect le dan una oportunidad. Vivo, esto es una muerte real (mismo camino que
-     * DownedSystem usa al expirar un derribado normal — allowRealDeath primero, o
-     * DownedDeathGuard la cancelaría igual que cancelaría cualquier otra). En el Otro Mundo no
-     * hay una segunda muerte que dar: el equivalente es el mismo reseteo que ya usa
-     * OtherworldManager para cualquier golpe que lo tumbe allí.
+     * ImmortalityEffect le dan una oportunidad. Esto es una muerte real, pero NUNCA se resuelve
+     * aquí mismo. Llamar a sp.die() desde dentro de LivingDamageEvent.Pre es reentrante: el
+     * evento se dispara en mitad de LivingEntity#actuallyHurt, y al volver, LivingEntity#hurt
+     * ve isDeadOrDying() y llama a die() OTRA VEZ (ServerPlayer#die no tiene guardia de
+     * reentrada) — con el paquete de muerte ya en camino al cliente. Esa segunda pasada acababa
+     * en la rama de derribado normal de DownedDeathGuard, que hace setHealth(1.0F), y vanilla
+     * ignora en silencio el botón "Reaparecer" de cualquier jugador con vida > 0. Ver el
+     * comentario de DownedSystem.PENDING_OUTRIGHT_KILL para la cadena completa.
+     *
+     * Así que aquí solo suena el golpe y se marca; DownedSystem.handlePendingOutrightKill()
+     * resuelve la muerte de verdad en el siguiente tick limpio (PlayerTickEvent.Post), el mismo
+     * camino ya probado que usa el timeout del derribado normal — Otro Mundo, allowRealDeath,
+     * causa real y reseteo completo de pose/lock incluidos.
+     *
+     * Un Totem of Undying NO salva de este golpe. La muerte sale de un tick limpio, o sea fuera
+     * de hurt(), que es donde vanilla revisaría el totem; y handlePendingOutrightKill no replica
+     * el chequeo a mano como sí hace DownedSystem.handleDowned para el timeout del derribado.
+     * Es una decisión de balance abierta, no un descuido: cambiarla es añadir allí la misma
+     * llamada a consumeTotem() que ya usa handleDowned.
      */
-    private static void killImmortalOutright(ServerPlayer sp, PlayerStatsAttachment att) {
-        if (att.isInOtherworld()) {
-            OtherworldManager.keepInOtherworld(sp);
-            return;
-        }
+    private static void markImmortalOutrightKill(ServerPlayer sp) {
         playKnockout(sp);
-        DownedDeathGuard.allowRealDeath(sp);
-        sp.setHealth(0.0F);
-        DamageSource cause = DeathCauseTracker.take(sp.getUUID());
-        sp.die(cause != null ? cause : sp.damageSources().generic());
+        DownedSystem.markOutrightKill(sp);
     }
 
     /**
@@ -527,9 +544,9 @@ public class CombatZenkaiHooks {
      * LA INMORTALIDAD NO SE MIRA AQUÍ TAMPOCO. Un inmortal cae derribado como cualquiera y se
      * levanta solo porque ImmortalityEffect le devuelve body muy rápido — salvo que el golpe que
      * lo tumbó sea "mayor de lo que su cuerpo puede absorber" (ver
-     * CombatZenkaiHooks.isOverkillOnImmortal), caso que ni siquiera llega a esta clase: se
-     * resuelve antes, en applyToZenkaiVictim, precisamente para que ni el derribado ni la
-     * regeneración le den una oportunidad.
+     * CombatZenkaiHooks.isOverkillOnImmortal), caso que ni siquiera llega a esta función: se
+     * marca antes, en applyToZenkaiVictim, y se resuelve en el siguiente tick limpio,
+     * precisamente para que ni el derribado ni la regeneración le den una oportunidad.
      */
     private static void onBodyDepleted(Player victim, PlayerStatsAttachment att) {
         if (!(victim instanceof ServerPlayer sp)) return;
@@ -543,7 +560,7 @@ public class CombatZenkaiHooks {
     }
 
     /** El golpe que derriba o mata de verdad a un jugador — ver onBodyDepleted y
-     *  killImmortalOutright, los dos únicos sitios que lo llaman. NO se llama desde
+     *  markImmortalOutrightKill, los dos únicos sitios que lo llaman. NO se llama desde
      *  DownedSystem: el timeout de 5 s sin curarse no es un golpe, es un temporizador. */
     private static void playKnockout(ServerPlayer sp) {
         sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(),

@@ -48,7 +48,7 @@ public class ModSounds {
      *  variantes, mismo motivo que HIT. */
     public static final Supplier<SoundEvent> BLOCK = registerSoundEvent("block");
     /** El golpe que derriba ("entra en derribado") o mata de verdad a un jugador — ver
-     *  CombatZenkaiHooks.onBodyDepleted/killImmortalOutright. NO suena en el timeout de
+     *  CombatZenkaiHooks.onBodyDepleted/markImmortalOutrightKill. NO suena en el timeout de
      *  DownedSystem: ese desenlace no es un golpe, es un temporizador expirando. */
     public static final Supplier<SoundEvent> KNOCKOUT = registerSoundEvent("knockout");
     /** Impacto de una PhysicalTechnique (Dash Punch/Heavy Blow/Barrage/Kiai) que CONECTA sin que

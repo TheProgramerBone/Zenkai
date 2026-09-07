@@ -32,7 +32,14 @@ public final class OtherworldManager {
         return player.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).isInOtherworld();
     }
 
-    /** Cura vida vanilla + pools (incluida la barra HP/body) y limpia estado de daño. */
+    /** Cura vida vanilla + pools (incluida la barra HP/body) y limpia estado de daño.
+     *  NO retira el marcador de DeathScreenGuard, a propósito. Si esto se llama sobre alguien
+     *  que sigue en la pantalla de muerte (revivirlo por comando o por deseo antes de que
+     *  pulse "Reaparecer"), retirarlo lo dejaría vivo en el servidor y encerrado en la pantalla,
+     *  porque vanilla ignora el respawn de cualquier jugador con vida > 0. Dejando el marcador
+     *  puesto, el guardia le devuelve la vida a 0 al tick siguiente, el jugador reaparece
+     *  normalmente y el resto de lo que hace revivir (quitar el flag del Otro Mundo, el destino)
+     *  se conserva. El marcador se retira SOLO al reaparecer o al desconectar: sin excepciones. */
     private static void fullHeal(ServerPlayer player) {
         player.getFoodData().setFoodLevel(20);
         player.removeAllEffects();
