@@ -9,6 +9,7 @@ import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.LockIconButton;
+import com.hmc.zenkai.client.gui.buttons.PlayIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
@@ -27,6 +28,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
@@ -82,9 +84,15 @@ public class TechniqueEditScreen extends Screen {
     private static final int Y_TABS  = Y_NAME + 20;
     private static final int Y_ROWS  = Y_TABS + 22;
     private static final int Y_BLOCK = 148;   // previews de combate
-    private static final int Y_PREVIEW = 150; // caja de animación (STYLE); la fila 4 acaba en 142
+    // STYLE: color(58) → charge(76) → play-charge(94) → release(109) → play-release(127) →
+    // animación(142, 14 alto, acaba en 156). Y_PREVIEW/Y_UNLOCK bajaron +10 (140→150 pasó a
+    // 150→160 y 214→224) para dejarle sitio a los dos PlayIconButton sin pisar la caja de
+    // animación del jugador ni el candado — el hueco vacío que había antes entre la fila de
+    // animación y la caja de preview (24px sin usar) es justo lo que se gastó aquí.
+    private static final int PLAY_ROW_H = 15; // 12px de icono + 3px de aire hasta la fila siguiente
+    private static final int Y_PREVIEW = 160; // caja de animación (STYLE)
     private static final int PREVIEW_H = 58;
-    private static final int Y_UNLOCK = 214;
+    private static final int Y_UNLOCK = 224;
     private static final int Y_BUTTONS = BG_H + 4; // FUERA del panel
     private static final int TRASH_SIZE = 16;  // 32px de textura / 2 → reducción limpia
 
@@ -329,6 +337,8 @@ public class TechniqueEditScreen extends Screen {
                         .append(soundLabel(charges.get(Math.floorMod(chargeIdx, charges.size())))),
                 dir -> { chargeIdx = Math.floorMod(chargeIdx + dir, charges.size()); rebuildWidgets(); });
         y += ROW_H;
+        playRow(x, y, contentW, charges.get(Math.floorMod(chargeIdx, charges.size())));
+        y += PLAY_ROW_H;
 
         List<ResourceLocation> releases = soundList(false);
         cyclerRow(x, y, contentW,
@@ -336,6 +346,8 @@ public class TechniqueEditScreen extends Screen {
                         .append(soundLabel(releases.get(Math.floorMod(releaseIdx, releases.size())))),
                 dir -> { releaseIdx = Math.floorMod(releaseIdx + dir, releases.size()); rebuildWidgets(); });
         y += ROW_H;
+        playRow(x, y, contentW, releases.get(Math.floorMod(releaseIdx, releases.size())));
+        y += PLAY_ROW_H;
 
         List<Integer> sets = TechniqueAnimSets.available();
 
@@ -508,6 +520,32 @@ public class TechniqueEditScreen extends Screen {
         addRenderableWidget(left);
         addRenderableWidget(mid);
         addRenderableWidget(right);
+    }
+
+    /**
+     * Triángulo "▶" centrado, debajo de una fila de sonido (Charge/Fire) — separa visualmente
+     * una fila de la siguiente de paso, que era el otro motivo por el que se pidió (además de
+     * poder escuchar el sonido sin salir del editor). Se apaga (gris, sin acción) cuando la
+     * opción elegida es "sin sonido" (id == null): no hay nada que reproducir, y una fila
+     * activa que no hace nada al pulsarla es peor que una apagada que explica por qué.
+     */
+    private void playRow(int x, int y, int w, ResourceLocation soundId) {
+        PlayIconButton play = new PlayIconButton(
+                x + (w - PlayIconButton.SIZE) / 2, y, () -> previewSound(soundId));
+        play.active = soundId != null;
+        play.setTooltip(Tooltip.create(Component.translatable(soundId != null
+                ? "screen.zenkai.technique.sound_preview"
+                : "screen.zenkai.technique.sound_preview_none")));
+        addRenderableWidget(play);
+    }
+
+    /** Sonido de UI puro (SimpleSoundInstance.forUI): sin posición, mismo trato que ya usa
+     *  MeditationScreen/TargetPracticeScreen para su propio feedback de nota — se oye igual sin
+     *  importar dónde mire o esté el jugador, porque no es un evento del mundo, es del menú. */
+    private void previewSound(@Nullable ResourceLocation soundId) {
+        var sound = TechniqueAssets.soundOf(soundId);
+        if (sound == null) return;
+        mc.getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0f, 1.0f));
     }
 
     private String initialName() {

@@ -189,6 +189,9 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
      * instancia — que es la mitad fácil de olvidar: sin ella el jugador tiene la técnica firma
      * "aprendida" pero sin nada que asignar a una casilla, y no hay ningún error que lo diga.
      * Devuelve false si el tipo ya estaba desbloqueado (nada que sincronizar).
+     * Una técnica de maestro NO cuenta contra el límite de 12 slots de ki (ese límite es solo
+     * para las que fabrica el jugador en el editor, ver PlayerTechniques.customSlotCount()),
+     * así que su instancia se crea siempre, sin gate de hueco.
      */
     public static boolean grant(PlayerStatsAttachment att, KiTechniqueType type) {
         if (att.techniques().isUnlocked(type)) return false;
@@ -198,10 +201,7 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         // enseña ENTERA, así que su instancia se crea aquí mismo y aparece ya lista para
         // asignar. El nombre se guarda VACÍO a propósito — displayName() cae al nombre
         // traducido del tipo, y así cada jugador lo lee en su idioma (ver KiTechnique).
-        // Si la lista de ki está llena la instancia no se crea y el tipo queda desbloqueado
-        // igualmente: la pantalla de técnicas ofrece recrearla cuando el jugador haga hueco.
-        if (!type.master().isEmpty()
-                && att.techniques().slotCount() < ServerConfig.techniqueMaxSlots()) {
+        if (!type.master().isEmpty()) {
             att.techniques().addSlot(new KiTechnique("", type, type.defaultRgb(),
                     SIGNATURE_DEFAULT_SIZE, TechniqueEffect.NONE, null, null,
                     SIGNATURE_DEFAULT_ANIM));
@@ -243,7 +243,13 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         int animSet = TechniqueAnimSet.clamp(pkt.animSet());
 
         if (pkt.slot() < 0) { // crear
-            if (att.techniques().slotCount() >= ServerConfig.techniqueMaxSlots()) return false;
+            // El límite de 12 solo aplica a técnicas que el jugador fabrica (sin master): una
+            // técnica firma recreada aquí (papelera -> "Create") no ocupa ese hueco, ver
+            // PlayerTechniques.customSlotCount().
+            if (type.master().isEmpty()
+                    && att.techniques().customSlotCount() >= ServerConfig.techniqueMaxSlots()) {
+                return false;
+            }
             att.techniques().addSlot(new KiTechnique(name, type, rgb, size,
                     TechniqueEffect.byOrdinal(pkt.effect()), charge, release, animSet));
             return true;

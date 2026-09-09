@@ -750,6 +750,8 @@
   "screen.zenkai.technique.sound_charge": "Charge Sound",
   "screen.zenkai.technique.sound_release": "Fire Sound",
   "screen.zenkai.technique.sound.none": "None",
+  "screen.zenkai.technique.sound_preview": "Play sound",
+  "screen.zenkai.technique.sound_preview_none": "No sound selected",
   "screen.zenkai.technique.anim": "Animation: %s",
   "screen.zenkai.technique.edit_title": "Ki Technique Editor",
   "screen.zenkai.technique.name": "Name",

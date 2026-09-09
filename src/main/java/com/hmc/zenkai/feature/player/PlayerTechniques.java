@@ -96,6 +96,18 @@ public final class PlayerTechniques {
     public KiTechnique slot(int i)               { return (i >= 0 && i < slots.size()) ? slots.get(i) : null; }
     public int slotCount()                       { return slots.size(); }
 
+    /** Igual que {@link #slotCount()} pero SIN contar instancias de técnica firma (Spirit
+     *  Bomb, etc.). El límite de `ServerConfig.techniqueMaxSlots()` (12) es el hueco de
+     *  técnicas de ki que el JUGADOR fabrica en el editor — una técnica de maestro la enseña
+     *  el maestro entero, no ocupa ese hueco, así que no debe contar ni para el contador
+     *  "X/12" ni para el gate de "sin sitio para una más". Usar esta función, no slotCount(),
+     *  en cualquier sitio que compare contra techniqueMaxSlots(). */
+    public int customSlotCount() {
+        int n = 0;
+        for (KiTechnique t : slots) if (t.type().master().isEmpty()) n++;
+        return n;
+    }
+
     public void addSlot(KiTechnique t)           { slots.add(t); }
 
     public void removeSlot(int i) {

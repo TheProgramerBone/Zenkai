@@ -32,17 +32,39 @@ esa es la palanca dominante del sistema, no damage_tp_factor/tp_per_pl (que
 solo importan para que un kill individual se sienta bien recompensado, o para
 forzar la eficiencia por debajo del suelo a base de fuerza bruta).
 
-Parametro libre que SI hace falta declarar a mano: cuantos segundos tarda un
-kill "de nivel" (contra una presa que da ratio de poder completo). Mirar
-CombatZenkaiHooks para derivarlo con precision requeriria modelar multiplicador
-de arma, chargeF, Ki Fist/Ki Infuse y mitigacion por defensa -- una cadena
-demasiado larga y sensible a build/gear para tratarla como un numero
-calculable sin jugarlo. En vez de eso se trata como el PARAMETRO DE RITMO DE
-DISEnO (cuanto debe durar una pelea de entrenamiento normal), constante a lo
-largo de toda la progresion -- que es ademas la hipotesis mas razonable: un
-jugador que invierte en combate deberia matar cosas de su nivel a un ritmo
-mas o menos parejo en todo momento, no cada vez mas lento ni mas rapido.
-Se prueban varios valores para acotar el rango.
+Parametro libre declarado a mano en la primera version de este script:
+cuantos segundos tarda un kill "de nivel" (contra una presa que da ratio de
+poder completo). Se probaban varios valores (2-40s) para acotar el rango
+porque derivarlo con precision requeria modelar multiplicador de arma,
+chargeF, Ki Fist/Ki Infuse y mitigacion por defensa.
+
+ACTUALIZADO 2026-09-09: esa cadena YA esta modelada (ver kill_seconds_real()
+mas abajo, espejo linea a linea de CombatZenkaiHooks.playerMeleeDamage +
+.mitigate()) -- el numero de segundos por kill ya NO hace falta declararlo a
+mano, se CALCULA a partir de las mismas formulas reales de combate, en el
+mismo punto de progresion (TP invertido) que el resto de la simulacion.
+Simplificaciones deliberadas del modelo de combate (documentadas donde se
+usan, no ocultas):
+  - A PUNO LIMPIO o con una espada de hierro SIN encantar (ATTACK_MODES) --
+    Ki Fist/Ki Infuse y encantamientos vanilla se dejan en 0 a proposito:
+    modelarlos añadiria variables de build (cuanto ki gasta, que encantamiento
+    lleva) en vez de dar un numero de referencia limpio. Los dos modos dan
+    una cota INFERIOR de DPS real, no un techo -- cualquier inversion en ki
+    solo puede acelerar el kill, nunca ralentizarlo.
+  - chargeF = 1.0 (carga completa) siempre: se asume que el jugador espera el
+    cooldown de vainilla entre golpes en vez de hacer spam -- mismo criterio
+    que "ritmo de diseño constante" de la version anterior, pero ahora
+    aplicado a CADA golpe individual, no a la pelea entera.
+  - Sin critico vainilla (salto+caida) ni armadura del mob: ambos solo
+    ACORTAN el kill si se dieran, asi que de nuevo el numero es una cota
+    inferior de velocidad real, nunca una sobreestimacion.
+El HALLAZGO CLAVE de mas arriba (TP/hora sostenido NO depende del ritmo de
+combate) sigue siendo cierto y sigue siendo la razon real de por que
+damage_tp_factor/fatigue_decay_per_minute son las palancas que importan --
+esto no lo cambia. Lo que aporta kill_seconds_real() es poder CONFIRMAR que
+el ritmo de combate resultante se sigue sintiendo bien (ni instantaneo ni
+eterno) en vez de suponerlo, y reemplazar el rango adivinado 2-40s por un
+numero trazable hasta el código real.
 """
 
 import math
@@ -81,6 +103,35 @@ ARCHETYPES = {
 TARGET_TP = 5_000_000
 MAX_HOURS_CUTOFF = 600  # si no llega antes de esto, se reporta como "no alcanzado"
 
+# ── Combate real (CombatZenkaiHooks) -- espejo, 2026-09-09 ──────────────────
+MIN_DAMAGE_PERCENT = 0.05  # ServerConfig.minDamagePercent(): suelo de mitigate()
+WEAPON_SCALE        = 0.04  # ServerConfig.weaponScale(): KiInfusion.weaponMultiplier()
+MELEE_FROM_WIL       = 0.15  # StatSynergy.MELEE_FROM_WIL: melee = (STR + WIL*esto) * coef
+
+# Coeficiente de melee del JUGADOR (RaceStatTable, data/zenkai/zenkai_race_stats/*.json):
+# humano "warrior" -- la combinacion mas generalista/de pelea de las 15 (5 razas x 3
+# estilos), elegida como referencia neutra en vez de barrer las 15 (el objetivo es un
+# numero de referencia trazable, no un barrido de builds). El coeficiente de DEFENSA de la
+# VICTIMA no hace falta declararlo: EntityStats.computeDefenseFinal() = DEX directo, SIN
+# coeficiente de raza -- ese multiplicador solo existe para el lado JUGADOR (StatSynergy).
+PLAYER_MELEE_COEF = 9.8  # human.json -> "warrior" -> "melee"
+
+# base_attributes de human.json (misma raza que PLAYER_MELEE_COEF) -- un personaje recién
+# creado, con 0 TP invertido, YA tiene esto en cada atributo antes de comprar ni un punto.
+# Sin sumarlo, kill_seconds_real(0, ...) da strDamage=0 -> hit=0 -> "inf" segundos por kill
+# (division por cero encubierta): un personaje de verdad nunca está en cero absoluto.
+BASE_ATTR = 5
+
+# Attributes.ATTACK_SPEED de vainilla: base 4.0 a puño limpio (cooldown = 20/4.0 = 5 ticks =
+# 0.25s por golpe a carga completa); una espada de hierro resta 2.4 (deja 1.6, 0.625s/golpe)
+# y aporta weaponMultiplier vía KiInfusion.weaponMultiplier -- attackDamageOf con espada de
+# hierro sin encantar = 4.0 (1.0 base + 3.0 del arma), extra = 3.0, *WEAPON_SCALE.
+ATTACK_MODES = {
+    "puño limpio":     dict(attack_speed=4.0, weapon_mult=1.0),
+    "espada de hierro": dict(attack_speed=1.6,
+                              weapon_mult=1.0 + max(0.0, 4.0 - 1.0) * WEAPON_SCALE),
+}
+
 
 # ── Coste de atributos: cost(n 0-indexado) = base + coef*n -> cumulative(N) = N(N+1)/2 ──
 def points_from_invested_tp(tp_invested: float) -> float:
@@ -107,15 +158,77 @@ def victim_body_max(victim_pl: float, archetype: str) -> float:
     return max(1.0, 10 + con * body_mult * BODY_SCALE)
 
 
+# ── Combate real: CombatZenkaiHooks.playerMeleeDamage + .mitigate(), espejo ─────────────
+def player_str_wil(tp_total_invested: float):
+    """STR y WIL del jugador: BASE_ATTR (base de raza, ver arriba) + puntos INVERTIDOS bajo
+    el mismo reparto uniforme que player_pl_from_tp (las 5 stats contadas reciben el mismo
+    numero de puntos) -- asi que STR == WIL == BASE_ATTR + n."""
+    per_attr_tp = tp_total_invested / NUM_COUNTED_ATTRS
+    n = points_from_invested_tp(per_attr_tp) + BASE_ATTR
+    return n, n
+
+
+def player_melee_hit(tp_total_invested: float, weapon_mult: float = 1.0) -> float:
+    """Un golpe a carga completa (chargeF=1.0), sin encantamientos vainilla ni bonus de Ki
+    Fist/Ki Infuse (0 en los dos, ver docstring del modulo) -- CombatZenkaiHooks.
+    playerMeleeDamage: base = strDamage * weaponMultiplier * enchantMult(=1) * chargeF(=1)."""
+    str_, wil = player_str_wil(tp_total_invested)
+    str_damage = (str_ + wil * MELEE_FROM_WIL) * PLAYER_MELEE_COEF
+    return str_damage * weapon_mult
+
+
+def mitigated_hit(raw_hit: float, defense: float) -> float:
+    """CombatZenkaiHooks.mitigate(), rama no-ambiental: sin armadura del mob (armorMult=1.0,
+    la mayoria de mobs vainilla no llevan), sin bloqueo/barrera/absorcion (la presa de
+    granjeo no bloquea). finalDamage = dmg*(1 - def/(def+dmg)), suelo en MIN_DAMAGE_PERCENT."""
+    if defense <= 0.0:
+        final = raw_hit
+    else:
+        final = raw_hit * (1.0 - defense / (defense + raw_hit))
+    return max(final, raw_hit * MIN_DAMAGE_PERCENT)
+
+
+def victim_defense(victim_pl: float, archetype: str) -> float:
+    """EntityStats.computeDefenseFinal() = DEX directo (SIN coeficiente de raza) -- y DEX =
+    victim_pl * shape[DEX]/shape_sum, exactamente el mismo reparto que PowerLevel.
+    solveAttributes usa para CON en victim_body_max (ver su docstring)."""
+    shape = ARCHETYPES[archetype]["shape"]
+    dex_frac = shape[2] / sum(shape)  # shape = (STR, CON, DEX, WIL, SPI)
+    return victim_pl * dex_frac
+
+
+def kill_seconds_real(tp_total_invested: float, archetype: str, mode: str) -> float:
+    """Segundos para matar a la presa exacta del umbral de ratio completo (PL_RATIO_FULL),
+    derivados de la formula REAL de combate en el punto de progresion dado -- sustituye al
+    parametro de ritmo de diseño declarado a mano de la version anterior de este script."""
+    pl = max(1.0, player_pl_from_tp(tp_total_invested))
+    victim_pl = PL_RATIO_FULL * pl
+    body_max = victim_body_max(victim_pl, archetype)
+    defense = victim_defense(victim_pl, archetype)
+
+    m = ATTACK_MODES[mode]
+    raw_hit = player_melee_hit(tp_total_invested, weapon_mult=m["weapon_mult"])
+    hit = mitigated_hit(raw_hit, defense)
+    if hit <= 0.0:
+        return float("inf")
+    hits_needed = math.ceil(body_max / hit)
+    return hits_needed / m["attack_speed"]
+
+
 def simulate(archetype: str, kill_seconds: float, burst_minutes: float, rest_minutes: float,
-             use_htc: bool, weight_mult: float, max_hours: float = MAX_HOURS_CUTOFF):
+             use_htc: bool, weight_mult: float, max_hours: float = MAX_HOURS_CUTOFF,
+             combat_mode: str = None):
     """
     Devuelve (horas_hasta_target o None, lista de checkpoints (horas, tp_total)).
     Ciclo: mata en rafaga durante burst_minutes (si es 0 => granjeo continuo sin pausas),
     luego descansa rest_minutes (fatiga decae, nada de TP), repite.
     La presa siempre se elige en el umbral exacto de ratio completo (ver docstring del modulo).
-    kill_seconds es CONSTANTE durante toda la progresion (parametro de ritmo de diseno,
-    ver docstring del modulo) -- no depende del PL actual del jugador.
+
+    kill_seconds: si combat_mode es None (comportamiento ORIGINAL), es una CONSTANTE durante
+    toda la progresion -- el parametro de ritmo de diseño declarado a mano. Si combat_mode es
+    "puño limpio"/"espada de hierro" (ATTACK_MODES), kill_seconds se IGNORA y se recalcula en
+    cada iteracion con kill_seconds_real(tp_total, archetype, combat_mode) -- el ritmo real de
+    combate en el punto de progresion actual, no un numero fijo.
     """
     tp_total = 0.0
     fatigue = 0.0
@@ -140,7 +253,8 @@ def simulate(archetype: str, kill_seconds: float, burst_minutes: float, rest_min
         victim_pl = PL_RATIO_FULL * pl  # umbral exacto: plFactor = 1.0
         body_max = victim_body_max(victim_pl, archetype)
         raw_tp = body_max * DAMAGE_TP_FACTOR + victim_pl * TP_PER_PL
-        kill_minutes = kill_seconds / 60.0
+        ks = kill_seconds_real(tp_total, archetype, combat_mode) if combat_mode else kill_seconds
+        kill_minutes = ks / 60.0
 
         # Decay desde el ultimo evento (lazy decay, igual que TrainingHooks.grant()).
         fatigue = max(0.0, fatigue - FATIGUE_DECAY_PER_MIN * kill_minutes)
@@ -174,7 +288,18 @@ def fmt_hours(h):
 if __name__ == "__main__":
     print(f"Objetivo: {TARGET_TP:,} TP  (PL implicado ~= {player_pl_from_tp(TARGET_TP):.0f})\n")
 
-    print("=== Sensibilidad a segundos-por-kill de nivel (parametro de ritmo de diseno) ===")
+    print("=== NUEVO 2026-09-09: segundos-por-kill REALES, derivados de CombatZenkaiHooks ===")
+    print("(sustituye al rango adivinado de la seccion siguiente -- ver docstring del modulo)\n")
+    print(f"{'TP invertido':>14s} {'PL jugador':>11s} {'puño limpio':>13s} {'espada hierro':>14s}")
+    for tp_point in (0, 1_000, 100_000, 1_000_000, TARGET_TP):
+        pl_here = player_pl_from_tp(tp_point)
+        fist = kill_seconds_real(tp_point, "balanced", "puño limpio")
+        sword = kill_seconds_real(tp_point, "balanced", "espada de hierro")
+        print(f"{tp_point:>14,} {pl_here:>11,.0f} {fist:>11.1f}s {sword:>12.1f}s")
+    print("(arquetipo=balanced; cota INFERIOR de DPS real -- sin Ki Fist/Infuse, sin "
+          "encantamientos, sin critico -- ver docstring de kill_seconds_real)")
+
+    print("\n=== Sensibilidad a segundos-por-kill de nivel (parametro de ritmo de diseno) ===")
     print("Arquetipo=balanced, granjeo CONTINUO (sin rafagas), sin HTC ni pesas:\n")
     for ks in (2, 5, 10, 20, 40):
         h, _ = simulate("balanced", ks, burst_minutes=0, rest_minutes=0,
@@ -229,3 +354,15 @@ if __name__ == "__main__":
             else:
                 lo = mid
         print(f"  Para llegar en {target_h}h hacen falta ~{lo:.1f}s por kill de nivel (o mas rapido)")
+
+    print("\n=== NUEVO 2026-09-09: horas a 5M con combate REAL (no un s/kill adivinado) ===")
+    print("Mismos escenarios de la matriz de arriba, pero kill_seconds se recalcula cada golpe")
+    print("con kill_seconds_real() -- confirma si el rango adivinado (arriba) fue optimista o")
+    print("pesimista frente a lo que el arquetipo balanced realmente puede hacer a puño limpio:\n")
+    print(f"{'cadencia (burst/descanso min)':32s} {'HTC':>5s} {'pesas x2.5':>11s} {'horas a 5M':>11s}")
+    for burst, rest, htc, wmult in scenarios:
+        h, _ = simulate("balanced", 0, burst_minutes=burst, rest_minutes=rest,
+                         use_htc=htc, weight_mult=wmult, combat_mode="puño limpio")
+        cadence = "continuo" if burst == 0 else f"{burst:g}/{rest:g}"
+        print(f"{cadence:32s} {str(htc):>5s} {wmult:>11.1f} {fmt_hours(h):>11s}")
+    print("(kill_seconds ignorado -- el 0 es un placeholder, combat_mode manda)")

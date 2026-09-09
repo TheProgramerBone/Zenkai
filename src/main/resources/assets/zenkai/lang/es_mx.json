@@ -747,6 +747,8 @@
   "screen.zenkai.technique.sound_charge": "Sonido de Carga",
   "screen.zenkai.technique.sound_release": "Sonido de Disparo",
   "screen.zenkai.technique.sound.none": "Ninguno",
+  "screen.zenkai.technique.sound_preview": "Reproducir sonido",
+  "screen.zenkai.technique.sound_preview_none": "Sin sonido elegido",
   "screen.zenkai.technique.anim": "Animación: %s",
   "screen.zenkai.technique.edit_title": "Editor de Técnicas de Ki",
   "screen.zenkai.technique.name": "Nombre",

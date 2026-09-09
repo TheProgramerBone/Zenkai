@@ -301,7 +301,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         // PartyScreen pasó sus acciones a iconos, ver CLAUDE.md). Además liberó los 12 px que
         // hacían que ki enseñara una fila menos que las otras categorías.
         if (category == Category.KI
-                && att.techniques().slotCount() < ServerConfig.techniqueMaxSlots()) {
+                && att.techniques().customSlotCount() < ServerConfig.techniqueMaxSlots()) {
             PlusIconButton add = new PlusIconButton(xPlus(), yPlus(),
                     () -> mc.setScreen(new TechniqueEditScreen(-1)));
             add.setTooltip(Tooltip.create(
@@ -413,19 +413,14 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
 
             if (slot < 0) {
                 // Instancia borrada con la papelera: se puede recrear gratis (el tipo sigue
-                // desbloqueado). Se apaga si no queda hueco en la lista de ki.
-                boolean room = tech.slotCount() < ServerConfig.techniqueMaxSlots();
+                // desbloqueado). Una técnica de maestro NO cuenta contra el límite de 12 slots
+                // de ki (ver PlayerTechniques.customSlotCount()), así que aquí siempre hay
+                // hueco — a diferencia de "Nueva técnica" en la categoría Ki, este botón nunca
+                // se apaga.
                 TextOnlyButton create = actionButton(
                         Component.translatable("screen.zenkai.master_techniques.create"),
                         () -> createSignature(type));
-                create.active = room;
-                addRow(bucket, create, DY_ACTION, room);
-                if (!room) {
-                    hoverTips.add(new HoverTip(create, () -> List.of(
-                            Component.translatable("screen.zenkai.master_techniques.create_full",
-                                    ServerConfig.techniqueMaxSlots())
-                                    .withStyle(ChatFormatting.RED))));
-                }
+                addRow(bucket, create, DY_ACTION, true);
                 return;
             }
 
@@ -880,7 +875,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                 free, MindBudget.total(att));
         Component sep = Component.literal(" · ");
         Component ki = Component.translatable("screen.zenkai.technique.count_ki",
-                att.techniques().slotCount(), ServerConfig.techniqueMaxSlots());
+                att.techniques().customSlotCount(), ServerConfig.techniqueMaxSlots());
 
         int wMnd = this.font.width(mnd), wSep = this.font.width(sep), wKi = this.font.width(ki);
         int x = rightEdge() - wMnd - wSep - wKi;
