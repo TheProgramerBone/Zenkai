@@ -1,6 +1,7 @@
 package com.hmc.zenkai.event;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.client.aura.AuraClientState;
 import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.client.InstantTransmissionClientState;
@@ -315,7 +316,7 @@ public final class ClientZenkaiHooks {
         }
 
         // --- Acciones (misma altura) ---
-        if (stats.isFlyEnabled() && SkillEffects.canFly(mc.player)) {
+        if (ClientZenkaiPalTick.fastFlightMode && SkillEffects.canFly(mc.player)) {
             drawBadge(g, iconX, iconY, ICON_FLY);
             iconX += BADGE_SIZE + BADGE_PAD;
         }

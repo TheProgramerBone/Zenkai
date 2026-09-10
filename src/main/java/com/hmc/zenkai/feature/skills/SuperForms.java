@@ -8,7 +8,12 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Habilidad "super_forms": desbloquea las transformaciones de TU raza, una por nivel.
@@ -140,5 +145,37 @@ public final class SuperForms {
         Race race = raceOf(p);
         int lvl = requiredLevel(race, FormIds.SSJ4);
         return lvl != Integer.MAX_VALUE && level(p) >= lvl;
+    }
+
+    /**
+     * IDs de todas las formas de la raza de este jugador que ya tiene desbloqueadas, en orden
+     * de la cadena, con BASE siempre primero. Mismo recorrido BFS por el árbol real
+     * (FormRegistry.childrenOf, no el camino único de chain()/nextFrom) que ya usa
+     * WheelMenu.forms() para la rueda de transformación — duplicado a propósito en vez de
+     * compartido: la rueda construye WheelNode con colores/traducciones/estado de selección
+     * propios, esto solo necesita la lista plana de IDs.
+     * Usado por ShadowTrainingScreen para el selector de "forma del rival" (simulación de PL
+     * vía PlayerStatsAttachment.getPowerLevelWithStatMultiplier(), ver ShadowTrainingManager) —
+     * NO transforma al jugador, solo decide qué opciones puede simular.
+     */
+    public static List<ResourceLocation> unlockedChain(Player p) {
+        List<ResourceLocation> out = new ArrayList<>();
+        out.add(FormIds.BASE);
+        Race race = raceOf(p);
+
+        Set<ResourceLocation> seen = new HashSet<>();
+        Deque<ResourceLocation> queue = new ArrayDeque<>();
+        ResourceLocation first = FormRegistry.firstFormFor(race);
+        if (first != null) queue.add(first);
+        while (!queue.isEmpty()) {
+            ResourceLocation id = queue.poll();
+            if (!seen.add(id)) continue; // corta ciclos de un datapack roto
+            if (unlocked(p, id)) out.add(id);
+            for (ResourceLocation child : FormRegistry.childrenOf(id)) {
+                FormDef cd = FormDef.get(child);
+                if (cd != null && cd.allows(race)) queue.add(child);
+            }
+        }
+        return out;
     }
 }

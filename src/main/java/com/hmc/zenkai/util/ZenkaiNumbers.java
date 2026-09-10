@@ -49,4 +49,11 @@ public final class ZenkaiNumbers {
     public static String fmt2(double v) {
         return String.format(Locale.ROOT, "%.2f", v);
     }
+
+    /** Igual que {@link #fmt2} pero con más decimales — para el tooltip "valor exacto" de un
+     *  número que en pantalla ya se redondeó a 2 decimales (p. ej. el tonelaje del panel "TP
+     *  Modifiers" de Training: la fila enseña 2 decimales, el tooltip da los 4 reales). */
+    public static String fmt4(double v) {
+        return String.format(Locale.ROOT, "%.4f", v);
+    }
 }

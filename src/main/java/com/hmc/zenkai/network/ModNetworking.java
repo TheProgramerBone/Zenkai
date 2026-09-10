@@ -25,6 +25,7 @@ import com.hmc.zenkai.feature.skills.SkillTogglePacket;
 import com.hmc.zenkai.feature.stats.*;
 import com.hmc.zenkai.feature.technique.*;
 import com.hmc.zenkai.feature.training.MeditationSessionPacket;
+import com.hmc.zenkai.feature.training.ShadowPotentialRequestPacket;
 import com.hmc.zenkai.feature.training.ShadowSessionResultPacket;
 import com.hmc.zenkai.feature.training.StartShadowTrainingPacket;
 import com.hmc.zenkai.feature.training.TargetPracticeSessionPacket;
@@ -243,6 +244,11 @@ public class ModNetworking {
                 StartShadowTrainingPacket::handle);
 
         registrar.playToServer(
+                ShadowPotentialRequestPacket.TYPE,
+                ShadowPotentialRequestPacket.STREAM_CODEC,
+                ShadowPotentialRequestPacket::handle);
+
+        registrar.playToServer(
                 MeditationSessionPacket.TYPE,
                 MeditationSessionPacket.STREAM_CODEC,
                 MeditationSessionPacket::handle);
@@ -287,7 +293,8 @@ public class ModNetworking {
                 TrainingFatiguePacket.TYPE,
                 TrainingFatiguePacket.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
-                        () -> ClientPayloadHandlers.onTrainingFatigue(payload.efficiency())));
+                        () -> ClientPayloadHandlers.onTrainingFatigue(payload.combatEfficiency(),
+                                payload.meditationEfficiency(), payload.targetPracticeEfficiency())));
 
         registrar.playToServer(
                 FlyAnimPacket.TYPE,

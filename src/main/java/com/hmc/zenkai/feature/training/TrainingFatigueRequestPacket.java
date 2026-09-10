@@ -30,8 +30,10 @@ public record TrainingFatigueRequestPacket() implements CustomPacketPayload {
     public static void handle(TrainingFatigueRequestPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
-            PacketDistributor.sendToPlayer(sp,
-                    new TrainingFatiguePacket(TrainingHooks.currentEfficiency(sp)));
+            PacketDistributor.sendToPlayer(sp, new TrainingFatiguePacket(
+                    TrainingHooks.currentEfficiency(sp, TrainingCategory.COMBAT),
+                    TrainingHooks.currentEfficiency(sp, TrainingCategory.MEDITATION),
+                    TrainingHooks.currentEfficiency(sp, TrainingCategory.TARGET_PRACTICE)));
         });
     }
 }

@@ -63,11 +63,15 @@ public final class ClientPayloadHandlers {
         Minecraft.getInstance().setScreen(new ShadowResultScreen(earnedTp, record));
     }
 
-    /** Eficiencia de entrenamiento actual (ver TrainingFatigueRequestPacket) — solo
-     *  TrainingHubScreen la pide, empujada a ella igual que onTrainingReward/onTrainingInfo. */
-    public static void onTrainingFatigue(double efficiency) {
+    /** Eficiencia de entrenamiento actual, UNA por categoría (ver TrainingFatigueRequestPacket/
+     *  TrainingCategory) — solo TrainingHubScreen la pide, empujada a ella igual que
+     *  onTrainingReward/onTrainingInfo. */
+    public static void onTrainingFatigue(double combatEfficiency, double meditationEfficiency,
+                                          double targetPracticeEfficiency) {
         Screen current = Minecraft.getInstance().screen;
-        if (current instanceof TrainingHubScreen ths) ths.onFatigueReceived(efficiency);
+        if (current instanceof TrainingHubScreen ths) {
+            ths.onFatigueReceived(combatEfficiency, meditationEfficiency, targetPracticeEfficiency);
+        }
     }
 
     public static void openInstantTransmissionMenu() {

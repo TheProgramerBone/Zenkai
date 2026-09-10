@@ -215,11 +215,22 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
      *  Sin supresión: llevaba powerFraction dentro, así que bajar el % de Ki Control te
      *  recortaba la capacidad de carga y el TP. Esconder el ki no te hace más débil. */
     public long getPowerLevelRaw() {
+        return getPowerLevelWithStatMultiplier(statMultiplier);
+    }
+
+    /** Igual que getPowerLevelRaw(), pero con un statMultiplier SUPUESTO en vez del real
+     *  (statMultiplier de este jugador, el que SÍ refleja la forma activa de verdad) — para
+     *  simular "qué PL tendría si estuviera en la forma X" sin transformar al jugador ni tocar
+     *  ningún estado real suyo. Usado por ShadowTrainingManager para escalar la sombra a la
+     *  forma que el jugador elige en ShadowTrainingScreen (pedido explícito del usuario: poder
+     *  entrenar "como si" llevara puesta una transformación sin depender de llevarla puesta de
+     *  verdad en ese momento). */
+    public long getPowerLevelWithStatMultiplier(double simulatedStatMultiplier) {
         return PowerLevel.compute(
-                raceStats.computeMeleeFinal()   * statMultiplier,
+                raceStats.computeMeleeFinal()   * simulatedStatMultiplier,
                 computeConFinal(),
-                raceStats.computeDefenseFinal() * statMultiplier,
-                raceStats.computeKiPowerFinal() * statMultiplier,
+                raceStats.computeDefenseFinal() * simulatedStatMultiplier,
+                raceStats.computeKiPowerFinal() * simulatedStatMultiplier,
                 computeKiPoolFinal());
     }
 

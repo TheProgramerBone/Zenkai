@@ -18,6 +18,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * C2S: fin de una sesión de Ki Target Practice (TargetPracticeScreen) — un bombazo/calavera
  * termina la ronda de golpe. Mismo principio anti-trampa que MeditationSessionPacket: desempeño
  * CRUDO (orbes reventados, bombas tocadas, duración), el servidor calcula/capa el TP.
+ *
+ * `bombsHit` es 1 si la sesión terminó por tocar una bomba (informativo, RESULTS lo usa para el
+ * mensaje "You hit a bomb") pero NO afecta el cálculo de TP — pedido explícito del usuario:
+ * tocar una bomba termina la ronda, no borra lo ya ganado. Antes de este fix `handle()` reportaba
+ * `orbsPopped=0` cuando `bombsHit=1`, así que perder por bomba literalmente te dejaba sin nada de
+ * lo reventado hasta ese punto; ahora `orbsPopped` viaja siempre tal cual, gane o pierda la ronda.
  */
 public record TargetPracticeSessionPacket(int orbsPopped, int bombsHit, int sessionDurationTicks)
         implements CustomPacketPayload {
@@ -42,7 +48,7 @@ public record TargetPracticeSessionPacket(int orbsPopped, int bombsHit, int sess
     /** Techo generoso: 1 orbe cada 8 ticks (400ms) — más laxo que el ritmo real de aparición
      *  del cliente, solo descarta un reporte imposible. */
     private static final double MAX_ORBS_PER_TICK = 1.0 / 8.0;
-    private static final int MAX_SESSION_TICKS = 3600;
+    public static final int MAX_SESSION_TICKS = 3600;
 
     public static void handle(TargetPracticeSessionPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -57,10 +63,19 @@ public record TargetPracticeSessionPacket(int orbsPopped, int bombsHit, int sess
 
                 int durationTicks = Math.max(1, Math.min(pkt.sessionDurationTicks(), MAX_SESSION_TICKS));
                 int maxPossible = (int) Math.max(1, Math.round(durationTicks * MAX_ORBS_PER_TICK));
+                // Reportado tal cual, gane o pierda la ronda (ver el javadoc de la clase) — antes
+                // esto se ponía a 0 si bombsHit=1, así que tocar una bomba borraba lo ganado.
                 int orbsPopped = Math.max(0, Math.min(pkt.orbsPopped(), maxPossible));
 
                 double rawTp = orbsPopped * ServerConfig.targetPracticeTpPerOrb();
-                rawTp = Math.min(rawTp, ServerConfig.targetPracticeSessionTpCap());
+                // El techo escala con la duración REAL de la sesión (mismo principio que
+                // MeditationSessionPacket, ver TrainingHooks.SESSION_CAP_BASELINE_TICKS) — antes
+                // era un número plano pensado para los 30s fijos que tenía el minijuego, así que
+                // una sesión más larga (ver TargetPracticeScreen.DURATION_STEPS_SEC) no rendía
+                // más aunque el jugador jugara más tiempo.
+                double sessionCap = ServerConfig.targetPracticeSessionTpCap()
+                        * (durationTicks / TrainingHooks.SESSION_CAP_BASELINE_TICKS);
+                rawTp = Math.min(rawTp, sessionCap);
                 if (rawTp > 0) granted = TrainingHooks.grantFromTargetPractice(sp, rawTp);
 
                 if (granted > td.getBestTargetPracticeTp()) td.setBestTargetPracticeTp(granted);

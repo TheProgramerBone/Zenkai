@@ -67,7 +67,7 @@ public final class ClientZenkaiPalTick {
      * Ctrl+adelante sin soltar, y combinado con mirar arriba/abajo se sentía mal). Solo
      * jugador local: es un campo simple, no un mapa por UUID.
      */
-    private static boolean fastFlightMode = false;
+    public static boolean fastFlightMode = false;
 
     /**
      * Aplica el estado de boost del jugador LOCAL:

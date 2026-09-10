@@ -4,14 +4,17 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
+import com.hmc.zenkai.client.gui.buttons.BackIconButton;
 import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
+import com.hmc.zenkai.client.gui.buttons.PlayIconButton;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.feature.training.TargetPracticeSessionPacket;
 import com.hmc.zenkai.feature.training.TrainingInfoRequestPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -36,7 +39,10 @@ import java.util.Random;
  * Mismo estado INTRO -> PLAYING -> RESULTS que MeditationScreen (ver su javadoc para el porqué
  * y para el convenio de fondo/orden de render compartido) — INTRO explica la regla de las
  * bombas, RESULTS enseña el TP REAL que respondió el servidor (TrainingSessionRewardPacket) más
- * Retry/Back.
+ * Retry/Back. PLAYING lleva un botón "Finish" (esquina superior izquierda) — Escape hace LO
+ * MISMO (ver onClose()/finishSessionEarly()): terminar YA y pasar a RESULTS, nunca el silencio
+ * de antes que salía directo al hub sin enseñar el reward (pedido explícito del usuario, mismo
+ * cambio que MeditationScreen).
  *
  * DIFICULTAD PROGRESIVA (pedido explícito del usuario, Pista C del plan de pulido de Training):
  * stepper 50%-200% como el de ShadowTrainingScreen, elegido en INTRO. Más difícil = orbes que
@@ -47,13 +53,20 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
 
     private enum State { INTRO, PLAYING, RESULTS }
 
-    private static final long SESSION_DURATION_MS = 30_000;
     private static final long BASE_SPAWN_INTERVAL_MS = 600;
     private static final long BASE_ORB_LIFESPAN_MS = 1500;
     private static final double BASE_BOMB_CHANCE = 0.2;
     private static final int ORB_RADIUS = 12;
 
     private static final int[] STEPS_PCT = {50, 75, 100, 125, 150, 175, 200};
+
+    /** Duración de sesión elegible (pedido explícito del usuario: "a mayor tiempo jugando se
+     *  pueda conseguir mayor TP") — mismos pasos que MeditationScreen.DURATION_STEPS_SEC para
+     *  que el idioma visual del stepper sea idéntico entre los dos minijuegos con duración
+     *  configurable. 30s (durationIndex por defecto) es la duración fija que tenía antes. */
+    private static final int[] DURATION_STEPS_SEC = {15, 30, 45, 60, 90, 120};
+    private int durationIndex = 1; // arranca en 30s
+    private long sessionDurationMs() { return DURATION_STEPS_SEC[durationIndex] * 1000L; }
 
     private static final ResourceLocation ICONS_TEX =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
@@ -62,8 +75,10 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
     private static final int ICON_CELL = 20;
     private static final int ICONS_ATLAS = 256;
 
-    private static final int IN_X1 = 10;
-    private static final int IN_X2 = 245;
+    // El beige real de common_screen.png va de x=12 a x=244 (muestreado píxel a píxel, ver
+    // TrainingHubScreen) — 10/245 se metían 2px dentro del marco por cada lado.
+    private static final int IN_X1 = 12;
+    private static final int IN_X2 = 243;
 
     private record Orb(int x, int y, long spawnMs, boolean bomb) {}
 
@@ -107,36 +122,69 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
                 Component.translatable("screen.zenkai.target_practice.intro"), ZenkaiMenuScreen.BG_W - 24);
         stepperY = 30 + introLines.size() * 10 + 4 + 20 + 4;
         buildIntroWidgets();
+        requestInfo();
+    }
 
+    /** (Re)pide récord + TP potencial — disparado al abrir la pantalla y cada vez que cambia
+     *  CUALQUIERA de los dos steppers. La dificultad SÍ dispara esto ahora (antes no, pero
+     *  TrainingHooks.targetPracticeAchievableRawTp() depende de ella: más difícil = orbes más
+     *  seguidos = más caben en la misma duración = techo más alto — bug real reportado por el
+     *  usuario, "siento que hay una discrepancia" entre el TP obtenido y el "up to" mostrado). */
+    private void requestInfo() {
         introRecord = null;
         introPotential = null;
-        PacketDistributor.sendToServer(new TrainingInfoRequestPacket(TrainingInfoRequestPacket.TARGET_PRACTICE));
+        PacketDistributor.sendToServer(new TrainingInfoRequestPacket(
+                TrainingInfoRequestPacket.TARGET_PRACTICE, (int) (sessionDurationMs() / 50),
+                STEPS_PCT[stepIndex] / 100f));
     }
 
     private void buildIntroWidgets() {
         this.clearWidgets();
         int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
-        addRenderableWidget(PanelButton.secondary(panelLeft + IN_X1, y,
-                Component.translatable("screen.zenkai.back"), this::onClose));
-        addRenderableWidget(PanelButton.primary(panelLeft + IN_X2 - PanelButton.W, y,
-                Component.translatable("screen.zenkai.training_hub.shadow.start"), this::startSession));
+        // Back en icono atlas / Start en ▶ — mismos íconos ya existentes que
+        // ShadowTrainingScreen/MeditationScreen, con tooltip (pedido explícito del usuario) para
+        // que el icono solo no tenga que explicarse por sí mismo.
+        BackIconButton backBtn = new BackIconButton(
+                panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::onClose);
+        backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
+        addRenderableWidget(backBtn);
+
+        PlayIconButton startBtn = new PlayIconButton(
+                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 24, this::startSession);
+        startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
+        addRenderableWidget(startBtn);
 
         int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
         addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decrease));
         addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increase));
+        // Duración de sesión (pedido explícito del usuario, ver DURATION_STEPS_SEC) — SU PROPIA
+        // línea de etiqueta arriba (+20, sin botones) y los botones en la línea de abajo (+32,
+        // no +20): "Session length: 30s" combinado en una sola línea se montaba con el botón +
+        // (mismo bug real que MeditationScreen, "Difficulty: 100%" es más corto y sí cabía) — ver
+        // el javadoc de clase de ShadowTrainingScreen para el mismo arreglo.
+        addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY + 32, this::decreaseDuration));
+        addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY + 32, this::increaseDuration));
     }
 
     private void buildResultsWidgets() {
         this.clearWidgets();
         int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
-        addRenderableWidget(PanelButton.secondary(panelLeft + IN_X1, y,
-                Component.translatable("screen.zenkai.back"), this::onClose));
-        addRenderableWidget(PanelButton.primary(panelLeft + IN_X2 - PanelButton.W, y,
-                Component.translatable("screen.zenkai.meditation.retry"), this::startSession));
+        BackIconButton backBtn = new BackIconButton(
+                panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::onClose);
+        backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
+        addRenderableWidget(backBtn);
+
+        PlayIconButton retryBtn = new PlayIconButton(
+                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 24, this::startSession);
+        retryBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.meditation.retry")));
+        addRenderableWidget(retryBtn);
     }
 
-    private void decrease() { stepIndex = Math.max(0, stepIndex - 1); }
-    private void increase() { stepIndex = Math.min(STEPS_PCT.length - 1, stepIndex + 1); }
+    private void decrease() { stepIndex = Math.max(0, stepIndex - 1); requestInfo(); }
+    private void increase() { stepIndex = Math.min(STEPS_PCT.length - 1, stepIndex + 1); requestInfo(); }
+
+    private void decreaseDuration() { durationIndex = Math.max(0, durationIndex - 1); requestInfo(); }
+    private void increaseDuration() { durationIndex = Math.min(DURATION_STEPS_SEC.length - 1, durationIndex + 1); requestInfo(); }
 
     /** Más difícil = orbes más seguidos, viven menos tiempo, y más probabilidad de que salga una
      *  bomba en vez de un orbe bueno — los 3 números que ya hacían de "perilla" implícita del
@@ -165,6 +213,25 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         resultReward = null;
         sessionStartMs = System.currentTimeMillis();
         lastSpawnMs = sessionStartMs;
+
+        // Botón "Finish" (pedido explícito del usuario tras la queja de que ESC salía sin
+        // enseñar el TP conseguido) — mismo BackIconButton que Back/Meditation, esquina superior
+        // izquierda: el HUD de juego usa (20,8) para "Popped: N" (desplazado, ver renderPlaying())
+        // y el lado derecho para el tiempo restante, así que la esquina queda libre de sobra.
+        BackIconButton finishBtn = new BackIconButton(8, 8, 16, this::finishSessionEarly);
+        finishBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.finish")));
+        addRenderableWidget(finishBtn);
+    }
+
+    /** Termina la sesión YA (botón Finish o Escape, ver onClose()) y pasa a RESULTS con el reward
+     *  REAL — mismo camino que una sesión completada del todo (tick() al agotar la duración),
+     *  nunca el "silencio" que antes solo devolvía al hub sin enseñar nada. Único sitio que sabe
+     *  terminar una sesión a medias, para que los dos disparadores no diverjan. */
+    private void finishSessionEarly() {
+        if (state != State.PLAYING) return;
+        sendSessionReport(false);
+        state = State.RESULTS;
+        buildResultsWidgets();
     }
 
     @Override
@@ -174,10 +241,8 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         long now = System.currentTimeMillis();
         long elapsed = now - sessionStartMs;
 
-        if (elapsed >= SESSION_DURATION_MS) {
-            sendSessionReport(false);
-            state = State.RESULTS;
-            buildResultsWidgets();
+        if (elapsed >= sessionDurationMs()) {
+            finishSessionEarly();
             return;
         }
 
@@ -192,13 +257,16 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         orbs.removeIf(o -> now - o.spawnMs() > orbLifespanMs);
     }
 
-    private void sendSessionReport(boolean forfeit) {
+    /** @param bombHit true si la sesión terminó por tocar una bomba (solo informativo, ver
+     *  RESULTS) — pedido explícito del usuario: tocar una bomba YA NO borra lo reventado hasta
+     *  ese punto, `orbsPopped` viaja tal cual gane o pierda la ronda (ver el javadoc de
+     *  TargetPracticeSessionPacket; antes esto ponía reportedOrbs a 0 cuando bombHit=true). */
+    private void sendSessionReport(boolean bombHit) {
         if (reported) return;
         reported = true;
         long elapsedTicks = Math.max(1, Math.round((System.currentTimeMillis() - sessionStartMs) / 50.0));
-        int reportedOrbs = forfeit ? 0 : orbsPopped;
         PacketDistributor.sendToServer(new TargetPracticeSessionPacket(
-                reportedOrbs, forfeit ? 1 : 0, (int) elapsedTicks));
+                orbsPopped, bombHit ? 1 : 0, (int) elapsedTicks));
     }
 
     @Override
@@ -215,7 +283,13 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
 
     @Override
     public void onClose() {
-        if (state == State.PLAYING) sendSessionReport(false);
+        // Escape ahora pasa por RESULTS igual que el botón Finish (pedido explícito del usuario,
+        // ver el mismo cambio en MeditationScreen.onClose()) — antes salía directo al hub sin
+        // enseñar el reward, indistinguible de "no gané nada" aunque sí se hubiera concedido TP.
+        if (state == State.PLAYING) {
+            finishSessionEarly();
+            return;
+        }
         Minecraft.getInstance().setScreen(new TrainingHubScreen());
     }
 
@@ -302,6 +376,14 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         PanelText.centeredOnPanel(g, this.font,
                 Component.translatable("screen.zenkai.training_hub.shadow.difficulty", STEPS_PCT[stepIndex]),
                 cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
+        // Etiqueta + valor separados — ver el javadoc de buildIntroWidgets() para el bug real que
+        // esto arregla (mismo que MeditationScreen).
+        PanelText.centeredOnPanel(g, this.font,
+                Component.translatable("screen.zenkai.meditation.session_length_label"),
+                cx, panelTop + stepperY + 20, ZenkaiPalette.LABEL_ON_PANEL);
+        PanelText.centeredOnPanel(g, this.font,
+                Component.translatable("screen.zenkai.meditation.session_length_value", DURATION_STEPS_SEC[durationIndex]),
+                cx, panelTop + stepperY + 34, ZenkaiPalette.LABEL_ON_PANEL);
     }
 
     private void renderPlaying(GuiGraphics g) {
@@ -318,12 +400,13 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
             g.setColor(1f, 1f, 1f, 1f);
         }
 
+        // x=44, no 20: deja hueco a la izquierda para el botón Finish (8,8,16px), ver startSession().
         PanelText.onDark(g, this.font,
                 Component.translatable("screen.zenkai.target_practice.orbs_popped", orbsPopped),
-                20, 8, ZenkaiPalette.TEXT);
+                44, 8, ZenkaiPalette.TEXT);
 
         long elapsed = now - sessionStartMs;
-        int secondsLeft = (int) Math.max(0, (SESSION_DURATION_MS - elapsed) / 1000);
+        int secondsLeft = (int) Math.max(0, (sessionDurationMs() - elapsed) / 1000);
         PanelText.rightOnDark(g, this.font,
                 Component.translatable("screen.zenkai.meditation.time_left", secondsLeft),
                 this.width - 20, 8, ZenkaiPalette.TEXT);

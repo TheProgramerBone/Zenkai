@@ -5,9 +5,14 @@ import com.hmc.zenkai.content.entity.misc.ShadowCloneEntity;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.combat.entity.EntityStatDef;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
+import com.hmc.zenkai.feature.forms.FormIds;
+import com.hmc.zenkai.feature.forms.FormRegistry;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -52,7 +57,21 @@ public final class ShadowTrainingManager {
      *  estado inconsistente que sobreviva al reinicio. */
     private static final Map<UUID, UUID> ACTIVE = new ConcurrentHashMap<>();
 
-    public static void start(ServerPlayer sp, float frac) {
+    /**
+     * @param simulatedFormId forma cuyo % de stats (a la maestría real del jugador en ella) se
+     *                         usa para escalar el PL de la sombra — pedido explícito del usuario:
+     *                         poder elegir "voy a entrenar como si llevara puesta X" desde
+     *                         ShadowTrainingScreen sin depender de que el jugador se transforme
+     *                         de verdad antes de pulsar Start. NO transforma al jugador ni toca
+     *                         ningún otro estado suyo, solo el cálculo de PL de la sombra (ver
+     *                         simulatedPowerLevel()/PlayerStatsAttachment.
+     *                         getPowerLevelWithStatMultiplier). FormIds.BASE simula de verdad
+     *                         "sin ninguna forma puesta" (statMultiplier=1.0), no "el PL actual
+     *                         del jugador tal cual esté" — un id no desbloqueado/no permitido
+     *                         para su raza cae a BASE, server-authoritative, nunca se confía en
+     *                         el id que mande el cliente sin validarlo aquí.
+     */
+    public static void start(ServerPlayer sp, float frac, ResourceLocation simulatedFormId) {
         ServerLevel level = sp.serverLevel();
         // Ya tiene una sombra activa DE VERDAD (no una entrada colgada de una que ya
         // desapareció sin pasar por onDeath, p. ej. un /kill de admin).
@@ -63,7 +82,7 @@ public final class ShadowTrainingManager {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         if (!att.isRaceChosen()) return;
 
-        long shadowPl = Math.max(1, Math.round(att.getPowerLevelRaw() * frac));
+        long shadowPl = Math.max(1, Math.round(simulatedPowerLevel(sp, att, simulatedFormId) * frac));
 
         ShadowCloneEntity shadow = ModEntities.SHADOW_CLONE.get().create(level);
         if (shadow == null) return;
@@ -107,6 +126,34 @@ public final class ShadowTrainingManager {
     private static boolean stillTracked(ServerPlayer sp, ServerLevel level) {
         UUID shadowId = ACTIVE.get(sp.getUUID());
         return shadowId != null && level.getEntity(shadowId) != null;
+    }
+
+    /**
+     * PL simulado a SU maestría real de la forma pedida (0 si nunca la maestreó, igual que
+     * cualquier otra consulta de maestría) — SIEMPRE se calcula así, BASE incluido
+     * (FormRegistry.statPercent(BASE,...) ya da 0, así que el factor sale 1.0 solo, sin
+     * necesitar un caso especial). Un id no desbloqueado/inventado/de otra raza cae a BASE antes
+     * de calcular nada (`unlocked()` ya cubre BASE -> siempre true, y la rama divina vía
+     * DivineForms.unlocked).
+     *
+     * A propósito NO devuelve el PL "real tal cual está el jugador ahora mismo" cuando se pide
+     * BASE — un primer intento de esta función trataba BASE como sentinel de "usa mi PL actual",
+     * lo que rompía la premisa del selector: si el jugador estaba transformado en SSJ y elegía
+     * "Base" en la lista esperando simular una pelea SIN transformar, el PL no bajaba nada. Con
+     * el cálculo uniforme, "Base" simula de verdad sus stats sin ninguna forma puesta, sea cual
+     * sea su transformación real en ese instante.
+     * Package-private (sin `private`): reusado también por ShadowPotentialRequestPacket para el
+     * "TP potential: up to X" del selector, sin duplicar esta cuenta una tercera vez.
+     */
+    static long simulatedPowerLevel(ServerPlayer sp, PlayerStatsAttachment att,
+                                     ResourceLocation simulatedFormId) {
+        ResourceLocation formId = (simulatedFormId != null
+                && (FormIds.BASE.equals(simulatedFormId) || SuperForms.unlocked(sp, simulatedFormId)))
+                ? simulatedFormId : FormIds.BASE;
+        PlayerFormAttachment formAtt = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        double mastery = formAtt.getFormMastery(formId);
+        double statMult = 1.0 + FormRegistry.statPercent(formId, mastery);
+        return att.getPowerLevelWithStatMultiplier(statMult);
     }
 
     @SubscribeEvent

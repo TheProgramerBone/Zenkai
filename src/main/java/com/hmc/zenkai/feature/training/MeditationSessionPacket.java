@@ -68,12 +68,7 @@ public record MeditationSessionPacket(
     private static final double MAX_NOTES_PER_TICK = 1.0 / 2.0;
     // 5 minutos: cubre práctica libre (30s) Y el modo Canción (discos vanilla de hasta ~3-4 min,
     // ver el set curado de CuratedSong) con margen para añadir alguno más largo después.
-    private static final int MAX_SESSION_TICKS = 6000;
-    /** Duración de referencia (ticks) contra la que se expresa `meditationSessionTpCap()` — el
-     *  modo Canción reporta sesiones de varios minutos, no solo los 30s de práctica libre, así
-     *  que el techo de sesión escala con la duración real en vez de quedarse plano (ver F8 del
-     *  plan de pulido de Training): una canción de 2 minutos puede valer ~4× el techo base. */
-    private static final double CAP_BASELINE_TICKS = 600.0; // 30s
+    public static final int MAX_SESSION_TICKS = 6000;
 
     public static void handle(MeditationSessionPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -118,7 +113,8 @@ public record MeditationSessionPacket(
                         : 1.0;
 
                 double rawTp = Math.min(notesHit, maxCombo) * ServerConfig.meditationTpPerCombo() * accuracy;
-                double sessionCap = ServerConfig.meditationSessionTpCap() * (durationTicks / CAP_BASELINE_TICKS);
+                double sessionCap = ServerConfig.meditationSessionTpCap()
+                        * (durationTicks / TrainingHooks.SESSION_CAP_BASELINE_TICKS);
                 rawTp = Math.min(rawTp, sessionCap);
                 if (rawTp > 0) granted = TrainingHooks.grantFromMeditation(sp, rawTp);
 

@@ -1,10 +1,13 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
+import com.hmc.zenkai.client.gui.buttons.BackIconButton;
 import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
+import com.hmc.zenkai.client.gui.buttons.PlayIconButton;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.client.training.CuratedSong;
 import com.hmc.zenkai.client.training.MeditationChart;
@@ -15,15 +18,19 @@ import com.hmc.zenkai.feature.training.TrainingInfoRequestPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -37,18 +44,32 @@ import java.util.Random;
  * hacia una zona de impacto fija; acertar en ventana sube la racha, fallar la corta. Dos modos:
  *
  *  - PRÁCTICA LIBRE (por defecto): generador procedural (spawnea una nota en un carril al azar a
- *    intervalo fijo) — evita tener que autorar charts, duración elegible en INTRO
+ *    intervalo fijo) — evita tener que autorar charts, duración elegible en OVERVIEW
  *    ({@link #DURATION_STEPS_SEC}).
- *  - MODO CANCIÓN (nuevo, pedido explícito del usuario): elige un disco vanilla curado
- *    ({@link CuratedSong}) y las notas siguen un chart real generado por
- *    tools/gen_meditation_chart.py (detección de onsets sobre el .ogg del disco) — la sesión dura
- *    lo que dura la canción, que suena de verdad ({@link SoundEvents} MUSIC_DISC_*) mientras se
- *    juega. La dificultad ES la canción elegida (Pigstep = difícil).
+ *  - MODO CANCIÓN: elige un disco vanilla curado ({@link CuratedSong}) y las notas siguen un
+ *    chart real generado por tools/gen_meditation_chart.py (detección de onsets sobre el .ogg del
+ *    disco) — la sesión dura lo que dura la canción, que suena de verdad ({@link SoundEvents}
+ *    MUSIC_DISC_*) mientras se juega. La dificultad ES la canción elegida (Pigstep = difícil).
  *
- * Cuatro estados (INTRO -> SONG_SELECT -> PLAYING -> RESULTS desde "Choose a Song", o
- * INTRO -> PLAYING -> RESULTS desde "Free Practice"): INTRO explica qué hacer y tiene los dos
- * botones de modo + Back; SONG_SELECT lista los discos curados cuyo chart ya existe; PLAYING es
- * el minijuego a pantalla completa, sin botones (Escape reporta lo hecho y sale, ver onClose());
+ * Cuatro estados, SIEMPRE en el mismo orden (OVERVIEW -> SONG_LIST -> PLAYING -> RESULTS) —
+ * SEGUNDO rediseño 2026-09-09, pedido explícito del usuario tras ver el primero en capturas: el
+ * rediseño anterior metía la lista de canciones Y los steppers de dificultad/duración Y el TP
+ * potencial en la MISMA pantalla (SONG_SELECT), lo que no escala a "bastantes discos" — con más
+ * de 3-4 filas la pantalla se queda sin sitio para lo demás. Ahora:
+ *  - OVERVIEW es la pantalla de resumen (antes "INTRO"): párrafo explicativo del minijuego, una
+ *    fila clicable con la canción elegida ahora mismo (o "Free Practice"), los steppers de
+ *    dificultad/duración SOLO si es Free Practice (una canción ya trae su propia dificultad y
+ *    duración fijas, ver renderOverview()), TP potencial + récord, y Back/Start — este es el
+ *    ÚNICO sitio con Start, y el ÚNICO que pide TrainingInfoPacket (ver requestInfo()).
+ *  - SONG_LIST (antes "SONG_SELECT") es SOLO la lista, con scroll (ver visibleRows()/
+ *    maxScroll()) para que quepan tantos discos como se añadan sin reventar el layout — pulsar
+ *    una fila selecciona Y VUELVE a OVERVIEW en el mismo clic (selectRow()), no hace falta un
+ *    segundo botón de confirmar. Back aquí vuelve a OVERVIEW sin tocar la selección.
+ * PLAYING es el minijuego a pantalla completa, con un único botón "Finish" (esquina superior
+ * izquierda) — Escape hace LO MISMO (ver onClose()/finishSessionEarly()): terminar YA y pasar a
+ * RESULTS con el reward real, SIN PERDER lo ganado hasta ese punto. Antes Escape saltaba directo
+ * al hub sin enseñar nada (queja explícita del usuario: "se salen y no terminan mostrando el TP
+ * conseguido"), lo que hacía indistinguible salir con TP concedido de no haber jugado nada.
  * RESULTS enseña el reward REAL (no una estimación del cliente) + récord + Retry/Back.
  *
  * ANTI-TRAMPA: la sesión entera se reporta como desempeño CRUDO (notas acertadas + racha máxima
@@ -58,15 +79,15 @@ import java.util.Random;
  * enseña — nunca una cifra adivinada en el cliente.
  *
  * `extends Screen` directamente (canvas propio) pero reusa el fondo/tamaño de panel de
- * ZenkaiMenuScreen (BG_TEX/BG_W/BG_H, protected + mismo paquete = accesible) para INTRO/
- * SONG_SELECT/RESULTS, sin heredar de ella — la fase PLAYING necesita la pantalla ENTERA para los
+ * ZenkaiMenuScreen (BG_TEX/BG_W/BG_H, protected + mismo paquete = accesible) para OVERVIEW/
+ * SONG_LIST/RESULTS, sin heredar de ella — la fase PLAYING necesita la pantalla ENTERA para los
  * carriles, cosa que ZenkaiMenuScreen (con su barra de pestañas fija) no puede dar. Sigue el
  * convenio de orden de render de CLAUDE.md: renderBackground() pinta DEBAJO de super.render(), el
  * contenido va DESPUÉS.
  */
 public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
-    private enum State { INTRO, SONG_SELECT, PLAYING, RESULTS }
+    private enum State { OVERVIEW, SONG_LIST, PLAYING, RESULTS }
 
     private static final int LANES = 4;
     private static final int[] KEYS = {
@@ -98,7 +119,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private long spawnIntervalMs = BASE_SPAWN_INTERVAL_MS;
     private double hitWindow = BASE_HIT_WINDOW;
 
-    /** Duración de sesión de PRÁCTICA LIBRE, elegible en INTRO (pedido explícito del usuario:
+    /** Duración de sesión de PRÁCTICA LIBRE, elegible en OVERVIEW (pedido explícito del usuario:
      *  "un tiempo configurable para que el jugador pueda conseguir recompensas") — modo Canción
      *  sigue sin usar esto, ahí la duración ES lo que dure el disco (ver sessionDurationMs()). */
     private static final int[] DURATION_STEPS_SEC = {15, 30, 45, 60, 90, 120};
@@ -125,17 +146,37 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private static final long MIN_LANE_GAP_MS = 150;
     private final long[] lastLaneNoteMs = new long[LANES];
 
-    private static final int IN_X1 = 10;
-    private static final int IN_X2 = 245;
+    // El beige real de common_screen.png va de x=12 a x=244 (muestreado píxel a píxel, ver
+    // TrainingHubScreen) — 10/245 se metían 2px dentro del marco por cada lado.
+    private static final int IN_X1 = 12;
+    private static final int IN_X2 = 243;
     private static final int SONG_ROW_H = 24;
     private static final int SONG_ROW_GAP = 6;
+
+    /** Ícono de la fila "Free Practice" (fila-resumen de OVERVIEW y SONG_LIST): la MISMA celda
+     *  de icons.png que ya usa la fila "Meditation" del hub (TrainingHubScreen.ICON_MEDITATION_U/
+     *  V) — no hay ítem que renderizar (no es un disco), así que se blitea el ícono del atlas en
+     *  su lugar. */
+    private static final ResourceLocation ICONS_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
+    private static final int ICON_FREE_PRACTICE_U = 160, ICON_FREE_PRACTICE_V = 80;
+    private static final int ICON_CELL = 20;
+    private static final int ICONS_ATLAS = 256;
+
+    /** SONG_LIST: canalón de scroll reservado SIEMPRE a la derecha de cada fila (con scroll o
+     *  sin él, mismo criterio que TechniquesScreen.CONTENT_INSET/rightEdge() — así una fila no
+     *  cambia de ancho el día que haya más discos de los que caben sin scroll). */
+    private static final int SCROLLBAR_W = 4;
+    private static final int SCROLLBAR_GUTTER = 8;
+    private static final int LIST_TOP = 30;
+    private static final int LIST_BOTTOM = ZenkaiMenuScreen.BG_H - 12 - PanelButton.H - 8;
 
     private record Note(int lane, long spawnMs) {}
 
     private final Random random = new Random();
     private final List<Note> notes = new ArrayList<>();
 
-    private State state = State.INTRO;
+    private State state = State.OVERVIEW;
     private long sessionStartMs = -1;
     private long lastSpawnMs = -1;
     private int notesHit = 0;
@@ -154,11 +195,11 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private Integer resultReward = null;
     private Integer resultRecord = null;
 
-    /** Récord/potencial de Práctica libre, mostrados en INTRO (TrainingInfoPacket) — null hasta
-     *  que responde el servidor. El potencial de Práctica libre se sigue mostrando aunque el
-     *  jugador acabe eligiendo modo Canción: una canción larga no tiene un techo de sesión fijo
-     *  con el que calcular "hasta X" (ver F8/G5 del plan), así que esto es deliberadamente solo
-     *  la referencia de Práctica libre. */
+    /** Récord/potencial mostrados en OVERVIEW (TrainingInfoPacket), null hasta que responde el
+     *  servidor — ver requestInfo(). A diferencia del primer rediseño, esto SÍ se recalcula al
+     *  cambiar de canción o de duración de Práctica libre (el techo de sesión escala con la
+     *  duración real, ver TrainingHooks.SESSION_CAP_BASELINE_TICKS), así el número que ve el
+     *  jugador antes de jugar coincide con el que puede ganar de verdad. */
     private Integer introRecord = null;
     private Integer introPotential = null;
 
@@ -174,6 +215,9 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
      *  mismo (evita restaurar dos veces o restaurar sin haber muteado). */
     private float savedMusicVolume = -1f;
 
+    /** Cargados UNA VEZ en init() (antes se cargaban al abrir la lista) — OVERVIEW necesita
+     *  saber la duración real del disco elegido para requestInfo() sin esperar a que el jugador
+     *  visite SONG_LIST primero. */
     private Map<String, MeditationChart> songCharts;
     private List<CuratedSong> songRows;
 
@@ -187,12 +231,25 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private final long[] laneBadUntil = new long[LANES];
 
     private int panelLeft, panelTop;
-    private List<FormattedCharSequence> introLines;
-    /** Y (relativo al panel) del stepper de dificultad de Práctica libre — calculado UNA VEZ a
-     *  partir de las líneas de intro reales, con una franja fija reservada para potencial/récord
-     *  aunque el packet todavía no haya respondido, así los botones nunca "saltan" cuando llega
-     *  el dato (mismo problema que ya documentó ShadowTrainingScreen para su propio stepper). */
+
+    /** Canción elegida (no confundir con `activeSong`, la sesión YA en marcha): null = Free
+     *  Practice, la selección por defecto al entrar. Decide qué muestra OVERVIEW (steppers vs.
+     *  dificultad/duración fijas de la canción) y qué arranca el botón de play — ver
+     *  renderOverview()/beginSelected(). */
+    @Nullable private CuratedSong selectedSong;
+
+    // ── Layout de OVERVIEW, medido UNA VEZ en init() a partir del párrafo real (varía por
+    // idioma) — mismo gotcha ya documentado en ShadowTrainingScreen/TargetPracticeScreen: reservar
+    // una franja FIJA para TP potencial/récord aunque el packet no haya respondido todavía, para
+    // que los botones no salten un frame después de que llegue. ────────────────────────────────
+    private List<FormattedCharSequence> overviewDescLines;
+    private int descY;
+    private int songRowY;
     private int stepperY;
+    private int infoY;
+
+    /** SONG_LIST: primera fila visible (0 = Free Practice, 1..N = songRows). */
+    private int scrollRow = 0;
 
     /** true = la sesión ya arrancó (beginPlaying) pero espera a que el jugador pulse una tecla
      *  para que empiecen a caer notas/sonar la canción — pedido explícito del usuario ("hasta
@@ -209,43 +266,92 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     protected void init() {
         panelLeft = (this.width - ZenkaiMenuScreen.BG_W) / 2;
         panelTop = (this.height - ZenkaiMenuScreen.BG_H) / 2;
-        introLines = this.font.split(
-                Component.translatable("screen.zenkai.meditation.intro"), ZenkaiMenuScreen.BG_W - 24);
-        stepperY = 30 + introLines.size() * 10 + 4 + 20 + 4;
-        buildIntroWidgets();
 
+        songCharts = MeditationChartLoader.loadAll();
+        songRows = Arrays.stream(CuratedSong.values())
+                .filter(s -> songCharts.containsKey(s.discId))
+                .toList();
+        selectedSong = null; // Free Practice, la selección por defecto al entrar
+
+        overviewDescLines = this.font.split(
+                Component.translatable("screen.zenkai.meditation.overview"), ZenkaiMenuScreen.BG_W - 24);
+        descY = 26;
+        songRowY = descY + overviewDescLines.size() * 10 + 8;
+        stepperY = songRowY + SONG_ROW_H + 10;
+        // TRES líneas SIEMPRE reservadas aquí (difficulty + etiqueta "Session length" + su valor
+        // en Free Practice, o dos líneas de solo lectura + una vacía con una canción elegida —
+        // ver renderOverview()) — el mismo total en los dos casos para que "TP potencial"/
+        // "Record" no salten de sitio al cambiar de selección.
+        infoY = stepperY + 48;
+
+        buildOverviewWidgets();
+        requestInfo();
+    }
+
+    /** (Re)pide récord + TP potencial — al entrar Y cada vez que cambia algo que afecta el techo
+     *  de sesión: duración de Práctica libre, la canción elegida (cada disco dura lo suyo), Y
+     *  AHORA TAMBIÉN la dificultad de Práctica libre — dejó de ser inofensiva para este número
+     *  el día que TrainingHooks.meditationAchievableRawTp() empezó a depender de ella (más
+     *  difícil = notas más seguidas = más notas caben en la misma duración = techo más alto). */
+    private void requestInfo() {
         introRecord = null;
         introPotential = null;
-        PacketDistributor.sendToServer(new TrainingInfoRequestPacket(TrainingInfoRequestPacket.MEDITATION));
+        int durationTicks;
+        float difficultyFraction;
+        if (selectedSong != null && songCharts.containsKey(selectedSong.discId)) {
+            durationTicks = (int) (songCharts.get(selectedSong.discId).durationMs() / 50);
+            // -1 = modo Canción: sin chart en servidor, no hay segundo techo que calcular ahí
+            // (ver el javadoc de TrainingInfoRequestPacket) — el plano ya escalado por la
+            // duración real de la canción es la mejor aproximación disponible.
+            difficultyFraction = -1f;
+        } else {
+            durationTicks = DURATION_STEPS_SEC[durationIndex] * 20;
+            difficultyFraction = STEPS_PCT[stepIndex] / 100f;
+        }
+        PacketDistributor.sendToServer(
+                new TrainingInfoRequestPacket(TrainingInfoRequestPacket.MEDITATION, durationTicks, difficultyFraction));
     }
 
-    private void buildIntroWidgets() {
-        state = State.INTRO;
+    /** OVERVIEW: Back/Start siempre presentes, más los steppers de dificultad/duración SOLO si
+     *  la selección actual es Free Practice (una canción ya trae su propia dificultad/duración
+     *  fijas, ver renderOverview()) — reconstruir en cada cambio de selección (selectRow()) en
+     *  vez de ocultar/desactivar widgets ya creados, mismo idioma que TechniqueEditScreen.
+     *  switchTab(). También sirve como target de "Back" desde SONG_LIST (ver openSongList()). */
+    private void buildOverviewWidgets() {
+        state = State.OVERVIEW;
         this.clearWidgets();
         int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
-        addRenderableWidget(PanelButton.secondary(panelLeft + IN_X1, y,
-                Component.translatable("screen.zenkai.back"), this::onClose));
-        addRenderableWidget(PanelButton.primary(panelLeft + IN_X2 - PanelButton.W, y,
-                Component.translatable("screen.zenkai.meditation.free_practice"), this::startFreePractice));
 
-        int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
-        addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decreaseDifficulty));
-        addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increaseDifficulty));
-        // Segundo stepper, mismo idioma que el de dificultad justo encima — duración de la
-        // sesión de Práctica libre (no aplica a modo Canción, ver DURATION_STEPS_SEC).
-        addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY + 20, this::decreaseDuration));
-        addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY + 20, this::increaseDuration));
+        BackIconButton backBtn = new BackIconButton(
+                panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::onClose);
+        backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
+        addRenderableWidget(backBtn);
 
-        addRenderableWidget(PanelButton.secondary(
-                panelLeft + (ZenkaiMenuScreen.BG_W - PanelButton.W) / 2, panelTop + stepperY + 40,
-                Component.translatable("screen.zenkai.meditation.choose_song"), this::openSongSelect));
+        PlayIconButton startBtn = new PlayIconButton(
+                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 24, this::beginSelected);
+        startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
+        addRenderableWidget(startBtn);
+
+        if (selectedSong == null) {
+            int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
+            addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decreaseDifficulty));
+            addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increaseDifficulty));
+            // Duración de la sesión de Práctica libre (no aplica a modo Canción, ver
+            // DURATION_STEPS_SEC) — SU PROPIA línea de etiqueta arriba (sin botones, renderOverview())
+            // y los botones en la línea de abajo (+32, no +20): "Session length: 30s" combinado en
+            // una sola línea centrada se montaba con el botón + (bug real, captura del usuario;
+            // "Difficulty: 100%" es más corto y cabía, "Session length: 30s" no) — mismo arreglo
+            // que "Opponent form" en ShadowTrainingScreen, ver su javadoc de clase.
+            addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY + 32, this::decreaseDuration));
+            addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY + 32, this::increaseDuration));
+        }
     }
 
-    private void decreaseDifficulty() { stepIndex = Math.max(0, stepIndex - 1); }
-    private void increaseDifficulty() { stepIndex = Math.min(STEPS_PCT.length - 1, stepIndex + 1); }
+    private void decreaseDifficulty() { stepIndex = Math.max(0, stepIndex - 1); requestInfo(); }
+    private void increaseDifficulty() { stepIndex = Math.min(STEPS_PCT.length - 1, stepIndex + 1); requestInfo(); }
 
-    private void decreaseDuration() { durationIndex = Math.max(0, durationIndex - 1); }
-    private void increaseDuration() { durationIndex = Math.min(DURATION_STEPS_SEC.length - 1, durationIndex + 1); }
+    private void decreaseDuration() { durationIndex = Math.max(0, durationIndex - 1); requestInfo(); }
+    private void increaseDuration() { durationIndex = Math.min(DURATION_STEPS_SEC.length - 1, durationIndex + 1); requestInfo(); }
 
     /** Más difícil = notas más seguidas y ventana de acierto más estrecha — los dos números que
      *  ya hacían de "perilla" implícita de Práctica libre, ahora escalados por el stepper en vez
@@ -260,17 +366,29 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private static long clampLong(long v, long min, long max) { return Math.max(min, Math.min(max, v)); }
     private static double clampDouble(double v, double min, double max) { return Math.max(min, Math.min(max, v)); }
 
-    private void openSongSelect() {
-        state = State.SONG_SELECT;
-        songCharts = MeditationChartLoader.loadAll();
-        songRows = Arrays.stream(CuratedSong.values())
-                .filter(s -> songCharts.containsKey(s.discId))
-                .toList();
-
+    /** SONG_LIST: solo la lista + Back (vuelve a OVERVIEW sin tocar la selección). Pulsar una
+     *  fila selecciona Y VUELVE a OVERVIEW en el mismo clic (ver selectRow()/clickSongRow()) —
+     *  no hace falta un botón de confirmar aparte. */
+    private void openSongList() {
+        state = State.SONG_LIST;
+        scrollRow = 0;
         this.clearWidgets();
         int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
-        addRenderableWidget(PanelButton.secondary(panelLeft + IN_X1, y,
-                Component.translatable("screen.zenkai.back"), this::buildIntroWidgets));
+        BackIconButton backBtn = new BackIconButton(
+                panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::buildOverviewWidgets);
+        backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
+        addRenderableWidget(backBtn);
+    }
+
+    private void selectRow(@Nullable CuratedSong song) {
+        selectedSong = song;
+        requestInfo();
+        buildOverviewWidgets();
+    }
+
+    private void beginSelected() {
+        if (selectedSong == null) startFreePractice();
+        else startSongSession(selectedSong);
     }
 
     private void buildResultsWidgets() {
@@ -365,6 +483,30 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         sessionStartMs = System.currentTimeMillis() + LEAD_IN_MS;
         lastSpawnMs = sessionStartMs;
         if (activeChart != null) muteVanillaMusic();
+
+        // Botón "Finish" (pedido explícito del usuario tras la queja de que ESC salía sin
+        // enseñar el TP conseguido): visible desde que la sesión arranca de verdad, NO durante
+        // "PRESS ANY KEY TO START" (nada que finalizar todavía). Reusa BackIconButton por pedido
+        // explícito ("usando el mismo BackIconButton") aunque la acción sea distinta de Back —
+        // sigue siendo "salir de esta sesión", el icono ya comunica eso. Esquina superior
+        // izquierda: lanesLeft() deja ese hueco libre de sobra en cualquier resolución razonable
+        // (ver su fórmula), combo/accuracy se dibujan pegados a la izquierda de los carriles, no
+        // del borde de la pantalla.
+        BackIconButton finishBtn = new BackIconButton(8, 8, 16, this::finishSessionEarly);
+        finishBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.finish")));
+        addRenderableWidget(finishBtn);
+    }
+
+    /** Termina la sesión YA (botón Finish o Escape, ver onClose()) y pasa a RESULTS con el reward
+     *  REAL — mismo camino que una sesión completada del todo (tick() al agotar la duración),
+     *  nunca el "silencio" que antes solo devolvía al hub sin enseñar nada. Único sitio que sabe
+     *  terminar una sesión a medias, para que los dos disparadores no diverjan. */
+    private void finishSessionEarly() {
+        if (state != State.PLAYING || waitingForStart) return;
+        stopSongIfAny();
+        sendSessionReport();
+        state = State.RESULTS;
+        buildResultsWidgets();
     }
 
     private void stopSongIfAny() {
@@ -387,10 +529,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         long elapsed = now - sessionStartMs;
 
         if (elapsed >= sessionDurationMs()) {
-            stopSongIfAny();
-            sendSessionReport();
-            state = State.RESULTS;
-            buildResultsWidgets();
+            finishSessionEarly();
             return;
         }
 
@@ -472,10 +611,16 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     @Override
     public void onClose() {
-        // Escape a mitad de partida reporta lo ya hecho (mismo espíritu que "sesión
-        // interrumpida cuenta") y sale directo al hub sin pasar por RESULTS — ver un resultado
-        // parcial no aporta nada que el jugador no supiera ya si él mismo decidió salir.
-        if (state == State.PLAYING && !waitingForStart) sendSessionReport();
+        // Escape a mitad de partida ahora pasa por RESULTS igual que el botón Finish (pedido
+        // explícito del usuario: "cuando se pulsa ESC se salen y no terminan mostrando el TP
+        // conseguido... para evitar confusiones") — antes reportaba lo hecho pero saltaba directo
+        // al hub SIN enseñar el reward, así que salir con ESC se sentía indistinguible de "no
+        // pasó nada" aunque sí se hubiera concedido TP de verdad. waitingForStart (aún en "PRESS
+        // ANY KEY TO START") sigue saliendo directo: no hay nada que reportar todavía.
+        if (state == State.PLAYING && !waitingForStart) {
+            finishSessionEarly();
+            return;
+        }
         Minecraft.getInstance().setScreen(new TrainingHubScreen());
     }
 
@@ -496,7 +641,11 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (state == State.PLAYING) {
-            if (waitingForStart) {
+            // ESCAPE no cuenta como "cualquier tecla" para arrancar: sin este caso especial, un
+            // jugador que se arrepiente justo en el prompt "PRESS ANY KEY TO START" y pulsa Esc
+            // esperando volver al hub arrancaba la sesión por accidente en su lugar — Esc cae a
+            // super.keyPressed(), que es quien de verdad gestiona el cierre (llama a onClose()).
+            if (waitingForStart && keyCode != GLFW.GLFW_KEY_ESCAPE) {
                 actuallyStart();
                 return true;
             }
@@ -613,95 +762,213 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         super.render(g, mouseX, mouseY, partialTick);
 
         switch (state) {
-            case INTRO -> renderIntro(g, mouseX, mouseY);
-            case SONG_SELECT -> renderSongSelect(g, mouseX, mouseY);
+            case OVERVIEW -> renderOverview(g, mouseX, mouseY);
+            case SONG_LIST -> renderSongList(g, mouseX, mouseY);
             case PLAYING -> renderPlaying(g);
             case RESULTS -> renderResults(g);
         }
     }
 
-    private void renderIntro(GuiGraphics g, int mouseX, int mouseY) {
+    /** Párrafo + fila-resumen de la canción (clicable, abre SONG_LIST) + steppers/valores fijos +
+     *  TP potencial/récord — ver el javadoc de clase para el porqué de este reparto. */
+    private void renderOverview(GuiGraphics g, int mouseX, int mouseY) {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + ZenkaiMenuScreen.BG_W / 2, panelTop);
         int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
-        int ty = panelTop + 30;
-        for (var line : introLines) {
+
+        int ty = panelTop + descY;
+        for (var line : overviewDescLines) {
             PanelText.onPanel(g, this.font, line, cx - this.font.width(line) / 2, ty, ZenkaiPalette.MUTED_ON_PANEL);
             ty += 10;
         }
-        ty += 4;
+
+        int x = panelLeft + IN_X1;
+        int w = IN_X2 - IN_X1;
+        int y = panelTop + songRowY;
+        Component songLabel = selectedSong != null
+                ? Component.translatable(selectedSong.nameKey())
+                : Component.translatable("screen.zenkai.meditation.free_practice");
+        Component rightLabel = selectedSong != null
+                ? Component.translatable(selectedSong.difficulty.translationKey) : null;
+        renderSelectableRow(g, x, y, w, mouseX, mouseY, false,
+                ICON_FREE_PRACTICE_U, ICON_FREE_PRACTICE_V, selectedSong != null ? selectedSong.item : null,
+                Component.translatable("screen.zenkai.meditation.song_label", songLabel), rightLabel);
+
+        if (selectedSong == null) {
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.training_hub.shadow.difficulty", STEPS_PCT[stepIndex]),
+                    cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
+            // "Session length" en SU PROPIA línea (sin botones, puede ser tan ancha como haga
+            // falta) + el VALOR SOLO ("30s") en la línea de los botones — bug real de captura del
+            // usuario: combinado en una sola línea ("Session length: 30s") se montaba con el
+            // botón +, a diferencia de "Difficulty: 100%" que sí cabía. Mismo arreglo que
+            // "Opponent form" en ShadowTrainingScreen, ver su javadoc de clase.
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.meditation.session_length_label"),
+                    cx, panelTop + stepperY + 20, ZenkaiPalette.LABEL_ON_PANEL);
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.meditation.session_length_value", DURATION_STEPS_SEC[durationIndex]),
+                    cx, panelTop + stepperY + 34, ZenkaiPalette.LABEL_ON_PANEL);
+        } else {
+            // Una canción trae su propia dificultad/duración fijas — sin steppers, solo lo que
+            // hay (pedido explícito del usuario: "la dificultad seleccionada, la duración de la
+            // sesión"). Sin botones en esta rama, así que el texto combinado no tiene nada con lo
+            // que solapar — se salta la línea de etiqueta y va directo a la Y del VALOR de la
+            // rama de arriba, para que "TP potencial"/"Record" no salten de sitio al cambiar.
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.meditation.song_difficulty",
+                            Component.translatable(selectedSong.difficulty.translationKey)),
+                    cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
+            long songSeconds = songCharts.containsKey(selectedSong.discId)
+                    ? songCharts.get(selectedSong.discId).durationMs() / 1000L : 0L;
+            PanelText.centeredOnPanel(g, this.font,
+                    Component.translatable("screen.zenkai.meditation.fixed_duration", songSeconds),
+                    cx, panelTop + stepperY + 34, ZenkaiPalette.LABEL_ON_PANEL);
+        }
+
         if (introPotential != null) {
             PanelText.centeredOnPanel(g, this.font,
                     Component.translatable("screen.zenkai.training_hub.potential", introPotential),
-                    cx, ty, ZenkaiPalette.VALUE_ON_PANEL);
-            ty += 10;
+                    cx, panelTop + infoY, ZenkaiPalette.VALUE_ON_PANEL);
         }
         if (introRecord != null) {
             PanelText.centeredOnPanel(g, this.font,
                     Component.translatable("screen.zenkai.training_hub.record", introRecord),
-                    cx, ty, ZenkaiPalette.MUTED_ON_PANEL);
+                    cx, panelTop + infoY + 12, ZenkaiPalette.MUTED_ON_PANEL);
         }
-
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.training_hub.shadow.difficulty", STEPS_PCT[stepIndex]),
-                cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.meditation.session_length", DURATION_STEPS_SEC[durationIndex]),
-                cx, panelTop + stepperY + 22, ZenkaiPalette.LABEL_ON_PANEL);
     }
 
-    private void renderSongSelect(GuiGraphics g, int mouseX, int mouseY) {
+    private int visibleRows() {
+        return Math.max(1, (LIST_BOTTOM - LIST_TOP + SONG_ROW_GAP) / (SONG_ROW_H + SONG_ROW_GAP));
+    }
+
+    private int totalSongRows() { return 1 + songRows.size(); }
+
+    private int maxScroll() { return Math.max(0, totalSongRows() - visibleRows()); }
+
+    /** Ancho de fila en SONG_LIST: el ancho total del panel MENOS el canalón de scroll,
+     *  reservado siempre haya o no scroll (ver SCROLLBAR_GUTTER) — para que las filas no cambien
+     *  de ancho el día que un disco de más haga aparecer la barra. */
+    private int songListRowWidth() { return (IN_X2 - IN_X1) - SCROLLBAR_GUTTER; }
+
+    private void renderSongList(GuiGraphics g, int mouseX, int mouseY) {
         ScreenTitle.drawAbovePanel(g, this.font,
                 Component.translatable("screen.zenkai.meditation.song_select.title"),
                 panelLeft + ZenkaiMenuScreen.BG_W / 2, panelTop);
         int x = panelLeft + IN_X1;
-        int w = IN_X2 - IN_X1;
-        int y = panelTop + 30;
+        int w = songListRowWidth();
+        int y = panelTop + LIST_TOP;
 
+        int total = totalSongRows();
+        int visible = visibleRows();
+        int last = Math.min(total, scrollRow + visible);
+        for (int i = scrollRow; i < last; i++) {
+            if (i == 0) {
+                y = renderSelectableRow(g, x, y, w, mouseX, mouseY, selectedSong == null,
+                        ICON_FREE_PRACTICE_U, ICON_FREE_PRACTICE_V, null,
+                        Component.translatable("screen.zenkai.meditation.free_practice"), null);
+            } else {
+                CuratedSong song = songRows.get(i - 1);
+                y = renderSelectableRow(g, x, y, w, mouseX, mouseY, selectedSong == song,
+                        -1, -1, song.item, Component.translatable(song.nameKey()),
+                        Component.translatable(song.difficulty.translationKey));
+            }
+        }
         if (songRows.isEmpty()) {
             PanelText.onPanel(g, this.font,
                     Component.translatable("screen.zenkai.meditation.song_select.empty"),
                     x, y, ZenkaiPalette.MUTED_ON_PANEL);
-            return;
         }
 
-        for (CuratedSong song : songRows) {
-            boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + SONG_ROW_H;
-            g.fill(x, y, x + w, y + SONG_ROW_H, hovered ? ZenkaiPalette.ROW_HOVER : ZenkaiPalette.INSET_BG);
-            g.fill(x, y, x + w, y + 1, ZenkaiPalette.BORDER_IN);
-            g.fill(x, y + SONG_ROW_H - 1, x + w, y + SONG_ROW_H, ZenkaiPalette.BORDER_IN);
-            g.fill(x, y, x + 1, y + SONG_ROW_H, ZenkaiPalette.BORDER_IN);
-            g.fill(x + w - 1, y, x + w, y + SONG_ROW_H, ZenkaiPalette.BORDER_IN);
-
-            g.renderItem(new ItemStack(song.item), x + 4, y + (SONG_ROW_H - 16) / 2);
-
-            // El nombre de ítem de CUALQUIER disco vanilla es genérico ("Music Disc") — el
-            // nombre real de la canción vive en una traducción propia (ver CuratedSong.nameKey()),
-            // no en el ItemStack, para que las tres filas se distingan de verdad.
-            PanelText.onPanel(g, this.font, Component.translatable(song.nameKey()),
-                    x + 26, y + 5, ZenkaiPalette.LABEL_ON_PANEL);
-            PanelText.rightOnPanel(g, this.font,
-                    Component.translatable(song.difficulty.translationKey),
-                    x + w - 6, y + 5, ZenkaiPalette.MUTED_ON_PANEL);
-
-            y += SONG_ROW_H + SONG_ROW_GAP;
+        if (maxScroll() > 0) {
+            int barX = x + w + 2;
+            int trackTop = panelTop + LIST_TOP;
+            int trackH = LIST_BOTTOM - LIST_TOP;
+            g.fill(barX, trackTop, barX + SCROLLBAR_W, trackTop + trackH, ZenkaiPalette.BAR_BG);
+            int thumbH = Math.max(10, trackH * visible / total);
+            int thumbY = trackTop + (trackH - thumbH) * scrollRow / maxScroll();
+            g.fill(barX, thumbY, barX + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.VALUE_ON_PANEL);
         }
+    }
+
+    /** Una fila seleccionable (Free Practice o una canción curada) — ícono desde el atlas
+     *  (u/v >= 0) o un ítem real (item != null), nunca los dos. `selected` pinta un borde dorado
+     *  FIJO (persiste sin el ratón encima); el tinte de hover se suma aparte y es independiente
+     *  — así una fila puede estar elegida Y resaltada por el ratón a la vez sin que un estado
+     *  tape al otro. Usada tanto por la fila-resumen de OVERVIEW (selected siempre false, es un
+     *  botón de "cambiar", no una opción marcable) como por cada fila de SONG_LIST. PURA
+     *  renderización, sin efectos de clic (ver clickSongSummaryRow()/clickSongRow() para el
+     *  hit-test, que recorre la MISMA disposición por coordenadas en vez de reejecutar el render
+     *  — nunca reejecutar el render como efecto secundario de un clic, ver el historial de esta
+     *  clase). Devuelve la Y de la siguiente fila. */
+    private int renderSelectableRow(GuiGraphics g, int x, int y, int w, int mouseX, int mouseY,
+                                    boolean selected, int iconU, int iconV, @Nullable Item item,
+                                    Component label, @Nullable Component rightLabel) {
+        boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + SONG_ROW_H;
+
+        g.fill(x, y, x + w, y + SONG_ROW_H, hovered ? ZenkaiPalette.ROW_HOVER : ZenkaiPalette.INSET_BG);
+        int border = selected ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.BORDER_IN;
+        g.fill(x, y, x + w, y + 1, border);
+        g.fill(x, y + SONG_ROW_H - 1, x + w, y + SONG_ROW_H, border);
+        g.fill(x, y, x + 1, y + SONG_ROW_H, border);
+        g.fill(x + w - 1, y, x + w, y + SONG_ROW_H, border);
+
+        if (item != null) {
+            g.renderItem(new ItemStack(item), x + 4, y + (SONG_ROW_H - 16) / 2);
+        } else {
+            g.blit(ICONS_TEX, x + 2, y + (SONG_ROW_H - ICON_CELL) / 2, iconU, iconV,
+                    ICON_CELL, ICON_CELL, ICONS_ATLAS, ICONS_ATLAS);
+        }
+
+        // El nombre de ítem de CUALQUIER disco vanilla es genérico ("Music Disc") — el nombre
+        // real de la canción vive en una traducción propia (ver CuratedSong.nameKey()), no en
+        // el ItemStack, para que las filas se distingan de verdad.
+        PanelText.onPanel(g, this.font, label, x + 26, y + 5, ZenkaiPalette.LABEL_ON_PANEL);
+        if (rightLabel != null) {
+            PanelText.rightOnPanel(g, this.font, rightLabel, x + w - 6, y + 5, ZenkaiPalette.MUTED_ON_PANEL);
+        }
+        return y + SONG_ROW_H + SONG_ROW_GAP;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (state == State.SONG_SELECT && button == 0 && clickSongRow(mouseX, mouseY)) return true;
+        if (state == State.OVERVIEW && button == 0 && clickSongSummaryRow(mouseX, mouseY)) {
+            openSongList();
+            return true;
+        }
+        if (state == State.SONG_LIST && button == 0 && clickSongRow(mouseX, mouseY)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private boolean clickSongRow(double mouseX, double mouseY) {
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (state == State.SONG_LIST && maxScroll() > 0 && scrollY != 0) {
+            scrollRow = Math.max(0, Math.min(maxScroll(), scrollRow - (int) Math.signum(scrollY)));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    /** Hit-test de la fila-resumen clicable de OVERVIEW — misma disposición que renderOverview(). */
+    private boolean clickSongSummaryRow(double mouseX, double mouseY) {
         int x = panelLeft + IN_X1;
         int w = IN_X2 - IN_X1;
-        int y = panelTop + 30;
+        int y = panelTop + songRowY;
+        return mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + SONG_ROW_H;
+    }
+
+    /** Hit-test de clic en SONG_LIST: misma disposición por coordenadas que renderSongList(),
+     *  acotada a las filas realmente visibles (scrollRow..scrollRow+visibleRows()). */
+    private boolean clickSongRow(double mouseX, double mouseY) {
+        int x = panelLeft + IN_X1;
+        int w = songListRowWidth();
         if (mouseX < x || mouseX >= x + w) return false;
 
-        for (CuratedSong song : songRows) {
+        int y = panelTop + LIST_TOP;
+        int total = totalSongRows();
+        int last = Math.min(total, scrollRow + visibleRows());
+        for (int i = scrollRow; i < last; i++) {
             if (mouseY >= y && mouseY < y + SONG_ROW_H) {
-                startSongSession(song);
+                selectRow(i == 0 ? null : songRows.get(i - 1));
                 return true;
             }
             y += SONG_ROW_H + SONG_ROW_GAP;

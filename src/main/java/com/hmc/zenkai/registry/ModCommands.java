@@ -20,6 +20,8 @@ import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
+import com.hmc.zenkai.feature.training.TrainingCategory;
+import com.hmc.zenkai.feature.training.TrainingData;
 import com.hmc.zenkai.worldgen.ProtectedZones;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -157,7 +159,11 @@ public class ModCommands {
                         .then(Commands.literal("full")
                                 .executes(ctx -> resetFull(ctx, ctx.getSource().getPlayerOrException()))
                                 .then(Commands.argument("player", EntityArgument.players())
-                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::resetFull)))))
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::resetFull))))
+                        .then(Commands.literal("training_fatigue")
+                                .executes(ctx -> resetTrainingFatigue(ctx, ctx.getSource().getPlayerOrException()))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::resetTrainingFatigue)))))
 
                 .then(Commands.literal("revive")
                         .then(Commands.argument("player", EntityArgument.players())
@@ -660,6 +666,26 @@ public class ModCommands {
 
         ctx.getSource().sendSuccess(
                 () -> Component.literal("[Zenkai] Full reset done → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /**
+     * Reinicia a 0 la fatiga/carry/lastDecay de las TRES categorías de entrenamiento (ver
+     * TrainingCategory: COMBAT/MEDITATION/TARGET_PRACTICE, cada una independiente desde
+     * 2026-09-09) — pedido explícito del usuario. NO toca récords (bestMeditationTp/
+     * bestTargetPracticeTp/bestShadowTp) ni el TP ya ganado: esto solo reinicia el "cansancio"
+     * que penaliza la eficiencia de seguir ganando, no el progreso conseguido.
+     */
+    private static int resetTrainingFatigue(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        TrainingData td = sp.getData(ZenkaiDataAttachments.TRAINING.get());
+        long now = sp.level().getGameTime();
+        for (TrainingCategory cat : TrainingCategory.values()) {
+            td.setFatigue(cat, 0.0);
+            td.setCarry(cat, 0.0);
+            td.setLastDecayTime(cat, now);
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Training fatigue reset → " + sp.getGameProfile().getName()), true);
         return 1;
     }
 

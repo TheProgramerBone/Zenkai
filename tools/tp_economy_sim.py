@@ -58,13 +58,27 @@ usan, no ocultas):
   - Sin critico vainilla (salto+caida) ni armadura del mob: ambos solo
     ACORTAN el kill si se dieran, asi que de nuevo el numero es una cota
     inferior de velocidad real, nunca una sobreestimacion.
-El HALLAZGO CLAVE de mas arriba (TP/hora sostenido NO depende del ritmo de
-combate) sigue siendo cierto y sigue siendo la razon real de por que
-damage_tp_factor/fatigue_decay_per_minute son las palancas que importan --
-esto no lo cambia. Lo que aporta kill_seconds_real() es poder CONFIRMAR que
-el ritmo de combate resultante se sigue sintiendo bien (ni instantaneo ni
-eterno) en vez de suponerlo, y reemplazar el rango adivinado 2-40s por un
-numero trazable hasta el código real.
+RESULTADO INESPERADO al conectar esto de verdad (2026-09-09), que CORRIGE el
+alcance del HALLAZGO CLAVE de mas arriba: la invariancia frente al ritmo de
+combate NO es universal, solo se cumple en una MESETA (~2-20s/kill fijo,
+medido barriendo el propio parametro -- ver "Sensibilidad a segundos-por-kill"
+en el bloque main). Fuera de esa meseta el resultado SI depende del ritmo:
+40s/kill ya da ~298h en vez de ~153h, y kill_seconds_real() revela que el
+combate a puño limpio de verdad cae MUY por debajo de la meseta (~0.2-0.6s,
+a menudo UN solo golpe -- el coeficiente de melee del jugador, 9.8/punto,
+aplasta la defensa/vida de un mob "de nivel" al 25% del PL, que no llevan
+NINGUN coeficiente de raza equivalente). El motivo es de discretizacion, no
+un fallo del modelo de fatiga: con kills casi instantaneos el decay perezoso
+(que solo corre justo antes de cada kill, no en tiempo continuo) se acerca
+al limite continuo real; con kills de 10-40s cada paso es "grueso" y la
+media de la eficiencia m() (una funcion CONVEXA de la fatiga) se desvia del
+promedio continuo. Con combate real, 5,000,000 TP salen en ~7-37h (según
+buffs) en vez de las ~30-153h que asumia el rango adivinado -- ver la tabla
+nueva al final del bloque main y la nota correspondiente en
+`.claude/pendiente/economia-tp.md`. damage_tp_factor/fatigue_decay_per_minute
+siguen siendo las palancas reales del sistema; lo que cambia es que "el
+ritmo de combate da igual" ya NO es una simplificacion segura para el rango
+de kill_seconds que el combate de verdad produce.
 """
 
 import math

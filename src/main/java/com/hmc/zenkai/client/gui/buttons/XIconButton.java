@@ -17,6 +17,10 @@ import java.util.Objects;
  * rectificar. Un botón propio, con su propia condición de visibilidad, no puede heredar
  * el apagado del otro.
  * ⚠ Necesita textures/gui/btn_x.png y btn_x_highlight.png (12x12).
+ * Tamaño configurable (constructor de 3 args): reusado a mayor escala como "Cancel"/"Back" de
+ * las pantallas de Training (pedido explícito del usuario, "esa textura ya existe") — el
+ * blit ya usaba this.width/this.height como destino, así que solo hacía falta un constructor
+ * que no fijara 12x12 a pelo.
  */
 public class XIconButton extends AbstractButton {
 
@@ -29,7 +33,11 @@ public class XIconButton extends AbstractButton {
     private final Runnable onClick;
 
     public XIconButton(int x, int y, Runnable onClick) {
-        super(x, y, 12, 12, Component.empty());
+        this(x, y, 12, onClick);
+    }
+
+    public XIconButton(int x, int y, int size, Runnable onClick) {
+        super(x, y, size, size, Component.empty());
         this.onClick = Objects.requireNonNull(onClick);
     }
 
