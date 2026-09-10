@@ -34,12 +34,17 @@ You decide when you are playing Minecraft and when you are playing Zenkai.
 - **Ki techniques** — chargeable blasts, waves, discs, spirals, barriers, plus physical
   techniques (dash, barrage, kiai, heavy blow).
 - **Skills** — Flight, Kaioken, Ki Sense, Ki Control, Ki Fist, Ki Infuse, Ki Block, Meditation.
+- **Training minigames** — a Training hub with Shadow Training (spar your own shadow clone),
+  Meditation and Target Practice, each with real difficulty scaling and Training Point rewards.
+- **Environmental gravity** — Kaiosama's planet and the Hyperbolic Time Chamber apply real ambient
+  gravity that scales training and stacks with weighted gear.
 - **Dragon Balls** — Earth and Namek sets, radar, Shenlong and a wish system.
 - **Masters** — Korin, Kami, Kaiosama and more, each offering skills, techniques and one-off
   services (senzu beans, growing/removing your tail, training weights).
 - **Party system** — invite, accept, leave, kick, disband and a friendly-fire toggle for
   grouping up with other players.
 - **Two dimensions** — Namek and the Otherworld, plus the Hyperbolic Time Chamber.
+- **Space Pod** — a real, flyable ship for Earth↔Namek travel, with its own countdown and landing.
 - **Gear** — Scouter, weighted training equipment (Curios), senzu beans, Kintoun.
 
 ### Requirements
