@@ -1,13 +1,26 @@
 package com.hmc.zenkai.content.entity.misc;
 
+import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
+import com.hmc.zenkai.feature.spacepod.OpenGalacticMenuPayload;
+import com.hmc.zenkai.feature.spacepod.SpacePodDestination;
+import com.hmc.zenkai.feature.teleport.DimensionEntryTracker;
+import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.registry.ModItems;
+import com.hmc.zenkai.registry.ModSounds;
 import com.hmc.zenkai.network.vehicle.VerticalControlVehicle;
+import com.hmc.zenkai.util.TeleportUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -16,7 +29,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoAnimatable;
@@ -42,6 +57,19 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
     // Input vertical (lo setea tu packet en servidor)
     private boolean inputUp;
     private boolean inputDown;
+
+    // -------------------------
+    // Cuenta atrás de despegue (menú galáctico)
+    // -------------------------
+    /** 3 segundos — el número que ve el jugador en la action bar (3, 2, 1) coincide con el
+     *  diseño pedido ("cuenta atrás 3...2...1"), ver
+     *  .claude/pendiente/nave-espacial-menu-galactico.md. */
+    private static final int LAUNCH_COUNTDOWN_TICKS = 60;
+
+    /** -1 = sin cuenta atrás en curso. Server-authoritative por completo: el cliente solo ve
+     *  los mensajes de action bar, nunca decide por su cuenta cuándo teletransportar. */
+    private int launchTicksLeft = -1;
+    @Nullable private SpacePodDestination launchDestination;
 
     public SpacePodEntity(EntityType<? extends SpacePodEntity> type, Level level) {
         super(type, level);
@@ -87,6 +115,17 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
 
     @Override
     public @NotNull InteractionResult mobInteract(Player player, @NotNull InteractionHand hand) {
+        // Ya montado en ESTA nave: el mismo click derecho que antes solo montaba ahora abre el
+        // menú galáctico (pedido explícito del usuario, ver
+        // .claude/pendiente/nave-espacial-menu-galactico.md). mobInteract SIGUE llamándose con
+        // el jugador ya encima — igual que un caballo abre su inventario con el jinete montado
+        // — así que no hace falta un input nuevo ni una tecla dedicada.
+        if (player.getVehicle() == this) {
+            if (!this.level().isClientSide() && player instanceof ServerPlayer sp) {
+                PacketDistributor.sendToPlayer(sp, new OpenGalacticMenuPayload());
+            }
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
+        }
         if (!player.isPassenger() && this.getPassengers().isEmpty()) {
             player.startRiding(this, true);
             if (!this.level().isClientSide()) triggerCloseAnimation();
@@ -220,9 +259,172 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
         // Con rider: sin gravedad (vuelo). Sin rider: con gravedad (cae) + tu travel también baja suave.
         this.setNoGravity(hasRider);
 
-        if (!hasRider && !this.level().isClientSide()) {
-            triggerOpenAnimation();
+        if (!this.level().isClientSide()) {
+            if (launchTicksLeft >= 0) {
+                tickLaunchCountdown();
+            } else if (!hasRider) {
+                triggerOpenAnimation();
+            }
         }
+    }
+
+    // -------------------------
+    // Menú galáctico: cuenta atrás + salto real
+    // -------------------------
+
+    /** Arranca la cuenta atrás de despegue hacia `dest`. Llamado SOLO desde
+     *  SpacePodLaunchPacket.handle, ya validado (jugador realmente montado en ESTA nave,
+     *  destino distinto de la dimensión actual). No hace nada si ya hay una en curso — evita
+     *  que un doble clic la reinicie o la solape. */
+    public void beginLaunch(ServerPlayer pilot, SpacePodDestination dest) {
+        if (launchTicksLeft >= 0) return;
+        this.launchDestination = dest;
+        this.launchTicksLeft = LAUNCH_COUNTDOWN_TICKS;
+        triggerLaunchAnimation();
+        pilot.displayClientMessage(Component.literal("3"), true);
+        // Dura exactamente los 3s de la cuenta atrás (ver tools/gen_space_pod_launch_sfx.py) —
+        // pedido explícito del usuario tras probar el menú sin ningún sonido de despegue.
+        this.level().playSound(null, this.getX(), this.getY(), this.getZ(),
+                ModSounds.SPACE_POD_LAUNCH.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
+    }
+
+    private void cancelLaunch() {
+        this.launchTicksLeft = -1;
+        this.launchDestination = null;
+    }
+
+    /** Un tick de la cuenta atrás YA en curso. Se cancela sola (sin viajar) si el piloto se
+     *  bajó o murió mientras contaba — nunca teletransporta a nadie que ya no esté montado. */
+    private void tickLaunchCountdown() {
+        LivingEntity rider = getControllingPassenger();
+        if (!(rider instanceof ServerPlayer pilot) || !pilot.isAlive()) {
+            cancelLaunch();
+            return;
+        }
+
+        launchTicksLeft--;
+        if (launchTicksLeft == 40) {
+            pilot.displayClientMessage(Component.literal("2"), true);
+        } else if (launchTicksLeft == 20) {
+            pilot.displayClientMessage(Component.literal("1"), true);
+        } else if (launchTicksLeft <= 0) {
+            executeLaunch(pilot);
+        }
+    }
+
+    /** El salto real, al llegar la cuenta atrás a cero: mismas X/Z que el punto de despegue,
+     *  altura reajustada al terreno del destino — como un portal, sin puerto espacial fijo que
+     *  definir a mano en Tierra/Namek todavía (pedido explícito del usuario, ver el pendiente).
+     *  La nave viaja CON el jugador de verdad (ver más abajo) y aparece de pie ENCIMA de ella,
+     *  no dentro de la cabina — pedido explícito del usuario. */
+    private void executeLaunch(ServerPlayer pilot) {
+        SpacePodDestination dest = this.launchDestination;
+        cancelLaunch();
+        if (dest == null) return;
+
+        ServerLevel destLevel = pilot.server.getLevel(dest.dimension());
+        if (destLevel == null) return;
+
+        BlockPos launchPos = this.blockPosition();
+        pilot.stopRiding();
+
+        BlockPos surface = surfaceAt(destLevel, launchPos.getX(), launchPos.getZ());
+        // Red de seguridad para una columna genuinamente sin terreno (no debería pasar con el
+        // generador de ruido de Namek/Overworld, los dos cubren toda columna, pero por si
+        // acaso) — mismo criterio que TeleportRequestPacket.resolveHome: caer al spawn del
+        // propio destino en vez de al vacío.
+        if (surface.getY() <= destLevel.getMinBuildHeight() + 1) {
+            BlockPos spawn = destLevel.getSharedSpawnPos();
+            surface = surfaceAt(destLevel, spawn.getX(), spawn.getZ());
+        }
+        BlockPos safe = TeleportUtil.findSafeSpot(destLevel, surface);
+        Vec3 landingBase = TeleportUtil.footCenter(safe);
+
+        // La nave viaja CON el jugador — bug real reportado por el usuario: la ronda anterior
+        // dejaba ESTA nave atrás en el sitio de despegue y plantaba una nueva "de bienvenida" en
+        // cada llegada, así que un viaje de ida y vuelta acababa con DOS SpacePodEntity (una por
+        // planeta) en vez de una sola. Un Entity no puede simplemente cambiar de ServerLevel —
+        // hay que recrearlo en el nivel de destino, igual que hace vainilla al cruzar un portal
+        // real: se guarda el NBT completo con saveWithoutId (posición/rotación ya no importan,
+        // se sobrescriben después de todos modos), se retira ESTA instancia del nivel de origen
+        // con remove(CHANGED_DIMENSION) — NO discard()/muerte, así que no dispara die() ni suelta
+        // SPACE_POD_ITEM, la nave no se está destruyendo, solo mudando de sitio — y se recrea con
+        // esos mismos datos en destLevel. this queda inválida a partir de aquí; todo lo de abajo
+        // opera sobre travelledPod.
+        CompoundTag podData = new CompoundTag();
+        this.saveWithoutId(podData);
+        this.remove(RemovalReason.CHANGED_DIMENSION);
+
+        SpacePodEntity travelledPod = new SpacePodEntity(ModEntities.SPACE_POD.get(), destLevel);
+        travelledPod.load(podData);
+        travelledPod.moveTo(landingBase.x, landingBase.y, landingBase.z, pilot.getYRot(), 0.0F);
+        destLevel.addFreshEntity(travelledPod);
+
+        // Encima del casco, no dentro de la cabina — "aparezca encima de la spacepod" tal cual
+        // lo pidió el usuario, no ya montado (canBeCollidedWith la hace sólida, así que el
+        // jugador se queda de pie ahí en cuanto la física del siguiente tick lo asiente).
+        Vec3 dest3 = new Vec3(landingBase.x, landingBase.y + travelledPod.getBbHeight(), landingBase.z);
+
+        // Mismo motivo que TeleportExecution.execute: teleportTo(ServerLevel, ...) SÍ dispara
+        // PlayerChangedDimensionEvent en cuanto cruza de dimensión, y DimensionEntryTracker está
+        // enganchado a ese evento — avisarle de que este cruce es nuestro, no una llegada real.
+        if (!pilot.serverLevel().dimension().equals(destLevel.dimension())) {
+            DimensionEntryTracker.suppressNextEntry(pilot);
+        }
+        pilot.teleportTo(destLevel, dest3.x, dest3.y, dest3.z, pilot.getYRot(), pilot.getXRot());
+        pilot.setPortalCooldown();
+
+        ZenkaiTriggers.MILESTONE.get().trigger(pilot, ZenkaiTriggers.Kinds.SPACE_POD_LAUNCH_USED);
+    }
+
+    /** Heightmap de verdad en (x, z) — NO el atajo barato de {@code Level#getHeight}, que solo
+     *  mira si el chunk YA está cargado ({@code hasChunk}) y, si no, devuelve directamente
+     *  {@code getMinBuildHeight()} sin generar nada (verificado leyendo el fuente real de
+     *  NeoForm, `Level.getHeight(Heightmap.Types, int, int)`). Bug real reportado por el
+     *  usuario: al viajar a una columna que el servidor nunca había cargado (cualquier X/Z
+     *  lejos de spawn en un mundo nuevo, que es justo el caso normal de esta nave), el
+     *  heightmap "veía" el fondo del mundo y `TeleportUtil.isSafe` daba por buena esa posición
+     *  (el chunk descargado también hace que `getBlockState` devuelva aire por defecto) —
+     *  aparecía en el vacío y moría de caída. Forzar la generación completa del chunk con
+     *  {@code getChunkAt} ANTES de leer el heightmap es la diferencia entre las dos. */
+    private static BlockPos surfaceAt(ServerLevel level, int x, int z) {
+        level.getChunkAt(new BlockPos(x, 0, z));
+        return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, new BlockPos(x, 0, z));
+    }
+
+    // -------------------------
+    // Inmunidades (igual que KintounEntity): no se ahoga ni muere por pociones
+    // -------------------------
+
+    /** Inmune a cualquier efecto de poción (veneno, wither, etc.). */
+    @Override
+    public boolean canBeAffected(@NotNull MobEffectInstance effect) {
+        return false;
+    }
+
+    /** Inmune a ahogo, asfixia en bloque y daño mágico/pociones (harming/veneno/wither) — mismo
+     *  criterio que KintounEntity, pedido explícito del usuario ("ajustar la IA y protecciones
+     *  para el spacepod"). */
+    @Override
+    public boolean isInvulnerableTo(@NotNull DamageSource source) {
+        if (source.is(DamageTypes.DROWN)
+                || source.is(DamageTypes.IN_WALL)
+                || source.is(DamageTypes.MAGIC)
+                || source.is(DamageTypes.INDIRECT_MAGIC)
+                || source.is(DamageTypes.WITHER)) {
+            return true;
+        }
+        return super.isInvulnerableTo(source);
+    }
+
+    // -------------------------
+    // Colisión sólida: el jugador puede pararse encima, igual que KintounEntity — pedido
+    // explícito del usuario ("hazla tangible... así como en los kintoun").
+    // -------------------------
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return true;
     }
 
     // -------------------------

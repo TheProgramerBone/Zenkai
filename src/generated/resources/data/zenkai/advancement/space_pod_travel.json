@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:space_pod",
+  "criteria": {
+    "used": {
+      "conditions": {
+        "kind": "space_pod_launch_used"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.space_pod_travel.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:firework_rocket"
+    },
+    "title": {
+      "translate": "advancements.zenkai.space_pod_travel.title"
+    }
+  },
+  "requirements": [
+    [
+      "used"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

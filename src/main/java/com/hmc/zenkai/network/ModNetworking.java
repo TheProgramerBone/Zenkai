@@ -532,5 +532,15 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.teleport.PartyTeleportRequestPacket.TYPE,
                 com.hmc.zenkai.feature.teleport.PartyTeleportRequestPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.teleport.PartyTeleportRequestPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.spacepod.OpenGalacticMenuPayload.TYPE,
+                com.hmc.zenkai.feature.spacepod.OpenGalacticMenuPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(ClientPayloadHandlers::openGalacticMenu));
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.spacepod.SpacePodLaunchPacket.TYPE,
+                com.hmc.zenkai.feature.spacepod.SpacePodLaunchPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.spacepod.SpacePodLaunchPacket::handle);
     }
 }

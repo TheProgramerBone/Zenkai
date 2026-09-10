@@ -61,11 +61,15 @@ public final class ClientZenkaiPalTick {
     private static boolean lastFlyBoostSent = false;
 
     /**
-     * Modo rápido de vuelo: Control ALTERNA (toggle), no hace falta mantenerlo pulsado. Se
-     * queda encendido incluso al aterrizar/despegar de nuevo, hasta que se vuelve a pulsar
-     * Control en pleno vuelo — pedido explícito del usuario (antes había que sostener
-     * Ctrl+adelante sin soltar, y combinado con mirar arriba/abajo se sentía mal). Solo
-     * jugador local: es un campo simple, no un mapa por UUID.
+     * Modo rápido de vuelo: Control ALTERNA (toggle) mientras se está volando, no hace falta
+     * mantenerlo pulsado (antes había que sostener Ctrl+adelante sin soltar, y combinado con
+     * mirar arriba/abajo se sentía mal). Solo jugador local: es un campo simple, no un mapa por
+     * UUID.
+     * Se apaga solo en cuanto se deja de volar (ver tickPlayer) — bug real reportado por el
+     * usuario: al quedar encendido tras aterrizar (comportamiento de una ronda anterior, pedido
+     * explícito en su momento), el badge ICON_FLY de ClientZenkaiHooks se quedaba pegado en el
+     * HUD con el jugador en el suelo, porque ese badge solo mira este flag + canFly(), nunca si
+     * se está volando de verdad ahora mismo.
      */
     public static boolean fastFlightMode = false;
 
@@ -148,6 +152,7 @@ public final class ClientZenkaiPalTick {
             while (mc.options.keySprint.consumeClick()) {
                 if (flying) fastFlightMode = !fastFlightMode;
             }
+            if (!flying) fastFlightMode = false;
             boolean boosting = flying && fastFlightMode && mc.player.input.forwardImpulse > 0.1f;
             applyLocalBoost(p, boosting);
 

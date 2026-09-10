@@ -63,6 +63,10 @@ public class ModSounds {
      *  cablear a ningún sitio, esa feature no existe aún. Ver
      *  .claude/pendiente/instant-transmission-pendiente.md. */
     public static final Supplier<SoundEvent> TELEPORT = registerSoundEvent("teleport");
+    /** Despegue de la SpacePod (menú galáctico) — suena desde SpacePodEntity.beginLaunch, dura
+     *  lo mismo que la cuenta atrás (3s). Placeholder sintético, ver
+     *  tools/gen_space_pod_launch_sfx.py. */
+    public static final Supplier<SoundEvent> SPACE_POD_LAUNCH = registerSoundEvent("space_pod_launch");
 
     // ── Banco de scouter ─────────────────────────────────────────────────────
     public static final Supplier<SoundEvent> SCOUTER_BENCH_OPEN    = registerSoundEvent("scouter_bench_open");

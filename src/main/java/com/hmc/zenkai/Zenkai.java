@@ -245,10 +245,7 @@ public class Zenkai {
             );
 
             // Entidades
-            EntityRenderers.register(ModEntities.SPACE_POD.get(),
-                    ctx -> new GenericGeoRenderer<>(ctx,
-                            new GenericGeoModel<>("space_pod",
-                                    false, true), 1f));
+            EntityRenderers.register(ModEntities.SPACE_POD.get(), SpacePodRenderer::new);
 
             EntityRenderers.register(ModEntities.KINTOUN.get(),
                     ctx -> new GenericGeoRenderer<>(ctx,

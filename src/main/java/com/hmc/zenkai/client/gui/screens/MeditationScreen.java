@@ -4,6 +4,8 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
+import com.hmc.zenkai.client.gui.buttons.AcceptIconButton;
+import com.hmc.zenkai.client.gui.buttons.AtlasIconButton;
 import com.hmc.zenkai.client.gui.buttons.BackIconButton;
 import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
@@ -13,8 +15,10 @@ import com.hmc.zenkai.client.training.CuratedSong;
 import com.hmc.zenkai.client.training.MeditationChart;
 import com.hmc.zenkai.client.training.MeditationChartLoader;
 import com.hmc.zenkai.client.training.MeditationDiscSound;
+import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.feature.training.MeditationSessionPacket;
 import com.hmc.zenkai.feature.training.TrainingInfoRequestPacket;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -26,6 +30,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -35,6 +40,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -90,15 +96,29 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private enum State { OVERVIEW, SONG_LIST, PLAYING, RESULTS }
 
     private static final int LANES = 4;
-    private static final int[] KEYS = {
-            GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_F
-    };
-    private static final String[] KEY_LABELS = {"A", "S", "D", "F"};
+    /** Códigos de tecla GLFW por carril — YA NO son una constante fija: pedido explícito del
+     *  usuario ("un ajuste para poder cambiar las teclas a gusto del jugador", ver el popup de
+     *  configuración/engranaje más abajo). Cargados de ClientConfig en init() y refrescados tras
+     *  confirmar el popup — instancia, no static, porque el valor puede cambiar en caliente sin
+     *  reabrir la pantalla. GLFW_KEY_A/S/D/F siguen siendo el default de ClientConfig. */
+    private final int[] keys = new int[LANES];
 
     private static final long BASE_SPAWN_INTERVAL_MS = 450;
     private static final long TRAVEL_MS = 1400;
-    /** Ventana de acierto: |ratio-1.0| <= esto se cuenta como golpe válido. */
-    private static final double BASE_HIT_WINDOW = 0.12;
+    /** Ventana de acierto: |ratio-1.0| <= esto se cuenta como golpe válido — 0.15 de TRAVEL_MS
+     *  son ±210ms reales, en la banda alta de lo que usa Friday Night Funkin' (referencia
+     *  explícita del usuario: "compara con FNF... a ver cómo funciona") para su ventana total de
+     *  acierto (ahí ronda los ±166ms, pero FNF es un juego de ritmo dedicado; este es un
+     *  minijuego de entrenamiento, de propósito más permisivo).
+     *  FIJA para las dos dificultades — pedido explícito del usuario tras reportar que a
+     *  dificultad alta "no lo detecta"/"lo toma como incorrecto": antes esto se ENCOGÍA con la
+     *  dificultad (ver el `applyDifficulty()` viejo, clamp 0.06-0.22), así que un chart más
+     *  denso también castigaba CADA nota individual con menos margen — doble penalización a la
+     *  vez. FNF (y los juegos de ritmo en general) mantienen la ventana de acierto CONSTANTE
+     *  sin importar la dificultad del chart: lo que cambia con la dificultad es la DENSIDAD de
+     *  notas (`spawnIntervalMs`), nunca cuánto margen tiene cada nota individual — ver
+     *  applyDifficulty(). */
+    private static final double HIT_WINDOW = 0.15;
 
     /** Colchón de silencio tras la primera tecla, antes de que "empiece de verdad" la sesión
      *  (elapsed llega a 0) — pedido explícito del usuario tras un playtest real: en modo Canción,
@@ -117,7 +137,6 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private static final int[] STEPS_PCT = {50, 75, 100, 125, 150, 175, 200};
     private int stepIndex = 2; // arranca en 100%
     private long spawnIntervalMs = BASE_SPAWN_INTERVAL_MS;
-    private double hitWindow = BASE_HIT_WINDOW;
 
     /** Duración de sesión de PRÁCTICA LIBRE, elegible en OVERVIEW (pedido explícito del usuario:
      *  "un tiempo configurable para que el jugador pueda conseguir recompensas") — modo Canción
@@ -145,6 +164,18 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
      *  jugador (una nota que no aparece no puede fallarse) y no toca los archivos de chart. */
     private static final long MIN_LANE_GAP_MS = 150;
     private final long[] lastLaneNoteMs = new long[LANES];
+
+    /** Mismo filtro anti-amontonamiento que MIN_LANE_GAP_MS, pero para el generador ALEATORIO
+     *  de Práctica libre (que nunca lo tuvo) y con SU PROPIO umbral, calculado en vez de copiado:
+     *  el mínimo real para que dos notas del MISMO carril nunca terminen con ventanas de acierto
+     *  solapadas es 2×HIT_WINDOW·TRAVEL_MS. Antes de ensanchar HIT_WINDOW (pedido explícito del
+     *  usuario, comparación con FNF) esto no hacía falta porque la ventana era más estrecha que
+     *  el hueco típico entre spawns aleatorios del mismo carril; con la ventana más ancha, dos
+     *  notas del mismo carril podían caer más juntas que 2×HIT_WINDOW a dificultad alta
+     *  (spawnIntervalMs bajo) y robarse el acierto entre ellas. Reusa lastLaneNoteMs (ya existía
+     *  para el modo Canción) — nunca penaliza al jugador, una nota que no aparece no puede
+     *  fallarse. */
+    private static final long FREE_PRACTICE_MIN_LANE_GAP_MS = Math.round(2 * HIT_WINDOW * TRAVEL_MS);
 
     // El beige real de common_screen.png va de x=12 a x=244 (muestreado píxel a píxel, ver
     // TrainingHubScreen) — 10/245 se metían 2px dentro del marco por cada lado.
@@ -258,6 +289,19 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
      *  respiro antes de la primera nota). */
     private boolean waitingForStart;
 
+    // ── Popup de reasignación de teclas (icons.png 80,60), OVERVIEW únicamente ─────────────────
+    /** true = el popup está abierto — mientras tanto Back/Start/steppers se ocultan (mismo
+     *  criterio que PartyScreen.configOpen) y el clic/tecla se enruta al popup en vez de al
+     *  resto de la pantalla. */
+    private boolean keybindPopupOpen = false;
+    /** Copia de trabajo de `keys` mientras el popup está abierto — Cancelar la descarta,
+     *  Confirmar la vuelca a ClientConfig Y a `keys`. Nunca se edita `keys` directamente desde
+     *  el popup para que Cancelar pueda deshacer de verdad. */
+    private final int[] pendingKeys = new int[LANES];
+    /** Carril esperando la PRÓXIMA tecla física para reasignarse, o -1 si ninguno — ver
+     *  keyPressed(). */
+    private int awaitingLane = -1;
+
     public MeditationScreen() {
         super(Component.translatable("screen.zenkai.training_hub.row.meditation"));
     }
@@ -267,9 +311,16 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         panelLeft = (this.width - ZenkaiMenuScreen.BG_W) / 2;
         panelTop = (this.height - ZenkaiMenuScreen.BG_H) / 2;
 
+        for (int i = 0; i < LANES; i++) keys[i] = ClientConfig.meditationLaneKey(i);
+
         songCharts = MeditationChartLoader.loadAll();
+        // Ordenado por dificultad (EASY -> MEDIUM -> HARD, el orden de declaración del enum
+        // Difficulty) — pedido explícito del usuario. sorted() es estable: dentro de la MISMA
+        // dificultad, las canciones conservan el orden de declaración de CuratedSong (los 3
+        // curados a mano primero, luego los 16 nuevos), sin necesidad de un segundo criterio.
         songRows = Arrays.stream(CuratedSong.values())
                 .filter(s -> songCharts.containsKey(s.discId))
+                .sorted(Comparator.comparing(s -> s.difficulty))
                 .toList();
         selectedSong = null; // Free Practice, la selección por defecto al entrar
 
@@ -316,11 +367,26 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
      *  la selección actual es Free Practice (una canción ya trae su propia dificultad/duración
      *  fijas, ver renderOverview()) — reconstruir en cada cambio de selección (selectRow()) en
      *  vez de ocultar/desactivar widgets ya creados, mismo idioma que TechniqueEditScreen.
-     *  switchTab(). También sirve como target de "Back" desde SONG_LIST (ver openSongList()). */
+     *  switchTab(). También sirve como target de "Back" desde SONG_LIST (ver openSongList()).
+     *  El engranaje de reasignar teclas (icons.png 80,60, centrado en la fila de Back/Start) va
+     *  SIEMPRE, incluso con el popup abierto — un segundo clic lo cierra, mismo gesto que
+     *  PartyScreen.config — y mientras está abierto oculta Back/Start/steppers (mismo criterio
+     *  que PartyScreen.configOpen: un popup modal no convive con más controles interactivos). */
     private void buildOverviewWidgets() {
         state = State.OVERVIEW;
         this.clearWidgets();
         int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
+
+        AtlasIconButton keysBtn = new AtlasIconButton(
+                panelLeft + ZenkaiMenuScreen.BG_W / 2 - 10, y + (PanelButton.H - 20) / 2, 80, 60,
+                this::toggleKeybindPopup);
+        keysBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.meditation.keybinds.tooltip")));
+        addRenderableWidget(keysBtn);
+
+        if (keybindPopupOpen) {
+            initKeybindPopupWidgets();
+            return;
+        }
 
         BackIconButton backBtn = new BackIconButton(
                 panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::onClose);
@@ -328,7 +394,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         addRenderableWidget(backBtn);
 
         PlayIconButton startBtn = new PlayIconButton(
-                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 24, this::beginSelected);
+                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 20, this::beginSelected);
         startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
         addRenderableWidget(startBtn);
 
@@ -347,6 +413,58 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         }
     }
 
+    private void toggleKeybindPopup() {
+        keybindPopupOpen = !keybindPopupOpen;
+        if (keybindPopupOpen) {
+            awaitingLane = -1;
+            System.arraycopy(keys, 0, pendingKeys, 0, LANES);
+        }
+        buildOverviewWidgets();
+    }
+
+    // ── Layout del popup de reasignación de teclas — mismo criterio que PartyScreen.PartyConfig
+    // (popup oscuro FUERA del panel, a su izquierda) y StatsScreen.renderPopup: popupLeft()/
+    // popupTop() son la ÚNICA fuente de esta posición, compartida por el builder de widgets, el
+    // render del fondo, el del contenido y el hit-test de "clic fuera cierra". ─────────────────
+    private static final int KEYBIND_POPUP_W = 140;
+    private static final int KEYBIND_POPUP_H = 132;
+    private static final int KEYBIND_POPUP_GAP = 8;
+    private static final int KEYBIND_ROW_H = 16;
+
+    private int keybindPopupLeft() {
+        return Mth.clamp(
+                panelLeft - KEYBIND_POPUP_W - KEYBIND_POPUP_GAP, 2, this.width - KEYBIND_POPUP_W - 2);
+    }
+
+    private int keybindPopupTop() { return panelTop + 20; }
+
+    private int keybindRowTop(int lane) { return keybindPopupTop() + 24 + lane * KEYBIND_ROW_H; }
+
+    /** Botones del popup: Confirmar/Cancelar (checkmark verde / X roja de icons.png, pedido
+     *  explícito del usuario, celdas 0,60/20,60 — ver AcceptIconButton/BackIconButton). Las 4
+     *  filas de carril NO son widgets — se dibujan y se hit-testean por coordenadas
+     *  (renderKeybindPopup()/clickKeybindRow()), mismo criterio que el resto de filas
+     *  clicables de esta clase (nunca reejecutar el render como efecto secundario de un clic). */
+    private void initKeybindPopupWidgets() {
+        int cx = keybindPopupLeft() + KEYBIND_POPUP_W / 2;
+        int py = keybindPopupTop();
+
+        BackIconButton cancel = new BackIconButton(cx - 12 - 18, py + KEYBIND_POPUP_H - 26, 16,
+                () -> { keybindPopupOpen = false; buildOverviewWidgets(); });
+        cancel.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.gui.cancel")));
+        addRenderableWidget(cancel);
+
+        AcceptIconButton confirm = new AcceptIconButton(cx + 18, py + KEYBIND_POPUP_H - 26, 16,
+                () -> {
+                    System.arraycopy(pendingKeys, 0, keys, 0, LANES);
+                    ClientConfig.setMeditationLaneKeys(keys[0], keys[1], keys[2], keys[3]);
+                    keybindPopupOpen = false;
+                    buildOverviewWidgets();
+                });
+        confirm.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.gui.confirm")));
+        addRenderableWidget(confirm);
+    }
+
     private void decreaseDifficulty() { stepIndex = Math.max(0, stepIndex - 1); requestInfo(); }
     private void increaseDifficulty() { stepIndex = Math.min(STEPS_PCT.length - 1, stepIndex + 1); requestInfo(); }
 
@@ -360,11 +478,11 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private void applyDifficulty() {
         double fraction = STEPS_PCT[stepIndex] / 100.0;
         spawnIntervalMs = clampLong(Math.round(BASE_SPAWN_INTERVAL_MS / fraction), 220, 900);
-        hitWindow = clampDouble(BASE_HIT_WINDOW / fraction, 0.06, 0.22);
+        // HIT_WINDOW ya NO escala aquí — ver su javadoc (comparación con FNF, pedido explícito
+        // del usuario). La dificultad solo cambia la densidad de notas.
     }
 
     private static long clampLong(long v, long min, long max) { return Math.max(min, Math.min(max, v)); }
-    private static double clampDouble(double v, double min, double max) { return Math.max(min, Math.min(max, v)); }
 
     /** SONG_LIST: solo la lista + Back (vuelve a OVERVIEW sin tocar la selección). Pulsar una
      *  fila selecciona Y VUELVE a OVERVIEW en el mismo clic (ver selectRow()/clickSongRow()) —
@@ -417,8 +535,8 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         chartCursor = 0;
         // La dificultad ES la canción elegida, no el stepper de Práctica libre — resetear a base
         // por si el jugador vino de jugar Práctica libre en difícil y luego elige una canción.
+        // HIT_WINDOW ya es una constante fija, no hace falta resetearla (ver su javadoc).
         spawnIntervalMs = BASE_SPAWN_INTERVAL_MS;
-        hitWindow = BASE_HIT_WINDOW;
         beginPlaying();
     }
 
@@ -561,13 +679,20 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             }
         } else if (now - lastSpawnMs >= spawnIntervalMs) {
             lastSpawnMs = now;
-            notes.add(new Note(random.nextInt(LANES), now));
+            int lane = random.nextInt(LANES);
+            // Ver FREE_PRACTICE_MIN_LANE_GAP_MS: descarta el spawn si caería con la ventana de
+            // acierto solapada a la última nota de ESTE carril (nunca penaliza — una nota que no
+            // aparece no puede fallarse).
+            if (now - lastLaneNoteMs[lane] >= FREE_PRACTICE_MIN_LANE_GAP_MS) {
+                notes.add(new Note(lane, now));
+                lastLaneNoteMs[lane] = now;
+            }
         }
 
         // Notas que ya pasaron la ventana de acierto sin pulsarse: fallo, corta la racha.
         notes.removeIf(n -> {
             double ratio = (now - n.spawnMs()) / (double) TRAVEL_MS;
-            if (ratio > 1.0 + hitWindow) {
+            if (ratio > 1.0 + HIT_WINDOW) {
                 if (activeChart != null && discSound != null) {
                     discSound.duck(220); // el disco "se apaga un poco" — ver MeditationDiscSound
                 } else if (combo > 0) {
@@ -640,6 +765,30 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (state == State.OVERVIEW && keybindPopupOpen) {
+            if (awaitingLane >= 0) {
+                // ESCAPE deja de esperar SIN reasignar (arrepentirse de reasignar esta fila
+                // concreta), no cierra el popup entero — un segundo Escape sí lo cierra (ver la
+                // rama de abajo la próxima vez que se pulse). Cualquier otra tecla ya en uso por
+                // OTRO carril se ignora en silencio: nunca dos carriles con la misma tecla.
+                if (keyCode != GLFW.GLFW_KEY_ESCAPE) {
+                    boolean taken = false;
+                    for (int i = 0; i < LANES; i++) {
+                        if (i != awaitingLane && pendingKeys[i] == keyCode) { taken = true; break; }
+                    }
+                    if (!taken) pendingKeys[awaitingLane] = keyCode;
+                }
+                awaitingLane = -1;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                keybindPopupOpen = false;
+                buildOverviewWidgets();
+                return true;
+            }
+            return true; // popup abierto: ninguna otra tecla debe colarse al resto de la pantalla
+        }
+
         if (state == State.PLAYING) {
             // ESCAPE no cuenta como "cualquier tecla" para arrancar: sin este caso especial, un
             // jugador que se arrepiente justo en el prompt "PRESS ANY KEY TO START" y pulsa Esc
@@ -650,13 +799,30 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
                 return true;
             }
             for (int lane = 0; lane < LANES; lane++) {
-                if (keyCode == KEYS[lane]) {
+                if (keyCode == keys[lane]) {
                     tryHit(lane);
                     return true;
                 }
             }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /** Nombre legible de una tecla física (p.ej. "A", "Space", "F5") — mismo mecanismo que usa
+     *  la pantalla vainilla de Controles, EXCEPTO las 4 flechas: vainilla las localiza como
+     *  texto ("Up"/"Down"/"Left"/"Right" en en_us), y pedido explícito del usuario ("que se vean
+     *  los símbolos y no el 'Key Up' etc") las sustituye por el glifo real (↑↓←→) — el mismo
+     *  idioma que ya usa `AppearanceScreen` con "‹" para su botón Back, así que el font del mod
+     *  ya renderiza Unicode fuera de ASCII sin problema. Usado tanto en el carril durante
+     *  PLAYING como en las filas del popup de reasignación. */
+    private static Component keyLabel(int glfwKeyCode) {
+        return switch (glfwKeyCode) {
+            case GLFW.GLFW_KEY_UP -> Component.literal("↑");
+            case GLFW.GLFW_KEY_DOWN -> Component.literal("↓");
+            case GLFW.GLFW_KEY_LEFT -> Component.literal("←");
+            case GLFW.GLFW_KEY_RIGHT -> Component.literal("→");
+            default -> InputConstants.Type.KEYSYM.getOrCreate(glfwKeyCode).getDisplayName();
+        };
     }
 
     private void tryHit(int lane) {
@@ -667,7 +833,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             if (n.lane() != lane) continue;
             double ratio = (now - n.spawnMs()) / (double) TRAVEL_MS;
             double delta = Math.abs(ratio - 1.0);
-            if (delta <= hitWindow && delta < bestDelta) {
+            if (delta <= HIT_WINDOW && delta < bestDelta) {
                 best = n;
                 bestDelta = delta;
             }
@@ -693,11 +859,11 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private void addHitJudgment(int lane, double delta) {
         String text;
         int color;
-        if (delta <= hitWindow * 0.35) {
+        if (delta <= HIT_WINDOW * 0.35) {
             text = "SICK!";
             color = ZenkaiPalette.VALUE;
             sickCount++;
-        } else if (delta <= hitWindow * 0.7) {
+        } else if (delta <= HIT_WINDOW * 0.7) {
             text = "GOOD";
             color = ZenkaiPalette.OK;
             goodCount++;
@@ -755,6 +921,17 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             g.blit(ZenkaiMenuScreen.BG_TEX, panelLeft, panelTop, 0, 0,
                     ZenkaiMenuScreen.BG_W, ZenkaiMenuScreen.BG_H);
         }
+        if (state == State.OVERVIEW && keybindPopupOpen) {
+            // Marco de tres anillos + relleno POPUP_BG, mismo idioma que el popup lateral de
+            // PartyConfig/StatsScreen — pintado ANTES de super.render() (bueno, de los widgets:
+            // esto corre en renderBackground(), que sí es ANTES) para que Confirmar/Cancelar
+            // queden encima de la caja y no al revés.
+            int x0 = keybindPopupLeft();
+            int y0 = keybindPopupTop();
+            g.fill(x0 - 2, y0 - 2, x0 + KEYBIND_POPUP_W + 2, y0 + KEYBIND_POPUP_H + 2, ZenkaiPalette.BORDER_IN);
+            g.fill(x0 - 1, y0 - 1, x0 + KEYBIND_POPUP_W + 1, y0 + KEYBIND_POPUP_H + 1, ZenkaiPalette.BORDER_MID);
+            g.fill(x0, y0, x0 + KEYBIND_POPUP_W, y0 + KEYBIND_POPUP_H, ZenkaiPalette.POPUP_BG);
+        }
     }
 
     @Override
@@ -767,6 +944,44 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             case PLAYING -> renderPlaying(g);
             case RESULTS -> renderResults(g);
         }
+        if (state == State.OVERVIEW && keybindPopupOpen) renderKeybindPopup(g, mouseX, mouseY);
+    }
+
+    /** Contenido del popup de reasignación de teclas: título, 4 filas "Lane N: TECLA" (la fila
+     *  `awaitingLane` muestra un aviso de "pulsa una tecla" en vez del nombre, y un borde dorado
+     *  fijo mientras espera), y una pista de Escape. Confirmar/Cancelar son widgets (ver
+     *  initKeybindPopupWidgets()), así que no se dibujan aquí. */
+    private void renderKeybindPopup(GuiGraphics g, int mouseX, int mouseY) {
+        int x0 = keybindPopupLeft();
+        int cx = x0 + KEYBIND_POPUP_W / 2;
+        int py = keybindPopupTop();
+
+        PanelText.centeredOnDark(g, this.font,
+                Component.translatable("screen.zenkai.meditation.keybinds.title"),
+                cx, py + 8, ZenkaiPalette.GOLD);
+
+        for (int lane = 0; lane < LANES; lane++) {
+            int ry = keybindRowTop(lane);
+            boolean waiting = awaitingLane == lane;
+            boolean hovered = mouseX >= x0 + 8 && mouseX < x0 + KEYBIND_POPUP_W - 8
+                    && mouseY >= ry && mouseY < ry + KEYBIND_ROW_H - 2;
+            int bg = waiting ? ZenkaiPalette.VALUE : (hovered ? ZenkaiPalette.BAR_BG_DARK : 0);
+            if (bg != 0) g.fill(x0 + 6, ry, x0 + KEYBIND_POPUP_W - 6, ry + KEYBIND_ROW_H - 2,
+                    (bg & 0x00FFFFFF) | 0x60000000);
+
+            Component laneLabel = Component.translatable("screen.zenkai.meditation.keybinds.lane", lane + 1);
+            PanelText.onDark(g, this.font, laneLabel, x0 + 10, ry + 4, ZenkaiPalette.TEXT_DIM);
+
+            Component valueLabel = waiting
+                    ? Component.translatable("screen.zenkai.meditation.keybinds.waiting")
+                    : keyLabel(pendingKeys[lane]);
+            PanelText.rightOnDark(g, this.font, valueLabel, x0 + KEYBIND_POPUP_W - 10, ry + 4,
+                    waiting ? ZenkaiPalette.GOLD : ZenkaiPalette.VALUE);
+        }
+
+        PanelText.centeredOnDark(g, this.font,
+                Component.translatable("screen.zenkai.meditation.keybinds.hint"),
+                cx, py + KEYBIND_POPUP_H - 40, ZenkaiPalette.TEXT_DIM);
     }
 
     /** Párrafo + fila-resumen de la canción (clicable, abre SONG_LIST) + steppers/valores fijos +
@@ -931,12 +1146,45 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (state == State.OVERVIEW && keybindPopupOpen) {
+            // super PRIMERO: deja actuar a los widgets del propio popup (Confirmar/Cancelar) y
+            // al engranaje, que lo cerraría por su cuenta — mismo orden que PartyScreen.
+            if (super.mouseClicked(mouseX, mouseY, button)) return true;
+            if (button != 0) return false;
+            if (clickKeybindRow(mouseX, mouseY)) return true;
+            // Clic fuera de la caja del popup = cerrar sin aplicar nada (gesto estándar de
+            // modal), igual que PartyScreen.configOpen.
+            int x0 = keybindPopupLeft(), y0 = keybindPopupTop();
+            boolean inside = mouseX >= x0 && mouseX < x0 + KEYBIND_POPUP_W
+                    && mouseY >= y0 && mouseY < y0 + KEYBIND_POPUP_H;
+            if (!inside) {
+                keybindPopupOpen = false;
+                buildOverviewWidgets();
+                return true;
+            }
+            return false;
+        }
         if (state == State.OVERVIEW && button == 0 && clickSongSummaryRow(mouseX, mouseY)) {
             openSongList();
             return true;
         }
         if (state == State.SONG_LIST && button == 0 && clickSongRow(mouseX, mouseY)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /** Hit-test de las 4 filas del popup de reasignación — un clic en una fila la pone a
+     *  "esperando tecla" (ver keyPressed()), nunca reasigna directamente por sí solo. */
+    private boolean clickKeybindRow(double mouseX, double mouseY) {
+        int x0 = keybindPopupLeft();
+        for (int lane = 0; lane < LANES; lane++) {
+            int ry = keybindRowTop(lane);
+            if (mouseX >= x0 + 8 && mouseX < x0 + KEYBIND_POPUP_W - 8
+                    && mouseY >= ry && mouseY < ry + KEYBIND_ROW_H - 2) {
+                awaitingLane = lane;
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -995,8 +1243,12 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             else if (now < laneBadUntil[lane]) flash = (ZenkaiPalette.ERROR & 0x00FFFFFF) | 0x50000000;
             if (flash != 0) g.fill(x, Math.max(20, hitY - 50), x + LANE_W, this.height - 20, flash);
             g.fill(x, hitY, x + LANE_W, hitY + 4, ZenkaiPalette.OK);
-            PanelText.onDark(g, this.font, Component.literal(KEY_LABELS[lane]),
-                    x + LANE_W / 2 - 3, hitY + 8, ZenkaiPalette.TEXT);
+            // font.width(), no un offset fijo de "-3": una tecla reasignada puede tener un
+            // nombre más largo que una sola letra (p.ej. "Space"), y un offset pensado para
+            // "A"/"S"/"D"/"F" la descentraría.
+            Component label = keyLabel(keys[lane]);
+            PanelText.onDark(g, this.font, label,
+                    x + LANE_W / 2 - this.font.width(label) / 2, hitY + 8, ZenkaiPalette.TEXT);
         }
 
         if (waitingForStart) {

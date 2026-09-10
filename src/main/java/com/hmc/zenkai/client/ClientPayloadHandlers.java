@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client;
 
+import com.hmc.zenkai.client.gui.screens.GalacticMenuScreen;
 import com.hmc.zenkai.client.gui.screens.InstantTransmissionMenuScreen;
 import com.hmc.zenkai.client.gui.screens.MasterScreen;
 import com.hmc.zenkai.client.gui.screens.NpcMarkerScreen;
@@ -79,5 +80,10 @@ public final class ClientPayloadHandlers {
         // corte en seco (no hay "teletransportación" que bajar el brazo suavemente aquí).
         ClientZenkaiPalTick.onInstantTransmissionMenuOpened();
         Minecraft.getInstance().setScreen(new InstantTransmissionMenuScreen());
+    }
+
+    /** Click derecho estando ya montado en la SpacePod (ver SpacePodEntity.mobInteract). */
+    public static void openGalacticMenu() {
+        Minecraft.getInstance().setScreen(new GalacticMenuScreen());
     }
 }

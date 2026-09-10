@@ -114,6 +114,20 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     ModItems.KINTOUN_ITEM.get(), AdvancementType.TASK, false,
                     "skill", skill("fly", 1));
 
+            // Obtener la cápsula (no exige que venga de una receta: mismo criterio que
+            // radar/scouter, "hasItems" ya cuenta cualquier vía de conseguirla). Colgado de
+            // chooseRace igual que el resto de esta sección, no es exclusivo de ninguna raza.
+            AdvancementHolder spacePod = child(saver, efh, chooseRace, "space_pod",
+                    ModItems.SPACE_POD_ITEM.get(), AdvancementType.TASK, false,
+                    "get", hasItems(ModItems.SPACE_POD_ITEM.get()));
+
+            // Viajar de verdad con el menú galáctico (SpacePodEntity.executeLaunch), no solo
+            // tener la nave — mismo criterio que instant_transmission_menu colgado de
+            // instant_transmission un paso antes.
+            child(saver, efh, spacePod, "space_pod_travel",
+                    net.minecraft.world.item.Items.FIREWORK_ROCKET, AdvancementType.TASK, false,
+                    "used", milestone(ZenkaiTriggers.Kinds.SPACE_POD_LAUNCH_USED));
+
             AdvancementHolder kiSense = child(saver, efh, chooseRace, "ki_sense",
                     net.minecraft.world.item.Items.ENDER_EYE, AdvancementType.TASK, false,
                     "skill", skill("ki_sense", 1));

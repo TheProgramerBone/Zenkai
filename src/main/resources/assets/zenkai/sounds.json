@@ -41,6 +41,10 @@
     "subtitle": "sounds.zenkai.teleport",
     "sounds": ["zenkai:teleport"]
   },
+  "space_pod_launch": {
+    "subtitle": "sounds.zenkai.space_pod_launch",
+    "sounds": ["zenkai:space_pod_launch"]
+  },
   "ki_charge_start": {
     "subtitle": "sounds.zenkai.ki_charge_start",
     "sounds": ["zenkai:ki_charge_start"]

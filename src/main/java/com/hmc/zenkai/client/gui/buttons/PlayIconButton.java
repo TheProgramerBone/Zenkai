@@ -32,7 +32,7 @@ import java.util.Objects;
 public class PlayIconButton extends AbstractButton {
 
     /** Tamaño por defecto — el que ya usaba el preview de sonido del editor de técnicas. */
-    public static final int SIZE = 12;
+    public static final int SIZE = 20;
 
     private static final ResourceLocation ATLAS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");

@@ -126,7 +126,7 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
         addRenderableWidget(backBtn);
 
         PlayIconButton startBtn = new PlayIconButton(
-                panelLeft + IN_X2 - 24, panelTop + startY + (PanelButton.H - 24) / 2, 24,
+                panelLeft + IN_X2 - 24, panelTop + startY + (PanelButton.H - 24) / 2, 20,
                 this::onStart);
         startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
         addRenderableWidget(startBtn);

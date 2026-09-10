@@ -1,0 +1,33 @@
+{
+  "parent": "zenkai:choose_race",
+  "criteria": {
+    "get": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:space_pod_item"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.space_pod.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "zenkai:space_pod_item"
+    },
+    "title": {
+      "translate": "advancements.zenkai.space_pod.title"
+    }
+  },
+  "requirements": [
+    [
+      "get"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

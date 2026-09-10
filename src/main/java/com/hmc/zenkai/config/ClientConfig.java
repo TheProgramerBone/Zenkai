@@ -3,6 +3,7 @@ package com.hmc.zenkai.config;
 import com.hmc.zenkai.client.overlay.HudAnchor;
 import com.hmc.zenkai.client.overlay.HudOrientation;
 import net.neoforged.neoforge.common.ModConfigSpec;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -191,6 +192,31 @@ public final class ClientConfig {
                     "Last colour picked in the scouter bench, as 0xRRGGBB",
                     0xd82624, 0x000000, 0xFFFFFF);
 
+    // ── Teclas de carril de Meditation (A/S/D/F) ────────────────────────────────
+
+    /** Ocultas de ClientConfigScreen: se editan desde un popup propio dentro de
+     *  MeditationScreen (engranaje, icons.png 80,60), no de la lista genérica de opciones —
+     *  pedido explícito del usuario ("no quiero que sea por keybinding de minecraft como tal").
+     *  Rango 0..348 = GLFW_KEY_SPACE..GLFW_KEY_LAST, generoso a propósito: MeditationScreen ya
+     *  valida que las 4 no se pisen entre sí antes de guardar, así que aquí solo hace falta un
+     *  código de tecla GLFW válido, no una lista concreta. */
+    private static final ModConfigSpec.IntValue MEDITATION_LANE_KEY_0 =
+            defineHiddenInt("meditation.lane_key_0",
+                    "GLFW key code for lane 1 (leftmost) of the Meditation rhythm minigame",
+                    GLFW.GLFW_KEY_A, 0, GLFW.GLFW_KEY_LAST);
+    private static final ModConfigSpec.IntValue MEDITATION_LANE_KEY_1 =
+            defineHiddenInt("meditation.lane_key_1",
+                    "GLFW key code for lane 2 of the Meditation rhythm minigame",
+                    GLFW.GLFW_KEY_S, 0, GLFW.GLFW_KEY_LAST);
+    private static final ModConfigSpec.IntValue MEDITATION_LANE_KEY_2 =
+            defineHiddenInt("meditation.lane_key_2",
+                    "GLFW key code for lane 3 of the Meditation rhythm minigame",
+                    GLFW.GLFW_KEY_D, 0, GLFW.GLFW_KEY_LAST);
+    private static final ModConfigSpec.IntValue MEDITATION_LANE_KEY_3 =
+            defineHiddenInt("meditation.lane_key_3",
+                    "GLFW key code for lane 4 (rightmost) of the Meditation rhythm minigame",
+                    GLFW.GLFW_KEY_F, 0, GLFW.GLFW_KEY_LAST);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     // ── Lectura ──────────────────────────────────────────────────────────────
@@ -228,4 +254,26 @@ public final class ClientConfig {
 
     /** Lista inmutable para la pantalla. */
     public static List<Entry> entries() { return Collections.unmodifiableList(ENTRIES); }
+
+    /** Código de tecla GLFW del carril `lane` (0..3, mismo índice que MeditationScreen.KEYS). */
+    public static int meditationLaneKey(int lane) {
+        return switch (lane) {
+            case 0 -> MEDITATION_LANE_KEY_0.get();
+            case 1 -> MEDITATION_LANE_KEY_1.get();
+            case 2 -> MEDITATION_LANE_KEY_2.get();
+            default -> MEDITATION_LANE_KEY_3.get();
+        };
+    }
+
+    /** Guarda las 4 teclas de carril DE UNA VEZ — mismo criterio que setHudPlacement(): un solo
+     *  punto de escritura para un conjunto de valores relacionados, para que no pueda quedar
+     *  uno desincronizado de los otros tres. El llamador (MeditationScreen) ya valida que las 4
+     *  sean distintas entre sí antes de llegar aquí. */
+    public static void setMeditationLaneKeys(int lane0, int lane1, int lane2, int lane3) {
+        MEDITATION_LANE_KEY_0.set(lane0);
+        MEDITATION_LANE_KEY_1.set(lane1);
+        MEDITATION_LANE_KEY_2.set(lane2);
+        MEDITATION_LANE_KEY_3.set(lane3);
+        SPEC.save();   // ⚠ API
+    }
 }

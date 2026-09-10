@@ -72,6 +72,7 @@ public final class ZenkaiTriggers {
         public static final String LOCK_ON_USED   = "lock_on_used";
         public static final String INSTANT_TRANSMISSION_USED        = "instant_transmission_used";
         public static final String INSTANT_TRANSMISSION_MENU_OPENED = "instant_transmission_menu_opened";
+        public static final String SPACE_POD_LAUNCH_USED = "space_pod_launch_used";
     }
 
     // =====================================================================

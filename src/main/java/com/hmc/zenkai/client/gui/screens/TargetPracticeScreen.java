@@ -150,7 +150,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         addRenderableWidget(backBtn);
 
         PlayIconButton startBtn = new PlayIconButton(
-                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 24, this::startSession);
+                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 20, this::startSession);
         startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
         addRenderableWidget(startBtn);
 
@@ -175,7 +175,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         addRenderableWidget(backBtn);
 
         PlayIconButton retryBtn = new PlayIconButton(
-                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 24, this::startSession);
+                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 20, this::startSession);
         retryBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.meditation.retry")));
         addRenderableWidget(retryBtn);
     }

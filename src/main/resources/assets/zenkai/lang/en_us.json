@@ -18,6 +18,10 @@
   "advancements.zenkai.max_load.description": "Train while carrying the heaviest load your body can take",
   "advancements.zenkai.fly.title": "Feet Off The Ground",
   "advancements.zenkai.fly.description": "Learn the Flight skill, then double-tap Space to take off — same as creative flight",
+  "advancements.zenkai.space_pod.title": "Home-Built Rocket",
+  "advancements.zenkai.space_pod.description": "Get a Space Pod, place it down and hop into the cockpit",
+  "advancements.zenkai.space_pod_travel.title": "Blast Off",
+  "advancements.zenkai.space_pod_travel.description": "While piloting the Space Pod, right-click it again to open the galactic menu and travel to another planet",
   "advancements.zenkai.ki_sense.title": "Eyes Closed",
   "advancements.zenkai.ki_sense.description": "Learn Ki Sense, then press F4 to sense what you cannot see",
   "advancements.zenkai.scouter.title": "Second Opinion",
@@ -1130,6 +1134,7 @@
   "sounds.zenkai.turbo_loop": "Aura flaring",
   "sounds.zenkai.detransform": "Power fading",
   "sounds.zenkai.teleport": "Teleport",
+  "sounds.zenkai.space_pod_launch": "Space pod launching",
   "sounds.zenkai.ki_attack_charge": "Energy gathering",
   "sounds.zenkai.ki_attack_release": "Energy released",
 
@@ -1202,6 +1207,14 @@
   "protector.zenkai.htc": "Hyperbolic Time Chamber",
   "curios.identifier.scouter": "Scouter",
   "curios.identifier.weight": "Training Weights",
+
+  "--- GUI: GALACTIC MENU (SPACE POD) ---": "--- GUI: GALACTIC MENU (SPACE POD) ---",
+  "screen.zenkai.galactic_menu": "Galactic Menu",
+  "screen.zenkai.galactic_menu.dest.earth": "Earth",
+  "screen.zenkai.galactic_menu.dest.namek": "Namek",
+  "screen.zenkai.galactic_menu.dest.yardrat": "Yardrat",
+  "screen.zenkai.galactic_menu.dest.yardrat.soon": "Coming soon",
+  "screen.zenkai.galactic_menu.already_here": "You're already here",
 
   "--- DEATH MESSAGES ---": "--- DEATH MESSAGES ---",
   "death.attack.ki_blast": "%1$s was blasted apart by %2$s's ki",
