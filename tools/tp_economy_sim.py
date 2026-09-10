@@ -500,3 +500,44 @@ if __name__ == "__main__":
         h, _ = simulate("balanced", 0, burst_minutes=0, rest_minutes=0,
                          combat_mode="puño limpio", **kwargs)
         print(f"{label:38s} {fmt_hours(h):>11s}")
+
+    print("\n" + "=" * 78)
+    print("=== NUEVO 2026-09-10 (b): el MULTIPLICADOR en sí, no solo horas-a-5M ===")
+    print("=" * 78)
+    print("Las horas-a-5M mezclan el multiplicador con la curva de fatiga y el PL variable --")
+    print("util para \"cuanto tarda\", pero no muestra el numero que el jugador VE en pantalla")
+    print("(la fila \"TP bonus\"/\"Gravity\" del Training Hub, ver TrainingHubScreen). Aqui se")
+    print("aisla ese numero: weight_tp_factor(load) puro, congelando el PL en cada punto de la")
+    print("tabla -- multiplicador = 1.0 + WEIGHT_TP_BONUS*r, o EXACTAMENTE 1.0 en sobrecarga")
+    print("(el bono se anula del todo, no se capa).\n")
+
+    print("--- Multiplicador de SOLO gravedad ambiental (sin pesas puestas) ---")
+    print(f"{'PL':>12s} {'x Kaiosama':>11s} {'x HTC':>8s}")
+    for pl_point in (500, 1_000, 2_500, 5_000, 10_000, 20_000, 50_000, 100_000, 500_000, 1_000_000):
+        mk = weight_tp_factor(weight_load(0.0, KAIOSAMA_AMBIENT_TONS, pl_point))
+        mh = weight_tp_factor(weight_load(0.0, HTC_AMBIENT_TONS, pl_point))
+        print(f"{pl_point:>12,} {mk:>10.2f}x {mh:>7.2f}x")
+
+    print("\n--- Multiplicador con pesas YA puestas a r=1 exacto (el \"punto dulce\" que el propio")
+    print("    sistema de pesas asume) + la gravedad SUMADA encima -- ¿cuanto le resta o suma la")
+    print("    gravedad al bono de pesas que el jugador ya se gano invirtiendo en equipo? ---")
+    print(f"{'PL':>12s} {'solo pesas':>10s} {'+Kaiosama':>10s} {'+HTC':>8s}")
+    for pl_point in (500, 1_000, 2_500, 5_000, 10_000, 20_000, 50_000, 100_000, 500_000, 1_000_000):
+        cap = capacity_tons(pl_point)
+        m_solo = weight_tp_factor(weight_load(cap, 0.0, pl_point))
+        m_kaio = weight_tp_factor(weight_load(cap, KAIOSAMA_AMBIENT_TONS, pl_point))
+        m_htc = weight_tp_factor(weight_load(cap, HTC_AMBIENT_TONS, pl_point))
+        print(f"{pl_point:>12,} {m_solo:>9.2f}x {m_kaio:>9.2f}x {m_htc:>7.2f}x")
+
+    print("\n--- Multiplicador TOTAL de la HTC (su x2 de training.htc_multiplier x el bono de")
+    print("    pesas/gravedad de arriba) -- el numero real por el que se multiplica CADA punto")
+    print("    de TP ganado entrenando ahi, antes de la fatiga: ---")
+    print(f"{'PL':>12s} {'HTC sola':>9s} {'HTC+grav':>9s} {'HTC+pesas':>10s} {'HTC+ambas':>10s}")
+    for pl_point in (500, 1_000, 2_500, 5_000, 10_000, 20_000, 50_000, 100_000, 500_000, 1_000_000):
+        cap = capacity_tons(pl_point)
+        htc_sola = HTC_MULTIPLIER * weight_tp_factor(0.0)
+        htc_grav = HTC_MULTIPLIER * weight_tp_factor(weight_load(0.0, HTC_AMBIENT_TONS, pl_point))
+        htc_pesas = HTC_MULTIPLIER * weight_tp_factor(weight_load(cap, 0.0, pl_point))
+        htc_ambas = HTC_MULTIPLIER * weight_tp_factor(weight_load(cap, HTC_AMBIENT_TONS, pl_point))
+        print(f"{pl_point:>12,} {htc_sola:>8.2f}x {htc_grav:>8.2f}x {htc_pesas:>9.2f}x {htc_ambas:>9.2f}x")
+    print("(HTC sola es siempre x2.00 -- fila de referencia, no depende del PL)")
