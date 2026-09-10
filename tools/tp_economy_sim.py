@@ -79,6 +79,24 @@ nueva al final del bloque main y la nota correspondiente en
 siguen siendo las palancas reales del sistema; lo que cambia es que "el
 ritmo de combate da igual" ya NO es una simplificacion segura para el rango
 de kill_seconds que el combate de verdad produce.
+
+ACTUALIZADO 2026-09-10: se conecta la gravedad ambiental nueva (WeightSystem.java, ver
+.claude/pendiente/gravedad-planeta-kaiosama.md) -- el multiplicador de pesas ya NO se pasa
+como constante externa (`weight_mult`), se recalcula por iteracion con la formula REAL
+(capacity_tons/weight_load/weight_tp_factor, espejo de WeightSystem.computeLoad/tpFactor),
+porque ahora depende del PL del momento: la capacidad crece con el PL, las toneladas
+ambientales de un sitio (Kaiosama/HTC) NO. `simulate()` gana `weight_at_full`/`ambient_tons`
+en vez de `weight_mult` -- ver su docstring y la seccion nueva al final del bloque main
+("gravedad ambiental aplicada al simulador"). HALLAZGO: la HTC ya multiplicaba x2 el TP por
+estar ahi (training.htc_multiplier); con la gravedad ambiental SUMA ADEMAS un bono de pesas
+GRATIS (sin equipar nada, solo por estar parado dentro) que antes solo se conseguia
+invirtiendo TP-equivalente en pesas fisicas -- ver la tabla comparativa para el tamaño real
+del efecto. Este mismo analisis mostro que el default original de la HTC (40t) sobrecargaba
+(r > weight_overload_threshold, bono de TP ANULADO) a CUALQUIER jugador por debajo de PL
+~1,000-2,500 -- la HTC no tiene filtro de PL, se usa desde el principio del juego, asi que
+sobrecargaba a casi todo el mundo. Bajado a 3t el mismo dia (Kaiosama 200->100, ya confirmado
+en juego por el usuario a PL ~20k) -- ver .claude/pendiente/economia-tp.md para la tabla y el
+razonamiento completo.
 """
 
 import math
@@ -95,6 +113,44 @@ TP_PER_PL         = 0.25       # entity.tp_per_pl (0.05 -> 0.25; antes hardcodea
 HTC_MULTIPLIER    = 2.0
 WEIGHT_TP_BONUS   = 1.5        # granted *= (1 + WEIGHT_TP_BONUS) a carga completa
 BODY_SCALE        = 1.0
+
+# ── Gravedad ambiental (WeightSystem.java, 2026-09-10) ──────────────────────
+# ANTES este script solo conocia "weight_mult" como un multiplicador CONSTANTE pasado desde
+# fuera (1.0 sin pesas, 2.5 "pesas a carga completa") -- nunca calculaba la capacidad real ni
+# la r=toneladas/capacidad de la que sale ese numero. Con la gravedad ambiental (planeta de
+# Kaiosama, dimension HTC) ya NO alcanza: esos sitios suman toneladas FIJAS sin que el jugador
+# haga nada, y su r resultante cambia con el PL (la capacidad crece, la gravedad no) -- hace
+# falta la formula real para saber en que punto de la progresion "gravedad gratis" empieza a
+# importar o deja de hacerlo. Espejo linea a linea de WeightSystem.java + ServerConfig.
+WEIGHT_CAP_DIV    = 3.4    # ServerConfig.weightCapacityDivisor()
+WEIGHT_CAP_EXP    = 0.6    # ServerConfig.weightCapacityExponent()
+WEIGHT_OVER_THRESH = 1.2   # ServerConfig.weightOverloadThreshold()
+KAIOSAMA_AMBIENT_TONS = 100.0  # ServerConfig.weightKaiosamaAmbientTons() (200->100, 2026-09-10)
+HTC_AMBIENT_TONS      = 3.0    # ServerConfig.weightHtcAmbientTons() (40->3, 2026-09-10, tras
+                                # este mismo analisis: 40t sobrecargaba casi cualquier PL bajo)
+
+
+def capacity_tons(clean_pl: float) -> float:
+    """WeightSystem.capacityTons(long cleanPl) -- nunca 0 (evita division por cero)."""
+    base = max(1.0, clean_pl) / WEIGHT_CAP_DIV
+    return max(0.01, base ** WEIGHT_CAP_EXP)
+
+
+def weight_load(equipped_tons: float, ambient_tons: float, clean_pl: float) -> float:
+    """WeightSystem.computeLoad(Player) -- r = (equipadas + ambientales) / capacidad."""
+    tons = equipped_tons + ambient_tons
+    if tons <= 0.0:
+        return 0.0
+    return tons / capacity_tons(clean_pl)
+
+
+def weight_tp_factor(load: float) -> float:
+    """WeightSystem.tpFactor(double load) -- 1.0 EXACTO en sobrecarga (r > umbral), no un
+    bono capado: "la carga que no puedes mover no entrena". Fuera de sobrecarga, 1 + bono*r
+    clampado al umbral."""
+    if load > WEIGHT_OVER_THRESH:
+        return 1.0
+    return 1.0 + WEIGHT_TP_BONUS * min(max(0.0, load), WEIGHT_OVER_THRESH)
 
 TP_COEFFICIENT      = 1.0      # stats.tp_coefficient
 ATTRIBUTE_BASE_COST = 1.0      # stats.attribute_base_cost
@@ -230,8 +286,8 @@ def kill_seconds_real(tp_total_invested: float, archetype: str, mode: str) -> fl
 
 
 def simulate(archetype: str, kill_seconds: float, burst_minutes: float, rest_minutes: float,
-             use_htc: bool, weight_mult: float, max_hours: float = MAX_HOURS_CUTOFF,
-             combat_mode: str = None):
+             use_htc: bool, weight_at_full: bool = False, ambient_tons: float = 0.0,
+             max_hours: float = MAX_HOURS_CUTOFF, combat_mode: str = None):
     """
     Devuelve (horas_hasta_target o None, lista de checkpoints (horas, tp_total)).
     Ciclo: mata en rafaga durante burst_minutes (si es 0 => granjeo continuo sin pausas),
@@ -243,6 +299,17 @@ def simulate(archetype: str, kill_seconds: float, burst_minutes: float, rest_min
     "puño limpio"/"espada de hierro" (ATTACK_MODES), kill_seconds se IGNORA y se recalcula en
     cada iteracion con kill_seconds_real(tp_total, archetype, combat_mode) -- el ritmo real de
     combate en el punto de progresion actual, no un numero fijo.
+
+    weight_at_full/ambient_tons (2026-09-10, reemplaza al "weight_mult" constante de antes):
+    el multiplicador de pesas/gravedad YA NO se pasa de fuera como numero fijo -- se recalcula
+    en CADA iteracion con la formula real (weight_load/weight_tp_factor), porque ahora depende
+    del PL del momento (capacidad = (PL/div)^exp crece con la progresion, ambient_tons NO).
+    weight_at_full=True asume que el jugador se re-equipa pesas para quedarse SIEMPRE en r=1
+    exacto (la misma simplificacion del "weight_mult=2.5" original, ahora derivada de la formula
+    en vez de una constante -- da el mismo resultado si ambient_tons=0). ambient_tons > 0 modela
+    estar parado en un sitio con gravedad propia (KAIOSAMA_AMBIENT_TONS/HTC_AMBIENT_TONS) SIN
+    tener que equipar nada -- se SUMA a las pesas si weight_at_full tambien es True, igual que
+    WeightSystem.computeLoad suma equipo+ambiental.
     """
     tp_total = 0.0
     fatigue = 0.0
@@ -275,6 +342,16 @@ def simulate(archetype: str, kill_seconds: float, burst_minutes: float, rest_min
         m = max(MIN_EFFICIENCY, FATIGUE_HALFLIFE / (FATIGUE_HALFLIFE + fatigue))
 
         base = raw_tp * m  # plFactor = 1.0 por construccion
+
+        # Pesas/gravedad recalculadas EN ESTE PUNTO de la progresion (ver docstring de arriba):
+        # equipped_tons = "cuantas toneladas hacen falta para r=1 exacto AHORA MISMO" cuando
+        # weight_at_full, igual que capacity_tons(pl) -- por construccion, equipado solo (sin
+        # ambient_tons) siempre da weight_tp_factor(1.0) = 1+WEIGHT_TP_BONUS, constante, sea
+        # cual sea el PL: mismo resultado que el "weight_mult=2.5" original.
+        equipped_tons = capacity_tons(pl) if weight_at_full else 0.0
+        load = weight_load(equipped_tons, ambient_tons, pl)
+        weight_mult = weight_tp_factor(load)
+
         granted = base * (HTC_MULTIPLIER if use_htc else 1.0) * weight_mult
 
         tp_total += granted
@@ -316,15 +393,13 @@ if __name__ == "__main__":
     print("\n=== Sensibilidad a segundos-por-kill de nivel (parametro de ritmo de diseno) ===")
     print("Arquetipo=balanced, granjeo CONTINUO (sin rafagas), sin HTC ni pesas:\n")
     for ks in (2, 5, 10, 20, 40):
-        h, _ = simulate("balanced", ks, burst_minutes=0, rest_minutes=0,
-                         use_htc=False, weight_mult=1.0)
+        h, _ = simulate("balanced", ks, burst_minutes=0, rest_minutes=0, use_htc=False)
         print(f"  {ks:3d}s/kill  ->  {fmt_hours(h)}")
 
     print("\n=== Efecto del arquetipo de la presa (deberia influir poco, por la invariancia) ===")
     print("10s/kill, granjeo continuo, sin HTC ni pesas:\n")
     for arch in ARCHETYPES:
-        h, _ = simulate(arch, 10, burst_minutes=0, rest_minutes=0,
-                         use_htc=False, weight_mult=1.0)
+        h, _ = simulate(arch, 10, burst_minutes=0, rest_minutes=0, use_htc=False)
         print(f"  {arch:10s} -> {fmt_hours(h)}")
 
     print("\n=== Matriz de loops de sesion (10s/kill, arquetipo balanced) ===")
@@ -340,7 +415,7 @@ if __name__ == "__main__":
     ]
     for burst, rest, htc, wmult in scenarios:
         h, _ = simulate("balanced", 10, burst_minutes=burst, rest_minutes=rest,
-                         use_htc=htc, weight_mult=wmult)
+                         use_htc=htc, weight_at_full=(wmult > 1.0))
         cadence = "continuo" if burst == 0 else f"{burst:g}/{rest:g}"
         print(f"{cadence:32s} {str(htc):>5s} {wmult:>11.1f} {fmt_hours(h):>11s}")
 
@@ -351,7 +426,7 @@ if __name__ == "__main__":
     ]:
         print(f"\n-- {label} --")
         h, cps = simulate("balanced", 10, burst_minutes=burst, rest_minutes=rest,
-                           use_htc=htc, weight_mult=wmult, max_hours=1000)
+                           use_htc=htc, weight_at_full=(wmult > 1.0), max_hours=1000)
         for hrs, tp in cps:
             print(f"  {hrs:7.1f} h  ->  {tp:,.0f} TP")
         print(f"  Horas hasta {TARGET_TP:,}: {fmt_hours(h)}")
@@ -362,7 +437,7 @@ if __name__ == "__main__":
         for _ in range(40):
             mid = (lo + hi) / 2
             h, _ = simulate("balanced", mid, burst_minutes=0, rest_minutes=0,
-                             use_htc=True, weight_mult=2.5, max_hours=2000)
+                             use_htc=True, weight_at_full=True, max_hours=2000)
             if h is None or h > target_h:
                 hi = mid
             else:
@@ -376,7 +451,52 @@ if __name__ == "__main__":
     print(f"{'cadencia (burst/descanso min)':32s} {'HTC':>5s} {'pesas x2.5':>11s} {'horas a 5M':>11s}")
     for burst, rest, htc, wmult in scenarios:
         h, _ = simulate("balanced", 0, burst_minutes=burst, rest_minutes=rest,
-                         use_htc=htc, weight_mult=wmult, combat_mode="puño limpio")
+                         use_htc=htc, weight_at_full=(wmult > 1.0), combat_mode="puño limpio")
         cadence = "continuo" if burst == 0 else f"{burst:g}/{rest:g}"
         print(f"{cadence:32s} {str(htc):>5s} {wmult:>11.1f} {fmt_hours(h):>11s}")
     print("(kill_seconds ignorado -- el 0 es un placeholder, combat_mode manda)")
+
+    print("\n" + "=" * 78)
+    print("=== NUEVO 2026-09-10: gravedad ambiental (Kaiosama/HTC) aplicada al simulador ===")
+    print("=" * 78)
+    print("Ver WeightSystem.java + .claude/pendiente/gravedad-planeta-kaiosama.md. A diferencia")
+    print("de las pesas (el jugador elige llevarlas), la gravedad ambiental se SUMA gratis por")
+    print("estar parado en el sitio -- no hace falta invertir en nada. Pregunta real: ¿en que")
+    print("punto de la progresion esa gravedad gratis empieza a importar, y cuanto vale hoy con")
+    print(f"los defaults (Kaiosama {KAIOSAMA_AMBIENT_TONS:g}t, HTC {HTC_AMBIENT_TONS:g}t -- bajados")
+    print("el 2026-09-10 tras este mismo analisis, ver .claude/pendiente/economia-tp.md)?\n")
+
+    print("--- ¿A que PL la gravedad AMBIENTAL SOLA (sin pesas) cruza r=1.0 (carga completa) y")
+    print("    r=1.2 (sobrecarga -- el bono de TP se ANULA, no se capa, ver weight_tp_factor)? ---")
+    print(f"{'PL':>12s} {'r Kaiosama (' + f'{KAIOSAMA_AMBIENT_TONS:g}t)':>18s} {'r HTC (' + f'{HTC_AMBIENT_TONS:g}t)':>13s}")
+    for pl_point in (500, 1_000, 2_500, 5_000, 10_000, 20_000, 50_000, 100_000,
+                     500_000, 1_000_000, 5_000_000):
+        r_kaio = weight_load(0.0, KAIOSAMA_AMBIENT_TONS, pl_point)
+        r_htc = weight_load(0.0, HTC_AMBIENT_TONS, pl_point)
+        flag_kaio = " (SOBRECARGA)" if r_kaio > WEIGHT_OVER_THRESH else ""
+        flag_htc = " (SOBRECARGA)" if r_htc > WEIGHT_OVER_THRESH else ""
+        print(f"{pl_point:>12,} {r_kaio:>10.2f}{flag_kaio:<8s} {r_htc:>10.2f}{flag_htc:<8s}")
+
+    print("\n--- Impacto real en horas-a-5M: HTC hoy YA multiplica x2 el TP por estar ahi (via")
+    print("    training.htc_multiplier) -- con la gravedad ambiental, ADEMAS suma un bono de")
+    print("    pesas GRATIS (sin equipar nada) que antes solo se conseguia invirtiendo en")
+    print("    pesas fisicas. Comparacion, 10s/kill, granjeo continuo: ---")
+    print(f"{'escenario':38s} {'horas a 5M':>11s}")
+    gravity_scenarios = [
+        ("sin HTC, sin gravedad, sin pesas",        dict(use_htc=False, weight_at_full=False, ambient_tons=0.0)),
+        ("HTC, SIN gravedad (modelo viejo)",         dict(use_htc=True,  weight_at_full=False, ambient_tons=0.0)),
+        ("HTC + gravedad GRATIS (nuevo, sin pesas)", dict(use_htc=True,  weight_at_full=False, ambient_tons=HTC_AMBIENT_TONS)),
+        ("HTC + pesas x2.5 (sin gravedad)",           dict(use_htc=True,  weight_at_full=True,  ambient_tons=0.0)),
+        ("HTC + pesas x2.5 + gravedad (las 2 SUMAN)", dict(use_htc=True,  weight_at_full=True,  ambient_tons=HTC_AMBIENT_TONS)),
+        ("Kaiosama (sin HTC), gravedad sola",         dict(use_htc=False, weight_at_full=False, ambient_tons=KAIOSAMA_AMBIENT_TONS)),
+    ]
+    for label, kwargs in gravity_scenarios:
+        h, _ = simulate("balanced", 10, burst_minutes=0, rest_minutes=0, **kwargs)
+        print(f"{label:38s} {fmt_hours(h):>11s}")
+
+    print("\n--- Lo mismo pero con combate REAL (puño limpio, kill_seconds derivado) --- ")
+    print(f"{'escenario':38s} {'horas a 5M':>11s}")
+    for label, kwargs in gravity_scenarios:
+        h, _ = simulate("balanced", 0, burst_minutes=0, rest_minutes=0,
+                         combat_mode="puño limpio", **kwargs)
+        print(f"{label:38s} {fmt_hours(h):>11s}")

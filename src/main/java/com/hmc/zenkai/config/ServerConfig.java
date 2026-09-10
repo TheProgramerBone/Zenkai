@@ -633,6 +633,16 @@ public class ServerConfig {
             BUILDER.comment("Weights: jump height lost at full load")
                     .defineInRange("training.weight_jump_penalty", 0.40D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue WEIGHT_GRAVITY_JUMP_FACTOR_RAW =
+            BUILDER.comment("Weights: how much AMBIENT gravity tons (Kaiosama/HTC, not equipped " +
+                    "gear) count towards the jump penalty specifically, relative to how much they " +
+                    "count for everything else (move/stat/TP, always 100%). 1.0 = same as equipped " +
+                    "weight; 0.0 = gravity never touches jump height at all. Default 0.25: gravity " +
+                    "still slows you and boosts TP at full weight, but doesn't crush your jump the " +
+                    "way carrying literal dead weight does -- user feedback 2026-09-10, needs " +
+                    "playtesting calibration, see .claude/pendiente/gravedad-planeta-kaiosama.md")
+                    .defineInRange("training.weight_gravity_jump_factor", 0.25D, 0.0D, 1.0D);
+
     private static final ModConfigSpec.DoubleValue WEIGHT_TP_BONUS_RAW =
             BUILDER.comment("Weights: extra TP at full load (1.5 = x2.5 TP)")
                     .defineInRange("training.weight_tp_bonus", 1.5D, 0.0D, 20.0D);
@@ -644,6 +654,35 @@ public class ServerConfig {
     private static final ModConfigSpec.DoubleValue WEIGHT_OVER_MOVE_RAW =
             BUILDER.comment("Weights: movement multiplier while overloaded (drag)")
                     .defineInRange("training.weight_overload_move_factor", 0.15D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_KAIOSAMA_TONS_RAW =
+            BUILDER.comment("Weights: ambient tons added by Kaiosama's planet natural gravity " +
+                    "(stacks with equipped weighted gear -- see .claude/pendiente/gravedad-planeta-kaiosama.md). " +
+                    "200 -> 100 (2026-09-10): confirmed in-game by the user at PL ~20k, still needs more " +
+                    "playtesting at other PL ranges")
+                    .defineInRange("training.weight_kaiosama_ambient_tons", 100.0D, 0.0D, 1.0E7D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_KAIOSAMA_GRAVITY_MULT_RAW =
+            BUILDER.comment("Weights: DISPLAY-ONLY gravity multiplier shown for Kaiosama's planet " +
+                    "(the generic \"Gravity\" row in the Training Hub, e.g. \"x10\"). Purely cosmetic " +
+                    "flavor text -- does NOT feed the load math, which always uses the flat ambient " +
+                    "tons above so its effect keeps shrinking at high PL regardless of this number.")
+                    .defineInRange("training.weight_kaiosama_gravity_multiplier", 10.0D, 1.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_HTC_TONS_RAW =
+            BUILDER.comment("Weights: ambient tons added by the Hyperbolic Time Chamber's own " +
+                    "natural gravity (the DIMENSION itself, not the future gravity chamber block -- " +
+                    "stacks with equipped weighted gear, see .claude/pendiente/gravedad-planeta-kaiosama.md). " +
+                    "40 -> 3 (2026-09-10): tp_economy_sim.py showed 40t overloaded (r > weight_overload_threshold, " +
+                    "TP bonus ZEROED, not capped) any player below PL ~1,000-2,500 -- the HTC has no PL gate, " +
+                    "used from early game, so that overloaded almost everyone who trained there")
+                    .defineInRange("training.weight_htc_ambient_tons", 3.0D, 0.0D, 1.0E7D);
+
+    private static final ModConfigSpec.DoubleValue WEIGHT_HTC_GRAVITY_MULT_RAW =
+            BUILDER.comment("Weights: DISPLAY-ONLY gravity multiplier shown for the Hyperbolic Time " +
+                    "Chamber (the generic \"Gravity\" row in the Training Hub, e.g. \"x2\"). Purely " +
+                    "cosmetic flavor text, same caveat as weight_kaiosama_gravity_multiplier.")
+                    .defineInRange("training.weight_htc_gravity_multiplier", 2.0D, 1.0D, 1000.0D);
 
     private static final ModConfigSpec.DoubleValue PU_TP_MULT_RAW =
             BUILDER.comment("TP multiplier while Potential Unlock is ACTIVE. You are using your potential, not training it.")
@@ -762,7 +801,10 @@ public class ServerConfig {
     private static volatile int TRAIN_AIR_TICKS = 10;
     private static volatile double WEIGHT_CAP_DIV = 3.4D, WEIGHT_CAP_EXP = 0.6D,
             WEIGHT_STAT_PEN = 0.25D, WEIGHT_MOVE_PEN = 0.60D, WEIGHT_JUMP_PEN = 0.40D,
-            WEIGHT_TP_BONUS = 1.5D, WEIGHT_OVER_THRESH = 1.2D, WEIGHT_OVER_MOVE = 0.15D;
+            WEIGHT_GRAVITY_JUMP_FACTOR = 0.25D,
+            WEIGHT_TP_BONUS = 1.5D, WEIGHT_OVER_THRESH = 1.2D, WEIGHT_OVER_MOVE = 0.15D,
+            WEIGHT_KAIOSAMA_TONS = 100.0D, WEIGHT_KAIOSAMA_GRAVITY_MULT = 10.0D,
+            WEIGHT_HTC_TONS = 3.0D, WEIGHT_HTC_GRAVITY_MULT = 2.0D;
     private static volatile double PU_TP_MULT = 0.50D;
     private static volatile int    PU_ALIGNMENT_REQ = 50;
 
@@ -850,9 +892,14 @@ public class ServerConfig {
         WEIGHT_STAT_PEN    = WEIGHT_STAT_PEN_RAW.get();
         WEIGHT_MOVE_PEN    = WEIGHT_MOVE_PEN_RAW.get();
         WEIGHT_JUMP_PEN    = WEIGHT_JUMP_PEN_RAW.get();
+        WEIGHT_GRAVITY_JUMP_FACTOR = WEIGHT_GRAVITY_JUMP_FACTOR_RAW.get();
         WEIGHT_TP_BONUS    = WEIGHT_TP_BONUS_RAW.get();
         WEIGHT_OVER_THRESH = WEIGHT_OVER_THRESH_RAW.get();
         WEIGHT_OVER_MOVE   = WEIGHT_OVER_MOVE_RAW.get();
+        WEIGHT_KAIOSAMA_TONS = WEIGHT_KAIOSAMA_TONS_RAW.get();
+        WEIGHT_KAIOSAMA_GRAVITY_MULT = WEIGHT_KAIOSAMA_GRAVITY_MULT_RAW.get();
+        WEIGHT_HTC_TONS = WEIGHT_HTC_TONS_RAW.get();
+        WEIGHT_HTC_GRAVITY_MULT = WEIGHT_HTC_GRAVITY_MULT_RAW.get();
         PU_TP_MULT       = PU_TP_MULT_RAW.get();
         PU_ALIGNMENT_REQ = PU_ALIGNMENT_REQ_RAW.get();
 
@@ -1073,9 +1120,14 @@ public class ServerConfig {
     public static double weightStatPenalty()       { return WEIGHT_STAT_PEN; }
     public static double weightMovePenalty()       { return WEIGHT_MOVE_PEN; }
     public static double weightJumpPenalty()       { return WEIGHT_JUMP_PEN; }
+    public static double weightGravityJumpFactor() { return WEIGHT_GRAVITY_JUMP_FACTOR; }
     public static double weightTpBonus()           { return WEIGHT_TP_BONUS; }
     public static double weightOverloadThreshold() { return WEIGHT_OVER_THRESH; }
     public static double weightOverloadMoveFactor(){ return WEIGHT_OVER_MOVE; }
+    public static double weightKaiosamaAmbientTons(){ return WEIGHT_KAIOSAMA_TONS; }
+    public static double weightKaiosamaGravityMultiplier(){ return WEIGHT_KAIOSAMA_GRAVITY_MULT; }
+    public static double weightHtcAmbientTons(){ return WEIGHT_HTC_TONS; }
+    public static double weightHtcGravityMultiplier(){ return WEIGHT_HTC_GRAVITY_MULT; }
 
     // === LÓGICA FINAL: aplica overrides con las nuevas opciones ===
     public static ItemStack resolveWishStack(ItemStack chosen) {

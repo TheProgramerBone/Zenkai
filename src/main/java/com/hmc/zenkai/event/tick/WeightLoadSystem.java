@@ -55,7 +55,9 @@ public final class WeightLoadSystem {
         att.setWeightLoad(load);
         att.setWeightFactor(WeightSystem.statFactor(load));
 
-        applyJump(p, WeightSystem.jumpFactor(load));
+        // El salto usa su PROPIA r (WeightSystem.jumpLoad): la gravedad ambiental cuenta menos
+        // ahí que en movimiento/stats/TP, ver su javadoc — pedido explícito del usuario.
+        applyJump(p, WeightSystem.jumpFactor(WeightSystem.jumpLoad(p)));
 
         // El aviso solo salta cuando el jugador INTENTA moverse, no de forma continua:
         // destransformarse con 2000 t encima te sobrecarga al instante y sería spam.

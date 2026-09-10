@@ -14,9 +14,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -65,6 +69,23 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
 
     private static final int PANEL_Y = ROW3_Y + HUB_ROW_H + 10;
     private static final int PANEL_ROW_H = 12;
+    /** Y de la fila "Gravity" dentro del panel — 2ª línea, justo debajo del título. Constante
+     *  propia (no recalculada dentro de renderModifiersPanel) porque clickHub necesita el MISMO
+     *  número para el hit-test del botón sin duplicar el cálculo en dos sitios que puedan
+     *  desincronizarse. +3 y no +2 (como el resto de filas) porque el botón dibuja un borde 1px
+     *  por ENCIMA de su texto (y-1): con el mismo hueco que una fila normal, ese borde quedaba a
+     *  un pixel de la línea de abajo de "TP Modifiers" — feedback de imagen 2026-09-10. */
+    private static final int GRAVITY_ROW_Y = PANEL_Y + PANEL_ROW_H + 3;
+    /** Alto del botón "Gravity" — más que PANEL_ROW_H (12) porque lleva marco propio (1px
+     *  arriba/abajo) y sin aire extra ese marco tocaba la fila siguiente ("TP bonus"),
+     *  feedback de imagen 2026-09-10: "solapamiento de textos" era en realidad el borde
+     *  pegado al texto de abajo, no dos textos dibujados en el mismo sitio. */
+    private static final int GRAVITY_ROW_H = PANEL_ROW_H + 3;
+    /** Ancho del popup de detalle de gravedad — mismo espíritu que POPUP_W de StatsScreen, pero
+     *  más ancho: 150 se quedaba corto para "Total load" + "140.00 / 191.65 t" en la misma
+     *  línea y el texto se solapaba (feedback de imagen, 2026-09-10). */
+    private static final int GRAVITY_POPUP_W = 170;
+    private static final int GRAVITY_POPUP_GAP = 8;
 
     /** null hasta que responde TrainingFatigueRequestPacket — ver onFatigueReceived(). 1.0 =
      *  sin penalización (fatiga en 0). Las TRES son independientes desde 2026-09-09 (pedido
@@ -73,6 +94,11 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     private Double combatFatigueEfficiency;
     private Double meditationFatigueEfficiency;
     private Double targetPracticeFatigueEfficiency;
+
+    /** Popup de detalle de la fila "Gravity" — pedido explícito del usuario (2026-09-10): un
+     *  solo texto de gravedad en el panel, con el desglose (equipo/ambiental/fuente/total)
+     *  detrás de un botón en vez de varias filas siempre visibles. */
+    private boolean showGravityPopup;
 
     public TrainingHubScreen() {
         super(Component.translatable(ZenkaiTab.TRAINING.titleKey()));
@@ -87,6 +113,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         combatFatigueEfficiency = null;
         meditationFatigueEfficiency = null;
         targetPracticeFatigueEfficiency = null;
+        showGravityPopup = false;
         PacketDistributor.sendToServer(new TrainingFatigueRequestPacket());
     }
 
@@ -122,6 +149,8 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
                 Component.translatable("screen.zenkai.training_hub.row.target_practice"), mouseX, mouseY, null);
 
         renderModifiersPanel(g, x, panelTop + PANEL_Y, w, mouseX, mouseY);
+
+        if (showGravityPopup) renderGravityPopup(g, mouseX, mouseY);
     }
 
     /** Botón grande horizontal (ícono izq + etiqueta der), mismo idioma que
@@ -153,24 +182,17 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
      *  a secas quedaba a ras del borde/las esquinas del panel (feedback de imagen: "ajusta el
      *  margen de la letra"). */
     private static final int PANEL_RIGHT_MARGIN = 3;
-    /** Alto de una línea de texto normal — usado para separar la barra de carga de su propio
-     *  porcentaje SIN que se pisen (antes ambos se dibujaban en la misma Y, ver el comentario de
-     *  imagen "evita solapamientos de texto"). */
-    private static final int TEXT_LINE_H = 9;
-    /** Aire extra entre el % y la barra que va justo debajo — con solo TEXT_LINE_H quedaba 1px
-     *  de margen real entre el pie de la letra y la barra, lo bastante poco para leerse como
-     *  solapado (segundo feedback de imagen, tras el primer arreglo que ya separó % de la
-     *  barra en líneas distintas pero no les dio aire de sobra entre sí). */
-    private static final int BAR_GAP_EXTRA = 3;
 
     /**
      * Panel "TP Modifiers" — antigua sección "Carga" de StatsScreen, ampliada con HTC y fatiga.
-     * Filas fijas: toneladas/capacidad + barra + % (cada una en su propia línea, ver
-     * TEXT_LINE_H), multiplicador de pesas, multiplicador de HTC si aplica, y tres filas de
-     * eficiencia efectiva (pesas × HTC × fatiga de ESA categoría) — una por Combat/Meditation/
-     * Target Practice, SIEMPRE visibles (no solo cuando hay penalización real): las fatigas de
-     * entrenamiento ya no se comparten entre categorías (2026-09-09, ver TrainingCategory), así
-     * que ya no existe un "efectivo" único que combine las tres.
+     * Rediseño 2026-09-10 (pedido explícito del usuario, "solo 1 texto de gravedad"): el
+     * desglose de equipo/gravedad ambiental/% de carga que antes vivía en 3-4 filas siempre
+     * visibles se movió DETRÁS de un botón — la fila "Gravity" (ver renderGravityRow) abre un
+     * popup con el mismo formato de colores que los popups de StatsScreen (renderGravityPopup).
+     * Aquí solo quedan: Gravity (botón), TP bonus, HTC si aplica, y tres filas de eficiencia
+     * efectiva (pesas+gravedad × HTC × fatiga de ESA categoría) — una por Combat/Meditation/
+     * Target Practice, SIEMPRE visibles: las fatigas de entrenamiento ya no se comparten entre
+     * categorías (2026-09-09, ver TrainingCategory), así que ya no existe un "efectivo" único.
      */
     private void renderModifiersPanel(GuiGraphics g, int x, int y, int w, int mouseX, int mouseY) {
         var player = mc.player;
@@ -187,49 +209,18 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
                 Component.translatable("screen.zenkai.training_hub.panel.title")
                         .copy().withStyle(net.minecraft.ChatFormatting.BOLD),
                 x, ty, ZenkaiPalette.LABEL_ON_PANEL);
-        ty += PANEL_ROW_H + 2;
+        ty += PANEL_ROW_H + 3;
 
-        if (load > 0.0) {
-            double equipped = WeightSystem.equippedTons(player);
-            double capacity = WeightSystem.capacityTons(att.getPowerLevelRaw());
-            int loadRowY = ty;
-            panelRow(g, x, ty, w,
-                    Component.translatable("screen.zenkai.stats_screen.stat.load_short.label"),
-                    Component.literal(String.format(Locale.ROOT, "%.2f / %.2f t", equipped, capacity)));
-            // Tooltip con el peso EXACTO (4 decimales, ver ZenkaiNumbers.fmt4) — la fila enseña
-            // solo 2, pedido explícito del usuario ("recuerda usar SIEMPRE ZenkaiNumbers con el
-            // tooltip del peso exacto"), mismo reparto compacto+tooltip que StatsScreen.bigVal.
-            if (mouseX >= x && mouseX < x + w && mouseY >= loadRowY && mouseY < loadRowY + PANEL_ROW_H) {
-                g.renderTooltip(this.font, Component.translatable(
-                        "screen.zenkai.training_hub.panel.load_exact",
-                        ZenkaiNumbers.fmt4(equipped), ZenkaiNumbers.fmt4(capacity)), mouseX, mouseY);
-            }
-            ty += PANEL_ROW_H;
+        renderGravityRow(g, x, ty, w, player, mouseX, mouseY);
+        ty += GRAVITY_ROW_H + 2;
 
-            // Porcentaje en SU PROPIA línea, ANTES de la barra — ya no comparte Y con ella (esa
-            // era la superposición del feedback de imagen).
-            PanelText.rightOnPanel(g, this.font,
-                    Component.literal(Math.round(load * 100) + "%"),
-                    x + w - PANEL_RIGHT_MARGIN, ty, ZenkaiPalette.VALUE_ON_PANEL);
-            ty += TEXT_LINE_H + BAR_GAP_EXTRA;
-
-            // Barra SOBRE EL BEIGE del panel: StatBar.draw(), no drawOnDark() — esa segunda
-            // usa un canal negro translúcido pensado para un popup oscuro, que sobre el beige
-            // pintaba un parche oscuro inesperado (ver feedback de imagen).
-            StatBar.draw(g, x, ty, w, StatBar.H_THIN,
-                    (float) Math.min(100.0, load * 100), 100.0, ZenkaiPalette.BAR_CONTROL);
-            ty += StatBar.H_THIN + 5;
-
-            panelRow(g, x, ty, w,
-                    Component.translatable("screen.zenkai.stats_screen.stat.weight_tp.label"),
-                    Component.literal("x" + ZenkaiNumbers.fmt2(weightMult)));
-            ty += PANEL_ROW_H;
-        } else {
-            PanelText.onPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.panel.no_weights"),
-                    x, ty, ZenkaiPalette.MUTED_ON_PANEL);
-            ty += PANEL_ROW_H;
-        }
+        // Siempre visible, incluso en x1.00: es la MISMA cifra que ya multiplican las filas de
+        // eficiencia de abajo (baseMult), así que ocultarla cuando vale 1 rompería la lectura de
+        // "por qué Combat efficiency es x4.04 y no x4.19" al comparar con HTC.
+        panelRow(g, x, ty, w,
+                Component.translatable("screen.zenkai.stats_screen.stat.weight_tp.label"),
+                Component.literal("x" + ZenkaiNumbers.fmt2(weightMult)));
+        ty += PANEL_ROW_H;
 
         if (inHtc) {
             panelRow(g, x, ty, w,
@@ -305,6 +296,126 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         PanelText.rightOnPanel(g, this.font, value, x + w - PANEL_RIGHT_MARGIN, y, ZenkaiPalette.OK_ON_PANEL);
     }
 
+    // ── Gravedad: fila-botón + popup de detalle ─────────────────────────────
+
+    /** Fila "Gravity: xN" — GENÉRICA (sirve para cualquier fuente: Kaiosama, HTC, la futura
+     *  cámara de gravedad). Botón DE VERDAD, no solo un highlight al pasar el ratón (pedido
+     *  explícito del usuario, "que se vea que es un botón"): marco de 1px + fondo propio
+     *  SIEMPRE visibles, mismo lenguaje que renderHubOption, con un fondo más claro al pasar el
+     *  ratón encima. Sin tooltip propio (pedido explícito del usuario, "elimina el tooltip, ya
+     *  se entiende con el popup") — toda la información vive en renderGravityPopup. El clic lo
+     *  procesa clickHub (mismo hit-test de Y que aquí, factorizado en GRAVITY_ROW_Y para que no
+     *  puedan desincronizarse). */
+    private void renderGravityRow(GuiGraphics g, int x, int y, int w, Player player, int mouseX, int mouseY) {
+        boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + GRAVITY_ROW_H;
+
+        // Caja del botón: GRAVITY_ROW_H (15px), no PANEL_ROW_H (12px) — con solo 12 el marco de
+        // abajo quedaba pegado al texto de la fila siguiente ("TP bonus"), el "solapamiento"
+        // real reportado en la imagen. El texto se dibuja en y+2 (no y) para quedar centrado
+        // dentro de esa caja más alta en vez de pegado a su borde superior.
+        g.fill(x, y - 1, x + w, y + GRAVITY_ROW_H - 1, hovered ? ZenkaiPalette.ROW_HOVER : ZenkaiPalette.INSET_BG);
+        g.fill(x, y - 1, x + w, y, ZenkaiPalette.BORDER_IN);
+        g.fill(x, y + GRAVITY_ROW_H - 2, x + w, y + GRAVITY_ROW_H - 1, ZenkaiPalette.BORDER_IN);
+        g.fill(x, y - 1, x + 1, y + GRAVITY_ROW_H - 1, ZenkaiPalette.BORDER_IN);
+        g.fill(x + w - 1, y - 1, x + w, y + GRAVITY_ROW_H - 1, ZenkaiPalette.BORDER_IN);
+
+        double gravityMult = WeightSystem.gravityMultiplier(player);
+        PanelText.onPanel(g, this.font,
+                Component.translatable("screen.zenkai.training_hub.panel.gravity"),
+                x + 4, y + 2, ZenkaiPalette.LABEL_ON_PANEL);
+        PanelText.rightOnPanel(g, this.font, Component.literal("x" + ZenkaiNumbers.fmt2(gravityMult)),
+                x + w - PANEL_RIGHT_MARGIN - 4, y + 2, ZenkaiPalette.OK_ON_PANEL);
+    }
+
+    /** Fila del popup de gravedad. `bar >= 0` dibuja además una barra bajo el texto — mismo
+     *  espíritu que StatsScreen.Row, versión reducida (este popup no necesita cabeceras). */
+    private record GravityRow(Component label, Component value, int color, float bar) {
+        static GravityRow of(Component l, Component v, int c) { return new GravityRow(l, v, c, -1f); }
+        static GravityRow bar(Component l, Component v, int c, float pct) {
+            return new GravityRow(l, v, c, pct);
+        }
+        boolean hasBar() { return bar >= 0f; }
+    }
+
+    /** Desglose SIN la fila "Source": esa se pinta aparte como línea propia a todo lo ancho
+     *  (ver renderGravityPopup) — con nombres largos como "Hyperbolic Time Chamber" no cabía
+     *  compartiendo línea con una etiqueta "Source" sin solaparse (feedback de imagen,
+     *  2026-09-10). Multiplicador cosmético, equipo físico y gravedad ambiental por separado, y
+     *  el TOTAL — pedido explícito del usuario, "que al final corresponda a la suma total".
+     *  equipped + ambient == el numerador de la fila Total, siempre. El valor del Total YA NO
+     *  repite el porcentaje entre paréntesis (la barra de debajo ya lo enseña) — ese texto
+     *  extra era la otra mitad del solapamiento original. */
+    private List<GravityRow> buildGravityRows(Player player) {
+        List<GravityRow> out = new ArrayList<>();
+        double equipped = WeightSystem.equippedTons(player);
+        double ambient = WeightSystem.ambientTons(player);
+        double capacity = WeightSystem.capacityTons(att.getPowerLevelRaw());
+        double load = att.getWeightLoad();
+        String sourceKey = WeightSystem.gravitySourceNameKey(player);
+
+        if (sourceKey != null) {
+            out.add(GravityRow.of(Component.translatable("screen.zenkai.training_hub.popup.gravity.multiplier"),
+                    Component.literal("x" + ZenkaiNumbers.fmt2(WeightSystem.gravityMultiplier(player))),
+                    ZenkaiPalette.VALUE));
+        }
+        out.add(GravityRow.of(Component.translatable("screen.zenkai.training_hub.popup.gravity.equipped"),
+                Component.literal(String.format(Locale.ROOT, "%.2f t", equipped)), ZenkaiPalette.TEXT));
+        out.add(GravityRow.of(Component.translatable("screen.zenkai.training_hub.popup.gravity.ambient"),
+                Component.literal(String.format(Locale.ROOT, "%.2f t", ambient)), ZenkaiPalette.TEXT));
+        out.add(GravityRow.bar(Component.translatable("screen.zenkai.training_hub.popup.gravity.total"),
+                Component.literal(String.format(Locale.ROOT, "%.2f / %.2f t", equipped + ambient, capacity)),
+                ZenkaiPalette.SECTION_LOAD, (float) Math.min(100.0, load * 100)));
+        return out;
+    }
+
+    /** Popup de detalle, MISMO formato de colores/marco que los popups laterales de StatsScreen
+     *  (tres anillos BORDER_IN/BORDER_MID/POPUP_BG, título en GOLD) — pedido explícito del
+     *  usuario. Se abre a la derecha del panel, igual criterio de clamp que StatsScreen. */
+    private void renderGravityPopup(GuiGraphics g, int mouseX, int mouseY) {
+        var player = mc.player;
+        if (player == null) return;
+        List<GravityRow> rows = buildGravityRows(player);
+        String sourceKey = WeightSystem.gravitySourceNameKey(player);
+
+        final int rowH = 11, barExtra = 8, sourceLineH = 11;
+        int h = 7 + 13 + sourceLineH;
+        for (GravityRow r : rows) h += rowH + (r.hasBar() ? barExtra : 0);
+        h += 8;
+
+        int x = Mth.clamp(panelLeft + BG_W + GRAVITY_POPUP_GAP, 2, this.width - GRAVITY_POPUP_W - 2);
+        int y = panelTop + GRAVITY_ROW_Y;
+
+        g.fill(x - 2, y - 2, x + GRAVITY_POPUP_W + 2, y + h + 2, ZenkaiPalette.BORDER_IN);
+        g.fill(x - 1, y - 1, x + GRAVITY_POPUP_W + 1, y + h + 1, ZenkaiPalette.BORDER_MID);
+        g.fill(x, y, x + GRAVITY_POPUP_W, y + h, ZenkaiPalette.POPUP_BG);
+
+        int tx = x + 8, tr = x + GRAVITY_POPUP_W - 8, ty = y + 6;
+        g.drawString(this.font, ScreenTitle.styled(
+                        Component.translatable("screen.zenkai.training_hub.panel.gravity")),
+                tx, ty, ZenkaiPalette.GOLD, true);
+        ty += 13;
+
+        // Fuente a TODO lo ancho, sin etiqueta compartiendo línea — "Hyperbolic Time Chamber"
+        // no cabía junto a "Source:" sin solaparse (feedback de imagen), ver buildGravityRows.
+        Component sourceText = sourceKey != null
+                ? Component.translatable(sourceKey)
+                : Component.translatable("screen.zenkai.training_hub.popup.gravity.source.none");
+        g.drawString(this.font, sourceText, tx,
+                ty, sourceKey != null ? ZenkaiPalette.GOLD : ZenkaiPalette.TEXT_DIM, true);
+        ty += sourceLineH;
+
+        for (GravityRow r : rows) {
+            g.drawString(this.font, r.label(), tx + 6, ty + 4, ZenkaiPalette.TEXT_DIM, true);
+            g.drawString(this.font, r.value(), tr - this.font.width(r.value()), ty + 4, r.color(), true);
+            ty += rowH;
+            if (r.hasBar()) {
+                StatBar.drawOnDark(g, tx + 6, ty + 5, tr - tx - 6, StatBar.H_THIN,
+                        r.bar(), 100.0, ZenkaiPalette.BAR_CONTROL);
+                ty += barExtra;
+            }
+        }
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && clickHub(mouseX, mouseY)) return true;
@@ -326,6 +437,11 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         }
         if (mouseY >= panelTop + ROW3_Y && mouseY < panelTop + ROW3_Y + HUB_ROW_H) {
             mc.setScreen(new TargetPracticeScreen());
+            return true;
+        }
+        int gravityY = panelTop + GRAVITY_ROW_Y;
+        if (mouseY >= gravityY && mouseY < gravityY + GRAVITY_ROW_H) {
+            showGravityPopup = !showGravityPopup;
             return true;
         }
         return false;
