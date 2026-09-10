@@ -62,10 +62,16 @@ You decide when you are playing Minecraft and when you are playing Zenkai.
 
 ## Configuration
 
-Zenkai is heavily configurable — over 150 options across three files.
+Zenkai is heavily configurable — 130+ options across three files.
 
-- `zenkai-common.toml` — combat formulas, costs, training rates, scaling. Server-authoritative.
-- `zenkai-server.toml` — per-world toggles.
+- `zenkai-server.toml` — where almost all of it lives: combat formulas, TP costs and economy,
+  training rates, mastery, flight, ambient gravity (Kaiosama's planet, the Hyperbolic Time
+  Chamber) and more. Per-world (lives in the save under `serverconfig/`) and synced to every
+  client automatically, so what you tune is exactly what players see and fight under.
+- `zenkai-common.toml` — per-installation only, and deliberately almost empty: a couple of
+  dev-only knobs, no gameplay balance. (It used to hold most of the numbers above; they were
+  migrated to `zenkai-server.toml` because a per-installation, unsynced file is the wrong place
+  for anything a client needs to see correctly — it caused a real desync bug before the move.)
 - `zenkai-client.toml` — HUD and visual preferences.
 
 The gamerule `zenkaiEnableRaceBoosts` disables the entire combat layer at runtime without
