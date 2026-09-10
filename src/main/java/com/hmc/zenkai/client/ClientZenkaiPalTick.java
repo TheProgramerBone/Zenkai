@@ -9,6 +9,7 @@ import com.hmc.zenkai.feature.action.ActionType;
 import com.hmc.zenkai.feature.ki.FlyBoostPacket;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.technique.TechniqueAnimOverride;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
@@ -266,8 +267,14 @@ public final class ClientZenkaiPalTick {
         // éxito se reproduzca igual si el blink termina fallando en silencio, sin ki/en
         // cooldown). ──
         if (p == mc.player) {
+            // Bug real reportado por el usuario: sin la skill, TAB seguía disparando la pose de
+            // carga LOCAL (nada le pedía el nivel aquí) — el servidor sí bloquea el blink/menú
+            // de verdad (InstantTransmissionSystem.tick ya resetea el gesto sin la skill), pero
+            // eso nunca frenaba esta predicción puramente visual, así que un jugador sin
+            // comprarla podía "actuar" el gesto igual.
             boolean itHeld = KeyBindings.INSTANT_TRANSMISSION != null
-                    && KeyBindings.INSTANT_TRANSMISSION.isDown();
+                    && KeyBindings.INSTANT_TRANSMISSION.isDown()
+                    && SkillEffects.instantTransmissionLevel(p) > 0;
             if (itHeld && !st.itPlaying) {
                 st.itPlaying = true;
                 ZenkaiPalAnimations.playInstantTransmissionCharge(p);
