@@ -787,31 +787,38 @@ public class ModItems {
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.HAIR));
 
-    // Cola de Saiyan (dos variantes cosméticas, ver TailResolver/TailGeoLayer). PENDIENTE:
-    // sin .geo.json/textura todavía — registrados ya para que el código exista mientras se
-    // modelan con calma; el sistema de RaceSkinSlots.backedOrEmpty (mismo que protege a
-    // Majin) hace que no se vea/crashee nada hasta que los archivos existan de verdad.
-    // LEGGINGS y no HELMET: la ranura HEAD ya la comparten pelo+halo+scouter en secuencia; es
-    // solo el "vehículo" que usa HumanoidArmorLayer para invocar al renderer de GeckoLib —
-    // la geometría real la pone el .geo.json propio (Halo ya lo demuestra: HELMET pero flota
-    // sobre la cabeza, no "es" un casco).
+    // Cola de Saiyan (dos variantes cosméticas, ver TailResolver/TailGeoLayer).
+    // CHESTPLATE y NO LEGGINGS/HELMET — no es un capricho, es un requisito real de GeckoLib:
+    // GeoArmorRenderer.applyBoneVisibilityBySlot() solo muestra los huesos "armorRightLeg"/
+    // "armorLeftLeg" durante el pase de LEGGINGS (comprobado decompilando geckolib-neoforge-
+    // 4.8.4.jar), NUNCA "armorBody". Como el hueso raíz de la cola ("cola"/"colacintura") cuelga
+    // de "torso" → "armorBody" (mismo patrón que el propio arcosiano, que solo se ve completo
+    // porque viste las 4 ranuras a la vez), con LEGGINGS la cola cargaba bien pero quedaba oculta
+    // en TODOS los casos sin ningún error en el log — el pase de CHESTPLATE sí muestra armorBody
+    // (+brazos). HEAD queda descartado aparte porque esa ranura ya la comparten pelo+halo+scouter
+    // en secuencia. La ranura vanilla sigue siendo solo el "vehículo" que usa HumanoidArmorLayer
+    // para invocar al renderer de GeckoLib — la geometría real la pone el .geo.json propio (Halo
+    // ya lo demuestra: HELMET pero flota sobre la cabeza, no "es" un casco).
+    // Sin canal de tinte propio (NONE, el default): el color de la cola no depende de la piel
+    // ni del pelo elegidos por el jugador, siempre lo pone TailResolver vía DYED_COLOR según la
+    // forma activa (ver GeoLayerArmorRenderer.getRenderColor y FormDef.tailRgb).
     public static final Supplier<GeoLayerArmorItem> TAIL_LOOSE =
             ITEMS.register("tail_loose", () ->
-                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/tail/tail_loose.geo.json",
                             "textures/customization/tail/tail_loose.png",
-                            ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN));
+                            "animations/tail_loose.animation.json"
+                    ));
 
     public static final Supplier<GeoLayerArmorItem> TAIL_WAIST =
             ITEMS.register("tail_waist", () ->
-                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/tail/tail_waist.geo.json",
                             "textures/customization/tail/tail_waist.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN));
+                    ));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

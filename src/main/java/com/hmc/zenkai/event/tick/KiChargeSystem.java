@@ -103,14 +103,18 @@ public final class KiChargeSystem {
         } else {
             PlayerTickState.resetOverdriveStep(p.getUUID());
             // Tras 1 s cargando, el % sube de STEP_AMOUNT en STEP_AMOUNT cada STEP_INTERVAL
-            // ticks, tope 100 (candado cerrado y ya en 100: no sube, tampoco baja — eso es cosa
-            // del drenaje de OverdriveSystem o de Descender). Ya no avisa por action bar: el
-            // cascarón circular del HUD (KiChargeGaugeOverlay) lee isChargingKi()+powerPercent
-            // del sync de fin de tick (ZenkaiTickHandlers) y se rellena en vivo, así que un
-            // mensaje de texto aparte solo repetiría la misma información con más parpadeo.
+            // ticks, tope el techo de Ki Control (BUG arreglado 2026-09-10: este tope estaba
+            // fijo en 100 sin mirar la skill, así que sin Ki Control igual se llegaba a 100% por
+            // este camino — la rama de Shift/>=100 de más abajo sí usaba
+            // SkillEffects.maxPowerPercent, esta no). Candado cerrado y ya en el techo: no sube,
+            // tampoco baja — eso es cosa del drenaje de OverdriveSystem o de Descender. Ya no
+            // avisa por action bar: el cascarón circular del HUD (KiChargeGaugeOverlay) lee
+            // isChargingKi()+powerPercent del sync de fin de tick (ZenkaiTickHandlers) y se
+            // rellena en vivo, así que un mensaje de texto aparte solo repetiría la misma
+            // información con más parpadeo.
             int t = PlayerTickState.bumpCharge(p.getUUID());
             if (t > 20 && (t - 20) % STEP_INTERVAL == 0 && cur < 100) {
-                att.setPowerPercent(cur + STEP_AMOUNT, 100);
+                att.setPowerPercent(cur + STEP_AMOUNT, SkillEffects.maxPowerPercent(p));
             }
         }
     }

@@ -136,6 +136,7 @@ public final class FormManager {
                             GsonHelper.getAsString(o, "aura_type", "default"),
                             readRgb(o, "aura_rgb", 0xFFFFFF),
                             readRgb(o, "hair_rgb", -1),
+                            readRgb(o, "tail_rgb", -1),
                             GsonHelper.getAsDouble(o, "scale", 1.0),
                             GsonHelper.getAsBoolean(o, "descendable", false),
                             GsonHelper.getAsDouble(o, "overdrive_ceiling_bonus", 0.0),

@@ -17,11 +17,15 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Cola de Saiyan: mismo truco exacto que HairGeoLayer (backup-inyecta-render-restaura sobre
- * un HumanoidArmorLayer propio), solo que la ranura vehículo es LEGGINGS (índice 1) en vez de
+ * un HumanoidArmorLayer propio), solo que la ranura vehículo es CHESTPLATE (índice 2) en vez de
  * HEAD — la geometría real la pone el .geo.json de TAIL_LOOSE/TAIL_WAIST, la ranura vanilla
  * es pura excusa para que HumanoidArmorLayer invoque al renderer de GeckoLib (ver
- * ModItems.TAIL_LOOSE). A diferencia del pelo, no hay candado de "ropa real tapa la cola":
- * unas piernas reales equipadas no ocultan la cola (ver TailResolver si hiciera falta añadirlo).
+ * ModItems.TAIL_LOOSE). CHESTPLATE y no LEGGINGS a propósito: el hueso raíz de la cola cuelga de
+ * "torso"→"armorBody", y GeoArmorRenderer.applyBoneVisibilityBySlot() de GeckoLib solo muestra
+ * "armorBody" durante el pase de CHESTPLATE, nunca en el de LEGGINGS (confirmado decompilando el
+ * jar) — con LEGGINGS la cola cargaba bien pero quedaba invisible SIEMPRE, sin ningún error en
+ * el log. A diferencia del pelo, no hay candado de "ropa real tapa la cola": un pecho real
+ * equipado no oculta la cola (ver TailResolver si hiciera falta añadirlo).
  */
 public class TailGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
@@ -55,10 +59,11 @@ public class TailGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         ItemStack oldLegs  = inv.getArmor(1);
         ItemStack oldFeet  = inv.getArmor(0);
 
-        // Inyectar solo la cola en LEGS, limpiar el resto
+        // Inyectar solo la cola en CHEST, limpiar el resto (ver javadoc de la clase: tiene que
+        // ser CHEST para que GeckoLib muestre "armorBody", del que cuelga la cola).
         inv.armor.set(3, ItemStack.EMPTY);
-        inv.armor.set(2, ItemStack.EMPTY);
-        inv.armor.set(1, tail);
+        inv.armor.set(2, tail);
+        inv.armor.set(1, ItemStack.EMPTY);
         inv.armor.set(0, ItemStack.EMPTY);
 
         armorLayer.render(poseStack, buffer, packedLight, player,

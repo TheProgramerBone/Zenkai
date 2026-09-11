@@ -66,6 +66,17 @@ import java.util.Map;
  * Kaioken encima. Pensado para auras de dos tonos (SSJ Rose/Goku Black: magenta por dentro,
  * granate oscuro por fuera). Si la forma está activa CON Kaioken, Kaioken sigue ganando la capa
  * exterior (KAIOKEN_RGB) — este campo solo se usa cuando la forma no lleva Kaioken encima.
+ *
+ * tailRgb (default -1 = sin override, ver TailResolver): igual que hairRgb, la cola NUNCA sigue
+ * el color elegido por el jugador (no hay selector de color de cola) — cada forma tiene SIEMPRE
+ * su propio tono fijo, base incluida. Este campo es solo la ESCOTILLA DE ESCAPE explícita para
+ * cuando la cola deba tener un tono distinto al pelo de la forma; el caso normal no necesita
+ * declararlo — TailResolver cae a hairRgb de la misma forma por defecto (la cola concuerda con
+ * el pelo de la transformación sin duplicar el dato en cada JSON), y si tampoco hay hairRgb, al
+ * color natural (TailResolver.DEFAULT_TAIL_RGB). Mismo mecanismo de aplicación que hairRgb
+ * (DYED_COLOR en el stack virtual, leído por GeoLayerArmorRenderer.getRenderColor), pero la
+ * textura de la cola no tiene canal de tinte propio (ColorChannel.NONE) — no hace falta el "sin
+ * declarar -> color de canal" que sí tiene hairRgb.
  */
 public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
@@ -74,7 +85,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       double kiDrainUntrained, double kiDrainMastered, int spiReq,
                       Map<String, ResourceLocation> hairItems,
                       Map<String, ResourceLocation> bodyItems,
-                      String auraType, int auraRgb, int hairRgb, double scale,
+                      String auraType, int auraRgb, int hairRgb, int tailRgb, double scale,
                       boolean descendable, double overdriveCeilingBonus,
                       double overdriveDrainMultUntrained, double overdriveDrainMultMastered,
                       boolean wheelSelectable, boolean divineTier, int auraOuterRgb) {
@@ -174,6 +185,10 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
      *  Con el pelo en escala de grises, un solo modelo sirve para cualquier forma. */
     public boolean tintsHair() { return hairRgb >= 0; }
 
+    /** ¿Esta forma declara un color de cola propio? -1 = cae al color natural
+     *  (TailResolver.DEFAULT_TAIL_RGB) — la cola nunca es "sin tinte" de verdad. */
+    public boolean tintsTail() { return tailRgb >= 0; }
+
     /** ¿Esta forma pide su propia capa exterior de aura (dos tonos)? -1 = solo capa simple. */
     public boolean hasAuraOuter() { return auraOuterRgb >= 0; }
 
@@ -205,6 +220,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeUtf(d.auraType());
                 buf.writeInt(d.auraRgb());
                 buf.writeInt(d.hairRgb());
+                buf.writeInt(d.tailRgb());
                 buf.writeDouble(d.scale());
                 buf.writeBoolean(d.descendable());
                 buf.writeDouble(d.overdriveCeilingBonus());
@@ -232,7 +248,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readDouble(), buf.readDouble(),
                         buf.readDouble(), buf.readDouble(), buf.readVarInt(),
                         readMap(buf), readMap(buf),
-                        buf.readUtf(), buf.readInt(), buf.readInt(), buf.readDouble(),
+                        buf.readUtf(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readDouble(),
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readBoolean(), buf.readBoolean(), buf.readInt());
             });

@@ -624,7 +624,7 @@ public class ModCommands {
         att.setHasSsj4Ritual(false);
         att.setHasTail(true);
         // Servicio de Kaiosama: un reset "full" también devuelve el derecho a pedir las
-        // pesas de nuevo, igual que borra todo lo demás — no sería full si dejara este
+        // pesas de nuevo, igual que borra lo demás — no sería full si dejara este
         // regalo de una sola vez "ya gastado" para una vida completamente nueva.
         att.setReceivedKaioWeights(false);
         att.setAlignment(0);
