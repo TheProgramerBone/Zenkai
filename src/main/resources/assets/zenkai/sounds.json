@@ -45,6 +45,10 @@
     "subtitle": "sounds.zenkai.space_pod_launch",
     "sounds": ["zenkai:space_pod_launch"]
   },
+  "black_flash": {
+    "subtitle": "sounds.zenkai.black_flash",
+    "sounds": ["zenkai:black_flash"]
+  },
   "ki_charge_start": {
     "subtitle": "sounds.zenkai.ki_charge_start",
     "sounds": ["zenkai:ki_charge_start"]

@@ -13,6 +13,7 @@ import net.minecraft.sounds.SoundSource;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.util.HashMap;
@@ -45,6 +46,9 @@ import java.util.Set;
  * isLoopWorthy() vale igual de bien para decidir cuándo se apaga sea cual sea el que lo
  * encendió. DETRANSFORM es un disparo aparte, en el flanco de isBase() (no de isTransforming):
  * dropear solo el kaioken y quedarse en la forma NO cuenta como destransformación.
+ * Ver también onPlayerClone: sin esa limpieza, teletransportarse entre dimensiones estando
+ * transformado podía disparar un DETRANSFORM falso (el id del jugador se reutiliza en el
+ * LocalPlayer nuevo, pero su attachment vuelve al default hasta que llega el sync).
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class ZenkaiPlayerSounds {
@@ -78,6 +82,34 @@ public final class ZenkaiPlayerSounds {
     /** true si cualquiera de los tres estados que comparten el bucle está activo. */
     private static boolean isLoopWorthy(AbstractClientPlayer p) {
         return isChargingKi(p) || isTransformHold(p) || AuraClientState.isTurbo(p);
+    }
+
+    /**
+     * El cliente crea un LocalPlayer NUEVO en cada respawn (muerte o cambio de dimensión), pero
+     * VANILLA REUTILIZA EL MISMO entity id en el objeto nuevo — precisamente para que sistemas
+     * como este, que llevan la cuenta por id, no se desincronicen del todo. El problema es el
+     * matiz: PlayerFormAttachment del objeto nuevo empieza en su default (formId=BASE) hasta que
+     * SyncPlayerFormPacket lo corrija (puede tardar uno o dos ticks, sobre todo si
+     * PlayerLifeCycle.onDimChange se olvidara de pedirlo — ver esa clase), pero BASE_PREV
+     * conserva el valor de ANTES del respawn bajo ese mismo id. Si el jugador estaba
+     * transformado, fireEdge ve `was=false` (el valor viejo, correcto) y `state=true` (el
+     * default nuevo, todavía sin corregir) en el mismo tick — un flanco falso, y DETRANSFORM
+     * suena sin que nadie se haya destransformado de verdad.
+     * Solución: al reemplazarse el LocalPlayer, se borra la entrada de ESTE id de los tres
+     * mapas (no solo BASE_PREV) para que la próxima lectura se trate como "primera vez viendo a
+     * este jugador" — fireEdge ya sabe inicializar ese caso sin disparar en falso (ver su
+     * javadoc). LOOP/INTRO no lo necesitarían por sí solos (sus sonidos se apagan solos al ver
+     * al jugador viejo removido), pero limpiarlos aquí es gratis y evita cualquier bucle
+     * colgado de un id reciclado.
+     */
+    @SubscribeEvent
+    public static void onPlayerClone(ClientPlayerNetworkEvent.Clone e) {
+        int id = e.getOldPlayer().getId();
+        BASE_PREV.remove(id);
+        SoundInstance intro = INTRO.remove(id);
+        if (intro != null) Minecraft.getInstance().getSoundManager().stop(intro);
+        PlayerLoopSound loop = LOOP.remove(id);
+        if (loop != null) Minecraft.getInstance().getSoundManager().stop(loop);
     }
 
     @SubscribeEvent

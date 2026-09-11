@@ -65,6 +65,14 @@ public class PlayerLifeCycle {
         if (e.getEntity() instanceof ServerPlayer sp) {
             sync(sp);
             syncVisual(sp);
+            // Faltaba: el cliente crea un LocalPlayer NUEVO en cada cambio de dimensión (mismo
+            // entity id, objeto distinto — ver ClientPlayerNetworkEvent.Clone), así que
+            // PLAYER_FORM vuelve a su default (formId=BASE) hasta que llegue este packet. Sin
+            // él, un jugador transformado se veía/sonaba en base (aura, HUD) durante un rato
+            // tras teletransportarse entre dimensiones — ver ZenkaiPlayerSounds.onPlayerClone
+            // para la otra mitad del bug (el sonido de destransformación que a veces disparaba
+            // de más por el mismo motivo).
+            syncForm(sp);
         }
     }
 

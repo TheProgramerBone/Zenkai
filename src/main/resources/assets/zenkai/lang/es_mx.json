@@ -1132,6 +1132,7 @@
   "sounds.zenkai.space_pod_launch": "Cápsula despegando",
   "sounds.zenkai.ki_attack_charge": "Concentrando energía",
   "sounds.zenkai.ki_attack_release": "Energía liberada",
+  "sounds.zenkai.black_flash": "BLACK FLASH",
 
   "--- GAME RULES, COMMANDS, PROTECTORS AND INTEGRATIONS ---": "--- REGLAS, COMANDOS, PROTECTORES E INTEGRACIONES ---",
   "gamerule.zenkai_allowRaceSelection": "Permitir Creación de Raza",

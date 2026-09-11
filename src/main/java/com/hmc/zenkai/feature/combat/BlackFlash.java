@@ -3,10 +3,10 @@ package com.hmc.zenkai.feature.combat;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModParticles;
+import com.hmc.zenkai.registry.ModSounds;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -152,10 +152,11 @@ public final class BlackFlash {
         lvl.sendParticles(ModParticles.blackFlashRim(RIM_SCALE),   x, y, z, 1, 0.0, 0.0, 0.0, 0.0);
         lvl.sendParticles(ModParticles.blackFlashSpark(1.0f),      x, y, z, SPARKS, s, 0.2, s, 0.55);
 
-        // ⚠ PROVISIONAL, igual que el fogonazo del arco: cuando existan los .ogg de
-        // ki_attack_release_*, esto debería compartir paleta sonora con ellos.
-        // ⚠ API a verificar: SoundEvents.LIGHTNING_BOLT_IMPACT en 1.21.1.
-        lvl.playSound(null, x, y, z, SoundEvents.LIGHTNING_BOLT_IMPACT,
+        // PLACEHOLDER sintético propio (tools/gen_black_flash_sfx.py) — sustituye al
+        // SoundEvents.LIGHTNING_BOLT_IMPACT vanilla que sonaba aquí antes por no tener paleta
+        // propia. El usuario lo reemplaza a mano cuando tenga audio real; mismo evento/archivo,
+        // no hace falta tocar sounds.json/ModSounds cuando eso pase.
+        lvl.playSound(null, x, y, z, ModSounds.BLACK_FLASH.get(),
                 SoundSource.PLAYERS, 0.5f, 1.5f);
 
         // Un proc del 3% que el jugador no sabe que ocurrió no existe. Actionbar y no chat:

@@ -67,6 +67,10 @@ public class ModSounds {
      *  lo mismo que la cuenta atrás (3s). Placeholder sintético, ver
      *  tools/gen_space_pod_launch_sfx.py. */
     public static final Supplier<SoundEvent> SPACE_POD_LAUNCH = registerSoundEvent("space_pod_launch");
+    /** Proc de Black Flash (BlackFlash.fx) — placeholder sintético, ver
+     *  tools/gen_black_flash_sfx.py. Sustituye al SoundEvents.LIGHTNING_BOLT_IMPACT vanilla que
+     *  usaba antes de tener paleta propia. */
+    public static final Supplier<SoundEvent> BLACK_FLASH = registerSoundEvent("black_flash");
 
     // ── Banco de scouter ─────────────────────────────────────────────────────
     public static final Supplier<SoundEvent> SCOUTER_BENCH_OPEN    = registerSoundEvent("scouter_bench_open");

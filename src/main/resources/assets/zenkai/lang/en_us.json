@@ -1137,6 +1137,7 @@
   "sounds.zenkai.space_pod_launch": "Space pod launching",
   "sounds.zenkai.ki_attack_charge": "Energy gathering",
   "sounds.zenkai.ki_attack_release": "Energy released",
+  "sounds.zenkai.black_flash": "BLACK FLASH",
 
   "--- GAME RULES, COMMANDS, PROTECTORS AND INTEGRATIONS ---": "--- GAME RULES, COMMANDS, PROTECTORS AND INTEGRATIONS ---",
   "gamerule.zenkai_allowRaceSelection": "Enable Race Creation",
