@@ -1152,6 +1152,7 @@
   "command.zenkai.respec.self": "Respec done: %s TP refunded",
 
   "--- PARTY ---": "--- PARTY ---",
+  "command.zenkai.party.create.done": "You created a new party. Invite someone with /zparty invite <player>.",
   "command.zenkai.party.invite.offline": "%s is not online.",
   "command.zenkai.party.invite.self": "You can't invite yourself.",
   "command.zenkai.party.invite.already_grouped": "%s is already in a party.",
@@ -1185,8 +1186,9 @@
   "command.zenkai.party.maxsize.same": "Max party size is already %s.",
   "command.zenkai.party.maxsize.done": "%s set the max party size to %s.",
   "screen.zenkai.party.invite_button": "Invite",
+  "screen.zenkai.party.create_button": "Create Party",
   "screen.zenkai.party.empty": "You're not in a party",
-  "screen.zenkai.party.empty.hint": "Invite someone to start one",
+  "screen.zenkai.party.empty.hint": "Create one, or just invite someone",
   "screen.zenkai.party.header": "Party — %s/%s",
   "screen.zenkai.party.ff.on": "Friendly fire: ON",
   "screen.zenkai.party.ff.off": "Friendly fire: OFF (protected)",

@@ -30,14 +30,16 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Pestaña PARTY. v1 "grouping básico": SOLO LISTA lo que hay, no muta nada por red — pero
- * SÍ ejecuta comandos: cada botón (Invitar, Expulsar, Salir, Disolver, Fuego amigo, Config)
- * llama a {@link #runCommand} con el mismo texto que el jugador teclearía en /zparty, no un
- * paquete C2S nuevo. Eso es DELIBERADO y no un atajo: PartyService y PartySyncPacket ya son
- * la única fuente de reglas (validación, mensajes de chat, quién es líder); duplicarlas en un
- * paquete de botón habría significado dos caminos que mantener sincronizados por la misma
+ * SÍ ejecuta comandos: cada botón (Crear, Invitar, Expulsar, Salir, Disolver, Fuego amigo,
+ * Config) llama a {@link #runCommand} con el mismo texto que el jugador teclearía en /zparty,
+ * no un paquete C2S nuevo. Eso es DELIBERADO y no un atajo: PartyService y PartySyncPacket ya
+ * son la única fuente de reglas (validación, mensajes de chat, quién es líder); duplicarlas en
+ * un paquete de botón habría significado dos caminos que mantener sincronizados por la misma
  * regla. La única excepción sigue siendo Invitar, que necesita texto libre (el nombre) y por
  * eso abre ChatScreen precargado en vez de mandar el comando directo — Invitar existe TANTO
- * sin party (crea una, ver PartyService.invite) como dentro de una con hueco libre.
+ * sin party (crea una, ver PartyService.invite) como dentro de una con hueco libre; Crear
+ * (PartyService.create) es el camino EXPLÍCITO para el primer caso, para quien no quiere
+ * depender de ese efecto secundario de Invitar — ver initContent() para las dos ramas.
  * REFRESCO: los botones (Invitar/Disolver/Fuego amigo/Config del pie y cabecera) dependen de
  * quién es el líder y de quién está en la party — cosas que cambian por un PartySyncPacket
  * que llega SIN que el jugador toque esta pantalla. tick() compara la referencia cacheada en
@@ -124,6 +126,7 @@ public class PartyScreen extends ZenkaiMenuScreen {
     private static final int MAIL_U = 40, MAIL_V = 60;
     private static final int KICK_U = 60, KICK_V = 60;
     private static final int CONFIG_U = 100, CONFIG_V = 20;
+    private static final int CREATE_U = 100, CREATE_V = 60;
     /** Mismo checkmark verde / X roja que FriendlyFireIconButton pinta para OFF/ON — reutilizados
      *  aquí como Confirmar/Cancelar del popup de PartyConfig en vez de un ícono de otra familia
      *  (btn_x.png, "flat bevel"): así los cuatro íconos del popup salen del MISMO atlas
@@ -199,14 +202,23 @@ public class PartyScreen extends ZenkaiMenuScreen {
         lastSeenState = state;
 
         if (state == null) {
-            // Sin party todavía: el ÚNICO botón posible es Invitar — no hay líder, no hay
-            // fuego amigo, no hay nada más que mostrar. PartyService.invite() crea la party
-            // sola en cuanto la invitación se manda, así que este botón hace doble función
-            // ("empezar una party" Y "invitar") sin que el jugador tenga que saberlo.
+            // Sin party todavía: dos botones, Crear e Invitar — no hay líder, no hay fuego
+            // amigo, no hay nada más que mostrar. PartyService.invite() sigue creando la
+            // party sola en cuanto se manda la invitación (compatibilidad con el flujo de
+            // siempre), pero Crear (PartyService.create) es el camino EXPLÍCITO para quien
+            // quiere una party de un solo jugador ya mismo — p. ej. para fijar el tamaño
+            // máximo o el fuego amigo antes de invitar a nadie, sin depender de ese efecto
+            // secundario ni de tener a alguien a quien invitar todavía.
             configOpen = false;
-            int x = panelLeft + (BG_W - ICON_CELL) / 2;
+            int rowW = ICON_CELL * 2 + 8;
+            int rowX = panelLeft + (BG_W - rowW) / 2;
             int y = panelTop + BG_H / 2 + 14;
-            AtlasIconButton invite = new AtlasIconButton(x, y, MAIL_U, MAIL_V,
+            AtlasIconButton create = new AtlasIconButton(rowX, y, CREATE_U, CREATE_V,
+                    () -> runCommand("zparty create"));
+            create.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.party.create_button")));
+            addRenderableWidget(create);
+
+            AtlasIconButton invite = new AtlasIconButton(rowX + ICON_CELL + 8, y, MAIL_U, MAIL_V,
                     () -> mc.setScreen(new ChatScreen("/zparty invite ")));
             invite.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.party.invite_button")));
             addRenderableWidget(invite);

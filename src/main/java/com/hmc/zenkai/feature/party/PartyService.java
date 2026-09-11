@@ -42,6 +42,28 @@ public final class PartyService {
         if (party != null) sendSyncTo(sp, party);
     }
 
+    // ── Crear ────────────────────────────────────────────────────────────────
+
+    /**
+     * Crea explícitamente una party de un solo miembro (el propio jugador de líder), sin
+     * invitar a nadie todavía. Antes de esto la ÚNICA forma de tener una party era invitar
+     * (ver invite() más abajo, que la crea sola como efecto secundario en cuanto se manda la
+     * primera invitación) — sigue siendo así por compatibilidad, esto solo añade un camino
+     * explícito para quien quiere fijar el tamaño máximo o el fuego amigo ANTES de meter a
+     * nadie, sin depender de ese efecto secundario ni de tener a alguien a quien invitar todavía.
+     */
+    public static boolean create(MinecraftServer server, ServerPlayer sp) {
+        var mgr = PartyManager.get(server);
+        if (mgr.partyOf(sp.getUUID()) != null) {
+            sp.sendSystemMessage(Component.translatable("command.zenkai.party.invite.already_grouped_self"));
+            return false;
+        }
+        PartyManager.Party party = mgr.createFor(sp.getUUID());
+        sp.sendSystemMessage(Component.translatable("command.zenkai.party.create.done"));
+        sendSyncTo(sp, party);
+        return true;
+    }
+
     // ── Invitar / responder ──────────────────────────────────────────────────
 
     public static boolean invite(MinecraftServer server, ServerPlayer inviter, String targetName) {

@@ -42,6 +42,10 @@ public final class PartyCommands {
 
         root.register(Commands.literal("zparty")
 
+                .then(Commands.literal("create")
+                        .executes(ctx -> PartyService.create(
+                                ctx.getSource().getServer(), ctx.getSource().getPlayerOrException()) ? 1 : 0))
+
                 .then(Commands.literal("invite")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> PartyService.invite(
