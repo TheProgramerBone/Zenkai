@@ -4,6 +4,7 @@ import com.hmc.zenkai.client.gui.screens.GalacticMenuScreen;
 import com.hmc.zenkai.client.gui.screens.InstantTransmissionMenuScreen;
 import com.hmc.zenkai.client.gui.screens.MasterScreen;
 import com.hmc.zenkai.client.gui.screens.NpcMarkerScreen;
+import com.hmc.zenkai.client.gui.screens.PieceConnectorScreen;
 import com.hmc.zenkai.client.gui.screens.ShadowResultScreen;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.client.gui.screens.TrainingHubScreen;
@@ -11,6 +12,7 @@ import com.hmc.zenkai.client.gui.screens.TrainingMinigameScreen;
 import com.hmc.zenkai.network.MasterServicesUpdatePayload;
 import com.hmc.zenkai.network.OpenMasterPayload;
 import com.hmc.zenkai.network.OpenNpcMarkerPayload;
+import com.hmc.zenkai.network.OpenPieceConnectorPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -22,6 +24,10 @@ public final class ClientPayloadHandlers {
     public static void openNpcMarker(OpenNpcMarkerPayload p) {
         Minecraft.getInstance().setScreen(new NpcMarkerScreen(
                 p.pos(), p.npcType(), p.yaw(), p.offX(), p.offY(), p.offZ()));
+    }
+
+    public static void openPieceConnector(OpenPieceConnectorPayload p) {
+        Minecraft.getInstance().setScreen(new PieceConnectorScreen(p.pos(), p.socket(), p.facing()));
     }
 
     public static void openMaster(OpenMasterPayload p) {

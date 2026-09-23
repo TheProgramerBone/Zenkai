@@ -16,11 +16,12 @@ import java.util.List;
  * espíritu, apuntando a un subconjunto distinto de la cadena de formas (las marcadas
  * {@code divine_tier} en su FormDef, ver el javadoc de esa clase).
  *
- * MAESTRO: hoy la enseña Kami, pero SOLO como placeholder — no hay ningún NPC "Whis"/"Bills"
- * (Beerus) en el mod todavía. Canónicamente debería ser uno de esos dos (los guías angelicales/
- * el Dios de la Destrucción son quienes enseñan el ki divino en la serie); en cuanto exista esa
- * entidad, cambiar el campo "master" de zenkai_skills/god_ki.json — no hace falta tocar nada de
- * esta clase, el maestro es puro dato de datapack.
+ * MAESTRO: hoy la enseña Tori-Bot, pero SOLO como placeholder — no hay ningún NPC "Whis"/"Bills"
+ * (Beerus) en el mod todavía, y Tori-Bot es el catch-all de "cosas sin maestro adecuado" (junto a
+ * instant_transmission y potential_unlock). Canónicamente debería ser uno de esos dos (los guías
+ * angelicales/el Dios de la Destrucción son quienes enseñan el ki divino en la serie); en cuanto
+ * exista esa entidad, cambiar el campo "masters" de zenkai_skills/god_ki.json — no hace falta
+ * tocar nada de esta clase, el maestro es puro dato de datapack.
  *
  * SSJ BLUE vs SSJ ROSE: no es una elección del jugador. Son la MISMA forma narrativa vista
  * desde dos orígenes distintos de ki divino, y por eso son técnicamente dos FormDef separados

@@ -1,4 +1,4 @@
-// 1.21.1	2026-09-06T09:37:43.5716776	Zenkai Entity Stats
+// 1.21.1	2026-09-13T23:11:06.5312719	Zenkai Entity Stats
 d7ae4c4a23d154bfca4a8a95499bdc2a42ceb0f8 data/zenkai/zenkai_entities/allay.json
 1413a009c26f6ef828daee751a65eb1f55f908c7 data/zenkai/zenkai_entities/armadillo.json
 1415dcefd5d0fec8a542e2987cb4bfc1fcdd6f9c data/zenkai/zenkai_entities/axolotl.json
@@ -52,7 +52,7 @@ cd962e6b8b1a17f1fd9f6d759ff2ea9cebf49202 data/zenkai/zenkai_entities/rabbit.json
 d1c333572d07a0a47dcc0e29b08ad9720fd9ecdc data/zenkai/zenkai_entities/ravager.json
 fab8937f12374895306c25e9b76a7119ab7ced05 data/zenkai/zenkai_entities/saibaman.json
 818773bade46a3462ae42f0a82cc1c6ce88d908a data/zenkai/zenkai_entities/salmon.json
-8f01642ce8bbc38193c926f88fce9d888ef0ce62 data/zenkai/zenkai_entities/shadow_clone.json
+59a22f23a4ded12265684efb1eafab5d4cfe52fd data/zenkai/zenkai_entities/shadow_clone.json
 7cfa2aeb41dcd79557475609c21bf95d461e021c data/zenkai/zenkai_entities/sheep.json
 efa4064da9bfadb9bc4902ff50a644fa8f8b0e31 data/zenkai/zenkai_entities/shulker.json
 7fb4217a8c8b03941ccabc8701db49cff956e48f data/zenkai/zenkai_entities/silverfish.json

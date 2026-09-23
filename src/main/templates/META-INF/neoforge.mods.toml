@@ -71,6 +71,16 @@ versionRange="[2.6.3,)"
 ordering="AFTER"
 side="CLIENT"
 
+# Ponder (opcional) — tutoriales 3D de piece_connector, scouter_bench y energy_generator.
+# Ver compat/ponder/PonderCompat.java: sin este mod, esos bloques simplemente no ofrecen tutorial.
+[[dependencies.${mod_id}]]
+modId="ponder"
+type="optional"
+reason="Tutoriales 3D en pantalla para algunos bloques (conector de piezas, banco de scouter, generador de energía)"
+versionRange="[1.0.82,)"
+ordering="AFTER"
+side="CLIENT"
+
 [modproperties.${mod_id}]
 catalogueImageIcon="assets/zenkai/icon.png"
 catalogueBackground = "assets/zenkai/background.png"

@@ -69,6 +69,22 @@ public class ZenkaiCommonAnimations {
     public static final RawAnimation ATTACK_CHARGE_END = RawAnimation.begin().thenPlay("attack.charge_end");
     public static final RawAnimation ATTACK_POWERUP = RawAnimation.begin().thenPlay("attack.powerup");
 
+    /** Técnicas físicas — clips REALES copiados tal cual de player_animations/phys_*.animation.json
+     *  a zenkai_animations.animation.json (mismas claves "zenkai.phys_*" que ya traían esos
+     *  archivos), para que un zenkaimob GeckoLib las reproduzca por el motor NATIVO
+     *  (AnimationController/triggerAnim) en vez de un sampler propio a mano — ver
+     *  PhysicalAttackGoal. */
+    public static final RawAnimation PHYS_DASH_PUNCH = RawAnimation.begin().thenPlay("zenkai.phys_dash_punch");
+    public static final RawAnimation PHYS_HEAVY_BLOW = RawAnimation.begin().thenPlay("zenkai.phys_heavy_blow");
+    public static final RawAnimation PHYS_BARRAGE = RawAnimation.begin().thenPlay("zenkai.phys_barrage");
+    public static final RawAnimation PHYS_KIAI = RawAnimation.begin().thenPlay("zenkai.phys_kiai");
+
+    /** Guardia — clip real "zenkai.block" (ya vivía en zenkai_animations.animation.json sin
+     *  usarse). "hold_on_last_frame" en el JSON: se reproduce una vez y se queda en la pose final
+     *  mientras el controlador siga en PlayState.CONTINUE (ver BlockingMob.isBlockingNow en
+     *  ZenkaiDefaultMob.registerControllers) — thenPlayAndHold es el equivalente en RawAnimation. */
+    public static final RawAnimation ZENKAI_BLOCK = RawAnimation.begin().thenPlayAndHold("zenkai.block");
+
     /**
      * A basic predicate-based {@link AnimationController} implementation
      * <p>

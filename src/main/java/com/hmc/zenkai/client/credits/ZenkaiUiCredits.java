@@ -84,15 +84,8 @@ public final class ZenkaiUiCredits {
         credit(Category.UI, "StackWishScreen", AUTHOR, "Screen design");
         credit(Category.UI, "EnchantVillagerWishScreen", AUTHOR, "Screen design");
         credit(Category.UI, "TrainingPointsWishScreen", AUTHOR, "Screen design");
-        // No es una Screen (no tiene panel/pestaña propia): es el overlay de HUD en juego
-        // (RenderGuiEvent) — iconos de estado, barra de body/ki, etc. Mismo criterio de "diseño
-        // de UI propio" que las Screens de arriba.
         credit(Category.UI, "ClientZenkaiHooks", "Spongtari", "HUD overlay design");
-        // Rediseño 2026-08: sustituye el arte pintado a mano original de Spongtari por un
-        // medidor generado (tools/gen_bars.py, bordes duros, mismo lenguaje que el resto de la
-        // GUI). Si se recupera un arte hecho a mano en el futuro, devolver este crédito a su
-        // autor real en vez de AUTHOR.
-        credit(Category.UI, "bars_empty.png / bars_full.png", AUTHOR, "HUD Body/Stamina/Ki bar art (tools/gen_bars.py)");
+        credit(Category.UI, "bars_empty.png / bars_full.png", "Spongtari", "HUD Body/Stamina/Ki bar art (tools/gen_bars.py)");
 
         // ── Íconos (textures/gui/icons.png, textures/gui/technique_icons.png) ───
         // Una línea por celda de atlas identificada como arte propio (no vainilla), con su (u,v)
@@ -111,6 +104,7 @@ public final class ZenkaiUiCredits {
         creditIcon("icon_tab_story", AUTHOR, 20, 20, "icons.png (20,20)");
         creditIcon("icon_tab_party", AUTHOR, 80, 20, "icons.png (80,20)");
         creditIcon("icon_tab_config", AUTHOR, 100, 20, "icons.png (100,20)");
+        creditIcon("icon_tab_training", AUTHOR, 220, 20, "icons.png (220,20)");
         creditIcon("icon_head", AUTHOR, 40, 80, "icons.png (40,80)");
         creditIcon("icon_body_colors", AUTHOR, 60, 80, "icons.png (60,80)");
         creditIcon("icon_gender_male", AUTHOR, 80, 80, "icons.png (80,80)");
@@ -141,9 +135,16 @@ public final class ZenkaiUiCredits {
         creditIcon("icon_hud_transforming", AUTHOR, 80, 40, "icons.png (80,40)");
         creditIcon("icon_hud_turbo", AUTHOR, 20, 40, "icons.png (20,40)");
         creditIcon("icon_hud_moon", AUTHOR, 120, 0, "icons.png (120,0)");
+        creditIcon("icon_hud_instant_transmission", AUTHOR, 20, 100, "icons.png (20,100)");
+        creditIcon("icon_hud_instant_transmission_charged", AUTHOR, 40, 100, "icons.png (40,100)");
         // Sin (u,v) propio: son varios íconos en OTRO archivo (technique_icons.png), no una celda.
         credit(Category.ICONS, "technique_icons_atlas", "@Sor_Sylvie", "technique_icons.png — one icon per KiTechniqueType");
         credit(Category.ICONS, "physical_icons_atlas", "@Sor_Sylvie", "physical_icons.png — one icon per PhysicalTechniqueType");
+        // Ídem: atlas propio de una sola pantalla, en OTRO archivo que CreditsScreen no sabe
+        // pintar como miniatura (solo sabe leer celdas de icons.png) — mismo criterio que la
+        // línea de arriba. icons_galactic_menu.png (Earth/Namek/Yardrat de GalacticMenuScreen)
+        // se fusionó dentro de este mismo atlas el 2026-09-11 — ya no existe como archivo propio.
+        credit(Category.ICONS, "icons_instant_transmision_atlas", AUTHOR, "icons_instant_transmision.png — Home/Kami's Palace/Korin Tower/Yemma Palace/Kaiosama's Planet + iconos genéricos de dimensión (InstantTransmissionMenuScreen) + Earth/Namek/Yardrat (GalacticMenuScreen, reusando las mismas celdas)");
 
         // ── Animaciones de jugador (assets/zenkai/player_animations/*.animation.json) ──
         // Una entrada por clip. Reproducidos por PAL, autoría son quienes los modelan en

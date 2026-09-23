@@ -22,6 +22,9 @@ import java.util.List;
  *     "ki_attacks": [
  *       { "type": "wave", "size": 3, "rgb": "0x33CCFF", "cooldown": 80,  "range": 20 },
  *       { "type": "big_blast", "size": 5, "rgb": "0xFFAA00", "cooldown": 140, "range": 24, "damage_mult": 1.2 }
+ *     ],
+ *     "physical_attacks": [
+ *       { "type": "dash_punch", "cooldown": 60, "range": 4, "damage_mult": 1.0 }
  *     ]
  *   },
  *   "rewards": { "tp": "auto" }
@@ -38,13 +41,18 @@ public record EntityStatDef(
         double kiMultOverride,     // 1.0 = usar el del arquetipo
         List<EntityKiAttack> kiAttacks, // ataques de ki que puede lanzar (vacío = ninguno)
         boolean movesetMelee,           // false = no persigue cuerpo a cuerpo
-        String rewardTp                 // "auto" (escala por PL) o número en string
+        String rewardTp,                // "auto" (escala por PL) o número en string
+        List<EntityPhysicalAttack> physicalAttacks, // técnicas físicas que puede usar (vacío = ninguna)
+        boolean canFly                  // "moveset.can_fly" — ver ZenkaiDefaultMob (vuelo estilo Vex)
 ) {
     /** Un override de atributo: absoluto (percent=false) o relativo en % (percent=true). */
     public record AttrOverride(boolean percent, double value) {}
 
     /** ¿La entidad tiene al menos un ataque de ki definido? */
     public boolean hasKiAttacks() { return kiAttacks != null && !kiAttacks.isEmpty(); }
+
+    /** ¿La entidad tiene al menos una técnica física definida? */
+    public boolean hasPhysicalAttacks() { return physicalAttacks != null && !physicalAttacks.isEmpty(); }
 
     /** Alineamiento -100..+100. Si el JSON no lo declara, lo decide quien pregunte
      *  (SenseKiScanPacket) según si la entidad es hostil. */

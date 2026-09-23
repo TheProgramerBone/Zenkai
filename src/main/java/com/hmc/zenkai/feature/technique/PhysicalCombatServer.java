@@ -150,6 +150,19 @@ public final class PhysicalCombatServer {
         };
     }
 
+    /**
+     * Daño PURO de una técnica física a partir de la fuerza efectiva de quien la usa — mismo
+     * papel que {@link KiCombatServer#computeDamage(double, KiTechniqueType, int)} para ki. No
+     * lee PlayerStatsAttachment ni nada exclusivo de jugador: el input es un double cualquiera
+     * (att.computeMeleeFinal() para un jugador, EntityStats.computeMeleeFinal() para un mob),
+     * así que {@link com.hmc.zenkai.content.entity.ai.PhysicalAttackGoal} puede usarla sin
+     * tocar el resto de esta clase (mastería, bonus de Ki Fist, movimientos con duración) que
+     * sigue siendo 100% ServerPlayer.
+     */
+    public static double computeDamage(double strength, PhysicalTechnique t, double damageMult) {
+        return strength * t.dmgMult() * damageMult;
+    }
+
     /** Consulta pura de cooldown. NO lo arranca. La usa ActionResolver. */
     public static boolean isReady(ServerPlayer sp, PhysicalTechnique t) {
         long[] cds = COOLDOWNS.get(sp.getUUID());
@@ -383,20 +396,20 @@ public final class PhysicalCombatServer {
         }
     }
 
-    /** ÚNICO sitio donde se dibuja el impacto de una técnica física.
-     *  El tinte sale del aura del ATACANTE, resuelto en servidor: viaja en el packet
-     *  de partículas, así que el conjunto de clientes ve el mismo color.
-     *  El SONIDO es uno solo por bloqueado/no bloqueado (PHYSICAL_IMPACT/_BLOCK, ver ModSounds)
-     *  — antes eran sonidos vanilla distintos por técnica, marcados como placeholder; el
-     *  volumen/pitch propio de cada técnica se mantiene en el record Fx. */
+    /** ÚNICO sitio donde se dibuja el impacto de una técnica física DE UN JUGADOR (partículas +
+     *  sonido). El tinte sale del aura del ATACANTE, resuelto en servidor: viaja en el packet
+     *  de partículas, así que el conjunto de clientes ve el mismo color — por eso esto exige un
+     *  ServerPlayer y un mob no puede reusarlo tal cual. El SONIDO en sí (mismo por técnica
+     *  bloqueada/no bloqueada, ver playImpactSound) SÍ es compartido: PhysicalAttackGoal lo llama
+     *  directo para que un mob "suene" igual sin necesitar un atacante con aura. */
     private static void impactFx(ServerPlayer sp, LivingEntity e, PhysicalTechnique t) {
-        record Fx(float flash, int sparks, double spread, float vol, float pitch) {}
+        record Fx(float flash, int sparks, double spread) {}
 
         Fx fx = switch (t) {
-            case DASH_PUNCH -> new Fx(1.0f,  8, 0.25, 1.0f, 1.1f);
-            case HEAVY_BLOW -> new Fx(2.0f, 18, 0.45, 1.0f, 0.8f);
-            case BARRAGE    -> new Fx(0.7f,  4, 0.18, 0.7f, 1.6f);
-            case KIAI       -> new Fx(1.4f, 10, 0.35, 0.9f, 1.4f);
+            case DASH_PUNCH -> new Fx(1.0f,  8, 0.25);
+            case HEAVY_BLOW -> new Fx(2.0f, 18, 0.45);
+            case BARRAGE    -> new Fx(0.7f,  4, 0.18);
+            case KIAI       -> new Fx(1.4f, 10, 0.35);
         };
 
         var lvl = sp.serverLevel();
@@ -409,9 +422,29 @@ public final class PhysicalCombatServer {
         lvl.sendParticles(ModParticles.spark(rgb, 1.0f),
                 x, y, z, fx.sparks(), s, 0.2, s, fx.spread());
 
-        boolean blocked = e instanceof ServerPlayer defSp && KiCombatServer.isBlocking(defSp);
+        playImpactSound(lvl, e, t);
+    }
+
+    /** El sonido de impacto (uno solo por bloqueado/no bloqueado, PHYSICAL_IMPACT/_BLOCK, ver
+     *  ModSounds; volumen/pitch propios de cada técnica) SIN las partículas ni el tinte de aura
+     *  — la parte que SÍ tiene sentido para cualquier atacante, jugador o mob. Público para que
+     *  {@link com.hmc.zenkai.content.entity.ai.PhysicalAttackGoal} lo reutilice tal cual en vez
+     *  de duplicar la elección de sonido/volumen/pitch por técnica (pedido explícito del usuario:
+     *  "el sistema de sonidos de las técnicas físicas que lo apliquen los enemigos también"). */
+    public static void playImpactSound(net.minecraft.world.level.Level level, LivingEntity target, PhysicalTechnique t) {
+        record Vol(float vol, float pitch) {}
+        Vol v = switch (t) {
+            case DASH_PUNCH -> new Vol(1.0f, 1.1f);
+            case HEAVY_BLOW -> new Vol(1.0f, 0.8f);
+            case BARRAGE    -> new Vol(0.7f, 1.6f);
+            case KIAI       -> new Vol(0.9f, 1.4f);
+        };
+        boolean blocked = target instanceof ServerPlayer defSp
+                ? KiCombatServer.isBlocking(defSp)
+                : target instanceof com.hmc.zenkai.content.entity.ai.BlockingMob bm && bm.isBlockingNow();
         var sound = blocked ? ModSounds.PHYSICAL_IMPACT_BLOCK.get() : ModSounds.PHYSICAL_IMPACT.get();
-        lvl.playSound(null, x, y, z, sound, SoundSource.PLAYERS, fx.vol(), fx.pitch());
+        level.playSound(null, target.getX(), target.getY(), target.getZ(),
+                sound, SoundSource.PLAYERS, v.vol(), v.pitch());
     }
 
     /** Funnel de daño físico: aquí (y SOLO aquí) se pega y se dibuja el impacto.

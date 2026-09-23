@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.blockentity.AllDragonBalls.AllDragonBallsEntity;
 import com.hmc.zenkai.content.blockentity.EnergyGeneratorBlockEntity;
 import com.hmc.zenkai.content.blockentity.NpcMarkerBlockEntity;
+import com.hmc.zenkai.content.blockentity.PieceConnectorBlockEntity;
 import com.hmc.zenkai.content.blockentity.ScouterBenchBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -27,6 +28,11 @@ public class ModBlockEntities {
     public static final Supplier<BlockEntityType<NpcMarkerBlockEntity>> NPC_MARKER =
             BLOCK_ENTITIES.register("npc_marker", () -> BlockEntityType.Builder
                     .of(NpcMarkerBlockEntity::new, ModBlocks.NPC_MARKER.get())
+                    .build(null));
+
+    public static final Supplier<BlockEntityType<PieceConnectorBlockEntity>> PIECE_CONNECTOR =
+            BLOCK_ENTITIES.register("piece_connector", () -> BlockEntityType.Builder
+                    .of(PieceConnectorBlockEntity::new, ModBlocks.PIECE_CONNECTOR.get())
                     .build(null));
 
     public static final Supplier<BlockEntityType<ScouterBenchBlockEntity>> SCOUTER_BENCH =

@@ -2,6 +2,7 @@ package com.hmc.zenkai;
 
 
 import com.hmc.zenkai.client.gui.screens.ClientConfigScreen;
+import com.hmc.zenkai.compat.ponder.PonderCompat;
 import com.hmc.zenkai.client.gui.screens.EnergyGeneratorScreen;
 import com.hmc.zenkai.client.gui.screens.ScouterBenchScreen;
 import com.hmc.zenkai.client.render_and_model_entities.blockentity.ScouterBenchRenderer;
@@ -225,6 +226,10 @@ public class Zenkai {
                         (container, parent) -> new ClientConfigScreen(parent));
             }
 
+            // Tutoriales 3D de Ponder (compat opcional, ver compat/ponder/PonderCompat.java).
+            // No hace nada si el jugador no tiene Ponder instalado.
+            PonderCompat.register();
+
             ScouterBenchBlockEntity.clientTickHook = ScouterBenchSounds::tick;
 
             // Icono del scouter roto: propiedad 0/1 que dispara el override del modelo.
@@ -297,7 +302,17 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.KORIN.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("korin", true), 0.5f));
 
-            EntityRenderers.register(ModEntities.SHADOW_CLONE.get(), ShadowCloneRenderer::new);
+            EntityRenderers.register(ModEntities.TORIBOT.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("toribot", true), 0.5f));
+
+            // Ya NO PlayerModel vainilla — ver el javadoc de PosedHumanoidGeoModel/
+            // ShadowCloneEntity: rig humanoide GeckoLib idéntico a geo/saibaman.geo.json (sin el
+            // 0.75 de escala), reusa attack.strike/move.walk de zenkai_animations.animation.json
+            // de verdad (triggerAnim ya no es inerte como con PlayerModel).
+            EntityRenderers.register(ModEntities.SHADOW_CLONE.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new PosedHumanoidGeoModel<>("shadow_clone",
+                                    "shadow_clone", "zenkai_animations", true, false), 0.5f));
 
             // Animaciones de jugador. La política de 1ª persona vive en ZenkaiPalAnimations,
             // NO aquí y NO en cada animación: las cinco capas comparten exactamente la misma.

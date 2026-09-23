@@ -574,6 +574,10 @@ public class ModBlocks {
     public static final DeferredBlock<Block> NPC_MARKER = registerBlock("npc_marker",
             () -> new NpcMarkerBlock(NpcMarkerBlock.markerProperties()));
 
+    /** El "jigsaw" propio — ver el javadoc de PieceConnectorBlock y worldgen.piecegraph. */
+    public static final DeferredBlock<Block> PIECE_CONNECTOR = registerBlock("piece_connector",
+            () -> new PieceConnectorBlock(PieceConnectorBlock.connectorProperties()));
+
     /** Agua curativa. Se registra SIN item de bloque, igual que NAMEKIAN_HERB_CROP: un
      *  fluido no se coloca desde el inventario como bloque, solo desde su cubo. Tipado como
      *  DeferredBlock&lt;HealingWaterBlock&gt; (no &lt;Block&gt;) a propósito: ModFluids lo pasa a

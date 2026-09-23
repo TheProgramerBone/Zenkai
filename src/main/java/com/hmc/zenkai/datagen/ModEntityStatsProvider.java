@@ -73,8 +73,34 @@ public class ModEntityStatsProvider implements DataProvider {
         // toca (ver EntityStats.isInitialized()). Lo único que SÍ lee esta ficha es el kit de
         // ki_attacks — ZenkaiDefaultMob.addKiAttackGoalIfDefined() lo busca por TIPO de entidad
         // registrado, no por instancia.
+        // Variedad de ki (wave/blast/lazer/spiral/burst/disk) para que el sparring no sea
+        // siempre el mismo proyectil — quedan fuera a propósito barrier (defensivo, no encaja
+        // en KiAttackGoal que es puramente ofensivo), explosion (autodetonación: mataría a la
+        // sombra sin sentido en un entrenamiento repetible) y big_blast/spirit_bomb (demasiado
+        // lentas/fuertes para un sparring, y spirit_bomb es técnica firma de Kaio). El daño ya
+        // escala solo con el PL simulado (ver el comentario grande de arriba), así que no hace
+        // falta variar nada por dificultad aquí.
         put(out, "shadow_clone", Def.of("zenkai:shadow_clone", 1000, "balanced", 0)
-                .ki("wave", 3, "0x552266", 90, 20, null));
+                // Vuela estilo Vex (ver ZenkaiDefaultMob) — el propio ShadowTrainingManager la
+                // gatea encima con la skill fly REAL del dueño (ShadowCloneEntity.
+                // setFlightAllowed), esto solo marca la CAPACIDAD estructural en el JSON.
+                .canFly(true)
+                .ki("wave",   3, "0x552266", 90,  20, null)
+                .ki("blast",  4, "0x552266", 70,  18, null)
+                .ki("lazer",  2, "0x552266", 50,  22, 0.8)
+                .ki("spiral", 3, "0x552266", 100, 18, 1.1)
+                .ki("burst",  2, "0x552266", 80,  16, 0.7)
+                .ki("disk",   3, "0x552266", 110, 18, 1.2)
+                // Físicas: dash a media distancia, heavy_blow/barrage de golpe directo cerca —
+                // ver PhysicalAttackGoal.pickByRange. kiai YA NO queda fuera: pedido explícito
+                // para que sea la respuesta situacional a "el jugador bloquea o me va a lanzar
+                // ki" (ver PhysicalAttackGoal.pickReady). Cooldowns EXACTOS pedidos por el
+                // usuario (en ticks, 20/s): dash 4s=80, heavy_blow 6s=120, barrage 8s=160,
+                // kiai 5s=100 — antes eran 50/140/90/100, no coincidían con el diseño.
+                .phys("dash_punch", 80, 4, 1.0)
+                .phys("heavy_blow", 120, 3, 1.3)
+                .phys("barrage", 160, 3, 0.6)
+                .phys("kiai", 100, 4, 1.0));
 
         // --- Jefes ----------------------------------------------------------
         put(out, "warden",         Def.of("minecraft:warden",         13000, "tank",  -60).attr("strength", "+30%"));
@@ -190,6 +216,7 @@ public class ModEntityStatsProvider implements DataProvider {
         private JsonObject attributes;
         private JsonObject moveset;
         private JsonArray kiAttacks;
+        private JsonArray physicalAttacks;
 
         private Def() {}
 
@@ -237,6 +264,13 @@ public class ModEntityStatsProvider implements DataProvider {
             return this;
         }
 
+        /** Vuelo estilo Vex, disparado por JSON — ver ZenkaiDefaultMob.createNavigation/tick/
+         *  canFlyNow. Default false (no escribir la clave) si nunca se llama. */
+        Def canFly(boolean canFly) {
+            if (moveset != null) moveset.addProperty("can_fly", canFly);
+            return this;
+        }
+
         /** damageMult null = no se escribe el campo (el cargador ya tiene su defecto). */
         Def ki(String type, int size, String rgb, int cooldown, int range, Double damageMult) {
             if (moveset == null) return this;
@@ -252,6 +286,23 @@ public class ModEntityStatsProvider implements DataProvider {
             o.addProperty("range", range);
             if (damageMult != null) o.addProperty("damage_mult", damageMult);
             kiAttacks.add(o);
+            return this;
+        }
+
+        /** Espejo de ki(...) para técnicas físicas — sin size/rgb, no hay proyectil.
+         *  damageMult null = no se escribe el campo (el cargador ya tiene su defecto). */
+        Def phys(String type, int cooldown, int range, Double damageMult) {
+            if (moveset == null) return this;
+            if (physicalAttacks == null) {
+                physicalAttacks = new JsonArray();
+                moveset.add("physical_attacks", physicalAttacks);
+            }
+            JsonObject o = new JsonObject();
+            o.addProperty("type", type);
+            o.addProperty("cooldown", cooldown);
+            o.addProperty("range", range);
+            if (damageMult != null) o.addProperty("damage_mult", damageMult);
+            physicalAttacks.add(o);
             return this;
         }
 

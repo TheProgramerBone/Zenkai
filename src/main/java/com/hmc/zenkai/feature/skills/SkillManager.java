@@ -85,12 +85,20 @@ public final class SkillManager {
                         }
                     }
 
+                    List<String> masters = new ArrayList<>();
+                    if (o.has("masters") && o.get("masters").isJsonArray()) {
+                        for (var el : o.getAsJsonArray("masters")) masters.add(el.getAsString());
+                    } else if (o.has("master")) {
+                        // Compat con el formato viejo (un solo maestro como string suelto).
+                        masters.add(GsonHelper.getAsString(o, "master"));
+                    }
+
                     SkillDef def = new SkillDef(id,
                             GsonHelper.getAsInt(o, "tp_cost", 0),
                             Math.max(1, GsonHelper.getAsInt(o, "max_level", 1)),
                             List.copyOf(mind),
                             GsonHelper.getAsBoolean(o, "purchasable", true),
-                            o.has("master") ? GsonHelper.getAsString(o, "master") : null,
+                            List.copyOf(masters),
                             Collections.unmodifiableMap(values),
                             GsonHelper.getAsBoolean(o, "levels_from_forms", false));
                     if (out.put(id, def) != null) {

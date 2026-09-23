@@ -3,7 +3,9 @@ package com.hmc.zenkai.network;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.ClientPayloadHandlers;
 import com.hmc.zenkai.client.gui.menu.StackWishMenu;
+import com.hmc.zenkai.content.block.PieceConnectorBlock;
 import com.hmc.zenkai.content.blockentity.NpcMarkerBlockEntity;
+import com.hmc.zenkai.content.blockentity.PieceConnectorBlockEntity;
 import com.hmc.zenkai.feature.aura.AuraSignatureSyncPacket;
 import com.hmc.zenkai.feature.aura.TurboPacket;
 import com.hmc.zenkai.feature.aura.TurboSyncPacket;
@@ -39,11 +41,13 @@ import com.hmc.zenkai.feature.weights.SetWeightPacket;
 import com.hmc.zenkai.feature.wheel.WheelSelectPacket;
 import com.hmc.zenkai.feature.wishes.*;
 import com.hmc.zenkai.network.vehicle.VehicleControlPayload;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -434,6 +438,33 @@ public class ModNetworking {
                     }
                     be.applyFrom(type, payload.yaw(), payload.offX(), payload.offY(), payload.offZ());
                     if (payload.respawn()) be.forceRespawn();
+                }));
+
+        registrar.playToClient(OpenPieceConnectorPayload.TYPE, OpenPieceConnectorPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandlers.openPieceConnector(payload)));
+
+        registrar.playToServer(SavePieceConnectorPayload.TYPE, SavePieceConnectorPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> {
+                    if (!(ctx.player() instanceof ServerPlayer sp)) return;
+                    if (!sp.canUseGameMasterBlocks()) return;                 // creativo + permiso 2
+                    if (!sp.level().isLoaded(payload.pos())) return;
+                    if (sp.distanceToSqr(payload.pos().getCenter()) > 64 * 64) return;
+                    if (!(sp.level().getBlockEntity(payload.pos()) instanceof PieceConnectorBlockEntity be)) return;
+                    BlockState state = sp.level().getBlockState(payload.pos());
+                    if (!(state.getBlock() instanceof PieceConnectorBlock)) return;
+
+                    ResourceLocation socket = ResourceLocation.tryParse(payload.socket());
+                    if (socket == null) {
+                        sp.sendSystemMessage(Component.translatable(
+                                "messages.zenkai.piece_connector.bad_socket", payload.socket()));
+                        return;
+                    }
+                    be.setSocket(socket);
+
+                    Direction facing = Direction.byName(payload.facing());
+                    if (facing != null && state.getValue(PieceConnectorBlock.FACING) != facing) {
+                        sp.level().setBlock(payload.pos(), state.setValue(PieceConnectorBlock.FACING, facing), 3);
+                    }
                 }));
 
         registrar.playToServer(

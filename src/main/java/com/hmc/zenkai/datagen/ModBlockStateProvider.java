@@ -142,6 +142,18 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         modLoc("block/energy_generator_front"),
                         modLoc("block/energy_generator_top")));
 
+        // piece_connector: bloque de 6 direcciones (FACING incluye arriba/abajo, no solo
+        // horizontal) — directionalBlock() es el helper de NeoForge para justo este caso:
+        // calcula rotación X/Y por estado a partir de UN modelo donde la cara "arriba" del
+        // modelo sin rotar es la que se toma como "frente" (a diferencia de horizontalBlock/
+        // "orientable", donde el frente es la cara norte). Antes esto era un cubeAll con una
+        // sola textura para las 6 caras — no se distinguía hacia dónde apuntaba el conector con
+        // solo mirarlo, justo lo que hace falta ver al construir una pieza a mano.
+        directionalBlock(ModBlocks.PIECE_CONNECTOR.get(), models().cubeBottomTop("piece_connector",
+                modLoc("block/piece_connector_side"),
+                modLoc("block/piece_connector_side"),
+                modLoc("block/piece_connector_front")));
+
         // El fluido en sí lo pinta LiquidBlockRenderer (ver HealingWaterFluidClientExtensions),
         // NUNCA este modelo — pero BlockStateModelLoader igual pide un modelo para CADA valor
         // de LEVEL (0-15) de este bloque, y sin blockstate/modelo propios lanzaba "missing

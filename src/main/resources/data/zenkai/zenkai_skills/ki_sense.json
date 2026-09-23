@@ -3,7 +3,7 @@
   "tp_cost": 300,
   "mind_req": [4, 8, 13, 19, 26],
   "purchasable": true,
-  "master": "kami",
+  "masters": ["kami"],
   "values": {
     "range_mult": [1.0, 1.35, 1.6, 1.85, 2.2],
     "silhouette_cap": [0, 0, 8, 24, 24],

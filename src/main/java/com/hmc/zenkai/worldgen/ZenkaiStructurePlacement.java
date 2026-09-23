@@ -126,6 +126,11 @@ public final class ZenkaiStructurePlacement {
             case "otherworld" -> StaticStructurePlacer.place(level, base, ModStructureSegments.OTHERWORLD_PALACE, true);
             case "kaiosama"   -> StaticStructurePlacer.place(level, base, ModStructureSegments.KAIOSAMA, true);
             case "htc"        -> StaticStructurePlacer.place(level, base, ModStructureSegments.HTC, true);
+            // Arnés de prueba del motor propio de piezas modulares (ver worldgen.piecegraph) —
+            // NO es namek real, son 3 piezas de relleno generadas por
+            // tools/gen_piecegraph_test_pieces.py, solo para confirmar en juego que
+            // enganchar/rotar/colocar funciona antes de construir el contenido de verdad.
+            case "piecegraph" -> com.hmc.zenkai.worldgen.piecegraph.PieceGraphDemo.place(level, base);
             default -> false;
         };
     }

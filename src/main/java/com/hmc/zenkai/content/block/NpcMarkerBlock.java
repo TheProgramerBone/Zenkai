@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -20,6 +21,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,6 +53,19 @@ public class NpcMarkerBlock extends BaseEntityBlock {
 
     @Override
     protected @NotNull RenderShape getRenderShape(@NotNull BlockState state) { return RenderShape.INVISIBLE; }
+
+    /** Mismo truco que el bloque de luz vainilla (LightBlock#getShape): el shape de
+     *  interacción/selección solo existe si el jugador sostiene el marcador en la mano. Sin
+     *  él en la mano, el rayo de "a qué bloque estoy mirando" pasa de largo — no hay contorno
+     *  de selección, no se puede apuntar ni interactuar, es exactamente como si no estuviera.
+     *  No hace falta togar canBeReplaced: por defecto ya es false, así que sigue actuando como
+     *  una barrier — ningún bloque puede colocarse en esa celda aunque se apunte a la cara de
+     *  al lado, sostenga el marcador o no. */
+    @Override
+    protected @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level,
+                                            @NotNull BlockPos pos, @NotNull CollisionContext context) {
+        return context.isHoldingItem(this.asItem()) ? Shapes.block() : Shapes.empty();
+    }
 
     @Override
     public @Nullable BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {

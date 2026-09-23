@@ -2,6 +2,7 @@ package com.hmc.zenkai.registry;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.content.blockentity.PieceConnectorBlockEntity;
 import com.hmc.zenkai.content.effect.MajinEffect;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
@@ -36,6 +37,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -44,7 +46,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -407,7 +411,18 @@ public class ModCommands {
                                         .executes(ctx -> debugPartyAdd(ctx, null))
                                         .then(Commands.argument("name", StringArgumentType.word())
                                                 .executes(ctx -> debugPartyAdd(ctx,
-                                                        StringArgumentType.getString(ctx, "name")))))))
+                                                        StringArgumentType.getString(ctx, "name"))))))
+                        // ── /zenkai debug connector set <socket> ──────────────────────
+                        // Atajo sin abrir PieceConnectorScreen (clic derecho normal en el
+                        // conector — ver worldgen.piecegraph): útil para edición por script o
+                        // desde lejos. socket es un ResourceLocation libre, p.ej.
+                        // zenkai:namek_path — no hay pool que registrar en JSON,
+                        // PieceTemplate#scan lo lee directo del NBT al cargar la pieza.
+                        .then(Commands.literal("connector")
+                                .then(Commands.literal("set")
+                                        .then(Commands.argument("socket", ResourceLocationArgument.id())
+                                                .executes(ctx -> debugSetConnectorSocket(ctx,
+                                                        ResourceLocationArgument.getId(ctx, "socket")))))))
 
 
 
@@ -825,7 +840,7 @@ public class ModCommands {
         for (SkillDef def : all) {
             int max = FormDrivenSkills.maxLevel(def, sp);
             int lvl = att.skills().level(def.id());
-            String extra = (def.master() != null ? " §8master:" + def.master() : "")
+            String extra = (def.hasMaster() ? " §8master:" + String.join(",", def.masters()) : "")
                     + (def.purchasable() ? "" : " §8[no comprable]")
                     + (def.levelsFromForms() ? " §8[formas]" : "");
             ctx.getSource().sendSuccess(() -> Component.literal(
@@ -958,6 +973,29 @@ public class ModCommands {
                         + " (" + String.format("%.2f", 100.0 * le.getHealth() / Math.max(1f, le.getMaxHealth())) + "%)"
                         + "\n  body  : " + body
         ).withStyle(ChatFormatting.AQUA), false);
+        return 1;
+    }
+
+    /** Atajo de "/zenkai debug connector set" (ver el comentario de arriba): raytracea el
+     *  bloque en el punto de mira y, si es un piece_connector, le cambia el socket
+     *  directamente, sin pasar por PieceConnectorScreen. */
+    private static int debugSetConnectorSocket(CommandContext<CommandSourceStack> ctx, ResourceLocation socket)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        HitResult hit = sp.pick(sp.blockInteractionRange() + 1.0, 1.0F, false);
+        if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult blockHit)) {
+            ctx.getSource().sendFailure(Component.literal(
+                    "[Zenkai] Sin piece_connector en el punto de mira."));
+            return 0;
+        }
+        BlockPos pos = blockHit.getBlockPos();
+        if (!(sp.level().getBlockEntity(pos) instanceof PieceConnectorBlockEntity be)) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] Eso no es un piece_connector."));
+            return 0;
+        }
+        be.setSocket(socket);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Socket de " + pos.toShortString() + " -> " + socket), true);
         return 1;
     }
 

@@ -38,6 +38,7 @@ public class ModEvents {
         event.put(ModEntities.KAMI.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.KAIO.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.KORIN.get(), ZenkaiMasterEntity.createAttributes().build());
+        event.put(ModEntities.TORIBOT.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.SHADOW_CLONE.get(), ShadowCloneEntity.createAttributes().build());
     }
 

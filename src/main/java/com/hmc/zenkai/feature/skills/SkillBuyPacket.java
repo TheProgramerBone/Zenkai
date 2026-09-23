@@ -59,16 +59,16 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
 
             int current = att.skills().level(def.id());
             if (current >= max) return;                        // ya al máximo
-            // El nivel 1 de una habilidad CON maestro solo lo da el maestro.
-            // El nivel 1 de una habilidad CON maestro solo lo da SU maestro, en persona.
-            if (current <= 0 && def.master() != null) {
-                if (!def.master().equals(pkt.masterId())) return;
+            // El nivel 1 de una habilidad CON maestro solo lo da UNO DE SUS maestros (puede
+            // enseñarla más de uno), en persona, ante el maestro concreto que mandó el paquete.
+            if (current <= 0 && def.hasMaster()) {
+                if (!def.masters().contains(pkt.masterId())) return;
 
-                Entity master = MasterManager.findNearby(sp, def.master());
+                Entity master = MasterManager.findNearby(sp, pkt.masterId());
                 if (master == null) return;                       // no estás delante de él
 
-                MasterManager.Result r = MasterManager.check(sp, def.master(), master);
-                if (!r.ok()) { MasterManager.tell(sp, def.master(), r); return; }
+                MasterManager.Result r = MasterManager.check(sp, pkt.masterId(), master);
+                if (!r.ok()) { MasterManager.tell(sp, pkt.masterId(), r); return; }
             }
 
             int next = current + 1;

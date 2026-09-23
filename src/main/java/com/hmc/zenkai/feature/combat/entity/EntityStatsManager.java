@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -123,15 +124,25 @@ public final class EntityStatsManager {
 
         // moveset
         List<EntityKiAttack> kiAttacks = new ArrayList<>();
+        List<EntityPhysicalAttack> physicalAttacks = new ArrayList<>();
         boolean melee = true;
+        boolean canFly = false;
         if (o.has("moveset") && o.get("moveset").isJsonObject()) {
             JsonObject ms = o.getAsJsonObject("moveset");
             if (ms.has("melee")) melee = ms.get("melee").getAsBoolean();
+            if (ms.has("can_fly")) canFly = ms.get("can_fly").getAsBoolean();
             if (ms.has("ki_attacks") && ms.get("ki_attacks").isJsonArray()) {
                 for (JsonElement el : ms.getAsJsonArray("ki_attacks")) {
                     if (!el.isJsonObject()) continue;
                     EntityKiAttack atk = parseKiAttack(el.getAsJsonObject(), entity);
                     if (atk != null && atk.valid()) kiAttacks.add(atk);
+                }
+            }
+            if (ms.has("physical_attacks") && ms.get("physical_attacks").isJsonArray()) {
+                for (JsonElement el : ms.getAsJsonArray("physical_attacks")) {
+                    if (!el.isJsonObject()) continue;
+                    EntityPhysicalAttack atk = parsePhysicalAttack(el.getAsJsonObject(), entity);
+                    if (atk != null && atk.valid()) physicalAttacks.add(atk);
                 }
             }
         }
@@ -144,7 +155,7 @@ public final class EntityStatsManager {
         }
 
         return new EntityStatDef(entity, powerLevel, displayOnly, archetype, alignment,
-                attrOv, bodyMult, kiMult, kiAttacks, melee, rewardTp);
+                attrOv, bodyMult, kiMult, kiAttacks, melee, rewardTp, physicalAttacks, canFly);
     }
 
     /** "+20%" / "-10%" -> relativo; "250" -> absoluto. */
@@ -173,5 +184,19 @@ public final class EntityStatsManager {
         double range = a.has("range") ? a.get("range").getAsDouble() : 16.0;
         double dmgMult = a.has("damage_mult") ? a.get("damage_mult").getAsDouble() : 1.0;
         return new EntityKiAttack(type, size, rgb, cooldown, range, dmgMult);
+    }
+
+    /** Una entrada de physical_attacks del JSON. null si el tipo no existe (se descarta con aviso). */
+    private static EntityPhysicalAttack parsePhysicalAttack(JsonObject a, ResourceLocation entity) {
+        String typeName = a.has("type") ? a.get("type").getAsString() : "";
+        PhysicalTechnique type = PhysicalTechnique.byName(typeName);
+        if (type == null) {
+            LOGGER.warn("[Zenkai] Técnica física '{}' desconocida en {}", typeName, entity);
+            return null;
+        }
+        int cooldown = a.has("cooldown") ? a.get("cooldown").getAsInt() : 60;
+        double range = a.has("range") ? a.get("range").getAsDouble() : 3.0;
+        double dmgMult = a.has("damage_mult") ? a.get("damage_mult").getAsDouble() : 1.0;
+        return new EntityPhysicalAttack(type, cooldown, range, dmgMult);
     }
 }

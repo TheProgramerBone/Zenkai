@@ -16,11 +16,11 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 /**
- * Kamisama. Enseña fly, ki_sense, ki_block, ki_control, meditation y run. Su servicio es la
- * única forma de tocar la cola de un saiyan (PlayerStatsAttachment.hasTail(), servicio de
- * OozaruConditions/TailResolver): quitarla o hacerla crecer de vuelta. El ESTILO
- * suelta/cintura, en cambio, es gratis y libre desde la rueda (WheelMenu.tailStyleToggle) —
- * Kami solo decide si hay cola, no cómo se lleva.
+ * Kamisama. Enseña fly, ki_sense, ki_block y meditation (esta última compartida con Korin y
+ * King Kai, ver zenkai_skills/meditation.json). Su servicio es la única forma de tocar la cola
+ * de un saiyan (PlayerStatsAttachment.hasTail(), servicio de OozaruConditions/TailResolver):
+ * quitarla o hacerla crecer de vuelta. El ESTILO suelta/cintura, en cambio, es gratis y libre
+ * desde la rueda (WheelMenu.tailStyleToggle) — Kami solo decide si hay cola, no cómo se lleva.
  */
 public class KamiEntity extends ZenkaiMasterEntity {
 

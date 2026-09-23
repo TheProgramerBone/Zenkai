@@ -29,8 +29,17 @@ import java.util.List;
  * Tabla estática de {@link SpacePodDestination} (Tierra/Namek), sin el aparato de
  * descubrimiento/protectorKey/scroll de InstantTransmissionMenuScreen — decisión ya tomada en
  * .claude/pendiente/nave-espacial-menu-galactico.md: con 2-3 filas fijas no hace falta nada de
- * eso. Yardrat es una fila fija "próximamente" sin SpacePodDestination real detrás (icono de
- * candado propio, ver tools/gen_galactic_menu_icons.py).
+ * eso. Yardrat es una fila fija "próximamente" sin SpacePodDestination real detrás.
+ *
+ * Íconos: 2026-09-11 se fusionó el atlas propio icons_galactic_menu.png dentro de
+ * icons_instant_transmision.png (a pedido del usuario: "estoy usando los mismos íconos") — Tierra
+ * y Namek de esta pantalla son EXACTAMENTE la misma celda que ya usa
+ * InstantTransmissionMenuScreen.KNOWN_DIM_ICON para esos mismos planetas, así que ya no tenía
+ * sentido mantener un PNG separado casi duplicado. Yardrat ("próximamente") reusa la celda "?" de
+ * reserva (icon_unknown_dimension) en vez de tener su propio candado: es el mismo concepto
+ * ("bloqueado hasta más adelante") con el mismo glifo. icons_galactic_menu.png y
+ * tools/gen_galactic_menu_icons.py se borraron — ver tools/gen_instant_transmission_icons.py para
+ * el resto del atlas.
  */
 public class GalacticMenuScreen extends Screen {
 
@@ -45,7 +54,7 @@ public class GalacticMenuScreen extends Screen {
     private static final ResourceLocation BG_TEX = ResourceLocation
             .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/galactic_menu.png");
     private static final ResourceLocation ICONS_TEX = ResourceLocation
-            .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons_galactic_menu.png");
+            .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons_instant_transmision.png");
     private static final int ICONS_ATLAS = 256;
     private static final int ICON_CELL = 20;
 
@@ -53,10 +62,13 @@ public class GalacticMenuScreen extends Screen {
         static IconUV grid(int col, int row) { return new IconUV(col * ICON_CELL, row * ICON_CELL); }
     }
 
-    /** Columnas == tools/gen_galactic_menu_icons.py (fila v=0: Tierra, Namek, Yardrat). */
+    /** Mismo atlas e íconos que InstantTransmissionMenuScreen (ver el javadoc de clase) — Tierra
+     *  es la celda de TeleportRealm.OVERWORLD, Namek la celda que InstantTransmissionMenuScreen.
+     *  KNOWN_DIM_ICON usa para la dimensión "zenkai:namek", y Yardrat reusa la celda "?" de
+     *  reserva (icon_unknown_dimension) — ninguna es propia de esta pantalla. */
     private static final IconUV ICON_EARTH = IconUV.grid(0, 0);
-    private static final IconUV ICON_NAMEK = IconUV.grid(1, 0);
-    private static final IconUV ICON_YARDRAT = IconUV.grid(2, 0);
+    private static final IconUV ICON_NAMEK = IconUV.grid(1, 1);
+    private static final IconUV ICON_YARDRAT = IconUV.grid(4, 0);
 
     private enum RowState { AVAILABLE, ALREADY_HERE, COMING_SOON }
 

@@ -50,6 +50,10 @@ repositories {
         name = "RedlanceMinecraft"
         url = "https://repo.redlance.org/public"
     }
+    maven {
+        name = "Create/Ponder/Flywheel"
+        url = "https://maven.createmod.net"
+    }
 }
 
 base {
@@ -148,6 +152,18 @@ dependencies {
 
     compileOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}:api"
     runtimeOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}"
+
+    // Ponder — compat OPCIONAL (ver compat/ponder/PonderCompat.java): compileOnly para poder
+    // implementar la API en compat/ponder/, runtimeOnly solo para poder probarlo en runClient.
+    // El jar publicado de Zenkai NO lo embebe ni lo exige (declarado "optional" en mods.toml):
+    // un usuario sin Ponder instalado simplemente no ve el boton de tutorial en esos bloques.
+    compileOnly "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
+    runtimeOnly "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
+
+    // Flywheel: dependencia dura de Ponder en tiempo de ejecucion del lado cliente (su propio
+    // mods.toml lo declara "required"). No lo usamos directamente, pero sin el Ponder no carga.
+    compileOnly "dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}"
+    runtimeOnly "dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

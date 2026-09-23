@@ -15,7 +15,8 @@ import net.minecraft.world.level.Level;
 
 import java.util.List;
 
-/** Kaiosama. Enseña kaioken. Vive en el Otherworld, así que su PL requerido puede ser alto:
+/** Kaiosama. Enseña kaioken, ki_control y meditation (esta compartida con Kami y Korin, ver
+ *  zenkai_skills/meditation.json). Vive en el Otherworld, así que su PL requerido puede ser alto:
  *  llegar hasta él ya es la mitad del filtro. Su servicio entrega el equipo de pesas de
  *  entrenamiento — DE UNA SOLA VEZ por jugador (PlayerStatsAttachment.hasReceivedKaioWeights),
  *  no una granja repetible: pedirlas dos veces no debería duplicar equipo gratis. */

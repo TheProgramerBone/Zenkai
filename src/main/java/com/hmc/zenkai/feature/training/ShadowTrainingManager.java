@@ -9,6 +9,7 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.registry.ModEntities;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -94,6 +95,10 @@ public final class ShadowTrainingManager {
         Vec3 pos = sp.position().add(sp.getLookAngle().normalize().scale(3.0)).add(0, 1.0, 0);
         shadow.moveTo(pos.x, pos.y, pos.z, sp.getYRot() + 180f, 0f);
         shadow.setOwner(sp);
+        // El vuelo estilo Vex es solo la CAPACIDAD (shadow_clone.json can_fly:true) — el gate
+        // real por-instancia es que el DUEÑO tenga la skill fly desbloqueada, pedido explícito
+        // del usuario. Mismo query que ya usa el propio jugador (FlightSystem.tick()).
+        shadow.setFlightAllowed(SkillEffects.canFly(sp));
 
         // Stats en runtime ANTES de addFreshEntity: para cuando EntityJoinLevelEvent dispare,
         // EntitySpawnStatsHandler ve isInitialized()=true y no los pisa (ver su propio onJoin).
@@ -107,7 +112,11 @@ public final class ShadowTrainingManager {
                 1.0, 1.0,
                 List.of(),
                 true,
-                "auto");
+                "auto",
+                List.of(),
+                false); // canFly aquí es irrelevante: ZenkaiDefaultMob lee el vuelo del def del
+                        // DATAPACK vía EntityStatsManager.get(id) (shadow_clone.json), no de este
+                        // EntityStatDef local — este solo alimenta stats.applyDef (vida/daño/PL).
         EntityStats stats = shadow.getData(ZenkaiDataAttachments.ENTITY_STATS.get());
         stats.applyDef(def, shadow);
         shadow.setData(ZenkaiDataAttachments.ENTITY_STATS.get(), stats);

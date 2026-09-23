@@ -3,6 +3,6 @@
   "tp_cost": 0,
   "mind_req": [50, 90],
   "purchasable": true,
-  "master": "kami",
+  "masters": ["toribot"],
   "levels_from_forms": true
 }

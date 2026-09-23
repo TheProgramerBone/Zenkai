@@ -1,5 +1,6 @@
 package com.hmc.zenkai.event;
 
+import com.hmc.zenkai.content.entity.ai.BlockingMob;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.content.item.KiWeaponItem;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
@@ -414,8 +415,8 @@ public class CombatZenkaiHooks {
             finalDamage = Math.max(finalDamage, dmg * ServerConfig.minDamagePercent());
         }
 
-        if (e.getEntity() instanceof ServerPlayer defSp && KiCombatServer.isBlocking(defSp)) {
-            finalDamage *= SkillEffects.blockDamageMultiplier(defSp);
+        if (isBlockingNow(e.getEntity())) {
+            finalDamage *= blockDamageMultiplierOf(e.getEntity());
         }
 
         if (e.getEntity() instanceof ServerPlayer defSp) {
@@ -425,6 +426,26 @@ public class CombatZenkaiHooks {
             finalDamage = VanillaMitigation.consumeAbsorption(defSp, defStats, finalDamage);
         }
         return finalDamage;
+    }
+
+    /** ¿Está bloqueando ESTE defensor, sea jugador (ActionState, vía KiCombatServer) o un mob
+     *  (BlockingMob, ver ShadowCloneEntity/BlockHabitGoal)? Generaliza lo que antes solo miraba
+     *  ServerPlayer — sin esto, un mob nunca podía beneficiarse de bloquear. Público: lo
+     *  reutiliza CombatAiUtil.isBlocking para que KiAttackGoal/PhysicalAttackGoal sepan si el
+     *  OBJETIVO está en guardia antes de elegir ataque, sin duplicar este mismo chequeo. */
+    public static boolean isBlockingNow(LivingEntity defender) {
+        if (defender instanceof ServerPlayer sp) return KiCombatServer.isBlocking(sp);
+        if (defender instanceof BlockingMob bm) return bm.isBlockingNow();
+        return false;
+    }
+
+    /** Espejo de isBlockingNow para el multiplicador de daño a aplicar mientras bloquea. Los
+     *  jugadores lo sacan de su skill ki_block (0.80..0.50 según nivel); un mob no tiene esa
+     *  skill, así que trae su propio número fijo (BlockingMob.blockDamageMultiplier()). */
+    private static double blockDamageMultiplierOf(LivingEntity defender) {
+        if (defender instanceof ServerPlayer sp) return SkillEffects.blockDamageMultiplier(sp);
+        if (defender instanceof BlockingMob bm) return bm.blockDamageMultiplier();
+        return 1.0;
     }
 
     /** DEF efectiva del defensor frente a ESTE golpe. Se mantiene SIEMPRE, en modo combate o no. */

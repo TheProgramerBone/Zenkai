@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "zenkai:block/piece_connector",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "zenkai:block/piece_connector",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "zenkai:block/piece_connector",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "zenkai:block/piece_connector",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "zenkai:block/piece_connector"
+    },
+    "facing=west": {
+      "model": "zenkai:block/piece_connector",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

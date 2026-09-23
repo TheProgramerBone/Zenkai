@@ -207,8 +207,8 @@ public class MasterScreen extends Screen {
         top  = (this.height - BG_H) / 2;
 
         skillRows.clear();
-        // god_ki lo enseña Kami a cualquier raza (una sola skill, ver DivineForms), pero no le
-        // sirve de nada a una raza sin ninguna forma divina (Arcosiano hoy) — no tiene sentido
+        // god_ki lo enseña Tori-Bot a cualquier raza (una sola skill, ver DivineForms), pero no
+        // le sirve de nada a una raza sin ninguna forma divina (Arcosiano hoy) — no tiene sentido
         // enseñársela en la tienda si comprarla no desbloquearía nada.
         PlayerStatsAttachment raceCheck = stats();
         for (SkillDef d : SkillDef.taughtBy(masterId)) {

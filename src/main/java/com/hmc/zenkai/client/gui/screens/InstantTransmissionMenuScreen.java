@@ -173,11 +173,16 @@ public class InstantTransmissionMenuScreen extends Screen {
      *  aparte que nunca hacía nada. Columna+fila EXPLÍCITAS por dimensión (ya no solo columna con
      *  la fila v=0 fija a fuego) — mismo criterio que TeleportRealm/TeleportDestination: una
      *  dimensión nueva puede reservar cualquier celda del atlas, igual que ClientZenkaiHooks
-     *  resuelve cada badge del HUD con su propia columna+fila libres. */
+     *  resuelve cada badge del HUD con su propia columna+fila libres.
+     *  "zenkai:namek" apuntaba antes a (3,0) — la celda de TeleportRealm.OTHERWORLD, prestada por
+     *  error, así que el menú mostraba la media luna del Otherworld en vez de Namek. Corregido
+     *  2026-09-11 al fusionar icons_galactic_menu.png aquí: ahora apunta a (1,1), donde vive el
+     *  planeta Namek real (migrado desde ese atlas) — la MISMA celda que usa
+     *  GalacticMenuScreen.ICON_NAMEK, así que las dos pantallas quedan de acuerdo. */
     private static final Map<ResourceLocation, IconUV> KNOWN_DIM_ICON = Map.of(
             Level.NETHER.location(), IconUV.grid(1, 0),
             Level.END.location(), IconUV.grid(2, 0),
-            ResourceLocation.fromNamespaceAndPath("zenkai", "namek"), IconUV.grid(3, 0)
+            ResourceLocation.fromNamespaceAndPath("zenkai", "namek"), IconUV.grid(1, 1)
     );
     private static final IconUV DEFAULT_DIM_ICON = IconUV.grid(4, 0);
 

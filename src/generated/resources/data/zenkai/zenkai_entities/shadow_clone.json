@@ -3,6 +3,7 @@
   "archetype": "balanced",
   "entity": "zenkai:shadow_clone",
   "moveset": {
+    "can_fly": true,
     "ki_attacks": [
       {
         "type": "wave",
@@ -10,9 +11,74 @@
         "range": 20,
         "rgb": "0x552266",
         "size": 3
+      },
+      {
+        "type": "blast",
+        "cooldown": 70,
+        "range": 18,
+        "rgb": "0x552266",
+        "size": 4
+      },
+      {
+        "type": "lazer",
+        "cooldown": 50,
+        "damage_mult": 0.8,
+        "range": 22,
+        "rgb": "0x552266",
+        "size": 2
+      },
+      {
+        "type": "spiral",
+        "cooldown": 100,
+        "damage_mult": 1.1,
+        "range": 18,
+        "rgb": "0x552266",
+        "size": 3
+      },
+      {
+        "type": "burst",
+        "cooldown": 80,
+        "damage_mult": 0.7,
+        "range": 16,
+        "rgb": "0x552266",
+        "size": 2
+      },
+      {
+        "type": "disk",
+        "cooldown": 110,
+        "damage_mult": 1.2,
+        "range": 18,
+        "rgb": "0x552266",
+        "size": 3
       }
     ],
-    "melee": true
+    "melee": true,
+    "physical_attacks": [
+      {
+        "type": "dash_punch",
+        "cooldown": 80,
+        "damage_mult": 1.0,
+        "range": 4
+      },
+      {
+        "type": "heavy_blow",
+        "cooldown": 120,
+        "damage_mult": 1.3,
+        "range": 3
+      },
+      {
+        "type": "barrage",
+        "cooldown": 160,
+        "damage_mult": 0.6,
+        "range": 3
+      },
+      {
+        "type": "kiai",
+        "cooldown": 100,
+        "damage_mult": 1.0,
+        "range": 4
+      }
+    ]
   },
   "power_level": 1000,
   "rewards": {

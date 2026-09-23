@@ -17,8 +17,9 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 /**
- * Korin. Enseña las habilidades de puño (ki_fist, ki_infuse) y, reparte semillas
- * del ermitaño: es la razón real por la que un jugador sube su torre.
+ * Korin. Enseña las habilidades de puño (ki_fist, ki_infuse), la agilidad de subir su torre
+ * (run) y meditation (compartida con Kami y King Kai, ver zenkai_skills/meditation.json), y
+ * reparte semillas del ermitaño: es la razón real por la que un jugador sube su torre.
  * El reparto de senzu NO vive aquí. Vive en KorinSenzuManager (tanda 2), por la misma razón
  * por la que los requisitos de admisión viven en MasterManager: la entidad es el punto de
  * contacto, no la regla. Si el reparto estuviera en mobInteract, /zenkai o cualquier otro

@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-27T14:14:03.2165936	Block States: zenkai
+// 1.21.1	2026-09-15T21:48:42.3688696	Block States: zenkai
 a94084a882e8e97f815eec1bcc0de31216c39653 assets/zenkai/blockstates/ajisa_button.json
 1941064c3fa3ef874b3f58b16d1e5260b932f041 assets/zenkai/blockstates/ajisa_door.json
 7b6b9fc8b8aecaa2d034bb21ffc7f4b12a529146 assets/zenkai/blockstates/ajisa_fence.json
@@ -50,6 +50,7 @@ fb3f8650ad9a9a88fefbcba677812e2edac8dbe7 assets/zenkai/blockstates/namekian_reds
 a9832c8f6080f7e1fb8ed05b9d3be471f1d05ed1 assets/zenkai/blockstates/namek_crystal_ore.json
 c74b679ee8766f280255202ddd537892d3059f72 assets/zenkai/blockstates/npc_marker.json
 085da3a83534626c2fe0ab9a50a3504306c97bf2 assets/zenkai/blockstates/otherworld_cloud.json
+4db692861863f9c67e01a6d87ca2759bb2f40643 assets/zenkai/blockstates/piece_connector.json
 4058d02174538c9323be6a6043e3150e263bf72f assets/zenkai/blockstates/polished_sacred_stone.json
 42b396af5ea9a820c0ecf88e1c67102679fbbeb7 assets/zenkai/blockstates/polished_sacred_stone_slab.json
 51a1e4a601222dc18e476a9878f86fcadde99ea0 assets/zenkai/blockstates/polished_sacred_stone_stairs.json
@@ -216,6 +217,7 @@ ab3c1e0be92a9c087224b469ea72990d25c928ca assets/zenkai/models/block/namekian_sto
 2c01127babcc5b02093af1f57222d1bd0a8a0270 assets/zenkai/models/block/namek_crystal_ore.json
 98fa95348649c462aceb04942326535bd8140832 assets/zenkai/models/block/npc_marker.json
 a1ac85f9881b1633a6808b7bec08e9ae516e3e3d assets/zenkai/models/block/otherworld_cloud.json
+61f88dac83c929be69e18f66b016d3f9040bdab9 assets/zenkai/models/block/piece_connector.json
 49f4dc03062240406c4bd63559e06547318c0486 assets/zenkai/models/block/polished_sacred_stone.json
 7ea76de4a9bde62681add9570da02996e2ddfa57 assets/zenkai/models/block/polished_sacred_stone_slab.json
 39773a971f4af78f9e59eea36f2ca2a269012dfc assets/zenkai/models/block/polished_sacred_stone_slab_top.json

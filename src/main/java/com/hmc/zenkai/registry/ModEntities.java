@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.entity.master.KaioEntity;
 import com.hmc.zenkai.content.entity.master.KamiEntity;
 import com.hmc.zenkai.content.entity.master.KorinEntity;
+import com.hmc.zenkai.content.entity.master.ToriBotEntity;
 import com.hmc.zenkai.content.entity.misc.IsaacEntity;
 import com.hmc.zenkai.content.entity.misc.ShadowCloneEntity;
 import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
@@ -101,6 +102,10 @@ public class ModEntities {
     public static final Supplier<EntityType<KorinEntity>> KORIN =
             ENTITY_TYPES.register("korin", () -> EntityType.Builder.of(KorinEntity::new, MobCategory.MISC)
                     .sized(0.6f, 1.2f).build("korin"));
+
+    public static final Supplier<EntityType<ToriBotEntity>> TORIBOT =
+            ENTITY_TYPES.register("toribot", () -> EntityType.Builder.of(ToriBotEntity::new, MobCategory.MISC)
+                    .sized(0.7f, 1.6f).build("toribot"));
 
     /** "Train with your shadow" (ShadowTrainingManager): MISC = nunca spawnea sola de forma
      *  natural, solo la coloca el manager al empezar una sesión — mismo criterio que

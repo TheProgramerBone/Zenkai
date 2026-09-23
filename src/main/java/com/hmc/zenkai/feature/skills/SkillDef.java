@@ -20,13 +20,15 @@ import java.util.Map;
  *  - values: curvas con nombre, una entrada por nivel. Cada habilidad declara las que
  *    necesita (Fly usa ki_cost_mult y speed_mult; Ki Control ninguna, su fórmula es
  *    50 + 5*nivel) y el código las lee por nombre sin que este schema las conozca.
- *  - master: id del maestro que enseña el nivel 1. Null = nadie lo enseña (razas).
+ *  - masters: ids de los maestros que enseñan el nivel 1 (puede haber más de uno — dos maestros
+ *    pueden enseñar la misma habilidad; el jugador la compra ante cualquiera de ellos). Vacía =
+ *    nadie lo enseña (razas).
  * El EFECTO se implementa donde corresponda consultando
  * PlayerStatsAttachment#skills().level(id).
  * Claves de lang derivadas: skill.zenkai.&lt; id&gt; (nombre) y skill.zenkai.&lt; id&gt; .desc.
  */
 public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindReq,
-                       boolean purchasable, String master, Map<String, List<Double>> values,
+                       boolean purchasable, List<String> masters, Map<String, List<Double>> values,
                        boolean levelsFromForms) {
 
     private static volatile Map<String, SkillDef> REGISTRY = Map.of();
@@ -42,11 +44,14 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
     /** En orden de carga (orden de la lista en la GUI). */
     public static Collection<SkillDef> all() { return REGISTRY.values(); }
 
+    /** ¿Al menos un maestro la enseña? (equivalente al viejo "master != null"). */
+    public boolean hasMaster() { return masters != null && !masters.isEmpty(); }
+
     /** Las que enseña un maestro concreto, para su menú de compra. */
     public static List<SkillDef> taughtBy(String masterId) {
         List<SkillDef> out = new ArrayList<>();
         for (SkillDef d : REGISTRY.values()) {
-            if (masterId.equals(d.master())) out.add(d);
+            if (d.masters().contains(masterId)) out.add(d);
         }
         return out;
     }
@@ -78,7 +83,8 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                 buf.writeVarInt(def.mindReq().size());
                 for (int m : def.mindReq()) buf.writeVarInt(m);
                 buf.writeBoolean(def.purchasable());
-                buf.writeUtf(def.master() == null ? "" : def.master());
+                buf.writeVarInt(def.masters().size());
+                for (String m : def.masters()) buf.writeUtf(m);
                 buf.writeVarInt(def.values().size());
                 for (Map.Entry<String, List<Double>> e : def.values().entrySet()) {
                     buf.writeUtf(e.getKey());
@@ -95,7 +101,9 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                 List<Integer> mind = new ArrayList<>(n);
                 for (int i = 0; i < n; i++) mind.add(buf.readVarInt());
                 boolean purch = buf.readBoolean();
-                String master = buf.readUtf();
+                int mn = buf.readVarInt();
+                List<String> masters = new ArrayList<>(mn);
+                for (int i = 0; i < mn; i++) masters.add(buf.readUtf());
                 int vn = buf.readVarInt();
                 Map<String, List<Double>> vals = new LinkedHashMap<>();
                 for (int i = 0; i < vn; i++) {
@@ -107,7 +115,7 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                 }
                 boolean lff = buf.readBoolean();
                 return new SkillDef(id, tp, max, List.copyOf(mind), purch,
-                        master.isEmpty() ? null : master,
+                        List.copyOf(masters),
                         Collections.unmodifiableMap(vals), lff);
             });
 }
