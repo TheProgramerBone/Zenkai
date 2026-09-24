@@ -52,7 +52,8 @@ import java.util.Map;
 public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String master,
                            double damageMult, double kiCostMult, double staminaPct,
                            int chargeTicks, int cooldownTicks, double speed,
-                           int count, boolean defensive, int defaultRgb, double range, int animTicks) {
+                           int count, boolean defensive, int defaultRgb, double range, int animTicks,
+                           int animSet, String chargeSound, String releaseSound, String defaultRgb2) {
 
     public enum Kind {
         KI, PHYSICAL;
@@ -82,14 +83,14 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
 
     public static java.util.Collection<TechniqueDef> all() { return REGISTRY.values(); }
 
-    // StreamCodec manual: 14 campos, muy por encima de lo que cubre composite.
+    // StreamCodec manual: 20 campos, muy por encima de lo que cubre composite.
     public static final StreamCodec<FriendlyByteBuf, TechniqueDef> STREAM_CODEC = StreamCodec.of(
             (buf, d) -> {
                 buf.writeUtf(d.id());
                 buf.writeVarInt(d.kind().ordinal());
                 buf.writeVarInt(d.tpCost());
                 buf.writeVarInt(d.mindReq());
-                buf.writeUtf(d.master(), 32);
+                buf.writeUtf(d.master(), 64);
                 buf.writeDouble(d.damageMult());
                 buf.writeDouble(d.kiCostMult());
                 buf.writeDouble(d.staminaPct());
@@ -101,16 +102,21 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                 buf.writeInt(d.defaultRgb());
                 buf.writeDouble(d.range());
                 buf.writeVarInt(d.animTicks());
+                buf.writeVarInt(d.animSet());
+                buf.writeUtf(d.chargeSound(), 64);
+                buf.writeUtf(d.releaseSound(), 64);
+                buf.writeUtf(d.defaultRgb2(), 64);
             },
             buf -> {
                 String id = buf.readUtf();
                 int k = buf.readVarInt();
                 Kind kind = (k >= 0 && k < Kind.values().length) ? Kind.values()[k] : Kind.KI;
                 return new TechniqueDef(id, kind,
-                        buf.readVarInt(), buf.readVarInt(), buf.readUtf(32),
+                        buf.readVarInt(), buf.readVarInt(), buf.readUtf(64),
                         buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readVarInt(), buf.readVarInt(),
                         buf.readDouble(), buf.readVarInt(), buf.readBoolean(),
-                        buf.readInt(), buf.readDouble(), buf.readVarInt());
+                        buf.readInt(), buf.readDouble(), buf.readVarInt(),
+                        buf.readVarInt(), buf.readUtf(64), buf.readUtf(64), buf.readUtf(64));
             });
 }

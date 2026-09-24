@@ -67,6 +67,32 @@ public final class ZenkaiPalAnimations {
         return c;
     }
 
+    /** Último valor de ClientConfig.kiFirstPersonAnimations() aplicado (null = nunca). */
+    private static Boolean lastKiFpAnim = null;
+    private static PlayerAnimationController lastKiController = null;
+
+    /**
+     * Opción de cliente "animaciones de ki en 1ª persona" (por defecto encendida = lo de
+     * siempre). Apagada, la capa de ki pasa a FirstPersonMode.NONE, igual que la de vuelo: el
+     * resto de jugadores te siguen viendo cargar y disparar, pero tú ves las manos vanilla. Se
+     * aplica por tick desde aquí, sin reiniciar el juego, y solo escribe al cambiar.
+     * Consecuencia conocida: sin pasada corporal de 1ª persona no hay huesos de mano que leer,
+     * así que la bola de carga cae a su posición de respaldo delante de la cámara (ver
+     * .claude/docs/animaciones-y-modelos.md, "PAL filtra las capas...").
+     */
+    private static void applyKiFirstPersonMode(AbstractClientPlayer player) {
+        boolean on = com.hmc.zenkai.config.ClientConfig.kiFirstPersonAnimations();
+        PlayerAnimationController c = kiController(player);
+        if (c == null) return;
+        // Se compara también el CONTROLADOR: al reaparecer o reconectar, el jugador local es otra
+        // entidad con un controlador nuevo en THIRD_PERSON_MODEL, y un "ya aplicado" guardado
+        // solo como booleano se lo saltaría.
+        if (c == lastKiController && lastKiFpAnim != null && lastKiFpAnim == on) return;
+        lastKiController = c;
+        lastKiFpAnim = on;
+        c.setFirstPersonMode(on ? FirstPersonMode.THIRD_PERSON_MODEL : FirstPersonMode.NONE);
+    }
+
     /** Último valor aplicado al jugador local (evita reescribir las cinco capas cada tick). */
     private static Boolean lastFpPolicy = null;
 
@@ -76,6 +102,7 @@ public final class ZenkaiPalAnimations {
      * la skin racial, cambiar de forma sin cuerpo propio).
      */
     public static void applyFirstPersonPolicy(AbstractClientPlayer player) {
+        applyKiFirstPersonMode(player);
         boolean racial = com.hmc.zenkai.feature.race.ZenkaiFirstPersonBody.hasRacialBody(player);
         if (lastFpPolicy != null && lastFpPolicy == racial) return;
         lastFpPolicy = racial;

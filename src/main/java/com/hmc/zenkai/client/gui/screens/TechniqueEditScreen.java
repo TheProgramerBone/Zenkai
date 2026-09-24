@@ -104,6 +104,8 @@ public class TechniqueEditScreen extends Screen {
     // ── Borrador ─────────────────────────────────────────────────────────────
     private KiTechniqueType type;
     private int rgb;
+    /** Segundo color (interior), -1 = ninguno — ver KiVfxColors. */
+    private int rgb2 = -1;
     private int size;
     private TechniqueEffect effect;
     private int chargeIdx;   // índice en soundList(true), 0 = ninguno
@@ -120,6 +122,8 @@ public class TechniqueEditScreen extends Screen {
     private TextOnlyButton saveButton;
 
     @Nullable private ColorPickerWidget picker = null;
+    /** Qué color edita el picker abierto: false = principal, true = interior (rgb2). */
+    private boolean pickerInner = false;
     private int leftPos, topPos;
 
     public TechniqueEditScreen(int slot) {
@@ -131,6 +135,7 @@ public class TechniqueEditScreen extends Screen {
         if (existing != null) {
             type = existing.type();
             rgb = existing.rgb();
+            rgb2 = existing.rgb2();
             size = existing.size();
             effect = existing.effect();
             chargeIdx = indexOf(soundList(true), existing.chargeSound());
@@ -139,6 +144,7 @@ public class TechniqueEditScreen extends Screen {
         } else {
             type = KiTechniqueType.BLAST;
             rgb = type.defaultRgb();
+            rgb2 = type.defaultRgb2();
             size = KiTechnique.MIN_SIZE;
             effect = TechniqueEffect.NONE;
             chargeIdx = 0;
@@ -263,6 +269,7 @@ public class TechniqueEditScreen extends Screen {
                         if (!selectable(next)) return;
                         type = next;
                         rgb = type.defaultRgb();
+                        rgb2 = type.defaultRgb2();
                         rebuildWidgets();
                     });
         }
@@ -327,8 +334,25 @@ public class TechniqueEditScreen extends Screen {
 
         // Color: botón a la izquierda, swatch + icono a la derecha. El picker se abre fuera.
         addRenderableWidget(new TextOnlyButton(x, y, 60, 14,
-                Component.translatable("screen.zenkai.technique.color"), this::togglePicker)
+                Component.translatable("screen.zenkai.technique.color"), () -> togglePicker(false))
                 .onPanel());
+        // Segundo color (interior de la energía). Abre el MISMO picker apuntando a rgb2; la
+        // primera vez parte del interior que se vería sin él (el derivado del principal), así
+        // que abrirlo y cerrarlo sin tocar nada no cambia el aspecto. La X lo quita.
+        TextOnlyButton inner = new TextOnlyButton(x + 64, y, 60, 14,
+                Component.translatable("screen.zenkai.technique.color2"), () -> togglePicker(true))
+                .onPanel();
+        inner.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.technique.color2.desc")));
+        addRenderableWidget(inner);
+        if (rgb2 >= 0) {
+            TextOnlyButton clear = new TextOnlyButton(x + 126, y, 12, 14, Component.literal("\u00D7"), () -> {
+                rgb2 = -1;
+                if (pickerInner) closePicker();
+                rebuildWidgets();
+            }).onPanel();
+            clear.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.technique.color2.clear")));
+            addRenderableWidget(clear);
+        }
         y += ROW_H;
 
         List<ResourceLocation> charges = soundList(true);
@@ -432,15 +456,19 @@ public class TechniqueEditScreen extends Screen {
         PlayerStatsAttachment a = att();
         if (a != null) {
             if (slot < 0) {
-                a.techniques().addSlot(new KiTechnique(n, type, rgb, size, effect,
-                        cs, rs, animSet));
+                KiTechnique created = new KiTechnique(n, type, rgb, size, effect, cs, rs, animSet);
+                created.setRgb2(rgb2);
+                a.techniques().addSlot(created);
             } else {
                 KiTechnique ex = a.techniques().slot(slot);
-                if (ex != null) ex.set(n, type, rgb, size, effect, cs, rs, animSet);
+                if (ex != null) {
+                    ex.set(n, type, rgb, size, effect, cs, rs, animSet);
+                    ex.setRgb2(rgb2);
+                }
             }
         }
         PacketDistributor.sendToServer(TechniquePacket.save(
-                slot, type, nameBox.getValue(), rgb, size, effect, cs, rs, animSet));
+                slot, type, nameBox.getValue(), rgb, size, effect, cs, rs, animSet, rgb2));
         close();
     }
 
@@ -453,8 +481,20 @@ public class TechniqueEditScreen extends Screen {
 
     // ── Color picker, fuera del panel ────────────────────────────────────────
 
-    private void togglePicker() {
-        if (picker != null) { closePicker(); return; }
+    private void togglePicker(boolean inner) {
+        boolean sameOpen = picker != null && pickerInner == inner;
+        closePicker();
+        if (sameOpen) return;
+        pickerInner = inner;
+        if (inner && rgb2 < 0) {
+            // Punto de partida = el interior que ya se veía (capa caliente derivada).
+            float[] h = com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors.derivedHot(
+                    ((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f);
+            rgb2 = (Math.round(h[0] * 255) << 16) | (Math.round(h[1] * 255) << 8) | Math.round(h[2] * 255);
+            rebuildWidgets(); // enseña la X de quitar (el picker ya estaba cerrado: se abre abajo)
+            openPicker();
+            return;
+        }
         openPicker();
     }
 
@@ -463,8 +503,11 @@ public class TechniqueEditScreen extends Screen {
         int px = leftPos + BG_W + 8;
         if (px + ColorPickerWidget.TOTAL_W > this.width - 4)
             px = leftPos - ColorPickerWidget.TOTAL_W - 8;
-        picker = new ColorPickerWidget(px, topPos + Y_ROWS, 0xFF000000 | rgb,
-                "Ki Color", argb -> rgb = argb & 0xFFFFFF);
+        picker = pickerInner
+                ? new ColorPickerWidget(px, topPos + Y_ROWS, 0xFF000000 | Math.max(0, rgb2),
+                        "Inner Color", argb -> rgb2 = argb & 0xFFFFFF)
+                : new ColorPickerWidget(px, topPos + Y_ROWS, 0xFF000000 | rgb,
+                        "Ki Color", argb -> rgb = argb & 0xFFFFFF);
         addRenderableWidget(picker);
     }
 
@@ -680,6 +723,10 @@ public class TechniqueEditScreen extends Screen {
         KiTechnique previewTech = new KiTechnique(" ", type, rgb, size, effect);
         g.fill(right - 40, sy + 1, right - 26, sy + 13, ZenkaiPalette.BORDER_IN);
         g.fill(right - 39, sy + 2, right - 27, sy + 12, 0xFF000000 | rgb);
+        // Swatch del interior, a la izquierda del principal; hueco (solo marco) sin segundo color.
+        g.fill(right - 58, sy + 1, right - 44, sy + 13, ZenkaiPalette.BORDER_IN);
+        g.fill(right - 57, sy + 2, right - 45, sy + 12,
+                rgb2 >= 0 ? 0xFF000000 | rgb2 : ZenkaiPalette.BEIGE_DEEP);
         TechniqueIcons.draw(g, right - 18, sy - 3, previewTech);
 
         int cx = leftPos + BG_W / 2;
@@ -760,10 +807,12 @@ public class TechniqueEditScreen extends Screen {
             g.pose().mulPose(Axis.XP.rotationDegrees(KiVfxProjectileRenderer.DISK_CANT_DEGREES));
             g.pose().mulPose(Axis.ZP.rotationDegrees(t * 8f));
         }
+        com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors.begin(rgb2);
         KiVfxCompositeRenderer.render(g.bufferSource(), visual,
                 asDisk ? KiVfxGeometry.shell(visual) : KiVfxGeometry.chargeSphere(),
                 g.pose(), diameterPx, cr, cg, cb);
         g.flush();
+        com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors.begin(-1);
         g.pose().popPose();
     }
 

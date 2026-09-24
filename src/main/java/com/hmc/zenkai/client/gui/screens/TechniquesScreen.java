@@ -653,7 +653,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         // Mismos valores de partida que usa el servidor al enseñarla (ver
         // TechniquePacket.handleUnlock): el color se fuerza igualmente en handleSave.
         PacketDistributor.sendToServer(TechniquePacket.save(-1, type, "", type.defaultRgb(), 3,
-                TechniqueEffect.NONE, null, null, 1));
+                TechniqueEffect.NONE, null, null, 1, type.defaultRgb2()));
     }
 
     /**

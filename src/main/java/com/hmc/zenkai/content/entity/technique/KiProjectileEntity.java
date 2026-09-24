@@ -68,6 +68,9 @@ public class KiProjectileEntity extends Projectile {
             SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Integer> DATA_RGB =
             SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.INT);
+    /** Segundo color (interior), -1 = ninguno. Ver KiTechnique.rgb2. */
+    private static final EntityDataAccessor<Integer> DATA_RGB2 =
+            SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Byte> DATA_SIZE =
             SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.BYTE);
     /** Ver {@link #freeze(Vec3)} — "/zenkai debug kivfx" congela una copia en el aire para
@@ -105,6 +108,17 @@ public class KiProjectileEntity extends Projectile {
     //    FlightMovement.refSpeed: no derivar "cómo debería ser esto ahora" de un valor que
     //    cambia tick a tick). ──
     private Vec3 flightRight, flightUp;
+
+    // ── Punto de disparo del HAZ ANCLADO (SOLO cliente, ver KiVfxProfile.column): de dónde sale
+    //    el tubo que se alarga hasta la cabeza. Se fija la PRIMERA vez que el renderer lo pide
+    //    (posición del centro al aparecer en el cliente, que es la de las manos del dueño) y no
+    //    se mueve después: si siguiera al dueño, un haz disparado en vuelo se doblaría con él. ──
+    private Vec3 beamOrigin;
+
+    public Vec3 beamOrigin(Vec3 ifUnset) {
+        if (beamOrigin == null) beamOrigin = ifUnset;
+        return beamOrigin;
+    }
 
     /** @return [derecha, arriba] — perpendiculares entre sí y a la dirección de vuelo fijada en
      *  el primer uso. */
@@ -190,12 +204,18 @@ public class KiProjectileEntity extends Projectile {
     }
 
     public int rgb()  { return this.entityData.get(DATA_RGB); }
+    public int rgb2() { return this.entityData.get(DATA_RGB2); }
+
+    /** Tras configure(): el segundo color no está en su firma para no tocar a los que no lo
+     *  tienen (NPCs, KiAttackGoal). */
+    public void setRgb2(int v) { this.entityData.set(DATA_RGB2, v < 0 ? -1 : (v & 0xFFFFFF)); }
     public int size() { return this.entityData.get(DATA_SIZE); }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(DATA_TYPE, (byte) KiTechniqueType.BLAST.ordinal());
         builder.define(DATA_RGB, 0xFFFFFF);
+        builder.define(DATA_RGB2, -1);
         builder.define(DATA_SIZE, (byte) 1);
         builder.define(DATA_FROZEN, false);
     }

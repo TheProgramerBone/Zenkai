@@ -57,7 +57,16 @@ public record KiVfxProfile(
          *  plana — ver {@link KiVfxGeometry#helixAngleFromTip}. Solo tiene sentido con
          *  {@code shape() == HELIX}, pero es un flag EXPLÍCITO, no una inferencia por forma: deja
          *  a un futuro HELIX no-espiral no llevar esta estela sin ramificar por tipo. */
-        boolean helixTrail
+        boolean helixTrail,
+        /** true = HAZ ANCLADO (modelo de dragonminez KiWaveRenderer): además de la cabeza, un
+         *  tubo 3D real que va desde el punto de disparo hasta la cabeza y se alarga con ella —
+         *  ver KiVfxProjectileRenderer.renderColumn. Sustituye a la estela en cintas cruzadas
+         *  ({@link KiRibbon}), la causa de las "flechas de papel" vistas desde atrás o a lo largo
+         *  del eje. Solo BEAM. */
+        boolean column,
+        /** Giro propio en grados por tick alrededor del eje vertical — rotación interna visible
+         *  de las esferas grandes (Death Ball, Supernova, Genki Dama). 0 = quieta. */
+        float spin
 ) {
     /** Cómo decide el fragment shader dónde está el núcleo de la CÁSCARA. El ordinal viaja como
      *  uniform float (ZenkaiShape en ki_energy.fsh). */
@@ -94,18 +103,23 @@ public record KiVfxProfile(
             float detailStrength,
             /** Qué textura usa la capa de detalle cuando detailStrength > 0 — irrelevante en
              *  0. Ver {@link DetailTexture}. */
-            DetailTexture detailTexture
+            DetailTexture detailTexture,
+            /** Suelo de cobertura del interior (uniform ZenkaiFill). 0 = hueco de frente, como
+             *  cualquier RIM (BARRIER). Death Ball lo usa para que su interior sea materia oscura
+             *  y solo el limbo brille — ver deathball_1-4 y ki_energy.fsh. */
+            float fill
     ) {
         public float bandMode() { return band.ordinal(); }
     }
 
-    /** Núcleo explícito: malla pequeña, aparte, aditiva. Ver la cabecera de la clase.
+    /** Núcleo explícito: malla pequeña, aparte. Ver la cabecera de la clase.
      *  @param offsetX, offsetY desplazamiento del núcleo respecto al centro, como fracción del
-     *         tamaño de la técnica — 0,0 = centrado (la mayoría de tipos). Un núcleo DESPLAZADO
-     *         hacia una esquina, en formas RIM (Death Ball, Supernova), imita el "sol con brillo
-     *         descentrado" de las referencias (deathball_1-4, Supernova_1-6): un fresnel RIM
-     *         simétrico por sí solo nunca produce ese punto caliente fuera de centro, hace falta
-     *         geometría real desplazada — ver KiVfxCompositeRenderer.drawCore. */
+     *         tamaño de la técnica — 0,0 = centrado. HOY NINGUNA FILA LO USA (2026-09-24): se
+     *         introdujo para un "sol descentrado" en Death Ball/Supernova, pero al revisar de
+     *         verdad deathball_1-4 y Supernova_1-6 ninguna tiene un disco blanco — y en Supernova
+     *         el núcleo se SALÍA de la esfera por pura geometría (desplazamiento 0.256 + radio
+     *         0.275 > radio 0.5 de la cáscara). Se conserva el mecanismo; si se reactiva, la suma
+     *         desplazamiento + 0.5·scale tiene que quedar holgadamente por debajo de 0.5. */
     public record Core(float scale, float alpha, float offsetX, float offsetY) {
         public boolean enabled() { return alpha > 0f; }
     }
@@ -143,45 +157,59 @@ public record KiVfxProfile(
     private static final KiVfxProfile[] BY_TYPE = new KiVfxProfile[KiTechniqueType.values().length];
 
     static {
-        // Los números de esta tabla son los ya calibrados a ojo contra las referencias de
-        // .claude/imagenes/ (ver .claude/pendiente/technique-visuals-referencia-mods.md) — se
-        // portan tal cual a la nueva estructura de componentes; lo que cambia es la
-        // ORGANIZACIÓN (Shell/Core/Envelope/Ribbon/Rays/Halo/Particles en vez de treinta campos
-        // sueltos), no la dirección de arte. Recalibrar en juego sigue pendiente igual que antes.
+        // PASADA DE DIRECCIÓN DE ARTE (2026-09-24), contra las imágenes reales de .claude/imagenes/
+        // (no de memoria). Lo que dicen las referencias, y cómo se tradujo:
+        //  - Haces (kamehameha_1-3, finalflash_2/4): el centro SÍ es blanco y ancho (~60 % del
+        //    grosor), pero SIEMPRE rodeado de una capa cian/amarilla saturada y un contorno dentado
+        //    más profundo. El blanco sin esa capa intermedia es lo que se leía como "mancha". La
+        //    capa la pone ahora la rampa de cuatro bandas de ki_energy.fsh (`hot`); aquí coreWhite
+        //    baja un poco para que el centro no se trague a la capa caliente. Y cada BEAM es haz
+        //    ANCLADO (column): un tubo 3D desde el punto de disparo, sin cintas cruzadas.
+        //  - Death Ball (deathball_1-4): NO hay núcleo blanco en ninguna. Interior violeta oscuro
+        //    moteado, limbo magenta brillante y dentado, arcos eléctricos, rayos hacia fuera.
+        //  - Supernova (Supernova_1-6): NO hay disco blanco (salvo un destello en _5). Superficie
+        //    solar granulada, centro amarillo, limbo naranja-rojo, silueta NÍTIDA.
+        //  - Genki Dama (spiritbomb_1-3): centro blanco grande, pero cáscara celeste translúcida con
+        //    manchas azules y filo más claro — el blanco NO llega al borde.
+        //  - Kienzan (kienzan_1-3): centro blanco, filo amarillo saturado, contorno fino más oscuro.
 
         put(KiTechniqueType.WAVE, b(KiVfxShape.BEAM)
-                .mesh(3.6f, 0.20f, 0.30f).anchored().shell(0.58f).envelope(1.55f, 0.17f).core(0.62f, 0.85f)
-                .bands(0.72f, 0.30f, 0.05f).tone(0.94f, 0.50f).edge(0.30f).wobble(0.70f)
-                .halo(0f, 0f).trail(18, 2.0f, 0.72f, 0.30f, 1.1f).sparks(0.55f));
+                .mesh(3.6f, 0.20f, 0.30f).anchored().column().shell(0.62f).envelope(1.55f, 0.17f).core(0.60f, 0.85f)
+                .bands(0.72f, 0.30f, 0.05f).tone(0.88f, 0.45f).edge(0.30f).wobble(0.80f)
+                .halo(0f, 0f).sparks(0.55f));
 
         put(KiTechniqueType.LAZER, b(KiVfxShape.BEAM)
-                .mesh(7.0f, 0.075f, 0.12f).anchored().shell(0.68f).envelope(2.0f, 0.13f).core(0.55f, 0.90f)
-                .bands(0.62f, 0.26f, 0.04f).tone(0.97f, 0.60f).edge(0.28f).wobble(0.40f)
-                .halo(0f, 0f).trail(34, 0.9f, 0.85f, 0.30f, 2.2f).sparks(0.20f));
+                .mesh(7.0f, 0.075f, 0.12f).anchored().column().shell(0.70f).envelope(2.0f, 0.13f).core(0.55f, 0.90f)
+                .bands(0.62f, 0.26f, 0.04f).tone(0.92f, 0.55f).edge(0.28f).wobble(0.40f)
+                .halo(0f, 0f).sparks(0.20f));
 
         put(KiTechniqueType.SPIRAL, b(KiVfxShape.HELIX)
-                .mesh(2.4f, 0.28f, 0.26f).anchored().shell(0.56f).envelope(1.32f, 0.15f).core(0.62f, 0.85f)
-                .bands(0.70f, 0.28f, 0.06f).tone(0.92f, 0.48f).edge(0.28f).wobble(1.00f)
+                .mesh(2.4f, 0.28f, 0.26f).anchored().shell(0.58f).envelope(1.32f, 0.15f).core(0.60f, 0.82f)
+                .bands(0.70f, 0.28f, 0.06f).tone(0.82f, 0.48f).edge(0.28f).wobble(1.00f)
                 .halo(0f, 0f).trail(26, 1.3f, 0.68f, 0.32f, 1.5f).helixTrail().sparks(0.65f));
 
         put(KiTechniqueType.BLAST, b(KiVfxShape.SPHERE)
-                .shell(0.50f).envelope(1.35f, 0.15f).core(0.62f, 0.85f)
-                .bands(0.75f, 0.30f, 0.05f).tone(0.90f, 0.55f).edge(0.32f).wobble(0.75f)
+                .shell(0.54f).envelope(1.35f, 0.15f).core(0.55f, 0.80f)
+                .bands(0.75f, 0.30f, 0.05f).tone(0.82f, 0.50f).edge(0.32f).wobble(0.75f)
                 .halo(2.2f, 0.24f).trail(12, 1.0f, 0.70f, 0.30f, 1.0f).detail(0.30f).sparks(0.35f));
 
         put(KiTechniqueType.BIG_BLAST, b(KiVfxShape.SPHERE)
-                .shell(0.46f).envelope(1.45f, 0.16f).core(0.66f, 0.88f)
-                .bands(0.78f, 0.32f, 0.04f).tone(0.92f, 0.48f).edge(0.36f).wobble(0.55f)
+                .shell(0.50f).envelope(1.45f, 0.16f).core(0.58f, 0.82f)
+                .bands(0.78f, 0.32f, 0.04f).tone(0.84f, 0.45f).edge(0.36f).wobble(0.55f)
                 .halo(2.8f, 0.26f).trail(9, 1.5f, 0.42f, 0f, 0.6f).sparks(0.85f));
 
         put(KiTechniqueType.BURST, b(KiVfxShape.SPHERE)
-                .shell(0.52f).envelope(1.30f, 0.13f).core(0.60f, 0.85f)
-                .bands(0.72f, 0.28f, 0.06f).tone(0.88f, 0.55f).edge(0.30f).wobble(0.80f)
+                .shell(0.56f).envelope(1.30f, 0.13f).core(0.55f, 0.80f)
+                .bands(0.72f, 0.28f, 0.06f).tone(0.80f, 0.50f).edge(0.30f).wobble(0.80f)
                 .halo(1.8f, 0.20f).trail(8, 0.85f, 0.60f, 0.30f, 1.0f).sparks(0.18f));
 
+        // DISK: el canto cae en g≈0.58 (DISK_RIM_U) — con bandCore 0.72 queda en la capa CALIENTE
+        // (amarillo saturado en kienzan_1-3) en vez de en el blanco; el blanco se queda en el
+        // centro de las caras. outlineDark 0.50: el aro exterior de las caras se oscurece, el
+        // contorno fino de kienzan_2.
         put(KiTechniqueType.DISK, b(KiVfxShape.DISK)
-                .band(Band.RADIAL).shell(0.74f).envelope(1.12f, 0.16f).core(0.62f, 0.90f)
-                .bands(0.60f, 0.26f, 0.06f).tone(0.92f, 0.78f).edge(0.10f).wobble(0.45f)
+                .band(Band.RADIAL).shell(0.78f).envelope(1.12f, 0.16f).core(0.62f, 0.90f)
+                .bands(0.72f, 0.30f, 0.06f).tone(0.80f, 0.50f).edge(0.10f).wobble(0.45f)
                 .halo(0f, 0f).trail(0, 0f, 0f, 0f, 0f).sparks(0.30f));
 
         put(KiTechniqueType.BARRIER, b(KiVfxShape.SPHERE)
@@ -196,56 +224,64 @@ public record KiVfxProfile(
         // significa NÚCLEO BLANCO en toda la pantalla.
 
         put(KiTechniqueType.EXPLOSION, b(KiVfxShape.SPHERE)
-                .shell(0.46f).envelope(1.50f, 0.18f).core(0.68f, 0.90f)
-                .bands(0.76f, 0.32f, 0.04f).tone(0.94f, 0.50f).edge(0.38f).wobble(1.10f)
+                .shell(0.48f).envelope(1.50f, 0.18f).core(0.62f, 0.85f)
+                .bands(0.76f, 0.32f, 0.04f).tone(0.86f, 0.45f).edge(0.38f).wobble(1.10f)
                 .halo(3.0f, 0.30f).trail(0, 0f, 0f, 0f, 0f).sparks(1.20f)
                 .backfaceCull());
 
+        // SPIRIT_BOMB: bandCore 0.85 → 0.72 y coreWhite 0.96 → 0.82: antes el blanco cubría ~85 %
+        // del radio y la bola era "una mancha blanca con rayos" (vídeo 10-01-17, 8 s y 16-19 s).
+        // Ahora el blanco ocupa el centro y deja un anillo celeste (capa caliente) y un filo azul
+        // legibles; detail() da las manchas de spiritbomb_2 y spin() las hace girar.
         put(KiTechniqueType.SPIRIT_BOMB, b(KiVfxShape.SPHERE)
-                .shell(0.52f).envelope(1.45f, 0.20f).core(0.70f, 0.92f)
-                .bands(0.85f, 0.34f, 0.05f).tone(0.96f, 0.40f).edge(0.30f).wobble(0.60f)
-                .halo(2.6f, 0.28f).trail(22, 2.0f, 0.55f, 0.35f, 0.8f)
+                .shell(0.56f).envelope(1.40f, 0.18f).core(0.52f, 0.70f)
+                .bands(0.72f, 0.30f, 0.05f).tone(0.82f, 0.42f).edge(0.30f).wobble(0.60f)
+                .halo(2.6f, 0.24f).trail(22, 2.0f, 0.55f, 0.35f, 0.8f).detail(0.35f).spin(0.5f)
                 .rays(6, 2.2f, 0.12f).sparks(1.00f));
 
         put(KiTechniqueType.KAMEHAMEHA, b(KiVfxShape.BEAM)
-                .mesh(4.2f, 0.26f, 0.34f).anchored().shell(0.62f).envelope(1.60f, 0.20f).core(0.64f, 0.88f)
-                .bands(0.70f, 0.30f, 0.05f).tone(0.95f, 0.45f).edge(0.34f).wobble(1.30f)
-                .halo(0f, 0f).trail(20, 2.6f, 0.75f, 0.32f, 1.15f).sparks(0.70f));
+                .mesh(4.2f, 0.26f, 0.34f).anchored().column().shell(0.66f).envelope(1.60f, 0.20f).core(0.62f, 0.88f)
+                .bands(0.70f, 0.30f, 0.05f).tone(0.92f, 0.42f).edge(0.34f).wobble(1.30f)
+                .halo(0f, 0f).sparks(0.70f));
 
         put(KiTechniqueType.FINAL_FLASH, b(KiVfxShape.BEAM)
-                .mesh(4.6f, 0.42f, 0.46f).anchored().shell(0.64f).envelope(1.75f, 0.22f).core(0.68f, 0.90f)
-                .bands(0.74f, 0.32f, 0.05f).tone(0.97f, 0.42f).edge(0.32f).wobble(1.00f)
-                .halo(0f, 0f).trail(16, 3.2f, 0.70f, 0.30f, 1.0f).chargeSparks(0.50f).sparks(0.65f));
+                .mesh(4.6f, 0.42f, 0.46f).anchored().column().shell(0.66f).envelope(1.75f, 0.22f).core(0.66f, 0.90f)
+                .bands(0.74f, 0.32f, 0.05f).tone(0.94f, 0.40f).edge(0.32f).wobble(1.00f)
+                .halo(0f, 0f).chargeSparks(0.50f).sparks(0.65f));
 
         put(KiTechniqueType.GALICK_GUN, b(KiVfxShape.BEAM)
-                .mesh(4.2f, 0.27f, 0.34f).anchored().shell(0.70f).envelope(1.55f, 0.19f).core(0.62f, 0.87f)
-                .bands(0.70f, 0.30f, 0.05f).tone(0.93f, 0.48f).edge(0.30f).wobble(0.85f)
-                .halo(0f, 0f).trail(18, 2.4f, 0.72f, 0.30f, 1.1f).sparks(0.60f));
+                .mesh(4.2f, 0.27f, 0.34f).anchored().column().shell(0.70f).envelope(1.55f, 0.19f).core(0.60f, 0.87f)
+                .bands(0.70f, 0.30f, 0.05f).tone(0.90f, 0.45f).edge(0.30f).wobble(0.85f)
+                .halo(0f, 0f).sparks(0.60f));
 
         put(KiTechniqueType.DEATH_BEAM, b(KiVfxShape.BEAM)
-                .mesh(8.0f, 0.05f, 0.08f).anchored().shell(0.72f).envelope(2.1f, 0.12f).core(0.55f, 0.92f)
-                .bands(0.65f, 0.28f, 0.04f).tone(0.98f, 0.65f).edge(0.26f).wobble(0.30f)
-                .halo(0f, 0f).trail(40, 0.7f, 0.88f, 0.28f, 2.4f).sparks(0.15f));
+                .mesh(8.0f, 0.05f, 0.08f).anchored().column().shell(0.74f).envelope(2.1f, 0.12f).core(0.55f, 0.92f)
+                .bands(0.65f, 0.28f, 0.04f).tone(0.95f, 0.60f).edge(0.26f).wobble(0.30f)
+                .halo(0f, 0f).sparks(0.15f));
 
-        // DEATH_BALL: RIM sigue dando el filo crepitante (deathball_1-4), pero las referencias
-        // TODAS muestran además un punto blanco-caliente claramente DESCENTRADO (el "sol" visto
-        // desde un ángulo) — un RIM simétrico por sí solo no puede darlo. coreOffset() añade un
-        // núcleo pequeño y desplazado hacia una esquina, sin tocar el fresnel del filo.
+        // DEATH_BALL: SIN núcleo explícito (antes: núcleo pequeño descentrado que se leía como
+        // "un ojo pegado a la esfera"). Composición de deathball_1-4: RIM para el limbo, fill()
+        // para que el interior sea materia oscura en vez de hueco, outlineDark bajo (violeta casi
+        // negro), detail() para el moteado, coreWhite bajo para que el limbo sea MAGENTA caliente
+        // y no blanco. Sin envolvente: compartiría el relleno y pondría una neblina oscura
+        // alrededor — el resplandor exterior lo dan halo + bloom.
         put(KiTechniqueType.DEATH_BALL, b(KiVfxShape.SPHERE)
-                .band(Band.RIM).shell(0.55f).envelope(1.60f, 0.22f).core(0.30f, 0.75f).coreOffset(-0.22f, 0.26f)
-                .bands(0.58f, 0.24f, 0.05f).tone(0.75f, 0.35f).edge(0.34f).wobble(1.80f)
-                .halo(2.4f, 0.20f).trail(0, 0f, 0f, 0f, 0f)
+                .band(Band.RIM).shell(0.78f).envelope(0f, 0f).core(0f, 0f).fill(0.82f)
+                .bands(0.58f, 0.22f, 0.04f).tone(0.25f, 0.28f).edge(0.30f).wobble(1.80f)
+                .detail(0.60f).spin(1.2f)
+                .halo(2.4f, 0.24f).trail(0, 0f, 0f, 0f, 0f)
                 .rays(8, 2.6f, 0.18f).chargeSparks(0.60f).sparks(1.40f));
 
-        // SUPERNOVA: detailTexture LAVA (grietas, ver KiVfxRenderTypes) en vez de la genérica —
-        // Supernova_5/6 muestran placas agrietadas con luz por dentro, no un ruido difuso.
-        // coreOffset(): mismo "sol descentrado" que Death Ball, más sutil (núcleo más grande,
-        // desplazamiento menor) porque aquí ya hay bandCore casi lleno debajo.
+        // SUPERNOVA: SIN núcleo explícito (antes: disco blanco descentrado que se SALÍA de la
+        // esfera naranja, vídeo 10-01-17 a 4 s). La capa caliente de la rampa pone el centro
+        // amarillo (Supernova_2/3), coreWhite 0.20 solo aclara la mitad del centro, outlineDark
+        // 0.55 da el limbo rojo de Supernova_1, detail LAVA la granulación y edge bajo la silueta
+        // nítida de las seis referencias.
         put(KiTechniqueType.SUPERNOVA, b(KiVfxShape.SPHERE)
-                .shell(0.90f).envelope(1.15f, 0.10f).core(0.55f, 0.85f).coreOffset(-0.16f, 0.20f)
-                .bands(0.92f, 0.85f, 0.06f).tone(0.55f, 0.40f).edge(0.24f).wobble(0.45f)
+                .shell(0.95f).envelope(1.10f, 0.10f).core(0f, 0f)
+                .bands(0.92f, 0.40f, 0.06f).tone(0.20f, 0.55f).edge(0.24f).wobble(0.45f)
                 .halo(2.0f, 0.20f).trail(0, 0f, 0f, 0f, 0f)
-                .detail(0.70f).lavaDetail().rays(6, 1.8f, 0.14f).sparks(0.25f));
+                .detail(0.75f).lavaDetail().spin(0.8f).rays(6, 1.8f, 0.12f).sparks(0.25f));
 
         // Red de seguridad: un tipo nuevo sin entrada se dibuja como una bola estándar en vez de
         // reventar con un null.
@@ -356,6 +392,9 @@ public record KiVfxProfile(
         private float chargeSparkRate = 0f;
         private int rayCount = 0;
         private float rayLength = 0f, rayAlpha = 0f;
+        private float fill = 0f;
+        private boolean column = false;
+        private float spin = 0f;
 
         Builder(KiVfxShape shape) { this.shape = shape; }
 
@@ -386,6 +425,10 @@ public record KiVfxProfile(
         Builder lavaDetail() { this.detailTexture = DetailTexture.LAVA; return this; }
         Builder sparks(float v) { this.sparkRate = v; return this; }
         Builder chargeSparks(float v) { this.chargeSparkRate = v; return this; }
+        Builder fill(float v) { this.fill = v; return this; }
+        /** Haz anclado, ver {@link KiVfxProfile#column()}. Implica sin estela de cintas. */
+        Builder column() { this.column = true; return trail(0, 0f, 0f, 0f, 0f); }
+        Builder spin(float degPerTick) { this.spin = degPerTick; return this; }
         Builder rays(int count, float length, float alpha) {
             rayCount = count; rayLength = length; rayAlpha = alpha; return this;
         }
@@ -394,14 +437,14 @@ public record KiVfxProfile(
             return new KiVfxProfile(shape,
                     new Shell(meshLength, meshRadius, headScale, shellAlpha, band,
                             bandCore, bandBorder, bandOutline, coreWhite, outlineDark,
-                            edgeFade * EDGE_FADE_MUL, wobble, detailStrength, detailTexture),
+                            edgeFade * EDGE_FADE_MUL, wobble, detailStrength, detailTexture, fill),
                     new Core(coreScale, coreAlpha, coreOffsetX, coreOffsetY),
                     new Envelope(envelopeScale, envelopeAlpha * ENVELOPE_ALPHA_MUL),
                     new Halo(haloScale * HALO_SCALE_MUL, haloAlpha * HALO_ALPHA_MUL),
                     new Ribbon(trailPoints, trailWidth, trailAlpha, trailInnerMul, trailScroll),
                     new Rays(rayCount, rayLength, rayAlpha),
                     new Particles(sparkRate, chargeSparkRate),
-                    anchorTip, backfaceCull, helixTrail);
+                    anchorTip, backfaceCull, helixTrail, column, spin);
         }
     }
 }

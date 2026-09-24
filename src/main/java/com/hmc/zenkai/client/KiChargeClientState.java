@@ -18,22 +18,25 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class KiChargeClientState {
     private KiChargeClientState() {}
 
+    /** @param rgb2 segundo color (interior) o -1, ver KiVfxColors. */
     public record Charge(int rgb, int size, KiTechniqueType type,
-                         TechniquePosition position, long startTick) {}
+                         TechniquePosition position, long startTick, int rgb2) {}
 
     private static final Map<Integer, Charge> ACTIVE = new ConcurrentHashMap<>();
 
     /** Ticks que la esfera sigue visible tras soltarse, encogiendo en su ÚLTIMA posición.
-     *  El proyectil nace en el servidor, que no tiene huesos, así que sale del offset estático
-     *  de TechniquePosition: en el Kamehameha eso es medio bloque de salto en un frame. Tres
-     *  ticks de desvanecido tapan el corte sin que se lea como una segunda esfera. */
+     *  El proyectil nace en el servidor, que no tiene huesos: desde 2026-09-24 sale del centro
+     *  de esta misma esfera (pista de KiFirePacket, ver releaseOrigin), salvo en los sets cuyo
+     *  release mueve las manos (Kamehameha, Galick Gun), que siguen usando el offset estático
+     *  de TechniquePosition. Tres ticks de desvanecido tapan el corte que queda en esos casos
+     *  sin que se lea como una segunda esfera. */
     public static final int FADE_TICKS = 3;
 
     /** Esfera apagándose. Congela el sitio y el tamaño que tenía al soltarse.
      *  Lleva el tipo de técnica por la misma razón que {@link Charge}: el renderer dibuja el
      *  mismo cuerpo con {@code KiVfxProfile}, y sin el tipo el apagado caería siempre en la técnica
      *  por defecto en vez de conservar sus bandas y alfas propias. */
-    public record Fade(int rgb, Vec3 origin, float radius, KiTechniqueType type, long startTick) {}
+    public record Fade(int rgb, Vec3 origin, float radius, KiTechniqueType type, long startTick, int rgb2) {}
 
     private static final Map<Integer, Fade> FADING = new ConcurrentHashMap<>();
 
@@ -44,6 +47,16 @@ public final class KiChargeClientState {
 
     public static void rememberDrawn(int entityId, Vec3 origin, float radius) {
         LAST.put(entityId, new Last(origin, radius));
+    }
+
+    /** Centro de la bola de carga dibujada este disparo, o null si no hay. Lo manda KiFirePacket
+     *  como pista para que el proyectil nazca donde el jugador VE la energía (ver
+     *  KiFirePacket.spawnCenter). Solo vale con una carga ACTIVA: LAST no se borra al soltar y,
+     *  sin esa condición, un disparo sin bola pintada reutilizaría la posición de otro. */
+    public static Vec3 releaseOrigin(Player p) {
+        if (!ACTIVE.containsKey(p.getId())) return null;
+        Last l = LAST.get(p.getId());
+        return l == null ? null : l.origin();
     }
 
     public static Fade fadeOf(Player p) { return FADING.get(p.getId()); }
@@ -67,7 +80,10 @@ public final class KiChargeClientState {
                 // registrada (reconexión a mitad de carga); el tipo por defecto es la misma red
                 // de seguridad que usa KiVfxProfile para un ordinal desconocido.
                 KiTechniqueType type = ending != null ? ending.type() : KiTechniqueType.values()[0];
-                FADING.put(pkt.playerId(), new Fade(pkt.rgb(), last.origin(), last.radius(), type, t));
+                // El segundo color sale de la carga que termina: el paquete de fin puede no
+                // traerlo (KiChargeServer.broadcastStop manda -1).
+                int rgb2 = ending != null ? ending.rgb2() : pkt.rgb2();
+                FADING.put(pkt.playerId(), new Fade(pkt.rgb(), last.origin(), last.radius(), type, t, rgb2));
             }
             return;
         }
@@ -87,7 +103,7 @@ public final class KiChargeClientState {
                 ? TechniqueAnimSet.BARRIER_POSITION
                 : TechniqueAnimSet.positionOf(Math.max(1, pkt.animSet()));
 
-        ACTIVE.put(pkt.playerId(), new Charge(pkt.rgb(), pkt.size(), type, pos, now));
+        ACTIVE.put(pkt.playerId(), new Charge(pkt.rgb(), pkt.size(), type, pos, now, pkt.rgb2()));
     }
 
     public static Charge of(Player p) { return ACTIVE.get(p.getId()); }

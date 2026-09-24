@@ -152,6 +152,18 @@ public final class AuraSparkRenderer {
             if (SPARKS.isEmpty()) return;
         }
 
+        drawAll(pose, buffers, cam, camPos, t, pt, 1f);
+    }
+
+    /**
+     * Solo DIBUJA, sin simular: la usa renderAll (mundo) y la pasada de bloom del aura
+     * (AuraRenderer, KiVfxFrameQueue.submitBloomOnly), que se ejecuta aparte y no puede volver a
+     * avanzar la simulación — cada chispa envejecería dos veces por frame.
+     * @param alphaMul 1 en el mundo; el peso de bloom (KiVfxTuning aura.bloom_sparks) en la otra.
+     */
+    public static void drawAll(PoseStack pose, MultiBufferSource buffers, Camera cam,
+                               Vec3 camPos, long t, float pt, float alphaMul) {
+        if (SPARKS.isEmpty()) return;
         int frame = (int) ((t / 2) % AuraTuning.SHEET_FRAMES);
         ResourceLocation sheet = AuraSkirtRenderer.sheet(frame);
         float yaw = -cam.getYRot();
@@ -186,7 +198,7 @@ public final class AuraSparkRenderer {
                 pose.mulPose(Axis.ZP.rotationDegrees(s.roll));
                 AuraQuads.plane(vc, pose.last(), s.w, h, u0, v0,
                         s.mirror, 0f, s.r, s.g, s.b,
-                        AuraSkirts.BASE_ALPHA * ALPHA_MUL * fade);
+                        AuraSkirts.BASE_ALPHA * ALPHA_MUL * fade * alphaMul);
                 pose.popPose();
             }
         }
@@ -208,7 +220,7 @@ public final class AuraSparkRenderer {
                 pose.translate(s.x + s.vx * pt, s.y + s.vy * pt, s.z + s.vz * pt);
                 pose.mulPose(Axis.YP.rotationDegrees(yaw));
                 pose.mulPose(Axis.ZP.rotationDegrees(s.roll));
-                drawJagged(vcGlow, pose, s, h, fade);
+                drawJagged(vcGlow, pose, s, h, fade * alphaMul);
                 pose.popPose();
             }
         }

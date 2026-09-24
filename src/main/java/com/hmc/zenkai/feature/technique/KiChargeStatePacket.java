@@ -16,7 +16,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * El animSet es la representación común entre ActionState.visual, la animación de PAL y el origen de la bola; el cliente resuelve el origen con TechniqueAnimSet.
  */
 public record KiChargeStatePacket(int playerId, boolean charging, int rgb, int size,
-                                  int typeOrdinal, int animSet)
+                                  int typeOrdinal, int animSet, int rgb2)
         implements CustomPacketPayload {
 
     public static final Type<KiChargeStatePacket> TYPE =
@@ -31,9 +31,11 @@ public record KiChargeStatePacket(int playerId, boolean charging, int rgb, int s
                         buf.writeVarInt(pkt.size());
                         buf.writeVarInt(pkt.typeOrdinal());
                         buf.writeVarInt(pkt.animSet());
+                        buf.writeInt(pkt.rgb2());
                     },
                     buf -> new KiChargeStatePacket(buf.readVarInt(), buf.readBoolean(),
-                            buf.readInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
+                            buf.readInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(),
+                            buf.readInt()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }

@@ -26,6 +26,10 @@ public final class KiTechnique {
     private String name;
     private KiTechniqueType type;
     private int rgb;   // 0xRRGGBB
+    /** SEGUNDO COLOR (2026-09-24): el del INTERIOR de la energía — la capa caliente y el núcleo
+     *  de la rampa de ki_energy.fsh, que sin él se derivan del primero (azul → cian). -1 = sin
+     *  segundo color, el comportamiento de siempre. Ver KiVfxColors. */
+    private int rgb2 = -1;
     private int size;  // MIN_SIZE..MAX_SIZE
     private TechniqueEffect effect;
 
@@ -53,6 +57,14 @@ public final class KiTechnique {
     public String name()                  { return name; }
     public KiTechniqueType type()         { return type; }
     public int rgb()                      { return rgb; }
+
+    /** Segundo color (interior) o -1. En una técnica de maestro lo IMPONE su datapack
+     *  (default_rgb2), igual que animación y sonidos — ver el bloque de TÉCNICA DE MAESTRO. */
+    public int rgb2() {
+        return isSignature() ? type.defaultRgb2() : rgb2;
+    }
+
+    public void setRgb2(int v) { this.rgb2 = v < 0 ? -1 : (v & 0xFFFFFF); }
     public int size()                     { return size; }
     /** Consecuencia del set de animación, no una elección. Los tipos que IMPONEN animación
      *  (barrera, explosión, Genki Dama) no tienen set, así que su origen sale de la constante:
@@ -60,12 +72,30 @@ public final class KiTechnique {
     public TechniquePosition position() {
         return type.animOverride() != null
                 ? TechniqueAnimSet.BARRIER_POSITION
-                : TechniqueAnimSet.positionOf(animSet);
+                : TechniqueAnimSet.positionOf(animSet());
     }
     public TechniqueEffect effect()       { return effect; }
-    public ResourceLocation chargeSound() { return chargeSound; }
-    public ResourceLocation releaseSound(){ return releaseSound; }
-    public int animSet()                  { return animSet; }
+
+    // TÉCNICA DE MAESTRO: animación y sonidos los IMPONE su datapack (anim_set, charge_sound,
+    // release_sound), igual que el color — se leen aquí, al consultar, y no al crear la
+    // instancia. Así las firmas ya guardadas (creadas con set 1 y sin sonido antes de que
+    // existieran estos campos) se corrigen solas sin migrar NBT, y un cambio del datapack llega
+    // a las instancias existentes con un /reload. Lo guardado en la instancia solo cuenta si el
+    // datapack no declara nada.
+    public ResourceLocation chargeSound() {
+        ResourceLocation sig = isSignature() ? type.signatureChargeSound() : null;
+        return sig != null ? sig : chargeSound;
+    }
+    public ResourceLocation releaseSound() {
+        ResourceLocation sig = isSignature() ? type.signatureReleaseSound() : null;
+        return sig != null ? sig : releaseSound;
+    }
+    public int animSet() {
+        int sig = isSignature() ? type.signatureAnimSet() : 0;
+        return sig > 0 ? TechniqueAnimSet.clamp(sig) : animSet;
+    }
+
+    private boolean isSignature() { return !type.master().isEmpty(); }
     /**
      * Valor que viaja en ActionState.visual y en el paquete de carga.
      * AUTORIDAD ÚNICA de la codificación: lo calculaban por su cuenta el arranque de carga, el
@@ -74,7 +104,7 @@ public final class KiTechnique {
      */
     public int visual() {
         TechniqueAnimOverride ov = type.animOverride();
-        return ov != null ? ov.encode() : animSet;
+        return ov != null ? ov.encode() : animSet();
     }
 
     /** Lo que se ENSEÑA: el nombre puesto por el jugador o, si lo dejó vacío, el del tipo. */
@@ -107,6 +137,7 @@ public final class KiTechnique {
         tag.putString("name", name);
         tag.putString("type", type.name());
         tag.putInt("rgb", rgb);
+        if (rgb2 >= 0) tag.putInt("rgb2", rgb2);
         tag.putInt("size", size);
         tag.putInt("effect", effect.ordinal());
         tag.putInt("animSet", animSet);
@@ -119,13 +150,15 @@ public final class KiTechnique {
     public static KiTechnique load(CompoundTag tag) {
         KiTechniqueType type = KiTechniqueType.byName(tag.getString("type"));
         if (type == null) return null;
-        return new KiTechnique(
+        KiTechnique t = new KiTechnique(
                 tag.getString("name"), type, tag.getInt("rgb"),
                 clampSize(tag.getInt("size")),   // recorta los 6 y 7 de partidas viejas
                 readEffect(tag),
                 // "position" de saves viejos se ignora: la técnica pasa a la del su animSet.
                 readId(tag, "chargeSound"), readId(tag, "releaseSound"),
                 tag.contains("animSet") ? tag.getInt("animSet") : 1);
+        t.setRgb2(tag.contains("rgb2") ? tag.getInt("rgb2") : -1);
+        return t;
     }
 
     private static ResourceLocation readId(CompoundTag tag, String key) {

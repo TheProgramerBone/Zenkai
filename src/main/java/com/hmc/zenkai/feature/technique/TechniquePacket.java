@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
  * cliente puede mandar cualquier id, así que aquí se comprueba que esté registrado.
  */
 public record TechniquePacket(byte op, int slot, String typeName, String name,
-                              int rgb, int size, int effect, String chargeSound, String releaseSound, int animSet)
+                              int rgb, int size, int effect, String chargeSound, String releaseSound, int animSet, int rgb2)
         implements CustomPacketPayload {
 
     public static final byte OP_UNLOCK = 0;
@@ -44,9 +44,9 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
 
     private static final int SOUND_ID_MAX = 128;
 
-    /** Valores de partida de la instancia que se crea sola al aprender una técnica firma.
-     *  No son su identidad (el color sí lo es, y lo fuerza handleSave): el jugador puede
-     *  reajustar tamaño y animación en el editor como en cualquier otra técnica suya. */
+    /** Valores de partida de la instancia que se crea sola al aprender una técnica firma. La
+     *  animación de aquí es solo un relleno: la real la impone el datapack (anim_set, igual que
+     *  charge_sound/release_sound) al leer la instancia — ver KiTechnique.animSet(). */
     private static final int SIGNATURE_DEFAULT_SIZE = 3;
     private static final int SIGNATURE_DEFAULT_ANIM = 1;
 
@@ -66,12 +66,13 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
                         buf.writeUtf(pkt.chargeSound(), SOUND_ID_MAX);
                         buf.writeUtf(pkt.releaseSound(), SOUND_ID_MAX);
                         buf.writeVarInt(pkt.animSet());
+                        buf.writeInt(pkt.rgb2());
                     },
                     buf -> new TechniquePacket(buf.readByte(), buf.readVarInt(),
                             buf.readUtf(32), buf.readUtf(KiTechnique.MAX_NAME_LENGTH * 4),
                             buf.readInt(), buf.readVarInt(), buf.readVarInt(),
                             buf.readUtf(SOUND_ID_MAX), buf.readUtf(SOUND_ID_MAX),
-                            buf.readVarInt()));
+                            buf.readVarInt(), buf.readInt()));
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
@@ -85,33 +86,33 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
 
     /** Desbloqueo ANTE UN MAESTRO: 'masterId' viaja en 'name' (ver comentario de la clase). */
     public static TechniquePacket unlock(KiTechniqueType t, String masterId) {
-        return new TechniquePacket(OP_UNLOCK, -1, t.name(), masterId, 0, 0, 0, "", "", 1);
+        return new TechniquePacket(OP_UNLOCK, -1, t.name(), masterId, 0, 0, 0, "", "", 1, -1);
     }
 
     /** Olvidar un tipo de ki: libera su MIND y devuelve el TP. */
     public static TechniquePacket forget(KiTechniqueType t) {
-        return new TechniquePacket(OP_FORGET, -1, t.name(), "", 0, 0, 0, "", "", 1);
+        return new TechniquePacket(OP_FORGET, -1, t.name(), "", 0, 0, 0, "", "", 1, -1);
     }
 
     public static TechniquePacket save(int slot, KiTechniqueType t, String name,
                                        int rgb, int size, TechniqueEffect effect,
                                        ResourceLocation chargeSound,
                                        ResourceLocation releaseSound,
-                                       int animSet) {
+                                       int animSet, int rgb2) {
         return new TechniquePacket(OP_SAVE, slot, t.name(), name, rgb, size,
                 effect == null ? TechniqueEffect.NONE.ordinal() : effect.ordinal(),
                 chargeSound == null ? "" : chargeSound.toString(),
                 releaseSound == null ? "" : releaseSound.toString(),
-                animSet);
+                animSet, rgb2);
     }
 
     public static TechniquePacket delete(int slot) {
-        return new TechniquePacket(OP_DELETE, slot, "", "", 0, 0, 0, "", "", 1);
+        return new TechniquePacket(OP_DELETE, slot, "", "", 0, 0, 0, "", "", 1, -1);
     }
 
     /** position 0..8 del overlay; -1 = desasignar. Ojo: viaja en 'size', no en 'position'. */
     public static TechniquePacket bind(int slot, int overlayPosition) {
-        return new TechniquePacket(OP_BIND, slot, "", "", 0, overlayPosition, 0, "", "", 1);
+        return new TechniquePacket(OP_BIND, slot, "", "", 0, overlayPosition, 0, "", "", 1, -1);
     }
 
     /**
@@ -124,7 +125,7 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
      * podía llegar a cualquier par, y swapSlots valida los dos índices igual.
      */
     public static TechniquePacket move(int slot, int offset) {
-        return new TechniquePacket(OP_MOVE, slot, "", "", 0, offset, 0, "", "", 1);
+        return new TechniquePacket(OP_MOVE, slot, "", "", 0, offset, 0, "", "", 1, -1);
     }
 
     public static void handle(TechniquePacket pkt, IPayloadContext ctx) {
@@ -241,6 +242,9 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         ResourceLocation charge = validSound(pkt.chargeSound(), true);
         ResourceLocation release = validSound(pkt.releaseSound(), false);
         int animSet = TechniqueAnimSet.clamp(pkt.animSet());
+        // Segundo color: libre en una técnica normal (-1 = ninguno); en una firma lo impone el
+        // datapack al LEER (KiTechnique.rgb2), así que lo que mande el cliente da igual.
+        int rgb2 = pkt.rgb2() < 0 ? -1 : (pkt.rgb2() & 0xFFFFFF);
 
         if (pkt.slot() < 0) { // crear
             // El límite de 12 solo aplica a técnicas que el jugador fabrica (sin master): una
@@ -250,8 +254,10 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
                     && att.techniques().customSlotCount() >= ServerConfig.techniqueMaxSlots()) {
                 return false;
             }
-            att.techniques().addSlot(new KiTechnique(name, type, rgb, size,
-                    TechniqueEffect.byOrdinal(pkt.effect()), charge, release, animSet));
+            KiTechnique created = new KiTechnique(name, type, rgb, size,
+                    TechniqueEffect.byOrdinal(pkt.effect()), charge, release, animSet);
+            created.setRgb2(rgb2);
+            att.techniques().addSlot(created);
             return true;
         }
         KiTechnique existing = att.techniques().slot(pkt.slot()); // editar
@@ -264,6 +270,7 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         // sitio) se IGNORA en vez de aplicarse.
         existing.set(name, existing.type(), rgb, size, TechniqueEffect.byOrdinal(pkt.effect()),
                 charge, release, animSet);
+        existing.setRgb2(rgb2);
         return true;
     }
 

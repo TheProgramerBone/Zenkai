@@ -1,5 +1,9 @@
 package com.hmc.zenkai.client.aura;
 
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxBloomPipeline;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxFrameQueue;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxTuning;
+
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.feature.aura.AuraColors;
@@ -62,6 +66,9 @@ public final class AuraRenderer {
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
 
         long dtTicks = (lastTick == Long.MIN_VALUE) ? 0 : Math.min(10, Math.max(0, t - lastTick));
+        // El bloom propio solo existe sin shaderpack (KiVfxBloomPipeline.active); con uno activo
+        // las tareas solo-bloom se descartarían igual, pero así ni se encolan.
+        boolean bloom = ClientConfig.auraBloomEnabled() && KiVfxBloomPipeline.active();
         lastTick = t;
 
         for (Player pl : mc.level.players()) {
@@ -129,6 +136,20 @@ public final class AuraRenderer {
             AuraSkirtRenderer.render(pose, buffers, plan, ticks, seconds, p.getId(),
                     toCamX, toCamZ);
 
+            // BLOOM DEL AURA (2026-09-24): el mundo ya está dibujado arriba, igual que siempre;
+            // esto solo AÑADE el resplandor, reproduciendo la misma hoja/pose en la pasada de
+            // bloom de KiVfxBloomPipeline (tarea solo-bloom: nunca se dibuja en el mundo). Pesos
+            // en KiVfxTuning (aura.bloom_core/mass), calibrables con /zkvfx.
+            if (bloom) {
+                final AuraSkirts.Plan bp = plan;
+                final int seed = p.getId();
+                final float tcx = toCamX, tcz = toCamZ;
+                KiVfxFrameQueue.submitBloomOnly(pose, at.subtract(camPos), (ps, buf) ->
+                        AuraSkirtRenderer.renderBloom(ps, buf, bp, ticks, seconds, seed, tcx, tcz,
+                                tuned(KiVfxTuning.Param.AURA_BLOOM_MASS),
+                                tuned(KiVfxTuning.Param.AURA_BLOOM_CORE)));
+            }
+
             pose.popPose();
         }
 
@@ -137,8 +158,19 @@ public final class AuraRenderer {
         AuraWispRenderer.renderAll(pose, buffers, cam, camPos, t, pt);
         AuraSparkRenderer.renderAll(pose, buffers, cam, camPos, t, pt);
         AuraEmberRenderer.renderAll(pose, buffers, cam, camPos, t, pt);
+        if (bloom) {
+            // Chispas y rayos: los puntos más calientes del aura, entran enteros al bloom.
+            // drawAll y no renderAll: la simulación ya avanzó arriba (ver su javadoc).
+            KiVfxFrameQueue.submitBloomOnly(pose, Vec3.ZERO, (ps, buf) ->
+                    AuraSparkRenderer.drawAll(ps, buf, cam, camPos, t, pt,
+                            tuned(KiVfxTuning.Param.AURA_BLOOM_SPARKS)));
+        }
 
         buffers.endBatch();
+    }
+
+    private static float tuned(KiVfxTuning.Param p) {
+        return KiVfxTuning.get(p, (com.hmc.zenkai.feature.technique.KiTechniqueType) null);
     }
 
     /**

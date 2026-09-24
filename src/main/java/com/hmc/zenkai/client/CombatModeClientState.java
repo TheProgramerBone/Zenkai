@@ -234,7 +234,8 @@ public final class CombatModeClientState {
                                 * (defensive ? 1.0 : KiCombatServer.chargeCostFactor(ratio))
                                 * fAtt.powerFraction()));
                 if (ratio >= KiTechniqueType.MIN_CHARGE && fAtt.getEnergy() >= fCost) {
-                    PacketDistributor.sendToServer(new KiFirePacket(chargingSlot, chargeTicks));
+                    PacketDistributor.sendToServer(new KiFirePacket(chargingSlot, chargeTicks,
+                            KiChargeClientState.releaseOrigin(mc.player)));
                     if (mc.level != null) {
                         READY_AT.put(chargingSlot,
                                 mc.level.getGameTime()

@@ -10,5 +10,8 @@
   "count": 1,
   "defensive": false,
   "default_rgb": "0xB030D0",
-  "anim_ticks": 28
+  "anim_ticks": 28,
+  "anim_set": 6,
+  "charge_sound": "zenkai:ki_attack_charge_1",
+  "release_sound": "zenkai:ki_attack_release_1"
 }

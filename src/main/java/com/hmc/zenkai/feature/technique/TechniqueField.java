@@ -55,7 +55,23 @@ public enum TechniqueField {
     DEFENSIVE     ("defensive",      ValueType.BOOL,   false,                          Kind.KI),
     DEFAULT_RGB   ("default_rgb",    ValueType.RGB,    0xFFFFFF,                       Kind.KI),
     RANGE         ("range",          ValueType.DOUBLE, 3.0,    0.0, Double.MAX_VALUE,  Kind.PHYSICAL),
-    ANIM_TICKS    ("anim_ticks",     ValueType.INT,    12,       1, Integer.MAX_VALUE, Kind.KI, Kind.PHYSICAL);
+    ANIM_TICKS    ("anim_ticks",     ValueType.INT,    12,       1, Integer.MAX_VALUE, Kind.KI, Kind.PHYSICAL),
+    /** Set de animación (TechniqueAnimSet, 1..N) que IMPONE una técnica de maestro. 0 = sin
+     *  imponer (técnica normal: la elige el jugador en el editor). Solo lo lee
+     *  KiTechnique.animSet() cuando el tipo tiene {@link #MASTER}: una firma no se edita, así
+     *  que sin esto se quedaba para siempre con la pose genérica del set 1. Un número mayor que
+     *  los sets que existen cae al 1 (TechniqueAnimSet.clamp). */
+    ANIM_SET      ("anim_set",       ValueType.INT,    0,        0, 64,                Kind.KI),
+    /** Sonidos de carga/disparo de una técnica de maestro ("zenkai:ki_attack_charge_1"; "" =
+     *  sin sonido). Mismo trato que ANIM_SET: solo se imponen con MASTER puesto, y se validan
+     *  contra el registro igual que los que elige el jugador (TechniqueAssets). Antes la
+     *  instancia de una firma nacía con los dos a null y era la única técnica muda del juego. */
+    CHARGE_SOUND  ("charge_sound",   ValueType.STRING, "",                              Kind.KI),
+    RELEASE_SOUND ("release_sound",  ValueType.STRING, "",                              Kind.KI),
+    /** Segundo color (interior) de fábrica, "0xRRGGBB" o "" = ninguno. STRING y no RGB a
+     *  propósito: RGB no puede representar "sin color" (su clamp lo dejaría en 0xFFFFFF, blanco).
+     *  Lo interpreta KiTechniqueType.defaultRgb2(). */
+    DEFAULT_RGB2  ("default_rgb2",   ValueType.STRING, "",                              Kind.KI);
 
     /** Tipo de dato del campo. Decide parseo, clamp, formato y cómo viaja a JSON/NBT. */
     public enum ValueType { INT, DOUBLE, BOOL, RGB, STRING }
@@ -134,11 +150,12 @@ public enum TechniqueField {
             case DOUBLE -> Math.max(min, Math.min(max, ((Number) raw).doubleValue()));
             case BOOL -> (Boolean) raw;
             case RGB -> ((Number) raw).intValue() & 0xFFFFFF;
-            // Id de maestro: minúsculas (mismo formato que MasterDef/ZenkaiMasterEntity#masterId)
-            // y recortado a 32 -- igual que el resto de ids cortos que viajan por packet en el mod.
+            // Id de maestro o de sonido: minúsculas (mismo formato que MasterDef/
+            // ZenkaiMasterEntity#masterId y que cualquier ResourceLocation) y recortado a 64 — el
+            // máximo que acepta el codec de TechniqueDef para estos campos.
             case STRING -> {
                 String s = ((String) raw).trim().toLowerCase(Locale.ROOT);
-                yield s.length() > 32 ? s.substring(0, 32) : s;
+                yield s.length() > 64 ? s.substring(0, 64) : s;
             }
         };
     }
@@ -247,6 +264,10 @@ public enum TechniqueField {
             case DEFAULT_RGB -> d.defaultRgb();
             case RANGE -> d.range();
             case ANIM_TICKS -> d.animTicks();
+            case ANIM_SET -> d.animSet();
+            case CHARGE_SOUND -> d.chargeSound();
+            case RELEASE_SOUND -> d.releaseSound();
+            case DEFAULT_RGB2 -> d.defaultRgb2();
         };
     }
 
@@ -280,7 +301,8 @@ public enum TechniqueField {
                 d(v, DAMAGE_MULT), d(v, KI_COST_MULT), d(v, STAMINA_PCT),
                 i(v, CHARGE_TICKS), i(v, COOLDOWN_TICKS),
                 d(v, SPEED), i(v, COUNT), b(v, DEFENSIVE),
-                i(v, DEFAULT_RGB), d(v, RANGE), i(v, ANIM_TICKS));
+                i(v, DEFAULT_RGB), d(v, RANGE), i(v, ANIM_TICKS),
+                i(v, ANIM_SET), s(v, CHARGE_SOUND), s(v, RELEASE_SOUND), s(v, DEFAULT_RGB2));
     }
 
     private static int i(Map<TechniqueField, Object> v, TechniqueField f) {

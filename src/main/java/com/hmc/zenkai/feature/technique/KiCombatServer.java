@@ -273,6 +273,7 @@ public final class KiCombatServer {
         KiProjectileEntity visual = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sp.level());
         visual.configure(sp, KiTechniqueType.BARRIER, tech.rgb(), tech.size(),
                 0, durationTicks, TechniqueEffect.NONE);
+        visual.setRgb2(tech.rgb2());
         visual.setPos(sp.getX(), sp.getY(), sp.getZ());
         sp.level().addFreshEntity(visual);
 

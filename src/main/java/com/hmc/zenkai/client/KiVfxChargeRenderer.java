@@ -184,7 +184,7 @@ public final class KiVfxChargeRenderer {
                 Vec3 look = (v.shape() == KiVfxShape.DISK) ? p.getViewVector(pt) : null;
                 final Vec3 o = origin;
                 final float rad = radius;
-                KiVfxFrameQueue.submit(pose, o.subtract(camPos), (ps, buf) -> drawBall(ps, buf, cam, camPos, o, v, rad,
+                KiVfxFrameQueue.submit(pose, o.subtract(camPos), (ps, buf) -> drawBall(ps, buf, c.rgb2(), cam, camPos, o, v, rad,
                         fpOpacity, r, g, b, now, pt, look, selfFirstPerson));
             }
         }
@@ -207,7 +207,7 @@ public final class KiVfxChargeRenderer {
             float radius = f.radius() * (0.6f + 0.4f * a);
 
             if (alpha > 0f) {
-                KiVfxFrameQueue.submit(pose, f.origin().subtract(camPos), (ps, buf) -> drawBall(ps, buf, cam, camPos, f.origin(), v,
+                KiVfxFrameQueue.submit(pose, f.origin().subtract(camPos), (ps, buf) -> drawBall(ps, buf, f.rgb2(), cam, camPos, f.origin(), v,
                         radius, alpha, r, g, b, now, pt, null, selfFirstPerson));
             }
         }
@@ -256,11 +256,12 @@ public final class KiVfxChargeRenderer {
     }
 
     /** Cuerpo (esfera real, no billboard, salvo DISK con `look`) + halo. */
-    private static void drawBall(PoseStack pose, MultiBufferSource.BufferSource buffers,
+    private static void drawBall(PoseStack pose, MultiBufferSource.BufferSource buffers, int rgb2,
                                  Camera cam, Vec3 camPos, Vec3 origin, KiVfxProfile v, float radius,
                                  float alphaMul, float r, float g, float b, long now, float pt,
                                  @Nullable Vec3 look, boolean selfFirstPerson) {
         float size = radius * 2f;
+        com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors.begin(rgb2);
 
         boolean asDisk = v.shape() == KiVfxShape.DISK && look != null;
         KiVfxMesh mesh = asDisk ? KiVfxGeometry.shell(v) : KiVfxGeometry.chargeSphere();

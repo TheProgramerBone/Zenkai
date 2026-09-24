@@ -144,6 +144,25 @@ public final class ClientConfig {
                             + "On by default. Automatically disabled if a shader pack (Iris/Oculus) is loaded",
                     true);
 
+    /** Resplandor (bloom) del AURA — mismo pipeline que el del ki (KiVfxBloomPipeline), así que
+     *  también requiere ki.bloom_enabled y se apaga solo con shaderpack. Separado de aquel porque
+     *  un aura grande cuesta más (se redibuja parte de su geometría) y puede querer apagarse sin
+     *  perder el del ki. */
+    private static final ModConfigSpec.BooleanValue AURA_BLOOM_ENABLED =
+            defineBool("aura.bloom_enabled", "aura_bloom_enabled",
+                    "Screen-space glow around auras (core, sparks, lightning). Uses the same bloom as "
+                            + "ki techniques, so it also needs ki bloom on and is disabled with a shader pack",
+                    true);
+
+    /** true = comportamiento de siempre: ves tu propio cuerpo animado al cargar/disparar una
+     *  técnica de ki en primera persona. false = manos vanilla en 1ª persona (los demás te siguen
+     *  viendo animado). Ver ZenkaiPalAnimations.applyKiFirstPersonMode. */
+    private static final ModConfigSpec.BooleanValue KI_FP_ANIMATIONS =
+            defineBool("ki.first_person_animations", "ki_first_person_animations",
+                    "Show your own ki attack animations (charge/release poses) in first person. "
+                            + "When off you see vanilla hands; other players still see the animation",
+                    true);
+
     /** 100 = tamaño nativo de bars_empty.png/bars_full.png (256x64 el bloque de las 3 barras).
      *  Pedido para que el HUD de Body/Stamina/Ki no se salga de pantalla con un GUI Scale alto
      *  o una ventana pequeña — el arte se pensó a un GUI Scale concreto y el resto de jugadores
@@ -232,6 +251,8 @@ public final class ClientConfig {
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }
     public static float kiFirstPersonOpacityFrac() { return KI_FP_OPACITY.get() / 100f; }
     public static boolean kiBloomEnabled() { return KI_BLOOM_ENABLED.get(); }
+    public static boolean kiFirstPersonAnimations() { return KI_FP_ANIMATIONS.get(); }
+    public static boolean auraBloomEnabled() { return AURA_BLOOM_ENABLED.get(); }
     public static float hudBarsScaleFrac() { return HUD_BARS_SCALE.get() / 100f; }
 
     public static HudAnchor hudAnchor() { return HUD_ANCHOR.get(); }

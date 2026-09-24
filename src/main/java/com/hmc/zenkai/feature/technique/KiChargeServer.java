@@ -45,11 +45,11 @@ public final class KiChargeServer {
     private static void broadcast(ServerPlayer sp, KiTechnique tech, boolean charging) {
         PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, new KiChargeStatePacket(
                 sp.getId(), charging, tech.rgb(), tech.size(),
-                tech.type().ordinal(), tech.visual()));
+                tech.type().ordinal(), tech.visual(), tech.rgb2()));
     }
 
     private static void broadcastStop(ServerPlayer sp) {
         PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp,
-                new KiChargeStatePacket(sp.getId(), false, 0, 1, 0, 0));
+                new KiChargeStatePacket(sp.getId(), false, 0, 1, 0, 0, -1));
     }
 }

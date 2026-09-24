@@ -22,11 +22,13 @@ public final class KiVfxTuning {
     private KiVfxTuning() {}
 
     public enum Param {
-        BLOOM_INTENSITY("bloom.intensity", 0.9f, false, "fuerza del composite del bloom"),
+        // 0.9 -> 0.85 y emit.body 0.35 -> 0.30 (pasada de arte 2026-09-24): la capa caliente de la
+        // rampa ya alimenta bloom y emisión; con los valores de antes el conjunto subía de brillo.
+        BLOOM_INTENSITY("bloom.intensity", 0.85f, false, "fuerza del composite del bloom"),
         BLOOM_KNEE("bloom.knee", 0.5f, false, "por debajo, el bloom pasa intacto"),
         BLOOM_LIMIT("bloom.limit", 0.9f, false, "techo al que tiende el bloom"),
         BLOOM_BODY("bloom.body", 0.25f, true, "peso del cuerpo (no núcleo) en la pasada de bloom"),
-        EMIT_BODY("emit.body", 0.35f, true, "emisión del cuerpo de la cáscara: 0 tapa, 1 suma luz"),
+        EMIT_BODY("emit.body", 0.30f, true, "emisión del cuerpo de la cáscara: 0 tapa, 1 suma luz"),
         EMIT_CORE("emit.core", 0.85f, true, "emisión en la banda de núcleo de la cáscara"),
         EMIT_GLOW("emit.glow", 0.80f, false, "emisión de halo, núcleo explícito y núcleo de estela"),
         EMIT_SOFT("emit.soft", 0.40f, false, "emisión de la capa exterior de estela y rayos"),
@@ -34,7 +36,11 @@ public final class KiVfxTuning {
         CORE_ALPHA_MUL("core.alpha", 1f, true, "MUL sobre el alfa del núcleo explícito"),
         CORE_WORLD_ALPHA("core.world_alpha", 0.55f, true, "alfa del núcleo explícito en el mundo"),
         HALO_ALPHA_MUL("halo.alpha", 1f, true, "MUL sobre el alfa del halo"),
-        TRAIL_ALPHA_MUL("trail.alpha", 1f, true, "MUL sobre el alfa de la estela");
+        TRAIL_ALPHA_MUL("trail.alpha", 1f, true, "MUL sobre el alfa de la estela"),
+        BEAM_PULSE("beam.pulse", 1f, true, "MUL sobre el pulso de grosor del haz anclado (0 = quieto)"),
+        AURA_BLOOM_CORE("aura.bloom_core", 0.70f, false, "peso del núcleo del aura en el bloom"),
+        AURA_BLOOM_MASS("aura.bloom_mass", 0.15f, false, "peso de la masa del aura en el bloom"),
+        AURA_BLOOM_SPARKS("aura.bloom_sparks", 1.0f, false, "peso de chispas y rayos del aura en el bloom");
 
         public final String key;
         public final float def;

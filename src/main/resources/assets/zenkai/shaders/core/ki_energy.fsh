@@ -93,6 +93,8 @@ uniform float ZenkaiDebugMode;  // 0 normal, 1 = pintar por normal (ver cabecera
 uniform float ZenkaiBloomMode;  // 1 = pasada de bloom de KiVfxBloomPipeline (ver main)
 uniform vec2 ZenkaiEmit;        // emisión: x = cuerpo, y = banda de núcleo (ver SALIDA en main)
 uniform float ZenkaiBloomBody;  // peso del cuerpo (no núcleo) en la pasada de bloom
+uniform float ZenkaiFill;       // suelo de cobertura del interior (RIM de Death Ball), ver alpha
+uniform vec4 ZenkaiHot;         // segundo color (interior); w = 1 activo, ver `hot` en main
 
 out vec4 fragColor;
 
@@ -187,23 +189,60 @@ void main() {
     float flameCore    = flameField(vField, t, 1.35, 1.30);
     float flameOutline = ridgedField(vField, t, 0.65, 0.65);
 
+    // RAMPA DE CUATRO CAPAS (pasada de dirección de arte 2026-09-24, contra las referencias de
+    // FighterZ/Xenoverse en .claude/imagenes/). Antes eran tres: contorno → tinte → tinte lavado a
+    // blanco. Mezclar un color con blanco en línea recta lo DESATURA a medio camino — el paso
+    // intermedio era un pastel, y el centro de cualquier técnica se leía como "objeto blanco con
+    // transparencia de color alrededor". En kamehameha_1-3 el orden es azul profundo → CIAN →
+    // blanco; en Supernova_1-6 rojo → naranja → AMARILLO; en spiritbomb_2 azul → celeste → blanco:
+    // entre el tinte y el blanco siempre hay una capa del MISMO tono, más luminosa y todavía
+    // saturada. `hot` es esa capa, derivada del propio tinte (sigue sin haber colores fijos): se
+    // normaliza al canal máximo y se levantan los canales secundarios con una potencia < 1, así
+    // un azul (0.1,0.4,1) sube a cian (0.35,0.66,1) y un naranja (1,0.5,0.05) a amarillo
+    // (1,0.73,0.26). El blanco (coreWhite, ZenkaiTone.x) queda reservado al centro de `hot`.
     vec3 tint    = vColor.rgb;
-    vec3 core    = mix(tint, vec3(1.0), ZenkaiTone.x);
+    float tMax   = max(max(tint.r, tint.g), max(tint.b, 1.0e-3));
+    vec3 hot     = pow(clamp(tint / tMax, 0.0, 1.0), vec3(0.45));
+    // SEGUNDO COLOR (KiVfxColors): si la técnica lo tiene, ES la capa caliente — el interior
+    // pasa a ser ese color en vez del derivado del primero. El blanco del centro sigue saliendo
+    // de coreWhite encima de él.
+    if (ZenkaiHot.w > 0.5) hot = ZenkaiHot.rgb;
+    vec3 core    = mix(hot, vec3(1.0), ZenkaiTone.x);
     vec3 outline = tint * ZenkaiTone.y;
+
+    float gCore = g + flameCore * WOBBLE_CORE * ZenkaiWobble;
+    float bandHot = mix(bands.y, bands.x, 0.5);
 
     vec3 col = outline;
     col = mix(col, tint, smoothstep(bands.z, bands.y,
                                     g + flameOutline * WOBBLE_OUTLINE * ZenkaiWobble));
-    float toCore = smoothstep(bands.y, bands.x,
-                              g + flameCore * WOBBLE_CORE * ZenkaiWobble);
+    float toHot  = smoothstep(bands.y, bandHot, gCore);
+    float toCore = smoothstep(bandHot, bands.x, gCore);
 
     // GARANTÍA DURA (ver "BUG DE CÁMARA", arreglo 2 de 2): la cáscara de una forma alargada ya NO
     // es responsable del centro blanco — eso lo dibuja la malla de núcleo aparte, inmune por
     // construcción. Acotar aquí el blanqueado de la cáscara a un máximo bajo, SIEMPRE, hace la
-    // cuña blanca MATEMÁTICAMENTE IMPOSIBLE sea cual sea `g`, no solo menos probable.
-    if (ZenkaiAxial > 0.5) toCore = min(toCore, 0.18);
+    // cuña blanca MATEMÁTICAMENTE IMPOSIBLE sea cual sea `g`, no solo menos probable. La capa
+    // caliente se acota también (más suelto: es color saturado, no blanco), por el mismo motivo.
+    if (ZenkaiAxial > 0.5) {
+        toCore = min(toCore, 0.18);
+        toHot  = min(toHot, 0.65);
+    }
 
+    col = mix(col, hot, toHot);
     col = mix(col, core, toCore);
+
+    // VETAS DE FLUJO (solo formas con eje): las líneas de velocidad que recorren el interior de
+    // kamehameha_1/3 — la energía se MUEVE hacia delante aunque el haz esté quieto en pantalla.
+    // vUv.y es la coordenada a lo largo del eje (en bloques en el haz anclado, ver
+    // KiVfxGeometry.emitTube) y vUv.x la vuelta al tubo (0..1): multiplicar x por 2π·k entero
+    // mantiene la veta sin costura. Solo aclara, en la zona de cuerpo/capa caliente.
+    if (ZenkaiAxial > 0.5) {
+        float around = vUv.x * 6.2831853;
+        float streak = ridge(vUv.y * 1.7 - t * 1.1 + sin(around * 3.0) * 0.6)
+                     * ridge(around * 5.0 + vUv.y * 0.35);
+        col *= 1.0 + max(0.0, streak) * 0.22 * (1.0 - toCore) * ZenkaiWobble;
+    }
 
     // Parpadeo de intensidad, más fuerte en el núcleo — impide que la técnica se vea como
     // plástico pintado cuando el proyectil está quieto respecto a la cámara.
@@ -220,14 +259,26 @@ void main() {
     }
 
     float edge = g + flameOutline * WOBBLE_OUTLINE * ZenkaiWobble;
-    float alpha = vColor.a * smoothstep(0.0, max(1.0e-3, ZenkaiTone.z), edge);
+    float alpha = smoothstep(0.0, max(1.0e-3, ZenkaiTone.z), edge);
+    // RELLENO (ZenkaiFill): suelo de cobertura para el interior de una forma RIM. Sin él una
+    // burbuja RIM es hueca de frente — correcto para BARRIER (cristal), incorrecto para Death
+    // Ball: en deathball_1-4 el interior es MATERIA oscura y moteada (violeta casi negro) y solo
+    // el limbo brilla en magenta. Ahí `g`≈0, así que el color ya es el contorno oscurecido y la
+    // capa de detalle lo motea. 0 = sin relleno (el resto de técnicas).
+    alpha = vColor.a * max(alpha, ZenkaiFill);
+
+    // "Calor" del píxel: cuánto de él es capa caliente o núcleo. Decide emisión y bloom.
+    float heat = max(toCore, toHot * 0.6);
 
     // PASADA DE BLOOM (KiVfxFrameQueue.bloomPass): la MISMA geometría, con el mismo depth test y
     // culling, redibujada sobre negro en el target de bloom. Solo cambia CUÁNTO aporta cada
     // píxel: el núcleo pesa entero y el cuerpo/contorno poco, para que el resplandor nazca del
     // centro caliente y no lave la técnica entera (misma idea que el bloomMode de dragonminez).
+    // Desde la rampa de cuatro capas la capa caliente también alimenta el bloom: el resplandor
+    // sale del COLOR (cian, amarillo, rosa) y no solo del blanco — "energía de color + bloom",
+    // no "blanco causado por el bloom".
     if (ZenkaiBloomMode > 0.5) {
-        alpha *= mix(ZenkaiBloomBody, 1.0, toCore);
+        alpha *= mix(ZenkaiBloomBody, 1.0, heat);
     }
 
     // SALIDA EN ALFA PREMULTIPLICADO (blend ONE / ONE_MINUS_SRC_ALPHA, ver KiVfxRenderTypes). El
@@ -237,6 +288,8 @@ void main() {
     // resplandor sin forma. Ajustable en vivo: /zkvfx set emit.body|emit.core.
     vec4 c = vec4(col, alpha) * ColorModulator;
     if (c.a < 0.004) discard;
-    float emit = clamp(mix(ZenkaiEmit.x, ZenkaiEmit.y, toCore), 0.0, 1.0);
+    // La capa caliente emite: es la que mantiene el color saturado sobre un cielo de día, donde
+    // un cuerpo que solo tapa se lee pastel.
+    float emit = clamp(mix(ZenkaiEmit.x, ZenkaiEmit.y, heat), 0.0, 1.0);
     fragColor = vec4(c.rgb * c.a, c.a * (1.0 - emit));
 }

@@ -111,25 +111,35 @@ public final class KiVfxCompositeRenderer {
     // Fracción del alfa del núcleo explícito en la pasada del mundo: KiVfxTuning.CORE_WORLD_ALPHA
     // (/zkvfx set core.world_alpha), ver drawCore.
 
+    /** Capa caliente/interior: el segundo color de la técnica actual o, sin él, el derivado del
+     *  primero — ver {@link KiVfxColors}. */
+    public static float[] hot(float r, float g, float b) { return KiVfxColors.hot(r, g, b); }
+
+    /** Radio de la capa interior (blanca) del núcleo respecto a la exterior (caliente). */
+    private static final float CORE_INNER_SCALE = 0.55f;
+    /** Alfa de la capa exterior respecto al del núcleo — es un resplandor de color, no un sólido. */
+    private static final float CORE_OUTER_ALPHA = 0.60f;
+
     private static void drawCore(MultiBufferSource.BufferSource buffer, KiVfxProfile p, KiVfxMesh coreMesh,
                                  PoseStack pose, float size, float r, float g, float b, float alphaMul) {
-        // Blanco hacia el tinte por el mismo factor que la cáscara (coreWhite) — misma idea de
-        // "cuánto se lava a blanco" en las dos capas, solo que aquí el tamaño lo decide geometría
-        // real, no un ángulo de vista. HALO_TEXTURE: glow radial suave con UV plana, un aditivo
-        // uniforme sin costuras sobre geometría 3D real.
+        // NÚCLEO EN DOS CAPAS (dirección de arte 2026-09-24). Antes era UNA malla de color
+        // uniforme (HALO_TEXTURE con UV plana) casi blanca: sobre una bola pequeña o el Kienzan se
+        // leía como un disco blanco PLANO recortado (vídeo 10-01-17, 35-37 s) — sin degradado no
+        // hay volumen. Ahora: capa exterior del tono caliente (cian/amarillo/rosa) y una interior
+        // más pequeña lavada a blanco por coreWhite. El paso de una a otra es el degradado
+        // caliente → blanco que en las referencias marca "aquí está lo más caliente".
         float white = Math.min(1f, p.shell().coreWhite()
                 * KiVfxTuning.get(KiVfxTuning.Param.CORE_WHITE_MUL, p));
-        float cr = r + (1f - r) * white;
-        float cg = g + (1f - g) * white;
-        float cb = b + (1f - b) * white;
+        float[] h = hot(r, g, b);
+        float wr = h[0] + (1f - h[0]) * white;
+        float wg = h[1] + (1f - h[1]) * white;
+        float wb = h[2] + (1f - h[2]) * white;
         RenderType type = KiVfxRenderTypes.glow(KiVfxRenderTypes.HALO_TEXTURE);
         VertexConsumer cvc = buffer.getBuffer(type);
         pose.pushPose();
         pose.scale(size, size, size);
-        // Desplazamiento del "sol descentrado" (Death Ball/Supernova, ver KiVfxProfile.Core) —
-        // EN EL ESPACIO YA ESCALADO por size, así que offsetX/Y son fracciones del tamaño real de
-        // la técnica y no bloques absolutos: una Genki Dama y un Death Beam con el mismo offset
-        // relativo se desplazan proporcionalmente a su propio tamaño, no por el mismo número fijo.
+        // Desplazamiento opcional del núcleo (KiVfxProfile.Core, hoy sin uso en la tabla) — EN EL
+        // ESPACIO YA ESCALADO por size: offsetX/Y son fracciones del tamaño de la técnica.
         if (p.core().offsetX() != 0f || p.core().offsetY() != 0f) {
             pose.translate(p.core().offsetX(), p.core().offsetY(), 0f);
         }
@@ -138,12 +148,64 @@ public final class KiVfxCompositeRenderer {
         // macizos y, en EXPLOSION, una esfera opaca que ocultaba al propio jugador (vídeo
         // 2026-09-24 09-10-44). El brillo del centro lo aporta la pasada de BLOOM, que lo usa
         // entero (ver KiVfxFrameQueue.bloomPass).
-        float coreAlpha = p.core().alpha() * alphaMul
-                * KiVfxTuning.get(KiVfxTuning.Param.CORE_ALPHA_MUL, p)
-                * (KiVfxFrameQueue.bloomPass() ? 1f : KiVfxTuning.get(KiVfxTuning.Param.CORE_WORLD_ALPHA, p));
-        coreMesh.emit(cvc, pose.last(), cr, cg, cb, coreAlpha, 0f, true);
+        float coreAlpha = coreAlpha(p, alphaMul);
+        coreMesh.emit(cvc, pose.last(), h[0], h[1], h[2], coreAlpha * CORE_OUTER_ALPHA, 0f, true);
+        // Capa interior: en la esfera se encoge entera; en el hilo de un haz solo en sección (el
+        // hilo sigue midiendo lo mismo de largo). La bola de CARGA de un haz también es esfera.
+        boolean round = KiVfxGeometry.isRound(coreMesh);
+        pose.scale(CORE_INNER_SCALE, CORE_INNER_SCALE, round ? CORE_INNER_SCALE : 1f);
+        coreMesh.emit(cvc, pose.last(), wr, wg, wb, coreAlpha, 0f, true);
         pose.popPose();
         buffer.endBatch(type);
+    }
+
+    private static float coreAlpha(KiVfxProfile p, float alphaMul) {
+        return p.core().alpha() * alphaMul
+                * KiVfxTuning.get(KiVfxTuning.Param.CORE_ALPHA_MUL, p)
+                * (KiVfxFrameQueue.bloomPass() ? 1f : KiVfxTuning.get(KiVfxTuning.Param.CORE_WORLD_ALPHA, p));
+    }
+
+    /**
+     * Cuerpo de un HAZ ANCLADO ({@link KiVfxProfile#column()}): envolvente, cáscara y núcleo en
+     * dos capas, como tubos de longitud real (ver {@link KiVfxGeometry#emitTube}). El PoseStack
+     * llega SIN escalar, con el origen en la punta y +Z apuntando del disparo hacia la cabeza;
+     * {@code radius} ya va en bloques.
+     */
+    public static void renderColumn(MultiBufferSource.BufferSource buffer, KiVfxProfile p, PoseStack pose,
+                                    float radius, float rootMul, float length,
+                                    float r, float g, float b, float alphaMul,
+                                    boolean frozenAnim, float proximity) {
+        if (!KiVfxRenderTypes.available() || length <= 1.0e-3f) return;
+        KiVfxDebugMode dbg = KiVfxDebugMode.current();
+
+        if (dbg.showsShell()) {
+            RenderType type = KiVfxRenderTypes.energy(p);
+            KiVfxRenderTypes.setupEnergy(p, frozenAnim, proximity);
+            VertexConsumer vc = buffer.getBuffer(type);
+            if (dbg.showsEnvelope() && p.envelope().enabled()) {
+                KiVfxGeometry.emitTube(vc, pose.last(), radius * p.envelope().scale(), rootMul, length,
+                        r, g, b, p.envelope().alpha() * alphaMul, false);
+            }
+            KiVfxGeometry.emitTube(vc, pose.last(), radius, rootMul, length,
+                    r, g, b, p.shell().alpha() * alphaMul, false);
+            buffer.endBatch(type);
+        }
+
+        if (dbg.showsCore() && p.hasExplicitCore()) {
+            float white = Math.min(1f, p.shell().coreWhite()
+                    * KiVfxTuning.get(KiVfxTuning.Param.CORE_WHITE_MUL, p));
+            float[] h = hot(r, g, b);
+            float a = coreAlpha(p, alphaMul);
+            float cr = radius * p.core().scale();
+            RenderType type = KiVfxRenderTypes.glow(KiVfxRenderTypes.HALO_TEXTURE);
+            VertexConsumer cvc = buffer.getBuffer(type);
+            KiVfxGeometry.emitTube(cvc, pose.last(), cr, rootMul, length,
+                    h[0], h[1], h[2], a * CORE_OUTER_ALPHA, true);
+            KiVfxGeometry.emitTube(cvc, pose.last(), cr * CORE_INNER_SCALE, rootMul, length,
+                    h[0] + (1f - h[0]) * white, h[1] + (1f - h[1]) * white, h[2] + (1f - h[2]) * white,
+                    a, true);
+            buffer.endBatch(type);
+        }
     }
 
     /** Ruta de respaldo (shader no disponible): cáscara teñida + núcleo encogido y lavado a

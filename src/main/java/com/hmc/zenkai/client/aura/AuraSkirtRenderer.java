@@ -52,6 +52,28 @@ public final class AuraSkirtRenderer {
     public static void render(PoseStack pose, MultiBufferSource buffers,
                               AuraSkirts.Plan plan, double ticks, float seconds,
                               int seed, float toCamX, float toCamZ) {
+        render(pose, buffers, plan, ticks, seconds, seed, toCamX, toCamZ, 1f, 1f);
+    }
+
+    /**
+     * Pasada de BLOOM del aura (KiVfxFrameQueue.submitBloomOnly, ver AuraRenderer): la MISMA
+     * geometría y la misma animación que la del mundo — mismo frame de hoja, mismo jitter, mismo
+     * pulso, porque salen de los mismos relojes —, con la masa y el núcleo pesados aparte. El
+     * resplandor tiene que nacer del NÚCLEO: si la masa entera entra con su peso normal, el
+     * bloom convierte el aura en una nube lechosa (la misma lección que el cuerpo del ki, ver
+     * ZenkaiBloomBody en ki_energy.fsh). Sin efectos laterales: se ejecuta dentro de una tarea.
+     */
+    public static void renderBloom(PoseStack pose, MultiBufferSource buffers,
+                                   AuraSkirts.Plan plan, double ticks, float seconds,
+                                   int seed, float toCamX, float toCamZ,
+                                   float massWeight, float coreWeight) {
+        render(pose, buffers, plan, ticks, seconds, seed, toCamX, toCamZ, massWeight, coreWeight);
+    }
+
+    private static void render(PoseStack pose, MultiBufferSource buffers,
+                               AuraSkirts.Plan plan, double ticks, float seconds,
+                               int seed, float toCamX, float toCamZ,
+                               float massWeight, float coreWeight) {
         if (plan.isEmpty()) return;
 
         AuraProfile p = plan.profile();
@@ -69,9 +91,10 @@ public final class AuraSkirtRenderer {
             // Capa envolvente: mismo perfil, más grande, seed desfasado para que no
             // respire igual que la interior. Una gota, dos colores.
             cone(pose, vc, plan, plan.outerColor(), scale * AuraTuning.OUTER_SCALE_MUL,
-                    AuraTuning.OUTER_ALPHA_MUL, stepIdx, seed + 7, toCamX, toCamZ);
+                    AuraTuning.OUTER_ALPHA_MUL, stepIdx, seed + 7, toCamX, toCamZ, massWeight, coreWeight);
         }
-        cone(pose, vc, plan, plan.innerColor(), scale, 1f, stepIdx, seed, toCamX, toCamZ);
+        cone(pose, vc, plan, plan.innerColor(), scale, 1f, stepIdx, seed, toCamX, toCamZ,
+                massWeight, coreWeight);
 
         // Pasada aditiva opcional (AuraModifier.additiveGlow, PRUEBA DE VIABILIDAD
         // 2026-09-02): un núcleo caliente MÁS PEQUEÑO que la interior, sumando luz en vez
@@ -81,13 +104,14 @@ public final class AuraSkirtRenderer {
         if (p.additiveGlow()) {
             VertexConsumer glowVc = buffers.getBuffer(ModAuraRenderType.energyAdditive(SHEET[frame]));
             cone(pose, glowVc, plan, plan.innerColor(), scale * AuraTuning.GLOW_SCALE_MUL,
-                    AuraTuning.GLOW_ALPHA_MUL, stepIdx, seed + 13, toCamX, toCamZ);
+                    AuraTuning.GLOW_ALPHA_MUL, stepIdx, seed + 13, toCamX, toCamZ, massWeight, coreWeight);
         }
     }
 
     private static void cone(PoseStack pose, VertexConsumer vc, AuraSkirts.Plan plan,
                              int rgb, float scale, float alphaMul,
-                             int stepIdx, int seed, float toCamX, float toCamZ) {
+                             int stepIdx, int seed, float toCamX, float toCamZ,
+                             float massWeight, float coreWeight) {
         float r = AuraQuads.red(rgb), g = AuraQuads.green(rgb), b = AuraQuads.blue(rgb);
         boolean core = plan.hasCore();
         float coreA = plan.profile().core();
@@ -130,10 +154,12 @@ public final class AuraSkirtRenderer {
                 pose.translate(0f, s.yStart() * scale, s.baseR() * scale);
                 pose.mulPose(Axis.XP.rotationDegrees(s.tiltDeg()));
 
-                AuraQuads.plane(vc, pose.last(), w, h, u0, vMass, mirror, 0f, r, g, b, a);
-                if (core) {
+                if (massWeight > 0f) {
+                    AuraQuads.plane(vc, pose.last(), w, h, u0, vMass, mirror, 0f, r, g, b, a * massWeight);
+                }
+                if (core && coreWeight > 0f) {
                     AuraQuads.plane(vc, pose.last(), w, h, u0, vCore, mirror,
-                            AuraTuning.CORE_Z_OFFSET, cr, cg, cb, a * coreA);
+                            AuraTuning.CORE_Z_OFFSET, cr, cg, cb, a * coreA * coreWeight);
                 }
                 pose.popPose();
             }

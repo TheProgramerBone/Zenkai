@@ -280,6 +280,39 @@ public enum KiTechniqueType {
      *  TechniquePacket.handleUnlock y el javadoc de TechniqueDef ("TÉCNICA FIRMA"). */
     public String master() { TechniqueDef d = def(); return d == null ? "" : d.master(); }
 
+    /** Segundo color (interior) de fábrica, campo datapack {@code default_rgb2} ("0xRRGGBB"; "" o
+     *  ausente = sin segundo color, -1). Impuesto en las técnicas de maestro (KiTechnique.rgb2);
+     *  en las normales es solo el punto de partida del editor. */
+    public int defaultRgb2() {
+        TechniqueDef d = def();
+        if (d == null || d.defaultRgb2().isEmpty()) return -1;
+        try {
+            return Integer.decode(d.defaultRgb2().replace("#", "0x")) & 0xFFFFFF;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /** Set de animación que impone una técnica de maestro (campo datapack {@code anim_set}); 0 =
+     *  ninguno. Ver KiTechnique.animSet(). */
+    public int signatureAnimSet() { TechniqueDef d = def(); return d == null ? 0 : d.animSet(); }
+
+    /** Sonido de carga/disparo que impone una técnica de maestro, o null (sin campo, id mal
+     *  escrito o sonido que no es de la familia ki_attack_*). */
+    public net.minecraft.resources.ResourceLocation signatureChargeSound() {
+        TechniqueDef d = def();
+        if (d == null || d.chargeSound().isEmpty()) return null;
+        var id = net.minecraft.resources.ResourceLocation.tryParse(d.chargeSound());
+        return TechniqueAssets.isValidCharge(id) ? id : null;
+    }
+
+    public net.minecraft.resources.ResourceLocation signatureReleaseSound() {
+        TechniqueDef d = def();
+        if (d == null || d.releaseSound().isEmpty()) return null;
+        var id = net.minecraft.resources.ResourceLocation.tryParse(d.releaseSound());
+        return TechniqueAssets.isValidRelease(id) ? id : null;
+    }
+
     /** CASTTIME: ticks para cargar al 100%. Se puede soltar desde MIN_CHARGE. */
     public int chargeTicks() { TechniqueDef d = def(); return d == null ? 20 : d.chargeTicks(); }
 

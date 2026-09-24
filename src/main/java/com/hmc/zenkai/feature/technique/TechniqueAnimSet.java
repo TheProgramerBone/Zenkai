@@ -29,13 +29,13 @@ public enum TechniqueAnimSet {
     /** Rayo mortal: un brazo al frente, quieto. */
     SET_4(TechniquePosition.RIGHT_HAND),
     /** Kamehameha: manos a la cadera derecha, empuje frontal. */
-    SET_5(TechniquePosition.BOTH_HANDS),
+    SET_5(TechniquePosition.BOTH_HANDS, false),
     /** Death Ball: brazo derecho recto arriba, esfera sobre la palma. */
     SET_6(TechniquePosition.RIGHT_HAND),
     /** Doble palma frontal: las dos manos abiertas al frente. */
     SET_7(TechniquePosition.BOTH_HANDS),
     /** Galick Gun: manos juntas al costado, a la altura de la cintura. */
-    SET_8(TechniquePosition.BOTH_HANDS),
+    SET_8(TechniquePosition.BOTH_HANDS, false),
     /** Makankosappo. La carga tiene DOS tiempos —postura tensa y luego los dedos subiendo a
      *  la frente— y por eso su clip dura 20 ticks en vez de los 14-18 del resto. Único set que
      *  ancla en la cabeza: la esfera vive en la frente desde el primer frame hasta el disparo,
@@ -57,10 +57,27 @@ public enum TechniqueAnimSet {
     public static final TechniquePosition BARRIER_POSITION = TechniquePosition.BOTH_HANDS;
 
     private final TechniquePosition position;
+    private final boolean firesFromChargePose;
 
     TechniqueAnimSet(TechniquePosition position) {
-        this.position = position;
+        this(position, true);
     }
+
+    TechniqueAnimSet(TechniquePosition position, boolean firesFromChargePose) {
+        this.position = position;
+        this.firesFromChargePose = firesFromChargePose;
+    }
+
+    /**
+     * ¿La técnica sale de donde estaba la bola de CARGA? true en casi cualquier set: la pose de
+     * carga ya es la de disparo (brazo al frente, palma arriba, dedos en la frente). false
+     * cuando el clip de release MUEVE las manos a otro sitio — el Kamehameha (cadera → empuje
+     * frontal, ki_attack_5_release) y el Galick Gun (costados → al frente, ki_attack_8_release),
+     * leído de los keyframes reales, no supuesto. Ahí el centro de la bola de carga quedaría en
+     * la cadera mientras las manos empujan hacia delante, así que el servidor usa el offset fijo
+     * de {@link #position()}, pensado para el punto del empuje. Ver KiFirePacket.spawnCenter.
+     */
+    public boolean firesFromChargePose() { return firesFromChargePose; }
 
     /** De dónde sale la técnica con este set. Ya no lo elige el jugador: lo dicta la animación. */
     public TechniquePosition position() { return position; }

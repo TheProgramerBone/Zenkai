@@ -64,7 +64,8 @@ public final class KiVfxFrameQueue {
         void draw(PoseStack pose, MultiBufferSource.BufferSource buffers);
     }
 
-    private record Entry(Matrix4f pose, Matrix3f normal, double distSq, Task task) {}
+    /** @param bloomOnly true = solo se reproduce en la pasada de bloom, ver {@link #submitBloomOnly}. */
+    private record Entry(Matrix4f pose, Matrix3f normal, double distSq, Task task, boolean bloomOnly) {}
 
     private static final List<Entry> QUEUE = new ArrayList<>();
     private static boolean bloomPass = false;
@@ -76,7 +77,21 @@ public final class KiVfxFrameQueue {
     public static void submit(PoseStack pose, Vec3 fromCamera, Task task) {
         PoseStack.Pose last = pose.last();
         QUEUE.add(new Entry(new Matrix4f(last.pose()), new Matrix3f(last.normal()),
-                fromCamera.lengthSqr(), task));
+                fromCamera.lengthSqr(), task, false));
+    }
+
+    /**
+     * Como {@link #submit}, pero la tarea SOLO se reproduce en la pasada de bloom: lo que pinta ya
+     * se dibujó en el mundo por su propia ruta y aquí solo aporta resplandor. Nació para el AURA
+     * (2026-09-24): se sigue dibujando en el mundo exactamente como antes (AuraRenderer, su propio
+     * orden y RenderTypes) y solo sus partes emisivas se suman al bloom — añadir resplandor sin
+     * tocar su aspecto base ni su orden de dibujado. Con shaderpack (sin bloom propio) estas
+     * tareas simplemente no se ejecutan.
+     */
+    public static void submitBloomOnly(PoseStack pose, Vec3 fromCamera, Task task) {
+        PoseStack.Pose last = pose.last();
+        QUEUE.add(new Entry(new Matrix4f(last.pose()), new Matrix3f(last.normal()),
+                fromCamera.lengthSqr(), task, true));
     }
 
     /** Lejos primero, cerca al final — ver "ORDEN DE ATRÁS HACIA DELANTE". Una vez por frame,
@@ -97,6 +112,7 @@ public final class KiVfxFrameQueue {
         bloomPass = forBloom;
         try {
             for (Entry e : QUEUE) {
+                if (e.bloomOnly() && !forBloom) continue;
                 PoseStack pose = new PoseStack();
                 pose.last().pose().set(e.pose());
                 pose.last().normal().set(e.normal());

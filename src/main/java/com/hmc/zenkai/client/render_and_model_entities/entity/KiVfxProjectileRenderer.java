@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.render_and_model_entities.entity;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiAxis;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiRibbon;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxFrameQueue;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxCompositeRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxDebugMode;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxGeometry;
@@ -92,8 +93,15 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         // reproduce en un stage fijo, una vez para el mundo y otra para el bloom. Lo que debe
         // pasar UNA sola vez por frame (partículas, consumeFxTick) se queda fuera de la tarea.
         if (!hiddenFirstPerson) {
-            Vec3 fromCamera = visualFeet(entity, partialTick).add(0, entity.getBbHeight() * 0.5, 0)
-                    .subtract(this.entityRenderDispatcher.camera.getPosition());
+            Vec3 center = visualFeet(entity, partialTick).add(0, entity.getBbHeight() * 0.5, 0);
+            // Haz anclado: se ordena por el PUNTO MEDIO del tubo, no por la cabeza — un haz de
+            // treinta bloques con la cabeza lejos tiene casi todo el cuerpo cerca de la cámara.
+            if (v.column()) {
+                Vec3 origin = columnOrigin(entity, center);
+                center = center.add(origin).scale(0.5);
+                KiBeamAfterglow.track(entity, v, origin);
+            }
+            Vec3 fromCamera = center.subtract(this.entityRenderDispatcher.camera.getPosition());
             KiVfxFrameQueue.submit(pose, fromCamera, (p, buf) -> drawTechnique(entity, v, partialTick, p, buf));
         }
 
@@ -112,6 +120,7 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
      *  ejecuta DOS veces por frame (mundo y bloom), así que no puede tener efectos laterales. */
     private void drawTechnique(KiProjectileEntity entity, KiVfxProfile v, float partialTick,
                                PoseStack pose, MultiBufferSource.BufferSource buffer) {
+        KiVfxColors.begin(entity.rgb2());
         int rgb = entity.rgb();
         float r = ((rgb >> 16) & 0xFF) / 255f;
         float g = ((rgb >> 8) & 0xFF) / 255f;
@@ -132,14 +141,29 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
 
         float animT = animTime(entity, partialTick);
 
-        // Respiración: una energía contenida no está nunca perfectamente quieta.
-        float breathe = 1f + 0.035f * Mth.sin(animT * 0.31f);
+        // Respiración: una energía contenida no está nunca perfectamente quieta. Dos senos de
+        // frecuencias no múltiplos: con uno solo el latido se lee mecánico, de metrónomo.
+        float breathe = 1f + 0.028f * Mth.sin(animT * 0.31f) + 0.014f * Mth.sin(animT * 0.87f + 1.3f);
         float popT = Mth.clamp((entity.tickCount + partialTick) / POP_TICKS, 0f, 1f);
         float popScale = popT * popT * (3f - 2f * popT);
         float size = (float) entity.techniqueType().visualDiameter(entity.size()) * breathe * popScale;
 
+        if (v.column() && (dbg.showsShell() || dbg.showsCore())) {
+            Vec3 center = visualFeet(entity, partialTick).add(0, entity.getBbHeight() * 0.5, 0);
+            renderColumn(v, pose, buffer, center, columnOrigin(entity, center),
+                    entity.getBbHeight() * 0.5f, size, animT, r, g, b, 1f, entity.isFrozen(),
+                    this.entityRenderDispatcher.camera.getPosition());
+        }
+
         pose.pushPose();
         pose.translate(0, entity.getBbHeight() * 0.5, 0);
+
+        // Giro propio de las esferas grandes (KiVfxProfile.spin): el hervor del shader y la capa
+        // de detalle viajan con la normal de la malla, así que girar la malla hace girar su
+        // superficie — rotación interna visible, no solo un contorno que tiembla.
+        if (v.shape() == KiVfxShape.SPHERE && v.spin() != 0f) {
+            pose.mulPose(Axis.YP.rotationDegrees(animT * v.spin()));
+        }
 
         // Las formas alargadas se orientan con la VELOCIDAD, no con el yaw.
         if (v.shape() != KiVfxShape.SPHERE) {
@@ -159,14 +183,15 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         }
 
         if (dbg.showsShell() || dbg.showsCore()) {
-            KiVfxMesh mesh = KiVfxGeometry.shell(v);
+            // Haz anclado: aquí solo la cabeza — el cuerpo ya lo ha puesto renderColumn.
+            KiVfxMesh mesh = v.column() ? KiVfxGeometry.head(v) : KiVfxGeometry.shell(v);
             // proximity: ver "BUG DE CÁMARA" en ki_energy.fsh. El radio ya escalado decide qué
             // cuenta como "cerca" para ESTA técnica, no una distancia fija en bloques.
             float proximity = KiVfxRenderTypes.proximity(
                     this.entityRenderDispatcher.camera.getPosition().distanceTo(
                             visualFeet(entity, partialTick).add(0, entity.getBbHeight() * 0.5, 0)),
                     v.worldRadius(size));
-            KiVfxMesh coreMesh = KiVfxGeometry.core(v, true);
+            KiVfxMesh coreMesh = v.column() ? KiVfxGeometry.headCore(v) : KiVfxGeometry.core(v, true);
             KiVfxCompositeRenderer.render(buffer, v, mesh, coreMesh, pose, size, r, g, b,
                     1f, entity.isFrozen(), proximity);
         }
@@ -176,6 +201,88 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         if (dbg.showsRibbons()) {
             renderRays(entity, v, partialTick, pose, buffer, r, g, b);
         }
+    }
+
+    // ── Haz anclado ─────────────────────────────────────────────────────────
+
+    /** Radio del tubo en el extremo del disparo respecto a la punta. Casi cilindro (las
+     *  referencias muestran un chorro de grosor casi constante), con un leve estrechamiento que
+     *  dice de dónde SALE la energía. */
+    private static final float COLUMN_ROOT_MUL = 0.80f;
+    /** Tamaño de la bola del extremo del disparo respecto a la cabeza (kamehameha_2: la energía
+     *  se acumula en las manos mientras el haz sale). */
+    private static final float ORIGIN_BULB = 0.85f;
+    /** Fracción del radio de la cabeza que el tubo se queda CORTO dentro de ella — el zCut de
+     *  dragonminez: sin él, el extremo abierto del tubo asoma a través de la cabeza translúcida. */
+    private static final float HEAD_CUT = 0.5f;
+    /** Largo del tubo de una copia congelada por "/zenkai debug kivfx" (no tiene disparo real). */
+    private static final float FROZEN_COLUMN_LENGTH = 12f;
+
+    private static Vec3 columnOrigin(KiProjectileEntity e, Vec3 center) {
+        if (e.isFrozen()) {
+            Vec3 dir = e.getDeltaMovement();
+            if (dir.lengthSqr() < 1.0e-6) dir = new Vec3(0, 0, 1);
+            return e.beamOrigin(center.subtract(dir.normalize().scale(FROZEN_COLUMN_LENGTH)));
+        }
+        return e.beamOrigin(center);
+    }
+
+    /**
+     * HAZ ANCLADO (KiVfxProfile.column, modelo de dragonminez KiWaveRenderer adaptado): tubo 3D
+     * desde el punto de disparo hasta la cabeza, más una bola en el extremo del disparo.
+     * <ul>
+     *   <li>EXTENSIÓN: la longitud es la distancia real disparo → cabeza, así que el haz se
+     *       alarga solo mientras la cabeza vuela (el getBeamLength de DMZ).</li>
+     *   <li>CRECIMIENTO: el grosor sale de {@code size}, que ya incluye el pop de 5 ticks — el
+     *       haz nace fino y se ensancha (el castTime de DMZ).</li>
+     *   <li>PULSO: dos senos pequeños sobre el grosor ("presión de energía", no un metrónomo; DMZ
+     *       usa uno solo de ±15 %). ±7.5 % combinado la primera vez; bajado a ±4.5 % a petición del
+     *       usuario (2026-09-24: "se ve increíble pero tal vez se podría reducir un poco"). Ajuste
+     *       fino en vivo: /zkvfx set beam.pulse.</li>
+     *   <li>DESVANECIDO: al desaparecer la entidad lo sigue dibujando {@link KiBeamAfterglow}.</li>
+     * </ul>
+     * Público y estático para que KiBeamAfterglow dibuje exactamente lo mismo.
+     * @param pose     en los pies de la entidad; {@code headLift} sube hasta el centro.
+     * @param alphaMul 1 en vida; el afterglow lo baja hasta 0.
+     */
+    public static void renderColumn(KiVfxProfile v, PoseStack pose, MultiBufferSource.BufferSource buffer,
+                                    Vec3 headWorld, Vec3 originWorld, float headLift, float size, float animT,
+                                    float r, float g, float b, float alphaMul, boolean frozen, Vec3 cam) {
+        Vec3 d = headWorld.subtract(originWorld);
+        float len = (float) d.length();
+        float headR = size * Math.max(v.shell().headScale(), v.shell().meshRadius());
+        float cut = headR * HEAD_CUT;
+        if (len <= cut + 0.05f) return;
+
+        float pulse = 1f + KiVfxTuning.get(KiVfxTuning.Param.BEAM_PULSE, v)
+                * (0.03f * Mth.sin(animT * 1.5f) + 0.015f * Mth.sin(animT * 3.7f + 1.1f));
+        float radius = size * v.shell().meshRadius() * pulse;
+        float proximity = KiVfxRenderTypes.proximity(distanceToSegment(cam, originWorld, headWorld), radius);
+
+        pose.pushPose();
+        pose.translate(0, headLift, 0);
+
+        pose.pushPose();
+        pose.translate(-d.x, -d.y, -d.z);
+        KiVfxCompositeRenderer.render(buffer, v, KiVfxGeometry.head(v), KiVfxGeometry.headCore(v), pose,
+                size * ORIGIN_BULB * pulse, r, g, b, alphaMul, frozen,
+                KiVfxRenderTypes.proximity(cam.distanceTo(originWorld), headR));
+        pose.popPose();
+
+        pose.mulPose(Axis.YP.rotationDegrees((float) (Math.atan2(d.x, d.z) * 180.0 / Math.PI)));
+        pose.mulPose(Axis.XP.rotationDegrees((float) (-Math.asin(Mth.clamp(d.y / len, -1.0, 1.0)) * 180.0 / Math.PI)));
+        pose.translate(0, 0, -cut);
+        KiVfxCompositeRenderer.renderColumn(buffer, v, pose, radius, COLUMN_ROOT_MUL, len - cut,
+                r, g, b, alphaMul, frozen, proximity);
+        pose.popPose();
+    }
+
+    private static double distanceToSegment(Vec3 p, Vec3 a, Vec3 b) {
+        Vec3 ab = b.subtract(a);
+        double l2 = ab.lengthSqr();
+        if (l2 < 1.0e-9) return p.distanceTo(a);
+        double t = Mth.clamp(p.subtract(a).dot(ab) / l2, 0.0, 1.0);
+        return p.distanceTo(a.add(ab.scale(t)));
     }
 
     /** Mismo ladeo que la bola de carga (ver KiVfxChargeRenderer.DISK_CANT_DEGREES): un disco
@@ -266,11 +373,23 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         // teñida. Opcional: en cuerpos grandes y lentos sobra
         // (trailInnerMul 0).
         if (v.trail().hasCore()) {
-            float cr = r + (1f - r) * 0.55f, cg = g + (1f - g) * 0.55f, cb = b + (1f - b) * 0.55f;
+            float[] in = innerTrailColor(r, g, b);
+            float cr = in[0], cg = in[1], cb = in[2];
             VertexConsumer innerVc = buffer.getBuffer(KiVfxRenderTypes.glow(KiVfxRenderTypes.TRAIL_TEXTURE));
             KiRibbon.draw(innerVc, pose.last(), pts, feet, basis[0], basis[1], cam,
                     outer * v.trail().innerMul(), scroll, cr, cg, cb, trailAlpha * 0.70f, headClear);
         }
+    }
+
+    /** Núcleo de la estela: el tinte empujado hacia blanco — o, con segundo color
+     *  (KiVfxColors), ESE color algo aclarado: el interior de la estela es el interior de la
+     *  técnica. */
+    private static float[] innerTrailColor(float r, float g, float b) {
+        if (KiVfxColors.secondary() >= 0) {
+            float[] h = KiVfxColors.hot(r, g, b);
+            return new float[]{h[0] + (1f - h[0]) * 0.30f, h[1] + (1f - h[1]) * 0.30f, h[2] + (1f - h[2]) * 0.30f};
+        }
+        return new float[]{r + (1f - r) * 0.55f, g + (1f - g) * 0.55f, b + (1f - b) * 0.55f};
     }
 
     /** Rampa de entrada de la estela (ver KiRibbon.strand, headClear): algo más que el radio de
@@ -312,7 +431,8 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         float trailAlpha = v.trail().alpha() * KiVfxTuning.get(KiVfxTuning.Param.TRAIL_ALPHA_MUL, v);
         float radius = v.shell().meshRadius();
         float length = v.shell().meshLength();
-        float cr = r + (1f - r) * 0.55f, cg = g + (1f - g) * 0.55f, cb = b + (1f - b) * 0.55f;
+        float[] in = innerTrailColor(r, g, b);
+        float cr = in[0], cg = in[1], cb = in[2];
 
         List<List<Vec3>> strands = new ArrayList<>(2);
         strands.add(KiRibbon.helixStrand(pts, right, up, radius, length, 0));

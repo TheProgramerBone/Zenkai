@@ -240,6 +240,16 @@ public final class KiVfxRenderTypes extends RenderType {
         s.safeGetUniform("ZenkaiBloomBody").set(KiVfxTuning.get(KiVfxTuning.Param.BLOOM_BODY, type));
         s.safeGetUniform("ZenkaiWobble").set(wobble);
         s.safeGetUniform("ZenkaiDetail").set(sh.detailStrength());
+        s.safeGetUniform("ZenkaiFill").set(sh.fill());
+        // Segundo color (KiVfxColors): w = 1 lo activa; con w = 0 el shader deriva la capa
+        // caliente del tinte del vértice, como siempre.
+        int hot = KiVfxColors.secondary();
+        if (hot >= 0) {
+            s.safeGetUniform("ZenkaiHot").set(((hot >> 16) & 0xFF) / 255f, ((hot >> 8) & 0xFF) / 255f,
+                    (hot & 0xFF) / 255f, 1f);
+        } else {
+            s.safeGetUniform("ZenkaiHot").set(0f, 0f, 0f, 0f);
+        }
         s.safeGetUniform("ZenkaiFrozenTime").set(frozenAnim || dbg.forceFlatBands() ? 0f : -1f);
         s.safeGetUniform("ZenkaiProximity").set(proximity);
         s.safeGetUniform("ZenkaiAxial").set(p.axial() ? 1f : 0f);

@@ -79,9 +79,89 @@ public final class KiVfxGeometry {
                 k -> cylinder(s.meshRadius() * p.core().scale(), s.meshLength(), p.anchorTip()));
     }
 
+    /**
+     * Solo la bola de la punta de un haz ANCLADO ({@link KiVfxProfile#column()}), en z=0 — sin el
+     * tubo horneado de longitud fija: el cuerpo del haz lo pone {@link #emitTube} con la longitud
+     * real de ese frame. La vista previa de TechniqueEditScreen y la bola de carga siguen usando
+     * {@link #shell}, a propósito: ahí no hay punto de disparo del que tirar un tubo.
+     */
+    public static KiVfxMesh head(KiVfxProfile p) {
+        return sphereOfRadius(Math.max(p.shell().headScale(), p.shell().meshRadius()));
+    }
+
+    private static final int TUBE_SECTORS = 24;
+    /** Largo máximo de un tramo del tubo anclado. El hervor del shader depende de la normal y la
+     *  UV por vértice: tramos muy largos lo dejarían interpolar en línea recta entre extremos. */
+    private static final float TUBE_SEGMENT_LEN = 1.25f;
+
+    /**
+     * Tubo de radio constante de z=−length a z=0 (eje +Z, igual que el resto de mallas), emitido
+     * DIRECTAMENTE: su longitud cambia cada frame (el haz se alarga con la cabeza), así que
+     * cachearlo como las demás formas no tiene sentido — son pocos quads.
+     * UV: x = vuelta al tubo (0..1), y = distancia en BLOQUES desde la punta — la usan las vetas
+     * de flujo de ki_energy.fsh, que así mantienen su tamaño sea cual sea el largo del haz. Por
+     * eso NO se escala en Z con el PoseStack (escalar estiraría las vetas).
+     * @param rootRadiusMul radio en el extremo del disparo respecto a la punta (1 = cilindro).
+     */
+    public static void emitTube(com.mojang.blaze3d.vertex.VertexConsumer vc,
+                                com.mojang.blaze3d.vertex.PoseStack.Pose pose,
+                                float radius, float rootRadiusMul, float length,
+                                float r, float g, float b, float alpha, boolean flatUv) {
+        if (length <= 1.0e-3f || radius <= 1.0e-4f) return;
+        int segments = Math.max(2, (int) Math.ceil(length / TUBE_SEGMENT_LEN));
+        float slope = radius * (1f - rootRadiusMul) / length;
+        float nl = (float) Math.sqrt(1f + slope * slope);
+        for (int s = 0; s < segments; s++) {
+            float f0 = (float) s / segments, f1 = (float) (s + 1) / segments;
+            for (int j = 0; j < TUBE_SECTORS; j++) {
+                float a0 = (float) j / TUBE_SECTORS, a1 = (float) (j + 1) / TUBE_SECTORS;
+                tubeVertex(vc, pose, radius, rootRadiusMul, length, slope, nl, f0, a0, r, g, b, alpha, flatUv);
+                tubeVertex(vc, pose, radius, rootRadiusMul, length, slope, nl, f1, a0, r, g, b, alpha, flatUv);
+                tubeVertex(vc, pose, radius, rootRadiusMul, length, slope, nl, f1, a1, r, g, b, alpha, flatUv);
+                tubeVertex(vc, pose, radius, rootRadiusMul, length, slope, nl, f0, a1, r, g, b, alpha, flatUv);
+            }
+        }
+    }
+
+    /** @param f 0 = punta (z=0), 1 = extremo del disparo (z=−length). */
+    private static void tubeVertex(com.mojang.blaze3d.vertex.VertexConsumer vc,
+                                   com.mojang.blaze3d.vertex.PoseStack.Pose pose,
+                                   float radius, float rootMul, float length, float slope, float nl,
+                                   float f, float around,
+                                   float r, float g, float b, float alpha, boolean flatUv) {
+        double th = 2 * Math.PI * around;
+        float cx = (float) Math.cos(th), cy = (float) Math.sin(th);
+        float rr = radius * (1f + (rootMul - 1f) * f);
+        vc.addVertex(pose, cx * rr, cy * rr, -length * f)
+                .setColor(r, g, b, alpha)
+                .setUv(flatUv ? 0.5f : around, flatUv ? 0.5f : length * f)
+                .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY)
+                .setLight(0xF000F0)
+                .setNormal(pose, cx / nl, cy / nl, -slope / nl);
+    }
+
+    /** Núcleo de la cabeza de un haz anclado: la esfera de {@link #head} reducida por
+     *  {@code core.scale} — {@link #core}(p, false) mide respecto al diámetro de la bola de
+     *  carga, no al radio de la cabeza, y casi la llenaría entera. */
+    public static KiVfxMesh headCore(KiVfxProfile p) {
+        if (!p.core().enabled()) return null;
+        return sphereOfRadius(Math.max(p.shell().headScale(), p.shell().meshRadius()) * p.core().scale());
+    }
+
+    /** Mallas esféricas cacheadas (cabezas y núcleos) — ver {@link #isRound}. */
+    private static final java.util.Set<KiVfxMesh> ROUND = ConcurrentHashMap.newKeySet();
+
+    /** ¿Es {@code mesh} una de las esferas de este cache? El núcleo en dos capas la encoge entera;
+     *  un hilo de haz, solo en sección. */
+    public static boolean isRound(KiVfxMesh mesh) { return ROUND.contains(mesh); }
+
     private static KiVfxMesh sphereOfRadius(float radius) {
         String key = "CORE_SPHERE|" + radius;
-        return CACHE.computeIfAbsent(key, k -> sphere(radius, 0f));
+        return CACHE.computeIfAbsent(key, k -> {
+            KiVfxMesh m = sphere(radius, 0f);
+            ROUND.add(m);
+            return m;
+        });
     }
 
     private static KiVfxMesh build(KiVfxProfile p) {

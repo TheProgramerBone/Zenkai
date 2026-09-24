@@ -35,10 +35,12 @@ public class ModSounds {
     public static final Supplier<SoundEvent> KI_ATTACK_CHARGE_2 = registerSoundEvent("ki_attack_charge_2");
     public static final Supplier<SoundEvent> KI_ATTACK_CHARGE_3 = registerSoundEvent("ki_attack_charge_3");
     public static final Supplier<SoundEvent> KI_ATTACK_CHARGE_4 = registerSoundEvent("ki_attack_charge_4");
+    public static final Supplier<SoundEvent> KI_ATTACK_CHARGE_5 = registerSoundEvent("ki_attack_charge_5");
     public static final Supplier<SoundEvent> KI_ATTACK_RELEASE_1 = registerSoundEvent("ki_attack_release_1");
     public static final Supplier<SoundEvent> KI_ATTACK_RELEASE_2 = registerSoundEvent("ki_attack_release_2");
     public static final Supplier<SoundEvent> KI_ATTACK_RELEASE_3 = registerSoundEvent("ki_attack_release_3");
     public static final Supplier<SoundEvent> KI_ATTACK_RELEASE_4 = registerSoundEvent("ki_attack_release_4");
+    public static final Supplier<SoundEvent> KI_ATTACK_RELEASE_5 = registerSoundEvent("ki_attack_release_5");
     /** Golpe físico normal que CONECTA. UN evento con cuatro variantes en sounds.json: el
      *  motor alterna solo. Cuatro eventos separados podrían desincronizarse en volumen o
      *  subtítulo. Ver CombatFeedback.onAttack. */

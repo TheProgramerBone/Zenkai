@@ -18,6 +18,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * C2S: disparar la técnica del slot con la carga acumulada (R + click derecho; soltar
@@ -41,7 +42,7 @@ import org.jetbrains.annotations.NotNull;
  * concentrada en un solo número (ver KiCombatServer.chargeSplitFactor). Fórmulas en
  * KiCombatServer, compartidas con las previews del editor.
  */
-public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPayload {
+public record KiFirePacket(int slot, int chargeTicks, @Nullable Vec3 originHint) implements CustomPacketPayload {
 
     private static final float BURST_SPREAD_DEG = 6.0f;
 
@@ -53,8 +54,15 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
                     (buf, pkt) -> {
                         buf.writeVarInt(pkt.slot());
                         buf.writeVarInt(pkt.chargeTicks());
+                        buf.writeBoolean(pkt.originHint() != null);
+                        if (pkt.originHint() != null) {
+                            buf.writeDouble(pkt.originHint().x);
+                            buf.writeDouble(pkt.originHint().y);
+                            buf.writeDouble(pkt.originHint().z);
+                        }
                     },
-                    buf -> new KiFirePacket(buf.readVarInt(), buf.readVarInt()));
+                    buf -> new KiFirePacket(buf.readVarInt(), buf.readVarInt(),
+                            buf.readBoolean() ? new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble()) : null));
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() { return TYPE; }
@@ -62,7 +70,14 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
     public static void handle(KiFirePacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (ctx.player() instanceof ServerPlayer sp) {
-                com.hmc.zenkai.feature.action.ActionResolver.releaseKi(sp, pkt.slot());
+                // La pista solo vive durante ESTE disparo: releaseKi → execute → spawnProjectile
+                // corre entero aquí dentro, en el hilo del servidor.
+                releaseHint = pkt.originHint();
+                try {
+                    com.hmc.zenkai.feature.action.ActionResolver.releaseKi(sp, pkt.slot());
+                } finally {
+                    releaseHint = null;
+                }
             }
         });
     }
@@ -137,6 +152,7 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
         KiProjectileEntity proj = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sp.level());
         proj.configure(sp, tech.type(), tech.rgb(), tech.size(), damage,
                 tech.type().animTicks(), effect);
+        proj.setRgb2(tech.rgb2());
         Vec3 c = sp.position().add(0, sp.getBbHeight() * 0.5, 0);
         proj.setPos(c.x, c.y - proj.getBbHeight() * 0.5, c.z);
         sp.level().addFreshEntity(proj);
@@ -146,6 +162,46 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
             sp.level().playSound(null, c.x, c.y, c.z, snd, SoundSource.PLAYERS, 1.0f, 1.0f);
         }
     }
+    /** Pista de origen del disparo en curso (ver {@link #spawnCenter}); null fuera de handle(). */
+    @Nullable
+    private static Vec3 releaseHint = null;
+
+    /** Distancia máxima, en bloques y ANTES de sumar el tamaño de la técnica, entre los ojos y la
+     *  pista del cliente. Cubre una pose con los brazos estirados (Kamehameha, Final Flash) o en
+     *  alto (Death Ball); lo que la técnica mida de más se suma aparte. */
+    private static final double HINT_REACH = 2.2;
+
+    /**
+     * De dónde sale la técnica. PREFERENCIA: el centro de la bola de carga tal como la dibujó el
+     * cliente, que sigue los huesos REALES de la animación (PlayerHandTracker) — así el
+     * proyectil, y con él el haz anclado, sale de las manos que el jugador está viendo, y no del
+     * offset fijo de TechniquePosition (que no sabe si la pose tiene los brazos al frente, al
+     * costado o sobre la cabeza). El servidor no tiene huesos, por eso hace falta la pista.
+     * NO SE FÍA A CIEGAS (el cliente podría mandar cualquier punto): la pista se descarta si
+     * queda más lejos de los ojos que HINT_REACH + el tamaño de la técnica, o si entre los ojos
+     * y ella hay un bloque — sin esto, un cliente modificado dispararía desde el otro lado de
+     * una pared. Descartada, o sin pista (NPC, cliente viejo), vale el offset de siempre.
+     */
+    private static Vec3 spawnCenter(ServerPlayer sp, KiTechnique tech, Vec3 dir) {
+        // El enum ya lo orienta con la mirada y lo escala con el tamaño del jugador; aquí solo se
+        // empuja un poco hacia delante para que no nazca dentro del propio modelo.
+        Vec3 fallback = tech.position().origin(sp).add(dir.scale(0.45));
+        Vec3 hint = releaseHint;
+        // Un tipo con animación impuesta (Genki Dama...) sostiene la bola donde se dispara; un
+        // set normal lo dice él mismo (ver TechniqueAnimSet.firesFromChargePose).
+        boolean fromChargePose = tech.type().animOverride() != null
+                || TechniqueAnimSet.byNumber(tech.animSet()).firesFromChargePose();
+        if (hint == null || !fromChargePose) return fallback;
+        Vec3 eye = sp.getEyePosition();
+        double reach = (HINT_REACH + tech.type().projectileSize(tech.size())) * sp.getScale();
+        if (hint.distanceToSqr(eye) > reach * reach) return fallback;
+        var clip = sp.level().clip(new net.minecraft.world.level.ClipContext(eye, hint,
+                net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE, sp));
+        if (clip.getType() != net.minecraft.world.phys.HitResult.Type.MISS) return fallback;
+        return hint;
+    }
+
     private static void spawnProjectile(ServerPlayer sp, KiTechnique tech, double damage,
                                         TechniqueEffect effect, int index) {
         KiTechniqueType type = tech.type();
@@ -159,13 +215,13 @@ public record KiFirePacket(int slot, int chargeTicks) implements CustomPacketPay
 
         Vec3 dir = Vec3.directionFromRotation(sp.getXRot() + pitchJitter, sp.getYRot() + yawJitter);
 
-        // El punto de salida lo decide la técnica (mano, boca, frente...). El enum ya lo
-        // orienta con la mirada y lo escala con el tamaño del jugador; aquí solo se empuja
-        // un poco hacia delante para que no nazca dentro del propio modelo.
-        Vec3 spawn = tech.position().origin(sp).add(dir.scale(0.45));
-
         proj.configure(sp, type, tech.rgb(), tech.size(), damage, 100, effect);
-        proj.setPos(spawn.x, spawn.y, spawn.z);
+        proj.setRgb2(tech.rgb2());
+        Vec3 spawn = spawnCenter(sp, tech, dir);
+        // `spawn` es el CENTRO de la técnica; setPos coloca los PIES de la entidad. Antes se
+        // pasaba el punto tal cual, así que el cuerpo nacía media altura por ENCIMA del punto de
+        // salida — imperceptible en un Kienzan, casi un bloque en una Genki Dama.
+        proj.setPos(spawn.x, spawn.y - proj.getBbHeight() * 0.5, spawn.z);
         proj.setDeltaMovement(dir.scale(type.speed()));
         sp.level().addFreshEntity(proj);
 
