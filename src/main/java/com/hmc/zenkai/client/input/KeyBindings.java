@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.input;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.client.CombatModeClientState;
 import com.hmc.zenkai.client.LockOnClientState;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxDebugMode;
 import com.hmc.zenkai.client.overlay.ScouterClientState;
 import com.hmc.zenkai.client.overlay.SenseKiClientState;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
@@ -58,6 +59,13 @@ public final class KeyBindings {
 
     /** B: toque = destransformar, sostenido = transformar (la máquina de hold es del servidor). */
     public static KeyMapping FORM;
+
+    /** K: recorre los modos de depuración del VFX de ki (ver KiVfxDebugMode) — SIN tecla F1-F12:
+     *  la mod ya ocupa V/C/Z/H/F4/R/X/Alt/Tab, y F1-F12 chocan con vainilla (F1 oculta el HUD, F3
+     *  el depurador, F5 la cámara, F11 pantalla completa). Un solo bind cíclico + el aviso en la
+     *  action bar (KiVfxDebugMode.cycle()) evita tener que memorizar doce teclas para algo que
+     *  solo se usa mientras se depura el VFX, nunca en juego normal. */
+    public static KeyMapping KI_VFX_DEBUG_CYCLE;
 
     private static boolean REGISTERED = false;
 
@@ -143,6 +151,13 @@ public final class KeyBindings {
                 "key.categories.zenkai"
         );
         event.register(INSTANT_TRANSMISSION);
+
+        KI_VFX_DEBUG_CYCLE = new KeyMapping(
+                "key.zenkai.ki_vfx_debug_cycle",
+                GLFW.GLFW_KEY_K,
+                "key.categories.zenkai"
+        );
+        event.register(KI_VFX_DEBUG_CYCLE);
     }
 
     /**
@@ -169,6 +184,10 @@ public final class KeyBindings {
 
         if (SENSE_KI != null && SENSE_KI.consumeClick()) {
             SenseKiClientState.onKeyPress(mc);
+        }
+
+        if (KI_VFX_DEBUG_CYCLE != null && KI_VFX_DEBUG_CYCLE.consumeClick()) {
+            KiVfxDebugMode.cycle();
         }
     }
 

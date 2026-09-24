@@ -1,0 +1,14 @@
+{
+  "tp_cost": 4500,
+  "mind_req": 65,
+  "master": "kami",
+  "damage_mult": 2.6,
+  "ki_cost_mult": 2.4,
+  "charge_ticks": 160,
+  "cooldown_ticks": 140,
+  "speed": 0.9,
+  "count": 1,
+  "defensive": false,
+  "default_rgb": "0xFFD24D",
+  "anim_ticks": 26
+}

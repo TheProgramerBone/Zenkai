@@ -1,36 +1,36 @@
-package com.hmc.zenkai.client.render_and_model_entities.ki;
+package com.hmc.zenkai.client.render_and_model_entities.kivfx;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Genera y CACHEA las mallas de ki. La clave lleva el conjunto de parámetros de geometría, así que
- * dos técnicas con la misma forma comparten malla sin recalcular nada.
-// * LA LONGITUD SE HORNEA EN LA MALLA, no se aplica escalando Z en el PoseStack. Con el escalado
- * no uniforme un cilindro aguanta (es un tubo sobre Z y su sección no cambia), pero el TUBO DE
- * LA HÉLICE se estira con él: cada tramo de cinta pasa de sección circular a lóbulo alargado y
- * la espiral se lee como una hilera de salchichas. Hornearla cuesta una entrada más de caché
- * por combinación y hace imposible ese fallo.
-// * ANCLAJE. Una bola va centrada en la entidad, pero un HAZ no: si se centra, la mitad del haz
+ * Genera y CACHEA las mallas de un {@link KiVfxProfile}, en ESPACIO LOCAL con el eje de vuelo
+ * siempre +Z (ver STEP 5-6 de la auditoría: nada aquí depende de cámara ni de espacio de vista —
+ * eso es responsabilidad exclusiva de {@code ki_energy.vsh}, más abajo en el pipeline).
+ *
+ * LA LONGITUD SE HORNEA EN LA MALLA, no se aplica escalando Z en el PoseStack. Con escalado no
+ * uniforme un cilindro aguanta (es un tubo sobre Z, su sección no cambia), pero el TUBO DE LA
+ * HÉLICE se estira con él: cada tramo de cinta pasa de sección circular a lóbulo alargado y la
+ * espiral se lee como una hilera de salchichas.
+ *
+ * ANCLAJE. Una bola va centrada en la entidad, pero un HAZ no: si se centra, la mitad del haz
  * sobresale por delante del proyectil y el visual atraviesa al objetivo antes de que el golpe
- * ocurra. Con {@code anchorTip} la malla ocupa z ∈ [−longitud, 0]: la punta está en la entidad
- * y el haz se extiende hacia atrás, enlazando con la estela.
-// * El eje de vuelo es +Z y se genera con GROSOR de referencia 1 (la esfera mide 0.5 de
- * radio); el renderer escala UNIFORMEMENTE con el tamaño del proyectil.
- * Las UV se guardan REALES; quién las aplana (o no) es KiMesh.emit, que es quien sabe con qué
- * textura o shader se va a dibujar.
+ * ocurra. Con {@code anchorTip} la malla ocupa z ∈ [−longitud, 0]: la punta está en la entidad y
+ * el haz se extiende hacia atrás, enlazando con la estela.
  */
-public final class KiMeshFactory {
+public final class KiVfxGeometry {
 
-    private KiMeshFactory() {}
+    private KiVfxGeometry() {}
 
     // Resolución. Subir estos números multiplica los vértices; con estos valores una esfera son
-    // 128 quads y la doble hélice unos 600, que a veinte proyectiles en pantalla no se nota.
+    // 128 quads y la doble hélice unos 800, que a veinte proyectiles en pantalla no se nota.
     private static final int SPHERE_RINGS = 14;
     private static final int SPHERE_SECTORS = 28;
-    private static final int TUBE_RADIAL = 6;
-    /** Pasos de hélice POR UNIDAD de longitud: una espiral larga no puede tener el mismo número
-     *  de segmentos que una corta o las cintas se ven poligonales. */
+    // 8, no 6: perfil de cinta más redondo sin tocar ninguna textura (resolución de malla, no
+    // sujeta a la regla de pixel-art del mod, que es sobre texturas) — ver
+    // .claude/pendiente/technique-visuals-referencia-mods.md §4, candidato de bajo riesgo ya
+    // identificado y aplicado en esta reconstrucción.
+    private static final int TUBE_RADIAL = 8;
     private static final int HELIX_STEPS_PER_UNIT = 20;
     private static final int DISK_SECTORS = 24;
     private static final int CYL_SEGMENTS_PER_UNIT = 4;
@@ -38,67 +38,87 @@ public final class KiMeshFactory {
     /** Radio de la cola de un haz respecto al de la punta. Un tubo de sección constante se lee
      *  como una barra; el estrechamiento es lo que dice que la energía SALE de un punto. */
     private static final float BEAM_TAPER = 0.55f;
-    /** Grosor de cada cinta de la hélice respecto a su radio de giro. */
     private static final float HELIX_TUBE_RATIO = 0.26f;
-    /** Vueltas completas por unidad de longitud. */
     private static final float HELIX_TWISTS_PER_UNIT = 1.55f;
 
-    private static final Map<String, KiMesh> CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, KiVfxMesh> CACHE = new ConcurrentHashMap<>();
 
-    /** Una sola entrada: la geometría de una técnica sale entera de su {@link KiVisual}. */
-    public static KiMesh get(KiVisual v) {
-        String key = v.shape().name() + '|' + v.meshLength() + '|' + v.meshRadius()
-                + '|' + v.headScale() + '|' + v.anchorTip();
-        return CACHE.computeIfAbsent(key, k -> build(v));
+    /** La cáscara: una sola entrada, la geometría de una técnica sale entera de su perfil. */
+    public static KiVfxMesh shell(KiVfxProfile p) {
+        KiVfxProfile.Shell s = p.shell();
+        String key = p.shape().name() + '|' + s.meshLength() + '|' + s.meshRadius()
+                + '|' + s.headScale() + '|' + p.anchorTip();
+        return CACHE.computeIfAbsent(key, k -> build(p));
     }
 
-    /** Esfera desnuda de radio 0.5, sin cabeza ni estrechamiento: la malla de la bola que se
-     *  carga en la mano. Cargando, la técnica AÚN no tiene forma — un Kamehameha no es un tubo
-     *  en la palma, es energía que se contiene y solo se estira en un haz al soltarse — así que
-     *  la carga es esta esfera sea cual sea {@link KiVisual#shape()} de la técnica, CON UNA
-     *  EXCEPCIÓN: DISK usa su malla real ({@link #get}) desde que empieza a cargar, ver
-     *  {@code KiChargeRenderer.drawBall}. Para el resto de tipos, lo que SÍ toma de su KiVisual
-     *  real son color, bandas y alfas, para que sea reconociblemente la misma energía que el
-     *  proyectil que sale después. */
-    private static final KiMesh CHARGE_SPHERE = sphere(0.5f, 0f);
+    /** Esfera desnuda de radio 0.5, sin cabeza ni estrechamiento — la malla de la bola que se
+     *  carga en la mano. Cargando, la técnica AÚN no tiene forma: un Kamehameha no es un tubo en
+     *  la palma, es energía que se contiene y solo se estira en un haz al soltarse. Excepción:
+     *  DISK usa su malla real desde que empieza a cargar (ver KiVfxChargeRenderer). */
+    private static final KiVfxMesh CHARGE_SPHERE = sphere(0.5f, 0f);
 
-    public static KiMesh chargeSphere() { return CHARGE_SPHERE; }
+    public static KiVfxMesh chargeSphere() { return CHARGE_SPHERE; }
 
-    private static KiMesh build(KiVisual v) {
-        float len = v.meshLength();
-        boolean tip = v.anchorTip();
-        KiMesh mesh = switch (v.shape()) {
+    /**
+     * NÚCLEO EXPLÍCITO: malla aparte, mucho más fina/pequeña que la cáscara, para el centro
+     * brillante — ver "EL NÚCLEO ES GEOMETRÍA, NO UNA BANDA DE SHADER" en KiVfxProfile. Para
+     * HELIX el núcleo es un hilo RECTO (cilindro simple), no otra doble hélice trenzada: la
+     * identidad de "energía enroscada" ya la da la cáscara, el núcleo solo necesita leerse como
+     * un centro brillante.
+     * @param real false = está CARGANDO (bola genérica): el núcleo también es una esfera lisa.
+     * @return null si esta técnica no lleva núcleo explícito o es DISK (su canto incandescente ya
+     *         es la lectura de núcleo, ver {@link #DISK_RIM_U}).
+     */
+    public static KiVfxMesh core(KiVfxProfile p, boolean real) {
+        if (!p.core().enabled() || p.shape() == KiVfxShape.DISK) return null;
+        if (!real || p.shape() == KiVfxShape.SPHERE) return sphereOfRadius(0.5f * p.core().scale());
+        KiVfxProfile.Shell s = p.shell();
+        String key = "CORE|" + p.shape().name() + '|' + s.meshLength() + '|' + s.meshRadius()
+                + '|' + p.core().scale() + '|' + p.anchorTip();
+        return CACHE.computeIfAbsent(key,
+                k -> cylinder(s.meshRadius() * p.core().scale(), s.meshLength(), p.anchorTip()));
+    }
+
+    private static KiVfxMesh sphereOfRadius(float radius) {
+        String key = "CORE_SPHERE|" + radius;
+        return CACHE.computeIfAbsent(key, k -> sphere(radius, 0f));
+    }
+
+    private static KiVfxMesh build(KiVfxProfile p) {
+        KiVfxProfile.Shell s = p.shell();
+        float len = s.meshLength();
+        boolean tip = p.anchorTip();
+        KiVfxMesh mesh = switch (p.shape()) {
             case SPHERE -> sphere(0.5f, 0f);
-            case CYLINDER -> cylinder(v.meshRadius(), len, tip);
-            case HELIX -> helix(v.meshRadius(), v.meshRadius() * HELIX_TUBE_RATIO, len, tip);
+            case BEAM -> cylinder(s.meshRadius(), len, tip);
+            case HELIX -> helix(s.meshRadius(), s.meshRadius() * HELIX_TUBE_RATIO, len, tip);
             case DISK -> disk();
         };
         // CABEZA: la bola de energía en la punta. Es lo que hace que un chorro se lea como
         // Kamehameha y no como una barra de luz — el haz EMPUJA algo, no es el algo.
-        if (v.headScale() > 0f) {
-            mesh = merge(mesh, sphere(v.headScale(), tip ? 0f : len * 0.5f));
+        if (s.headScale() > 0f) {
+            mesh = merge(mesh, sphere(s.headScale(), tip ? 0f : len * 0.5f));
         }
         return mesh;
     }
 
-    /** z del extremo delantero y del trasero según el anclaje. */
     private static float zFront(float len, boolean tip) { return tip ? 0f : len * 0.5f; }
     private static float zBack(float len, boolean tip) { return tip ? -len : -len * 0.5f; }
 
     // ── Constructor de quads ────────────────────────────────────────────────
 
     private static final class Buf {
-        float[] d = new float[4096 * KiMesh.STRIDE];
-        int n = 0;   // vértices escritos
+        float[] d = new float[4096 * KiVfxMesh.STRIDE];
+        int n = 0;
 
         void v(float x, float y, float z, float u, float vv,
                float nx, float ny, float nz, float w) {
-            if ((n + 1) * KiMesh.STRIDE > d.length) {
+            if ((n + 1) * KiVfxMesh.STRIDE > d.length) {
                 float[] bigger = new float[d.length * 2];
                 System.arraycopy(d, 0, bigger, 0, d.length);
                 d = bigger;
             }
-            int o = n * KiMesh.STRIDE;
+            int o = n * KiVfxMesh.STRIDE;
             d[o] = x; d[o + 1] = y; d[o + 2] = z;
             d[o + 3] = u;
             d[o + 4] = vv;
@@ -107,24 +127,23 @@ public final class KiMeshFactory {
             n++;
         }
 
-        KiMesh done() {
-            float[] exact = new float[n * KiMesh.STRIDE];
+        KiVfxMesh done() {
+            float[] exact = new float[n * KiVfxMesh.STRIDE];
             System.arraycopy(d, 0, exact, 0, exact.length);
-            return new KiMesh(exact, n / 4);
+            return new KiVfxMesh(exact, n / 4);
         }
     }
 
-    private static KiMesh merge(KiMesh a, KiMesh b) {
+    private static KiVfxMesh merge(KiVfxMesh a, KiVfxMesh b) {
         float[] out = new float[a.data().length + b.data().length];
         System.arraycopy(a.data(), 0, out, 0, a.data().length);
         System.arraycopy(b.data(), 0, out, a.data().length, b.data().length);
-        return new KiMesh(out, a.quadCount() + b.quadCount());
+        return new KiVfxMesh(out, a.quadCount() + b.quadCount());
     }
 
     // ── Formas ──────────────────────────────────────────────────────────────
 
-    /** Esfera UV con radio y desplazamiento en Z (el desplazamiento es para la cabeza del haz). */
-    private static KiMesh sphere(float radius, float zOff) {
+    private static KiVfxMesh sphere(float radius, float zOff) {
         Buf b = new Buf();
         for (int i = 0; i < SPHERE_RINGS; i++) {
             double p0 = Math.PI * i / SPHERE_RINGS;
@@ -146,24 +165,20 @@ public final class KiMeshFactory {
         float nx = (float) (Math.sin(phi) * Math.cos(theta));
         float ny = (float) Math.cos(phi);
         float nz = (float) (Math.sin(phi) * Math.sin(theta));
-        // Blancura por latitud: solo la usa la RUTA DE RESPALDO. Con el shader vale 0 y las
-        // bandas se deciden por píxel.
         float w = 0.18f * (float) Math.pow(Math.sin(phi), 2.0);
         b.v(nx * radius, ny * radius, nz * radius + zOff,
                 (float) si / SPHERE_SECTORS, (float) ri / SPHERE_RINGS, nx, ny, nz, w);
     }
 
     /**
-     * Tubo cónico a lo largo del eje de vuelo, con las tapas abiertas (por dentro se ve el otro
-     * lado gracias a NO_CULL, que es lo que da sensación de volumen hueco).
-     * La normal se inclina con el cono: usar la radial pura dejaba una arista de brillo donde
-     * el fresnel cambiaba de golpe.
+     * Tubo cónico a lo largo del eje de vuelo, tapas abiertas (NO_CULL enseña el otro lado por
+     * dentro, lo que da sensación de volumen hueco). La normal se inclina con el cono: la radial
+     * pura dejaba una arista de brillo donde el fresnel cambiaba de golpe.
      */
-    private static KiMesh cylinder(float radius, float length, boolean tip) {
+    private static KiVfxMesh cylinder(float radius, float length, boolean tip) {
         Buf b = new Buf();
         float zf = zFront(length, tip), zb = zBack(length, tip);
         int segments = Math.max(4, Math.round(CYL_SEGMENTS_PER_UNIT * length));
-        // Componente Z de la normal del cono: cuánto se "abre" la superficie hacia delante.
         float slope = (radius - radius * BEAM_TAPER) / Math.max(1.0e-4f, length);
 
         for (int s = 0; s < segments; s++) {
@@ -192,12 +207,11 @@ public final class KiMeshFactory {
     }
 
     /**
-     * Dos cintas tubulares barridas sobre una hélice alrededor del eje de vuelo, desfasadas
-     * media vuelta: es lo que se lee como energía enroscada y no como un muelle.
-     * Las vueltas son POR UNIDAD DE LONGITUD, no en total: con un número fijo, una espiral larga
-     * sale con el paso estirado y una corta apelmazada.
+     * Dos cintas tubulares barridas sobre una hélice alrededor del eje de vuelo, desfasadas media
+     * vuelta: energía enroscada, no un muelle. Vueltas POR UNIDAD DE LONGITUD, no en total, o una
+     * espiral larga sale con el paso estirado y una corta apelmazada.
      */
-    private static KiMesh helix(float radius, float tube, float length, boolean tip) {
+    private static KiVfxMesh helix(float radius, float tube, float length, boolean tip) {
         Buf b = new Buf();
         float zf = zFront(length, tip), zb = zBack(length, tip);
         int steps = Math.max(24, Math.round(HELIX_STEPS_PER_UNIT * length));
@@ -224,18 +238,10 @@ public final class KiMeshFactory {
 
     /**
      * Ángulo de una hebra de la hélice horneada por {@link #helix}, medido HACIA ATRÁS desde la
-     * PUNTA (z=0 con {@code anchorTip}): {@code d=0} en la punta, {@code d=length} en la cola de
-     * la malla. Se puede evaluar con {@code d > length}, más allá de la cola, para que
-     * {@code KiProjectileRenderer} continúe la MISMA torsión en la estela sin discontinuidad
-     * visible en la costura donde la malla horneada termina y la estela empieza — ver
-     * {@code KiVisual#helixTrail}. {@code phase} es la fase de la hebra (0 o {@code Math.PI},
-     * una por cada de las dos que dibuja {@link #helix}).
-     * Nota: el ángulo NO depende de {@code length} salvo para fijar dónde cae {@code d=0} — la
-     * fórmula de {@link #helix} es {@code phase + 2π·HELIX_TWISTS_PER_UNIT·length·(i/steps)},
-     * y {@code i/steps} es la fracción de {@code length} recorrida desde la cola
-     * ({@code (length-d)/length}); al multiplicar por {@code length} este factor se cancela y
-     * queda una velocidad angular constante por unidad de distancia, la misma dentro y fuera de
-     * la malla.
+     * PUNTA (d=0 en la punta, d=length en la cola). Se puede evaluar con d > length, más allá de
+     * la cola, para que la estela continúe la MISMA torsión sin costura visible donde la malla
+     * horneada termina — ver {@code KiRibbon}/{@code KiVfxProfile#helixTrail}. `phase` es la fase
+     * de la hebra (0 o π).
      */
     public static double helixAngleFromTip(float length, double d, double phase) {
         return phase + 2 * Math.PI * HELIX_TWISTS_PER_UNIT * (length - d);
@@ -245,7 +251,6 @@ public final class KiMeshFactory {
                                  double along, float z, double around, float v, int ri) {
         float cx = (float) (Math.cos(along) * radius);
         float cy = (float) (Math.sin(along) * radius);
-        // Marco local: radial hacia fuera y el eje Z como "arriba" del tubo.
         float ox = (float) (Math.cos(along) * Math.cos(around));
         float oy = (float) (Math.sin(along) * Math.cos(around));
         float oz = (float) Math.sin(around);
@@ -253,7 +258,6 @@ public final class KiMeshFactory {
                 (float) ri / TUBE_RADIAL, v, ox, oy, oz, 0.35f);
     }
 
-    /** Semiespesor de la lente. Un disco de espesor cero desaparece visto de canto. */
     private static final float DISK_HALF_THICK = 0.045f;
     /** Coordenada de banda del canto. Va ALTA a propósito: con el valor geométrico (1.0) el
      *  fresnel lo trataría como borde exterior y el filo se desvanecería justo donde está la
@@ -261,13 +265,11 @@ public final class KiMeshFactory {
     private static final float DISK_RIM_U = 0.42f;
 
     /**
-     * Disco como LENTE: dos caras de quads concéntricos más un canto que las une.
-     * Las caras son coronas y no abanicos de triángulos — el abanico metía dos vértices en el
-     * mismo punto central, cada cara era un quad degenerado y los huecos se veían como dientes
-     * de engranaje.
-     * Se genera en el plano XY con normal +Z; su orientación de vuelo es cosa del renderer.
+     * Disco como LENTE: dos caras de quads concéntricos más un canto que las une — coronas, no
+     * abanicos de triángulos (un abanico mete dos vértices en el mismo punto central, cada cara
+     * es un quad degenerado y los huecos se ven como dientes de engranaje).
      */
-    private static KiMesh disk() {
+    private static KiVfxMesh disk() {
         Buf b = new Buf();
         final int rings = 4;
 
@@ -301,10 +303,6 @@ public final class KiMeshFactory {
         return b.done();
     }
 
-    /** La U lleva el RADIO NORMALIZADO (0 centro → 1 filo), no una coordenada de textura: es lo
-     *  que el shader usa como coordenada de banda en el modo RADIAL. Un disco es plano y el
-     *  ángulo con la cámara es el mismo en su cara entera, así que sin esto saldría de un solo
-     *  color liso. La V lleva el ángulo, que alimenta el hervor. */
     private static void diskVert(Buf b, float radius, double theta, float z, float nz, float w) {
         float x = (float) Math.cos(theta) * radius;
         float y = (float) Math.sin(theta) * radius;

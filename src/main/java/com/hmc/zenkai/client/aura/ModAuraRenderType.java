@@ -75,7 +75,7 @@ public final class ModAuraRenderType extends RenderType {
 
     /**
      * Igual que {@link #energy} pero ADITIVO (SRC_ALPHA, ONE) en vez de TRANSLUCENT — mismo
-     * patrón que {@code KiRenderTypes.ADDITIVE} (halo/núcleo de estela de las técnicas ki):
+     * patrón que {@code KiVfxRenderTypes.ADDITIVE} (halo/núcleo de estela de las técnicas ki):
      * la luz que se solapa suma hacia blanco en vez de mezclarse con lo de detrás.
      * PRUEBA DE VIABILIDAD (2026-09-02, ver AuraModifier.additiveGlow): pasada extra opcional
      * para las firmas de aura que la pidan, encima del cono translúcido normal — el cuerpo del
@@ -166,7 +166,7 @@ public final class ModAuraRenderType extends RenderType {
 
     private static ShaderInstance auraRimShader;
 
-    /** Mismo patrón que KiRenderTypes.onRegisterShaders — copiado tal cual, incluida la misma
+    /** Mismo patrón que KiVfxRenderTypes.onRegisterShaders — copiado tal cual, incluida la misma
      *  anotación @EventBusSubscriber sin bus explícito (RegisterShadersEvent es del mod bus; ese
      *  patrón ya funciona en este mismo repo tanto ahí como en AuraRimRenderer.onAddLayers). Un
      *  fallo de compilación (driver viejo, shaderpack) no puede hacer desaparecer el rim: cae a
@@ -231,7 +231,7 @@ public final class ModAuraRenderType extends RenderType {
             });
 
     /** Rim con picos si el shader está disponible; si no, cae a {@link #energyRim} sin que el
-     *  llamador tenga que comprobar nada — mismo criterio defensivo que KiRenderTypes.available()
+     *  llamador tenga que comprobar nada — mismo criterio defensivo que KiVfxRenderTypes.available()
      *  aplicado aquí a nivel de RenderType en vez de dejarlo solo al llamador. */
     public static RenderType energyRimSpiked(ResourceLocation tex) {
         return auraRimSpikeShaderAvailable() ? ENERGY_RIM_SPIKED.apply(tex) : energyRim(tex);
@@ -239,7 +239,7 @@ public final class ModAuraRenderType extends RenderType {
 
     /**
      * Sube los uniforms propios de aura_rim.fsh/vsh. Llamar ANTES de que el buffer haga
-     * endBatch, mismo motivo que KiRenderTypes.setupFresnel (el ShaderInstance es único, sus
+     * endBatch, mismo motivo que KiVfxRenderTypes.setupEnergy (el ShaderInstance es único, sus
      * uniforms valen para el draw que se ejecuta).
      * @param spikeAmount AuraProfile.spike() del jugador, 0..1.
      * @param spikeCount  nº de picos alrededor del eje Y.

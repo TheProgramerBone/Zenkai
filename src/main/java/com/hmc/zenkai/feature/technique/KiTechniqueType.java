@@ -22,9 +22,18 @@ public enum KiTechniqueType {
     BURST,      // ráfaga de bolas pequeñas
     DISK,       // disco destructor
     EXPLOSION,  // autodetonación centrada en el lanzador: no viaja, no apunta
-    SPIRIT_BOMB; // Genki Dama: técnica firma de Kaio (ver TechniqueDef "TÉCNICA FIRMA"). Va
-    // AL FINAL a propósito: ordinal() es la celda del icono en technique_icons.png, así que
-    // añadirla aquí no reordena las 9 celdas ya existentes.
+    SPIRIT_BOMB, // Genki Dama: técnica firma de Kaio (ver TechniqueDef "TÉCNICA FIRMA").
+
+    // Técnicas firma nuevas (2026-09-23), TODAS con master="kami" como placeholder — Roshi/
+    // Vegeta/Freezer no existen todavía como NPC maestro (ver .claude/pendiente/tecnicas-maestros.md).
+    // Van DESPUÉS de SPIRIT_BOMB a propósito: ordinal() es la celda del icono en
+    // technique_icons.png, así que añadirlas aquí no reordena las 10 celdas ya existentes.
+    KAMEHAMEHA,   // el haz por antonomasia: núcleo blanco limpio, borde azul dentado
+    FINAL_FLASH,  // beam ANCHO, núcleo extremadamente brillante, carga con arcos eléctricos
+    GALICK_GUN,   // mismo perfil que Kamehameha pero denso/compacto, violeta
+    DEATH_BEAM,   // finísimo y preciso, más aún que LAZER — un solo dedo
+    DEATH_BALL,   // esfera enorme, oscura al centro, filo crepitante (RIM + partícula "arco")
+    SUPERNOVA;    // esfera aún mayor, material de sol sólido (detailStrength alto, no cáscara)
 
     /** Fracción mínima de carga para poder disparar (estilo DBC). */
     public static final double MIN_CHARGE = 0.25;
@@ -96,8 +105,8 @@ public enum KiTechniqueType {
      *  un big blast: cada tipo tiene su base y su paso, y por eso esto no puede ser una
      *  fórmula única aplicada fuera.
      *  EXPLOSION y BIG_BLAST están calibrados contra el diámetro VISUAL en pantalla, no este
-     *  número crudo: KiProjectileRenderer escala la malla a getBbWidth() * 1.5 (ver
-     *  "breathe" en KiProjectileRenderer.render), así que el diámetro que de verdad se ve es
+     *  número crudo: KiVfxProjectileRenderer escala la malla a getBbWidth() * 1.5 (ver
+     *  "breathe" en KiVfxProjectileRenderer.render), así que el diámetro que de verdad se ve es
      *  este valor × 1.5. EXPLOSION ancla tamaño 1 a ~1.8 bloques visuales (la altura de un
      *  jugador de pie: 1.2 × 1.5) y crece hasta ~3.9 en tamaño 5 (2.6 × 1.5) — antes tamaño 1
      *  ya eran 3.0 bloques visuales y tamaño 5 llegaba a 9.0, mucho más que "del tamaño de un
@@ -118,7 +127,35 @@ public enum KiTechniqueType {
             // Técnica firma: arranca por encima del techo de BIG_BLAST (~2.9 en tamaño 5) y
             // sigue creciendo, mismo patrón documentado arriba para EXPLOSION/BIG_BLAST.
             case SPIRIT_BOMB -> 3.20 + 0.40 * s;
+
+            // Firmas nuevas (2026-09-23): cada una arranca por encima del techo del tipo
+            // genérico del que es "hermana" (ver KiVfxProfile — mismo shape/banda, personalidad
+            // propia). FINAL_FLASH es la más ANCHA a propósito (finalflash_1/3); DEATH_BEAM más
+            // fino que el propio LAZER (un dedo, no un haz); DEATH_BALL/SUPERNOVA superan a
+            // SPIRIT_BOMB, son las esferas más grandes del mod.
+            case KAMEHAMEHA  -> 1.00 + 0.35 * s;   // por encima del techo de WAVE (1.90)
+            case FINAL_FLASH -> 1.30 + 0.40 * s;   // la más ancha de las tres tipo-WAVE
+            case GALICK_GUN  -> 1.00 + 0.32 * s;
+            case DEATH_BEAM  -> 0.15 + 0.03 * s;   // más fino que el techo de LAZER (0.40)
+            case DEATH_BALL  -> 2.20 + 0.45 * s;
+            case SUPERNOVA   -> 2.60 + 0.50 * s;   // la esfera más grande del mod
         };
+    }
+
+    /** Cuánto agranda {@code KiVfxProjectileRenderer} la malla más allá del hitbox (ver su
+     *  comentario "el cuerpo sobresale del hitbox") — vive aquí, no repetida como número mágico
+     *  en cada sitio que necesite saber "qué tan grande se ve esto de verdad" en vez de solo el
+     *  tamaño de colisión. */
+    private static final double VISUAL_INFLATION = 1.5;
+
+    /** Diámetro REAL en pantalla, no el del hitbox — {@link #projectileSize(int)} × la misma
+     *  inflación que ya aplica {@code KiVfxProjectileRenderer.render()}. Cualquier código que
+     *  necesite saber cuánto sitio ocupa esto de verdad (por ejemplo, para no solapar dos
+     *  técnicas en la fila de "/zenkai debug kivfx spawnall") debe usar esto, no
+     *  {@code projectileSize()} a secas — son dos números distintos y ya hubo un solapamiento
+     *  real en la fila de depuración por confundirlos. */
+    public double visualDiameter(int size) {
+        return projectileSize(size) * VISUAL_INFLATION;
     }
 
     /**
@@ -136,7 +173,8 @@ public enum KiTechniqueType {
      * encogerla sería justo deshacer lo que esta bandera pide.
      */
     public boolean chargeShowsRealSize() {
-        return this == EXPLOSION || this == BIG_BLAST || this == SPIRIT_BOMB;
+        return this == EXPLOSION || this == BIG_BLAST || this == SPIRIT_BOMB
+                || this == DEATH_BALL || this == SUPERNOVA;
     }
 
     /** Radio de la explosión en bloques. SIN TECHO a propósito: los techos por tipo aplastaban
@@ -158,6 +196,12 @@ public enum KiTechniqueType {
             case BURST     -> 0.60;
             case BARRIER   -> 0.00;
             case SPIRIT_BOMB -> 3.20;   // por encima del 2.40 de BIG_BLAST
+            case KAMEHAMEHA  -> 1.90;
+            case FINAL_FLASH -> 2.10;
+            case GALICK_GUN  -> 1.90;
+            case DEATH_BEAM  -> 0.80;
+            case DEATH_BALL  -> 3.60;
+            case SUPERNOVA   -> 3.90;
         };
     }
 
@@ -175,6 +219,12 @@ public enum KiTechniqueType {
             case LAZER     -> 0.20;
             case BARRIER   -> 0.00;
             case SPIRIT_BOMB -> 0.90;   // casi todo el daño en el área: es una bola, no un golpe directo
+            case KAMEHAMEHA  -> 0.80;
+            case FINAL_FLASH -> 0.85;
+            case GALICK_GUN  -> 0.80;
+            case DEATH_BEAM  -> 0.30;   // preciso: casi todo el daño va al golpe directo
+            case DEATH_BALL  -> 0.90;
+            case SUPERNOVA   -> 0.95;
         };
     }
 
@@ -236,34 +286,6 @@ public enum KiTechniqueType {
     /** Enfriamiento POR SLOT tras disparar. */
     public int cooldownTicks() { TechniqueDef d = def(); return d == null ? 20 : d.cooldownTicks(); }
 
-    // ── Estela 3D (cinta por posiciones históricas; solo tipos "viajeros") ──
-
-    /** ¿Este tipo dibuja estela detrás del proyectil? */
-    public boolean hasTrail() {
-        return travels() && (this == LAZER || this == WAVE || this == SPIRAL || this == SPIRIT_BOMB);
-    }
-
-    /** Longitud de la estela en puntos (≈ ticks de historia). */
-    public int trailPoints() {
-        return switch (this) {
-            case LAZER -> 34;   // haz largo y fino
-            case WAVE  -> 18;   // haz corto y grueso
-            case SPIRAL -> 26;  // la oscilación dibuja la espiral sola
-            case SPIRIT_BOMB -> 22;   // cola de cometa, más corta que el láser
-            default -> 0;
-        };
-    }
-
-    /** Ancho total de la estela como múltiplo del ancho del hitbox. */
-    public float trailWidth() {
-        return switch (this) {
-            case LAZER -> 1.0f;
-            case WAVE  -> 2.4f;
-            case SPIRAL -> 1.4f;
-            case SPIRIT_BOMB -> 2.0f;
-            default -> 0f;
-        };
-    }
     /** Duración del estado de disparo (RELEASING) para los observadores. */
     public int animTicks() { TechniqueDef d = def(); return d == null ? 20 : d.animTicks(); }
 }

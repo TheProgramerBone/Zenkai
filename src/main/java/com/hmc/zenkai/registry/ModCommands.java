@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.blockentity.PieceConnectorBlockEntity;
 import com.hmc.zenkai.content.effect.MajinEffect;
+import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
 import com.hmc.zenkai.feature.combat.entity.EntityStats;
 import com.hmc.zenkai.feature.forms.FormDef;
@@ -20,7 +21,9 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
+import com.hmc.zenkai.feature.technique.TechniqueEffect;
 import com.hmc.zenkai.feature.training.TrainingCategory;
 import com.hmc.zenkai.feature.training.TrainingData;
 import com.hmc.zenkai.worldgen.ProtectedZones;
@@ -40,6 +43,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -422,7 +426,42 @@ public class ModCommands {
                                 .then(Commands.literal("set")
                                         .then(Commands.argument("socket", ResourceLocationArgument.id())
                                                 .executes(ctx -> debugSetConnectorSocket(ctx,
-                                                        ResourceLocationArgument.getId(ctx, "socket")))))))
+                                                        ResourceLocationArgument.getId(ctx, "socket"))))))
+                        // ── /zenkai debug kivfx spawn <type> [size] ───────────────────
+                        // Ataque de ki CONGELADO en el aire, a 6 bloques de donde mira quien
+                        // ejecuta — pensado para comparar el aspecto real contra las referencias
+                        // de .claude/imagenes/ sin tener que dispararlo de verdad ni perseguirlo
+                        // en vuelo. No se mueve, no hace daño (KiProjectileEntity.freeze) y NO
+                        // expira solo: hay que borrarlo con "kivfx clear". Tamaño por defecto 3
+                        // (mitad de la escala normal 1-5); tope en 10, NO en 100 como en un
+                        // primer intento — casi todos los números de este sistema (radio de
+                        // rayos, escala de chispas/arcos, envolvente...) se calibraron pensando
+                        // en la escala 1-5 y algunos directamente escalan por `size()` en vez de
+                        // por el diámetro real; 10 da margen para ver una técnica más grande de
+                        // lo jugable sin salirse tanto del rango calibrado como para que el
+                        // resultado deje de leerse como la propia técnica (confirmado con
+                        // capturas: a tamaños mucho mayores, partículas y rayos pensados para
+                        // motas pequeñas se leen como bloques sueltos "sin seguir" la malla).
+                        .then(Commands.literal("kivfx")
+                                .then(Commands.literal("spawn")
+                                        .then(Commands.argument("type", StringArgumentType.word())
+                                                .suggests(KI_TYPE_IDS)
+                                                .executes(ctx -> debugSpawnKiVfx(ctx,
+                                                        StringArgumentType.getString(ctx, "type"), 3))
+                                                .then(Commands.argument("size", IntegerArgumentType.integer(1, 10))
+                                                        .executes(ctx -> debugSpawnKiVfx(ctx,
+                                                                StringArgumentType.getString(ctx, "type"),
+                                                                IntegerArgumentType.getInteger(ctx, "size"))))))
+                                // "spawnall" hace en un solo comando lo que "spawn" repetido 16
+                                // veces: toda la familia en fila, mismo tamaño, para una
+                                // comparativa de un vistazo en vez de ir una por una.
+                                .then(Commands.literal("spawnall")
+                                        .executes(ctx -> debugSpawnAllKiVfx(ctx, 3))
+                                        .then(Commands.argument("size", IntegerArgumentType.integer(1, 10))
+                                                .executes(ctx -> debugSpawnAllKiVfx(ctx,
+                                                        IntegerArgumentType.getInteger(ctx, "size")))))
+                                .then(Commands.literal("clear")
+                                        .executes(ModCommands::debugClearKiVfx))))
 
 
 
@@ -891,6 +930,14 @@ public class ModCommands {
         return SharedSuggestionProvider.suggest(ids, b);
     };
 
+    /** Los 16 valores de KiTechniqueType, en minúscula (== id() de cada uno). Para
+     *  "/zenkai debug kivfx spawn". */
+    private static final SuggestionProvider<CommandSourceStack> KI_TYPE_IDS = (ctx, b) -> {
+        List<String> ids = new ArrayList<>();
+        for (KiTechniqueType t : KiTechniqueType.values()) ids.add(t.id());
+        return SharedSuggestionProvider.suggest(ids, b);
+    };
+
     /**
      * Admite "kaioken", cualquier etiqueta de escalón ("x20"), "ssj4" y "zenkai:ssj4".
      * Brigadier resuelve un id sin namespace como minecraft:, así que ese caso se reinterpreta
@@ -997,6 +1044,122 @@ public class ModCommands {
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] Socket de " + pos.toShortString() + " -> " + socket), true);
         return 1;
+    }
+
+    /** Distancia fija a la que aparece "/zenkai debug kivfx spawn", delante de la mirada de
+     *  quien ejecuta. Suficiente para ver el proyectil entero (incluida la envolvente y la
+     *  estela) sin quedar dentro de su propio cuerpo con las técnicas más grandes a tamaño
+     *  alto. */
+    private static final double DEBUG_KIVFX_DISTANCE = 6.0;
+
+    /**
+     * "/zenkai debug kivfx spawn <type> [size]": aparece una copia CONGELADA (ver
+     * KiProjectileEntity.freeze) del tipo pedido, a DEBUG_KIVFX_DISTANCE bloques de donde mira
+     * quien ejecuta, orientada en esa misma dirección. Color = el default_rgb real del
+     * datapack (la misma identidad que vería un jugador, no un color de depuración aparte).
+     * damage=0/effect=NONE a propósito: es puramente un objeto que mirar, nunca debe poder
+     * hacer daño ni admitir HOMING/EXPLOSIVE/etc.
+     */
+    private static int debugSpawnKiVfx(CommandContext<CommandSourceStack> ctx, String typeId, int size)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        KiTechniqueType type = KiTechniqueType.byName(typeId);
+        if (type == null) {
+            ctx.getSource().sendFailure(Component.literal(
+                    "[Zenkai] Tipo de técnica desconocido: " + typeId));
+            return 0;
+        }
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+
+        Vec3 look = sp.getLookAngle();
+        Vec3 spawnPos = sp.getEyePosition().add(look.scale(DEBUG_KIVFX_DISTANCE));
+
+        KiProjectileEntity proj = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sl);
+        proj.configure(sp, type, type.defaultRgb(), size, 0.0, Integer.MAX_VALUE, TechniqueEffect.NONE);
+        proj.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+        proj.freeze(look);
+        sl.addFreshEntity(proj);
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] " + type.id() + " (tamaño " + size + ") congelado a "
+                        + (int) DEBUG_KIVFX_DISTANCE + " bloques. \"/zenkai debug kivfx clear\" para quitarlos."),
+                false);
+        return 1;
+    }
+
+    /** Separación EXTRA entre técnicas contiguas en "kivfx spawnall", además del ancho real de
+     *  cada una — sin esto, dos técnicas grandes casi se tocan por los bordes y estorban para
+     *  distinguir dónde termina una y empieza la otra. */
+    private static final double DEBUG_KIVFX_ROW_GAP = 2.0;
+
+    /**
+     * "/zenkai debug kivfx spawnall [size]": las 16 técnicas de golpe, congeladas en fila
+     * horizontal delante de quien ejecuta, todas al mismo tamaño — la comparativa completa que
+     * "spawn" uno a uno solo da tras 16 comandos. La fila se centra en la mirada (no arranca
+     * pegada a un lado) y cada hueco usa {@link KiTechniqueType#visualDiameter(int)} — el
+     * diámetro REAL en pantalla, no {@code projectileSize()} a secas — así que un Death Ball
+     * enorme no atropella a su vecino aunque un Death Beam finísimo sí quede muy junto al suyo.
+     * PRIMER INTENTO usaba {@code projectileSize()} directo y las técnicas se solapaban un 50%
+     * (confirmado con capturas): el renderer agranda la malla un 50% más allá del hitbox
+     * (ver KiVfxProjectileRenderer.render()) y la fila no lo tenía en cuenta.
+     * La mirada se APLANA (se ignora el pitch): con la fila orientada a una mirada inclinada
+     * hacia arriba/abajo saldría en diagonal en vez de una línea horizontal legible.
+     */
+    private static int debugSpawnAllKiVfx(CommandContext<CommandSourceStack> ctx, int size)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+
+        Vec3 look = sp.getLookAngle();
+        Vec3 flatLook = new Vec3(look.x, 0.0, look.z);
+        flatLook = flatLook.lengthSqr() > 1.0e-4 ? flatLook.normalize() : new Vec3(0, 0, 1);
+        Vec3 right = new Vec3(-flatLook.z, 0.0, flatLook.x);
+        Vec3 rowCenter = sp.getEyePosition().add(flatLook.scale(DEBUG_KIVFX_DISTANCE));
+
+        KiTechniqueType[] all = KiTechniqueType.values();
+        double[] slot = new double[all.length];
+        double total = 0.0;
+        for (int i = 0; i < all.length; i++) {
+            slot[i] = Math.max(0.5, all[i].visualDiameter(size)) + DEBUG_KIVFX_ROW_GAP;
+            total += slot[i];
+        }
+
+        double x = -total / 2.0;
+        for (KiTechniqueType type : all) {
+            double half = Math.max(0.5, type.visualDiameter(size)) / 2.0 + DEBUG_KIVFX_ROW_GAP / 2.0;
+            x += half;
+            Vec3 pos = rowCenter.add(right.scale(x));
+
+            KiProjectileEntity proj = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sl);
+            proj.configure(sp, type, type.defaultRgb(), size, 0.0, Integer.MAX_VALUE, TechniqueEffect.NONE);
+            proj.setPos(pos.x, pos.y, pos.z);
+            proj.freeze(flatLook);
+            sl.addFreshEntity(proj);
+
+            x += half;
+        }
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] " + all.length + " técnicas congeladas en fila (tamaño " + size
+                        + "). \"/zenkai debug kivfx clear\" para quitarlas."), false);
+        return all.length;
+    }
+
+    /** "/zenkai debug kivfx clear": borra solo las entidades marcadas por freeze() (ver
+     *  KiProjectileEntity.DEBUG_TAG), nunca un proyectil de combate real aunque comparta
+     *  clase. Radio generoso (500 bloques) porque es una sesión de comparación manual, no algo
+     *  que se dispare cerca de otros jugadores por accidente. */
+    private static int debugClearKiVfx(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        AABB area = sp.getBoundingBox().inflate(500.0);
+        List<KiProjectileEntity> found = sp.level().getEntitiesOfClass(KiProjectileEntity.class, area,
+                e -> e.getTags().contains(KiProjectileEntity.DEBUG_TAG));
+        for (KiProjectileEntity e : found) e.discard();
+
+        int n = found.size();
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] " + n + " ataque(s) congelado(s) eliminado(s)."), false);
+        return n;
     }
 
     /** TEMPORAL — ver el comentario de "/zenkai debug party add" arriba y el javadoc de

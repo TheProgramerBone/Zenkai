@@ -23,6 +23,13 @@ public final class ModParticles {
     public static final DeferredHolder<ParticleType<?>, ZenkaiParticleType> KI_SPARK =
             PARTICLES.register("ki_spark", ZenkaiParticleType::new);
 
+    /** Arco eléctrico: quieto, animado por edad (mismo Provider que KI_IMPACT — es un destello
+     *  en un punto, no un fragmento que sale volando). Filo crepitante de Death Ball
+     *  (KiVfxProjectileRenderer, esparcido por la superficie) y arcos de carga de Final Flash/
+     *  Death Ball (KiVfxChargeRenderer, ver KiVfxProfile.Particles.chargeSparkRate). */
+    public static final DeferredHolder<ParticleType<?>, ZenkaiParticleType> KI_ARC =
+            PARTICLES.register("ki_arc", ZenkaiParticleType::new);
+
     // Fábricas: úsalas siempre en vez de construir el record a mano.
     public static ZenkaiParticleOptions impact(int rgb, float scale) {
         return new ZenkaiParticleOptions(KI_IMPACT.get(), rgb, scale);
@@ -30,6 +37,10 @@ public final class ModParticles {
 
     public static ZenkaiParticleOptions spark(int rgb, float scale) {
         return new ZenkaiParticleOptions(KI_SPARK.get(), rgb, scale);
+    }
+
+    public static ZenkaiParticleOptions arc(int rgb, float scale) {
+        return new ZenkaiParticleOptions(KI_ARC.get(), rgb, scale);
     }
 
     /** Núcleo del Black Flash: misma mecánica que KI_IMPACT (6 frames por edad, quieto). */

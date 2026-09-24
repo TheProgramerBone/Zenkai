@@ -32,7 +32,7 @@ import java.util.Map;
  *
  * TÉCNICA FIRMA (cimiento para "el maestro X enseña la técnica Y", ver conversación de
  * diseño): con {@code master} puesto, el tipo/técnica sigue siendo EXACTAMENTE el mismo
- * código (mismo KiTechniqueType o PhysicalTechnique, mismo KiVisual, mismo proyectil) pero
+ * código (mismo KiTechniqueType o PhysicalTechnique, mismo KiVfxProfile, mismo proyectil) pero
  * dos cosas cambian:
  *  1) {@link KiTechniqueType#master()}/{@link PhysicalTechnique#master()} != "" bloquea el
  *     desbloqueo genérico por TP (TechniquePacket/PhysicalTechniquePacket.handleUnlock): solo
@@ -43,7 +43,7 @@ import java.util.Map;
  *     tamaño, efecto, sonidos, animSet) sigue siendo elección normal del jugador.
  * Para una técnica de verdad más fuerte que las genéricas del mismo tipo (más daño, más
  * radio de explosión que cualquier size 5...) hace falta además su PROPIO KiTechniqueType/
- * PhysicalTechnique (nuevo valor de enum, con su propio switch en KiVisual/
+ * PhysicalTechnique (nuevo valor de enum, con su propio switch en KiVfxProfile/
  * KiTechniqueType#projectileSize etc. — igual que EXPLOSION o BARRIER hoy) apuntando a este
  * mismo id de maestro: el número base de ESE tipo puede partir ya por encima de lo que
  * cualquier size 1..5 del tipo genérico alcanza (mismo patrón que EXPLOSION/BIG_BLAST, ver

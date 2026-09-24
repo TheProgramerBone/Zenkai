@@ -222,7 +222,7 @@ public final class AuraRimRenderer extends RenderLayer<AbstractClientPlayer, Pla
         // aquí cierra prematuramente el mismo buffer compartido de translúcidos que otras capas
         // del aura (chispas, wisps) todavía necesitaban seguir usando más tarde EN ESE MISMO
         // FRAME, y su siguiente addVertex() revienta contra un builder ya cerrado.
-        // KiBodyRenderer.renderShaded SÍ puede hacerlo con seguridad porque KiProjectileRenderer
+        // KiVfxCompositeRenderer.renderShaded SÍ puede hacerlo con seguridad porque KiVfxProjectileRenderer
         // es el dueño exclusivo de todo el render() de una entidad aislada — nadie más comparte
         // ese buffer en ese instante. AuraRimRenderer, en cambio, es UNA capa más entre muchas
         // dentro del render de UN jugador, con más aura y más jugadores todavía por dibujar

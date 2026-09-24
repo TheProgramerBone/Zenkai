@@ -17,7 +17,7 @@ import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.client.particle.KiImpactParticle;
 import com.hmc.zenkai.client.particle.KiSparkParticle;
-import com.hmc.zenkai.client.render_and_model_entities.entity.KiProjectileRenderer;
+import com.hmc.zenkai.client.render_and_model_entities.entity.KiVfxProjectileRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.blockentity.AllDragonBallsRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.entity.*;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
@@ -282,7 +282,7 @@ public class Zenkai {
                             new GenericGeoModel<>("shenlong", true), 0.5f));
 
             EntityRenderers.register(ModEntities.KI_PROJECTILE.get(),
-                    KiProjectileRenderer::new);
+                    KiVfxProjectileRenderer::new);
 
             EntityRenderers.register(ModEntities.KI_ARROW.get(),
                     TippableArrowRenderer::new);
@@ -374,6 +374,10 @@ public class Zenkai {
             event.registerSpriteSet(ModParticles.BLACK_FLASH_CORE.get(),
                     KiImpactParticle.Provider::new);
             event.registerSpriteSet(ModParticles.BLACK_FLASH_RIM.get(),
+                    KiImpactParticle.Provider::new);
+            // El "arco" (filo crepitante de Death Ball, arcos de carga de Final Flash) es otro
+            // destello quieto animado por edad — mismo Provider, solo cambia el sprite set.
+            event.registerSpriteSet(ModParticles.KI_ARC.get(),
                     KiImpactParticle.Provider::new);
         }
 

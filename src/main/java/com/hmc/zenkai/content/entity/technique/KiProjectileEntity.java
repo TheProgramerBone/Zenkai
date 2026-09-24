@@ -41,7 +41,7 @@ import java.util.Optional;
  * (kiPower × dmgMult × sizeF, ver KiFirePacket) y entra al pipeline de combate como
  * proyectil: CombatZenkaiHooks NO lo recalcula como melee (bypass por instanceof).
  * Tipos especiales:
- *  - SPIRAL: vuela recto. El nombre viene de la forma helicoidal (ver KiVisual/KiMeshFactory),
+ *  - SPIRAL: vuela recto. El nombre viene de la forma helicoidal (ver KiVfxProfile/KiVfxGeometry),
  *    no de la trayectoria — llevó oscilación perpendicular y se retiró porque además torcía la
  *    estela.
  *  - BARRIER: no se mueve ni golpea; sigue el centro del dueño y muere al expirar
@@ -70,13 +70,17 @@ public class KiProjectileEntity extends Projectile {
             SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Byte> DATA_SIZE =
             SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.BYTE);
+    /** Ver {@link #freeze(Vec3)} — "/zenkai debug kivfx" congela una copia en el aire para
+     *  comparar contra las referencias sin tener que dispararla ni perseguirla en vuelo. */
+    private static final EntityDataAccessor<Boolean> DATA_FROZEN =
+            SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.BOOLEAN);
 
     // ── Estela (SOLO cliente): historial de posiciones del centro, cabeza primero.
-    //    Lo llena tick() y lo lee KiProjectileRenderer. En server queda vacío. ──
+    //    Lo llena tick() y lo lee KiVfxProjectileRenderer. En server queda vacío. ──
     private final java.util.ArrayDeque<Vec3> trail = new java.util.ArrayDeque<>();
     public java.util.Deque<Vec3> trailHistory() { return trail; }
 
-    /** Techo del historial de estela. Es el máximo que cualquier KiVisual puede pedir; grabar
+    /** Techo del historial de estela. Es el máximo que cualquier KiVfxProfile puede pedir; grabar
      *  de más cuesta un Vec3 por tick y ahorra tener el largo declarado en dos sitios. */
     public static final int TRAIL_MAX = 34;
 
@@ -89,29 +93,33 @@ public class KiProjectileEntity extends Projectile {
         return true;
     }
 
-    // ── Base perpendicular ESTABLE para la estela en doble hélice (SOLO cliente, ver
-    //    KiVisual.helixTrail / KiProjectileRenderer.renderTrail). Se fija UNA SOLA VEZ, la
-    //    primera vez que hace falta, a partir de la dirección de vuelo EN ESE INSTANTE — nunca
-    //    se recalcula después. Si se recalculara contra la dirección instantánea, un giro
-    //    brusco del proyectil (p. ej. HOMING corrigiendo el rumbo) retorcería la hélice de
-    //    golpe en vez de dejarla girar suavemente (misma lección que FlightMovement.refSpeed:
-    //    no derivar "cómo debería ser esto ahora" de un valor que cambia tick a tick). ──
-    private Vec3 helixRight, helixUp;
+    // ── Base perpendicular ESTABLE para geometría de estela EN ESPACIO DE MUNDO (SOLO cliente).
+    //    Nació para la estela en doble hélice (KiVfxProfile.helixTrail) pero KiVfxProjectileRenderer.
+    //    renderTrail() la reutiliza también para la estela RECTA de cualquier haz: los dos casos
+    //    necesitan lo mismo, un ancho que NO dependa de la cámara (ver el javadoc de
+    //    KiRibbon para el bug de "volteo" que esto evita, ver KiAxis). Se fija UNA
+    //    SOLA VEZ, la primera vez que hace falta, a partir de la dirección de vuelo EN ESE
+    //    INSTANTE — nunca se recalcula después. Si se recalculara contra la dirección
+    //    instantánea, un giro brusco del proyectil (p. ej. HOMING corrigiendo el rumbo)
+    //    retorcería la geometría de golpe en vez de dejarla girar suavemente (misma lección que
+    //    FlightMovement.refSpeed: no derivar "cómo debería ser esto ahora" de un valor que
+    //    cambia tick a tick). ──
+    private Vec3 flightRight, flightUp;
 
     /** @return [derecha, arriba] — perpendiculares entre sí y a la dirección de vuelo fijada en
      *  el primer uso. */
-    public Vec3[] helixBasis() {
-        if (helixRight == null) {
+    public Vec3[] flightBasis() {
+        if (flightRight == null) {
             Vec3 dir = getDeltaMovement();
             if (dir.lengthSqr() < 1.0e-6) dir = new Vec3(0, 0, 1);
             dir = dir.normalize();
             // "Arriba" de referencia: el eje mundo Y, salvo que el proyectil vuele casi vertical
             // (dir paralelo a Y), donde ese cruce degenera a un vector casi nulo.
             Vec3 worldUp = Math.abs(dir.y) > 0.999 ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
-            helixRight = dir.cross(worldUp).normalize();
-            helixUp = helixRight.cross(dir).normalize();
+            flightRight = dir.cross(worldUp).normalize();
+            flightUp = flightRight.cross(dir).normalize();
         }
-        return new Vec3[]{helixRight, helixUp};
+        return new Vec3[]{flightRight, flightUp};
     }
 
     // ── DISK (siempre) y PIERCING (si se eligió ese efecto): ids de entidades ya atravesadas
@@ -126,6 +134,13 @@ public class KiProjectileEntity extends Projectile {
     public KiProjectileEntity(EntityType<? extends KiProjectileEntity> type, Level level) {
         super(type, level);
         this.noPhysics = false;
+        // En el CONSTRUCTOR, no en configure(): noCulling solo lo lee el renderer del CLIENTE
+        // (EntityRenderer.shouldRender), y configure() corre solo en el servidor — en el cliente
+        // la entidad nace del paquete de spawn por aquí. Con el flag puesto solo en configure(),
+        // el cliente recortaba la técnica por su HITBOX, más pequeño que lo que se dibuja: la
+        // BARRIER desaparecía entera según el ángulo de la cámara en tercera persona (reporte del
+        // usuario 2026-09-24) y las estelas largas se cortaban al salir la cabeza de pantalla.
+        this.noCulling = true;
     }
 
     /** Configuración al disparar (solo servidor; el data syncer propaga al cliente). */
@@ -139,9 +154,34 @@ public class KiProjectileEntity extends Projectile {
         this.life = lifeTicks;
         this.effect = (effect == null || !type.allowsEffect(effect))
                 ? TechniqueEffect.NONE : effect;
-        this.noCulling = true; // la estela sobresale del hitbox: sin esto desaparece al salir la bola de cámara
         refreshDimensions();
     }
+
+    /** Tag para localizar y limpiar SOLO las entidades creadas por "/zenkai debug kivfx" —
+     *  nunca un proyectil de combate real, aunque comparta clase. */
+    public static final String DEBUG_TAG = "zenkai_debug_kivfx";
+
+    /**
+     * Congela esta entidad para inspección visual ("/zenkai debug kivfx spawn"): a partir de
+     * aquí {@link #tick()} no la mueve, no comprueba impactos y no la hace expirar — se queda
+     * flotando exactamente donde esté hasta que alguien la borre ("kivfx clear").
+     * {@code facing} se guarda como velocidad (nunca aplicada a la posición mientras esté
+     * congelada, ver tick()) solo para que lo que SÍ lee {@code getDeltaMovement()} sin mirar si
+     * el tipo viaja de verdad —la orientación de formas no-esféricas en
+     * {@code KiVfxProjectileRenderer.render()} y la base perpendicular de {@link #flightBasis()}—
+     * siga dando una dirección coherente en vez de un vector nulo.
+     * NO rellena la estela aquí: esta clase es COMÚN a servidor y cliente, y la estela depende
+     * de {@code KiVfxProfile} (código de cliente) para saber cuántos puntos/qué tan separados —
+     * la sintetiza {@code KiVfxProjectileRenderer.synthesizeFrozenTrail} la primera vez que la
+     * dibuja, en el único sitio que ya conoce esa clase.
+     */
+    public void freeze(Vec3 facing) {
+        this.entityData.set(DATA_FROZEN, true);
+        setDeltaMovement(facing.lengthSqr() > 1.0e-6 ? facing.normalize() : new Vec3(0, 0, 1));
+        addTag(DEBUG_TAG);
+    }
+
+    public boolean isFrozen() { return this.entityData.get(DATA_FROZEN); }
 
     public KiTechniqueType techniqueType() {
         int i = this.entityData.get(DATA_TYPE);
@@ -157,6 +197,7 @@ public class KiProjectileEntity extends Projectile {
         builder.define(DATA_TYPE, (byte) KiTechniqueType.BLAST.ordinal());
         builder.define(DATA_RGB, 0xFFFFFF);
         builder.define(DATA_SIZE, (byte) 1);
+        builder.define(DATA_FROZEN, false);
     }
 
     @Override
@@ -176,6 +217,12 @@ public class KiProjectileEntity extends Projectile {
     @Override
     public void tick() {
         super.tick();
+
+        // Congelada por "/zenkai debug kivfx" (ver freeze()): ni movimiento, ni detección de
+        // impacto, ni cuenta atrás de vida — se queda exactamente donde está hasta que se borre
+        // a mano. Antes de cualquier otra rama, incluida la de "no viaja": una BARRIER/EXPLOSION
+        // congelada tampoco debe seguir al dueño.
+        if (isFrozen()) return;
 
         // Lo que no viaja va pegado al dueño. La barrera expira sin más; la explosión DETONA
         // al expirar — su `life` es la mecha, no su duración.
@@ -200,7 +247,7 @@ public class KiProjectileEntity extends Projectile {
         setPos(next.x, next.y, next.z);
 
         // Estela: historial de posiciones en cliente (cabeza primero). Se graba SIEMPRE hasta
-        // TRAIL_MAX y es el cliente (KiVisual) quien decide cuántos puntos dibuja y con qué
+        // TRAIL_MAX y es el cliente (KiVfxProfile) quien decide cuántos puntos dibuja y con qué
         // ancho. Antes la longitud la mandaba el enum, que es código común: con eso, activar
         // una estela era tocar código de identidad compartido con el servidor.
         if (level().isClientSide) {
@@ -348,7 +395,7 @@ public class KiProjectileEntity extends Projectile {
         // que pase después (grief, fragmentos, zona persistente). ANTES el impacto de un blast
         // caía siempre en el humo gris genérico de vainilla: una bola cargada y disparada de un
         // color concreto explotaba en gris, rompiendo la identidad de color que SÍ tienen la
-        // carga (KiChargeRenderer) y el vuelo (KiProjectileRenderer). Mismo ModParticles.impact/
+        // carga (KiVfxChargeRenderer) y el vuelo (KiVfxProjectileRenderer). Mismo ModParticles.impact/
         // spark que ya usan PhysicalCombatServer (golpes físicos) y KiInfusionShooting
         // (infusión de ki) para su propio destello de impacto.
         //
@@ -466,6 +513,7 @@ public class KiProjectileEntity extends Projectile {
         tag.putByte("ktype", this.entityData.get(DATA_TYPE));
         tag.putInt("rgb", rgb());
         tag.putByte("size", (byte) size());
+        tag.putBoolean("frozen", isFrozen());
     }
 
     @Override
@@ -478,6 +526,9 @@ public class KiProjectileEntity extends Projectile {
         this.entityData.set(DATA_TYPE, tag.getByte("ktype"));
         this.entityData.set(DATA_RGB, tag.getInt("rgb"));
         this.entityData.set(DATA_SIZE, tag.getByte("size"));
+        // Sin esto, recargar el mundo con una copia congelada dentro reactivaría su
+        // getDeltaMovement() guardado (ver freeze()) como vuelo NORMAL en la siguiente carga.
+        if (tag.getBoolean("frozen")) this.entityData.set(DATA_FROZEN, true);
     }
 
     @Override

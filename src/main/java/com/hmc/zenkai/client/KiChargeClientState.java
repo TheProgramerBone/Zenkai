@@ -31,7 +31,7 @@ public final class KiChargeClientState {
 
     /** Esfera apagándose. Congela el sitio y el tamaño que tenía al soltarse.
      *  Lleva el tipo de técnica por la misma razón que {@link Charge}: el renderer dibuja el
-     *  mismo cuerpo con {@code KiVisual}, y sin el tipo el apagado caería siempre en la técnica
+     *  mismo cuerpo con {@code KiVfxProfile}, y sin el tipo el apagado caería siempre en la técnica
      *  por defecto en vez de conservar sus bandas y alfas propias. */
     public record Fade(int rgb, Vec3 origin, float radius, KiTechniqueType type, long startTick) {}
 
@@ -65,7 +65,7 @@ public final class KiChargeClientState {
                         ? 0L : Minecraft.getInstance().level.getGameTime();
                 // ending puede ser null si el paquete de fin llega sin que hubiera carga activa
                 // registrada (reconexión a mitad de carga); el tipo por defecto es la misma red
-                // de seguridad que usa KiVisual para un ordinal desconocido.
+                // de seguridad que usa KiVfxProfile para un ordinal desconocido.
                 KiTechniqueType type = ending != null ? ending.type() : KiTechniqueType.values()[0];
                 FADING.put(pkt.playerId(), new Fade(pkt.rgb(), last.origin(), last.radius(), type, t));
             }
@@ -96,6 +96,15 @@ public final class KiChargeClientState {
     public static float progress(Charge c, long now) {
         int max = Math.max(1, KiCombatServer.chargeTicksFor(c.type(), c.size()));
         return Math.min(1.0f, (now - c.startTick()) / (float) max);
+    }
+
+    /** Olvida por completo a UN jugador (carga, desvanecido, última posición) — ver
+     *  ClientVfxStateReset: al reaparecer el jugador conserva su id de entidad, así que sin esto
+     *  una esfera a medio desvanecer seguiría anclada al sitio donde murió. */
+    public static void forget(int entityId) {
+        ACTIVE.remove(entityId);
+        FADING.remove(entityId);
+        LAST.remove(entityId);
     }
 
     /** Al cambiar de mundo/dimensión los ids de entidad dejan de valer. */

@@ -28,9 +28,11 @@ public final class TechniqueIcons {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/technique_icons.png");
     private static final int CELL = 20;
     // Ampliado de 180 a 200 (9 -> 10 celdas) al añadir SPIRIT_BOMB (KiTechniqueType.ordinal 9,
-    // ver tools/gen_spirit_bomb_icon.py). ACOPLAMIENTO: si el atlas cambia de ancho otra vez,
-    // esta constante y el script Python tienen que actualizarse juntos.
-    private static final int ATLAS_W = 200;
+    // ver tools/gen_spirit_bomb_icon.py), y de 200 a 320 (10 -> 16 celdas) al añadir las 6
+    // técnicas firma nuevas (KAMEHAMEHA..SUPERNOVA, ordinales 10-15, ver
+    // tools/gen_signature_technique_icons.py). ACOPLAMIENTO: si el atlas cambia de ancho otra
+    // vez, esta constante y el script Python tienen que actualizarse juntos.
+    private static final int ATLAS_W = 320;
     private static final int ATLAS_H = 40; // ◄ Ampliado a 40px para 2 filas
     private static final int EXPLOSIVE_CELL = 8;
 

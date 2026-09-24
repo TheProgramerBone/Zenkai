@@ -29,7 +29,7 @@ import java.util.function.Function;
  * eso se usa el mecanismo real de dbrebirth: {@code NO_CULL} + un fresnel en el fragment shader
  * que atenúa la cara trasera por alfa ({@code facingRaw < 0.0 -> alpha muy bajo}, ver
  * aura_flame.fsh) — el mismo patrón de RenderType normal vía {@code CompositeState.builder()}
- * que ya usa {@code KiRenderTypes.FRESNEL} para las técnicas ki, no el constructor a mano de
+ * que ya usa {@code KiVfxRenderTypes.energy()} para las técnicas ki, no el constructor a mano de
  * {@code ENERGY_RIM_SPIKED}.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
@@ -42,7 +42,7 @@ public final class AuraFlameRenderType extends RenderType {
 
     private static ShaderInstance auraFlameShader;
 
-    /** Mismo patrón try/catch con fallback silencioso que ModAuraRenderType/KiRenderTypes: un
+    /** Mismo patrón try/catch con fallback silencioso que ModAuraRenderType/KiVfxRenderTypes: un
      *  fallo de compilación (driver viejo, shaderpack) deja el shader en null en vez de
      *  crashear, y {@link #available()} es la única pregunta que hace AuraFlameRenderer. */
     @SubscribeEvent
@@ -89,7 +89,7 @@ public final class AuraFlameRenderType extends RenderType {
 
     /**
      * Sube los uniforms propios de aura_flame.vsh/.fsh. Llamar ANTES de que el buffer haga
-     * endBatch (mismo motivo que KiRenderTypes.setupFresnel/ModAuraRenderType.setupAuraRim: el
+     * endBatch (mismo motivo que KiVfxRenderTypes.setupEnergy/ModAuraRenderType.setupAuraRim: el
      * ShaderInstance es único, sus uniforms valen para el próximo draw ejecutado).
      * @param amount      interruptor de intensidad general, 0..1 (1.0 fijo en la Fase 1).
      * @param spikeCount  nº de picos alrededor del eje Y.

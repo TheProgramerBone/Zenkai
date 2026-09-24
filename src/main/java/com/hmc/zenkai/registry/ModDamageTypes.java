@@ -37,6 +37,15 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> KI_SPIRAL = key("ki_spiral");
     public static final ResourceKey<DamageType> KI_BIG_BLAST = key("ki_big_blast");
     public static final ResourceKey<DamageType> KI_BURST = key("ki_burst");
+    /** Técnicas firma (2026-09-23): mensaje propio en vez del respaldo genérico KI_BLAST —
+     *  a diferencia de SPIRIT_BOMB (que se quedó en el respaldo por ahora), estas seis son
+     *  precisamente las que más se benefician de nombrarse en el mensaje de muerte. */
+    public static final ResourceKey<DamageType> KI_KAMEHAMEHA = key("ki_kamehameha");
+    public static final ResourceKey<DamageType> KI_FINAL_FLASH = key("ki_final_flash");
+    public static final ResourceKey<DamageType> KI_GALICK_GUN = key("ki_galick_gun");
+    public static final ResourceKey<DamageType> KI_DEATH_BEAM = key("ki_death_beam");
+    public static final ResourceKey<DamageType> KI_DEATH_BALL = key("ki_death_ball");
+    public static final ResourceKey<DamageType> KI_SUPERNOVA = key("ki_supernova");
     /** Daño en área de la detonación de una técnica ki (KiProjectileEntity.detonate), con o sin
      *  destrucción de bloques — las dos ramas de detonate() usan esta misma clave, así que una
      *  explosión de ki da el mismo mensaje rompa o no bloques. */
@@ -70,6 +79,12 @@ public final class ModDamageTypes {
             case SPIRAL -> KI_SPIRAL;
             case BIG_BLAST -> KI_BIG_BLAST;
             case BURST -> KI_BURST;
+            case KAMEHAMEHA -> KI_KAMEHAMEHA;
+            case FINAL_FLASH -> KI_FINAL_FLASH;
+            case GALICK_GUN -> KI_GALICK_GUN;
+            case DEATH_BEAM -> KI_DEATH_BEAM;
+            case DEATH_BALL -> KI_DEATH_BALL;
+            case SUPERNOVA -> KI_SUPERNOVA;
             default -> KI_BLAST;
         };
     }

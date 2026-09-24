@@ -133,11 +133,16 @@ public final class ClientConfig {
                             + "(previous behaviour)",
                     100, 0, 100, 10);
 
-    // ki.bloom_enabled / KiBloomPipeline / IrisCompat existieron aquí (bloom real opt-in sobre
-    // el halo de ki) y se eliminaron sin haberse confirmado nunca en juego, para no dejar un
-    // pipeline de post-proceso sin probar como superficie de mantenimiento — ver
-    // KiProjectileRenderer.renderHalo para el reemplazo (el quad aditivo de siempre, sin capa
-    // extra).
+    /** Recuperado 2026-09-23 tras haberse eliminado sin confirmar (ver KiVfxBloomPipeline) — esta
+     *  vez a petición EXPLÍCITA del usuario ("permiso de usar bloom... sin temor a romper algo"),
+     *  así que arranca en TRUE, no en false como el intento original. Sigue rindiéndose solo si
+     *  hay un shaderpack cargado (IrisCompat.shaderPackActive()): eso no es timidez, es evitar
+     *  que dos pipelines de post-proceso independientes compitan por el mismo framebuffer. */
+    private static final ModConfigSpec.BooleanValue KI_BLOOM_ENABLED =
+            defineBool("ki.bloom_enabled", "ki_bloom_enabled",
+                    "Real screen-space bloom/glow pass on top of the ki VFX (halo, core, trail). "
+                            + "On by default. Automatically disabled if a shader pack (Iris/Oculus) is loaded",
+                    true);
 
     /** 100 = tamaño nativo de bars_empty.png/bars_full.png (256x64 el bloque de las 3 barras).
      *  Pedido para que el HUD de Body/Stamina/Ki no se salga de pantalla con un GUI Scale alto
@@ -226,6 +231,7 @@ public final class ClientConfig {
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }
     public static float kiFirstPersonOpacityFrac() { return KI_FP_OPACITY.get() / 100f; }
+    public static boolean kiBloomEnabled() { return KI_BLOOM_ENABLED.get(); }
     public static float hudBarsScaleFrac() { return HUD_BARS_SCALE.get() / 100f; }
 
     public static HudAnchor hudAnchor() { return HUD_ANCHOR.get(); }

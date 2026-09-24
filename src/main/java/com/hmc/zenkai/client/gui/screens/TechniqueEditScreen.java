@@ -1,7 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.client.KiChargeRenderer;
+import com.hmc.zenkai.client.render_and_model_entities.entity.KiVfxProjectileRenderer;
 import com.hmc.zenkai.client.TechniqueAnimSets;
 import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.PanelText;
@@ -12,10 +12,10 @@ import com.hmc.zenkai.client.gui.buttons.LockIconButton;
 import com.hmc.zenkai.client.gui.buttons.PlayIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
-import com.hmc.zenkai.client.render_and_model_entities.ki.KiBodyRenderer;
-import com.hmc.zenkai.client.render_and_model_entities.ki.KiMeshFactory;
-import com.hmc.zenkai.client.render_and_model_entities.ki.KiShape;
-import com.hmc.zenkai.client.render_and_model_entities.ki.KiVisual;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxCompositeRenderer;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxGeometry;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxShape;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxProfile;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.technique.*;
@@ -715,19 +715,19 @@ public class TechniqueEditScreen extends Screen {
     }
 
     /**
-     * Cuerpo REAL de KiBodyRenderer, el mismo que ves cargando en el mundo (KiChargeRenderer):
-     * esfera con fresnel de tres bandas si el shader está disponible, cáscara + núcleo si no.
-     * ANTES esto era un blit a mano de ki_ball.png con pulso hecho aquí a pelo y una estela de
-     * franjas — el sistema VIEJO, anterior a KiBodyRenderer/KiMeshFactory/KiVisual. La malla es
-     * la esfera desnuda de la carga (KiMeshFactory.chargeSphere()) para casi cualquier tipo —
-     * cargando, la energía todavía no tiene forma — salvo DISK, que es la única excepción
-     * también en KiChargeRenderer: un disco ya se reconoce como disco desde que se condensa, así
-     * que aquí también usa su malla real y el mismo ladeo (ver DISK_CANT_DEGREES en
-     * KiChargeRenderer) para que la vista previa no mienta sobre lo que se ve al cargar.
+     * Cuerpo REAL de KiVfxCompositeRenderer, el mismo que ves cargando en el mundo
+     * (KiVfxChargeRenderer): esfera con el shader de energía de tres bandas si está disponible,
+     * cáscara + núcleo si no. La malla es la esfera desnuda de la carga
+     * (KiVfxGeometry.chargeSphere()) para casi cualquier tipo — cargando, la energía todavía no
+     * tiene forma — salvo DISK, que es la única excepción también en KiVfxChargeRenderer: un
+     * disco ya se reconoce como disco desde que se condensa, así que aquí también usa su malla
+     * real y el mismo ladeo (KiVfxProjectileRenderer.DISK_CANT_DEGREES — una sola constante para
+     * las tres vistas: cargar, volar y esta previsualización) para que la vista previa no mienta
+     * sobre lo que se ve al cargar.
      * SIN proyección propia: el PoseStack de GuiGraphics ya sirve para geometría 3D dentro de la
      * GUI — es el mismo truco que usa InventoryScreen.renderEntityInInventory (translate + scale,
-     * sin cámara real), y el shader de ki no depende de nada del mundo (ver ki_fresnel.json: solo
-     * ModelViewMat/ProjMat que la propia GuiGraphics ya sube).
+     * sin cámara real), y el shader de energía no depende de nada del mundo (ver ki_energy.json:
+     * solo ModelViewMat/ProjMat que la propia GuiGraphics ya sube).
      */
     private void renderTechniquePreview(GuiGraphics g, float partialTick) {
         float t = (mc.player != null ? mc.player.tickCount : 0) + partialTick;
@@ -738,31 +738,30 @@ public class TechniqueEditScreen extends Screen {
         int cx = leftPos + 208;
         int cy = topPos + Y_BLOCK + 26;
 
-        // Mismo pulso que antes (respiración suave), no el de KiChargeRenderer: aquí no hay un
+        // Mismo pulso que antes (respiración suave), no el de KiVfxChargeRenderer: aquí no hay un
         // progreso de carga que animar, es una foto fija de "así se ve esta técnica".
         float pulse = 1f + 0.06f * (float) Math.sin(t * 0.3);
         float diameterPx = (16 + 4 * size) * pulse;
 
-        KiVisual visual = KiVisual.of(type);
-        // DISK: misma excepción que KiChargeRenderer (ver su DISK_CANT_DEGREES). Sin una
-        // dirección real que mirar (esto es un icono fijo, no hay mundo ni cámara), el ladeo se
-        // aplica sobre el eje fijo de la GUI y se deja girar despacio con `t` — no hay marco de
-        // referencia (suelo, trayectoria) contra el que pueda leerse "mal orientado" aquí.
-        boolean asDisk = visual.shape() == KiShape.DISK;
+        KiVfxProfile visual = KiVfxProfile.of(type);
+        // DISK: sin una dirección real que mirar (esto es un icono fijo, no hay mundo ni cámara),
+        // el ladeo se aplica sobre el eje fijo de la GUI y se deja girar despacio con `t` — no
+        // hay marco de referencia (suelo, trayectoria) contra el que pueda leerse "mal orientado".
+        boolean asDisk = visual.shape() == KiVfxShape.DISK;
 
         g.pose().pushPose();
         g.pose().translate(cx, cy, 100.0);
         // Z invertida, igual que renderEntityInInventory: mantiene la misma quiralidad que usa
         // el resto del juego para geometría 3D metida en la GUI. La esfera es simétrica así que
-        // no CAMBIA su silueta, pero el fresnel lee normales contra la cámara y conviene no
+        // no CAMBIA su silueta, pero el shader lee normales contra la cámara y conviene no
         // improvisar un espacio distinto al que ya está probado.
         g.pose().scale(1f, 1f, -1f);
         if (asDisk) {
-            g.pose().mulPose(Axis.XP.rotationDegrees(KiChargeRenderer.DISK_CANT_DEGREES));
+            g.pose().mulPose(Axis.XP.rotationDegrees(KiVfxProjectileRenderer.DISK_CANT_DEGREES));
             g.pose().mulPose(Axis.ZP.rotationDegrees(t * 8f));
         }
-        KiBodyRenderer.render(g.bufferSource(), visual,
-                asDisk ? KiMeshFactory.get(visual) : KiMeshFactory.chargeSphere(),
+        KiVfxCompositeRenderer.render(g.bufferSource(), visual,
+                asDisk ? KiVfxGeometry.shell(visual) : KiVfxGeometry.chargeSphere(),
                 g.pose(), diameterPx, cr, cg, cb);
         g.flush();
         g.pose().popPose();
