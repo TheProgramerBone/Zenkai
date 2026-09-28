@@ -24,6 +24,10 @@ import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import com.hmc.zenkai.feature.technique.PhysicalTechnique;
 import com.hmc.zenkai.feature.technique.TechniqueEffect;
+import com.hmc.zenkai.feature.technique.sequence.SequenceContext;
+import com.hmc.zenkai.feature.technique.sequence.TechniqueSequence;
+import com.hmc.zenkai.feature.technique.sequence.steps.PauseStep;
+import com.hmc.zenkai.feature.technique.sequence.steps.VfxStep;
 import com.hmc.zenkai.feature.training.TrainingCategory;
 import com.hmc.zenkai.feature.training.TrainingData;
 import com.hmc.zenkai.worldgen.ProtectedZones;
@@ -461,7 +465,16 @@ public class ModCommands {
                                                 .executes(ctx -> debugSpawnAllKiVfx(ctx,
                                                         IntegerArgumentType.getInteger(ctx, "size")))))
                                 .then(Commands.literal("clear")
-                                        .executes(ModCommands::debugClearKiVfx))))
+                                        .executes(ModCommands::debugClearKiVfx)))
+                        // ── /zenkai debug sequence ────────────────────────────────────
+                        // Caso SINTÉTICO del andamiaje de TechniqueSequence (paso 3 del roadmap,
+                        // ver .claude/pendiente/cobblemon-audit-vfx-animaciones.md §20): NINGUNA
+                        // técnica real llama a TechniqueSequence todavía (ninguna lo necesita hoy,
+                        // ver el javadoc de TechniqueSequence) — esto solo prueba que el andamiaje
+                        // en sí encadena, espera y dibuja en el orden correcto. 2 destellos con 1s
+                        // de diferencia, delante de quien ejecuta, tintados con SU color de aura.
+                        .then(Commands.literal("sequence")
+                                .executes(ModCommands::debugRunSequence)))
 
 
 
@@ -1160,6 +1173,34 @@ public class ModCommands {
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] " + n + " ataque(s) congelado(s) eliminado(s)."), false);
         return n;
+    }
+
+    /** "/zenkai debug sequence": caso SINTÉTICO del andamiaje TechniqueSequence, sin ninguna
+     *  técnica real de por medio — ver el comentario de la rama "sequence" más arriba y el
+     *  javadoc de {@link com.hmc.zenkai.feature.technique.sequence.TechniqueSequence}.
+     *  2 destellos (heavy_blow, luego kiai) con 1s de diferencia, delante de quien ejecuta,
+     *  reutilizando los MISMOS JSON de {@code zenkai_vfx_effects/physical_impact/} que ya
+     *  migró el paso 1 — no hace falta un efecto nuevo solo para esta prueba. */
+    private static int debugRunSequence(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+
+        Vec3 spawnPos = sp.getEyePosition().add(sp.getLookAngle().scale(DEBUG_KIVFX_DISTANCE));
+        int rgb = com.hmc.zenkai.feature.aura.AuraColors.resolve(sp);
+        SequenceContext seqCtx = new SequenceContext(sl, spawnPos, rgb, sp);
+
+        TechniqueSequence sequence = new TechniqueSequence(List.of(
+                new VfxStep(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                        "physical_impact/heavy_blow"), 0.4),
+                new PauseStep(20),
+                new VfxStep(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                        "physical_impact/kiai"), 0.6)
+        ));
+        sequence.run(seqCtx);
+
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Secuencia sintética lanzada: 2 destellos con 1s de diferencia."), false);
+        return 1;
     }
 
     /** TEMPORAL — ver el comentario de "/zenkai debug party add" arriba y el javadoc de

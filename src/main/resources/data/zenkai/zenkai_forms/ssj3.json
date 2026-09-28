@@ -16,5 +16,6 @@
   "aura_type": "dark",
   "aura_rgb": "0xFFF7B0",
   "scale": 1.0,
-  "hair_rgb": "0xFFF7B0"
+  "hair_rgb": "0xFFF7B0",
+  "eye_rgb": "0x3E9CFF"
 }

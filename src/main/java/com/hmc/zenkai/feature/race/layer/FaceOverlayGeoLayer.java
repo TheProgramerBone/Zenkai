@@ -1,8 +1,11 @@
 package com.hmc.zenkai.feature.race.layer;
 
 import com.hmc.zenkai.client.CustomizationAssets;
+import com.hmc.zenkai.feature.forms.FormDef;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.race.RaceRenderTypes;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -29,6 +32,10 @@ import static com.hmc.zenkai.feature.race.RaceTextureUtil.withSuffix;
  *        eyes_N.png       (esclerótica/contorno, iris transparente) SIN tinte
  *        eyes_N_iris.png  (solo iris, en gris)                      CON tinte de color de ojos
  *    Si no existe el _iris, se tiñe el ojo (fallback).
+ *  · El tinte normalmente es PlayerVisualAttachment.eyeColorRgb (elegido por el jugador al crear
+ *    personaje), pero si la forma activa declara eye_rgb (FormDef.tintsEyes(), ver su javadoc)
+ *    ese color manda por encima — pensado para razas sin pelo (Namekiano/Majin/Arcosiano) donde
+ *    una transformación no tiene forma de "vender" pelo dorado/plateado.
  *
  * ⚠ API específica de GeckoLib 4.8.4 / 1.21.1 — verificar al compilar:
  *   firma de render(...) de GeoRenderLayer · getRenderer() · getCurrentEntity() · reRender(...).
@@ -68,7 +75,10 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
             case EYES -> {
                 ResourceLocation base = CustomizationAssets.getEye(vis.getEyeIndex());
                 if (base != null) {
-                    int eyeArgb = 0xFF000000 | (vis.getEyeColorRgb() & 0xFFFFFF);
+                    PlayerFormAttachment form = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+                    FormDef def = FormDef.get(form.getFormId());
+                    int baseColor = (def != null && def.tintsEyes()) ? def.eyeRgb() : vis.getEyeColorRgb();
+                    int eyeArgb = 0xFF000000 | (baseColor & 0xFFFFFF);
                     ResourceLocation iris = withSuffix(base, "_iris");
                     if (resourceExists(iris)) {
                         drawPass(base, 0xFFFFFFFF, poseStack, bakedModel, animatable,

@@ -351,8 +351,8 @@ public final class KiVfxRenderTypes extends RenderType {
      * {@code MultiBufferSource.BufferSource} difiere el draw real hasta el `endBatch`.
      * {@code glPolygonMode} directo, no un {@code RenderStateShard}, porque
      * {@code RenderType.CompositeState} no expone un modo de relleno de polígono como shard —
-     * única excepción del pipeline a "no pelear con el motor" (ver la nota de bloom en
-     * .claude/pendiente/technique-visuals-referencia-mods.md), aceptable por ser EXCLUSIVAMENTE
+     * única excepción del pipeline a "no pelear con el motor" (mismo criterio que el resto del
+     * pipeline de bloom, ver `.claude/docs/tecnicas-y-vfx.md`), aceptable por ser EXCLUSIVAMENTE
      * una herramienta de depuración que nunca corre en la ruta normal, y siempre restaurada en un
      * {@code finally}.
      */

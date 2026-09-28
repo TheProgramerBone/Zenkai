@@ -4,7 +4,6 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.KiFist;
 import com.hmc.zenkai.feature.combat.KiInfusion;
-import com.hmc.zenkai.registry.ModParticles;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.registry.ModSounds;
 import com.hmc.zenkai.config.ServerConfig;
@@ -12,9 +11,12 @@ import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.technique.vfx.ZenkaiVfxEffect;
+import com.hmc.zenkai.feature.technique.vfx.ZenkaiVfxRegistry;
 import com.hmc.zenkai.registry.ModDamageTypes;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageType;
@@ -401,26 +403,30 @@ public final class PhysicalCombatServer {
      *  de partículas, así que el conjunto de clientes ve el mismo color — por eso esto exige un
      *  ServerPlayer y un mob no puede reusarlo tal cual. El SONIDO en sí (mismo por técnica
      *  bloqueada/no bloqueada, ver playImpactSound) SÍ es compartido: PhysicalAttackGoal lo llama
-     *  directo para que un mob "suene" igual sin necesitar un atacante con aura. */
+     *  directo para que un mob "suene" igual sin necesitar un atacante con aura.
+     *
+     *  Partículas: {@link ZenkaiVfxEffect} data-driven desde
+     *  {@code data/zenkai/zenkai_vfx_effects/physical_impact/<id>.json} — primer efecto migrado
+     *  al formato propuesto en {@code .claude/pendiente/cobblemon-audit-vfx-animaciones.md}
+     *  (§17/§20, paso 1). Antes era un {@code switch} fijo en Java (flash/chispas/dispersión por
+     *  técnica); ahora es la MISMA forma pero editable sin recompilar. Sin JSON para una técnica
+     *  (datapack roto o borrado a mano), se avisa y no se dibuja nada — no hay fallback a un
+     *  valor fijo en Java, porque eso escondería el propio aviso. */
     private static void impactFx(ServerPlayer sp, LivingEntity e, PhysicalTechnique t) {
-        record Fx(float flash, int sparks, double spread) {}
-
-        Fx fx = switch (t) {
-            case DASH_PUNCH -> new Fx(1.0f,  8, 0.25);
-            case HEAVY_BLOW -> new Fx(2.0f, 18, 0.45);
-            case BARRAGE    -> new Fx(0.7f,  4, 0.18);
-            case KIAI       -> new Fx(1.4f, 10, 0.35);
-        };
-
         var lvl = sp.serverLevel();
         int rgb = com.hmc.zenkai.feature.aura.AuraColors.resolve(sp);
         double x = e.getX(), y = e.getY() + e.getBbHeight() * 0.6, z = e.getZ();
         double s = e.getBbWidth() * 0.4;
 
-        lvl.sendParticles(ModParticles.impact(rgb, fx.flash()),
-                x, y, z, 1, 0.0, 0.0, 0.0, 0.0);
-        lvl.sendParticles(ModParticles.spark(rgb, 1.0f),
-                x, y, z, fx.sparks(), s, 0.2, s, fx.spread());
+        ResourceLocation effectId = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                "physical_impact/" + t.id());
+        ZenkaiVfxEffect fx = ZenkaiVfxRegistry.get(effectId);
+        if (fx == null) {
+            Zenkai.LOGGER.warn("[Zenkai] Sin efecto VFX '{}' (datapack roto/borrado): "
+                    + "impacto de {} sin partículas.", effectId, t.id());
+        } else {
+            fx.spawn(lvl, new Vec3(x, y, z), rgb, s);
+        }
 
         playImpactSound(lvl, e, t);
     }

@@ -77,6 +77,17 @@ import java.util.Map;
  * (DYED_COLOR en el stack virtual, leído por GeoLayerArmorRenderer.getRenderColor), pero la
  * textura de la cola no tiene canal de tinte propio (ColorChannel.NONE) — no hace falta el "sin
  * declarar -> color de canal" que sí tiene hairRgb.
+ *
+ * eyeRgb (default -1 = sin override, ver FaceOverlayGeoLayer): a diferencia de hairRgb/tailRgb,
+ * el color de ojos NO parte de una textura en gris — cada jugador YA elige el suyo propio en
+ * PlayerVisualAttachment.eyeColorRgb al crear personaje, y ese es el que se pinta siempre que
+ * ninguna forma diga lo contrario. Este campo es la escotilla de escape para cuando una forma
+ * necesita imponer SU PROPIO color de ojos por encima de la elección del jugador (ojos plateados
+ * de Ultra Instinto, verde-azulado de SSJ...) — pensado sobre todo para las razas sin pelo
+ * (Namekiano/Majin/Arcosiano), donde el pelo no puede vender la transformación y el cambio de
+ * ojos es la única pista visual de "ascensión" que les queda (ver `divineTier` en
+ * human_god/namek_god/majin_god). No sustituye el iris SELECCIONADO (`eyeIndex`, la forma del
+ * ojo), solo su tinte — mismo espíritu que hairRgb tiñendo el mismo modelo de pelo base.
  */
 public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
@@ -88,7 +99,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       String auraType, int auraRgb, int hairRgb, int tailRgb, double scale,
                       boolean descendable, double overdriveCeilingBonus,
                       double overdriveDrainMultUntrained, double overdriveDrainMultMastered,
-                      boolean wheelSelectable, boolean divineTier, int auraOuterRgb) {
+                      boolean wheelSelectable, boolean divineTier, int auraOuterRgb, int eyeRgb) {
 
     public enum Kind {
         /** Innata por raza: no la enseña ningún maestro. */
@@ -192,6 +203,10 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
     /** ¿Esta forma pide su propia capa exterior de aura (dos tonos)? -1 = solo capa simple. */
     public boolean hasAuraOuter() { return auraOuterRgb >= 0; }
 
+    /** ¿Esta forma impone su propio color de ojos? -1 = manda el elegido por el jugador
+     *  (PlayerVisualAttachment.eyeColorRgb), sin tocarlo. */
+    public boolean tintsEyes() { return eyeRgb >= 0; }
+
     /** Item de cuerpo para un slot ("head", "chest", "legs", "feet"). null = no lo cambia. */
     public ResourceLocation bodyItem(String slot) {
         return slot == null ? null : bodyItems.get(slot.toLowerCase(Locale.ROOT));
@@ -229,6 +244,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeBoolean(d.wheelSelectable());
                 buf.writeBoolean(d.divineTier());
                 buf.writeInt(d.auraOuterRgb());
+                buf.writeInt(d.eyeRgb());
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -250,7 +266,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         readMap(buf), readMap(buf),
                         buf.readUtf(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readDouble(),
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
-                        buf.readBoolean(), buf.readBoolean(), buf.readInt());
+                        buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt());
             });
 
     private static void writeMap(FriendlyByteBuf buf, Map<String, ResourceLocation> map) {

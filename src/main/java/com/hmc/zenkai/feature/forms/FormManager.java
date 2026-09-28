@@ -144,7 +144,8 @@ public final class FormManager {
                             GsonHelper.getAsDouble(o, "overdrive_drain_mult_mastered", 1.0),
                             GsonHelper.getAsBoolean(o, "wheel_selectable", true),
                             GsonHelper.getAsBoolean(o, "divine_tier", false),
-                            readRgb(o, "aura_outer_rgb", -1)));
+                            readRgb(o, "aura_outer_rgb", -1),
+                            readRgb(o, "eye_rgb", -1)));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }

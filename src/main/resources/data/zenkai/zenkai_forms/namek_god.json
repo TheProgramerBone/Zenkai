@@ -16,5 +16,6 @@
   "aura_type": "divine",
   "aura_rgb": "0xE8FFE0",
   "scale": 1.6,
-  "divine_tier": true
+  "divine_tier": true,
+  "eye_rgb": "0xB8FFA0"
 }

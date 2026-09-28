@@ -18,5 +18,6 @@
   "scale": 1.0,
   "hair_rgb": "0xFF8FC0",
   "divine_tier": true,
-  "aura_outer_rgb": "0xE8103C"
+  "aura_outer_rgb": "0xE8103C",
+  "eye_rgb": "0xFF6FD6"
 }

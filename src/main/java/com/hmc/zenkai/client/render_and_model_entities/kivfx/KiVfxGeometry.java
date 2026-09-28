@@ -27,9 +27,8 @@ public final class KiVfxGeometry {
     private static final int SPHERE_RINGS = 14;
     private static final int SPHERE_SECTORS = 28;
     // 8, no 6: perfil de cinta más redondo sin tocar ninguna textura (resolución de malla, no
-    // sujeta a la regla de pixel-art del mod, que es sobre texturas) — ver
-    // .claude/pendiente/technique-visuals-referencia-mods.md §4, candidato de bajo riesgo ya
-    // identificado y aplicado en esta reconstrucción.
+    // sujeta a la regla de pixel-art del mod, que es sobre texturas) — subida heredada del
+    // sistema ki_fresnel.fsh anterior al rework de 2026-09-23, aplicada aquí sin volver a medir.
     private static final int TUBE_RADIAL = 8;
     private static final int HELIX_STEPS_PER_UNIT = 20;
     private static final int DISK_SECTORS = 24;
