@@ -147,8 +147,10 @@ public class PartyScreen extends ZenkaiMenuScreen {
     private static final int ROW_H = HEAD_SIZE + 8;
     private static final int LIST_Y = CONTENT_TOP + 40;
     /** Fondo de la lista, pegado al pie salvo un hueco antes de los íconos de acción — así
-     *  la party por defecto (4) sigue cabiendo entera sin scroll (ver visibleRows()). */
-    private static final int LIST_BOTTOM = BG_H - MARGIN - ICON_CELL - 6;
+     *  la party por defecto (4) sigue cabiendo entera sin scroll (ver visibleRows()). Función
+     *  de instancia y no constante: BG_H puede encoger por debajo de CommonPanel.IDEAL en
+     *  ventanas pequeñas (ver CommonPanel), así que no puede resolverse en tiempo de compilación. */
+    private int listBottom() { return BG_H - MARGIN - ICON_CELL - 6; }
     private static final int SCROLLBAR_W = 4;
     /** Columna reservada SIEMPRE (haga falta scroll o no) para que el texto de la fila (PL,
      *  "actual/máximo" de la barra) no salte de sitio en cuanto una party cruza el umbral de
@@ -372,7 +374,7 @@ public class PartyScreen extends ZenkaiMenuScreen {
     /** Filas visibles a la vez en la lista, según el hueco real del panel. Como mínimo 1,
      *  para que ROW_H nunca pueda dejar la lista en blanco por un cálculo raro. */
     private int visibleRows() {
-        return Math.max(1, (LIST_BOTTOM - LIST_Y) / ROW_H);
+        return Math.max(1, (listBottom() - LIST_Y) / ROW_H);
     }
 
     private int maxScroll(int totalMembers) {
@@ -465,7 +467,7 @@ public class PartyScreen extends ZenkaiMenuScreen {
         int rowLeft = panelLeft + MARGIN;
         int rowRight = panelLeft + BG_W - MARGIN - SCROLLBAR_GUTTER;
         int listTop = panelTop + LIST_Y;
-        int listBottom = panelTop + LIST_BOTTOM;
+        int listBottom = panelTop + listBottom();
 
         // Recorta la lista a su hueco: con scroll, la última fila visible puede quedar
         // partida a media altura y sin esto se saldría por encima del pie de la pantalla.

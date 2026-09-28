@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
-import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.buttons.TabIconButton;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -10,7 +10,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -27,13 +26,20 @@ import org.jetbrains.annotations.NotNull;
  */
 public abstract class ZenkaiMenuScreen extends Screen {
 
-    protected static final ResourceLocation BG_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
-    protected static final int BG_W = 256;
-    protected static final int BG_H = 256;
+    /** Tamaño real del panel de esta pantalla — puede encoger por debajo de CommonPanel.IDEAL
+     *  en ventanas pequeñas (ver CommonPanel). Calculado en init(), no constante. */
+    protected int BG_W;
+    protected int BG_H;
 
     private static final int TAB_ICON = 20; // tamaño de celda del atlas
     private static final int TAB_GAP  = 4;
+    /** Hueco entre el borde inferior del panel y la fila de pestañas. */
+    private static final int TAB_ROW_GAP = 6;
+    /** Aire bajo la fila de pestañas antes del borde de la ventana. */
+    private static final int TAB_ROW_MARGIN = 2;
+    /** Alto que hay que reservar por DEBAJO del panel para la fila de pestañas — igual que
+     *  CommonPanel.TITLE_RESERVE pero para lo que vive bajo el panel en vez de encima. */
+    private static final int TAB_RESERVE = TAB_ROW_GAP + TAB_ICON + TAB_ROW_MARGIN;
 
     protected final Minecraft mc = Minecraft.getInstance();
     protected PlayerStatsAttachment att;
@@ -58,8 +64,12 @@ public abstract class ZenkaiMenuScreen extends Screen {
         if (mc.player != null) {
             att = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         }
-        panelLeft = (this.width - BG_W) / 2;
-        panelTop = (this.height - BG_H) / 2;
+        var w = CommonPanel.fitAxis(this.width, CommonPanel.MARGIN, CommonPanel.MARGIN);
+        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, TAB_RESERVE);
+        BG_W = w.size();
+        BG_H = h.size();
+        panelLeft = w.pos();
+        panelTop = h.pos();
         addTabButtons();
         initContent();
     }
@@ -68,8 +78,9 @@ public abstract class ZenkaiMenuScreen extends Screen {
     private void addTabButtons() {
         ZenkaiTab[] tabs = ZenkaiTab.values();
         int rowW = tabs.length * TAB_ICON + (tabs.length - 1) * TAB_GAP;
-        // Bajo el panel, pero sin salirse de la ventana en resoluciones pequeñas.
-        int y = Math.min(this.height - TAB_ICON - 2, panelTop + BG_H + 6);
+        // TAB_RESERVE ya le hizo sitio a init(), así que esto normalmente no dispara — se deja
+        // como red de seguridad última por si algún día una pantalla hija pisa la reserva.
+        int y = Math.min(this.height - TAB_ICON - TAB_ROW_MARGIN, panelTop + BG_H + TAB_ROW_GAP);
         int x = panelLeft + (BG_W - rowW) / 2;
         for (ZenkaiTab t : tabs) {
             TabIconButton b = new TabIconButton(x, y, TAB_ICON, t.u, t.v,
@@ -114,7 +125,7 @@ public abstract class ZenkaiMenuScreen extends Screen {
     @Override
     public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
-        g.blit(BG_TEX, panelLeft, panelTop, 0, 0, BG_W, BG_H);
+        CommonPanel.blit(g, panelLeft, panelTop, BG_W, BG_H);
     }
 
     @Override

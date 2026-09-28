@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.PanelSizing;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiTechPalette;
 import com.hmc.zenkai.feature.spacepod.SpacePodDestination;
@@ -43,8 +44,16 @@ import java.util.List;
  */
 public class GalacticMenuScreen extends Screen {
 
-    private static final int BG_W = 210;
-    private static final int BG_H = 180;
+    private static final int IDEAL_W = 210;
+    private static final int IDEAL_H = 180;
+    /** Hueco fijo para que el diálogo no toque los bordes de la ventana. El título va DENTRO
+     *  del panel (PanelText.centeredOnDark a top+PADDING), sin reserva especial arriba. */
+    private static final int MARGIN = 8;
+
+    /** Tamaño real del diálogo — puede encoger por debajo de IDEAL_W/IDEAL_H con GUI Scale alto
+     *  o una ventana pequeña (ver PanelSizing). Calculado en init(), no constante. */
+    private int BG_W;
+    private int BG_H;
     private static final int PADDING = 10;
     private static final int CONTENT_TOP = 26;
     private static final int ROW_H = 24;
@@ -83,8 +92,12 @@ public class GalacticMenuScreen extends Screen {
 
     @Override
     protected void init() {
-        left = (this.width - BG_W) / 2;
-        top = (this.height - BG_H) / 2;
+        var w = PanelSizing.fitAxis(IDEAL_W, this.width, MARGIN, MARGIN);
+        var h = PanelSizing.fitAxis(IDEAL_H, this.height, MARGIN, MARGIN);
+        BG_W = w.size();
+        BG_H = h.size();
+        left = w.pos();
+        top = h.pos();
         rows = buildRows();
     }
 
@@ -132,7 +145,9 @@ public class GalacticMenuScreen extends Screen {
     @Override
     public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
-        g.blit(BG_TEX, left, top, 0, 0, BG_W, BG_H, BG_W, BG_H);
+        // Destino distinto al origen a propósito: BG_W/BG_H pueden ser menores que IDEAL_W/
+        // IDEAL_H (ver PanelSizing) — esto escala la textura entera en vez de recortarla.
+        g.blit(BG_TEX, left, top, BG_W, BG_H, 0, 0, IDEAL_W, IDEAL_H, IDEAL_W, IDEAL_H);
     }
 
     @Override

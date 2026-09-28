@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -18,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * `extends Screen` directo, NO ZenkaiMenuScreen: se abre a mitad de partida sobre el mundo, no
  * como parte de la navegación del hub — mismo idioma de panel/fondo compartido que RESULTS de
- * MeditationScreen/TargetPracticeScreen (ZenkaiMenuScreen.BG_TEX blitteado a mano), pero sin la
+ * MeditationScreen/TargetPracticeScreen (CommonPanel, blitteado a mano), pero sin la
  * barra de pestañas ni el resto del chrome del menú. isPauseScreen() false a propósito: un golpe
  * de gracia contra la sombra no debería congelar el juego para siempre si el jugador tarda en
  * leer el resultado.
@@ -29,6 +30,7 @@ public class ShadowResultScreen extends Screen {
     private final int record;
 
     private int panelLeft, panelTop;
+    private int panelW, panelH;
 
     public ShadowResultScreen(int earnedTp, int record) {
         super(Component.translatable("screen.zenkai.shadow_result.title"));
@@ -38,12 +40,16 @@ public class ShadowResultScreen extends Screen {
 
     @Override
     protected void init() {
-        panelLeft = (this.width - ZenkaiMenuScreen.BG_W) / 2;
-        panelTop = (this.height - ZenkaiMenuScreen.BG_H) / 2;
+        var w = CommonPanel.fitAxis(this.width, CommonPanel.MARGIN, CommonPanel.MARGIN);
+        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, CommonPanel.MARGIN);
+        panelW = w.size();
+        panelH = h.size();
+        panelLeft = w.pos();
+        panelTop = h.pos();
 
-        int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
+        int y = panelTop + panelH - 12 - PanelButton.H;
         addRenderableWidget(PanelButton.primary(
-                panelLeft + (ZenkaiMenuScreen.BG_W - PanelButton.W) / 2, y,
+                panelLeft + (panelW - PanelButton.W) / 2, y,
                 Component.translatable("screen.zenkai.close"), () -> this.onClose()));
     }
 
@@ -55,15 +61,14 @@ public class ShadowResultScreen extends Screen {
     @Override
     public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
-        g.blit(ZenkaiMenuScreen.BG_TEX, panelLeft, panelTop, 0, 0,
-                ZenkaiMenuScreen.BG_W, ZenkaiMenuScreen.BG_H);
+        CommonPanel.blit(g, panelLeft, panelTop, panelW, panelH);
     }
 
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
 
-        int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
+        int cx = panelLeft + panelW / 2;
         int ty = panelTop + 50;
 
         ScreenTitle.drawAbovePanel(g, this.font, this.title, cx, panelTop);

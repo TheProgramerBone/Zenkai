@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -84,9 +85,9 @@ import java.util.Random;
  * (ver TrainingMinigameScreen/ClientPayloadHandlers.onTrainingReward), que es lo que RESULTS
  * enseña — nunca una cifra adivinada en el cliente.
  *
- * `extends Screen` directamente (canvas propio) pero reusa el fondo/tamaño de panel de
- * ZenkaiMenuScreen (BG_TEX/BG_W/BG_H, protected + mismo paquete = accesible) para OVERVIEW/
- * SONG_LIST/RESULTS, sin heredar de ella — la fase PLAYING necesita la pantalla ENTERA para los
+ * `extends Screen` directamente (canvas propio) pero reusa el fondo/tamaño de panel compartido
+ * (CommonPanel, la misma textura y política de encogido que ZenkaiMenuScreen/ZenkaiPanelScreen)
+ * para OVERVIEW/SONG_LIST/RESULTS, sin heredar de ella — la fase PLAYING necesita la pantalla ENTERA para los
  * carriles, cosa que ZenkaiMenuScreen (con su barra de pestañas fija) no puede dar. Sigue el
  * convenio de orden de render de CLAUDE.md: renderBackground() pinta DEBAJO de super.render(), el
  * contenido va DESPUÉS.
@@ -200,7 +201,10 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private static final int SCROLLBAR_W = 4;
     private static final int SCROLLBAR_GUTTER = 8;
     private static final int LIST_TOP = 30;
-    private static final int LIST_BOTTOM = ZenkaiMenuScreen.BG_H - 12 - PanelButton.H - 8;
+    /** Función de instancia y no constante: panelH puede encoger por debajo de
+     *  CommonPanel.IDEAL en ventanas pequeñas (ver CommonPanel), así que no puede resolverse en
+     *  tiempo de compilación. */
+    private int listBottom() { return panelH - 12 - PanelButton.H - 8; }
 
     private record Note(int lane, long spawnMs) {}
 
@@ -262,6 +266,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private final long[] laneBadUntil = new long[LANES];
 
     private int panelLeft, panelTop;
+    private int panelW, panelH;
 
     /** Canción elegida (no confundir con `activeSong`, la sesión YA en marcha): null = Free
      *  Practice, la selección por defecto al entrar. Decide qué muestra OVERVIEW (steppers vs.
@@ -308,8 +313,12 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     @Override
     protected void init() {
-        panelLeft = (this.width - ZenkaiMenuScreen.BG_W) / 2;
-        panelTop = (this.height - ZenkaiMenuScreen.BG_H) / 2;
+        var w = CommonPanel.fitAxis(this.width, CommonPanel.MARGIN, CommonPanel.MARGIN);
+        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, CommonPanel.MARGIN);
+        panelW = w.size();
+        panelH = h.size();
+        panelLeft = w.pos();
+        panelTop = h.pos();
 
         for (int i = 0; i < LANES; i++) keys[i] = ClientConfig.meditationLaneKey(i);
 
@@ -325,7 +334,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         selectedSong = null; // Free Practice, la selección por defecto al entrar
 
         overviewDescLines = this.font.split(
-                Component.translatable("screen.zenkai.meditation.overview"), ZenkaiMenuScreen.BG_W - 24);
+                Component.translatable("screen.zenkai.meditation.overview"), panelW - 24);
         descY = 26;
         songRowY = descY + overviewDescLines.size() * 10 + 8;
         stepperY = songRowY + SONG_ROW_H + 10;
@@ -375,10 +384,10 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private void buildOverviewWidgets() {
         state = State.OVERVIEW;
         this.clearWidgets();
-        int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
+        int y = panelTop + panelH - 12 - PanelButton.H;
 
         AtlasIconButton keysBtn = new AtlasIconButton(
-                panelLeft + ZenkaiMenuScreen.BG_W / 2 - 10, y + (PanelButton.H - 20) / 2, 80, 60,
+                panelLeft + panelW / 2 - 10, y + (PanelButton.H - 20) / 2, 80, 60,
                 this::toggleKeybindPopup);
         keysBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.meditation.keybinds.tooltip")));
         addRenderableWidget(keysBtn);
@@ -399,7 +408,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         addRenderableWidget(startBtn);
 
         if (selectedSong == null) {
-            int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
+            int cx = panelLeft + panelW / 2;
             addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decreaseDifficulty));
             addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increaseDifficulty));
             // Duración de la sesión de Práctica libre (no aplica a modo Canción, ver
@@ -491,7 +500,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         state = State.SONG_LIST;
         scrollRow = 0;
         this.clearWidgets();
-        int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
+        int y = panelTop + panelH - 12 - PanelButton.H;
         BackIconButton backBtn = new BackIconButton(
                 panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::buildOverviewWidgets);
         backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
@@ -511,7 +520,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     private void buildResultsWidgets() {
         this.clearWidgets();
-        int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
+        int y = panelTop + panelH - 12 - PanelButton.H;
         addRenderableWidget(PanelButton.secondary(panelLeft + IN_X1, y,
                 Component.translatable("screen.zenkai.back"), this::onClose));
         // Retry repite el MISMO modo que se acaba de jugar — si fue modo Canción, reintentar no
@@ -918,8 +927,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         if (state != State.PLAYING) {
-            g.blit(ZenkaiMenuScreen.BG_TEX, panelLeft, panelTop, 0, 0,
-                    ZenkaiMenuScreen.BG_W, ZenkaiMenuScreen.BG_H);
+            CommonPanel.blit(g, panelLeft, panelTop, panelW, panelH);
         }
         if (state == State.OVERVIEW && keybindPopupOpen) {
             // Marco de tres anillos + relleno POPUP_BG, mismo idioma que el popup lateral de
@@ -987,8 +995,8 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     /** Párrafo + fila-resumen de la canción (clicable, abre SONG_LIST) + steppers/valores fijos +
      *  TP potencial/récord — ver el javadoc de clase para el porqué de este reparto. */
     private void renderOverview(GuiGraphics g, int mouseX, int mouseY) {
-        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + ZenkaiMenuScreen.BG_W / 2, panelTop);
-        int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
+        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + panelW / 2, panelTop);
+        int cx = panelLeft + panelW / 2;
 
         int ty = panelTop + descY;
         for (var line : overviewDescLines) {
@@ -1053,7 +1061,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     }
 
     private int visibleRows() {
-        return Math.max(1, (LIST_BOTTOM - LIST_TOP + SONG_ROW_GAP) / (SONG_ROW_H + SONG_ROW_GAP));
+        return Math.max(1, (listBottom() - LIST_TOP + SONG_ROW_GAP) / (SONG_ROW_H + SONG_ROW_GAP));
     }
 
     private int totalSongRows() { return 1 + songRows.size(); }
@@ -1068,7 +1076,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private void renderSongList(GuiGraphics g, int mouseX, int mouseY) {
         ScreenTitle.drawAbovePanel(g, this.font,
                 Component.translatable("screen.zenkai.meditation.song_select.title"),
-                panelLeft + ZenkaiMenuScreen.BG_W / 2, panelTop);
+                panelLeft + panelW / 2, panelTop);
         int x = panelLeft + IN_X1;
         int w = songListRowWidth();
         int y = panelTop + LIST_TOP;
@@ -1097,7 +1105,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         if (maxScroll() > 0) {
             int barX = x + w + 2;
             int trackTop = panelTop + LIST_TOP;
-            int trackH = LIST_BOTTOM - LIST_TOP;
+            int trackH = listBottom() - LIST_TOP;
             g.fill(barX, trackTop, barX + SCROLLBAR_W, trackTop + trackH, ZenkaiPalette.BAR_BG);
             int thumbH = Math.max(10, trackH * visible / total);
             int thumbY = trackTop + (trackH - thumbH) * scrollRow / maxScroll();
@@ -1309,8 +1317,8 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     }
 
     private void renderResults(GuiGraphics g) {
-        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + ZenkaiMenuScreen.BG_W / 2, panelTop);
-        int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
+        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + panelW / 2, panelTop);
+        int cx = panelLeft + panelW / 2;
         int ty = panelTop + 50;
 
         // LABEL_ON_PANEL + negrita, NO GOLD: GOLD es dorado pensado para fondo OSCURO (ver

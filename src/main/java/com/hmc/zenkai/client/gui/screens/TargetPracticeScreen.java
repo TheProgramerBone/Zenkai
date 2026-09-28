@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -103,6 +104,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
     private Integer introPotential = null;
 
     private int panelLeft, panelTop;
+    private int panelW, panelH;
     private List<FormattedCharSequence> introLines;
     /** Y (relativo al panel) del stepper de dificultad — calculado UNA VEZ a partir de las
      *  líneas de intro reales, con una franja fija reservada para potencial/récord aunque el
@@ -116,10 +118,14 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
 
     @Override
     protected void init() {
-        panelLeft = (this.width - ZenkaiMenuScreen.BG_W) / 2;
-        panelTop = (this.height - ZenkaiMenuScreen.BG_H) / 2;
+        var w = CommonPanel.fitAxis(this.width, CommonPanel.MARGIN, CommonPanel.MARGIN);
+        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, CommonPanel.MARGIN);
+        panelW = w.size();
+        panelH = h.size();
+        panelLeft = w.pos();
+        panelTop = h.pos();
         introLines = this.font.split(
-                Component.translatable("screen.zenkai.target_practice.intro"), ZenkaiMenuScreen.BG_W - 24);
+                Component.translatable("screen.zenkai.target_practice.intro"), panelW - 24);
         stepperY = 30 + introLines.size() * 10 + 4 + 20 + 4;
         buildIntroWidgets();
         requestInfo();
@@ -140,7 +146,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
 
     private void buildIntroWidgets() {
         this.clearWidgets();
-        int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
+        int y = panelTop + panelH - 12 - PanelButton.H;
         // Back en icono atlas / Start en ▶ — mismos íconos ya existentes que
         // ShadowTrainingScreen/MeditationScreen, con tooltip (pedido explícito del usuario) para
         // que el icono solo no tenga que explicarse por sí mismo.
@@ -154,7 +160,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
         addRenderableWidget(startBtn);
 
-        int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
+        int cx = panelLeft + panelW / 2;
         addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decrease));
         addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increase));
         // Duración de sesión (pedido explícito del usuario, ver DURATION_STEPS_SEC) — SU PROPIA
@@ -168,7 +174,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
 
     private void buildResultsWidgets() {
         this.clearWidgets();
-        int y = panelTop + ZenkaiMenuScreen.BG_H - 12 - PanelButton.H;
+        int y = panelTop + panelH - 12 - PanelButton.H;
         BackIconButton backBtn = new BackIconButton(
                 panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::onClose);
         backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
@@ -337,8 +343,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
     public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
         if (state != State.PLAYING) {
-            g.blit(ZenkaiMenuScreen.BG_TEX, panelLeft, panelTop, 0, 0,
-                    ZenkaiMenuScreen.BG_W, ZenkaiMenuScreen.BG_H);
+            CommonPanel.blit(g, panelLeft, panelTop, panelW, panelH);
         }
     }
 
@@ -353,8 +358,8 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
     }
 
     private void renderIntro(GuiGraphics g) {
-        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + ZenkaiMenuScreen.BG_W / 2, panelTop);
-        int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
+        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + panelW / 2, panelTop);
+        int cx = panelLeft + panelW / 2;
         int ty = panelTop + 30;
         for (var line : introLines) {
             PanelText.onPanel(g, this.font, line, cx - this.font.width(line) / 2, ty, ZenkaiPalette.MUTED_ON_PANEL);
@@ -413,8 +418,8 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
     }
 
     private void renderResults(GuiGraphics g) {
-        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + ZenkaiMenuScreen.BG_W / 2, panelTop);
-        int cx = panelLeft + ZenkaiMenuScreen.BG_W / 2;
+        ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + panelW / 2, panelTop);
+        int cx = panelLeft + panelW / 2;
         int ty = panelTop + 50;
 
         // LABEL_ON_PANEL + negrita, NO GOLD: ver el comentario equivalente en MeditationScreen.

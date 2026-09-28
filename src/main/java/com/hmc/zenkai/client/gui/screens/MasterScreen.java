@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.PhysicalIcons;
 import com.hmc.zenkai.client.TechniqueIcons;
+import com.hmc.zenkai.client.gui.PanelSizing;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -67,8 +68,17 @@ public class MasterScreen extends Screen {
     // 320×180 con filas de 22px solo daba sitio a "Be able to fly using k…" antes de recortar:
     // la descripción no cabía ni truncada a una palabra útil. Se agranda el diálogo entero
     // (mismo lenguaje visual, solo más aire) en vez de encoger más el texto.
-    private static final int BG_W = 360;
-    private static final int BG_H = 210;
+    private static final int IDEAL_W = 360;
+    private static final int IDEAL_H = 210;
+    /** Hueco fijo para que el diálogo no toque los bordes de la ventana. El título va DENTRO
+     *  del panel (ver render(), PanelText.onDark a top+PADDING), así que no hace falta reservar
+     *  nada especial arriba como en ZenkaiPanelScreen/CommonPanel. */
+    private static final int MARGIN = 8;
+
+    /** Tamaño real del diálogo — puede encoger por debajo de IDEAL_W/IDEAL_H con GUI Scale alto
+     *  o una ventana pequeña (ver PanelSizing). Calculado en init(), no constante. */
+    private int BG_W;
+    private int BG_H;
 
     /** Ancho del panel del maestro (izquierda): retrato + su nombre debajo. */
     private static final int PORTRAIT_W = 116;
@@ -203,8 +213,12 @@ public class MasterScreen extends Screen {
 
     @Override
     protected void init() {
-        left = (this.width - BG_W) / 2;
-        top  = (this.height - BG_H) / 2;
+        var w = PanelSizing.fitAxis(IDEAL_W, this.width, MARGIN, MARGIN);
+        var h = PanelSizing.fitAxis(IDEAL_H, this.height, MARGIN, MARGIN);
+        BG_W = w.size();
+        BG_H = h.size();
+        left = w.pos();
+        top  = h.pos();
 
         skillRows.clear();
         // god_ki lo enseña Tori-Bot a cualquier raza (una sola skill, ver DivineForms), pero no
@@ -303,7 +317,9 @@ public class MasterScreen extends Screen {
     @Override
     public void renderBackground(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
-        g.blit(BG_TEX, left, top, 0, 0, BG_W, BG_H, BG_W, BG_H);
+        // Destino distinto al origen a propósito: BG_W/BG_H pueden ser menores que IDEAL_W/
+        // IDEAL_H (ver PanelSizing) — esto escala la textura entera en vez de recortarla.
+        g.blit(BG_TEX, left, top, BG_W, BG_H, 0, 0, IDEAL_W, IDEAL_H, IDEAL_W, IDEAL_H);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
-import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
@@ -8,7 +8,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,10 +34,10 @@ import org.jetbrains.annotations.Nullable;
  */
 public abstract class ZenkaiPanelScreen extends Screen {
 
-    protected static final ResourceLocation BG_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
-    protected static final int BG_W = 256;
-    protected static final int BG_H = 256;
+    /** Tamaño real del panel esta pantalla — puede encoger por debajo de CommonPanel.IDEAL en
+     *  ventanas pequeñas (ver CommonPanel). Calculado en init(), no constante. */
+    protected int BG_W;
+    protected int BG_H;
 
     /** Margen lateral del contenido dentro del panel. */
     protected static final int PAD = 14;
@@ -95,8 +94,12 @@ public abstract class ZenkaiPanelScreen extends Screen {
 
     @Override
     protected final void init() {
-        this.panelLeft = (this.width - BG_W) / 2;
-        this.panelTop  = (this.height - BG_H) / 2;
+        var w = CommonPanel.fitAxis(this.width, CommonPanel.MARGIN, CommonPanel.MARGIN);
+        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, CommonPanel.MARGIN);
+        this.BG_W = w.size();
+        this.BG_H = h.size();
+        this.panelLeft = w.pos();
+        this.panelTop  = h.pos();
 
         initContent();
 
@@ -118,7 +121,7 @@ public abstract class ZenkaiPanelScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
-        g.blit(BG_TEX, panelLeft, panelTop, 0, 0, BG_W, BG_H);
+        CommonPanel.blit(g, panelLeft, panelTop, BG_W, BG_H);
 
         ScreenTitle.drawAbovePanel(g, this.font, this.title, centerX(), panelTop, titleColor());
 
