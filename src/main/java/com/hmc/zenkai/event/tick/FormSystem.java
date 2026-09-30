@@ -45,6 +45,15 @@ public final class FormSystem {
             PlayerLifeCycle.syncIfServer(p);
         }
 
+        // arcosian_power (race_innate: arcosian): igual que super_forms, el nivel 1 (tanque base de
+        // PP) es REGALADO al Arcosiano y sobrevive al respec; los niveles 2-4 solo agrandan el
+        // tanque (las formas van todas por super_forms).
+        if (att.getRace() == com.hmc.zenkai.feature.Race.ARCOSIAN
+                && att.skills().level(ArcosianPowerSystem.SKILL) <= 0) {
+            att.skills().grant(ArcosianPowerSystem.SKILL, 1);
+            PlayerLifeCycle.syncIfServer(p);
+        }
+
         // Autocorrección: ninguna skill levels_from_forms debería tener MÁS nivel que su techo
         // real (FormDrivenSkills.maxLevel, que sabe si el proveedor es super_forms o god_ki).
         // Repara solo las partidas que ya quedaran con un nivel de sobra por el bug real de
@@ -94,7 +103,7 @@ public final class FormSystem {
                 // y se sigue cayendo a Base como siempre.
                 ResourceLocation swap = DivineForms.pendingSiblingSwap(p, currentFormId);
                 if (swap != null && FormRegistry.get(swap) != null) {
-                    form.setFormId(swap);
+                    form.setFormId(p, swap);
                     currentFormId = swap;
                     def = FormRegistry.get(swap);
                     PlayerLifeCycle.syncFormIfServer(p);

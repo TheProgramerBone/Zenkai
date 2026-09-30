@@ -23,13 +23,16 @@ import java.util.Map;
  *  - masters: ids de los maestros que enseñan el nivel 1 (puede haber más de uno — dos maestros
  *    pueden enseñar la misma habilidad; el jugador la compra ante cualquiera de ellos). Vacía =
  *    nadie lo enseña (razas).
+ * raceInnate (JSON "race_innate": true, default false si no aparece): la skill es INNATA de una
+ * raza (Poder Arcosiano, la futura absorción del Majin): la regala el juego y el logro de "todas
+ * las habilidades" la IGNORA para que ninguna raza tenga un requisito que las demás no tienen.
  * El EFECTO se implementa donde corresponda consultando
  * PlayerStatsAttachment#skills().level(id).
  * Claves de lang derivadas: skill.zenkai.&lt; id&gt; (nombre) y skill.zenkai.&lt; id&gt; .desc.
  */
 public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindReq,
                        boolean purchasable, List<String> masters, Map<String, List<Double>> values,
-                       boolean levelsFromForms) {
+                       boolean levelsFromForms, boolean raceInnate) {
 
     private static volatile Map<String, SkillDef> REGISTRY = Map.of();
 
@@ -92,6 +95,7 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                     for (double d : e.getValue()) buf.writeDouble(d);
                 }
                 buf.writeBoolean(def.levelsFromForms());
+                buf.writeBoolean(def.raceInnate());
             },
             buf -> {
                 String id = buf.readUtf();
@@ -114,8 +118,9 @@ public record SkillDef(String id, int tpCost, int maxLevel, List<Integer> mindRe
                     vals.put(k, List.copyOf(curve));
                 }
                 boolean lff = buf.readBoolean();
+                boolean innate = buf.readBoolean();
                 return new SkillDef(id, tp, max, List.copyOf(mind), purch,
                         List.copyOf(masters),
-                        Collections.unmodifiableMap(vals), lff);
+                        Collections.unmodifiableMap(vals), lff, innate);
             });
 }

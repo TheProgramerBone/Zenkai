@@ -1,0 +1,31 @@
+{
+  "races": [
+    "arcosian"
+  ],
+  "kind": "extension",
+  "tier": "ultra",
+  "tp_cost": 150000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.25,
+  "stat_percent_untrained": 20.0,
+  "stat_percent_mastered": 24.0,
+  "ki_drain_untrained": 5.0,
+  "ki_drain_mastered": 1.8,
+  "spi_req": 210,
+  "parent": "zenkai:fifth_form",
+  "body_items": {
+    "head": "zenkai:arcosian_black_fifth_form_helmet",
+    "chest": "zenkai:arcosian_black_fifth_form_chestplate",
+    "legs": "zenkai:arcosian_black_fifth_form_leggings",
+    "feet": "zenkai:arcosian_black_fifth_form_boots"
+  },
+  "aura_type": "golden",
+  "aura_rgb": "0x8030E0",
+  "aura_outer_rgb": "0xFF1050",
+  "eye_rgb": "0xFF1040",
+  "scale": 1.0,
+  "mastery_reqs": {
+    "zenkai:fifth_form": 100,
+    "zenkai:black_form": 50
+  }
+}

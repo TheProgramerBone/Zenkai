@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.skills;
 
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
@@ -128,7 +129,18 @@ public final class DivineForms {
     public static int maxLevel(Race race) {
         int max = 0;
         for (ResourceLocation id : divineFormsFor(race)) max = Math.max(max, depthOf(race, id));
-        return max;
+        return max > 0 ? max : placeholderLevels(race);
+    }
+
+    /**
+     * Niveles de god_ki para una raza SIN ninguna forma divina propia (hoy: Arcosiano). No
+     * desbloquean ninguna transformación todavía: son la puerta para las mecánicas de ki divino
+     * que el diseño del Arcosiano va a colgar de esta skill (y evitan que god_ki sea
+     * inalcanzable para él, lo que también le impedía el logro de "todas las habilidades").
+     * Cuántos: ServerConfig arcosian.god_ki_levels. El precio NO es propio: ver tpCostForLevel.
+     */
+    private static int placeholderLevels(Race race) {
+        return race == Race.ARCOSIAN ? ServerConfig.arcGodKiLevels() : 0;
     }
 
     public static int maxLevel(Player p) { return maxLevel(SuperForms.raceOf(p)); }
@@ -145,6 +157,11 @@ public final class DivineForms {
                 return d == null ? Integer.MAX_VALUE : d.tpCost();
             }
         }
+        if (level >= 1 && level <= placeholderLevels(race) && divineFormsFor(race).isEmpty()) {
+            // Sin coste propio (pedido del usuario): el del MISMO nivel de la cadena divina de
+            // referencia (Saiyan), no un número inventado para el Arcosiano.
+            return tpCostForLevel(Race.SAIYAN, level);
+        }
         return Integer.MAX_VALUE;
     }
 
@@ -152,8 +169,8 @@ public final class DivineForms {
         return tpCostForLevel(SuperForms.raceOf(p), level);
     }
 
-    /** ¿Esta raza tiene alguna forma de nivel divino? (Arcosiano hoy: no.) Usado para ocultar
-     *  la fila de "god_ki" en la tienda de su maestro para quien no le sirve de nada. */
+    /** ¿Tiene god_ki algún nivel para esta raza? (El Arcosiano sí, por los niveles placeholder.)
+     *  Usado para ocultar la fila de "god_ki" en la tienda de su maestro a quien no le sirve. */
     public static boolean appliesTo(Race race) { return maxLevel(race) > 0; }
 
     /**
@@ -167,7 +184,7 @@ public final class DivineForms {
         Race race = SuperForms.raceOf(p);
         int depth = depthOf(race, form);
         if (depth <= 0) return false;
-        if (SuperForms.level(p) < SuperForms.maxLevel(race)) return false;
+        if (SuperForms.level(p) < SuperForms.mortalLevelNeededForDivine(race, form)) return false;
         if (SkillEffects.level(p, SKILL) < depth) return false;
         return form.equals(resolveTie(race, depth, p));
     }

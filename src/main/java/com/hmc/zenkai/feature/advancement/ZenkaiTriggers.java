@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.advancement;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.mojang.serialization.Codec;
@@ -163,10 +164,16 @@ public final class ZenkaiTriggers {
             /** El conjunto de habilidades COMPRABLES. Las de grant() quedan fuera a propósito: llegan
              *  solas con la raza y contarlas haría el logro más fácil para unas razas que otras. */
             private static boolean hasAll(PlayerStatsAttachment att, boolean maxed) {
+                var race = att.getRace();
                 for (SkillDef d : SkillDef.all()) {
                     if (!d.purchasable()) continue;
+                    // race_innate (Poder Arcosiano, la absorción del Majin...) se ignora. Sin nada que
+                    // comprar para ESTA raza (god_ki sin niveles): tampoco cuenta, o el logro sería imposible para esa raza. El techo
+                    // de una skill derivada de formas también es por raza, no el max_level crudo.
+                    if (d.raceInnate()) continue; // innatas de raza: no cuentan para nadie
+                    if (!FormDrivenSkills.appliesTo(d, race)) continue;
                     int lvl = att.skills().level(d.id());
-                    if (lvl < (maxed ? d.maxLevel() : 1)) return false;
+                    if (lvl < (maxed ? FormDrivenSkills.maxLevel(d, race) : 1)) return false;
                 }
                 return true;
             }

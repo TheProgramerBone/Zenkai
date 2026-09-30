@@ -3,6 +3,7 @@ package com.hmc.zenkai.feature.stats;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
+import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -58,8 +59,29 @@ public record TransformHoldPacket(Action action, boolean active) implements Cust
                 // que el primer toque lo quita y el segundo devuelve a base. Antes solo se
                 // miraba el formId; como el kaioken no es una forma sino otra capa, estando
                 // en base la condición era falsa y el toque no hacía absolutamente nada.
-                if (!form.dropKaioken() && !FormIds.BASE.equals(form.getFormId())) {
-                    form.forceBase();
+                //
+                // Una forma de CONTENCIÓN (second_form/third_form/final_form del arcosiano —
+                // FormDef.descendable()) NO debe bajar a Base con un simple toque: para eso
+                // está el botón "Descender" de la rueda (WheelSelectPacket.descend()), que
+                // además aplica su propio cooldown. Sin este guardado, un toque de esta tecla
+                // hacía exactamente lo mismo que Descender pero sin pasar por él.
+                FormDef activeDef = form.activeDef();
+                boolean descendable = activeDef != null && activeDef.descendable();
+                if (!form.dropKaioken() && !FormIds.BASE.equals(form.getFormId()) && !descendable) {
+                    // Golden/Black/sus variantes "fifth" (y cualquier forma futura que cuelgue
+                    // de una de contención) NO son limitadores: son Power Points por ENCIMA de
+                    // la forma original de verdad (final_form). Perder Golden con un toque debe
+                    // devolver a Final Form, no saltarse toda la cadena hasta Base de golpe —
+                    // eso es justo lo que "Descender" hace para las de contención, y esto no es
+                    // eso. Solo pasa hoy con el arcosiano: es la única raza con algo colgando de
+                    // una forma descendable (decisión explícita: NO se generaliza a las demás
+                    // razas, donde un toque sigue reseteando a Base de golpe como siempre).
+                    ResourceLocation parentId = activeDef == null ? null : activeDef.parent();
+                    if (parentId != null && hasDescendableAncestor(activeDef)) {
+                        form.setFormId(sp, parentId);
+                    } else {
+                        form.forceBase();
+                    }
                 }
                 PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
                 return;
@@ -75,5 +97,19 @@ public record TransformHoldPacket(Action action, boolean active) implements Cust
             com.hmc.zenkai.feature.action.ActionResolver.setTransformHeld(sp, pkt.active());
             PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
         });
+    }
+
+    /** ¿Algún antepasado (parent, parent del parent...) de esta forma es descendable()? Ver el
+     *  bloque de comentarios de más arriba — hoy solo es true para lo que cuelga de
+     *  final_form/third_form/second_form del arcosiano. */
+    private static boolean hasDescendableAncestor(FormDef def) {
+        ResourceLocation parent = def.parent();
+        while (parent != null) {
+            FormDef parentDef = FormDef.get(parent);
+            if (parentDef == null) return false;
+            if (parentDef.descendable()) return true;
+            parent = parentDef.parent();
+        }
+        return false;
     }
 }

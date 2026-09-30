@@ -83,6 +83,15 @@ public final class FormManager {
         return out;
     }
 
+    /** "mastery_reqs": {"zenkai:fifth_form": 100, ...}. Ausente = sin requisitos. */
+    private static Map<ResourceLocation, Double> readMasteryReqs(JsonObject o) {
+        if (!o.has("mastery_reqs")) return Map.of();
+        Map<ResourceLocation, Double> out = new LinkedHashMap<>();
+        JsonObject obj = GsonHelper.getAsJsonObject(o, "mastery_reqs");
+        for (String k : obj.keySet()) out.put(ResourceLocation.parse(k), obj.get(k).getAsDouble());
+        return out;
+    }
+
     /** Acepta 0xFFE55C, #FFE55C o un entero. */
     private static int readRgb(JsonObject o, String key, int fallback) {
         if (!o.has(key)) return fallback;
@@ -103,8 +112,15 @@ public final class FormManager {
 
             for (var entry : found.entrySet()) {
                 ResourceLocation file = entry.getKey();
-                String name = file.getPath().substring(FOLDER.length() + 1,
+                // <categoría opcional>/<id>.json: la categoría (0.3.0) es la subcarpeta, si la
+                // hay — puramente organización de archivo + agrupación en la rueda, nunca parte
+                // del id lógico de la forma (un addon sin subcarpeta sigue funcionando igual,
+                // categoría "" = sin agrupar).
+                String rel = file.getPath().substring(FOLDER.length() + 1,
                         file.getPath().length() - ".json".length());
+                int slash = rel.lastIndexOf('/');
+                String category = slash >= 0 ? rel.substring(0, slash) : "";
+                String name = slash >= 0 ? rel.substring(slash + 1) : rel;
                 ResourceLocation id = ResourceLocation.fromNamespaceAndPath(file.getNamespace(), name);
 
                 if (FormIds.BASE.equals(id)) {
@@ -145,7 +161,12 @@ public final class FormManager {
                             GsonHelper.getAsBoolean(o, "wheel_selectable", true),
                             GsonHelper.getAsBoolean(o, "divine_tier", false),
                             readRgb(o, "aura_outer_rgb", -1),
-                            readRgb(o, "eye_rgb", -1)));
+                            readRgb(o, "eye_rgb", -1),
+                            FormDef.Tier.byName(GsonHelper.getAsString(o, "tier", "none")),
+                            GsonHelper.getAsBoolean(o, "endgame_path", false),
+                            FormDef.AlignBranch.byName(GsonHelper.getAsString(o, "alignment_branch", "none")),
+                            readMasteryReqs(o),
+                            category));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }

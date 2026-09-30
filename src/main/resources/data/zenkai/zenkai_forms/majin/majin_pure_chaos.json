@@ -1,0 +1,21 @@
+{
+  "races": [
+    "majin"
+  ],
+  "kind": "extension",
+  "tier": "evolution",
+  "alignment_branch": "evil",
+  "tp_cost": 60000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.6,
+  "stat_percent_untrained": 2.6,
+  "stat_percent_mastered": 3.4,
+  "ki_drain_untrained": 0.9,
+  "ki_drain_mastered": 0.3,
+  "spi_req": 80,
+  "parent": "zenkai:majin_super",
+  "body_items": {},
+  "aura_type": "dark",
+  "aura_rgb": "0xC0106A",
+  "scale": 1.05
+}

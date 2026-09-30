@@ -11,7 +11,7 @@
   "ki_drain_untrained": 1.5,
   "ki_drain_mastered": 0.5,
   "spi_req": 134,
-  "parent": "zenkai:final_form",
+  "parent": "zenkai:fifth_form",
   "body_items": {
     "head": "zenkai:arcosian_golden_form_helmet",
     "chest": "zenkai:arcosian_golden_form_chestplate",

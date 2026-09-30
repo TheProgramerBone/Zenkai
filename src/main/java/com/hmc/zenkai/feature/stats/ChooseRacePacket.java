@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.stats;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.api.event.RaceChosenEvent;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.Race;
@@ -12,6 +13,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Locale;
@@ -55,6 +57,7 @@ public record ChooseRacePacket(Race race) implements CustomPacketPayload {
             att.setRace(pkt.race());
             att.setRaceChosen(true);
             att.setStyleChosen(false);
+            NeoForge.EVENT_BUS.post(new RaceChosenEvent(sp, pkt.race()));
             ZenkaiTriggers.RACE_CHOSEN.get().trigger(sp,
                     pkt.race().name().toLowerCase(Locale.ROOT), null);
 

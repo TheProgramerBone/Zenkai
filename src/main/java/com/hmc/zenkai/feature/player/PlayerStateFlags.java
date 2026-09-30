@@ -73,6 +73,15 @@ public class PlayerStateFlags {
      */
     private boolean hasTail = true;
 
+    /** Power Points del Arcosiano (ver ArcosianPowerSystem): tanque que se llena en reposo. Va en
+     *  save()/load() porque ese round-trip de NBT es también el transporte de red (ver
+     *  overdriveCharging). */
+    private double arcosianPp = 0.0;
+    /** Barra de calor de Ultra Instinct, 0-100 (ver OverlayMetersSystem). */
+    private double uiHeat = 0.0;
+    /** Barra de daño acumulado de Ultra Ego, 0-100. */
+    private double ueCharge = 0.0;
+
     /** Ya recibió el servicio de pesas de Kaiosama (ver KaioEntity.services()). Regalo de una
      *  sola vez: sin este flag, pedirlas repetidas veces sería una granja infinita de
      *  WEIGHTED_STRAPS/WEIGHTED_CAPE gratis. */
@@ -112,6 +121,12 @@ public class PlayerStateFlags {
     public void setHardcoreDeath(boolean v) { this.hardcoreDeath = v; }
     public boolean hasTail() { return hasTail; }
     public void setHasTail(boolean v) { this.hasTail = v; }
+    public double getArcosianPp() { return arcosianPp; }
+    public void setArcosianPp(double v) { this.arcosianPp = Math.max(0.0, v); }
+    public double getUiHeat() { return uiHeat; }
+    public void setUiHeat(double v) { this.uiHeat = Math.max(0.0, Math.min(100.0, v)); }
+    public double getUeCharge() { return ueCharge; }
+    public void setUeCharge(double v) { this.ueCharge = Math.max(0.0, Math.min(100.0, v)); }
     public boolean hasSsj4Ritual() { return hasSsj4Ritual; }
     public void setHasSsj4Ritual(boolean v) { this.hasSsj4Ritual = v; }
     public boolean hasReceivedKaioWeights() { return receivedKaioWeights; }
@@ -150,6 +165,9 @@ public class PlayerStateFlags {
         tag.putBoolean("overdriveCharging", overdriveCharging);
         tag.putBoolean("hasTail", hasTail);
         tag.putBoolean("hasSsj4Ritual", hasSsj4Ritual);
+        tag.putDouble("arcosianPp", arcosianPp);
+        tag.putDouble("uiHeat", uiHeat);
+        tag.putDouble("ueCharge", ueCharge);
         tag.putBoolean("receivedKaioWeights", receivedKaioWeights);
         return tag;
     }
@@ -160,6 +178,9 @@ public class PlayerStateFlags {
         // como haría getBoolean() con una key ausente.
         this.hasTail = !tag.contains("hasTail") || tag.getBoolean("hasTail");
         this.hasSsj4Ritual = tag.getBoolean("hasSsj4Ritual");
+        this.arcosianPp = tag.getDouble("arcosianPp");
+        this.uiHeat = tag.getDouble("uiHeat");
+        this.ueCharge = tag.getDouble("ueCharge");
         this.receivedKaioWeights = tag.getBoolean("receivedKaioWeights");
         this.isImmortal  = tag.getBoolean("isImmortal");
         this.isDivine    = tag.getBoolean("isDivine");

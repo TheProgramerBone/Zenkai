@@ -287,6 +287,6 @@ public final class TrainingHooks {
         PlayerFormAttachment formAtt = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         if (FormIds.POTENTIAL_UNLOCK.equals(formAtt.getFormId())) return true;
         FormDef def = formAtt.activeDef();
-        return def != null && def.divineTier();
+        return def != null && def.hasDivineEnergy();
     }
 }

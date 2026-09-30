@@ -13,11 +13,12 @@
   "spi_req": 230,
   "parent": "zenkai:ssj_god",
   "body_items": {},
-  "aura_type": "rose",
-  "aura_rgb": "0x9C27FF",
+  "aura_type": "divine",
+  "aura_rgb": "0x5FE8FF",
   "scale": 1.0,
-  "hair_rgb": "0xFF8FC0",
+  "hair_rgb": "0x1FB8C4",
   "divine_tier": true,
-  "aura_outer_rgb": "0xE8103C",
-  "eye_rgb": "0xFF6FD6"
+  "tier": "evolution",
+  "aura_outer_rgb": "0x1B3F9E",
+  "eye_rgb": "0x35C8FF"
 }

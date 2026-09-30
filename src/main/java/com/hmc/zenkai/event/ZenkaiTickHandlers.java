@@ -75,6 +75,8 @@ public class ZenkaiTickHandlers {
         // válida); si sale, FormSystem ve Base normal el resto del tick.
         OozaruSystem.tick(c);
 
+        ArcosianPowerSystem.tick(c);
+        OverlayMetersSystem.tick(c);
         if (FormSystem.tick(c)) return;
         KaiokenSystem.tick(c);
         KiChargeSystem.tick(c);
@@ -110,6 +112,7 @@ public class ZenkaiTickHandlers {
         PlayerTickState.forget(e.getEntity().getUUID());
         RacePassiveSystem.forget(e.getEntity().getUUID());
         WeightLoadSystem.forget(e.getEntity().getUUID());
+        OverlayMetersSystem.forget(e.getEntity().getUUID());
         if (e.getEntity() instanceof ServerPlayer sp) ScouterOverload.forget(sp);
     }
 }

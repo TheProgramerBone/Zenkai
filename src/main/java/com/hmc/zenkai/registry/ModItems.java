@@ -666,6 +666,123 @@ public class ModItems {
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
+    // Fifth Form Path (0.3.0, .claude/pendiente/rediseno-transformaciones-balance.md): dos
+    // formas nuevas tras black_form — golden_fifth_form (extensión mortal) y black_fifth_form
+    // (primera forma divina del Arcosiano). Mismo patrón exacto que las 5 formas Arcosian ya
+    // existentes: sin .geo.json/textura todavía, cae limpio al cuerpo de black_form vía el
+    // mismo fallback (RaceSkinSlots.backedOrEmpty) — no crashea, ver
+    // .claude/pendiente/geo-models-pendientes.md.
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_GOLDEN_FIFTH_FORM_HELMET =
+            ITEMS.register("arcosian_golden_fifth_form_helmet", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_golden_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_golden_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_GOLDEN_FIFTH_FORM_CHESTPLATE =
+            ITEMS.register("arcosian_golden_fifth_form_chestplate", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_golden_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_golden_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_GOLDEN_FIFTH_FORM_LEGGINGS =
+            ITEMS.register("arcosian_golden_fifth_form_leggings", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_golden_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_golden_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_GOLDEN_FIFTH_FORM_BOOTS =
+            ITEMS.register("arcosian_golden_fifth_form_boots", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_golden_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_golden_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_BLACK_FIFTH_FORM_HELMET =
+            ITEMS.register("arcosian_black_fifth_form_helmet", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_black_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_black_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_BLACK_FIFTH_FORM_CHESTPLATE =
+            ITEMS.register("arcosian_black_fifth_form_chestplate", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_black_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_black_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_BLACK_FIFTH_FORM_LEGGINGS =
+            ITEMS.register("arcosian_black_fifth_form_leggings", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_black_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_black_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_BLACK_FIFTH_FORM_BOOTS =
+            ITEMS.register("arcosian_black_fifth_form_boots", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_black_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_black_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    // fifth_form (0.3.0): nodo central del que cuelgan golden_fifth_form y black_fifth_form.
+    // Mismo patrón y mismo fallback limpio que las demás formas Arcosian (sin .geo.json/textura
+    // todavía cae al cuerpo de la forma anterior, RaceSkinSlots.backedOrEmpty).
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_FIFTH_FORM_HELMET =
+            ITEMS.register("arcosian_fifth_form_helmet", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_FIFTH_FORM_CHESTPLATE =
+            ITEMS.register("arcosian_fifth_form_chestplate", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_FIFTH_FORM_LEGGINGS =
+            ITEMS.register("arcosian_fifth_form_leggings", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    public static final Supplier<GeoLayerArmorItem> ARCOSIAN_FIFTH_FORM_BOOTS =
+            ITEMS.register("arcosian_fifth_form_boots", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
+                            new Item.Properties(),
+                            "geo/forms/arcosian_fifth_form_player.geo.json",
+                            "textures/models/forms/arcosian_fifth_form_player_layer_0.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
     // Majin. Cuatro variantes como Human/Saiyan (género x color) porque comparte con ellos
     // la silueta humanoide y el selector de género de AppearanceScreen, que ya lo incluye en
     // isTintRace. A diferencia de ellos NO tiene pelo: HairResolver filtra por raza y el

@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.api.event.MasterPurchaseEvent;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.master.MasterManager;
 import com.hmc.zenkai.feature.player.MindBudget;
@@ -12,6 +13,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
@@ -178,6 +180,13 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         }
 
         if (att.getTP() < type.tpCost()) return false;
+
+        if (!master.isEmpty()) {
+            var event = new MasterPurchaseEvent(sp, master, type.id());
+            NeoForge.EVENT_BUS.post(event);
+            if (event.isCanceled()) return false;
+        }
+
         att.addTP(-type.tpCost());
         return grant(att, type);
     }

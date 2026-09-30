@@ -70,4 +70,8 @@ public enum PhysicalTechnique {
      *  el golpe instantáneo sigue resolviéndose en su tick. Solo determina cuánto se mantiene
      *  el ActionState para que los demás vean la animación entera. */
     public int animTicks() { TechniqueDef d = def(); return d == null ? 12 : d.animTicks(); }
+
+    /** "" = usar la celda fija del atlas compartido (physical_icons.png, indexada por
+     *  ordinal()). Con una ResourceLocation propia, PhysicalIcons la dibuja en su lugar. */
+    public String icon() { TechniqueDef d = def(); return d == null ? "" : d.icon(); }
 }

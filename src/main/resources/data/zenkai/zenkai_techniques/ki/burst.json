@@ -9,5 +9,10 @@
   "count": 5,
   "defensive": false,
   "default_rgb": "0xFFF3A0",
-  "anim_ticks": 12
+  "anim_ticks": 12,
+  "projectile_size_base": 0.30,
+  "projectile_size_step": 0.08,
+  "explosion_radius_mult": 0.60,
+  "aoe_factor": 0.35,
+  "allowed_effects": "fragmentation"
 }

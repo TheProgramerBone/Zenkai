@@ -3,6 +3,8 @@ package com.hmc.zenkai.feature.forms;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.aura.AuraCeiling;
 import net.minecraft.resources.ResourceLocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +25,8 @@ import java.util.Map;
 public final class FormRegistry {
     private FormRegistry() {}
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("Zenkai-Forms");
+
     private static volatile Map<Race, ResourceLocation> FIRST_BY_RACE = Map.of();
     private static volatile Map<ResourceLocation, List<ResourceLocation>> CHILDREN = Map.of();
 
@@ -33,7 +37,16 @@ public final class FormRegistry {
 
         for (FormDef d : FormDef.all()) {
             if (d.parent() == null && d.kind() == FormDef.Kind.SUPER) {
-                for (Race r : d.races()) first.putIfAbsent(r, d.id());
+                for (Race r : d.races()) {
+                    ResourceLocation prev = first.get(r);
+                    if (prev != null && !prev.equals(d.id())) {
+                        LOGGER.warn("[Zenkai] Conflicto de raíz de forma para la raza {}: {} " +
+                                "ya declarada, {} la ignora (gana la primera en cargar).",
+                                r, prev, d.id());
+                        continue;
+                    }
+                    first.putIfAbsent(r, d.id());
+                }
             } else if (d.parent() != null) {
                 children.computeIfAbsent(d.parent(), k -> new ArrayList<>()).add(d.id());
             }
@@ -55,18 +68,30 @@ public final class FormRegistry {
     }
 
     /**
-     * Siguiente forma en la cadena. Con varias ramas devuelve la primera; cuando existan
-     * bifurcaciones de verdad, es la rueda quien debe elegir y no esta función.
+     * Siguiente forma en la cadena "mortal" (la que compra super_forms). Con varias ramas elige de
+     * forma DETERMINISTA (antes ganaba el orden de carga del datapack): primero los hijos que no
+     * son divinos, ni de endgame, ni exigen maestría de otras formas (esos cuelgan como ramas);
+     * entre ellos, una hermana de alineamiento GOOD antes que una EVIL. Solo si no queda ninguno
+     * cae a un hijo divino (Saiyan: ssj4 -> ssj_god). Las ramas fuera de la cadena las ofrece la
+     * rueda recorriendo childrenOf, no esta función.
      */
     public static ResourceLocation nextFrom(ResourceLocation current, Race race) {
         if (current == null || FormIds.BASE.equals(current)) return firstFormFor(race);
         List<ResourceLocation> kids = CHILDREN.get(current);
         if (kids == null) return null;
+        ResourceLocation mortal = null;
+        ResourceLocation fallback = null;
         for (ResourceLocation k : kids) {
             FormDef d = FormDef.get(k);
-            if (d != null && d.allows(race)) return k;
+            if (d == null || !d.allows(race)) continue;
+            if (fallback == null) fallback = k;
+            if (d.divineTier() || d.endgamePath() || !d.masteryReqs().isEmpty()) continue;
+            if (mortal == null) { mortal = k; continue; }
+            FormDef md = FormDef.get(mortal);
+            if (d.alignmentBranch() == FormDef.AlignBranch.GOOD
+                    && md.alignmentBranch() != FormDef.AlignBranch.GOOD) mortal = k;
         }
-        return null;
+        return mortal != null ? mortal : fallback;
     }
 
     /** El conjunto de ramas que salen de una forma (para la rueda). Nunca null. */

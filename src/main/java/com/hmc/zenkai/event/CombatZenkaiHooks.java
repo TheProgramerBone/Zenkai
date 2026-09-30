@@ -1,5 +1,6 @@
 package com.hmc.zenkai.event;
 
+import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.content.entity.ai.BlockingMob;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
 import com.hmc.zenkai.content.item.KiWeaponItem;
@@ -104,6 +105,12 @@ public class CombatZenkaiHooks {
             e.setNewDamage(0.0F);
             return;
         }
+        // Esquive automático de Ultra Instinct: tras los i-frames y antes de defensa/pools, así
+        // un golpe esquivado no toca el cuerpo ni alimenta la barra de Ultra Ego.
+        if (e.getEntity() instanceof ServerPlayer uiDodger && OverlayMetersSystem.tryDodge(uiDodger)) {
+            e.setNewDamage(0.0F);
+            return;
+        }
         MinecraftServer server = e.getEntity().getServer();
         if (server == null || !ModGameRules.enableRaceBoosts(server)) return;
 
@@ -113,6 +120,8 @@ public class CombatZenkaiHooks {
 
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
         float dmg = computeAttackDamage(e, atkStats, armorMult);
+        // Ultra Ego: multiplicador de salida según su barra de daño acumulado (1.0 sin UE).
+        dmg = OverlayMetersSystem.scaleOutgoing(e.getSource().getEntity(), dmg);
 
         // Se consume AQUÍ, inmediatamente después de computeAttackDamage (el único sitio que
         // puede haberlo marcado, vía BlackFlash.apply dentro de playerMeleeDamage) y ANTES de
@@ -331,6 +340,9 @@ public class CombatZenkaiHooks {
             bodySpent = bodyBefore - defStats.getBody();
 
             grantTraining(e, Math.min(finalDamage, bodyBefore));
+            if (e.getEntity() instanceof ServerPlayer ueVictim) {
+                OverlayMetersSystem.onDamaged(ueVictim, bodySpent, defStats.getBodyMax());
+            }
         }
 
         // JUGADOR: sin cambios. Su vida vanilla la escribe PlayerLifeCycle y el daño se anula.

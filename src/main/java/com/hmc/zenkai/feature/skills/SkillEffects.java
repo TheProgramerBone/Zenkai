@@ -28,6 +28,13 @@ public final class SkillEffects {
     /** No son habilidades comprables: se desbloquean por tener Ki Fist + Ki Infuse. */
     public static final String KI_BLADE = "ki_blade";
     public static final String KI_SCYTHE = "ki_scythe";
+    /** Overlay genérico (0.3.0, ver OverlayStateSystem): interruptor ON/OFF que se puede usar
+     *  sobre CUALQUIER Transformación primaria (Base, SSJ, SSB...) — distinto de la
+     *  Transformación completa "Ultra Instinct" (FormDef ultra_instinct_sign/ultra_instinct),
+     *  que es un sistema totalmente aparte sin relación de código con este interruptor. */
+    public static final String ULTRA_INSTINCT = "ultra_instinct";
+    /** Overlay genérico gemelo de {@link #ULTRA_INSTINCT} para Ultra Ego — mismo comentario. */
+    public static final String ULTRA_EGO = "ultra_ego";
 
     public static int level(Player p, String skillId) {
         if (p == null) return 0;

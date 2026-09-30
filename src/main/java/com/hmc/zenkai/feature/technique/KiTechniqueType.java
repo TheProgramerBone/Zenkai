@@ -5,12 +5,19 @@ import java.util.Locale;
 /**
  * Tipos de técnica ki. El enum es solo IDENTIDAD:
  *  - name() = clave NBT / packets.
- *  - ordinal() = celda del ícono en technique_icons.png (NO reordenar). EXPLOSION ocupa la
- *    celda 8, que antes era la base de la marca explosiva; el atlas no cambia de tamaño.
+ *  - ordinal() = celda del ícono en technique_icons.png (NO reordenar) SOLO mientras
+ *    {@link #icon()} esté vacío — con una textura propia en datapack, TechniqueIcons la usa en
+ *    vez de la celda del atlas (ver TechniqueDef.icon, 0.3.0). EXPLOSION ocupa la celda 8, que
+ *    antes era la base de la marca explosiva; el atlas no cambia de tamaño.
  *  - la estela 3D se queda aquí (es visual, no balance).
  * Cada NÚMERO vive en datapack: data/&lt;ns&gt;/zenkai_techniques/ki/&lt;id&gt;.json
  * (ver TechniqueDef / TechniqueManager). Sin JSON, enabled() es false y la técnica
  * no se puede desbloquear, guardar ni disparar.
+ * Desde 0.3.0, la FORMA (tamaño de proyectil, radio de explosión, aoe, animación impuesta,
+ * efectos admitidos) también es dato — ver el javadoc de {@link TechniqueDef}. El enum sigue
+ * siendo Java cerrado a propósito: un addon puede reutilizar/reskinnear un tipo existente
+ * (técnica firma) pero no crear una identidad genuinamente nueva sin recompilar Zenkai —
+ * decisión explícita, ver {@code .claude/pendiente/api-addons-0.3.0.md}.
  */
 public enum KiTechniqueType {
     WAVE,       // Kamehameha: lento, fuerte
@@ -55,48 +62,37 @@ public enum KiTechniqueType {
     // ── Naturaleza del tipo ──────────────────────────────────────────────────
 
     /** ¿El proyectil VIAJA? La barrera sigue al dueño y la explosión estalla donde estás.
-     *  Lo que no viaja no apunta, no converge con la mira y no se desvía. */
-    public boolean travels() { return this != BARRIER && this != EXPLOSION; }
+     *  Lo que no viaja no apunta, no converge con la mira y no se desvía.
+     *  Dato (TechniqueDef.travels, 0.3.0): default true si el tipo está desactivado. */
+    public boolean travels() { TechniqueDef d = def(); return d == null || d.travels(); }
 
-    /** Animación impuesta por el tipo, o null si el jugador elige el set. */
+    /** Animación impuesta por el tipo, o null si el jugador elige el set.
+     *  Dato (TechniqueDef.animOverride, 0.3.0): "" = sin imponer. */
     public TechniqueAnimOverride animOverride() {
-        return switch (this) {
-            case BARRIER     -> TechniqueAnimOverride.BARRIER;
-            case EXPLOSION   -> TechniqueAnimOverride.EXPLOSION;
-            case SPIRIT_BOMB -> TechniqueAnimOverride.SPIRIT_BOMB;
-            default          -> null;
-        };
+        TechniqueDef d = def();
+        if (d == null || d.animOverride().isEmpty()) return null;
+        try {
+            return TechniqueAnimOverride.valueOf(d.animOverride().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**
-     * ¿Admite este efecto? Antes era "estos tres tipos no admiten NINGUNO"; con más de un
-     * efecto cada tipo necesita su propia combinación — no cualquier "no encaja" es el mismo
-     * motivo, así que cada rama explica el suyo.
+     * ¿Admite este efecto? Dato (TechniqueDef.allowedEffects, 0.3.0): "" = default (todos menos
+     * FRAGMENTATION, el mismo comportamiento que tenía la rama por defecto del switch viejo),
+     * "none" = ninguno, o una lista separada por comas de nombres de TechniqueEffect.
      */
     public boolean allowsEffect(TechniqueEffect effect) {
         if (effect == TechniqueEffect.NONE) return true;
-        return switch (this) {
-            // El disco YA perfora sin marcar nada (KiProjectileEntity.onHitEntity): PIERCING
-            // sería una opción que no cambia nada, y EXPLOSIVE/FRAGMENTATION le quitan la
-            // identidad ("un disco que explota deja de ser un disco"). HOMING y LINGERING no
-            // chocan con esa identidad.
-            case DISK -> effect == TechniqueEffect.HOMING || effect == TechniqueEffect.LINGERING;
-            // No impacta contra nada: no hay efecto de impacto que aplicar.
-            case BARRIER -> false;
-            // Una ráfaga multiplica cualquier efecto de área/impacto por el número de bolas —
-            // con EXPLOSIVE ya se consideró demasiado. FRAGMENTATION es la excepción: es la
-            // identidad propia del tipo (bolas que sueltan más bolas), así que es el único que
-            // se habilita aquí.
-            case BURST -> effect == TechniqueEffect.FRAGMENTATION;
-            // No viaja: no hay un "primer impacto" que perforar, corregir o fragmentar. Solo
-            // tiene sentido lo que pasa EN el punto de detonación (romper bloques, o dejar
-            // rescoldo ardiendo ahí mismo).
-            case EXPLOSION -> effect == TechniqueEffect.EXPLOSIVE || effect == TechniqueEffect.LINGERING;
-            // WAVE, BLAST, LAZER, SPIRAL, BIG_BLAST: admiten el resto salvo FRAGMENTATION, que es
-            // la identidad reservada a BURST (una sola bola soltando más bolas no es "una
-            // ráfaga", es solo confuso).
-            default -> effect != TechniqueEffect.FRAGMENTATION;
-        };
+        TechniqueDef d = def();
+        String raw = d == null ? "" : d.allowedEffects();
+        if (raw.isEmpty()) return effect != TechniqueEffect.FRAGMENTATION;
+        if (raw.equalsIgnoreCase("none")) return false;
+        for (String part : raw.split(",")) {
+            if (effect.name().equalsIgnoreCase(part.trim())) return true;
+        }
+        return false;
     }
 
     // ── Escala física ────────────────────────────────────────────────────────
@@ -114,32 +110,9 @@ public enum KiTechniqueType {
      *  antes 1.8) y suaviza el crecimiento hasta 4.35 en tamaño 5 (antes 5.1). */
     public double projectileSize(int size) {
         int s = Math.max(1, size) - 1;
-        return switch (this) {
-            case LAZER     -> 0.20 + 0.05 * s;
-            case BURST     -> 0.30 + 0.08 * s;
-            case SPIRAL    -> 0.40 + 0.15 * s;
-            case BLAST     -> 0.45 + 0.18 * s;
-            case DISK      -> 0.60 + 0.20 * s;
-            case WAVE      -> 0.70 + 0.30 * s;
-            case BIG_BLAST -> 1.50 + 0.35 * s;
-            case EXPLOSION -> 1.20 + 0.35 * s;
-            case BARRIER   -> 2.60 + 0.20 * s;   // como estaba
-            // Técnica firma: arranca por encima del techo de BIG_BLAST (~2.9 en tamaño 5) y
-            // sigue creciendo, mismo patrón documentado arriba para EXPLOSION/BIG_BLAST.
-            case SPIRIT_BOMB -> 3.20 + 0.40 * s;
-
-            // Firmas nuevas (2026-09-23): cada una arranca por encima del techo del tipo
-            // genérico del que es "hermana" (ver KiVfxProfile — mismo shape/banda, personalidad
-            // propia). FINAL_FLASH es la más ANCHA a propósito (finalflash_1/3); DEATH_BEAM más
-            // fino que el propio LAZER (un dedo, no un haz); DEATH_BALL/SUPERNOVA superan a
-            // SPIRIT_BOMB, son las esferas más grandes del mod.
-            case KAMEHAMEHA  -> 1.00 + 0.35 * s;   // por encima del techo de WAVE (1.90)
-            case FINAL_FLASH -> 1.30 + 0.40 * s;   // la más ancha de las tres tipo-WAVE
-            case GALICK_GUN  -> 1.00 + 0.32 * s;
-            case DEATH_BEAM  -> 0.15 + 0.03 * s;   // más fino que el techo de LAZER (0.40)
-            case DEATH_BALL  -> 2.20 + 0.45 * s;
-            case SUPERNOVA   -> 2.60 + 0.50 * s;   // la esfera más grande del mod
-        };
+        TechniqueDef d = def();
+        if (d == null) return 0.45 + 0.18 * s; // desactivada: mismo neutro que el resto de getters
+        return d.projectileSizeBase() + d.projectileSizeStep() * s;
     }
 
     /** Cuánto agranda {@code KiVfxProjectileRenderer} la malla más allá del hitbox (ver su
@@ -173,8 +146,8 @@ public enum KiTechniqueType {
      * encogerla sería justo deshacer lo que esta bandera pide.
      */
     public boolean chargeShowsRealSize() {
-        return this == EXPLOSION || this == BIG_BLAST || this == SPIRIT_BOMB
-                || this == DEATH_BALL || this == SUPERNOVA;
+        TechniqueDef d = def();
+        return d != null && d.chargeShowsRealSize();
     }
 
     /** Radio de la explosión en bloques. SIN TECHO a propósito: los techos por tipo aplastaban
@@ -185,54 +158,23 @@ public enum KiTechniqueType {
     }
 
     private double explosionRadiusMult() {
-        return switch (this) {
-            case LAZER     -> 0.60;
-            case BLAST     -> 1.20;
-            case SPIRAL    -> 1.35;
-            case WAVE      -> 1.60;
-            case BIG_BLAST -> 2.40;
-            case EXPLOSION -> 3.60;
-            case DISK      -> 0.70;
-            case BURST     -> 0.60;
-            case BARRIER   -> 0.00;
-            case SPIRIT_BOMB -> 3.20;   // por encima del 2.40 de BIG_BLAST
-            case KAMEHAMEHA  -> 1.90;
-            case FINAL_FLASH -> 2.10;
-            case GALICK_GUN  -> 1.90;
-            case DEATH_BEAM  -> 0.80;
-            case DEATH_BALL  -> 3.60;
-            case SUPERNOVA   -> 3.90;
-        };
+        TechniqueDef d = def();
+        return d == null ? 1.20 : d.explosionRadiusMult();
     }
 
     /** Fracción del daño directo que se reparte en el área, EN EL CENTRO. Ya no depende de la
      *  marca de efecto: cualquier técnica que impacta reparte área. */
     public double aoeFactor() {
-        return switch (this) {
-            case EXPLOSION -> 1.00;   // la explosión ES la técnica: no hay golpe directo que descontar
-            case BIG_BLAST -> 0.85;
-            case WAVE      -> 0.75;
-            case SPIRAL    -> 0.60;
-            case BLAST     -> 0.50;
-            case DISK      -> 0.40;
-            case BURST     -> 0.35;
-            case LAZER     -> 0.20;
-            case BARRIER   -> 0.00;
-            case SPIRIT_BOMB -> 0.90;   // casi todo el daño en el área: es una bola, no un golpe directo
-            case KAMEHAMEHA  -> 0.80;
-            case FINAL_FLASH -> 0.85;
-            case GALICK_GUN  -> 0.80;
-            case DEATH_BEAM  -> 0.30;   // preciso: casi todo el daño va al golpe directo
-            case DEATH_BALL  -> 0.90;
-            case SUPERNOVA   -> 0.95;
-        };
+        TechniqueDef d = def();
+        return d == null ? 0.50 : d.aoeFactor();
     }
 
     /** Fracción del daño que queda EN EL BORDE del radio. Los proyectiles caen a cero; la
      *  explosión mantiene el 65 %, que es lo que la convierte en una zona de muerte y no en un
-     *  golpe con halo. */
+     *  golpe con halo. Dato (TechniqueDef.aoeEdgeFalloff, 0.3.0). */
     public double aoeEdgeFalloff() {
-        return this == EXPLOSION ? 0.65 : 0.0;
+        TechniqueDef d = def();
+        return d == null ? 0.0 : d.aoeEdgeFalloff();
     }
 
     /** Parse seguro desde NBT/packets. null si no existe. */
@@ -279,6 +221,11 @@ public enum KiTechniqueType {
     /** "" = desbloqueable con TP normalmente. Con un id, SOLO ese maestro la enseña — ver
      *  TechniquePacket.handleUnlock y el javadoc de TechniqueDef ("TÉCNICA FIRMA"). */
     public String master() { TechniqueDef d = def(); return d == null ? "" : d.master(); }
+
+    /** "" = usar la celda fija del atlas compartido (technique_icons.png, indexada por
+     *  ordinal(), como siempre). Con una ResourceLocation propia, TechniqueIcons la dibuja en
+     *  su lugar — ver TechniqueDef.icon, campo 0.3.0. */
+    public String icon() { TechniqueDef d = def(); return d == null ? "" : d.icon(); }
 
     /** Segundo color (interior) de fábrica, campo datapack {@code default_rgb2} ("0xRRGGBB"; "" o
      *  ausente = sin segundo color, -1). Impuesto en las técnicas de maestro (KiTechnique.rgb2);

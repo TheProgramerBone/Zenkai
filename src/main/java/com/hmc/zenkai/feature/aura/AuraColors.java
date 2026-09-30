@@ -2,6 +2,8 @@ package com.hmc.zenkai.feature.aura;
 
 import com.hmc.zenkai.feature.alignment.AlignmentTier;
 import com.hmc.zenkai.feature.forms.FormDef;
+import com.hmc.zenkai.feature.skills.OverlayStateDef;
+import com.hmc.zenkai.feature.skills.OverlayStateSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.world.entity.player.Player;
 
@@ -54,10 +56,23 @@ public final class AuraColors {
         // Kaioken SOBRE una forma: rojo por FUERA envolviendo el color de la forma, siempre
         // ganando sobre la capa exterior propia de la forma (si tuviera una) — un jugador
         // forzando Kaioken quiere verlo, no que se lo tape su propio aura de dos tonos.
+        // SIN TOCAR (0.3.0): Kaioken sigue ganando exactamente igual que antes de que existieran
+        // los overlays genéricos de abajo.
         if (kaio && def != null) return new Layers(def.auraRgb(), KAIOKEN_RGB);
         if (kaio) return new Layers(KAIOKEN_RGB, -1);
-        // Forma sin Kaioken: su propia capa exterior si la declara (aura de dos tonos, ver
-        // FormDef.auraOuterRgb), o -1 (capa única) si no.
+
+        // Overlay genérico (Ultra Instinct/Ultra Ego "técnica" y cualquier estado futuro del
+        // mismo tipo, ver OverlayStateSystem) SOBRE una forma: mismo mecanismo que Kaioken justo
+        // arriba (capa exterior propia envolviendo el color de la forma), pero solo se evalúa
+        // con Kaioken apagado — Kaioken sigue siendo la prioridad más alta, sin cambios. Ninguno
+        // de los dos overlays del mod declara aura_rgb todavía, así que esta rama es hoy un
+        // no-op en cualquier partida real (highestPriorityAuraOverlay siempre null).
+        OverlayStateDef overlay = OverlayStateSystem.highestPriorityAuraOverlay(p);
+        if (overlay != null && def != null) return new Layers(def.auraRgb(), overlay.auraRgb());
+        if (overlay != null) return new Layers(overlay.auraRgb(), -1);
+
+        // Forma sin Kaioken ni overlay genérico: su propia capa exterior si la declara (aura de
+        // dos tonos, ver FormDef.auraOuterRgb), o -1 (capa única) si no.
         if (def != null) return new Layers(def.auraRgb(), def.auraOuterRgb());
         // Majin solo tiñe el aura en BASE (con forma activa manda la forma).
         if (visual.isMajinControlled()) return new Layers(MAJIN_RGB, -1);

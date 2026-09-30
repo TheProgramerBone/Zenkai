@@ -45,7 +45,6 @@ public final class WheelMenu {
     // no la tierra. Antes tenía cuatro colores propios —incluido un tercer verde para
     // "encendido" distinto del verde de las formas— que no aparecían en ninguna otra pantalla.
     private static final int COL_FORMS    = ZenkaiPalette.OK;
-    private static final int COL_BASE     = ZenkaiPalette.TEXT_DIM;
     private static final int COL_ON       = ZenkaiPalette.OK;      // interruptor encendido
     private static final int COL_OFF      = ZenkaiPalette.DENIED;  // interruptor apagado
     private static final int COL_CATEGORY = ZenkaiPalette.MAXED;   // submenús de interruptores
@@ -54,8 +53,14 @@ public final class WheelMenu {
     public static WheelNode build(Player p) {
         List<WheelNode> roots = new ArrayList<>();
 
+        // "Forms" envuelve una sub-rama por nivel (Race/Super Forms/Divine, ver forms()) —
+        // WheelScreen ya soporta profundidad arbitraria (0.3.0, ver su javadoc/hoverPath), así
+        // que anidar una categoría dentro de otra vuelve a funcionar: Forms -> Race -> hoja de
+        // forma navega en 3 anillos sin problema. Ya NO incluye "Base": destransformar del
+        // todo es la tecla de transformar (toque corto), no una opción que valga la pena
+        // ocupar sitio en la rueda (pedido del usuario, 2026-09-28).
         List<WheelNode> forms = forms(p);
-        if (forms.size() > 1) { // 1 = solo Base: no hay nada que elegir
+        if (!forms.isEmpty()) {
             roots.add(WheelNode.category(
                     Component.translatable("wheel.zenkai.forms"), COL_FORMS, forms));
         }
@@ -68,11 +73,36 @@ public final class WheelMenu {
 
         WheelNode tailMode = tailStyleToggle(p);
         if (tailMode != null) roots.add(tailMode);
+
+        // Ultra Instinct / Ultra Ego: ya NO se reparten entre un interruptor suelto en la
+        // raíz y una forma enterrada dentro de "Forms" — cada una es su propia rama con
+        // "Technique" (el interruptor on/off) y "Form" (la transformación de verdad), pedido
+        // del usuario 2026-09-28. Por eso se excluyen sus ids del bucle genérico de
+        // SkillToggles de abajo: si no, aparecerían DOS veces.
+        WheelNode ultraInstinct = endgameBranch(p, SkillEffects.ULTRA_INSTINCT,
+                Component.translatable("wheel.zenkai.ultra_instinct_branch"), FormIds.ULTRA_INSTINCT_SIGN);
+        if (ultraInstinct != null) roots.add(ultraInstinct);
+
+        WheelNode ultraEgo = endgameBranch(p, SkillEffects.ULTRA_EGO,
+                Component.translatable("wheel.zenkai.ultra_ego_branch"), FormIds.ULTRA_EGO);
+        if (ultraEgo != null) roots.add(ultraEgo);
+
+        // Ultimate Mystic (-> Beast) NO es una forma "divina" (pedido del usuario, 2026-09-28:
+        // antes se enseñaba dentro de Forms > Divine solo porque comparte el flag divineTier
+        // con SSJG/HumanGod/etc, no porque sea la misma cosa) — es una evolución PROPIA como
+        // Ultra Instinct/Ultra Ego, así que ahora tiene el mismo tratamiento de rama suelta.
+        // Sin toggleId: a diferencia de esas dos, no existe ninguna "técnica parcial" de
+        // Mystic que se pueda activar sin la transformación completa.
+        WheelNode ultimateMystic = endgameBranch(p, null,
+                Component.translatable("wheel.zenkai.ultimate_mystic_branch"), FormIds.ULTIMATE_MYSTIC);
+        if (ultimateMystic != null) roots.add(ultimateMystic);
+
         // Interruptores: los sueltos cuelgan de la raíz, los que declaran categoría se
         // agrupan en su propia rama. Agrupar es SOLO presentación: el packet manda el mismo
         // kind TOGGLE con el mismo id, esté donde esté la hoja.
         Map<String, List<WheelNode>> categories = new LinkedHashMap<>();
         for (SkillToggles.Toggle t : SkillToggles.all()) {
+            if (SkillEffects.ULTRA_INSTINCT.equals(t.id()) || SkillEffects.ULTRA_EGO.equals(t.id())) continue;
             WheelNode n = toggleNode(p, t.id());
             if (n == null) continue;
             if (t.category() == null) roots.add(n);
@@ -86,18 +116,29 @@ public final class WheelMenu {
         return WheelNode.category(Component.empty(), ZenkaiPalette.TEXT, roots);
     }
 
-    /** Cadena de formas. 'active' = la que está SELECCIONADA, no la que lleva puesta. */
+    /**
+     * Hijos de "Forms", agrupados en 3 niveles fijos en vez de por categoría/raza (pedido del
+     * usuario, 2026-09-28 — antes se amontonaban por subcarpeta, ver captura de esa fecha):
+     *  - Race: la cadena normal de la raza (SSJ1-4 del saiyan, second/third/final del
+     *    arcosiano...) — {@link FormDef#descendable()} o sin ningún antepasado descendable.
+     *  - Super Forms: lo que cuelga de una forma descendable sin serlo ella misma (hoy solo
+     *    Golden/Black/sus variantes "fifth" del arcosiano, que cuelgan de final_form).
+     *  - Divine: {@link FormDef#divineTier()} — los pares god/blue/rose de cada raza, cruzando
+     *    razas dentro de la misma etiqueta (un jugador solo ve la suya, claro).
+     * Ver {@link #tierOf}. 'active' en cada hoja = la forma SELECCIONADA, no la que lleva
+     * puesta. Ni Ultra Instinct/Ultra Ego NI Ultimate Mystic pasan por aquí — las 3 rutas de
+     * endgame tienen su propia rama suelta, ver {@link #endgameBranch}.
+     */
     private static List<WheelNode> forms(Player p) {
-        List<WheelNode> out = new ArrayList<>();
         PlayerStatsAttachment st = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         PlayerFormAttachment fm = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
 
         Race race = st.getRace();
         ResourceLocation selected = fm.getSelectedForm();
 
-        out.add(WheelNode.leaf(WheelNode.Kind.FORM, FormIds.BASE.toString(),
-                Component.translatable("wheel.zenkai.base"), COL_BASE,
-                true, FormIds.BASE.equals(selected)));
+        List<WheelNode> raceTier = new ArrayList<>();
+        List<WheelNode> superTier = new ArrayList<>();
+        List<WheelNode> divineTier = new ArrayList<>();
 
         // Recorre el ÁRBOL de verdad (FormRegistry.childrenOf, TODOS los hijos) en vez del
         // camino único de SuperForms.chain/FormRegistry.nextFrom (que solo sigue el primer
@@ -116,6 +157,107 @@ public final class WheelMenu {
             // SSJ1 y nada más: SSJ2/3/4 no existen para él hasta comprarlos. Enseñarlos en
             // gris adelantaba la progresión y llenaba la rueda de opciones muertas.
             if (SuperForms.unlocked(p, id)) {
+                addTieredLeaf(raceTier, superTier, divineTier, id, selected);
+            }
+            for (ResourceLocation child : FormRegistry.childrenOf(id)) {
+                FormDef cd = FormDef.get(child);
+                if (cd != null && cd.allows(race)) queue.add(child);
+            }
+        }
+
+        List<WheelNode> out = new ArrayList<>();
+        if (!raceTier.isEmpty()) out.add(WheelNode.category(
+                Component.translatable("wheel.zenkai.forms_tier.race"), COL_FORMS, raceTier));
+        if (!superTier.isEmpty()) out.add(WheelNode.category(
+                Component.translatable("wheel.zenkai.forms_tier.super"), COL_FORMS, superTier));
+        if (!divineTier.isEmpty()) out.add(WheelNode.category(
+                Component.translatable("wheel.zenkai.forms_tier.divine"), COL_FORMS, divineTier));
+        return out;
+    }
+
+    private static void addTieredLeaf(List<WheelNode> race, List<WheelNode> superForms,
+                                      List<WheelNode> divine, ResourceLocation id, ResourceLocation selected) {
+        FormDef def = FormDef.get(id);
+        int color = def == null ? COL_FORMS : (0xFF000000 | def.auraRgb());
+        WheelNode leaf = WheelNode.leaf(WheelNode.Kind.FORM, id.toString(),
+                Component.translatable("form.zenkai." + id.getPath()), color,
+                true, id.equals(selected));
+        switch (tierOf(def)) {
+            case DIVINE -> divine.add(leaf);
+            case SUPER -> superForms.add(leaf);
+            default -> race.add(leaf);
+        }
+    }
+
+    private enum Tier { RACE, SUPER, DIVINE }
+
+    /**
+     * divineTier() manda siempre (energía divina, cruza razas). Si no, descendable() ==
+     * "Race": es la cadena de la raza (o uno de sus limitadores). Si no es descendable pero
+     * ALGÚN antepasado suyo sí lo es, es una continuación por encima de un limitador liberado
+     * ("Super Forms" — hoy solo Golden/Black/sus variantes del arcosiano, que cuelgan de
+     * final_form). Cualquier otro caso (cadenas sin ningún tramo descendable, como la del
+     * saiyan) cae en "Race" por descarte: no tienen Super Forms hoy, y está bien que esa
+     * sub-rama simplemente no aparezca para ellas.
+     */
+    private static Tier tierOf(FormDef def) {
+        if (def == null) return Tier.RACE;
+        if (def.divineTier()) return Tier.DIVINE;
+        if (def.descendable()) return Tier.RACE;
+        ResourceLocation parent = def.parent();
+        while (parent != null) {
+            FormDef parentDef = FormDef.get(parent);
+            if (parentDef == null) return Tier.RACE;
+            if (parentDef.descendable()) return Tier.SUPER;
+            parent = parentDef.parent();
+        }
+        return Tier.RACE;
+    }
+
+    /**
+     * Una ruta de endgame como rama propia: "Technique" (el interruptor on/off de SkillToggles
+     * — mismo id que la forma solo por coincidencia de nombre, sin relación de código, ver
+     * SkillToggles.java) + "Form" (la transformación de verdad, la cadena de EndgamePaths que
+     * antes vivía enterrada dentro de "Forms"). {@code toggleId} null = esta ruta no tiene
+     * técnica parcial (Ultimate Mystic, a diferencia de Ultra Instinct/Ultra Ego): entonces las
+     * hojas de la forma cuelgan sueltas de la rama en vez de envolverse en un sub-nodo "Form"
+     * que no aportaría nada al ser el único hijo real. null si NI el interruptor (cuando lo
+     * hay) NI ninguna forma de la cadena están disponibles todavía: no se enseña una rama vacía.
+     */
+    private static WheelNode endgameBranch(Player p, String toggleId, Component label, ResourceLocation formRoot) {
+        List<WheelNode> kids = new ArrayList<>();
+
+        if (toggleId != null) {
+            WheelNode technique = techniqueToggleNode(p, toggleId);
+            if (technique != null) kids.add(technique);
+        }
+
+        List<WheelNode> formLeaves = endgameChainLeaves(p, formRoot);
+        if (!formLeaves.isEmpty()) {
+            if (toggleId != null) {
+                kids.add(WheelNode.category(
+                        Component.translatable("wheel.zenkai.endgame_form"), COL_FORMS, formLeaves));
+            } else {
+                kids.addAll(formLeaves);
+            }
+        }
+
+        if (kids.isEmpty()) return null;
+        return WheelNode.category(label, COL_CATEGORY, kids);
+    }
+
+    /** Misma pasada BFS que antes hacía forms() para las rutas de endgame, pero acotada a UNA
+     *  sola raíz — reutilizada por endgameBranch() para Ultra Instinct y Ultra Ego. */
+    private static List<WheelNode> endgameChainLeaves(Player p, ResourceLocation root) {
+        ResourceLocation selected = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getSelectedForm();
+        List<WheelNode> out = new ArrayList<>();
+        Set<ResourceLocation> seen = new HashSet<>();
+        Deque<ResourceLocation> queue = new ArrayDeque<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            ResourceLocation id = queue.poll();
+            if (!seen.add(id)) continue;
+            if (com.hmc.zenkai.feature.skills.EndgamePaths.unlocked(p, id)) {
                 FormDef def = FormDef.get(id);
                 int color = def == null ? COL_FORMS : (0xFF000000 | def.auraRgb());
                 out.add(WheelNode.leaf(WheelNode.Kind.FORM, id.toString(),
@@ -124,7 +266,7 @@ public final class WheelMenu {
             }
             for (ResourceLocation child : FormRegistry.childrenOf(id)) {
                 FormDef cd = FormDef.get(child);
-                if (cd != null && cd.allows(race)) queue.add(child);
+                if (cd != null) queue.add(child);
             }
         }
         return out;
@@ -190,6 +332,17 @@ public final class WheelMenu {
         Component label = Component.translatable(
                 on ? "wheel.zenkai.toggle.on" : "wheel.zenkai.toggle.off",
                 Component.translatable("skill.zenkai." + id));
+        return WheelNode.leaf(WheelNode.Kind.TOGGLE, id, label, on ? COL_ON : COL_OFF, true, on);
+    }
+
+    /** Igual que toggleNode(), pero para un interruptor que ya cuelga de una rama con su
+     *  propio nombre (Ultra Instinct/Ultra Ego, ver endgameBranch): repetir el nombre de la
+     *  habilidad en la etiqueta sería redundante ("Ultra Instinct > Ultra Instinct ACTIVADO"),
+     *  así que esta etiqueta es genérica ("Technique ACTIVADA/DESACTIVADA"). */
+    private static WheelNode techniqueToggleNode(Player p, String id) {
+        if (!SkillToggles.available(p, id)) return null;
+        boolean on = SkillToggles.isOn(p, id);
+        Component label = Component.translatable(on ? "wheel.zenkai.technique.on" : "wheel.zenkai.technique.off");
         return WheelNode.leaf(WheelNode.Kind.TOGGLE, id, label, on ? COL_ON : COL_OFF, true, on);
     }
 }

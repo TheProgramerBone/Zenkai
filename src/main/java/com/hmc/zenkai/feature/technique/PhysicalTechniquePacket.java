@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.api.event.MasterPurchaseEvent;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.master.MasterManager;
 import com.hmc.zenkai.feature.player.MindBudget;
@@ -13,6 +14,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -80,6 +82,14 @@ public record PhysicalTechniquePacket(int op, int tech, int position, String mas
                 }
 
                 if (att.getTP() < t.tpCost()) return;
+
+                if (!master.isEmpty()) {
+                    var event = new MasterPurchaseEvent(sp, master,
+                            t.name().toLowerCase(java.util.Locale.ROOT));
+                    NeoForge.EVENT_BUS.post(event);
+                    if (event.isCanceled()) return;
+                }
+
                 att.addTP(-t.tpCost());
                 att.techniques().unlock(t);
             } else if (pkt.op() == 1) {

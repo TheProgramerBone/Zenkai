@@ -1,6 +1,8 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.api.event.KiConsumedEvent;
+import com.hmc.zenkai.api.event.TechniqueFiredEvent;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModEntities;
@@ -16,6 +18,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -94,7 +97,13 @@ public record KiFirePacket(int slot, int chargeTicks, @Nullable Vec3 originHint)
         if (!KiCombatServer.tryFire(sp, slot,
                 KiCombatServer.cooldownTicksFor(type, tech.size()))) return;
 
-        att.addEnergy(-cost);
+        var firedEvent = new TechniqueFiredEvent(sp, type.id(), false, tech.size());
+        NeoForge.EVENT_BUS.post(firedEvent);
+        if (firedEvent.isCanceled()) return;
+
+        var kiEvent = new KiConsumedEvent(sp, cost);
+        NeoForge.EVENT_BUS.post(kiEvent);
+        if (!kiEvent.isCanceled()) att.addEnergy(-kiEvent.amount());
         att.addTechniqueMastery(type.name(), (float) ServerConfig.techMasteryPerUse());
 
         double kiPower = att.computeKiPowerFinal();

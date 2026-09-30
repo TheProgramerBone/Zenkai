@@ -692,6 +692,66 @@ public class ServerConfig {
             BUILDER.comment("Minimum alignment (-100..100) required to BUY Potential Unlock. Not checked afterwards.")
                     .defineInRange("skills.potential_unlock_alignment_req", 50, -100, 100);
 
+    // =====================================================================
+    // SPEC — Power Points arcosianos, Ultra Instinct (calor), Ultra Ego (daño)
+    // =====================================================================
+
+    private static final ModConfigSpec.DoubleValue ARC_PP_GAIN_RAW =
+            BUILDER.comment("Arcosian Power Points gained per second while in BASE form and power below 50%.")
+                    .defineInRange("arcosian.pp_gain_per_second", 1.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_PP_DRAIN_RAW =
+            BUILDER.comment("Percent of the Power Point tank spent per second while they are being applied (Final Form or higher at 100%+ power).")
+                    .defineInRange("arcosian.pp_drain_percent_per_second", 2.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_PP_STAT_RAW =
+            BUILDER.comment("Stat multiplier bonus (added, 2.0 = +200%) granted when the Power Point tank is full and being applied; scales linearly with the tank.")
+                    .defineInRange("arcosian.pp_stat_bonus_max", 2.0D, 0.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_HEAT_RATE_RAW =
+            BUILDER.comment("Ultra Instinct heat bar: percent filled per second while in an Ultra Instinct form. At 100% the form collapses.")
+                    .defineInRange("ultra_instinct.heat_percent_per_second", 2.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_HEAT_SLOW_RAW =
+            BUILDER.comment("Fraction of the heat fill rate removed per Ultra Instinct skill level above 1 (0.06 = -6% per level).")
+                    .defineInRange("ultra_instinct.heat_slowdown_per_skill_level", 0.06D, 0.0D, 0.1D);
+
+    private static final ModConfigSpec.DoubleValue UI_HEAT_COOL_RAW =
+            BUILDER.comment("Heat percent removed per second while NOT in an Ultra Instinct form.")
+                    .defineInRange("ultra_instinct.heat_cooldown_per_second", 4.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_DODGE_COST_RAW =
+            BUILDER.comment("Ki spent per automatic dodge, as percent of the max ki pool, at skill level 1.")
+                    .defineInRange("ultra_instinct.dodge_ki_cost_percent", 8.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_DODGE_REDUCE_RAW =
+            BUILDER.comment("Fraction of the dodge ki cost removed per skill level above 1 (levels 1-4 only).")
+                    .defineInRange("ultra_instinct.dodge_cost_reduction_per_level", 0.1D, 0.0D, 0.3D);
+
+    private static final ModConfigSpec.DoubleValue UE_CHARGE_RAW =
+            BUILDER.comment("Ultra Ego damage bar: percent gained per percent of max body lost in a hit.")
+                    .defineInRange("ultra_ego.charge_per_damage", 2.0D, 0.0D, 50.0D);
+
+    private static final ModConfigSpec.DoubleValue UE_DECAY_RAW =
+            BUILDER.comment("Ultra Ego damage bar percent lost per second.")
+                    .defineInRange("ultra_ego.charge_decay_per_second", 1.5D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue UE_MIN_RAW =
+            BUILDER.comment("Outgoing damage multiplier with Ultra Ego on and an empty damage bar (starts weak).")
+                    .defineInRange("ultra_ego.min_damage_mult", 0.6D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue UE_MAX_RAW =
+            BUILDER.comment("Outgoing damage multiplier at a full damage bar (curve is exponential).")
+                    .defineInRange("ultra_ego.max_damage_mult", 3.0D, 1.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue BEAST_OD_STAT_RAW =
+            BUILDER.comment("Extra stat multiplier bonus (added, 0.5 = +50%) while wearing Beast with power above 100% (overdrive). Stacks with Beast's cheaper overdrive drain.")
+                    .defineInRange("beast.overdrive_stat_bonus", 0.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.IntValue ARC_GODKI_LEVELS_RAW =
+            BUILDER.comment("God Ki levels an Arcosian can learn. The race has no divine forms, so these levels unlock no transformation yet: they are the gate for the divine-ki mechanics planned for the race. Each level costs the same TP as the same level of the Saiyan divine chain. 0 hides God Ki from Arcosians entirely.")
+                    .defineInRange("arcosian.god_ki_levels", 1, 0, 10);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     // ── API de toggles ──────────────────────────────────────────────────────────
@@ -807,6 +867,21 @@ public class ServerConfig {
             WEIGHT_HTC_TONS = 3.0D, WEIGHT_HTC_GRAVITY_MULT = 2.0D;
     private static volatile double PU_TP_MULT = 0.50D;
     private static volatile int    PU_ALIGNMENT_REQ = 50;
+    private static volatile int ARC_GODKI_LEVELS = 1;
+    private static volatile double BEAST_OD_STAT = 0.5D;
+    private static volatile double ARC_PP_GAIN = 1.0D;
+    private static volatile double ARC_PP_DRAIN = 2.0D;
+    private static volatile double ARC_PP_STAT = 2.0D;
+    private static volatile double UI_HEAT_RATE = 2.0D;
+    private static volatile double UI_HEAT_SLOW = 0.06D;
+    private static volatile double UI_HEAT_COOL = 4.0D;
+    private static volatile double UI_DODGE_COST = 8.0D;
+    private static volatile double UI_DODGE_REDUCE = 0.1D;
+    private static volatile double UE_CHARGE = 2.0D;
+    private static volatile double UE_DECAY = 1.5D;
+    private static volatile double UE_MIN = 0.6D;
+    private static volatile double UE_MAX = 3.0D;
+
 
     @SubscribeEvent
     public static void onConfigLoad(final ModConfigEvent event) {
@@ -902,6 +977,20 @@ public class ServerConfig {
         WEIGHT_HTC_GRAVITY_MULT = WEIGHT_HTC_GRAVITY_MULT_RAW.get();
         PU_TP_MULT       = PU_TP_MULT_RAW.get();
         PU_ALIGNMENT_REQ = PU_ALIGNMENT_REQ_RAW.get();
+        ARC_GODKI_LEVELS = ARC_GODKI_LEVELS_RAW.get();
+        BEAST_OD_STAT = BEAST_OD_STAT_RAW.get();
+        ARC_PP_GAIN = ARC_PP_GAIN_RAW.get();
+        ARC_PP_DRAIN = ARC_PP_DRAIN_RAW.get();
+        ARC_PP_STAT = ARC_PP_STAT_RAW.get();
+        UI_HEAT_RATE = UI_HEAT_RATE_RAW.get();
+        UI_HEAT_SLOW = UI_HEAT_SLOW_RAW.get();
+        UI_HEAT_COOL = UI_HEAT_COOL_RAW.get();
+        UI_DODGE_COST = UI_DODGE_COST_RAW.get();
+        UI_DODGE_REDUCE = UI_DODGE_REDUCE_RAW.get();
+        UE_CHARGE = UE_CHARGE_RAW.get();
+        UE_DECAY = UE_DECAY_RAW.get();
+        UE_MIN = UE_MIN_RAW.get();
+        UE_MAX = UE_MAX_RAW.get();
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
@@ -1071,6 +1160,20 @@ public class ServerConfig {
     public static double majinStatBonus()            { return MAJIN_STAT_BONUS; }
     public static double potentialUnlockTpMult()     { return PU_TP_MULT; }
     public static int    potentialUnlockAlignmentReq() { return PU_ALIGNMENT_REQ; }
+    public static int arcGodKiLevels() { return ARC_GODKI_LEVELS; }
+    public static double beastOverdriveStatBonus() { return BEAST_OD_STAT; }
+    public static double arcPpGain() { return ARC_PP_GAIN; }
+    public static double arcPpDrain() { return ARC_PP_DRAIN; }
+    public static double arcPpStat() { return ARC_PP_STAT; }
+    public static double uiHeatRate() { return UI_HEAT_RATE; }
+    public static double uiHeatSlow() { return UI_HEAT_SLOW; }
+    public static double uiHeatCool() { return UI_HEAT_COOL; }
+    public static double uiDodgeCost() { return UI_DODGE_COST; }
+    public static double uiDodgeReduce() { return UI_DODGE_REDUCE; }
+    public static double ueCharge() { return UE_CHARGE; }
+    public static double ueDecay() { return UE_DECAY; }
+    public static double ueMin() { return UE_MIN; }
+    public static double ueMax() { return UE_MAX; }
 
     public static double kiCostPerPower()    { return KI_COST_PER_POWER; }
     public static double meleeStaminaPerHit() { return MELEE_STAMINA_PER_HIT; }

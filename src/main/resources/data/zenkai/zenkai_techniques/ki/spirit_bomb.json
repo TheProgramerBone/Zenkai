@@ -12,5 +12,11 @@
   "default_rgb": "0xFFFCE0",
   "anim_ticks": 30,
   "charge_sound": "zenkai:ki_attack_charge_2",
-  "release_sound": "zenkai:ki_attack_release_1"
+  "release_sound": "zenkai:ki_attack_release_1",
+  "projectile_size_base": 3.20,
+  "projectile_size_step": 0.40,
+  "explosion_radius_mult": 3.20,
+  "aoe_factor": 0.90,
+  "charge_shows_real_size": true,
+  "anim_override": "spirit_bomb"
 }

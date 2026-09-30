@@ -33,6 +33,19 @@ public final class PhysicalIcons {
     public static void draw(GuiGraphics g, int x, int y, int size, PhysicalTechnique t) {
         if (size <= 0) return;
 
+        // Icono propio (TechniqueDef.icon, 0.3.0): mismo escape hatch que TechniqueIcons.
+        String custom = t.icon();
+        if (!custom.isEmpty()) {
+            ResourceLocation id = ResourceLocation.tryParse(custom);
+            if (id != null && RaceTextureUtil.resourceExists(id)) {
+                RenderSystem.enableBlend();
+                g.setColor(1f, 1f, 1f, 1f);
+                g.blit(id, x, y, size, size, 0f, 0f, CELL, CELL, CELL, CELL);
+                RenderSystem.disableBlend();
+                return;
+            }
+        }
+
         long now = System.currentTimeMillis();
         if (now >= nextCheckMs) {
             nextCheckMs = now + 2000;

@@ -3,6 +3,7 @@
     "saiyan"
   ],
   "kind": "extension",
+  "tier": "god",
   "tp_cost": 75000,
   "hold_ticks": 60,
   "mastery_gain": 0.4,

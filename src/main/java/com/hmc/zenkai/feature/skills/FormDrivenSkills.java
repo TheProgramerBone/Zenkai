@@ -15,17 +15,20 @@ public final class FormDrivenSkills {
     private FormDrivenSkills() {}
 
     public static int maxLevel(SkillDef def, Player p) {
+        return maxLevel(def, SuperForms.raceOf(p));
+    }
+
+    /** Variante por raza: la usan el logro de "todas las habilidades" y cualquiera sin Player. */
+    public static int maxLevel(SkillDef def, Race race) {
         if (!def.levelsFromForms()) return def.maxLevel();
-        return SuperForms.SKILL.equals(def.id())
-                ? Math.min(def.maxLevel(), SuperForms.maxLevel(p))
-                : Math.min(def.maxLevel(), DivineForms.maxLevel(p));
+        int derived = SuperForms.SKILL.equals(def.id())
+                ? SuperForms.maxLevel(race)
+                : DivineForms.maxLevel(race);
+        return Math.min(def.maxLevel(), derived);
     }
 
     public static int tpCostForLevel(SkillDef def, Player p, int level) {
-        if (!def.levelsFromForms()) return def.tpCost();
-        return SuperForms.SKILL.equals(def.id())
-                ? SuperForms.tpCostForLevel(p, level)
-                : DivineForms.tpCostForLevel(p, level);
+        return tpCostForLevel(def, SuperForms.raceOf(p), level);
     }
 
     /** Variante sin Player: la usa PlayerStatsAttachment#respec(), que solo tiene la raza a
@@ -35,5 +38,12 @@ public final class FormDrivenSkills {
         return SuperForms.SKILL.equals(def.id())
                 ? SuperForms.tpCostForLevel(race, level)
                 : DivineForms.tpCostForLevel(race, level);
+    }
+
+    /** ¿Tiene sentido esta skill para esa raza? Una skill derivada de formas sin ningún nivel
+     *  posible (god_ki sin rama divina y sin niveles placeholder) no existe para ella. */
+    public static boolean appliesTo(SkillDef def, Race race) {
+        if (!def.levelsFromForms()) return true;
+        return maxLevel(def, race) > 0;
     }
 }

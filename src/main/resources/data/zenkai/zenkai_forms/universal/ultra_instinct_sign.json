@@ -1,0 +1,22 @@
+{
+  "races": [
+    "saiyan", "human", "namekian", "arcosian", "majin"
+  ],
+  "kind": "divine",
+  "tp_cost": 180000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.22,
+  "stat_percent_untrained": 18.0,
+  "stat_percent_mastered": 24.0,
+  "ki_drain_untrained": 4.5,
+  "ki_drain_mastered": 1.5,
+  "spi_req": 235,
+  "body_items": {},
+  "aura_type": "divine",
+  "aura_rgb": "0xB8B8B8",
+  "hair_rgb": "0xC0C0C0",
+  "scale": 1.0,
+  "endgame_path": true,
+  "tier": "evolution",
+  "eye_rgb": "0xC8C8C8"
+}

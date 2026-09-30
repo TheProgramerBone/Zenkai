@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.race;
 
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.registry.ModDamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.player.Player;
@@ -125,11 +126,11 @@ public final class RacePassives {
         return amount * (1.0f - (float) MAJIN_PHYSICAL_REDUCTION);
     }
 
-    /** ⚠ Ajustar al tipo de daño real del mod si el id no es "zenkai:ki". */
+    /** Tag data-driven (ver {@link ModDamageTypes#KI_DAMAGE_TAG}) en vez de namespace
+     *  hardcodeado: un addon con su propio tipo de daño de energía solo necesita su propio
+     *  archivo de tag para que esta mitigación lo trate como energía. */
     private static boolean isKiDamage(DamageSource source) {
-        return source.typeHolder().unwrapKey()
-                .map(k -> k.location().getNamespace().equals("zenkai"))
-                .orElse(false);
+        return source.is(ModDamageTypes.KI_DAMAGE_TAG);
     }
 
     /** ¿Esta raza ignora el daño y la ralentización por frío? */

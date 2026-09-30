@@ -18,5 +18,6 @@
   "scale": 1.0,
   "hair_rgb": "0xFFFFFF",
   "divine_tier": true,
+  "tier": "god",
   "eye_rgb": "0xFFD24C"
 }

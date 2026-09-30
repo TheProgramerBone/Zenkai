@@ -13,5 +13,9 @@
   "anim_ticks": 24,
   "anim_set": 8,
   "charge_sound": "zenkai:ki_attack_charge_3",
-  "release_sound": "zenkai:ki_attack_release_3"
+  "release_sound": "zenkai:ki_attack_release_3",
+  "projectile_size_base": 1.00,
+  "projectile_size_step": 0.32,
+  "explosion_radius_mult": 1.90,
+  "aoe_factor": 0.80
 }

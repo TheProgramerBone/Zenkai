@@ -123,6 +123,7 @@ public class PlayerFormAttachment {
         return FormIds.BASE.equals(formId) && !getKaioken().isOn();
     }
 
+
     // ── Setters ──────────────────────────────────────────────────────────────
 
     public void setTransformHeld(boolean held) {
@@ -132,6 +133,20 @@ public class PlayerFormAttachment {
 
     public void setFormId(ResourceLocation id) {
         this.formId = (id == null) ? FormIds.BASE : id;
+    }
+
+    /** Cambio de forma "de verdad" (ritual, escalera, Potential Unlock, deslizamiento entre
+     *  hermanas divinas): postea {@link com.hmc.zenkai.api.event.FormChangedEvent} ANTES de
+     *  aplicar el cambio, para que un addon pueda vetarlo. Cancelado, la forma se queda como
+     *  estaba. Usar esta variante (no la de un solo argumento) en cualquier sitio que tenga un
+     *  Player a mano y represente un cambio real de transformación, no una carga/reset. */
+    public void setFormId(Player p, ResourceLocation id) {
+        ResourceLocation next = (id == null) ? FormIds.BASE : id;
+        if (this.formId.equals(next)) { this.formId = next; return; }
+        var event = new com.hmc.zenkai.api.event.FormChangedEvent(p, this.formId, next);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(event);
+        if (event.isCanceled()) return;
+        this.formId = next;
     }
 
     /** Kaioken y transformación son capas INDEPENDIENTES: cambiar de forma no lo apaga. */
@@ -217,7 +232,7 @@ public class PlayerFormAttachment {
         // ambiental (ver oozaruForced). Solo aplica desde Base, y respeta el cooldown propio
         // (forceBase() ya deja uno tras revertir, evitando un flicker si la condición oscila).
         if (oozaruForced && FormIds.BASE.equals(formId) && cooldownTicks <= 0) {
-            return tickOozaruLadder();
+            return tickOozaruLadder(p);
         }
 
         if (!transformHeld || cooldownTicks > 0) return clearProgress(false);
@@ -234,7 +249,7 @@ public class PlayerFormAttachment {
      *  la tecla del jugador. Reusa holdTicks/transforming para que el HUD
      *  (TransformGaugeOverlay) pinte la misma barra de progreso que cualquier otra
      *  transformación, sin código de cliente nuevo — ver currentHoldTarget(). */
-    private boolean tickOozaruLadder() {
+    private boolean tickOozaruLadder(Player p) {
         FormDef def = FormRegistry.get(FormIds.OOZARU);
         int required = (def == null) ? 0 : def.holdTicks();
         if (required <= 0) return clearProgress(false);
@@ -242,7 +257,7 @@ public class PlayerFormAttachment {
         boolean was = transforming;
         if (advanceHold(required)) return progressDirty(was);
 
-        setFormId(FormIds.OOZARU);
+        setFormId(p, FormIds.OOZARU);
         finishHold();
         return true;
     }
@@ -270,7 +285,7 @@ public class PlayerFormAttachment {
             completeSsj4Ritual(p);
         }
 
-        setFormId(target);
+        setFormId(p, target);
         // La selección de la rueda es un ATAJO de un solo uso, no un techo permanente: al
         // alcanzarla se consume (selectedForm vuelve a null) para que targetForm() caiga en
         // resolveNextForm() en el siguiente hold. Sin esto, seleccionar SSJ2 y llegar a SSJ2
@@ -382,6 +397,7 @@ public class PlayerFormAttachment {
         // divino. DivineForms.resolveForPlayer cambia 'next' por la hermana que de verdad le
         // corresponde antes de comprobar unlocked(); para cualquier forma sin hermanas, la
         // devuelve tal cual.
+        next = SuperForms.resolveSibling(p, next);
         next = DivineForms.resolveForPlayer(p, next);
         return SuperForms.unlocked(p, next) ? next : null;
     }
@@ -435,7 +451,7 @@ public class PlayerFormAttachment {
             if (required <= 0) return clearProgress(false);
         boolean was = transforming;
         if (advanceHold(required)) return progressDirty(was);
-        setFormId(target);
+        setFormId(p, target);
         finishHold();
         return true;
     }

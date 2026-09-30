@@ -281,6 +281,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public boolean isDivine()        { return flags.isDivine(); }
     public boolean isLegendary()     { return flags.isLegendary(); }
     public boolean hasTail()         { return flags.hasTail(); }
+    public double getArcosianPp()    { return flags.getArcosianPp(); }
+    public void setArcosianPp(double v) { flags.setArcosianPp(v); }
+    public double getUiHeat()        { return flags.getUiHeat(); }
+    public void setUiHeat(double v)  { flags.setUiHeat(v); }
+    public double getUeCharge()      { return flags.getUeCharge(); }
+    public void setUeCharge(double v) { flags.setUeCharge(v); }
     public boolean hasSsj4Ritual()   { return flags.hasSsj4Ritual(); }
     public boolean hasReceivedKaioWeights() { return flags.hasReceivedKaioWeights(); }
 

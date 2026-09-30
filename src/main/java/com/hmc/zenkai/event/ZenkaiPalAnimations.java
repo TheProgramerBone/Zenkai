@@ -199,6 +199,15 @@ public final class ZenkaiPalAnimations {
                 ZenkaiTransitions.COMBAT);
     }
 
+    private static final ResourceLocation BEAST_IDLE =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.beast_overdrive_idle");
+
+    /** Idle agresivo de Beast forzando (loop). Vive en la capa de combate: cualquier pose de
+     *  combate o técnica posterior la reemplaza con el mismo fundido de 5 ticks. */
+    public static void playBeastOverdriveIdle(AbstractClientPlayer player) {
+        ZenkaiTransitions.play(combatController(player), BEAST_IDLE, ZenkaiTransitions.COMBAT);
+    }
+
     public static void stopCombatIdle(AbstractClientPlayer player) {
         ZenkaiTransitions.stop(combatController(player), ZenkaiTransitions.COMBAT);
     }
@@ -222,6 +231,21 @@ public final class ZenkaiPalAnimations {
         // 2 ticks: el golpe tiene que salir seco. Fundir más se siente como lag aunque el
         // daño se haya resuelto en el tick 0.
         ZenkaiTransitions.play(c, PHYS_ANIMS[t.ordinal()], ZenkaiTransitions.PHYS);
+    }
+
+    // ── Esquive automático de Ultra Instinct: dos clips one-shot, el servidor sortea cuál ──
+    private static final ResourceLocation[] UI_DODGE_ANIMS = {
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_1"),
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_2")};
+    /** Cuántas variantes de esquive existen (el servidor sortea 0..N-1, ver UiDodgeAnimPacket). */
+    public static final int UI_DODGE_VARIANTS = UI_DODGE_ANIMS.length;
+
+    public static void playUiDodge(AbstractClientPlayer player, int variant) {
+        if (variant < 0 || variant >= UI_DODGE_ANIMS.length) return;
+        var c = (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
+        // Misma capa y fundido corto que las técnicas físicas: reactivo, tiene que salir seco.
+        ZenkaiTransitions.play(c, UI_DODGE_ANIMS[variant], ZenkaiTransitions.PHYS);
     }
 
     // ── Técnicas de ki ───────────────────────────────────────────────────────

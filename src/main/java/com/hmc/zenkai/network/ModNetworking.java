@@ -15,6 +15,7 @@ import com.hmc.zenkai.feature.combat.CombatModePacket;
 import com.hmc.zenkai.feature.combat.CombatModeSyncPacket;
 import com.hmc.zenkai.feature.forms.FormSyncPacket;
 import com.hmc.zenkai.feature.ki.*;
+import com.hmc.zenkai.feature.skills.OverlayStateSyncPacket;
 import com.hmc.zenkai.feature.player.SyncPlayerFormPacket;
 import com.hmc.zenkai.feature.player.SyncPlayerStatsPacket;
 import com.hmc.zenkai.feature.player.SyncPlayerVisualPacket;
@@ -385,6 +386,11 @@ public class ModNetworking {
                 FormSyncPacket::handle);
 
         registrar.playToClient(
+                OverlayStateSyncPacket.TYPE,
+                OverlayStateSyncPacket.STREAM_CODEC,
+                OverlayStateSyncPacket::handle);
+
+        registrar.playToClient(
                 AuraSignatureSyncPacket.TYPE,
                 AuraSignatureSyncPacket.STREAM_CODEC,
                 AuraSignatureSyncPacket::handle);
@@ -523,6 +529,11 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket.TYPE,
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.TYPE,
+                com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.skills.UiDodgeAnimPacket::handle);
 
         registrar.playToClient(
                 com.hmc.zenkai.feature.teleport.InstantTransmissionAnimPacket.TYPE,

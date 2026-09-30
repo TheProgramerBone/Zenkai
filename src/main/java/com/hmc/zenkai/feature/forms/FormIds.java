@@ -32,6 +32,9 @@ public final class FormIds {
     public static final ResourceLocation FINAL_FORM  = id("final_form");
     public static final ResourceLocation GOLDEN_FORM = id("golden_form");
     public static final ResourceLocation BLACK_FORM  = id("black_form");
+    public static final ResourceLocation FIFTH_FORM  = id("fifth_form");
+    public static final ResourceLocation GOLDEN_FIFTH_FORM = id("golden_fifth_form");
+    public static final ResourceLocation BLACK_FIFTH_FORM  = id("black_fifth_form");
     /** Potential Unlock. Hay lógica Java que compara contra este id (el multiplicador
     +     *  acoplado y el castigo de TP), así que es de los que sí van cableados. */
     public static final ResourceLocation POTENTIAL_UNLOCK = id("potential_unlock");
@@ -48,6 +51,17 @@ public final class FormIds {
      *  decidir si comparten maestría (ServerConfig.ssjBlueRoseShareMastery()). */
     public static final ResourceLocation SSJ_BLUE = id("ssj_blue");
     public static final ResourceLocation SSJ_ROSE = id("ssj_rose");
+
+    /** Rutas de endgame universales (0.3.0, Destroyer/Angels/Mystic Path — ver
+     *  {@code .claude/pendiente/rediseno-transformaciones-balance.md}). Igual que OOZARU/
+     *  SUPER_OOZARU: kind divine + parent null, fuera de la cadena normal de super_forms, así
+     *  que {@code EndgamePaths} necesita conocer las 3 raíces a pelo para poder ofrecerlas en
+     *  la rueda (no son alcanzables por FormRegistry.childrenOf desde ninguna raza). */
+    public static final ResourceLocation ULTRA_EGO = id("ultra_ego");
+    public static final ResourceLocation ULTRA_INSTINCT_SIGN = id("ultra_instinct_sign");
+    public static final ResourceLocation ULTRA_INSTINCT = id("ultra_instinct");
+    public static final ResourceLocation ULTIMATE_MYSTIC = id("ultimate_mystic");
+    public static final ResourceLocation BEAST = id("beast");
 
     private static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path);

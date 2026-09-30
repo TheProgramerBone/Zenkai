@@ -1,0 +1,24 @@
+{
+  "races": [
+    "saiyan", "human", "namekian", "arcosian", "majin"
+  ],
+  "kind": "extension",
+  "parent": "zenkai:ultra_instinct_sign",
+  "tp_cost": 260000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.18,
+  "stat_percent_untrained": 26.0,
+  "stat_percent_mastered": 34.0,
+  "ki_drain_untrained": 6.0,
+  "ki_drain_mastered": 2.0,
+  "spi_req": 260,
+  "body_items": {},
+  "aura_type": "divine",
+  "aura_rgb": "0xFFFFFF",
+  "hair_rgb": "0xF0F0F0",
+  "aura_outer_rgb": "0x8FD8FF",
+  "scale": 1.0,
+  "endgame_path": true,
+  "tier": "ultra",
+  "eye_rgb": "0xE8E8FF"
+}

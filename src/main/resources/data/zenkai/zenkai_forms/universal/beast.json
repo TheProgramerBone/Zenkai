@@ -1,0 +1,31 @@
+{
+  "races": [
+    "saiyan",
+    "human",
+    "namekian",
+    "arcosian",
+    "majin"
+  ],
+  "kind": "extension",
+  "parent": "zenkai:ultimate_mystic",
+  "tp_cost": 240000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.2,
+  "stat_percent_untrained": 24.0,
+  "stat_percent_mastered": 32.0,
+  "ki_drain_untrained": 4.5,
+  "ki_drain_mastered": 1.2,
+  "spi_req": 245,
+  "body_items": {},
+  "aura_type": "divine",
+  "aura_rgb": "0x40C0FF",
+  "hair_rgb": "0x40FFFF",
+  "aura_outer_rgb": "0xFF3030",
+  "scale": 1.0,
+  "endgame_path": true,
+  "tier": "ultra",
+  "eye_rgb": "0xFF2020",
+  "overdrive_ceiling_bonus": 30.0,
+  "overdrive_drain_mult_untrained": 0.5,
+  "overdrive_drain_mult_mastered": 0.2
+}

@@ -1,0 +1,20 @@
+{
+  "max_level": 10,
+  "tp_cost": 8000,
+  "mind_req": [
+    60,
+    63,
+    66,
+    70,
+    74,
+    78,
+    82,
+    86,
+    90,
+    95
+  ],
+  "purchasable": true,
+  "masters": [
+    "toribot"
+  ]
+}

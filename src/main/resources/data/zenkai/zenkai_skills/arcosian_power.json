@@ -1,0 +1,20 @@
+{
+  "max_level": 4,
+  "tp_cost": 3000,
+  "mind_req": [
+    0,
+    8,
+    14,
+    22
+  ],
+  "purchasable": true,
+  "race_innate": true,
+  "values": {
+    "pp_max": [
+      100,
+      250,
+      500,
+      1000
+    ]
+  }
+}

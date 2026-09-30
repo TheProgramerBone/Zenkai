@@ -46,6 +46,12 @@ public final class TechniqueIcons {
     public static void draw(GuiGraphics g, int x, int y, int size, KiTechnique t) {
         if (size <= 0) return;
 
+        // Icono propio (TechniqueDef.icon, 0.3.0): sustituye la celda del atlas compartido por
+        // completo, incluido el marco de efecto — una técnica con textura propia dibuja su
+        // propia identidad entera, no se mezcla con el lenguaje visual del atlas base.
+        String custom = t.type().icon();
+        if (!custom.isEmpty() && drawCustom(g, x, y, size, custom, t.rgb())) return;
+
         long now = System.currentTimeMillis();
         if (now >= nextCheckMs) {
             nextCheckMs = now + 2000;
@@ -91,6 +97,24 @@ public final class TechniqueIcons {
     }
 
     /**
+     * Icono propio de una técnica (TechniqueDef.icon), UNA sola capa (sin el detalle blanco
+     * separado que sí tiene el atlas compartido) — el contrato para un addon es "un PNG de
+     * 20x20 (mismo tamaño de celda que el atlas base), blanco/gris, se tiñe entero", más simple
+     * que replicar el sistema de dos capas. false si el recurso no existe (cae al atlas normal).
+     */
+    private static boolean drawCustom(GuiGraphics g, int x, int y, int size, String iconId, int rgb) {
+        ResourceLocation id = ResourceLocation.tryParse(iconId);
+        if (id == null) return false;
+        if (!RaceTextureUtil.resourceExists(id)) return false;
+        RenderSystem.enableBlend();
+        g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
+        g.blit(id, x, y, size, size, 0f, 0f, CELL, CELL, CELL, CELL);
+        g.setColor(1f, 1f, 1f, 1f);
+        RenderSystem.disableBlend();
+        return true;
+    }
+
+    /**
      * Vista previa de un TIPO aún sin instancia (p. ej. una fila de MasterScreen antes de
      * comprarlo): sin KiTechnique no hay efecto ni color elegido todavía, así que dibuja solo
      * las dos capas base con el rgb que se le pase (para una técnica firma, el {@code rgb} es
@@ -98,6 +122,9 @@ public final class TechniqueIcons {
      */
     public static void draw(GuiGraphics g, int x, int y, int size, KiTechniqueType type, int rgb) {
         if (size <= 0) return;
+
+        String custom = type.icon();
+        if (!custom.isEmpty() && drawCustom(g, x, y, size, custom, rgb)) return;
 
         long now = System.currentTimeMillis();
         if (now >= nextCheckMs) {

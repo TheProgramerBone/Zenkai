@@ -9,5 +9,10 @@
   "count": 1,
   "defensive": false,
   "default_rgb": "0xFFF7C0",
-  "anim_ticks": 12
+  "anim_ticks": 12,
+  "projectile_size_base": 0.60,
+  "projectile_size_step": 0.20,
+  "explosion_radius_mult": 0.70,
+  "aoe_factor": 0.40,
+  "allowed_effects": "homing,lingering"
 }

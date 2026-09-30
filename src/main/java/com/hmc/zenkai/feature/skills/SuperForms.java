@@ -4,7 +4,9 @@ import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
@@ -79,14 +81,75 @@ public final class SuperForms {
         return fd == null ? Integer.MAX_VALUE : fd.tpCost();
     }
 
-    /** Posición (1-based) de una forma en la cadena de esa raza. 0 si no pertenece. */
+    /** Posición (1-based) de una forma en la cadena COMPRABLE con super_forms. 0 si no pertenece
+     *  (ni las ramas por maestría). */
     public static int depthOf(Race race, ResourceLocation form) {
         if (race == null || form == null || FormIds.BASE.equals(form)) return 0;
-        List<ResourceLocation> c = chain(race);
+        List<ResourceLocation> c = purchasableChain(race);
         for (int i = 0; i < c.size(); i++) {
             if (c.get(i).equals(form)) return i + 1;
         }
+        // Hermana de alineamiento fuera de la cadena (majin_pure_chaos si la cadena eligió a
+        // harmony): comparte peldaño con la que SÍ está en ella.
+        FormDef d = FormDef.get(form);
+        if (d != null && d.alignmentBranch() != FormDef.AlignBranch.NONE && d.parent() != null) {
+            for (int i = 0; i < c.size(); i++) {
+                FormDef cd = FormDef.get(c.get(i));
+                if (cd != null && d.parent().equals(cd.parent())
+                        && cd.alignmentBranch() != FormDef.AlignBranch.NONE) return i + 1;
+            }
+        }
         return 0;
+    }
+
+    /**
+     * Entre hermanas mortales con {@code alignment_branch} (mismo parent), la que le corresponde
+     * a este jugador: GOOD con alineamiento >= 0, EVIL con negativo. Si {@code form} no tiene
+     * bifurcación se devuelve tal cual. Mismo papel que DivineForms.resolveForPlayer, pero para
+     * formas no divinas.
+     */
+    public static ResourceLocation resolveSibling(Player p, ResourceLocation form) {
+        FormDef d = FormDef.get(form);
+        if (d == null || d.alignmentBranch() == FormDef.AlignBranch.NONE || d.parent() == null) return form;
+        FormDef.AlignBranch want = PlayerStatsAttachment.get(p).getAlignment() >= 0
+                ? FormDef.AlignBranch.GOOD : FormDef.AlignBranch.EVIL;
+        for (ResourceLocation sib : FormRegistry.childrenOf(d.parent())) {
+            FormDef sd = FormDef.get(sib);
+            if (sd != null && sd.alignmentBranch() == want && sd.allows(d.races().iterator().next())) return sib;
+        }
+        return form;
+    }
+
+    /** ¿Cumple el jugador cada maestría mínima declarada en {@code mastery_reqs} de la forma? */
+    public static boolean masteryReqsMet(Player p, FormDef def) {
+        if (def == null || def.masteryReqs().isEmpty()) return true;
+        PlayerFormAttachment fm = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        for (var e : def.masteryReqs().entrySet()) {
+            if (fm.getFormMastery(e.getKey()) < e.getValue()) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Nivel de super_forms que hace falta tener ANTES de poder empezar una rama divina: el de su
+     * antepasado mortal más cercano (human_god cuelga de human_ultra: nivel 3, sin exigir la
+     * cima mortal indomitable; ssj_god cuelga de ssj4: el máximo de siempre). Antes era siempre
+     * maxLevel, lo que obligaba a agotar una cadena mortal aunque la divina fuera una rama
+     * paralela a su final.
+     */
+    public static int mortalLevelNeededForDivine(Race race, ResourceLocation divineForm) {
+        FormDef d = FormDef.get(divineForm);
+        ResourceLocation parent = d == null ? null : d.parent();
+        while (parent != null) {
+            FormDef pd = FormDef.get(parent);
+            if (pd == null) break;
+            if (!pd.divineTier()) {
+                int lvl = requiredLevel(race, parent);
+                return lvl == Integer.MAX_VALUE ? maxLevel(race) : lvl;
+            }
+            parent = pd.parent();
+        }
+        return maxLevel(race);
     }
 
     /** Nivel de habilidad necesario para usar esa forma (profundidad + 1, por el nivel base). */
@@ -129,8 +192,18 @@ public final class SuperForms {
         if (form == null || FormIds.BASE.equals(form)) return true;
         Race race = raceOf(p);
         FormDef def = FormDef.get(form);
+        if (def != null && def.endgamePath()) return EndgamePaths.unlocked(p, form);
         if (def != null && def.divineTier()) return DivineForms.unlocked(p, form);
-        if (depthOf(race, form) <= 0) return true;
+        if (!masteryReqsMet(p, def)) return false;
+        if (depthOf(race, form) <= 0) {
+            // Rama fuera de la cadena que se desbloquea por maestría (golden_fifth_form...): con
+            // el padre desbloqueado y sus mastery_reqs cumplidos basta; no se compra con TP.
+            if (def != null && !def.masteryReqs().isEmpty() && def.parent() != null) {
+                return unlocked(p, def.parent());
+            }
+            return true;
+        }
+        if (def != null && !form.equals(resolveSibling(p, form))) return false;
         if (FormIds.SSJ4.equals(form) && !PlayerStatsAttachment.get(p).hasSsj4Ritual()) return false;
         return level(p) >= requiredLevel(race, form);
     }

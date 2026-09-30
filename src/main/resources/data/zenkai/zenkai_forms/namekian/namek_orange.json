@@ -3,6 +3,7 @@
     "namekian"
   ],
   "kind": "extension",
+  "tier": "evolution",
   "tp_cost": 11000,
   "hold_ticks": 60,
   "mastery_gain": 0.8,

@@ -239,7 +239,7 @@ public final class AuraRimRenderer extends RenderLayer<AbstractClientPlayer, Pla
     /** Ver "GATING" en el javadoc de la clase: divineTier, no aura_type. */
     private static boolean isDivineTier(AbstractClientPlayer player) {
         FormDef def = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).activeDef();
-        return def != null && def.divineTier();
+        return def != null && def.hasDivineEnergy();
     }
 
     @SubscribeEvent

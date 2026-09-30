@@ -1,0 +1,29 @@
+{
+  "races": [
+    "arcosian"
+  ],
+  "kind": "extension",
+  "tier": "evolution",
+  "tp_cost": 120000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.3,
+  "stat_percent_untrained": 16.0,
+  "stat_percent_mastered": 20.0,
+  "ki_drain_untrained": 3.4,
+  "ki_drain_mastered": 1.3,
+  "spi_req": 195,
+  "parent": "zenkai:fifth_form",
+  "body_items": {
+    "head": "zenkai:arcosian_golden_fifth_form_helmet",
+    "chest": "zenkai:arcosian_golden_fifth_form_chestplate",
+    "legs": "zenkai:arcosian_golden_fifth_form_leggings",
+    "feet": "zenkai:arcosian_golden_fifth_form_boots"
+  },
+  "aura_type": "golden",
+  "aura_rgb": "0xFFE066",
+  "scale": 1.0,
+  "mastery_reqs": {
+    "zenkai:fifth_form": 100,
+    "zenkai:golden_form": 50
+  }
+}

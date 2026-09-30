@@ -1,0 +1,5 @@
+{
+  "shape": { "str": 10, "con": 15, "dex": 17, "wil": 30, "spi": 28 },
+  "body_mult": 1.0,
+  "ki_mult": 1.2
+}

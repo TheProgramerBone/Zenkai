@@ -88,6 +88,37 @@ import java.util.Map;
  * ojos es la única pista visual de "ascensión" que les queda (ver `divineTier` en
  * human_god/namek_god/majin_god). No sustituye el iris SELECCIONADO (`eyeIndex`, la forma del
  * ojo), solo su tinte — mismo espíritu que hairRgb tiñendo el mismo modelo de pelo base.
+ *
+ * Rutas de endgame universales (0.3.0, Destroyer/Angels/Mystic Path — ver
+ * {@code .claude/pendiente/rediseno-transformaciones-balance.md}): NO son mutuamente
+ * excluyentes (decisión explícita del usuario) — son caminos de progresión independientes,
+ * cada uno una cadena normal de {@code FormDef} más colgada de {@code parent: null} (mismo caso
+ * que {@code oozaru}/{@code potential_unlock}: fuera de la cadena de la raza, la rueda las
+ * ofrece aparte, ver {@code WheelMenu.ENDGAME_ROOTS}/{@code EndgamePaths}). Un jugador puede
+ * tener varias desbloqueadas a la vez y cambiar libremente entre ellas como con cualquier otra
+ * forma.
+ *
+ * tier (default NONE): rango de diseño God/Evolution/Ultra, ver {@link Tier}.
+ * endgamePath (default false): marca los peldaños de las 3 rutas de endgame universales. Sustituye
+ * al antiguo {@code divine_tier: true} de esas 5 formas, que las hacía contar como "rama divina
+ * propia" de cada raza (empates en DivineForms.resolveTie, maxLevel(ARCOSIAN) != 0). Su acceso lo
+ * decide EndgamePaths, nunca god_ki/super_forms.
+ *
+ * alignmentBranch (default NONE): ver {@link AlignBranch}.
+ * masteryReqs (default vacío): maestría MÍNIMA (0-100) que el jugador debe tener en OTRAS formas
+ * para desbloquear ESTA (ver SuperForms.unlocked). Es el único vínculo entre ramas hermanas: la
+ * herencia por parent no exige haber dominado nada (golden_fifth_form cuelga de fifth_form, pero
+ * exige fifth 100% + golden_form 50%).
+ *
+ * category (0.3.0, NO es un campo del JSON — se deriva de la SUBCARPETA del archivo dentro de
+ * {@code data/<ns>/zenkai_forms/<categoría>/<id>.json}, ver {@link FormManager}): agrupa formas
+ * para la rueda ({@code WheelMenu.forms()}, una sub-rama por categoría distinta encontrada en el
+ * recorrido, en vez de una sola lista "Forms" plana — pensado para que la rueda no se amontone
+ * al crecer una raza con muchas transformaciones). Categorías de hoy: {@code saiyan}/
+ * {@code human}/{@code namekian}/{@code arcosian}/{@code majin} (la cadena de cada raza) y
+ * {@code universal} (Potential Unlock + las 3 rutas de endgame, compartidas por las 5). El id
+ * lógico de la forma ({@code zenkai:ssj1}) NO incluye la subcarpeta — es puramente organización
+ * de archivo + agrupación visual, nunca parte de la identidad de la forma.
  */
 public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       ResourceLocation parent, int tpCost, int holdTicks,
@@ -99,7 +130,42 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       String auraType, int auraRgb, int hairRgb, int tailRgb, double scale,
                       boolean descendable, double overdriveCeilingBonus,
                       double overdriveDrainMultUntrained, double overdriveDrainMultMastered,
-                      boolean wheelSelectable, boolean divineTier, int auraOuterRgb, int eyeRgb) {
+                      boolean wheelSelectable, boolean divineTier, int auraOuterRgb, int eyeRgb,
+                      Tier tier, boolean endgamePath, AlignBranch alignmentBranch,
+                      Map<ResourceLocation, Double> masteryReqs, String category) {
+
+    /**
+     * Rango conceptual de una forma en el mid/late-game (campo "tier" del JSON, default NONE).
+     * GOD = primer escalón del poder superior; EVOLUTION = hito intermedio que, al desbloquearlo,
+     * abre las rutas de endgame universales (ver EndgamePaths.entryUnlocked); ULTRA = pináculo de
+     * la rama. Es solo un rótulo de diseño: NO implica {@code divineTier} (el Arcosiano tiene
+     * Evolution y Ultra sin ninguna forma divina).
+     */
+    public enum Tier {
+        NONE, GOD, EVOLUTION, ULTRA;
+
+        public static Tier byName(String s) {
+            if (s == null) return NONE;
+            try { return valueOf(s.toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException e) { return NONE; }
+        }
+    }
+
+    /**
+     * Bifurcación por alineamiento entre hermanas MORTALES (mismo parent, ambas con valor distinto
+     * de NONE): el jugador con alineamiento >= 0 usa la GOOD, el de alineamiento negativo la EVIL,
+     * sin elegir (mismo espíritu que ssj_blue/ssj_rose por isDivine, pero para formas no
+     * divinas: ver SuperForms.resolveSibling). Hoy: majin_harmony / majin_pure_chaos.
+     */
+    public enum AlignBranch {
+        NONE, GOOD, EVIL;
+
+        public static AlignBranch byName(String s) {
+            if (s == null) return NONE;
+            try { return valueOf(s.toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException e) { return NONE; }
+        }
+    }
 
     public enum Kind {
         /** Innata por raza: no la enseña ningún maestro. */
@@ -176,6 +242,11 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
         return lerp(overdriveDrainMultUntrained, overdriveDrainMultMastered, mastery0to100 / 100.0);
     }
 
+    /** ¿Lleva energía divina a efectos visuales/de entrenamiento (aro del aura, bono de Potential
+     *  Unlock)? Cuenta los dioses de raza Y los peldaños de endgame, que dejaron de ser
+     *  {@code divineTier} para no contaminar la rama divina de cada raza (ver DivineForms). */
+    public boolean hasDivineEnergy() { return divineTier || endgamePath; }
+
     public boolean allows(Race race) { return race != null && races.contains(race); }
 
     // ── Visuales ────────────────────────────────────────────────────────────
@@ -245,6 +316,15 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeBoolean(d.divineTier());
                 buf.writeInt(d.auraOuterRgb());
                 buf.writeInt(d.eyeRgb());
+                buf.writeVarInt(d.tier().ordinal());
+                buf.writeBoolean(d.endgamePath());
+                buf.writeVarInt(d.alignmentBranch().ordinal());
+                buf.writeVarInt(d.masteryReqs().size());
+                for (var e : d.masteryReqs().entrySet()) {
+                    buf.writeResourceLocation(e.getKey());
+                    buf.writeDouble(e.getValue());
+                }
+                buf.writeUtf(d.category(), 32);
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -266,8 +346,27 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         readMap(buf), readMap(buf),
                         buf.readUtf(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readDouble(),
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
-                        buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt());
+                        buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt(),
+                        readTier(buf), buf.readBoolean(), readAlign(buf), readReqs(buf),
+                        buf.readUtf(32));
             });
+
+    private static Tier readTier(FriendlyByteBuf buf) {
+        int o = buf.readVarInt();
+        return (o >= 0 && o < Tier.values().length) ? Tier.values()[o] : Tier.NONE;
+    }
+
+    private static AlignBranch readAlign(FriendlyByteBuf buf) {
+        int o = buf.readVarInt();
+        return (o >= 0 && o < AlignBranch.values().length) ? AlignBranch.values()[o] : AlignBranch.NONE;
+    }
+
+    private static Map<ResourceLocation, Double> readReqs(FriendlyByteBuf buf) {
+        int n = buf.readVarInt();
+        Map<ResourceLocation, Double> m = new LinkedHashMap<>();
+        for (int i = 0; i < n; i++) m.put(buf.readResourceLocation(), buf.readDouble());
+        return Collections.unmodifiableMap(m);
+    }
 
     private static void writeMap(FriendlyByteBuf buf, Map<String, ResourceLocation> map) {
         buf.writeVarInt(map.size());

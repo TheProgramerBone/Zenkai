@@ -71,7 +71,32 @@ public enum TechniqueField {
     /** Segundo color (interior) de fábrica, "0xRRGGBB" o "" = ninguno. STRING y no RGB a
      *  propósito: RGB no puede representar "sin color" (su clamp lo dejaría en 0xFFFFFF, blanco).
      *  Lo interpreta KiTechniqueType.defaultRgb2(). */
-    DEFAULT_RGB2  ("default_rgb2",   ValueType.STRING, "",                              Kind.KI);
+    DEFAULT_RGB2  ("default_rgb2",   ValueType.STRING, "",                              Kind.KI),
+
+    // ── FORMA (0.3.0): lo que antes eran los 6 switch exhaustivos de KiTechniqueType ──────
+    // El default de fábrica de cada uno reproduce la rama "genérica" que tenía el switch
+    // (equivalente a BLAST/ninguna excepción); las 22 técnicas ki existentes declaran su valor
+    // real en su propio JSON — ver TechniqueManager, no hay rebalanceo, es transcripción 1:1.
+    /** ¿El proyectil VIAJA? false en BARRIER/EXPLOSION (no apuntan, no convergen, no se desvían). */
+    TRAVELS       ("travels",        ValueType.BOOL,   true,                            Kind.KI),
+    PROJECTILE_SIZE_BASE("projectile_size_base", ValueType.DOUBLE, 0.45, 0.0, Double.MAX_VALUE, Kind.KI),
+    PROJECTILE_SIZE_STEP("projectile_size_step", ValueType.DOUBLE, 0.18, 0.0, Double.MAX_VALUE, Kind.KI),
+    EXPLOSION_RADIUS_MULT("explosion_radius_mult", ValueType.DOUBLE, 1.20, 0.0, Double.MAX_VALUE, Kind.KI),
+    AOE_FACTOR    ("aoe_factor",     ValueType.DOUBLE, 0.50,   0.0, 1.0,                Kind.KI),
+    /** Fracción de daño que queda en el borde del radio (solo EXPLOSION la usa hoy). */
+    AOE_EDGE_FALLOFF("aoe_edge_falloff", ValueType.DOUBLE, 0.0, 0.0, 1.0,               Kind.KI),
+    CHARGE_SHOWS_REAL_SIZE("charge_shows_real_size", ValueType.BOOL, false,             Kind.KI),
+    /** "" = sin imponer (el jugador elige set). Si no, nombre de TechniqueAnimOverride en
+     *  minúsculas ("barrier"/"explosion"/"spirit_bomb") — ver TechniqueAnimOverride.byName. */
+    ANIM_OVERRIDE ("anim_override",  ValueType.STRING, "",                              Kind.KI),
+    /** "" = default (todos menos FRAGMENTATION); "none" = ninguno; si no, lista separada por
+     *  comas de nombres de TechniqueEffect. Ver KiTechniqueType.allowsEffect. */
+    ALLOWED_EFFECTS("allowed_effects", ValueType.STRING, "",                            Kind.KI),
+    /** "" = usar el atlas fijo (technique_icons.png/physical_icons.png, indexado por ordinal,
+     *  igual que siempre). Con una ResourceLocation, TechniqueIcons/PhysicalIcons dibujan esa
+     *  textura propia en su lugar — la vía real para que un addon dé icono a una técnica sin
+     *  tocar el atlas compartido. */
+    ICON          ("icon",           ValueType.STRING, "",                              Kind.KI, Kind.PHYSICAL);
 
     /** Tipo de dato del campo. Decide parseo, clamp, formato y cómo viaja a JSON/NBT. */
     public enum ValueType { INT, DOUBLE, BOOL, RGB, STRING }
@@ -268,6 +293,16 @@ public enum TechniqueField {
             case CHARGE_SOUND -> d.chargeSound();
             case RELEASE_SOUND -> d.releaseSound();
             case DEFAULT_RGB2 -> d.defaultRgb2();
+            case TRAVELS -> d.travels();
+            case PROJECTILE_SIZE_BASE -> d.projectileSizeBase();
+            case PROJECTILE_SIZE_STEP -> d.projectileSizeStep();
+            case EXPLOSION_RADIUS_MULT -> d.explosionRadiusMult();
+            case AOE_FACTOR -> d.aoeFactor();
+            case AOE_EDGE_FALLOFF -> d.aoeEdgeFalloff();
+            case CHARGE_SHOWS_REAL_SIZE -> d.chargeShowsRealSize();
+            case ANIM_OVERRIDE -> d.animOverride();
+            case ALLOWED_EFFECTS -> d.allowedEffects();
+            case ICON -> d.icon();
         };
     }
 
@@ -302,7 +337,12 @@ public enum TechniqueField {
                 i(v, CHARGE_TICKS), i(v, COOLDOWN_TICKS),
                 d(v, SPEED), i(v, COUNT), b(v, DEFENSIVE),
                 i(v, DEFAULT_RGB), d(v, RANGE), i(v, ANIM_TICKS),
-                i(v, ANIM_SET), s(v, CHARGE_SOUND), s(v, RELEASE_SOUND), s(v, DEFAULT_RGB2));
+                i(v, ANIM_SET), s(v, CHARGE_SOUND), s(v, RELEASE_SOUND), s(v, DEFAULT_RGB2),
+                bDefaultTrue(v, TRAVELS),
+                d(v, PROJECTILE_SIZE_BASE), d(v, PROJECTILE_SIZE_STEP),
+                d(v, EXPLOSION_RADIUS_MULT), d(v, AOE_FACTOR), d(v, AOE_EDGE_FALLOFF),
+                b(v, CHARGE_SHOWS_REAL_SIZE), s(v, ANIM_OVERRIDE), s(v, ALLOWED_EFFECTS),
+                s(v, ICON));
     }
 
     private static int i(Map<TechniqueField, Object> v, TechniqueField f) {
@@ -318,6 +358,13 @@ public enum TechniqueField {
     private static boolean b(Map<TechniqueField, Object> v, TechniqueField f) {
         Object o = v.get(f);
         return o instanceof Boolean bo && bo;
+    }
+
+    /** Como {@link #b}, pero ausente (kind al que el campo no aplica) vale true en vez de
+     *  false — solo TRAVELS lo necesita: su default conceptual es "sí viaja". */
+    private static boolean bDefaultTrue(Map<TechniqueField, Object> v, TechniqueField f) {
+        Object o = v.get(f);
+        return !(o instanceof Boolean bo) || bo;
     }
 
     private static String s(Map<TechniqueField, Object> v, TechniqueField f) {

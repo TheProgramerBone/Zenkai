@@ -43,17 +43,35 @@ import java.util.Map;
  *     tamaño, efecto, sonidos, animSet) sigue siendo elección normal del jugador.
  * Para una técnica de verdad más fuerte que las genéricas del mismo tipo (más daño, más
  * radio de explosión que cualquier size 5...) hace falta además su PROPIO KiTechniqueType/
- * PhysicalTechnique (nuevo valor de enum, con su propio switch en KiVfxProfile/
- * KiTechniqueType#projectileSize etc. — igual que EXPLOSION o BARRIER hoy) apuntando a este
- * mismo id de maestro: el número base de ESE tipo puede partir ya por encima de lo que
- * cualquier size 1..5 del tipo genérico alcanza (mismo patrón que EXPLOSION/BIG_BLAST, ver
- * git history). Ningún tipo nuevo se ha añadido todavía — esto es solo el mecanismo.
+ * PhysicalTechnique (nuevo valor de enum — el atlas de icono fijo por ordinal desapareció con
+ * el campo {@code icon} de abajo, pero el ENUM en sí sigue siendo Java cerrado a propósito,
+ * decisión explícita de 0.3.0) apuntando a este mismo id de maestro: el número base de ESE
+ * tipo puede partir ya por encima de lo que cualquier size 1..5 del tipo genérico alcanza
+ * (mismo patrón que EXPLOSION/BIG_BLAST, ver git history).
+ *
+ * FORMA de una técnica ki (0.3.0, ver {@code .claude/pendiente/api-addons-0.3.0.md} punto 4):
+ * lo que antes eran 6 switch exhaustivos de {@link KiTechniqueType} ahora son datos aquí —
+ * {@code travels}, {@code projectileSizeBase/Step}, {@code explosionRadiusMult}, {@code aoeFactor},
+ * {@code aoeEdgeFalloff}, {@code chargeShowsRealSize}, {@code animOverride}, {@code allowedEffects}
+ * — más {@code icon}, una textura propia opcional que sustituye la celda fija del atlas
+ * ({@code technique_icons.png}/{@code physical_icons.png}) cuando no está vacía. El ENUM sigue
+ * siendo la identidad (nombre = clave NBT); estos campos son solo su FORMA, ahora editable por
+ * datapack sin tocar switches Java.
+ * {@code animOverride}: "" = sin imponer (el jugador elige set); si no, nombre de
+ * {@link TechniqueAnimOverride} en minúsculas ("barrier"/"explosion"/"spirit_bomb").
+ * {@code allowedEffects}: "" = comportamiento por defecto (todos menos FRAGMENTATION, el mismo
+ * default que tenía el switch); "none" = ninguno (antes BARRIER); lista separada por comas de
+ * nombres de {@link TechniqueEffect} en cualquier otro caso (antes DISK/BURST/EXPLOSION).
  */
 public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String master,
                            double damageMult, double kiCostMult, double staminaPct,
                            int chargeTicks, int cooldownTicks, double speed,
                            int count, boolean defensive, int defaultRgb, double range, int animTicks,
-                           int animSet, String chargeSound, String releaseSound, String defaultRgb2) {
+                           int animSet, String chargeSound, String releaseSound, String defaultRgb2,
+                           boolean travels, double projectileSizeBase, double projectileSizeStep,
+                           double explosionRadiusMult, double aoeFactor, double aoeEdgeFalloff,
+                           boolean chargeShowsRealSize, String animOverride, String allowedEffects,
+                           String icon) {
 
     public enum Kind {
         KI, PHYSICAL;
@@ -83,7 +101,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
 
     public static java.util.Collection<TechniqueDef> all() { return REGISTRY.values(); }
 
-    // StreamCodec manual: 20 campos, muy por encima de lo que cubre composite.
+    // StreamCodec manual: 29 campos, muy por encima de lo que cubre composite.
     public static final StreamCodec<FriendlyByteBuf, TechniqueDef> STREAM_CODEC = StreamCodec.of(
             (buf, d) -> {
                 buf.writeUtf(d.id());
@@ -106,6 +124,16 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                 buf.writeUtf(d.chargeSound(), 64);
                 buf.writeUtf(d.releaseSound(), 64);
                 buf.writeUtf(d.defaultRgb2(), 64);
+                buf.writeBoolean(d.travels());
+                buf.writeDouble(d.projectileSizeBase());
+                buf.writeDouble(d.projectileSizeStep());
+                buf.writeDouble(d.explosionRadiusMult());
+                buf.writeDouble(d.aoeFactor());
+                buf.writeDouble(d.aoeEdgeFalloff());
+                buf.writeBoolean(d.chargeShowsRealSize());
+                buf.writeUtf(d.animOverride(), 64);
+                buf.writeUtf(d.allowedEffects(), 256);
+                buf.writeUtf(d.icon(), 256);
             },
             buf -> {
                 String id = buf.readUtf();
@@ -117,6 +145,9 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                         buf.readVarInt(), buf.readVarInt(),
                         buf.readDouble(), buf.readVarInt(), buf.readBoolean(),
                         buf.readInt(), buf.readDouble(), buf.readVarInt(),
-                        buf.readVarInt(), buf.readUtf(64), buf.readUtf(64), buf.readUtf(64));
+                        buf.readVarInt(), buf.readUtf(64), buf.readUtf(64), buf.readUtf(64),
+                        buf.readBoolean(), buf.readDouble(), buf.readDouble(),
+                        buf.readDouble(), buf.readDouble(), buf.readDouble(),
+                        buf.readBoolean(), buf.readUtf(64), buf.readUtf(256), buf.readUtf(256));
             });
 }

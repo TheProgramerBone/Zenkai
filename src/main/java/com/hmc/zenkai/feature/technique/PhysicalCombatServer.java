@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.technique;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.api.event.TechniqueFiredEvent;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.KiFist;
 import com.hmc.zenkai.feature.combat.KiInfusion;
@@ -23,6 +24,7 @@ import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -181,6 +183,11 @@ public final class PhysicalCombatServer {
      * resolvió ActionResolver. Llamar desde otro sitio se salta eso.
      */
     public static void execute(ServerPlayer sp, PhysicalTechnique t, int staminaCost) {
+        var firedEvent = new TechniqueFiredEvent(sp,
+                t.name().toLowerCase(java.util.Locale.ROOT), true, -1);
+        NeoForge.EVENT_BUS.post(firedEvent);
+        if (firedEvent.isCanceled()) return;
+
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
 
         long now = sp.level().getGameTime();

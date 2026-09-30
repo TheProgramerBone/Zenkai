@@ -1,0 +1,21 @@
+{
+  "races": [
+    "saiyan", "human", "namekian", "arcosian", "majin"
+  ],
+  "kind": "divine",
+  "tp_cost": 200000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.20,
+  "stat_percent_untrained": 22.0,
+  "stat_percent_mastered": 30.0,
+  "ki_drain_untrained": 4.0,
+  "ki_drain_mastered": 1.0,
+  "spi_req": 240,
+  "body_items": {},
+  "aura_type": "ascension",
+  "aura_rgb": "0xFF2050",
+  "scale": 1.0,
+  "endgame_path": true,
+  "tier": "ultra",
+  "eye_rgb": "0xFF0030"
+}

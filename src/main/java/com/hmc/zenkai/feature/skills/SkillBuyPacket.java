@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.skills;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.api.event.MasterPurchaseEvent;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.forms.PotentialUnlock;
@@ -15,6 +16,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -61,7 +63,8 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
             if (current >= max) return;                        // ya al máximo
             // El nivel 1 de una habilidad CON maestro solo lo da UNO DE SUS maestros (puede
             // enseñarla más de uno), en persona, ante el maestro concreto que mandó el paquete.
-            if (current <= 0 && def.hasMaster()) {
+            boolean masterPurchase = current <= 0 && def.hasMaster();
+            if (masterPurchase) {
                 if (!def.masters().contains(pkt.masterId())) return;
 
                 Entity master = MasterManager.findNearby(sp, pkt.masterId());
@@ -87,6 +90,12 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
                 return;
             }
             if (att.getTP() < cost) return;
+
+            if (masterPurchase) {
+                var event = new MasterPurchaseEvent(sp, pkt.masterId(), def.id());
+                NeoForge.EVENT_BUS.post(event);
+                if (event.isCanceled()) return;
+            }
 
             att.addTP(-cost);
             att.skills().raise(def.id(), max);

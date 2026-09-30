@@ -5,6 +5,7 @@ import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageType;
 
 /**
@@ -67,6 +68,15 @@ public final class ModDamageTypes {
      *  cuando el golpe que la causó fue justo el que tuvo el proc, ver
      *  CombatZenkaiHooks.onDamage/BlackFlash.consumeProc. */
     public static final ResourceKey<DamageType> BLACK_FLASH = key("black_flash");
+
+    /** Tag data-driven de "esto es daño de ki" (data/&lt;ns&gt;/tags/damage_type/ki_damage.json,
+     *  fusión estándar de tags vanilla). {@link com.hmc.zenkai.feature.race.RacePassives
+     *  #isKiDamage} lo consulta en vez de comparar el namespace del DamageType: un addon con su
+     *  propio tipo de daño de energía solo necesita su propio archivo de tag para que la
+     *  mitigación física del Majin lo trate como energía, sin tocar Java. */
+    public static final TagKey<DamageType> KI_DAMAGE_TAG =
+            TagKey.create(Registries.DAMAGE_TYPE,
+                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_damage"));
 
     /** ¿Qué DamageType usa el impacto DIRECTO de esta técnica ki? BARRIER y EXPLOSION no
      *  aparecen aquí porque nunca llegan a KiProjectileEntity.onHitEntity (no viajan, no

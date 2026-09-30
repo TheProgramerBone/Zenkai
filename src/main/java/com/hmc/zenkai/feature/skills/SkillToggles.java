@@ -73,6 +73,18 @@ public final class SkillToggles {
                 Set.of(SkillEffects.KI_BLADE),  CAT_KI_WEAPONS, false));
 
         register(new Toggle(SkillEffects.POTENTIAL_UNLOCK, true, Set.of(), Set.of(), null, true));
+
+        // Overlay genérico (0.3.0, ver OverlayStateSystem): puede convivir con Kaioken y con
+        // cualquier Transformación primaria — vendidos por Tori-Bot como habilidad aparte de su
+        // propia Transformación completa (FormDef ultra_instinct_sign/ultra_ego, sin relación
+        // de código con este interruptor). Entre SÍ son mutuamente excluyentes (decisión de
+        // diseño explícita del usuario, 2026-09-29, que sustituye a la anterior de dejarlos
+        // coexistir): encender uno apaga el otro vía `conflicts`, y OverlayMetersSystem lo
+        // vuelve a imponer cada tick por si un estado guardado ya venía con los dos.
+        register(new Toggle(SkillEffects.ULTRA_INSTINCT, true, Set.of(),
+                Set.of(SkillEffects.ULTRA_EGO), null, true));
+        register(new Toggle(SkillEffects.ULTRA_EGO, true, Set.of(),
+                Set.of(SkillEffects.ULTRA_INSTINCT), null, true));
     }
 
     /** En orden de registro (orden en la rueda). */

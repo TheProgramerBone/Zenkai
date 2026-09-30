@@ -2,8 +2,10 @@ package com.hmc.zenkai.feature.mastery;
 
 import com.hmc.zenkai.content.effect.MajinEffect;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.event.tick.ArcosianPowerSystem;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.OverlayStateSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.world.entity.player.Player;
 
@@ -25,6 +27,18 @@ public final class MasteryEffects {
         return Math.max(0.0, 1.0 - ServerConfig.masteryFormDrainReduction() * m);
     }
 
+    /** ¿Lleva Beast puesta Y está forzando (powerPercent > 100)? Lo consulta también el cliente
+     *  (powerPercent y formId ya viajan sincronizados) para la animación idle agresiva. */
+    public static boolean isBeastOverdrive(Player p) {
+        PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        return com.hmc.zenkai.feature.forms.FormIds.BEAST.equals(form.getFormId())
+                && PlayerStatsAttachment.get(p).getPowerPercent() > 100;
+    }
+
+    private static double beastOverdriveBonus(Player p, PlayerFormAttachment form) {
+        return isBeastOverdrive(p) ? ServerConfig.beastOverdriveStatBonus() : 0.0;
+    }
+
     /** Multiplicador de daño de una técnica (clave = nombre del tipo). */
     public static double techDamageFactor(PlayerStatsAttachment att, String key) {
         double m = att.getTechniqueMastery(key) / 100.0;
@@ -44,14 +58,18 @@ public final class MasteryEffects {
     }
 
     /**
-     * Multiplicador total de stats. ADITIVO entre capas: 1 + %forma + %kaioken, con el
-     * bonus de Majin multiplicando encima.
+     * Multiplicador total de stats. ADITIVO entre capas: 1 + %forma + %kaioken + %overlays
+     * genéricos (Ultra Instinct/Ultra Ego "técnica" y cualquier estado futuro del mismo tipo,
+     * ver {@link OverlayStateSystem} — término independiente, hoy siempre 0.0 en cualquier
+     * partida real: sin balance de UI/UE definido todavía), con el bonus de Majin multiplicando
+     * encima.
      * YA NO se llama desde los sitios de combate: lo consume TickHandlers.tickForms, que lo
      * guarda en PlayerStatsAttachment.setStatMultiplier(). Así el PL, la pantalla de stats se actualiza sola.
      */
     public static double formStatFactor(Player p) {
         PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
-        double f = 1.0 + form.totalStatPercent();
+        double f = 1.0 + form.totalStatPercent() + OverlayStateSystem.statPercent(p)
+                + ArcosianPowerSystem.statBonus(p) + beastOverdriveBonus(p, form);
         if (MajinEffect.isActive(p)) {
             f *= 1.0 + ServerConfig.majinStatBonus();
         }

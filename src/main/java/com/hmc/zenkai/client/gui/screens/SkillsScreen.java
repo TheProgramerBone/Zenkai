@@ -28,8 +28,9 @@ import java.util.List;
  * Lista con scroll de rueda: caben 5 filas y el mod va camino de tener bastantes más
  * habilidades, así que la ventana se desplaza por filas enteras (nada de medias filas
  * cortadas) y una barra a la derecha indica dónde estás.
- * Los textos se recortan con puntos suspensivos al ancho disponible; la descripción
- * completa sale en un tooltip al pasar el ratón por encima de la fila.
+ * Los textos se recortan con puntos suspensivos al ancho disponible. (Hubo un tooltip con la
+ * descripción completa al pasar el ratón por la fila; se ELIMINÓ a petición del usuario
+ * 2026-09-29: salía cuando quería y volvía injugable la pantalla.)
  */
 
 public class SkillsScreen extends ZenkaiMenuScreen {
@@ -41,7 +42,6 @@ public class SkillsScreen extends ZenkaiMenuScreen {
     private static final int LIST_BOTTOM_MARGIN = 14;
     private static final int TEXT_X_OFF = 16;
     private static final int SCROLLBAR_W = 4;
-    private static final int TOOLTIP_W = 200;
 
     // Los colores salen de ZenkaiPalette, no de literales locales. Antes esta pantalla usaba
     // 0xFF7CFC7C para el nombre y 0xFFFFD966 para el coste: dos tonos pensados para leerse
@@ -277,7 +277,6 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
         int textX = panelLeft + TEXT_X_OFF;
         int maxW = textMaxWidth();
-        Component hoveredDesc = null;
 
         // Recorte a la ventana visible: una fila a medio salir se corta en vez de
         // pintarse encima del borde del panel.
@@ -311,16 +310,6 @@ public class SkillsScreen extends ZenkaiMenuScreen {
                 g.fill(textX, y + ROW_H - 6, plusX() + PLUS_SIZE, y + ROW_H - 5, ZenkaiPalette.SEPARATOR);
             }
 
-            // < forgetX(), NO < plusX(): el botón de olvidar (X) vive justo antes del +, dentro
-            // de ese rango. Con < plusX() el hit-test de la descripción lo incluía, así que pasar
-            // el ratón por la X disparaba A LA VEZ el tooltip manual de esta fila (renderTooltip,
-            // inmediato) Y el tooltip propio del XIconButton (setTooltip → cola de GuiGraphics,
-            // se pinta al final del frame) — los dos en el mismo (mouseX, mouseY), superpuestos
-            // en un mismo bloque de texto ilegible.
-            if (mouseY >= y && mouseY < y + ROW_H && mouseX >= textX && mouseX < forgetX()) {
-                hoveredDesc = def != null ? Component.translatable(def.descKey()) : null;
-            }
-
             if (def == null) continue;
 
             PanelText.onPanel(g, this.font, fit(Component.translatable(def.descKey()), maxW),
@@ -344,9 +333,5 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         }
         g.disableScissor();
         drawScrollbar(g);
-        // El tooltip va fuera del scissor o se recortaría con la lista.
-        if (hoveredDesc != null) {
-            g.renderTooltip(this.font, this.font.split(hoveredDesc, TOOLTIP_W), mouseX, mouseY);
-        }
     }
 }
