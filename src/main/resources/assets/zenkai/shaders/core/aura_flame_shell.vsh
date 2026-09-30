@@ -17,7 +17,9 @@
 //    SUBE con el tiempo (lenguas que trepan) + ruido (temblor del contorno);
 //  - desplazamiento en una mezcla entre radial y vertical (ZenkaiShellUpDir): radial puro da una
 //    bola erizada, vertical da lenguas que suben — la mezcla da la lágrima de las referencias;
-//  - falloff abajo para que los pies no se deformen (las lenguas NACEN en los pies).
+//  - falloff abajo para que los pies no se deformen (las lenguas NACEN en los pies);
+//  - estrechamiento arriba (ZenkaiShellTaper) + punta (ZenkaiShellTip): silueta de lágrima cerrada,
+//    no de abanico abierto.
 // RUIDO (Fase 3): canal R de aura_noise.png (tools/gen_aura_noise.py, tileable) en Sampler0 —
 // el NoiseTex de dbrebirth. U = ángulo alrededor (x2: ENTERO a propósito, así el salto de atan de
 // +PI a -PI cae en un múltiplo exacto de la textura y no deja costura en la espalda), V = altura
@@ -45,6 +47,12 @@ uniform float ZenkaiShellSpeed;   // ciclos por segundo de la onda vertical
 uniform float ZenkaiShellDetail;  // peso del ruido
 uniform float ZenkaiShellUpDir;   // 0 radial .. 1 vertical
 uniform float ZenkaiShellGrowth;  // 0..1, encendido/apagado del aura
+uniform float ZenkaiShellTaper;   // 0 = elipsoide, 1 = se cierra en punta arriba (lágrima)
+uniform float ZenkaiShellTip;     // bloques de punta extra sobre la cabeza
+uniform float ZenkaiShellSideUpDir; // up_dir de los flancos y la base (ver ZenkaiShellUpDir, el de la corona)
+uniform vec2 ZenkaiShellCrown;      // x = rodilla (fracción del semieje de arriba), y = compresión por encima
+uniform float ZenkaiShellLowerHalf; // semieje de la mitad de ABAJO (bloques); ZenkaiShellSize.y es el de arriba
+uniform float ZenkaiShellPoleCalm;// 0 = el polo se desplaza como el resto, 1 = quieto (sin aguja)
 
 out vec4 vColor;
 out vec3 vNormal;
@@ -92,11 +100,46 @@ void main() {
     float smoothGrowth = g * g * (3.0 - 2.0 * g);
 
     vec3 pos = p * ZenkaiShellSize;
+    // Elipsoide ASIMÉTRICA (2026-09-30, comparado con DragonMine Z): la mitad de abajo tiene su
+    // propio semieje. Con el centro en la cadera, la llama es ancha abajo y larga arriba (vela,
+    // no huevo con el ancho en la cabeza), y la base baja ~1 bloque por debajo de los pies.
+    if (p.y < 0.0) pos.y = p.y * ZenkaiShellLowerHalf;
     pos.xz *= smoothGrowth;
     vec3 radial = normalize(pos + vec3(0.0, 0.00001, 0.0));
-    vec3 dir = normalize(mix(radial, vec3(0.0, 1.0, 0.0), ZenkaiShellUpDir));
+    // Dirección de las lenguas por ALTURA (2026-09-30, cuarto vídeo): con un up_dir único y alto,
+    // las de los flancos se desplazaban casi en vertical — A LO LARGO de la superficie —, así que no
+    // cambiaban el contorno y los costados se veían lisos (solo la corona tenía picos). En DMZ y
+    // aura_2 hay lenguas por todo el costado. Abajo y en los flancos salen más hacia fuera
+    // (ZenkaiShellSideUpDir); hacia la corona, cada vez más hacia arriba (ZenkaiShellUpDir).
+    float upD = mix(ZenkaiShellSideUpDir, ZenkaiShellUpDir, smoothstep(0.0, 0.8, localY));
+    vec3 dir = normalize(mix(radial, vec3(0.0, 1.0, 0.0), upD));
     float disp = total * ZenkaiShellAmp * falloff * pow(g, 6.0);
+    // Polo en calma (2026-09-30, vídeo del usuario): con el estrechamiento, las lenguas del polo
+    // convergían en una AGUJA fina y alta. Vista casi siempre de frente, caía en la banda interior
+    // (casi transparente) y se leía como una columna fantasma sobre la cabeza. La punta la pone
+    // ZenkaiShellTip, controlada; aquí el polo apenas se desplaza.
+    disp *= 1.0 - ZenkaiShellPoleCalm * smoothstep(0.75, 1.0, localY);
     pos += dir * disp;
+
+    // LÁGRIMA (2026-09-30, comparación en vídeo con DragonMine Z y aura_1/aura_2): antes las
+    // lenguas de arriba, desplazadas en radial+arriba, se ABRÍAN en V y la llama se leía como una
+    // corona/abanico de 3 veces el jugador. En el anime la silueta se CIERRA en punta sobre la
+    // cabeza. El estrechamiento usa la altura YA desplazada (no la de la esfera): una lengua larga
+    // que sube se acerca al eje en proporción a lo alto que llega, así ninguna se escapa hacia fuera.
+    float reach = ZenkaiShellSize.y + ZenkaiShellAmp * (1.0 + ZenkaiShellTopBoost);
+    float hNorm = clamp(pos.y / max(reach, 0.001), -1.0, 1.0);
+    pos.xz *= max(0.04, 1.0 - ZenkaiShellTaper * smoothstep(0.05, 1.0, hNorm));
+    // Corona blanda (2026-09-30, cuarto vídeo): la "columna fantasma" sobre la cabeza no era el
+    // polo (pole_calm no bastó) sino las lenguas de la cara de DELANTE y de atrás: suben por encima
+    // de la corona, el estrechamiento las aprieta en agujas y, vistas de frente, caen en la banda
+    // interior casi transparente. Por encima de la rodilla (ZenkaiShellCrown.x * semieje) lo que
+    // sobra se comprime (ZenkaiShellCrown.y): la corona sigue teniendo picos, pero ninguna lengua
+    // se escapa bloque y medio hacia arriba.
+    float knee = ZenkaiShellSize.y * ZenkaiShellCrown.x;
+    if (pos.y > knee) pos.y = knee + (pos.y - knee) * ZenkaiShellCrown.y;
+    // Punta: empuje vertical extra cerca del polo, con parpadeo de la onda de lenguas para que la
+    // punta respire en vez de ser un cono fijo.
+    pos.y += ZenkaiShellTip * smoothstep(0.7, 1.0, localY) * (0.65 + 0.35 * layer) * pow(g, 3.0);
 
     vec4 world = ZenkaiShellModelMat * vec4(ZenkaiShellCenter + pos, 1.0);
     vec4 viewPos = ModelViewMat * world;

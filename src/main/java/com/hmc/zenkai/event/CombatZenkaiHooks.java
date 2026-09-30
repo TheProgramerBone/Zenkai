@@ -120,8 +120,6 @@ public class CombatZenkaiHooks {
 
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
         float dmg = computeAttackDamage(e, atkStats, armorMult);
-        // Ultra Ego: multiplicador de salida según su barra de daño acumulado (1.0 sin UE).
-        dmg = OverlayMetersSystem.scaleOutgoing(e.getSource().getEntity(), dmg);
 
         // Se consume AQUÍ, inmediatamente después de computeAttackDamage (el único sitio que
         // puede haberlo marcado, vía BlackFlash.apply dentro de playerMeleeDamage) y ANTES de
@@ -481,6 +479,11 @@ public class CombatZenkaiHooks {
             if (shot.isInfused() && shot.refPower() > 1.0e-6) {
                 defense *= (dmg / shot.refPower());
             }
+        }
+        // Ultra Ego: perforación de defensa SOLO de técnicas físicas (PhysicalCombatServer marca
+        // el puente mientras reparte el daño de la técnica; un puñetazo normal no pasa por aquí).
+        if (PhysicalCombatServer.isFiring()) {
+            defense *= 1.0 - OverlayMetersSystem.uePenetration(e.getSource().getEntity());
         }
         return defense;
     }

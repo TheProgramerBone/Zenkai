@@ -15,6 +15,8 @@ import com.hmc.zenkai.client.fluid.HealingWaterFluidClientExtensions;
 import com.hmc.zenkai.client.gui.ModMenuTypes;
 import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
+import com.hmc.zenkai.client.particle.AuraDustParticle;
+import com.hmc.zenkai.client.particle.AuraRockParticle;
 import com.hmc.zenkai.client.particle.KiImpactParticle;
 import com.hmc.zenkai.client.particle.KiSparkParticle;
 import com.hmc.zenkai.client.render_and_model_entities.entity.KiVfxProjectileRenderer;
@@ -379,6 +381,11 @@ public class Zenkai {
             // destello quieto animado por edad — mismo Provider, solo cambia el sprite set.
             event.registerSpriteSet(ModParticles.KI_ARC.get(),
                     KiImpactParticle.Provider::new);
+            // Efectos de suelo al cargar ki (AuraChargeGroundFx). La roca no tiene sprite set:
+            // dibuja un recorte del sprite del bloque pisado, del atlas de bloques.
+            event.registerSpriteSet(ModParticles.AURA_DUST.get(),
+                    AuraDustParticle.Provider::new);
+            event.registerSpecial(ModParticles.AURA_ROCK.get(), new AuraRockParticle.Provider());
         }
 
         @SubscribeEvent

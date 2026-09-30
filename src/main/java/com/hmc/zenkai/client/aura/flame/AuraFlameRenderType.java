@@ -159,6 +159,15 @@ public final class AuraFlameRenderType extends RenderType {
         s.safeGetUniform("ZenkaiShellStreak").set(p.streak());
         s.safeGetUniform("ZenkaiShellUpDir").set(p.upDir());
         s.safeGetUniform("ZenkaiShellGrowth").set(growth);
+        s.safeGetUniform("ZenkaiShellTaper").set(p.taper());
+        s.safeGetUniform("ZenkaiShellTip").set(p.tip());
+        s.safeGetUniform("ZenkaiShellPoleCalm").set(p.poleCalm());
+        s.safeGetUniform("ZenkaiShellLowerHalf").set(p.lowerHalf());
+        s.safeGetUniform("ZenkaiShellSideUpDir").set(p.sideUpDir());
+        s.safeGetUniform("ZenkaiShellCrown").set(p.crownKnee(), p.crownSoft());
+        s.safeGetUniform("ZenkaiShellCelShape").set(p.peakWeight(), p.bottomRim());
+        s.safeGetUniform("ZenkaiShellBaseFade").set(p.baseFadeLo(), p.baseFadeHi());
+        s.safeGetUniform("ZenkaiShellCel").set(p.cel(), p.celRim(), p.celLight(), p.celBody());
         s.safeGetUniform("ZenkaiShellAlpha").set(p.alphaCenter(), p.alphaEdge());
         s.safeGetUniform("ZenkaiShellFresnel").set(p.fresnelPower(), p.fresnelDivis());
         s.safeGetUniform("ZenkaiShellCoreColor").set(core[0], core[1], core[2], 1f);

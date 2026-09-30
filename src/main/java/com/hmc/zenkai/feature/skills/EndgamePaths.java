@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.skills;
 
+import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
@@ -18,9 +19,14 @@ import net.minecraft.world.entity.player.Player;
  * en la rueda como una transformación normal (se cargan con hold, no son un interruptor) — ver
  * {@code WheelMenu.forms()}, que las añade en una pasada aparte tras el BFS de la cadena de raza.
  *
- * ENTRADA: haber desbloqueado el "Evolution Tier" propio de la raza (campo {@code tier} del
- * FormDef, ver {@link #entryUnlocked}). Las 5 formas de endgame llevan {@code endgame_path:true}
- * y NO {@code divine_tier}, para no contarse como rama divina de cada raza.
+ * ENTRADA (distinta por ruta, decisión del usuario 2026-09-30):
+ *  - Ultra Instinct y Ultra Ego: SOLO el nivel de su skill (Señal 5, pleno 9 / Ultra Ego 5), sin
+ *    ninguna evolución de raza — las 5 razas llegan igual. Las 5th forms del Arcosiano son un
+ *    camino secreto aparte.
+ *  - Ultimate Mystic -> Beast: haber desbloqueado el "Evolution Tier" propio de la raza (campo
+ *    {@code tier} del FormDef, ver {@link #entryUnlocked}).
+ * Las 5 formas de endgame llevan {@code endgame_path:true} y NO {@code divine_tier}, para no
+ * contarse como rama divina de cada raza.
  *
  * NO son mutuamente excluyentes (decisión explícita del usuario, revertido tras un primer
  * intento con {@code FormDef.exclusiveGroup}/{@code PlayerFormAttachment.committedPaths} — ver
@@ -52,8 +58,17 @@ public final class EndgamePaths {
      *  sobre la forma en sí. Se queda como método aparte (no se inlinea en las llamadas) por si
      *  algún día una ruta concreta necesita un requisito adicional propio. */
     public static boolean unlocked(Player p, ResourceLocation form) {
-        if (FormRegistry.get(form) == null || !entryUnlocked(p)) return false;
-        return SkillEffects.level(p, SkillEffects.ULTRA_INSTINCT) >= requiredUiLevel(form);
+        if (FormRegistry.get(form) == null) return false;
+        // Ultra Instinct y Ultra Ego (decisión del usuario, 2026-09-30): SOLO piden el nivel de
+        // su skill, sin ninguna evolución previa de raza — las 5 razas pueden llegar. Las
+        // "5th forms" del Arcosiano son un camino secreto aparte que nada tiene que ver con esto.
+        if (FormIds.ULTRA_EGO.equals(form)) {
+            return SkillEffects.level(p, SkillEffects.ULTRA_EGO) >= OverlayMetersSystem.UE_FORM_LEVEL;
+        }
+        int uiLevel = requiredUiLevel(form);
+        if (uiLevel > 0) return SkillEffects.level(p, SkillEffects.ULTRA_INSTINCT) >= uiLevel;
+        // Ultimate Mystic / Beast: siguen detrás de la evolución de la raza.
+        return entryUnlocked(p);
     }
 
     /** Nivel de la skill Ultra Instinct que pide cada peldaño de esa ruta: Sign nivel 5,

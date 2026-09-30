@@ -3,6 +3,7 @@ package com.hmc.zenkai.feature.mastery;
 import com.hmc.zenkai.content.effect.MajinEffect;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.event.tick.ArcosianPowerSystem;
+import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.OverlayStateSystem;
@@ -59,17 +60,17 @@ public final class MasteryEffects {
 
     /**
      * Multiplicador total de stats. ADITIVO entre capas: 1 + %forma + %kaioken + %overlays
-     * genéricos (Ultra Instinct/Ultra Ego "técnica" y cualquier estado futuro del mismo tipo,
-     * ver {@link OverlayStateSystem} — término independiente, hoy siempre 0.0 en cualquier
-     * partida real: sin balance de UI/UE definido todavía), con el bonus de Majin multiplicando
-     * encima.
+     * genéricos (cualquier estado del mismo tipo, ver {@link OverlayStateSystem} — término
+     * independiente, hoy siempre 0.0 en cualquier partida real) + PP arcosiano + overdrive de
+     * Beast + barra de daño de Ultra Ego, con el bonus de Majin multiplicando encima.
      * YA NO se llama desde los sitios de combate: lo consume TickHandlers.tickForms, que lo
      * guarda en PlayerStatsAttachment.setStatMultiplier(). Así el PL, la pantalla de stats se actualiza sola.
      */
     public static double formStatFactor(Player p) {
         PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         double f = 1.0 + form.totalStatPercent() + OverlayStateSystem.statPercent(p)
-                + ArcosianPowerSystem.statBonus(p) + beastOverdriveBonus(p, form);
+                + ArcosianPowerSystem.statBonus(p) + beastOverdriveBonus(p, form)
+                + OverlayMetersSystem.ueStatBonus(p);
         if (MajinEffect.isActive(p)) {
             f *= 1.0 + ServerConfig.majinStatBonus();
         }

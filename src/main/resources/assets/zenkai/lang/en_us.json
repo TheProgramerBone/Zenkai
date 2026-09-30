@@ -370,7 +370,7 @@
   "skill.zenkai.arcosian_power.desc": "Innate to Arcosians. Hold your strength back in Base form below 50% power to store Power Points, then release them at 100%+ power from Final Form onward. Each level enlarges the tank.",
   "message.zenkai.ui_overheat": "Your body can't sustain Ultra Instinct any longer!",
   "skill.zenkai.ultra_ego": "Ultra Ego",
-  "skill.zenkai.ultra_ego.desc": "Channel Ultra Ego's fighting spirit while staying in whatever transformation you're already in. Separate from the full Ultra Ego transformation itself.",
+  "skill.zenkai.ultra_ego.desc": "Channel the power of destruction. While the technique is on (always on in the Ultra Ego form), your physical techniques ignore part of the target's defense, up to 20% at level 10. Level 5 unlocks the Ultra Ego transformation, where the damage you take builds a bar that boosts your stats; the higher the level, the higher that boost can go.",
   "skill.zenkai.instant_transmission": "Instant Transmission",
   "skill.zenkai.instant_transmission.desc": "Lock onto a ki signature or the point you're looking at and blink there instantly. Higher levels lower the ki cost and cooldown and extend the range.",
 

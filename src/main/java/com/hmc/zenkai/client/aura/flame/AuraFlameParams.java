@@ -47,7 +47,15 @@ public record AuraFlameParams(
         /** Opacidad general (PODER alpha), multiplica el alfa de vértice. */
         float opacity,
         /** Cuánto se acerca el centro caliente al blanco (PODER core), 0..0.35. */
-        float coreWhite) {
+        float coreWhite,
+        /** Estrechamiento arriba (lágrima) y punta extra sobre la cabeza, ver AuraFlameTuning. */
+        float taper, float tip, float poleCalm,
+        /** Semieje de la mitad de abajo (bloques) y banda de fundido de la base (Y unitaria). */
+        float lowerHalf, float baseFadeLo, float baseFadeHi,
+        /** Lenguas de los flancos, corona blanda y forma de las bandas (cuarto vídeo, ver AuraFlameTuning). */
+        float sideUpDir, float crownKnee, float crownSoft, float peakWeight, float bottomRim,
+        /** Cel-shading: interruptor y umbrales de las bandas borde / clara / cuerpo. */
+        float cel, float celRim, float celLight, float celBody) {
 
     private static float t(AuraFlameTuning.Param p) { return AuraFlameTuning.get(p); }
 
@@ -69,12 +77,37 @@ public record AuraFlameParams(
                 Mth.clamp(alphaCenter * t(AuraFlameTuning.Param.INNER_ALPHA), 0f, 0.5f), alphaEdge * 0.8f,
                 fresnelPower, fresnelDivis,
                 emitBody * 0.3f, emitEdge * 0.5f, bloom, bloomBody,
-                opacity, coreWhite);
+                opacity, coreWhite,
+                // Misma lágrima que la exterior, con la punta más corta: la nube interior no
+                // debe asomar por encima de la llama de fuera.
+                taper, tip * 0.5f, poleCalm,
+                lowerHalf * s, baseFadeLo, baseFadeHi,
+                sideUpDir, crownKnee, crownSoft, peakWeight, bottomRim,
+                cel, celRim, celLight, celBody);
     }
 
     /** Sin personalidad: los defaults de AuraFlameTuning tal cual (comportamiento de la Fase 4). */
     public static AuraFlameParams neutral() {
         return from(null, 0f);
+    }
+
+    /**
+     * PODER del perfil respecto a la base: 1 = personaje recién creado liberando al 100%, ~2-2.3 un
+     * endgame a plena potencia en turbo. Ya lleva aplicado {@code profile_mix} y sus límites.
+     * pulsedSize incluye el latido (±4% en reposo, mucho más con Kaioken). Público porque la
+     * estrella del suelo ({@link AuraFlameGroundRenderer}) crece con el MISMO número que la llama.
+     * @param profile perfil del jugador; null = poder base (1).
+     */
+    public static float powerFactor(AuraProfile profile, float seconds) {
+        if (profile == null) return 1f;
+        float mix = Mth.clamp(t(AuraFlameTuning.Param.PROFILE_MIX), 0f, 3f);
+        float powerF = Math.max(profile.pulsedSize(seconds), AuraTuning.SIZE_MIN) / AuraTuning.SIZE_BASE;
+        return Mth.lerp(mix, 1f, Mth.clamp(powerF, 0.8f, 3.5f));
+    }
+
+    /** Escala de la llama entera para un poder dado ({@code size} × crecimiento por poder). */
+    public static float sizeScale(float powerF) {
+        return t(AuraFlameTuning.Param.SIZE) * (1f + t(AuraFlameTuning.Param.POWER_GROWTH) * (powerF - 1f));
     }
 
     /**
@@ -97,8 +130,7 @@ public record AuraFlameParams(
             massF = profile.mass() / AuraTuning.C_MASS;
             heightF = profile.height() / AuraTuning.C_HEIGHT;
             densF = profile.density() / AuraTuning.C_DENSITY;
-            // pulsedSize ya incluye el latido (±4% en reposo, mucho más con Kaioken).
-            powerF = Math.max(profile.pulsedSize(seconds), AuraTuning.SIZE_MIN) / AuraTuning.SIZE_BASE;
+            powerF = powerFactor(profile, seconds);
             opacity = profile.alpha() / (AuraTuning.ALPHA_BASE + AuraTuning.ALPHA_PER_ENERGY);
             // Tope 0.15 (antes 0.35): sumado a la capa caliente y al solape de lenguas, el centro
             // acababa en blanco puro (capturas 2026-09-29). El blanco es un acento, no el relleno.
@@ -112,7 +144,7 @@ public record AuraFlameParams(
         massF = Mth.lerp(mix, 1f, Mth.clamp(massF, 0.5f, 1.4f));
         heightF = Mth.lerp(mix, 1f, Mth.clamp(heightF, 0.5f, 1.7f));
         densF = Mth.lerp(mix, 1f, Mth.clamp(densF, 0.5f, 2.2f));
-        powerF = Mth.lerp(mix, 1f, Mth.clamp(powerF, 0.8f, 3.5f));
+        // powerF ya viene con profile_mix aplicado (powerFactor).
         opacity = Mth.lerp(mix, 1f, Mth.clamp(opacity, 0.6f, 1.2f));
         coreWhite *= mix;
 
@@ -128,15 +160,21 @@ public record AuraFlameParams(
         float detail = t(AuraFlameTuning.Param.DETAIL) * Mth.clamp(1f + 2.0f * dTurb, 0.4f, 3.0f);
         float streak = Mth.clamp(t(AuraFlameTuning.Param.STREAK) * (1f + 1.0f * dTurb), 0f, 1f);
 
-        // El poder ensancha poco y alarga mucho: la llama de un personaje fuerte SUBE más, no se
-        // convierte en una bola más gorda.
-        float radius = t(AuraFlameTuning.Param.RADIUS) * Mth.clamp(1f + 0.6f * dSpread, 0.8f, 1.6f)
-                * (1f + 0.12f * (powerF - 1f));
+        // TAMAÑO (2026-09-30): el poder escala la llama ENTERA desde los pies (radio, alto,
+        // centro, lenguas y punta), no solo el largo de las lenguas — con la lágrima de lenguas
+        // cortas, eso dejaba a un novato y a un endgame casi iguales (vídeo del usuario). Encima,
+        // el poder sigue alargando algo las lenguas: la llama de un personaje fuerte también SUBE
+        // más, no es solo la misma llama más grande.
+        float scale = sizeScale(powerF);
+        float radius = t(AuraFlameTuning.Param.RADIUS) * Mth.clamp(1f + 0.6f * dSpread, 0.8f, 1.6f) * scale;
         float upDir = Mth.clamp(t(AuraFlameTuning.Param.UP_DIR) - 0.6f * dSpread, 0.1f, 0.95f);
+        // Mismo empuje del spread en los flancos: un abanico (Beast) también abre los costados.
+        float sideUpDir = Mth.clamp(t(AuraFlameTuning.Param.SIDE_UP_DIR) - 0.6f * dSpread, 0.05f, 0.95f);
 
-        float halfHeight = t(AuraFlameTuning.Param.HALF_HEIGHT) * Mth.lerp(0.5f, 1f, heightF);
-        float amp = t(AuraFlameTuning.Param.AMP) * Mth.lerp(0.8f, 1f, heightF)
-                * (1f + 0.35f * (powerF - 1f));
+        float halfHeight = t(AuraFlameTuning.Param.HALF_HEIGHT) * Mth.lerp(0.5f, 1f, heightF) * scale;
+        float centerY = t(AuraFlameTuning.Param.CENTER_Y) * scale;
+        float amp = t(AuraFlameTuning.Param.AMP) * Mth.lerp(0.8f, 1f, heightF) * scale
+                * (1f + 0.2f * (powerF - 1f));
         float topBoost = t(AuraFlameTuning.Param.TOP_BOOST) * heightF;
 
         float freqY = t(AuraFlameTuning.Param.FREQ_Y) * densF;
@@ -145,14 +183,26 @@ public record AuraFlameParams(
         float alphaCenter = t(AuraFlameTuning.Param.ALPHA_CENTER) * massF;
         float alphaEdge = Mth.clamp(t(AuraFlameTuning.Param.ALPHA_EDGE) * Mth.lerp(0.5f, 1f, massF), 0f, 1f);
 
+        // Lágrima: un spread alto (abanico en V, Beast) la abre, igual que ya bajaba up_dir; el
+        // poder alarga la punta (sube, no engorda), con el mismo criterio que radius/amp.
+        float taper = Mth.clamp(t(AuraFlameTuning.Param.TAPER) - 0.8f * dSpread, 0f, 1f);
+        float tip = t(AuraFlameTuning.Param.TIP) * heightF * scale;
+
         return new AuraFlameParams(
-                radius, halfHeight, t(AuraFlameTuning.Param.CENTER_Y),
+                radius, halfHeight, centerY,
                 amp, topBoost, peaks, sharp, freqY,
                 speed, detail, streak, upDir,
                 alphaCenter, alphaEdge,
                 t(AuraFlameTuning.Param.FRESNEL_POWER), t(AuraFlameTuning.Param.FRESNEL_DIVIS),
                 t(AuraFlameTuning.Param.EMIT_BODY), t(AuraFlameTuning.Param.EMIT_EDGE),
                 bloom, t(AuraFlameTuning.Param.BLOOM_BODY),
-                opacity, coreWhite);
+                opacity, coreWhite,
+                taper, tip, t(AuraFlameTuning.Param.POLE_CALM),
+                t(AuraFlameTuning.Param.LOWER_HALF) * scale,
+                t(AuraFlameTuning.Param.BASE_FADE_LO), t(AuraFlameTuning.Param.BASE_FADE_HI),
+                sideUpDir, t(AuraFlameTuning.Param.CROWN_KNEE), t(AuraFlameTuning.Param.CROWN_SOFT),
+                t(AuraFlameTuning.Param.PEAK_WEIGHT), t(AuraFlameTuning.Param.BOTTOM_RIM),
+                t(AuraFlameTuning.Param.CEL), t(AuraFlameTuning.Param.CEL_RIM),
+                t(AuraFlameTuning.Param.CEL_LIGHT), t(AuraFlameTuning.Param.CEL_BODY));
     }
 }

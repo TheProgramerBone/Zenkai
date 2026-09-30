@@ -41,7 +41,23 @@ uniform vec2 ZenkaiShellFresnel;    // x = exponente, y = divisor
 uniform vec4 ZenkaiShellCoreColor;  // color del centro de ESTA capa (su tinte, algo calentado)
 uniform vec4 ZenkaiShellOuterColor; // color del borde de ESTA capa (su tinte saturado)
 
+uniform vec2 ZenkaiShellCelShape;   // x = peso de las puntas de lengua en la banda, y = intensidad del borde en la base
+uniform vec2 ZenkaiShellBaseFade;  // Y de la esfera unitaria donde la base empieza/termina de fundirse
+uniform vec4 ZenkaiShellCel;       // x = 1 bandas / 0 degradado; y, z, w = umbrales borde, clara, cuerpo
+
 out vec4 fragColor;
+
+// Aclara SIN cambiar de tono: escala por el canal máximo. El rgb*1.6 de DMZ con recorte por canal
+// lleva un azul claro (Blue 0x5FE8FF) a blanco puro — justo el lavado que tenía esta llama.
+vec3 lift(vec3 c, float k) {
+    float m = max(max(c.r, c.g), c.b);
+    return c / max(m, 0.001) * min(1.0, m * k);
+}
+
+// Borde: el tono aclarado con un toque de blanco. El blanco es un acento, nunca el relleno.
+vec3 rimColor(vec3 c) {
+    return mix(lift(c, 1.6), vec3(1.0), 0.3);
+}
 
 void main() {
     vec3 N = normalize(vNormal);
@@ -69,25 +85,64 @@ void main() {
     float streak = texture(Sampler0, streakUV).g;
     float streakMix = clamp(ZenkaiShellStreak, 0.0, 1.0);
 
-    vec3 color = mix(ZenkaiShellCoreColor.rgb, ZenkaiShellOuterColor.rgb, blend);
-    // Brillo y opacidad modulados por la raya: nunca oscurece por debajo del 80% (un aura
-    // oscurecida se lee sucia, lección de aura.md §2).
-    color *= mix(1.0, mix(0.8, 1.15, streak), streakMix);
-    float alpha = mix(ZenkaiShellAlpha.x, ZenkaiShellAlpha.y, alphaBlend) * vColor.a;
-    alpha *= mix(1.0, mix(0.55, 1.2, streak), streakMix);
+    vec3 color;
+    float alpha;
+    float emitBlend = alphaBlend;
+    if (ZenkaiShellCel.x > 0.5) {
+        // CEL-SHADING POR BANDAS (2026-09-30, comparación en vídeo con DragonMine Z): la intensidad
+        // continua (fresnel + puntas + raya) se corta en 4 bandas planas con step duro, sin
+        // suavizado — el "anime + pixel" de DMZ, cuyo aura.fsh hace lo mismo con umbrales fijos
+        // sobre una textura gris. Aquí la intensidad sale de la malla 3D, no de un billboard.
+        // De fuera hacia dentro: borde claro, banda clara, cuerpo saturado, interior casi
+        // transparente (el cuerpo del jugador se sigue leyendo).
+        float i = clamp(max(edge, vPeak * ZenkaiShellCelShape.x) * mix(1.0, mix(0.85, 1.15, streak), streakMix), 0.0, 1.0);
+        // Base ABIERTA (2026-09-30, cuarto vídeo): el borde claro rodeaba también el fondo de la
+        // elipsoide y dibujaba un anillo cerrado bajo los pies — se leía como una cápsula. En DMZ
+        // y en el anime la base no tiene contorno: se abre y se funde. Hacia abajo, la intensidad
+        // baja (ZenkaiShellCelShape.y) y el contorno cae a bandas más tenues.
+        i *= mix(ZenkaiShellCelShape.y, 1.0, smoothstep(-0.7, -0.1, vLocalY));
+        vec3 tint = ZenkaiShellOuterColor.rgb;
+        if (i >= ZenkaiShellCel.y) {
+            color = rimColor(tint);
+            alpha = ZenkaiShellAlpha.y;
+            emitBlend = 1.0;
+        } else if (i >= ZenkaiShellCel.z) {
+            color = lift(tint, 1.3);
+            alpha = ZenkaiShellAlpha.y * 0.8;
+            emitBlend = 0.5;
+        } else if (i >= ZenkaiShellCel.w) {
+            color = tint;
+            alpha = mix(ZenkaiShellAlpha.x, ZenkaiShellAlpha.y, 0.5);
+            emitBlend = 0.2;
+        } else {
+            color = ZenkaiShellCoreColor.rgb;
+            alpha = ZenkaiShellAlpha.x;
+            emitBlend = 0.0;
+        }
+        alpha *= vColor.a;
+    } else {
+        color = mix(ZenkaiShellCoreColor.rgb, ZenkaiShellOuterColor.rgb, blend);
+        // Brillo y opacidad modulados por la raya: nunca oscurece por debajo del 80% (un aura
+        // oscurecida se lee sucia, lección de aura.md §2).
+        color *= mix(1.0, mix(0.8, 1.15, streak), streakMix);
+        alpha = mix(ZenkaiShellAlpha.x, ZenkaiShellAlpha.y, alphaBlend) * vColor.a;
+        alpha *= mix(1.0, mix(0.55, 1.2, streak), streakMix);
+    }
     // La base se funde en vez de cortarse contra el suelo. Banda subida (antes -1.0..-0.55): el
     // casquete inferior de la elipsoide asomaba sobre el suelo como un "cuenco" con el borde
     // encendido por el fresnel (visto en juego); en las referencias las lenguas NACEN del suelo.
-    alpha *= smoothstep(-0.8, -0.3, vLocalY);
+    // Banda configurable desde el 2026-09-30 (ZenkaiShellBaseFade): con la base bajada bajo los
+    // pies, la llama se lee entera hasta el suelo y solo se funde el último tramo.
+    alpha *= smoothstep(ZenkaiShellBaseFade.x, ZenkaiShellBaseFade.y, vLocalY);
     // Cara trasera casi invisible (mecanismo real de dbrebirth: finalAlpha = 0.01).
     if (facingRaw < 0.0) alpha = min(alpha, 0.01);
 
     if (ZenkaiBloomMode > 0.5) {
-        alpha *= ZenkaiShellBloom.x * mix(ZenkaiShellBloom.y, 1.0, alphaBlend);
+        alpha *= ZenkaiShellBloom.x * mix(ZenkaiShellBloom.y, 1.0, emitBlend);
     }
 
     alpha = clamp(alpha, 0.0, 1.0) * ColorModulator.a;
     if (alpha < 0.004) discard;
-    float emit = clamp(mix(ZenkaiShellEmit.x, ZenkaiShellEmit.y, alphaBlend), 0.0, 1.0);
+    float emit = clamp(mix(ZenkaiShellEmit.x, ZenkaiShellEmit.y, emitBlend), 0.0, 1.0);
     fragColor = vec4(color * ColorModulator.rgb * alpha, alpha * (1.0 - emit));
 }

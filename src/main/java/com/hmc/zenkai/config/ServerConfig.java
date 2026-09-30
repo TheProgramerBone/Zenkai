@@ -736,13 +736,17 @@ public class ServerConfig {
             BUILDER.comment("Ultra Ego damage bar percent lost per second.")
                     .defineInRange("ultra_ego.charge_decay_per_second", 1.5D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue UE_MIN_RAW =
-            BUILDER.comment("Outgoing damage multiplier with Ultra Ego on and an empty damage bar (starts weak).")
-                    .defineInRange("ultra_ego.min_damage_mult", 0.6D, 0.0D, 1.0D);
+    private static final ModConfigSpec.DoubleValue UE_STAT_LV5_RAW =
+            BUILDER.comment("Ultra Ego: stat bonus (added, 0.2 = +20%) granted by a FULL damage bar at skill level 5 (the level the transformation unlocks). The bar only acts from level 5.")
+                    .defineInRange("ultra_ego.max_stat_bonus_level5", 0.2D, 0.0D, 10.0D);
 
-    private static final ModConfigSpec.DoubleValue UE_MAX_RAW =
-            BUILDER.comment("Outgoing damage multiplier at a full damage bar (curve is exponential).")
-                    .defineInRange("ultra_ego.max_damage_mult", 3.0D, 1.0D, 20.0D);
+    private static final ModConfigSpec.DoubleValue UE_STAT_LV10_RAW =
+            BUILDER.comment("Ultra Ego: stat bonus (added) granted by a FULL damage bar at skill level 10. Levels 6-9 interpolate linearly between the level 5 and level 10 values.")
+                    .defineInRange("ultra_ego.max_stat_bonus_level10", 0.6D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue UE_PEN_RAW =
+            BUILDER.comment("Ultra Ego: fraction of the target's defense ignored by PHYSICAL techniques at skill level 10 (0.2 = 20%). Scales linearly from level 1 (1/10 of this value). Applies while the Ultra Ego technique is on or the Ultra Ego form is worn.")
+                    .defineInRange("ultra_ego.max_armor_penetration", 0.2D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.DoubleValue BEAST_OD_STAT_RAW =
             BUILDER.comment("Extra stat multiplier bonus (added, 0.5 = +50%) while wearing Beast with power above 100% (overdrive). Stacks with Beast's cheaper overdrive drain.")
@@ -879,8 +883,9 @@ public class ServerConfig {
     private static volatile double UI_DODGE_REDUCE = 0.1D;
     private static volatile double UE_CHARGE = 2.0D;
     private static volatile double UE_DECAY = 1.5D;
-    private static volatile double UE_MIN = 0.6D;
-    private static volatile double UE_MAX = 3.0D;
+    private static volatile double UE_STAT_LV5 = 0.2D;
+    private static volatile double UE_STAT_LV10 = 0.6D;
+    private static volatile double UE_PEN = 0.2D;
 
 
     @SubscribeEvent
@@ -989,8 +994,9 @@ public class ServerConfig {
         UI_DODGE_REDUCE = UI_DODGE_REDUCE_RAW.get();
         UE_CHARGE = UE_CHARGE_RAW.get();
         UE_DECAY = UE_DECAY_RAW.get();
-        UE_MIN = UE_MIN_RAW.get();
-        UE_MAX = UE_MAX_RAW.get();
+        UE_STAT_LV5 = UE_STAT_LV5_RAW.get();
+        UE_STAT_LV10 = UE_STAT_LV10_RAW.get();
+        UE_PEN = UE_PEN_RAW.get();
 
         KI_COST_PER_POWER     = KI_COST_PER_POWER_RAW.get();
         MELEE_STAMINA_PER_HIT = MELEE_STAMINA_PER_HIT_RAW.get();
@@ -1172,8 +1178,9 @@ public class ServerConfig {
     public static double uiDodgeReduce() { return UI_DODGE_REDUCE; }
     public static double ueCharge() { return UE_CHARGE; }
     public static double ueDecay() { return UE_DECAY; }
-    public static double ueMin() { return UE_MIN; }
-    public static double ueMax() { return UE_MAX; }
+    public static double ueStatBonusLv5() { return UE_STAT_LV5; }
+    public static double ueStatBonusLv10() { return UE_STAT_LV10; }
+    public static double uePenetrationMax() { return UE_PEN; }
 
     public static double kiCostPerPower()    { return KI_COST_PER_POWER; }
     public static double meleeStaminaPerHit() { return MELEE_STAMINA_PER_HIT; }

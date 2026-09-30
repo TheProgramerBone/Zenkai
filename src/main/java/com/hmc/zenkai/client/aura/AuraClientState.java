@@ -93,6 +93,18 @@ public final class AuraClientState {
         return REMOTE_TURBO.contains(p.getId());
     }
 
+    /**
+     * ¿Está CARGANDO ki o transformándose? Es {@link #isAuraActive} sin el turbo: el turbo
+     * mantiene el aura encendida pero no remueve el suelo. Lo usan los efectos de suelo
+     * (AuraChargeGroundFx, AuraFlameGroundRenderer). Mismas fuentes que isAuraActive: flags del
+     * servidor ya sincronizados a los trackers, más la carga optimista del jugador local.
+     */
+    public static boolean isChargingOrTransforming(AbstractClientPlayer p) {
+        if (p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).isTransforming()) return true;
+        if (p.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).isChargingKi()) return true;
+        return p == Minecraft.getInstance().player && CombatModeClientState.isCharging();
+    }
+
     /** ¿Este jugador está en turbo AHORA? El local incluye el estado optimista para
      *  no esperar el round-trip; los remotos van por el sync del servidor. */
     public static boolean isTurbo(AbstractClientPlayer p) {

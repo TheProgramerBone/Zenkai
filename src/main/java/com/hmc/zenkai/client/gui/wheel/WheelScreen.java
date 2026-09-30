@@ -73,37 +73,18 @@ public class WheelScreen extends Screen {
     private static final float LABEL_SCALE = 0.72f;  // letra más pequeña
     private static final int   LABEL_WRAP  = 84;     // ancho de corte, en px ya escalados
 
-    // Solución de solapamiento (arfc29.mp4, referencia del usuario 2026-09-28), en dos escalones:
-    //   1) Gajo estrecho (< ROTATE_BELOW_DEG) -> la etiqueta se gira para salir "como una aguja"
-    //      desde el borde interior del gajo hacia fuera en vez de quedarse siempre horizontal
-    //      (ver labelAt). El hueco angular que necesita pasa de ser su ANCHO (grande) a ser su
-    //      GROSOR de línea (pequeño), así que caben muchos más hermanos antes de solaparse.
-    //   2) Ni así cabe (Arcosian con 7 formas en el mismo gajo de "Forms", ~2-3° cada una) -> el
-    //      anillo entero se reemplaza por una lista con el estilo de tooltip real de Minecraft
-    //      (ver drawListBox) en vez de seguir intentando meter más gajos.
-    // listBoxFor() decide esto por adelantado (usando el mismo umbral de rotación que render())
-    // para el paso 1, y el ancho/alto real de la etiqueta más larga para el paso 2.
+    // Solución de solapamiento (arfc29.mp4, referencia del usuario 2026-09-28): un gajo estrecho
+    // (< ROTATE_BELOW_DEG) gira su etiqueta para salir "como una aguja" desde el borde interior
+    // hacia fuera en vez de quedarse siempre horizontal (ver labelAt). El hueco angular que
+    // necesita pasa de ser su ANCHO (grande) a ser su GROSOR de línea (pequeño), así que caben
+    // muchos más hermanos antes de solaparse. Existió además una lista lateral con estilo de
+    // tooltip para el caso extremo; se eliminó (2026-09-30, pedido del usuario: salía bugeada).
     private static final float ROTATE_BELOW_DEG = 30f;
     // El texto radial ("aguja") solo se usa a partir del TERCER nivel (depth >= 2: las
     // transformaciones). Los dos primeros anillos (categorías raíz y su nivel "Race/Super Forms/
-    // Divine...") siempre van horizontales, con la lista lateral como red si no caben (pedido
-    // del usuario, 2026-09-29).
+    // Divine...") siempre van horizontales (pedido del usuario, 2026-09-29).
     private static final int ROTATE_FROM_DEPTH = 2;
     private static final float ROTATE_STAGGER   = 11f; // radio extra de los gajos impares al rotar
-    // LIST_FIT_MARGIN > 1 = cuánto puede la etiqueta más exigente "invadir" el hueco de su
-    // vecina (un roce leve se lee bien) antes de rendirse a la lista — 1.0 sería el punto
-    // exacto en que dos etiquetas del tamaño máximo llegarían a tocarse justo por el borde.
-    private static final float LIST_FIT_MARGIN = 1.4f;
-    private static final int   LIST_PAD        = 4;
-
-    // Mismos colores EXACTOS que usa Minecraft para el fondo/borde de sus propios tooltips
-    // (Screen#renderTooltipInternal) — para que la lista de emergencia se lea como parte del
-    // juego en vez de un rectángulo negro pegado encima.
-    private static final int TOOLTIP_BG           = 0xF0100010;
-    private static final int TOOLTIP_BORDER_START = 0x505000FF;
-    private static final int TOOLTIP_BORDER_END   =
-            (TOOLTIP_BORDER_START & 0xFEFEFE) >> 1 | (TOOLTIP_BORDER_START & 0xFF000000);
-
     private final WheelNode root;
 
     /** Camino de índices hasta el nodo más profundo bajo el ratón AHORA MISMO. Vacío = fuera
@@ -111,17 +92,6 @@ public class WheelScreen extends Screen {
      *  posición {@code d} es el hijo elegido dentro del sector del nodo de la posición
      *  {@code d-1} (o de la raíz si d=0) — NUNCA un índice absoluto sobre el círculo completo. */
     private List<Integer> hoverPath = new ArrayList<>();
-
-    // Estado "pegajoso" de la lista lateral actualmente abierta (si la hay). La caja vive en
-    // coordenadas de PANTALLA, no polares — si se recalculara el gajo elegido por ángulo cada
-    // fotograma, mover el ratón HACIA la caja (que sobresale del círculo) cambiaría el ángulo
-    // respecto al centro lo bastante como para que pick() eligiera OTRO hermano a mitad de
-    // camino, y la lista se cerraría antes de poder alcanzarla. Mientras el ratón siga dentro
-    // del gajo original (por ángulo, a cualquier radio) o dentro de la caja, se conserva el
-    // mismo camino en vez de recalcularlo desde cero.
-    private ListBox stickyBox;
-    private List<Integer> stickyPrefix = List.of();
-    private float stickyAngStart, stickyAngSize;
 
     public WheelScreen(WheelNode root) {
         super(Component.translatable("wheel.zenkai.title"));
@@ -155,19 +125,6 @@ public class WheelScreen extends Screen {
         float r = Mth.sqrt(dx * dx + dy * dy);
         float ang = (float) Math.toDegrees(Math.atan2(dy, dx));
 
-        // Atajo pegajoso: si ya había una lista abierta y el ratón sigue dentro de su gajo
-        // original o de la caja, se conserva el mismo camino sin volver a calcular por ángulo.
-        if (stickyBox != null) {
-            boolean inWedgeAngle = r >= R_HOLE && norm(ang - stickyAngStart) < stickyAngSize;
-            int row = stickyBox.rowAt(mouseX, mouseY);
-            if (inWedgeAngle || row >= 0) {
-                hoverPath = new ArrayList<>(stickyPrefix);
-                if (row >= 0) hoverPath.add(row);
-                return true;
-            }
-            stickyBox = null;
-        }
-
         hoverPath = new ArrayList<>();
         if (r < R_HOLE || roots().isEmpty()) return false;
 
@@ -188,76 +145,11 @@ public class WheelScreen extends Screen {
             List<WheelNode> kids = chosen.children();
             if (kids.isEmpty()) break; // nada más que ofrecer un anillo más adentro... afuera
 
-            float chosenStart = spanStart + idx * size;
-            ListBox lb = listBoxFor(kids, depth + 1, size / kids.size(),
-                    (ringIn(depth + 1) + ringOut(depth + 1)) / 2f, chosenStart + size / 2f);
-            if (lb != null) {
-                stickyBox = lb;
-                stickyPrefix = new ArrayList<>(hoverPath);
-                stickyAngStart = chosenStart;
-                stickyAngSize = size;
-                int row = lb.rowAt(mouseX, mouseY);
-                if (row >= 0) hoverPath.add(row);
-                break; // los hijos se ofrecen como lista, no como un anillo más: no seguir subdividiendo
-            }
-
             spanStart += idx * size;
             spanSize = size;
             level = kids;
         }
         return true;
-    }
-
-    /**
-     * Decide si los hijos de una categoría caben como gajos de un anillo más o si hace falta
-     * una lista lateral en su lugar (ver el bloque de comentarios sobre {@link #stickyBox}).
-     * null = caben de sobra, dibújalos como siempre. pick() es la ÚNICA que llama a esto —
-     * render() reutiliza el resultado guardado en stickyBox para no poder discrepar con pick()
-     * sobre qué gajo es cuál (ese fue el bug real de hoverPath/clic documentado en la clase).
-     */
-    private ListBox listBoxFor(List<WheelNode> kids, int ringDepth, float slotDeg, float midRadius,
-                               float midAngleDeg) {
-        int n = kids.size();
-        if (n == 0) return null;
-
-        // MISMO umbral que usará render() para este anillo: si va a salir rotada, lo que hay
-        // que comprobar que quepa no es el ANCHO del texto (que ahora corre a lo largo del
-        // radio, sin chocar con el vecino) sino su GROSOR de línea (perpendicular al radio,
-        // eso sí compite por el mismo hueco angular que el vecino).
-        boolean rotated = ringDepth >= ROTATE_FROM_DEPTH && slotDeg < ROTATE_BELOW_DEG;
-        float slotArc = (float) Math.toRadians(slotDeg) * midRadius;
-        float maxNeed = 0f;
-        for (WheelNode k : kids) {
-            float need = rotated ? this.font.lineHeight * LABEL_SCALE : this.font.width(k.label()) * LABEL_SCALE;
-            maxNeed = Math.max(maxNeed, need);
-        }
-        if (maxNeed <= slotArc * LIST_FIT_MARGIN) return null; // cabe de sobra como gajos
-
-        float rowH = this.font.lineHeight + 2;
-        float boxW = 0f;
-        for (WheelNode k : kids) boxW = Math.max(boxW, this.font.width(k.label()));
-        boxW += LIST_PAD * 2;
-        float boxH = n * rowH + LIST_PAD * 2;
-
-        float rad = (float) Math.toRadians(midAngleDeg);
-        boolean rightSide = Mth.cos(rad) >= 0f;
-        float anchorX = cx() + Mth.cos(rad) * midRadius;
-        float anchorY = cy() + Mth.sin(rad) * midRadius;
-        float x = rightSide ? anchorX + 6f : anchorX - 6f - boxW;
-        float y = anchorY - boxH / 2f;
-        x = Mth.clamp(x, 4f, this.width - boxW - 4f);
-        y = Mth.clamp(y, 4f, this.height - boxH - 4f);
-
-        return new ListBox(x, y, boxW, boxH, rowH, kids);
-    }
-
-    private record ListBox(float x, float y, float w, float h, float rowH, List<WheelNode> items) {
-        /** -1 si el ratón no cae en ninguna fila. */
-        int rowAt(double mouseX, double mouseY) {
-            if (mouseX < x || mouseX > x + w || mouseY < y || mouseY > y + h) return -1;
-            int idx = (int) ((mouseY - y - LIST_PAD) / rowH);
-            return idx >= 0 && idx < items.size() ? idx : -1;
-        }
     }
 
     private static float norm(float deg) {
@@ -347,50 +239,9 @@ public class WheelScreen extends Screen {
             List<WheelNode> kids = chosen.children();
             if (kids.isEmpty()) break;
 
-            // pick() ya decidió (mismo cálculo, ver stickyBox) si esta rama se ofrece como
-            // lista en vez de como anillo. depth == stickyPrefix.size() - 1 identifica que la
-            // lista pegajosa activa AHORA MISMO cuelga justo del gajo que se acaba de dibujar.
-            if (stickyBox != null && depth == stickyPrefix.size() - 1) {
-                Integer hoveredRow = hoverPath.size() > depth + 1 ? hoverPath.get(depth + 1) : null;
-                drawListBox(g, stickyBox, hoveredRow);
-                break;
-            }
-
             spanStart += hoveredIdx * size;
             spanSize = size;
             level = kids;
-        }
-    }
-
-    /**
-     * Rama demasiado poblada para caber como gajos ni girando el texto (ver {@link #stickyBox}):
-     * en vez de un rectángulo propio, el fondo y el borde con degradado violeta son EXACTAMENTE
-     * los que Minecraft dibuja para sus propios tooltips (mismo algoritmo que
-     * {@code Screen#renderTooltipInternal}, con los mismos {@link #TOOLTIP_BG}/
-     * {@code TOOLTIP_BORDER_*}), para que la lista se lea como parte del juego. Sin franja de
-     * fondo por fila — un tooltip vainilla nunca resalta una línea suelta — la fila bajo el
-     * ratón se distingue con el mismo color de "activo/hover" que ya usan las etiquetas de los
-     * gajos (labelColor/TEXT_HOVER), no con un elemento nuevo.
-     */
-    private void drawListBox(GuiGraphics g, ListBox lb, Integer hoveredRow) {
-        int x0 = (int) lb.x(), y0 = (int) lb.y();
-        int x1 = (int) (lb.x() + lb.w()), y1 = (int) (lb.y() + lb.h());
-
-        g.fillGradient(x0 - 3, y0 - 4, x1 + 3, y0 - 3, TOOLTIP_BG, TOOLTIP_BG);
-        g.fillGradient(x0 - 3, y1 + 3, x1 + 3, y1 + 4, TOOLTIP_BG, TOOLTIP_BG);
-        g.fillGradient(x0 - 3, y0 - 3, x1 + 3, y1 + 3, TOOLTIP_BG, TOOLTIP_BG);
-        g.fillGradient(x0 - 4, y0 - 3, x0 - 3, y1 + 3, TOOLTIP_BG, TOOLTIP_BG);
-        g.fillGradient(x1 + 3, y0 - 3, x1 + 4, y1 + 3, TOOLTIP_BG, TOOLTIP_BG);
-        g.fillGradient(x0 - 3, y0 - 3 + 1, x0 - 3 + 1, y1 + 3 - 1, TOOLTIP_BORDER_START, TOOLTIP_BORDER_END);
-        g.fillGradient(x1 + 2, y0 - 3 + 1, x1 + 3, y1 + 3 - 1, TOOLTIP_BORDER_START, TOOLTIP_BORDER_END);
-        g.fillGradient(x0 - 3, y0 - 3, x1 + 3, y0 - 3 + 1, TOOLTIP_BORDER_START, TOOLTIP_BORDER_START);
-        g.fillGradient(x0 - 3, y1 + 2, x1 + 3, y1 + 3, TOOLTIP_BORDER_END, TOOLTIP_BORDER_END);
-
-        for (int i = 0; i < lb.items().size(); i++) {
-            WheelNode node = lb.items().get(i);
-            int rowY = (int) (lb.y() + LIST_PAD + i * lb.rowH());
-            int color = (hoveredRow != null && hoveredRow == i) ? ZenkaiPalette.TEXT_HOVER : labelColor(node);
-            PanelText.onDark(g, this.font, node.label(), x0 + LIST_PAD, rowY, color);
         }
     }
 

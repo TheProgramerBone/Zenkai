@@ -11,8 +11,10 @@ import org.jetbrains.annotations.Nullable;
  * <p>
  * En cualquier frame se dibuja el CUERPO del aura con un sistema o con el otro, nunca los dos.
  * Qué cuenta como cuerpo (decisión del usuario, 2026-09-29): el faldón de llama
- * ({@code AuraSkirtRenderer}) y el aro ({@code AuraRimRenderer}) del legacy. Suelo, estela,
- * wisps, chispas y ascuas del legacy se siguen dibujando también con el sistema nuevo — son
+ * ({@code AuraSkirtRenderer}) y el aro ({@code AuraRimRenderer}) del legacy; desde el 2026-09-30
+ * también las wisps, que sobre la llama de vela se leían como una columna saliendo de la cabeza
+ * (guarda en {@code AuraRenderer}). Suelo, estela, chispas y ascuas del legacy se siguen
+ * dibujando también con el sistema nuevo — son
  * capas complementarias que las referencias (llama + anillo de suelo + chispas) también tienen.
  * <p>
  * Los archivos legacy solo LEEN {@link #useFlame()} en una guarda de una línea; la decisión vive

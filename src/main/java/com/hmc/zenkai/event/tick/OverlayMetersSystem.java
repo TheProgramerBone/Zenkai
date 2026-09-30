@@ -21,10 +21,16 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Mecánicas propias de Ultra Instinct (barra de calor + esquive automático) y Ultra Ego (barra
- * de daño acumulado que multiplica el daño de salida), más la exclusión mutua UI/UE.
- * "Activo" = el interruptor (SkillToggles) O la transformación completa correspondiente.
- * Los números salen de ServerConfig (ultra_instinct.* / ultra_ego.*).
+ * Mecánicas propias de Ultra Instinct (barra de calor + esquive automático) y Ultra Ego, más la
+ * exclusión mutua UI/UE. "Activo" = el interruptor (SkillToggles) O la transformación completa
+ * correspondiente. Los números salen de ServerConfig (ultra_instinct.* / ultra_ego.*).
+ *
+ * Ultra Ego (skill de 10 niveles, la forma se desbloquea en el 5):
+ *  - Niveles 1-10: PERFORACIÓN de defensa de las técnicas FÍSICAS, lineal hasta
+ *    ultra_ego.max_armor_penetration en el 10 (uePenetration).
+ *  - Niveles 5-10: el daño recibido llena una barra que da un BONO DE ESTADÍSTICAS (no un
+ *    multiplicador de daño) cuyo techo sube con el nivel (ueStatBonus). Antes del 5 la barra no
+ *    actúa: el jugador aún no tiene la forma.
  */
 public final class OverlayMetersSystem {
     private OverlayMetersSystem() {}
@@ -48,6 +54,33 @@ public final class OverlayMetersSystem {
 
     private static boolean ueActive(Player p, ResourceLocation form) {
         return isUeForm(form) || SkillToggles.isOn(p, SkillEffects.ULTRA_EGO);
+    }
+
+    /** Nivel de Ultra Ego desde el que la forma existe y la barra de daño empieza a actuar. */
+    public static final int UE_FORM_LEVEL = 5;
+
+    /** Fracción de la defensa del objetivo que IGNORAN las técnicas físicas del jugador. En la
+     *  forma Ultra Ego siempre está activa (da igual el interruptor); fuera de ella, solo con el
+     *  interruptor encendido. Lineal: nivel/10 del máximo configurado. 0 sin la skill. */
+    public static double uePenetration(Entity attacker) {
+        if (!(attacker instanceof Player p)) return 0.0;
+        int lvl = Math.min(10, SkillEffects.level(p, SkillEffects.ULTRA_EGO));
+        if (lvl <= 0 || !ueActive(p, formOf(p))) return 0.0;
+        return ServerConfig.uePenetrationMax() * lvl / 10.0;
+    }
+
+    /** Bono ADITIVO de estadísticas de la barra de Ultra Ego, sumado en
+     *  MasteryEffects.formStatFactor. 0 bajo el nivel 5 o con Ultra Ego inactivo. El techo
+     *  interpola linealmente entre ultra_ego.max_stat_bonus_level5 y _level10; el bono es
+     *  proporcional a lo llena que esté la barra. */
+    public static double ueStatBonus(Player p) {
+        int lvl = Math.min(10, SkillEffects.level(p, SkillEffects.ULTRA_EGO));
+        if (lvl < UE_FORM_LEVEL || !ueActive(p, formOf(p))) return 0.0;
+        double t = (lvl - UE_FORM_LEVEL) / (double) (10 - UE_FORM_LEVEL);
+        double ceiling = ServerConfig.ueStatBonusLv5()
+                + (ServerConfig.ueStatBonusLv10() - ServerConfig.ueStatBonusLv5()) * t;
+        double fill = Math.min(1.0, PlayerStatsAttachment.get(p).getUeCharge() / 100.0);
+        return ceiling * fill;
     }
 
     public static void tick(TickCtx c) {
@@ -105,19 +138,11 @@ public final class OverlayMetersSystem {
         return true;
     }
 
-    /** Multiplicador de daño de SALIDA de Ultra Ego según su barra (curva cuadrática). */
-    public static float scaleOutgoing(Entity attacker, float dmg) {
-        if (!(attacker instanceof ServerPlayer sp)) return dmg;
-        if (!ueActive(sp, formOf(sp)) || SkillEffects.level(sp, SkillEffects.ULTRA_EGO) <= 0) return dmg;
-        double t = PlayerStatsAttachment.get(sp).getUeCharge() / 100.0;
-        double mult = ServerConfig.ueMin() + (ServerConfig.ueMax() - ServerConfig.ueMin()) * t * t;
-        return (float) (dmg * mult);
-    }
-
     /** Alimenta la barra de Ultra Ego con el daño recibido (fracción del cuerpo perdido). No
      *  mata ni quita nada por sí sola: solo sube la barra. */
     public static void onDamaged(ServerPlayer victim, double bodyLost, int bodyMax) {
         if (bodyMax <= 0 || bodyLost <= 0 || !ueActive(victim, formOf(victim))) return;
+        if (SkillEffects.level(victim, SkillEffects.ULTRA_EGO) < UE_FORM_LEVEL) return;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(victim);
         att.setUeCharge(att.getUeCharge() + bodyLost / bodyMax * 100.0 * ServerConfig.ueCharge());
     }

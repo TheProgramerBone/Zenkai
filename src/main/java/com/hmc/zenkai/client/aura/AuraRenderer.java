@@ -105,7 +105,10 @@ public final class AuraRenderer {
             AuraTrailRenderer.render(pose, buffers, p, at, camPos, layers.inner(), mo);
 
             // Emisores anclados al mundo: se dibujan luego, en conjunto.
-            AuraWispRenderer.spawn(p, at, plan, t);
+            // Con la llama nueva no se sueltan lenguas: nacen en la corona (1.45-2.4 bloques) y
+            // suben, y sobre la lágrima cerrada se leían como una columna azul saliendo de la
+            // cabeza (vídeo comparado con DragonMine Z, 2026-09-30).
+            if (!AuraSystemDispatcher.useFlame()) AuraWispRenderer.spawn(p, at, plan, t);
             AuraSparkRenderer.spawn(p, at, plan, t, dtTicks);
             AuraEmberRenderer.spawn(p, at, plan, t);
 

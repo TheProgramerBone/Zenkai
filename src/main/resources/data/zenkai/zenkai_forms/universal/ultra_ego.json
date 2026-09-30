@@ -13,9 +13,9 @@
   "spi_req": 240,
   "body_items": {},
   "aura_type": "ascension",
-  "aura_rgb": "0xFF2050",
+  "aura_rgb": "0x9A3CFF",
   "scale": 1.0,
   "endgame_path": true,
   "tier": "ultra",
-  "eye_rgb": "0xFF0030"
+  "eye_rgb": "0xB05CFF"
 }

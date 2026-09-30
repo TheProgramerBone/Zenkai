@@ -3,8 +3,12 @@ package com.hmc.zenkai.registry;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.particle.ZenkaiParticleOptions;
 import com.hmc.zenkai.content.particle.ZenkaiParticleType;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -69,6 +73,34 @@ public final class ModParticles {
     /** Chispas del Black Flash: la KI_SPARK de siempre, forzada al rojo del filo. */
     public static ZenkaiParticleOptions blackFlashSpark(float scale) {
         return new ZenkaiParticleOptions(KI_SPARK.get(), BF_RIM_RGB, scale);
+    }
+
+    // ═══ Efectos de SUELO al cargar ki / transformarse (2026-09-30) ═══ Los dispara solo el
+    // cliente (AuraChargeGroundFx), sin packet: se desprenden al mundo y tienen física propia,
+    // así que son partículas y no billboards del aura. Son tipos PROPIOS con arte propio — la
+    // regla de "nada de ParticleTypes vanilla en el aura" va por el FLAME vanilla, que desentonaba.
+
+    /** Nube de polvo pixel-art con contorno; el rgb es el MapColor del bloque pisado. */
+    public static final DeferredHolder<ParticleType<?>, ZenkaiParticleType> AURA_DUST =
+            PARTICLES.register("aura_dust", ZenkaiParticleType::new);
+
+    /** Trozo de bloque (cubito 3D con el sprite del bloque pisado) que sube girando. Lleva el
+     *  BlockState en las opciones, como la partícula "block" vanilla. */
+    public static final DeferredHolder<ParticleType<?>, ParticleType<BlockParticleOption>> AURA_ROCK =
+            PARTICLES.register("aura_rock", () -> new ParticleType<BlockParticleOption>(false) {
+                @Override
+                public MapCodec<BlockParticleOption> codec() {
+                    return BlockParticleOption.codec(this);
+                }
+
+                @Override
+                public StreamCodec<? super RegistryFriendlyByteBuf, BlockParticleOption> streamCodec() {
+                    return BlockParticleOption.streamCodec(this);
+                }
+            });
+
+    public static ZenkaiParticleOptions auraDust(int rgb, float scale) {
+        return new ZenkaiParticleOptions(AURA_DUST.get(), rgb, scale);
     }
 
     public static void register(IEventBus bus) {

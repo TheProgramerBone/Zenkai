@@ -366,7 +366,7 @@
   "skill.zenkai.arcosian_power.desc": "Innata de los Arcosianos. Contén tu fuerza en Base por debajo del 50% de poder para almacenar Power Points, y libéralos con 100%+ de poder desde la Forma Final. Cada nivel agranda el tanque.",
   "message.zenkai.ui_overheat": "¡Tu cuerpo ya no puede sostener el Ultra Instinto!",
   "skill.zenkai.ultra_ego": "Ultra Ego",
-  "skill.zenkai.ultra_ego.desc": "Canaliza el espíritu de combate de Ultra Ego sin dejar la transformación que ya llevas puesta. Independiente de la transformación completa de Ultra Ego.",
+  "skill.zenkai.ultra_ego.desc": "Canaliza el poder de la destrucción. Con la técnica activa (siempre activa en la forma Ultra Ego), tus técnicas físicas ignoran parte de la defensa del objetivo, hasta un 20% en el nivel 10. El nivel 5 desbloquea la transformación Ultra Ego, donde el daño que recibes llena una barra que aumenta tus estadísticas; cuanto mayor el nivel, mayor el techo de ese aumento.",
   "skill.zenkai.instant_transmission": "Transmisión Instantánea",
   "skill.zenkai.instant_transmission.desc": "Engánchate a una firma de ki o al punto que estás mirando y aparece ahí al instante. Los niveles altos bajan el costo de Ki y el tiempo de reutilización, y extienden el alcance.",
 
