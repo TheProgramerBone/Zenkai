@@ -1,6 +1,5 @@
 package com.hmc.zenkai.client;
 
-import com.hmc.zenkai.client.debug.ZenkaiAnimDebug;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranimcore.animation.Animation;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeModifier;
@@ -49,12 +48,9 @@ public final class ZenkaiTransitions {
      */
     public static boolean play(PlayerAnimationController c, ResourceLocation anim, int ticks) {
         if (c == null || anim == null) {
-            ZenkaiAnimDebug.logPlay(c, anim, ticks, null);
             return false;
         }
-        ZenkaiAnimDebug.beforePlay(c, anim);
         boolean ok = c.replaceAnimationWithFade(fadeIn(ticks), anim);
-        ZenkaiAnimDebug.logPlay(c, anim, ticks, ok);
         return ok;
     }
 
@@ -79,11 +75,8 @@ public final class ZenkaiTransitions {
      */
     public static void stop(PlayerAnimationController c, int ticks) {
         if (c == null) {
-            ZenkaiAnimDebug.beforeStop(null, ticks);
             return;
         }
-        ZenkaiAnimDebug.beforeStop(c, ticks);
         c.stopTriggeredAnimation();
-        ZenkaiAnimDebug.afterStop(c);
     }
 }

@@ -71,7 +71,7 @@ void main() {
 
     vec3 color = mix(ZenkaiShellCoreColor.rgb, ZenkaiShellOuterColor.rgb, blend);
     // Brillo y opacidad modulados por la raya: nunca oscurece por debajo del 80% (un aura
-    // oscurecida se lee sucia, lección de aura-pendientes.md §2).
+    // oscurecida se lee sucia, lección de aura.md §2).
     color *= mix(1.0, mix(0.8, 1.15, streak), streakMix);
     float alpha = mix(ZenkaiShellAlpha.x, ZenkaiShellAlpha.y, alphaBlend) * vColor.a;
     alpha *= mix(1.0, mix(0.55, 1.2, streak), streakMix);

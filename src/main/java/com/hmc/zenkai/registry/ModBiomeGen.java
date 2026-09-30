@@ -38,7 +38,7 @@ public final class ModBiomeGen {
     private static final int NAMEK_GRASS   = 1725043; // #1A5273
     private static final int NAMEK_FOLIAGE = 2055820; // #1F5E8C
 
-    // Rediseño HFIL fase 1, punto 2 (ver .claude/pendiente/hfil-rework-propuesta.md): ceniza
+    // Rediseño HFIL fase 1, punto 2 (ver .claude/pendiente/worldgen-pendiente.md): ceniza
     // cayendo pasivamente, nativo de BiomeSpecialEffects (sin entidad ni tick propio que
     // mantener). Probabilidad base calcada de minecraft:nether_wastes (0.00625) en vez de
     // inventar un número — incluso en un bioma pensado para verse denso, esa cifra ya se lee
@@ -165,7 +165,7 @@ public final class ModBiomeGen {
     }
 
     /**
-     * Rediseño de identidad HFIL (ver .claude/pendiente/hfil-rework-propuesta.md, Fase 2) —
+     * Rediseño de identidad HFIL (ver .claude/pendiente/worldgen-pendiente.md, Fase 2) —
      * antes "hfil_badlands": pintaba terracota bandeada de vainilla ({@code minecraft:bandlands}
      * en la surface_rule), la identidad prestada más obvia de los 3 biomas del HFIL, sin relación
      * con el imaginario de Dragon Ball. Ahora es la identidad "Blood Pond": el charco de sangre
@@ -211,7 +211,7 @@ public final class ModBiomeGen {
     }
 
     /**
-     * Rediseño de identidad HFIL (ver .claude/pendiente/hfil-rework-propuesta.md, Fase 3) —
+     * Rediseño de identidad HFIL (ver .claude/pendiente/worldgen-pendiente.md, Fase 3) —
      * antes "hfil_wastes". Los pinchos (HFIL_SPIKE_KEY) ya vivían exclusivamente aquí desde
      * Ronda 5 del rediseño anterior; esta fase solo sube su frecuencia (ver ModPlacedFeatures)
      * para que definan el horizonte nada más entrar, en vez de ser un evento raro, y afloja la
@@ -257,7 +257,7 @@ public final class ModBiomeGen {
     }
 
     /**
-     * Rediseño de identidad HFIL (ver .claude/pendiente/hfil-rework-propuesta.md, Fase 4) —
+     * Rediseño de identidad HFIL (ver .claude/pendiente/worldgen-pendiente.md, Fase 4) —
      * antes "hfil_dunes": dunas literalmente de {@code minecraft:red_sand}/{@code red_sandstone},
      * el más "prestado" de los 3 biomas (ni siquiera llevaba HFIL_SCORCHED_STONE visible en
      * superficie, la arena lo tapaba). Ahora la arena/arenisca son bloques propios

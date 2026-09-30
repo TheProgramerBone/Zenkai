@@ -49,7 +49,7 @@ import java.util.Map;
  * tipo puede partir ya por encima de lo que cualquier size 1..5 del tipo genérico alcanza
  * (mismo patrón que EXPLOSION/BIG_BLAST, ver git history).
  *
- * FORMA de una técnica ki (0.3.0, ver {@code .claude/pendiente/api-addons-0.3.0.md} punto 4):
+ * FORMA de una técnica ki (0.3.0, ver {@code .claude/pendiente/verificar-y-deuda.md} punto 4):
  * lo que antes eran 6 switch exhaustivos de {@link KiTechniqueType} ahora son datos aquí —
  * {@code travels}, {@code projectileSizeBase/Step}, {@code explosionRadiusMult}, {@code aoeFactor},
  * {@code aoeEdgeFalloff}, {@code chargeShowsRealSize}, {@code animOverride}, {@code allowedEffects}

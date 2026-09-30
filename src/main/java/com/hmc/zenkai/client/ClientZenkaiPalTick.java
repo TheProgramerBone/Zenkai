@@ -103,7 +103,6 @@ public final class ClientZenkaiPalTick {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
         ZenkaiPalAnimations.applyFirstPersonPolicy(mc.player);
-        com.hmc.zenkai.client.debug.ZenkaiAnimDebug.trackControllers(mc.player);
         for (AbstractClientPlayer p : mc.level.players()) {
             tickPlayer(mc, p);
         }
@@ -253,11 +252,9 @@ public final class ClientZenkaiPalTick {
                 ? CombatModeClientState.isBlockingLocal()
                 : CombatModeClientState.isBlockingRemote(p.getId());
         if (blockingNow && !st.blockPlaying) {
-            com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "BLOCK", "start");
             st.blockPlaying = true;
             ZenkaiPalAnimations.playBlock(p);
         } else if (!blockingNow && st.blockPlaying) {
-            com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "BLOCK", "stop");
             st.blockPlaying = false;
             ZenkaiPalAnimations.stopBlock(p);
         }
@@ -459,8 +456,6 @@ public final class ClientZenkaiPalTick {
     private static void tickCombatIdle(AbstractClientPlayer p, AnimState st, int styleOrd) {
         if (styleOrd < 0) {
             if (st.combatPlaying) {
-                com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "COMBAT",
-                        "stop (estilo=" + st.combatStyle + ")");
                 st.combatPlaying = false;
                 st.combatStyle = -1;
                 st.combatStartTicks = 0;
@@ -470,7 +465,6 @@ public final class ClientZenkaiPalTick {
         }
         if (styleOrd == BEAST_IDLE) {
             if (!st.combatPlaying || st.combatStyle != BEAST_IDLE) {
-                com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "COMBAT", "beast idle");
                 st.combatPlaying = true;
                 st.combatStyle = BEAST_IDLE;
                 st.combatStartTicks = 0;
@@ -479,9 +473,6 @@ public final class ClientZenkaiPalTick {
             return;
         }
         if (!st.combatPlaying || st.combatStyle != styleOrd) {
-            com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "COMBAT",
-                    "start estilo=" + styleOrd + " (playing=" + st.combatPlaying
-                            + " prev=" + st.combatStyle + ")");
             st.combatPlaying = true;
             st.combatStyle = styleOrd;
             st.combatStartTicks = COMBAT_START_TICKS;
@@ -489,8 +480,6 @@ public final class ClientZenkaiPalTick {
             return;
         }
         if (st.combatStartTicks > 0 && --st.combatStartTicks == 0) {
-            com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "COMBAT",
-                    "loop estilo=" + styleOrd);
             ZenkaiPalAnimations.playCombatIdleLoop(p, styleOrd);
         }
     }
@@ -515,9 +504,6 @@ public final class ClientZenkaiPalTick {
         if (phase == st.kiPhase && start == st.kiStart && visual == st.kiVisual) return;
 
         long prevStart = st.kiStart;
-        com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "KI",
-                st.kiPhase + "/" + st.kiVisual + "/" + st.kiStart
-                        + "  ->  " + phase + "/" + visual + "/" + start);
         st.kiPhase  = phase;
         st.kiStart  = start;
         st.kiVisual = visual;
@@ -565,18 +551,15 @@ public final class ClientZenkaiPalTick {
      */
     private static void tickChargeKi(AbstractClientPlayer p, AnimState st, boolean want) {
         if (want && !st.chargeKiPlaying) {
-            com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "CHARGE_KI", "start");
             st.chargeKiPlaying = true;
             st.chargeKiStartTicks = COMBAT_START_TICKS;
             ZenkaiPalAnimations.playChargeKiStart(p);
         } else if (!want && st.chargeKiPlaying) {
-            com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "CHARGE_KI", "stop");
             st.chargeKiPlaying = false;
             st.chargeKiStartTicks = 0;
             ZenkaiPalAnimations.stopCombatIdle(p);
         } else if (st.chargeKiPlaying && st.chargeKiStartTicks > 0
                 && --st.chargeKiStartTicks == 0) {
-            com.hmc.zenkai.client.debug.ZenkaiAnimDebug.state(p, "CHARGE_KI", "loop");
             ZenkaiPalAnimations.playChargeKiLoop(p);
         }
     }

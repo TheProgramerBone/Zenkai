@@ -561,7 +561,7 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue TRAIN_DMG_TP_RAW =
             BUILDER.comment("Training: TP per point of effective damage dealt.",
-                            "Recalibrado 2026-08-20 (0.02 -> 0.10, x5): la simulacion de .claude/pendiente/economia-tp.md",
+                            "Recalibrado 2026-08-20 (0.02 -> 0.10, x5): la simulacion de .claude/pendiente/verificar-y-deuda.md",
                             "mostro que con el valor viejo, incluso ELIMINANDO la fatiga por completo, un jugador tardaba ~112h",
                             "en llegar a los 5,000,000 TP de referencia peleando a ritmo moderado (15s/kill) -- muy por",
                             "encima de las 20-40h que el usuario fijo como objetivo. Va de la mano con entity.tp_per_pl",
@@ -602,7 +602,7 @@ public class ServerConfig {
                             "el mismo resultado con el 0.01 viejo). Subir damage_tp_factor/entity.tp_per_pl sin tocar",
                             "esto no sirve de mucho: el reward extra se cancela con la fatiga extra que genera.",
                             "Sigue siendo una ESTIMACION del modelo (asume ~15s por kill 'de nivel'); hace falta",
-                            "playtesting real para afinarlo -- ver .claude/pendiente/economia-tp.md.")
+                            "playtesting real para afinarlo -- ver .claude/pendiente/verificar-y-deuda.md.")
                     .defineInRange("training.fatigue_decay_per_minute", 0.20D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue TRAIN_HTC_MULT_RAW =

@@ -84,7 +84,7 @@ public class ModConfiguredFeatures {
      *  ya usan los lagos de lava de BiomeDefaultFeatures.addDefaultCarversAndLakes — al ser dos
      *  features independientes en el mismo paso, se intercalan solas por el terreno sin
      *  necesitar lógica propia que alterne entre una y otra. Fase 5 del rework (ver
-     *  .claude/pendiente/hfil-rework-propuesta.md): usa HfilBloodPoolFeature en vez de
+     *  .claude/pendiente/worldgen-pendiente.md): usa HfilBloodPoolFeature en vez de
      *  Feature.LAKE — LakeFeature.Configuration solo expone fluido+barrier, no la forma del
      *  hueco, y en juego se veía como un disco tapado en vez de un charco abierto. Ver
      *  HfilBloodPoolFeature para el detalle. */

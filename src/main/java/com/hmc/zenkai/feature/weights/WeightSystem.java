@@ -88,7 +88,7 @@ public final class WeightSystem {
      *  caja — igual que ya hace {@code inHtc} en TrainingHubScreen para el multiplicador de TP.
      *  Corrección del usuario (2026-09-10): esto es gravedad INHERENTE a la dimensión, no algo
      *  que dependa de la futura cámara de gravedad (bloque+estructura, ver
-     *  .claude/pendiente/camara-de-gravedad-bloque.md) — son cosas separadas aunque la cámara
+     *  .claude/pendiente/contenido-futuro.md) — son cosas separadas aunque la cámara
      *  probablemente se termine construyendo DENTRO de la HTC. */
     public static boolean isInHtc(Player p) {
         return p != null && p.level().dimension().equals(ModDimensions.HTC_LEVEL);

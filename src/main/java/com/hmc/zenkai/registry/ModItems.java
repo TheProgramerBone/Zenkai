@@ -259,7 +259,7 @@ public class ModItems {
     // el cuerpo base a propósito, ver body_items:{} en su JSON), esta forma cambia de modelo
     // propio, solo que ligeramente más grande que el namekiano base (el "scale" real vive en
     // namek_orange.json, no aquí). Pendiente: sin .geo.json/textura todavía, ver
-    // .claude/pendiente/geo-models-pendientes.md — el sistema de RaceSkinSlots.backedOrEmpty
+    // .claude/pendiente/arte-y-modelos.md — el sistema de RaceSkinSlots.backedOrEmpty
     // (mismo que protege a Majin) evita que crashee o se vea nada raro mientras tanto.
     public static final Supplier<GeoLayerArmorItem> NAMEK_ORANGE_HELMET =
             ITEMS.register("namek_orange_helmet", () ->
@@ -484,7 +484,7 @@ public class ModItems {
     // body_items:{} en su JSON), CADA forma arcosiana tiene su propio modelo geo distinto —
     // no hay ninguna que reuse el cuerpo de arcosian_first_form_player. Registradas ya en
     // Java (patrón Majin) para que exista el código mientras se modelan con calma: sin
-    // .geo.json/textura todavía, ver .claude/pendiente/geo-models-pendientes.md — el sistema
+    // .geo.json/textura todavía, ver .claude/pendiente/arte-y-modelos.md — el sistema
     // de RaceSkinSlots.backedOrEmpty evita que crashee o se vea nada raro mientras tanto.
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_SECOND_FORM_HELMET =
             ITEMS.register("arcosian_second_form_helmet", () ->
@@ -671,7 +671,7 @@ public class ModItems {
     // (primera forma divina del Arcosiano). Mismo patrón exacto que las 5 formas Arcosian ya
     // existentes: sin .geo.json/textura todavía, cae limpio al cuerpo de black_form vía el
     // mismo fallback (RaceSkinSlots.backedOrEmpty) — no crashea, ver
-    // .claude/pendiente/geo-models-pendientes.md.
+    // .claude/pendiente/arte-y-modelos.md.
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_GOLDEN_FIFTH_FORM_HELMET =
             ITEMS.register("arcosian_golden_fifth_form_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,

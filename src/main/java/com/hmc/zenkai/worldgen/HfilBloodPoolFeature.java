@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 
 /**
  * Charco de sangre del HFIL, ABIERTO de verdad — sustituye a {@code Feature.LAKE} (ver
- * .claude/pendiente/hfil-rework-propuesta.md, secciones 1.2 y 5.2, Fase 5). El motivo del
+ * .claude/pendiente/worldgen-pendiente.md, secciones 1.2 y 5.2, Fase 5). El motivo del
  * cambio: {@code LakeFeature.Configuration} solo expone dos {@code BlockStateProvider} (fluido +
  * barrier) — la FORMA del hueco y la decisión de taparlo con barrier por arriba son internas de
  * {@code LakeFeature} y no configurables. En juego eso se veía como un disco maroon tapado
@@ -110,7 +110,7 @@ public class HfilBloodPoolFeature extends Feature<NoneFeatureConfiguration> {
     /**
      * Cava y rellena la cubeta — cuerpo compartido con {@code place()} de arriba, extraído para
      * que {@code BloodPondPiece} (el landmark de la Fase 6, ver
-     * .claude/pendiente/hfil-rework-propuesta.md sección 7/8) pueda generar el MISMO tipo de
+     * .claude/pendiente/worldgen-pendiente.md sección 7/8) pueda generar el MISMO tipo de
      * charco abierto a un tamaño fijo mayor, en vez de reimplementar el algoritmo. {@code
      * chunkBox}, si no es null, filtra cada bloque colocado (uso de {@code StructurePiece},
      * cuyo {@code postProcess} puede llamarse una vez por cada chunk que solape la pieza — sin

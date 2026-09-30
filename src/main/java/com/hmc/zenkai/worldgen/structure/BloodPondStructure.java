@@ -16,7 +16,7 @@ import java.util.Optional;
 
 /**
  * Landmark del Blood Pond (Fase 6 del rework del HFIL, ver
- * .claude/pendiente/hfil-rework-propuesta.md secciones 7 y 8) — un charco de sangre ABIERTO
+ * .claude/pendiente/worldgen-pendiente.md secciones 7 y 8) — un charco de sangre ABIERTO
  * grande con un cartel y marcadores de hueso alrededor, ancla la identidad de {@code
  * hfil_blood_shore} a un punto localizable ({@code /locate structure zenkai:blood_pond}).
  *

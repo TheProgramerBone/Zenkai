@@ -50,7 +50,7 @@ public class ModOverworldRegion extends Region {
         // biomas vanilla en ese nicho). Cuanto más estrecho, más raro y pequeño.
         //
         // BUG real investigado y medido a fondo (2026-09-04, ver .claude/pendiente/
-        // rocky-wasteland-terrablender-gen.md): rocky_wasteland podía aparecer como bioma
+        // worldgen-pendiente.md): rocky_wasteland podía aparecer como bioma
         // EXPLÍCITO en pleno océano (confirmado con captura F3 real del usuario, C=-0.751 =
         // "Deep ocean"). Causa (terrablender.mixin.MixinParameterList.findValuePositional,
         // fuente real leída): la selección de bioma es NEAREST-NEIGHBOR por distancia acumulada

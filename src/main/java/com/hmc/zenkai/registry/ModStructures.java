@@ -28,7 +28,7 @@ public final class ModStructures {
             PIECES.register("segment", () -> (StructurePieceType.StructureTemplateType) SegmentPiece::new);
 
     // Landmark del Blood Pond, Fase 6 del rework del HFIL (ver
-    // .claude/pendiente/hfil-rework-propuesta.md secciones 7/8). BloodPondPiece NO es un
+    // .claude/pendiente/worldgen-pendiente.md secciones 7/8). BloodPondPiece NO es un
     // StructureTemplateType (no lee NBT, ver su javadoc) — usa el StructurePieceType genérico.
     public static final DeferredHolder<StructureType<?>, StructureType<BloodPondStructure>> BLOOD_POND =
             TYPES.register("blood_pond", () -> () -> BloodPondStructure.CODEC);

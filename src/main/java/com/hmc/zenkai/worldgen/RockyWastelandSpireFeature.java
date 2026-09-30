@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  * sin jigsaw, sondeo de suelo LOCAL vía LocalGroundProbe, bloques colocados a mano.
  *
  * Deliberadamente NO toca la forma macro del terreno (density function / erosion) — ver la
- * sesión 2026-09-04 en .claude/pendiente/rocky-wasteland-terrablender-gen.md: el relieve suave
+ * sesión 2026-09-04 en .claude/pendiente/worldgen-pendiente.md: el relieve suave
  * (EROSION_5) se dejó así a propósito para evitar reabrir el bug de acantilados abruptos junto al
  * agua ya medido y arreglado. Esta feature logra el aspecto de cañón dramático solo con
  * decoración ENCIMA del terreno existente, igual que HfilOreBoulderFeature hace con los

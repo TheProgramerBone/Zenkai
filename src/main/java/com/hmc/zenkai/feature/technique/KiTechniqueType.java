@@ -17,7 +17,7 @@ import java.util.Locale;
  * efectos admitidos) también es dato — ver el javadoc de {@link TechniqueDef}. El enum sigue
  * siendo Java cerrado a propósito: un addon puede reutilizar/reskinnear un tipo existente
  * (técnica firma) pero no crear una identidad genuinamente nueva sin recompilar Zenkai —
- * decisión explícita, ver {@code .claude/pendiente/api-addons-0.3.0.md}.
+ * decisión explícita, ver {@code .claude/pendiente/verificar-y-deuda.md}.
  */
 public enum KiTechniqueType {
     WAVE,       // Kamehameha: lento, fuerte
@@ -32,7 +32,7 @@ public enum KiTechniqueType {
     SPIRIT_BOMB, // Genki Dama: técnica firma de Kaio (ver TechniqueDef "TÉCNICA FIRMA").
 
     // Técnicas firma nuevas (2026-09-23), TODAS con master="kami" como placeholder — Roshi/
-    // Vegeta/Freezer no existen todavía como NPC maestro (ver .claude/pendiente/tecnicas-maestros.md).
+    // Vegeta/Freezer no existen todavía como NPC maestro (ver .claude/pendiente/contenido-futuro.md).
     // Van DESPUÉS de SPIRIT_BOMB a propósito: ordinal() es la celda del icono en
     // technique_icons.png, así que añadirlas aquí no reordena las 10 celdas ya existentes.
     KAMEHAMEHA,   // el haz por antonomasia: núcleo blanco limpio, borde azul dentado

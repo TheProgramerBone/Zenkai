@@ -21,7 +21,7 @@
 // de donde deben salir los picos más altos.
 //
 // CORRECCIÓN DE ORIGEN (encontrada en la primera prueba en juego de esta fase, ver
-// .claude/pendiente/aura-pendientes.md — el "artefacto sin diagnosticar" de aura_rim era
+// .claude/pendiente/aura.md — el "artefacto sin diagnosticar" de aura_rim era
 // probablemente este mismo fallo, invisible a su escala de 0.12 bloques). InvBodyRotMat deshace
 // SOLO la rotación de cuerpo — pero `Position` sigue cargando la traslación cámara-relativa que
 // el PoseStack ya horneó (Minecraft traduce el PoseStack a `posEntidad - posCámara` antes de

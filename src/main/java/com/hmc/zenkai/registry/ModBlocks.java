@@ -259,7 +259,7 @@ public class ModBlocks {
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.SAND)));
 
-    // Rediseño HFIL (ver .claude/pendiente/hfil-rework-propuesta.md, fase 1). Roca base
+    // Rediseño HFIL (ver .claude/pendiente/worldgen-pendiente.md, fase 1). Roca base
     // CÁLIDA: sustituye a minecraft:stone como default_block del Otherworld
     // (otherworld_noise.json) — arregla de paso la "mancha de piedra" (CLAUDE.md pendiente #2):
     // si algo se escapa del gate above_preliminary_surface, lo que se ve ya no es piedra gris
@@ -281,7 +281,7 @@ public class ModBlocks {
                     .sound(SoundType.BASALT)
                     .mapColor(MapColor.COLOR_BLACK)));
 
-    // Rediseño HFIL, Fase 4 (ver .claude/pendiente/hfil-rework-propuesta.md, secciones 3.3/5.3) —
+    // Rediseño HFIL, Fase 4 (ver .claude/pendiente/worldgen-pendiente.md, secciones 3.3/5.3) —
     // hfil_dunes -> hfil_cinder_dunes: reemplaza red_sand/red_sandstone vainilla por ceniza
     // propia. HFIL_CINDER_SAND cae como arena de verdad (ColoredFallingBlock, mismo patrón que
     // NAMEKIAN_SAND) — es la capa de superficie. HFIL_CINDER_SANDSTONE es la capa compactada

@@ -196,7 +196,7 @@ public class ModPlacedFeatures {
                         SurfaceWaterDepthFilter.forMaxDepth(0),
                         BiomeFilter.biome()));
 
-        // Rediseño de identidad HFIL, Fase 3 (ver .claude/pendiente/hfil-rework-propuesta.md):
+        // Rediseño de identidad HFIL, Fase 3 (ver .claude/pendiente/worldgen-pendiente.md):
         // bajado de (2, 8) a (1, 3) intentos por chunk — la hierba pasa de cobertura densa a
         // matojos dispersos, para que en hfil_needle_wastes el terreno base se lea "yermo
         // rocoso" y los pinchos (HFIL_SPIKE_KEY, más abajo) sean lo primero que define el
@@ -249,7 +249,7 @@ public class ModPlacedFeatures {
         // dominar el horizonte, no decoración de relleno — ver HfilSpikeFeature. Mismo
         // ClampedHeightmapPlacement que el resto del suelo del HFIL (evita que el origen del
         // clúster herede la altura de una isla flotante del Otherworld).
-        // Rediseño de identidad HFIL, Fase 3 (ver .claude/pendiente/hfil-rework-propuesta.md):
+        // Rediseño de identidad HFIL, Fase 3 (ver .claude/pendiente/worldgen-pendiente.md):
         // subido de 1/120 a 1/40 — con la identidad "Needle Wastes", los pinchos deben ser lo
         // que define el horizonte nada más entrar al bioma, no un evento raro/accesorio como
         // en el rediseño anterior. Sigue siendo bastante más raro que HFIL_BONE_PILE_KEY (1/16)

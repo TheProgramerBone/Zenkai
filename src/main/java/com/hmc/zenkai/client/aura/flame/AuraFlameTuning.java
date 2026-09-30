@@ -58,7 +58,7 @@ public final class AuraFlameTuning {
         FRESNEL_DIVIS("fresnel_divis", 0.8f),
         // Fase 4 (bloom real vía KiVfxBloomPipeline). Salida premultiplicada vec4(c*a, a*(1-emit)):
         // emit 0 = tapa como un translúcido, 1 = suma luz. Nunca aditivo puro en el cuerpo: las
-        // capas superpuestas lavarían a blanco (rechazado en juego, aura-pendientes.md §2).
+        // capas superpuestas lavarían a blanco (rechazado en juego, aura.md §2).
         /** Emisión del cuerpo de la llama (centro, de frente). */
         EMIT_BODY("emit_body", 0.3f),
         /** Emisión del borde y de las puntas de los picos. */
