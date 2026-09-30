@@ -53,7 +53,7 @@ public final class FormIds {
     public static final ResourceLocation SSJ_ROSE = id("ssj_rose");
 
     /** Rutas de endgame universales (0.3.0, Destroyer/Angels/Mystic Path — ver
-     *  {@code .claude/pendiente/rediseno-transformaciones-balance.md}). Igual que OOZARU/
+     *  {@code .claude/docs/jugador-razas-formas.md}). Igual que OOZARU/
      *  SUPER_OOZARU: kind divine + parent null, fuera de la cadena normal de super_forms, así
      *  que {@code EndgamePaths} necesita conocer las 3 raíces a pelo para poder ofrecerlas en
      *  la rueda (no son alcanzables por FormRegistry.childrenOf desde ninguna raza). */

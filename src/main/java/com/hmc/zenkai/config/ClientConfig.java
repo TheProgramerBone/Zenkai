@@ -1,5 +1,6 @@
 package com.hmc.zenkai.config;
 
+import com.hmc.zenkai.client.aura.flame.AuraSystemMode;
 import com.hmc.zenkai.client.overlay.HudAnchor;
 import com.hmc.zenkai.client.overlay.HudOrientation;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -154,6 +155,20 @@ public final class ClientConfig {
                             + "ki techniques, so it also needs ki bloom on and is disabled with a shader pack",
                     true);
 
+    /** Qué sistema dibuja el CUERPO del aura (ver AuraSystemDispatcher): el de siempre o el nuevo
+     *  estilo dbrebirth (llama grande de picos con bloom, client/aura/flame). AUTO = el nuevo solo
+     *  sin shaderpack, pedido explícito del usuario: con Iris/Oculus el bloom propio no existe y
+     *  el aura nueva pierde gran parte de lo que la hace funcionar. FORCE_NEW es bajo el riesgo del
+     *  jugador (puede chocar visualmente con el shaderpack). Primer uso de defineEnum visible en la
+     *  pantalla; los valores se traducen con config.zenkai.value.auto/force_legacy/force_new. */
+    private static final ModConfigSpec.EnumValue<AuraSystemMode> AURA_SYSTEM =
+            defineEnum("aura.system", "aura_system",
+                    "Which aura system draws the aura body. AUTO uses the new flame aura (big spiked "
+                            + "flame with bloom) unless a shader pack (Iris/Oculus) is active, then the "
+                            + "classic one. FORCE_LEGACY always uses the classic aura. FORCE_NEW always uses "
+                            + "the new one, even with a shader pack (may clash with it)",
+                    AuraSystemMode.AUTO, AuraSystemMode.class);
+
     /** true = comportamiento de siempre: ves tu propio cuerpo animado al cargar/disparar una
      *  técnica de ki en primera persona. false = manos vanilla en 1ª persona (los demás te siguen
      *  viendo animado). Ver ZenkaiPalAnimations.applyKiFirstPersonMode. */
@@ -253,6 +268,7 @@ public final class ClientConfig {
     public static boolean kiBloomEnabled() { return KI_BLOOM_ENABLED.get(); }
     public static boolean kiFirstPersonAnimations() { return KI_FP_ANIMATIONS.get(); }
     public static boolean auraBloomEnabled() { return AURA_BLOOM_ENABLED.get(); }
+    public static AuraSystemMode auraSystem() { return AURA_SYSTEM.get(); }
     public static float hudBarsScaleFrac() { return HUD_BARS_SCALE.get() / 100f; }
 
     public static HudAnchor hudAnchor() { return HUD_ANCHOR.get(); }

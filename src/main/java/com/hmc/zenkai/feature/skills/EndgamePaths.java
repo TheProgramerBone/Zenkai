@@ -11,7 +11,7 @@ import net.minecraft.world.entity.player.Player;
  * Rutas de endgame universales (0.3.0): Destroyer Path -&gt; Ultra Ego, Path of the Angels -&gt;
  * Ultra Instinct (Sign -&gt; pleno), Mystic Path -&gt; Ultimate Mystic -&gt; Beast — un solo
  * {@link FormDef} compartido por las 5 razas para cada peldaño, ver
- * {@code .claude/pendiente/rediseno-transformaciones-balance.md}.
+ * {@code .claude/docs/jugador-razas-formas.md}.
  *
  * NO reutiliza {@link DivineForms}/{@link com.hmc.zenkai.feature.forms.PotentialUnlock}: las 3
  * raíces son {@code parent: null} igual que Potential Unlock, pero a diferencia de él SÍ viven

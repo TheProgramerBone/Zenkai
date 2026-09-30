@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.aura;
 
+import com.hmc.zenkai.client.aura.flame.AuraSystemDispatcher;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxBloomPipeline;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxFrameQueue;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxTuning;
@@ -133,14 +134,20 @@ public final class AuraRenderer {
             AuraTiltController.apply(pose, p, mo);
 
             AuraGroundRenderer.render(pose, buffers, plan, p, ticks, seconds, p.getId());
-            AuraSkirtRenderer.render(pose, buffers, plan, ticks, seconds, p.getId(),
-                    toCamX, toCamZ);
+            // Con el sistema de aura nuevo activo (client.aura.flame) el CUERPO del aura lo
+            // dibuja él: aquí se salta el faldón y su bloom. Suelo, estela y partículas siguen.
+            // La decisión vive entera en AuraSystemDispatcher; esto solo la lee.
+            boolean flameBody = AuraSystemDispatcher.useFlame();
+            if (!flameBody) {
+                AuraSkirtRenderer.render(pose, buffers, plan, ticks, seconds, p.getId(),
+                        toCamX, toCamZ);
+            }
 
             // BLOOM DEL AURA (2026-09-24): el mundo ya está dibujado arriba, igual que siempre;
             // esto solo AÑADE el resplandor, reproduciendo la misma hoja/pose en la pasada de
             // bloom de KiVfxBloomPipeline (tarea solo-bloom: nunca se dibuja en el mundo). Pesos
             // en KiVfxTuning (aura.bloom_core/mass), calibrables con /zkvfx.
-            if (bloom) {
+            if (bloom && !flameBody) {
                 final AuraSkirts.Plan bp = plan;
                 final int seed = p.getId();
                 final float tcx = toCamX, tcz = toCamZ;

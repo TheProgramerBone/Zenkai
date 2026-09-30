@@ -1,7 +1,7 @@
 #version 150
 
 // FASE 1 del sistema de aura NUEVO (estilo dbrebirth-0.3, ver
-// .claude/pendiente/aura-dbrebirth-sistema-propuesta.md). AISLADO de aura_rim.vsh a propósito:
+// .claude/docs/tecnicas-y-vfx.md, "Aura nueva estilo dbrebirth"). AISLADO de aura_rim.vsh a propósito:
 // vive en su propio par vertex/fragment porque el propósito es distinto (una llama que ENVUELVE
 // al jugador varias veces su tamaño, no un aro delgado pegado a la silueta) aunque reutiliza la
 // misma plomería de espacio de coordenadas que aura_rim.vsh ya resolvió — leer su comentario de

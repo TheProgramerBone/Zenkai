@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.aura.flame.AuraSystemDispatcher;
 import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.feature.aura.AuraLod;
 import com.hmc.zenkai.feature.aura.AuraManager;
@@ -129,7 +130,11 @@ public final class AuraRimRenderer extends RenderLayer<AbstractClientPlayer, Pla
                        @NotNull AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
                        float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
 
-        boolean active = AuraClientState.isAuraActive(player) && isDivineTier(player);
+        // Con el sistema de aura nuevo activo (client.aura.flame) el aro no se dibuja: la llama
+        // nueva sustituye al cuerpo del aura entero. Se pone en false en vez de un return para que
+        // la rampa se apague sola con su fade de siempre al cambiar de sistema en caliente.
+        boolean active = AuraClientState.isAuraActive(player) && isDivineTier(player)
+                && !AuraSystemDispatcher.useFlame();
 
         // Ramp en tiempo REAL (nanoTime), no en ticks: render() corre una vez por FRAME,
         // no por tick, así que derivarlo de gameTime infra-actualizaría a FPS altos y

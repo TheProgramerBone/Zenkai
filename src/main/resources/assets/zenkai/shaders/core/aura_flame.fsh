@@ -1,7 +1,7 @@
 #version 150
 
 // FASE 1 del sistema de aura NUEVO (estilo dbrebirth-0.3, ver
-// .claude/pendiente/aura-dbrebirth-sistema-propuesta.md). A diferencia de aura_rim.fsh (fragment
+// .claude/docs/tecnicas-y-vfx.md, "Aura nueva estilo dbrebirth"). A diferencia de aura_rim.fsh (fragment
 // mínimo — el aro lo produce el cull FRONT + depth-test del RenderType, ver ModAuraRenderType),
 // esta malla ENVUELVE al jugador varias veces su tamaño: el mismo truco de cull FRONT taparía al
 // jugador entero desde dentro (mismo problema ya documentado para BARRIER/EXPLOSION en
@@ -35,6 +35,12 @@ void main() {
     vec3 tint = mix(ZenkaiFlameCoreColor.rgb, ZenkaiFlameOuterColor.rgb, clamp(vBlend, 0.0, 1.0));
 
     float alpha = tex.a * vColor.a;
+    // Capa INTERIOR ceñida (desde la Fase 1 del plan de 2026-09-29): solo el contorno. Las caras
+    // de frente a la cámara quedan casi transparentes para que el cuerpo se siga leyendo; las de
+    // canto (laterales de brazos, piernas, torso) llevan el color. Sin esto la capa tapaba al
+    // personaje entero con un tinte plano.
+    float edge = pow(1.0 - clamp(abs(facingRaw), 0.0, 1.0), 1.5);
+    alpha *= mix(0.08, 1.0, edge);
     if (facingRaw < 0.0) alpha *= 0.01; // cara trasera casi invisible, ver comentario de cabecera
 
     fragColor = vec4(tint, alpha) * ColorModulator;

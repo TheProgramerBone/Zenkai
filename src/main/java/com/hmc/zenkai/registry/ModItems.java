@@ -666,7 +666,7 @@ public class ModItems {
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
-    // Fifth Form Path (0.3.0, .claude/pendiente/rediseno-transformaciones-balance.md): dos
+    // Fifth Form Path (0.3.0, .claude/docs/jugador-razas-formas.md): dos
     // formas nuevas tras black_form — golden_fifth_form (extensión mortal) y black_fifth_form
     // (primera forma divina del Arcosiano). Mismo patrón exacto que las 5 formas Arcosian ya
     // existentes: sin .geo.json/textura todavía, cae limpio al cuerpo de black_form vía el

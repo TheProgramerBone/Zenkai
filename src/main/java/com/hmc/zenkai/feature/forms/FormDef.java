@@ -90,7 +90,7 @@ import java.util.Map;
  * ojo), solo su tinte — mismo espíritu que hairRgb tiñendo el mismo modelo de pelo base.
  *
  * Rutas de endgame universales (0.3.0, Destroyer/Angels/Mystic Path — ver
- * {@code .claude/pendiente/rediseno-transformaciones-balance.md}): NO son mutuamente
+ * {@code .claude/docs/jugador-razas-formas.md}): NO son mutuamente
  * excluyentes (decisión explícita del usuario) — son caminos de progresión independientes,
  * cada uno una cadena normal de {@code FormDef} más colgada de {@code parent: null} (mismo caso
  * que {@code oozaru}/{@code potential_unlock}: fuera de la cadena de la raza, la rueda las
