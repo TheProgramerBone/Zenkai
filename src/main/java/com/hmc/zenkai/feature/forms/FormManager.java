@@ -162,6 +162,7 @@ public final class FormManager {
                             GsonHelper.getAsBoolean(o, "divine_tier", false),
                             readRgb(o, "aura_outer_rgb", -1),
                             readRgb(o, "eye_rgb", -1),
+                            readRgb(o, "brow_rgb", -1),
                             FormDef.Tier.byName(GsonHelper.getAsString(o, "tier", "none")),
                             GsonHelper.getAsBoolean(o, "endgame_path", false),
                             FormDef.AlignBranch.byName(GsonHelper.getAsString(o, "alignment_branch", "none")),

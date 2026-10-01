@@ -688,6 +688,10 @@ public class ServerConfig {
             BUILDER.comment("TP multiplier while Potential Unlock is ACTIVE. You are using your potential, not training it.")
                     .defineInRange("training.potential_unlock_tp_mult", 0.50D, 0.0D, 1.0D);
 
+    private static final ModConfigSpec.DoubleValue PU_MAX_STAT_RAW =
+            BUILDER.comment("Mystic (Potential Unlock): ABSOLUTE ceiling of the stat bonus the form can give at 100% mastery (added, 16.0 = +1600%). Mystic scales with the best form you own, which let it overtake Ultimate Mystic (17-22) and even Beast (24-32); this caps it just below Ultimate Mystic's untrained value so the Mystic path stays an upgrade ladder. Mastery still spans the whole curve (the cap rescales it, it does not just clip it). Races with low-bonus chains are not affected.")
+                    .defineInRange("skills.potential_unlock_max_stat_percent", 16.0D, 0.0D, 1000.0D);
+
     private static final ModConfigSpec.IntValue PU_ALIGNMENT_REQ_RAW =
             BUILDER.comment("Minimum alignment (-100..100) required to BUY Potential Unlock. Not checked afterwards.")
                     .defineInRange("skills.potential_unlock_alignment_req", 50, -100, 100);
@@ -709,7 +713,7 @@ public class ServerConfig {
                     .defineInRange("arcosian.pp_stat_bonus_max", 2.0D, 0.0D, 20.0D);
 
     private static final ModConfigSpec.DoubleValue UI_HEAT_RATE_RAW =
-            BUILDER.comment("Ultra Instinct heat bar: percent filled per second while in an Ultra Instinct form. At 100% the form collapses.")
+            BUILDER.comment("Ultra Instinct heat bar: percent filled per second while in an Ultra Instinct form. At 100% dodging stops (the form is kept) until the bar cools down.")
                     .defineInRange("ultra_instinct.heat_percent_per_second", 2.0D, 0.0D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue UI_HEAT_SLOW_RAW =
@@ -727,6 +731,34 @@ public class ServerConfig {
     private static final ModConfigSpec.DoubleValue UI_DODGE_REDUCE_RAW =
             BUILDER.comment("Fraction of the dodge ki cost removed per skill level above 1 (levels 1-4 only).")
                     .defineInRange("ultra_instinct.dodge_cost_reduction_per_level", 0.1D, 0.0D, 0.3D);
+
+    private static final ModConfigSpec.DoubleValue UI_DODGE_CHANCE_RAW =
+            BUILDER.comment("Chance (percent) that Ultra Instinct dodges a hit, at skill level 1.")
+                    .defineInRange("ultra_instinct.dodge_chance_percent", 40.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_DODGE_CHANCE_LEVEL_RAW =
+            BUILDER.comment("Percent points of dodge chance added per Ultra Instinct skill level above 1.")
+                    .defineInRange("ultra_instinct.dodge_chance_per_skill_level", 3.3333D, 0.0D, 50.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_DODGE_CHANCE_MAX_RAW =
+            BUILDER.comment("Upper limit (percent) of the Ultra Instinct dodge chance.")
+                    .defineInRange("ultra_instinct.dodge_chance_max_percent", 90.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_HEAT_RECOVER_RAW =
+            BUILDER.comment("Ultra Instinct: when the heat bar hits 100% the form is NOT lost, but dodging stops until the bar cools down to this percent. The bar cools at heat_cooldown_per_second while exhausted.")
+                    .defineInRange("ultra_instinct.heat_recover_percent", 50.0D, 0.0D, 99.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_MASTERY_DODGE_RAW =
+            BUILDER.comment("Ultra Instinct: percent points of dodge chance added at 100% mastery of the Ultra Instinct forms (scales linearly with mastery; the best of the two forms counts, also for the technique).")
+                    .defineInRange("ultra_instinct.mastery_dodge_chance_bonus", 20.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue UI_MASTERY_HEAT_RAW =
+            BUILDER.comment("Ultra Instinct: fraction of the heat fill rate removed at 100% mastery (0.4 = heat fills 40% slower when mastered).")
+                    .defineInRange("ultra_instinct.mastery_heat_slowdown", 0.4D, 0.0D, 0.9D);
+
+    private static final ModConfigSpec.DoubleValue UE_MASTERY_BONUS_RAW =
+            BUILDER.comment("Ultra Ego: bonus applied to BOTH the physical defense penetration and the damage-bar stat bonus at 100% mastery of the Ultra Ego form (0.5 = +50%).")
+                    .defineInRange("ultra_ego.mastery_bonus", 0.5D, 0.0D, 5.0D);
 
     private static final ModConfigSpec.DoubleValue UE_CHARGE_RAW =
             BUILDER.comment("Ultra Ego damage bar: percent gained per percent of max body lost in a hit.")
@@ -871,6 +903,7 @@ public class ServerConfig {
             WEIGHT_HTC_TONS = 3.0D, WEIGHT_HTC_GRAVITY_MULT = 2.0D;
     private static volatile double PU_TP_MULT = 0.50D;
     private static volatile int    PU_ALIGNMENT_REQ = 50;
+    private static volatile double PU_MAX_STAT = 16.0D;
     private static volatile int ARC_GODKI_LEVELS = 1;
     private static volatile double BEAST_OD_STAT = 0.5D;
     private static volatile double ARC_PP_GAIN = 1.0D;
@@ -881,6 +914,13 @@ public class ServerConfig {
     private static volatile double UI_HEAT_COOL = 4.0D;
     private static volatile double UI_DODGE_COST = 8.0D;
     private static volatile double UI_DODGE_REDUCE = 0.1D;
+    private static volatile double UI_DODGE_CHANCE = 40.0D;
+    private static volatile double UI_DODGE_CHANCE_LEVEL = 3.3333D;
+    private static volatile double UI_DODGE_CHANCE_MAX = 90.0D;
+    private static volatile double UI_HEAT_RECOVER = 50.0D;
+    private static volatile double UI_MASTERY_DODGE = 20.0D;
+    private static volatile double UI_MASTERY_HEAT = 0.4D;
+    private static volatile double UE_MASTERY_BONUS = 0.5D;
     private static volatile double UE_CHARGE = 2.0D;
     private static volatile double UE_DECAY = 1.5D;
     private static volatile double UE_STAT_LV5 = 0.2D;
@@ -982,6 +1022,7 @@ public class ServerConfig {
         WEIGHT_HTC_GRAVITY_MULT = WEIGHT_HTC_GRAVITY_MULT_RAW.get();
         PU_TP_MULT       = PU_TP_MULT_RAW.get();
         PU_ALIGNMENT_REQ = PU_ALIGNMENT_REQ_RAW.get();
+        PU_MAX_STAT      = PU_MAX_STAT_RAW.get();
         ARC_GODKI_LEVELS = ARC_GODKI_LEVELS_RAW.get();
         BEAST_OD_STAT = BEAST_OD_STAT_RAW.get();
         ARC_PP_GAIN = ARC_PP_GAIN_RAW.get();
@@ -992,6 +1033,13 @@ public class ServerConfig {
         UI_HEAT_COOL = UI_HEAT_COOL_RAW.get();
         UI_DODGE_COST = UI_DODGE_COST_RAW.get();
         UI_DODGE_REDUCE = UI_DODGE_REDUCE_RAW.get();
+        UI_DODGE_CHANCE = UI_DODGE_CHANCE_RAW.get();
+        UI_DODGE_CHANCE_LEVEL = UI_DODGE_CHANCE_LEVEL_RAW.get();
+        UI_DODGE_CHANCE_MAX = UI_DODGE_CHANCE_MAX_RAW.get();
+        UI_HEAT_RECOVER = UI_HEAT_RECOVER_RAW.get();
+        UI_MASTERY_DODGE = UI_MASTERY_DODGE_RAW.get();
+        UI_MASTERY_HEAT = UI_MASTERY_HEAT_RAW.get();
+        UE_MASTERY_BONUS = UE_MASTERY_BONUS_RAW.get();
         UE_CHARGE = UE_CHARGE_RAW.get();
         UE_DECAY = UE_DECAY_RAW.get();
         UE_STAT_LV5 = UE_STAT_LV5_RAW.get();
@@ -1166,6 +1214,7 @@ public class ServerConfig {
     public static double majinStatBonus()            { return MAJIN_STAT_BONUS; }
     public static double potentialUnlockTpMult()     { return PU_TP_MULT; }
     public static int    potentialUnlockAlignmentReq() { return PU_ALIGNMENT_REQ; }
+    public static double potentialUnlockMaxStatPercent() { return PU_MAX_STAT; }
     public static int arcGodKiLevels() { return ARC_GODKI_LEVELS; }
     public static double beastOverdriveStatBonus() { return BEAST_OD_STAT; }
     public static double arcPpGain() { return ARC_PP_GAIN; }
@@ -1176,6 +1225,13 @@ public class ServerConfig {
     public static double uiHeatCool() { return UI_HEAT_COOL; }
     public static double uiDodgeCost() { return UI_DODGE_COST; }
     public static double uiDodgeReduce() { return UI_DODGE_REDUCE; }
+    public static double uiDodgeChance() { return UI_DODGE_CHANCE; }
+    public static double uiDodgeChanceLevel() { return UI_DODGE_CHANCE_LEVEL; }
+    public static double uiDodgeChanceMax() { return UI_DODGE_CHANCE_MAX; }
+    public static double uiHeatRecover() { return UI_HEAT_RECOVER; }
+    public static double uiMasteryDodge() { return UI_MASTERY_DODGE; }
+    public static double uiMasteryHeat() { return UI_MASTERY_HEAT; }
+    public static double ueMasteryBonus() { return UE_MASTERY_BONUS; }
     public static double ueCharge() { return UE_CHARGE; }
     public static double ueDecay() { return UE_DECAY; }
     public static double ueStatBonusLv5() { return UE_STAT_LV5; }

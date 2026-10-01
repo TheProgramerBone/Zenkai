@@ -697,7 +697,10 @@ public class ModCommands {
         // regalo de una sola vez "ya gastado" para una vida completamente nueva.
         att.setReceivedKaioWeights(false);
         att.setAlignment(0);
-        att.setLastSummonTick(ServerConfig.summonCooldownTicks());
+        // Sin deseos concedidos todavía: el cooldown de Shenlong solo corre desde el primer deseo.
+        // (Antes esto guardaba la DURACIÓN del cooldown como si fuera un instante: tras un reset
+        // el jugador quedaba bloqueado para invocar hasta que el mundo cumpliera esos días.)
+        att.setLastSummonTick(Long.MIN_VALUE);
         // No se queda cargando ki ni con el % de poder subido: vuelve al 50% base (el mismo
         // que da SkillEffects.maxPowerPercent con Ki Control en 0, que es donde acaba de
         // dejarlo skills().clear() de arriba).

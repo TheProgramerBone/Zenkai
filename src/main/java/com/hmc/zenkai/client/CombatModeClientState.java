@@ -264,6 +264,12 @@ public final class CombatModeClientState {
         if (blocking) {
             while (mc.options.keyAttack.consumeClick()) { /* descartado */ }
         }
+        // Cargar una técnica de ki tampoco permite pegar ni picar: mismo descarte de clics, y
+        // setDown(false) corta el "mantener para romper bloque", que no pasa por la cola.
+        if (chargingSlot >= 0 && mc.screen == null) {
+            while (mc.options.keyAttack.consumeClick()) { /* descartado */ }
+            mc.options.keyAttack.setDown(false);
+        }
     }
 
     /** ÚNICO sitio que apaga la carga en cliente, así que también el único que avisa al

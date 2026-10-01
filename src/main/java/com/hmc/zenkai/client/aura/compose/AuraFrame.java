@@ -69,6 +69,12 @@ public final class AuraFrame {
     public float burstScale = 1f;
     /** Multiplicador de alfa de la secuencia de transformación (1 = sin efecto). */
     public float burstAlpha = 1f;
+    /** Alfa del cuerpo principal para las auras SIEMPRE ENCENDIDAS (Ultra Instinct: el contorno se
+     *  ve en tercera persona sin cargar y cargar solo lo intensifica). 1 en el resto. */
+    public float idleBody = 1f;
+    /** Alfa de las capas secundarias (cáscaras, borde) de esas mismas auras: 0 en reposo, 1 al
+     *  cargar. 1 en el resto. */
+    public float extras = 1f;
 
     /** Radio aproximado de la cáscara exterior a la altura del pecho (bloques), para anclar rayos
      *  y wisps a su superficie. */

@@ -205,7 +205,6 @@ public class PlayerFormAttachment {
         if (kaiokenSwitch) {
             return !isStrained(p.level().getGameTime()) && nextKaiokenTier(p) != null;
         }
-        if (potentialTarget(p) != null) return true;
         // Último tramo del ritual de Oozaru (ver resolveNextForm): SuperForms.unlocked(SSJ4)
         // da FALSE hasta que el ritual está completo, así que exigirlo aquí lo haría imposible
         // de completar — completar ESTE hold es justo lo que lo marca (completeSsj4Ritual).
@@ -241,7 +240,6 @@ public class PlayerFormAttachment {
         if (!canAdvance(p, race)) return clearProgress(false);
 
         if (kaiokenSwitch) return tickKaiokenLadder(p);
-        if (SkillToggles.isOn(p, SkillEffects.POTENTIAL_UNLOCK)) return tickPotentialLadder(p);
         return tickFormLadder(p, race);
     }
 
@@ -359,6 +357,9 @@ public class PlayerFormAttachment {
 
         if (target == null || target.equals(formId)) return null;
         if (FormIds.BASE.equals(target)) return null; // volver a base es el toque corto
+        // Mystic (Potential Unlock) es "el estado definitivo", no una capa encima de otra forma:
+        // solo se entra desde BASE (hay que bajar antes de sacarlo).
+        if (FormIds.POTENTIAL_UNLOCK.equals(target) && !FormIds.BASE.equals(formId)) return null;
         return target;
     }
 
@@ -430,32 +431,6 @@ public class PlayerFormAttachment {
         return null;
     }
     
-    /**
-    * Destino de la escalera de Potential Unlock: solo desde BASE y solo con el interruptor
-    * puesto. Exigir BASE es lo que hace que sea "el estado definitivo" y no una capa más
-    * encima de SSJ: hay que bajar antes de sacarlo.
-    */
-    private ResourceLocation potentialTarget(Player p) {
-        if (!SkillToggles.isOn(p, SkillEffects.POTENTIAL_UNLOCK)) return null;
-        if (!FormIds.BASE.equals(formId)) return null;
-        return FormRegistry.get(FormIds.POTENTIAL_UNLOCK) == null
-                            ? null : FormIds.POTENTIAL_UNLOCK;
-    }
-
-    /** Escalera de Potential Unlock: un solo escalón, del que se baja con el toque corto. */
-    private boolean tickPotentialLadder(Player p) {
-        ResourceLocation target = potentialTarget(p);
-        if (target == null) return clearProgress(false);
-        FormDef d = FormRegistry.get(target);
-            int required = (d == null) ? 0 : d.holdTicks();
-            if (required <= 0) return clearProgress(false);
-        boolean was = transforming;
-        if (advanceHold(required)) return progressDirty(was);
-        setFormId(p, target);
-        finishHold();
-        return true;
-    }
-
     /** Helper para CLIENTE/UI: mismo juez que el servidor, así la animación no miente. */
     public static boolean canTransformFrom(Player p, Race race, ResourceLocation current) {
         PlayerFormAttachment fm = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
@@ -475,7 +450,7 @@ public class PlayerFormAttachment {
         public boolean isEmpty() { return holdTicks <= 0; }
     }
 
-    /** MISMA rama que serverTick, en el MISMO orden (oozaru > kaioken > potencial > forma): el
+    /** MISMA rama que serverTick, en el MISMO orden (oozaru > kaioken > forma): el
      *  cliente no decide nada nuevo, solo repite el juicio del servidor sobre datos ya
      *  sincronizados (formId, oozaruForced, kaiokenSwitch, holdTicks). El tramo oozaru es el
      *  ÚNICO que no pasa por targetForm()/resolveNextForm() (no hay tecla que lo dispare), así
@@ -488,8 +463,7 @@ public class PlayerFormAttachment {
         }
         if (kaiokenSwitch) return new HoldTarget(KAIOKEN_HOLD_TICKS, AuraColors.KAIOKEN_RGB);
 
-        ResourceLocation target = SkillToggles.isOn(p, SkillEffects.POTENTIAL_UNLOCK)
-                ? potentialTarget(p) : targetForm(p, race);
+        ResourceLocation target = targetForm(p, race);
         FormDef d = target == null ? null : FormRegistry.get(target);
         return d == null ? new HoldTarget(0, -1) : new HoldTarget(d.holdTicks(), d.auraRgb());
     }

@@ -104,7 +104,8 @@ public class AllDragonBallsBlock extends BaseEntityBlock implements SimpleWaterl
             );
             level.scheduleTick(pos, this, 20*4);
             summonShenron(level, pos);
-            stats.setLastSummonTick(now); // (1) registrar la invocación
+            // (El cooldown NO se registra aquí: corre desde el último DESEO concedido, ver
+            // WishFinalizer. Quien invoca por primera vez no tiene cooldown alguno.)
             int spacing = 6;
             int yOffset = 0;
             spawnLightningGrid(serverLevel, pos, spacing, yOffset);

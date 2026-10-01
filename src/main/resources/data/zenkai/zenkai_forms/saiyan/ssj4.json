@@ -17,6 +17,7 @@
   "aura_type": "ssj4",
   "aura_rgb": "0xFF4040",
   "scale": 1.05,
-  "hair_rgb": "0xE03030",
+  "hair_rgb": "0x1E1E1E",
+  "tail_rgb": "0xE03030",
   "eye_rgb": "0xFFE347"
 }

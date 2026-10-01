@@ -72,7 +72,8 @@ public final class SkillToggles {
         register(new Toggle(SkillEffects.KI_SCYTHE, false, weaponReq,
                 Set.of(SkillEffects.KI_BLADE),  CAT_KI_WEAPONS, false));
 
-        register(new Toggle(SkillEffects.POTENTIAL_UNLOCK, true, Set.of(), Set.of(), null, true));
+        // Potential Unlock YA NO es un interruptor: Mystic es una forma propia que se elige en la
+        // rueda y se carga con la tecla de transformar, como cualquier otra (ver PotentialUnlock).
 
         // Overlay genérico (0.3.0, ver OverlayStateSystem): puede convivir con Kaioken y con
         // cualquier Transformación primaria — vendidos por Tori-Bot como habilidad aparte de su

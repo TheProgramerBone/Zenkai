@@ -3,6 +3,7 @@ package com.hmc.zenkai.event.tick;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.event.ZenkaiPalAnimations;
 import com.hmc.zenkai.feature.forms.FormIds;
+import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
@@ -37,6 +38,10 @@ public final class OverlayMetersSystem {
 
     private static final Map<UUID, Long> DODGE_COOLDOWN = new HashMap<>();
     private static final long DODGE_COOLDOWN_TICKS = 10L;
+    /** Contador de esquives por jugador: el clip que toca es contador % variantes. */
+    private static final Map<UUID, Integer> DODGE_NEXT = new HashMap<>();
+    /** Jugadores en forma UI con la barra de calor agotada (sin esquive hasta enfriarse). */
+    private static final java.util.Set<UUID> EXHAUSTED = new java.util.HashSet<>();
 
     public static boolean isUiForm(ResourceLocation f) {
         return FormIds.ULTRA_INSTINCT_SIGN.equals(f) || FormIds.ULTRA_INSTINCT.equals(f);
@@ -56,6 +61,24 @@ public final class OverlayMetersSystem {
         return isUeForm(form) || SkillToggles.isOn(p, SkillEffects.ULTRA_EGO);
     }
 
+    /** Maestría (0..1) de Ultra Instinct: la MEJOR de sus dos formas, también para la técnica
+     *  (entrenar la forma mejora el interruptor; sin forma entrenada es 0). */
+    public static double uiMastery(Player p) {
+        PlayerFormAttachment f = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        return Math.min(1.0, Math.max(f.getFormMastery(FormIds.ULTRA_INSTINCT_SIGN),
+                f.getFormMastery(FormIds.ULTRA_INSTINCT)) / 100.0);
+    }
+
+    /** Maestría (0..1) de la forma Ultra Ego. */
+    public static double ueMastery(Player p) {
+        return Math.min(1.0, p.getData(ZenkaiDataAttachments.PLAYER_FORM.get())
+                .getFormMastery(FormIds.ULTRA_EGO) / 100.0);
+    }
+
+    private static double ueMasteryFactor(Player p) {
+        return 1.0 + ServerConfig.ueMasteryBonus() * ueMastery(p);
+    }
+
     /** Nivel de Ultra Ego desde el que la forma existe y la barra de daño empieza a actuar. */
     public static final int UE_FORM_LEVEL = 5;
 
@@ -66,7 +89,8 @@ public final class OverlayMetersSystem {
         if (!(attacker instanceof Player p)) return 0.0;
         int lvl = Math.min(10, SkillEffects.level(p, SkillEffects.ULTRA_EGO));
         if (lvl <= 0 || !ueActive(p, formOf(p))) return 0.0;
-        return ServerConfig.uePenetrationMax() * lvl / 10.0;
+        // La maestría de la forma sube la perforación (tope 1.0: ignorar más que toda la defensa no existe).
+        return Math.min(1.0, ServerConfig.uePenetrationMax() * lvl / 10.0 * ueMasteryFactor(p));
     }
 
     /** Bono ADITIVO de estadísticas de la barra de Ultra Ego, sumado en
@@ -80,7 +104,7 @@ public final class OverlayMetersSystem {
         double ceiling = ServerConfig.ueStatBonusLv5()
                 + (ServerConfig.ueStatBonusLv10() - ServerConfig.ueStatBonusLv5()) * t;
         double fill = Math.min(1.0, PlayerStatsAttachment.get(p).getUeCharge() / 100.0);
-        return ceiling * fill;
+        return ceiling * fill * ueMasteryFactor(p);
     }
 
     public static void tick(TickCtx c) {
@@ -96,21 +120,34 @@ public final class OverlayMetersSystem {
         else if (isUeForm(form) && uiOn) SkillToggles.set(sp, SkillEffects.ULTRA_INSTINCT, false);
         else if (uiOn && ueOn) SkillToggles.set(sp, SkillEffects.ULTRA_EGO, false);
 
-        // Calor: solo sube en las FORMAS Ultra Instinct; al llegar a 100% la forma colapsa.
+        // Calor: solo sube en las FORMAS Ultra Instinct. Al llegar a 100% la forma NO se pierde: el
+        // jugador queda "agotado" (sin esquive, ver tryDodge) y la barra se enfría hasta
+        // ultra_instinct.heat_recover_percent, momento en que el esquive vuelve.
         double heat = att.getUiHeat();
         if (isUiForm(form)) {
-            int lvl = Math.max(1, SkillEffects.level(sp, SkillEffects.ULTRA_INSTINCT));
-            double slow = Math.max(0.1, 1.0 - ServerConfig.uiHeatSlow() * (lvl - 1));
-            heat += ServerConfig.uiHeatRate() * slow / 20.0;
-            if (heat >= 100.0) {
-                heat = 100.0;
-                c.form().forceBase();
-                PlayerLifeCycle.syncFormIfServer(sp);
-                sp.displayClientMessage(Component.translatable("message.zenkai.ui_overheat"), true);
+            if (EXHAUSTED.contains(sp.getUUID()) || heat >= 100.0) {
+                EXHAUSTED.add(sp.getUUID());   // heat >= 100 tras reconectar: la marca no persiste
+                heat -= ServerConfig.uiHeatCool() / 20.0;
+                if (heat <= ServerConfig.uiHeatRecover()) {
+                    EXHAUSTED.remove(sp.getUUID());
+                    sp.displayClientMessage(Component.translatable("message.zenkai.ui_recovered"), true);
+                }
+            } else {
+                int lvl = Math.max(1, SkillEffects.level(sp, SkillEffects.ULTRA_INSTINCT));
+                double slow = Math.max(0.1, 1.0 - ServerConfig.uiHeatSlow() * (lvl - 1))
+                        * (1.0 - ServerConfig.uiMasteryHeat() * uiMastery(sp));
+                heat += ServerConfig.uiHeatRate() * slow / 20.0;
+                if (heat >= 100.0) {
+                    heat = 100.0;
+                    EXHAUSTED.add(sp.getUUID());
+                    sp.displayClientMessage(Component.translatable("message.zenkai.ui_overheat"), true);
+                }
             }
-        } else if (heat > 0.0) {
-            heat -= ServerConfig.uiHeatCool() / 20.0;
+        } else {
+            EXHAUSTED.remove(sp.getUUID());
+            if (heat > 0.0) heat -= ServerConfig.uiHeatCool() / 20.0;
         }
+        heat = Math.max(0.0, heat);
         if (heat != att.getUiHeat()) att.setUiHeat(heat);
 
         double ue = att.getUeCharge();
@@ -123,16 +160,26 @@ public final class OverlayMetersSystem {
         if (!uiActive(sp, formOf(sp))) return false;
         int lvl = SkillEffects.level(sp, SkillEffects.ULTRA_INSTINCT);
         if (lvl <= 0) return false;
+        // Barra de calor al máximo: sigue transformado pero ya no esquiva hasta enfriarse.
+        if (EXHAUSTED.contains(sp.getUUID()) || att.getUiHeat() >= 100.0) return false;
         long now = sp.level().getGameTime();
         Long until = DODGE_COOLDOWN.get(sp.getUUID());
         if (until != null && now < until) return true; // golpe en ráfaga: cubierto por el mismo esquive
+        // No siempre esquiva: probabilidad por nivel de la skill (se sortea una vez por golpe
+        // suelto; las ráfagas ya quedan cubiertas por el cooldown de arriba).
+        double chance = Math.min(ServerConfig.uiDodgeChanceMax(),
+                ServerConfig.uiDodgeChance() + ServerConfig.uiDodgeChanceLevel() * (lvl - 1)
+                        + ServerConfig.uiMasteryDodge() * uiMastery(sp));
+        if (sp.getRandom().nextDouble() * 100.0 >= chance) return false;
         double factor = Math.max(0.1, 1.0 - ServerConfig.uiDodgeReduce() * (Math.min(lvl, 4) - 1));
         double cost = att.getKiPool() * ServerConfig.uiDodgeCost() / 100.0 * factor;
         if (att.getKiCurrent() < cost) return false;
         att.addKi(-cost);
         DODGE_COOLDOWN.put(sp.getUUID(), now + DODGE_COOLDOWN_TICKS);
-        // Dos clips de esquive, sorteo del servidor para que todos vean el mismo.
-        int variant = sp.getRandom().nextInt(ZenkaiPalAnimations.UI_DODGE_VARIANTS);
+        // Dos clips de esquive, alternados en ciclo por jugador (1, 2, 1, 2...); el servidor decide
+        // para que todos vean el mismo.
+        int variant = DODGE_NEXT.merge(sp.getUUID(), 1, (old, one) -> old + 1) - 1;
+        variant %= ZenkaiPalAnimations.UI_DODGE_VARIANTS;
         PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, new UiDodgeAnimPacket(sp.getId(), variant));
         PlayerLifeCycle.syncIfServer(sp);
         return true;
@@ -147,5 +194,5 @@ public final class OverlayMetersSystem {
         att.setUeCharge(att.getUeCharge() + bodyLost / bodyMax * 100.0 * ServerConfig.ueCharge());
     }
 
-    public static void forget(UUID id) { DODGE_COOLDOWN.remove(id); }
+    public static void forget(UUID id) { DODGE_COOLDOWN.remove(id); EXHAUSTED.remove(id); DODGE_NEXT.remove(id); }
 }

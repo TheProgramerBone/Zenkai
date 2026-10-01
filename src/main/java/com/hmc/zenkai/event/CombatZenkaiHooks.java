@@ -34,6 +34,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingHealEvent;
 import net.neoforged.neoforge.event.entity.player.CriticalHitEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
@@ -75,6 +76,24 @@ public class CombatZenkaiHooks {
     // ORQUESTADOR
     // =====================================================================
 
+    /**
+     * Esquive automático de Ultra Instinct. Vive en LivingIncomingDamageEvent y CANCELA el
+     * golpe, en vez de poner el daño a 0 en LivingDamageEvent.Pre: ahí vanilla ya decidió
+     * reproducir la animación de daño (parpadeo rojo, sacudida de cámara, sonido de golpe),
+     * así que un esquive con daño 0 seguía "doliendo" en pantalla. Cancelar aquí hace que
+     * hurt() devuelva false antes de nada de eso. Se repiten las exclusiones que onDamage
+     * aplica primero (daño inesquivable, fuego amigo, i-frames) para no gastar ki en ellas.
+     */
+    @SubscribeEvent
+    public static void onIncomingDamage(LivingIncomingDamageEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer sp) || sp.level().isClientSide()) return;
+        if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+        if (e.getSource().getEntity() instanceof ServerPlayer attacker
+                && PartyService.friendlyFireBlocked(attacker, sp)) return;
+        if (PhysicalCombatServer.hasIFrames(sp.getUUID())) return;
+        if (OverlayMetersSystem.tryDodge(sp)) e.setCanceled(true);
+    }
+
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent.Pre e) {
         if (e.getEntity().level().isClientSide()) return;
@@ -105,12 +124,8 @@ public class CombatZenkaiHooks {
             e.setNewDamage(0.0F);
             return;
         }
-        // Esquive automático de Ultra Instinct: tras los i-frames y antes de defensa/pools, así
-        // un golpe esquivado no toca el cuerpo ni alimenta la barra de Ultra Ego.
-        if (e.getEntity() instanceof ServerPlayer uiDodger && OverlayMetersSystem.tryDodge(uiDodger)) {
-            e.setNewDamage(0.0F);
-            return;
-        }
+        // (El esquive automático de Ultra Instinct ya se resolvió en onIncomingDamage, antes de
+        // que vanilla aplique la animación de daño: un golpe esquivado nunca llega hasta aquí.)
         MinecraftServer server = e.getEntity().getServer();
         if (server == null || !ModGameRules.enableRaceBoosts(server)) return;
 
@@ -655,6 +670,12 @@ public class CombatZenkaiHooks {
     public static void onAttackWhileBlocking(AttackEntityEvent e) {
         if (e.getEntity().level().isClientSide()) return;
         if (e.getEntity() instanceof ServerPlayer sp && KiCombatServer.isBlocking(sp)) {
+            e.setCanceled(true);
+        }
+        // Cargando una técnica de ki: las manos están ocupadas con la bola, no se puede pegar.
+        // Guard del lado servidor del que ya hace el cliente en CombatModeClientState.
+        if (e.getEntity() instanceof ServerPlayer sp
+                && com.hmc.zenkai.feature.action.ActionStateServer.get(sp).chargingSlot() >= 0) {
             e.setCanceled(true);
         }
     }

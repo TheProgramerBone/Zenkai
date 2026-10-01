@@ -6,6 +6,8 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.race.RaceRenderTypes;
+import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.feature.race.face.FaceCatalog;
 import com.hmc.zenkai.feature.race.face.FaceCategory;
 import com.hmc.zenkai.feature.race.face.FaceLayer;
@@ -99,6 +101,11 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
             }
         }
 
+        // Ultra Instinct ACTIVADO COMO TÉCNICA (interruptor, con la skill): ojos blancos sea cual sea
+        // la forma, para que se vea de un vistazo si el jugador la está usando.
+        int eyeOverride = (SkillEffects.level(player, SkillEffects.ULTRA_INSTINCT) > 0
+                && SkillToggles.isOn(player, SkillEffects.ULTRA_INSTINCT)) ? 0xFFFFFF : -1;
+
         for (FaceCategory category : FaceCategory.values()) {
             FacePartDef part = FaceCatalog.get(vis.getFacePart(category));
             if (part == null) continue;
@@ -106,7 +113,8 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
             for (FaceLayer layer : part.layersFor(race)) {
                 ResourceLocation tex = textureFor(layer);
                 if (tex == null) continue;
-                drawPass(tex, 0xFF000000 | layer.resolveRgb(vis, formDef), poseStack, bakedModel,
+                drawPass(tex, 0xFF000000 | layer.resolveRgb(vis, formDef, eyeOverride,
+                                category == FaceCategory.EYES), poseStack, bakedModel,
                         animatable, bufferSource, partialTick, packedLight, packedOverlay);
             }
         }

@@ -364,7 +364,8 @@
   "skill.zenkai.ultra_instinct.desc": "Usa los reflejos del Ultra Instinto sin dejar la transformación que ya llevas puesta. Independiente de la transformación completa del Ultra Instinto.",
   "skill.zenkai.arcosian_power": "Poder Arcosiano",
   "skill.zenkai.arcosian_power.desc": "Innata de los Arcosianos. Contén tu fuerza en Base por debajo del 50% de poder para almacenar Power Points, y libéralos con 100%+ de poder desde la Forma Final. Cada nivel agranda el tanque.",
-  "message.zenkai.ui_overheat": "¡Tu cuerpo ya no puede sostener el Ultra Instinto!",
+  "message.zenkai.ui_overheat": "¡Tu cuerpo se agotó! Ya no puedes esquivar hasta que se enfríe.",
+  "message.zenkai.ui_recovered": "Tu cuerpo se recuperó: vuelves a esquivar.",
   "skill.zenkai.ultra_ego": "Ultra Ego",
   "skill.zenkai.ultra_ego.desc": "Canaliza el poder de la destrucción. Con la técnica activa (siempre activa en la forma Ultra Ego), tus técnicas físicas ignoran parte de la defensa del objetivo, hasta un 20% en el nivel 10. El nivel 5 desbloquea la transformación Ultra Ego, donde el daño que recibes llena una barra que aumenta tus estadísticas; cuanto mayor el nivel, mayor el techo de ese aumento.",
   "skill.zenkai.instant_transmission": "Transmisión Instantánea",
@@ -453,7 +454,7 @@
 
   "--- TRANSFORMATIONS AND MODEL LAYERS ---": "--- TRANSFORMACIONES Y CAPAS DEL MODELO ---",
   "form.zenkai.base": "Estado Base",
-  "form.zenkai.potential_unlock": "Desbloqueo de Potencial",
+  "form.zenkai.potential_unlock": "Místico",
   "form.zenkai.ssj1": "SSJ1",
   "form.zenkai.ssj2": "SSJ2",
   "form.zenkai.ssj3": "SSJ3",
@@ -1054,6 +1055,7 @@
   "wheel.zenkai.ultra_instinct_branch": "Ultra Instinto",
   "wheel.zenkai.ultra_ego_branch": "Ultra Ego",
   "wheel.zenkai.ultimate_mystic_branch": "Místico Definitivo",
+  "wheel.zenkai.potential_unlock_branch": "Desbloqueo de Potencial",
   "wheel.zenkai.endgame_form": "Forma",
 
   "--- CHAT MESSAGES ---": "--- MENSAJES DE CHAT ---",

@@ -12,8 +12,11 @@ import net.minecraft.world.entity.player.Player;
 
 /**
  * Efectos de la maestría (curvas LINEALES; el "at 100%" viene de StatsConfig):
- *  - Forma:   drenaje x (1 - drainRed * m/100). El bonus de stats de la forma NO escala con
- *    maestría: vive en el datapack (zenkai_forms, totalStatPercent()) y es fijo por forma.
+ *  - Forma:   el bonus de stats y el drenaje interpolan POR FORMA entre sus valores "untrained" y
+ *    "mastered" del datapack (FormDef.statPercent/kiDrainPerTick, vía PlayerFormAttachment).
+ *    formDrainFactor (config mastery.form_drain_reduction) NO lo llama nadie: el drenaje real ya
+ *    sale de FormDef.effectiveKiDrainPerTick. Ultra Instinct/Ultra Ego suman además efectos
+ *    propios de maestría (esquive, calor, perforación) en OverlayMetersSystem.
  *  - Técnica: daño  x (1 + dmgBonus  * m/100)  ·  costo   x (1 - costRed  * m/100)
  *             cast  x (1 - castRed   * m/100)  (solo ki: reduce los ticks de carga requeridos)
  * Cada factor devuelve 1.0 en base/maestría 0, así que aplicarlos siempre es seguro.

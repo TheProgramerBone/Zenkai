@@ -13,6 +13,8 @@ import com.zigythebird.playeranimcore.enums.PlayState;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.Collections;
+
 public final class ZenkaiPalAnimations {
     private ZenkaiPalAnimations() {}
 
@@ -67,30 +69,87 @@ public final class ZenkaiPalAnimations {
         return c;
     }
 
-    /** Último valor de ClientConfig.kiFirstPersonAnimations() aplicado (null = nunca). */
-    private static Boolean lastKiFpAnim = null;
-    private static PlayerAnimationController lastKiController = null;
+    /**
+     * Clips que NUNCA se ven en 1ª persona (el resto de jugadores sí los ve). Para añadir otro,
+     * basta con meter aquí su id: applyFirstPersonModes lo apaga solo mientras ese clip sea el
+     * actual de su capa. Beast: la pose agresiva de forzar tapa media pantalla pegada a la cámara.
+     */
+    private static final java.util.Set<ResourceLocation> THIRD_PERSON_ONLY = new java.util.HashSet<>();
+
+    // ── Swing de ataque vanilla sobre capas que mandan en los brazos ─────────────────────────
+    /** Ajustes del swing (1.0 = idéntico a vanilla). Un solo sitio para calibrarlo a ojo. */
+    private static final float SWING_PITCH_MUL = 1.0f;   // cuánto levanta/baja el brazo
+    private static final float SWING_YAW_MUL   = 1.0f;   // cuánto lo cruza hacia dentro
+    private static final float SWING_ROLL_MUL  = 1.0f;   // cuánto lo abre hacia fuera
 
     /**
-     * Opción de cliente "animaciones de ki en 1ª persona" (por defecto encendida = lo de
-     * siempre). Apagada, la capa de ki pasa a FirstPersonMode.NONE, igual que la de vuelo: el
-     * resto de jugadores te siguen viendo cargar y disparar, pero tú ves las manos vanilla. Se
-     * aplica por tick desde aquí, sin reiniciar el juego, y solo escribe al cambiar.
-     * Consecuencia conocida: sin pasada corporal de 1ª persona no hay huesos de mano que leer,
-     * así que la bola de carga cae a su posición de respaldo delante de la cámara (ver
+     * El clic de ataque vanilla (swing) SÍ mueve el brazo que ataca aunque una capa PAL mande sobre
+     * los brazos. Causa: PAL arranca cada hueso con la pose vanilla (que ya incluye el swing) pero
+     * el clip SUSTITUYE la rotación del brazo (copyOtherBoneIfNotDisabled), así que el brazo se
+     * quedaba quieto mientras el torso —que el clip no toca— sí giraba con el swing. Se SUMA
+     * encima del brazo animado la misma rotación que HumanoidModel#setupAttackAnimation añade al
+     * brazo que golpea (mano que ataca + brazo principal). Lo llama el controlador de la capa
+     * desde get3DTransformRaw; hoy solo el de vuelo (FlyAnimationController).
+     */
+    public static void applyVanillaSwing(AbstractClientPlayer p, com.zigythebird.playeranimcore.bones.PlayerAnimBone bone) {
+        boolean rightBone = "right_arm".equals(bone.getName());
+        if (!rightBone && !"left_arm".equals(bone.getName())) return;
+
+        float partial = net.minecraft.client.Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
+        float t = p.getAttackAnim(partial);
+        if (t <= 0f) return;
+
+        net.minecraft.world.entity.HumanoidArm arm = p.swingingArm == net.minecraft.world.InteractionHand.MAIN_HAND
+                ? p.getMainArm() : p.getMainArm().getOpposite();
+        if ((arm == net.minecraft.world.entity.HumanoidArm.RIGHT) != rightBone) return;
+
+        // Copia de HumanoidModel#setupAttackAnimation (1.21.1).
+        float twist = net.minecraft.util.Mth.sin(net.minecraft.util.Mth.sqrt(t) * net.minecraft.util.Mth.TWO_PI)
+                * 0.2f * (arm == net.minecraft.world.entity.HumanoidArm.LEFT ? -1f : 1f);
+        float f1 = 1f - t;
+        f1 *= f1;
+        f1 *= f1;
+        f1 = 1f - f1;
+        float f2 = net.minecraft.util.Mth.sin(f1 * net.minecraft.util.Mth.PI);
+        float headX = p.getXRot() * net.minecraft.util.Mth.DEG_TO_RAD;
+        float f3 = net.minecraft.util.Mth.sin(t * net.minecraft.util.Mth.PI) * -(headX - 0.7f) * 0.75f;
+        bone.rotX -= (f2 * 1.2f + f3) * SWING_PITCH_MUL;
+        bone.rotY += twist * 2f * SWING_YAW_MUL;
+        bone.rotZ += net.minecraft.util.Mth.sin(t * net.minecraft.util.Mth.PI) * -0.4f * SWING_ROLL_MUL;
+    }
+
+    /** Último modo aplicado por controlador (clave = el controlador mismo: al reaparecer o
+     *  reconectar el jugador local es otra entidad con controladores nuevos, y un "ya aplicado"
+     *  guardado solo como booleano se lo saltaría). */
+    private static final java.util.Map<PlayerAnimationController, FirstPersonMode> LAST_FP_MODE =
+            new java.util.WeakHashMap<>();
+
+    /**
+     * Modo de 1ª persona de cada capa, decidido por tick para el jugador local. FLY queda fuera:
+     * va siempre en NONE (ver newFlightController). Una capa va en NONE (manos vanilla, sin
+     * pasada corporal de PAL) cuando:
+     *  - vuelo rápido (Ctrl) activo: la pasada corporal de PAL se rompe con el cuerpo tumbado, así
+     *    que NINGUNA animación se ve en 1ª persona salvo las de la capa de vuelo, que ya es NONE;
+     *    volar normal sí es seguro y no entra aquí;
+     *  - su clip actual está en THIRD_PERSON_ONLY;
+     *  - es la capa de ki y la opción de cliente "animaciones de ki en 1ª persona" está apagada.
+     * Consecuencia conocida de NONE: sin pasada corporal no hay huesos de mano que leer, así que
+     * la bola de carga cae a su posición de respaldo delante de la cámara (ver
      * .claude/docs/animaciones-y-modelos.md, "PAL filtra las capas...").
      */
-    private static void applyKiFirstPersonMode(AbstractClientPlayer player) {
-        boolean on = com.hmc.zenkai.config.ClientConfig.kiFirstPersonAnimations();
-        PlayerAnimationController c = kiController(player);
-        if (c == null) return;
-        // Se compara también el CONTROLADOR: al reaparecer o reconectar, el jugador local es otra
-        // entidad con un controlador nuevo en THIRD_PERSON_MODEL, y un "ya aplicado" guardado
-        // solo como booleano se lo saltaría.
-        if (c == lastKiController && lastKiFpAnim != null && lastKiFpAnim == on) return;
-        lastKiController = c;
-        lastKiFpAnim = on;
-        c.setFirstPersonMode(on ? FirstPersonMode.THIRD_PERSON_MODEL : FirstPersonMode.NONE);
+    private static void applyFirstPersonModes(AbstractClientPlayer player) {
+        boolean fastFlight = com.hmc.zenkai.client.ClientZenkaiPalTick.fastFlightMode;
+        boolean kiFp = com.hmc.zenkai.config.ClientConfig.kiFirstPersonAnimations();
+        for (ResourceLocation layer : ZenkaiPalLayers.ALL) {
+            if (layer.equals(ZenkaiPalLayers.FLY_LAYER)) continue;
+            var c = (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(player, layer);
+            if (c == null) continue;
+            ResourceLocation clip = ZenkaiTransitions.currentClip(c);
+            boolean fp = !fastFlight && (clip == null || !THIRD_PERSON_ONLY.contains(clip));
+            if (layer.equals(ZenkaiPalLayers.KI_LAYER)) fp &= kiFp;
+            FirstPersonMode mode = fp ? FirstPersonMode.THIRD_PERSON_MODEL : FirstPersonMode.NONE;
+            if (LAST_FP_MODE.put(c, mode) != mode) c.setFirstPersonMode(mode);
+        }
     }
 
     /** Último valor aplicado al jugador local (evita reescribir las cinco capas cada tick). */
@@ -102,7 +161,7 @@ public final class ZenkaiPalAnimations {
      * la skin racial, cambiar de forma sin cuerpo propio).
      */
     public static void applyFirstPersonPolicy(AbstractClientPlayer player) {
-        applyKiFirstPersonMode(player);
+        applyFirstPersonModes(player);
         boolean racial = com.hmc.zenkai.feature.race.ZenkaiFirstPersonBody.hasRacialBody(player);
         if (lastFpPolicy != null && lastFpPolicy == racial) return;
         lastFpPolicy = racial;
@@ -246,6 +305,8 @@ public final class ZenkaiPalAnimations {
                 .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
         // Misma capa y fundido corto que las técnicas físicas: reactivo, tiene que salir seco.
         ZenkaiTransitions.play(c, UI_DODGE_ANIMS[variant], ZenkaiTransitions.PHYS);
+        // Sin esperar al tick siguiente: si no, el primer tick del esquive aún se vería en 1ª persona.
+        if (player == net.minecraft.client.Minecraft.getInstance().player) applyFirstPersonModes(player);
     }
 
     // ── Técnicas de ki ───────────────────────────────────────────────────────
@@ -350,6 +411,12 @@ public final class ZenkaiPalAnimations {
      *  playInstantTransmissionRelease en su lugar para que el brazo baje solo. */
     public static void stopInstantTransmissionCharge(AbstractClientPlayer p) {
         ZenkaiTransitions.stop(transmissionController(p), ZenkaiTransitions.KI_CHARGE);
+    }
+
+    static {
+        THIRD_PERSON_ONLY.add(BEAST_IDLE);
+        // Esquives de Ultra Instinct: el cuerpo entero se mueve y en 1ª persona rompen la vista.
+        Collections.addAll(THIRD_PERSON_ONLY, UI_DODGE_ANIMS);
     }
 
     // ── Capa de PREVIEW (editores) ───────────────────────────────────────────

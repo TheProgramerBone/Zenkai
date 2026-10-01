@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.wishes;
 
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ModSounds;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,6 +23,10 @@ public final class WishFinalizer {
     public static void finalizeWish(ServerPlayer player, Component wishDesc) {
         player.closeContainer();
         player.playNotifySound(ModSounds.WISH_GRANTED.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
+
+        // El cooldown de invocación (summoning.cooldown_days, 7 por defecto) empieza a contar con
+        // el deseo concedido, no con la invocación: hasta el primer deseo no existe.
+        PlayerStatsAttachment.get(player).setLastSummonTick(player.level().getGameTime());
 
         // Buscar el Shenlong más cercano y consumir UN deseo del pool.
         List<ShenLongEntity> nearby = player.level().getEntitiesOfClass(

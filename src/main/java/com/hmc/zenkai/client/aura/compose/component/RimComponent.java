@@ -81,6 +81,6 @@ public final class RimComponent implements AuraComponent {
         p.put(Key.EMIT_EDGE, 0.6f);
         p.put(Key.SPEED, 0.8f);
         float[] c = cfg.color().of(f);
-        AuraComposer.submitBodyLayer(f, pose, AuraBodyKind.FLOW, p, c, c, 1f, 0.999f);
+        AuraComposer.submitBodyLayer(f, pose, AuraBodyKind.FLOW, p, c, c, f.extras, 0.999f);
     }
 }

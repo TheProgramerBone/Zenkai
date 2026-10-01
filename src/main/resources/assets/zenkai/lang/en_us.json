@@ -368,7 +368,8 @@
   "skill.zenkai.ultra_instinct.desc": "Tap into Ultra Instinct's reflexes while staying in whatever transformation you're already in. Separate from the full Ultra Instinct transformation itself.",
   "skill.zenkai.arcosian_power": "Arcosian Power",
   "skill.zenkai.arcosian_power.desc": "Innate to Arcosians. Hold your strength back in Base form below 50% power to store Power Points, then release them at 100%+ power from Final Form onward. Each level enlarges the tank.",
-  "message.zenkai.ui_overheat": "Your body can't sustain Ultra Instinct any longer!",
+  "message.zenkai.ui_overheat": "Your body is spent! You can't dodge until it cools down.",
+  "message.zenkai.ui_recovered": "Your body has recovered: you can dodge again.",
   "skill.zenkai.ultra_ego": "Ultra Ego",
   "skill.zenkai.ultra_ego.desc": "Channel the power of destruction. While the technique is on (always on in the Ultra Ego form), your physical techniques ignore part of the target's defense, up to 20% at level 10. Level 5 unlocks the Ultra Ego transformation, where the damage you take builds a bar that boosts your stats; the higher the level, the higher that boost can go.",
   "skill.zenkai.instant_transmission": "Instant Transmission",
@@ -457,7 +458,7 @@
 
   "--- TRANSFORMATIONS AND MODEL LAYERS ---": "--- TRANSFORMATIONS AND MODEL LAYERS ---",
   "form.zenkai.base": "Base",
-  "form.zenkai.potential_unlock": "Potential Unlock",
+  "form.zenkai.potential_unlock": "Mystic",
   "form.zenkai.ssj1": "SS1",
   "form.zenkai.ssj2": "SS2",
   "form.zenkai.ssj3": "SS3",
@@ -1058,6 +1059,7 @@
   "wheel.zenkai.ultra_instinct_branch": "Ultra Instinct",
   "wheel.zenkai.ultra_ego_branch": "Ultra Ego",
   "wheel.zenkai.ultimate_mystic_branch": "Ultimate Mystic",
+  "wheel.zenkai.potential_unlock_branch": "Potential Unlock",
   "wheel.zenkai.endgame_form": "Form",
 
   "--- CHAT MESSAGES ---": "--- CHAT MESSAGES ---",

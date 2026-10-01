@@ -13,6 +13,7 @@ import com.hmc.zenkai.client.aura.flame.AuraSystemDispatcher;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxFrameQueue;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.aura.AuraFormula;
 import com.hmc.zenkai.feature.aura.AuraManager;
@@ -84,6 +85,11 @@ public final class AuraComposer {
     private static final double MAX_DIST = 64.0;
     /** Separación lateral del aura fantasma de {@code /zenkaiaura compare} (bloques). */
     private static final float COMPARE_OFFSET = 2.5f;
+    /** Aura siempre encendida (Ultra Instinct): alfa del contorno en reposo (1 = el de cargar) y
+     *  segundos que tarda en intensificarse al cargar / en volver a reposo al soltar. */
+    private static final float IDLE_BODY_ALPHA = 0.5f;
+    private static final float IDLE_CHARGE_IN = 0.5f;
+    private static final float IDLE_CHARGE_OUT = 1.2f;
 
     /** Estado persistente de un jugador (o del fantasma de comparación) entre frames. */
     private static final class Runtime {
@@ -91,6 +97,8 @@ public final class AuraComposer {
         final TransformFx transform = new TransformFx();
         final FlightTrail trail = new FlightTrail();
         float ramp;
+        /** 0..1: cuánto se está cargando, suavizado. Solo lo usan las auras siempre encendidas. */
+        float charge;
         long lastNanos;
         @Nullable AuraProfile lastProfile;
         @Nullable AuraStyle style;
@@ -155,15 +163,21 @@ public final class AuraComposer {
             int id = p.getId();
             SEEN.add(id);
             Runtime rt = RUNTIMES.get(id);
-            boolean active = composed && AuraClientState.isAuraActive(p);
+            boolean self = p == mc.player;
+            boolean charging = composed && AuraClientState.isAuraActive(p);
+            // Ultra Instinct: el contorno está SIEMPRE encendido (en tercera persona) y cargar ki
+            // solo lo intensifica. En primera persona propia no se dibuja nunca, así que ahí no hay
+            // nada que mantener vivo.
+            boolean alwaysOn = composed && alwaysOnAura(p)
+                    && !(self && mc.options.getCameraType().isFirstPerson());
+            boolean active = charging || alwaysOn;
             if (rt == null) {
                 if (!active) continue;
                 rt = new Runtime();
                 RUNTIMES.put(id, rt);
             }
-            boolean self = p == mc.player;
             String type = self && AuraDebug.typeOverride != null ? AuraDebug.typeOverride : formAuraType(p);
-            if (!process(rt, p, self, false, type, active, pt, seconds, now, camPos, left, up, pose, mc)) {
+            if (!process(rt, p, self, false, type, active, alwaysOn, charging, pt, seconds, now, camPos, left, up, pose, mc)) {
                 RUNTIMES.remove(id);
                 continue;
             }
@@ -176,16 +190,27 @@ public final class AuraComposer {
         // aura_type, a tu derecha. Siempre encendida mientras dure la comparación.
         if (composed && AuraDebug.compareType != null && mc.player != null) {
             if (ghost == null) ghost = new Runtime();
-            process(ghost, mc.player, true, true, AuraDebug.compareType, true, pt, seconds, now, camPos, left, up, pose, mc);
+            process(ghost, mc.player, true, true, AuraDebug.compareType, true, false, true, pt, seconds, now, camPos, left, up, pose, mc);
         } else {
             ghost = null;
         }
     }
 
-    /** @return false si el runtime ya no tiene nada que dibujar y se puede soltar. */
+    /** Formas cuyo contorno se ve siempre, sin cargar (Ultra Instinct y su signo). */
+    private static boolean alwaysOnAura(AbstractClientPlayer p) {
+        return OverlayMetersSystem.isUiForm(p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId());
+    }
+
+    /**
+     * @param active    hay algo que dibujar (carga/transformación/turbo, o aura siempre encendida).
+     * @param alwaysOn  aura siempre encendida: el cuerpo se ve en reposo, atenuado, y las capas
+     *                  secundarias solo aparecen al cargar.
+     * @param charging  carga/transformación/turbo de verdad (lo que antes era "active" a secas).
+     * @return false si el runtime ya no tiene nada que dibujar y se puede soltar.
+     */
     private static boolean process(Runtime rt, AbstractClientPlayer p, boolean self, boolean isGhost, String auraType,
-                                   boolean active, float pt, float seconds, long now, Vec3 camPos, Vector3f left,
-                                   Vector3f up, PoseStack pose, Minecraft mc) {
+                                   boolean active, boolean alwaysOn, boolean charging, float pt, float seconds,
+                                   long now, Vec3 camPos, Vector3f left, Vector3f up, PoseStack pose, Minecraft mc) {
         // Rampa en tiempo REAL (el render corre por frame, no por tick).
         float dt = rt.lastNanos == 0L ? 0f : Math.min(0.1f, (now - rt.lastNanos) / 1.0e9f);
         rt.lastNanos = now;
@@ -196,8 +221,20 @@ public final class AuraComposer {
 
         AuraFrame f = rt.frame;
         boolean overridden = isGhost || (self && AuraDebug.typeOverride != null);
-        fill(f, p, pt, seconds, dt, camPos, left, up, active, rt.ramp, mc, self, isGhost,
+        // f.active = carga de verdad: en un aura siempre encendida los componentes (motas, wisps,
+        // estela...) solo nacen mientras se carga, y en reposo queda únicamente el contorno.
+        fill(f, p, pt, seconds, dt, camPos, left, up, charging, rt.ramp, mc, self, isGhost,
                 overridden ? auraType : null);
+        if (alwaysOn) {
+            rt.charge = Mth.clamp(rt.charge + (charging ? dt / IDLE_CHARGE_IN : -dt / IDLE_CHARGE_OUT), 0f, 1f);
+            float k = rt.charge * rt.charge * (3f - 2f * rt.charge);
+            f.idleBody = Mth.lerp(k, IDLE_BODY_ALPHA, 1f);
+            f.extras = k;
+        } else {
+            rt.charge = 0f;
+            f.idleBody = 1f;
+            f.extras = 1f;
+        }
 
         // ── Estilo ──
         AuraStyle style = AuraStyleManager.get(auraType);
@@ -394,7 +431,7 @@ public final class AuraComposer {
     }
 
     private static void submitBody(AuraFrame f, AuraStyle style, PoseStack pose) {
-        submitBodyLayer(f, pose, f.bodyKind, f.body, f.outerCenter.clone(), f.outer.clone(), 1f, 1f);
+        submitBodyLayer(f, pose, f.bodyKind, f.body, f.outerCenter.clone(), f.outer.clone(), f.idleBody, 1f);
         AuraInnerSpec inner = style.effectiveInner();
         if (inner.draws(f.twoTone)) {
             AuraBodyKind innerKind = inner.kind() != null ? inner.kind() : f.bodyKind;
@@ -415,6 +452,9 @@ public final class AuraComposer {
      */
     public static void submitBodyLayer(AuraFrame f, PoseStack pose, AuraBodyKind kind, AuraBodyParams params,
                                        float[] center, float[] edge, float alphaMul, float distScale) {
+        // El contorno que sigue la silueta del jugador (FLOW) no se dibuja nunca en primera persona
+        // propia: ahí queda pegado a los brazos y a la cámara.
+        if (kind == AuraBodyKind.FLOW && f.selfFirstPerson) return;
         float alpha = Mth.clamp(f.growth * f.fpOpacity * params.get(Key.OPACITY) * f.burstAlpha * alphaMul, 0f, 1f);
         if (alpha <= 0.002f) return;
         boolean noBloom = !f.bloomAllowed;

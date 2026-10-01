@@ -36,6 +36,9 @@ public class FlyAnimationController extends PlayerAnimationController {
     @Override
     public PlayerAnimBone get3DTransformRaw(@NotNull PlayerAnimBone bone) {
         bone = super.get3DTransformRaw(bone);
+        // El clic de ataque vanilla mueve el brazo que ataca aunque la pose de vuelo mande sobre
+        // los brazos (ver ZenkaiPalAnimations.applyVanillaSwing).
+        com.hmc.zenkai.event.ZenkaiPalAnimations.applyVanillaSwing(getPlayer(), bone);
 
         FlightController.Orientation o = FlightController.of(getPlayer().getUUID());
         if (Math.abs(o.pitch()) < 1.0e-4f && Math.abs(o.roll()) < 1.0e-4f) return bone;

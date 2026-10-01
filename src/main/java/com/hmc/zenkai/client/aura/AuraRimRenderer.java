@@ -2,7 +2,6 @@ package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.aura.flame.AuraSystemDispatcher;
-import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.feature.aura.AuraLod;
 import com.hmc.zenkai.feature.aura.AuraManager;
 import com.hmc.zenkai.feature.aura.AuraProfile;
@@ -156,8 +155,11 @@ public final class AuraRimRenderer extends RenderLayer<AbstractClientPlayer, Pla
         // es configurable y puede estar a 0.
         Minecraft mc = Minecraft.getInstance();
         boolean selfFirstPerson = player == mc.player && mc.options.getCameraType().isFirstPerson();
-        float fpOpacity = selfFirstPerson ? ClientConfig.auraFirstPersonOpacityFrac() : 1f;
-        if (selfFirstPerson && fpOpacity <= 0f) return;
+        // El contorno del jugador no se dibuja nunca en primera persona propia (pedido explícito):
+        // pegado a los brazos y a la cámara solo estorba. Va DESPUÉS de avanzar la rampa de arriba,
+        // para que el fundido siga coherente al volver a tercera persona.
+        if (selfFirstPerson) return;
+        float fpOpacity = 1f;
 
         // Smoothstep en vez de ramp lineal: la entrada/salida se siente orgánica.
         float eased = ramp * ramp * (3f - 2f * ramp);

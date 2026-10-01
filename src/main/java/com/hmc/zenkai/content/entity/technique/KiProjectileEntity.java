@@ -142,6 +142,11 @@ public class KiProjectileEntity extends Projectile {
     private final java.util.Set<Integer> pierced = new java.util.HashSet<>();
 
     private double damage = 0;
+    /** Margen de impacto por bloque de ancho del hitbox. El cuerpo se DIBUJA a 1.5x el ancho (radio
+     *  0.75x, ver KiTechniqueType.visualDiameter); 0.6 deja el impacto un poco por dentro de la
+     *  silueta visible, para que rozar el borde brillante no cuente como golpe pero sí el cuerpo. */
+    private static final float HIT_MARGIN_PER_WIDTH = 0.6F;
+
     private int life = 100;
     private TechniqueEffect effect = TechniqueEffect.NONE;
 
@@ -254,7 +259,24 @@ public class KiProjectileEntity extends Projectile {
         if (!level().isClientSide) {
             if (effect == TechniqueEffect.HOMING) applyHoming();
 
-            HitResult hit = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
+            // Margen de impacto contra ENTIDADES proporcional al tamaño de la técnica. Vanilla usa 0.3
+            // fijo (getHitResultOnMoveVector) y trata al proyectil como un RAYO: una bola de 4
+            // bloques de diámetro solo golpeaba lo que estuviera en su línea central, aunque
+            // visualmente envolviera al objetivo. Con el margen escalado, lo que roza el cuerpo que se
+            // ve también recibe el golpe.
+            float margin = Math.max(0.3F, getBbWidth() * HIT_MARGIN_PER_WIDTH);
+            // (ProjectileUtil.getHitResult con margen es privado: se repite aquí su mismo orden —
+            // primero el bloque, que acota el recorrido, y después las entidades hasta ese punto.)
+            Vec3 start = position();
+            Vec3 end = start.add(getDeltaMovement());
+            HitResult hit = level().clip(new net.minecraft.world.level.ClipContext(start, end,
+                    net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                    net.minecraft.world.level.ClipContext.Fluid.NONE, this));
+            if (hit.getType() != HitResult.Type.MISS) end = hit.getLocation();
+            EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(level(), this, start, end,
+                    getBoundingBox().expandTowards(getDeltaMovement()).inflate(1.0 + margin),
+                    this::canHitEntity, margin);
+            if (entityHit != null) hit = entityHit;
             if (hit.getType() != HitResult.Type.MISS) {
                 onHit(hit);
                 if (isRemoved()) return;

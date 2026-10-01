@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.wheel;
 
+import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
@@ -93,9 +94,12 @@ public final class WheelMenu {
         // Ultra Instinct/Ultra Ego, así que ahora tiene el mismo tratamiento de rama suelta.
         // Sin toggleId: a diferencia de esas dos, no existe ninguna "técnica parcial" de
         // Mystic que se pueda activar sin la transformación completa.
-        WheelNode ultimateMystic = endgameBranch(p, null,
-                Component.translatable("wheel.zenkai.ultimate_mystic_branch"), FormIds.ULTIMATE_MYSTIC);
-        if (ultimateMystic != null) roots.add(ultimateMystic);
+        // Carpeta "Potential Unlock" (pedido del usuario): deja de ser un interruptor suelto en la
+        // raíz y pasa a agrupar la ruta Mystic. "Mystic" es el interruptor que antes se llamaba
+        // Potential Unlock (misma habilidad, mismo comportamiento) y a su lado cuelgan las formas
+        // de la ruta (Místico Definitivo y Beast), que antes tenían su propia rama.
+        WheelNode potentialUnlock = potentialUnlockBranch(p);
+        if (potentialUnlock != null) roots.add(potentialUnlock);
 
         // Interruptores: los sueltos cuelgan de la raíz, los que declaran categoría se
         // agrupan en su propia rama. Agrupar es SOLO presentación: el packet manda el mismo
@@ -246,6 +250,32 @@ public final class WheelMenu {
         return WheelNode.category(label, COL_CATEGORY, kids);
     }
 
+    /**
+     * Carpeta "Potential Unlock": hoja "Mystic" (la FORMA potential_unlock, una forma propia que se
+     * elige aquí y se carga con la tecla de transformar; ya no es un interruptor) + las formas de
+     * la ruta que el jugador tenga (Beast; Místico Definitivo no lleva hoja). null si no tiene
+     * ninguna.
+     */
+    private static WheelNode potentialUnlockBranch(Player p) {
+        List<WheelNode> kids = new ArrayList<>();
+        ResourceLocation mystic = FormIds.POTENTIAL_UNLOCK;
+        if (FormDef.get(mystic) != null && SuperForms.unlocked(p, mystic)) {
+            FormDef def = FormDef.get(mystic);
+            ResourceLocation selected = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getSelectedForm();
+            kids.add(WheelNode.leaf(WheelNode.Kind.FORM, mystic.toString(),
+                    Component.translatable("form.zenkai." + mystic.getPath()),
+                    0xFF000000 | def.auraRgb(), true, mystic.equals(selected)));
+        }
+        // Místico Definitivo NO tiene hoja propia (pedido del usuario): solo sus continuaciones (Beast).
+        String ultimateMysticId = FormIds.ULTIMATE_MYSTIC.toString();
+        for (WheelNode leaf : endgameChainLeaves(p, FormIds.ULTIMATE_MYSTIC)) {
+            if (!ultimateMysticId.equals(leaf.value())) kids.add(leaf);
+        }
+        if (kids.isEmpty()) return null;
+        return WheelNode.category(Component.translatable("wheel.zenkai.potential_unlock_branch"),
+                COL_CATEGORY, kids);
+    }
+
     /** Misma pasada BFS que antes hacía forms() para las rutas de endgame, pero acotada a UNA
      *  sola raíz — reutilizada por endgameBranch() para Ultra Instinct y Ultra Ego. */
     private static List<WheelNode> endgameChainLeaves(Player p, ResourceLocation root) {
@@ -341,7 +371,12 @@ public final class WheelMenu {
      *  así que esta etiqueta es genérica ("Technique ACTIVADA/DESACTIVADA"). */
     private static WheelNode techniqueToggleNode(Player p, String id) {
         if (!SkillToggles.available(p, id)) return null;
-        boolean on = SkillToggles.isOn(p, id);
+        // La técnica cuenta como ACTIVA también si la forma correspondiente está puesta (la forma
+        // implica la técnica: ver OverlayMetersSystem.uiActive/ueActive), para no confundir.
+        ResourceLocation form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId();
+        boolean formImplies = (SkillEffects.ULTRA_INSTINCT.equals(id) && OverlayMetersSystem.isUiForm(form))
+                || (SkillEffects.ULTRA_EGO.equals(id) && OverlayMetersSystem.isUeForm(form));
+        boolean on = SkillToggles.isOn(p, id) || formImplies;
         Component label = Component.translatable(on ? "wheel.zenkai.technique.on" : "wheel.zenkai.technique.off");
         return WheelNode.leaf(WheelNode.Kind.TOGGLE, id, label, on ? COL_ON : COL_OFF, true, on);
     }

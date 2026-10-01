@@ -17,5 +17,7 @@
   "scale": 1.0,
   "endgame_path": true,
   "tier": "ultra",
-  "eye_rgb": "0xB05CFF"
+  "eye_rgb": "0xB05CFF",
+  "hair_rgb": "0x7A2CD9",
+  "brow_rgb": "0x7A2CD9"
 }

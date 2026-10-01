@@ -131,7 +131,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       boolean descendable, double overdriveCeilingBonus,
                       double overdriveDrainMultUntrained, double overdriveDrainMultMastered,
                       boolean wheelSelectable, boolean divineTier, int auraOuterRgb, int eyeRgb,
-                      Tier tier, boolean endgamePath, AlignBranch alignmentBranch,
+                      int browRgb, Tier tier, boolean endgamePath, AlignBranch alignmentBranch,
                       Map<ResourceLocation, Double> masteryReqs, String category) {
 
     /**
@@ -278,6 +278,10 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
      *  (PlayerVisualAttachment.eyeColorRgb), sin tocarlo. */
     public boolean tintsEyes() { return eyeRgb >= 0; }
 
+    /** ¿Esta forma tiñe la capa "brow" (cejas/párpado de los ojos, que por defecto sigue al pelo)?
+     *  -1 = siguen al pelo como siempre. Ultra Ego las pone moradas sin teñir el pelo. */
+    public boolean tintsBrows() { return browRgb >= 0; }
+
     /** Item de cuerpo para un slot ("head", "chest", "legs", "feet"). null = no lo cambia. */
     public ResourceLocation bodyItem(String slot) {
         return slot == null ? null : bodyItems.get(slot.toLowerCase(Locale.ROOT));
@@ -316,6 +320,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeBoolean(d.divineTier());
                 buf.writeInt(d.auraOuterRgb());
                 buf.writeInt(d.eyeRgb());
+                buf.writeInt(d.browRgb());
                 buf.writeVarInt(d.tier().ordinal());
                 buf.writeBoolean(d.endgamePath());
                 buf.writeVarInt(d.alignmentBranch().ordinal());
@@ -346,7 +351,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         readMap(buf), readMap(buf),
                         buf.readUtf(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readDouble(),
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
-                        buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt(),
+                        buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(),
                         readTier(buf), buf.readBoolean(), readAlign(buf), readReqs(buf),
                         buf.readUtf(32));
             });

@@ -2,7 +2,7 @@
 	"format_version": "1.8.0",
 	"animations": {
 		"zenkai.ui_dodge_2": {
-			"animation_length": 0.26,
+			"animation_length": 1,
 			"bones": {
 				"body": {
 					"rotation": {

@@ -51,7 +51,19 @@ public final class ZenkaiTransitions {
             return false;
         }
         boolean ok = c.replaceAnimationWithFade(fadeIn(ticks), anim);
+        if (ok) CURRENT.put(c, anim);
         return ok;
+    }
+
+    /** Último clip lanzado por cada controlador (null tras un stop). Lo consulta la política de
+     *  1ª persona (ZenkaiPalAnimations) para ocultar ciertos clips al propio jugador. Un clip
+     *  one-shot que termina solo se queda aquí hasta el siguiente play/stop: vale para decidir
+     *  sobre clips sostenidos, que es el único caso que lo usa. */
+    private static final java.util.Map<PlayerAnimationController, ResourceLocation> CURRENT =
+            new java.util.WeakHashMap<>();
+
+    public static ResourceLocation currentClip(PlayerAnimationController c) {
+        return c == null ? null : CURRENT.get(c);
     }
 
     /**
@@ -77,6 +89,7 @@ public final class ZenkaiTransitions {
         if (c == null) {
             return;
         }
+        CURRENT.remove(c);
         c.stopTriggeredAnimation();
     }
 }

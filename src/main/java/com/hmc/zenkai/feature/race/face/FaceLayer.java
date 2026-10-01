@@ -59,13 +59,26 @@ public record FaceLayer(ResourceLocation texture, Color color, int fixedRgb) {
      * mandan sobre los colores del jugador.
      */
     public int resolveRgb(PlayerVisualAttachment vis, @Nullable FormDef form) {
+        return resolveRgb(vis, form, -1, false);
+    }
+
+    /**
+     * @param eyeOverride  &gt;= 0 = color que pisa los dos ojos por encima de la forma y del jugador
+     *                     (Ultra Instinct activado como técnica: ojos blancos); -1 = ninguno.
+     * @param eyesCategory true si la capa es del rasgo OJOS: ahí la capa que sigue al pelo es la de
+     *                     la capa brow, que una forma puede teñir aparte (brow_rgb) sin tocar el pelo.
+     */
+    public int resolveRgb(PlayerVisualAttachment vis, @Nullable FormDef form, int eyeOverride,
+                          boolean eyesCategory) {
         boolean formEyes = form != null && form.tintsEyes();
+        boolean forced = eyeOverride >= 0;
         int rgb = switch (color) {
             case NONE      -> 0xFFFFFF;
             case SKIN      -> vis.getSkinColorRgb();
-            case EYE, EYE_LEFT -> formEyes ? form.eyeRgb() : vis.getEyeColorRgb();
-            case EYE_RIGHT -> formEyes ? form.eyeRgb() : vis.resolvedEyeColorRightRgb();
-            case HAIR      -> (form != null && form.tintsHair()) ? form.hairRgb() : vis.getHairColorRgb();
+            case EYE, EYE_LEFT -> forced ? eyeOverride : formEyes ? form.eyeRgb() : vis.getEyeColorRgb();
+            case EYE_RIGHT -> forced ? eyeOverride : formEyes ? form.eyeRgb() : vis.resolvedEyeColorRightRgb();
+            case HAIR      -> (eyesCategory && form != null && form.tintsBrows()) ? form.browRgb()
+                    : (form != null && form.tintsHair()) ? form.hairRgb() : vis.getHairColorRgb();
             case FIXED     -> fixedRgb;
         };
         return rgb & 0xFFFFFF;

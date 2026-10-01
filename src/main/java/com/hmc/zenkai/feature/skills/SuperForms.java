@@ -192,6 +192,12 @@ public final class SuperForms {
         if (form == null || FormIds.BASE.equals(form)) return true;
         Race race = raceOf(p);
         FormDef def = FormDef.get(form);
+        // Mystic (Potential Unlock): fuera de la cadena, así que sin esto caería en "depth <= 0 ->
+        // true" y cualquiera podría elegirla en la rueda. Su acceso es la HABILIDAD comprada (el
+        // gate de alineamiento se comprueba al comprarla, ver PotentialUnlock.canPurchase).
+        if (FormIds.POTENTIAL_UNLOCK.equals(form)) {
+            return SkillEffects.level(p, SkillEffects.POTENTIAL_UNLOCK) > 0;
+        }
         if (def != null && def.endgamePath()) return EndgamePaths.unlocked(p, form);
         if (def != null && def.divineTier()) return DivineForms.unlocked(p, form);
         if (!masteryReqsMet(p, def)) return false;

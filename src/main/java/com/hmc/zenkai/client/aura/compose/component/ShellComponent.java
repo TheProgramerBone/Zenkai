@@ -126,6 +126,6 @@ public final class ShellComponent implements AuraComponent {
         AuraBodyParams p = paramsOf(cfg, f.body, f.seconds);
         float[] edge = cfg.color().of(f).clone();
         float[] center = AuraFlameColors.heatedCenter(edge, p.get(Key.CORE_WHITE));
-        AuraComposer.submitBodyLayer(f, pose, kindOf(cfg, f.bodyKind), p, center, edge, 1f, 1.0005f);
+        AuraComposer.submitBodyLayer(f, pose, kindOf(cfg, f.bodyKind), p, center, edge, f.extras, 1.0005f);
     }
 }
