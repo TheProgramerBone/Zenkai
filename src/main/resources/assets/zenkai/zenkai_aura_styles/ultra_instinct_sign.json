@@ -1,0 +1,63 @@
+{
+  "_comment": "Ultra Instinct Sign: la misma familia, incompleta: menos cuerpo, menos lenguas, sin columna.",
+  "family": "flowing",
+  "body": {
+    "inflate": 0.75,
+    "alpha_edge": 0.8
+  },
+  "body_set": {
+    "flecks": 0.3,
+    "licks": 0.6
+  },
+  "components": [
+    {
+      "type": "wisps",
+      "behavior": "flow",
+      "rate": 2.5,
+      "life": [
+        0.5,
+        0.9
+      ],
+      "width": [
+        0.025,
+        0.04
+      ],
+      "speed": [
+        0.8,
+        1.2
+      ],
+      "curl": 3,
+      "color": "inner",
+      "alpha": 0.6,
+      "bloom": 0.6
+    },
+    {
+      "type": "motes",
+      "behavior": "glint",
+      "sprite": "glint",
+      "rate": 3,
+      "life": [
+        0.4,
+        0.8
+      ],
+      "size": [
+        0.07,
+        0.11
+      ],
+      "speed": [
+        0.1,
+        0.2
+      ],
+      "radius": [
+        0.3,
+        0.8
+      ],
+      "height": [
+        0.2,
+        1.9
+      ],
+      "color": "white",
+      "bloom": 1.0
+    }
+  ]
+}

@@ -53,6 +53,7 @@ uniform float ZenkaiShellSideUpDir; // up_dir de los flancos y la base (ver Zenk
 uniform vec2 ZenkaiShellCrown;      // x = rodilla (fracción del semieje de arriba), y = compresión por encima
 uniform float ZenkaiShellLowerHalf; // semieje de la mitad de ABAJO (bloques); ZenkaiShellSize.y es el de arriba
 uniform float ZenkaiShellPoleCalm;// 0 = el polo se desplaza como el resto, 1 = quieto (sin aguja)
+uniform float ZenkaiShellPeakVar; // 0 = picos todos iguales; >0 = largo aleatorio por pico (DMZ, 2026-09-30)
 
 out vec4 vColor;
 out vec3 vNormal;
@@ -83,6 +84,21 @@ void main() {
     float angularWave = mix(0.5 + 0.5 * cos(wavePhase * TAU), triangleWave(wavePhase),
                             clamp(ZenkaiShellSharp, 0.0, 1.0));
     float layer = triangleWave(localY * ZenkaiShellFreqY - t * ZenkaiShellSpeed);
+    // LARGO POR PICO (2026-09-30, comparación en vídeo con DragonMine Z): con todos los picos del
+    // mismo largo la corona se leía como una fila de dientes; en DMZ y en el anime las agujas
+    // tienen largos muy distintos. Cada pico (el entero más cercano de wavePhase; mod peaks para
+    // que el salto de atan caiga en el mismo índice) saca dos valores pseudoaleatorios y mezcla
+    // entre ellos con el tiempo: el largo cambia suave, nunca a saltos. El cambio de índice cae en
+    // los valles, donde angularWave ya es 0: no abre grietas.
+    float peakIdx = mod(floor(wavePhase + 0.5), max(ZenkaiShellPeaks, 1.0));
+    float h1 = fract(sin(peakIdx * 12.9898 + 4.1) * 43758.5453);
+    float cycle = t * 0.45 + h1 * 7.0;
+    float hA = fract(sin(peakIdx * 78.233 + floor(cycle) * 1.7) * 43758.5453);
+    float hB = fract(sin(peakIdx * 78.233 + (floor(cycle) + 1.0) * 1.7) * 43758.5453);
+    float fc = fract(cycle);
+    float hv = mix(hA, hB, fc * fc * (3.0 - 2.0 * fc));
+    float peakLen = 1.0 + ZenkaiShellPeakVar * (hv * 2.0 - 1.0);
+    angularWave *= peakLen;
 
     // Mismo rango que dbrebirth (tex*1.5-0.5 -> -0.5..1). El scroll va algo más lento que la onda
     // de lenguas: si fueran a la par el temblor se leería pegado a los picos, no como vida propia.

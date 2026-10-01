@@ -1,0 +1,367 @@
+{
+  "vertex": "zenkai:aura_body_flow",
+  "fragment": "zenkai:aura_body_flow",
+  "attributes": [
+    "Position",
+    "Color",
+    "Normal"
+  ],
+  "samplers": [
+    {
+      "name": "Sampler0"
+    }
+  ],
+  "uniforms": [
+    {
+      "name": "ModelViewMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0
+      ]
+    },
+    {
+      "name": "ProjMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0
+      ]
+    },
+    {
+      "name": "ColorModulator",
+      "type": "float",
+      "count": 4,
+      "values": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "GameTime",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiShellModelMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0,
+        0,
+        0,
+        0,
+        0,
+        1.0
+      ]
+    },
+    {
+      "name": "ZenkaiShellAmp",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0.1
+      ]
+    },
+    {
+      "name": "ZenkaiShellSpeed",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0.9
+      ]
+    },
+    {
+      "name": "ZenkaiShellGrowth",
+      "type": "float",
+      "count": 1,
+      "values": [
+        1
+      ]
+    },
+    {
+      "name": "ZenkaiFlowShape",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0.6,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiSeg0A",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        0,
+        0,
+        0.1
+      ]
+    },
+    {
+      "name": "ZenkaiSeg0B",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiSeg1A",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        0,
+        0,
+        0.1
+      ]
+    },
+    {
+      "name": "ZenkaiSeg1B",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiSeg2A",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        0,
+        0,
+        0.1
+      ]
+    },
+    {
+      "name": "ZenkaiSeg2B",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiSeg3A",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        0,
+        0,
+        0.1
+      ]
+    },
+    {
+      "name": "ZenkaiSeg3B",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiSeg4A",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        0,
+        0,
+        0.1
+      ]
+    },
+    {
+      "name": "ZenkaiSeg4B",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiSeg5A",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        0,
+        0,
+        0.1
+      ]
+    },
+    {
+      "name": "ZenkaiSeg5B",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiBloomMode",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiShellEmit",
+      "type": "float",
+      "count": 2,
+      "values": [
+        0.1,
+        0.5
+      ]
+    },
+    {
+      "name": "ZenkaiShellBloom",
+      "type": "float",
+      "count": 2,
+      "values": [
+        0.35,
+        0.25
+      ]
+    },
+    {
+      "name": "ZenkaiShellAlpha",
+      "type": "float",
+      "count": 2,
+      "values": [
+        0.06,
+        0.85
+      ]
+    },
+    {
+      "name": "ZenkaiShellFresnel",
+      "type": "float",
+      "count": 2,
+      "values": [
+        1.6,
+        0.8
+      ]
+    },
+    {
+      "name": "ZenkaiShellCoreColor",
+      "type": "float",
+      "count": 4,
+      "values": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "ZenkaiShellOuterColor",
+      "type": "float",
+      "count": 4,
+      "values": [
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "ZenkaiShellCel",
+      "type": "float",
+      "count": 4,
+      "values": [
+        1,
+        0.7,
+        0.45,
+        0.28
+      ]
+    },
+    {
+      "name": "ZenkaiFlowLook",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0.6,
+        0,
+        0.05,
+        0
+      ]
+    },
+    {
+      "name": "ZenkaiOrtho",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0.0
+      ]
+    }
+  ]
+}

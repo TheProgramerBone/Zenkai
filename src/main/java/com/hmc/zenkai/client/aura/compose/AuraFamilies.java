@@ -1,0 +1,328 @@
+package com.hmc.zenkai.client.aura.compose;
+
+import com.hmc.zenkai.client.aura.compose.AuraBodyParams.Key;
+import com.hmc.zenkai.client.aura.compose.component.AuraComponentConfig;
+import com.hmc.zenkai.client.aura.compose.component.ElectricityComponent;
+import com.hmc.zenkai.client.aura.compose.component.MoteComponent;
+import com.hmc.zenkai.client.aura.compose.component.RimComponent;
+import com.hmc.zenkai.client.aura.compose.component.ShellComponent;
+import com.hmc.zenkai.client.aura.compose.component.StrandComponent;
+import com.hmc.zenkai.client.aura.compose.component.TintSpec;
+import com.hmc.zenkai.client.aura.compose.component.WispComponent;
+import com.hmc.zenkai.client.aura.flame.AuraFlameTuning;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Registro de FAMILIAS de aura. Cada una dice qué PROGRAMA dibuja el cuerpo, cómo se moldea sobre la
+ * llama calibrada y qué componentes lleva por defecto. Referencias de cada una en
+ * .claude/imagenes_videos_referencias/aura vfx/ (ver también .claude/docs/tecnicas-y-vfx.md).
+ * <p>
+ * Crear una familia nueva: una entrada aquí (y, si su geometría no la da ninguno de los programas
+ * existentes, un {@link AuraBodyKind} con su shader). Crear una VARIANTE de una familia existente
+ * no necesita Java: un JSON en assets/zenkai/zenkai_aura_styles/.
+ */
+public final class AuraFamilies {
+
+    private AuraFamilies() {}
+
+    private static final Map<String, AuraFamily> FAMILIES = new LinkedHashMap<>();
+
+    /** Blanco azulado de la bioelectricidad canónica (SSJ2/SSJ3). */
+    private static final TintSpec ELECTRIC_BLUE = TintSpec.parse("#BFEFFF");
+
+    /**
+     * FLAME — la llama de vela confirmada en juego el 2026-09-30 (SSJ, golden, arcosiano y cualquier forma
+     * que no tenga estilo). Sin moldeado: sus números son los de AuraFlameTuning tal cual. Capa
+     * interior solo con dos tonos, con los mismos factores que la llama sola (inner_scale,
+     * inner_amp, inner_alpha). Chispas que salen disparadas hacia arriba (aura_11).
+     */
+    public static final AuraFamily FLAME = register(new AuraFamily("flame", AuraBodyKind.FLAME,
+            new AuraInnerSpec(AuraInnerSpec.Mode.TWO_TONE, null,
+                    AuraFlameTuning.get(AuraFlameTuning.Param.INNER_SCALE),
+                    AuraFlameTuning.get(AuraFlameTuning.Param.INNER_AMP),
+                    AuraFlameTuning.get(AuraFlameTuning.Param.INNER_ALPHA), 0.5f, 0.4f),
+            AuraFamilies::needleCandle,
+            List.of(strands(48), sparks()),
+            "dust", "burst", AuraTrailSpec.FLAME));
+
+    /**
+     * DIVINE — energía divina y CONTROLADA (SSG aura_7, SSB, formas *_god). Pocos lóbulos redondos
+     * que se mecen, abultamientos lentos que suben, lenguas romas arriba; interior de nube (aura_2)
+     * SIEMPRE, también con un solo tono. Ascuas que suben despacio. Nada de púas ni temblor rápido.
+     */
+    public static final AuraFamily DIVINE = register(new AuraFamily("divine", AuraBodyKind.SOFT,
+            new AuraInnerSpec(AuraInnerSpec.Mode.ALWAYS, AuraBodyKind.SOFT, 0.72f, 0.5f, 3.0f, 0.4f, 0.3f),
+            b -> {
+                b.set(Key.PEAKS, 7f);
+                b.set(Key.SHARP, 0f);
+                b.mul(Key.FREQ_Y, 0.55f);
+                b.mul(Key.SPEED, 0.6f);
+                b.set(Key.DETAIL, 0.5f);
+                b.mul(Key.RADIUS, 1.05f);
+                // Amplitud contenida y lóbulos de los flancos más hacia arriba: con 1.25 y
+                // side_up_dir 0.55 un lóbulo se abría de lado como una bandera de bloque y medio
+                // (vídeo del usuario, 2026-09-30). Divina = CONTROLADA.
+                b.mul(Key.AMP, 0.95f);
+                b.set(Key.TOP_BOOST, 0.4f);
+                b.set(Key.TIP, 0.55f);
+                b.mul(Key.TAPER, 0.55f);
+                b.set(Key.UP_DIR, 0.85f);
+                b.set(Key.SIDE_UP_DIR, 0.75f);
+                b.set(Key.SWAY, 0.1f);
+                b.set(Key.BREATHE, 0.025f);
+                b.set(Key.TONGUE_SHARP, 0.35f);
+                b.set(Key.CLOUD, 0.55f);
+                b.set(Key.BAND_SOFT, 0.045f);
+                b.set(Key.CEL_RIM, 0.78f);
+                b.set(Key.CEL_LIGHT, 0.5f);
+                b.mul(Key.ALPHA_CENTER, 1.3f);
+                b.mul(Key.EMIT_EDGE, 0.9f);
+            },
+            List.of(embers(), rim(0.35f, 0.22f, 1.2f, 0.15f, TintSpec.HOT)),
+            "clean", "radiant",
+            new AuraTrailSpec(0.75f, 0.1f, 0.5f, 0.5f, 0.7f, false, 16)));
+
+    /**
+     * DARK_DENSE — energía oscura y PESADA (aura_5, Ultra Ego, majin malvado). Masa ancha y
+     * redondeada que se retuerce, casi sin estrecharse arriba, interior profundo con vetas y borde
+     * fino; respira despacio. Motas grandes que se alejan y caen, sin bloom.
+     */
+    public static final AuraFamily DARK_DENSE = register(new AuraFamily("dark_dense", AuraBodyKind.DENSE,
+            new AuraInnerSpec(AuraInnerSpec.Mode.TWO_TONE, AuraBodyKind.DENSE, 0.7f, 0.8f, 1.3f, 0.5f, 0.5f),
+            b -> {
+                b.set(Key.PEAKS, 4f);
+                b.mul(Key.RADIUS, 1.1f);
+                b.mul(Key.HALF_HEIGHT, 0.82f);
+                b.mul(Key.LOWER_HALF, 0.9f);
+                b.set(Key.AMP, 0.38f);
+                b.set(Key.TIP, 0.25f);
+                b.set(Key.TAPER, 0.12f);
+                b.set(Key.SPEED, 0.55f);
+                b.set(Key.DETAIL, 0.7f);
+                b.set(Key.UP_DIR, 0.25f);
+                b.set(Key.BREATHE, 0.03f);
+                b.set(Key.CLOUD, 0.8f);
+                b.set(Key.DEPTH, 0.6f);
+                b.set(Key.ALPHA_CENTER, 0.3f);
+                b.set(Key.ALPHA_EDGE, 0.9f);
+                b.set(Key.CEL_RIM, 0.82f);
+                b.set(Key.CEL_LIGHT, 0.62f);
+                b.set(Key.CEL_BODY, 0.3f);
+                b.set(Key.EMIT_BODY, 0f);
+                b.set(Key.EMIT_EDGE, 0.3f);
+                b.mul(Key.BLOOM, 0.7f);
+                b.set(Key.FRESNEL_POWER, 2.4f);
+            },
+            List.of(drift(),
+                    new WispComponent.Config(WispComponent.Behavior.SINK, 2.5f, new float[]{1.2f, 1.8f},
+                            new float[]{0.12f, 0.18f}, new float[]{0.5f, 0.8f}, 1.2f, 0.09f, TintSpec.OUTER, 0.6f, 0f)),
+            "pressure", "heavy",
+            new AuraTrailSpec(0.95f, 0.15f, 0.2f, 0.65f, 0.5f, true, 16)));
+
+    /**
+     * ELECTRIC_FLAME — la llama agresiva con ELECTRICIDAD integrada (SSJ2 aura_11, Rosé). Misma vela
+     * que flame pero con más púas, más afiladas, corona más activa (menos compresión arriba) y
+     * ritmo más rápido. Rayos que salen del cuerpo hasta el borde de la cáscara, chispas más densas
+     * y un contorno que late.
+     */
+    public static final AuraFamily ELECTRIC_FLAME = register(new AuraFamily("electric_flame", AuraBodyKind.FLAME,
+            FLAME.inner(),
+            b -> {
+                needleCandle(b);
+                b.mul(Key.PEAKS, 1.15f);
+                b.set(Key.SHARP, 1f);
+                b.mul(Key.SPEED, 1.45f);
+                b.mul(Key.DETAIL, 1.4f);
+                b.mul(Key.STREAK, 1.3f);
+                b.mul(Key.AMP, 1.15f);
+                b.set(Key.CROWN_SOFT, 0.75f);
+                b.mul(Key.TIP, 1.2f);
+                b.mul(Key.TOP_BOOST, 1.2f);
+            },
+            List.of(strands(56), sparks(14f),
+                    // Rayos BLANCO AZULADOS en cualquier color de aura: la bioelectricidad de SSJ2 y
+                    // SSJ3 en el anime es así (con el tono caliente del amarillo salían rayos
+                    // amarillos que se perdían dentro de la llama).
+                    new ElectricityComponent.Config(7f, 8, 1, new float[]{0.6f, 1.3f}, 0.035f, new float[]{0.08f, 0.2f},
+                            ElectricityComponent.Attach.MIXED, ELECTRIC_BLUE, TintSpec.WHITE, 1f, 0.3f, 22f, 1f),
+                    rim(0.4f, 0.2f, 3f, 0.35f, TintSpec.HOT)),
+            "aggressive", "electric_burst",
+            new AuraTrailSpec(0.85f, 0.45f, 0.0f, 0.6f, 0.95f, false, 18)));
+
+    /**
+     * WILD — energía salvaje y abierta (Beast aura_9/aura_10, legendario). La llama se abre en V:
+     * lenguas de los flancos casi horizontales, sin estrechamiento arriba, ancha y muy agitada; por
+     * fuera, una SEGUNDA cáscara de alas laterales enormes que late despacio a otra frecuencia. Rayos
+     * pegados al cuerpo (del color interior), rocas que levitan alrededor.
+     */
+    public static final AuraFamily WILD = register(new AuraFamily("wild", AuraBodyKind.FLAME,
+            FLAME.inner(),
+            b -> {
+                // Contenida dos veces tras probarla en juego (2026-09-30: "demasiado grande").
+                b.mul(Key.RADIUS, 1.0f);
+                b.mul(Key.AMP, 1.05f);
+                b.set(Key.SIDE_UP_DIR, 0.2f);
+                b.set(Key.UP_DIR, 0.5f);
+                b.set(Key.TAPER, 0f);
+                b.set(Key.CROWN_KNEE, 1.4f);
+                b.set(Key.CROWN_SOFT, 0.85f);
+                b.mul(Key.TOP_BOOST, 1.3f);
+                b.mul(Key.SPEED, 1.3f);
+                b.mul(Key.DETAIL, 1.5f);
+                b.set(Key.POLE_CALM, 0.9f);
+            },
+            // Alas algo romas (sharp 0.6): con la onda triangular pura y amplitud alta las lenguas
+            // grandes se leían como placas de cristal facetadas (capturas de noche, 2026-09-30).
+            List.of(new ShellComponent.Config(AuraBodyKind.FLAME, 1.05f, 0.8f, 0.35f, TintSpec.OUTER,
+                            ShellComponent.Pulse.SINE, 0.9f, 0.06f,
+                            Map.of(Key.SIDE_UP_DIR, 0.08f, Key.UP_DIR, 0.4f, Key.TAPER, 0f, Key.PEAKS, 12f, Key.SHARP, 0.6f),
+                            Map.of()),
+                    new ElectricityComponent.Config(9f, 10, 2, new float[]{0.4f, 0.9f}, 0.03f, new float[]{0.1f, 0.25f},
+                            ElectricityComponent.Attach.BODY, TintSpec.INNER, TintSpec.WHITE, 1f, 0.32f, 18f, 1f),
+                    sparks(12f)),
+            "pressure", "violent",
+            new AuraTrailSpec(1.0f, 0.5f, 0.0f, 0.55f, 0.85f, false, 20)));
+
+    /**
+     * FLOWING — energía fluida y controlada, CEÑIDA al cuerpo (Ultra Instinct aura_6/aura_12/aura_14).
+     * El cuerpo no es una llama: son las cápsulas de la pose real hinchadas, con el flujo subiendo
+     * por el contorno, borde plateado y motas de luz. Alrededor, una columna blanda y tenue; wisps
+     * finas que trepan enroscándose; destellos en estrella y gotas de luz que suben. Suelo limpio.
+     */
+    public static final AuraFamily FLOWING = register(new AuraFamily("flowing", AuraBodyKind.FLOW,
+            AuraInnerSpec.NONE,
+            b -> {
+                b.set(Key.INFLATE, 0.7f);
+                b.set(Key.AMP, 0.12f);
+                b.set(Key.LICKS, 1f);
+                b.set(Key.SPEED, 0.9f);
+                // Calibrado con capturas automáticas (2026-09-30): con borde 0.85 y bandas estrechas,
+                // de día el contorno ceñido casi no se veía y mandaba la columna de fuera.
+                b.set(Key.FLECKS, 0.8f);
+                b.set(Key.BAND_SOFT, 0.06f);
+                b.set(Key.ALPHA_CENTER, 0.12f);
+                b.set(Key.ALPHA_EDGE, 0.95f);
+                b.set(Key.CEL_RIM, 0.6f);
+                b.set(Key.CEL_LIGHT, 0.35f);
+                b.set(Key.EMIT_EDGE, 0.7f);
+                b.set(Key.FRESNEL_POWER, 1.6f);
+                b.set(Key.FRESNEL_DIVIS, 0.8f);
+            },
+            List.of(new ShellComponent.Config(AuraBodyKind.SOFT, 1.05f, 0.6f, 0.2f, TintSpec.OUTER,
+                            ShellComponent.Pulse.SINE, 0.5f, 0.03f,
+                            Map.of(Key.CLOUD, 0.9f, Key.SWAY, 0.05f, Key.PEAKS, 6f, Key.TONGUE_SHARP, 0.2f),
+                            Map.of(Key.SPEED, 0.6f)),
+                    new WispComponent.Config(WispComponent.Behavior.FLOW, 5f, new float[]{0.6f, 1.0f},
+                            new float[]{0.03f, 0.05f}, new float[]{0.9f, 1.4f}, 3f, 0.06f, TintSpec.INNER, 0.7f, 0.8f),
+                    new MoteComponent.Config(MoteComponent.Behavior.GLINT, MoteComponent.Sprite.GLINT, 6f,
+                            new float[]{0.4f, 0.8f}, new float[]{0.08f, 0.13f}, new float[]{0.1f, 0.2f},
+                            new float[]{0.3f, 0.8f}, new float[]{0.2f, 1.9f}, MoteComponent.Tint.WHITE,
+                            new float[]{1f, 1f, 1f}, 1f, 1f, 1f),
+                    new MoteComponent.Config(MoteComponent.Behavior.FLOAT, MoteComponent.Sprite.MOTE, 7f,
+                            new float[]{0.8f, 1.4f}, new float[]{0.025f, 0.04f}, new float[]{0.6f, 1.1f},
+                            new float[]{0.25f, 0.6f}, new float[]{0.0f, 1.6f}, MoteComponent.Tint.INNER,
+                            new float[]{1f, 1f, 1f}, 0.9f, 1f, 0.8f)),
+            "clean", "calm_shift",
+            new AuraTrailSpec(0.4f, 0.05f, 0.6f, 0.5f, 1.0f, false, 22)));
+
+    /**
+     * LLAMA DE AGUJAS (2026-09-30, vídeo del usuario comparado con DragonMine Z): sobre la vela
+     * calibrada, la silueta que DMZ y el anime tienen y la nuestra no:
+     * <ul>
+     *   <li>más ESTRECHA (columna poco más ancha que los hombros, no un huevo de dos cuerpos);</li>
+     *   <li>base que empieza algo bajo los pies pero no se cierra en capullo: la mitad de abajo,
+     *       algo más corta que en la vela, se funde antes de curvarse (el abanico de los pies lo
+     *       ponen las agujas del suelo);</li>
+     *   <li>más picos, más LARGOS y de LARGO DISTINTO cada uno (peak_var): una corona de dientes
+     *       iguales era lo que más alejaba de la referencia;</li>
+     *   <li>casi sin pisos de lenguas (freq_y bajo) y poco peso de las puntas en las bandas: los
+     *       pisos, de frente, se leían como filas de triángulos DENTRO del aro ("dientes");</li>
+     *   <li>interior algo más lleno y con más estrías: el cuerpo queda dentro de la energía.</li>
+     * </ul>
+     * La textura de trazos finos la ponen las agujas ({@code strands}), no esta superficie.
+     */
+    static void needleCandle(AuraBodyParams b) {
+        b.mul(Key.RADIUS, 0.9f);
+        // Base algo por DEBAJO de los pies (pedido del usuario tras probarla, 2026-09-30: le gustaba
+        // más que el aura empezara bajo los pies y terminara arriba). Sin volver al capullo: la
+        // mitad de abajo sigue más corta que en la vela y se funde antes de cerrarse.
+        b.mul(Key.LOWER_HALF, 0.85f);
+        b.set(Key.BASE_FADE_LO, -0.95f);
+        b.set(Key.BASE_FADE_HI, -0.6f);
+        b.set(Key.PEAKS, 26f);
+        b.set(Key.PEAK_VAR, 0.6f);
+        b.mul(Key.FREQ_Y, 0.35f);
+        b.mul(Key.AMP, 1.25f);
+        b.mul(Key.TOP_BOOST, 1.3f);
+        b.set(Key.CROWN_KNEE, 1.15f);
+        b.set(Key.CROWN_SOFT, 0.65f);
+        b.mul(Key.TIP, 1.3f);
+        b.mul(Key.STREAK, 1.5f);
+        // Relleno moderado: el centro usa el tinte CALENTADO (en amarillo, casi blanco); con x2 era
+        // un velo blanco sobre la corona y SSJ2/SSJ3 (capturas del 2026-09-30).
+        b.mul(Key.ALPHA_CENTER, 1.3f);
+        b.set(Key.PEAK_WEIGHT, 0.15f);
+        // Borde de la cáscara FINO y menos emisivo: arriba es liso (la corona comprimida) y, visto
+        // de espaldas, la banda ancha y brillante dibujaba un arco blanco continuo sobre la cabeza.
+        // Las puntas de la corona las ponen las agujas.
+        b.set(Key.CEL_RIM, 0.9f);
+        b.mul(Key.EMIT_EDGE, 0.7f);
+        b.mul(Key.BLOOM, 0.6f);
+    }
+
+    private static AuraFamily register(AuraFamily f) {
+        FAMILIES.put(f.id(), f);
+        return f;
+    }
+
+    public static @Nullable AuraFamily get(String id) {
+        return FAMILIES.get(id.startsWith("zenkai:") ? id.substring("zenkai:".length()) : id);
+    }
+
+    public static Set<String> ids() { return FAMILIES.keySet(); }
+
+    // ── Componentes por defecto ──
+
+    private static AuraComponentConfig sparks() { return sparks(10f); }
+
+    private static AuraComponentConfig strands(int count) {
+        // Abiertas hacia fuera (lean) y de largo medio: la lágrima de DMZ. Con lean 0.15 y largos
+        // de hasta 1.5 la primera prueba (capturas del 2026-09-30) salió un géiser alto y estrecho.
+        return new StrandComponent.Config(count, new float[]{0.25f, 0.6f}, new float[]{0.0f, 1.55f},
+                new float[]{0.45f, 1.15f}, 0.07f, 0.32f, new float[]{0.25f, 0.55f}, 0.6f,
+                // Núcleo del MISMO tinte (aclarado un poco), no la capa caliente: con el amarillo de
+                // SSJ la capa caliente ya es casi blanca, y decenas de agujas solapadas más el bloom
+                // lavaban SSJ2/SSJ3 a blanco (capturas del 2026-09-30).
+                14, new float[]{0.5f, 1.1f}, TintSpec.OUTER, TintSpec.OUTER, 0.8f, 0.45f);
+    }
+
+    private static AuraComponentConfig sparks(float rate) {
+        return new MoteComponent.Config(MoteComponent.Behavior.RISE, MoteComponent.Sprite.SPARK, rate,
+                new float[]{0.3f, 0.55f}, new float[]{0.05f, 0.08f}, new float[]{2.5f, 4f},
+                new float[]{0.25f, 0.7f}, new float[]{0.1f, 1.6f}, MoteComponent.Tint.HOT, new float[]{1f, 1f, 1f},
+                1f, 5f, 0.8f);
+    }
+
+    private static AuraComponentConfig embers() {
+        return new MoteComponent.Config(MoteComponent.Behavior.FLOAT, MoteComponent.Sprite.EMBER, 8f,
+                new float[]{1.2f, 2.0f}, new float[]{0.07f, 0.1f}, new float[]{0.5f, 0.9f},
+                new float[]{0.35f, 0.9f}, new float[]{0.1f, 1.9f}, MoteComponent.Tint.HOT, new float[]{1f, 1f, 1f},
+                1f, 1f, 0.9f);
+    }
+
+    private static AuraComponentConfig rim(float strength, float width, float hz, float amp, TintSpec color) {
+        return new RimComponent.Config(strength, width, ShellComponent.Pulse.SINE, hz, amp, color, 0f);
+    }
+
+    private static AuraComponentConfig drift() {
+        return new MoteComponent.Config(MoteComponent.Behavior.DRIFT, MoteComponent.Sprite.MOTE, 5f,
+                new float[]{1.6f, 2.6f}, new float[]{0.12f, 0.2f}, new float[]{0.25f, 0.45f},
+                new float[]{0.5f, 1.0f}, new float[]{0.2f, 1.7f}, MoteComponent.Tint.OUTER, new float[]{1f, 1f, 1f},
+                0.55f, 1f, 0f);
+    }
+}

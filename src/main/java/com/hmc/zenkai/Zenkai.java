@@ -385,7 +385,8 @@ public class Zenkai {
             // dibuja un recorte del sprite del bloque pisado, del atlas de bloques.
             event.registerSpriteSet(ModParticles.AURA_DUST.get(),
                     AuraDustParticle.Provider::new);
-            event.registerSpecial(ModParticles.AURA_ROCK.get(), new AuraRockParticle.Provider());
+            event.registerSpecial(ModParticles.AURA_ROCK.get(), new AuraRockParticle.Provider(false));
+            event.registerSpecial(ModParticles.AURA_ROCK_FLOAT.get(), new AuraRockParticle.Provider(true));
         }
 
         @SubscribeEvent

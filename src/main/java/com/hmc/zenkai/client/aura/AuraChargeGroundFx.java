@@ -101,8 +101,56 @@ public final class AuraChargeGroundFx {
             float k = power * near;
             if (k <= 0.02f) continue;
 
-            spawnDust(level, rng, p, g, k);
-            spawnRocks(level, rng, p, g, k);
+            // RESPUESTA DE SUELO POR FAMILIA (aura compuesta, campo "ground" del estilo): una aura
+            // divina no ensucia el suelo, una salvaje levanta rocas que se quedan flotando. Con el
+            // legacy o la llama sola, null = lo de siempre (polvo + rocas).
+            String mode = com.hmc.zenkai.client.aura.compose.AuraComposer.groundModeOf(p.getId());
+            if (mode == null) mode = "dust";
+            switch (mode) {
+                case "none", "clean" -> { }
+                case "aggressive" -> {
+                    spawnDust(level, rng, p, g, Math.min(1f, k * 1.5f));
+                    spawnRocks(level, rng, p, g, Math.min(1f, k * 1.6f), false);
+                }
+                case "pressure" -> {
+                    spawnDust(level, rng, p, g, k);
+                    spawnRocks(level, rng, p, g, Math.min(1f, k * 1.4f), true);
+                }
+                default -> {
+                    spawnDust(level, rng, p, g, k);
+                    // Como en DMZ, parte de los trozos suben y se QUEDAN flotando alrededor en vez de
+                    // caer todos: la mitad levita.
+                    spawnRocks(level, rng, p, g, k, rng.nextBoolean());
+                }
+            }
+        }
+    }
+
+    /**
+     * RÁFAGA de suelo de una transformación (aura compuesta, TransformFx): un anillo de polvo que
+     * sale disparado hacia fuera y, si se pide, rocas (que caen, o que levitan en las familias de
+     * presión). Una sola vez, en el instante del estallido.
+     */
+    public static void burst(ClientLevel level, Player p, Ground g, int dust, int rocks, boolean levitate) {
+        RandomSource rng = level.random;
+        int rgb = dustColor(level, g);
+        for (int i = 0; i < dust; i++) {
+            double ang = (i + rng.nextDouble() * 0.5) / dust * Math.PI * 2.0;
+            double cx = Math.cos(ang), cz = Math.sin(ang);
+            double out = 0.35 + rng.nextDouble() * 0.25;
+            level.addParticle(ModParticles.auraDust(rgb, 1.2f + rng.nextFloat() * 0.6f),
+                    p.getX() + cx * 0.6, g.surfaceY() + 0.1, p.getZ() + cz * 0.6,
+                    cx * out, 0.02 + rng.nextDouble() * 0.05, cz * out);
+        }
+        if (rocks <= 0) return;
+        BlockParticleOption opts = new BlockParticleOption(
+                (levitate ? ModParticles.AURA_ROCK_FLOAT : ModParticles.AURA_ROCK).get(), g.state());
+        for (int i = 0; i < rocks; i++) {
+            double ang = rng.nextDouble() * Math.PI * 2.0;
+            double r = 0.5 + rng.nextDouble() * 1.8;
+            level.addParticle(opts,
+                    p.getX() + Math.cos(ang) * r, g.surfaceY() + 0.05, p.getZ() + Math.sin(ang) * r,
+                    Math.cos(ang) * 0.08, 0.25 + rng.nextDouble() * 0.35, Math.sin(ang) * 0.08);
         }
     }
 
@@ -110,29 +158,37 @@ public final class AuraChargeGroundFx {
     private static void spawnDust(ClientLevel level, RandomSource rng, Player p, Ground g, float k) {
         if (rng.nextFloat() > 0.65f * k + 0.1f) return;
         int rgb = dustColor(level, g);
-        int n = 1 + rng.nextInt(2) + Math.round(2f * k);
+        // Más nubes, más grandes y más extendidas (2026-09-30, vídeo del usuario contra DMZ: allí
+        // el polvo cubre un círculo de varios bloques; aquí quedaba pegado a los pies).
+        // ALCANCE: con el rozamiento de AuraDustParticle (0.93) una nube recorre ~14 veces su
+        // velocidad inicial y además crece. Con la velocidad de antes llegaba a ~4 bloques — justo
+        // donde está la cámara en tercera persona de frente, que quedaba tapada (capturas del
+        // 2026-09-30). Radio de nacimiento + recorrido acotados a ~2.6 bloques del jugador.
+        int n = 2 + rng.nextInt(2) + Math.round(2f * k);
         for (int i = 0; i < n; i++) {
             double ang = rng.nextDouble() * Math.PI * 2.0;
-            double r = 0.4 + rng.nextDouble() * 0.7;
+            double r = 0.5 + rng.nextDouble() * 1.0;
             double cx = Math.cos(ang), cz = Math.sin(ang);
-            double out = 0.08 + rng.nextDouble() * 0.12;
-            level.addParticle(ModParticles.auraDust(rgb, 0.8f + 0.6f * k),
+            double out = 0.04 + rng.nextDouble() * 0.04;
+            level.addParticle(ModParticles.auraDust(rgb, 0.9f + 0.6f * k),
                     p.getX() + cx * r, g.surfaceY() + 0.1, p.getZ() + cz * r,
                     cx * out, 0.015 + rng.nextDouble() * 0.04, cz * out);
         }
     }
 
     /** Números de partida de DMZ (spawnFloatingRubble): radio 0.4-1.9, sube 0.1-0.6, ±0.08 de lado. */
-    private static void spawnRocks(ClientLevel level, RandomSource rng, Player p, Ground g, float k) {
-        if (rng.nextFloat() > 0.3f * k) return;
-        BlockParticleOption opts = new BlockParticleOption(ModParticles.AURA_ROCK.get(), g.state());
+    private static void spawnRocks(ClientLevel level, RandomSource rng, Player p, Ground g, float k,
+                                   boolean levitate) {
+        if (rng.nextFloat() > 0.45f * k) return;
+        BlockParticleOption opts = new BlockParticleOption(
+                (levitate ? ModParticles.AURA_ROCK_FLOAT : ModParticles.AURA_ROCK).get(), g.state());
         int n = 1 + rng.nextInt(2);
         for (int i = 0; i < n; i++) {
             double ang = rng.nextDouble() * Math.PI * 2.0;
             double r = 0.4 + rng.nextDouble() * 1.3;
             level.addParticle(opts,
                     p.getX() + Math.cos(ang) * r, g.surfaceY() + 0.05, p.getZ() + Math.sin(ang) * r,
-                    (rng.nextDouble() - 0.5) * 0.12, 0.12 + rng.nextDouble() * 0.3, (rng.nextDouble() - 0.5) * 0.12);
+                    (rng.nextDouble() - 0.5) * 0.12, 0.25 + rng.nextDouble() * 0.35, (rng.nextDouble() - 0.5) * 0.12);
         }
     }
 

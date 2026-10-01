@@ -1,0 +1,8 @@
+{
+  "_comment": "SSJ: la llama de vela clásica, con más mechones verticales (aura_1/aura_3).",
+  "family": "flame",
+  "body": {
+    "streak": 1.35,
+    "peaks": 1.1
+  }
+}

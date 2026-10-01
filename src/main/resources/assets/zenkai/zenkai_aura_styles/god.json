@@ -1,0 +1,8 @@
+{
+  "_comment": "SSG: lenguas divinas redondeadas que se mecen, ascuas flotando (aura_7).",
+  "family": "divine",
+  "body_set": {
+    "tongue_sharp": 0.55,
+    "sway": 0.15
+  }
+}

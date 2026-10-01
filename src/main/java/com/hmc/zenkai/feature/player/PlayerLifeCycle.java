@@ -86,6 +86,11 @@ public class PlayerLifeCycle {
             // tracker ahora puede verlo -> mandarle su data
             PacketDistributor.sendToPlayer(tracker, SyncPlayerStatsPacket.from(targetPlayer));
             PacketDistributor.sendToPlayer(tracker, SyncPlayerVisualPacket.from(targetPlayer));
+            // Y su FORMA (formId, Kaioken, transformándose). Sin esto, un jugador que entraba en
+            // el rango de visión ya transformado se veía en base (aura, color, pelo) para ese
+            // observador hasta su siguiente cambio de forma: el ticker de maestría solo reenvía la
+            // forma al propio jugador (auditoría del aura, 2026-09-30).
+            PacketDistributor.sendToPlayer(tracker, SyncPlayerFormPacket.from(targetPlayer));
         }
     }
 

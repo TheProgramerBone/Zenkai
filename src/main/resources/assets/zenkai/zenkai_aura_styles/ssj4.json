@@ -1,0 +1,9 @@
+{
+  "_comment": "SSJ4 (canon GT): llama controlada, algo más ancha y tranquila que SSJ; sin rayos.",
+  "family": "flame",
+  "body": {
+    "radius": 1.06,
+    "speed": 0.85,
+    "detail": 0.85
+  }
+}

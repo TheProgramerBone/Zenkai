@@ -16,17 +16,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 
 /**
- * Comando SOLO-CLIENTE (mismo patrón que {@code ZenkaiArmCalibrationCommand}) para elegir en
- * caliente qué sistema de aura dibuja el cuerpo, sin recompilar. Deliberadamente client-only:
- * es un interruptor de calibración visual puramente local, no necesita ida y vuelta al servidor.
- * Pone el override de sesión de {@link AuraSystemDispatcher}, solo en memoria: la opción
- * persistente es {@code aura.system} de {@code ClientConfig} (Fase 5 del plan, ver
- * .claude/docs/tecnicas-y-vfx.md, "Aura nueva estilo dbrebirth").
- *
- * {@code /zenkaiauraflame <auto|legacy|new>} — override de sesión.
- * {@code /zenkaiauraflame config} — quita el override y vuelve a mandar la config.
- * {@code /zenkaiauraflame set <param> <valor>} / {@code reset} / {@code list} — calibración de la
- * llama exterior ({@link AuraFlameTuning}).
+ * {@code /zenkaiauraflame set <param> <valor>} / {@code reset} / {@code list} — calibración en
+ * caliente de los centros de la llama ({@link AuraFlameTuning}), solo en memoria y solo cliente
+ * (mismo espíritu que {@code /zkvfx}). {@code list} escribe también al log para copiar los valores
+ * buenos de vuelta al código.
+ * <p>
+ * El cambio de sistema de aura (nueva / clásica) ya no vive aquí: es {@code /zenkaiaura system}
+ * (override de sesión) o la opción {@code aura.system} de la config.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class AuraFlameDebugCommand {
@@ -37,15 +33,6 @@ public final class AuraFlameDebugCommand {
     public static void onRegister(RegisterClientCommandsEvent event) {
         event.getDispatcher().register(
                 Commands.literal("zenkaiauraflame")
-                        .then(Commands.literal("auto").executes(ctx ->
-                                set(ctx.getSource(), AuraSystemMode.AUTO)))
-                        .then(Commands.literal("legacy").executes(ctx ->
-                                set(ctx.getSource(), AuraSystemMode.FORCE_LEGACY)))
-                        .then(Commands.literal("new").executes(ctx ->
-                                set(ctx.getSource(), AuraSystemMode.FORCE_NEW)))
-                        // Quita el override: vuelve a mandar la opción aura.system de ClientConfig.
-                        .then(Commands.literal("config").executes(ctx ->
-                                set(ctx.getSource(), null)))
                         // Calibración en caliente de la llama exterior (AuraFlameTuning), solo en
                         // memoria, mismo espíritu que /zkvfx.
                         .then(Commands.literal("set")
@@ -90,16 +77,4 @@ public final class AuraFlameDebugCommand {
         return 1;
     }
 
-    /** @param mode override de sesión, o null para volver a seguir la config. */
-    private static int set(CommandSourceStack src, @Nullable AuraSystemMode mode) {
-        AuraSystemDispatcher.setSessionOverride(mode);
-        AuraSystemMode effective = AuraSystemDispatcher.effectiveMode();
-        boolean flame = AuraSystemDispatcher.useFlame();
-        String origin = mode == null ? "config" : "override de sesión";
-        String extra = effective == AuraSystemMode.FORCE_NEW && !flame
-                ? " (los shaders del aura nueva no compilaron: se sigue usando el legacy)" : "";
-        src.sendSuccess(() -> Component.literal("[AuraFlame] Modo " + effective.name() + " (" + origin
-                + ") -> sistema " + (flame ? "NUEVO" : "legacy") + extra), false);
-        return 1;
-    }
 }

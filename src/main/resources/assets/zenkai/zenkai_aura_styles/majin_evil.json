@@ -1,0 +1,56 @@
+{
+  "_comment": "Majin malvado/caótico (canon: Kid Buu): masa oscura y pesada que suelta vapor.",
+  "family": "dark_dense",
+  "components": [
+    {
+      "type": "wisps",
+      "behavior": "rise",
+      "rate": 5,
+      "life": [
+        0.6,
+        1.0
+      ],
+      "width": [
+        0.08,
+        0.13
+      ],
+      "speed": [
+        1.0,
+        1.6
+      ],
+      "curl": 2.5,
+      "color": "#FFE0F0",
+      "alpha": 0.6,
+      "bloom": 0.3
+    },
+    {
+      "type": "motes",
+      "behavior": "drift",
+      "sprite": "mote",
+      "rate": 4,
+      "life": [
+        1.4,
+        2.2
+      ],
+      "size": [
+        0.1,
+        0.16
+      ],
+      "speed": [
+        0.25,
+        0.45
+      ],
+      "radius": [
+        0.5,
+        1.0
+      ],
+      "height": [
+        0.2,
+        1.7
+      ],
+      "color": "outer",
+      "alpha": 0.55,
+      "bloom": 0.0
+    }
+  ]
+}

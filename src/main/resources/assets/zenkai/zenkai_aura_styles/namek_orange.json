@@ -1,0 +1,12 @@
+{
+  "_comment": "Namek Naranja (canon: Piccolo Naranja): llama ancha y agresiva; levanta el suelo con fuerza.",
+  "family": "flame",
+  "body": {
+    "radius": 1.12,
+    "amp": 1.15,
+    "speed": 1.2,
+    "detail": 1.2
+  },
+  "ground": "aggressive",
+  "transform": "violent"
+}

@@ -138,7 +138,7 @@ public final class AuraFlameTuning {
          *  (aura_8), no del centro — si no, una llama que llena media pantalla la blanquearía. */
         BLOOM_BODY("bloom_body", 0.25f),
         // Color y doble capa (2026-09-29, capturas de Blue+Kaioken y Beast: el color interior
-        // desaparecía lavado a blanco). Ver AuraFlameShellRenderer, "COLOR POR CAPA".
+        // desaparecía lavado a blanco). Ver AuraFlameColors, "COLOR POR CAPA".
         /** Cuánto se calienta el centro de cada capa hacia su capa caliente (derivedHot): 0 =
          *  tinte puro, 1 = capa caliente entera (lo de la Fase 4, que blanqueaba). */
         HOT_MIX("hot_mix", 0.35f),

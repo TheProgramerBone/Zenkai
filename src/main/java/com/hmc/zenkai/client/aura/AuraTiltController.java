@@ -126,6 +126,21 @@ public final class AuraTiltController {
         pose.translate(0.0, -BODY_PIVOT_Y, 0.0);
     }
 
+    /**
+     * Aplica la inclinación YA calculada este frame por {@link #apply} (el legacy la avanza en
+     * AuraRenderer, que sigue corriendo con el sistema compuesto por la estela), SIN tocar el
+     * suavizado: el aura compuesta usa el mismo eje que la estela y el cuerpo. Llamar a
+     * {@link #sample} por segunda vez en el mismo frame daría dt≈0 y velocidad cero — el aura se
+     * enderezaría sola.
+     */
+    public static void applyCurrent(PoseStack pose, int playerId) {
+        Vector3f axis = TILT_AXIS.get(playerId);
+        if (axis == null || axis.y > 0.9999f) return;
+        pose.translate(0.0, BODY_PIVOT_Y, 0.0);
+        pose.mulPose(new Quaternionf().rotationTo(0f, 1f, 0f, axis.x, axis.y, axis.z));
+        pose.translate(0.0, -BODY_PIVOT_Y, 0.0);
+    }
+
     /** Pivote del hueso `body` en PAL: 12 px = 0.75 bloques. */
     private static final double BODY_PIVOT_Y = 0.75;
 }

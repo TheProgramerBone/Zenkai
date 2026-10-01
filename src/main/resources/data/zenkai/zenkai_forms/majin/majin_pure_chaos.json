@@ -15,7 +15,7 @@
   "spi_req": 80,
   "parent": "zenkai:majin_super",
   "body_items": {},
-  "aura_type": "dark",
+  "aura_type": "majin_evil",
   "aura_rgb": "0xC0106A",
   "scale": 1.05
 }

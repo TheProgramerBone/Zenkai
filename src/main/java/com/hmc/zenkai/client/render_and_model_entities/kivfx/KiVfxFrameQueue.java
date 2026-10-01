@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.render_and_model_entities.kivfx;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.config.ClientConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -64,8 +65,11 @@ public final class KiVfxFrameQueue {
         void draw(PoseStack pose, MultiBufferSource.BufferSource buffers);
     }
 
-    /** @param bloomOnly true = solo se reproduce en la pasada de bloom, ver {@link #submitBloomOnly}. */
-    private record Entry(Matrix4f pose, Matrix3f normal, double distSq, Task task, boolean bloomOnly) {}
+    /** @param bloomOnly true = solo se reproduce en la pasada de bloom, ver {@link #submitBloomOnly}.
+     *  @param aura      true = pertenece al AURA, no a una técnica de ki: su bloom lo gobierna
+     *                   {@code aura.bloom_enabled} y no {@code ki.bloom_enabled} (ver {@link #replay}). */
+    private record Entry(Matrix4f pose, Matrix3f normal, double distSq, Task task, boolean bloomOnly,
+                         boolean aura) {}
 
     private static final List<Entry> QUEUE = new ArrayList<>();
     private static boolean bloomPass = false;
@@ -77,7 +81,20 @@ public final class KiVfxFrameQueue {
     public static void submit(PoseStack pose, Vec3 fromCamera, Task task) {
         PoseStack.Pose last = pose.last();
         QUEUE.add(new Entry(new Matrix4f(last.pose()), new Matrix3f(last.normal()),
-                fromCamera.lengthSqr(), task, false));
+                fromCamera.lengthSqr(), task, false, false));
+    }
+
+    /**
+     * Como {@link #submit}, pero la tarea es del AURA (sistema de aura nuevo, client/aura/flame y
+     * client/aura/compose). Se dibuja en el mundo igual que cualquier otra; en la pasada de bloom
+     * solo entra si {@code aura.bloom_enabled} está encendido. Antes de separarlo (auditoría del
+     * 2026-09-30) apagar el bloom de KI apagaba también el del aura, aunque la opción del aura
+     * siguiera activa.
+     */
+    public static void submitAura(PoseStack pose, Vec3 fromCamera, Task task) {
+        PoseStack.Pose last = pose.last();
+        QUEUE.add(new Entry(new Matrix4f(last.pose()), new Matrix3f(last.normal()),
+                fromCamera.lengthSqr(), task, false, true));
     }
 
     /**
@@ -91,7 +108,7 @@ public final class KiVfxFrameQueue {
     public static void submitBloomOnly(PoseStack pose, Vec3 fromCamera, Task task) {
         PoseStack.Pose last = pose.last();
         QUEUE.add(new Entry(new Matrix4f(last.pose()), new Matrix3f(last.normal()),
-                fromCamera.lengthSqr(), task, true));
+                fromCamera.lengthSqr(), task, true, true));
     }
 
     /** Lejos primero, cerca al final — ver "ORDEN DE ATRÁS HACIA DELANTE". Una vez por frame,
@@ -110,9 +127,14 @@ public final class KiVfxFrameQueue {
     static void replay(boolean forBloom) {
         MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         bloomPass = forBloom;
+        // Cada categoría respeta SU interruptor de bloom (ClientConfig): el pipeline corre si
+        // cualquiera de los dos está encendido, y aquí se salta la otra.
+        boolean kiBloom = ClientConfig.kiBloomEnabled();
+        boolean auraBloom = ClientConfig.auraBloomEnabled();
         try {
             for (Entry e : QUEUE) {
                 if (e.bloomOnly() && !forBloom) continue;
+                if (forBloom && !(e.aura() ? auraBloom : kiBloom)) continue;
                 PoseStack pose = new PoseStack();
                 pose.last().pose().set(e.pose());
                 pose.last().normal().set(e.normal());

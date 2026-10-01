@@ -1,0 +1,40 @@
+{
+  "_comment": "Espíritu indomable: voluntad ardiendo; llama más abierta y viva, con ascuas que suben.",
+  "family": "flame",
+  "body": {
+    "radius": 1.05,
+    "speed": 1.2,
+    "top_boost": 1.2,
+    "amp": 1.1
+  },
+  "extra_components": [
+    {
+      "type": "motes",
+      "behavior": "float",
+      "sprite": "ember",
+      "rate": 8,
+      "life": [
+        1.0,
+        1.6
+      ],
+      "size": [
+        0.06,
+        0.09
+      ],
+      "speed": [
+        0.6,
+        1.0
+      ],
+      "radius": [
+        0.35,
+        0.9
+      ],
+      "height": [
+        0.1,
+        1.8
+      ],
+      "color": "hot",
+      "bloom": 0.9
+    }
+  ]
+}

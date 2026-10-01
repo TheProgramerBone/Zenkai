@@ -1,12 +1,12 @@
 {
-  "d_mass": -0.03,
-  "d_spike": 0.20,
-  "d_turb": 0.04,
-  "d_spread": 0.03,
-  "d_height": 0.08,
+  "d_mass": 0.03,
+  "d_spike": 0.25,
+  "d_turb": 0.18,
+  "d_spread": 0.04,
+  "d_height": 0.1,
   "d_density": 0.05,
-  "turb_gain": 0.90,
-  "spread_gain": 1.10,
-  "pulse_hz_gain": 0.55,
-  "pulse_amp_gain": 1.45
+  "turb_gain": 1.4,
+  "spread_gain": 1.1,
+  "pulse_hz_gain": 1.6,
+  "pulse_amp_gain": 1.4
 }

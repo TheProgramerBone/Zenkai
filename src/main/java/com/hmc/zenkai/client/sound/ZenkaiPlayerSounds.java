@@ -40,11 +40,12 @@ import java.util.Set;
  * transformar (H sostenido) comparten el MISMO par de sonidos — KI_CHARGE_START suena una
  * vez y, cuando acaba SOLO, el bucle KI_CHARGE toma el relevo mientras la condición siga
  * activa. Turbo (R) es la excepción: salta DIRECTO al bucle (TURBO_LOOP, mismo archivo de
- * audio que KI_CHARGE pero volumen/subtítulo propios) sin pasar por el arranque. Los tres
- * estados son mutuamente excluyentes (ActionRules: TRANSFORM cancela tanto chargingKi como
- * turbo), así que nunca hace falta desempatar cuál "manda" una vez el bucle ya está sonando —
- * isLoopWorthy() vale igual de bien para decidir cuándo se apaga sea cual sea el que lo
- * encendió. DETRANSFORM es un disparo aparte, en el flanco de isBase() (no de isTransforming):
+ * audio que KI_CHARGE pero volumen/subtítulo propios) sin pasar por el arranque. Cargar y
+ * transformar son excluyentes (ActionRules: TRANSFORM cancela chargingKi); el turbo, desde el
+ * 2026-09-30, NO se apaga al transformar (solo con R), así que puede coincidir con transformar:
+ * en ese caso sigue sonando el bucle de turbo, sin arranque de transformación. No hace falta
+ * desempatar cuál "manda" una vez el bucle ya está sonando — isLoopWorthy() (cualquiera de los
+ * tres) vale igual de bien para decidir cuándo se apaga sea cual sea el que lo encendió. DETRANSFORM es un disparo aparte, en el flanco de isBase() (no de isTransforming):
  * dropear solo el kaioken y quedarse en la forma NO cuenta como destransformación.
  * Ver también onPlayerClone: sin esa limpieza, teletransportarse entre dimensiones estando
  * transformado podía disparar un DETRANSFORM falso (el id del jugador se reutiliza en el

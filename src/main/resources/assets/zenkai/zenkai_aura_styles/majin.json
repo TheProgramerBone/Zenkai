@@ -1,0 +1,46 @@
+{
+  "_comment": "Majin (canon Buu): aura rosa BLANDA e hinchada, ondulante, nada de púas.",
+  "family": "divine",
+  "body": {
+    "amp": 1.1,
+    "speed": 0.8
+  },
+  "body_set": {
+    "peaks": 6,
+    "tongue_sharp": 0.0,
+    "sway": 0.2,
+    "cloud": 0.8,
+    "breathe": 0.04
+  },
+  "components": [
+    {
+      "type": "motes",
+      "behavior": "float",
+      "sprite": "mote",
+      "rate": 6,
+      "life": [
+        1.0,
+        1.8
+      ],
+      "size": [
+        0.06,
+        0.1
+      ],
+      "speed": [
+        0.3,
+        0.6
+      ],
+      "radius": [
+        0.4,
+        0.9
+      ],
+      "height": [
+        0.2,
+        1.8
+      ],
+      "color": "outer",
+      "alpha": 0.8,
+      "bloom": 0.5
+    }
+  ]
+}

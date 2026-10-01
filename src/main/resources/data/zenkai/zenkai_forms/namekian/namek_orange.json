@@ -19,7 +19,7 @@
     "legs": "zenkai:namek_orange_leggings",
     "feet": "zenkai:namek_orange_boots"
   },
-  "aura_type": "default",
+  "aura_type": "namek_orange",
   "aura_rgb": "0xFF9933",
   "scale": 1.5
 }

@@ -1,0 +1,10 @@
+{
+  "_comment": "Arcosiano: llama más compacta y afilada, ritmo más rápido.",
+  "family": "flame",
+  "body": {
+    "radius": 0.85,
+    "half_height": 1.1,
+    "peaks": 1.2,
+    "speed": 1.2
+  }
+}

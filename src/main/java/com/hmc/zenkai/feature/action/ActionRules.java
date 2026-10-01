@@ -22,7 +22,7 @@ package com.hmc.zenkai.feature.action;
  *   BLOCK          cancela      mantiene  mantiene
  *   PHYS           cancela      mantiene  mantiene
  *   KI técnica     cancela      mantiene  mantiene
- *   TRANSFORM      cancela      cancela   mantiene
+ *   TRANSFORM      cancela      mantiene  mantiene
  *   DOWNED         cancela      cancela   cancela
  */
 public final class ActionRules {
@@ -73,7 +73,9 @@ public final class ActionRules {
 
     /** Solo transformar apaga el turbo (más el derribo, que va aparte). */
     public static boolean cancelsTurbo(ActionType incoming) {
-        if (incoming == ActionType.TRANSFORM) return true;
+        // Transformarse YA NO apaga el turbo (pedido del usuario, 2026-09-30): el turbo es un modo
+        // que el jugador enciende y apaga él mismo con R. Solo se apaga solo por causas de fuerza
+        // mayor (muerte, desconexión, quedarse sin ki volando, /zenkai reset), en TurboServerState.
         return TURBO_CANCELLED_BY_ACTIONS && incoming != null && incoming != ActionType.NONE;
     }
 

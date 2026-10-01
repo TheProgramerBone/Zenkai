@@ -14,7 +14,7 @@
   "spi_req": 90,
   "parent": "zenkai:human_ultra",
   "body_items": {},
-  "aura_type": "default",
+  "aura_type": "spirit",
   "aura_rgb": "0xFFB04C",
   "scale": 1.0,
   "hair_rgb": "0xFFB04C"

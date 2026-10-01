@@ -99,6 +99,21 @@ public final class ModParticles {
                 }
             });
 
+    /** Igual que AURA_ROCK pero LEVITA: sube despacio, flota girando y no cae (auras de presión
+     *  como Beast, aura_9/aura_10; ver AuraChargeGroundFx y el campo "ground" de los estilos). */
+    public static final DeferredHolder<ParticleType<?>, ParticleType<BlockParticleOption>> AURA_ROCK_FLOAT =
+            PARTICLES.register("aura_rock_float", () -> new ParticleType<BlockParticleOption>(false) {
+                @Override
+                public MapCodec<BlockParticleOption> codec() {
+                    return BlockParticleOption.codec(this);
+                }
+
+                @Override
+                public StreamCodec<? super RegistryFriendlyByteBuf, BlockParticleOption> streamCodec() {
+                    return BlockParticleOption.streamCodec(this);
+                }
+            });
+
     public static ZenkaiParticleOptions auraDust(int rgb, float scale) {
         return new ZenkaiParticleOptions(AURA_DUST.get(), rgb, scale);
     }

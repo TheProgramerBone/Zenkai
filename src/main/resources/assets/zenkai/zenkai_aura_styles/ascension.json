@@ -1,0 +1,34 @@
+{
+  "_comment": "Llama con ascuas (sin formas propias desde el 2026-09-30; se conserva para datapacks).",
+  "family": "flame",
+  "extra_components": [
+    {
+      "type": "motes",
+      "behavior": "float",
+      "sprite": "ember",
+      "rate": 6,
+      "life": [
+        1.0,
+        1.6
+      ],
+      "size": [
+        0.06,
+        0.09
+      ],
+      "speed": [
+        0.5,
+        0.9
+      ],
+      "radius": [
+        0.35,
+        0.9
+      ],
+      "height": [
+        0.1,
+        1.8
+      ],
+      "color": "hot",
+      "bloom": 0.9
+    }
+  ]
+}

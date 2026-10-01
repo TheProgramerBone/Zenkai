@@ -102,15 +102,24 @@ public final class AuraRenderer {
             AuraTiltController.Motion mo = AuraTiltController.sample(p, at);
 
             // Estela: coordenadas de mundo, antes del translate al jugador.
-            AuraTrailRenderer.render(pose, buffers, p, at, camPos, layers.inner(), mo);
+            // Con el sistema compuesto la estela la dibuja él (compose/FlightTrail, mismo idioma
+            // visual que el aura); aquí solo con el legacy o la llama sola.
+            if (!AuraSystemDispatcher.useComposed()) {
+                AuraTrailRenderer.render(pose, buffers, p, at, camPos, layers.inner(), mo);
+            }
 
             // Emisores anclados al mundo: se dibujan luego, en conjunto.
             // Con la llama nueva no se sueltan lenguas: nacen en la corona (1.45-2.4 bloques) y
             // suben, y sobre la lágrima cerrada se leían como una columna azul saliendo de la
             // cabeza (vídeo comparado con DragonMine Z, 2026-09-30).
             if (!AuraSystemDispatcher.useFlame()) AuraWispRenderer.spawn(p, at, plan, t);
-            AuraSparkRenderer.spawn(p, at, plan, t, dtTicks);
-            AuraEmberRenderer.spawn(p, at, plan, t);
+            // Con el sistema compuesto, chispas y ascuas las ponen los motes de cada familia
+            // (client/aura/compose); las del legacy sobrarían encima.
+            boolean composed = AuraSystemDispatcher.useComposed();
+            if (!composed) {
+                AuraSparkRenderer.spawn(p, at, plan, t, dtTicks);
+                AuraEmberRenderer.spawn(p, at, plan, t);
+            }
 
             // Dirección jugador->cámara en XZ, para atenuar el sector frontal.
             double dcx = camPos.x - at.x, dcz = camPos.z - at.z;
@@ -136,12 +145,14 @@ public final class AuraRenderer {
             if (bodyScale != 1f) pose.scale(bodyScale, bodyScale, bodyScale);
             AuraTiltController.apply(pose, p, mo);
 
-            AuraGroundRenderer.render(pose, buffers, plan, p, ticks, seconds, p.getId());
-            // Con el sistema de aura nuevo activo (client.aura.flame) el CUERPO del aura lo
-            // dibuja él: aquí se salta el faldón y su bloom. Suelo, estela y partículas siguen.
+            // Con el sistema de aura nuevo activo (client.aura.flame / compose) el CUERPO del aura
+            // lo dibuja él: aquí se salta el faldón y su bloom. El anillo de suelo legacy también
+            // (antes se dibujaba A LA VEZ que la estrella del sistema nuevo, cuyo javadoc ya decía
+            // que eran excluyentes — auditoría del 2026-09-30). La estela sigue.
             // La decisión vive entera en AuraSystemDispatcher; esto solo la lee.
             boolean flameBody = AuraSystemDispatcher.useFlame();
             if (!flameBody) {
+                AuraGroundRenderer.render(pose, buffers, plan, p, ticks, seconds, p.getId());
                 AuraSkirtRenderer.render(pose, buffers, plan, ticks, seconds, p.getId(),
                         toCamX, toCamZ);
             }

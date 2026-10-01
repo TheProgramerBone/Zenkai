@@ -33,7 +33,8 @@ uniform float GameTime;
 uniform sampler2D Sampler0;         // aura_noise.png (canal G: rayas verticales)
 uniform float ZenkaiShellSpeed;
 uniform float ZenkaiShellStreak;    // 0 = superficie lisa, 1 = rayas muy marcadas
-uniform float ZenkaiBloomMode;      // 1 = pasada de bloom
+uniform float ZenkaiBloomMode;
+uniform float ZenkaiOrtho;        // 1 = vista ortográfica (GUI)      // 1 = pasada de bloom
 uniform vec2 ZenkaiShellEmit;       // x = emisión del cuerpo, y = del borde
 uniform vec2 ZenkaiShellBloom;      // x = peso general en bloom, y = peso del cuerpo frente al borde
 uniform vec2 ZenkaiShellAlpha;      // x = alfa del centro, y = alfa del borde
@@ -61,7 +62,9 @@ vec3 rimColor(vec3 c) {
 
 void main() {
     vec3 N = normalize(vNormal);
-    vec3 V = normalize(vViewDir);
+    // En la GUI (vista previa del aura) la proyección es ORTOGRÁFICA: la visual es el eje Z de la
+    // pantalla para cualquier píxel, no la dirección al punto (que daría un borde torcido).
+    vec3 V = ZenkaiOrtho > 0.5 ? vec3(0.0, 0.0, 1.0) : normalize(vViewDir);
     float facingRaw = dot(V, N);
     if (facingRaw < 0.0) N = -N;
 

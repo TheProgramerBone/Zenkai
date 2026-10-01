@@ -71,10 +71,14 @@ import org.lwjgl.opengl.GL30;
 public final class KiVfxBloomPipeline {
     private KiVfxBloomPipeline() {}
 
-    /** true solo si el jugador no apagó el toggle Y no hay un shaderpack tipo Iris/Oculus
-     *  cargado (ver IrisCompat) — postura conservadora pedida explícitamente. */
+    /** true si alguno de los dos toggles (ki o aura) está encendido Y no hay un shaderpack tipo
+     *  Iris/Oculus cargado (ver IrisCompat) — postura conservadora pedida explícitamente. Qué
+     *  tareas entran en la pasada de bloom lo decide cada una según su toggle
+     *  ({@code KiVfxFrameQueue.replay}); antes solo miraba el de ki y apagarlo mataba también el
+     *  bloom del aura (auditoría del 2026-09-30). */
     public static boolean active() {
-        return ClientConfig.kiBloomEnabled() && !IrisCompat.shaderPackActive();
+        return (ClientConfig.kiBloomEnabled() || ClientConfig.auraBloomEnabled())
+                && !IrisCompat.shaderPackActive();
     }
 
     // ── Shaders ─────────────────────────────────────────────────────────────

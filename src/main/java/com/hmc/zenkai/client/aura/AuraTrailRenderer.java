@@ -17,8 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Estela de vuelo: cinta de puntos detrás del jugador, misma técnica que la de los
- * proyectiles de ki. TRASLADO LITERAL, sin rediseño.
+ * Estela de vuelo del LEGACY (y de la llama sola): cinta de puntos detrás del jugador, misma
+ * técnica que la de los proyectiles de ki. Con el sistema compuesto la dibuja
+ * {@code compose.FlightTrail}, que reutiliza de aquí solo el ancla de los pies ({@link #bodyFeet}).
  *
  * Es independiente del rework: usa su propia textura (ki_trail) y el RenderType vanilla
  * entityTranslucentEmissive, no la hoja de llamas ni zenkai_energy. Lo único que toma
@@ -139,7 +140,7 @@ public final class AuraTrailRenderer {
      * Se usa MODEL_HEIGHT y no bbHeight porque BoostSizeHandler encoge la hitbox y deja el
      * modelo intacto; con bbHeight el ancla se caía a media pierna al entrar en boost.
      */
-    private static Vec3 bodyFeet(AbstractClientPlayer p, Vec3 at) {
+    public static Vec3 bodyFeet(AbstractClientPlayer p, Vec3 at) {
         var o = com.hmc.zenkai.client.fly.FlightController.of(p.getUUID());
         Vec3 pivot = at.add(0, BODY_PIVOT_Y, 0);
 

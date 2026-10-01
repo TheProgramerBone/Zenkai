@@ -94,9 +94,19 @@ public final class AuraFlameGroundRenderer {
             int id = p.getId();
             seen.add(id);
 
+            // Sin carga y sin estrella que desvanecer, ni se busca el suelo (antes se buscaba para
+            // cada jugador en cada frame — auditoría del 2026-09-30).
+            boolean charging = AuraClientState.isChargingOrTransforming(p);
+            if (!charging && !RAMP.containsKey(id)) continue;
             Vec3 at = p.getPosition(pt);
             AuraChargeGroundFx.Ground g = AuraChargeGroundFx.findGround(mc.level, p, at.x, at.y, at.z);
-            boolean active = flame && g != null && AuraClientState.isChargingOrTransforming(p);
+            // Estilos de aura compuesta con suelo "none" no dejan estrella (el resto sí: también la
+            // divina, cuya respuesta "clean" quita polvo y rocas pero conserva esta marca de luz).
+            // Solo PISANDO el suelo (pedido del usuario, 2026-09-30): antes bastaba con tener suelo a
+            // menos de 2 bloques, y la estrella aparecía bajo un jugador que cargaba flotando o
+            // volando bajo. onGround llega sincronizado también para los jugadores remotos.
+            boolean active = flame && g != null && charging && p.onGround()
+                    && !"none".equals(com.hmc.zenkai.client.aura.compose.AuraComposer.groundModeOf(p.getId()));
             float ramp = advanceRamp(id, now, active);
             if (ramp <= 0.002f || g == null) continue;
             if (camPos.distanceToSqr(at) > 64 * 64) continue;

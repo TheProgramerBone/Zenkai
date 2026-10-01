@@ -13,7 +13,7 @@
   "spi_req": 55,
   "parent": "zenkai:human_super",
   "body_items": {},
-  "aura_type": "default",
+  "aura_type": "human",
   "aura_rgb": "0x3399FF",
   "scale": 1.0,
   "hair_rgb": "0x3399FF"

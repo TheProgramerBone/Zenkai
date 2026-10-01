@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.aura.flame.AuraSystemDispatcher;
 import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.aura.AuraFormula;
 import com.hmc.zenkai.feature.aura.AuraLod;
@@ -24,6 +25,10 @@ import net.neoforged.neoforge.client.event.RenderLivingEvent;
  * RenderLivingEvent. La pantalla activa {@link #ACTIVE} SOLO alrededor de esa llamada;
  * durante el render de mundo la bandera está en false, así que no interfiere.
  *
+ * Con el aura nueva elegida en la config dibuja el aura COMPUESTA de la forma del jugador
+ * (AuraComposer.drawPreview: cuerpo, capa interior y cáscaras, sin componentes de mundo); con la
+ * clásica, los faldones legacy de siempre.
+ *
  * ESTADO FIJO A PROPÓSITO. Antes llamaba a AuraRenderer.drawAura, que usaba el estilo
  * por defecto. Ahora usa un AuraState constante (poder liberado, control alto, ki lleno,
  * sin kaioken) en vez del estado real del jugador: si dependiera de él, un maestro y un
@@ -38,6 +43,8 @@ public final class AuraPreviewRenderer {
     public static boolean ACTIVE = false;
     /** Escala del aura en el preview. = AURA_SCALE del mundo -> proporción real. */
     public static float PREVIEW_SCALE = 1.30f;
+    /** Escala del aura COMPUESTA en el preview (más alta que la legacy; ver onRenderLivingPost). */
+    public static float COMPOSED_PREVIEW_SCALE = 0.8f;
 
     /**
      * Override de color EN VIVO para StyleSelectionScreen: mientras el jugador elige
@@ -57,6 +64,12 @@ public final class AuraPreviewRenderer {
     private static final AuraProfile PREVIEW_PROFILE =
             AuraFormula.profile(PREVIEW_STATE, AuraModifier.NONE);
 
+    /** Perfil fijo de la vista previa con la firma de la forma y de la raza del jugador: el PODER
+     *  sigue siendo el fijo (comparar tintes), pero la silueta es la de su forma. */
+    private static AuraProfile previewProfile(AbstractClientPlayer p) {
+        return AuraFormula.profile(PREVIEW_STATE, com.hmc.zenkai.feature.aura.AuraManager.modifiersOf(p));
+    }
+
     @SubscribeEvent
     public static void onRenderLivingPost(RenderLivingEvent.Post<?, ?> e) {
         if (!ACTIVE) return;
@@ -71,6 +84,29 @@ public final class AuraPreviewRenderer {
                 ? AuraColors.resolve(p, colorOverrideCustom, colorOverrideRgb)
                 : AuraClientState.resolveColor(p);
         double ticks = mc.level.getGameTime() + e.getPartialTick();
+
+        // AURA NUEVA (2026-09-30): la vista previa muestra la misma aura que el juego, la compuesta
+        // de la familia de la forma, en vez de los faldones legacy. Solo con el aura clásica
+        // elegida en la config se sigue dibujando la de siempre.
+        if (AuraSystemDispatcher.useComposed()) {
+            AuraColors.Layers layers = AuraColors.resolveLayers(p);
+            // El override en vivo del selector solo cambia el tinte "suelto"; forma y Kaioken
+            // siguen mandando (mismo criterio que AuraColors.resolve).
+            int inner = rgb;
+            int outer = layers.hasOuter() ? layers.outer() : rgb;
+            // Primero se dibuja el personaje (su lote sigue en el búfer) y el aura encima: si no,
+            // el cuerpo translúcido del aura quedaba tapado por el modelo entero.
+            if (e.getMultiBufferSource() instanceof MultiBufferSource.BufferSource bs) bs.endBatch();
+            PoseStack pose = e.getPoseStack();
+            pose.pushPose();
+            // El aura compuesta es más alta que los faldones: a escala real la corona se salía por
+            // arriba del recuadro de la vista previa (capturas del 2026-09-30).
+            pose.scale(COMPOSED_PREVIEW_SCALE, COMPOSED_PREVIEW_SCALE, COMPOSED_PREVIEW_SCALE);
+            com.hmc.zenkai.client.aura.compose.AuraComposer.drawPreview(pose, p,
+                    previewProfile(p), inner, outer, layers.hasOuter(), (float) (ticks / 20.0));
+            pose.popPose();
+            return;
+        }
 
         // Distancia 0 y banda NEAR forzada: en una GUI queremos el detalle completo.
         AuraSkirts.Plan plan =

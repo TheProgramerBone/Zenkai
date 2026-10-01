@@ -1,0 +1,45 @@
+{
+  "_comment": "SSJ3 (canon): la llama eléctrica de SSJ2, mucho más alta y vertical; agujas más largas en la corona.",
+  "family": "electric_flame",
+  "body": {
+    "half_height": 1.3,
+    "tip": 1.8,
+    "top_boost": 1.6,
+    "speed": 1.25,
+    "amp": 1.15
+  },
+  "body_set": {
+    "crown_knee": 1.25,
+    "crown_soft": 0.7
+  },
+  "extra_components": [
+    {
+      "type": "strands",
+      "count": 24,
+      "radius": [
+        0.2,
+        0.45
+      ],
+      "height": [
+        0.8,
+        1.9
+      ],
+      "length": [
+        0.8,
+        1.7
+      ],
+      "width": 0.06,
+      "lean": 0.15,
+      "life": [
+        0.3,
+        0.6
+      ],
+      "top_bias": 0.8,
+      "ground_count": 0,
+      "color": "outer",
+      "core_color": "outer",
+      "alpha": 0.8,
+      "bloom": 0.45
+    }
+  ]
+}

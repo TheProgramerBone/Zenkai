@@ -44,7 +44,8 @@ public class AuraRockParticle extends Particle {
     private float rotX, rotY, rotZ, oRotX, oRotY, oRotZ;
 
     protected AuraRockParticle(ClientLevel level, double x, double y, double z,
-                               double xd, double yd, double zd, BlockState state, BlockPos pos) {
+                               double xd, double yd, double zd, BlockState state, BlockPos pos,
+                               boolean levitate) {
         super(level, x, y, z, 0.0, 0.0, 0.0);
         this.xd = xd;
         this.yd = yd;
@@ -62,7 +63,17 @@ public class AuraRockParticle extends Particle {
         this.gravity = 0.12f;
         this.friction = 0.94f;
         this.hasPhysics = true;
-        this.halfSize = 0.05f + level.random.nextFloat() * 0.08f;
+        // Trozos más grandes (antes 0.05-0.13): junto al polvo de DMZ los cubitos se perdían.
+        this.halfSize = 0.07f + level.random.nextFloat() * 0.11f;
+        if (levitate) {
+            // Presión del aura (Beast, aura_9/aura_10): el trozo sube despacio y se queda
+            // flotando alrededor en vez de caer — gravedad levemente negativa, mucho rozamiento,
+            // sin colisión para que no se quede enganchado en el borde de un bloque.
+            this.lifetime = 60 + level.random.nextInt(50);
+            this.gravity = -0.012f;
+            this.friction = 0.9f;
+            this.hasPhysics = false;
+        }
 
         this.spinX = (level.random.nextFloat() - 0.5f) * 0.3f;
         this.spinY = (level.random.nextFloat() - 0.5f) * 0.3f;
@@ -157,13 +168,18 @@ public class AuraRockParticle extends Particle {
     }
 
     public static class Provider implements ParticleProvider<BlockParticleOption> {
+        /** true = la variante que levita (ModParticles.AURA_ROCK_FLOAT). */
+        private final boolean levitate;
+
+        public Provider(boolean levitate) { this.levitate = levitate; }
+
         @Override
         public Particle createParticle(@NotNull BlockParticleOption opts, @NotNull ClientLevel level,
                                        double x, double y, double z,
                                        double xd, double yd, double zd) {
             BlockState state = opts.getState();
             if (state.isAir() || state.getRenderShape() == RenderShape.INVISIBLE) return null;
-            return new AuraRockParticle(level, x, y, z, xd, yd, zd, state, BlockPos.containing(x, y, z));
+            return new AuraRockParticle(level, x, y, z, xd, yd, zd, state, BlockPos.containing(x, y, z), levitate);
         }
     }
 }
