@@ -29,10 +29,15 @@ solos, sin que el addon toque ninguna clase de Zenkai:
 | `zenkai_race_stats/<race>.json` | Curvas de stats de una raza | `RaceStatTable` |
 | `zenkai_forms/<id>.json` | Una transformación nueva colgada de una cadena existente (`parent`) | `FormDef`/`FormRegistry` |
 | `zenkai_archetypes/<nombre>.json` | Un arquetipo de entidad nuevo (forma de atributos + multiplicadores) | `EntityArchetype`/`EntityArchetypeManager` |
+| `zenkai_face_parts/<categoría>/<nombre>.json` | Un rasgo facial nuevo (ojos, cejas, nariz, boca): capas PNG con su fuente de color, razas, variante por raza | `FacePartDef`/`FaceCatalog` |
+| `zenkai_hair_styles/<nombre>.json` | Un peinado nuevo (geo de cubos o textura plana), razas, variante por transformación | `HairStyleDef`/`HairCatalog` |
 
 En todos los casos: el `id` del archivo tiene que coincidir con un valor **ya existente** del
-enum/cadena correspondiente (excepto `zenkai_forms`, `zenkai_archetypes` y `zenkai_masters`, que
-son verdaderamente abiertos — cualquier `id` nuevo funciona). Un archivo cuyo `id` no encaja en
+enum/cadena correspondiente (excepto `zenkai_forms`, `zenkai_archetypes`, `zenkai_masters`,
+`zenkai_face_parts` y `zenkai_hair_styles`, que son verdaderamente abiertos — cualquier `id`
+nuevo funciona). Las texturas/geo de rasgos y peinados van en `assets/<tu_modid>/`; su nombre
+visible, en la clave de lang `face_part.<ns>.<categoría>.<nombre>` o `hair_style.<ns>.<nombre>`.
+Formato completo de los campos en el javadoc de `FacePartDef.parse` y `HairStyleDef.parse`. Un archivo cuyo `id` no encaja en
 ningún enum se ignora con un aviso en el log, nunca crashea.
 
 **Conflictos entre datapacks**: `FormRegistry` avisa por log (`Zenkai-Forms`) si dos datapacks
@@ -134,10 +139,15 @@ them up by itself, without the addon touching any Zenkai class:
 | `zenkai_race_stats/<race>.json` | Stat curves of a race | `RaceStatTable` |
 | `zenkai_forms/<id>.json` | A new transformation hanging off an existing chain (`parent`) | `FormDef`/`FormRegistry` |
 | `zenkai_archetypes/<name>.json` | A new entity archetype (attribute shape + multipliers) | `EntityArchetype`/`EntityArchetypeManager` |
+| `zenkai_face_parts/<category>/<name>.json` | A new face feature (eyes, eyebrows, nose, mouth): PNG layers with their color source, races, per-race variant | `FacePartDef`/`FaceCatalog` |
+| `zenkai_hair_styles/<name>.json` | A new hairstyle (cube geo or flat texture), races, per-transformation variant | `HairStyleDef`/`HairCatalog` |
 
 In every case the file's `id` must match an **already existing** value of the corresponding
-enum/chain (except `zenkai_forms`, `zenkai_archetypes` and `zenkai_masters`, which are truly
-open — any new `id` works). A file whose `id` fits no enum is ignored with a log warning, and
+enum/chain (except `zenkai_forms`, `zenkai_archetypes`, `zenkai_masters`, `zenkai_face_parts`
+and `zenkai_hair_styles`, which are truly open — any new `id` works). Face/hair textures and geo
+go under `assets/<your_modid>/`; their display name in the lang key
+`face_part.<ns>.<category>.<name>` or `hair_style.<ns>.<name>`. Full field format in the javadoc
+of `FacePartDef.parse` and `HairStyleDef.parse`. A file whose `id` fits no enum is ignored with a log warning, and
 never crashes.
 
 **Datapack conflicts**: `FormRegistry` logs a warning (`Zenkai-Forms`) if two datapacks compete

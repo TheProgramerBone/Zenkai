@@ -55,6 +55,14 @@ public class PlayerLifeCycle {
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent e) {
         if (e.getEntity() instanceof ServerPlayer sp) {
+            // Rasgos faciales guardados que ya no son válidos (id de un addon desinstalado, rasgo
+            // borrado del datapack, save migrado desde índices sin equivalente): al default de
+            // la raza. Sin raza elegida aún no hay nada que reconciliar.
+            PlayerStatsAttachment stats = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+            if (stats.isRaceChosen()) {
+                com.hmc.zenkai.feature.race.FaceBans.reconcile(stats.getRace(),
+                        sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()));
+            }
             sync(sp);
             syncVisual(sp);
         }

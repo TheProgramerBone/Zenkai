@@ -12,9 +12,23 @@ public final class RaceTextureUtil {
 
     private RaceTextureUtil() {}
 
+    /**
+     * Caché de existencia: getResource recorre la pila entera de resource packs, y las capas de
+     * render (iris, rasgos faciales, capas de cuerpo) lo preguntan por jugador y por frame. La
+     * respuesta solo cambia al recargar recursos, y entonces RaceTextureCacheReload la vacía.
+     */
+    private static final java.util.Map<ResourceLocation, Boolean> EXISTS =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     /** ¿Existe el recurso en el resource manager del cliente? */
     public static boolean resourceExists(ResourceLocation rl) {
-        return Minecraft.getInstance().getResourceManager().getResource(rl).isPresent();
+        return EXISTS.computeIfAbsent(rl,
+                k -> Minecraft.getInstance().getResourceManager().getResource(k).isPresent());
+    }
+
+    /** Llamar al recargar recursos (F3+T, cambio de resource pack). */
+    public static void clearCache() {
+        EXISTS.clear();
     }
 
     /**
@@ -29,16 +43,5 @@ public final class RaceTextureUtil {
         String stem = (dot >= 0) ? p.substring(0, dot) : p;
         if (stem.endsWith("_colorable")) stem = stem.substring(0, stem.length() - "_colorable".length());
         return ResourceLocation.fromNamespaceAndPath(base.getNamespace(), stem + suffix + ext);
-    }
-
-    /**
-     * Inserta {@code suffix} antes de la extensión SIN quitar {@code _colorable}.
-     * Ej: {@code eyes.png} + {@code "_iris"} -> {@code eyes_iris.png}
-     */
-    public static ResourceLocation withSuffix(ResourceLocation rl, String suffix) {
-        String p = rl.getPath();
-        int dot = p.lastIndexOf('.');
-        String np = (dot >= 0) ? p.substring(0, dot) + suffix + p.substring(dot) : p + suffix;
-        return ResourceLocation.fromNamespaceAndPath(rl.getNamespace(), np);
     }
 }

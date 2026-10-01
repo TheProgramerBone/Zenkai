@@ -36,6 +36,18 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
         return item.getModelPath();
     }
 
+    /**
+     * GeoRenderer.defaultRender pide el modelo por ESTA sobrecarga (con el renderer), así que aquí
+     * se puede mirar el stack que se pinta: el item de pelo genérico elige la geo del peinado
+     * desde su componente (GeoLayerArmorItem.stackModel). Sin stackModel, igual que antes.
+     */
+    @Override
+    public ResourceLocation getModelResource(GeoLayerArmorItem item,
+                                             @Nullable software.bernie.geckolib.renderer.GeoRenderer<GeoLayerArmorItem> renderer) {
+        if (renderer instanceof GeoLayerArmorRenderer armor) return item.resolveModel(armor.getCurrentStack());
+        return item.getModelPath();
+    }
+
     @Override
     public ResourceLocation getTextureResource(GeoLayerArmorItem item) {
         return item.getTexturePath();

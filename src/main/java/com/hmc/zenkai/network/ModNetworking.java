@@ -386,6 +386,16 @@ public class ModNetworking {
                 FormSyncPacket::handle);
 
         registrar.playToClient(
+                com.hmc.zenkai.feature.race.face.FaceCatalogSyncPacket.TYPE,
+                com.hmc.zenkai.feature.race.face.FaceCatalogSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.race.face.FaceCatalogSyncPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.race.hair.HairCatalogSyncPacket.TYPE,
+                com.hmc.zenkai.feature.race.hair.HairCatalogSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.race.hair.HairCatalogSyncPacket::handle);
+
+        registrar.playToClient(
                 OverlayStateSyncPacket.TYPE,
                 OverlayStateSyncPacket.STREAM_CODEC,
                 OverlayStateSyncPacket::handle);

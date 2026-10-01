@@ -62,6 +62,18 @@ public final class ModDataComponents {
                     .networkSynchronized(ByteBufCodecs.BOOL)
                     .build());
 
+    /**
+     * Peinado (id de HairCatalog) del item de pelo genérico zenkai:hair. Lo pone HairResolver en
+     * un stack VIRTUAL que solo existe durante el render (nunca en un inventario real), pero se
+     * registra persistente/sincronizable por si un stack así acabara serializado (creativo,
+     * comandos): un componente sin codec rompería el guardado.
+     */
+    public static final Supplier<DataComponentType<net.minecraft.resources.ResourceLocation>> HAIR_STYLE =
+            COMPONENTS.register("hair_style", () -> DataComponentType.<net.minecraft.resources.ResourceLocation>builder()
+                    .persistent(net.minecraft.resources.ResourceLocation.CODEC)
+                    .networkSynchronized(net.minecraft.resources.ResourceLocation.STREAM_CODEC)
+                    .build());
+
     public static void register(IEventBus modBus) {
         COMPONENTS.register(modBus);
     }

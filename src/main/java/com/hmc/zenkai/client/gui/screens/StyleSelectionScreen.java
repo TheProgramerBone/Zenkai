@@ -40,9 +40,11 @@ public class StyleSelectionScreen extends Screen {
 
     private static final int BG_W = 256;
     private static final int BG_H = 256;
-    private static final int IN_X1 = 10;
+    // Beige real de common_screen.png: x=12..243 (el marco ocupa 0..11 y 244..255). Antes era
+    // 10/245, copiado de las pantallas viejas, y lo que va pegado al borde pisaba el marco. Ver gui.md.
+    private static final int IN_X1 = 12;
     private static final int IN_Y1 = 10;
-    private static final int IN_X2 = 245;
+    private static final int IN_X2 = 243;
     private static final int IN_Y2 = 240;
     private static final int IN_W  = IN_X2 - IN_X1;
     private static final int BTN_BAR_Y = 260;
@@ -81,8 +83,8 @@ public class StyleSelectionScreen extends Screen {
     private static final int COLOR_SWATCH = ZenkaiPalette.LABEL_ON_PANEL; // bronce/dorado → etiqueta de swatch (Ki Color)
 
     // ── Bloque de estadísticas (a la derecha del preview) ─────────────────────
-    private static final int STATS_X    = IN_X1 + PAD + PREVIEW_W + 6;   // 94
-    private static final int STATS_R    = IN_X2 - PAD;                   // 237
+    private static final int STATS_X    = IN_X1 + PAD + PREVIEW_W + 6;   // 96
+    private static final int STATS_R    = IN_X2 - PAD;                   // 235
     private static final int COL_BASE_R = STATS_X + 44;
     private static final int COL_COEF_R = STATS_X + 92;
     /** Justo debajo del swatch de Ki Color. */

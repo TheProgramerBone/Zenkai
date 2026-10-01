@@ -28,8 +28,9 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     public enum ColorChannel {
         NONE,   // sin tinte (blanco) — textura tal cual
         SKIN,   // skinColorRgb   → cuerpo/piel de raza
-        HAIR,   // hairColorRgb   → pelos
-        DETAIL  // detailColorRgb → detalles (p. ej. Arcosian)
+        HAIR    // hairColorRgb   → pelos
+        // (DETAIL se eliminó el 2026-10-01: nadie lo usaba; los colores por capa del cuerpo van
+        // por RaceLayerDiscovery/BodyTintGeoLayer)
     }
 
     private final ResourceLocation modelPath;
@@ -80,6 +81,29 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     public GeoLayerArmorItem channel(ColorChannel channel) {
         this.colorChannel = channel;
         return this;
+    }
+
+    // Modelo que depende del STACK (el item de pelo genérico: el peinado va en un componente).
+    @Nullable private java.util.function.Function<ItemStack, ResourceLocation> stackModel = null;
+
+    /**
+     * Modelo según el estado del stack. Devolver null desde la función = usar el normal.
+     * GeoLayerArmorModel.getModelResource(item, renderer) lo consulta con el stack que se está
+     * pintando; GeckoLib re-localiza los huesos al cambiar de modelo (grabRelevantBones compara
+     * el BakedGeoModel), así que un mismo item puede cambiar de geo entre jugadores.
+     */
+    public GeoLayerArmorItem stackModel(java.util.function.Function<ItemStack, ResourceLocation> f) {
+        this.stackModel = f;
+        return this;
+    }
+
+    /** Modelo efectivo para ESTE stack (mismo embudo que resolveTexture). */
+    public ResourceLocation resolveModel(@Nullable ItemStack stack) {
+        if (stackModel != null && stack != null && !stack.isEmpty()) {
+            ResourceLocation r = stackModel.apply(stack);
+            if (r != null) return r;
+        }
+        return modelPath;
     }
 
     /** Textura según el estado del stack. Devolver null desde la función = usar la normal. */

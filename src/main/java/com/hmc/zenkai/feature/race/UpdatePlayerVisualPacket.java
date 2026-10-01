@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.race;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -37,7 +38,18 @@ public record UpdatePlayerVisualPacket(CompoundTag data) implements CustomPacket
             // Si lo recibe el SERVIDOR (cliente -> servidor)
             if (ctx.player() instanceof ServerPlayer sp) {
                 var visual = sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
-                visual.load(pkt.data);
+                // Lista blanca de campos cosméticos, NUNCA load() completo: ver el javadoc de
+                // loadCosmeticFromClient (majinControlled y compañía son del servidor).
+                visual.loadCosmeticFromClient(pkt.data);
+                Race race = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).getRace();
+                // Misma regla que RaceSelectionScreen: solo Human/Saiyan pueden volver a la
+                // skin vanilla; el resto lleva siempre su cuerpo de raza.
+                if (race != Race.HUMAN && race != Race.SAIYAN) {
+                    visual.setRenderRaceSkin(true);
+                    visual.setHideVanillaBody(true);
+                }
+                // Un cliente modificado podría mandar un índice de cara baneado para su raza.
+                FaceBans.reconcile(race, visual);
 
                 // Re-broadcast a self + trackers (server -> clients)
                 PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);

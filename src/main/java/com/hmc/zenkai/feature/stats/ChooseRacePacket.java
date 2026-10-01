@@ -7,6 +7,8 @@ import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.feature.race.FaceBans;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -57,6 +59,8 @@ public record ChooseRacePacket(Race race) implements CustomPacketPayload {
             att.setRace(pkt.race());
             att.setRaceChosen(true);
             att.setStyleChosen(false);
+            // Los índices de ojos/boca/nariz guardados pueden estar baneados para la raza nueva.
+            FaceBans.reconcile(pkt.race(), PlayerVisualAttachment.get(sp));
             NeoForge.EVENT_BUS.post(new RaceChosenEvent(sp, pkt.race()));
             ZenkaiTriggers.RACE_CHOSEN.get().trigger(sp,
                     pkt.race().name().toLowerCase(Locale.ROOT), null);

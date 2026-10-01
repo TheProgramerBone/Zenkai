@@ -616,7 +616,9 @@ public class ModCommands {
             return 0;
         }
         sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).setRace(r);
+        com.hmc.zenkai.feature.race.FaceBans.reconcile(r, sp.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()));
         PlayerLifeCycle.sync(sp);
+        PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
         ctx.getSource().sendSuccess(
                 () -> Component.literal("[Zenkai] Race = " + r + " → " + sp.getGameProfile().getName()), true);
         return 1;

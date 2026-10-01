@@ -1,0 +1,9 @@
+{
+  "races": ["human", "saiyan"],
+  "sort": 11,
+  "selectable": false,
+  "representation": "geo",
+  "model": "zenkai:geo/hair/ssj_hair_1.geo.json",
+  "texture": "zenkai:textures/customization/hair/ssj_hair_1.png",
+  "color": "hair"
+}

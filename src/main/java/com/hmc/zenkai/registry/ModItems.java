@@ -880,6 +880,25 @@ public class ModItems {
                     "geo/scouter.geo.json",
                     "textures/models/armor/scouter.png"));
 
+    // Pelo GENÉRICO (S5, 2026-10-01): UN item para cualquier peinado del catálogo de datapack
+    // (HairCatalog). El peinado viaja en el componente HAIR_STYLE del stack virtual que construye
+    // HairResolver, y de ahí salen modelo y textura en cada render. Un peinado nuevo = geo + PNG +
+    // JSON en zenkai_hair_styles, sin registrar nada aquí. La geo/textura de abajo son solo el
+    // respaldo si el componente falta o apunta a un peinado que no existe.
+    public static final Supplier<GeoLayerArmorItem> HAIR =
+            ITEMS.register("hair", () ->
+                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
+                            new Item.Properties(),
+                            "geo/hair/hair_1.geo.json",
+                            "textures/customization/hair/hair_1.png",
+                            ""
+                    ).channel(GeoLayerArmorItem.ColorChannel.HAIR)
+                     .stackModel(com.hmc.zenkai.feature.race.hair.HairStacks::model)
+                     .stackTexture(com.hmc.zenkai.feature.race.hair.HairStacks::texture));
+
+    // LEGACY: los items de pelo de antes del catálogo. Siguen registrados SOLO para no romper
+    // mundos/inventarios que los tengan guardados; HairResolver ya no los usa (sus geo/PNG los
+    // usan ahora los peinados zenkai:legacy_1 y zenkai:legacy_1_ssj del catálogo).
     //Cabellos Común
     public static final Supplier<GeoLayerArmorItem> HAIR_1 =
             ITEMS.register("hair_1",() ->

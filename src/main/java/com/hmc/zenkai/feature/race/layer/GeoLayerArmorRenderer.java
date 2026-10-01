@@ -13,12 +13,10 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
 
     public GeoLayerArmorRenderer(GeoLayerArmorItem item) {
         super(new GeoLayerArmorModel());
-        // Overlays de cara solo para items de cuerpo (no pelo).
+        // Cara (ojos/cejas/nariz/boca) solo para items de cuerpo (no pelo). Una sola capa que
+        // recorre las categorías del catálogo, ver FaceOverlayGeoLayer.
         if (item.hasFaceOverlays()) {
-            addRenderLayer(new FaceOverlayGeoLayer(this, FaceOverlayGeoLayer.Kind.EYES));
-            addRenderLayer(new FaceOverlayGeoLayer(this, FaceOverlayGeoLayer.Kind.MOUTH));
-            addRenderLayer(new FaceOverlayGeoLayer(this, FaceOverlayGeoLayer.Kind.NOSE));
-
+            addRenderLayer(new FaceOverlayGeoLayer(this));
         }
         // Tinte de cuerpo multicapa (detalle + líneas) — razas multicolor (Namek).
         if (item.hasBodyTint()) {

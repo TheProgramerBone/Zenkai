@@ -1,0 +1,9 @@
+{
+  "sort": 230,
+  "layers": [
+    { "texture": "zenkai:textures/customization/face/eyes/sleepy/base.png", "color": "none" },
+    { "texture": "zenkai:textures/customization/face/eyes/sleepy/brow.png", "color": "hair" },
+    { "texture": "zenkai:textures/customization/face/eyes/sleepy/iris_l.png", "color": "eye_left" },
+    { "texture": "zenkai:textures/customization/face/eyes/sleepy/iris_r.png", "color": "eye_right" }
+  ]
+}
