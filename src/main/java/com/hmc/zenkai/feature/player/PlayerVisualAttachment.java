@@ -89,7 +89,9 @@ public class PlayerVisualAttachment {
     public static int defaultSkinColorFor(Race race) {
         return switch (race) {
             case NAMEKIAN -> 0x2DC31E;
-            case ARCOSIAN -> 0xEDEDED;
+            // Base de la piel lavanda del arte de Kirbro (geo nueva, 2026-10-01): las capas
+            // _layer_N guardan cada color RELATIVO a este tono, así que con él sale el arte exacto.
+            case ARCOSIAN -> 0xDDD8EE;
             case MAJIN    -> 0xF2A0C4;
             default        -> 0xD5A07A;
         };
