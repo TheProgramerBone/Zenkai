@@ -203,13 +203,14 @@ public record KiVfxProfile(
                 .bands(0.72f, 0.28f, 0.06f).tone(0.80f, 0.50f).edge(0.30f).wobble(0.80f)
                 .halo(1.8f, 0.20f).trail(8, 0.85f, 0.60f, 0.30f, 1.0f).sparks(0.18f));
 
-        // DISK: el canto cae en g≈0.58 (DISK_RIM_U) — con bandCore 0.72 queda en la capa CALIENTE
+        // DISK: el canto cae en g≈0.58 (DISK_RIM_U) — con bandCore 0.80 queda en la capa CALIENTE
         // (amarillo saturado en kienzan_1-3) en vez de en el blanco; el blanco se queda en el
         // centro de las caras. outlineDark 0.50: el aro exterior de las caras se oscurece, el
-        // contorno fino de kienzan_2.
+        // contorno fino de kienzan_2. bandCore 0.72 → 0.80 (2026-10-01, a petición del usuario):
+        // con 0.72 el blanco cubría ~2/3 del radio y se tragaba el filo amarillo.
         put(KiTechniqueType.DISK, b(KiVfxShape.DISK)
                 .band(Band.RADIAL).shell(0.78f).envelope(1.12f, 0.16f).core(0.62f, 0.90f)
-                .bands(0.72f, 0.30f, 0.06f).tone(0.80f, 0.50f).edge(0.10f).wobble(0.45f)
+                .bands(0.80f, 0.30f, 0.06f).tone(0.80f, 0.50f).edge(0.10f).wobble(0.45f)
                 .halo(0f, 0f).trail(0, 0f, 0f, 0f, 0f).sparks(0.30f));
 
         put(KiTechniqueType.BARRIER, b(KiVfxShape.SPHERE)

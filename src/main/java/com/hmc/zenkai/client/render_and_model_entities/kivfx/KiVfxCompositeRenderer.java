@@ -167,15 +167,16 @@ public final class KiVfxCompositeRenderer {
 
     /**
      * Cuerpo de un HAZ ANCLADO ({@link KiVfxProfile#column()}): envolvente, cáscara y núcleo en
-     * dos capas, como tubos de longitud real (ver {@link KiVfxGeometry#emitTube}). El PoseStack
-     * llega SIN escalar, con el origen en la punta y +Z apuntando del disparo hacia la cabeza;
-     * {@code radius} ya va en bloques.
+     * dos capas, como tubos barridos a lo largo de la trayectoria real de la cabeza (ver
+     * {@link KiVfxGeometry#emitSweptTube}: con HOMING el haz se curva con ella). El PoseStack
+     * llega SIN escalar ni rotar, con el origen en la cabeza; la trayectoria ya va en esas
+     * coordenadas. {@code radius} ya va en bloques.
      */
     public static void renderColumn(MultiBufferSource.BufferSource buffer, KiVfxProfile p, PoseStack pose,
-                                    float radius, float rootMul, float length,
+                                    KiVfxGeometry.TubePath path, float radius, float rootMul,
                                     float r, float g, float b, float alphaMul,
                                     boolean frozenAnim, float proximity) {
-        if (!KiVfxRenderTypes.available() || length <= 1.0e-3f) return;
+        if (!KiVfxRenderTypes.available() || path == null) return;
         KiVfxDebugMode dbg = KiVfxDebugMode.current();
 
         if (dbg.showsShell()) {
@@ -183,10 +184,10 @@ public final class KiVfxCompositeRenderer {
             KiVfxRenderTypes.setupEnergy(p, frozenAnim, proximity);
             VertexConsumer vc = buffer.getBuffer(type);
             if (dbg.showsEnvelope() && p.envelope().enabled()) {
-                KiVfxGeometry.emitTube(vc, pose.last(), radius * p.envelope().scale(), rootMul, length,
+                KiVfxGeometry.emitSweptTube(vc, pose.last(), path, radius * p.envelope().scale(), rootMul,
                         r, g, b, p.envelope().alpha() * alphaMul, false);
             }
-            KiVfxGeometry.emitTube(vc, pose.last(), radius, rootMul, length,
+            KiVfxGeometry.emitSweptTube(vc, pose.last(), path, radius, rootMul,
                     r, g, b, p.shell().alpha() * alphaMul, false);
             buffer.endBatch(type);
         }
@@ -199,9 +200,9 @@ public final class KiVfxCompositeRenderer {
             float cr = radius * p.core().scale();
             RenderType type = KiVfxRenderTypes.glow(KiVfxRenderTypes.HALO_TEXTURE);
             VertexConsumer cvc = buffer.getBuffer(type);
-            KiVfxGeometry.emitTube(cvc, pose.last(), cr, rootMul, length,
+            KiVfxGeometry.emitSweptTube(cvc, pose.last(), path, cr, rootMul,
                     h[0], h[1], h[2], a * CORE_OUTER_ALPHA, true);
-            KiVfxGeometry.emitTube(cvc, pose.last(), cr * CORE_INNER_SCALE, rootMul, length,
+            KiVfxGeometry.emitSweptTube(cvc, pose.last(), path, cr * CORE_INNER_SCALE, rootMul,
                     h[0] + (1f - h[0]) * white, h[1] + (1f - h[1]) * white, h[2] + (1f - h[2]) * white,
                     a, true);
             buffer.endBatch(type);

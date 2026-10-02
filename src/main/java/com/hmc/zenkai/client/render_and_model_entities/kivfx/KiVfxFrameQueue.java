@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.render_and_model_entities.kivfx;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.compat.IrisCompat;
 import com.hmc.zenkai.config.ClientConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -79,6 +80,7 @@ public final class KiVfxFrameQueue {
      *  @param fromCamera centro de la técnica RELATIVO A LA CÁMARA (mundo − cámara), para
      *                    ordenarla con {@link #sortBackToFront}. */
     public static void submit(PoseStack pose, Vec3 fromCamera, Task task) {
+        if (IrisCompat.renderingShadowPass()) return;
         PoseStack.Pose last = pose.last();
         QUEUE.add(new Entry(new Matrix4f(last.pose()), new Matrix3f(last.normal()),
                 fromCamera.lengthSqr(), task, false, false));
@@ -92,6 +94,7 @@ public final class KiVfxFrameQueue {
      * siguiera activa.
      */
     public static void submitAura(PoseStack pose, Vec3 fromCamera, Task task) {
+        if (IrisCompat.renderingShadowPass()) return;
         PoseStack.Pose last = pose.last();
         QUEUE.add(new Entry(new Matrix4f(last.pose()), new Matrix3f(last.normal()),
                 fromCamera.lengthSqr(), task, false, true));
@@ -106,6 +109,7 @@ public final class KiVfxFrameQueue {
      * tareas simplemente no se ejecutan.
      */
     public static void submitBloomOnly(PoseStack pose, Vec3 fromCamera, Task task) {
+        if (IrisCompat.renderingShadowPass()) return;
         PoseStack.Pose last = pose.last();
         QUEUE.add(new Entry(new Matrix4f(last.pose()), new Matrix3f(last.normal()),
                 fromCamera.lengthSqr(), task, true, true));
@@ -135,6 +139,7 @@ public final class KiVfxFrameQueue {
             for (Entry e : QUEUE) {
                 if (e.bloomOnly() && !forBloom) continue;
                 if (forBloom && !(e.aura() ? auraBloom : kiBloom)) continue;
+                KiVfxRenderTypes.resetAxis(); // cada técnica fija el suyo; nunca hereda el de otra
                 PoseStack pose = new PoseStack();
                 pose.last().pose().set(e.pose());
                 pose.last().normal().set(e.normal());
@@ -146,6 +151,7 @@ public final class KiVfxFrameQueue {
             }
         } finally {
             bloomPass = false;
+            KiVfxRenderTypes.resetAxis();
         }
     }
 

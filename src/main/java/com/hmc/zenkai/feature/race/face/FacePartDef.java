@@ -33,13 +33,12 @@ import java.util.function.Consumer;
  * @param races      razas que pueden elegirlo (el JSON sin "races" = cualquiera)
  * @param defaultFor razas para las que es la opción inicial al reconciliar
  * @param layers     capas en orden de pintado (la última queda encima), ver {@link FaceLayer}
- * @param raceLayers capas ALTERNATIVAS por raza: el mismo rasgo dibujado distinto donde la
- *                   cabeza lo pide. Caso real (2026-10-01): el casco arcosiano tapa las filas
- *                   ly 0-7 de la cara, así que los ojos se redibujan bajo el casco. Es el MISMO
- *                   rasgo (mismo id y nombre: el jugador no pierde su elección al cambiar de
- *                   raza ni ve duplicados en la lista). Raza ausente = {@link #layers}.
- *                   Limitación conocida: va por raza, no por modelo; si una forma arcosiana
- *                   tiene algún día una cabeza sin casco, habrá que pasar a clave por modelo.
+ * @param raceLayers capas ALTERNATIVAS por raza: el mismo rasgo dibujado distinto en una raza
+ *                   (mismo id y nombre: el jugador no pierde su elección al cambiar de raza ni
+ *                   ve duplicados en la lista). Raza ausente = {@link #layers}. Como cualquier
+ *                   capa, se pintan en la cara CANÓNICA (16,16)-(31,31): DÓNDE cae la cara en
+ *                   cada modelo ya no se resuelve aquí sino en {@link FaceRegions} (desde el
+ *                   2026-10-01; antes la boca arcosiana era un PNG aparte movido a (16,48)).
  */
 public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
                           Set<Race> races, Set<Race> defaultFor, List<FaceLayer> layers,
@@ -53,7 +52,9 @@ public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
     /** Cada capa es una pasada de render por jugador: tope para que un JSON no dispare el coste. */
     public static final int MAX_LAYERS = 8;
 
+    /** Una ceja (categoría EYEBROWS) nunca es elegible en una raza sin cejas (RaceFaceTraits). */
     public boolean allows(Race race) {
+        if (category == FaceCategory.EYEBROWS && !RaceFaceTraits.hasEyebrows(race)) return false;
         return races.contains(race);
     }
 
@@ -78,7 +79,8 @@ public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
     /**
      * Lee la definición. Formato:
      * <pre>
-     * "layers": [ {"texture": "ns:textures/....png", "color": "none|skin|eye|eye_left|eye_right|hair|#RRGGBB"}, ... ]
+     * "layers": [ {"texture": "ns:textures/....png", "color": "none|skin|eye|eye_left|eye_right|hair|#RRGGBB",
+     *              "eyebrow": true (opcional: ceja, oculta en razas sin cejas)}, ... ]
      *   o el atajo de una sola capa:  "texture": "ns:textures/....png"  (color = el de la categoría)
      * "sort", "races", "exclude_races", "default_for"  — ver FaceCatalogManager
      * </pre>
@@ -101,7 +103,7 @@ public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
         }
         if (layers.isEmpty()) throw new IllegalArgumentException("sin \"layers\" ni \"texture\"");
 
-        // "race_layers": {"arcosian": [ ...capas... ]} — ver el javadoc del record.
+        // "race_layers": {"<raza>": [ ...capas... ]} — ver el javadoc del record.
         Map<Race, List<FaceLayer>> raceLayers = new EnumMap<>(Race.class);
         if (o.has("race_layers")) {
             JsonObject rl = GsonHelper.getAsJsonObject(o, "race_layers");
@@ -129,7 +131,7 @@ public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
             JsonObject l = el.getAsJsonObject();
             ResourceLocation tex = ResourceLocation.parse(GsonHelper.getAsString(l, "texture"));
             layers.add(FaceLayer.Color.parse(tex, GsonHelper.getAsString(l, "color", null),
-                    category.defaultColor()));
+                    category.defaultColor()).withEyebrow(GsonHelper.getAsBoolean(l, "eyebrow", false)));
         }
         if (layers.size() > MAX_LAYERS) {
             warn.accept(id + ": " + layers.size() + " capas, se usan las primeras " + MAX_LAYERS);

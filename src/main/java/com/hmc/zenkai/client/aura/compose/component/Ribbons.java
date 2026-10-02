@@ -7,8 +7,11 @@ import org.joml.Matrix4f;
  * Tramos de CINTA orientados a cámara para rayos y wisps (RenderType
  * {@code AuraComposeShaders.ribbons()}). Coordenadas relativas a la cámara: la cámara está en el
  * origen, así que la visual de cada tramo es menos su propio punto medio.
+ * <p>
+ * Público desde 2026-10-01: los arcos eléctricos de las técnicas de ki ({@code KiArcParticle})
+ * dibujan sus rayos con esta misma cinta, para que se lean igual que los del aura de SSJ2 y Beast.
  */
-final class Ribbons {
+public final class Ribbons {
 
     private Ribbons() {}
 
@@ -16,8 +19,8 @@ final class Ribbons {
      * Un tramo de p0 a p1 con ancho w0 → w1 y alfa a0 → a1. El ancho se abre en perpendicular al
      * tramo y a la visual, así la cinta siempre se ve de cara.
      */
-    static void segment(VertexConsumer vc, Matrix4f m, float x0, float y0, float z0, float x1, float y1, float z1,
-                        float w0, float w1, float r, float g, float b, float a0, float a1) {
+    public static void segment(VertexConsumer vc, Matrix4f m, float x0, float y0, float z0, float x1, float y1, float z1,
+                               float w0, float w1, float r, float g, float b, float a0, float a1) {
         float dx = x1 - x0, dy = y1 - y0, dz = z1 - z0;
         float mx = -(x0 + x1) * 0.5f, my = -(y0 + y1) * 0.5f, mz = -(z0 + z1) * 0.5f;
         float sx = dy * mz - dz * my, sy = dz * mx - dx * mz, sz = dx * my - dy * mx;
@@ -31,6 +34,22 @@ final class Ribbons {
         vc.addVertex(m, x0 + sx * h0, y0 + sy * h0, z0 + sz * h0).setColor(r, g, b, a0);
         vc.addVertex(m, x1 + sx * h1, y1 + sy * h1, z1 + sz * h1).setColor(r, g, b, a1);
         vc.addVertex(m, x1 - sx * h1, y1 - sy * h1, z1 - sz * h1).setColor(r, g, b, a1);
+    }
+
+    /**
+     * Una polilínea ({@code n} puntos xyz intercalados en {@code p}, desplazados {@code ox,oy,oz}
+     * para llevarlos a coordenadas relativas a cámara) como cinta que se estrecha un 50 % hacia la
+     * punta. Es el trazo de un rayo: el aura lo dibuja dos veces, una ancha del color y otra fina casi
+     * blanca.
+     */
+    public static void strip(VertexConsumer vc, Matrix4f m, float[] p, int n, float ox, float oy, float oz,
+                             float w, float r, float g, float b, float a) {
+        for (int j = 0; j < n - 1; j++) {
+            int i0 = j * 3, i1 = i0 + 3;
+            float w0 = w * (1f - 0.5f * j / (n - 1f)), w1 = w * (1f - 0.5f * (j + 1) / (n - 1f));
+            segment(vc, m, p[i0] + ox, p[i0 + 1] + oy, p[i0 + 2] + oz,
+                    p[i1] + ox, p[i1 + 1] + oy, p[i1 + 2] + oz, w0, w1, r, g, b, a, a);
+        }
     }
 
 }

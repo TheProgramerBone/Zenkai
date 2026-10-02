@@ -25,6 +25,7 @@
     { "name": "ZenkaiFrozenTime", "type": "float", "count": 1, "values": [ -1.0 ] },
     { "name": "ZenkaiProximity", "type": "float", "count": 1, "values": [ 1.0 ] },
     { "name": "ZenkaiAxial",     "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "ZenkaiAxisWorld", "type": "float", "count": 3, "values": [ 0.0, 0.0, 1.0 ] },
     { "name": "ZenkaiDebugMode", "type": "float", "count": 1, "values": [ 0.0 ] },
     { "name": "ZenkaiBloomMode", "type": "float", "count": 1, "values": [ 0.0 ] },
     { "name": "ZenkaiEmit",      "type": "float", "count": 2, "values": [ 0.30, 0.85 ] },

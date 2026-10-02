@@ -12,8 +12,9 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Destello de impacto: quieto, sin física, animado por edad sobre los 6 frames de
- * textures/particle/ki_impact_*.png. La textura es BLANCA; el tinte viene del RGB de las
- * opciones (color del aura resuelto en servidor).
+ * textures/particle/ki_impact_*.png (generados por tools/gen_ki_impact_fx.py: núcleo, destellos
+ * y anillo de choque con degradados continuos). La textura es BLANCA; el tinte viene del RGB de
+ * las opciones (color del aura resuelto en servidor).
  */
 public class KiImpactParticle extends TextureSheetParticle {
 

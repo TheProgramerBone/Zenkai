@@ -261,24 +261,13 @@ public final class ElectricityComponent implements AuraComponent {
                 float t = age[i] / life[i];
                 float a = cfg.alpha() * weight * (t < 0.5f ? 1f : 1f - (t - 0.5f) * 2f);
                 if (a <= 0.02f) continue;
-                strip(vc, m, main[i], MAIN_PTS, ox, oy, oz, w * 3.2f, cr, cg, cb, a * 0.45f);
-                strip(vc, m, main[i], MAIN_PTS, ox, oy, oz, w, kr, kg, kb, a);
+                Ribbons.strip(vc, m, main[i], MAIN_PTS, ox, oy, oz, w * 3.2f, cr, cg, cb, a * 0.45f);
+                Ribbons.strip(vc, m, main[i], MAIN_PTS, ox, oy, oz, w, kr, kg, kb, a);
                 for (int b = 0; b < cfg.branches(); b++) {
-                    strip(vc, m, branch[i][b], BRANCH_PTS, ox, oy, oz, w * 2.2f, cr, cg, cb, a * 0.35f);
-                    strip(vc, m, branch[i][b], BRANCH_PTS, ox, oy, oz, w * 0.7f, kr, kg, kb, a * 0.8f);
+                    Ribbons.strip(vc, m, branch[i][b], BRANCH_PTS, ox, oy, oz, w * 2.2f, cr, cg, cb, a * 0.35f);
+                    Ribbons.strip(vc, m, branch[i][b], BRANCH_PTS, ox, oy, oz, w * 0.7f, kr, kg, kb, a * 0.8f);
                 }
             }
         });
-    }
-
-    private static void strip(VertexConsumer vc, Matrix4f m, float[] p, int n, float ox, float oy, float oz,
-                              float w, float r, float g, float b, float a) {
-        for (int j = 0; j < n - 1; j++) {
-            int i0 = j * 3, i1 = i0 + 3;
-            // Se estrecha hacia la punta.
-            float w0 = w * (1f - 0.5f * j / (n - 1f)), w1 = w * (1f - 0.5f * (j + 1) / (n - 1f));
-            Ribbons.segment(vc, m, p[i0] + ox, p[i0 + 1] + oy, p[i0 + 2] + oz,
-                    p[i1] + ox, p[i1 + 1] + oy, p[i1 + 2] + oz, w0, w1, r, g, b, a, a);
-        }
     }
 }

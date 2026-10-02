@@ -44,25 +44,24 @@ public final class KiBeamAfterglow {
     private static final class Live {
         KiProjectileEntity entity;
         KiVfxProfile profile;
-        Vec3 origin, head;
+        List<Vec3> points; // camino raíz → cabeza, curvado si hubo HOMING
         float size;
         long lastSeen;
     }
 
-    private record Ghost(KiVfxProfile profile, Vec3 origin, Vec3 head, float size, int rgb, int rgb2, long start) {}
+    private record Ghost(KiVfxProfile profile, List<Vec3> points, float size, int rgb, int rgb2, long start) {}
 
     private static final Map<Integer, Live> LIVE = new HashMap<>();
     private static final List<Ghost> GHOSTS = new ArrayList<>();
 
     /** Lo llama el renderer del proyectil cada frame que dibuja un haz anclado. */
-    static void track(KiProjectileEntity e, KiVfxProfile v, Vec3 origin) {
+    static void track(KiProjectileEntity e, KiVfxProfile v, List<Vec3> points) {
         Minecraft mc = Minecraft.getInstance();
         if (e.isFrozen() || mc.level == null) return;
         Live l = LIVE.computeIfAbsent(e.getId(), k -> new Live());
         l.entity = e;
         l.profile = v;
-        l.origin = origin;
-        l.head = e.position().add(0, e.getBbHeight() * 0.5, 0);
+        l.points = points;
         l.size = (float) e.techniqueType().visualDiameter(e.size());
         l.lastSeen = mc.level.getGameTime();
     }
@@ -79,7 +78,7 @@ public final class KiBeamAfterglow {
         while (it.hasNext()) {
             Live l = it.next();
             if (l.entity.isRemoved()) {
-                GHOSTS.add(new Ghost(l.profile, l.origin, l.head, l.size, l.entity.rgb(), l.entity.rgb2(), now));
+                GHOSTS.add(new Ghost(l.profile, l.points, l.size, l.entity.rgb(), l.entity.rgb2(), now));
                 it.remove();
             } else if (now - l.lastSeen > STALE_TICKS) {
                 it.remove();
@@ -111,12 +110,13 @@ public final class KiBeamAfterglow {
             float animT = (float) t;
 
             PoseStack pose = new PoseStack();
-            Vec3 rel = gh.head().subtract(cam);
+            Vec3 head = gh.points().get(gh.points().size() - 1);
+            Vec3 rel = head.subtract(cam);
             pose.translate(rel.x, rel.y, rel.z);
-            Vec3 mid = gh.head().add(gh.origin()).scale(0.5).subtract(cam);
+            Vec3 mid = head.add(gh.points().get(0)).scale(0.5).subtract(cam);
             KiVfxFrameQueue.submit(pose, mid, (p, buf) -> {
                 com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors.begin(gh.rgb2());
-                KiVfxProjectileRenderer.renderColumn(gh.profile(), p, buf, gh.head(), gh.origin(), 0f,
+                KiVfxProjectileRenderer.renderColumn(gh.profile(), p, buf, gh.points(), 0f,
                         size, animT, r, g, b, fade, false, cam);
             });
         }

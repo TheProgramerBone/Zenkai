@@ -87,6 +87,34 @@ public class KiProjectileEntity extends Projectile {
      *  de más cuesta un Vec3 por tick y ahorra tener el largo declarado en dos sitios. */
     public static final int TRAIL_MAX = 34;
 
+    // ── Camino de la cabeza (SOLO cliente) para el haz ANCLADO: el cuerpo del haz no es la recta
+    //    origen→cabeza sino la trayectoria que la cabeza ha recorrido de verdad — con HOMING esa
+    //    trayectoria se curva y el haz debe curvarse con ella, como una serpiente que persigue al
+    //    objetivo, no una barra recta que solo gira. Se guarda con separación mínima entre puntos
+    //    y, si se llena, se ADELGAZA (se tira uno de cada dos y se dobla la separación) en vez de
+    //    cortarse, para que un haz larguísimo conserve su origen. ──
+    private static final int BEAM_PATH_MAX = 256;
+    private static final double BEAM_PATH_MIN_STEP = 0.35;
+    private final java.util.ArrayList<Vec3> beamPath = new java.util.ArrayList<>();
+    private double beamPathMinSq = BEAM_PATH_MIN_STEP * BEAM_PATH_MIN_STEP;
+
+    /** Centros de la cabeza en cada tick, del primero al último (último = posición del tick
+     *  actual). Vista de solo lectura; vacía en servidor y en una copia congelada. */
+    public java.util.List<Vec3> beamPath() { return java.util.Collections.unmodifiableList(beamPath); }
+
+    private void recordBeamPath(Vec3 center) {
+        if (!beamPath.isEmpty() && beamPath.get(beamPath.size() - 1).distanceToSqr(center) < beamPathMinSq) return;
+        beamPath.add(center);
+        if (beamPath.size() > BEAM_PATH_MAX) {
+            java.util.ArrayList<Vec3> thinned = new java.util.ArrayList<>(BEAM_PATH_MAX / 2 + 1);
+            for (int i = 0; i < beamPath.size(); i += 2) thinned.add(beamPath.get(i));
+            thinned.add(beamPath.get(beamPath.size() - 1));
+            beamPath.clear();
+            beamPath.addAll(thinned);
+            beamPathMinSq *= 4.0; // doble separación = cuádruple en distancia al cuadrado
+        }
+    }
+
     /** Desduplicador de efectos por tick para el renderer, que corre por FRAME. Devuelve true
      *  una sola vez por tick. Cliente: en servidor nadie lo llama. */
     private int lastFxTick = -1;
@@ -295,6 +323,7 @@ public class KiProjectileEntity extends Projectile {
         if (level().isClientSide) {
             trail.addFirst(position().add(0, getBbHeight() * 0.5, 0));
             while (trail.size() > TRAIL_MAX) trail.removeLast();
+            recordBeamPath(trail.getFirst());
         }
 
         if (!level().isClientSide && --life <= 0) discard();
@@ -441,18 +470,14 @@ public class KiProjectileEntity extends Projectile {
         // spark que ya usan PhysicalCombatServer (golpes físicos) y KiInfusionShooting
         // (infusión de ki) para su propio destello de impacto.
         //
-        // TOPE DELIBERADO en 3.0. `ki_impact_*.png` es un icono pixel-art de estrella/diamante
-        // de 32x32 con bordes dentados A PROPÓSITO (pensado para golpes físicos, que lo usan en
-        // 0.7-2.0) — NO es un degradado suave como ki_halo.png. Un intento anterior lo escalaba
-        // por `radius` sin tope (pasando de 10x en una EXPLOSION grande) para competir en tamaño
-        // con el humo/escombros de vainilla de más abajo; una vez QUITADO ese humo (ver el
-        // comentario de la rama sin grief) esa razón ya no existe, y escalarlo tanto solo
-        // agranda un icono dentado hasta que se le notan los bordes — CON shaders de bloom
-        // (Iris) esos bordes se difuminan y se ve bien, SIN shaders se ve un "sol" con anillos
-        // duros (confirmado con capturas del usuario). Mantenerlo en un rango donde el icono se
-        // ve bien CON O SIN shaders, en vez de perseguir un tamaño que dependía de que hubiera
-        // bloom para disimularlo.
-        float flashScale = Math.min(3.0f, 1.0f + (float) radius * 0.18f);
+        // TOPE en 4.5. Hasta 2026-10-01 `ki_impact_*.png` era un icono pixel-art de 32x32 con
+        // bordes dentados y el tope era 3.0: más grande, el filtro nearest del atlas lo ampliaba
+        // hasta un "sol" con anillos duros SIN shaders (confirmado con capturas del usuario). Ahora
+        // son 64x64 con degradados continuos (tools/gen_ki_impact_fx.py: núcleo, destellos y un
+        // anillo de choque que se expande), que aguantan la ampliación; el tope sigue existiendo
+        // para que un EXPLOSION enorme no tape la pantalla con un solo quad. Una cifra más alta
+        // solo se justifica mirando un impacto grande en juego, no por la fórmula.
+        float flashScale = Math.min(4.5f, 1.0f + (float) radius * 0.18f);
         sl.sendParticles(ModParticles.impact(rgb(), flashScale),
                 center.x, center.y, center.z, 1, 0.0, 0.0, 0.0, 0.0);
         sl.sendParticles(ModParticles.spark(rgb(), 1.0f),

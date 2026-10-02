@@ -1,0 +1,6 @@
+{
+  "sort": 120,
+  "layers": [
+    { "texture": "zenkai:textures/customization/face/nose/nostrils/base.png", "color": "skin" }
+  ]
+}

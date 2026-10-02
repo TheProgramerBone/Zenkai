@@ -3,7 +3,7 @@
   "sort": 110,
   "layers": [
     { "texture": "zenkai:textures/customization/face/eyes/expressive/base.png", "color": "none" },
-    { "texture": "zenkai:textures/customization/face/eyes/expressive/brow.png", "color": "hair" },
+    { "texture": "zenkai:textures/customization/face/eyes/expressive/brow.png", "color": "hair", "eyebrow": true },
     { "texture": "zenkai:textures/customization/face/eyes/expressive/iris_l.png", "color": "eye_left" },
     { "texture": "zenkai:textures/customization/face/eyes/expressive/iris_r.png", "color": "eye_right" },
     { "texture": "zenkai:textures/customization/face/eyes/expressive/shine.png", "color": "none" }

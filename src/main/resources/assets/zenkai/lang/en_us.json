@@ -1355,5 +1355,19 @@
   "face_part.zenkai.eyes.narrow": "Narrow",
   "face_part.zenkai.eyes.wide": "Wide",
   "face_part.zenkai.eyes.sleepy": "Sleepy",
-  "face_part.zenkai.eyes.arched": "Arched"
+  "face_part.zenkai.eyes.arched": "Arched",
+  "face_part.zenkai.eyes.lidded": "Lidded",
+  "face_part.zenkai.eyes.closed": "Closed",
+  "face_part.zenkai.eyes.alert": "Alert",
+  "face_part.zenkai.eyes.slanted": "Slanted",
+  "face_part.zenkai.eyes.sparkle": "Sparkle",
+  "face_part.zenkai.mouth.smile": "Smile",
+  "face_part.zenkai.mouth.small": "Small",
+  "face_part.zenkai.mouth.smirk": "Smirk",
+  "face_part.zenkai.mouth.shout": "Shout",
+  "face_part.zenkai.mouth.thin": "Thin",
+  "face_part.zenkai.nose.dot": "Dot",
+  "face_part.zenkai.nose.shadow": "Shadow",
+  "face_part.zenkai.nose.nostrils": "Nostrils",
+  "face_part.zenkai.nose.bridge": "Bridge"
 }

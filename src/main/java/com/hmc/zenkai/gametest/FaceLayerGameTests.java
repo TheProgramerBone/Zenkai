@@ -9,6 +9,7 @@ import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.race.face.FaceCategory;
 import com.hmc.zenkai.feature.race.face.FaceLayer;
 import com.hmc.zenkai.feature.race.face.FacePartDef;
+import com.hmc.zenkai.feature.race.face.RaceFaceTraits;
 import io.netty.buffer.Unpooled;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -62,7 +63,21 @@ public final class FaceLayerGameTests {
         FacePartDef brows = parse(FaceCategory.EYEBROWS, "{ \"texture\": \"test_addon:textures/b.png\" }", warn);
         helper.assertTrue(brows.layers().size() == 1 && brows.layers().get(0).color() == FaceLayer.Color.HAIR,
                 "atajo texture en cejas = una capa con color de pelo");
-        helper.assertTrue(brows.allows(Race.NAMEKIAN), "sin races = cualquier raza");
+        helper.assertTrue(brows.allows(Race.HUMAN) && brows.allows(Race.SAIYAN), "sin races = cualquier raza (con cejas)");
+        // Namekianos, Arcosianos y Majin no tienen cejas: una ceja nunca es elegible para ellos.
+        helper.assertTrue(!brows.allows(Race.NAMEKIAN) && !brows.allows(Race.ARCOSIAN) && !brows.allows(Race.MAJIN),
+                "cejas: nunca para Namek/Arcosiano/Majin");
+
+        // "eyebrow": true marca el trazo-ceja de un ojo: se oculta en esas razas; el resto del ojo no.
+        FacePartDef browEye = parse(FaceCategory.EYES, """
+                { "layers": [ {"texture": "test_addon:textures/w.png", "color": "none"},
+                              {"texture": "test_addon:textures/b.png", "color": "hair", "eyebrow": true} ] }""", warn);
+        FaceLayer white = browEye.layers().get(0), stroke = browEye.layers().get(1);
+        helper.assertTrue(stroke.eyebrow() && !white.eyebrow(), "eyebrow se lee del JSON (defecto false)");
+        helper.assertTrue(RaceFaceTraits.shows(Race.HUMAN, FaceCategory.EYES, stroke)
+                && !RaceFaceTraits.shows(Race.NAMEKIAN, FaceCategory.EYES, stroke)
+                && RaceFaceTraits.shows(Race.NAMEKIAN, FaceCategory.EYES, white), "la ceja de un ojo no se pinta en Namek");
+        helper.assertTrue(browEye.allows(Race.MAJIN), "un ojo con ceja sigue siendo elegible en Majin (solo se oculta la ceja)");
 
         StringBuilder many = new StringBuilder("{ \"layers\": [");
         for (int i = 0; i < 12; i++) many.append(i > 0 ? "," : "").append("{\"texture\": \"test_addon:textures/").append(i).append(".png\"}");
@@ -93,7 +108,7 @@ public final class FaceLayerGameTests {
         helper.assertTrue(withRace.raceLayers().size() == 1, "una raza desconocida en race_layers se ignora con aviso");
 
         // Ida y vuelta por red (lo que hace FaceCatalogSyncPacket), con y sin race_layers.
-        for (FacePartDef original : new FacePartDef[]{d, withRace}) {
+        for (FacePartDef original : new FacePartDef[]{d, withRace, browEye}) {
             FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
             FacePartDef.STREAM_CODEC.encode(buf, original);
             FacePartDef back = FacePartDef.STREAM_CODEC.decode(buf);
@@ -121,6 +136,10 @@ public final class FaceLayerGameTests {
                 "heterocromía: cada ojo su color");
         helper.assertTrue(new FaceLayer(t, FaceLayer.Color.SKIN, 0).resolveRgb(v, null) == 0xC08060, "skin");
         helper.assertTrue(new FaceLayer(t, FaceLayer.Color.NONE, 0).resolveRgb(v, null) == 0xFFFFFF, "none = blanco");
+        // Boca/nariz Namek: la piel se oscurece además por la raza (antes apenas se distinguía).
+        helper.assertTrue(RaceFaceTraits.shadeSkin(Race.HUMAN, 0xC08060) == 0xC08060, "humano: piel sin cambio");
+        int namek = RaceFaceTraits.shadeSkin(Race.NAMEKIAN, 0x2DC31E);
+        helper.assertTrue(((namek >> 8) & 0xFF) < 0xC3 && ((namek >> 8) & 0xFF) > 0, "Namek: piel de boca más oscura");
 
         // NBT: la heterocromía se guarda, y -1 vuelve a "sin heterocromía".
         PlayerVisualAttachment re = new PlayerVisualAttachment();

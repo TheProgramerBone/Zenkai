@@ -3,10 +3,5 @@
   "sort": 10,
   "layers": [
     { "texture": "zenkai:textures/customization/mouth/mouth_1.png", "color": "skin" }
-  ],
-  "race_layers": {
-    "arcosian": [
-      { "texture": "zenkai:textures/customization/mouth/mouth_1_arcosian.png", "color": "skin" }
-    ]
-  }
+  ]
 }

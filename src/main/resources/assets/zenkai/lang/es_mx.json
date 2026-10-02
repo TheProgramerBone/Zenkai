@@ -1349,5 +1349,19 @@
   "face_part.zenkai.eyes.narrow": "Estrecho",
   "face_part.zenkai.eyes.wide": "Ancho",
   "face_part.zenkai.eyes.sleepy": "Somnoliento",
-  "face_part.zenkai.eyes.arched": "Arqueado"
+  "face_part.zenkai.eyes.arched": "Arqueado",
+  "face_part.zenkai.eyes.lidded": "Párpado",
+  "face_part.zenkai.eyes.closed": "Cerrado",
+  "face_part.zenkai.eyes.alert": "Alerta",
+  "face_part.zenkai.eyes.slanted": "Rasgado",
+  "face_part.zenkai.eyes.sparkle": "Brillo",
+  "face_part.zenkai.mouth.smile": "Sonrisa",
+  "face_part.zenkai.mouth.small": "Pequeña",
+  "face_part.zenkai.mouth.smirk": "Sonrisa torcida",
+  "face_part.zenkai.mouth.shout": "Gritando",
+  "face_part.zenkai.mouth.thin": "Línea fina",
+  "face_part.zenkai.nose.dot": "Punto",
+  "face_part.zenkai.nose.shadow": "Sombra",
+  "face_part.zenkai.nose.nostrils": "Fosas",
+  "face_part.zenkai.nose.bridge": "Puente"
 }

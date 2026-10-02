@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.race.layer;
 
+import com.hmc.zenkai.client.FaceRemapTextures;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -12,6 +13,8 @@ import com.hmc.zenkai.feature.race.face.FaceCatalog;
 import com.hmc.zenkai.feature.race.face.FaceCategory;
 import com.hmc.zenkai.feature.race.face.FaceLayer;
 import com.hmc.zenkai.feature.race.face.FacePartDef;
+import com.hmc.zenkai.feature.race.face.FaceRegion;
+import com.hmc.zenkai.feature.race.face.RaceFaceTraits;
 import com.hmc.zenkai.feature.race.hair.HairCatalog;
 import com.hmc.zenkai.feature.race.hair.HairStyleDef;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -84,13 +87,19 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         FormDef formDef = FormDef.get(form.getFormId());
         Race race = PlayerStatsAttachment.get(player).getRace();
 
+        // Dónde está la cara en la textura de ESTE modelo (FaceRegions): los rasgos se pintan en
+        // la cara canónica y se recolocan aquí (la arcosiana está en (16,48), no en (16,16)).
+        FaceRegion region = FaceRemapTextures.regionFor(animatable.getModelPath());
+
         poseStack.pushPose();
         poseStack.scale(OVERLAY_SCALE, OVERLAY_SCALE, OVERLAY_SCALE);
 
         // Pelo PLANO (peinado con "representation": "texture"): se pinta sobre la propia cabeza,
         // como el pelo de una skin vanilla, ANTES de los rasgos para que las cejas lo pisen. El
         // pelo 3D ("geo") lo pinta HairGeoLayer aparte. Bajo un casco real queda tapado por el
-        // propio casco, que se dibuja encima.
+        // propio casco, que se dibuja encima. NO pasa por FaceRemapTextures: el pelo plano cubre
+        // la cabeza entera (techo, nuca, laterales) en la UV de una cabeza uv [0,0], no solo la
+        // cara; recolocar solo la cara le cortaría el resto.
         if (!com.hmc.zenkai.feature.race.HairCode.isCustom(vis.getHairStyleId())) {
             HairStyleDef hair = HairCatalog.effectiveStyle(vis.getHairStyle(),
                     formDef == null ? null : formDef.id(), race);
@@ -109,12 +118,16 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         for (FaceCategory category : FaceCategory.values()) {
             FacePartDef part = FaceCatalog.get(vis.getFacePart(category));
             if (part == null) continue;
-            // Capas de la RAZA (p. ej. ojos de Arcosiano redibujados bajo su casco).
+            // Capas de la RAZA si el rasgo trae una variante dibujada para ella (race_layers).
             for (FaceLayer layer : part.layersFor(race)) {
-                ResourceLocation tex = textureFor(layer);
+                // Namek/Arcosiano/Majin no tienen cejas: ni la categoría ni el trazo-ceja del ojo.
+                if (!RaceFaceTraits.shows(race, category, layer)) continue;
+                ResourceLocation tex = textureFor(layer, region);
                 if (tex == null) continue;
-                drawPass(tex, 0xFF000000 | layer.resolveRgb(vis, formDef, eyeOverride,
-                                category == FaceCategory.EYES), poseStack, bakedModel,
+                int rgb = layer.resolveRgb(vis, formDef, eyeOverride, category == FaceCategory.EYES);
+                // Boca/nariz ("skin") más oscuras donde la raza lo pide (verde Namek).
+                if (layer.color() == FaceLayer.Color.SKIN) rgb = RaceFaceTraits.shadeSkin(race, rgb);
+                drawPass(tex, 0xFF000000 | rgb, poseStack, bakedModel,
                         animatable, bufferSource, partialTick, packedLight, packedOverlay);
             }
         }
@@ -125,11 +138,13 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
     /**
      * Textura de una capa, o null si este cliente no la tiene. Punto ÚNICO de elección de
      * textura: las expresiones (parpadeo, daño...) entrarán aquí eligiendo una variante de la
-     * capa, sin tocar el resto de la clase.
+     * capa, sin tocar el resto de la clase. Devuelve la textura YA recolocada a la región de
+     * cara del modelo (la misma si la región es la canónica).
      */
     @Nullable
-    private static ResourceLocation textureFor(FaceLayer layer) {
-        return resourceExists(layer.texture()) ? layer.texture() : null;
+    private static ResourceLocation textureFor(FaceLayer layer, FaceRegion region) {
+        if (!resourceExists(layer.texture())) return null;
+        return FaceRemapTextures.remap(layer.texture(), region);
     }
 
     /** Re-renderiza el modelo del cuerpo con una textura y un color ARGB, con offset hacia la cámara. */

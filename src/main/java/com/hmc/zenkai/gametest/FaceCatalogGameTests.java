@@ -71,17 +71,40 @@ public final class FaceCatalogGameTests {
             helper.assertTrue(FaceCatalog.get(r).layers().stream().anyMatch(l -> l.color() == FaceLayer.Color.HAIR),
                     r + ": el trazo (capa brow) debe ir con color hair");
         }
-        // Guarda del fallo de S2: con UN iris teñido "eye" la heterocromía no se ve nunca. Todo
-        // ojo del catálogo debe pintar el ojo derecho con su propio color.
+        // Guarda del fallo de S2: con UN iris teñido "eye" la heterocromía no se ve nunca. Cada
+        // ojo del catálogo que tenga iris debe pintar el ojo derecho con su propio color. Un ojo
+        // sin iris (eyes/closed: solo la línea del párpado) es válido.
         for (FacePartDef d : FaceCatalog.all()) {
             if (d.category() != FaceCategory.EYES) continue;
             for (Race r : Race.values()) {   // también las variantes por raza (race_layers)
                 var ls = d.layersFor(r);
+                boolean left = ls.stream().anyMatch(l -> l.color() == FaceLayer.Color.EYE_LEFT);
                 boolean right = ls.stream().anyMatch(l -> l.color() == FaceLayer.Color.EYE_RIGHT);
                 boolean single = ls.stream().anyMatch(l -> l.color() == FaceLayer.Color.EYE);
-                helper.assertTrue(right && !single, d.id() + " (" + r
-                        + "): un ojo necesita capas eye_left/eye_right (no 'eye') o la heterocromía no se ve");
+                helper.assertTrue(left == right && !single, d.id() + " (" + r
+                        + "): un ojo con iris necesita capas eye_left Y eye_right (no 'eye') o la heterocromía no se ve");
             }
+        }
+        // Rasgos de la hoja de propuestas (2026-10-01): para cualquier raza (ninguno pisa las
+        // marcas laterales arcosianas lx 0-1/14-15).
+        for (String p : new String[]{"eyes/lidded", "eyes/closed", "eyes/alert", "eyes/slanted", "eyes/sparkle",
+                "mouth/smile", "mouth/small", "mouth/smirk", "mouth/shout", "mouth/thin",
+                "nose/dot", "nose/shadow", "nose/nostrils", "nose/bridge"}) {
+            var d = FaceCatalog.get(id(p));
+            helper.assertTrue(d != null, "falta en el catálogo: " + p);
+            for (Race r : Race.values()) helper.assertTrue(d.allows(r), p + " debe valer para " + r);
+        }
+        helper.assertTrue(FaceCatalog.get(id("eyes/closed")).layers().stream()
+                .noneMatch(l -> l.color() == FaceLayer.Color.EYE_LEFT), "eyes/closed: sin iris");
+        // Trazo de ceja marcado "eyebrow" (se oculta en Namek/Arcosiano/Majin); la línea del ojo
+        // cerrado y el párpado NO son ceja y se ven en cualquier raza.
+        for (String n : new String[]{"minimal", "expressive", "soft", "narrow", "wide", "sleepy", "arched", "slanted", "sparkle"}) {
+            helper.assertTrue(FaceCatalog.get(id("eyes/" + n)).layers().stream()
+                    .anyMatch(l -> l.color() == FaceLayer.Color.HAIR && l.eyebrow()), "eyes/" + n + ": su trazo es ceja");
+        }
+        for (String n : new String[]{"closed", "lidded"}) {
+            helper.assertTrue(FaceCatalog.get(id("eyes/" + n)).layers().stream().noneMatch(FaceLayer::eyebrow),
+                    "eyes/" + n + ": su trazo NO es ceja");
         }
         var mouth = FaceCatalog.get(MOUTH_1).layers();
         helper.assertTrue(mouth.size() == 1 && mouth.get(0).color() == FaceLayer.Color.SKIN

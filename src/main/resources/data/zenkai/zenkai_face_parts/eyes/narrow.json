@@ -2,7 +2,7 @@
   "sort": 200,
   "layers": [
     { "texture": "zenkai:textures/customization/face/eyes/narrow/base.png", "color": "none" },
-    { "texture": "zenkai:textures/customization/face/eyes/narrow/brow.png", "color": "hair" },
+    { "texture": "zenkai:textures/customization/face/eyes/narrow/brow.png", "color": "hair", "eyebrow": true },
     { "texture": "zenkai:textures/customization/face/eyes/narrow/iris_l.png", "color": "eye_left" },
     { "texture": "zenkai:textures/customization/face/eyes/narrow/iris_r.png", "color": "eye_right" }
   ]

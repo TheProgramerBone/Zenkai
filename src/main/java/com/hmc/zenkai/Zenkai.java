@@ -17,6 +17,7 @@ import com.hmc.zenkai.client.gui.screens.wishes.StackWishScreen;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.client.particle.AuraDustParticle;
 import com.hmc.zenkai.client.particle.AuraRockParticle;
+import com.hmc.zenkai.client.particle.KiArcParticle;
 import com.hmc.zenkai.client.particle.KiImpactParticle;
 import com.hmc.zenkai.client.particle.KiSparkParticle;
 import com.hmc.zenkai.client.render_and_model_entities.entity.KiVfxProjectileRenderer;
@@ -377,10 +378,9 @@ public class Zenkai {
                     KiImpactParticle.Provider::new);
             event.registerSpriteSet(ModParticles.BLACK_FLASH_RIM.get(),
                     KiImpactParticle.Provider::new);
-            // El "arco" (filo crepitante de Death Ball, arcos de carga de Final Flash) es otro
-            // destello quieto animado por edad — mismo Provider, solo cambia el sprite set.
-            event.registerSpriteSet(ModParticles.KI_ARC.get(),
-                    KiImpactParticle.Provider::new);
+            // El "arco" (filo crepitante de Death Ball, arcos de carga de Final Flash, efecto ARC de
+            // los datapacks) es un RAYO fractal como los del aura, no un sprite: no tiene sprite set.
+            event.registerSpecial(ModParticles.KI_ARC.get(), new KiArcParticle.Provider());
             // Efectos de suelo al cargar ki (AuraChargeGroundFx). La roca no tiene sprite set:
             // dibuja un recorte del sprite del bloque pisado, del atlas de bloques.
             event.registerSpriteSet(ModParticles.AURA_DUST.get(),

@@ -23,15 +23,19 @@ public final class KiVfxGeometry {
     private KiVfxGeometry() {}
 
     // Resolución. Subir estos números multiplica los vértices; con estos valores una esfera son
-    // 128 quads y la doble hélice unos 800, que a veinte proyectiles en pantalla no se nota.
-    private static final int SPHERE_RINGS = 14;
-    private static final int SPHERE_SECTORS = 28;
+    // 880 quads y la doble hélice unos 800, que a veinte proyectiles en pantalla no se nota.
+    // La esfera subió de 14x28 (128 quads, ~13° por faceta) a 22x40 el 2026-10-01: de cerca la
+    // silueta de la cabeza del haz se leía poligonal. Los sectores también los usa el cilindro.
+    private static final int SPHERE_RINGS = 22;
+    private static final int SPHERE_SECTORS = 40;
     // 8, no 6: perfil de cinta más redondo sin tocar ninguna textura (resolución de malla, no
     // sujeta a la regla de pixel-art del mod, que es sobre texturas) — subida heredada del
     // sistema ki_fresnel.fsh anterior al rework de 2026-09-23, aplicada aquí sin volver a medir.
     private static final int TUBE_RADIAL = 8;
     private static final int HELIX_STEPS_PER_UNIT = 20;
-    private static final int DISK_SECTORS = 24;
+    // 24 -> 64 el 2026-10-01: con 24 sectores (15° cada uno) el aro exterior del Kienzan se veía
+    // como un polígono. Son 4 anillos x sectores x 2 caras: unos 500 quads.
+    private static final int DISK_SECTORS = 64;
     private static final int CYL_SEGMENTS_PER_UNIT = 4;
 
     /** Radio de la cola de un haz respecto al de la punta. Un tubo de sección constante se lee
@@ -80,7 +84,7 @@ public final class KiVfxGeometry {
 
     /**
      * Solo la bola de la punta de un haz ANCLADO ({@link KiVfxProfile#column()}), en z=0 — sin el
-     * tubo horneado de longitud fija: el cuerpo del haz lo pone {@link #emitTube} con la longitud
+     * tubo horneado de longitud fija: el cuerpo del haz lo pone {@link #emitSweptTube} con la longitud
      * real de ese frame. La vista previa de TechniqueEditScreen y la bola de carga siguen usando
      * {@link #shell}, a propósito: ahí no hay punto de disparo del que tirar un tubo.
      */
@@ -89,54 +93,193 @@ public final class KiVfxGeometry {
     }
 
     private static final int TUBE_SECTORS = 24;
-    /** Largo máximo de un tramo del tubo anclado. El hervor del shader depende de la normal y la
-     *  UV por vértice: tramos muy largos lo dejarían interpolar en línea recta entre extremos. */
-    private static final float TUBE_SEGMENT_LEN = 1.25f;
+
+    // ── Tubo CURVO (haz serpiente) ──────────────────────────────────────────
+
+    /** Separación objetivo entre anillos del tubo curvo, en bloques. */
+    private static final float PATH_RING_STEP = 0.8f;
 
     /**
-     * Tubo de radio constante de z=−length a z=0 (eje +Z, igual que el resto de mallas), emitido
-     * DIRECTAMENTE: su longitud cambia cada frame (el haz se alarga con la cabeza), así que
-     * cachearlo como las demás formas no tiene sentido — son pocos quads.
-     * UV: x = vuelta al tubo (0..1), y = distancia en BLOQUES desde la punta — la usan las vetas
-     * de flujo de ki_energy.fsh, que así mantienen su tamaño sea cual sea el largo del haz. Por
-     * eso NO se escala en Z con el PoseStack (escalar estiraría las vetas).
-     * @param rootRadiusMul radio en el extremo del disparo respecto a la punta (1 = cilindro).
+     * Trayectoria ya suavizada y con marcos para barrer un tubo a lo largo de ella. Anillos de la
+     * RAÍZ (índice 0, el extremo del disparo) a la PUNTA (último). Cada anillo guarda centro,
+     * tangente (hacia la punta), normal y binormal, y la longitud de arco desde la raíz.
+     * Los marcos se propagan por TRANSPORTE PARALELO: un marco derivado de la dirección
+     * instantánea (o de la cámara) giraría de golpe al curvarse el haz y retorcería el tubo — la
+     * misma razón por la que {@code KiProjectileEntity.flightBasis} se fija una sola vez.
      */
-    public static void emitTube(com.mojang.blaze3d.vertex.VertexConsumer vc,
-                                com.mojang.blaze3d.vertex.PoseStack.Pose pose,
-                                float radius, float rootRadiusMul, float length,
-                                float r, float g, float b, float alpha, boolean flatUv) {
-        if (length <= 1.0e-3f || radius <= 1.0e-4f) return;
-        int segments = Math.max(2, (int) Math.ceil(length / TUBE_SEGMENT_LEN));
-        float slope = radius * (1f - rootRadiusMul) / length;
+    public static final class TubePath {
+        final int n;
+        final float length;
+        final float[] px, py, pz, tx, ty, tz, nx, ny, nz, bx, by, bz, s;
+
+        private TubePath(int n, float length) {
+            this.n = n;
+            this.length = length;
+            px = new float[n]; py = new float[n]; pz = new float[n];
+            tx = new float[n]; ty = new float[n]; tz = new float[n];
+            nx = new float[n]; ny = new float[n]; nz = new float[n];
+            bx = new float[n]; by = new float[n]; bz = new float[n];
+            s = new float[n];
+        }
+
+        /** Dirección del haz en la punta, en el mismo espacio que los puntos de entrada. */
+        public net.minecraft.world.phys.Vec3 tipTangent() {
+            return new net.minecraft.world.phys.Vec3(tx[n - 1], ty[n - 1], tz[n - 1]);
+        }
+
+        public float length() { return length; }
+    }
+
+    /**
+     * Construye el {@link TubePath} de una polilínea de la raíz a la punta: la suaviza con
+     * Catmull-Rom (con rectas colineales da rectas, así que un disparo sin HOMING sale idéntico al
+     * tubo recto de siempre), la remuestrea a ~{@link #PATH_RING_STEP} bloques y calcula los marcos.
+     * @param trimTip longitud de arco que se recorta de la punta (la parte que queda DENTRO de la
+     *                cabeza, ver HEAD_CUT del renderer).
+     * @return null si lo que queda es demasiado corto para dibujar un tubo.
+     */
+    public static TubePath tubePath(java.util.List<net.minecraft.world.phys.Vec3> pts, float trimTip) {
+        int m = pts.size();
+        if (m < 2) return null;
+        java.util.ArrayList<double[]> dense = new java.util.ArrayList<>();
+        for (int i = 0; i < m - 1; i++) {
+            net.minecraft.world.phys.Vec3 p1 = pts.get(i), p2 = pts.get(i + 1);
+            net.minecraft.world.phys.Vec3 p0 = i > 0 ? pts.get(i - 1) : p1.subtract(p2.subtract(p1));
+            net.minecraft.world.phys.Vec3 p3 = i + 2 < m ? pts.get(i + 2) : p2.add(p2.subtract(p1));
+            int k = Math.max(1, (int) Math.ceil(p1.distanceTo(p2) / PATH_RING_STEP));
+            for (int j = 0; j < k; j++) addDense(dense, catmull(p0, p1, p2, p3, (double) j / k));
+        }
+        net.minecraft.world.phys.Vec3 last = pts.get(m - 1);
+        addDense(dense, new double[] {last.x, last.y, last.z});
+        if (dense.size() < 2) return null;
+
+        // Longitud de arco y recorte de la punta.
+        int cnt = dense.size();
+        double[] arc = new double[cnt];
+        for (int i = 1; i < cnt; i++) {
+            double[] a = dense.get(i - 1), b = dense.get(i);
+            arc[i] = arc[i - 1] + Math.sqrt(sq(b[0] - a[0]) + sq(b[1] - a[1]) + sq(b[2] - a[2]));
+        }
+        double total = arc[cnt - 1];
+        double keep = total - Math.max(0f, trimTip);
+        if (keep < 0.05) return null;
+        if (keep < total) {
+            int end = cnt - 1;
+            while (end > 0 && arc[end - 1] >= keep) end--;
+            // end es el primer índice con arc >= keep; se sustituye por el punto interpolado.
+            double[] a = dense.get(end - 1), b = dense.get(end);
+            double f = (keep - arc[end - 1]) / Math.max(1.0e-9, arc[end] - arc[end - 1]);
+            double[] cut = {a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f};
+            while (dense.size() > end) dense.remove(dense.size() - 1);
+            dense.add(cut);
+            cnt = dense.size();
+            arc = java.util.Arrays.copyOf(arc, cnt);
+            arc[cnt - 1] = keep;
+        }
+        if (cnt < 2) return null;
+
+        TubePath tp = new TubePath(cnt, (float) arc[cnt - 1]);
+        for (int i = 0; i < cnt; i++) {
+            double[] c = dense.get(i);
+            double[] a = dense.get(Math.max(0, i - 1)), b = dense.get(Math.min(cnt - 1, i + 1));
+            double dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2];
+            double l = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (l < 1.0e-9) { dx = 0; dy = 0; dz = 1; l = 1; }
+            tp.px[i] = (float) c[0]; tp.py[i] = (float) c[1]; tp.pz[i] = (float) c[2];
+            tp.tx[i] = (float) (dx / l); tp.ty[i] = (float) (dy / l); tp.tz[i] = (float) (dz / l);
+            tp.s[i] = (float) arc[i];
+        }
+        // Marco inicial perpendicular a la tangente de la raíz; después, transporte paralelo.
+        float rx = Math.abs(tp.ty[0]) > 0.99f ? 1f : 0f, ry = rx == 1f ? 0f : 1f, rz = 0f;
+        float dot = rx * tp.tx[0] + ry * tp.ty[0] + rz * tp.tz[0];
+        float ux = rx - tp.tx[0] * dot, uy = ry - tp.ty[0] * dot, uz = rz - tp.tz[0] * dot;
+        float ul = (float) Math.sqrt(ux * ux + uy * uy + uz * uz);
+        tp.nx[0] = ux / ul; tp.ny[0] = uy / ul; tp.nz[0] = uz / ul;
+        for (int i = 0; i < cnt; i++) {
+            if (i > 0) {
+                float d = tp.nx[i - 1] * tp.tx[i] + tp.ny[i - 1] * tp.ty[i] + tp.nz[i - 1] * tp.tz[i];
+                float vx = tp.nx[i - 1] - tp.tx[i] * d, vy = tp.ny[i - 1] - tp.ty[i] * d, vz = tp.nz[i - 1] - tp.tz[i] * d;
+                float vl = (float) Math.sqrt(vx * vx + vy * vy + vz * vz);
+                if (vl < 1.0e-6f) { vx = tp.nx[i - 1]; vy = tp.ny[i - 1]; vz = tp.nz[i - 1]; vl = 1f; }
+                tp.nx[i] = vx / vl; tp.ny[i] = vy / vl; tp.nz[i] = vz / vl;
+            }
+            // b = t × n: con x=n, y=b, z=t la terna es la misma (derecha) que la del tubo recto.
+            tp.bx[i] = tp.ty[i] * tp.nz[i] - tp.tz[i] * tp.ny[i];
+            tp.by[i] = tp.tz[i] * tp.nx[i] - tp.tx[i] * tp.nz[i];
+            tp.bz[i] = tp.tx[i] * tp.ny[i] - tp.ty[i] * tp.nx[i];
+        }
+        return tp;
+    }
+
+    private static double sq(double v) { return v * v; }
+
+    private static void addDense(java.util.List<double[]> out, double[] p) {
+        if (!out.isEmpty()) {
+            double[] q = out.get(out.size() - 1);
+            if (sq(p[0] - q[0]) + sq(p[1] - q[1]) + sq(p[2] - q[2]) < 1.0e-8) return;
+        }
+        out.add(p);
+    }
+
+    private static double[] catmull(net.minecraft.world.phys.Vec3 p0, net.minecraft.world.phys.Vec3 p1,
+                                    net.minecraft.world.phys.Vec3 p2, net.minecraft.world.phys.Vec3 p3, double t) {
+        double t2 = t * t, t3 = t2 * t;
+        return new double[] {
+                cr(p0.x, p1.x, p2.x, p3.x, t, t2, t3),
+                cr(p0.y, p1.y, p2.y, p3.y, t, t2, t3),
+                cr(p0.z, p1.z, p2.z, p3.z, t, t2, t3)};
+    }
+
+    private static double cr(double a, double b, double c, double d, double t, double t2, double t3) {
+        return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+    }
+
+    /**
+     * Tubo barrido a lo largo de un {@link TubePath} (con una trayectoria recta es un cilindro
+     * ahusado). Los quads se emiten directamente: la longitud cambia cada frame y cachearlos no
+     * tiene sentido. UV y y el resto en radios, para que el ruido de ki_energy.vsh tenga la misma
+     * escala que el de la cabeza esférica. Convención: radio
+     * {@code radius} en la punta, {@code radius*rootRadiusMul} en la raíz; UV x = vuelta (0..1),
+     * UV y = distancia desde la punta en radios. Los vértices salen ya en las coordenadas de la
+     * trayectoria (sin rotar): la pose que se pase solo debe trasladar.
+     */
+    public static void emitSweptTube(com.mojang.blaze3d.vertex.VertexConsumer vc,
+                                     com.mojang.blaze3d.vertex.PoseStack.Pose pose, TubePath tp,
+                                     float radius, float rootRadiusMul,
+                                     float r, float g, float b, float alpha, boolean flatUv) {
+        if (tp == null || radius <= 1.0e-4f) return;
+        float slope = radius * (1f - rootRadiusMul) / tp.length;
         float nl = (float) Math.sqrt(1f + slope * slope);
-        for (int s = 0; s < segments; s++) {
-            float f0 = (float) s / segments, f1 = (float) (s + 1) / segments;
+        for (int k = tp.n - 1; k > 0; k--) {
             for (int j = 0; j < TUBE_SECTORS; j++) {
                 float a0 = (float) j / TUBE_SECTORS, a1 = (float) (j + 1) / TUBE_SECTORS;
-                tubeVertex(vc, pose, radius, rootRadiusMul, length, slope, nl, f0, a0, r, g, b, alpha, flatUv);
-                tubeVertex(vc, pose, radius, rootRadiusMul, length, slope, nl, f1, a0, r, g, b, alpha, flatUv);
-                tubeVertex(vc, pose, radius, rootRadiusMul, length, slope, nl, f1, a1, r, g, b, alpha, flatUv);
-                tubeVertex(vc, pose, radius, rootRadiusMul, length, slope, nl, f0, a1, r, g, b, alpha, flatUv);
+                pathVertex(vc, pose, tp, k, a0, radius, rootRadiusMul, slope, nl, r, g, b, alpha, flatUv);
+                pathVertex(vc, pose, tp, k - 1, a0, radius, rootRadiusMul, slope, nl, r, g, b, alpha, flatUv);
+                pathVertex(vc, pose, tp, k - 1, a1, radius, rootRadiusMul, slope, nl, r, g, b, alpha, flatUv);
+                pathVertex(vc, pose, tp, k, a1, radius, rootRadiusMul, slope, nl, r, g, b, alpha, flatUv);
             }
         }
     }
 
-    /** @param f 0 = punta (z=0), 1 = extremo del disparo (z=−length). */
-    private static void tubeVertex(com.mojang.blaze3d.vertex.VertexConsumer vc,
-                                   com.mojang.blaze3d.vertex.PoseStack.Pose pose,
-                                   float radius, float rootMul, float length, float slope, float nl,
-                                   float f, float around,
+    private static void pathVertex(com.mojang.blaze3d.vertex.VertexConsumer vc,
+                                   com.mojang.blaze3d.vertex.PoseStack.Pose pose, TubePath tp, int k,
+                                   float around, float radius, float rootMul, float slope, float nl,
                                    float r, float g, float b, float alpha, boolean flatUv) {
         double th = 2 * Math.PI * around;
-        float cx = (float) Math.cos(th), cy = (float) Math.sin(th);
+        float c = (float) Math.cos(th), sn = (float) Math.sin(th);
+        float dx = tp.nx[k] * c + tp.bx[k] * sn;
+        float dy = tp.ny[k] * c + tp.by[k] * sn;
+        float dz = tp.nz[k] * c + tp.bz[k] * sn;
+        float fromTip = tp.length - tp.s[k];
+        float f = fromTip / tp.length; // 0 = punta, 1 = raíz
         float rr = radius * (1f + (rootMul - 1f) * f);
-        vc.addVertex(pose, cx * rr, cy * rr, -length * f)
+        vc.addVertex(pose, tp.px[k] + dx * rr, tp.py[k] + dy * rr, tp.pz[k] + dz * rr)
                 .setColor(r, g, b, alpha)
-                .setUv(flatUv ? 0.5f : around, flatUv ? 0.5f : length * f)
+                .setUv(flatUv ? 0.5f : around, flatUv ? 0.5f : fromTip / radius)
                 .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY)
                 .setLight(0xF000F0)
-                .setNormal(pose, cx / nl, cy / nl, -slope / nl);
+                .setNormal(pose, (dx - tp.tx[k] * slope) / nl, (dy - tp.ty[k] * slope) / nl,
+                        (dz - tp.tz[k] * slope) / nl);
     }
 
     /** Núcleo de la cabeza de un haz anclado: la esfera de {@link #head} reducida por

@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.render_and_model_entities.entity;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiAxis;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiRibbon;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxFrameQueue;
+import com.hmc.zenkai.compat.IrisCompat;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxCompositeRenderer;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxDebugMode;
@@ -70,6 +71,10 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
     @Override
     public void render(KiProjectileEntity entity, float entityYaw, float partialTick,
                        PoseStack pose, MultiBufferSource buffer, int packedLight) {
+        // Iris llama de nuevo a este render() en su pase de sombras. Todo lo de abajo (encolar,
+        // partículas, consumeFxTick, afterglow) debe ocurrir UNA vez por frame: ver
+        // IrisCompat.renderingShadowPass.
+        if (IrisCompat.renderingShadowPass()) return;
         KiVfxProfile v = KiVfxProfile.of(entity.techniqueType());
         int rgb = entity.rgb();
         KiVfxDebugMode dbg = KiVfxDebugMode.current();
@@ -94,15 +99,19 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         // pasar UNA sola vez por frame (partículas, consumeFxTick) se queda fuera de la tarea.
         if (!hiddenFirstPerson) {
             Vec3 center = visualFeet(entity, partialTick).add(0, entity.getBbHeight() * 0.5, 0);
+            // Camino del cuerpo del haz (origen → cabeza, curvado si hubo HOMING): se calcula UNA
+            // vez por frame y lo comparten las dos pasadas (mundo y bloom) y el afterglow.
+            List<Vec3> columnPts = null;
             // Haz anclado: se ordena por el PUNTO MEDIO del tubo, no por la cabeza — un haz de
             // treinta bloques con la cabeza lejos tiene casi todo el cuerpo cerca de la cámara.
             if (v.column()) {
-                Vec3 origin = columnOrigin(entity, center);
-                center = center.add(origin).scale(0.5);
-                KiBeamAfterglow.track(entity, v, origin);
+                columnPts = columnPath(entity, center);
+                center = center.add(columnPts.get(0)).scale(0.5);
+                KiBeamAfterglow.track(entity, v, columnPts);
             }
             Vec3 fromCamera = center.subtract(this.entityRenderDispatcher.camera.getPosition());
-            KiVfxFrameQueue.submit(pose, fromCamera, (p, buf) -> drawTechnique(entity, v, partialTick, p, buf));
+            final List<Vec3> pts = columnPts;
+            KiVfxFrameQueue.submit(pose, fromCamera, (p, buf) -> drawTechnique(entity, v, partialTick, p, buf, pts));
         }
 
         if (dbg.showsParticles()) {
@@ -119,7 +128,8 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
     /** Cuerpo completo de la técnica: estela → halo → envolvente/cáscara/núcleo → rayos. Se
      *  ejecuta DOS veces por frame (mundo y bloom), así que no puede tener efectos laterales. */
     private void drawTechnique(KiProjectileEntity entity, KiVfxProfile v, float partialTick,
-                               PoseStack pose, MultiBufferSource.BufferSource buffer) {
+                               PoseStack pose, MultiBufferSource.BufferSource buffer,
+                               List<Vec3> columnPts) {
         KiVfxColors.begin(entity.rgb2());
         int rgb = entity.rgb();
         float r = ((rgb >> 16) & 0xFF) / 255f;
@@ -148,9 +158,8 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         float popScale = popT * popT * (3f - 2f * popT);
         float size = (float) entity.techniqueType().visualDiameter(entity.size()) * breathe * popScale;
 
-        if (v.column() && (dbg.showsShell() || dbg.showsCore())) {
-            Vec3 center = visualFeet(entity, partialTick).add(0, entity.getBbHeight() * 0.5, 0);
-            renderColumn(v, pose, buffer, center, columnOrigin(entity, center),
+        if (columnPts != null && (dbg.showsShell() || dbg.showsCore())) {
+            renderColumn(v, pose, buffer, columnPts,
                     entity.getBbHeight() * 0.5f, size, animT, r, g, b, 1f, entity.isFrozen(),
                     this.entityRenderDispatcher.camera.getPosition());
         }
@@ -170,6 +179,7 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
             Vec3 vel = entity.getDeltaMovement();
             if (vel.lengthSqr() > 1.0e-6) {
                 vel = vel.normalize();
+                if (!v.column()) KiVfxRenderTypes.setAxis(vel.x, vel.y, vel.z);
                 pose.mulPose(Axis.YP.rotationDegrees(
                         (float) (Math.atan2(vel.x, vel.z) * 180.0 / Math.PI)));
                 pose.mulPose(Axis.XP.rotationDegrees(
@@ -192,7 +202,8 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
                             visualFeet(entity, partialTick).add(0, entity.getBbHeight() * 0.5, 0)),
                     v.worldRadius(size));
             KiVfxMesh coreMesh = v.column() ? KiVfxGeometry.headCore(v) : KiVfxGeometry.core(v, true);
-            KiVfxCompositeRenderer.render(buffer, v, mesh, coreMesh, pose, size, r, g, b,
+            KiVfxCompositeRenderer.render(buffer, v, mesh, coreMesh, pose,
+                    v.column() ? size * beamPulse(v, animT) : size, r, g, b,
                     1f, entity.isFrozen(), proximity);
         }
 
@@ -246,16 +257,26 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
      * @param alphaMul 1 en vida; el afterglow lo baja hasta 0.
      */
     public static void renderColumn(KiVfxProfile v, PoseStack pose, MultiBufferSource.BufferSource buffer,
-                                    Vec3 headWorld, Vec3 originWorld, float headLift, float size, float animT,
+                                    List<Vec3> pathWorld, float headLift, float size, float animT,
                                     float r, float g, float b, float alphaMul, boolean frozen, Vec3 cam) {
-        Vec3 d = headWorld.subtract(originWorld);
-        float len = (float) d.length();
+        Vec3 originWorld = pathWorld.get(0);
+        Vec3 headWorld = pathWorld.get(pathWorld.size() - 1);
         float headR = size * Math.max(v.shell().headScale(), v.shell().meshRadius());
         float cut = headR * HEAD_CUT;
-        if (len <= cut + 0.05f) return;
 
-        float pulse = 1f + KiVfxTuning.get(KiVfxTuning.Param.BEAM_PULSE, v)
-                * (0.03f * Mth.sin(animT * 1.5f) + 0.015f * Mth.sin(animT * 3.7f + 1.1f));
+        // Trayectoria RELATIVA A LA CABEZA (la pose se traslada a ella), de la raíz a la punta.
+        List<Vec3> rel = new ArrayList<>(pathWorld.size());
+        for (Vec3 p : pathWorld) rel.add(p.subtract(headWorld));
+        KiVfxGeometry.TubePath path = KiVfxGeometry.tubePath(rel, cut);
+        if (path == null) return;
+        // Eje del haz en la PUNTA, en ejes de mundo, para el fresnel axial (ver "EJE DE VUELO" en
+        // ki_energy.vsh). En un haz curvado el eje varía a lo largo del tubo y el uniform es uno
+        // solo por técnica: el error es del orden de lo que se curva el haz, y la cabeza (lo que
+        // más se mira) lleva exactamente el suyo.
+        Vec3 tip = path.tipTangent();
+        KiVfxRenderTypes.setAxis(tip.x, tip.y, tip.z);
+
+        float pulse = beamPulse(v, animT);
         float radius = size * v.shell().meshRadius() * pulse;
         float proximity = KiVfxRenderTypes.proximity(distanceToSegment(cam, originWorld, headWorld), radius);
 
@@ -263,18 +284,48 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         pose.translate(0, headLift, 0);
 
         pose.pushPose();
-        pose.translate(-d.x, -d.y, -d.z);
+        pose.translate(originWorld.x - headWorld.x, originWorld.y - headWorld.y, originWorld.z - headWorld.z);
         KiVfxCompositeRenderer.render(buffer, v, KiVfxGeometry.head(v), KiVfxGeometry.headCore(v), pose,
                 size * ORIGIN_BULB * pulse, r, g, b, alphaMul, frozen,
                 KiVfxRenderTypes.proximity(cam.distanceTo(originWorld), headR));
         pose.popPose();
 
-        pose.mulPose(Axis.YP.rotationDegrees((float) (Math.atan2(d.x, d.z) * 180.0 / Math.PI)));
-        pose.mulPose(Axis.XP.rotationDegrees((float) (-Math.asin(Mth.clamp(d.y / len, -1.0, 1.0)) * 180.0 / Math.PI)));
-        pose.translate(0, 0, -cut);
-        KiVfxCompositeRenderer.renderColumn(buffer, v, pose, radius, COLUMN_ROOT_MUL, len - cut,
+        // Sin rotar: los vértices del tubo ya van en las coordenadas de la trayectoria.
+        KiVfxCompositeRenderer.renderColumn(buffer, v, pose, path, radius, COLUMN_ROOT_MUL,
                 r, g, b, alphaMul, frozen, proximity);
         pose.popPose();
+    }
+
+    /**
+     * Camino que dibuja el cuerpo de un haz anclado, de la RAÍZ (extremo del disparo) a la CABEZA
+     * (último punto, el centro interpolado de este frame). Sale de {@link KiProjectileEntity#beamPath}:
+     * la trayectoria que la cabeza recorrió de verdad, así que con HOMING el haz se curva. Sin
+     * trayectoria grabada (copia congelada) o sin curva, son dos puntos y el tubo es el recto de
+     * siempre. El último punto grabado es la posición del tick ACTUAL, que va por delante de la
+     * cabeza interpolada: se descarta y se pone la cabeza en su lugar.
+     */
+    private static List<Vec3> columnPath(KiProjectileEntity e, Vec3 head) {
+        List<Vec3> out = new ArrayList<>();
+        Vec3 origin = columnOrigin(e, head);
+        out.add(origin);
+        List<Vec3> rec = e.beamPath();
+        Vec3 last = origin;
+        for (int i = 0; i < rec.size() - 1; i++) {
+            Vec3 p = rec.get(i);
+            if (p.distanceToSqr(last) < 0.04 || p.distanceToSqr(head) < 0.04) continue;
+            out.add(p);
+            last = p;
+        }
+        if (head.distanceToSqr(last) > 1.0e-6 || out.size() == 1) out.add(head);
+        return out;
+    }
+
+    /** Pulso del grosor del haz. Lo comparten el tubo, la bola de origen Y la cabeza: si la cabeza
+     *  no lo aplicaba, su radio quedaba hasta un 4.5 % fuera de fase con el del tubo y la unión
+     *  mostraba un escalón que latía. */
+    private static float beamPulse(KiVfxProfile v, float animT) {
+        return 1f + KiVfxTuning.get(KiVfxTuning.Param.BEAM_PULSE, v)
+                * (0.03f * Mth.sin(animT * 1.5f) + 0.015f * Mth.sin(animT * 3.7f + 1.1f));
     }
 
     private static double distanceToSegment(Vec3 p, Vec3 a, Vec3 b) {
@@ -425,8 +476,15 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
                                   Vec3 cam, float outer, float scroll,
                                   float r, float g, float b,
                                   PoseStack.Pose mat, MultiBufferSource buffer) {
-        Vec3[] basis = e.flightBasis();
-        Vec3 right = basis[0], up = basis[1];
+        // MARCOS POR TRANSPORTE PARALELO desde la cabeza, no el par fijo de flightBasis(): con
+        // HOMING la trayectoria gira y un par fijo la deja de canto (la hélice se aplasta y las
+        // cintas desaparecen). El de partida es el de la dirección de vuelo ACTUAL — el mismo que
+        // orienta la malla de la cabeza — así la estela sigue empalmando con ella; sin giro, es el
+        // mismo par de siempre.
+        Vec3 vel = e.getDeltaMovement();
+        // KiAxis.basis = [adelante, derecha, arriba]; flightBasis = [derecha, arriba].
+        Vec3 startNormal = vel.lengthSqr() > 1.0e-8 ? KiAxis.basis(vel)[1] : e.flightBasis()[0];
+        Vec3[][] frames = KiRibbon.transportFrames(pts, startNormal);
         float headClear = headClear(e);
         float trailAlpha = v.trail().alpha() * KiVfxTuning.get(KiVfxTuning.Param.TRAIL_ALPHA_MUL, v);
         float radius = v.shell().meshRadius();
@@ -435,28 +493,30 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         float cr = in[0], cg = in[1], cb = in[2];
 
         List<List<Vec3>> strands = new ArrayList<>(2);
-        strands.add(KiRibbon.helixStrand(pts, right, up, radius, length, 0));
-        strands.add(KiRibbon.helixStrand(pts, right, up, radius, length, Math.PI));
+        strands.add(KiRibbon.helixStrand(pts, frames, radius, length, 0));
+        strands.add(KiRibbon.helixStrand(pts, frames, radius, length, Math.PI));
 
-        // Orden por facing de las dos hebras contra sus propios laterales instantáneos (right/up,
-        // ya fijos): calculado una vez, reutilizado en las dos pasadas.
-        Vec3[] order = KiAxis.orderByFacing(pts.get(0), cam, right, up);
+        // Orden por facing de los dos planos contra los laterales de la cabeza: calculado una vez,
+        // reutilizado en las dos pasadas. Cada plano usa su lateral PROPIO por punto.
+        Vec3[] sidesN = KiRibbon.sidesOf(frames, 0), sidesB = KiRibbon.sidesOf(frames, 1);
+        Vec3[] order = KiAxis.orderByFacing(pts.get(0), cam, frames[0][0], frames[0][1]);
+        Vec3[][] orderSides = order[0] == frames[0][0] ? new Vec3[][]{sidesN, sidesB} : new Vec3[][]{sidesB, sidesN};
 
         // DOS PASADAS, no un solo draw con outerVc/innerVc simultáneos: un
         // MultiBufferSource.BufferSource solo tiene un sharedBuffer para un RenderType custom
         // no-fijo, así que hay que cerrar (endBatch) el anterior antes de pedir otro.
         VertexConsumer outerVc = buffer.getBuffer(KiVfxRenderTypes.soft(KiVfxRenderTypes.TRAIL_TEXTURE));
         for (List<Vec3> strand : strands) {
-            KiRibbon.strand(outerVc, mat, strand, feet, order[0], outer, scroll, r, g, b, trailAlpha, headClear);
-            KiRibbon.strand(outerVc, mat, strand, feet, order[1], outer, scroll, r, g, b, trailAlpha, headClear);
+            KiRibbon.strand(outerVc, mat, strand, feet, orderSides[0], outer, scroll, r, g, b, trailAlpha, headClear);
+            KiRibbon.strand(outerVc, mat, strand, feet, orderSides[1], outer, scroll, r, g, b, trailAlpha, headClear);
         }
 
         if (v.trail().hasCore()) {
             VertexConsumer innerVc = buffer.getBuffer(KiVfxRenderTypes.glow(KiVfxRenderTypes.TRAIL_TEXTURE));
             float innerW = outer * v.trail().innerMul();
             for (List<Vec3> strand : strands) {
-                KiRibbon.strand(innerVc, mat, strand, feet, order[0], innerW, scroll, cr, cg, cb, trailAlpha * 0.70f, headClear);
-                KiRibbon.strand(innerVc, mat, strand, feet, order[1], innerW, scroll, cr, cg, cb, trailAlpha * 0.70f, headClear);
+                KiRibbon.strand(innerVc, mat, strand, feet, orderSides[0], innerW, scroll, cr, cg, cb, trailAlpha * 0.70f, headClear);
+                KiRibbon.strand(innerVc, mat, strand, feet, orderSides[1], innerW, scroll, cr, cg, cb, trailAlpha * 0.70f, headClear);
             }
         }
     }
@@ -567,9 +627,11 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         float scale = particleScale(0.20f, 0.05f, e.getBbWidth(), 0.65f);
         for (int i = 0; i < count; i++) {
             Vec3 dir = rayDirection(e.getId(), mc.level.random.nextInt(1_000_000));
+            // La velocidad es la normal hacia fuera de la superficie: KiArcParticle la usa de
+            // dirección del rayo (no se mueve).
             mc.level.addParticle(ModParticles.arc(rgb, scale),
                     cx + dir.x * surfaceRadius, cy + dir.y * surfaceRadius, cz + dir.z * surfaceRadius,
-                    0, 0, 0);
+                    dir.x, dir.y, dir.z);
         }
     }
 

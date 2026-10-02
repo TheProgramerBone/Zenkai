@@ -232,11 +232,14 @@ public final class KiVfxChargeRenderer {
             double theta = rnd.nextDouble() * Math.PI * 2.0;
             double z = rnd.nextDouble() * 2.0 - 1.0;
             double planar = Math.sqrt(Math.max(0.0, 1.0 - z * z));
+            // La velocidad es la normal hacia fuera de la esfera: KiArcParticle la usa de dirección
+            // del rayo (no se mueve).
+            double nx = planar * Math.cos(theta), nz = planar * Math.sin(theta);
             mc.level.addParticle(ModParticles.arc(rgb, Math.min(0.65f, 0.20f + 0.10f * radius)),
-                    origin.x + planar * Math.cos(theta) * radius,
+                    origin.x + nx * radius,
                     origin.y + z * radius,
-                    origin.z + planar * Math.sin(theta) * radius,
-                    0, 0, 0);
+                    origin.z + nz * radius,
+                    nx, z, nz);
         }
     }
 

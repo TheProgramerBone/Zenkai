@@ -1,0 +1,9 @@
+{
+  "sort": 230,
+  "layers": [
+    { "texture": "zenkai:textures/customization/face/eyes/slanted/base.png", "color": "none" },
+    { "texture": "zenkai:textures/customization/face/eyes/slanted/brow.png", "color": "hair", "eyebrow": true },
+    { "texture": "zenkai:textures/customization/face/eyes/slanted/iris_l.png", "color": "eye_left" },
+    { "texture": "zenkai:textures/customization/face/eyes/slanted/iris_r.png", "color": "eye_right" }
+  ]
+}

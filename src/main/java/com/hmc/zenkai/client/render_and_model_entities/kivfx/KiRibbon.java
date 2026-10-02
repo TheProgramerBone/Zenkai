@@ -77,6 +77,25 @@ public final class KiRibbon {
     public static void strand(VertexConsumer vc, PoseStack.Pose mat, List<Vec3> pts, Vec3 origin, Vec3 side,
                               float fullWidth, float scroll, float r, float g, float b, float headAlpha,
                               float headClear) {
+        strandImpl(vc, mat, pts, origin, side, null, fullWidth, scroll, r, g, b, headAlpha, headClear);
+    }
+
+    /**
+     * Como {@link #strand(VertexConsumer, PoseStack.Pose, List, Vec3, Vec3, float, float, float,
+     * float, float, float, float)} pero con un lateral PROPIO por punto ({@code sides[i]} para
+     * {@code pts[i]}). Con un lateral fijo para toda la cinta, una trayectoria que gira (HOMING) la
+     * deja de canto respecto al lateral y la cinta desaparece; con un lateral por punto, sacado de
+     * {@link #transportFrames}, sigue siendo perpendicular a la trayectoria en cada tramo.
+     */
+    public static void strand(VertexConsumer vc, PoseStack.Pose mat, List<Vec3> pts, Vec3 origin, Vec3[] sides,
+                              float fullWidth, float scroll, float r, float g, float b, float headAlpha,
+                              float headClear) {
+        strandImpl(vc, mat, pts, origin, null, sides, fullWidth, scroll, r, g, b, headAlpha, headClear);
+    }
+
+    private static void strandImpl(VertexConsumer vc, PoseStack.Pose mat, List<Vec3> pts, Vec3 origin,
+                                   Vec3 fixedSide, Vec3[] sides, float fullWidth, float scroll,
+                                   float r, float g, float b, float headAlpha, float headClear) {
         int n = pts.size();
         if (n < 2) return;
         Vec3 prevL = null, prevR = null;
@@ -95,6 +114,7 @@ public final class KiRibbon {
             }
             float v = (float) i / (n - 1) + scroll;
 
+            Vec3 side = sides != null ? sides[i] : fixedSide;
             Vec3 vL = pt.add(side.scale(half)).subtract(origin);
             Vec3 vR = pt.subtract(side.scale(half)).subtract(origin);
 
@@ -116,17 +136,59 @@ public final class KiRibbon {
      *                   fija dónde cae d=0 en la fórmula de torsión.
      * @param phase      0 o π: las dos hebras de la hélice.
      */
-    public static List<Vec3> helixStrand(List<Vec3> centerPts, Vec3 right, Vec3 up,
+    public static List<Vec3> helixStrand(List<Vec3> centerPts, Vec3[][] frames,
                                          float radius, float meshLength, double phase) {
         List<Vec3> out = new ArrayList<>(centerPts.size());
         double d = 0;
-        out.add(helixOffset(centerPts.get(0), right, up, radius,
+        out.add(helixOffset(centerPts.get(0), frames[0][0], frames[0][1], radius,
                 KiVfxGeometry.helixAngleFromTip(meshLength, 0, phase)));
         for (int i = 1; i < centerPts.size(); i++) {
             d += centerPts.get(i - 1).distanceTo(centerPts.get(i));
-            out.add(helixOffset(centerPts.get(i), right, up, radius,
+            out.add(helixOffset(centerPts.get(i), frames[i][0], frames[i][1], radius,
                     KiVfxGeometry.helixAngleFromTip(meshLength, d, phase)));
         }
+        return out;
+    }
+
+    /**
+     * Marcos {normal, binormal} por punto a lo largo de una trayectoria, por TRANSPORTE PARALELO
+     * desde la cabeza ({@code pts[0]}) hacia la cola. Con un par fijo (el de la dirección del
+     * disparo) la hélice de una estela que gira por HOMING giraba en un plano oblicuo a su propio
+     * recorrido y se aplastaba; con estos marcos el desplazamiento helicoidal es siempre
+     * perpendicular a la trayectoria y solo rota lo que dicta {@link KiVfxGeometry#helixAngleFromTip}.
+     * Sin curva (trayectoria recta) da {@code {initialNormal, ...}} constantes: idéntico a lo de antes.
+     * @param pts           cabeza primero, en espacio de mundo.
+     * @param initialNormal lateral de partida en la cabeza (se proyecta perpendicular a la tangente).
+     */
+    public static Vec3[][] transportFrames(List<Vec3> pts, Vec3 initialNormal) {
+        int n = pts.size();
+        Vec3[][] out = new Vec3[n][];
+        Vec3 prevT = null, prevN = null;
+        for (int i = 0; i < n; i++) {
+            // Tangente en el sentido de VUELO (cola → cabeza): vecino hacia la cabeza menos vecino
+            // hacia la cola. Un tramo de longitud nula hereda la tangente anterior.
+            Vec3 toHead = pts.get(Math.max(0, i - 1));
+            Vec3 toTail = pts.get(Math.min(n - 1, i + 1));
+            Vec3 t = toHead.subtract(toTail);
+            if (t.lengthSqr() < 1.0e-10) t = prevT != null ? prevT : new Vec3(0, 0, 1);
+            t = t.normalize();
+            Vec3 nrm = prevN != null ? prevN : initialNormal;
+            nrm = nrm.subtract(t.scale(nrm.dot(t)));
+            if (nrm.lengthSqr() < 1.0e-8) nrm = KiAxis.basis(t)[1];
+            nrm = nrm.normalize();
+            // n × t, no t × n: es el "arriba" de KiAxis.basis (up = right × fwd), así que el
+            // sentido de giro de la hélice es el mismo que con el par fijo de antes.
+            out[i] = new Vec3[]{nrm, nrm.cross(t).normalize()};
+            prevT = t;
+            prevN = nrm;
+        }
+        return out;
+    }
+
+    /** Laterales de un conjunto de marcos: {@code which} 0 = normal, 1 = binormal. */
+    public static Vec3[] sidesOf(Vec3[][] frames, int which) {
+        Vec3[] out = new Vec3[frames.length];
+        for (int i = 0; i < frames.length; i++) out[i] = frames[i][which];
         return out;
     }
 

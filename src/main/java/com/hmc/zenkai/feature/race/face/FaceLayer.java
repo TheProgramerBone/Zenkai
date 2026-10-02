@@ -20,8 +20,19 @@ import java.util.Locale;
  * .claude/pendiente/sistema-visual-personajes-diseno.md).
  *
  * @param fixedRgb solo para {@link Color#FIXED}; ignorado en el resto.
+ * @param eyebrow  la capa es una CEJA dentro de otro rasgo (el trazo de encima de un ojo,
+ *                 JSON "eyebrow": true): no se pinta en razas sin cejas (RaceFaceTraits). Un
+ *                 párpado o la línea de un ojo cerrado NO son ceja y se pintan siempre.
  */
-public record FaceLayer(ResourceLocation texture, Color color, int fixedRgb) {
+public record FaceLayer(ResourceLocation texture, Color color, int fixedRgb, boolean eyebrow) {
+
+    public FaceLayer(ResourceLocation texture, Color color, int fixedRgb) {
+        this(texture, color, fixedRgb, false);
+    }
+
+    public FaceLayer withEyebrow(boolean eyebrow) {
+        return eyebrow == this.eyebrow ? this : new FaceLayer(texture, color, fixedRgb, eyebrow);
+    }
 
     /** Fuente del tinte de una capa. La clave en minúsculas es lo que se escribe en el JSON. */
     public enum Color {
@@ -89,6 +100,7 @@ public record FaceLayer(ResourceLocation texture, Color color, int fixedRgb) {
                 buf.writeResourceLocation(l.texture);
                 buf.writeEnum(l.color);
                 buf.writeInt(l.fixedRgb);
+                buf.writeBoolean(l.eyebrow);
             },
-            buf -> new FaceLayer(buf.readResourceLocation(), buf.readEnum(Color.class), buf.readInt()));
+            buf -> new FaceLayer(buf.readResourceLocation(), buf.readEnum(Color.class), buf.readInt(), buf.readBoolean()));
 }

@@ -10,8 +10,8 @@ import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 
 /**
  * Al recargar recursos del cliente (F3+T, cambio de resource pack) invalida lo que se cacheó
- * sobre texturas y modelos: la caché de RaceTextureUtil.resourceExists y la del origen de la
- * cara por modelo de FaceThumbnails.
+ * sobre texturas y modelos: la caché de RaceTextureUtil.resourceExists y las texturas de cara
+ * recolocadas (+ la región leída de cada modelo) de FaceRemapTextures.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class RaceTextureCacheReload {
@@ -21,7 +21,7 @@ public final class RaceTextureCacheReload {
     public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener((ResourceManagerReloadListener) rm -> {
             RaceTextureUtil.clearCache();
-            com.hmc.zenkai.client.gui.FaceThumbnails.clearCache();
+            FaceRemapTextures.clear();
         });
     }
 }

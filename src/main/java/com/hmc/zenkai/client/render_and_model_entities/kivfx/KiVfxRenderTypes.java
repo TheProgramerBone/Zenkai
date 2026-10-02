@@ -210,12 +210,26 @@ public final class KiVfxRenderTypes extends RenderType {
      * Sube los uniforms de la técnica. Hay que llamarlo ANTES de volcar el lote, porque un
      * ShaderInstance es único y sus uniforms valen para el draw que se ejecuta, no para el que se
      * encoló.
-     * Lo que sube es FORMA de la rampa, nunca un dato de orientación por proyectil: el eje de
-     * vuelo que el fragment necesita (ZenkaiAxial) lo deriva el propio shader transformando el
-     * vector local constante (0,0,1) — ver "EJE DE VUELO" en ki_energy.vsh — así que no hay
-     * ningún uniform de orientación que se pueda desincronizar entre dos proyectiles distintos
-     * dibujados en el mismo lote.
+     * Sube la FORMA de la rampa y el eje de vuelo de la técnica en curso ({@link #setAxis}). El eje
+     * NO puede derivarse en el shader del +Z local: la pose va horneada en los vértices — ver
+     * "EJE DE VUELO" en ki_energy.vsh. Es seguro como uniform porque KiVfxFrameQueue vuelca un
+     * lote por técnica, así que dos proyectiles no comparten draw.
      */
+    // Eje de vuelo de la técnica que se está dibujando, en ejes de MUNDO (ver "EJE DE VUELO" en
+    // ki_energy.vsh). Lo fija cada renderer antes de emitir y se restablece al terminar la cola.
+    private static float axisX = 0f, axisY = 0f, axisZ = 1f;
+
+    /** Fija el eje de vuelo (cualquier longitud; se normaliza). Un vector nulo restablece +Z. */
+    public static void setAxis(double x, double y, double z) {
+        double l = Math.sqrt(x * x + y * y + z * z);
+        if (l < 1.0e-6) { resetAxis(); return; }
+        axisX = (float) (x / l);
+        axisY = (float) (y / l);
+        axisZ = (float) (z / l);
+    }
+
+    public static void resetAxis() { axisX = 0f; axisY = 0f; axisZ = 1f; }
+
     public static void setupEnergy(KiVfxProfile p) { setupEnergy(p, false, 1f); }
 
     public static void setupEnergy(KiVfxProfile p, boolean frozenAnim) { setupEnergy(p, frozenAnim, 1f); }
@@ -253,6 +267,7 @@ public final class KiVfxRenderTypes extends RenderType {
         s.safeGetUniform("ZenkaiFrozenTime").set(frozenAnim || dbg.forceFlatBands() ? 0f : -1f);
         s.safeGetUniform("ZenkaiProximity").set(proximity);
         s.safeGetUniform("ZenkaiAxial").set(p.axial() ? 1f : 0f);
+        s.safeGetUniform("ZenkaiAxisWorld").set(axisX, axisY, axisZ);
         s.safeGetUniform("ZenkaiDebugMode").set(dbg.shaderMode());
         s.safeGetUniform("ZenkaiBloomMode").set(KiVfxFrameQueue.bloomPass() ? 1f : 0f);
     }

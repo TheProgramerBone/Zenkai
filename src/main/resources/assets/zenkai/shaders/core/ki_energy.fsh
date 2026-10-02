@@ -127,16 +127,17 @@ float ridge(float x) {
     return 1.0 - 2.0 * abs(sin(x));
 }
 
-/** Campo de llama DENTADO: misma estructura que flameField (mismas frecuencias/pesos), pero con
- *  `ridge()` en vez de `sin()`, más una quinta octava de frecuencia alta y peso bajo para que los
- *  picos no salgan todos del mismo tamaño. Reservada para el BORDE. */
-float ridgedField(vec3 p, float t, float freq, float speed) {
+/** Campo de borde DENTADO: mismas frecuencias y pesos que flameField pero con `ridge()` en vez de
+ *  `sin()`. Antes llevaba dos octavas más (19 y 31 rad): daban un diente de ~1/10 del radio, que
+ *  con 24 sectores en un tubo es aliasing (el rayado en diagonal que se veía al hacer zoom) y en
+ *  una esfera es grano. Con solo las tres bajas, reescaladas para conservar la amplitud (suma de
+ *  pesos 1.06 frente a 1.40), el borde queda en pocas astillas grandes, como en kamehameha_1/2.
+ *  Lo usan TODAS las técnicas. */
+float ridgedFieldSoft(vec3 p, float t, float freq, float speed) {
     float v  = ridge(p.x *  9.0 * freq + t * 4.0 * speed)               * 0.50;
     v       += ridge(p.y * 11.0 * freq - t * 5.5 * speed + p.x * 3.0)   * 0.32;
     v       += ridge(p.z * 13.0 * freq + t * 6.5 * speed + p.y * 4.0)   * 0.24;
-    v       += ridge((p.x + p.y + p.z) * 19.0 * freq - t * 8.0 * speed) * 0.16;
-    v       += ridge((p.x * 2.0 - p.y * 1.5 + p.z) * 31.0 * freq + t * 9.0 * speed) * 0.18;
-    return v;
+    return v * 1.32;
 }
 
 void main() {
@@ -187,7 +188,9 @@ void main() {
     vec3 bands = clamp(ZenkaiBands + vec3(proximityRaise, proximityRaise * 0.65, 0.0), 0.0, 0.97);
 
     float flameCore    = flameField(vField, t, 1.35, 1.30);
-    float flameOutline = ridgedField(vField, t, 0.65, 0.65);
+    // Borde de TODAS las técnicas con las tres octavas bajas (antes solo las de eje): las dos
+    // altas daban grano de 1/10 del radio, el mismo aliasing en una esfera que en un haz.
+    float flameOutline = ridgedFieldSoft(vField, t, 0.65, 0.65);
 
     // RAMPA DE CUATRO CAPAS (pasada de dirección de arte 2026-09-24, contra las referencias de
     // FighterZ/Xenoverse en .claude/imagenes/). Antes eran tres: contorno → tinte → tinte lavado a
@@ -213,9 +216,16 @@ void main() {
     float gCore = g + flameCore * WOBBLE_CORE * ZenkaiWobble;
     float bandHot = mix(bands.y, bands.x, 0.5);
 
+    // REPARTO DE COLOR contorno→tinte. En formas con eje sale de un campo SUAVE y de baja
+    // frecuencia, no del `ridge` angular de la silueta: con el mismo ridge, el límite entre
+    // bandas dibujaba por dentro de la cabeza los mismos romboides de borde duro que el borde
+    // alfa (las facetas de la captura 2026-10-01). La silueta (`edge`, más abajo) conserva su
+    // dentado; el color solo ondula.
+    float outlineWobble = flameField(vField, t, 0.45, 0.60) * 0.55;
+
     vec3 col = outline;
     col = mix(col, tint, smoothstep(bands.z, bands.y,
-                                    g + flameOutline * WOBBLE_OUTLINE * ZenkaiWobble));
+                                    g + outlineWobble * WOBBLE_OUTLINE * ZenkaiWobble));
     float toHot  = smoothstep(bands.y, bandHot, gCore);
     float toCore = smoothstep(bandHot, bands.x, gCore);
 
@@ -234,13 +244,15 @@ void main() {
 
     // VETAS DE FLUJO (solo formas con eje): las líneas de velocidad que recorren el interior de
     // kamehameha_1/3 — la energía se MUEVE hacia delante aunque el haz esté quieto en pantalla.
-    // vUv.y es la coordenada a lo largo del eje (en bloques en el haz anclado, ver
-    // KiVfxGeometry.emitTube) y vUv.x la vuelta al tubo (0..1): multiplicar x por 2π·k entero
+    // vUv.y es la coordenada a lo largo del eje (en radios del tubo en el haz anclado, ver
+    // KiVfxGeometry.emitSweptTube) y vUv.x la vuelta al tubo (0..1): multiplicar x por 2π·k entero
     // mantiene la veta sin costura. Solo aclara, en la zona de cuerpo/capa caliente.
     if (ZenkaiAxial > 0.5) {
         float around = vUv.x * 6.2831853;
-        float streak = ridge(vUv.y * 1.7 - t * 1.1 + sin(around * 3.0) * 0.6)
-                     * ridge(around * 5.0 + vUv.y * 0.35);
+        // vUv.y va en RADIOS del haz (antes en bloques): las constantes de avance se multiplicaron
+        // por ~0.26, el radio típico, para que la veta conserve su tamaño en pantalla.
+        float streak = ridge(vUv.y * 0.45 - t * 1.1 + sin(around * 3.0) * 0.6)
+                     * ridge(around * 5.0 + vUv.y * 0.09);
         col *= 1.0 + max(0.0, streak) * 0.22 * (1.0 - toCore) * ZenkaiWobble;
     }
 
@@ -258,7 +270,14 @@ void main() {
         col *= mix(1.0, 0.65 + 0.70 * d, ZenkaiDetail);
     }
 
-    float edge = g + flameOutline * WOBBLE_OUTLINE * ZenkaiWobble;
+    // PROFUNDIDAD DE LOS DIENTES de la silueta. En una ESFERA SURFACE `g` sube muy despacio hacia
+    // dentro del limbo, así que un diente de amplitud A se come A del radio: con las octavas bajas
+    // (pocos dientes, grandes) la Supernova salió con mordiscos de cielo dentro de la esfera,
+    // cuando las seis referencias piden silueta NÍTIDA. Se acota a 0.4 para esas formas; los
+    // haces/hélices (astillas), el disco y la burbuja RIM conservan la amplitud completa.
+    float edgeAmp = WOBBLE_OUTLINE * ZenkaiWobble;
+    if (ZenkaiShape < 0.5 && ZenkaiAxial < 0.5) edgeAmp *= 0.4;
+    float edge = g + flameOutline * edgeAmp;
     float alpha = smoothstep(0.0, max(1.0e-3, ZenkaiTone.z), edge);
     // RELLENO (ZenkaiFill): suelo de cobertura para el interior de una forma RIM. Sin él una
     // burbuja RIM es hueca de frente — correcto para BARRIER (cristal), incorrecto para Death

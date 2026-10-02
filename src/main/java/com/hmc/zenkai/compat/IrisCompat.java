@@ -31,6 +31,7 @@ public final class IrisCompat {
 
     private static Object api;
     private static Method inUse;
+    private static Method shadowPass;
     private static boolean resolved = false;
 
     private static void resolve() {
@@ -39,11 +40,36 @@ public final class IrisCompat {
             Class<?> c = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
             api = c.getMethod("getInstance").invoke(null);
             inUse = c.getMethod("isShaderPackInUse");
+            try {
+                shadowPass = c.getMethod("isRenderingShadowPass");
+            } catch (Throwable t) {
+                shadowPass = null; // API sin esa función: sin guarda de sombras, como antes
+            }
         } catch (Throwable t) {
             api = null;
             inUse = null;
             Zenkai.LOGGER.warn("[Zenkai] Iris/Oculus cargado pero su API no respondió ({}); se "
                     + "asume shaderpack activo.", t.toString());
+        }
+    }
+
+    /**
+     * true mientras Iris dibuja el mapa de SOMBRAS del shaderpack.
+     * <p>
+     * ═══ DUPLICADO CON SHADERPACK ═══ Iris vuelve a llamar al render de cada entidad dentro de su
+     * pase de sombras, desde la cámara de la luz. Los renderers de ki no dibujan en su
+     * {@code render()}: ENCOLAN en {@code KiVfxFrameQueue}, que se vacía una vez por frame. Sin esta
+     * guarda la cola recibía una segunda copia de la técnica con la matriz de la luz (otra pose y
+     * otra escala), y además las partículas y el {@code consumeFxTick} corrían dos veces.
+     */
+    public static boolean renderingShadowPass() {
+        if (!IRIS && !OCULUS) return false;
+        if (!resolved) resolve();
+        if (shadowPass == null) return false;
+        try {
+            return (Boolean) shadowPass.invoke(api);
+        } catch (Throwable t) {
+            return false;
         }
     }
 
