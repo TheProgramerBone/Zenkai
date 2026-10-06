@@ -226,46 +226,6 @@ public final class PartyService {
         return true;
     }
 
-    // ── Debug (temporal) ─────────────────────────────────────────────────────
-
-    /**
-     * SOLO PARA PRUEBAS: añade un miembro con un UUID aleatorio (no un jugador real) a la
-     * party de quien ejecuta el comando, creándola si hace falta. Bypasa invite()/accept() a
-     * propósito — sirve para probar PartyScreen en singleplayer, donde no hay con quién formar
-     * grupo de verdad. Ver el javadoc de {@link PartyDebug} para qué más borrar junto a esto.
-     * Comando: {@code /zenkai debug party add [nombre]}, gated por el permiso 2 del root
-     * /zenkai (ver ModCommands) — no expuesto en /zparty, que es de cualquier jugador.
-     */
-    public static boolean debugAddFakeMember(MinecraftServer server, ServerPlayer leader,
-                                             @Nullable String fakeName) {
-        var mgr = PartyManager.get(server);
-        PartyManager.Party party = mgr.partyOf(leader.getUUID());
-        if (party == null) {
-            party = mgr.createFor(leader.getUUID());
-        } else if (!party.leaderId.equals(leader.getUUID())) {
-            leader.sendSystemMessage(Component.translatable("command.zenkai.party.not_leader"));
-            return false;
-        }
-        if (party.members.size() >= party.maxSize) {
-            leader.sendSystemMessage(Component.translatable(
-                    "command.zenkai.party.invite.full", party.maxSize));
-            return false;
-        }
-
-        String name = (fakeName == null || fakeName.isBlank())
-                ? "TestBot" + party.members.size() : fakeName;
-        // Recortado al mismo tope que PartySyncPacket acepta (ver su MAX_NAME_LEN): un
-        // nombre de prueba más largo que eso reventaba el encoder en CADA login mientras la
-        // party siguiera guardada — justo el bug que dejó esto aquí, no algo hipotético.
-        if (name.length() > 32) name = name.substring(0, 32);
-        UUID fakeId = UUID.randomUUID();
-        PartyDebug.register(fakeId, name);
-        mgr.addMember(party, fakeId);
-        leader.sendSystemMessage(Component.literal("[Zenkai DEBUG] Added fake party member: " + name));
-        syncAll(server, party);
-        return true;
-    }
-
     // ── Fuego amigo ──────────────────────────────────────────────────────────
 
     /**
@@ -419,8 +379,6 @@ public final class PartyService {
     private static String resolveName(MinecraftServer server, UUID id) {
         ServerPlayer online = server.getPlayerList().getPlayer(id);
         if (online != null) return online.getGameProfile().getName();
-        String debugName = PartyDebug.nameOf(id);   // SOLO PRUEBAS, ver PartyDebug
-        if (debugName != null) return debugName;
         return id.toString();
     }
 

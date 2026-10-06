@@ -204,9 +204,27 @@ public class ModItemModelProvider extends ItemModelProvider {
                 "namekian_race_boots", "namekian_race_boots_colorable",
                 "arcosian_race_boots");
 
-        flatGroup("hair_1");
-        flatGroup("ssj_hair1");
-        flatGroup("ki_scythe");
+        // Formas arcosianas, Majin y Namek naranja: mismas siluetas genéricas que arriba.
+        String[] slots = {"helmet", "chestplate", "leggings", "boots"};
+        String[] arcosianForms = {"second", "third", "final", "fifth", "golden", "black",
+                "golden_fifth", "black_fifth"};
+        for (String slot : slots) {
+            String tex = "race_" + slot;
+            for (String form : arcosianForms) {
+                flatGroup(tex, "arcosian_" + form + "_form_" + slot);
+            }
+            flatGroup(tex, "majin_race_" + slot, "majin_race_" + slot + "_female",
+                    "namek_orange_" + slot);
+        }
+
+        // Las colas van en el slot de pechera: reutilizan su silueta.
+        flatGroup("race_chestplate", "tail_loose", "tail_waist");
+
+        // Pelo: flatGroup sin nombres no genera nada, así que se pasan explícitos.
+        flatGroup("hair_1", "hair", "hair_1");
+        flatGroup("ssj_hair_1", "ssj1_hair1");
+        // ki_scythe.png no existe (solo su .mcmeta): se usa la textura de la hoja de ki.
+        flatGroup("ki_blade", "ki_scythe");
     }
 
     private void flatGroup(String texture, String... names) {

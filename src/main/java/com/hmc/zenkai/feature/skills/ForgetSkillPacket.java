@@ -52,9 +52,8 @@ public record ForgetSkillPacket(String skillId) implements CustomPacketPayload {
             int removed = att.skills().lower(def.id());
             if (removed <= 0) return;
 
-            // ⚠ Verificar la sobrecarga: SkillBuyPacket usa tpCostForLevel(sp, nivel), respec()
-            // usa tpCostForLevel(race, nivel). Aquí hace falta la misma que usó la compra.
-            // FormDrivenSkills decide además CUÁL proveedor (super_forms o god_ki) preguntar.
+            // Misma sobrecarga que SkillBuyPacket (def + jugador), así el reembolso coincide con
+            // lo que costó la compra. FormDrivenSkills decide además CUÁL proveedor (super_forms o god_ki) preguntar.
             int refund = FormDrivenSkills.tpCostForLevel(def, sp, removed);
 
             // MAX_VALUE significa "ese nivel no tiene coste real definido" (p. ej. un nivel de

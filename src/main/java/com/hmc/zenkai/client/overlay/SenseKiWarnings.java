@@ -158,11 +158,6 @@ public final class SenseKiWarnings {
             shakeStart = now;
             shakeIntensity = intensity;
         }
-
-//        // TEMPORAL: quita este bloque cuando esté calibrado.
-//        mc.player.displayClientMessage(net.minecraft.network.chat.Component.literal(
-//                "[sense] aviso · intensidad " + String.format("%.2f", intensity)
-//                        + " · sacudida " + ClientConfig.kiSenseCameraShake()), false);
     }
 
     private static void purge(long now) {

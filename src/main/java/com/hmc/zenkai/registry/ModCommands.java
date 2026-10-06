@@ -310,20 +310,10 @@ public class ModCommands {
                 // ── /zenkai debug entity ─────────────────────────────────────────
                 // Vuelca vida vanilla + pool zenkai de la entidad en el punto de mira.
                 //
-                // ── /zenkai debug party add [nombre] ─────────────────────────────
-                // TEMPORAL — solo para probar PartyScreen en singleplayer, donde no hay con
-                // quién formar grupo de verdad. Añade un miembro con UUID aleatorio a tu party
-                // (la crea si hace falta). Ver PartyService.debugAddFakeMember y el javadoc de
-                // PartyDebug para qué borrar cuando el menú ya esté verificado.
-                // ── /zenkai debug tail <true|false> ──────────────────────────────
-                // TEMPORAL — para probar el ritual de Oozaru (ver OozaruSystem/
-                // OozaruConditions) sin esperar al ítem real de cola de GeckoLibArmor, que
-                // todavía no existe (ver PlayerStateFlags.hasTail, default true). Borrar esta
-                // rama cuando ese ítem exista y de verdad pueda ponerse/quitarse en juego.
                 .then(Commands.literal("debug")
                         .then(Commands.literal("entity")
                                 .executes(ModCommands::debugEntity))
-                        // Todas las ramas "set a flag" de abajo (tail/divine/legendary/immortal/
+                        // Todas las ramas "set a flag" de abajo (divine/legendary/immortal/
                         // majin) aceptan ahora un <player> opcional, MISMO patrón que el resto de
                         // /zenkai (ver "tp add"/"attr setall": sin argumento actúa sobre quien
                         // ejecuta, con él acepta cualquier selector de EntityArgument.players()
@@ -333,17 +323,8 @@ public class ModCommands {
                         // "entity"/"party add" se quedan self-only a propósito: el primero
                         // raytracea la MIRADA de quien ejecuta y el segundo añade un miembro a SU
                         // propia party, ninguno de los dos tiene sentido apuntado a otro jugador.
-                        .then(Commands.literal("tail")
-                                .then(Commands.argument("value", BoolArgumentType.bool())
-                                        .executes(ctx -> debugSetTail(ctx,
-                                                ctx.getSource().getPlayerOrException(),
-                                                BoolArgumentType.getBool(ctx, "value")))
-                                        .then(Commands.argument("player", EntityArgument.players())
-                                                .executes(ctx -> forEach(ctx, targets(ctx),
-                                                        (c, sp) -> debugSetTail(c, sp,
-                                                                BoolArgumentType.getBool(c, "value")))))))
                         // ── /zenkai debug divine|legendary <true|false> ──────────────
-                        // TEMPORAL — igual que "debug tail" de arriba: la vía REAL de conseguir
+                        // TEMPORAL — la vía REAL de conseguir
                         // cada uno de estos dos estados (PlayerStateFlags.isDivine/isLegendary,
                         // hoy solo leídos por el HUD — ver ClientZenkaiHooks) no existe todavía
                         // (Divino se piensa como "tomarse un té de agua divina", un ítem que
@@ -414,12 +395,6 @@ public class ModCommands {
                                                 .executes(ctx -> forEach(ctx, targets(ctx),
                                                         (c, sp) -> debugSetMajinControlled(c, sp,
                                                                 BoolArgumentType.getBool(c, "value")))))))
-                        .then(Commands.literal("party")
-                                .then(Commands.literal("add")
-                                        .executes(ctx -> debugPartyAdd(ctx, null))
-                                        .then(Commands.argument("name", StringArgumentType.word())
-                                                .executes(ctx -> debugPartyAdd(ctx,
-                                                        StringArgumentType.getString(ctx, "name"))))))
                         // ── /zenkai debug connector set <socket> ──────────────────────
                         // Atajo sin abrir PieceConnectorScreen (clic derecho normal en el
                         // conector — ver worldgen.piecegraph): útil para edición por script o
@@ -518,15 +493,6 @@ public class ModCommands {
     }
 
     // ── Implementaciones ─────────────────────────────────────────────────────
-
-    /** Ver el comentario de la rama "debug tail" más arriba. Actúa sobre quien ejecuta. */
-    private static int debugSetTail(CommandContext<CommandSourceStack> ctx, ServerPlayer sp, boolean value) {
-        sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).setHasTail(value);
-        PlayerLifeCycle.sync(sp);
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[Zenkai] hasTail = " + value + " → " + sp.getGameProfile().getName()), true);
-        return 1;
-    }
 
     /** Ver el comentario de las ramas "debug divine/majin/legendary" más arriba. Un solo helper
      *  para los tres en vez de triplicar el mismo cuerpo — solo cambia la etiqueta y qué setter
@@ -689,7 +655,7 @@ public class ModCommands {
         // Ritual de Oozaru: un reset "full" que dejara esto vivo permitiría re-desbloquear
         // SSJ4 sin repetir el ritual en cuanto se re-comprara el nivel — no sería full. La
         // cola vuelve a su valor por defecto (true) por la misma razón de "estado limpio",
-        // aunque hoy solo /zenkai debug tail puede haberla puesto en false.
+        // aunque el ítem de cola puede haberla puesto en false.
         att.setHasSsj4Ritual(false);
         att.setHasTail(true);
         // Servicio de Kaiosama: un reset "full" también devuelve el derecho a pedir las
@@ -1206,14 +1172,6 @@ public class ModCommands {
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] Secuencia sintética lanzada: 2 destellos con 1s de diferencia."), false);
         return 1;
-    }
-
-    /** TEMPORAL — ver el comentario de "/zenkai debug party add" arriba y el javadoc de
-     *  PartyService.debugAddFakeMember. {@code name} null → nombre autogenerado. */
-    private static int debugPartyAdd(CommandContext<CommandSourceStack> ctx, String name)
-            throws CommandSyntaxException {
-        ServerPlayer sp = ctx.getSource().getPlayerOrException();
-        return PartyService.debugAddFakeMember(ctx.getSource().getServer(), sp, name) ? 1 : 0;
     }
 
     private static int respec(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {

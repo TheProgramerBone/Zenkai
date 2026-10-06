@@ -54,6 +54,10 @@ repositories {
         name = "Create/Ponder/Flywheel"
         url = "https://maven.createmod.net"
     }
+    maven {
+        name = "BlameJared (JEI)"
+        url = "https://maven.blamejared.com"
+    }
 }
 
 base {
@@ -159,6 +163,10 @@ dependencies {
     // un usuario sin Ponder instalado simplemente no ve el boton de tutorial en esos bloques.
     compileOnly "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
     runtimeOnly "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
+
+    // JEI: compat OPCIONAL, solo la API en compileOnly (ver compat/JeiCompat.java). En runClient
+    // JEI llega desde run/mods; un usuario sin JEI nunca carga esa clase.
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
 
     // Flywheel: dependencia dura de Ponder en tiempo de ejecucion del lado cliente (su propio
     // mods.toml lo declara "required"). No lo usamos directamente, pero sin el Ponder no carga.

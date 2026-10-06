@@ -37,7 +37,7 @@ public record PartySyncPacket(boolean inParty, @Nullable UUID leaderId, boolean 
 
     /** CRASH REAL VISTO EN PRUEBAS: PartyService.resolveName() cae a id.toString() (36
      *  caracteres, formato UUID con guiones) para un miembro sin nombre de jugador real —
-     *  offline sin GameProfileCache, o un miembro de prueba de PartyDebug. Con el tope
+     *  offline sin GameProfileCache (antes también un miembro de prueba). Con el tope
      *  anterior (32) ese fallback reventaba writeUtf en el encoder y desconectaba al jugador
      *  en CADA login mientras esa party siguiera en el SavedData. 40 deja margen sobre los
      *  36 exactos de un UUID sin que un nombre de jugador normal (máx. 16 de Mojang) se
