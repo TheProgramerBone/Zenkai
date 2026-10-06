@@ -38,7 +38,7 @@ public final class ModBiomeGen {
     private static final int NAMEK_GRASS   = 1725043; // #1A5273
     private static final int NAMEK_FOLIAGE = 2055820; // #1F5E8C
 
-    // Rediseño HFIL fase 1, punto 2 (ver .claude/pendiente/worldgen-pendiente.md): ceniza
+    // Rediseño HFIL fase 1 (ver .claude/docs/worldgen.md): ceniza
     // cayendo pasivamente, nativo de BiomeSpecialEffects (sin entidad ni tick propio que
     // mantener). Probabilidad base calcada de minecraft:nether_wastes (0.00625) en vez de
     // inventar un número — incluso en un bioma pensado para verse denso, esa cifra ya se lee
@@ -61,6 +61,8 @@ public final class ModBiomeGen {
         ctx.register(ModBiomes.HFIL_BLOOD_SHORE, hfilBloodShore(features, carvers));
         ctx.register(ModBiomes.HFIL_NEEDLE_WASTES, hfilNeedleWastes(features, carvers));
         ctx.register(ModBiomes.HFIL_CINDER_DUNES, hfilCinderDunes(features, carvers));
+        ctx.register(ModBiomes.HFIL_FROZEN_LAKE, hfilFrozenLake(features, carvers));
+        ctx.register(ModBiomes.HFIL_JANEMBA_RIFT, hfilJanembaRift(features, carvers));
         ctx.register(ModBiomes.OTHERWORLD, otherworld(features, carvers));
         ctx.register(ModBiomes.NAMEK_PLAINS, namek(features, carvers, NamekVeg.PLAINS));
         ctx.register(ModBiomes.NAMEK_FOREST, namek(features, carvers, NamekVeg.FOREST));
@@ -132,21 +134,83 @@ public final class ModBiomeGen {
      */
     private static BiomeGenerationSettings.Builder hfilBase(HolderGetter<PlacedFeature> features,
                                                             HolderGetter<ConfiguredWorldCarver<?>> carvers) {
+        return hfilBase(features, carvers, true);
+    }
+
+    /**
+     * {@code lavaSprings = false}: solo los manantiales de agua. Para el Janemba Rift, cuya
+     * referencia (Fusion Reborn) no tiene lava en ninguna parte; con lava saliendo de las paredes
+     * se leía como Nether. Quitar el de lava y dejar el de agua en su sitio conserva el orden
+     * relativo de los demás biomas (agua → lava → manantial extra de cinder_dunes): sin ciclo.
+     */
+    private static BiomeGenerationSettings.Builder hfilBase(HolderGetter<PlacedFeature> features,
+                                                            HolderGetter<ConfiguredWorldCarver<?>> carvers,
+                                                            boolean lavaSprings) {
         BiomeGenerationSettings.Builder gen = new BiomeGenerationSettings.Builder(features, carvers);
         gen.addCarver(GenerationStep.Carving.AIR, Carvers.CAVE);
         gen.addCarver(GenerationStep.Carving.AIR, Carvers.CAVE_EXTRA_UNDERGROUND);
         gen.addCarver(GenerationStep.Carving.AIR, Carvers.CANYON);
-        BiomeDefaultFeatures.addDefaultUndergroundVariety(gen);
-        BiomeDefaultFeatures.addDefaultSprings(gen);
-        BiomeDefaultFeatures.addDefaultOres(gen);
+        // SIN addDefaultUndergroundVariety (2026-10-04, petición del usuario: que la dimensión no
+        // se sienta un copia y pega del Overworld). Esas vetas (grava, granito, diorita, andesita,
+        // toba, calcita, tierra) son piedra vanilla y generan en todo lo que esté en
+        // stone_ore_replaceables, que el HFIL SÍ necesita para sus menas propias.
+        if (lavaSprings) {
+            BiomeDefaultFeatures.addDefaultSprings(gen);
+        } else {
+            gen.addFeature(GenerationStep.Decoration.FLUID_SPRINGS, MiscOverworldPlacements.SPRING_WATER);
+        }
+        // Menas PROPIAS del HFIL en vez de BiomeDefaultFeatures.addDefaultOres (2026-10-02,
+        // petición del usuario): las vanilla salían con fondo de piedra gris del Overworld sobre
+        // la roca del bioma. Misma abundancia y alturas que la vanilla, en su mismo orden; cada
+        // veta usa la variante de la piedra que atraviesa (ver HfilOres).
+        for (var ore : java.util.List.of(
+                ModPlacedFeatures.HFIL_ORE_COAL_UPPER, ModPlacedFeatures.HFIL_ORE_COAL_LOWER,
+                ModPlacedFeatures.HFIL_ORE_IRON_UPPER, ModPlacedFeatures.HFIL_ORE_IRON_MIDDLE,
+                ModPlacedFeatures.HFIL_ORE_IRON_SMALL, ModPlacedFeatures.HFIL_ORE_GOLD,
+                ModPlacedFeatures.HFIL_ORE_GOLD_LOWER, ModPlacedFeatures.HFIL_ORE_REDSTONE,
+                ModPlacedFeatures.HFIL_ORE_REDSTONE_LOWER, ModPlacedFeatures.HFIL_ORE_DIAMOND,
+                ModPlacedFeatures.HFIL_ORE_DIAMOND_MEDIUM, ModPlacedFeatures.HFIL_ORE_DIAMOND_LARGE,
+                ModPlacedFeatures.HFIL_ORE_DIAMOND_BURIED, ModPlacedFeatures.HFIL_ORE_LAPIS,
+                ModPlacedFeatures.HFIL_ORE_LAPIS_BURIED, ModPlacedFeatures.HFIL_ORE_COPPER)) {
+            gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ore);
+        }
         gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES, ModPlacedFeatures.KATCHIN_ORE_HFIL);
         return gen;
     }
 
-    /** Efectos comunes. grass/foliage solo los usa la variante con hierba. */
+    /**
+     * Pozas de los "infiernos" de Beppu (propuesta A, 2026-10-02): agua hirviendo azul
+     * (Umi Jigoku), barro gris hirviendo (Oniishibozu Jigoku) y géiser (Tatsumaki Jigoku, en
+     * los 3 biomas). En el paso LAKES y SIEMPRE en este mismo orden relativo (poza → barro →
+     * géiser) en cualquier bioma: FeatureSorter exige que dos placed features compartidas
+     * aparezcan en el mismo orden en cada bioma que las use, o el arranque falla con "Feature
+     * order cycle found". Por eso un solo sitio las añade, con interruptores, en vez de
+     * repetirlas a mano en cada bioma.
+     */
+    private static void addBeppuPools(BiomeGenerationSettings.Builder gen, boolean boilingWater, boolean mud) {
+        if (boilingWater) {
+            gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_BOILING_POOL_KEY);
+        }
+        if (mud) {
+            gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_MUD_POT_KEY);
+        }
+        gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_GEYSER_KEY);
+    }
+
+    /** Efectos comunes con el cielo rojo oscuro de siempre. */
     private static BiomeSpecialEffects.Builder hfilEffects(int fogColor) {
+        return hfilEffects(SKY_COLOR, fogColor);
+    }
+
+    /**
+     * Efectos comunes con cielo propio. Niebla Y cielo por bioma (petición del usuario,
+     * 2026-10-02): con los tres biomas en rojos casi iguales, cruzar de uno a otro no se notaba
+     * en el aire, solo en el suelo. Cada bioma tiene ahora su atmósfera — y como el horizonte
+     * del Otherworld es casi todo niebla, cambiar la niebla cambia lo que se ve del "cielo".
+     */
+    private static BiomeSpecialEffects.Builder hfilEffects(int skyColor, int fogColor) {
         return new BiomeSpecialEffects.Builder()
-                .skyColor(SKY_COLOR)
+                .skyColor(skyColor)
                 .fogColor(fogColor)
                 .waterColor(WATER_COLOR)
                 .waterFogColor(WATER_FOG_COLOR)
@@ -154,18 +218,29 @@ public final class ModBiomeGen {
     }
 
     private static Biome hfilBuild(BiomeSpecialEffects effects, BiomeGenerationSettings.Builder gen) {
+        return hfilBuild(effects, gen, 2.0F);
+    }
+
+    private static Biome hfilBuild(BiomeSpecialEffects effects, BiomeGenerationSettings.Builder gen, float temperature) {
+        // Ogros (propuesta I) en cualquier bioma del HFIL, sueltos o en pareja, rojo y azul por
+        // igual. Además, el caldero de los oni genera su propia pareja de guardia.
+        MobSpawnSettings.Builder spawns = new MobSpawnSettings.Builder()
+                .addSpawn(net.minecraft.world.entity.MobCategory.CREATURE,
+                        new MobSpawnSettings.SpawnerData(ModEntities.RED_OGRE.get(), 10, 1, 2))
+                .addSpawn(net.minecraft.world.entity.MobCategory.CREATURE,
+                        new MobSpawnSettings.SpawnerData(ModEntities.BLUE_OGRE.get(), 10, 1, 2));
         return new Biome.BiomeBuilder()
                 .hasPrecipitation(false)
-                .temperature(2.0F)
+                .temperature(temperature)
                 .downfall(0.0F)
                 .specialEffects(effects)
-                .mobSpawnSettings(new MobSpawnSettings.Builder().build())
+                .mobSpawnSettings(spawns.build())
                 .generationSettings(gen.build())
                 .build();
     }
 
     /**
-     * Rediseño de identidad HFIL (ver .claude/pendiente/worldgen-pendiente.md, Fase 2) —
+     * Rediseño de identidad HFIL (ver .claude/docs/worldgen.md, Fase 2) —
      * antes "hfil_badlands": pintaba terracota bandeada de vainilla ({@code minecraft:bandlands}
      * en la surface_rule), la identidad prestada más obvia de los 3 biomas del HFIL, sin relación
      * con el imaginario de Dragon Ball. Ahora es la identidad "Blood Pond": el charco de sangre
@@ -198,66 +273,81 @@ public final class ModBiomeGen {
         // pinchos con la paleta cálida del charco de sangre sigue siendo válida, así que se
         // mantiene. Los pinchos se quedan solo en hfil_needle_wastes.
         gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_LAKE_BLOOD_KEY);
+        addBeppuPools(gen, true, true);
+        // Caldero de los oni (kama-yude, propuesta G): el castigo junto al Blood Pond.
+        gen.addFeature(GenerationStep.Decoration.SURFACE_STRUCTURES, ModPlacedFeatures.HFIL_ONI_CAULDRON_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_BONE_PILE_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_ORE_BOULDER_COMMON_KEY);
+        // La orilla de sangre es la "orilla del Sanzu": mojones frecuentes (propuesta C).
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.HFIL_CAIRNS_COMMON_KEY);
         gen.addFeature(GenerationStep.Decoration.UNDERGROUND_ORES,
                 ModPlacedFeatures.KATCHIN_ORE_HFIL_EXPOSED);
-        BiomeSpecialEffects effects = hfilEffects(6034452)   // #5C1414
+        // Rojo sangre: el original del HFIL, ahora exclusivo de la orilla del Blood Pond.
+        BiomeSpecialEffects effects = hfilEffects(0x6E1414)
                 .ambientParticle(HFIL_ASH_PARTICLES_LIGHT)
                 .build();
         return hfilBuild(effects, gen);
     }
 
     /**
-     * Rediseño de identidad HFIL (ver .claude/pendiente/worldgen-pendiente.md, Fase 3) —
+     * Rediseño de identidad HFIL (ver .claude/docs/worldgen.md, Fase 3) —
      * antes "hfil_wastes". Los pinchos (HFIL_SPIKE_KEY) ya vivían exclusivamente aquí desde
      * Ronda 5 del rediseño anterior; esta fase solo sube su frecuencia (ver ModPlacedFeatures)
      * para que definan el horizonte nada más entrar, en vez de ser un evento raro, y afloja la
-     * hierba a matojos dispersos en vez de cobertura densa, para que el suelo se lea más "yermo
-     * rocoso" que "pradera muerta". El suelo sigue siendo coarse_dirt (ver surface rule): NO
-     * grass_block, que moriría por falta de luz bajo la capa de nubes. El aspecto de pasto lo da
-     * el short_grass, que sobrevive a oscuras y se tiñe con grassColorOverride.
-     * PENDIENTE DE DECISIÓN DE ARTE (ver la propuesta, sección 3.2): las imágenes de referencia
-     * muestran pinchos sobre colinas VERDES o sobre suelo BLANCO/nevado, ninguna sobre este
-     * ocre/pardo — esta fase NO toca la paleta de superficie, solo la densidad de decoración.
-     * Personalidad por bioma (ver .claude/pendiente): los troncos caídos (FALLEN_LOG_HFIL_KEY)
-     * pasan a ser EXCLUSIVOS de este bioma — se quitaron de blood_shore y cinder_dunes (ver esas
-     * funciones), así que un tronco caído en el HFIL ahora identifica needle_wastes por sí solo.
-     * También su primer gancho minero propio: un afloramiento raro de Katchin en superficie
+     * hierba a matojos dispersos en vez de cobertura densa.
+     * SUELO BLANCO (2026-10-02, decisión del usuario): las imágenes de referencia muestran los
+     * pinchos sobre colinas VERDES o sobre suelo BLANCO/nevado, nunca sobre el ocre/pardo de
+     * coarse_dirt que había. Ahora la surface_rule pinta HFIL_PALE_STONE (roca blanca-azulada,
+     * ver ModBlocks), que hace de fondo claro para la roca fría de los pinchos. La hierba seca y
+     * las matas se QUITARON: ni short_grass ni dead_bush sobreviven sobre roca (exigen
+     * tierra/arena), así que solo habrían gastado intentos sin colocar nada; por lo mismo ya no
+     * hacen falta grassColorOverride/foliageColorOverride.
+     * Los troncos caídos fueron exclusivos de este bioma hasta el 2026-10-02; se quitaron también
+     * de aquí al volverse blanco y nevado (madera fuera de lugar, petición del usuario). Su placed
+     * feature del HFIL se borró el 2026-10-05: no la usaba ningún bioma.
+     * Su primer gancho minero propio: un afloramiento raro de Katchin en superficie
      * (HFIL_ORE_BOULDER_RARE_KEY, ver HfilOreBoulderFeature) — mucho menos frecuente que en
      * blood_shore, que ya tiene la veta expuesta como seña de identidad.
      */
     private static Biome hfilNeedleWastes(HolderGetter<PlacedFeature> features,
                                           HolderGetter<ConfiguredWorldCarver<?>> carvers) {
         BiomeGenerationSettings.Builder gen = hfilBase(features, carvers);
+        // Pozas azules sobre el suelo blanco (el contraste más fuerte del HFIL) y géiseres; sin
+        // barro: el gris del barro se perdería contra la piedra pálida.
+        addBeppuPools(gen, true, false);
+        // Terrazas de Pamukkale (propuesta B): piedra pálida con pozas de sangre escalonadas.
+        // Exclusivas de este bioma (es el único con suelo blanco), así que no comparten orden
+        // de features con ningún otro.
+        gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_TERRACES_KEY);
+        // El capullo de Freezer (propuesta H) NO va aquí: es una estructura (FriezaCocoonStructure,
+        // #has_structure/frieza_cocoon), localizable con /locate.
         // Pinchos primero, igual que en Namek los árboles van antes que la hierba: es el
         // elemento "grande" del paisaje, la decoración pequeña va después. Solo aquí (ver
-        // hfilBloodShore): el ocre/pardo de needle_wastes no compite con el tinte frío de la roca.
+        // hfilBloodShore): el suelo blanco de needle_wastes hace de fondo a la roca fría.
+        // Sin troncos caídos desde 2026-10-02 (petición del usuario): sobre el suelo blanco y
+        // nevado la madera no pega.
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_SPIKE_KEY);
-        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
-                ModPlacedFeatures.HFIL_DRY_GRASS_KEY);
-        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
-                ModPlacedFeatures.HFIL_DEAD_BUSH_KEY);
-        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
-                ModPlacedFeatures.FALLEN_LOG_HFIL_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_BONE_PILE_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_ORE_BOULDER_RARE_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.HFIL_CAIRNS_RARE_KEY);
 
-        BiomeSpecialEffects effects = hfilEffects(5118482)   // #4E1A12
-                .grassColorOverride(8016432)                 // #7A5230 ocre pardo
-                .foliageColorOverride(7029798)               // #6B4426
+        // Rosa-magenta: el cielo de la referencia del monte de agujas (Hari no Yama) del anime,
+        // que sobre el suelo blanco da el contraste de la imagen original.
+        BiomeSpecialEffects effects = hfilEffects(0x7A2E5A, 0xB8708F)
                 .ambientParticle(HFIL_ASH_PARTICLES)
                 .build();
         return hfilBuild(effects, gen);
     }
 
     /**
-     * Rediseño de identidad HFIL (ver .claude/pendiente/worldgen-pendiente.md, Fase 4) —
+     * Rediseño de identidad HFIL (ver .claude/docs/worldgen.md, Fase 4) —
      * antes "hfil_dunes": dunas literalmente de {@code minecraft:red_sand}/{@code red_sandstone},
      * el más "prestado" de los 3 biomas (ni siquiera llevaba HFIL_SCORCHED_STONE visible en
      * superficie, la arena lo tapaba). Ahora la arena/arenisca son bloques propios
@@ -291,6 +381,13 @@ public final class ModBiomeGen {
         BiomeGenerationSettings.Builder gen = hfilBase(features, carvers);
         gen.addFeature(GenerationStep.Decoration.LAKES, MiscOverworldPlacements.LAKE_LAVA_UNDERGROUND);
         gen.addFeature(GenerationStep.Decoration.LAKES, MiscOverworldPlacements.LAKE_LAVA_SURFACE);
+        // Barro hirviendo y géiseres: el lado volcánico de Beppu, en el bioma de lava. Sin pozas
+        // azules: el agua hirviendo junto a lagos de lava se leería como un error de color.
+        addBeppuPools(gen, false, true);
+        // Campos de azufre (Osorezan, propuesta E) y cráter de gas en llamas (Darvaza, en el
+        // desierto de Karakum, propuesta F): lo volcánico/desértico, exclusivo de este bioma.
+        gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_SULFUR_FIELD_KEY);
+        gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_GAS_CRATER_KEY);
         gen.addFeature(GenerationStep.Decoration.FLUID_SPRINGS, ModPlacedFeatures.HFIL_LAVA_SPRING_BONUS_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_CINDER_SPIKE_KEY);
@@ -300,8 +397,90 @@ public final class ModBiomeGen {
                 ModPlacedFeatures.HFIL_BONE_PILE_KEY);
         gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
                 ModPlacedFeatures.HFIL_ORE_BOULDER_RARE_KEY);
-        BiomeSpecialEffects effects = hfilEffects(7219736)   // #6E2A18
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION,
+                ModPlacedFeatures.HFIL_CAIRNS_RARE_KEY);
+        // Naranja-ceniza: aire cargado de ceniza caliente, el del desierto de lava.
+        BiomeSpecialEffects effects = hfilEffects(0x4A2410, 0x8A5530)
                 .ambientParticle(HFIL_ASH_PARTICLES_DENSE)
+                .build();
+        return hfilBuild(effects, gen);
+    }
+
+    /**
+     * Infierno helado — propuesta D (2026-10-02, ver .claude/pendiente/worldgen-pendiente.md).
+     * Referencias: el infierno de hielo de Dragon Ball GT (Goku contra Freezer y Cell, con una
+     * zona helada junto a la de lava) y el Guren, el "infierno del loto rojo" de los infiernos
+     * fríos budistas, donde el frío agrieta la piel como pétalos rojos. El Blood Pond, congelado:
+     * lagos de HFIL_BLOOD_ICE (HfilFrozenLakeFeature) sobre nieve, agujas de hielo (la montaña de
+     * agujas, helada) y huesos. Suelo: nieve compacta + hielo compacto (surface_rule de
+     * otherworld_noise.json), los bloques propios de ESTE bioma; las menas siguen apareciendo en
+     * la roca calcinada de debajo.
+     * Ocupa la franja más fría del clima del Otherworld, pegada a needle_wastes: el paso del
+     * blanco de piedra al blanco de nieve es coherente.
+     * Sin pozas de Beppu ni mojones: el géiser y la orilla de las pozas tienen variantes por suelo
+     * de piedra (no de hielo), y los mojones son de piedra — fuera de lugar sobre nieve.
+     */
+    private static Biome hfilFrozenLake(HolderGetter<PlacedFeature> features,
+                                        HolderGetter<ConfiguredWorldCarver<?>> carvers) {
+        BiomeGenerationSettings.Builder gen = hfilBase(features, carvers);
+        gen.addFeature(GenerationStep.Decoration.LAKES, ModPlacedFeatures.HFIL_FROZEN_LAKE_KEY);
+        gen.addFeature(GenerationStep.Decoration.SURFACE_STRUCTURES, ModPlacedFeatures.HFIL_ICE_SPIKE_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.HFIL_BONE_PILE_KEY);
+        // Violeta helado; copos de nieve cayendo en vez de ceniza.
+        BiomeSpecialEffects effects = hfilEffects(0x2A3266, 0x8C94C8)
+                .ambientParticle(new AmbientParticleSettings(ParticleTypes.SNOWFLAKE, 0.012F))
+                .build();
+        // Bajo cero: el agua que se deje aquí se hiela, coherente con el bioma.
+        return hfilBuild(effects, gen, -0.7F);
+    }
+
+    /**
+     * Janemba Rift: el Otro Mundo de Dragon Ball Z: Fusion Reborn, deformado por la maldad que se
+     * libera de la máquina purificadora de almas. REHECHO ENTERO el 2026-10-05 sobre la referencia
+     * .claude/pendiente/referencia_janemba.png (decisión del usuario: cualquier elemento del bioma
+     * sale de la imagen; lo que no está en ella se quitó: la Lentitud, las venas luminosas y la
+     * Compuerta de púrpur). La regla de arte: la referencia manda sobre lo que se asocia con
+     * "infierno". Sin lava (ni manantiales: hfilBase con lavaSprings=false), obsidiana, fuego ni
+     * piedra negra; cielo rojo-naranja, suelo púrpura/rosa ondulado, masas azules, torres y esferas.
+     *
+     * Suelo: franjas onduladas de carne rosa y piedra violeta (surface_rule de
+     * otherworld_noise.json). Sin tocar la densidad compartida del HFIL (riesgo del "bache", ver
+     * docs/worldgen.md): el relieve lo ponen features, por escala:
+     * <ul>
+     *   <li>terreno: montículos bajos con joroba (JanembaMoundFeature), uno cada 2 chunks;</li>
+     *   <li>grande: agujas sin corona (JanembaSpireFeature), crestas de pinchos
+     *   (JanembaSpineRidgeFeature), lomos y olas azules (JanembaDomeFeature);</li>
+     *   <li>mediano: arcos retorcidos (JanembaRibFeature);</li>
+     *   <li>aire: grupos de esferas de gelatina de colores (JanembaOrbFeature);</li>
+     *   <li>micro: protuberancias y burbujas diminutas (JanembaNubFeature);</li>
+     *   <li>landmark: la torre con corona, como estructura (JanembaTowerStructure).</li>
+     * </ul>
+     * Los montículos van primero porque son terreno: el resto se apoya encima. Cada una es
+     * exclusiva de este bioma, así que su orden no puede chocar con el de ningún otro.
+     */
+    private static Biome hfilJanembaRift(HolderGetter<PlacedFeature> features,
+                                         HolderGetter<ConfiguredWorldCarver<?>> carvers) {
+        BiomeGenerationSettings.Builder gen = hfilBase(features, carvers, false);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.JANEMBA_MOUND_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.JANEMBA_SPIRE_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.JANEMBA_RIDGE_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.JANEMBA_DOME_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.JANEMBA_RIB_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.JANEMBA_ORB_KEY);
+        gen.addFeature(GenerationStep.Decoration.VEGETAL_DECORATION, ModPlacedFeatures.JANEMBA_NUB_KEY);
+        // Atmósfera de la referencia. Vanilla funde el color del cielo (cenit) con el de la niebla
+        // (horizonte): rojo arriba y naranja abajo es el degradado de la película. La distancia
+        // de la niebla la acerca el cliente (JanembaRiftFog) para que lo lejano se desvanezca en
+        // naranja. El agua, rosa (no la sangre del resto del HFIL): rompería la paleta.
+        // Aliento de dragón: motas violetas flotando, algo más denso que antes para que el aire
+        // tenga vida sin llegar a ser "spam" de partículas.
+        BiomeSpecialEffects effects = new BiomeSpecialEffects.Builder()
+                .skyColor(0xE51A24)
+                .fogColor(0xFF6A22)
+                .waterColor(0xF05A9D)
+                .waterFogColor(0x8A2E6A)
+                .ambientMoodSound(AmbientMoodSettings.LEGACY_CAVE_SETTINGS)
+                .ambientParticle(new AmbientParticleSettings(ParticleTypes.DRAGON_BREATH, 0.008F))
                 .build();
         return hfilBuild(effects, gen);
     }

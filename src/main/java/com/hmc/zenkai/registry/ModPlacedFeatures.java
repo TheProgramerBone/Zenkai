@@ -57,12 +57,10 @@ public class ModPlacedFeatures {
 
     //  Vegetación de superficie 
     public static final ResourceKey<PlacedFeature> ROCKY_DEAD_BUSH_KEY   = registerKey("rocky_dead_bush");
-    public static final ResourceKey<PlacedFeature> HFIL_DRY_GRASS_KEY    = registerKey("hfil_dry_grass");
     public static final ResourceKey<PlacedFeature> HFIL_DEAD_BUSH_KEY    = registerKey("hfil_dead_bush");
 
     //  Troncos caídos (biomas sin árboles)
     public static final ResourceKey<PlacedFeature> FALLEN_LOG_ROCKY_KEY = registerKey("fallen_log_rocky");
-    public static final ResourceKey<PlacedFeature> FALLEN_LOG_HFIL_KEY  = registerKey("fallen_log_hfil");
 
     //  Pinchos del HFIL (rediseño "infierno de Dragon Ball", ver ModBiomeGen)
     public static final ResourceKey<PlacedFeature> HFIL_SPIKE_KEY = registerKey("hfil_spike");
@@ -97,11 +95,56 @@ public class ModPlacedFeatures {
     public static final ResourceKey<PlacedFeature> HFIL_ORE_BOULDER_COMMON_KEY = registerKey("hfil_ore_boulder_common");
     public static final ResourceKey<PlacedFeature> HFIL_ORE_BOULDER_RARE_KEY   = registerKey("hfil_ore_boulder_rare");
 
+    //  Mojones (propuesta C): frecuentes en blood_shore (la "orilla" por excelencia, junto a la
+    //  sangre), raros en los otros dos. Pozas de Beppu (propuesta A): una rareza cada una, el
+    //  reparto por bioma vive en ModBiomeGen.
+    public static final ResourceKey<PlacedFeature> HFIL_CAIRNS_COMMON_KEY = registerKey("hfil_cairns_common");
+    public static final ResourceKey<PlacedFeature> HFIL_CAIRNS_RARE_KEY   = registerKey("hfil_cairns_rare");
+    public static final ResourceKey<PlacedFeature> HFIL_BOILING_POOL_KEY  = registerKey("hfil_boiling_pool");
+    public static final ResourceKey<PlacedFeature> HFIL_MUD_POT_KEY       = registerKey("hfil_mud_pot");
+    public static final ResourceKey<PlacedFeature> HFIL_GEYSER_KEY        = registerKey("hfil_geyser");
+    //  Terrazas de Pamukkale (propuesta B): solo needle_wastes, la pieza grande y rara del bioma.
+    public static final ResourceKey<PlacedFeature> HFIL_TERRACES_KEY      = registerKey("hfil_terraces");
+    //  Infierno helado (propuesta D): lagos de sangre congelada y agujas de hielo, solo en
+    //  hfil_frozen_lake.
+    public static final ResourceKey<PlacedFeature> HFIL_FROZEN_LAKE_KEY   = registerKey("hfil_frozen_lake");
+    public static final ResourceKey<PlacedFeature> HFIL_ICE_SPIKE_KEY     = registerKey("hfil_ice_spike");
+    //  Janemba Rift (rehecho el 2026-10-05): de micro a landmark, ver ModBiomeGen.hfilJanembaRift.
+    public static final ResourceKey<PlacedFeature> JANEMBA_MOUND_KEY    = registerKey("janemba_mound");
+    public static final ResourceKey<PlacedFeature> JANEMBA_SPIRE_KEY    = registerKey("janemba_spire");
+    public static final ResourceKey<PlacedFeature> JANEMBA_RIDGE_KEY    = registerKey("janemba_ridge");
+    public static final ResourceKey<PlacedFeature> JANEMBA_RIB_KEY      = registerKey("janemba_rib");
+    public static final ResourceKey<PlacedFeature> JANEMBA_ORB_KEY      = registerKey("janemba_orb");
+    public static final ResourceKey<PlacedFeature> JANEMBA_DOME_KEY     = registerKey("janemba_dome");
+    public static final ResourceKey<PlacedFeature> JANEMBA_NUB_KEY      = registerKey("janemba_nub");
+    //  Propuestas E-G: azufre y cráter en cinder_dunes, caldero de los oni en blood_shore.
+    public static final ResourceKey<PlacedFeature> HFIL_SULFUR_FIELD_KEY  = registerKey("hfil_sulfur_field");
+    public static final ResourceKey<PlacedFeature> HFIL_GAS_CRATER_KEY    = registerKey("hfil_gas_crater");
+    public static final ResourceKey<PlacedFeature> HFIL_ONI_CAULDRON_KEY  = registerKey("hfil_oni_cauldron");
     public static final ResourceKey<PlacedFeature> OTHERWORLD_CLOUDS_KEY    = registerKey("otherworld_clouds");
     public static final ResourceKey<PlacedFeature> OTHERWORLD_FLOWERS_KEY   = registerKey("otherworld_flowers");
     public static final ResourceKey<PlacedFeature> OTHERWORLD_DEAD_BUSH_KEY = registerKey("otherworld_dead_bush");
 
-    //  Namek: menas 
+    //  Menas propias del HFIL: misma colocación que OrePlacements vanilla (cantidad y alturas),
+    //  ver ModConfiguredFeatures.hfilOre. Se añaden en hfilBase en el orden vanilla.
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_COAL_UPPER      = registerKey("hfil_ore_coal_upper");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_COAL_LOWER      = registerKey("hfil_ore_coal_lower");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_IRON_UPPER      = registerKey("hfil_ore_iron_upper");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_IRON_MIDDLE     = registerKey("hfil_ore_iron_middle");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_IRON_SMALL      = registerKey("hfil_ore_iron_small");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_GOLD            = registerKey("hfil_ore_gold");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_GOLD_LOWER      = registerKey("hfil_ore_gold_lower");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_REDSTONE        = registerKey("hfil_ore_redstone");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_REDSTONE_LOWER  = registerKey("hfil_ore_redstone_lower");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_DIAMOND         = registerKey("hfil_ore_diamond");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_DIAMOND_MEDIUM  = registerKey("hfil_ore_diamond_medium");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_DIAMOND_LARGE   = registerKey("hfil_ore_diamond_large");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_DIAMOND_BURIED  = registerKey("hfil_ore_diamond_buried");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_LAPIS           = registerKey("hfil_ore_lapis");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_LAPIS_BURIED    = registerKey("hfil_ore_lapis_buried");
+    public static final ResourceKey<PlacedFeature> HFIL_ORE_COPPER          = registerKey("hfil_ore_copper");
+
+    //  Namek: menas
     public static final ResourceKey<PlacedFeature> NAMEK_COAL_UPPER      = registerKey("namek_coal_upper");
     public static final ResourceKey<PlacedFeature> NAMEK_COAL_LOWER      = registerKey("namek_coal_lower");
     public static final ResourceKey<PlacedFeature> NAMEK_IRON_UPPER      = registerKey("namek_iron_upper");
@@ -196,18 +239,8 @@ public class ModPlacedFeatures {
                         SurfaceWaterDepthFilter.forMaxDepth(0),
                         BiomeFilter.biome()));
 
-        // Rediseño de identidad HFIL, Fase 3 (ver .claude/pendiente/worldgen-pendiente.md):
-        // bajado de (2, 8) a (1, 3) intentos por chunk — la hierba pasa de cobertura densa a
-        // matojos dispersos, para que en hfil_needle_wastes el terreno base se lea "yermo
-        // rocoso" y los pinchos (HFIL_SPIKE_KEY, más abajo) sean lo primero que define el
-        // horizonte, no una pradera de fondo compitiendo con ellos.
-        register(context, HFIL_DRY_GRASS_KEY,
-                configuredFeatures.getOrThrow(VegetationFeatures.PATCH_TAIGA_GRASS),
-                List.of(NoiseThresholdCountPlacement.of(-0.4D, 1, 3),
-                        InSquarePlacement.spread(),
-                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
-                        BiomeFilter.biome()));
-
+        // (La hierba seca del HFIL, HFIL_DRY_GRASS_KEY, se borró el 2026-10-05: ningún bioma la usaba
+        // desde que needle_wastes pasó a suelo de piedra pálida, donde la hierba no arraiga.)
         register(context, HFIL_DEAD_BUSH_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.PATCH_DEAD_BUSH),
                 List.of(NoiseThresholdCountPlacement.of(-0.8D, 0, 4),
@@ -222,9 +255,8 @@ public class ModPlacedFeatures {
         //  Troncos caídos: decoración puntual para poder hacerse un set de madera básico, no
         // un bosque, pero sin pasarse de escasos — parte de los intentos se descartan en
         // FallenLogFeature.groundIsFlatEnough (terreno irregular), así que la rareza de aquí
-        // ya cuenta con que no todos los intentos llegan a colocar nada. Dos placed features
-        // por si algún día se quiere ajustar la rareza de cada lado por separado, aunque hoy
-        // comparten configured feature.
+        // ya cuenta con que no todos los intentos llegan a colocar nada. Solo en rocky_wasteland:
+        // la variante del HFIL (FALLEN_LOG_HFIL_KEY) se borró el 2026-10-05, ningún bioma la usaba.
         // Mismo motivo que ROCKY_DEAD_BUSH_KEY arriba: HEIGHTMAP_WORLD_SURFACE deja pasar
         // columnas de agua, así que el origen del tronco se colocaba sobre la lámina en vez
         // de rechazarse. groundIsFlatEnough (dentro de FallenLogFeature) ya comprueba el
@@ -238,18 +270,11 @@ public class ModPlacedFeatures {
                         SurfaceWaterDepthFilter.forMaxDepth(0),
                         BiomeFilter.biome()));
 
-        register(context, FALLEN_LOG_HFIL_KEY,
-                configuredFeatures.getOrThrow(ModConfiguredFeatures.FALLEN_LOG_KEY),
-                List.of(RarityFilter.onAverageOnceEvery(12),
-                        InSquarePlacement.spread(),
-                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
-                        BiomeFilter.biome()));
-
         // Más raro que los troncos/matas a propósito: son formaciones dramáticas pensadas para
         // dominar el horizonte, no decoración de relleno — ver HfilSpikeFeature. Mismo
         // ClampedHeightmapPlacement que el resto del suelo del HFIL (evita que el origen del
         // clúster herede la altura de una isla flotante del Otherworld).
-        // Rediseño de identidad HFIL, Fase 3 (ver .claude/pendiente/worldgen-pendiente.md):
+        // Rediseño de identidad HFIL, Fase 3 (ver .claude/docs/worldgen.md):
         // subido de 1/120 a 1/40 — con la identidad "Needle Wastes", los pinchos deben ser lo
         // que define el horizonte nada más entrar al bioma, no un evento raro/accesorio como
         // en el rediseño anterior. Sigue siendo bastante más raro que HFIL_BONE_PILE_KEY (1/16)
@@ -309,8 +334,7 @@ public class ModPlacedFeatures {
         // Mineral visible en superficie, DELIBERADO (ver HfilOreBoulderFeature) — mismo
         // configured feature, dos rarezas: frecuente en blood_shore (ya tiene identidad minera
         // fuerte con la veta expuesta), raro en needle_wastes/cinder_dunes (su primer gancho
-        // minero propio). Mismo patrón que FALLEN_LOG_HFIL_KEY/FALLEN_LOG_ROCKY_KEY reusando un
-        // único configured feature con dos placed features.
+        // minero propio). Un único configured feature con dos placed features.
         register(context, HFIL_ORE_BOULDER_COMMON_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_ORE_BOULDER_KEY),
                 List.of(RarityFilter.onAverageOnceEvery(70),
@@ -325,6 +349,58 @@ public class ModPlacedFeatures {
                         ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
                         BiomeFilter.biome()));
 
+        // Propuestas C y A (2026-10-02). Mismo patrón de colocación que el resto del suelo del
+        // HFIL (ClampedHeightmapPlacement, para no heredar la altura de una isla flotante).
+        // Rarezas de partida, sin calibrar en juego: un campo de mojones cada ~6 chunks en
+        // blood_shore, cada ~18 fuera; cada tipo de poza cada ~20-28 chunks del bioma que la lleva.
+        hfilFloor(context, HFIL_CAIRNS_COMMON_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_CAIRNS_KEY), 6);
+        hfilFloor(context, HFIL_CAIRNS_RARE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_CAIRNS_KEY), 18);
+        hfilFloor(context, HFIL_BOILING_POOL_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_BOILING_POOL_KEY), 22);
+        hfilFloor(context, HFIL_MUD_POT_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_MUD_POT_KEY), 20);
+        hfilFloor(context, HFIL_GEYSER_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_GEYSER_KEY), 28);
+        // Rara: es un paisaje entero (hasta ~17×9 bloques), no decoración. Además se descarta
+        // sola en terreno muy irregular, así que la frecuencia real queda algo por debajo.
+        hfilFloor(context, HFIL_TERRACES_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_TERRACES_KEY), 30);
+        // El lago congelado es EL paisaje de su bioma: frecuente (y se descarta solo en cuesta).
+        hfilFloor(context, HFIL_FROZEN_LAKE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_FROZEN_LAKE_KEY), 4);
+        // Agujas de hielo vanilla (la "montaña de agujas", helada): la feature vanilla exige
+        // nieve compacta debajo, justo el suelo de hfil_frozen_lake. Colocación propia del HFIL
+        // (no la de ice_spikes del Overworld) para no heredar la altura de una isla flotante.
+        hfilFloor(context, HFIL_ICE_SPIKE_KEY,
+                configuredFeatures.getOrThrow(MiscOverworldFeatures.ICE_SPIKE), 3);
+        // Janemba Rift, escala micro → landmark (referencia de Fusion Reborn): lo pequeño muy
+        // frecuente, lo grande raro, para que el paisaje lea "estructura grande, mucho terreno,
+        // formación pequeña, zona abierta..." y no un patrón repetido. Lomas y protuberancias
+        // rebajadas de 1/1 a 1/2 y 1/3 tras verlo en juego (2026-10-05): el suelo salía cargado.
+        hfilFloor(context, JANEMBA_MOUND_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_MOUND_KEY), 2);
+        hfilFloor(context, JANEMBA_SPIRE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_SPIRE_KEY), 26);
+        hfilFloor(context, JANEMBA_RIDGE_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_RIDGE_KEY), 12);
+        hfilFloor(context, JANEMBA_DOME_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_DOME_KEY), 8);
+        hfilFloor(context, JANEMBA_RIB_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_RIB_KEY), 9);
+        hfilFloor(context, JANEMBA_ORB_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_ORB_KEY), 2);
+        hfilFloor(context, JANEMBA_NUB_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_NUB_KEY), 3);
+        // Azufre: frecuente en su bioma (es su textura de suelo). Cráter y caldero: landmarks
+        // raros, y además se descartan solos en terreno irregular.
+        hfilFloor(context, HFIL_SULFUR_FIELD_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_SULFUR_FIELD_KEY), 14);
+        hfilFloor(context, HFIL_GAS_CRATER_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_GAS_CRATER_KEY), 70);
+        hfilFloor(context, HFIL_ONI_CAULDRON_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.HFIL_ONI_CAULDRON_KEY), 110);
         register(context, OTHERWORLD_FLOWERS_KEY,
                 configuredFeatures.getOrThrow(VegetationFeatures.FLOWER_DEFAULT),
                 List.of(NoiseThresholdCountPlacement.of(-0.6D, 2, 5),
@@ -339,7 +415,42 @@ public class ModPlacedFeatures {
                         PlacementUtils.HEIGHTMAP_WORLD_SURFACE,
                         BiomeFilter.biome()));
 
-        // Namek: menas 
+        // Menas del HFIL: cantidades y alturas de OrePlacements vanilla (1.21.1), sin retoques.
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_COAL_UPPER, ModConfiguredFeatures.HFIL_ORE_COAL,
+                ModOrePlacement.commonOrePlacement(30, HeightRangePlacement.uniform(VerticalAnchor.absolute(136), VerticalAnchor.top())));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_COAL_LOWER, ModConfiguredFeatures.HFIL_ORE_COAL_BURIED,
+                ModOrePlacement.commonOrePlacement(20, HeightRangePlacement.triangle(VerticalAnchor.absolute(0), VerticalAnchor.absolute(192))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_IRON_UPPER, ModConfiguredFeatures.HFIL_ORE_IRON,
+                ModOrePlacement.commonOrePlacement(90, HeightRangePlacement.triangle(VerticalAnchor.absolute(80), VerticalAnchor.absolute(384))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_IRON_MIDDLE, ModConfiguredFeatures.HFIL_ORE_IRON,
+                ModOrePlacement.commonOrePlacement(10, HeightRangePlacement.triangle(VerticalAnchor.absolute(-24), VerticalAnchor.absolute(56))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_IRON_SMALL, ModConfiguredFeatures.HFIL_ORE_IRON_SMALL,
+                ModOrePlacement.commonOrePlacement(10, HeightRangePlacement.uniform(VerticalAnchor.bottom(), VerticalAnchor.absolute(72))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_GOLD, ModConfiguredFeatures.HFIL_ORE_GOLD_BURIED,
+                ModOrePlacement.commonOrePlacement(4, HeightRangePlacement.triangle(VerticalAnchor.absolute(-64), VerticalAnchor.absolute(32))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_GOLD_LOWER, ModConfiguredFeatures.HFIL_ORE_GOLD_BURIED,
+                ModOrePlacement.orePlacement(CountPlacement.of(UniformInt.of(0, 1)),
+                        HeightRangePlacement.uniform(VerticalAnchor.absolute(-64), VerticalAnchor.absolute(-48))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_REDSTONE, ModConfiguredFeatures.HFIL_ORE_REDSTONE,
+                ModOrePlacement.commonOrePlacement(4, HeightRangePlacement.uniform(VerticalAnchor.bottom(), VerticalAnchor.absolute(15))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_REDSTONE_LOWER, ModConfiguredFeatures.HFIL_ORE_REDSTONE,
+                ModOrePlacement.commonOrePlacement(8, HeightRangePlacement.triangle(VerticalAnchor.aboveBottom(-32), VerticalAnchor.aboveBottom(32))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_DIAMOND, ModConfiguredFeatures.HFIL_ORE_DIAMOND_SMALL,
+                ModOrePlacement.commonOrePlacement(7, HeightRangePlacement.triangle(VerticalAnchor.aboveBottom(-80), VerticalAnchor.aboveBottom(80))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_DIAMOND_MEDIUM, ModConfiguredFeatures.HFIL_ORE_DIAMOND_MEDIUM,
+                ModOrePlacement.commonOrePlacement(2, HeightRangePlacement.uniform(VerticalAnchor.absolute(-64), VerticalAnchor.absolute(-4))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_DIAMOND_LARGE, ModConfiguredFeatures.HFIL_ORE_DIAMOND_LARGE,
+                ModOrePlacement.rareOrePlacement(9, HeightRangePlacement.triangle(VerticalAnchor.aboveBottom(-80), VerticalAnchor.aboveBottom(80))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_DIAMOND_BURIED, ModConfiguredFeatures.HFIL_ORE_DIAMOND_BURIED,
+                ModOrePlacement.commonOrePlacement(4, HeightRangePlacement.triangle(VerticalAnchor.aboveBottom(-80), VerticalAnchor.aboveBottom(80))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_LAPIS, ModConfiguredFeatures.HFIL_ORE_LAPIS,
+                ModOrePlacement.commonOrePlacement(2, HeightRangePlacement.triangle(VerticalAnchor.absolute(-32), VerticalAnchor.absolute(32))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_LAPIS_BURIED, ModConfiguredFeatures.HFIL_ORE_LAPIS_BURIED,
+                ModOrePlacement.commonOrePlacement(4, HeightRangePlacement.uniform(VerticalAnchor.bottom(), VerticalAnchor.absolute(64))));
+        hfilOrePlaced(context, configuredFeatures, HFIL_ORE_COPPER, ModConfiguredFeatures.HFIL_ORE_COPPER_SMALL,
+                ModOrePlacement.commonOrePlacement(16, HeightRangePlacement.triangle(VerticalAnchor.absolute(-16), VerticalAnchor.absolute(112))));
+
+        // Namek: menas
         register(context, NAMEK_COAL_UPPER, configuredFeatures.getOrThrow(ModConfiguredFeatures.NAMEK_COAL),
                 ModOrePlacement.commonOrePlacement(30, HeightRangePlacement.uniform(VerticalAnchor.absolute(136), VerticalAnchor.absolute(192))));
         register(context, NAMEK_COAL_LOWER, configuredFeatures.getOrThrow(ModConfiguredFeatures.NAMEK_COAL_BURIED),
@@ -430,6 +541,24 @@ public class ModPlacedFeatures {
                                  Holder<ConfiguredFeature<?, ?>> configuration,
                                  List<PlacementModifier> modifiers) {
         context.register(key, new PlacedFeature(configuration, List.copyOf(modifiers)));
+    }
+
+    private static void hfilOrePlaced(BootstrapContext<PlacedFeature> context,
+                                      net.minecraft.core.HolderGetter<ConfiguredFeature<?, ?>> configured,
+                                      ResourceKey<PlacedFeature> key, ResourceKey<ConfiguredFeature<?, ?>> ore,
+                                      List<PlacementModifier> placement) {
+        register(context, key, configured.getOrThrow(ore), placement);
+    }
+
+    /** Decoración del suelo del HFIL "una vez cada N chunks": la misma cadena de modificadores
+     *  que ya repiten a mano los huesos, pinchos y afloramientos de arriba. */
+    private static void hfilFloor(BootstrapContext<PlacedFeature> context, ResourceKey<PlacedFeature> key,
+                                  Holder<ConfiguredFeature<?, ?>> configuration, int onceEvery) {
+        register(context, key, configuration,
+                List.of(RarityFilter.onAverageOnceEvery(onceEvery),
+                        InSquarePlacement.spread(),
+                        ClampedHeightmapPlacement.belowY(HFIL_FLOOR_MAX_Y),
+                        BiomeFilter.biome()));
     }
 
     /**

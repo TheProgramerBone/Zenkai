@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_wall_side",
+  "textures": {
+    "wall": "zenkai:block/hfil_corrupted_flesh_bricks"
+  }
+}

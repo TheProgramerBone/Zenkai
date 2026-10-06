@@ -1,0 +1,13 @@
+{
+  "alignment": 100,
+  "archetype": "balanced",
+  "entity": "zenkai:angel",
+  "moveset": {
+    "can_fly": true,
+    "melee": false
+  },
+  "power_level": 80,
+  "rewards": {
+    "tp": "auto"
+  }
+}

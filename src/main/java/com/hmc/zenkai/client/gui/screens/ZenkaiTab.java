@@ -1,8 +1,8 @@
 package com.hmc.zenkai.client.gui.screens;
 
 /**
- * Pestañas del menú Zenkai (StatsScreen como shell). En v1.0 solo PRINCIPAL y HABILIDADES
- * tienen contenido; el resto muestra "Próximamente" (los pasos 4-5 del release las llenan).
+ * Pestañas del menú Zenkai (StatsScreen como shell). Cada pestaña abre su pantalla desde
+ * ZenkaiMenuScreen; solo STORY sigue sin contenido y muestra "Próximamente" (ComingSoonScreen).
  */
 public enum ZenkaiTab {
     STATS(0,20),

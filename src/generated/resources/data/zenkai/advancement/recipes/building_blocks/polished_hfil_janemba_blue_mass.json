@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_hfil_janemba_blue_mass": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:hfil_janemba_blue_mass"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:polished_hfil_janemba_blue_mass"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_hfil_janemba_blue_mass"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:polished_hfil_janemba_blue_mass"
+    ]
+  }
+}

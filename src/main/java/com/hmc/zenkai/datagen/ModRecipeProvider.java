@@ -365,6 +365,45 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         stonecut(recipeOutput, ModBlocks.SACRED_STONE_BLOCK.get(), ModBlocks.SACRED_STONE_BRICKS.get(), 1);
         stonecut(recipeOutput, ModBlocks.POLISHED_SACRED_STONE.get(), ModBlocks.SACRED_STONE_BRICKS.get(), 1);
 
+        // Janemba Rift: natural → pulido → ladrillos (2x2 → 4 en cada paso, como la piedra de
+        // deepslate vanilla), y el cantero salta pasos. Escaleras/losa/muro de cada variante a partir
+        // de esa variante salen del bucle de buildingFamilies (sacredFamily).
+        riftChain(recipeOutput, ModBlocks.HFIL_VOID_STONE.get(),
+                ModBlocks.POLISHED_HFIL_VOID_STONE.get(), ModBlocks.HFIL_VOID_STONE_BRICKS.get());
+        riftChain(recipeOutput, ModBlocks.HFIL_CORRUPTED_FLESH.get(),
+                ModBlocks.POLISHED_HFIL_CORRUPTED_FLESH.get(), ModBlocks.HFIL_CORRUPTED_FLESH_BRICKS.get());
+        riftChain(recipeOutput, ModBlocks.HFIL_JANEMBA_BLUE_MASS.get(),
+                ModBlocks.POLISHED_HFIL_JANEMBA_BLUE_MASS.get(), ModBlocks.HFIL_JANEMBA_BLUE_MASS_BRICKS.get());
+        janembaBubbleDyeing(recipeOutput);
+
+        // Menas del HFIL: se funden como su mena vanilla (mismo resultado y experiencia).
+        ModBlocks.HFIL_ORES.values().forEach(m -> m.forEach((type, ore) -> {
+            if (type.smeltResult == null) return; // Katchin: se funde el crudo, no la mena
+            String group = "hfil_" + type.key;
+            oreSmelting(recipeOutput, List.of(ore.get()), RecipeCategory.MISC, type.smeltResult.get(), type.smeltXp, 200, group);
+            oreBlasting(recipeOutput, List.of(ore.get()), RecipeCategory.MISC, type.smeltResult.get(), type.smeltXp, 100, group);
+        }));
+
+        // Usos de los bloques del HFIL (2026-10-04): la arena de ceniza se funde a vidrio y se
+        // compacta en arenisca (2x2, como la vanilla); la roca calcinada se funde a piedra lisa;
+        // la costra de azufre, con carbón vegetal, da pólvora (azufre + carbón: la mitad de la receta
+        // real de la pólvora negra; el salitre no existe en el juego).
+        oreSmelting(recipeOutput, List.of(ModBlocks.HFIL_CINDER_SAND.get()), RecipeCategory.BUILDING_BLOCKS,
+                Items.GLASS, 0.1f, 200, "hfil_glass");
+        oreSmelting(recipeOutput, List.of(ModBlocks.HFIL_SCORCHED_STONE.get()), RecipeCategory.BUILDING_BLOCKS,
+                Items.STONE, 0.1f, 200, "hfil_stone");
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.HFIL_CINDER_SANDSTONE.get(), 1)
+                .pattern("SS")
+                .pattern("SS")
+                .define('S', ModBlocks.HFIL_CINDER_SAND.get())
+                .unlockedBy("has_hfil_cinder_sand", has(ModBlocks.HFIL_CINDER_SAND.get()))
+                .save(recipeOutput);
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, Items.GUNPOWDER, 2)
+                .requires(ModBlocks.HFIL_SULFUR_CRUST.get())
+                .requires(Items.CHARCOAL)
+                .unlockedBy("has_hfil_sulfur_crust", has(ModBlocks.HFIL_SULFUR_CRUST.get()))
+                .save(recipeOutput);
+
         oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_IRON_ORE.get()),   RecipeCategory.MISC, Items.IRON_INGOT,   0.7f, 200, "namekian_iron");
         oreBlasting(recipeOutput, List.of(ModBlocks.NAMEKIAN_IRON_ORE.get()),   RecipeCategory.MISC, Items.IRON_INGOT,   0.7f, 100, "namekian_iron");
         oreSmelting(recipeOutput, List.of(ModBlocks.NAMEKIAN_GOLD_ORE.get()),   RecipeCategory.MISC, Items.GOLD_INGOT,   1.0f, 200, "namekian_gold");
@@ -405,7 +444,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         tintedConcrete(recipeOutput, ModBlocks.STRUCTURAL_CONCRETE_DARK_RED.get(),
                 ModBlocks.STRUCTURAL_CONCRETE_RED.get(), Items.BLACK_DYE);
 
-        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+        for (var fam : ModBlocks.buildingFamilies()) {
             sacredFamily(recipeOutput, fam.block().get(),
                     fam.stairs().get(), fam.slab().get(), fam.wall().get());
         }
@@ -459,6 +498,55 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         stonecut(out, base, stairs, 1);
         stonecut(out, base, slab, 2);
         stonecut(out, base, wall, 1);
+    }
+
+    /** Cadena natural → pulido → ladrillos: 2x2 → 4 en cada paso, y en el cantero cada eslabón
+     *  da los siguientes y las piezas de sus familias (como la deepslate vanilla). */
+    private static void riftChain(RecipeOutput out, Block raw, Block polished, Block bricks) {
+        twoByTwo(out, raw, polished);
+        twoByTwo(out, polished, bricks);
+        stonecutWithPieces(out, raw, polished);
+        stonecutWithPieces(out, raw, bricks);
+        stonecutWithPieces(out, polished, bricks);
+    }
+
+    private static void twoByTwo(RecipeOutput out, Block input, Block result) {
+        String in = BuiltInRegistries.BLOCK.getKey(input).getPath();
+        ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, result, 4)
+                .pattern("SS").pattern("SS")
+                .define('S', input)
+                .unlockedBy("has_" + in, has(input)).save(out);
+    }
+
+    /** Cantero de {@code input} al bloque {@code target} y a las tres piezas de su familia
+     *  (las de la propia familia, desde {@code target}, ya las da sacredFamily). */
+    private static void stonecutWithPieces(RecipeOutput out, Block input, Block target) {
+        stonecut(out, input, target, 1);
+        for (var fam : ModBlocks.JANEMBA_FAMILIES) {
+            if (fam.block().get() != target) continue;
+            stonecut(out, input, fam.stairs().get(), 1);
+            stonecut(out, input, fam.slab().get(), 2);
+            stonecut(out, input, fam.wall().get(), 1);
+        }
+    }
+
+    /** Gelatina teñida: 8 gelatinas de cualquier color alrededor de un tinte → 8 de ese color, como
+     *  el cristal tintado. El color viaja en el componente BLOCK_STATE del ítem (lo aplica
+     *  BlockItem al colocarlo), así que el resultado es un ItemStack con ese componente. */
+    private static void janembaBubbleDyeing(RecipeOutput out) {
+        Block bubble = ModBlocks.HFIL_JANEMBA_BUBBLE.get();
+        for (net.minecraft.world.item.DyeColor dye : net.minecraft.world.item.DyeColor.values()) {
+            var color = com.hmc.zenkai.content.block.JanembaBubbleBlock.Color.of(dye);
+            net.minecraft.world.item.ItemStack result = com.hmc.zenkai.content.block.JanembaBubbleBlock.stackOf(color, 8);
+            ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, result)
+                    .pattern("JJJ").pattern("JDJ").pattern("JJJ")
+                    .define('J', bubble)
+                    .define('D', net.minecraft.world.item.DyeItem.byColor(dye))
+                    .group("hfil_janemba_bubble_dyeing")
+                    .unlockedBy("has_hfil_janemba_bubble", has(bubble))
+                    .save(out, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                            "hfil_janemba_bubble_" + color.getSerializedName() + "_from_dyeing"));
+        }
     }
 
     private static void stonecut(RecipeOutput out, ItemLike input, ItemLike result, int count) {

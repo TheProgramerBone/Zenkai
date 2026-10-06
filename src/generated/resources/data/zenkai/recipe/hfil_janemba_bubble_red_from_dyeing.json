@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "hfil_janemba_bubble_dyeing",
+  "key": {
+    "D": {
+      "item": "minecraft:red_dye"
+    },
+    "J": {
+      "item": "zenkai:hfil_janemba_bubble"
+    }
+  },
+  "pattern": [
+    "JJJ",
+    "JDJ",
+    "JJJ"
+  ],
+  "result": {
+    "components": {
+      "minecraft:block_state": {
+        "color": "red"
+      }
+    },
+    "count": 8,
+    "id": "zenkai:hfil_janemba_bubble"
+  }
+}

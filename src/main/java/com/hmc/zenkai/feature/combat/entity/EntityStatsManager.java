@@ -127,10 +127,12 @@ public final class EntityStatsManager {
         List<EntityPhysicalAttack> physicalAttacks = new ArrayList<>();
         boolean melee = true;
         boolean canFly = false;
+        boolean canBlock = false;
         if (o.has("moveset") && o.get("moveset").isJsonObject()) {
             JsonObject ms = o.getAsJsonObject("moveset");
             if (ms.has("melee")) melee = ms.get("melee").getAsBoolean();
             if (ms.has("can_fly")) canFly = ms.get("can_fly").getAsBoolean();
+            if (ms.has("can_block")) canBlock = ms.get("can_block").getAsBoolean();
             if (ms.has("ki_attacks") && ms.get("ki_attacks").isJsonArray()) {
                 for (JsonElement el : ms.getAsJsonArray("ki_attacks")) {
                     if (!el.isJsonObject()) continue;
@@ -155,7 +157,7 @@ public final class EntityStatsManager {
         }
 
         return new EntityStatDef(entity, powerLevel, displayOnly, archetype, alignment,
-                attrOv, bodyMult, kiMult, kiAttacks, melee, rewardTp, physicalAttacks, canFly);
+                attrOv, bodyMult, kiMult, kiAttacks, melee, rewardTp, physicalAttacks, canFly, canBlock);
     }
 
     /** "+20%" / "-10%" -> relativo; "250" -> absoluto. */

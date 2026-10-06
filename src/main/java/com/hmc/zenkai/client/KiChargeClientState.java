@@ -20,7 +20,8 @@ public final class KiChargeClientState {
 
     /** @param rgb2 segundo color (interior) o -1, ver KiVfxColors. */
     public record Charge(int rgb, int size, KiTechniqueType type,
-                         TechniquePosition position, long startTick, int rgb2) {}
+                         TechniquePosition position, long startTick, int rgb2,
+                         TechniqueAnimSet.ChargeClearance clearance) {}
 
     private static final Map<Integer, Charge> ACTIVE = new ConcurrentHashMap<>();
 
@@ -102,8 +103,12 @@ public final class KiChargeClientState {
         TechniquePosition pos = type.animOverride() != null
                 ? TechniqueAnimSet.BARRIER_POSITION
                 : TechniqueAnimSet.positionOf(Math.max(1, pkt.animSet()));
+        TechniqueAnimSet.ChargeClearance clearance = type.animOverride() != null
+                ? TechniqueAnimSet.OVERRIDE_CLEARANCE
+                : TechniqueAnimSet.byNumber(Math.max(1, pkt.animSet())).chargeClearance();
 
-        ACTIVE.put(pkt.playerId(), new Charge(pkt.rgb(), pkt.size(), type, pos, now, pkt.rgb2()));
+        ACTIVE.put(pkt.playerId(), new Charge(pkt.rgb(), pkt.size(), type, pos, now, pkt.rgb2(),
+                clearance));
     }
 
     public static Charge of(Player p) { return ACTIVE.get(p.getId()); }

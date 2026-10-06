@@ -46,9 +46,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class AuraRenderer {
     private AuraRenderer() {}
 
-    /** Última banda mínima por calidad. TODO(L7): leerla de ClientConfig. */
-    private static final AuraLod QUALITY_FLOOR = null;
-
     private static long lastTick = Long.MIN_VALUE;
 
     @SubscribeEvent
@@ -70,6 +67,8 @@ public final class AuraRenderer {
         // El bloom propio solo existe sin shaderpack (KiVfxBloomPipeline.active); con uno activo
         // las tareas solo-bloom se descartarían igual, pero así ni se encolan.
         boolean bloom = ClientConfig.auraBloomEnabled() && KiVfxBloomPipeline.active();
+        // Banda mínima por calidad (aura.classic_quality); null = solo decide la distancia.
+        AuraLod qualityFloor = ClientConfig.auraClassicQuality().floor();
         lastTick = t;
 
         for (Player pl : mc.level.players()) {
@@ -94,7 +93,7 @@ public final class AuraRenderer {
 
             // 2. Color: AuraColors sigue siendo la única autoridad del tinte.
             AuraColors.Layers layers = AuraColors.resolveLayers(p);
-            AuraSkirts.Plan plan = AuraSkirts.plan(profile, distSq, QUALITY_FLOOR,
+            AuraSkirts.Plan plan = AuraSkirts.plan(profile, distSq, qualityFloor,
                     layers.inner(), layers.hasOuter() ? layers.outer() : -1);
             if (plan.isEmpty()) continue;
 

@@ -1,10 +1,7 @@
 package com.hmc.zenkai.content.entity.misc;
 
 import com.hmc.zenkai.content.entity.ZenkaiDefaultMob;
-import com.hmc.zenkai.content.entity.ai.BlockHabitGoal;
-import com.hmc.zenkai.content.entity.ai.BlockingMob;
 import com.hmc.zenkai.content.entity.ai.PosedAttacker;
-import com.hmc.zenkai.content.entity.ai.ZenkaiMeleeAttackGoal;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -15,9 +12,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
@@ -82,28 +76,20 @@ import java.util.UUID;
  * ver {@link com.hmc.zenkai.client.render_and_model_entities.entity.PosedHumanoidGeoModel
  * #setCustomAnimations}.
  *
- * IMPLEMENTA BlockingMob: bloqueo de hábito + REACTIVO vía BlockHabitGoal (ver su javadoc: además
- * del azar periódico, entra en guardia si detecta que su objetivo actual está en pleno wind-up de
- * un ataque real) — CombatZenkaiHooks.isBlockingNow/blockDamageMultiplierOf y
- * PhysicalCombatServer.impactFx ya reconocen esta interfaz en el defensor, así que el % de
- * reducción se aplica igual que a un jugador bloqueando.
+ * BLOQUEO (de hábito + REACTIVO, BlockHabitGoal): desde 2026-10-02 lo implementa
+ * ZenkaiDefaultMob para cualquier NPC con "can_block" en su ficha; la Sombra fue la primera en
+ * tenerlo y de aquí salió el diseño.
  */
-public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker, BlockingMob {
+public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Zenkai-ShadowAI");
 
     private static final EntityDataAccessor<Integer> DATA_ATTACK_POSE =
             SynchedEntityData.defineId(ShadowCloneEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Boolean> DATA_BLOCKING =
-            SynchedEntityData.defineId(ShadowCloneEntity.class, EntityDataSerializers.BOOLEAN);
 
-    /** Por encima de esta distancia, ki; por debajo, físicas — ver el javadoc de KiAttackGoal/
-     *  PhysicalAttackGoal (minRange/engageRange). Número a tunear en juego. */
-    private static final double MELEE_SWITCH_DISTANCE = 10.0;
-
-    /** Sin skill ki_block que consultar (los mobs no tienen skills) — número fijo, a medio
-     *  camino de la curva del jugador (0.80 sin la skill .. 0.50 a nivel 5). Tunear en juego. */
-    private static final double BLOCK_DAMAGE_MULTIPLIER = 0.65;
+    // Bloqueo y reparto ki/físicas por distancia: ya NO viven aquí — se subieron a
+    // ZenkaiDefaultMob (2026-10-02, IA de combate universal). La Sombra los activa por su ficha
+    // (shadow_clone.json: can_block, ki_attacks y physical_attacks).
 
     /** Dueño (quien la invocó) — puramente informativo/para limpieza; el tracking real de
      *  "qué sombra pertenece a qué jugador" vive en ShadowTrainingManager. */
@@ -145,7 +131,6 @@ public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker
     protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_ATTACK_POSE, POSE_NONE);
-        builder.define(DATA_BLOCKING, false);
     }
 
     @Override
@@ -155,36 +140,11 @@ public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker
     public int getAttackPose() { return this.entityData.get(DATA_ATTACK_POSE); }
 
     @Override
-    public void setBlocking(boolean blocking) { this.entityData.set(DATA_BLOCKING, blocking); }
-
-    @Override
-    public boolean isBlockingNow() { return this.entityData.get(DATA_BLOCKING); }
-
-    @Override
-    public double blockDamageMultiplier() { return BLOCK_DAMAGE_MULTIPLIER; }
-
-    @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new FloatGoal(this));
-        // Ki(1)/Físicas(2) por delante de Melee(3): ver el javadoc de clase — con Melee primero,
-        // podía interrumpir su windup a mitad de carga cada vez que recalculaba camino.
-        // MELEE_SWITCH_DISTANCE reparte por distancia: por encima, ki; por debajo, físicas —
-        // sin esto, con 6 ki_attacks de cooldown corto casi siempre había uno listo y ki ganaba
-        // SIEMPRE la prioridad sin importar lo cerca que estuviera el jugador (confirmado en
-        // juego: 6 técnicas rotando sin parar, ni una física ni un melee en varios minutos).
-        addKiAttackGoalIfDefined(1, 1.4, MELEE_SWITCH_DISTANCE);
-        addPhysicalAttackGoalIfDefined(2, 1.6, MELEE_SWITCH_DISTANCE);
-        // followingTargetEvenIfNotSeen=false: con true, MeleeAttackGoal.canContinueToUse()
-        // devuelve siempre true mientras el objetivo sea válido (sin mirar distancia ni si el
-        // camino llegó a algo), así que en cuanto tomaba los flags MOVE/LOOK ya no los soltaba
-        // NUNCA. Con false, los suelta en cuanto termina el camino actual (getNavigation().
-        // isDone()), dejando hueco para que ki/físicas actúen de verdad.
-        this.goalSelector.addGoal(3, new ZenkaiMeleeAttackGoal(this, 1.4D, false));
-        // Sin flags (ver su javadoc): corre en paralelo, no compite con los de arriba.
-        this.goalSelector.addGoal(4, new BlockHabitGoal<>(this));
-        addFlightWanderGoalIfCanFly(7, 1.4D);
-        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        // IA de combate universal (ver ZenkaiDefaultMob.registerCombatGoals): ki/físicas por
+        // delante del cuerpo a cuerpo, reparto por distancia, guardia y vuelo — todo lo que antes
+        // estaba escrito aquí a mano, ahora compartido con cualquier NPC de combate.
+        registerCombatGoals(1.4D);
 
         // SOLO HurtByTargetGoal: a propósito no hay NearestAttackableTargetGoal aquí, así
         // nunca ataca primero — el pedido explícito era "IA neutral al inicio, solo se vuelve

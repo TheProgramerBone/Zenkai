@@ -8,6 +8,7 @@ import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianWarriorEntity;
 import com.hmc.zenkai.content.entity.misc.KintounEntity;
+import com.hmc.zenkai.content.entity.otherworld.OgreEntity;
 import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
@@ -40,6 +41,25 @@ public class ModEvents {
         event.put(ModEntities.KORIN.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.TORIBOT.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.SHADOW_CLONE.get(), ShadowCloneEntity.createAttributes().build());
+        event.put(ModEntities.RED_OGRE.get(), OgreEntity.createAttributes().build());
+        event.put(ModEntities.BLUE_OGRE.get(), OgreEntity.createAttributes().build());
+        event.put(ModEntities.ANGEL.get(), com.hmc.zenkai.content.entity.otherworld.AngelEntity.createAttributes().build());
+    }
+
+    /**
+     * Reglas de spawn natural de los ogros (las primeras del mod): sobre suelo firme, nunca en el
+     * aire ni dentro de un líquido. Sin esto, un tipo sin registrar spawnea sin restricción de
+     * posición. Mob::checkMobSpawnRules y no la de Monster: el HFIL no es oscuro, y el ogro no es
+     * un monstruo nocturno.
+     */
+    @SubscribeEvent
+    public static void onRegisterSpawnPlacements(net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent event) {
+        for (var type : java.util.List.of(ModEntities.RED_OGRE.get(), ModEntities.BLUE_OGRE.get())) {
+            event.register(type, net.minecraft.world.entity.SpawnPlacementTypes.ON_GROUND,
+                    net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    net.minecraft.world.entity.Mob::checkMobSpawnRules,
+                    net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent.Operation.REPLACE);
+        }
     }
 
 

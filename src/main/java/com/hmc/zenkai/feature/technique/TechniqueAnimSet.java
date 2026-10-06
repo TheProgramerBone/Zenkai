@@ -21,19 +21,19 @@ package com.hmc.zenkai.feature.technique;
  */
 public enum TechniqueAnimSet {
     /** Brazo derecho al frente. */
-    SET_1(TechniquePosition.RIGHT_HAND),
+    SET_1(TechniquePosition.RIGHT_HAND, true, ChargeClearance.FORWARD),
     /** Brazo izquierdo al frente: el reflejo del 1, no una pose distinta. */
-    SET_2(TechniquePosition.LEFT_HAND),
+    SET_2(TechniquePosition.LEFT_HAND, true, ChargeClearance.FORWARD),
     /** Final Flash: brazos abiertos a los lados que se juntan al disparar. */
     SET_3(TechniquePosition.BOTH_HANDS),
     /** Rayo mortal: un brazo al frente, quieto. */
-    SET_4(TechniquePosition.RIGHT_HAND),
+    SET_4(TechniquePosition.RIGHT_HAND, true, ChargeClearance.FORWARD),
     /** Kamehameha: manos a la cadera derecha, empuje frontal. */
     SET_5(TechniquePosition.BOTH_HANDS, false),
     /** Death Ball: brazo derecho recto arriba, esfera sobre la palma. */
-    SET_6(TechniquePosition.RIGHT_HAND),
+    SET_6(TechniquePosition.RIGHT_HAND, true, ChargeClearance.UP),
     /** Doble palma frontal: las dos manos abiertas al frente. */
-    SET_7(TechniquePosition.BOTH_HANDS),
+    SET_7(TechniquePosition.BOTH_HANDS, true, ChargeClearance.FORWARD),
     /** Galick Gun: manos juntas al costado, a la altura de la cintura. */
     SET_8(TechniquePosition.BOTH_HANDS, false),
     /** Makankosappo. La carga tiene DOS tiempos —postura tensa y luego los dedos subiendo a
@@ -41,6 +41,21 @@ public enum TechniqueAnimSet {
      *  ancla en la cabeza: la esfera vive en la frente desde el primer frame hasta el disparo,
      *  sin cambiar de sitio a mitad de la secuencia. */
     SET_9(TechniquePosition.FOREHEAD);
+
+    /**
+     * Hacia dónde se aparta una bola de carga de tamaño REAL (BIG_BLAST, SPIRIT_BOMB) cuando
+     * tocaría el cuerpo de quien la carga (ver KiVfxChargeRenderer.pushOutOfBody). Lo dicta la
+     * pose, no la técnica: con los brazos al frente la bola se aparta hacia delante, con el brazo
+     * arriba sube. NONE por defecto, porque en las poses que se mueven entre carga y disparo
+     * (Kamehameha desde la cadera, Galick Gun desde el costado) o que abren los brazos a los
+     * lados, cualquier empuje hace que la bola "se vaya" sola y deje de cuadrar con las manos —
+     * se probó en juego con un Big Blast con la animación del Kamehameha (2026-10-02).
+     */
+    public enum ChargeClearance { NONE, FORWARD, UP }
+
+    /** Apartado de los tipos que IMPONEN animación (ver {@link #BARRIER_POSITION}): de ellos
+     *  solo la Genki Dama tiene tamaño real, y se sostiene con los brazos en alto. */
+    public static final ChargeClearance OVERRIDE_CLEARANCE = ChargeClearance.UP;
 
     /**
      * Origen de CUALQUIER tipo que imponga su animación (ver TechniqueAnimOverride): no tienen
@@ -58,15 +73,25 @@ public enum TechniqueAnimSet {
 
     private final TechniquePosition position;
     private final boolean firesFromChargePose;
+    private final ChargeClearance chargeClearance;
 
     TechniqueAnimSet(TechniquePosition position) {
         this(position, true);
     }
 
     TechniqueAnimSet(TechniquePosition position, boolean firesFromChargePose) {
+        this(position, firesFromChargePose, ChargeClearance.NONE);
+    }
+
+    TechniqueAnimSet(TechniquePosition position, boolean firesFromChargePose,
+                     ChargeClearance chargeClearance) {
         this.position = position;
         this.firesFromChargePose = firesFromChargePose;
+        this.chargeClearance = chargeClearance;
     }
+
+    /** Ver {@link ChargeClearance}. */
+    public ChargeClearance chargeClearance() { return chargeClearance; }
 
     /**
      * ¿La técnica sale de donde estaba la bola de CARGA? true en casi cualquier set: la pose de

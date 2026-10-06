@@ -1,0 +1,19 @@
+{
+  "feature": "zenkai:janemba_rib",
+  "placement": [
+    {
+      "type": "minecraft:rarity_filter",
+      "chance": 9
+    },
+    {
+      "type": "minecraft:in_square"
+    },
+    {
+      "type": "zenkai:clamped_heightmap",
+      "max_y": 123
+    },
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

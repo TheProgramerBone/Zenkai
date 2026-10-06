@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  * sin jigsaw, sondeo de suelo LOCAL vía LocalGroundProbe, bloques colocados a mano.
  *
  * Deliberadamente NO toca la forma macro del terreno (density function / erosion) — ver la
- * sesión 2026-09-04 en .claude/pendiente/worldgen-pendiente.md: el relieve suave
+ * sección "Ya descartado" de .claude/pendiente/worldgen-pendiente.md: el relieve suave
  * (EROSION_5) se dejó así a propósito para evitar reabrir el bug de acantilados abruptos junto al
  * agua ya medido y arreglado. Esta feature logra el aspecto de cañón dramático solo con
  * decoración ENCIMA del terreno existente, igual que HfilOreBoulderFeature hace con los
@@ -31,10 +31,22 @@ import java.util.function.Supplier;
  */
 public class RockyWastelandSpireFeature extends Feature<NoneFeatureConfiguration> {
 
-    private static final int MIN_HEIGHT = 16;
-    private static final int MAX_HEIGHT = 42;
-    private static final int MIN_BASE_RADIUS = 3;
-    private static final int MAX_BASE_RADIUS = 6;
+    // Tuneo 2026-10-04 ("hace falta tunear un poco", sin la imagen de referencia a mano): más
+    // altas y esbeltas (cañón de agujas, no cúmulo de columnas gordas), con sombrero de mesa más
+    // ancho que la cintura, ligera inclinación y una aguja principal por clúster rodeada de otras
+    // más bajas — la silueta de hoodoo que pide el cañón naranja de Dragon Ball.
+    private static final int MIN_HEIGHT = 18;
+    private static final int MAX_HEIGHT = 48;
+    private static final int MIN_BASE_RADIUS = 2;
+    private static final int MAX_BASE_RADIUS = 5;
+    /** Las agujas secundarias del clúster miden esta fracción (rango) de la principal. */
+    private static final double SECONDARY_MIN_SCALE = 0.45;
+    private static final double SECONDARY_MAX_SCALE = 0.8;
+    /** Sombrero: el último tramo de la aguja se ensancha por este factor (remate de mesa/hongo). */
+    private static final double CAP_WIDEN = 1.35;
+    private static final double CAP_FRACTION = 0.1;
+    /** Inclinación máxima por bloque de altura (desplazamiento lateral del eje de la aguja). */
+    private static final double MAX_LEAN_PER_BLOCK = 0.12;
     private static final int MIN_SPIRES = 2;
     private static final int MAX_SPIRES = 5;
     /** Cuánto se puede alejar cada aguja del origen del clúster, en bloques (radio del área) —
@@ -86,7 +98,10 @@ public class RockyWastelandSpireFeature extends Feature<NoneFeatureConfiguration
             if (groundY == Integer.MIN_VALUE) continue; // sin suelo real cerca (incluye océano abierto): no se coloca
             if (!hasSolidFooting(level, x, groundY, z)) continue; // cornisa/voladizo delgado: no es suelo real, saltar
 
-            placeSpire(level, random, x, groundY, z, rockBlock.get());
+            // La primera aguja del clúster es la principal (altura completa); el resto, más bajas.
+            double scale = i == 0 ? 1.0
+                    : SECONDARY_MIN_SCALE + random.nextDouble() * (SECONDARY_MAX_SCALE - SECONDARY_MIN_SCALE);
+            placeSpire(level, random, x, groundY, z, rockBlock.get(), scale);
             placedAny = true;
         }
         return placedAny;
@@ -106,9 +121,15 @@ public class RockyWastelandSpireFeature extends Feature<NoneFeatureConfiguration
         return true;
     }
 
-    private static void placeSpire(WorldGenLevel level, RandomSource random, int baseX, int baseY, int baseZ, Block rockBlock) {
-        int height = MIN_HEIGHT + random.nextInt(MAX_HEIGHT - MIN_HEIGHT + 1);
+    private static void placeSpire(WorldGenLevel level, RandomSource random, int baseX, int baseY, int baseZ,
+                                   Block rockBlock, double heightScale) {
+        int height = Math.max(MIN_HEIGHT / 2,
+                (int) ((MIN_HEIGHT + random.nextInt(MAX_HEIGHT - MIN_HEIGHT + 1)) * heightScale));
         int baseRadius = MIN_BASE_RADIUS + random.nextInt(MAX_BASE_RADIUS - MIN_BASE_RADIUS + 1);
+        // Inclinación: eje desplazado en X y Z según la altura. Tope 0.12 por bloque (≈5 bloques
+        // en 42 de alto) y radio mínimo 2 en la cintura, para que las capas sigan conectadas.
+        double leanX = (random.nextDouble() * 2 - 1) * MAX_LEAN_PER_BLOCK;
+        double leanZ = (random.nextDouble() * 2 - 1) * MAX_LEAN_PER_BLOCK;
         int maxY = level.getMaxBuildHeight() - 1;
         BlockState rock = rockBlock.defaultBlockState();
 
@@ -130,6 +151,10 @@ public class RockyWastelandSpireFeature extends Feature<NoneFeatureConfiguration
             double wave = Math.abs(Math.sin(t * Math.PI * bulges + phase));
             double radiusFactor = MIN_RADIUS_FRACTION + (1.0 - MIN_RADIUS_FRACTION) * wave;
             double radius = baseRadius * radiusFactor;
+            // Sombrero de mesa en el último tramo: más ancho que la cintura de debajo.
+            if (t > 1.0 - CAP_FRACTION) radius *= CAP_WIDEN;
+            int offX = (int) Math.round(leanX * dy);
+            int offZ = (int) Math.round(leanZ * dy);
 
             int rx = Math.max(1, (int) Math.round(radius * aspectX));
             int rz = Math.max(1, (int) Math.round(radius * aspectZ));
@@ -147,7 +172,7 @@ public class RockyWastelandSpireFeature extends Feature<NoneFeatureConfiguration
                     long rhsInner = (long) innerRxSq * innerRzSq;
                     boolean edge = innerRxSq == 0 || innerRzSq == 0 || lhs > rhsInner;
                     if (edge && random.nextFloat() < EDGE_ERODE_CHANCE) continue; // erosión del borde
-                    level.setBlock(new BlockPos(baseX + ddx, y, baseZ + ddz), rock,
+                    level.setBlock(new BlockPos(baseX + offX + ddx, y, baseZ + offZ + ddz), rock,
                             Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
                 }
             }

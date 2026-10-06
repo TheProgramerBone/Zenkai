@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:hfil_janemba_blue_mass"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:polished_hfil_janemba_blue_mass"
+  }
+}

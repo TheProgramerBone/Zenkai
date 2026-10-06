@@ -17,7 +17,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Candidato #3 de .claude/pendiente/tests-automatizados.md: compra en maestro
+ * Candidato #3 de la lista original de tests automatizados (documento ya retirado): compra en maestro
  * (MasterManager.check() + SkillBuyPacket con masterId), cubriendo la validación de distancia.
  * Usa ki_fist (master: korin, tp_cost: 500) contra un korin.json real (pl_req: 800,
  * alignment [-20,100]). El jugador se sube a los atributos al tope de ServerConfig en vez de a

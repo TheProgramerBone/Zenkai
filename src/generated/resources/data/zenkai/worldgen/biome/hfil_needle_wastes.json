@@ -8,9 +8,7 @@
   },
   "downfall": 0.0,
   "effects": {
-    "fog_color": 5118482,
-    "foliage_color": 7029798,
-    "grass_color": 8016432,
+    "fog_color": 12087439,
     "mood_sound": {
       "block_search_extent": 8,
       "offset": 2.0,
@@ -23,44 +21,38 @@
       },
       "probability": 0.00625
     },
-    "sky_color": 3803658,
+    "sky_color": 8007258,
     "water_color": 9044739,
     "water_fog_color": 4849921
   },
   "features": [
     [],
-    [],
+    [
+      "zenkai:hfil_boiling_pool",
+      "zenkai:hfil_geyser",
+      "zenkai:hfil_terraces"
+    ],
     [],
     [],
     [],
     [],
     [
-      "minecraft:ore_dirt",
-      "minecraft:ore_gravel",
-      "minecraft:ore_granite_upper",
-      "minecraft:ore_granite_lower",
-      "minecraft:ore_diorite_upper",
-      "minecraft:ore_diorite_lower",
-      "minecraft:ore_andesite_upper",
-      "minecraft:ore_andesite_lower",
-      "minecraft:ore_tuff",
-      "minecraft:ore_coal_upper",
-      "minecraft:ore_coal_lower",
-      "minecraft:ore_iron_upper",
-      "minecraft:ore_iron_middle",
-      "minecraft:ore_iron_small",
-      "minecraft:ore_gold",
-      "minecraft:ore_gold_lower",
-      "minecraft:ore_redstone",
-      "minecraft:ore_redstone_lower",
-      "minecraft:ore_diamond",
-      "minecraft:ore_diamond_medium",
-      "minecraft:ore_diamond_large",
-      "minecraft:ore_diamond_buried",
-      "minecraft:ore_lapis",
-      "minecraft:ore_lapis_buried",
-      "minecraft:ore_copper",
-      "minecraft:underwater_magma",
+      "zenkai:hfil_ore_coal_upper",
+      "zenkai:hfil_ore_coal_lower",
+      "zenkai:hfil_ore_iron_upper",
+      "zenkai:hfil_ore_iron_middle",
+      "zenkai:hfil_ore_iron_small",
+      "zenkai:hfil_ore_gold",
+      "zenkai:hfil_ore_gold_lower",
+      "zenkai:hfil_ore_redstone",
+      "zenkai:hfil_ore_redstone_lower",
+      "zenkai:hfil_ore_diamond",
+      "zenkai:hfil_ore_diamond_medium",
+      "zenkai:hfil_ore_diamond_large",
+      "zenkai:hfil_ore_diamond_buried",
+      "zenkai:hfil_ore_lapis",
+      "zenkai:hfil_ore_lapis_buried",
+      "zenkai:hfil_ore_copper",
       "zenkai:katchin_ore_hfil"
     ],
     [],
@@ -69,13 +61,10 @@
       "minecraft:spring_lava"
     ],
     [
-      "minecraft:glow_lichen",
       "zenkai:hfil_spike",
-      "zenkai:hfil_dry_grass",
-      "zenkai:hfil_dead_bush",
-      "zenkai:fallen_log_hfil",
       "zenkai:hfil_bone_pile",
-      "zenkai:hfil_ore_boulder_rare"
+      "zenkai:hfil_ore_boulder_rare",
+      "zenkai:hfil_cairns_rare"
     ]
   ],
   "has_precipitation": false,
@@ -83,7 +72,20 @@
   "spawners": {
     "ambient": [],
     "axolotls": [],
-    "creature": [],
+    "creature": [
+      {
+        "type": "zenkai:red_ogre",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 10
+      },
+      {
+        "type": "zenkai:blue_ogre",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 10
+      }
+    ],
     "misc": [],
     "monster": [],
     "underground_water_creature": [],

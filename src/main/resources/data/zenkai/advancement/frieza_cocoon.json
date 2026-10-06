@@ -1,0 +1,40 @@
+{
+  "parent": "zenkai:otherworld",
+  "criteria": {
+    "found": {
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "zenkai:frieza_cocoon"
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:location"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.frieza_cocoon.description"
+    },
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:white_wool"
+    },
+    "title": {
+      "translate": "advancements.zenkai.frieza_cocoon.title"
+    }
+  },
+  "requirements": [
+    [
+      "found"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

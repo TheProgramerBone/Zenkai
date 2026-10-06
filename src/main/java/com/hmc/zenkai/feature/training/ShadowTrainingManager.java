@@ -114,7 +114,7 @@ public final class ShadowTrainingManager {
                 true,
                 "auto",
                 List.of(),
-                false); // canFly aquí es irrelevante: ZenkaiDefaultMob lee el vuelo del def del
+                false, false); // canFly/canBlock aquí son irrelevantes: ZenkaiDefaultMob lee el vuelo del def del
                         // DATAPACK vía EntityStatsManager.get(id) (shadow_clone.json), no de este
                         // EntityStatDef local — este solo alimenta stats.applyDef (vida/daño/PL).
         EntityStats stats = shadow.getData(ZenkaiDataAttachments.ENTITY_STATS.get());

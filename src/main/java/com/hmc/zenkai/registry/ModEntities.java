@@ -11,6 +11,7 @@ import com.hmc.zenkai.content.entity.misc.ShadowKintounEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianEntity;
 import com.hmc.zenkai.content.entity.namek.NamekianWarriorEntity;
 import com.hmc.zenkai.content.entity.misc.KintounEntity;
+import com.hmc.zenkai.content.entity.otherworld.OgreEntity;
 import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
 import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
@@ -113,6 +114,26 @@ public class ModEntities {
     public static final Supplier<EntityType<ShadowCloneEntity>> SHADOW_CLONE =
             ENTITY_TYPES.register("shadow_clone", () -> EntityType.Builder.of(ShadowCloneEntity::new, MobCategory.MISC)
                     .sized(0.6f, 1.8f).build("shadow_clone"));
+
+    /** Ogros del HFIL (propuesta I): misma clase, dos texturas (Goz rojo y Mez azul).
+     *  CREATURE y no MONSTER a propósito: en el HFIL serían el ÚNICO monstruo, y el spawner
+     *  llenaría con ellos el cupo entero de monstruos (~70 alrededor del jugador). CREATURE tiene
+     *  cupo de ~10, reaparece despacio y no desaparece: pueblan el sitio como trabajadores, no
+     *  como plaga. Tamaño de jugador: el atributo SCALE (1.2) los agranda. */
+    public static final Supplier<EntityType<OgreEntity>> RED_OGRE =
+            ENTITY_TYPES.register("red_ogre", () -> EntityType.Builder.of(OgreEntity::new, MobCategory.CREATURE)
+                    .sized(0.6f, 1.8f).build("red_ogre"));
+
+    public static final Supplier<EntityType<OgreEntity>> BLUE_OGRE =
+            ENTITY_TYPES.register("blue_ogre", () -> EntityType.Builder.of(OgreEntity::new, MobCategory.CREATURE)
+                    .sized(0.6f, 1.8f).build("blue_ogre"));
+
+    /** Ángeles del capullo de Freezer: tamaño de jugador en el tipo, el atributo SCALE (0.45) los
+     *  deja del tamaño de un Vex. No aparecen solos: los pone la estructura frieza_cocoon. */
+    public static final Supplier<EntityType<com.hmc.zenkai.content.entity.otherworld.AngelEntity>> ANGEL =
+            ENTITY_TYPES.register("angel", () -> EntityType.Builder.of(
+                            com.hmc.zenkai.content.entity.otherworld.AngelEntity::new, MobCategory.CREATURE)
+                    .sized(0.6f, 1.8f).build("angel"));
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);

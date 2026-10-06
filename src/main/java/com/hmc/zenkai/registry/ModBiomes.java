@@ -13,6 +13,10 @@ public class ModBiomes {
     public static final ResourceKey<Biome> HFIL_BLOOD_SHORE = register("hfil_blood_shore");
     public static final ResourceKey<Biome> HFIL_NEEDLE_WASTES = register("hfil_needle_wastes");
     public static final ResourceKey<Biome> HFIL_CINDER_DUNES = register("hfil_cinder_dunes");
+    /** Infierno helado (propuesta D, 2026-10-02): lagos de sangre congelada. */
+    public static final ResourceKey<Biome> HFIL_FROZEN_LAKE = register("hfil_frozen_lake");
+    /** Janemba Rift (2026-10-04): la grieta de maldad de Fusion Reborn; el bioma "peligroso". */
+    public static final ResourceKey<Biome> HFIL_JANEMBA_RIFT = register("hfil_janemba_rift");
     public static final ResourceKey<Biome> NAMEK_PLAINS = register("namek_plains");
     public static final ResourceKey<Biome> NAMEK_HILLS  = register("namek_hills");
     public static final ResourceKey<Biome> NAMEK_OCEAN  = register("namek_ocean");

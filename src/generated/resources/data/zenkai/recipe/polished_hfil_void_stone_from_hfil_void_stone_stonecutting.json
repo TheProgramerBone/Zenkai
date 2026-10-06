@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:hfil_void_stone"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:polished_hfil_void_stone"
+  }
+}

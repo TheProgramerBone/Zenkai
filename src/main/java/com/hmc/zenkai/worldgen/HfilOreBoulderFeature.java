@@ -1,5 +1,6 @@
 package com.hmc.zenkai.worldgen;
 
+import com.hmc.zenkai.registry.HfilOres;
 import com.hmc.zenkai.registry.ModBlocks;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
@@ -49,7 +50,12 @@ public class HfilOreBoulderFeature extends Feature<NoneFeatureConfiguration> {
         int originGroundY = LocalGroundProbe.findGroundY(level, origin.getX(), origin.getY(), origin.getZ(), GROUND_SEARCH_RADIUS);
         if (originGroundY == Integer.MIN_VALUE) return false; // sin suelo real bajo el origen
 
-        BlockState ore = ModBlocks.KATCHIN_ORE.get().defaultBlockState();
+        // La variante de Katchin del suelo donde asoma (regla del usuario, 2026-10-02: lo que sale
+        // en un bioma, con los bloques de ese bioma). Fuera de las piedras del HFIL, la de siempre.
+        HfilOres.Stone stone = HfilOres.stoneOf(level.getBlockState(
+                new BlockPos(origin.getX(), originGroundY - 1, origin.getZ())));
+        BlockState ore = (stone != null ? HfilOres.get(stone, HfilOres.Type.KATCHIN) : ModBlocks.KATCHIN_ORE)
+                .get().defaultBlockState();
         int oreCount = MIN_ORE + random.nextInt(MAX_ORE - MIN_ORE + 1);
         boolean placedAny = false;
 

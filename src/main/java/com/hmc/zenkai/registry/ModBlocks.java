@@ -259,7 +259,7 @@ public class ModBlocks {
                     .sound(SoundType.STONE)
                     .mapColor(MapColor.SAND)));
 
-    // Rediseño HFIL (ver .claude/pendiente/worldgen-pendiente.md, fase 1). Roca base
+    // Rediseño HFIL (ver .claude/docs/worldgen.md, fase 1). Roca base
     // CÁLIDA: sustituye a minecraft:stone como default_block del Otherworld
     // (otherworld_noise.json) — arregla de paso la "mancha de piedra" (CLAUDE.md pendiente #2):
     // si algo se escapa del gate above_preliminary_surface, lo que se ve ya no es piedra gris
@@ -281,7 +281,181 @@ public class ModBlocks {
                     .sound(SoundType.BASALT)
                     .mapColor(MapColor.COLOR_BLACK)));
 
-    // Rediseño HFIL, Fase 4 (ver .claude/pendiente/worldgen-pendiente.md, secciones 3.3/5.3) —
+    // Roca BLANCA-azulada del suelo de hfil_needle_wastes (2026-10-02, decisión del usuario):
+    // las referencias del infierno de DBZ pintan los pinchos sobre suelo blanco/"nevado", no
+    // sobre el ocre de antes. Roca y no nieve a propósito: no se derrite junto a lava ni
+    // antorchas y no suelta bolas de nieve. Textura: tools/gen_hfil_pale_stone.py.
+    public static final DeferredBlock<Block> HFIL_PALE_STONE = registerBlock("hfil_pale_stone",
+            ()-> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.CALCITE)
+                    .mapColor(MapColor.SNOW)));
+
+    /** Sangre congelada del hfil_frozen_lake (propuesta D, 2026-10-02): el Blood Pond helado.
+     *  Como el hielo compacto: resbala, NO se derrite (no es IceBlock: ni luz ni calor lo
+     *  convierten en agua), solo se recoge con toque de seda. Textura: tools/gen_hfil_frozen.py. */
+    public static final DeferredBlock<Block> HFIL_BLOOD_ICE = registerBlock("hfil_blood_ice",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_RED)
+                    .instrument(NoteBlockInstrument.CHIME)
+                    .friction(0.98f)
+                    .strength(0.5f)
+                    .sound(SoundType.GLASS)));
+
+    /** Costra de azufre de los campos de Osorezan (propuesta E). Pisarla da náusea. Es el
+     *  concepto (el azufre), no la obra: su amarillo es el color del concepto, como el agua azul
+     *  de las pozas. Texturas: tools/gen_hfil_sulfur.py. */
+    public static final DeferredBlock<Block> HFIL_SULFUR_CRUST = registerBlock("hfil_sulfur_crust",
+            () -> new HfilSulfurBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_YELLOW)
+                    .strength(0.8f)
+                    .sound(SoundType.TUFF), false));
+
+    /** Fumarola de azufre (propuesta E): humo continuo; encima, náusea y veneno leve. */
+    public static final DeferredBlock<Block> HFIL_FUMAROLE = registerBlock("hfil_fumarole",
+            () -> new HfilSulfurBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_YELLOW)
+                    .strength(1.5f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.TUFF), true));
+
+    // Janemba Rift (2026-10-04): la grieta de maldad que se libera de la máquina purificadora.
+    // Texturas: tools/gen_hfil_janemba.py.
+    // Paleta de la referencia de Fusion Reborn (.claude/pendiente/referencia_janemba.png): terreno
+    // púrpura/rosa, suave y orgánico; NADA de estética Nether (sin lava, obsidiana ni piedra negra).
+    /** Carne orgánica rosa/púrpura: la superficie del Janemba Rift (surface_rule de otherworld_noise.json). */
+    public static final DeferredBlock<Block> HFIL_CORRUPTED_FLESH = registerBlock("hfil_corrupted_flesh",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(2f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.CORAL_BLOCK)
+                    .mapColor(MapColor.COLOR_MAGENTA)));
+
+    /** Piedra violeta: el subsuelo del Janemba Rift y el material de sus columnas y curvas. */
+    public static final DeferredBlock<Block> HFIL_VOID_STONE = registerBlock("hfil_void_stone",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(3.5f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.AMETHYST)
+                    .mapColor(MapColor.COLOR_PURPLE)));
+
+    /** Gelatina de las esferas flotantes: translúcida, sin marco, teñida por color (ver la clase).
+     *  Luz baja para que las esferas "brillen" sin ser lámparas. Se rompe como el cristal. */
+    public static final DeferredBlock<Block> HFIL_JANEMBA_BUBBLE = registerBlock("hfil_janemba_bubble",
+            () -> new JanembaBubbleBlock(BlockBehaviour.Properties.of()
+                    .strength(0.3f)
+                    .noOcclusion()
+                    .lightLevel(s -> 5)
+                    .isValidSpawn(Blocks::never)
+                    .isRedstoneConductor((s, l, p) -> false)
+                    .isSuffocating((s, l, p) -> false)
+                    .isViewBlocking((s, l, p) -> false)
+                    .sound(SoundType.HONEY_BLOCK)
+                    .mapColor(MapColor.COLOR_PINK)));
+
+    /** Masa azul: las grandes formas curvas azules de la referencia (lomos, olas, la torre). */
+    public static final DeferredBlock<Block> HFIL_JANEMBA_BLUE_MASS = registerBlock("hfil_janemba_blue_mass",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(3f)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.CALCITE)
+                    .mapColor(MapColor.COLOR_BLUE)));
+
+    /** Variantes de construcción del Janemba Rift (pedido del usuario, 2026-10-05): base + escaleras
+     *  + losa + muro, con el mismo record que el concreto estructural para que el datagen las recorra
+     *  igual (ver {@link #buildingFamilies()}). Propiedades copiadas del bloque natural. */
+    public static final List<ConcreteFamily> JANEMBA_FAMILIES = new ArrayList<>();
+
+    /** {@code piece}: prefijo de escaleras/losa/muro. Para los ladrillos va en singular, como en
+     *  vanilla (stone_brick_stairs, no stone_bricks_stairs). */
+    private static DeferredBlock<Block> janembaFamily(String name, String piece, Supplier<BlockBehaviour.Properties> props) {
+        DeferredBlock<Block> block = registerBlock(name, () -> new Block(props.get()));
+        DeferredBlock<StairBlock> stairs = registerBlock(piece + "_stairs",
+                () -> new StairBlock(block.get().defaultBlockState(), props.get()));
+        DeferredBlock<SlabBlock> slab = registerBlock(piece + "_slab", () -> new SlabBlock(props.get()));
+        DeferredBlock<WallBlock> wall = registerBlock(piece + "_wall", () -> new WallBlock(props.get()));
+        JANEMBA_FAMILIES.add(new ConcreteFamily(name, block, stairs, slab, wall));
+        return block;
+    }
+
+    // Pulidos y ladrillos de los tres materiales del Janemba Rift. Cadena de recetas (ver
+    // ModRecipeProvider.riftChain): natural → pulido → ladrillos, y el cantero salta pasos.
+    public static final DeferredBlock<Block> POLISHED_HFIL_VOID_STONE = janembaFamily("polished_hfil_void_stone",
+            "polished_hfil_void_stone", () -> BlockBehaviour.Properties.ofFullCopy(HFIL_VOID_STONE.get()));
+    public static final DeferredBlock<Block> HFIL_VOID_STONE_BRICKS = janembaFamily("hfil_void_stone_bricks",
+            "hfil_void_stone_brick", () -> BlockBehaviour.Properties.ofFullCopy(HFIL_VOID_STONE.get()));
+    public static final DeferredBlock<Block> POLISHED_HFIL_CORRUPTED_FLESH = janembaFamily("polished_hfil_corrupted_flesh",
+            "polished_hfil_corrupted_flesh", () -> BlockBehaviour.Properties.ofFullCopy(HFIL_CORRUPTED_FLESH.get()));
+    public static final DeferredBlock<Block> HFIL_CORRUPTED_FLESH_BRICKS = janembaFamily("hfil_corrupted_flesh_bricks",
+            "hfil_corrupted_flesh_brick", () -> BlockBehaviour.Properties.ofFullCopy(HFIL_CORRUPTED_FLESH.get()));
+    public static final DeferredBlock<Block> POLISHED_HFIL_JANEMBA_BLUE_MASS = janembaFamily("polished_hfil_janemba_blue_mass",
+            "polished_hfil_janemba_blue_mass", () -> BlockBehaviour.Properties.ofFullCopy(HFIL_JANEMBA_BLUE_MASS.get()));
+    public static final DeferredBlock<Block> HFIL_JANEMBA_BLUE_MASS_BRICKS = janembaFamily("hfil_janemba_blue_mass_bricks",
+            "hfil_janemba_blue_mass_brick", () -> BlockBehaviour.Properties.ofFullCopy(HFIL_JANEMBA_BLUE_MASS.get()));
+
+    /** Familias de construcción (base + escaleras + losa + muro) que el datagen recorre entero:
+     *  concreto estructural y variantes del Janemba Rift. Añadir una familia nueva no toca el datagen. */
+    public static List<ConcreteFamily> buildingFamilies() {
+        List<ConcreteFamily> all = new ArrayList<>(STRUCTURAL_CONCRETE_FAMILIES);
+        all.addAll(JANEMBA_FAMILIES);
+        return all;
+    }
+
+    /** Menas propias del HFIL: [piedra][mena] → bloque (24). Ver HfilOres. Propiedades copiadas
+     *  de la mena vanilla; id y color de mapa, de la piedra. El orden respecto a las piedras da
+     *  igual: HfilOres.Stone las lee con un Supplier perezoso. */
+    public static final java.util.Map<HfilOres.Stone, java.util.Map<HfilOres.Type, DeferredBlock<Block>>> HFIL_ORES =
+            registerHfilOres();
+
+    private static java.util.Map<HfilOres.Stone, java.util.Map<HfilOres.Type, DeferredBlock<Block>>> registerHfilOres() {
+        var byStone = new java.util.EnumMap<HfilOres.Stone, java.util.Map<HfilOres.Type, DeferredBlock<Block>>>(HfilOres.Stone.class);
+        for (HfilOres.Stone stone : HfilOres.Stone.values()) {
+            var byType = new java.util.EnumMap<HfilOres.Type, DeferredBlock<Block>>(HfilOres.Type.class);
+            for (HfilOres.Type type : HfilOres.Type.values()) {
+                byType.put(type, registerBlock(HfilOres.id(stone, type), () -> {
+                    BlockBehaviour.Properties p = BlockBehaviour.Properties.ofFullCopy(type.vanilla.get())
+                            .mapColor(stone.mapColor);
+                    // La redstone conserva su clase (se ilumina al tocarla); el resto suelta
+                    // experiencia como su mena vanilla.
+                    return type == HfilOres.Type.REDSTONE ? new RedStoneOreBlock(p) : new DropExperienceBlock(type.xp, p);
+                }));
+            }
+            byStone.put(stone, java.util.Collections.unmodifiableMap(byType));
+        }
+        return java.util.Collections.unmodifiableMap(byStone);
+    }
+
+    // Pozas del HFIL inspiradas en los "infiernos" reales de Beppu (2026-10-02, ver
+    // .claude/pendiente/worldgen-pendiente.md, propuesta A). Texturas: tools/gen_hfil_springs.py.
+    /** Barro gris hirviendo (Oniishibozu Jigoku). Ver HfilBoilingMudBlock. */
+    public static final DeferredBlock<Block> HFIL_BOILING_MUD = registerBlock("hfil_boiling_mud",
+            () -> new HfilBoilingMudBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.MUD)
+                    .mapColor(MapColor.COLOR_GRAY)));
+
+    /** Géiser (Tatsumaki Jigoku). Ver HfilGeyserBlock. randomTicks: red de seguridad de su ciclo. */
+    public static final DeferredBlock<Block> HFIL_GEYSER = registerBlock("hfil_geyser",
+            () -> new HfilGeyserBlock(BlockBehaviour.Properties.of()
+                    .strength(3f)
+                    .requiresCorrectToolForDrops()
+                    .randomTicks()
+                    .sound(SoundType.CALCITE)
+                    .mapColor(MapColor.SNOW)));
+
+    /** Agua hirviendo azul (Umi Jigoku). Sin item de bloque, como HEALING_WATER_BLOCK; tipado
+     *  como su clase concreta por el mismo motivo (BaseFlowingFluid.Properties.block). */
+    public static final DeferredBlock<HfilBoilingWaterBlock> HFIL_BOILING_WATER_BLOCK = MOD_BLOCKS.register("hfil_boiling_water",
+            () -> new HfilBoilingWaterBlock(ModFluids.HFIL_BOILING_WATER.get(), BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLUE)
+                    .replaceable()
+                    .noCollission()
+                    .strength(100f)
+                    .liquid()
+                    .sound(SoundType.EMPTY)
+                    .pushReaction(PushReaction.DESTROY)
+                    .noLootTable()));
+
+    // Rediseño HFIL, Fase 4 (ver .claude/docs/worldgen.md) —
     // hfil_dunes -> hfil_cinder_dunes: reemplaza red_sand/red_sandstone vainilla por ceniza
     // propia. HFIL_CINDER_SAND cae como arena de verdad (ColoredFallingBlock, mismo patrón que
     // NAMEKIAN_SAND) — es la capa de superficie. HFIL_CINDER_SANDSTONE es la capa compactada

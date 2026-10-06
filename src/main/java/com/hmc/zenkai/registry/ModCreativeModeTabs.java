@@ -154,7 +154,19 @@ public class ModCreativeModeTabs {
         }
 
         items.sort(order(insertionOrder(), dragonBallRank()));
-        items.forEach(output::accept);
+        Item bubble = ModBlocks.HFIL_JANEMBA_BUBBLE.get().asItem();
+        for (Item item : items) {
+            output.accept(item);
+            // Gelatina: además de la rosa, un ítem por cada color de tinte (el color viaja en el
+            // componente BLOCK_STATE, ver JanembaBubbleBlock).
+            if (item == bubble) {
+                for (var c : com.hmc.zenkai.content.block.JanembaBubbleBlock.Color.values()) {
+                    if (c != com.hmc.zenkai.content.block.JanembaBubbleBlock.Color.PINK) {
+                        output.accept(com.hmc.zenkai.content.block.JanembaBubbleBlock.stackOf(c, 1));
+                    }
+                }
+            }
+        }
     }
 
     // ── Orden ────────────────────────────────────────────────────────────────

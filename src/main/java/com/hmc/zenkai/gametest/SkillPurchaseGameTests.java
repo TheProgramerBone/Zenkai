@@ -12,7 +12,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Candidato #1 de .claude/pendiente/tests-automatizados.md: comprar/olvidar una skill contra un
+ * Candidato #1 de la lista original de tests automatizados (documento ya retirado): comprar/olvidar una skill contra un
  * PlayerStatsAttachment de prueba. Usa ki_control (master: kami, tp_cost: 600, max_level: 10)
  * comprando el nivel 2 en adelante — el nivel 1 ya lo tiene simulado con grantAdmin(), igual que
  * hace /zenkai skill give, así que no hace falta montar un maestro para este test (eso lo cubre

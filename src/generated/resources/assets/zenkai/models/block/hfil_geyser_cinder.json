@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "zenkai:block/hfil_cinder_sand",
+    "side": "zenkai:block/hfil_cinder_sand",
+    "top": "zenkai:block/hfil_geyser_top_cinder"
+  }
+}

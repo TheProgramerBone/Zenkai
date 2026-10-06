@@ -13,6 +13,7 @@ import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxShape;
 import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxTuning;
 import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
+import com.hmc.zenkai.feature.technique.TechniqueAnimSet;
 import com.hmc.zenkai.feature.technique.TechniquePosition;
 import com.hmc.zenkai.registry.ModParticles;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -92,6 +93,9 @@ public final class KiVfxChargeRenderer {
     private static final float FP_DOWN    = 0.25f;
     private static final double FP_CLEARANCE = 0.35;
     private static final float REST_ON_ANCHOR_RADIUS = 0.45f;
+    /** Aire mínimo, en bloques, entre la superficie de una bola de tamaño real y el cuerpo de
+     *  quien la carga (ver {@link #pushOutOfBody}). */
+    private static final double BODY_CLEARANCE = 0.15;
 
     /**
      * ¿Esta técnica se OCULTA POR COMPLETO en primera persona propia, en TODAS sus fases (carga,
@@ -165,6 +169,9 @@ public final class KiVfxChargeRenderer {
             boolean fpFallback = selfFirstPerson && anchors == null;
             if (c.type() != KiTechniqueType.EXPLOSION && !fpFallback) {
                 origin = origin.add(0, Math.max(0f, radius - REST_ON_ANCHOR_RADIUS), 0);
+            }
+            if (c.type().chargeShowsRealSize() && c.type() != KiTechniqueType.EXPLOSION) {
+                origin = pushOutOfBody(p, origin, radius, pt, c.clearance());
             }
             if (selfFirstPerson && c.type().chargeShowsRealSize()) {
                 origin = pushOutOfCamera(camPos, origin, radius);
@@ -249,6 +256,62 @@ public final class KiVfxChargeRenderer {
         double minDist = radius + FP_CLEARANCE;
         if (dist >= minDist || dist < 1.0E-4) return origin;
         return camPos.add(fromCam.scale(minDist / dist));
+    }
+
+    /**
+     * Que una bola de tamaño real (BIG_BLAST, SPIRIT_BOMB) no atraviese el cuerpo de quien la
+     * carga. Descansar sobre el ancla ({@link #REST_ON_ANCHOR_RADIUS}) resuelve el suelo, pero no
+     * lo de atrás: con las manos un palmo delante del pecho, un Big Blast de 2 bloques de radio
+     * se metía por el torso y la cabeza (pendiente pedido 2026-09-30).
+     *
+     * El cuerpo se modela como un segmento vertical en el eje del jugador (pies → altura del
+     * hitbox) con el grosor del hitbox. Si la esfera lo toca, se aparta lo justo para dejar
+     * {@link #BODY_CLEARANCE} de aire, en la dirección que dicta la POSE del set de animación
+     * ({@link TechniqueAnimSet.ChargeClearance}), para que el movimiento de la bola acompañe al
+     * de los brazos:
+     * - FORWARD (brazos al frente): solo en horizontal, en la dirección en la que ya estaba
+     *   respecto al eje (o hacia donde mira el cuerpo si estaba encima del eje). Conserva la
+     *   altura: sigue apoyada en las manos.
+     * - UP (brazo o brazos en alto: Death Ball, Genki Dama): solo en vertical, hasta quedar
+     *   encima de la cabeza.
+     * - NONE (Kamehameha, Galick Gun, brazos a los lados...): no se mueve. Ahí empujarla hacía
+     *   que la bola se desplazara por su cuenta, sin cuadrar con la animación (2026-10-02).
+     * Si la esfera ya queda libre, no se mueve en ningún caso. EXPLOSION se excluye: envolverte
+     * es su gracia.
+     *
+     * El proyectil sale de este mismo centro (`KiFirePacket.spawnCenter` vía rememberDrawn), y
+     * el alcance que valida el servidor (`HINT_REACH` + tamaño) cubre el desplazamiento.
+     */
+    private static Vec3 pushOutOfBody(Player p, Vec3 origin, float radius, float pt,
+                                      TechniqueAnimSet.ChargeClearance mode) {
+        if (mode == TechniqueAnimSet.ChargeClearance.NONE) return origin;
+        Vec3 feet = p.getPosition(pt);
+        double halfWidth = p.getBbWidth() * 0.5;
+        double minDist = radius + halfWidth + BODY_CLEARANCE;
+        double top = feet.y + p.getBbHeight();
+
+        double closestY = Mth.clamp(origin.y, feet.y, top);
+        double dy = origin.y - closestY;
+        double hx = origin.x - feet.x, hz = origin.z - feet.z;
+        double horiz = Math.sqrt(hx * hx + hz * hz);
+        if (horiz * horiz + dy * dy >= minDist * minDist) return origin;
+
+        if (mode == TechniqueAnimSet.ChargeClearance.UP) {
+            // Por encima de la cabeza, a la altura en la que la esfera deja de tocar el segmento
+            // (el punto más cercano pasa a ser su extremo superior).
+            double lift = Math.sqrt(Math.max(0.0, minDist * minDist - horiz * horiz));
+            return new Vec3(origin.x, Math.max(origin.y, top + lift), origin.z);
+        }
+
+        double needed = Math.sqrt(minDist * minDist - dy * dy);
+        if (horiz < 0.05) {
+            double rad = Math.toRadians(Mth.lerp(pt, p.yBodyRotO, p.yBodyRot));
+            hx = -Math.sin(rad);
+            hz = Math.cos(rad);
+            horiz = 1.0;
+        }
+        double k = needed / horiz;
+        return new Vec3(feet.x + hx * k, origin.y, feet.z + hz * k);
     }
 
     private static boolean isHandAnchored(TechniquePosition pos) {

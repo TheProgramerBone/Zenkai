@@ -280,6 +280,24 @@ public class Zenkai {
                             new GenericGeoModel<>("saibaman",
                                     "saibaman", "zenkai_animations", true, false), 0.5f));
 
+            // Ogros del HFIL: un solo modelo con rig y UV de jugador (geo/ogre), una textura por tipo.
+            EntityRenderers.register(ModEntities.RED_OGRE.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("ogre", "red_ogre", "zenkai_animations", true, false), 0.6f));
+            EntityRenderers.register(ModEntities.BLUE_OGRE.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx,
+                            new GenericGeoModel<>("ogre", "blue_ogre", "zenkai_animations", true, false), 0.6f));
+            // Ángel: rig de jugador con trompeta (geo/angel), animación propia de tocar.
+            EntityRenderers.register(ModEntities.ANGEL.get(),
+                    ctx -> {
+                        GenericGeoRenderer<com.hmc.zenkai.content.entity.otherworld.AngelEntity> r =
+                                new GenericGeoRenderer<>(ctx,
+                                        new GenericGeoModel<>("angel", "angel", "angel", false, false), 0.25f);
+                        // El halo del mod, leído de la ranura de casco del ángel.
+                        r.addRenderLayer(new com.hmc.zenkai.client.render_and_model_entities.entity.AngelHaloLayer(r));
+                        return r;
+                    });
+
             EntityRenderers.register(ModEntities.SHENLONG.get(),
                     ctx -> new GenericGeoRenderer<>(ctx,
                             new GenericGeoModel<>("shenlong", true), 0.5f));
@@ -351,7 +369,7 @@ public class Zenkai {
                 // it can override everything else", PAL AnimationStack.java) — con 970 ya le
                 // ganaba a FLY_LAYER numéricamente, pero se sube más para que sea inequívocamente
                 // la capa dominante de gameplay (justo debajo de PREVIEW, que es la única que
-                // debe estar siempre por encima de todo).
+                // debe estar siempre por encima de lo demás).
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.TRANSMISSION_LAYER, 1250,
                         ZenkaiPalAnimations::newFirstPersonController);
@@ -411,6 +429,8 @@ public class Zenkai {
         @SubscribeEvent
         public static void registerFluidExtensions(RegisterClientExtensionsEvent event) {
             event.registerFluidType(HealingWaterFluidClientExtensions.INSTANCE, ModFluids.HEALING_WATER_TYPE.get());
+            event.registerFluidType(com.hmc.zenkai.client.fluid.HfilBoilingWaterFluidClientExtensions.INSTANCE,
+                    ModFluids.HFIL_BOILING_WATER_TYPE.get());
         }
     }
 }

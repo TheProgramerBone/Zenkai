@@ -2,6 +2,7 @@ package com.hmc.zenkai.datagen;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.block.EnergyGeneratorBlock;
+import com.hmc.zenkai.content.block.HfilGeyserBlock;
 import com.hmc.zenkai.content.block.NamekianHerbCropBlock;
 import com.hmc.zenkai.content.block.NamekianLampBlock;
 import com.hmc.zenkai.registry.ModBlocks;
@@ -10,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.*;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 
@@ -47,12 +49,48 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.NAMEKIAN_DIAMOND_ORE);
         blockWithItem(ModBlocks.ROCKY_BLOCK);
         blockWithItem(ModBlocks.HFIL_SCORCHED_STONE);
+        blockWithItem(ModBlocks.HFIL_PALE_STONE);
+        blockWithItem(ModBlocks.HFIL_BOILING_MUD);
+        blockWithItem(ModBlocks.HFIL_BLOOD_ICE);
+        blockWithItem(ModBlocks.HFIL_SULFUR_CRUST);
+        simpleBlockWithItem(ModBlocks.HFIL_FUMAROLE.get(), models().cubeBottomTop("hfil_fumarole",
+                modLoc("block/hfil_sulfur_crust"), modLoc("block/hfil_sulfur_crust"),
+                modLoc("block/hfil_fumarole_top")));
+        // Menas del HFIL: textura = id (tools/gen_hfil_ores.py). La redstone tiene LIT, pero
+        // como la vanilla usa el mismo modelo encendida y apagada.
+        ModBlocks.HFIL_ORES.values().forEach(m -> m.values().forEach(this::blockWithItem));
+        // Géiser: un modelo por suelo (GROUND), hecho del MISMO bloque que el bioma donde sale —
+        // costados y base = ese bloque, arriba = ese bloque con la boca. Mismo modelo en las 16
+        // etapas de STAGE: la erupción se ve por partículas, no por modelo.
+        java.util.Map<HfilGeyserBlock.Ground, ModelFile> geyserModels = new java.util.EnumMap<>(HfilGeyserBlock.Ground.class);
+        for (HfilGeyserBlock.Ground g : HfilGeyserBlock.Ground.values()) {
+            String base = switch (g) {
+                case SCORCHED -> "block/hfil_scorched_stone";
+                case PALE -> "block/hfil_pale_stone";
+                case CINDER -> "block/hfil_cinder_sand";
+            };
+            geyserModels.put(g, models().cubeBottomTop("hfil_geyser_" + g.getSerializedName(),
+                    modLoc(base), modLoc(base), modLoc("block/hfil_geyser_top_" + g.getSerializedName())));
+        }
+        getVariantBuilder(ModBlocks.HFIL_GEYSER.get()).forAllStates(s -> ConfiguredModel.builder()
+                .modelFile(geyserModels.get(s.getValue(HfilGeyserBlock.GROUND))).build());
+        simpleBlockItem(ModBlocks.HFIL_GEYSER.get(), geyserModels.get(HfilGeyserBlock.Ground.SCORCHED));
         blockWithItem(ModBlocks.HFIL_SPIKE_ROCK);
+        blockWithItem(ModBlocks.HFIL_CORRUPTED_FLESH);
+        blockWithItem(ModBlocks.HFIL_VOID_STONE);
+        blockWithItem(ModBlocks.HFIL_JANEMBA_BLUE_MASS);
+        // Gelatina de las esferas: un cubo con tintindex 0 en las 6 caras (el modelo de las hojas
+        // vanilla) y translúcido. Mismo modelo en los 14 estados: el color lo pone el tinte del
+        // cliente (JanembaBubbleColors), no el modelo.
+        simpleBlockWithItem(ModBlocks.HFIL_JANEMBA_BUBBLE.get(),
+                models().withExistingParent("hfil_janemba_bubble", mcLoc("block/leaves"))
+                        .texture("all", modLoc("block/hfil_janemba_bubble"))
+                        .renderType("translucent"));
         blockWithItem(ModBlocks.HFIL_CINDER_SAND);
         blockWithItem(ModBlocks.HFIL_CINDER_SANDSTONE);
         blockWithItem(ModBlocks.HTC_BLOCK);
         blockWithItem(ModBlocks.HTC_PORTAL);
-        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+        for (var fam : ModBlocks.buildingFamilies()) {
             ResourceLocation tex = modLoc("block/" + fam.name());
             blockWithItem(fam.block());
             stairsBlock(fam.stairs().get(), tex);
@@ -164,6 +202,12 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 .texture("particle", mcLoc("block/water_still"));
         getVariantBuilder(ModBlocks.HEALING_WATER_BLOCK.get())
                 .forAllStates(s -> ConfiguredModel.builder().modelFile(healingWaterModel).build());
+
+        // Mismo caso que healing_water: modelo invisible solo con "particle".
+        var boilingWaterModel = models().getBuilder("hfil_boiling_water")
+                .texture("particle", mcLoc("block/water_still"));
+        getVariantBuilder(ModBlocks.HFIL_BOILING_WATER_BLOCK.get())
+                .forAllStates(s -> ConfiguredModel.builder().modelFile(boilingWaterModel).build());
     }
 
     private void blockWithItem(DeferredBlock<?> deferredBlock) {

@@ -1,0 +1,7 @@
+{
+  "type": "zenkai:frieza_cocoon",
+  "biomes": "#zenkai:has_structure/frieza_cocoon",
+  "step": "surface_structures",
+  "terrain_adaptation": "none",
+  "spawn_overrides": {}
+}

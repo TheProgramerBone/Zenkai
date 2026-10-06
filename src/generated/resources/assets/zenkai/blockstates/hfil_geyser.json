@@ -1,0 +1,148 @@
+{
+  "variants": {
+    "ground=cinder,stage=0": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=1": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=10": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=11": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=12": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=13": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=14": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=15": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=2": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=3": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=4": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=5": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=6": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=7": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=8": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=cinder,stage=9": {
+      "model": "zenkai:block/hfil_geyser_cinder"
+    },
+    "ground=pale,stage=0": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=1": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=10": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=11": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=12": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=13": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=14": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=15": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=2": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=3": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=4": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=5": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=6": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=7": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=8": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=pale,stage=9": {
+      "model": "zenkai:block/hfil_geyser_pale"
+    },
+    "ground=scorched,stage=0": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=1": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=10": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=11": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=12": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=13": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=14": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=15": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=2": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=3": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=4": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=5": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=6": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=7": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=8": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    },
+    "ground=scorched,stage=9": {
+      "model": "zenkai:block/hfil_geyser_scorched"
+    }
+  }
+}

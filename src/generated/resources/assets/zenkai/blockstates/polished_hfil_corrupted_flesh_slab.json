@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "zenkai:block/polished_hfil_corrupted_flesh_slab"
+    },
+    "type=double": {
+      "model": "zenkai:block/polished_hfil_corrupted_flesh"
+    },
+    "type=top": {
+      "model": "zenkai:block/polished_hfil_corrupted_flesh_slab_top"
+    }
+  }
+}

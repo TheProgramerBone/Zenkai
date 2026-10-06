@@ -1,0 +1,34 @@
+{
+  "alignment": 30,
+  "archetype": "tank",
+  "entity": "zenkai:red_ogre",
+  "moveset": {
+    "can_block": true,
+    "melee": true,
+    "physical_attacks": [
+      {
+        "type": "heavy_blow",
+        "cooldown": 120,
+        "damage_mult": 1.3,
+        "range": 3
+      },
+      {
+        "type": "dash_punch",
+        "cooldown": 100,
+        "damage_mult": 1.0,
+        "range": 5
+      }
+    ]
+  },
+  "overrides": {
+    "attributes": {
+      "strength": "+20%"
+    },
+    "body_mult": 1.2,
+    "ki_mult": 0.5
+  },
+  "power_level": 4500,
+  "rewards": {
+    "tp": "auto"
+  }
+}

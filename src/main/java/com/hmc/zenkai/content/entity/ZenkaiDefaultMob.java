@@ -26,11 +26,100 @@ import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-// Esta clase será para los enemigos neutrales
-
-public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntity, AttackTelegraph {
+/**
+ * Base de cualquier NPC de combate de Zenkai (Saibaman, Guerrero Namekiano, Sombra, ogros...) y de los
+ * NPC voladores pacíficos (ángeles). Desde 2026-10-02 la IA de combate es UNIVERSAL (petición del
+ * usuario: "si toca ajustar IA de combate se soluciona todo desde una sola pasada, lo mismo para
+ * el combate volador"): {@link #registerCombatGoals} pone en un solo sitio el orden de goals ya
+ * depurado con la Sombra (ki → físicas → cuerpo a cuerpo → guardia → deambular/vuelo), y el
+ * BLOQUEO vive aquí (antes solo en ShadowCloneEntity). Qué usa cada NPC lo dice su ficha JSON
+ * (zenkai_entities: ki_attacks, physical_attacks, melee, can_fly, can_block); la subclase solo
+ * decide a quién ataca (targetSelector) y lo propio de su papel (guardar un puesto, dar vueltas).
+ */
+public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntity, AttackTelegraph, BlockingMob {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Zenkai-CombatAI");
+
+    /** Guardia sincronizada al cliente (la anima el controlador "Block"). */
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> DATA_BLOCKING =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(ZenkaiDefaultMob.class,
+                    net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+
+    /** Reducción de daño en guardia. Los mobs no tienen la skill ki_block del jugador: número fijo
+     *  a medio camino de su curva (0.80 sin skill .. 0.50 a nivel 5). Antes vivía en la Sombra. */
+    private static final double BLOCK_DAMAGE_MULTIPLIER = 0.65;
+
+    /** Con ki Y físicas: por encima de esta distancia, ki; por debajo, físicas (ver el javadoc de
+     *  KiAttackGoal/PhysicalAttackGoal: minRange/engageRange). Sin esto, con muchos ki de cooldown
+     *  corto ganaba ki SIEMPRE aunque el objetivo estuviera pegado (visto en juego con la Sombra). */
+    private static final double KI_PHYSICAL_SWITCH_DISTANCE = 10.0;
+
+    @Override
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.@NotNull Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_BLOCKING, false);
+    }
+
+    @Override
+    public void setBlocking(boolean blocking) { this.entityData.set(DATA_BLOCKING, blocking); }
+
+    @Override
+    public boolean isBlockingNow() { return this.entityData.get(DATA_BLOCKING); }
+
+    @Override
+    public double blockDamageMultiplier() { return BLOCK_DAMAGE_MULTIPLIER; }
+
+    /** ¿Sabe ponerse en guardia? "moveset.can_block" de su ficha. */
+    public boolean canBlock() {
+        var def = EntityStatsManager.get(entityId());
+        return def != null && def.canBlock();
+    }
+
+    /**
+     * La IA de combate entera, igual para cualquier NPC — llamar desde registerGoals() y luego
+     * añadir solo lo propio (objetivos, puesto de guardia...). Prioridades:
+     * <ol start="0">
+     *   <li>Flotar en el agua.</li>
+     *   <li>Ki (si la ficha trae ki_attacks).</li>
+     *   <li>Físicas (si trae physical_attacks).</li>
+     *   <li>Cuerpo a cuerpo (si "melee" no es false).</li>
+     *   <li>Guardia (si "can_block"; sin flags, corre en paralelo).</li>
+     *   <li>(5-6 libres para la subclase.)</li>
+     *   <li>Deambular: en vuelo si "can_fly", andando si no.</li>
+     *   <li>Mirar a jugadores / alrededor.</li>
+     * </ol>
+     * Ki y físicas van POR DELANTE del cuerpo a cuerpo a propósito: con el melee delante, al
+     * recalcular su camino desalojaba a ki/físicas a mitad de la carga y nunca disparaban
+     * (encontrado con la Sombra). El melee usa followingTargetEvenIfNotSeen=false por la misma
+     * razón (con true no suelta MOVE/LOOK nunca). Si la ficha trae ki y físicas, se reparten por
+     * distancia (KI_PHYSICAL_SWITCH_DISTANCE).
+     *
+     * @param speed velocidad de persecución; las físicas van un 15 % más rápido (cierran distancia).
+     */
+    protected void registerCombatGoals(double speed) {
+        var def = EntityStatsManager.get(entityId());
+        boolean ki = def != null && def.hasKiAttacks();
+        boolean phys = def != null && def.hasPhysicalAttacks();
+        boolean split = ki && phys;
+
+        this.goalSelector.addGoal(0, new net.minecraft.world.entity.ai.goal.FloatGoal(this));
+        if (ki) addKiAttackGoalIfDefined(1, speed, split ? KI_PHYSICAL_SWITCH_DISTANCE : 0.0);
+        if (phys) addPhysicalAttackGoalIfDefined(2, speed * 1.15, split ? KI_PHYSICAL_SWITCH_DISTANCE : Double.MAX_VALUE);
+        if (def == null || def.movesetMelee()) {
+            this.goalSelector.addGoal(3, new com.hmc.zenkai.content.entity.ai.ZenkaiMeleeAttackGoal(this, speed, false));
+        }
+        if (def != null && def.canBlock()) {
+            this.goalSelector.addGoal(4, new com.hmc.zenkai.content.entity.ai.BlockHabitGoal<>(this));
+        }
+        if (def != null && def.canFly()) {
+            addFlightWanderGoalIfCanFly(7, speed);
+        } else {
+            this.goalSelector.addGoal(7, new net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal(this, speed * 0.7));
+        }
+        this.goalSelector.addGoal(8, new net.minecraft.world.entity.ai.goal.LookAtPlayerGoal(this,
+                net.minecraft.world.entity.player.Player.class, 8.0F));
+        this.goalSelector.addGoal(8, new net.minecraft.world.entity.ai.goal.RandomLookAroundGoal(this));
+    }
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -175,17 +264,16 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
                 .triggerableAnim("phys_barrage",    ZenkaiCommonAnimations.PHYS_BARRAGE)
                 .triggerableAnim("phys_kiai",       ZenkaiCommonAnimations.PHYS_KIAI));
 
-        // Bloqueo: SOLO si el mob implementa BlockingMob (Saibaman/NamekianWarrior no bloquean
-        // hoy). Predicado, no trigger: mientras isBlockingNow() sea true reproduce/mantiene
-        // zenkai.block (clip real, "hold_on_last_frame"); en cuanto deja de bloquear, STOP y
-        // vuelve a lo que toque (walk/idle). BlockHabitGoal solo toca setBlocking(), no sabe nada
-        // de animación — la desacopla por completo.
-        if (this instanceof BlockingMob bm) {
-            controllers.add(new AnimationController<>(this, "Block", 5,
-                    state -> bm.isBlockingNow()
-                            ? state.setAndContinue(ZenkaiCommonAnimations.ZENKAI_BLOCK)
-                            : PlayState.STOP));
-        }
+        // Bloqueo: en cualquier NPC (universal desde 2026-10-02). Predicado, no trigger: mientras
+        // isBlockingNow() (sincronizado) sea true reproduce/mantiene zenkai.block (clip real,
+        // "hold_on_last_frame"); en cuanto deja de bloquear, STOP. Un mob sin can_block nunca
+        // pone isBlockingNow a true, así que el controlador simplemente no hace nada. Se registra
+        // siempre (y no según la ficha) porque esto corre también en el cliente, que no tiene por
+        // qué tener la ficha JSON cargada.
+        controllers.add(new AnimationController<>(this, "Block", 5,
+                state -> isBlockingNow()
+                        ? state.setAndContinue(ZenkaiCommonAnimations.ZENKAI_BLOCK)
+                        : PlayState.STOP));
     }
 
     /** Un mob que puede volar AHORA MISMO no debería morir de caída al perder el vuelo un

@@ -57,7 +57,40 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.NAMEKIAN_DIRT.get());
         dropSelf(ModBlocks.ROCKY_BLOCK.get());
         dropSelf(ModBlocks.HFIL_SCORCHED_STONE.get());
+        dropSelf(ModBlocks.HFIL_PALE_STONE.get());
+        dropSelf(ModBlocks.HFIL_BOILING_MUD.get());
+        // Como el hielo compacto: solo con toque de seda.
+        dropWhenSilkTouch(ModBlocks.HFIL_BLOOD_ICE.get());
+        dropSelf(ModBlocks.HFIL_SULFUR_CRUST.get());
+        dropSelf(ModBlocks.HFIL_FUMAROLE.get());
+        // Menas del HFIL: los mismos drops que su mena vanilla (fortuna y toque de seda incluidos).
+        ModBlocks.HFIL_ORES.values().forEach(m -> m.forEach((type, ore) -> {
+            switch (type) {
+                case COAL -> add(ore.get(), b -> createOreDrop(b, Items.COAL));
+                case IRON -> add(ore.get(), b -> createOreDrop(b, Items.RAW_IRON));
+                case COPPER -> add(ore.get(), this::createCopperOreDrops);
+                case GOLD -> add(ore.get(), b -> createOreDrop(b, Items.RAW_GOLD));
+                case REDSTONE -> add(ore.get(), this::createRedstoneOreDrops);
+                case LAPIS -> add(ore.get(), this::createLapisOreDrops);
+                case DIAMOND -> add(ore.get(), b -> createOreDrop(b, Items.DIAMOND));
+                case KATCHIN -> add(ore.get(), b -> createOreDrop(b, ModItems.RAW_KATCHIN.get()));
+            }
+        }));
+        dropSelf(ModBlocks.HFIL_GEYSER.get());
         dropSelf(ModBlocks.HFIL_SPIKE_ROCK.get());
+        dropSelf(ModBlocks.HFIL_CORRUPTED_FLESH.get());
+        dropSelf(ModBlocks.HFIL_VOID_STONE.get());
+        dropSelf(ModBlocks.HFIL_JANEMBA_BLUE_MASS.get());
+        // Como el cristal: solo con toque de seda (romper una esfera no debe dar cientos de bloques).
+        // Copia el COLOR al componente BLOCK_STATE del ítem: sin eso la gelatina teñida volvía a ser
+        // rosa al recogerla. El reflejo (SHINE) no se copia: es cosa de la generación.
+        add(ModBlocks.HFIL_JANEMBA_BUBBLE.get(), b -> net.minecraft.world.level.storage.loot.LootTable.lootTable()
+                .withPool(net.minecraft.world.level.storage.loot.LootPool.lootPool()
+                        .when(hasSilkTouch())
+                        .setRolls(net.minecraft.world.level.storage.loot.providers.number.ConstantValue.exactly(1.0f))
+                        .add(net.minecraft.world.level.storage.loot.entries.LootItem.lootTableItem(b)
+                                .apply(net.minecraft.world.level.storage.loot.functions.CopyBlockState.copyState(b)
+                                        .copy(com.hmc.zenkai.content.block.JanembaBubbleBlock.COLOR)))));
         dropSelf(ModBlocks.HFIL_CINDER_SAND.get());
         dropSelf(ModBlocks.HFIL_CINDER_SANDSTONE.get());
         dropSelf(ModBlocks.NAMEKIAN_COBBLESTONE.get());
@@ -87,7 +120,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.NAMEKIAN_LAMP.get());
         dropSelf(ModBlocks.ENERGY_GENERATOR.get());
 
-        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+        for (var fam : ModBlocks.buildingFamilies()) {
             dropSelf(fam.block().get());
             dropSelf(fam.stairs().get());
             dropSelf(fam.wall().get());

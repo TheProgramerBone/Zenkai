@@ -3,6 +3,15 @@
     "zenkai:namekian_iron_ore",
     "zenkai:namekian_copper_ore",
     "zenkai:namekian_lapis_ore",
-    "zenkai:sacred_stone_ore"
+    "zenkai:sacred_stone_ore",
+    "zenkai:hfil_scorched_iron_ore",
+    "zenkai:hfil_scorched_copper_ore",
+    "zenkai:hfil_scorched_lapis_ore",
+    "zenkai:hfil_pale_iron_ore",
+    "zenkai:hfil_pale_copper_ore",
+    "zenkai:hfil_pale_lapis_ore",
+    "zenkai:hfil_cinder_iron_ore",
+    "zenkai:hfil_cinder_copper_ore",
+    "zenkai:hfil_cinder_lapis_ore"
   ]
 }

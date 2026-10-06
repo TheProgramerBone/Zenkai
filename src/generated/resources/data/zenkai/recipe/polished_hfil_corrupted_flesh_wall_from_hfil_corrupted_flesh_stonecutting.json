@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:hfil_corrupted_flesh"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:polished_hfil_corrupted_flesh_wall"
+  }
+}

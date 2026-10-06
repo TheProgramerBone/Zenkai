@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 
 /**
  * Charco de sangre del HFIL, ABIERTO de verdad — sustituye a {@code Feature.LAKE} (ver
- * .claude/pendiente/worldgen-pendiente.md, secciones 1.2 y 5.2, Fase 5). El motivo del
+ * .claude/docs/worldgen.md, Fase 5 del rework). El motivo del
  * cambio: {@code LakeFeature.Configuration} solo expone dos {@code BlockStateProvider} (fluido +
  * barrier) — la FORMA del hueco y la decisión de taparlo con barrier por arriba son internas de
  * {@code LakeFeature} y no configurables. En juego eso se veía como un disco maroon tapado
@@ -110,7 +110,7 @@ public class HfilBloodPoolFeature extends Feature<NoneFeatureConfiguration> {
     /**
      * Cava y rellena la cubeta — cuerpo compartido con {@code place()} de arriba, extraído para
      * que {@code BloodPondPiece} (el landmark de la Fase 6, ver
-     * .claude/pendiente/worldgen-pendiente.md sección 7/8) pueda generar el MISMO tipo de
+     * .claude/docs/worldgen.md) pueda generar el MISMO tipo de
      * charco abierto a un tamaño fijo mayor, en vez de reimplementar el algoritmo. {@code
      * chunkBox}, si no es null, filtra cada bloque colocado (uso de {@code StructurePiece},
      * cuyo {@code postProcess} puede llamarse una vez por cada chunk que solape la pieza — sin
@@ -121,18 +121,46 @@ public class HfilBloodPoolFeature extends Feature<NoneFeatureConfiguration> {
     public static boolean carve(WorldGenLevel level, RandomSource random, BlockPos origin,
                                  int radius, int maxDepth, int groundSearchRadius, float edgeErodeChance,
                                  @Nullable BoundingBox chunkBox) {
+        return carve(level, random, origin, radius, maxDepth, groundSearchRadius, edgeErodeChance, chunkBox,
+                Blocks.WATER.defaultBlockState(), ModBlocks.HFIL_SCORCHED_STONE.get().defaultBlockState());
+    }
+
+    /**
+     * La misma cubeta con OTRO relleno y OTRA orilla — la usa HfilBoilingPoolFeature (agua
+     * hirviendo azul con orilla de piedra pálida, propuesta A de las pozas de Beppu) para no
+     * duplicar el algoritmo. La versión de arriba sigue siendo el charco de sangre de siempre.
+     */
+    public static boolean carve(WorldGenLevel level, RandomSource random, BlockPos origin,
+                                 int radius, int maxDepth, int groundSearchRadius, float edgeErodeChance,
+                                 @Nullable BoundingBox chunkBox, BlockState water, BlockState bank) {
         int centerGroundY = LocalGroundProbe.findGroundY(level, origin.getX(), origin.getY(), origin.getZ(), groundSearchRadius);
         if (centerGroundY == Integer.MIN_VALUE) return false; // sin suelo real bajo el origen
 
-        BlockState water = Blocks.WATER.defaultBlockState();
-        BlockState bank = ModBlocks.HFIL_SCORCHED_STONE.get().defaultBlockState();
         int minY = level.getMinBuildHeight();
-
-        boolean placedAny = false;
+        // NIVEL ÚNICO DEL AGUA (2026-10-02, bug con captura): antes cada columna se llenaba hasta
+        // SU propio suelo, y en terreno escalonado quedaban bloques de agua sueltos un escalón por
+        // encima del resto. Ahora la lámina entera está a la altura del suelo del centro.
+        int waterTop = centerGroundY - 1;
         int innerSq = (radius - 1) * (radius - 1);
         int rSq = radius * radius;
         int bankSq = (radius + 1) * (radius + 1);
 
+        // Sondeo previo: con un desnivel mayor que MAX_STEP la poza tendría que cortar un tajo o
+        // levantar un muro; en vez de eso no se genera aquí (otra colocación saldrá en llano).
+        // Solo para features (chunkBox == null): un landmark (BloodPondPiece) se coloca siempre.
+        int[][] ground = new int[2 * radius + 3][2 * radius + 3];
+        for (int dx = -radius - 1; dx <= radius + 1; dx++) {
+            for (int dz = -radius - 1; dz <= radius + 1; dz++) {
+                int g = LocalGroundProbe.findGroundY(level, origin.getX() + dx, centerGroundY, origin.getZ() + dz, groundSearchRadius);
+                ground[dx + radius + 1][dz + radius + 1] = g;
+                if (chunkBox == null && dx * dx + dz * dz <= bankSq
+                        && (g == Integer.MIN_VALUE || Math.abs(g - centerGroundY) > MAX_STEP)) {
+                    return false;
+                }
+            }
+        }
+
+        boolean placedAny = false;
         for (int dx = -radius - 1; dx <= radius + 1; dx++) {
             for (int dz = -radius - 1; dz <= radius + 1; dz++) {
                 int distSq = dx * dx + dz * dz;
@@ -141,36 +169,58 @@ public class HfilBloodPoolFeature extends Feature<NoneFeatureConfiguration> {
                 int x = origin.getX() + dx;
                 int z = origin.getZ() + dz;
                 if (chunkBox != null && !chunkBox.isInside(new BlockPos(x, origin.getY(), z))) continue;
-                // Cada columna sondea su PROPIO suelo local en vez de asumir la Y del centro —
-                // el terreno del HFIL no es perfectamente plano en un radio de 7 bloques.
-                int groundY = LocalGroundProbe.findGroundY(level, x, centerGroundY, z, groundSearchRadius);
+                int groundY = ground[dx + radius + 1][dz + radius + 1];
                 if (groundY == Integer.MIN_VALUE) continue;
+                int groundTop = groundY - 1; // último bloque sólido de la columna
 
                 if (distSq <= rSq) {
                     // Interior del charco: erosión solo cerca del borde, para un contorno
                     // irregular en vez de un círculo perfecto (el centro nunca se erosiona,
                     // así el charco no queda con agujeros en medio).
-                    if (distSq > innerSq && random.nextFloat() < edgeErodeChance) continue;
-
+                    if (distSq > innerSq && random.nextFloat() < edgeErodeChance) {
+                        // Mordisco del borde: la columna queda como orilla. Si está por debajo
+                        // de la lámina, se sube hasta ella para que el agua no se derrame.
+                        raiseBank(level, x, z, groundTop, waterTop, bank, minY);
+                        continue;
+                    }
+                    // Columna más alta que la lámina: se recorta hasta el nivel del agua.
+                    for (int y = waterTop + 1; y <= groundTop; y++) {
+                        level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+                    }
                     double t = Math.sqrt(distSq) / radius; // 0 en el centro, 1 en el borde
                     int depth = Math.max(1, (int) Math.round(maxDepth * (1.0 - t)));
-                    for (int dy = 0; dy < depth; dy++) {
-                        int y = groundY - 1 - dy;
+                    // Hasta la profundidad de la cubeta o hasta el suelo, lo que esté más abajo
+                    // (una columna baja se llena entera, sin bolsas de aire bajo el agua).
+                    int bottom = Math.min(waterTop - depth + 1, groundTop + 1);
+                    for (int y = waterTop; y >= bottom; y--) {
                         if (y < minY) break;
                         level.setBlock(new BlockPos(x, y, z), water, Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
                     }
                     placedAny = true;
                 } else {
-                    // Anillo exterior: orilla de roca calcinada a nivel de suelo — reviste el
-                    // borde del charco, nunca tapa el agua desde arriba.
-                    if (random.nextFloat() < edgeErodeChance) continue;
-                    int y = groundY - 1;
-                    if (y < minY) continue;
-                    level.setBlock(new BlockPos(x, y, z), bank, Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+                    // Anillo exterior: orilla a la altura de la lámina — reviste el borde del
+                    // charco, nunca tapa el agua desde arriba. Donde el suelo está por debajo de
+                    // la lámina, la orilla NO se erosiona: un hueco ahí vaciaría la poza.
+                    if (groundTop >= waterTop && random.nextFloat() < edgeErodeChance) continue;
+                    if (groundTop > waterTop) continue; // terreno natural más alto: ya contiene
+                    raiseBank(level, x, z, groundTop, waterTop, bank, minY);
                 }
             }
         }
 
         return placedAny;
+    }
+
+    /** Desnivel máximo (en bloques) entre el centro y cualquier columna de la poza o su orilla. */
+    private static final int MAX_STEP = 1;
+
+    /** Orilla de la columna: del suelo hasta la lámina con el bloque de orilla (si el suelo ya
+     *  llega a la lámina, solo sustituye ese bloque, como siempre). */
+    private static void raiseBank(WorldGenLevel level, int x, int z, int groundTop, int waterTop,
+                                  BlockState bank, int minY) {
+        for (int y = Math.min(groundTop, waterTop); y <= waterTop; y++) {
+            if (y < minY) continue;
+            level.setBlock(new BlockPos(x, y, z), bank, Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+        }
     }
 }

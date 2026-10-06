@@ -7,6 +7,9 @@
     "zenkai:cut_katchin_stairs",
     "zenkai:cut_katchin_slab",
     "zenkai:cut_katchin_wall",
-    "zenkai:katchin_pillar"
+    "zenkai:katchin_pillar",
+    "zenkai:hfil_scorched_katchin_ore",
+    "zenkai:hfil_pale_katchin_ore",
+    "zenkai:hfil_cinder_katchin_ore"
   ]
 }

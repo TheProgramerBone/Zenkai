@@ -30,8 +30,8 @@ import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSeriali
  * estructura). NO extiende {@link SegmentPiece} — esta pieza necesita CAVAR terreno además de
  * colocar bloques, y {@code SegmentPiece} solo estampa un NBT tal cual. Todo a mano, mismo
  * estilo ligero que {@code HfilSpikeFeature}/{@code HfilBonePileFeature}: sin jigsaw, sin
- * asset NBT (a diferencia del plan original de la sección 7 de
- * .claude/pendiente/worldgen-pendiente.md, que proponía un NBT para el cartel/plataforma —
+ * asset NBT (a diferencia del plan original del rework del HFIL, ya retirado de
+ * .claude/pendiente/, que proponía un NBT para el cartel/plataforma —
  * innecesario aquí porque toda la geometría es simple y fija, ver esa sección para el porqué no
  * hacía falta la complejidad de un asset NBT + script de generación para esto).
  *

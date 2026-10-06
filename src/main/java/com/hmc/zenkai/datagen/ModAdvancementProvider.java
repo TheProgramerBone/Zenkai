@@ -296,8 +296,11 @@ public class ModAdvancementProvider extends AdvancementProvider {
                             .changedDimensionTo(ModDimensions.OTHERWORLD_LEVEL))
                     .save(saver, id("otherworld"), efh);
 
-            // Los 3 criterios y ninguna llamada a requirements(): el default de vanilla es AND
-            // (mismo patrón que all_wishes arriba), o sea que hacen falta LOS TRES biomas.
+            // Un criterio por bioma y ninguna llamada a requirements(): el default de vanilla es
+            // AND (mismo patrón que all_wishes arriba), o sea que hacen falta TODOS los biomas
+            // del HFIL — desde 2026-10-02 son cuatro, con el lago helado, y cinco desde 2026-10-04 con el
+            // Janemba Rift. Quien ya lo tenía
+            // cumplido lo conserva (vanilla no revoca un logro ganado al añadirle un criterio).
             // Primer uso de LocationTrigger/LocationPredicate de vanilla en el mod — no hace
             // falta ningún trigger propio de Zenkai para "el jugador está en tal bioma".
             Advancement.Builder.advancement().parent(otherworld)
@@ -306,6 +309,8 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     .addCriterion("blood_shore", inBiome(biomes, ModBiomes.HFIL_BLOOD_SHORE))
                     .addCriterion("needle_wastes", inBiome(biomes, ModBiomes.HFIL_NEEDLE_WASTES))
                     .addCriterion("cinder_dunes", inBiome(biomes, ModBiomes.HFIL_CINDER_DUNES))
+                    .addCriterion("frozen_lake", inBiome(biomes, ModBiomes.HFIL_FROZEN_LAKE))
+                    .addCriterion("janemba_rift", inBiome(biomes, ModBiomes.HFIL_JANEMBA_RIFT))
                     .save(saver, id("hfil_biomes"), efh);
         }
 

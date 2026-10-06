@@ -11,7 +11,10 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.Vec3;
+import com.hmc.zenkai.client.aura.AuraTiltController;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.Set;
 
@@ -177,6 +180,9 @@ public final class StrandComponent implements AuraComponent {
         final float ox = (float) (f.x - f.camX), oy = (float) (f.y - f.camY), oz = (float) (f.z - f.camZ);
         final boolean bloomOk = f.bloomAllowed;
         final float fp = f.fpOpacity;
+        // Las agujas son del CUERPO: siguen su inclinación de vuelo (las del suelo no salen en el
+        // aire, así que girarlas también es inofensivo). Capturada al encolar, no al reproducir.
+        final Quaternionf tilt = AuraTiltController.currentRotation(f.player.getId());
         KiVfxFrameQueue.submitAura(pose, new Vec3(ox, oy, oz), (ps, buf) -> {
             boolean bloom = KiVfxFrameQueue.bloomPass();
             if (bloom && (!bloomOk || cfg.bloom() <= 0f)) return;
@@ -185,12 +191,19 @@ public final class StrandComponent implements AuraComponent {
             Matrix4f m = ps.last().pose();
             float a = cfg.alpha() * weight * growth * fp;
             if (a <= 0.01f) return;
+            Vector3f p0 = new Vector3f(), p1 = new Vector3f();
             for (int i = 0; i < CAP + GROUND_CAP; i++) {
                 if (!live[i]) continue;
                 float l = len[i] * extent(i);
                 float r0 = retract(i);
-                float x0 = ox + bx[i] + dx[i] * l * r0, y0 = oy + by[i] + dy[i] * l * r0, z0 = oz + bz[i] + dz[i] * l * r0;
-                float x1 = ox + bx[i] + dx[i] * l, y1 = oy + by[i] + dy[i] * l, z1 = oz + bz[i] + dz[i] * l;
+                p0.set(bx[i] + dx[i] * l * r0, by[i] + dy[i] * l * r0, bz[i] + dz[i] * l * r0);
+                p1.set(bx[i] + dx[i] * l, by[i] + dy[i] * l, bz[i] + dz[i] * l);
+                if (tilt != null) {
+                    AuraTiltController.rotateAboutPivot(tilt, p0);
+                    AuraTiltController.rotateAboutPivot(tilt, p1);
+                }
+                float x0 = ox + p0.x, y0 = oy + p0.y, z0 = oz + p0.z;
+                float x1 = ox + p1.x, y1 = oy + p1.y, z1 = oz + p1.z;
                 float w = wid[i] * (1f - 0.5f * r0);
                 // Halo del tinte (ancho, base tenue) y núcleo claro (fino): dos bandas planas.
                 Ribbons.segment(vc, m, x0, y0, z0, x1, y1, z1, w * 2f, 0f, cr, cg, cb, a * 0.25f, a * 0.5f);

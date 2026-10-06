@@ -8,6 +8,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.data.tags.TagsProvider;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -28,6 +29,14 @@ public class ModItemTagProvider extends ItemTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.@NotNull Provider provider) {
+
+        // Menas del HFIL (HfilOres): mismas etiquetas de objeto que su mena vanilla (con toque de
+        // seda se recogen como bloque; recetas y mods que piden "#c:ores/iron" las aceptan).
+        ModBlocks.HFIL_ORES.values().forEach(m -> m.forEach((type, ore) -> {
+            if (type.vanillaItemTag != null) tag(type.vanillaItemTag).add(ore.asItem());
+            // Solo #c:ores/<mena>; ver la nota equivalente en ModBlockTagProvider.
+            if (type.commonItemTag != null) tag(type.commonItemTag).add(ore.asItem());
+        }));
 
         // ==========================================
         // 1. HERRAMIENTAS Y ARMADURAS
@@ -129,7 +138,23 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 ModBlocks.CUT_KATCHIN_SLAB.get().asItem()
         );
 
-        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+        // Piedras y arena del HFIL (2026-10-04): los mismos tags de objeto que sus tags de bloque
+        // (ver ModBlockTagProvider 5b), copiados de ahí para que no se desincronicen.
+        copy(Tags.Blocks.STONES, Tags.Items.STONES);
+        copy(Tags.Blocks.SANDSTONE_BLOCKS, Tags.Items.SANDSTONE_BLOCKS);
+        copy(BlockTags.SAND, ItemTags.SAND);
+        // La roca calcinada y la pálida hacen de "cobblestone" para herramientas de piedra y
+        // para los bloques que piden piedra (horno, destilador, etc.).
+        tag(ItemTags.STONE_TOOL_MATERIALS).add(
+                ModBlocks.HFIL_SCORCHED_STONE.asItem(),
+                ModBlocks.HFIL_PALE_STONE.asItem()
+        );
+        tag(ItemTags.STONE_CRAFTING_MATERIALS).add(
+                ModBlocks.HFIL_SCORCHED_STONE.asItem(),
+                ModBlocks.HFIL_PALE_STONE.asItem()
+        );
+
+        for (var fam : ModBlocks.buildingFamilies()) {
             tag(ItemTags.STAIRS).add(fam.stairs().get().asItem());
             tag(ItemTags.SLABS).add(fam.slab().get().asItem());
             tag(ItemTags.WALLS).add(fam.wall().get().asItem());

@@ -33,6 +33,38 @@
       },
       "trigger": "minecraft:location"
     },
+    "frozen_lake": {
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "biomes": "zenkai:hfil_frozen_lake"
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:location"
+    },
+    "janemba_rift": {
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "biomes": "zenkai:hfil_janemba_rift"
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:location"
+    },
     "needle_wastes": {
       "conditions": {
         "player": [
@@ -72,6 +104,12 @@
     ],
     [
       "cinder_dunes"
+    ],
+    [
+      "frozen_lake"
+    ],
+    [
+      "janemba_rift"
     ]
   ],
   "sends_telemetry_event": true

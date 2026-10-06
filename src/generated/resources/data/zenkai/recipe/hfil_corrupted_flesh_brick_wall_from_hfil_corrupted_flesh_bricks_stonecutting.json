@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:hfil_corrupted_flesh_bricks"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:hfil_corrupted_flesh_brick_wall"
+  }
+}

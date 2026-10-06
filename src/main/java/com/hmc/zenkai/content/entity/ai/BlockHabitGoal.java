@@ -30,7 +30,7 @@ import java.util.EnumSet;
  * exclusión mutua real (no bloquear a mitad de un wind-up, no empezar un wind-up mientras se
  * bloquea) se hace a mano comprobando el estado del otro lado, no con el sistema de flags.
  */
-public class BlockHabitGoal<T extends ZenkaiDefaultMob & BlockingMob> extends Goal {
+public class BlockHabitGoal<T extends ZenkaiDefaultMob> extends Goal {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Zenkai-ShadowAI");
 

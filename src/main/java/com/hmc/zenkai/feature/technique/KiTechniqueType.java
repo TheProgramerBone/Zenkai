@@ -17,7 +17,7 @@ import java.util.Locale;
  * efectos admitidos) también es dato — ver el javadoc de {@link TechniqueDef}. El enum sigue
  * siendo Java cerrado a propósito: un addon puede reutilizar/reskinnear un tipo existente
  * (técnica firma) pero no crear una identidad genuinamente nueva sin recompilar Zenkai —
- * decisión explícita, ver {@code .claude/pendiente/verificar-y-deuda.md}.
+ * decisión explícita, ver {@code .claude/pendiente/verificar-y-deuda.md} §2.
  */
 public enum KiTechniqueType {
     WAVE,       // Kamehameha: lento, fuerte

@@ -43,7 +43,8 @@ public record EntityStatDef(
         boolean movesetMelee,           // false = no persigue cuerpo a cuerpo
         String rewardTp,                // "auto" (escala por PL) o número en string
         List<EntityPhysicalAttack> physicalAttacks, // técnicas físicas que puede usar (vacío = ninguna)
-        boolean canFly                  // "moveset.can_fly" — ver ZenkaiDefaultMob (vuelo estilo Vex)
+        boolean canFly,                 // "moveset.can_fly" — ver ZenkaiDefaultMob (vuelo estilo Vex)
+        boolean canBlock                // "moveset.can_block" — ver ZenkaiDefaultMob (guardia, BlockHabitGoal)
 ) {
     /** Un override de atributo: absoluto (percent=false) o relativo en % (percent=true). */
     public record AttrOverride(boolean percent, double value) {}

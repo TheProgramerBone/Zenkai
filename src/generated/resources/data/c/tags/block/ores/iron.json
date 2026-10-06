@@ -1,5 +1,8 @@
 {
   "values": [
-    "zenkai:namekian_iron_ore"
+    "zenkai:namekian_iron_ore",
+    "zenkai:hfil_scorched_iron_ore",
+    "zenkai:hfil_pale_iron_ore",
+    "zenkai:hfil_cinder_iron_ore"
   ]
 }

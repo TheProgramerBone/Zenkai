@@ -535,10 +535,6 @@ public class ServerConfig {
             BUILDER.comment("Technique mastery gained per use (percent points, 0-100 scale)")
                     .defineInRange("mastery.technique_per_use", 0.2D, 0.0D, 100.0D);
 
-    private static final ModConfigSpec.DoubleValue MASTERY_FORM_DRAIN_RED_RAW =
-            BUILDER.comment("At 100% form mastery: fraction of form ki drain removed (0.50 = -50%)")
-                    .defineInRange("mastery.form_drain_reduction", 0.50D, 0.0D, 1.0D);
-
     private static final ModConfigSpec.DoubleValue MASTERY_TECH_DMG_RAW =
             BUILDER.comment("At 100% technique mastery: damage bonus fraction (0.25 = +25%)")
                     .defineInRange("mastery.tech_damage_bonus", 0.25D, 0.0D, 5.0D);
@@ -860,8 +856,7 @@ public class ServerConfig {
     private static volatile double FORM_MASTERY_PER_MINUTE = 0.5D;
     private static volatile boolean SSJ_BLUE_ROSE_SHARE_MASTERY = true;
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
-    private static volatile double M_FORM_DRAIN = 0.50D,
-            M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
+    private static volatile double M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
     private static volatile double KI_COST_PER_POWER = 0.70D;
     private static volatile double MELEE_STAMINA_PER_HIT = 0.10D;
     private static volatile double WEAPON_SCALE = 0.04D;
@@ -989,7 +984,6 @@ public class ServerConfig {
         FORM_MASTERY_PER_MINUTE = FORM_MASTERY_PER_MINUTE_RAW.get();
         SSJ_BLUE_ROSE_SHARE_MASTERY = SSJ_BLUE_ROSE_SHARE_MASTERY_RAW.get();
         TECH_MASTERY_PER_USE    = TECH_MASTERY_PER_USE_RAW.get();
-        M_FORM_DRAIN     = MASTERY_FORM_DRAIN_RED_RAW.get();
         M_TECH_DMG       = MASTERY_TECH_DMG_RAW.get();
         M_TECH_COST      = MASTERY_TECH_COST_RAW.get();
         M_TECH_CAST      = MASTERY_TECH_CAST_RAW.get();
@@ -1207,7 +1201,6 @@ public class ServerConfig {
     public static double formMasteryPerMinute()      { return FORM_MASTERY_PER_MINUTE; }
     public static boolean ssjBlueRoseShareMastery()  { return SSJ_BLUE_ROSE_SHARE_MASTERY; }
     public static double techMasteryPerUse()         { return TECH_MASTERY_PER_USE; }
-    public static double masteryFormDrainReduction() { return M_FORM_DRAIN; }
     public static double masteryTechDamageBonus()    { return M_TECH_DMG; }
     public static double masteryTechCostReduction()  { return M_TECH_COST; }
     public static double masteryTechCastReduction()  { return M_TECH_CAST; }

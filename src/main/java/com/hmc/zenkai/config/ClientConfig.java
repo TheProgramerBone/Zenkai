@@ -1,5 +1,6 @@
 package com.hmc.zenkai.config;
 
+import com.hmc.zenkai.client.aura.AuraClassicQuality;
 import com.hmc.zenkai.client.aura.flame.AuraEngine;
 import com.hmc.zenkai.client.overlay.HudAnchor;
 import com.hmc.zenkai.client.overlay.HudOrientation;
@@ -169,6 +170,14 @@ public final class ClientConfig {
                             + "LEGACY: the classic aura, lighter; use it if the new one costs you too many FPS",
                     AuraEngine.NEW, AuraEngine.class);
 
+    /** Solo afecta al aura CLÁSICA (AuraRenderer). FULL = comportamiento de siempre: el detalle
+     *  baja solo con la distancia. Ver AuraClassicQuality. */
+    private static final ModConfigSpec.EnumValue<AuraClassicQuality> AURA_CLASSIC_QUALITY =
+            defineEnum("aura.classic_quality", "aura_classic_quality",
+                    "Detail of the CLASSIC aura (only when aura.system = LEGACY). FULL: detail drops "
+                            + "only with distance. MEDIUM/LOW/MINIMAL: lighter even up close, for more FPS",
+                    AuraClassicQuality.FULL, AuraClassicQuality.class);
+
     /** true = comportamiento de siempre: ves tu propio cuerpo animado al cargar/disparar una
      *  técnica de ki en primera persona. false = manos vanilla en 1ª persona (los demás te siguen
      *  viendo animado). Ver ZenkaiPalAnimations.applyKiFirstPersonMode. */
@@ -269,6 +278,7 @@ public final class ClientConfig {
     public static boolean kiFirstPersonAnimations() { return KI_FP_ANIMATIONS.get(); }
     public static boolean auraBloomEnabled() { return AURA_BLOOM_ENABLED.get(); }
     public static AuraEngine auraEngine() { return AURA_SYSTEM.get(); }
+    public static AuraClassicQuality auraClassicQuality() { return AURA_CLASSIC_QUALITY.get(); }
     public static float hudBarsScaleFrac() { return HUD_BARS_SCALE.get() / 100f; }
 
     public static HudAnchor hudAnchor() { return HUD_ANCHOR.get(); }

@@ -141,6 +141,26 @@ public final class AuraTiltController {
         pose.translate(0.0, -BODY_PIVOT_Y, 0.0);
     }
 
+    /**
+     * La rotación de vuelo de este frame (la misma de {@link #applyCurrent}) como cuaternión, o
+     * null si el aura está vertical. Para componentes que calculan sus puntos a mano relativos a
+     * los pies en vez de dibujar con el PoseStack (agujas, rayos de cáscara): sin esto quedaban
+     * verticales con el jugador tumbado en vuelo (bug reportado con captura, 2026-10-02).
+     */
+    public static Quaternionf currentRotation(int playerId) {
+        Vector3f axis = TILT_AXIS.get(playerId);
+        if (axis == null || axis.y > 0.9999f) return null;
+        return new Quaternionf().rotationTo(0f, 1f, 0f, axis.x, axis.y, axis.z);
+    }
+
+    /** Gira un punto relativo a los pies alrededor del pivote del cuerpo (en el sitio), igual que
+     *  {@link #applyCurrent} gira el PoseStack del cuerpo del aura. */
+    public static void rotateAboutPivot(Quaternionf q, Vector3f v) {
+        v.y -= (float) BODY_PIVOT_Y;
+        q.transform(v);
+        v.y += (float) BODY_PIVOT_Y;
+    }
+
     /** Pivote del hueso `body` en PAL: 12 px = 0.75 bloques. */
     private static final double BODY_PIVOT_Y = 0.75;
 }

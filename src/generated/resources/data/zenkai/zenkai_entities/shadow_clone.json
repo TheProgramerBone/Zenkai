@@ -3,6 +3,7 @@
   "archetype": "balanced",
   "entity": "zenkai:shadow_clone",
   "moveset": {
+    "can_block": true,
     "can_fly": true,
     "ki_attacks": [
       {

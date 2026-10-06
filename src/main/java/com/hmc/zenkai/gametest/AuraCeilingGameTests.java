@@ -8,7 +8,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
- * Candidato #4 de .claude/pendiente/tests-automatizados.md: una fórmula con ServerConfig detrás
+ * Candidato #4 de la lista original de tests automatizados (documento ya retirado): una fórmula con ServerConfig detrás
  * y un comentario largo explicando por qué el número es el que es. AuraCeiling deriva el techo
  * de la escala de presencia recorriendo el registro entero de formas/razas/estilos a partir de
  * ServerConfig.auraReferenceTp() (ver el javadoc de la clase) — es justo el tipo de cálculo que

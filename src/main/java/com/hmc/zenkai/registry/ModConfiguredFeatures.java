@@ -79,12 +79,50 @@ public class ModConfiguredFeatures {
      *  blood_shore, más raro en needle_wastes/cinder_dunes) vive en ModPlacedFeatures. */
     public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_BOULDER_KEY = registerKey("hfil_ore_boulder");
 
+    /** Menas propias del HFIL (HfilOres): las mismas configuraciones que la vanilla (tamaño y
+     *  descarte al aire), cada una con un objetivo por piedra del HFIL. Sustituyen a
+     *  BiomeDefaultFeatures.addDefaultOres en ModBiomeGen.hfilBase. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_COAL           = registerKey("hfil_ore_coal");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_COAL_BURIED    = registerKey("hfil_ore_coal_buried");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_IRON           = registerKey("hfil_ore_iron");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_IRON_SMALL     = registerKey("hfil_ore_iron_small");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_GOLD_BURIED    = registerKey("hfil_ore_gold_buried");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_REDSTONE       = registerKey("hfil_ore_redstone");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_DIAMOND_SMALL  = registerKey("hfil_ore_diamond_small");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_DIAMOND_MEDIUM = registerKey("hfil_ore_diamond_medium");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_DIAMOND_LARGE  = registerKey("hfil_ore_diamond_large");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_DIAMOND_BURIED = registerKey("hfil_ore_diamond_buried");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_LAPIS          = registerKey("hfil_ore_lapis");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_LAPIS_BURIED   = registerKey("hfil_ore_lapis_buried");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ORE_COPPER_SMALL   = registerKey("hfil_ore_copper_small");
+
+    /** Mojones y pozas de Beppu (propuestas C y A). Ver sus features en worldgen/. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_CAIRNS_KEY = registerKey("hfil_cairns");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_BOILING_POOL_KEY = registerKey("hfil_boiling_pool");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_MUD_POT_KEY = registerKey("hfil_mud_pot");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_GEYSER_KEY = registerKey("hfil_geyser");
+    /** Propuestas E, F y G. Ver HfilSulfurFieldFeature / HfilGasCraterFeature / HfilOniCauldronFeature. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_SULFUR_FIELD_KEY = registerKey("hfil_sulfur_field");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_GAS_CRATER_KEY = registerKey("hfil_gas_crater");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_ONI_CAULDRON_KEY = registerKey("hfil_oni_cauldron");    /** Lago de sangre congelada (propuesta D). Ver HfilFrozenLakeFeature. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_FROZEN_LAKE_KEY = registerKey("hfil_frozen_lake");
+    /** Janemba Rift: el paisaje de la referencia de Fusion Reborn, por escalas (ver sus Feature). */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> JANEMBA_MOUND_KEY = registerKey("janemba_mound");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> JANEMBA_SPIRE_KEY = registerKey("janemba_spire");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> JANEMBA_RIDGE_KEY = registerKey("janemba_ridge");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> JANEMBA_RIB_KEY = registerKey("janemba_rib");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> JANEMBA_ORB_KEY = registerKey("janemba_orb");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> JANEMBA_DOME_KEY = registerKey("janemba_dome");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> JANEMBA_NUB_KEY = registerKey("janemba_nub");
+    /** Terrazas de Pamukkale (propuesta B). Ver HfilTerraceFeature. */
+    public static final ResourceKey<ConfiguredFeature<?, ?>> HFIL_TERRACES_KEY = registerKey("hfil_terraces");
+
     /** Charco de "sangre" (agua vainilla — el tinte lo pone WATER_COLOR del bioma, ver
      *  ModBiomeGen.hfilEffects). Compartido por los 3 biomas HFIL, en el mismo paso LAKES que
      *  ya usan los lagos de lava de BiomeDefaultFeatures.addDefaultCarversAndLakes — al ser dos
      *  features independientes en el mismo paso, se intercalan solas por el terreno sin
      *  necesitar lógica propia que alterne entre una y otra. Fase 5 del rework (ver
-     *  .claude/pendiente/worldgen-pendiente.md): usa HfilBloodPoolFeature en vez de
+     *  .claude/docs/worldgen.md): usa HfilBloodPoolFeature en vez de
      *  Feature.LAKE — LakeFeature.Configuration solo expone fluido+barrier, no la forma del
      *  hueco, y en juego se veía como un disco tapado en vez de un charco abierto. Ver
      *  HfilBloodPoolFeature para el detalle. */
@@ -144,17 +182,17 @@ public class ModConfiguredFeatures {
         // ver ModBlocks) — no hay deepslate que reemplazar, así que DEEPSLATE_KATCHIN_ORE
         // es exclusivo del overworld. Veta de 9 para igualar al hierro: vainilla reparte
         // 10x9 + 10x4 = 130 en la franja profunda y aquí son 15 tiradas x 9 = 135.
+        // Desde 2026-10-02 con un objetivo POR PIEDRA del HFIL (variantes de HfilOres), no el
+        // katchin_ore de fondo gris: misma regla que el resto de menas del HFIL.
         register(context, KATCHIN_ORE_OW_KEY, Feature.ORE, new OreConfiguration(
-                List.of(OreConfiguration.target(stoneReplaceables,
-                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 9, 0.0F));
+                hfilTargets(HfilOres.Type.KATCHIN), 9, 0.0F));
 
         // hfil_blood_shore: veta mayor, se SUMA a KATCHIN_ORE_OW_KEY (no la sustituye) — mismo
         // patrón que KATCHIN_ORE_EXPOSED_KEY con la genérica del overworld. Refuerza a propósito
         // la peculiaridad "se ve mineral en la costa de sangre" (que ya salía sola de la
         // surface_rule, floor=HFIL_SCORCHED_STONE sin capa de tierra encima en este bioma).
         register(context, KATCHIN_ORE_OW_EXPOSED_KEY, Feature.ORE, new OreConfiguration(
-                List.of(OreConfiguration.target(stoneReplaceables,
-                        ModBlocks.KATCHIN_ORE.get().defaultBlockState())), 12, 0.0F));
+                hfilTargets(HfilOres.Type.KATCHIN), 12, 0.0F));
 
         // Islas flotantes: mismo objetivo que HFIL pero NO su tamaño, y por eso es una
         // configured feature aparte. En una plataforma de pocos bloques de grosor una veta de
@@ -180,7 +218,46 @@ public class ModConfiguredFeatures {
                 ModFeatures.HFIL_BONE_PILE.get(), NoneFeatureConfiguration.INSTANCE);
         register(context, HFIL_ORE_BOULDER_KEY,
                 ModFeatures.HFIL_ORE_BOULDER.get(), NoneFeatureConfiguration.INSTANCE);
+        // Menas del HFIL: tamaño y descarte calcados de OreFeatures vanilla.
+        hfilOre(context, HFIL_ORE_COAL,           HfilOres.Type.COAL,     17, 0.0F);
+        hfilOre(context, HFIL_ORE_COAL_BURIED,    HfilOres.Type.COAL,     17, 0.5F);
+        hfilOre(context, HFIL_ORE_IRON,           HfilOres.Type.IRON,      9, 0.0F);
+        hfilOre(context, HFIL_ORE_IRON_SMALL,     HfilOres.Type.IRON,      4, 0.0F);
+        hfilOre(context, HFIL_ORE_GOLD_BURIED,    HfilOres.Type.GOLD,      9, 0.5F);
+        hfilOre(context, HFIL_ORE_REDSTONE,       HfilOres.Type.REDSTONE,  8, 0.0F);
+        hfilOre(context, HFIL_ORE_DIAMOND_SMALL,  HfilOres.Type.DIAMOND,   4, 0.5F);
+        hfilOre(context, HFIL_ORE_DIAMOND_MEDIUM, HfilOres.Type.DIAMOND,   8, 0.5F);
+        hfilOre(context, HFIL_ORE_DIAMOND_LARGE,  HfilOres.Type.DIAMOND,  12, 0.7F);
+        hfilOre(context, HFIL_ORE_DIAMOND_BURIED, HfilOres.Type.DIAMOND,   8, 1.0F);
+        hfilOre(context, HFIL_ORE_LAPIS,          HfilOres.Type.LAPIS,     7, 0.0F);
+        hfilOre(context, HFIL_ORE_LAPIS_BURIED,   HfilOres.Type.LAPIS,     7, 1.0F);
+        hfilOre(context, HFIL_ORE_COPPER_SMALL,   HfilOres.Type.COPPER,   10, 0.0F);
 
+        register(context, HFIL_CAIRNS_KEY,
+                ModFeatures.HFIL_CAIRNS.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_BOILING_POOL_KEY,
+                ModFeatures.HFIL_BOILING_POOL.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_MUD_POT_KEY,
+                ModFeatures.HFIL_MUD_POT.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_GEYSER_KEY,
+                ModFeatures.HFIL_GEYSER.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_TERRACES_KEY,
+                ModFeatures.HFIL_TERRACES.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_FROZEN_LAKE_KEY,
+                ModFeatures.HFIL_FROZEN_LAKE.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, JANEMBA_MOUND_KEY, ModFeatures.JANEMBA_MOUND.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, JANEMBA_SPIRE_KEY, ModFeatures.JANEMBA_SPIRE.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, JANEMBA_RIDGE_KEY, ModFeatures.JANEMBA_RIDGE.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, JANEMBA_RIB_KEY, ModFeatures.JANEMBA_RIB.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, JANEMBA_ORB_KEY, ModFeatures.JANEMBA_ORB.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, JANEMBA_DOME_KEY, ModFeatures.JANEMBA_DOME.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, JANEMBA_NUB_KEY, ModFeatures.JANEMBA_NUB.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_SULFUR_FIELD_KEY,
+                ModFeatures.HFIL_SULFUR_FIELD.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_GAS_CRATER_KEY,
+                ModFeatures.HFIL_GAS_CRATER.get(), NoneFeatureConfiguration.INSTANCE);
+        register(context, HFIL_ONI_CAULDRON_KEY,
+                ModFeatures.HFIL_ONI_CAULDRON.get(), NoneFeatureConfiguration.INSTANCE);
         // Ya NO es Feature.LAKE (ver comentario de la key arriba) — HfilBloodPoolFeature cava y
         // rellena a mano, sin capa de barrier por encima del agua, para que el charco quede
         // siempre abierto en vez de tapado.
@@ -260,6 +337,25 @@ public class ModConfiguredFeatures {
     }
 
     /** size = bloques por veta, discard = probabilidad de descartar la veta si está expuesta al aire. */
+    /** Una veta del HFIL: un objetivo por piedra (calcinada, pálida, ceniza), cada una con SU
+     *  variante de la mena — la veta que cruza dos piedras cambia de fondo, no de mineral. */
+    private static void hfilOre(BootstrapContext<ConfiguredFeature<?, ?>> ctx,
+                                ResourceKey<ConfiguredFeature<?, ?>> key, HfilOres.Type type,
+                                int size, float discardOnAir) {
+        register(ctx, key, Feature.ORE, new OreConfiguration(hfilTargets(type), size, discardOnAir));
+    }
+
+    /** Un objetivo por piedra del HFIL, cada uno con su variante de la mena. */
+    private static List<OreConfiguration.TargetBlockState> hfilTargets(HfilOres.Type type) {
+        List<OreConfiguration.TargetBlockState> targets = new java.util.ArrayList<>();
+        for (HfilOres.Stone stone : HfilOres.Stone.values()) {
+            targets.add(OreConfiguration.target(
+                    new net.minecraft.world.level.levelgen.structure.templatesystem.BlockMatchTest(stone.host.get()),
+                    HfilOres.get(stone, type).get().defaultBlockState()));
+        }
+        return targets;
+    }
+
     private static void namekOre(BootstrapContext<ConfiguredFeature<?, ?>> ctx,
                                  ResourceKey<ConfiguredFeature<?, ?>> key,
                                  RuleTest target, DeferredBlock<Block> ore,

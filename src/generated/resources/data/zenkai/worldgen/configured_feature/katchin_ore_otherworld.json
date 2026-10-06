@@ -6,11 +6,29 @@
     "targets": [
       {
         "state": {
-          "Name": "zenkai:katchin_ore"
+          "Name": "zenkai:hfil_scorched_katchin_ore"
         },
         "target": {
-          "predicate_type": "minecraft:tag_match",
-          "tag": "minecraft:stone_ore_replaceables"
+          "block": "zenkai:hfil_scorched_stone",
+          "predicate_type": "minecraft:block_match"
+        }
+      },
+      {
+        "state": {
+          "Name": "zenkai:hfil_pale_katchin_ore"
+        },
+        "target": {
+          "block": "zenkai:hfil_pale_stone",
+          "predicate_type": "minecraft:block_match"
+        }
+      },
+      {
+        "state": {
+          "Name": "zenkai:hfil_cinder_katchin_ore"
+        },
+        "target": {
+          "block": "zenkai:hfil_cinder_sandstone",
+          "predicate_type": "minecraft:block_match"
         }
       }
     ]

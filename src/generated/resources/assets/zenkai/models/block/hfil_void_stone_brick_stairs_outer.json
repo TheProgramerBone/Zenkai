@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "zenkai:block/hfil_void_stone_bricks",
+    "side": "zenkai:block/hfil_void_stone_bricks",
+    "top": "zenkai:block/hfil_void_stone_bricks"
+  }
+}

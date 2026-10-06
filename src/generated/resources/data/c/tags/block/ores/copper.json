@@ -1,5 +1,8 @@
 {
   "values": [
-    "zenkai:namekian_copper_ore"
+    "zenkai:namekian_copper_ore",
+    "zenkai:hfil_scorched_copper_ore",
+    "zenkai:hfil_pale_copper_ore",
+    "zenkai:hfil_cinder_copper_ore"
   ]
 }

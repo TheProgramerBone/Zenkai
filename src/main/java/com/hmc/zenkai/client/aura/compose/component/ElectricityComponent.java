@@ -12,7 +12,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import com.hmc.zenkai.client.aura.AuraTiltController;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.Locale;
 import java.util.Set;
@@ -182,6 +185,26 @@ public final class ElectricityComponent implements AuraComponent {
                 float h1 = Mth.clamp(h0 + (rnd() - 0.3f) * len, 0.1f, f.shellTop());
                 e[0] = Mth.cos(a0) * r; e[1] = h0; e[2] = Mth.sin(a0) * r;
                 e[3] = Mth.cos(a1) * r; e[4] = h1; e[5] = Mth.sin(a1) * r;
+            }
+        }
+        // La cáscara se inclina con el vuelo (el cuerpo del aura gira con AuraTiltController), pero
+        // estos puntos se calculan con la cáscara VERTICAL: sin girarlos, los rayos de cáscara
+        // quedaban de pie con el jugador tumbado (bug reportado con captura, 2026-10-02). BODY no
+        // se gira: sus extremos salen de la pose real del cuerpo (AuraAnchor), ya inclinada.
+        Quaternionf tilt = AuraTiltController.currentRotation(f.player.getId());
+        if (tilt != null && a != Attach.BODY) {
+            Vector3f v = new Vector3f();
+            if (a == Attach.BODY_TO_SHELL) {
+                // El inicio está en el cuerpo real; solo se gira la dirección hacia la cáscara.
+                v.set(e[3] - e[0], e[4] - e[1], e[5] - e[2]);
+                tilt.transform(v);
+                e[3] = e[0] + v.x; e[4] = e[1] + v.y; e[5] = e[2] + v.z;
+            } else {
+                for (int o = 0; o <= 3; o += 3) {
+                    v.set(e[o], e[o + 1], e[o + 2]);
+                    AuraTiltController.rotateAboutPivot(tilt, v);
+                    e[o] = v.x; e[o + 1] = v.y; e[o + 2] = v.z;
+                }
             }
         }
         age[i] = 0f;

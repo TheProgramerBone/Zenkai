@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "zenkai:block/hfil_sulfur_crust",
+    "side": "zenkai:block/hfil_sulfur_crust",
+    "top": "zenkai:block/hfil_fumarole_top"
+  }
+}

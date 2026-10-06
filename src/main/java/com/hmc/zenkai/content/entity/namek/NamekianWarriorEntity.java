@@ -6,7 +6,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.TargetGoal;
 import net.minecraft.world.entity.player.Player;
@@ -26,13 +25,12 @@ public class NamekianWarriorEntity extends ZenkaiDefaultMob {
 
     @Override
     protected void registerGoals() {
+        // IA de combate universal (ZenkaiDefaultMob.registerCombatGoals). Ojo: su ficha
+        // (namekian_warrior.json) traía ki_attacks desde siempre, pero este registerGoals solo
+        // ponía melee vainilla, así que nunca lanzaba ki. Ahora sí lo usa.
+        registerCombatGoals(1.0D);
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.goalSelector.addGoal(1, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1, true));
         this.targetSelector.addGoal(2, new DefendNamekians(this));
-        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D));
-        this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
     }
 
     public static class DefendNamekians extends TargetGoal {

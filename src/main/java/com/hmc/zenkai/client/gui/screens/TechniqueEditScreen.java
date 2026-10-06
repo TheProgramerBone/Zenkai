@@ -89,7 +89,8 @@ public class TechniqueEditScreen extends Screen {
     // 150→160 y 214→224) para dejarle sitio a los dos PlayIconButton sin pisar la caja de
     // animación del jugador ni el candado — el hueco vacío que había antes entre la fila de
     // animación y la caja de preview (24px sin usar) es justo lo que se gastó aquí.
-    private static final int PLAY_ROW_H = 15; // 12px de icono + 3px de aire hasta la fila siguiente
+    private static final int PLAY_SIZE = 12;
+    private static final int PLAY_ROW_H = PLAY_SIZE + 3; // icono + 3px de aire hasta la fila siguiente
     private static final int Y_PREVIEW = 160; // caja de animación (STYLE)
     private static final int PREVIEW_H = 58;
     private static final int Y_UNLOCK = 224;
@@ -157,11 +158,17 @@ public class TechniqueEditScreen extends Screen {
         return mc.player == null ? null : mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
     }
 
-    /** Lista de sonidos con un hueco null al principio: "sin sonido" es una opción válida. */
+    /**
+     * Sonidos elegibles. "Ninguno" YA NO es una opción (2026-10-02, petición del usuario): una
+     * técnica muda no tenía sentido de juego y la fila se leía como un hueco sin rellenar. Una
+     * técnica guardada antes con null cae en el primero de la lista (indexOf → 0) y se guarda
+     * con él la próxima vez. El null solo sobrevive como red de seguridad si no hubiera ningún
+     * sonido registrado con el prefijo, para que el ciclo (floorMod) no divida entre cero.
+     */
     private static List<ResourceLocation> soundList(boolean charge) {
-        List<ResourceLocation> out = new ArrayList<>();
-        out.add(null);
-        out.addAll(charge ? TechniqueAssets.chargeSounds() : TechniqueAssets.releaseSounds());
+        List<ResourceLocation> out = new ArrayList<>(
+                charge ? TechniqueAssets.chargeSounds() : TechniqueAssets.releaseSounds());
+        if (out.isEmpty()) out.add(null);
         return out;
     }
 
@@ -532,9 +539,14 @@ public class TechniqueEditScreen extends Screen {
         return tab == t ? Component.literal("[ ").append(c).append(" ]") : c;
     }
 
+    /** Nombre legible del sonido ("screen.zenkai.technique.sound.<path>" en el lang). Un sonido
+     *  nuevo descubierto por prefijo (TechniqueAssets) sin su línea de lang sigue apareciendo,
+     *  con el path en crudo, en vez de enseñar la clave sin traducir. */
     private Component soundLabel(ResourceLocation id) {
-        return id == null
-                ? Component.translatable("screen.zenkai.technique.sound.none")
+        if (id == null) return Component.translatable("screen.zenkai.technique.sound.none");
+        String key = "screen.zenkai.technique.sound." + id.getPath();
+        return net.minecraft.client.resources.language.I18n.exists(key)
+                ? Component.translatable(key)
                 : Component.literal(id.getPath());
     }
 
@@ -573,8 +585,11 @@ public class TechniqueEditScreen extends Screen {
      * activa que no hace nada al pulsarla es peor que una apagada que explica por qué.
      */
     private void playRow(int x, int y, int w, ResourceLocation soundId) {
+        // Tamaño EXPLÍCITO: el constructor corto usa PlayIconButton.SIZE (20), que creció para
+        // los botones Start/Back de Training. Aquí el hueco es de PLAY_SIZE + 3 px de aire
+        // (PLAY_ROW_H), y a 20 px el badge invadía la fila de texto siguiente.
         PlayIconButton play = new PlayIconButton(
-                x + (w - PlayIconButton.SIZE) / 2, y, () -> previewSound(soundId));
+                x + (w - PLAY_SIZE) / 2, y, PLAY_SIZE, () -> previewSound(soundId));
         play.active = soundId != null;
         play.setTooltip(Tooltip.create(Component.translatable(soundId != null
                 ? "screen.zenkai.technique.sound_preview"

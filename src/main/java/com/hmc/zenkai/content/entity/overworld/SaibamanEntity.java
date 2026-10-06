@@ -5,7 +5,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
@@ -21,17 +20,10 @@ public class SaibamanEntity extends ZenkaiDefaultMob {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new FloatGoal(this));
-
-        // Prioridad 1: Ataque cuerpo a cuerpo (Máxima preferencia de combate)
-        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2D, true));
-
-        // Prioridad 2 (o 3): Ataque a distancia como alternativa
-        addKiAttackGoalIfDefined(2, 1);
-
-        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0D));
-        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        // IA de combate universal (ZenkaiDefaultMob.registerCombatGoals). Antes el cuerpo a cuerpo
+        // iba por delante del ki (prioridad 1 contra 2): el mismo orden que en la Sombra hacía
+        // que el melee cortara la carga de ki a medias y no llegara a disparar.
+        registerCombatGoals(1.2D);
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this, SaibamanEntity.class).setAlertOthers());
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));

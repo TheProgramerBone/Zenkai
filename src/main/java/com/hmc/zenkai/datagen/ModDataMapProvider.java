@@ -48,6 +48,11 @@ public class ModDataMapProvider extends DataMapProvider {
         credit(ModBlocks.NAMEK_DRAGON_BALL_7.get(), "Kirbro", "Texture");
         credit(ModItems.SHENLONG_SPAWN_EGG, "Kirbro", "Entity Model");
         credit(ModItems.ISAAC_SPAWN_EGG, "Kirbro", "Entity Model");
+        // Skins/texturas de entidad de gnocchisskins (2026-10-02, petición del usuario: el
+        // Saibaman aparecía como suyo por defecto; los ogros son skins de gnocchisskins).
+        credit(ModItems.SAIBAMAN_SPAWN_EGG, "gnocchisskins", "Entity Texture");
+        credit(ModItems.RED_OGRE_SPAWN_EGG, "gnocchisskins", "Entity Texture");
+        credit(ModItems.BLUE_OGRE_SPAWN_EGG, "gnocchisskins", "Entity Texture");
         credit(ModBlocks.NAMEKIAN_GRASS_BLOCK,"IxWolxz","Texture");
         credit(ModItems.SCOUTER,"IxWolxz","Texture");
     }

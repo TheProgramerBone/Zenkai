@@ -1,0 +1,93 @@
+{
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "downfall": 0.0,
+  "effects": {
+    "fog_color": 9213128,
+    "mood_sound": {
+      "block_search_extent": 8,
+      "offset": 2.0,
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:snowflake"
+      },
+      "probability": 0.012
+    },
+    "sky_color": 2765414,
+    "water_color": 9044739,
+    "water_fog_color": 4849921
+  },
+  "features": [
+    [],
+    [
+      "zenkai:hfil_frozen_lake"
+    ],
+    [],
+    [],
+    [
+      "zenkai:hfil_ice_spike"
+    ],
+    [],
+    [
+      "zenkai:hfil_ore_coal_upper",
+      "zenkai:hfil_ore_coal_lower",
+      "zenkai:hfil_ore_iron_upper",
+      "zenkai:hfil_ore_iron_middle",
+      "zenkai:hfil_ore_iron_small",
+      "zenkai:hfil_ore_gold",
+      "zenkai:hfil_ore_gold_lower",
+      "zenkai:hfil_ore_redstone",
+      "zenkai:hfil_ore_redstone_lower",
+      "zenkai:hfil_ore_diamond",
+      "zenkai:hfil_ore_diamond_medium",
+      "zenkai:hfil_ore_diamond_large",
+      "zenkai:hfil_ore_diamond_buried",
+      "zenkai:hfil_ore_lapis",
+      "zenkai:hfil_ore_lapis_buried",
+      "zenkai:hfil_ore_copper",
+      "zenkai:katchin_ore_hfil"
+    ],
+    [],
+    [
+      "minecraft:spring_water",
+      "minecraft:spring_lava"
+    ],
+    [
+      "zenkai:hfil_bone_pile"
+    ]
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "zenkai:red_ogre",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 10
+      },
+      {
+        "type": "zenkai:blue_ogre",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 10
+      }
+    ],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": -0.7
+}

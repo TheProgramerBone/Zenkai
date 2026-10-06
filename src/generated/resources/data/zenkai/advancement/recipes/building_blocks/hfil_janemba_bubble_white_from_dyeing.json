@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_hfil_janemba_bubble": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:hfil_janemba_bubble"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:hfil_janemba_bubble_white_from_dyeing"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_hfil_janemba_bubble"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:hfil_janemba_bubble_white_from_dyeing"
+    ]
+  }
+}

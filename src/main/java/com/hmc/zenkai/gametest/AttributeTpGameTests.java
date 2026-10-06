@@ -13,7 +13,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Candidato #2 de .claude/pendiente/tests-automatizados.md: subir/reembolsar un atributo con
+ * Candidato #2 de la lista original de tests automatizados (documento ya retirado): subir/reembolsar un atributo con
  * SpendTpPacket + RefundTpPacket, mismo patrón que SkillPurchaseGameTests pero para TP de
  * atributos en vez de TP de skill.
  * El coste esperado se calcula con PlayerStatsAttachment#previewTpCost — la MISMA fórmula que

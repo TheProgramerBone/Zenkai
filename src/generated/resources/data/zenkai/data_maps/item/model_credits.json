@@ -16,6 +16,10 @@
       "author": "Kirbro",
       "detail": "All Arcosian Model and Texture"
     },
+    "zenkai:blue_ogre_spawn_egg": {
+      "author": "gnocchisskins",
+      "detail": "Entity Texture"
+    },
     "zenkai:dragon_ball_1": {
       "author": "Kirbro",
       "detail": "Texture"
@@ -79,6 +83,14 @@
     "zenkai:namekian_grass_block": {
       "author": "IxWolxz",
       "detail": "Texture"
+    },
+    "zenkai:red_ogre_spawn_egg": {
+      "author": "gnocchisskins",
+      "detail": "Entity Texture"
+    },
+    "zenkai:saibaman_spawn_egg": {
+      "author": "gnocchisskins",
+      "detail": "Entity Texture"
     },
     "zenkai:scouter": {
       "author": "IxWolxz",

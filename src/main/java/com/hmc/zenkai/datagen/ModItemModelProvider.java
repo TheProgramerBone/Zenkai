@@ -37,6 +37,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.NAMEKIAN_HERB_SEEDS.get());
         basicItem(ModItems.HEALING_WATER_BOTTLE.get());
         basicItem(ModItems.HEALING_WATER_BUCKET.get());
+        basicItem(ModItems.HFIL_BOILING_WATER_BUCKET.get());
         basicItem(ModItems.RAW_KATCHIN.get());
         basicItem(ModItems.DIRTY_RAW_KATCHIN.get());
         basicItem(ModItems.KATCHIN_INGOT.get());
@@ -64,6 +65,9 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent(ModItems.WARRIOR_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.YEMMA_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.SAIBAMAN_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
+        withExistingParent(ModItems.RED_OGRE_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
+        withExistingParent(ModItems.BLUE_OGRE_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
+        withExistingParent(ModItems.ANGEL_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.SHENLONG_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.ISAAC_SPAWN_EGG.getId().getPath(),mcLoc("item/template_spawn_egg"));
 
@@ -91,11 +95,16 @@ public class ModItemModelProvider extends ItemModelProvider {
                 .texture("wall", modLoc("block/polished_sacred_stone"));
         withExistingParent("sacred_stone_brick_wall", mcLoc("block/wall_inventory"))
                 .texture("wall", modLoc("block/sacred_stone_bricks"));
-        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
-            withExistingParent(fam.name() + "_stairs", modLoc("block/" + fam.name() + "_stairs"));
-            withExistingParent(fam.name() + "_slab",   modLoc("block/" + fam.name() + "_slab"));
+        for (var fam : ModBlocks.buildingFamilies()) {
+            // Ids reales de cada pieza: en los ladrillos no son <familia>_stairs sino
+            // <..>_brick_stairs (singular, como en vanilla).
+            String stairs = fam.stairs().getId().getPath();
+            String slab = fam.slab().getId().getPath();
+            String wall = fam.wall().getId().getPath();
+            withExistingParent(stairs, modLoc("block/" + stairs));
+            withExistingParent(slab,   modLoc("block/" + slab));
             // El muro no tiene modelo de inventario propio: se monta con la textura base.
-            withExistingParent(fam.name() + "_wall", mcLoc("block/wall_inventory"))
+            withExistingParent(wall, mcLoc("block/wall_inventory"))
                     .texture("wall", modLoc("block/" + fam.name()));
         }
         registerRaceSkinModels();

@@ -14,22 +14,17 @@ import net.minecraft.world.entity.player.Player;
  * Efectos de la maestría (curvas LINEALES; el "at 100%" viene de StatsConfig):
  *  - Forma:   el bonus de stats y el drenaje interpolan POR FORMA entre sus valores "untrained" y
  *    "mastered" del datapack (FormDef.statPercent/kiDrainPerTick, vía PlayerFormAttachment).
- *    formDrainFactor (config mastery.form_drain_reduction) NO lo llama nadie: el drenaje real ya
- *    sale de FormDef.effectiveKiDrainPerTick. Ultra Instinct/Ultra Ego suman además efectos
- *    propios de maestría (esquive, calor, perforación) en OverlayMetersSystem.
+ *    El drenaje real sale de FormDef.effectiveKiDrainPerTick; por eso se BORRARON (2026-10-02)
+ *    formDrainFactor y su config mastery.form_drain_reduction, que no leía nadie: tener dos
+ *    sitios que "reducen el drenaje por maestría" invitaba a conectar el segundo y aplicar la
+ *    reducción dos veces. Ultra Instinct/Ultra Ego suman además efectos propios de maestría
+ *    (esquive, calor, perforación) en OverlayMetersSystem.
  *  - Técnica: daño  x (1 + dmgBonus  * m/100)  ·  costo   x (1 - costRed  * m/100)
  *             cast  x (1 - castRed   * m/100)  (solo ki: reduce los ticks de carga requeridos)
  * Cada factor devuelve 1.0 en base/maestría 0, así que aplicarlos siempre es seguro.
  */
 public final class MasteryEffects {
     private MasteryEffects() {}
-
-    /** Multiplicador del drenaje de ki de la forma actual (1.0 sin maestría). */
-    public static double formDrainFactor(Player p) {
-        PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
-        double m = form.getFormMastery(form.getFormId()) / 100.0;
-        return Math.max(0.0, 1.0 - ServerConfig.masteryFormDrainReduction() * m);
-    }
 
     /** ¿Lleva Beast puesta Y está forzando (powerPercent > 100)? Lo consulta también el cliente
      *  (powerPercent y formId ya viajan sincronizados) para la animación idle agresiva. */

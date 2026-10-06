@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  * "hfil_*", el BiomeFilter que corre justo después descarta la colocación entera — el suelo
  * bajo esa isla se queda sin decoración (el "bache" reportado en juego). Reemplaza a
  * PlacementUtils.HEIGHTMAP_WORLD_SURFACE solo en las placed features del SUELO del HFIL
- * (ver HFIL_DRY_GRASS_KEY, HFIL_DEAD_BUSH_KEY y FALLEN_LOG_HFIL_KEY en ModPlacedFeatures)
+ * (ver hfilFloor y HFIL_DEAD_BUSH_KEY en ModPlacedFeatures)
  * — la decoración propia de las islas
  * (OTHERWORLD_DEAD_BUSH_KEY, OTHERWORLD_FLOWERS_KEY) sigue usando el heightmap normal, que
  * para esas columnas ya apunta a la isla correctamente.
@@ -49,6 +49,8 @@ public class ClampedHeightmapPlacement extends PlacementModifier {
         int x = pos.getX();
         int z = pos.getZ();
         int minY = ctx.getMinBuildHeight();
+        // Lejos de los sitios del capullo y la torre de Janemba (ver StructureSites): sin solapes.
+        if (StructureSites.isNearStructureSite(ctx.getLevel().getSeed(), pos)) return Stream.of();
 
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos(x, maxY, z);
         for (int y = maxY; y >= minY; y--) {

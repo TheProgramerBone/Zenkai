@@ -4,6 +4,15 @@
     "zenkai:namekian_redstone_ore",
     "zenkai:namekian_diamond_ore",
     "zenkai:namek_crystal_ore",
-    "zenkai:namek_crystal_block"
+    "zenkai:namek_crystal_block",
+    "zenkai:hfil_scorched_gold_ore",
+    "zenkai:hfil_scorched_redstone_ore",
+    "zenkai:hfil_scorched_diamond_ore",
+    "zenkai:hfil_pale_gold_ore",
+    "zenkai:hfil_pale_redstone_ore",
+    "zenkai:hfil_pale_diamond_ore",
+    "zenkai:hfil_cinder_gold_ore",
+    "zenkai:hfil_cinder_redstone_ore",
+    "zenkai:hfil_cinder_diamond_ore"
   ]
 }

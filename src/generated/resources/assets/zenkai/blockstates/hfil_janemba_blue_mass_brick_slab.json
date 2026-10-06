@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "zenkai:block/hfil_janemba_blue_mass_brick_slab"
+    },
+    "type=double": {
+      "model": "zenkai:block/hfil_janemba_blue_mass_bricks"
+    },
+    "type=top": {
+      "model": "zenkai:block/hfil_janemba_blue_mass_brick_slab_top"
+    }
+  }
+}

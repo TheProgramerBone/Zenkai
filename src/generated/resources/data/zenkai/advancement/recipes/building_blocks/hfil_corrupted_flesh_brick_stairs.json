@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_hfil_corrupted_flesh_bricks": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:hfil_corrupted_flesh_bricks"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:hfil_corrupted_flesh_brick_stairs"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_hfil_corrupted_flesh_bricks"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:hfil_corrupted_flesh_brick_stairs"
+    ]
+  }
+}

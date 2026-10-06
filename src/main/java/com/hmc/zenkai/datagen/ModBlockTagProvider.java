@@ -32,7 +32,15 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.ROCKY_BLOCK.get(),
                 ModBlocks.HFIL_SCORCHED_STONE.get(),
                 ModBlocks.HFIL_SPIKE_ROCK.get(),
+                ModBlocks.HFIL_PALE_STONE.get(),
+                ModBlocks.HFIL_GEYSER.get(),
+                ModBlocks.HFIL_BLOOD_ICE.get(),
+                ModBlocks.HFIL_SULFUR_CRUST.get(),
+                ModBlocks.HFIL_FUMAROLE.get(),
                 ModBlocks.HFIL_CINDER_SANDSTONE.get(),
+                ModBlocks.HFIL_CORRUPTED_FLESH.get(),
+                ModBlocks.HFIL_VOID_STONE.get(),
+                ModBlocks.HFIL_JANEMBA_BLUE_MASS.get(),
                 ModBlocks.NAMEKIAN_STONE.get(),
                 ModBlocks.NAMEKIAN_COBBLESTONE.get(),
                 ModBlocks.SCOUTER_BENCH.get(),
@@ -69,6 +77,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         );
 
         tag(BlockTags.MINEABLE_WITH_SHOVEL).add(
+                ModBlocks.HFIL_BOILING_MUD.get(),
                 ModBlocks.NAMEKIAN_DIRT.get(),
                 ModBlocks.NAMEKIAN_DIRT_PATH.get(),
                 ModBlocks.NAMEKIAN_GRASS_BLOCK.get(),
@@ -237,7 +246,7 @@ public class ModBlockTagProvider extends BlockTagsProvider {
 
         // Concreto estructural: pico obligatorio (lo pide requiresCorrectToolForDrops) y
         // tags de familia para que funcionen recetas, cantero y mods de construcción.
-        for (var fam : ModBlocks.STRUCTURAL_CONCRETE_FAMILIES) {
+        for (var fam : ModBlocks.buildingFamilies()) {
             tag(BlockTags.MINEABLE_WITH_PICKAXE).add(
                     fam.block().get(), fam.stairs().get(), fam.slab().get(), fam.wall().get());
             tag(BlockTags.STAIRS).add(fam.stairs().get());
@@ -328,6 +337,94 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES).add(
                 ModBlocks.HFIL_CINDER_SANDSTONE.get()
         );
+
+        // HFIL_PALE_STONE (suelo blanco de hfil_needle_wastes, 2026-10-02): misma lección que
+        // las dos de arriba, aplicada ANTES de que salga en juego. Ocupa la superficie y ~6
+        // bloques de profundidad (surface_rule de otherworld_noise.json); sin estos tags esa
+        // franja quedaría sin menas y sin bocas de cueva ni cañones, solo en este bioma.
+        tag(BlockTags.STONE_ORE_REPLACEABLES).add(
+                ModBlocks.HFIL_PALE_STONE.get()
+        );
+        tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES).add(
+                ModBlocks.HFIL_PALE_STONE.get()
+        );
+
+        // Menas del HFIL (HfilOres): las mismas etiquetas que su mena vanilla — pico y nivel de
+        // herramienta, la etiqueta vanilla (#minecraft:iron_ores...; la usan, p. ej., los
+        // piglins con el oro) y las comunes (#c:ores/...) para compatibilidad con otros mods.
+        // Y carvers: una cueva que atraviesa una veta la corta igual que la roca de alrededor.
+        ModBlocks.HFIL_ORES.values().forEach(m -> m.forEach((type, ore) -> {
+            tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ore.get());
+            if (type.toolTag != null) tag(type.toolTag).add(ore.get());
+            if (type.vanillaBlockTag != null) tag(type.vanillaBlockTag).add(ore.get());
+            // Solo #c:ores/<mena>: el #c:ores general ya incluye esas subetiquetas (NeoForge), y
+            // generarlo aquí chocaría con el data/c/tags/block/ores.json escrito a mano. El
+            // Katchin no lleva commonBlockTag: su #c:ores/katchin también está escrito a mano.
+            if (type.commonBlockTag != null) tag(type.commonBlockTag).add(ore.get());
+            type.extraBlockTags.forEach(t -> tag(t).add(ore.get()));
+            tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES).add(ore.get());
+        }));
+        // El barro y el géiser de las pozas (propuesta A) NO llevan estos dos tags a propósito: los
+        // pone una feature (paso LAKES), que corre DESPUÉS de los carvers — nunca llegan a verlos
+        // — y antes de las menas, que sí podrían alcanzarlos pero no deben convertir una poza en
+        // mineral (igual que minecraft:mud no está en STONE_ORE_REPLACEABLES). HFIL_PALE_STONE sí
+        // los necesita porque la pinta la surface_rule, que corre antes que ambos.
+
+        // ==========================================
+        // 5b. USO DE LOS BLOQUES DEL HFIL (2026-10-04, petición del usuario: que no se queden en
+        //     "mineable y ya", que cuenten como lo que son para vanilla y para otros mods)
+        // ==========================================
+
+        // Piedras: cuentan como piedra para recetas y mods (#c:stones, que NeoForge copia a los
+        // objetos), y el sculk las infecta como a cualquier roca.
+        // PROHIBIDO añadir bloques del HFIL a BASE_STONE_OVERWORLD (error de 2026-10-04): las
+        // vetas de variedad del subsuelo vanilla (addDefaultUndergroundVariety: grava, granito,
+        // diorita, andesita, toba, calcita...) usan ese tag como "dónde generarme", y el Otherworld
+        // se llenó de piedra vanilla. Mismo riesgo con cualquier tag que miren las features vanilla.
+        tag(Tags.Blocks.STONES).add(
+                ModBlocks.HFIL_SCORCHED_STONE.get(),
+                ModBlocks.HFIL_PALE_STONE.get(),
+                ModBlocks.HFIL_SPIKE_ROCK.get()
+        );
+        tag(Tags.Blocks.SANDSTONE_BLOCKS).add(ModBlocks.HFIL_CINDER_SANDSTONE.get());
+        tag(BlockTags.SCULK_REPLACEABLE).add(
+                ModBlocks.HFIL_SCORCHED_STONE.get(),
+                ModBlocks.HFIL_PALE_STONE.get(),
+                ModBlocks.HFIL_SPIKE_ROCK.get(),
+                ModBlocks.HFIL_CINDER_SANDSTONE.get(),
+                ModBlocks.HFIL_CINDER_SAND.get()
+        );
+
+        // Janemba Rift: la carne corrupta (superficie) y la piedra del vacío (subsuelo) los pone la
+        // surface_rule, que corre ANTES que menas y carvers: sin estos dos tags esa franja sería
+        // maciza y sin menas ni cuevas — el mismo "bache" ya pagado con la arenisca y la pálida.
+        // Son sustrato (BASE_STONE) y la piedra del vacío cuenta además como piedra común. La
+        // masa azul y la gelatina de las esferas (2026-10-05) NO: solo las colocan features,
+        // así que no van en ningún tag que lea la generación.
+        tag(BlockTags.STONE_ORE_REPLACEABLES).add(
+                ModBlocks.HFIL_CORRUPTED_FLESH.get(),
+                ModBlocks.HFIL_VOID_STONE.get()
+        );
+        tag(BlockTags.OVERWORLD_CARVER_REPLACEABLES).add(
+                ModBlocks.HFIL_CORRUPTED_FLESH.get(),
+                ModBlocks.HFIL_VOID_STONE.get()
+        );
+        // OJO: NUNCA BASE_STONE_OVERWORLD (ver la nota de arriba).
+        tag(Tags.Blocks.STONES).add(ModBlocks.HFIL_VOID_STONE.get());
+        tag(BlockTags.SCULK_REPLACEABLE).add(
+                ModBlocks.HFIL_CORRUPTED_FLESH.get(),
+                ModBlocks.HFIL_VOID_STONE.get()
+        );
+
+        // Arena de ceniza: arena de verdad (cactus y caña de azúcar se plantan sobre #sand, los
+        // camellos suenan distinto al pisarla, y el arbusto seco prende en ella).
+        tag(BlockTags.SAND).add(ModBlocks.HFIL_CINDER_SAND.get());
+        tag(BlockTags.CAMEL_SAND_STEP_SOUND_BLOCKS).add(ModBlocks.HFIL_CINDER_SAND.get());
+
+        // Sangre congelada: es hielo (#ice: lo miran, p. ej., las heladas y los mobs que patinan).
+        // No admite capas de nieve encima, igual que el hielo vanilla.
+        tag(BlockTags.ICE).add(ModBlocks.HFIL_BLOOD_ICE.get());
+        tag(BlockTags.SNOW_LAYER_CANNOT_SURVIVE_ON).add(ModBlocks.HFIL_BLOOD_ICE.get());
 
         tag(ModTags.Blocks.DRAGON_BALLS_BLOCK).add(
                 ModBlocks.DRAGON_BALL_1.get(),

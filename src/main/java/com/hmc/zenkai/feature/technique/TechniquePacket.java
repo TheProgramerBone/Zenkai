@@ -283,11 +283,17 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         return true;
     }
 
+    /**
+     * Sonido que manda el editor, validado. "Sin sonido" ya no es una elección (2026-10-02): lo
+     * vacío o desconocido cae en el PRIMER sonido de la lista, el mismo que enseña el editor por
+     * defecto, así que un cliente modificado tampoco puede guardar una técnica muda. Solo queda
+     * null si no hay ningún sonido registrado con el prefijo.
+     */
     private static ResourceLocation validSound(String raw, boolean charge) {
-        if (raw == null || raw.isEmpty()) return null;
-        ResourceLocation id = ResourceLocation.tryParse(raw);
-        if (id == null) return null;
+        ResourceLocation id = (raw == null || raw.isEmpty()) ? null : ResourceLocation.tryParse(raw);
         boolean ok = charge ? TechniqueAssets.isValidCharge(id) : TechniqueAssets.isValidRelease(id);
-        return ok ? id : null;
+        if (ok) return id;
+        var list = charge ? TechniqueAssets.chargeSounds() : TechniqueAssets.releaseSounds();
+        return list.isEmpty() ? null : list.get(0);
     }
 }

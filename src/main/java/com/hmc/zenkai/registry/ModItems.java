@@ -110,6 +110,12 @@ public class ModItems {
             p -> new BucketItem(ModFluids.HEALING_WATER.get(), p),
             new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET));
 
+    /** Cubo del agua hirviendo del HFIL (ver ModFluids.HFIL_BOILING_WATER): BucketItem vanilla, el
+     *  fluido quema por contacto al colocarla (HfilBoilingWaterBlock). */
+    public static final DeferredItem<Item> HFIL_BOILING_WATER_BUCKET = ITEMS.registerItem("hfil_boiling_water_bucket",
+            p -> new BucketItem(ModFluids.HFIL_BOILING_WATER.get(), p),
+            new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET));
+
     public static final DeferredItem<Item> WARRIOR_SPAWN_EGG = ITEMS.register("namekian_warrior_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.NAMEKIAN_WARRIOR,0x28ad1b ,0x26b9fe, new Item.Properties()));
 
@@ -121,6 +127,15 @@ public class ModItems {
 
     public static final DeferredItem<Item> SAIBAMAN_SPAWN_EGG = ITEMS.register("saibaman_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.SAIBAMAN,0xd3cf5d,0x18460d, new Item.Properties()));
+
+    /** Ogros del HFIL: piel y camiseta blanca de cada uno. */
+    public static final DeferredItem<Item> RED_OGRE_SPAWN_EGG = ITEMS.register("red_ogre_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.RED_OGRE, 0xC8241C, 0xE8E2DC, new Item.Properties()));
+    public static final DeferredItem<Item> BLUE_OGRE_SPAWN_EGG = ITEMS.register("blue_ogre_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.BLUE_OGRE, 0x6EC8DC, 0x7A5AC8, new Item.Properties()));
+    /** Ángel del capullo de Freezer: túnica blanca y aro dorado. */
+    public static final DeferredItem<Item> ANGEL_SPAWN_EGG = ITEMS.register("angel_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.ANGEL, 0xF2F2F0, 0xF0C966, new Item.Properties()));
 
     public static final DeferredItem<Item> SHENLONG_SPAWN_EGG = ITEMS.register("shenlong_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.SHENLONG,0x2E8B57,0xD2B48C,new Item.Properties()));

@@ -1,10 +1,12 @@
-// 1.21.1	2026-09-13T23:11:06.5312719	Zenkai Entity Stats
+// 1.21.1	2026-10-02T16:05:02.8474449	Zenkai Entity Stats
 d7ae4c4a23d154bfca4a8a95499bdc2a42ceb0f8 data/zenkai/zenkai_entities/allay.json
+8438a090d53da979554895b62b11b317d9383aef data/zenkai/zenkai_entities/angel.json
 1413a009c26f6ef828daee751a65eb1f55f908c7 data/zenkai/zenkai_entities/armadillo.json
 1415dcefd5d0fec8a542e2987cb4bfc1fcdd6f9c data/zenkai/zenkai_entities/axolotl.json
 5fc550170d9c2faeffe91cc95674ece16e80353d data/zenkai/zenkai_entities/bat.json
 db12fec80e8749c5d96ad3c120b8014a086c546f data/zenkai/zenkai_entities/bee.json
 d297bb7d8b390ce856206b8b17b0608f03a5c955 data/zenkai/zenkai_entities/blaze.json
+42bfe92d4c42b7cc5a2b54cf87d461f746ca6123 data/zenkai/zenkai_entities/blue_ogre.json
 f400eafdc41141e6b6ba889e541d58c09a1a3d6d data/zenkai/zenkai_entities/bogged.json
 30cb6ee45f65d7da0195e60fc1348612cd9fea58 data/zenkai/zenkai_entities/breeze.json
 64e8a0baec5b732c92ac46f42e06812e0dca2108 data/zenkai/zenkai_entities/camel.json
@@ -50,9 +52,10 @@ a034dfe29efd3c78bbaddb0af80a42df0c90fd25 data/zenkai/zenkai_entities/piglin.json
 94244b6c539bd6be90a5ed7dc36e5c850771216a data/zenkai/zenkai_entities/pufferfish.json
 cd962e6b8b1a17f1fd9f6d759ff2ea9cebf49202 data/zenkai/zenkai_entities/rabbit.json
 d1c333572d07a0a47dcc0e29b08ad9720fd9ecdc data/zenkai/zenkai_entities/ravager.json
+03a94ec3f1f413512b7ad480ba272020f573e171 data/zenkai/zenkai_entities/red_ogre.json
 fab8937f12374895306c25e9b76a7119ab7ced05 data/zenkai/zenkai_entities/saibaman.json
 818773bade46a3462ae42f0a82cc1c6ce88d908a data/zenkai/zenkai_entities/salmon.json
-59a22f23a4ded12265684efb1eafab5d4cfe52fd data/zenkai/zenkai_entities/shadow_clone.json
+c6674fbbc6ccc7ea0f84e4ae43c93a046ea2de3e data/zenkai/zenkai_entities/shadow_clone.json
 7cfa2aeb41dcd79557475609c21bf95d461e021c data/zenkai/zenkai_entities/sheep.json
 efa4064da9bfadb9bc4902ff50a644fa8f8b0e31 data/zenkai/zenkai_entities/shulker.json
 7fb4217a8c8b03941ccabc8701db49cff956e48f data/zenkai/zenkai_entities/silverfish.json

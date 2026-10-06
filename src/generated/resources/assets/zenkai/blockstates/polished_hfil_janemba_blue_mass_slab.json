@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "zenkai:block/polished_hfil_janemba_blue_mass_slab"
+    },
+    "type=double": {
+      "model": "zenkai:block/polished_hfil_janemba_blue_mass"
+    },
+    "type=top": {
+      "model": "zenkai:block/polished_hfil_janemba_blue_mass_slab_top"
+    }
+  }
+}

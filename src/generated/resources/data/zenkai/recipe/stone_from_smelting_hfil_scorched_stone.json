@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "group": "hfil_stone",
+  "ingredient": {
+    "item": "zenkai:hfil_scorched_stone"
+  },
+  "result": {
+    "count": 1,
+    "id": "minecraft:stone"
+  }
+}

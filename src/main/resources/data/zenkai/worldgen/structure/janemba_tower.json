@@ -1,0 +1,7 @@
+{
+  "type": "zenkai:janemba_tower",
+  "biomes": "#zenkai:has_structure/janemba_tower",
+  "step": "surface_structures",
+  "terrain_adaptation": "none",
+  "spawn_overrides": {}
+}

@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_hfil_sulfur_crust": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:hfil_sulfur_crust"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "minecraft:gunpowder"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_hfil_sulfur_crust"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "minecraft:gunpowder"
+    ]
+  }
+}

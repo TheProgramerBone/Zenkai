@@ -1,0 +1,19 @@
+{
+  "feature": "zenkai:janemba_spire",
+  "placement": [
+    {
+      "type": "minecraft:rarity_filter",
+      "chance": 26
+    },
+    {
+      "type": "minecraft:in_square"
+    },
+    {
+      "type": "zenkai:clamped_heightmap",
+      "max_y": 123
+    },
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

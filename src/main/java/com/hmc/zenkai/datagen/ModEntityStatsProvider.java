@@ -61,6 +61,21 @@ public class ModEntityStatsProvider implements DataProvider {
                 .ki("wave",  3, "0x33CCFF", 400, 20, null)
                 .ki("blast", 5, "0xFFAA00", 200, 24, 1.3));
 
+        // Ogros del HFIL (Goz y Mez): trabajadores de Yemma, no malvados (alineamiento +30).
+        // Tanques cuerpo a cuerpo sin ki: golpe pesado para romper guardias y embestida para
+        // cerrar distancia. PL por encima del guerrero namekiano: son los guardias del infierno.
+        put(out, "red_ogre", Def.of("zenkai:red_ogre", 4500, "tank", 30)
+                .attr("strength", "+20%").mults(1.2, 0.5).canBlock(true)
+                .phys("heavy_blow", 120, 3, 1.3)
+                .phys("dash_punch", 100, 5, 1.0));
+        put(out, "blue_ogre", Def.of("zenkai:blue_ogre", 4500, "tank", 30)
+                .attr("strength", "+20%").mults(1.2, 0.5).canBlock(true)
+                .phys("heavy_blow", 120, 3, 1.3)
+                .phys("dash_punch", 100, 5, 1.0));
+
+        // Ángeles del capullo de Freezer: pacíficos (sin targetSelector), vuelan y no pegan.
+        put(out, "angel", Def.of("zenkai:angel", 80, "balanced", 100).noMelee().canFly(true));
+
         put(out, "namekian_warrior", Def.of("zenkai:namekian_warrior", 3000, "brawler", 60)
                 .attr("strength", "+20%").mults(1.0, 1.0)
                 .ki("wave",  3, "0x49cc5d", 400, 20, null)
@@ -85,6 +100,7 @@ public class ModEntityStatsProvider implements DataProvider {
                 // gatea encima con la skill fly REAL del dueño (ShadowCloneEntity.
                 // setFlightAllowed), esto solo marca la CAPACIDAD estructural en el JSON.
                 .canFly(true)
+                .canBlock(true)
                 .ki("wave",   3, "0x552266", 90,  20, null)
                 .ki("blast",  4, "0x552266", 70,  18, null)
                 .ki("lazer",  2, "0x552266", 50,  22, 0.8)
@@ -268,6 +284,13 @@ public class ModEntityStatsProvider implements DataProvider {
          *  canFlyNow. Default false (no escribir la clave) si nunca se llama. */
         Def canFly(boolean canFly) {
             if (moveset != null) moveset.addProperty("can_fly", canFly);
+            return this;
+        }
+
+        /** Guardia de hábito + reactiva (BlockHabitGoal), universal en ZenkaiDefaultMob. Default
+         *  false (no escribir la clave) si nunca se llama. */
+        Def canBlock(boolean canBlock) {
+            if (moveset != null) moveset.addProperty("can_block", canBlock);
             return this;
         }
 

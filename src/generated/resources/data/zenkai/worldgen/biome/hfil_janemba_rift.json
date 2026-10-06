@@ -1,0 +1,94 @@
+{
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "downfall": 0.0,
+  "effects": {
+    "fog_color": 16738850,
+    "mood_sound": {
+      "block_search_extent": 8,
+      "offset": 2.0,
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:dragon_breath"
+      },
+      "probability": 0.008
+    },
+    "sky_color": 15014436,
+    "water_color": 15751837,
+    "water_fog_color": 9055850
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "zenkai:hfil_ore_coal_upper",
+      "zenkai:hfil_ore_coal_lower",
+      "zenkai:hfil_ore_iron_upper",
+      "zenkai:hfil_ore_iron_middle",
+      "zenkai:hfil_ore_iron_small",
+      "zenkai:hfil_ore_gold",
+      "zenkai:hfil_ore_gold_lower",
+      "zenkai:hfil_ore_redstone",
+      "zenkai:hfil_ore_redstone_lower",
+      "zenkai:hfil_ore_diamond",
+      "zenkai:hfil_ore_diamond_medium",
+      "zenkai:hfil_ore_diamond_large",
+      "zenkai:hfil_ore_diamond_buried",
+      "zenkai:hfil_ore_lapis",
+      "zenkai:hfil_ore_lapis_buried",
+      "zenkai:hfil_ore_copper",
+      "zenkai:katchin_ore_hfil"
+    ],
+    [],
+    [
+      "minecraft:spring_water"
+    ],
+    [
+      "zenkai:janemba_mound",
+      "zenkai:janemba_spire",
+      "zenkai:janemba_ridge",
+      "zenkai:janemba_dome",
+      "zenkai:janemba_rib",
+      "zenkai:janemba_orb",
+      "zenkai:janemba_nub"
+    ]
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "zenkai:red_ogre",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 10
+      },
+      {
+        "type": "zenkai:blue_ogre",
+        "maxCount": 2,
+        "minCount": 1,
+        "weight": 10
+      }
+    ],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 2.0
+}

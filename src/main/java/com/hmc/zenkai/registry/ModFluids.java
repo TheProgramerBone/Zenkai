@@ -55,6 +55,37 @@ public final class ModFluids {
                 .bucket(ModItems.HEALING_WATER_BUCKET);
     }
 
+    /**
+     * Agua hirviendo azul cobalto de las pozas del HFIL ("Umi Jigoku", el "infierno del mar" de
+     * Beppu: una fuente termal real a ~98 °C, de color azul lechoso). Quema por contacto (ver
+     * HfilBoilingWaterBlock). Tiene cubo desde 2026-10-04 (petición del usuario): se recoge y se
+     * coloca como el agua vanilla.
+     */
+    public static final DeferredHolder<FluidType, FluidType> HFIL_BOILING_WATER_TYPE = FLUID_TYPES.register(
+            "hfil_boiling_water",
+            () -> new FluidType(FluidType.Properties.create()
+                    .descriptionId("fluid.zenkai.hfil_boiling_water")
+                    .canSwim(true)
+                    .canDrown(true)
+                    .canExtinguish(true)
+                    .canConvertToSource(false) // no se "cultiva" como el agua: es de la poza
+                    .density(1000)
+                    .viscosity(1000)
+                    .temperature(370)));
+
+    public static final DeferredHolder<Fluid, BaseFlowingFluid.Source> HFIL_BOILING_WATER = FLUIDS.register(
+            "hfil_boiling_water", () -> new BaseFlowingFluid.Source(boilingWaterProperties()));
+    public static final DeferredHolder<Fluid, BaseFlowingFluid.Flowing> HFIL_BOILING_WATER_FLOWING = FLUIDS.register(
+            "flowing_hfil_boiling_water", () -> new BaseFlowingFluid.Flowing(boilingWaterProperties()));
+
+    private static BaseFlowingFluid.Properties boilingWaterProperties() {
+        return new BaseFlowingFluid.Properties(HFIL_BOILING_WATER_TYPE, HFIL_BOILING_WATER, HFIL_BOILING_WATER_FLOWING)
+                .slopeFindDistance(4)
+                .levelDecreasePerBlock(1)
+                .block(ModBlocks.HFIL_BOILING_WATER_BLOCK)
+                .bucket(ModItems.HFIL_BOILING_WATER_BUCKET);
+    }
+
     public static void register(IEventBus bus) {
         FLUID_TYPES.register(bus);
         FLUIDS.register(bus);
