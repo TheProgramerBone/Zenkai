@@ -17,9 +17,15 @@
     },
     "particle": {
       "options": {
-        "type": "minecraft:dragon_breath"
+        "type": "minecraft:dust",
+        "color": [
+          0.69,
+          0.31,
+          0.86
+        ],
+        "scale": 0.6
       },
-      "probability": 0.008
+      "probability": 0.003
     },
     "sky_color": 15014436,
     "water_color": 15751837,

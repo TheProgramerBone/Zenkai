@@ -17,9 +17,9 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  * colores repartidas por el aire. Solo bloques (decisión del usuario, 2026-10-05: sin render de
  * cliente ni entidades).
  *
- * Cada colocación es un GRUPO de 1-4 esferas de tamaños distintos, separadas y a alturas
+ * Cada colocación es un GRUPO de 1-3 esferas de tamaños distintos, separadas y a alturas
  * distintas: unas zonas quedan llenas y otras abiertas, en vez de una esfera igual por chunk.
- * Tamaños por escala: pequeñas (r 2-3) las más frecuentes, medianas (r 4-5) y grandes (r 6-8)
+ * Tamaños por escala: pequeñas (r 2-3) las más frecuentes, medianas (r 4-5) y grandes (r 6-7)
  * raras. Alguna grande o mediana queda posada y medio hundida en el suelo, como la burbuja rosa
  * del primer plano de la referencia.
  *
@@ -44,16 +44,20 @@ public class JanembaOrbFeature extends Feature<NoneFeatureConfiguration> {
         RandomSource random = ctx.random();
         BlockPos origin = JanembaShapes.centered(ctx.origin(), random, 3);
 
-        int n = 1 + random.nextInt(3) + (random.nextInt(4) == 0 ? 1 : 0);
+        // Grupos de 1-2 (a veces 3), una vez cada 3 chunks (ModPlacedFeatures): menos de la mitad de
+        // esferas que la primera versión (1-4 cada 2 chunks), que en juego tapaba el cielo
+        // (capturas del 2026-10-05). La referencia deja mucho cielo entre esfera y esfera.
+        int n = 1 + random.nextInt(2) + (random.nextInt(6) == 0 ? 1 : 0);
         int placed = 0;
         for (int i = 0; i < n; i++) {
             int r;
             int roll = random.nextInt(100);
             // Radio mínimo 2: con r 1 la "esfera" son 18 bloques en cruz y en juego se leía como un
-            // cubo (capturas del 2026-10-05).
-            if (roll < 55) r = 2 + random.nextInt(2);
-            else if (roll < 90) r = 4 + random.nextInt(2);
-            else r = 6 + random.nextInt(3);
+            // cubo (capturas del 2026-10-05). Sesgado a las pequeñas: las grandes (antes 10 %, hasta
+            // r 8) ocupaban media pantalla; ahora 4 % y hasta r 7.
+            if (roll < 72) r = 2 + random.nextInt(2);
+            else if (roll < 96) r = 4 + random.nextInt(2);
+            else r = 6 + random.nextInt(2);
             // Separadas dentro del grupo; holgura 3 + 10 + r ≤ 21 cabe en los 24 desde el centro del chunk.
             int x = origin.getX() + random.nextInt(21) - 10;
             int z = origin.getZ() + random.nextInt(21) - 10;

@@ -1,6 +1,7 @@
 package com.hmc.zenkai.registry;
 
 import net.minecraft.core.HolderGetter;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BiomeDefaultFeatures;
@@ -16,6 +17,7 @@ import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
+import org.joml.Vector3f;
 
 /**
  * Biomas del mod construidos en datagen.
@@ -472,15 +474,17 @@ public final class ModBiomeGen {
         // (horizonte): rojo arriba y naranja abajo es el degradado de la película. La distancia
         // de la niebla la acerca el cliente (JanembaRiftFog) para que lo lejano se desvanezca en
         // naranja. El agua, rosa (no la sangre del resto del HFIL): rompería la paleta.
-        // Aliento de dragón: motas violetas flotando, algo más denso que antes para que el aire
-        // tenga vida sin llegar a ser "spam" de partículas.
+        // Motas violetas flotando: polvo pequeño (escala 0.6) y escaso. Antes era aliento de dragón
+        // a 0.008, pero su sprite es grande y no admite escala: de cerca se leía como un píxel roto
+        // gigante y de lejos ensuciaba el paisaje (capturas del 2026-10-05).
         BiomeSpecialEffects effects = new BiomeSpecialEffects.Builder()
                 .skyColor(0xE51A24)
                 .fogColor(0xFF6A22)
                 .waterColor(0xF05A9D)
                 .waterFogColor(0x8A2E6A)
                 .ambientMoodSound(AmbientMoodSettings.LEGACY_CAVE_SETTINGS)
-                .ambientParticle(new AmbientParticleSettings(ParticleTypes.DRAGON_BREATH, 0.008F))
+                .ambientParticle(new AmbientParticleSettings(
+                        new DustParticleOptions(new Vector3f(0.69F, 0.31F, 0.86F), 0.6F), 0.003F))
                 .build();
         return hfilBuild(effects, gen);
     }

@@ -379,18 +379,20 @@ public class ModPlacedFeatures {
         // frecuente, lo grande raro, para que el paisaje lea "estructura grande, mucho terreno,
         // formación pequeña, zona abierta..." y no un patrón repetido. Lomas y protuberancias
         // rebajadas de 1/1 a 1/2 y 1/3 tras verlo en juego (2026-10-05): el suelo salía cargado.
+        // Mismo día, segunda ronda: crestas de 1/12 a 1/16 (los grupos de picos dominaban) y
+        // esferas de 1/2 a 1/3 (tapaban el cielo; además, grupos más pequeños, ver JanembaOrbFeature).
         hfilFloor(context, JANEMBA_MOUND_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_MOUND_KEY), 2);
         hfilFloor(context, JANEMBA_SPIRE_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_SPIRE_KEY), 26);
         hfilFloor(context, JANEMBA_RIDGE_KEY,
-                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_RIDGE_KEY), 12);
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_RIDGE_KEY), 16);
         hfilFloor(context, JANEMBA_DOME_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_DOME_KEY), 8);
         hfilFloor(context, JANEMBA_RIB_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_RIB_KEY), 9);
         hfilFloor(context, JANEMBA_ORB_KEY,
-                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_ORB_KEY), 2);
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_ORB_KEY), 3);
         hfilFloor(context, JANEMBA_NUB_KEY,
                 configuredFeatures.getOrThrow(ModConfiguredFeatures.JANEMBA_NUB_KEY), 3);
         // Azufre: frecuente en su bioma (es su textura de suelo). Cráter y caldero: landmarks

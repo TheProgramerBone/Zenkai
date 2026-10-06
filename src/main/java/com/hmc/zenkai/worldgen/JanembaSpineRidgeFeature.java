@@ -13,7 +13,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 /**
  * Crestas de pinchos del Janemba Rift: las hileras de dientes que recortan el horizonte de la
  * referencia de Fusion Reborn, como el lomo de algo enorme. Un lomo bajo que sigue una curva
- * (bezier cuadrática) y, encima, pinchos cada 2-3 bloques que crecen hacia el centro de la cresta
+ * (bezier cuadrática) y, encima, pinchos cada 4-6 bloques que crecen hacia el centro de la cresta
  * y se inclinan SIEMPRE hacia el mismo lado (en la referencia se leen como una sola forma, no como
  * pinchos sueltos).
  *
@@ -88,7 +88,7 @@ public class JanembaSpineRidgeFeature extends Feature<NoneFeatureConfiguration> 
         }
 
         int spikes = 0;
-        double nextSpike = 1 + random.nextDouble() * 2;
+        double nextSpike = 2 + random.nextDouble() * 2;
         for (int i = 0; i < steps; i++) {
             int gy = ground[i];
             if (gy == Integer.MIN_VALUE) continue;
@@ -96,15 +96,21 @@ public class JanembaSpineRidgeFeature extends Feature<NoneFeatureConfiguration> 
             double t = s / length;
             double x = px0[i], z = pz0[i];
             double envelope = Math.sin(Math.PI * t);
-            // Lomo: 1-3 de alto, carne arriba.
-            double ridgeH = 1 + 2 * envelope;
+            // Lomo: 1-4 de alto y más ancho hacia el centro, carne arriba. Es el que da la forma de
+            // aleta: con un lomo de 1-3 y radio fijo 1.4 la cresta era casi solo pinchos.
+            double ridgeH = 1 + 3 * envelope;
+            double ridgeR = 1.4 + 0.6 * envelope;
             for (int dy = -2; dy < ridgeH; dy++) {
-                JanembaShapes.ball(sink, x, gy + dy, z, 1.4, dy + 1 >= ridgeH ? flesh : stone);
+                JanembaShapes.ball(sink, x, gy + dy, z, ridgeR, dy + 1 >= ridgeH ? flesh : stone);
             }
+            // Pinchos cada 4-6 bloques y con la altura que marca la envolvente, sin azar: la
+            // silueta sale como un arco limpio de dientes. Con uno cada 2-3,5 bloques y ±1 de azar
+            // (versión anterior) los pinchos gruesos se fundían en una pared de picos irregulares
+            // que en juego se leía como ruido (capturas del 2026-10-05).
             if (s >= nextSpike) {
-                double len = Math.max(2, peak * (0.35 + 0.65 * envelope) + random.nextDouble() * 2 - 1);
-                JanembaShapes.spike(sink, x, gy + ridgeH - 1, z, tipDx, 1.0, tipDz, len, 1.8 + 0.8 * envelope, stone);
-                nextSpike = s + 2 + random.nextDouble() * 1.5;
+                double len = Math.max(2, peak * (0.3 + 0.7 * envelope));
+                JanembaShapes.spike(sink, x, gy + ridgeH - 1, z, tipDx, 1.0, tipDz, len, 1.6 + 0.8 * envelope, stone);
+                nextSpike = s + 4 + random.nextDouble() * 2;
                 spikes++;
             }
         }
