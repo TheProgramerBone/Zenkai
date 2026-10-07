@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "zenkai:block/cut_hfil_cinder_sandstone_slab"
+    },
+    "type=double": {
+      "model": "zenkai:block/cut_hfil_cinder_sandstone"
+    },
+    "type=top": {
+      "model": "zenkai:block/cut_hfil_cinder_sandstone_slab_top"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:polished_hfil_scorched_stone"
+  },
+  "result": {
+    "count": 2,
+    "id": "zenkai:polished_hfil_scorched_stone_slab"
+  }
+}

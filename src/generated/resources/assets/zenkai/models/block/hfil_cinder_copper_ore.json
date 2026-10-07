@@ -1,6 +1,8 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube_bottom_top",
   "textures": {
-    "all": "zenkai:block/hfil_cinder_copper_ore"
+    "bottom": "zenkai:block/hfil_cinder_copper_ore_bottom",
+    "side": "zenkai:block/hfil_cinder_copper_ore",
+    "top": "zenkai:block/hfil_cinder_copper_ore_top"
   }
 }

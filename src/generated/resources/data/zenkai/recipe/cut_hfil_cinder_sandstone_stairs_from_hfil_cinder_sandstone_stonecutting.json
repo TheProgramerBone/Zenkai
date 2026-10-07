@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "zenkai:hfil_cinder_sandstone"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:cut_hfil_cinder_sandstone_stairs"
+  }
+}

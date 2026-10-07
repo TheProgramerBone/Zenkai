@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "zenkai:block/hfil_cinder_sandstone_top",
+    "side": "zenkai:block/cut_hfil_cinder_sandstone"
+  }
+}

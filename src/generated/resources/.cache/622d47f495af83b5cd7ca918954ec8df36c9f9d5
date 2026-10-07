@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-05T20:53:06.6310951	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-10-06T23:23:41.2623723	Tags for minecraft:item mod id zenkai
 fe588a35d47219c3f97563e3eb732b9225fd3212 data/c/tags/item/ores/coal.json
 c3a2c9d4ecdc046cab4c9113b70a7c6537df9627 data/c/tags/item/ores/copper.json
 403711dce9705a591c90e8b9092daa0210c8fd66 data/c/tags/item/ores/diamond.json
@@ -22,13 +22,13 @@ cdd3617c7cf6df75b2afdcd664a01219e6b36a36 data/minecraft/tags/item/planks.json
 b16a219f61135f620f83b72309c3ba19633a7a42 data/minecraft/tags/item/redstone_ores.json
 5cf061924e11715c5dce759ca2eda50184f4d6db data/minecraft/tags/item/sand.json
 1f60c81073ae1365563f3cb183dd446e7e04b752 data/minecraft/tags/item/saplings.json
-b6594d804237472a656617bdfdaccb980746dbf3 data/minecraft/tags/item/slabs.json
+0f1f0ae56a52853b957ec25341e2a9ec16a79b37 data/minecraft/tags/item/slabs.json
 9dfac68a481565637dcfb2d36ac5275ada80f5e0 data/minecraft/tags/item/small_flowers.json
-a7ea56b028b7fbc6bc4c7d64571157c2c2575bb2 data/minecraft/tags/item/stairs.json
+59ba884fd8936707003607bab186db270f7e09bf data/minecraft/tags/item/stairs.json
 7f7b80423323f26fb5035f83e3286b6380279425 data/minecraft/tags/item/stone_crafting_materials.json
 7f7b80423323f26fb5035f83e3286b6380279425 data/minecraft/tags/item/stone_tool_materials.json
 652e8c424d5fc995d9d99eb6aeb6394748171847 data/minecraft/tags/item/villager_plantable_seeds.json
-4333c022efde8be3676080c9f0b1e6fb92d3c961 data/minecraft/tags/item/walls.json
+5f5ce741f2087ef9e72a43c93f910518f9747d8f data/minecraft/tags/item/walls.json
 955e6811c5bb3ae05014661b2509d95fa30b6e07 data/minecraft/tags/item/wooden_buttons.json
 8a3d56980dfaf98214018d6ec099f55b3003dc94 data/minecraft/tags/item/wooden_doors.json
 694ba63bff1eb3f8e9db92fc132516115083b6bb data/minecraft/tags/item/wooden_fences.json

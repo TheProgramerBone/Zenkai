@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "zenkai:block/hfil_cinder_sandstone_top",
+    "side": "zenkai:block/cut_hfil_cinder_sandstone",
+    "top": "zenkai:block/hfil_cinder_sandstone_top"
+  }
+}

@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-05T20:53:06.6441948	Tags for minecraft:block mod id zenkai
+// 1.21.1	2026-10-06T23:23:41.2653707	Tags for minecraft:block mod id zenkai
 8912682f310bd3f4d32caa8aa6602d47f7ae797a data/c/tags/block/cobblestones.json
 e35360f19a76a691d096e179818b83ba31bea13e data/c/tags/block/gravels.json
 8c1139716227b52d587ceff2a1aca439af78ee88 data/c/tags/block/ores/coal.json
@@ -27,7 +27,7 @@ b9a230b994fbd179ce5a7ba0bfdf6b8618083e4d data/minecraft/tags/block/dirt.json
 9f343c7e578238b731c8e2ae90110c3eae28dffc data/minecraft/tags/block/logs_that_burn.json
 3e87509d10ac46f3d7da08f41f893b23826b85a3 data/minecraft/tags/block/mineable/axe.json
 7e85adb63a2a408a9c60a9ed3d9d155ebacc5a81 data/minecraft/tags/block/mineable/hoe.json
-edf8dae96a10a81a486e9180b88a72afc293b4d2 data/minecraft/tags/block/mineable/pickaxe.json
+cd53315a689563b47b2b5de21e30e923418d8a31 data/minecraft/tags/block/mineable/pickaxe.json
 fb2922c37d00cab8af37ebab6e2ecc27a7c0b4e1 data/minecraft/tags/block/mineable/shovel.json
 270ae2cb55889e84656aa4b09c712bd902c19c6f data/minecraft/tags/block/needs_diamond_tool.json
 d1aadb97849142d9f7f26b6b07067efb73e1795f data/minecraft/tags/block/needs_iron_tool.json
@@ -38,12 +38,12 @@ b16a219f61135f620f83b72309c3ba19633a7a42 data/minecraft/tags/block/redstone_ores
 5cf061924e11715c5dce759ca2eda50184f4d6db data/minecraft/tags/block/sand.json
 1f60c81073ae1365563f3cb183dd446e7e04b752 data/minecraft/tags/block/saplings.json
 f9853ced037bf343df405bfefb4d4f6231e6e0a7 data/minecraft/tags/block/sculk_replaceable.json
-c7eea804acbf9b2d3c028b5c85848f4b586dcb8a data/minecraft/tags/block/slabs.json
+d0d0f9d96e09ac71a4f277dc39ee8540dd4bc3ce data/minecraft/tags/block/slabs.json
 9dfac68a481565637dcfb2d36ac5275ada80f5e0 data/minecraft/tags/block/small_flowers.json
 61537eacdc430bdafd7f9e59d59cd9c6787ecec7 data/minecraft/tags/block/snow_layer_cannot_survive_on.json
-a7ea56b028b7fbc6bc4c7d64571157c2c2575bb2 data/minecraft/tags/block/stairs.json
+59ba884fd8936707003607bab186db270f7e09bf data/minecraft/tags/block/stairs.json
 de8fa1a601de203ddf19468d2d8c389cac54d17e data/minecraft/tags/block/stone_ore_replaceables.json
-4333c022efde8be3676080c9f0b1e6fb92d3c961 data/minecraft/tags/block/walls.json
+5f5ce741f2087ef9e72a43c93f910518f9747d8f data/minecraft/tags/block/walls.json
 955e6811c5bb3ae05014661b2509d95fa30b6e07 data/minecraft/tags/block/wooden_buttons.json
 8a3d56980dfaf98214018d6ec099f55b3003dc94 data/minecraft/tags/block/wooden_doors.json
 694ba63bff1eb3f8e9db92fc132516115083b6bb data/minecraft/tags/block/wooden_fences.json

@@ -21,11 +21,17 @@
     "zenkai:structural_concrete_red_slab",
     "zenkai:structural_concrete_white_slab",
     "zenkai:structural_concrete_yellow_slab",
-    "zenkai:polished_hfil_void_stone_slab",
-    "zenkai:hfil_void_stone_brick_slab",
     "zenkai:polished_hfil_corrupted_flesh_slab",
     "zenkai:hfil_corrupted_flesh_brick_slab",
+    "zenkai:polished_hfil_void_stone_slab",
+    "zenkai:hfil_void_stone_brick_slab",
     "zenkai:polished_hfil_janemba_blue_mass_slab",
-    "zenkai:hfil_janemba_blue_mass_brick_slab"
+    "zenkai:hfil_janemba_blue_mass_brick_slab",
+    "zenkai:polished_hfil_scorched_stone_slab",
+    "zenkai:hfil_scorched_stone_brick_slab",
+    "zenkai:polished_hfil_pale_stone_slab",
+    "zenkai:hfil_pale_stone_brick_slab",
+    "zenkai:smooth_hfil_cinder_sandstone_slab",
+    "zenkai:cut_hfil_cinder_sandstone_slab"
   ]
 }

@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_cut_hfil_cinder_sandstone": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:cut_hfil_cinder_sandstone"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:cut_hfil_cinder_sandstone_stairs"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_cut_hfil_cinder_sandstone"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:cut_hfil_cinder_sandstone_stairs"
+    ]
+  }
+}

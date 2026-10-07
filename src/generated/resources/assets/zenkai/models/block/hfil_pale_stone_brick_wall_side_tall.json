@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_wall_side_tall",
+  "textures": {
+    "wall": "zenkai:block/hfil_pale_stone_bricks"
+  }
+}

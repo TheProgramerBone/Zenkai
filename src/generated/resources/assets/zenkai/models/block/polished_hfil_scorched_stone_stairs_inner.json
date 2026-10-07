@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "zenkai:block/polished_hfil_scorched_stone",
+    "side": "zenkai:block/polished_hfil_scorched_stone",
+    "top": "zenkai:block/polished_hfil_scorched_stone"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_polished_hfil_pale_stone": {
+      "conditions": {
+        "items": [
+          {
+            "items": "zenkai:polished_hfil_pale_stone"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "zenkai:hfil_pale_stone_brick_wall_from_polished_hfil_pale_stone_stonecutting"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_polished_hfil_pale_stone"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "zenkai:hfil_pale_stone_brick_wall_from_polished_hfil_pale_stone_stonecutting"
+    ]
+  }
+}

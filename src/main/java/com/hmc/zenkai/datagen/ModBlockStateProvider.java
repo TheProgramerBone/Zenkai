@@ -58,7 +58,13 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 modLoc("block/hfil_fumarole_top")));
         // Menas del HFIL: textura = id (tools/gen_hfil_ores.py). La redstone tiene LIT, pero
         // como la vanilla usa el mismo modelo encendida y apagada.
-        ModBlocks.HFIL_ORES.values().forEach(m -> m.values().forEach(this::blockWithItem));
+        // Las de ceniza, de tres caras como su arenisca (si no, el canto del lateral sale arriba).
+        ModBlocks.HFIL_ORES.forEach((stone, m) -> m.values().forEach(ore -> {
+            if (stone != com.hmc.zenkai.registry.HfilOres.Stone.CINDER) { blockWithItem(ore); return; }
+            String id = ore.getId().getPath();
+            simpleBlockWithItem(ore.get(), models().cubeBottomTop(id, modLoc("block/" + id),
+                    modLoc("block/" + id + "_bottom"), modLoc("block/" + id + "_top")));
+        }));
         // Géiser: un modelo por suelo (GROUND), hecho del MISMO bloque que el bioma donde sale —
         // costados y base = ese bloque, arriba = ese bloque con la boca. Mismo modelo en las 16
         // etapas de STAGE: la erupción se ve por partículas, no por modelo.
@@ -87,11 +93,23 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         .texture("all", modLoc("block/hfil_janemba_bubble"))
                         .renderType("translucent"));
         blockWithItem(ModBlocks.HFIL_CINDER_SAND);
-        blockWithItem(ModBlocks.HFIL_CINDER_SANDSTONE);
+        // Tres caras como la arenisca vanilla: con cubeAll arriba y abajo salía el canto del lateral.
+        simpleBlockWithItem(ModBlocks.HFIL_CINDER_SANDSTONE.get(), models().cubeBottomTop("hfil_cinder_sandstone",
+                modLoc("block/hfil_cinder_sandstone"), modLoc("block/hfil_cinder_sandstone_bottom"),
+                modLoc("block/hfil_cinder_sandstone_top")));
         blockWithItem(ModBlocks.HTC_BLOCK);
         blockWithItem(ModBlocks.HTC_PORTAL);
         for (var fam : ModBlocks.buildingFamilies()) {
             ResourceLocation tex = modLoc("block/" + fam.name());
+            if (fam.block() == ModBlocks.CUT_HFIL_CINDER_SANDSTONE) {
+                // Como cut_sandstone vanilla: lateral cortado, arriba y abajo la cara lisa de la arenisca.
+                ResourceLocation end = modLoc("block/hfil_cinder_sandstone_top");
+                simpleBlockWithItem(fam.block().get(), models().cubeColumn(fam.name(), tex, end));
+                stairsBlock(fam.stairs().get(), tex, end, end);
+                slabBlock(fam.slab().get(), modLoc("block/" + fam.name()), tex, end, end);
+                wallBlock(fam.wall().get(), tex);
+                continue;
+            }
             blockWithItem(fam.block());
             stairsBlock(fam.stairs().get(), tex);
             slabBlock(fam.slab().get(), tex, tex);

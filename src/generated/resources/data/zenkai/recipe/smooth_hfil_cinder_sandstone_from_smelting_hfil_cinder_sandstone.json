@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "group": "smooth_hfil_cinder_sandstone",
+  "ingredient": {
+    "item": "zenkai:hfil_cinder_sandstone"
+  },
+  "result": {
+    "count": 1,
+    "id": "zenkai:smooth_hfil_cinder_sandstone"
+  }
+}

@@ -376,6 +376,18 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 ModBlocks.POLISHED_HFIL_JANEMBA_BLUE_MASS.get(), ModBlocks.HFIL_JANEMBA_BLUE_MASS_BRICKS.get());
         janembaBubbleDyeing(recipeOutput);
 
+        // Rocas naturales del HFIL (2026-10-06): misma cadena que el Rift. La arenisca de ceniza
+        // sigue a la vanilla: la lisa se funde (como smooth_sandstone) y la cortada sale 2x2 → 4 o
+        // por el cantero (como cut_sandstone).
+        riftChain(recipeOutput, ModBlocks.HFIL_SCORCHED_STONE.get(),
+                ModBlocks.POLISHED_HFIL_SCORCHED_STONE.get(), ModBlocks.HFIL_SCORCHED_STONE_BRICKS.get());
+        riftChain(recipeOutput, ModBlocks.HFIL_PALE_STONE.get(),
+                ModBlocks.POLISHED_HFIL_PALE_STONE.get(), ModBlocks.HFIL_PALE_STONE_BRICKS.get());
+        oreSmelting(recipeOutput, List.of(ModBlocks.HFIL_CINDER_SANDSTONE.get()), RecipeCategory.BUILDING_BLOCKS,
+                ModBlocks.SMOOTH_HFIL_CINDER_SANDSTONE.get(), 0.1f, 200, "smooth_hfil_cinder_sandstone");
+        twoByTwo(recipeOutput, ModBlocks.HFIL_CINDER_SANDSTONE.get(), ModBlocks.CUT_HFIL_CINDER_SANDSTONE.get());
+        stonecutWithPieces(recipeOutput, ModBlocks.HFIL_CINDER_SANDSTONE.get(), ModBlocks.CUT_HFIL_CINDER_SANDSTONE.get());
+
         // Menas del HFIL: se funden como su mena vanilla (mismo resultado y experiencia).
         ModBlocks.HFIL_ORES.values().forEach(m -> m.forEach((type, ore) -> {
             if (type.smeltResult == null) return; // Katchin: se funde el crudo, no la mena
@@ -522,7 +534,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
      *  (las de la propia familia, desde {@code target}, ya las da sacredFamily). */
     private static void stonecutWithPieces(RecipeOutput out, Block input, Block target) {
         stonecut(out, input, target, 1);
-        for (var fam : ModBlocks.JANEMBA_FAMILIES) {
+        for (var fam : ModBlocks.buildingFamilies()) {
             if (fam.block().get() != target) continue;
             stonecut(out, input, fam.stairs().get(), 1);
             stonecut(out, input, fam.slab().get(), 2);
