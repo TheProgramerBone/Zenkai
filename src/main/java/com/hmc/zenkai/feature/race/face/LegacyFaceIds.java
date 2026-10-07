@@ -18,6 +18,8 @@ import org.jetbrains.annotations.Nullable;
  *    de entre medias que guardaron "zenkai:eyes/legacy_N" se renombran a zenkai:eyes/N al cargar.
  *  · Después: el 2 se fusionó con minimal (misma silueta con el trazo de cejas) y los demás
  *    pasaron a ids con nombre = carpeta: 1 narrow, 3 wide, 4 sleepy, 5 arched.
+ *  · 0.3.1: la boca zenkai:mouth/legacy_1 pasó a zenkai:mouth/neutral y los peinados
+ *    legacy_1 / legacy_1_ssj a classic / classic_ssj (la personalización no lleva números).
  * Los índices los resolvía cada cliente sobre su lista de PNG: solo son fiables para los
  * ficheros que había entonces; cualquier otro valor se pierde (null) y reconcile lo repone.
  */
@@ -44,7 +46,7 @@ public final class LegacyFaceIds {
         return switch (category) {
             case EYES -> (index >= 1 && index <= LEGACY_EYES) ? eyeFor(index) : null;
             case MOUTH -> (index >= 1 && index <= LEGACY_MOUTH)
-                    ? ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "mouth/legacy_" + index) : null;
+                    ? ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "mouth/neutral") : null;
             case NOSE, EYEBROWS -> null; // nunca hubo narices ni cejas con índice
         };
     }
@@ -57,6 +59,8 @@ public final class LegacyFaceIds {
     public static ResourceLocation renamed(ResourceLocation id) {
         if (!Zenkai.MOD_ID.equals(id.getNamespace())) return id;
         String path = id.getPath();
+        // 0.3.1: la única boca con número pasó a llamarse "neutral".
+        if (path.equals("mouth/legacy_1")) return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "mouth/neutral");
         String n = path.startsWith(RENAMED_EYES_PREFIX) ? path.substring(RENAMED_EYES_PREFIX.length())
                 : path.startsWith("eyes/") ? path.substring("eyes/".length()) : null;
         if (n != null && n.matches("[1-" + LEGACY_EYES + "]")) return eyeFor(Integer.parseInt(n));

@@ -31,16 +31,16 @@ public final class HairCatalogGameTests {
         return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path);
     }
 
-    private static final ResourceLocation BASE = id("legacy_1");
-    private static final ResourceLocation SSJ = id("legacy_1_ssj");
+    private static final ResourceLocation BASE = id("classic");
+    private static final ResourceLocation SSJ = id("classic_ssj");
 
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void catalogKeepsOldHairBehaviour(GameTestHelper helper) {
         HairStyleDef base = HairCatalog.get(BASE);
         HairStyleDef ssj = HairCatalog.get(SSJ);
-        helper.assertTrue(base != null && ssj != null, "faltan legacy_1 / legacy_1_ssj en el catálogo");
-        helper.assertTrue(base.model().getPath().equals("geo/hair/hair_1.geo.json")
-                        && ssj.model().getPath().equals("geo/hair/ssj_hair_1.geo.json"),
+        helper.assertTrue(base != null && ssj != null, "faltan classic / classic_ssj en el catálogo");
+        helper.assertTrue(base.model().getPath().equals("geo/hair/classic.geo.json")
+                        && ssj.model().getPath().equals("geo/hair/classic_ssj.geo.json"),
                 "deben apuntar a las geo de siempre (cero cambio visual)");
 
         // Quién tiene pelo: como antes, solo Human/Saiyan.
@@ -48,17 +48,17 @@ public final class HairCatalogGameTests {
             boolean expected = r == Race.HUMAN || r == Race.SAIYAN;
             helper.assertTrue(HairCatalog.options(r).isEmpty() != expected, r + ": pelo " + (expected ? "sí" : "no"));
         }
-        // legacy_1_ssj solo existe como override: no se elige en la lista.
-        helper.assertTrue(!HairCatalog.choices(Race.SAIYAN).contains(SSJ), "legacy_1_ssj no debe salir en la lista");
+        // classic_ssj solo existe como override: no se elige en la lista.
+        helper.assertTrue(!HairCatalog.choices(Race.SAIYAN).contains(SSJ), "classic_ssj no debe salir en la lista");
         helper.assertTrue(HairCatalog.choices(Race.SAIYAN).get(0) == null, "calvo es la primera opción");
 
         // La cadena SSJ de antes (cualquier forma "ssj*" caía en ssj1_hair1) se conserva.
         for (String f : new String[]{"ssj1", "ssj2", "ssj3", "ssj4", "ssj_blue", "ssj_god", "ssj_rose"}) {
             HairStyleDef shown = HairCatalog.effectiveStyle(BASE, id(f), Race.SAIYAN);
-            helper.assertTrue(shown != null && shown.id().equals(SSJ), f + ": debe verse legacy_1_ssj");
+            helper.assertTrue(shown != null && shown.id().equals(SSJ), f + ": debe verse classic_ssj");
         }
         HairStyleDef inBase = HairCatalog.effectiveStyle(BASE, null, Race.SAIYAN);
-        helper.assertTrue(inBase != null && inBase.id().equals(BASE), "sin forma: legacy_1");
+        helper.assertTrue(inBase != null && inBase.id().equals(BASE), "sin forma: classic");
         helper.assertTrue(HairCatalog.effectiveStyle(BASE, null, Race.NAMEKIAN) == null, "Namek: sin pelo");
         helper.assertTrue(HairCatalog.effectiveStyle(null, id("ssj1"), Race.SAIYAN) == null, "calvo sigue calvo en SSJ");
 
@@ -79,8 +79,10 @@ public final class HairCatalogGameTests {
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void migrationAndReconcile(GameTestHelper helper) {
         // Valores de antes del catálogo.
-        for (String[] c : new String[][]{{"hair1", "zenkai:legacy_1"}, {"hair2", "zenkai:legacy_1"},
-                {"hair0", "none"}, {"bald", "none"}}) {
+        for (String[] c : new String[][]{{"hair1", "zenkai:classic"}, {"hair2", "zenkai:classic"},
+                {"hair0", "none"}, {"bald", "none"},
+                // Ids intermedios con número (renombrados en 0.3.1).
+                {"zenkai:legacy_1", "zenkai:classic"}, {"zenkai:legacy_1_ssj", "zenkai:classic_ssj"}}) {
             CompoundTag old = new CompoundTag();
             old.putString("hairStyleId", c[0]);
             old.putInt("hairIndex", 7); // el campo viejo se ignora
@@ -95,20 +97,20 @@ public final class HairCatalogGameTests {
         helper.assertTrue(!HairCatalog.reconcile(Race.SAIYAN, custom) && custom.getHairStyle() == null,
                 "custom: se respeta y se pinta calvo");
 
-        // Namek con el pelo humano -> calvo (no tiene default_for); Saiyan con un id inventado -> legacy_1.
+        // Namek con el pelo humano -> calvo (no tiene default_for); Saiyan con un id inventado -> classic.
         PlayerVisualAttachment namek = new PlayerVisualAttachment();
         namek.setHairStyle(BASE);
         helper.assertTrue(FaceBans.reconcile(Race.NAMEKIAN, namek) && namek.getHairStyle() == null,
-                "Namek con legacy_1 -> calvo");
+                "Namek con classic -> calvo");
         PlayerVisualAttachment saiyan = new PlayerVisualAttachment();
         saiyan.setHairStyle(ResourceLocation.fromNamespaceAndPath("addon_borrado", "pelo"));
         FaceBans.reconcile(Race.SAIYAN, saiyan);
-        helper.assertTrue(BASE.equals(saiyan.getHairStyle()), "peinado inexistente -> default_for (legacy_1)");
+        helper.assertTrue(BASE.equals(saiyan.getHairStyle()), "peinado inexistente -> default_for (classic)");
         // El override de forma no es elegible a mano.
         PlayerVisualAttachment forced = new PlayerVisualAttachment();
         forced.setHairStyle(SSJ);
         FaceBans.reconcile(Race.SAIYAN, forced);
-        helper.assertTrue(BASE.equals(forced.getHairStyle()), "legacy_1_ssj elegido a mano -> legacy_1");
+        helper.assertTrue(BASE.equals(forced.getHairStyle()), "classic_ssj elegido a mano -> classic");
 
         helper.succeed();
     }

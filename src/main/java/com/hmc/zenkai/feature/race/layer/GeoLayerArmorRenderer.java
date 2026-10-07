@@ -68,16 +68,32 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
 
 
     /**
-     * Permite presets de textura: elige la textura según el índice skinPreset del jugador.
-     * Si el item no define presets, devuelve su textura única (comportamiento por defecto).
+     * Reaplica en CADA pintado qué huesos se ocultan por casco real (casco/cuernos arcosianos,
+     * antenas namek). Antes solo lo hacía GeoLayerArmorModel.setCustomAnimations: el BakedGeoModel
+     * es compartido entre pintados y esa función no corre en cualquier pasada (p. ej. el muñeco
+     * del inventario), así que el estado "oculto" de un jugador con casco se quedaba pegado y el
+     * muñeco sin casco salía con la cabeza arcosiana sin el casco (captura 2026-10-06).
      */
     @Override
+    public void preRender(com.mojang.blaze3d.vertex.PoseStack poseStack, GeoLayerArmorItem animatable,
+                          software.bernie.geckolib.cache.object.BakedGeoModel model,
+                          net.minecraft.client.renderer.MultiBufferSource bufferSource,
+                          com.mojang.blaze3d.vertex.VertexConsumer buffer, boolean isReRender,
+                          float partialTick, int packedLight, int packedOverlay, int colour) {
+        super.preRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick,
+                packedLight, packedOverlay, colour);
+        boolean hide = GeoLayerArmorModel.wearerHasRealHeadwear;
+        for (String name : animatable.getHideOnHelmetBones()) {
+            model.getBone(name).ifPresent(b -> {
+                b.setHidden(hide);
+                b.setChildrenHidden(hide);
+            });
+        }
+    }
+
+    /** Textura efectiva según el stack que se pinta (embudo único, ver resolveTexture). */
+    @Override
     public net.minecraft.resources.ResourceLocation getTextureLocation(GeoLayerArmorItem animatable) {
-        Entity wearer = getCurrentEntity();
-        int preset = (wearer instanceof Player player)
-                ? player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).getSkinPreset()
-                : 0;
-        // ⚠ VERIFICAR GeckoLib 4.8.4: getCurrentStack() — ya se usa en DyedTintGeoLayer.
-        return animatable.resolveTexture(getCurrentStack(), preset);
+        return animatable.resolveTexture(getCurrentStack());
     }
 }

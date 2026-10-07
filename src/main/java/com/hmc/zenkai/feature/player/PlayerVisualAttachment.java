@@ -40,7 +40,7 @@ public class PlayerVisualAttachment {
     private static final ResourceLocation DEFAULT_EYES  =
             ResourceLocation.fromNamespaceAndPath("zenkai", "eyes/minimal");
     private static final ResourceLocation DEFAULT_MOUTH =
-            ResourceLocation.fromNamespaceAndPath("zenkai", "mouth/legacy_1");
+            ResourceLocation.fromNamespaceAndPath("zenkai", "mouth/neutral");
     private final EnumMap<FaceCategory, ResourceLocation> faceParts = new EnumMap<>(FaceCategory.class);
     {
         faceParts.put(FaceCategory.EYES, DEFAULT_EYES);
@@ -50,9 +50,9 @@ public class PlayerVisualAttachment {
     // ── Peinado (S5): id del catálogo HairCatalog, "none" = calvo, "custom:..." = HairCode ──
     // Antes había DOS campos para lo mismo (hairIndex, índice en la lista de PNG del cliente, y
     // hairStyleId = "hair"+índice). Ahora solo este, con ids; los valores viejos se migran en
-    // normalizeHairStyle ("hair1" -> zenkai:legacy_1, "hair0"/"bald" -> none).
+    // normalizeHairStyle ("hair1" -> zenkai:classic, "hair0"/"bald" -> none).
     public static final String HAIR_NONE = "none";
-    private static final String DEFAULT_HAIR = "zenkai:legacy_1";
+    private static final String DEFAULT_HAIR = "zenkai:classic";
 
     // ── IDs de estilo ────────────────────────────────────────────────────────
     private String hairStyleId = DEFAULT_HAIR;
@@ -61,9 +61,8 @@ public class PlayerVisualAttachment {
      *  Kami. Sin efecto para nada que no sea Saiyan+hasTail (ver TailResolver). */
     private String tailStyleId = "loose";
 
-    // ── Piel: modo y preset ───────────────────────────────────────────────────
+    // ── Piel: modo ───────────────────────────────────────────────────
     private boolean customSkinColor = false; // Human/Saiyan/Majin: false=natural, true=color custom (tinte)
-    private int     skinPreset      = 0;     // Namekian/Arcosian: índice de textura preset
 
     // ── Aura: modo ────────────────────────────────────────────────────────────
     private boolean customAuraColor = false; // false=tinte por AlignmentTier (ver AuraColors), true=color fijado por el jugador
@@ -121,12 +120,10 @@ public class PlayerVisualAttachment {
     public boolean isCustomAuraColor()           { return customAuraColor; }
     public void    setCustomAuraColor(boolean v) { this.customAuraColor = v; }
 
-    // ── Piel: modo y preset API ───────────────────────────────────────────────
+    // ── Piel: modo API ───────────────────────────────────────────────
     public boolean isCustomSkinColor()         { return customSkinColor; }
     public void    setCustomSkinColor(boolean v) { this.customSkinColor = v; }
 
-    public int  getSkinPreset()                { return skinPreset; }
-    public void setSkinPreset(int i)           { this.skinPreset = Math.max(0, i); }
 
     public Gender getGender()                  { return gender; }
     public void   setGender(Gender g)          { if (g != null) this.gender = g; }
@@ -160,12 +157,16 @@ public class PlayerVisualAttachment {
 
     /**
      * Traduce los valores de antes del catálogo de pelo (S5): "hair0"/"bald"/"" -> "none",
-     * "hairN" -> zenkai:legacy_1 (el único peinado que existió con número; hair_2+ se pintaban
-     * calvos igualmente). Cualquier otro valor se deja tal cual.
+     * "hairN" -> zenkai:classic (el único peinado que existió con número; hair_2+ se pintaban
+     * calvos igualmente) y los ids intermedios zenkai:legacy_1 / legacy_1_ssj, ya renombrados a
+     * zenkai:classic / classic_ssj (0.3.1: nada de la personalización lleva número).
+     * Cualquier otro valor se deja tal cual.
      */
     static String normalizeHairStyle(String raw) {
         if (raw == null || raw.isEmpty() || "bald".equalsIgnoreCase(raw) || "hair0".equalsIgnoreCase(raw)) return HAIR_NONE;
         if (raw.matches("hair\\d{1,3}")) return DEFAULT_HAIR;
+        if ("zenkai:legacy_1".equals(raw)) return DEFAULT_HAIR;
+        if ("zenkai:legacy_1_ssj".equals(raw)) return "zenkai:classic_ssj";
         return raw;
     }
 
@@ -198,7 +199,6 @@ public class PlayerVisualAttachment {
 
         tag.putBoolean("customSkinColor", customSkinColor);
         tag.putBoolean("customAuraColor", customAuraColor);
-        tag.putInt("skinPreset", skinPreset);
         tag.putString("gender", gender.name());
         tag.putBoolean("majinControlled", majinControlled);
 
@@ -235,7 +235,6 @@ public class PlayerVisualAttachment {
 
         if (tag.contains("customSkinColor")) this.customSkinColor = tag.getBoolean("customSkinColor");
         if (tag.contains("customAuraColor")) this.customAuraColor = tag.getBoolean("customAuraColor");
-        if (tag.contains("skinPreset"))      this.skinPreset      = Math.max(0, tag.getInt("skinPreset"));
         if (tag.contains("gender")) {
             try { this.gender = Gender.valueOf(tag.getString("gender")); } catch (IllegalArgumentException ignored) {}
         }
@@ -250,13 +249,12 @@ public class PlayerVisualAttachment {
     // ── Carga desde el CLIENTE (UpdatePlayerVisualPacket) ─────────────────────
     /** Topes de lo que el cliente puede pedir. Holgados respecto al contenido real: solo
      *  existen para que un cliente modificado no meta valores absurdos o listas enormes. */
-    private static final int MAX_CLIENT_SKIN_PRESET   = 63;
     private static final int MAX_CLIENT_LAYER_COLORS  = 16;
 
     /**
      * Versión saneada de {@link #load} para lo que manda el cliente: copia SOLO la lista blanca
      * de campos que las pantallas de apariencia permiten elegir (colores, rasgos faciales, pelo,
-     * peinado, modo de piel, preset, género, skin de raza on/off) y con rangos acotados. El resto
+     * peinado, modo de piel, género, skin de raza on/off) y con rangos acotados. El resto
      * del tag se ignora y conserva el valor del servidor.
      *
      * Por qué no {@code load()}: antes el servidor hacía {@code load(pkt.data)} con el NBT
@@ -285,8 +283,6 @@ public class PlayerVisualAttachment {
 
         if (tag.contains("customSkinColor")) setCustomSkinColor(tag.getBoolean("customSkinColor"));
         if (tag.contains("customAuraColor")) setCustomAuraColor(tag.getBoolean("customAuraColor"));
-        if (tag.contains("skinPreset"))
-            setSkinPreset(Math.min(MAX_CLIENT_SKIN_PRESET, Math.max(0, tag.getInt("skinPreset"))));
         if (tag.contains("gender")) {
             try { setGender(Gender.valueOf(tag.getString("gender"))); } catch (IllegalArgumentException ignored) {}
         }

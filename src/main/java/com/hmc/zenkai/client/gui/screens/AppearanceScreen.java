@@ -322,11 +322,12 @@ public class AppearanceScreen extends Screen {
                 : PlayerVisualAttachment.Gender.MALE);
     }
 
+    /** "Next" del hub: entra al flujo lineal cabeza → cuerpo → estilo (antes saltaba al estilo). */
     private void goToStyle() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        goingNext = true;
-        mc.setScreen(new StyleSelectionScreen(this, statsSnapshot, visualSnapshot));
+        goingToHead = true;
+        mc.setScreen(new HeadAppearanceScreen(this, statsSnapshot, visualSnapshot));
     }
 
     @Override

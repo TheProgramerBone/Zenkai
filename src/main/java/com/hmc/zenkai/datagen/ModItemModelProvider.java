@@ -220,9 +220,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         // Las colas van en el slot de pechera: reutilizan su silueta.
         flatGroup("race_chestplate", "tail_loose", "tail_waist");
 
-        // Pelo: flatGroup sin nombres no genera nada, así que se pasan explícitos.
-        flatGroup("hair_1", "hair", "hair_1");
-        flatGroup("ssj_hair_1", "ssj1_hair1");
+        // Pelo genérico: un solo ítem, con la silueta de casco.
+        flatGroup("race_helmet", "hair");
         // ki_scythe.png no existe (solo su .mcmeta): se usa la textura de la hoja de ki.
         flatGroup("ki_blade", "ki_scythe");
     }

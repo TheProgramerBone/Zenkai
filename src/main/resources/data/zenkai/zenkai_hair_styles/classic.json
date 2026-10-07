@@ -1,0 +1,18 @@
+{
+  "races": ["human", "saiyan"],
+  "default_for": ["human", "saiyan"],
+  "sort": 10,
+  "representation": "geo",
+  "model": "zenkai:geo/hair/classic.geo.json",
+  "texture": "zenkai:textures/customization/hair/classic.png",
+  "color": "hair",
+  "form_overrides": {
+    "zenkai:ssj1": "zenkai:classic_ssj",
+    "zenkai:ssj2": "zenkai:classic_ssj",
+    "zenkai:ssj3": "zenkai:classic_ssj",
+    "zenkai:ssj4": "zenkai:classic_ssj",
+    "zenkai:ssj_blue": "zenkai:classic_ssj",
+    "zenkai:ssj_god": "zenkai:classic_ssj",
+    "zenkai:ssj_rose": "zenkai:classic_ssj"
+  }
+}

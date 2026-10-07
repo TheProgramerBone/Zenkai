@@ -904,39 +904,12 @@ public class ModItems {
             ITEMS.register("hair", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/hair/hair_1.geo.json",
-                            "textures/customization/hair/hair_1.png",
+                            "geo/hair/classic.geo.json",
+                            "textures/customization/hair/classic.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.HAIR)
                      .stackModel(com.hmc.zenkai.feature.race.hair.HairStacks::model)
                      .stackTexture(com.hmc.zenkai.feature.race.hair.HairStacks::texture));
-
-    // LEGACY: los items de pelo de antes del catálogo. Siguen registrados SOLO para no romper
-    // mundos/inventarios que los tengan guardados; HairResolver ya no los usa (sus geo/PNG los
-    // usan ahora los peinados zenkai:legacy_1 y zenkai:legacy_1_ssj del catálogo).
-    //Cabellos Común
-    public static final Supplier<GeoLayerArmorItem> HAIR_1 =
-            ITEMS.register("hair_1",() ->
-                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
-                            new Item.Properties(),
-                            "geo/hair/hair_1.geo.json",
-                            "textures/customization/hair/hair_1.png",
-                            ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.HAIR));
-
-    //Transformaciones Saiyan
-    // Id renombrado de "ssj_hair1" a "ssj1_hair1" para encajar en la convención
-    // "<grupo>_hair<peinado>" que usa HairResolver.ssjHairChain() para resolver pelos nuevos
-    // por nombre sin tocar hair_items en el JSON de ninguna forma (ver CLAUDE.md). El .geo.json
-    // y la textura NO se movieron, solo el id del item registrado.
-    public static final Supplier<GeoLayerArmorItem> SSJ1_HAIR1 =
-            ITEMS.register("ssj1_hair1",() ->
-                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
-                            new Item.Properties(),
-                            "geo/hair/ssj_hair_1.geo.json",
-                            "textures/customization/hair/ssj_hair_1.png",
-                            ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.HAIR));
 
     // Cola de Saiyan (dos variantes cosméticas, ver TailResolver/TailGeoLayer).
     // CHESTPLATE y NO LEGGINGS/HELMET — no es un capricho, es un requisito real de GeckoLib:

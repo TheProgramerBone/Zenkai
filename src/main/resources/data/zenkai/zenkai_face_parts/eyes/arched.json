@@ -1,4 +1,5 @@
 {
+  "exclude_races": ["arcosian"],
   "sort": 240,
   "layers": [
     { "texture": "zenkai:textures/customization/face/eyes/arched/base.png", "color": "none" },

@@ -67,7 +67,7 @@ public class StyleSelectionScreen extends Screen {
     private static final int S_VALUE_Y = S_TITLE_Y + TITLE_H;
     private static final int DIV1_Y    = S_VALUE_Y + 14;
     private static final int DESC_Y    = DIV1_Y + 6;
-    private static final int DIV2_Y    = DESC_Y + 44; // espacio para ~4 líneas de descripción
+    private static final int DESC_LINE_H = 11;
     private static final int PREVIEW_W = 70;
     private static final int PREVIEW_SIZE = 45;
 
@@ -87,8 +87,6 @@ public class StyleSelectionScreen extends Screen {
     private static final int STATS_R    = IN_X2 - PAD;                   // 235
     private static final int COL_BASE_R = STATS_X + 44;
     private static final int COL_COEF_R = STATS_X + 92;
-    /** Justo debajo del swatch de Ki Color. */
-    private static final int STATS_Y    = DIV2_Y + 8 + 14 + COLOR_BOX_H + 6;
     private static final int STAT_ROW_H = 9;
 
     /** Cabecera de columna, muy tenue. Era 0x7A6450 suelto — el mismo ROL que
@@ -123,6 +121,11 @@ public class StyleSelectionScreen extends Screen {
     @Nullable private ColorPickerWidget picker = null;
     @Nullable private ColorBoxButton colorBox = null;
     private int kiBoxY;
+    /** Y del divisor entre descripción y stats: se ajusta al texto (ver init). */
+    private int div2Y = DESC_Y + DESC_LINE_H * 2;
+
+    /** Justo debajo del swatch de Ki Color. */
+    private int statsY() { return div2Y + 8 + 14 + COLOR_BOX_H + 6; }
 
     public StyleSelectionScreen(@Nullable AppearanceScreen appearanceScreen,
                                 @Nullable CompoundTag statsSnapshot,
@@ -156,6 +159,18 @@ public class StyleSelectionScreen extends Screen {
         int lp = leftPos;
         int tp = topPos;
 
+        // El divisor baja justo lo que ocupe la descripción MÁS LARGA de los estilos (en el idioma
+        // y ancho actuales), no un hueco fijo de 4 líneas: lo que sobra se lo quedan las stats.
+        // Se toma el máximo de cada estilo y no el del actual para que el divisor y las stats no
+        // salten de sitio al girar la flecha (el mismo "pop" que el resto del mod evita).
+        int maxLines = 1;
+        for (Style st : styles) {
+            maxLines = Math.max(maxLines, wrapText(
+                    Component.translatable("screen.zenkai.style." + st.name().toLowerCase() + ".desc").getString(),
+                    mc.font, IN_W - PAD * 2).length);
+        }
+        div2Y = DESC_Y + DESC_LINE_H * maxLines;
+
         // Flechas de estilo — a los lados de la fila de valor
         int arrowY = tp + S_VALUE_Y - 2;
         addRenderableWidget(new ArrowIconButton(
@@ -173,7 +188,7 @@ public class StyleSelectionScreen extends Screen {
         // alterna a Custom y ahí abre el popup de color. Ver toggleKiColorMode.
         this.kiAreaCX = lp + IN_X1 + PAD + PREVIEW_W + (IN_W - PAD * 2 - PREVIEW_W) / 2;
         int kiBoxX = kiAreaCX - COLOR_BOX_W / 2;
-        this.kiBoxY = tp + DIV2_Y + 8 + 14;
+        this.kiBoxY = tp + div2Y + 8 + 14;
         addRenderableWidget(new ArrowIconButton(
                 kiAreaCX - KI_ROW_HALF - ARROW_W, kiBoxY,
                 ArrowIconButton.Dir.LEFT, this::toggleKiColorMode));
@@ -275,14 +290,14 @@ public class StyleSelectionScreen extends Screen {
                 mc.font, IN_W - PAD * 2);
         for (int i = 0; i < lines.length; i++) {
             g.drawString(mc.font, Component.literal(lines[i]),
-                    lp + IN_X1 + PAD, tp + DESC_Y + i * 11, COLOR_DESC, false);
+                    lp + IN_X1 + PAD, tp + DESC_Y + i * DESC_LINE_H, COLOR_DESC, false);
         }
 
-        g.fill(lp + IN_X1 + PAD, tp + DIV2_Y, lp + IN_X2 - PAD, tp + DIV2_Y + 1, ZenkaiPalette.SEPARATOR);
+        g.fill(lp + IN_X1 + PAD, tp + div2Y, lp + IN_X2 - PAD, tp + div2Y + 1, ZenkaiPalette.SEPARATOR);
 
         // Preview jugador — izquierda zona inferior (con aura de ki EN VIVO)
         int pvX1 = lp + IN_X1 + PAD;
-        int pvY1 = tp + DIV2_Y + 8;
+        int pvY1 = tp + div2Y + 8;
         int pvX2 = lp + IN_X1 + PAD + PREVIEW_W;
         int pvY2 = tp + IN_Y2 - 4;
         g.enableScissor(pvX1, pvY1, pvX2, pvY2);   // recorta el aura al recuadro del preview
@@ -309,7 +324,7 @@ public class StyleSelectionScreen extends Screen {
 
         // Label "Ki Color" encima de la fila de flechas
         drawCenteredNoShadow(g, Component.translatable("screen.zenkai.label.ki_color"),
-                kiAreaCX, tp + DIV2_Y + 8, COLOR_SWATCH);
+                kiAreaCX, tp + div2Y + 8, COLOR_SWATCH);
 
         // Estado Default: el swatch (widget, ver init) está oculto y en su lugar se dibuja el
         // texto "Default" — con tooltip manual porque no es un widget, mismo patrón que el
@@ -367,7 +382,7 @@ public class StyleSelectionScreen extends Screen {
 
         long pl = PowerLevel.compute(melee, body, defe, kiDmg, kiPool);
 
-        int y = tp + STATS_Y;
+        int y = tp + statsY();
 
         // Titular: el número que el jugador va a comparar entre estilos.
         drawCenteredNoShadow(g, Component.translatable("screen.zenkai.style.power", pl),

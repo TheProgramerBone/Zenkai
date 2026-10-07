@@ -131,6 +131,14 @@ public class BodyColorsScreen extends Screen {
     private static final int TONE_LABEL_H = 14;
     private static final int DEFAULT_BTN_H = 14;
 
+    // ── Botón de género con icono de pixel art (celdas 80,80 / 100,80 de icons.png, las del hub) ──
+    private static final ResourceLocation ICONS_TEX =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
+    private static final int ICONS_ATLAS = 256;
+    private static final int GENDER_ICON = 20;
+    private static final int ICON_GENDER_MALE_U = 80, ICON_GENDER_FEMALE_U = 100, ICON_GENDER_V = 80;
+    private int genderIconX, genderIconY;
+
     private static final int COLOR_SWATCH = ZenkaiPalette.LABEL_ON_PANEL;
 
     private static final int[] SKIN_TONES = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
@@ -145,7 +153,7 @@ public class BodyColorsScreen extends Screen {
 
     private int skinColor = 0xFFD5A07A;
     private boolean customSkinColor = false;
-    private int skinPreset = 0;
+    private boolean genderFemale = false;
     private int toneLabelY;
     /** Y absoluta (pantalla) donde termina el contenido real de la raza actual — la fija
      *  buildLayerRows()/buildSkinToneGrid(), la lee render() para el divisor y el preview. */
@@ -184,7 +192,7 @@ public class BodyColorsScreen extends Screen {
         this.race        = stats.getRace();
         skinColor         = visual.getSkinColorRgb() | 0xFF000000;
         customSkinColor   = visual.isCustomSkinColor();
-        skinPreset        = visual.getSkinPreset();
+        genderFemale      = visual.getGender() == com.hmc.zenkai.feature.player.PlayerVisualAttachment.Gender.FEMALE;
 
         if (isMultiTintRace(race)) buildLayerRows();
         else                       buildSkinToneGrid();
@@ -199,7 +207,11 @@ public class BodyColorsScreen extends Screen {
                 panelLeft + IN_X1, panelTop + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
                 TEX_BTN, null,
-                () -> { goingToHub = true; mc.setScreen(hub); }));
+                () -> {
+                    // Back vuelve a la ÚLTIMA pestaña de la cabeza, no al hub: el flujo es hub → cabeza (pestañas) → cuerpo → estilo.
+                    goingToHub = true;
+                    mc.setScreen(new HeadAppearanceScreen(hub, statsSnapshot, visualSnapshot, true));
+                }));
 
         addRenderableWidget(new TextOnlyButton(
                 panelLeft + IN_X2 - BTN_W, panelTop + BTN_BAR_Y, BTN_W, 20,
@@ -306,10 +318,12 @@ public class BodyColorsScreen extends Screen {
         }
 
         int boxY = y + (ROW_H - COLOR_BOX_H) / 2;
-        addRenderableWidget(new ColorBoxButton(x, boxY, COLOR_BOX_W, COLOR_BOX_H,
+        var custom = new ColorBoxButton(x, boxY, COLOR_BOX_W, COLOR_BOX_H,
                 () -> layerCurrent(L) & 0xFFFFFF,
                 () -> activeLayerIndex == L.index(),
-                () -> toggleLayerPicker(L)));
+                () -> toggleLayerPicker(L));
+        custom.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.body.custom_color")));
+        addRenderableWidget(custom);
     }
 
     private int layerCurrent(RaceLayerDiscovery.Layer L) {
@@ -386,9 +400,8 @@ public class BodyColorsScreen extends Screen {
 
     private void buildSkinToneGrid() {
         int[] presets = SKIN_TONES;
-        boolean tint = isTintRace(race);
         int perRow = 4;
-        int total  = presets.length + (tint ? 1 : 0);
+        int total  = presets.length + 1;
         int rows   = (total + perRow - 1) / perRow;
 
         // Anclado arriba, sin centrar: el hueco libre que esto deje lo aprovecha el preview
@@ -405,42 +418,54 @@ public class BodyColorsScreen extends Screen {
             int x = startX + col * (TONE_W + TONE_GAP);
             int y = gridTop + row * (TONE_H + TONE_GAP);
 
-            if (tint && i == presets.length) {
-                addRenderableWidget(new ColorBoxButton(x, y, TONE_W, TONE_H,
+            if (i == presets.length) {
+                var custom = new ColorBoxButton(x, y, TONE_W, TONE_H,
                         () -> skinColor & 0xFFFFFF,
                         () -> skinPickerActive,
-                        this::toggleSkinPicker));
-            } else if (tint) {
+                        this::toggleSkinPicker);
+                custom.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.body.custom_color")));
+                addRenderableWidget(custom);
+            } else {
                 final int c = presets[i];
                 addRenderableWidget(new ColorBoxButton(x, y, TONE_W, TONE_H,
                         () -> c,
                         () -> customSkinColor && (skinColor & 0xFFFFFF) == c,
                         () -> { customSkinColor = true; skinColor = 0xFF000000 | c; closePicker(); applyPreview(); }));
-            } else {
-                final int idx = i, c = presets[i];
-                addRenderableWidget(new ColorBoxButton(x, y, TONE_W, TONE_H,
-                        () -> c,
-                        () -> skinPreset == idx,
-                        () -> { skinPreset = idx; applyPreview(); }));
             }
         }
 
         int gridBottom = gridTop + rows * (TONE_H + TONE_GAP) - TONE_GAP;
-        if (tint) {
-            int naturalY = gridBottom + 8;
-            addRenderableWidget(new TextOnlyButton(cx - 30, naturalY, 60, DEFAULT_BTN_H,
-                    Component.literal("Default"),
-                    () -> { customSkinColor = false; closePicker(); applyPreview(); })
-                    .onPanel());
-            contentBottom = naturalY + DEFAULT_BTN_H;
-        } else {
-            contentBottom = gridBottom;
-        }
+        int naturalY = gridBottom + 8;
+        addRenderableWidget(new TextOnlyButton(cx - 30, naturalY, 60, DEFAULT_BTN_H,
+                Component.literal("Default"),
+                () -> { customSkinColor = false; closePicker(); applyPreview(); })
+                .onPanel());
+        contentBottom = naturalY + DEFAULT_BTN_H;
+
+        // Género: mismo ajuste que la fila "Gender" del hub, aquí para que el flujo lineal
+        // cabeza → cuerpo → estilo lo incluya sin volver al hub. Solo razas de tinte simple
+        // (las que tienen modelo masculino/femenino); esta rejilla ya es solo de ellas.
+        int genderY = contentBottom + 6;
+        Component genderName = Component.translatable(genderFemale
+                ? "screen.zenkai.body.gender.female" : "screen.zenkai.body.gender.male");
+        // Icono (celda 20x20 de icons.png, las mismas que la fila del hub) + botón a su derecha.
+        // El botón mide lo que su texto (el texto va centrado en el botón): así queda pegado al
+        // icono y el conjunto se centra de verdad, sea cual sea el idioma o el género.
+        Component genderLabel = Component.translatable("screen.zenkai.body.gender", genderName);
+        int genderBtnW = Minecraft.getInstance().font.width(genderLabel) + 8;
+        genderIconX = cx - (GENDER_ICON + 4 + genderBtnW) / 2;
+        genderIconY = genderY;
+        addRenderableWidget(new TextOnlyButton(genderIconX + GENDER_ICON + 4, genderY + (GENDER_ICON - DEFAULT_BTN_H) / 2,
+                genderBtnW, DEFAULT_BTN_H,
+                genderLabel,
+                () -> { genderFemale = !genderFemale; closePicker(); applyPreview(); rebuildWidgets(); })
+                .onPanel());
+        contentBottom = genderY + GENDER_ICON;
     }
 
     private void renderSkinToneLabel(GuiGraphics g) {
         int cx = panelLeft + BG_W / 2;
-        drawCenteredNoShadow(g, Component.literal(isTintRace(race) ? "Skin Color" : "Skin Preset"),
+        drawCenteredNoShadow(g, Component.literal("Skin Color"),
                 cx, toneLabelY, COLOR_SWATCH);
     }
 
@@ -503,6 +528,12 @@ public class BodyColorsScreen extends Screen {
                 zoomedSize, 0.0625f, (float) mouseX, (float) mouseY, mc.player);
 
         super.render(g, mouseX, mouseY, partialTick);
+
+        if (!isMultiTintRace(race)) {
+            g.blit(ICONS_TEX, genderIconX, genderIconY,
+                    genderFemale ? ICON_GENDER_FEMALE_U : ICON_GENDER_MALE_U, ICON_GENDER_V,
+                    GENDER_ICON, GENDER_ICON, ICONS_ATLAS, ICONS_ATLAS);
+        }
     }
 
     private void drawCenteredNoShadow(GuiGraphics g, Component text, int cx, int y, int color) {
@@ -529,7 +560,10 @@ public class BodyColorsScreen extends Screen {
         var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.setSkinColorRgb(skinColor & 0xFFFFFF);
         visual.setCustomSkinColor(customSkinColor);
-        visual.setSkinPreset(skinPreset);
+        if (isTintRace(race)) {
+            visual.setGender(genderFemale ? com.hmc.zenkai.feature.player.PlayerVisualAttachment.Gender.FEMALE
+                    : com.hmc.zenkai.feature.player.PlayerVisualAttachment.Gender.MALE);
+        }
 
         // Razas multicolor: capa 0 -> piel (skinColorRgb, sobrescribe lo de arriba); capa >=1
         // -> layerColors[index]. Corre SIEMPRE que la raza sea multicolor, sin importar qué

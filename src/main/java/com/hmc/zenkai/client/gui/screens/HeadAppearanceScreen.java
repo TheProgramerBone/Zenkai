@@ -168,12 +168,22 @@ public class HeadAppearanceScreen extends Screen {
     @Nullable private ColorChannel      activeChannel = null;
     @Nullable private ColorPickerWidget picker        = null;
 
+    /** true si se llega con "Back" desde BodyColorsScreen: se abre en la ÚLTIMA pestaña. */
+    private final boolean startAtLastTab;
+
     public HeadAppearanceScreen(AppearanceScreen hub,
                                 @Nullable CompoundTag statsSnapshot, @Nullable CompoundTag visualSnapshot) {
+        this(hub, statsSnapshot, visualSnapshot, false);
+    }
+
+    public HeadAppearanceScreen(AppearanceScreen hub,
+                                @Nullable CompoundTag statsSnapshot, @Nullable CompoundTag visualSnapshot,
+                                boolean startAtLastTab) {
         super(Component.translatable("screen.zenkai.appearance.title"));
         this.hub            = hub;
         this.statsSnapshot  = statsSnapshot;
         this.visualSnapshot = visualSnapshot;
+        this.startAtLastTab = startAtLastTab;
     }
 
     // ── Estado ───────────────────────────────────────────────────────────────
@@ -200,7 +210,11 @@ public class HeadAppearanceScreen extends Screen {
         hairStyle = visual.getHairStyle();
         keepCustomHair = com.hmc.zenkai.feature.race.HairCode.isCustom(visual.getHairStyleId());
 
-        tab = isTabVisible(lastTab) ? lastTab : Tab.EYES;
+        // Desde el hub se arranca en la primera pestaña (el flujo es lineal: Next recorre todas);
+        // desde Back del cuerpo, en la última.
+        List<Tab> tabs = visibleTabs();
+        tab = startAtLastTab ? tabs.get(tabs.size() - 1) : tabs.get(0);
+        lastTab = tab;
         page = pageOfSelection();
     }
 
@@ -281,7 +295,7 @@ public class HeadAppearanceScreen extends Screen {
                 pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
                 TEX_BTN, null,
-                () -> { goingToHub = true; mc.setScreen(hub); }));
+                this::goBack));
 
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20,
@@ -566,11 +580,34 @@ public class HeadAppearanceScreen extends Screen {
         if (!keepCustomHair) visual.setHairStyle(hairStyle);
     }
 
+    /** "Back": retrocede a la pestaña anterior visible y solo desde la primera vuelve al hub. */
+    private void goBack() {
+        List<Tab> tabs = visibleTabs();
+        int i = tabs.indexOf(tab);
+        if (i > 0) {
+            switchTab(tabs.get(i - 1));
+            return;
+        }
+        goingToHub = true;
+        Minecraft.getInstance().setScreen(hub);
+    }
+
+    /**
+     * "Next": avanza a la siguiente pestaña visible (ojos → nariz → boca → pelo) y solo desde la
+     * última pasa a StyleSelectionScreen. Antes saltaba de una al estilo y se saltaba las demás
+     * categorías sin que el jugador las viera.
+     */
     private void goToStyle() {
+        List<Tab> tabs = visibleTabs();
+        int i = tabs.indexOf(tab);
+        if (i >= 0 && i + 1 < tabs.size()) {
+            switchTab(tabs.get(i + 1));
+            return;
+        }
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         goingNext = true;
-        mc.setScreen(new StyleSelectionScreen(hub, statsSnapshot, visualSnapshot));
+        mc.setScreen(new BodyColorsScreen(hub, statsSnapshot, visualSnapshot));
     }
 
     @Override

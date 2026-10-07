@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "zenkai:item/hair_1"
+    "layer0": "zenkai:item/race_helmet"
   }
 }

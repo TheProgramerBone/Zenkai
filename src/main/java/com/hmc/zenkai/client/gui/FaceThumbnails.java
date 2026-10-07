@@ -111,7 +111,7 @@ public final class FaceThumbnails {
             case HAIR -> vis.getHairColorRgb();
             default   -> 0xFFFFFF;
         };
-        blitFace(g, geo.resolveTexture(head, vis.getSkinPreset()), rgb, region, x, y, scale);
+        blitFace(g, geo.resolveTexture(head), rgb, region, x, y, scale);
         // Capas de color de cuerpo (detalle Namek, marcas Arcosianas...), como BodyTintGeoLayer.
         if (geo.hasBodyTint()) {
             for (RaceLayerDiscovery.Layer layer : RaceLayerDiscovery.layersFor(geo)) {

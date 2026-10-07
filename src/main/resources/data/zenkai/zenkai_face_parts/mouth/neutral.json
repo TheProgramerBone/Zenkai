@@ -2,6 +2,6 @@
   "default_for": ["human", "saiyan", "namekian", "arcosian", "majin"],
   "sort": 10,
   "layers": [
-    { "texture": "zenkai:textures/customization/mouth/mouth_1.png", "color": "skin" }
+    { "texture": "zenkai:textures/customization/mouth/neutral.png", "color": "skin" }
   ]
 }

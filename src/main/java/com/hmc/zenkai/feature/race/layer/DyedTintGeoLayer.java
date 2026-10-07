@@ -44,7 +44,7 @@ public class DyedTintGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
 
         // Preset 0: tinte por tintes vanilla y presets de raza no se combinan en ningún item
         // de hoy. Si algún día lo hacen, aquí hay que sacar el preset del portador.
-        ResourceLocation tint = deriveMask(animatable.resolveTexture(stack, 0), "_tint");
+        ResourceLocation tint = deriveMask(animatable.resolveTexture(stack), "_tint");
         if (!resourceExists(tint)) return;
         int rgb = (stack != null && stack.has(DataComponents.DYED_COLOR))
                 ? DyedItemColor.getOrDefault(stack, animatable.getDyeTintDefault())

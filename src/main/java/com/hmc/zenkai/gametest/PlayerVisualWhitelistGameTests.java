@@ -22,7 +22,7 @@ public final class PlayerVisualWhitelistGameTests {
     private PlayerVisualWhitelistGameTests() {}
 
     private static final ResourceLocation EYES_4 = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "eyes/expressive");
-    private static final ResourceLocation MOUTH_1 = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "mouth/legacy_1");
+    private static final ResourceLocation MOUTH_1 = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "mouth/neutral");
 
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void clientCannotWriteServerOnlyFields(GameTestHelper helper) {
@@ -61,10 +61,9 @@ public final class PlayerVisualWhitelistGameTests {
         chosen.setFacePart(FaceCategory.EYES, EYES_4);
         chosen.setFacePart(FaceCategory.MOUTH, MOUTH_1);
         chosen.setFacePart(FaceCategory.NOSE, null);
-        chosen.setHairStyleId("zenkai:legacy_1");
+        chosen.setHairStyleId("zenkai:classic");
         chosen.setCustomSkinColor(true);
         chosen.setCustomAuraColor(true);
-        chosen.setSkinPreset(2);
         chosen.setGender(PlayerVisualAttachment.Gender.FEMALE);
         chosen.setRenderRaceSkin(false);
         chosen.setHideVanillaBody(false);
@@ -78,9 +77,8 @@ public final class PlayerVisualWhitelistGameTests {
         helper.assertTrue(EYES_4.equals(v.getFacePart(FaceCategory.EYES))
                 && MOUTH_1.equals(v.getFacePart(FaceCategory.MOUTH))
                 && v.getFacePart(FaceCategory.NOSE) == null, "rasgos faciales deben aplicarse");
-        helper.assertTrue("zenkai:legacy_1".equals(v.getHairStyleId()), "hairStyleId válido debe aplicarse");
+        helper.assertTrue("zenkai:classic".equals(v.getHairStyleId()), "hairStyleId válido debe aplicarse");
         helper.assertTrue(v.isCustomSkinColor() && v.isCustomAuraColor(), "modos de color deben aplicarse");
-        helper.assertTrue(v.getSkinPreset() == 2, "skinPreset debe aplicarse");
         helper.assertTrue(v.getGender() == PlayerVisualAttachment.Gender.FEMALE, "gender debe aplicarse");
         helper.assertTrue(!v.shouldRenderRaceSkin() && !v.shouldHideVanillaBody(), "skin de raza on/off debe aplicarse");
         helper.assertTrue(v.getLayerColorRgb(1) == 0x00FF00 && !v.hasLayerColor(0), "layerColors debe aplicarse");
@@ -91,7 +89,6 @@ public final class PlayerVisualWhitelistGameTests {
         evilFace.putString("eyes", "x".repeat(5000));      // demasiado largo: se descarta
         evilFace.putString("mouth", "NO ES UN ID VALIDO"); // no parsea: se descarta
         evil.put("faceParts", evilFace);
-        evil.putInt("skinPreset", 9999);
         evil.putString("hairStyleId", "NO ES UN ID VALIDO");
         evil.putString("gender", "NOT_A_GENDER");
         evil.putIntArray("layerColors", new int[10_000]);
@@ -99,8 +96,7 @@ public final class PlayerVisualWhitelistGameTests {
 
         helper.assertTrue(v.getFacePart(FaceCategory.EYES) == null && v.getFacePart(FaceCategory.MOUTH) == null,
                 "ids de rasgo malformados deben descartarse (después los repone FaceBans.reconcile)");
-        helper.assertTrue(v.getSkinPreset() <= 63, "skinPreset debe acotarse, es " + v.getSkinPreset());
-        helper.assertTrue("zenkai:legacy_1".equals(v.getHairStyleId()), "hairStyleId inválido debe ignorarse");
+        helper.assertTrue("zenkai:classic".equals(v.getHairStyleId()), "hairStyleId inválido debe ignorarse");
         helper.assertTrue(v.getGender() == PlayerVisualAttachment.Gender.FEMALE, "gender inválido debe ignorarse");
         helper.assertTrue(v.layerColorCount() <= 16, "layerColors debe acotarse, tiene " + v.layerColorCount());
 

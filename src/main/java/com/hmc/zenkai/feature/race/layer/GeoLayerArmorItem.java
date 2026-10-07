@@ -48,9 +48,6 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     // Opacidad de la pasada de tinte por tintes vanilla, 0-255. 255 = opaca (comportamiento
     // de siempre). Por debajo, la capa pasa a RenderType translúcido.
     private int dyeTintAlpha = 255;
-    // Texturas preset opcionales (para razas con presets pintados, p. ej. Namekian/Arcosian).
-    // Si es null se usa siempre texturePath.
-    @Nullable private ResourceLocation[] presetTextures = null;
     // Textura que depende del ESTADO DEL STACK (p. ej. scouter roto). null = la de siempre.
     @Nullable private java.util.function.Function<ItemStack, ResourceLocation> stackTexture = null;
     // Si true, el renderer añade los overlays de cara (ojos/boca/nariz). Solo para items de cuerpo.
@@ -117,39 +114,18 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
      * aquí. Si solo lo hiciera el renderer, un scouter roto saldría con la base agrietada y la
      * máscara _tint de la sana, dejando el cristal flotando sobre un armazón partido.
      */
-    public ResourceLocation resolveTexture(@Nullable ItemStack stack, int preset) {
+    public ResourceLocation resolveTexture(@Nullable ItemStack stack) {
         if (stackTexture != null && stack != null && !stack.isEmpty()) {
             ResourceLocation r = stackTexture.apply(stack);
             if (r != null) return r;
         }
-        return getTexture(preset);
+        return texturePath;
     }
 
     /** Define controladores de animación personalizados. Devuelve this para encadenar. */
     public GeoLayerArmorItem animations(Consumer<AnimatableManager.ControllerRegistrar> factory) {
         this.controllerFactory = factory;
         return this;
-    }
-
-    /**
-     * Define texturas preset (rutas relativas a assets/zenkai/, p. ej. "textures/models/races/namekian_player_0.png").
-     * El renderer elegirá una según el índice skinPreset del jugador. Devuelve this para encadenar.
-     */
-    public GeoLayerArmorItem presets(String... paths) {
-        if (paths == null || paths.length == 0) { this.presetTextures = null; return this; }
-        this.presetTextures = new ResourceLocation[paths.length];
-        for (int i = 0; i < paths.length; i++)
-            this.presetTextures[i] = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, paths[i]);
-        return this;
-    }
-
-    /** Textura a usar para un índice de preset dado (si hay presets); si no, la textura única. */
-    public ResourceLocation getTexture(int presetIndex) {
-        if (presetTextures != null && presetTextures.length > 0) {
-            int i = Math.floorMod(presetIndex, presetTextures.length);
-            return presetTextures[i];
-        }
-        return texturePath;
     }
 
     /** Marca este item como "cuerpo" para que el renderer le añada los overlays de cara. */

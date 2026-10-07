@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-06T06:39:43.7590903	Item Models: zenkai
+// 1.21.1	2026-10-06T07:00:52.5197402	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -56,8 +56,7 @@ c52731eb08f625e4de3fd0b76e868898577177e9 assets/zenkai/models/item/dirty_raw_kat
 77289c932292d2205e772a83398fbcca77dab032 assets/zenkai/models/item/elite_circuit.json
 b6f3572016d27a67567a73dd90a74cf43defc6f7 assets/zenkai/models/item/energy_crystal.json
 b3483a3b592995f3901669b8a260cde0e5b6a537 assets/zenkai/models/item/energy_generator.json
-42298552494411d74786c39d7726e531b2768363 assets/zenkai/models/item/hair.json
-42298552494411d74786c39d7726e531b2768363 assets/zenkai/models/item/hair_1.json
+f96129e0583ae0240b05de3b51b397520126f065 assets/zenkai/models/item/hair.json
 c6fdd6445bc58722d479b71d0c927092b728dc33 assets/zenkai/models/item/halo.json
 17a629df4615b9fbb9b20f489f1053784acc77a2 assets/zenkai/models/item/healing_water_bottle.json
 abee47a8f46a87476d43b6d2d9b86e4841c2e9bb assets/zenkai/models/item/healing_water_bucket.json
@@ -145,7 +144,6 @@ cbc58156863501ef3999d1f3f7a691697efd9c13 assets/zenkai/models/item/sacred_stone_
 340e5a499537ca1c3856387e5dbacb789e98e351 assets/zenkai/models/item/senzu_bean.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/shenlong_spawn_egg.json
 b2b33d40b8094e7f9ef4314e5b8c7c9f0ecb27c0 assets/zenkai/models/item/space_pod_item.json
-2f38111f1cc0b97ef253be8f716c5cf79e26cd03 assets/zenkai/models/item/ssj1_hair1.json
 473d8df53841e77634ca9d63306d43ca492a958b assets/zenkai/models/item/stripped_ajisa_log.json
 7397baab3cc0cf09fa8484a957d0aed2538445f0 assets/zenkai/models/item/stripped_ajisa_wood.json
 18890d73493dbde811a8c717f2c9292d5e46c8dc assets/zenkai/models/item/structural_concrete_black_slab.json

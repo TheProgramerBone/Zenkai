@@ -34,11 +34,11 @@ public final class FaceCatalogGameTests {
     }
 
     // Ojos: desde 2026-10-01 SOLO los tres aprobados por el usuario (los eyes_1..5 "legacy" se
-    // retiraron). Boca: mouth/legacy_1 sigue siendo la única.
+    // retiraron). Boca: mouth/neutral sigue siendo la única.
     private static final ResourceLocation MINIMAL = id("eyes/minimal");
     private static final ResourceLocation EXPRESSIVE = id("eyes/expressive");
     private static final ResourceLocation SOFT = id("eyes/soft");
-    private static final ResourceLocation MOUTH_1 = id("mouth/legacy_1");
+    private static final ResourceLocation MOUTH_1 = id("mouth/neutral");
 
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void catalogLoadsApprovedPartsAndRaceRules(GameTestHelper helper) {
@@ -46,7 +46,7 @@ public final class FaceCatalogGameTests {
             helper.assertTrue(FaceCatalog.get(r) != null, "falta en el catálogo: " + r);
         }
         helper.assertTrue(FaceCatalog.get(MINIMAL).category() == FaceCategory.EYES, "eyes/minimal debe ser EYES");
-        helper.assertTrue(FaceCatalog.get(MOUTH_1).category() == FaceCategory.MOUTH, "mouth/legacy_1 debe ser MOUTH");
+        helper.assertTrue(FaceCatalog.get(MOUTH_1).category() == FaceCategory.MOUTH, "mouth/neutral debe ser MOUTH");
         for (Race r : Race.values()) {
             helper.assertTrue(FaceCatalog.get(MINIMAL).isDefaultFor(r), "minimal debe ser el ojo por defecto de " + r);
         }
@@ -87,7 +87,7 @@ public final class FaceCatalogGameTests {
         }
         // Rasgos de la hoja de propuestas (2026-10-01): para cualquier raza (ninguno pisa las
         // marcas laterales arcosianas lx 0-1/14-15).
-        for (String p : new String[]{"eyes/lidded", "eyes/closed", "eyes/alert", "eyes/slanted", "eyes/sparkle",
+        for (String p : new String[]{"eyes/lidded", "eyes/closed", "eyes/alert", "eyes/slanted",
                 "mouth/smile", "mouth/small", "mouth/smirk", "mouth/shout", "mouth/thin",
                 "nose/dot", "nose/shadow", "nose/nostrils", "nose/bridge"}) {
             var d = FaceCatalog.get(id(p));
@@ -108,8 +108,16 @@ public final class FaceCatalogGameTests {
         }
         var mouth = FaceCatalog.get(MOUTH_1).layers();
         helper.assertTrue(mouth.size() == 1 && mouth.get(0).color() == FaceLayer.Color.SKIN
-                        && mouth.get(0).texture().getPath().equals("textures/customization/mouth/mouth_1.png"),
-                "mouth/legacy_1 debe ser una capa mouth_1 teñida con la piel");
+                        && mouth.get(0).texture().getPath().equals("textures/customization/mouth/neutral.png"),
+                "mouth/neutral debe ser una capa neutral teñida con la piel");
+
+        // sparkle/arched/sleepy: para cualquier raza salvo Arcosiano (el casco se come su rasgo
+        // distintivo; vetados el 2026-10-06 viendo la cabeza real).
+        for (String p : new String[]{"eyes/sparkle", "eyes/arched", "eyes/sleepy"}) {
+            var d = FaceCatalog.get(id(p));
+            helper.assertTrue(d != null && d.allows(Race.HUMAN) && !d.allows(Race.ARCOSIAN),
+                    p + ": sí Human, no Arcosiano");
+        }
 
         // minimal para cualquier raza; expressive/soft sin Arcosiano (su remate de párpado pisa
         // las marcas laterales; la cara arcosiana es un pendiente aparte del usuario).
@@ -198,7 +206,7 @@ public final class FaceCatalogGameTests {
         migrated.load(old);
         helper.assertTrue(id("eyes/sleepy").equals(migrated.getFacePart(FaceCategory.EYES)),
                 "eyeIndex 4 -> eyes/sleepy (los ojos antiguos volvieron con id con nombre)");
-        helper.assertTrue(MOUTH_1.equals(migrated.getFacePart(FaceCategory.MOUTH)), "mouthIndex 1 -> mouth/legacy_1");
+        helper.assertTrue(MOUTH_1.equals(migrated.getFacePart(FaceCategory.MOUTH)), "mouthIndex 1 -> mouth/neutral");
         helper.assertTrue(migrated.getFacePart(FaceCategory.NOSE) == null, "noseIndex 0 -> ninguna");
 
         // Ida y vuelta por NBT: el formato nuevo guarda ids, no índices.
