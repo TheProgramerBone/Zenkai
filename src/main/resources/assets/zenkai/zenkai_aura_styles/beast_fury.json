@@ -1,0 +1,4 @@
+{
+  "_comment": "Contorno rojo de Beast forzando (overdrive): solo el borde ceñido a la pose real, sin cuerpo de aura. Lo dibuja AuraComposer aparte del aura normal de Beast, ver familia outline.",
+  "family": "outline"
+}
