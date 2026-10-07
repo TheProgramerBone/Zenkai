@@ -49,31 +49,44 @@ public final class AuraAnchor {
 
     public static final int HEAD = 0, BODY = 1, RIGHT_ARM = 2, LEFT_ARM = 3, RIGHT_LEG = 4, LEFT_LEG = 5;
     public static final int SEGMENTS = 6;
+    /** Floats por segmento en el array que se sube al shader: A xyz + rx, B xyz + rz, eje lateral xyz + 0. */
+    public static final int SEG_FLOATS = 12;
 
-    /** Extremos A/B y radio de cada cápsula en PÍXELES del espacio de su ModelPart (Y hacia abajo). */
+    /**
+     * Cada segmento es una CAJA redondeada, no un cilindro: extremos A/B del eje, semiancho lateral
+     * (rx, a lo largo del eje X del ModelPart) y semiprofundidad (rz), todo en PÍXELES del espacio de
+     * su ModelPart (Y hacia abajo). Las tapas añaden {@code 0.5 * min(rx, rz)} más allá de A y B
+     * (aura_body_flow.vsh), así que los extremos están metidos ese tanto para que la caja cubra
+     * EXACTAMENTE el cubo del modelo vanilla (torso 8x12x4, brazos/piernas 4x12x4, cabeza 8x8x8). Antes
+     * eran cápsulas redondas de radio 4.4 y 2.4-2.5: el torso salía el doble de grueso en profundidad,
+     * los brazos se fundían con él y el contorno se leía como un muñeco de jengibre (2026-10-06).
+     */
     private static final float[][] LOCAL = {
-            // ax, ay, az, bx, by, bz, radio
-            {0f, -1.5f, 0f, 0f, -6.5f, 0f, 4.6f},   // cabeza: de la nuca a la coronilla
-            {0f, 1.5f, 0f, 0f, 10.5f, 0f, 4.4f},    // torso
-            {-1f, 0f, 0f, -1f, 9f, 0f, 2.4f},       // brazo derecho: hombro -> muñeca
-            {1f, 0f, 0f, 1f, 9f, 0f, 2.4f},         // brazo izquierdo
-            {0f, 1f, 0f, 0f, 11f, 0f, 2.5f},        // pierna derecha: cadera -> tobillo
-            {0f, 1f, 0f, 0f, 11f, 0f, 2.5f}};       // pierna izquierda
+            // ax, ay, az, bx, by, bz, rx, rz
+            {0f, -2f, 0f, 0f, -6f, 0f, 4f, 4f},     // cabeza: cubo y de -8 a 0
+            {0f, 1f, 0f, 0f, 11f, 0f, 4f, 2f},      // torso: y de 0 a 12
+            {-1f, -1f, 0f, -1f, 9f, 0f, 2f, 2f},    // brazo derecho: y de -2 a 10 (hombro -> muñeca)
+            {1f, -1f, 0f, 1f, 9f, 0f, 2f, 2f},      // brazo izquierdo
+            {0f, 1f, 0f, 0f, 11f, 0f, 2f, 2f},      // pierna derecha: cadera -> tobillo
+            {0f, 1f, 0f, 0f, 11f, 0f, 2f, 2f}};     // pierna izquierda
 
-    /** Pose sintética de pie (bloques sobre los pies; x = lateral hacia la derecha). */
+    /** Pose sintética de pie (bloques sobre los pies; x = lateral hacia la derecha): ax, ay, bx, by, rx, rz. */
     private static final float[][] STANDING = {
-            {0f, 1.53f, 0f, 1.84f, 0.29f},
-            {0f, 0.78f, 0f, 1.34f, 0.28f},
-            {0.31f, 1.37f, 0.31f, 0.83f, 0.15f},
-            {-0.31f, 1.37f, -0.31f, 0.83f, 0.15f},
-            {0.12f, 0.68f, 0.12f, 0.06f, 0.16f},
-            {-0.12f, 0.68f, -0.12f, 0.06f, 0.16f}};
+            {0f, 1.625f, 0f, 1.875f, 0.25f, 0.25f},
+            {0f, 0.8125f, 0f, 1.4375f, 0.25f, 0.125f},
+            {0.375f, 1.4375f, 0.375f, 0.8125f, 0.125f, 0.125f},
+            {-0.375f, 1.4375f, -0.375f, 0.8125f, 0.125f, 0.125f},
+            {0.12f, 0.6875f, 0.12f, 0.0625f, 0.125f, 0.125f},
+            {-0.12f, 0.6875f, -0.12f, 0.0625f, 0.125f, 0.125f}};
 
-    /** Cápsulas de un jugador. Coordenadas de MUNDO. */
+    /** Cajas de un jugador. Coordenadas de MUNDO. {@code r} = semiancho lateral, {@code rz} =
+     *  semiprofundidad, {@code lx/ly/lz} = eje lateral (X del ModelPart) unitario. */
     public static final class Pose {
         public final double[] ax = new double[SEGMENTS], ay = new double[SEGMENTS], az = new double[SEGMENTS];
         public final double[] bx = new double[SEGMENTS], by = new double[SEGMENTS], bz = new double[SEGMENTS];
         public final float[] r = new float[SEGMENTS];
+        public final float[] rz = new float[SEGMENTS];
+        public final float[] lx = new float[SEGMENTS], ly = new float[SEGMENTS], lz = new float[SEGMENTS];
         long frame = -1;
     }
 
@@ -114,6 +127,10 @@ public final class AuraAnchor {
             System.arraycopy(cap.by, 0, out.by, 0, SEGMENTS);
             System.arraycopy(cap.bz, 0, out.bz, 0, SEGMENTS);
             System.arraycopy(cap.r, 0, out.r, 0, SEGMENTS);
+            System.arraycopy(cap.rz, 0, out.rz, 0, SEGMENTS);
+            System.arraycopy(cap.lx, 0, out.lx, 0, SEGMENTS);
+            System.arraycopy(cap.ly, 0, out.ly, 0, SEGMENTS);
+            System.arraycopy(cap.lz, 0, out.lz, 0, SEGMENTS);
             return true;
         }
         AttributeInstance scaleAttr = p.getAttribute(Attributes.SCALE);
@@ -130,25 +147,31 @@ public final class AuraAnchor {
             out.by[i] = y + st[3] * s;
             out.bz[i] = z + rz * st[2] * s;
             out.r[i] = st[4] * s;
+            out.rz[i] = st[5] * s;
+            out.lx[i] = rx;
+            out.ly[i] = 0f;
+            out.lz[i] = rz;
         }
         return false;
     }
 
     /**
      * Pose de pie en coordenadas LOCALES (pies en el origen, sin giro), con el formato de segmentos
-     * de {@code AuraBodyUniforms} (por segmento: A xyz, radio, B xyz, 0). Para la vista previa de
-     * la GUI, donde no hay mundo ni cámara.
+     * de {@code AuraBodyUniforms} (por segmento: A xyz, rx, B xyz, rz, eje lateral xyz, 0). Para la
+     * vista previa de la GUI, donde no hay mundo ni cámara.
      */
     public static float[] standingLocal() {
-        float[] out = new float[SEGMENTS * 8];
+        float[] out = new float[SEGMENTS * SEG_FLOATS];
         for (int i = 0; i < SEGMENTS; i++) {
             float[] st = STANDING[i];
-            int o = i * 8;
+            int o = i * SEG_FLOATS;
             out[o] = -st[0];
             out[o + 1] = st[1];
             out[o + 3] = st[4];
             out[o + 4] = -st[2];
             out[o + 5] = st[3];
+            out[o + 7] = st[5];
+            out[o + 8] = 1f;
         }
         return out;
     }
@@ -207,6 +230,14 @@ public final class AuraAnchor {
             // Escala real de la parte (escala de cuerpo, Oozaru...): largo de una columna.
             float sc = (float) Math.sqrt(mat.m00() * mat.m00() + mat.m01() * mat.m01() + mat.m02() * mat.m02());
             out.r[i] = l[6] / 16f * sc;
+            out.rz[i] = l[7] / 16f * sc;
+            // Eje lateral (X del ModelPart) en mundo: la caja se orienta con el hueso, no con el mundo.
+            mat.transform(tmp.set(1f, 0f, 0f, 0f));
+            float ll = Mth.sqrt(tmp.x * tmp.x + tmp.y * tmp.y + tmp.z * tmp.z);
+            if (ll < 1.0e-4f) ll = 1f;
+            out.lx[i] = tmp.x / ll;
+            out.ly[i] = tmp.y / ll;
+            out.lz[i] = tmp.z / ll;
             pose.popPose();
         }
     }

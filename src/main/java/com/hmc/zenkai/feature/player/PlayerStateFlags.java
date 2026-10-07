@@ -64,6 +64,13 @@ public class PlayerStateFlags {
     private boolean hasSsj4Ritual = false;
 
     /**
+     * Beast desbloqueado por furia: una mascota propia o un miembro de la party murió cerca del
+     * jugador teniendo él la maestría de Mystic requerida (ver BeastFury). Persistente, igual que
+     * hasSsj4Ritual, y viaja al cliente por este mismo save()/load() para que la rueda lo sepa.
+     */
+    private boolean beastFury = false;
+
+    /**
      * Cola de saiyan: una de las tres condiciones de Oozaru (junto con raza y luna llena, ver
      * OozaruConditions). PENDIENTE: hoy no existe ninguna pieza de GeckoLibArmor de cola
      * todavía, así que el valor por defecto es true (todo saiyan la tiene) para no bloquear el
@@ -129,6 +136,8 @@ public class PlayerStateFlags {
     public void setUeCharge(double v) { this.ueCharge = Math.max(0.0, Math.min(100.0, v)); }
     public boolean hasSsj4Ritual() { return hasSsj4Ritual; }
     public void setHasSsj4Ritual(boolean v) { this.hasSsj4Ritual = v; }
+    public boolean hasBeastFury() { return beastFury; }
+    public void setBeastFury(boolean v) { this.beastFury = v; }
     public boolean hasReceivedKaioWeights() { return receivedKaioWeights; }
     public void setReceivedKaioWeights(boolean v) { this.receivedKaioWeights = v; }
 
@@ -165,6 +174,7 @@ public class PlayerStateFlags {
         tag.putBoolean("overdriveCharging", overdriveCharging);
         tag.putBoolean("hasTail", hasTail);
         tag.putBoolean("hasSsj4Ritual", hasSsj4Ritual);
+        tag.putBoolean("beastFury", beastFury);
         tag.putDouble("arcosianPp", arcosianPp);
         tag.putDouble("uiHeat", uiHeat);
         tag.putDouble("ueCharge", ueCharge);
@@ -178,6 +188,7 @@ public class PlayerStateFlags {
         // como haría getBoolean() con una key ausente.
         this.hasTail = !tag.contains("hasTail") || tag.getBoolean("hasTail");
         this.hasSsj4Ritual = tag.getBoolean("hasSsj4Ritual");
+        this.beastFury = tag.getBoolean("beastFury");
         this.arcosianPp = tag.getDouble("arcosianPp");
         this.uiHeat = tag.getDouble("uiHeat");
         this.ueCharge = tag.getDouble("ueCharge");

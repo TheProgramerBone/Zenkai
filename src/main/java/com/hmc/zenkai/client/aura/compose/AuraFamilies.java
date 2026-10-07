@@ -231,6 +231,22 @@ public final class AuraFamilies {
             new AuraTrailSpec(0.4f, 0.05f, 0.6f, 0.5f, 1.0f, false, 22)));
 
     /**
+     * OUTLINE — solo el CONTORNO rojo ceñido de Beast forzando (2026-10-06, sustituye a la animación
+     * idle de overdrive). No es un aura de verdad: no dibuja cuerpo (AuraComposer lo salta para esta
+     * familia) ni estela, solo el componente rim, que se pinta con las cápsulas de la pose real
+     * (AuraAnchor), así que sigue brazos y piernas en vez de ser una esfera alrededor del jugador.
+     * Contorno de SILUETA uniforme (rim en modo steady): grosor ABSOLUTO de 0.05 bloques, dibujado con
+     * las caras traseras de las cajas para que el cuerpo real las tape. AuraComposer.hasRuntime cuenta
+     * también este runtime para que la captura de pose corra en reposo y siga las animaciones.
+     */
+    public static final AuraFamily OUTLINE = register(new AuraFamily("outline", AuraBodyKind.FLOW,
+            AuraInnerSpec.NONE,
+            b -> { },
+            List.of(new RimComponent.Config(1.0f, 0.05f, ShellComponent.Pulse.SINE, 1.0f, 0.05f,
+                    TintSpec.parse("#FF2A1A"), 0f, true)),
+            "clean", "none", FLOWING.trail()));
+
+    /**
      * LLAMA DE AGUJAS (2026-09-30, vídeo del usuario comparado con DragonMine Z): sobre la vela
      * calibrada, la silueta que DMZ y el anime tienen y la nuestra no:
      * <ul>
@@ -316,7 +332,7 @@ public final class AuraFamilies {
     }
 
     private static AuraComponentConfig rim(float strength, float width, float hz, float amp, TintSpec color) {
-        return new RimComponent.Config(strength, width, ShellComponent.Pulse.SINE, hz, amp, color, 0f);
+        return new RimComponent.Config(strength, width, ShellComponent.Pulse.SINE, hz, amp, color, 0f, false);
     }
 
     private static AuraComponentConfig drift() {

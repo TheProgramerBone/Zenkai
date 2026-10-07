@@ -657,6 +657,7 @@ public class ModCommands {
         // cola vuelve a su valor por defecto (true) por la misma razón de "estado limpio",
         // aunque el ítem de cola puede haberla puesto en false.
         att.setHasSsj4Ritual(false);
+        att.setBeastFury(false); // idem: Beast se vuelve a desbloquear con una nueva furia
         att.setHasTail(true);
         // Servicio de Kaiosama: un reset "full" también devuelve el derecho a pedir las
         // pesas de nuevo, igual que borra lo demás — no sería full si dejara este

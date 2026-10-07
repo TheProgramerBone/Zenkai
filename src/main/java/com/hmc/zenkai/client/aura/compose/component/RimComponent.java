@@ -28,11 +28,18 @@ public final class RimComponent implements AuraComponent {
 
     public static final String TYPE = "rim";
 
+    /**
+     * @param steady contorno de SILUETA (Beast forzando): un borde liso y uniforme alrededor del cuerpo,
+     *               como el de una pegatina. Se dibuja con las caras traseras de las cajas infladas (el
+     *               cuerpo real las tapa), sin estrías ni motas que se mueven con la altura de mundo (al
+     *               volar titilaban) y con el color puro. En este modo {@code width} es el grosor
+     *               ABSOLUTO en bloques (0.05 ≈ 0.8 píxeles de modelo), no una proporción.
+     */
     public record Config(float strength, float width, ShellComponent.Pulse pulse, float pulseHz, float pulseAmp,
-                         TintSpec color, float flecks) implements AuraComponentConfig {
+                         TintSpec color, float flecks, boolean steady) implements AuraComponentConfig {
 
         private static final Set<String> KEYS = Set.of("strength", "width", "pulse", "pulse_hz", "pulse_amp",
-                "color", "flecks");
+                "color", "flecks", "steady");
 
         @Override public String type() { return TYPE; }
 
@@ -48,7 +55,8 @@ public final class RimComponent implements AuraComponent {
                     AuraComponentTypes.f(o, "pulse_hz", 1.5f),
                     AuraComponentTypes.f(o, "pulse_amp", 0.2f),
                     TintSpec.parse(AuraComponentTypes.s(o, "color", "hot")),
-                    Mth.clamp(AuraComponentTypes.f(o, "flecks", 0f), 0f, 1f));
+                    Mth.clamp(AuraComponentTypes.f(o, "flecks", 0f), 0f, 1f),
+                    o.has("steady") && o.get("steady").getAsBoolean());
         }
     }
 
@@ -69,17 +77,26 @@ public final class RimComponent implements AuraComponent {
         float beat = ShellComponent.pulse(cfg.pulse(), cfg.pulseHz() * f.dynamics.pulseRateFactor(),
                 cfg.pulseAmp(), f.seconds);
         p.put(Key.INFLATE, cfg.width());
-        p.put(Key.AMP, 0.02f * f.powerScale);
         p.put(Key.LICKS, 0f);
-        p.put(Key.RIM_ONLY, 1f);
         p.put(Key.FLECKS, cfg.flecks());
         p.put(Key.ALPHA_EDGE, Mth.clamp(cfg.strength() * beat, 0f, 1f));
-        p.put(Key.CEL_RIM, 0.55f);
-        p.put(Key.FRESNEL_POWER, 1.5f);
-        p.put(Key.FRESNEL_DIVIS, 0.8f);
-        p.put(Key.BAND_SOFT, 0.05f);
-        p.put(Key.EMIT_EDGE, 0.6f);
         p.put(Key.SPEED, 0.8f);
+        if (cfg.steady()) {
+            // RIM_ONLY = 3 = CONTORNO DE SILUETA para aura_body_flow (vsh y fsh): caras traseras de las
+            // cajas infladas, ocluidas por el cuerpo real. INFLATE pasa a ser el grosor ABSOLUTO en
+            // bloques. Sin ondulación ni ruido, y emisión alta para que se lea aun de día.
+            p.put(Key.AMP, 0f);
+            p.put(Key.RIM_ONLY, 3f);
+            p.put(Key.EMIT_EDGE, 0.9f);
+        } else {
+            p.put(Key.AMP, 0.02f * f.powerScale);
+            p.put(Key.RIM_ONLY, 1f);
+            p.put(Key.CEL_RIM, 0.55f);
+            p.put(Key.FRESNEL_POWER, 1.5f);
+            p.put(Key.FRESNEL_DIVIS, 0.8f);
+            p.put(Key.BAND_SOFT, 0.05f);
+            p.put(Key.EMIT_EDGE, 0.6f);
+        }
         float[] c = cfg.color().of(f);
         AuraComposer.submitBodyLayer(f, pose, AuraBodyKind.FLOW, p, c, c, f.extras, 0.999f);
     }

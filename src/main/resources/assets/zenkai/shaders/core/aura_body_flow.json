@@ -267,6 +267,12 @@
         0
       ]
     },
+    { "name": "ZenkaiSeg0X", "type": "float", "count": 4, "values": [ 1, 0, 0, 0 ] },
+    { "name": "ZenkaiSeg1X", "type": "float", "count": 4, "values": [ 1, 0, 0, 0 ] },
+    { "name": "ZenkaiSeg2X", "type": "float", "count": 4, "values": [ 1, 0, 0, 0 ] },
+    { "name": "ZenkaiSeg3X", "type": "float", "count": 4, "values": [ 1, 0, 0, 0 ] },
+    { "name": "ZenkaiSeg4X", "type": "float", "count": 4, "values": [ 1, 0, 0, 0 ] },
+    { "name": "ZenkaiSeg5X", "type": "float", "count": 4, "values": [ 1, 0, 0, 0 ] },
     {
       "name": "ZenkaiBloomMode",
       "type": "float",

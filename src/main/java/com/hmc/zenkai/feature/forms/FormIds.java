@@ -60,7 +60,6 @@ public final class FormIds {
     public static final ResourceLocation ULTRA_EGO = id("ultra_ego");
     public static final ResourceLocation ULTRA_INSTINCT_SIGN = id("ultra_instinct_sign");
     public static final ResourceLocation ULTRA_INSTINCT = id("ultra_instinct");
-    public static final ResourceLocation ULTIMATE_MYSTIC = id("ultimate_mystic");
     public static final ResourceLocation BEAST = id("beast");
 
     private static ResourceLocation id(String path) {

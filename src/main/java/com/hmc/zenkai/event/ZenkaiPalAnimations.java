@@ -258,15 +258,6 @@ public final class ZenkaiPalAnimations {
                 ZenkaiTransitions.COMBAT);
     }
 
-    private static final ResourceLocation BEAST_IDLE =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.beast_overdrive_idle");
-
-    /** Idle agresivo de Beast forzando (loop). Vive en la capa de combate: cualquier pose de
-     *  combate o técnica posterior la reemplaza con el mismo fundido de 5 ticks. */
-    public static void playBeastOverdriveIdle(AbstractClientPlayer player) {
-        ZenkaiTransitions.play(combatController(player), BEAST_IDLE, ZenkaiTransitions.COMBAT);
-    }
-
     public static void stopCombatIdle(AbstractClientPlayer player) {
         ZenkaiTransitions.stop(combatController(player), ZenkaiTransitions.COMBAT);
     }
@@ -414,7 +405,6 @@ public final class ZenkaiPalAnimations {
     }
 
     static {
-        THIRD_PERSON_ONLY.add(BEAST_IDLE);
         // Esquives de Ultra Instinct: el cuerpo entero se mueve y en 1ª persona rompen la vista.
         Collections.addAll(THIRD_PERSON_ONLY, UI_DODGE_ANIMS);
     }

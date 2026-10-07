@@ -60,8 +60,8 @@ public final class PotentialUnlock {
             if (d != null) best = Math.max(best, d.statPercentMastered());
         }
         // TOPE ABSOLUTO (skills.potential_unlock_max_stat_percent): sin él, un saiyan con SSB/Rosé
-        // (26) sacaba un Mystic de 22 a maestría 100, por encima del Místico Definitivo sin entrenar
-        // (17) y casi igualando a Beast sin entrenar (24). El tope se aplica al TECHO y no al
+        // (26) sacaba un Mystic de 22 a maestría 100, casi igualando a Beast sin entrenar (24),
+        // su evolución. El tope se aplica al TECHO y no al
         // resultado: así la curva de maestría sigue recorriendo de 30 % a 85 % del techo reescalado
         // (el máximo real es exactamente el tope) en vez de aplastarse contra él a media maestría.
         double cap = ServerConfig.potentialUnlockMaxStatPercent() / MASTERY_CEIL_FACTOR;

@@ -292,6 +292,8 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
     public void setHasTail(boolean v) { flags.setHasTail(v); }
     public void setHasSsj4Ritual(boolean v) { flags.setHasSsj4Ritual(v); }
+    public boolean hasBeastFury() { return flags.hasBeastFury(); }
+    public void setBeastFury(boolean v) { flags.setBeastFury(v); }
     public void setReceivedKaioWeights(boolean v) { flags.setReceivedKaioWeights(v); }
     public void setFlyEnabled(boolean v)  { flags.setFlyEnabled(v); }
     public void setChargingKi(boolean v)  { flags.setChargingKi(v); }

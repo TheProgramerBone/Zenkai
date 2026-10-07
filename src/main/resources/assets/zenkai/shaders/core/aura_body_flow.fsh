@@ -48,7 +48,10 @@ void main() {
     float edge = clamp(pow(1.0 - facingAbs, ZenkaiShellFresnel.x) / max(ZenkaiShellFresnel.y, 0.001), 0.0, 1.0);
 
     float streak = texture(Sampler0, vFlowUV * vec2(1.0, 2.5)).g;
-    float i = clamp(edge + (streak - 0.5) * 0.25, 0.0, 1.0);
+    // ZenkaiFlowLook.y >= 2 = contorno ESTABLE (Beast forzando): sin estrías. Su textura se muestrea con
+    // la altura de MUNDO, así que al volar pasa a toda velocidad por la banda y el borde titila.
+    bool steady = ZenkaiFlowLook.y > 1.5;
+    float i = clamp(edge + (streak - 0.5) * (steady ? 0.0 : 0.25), 0.0, 1.0);
     float w = max(ZenkaiFlowLook.z, 0.005);
     float rimB = smoothstep(ZenkaiShellCel.y - w, ZenkaiShellCel.y + w, i);
     float lightB = smoothstep(ZenkaiShellCel.z - w, ZenkaiShellCel.z + w, i);
@@ -65,7 +68,7 @@ void main() {
     // Solo borde (rim): fuera de la banda del borde, nada.
     if (ZenkaiFlowLook.y > 0.5) {
         alpha = ZenkaiShellAlpha.y * rimB;
-        color = mix(outer, silver, 0.6);
+        color = steady ? lift(outer, 1.15) : mix(outer, silver, 0.6);
         emitBlend = 1.0;
     }
 
@@ -77,7 +80,17 @@ void main() {
     alpha = max(alpha, clamp(fleckOn, 0.0, 1.0) * 0.9);
     emitBlend = max(emitBlend, fleckOn);
 
-    if (facingRaw < 0.0) alpha = min(alpha, 0.01);
+    if (ZenkaiFlowLook.y > 2.5) {
+        // CONTORNO DE SILUETA (Beast forzando): solo las caras TRASERAS de las cajas infladas, lisas y
+        // del color puro. El cuerpo real, más cerca de la cámara, las tapa por profundidad y queda
+        // únicamente el borde que asoma alrededor de la silueta (casco invertido).
+        if (facingRaw >= 0.0) discard;
+        color = lift(outer, 1.15);
+        alpha = ZenkaiShellAlpha.y;
+        emitBlend = 1.0;
+    } else if (facingRaw < 0.0) {
+        alpha = min(alpha, 0.01);
+    }
 
     if (ZenkaiBloomMode > 0.5) {
         alpha *= ZenkaiShellBloom.x * mix(ZenkaiShellBloom.y, 1.0, emitBlend);

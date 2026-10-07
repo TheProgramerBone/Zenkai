@@ -685,7 +685,7 @@ public class ServerConfig {
                     .defineInRange("training.potential_unlock_tp_mult", 0.50D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.DoubleValue PU_MAX_STAT_RAW =
-            BUILDER.comment("Mystic (Potential Unlock): ABSOLUTE ceiling of the stat bonus the form can give at 100% mastery (added, 16.0 = +1600%). Mystic scales with the best form you own, which let it overtake Ultimate Mystic (17-22) and even Beast (24-32); this caps it just below Ultimate Mystic's untrained value so the Mystic path stays an upgrade ladder. Mastery still spans the whole curve (the cap rescales it, it does not just clip it). Races with low-bonus chains are not affected.")
+            BUILDER.comment("Mystic (Potential Unlock): ABSOLUTE ceiling of the stat bonus the form can give at 100% mastery (added, 16.0 = +1600%). Mystic scales with the best form you own, which let it overtake Beast (24-32); this caps it below Beast's untrained value so Mystic -> Beast stays an upgrade. Mastery still spans the whole curve (the cap rescales it, it does not just clip it). Races with low-bonus chains are not affected.")
                     .defineInRange("skills.potential_unlock_max_stat_percent", 16.0D, 0.0D, 1000.0D);
 
     private static final ModConfigSpec.IntValue PU_ALIGNMENT_REQ_RAW =
@@ -779,6 +779,14 @@ public class ServerConfig {
     private static final ModConfigSpec.DoubleValue BEAST_OD_STAT_RAW =
             BUILDER.comment("Extra stat multiplier bonus (added, 0.5 = +50%) while wearing Beast with power above 100% (overdrive). Stacks with Beast's cheaper overdrive drain.")
                     .defineInRange("beast.overdrive_stat_bonus", 0.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue BEAST_MASTERY_REQ_RAW =
+            BUILDER.comment("Beast unlock, requirement 1: minimum Mystic mastery (0-100, in percent) the player must have when the fury trigger happens. Requirement 2 is the trigger itself: a tamed pet or a party member dying near the player (see beast.fury_radius).")
+                    .defineInRange("beast.unlock_mystic_mastery_percent", 50.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue BEAST_FURY_RADIUS_RAW =
+            BUILDER.comment("Beast unlock: radius in blocks within which the death of a tamed pet (owned by the player) or of a party member counts as the fury trigger.")
+                    .defineInRange("beast.fury_radius", 32.0D, 1.0D, 256.0D);
 
     private static final ModConfigSpec.IntValue ARC_GODKI_LEVELS_RAW =
             BUILDER.comment("God Ki levels an Arcosian can learn. The race has no divine forms, so these levels unlock no transformation yet: they are the gate for the divine-ki mechanics planned for the race. Each level costs the same TP as the same level of the Saiyan divine chain. 0 hides God Ki from Arcosians entirely.")
@@ -901,6 +909,8 @@ public class ServerConfig {
     private static volatile double PU_MAX_STAT = 16.0D;
     private static volatile int ARC_GODKI_LEVELS = 1;
     private static volatile double BEAST_OD_STAT = 0.5D;
+    private static volatile double BEAST_MASTERY_REQ = 50.0D;
+    private static volatile double BEAST_FURY_RADIUS = 32.0D;
     private static volatile double ARC_PP_GAIN = 1.0D;
     private static volatile double ARC_PP_DRAIN = 2.0D;
     private static volatile double ARC_PP_STAT = 2.0D;
@@ -1019,6 +1029,8 @@ public class ServerConfig {
         PU_MAX_STAT      = PU_MAX_STAT_RAW.get();
         ARC_GODKI_LEVELS = ARC_GODKI_LEVELS_RAW.get();
         BEAST_OD_STAT = BEAST_OD_STAT_RAW.get();
+        BEAST_MASTERY_REQ = BEAST_MASTERY_REQ_RAW.get();
+        BEAST_FURY_RADIUS = BEAST_FURY_RADIUS_RAW.get();
         ARC_PP_GAIN = ARC_PP_GAIN_RAW.get();
         ARC_PP_DRAIN = ARC_PP_DRAIN_RAW.get();
         ARC_PP_STAT = ARC_PP_STAT_RAW.get();
@@ -1210,6 +1222,8 @@ public class ServerConfig {
     public static double potentialUnlockMaxStatPercent() { return PU_MAX_STAT; }
     public static int arcGodKiLevels() { return ARC_GODKI_LEVELS; }
     public static double beastOverdriveStatBonus() { return BEAST_OD_STAT; }
+    public static double beastUnlockMysticMastery() { return BEAST_MASTERY_REQ; }
+    public static double beastFuryRadius() { return BEAST_FURY_RADIUS; }
     public static double arcPpGain() { return ARC_PP_GAIN; }
     public static double arcPpDrain() { return ARC_PP_DRAIN; }
     public static double arcPpStat() { return ARC_PP_STAT; }

@@ -7,7 +7,7 @@
     "majin"
   ],
   "kind": "extension",
-  "parent": "zenkai:ultimate_mystic",
+  "parent": "zenkai:potential_unlock",
   "tp_cost": 240000,
   "hold_ticks": 60,
   "mastery_gain": 0.2,

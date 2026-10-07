@@ -235,12 +235,6 @@ public final class ClientZenkaiPalTick {
                 if (cr != null) combatStyleOrd = cr.styleOrdinal();
             }
         }
-        // Idle de Beast forzando: solo si no hay una pose de combate que mandar, quieto, en tierra
-        // y sin subir ki. Reusa el mismo estado de la capa de combate (sentinela BEAST_IDLE).
-        if (combatStyleOrd < 0 && still && !chargeKi
-                && com.hmc.zenkai.feature.mastery.MasteryEffects.isBeastOverdrive(p)) {
-            combatStyleOrd = BEAST_IDLE;
-        }
         tickCombatIdle(p, st, combatStyleOrd);
 
         // ── Técnicas de ki: local y remotos por igual, desde el estado sincronizado ──
@@ -449,8 +443,6 @@ public final class ClientZenkaiPalTick {
     // ── Pose ofensiva del modo combate ───────────────────────────────────────
     /** Duración (ticks) del start antes del loop. Ajústala a tus animaciones. */
     private static final int COMBAT_START_TICKS = 6; // ~0.3 s
-    /** Sentinela de styleOrd para el idle de Beast forzando (ningún Style real llega a 99). */
-    private static final int BEAST_IDLE = 99;
 
     /** styleOrd < 0 = sin pose (fuera de modo combate / derribado / sin estilo / subiendo ki). */
     private static void tickCombatIdle(AbstractClientPlayer p, AnimState st, int styleOrd) {
@@ -460,15 +452,6 @@ public final class ClientZenkaiPalTick {
                 st.combatStyle = -1;
                 st.combatStartTicks = 0;
                 ZenkaiPalAnimations.stopCombatIdle(p);
-            }
-            return;
-        }
-        if (styleOrd == BEAST_IDLE) {
-            if (!st.combatPlaying || st.combatStyle != BEAST_IDLE) {
-                st.combatPlaying = true;
-                st.combatStyle = BEAST_IDLE;
-                st.combatStartTicks = 0;
-                ZenkaiPalAnimations.playBeastOverdriveIdle(p);
             }
             return;
         }

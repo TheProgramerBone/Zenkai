@@ -5,12 +5,13 @@ import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
 /**
  * Rutas de endgame universales (0.3.0): Destroyer Path -&gt; Ultra Ego, Path of the Angels -&gt;
- * Ultra Instinct (Sign -&gt; pleno), Mystic Path -&gt; Ultimate Mystic -&gt; Beast — un solo
+ * Ultra Instinct (Sign -&gt; pleno), Mystic Path -&gt; Beast (Mystic es la forma potential_unlock) — un solo
  * {@link FormDef} compartido por las 5 razas para cada peldaño, ver
  * {@code .claude/docs/jugador-razas-formas.md}.
  *
@@ -23,8 +24,9 @@ import net.minecraft.world.entity.player.Player;
  *  - Ultra Instinct y Ultra Ego: SOLO el nivel de su skill (Señal 5, pleno 9 / Ultra Ego 5), sin
  *    ninguna evolución de raza — las 5 razas llegan igual. Las 5th forms del Arcosiano son un
  *    camino secreto aparte.
- *  - Ultimate Mystic -> Beast: haber desbloqueado el "Evolution Tier" propio de la raza (campo
- *    {@code tier} del FormDef, ver {@link #entryUnlocked}).
+ *  - Beast (evolución de Mystic): tener la habilidad de Mystic y haber sentido la furia
+ *    ({@link com.hmc.zenkai.feature.forms.BeastFury}: muerte de una mascota propia o de un
+ *    miembro de la party cerca, con la maestría de Mystic al mínimo configurado).
  * Las 5 formas de endgame llevan {@code endgame_path:true} y NO {@code divine_tier}, para no
  * contarse como rama divina de cada raza.
  *
@@ -67,7 +69,12 @@ public final class EndgamePaths {
         }
         int uiLevel = requiredUiLevel(form);
         if (uiLevel > 0) return SkillEffects.level(p, SkillEffects.ULTRA_INSTINCT) >= uiLevel;
-        // Ultimate Mystic / Beast: siguen detrás de la evolución de la raza.
+        // Beast: evolución de Mystic. Hace falta tener la habilidad de Mystic y que la furia ya
+        // se haya disparado (BeastFury, que a su vez exigió la maestría de Mystic en ese momento).
+        if (FormIds.BEAST.equals(form)) {
+            return SkillEffects.level(p, SkillEffects.POTENTIAL_UNLOCK) > 0
+                    && PlayerStatsAttachment.get(p).hasBeastFury();
+        }
         return entryUnlocked(p);
     }
 

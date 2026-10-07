@@ -88,16 +88,10 @@ public final class WheelMenu {
                 Component.translatable("wheel.zenkai.ultra_ego_branch"), FormIds.ULTRA_EGO);
         if (ultraEgo != null) roots.add(ultraEgo);
 
-        // Ultimate Mystic (-> Beast) NO es una forma "divina" (pedido del usuario, 2026-09-28:
-        // antes se enseñaba dentro de Forms > Divine solo porque comparte el flag divineTier
-        // con SSJG/HumanGod/etc, no porque sea la misma cosa) — es una evolución PROPIA como
-        // Ultra Instinct/Ultra Ego, así que ahora tiene el mismo tratamiento de rama suelta.
-        // Sin toggleId: a diferencia de esas dos, no existe ninguna "técnica parcial" de
-        // Mystic que se pueda activar sin la transformación completa.
-        // Carpeta "Potential Unlock" (pedido del usuario): deja de ser un interruptor suelto en la
-        // raíz y pasa a agrupar la ruta Mystic. "Mystic" es el interruptor que antes se llamaba
-        // Potential Unlock (misma habilidad, mismo comportamiento) y a su lado cuelgan las formas
-        // de la ruta (Místico Definitivo y Beast), que antes tenían su propia rama.
+        // Carpeta "Potential Unlock" (pedido del usuario): agrupa la ruta Mystic. "Mystic" es la
+        // forma potential_unlock (misma habilidad) y Beast, su evolución, cuelga a su lado cuando
+        // la furia la desbloquea. Ultimate Mystic ya no existe (2026-10-06). No es una rama
+        // "divina": es una evolución propia, como Ultra Instinct/Ultra Ego.
         WheelNode potentialUnlock = potentialUnlockBranch(p);
         if (potentialUnlock != null) roots.add(potentialUnlock);
 
@@ -130,7 +124,7 @@ public final class WheelMenu {
      *  - Divine: {@link FormDef#divineTier()} — los pares god/blue/rose de cada raza, cruzando
      *    razas dentro de la misma etiqueta (un jugador solo ve la suya, claro).
      * Ver {@link #tierOf}. 'active' en cada hoja = la forma SELECCIONADA, no la que lleva
-     * puesta. Ni Ultra Instinct/Ultra Ego NI Ultimate Mystic pasan por aquí — las 3 rutas de
+     * puesta. Ni Ultra Instinct/Ultra Ego NI la ruta Mystic/Beast pasan por aquí — las 3 rutas de
      * endgame tienen su propia rama suelta, ver {@link #endgameBranch}.
      */
     private static List<WheelNode> forms(Player p) {
@@ -223,7 +217,7 @@ public final class WheelMenu {
      * — mismo id que la forma solo por coincidencia de nombre, sin relación de código, ver
      * SkillToggles.java) + "Form" (la transformación de verdad, la cadena de EndgamePaths que
      * antes vivía enterrada dentro de "Forms"). {@code toggleId} null = esta ruta no tiene
-     * técnica parcial (Ultimate Mystic, a diferencia de Ultra Instinct/Ultra Ego): entonces las
+     * técnica parcial (la ruta Mystic, a diferencia de Ultra Instinct/Ultra Ego): entonces las
      * hojas de la forma cuelgan sueltas de la rama en vez de envolverse en un sub-nodo "Form"
      * que no aportaría nada al ser el único hijo real. null si NI el interruptor (cuando lo
      * hay) NI ninguna forma de la cadena están disponibles todavía: no se enseña una rama vacía.
@@ -253,8 +247,7 @@ public final class WheelMenu {
     /**
      * Carpeta "Potential Unlock": hoja "Mystic" (la FORMA potential_unlock, una forma propia que se
      * elige aquí y se carga con la tecla de transformar; ya no es un interruptor) + las formas de
-     * la ruta que el jugador tenga (Beast; Místico Definitivo no lleva hoja). null si no tiene
-     * ninguna.
+     * la ruta que el jugador tenga (Beast, evolución de Mystic). null si no tiene ninguna.
      */
     private static WheelNode potentialUnlockBranch(Player p) {
         List<WheelNode> kids = new ArrayList<>();
@@ -266,11 +259,8 @@ public final class WheelMenu {
                     Component.translatable("form.zenkai." + mystic.getPath()),
                     0xFF000000 | def.auraRgb(), true, mystic.equals(selected)));
         }
-        // Místico Definitivo NO tiene hoja propia (pedido del usuario): solo sus continuaciones (Beast).
-        String ultimateMysticId = FormIds.ULTIMATE_MYSTIC.toString();
-        for (WheelNode leaf : endgameChainLeaves(p, FormIds.ULTIMATE_MYSTIC)) {
-            if (!ultimateMysticId.equals(leaf.value())) kids.add(leaf);
-        }
+        // Beast: evolución de Mystic, aparece cuando la furia lo desbloquea (EndgamePaths.unlocked).
+        kids.addAll(endgameChainLeaves(p, FormIds.BEAST));
         if (kids.isEmpty()) return null;
         return WheelNode.category(Component.translatable("wheel.zenkai.potential_unlock_branch"),
                 COL_CATEGORY, kids);

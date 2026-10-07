@@ -41,7 +41,9 @@ public final class AuraBodyUniforms {
         FLOW_SHAPE("ZenkaiFlowShape"), PEAK_VAR("ZenkaiShellPeakVar"), ORTHO("ZenkaiOrtho"), FLOW_LOOK("ZenkaiFlowLook"),
         S0A("ZenkaiSeg0A"), S0B("ZenkaiSeg0B"), S1A("ZenkaiSeg1A"), S1B("ZenkaiSeg1B"),
         S2A("ZenkaiSeg2A"), S2B("ZenkaiSeg2B"), S3A("ZenkaiSeg3A"), S3B("ZenkaiSeg3B"),
-        S4A("ZenkaiSeg4A"), S4B("ZenkaiSeg4B"), S5A("ZenkaiSeg5A"), S5B("ZenkaiSeg5B");
+        S4A("ZenkaiSeg4A"), S4B("ZenkaiSeg4B"), S5A("ZenkaiSeg5A"), S5B("ZenkaiSeg5B"),
+        // Eje lateral (X del hueso) de cada caja; contiguos para indexar por segmento.
+        X0("ZenkaiSeg0X"), X1("ZenkaiSeg1X"), X2("ZenkaiSeg2X"), X3("ZenkaiSeg3X"), X4("ZenkaiSeg4X"), X5("ZenkaiSeg5X");
 
         final String name;
 
@@ -78,7 +80,8 @@ public final class AuraBodyUniforms {
     }
 
     /**
-     * @param segs  solo para FLOW: 6 segmentos × 8 floats (A xyz relativo a cámara, radio, B xyz, 0);
+     * @param segs  solo para FLOW: 6 segmentos × 12 floats (A xyz relativo a cámara, semiancho, B xyz,
+     *              semiprofundidad, eje lateral xyz, 0);
      *              null para los cuerpos de esfera.
      * @param camY  Y de la cámara en mundo (el flujo de FLOW se muestrea con la altura de mundo).
      */
@@ -132,9 +135,10 @@ public final class AuraBodyUniforms {
         set(c, U.FLOW_LOOK, p.get(Key.FLECKS), p.get(Key.RIM_ONLY), p.get(Key.BAND_SOFT), 0f);
         if (segs != null) {
             for (int i = 0; i < AuraAnchor.SEGMENTS; i++) {
-                int o = i * 8;
+                int o = i * AuraAnchor.SEG_FLOATS;
                 set(c, ALL[U.S0A.ordinal() + 2 * i], segs[o], segs[o + 1], segs[o + 2], segs[o + 3]);
-                set(c, ALL[U.S0B.ordinal() + 2 * i], segs[o + 4], segs[o + 5], segs[o + 6], 0f);
+                set(c, ALL[U.S0B.ordinal() + 2 * i], segs[o + 4], segs[o + 5], segs[o + 6], segs[o + 7]);
+                set(c, ALL[U.X0.ordinal() + i], segs[o + 8], segs[o + 9], segs[o + 10], 0f);
             }
         }
     }
