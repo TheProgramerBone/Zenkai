@@ -61,7 +61,7 @@ public final class AfterImageClient {
     private record Pose(PartPose head, PartPose body, PartPose rightArm, PartPose leftArm,
                         PartPose rightLeg, PartPose leftLeg) {}
 
-    private record Ghost(Vec3 pos, float bodyYaw, Pose pose, int rgb, long startTick) {}
+    private record Ghost(UUID owner, Vec3 pos, float bodyYaw, Pose pose, int rgb, long startTick) {}
     private record PendingEcho(UUID owner, long atTick) {}
 
     private static final Map<UUID, Pose> LAST_POSE = new HashMap<>();
@@ -89,7 +89,7 @@ public final class AfterImageClient {
     private static void addGhost(AbstractClientPlayer p, long now) {
         Pose pose = LAST_POSE.get(p.getUUID());
         if (pose == null) return; // aún no se ha dibujado nunca: sin pose no hay silueta
-        GHOSTS.add(new Ghost(p.position(), p.yBodyRot, pose, AuraColors.resolve(p), now));
+        GHOSTS.add(new Ghost(p.getUUID(), p.position(), p.yBodyRot, pose, AuraColors.resolve(p), now));
     }
 
     @SubscribeEvent
@@ -139,7 +139,11 @@ public final class AfterImageClient {
         model.rightLeg.visible = true;
         model.leftLeg.visible = true;
 
+        // En PRIMERA persona tus propias imágenes residuales no se dibujan (quedaban pegadas a la
+        // cámara y tapaban la vista); solo se ven en tercera persona. Las de otros jugadores sí.
+        boolean firstPerson = mc.options.getCameraType().isFirstPerson();
         for (Ghost g : GHOSTS) {
+            if (firstPerson && g.owner().equals(mc.player.getUUID())) continue;
             float age = (now - g.startTick()) + pt;
             float fade = 1f - Math.min(1f, age / LIFE);
             int a = (int) (START_ALPHA * fade * fade * 255f); // cae rápido al principio

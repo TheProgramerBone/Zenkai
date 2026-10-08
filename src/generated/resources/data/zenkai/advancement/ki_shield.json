@@ -1,0 +1,30 @@
+{
+  "parent": "zenkai:shield_block",
+  "criteria": {
+    "infused": {
+      "conditions": {
+        "kind": "ki_shield"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.ki_shield.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "minecraft:amethyst_shard"
+    },
+    "title": {
+      "translate": "advancements.zenkai.ki_shield.title"
+    }
+  },
+  "requirements": [
+    [
+      "infused"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:first_tp",
+  "criteria": {
+    "done": {
+      "conditions": {
+        "kind": "target_practice_done"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.target_practice.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:bow"
+    },
+    "title": {
+      "translate": "advancements.zenkai.target_practice.title"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -70,6 +70,21 @@ public final class ZenkaiTriggers {
         public static final String INSTANT_TRANSMISSION_USED        = "instant_transmission_used";
         public static final String INSTANT_TRANSMISSION_MENU_OPENED = "instant_transmission_menu_opened";
         public static final String SPACE_POD_LAUNCH_USED = "space_pod_launch_used";
+        // Combat Update (0.4.0)
+        public static final String DASH_USED         = "dash_used";
+        public static final String QUICK_STEP_USED   = "quick_step_used";
+        public static final String PARRY_SUCCESS     = "parry_success";
+        public static final String PARRY_PROJECTILE  = "parry_projectile";
+        public static final String CLASH_STARTED     = "clash_started";
+        public static final String CLASH_WON         = "clash_won";
+        public static final String CLASH_PERFECT     = "clash_perfect";
+        public static final String GUARD_BROKEN      = "guard_broken";
+        public static final String SHIELD_BLOCKED    = "shield_blocked";
+        public static final String KI_SHIELD         = "ki_shield";
+        // Minijuegos de Training: se dispara al TERMINAR una sesión
+        public static final String SHADOW_TRAINING_DONE  = "shadow_training_done";
+        public static final String MEDITATION_DONE       = "meditation_done";
+        public static final String TARGET_PRACTICE_DONE  = "target_practice_done";
     }
 
     // =====================================================================

@@ -168,6 +168,9 @@ public final class ShadowTrainingManager {
     @SubscribeEvent
     public static void onShadowDeath(LivingDeathEvent e) {
         if (!(e.getEntity() instanceof ShadowCloneEntity shadow)) return;
+        // Muñeco de "/zenkai debug dummy": no es una sesión de Shadow Training, así que ni toca
+        // ACTIVE ni actualiza el récord ni manda la pantalla de resultado.
+        if (shadow.getTags().contains(ShadowCloneEntity.DEBUG_DUMMY_TAG)) return;
         UUID ownerId = shadow.getOwnerId();
         if (ownerId == null) return;
         ACTIVE.remove(ownerId, shadow.getUUID());
@@ -181,6 +184,7 @@ public final class ShadowTrainingManager {
         ServerPlayer owner = level.getServer().getPlayerList().getPlayer(ownerId);
         if (owner == null) return;
 
+        com.hmc.zenkai.feature.advancement.ZenkaiTriggers.MILESTONE.get().trigger(owner, com.hmc.zenkai.feature.advancement.ZenkaiTriggers.Kinds.SHADOW_TRAINING_DONE);
         PlayerStatsAttachment att = PlayerStatsAttachment.get(owner);
         TrainingData td = owner.getData(ZenkaiDataAttachments.TRAINING.get());
         int earned = Math.max(0, att.getTP() - td.getShadowSessionStartTp());

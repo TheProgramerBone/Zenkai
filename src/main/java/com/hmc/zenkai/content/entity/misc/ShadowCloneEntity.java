@@ -2,6 +2,7 @@ package com.hmc.zenkai.content.entity.misc;
 
 import com.hmc.zenkai.content.entity.ZenkaiDefaultMob;
 import com.hmc.zenkai.content.entity.ai.PosedAttacker;
+import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -118,6 +119,61 @@ public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker
         super(type, level);
     }
 
+    // ── Muñeco de pruebas ("/zenkai debug dummy"): guion que sustituye a la IA normal ──
+    /** Etiqueta que marca a las Sombras creadas por el comando (para "set" y "clear"). */
+    public static final String DEBUG_DUMMY_TAG = "zenkai_debug_dummy";
+
+    /** null = Sombra normal. No se guarda en NBT: es una herramienta de pruebas. */
+    private ShadowDebugMode debugMode;
+    private KiTechniqueType debugKiType = KiTechniqueType.BLAST;
+    private int debugKiSize = 3;
+    private int debugKiInterval = 0;
+
+    public void setDebugScript(ShadowDebugMode mode, KiTechniqueType kiType, int kiSize,
+                               int kiInterval) {
+        this.debugMode = mode;
+        if (kiType != null) this.debugKiType = kiType;
+        this.debugKiSize = kiSize;
+        this.debugKiInterval = Math.max(0, kiInterval); // 0 = cooldown de la técnica
+        addTag(DEBUG_DUMMY_TAG);
+        if (mode != ShadowDebugMode.BLOCK) setBlocking(false);
+        getNavigation().stop();
+    }
+
+    public ShadowDebugMode debugMode() { return debugMode; }
+    public KiTechniqueType debugKiType() { return debugKiType; }
+    public int debugKiSize() { return debugKiSize; }
+    public int debugKiInterval() { return debugKiInterval; }
+
+    /** El dueño si está en el mundo; si no, el jugador más cercano. Objetivo de TODO el guion. */
+    public LivingEntity debugTarget() {
+        Player p = ownerId == null ? null : level().getPlayerByUUID(ownerId);
+        return p != null ? p : level().getNearestPlayer(this, 64.0);
+    }
+
+    /** Con guion puesto solo corren los goals que el modo necesita: cuerpo a cuerpo en MELEE,
+     *  físicas en PHYSICAL, y el resto lo lleva ShadowScriptGoal. */
+    @Override
+    public boolean combatGoalAllowed(String kind) {
+        if (debugMode == null) return true;
+        return switch (debugMode) {
+            case MELEE -> GOAL_MELEE.equals(kind);
+            case PHYSICAL -> GOAL_PHYSICAL.equals(kind);
+            default -> false;
+        };
+    }
+
+    /** MELEE y PHYSICAL usan los goals normales, que necesitan un objetivo: se le da el dueño. */
+    @Override
+    public void tick() {
+        super.tick();
+        if (!level().isClientSide && debugMode != null
+                && (debugMode == ShadowDebugMode.MELEE || debugMode == ShadowDebugMode.PHYSICAL)) {
+            LivingEntity t = getTarget();
+            if (t == null || !t.isAlive()) setTarget(debugTarget());
+        }
+    }
+
     /** Log de diagnóstico: cuándo y a quién apunta la Sombra. Si nunca aparece "target -> null"
      *  tras el primer golpe, el objetivo no se está perdiendo — el problema está en los goals
      *  de ataque, no en HurtByTargetGoal. */
@@ -145,6 +201,9 @@ public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker
         // delante del cuerpo a cuerpo, reparto por distancia, guardia y vuelo — todo lo que antes
         // estaba escrito aquí a mano, ahora compartido con cualquier NPC de combate.
         registerCombatGoals(1.4D);
+
+        // Guion de "/zenkai debug dummy": inactivo (canUse=false) salvo que se haya puesto uno.
+        this.goalSelector.addGoal(0, new com.hmc.zenkai.content.entity.ai.ShadowScriptGoal(this));
 
         // SOLO HurtByTargetGoal: a propósito no hay NearestAttackableTargetGoal aquí, así
         // nunca ataca primero — el pedido explícito era "IA neutral al inicio, solo se vuelve

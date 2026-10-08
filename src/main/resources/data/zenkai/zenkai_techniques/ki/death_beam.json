@@ -17,5 +17,6 @@
   "projectile_size_base": 0.15,
   "projectile_size_step": 0.03,
   "explosion_radius_mult": 0.80,
-  "aoe_factor": 0.30
+  "aoe_factor": 0.30,
+  "breaks_blocks": true
 }

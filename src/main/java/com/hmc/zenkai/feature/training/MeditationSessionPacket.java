@@ -122,6 +122,7 @@ public record MeditationSessionPacket(
             }
             // SIEMPRE se responde, aunque sea 0: la pantalla espera este packet para pasar a
             // resultados y nunca debe quedarse colgada por un cooldown o una sesión sin TP.
+            if (granted > 0) com.hmc.zenkai.feature.advancement.ZenkaiTriggers.MILESTONE.get().trigger(sp, com.hmc.zenkai.feature.advancement.ZenkaiTriggers.Kinds.MEDITATION_DONE);
             PacketDistributor.sendToPlayer(sp, new TrainingSessionRewardPacket(granted, td.getBestMeditationTp()));
         });
     }

@@ -1,0 +1,30 @@
+{
+  "parent": "zenkai:parry",
+  "criteria": {
+    "skill": {
+      "conditions": {
+        "skill": "parry_mastery",
+        "skill_level": 1
+      },
+      "trigger": "zenkai:stat_threshold"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.parry_mastery.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:enchanted_book"
+    },
+    "title": {
+      "translate": "advancements.zenkai.parry_mastery.title"
+    }
+  },
+  "requirements": [
+    [
+      "skill"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

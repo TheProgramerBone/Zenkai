@@ -78,6 +78,12 @@ public class KiProjectileEntity extends Projectile {
     private static final EntityDataAccessor<Boolean> DATA_FROZEN =
             SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.BOOLEAN);
 
+    /** Retenido por un choque de haces (ver ClashManager). SINCRONIZADO: si solo lo supiera el
+     *  servidor, el cliente seguiría prediciendo el avance cada tick y la bola se escaparía del
+     *  punto de choque hasta el siguiente paquete de posición, que no llega porque no se mueve. */
+    private static final EntityDataAccessor<Boolean> DATA_CLASH_HELD =
+            SynchedEntityData.defineId(KiProjectileEntity.class, EntityDataSerializers.BOOLEAN);
+
     // ── Estela (SOLO cliente): historial de posiciones del centro, cabeza primero.
     //    Lo llena tick() y lo lee KiVfxProjectileRenderer. En server queda vacío. ──
     private final java.util.ArrayDeque<Vec3> trail = new java.util.ArrayDeque<>();
@@ -251,6 +257,120 @@ public class KiProjectileEntity extends Projectile {
         builder.define(DATA_RGB2, -1);
         builder.define(DATA_SIZE, (byte) 1);
         builder.define(DATA_FROZEN, false);
+        builder.define(DATA_CLASH_HELD, false);
+    }
+
+    // ── Choque de haces (lo orquesta feature/technique/clash/ClashManager) ──
+
+    public boolean isClashHeld() { return this.entityData.get(DATA_CLASH_HELD); }
+
+    /** Daño con el que se disparó (el que se compara y se suma en un choque). */
+    public double damage() { return damage; }
+
+    /** Retiene el proyectil en el sitio (true) o lo suelta (false). Retenido no avanza, no
+     *  comprueba impactos y no gasta vida. */
+    public void setClashHeld(boolean held) {
+        this.entityData.set(DATA_CLASH_HELD, held);
+    }
+
+    /** ¿Puede participar en un choque? Solo lo que VIAJA, golpea y no atraviesa por identidad. */
+    public boolean canClash() {
+        return !isFrozen() && !isClashHeld() && techniqueType().travels()
+                && techniqueType() != KiTechniqueType.DISK && damage > 0.0;
+    }
+
+    /**
+     * El haz ganador sale de nuevo, ya reforzado, hacia el perdedor. Es el MISMO proyectil (mismo
+     * tipo, color y camino de cabeza), así que visualmente el haz se alarga desde el ganador
+     * atravesando el punto de choque hasta el rival.
+     * @param dir        dirección de salida (se normaliza)
+     * @param speedMult  fracción de la velocidad normal del tipo
+     * @param newDamage  daño ya sumado
+     */
+    public void clashRelaunch(Vec3 dir, double speedMult, double newDamage,
+                              LivingEntity homeOn, double homingTurn, double homingRange) {
+        this.returnHomeTarget = homeOn == null || homingTurn <= 0.0 ? null : homeOn.getUUID();
+        this.returnHomeTurn = homingTurn;
+        this.returnHomeRange = homingRange;
+        this.damage = newDamage;
+        this.pierced.clear();
+        this.flightRight = null; // la dirección cambió: la base del haz se recalcula
+        this.life = Math.max(this.life, 100);
+        setDeltaMovement(dir.normalize().scale(techniqueType().speed() * speedMult));
+        setClashHeld(false);
+        this.hasImpulse = true;
+    }
+
+    /**
+     * Desvío LATERAL del kiai: aparta el proyectil hacia un lado y un poco hacia arriba SIN cambiar
+     * de dueño ni devolverlo (devolver proyectiles es cosa del parry). Pasa a su lado en vez de
+     * golpear a quien lo desvió. Conserva la velocidad.
+     */
+    public void scatter(java.util.Random rng) {
+        Vec3 vel = getDeltaMovement();
+        double speed = vel.length();
+        if (speed < 1.0e-6) return;
+        Vec3 fwd = vel.scale(1.0 / speed);
+        Vec3 up = new Vec3(0, 1, 0);
+        Vec3 side = fwd.cross(up);
+        side = side.lengthSqr() < 1.0e-6 ? new Vec3(1, 0, 0) : side.normalize();
+        if (rng.nextBoolean()) side = side.scale(-1.0);
+        Vec3 dir = fwd.scale(0.25).add(side.scale(0.75)).add(up.scale(0.35 + 0.25 * rng.nextDouble()))
+                .normalize();
+        setDeltaMovement(dir.scale(speed));
+        this.hasImpulse = true;
+    }
+
+    /**
+     * Desvío del parry NORMAL: como {@link #scatter}, pero además el proyectil ya no puede volver a
+     * golpear a quien lo desvió (se añade a {@code pierced}): sin esto, un haz grande que sigue solapando
+     * al defensor el tick siguiente le haría el daño que acaba de parar. Solo el parry PERFECTO devuelve
+     * el proyectil a su dueño ({@link #deflect}).
+     */
+    public void scatterAround(java.util.Random rng, Entity parrier) {
+        pierced.add(parrier.getId());
+        scatter(rng);
+    }
+
+    // Guiado del golpe de vuelta de un choque: persigue al perdedor, pero SOLO mientras esté
+    // dentro de returnHomeRange. Fuera de ese radio vuela recto, así que alejarse lo bastante
+    // (p. ej. con Transmisión Instantánea) sigue siendo una forma de esquivarlo.
+    private java.util.UUID returnHomeTarget;
+    private double returnHomeTurn;
+    private double returnHomeRange;
+
+    private void applyReturnHoming() {
+        if (!(level() instanceof ServerLevel sl)) return;
+        if (!(sl.getEntity(returnHomeTarget) instanceof LivingEntity t) || !t.isAlive()) {
+            returnHomeTarget = null;
+            return;
+        }
+        Vec3 toTarget = t.getBoundingBox().getCenter().subtract(position());
+        double dist = toTarget.length();
+        if (dist < 1.0e-4 || dist > returnHomeRange) return;
+        Vec3 vel = getDeltaMovement();
+        double speed = vel.length();
+        if (speed <= 0.0) return;
+        setDeltaMovement(vel.normalize().scale(1.0 - returnHomeTurn)
+                .add(toTarget.normalize().scale(returnHomeTurn))
+                .normalize().scale(speed));
+    }
+
+    /** Empate: el haz detona donde está, con su daño reducido. */
+    public void clashDetonate(double damageFraction) {
+        this.damage *= Math.max(0.0, damageFraction);
+        detonate(position().add(0, getBbHeight() * 0.5, 0), null);
+        discard();
+    }
+
+    /** Se disipa sin daño (el haz perdedor, absorbido por el ganador). */
+    public void clashDissipate() {
+        if (level() instanceof ServerLevel sl) {
+            Vec3 c = position().add(0, getBbHeight() * 0.5, 0);
+            sl.sendParticles(ModParticles.spark(rgb(), 1.0f), c.x, c.y, c.z,
+                    10 + size() * 2, 0.4, 0.4, 0.4, 0.2);
+        }
+        discard();
     }
 
     @Override
@@ -277,6 +397,9 @@ public class KiProjectileEntity extends Projectile {
         // congelada tampoco debe seguir al dueño.
         if (isFrozen()) return;
 
+        // Retenido por un choque de haces: quieto, sin impacto y sin gastar vida (en ambos lados).
+        if (isClashHeld()) return;
+
         // Lo que no viaja va pegado al dueño. La barrera expira sin más; la explosión DETONA
         // al expirar — su `life` es la mecha, no su duración.
         if (!techniqueType().travels()) {
@@ -285,7 +408,12 @@ public class KiProjectileEntity extends Projectile {
         }
 
         if (!level().isClientSide) {
-            if (effect == TechniqueEffect.HOMING) applyHoming();
+            // ¿Se cruza con el haz de otro dueño? Si es así, ClashManager lo retiene y este tick
+            // no avanza más (los dos quedan en el punto medio).
+            if (com.hmc.zenkai.feature.technique.clash.ClashManager.tryStart(this)) return;
+
+            if (returnHomeTarget != null) applyReturnHoming();
+            else if (effect == TechniqueEffect.HOMING) applyHoming();
 
             // Margen de impacto contra ENTIDADES proporcional al tamaño de la técnica. Vanilla usa 0.3
             // fijo (getHitResultOnMoveVector) y trata al proyectil como un RAYO: una bola de 4
@@ -349,6 +477,12 @@ public class KiProjectileEntity extends Projectile {
     protected void onHitEntity(@NotNull EntityHitResult hit) {
         super.onHitEntity(hit);
         if (level().isClientSide) return;
+        // Parry: si el golpeado está en su ventana, el proyectil se desvía y vuelve a su dueño en
+        // vez de hacer daño. Sigue volando (no detona ni se descarta).
+        if (hit.getEntity() instanceof ServerPlayer parrier
+                && com.hmc.zenkai.feature.combat.ParryServer.tryParryProjectile(parrier, this)) {
+            return;
+        }
         LivingEntity owner = getOwner() instanceof LivingEntity le ? le : null;
 
         if (level().getServer() == null || ModGameRules.enableKiDamage(Objects.requireNonNull(level().getServer()))) {
@@ -429,7 +563,7 @@ public class KiProjectileEntity extends Projectile {
     public double refPower() { return refPower; }
 
     /**
-     * Impacto: daño en ÁREA siempre, rotura de bloques solo con el efecto EXPLOSIVE.
+     * Impacto: daño en ÁREA siempre, rotura de bloques con el efecto EXPLOSIVE o con `breaks_blocks`.
      * ANTES el área y la destrucción iban juntas bajo la marca `explosive`; separarlas es lo
      * que hace que la marca signifique una cosa sola. Consecuencia asumida: ahora cualquier técnica
      * reparte algo de área, según el aoeFactor de su tipo (un láser, un 20 %).
@@ -491,7 +625,9 @@ public class KiProjectileEntity extends Projectile {
         if (effect == TechniqueEffect.FRAGMENTATION) spawnFragments(center, owner);
         if (effect == TechniqueEffect.LINGERING) spawnLingeringZone(center, owner);
 
-        boolean grief = effect == TechniqueEffect.EXPLOSIVE
+        // Rompe bloques si el jugador eligió EXPLOSIVE O la técnica lo hace de serie (firma de maestro,
+        // `breaks_blocks`), y SIEMPRE que la gamerule zenkai_enableKiGriefing esté encendida.
+        boolean grief = (effect == TechniqueEffect.EXPLOSIVE || techniqueType().breaksBlocks())
                 && ModGameRules.enableKiGriefing(sl.getServer());
         if (grief) {
             // DamageSource explícito (antes null) para que esta rama dé el MISMO mensaje de

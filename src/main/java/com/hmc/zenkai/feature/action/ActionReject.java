@@ -19,7 +19,8 @@ public enum ActionReject {
     BUSY,            // otra acción exclusiva en curso
     NO_CHARGE,       // release sin carga en curso
     WRONG_SLOT,      // release de un slot distinto al que cargaba
-    UNDERCHARGED;    // por debajo de MIN_CHARGE
+    UNDERCHARGED,    // por debajo de MIN_CHARGE
+    IN_CLASH;        // atrapado en un choque de haces
 
     public boolean ok() { return this == OK; }
 }

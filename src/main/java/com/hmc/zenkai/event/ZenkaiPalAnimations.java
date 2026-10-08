@@ -297,6 +297,16 @@ public final class ZenkaiPalAnimations {
                 step ? 1 : ZenkaiTransitions.PHYS);
     }
 
+    // ── Parry: un solo clip (la mano aparta el golpe, estilo «Futile»), generado con
+    //    tools/gen_parry_animation.py. Una pasada one-shot en la capa de físicas. ──
+    public static void playParry(AbstractClientPlayer player) {
+        var c = (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
+        // Fundido de 1 tick: el manotazo tiene que arrancar seco, como el Paso rápido.
+        ZenkaiTransitions.play(c, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                "zenkai.parry"), 1);
+    }
+
     // ── Esquive automático de Ultra Instinct: dos clips one-shot, el servidor sortea cuál ──
     private static final ResourceLocation[] UI_DODGE_ANIMS = {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_1"),

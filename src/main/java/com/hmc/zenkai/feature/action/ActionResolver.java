@@ -35,7 +35,7 @@ public final class ActionResolver {
         int cost = PhysicalCombatServer.staminaCost(att, t);
 
         ActionReject verdict = ActionRules.canFirePhysical(
-                ctx, t.enabled(), att.techniques().isUnlocked(t),
+                ctx, t.weaponRequirement(), t.enabled(), att.techniques().isUnlocked(t),
                 PhysicalCombatServer.isReady(sp, t), cost, att.getStamina());
         if (!verdict.ok()) return reject(sp, ActionType.PHYSICAL, verdict, t.ordinal());
 
@@ -193,11 +193,20 @@ public final class ActionResolver {
     // ── Defensa ──────────────────────────────────────────────────────────────
 
     public static ActionResult setBlocking(ServerPlayer sp, boolean blocking) {
+        return setBlocking(sp, blocking, false);
+    }
+
+    /**
+     * @param fromParryDelay true cuando lo llama ParryServer al acabar la ventana de parry de un
+     *                       bloqueo aplazado: la guardia real arranca ya, sin volver a aplazarla.
+     */
+    public static ActionResult setBlocking(ServerPlayer sp, boolean blocking, boolean fromParryDelay) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
 
         ActionState cur = ActionStateServer.get(sp);
 
         if (!blocking) {
+            com.hmc.zenkai.feature.combat.ParryServer.cancelPendingBlock(sp);
             // Salir SIEMPRE funciona: si no, el -60% de velocidad se quedaría pegado.
             if (cur.type() == ActionType.BLOCK) ActionStateServer.clear(sp);
             KiCombatServer.applyBlocking(sp, false);
@@ -205,13 +214,25 @@ public final class ActionResolver {
         }
 
         ActionContext ctx = ServerActionContext.of(sp);
-        if (!ctx.raceChosen() || !ctx.combatMode() || !ctx.handsFree() || ctx.downed()) {
+        if (!ctx.raceChosen() || !ctx.combatMode()
+                || !com.hmc.zenkai.feature.combat.GuardHands.canGuard(sp) || ctx.downed()) {
             return reject(sp, ActionType.BLOCK, ActionReject.NOT_COMBAT_MODE, -1);
         }
         if (cur.type() == ActionType.BLOCK) return ActionResult.ok(cur); // ya defendía
+        // Guardia rota por un kiai: no se puede volver a levantar hasta que caduque.
+        if (com.hmc.zenkai.feature.combat.GuardBreak.isBroken(sp)) {
+            return reject(sp, ActionType.BLOCK, ActionReject.BUSY, -1);
+        }
 
         if (!ActionRules.canInterrupt(cur.type(), cur.phase(), ActionType.BLOCK)) {
             return reject(sp, ActionType.BLOCK, ActionReject.BUSY, -1);
+        }
+
+        // Parry por bloqueo: abre la ventana y APLAZA la guardia real hasta que acabe (pulsar y
+        // soltar = parry, mantener = bloqueo). Sin parry disponible (cooldown, apagado o solo por
+        // tecla) devuelve false y se bloquea ya.
+        if (!fromParryDelay && com.hmc.zenkai.feature.combat.ParryServer.deferBlock(sp)) {
+            return ActionResult.ok();
         }
 
         cancelCurrent(sp, cur);
@@ -251,6 +272,29 @@ public final class ActionResolver {
         ActionStateServer.set(sp, st);
         sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).setTransformHeld(true);
         return ActionResult.ok(st);
+    }
+
+    // ── Choque de haces ──────────────────────────────────────────────────────
+
+    /**
+     * Mete al jugador en el estado CLASH. A diferencia de las demás acciones esta NO nace de un
+     * input: la decide ClashManager al detectar el cruce de dos haces, así que no hay veredicto
+     * de ActionRules que consultar. Corta lo que hubiera en curso (carga, guardia, física) con el
+     * mismo camino que cualquier interrupción y cancela la carga de ki sostenida (Matriz B).
+     */
+    public static void beginClash(ServerPlayer sp) {
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        ActionState cur = ActionStateServer.get(sp);
+        cancelCurrent(sp, cur);
+        cancelSustained(sp, att, ActionType.CLASH);
+        ActionStateServer.set(sp, new ActionState(ActionType.CLASH, ActionPhase.ACTIVE,
+                sp.level().getGameTime(), -1, -1));
+    }
+
+    /** Libera al jugador. Solo limpia si lo que hay ES un CLASH: si murió o lo derribaron, otro
+     *  gate ya lo sustituyó y no hay que pisarlo. */
+    public static void endClash(ServerPlayer sp) {
+        ActionStateServer.clearIf(sp, ActionType.CLASH);
     }
 
     // ── Interno ──────────────────────────────────────────────────────────────

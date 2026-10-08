@@ -343,7 +343,24 @@ public final class PhysicalCombatServer {
         double push = 0.7 + 0.9 * (str / (str + 100.0)); // 100 = perilla de "STR media"
         double dmg = str * t.dmgMult();
         Vec3 look = sp.getLookAngle();
-        List<LivingEntity> targets = inCone(sp, t.range(), 0.4);
+        // Control de zona: por defecto en CÍRCULO COMPLETO (para cuando te rodean) y no solo el
+        // cono frontal. minDot -1 admite cualquier dirección; 0.4 es el cono de siempre.
+        boolean omni = ServerConfig.kiaiOmnidirectional();
+        List<LivingEntity> targets = inCone(sp, t.range(), omni ? -1.1 : 0.4);
+
+        // RUPTURA DE GUARDIA, ANTES del daño: el golpe del propio kiai ya no se mitiga con una
+        // guardia que acaba de romper. Es lo que el parry no hace (el parry defiende).
+        int breakTicks = ServerConfig.kiaiGuardBreakTicks();
+        int broken = 0;
+        for (LivingEntity e : targets) {
+            if (com.hmc.zenkai.feature.combat.GuardBreak.breakGuard(e, breakTicks)) {
+                broken++;
+                com.hmc.zenkai.feature.advancement.ZenkaiTriggers.MILESTONE.get().trigger(sp, com.hmc.zenkai.feature.advancement.ZenkaiTriggers.Kinds.GUARD_BROKEN);
+                sp.serverLevel().playSound(null, e.getX(), e.getY(), e.getZ(),
+                        net.minecraft.sounds.SoundEvents.SHIELD_BREAK,
+                        SoundSource.PLAYERS, 0.9f, 1.1f);
+            }
+        }
 
         if (dmg > 0.0 && damageEnabled(sp)) {
             withBridge(t.dmgMult(), () -> {
@@ -353,19 +370,42 @@ public final class PhysicalCombatServer {
             });
         }
 
+        // Empujón: radial desde el jugador si es omnidireccional (los aparta a todos), y a lo largo
+        // de la mirada si no. Se aplica DESPUÉS del daño para que no lo pise el knockback de hurt().
         for (LivingEntity e : targets) {
+            double dx = look.x, dz = look.z;
+            if (omni) {
+                dx = e.getX() - sp.getX();
+                dz = e.getZ() - sp.getZ();
+                double len = Math.sqrt(dx * dx + dz * dz);
+                if (len < 1.0e-4) { dx = look.x; dz = look.z; len = Math.sqrt(dx * dx + dz * dz); }
+                if (len > 1.0e-4) { dx /= len; dz /= len; }
+            }
             e.setDeltaMovement(e.getDeltaMovement()
-                    .add(look.x * push, 0.3 + push * 0.15, look.z * push));
+                    .add(dx * push, 0.3 + push * 0.15, dz * push));
             e.hurtMarked = true;
         }
 
+        // DESVÍO DE PROYECTILES: se APARTAN hacia un lado y arriba, SIN devolverlos (devolver un
+        // proyectil es cosa del parry). Siguen siendo de su dueño y pasan de largo.
         AABB box = sp.getBoundingBox().inflate(t.range());
+        java.util.Random rng = new java.util.Random(sp.getRandom().nextLong());
+        int scattered = 0;
         for (var proj : sp.serverLevel().getEntitiesOfClass(
                 com.hmc.zenkai.content.entity.technique.KiProjectileEntity.class, box,
-                pr -> pr.getOwner() != sp && pr.canBeDeflected())) {
-            double speed = proj.getDeltaMovement().length();
-            if (!proj.deflect(sp)) continue; // guarda doble: barreras y proyectiles sin daño
-            proj.setDeltaMovement(look.scale(Math.max(speed, 0.4 + push * 0.4)));
+                pr -> pr.getOwner() != sp && pr.canBeDeflected() && !pr.isClashHeld())) {
+            proj.scatter(rng);
+            scattered++;
+        }
+
+        // COSTE CLARO: cada objetivo extra (enemigo empujado o proyectil desviado) suma una fracción
+        // del coste base, con tope. Un kiai que limpia una sala cuesta más que uno a un solo rival.
+        int extra = Math.min(Math.max(0, targets.size() + scattered - 1),
+                ServerConfig.kiaiExtraTargetCap());
+        double frac = ServerConfig.kiaiExtraTargetStamina();
+        if (extra > 0 && frac > 0.0) {
+            PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+            att.consumeStamina((int) Math.ceil(staminaCost(att, t) * frac * extra));
         }
     }
 
@@ -403,6 +443,17 @@ public final class PhysicalCombatServer {
             firing = false;
             defenseScale = 1.0;
         }
+    }
+
+    /**
+     * Daño devuelto por un efecto que NO es una técnica física (hoy, el parry): pasa por el mismo
+     * puente que las técnicas, así que CombatZenkaiHooks lo toma tal cual (sin recalcularlo como
+     * melee básico) y lo mitiga con la defensa del objetivo. Respeta la gamerule de daño.
+     */
+    public static void bridgedHit(ServerPlayer sp, LivingEntity target, double dmg,
+                                  ResourceKey<DamageType> type) {
+        if (dmg <= 0.0 || !damageEnabled(sp)) return;
+        withBridge(1.0, () -> target.hurt(sp.damageSources().source(type, sp), (float) dmg));
     }
 
     /** ÚNICO sitio donde se dibuja el impacto de una técnica física DE UN JUGADOR (partículas +

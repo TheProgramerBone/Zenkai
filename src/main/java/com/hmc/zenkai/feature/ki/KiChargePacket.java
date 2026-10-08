@@ -37,6 +37,10 @@ public record KiChargePacket(boolean charging) implements CustomPacketPayload {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
 
+            // Atrapado en un choque de haces no se puede cargar ki (solo se permite APAGARLO).
+            if (pkt.charging()
+                    && com.hmc.zenkai.feature.action.ActionStateServer.get(sp).inClash()) return;
+
             PlayerStatsAttachment att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
             att.setChargingKi(pkt.charging());
         });

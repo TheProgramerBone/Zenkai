@@ -1,0 +1,30 @@
+{
+  "parent": "zenkai:parry",
+  "criteria": {
+    "parry": {
+      "conditions": {
+        "kind": "parry_projectile"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.parry_projectile.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "minecraft:arrow"
+    },
+    "title": {
+      "translate": "advancements.zenkai.parry_projectile.title"
+    }
+  },
+  "requirements": [
+    [
+      "parry"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

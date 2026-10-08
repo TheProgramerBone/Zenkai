@@ -449,7 +449,16 @@ public class ModCommands {
                         // en sí encadena, espera y dibuja en el orden correcto. 2 destellos con 1s
                         // de diferencia, delante de quien ejecuta, tintados con SU color de aura.
                         .then(Commands.literal("sequence")
-                                .executes(ModCommands::debugRunSequence)))
+                                .executes(ModCommands::debugRunSequence))
+                        // ── /zenkai debug dummy ───────────────────────────────────────
+                        // Muñeco de pruebas: una Sombra con guion que hace UNA sola cosa
+                        // (spamear ki, quedarse quieta, guardia...), para probar el choque de
+                        // haces y demás sin esperar a la IA. Ver ShadowDebugMode.
+                        .then(Commands.literal("dummy")
+                                .then(dummyModes(true))
+                                .then(dummyModes(false))
+                                .then(Commands.literal("clear")
+                                        .executes(ModCommands::debugClearDummies))))
 
 
 
@@ -1045,6 +1054,116 @@ public class ModCommands {
      * damage=0/effect=NONE a propósito: es puramente un objeto que mirar, nunca debe poder
      * hacer daño ni admitir HOMING/EXPLOSIVE/etc.
      */
+    // ── Muñeco de pruebas ────────────────────────────────────────────────────
+
+    /** Bloques delante de quien ejecuta a los que aparece el muñeco. */
+    private static final double DUMMY_SPAWN_DISTANCE = 10.0;
+    private static final double DUMMY_SEARCH_RADIUS = 128.0;
+    private static final int DUMMY_DEFAULT_SIZE = 3;
+    /** 0 = sin intervalo propio: dispara con el cooldown real de la técnica. */
+    private static final int DUMMY_DEFAULT_INTERVAL = 0;
+
+    /**
+     * Rama "spawn" (crea uno) o "set" (cambia el guion de los que ya hay). Misma gramática en los
+     * dos: {@code <modo>} para idle/block/melee/physical/follow/flee, y
+     * {@code spam_ki <tipo> [tamaño] [intervalo_ticks]}.
+     */
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> dummyModes(
+            boolean spawn) {
+        var root = Commands.literal(spawn ? "spawn" : "set");
+        for (com.hmc.zenkai.content.entity.misc.ShadowDebugMode m
+                : com.hmc.zenkai.content.entity.misc.ShadowDebugMode.values()) {
+            if (m == com.hmc.zenkai.content.entity.misc.ShadowDebugMode.SPAM_KI) continue;
+            root.then(Commands.literal(m.id()).executes(ctx -> debugDummy(ctx, spawn, m, null,
+                    DUMMY_DEFAULT_SIZE, DUMMY_DEFAULT_INTERVAL)));
+        }
+        root.then(Commands.literal("spam_ki")
+                .then(Commands.argument("type", StringArgumentType.word())
+                        .suggests(KI_TYPE_IDS)
+                        .executes(ctx -> debugDummy(ctx, spawn,
+                                com.hmc.zenkai.content.entity.misc.ShadowDebugMode.SPAM_KI,
+                                StringArgumentType.getString(ctx, "type"),
+                                DUMMY_DEFAULT_SIZE, DUMMY_DEFAULT_INTERVAL))
+                        .then(Commands.argument("size", IntegerArgumentType.integer(1, 10))
+                                .executes(ctx -> debugDummy(ctx, spawn,
+                                        com.hmc.zenkai.content.entity.misc.ShadowDebugMode.SPAM_KI,
+                                        StringArgumentType.getString(ctx, "type"),
+                                        IntegerArgumentType.getInteger(ctx, "size"),
+                                        DUMMY_DEFAULT_INTERVAL))
+                                .then(Commands.argument("interval", IntegerArgumentType.integer(1, 400))
+                                        .executes(ctx -> debugDummy(ctx, spawn,
+                                                com.hmc.zenkai.content.entity.misc.ShadowDebugMode.SPAM_KI,
+                                                StringArgumentType.getString(ctx, "type"),
+                                                IntegerArgumentType.getInteger(ctx, "size"),
+                                                IntegerArgumentType.getInteger(ctx, "interval")))))));
+        return root;
+    }
+
+    private static int debugDummy(CommandContext<CommandSourceStack> ctx, boolean spawn,
+                                  com.hmc.zenkai.content.entity.misc.ShadowDebugMode mode,
+                                  String typeId, int size, int interval)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+
+        KiTechniqueType type = null;
+        if (mode == com.hmc.zenkai.content.entity.misc.ShadowDebugMode.SPAM_KI) {
+            type = KiTechniqueType.byName(typeId);
+            if (type == null) {
+                ctx.getSource().sendFailure(Component.literal(
+                        "[Zenkai] Tipo de técnica desconocido: " + typeId));
+                return 0;
+            }
+        }
+
+        if (spawn) {
+            var shadow = ModEntities.SHADOW_CLONE.get().create(sl);
+            if (shadow == null) return 0;
+            // Delante de quien ejecuta, mirándole. +1 en Y: si cae sobre una cuesta, por gravedad
+            // llega al suelo; sin el margen podía nacer dentro de un bloque.
+            Vec3 look = sp.getLookAngle();
+            Vec3 flat = new Vec3(look.x, 0.0, look.z);
+            flat = flat.lengthSqr() < 1.0e-6 ? new Vec3(0, 0, 1) : flat.normalize();
+            Vec3 pos = sp.position().add(flat.scale(DUMMY_SPAWN_DISTANCE)).add(0, 1.0, 0);
+            shadow.moveTo(pos.x, pos.y, pos.z, sp.getYRot() + 180f, 0f);
+            shadow.setOwner(sp);
+            shadow.setFlightAllowed(false);
+            shadow.setDebugScript(mode, type, size, interval);
+            sl.addFreshEntity(shadow);
+            ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Muñeco creado: "
+                    + mode.id() + ". \"/zenkai debug dummy set <modo>\" lo cambia, "
+                    + "\"/zenkai debug dummy clear\" los borra."), false);
+            return 1;
+        }
+
+        var dummies = sl.getEntitiesOfClass(
+                com.hmc.zenkai.content.entity.misc.ShadowCloneEntity.class,
+                sp.getBoundingBox().inflate(DUMMY_SEARCH_RADIUS),
+                s -> s.getTags().contains(
+                        com.hmc.zenkai.content.entity.misc.ShadowCloneEntity.DEBUG_DUMMY_TAG));
+        for (var d : dummies) d.setDebugScript(mode, type, size, interval);
+        final int n = dummies.size();
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] " + n
+                + " muñeco(s) ahora en modo " + mode.id()), false);
+        return n;
+    }
+
+    private static int debugClearDummies(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+        var dummies = sl.getEntitiesOfClass(
+                com.hmc.zenkai.content.entity.misc.ShadowCloneEntity.class,
+                sp.getBoundingBox().inflate(DUMMY_SEARCH_RADIUS),
+                s -> s.getTags().contains(
+                        com.hmc.zenkai.content.entity.misc.ShadowCloneEntity.DEBUG_DUMMY_TAG));
+        for (var d : dummies) d.discard();
+        final int n = dummies.size();
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] " + n
+                + " muñeco(s) borrado(s)"), false);
+        return n;
+    }
+
     private static int debugSpawnKiVfx(CommandContext<CommandSourceStack> ctx, String typeId, int size)
             throws CommandSyntaxException {
         ServerPlayer sp = ctx.getSource().getPlayerOrException();

@@ -46,6 +46,10 @@ public record ActionState(ActionType type, ActionPhase phase, long startTick,
         return type == ActionType.PHYSICAL && phase == ActionPhase.ACTIVE;
     }
 
+    public boolean inClash() {
+        return type == ActionType.CLASH;
+    }
+
     public ActionState withPhase(ActionPhase p) {
         return new ActionState(type, p, startTick, payload, visual);
     }

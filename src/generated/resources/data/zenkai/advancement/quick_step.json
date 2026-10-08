@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:dash",
+  "criteria": {
+    "used": {
+      "conditions": {
+        "kind": "quick_step_used"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.quick_step.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:chorus_fruit"
+    },
+    "title": {
+      "translate": "advancements.zenkai.quick_step.title"
+    }
+  },
+  "requirements": [
+    [
+      "used"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

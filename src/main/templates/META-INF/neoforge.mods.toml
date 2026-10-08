@@ -38,8 +38,8 @@ side="BOTH"
 # Curios API
 [[dependencies.${mod_id}]]
 modId="curios"
-type="required"
-reason="Las pesas de entrenamiento y el scouter usan slots de Curios"
+type="optional"
+reason="Con Curios, las pesas de entrenamiento y el scouter tienen su propio slot extra; sin Curios se llevan en las ranuras de armadura (pecho y cabeza)"
 versionRange="[9.0.0,)"
 ordering="AFTER"
 side="BOTH"

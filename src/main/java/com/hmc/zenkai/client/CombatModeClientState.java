@@ -2,8 +2,10 @@ package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.action.ActionStateClient;
+import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.event.ZenkaiPalAnimations;
 import com.hmc.zenkai.feature.combat.BlockingPacket;
+import com.hmc.zenkai.feature.combat.GuardHands;
 import com.hmc.zenkai.feature.combat.CombatModePacket;
 import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -186,10 +188,23 @@ public final class CombatModeClientState {
         if (mc.player == null) return;
         tickDash(mc);
 
-        boolean rightDown = mc.options.keyUse.isDown();
+        boolean blockDown = KeyBindings.BLOCK != null && KeyBindings.BLOCK.isDown();
         boolean handsFree = mc.player.getMainHandItem().isEmpty()
                 && mc.player.getOffhandItem().isEmpty();
         boolean inGame = mc.screen == null && mc.getConnection() != null;
+        // Manos válidas para DEFENDERSE: vacías, un arma en la mano principal o un escudo en la
+        // secundaria (ver GuardHands). Distinto de handsFree, que sigue mandando en las técnicas.
+        boolean guardHands = GuardHands.canGuard(mc.player);
+
+        // PARRY: el servidor decide; el cliente solo avisa. Se vacía siempre el clic para que no se
+        // acumulen pulsaciones, y se manda solo si el jugador quiere activarlo con la tecla.
+        if (KeyBindings.PARRY != null) {
+            while (KeyBindings.PARRY.consumeClick()) {
+                if (active && inGame && com.hmc.zenkai.config.ClientConfig.parryTrigger().allowsKey()) {
+                    PacketDistributor.sendToServer(new com.hmc.zenkai.feature.combat.ParryPacket());
+                }
+            }
+        }
 
         // ── Teclas 1-9 (consumidas ANTES de handleKeybinds; la hotbar vanilla no se mueve):
         //    primera pulsación = seleccionar; SEGUNDA pulsación sobre la seleccionada = actuar
@@ -197,9 +212,16 @@ public final class CombatModeClientState {
         boolean pressedSelected = false;
         if (active && mc.screen == null) {
             var binds = PlayerStatsAttachment.get(mc.player).techniques();
-            for (int i = 0; i < Math.min(mc.options.keyHotbarSlots.length,
+            // La hotbar vanilla sigue bloqueada en modo combate: se vacían sus clics para que 1-9 no
+            // cambien el ítem de la mano (con teclas de slot reasignadas, también).
+            for (var hotbarKey : mc.options.keyHotbarSlots) {
+                while (hotbarKey.consumeClick()) { /* descartar */ }
+            }
+            for (int i = 0; i < Math.min(KeyBindings.COMBAT_SLOTS.length,
                     PlayerTechniques.BIND_POSITIONS); i++) {
-                while (mc.options.keyHotbarSlots[i].consumeClick()) {
+                // Las teclas de slot son propias del mod (reasignables en Controles), no las de la
+                // hotbar vanilla.
+                while (KeyBindings.COMBAT_SLOTS[i].consumeClick()) {
                     if (binds.physicalBinding(i) != null) {
                         // FÍSICA: se ejecuta A LA PRIMERA pulsación
                         selected = i;
@@ -216,7 +238,9 @@ public final class CombatModeClientState {
         }
 
         // ── Actuar sobre la casilla seleccionada ──
-        if (pressedSelected && active && inGame && handsFree && mc.level != null) {
+        // handsFree NO se exige aquí: una física con weapon_requirement distinto de manos vacías (espada)
+        // se juzga en ActionRules.canFirePhysical; la rama de ki sí exige las manos vacías.
+        if (pressedSelected && active && inGame && mc.level != null) {
             var att = PlayerStatsAttachment.get(mc.player);
             var techniques = att.techniques();
             PhysicalTechnique phys = techniques.physicalBinding(selected);
@@ -234,6 +258,7 @@ public final class CombatModeClientState {
 
                 var verdict = com.hmc.zenkai.feature.action.ActionRules.canFirePhysical(
                         ctx,
+                        phys.weaponRequirement(),
                         phys.enabled(),
                         att.techniques().isUnlocked(phys),
                         PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now,
@@ -245,7 +270,7 @@ public final class CombatModeClientState {
                     PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks()); // optimista
                     ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: fase 6)
                 }
-            } else if (chargingSlot < 0) {
+            } else if (chargingSlot < 0 && handsFree) {
                 int bound = techniques.binding(selected);
                 // El cooldown bloquea la carga, no solo el disparo: así la tecla no responde
                 // en vez de dejar cargar para rechazar al soltar.
@@ -262,8 +287,8 @@ public final class CombatModeClientState {
         if (chargingSlot >= 0) {
             KiTechnique t = PlayerStatsAttachment.get(mc.player).techniques().slot(chargingSlot);
             boolean held = chargingKey >= 0
-                    && chargingKey < mc.options.keyHotbarSlots.length
-                    && mc.options.keyHotbarSlots[chargingKey].isDown();
+                    && chargingKey < KeyBindings.COMBAT_SLOTS.length
+                    && KeyBindings.COMBAT_SLOTS[chargingKey].isDown();
             if (!active || !inGame || !handsFree || t == null) {
                 cancelCharge();
             } else if (!held) {
@@ -295,9 +320,10 @@ public final class CombatModeClientState {
             }
         }
 
-        // ── DEFENSA: click derecho + manos vacías (edge-trigger al server) ──
-        boolean blocking = active && inGame && rightDown
-                && chargingSlot < 0 && handsFree;
+        // ── DEFENSA: la tecla de bloqueo (clic derecho por defecto) con manos válidas (edge-trigger
+        //    al server) ──
+        boolean blocking = active && inGame && blockDown
+                && chargingSlot < 0 && guardHands;
         if (blocking != lastBlockingSent) {
             lastBlockingSent = blocking;
             if (mc.getConnection() != null) {
@@ -328,6 +354,38 @@ public final class CombatModeClientState {
         chargingSlot = -1;
         chargingKey = -1;
         chargeTicks = 0;
+    }
+
+    /**
+     * Al REAPARECER tras morir, el modo combate se apaga también en el cliente. El servidor ya lo
+     * apaga en LivingDeathEvent, pero ese aviso solo llegaba a quienes rastrean al jugador, no a él
+     * mismo, así que su cliente seguía con `active` en true y la barra de técnicas dibujada. Se
+     * distingue la muerte de un cambio de dimensión (que también reemplaza al jugador pero NO apaga
+     * el modo en el servidor) mirando si el jugador anterior estaba muerto.
+     */
+    @SubscribeEvent
+    public static void onPlayerClone(net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.Clone e) {
+        if (e.getOldPlayer().isDeadOrDying()) reset();
+    }
+
+    /**
+     * En modo combate, si el botón de bloqueo o de parry es el MISMO que «Usar objeto» y las manos
+     * son válidas para defenderse (vacías, arma o escudo), el clic NO hace la interacción de
+     * vanilla: no se abren cofres ni puertas ni se comercia mientras te defiendes. Con un ítem
+     * usable en la mano (comida, bloques, arco) gana vanilla. Para abrir un cofre se apaga el modo
+     * combate con X, que ya bloquea la hotbar por el mismo motivo.
+     */
+    @SubscribeEvent
+    public static void onInteraction(net.neoforged.neoforge.client.event.InputEvent.InteractionKeyMappingTriggered e) {
+        if (!e.isUseItem() || !active) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.screen != null) return;
+        var use = mc.options.keyUse.getKey();
+        boolean shared = (KeyBindings.BLOCK != null && KeyBindings.BLOCK.getKey().equals(use))
+                || (KeyBindings.PARRY != null && KeyBindings.PARRY.getKey().equals(use));
+        if (!shared || !GuardHands.canGuard(mc.player)) return;
+        e.setCanceled(true);
+        e.setSwingHand(false);
     }
 
     /** Desde CombatModeSyncPacket. */

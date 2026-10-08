@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:combat_stance",
+  "criteria": {
+    "used": {
+      "conditions": {
+        "kind": "dash_used"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.dash.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:feather"
+    },
+    "title": {
+      "translate": "advancements.zenkai.dash.title"
+    }
+  },
+  "requirements": [
+    [
+      "used"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

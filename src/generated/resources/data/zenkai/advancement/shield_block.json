@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:combat_stance",
+  "criteria": {
+    "blocked": {
+      "conditions": {
+        "kind": "shield_blocked"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.shield_block.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:shield"
+    },
+    "title": {
+      "translate": "advancements.zenkai.shield_block.title"
+    }
+  },
+  "requirements": [
+    [
+      "blocked"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

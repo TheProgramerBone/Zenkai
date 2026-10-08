@@ -47,6 +47,7 @@ public class ZenkaiMeleeAttackGoal extends MeleeAttackGoal {
      *  qué PathNavigation tiene instalada de verdad en ese momento. */
     @Override
     public boolean canUse() {
+        if (!zenkaiMob.combatGoalAllowed(ZenkaiDefaultMob.GOAL_MELEE)) return false;
         if (zenkaiMob.isActionOnCooldown()) {
             logDiag("en respiro (isActionOnCooldown)");
             return false;

@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.action;
 
 import com.hmc.zenkai.feature.combat.CombatModeServerState;
+import com.hmc.zenkai.feature.combat.GuardHands;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.technique.KiChargeServer;
 import com.hmc.zenkai.feature.technique.KiCombatServer;
@@ -39,9 +40,11 @@ public final class ServerActionContext {
                 KiCombatServer.isBlocking(sp),
                 att.flags().isDowned(),
                 sp.getMainHandItem().isEmpty() && sp.getOffhandItem().isEmpty(),
+                GuardHands.isHoldingSword(sp),
                 st.physBusy(),
                 st.chargingSlot(),
-                st.elapsed(now));
+                st.elapsed(now),
+                st.inClash());
     }
 
     /** Contexto con un ActionState dado en vez del actual. Lo usa el release de ki, que ya
@@ -55,8 +58,10 @@ public final class ServerActionContext {
                 KiCombatServer.isBlocking(sp),
                 att.flags().isDowned(),
                 sp.getMainHandItem().isEmpty() && sp.getOffhandItem().isEmpty(),
+                GuardHands.isHoldingSword(sp),
                 st.physBusy(),
                 st.chargingSlot(),
-                st.elapsed(now));
+                st.elapsed(now),
+                st.inClash());
     }
 }

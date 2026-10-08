@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:combat_stance",
+  "criteria": {
+    "parry": {
+      "conditions": {
+        "kind": "parry_success"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.parry.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:golden_sword"
+    },
+    "title": {
+      "translate": "advancements.zenkai.parry.title"
+    }
+  },
+  "requirements": [
+    [
+      "parry"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

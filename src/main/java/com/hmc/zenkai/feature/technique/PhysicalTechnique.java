@@ -29,6 +29,9 @@ public enum PhysicalTechnique {
 
     public String nameKey() { return "physical.zenkai." + id; }
 
+    /** Descripción corta para el tooltip de la lista de técnicas. */
+    public String descKey() { return nameKey() + ".desc"; }
+
     public static PhysicalTechnique byOrdinal(int i) {
         PhysicalTechnique[] all = values();
         return (i >= 0 && i < all.length) ? all[i] : null;
@@ -62,6 +65,12 @@ public enum PhysicalTechnique {
     public String master() { TechniqueDef d = def(); return d == null ? "" : d.master(); }
 
     public int cooldownTicks() { TechniqueDef d = def(); return d == null ? 20 : d.cooldownTicks(); }
+
+    /** Qué hay que llevar en las manos. Sin JSON, lo de siempre: manos vacías. */
+    public WeaponRequirement weaponRequirement() {
+        TechniqueDef d = def();
+        return WeaponRequirement.byId(d == null ? "" : d.weaponRequirement());
+    }
 
     /** Alcance en bloques (rayo/cono según la técnica). */
     public double range() { TechniqueDef d = def(); return d == null ? 0.0 : d.range(); }

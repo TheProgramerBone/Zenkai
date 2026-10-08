@@ -131,6 +131,7 @@ public class PhysicalAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
 
     @Override
     public boolean canUse() {
+        if (!mob.combatGoalAllowed(com.hmc.zenkai.content.entity.ZenkaiDefaultMob.GOAL_PHYSICAL)) return false;
         LivingEntity tgt = mob.getTarget();
         if (tgt == null || !tgt.isAlive()) return false;
         if (mob instanceof BlockingMob bm && bm.isBlockingNow()) return false;
@@ -271,13 +272,10 @@ public class PhysicalAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
             case BARRAGE -> {
                 for (int i = 0; i < BARRAGE_HITS; i++) hit(target, str, 1.0 / BARRAGE_HITS, 0.5);
             }
-            case KIAI ->
-                // excludeTarget=false: a diferencia de HEAVY_BLOW, este ES el único daño de
-                // KIAI — excluir a target (bug real encontrado: la llamada original SIEMPRE lo
-                // excluía, así que KIAI nunca golpeaba a su propio objetivo si era el único
-                // cerca) lo dejaría sin efecto contra la razón por la que se elige (contrarrestar
-                // guardia/ki del objetivo, ver KiAttackGoal/PhysicalAttackGoal.pickReady).
-                areaBurst(mob.position(), chosen.range(), str, false);
+            // El kiai del NPC hace lo mismo que el del jugador: círculo completo, ruptura de guardia ANTES del
+            // daño, empuje radial escalado con STR y desvío lateral de proyectiles ajenos. Solo lo usa
+            // quien lleva "kiai" en su ficha (entity physical_attacks), que es lo que lo "habilita".
+            case KIAI -> kiaiBurst(str);
         }
     }
 
@@ -299,6 +297,51 @@ public class PhysicalAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
         Vec3 dir = tgt.position().subtract(mob.position()).normalize();
         mob.setDeltaMovement(mob.getDeltaMovement().add(dir.x * 1.2, 0.1, dir.z * 1.2));
         mob.hurtMarked = true;
+    }
+
+    /**
+     * Kiai de un NPC. Espejo del kiai del jugador (PhysicalCombatServer.kiai) sin la parte exclusiva de
+     * jugador (estamina extra, advancements): control de zona alrededor del mob. A diferencia de
+     * HEAVY_BLOW, aquí el objetivo SÍ recibe el daño (ver pickReady: se elige para romper la guardia
+     * o la carga del objetivo, así que tiene que alcanzarlo).
+     */
+    private void kiaiBurst(double str) {
+        Vec3 c = mob.position();
+        double range = chosen.range();
+        List<LivingEntity> targets = mob.level().getEntitiesOfClass(LivingEntity.class,
+                new AABB(c, c).inflate(range), x -> x != mob && x.isAlive() && x.distanceTo(mob) <= range);
+
+        // Ruptura de guardia antes del daño: el golpe del propio kiai ya no se mitiga con ella.
+        int breakTicks = com.hmc.zenkai.config.ServerConfig.kiaiGuardBreakTicks();
+        for (LivingEntity e : targets) {
+            if (com.hmc.zenkai.feature.combat.GuardBreak.breakGuard(e, breakTicks)) {
+                mob.level().playSound(null, e.getX(), e.getY(), e.getZ(),
+                        net.minecraft.sounds.SoundEvents.SHIELD_BREAK,
+                        net.minecraft.sounds.SoundSource.HOSTILE, 0.9f, 1.1f);
+            }
+        }
+
+        double push = 0.7 + 0.9 * (str / (str + 100.0));   // mismo softcap que el jugador
+        double dmg = PhysicalCombatServer.computeDamage(str, chosen.type(), chosen.damageMult() * 0.5);
+        for (LivingEntity e : targets) {
+            e.hurt(mob.damageSources().mobAttack(mob), (float) dmg);
+            // El empuje va DESPUÉS del daño para que no lo pise el knockback de hurt().
+            double dx = e.getX() - mob.getX(), dz = e.getZ() - mob.getZ();
+            double len = Math.sqrt(dx * dx + dz * dz);
+            if (len < 1.0e-4) { dx = 1.0; dz = 0.0; len = 1.0; }
+            e.setDeltaMovement(e.getDeltaMovement().add(dx / len * push, 0.3 + push * 0.15, dz / len * push));
+            e.hurtMarked = true;
+            PhysicalCombatServer.playImpactSound(mob.level(), e, chosen.type());
+        }
+
+        // Proyectiles ajenos: se APARTAN, no se devuelven (devolver es cosa del parry).
+        java.util.Random rng = new java.util.Random(mob.getRandom().nextLong());
+        for (var proj : mob.level().getEntitiesOfClass(
+                com.hmc.zenkai.content.entity.technique.KiProjectileEntity.class,
+                mob.getBoundingBox().inflate(range),
+                pr -> pr.getOwner() != mob && pr.canBeDeflected() && !pr.isClashHeld())) {
+            proj.scatter(rng);
+        }
     }
 
     /** Onda en área centrada en `center` (HEAVY_BLOW: remate alrededor del golpe directo;

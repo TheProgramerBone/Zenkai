@@ -88,11 +88,23 @@ public class CombatZenkaiHooks {
      */
     @SubscribeEvent
     public static void onIncomingDamage(LivingIncomingDamageEvent e) {
+        // NPC con kiai en su ficha: puede parar el golpe cuerpo a cuerpo (ver ParryServer.tryMobParry).
+        if (e.getEntity() instanceof com.hmc.zenkai.content.entity.ZenkaiDefaultMob mob) {
+            if (!e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)
+                    && ParryServer.tryMobParry(mob, e.getSource())) {
+                e.setCanceled(true);
+            }
+            return;
+        }
         if (!(e.getEntity() instanceof ServerPlayer sp) || sp.level().isClientSide()) return;
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
         if (e.getSource().getEntity() instanceof ServerPlayer attacker
                 && PartyService.friendlyFireBlocked(attacker, sp)) return;
         if (PhysicalCombatServer.hasIFrames(sp.getUUID()) || DashServer.hasIFrames(sp)) return;
+        // PARRY: antes que el esquive de UI. Cancelar aquí (y no a 0 en Pre) evita la animación de
+        // daño: el golpe parreado no «duele». Los proyectiles de ki se desvían en
+        // KiProjectileEntity.onHitEntity, antes de llegar a hacer daño.
+        if (ParryServer.tryParry(sp, e.getSource())) { e.setCanceled(true); return; }
         if (OverlayMetersSystem.tryDodge(sp)) e.setCanceled(true);
     }
 
@@ -136,6 +148,10 @@ public class CombatZenkaiHooks {
 
         ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
         float dmg = computeAttackDamage(e, atkStats, armorMult);
+        // Contraataque tras un parry: el primer golpe saliente del defensor sale reforzado.
+        if (dmg > 0f && e.getSource().getEntity() != e.getEntity()) {
+            dmg *= ParryServer.consumeCounterMult(e.getSource().getEntity());
+        }
 
         // Se consume AQUÍ, inmediatamente después de computeAttackDamage (el único sitio que
         // puede haberlo marcado, vía BlackFlash.apply dentro de playerMeleeDamage) y ANTES de
@@ -468,7 +484,8 @@ public class CombatZenkaiHooks {
      *  jugadores lo sacan de su skill ki_block (0.80..0.50 según nivel); un mob no tiene esa
      *  skill, así que trae su propio número fijo (BlockingMob.blockDamageMultiplier()). */
     private static double blockDamageMultiplierOf(LivingEntity defender) {
-        if (defender instanceof ServerPlayer sp) return SkillEffects.blockDamageMultiplier(sp);
+        // Una vez por golpe bloqueado: con escudo gasta durabilidad y, imbuido, ki (GuardHands).
+        if (defender instanceof ServerPlayer sp) return GuardHands.consumeBlockMultiplier(sp);
         if (defender instanceof BlockingMob bm) return bm.blockDamageMultiplier();
         return 1.0;
     }

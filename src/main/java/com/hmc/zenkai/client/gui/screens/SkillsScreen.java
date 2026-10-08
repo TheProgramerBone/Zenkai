@@ -28,9 +28,10 @@ import java.util.List;
  * Lista con scroll de rueda: caben 5 filas y el mod va camino de tener bastantes más
  * habilidades, así que la ventana se desplaza por filas enteras (nada de medias filas
  * cortadas) y una barra a la derecha indica dónde estás.
- * Los textos se recortan con puntos suspensivos al ancho disponible. (Hubo un tooltip con la
- * descripción completa al pasar el ratón por la fila; se ELIMINÓ a petición del usuario
- * 2026-09-29: salía cuando quería y volvía injugable la pantalla.)
+ * Los textos se recortan con puntos suspensivos al ancho disponible. El primer tooltip con la
+ * descripción completa (sobre la FILA entera) se ELIMINÓ a petición del usuario 2026-09-29:
+ * salía cuando quería y volvía injugable la pantalla. Desde 2026-10-07 hay uno CONTROLADO: solo
+ * sobre la línea de la descripción, solo si está recortada, y tras una pausa (HOVER_DELAY_MS).
  */
 
 public class SkillsScreen extends ZenkaiMenuScreen {
@@ -53,6 +54,14 @@ public class SkillsScreen extends ZenkaiMenuScreen {
     private final List<XIconButton> forgetButtons = new ArrayList<>();
 
     private int scrollRow = 0;
+
+    /** Pausa con el ratón quieto sobre la descripción antes de enseñar el tooltip. */
+    private static final long HOVER_DELAY_MS = 450L;
+    private static final int TIP_WRAP_W = 200;
+    /** Habilidad cuya descripción recortada señala el ratón ahora, y desde cuándo. */
+    private String hoverDescId = null;
+    private long hoverDescSince = 0L;
+    private int hoverDescMouseX, hoverDescMouseY;
 
     public SkillsScreen() {
         super(Component.translatable(ZenkaiTab.SKILLS.titleKey()));
@@ -282,6 +291,7 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         // pintarse encima del borde del panel.
         g.enableScissor(panelLeft, listTop(), panelLeft + BG_W, listTop() + viewHeight());
 
+        String hoveredDesc = null;
         int first = scrollRow;
         int last = Math.min(rowIds.size(), scrollRow + visibleRows());
         for (int i = first; i < last; i++) {
@@ -312,8 +322,16 @@ public class SkillsScreen extends ZenkaiMenuScreen {
 
             if (def == null) continue;
 
-            PanelText.onPanel(g, this.font, fit(Component.translatable(def.descKey()), maxW),
+            Component fullDesc = Component.translatable(def.descKey());
+            PanelText.onPanel(g, this.font, fit(fullDesc, maxW),
                     textX, y + 11, ZenkaiPalette.BODY_ON_PANEL);
+            // Solo la línea de la descripción y solo si está recortada: así el tooltip no tapa
+            // los botones + / olvidar ni sale al pasar por una fila cuyo texto ya se lee entero.
+            if (this.font.width(fullDesc) > maxW && mouseX >= textX && mouseX < textX + maxW
+                    && mouseY >= y + 10 && mouseY < y + 21
+                    && mouseY >= listTop() && mouseY < listTop() + viewHeight()) {
+                hoveredDesc = id;
+            }
 
             boolean canLevel = def.purchasable() && lvl < maxLevelOf(def);
             if (!canLevel) {
@@ -333,5 +351,32 @@ public class SkillsScreen extends ZenkaiMenuScreen {
         }
         g.disableScissor();
         drawScrollbar(g);
+
+        // Tooltip de la descripción completa, FUERA del scissor (o se recortaría con la lista).
+        long now = System.currentTimeMillis();
+        if (hoveredDesc == null) {
+            hoverDescId = null;
+        } else {
+            // Mover el ratón reinicia la espera: el tooltip solo sale con el cursor quieto.
+            if (!hoveredDesc.equals(hoverDescId) || Math.abs(mouseX - hoverDescMouseX) > 2
+                    || Math.abs(mouseY - hoverDescMouseY) > 2) {
+                hoverDescId = hoveredDesc;
+                hoverDescSince = now;
+                hoverDescMouseX = mouseX;
+                hoverDescMouseY = mouseY;
+            }
+            SkillDef hd = SkillDef.get(hoveredDesc);
+            if (hd != null && now - hoverDescSince >= HOVER_DELAY_MS) {
+                List<Component> lines = new ArrayList<>();
+                lines.add(Component.translatable(hd.nameKey()));
+                for (net.minecraft.network.chat.FormattedText part : this.font.getSplitter().splitLines(
+                        Component.translatable(hd.descKey()), TIP_WRAP_W,
+                        net.minecraft.network.chat.Style.EMPTY)) {
+                    lines.add(Component.literal(part.getString())
+                            .withStyle(net.minecraft.ChatFormatting.GRAY));
+                }
+                g.renderComponentTooltip(this.font, lines, mouseX, mouseY);
+            }
+        }
     }
 }

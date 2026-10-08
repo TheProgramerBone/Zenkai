@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:first_tp",
+  "criteria": {
+    "done": {
+      "conditions": {
+        "kind": "meditation_done"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.meditation_minigame.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:note_block"
+    },
+    "title": {
+      "translate": "advancements.zenkai.meditation_minigame.title"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

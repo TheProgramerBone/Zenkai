@@ -125,6 +125,28 @@ public final class ClientConfig {
                             + "completely (previous behaviour), 100 shows it at full strength",
                     30, 0, 100, 10);
 
+    /** Cómo prefiere ESTE jugador activar el parry: KEY (por defecto, solo la tecla de parry), BLOCK
+     *  (al pulsar la guardia: la guardia real se aplaza hasta que acaba la ventana) o BOTH. Es una
+     *  preferencia del jugador: el cliente la manda al servidor (ParryPrefPacket) al entrar y cada
+     *  vez que cambia. */
+    private static final ModConfigSpec.EnumValue<com.hmc.zenkai.feature.combat.ParryTrigger> PARRY_TRIGGER =
+            defineEnum("parry.trigger", "parry_trigger",
+                    "How you trigger the parry. KEY: only the dedicated parry key (default). BLOCK: pressing "
+                            + "the guard button opens the parry window and the real guard starts a moment later "
+                            + "(tap = parry, hold = block). BOTH: either",
+                    com.hmc.zenkai.feature.combat.ParryTrigger.KEY,
+                    com.hmc.zenkai.feature.combat.ParryTrigger.class);
+
+    /** Orientación de la barra del choque de haces: 0 horizontal (bajo la mirilla), 1 vertical (a
+     *  su derecha). Solo cambia el giro con que ClashBarOverlay dibuja las MISMAS piezas, no la
+     *  lógica. La clave se renombró (antes `bar_style`, 0 = vertical, con una diagonal que ya no
+     *  existe) para que un toml viejo no cambie de orientación sin que nadie lo note: vuelve al
+     *  valor por defecto en vez de reinterpretar su 0. */
+    private static final ModConfigSpec.IntValue CLASH_BAR_STYLE =
+            defineInt("clash.bar_orientation", "clash_bar_orientation",
+                    "Orientation of the beam-clash timing bar: 0 = horizontal, 1 = vertical",
+                    0, 0, 1, 1);
+
     /** 100 = igual que el comportamiento de siempre: la bola de ki que cargas/sueltas se ve a
      *  máxima fuerza en primera persona. Por debajo de eso es para quien la encuentra
      *  demasiado grande pegada a la cámara pero no quiere perderla. */
@@ -273,6 +295,8 @@ public final class ClientConfig {
 
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }
+    public static int clashBarStyle() { return CLASH_BAR_STYLE.get(); }
+    public static com.hmc.zenkai.feature.combat.ParryTrigger parryTrigger() { return PARRY_TRIGGER.get(); }
     public static float kiFirstPersonOpacityFrac() { return KI_FP_OPACITY.get() / 100f; }
     public static boolean kiBloomEnabled() { return KI_BLOOM_ENABLED.get(); }
     public static boolean kiFirstPersonAnimations() { return KI_FP_ANIMATIONS.get(); }

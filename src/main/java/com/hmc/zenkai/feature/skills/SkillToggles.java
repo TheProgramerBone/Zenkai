@@ -50,7 +50,14 @@ public final class SkillToggles {
      *                      a medio terminar sin arrancar su código ni tocar los guardados.
      */
     public record Toggle(String id, boolean needsOwnSkill, Set<String> requires,
-                         Set<String> conflicts, @Nullable String category, boolean enabled) {}
+                         Set<String> conflicts, @Nullable String category, boolean enabled,
+                         boolean defaultOn) {
+        /** Interruptor normal: arranca apagado. */
+        public Toggle(String id, boolean needsOwnSkill, Set<String> requires,
+                      Set<String> conflicts, @Nullable String category, boolean enabled) {
+            this(id, needsOwnSkill, requires, conflicts, category, enabled, false);
+        }
+    }
 
     private static final Map<String, Toggle> REGISTRY = new LinkedHashMap<>();
 
@@ -86,6 +93,11 @@ public final class SkillToggles {
                 Set.of(SkillEffects.ULTRA_EGO), null, true));
         register(new Toggle(SkillEffects.ULTRA_EGO, true, Set.of(),
                 Set.of(SkillEffects.ULTRA_INSTINCT), null, true));
+
+        // Paso rápido: ENCENDIDO por defecto (defaultOn). Quien ya lo tenía comprado conserva el
+        // comportamiento de siempre (el doble toque es Paso rápido); apagarlo en la rueda devuelve
+        // el dash normal. Lo lee DashServer.tryDash.
+        register(new Toggle(SkillEffects.QUICK_STEP, true, Set.of(), Set.of(), null, true, true));
     }
 
     /** En orden de registro (orden en la rueda). */
@@ -110,7 +122,20 @@ public final class SkillToggles {
     /** EL lector. false si el interruptor ya no es legítimo, aunque el bit siga guardado. */
     public static boolean isOn(Player p, String id) {
         if (!available(p, id)) return false;
-        return PlayerStatsAttachment.get(p).skills().isToggleOn(id);
+        return rawState(PlayerStatsAttachment.get(p), REGISTRY.get(id));
+    }
+
+    /**
+     * Un interruptor {@code defaultOn} guarda el bit al REVÉS (presente = apagado a mano), para que
+     * un guardado sin ese bit —jugador antiguo, respawn, {@code clearToggles}— siga encendido.
+     */
+    private static boolean rawState(PlayerStatsAttachment att, Toggle t) {
+        boolean bit = att.skills().isToggleOn(t.id());
+        return t.defaultOn() ? !bit : bit;
+    }
+
+    private static void writeState(PlayerStatsAttachment att, Toggle t, boolean on) {
+        att.skills().setToggle(t.id(), t.defaultOn() ? !on : on);
     }
 
     /**
@@ -123,13 +148,16 @@ public final class SkillToggles {
         if (!available(sp, id)) return false;
 
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        boolean now = !att.skills().isToggleOn(id);
-        att.skills().setToggle(id, now);
+        Toggle t = REGISTRY.get(id);
+        boolean now = !rawState(att, t);
+        writeState(att, t, now);
 
         // Al encender, apagar lo que no puede convivir con esto.
         if (now) {
-            Toggle t = REGISTRY.get(id);
-            for (String other : t.conflicts()) att.skills().setToggle(other, false);
+            for (String other : t.conflicts()) {
+                Toggle o = REGISTRY.get(other);
+                if (o != null) writeState(att, o, false);
+            }
         }
 
         PlayerLifeCycle.sync(sp);   // stats, no forma: los interruptores viven en PlayerSkills
@@ -143,8 +171,9 @@ public final class SkillToggles {
     /** Fija un estado concreto (muerte, comandos). No valida: es para apagar, no para dar. */
     public static void set(ServerPlayer sp, String id, boolean on) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (att.skills().isToggleOn(id) == on) return;
-        att.skills().setToggle(id, on);
+        Toggle t = REGISTRY.get(id);
+        if (t == null || rawState(att, t) == on) return;
+        writeState(att, t, on);
         PlayerLifeCycle.sync(sp);
     }
 }

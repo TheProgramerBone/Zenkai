@@ -1109,12 +1109,27 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         return null;
     }
 
+    /** Ancho (px) al que se parte una descripción larga dentro de un tooltip. */
+    private static final int TIP_WRAP_W = 190;
+
+    /** Parte un texto largo en líneas del ancho dado, en gris, para un tooltip de varias líneas. */
+    private List<Component> wrapped(Component text, int width) {
+        List<Component> out = new ArrayList<>();
+        for (net.minecraft.network.chat.FormattedText part
+                : this.font.getSplitter().splitLines(text, width, net.minecraft.network.chat.Style.EMPTY)) {
+            out.add(Component.literal(part.getString()).withStyle(ChatFormatting.GRAY));
+        }
+        return out;
+    }
+
     /** Tooltip de una fila de ki: lo que ya no cabe en la sub-línea. El efecto va con SU color
      *  (TechniqueEffect.panelRgb, la variante legible sobre el beige) porque el color es su
      *  identidad — el mismo criterio con el que el editor pinta esa fila. */
     private List<Component> kiRowTooltip(KiTechnique t) {
         List<Component> lines = new ArrayList<>();
         lines.add(t.displayName());
+        // Qué ES esta técnica (la descripción de su tipo): antes el tooltip solo traía números.
+        lines.addAll(wrapped(Component.translatable(t.type().descKey()), TIP_WRAP_W));
         lines.add(Component.translatable("screen.zenkai.technique.tip_size", t.size())
                 .withStyle(ChatFormatting.GRAY));
         if (t.effect() != TechniqueEffect.NONE) {
@@ -1135,6 +1150,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     private List<Component> physRowTooltip(PhysicalTechnique t) {
         List<Component> lines = new ArrayList<>();
         lines.add(Component.translatable(t.nameKey()));
+        lines.addAll(wrapped(Component.translatable(t.descKey()), TIP_WRAP_W));
         lines.add(Component.translatable("screen.zenkai.technique.tip_phys",
                         fmt(t.dmgMult()), fmt(t.cooldownTicks() / 20.0), fmt(t.range()))
                 .withStyle(ChatFormatting.GRAY));

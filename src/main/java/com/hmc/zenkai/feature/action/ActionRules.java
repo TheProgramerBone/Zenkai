@@ -1,5 +1,7 @@
 package com.hmc.zenkai.feature.action;
 
+import com.hmc.zenkai.feature.technique.WeaponRequirement;
+
 /**
  * ÚNICA fuente de verdad de qué se puede hacer y cuándo. Sin estado, sin dependencias de
  * lado: la compilan cliente y servidor y ambos leen las mismas reglas.
@@ -14,7 +16,8 @@ package com.hmc.zenkai.feature.action;
  *   KI_TECHNIQUE/CHARGING  cancela  cancela  cancela+nueva desde 0   ✗
  *   KI_TECHNIQUE/RELEASING ✗        ✗        ✗        ✗
  *   TRANSFORM              ✗        ✗        ✗        —
- *   DOWNED                 ✗        ✗        ✗        ✗
+ *   CLASH                  ✗        ✗        ✗        ✗
+ *   DOWNED                ✗        ✗        ✗        ✗
  *
  * MATRIZ B (estados sostenidos) — cancelsChargingKi() / cancelsTurbo():
  *
@@ -60,6 +63,8 @@ public final class ActionRules {
                 default                     -> false;
             };
             case TRANSFORM -> false;
+            // El choque de haces no se corta con nada: solo termina el propio ClashManager.
+            case CLASH -> false;
             default -> true;
         };
     }
@@ -85,17 +90,29 @@ public final class ActionRules {
     private static ActionReject common(ActionContext ctx) {
         if (!ctx.raceChosen()) return ActionReject.NO_RACE;
         if (ctx.downed())      return ActionReject.DOWNED;
+        if (ctx.clash())       return ActionReject.IN_CLASH;
         if (!ctx.combatMode()) return ActionReject.NOT_COMBAT_MODE;
-        if (!ctx.handsFree())  return ActionReject.HANDS_BUSY;
         return ActionReject.OK;
+    }
+
+    /** Las técnicas de ki siempre piden las manos vacías; las físicas, lo que diga su requisito. */
+    private static ActionReject emptyHands(ActionContext ctx) {
+        return ctx.handsFree() ? ActionReject.OK : ActionReject.HANDS_BUSY;
     }
 
     // ── Técnicas físicas ──────────────────────────────────────────────────────
 
-    public static ActionReject canFirePhysical(ActionContext ctx, boolean enabled, boolean unlocked,
+    public static ActionReject canFirePhysical(ActionContext ctx, WeaponRequirement requirement,
+                                               boolean enabled, boolean unlocked,
                                                boolean cooldownReady, int cost, double stamina) {
         ActionReject c = common(ctx);
         if (!c.ok()) return c;
+        boolean handsOk = switch (requirement) {
+            case NONE -> true;
+            case EMPTY_HANDS -> ctx.handsFree();
+            case SWORD -> ctx.swordHeld();
+        };
+        if (!handsOk)          return ActionReject.HANDS_BUSY;
         if (ctx.blocking())    return ActionReject.BLOCKING;
         if (ctx.physBusy())    return ActionReject.BUSY;   // un movimiento a la vez
         if (!enabled)          return ActionReject.DISABLED;
@@ -122,6 +139,7 @@ public final class ActionRules {
                                                 boolean cooldownReady) {
         ActionReject c = common(ctx);
         if (!c.ok()) return c;
+        if (!ctx.handsFree()) return ActionReject.HANDS_BUSY;
         if (ctx.blocking())   return ActionReject.BLOCKING;
         if (ctx.physBusy())   return ActionReject.BUSY;
         if (!enabled)         return ActionReject.DISABLED;
@@ -141,6 +159,7 @@ public final class ActionRules {
                                             double energy, int cost) {
         ActionReject c = common(ctx);
         if (!c.ok()) return c;
+        if (!ctx.handsFree())             return ActionReject.HANDS_BUSY;
         if (ctx.blocking())               return ActionReject.BLOCKING;
         if (!ctx.chargingTechnique())     return ActionReject.NO_CHARGE;
         if (ctx.chargingSlot() != slot)   return ActionReject.WRONG_SLOT;

@@ -25,6 +25,8 @@ public final class SkillEffects {
     public static final String INSTANT_TRANSMISSION = "instant_transmission";
     /** Paso rápido: habilidad comprable (Korin) que, con su interruptor de la rueda, sustituye al dash. */
     public static final String QUICK_STEP = "quick_step";
+    /** Maestría del parry: el parry base es innato; esta habilidad lo mejora (la enseña cualquier maestro). */
+    public static final String PARRY_MASTERY = "parry_mastery";
     /** No es una habilidad comprable: se desbloquea por tener Ki Fist + Ki Infuse. */
     public static final String POTENTIAL_UNLOCK = "potential_unlock";
     /** No son habilidades comprables: se desbloquean por tener Ki Fist + Ki Infuse. */
@@ -149,12 +151,32 @@ public final class SkillEffects {
         return curve(p, KI_INFUSE, "damage_factor", 0.0);
     }
 
+    /** Reducción EXTRA de daño de un escudo imbuido de ki (se suma a la del escudo normal). 0 sin
+     *  Ki Infuse. Cada golpe bloqueado cuesta ki (ServerConfig block.shield_ki_cost_pct). */
+    public static double kiInfuseShieldBonus(Player p) {
+        return curve(p, KI_INFUSE, "shield_block_bonus", 0.0);
+    }
+
     // ── Paso rápido ──────────────────────────────────────────────────────────
     /** Multiplicador del coste de ki del Paso rápido (1.0 = el de ServerConfig step.energy_cost_pct). */
     public static double quickStepKiCostMult(Player p) { return curve(p, QUICK_STEP, "ki_cost_mult", 1.0); }
 
     /** Multiplicador del cooldown del Paso rápido (1.0 = el de ServerConfig step.cooldown_ticks). */
     public static double quickStepCooldownMult(Player p) { return curve(p, QUICK_STEP, "cooldown_mult", 1.0); }
+
+    // ── Maestría del parry ───────────────────────────────────────────────────
+    // El parry es innato; esta habilidad solo lo MEJORA. Cada valor es 0 sin la habilidad.
+    /** Ticks extra de ventana sobre ServerConfig parry.window_ticks. */
+    public static int parryWindowBonus(Player p) { return (int) Math.round(curve(p, PARRY_MASTERY, "window_bonus", 0.0)); }
+
+    /** Fracción del ki máximo que devuelve un parry logrado. */
+    public static double parryKiReturn(Player p) { return curve(p, PARRY_MASTERY, "ki_return", 0.0); }
+
+    /** Fracción del body máximo que cura un parry logrado. */
+    public static double parryBodyHeal(Player p) { return curve(p, PARRY_MASTERY, "body_heal", 0.0); }
+
+    /** Se SUMA al multiplicador del contraataque (parry.counter_mult). */
+    public static double parryCounterBonus(Player p) { return curve(p, PARRY_MASTERY, "counter_bonus", 0.0); }
 
     // ── Ki Fist ──────────────────────────────────────────────────────────────
     /** Fracción del SPI (en escala de melee) que suma un golpe con los puños de ki. */

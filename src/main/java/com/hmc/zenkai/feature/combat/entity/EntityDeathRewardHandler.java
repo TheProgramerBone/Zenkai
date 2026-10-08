@@ -30,6 +30,8 @@ public final class EntityDeathRewardHandler {
         if (event.getEntity().level().isClientSide()) return;
         if (event.getEntity() instanceof Player) return;
         LivingEntity dead = event.getEntity();
+        // Muñeco de "/zenkai debug dummy": herramienta de pruebas, no da TP ni cuenta como kill.
+        if (dead.getTags().contains(ShadowCloneEntity.DEBUG_DUMMY_TAG)) return;
 
         Player killer = resolveKiller(event.getSource());
         if (killer == null) return;

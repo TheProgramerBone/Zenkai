@@ -41,6 +41,25 @@ public final class KeyBindings {
     public static KeyMapping TURBO;
     public static KeyMapping COMBAT_MODE;
     public static KeyMapping LOCK_ON;
+    /** Y: abre la ventana de parry sin necesidad de bloquear (ver ParryServer.tryActivate). */
+    public static KeyMapping PARRY;
+
+    /**
+     * Bloquear. Por defecto el botón DERECHO del ratón (como siempre), pero reasignable en
+     * Controles: a otra tecla, o sin asignar para no bloquear nunca. Contexto del modo combate: no
+     * marca conflicto con «Usar objeto» de vanilla aunque compartan botón. Cuando comparte el botón
+     * de usar, en modo combate y con las manos válidas se cancela la interacción vanilla (ver
+     * CombatModeClientState.onInteraction).
+     */
+    public static KeyMapping BLOCK;
+
+    /**
+     * Teclas de los 9 slots de técnicas del modo combate (por defecto 1-9, como siempre). Son
+     * reasignables en Controles. Usan ZenkaiKeyContexts.COMBAT_MODE, así que no chocan con la
+     * hotbar vanilla aunque compartan tecla. El overlay muestra el nombre de la tecla asignada.
+     */
+    public static final KeyMapping[] COMBAT_SLOTS = new KeyMapping[9];
+
     private static final int WHEEL_HOLD_TICKS = 6; // igual que el umbral de B
     private static int xHoldTicks = 0;
 
@@ -152,6 +171,41 @@ public final class KeyBindings {
         );
         event.register(INSTANT_TRANSMISSION);
 
+        // G es cómoda (junto a F/R/C, al alcance de la mano izquierda) pero es la tecla de Curios por
+        // defecto. Con Curios instalado el parry nace en B (cómoda con el pulgar, bajo la barra
+        // espaciadora) para no chocar; sin él, en G. Es solo el valor por defecto: se reasigna en
+        // Controles como cualquier otra.
+        // Parry y bloqueo comparten el contexto del modo combate: pueden estar en el MISMO botón que
+        // «Usar objeto» sin avisos de conflicto, y SÍ se avisan entre sí (o con los slots) si el
+        // jugador los pone en la misma tecla.
+        PARRY = new KeyMapping(
+                "key.zenkai.parry",
+                ZenkaiKeyContexts.COMBAT_MODE,
+                InputConstants.Type.KEYSYM,
+                com.hmc.zenkai.compat.CuriosCompat.isLoaded() ? GLFW.GLFW_KEY_B : GLFW.GLFW_KEY_G,
+                "key.categories.zenkai"
+        );
+        event.register(PARRY);
+
+        BLOCK = new KeyMapping(
+                "key.zenkai.block",
+                ZenkaiKeyContexts.COMBAT_MODE,
+                InputConstants.Type.MOUSE,
+                GLFW.GLFW_MOUSE_BUTTON_RIGHT,
+                "key.categories.zenkai"
+        );
+        event.register(BLOCK);
+
+        for (int i = 0; i < COMBAT_SLOTS.length; i++) {
+            COMBAT_SLOTS[i] = new KeyMapping(
+                    "key.zenkai.combat_slot_" + (i + 1),
+                    ZenkaiKeyContexts.COMBAT_MODE,
+                    InputConstants.Type.KEYSYM,
+                    GLFW.GLFW_KEY_1 + i,
+                    "key.categories.zenkai");
+            event.register(COMBAT_SLOTS[i]);
+        }
+
         KI_VFX_DEBUG_CYCLE = new KeyMapping(
                 "key.zenkai.ki_vfx_debug_cycle",
                 GLFW.GLFW_KEY_K,
@@ -181,6 +235,9 @@ public final class KeyBindings {
             }
             return;
         }
+
+        // (El PARRY se sondea en CombatModeClientState.onClientTickPre, no aquí: InputEvent.Key no
+        // se dispara con botones del ratón y el parry puede reasignarse a uno.)
 
         if (SENSE_KI != null && SENSE_KI.consumeClick()) {
             SenseKiClientState.onKeyPress(mc);

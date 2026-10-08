@@ -18,5 +18,6 @@
   "projectile_size_step": 0.50,
   "explosion_radius_mult": 3.90,
   "aoe_factor": 0.95,
-  "charge_shows_real_size": true
+  "charge_shows_real_size": true,
+  "breaks_blocks": true
 }

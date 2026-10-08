@@ -1,0 +1,30 @@
+{
+  "parent": "zenkai:clash_win",
+  "criteria": {
+    "perfect": {
+      "conditions": {
+        "kind": "clash_perfect"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.clash_perfect.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "minecraft:diamond"
+    },
+    "title": {
+      "translate": "advancements.zenkai.clash_perfect.title"
+    }
+  },
+  "requirements": [
+    [
+      "perfect"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

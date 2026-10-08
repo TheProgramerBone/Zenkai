@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:combat_stance",
+  "criteria": {
+    "broken": {
+      "conditions": {
+        "kind": "guard_broken"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.guard_break.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:iron_axe"
+    },
+    "title": {
+      "translate": "advancements.zenkai.guard_break.title"
+    }
+  },
+  "requirements": [
+    [
+      "broken"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

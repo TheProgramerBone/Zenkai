@@ -120,13 +120,30 @@ public final class TechniqueHotbarOverlay {
                         0xB0101010);
             }
 
-            g.drawString(mc.font, String.valueOf(pos + 1), x + 2, y + 1,
-                    sel ? 0xFFFFFFFF : 0xFFAAAAAA, true);
+            // Etiqueta = la TECLA asignada al slot (por defecto 1-9, reasignable en Controles). Las
+            // teclas especiales (flechas, Shift, ratón...) tienen representación propia, ver KeyLabel.
+            int labelColor = sel ? 0xFFFFFFFF : 0xFFAAAAAA;
+            var slotKey = pos < com.hmc.zenkai.client.input.KeyBindings.COMBAT_SLOTS.length
+                    ? com.hmc.zenkai.client.input.KeyBindings.COMBAT_SLOTS[pos] : null;
+            if (slotKey == null || slotKey.isUnbound()) {
+                g.drawString(mc.font, String.valueOf(pos + 1), x + 2, y + 1, labelColor, true);
+            } else {
+                com.hmc.zenkai.client.input.KeyLabel.draw(g, mc.font, slotKey, x + 2, y + 1, labelColor);
+            }
+
+            // Aviso de manos: la técnica existe pero lo que llevas en ellas no la deja ejecutarse.
+            Component handsNeed = handsNeed(mc, t, ph);
+            if (handsNeed != null) {
+                g.fill(x + 1, y + 1, x + TechniqueHudLayout.CELL - 1, y + TechniqueHudLayout.CELL - 1,
+                        0x80400000);
+                g.drawString(mc.font, "!", x + TechniqueHudLayout.CELL - 6, y + TechniqueHudLayout.CELL - 9,
+                        0xFFFF5050, true);
+            }
 
             if (sel && occupied) {
                 Component name = (t != null) ? Component.literal(t.name())
                         : Component.translatable(ph.nameKey());
-                drawSelectedName(g, mc.font, layout, x, y, name);
+                drawSelectedName(g, mc.font, layout, x, y, name, handsNeed);
             }
         }
     }
@@ -140,7 +157,7 @@ public final class TechniqueHotbarOverlay {
      * dejaba de estar a la derecha.
      */
     private static void drawSelectedName(GuiGraphics g, Font font, TechniqueHudLayout layout,
-                                         int cellX, int cellY, Component name) {
+                                         int cellX, int cellY, Component name, Component warning) {
         HudAnchor anchor = com.hmc.zenkai.config.ClientConfig.hudAnchor();
         int w = font.width(name);
 
@@ -152,12 +169,44 @@ public final class TechniqueHotbarOverlay {
             int x = cellX + TechniqueHudLayout.CELL / 2 - w / 2;
             x = Math.max(2, Math.min(x, g.guiWidth() - w - 2));
             g.drawString(font, name, x, y, 0xFFFFFFFF, true);
+            if (warning != null) {
+                // La segunda línea se aleja de la barra, en el mismo sentido que la primera.
+                int wy = anchor.isTop() ? y + font.lineHeight + 2 : y - font.lineHeight - 2;
+                int wx = cellX + TechniqueHudLayout.CELL / 2 - font.width(warning) / 2;
+                wx = Math.max(2, Math.min(wx, g.guiWidth() - font.width(warning) - 2));
+                g.drawString(font, warning, wx, wy, 0xFFFF5050, true);
+            }
             return;
         }
 
         boolean toLeft = !anchor.isLeft();   // pegada a la derecha o al centro → texto a la izquierda
         int x = toLeft ? cellX - 6 - w : cellX + TechniqueHudLayout.CELL + 6;
-        g.drawString(font, name, x, cellY + (TechniqueHudLayout.CELL - 8) / 2, 0xFFFFFFFF, true);
+        int ny = cellY + (TechniqueHudLayout.CELL - 8) / 2;
+        g.drawString(font, name, x, ny, 0xFFFFFFFF, true);
+        if (warning != null) {
+            int wx = toLeft ? cellX - 6 - font.width(warning) : x;
+            g.drawString(font, warning, wx, ny + font.lineHeight + 2, 0xFFFF5050, true);
+        }
+    }
+
+    /**
+     * Motivo por el que lo que llevas en las manos impide esta técnica, o null si puede ejecutarse.
+     * Las de ki piden las dos manos libres; las físicas, lo que diga su {@code weapon_requirement}
+     * (mismas reglas que ActionRules.canFirePhysical, que es quien decide de verdad).
+     */
+    private static Component handsNeed(Minecraft mc, KiTechnique ki, PhysicalTechnique ph) {
+        if (mc.player == null) return null;
+        boolean free = mc.player.getMainHandItem().isEmpty() && mc.player.getOffhandItem().isEmpty();
+        if (ki != null) {
+            return free ? null : Component.translatable("hud.zenkai.requires_free_hands");
+        }
+        if (ph == null) return null;
+        return switch (ph.weaponRequirement()) {
+            case NONE -> null;
+            case EMPTY_HANDS -> free ? null : Component.translatable("hud.zenkai.requires_free_hands");
+            case SWORD -> com.hmc.zenkai.feature.combat.GuardHands.isHoldingSword(mc.player)
+                    ? null : Component.translatable("hud.zenkai.requires_sword");
+        };
     }
 
     // ── Carga: FIJA bajo la mira ─────────────────────────────────────────────

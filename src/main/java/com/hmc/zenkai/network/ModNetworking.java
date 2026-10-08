@@ -551,6 +551,46 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.combat.DashAnimPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.combat.DashAnimPacket::handle);
 
+        registrar.playToServer(
+                com.hmc.zenkai.feature.combat.ParryPacket.TYPE,
+                com.hmc.zenkai.feature.combat.ParryPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.ParryPacket::handle);
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.combat.ParryPrefPacket.TYPE,
+                com.hmc.zenkai.feature.combat.ParryPrefPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.ParryPrefPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.combat.ParryCooldownPacket.TYPE,
+                com.hmc.zenkai.feature.combat.ParryCooldownPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.ParryCooldownPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.combat.ParryAnimPacket.TYPE,
+                com.hmc.zenkai.feature.combat.ParryAnimPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.ParryAnimPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.technique.clash.ClashStartPacket.TYPE,
+                com.hmc.zenkai.feature.technique.clash.ClashStartPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.clash.ClashStartPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.technique.clash.ClashResultPacket.TYPE,
+                com.hmc.zenkai.feature.technique.clash.ClashResultPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.clash.ClashResultPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.technique.clash.ClashPressedPacket.TYPE,
+                com.hmc.zenkai.feature.technique.clash.ClashPressedPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.clash.ClashPressedPacket::handle);
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.technique.clash.ClashPressPacket.TYPE,
+                com.hmc.zenkai.feature.technique.clash.ClashPressPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.clash.ClashPressPacket::handle);
+
         registrar.playToClient(
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.TYPE,
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.STREAM_CODEC,

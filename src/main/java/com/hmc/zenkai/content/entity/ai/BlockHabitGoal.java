@@ -51,6 +51,8 @@ public class BlockHabitGoal<T extends ZenkaiDefaultMob> extends Goal {
 
     @Override
     public boolean canUse() {
+        if (!mob.combatGoalAllowed(com.hmc.zenkai.content.entity.ZenkaiDefaultMob.GOAL_BLOCK)) return false;
+        if (com.hmc.zenkai.feature.combat.GuardBreak.isBroken(mob)) return false; // guardia rota por un kiai
         LivingEntity tgt = mob.getTarget();
         if (tgt == null || !tgt.isAlive()) return false;
         if (mob.isWindingUp()) return false; // no empezar a bloquear a mitad del propio ataque

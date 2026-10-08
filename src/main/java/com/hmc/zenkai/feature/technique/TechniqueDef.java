@@ -21,8 +21,10 @@ import java.util.Map;
  * los costes devuelven Integer.MAX_VALUE para que nada sea "asequible" por accidente.
  * Campos según kind (los que no aplican quedan a 0):
  *  - KI:       damage_mult, ki_cost_mult, charge_ticks, cooldown_ticks, speed, count,
- *              defensive, default_rgb
- *  - PHYSICAL: damage_mult, stamina_pct, cooldown_ticks, range
+ *              defensive, default_rgb, breaks_blocks (rompe bloques al detonar, con la gamerule
+ *              zenkai_enableKiGriefing; lo llevan las técnicas firma de maestro)
+ *  - PHYSICAL: damage_mult, stamina_pct, cooldown_ticks, range, weapon_requirement
+ *              ("" = manos vacías, "none", "sword"; ver WeaponRequirement)
  * Comunes: tp_cost (coste de desbloqueo), mind_req (MND mínimo para desbloquear), master
  *          (id de maestro; "" = desbloqueable normal, ver abajo),
  *          anim_ticks (duración del ESTADO VISUAL sincronizado; ver abajo).
@@ -71,7 +73,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                            boolean travels, double projectileSizeBase, double projectileSizeStep,
                            double explosionRadiusMult, double aoeFactor, double aoeEdgeFalloff,
                            boolean chargeShowsRealSize, String animOverride, String allowedEffects,
-                           String icon) {
+                           String icon, String weaponRequirement, boolean breaksBlocks) {
 
     public enum Kind {
         KI, PHYSICAL;
@@ -134,6 +136,8 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                 buf.writeUtf(d.animOverride(), 64);
                 buf.writeUtf(d.allowedEffects(), 256);
                 buf.writeUtf(d.icon(), 256);
+                buf.writeUtf(d.weaponRequirement(), 64);
+                buf.writeBoolean(d.breaksBlocks());
             },
             buf -> {
                 String id = buf.readUtf();
@@ -148,6 +152,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                         buf.readVarInt(), buf.readUtf(64), buf.readUtf(64), buf.readUtf(64),
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(),
                         buf.readDouble(), buf.readDouble(), buf.readDouble(),
-                        buf.readBoolean(), buf.readUtf(64), buf.readUtf(256), buf.readUtf(256));
+                        buf.readBoolean(), buf.readUtf(64), buf.readUtf(256), buf.readUtf(256),
+                        buf.readUtf(64), buf.readBoolean());
             });
 }

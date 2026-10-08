@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * Los 31 logros de Zenkai, en UNA sola pestaña.
+ * Los logros de Zenkai, en UNA sola pestaña.
  * POR QUÉ UNA PESTAÑA. Tres pestañas de un mod en la pantalla de logros gritan "conversión
  * total", y ese es justo el problema que el resto del diseño se esfuerza en no tener.
  * LA RAÍZ OTORGA EL MUNDO al entrar (trigger `tick` de vanilla, igual que la raíz de
@@ -108,6 +108,29 @@ public class ModAdvancementProvider extends AdvancementProvider {
             child(saver, efh, weights, "max_load",
                     ModItems.WEIGHTED_CAPE.get(), AdvancementType.GOAL, false,
                     "load", weightLoad(1.0));
+
+            // ── MINIJUEGOS DE ENTRENAMIENTO ─────────────────────────────────
+            // Cada uno se completa al TERMINAR una sesión (no al abrirla). La descripción dice
+            // dónde se abren: son el mini tutorial de la pestaña Training.
+            AdvancementHolder shadowTraining = child(saver, efh, firstTp, "shadow_training",
+                    Items.COAL, AdvancementType.TASK, false,
+                    "done", milestone(ZenkaiTriggers.Kinds.SHADOW_TRAINING_DONE));
+            AdvancementHolder meditation = child(saver, efh, firstTp, "meditation_minigame",
+                    Items.NOTE_BLOCK, AdvancementType.TASK, false,
+                    "done", milestone(ZenkaiTriggers.Kinds.MEDITATION_DONE));
+            AdvancementHolder targetPractice = child(saver, efh, firstTp, "target_practice",
+                    Items.BOW, AdvancementType.TASK, false,
+                    "done", milestone(ZenkaiTriggers.Kinds.TARGET_PRACTICE_DONE));
+
+            // Los tres criterios y ninguna llamada a requirements(): AND por defecto, hacen falta
+            // LOS TRES (mismo patrón que all_wishes y hfil_biomes).
+            Advancement.Builder.advancement().parent(meditation)
+                    .display(Items.DIAMOND_BOOTS, title("training_all"), desc("training_all"),
+                            null, AdvancementType.GOAL, true, true, false)
+                    .addCriterion("shadow", milestone(ZenkaiTriggers.Kinds.SHADOW_TRAINING_DONE))
+                    .addCriterion("meditation", milestone(ZenkaiTriggers.Kinds.MEDITATION_DONE))
+                    .addCriterion("target", milestone(ZenkaiTriggers.Kinds.TARGET_PRACTICE_DONE))
+                    .save(saver, id("training_all"), efh);
 
             // ── HABILIDADES ─────────────────────────────────────────────────
             child(saver, efh, chooseRace, "fly",
@@ -205,6 +228,37 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     net.minecraft.world.item.Items.COMPASS, AdvancementType.TASK, false,
                     "wheel", milestone(ZenkaiTriggers.Kinds.WHEEL_USED));
 
+            // ── COMBAT UPDATE (0.4.0) ───────────────────────────────────────
+            // Ninguno oculto: cada uno se activa con una tecla o un gesto que no se adivina, y la
+            // descripción es el tutorial (se lee en la pantalla de logros ANTES de completarlo).
+            AdvancementHolder dash = child(saver, efh, combatStance, "dash",
+                    Items.FEATHER, AdvancementType.TASK, false,
+                    "used", milestone(ZenkaiTriggers.Kinds.DASH_USED));
+            child(saver, efh, dash, "quick_step",
+                    Items.CHORUS_FRUIT, AdvancementType.TASK, false,
+                    "used", milestone(ZenkaiTriggers.Kinds.QUICK_STEP_USED));
+
+            AdvancementHolder parry = child(saver, efh, combatStance, "parry",
+                    Items.GOLDEN_SWORD, AdvancementType.TASK, false,
+                    "parry", milestone(ZenkaiTriggers.Kinds.PARRY_SUCCESS));
+            child(saver, efh, parry, "parry_projectile",
+                    Items.ARROW, AdvancementType.GOAL, false,
+                    "parry", milestone(ZenkaiTriggers.Kinds.PARRY_PROJECTILE));
+            child(saver, efh, parry, "parry_mastery",
+                    Items.ENCHANTED_BOOK, AdvancementType.TASK, false,
+                    "skill", skill("parry_mastery", 1));
+
+            child(saver, efh, combatStance, "guard_break",
+                    Items.IRON_AXE, AdvancementType.TASK, false,
+                    "broken", milestone(ZenkaiTriggers.Kinds.GUARD_BROKEN));
+
+            AdvancementHolder shieldBlock = child(saver, efh, combatStance, "shield_block",
+                    Items.SHIELD, AdvancementType.TASK, false,
+                    "blocked", milestone(ZenkaiTriggers.Kinds.SHIELD_BLOCKED));
+            child(saver, efh, shieldBlock, "ki_shield",
+                    Items.AMETHYST_SHARD, AdvancementType.GOAL, false,
+                    "infused", milestone(ZenkaiTriggers.Kinds.KI_SHIELD));
+
             // ── TÉCNICAS ────────────────────────────────────────────────────
             AdvancementHolder firstTech = child(saver, efh, chooseRace, "first_technique",
                     net.minecraft.world.item.Items.FIRE_CHARGE, AdvancementType.TASK, false,
@@ -217,6 +271,17 @@ public class ModAdvancementProvider extends AdvancementProvider {
             child(saver, efh, fullCharge, "overcharge",
                     ModBlocks.ENERGY_CRYSTAL_BLOCK.get(), AdvancementType.GOAL, false,
                     "use", technique(2.0));
+
+            // ── CHOQUE DE HACES ─────────────────────────────────────────────
+            AdvancementHolder beamClash = child(saver, efh, firstTech, "beam_clash",
+                    Items.LIGHTNING_ROD, AdvancementType.TASK, false,
+                    "clash", milestone(ZenkaiTriggers.Kinds.CLASH_STARTED));
+            AdvancementHolder clashWin = child(saver, efh, beamClash, "clash_win",
+                    Items.GOLD_INGOT, AdvancementType.TASK, false,
+                    "won", milestone(ZenkaiTriggers.Kinds.CLASH_WON));
+            child(saver, efh, clashWin, "clash_perfect",
+                    Items.DIAMOND, AdvancementType.GOAL, false,
+                    "perfect", milestone(ZenkaiTriggers.Kinds.CLASH_PERFECT));
 
             // ── OCULTOS DE COMBATE ──────────────────────────────────────────
             Advancement.Builder.advancement().parent(chooseRace)

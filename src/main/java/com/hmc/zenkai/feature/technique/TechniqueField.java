@@ -96,7 +96,12 @@ public enum TechniqueField {
      *  igual que siempre). Con una ResourceLocation, TechniqueIcons/PhysicalIcons dibujan esa
      *  textura propia en su lugar — la vía real para que un addon dé icono a una técnica sin
      *  tocar el atlas compartido. */
-    ICON          ("icon",           ValueType.STRING, "",                              Kind.KI, Kind.PHYSICAL);
+    ICON          ("icon",           ValueType.STRING, "",                              Kind.KI, Kind.PHYSICAL),
+    /** "" = manos vacías (lo de siempre); "none" o "sword". Ver WeaponRequirement. */
+    WEAPON_REQUIREMENT("weapon_requirement", ValueType.STRING, "",                      Kind.PHYSICAL),
+    /** true = la técnica rompe bloques al detonar (con la gamerule zenkai_enableKiGriefing), sin importar el
+     *  efecto elegido. Es lo que hace explosiva por defecto a una técnica firma de maestro, que no se edita. */
+    BREAKS_BLOCKS ("breaks_blocks",  ValueType.BOOL,   false,                           Kind.KI);
 
     /** Tipo de dato del campo. Decide parseo, clamp, formato y cómo viaja a JSON/NBT. */
     public enum ValueType { INT, DOUBLE, BOOL, RGB, STRING }
@@ -303,6 +308,8 @@ public enum TechniqueField {
             case ANIM_OVERRIDE -> d.animOverride();
             case ALLOWED_EFFECTS -> d.allowedEffects();
             case ICON -> d.icon();
+            case WEAPON_REQUIREMENT -> d.weaponRequirement();
+            case BREAKS_BLOCKS -> d.breaksBlocks();
         };
     }
 
@@ -342,7 +349,7 @@ public enum TechniqueField {
                 d(v, PROJECTILE_SIZE_BASE), d(v, PROJECTILE_SIZE_STEP),
                 d(v, EXPLOSION_RADIUS_MULT), d(v, AOE_FACTOR), d(v, AOE_EDGE_FALLOFF),
                 b(v, CHARGE_SHOWS_REAL_SIZE), s(v, ANIM_OVERRIDE), s(v, ALLOWED_EFFECTS),
-                s(v, ICON));
+                s(v, ICON), s(v, WEAPON_REQUIREMENT), b(v, BREAKS_BLOCKS));
     }
 
     private static int i(Map<TechniqueField, Object> v, TechniqueField f) {

@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:beam_clash",
+  "criteria": {
+    "won": {
+      "conditions": {
+        "kind": "clash_won"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.clash_win.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:gold_ingot"
+    },
+    "title": {
+      "translate": "advancements.zenkai.clash_win.title"
+    }
+  },
+  "requirements": [
+    [
+      "won"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

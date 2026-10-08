@@ -15,5 +15,8 @@ public enum ActionType {
     BLOCK,
     PHYSICAL,
     KI_TECHNIQUE,
-    TRANSFORM
+    TRANSFORM,
+    /** Choque de haces: el jugador queda inmóvil jugando el minijuego. Va al final para no
+     *  desplazar los ordinales que ya viajan por red. Nada lo interrumpe (ver ActionRules). */
+    CLASH
 }

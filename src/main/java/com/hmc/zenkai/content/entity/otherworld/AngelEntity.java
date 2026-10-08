@@ -102,7 +102,7 @@ public class AngelEntity extends ZenkaiDefaultMob {
     public void tick() {
         super.tick();
         if (level().isClientSide()) return;
-        // El aro es el ítem del halo en la ranura de casco (lo pinta AngelHaloLayer). Se pone aquí
+        // El aro es el ítem del halo en la ranura de casco (lo pinta AngelArmorLayer, la capa de armadura de GeckoLib). Se pone aquí
         // y no en el constructor para que también lo reciban los ángeles guardados antes de este
         // cambio; drop chance 0 para que no se pueda farmear el halo matándolos.
         if (getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {

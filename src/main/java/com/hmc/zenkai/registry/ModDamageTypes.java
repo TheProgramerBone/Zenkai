@@ -61,6 +61,7 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> HEAVY_BLOW = key("heavy_blow");
     public static final ResourceKey<DamageType> BARRAGE = key("barrage");
     public static final ResourceKey<DamageType> KIAI = key("kiai");
+    public static final ResourceKey<DamageType> PARRY = key("parry");
 
     // ── Combate cuerpo a cuerpo ─────────────────────────────────────────────
     /** Proc de Black Flash (feature.combat.BlackFlash) sobre un golpe de Ki Fist. El golpe base

@@ -333,7 +333,14 @@ public final class KiCombatServer {
 
         if (speed != null) {
             speed.removeModifier(BLOCK_SLOW_ID);
-            if (blocking) speed.addTransientModifier(BLOCK_SLOW);
+            if (blocking) {
+                // Con escudo la ralentización es otra (por defecto ninguna): el modificador se
+                // añade SIEMPRE, aunque valga 0, porque la idempotencia de arriba se apoya en que
+                // exista mientras se defiende.
+                double slow = com.hmc.zenkai.feature.combat.GuardHands.slowdown(sp, 0.6);
+                speed.addTransientModifier(slow == 0.6 ? BLOCK_SLOW : new AttributeModifier(
+                        BLOCK_SLOW_ID, -slow, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+            }
         }
 
         PacketDistributor.sendToPlayersTrackingEntity(sp,

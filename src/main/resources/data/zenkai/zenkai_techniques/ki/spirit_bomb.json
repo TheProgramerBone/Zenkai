@@ -19,5 +19,6 @@
   "explosion_radius_mult": 3.20,
   "aoe_factor": 0.90,
   "charge_shows_real_size": true,
-  "anim_override": "spirit_bomb"
+  "anim_override": "spirit_bomb",
+  "breaks_blocks": true
 }

@@ -5,6 +5,7 @@ import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.action.ActionStateServer;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.feature.technique.KiCombatServer;
 import net.minecraft.core.particles.ParticleTypes;
 import com.hmc.zenkai.feature.aura.AuraColors;
@@ -37,7 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * toque SOBREESCRIBE el dash: cuesta ki, llega más lejos, el modelo desaparece mientras dura el
  * impulso, da i-frames y la animación es más brusca. No es un teletransporte: el movimiento es
  * físico y continuo. Si no hay ki suficiente cae al dash normal; en cooldown no hace nada (nunca
- * se encadenan un dash y un Paso rápido).
+ * se encadenan un dash y un Paso rápido). Un interruptor de la rueda (encendido por defecto)
+ * alterna entre Paso rápido y dash normal.
  *
  * Todo es autoritativo del servidor: el cliente solo detecta el doble toque y manda la
  * dirección. Se rechaza en silencio (sin packet de rechazo: es un gesto de movimiento, no una
@@ -113,7 +115,9 @@ public final class DashServer {
         UUID id = sp.getUUID();
 
         boolean step = false;
-        if (SkillEffects.level(sp, SkillEffects.QUICK_STEP) > 0) {
+        // El interruptor de la rueda (encendido por defecto) decide si el doble toque es Paso rápido
+        // o dash normal; isOn ya exige tener la habilidad.
+        if (SkillToggles.isOn(sp, SkillEffects.QUICK_STEP)) {
             // Con la habilidad, el doble toque ES el Paso rápido: en cooldown no hace nada. Caer al
             // dash normal aquí dejaba encadenar un dash justo después de un Paso rápido.
             if (STEP_READY_AT.getOrDefault(id, 0L) > now) return false;
@@ -176,6 +180,8 @@ public final class DashServer {
         }
         PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp,
                 new DashAnimPacket(sp.getId(), dir, step));
+        com.hmc.zenkai.feature.advancement.ZenkaiTriggers.MILESTONE.get().trigger(sp,
+                step ? com.hmc.zenkai.feature.advancement.ZenkaiTriggers.Kinds.QUICK_STEP_USED : com.hmc.zenkai.feature.advancement.ZenkaiTriggers.Kinds.DASH_USED);
         return true;
     }
 

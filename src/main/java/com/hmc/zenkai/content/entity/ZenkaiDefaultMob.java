@@ -69,6 +69,18 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
     @Override
     public double blockDamageMultiplier() { return BLOCK_DAMAGE_MULTIPLIER; }
 
+    /** Tipos de goal de combate que una subclase puede apagar por completo (ver
+     *  {@link #combatGoalAllowed}). */
+    public static final String GOAL_KI = "ki", GOAL_PHYSICAL = "physical",
+            GOAL_MELEE = "melee", GOAL_BLOCK = "block";
+
+    /**
+     * Permiso para que un goal de combate EMPIECE. Siempre true salvo en el muñeco de pruebas
+     * (ShadowCloneEntity con guion de "/zenkai debug dummy"), que apaga los goals que no le tocan
+     * para hacer solo la acción pedida. Cada goal lo consulta al principio de canUse().
+     */
+    public boolean combatGoalAllowed(String kind) { return true; }
+
     /** ¿Sabe ponerse en guardia? "moveset.can_block" de su ficha. */
     public boolean canBlock() {
         var def = EntityStatsManager.get(entityId());
@@ -349,6 +361,26 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
         } else {
             LOGGER.info("[Zenkai] {} SIN ki_attacks en su EntityStatDef (def={})", id, def);
         }
+    }
+
+    /** Tick de juego a partir del cual este mob puede volver a parar un golpe (ver ParryServer.tryMobParry). */
+    private long parryReadyAt = 0L;
+    public long parryReadyAt() { return parryReadyAt; }
+    public void setParryReadyAt(long tick) { this.parryReadyAt = tick; }
+
+    /**
+     * ¿Sabe kiai? Es lo que habilita al NPC para parar golpes: lo decide su ficha (physical_attacks
+     * del datapack tiene una entrada "kiai"), igual que habilita su kiai en combate. Sin kiai en la
+     * ficha, el mob no para nada.
+     */
+    public boolean knowsKiai() {
+        var id = BuiltInRegistries.ENTITY_TYPE.getKey(getType());
+        var def = EntityStatsManager.get(id);
+        if (def == null || !def.hasPhysicalAttacks()) return false;
+        for (var a : def.physicalAttacks()) {
+            if (a.type() == com.hmc.zenkai.feature.technique.PhysicalTechnique.KIAI) return true;
+        }
+        return false;
     }
 
     /** Espejo de addKiAttackGoalIfDefined para técnicas físicas (physical_attacks del

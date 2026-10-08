@@ -137,6 +137,9 @@ public final class InstantTransmissionSystem {
         InstantTransmissionAttachment att = InstantTransmissionAttachment.get(sp);
         if (!att.isHolding() || att.isMenuArmed()) return;
         if (SkillEffects.instantTransmissionLevel(sp) <= 0) return;
+        // Atrapado en un choque de haces no hay escape: el blink solo sirve para esquivar el
+        // golpe de vuelta, DESPUÉS de que termine el minijuego.
+        if (com.hmc.zenkai.feature.action.ActionStateServer.get(sp).inClash()) return;
         tryBlink(sp, att);
         att.resetGesture();
     }

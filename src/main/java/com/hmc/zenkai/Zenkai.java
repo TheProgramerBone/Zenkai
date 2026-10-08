@@ -291,8 +291,8 @@ public class Zenkai {
                         GenericGeoRenderer<com.hmc.zenkai.content.entity.otherworld.AngelEntity> r =
                                 new GenericGeoRenderer<>(ctx,
                                         new GenericGeoModel<>("angel", "angel", "angel", false, false), 0.25f);
-                        // El halo del mod, leído de la ranura de casco del ángel.
-                        r.addRenderLayer(new com.hmc.zenkai.client.render_and_model_entities.entity.AngelHaloLayer(r));
+                        // El casco del ángel (el halo del mod) con la capa de armadura de GeckoLib.
+                        r.addRenderLayer(new com.hmc.zenkai.client.render_and_model_entities.entity.AngelArmorLayer(r));
                         return r;
                     });
 

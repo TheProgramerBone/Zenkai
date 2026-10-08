@@ -5,6 +5,7 @@ import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.client.aura.AuraClientState;
 import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.client.InstantTransmissionClientState;
+import com.hmc.zenkai.client.ParryClientState;
 import com.hmc.zenkai.feature.combat.InCombatState;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
@@ -135,6 +136,9 @@ public final class ClientZenkaiHooks {
      *  InstantTransmissionCrosshairOverlay pinta sobre la mira mientras se mantiene TAB (ver
      *  drawInstantTransmissionIcon, expuesto para que la otra clase no duplique esta celda por
      *  su cuenta). */
+    /** Parry (fila v=160 del atlas, ver tools/gen_parry_icons.py): el fallido se pinta con su
+     *  cuenta atrás mientras dura el cooldown tras una ventana sin acierto. */
+    private static final IconUV ICON_PARRY_FAILED = IconUV.grid(1, 8);
     private static final IconUV ICON_INSTANT_TRANSMISSION = IconUV.grid(1, 5);
     private static final IconUV ICON_INSTANT_TRANSMISSION_CHARGED = IconUV.grid(2, 5);
 
@@ -330,6 +334,17 @@ public final class ClientZenkaiHooks {
             drawBadge(g, iconX, iconY, ICON_INSTANT_TRANSMISSION);
             int secondsLeft = (InstantTransmissionClientState.cooldownTicks() + 19) / 20;
             drawBadgeLabel(g, iconX, iconY, secondsLeft + "s", 0xFFAAAAFF);
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+
+        // Parry FALLIDO: la ventana se cerró sin parar nada (o se pulsó en cooldown). Mano tachada
+        // con los segundos que faltan, con un decimal: la cuenta es corta (2 s por defecto) y
+        // «2s» a secas no dejaba ver cuándo vuelve.
+        int parryCd = ParryClientState.cooldownTicks();
+        if (parryCd > 0) {
+            drawBadge(g, iconX, iconY, ICON_PARRY_FAILED);
+            drawBadgeLabel(g, iconX, iconY, String.format(java.util.Locale.ROOT, "%.1f", parryCd / 20.0f),
+                    0xFFFF6666);
             iconX += BADGE_SIZE + BADGE_PAD;
         }
     }

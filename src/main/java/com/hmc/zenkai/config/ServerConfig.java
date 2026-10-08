@@ -267,6 +267,179 @@ public class ServerConfig {
             BUILDER.comment("Quick Step: ticks of invulnerability from the moment it starts")
                     .defineInRange("step.iframe_ticks", 10, 0, 60);
 
+    private static final ModConfigSpec.DoubleValue BLOCK_WEAPON_FACTOR_RAW =
+            BUILDER.comment("Blocking with a melee weapon in the main hand: fraction of the normal damage reduction you keep (1.0 = same as bare hands)")
+                    .defineInRange("block.weapon_factor", 0.6D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_BONUS_RAW =
+            BUILDER.comment("Blocking with a shield in the off hand: extra damage reduction as a fraction of the normal one (0.35 = 35% more)")
+                    .defineInRange("block.shield_bonus", 0.35D, 0.0D, 3.0D);
+
+    private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_CAP_RAW =
+            BUILDER.comment("Blocking with a shield: the damage reduction can never exceed this (0.85 = at most 85% of the damage is cut)")
+                    .defineInRange("block.shield_cap", 0.85D, 0.0D, 0.95D);
+
+    private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_SLOW_RAW =
+            BUILDER.comment("Blocking with a shield: fraction of movement speed lost while guarding (bare-handed blocking always loses 60%). 0 = no slowdown")
+                    .defineInRange("block.shield_slow", 0.0D, 0.0D, 0.9D);
+
+    private static final ModConfigSpec.IntValue BLOCK_SHIELD_DURABILITY_RAW =
+            BUILDER.comment("Blocking with a shield: durability points the shield loses per blocked hit. 0 = never wears out")
+                    .defineInRange("block.shield_durability_per_hit", 1, 0, 100);
+
+    private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_KI_RAW =
+            BUILDER.comment("Ki-infused shield (Ki Infuse skill): ki spent per blocked hit as a fraction of your maximum ki. Without enough ki the shield is not infused")
+                    .defineInRange("block.shield_ki_cost_pct", 0.01D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.BooleanValue KIAI_OMNI_RAW =
+            BUILDER.comment("Kiai: true = it blasts in a full circle around the user (crowd control, pushes everyone away from you);",
+                            "false = only the frontal cone, pushing along the look direction")
+                    .define("kiai.omnidirectional", true);
+
+    private static final ModConfigSpec.DoubleValue KIAI_EXTRA_STAMINA_RAW =
+            BUILDER.comment("Kiai: extra stamina charged for every target beyond the first (enemies pushed + ki projectiles deflected),",
+                            "as a fraction of the technique's base stamina cost. 0 = a kiai always costs the same")
+                    .defineInRange("kiai.extra_target_stamina_fraction", 0.12D, 0.0D, 2.0D);
+
+    private static final ModConfigSpec.IntValue KIAI_EXTRA_CAP_RAW =
+            BUILDER.comment("Kiai: maximum number of extra targets that add to the stamina cost")
+                    .defineInRange("kiai.extra_target_cap", 6, 0, 50);
+
+    private static final ModConfigSpec.IntValue KIAI_GUARD_BREAK_RAW =
+            BUILDER.comment("Kiai: ticks a blocking target loses its guard for (it cannot raise it again meanwhile). 0 disables guard break")
+                    .defineInRange("kiai.guard_break_ticks", 40, 0, 400);
+
+    private static final ModConfigSpec.BooleanValue PARRY_ENABLED_RAW =
+            BUILDER.comment("Parry: right after starting to block, a short window turns the guard into a parry. A hit or ki",
+                            "projectile landing inside it is negated (a projectile is sent back), the attacker is knocked back and staggered,",
+                            "and the defender gets a counter-attack window. Everyone has it; the Parry Mastery skill improves it")
+                    .define("parry.enabled", true);
+
+    private static final ModConfigSpec.IntValue PARRY_WINDOW_RAW =
+            BUILDER.comment("Parry: ticks after starting to block during which the guard parries (6 = 0.3 s). Parry Mastery adds to this")
+                    .defineInRange("parry.window_ticks", 6, 1, 40);
+
+    private static final ModConfigSpec.IntValue PARRY_COOLDOWN_RAW =
+            BUILDER.comment("Parry: ticks before a NEW block can open another parry window. Counted from the moment the previous window opened,",
+                            "whether or not it caught anything, so tapping the guard repeatedly cannot keep a parry up")
+                    .defineInRange("parry.cooldown_ticks", 40, 0, 400);
+
+    private static final ModConfigSpec.DoubleValue PARRY_KNOCKBACK_RAW =
+            BUILDER.comment("Parry: how far, in blocks, a melee attacker who got parried is thrown back (about; the push is",
+                            "computed from the vanilla drag and friction, so it lands near this distance on flat ground)")
+                    .defineInRange("parry.knockback_blocks", 2.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue PARRY_NPC_CHANCE_RAW =
+            BUILDER.comment("Parry: chance that an NPC whose kit includes kiai parries an incoming melee hit (0 disables NPC parries).",
+                            "Each NPC then waits parry.cooldown_ticks before it can parry again")
+                    .defineInRange("parry.npc_chance", 0.3D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue PARRY_REFLECT_RAW =
+            BUILDER.comment("Parry: damage returned to a melee attacker who got parried, as a fraction of the defender's own",
+                            "melee strength (0 disables it). Goes through the normal defense of the target")
+                    .defineInRange("parry.reflect_fraction", 0.25D, 0.0D, 3.0D);
+
+    private static final ModConfigSpec.IntValue PARRY_STUN_RAW =
+            BUILDER.comment("Parry: ticks a parried NPC cannot start a new attack (players are only knocked back)")
+                    .defineInRange("parry.stun_ticks", 30, 0, 400);
+
+    private static final ModConfigSpec.IntValue PARRY_COUNTER_TICKS_RAW =
+            BUILDER.comment("Parry: ticks after a successful parry during which the defender's next hit is boosted")
+                    .defineInRange("parry.counter_ticks", 40, 0, 400);
+
+    private static final ModConfigSpec.DoubleValue PARRY_COUNTER_MULT_RAW =
+            BUILDER.comment("Parry: damage multiplier of the counter-attack hit (Parry Mastery adds to it)")
+                    .defineInRange("parry.counter_mult", 1.5D, 1.0D, 10.0D);
+
+    private static final ModConfigSpec.IntValue PARRY_PERFECT_TICKS_RAW =
+            BUILDER.comment("Parry: a hit caught within this many ticks of OPENING the window is a perfect parry (0 disables it)")
+                    .defineInRange("parry.perfect_ticks", 2, 0, 10);
+
+    private static final ModConfigSpec.DoubleValue PARRY_PERFECT_BONUS_RAW =
+            BUILDER.comment("Parry: extra damage multiplier added to the counter-attack hit after a perfect parry")
+                    .defineInRange("parry.perfect_counter_bonus", 0.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.BooleanValue CLASH_ENABLED_RAW =
+            BUILDER.comment("Beam clash: two ki projectiles from different owners that cross freeze in place and start a",
+                            "timing minigame. The winner's beam absorbs the loser's and is fired back at them.")
+                    .define("clash.enabled", true);
+
+    private static final ModConfigSpec.IntValue CLASH_DURATION_RAW =
+            BUILDER.comment("Beam clash: length of the timing minigame in ticks (100 = 5 seconds)")
+                    .defineInRange("clash.duration_ticks", 100, 20, 400);
+
+    private static final ModConfigSpec.IntValue CLASH_CONTACT_RAW =
+            BUILDER.comment("Beam clash: ticks between the beams meeting and the bar starting (the sphere grows meanwhile)")
+                    .defineInRange("clash.contact_ticks", 10, 0, 100);
+
+    private static final ModConfigSpec.IntValue CLASH_RESOLVE_RAW =
+            BUILDER.comment("Beam clash: ticks the final numbers stay on screen before the winner's beam is fired back")
+                    .defineInRange("clash.resolve_ticks", 14, 0, 100);
+
+    private static final ModConfigSpec.IntValue CLASH_PERIOD_SLOW_RAW =
+            BUILDER.comment("Beam clash: ticks per full up-and-down sweep of the bar when the slow speed is drawn")
+                    .defineInRange("clash.period_slow_ticks", 30, 4, 200);
+
+    private static final ModConfigSpec.IntValue CLASH_PERIOD_MEDIUM_RAW =
+            BUILDER.comment("Beam clash: ticks per full sweep when the medium speed is drawn")
+                    .defineInRange("clash.period_medium_ticks", 18, 4, 200);
+
+    private static final ModConfigSpec.IntValue CLASH_PERIOD_FAST_RAW =
+            BUILDER.comment("Beam clash: ticks per full sweep when the fast speed is drawn")
+                    .defineInRange("clash.period_fast_ticks", 10, 4, 200);
+
+    private static final ModConfigSpec.IntValue CLASH_FIXED_SPEED_RAW =
+            BUILDER.comment("Beam clash: the bar speed is drawn ONCE per clash and is the same for both fighters until it ends.",
+                            "-1 = random between the three speeds, 0 = always slow, 1 = always medium, 2 = always fast")
+                    .defineInRange("clash.fixed_speed", -1, -1, 2);
+
+    private static final ModConfigSpec.IntValue CLASH_PING_GRACE_RAW =
+            BUILDER.comment("Beam clash: maximum ticks the server will rewind a player's button press to compensate for latency.",
+                            "The press is evaluated at the tick the client reports, clamped to this window and to the player's real ping,",
+                            "so a modified client cannot pick its own score. 0 disables compensation")
+                    .defineInRange("clash.ping_grace_ticks", 6, 0, 20);
+
+    private static final ModConfigSpec.DoubleValue CLASH_NO_PRESS_RAW =
+            BUILDER.comment("Beam clash: multiplier applied to the bar value of a player who never pressed (0 = they score nothing)")
+                    .defineInRange("clash.no_press_multiplier", 0.5D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_STAT_BONUS_CAP_RAW =
+            BUILDER.comment("Beam clash: the stronger beam gets up to this many bar points of bonus (out of 1000) so power level matters without deciding the minigame. 0 disables it")
+                    .defineInRange("clash.stat_bonus_cap", 100.0D, 0.0D, 500.0D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_TIE_MARGIN_RAW =
+            BUILDER.comment("Beam clash: bar-point difference below which the clash is a tie and both beams detonate")
+                    .defineInRange("clash.tie_margin", 10.0D, 0.0D, 200.0D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_TIE_DAMAGE_RAW =
+            BUILDER.comment("Beam clash: fraction of its damage each beam still deals when the clash is a tie")
+                    .defineInRange("clash.tie_damage_fraction", 0.5D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_SUM_RAW =
+            BUILDER.comment("Beam clash: fraction of the LOSER's beam damage added to the winner's returning beam (1.0 = full sum)")
+                    .defineInRange("clash.damage_sum_fraction", 1.0D, 0.0D, 3.0D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_RETURN_SPEED_RAW =
+            BUILDER.comment("Beam clash: speed of the returning beam as a fraction of the technique's normal speed. Lower gives the loser more time to dodge (for example with Instant Transmission)")
+                    .defineInRange("clash.return_speed_multiplier", 0.9D, 0.1D, 2.0D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_HOMING_RAW =
+            BUILDER.comment("Beam clash: how strongly the returning beam curves toward the loser each tick (0 = flies straight, 0.08 = gentle, 0.15 = strong).",
+                            "It only steers while the loser is within clash.return_homing_range, so getting far enough away still dodges it")
+                    .defineInRange("clash.return_homing_strength", 0.08D, 0.0D, 0.5D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_HOMING_RANGE_RAW =
+            BUILDER.comment("Beam clash: distance in blocks within which the returning beam homes on the loser")
+                    .defineInRange("clash.return_homing_range", 24.0D, 1.0D, 128.0D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_MIN_DAMAGE_RAW =
+            BUILDER.comment("Beam clash: projectiles dealing less damage than this never start a clash (they pass through each other)")
+                    .defineInRange("clash.min_damage", 1.0D, 0.0D, 1.0E6D);
+
+    private static final ModConfigSpec.DoubleValue CLASH_MOB_SKILL_RAW =
+            BUILDER.comment("Beam clash: how well mobs time their press (0 = random, 1 = almost always near the peak)")
+                    .defineInRange("clash.mob_skill", 0.35D, 0.0D, 1.0D);
+
     private static final ModConfigSpec.IntValue KI_LIFE_RAW =
             BUILDER.comment("Lifetime in ticks of the ki techniques that travel (20 ticks = 1 s). A projectile flies in a",
                             "straight line with no gravity or drag, so its RANGE = speed (blocks/tick) x lifetime (ticks).",
@@ -667,8 +840,11 @@ public class ServerConfig {
                             "result with the old 0.01). Raising damage_tp_factor/entity.tp_per_pl without touching",
                             "this is of little use: the extra reward is cancelled by the extra fatigue it generates.",
                             "It is still an ESTIMATE of the model (assumes ~15s per 'leveled' kill); real playtesting is needed",
-                            "to tune it -- see the balance simulation (tools/tp_economy_sim.py).")
-                    .defineInRange("training.fatigue_decay_per_minute", 0.20D, 0.0D, 10.0D);
+                            "to tune it -- see the balance simulation (tools/tp_economy_sim.py).",
+                            "Raised 2026-10-08 (0.2 -> 0.3): at 0.2 a player with no buffs needed ~153h to reach 5,000,000 TP.",
+                            "At 0.3 it is ~102h with no buffs, ~51h in the HTC and ~20h in the HTC with full weights.",
+                            "Hours scale as 1 / this value. Existing worlds keep the value saved in their serverconfig file.")
+                    .defineInRange("training.fatigue_decay_per_minute", 0.30D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue TRAIN_HTC_MULT_RAW =
             BUILDER.comment("Training: TP multiplier while inside the HTC")
@@ -904,6 +1080,46 @@ public class ServerConfig {
     private static volatile double STEP_ENERGY_PCT = 0.03D;
     private static volatile int STEP_INVISIBLE = 8;
     private static volatile int STEP_IFRAME = 10;
+    private static volatile double BLOCK_WEAPON_FACTOR = 0.6D;
+    private static volatile double BLOCK_SHIELD_BONUS = 0.35D;
+    private static volatile double BLOCK_SHIELD_CAP = 0.85D;
+    private static volatile double BLOCK_SHIELD_SLOW = 0.0D;
+    private static volatile int BLOCK_SHIELD_DURABILITY = 1;
+    private static volatile double BLOCK_SHIELD_KI = 0.01D;
+    private static volatile boolean KIAI_OMNI = true;
+    private static volatile double KIAI_EXTRA_STAMINA = 0.12D;
+    private static volatile int KIAI_EXTRA_CAP = 6;
+    private static volatile int KIAI_GUARD_BREAK = 40;
+    private static volatile boolean PARRY_ENABLED = true;
+    private static volatile int PARRY_WINDOW = 6;
+    private static volatile int PARRY_COOLDOWN = 40;
+    private static volatile double PARRY_KNOCKBACK = 2.5D;
+    private static volatile double PARRY_REFLECT = 0.25D;
+    private static volatile double PARRY_NPC_CHANCE = 0.3D;
+    private static volatile int PARRY_STUN = 30;
+    private static volatile int PARRY_COUNTER_TICKS = 40;
+    private static volatile double PARRY_COUNTER_MULT = 1.5D;
+    private static volatile int PARRY_PERFECT_TICKS = 2;
+    private static volatile double PARRY_PERFECT_BONUS = 0.5D;
+    private static volatile int CLASH_CONTACT = 10;
+    private static volatile int CLASH_RESOLVE = 14;
+    private static volatile boolean CLASH_ENABLED = true;
+    private static volatile int CLASH_DURATION = 100;
+    private static volatile int CLASH_PERIOD_SLOW = 30;
+    private static volatile int CLASH_PERIOD_MEDIUM = 18;
+    private static volatile int CLASH_PERIOD_FAST = 10;
+    private static volatile int CLASH_FIXED_SPEED = -1;
+    private static volatile int CLASH_PING_GRACE = 6;
+    private static volatile double CLASH_NO_PRESS = 0.5D;
+    private static volatile double CLASH_STAT_BONUS_CAP = 100.0D;
+    private static volatile double CLASH_TIE_MARGIN = 10.0D;
+    private static volatile double CLASH_TIE_DAMAGE = 0.5D;
+    private static volatile double CLASH_SUM = 1.0D;
+    private static volatile double CLASH_RETURN_SPEED = 0.9D;
+    private static volatile double CLASH_HOMING = 0.08D;
+    private static volatile double CLASH_HOMING_RANGE = 24.0D;
+    private static volatile double CLASH_MIN_DAMAGE = 1.0D;
+    private static volatile double CLASH_MOB_SKILL = 0.35D;
     private static volatile double SB_RADIUS = 32.0D;
     private static volatile int KI_LIFE = 200;
     private static volatile double SB_GAIN = 0.03D;
@@ -977,7 +1193,7 @@ public class ServerConfig {
     private static volatile double EXPLOSION_SACRIFICE_CONVERSION = 0.5;
 
     private static volatile double TRAIN_DMG_TP = 0.10D, TRAIN_AIR_TP = 0.0001D,
-            TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.20D,
+            TRAIN_AIR_COST = 0.04D, TRAIN_HALF_LIFE = 0.10D, TRAIN_DECAY = 0.30D,
             TRAIN_HTC_MULT = 2.0D, TRAIN_MIN_EFF = 0.05D;
     private static volatile double TP_PER_PL = 0.25D;
     private static volatile int TRAIN_AIR_TICKS = 10;
@@ -1040,6 +1256,46 @@ public class ServerConfig {
         STEP_ENERGY_PCT   = STEP_ENERGY_PCT_RAW.get();
         STEP_INVISIBLE    = STEP_INVISIBLE_RAW.get();
         STEP_IFRAME       = STEP_IFRAME_RAW.get();
+        BLOCK_WEAPON_FACTOR = BLOCK_WEAPON_FACTOR_RAW.get();
+        BLOCK_SHIELD_BONUS = BLOCK_SHIELD_BONUS_RAW.get();
+        BLOCK_SHIELD_CAP  = BLOCK_SHIELD_CAP_RAW.get();
+        BLOCK_SHIELD_SLOW = BLOCK_SHIELD_SLOW_RAW.get();
+        BLOCK_SHIELD_DURABILITY = BLOCK_SHIELD_DURABILITY_RAW.get();
+        BLOCK_SHIELD_KI   = BLOCK_SHIELD_KI_RAW.get();
+        KIAI_OMNI         = KIAI_OMNI_RAW.get();
+        KIAI_EXTRA_STAMINA = KIAI_EXTRA_STAMINA_RAW.get();
+        KIAI_EXTRA_CAP    = KIAI_EXTRA_CAP_RAW.get();
+        KIAI_GUARD_BREAK  = KIAI_GUARD_BREAK_RAW.get();
+        PARRY_ENABLED     = PARRY_ENABLED_RAW.get();
+        PARRY_WINDOW      = PARRY_WINDOW_RAW.get();
+        PARRY_COOLDOWN    = PARRY_COOLDOWN_RAW.get();
+        PARRY_KNOCKBACK   = PARRY_KNOCKBACK_RAW.get();
+        PARRY_REFLECT     = PARRY_REFLECT_RAW.get();
+        PARRY_NPC_CHANCE  = PARRY_NPC_CHANCE_RAW.get();
+        PARRY_STUN        = PARRY_STUN_RAW.get();
+        PARRY_COUNTER_TICKS = PARRY_COUNTER_TICKS_RAW.get();
+        PARRY_COUNTER_MULT = PARRY_COUNTER_MULT_RAW.get();
+        PARRY_PERFECT_TICKS = PARRY_PERFECT_TICKS_RAW.get();
+        PARRY_PERFECT_BONUS = PARRY_PERFECT_BONUS_RAW.get();
+        CLASH_CONTACT     = CLASH_CONTACT_RAW.get();
+        CLASH_RESOLVE     = CLASH_RESOLVE_RAW.get();
+        CLASH_ENABLED     = CLASH_ENABLED_RAW.get();
+        CLASH_DURATION    = CLASH_DURATION_RAW.get();
+        CLASH_PERIOD_SLOW = CLASH_PERIOD_SLOW_RAW.get();
+        CLASH_PERIOD_MEDIUM = CLASH_PERIOD_MEDIUM_RAW.get();
+        CLASH_PERIOD_FAST = CLASH_PERIOD_FAST_RAW.get();
+        CLASH_FIXED_SPEED = CLASH_FIXED_SPEED_RAW.get();
+        CLASH_PING_GRACE  = CLASH_PING_GRACE_RAW.get();
+        CLASH_NO_PRESS    = CLASH_NO_PRESS_RAW.get();
+        CLASH_STAT_BONUS_CAP = CLASH_STAT_BONUS_CAP_RAW.get();
+        CLASH_TIE_MARGIN  = CLASH_TIE_MARGIN_RAW.get();
+        CLASH_TIE_DAMAGE  = CLASH_TIE_DAMAGE_RAW.get();
+        CLASH_SUM         = CLASH_SUM_RAW.get();
+        CLASH_RETURN_SPEED = CLASH_RETURN_SPEED_RAW.get();
+        CLASH_HOMING      = CLASH_HOMING_RAW.get();
+        CLASH_HOMING_RANGE = CLASH_HOMING_RANGE_RAW.get();
+        CLASH_MIN_DAMAGE  = CLASH_MIN_DAMAGE_RAW.get();
+        CLASH_MOB_SKILL   = CLASH_MOB_SKILL_RAW.get();
         SB_RADIUS         = SB_RADIUS_RAW.get();
         KI_LIFE           = KI_LIFE_RAW.get();
         SB_GAIN           = SB_GAIN_RAW.get();
@@ -1274,6 +1530,46 @@ public class ServerConfig {
     public static double stepEnergyPct()            { return STEP_ENERGY_PCT; }
     public static int stepInvisibleTicks()          { return STEP_INVISIBLE; }
     public static int stepIFrameTicks()             { return STEP_IFRAME; }
+    public static double blockWeaponFactor()        { return BLOCK_WEAPON_FACTOR; }
+    public static double blockShieldBonus()         { return BLOCK_SHIELD_BONUS; }
+    public static double blockShieldCap()           { return BLOCK_SHIELD_CAP; }
+    public static double blockShieldSlow()          { return BLOCK_SHIELD_SLOW; }
+    public static int blockShieldDurability()       { return BLOCK_SHIELD_DURABILITY; }
+    public static double blockShieldKiPct()         { return BLOCK_SHIELD_KI; }
+    public static boolean kiaiOmnidirectional()     { return KIAI_OMNI; }
+    public static double kiaiExtraTargetStamina()   { return KIAI_EXTRA_STAMINA; }
+    public static int kiaiExtraTargetCap()          { return KIAI_EXTRA_CAP; }
+    public static int kiaiGuardBreakTicks()         { return KIAI_GUARD_BREAK; }
+    public static boolean parryEnabled()            { return PARRY_ENABLED; }
+    public static int parryWindowTicks()            { return PARRY_WINDOW; }
+    public static int parryCooldownTicks()          { return PARRY_COOLDOWN; }
+    public static double parryKnockbackBlocks()     { return PARRY_KNOCKBACK; }
+    public static double parryReflectFraction()     { return PARRY_REFLECT; }
+    public static double parryNpcChance()           { return PARRY_NPC_CHANCE; }
+    public static int parryStunTicks()              { return PARRY_STUN; }
+    public static int parryCounterTicks()           { return PARRY_COUNTER_TICKS; }
+    public static double parryCounterMult()         { return PARRY_COUNTER_MULT; }
+    public static int parryPerfectTicks()           { return PARRY_PERFECT_TICKS; }
+    public static double parryPerfectBonus()        { return PARRY_PERFECT_BONUS; }
+    public static int clashContactTicks()           { return CLASH_CONTACT; }
+    public static int clashResolveTicks()           { return CLASH_RESOLVE; }
+    public static boolean clashEnabled()            { return CLASH_ENABLED; }
+    public static int clashDurationTicks()          { return CLASH_DURATION; }
+    public static int clashPeriodSlow()             { return CLASH_PERIOD_SLOW; }
+    public static int clashPeriodMedium()           { return CLASH_PERIOD_MEDIUM; }
+    public static int clashPeriodFast()             { return CLASH_PERIOD_FAST; }
+    public static int clashFixedSpeed()             { return CLASH_FIXED_SPEED; }
+    public static int clashPingGraceTicks()         { return CLASH_PING_GRACE; }
+    public static double clashNoPressMultiplier()   { return CLASH_NO_PRESS; }
+    public static double clashStatBonusCap()        { return CLASH_STAT_BONUS_CAP; }
+    public static double clashTieMargin()           { return CLASH_TIE_MARGIN; }
+    public static double clashTieDamageFraction()   { return CLASH_TIE_DAMAGE; }
+    public static double clashDamageSumFraction()   { return CLASH_SUM; }
+    public static double clashReturnSpeedMultiplier() { return CLASH_RETURN_SPEED; }
+    public static double clashReturnHoming()        { return CLASH_HOMING; }
+    public static double clashReturnHomingRange()   { return CLASH_HOMING_RANGE; }
+    public static double clashMinDamage()           { return CLASH_MIN_DAMAGE; }
+    public static double clashMobSkill()            { return CLASH_MOB_SKILL; }
     public static double spiritBombGatherRadius()   { return SB_RADIUS; }
     public static int kiProjectileLifeTicks()       { return KI_LIFE; }
     public static double spiritBombGainPerPulse()   { return SB_GAIN; }

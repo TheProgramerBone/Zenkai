@@ -107,6 +107,7 @@ public class KiAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
 
     @Override
     public boolean canUse() {
+        if (!mob.combatGoalAllowed(ZenkaiDefaultMob.GOAL_KI)) return false;
         LivingEntity tgt = mob.getTarget();
         if (tgt == null || !tgt.isAlive()) return false;
         if (mob instanceof BlockingMob bm && bm.isBlockingNow()) return false;

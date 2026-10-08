@@ -1,0 +1,48 @@
+{
+  "parent": "zenkai:meditation_minigame",
+  "criteria": {
+    "meditation": {
+      "conditions": {
+        "kind": "meditation_done"
+      },
+      "trigger": "zenkai:milestone"
+    },
+    "shadow": {
+      "conditions": {
+        "kind": "shadow_training_done"
+      },
+      "trigger": "zenkai:milestone"
+    },
+    "target": {
+      "conditions": {
+        "kind": "target_practice_done"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.training_all.description"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "minecraft:diamond_boots"
+    },
+    "title": {
+      "translate": "advancements.zenkai.training_all.title"
+    }
+  },
+  "requirements": [
+    [
+      "shadow"
+    ],
+    [
+      "meditation"
+    ],
+    [
+      "target"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

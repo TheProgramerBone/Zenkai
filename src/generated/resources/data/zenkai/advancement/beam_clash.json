@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:first_technique",
+  "criteria": {
+    "clash": {
+      "conditions": {
+        "kind": "clash_started"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.beam_clash.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:lightning_rod"
+    },
+    "title": {
+      "translate": "advancements.zenkai.beam_clash.title"
+    }
+  },
+  "requirements": [
+    [
+      "clash"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

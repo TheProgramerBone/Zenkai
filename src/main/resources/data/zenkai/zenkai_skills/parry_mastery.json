@@ -1,0 +1,13 @@
+{
+  "max_level": 4,
+  "tp_cost": 450,
+  "mind_req": [6, 12, 20, 30],
+  "purchasable": true,
+  "masters": ["kami", "korin", "kaio", "toribot"],
+  "values": {
+    "window_bonus": [2, 4, 6, 8],
+    "ki_return": [0.0, 0.05, 0.10, 0.15],
+    "body_heal": [0.0, 0.0, 0.03, 0.06],
+    "counter_bonus": [0.1, 0.25, 0.4, 0.6]
+  }
+}

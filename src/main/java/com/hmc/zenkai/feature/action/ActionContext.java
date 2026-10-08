@@ -17,12 +17,16 @@ public record ActionContext(
         boolean blocking,
         boolean downed,
         boolean handsFree,
+        // Espada (o arma de ki) en la mano principal: lo que piden las técnicas de espada.
+        boolean swordHeld,
         // Hay un movimiento físico CON DURACIÓN en curso (dash, barrage).
         boolean physBusy,
         // Slot de la técnica que se está cargando, o -1 si no hay ninguna.
         int chargingSlot,
         // Ticks transcurridos desde que empezó esa carga. 0 si chargingSlot < 0.
-        long chargeElapsedTicks
+        long chargeElapsedTicks,
+        // Está atrapado en un choque de haces (inmóvil, sin poder actuar).
+        boolean clash
 ) {
     public boolean chargingTechnique() { return chargingSlot >= 0; }
 }

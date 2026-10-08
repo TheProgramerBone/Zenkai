@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:first_tp",
+  "criteria": {
+    "done": {
+      "conditions": {
+        "kind": "shadow_training_done"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.shadow_training.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "minecraft:coal"
+    },
+    "title": {
+      "translate": "advancements.zenkai.shadow_training.title"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -80,6 +80,7 @@ public record TargetPracticeSessionPacket(int orbsPopped, int bombsHit, int sess
 
                 if (granted > td.getBestTargetPracticeTp()) td.setBestTargetPracticeTp(granted);
             }
+            if (granted > 0) com.hmc.zenkai.feature.advancement.ZenkaiTriggers.MILESTONE.get().trigger(sp, com.hmc.zenkai.feature.advancement.ZenkaiTriggers.Kinds.TARGET_PRACTICE_DONE);
             PacketDistributor.sendToPlayer(sp, new TrainingSessionRewardPacket(granted, td.getBestTargetPracticeTp()));
         });
     }
