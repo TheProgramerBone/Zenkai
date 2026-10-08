@@ -51,7 +51,7 @@ public final class TechniqueHotbarOverlay {
     private static final int SLOT_ATLAS_W = 60, SLOT_ATLAS_H = 20;
     private static final int ICON_INSET = 2;
 
-    private static final int BLOCK_ICON_U = 3 * 20; // ⚠ AJUSTA a la celda real de tu ícono
+    private static final int BLOCK_ICON_U = 3 * 20;
     private static final int BLOCK_ICON_V = 20;
 
     private static final int CHARGE_W = 62;
@@ -167,7 +167,7 @@ public final class TechniqueHotbarOverlay {
 
         KiTechnique t = att.techniques().slot(CombatModeClientState.chargingSlot());
         double ratio = CombatModeClientState.chargeRatio(mc);
-        int rgb = t != null ? t.rgb() : 0xFFFFFF;
+        int rgb = t != null ? com.hmc.zenkai.feature.technique.EvilSpiritBomb.rgb(mc.player, t) : 0xFFFFFF;
 
         int bx = g.guiWidth() / 2 - CHARGE_W / 2;
         int by = g.guiHeight() / 2 + 12;

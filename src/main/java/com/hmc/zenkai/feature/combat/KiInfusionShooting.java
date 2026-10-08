@@ -95,7 +95,6 @@ public final class KiInfusionShooting {
         // disparos infusionados gratis reciclando los tuyos. Va DESPUÉS de que vanilla haya
         // fijado su propio pickup (BowItem lo pone antes de addFreshEntity, y este evento
         // se dispara dentro).
-        // ⚠ API a verificar al compilar: campo público 'pickup' de AbstractArrow en 1.21.1.
         if (proj instanceof AbstractArrow arrow) {
             arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
         }
@@ -161,7 +160,7 @@ public final class KiInfusionShooting {
         lvl.sendParticles(ModParticles.spark(rgb, 1.0f),
                 at.x, at.y, at.z, sparks, 0.05, 0.05, 0.05, 0.12);
 
-        // ⚠ PROVISIONAL. ModSounds ya registra ki_attack_release_1..4, pero no existen ni los
+        // PROVISIONAL (decisión del usuario: se queda). ModSounds ya registra ki_attack_release_1..4, pero no existen ni los
         // .ogg ni sus entradas en sounds.json, así que suenan a nada. Cuando los tengas,
         // cambia esta línea por uno de ellos y quita el sonido vanilla.
         lvl.playSound(null, at.x, at.y, at.z, SoundEvents.FIRECHARGE_USE,

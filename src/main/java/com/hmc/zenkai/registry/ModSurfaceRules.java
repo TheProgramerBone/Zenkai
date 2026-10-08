@@ -37,7 +37,7 @@ public class ModSurfaceRules {
         );
 
         return SurfaceRules.ifTrue(
-                SurfaceRules.abovePreliminarySurface(),                      // ⚠ API
+                SurfaceRules.abovePreliminarySurface(),
                 SurfaceRules.ifTrue(
                         SurfaceRules.isBiome(ModBiomes.ROCKY_WASTELAND),
                         SurfaceRules.sequence(

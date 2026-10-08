@@ -34,8 +34,7 @@ public final class RaceRenderTypes {
      * combine translúcido y layering. Por eso la textura BASE debe tener esa zona
      * transparente: sin píxeles opacos coplanares debajo, no hay z-fighting que evitar, y
      * además es la única forma de que el cristal mezcle contra la cara y no contra el armazón.
-     * ⚠ VERIFICAR 1.21.1: entityTranslucent(tex) es la variante NO_CULL. Si en tu mapeo
-     * culea, usa entityTranslucentCull(tex) — para una lente de un solo plano da igual, pero
+     * entityTranslucent(tex) es la variante NO_CULL; entityTranslucentCull(tex) — para una lente de un solo plano da igual, pero
      * si el cristal tiene grosor, NO_CULL mezcla las dos caras y oscurece el doble.
      */
     public static RenderType translucent(ResourceLocation tex) {

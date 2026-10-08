@@ -37,6 +37,31 @@ public final class KiVfxColors {
                 (secondary & 0xFF) / 255f};
     }
 
+    /** Carmesí de los rayos de una técnica de interior oscuro (ver {@link #isDarkInterior}). */
+    public static final int CRIMSON = 0xFF1F45;
+
+    private static float luma(int rgb) {
+        return (0.2126f * ((rgb >> 16) & 0xFF) + 0.7152f * ((rgb >> 8) & 0xFF) + 0.0722f * (rgb & 0xFF)) / 255f;
+    }
+
+    /** ¿El segundo color es OSCURO (interior casi negro)? Lo usan los rayos carmesí. -1 = sin segundo color. */
+    public static boolean isDarkInterior(int rgb2) {
+        return rgb2 >= 0 && luma(rgb2) < 0.25f;
+    }
+
+    /**
+     * Factor 0..1 sobre el blanco del centro (coreWhite) de la técnica actual. El centro se mezcla
+     * hacia blanco (core = mix(hot, 1, coreWhite)) en ki_energy.fsh y en el núcleo de dos capas
+     * (KiVfxCompositeRenderer): con un segundo color OSCURO eso lo dejaba blanco por mucho que el
+     * interior fuera negro. Aquí se baja ese blanco según la luminancia del segundo color: 1 (sin
+     * cambio) desde luminancia 0.35, 0 con negro. Sin segundo color o con uno claro, no cambia nada.
+     */
+    public static float coreWhiteScale() {
+        if (secondary < 0) return 1f;
+        float t = Math.max(0f, Math.min(1f, (luma(secondary) - 0.05f) / 0.30f));
+        return t * t * (3f - 2f * t);
+    }
+
     private static final float HOT_POW = 0.45f;
 
     /**

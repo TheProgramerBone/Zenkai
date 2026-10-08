@@ -45,7 +45,7 @@ public class IsaacEntity extends ZenkaiDefaultMob {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    /** ⚠ Ajusta a la DURACIÓN real de "isaac.dance" en ticks (segundos × 20). */
+    /** Debe coincidir con la DURACIÓN real de "isaac.dance" en ticks (segundos × 20). */
     private static final int DANCE_DURATION_TICKS = 269;
 
     private static final RawAnimation DANCE = RawAnimation.begin().thenPlay("isaac.dance");

@@ -2,6 +2,10 @@ package com.hmc.zenkai.client.aura;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.CombatModeClientState;
+import com.hmc.zenkai.client.action.ActionStateClient;
+import com.hmc.zenkai.feature.action.ActionPhase;
+import com.hmc.zenkai.feature.action.ActionState;
+import com.hmc.zenkai.feature.action.ActionType;
 import com.hmc.zenkai.client.input.KeyBindings;
 import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.aura.TurboPacket;
@@ -85,11 +89,11 @@ public final class AuraClientState {
         // Cargando ki: idem (lo escribe KiChargePacket en el servidor).
         if (p.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).isChargingKi()) return true;
 
+        // Cargando una TÉCNICA de ki: el aura solo sale al pasar del 100 % (sobrecarga).
+        if (isTechniqueOvercharging(p)) return true;
+
         Minecraft mc = Minecraft.getInstance();
-        if (p == mc.player) {
-            // Local: además el estado optimista, para no esperar el round-trip.
-            return localTurbo || CombatModeClientState.isCharging();
-        }
+        if (p == mc.player) return localTurbo;
         return REMOTE_TURBO.contains(p.getId());
     }
 
@@ -102,7 +106,21 @@ public final class AuraClientState {
     public static boolean isChargingOrTransforming(AbstractClientPlayer p) {
         if (p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).isTransforming()) return true;
         if (p.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).isChargingKi()) return true;
-        return p == Minecraft.getInstance().player && CombatModeClientState.isCharging();
+        return isTechniqueOvercharging(p);
+    }
+
+    /**
+     * ¿Está SOBRECARGANDO una técnica de ki (más del 100 % de carga)? Hasta ahí cargar una técnica no
+     * enciende el aura (pedido del usuario, 2026-10-07): solo la sobrecarga. Vale para locales y
+     * remotos: la fase OVERCHARGING la decide el servidor (ActionStateServer, depende de la maestría
+     * y no se puede derivar en el cliente de un observador); el jugador local además mira su
+     * predicción para no esperar el round-trip.
+     */
+    public static boolean isTechniqueOvercharging(AbstractClientPlayer p) {
+        ActionState st = ActionStateClient.of(p.getId());
+        if (st.type() == ActionType.KI_TECHNIQUE && st.phase() == ActionPhase.OVERCHARGING) return true;
+        Minecraft mc = Minecraft.getInstance();
+        return p == mc.player && CombatModeClientState.chargeRatio(mc) > 1.0;
     }
 
     /** ¿Este jugador está en turbo AHORA? El local incluye el estado optimista para

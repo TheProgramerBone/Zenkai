@@ -11,8 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Marca el tick en el que el jugador local recibió daño REAL.
- * ⚠ Verifica la firma en tu IDE: en 1.21.1 debería ser
- * LivingEntity#handleDamageEvent(DamageSource). Es el manejador cliente de
+ * Destino: LivingEntity#handleDamageEvent(DamageSource), el manejador cliente de
  * ClientboundDamageEventPacket.
  */
 @Mixin(LivingEntity.class)

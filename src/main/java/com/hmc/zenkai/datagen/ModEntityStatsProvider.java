@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
  * campo nuevo (como `alignment`) obliga a abrir 45 archivos y basta un olvido para que una
  * entidad se comporte distinto sin que nadie sepa por qué. Aquí los PL están en conjunto en la misma
  * pantalla, que es lo que hace falta para calibrarlos unos contra otros.
- * ⚠ ANTES DE USARLO: borra src/main/resources/data/zenkai/zenkai_entities/ entero. Los dos
+ * ANTES DE USARLO: borra src/main/resources/data/zenkai/zenkai_entities/ entero. Los dos
  * directorios de recursos se montan juntos y tendrías cada ficha duplicada.
  * ALINEAMIENTO (-100..+100): es la maldad SENTIDA, no la hostilidad mecánica. Un enderman es
  * peligroso pero no malvado; un piglin zombificado es una víctima. Alimenta el color de la

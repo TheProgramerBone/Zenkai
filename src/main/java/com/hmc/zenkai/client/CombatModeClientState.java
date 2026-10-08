@@ -135,10 +135,56 @@ public final class CombatModeClientState {
         PacketDistributor.sendToServer(new CombatModePacket(active));
     }
 
+    // ── Dash por doble toque (W, S, A, D = dirección 0..3 de DashPacket) ──
+    /** Ventana entre los dos toques, en ticks (≈ 0.3 s). */
+    private static final int DASH_TAP_WINDOW = 6;
+    private static final boolean[] DASH_KEY_WAS_DOWN = new boolean[4];
+    private static final long[] DASH_LAST_TAP = {Long.MIN_VALUE, Long.MIN_VALUE,
+            Long.MIN_VALUE, Long.MIN_VALUE};
+    /** Espejo optimista del cooldown: solo evita mandar packets que el servidor rechazaría. */
+    private static long dashReadyAt = 0L;
+
+    /**
+     * Detecta el doble toque de una tecla de movimiento en modo combate y pide el dash al
+     * servidor, que es quien decide (guardas y cooldown autoritativos, ver DashServer). Se
+     * detecta el flanco de bajada→subida de CADA tecla por separado: pulsar W y luego A no
+     * cuenta. Los toques se descartan si el modo combate está apagado o hay una pantalla.
+     */
+    private static void tickDash(Minecraft mc) {
+        var o = mc.options;
+        net.minecraft.client.KeyMapping[] keys = {o.keyUp, o.keyDown, o.keyLeft, o.keyRight};
+        long now = mc.level != null ? mc.level.getGameTime() : 0L;
+        boolean canDash = active && mc.screen == null && mc.player != null && !mc.player.isSpectator()
+                && !mc.player.getAbilities().flying && !lastBlockingSent && chargingSlot < 0;
+        for (int i = 0; i < 4; i++) {
+            boolean down = keys[i].isDown();
+            boolean pressedNow = down && !DASH_KEY_WAS_DOWN[i];
+            DASH_KEY_WAS_DOWN[i] = down;
+            if (!pressedNow) continue;
+            if (!canDash) {
+                DASH_LAST_TAP[i] = Long.MIN_VALUE;
+                continue;
+            }
+            // Long.MIN_VALUE = "sin toque previo". Restarlo desbordaba (now - MIN_VALUE da un
+            // negativo enorme, siempre <= la ventana), así que tras cada dash o toque descartado
+            // UNA sola pulsación ya contaba como doble toque.
+            boolean hadPrevTap = DASH_LAST_TAP[i] != Long.MIN_VALUE;
+            if (hadPrevTap && now - DASH_LAST_TAP[i] <= DASH_TAP_WINDOW && now >= dashReadyAt) {
+                PacketDistributor.sendToServer(
+                        new com.hmc.zenkai.feature.combat.DashPacket(i));
+                dashReadyAt = now + com.hmc.zenkai.config.ServerConfig.dashCooldownTicks();
+                DASH_LAST_TAP[i] = Long.MIN_VALUE; // un triple toque no encadena otro dash
+            } else {
+                DASH_LAST_TAP[i] = now;
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onClientTickPre(ClientTickEvent.Pre e) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
+        tickDash(mc);
 
         boolean rightDown = mc.options.keyUse.isDown();
         boolean handsFree = mc.player.getMainHandItem().isEmpty()

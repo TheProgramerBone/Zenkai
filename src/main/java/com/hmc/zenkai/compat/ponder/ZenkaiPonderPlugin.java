@@ -9,7 +9,7 @@ import net.createmod.ponder.api.registration.PonderSceneRegistrationHelper;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * ⚠ Esta clase (y todo lo que cuelga de compat/ponder/scenes/) importa tipos de la API de
+ * Esta clase (y todo lo que cuelga de compat/ponder/scenes/) importa tipos de la API de
  * Ponder directamente en sus firmas. Nunca debe instanciarse ni referenciarse desde código que
  * se ejecute sin pasar antes por PonderCompat.register() — es lo que garantiza que, sin el mod
  * Ponder instalado, esta clase jamás llega a cargarse.

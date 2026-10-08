@@ -27,9 +27,6 @@ import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
  * se ve la base entera; encendido se le suma el brillo encima.
  * RenderType.eyes() es aditivo y se salta la iluminación del mundo, que es justo el
  * comportamiento de un piloto encendido: se ve igual de noche y en una cueva.
- * ⚠ VERIFICAR en GeckoLib 4.8.4: firma de GeoRenderer#reRender(BakedGeoModel, PoseStack,
- * MultiBufferSource, T, RenderType, VertexConsumer, float, int, int, int). Si el último
- * parámetro de color no existe en tu versión, se quita.
  */
 public class ScouterBenchGlowLayer extends GeoRenderLayer<ScouterBenchBlockEntity> {
 

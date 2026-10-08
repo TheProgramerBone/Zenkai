@@ -265,7 +265,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
                 writeValue(entries.get(i), staged.get(i));
             }
         }
-        ClientConfig.SPEC.save();   // ⚠ API
+        ClientConfig.SPEC.save();
     }
 
     // ── Render ───────────────────────────────────────────────────────────────
@@ -375,7 +375,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
     }
 
     private boolean hasTranslation(String key) {
-        return net.minecraft.client.resources.language.I18n.exists(key);   // ⚠ API
+        return net.minecraft.client.resources.language.I18n.exists(key);
     }
 
     private void drawScrollbar(GuiGraphics g) {

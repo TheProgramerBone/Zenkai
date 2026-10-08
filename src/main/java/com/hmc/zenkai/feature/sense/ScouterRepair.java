@@ -36,7 +36,7 @@ public final class ScouterRepair {
     }
 
     /**
-     * ⚠ VERIFICAR NeoForge 1.21.1: al fijar output en AnvilUpdateEvent, AnvilMenu.createResult
+     * Al fijar output en AnvilUpdateEvent, AnvilMenu.createResult
      * sale antes de aplicar su propio incremento de RepairCost. Si aun así el resultado sale
      * con "demasiado caro" tras varias reparaciones, hay que quitarle el componente
      * DataComponents.REPAIR_COST al stack de salida aquí mismo.

@@ -67,7 +67,6 @@ public final class KiChargeSystem {
                             ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.OVERDRIVE);
                             // Cristal roto: SOLO la primera vez de todas, el resto de rupturas no
                             // lo repiten (rompes el límite una vez, no un candado nuevo cada vez).
-                            // ⚠ API a verificar: SoundEvents.GLASS_BREAK en 1.21.1.
                             sp.serverLevel().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
                                     SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.0f, 1.0f);
                         }

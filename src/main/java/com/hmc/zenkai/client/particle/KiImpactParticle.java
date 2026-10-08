@@ -37,7 +37,7 @@ public class KiImpactParticle extends TextureSheetParticle {
         this.bCol = opts.blue();
 
         // Giro aleatorio: dos golpes seguidos no dibujan la misma estrella.
-        this.roll = this.oRoll = level.random.nextFloat() * Mth.TWO_PI; // ⚠ Mth.TWO_PI
+        this.roll = this.oRoll = level.random.nextFloat() * Mth.TWO_PI;
 
         setSpriteFromAge(sprites);
     }

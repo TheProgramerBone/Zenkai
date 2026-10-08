@@ -97,8 +97,7 @@ public final class BlackFlash {
         double f = Math.max(0.0, Math.min(1.0, scale));
         double c = base * Math.pow(f, ServerConfig.blackFlashChargeExponent());
 
-        // ⚠ API a verificar al compilar: Player#getLuck() en 1.21.1 (lee Attributes.LUCK).
-        // El max(0) es por Unlucky con amplificador alto: luck muy negativo daría un factor
+        // Player#getLuck() lee Attributes.LUCK. El max(0) es por Unlucky con amplificador alto: luck muy negativo daría un factor
         // negativo y, peor, positivo otra vez si alguien tocara el signo.
         double luck = sp.getLuck();
         c *= Math.max(0.0, 1.0 + luck * ServerConfig.blackFlashLuckFactor());

@@ -44,7 +44,6 @@ public final class EntityHealthSync {
         e.setCanceled(true);
     }
 
-    /** ⚠ API a verificar al compilar: EntityTickEvent.Post en NeoForge 1.21.1. */
     @SubscribeEvent
     public static void onTick(EntityTickEvent.Post e) {
         if (!(e.getEntity() instanceof LivingEntity le) || le instanceof Player) return;

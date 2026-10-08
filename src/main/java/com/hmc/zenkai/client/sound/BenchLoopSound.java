@@ -18,8 +18,6 @@ import net.minecraft.sounds.SoundSource;
  * BLOCKS, así que se atenúa con la distancia y lo oye cualquiera que pase cerca aunque no
  * tenga la GUI abierta.
  *
- * ⚠ VERIFICAR 1.21.1: constructor AbstractTickableSoundInstance(SoundEvent, SoundSource,
- * RandomSource) y SoundInstance.createUnseededRandom().
  */
 public class BenchLoopSound extends AbstractTickableSoundInstance {
 

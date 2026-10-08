@@ -46,8 +46,7 @@ public final class ActionStateClient {
     /**
      * ActionContext del jugador local. Las guardas las evalúa ActionRules, igual que en el
      * servidor; lo único propio de este lado es de dónde salen los booleanos.
-         * physBusy y chargingSlot ya NO se inventan: llegan del servidor por sync. Era el ⚠ que
-     * quedaba pendiente del paso 2.
+         * physBusy y chargingSlot ya NO se inventan: llegan del servidor por sync. 
      */
     public static ActionContext contextOf(AbstractClientPlayer p, boolean combatMode,
                                           boolean blockingLocal) {

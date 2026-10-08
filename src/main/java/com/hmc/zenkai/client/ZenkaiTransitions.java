@@ -82,8 +82,6 @@ public final class ZenkaiTransitions {
      * Las técnicas físicas eran lo único que se salvaba porque nunca llaman aquí.
      * Si algún día se quiere recuperar la salida suave, NO se vuelve al fundido hacia null:
      * se funde hacia un clip neutro con fadeIn(), que es la ruta que sí se limpia sola.
-     * ⚠ stopTriggeredAnimation(): si el fork no lo expone en PlayerAnimationController, pásame
-     *   las funciones públicas de parada de AnimationController y lo sustituyo.
      */
     public static void stop(PlayerAnimationController c, int ticks) {
         if (c == null) {

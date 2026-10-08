@@ -50,7 +50,7 @@ void main() {
     vec3 N = normalize(vNormal);
     // En la GUI (vista previa del aura) la proyección es ORTOGRÁFICA: la visual es el eje Z de la
     // pantalla para cualquier píxel, no la dirección al punto (que daría un borde torcido).
-    vec3 V = ZenkaiOrtho > 0.5 ? vec3(0.0, 0.0, 1.0) : normalize(vViewDir);
+    vec3 V = (ZenkaiOrtho > 0.5 && ZenkaiOrtho < 1.5) ? vec3(0.0, 0.0, 1.0) : normalize(vViewDir);
     float facingRaw = dot(V, N);
     if (facingRaw < 0.0) N = -N;
     float facingAbs = abs(dot(V, N));
@@ -93,7 +93,9 @@ void main() {
     alpha *= vColor.a;
 
     alpha *= smoothstep(ZenkaiShellBaseFade.x, ZenkaiShellBaseFade.y, vLocalY);
-    if (facingRaw < 0.0) alpha = min(alpha, 0.01);
+    // ZenkaiOrtho = 2: la cámara está DENTRO del aura (primera persona propia) y solo ve caras
+    // traseras; sin esto el aura propia no se vería nunca en primera persona.
+    if (facingRaw < 0.0 && ZenkaiOrtho < 1.5) alpha = min(alpha, 0.01);
 
     if (ZenkaiBloomMode > 0.5) {
         // Solo el borde brilla: el interior oscuro nunca entra al bloom.

@@ -25,7 +25,6 @@ import static com.hmc.zenkai.feature.race.RaceTextureUtil.resourceExists;
  * transparente en el resto), derivada de la textura base del item, igual que _detail/_lines del
  * Namek. Si la máscara no existe, la pasada se omite (la base se ve sin teñir).
  * Sin tinte aplicado, usa el color por defecto del item (item.getDyeTintDefault()).
- * ⚠ API GeckoLib 4.8.4 — verificar: getCurrentStack() del GeoArmorRenderer (portador del stack).
  */
 public class DyedTintGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
 

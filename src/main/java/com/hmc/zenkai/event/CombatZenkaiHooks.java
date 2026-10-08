@@ -1,5 +1,7 @@
 package com.hmc.zenkai.event;
 
+import com.hmc.zenkai.feature.combat.DashServer;
+
 import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.content.entity.ai.BlockingMob;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
@@ -90,7 +92,7 @@ public class CombatZenkaiHooks {
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
         if (e.getSource().getEntity() instanceof ServerPlayer attacker
                 && PartyService.friendlyFireBlocked(attacker, sp)) return;
-        if (PhysicalCombatServer.hasIFrames(sp.getUUID())) return;
+        if (PhysicalCombatServer.hasIFrames(sp.getUUID()) || DashServer.hasIFrames(sp)) return;
         if (OverlayMetersSystem.tryDodge(sp)) e.setCanceled(true);
     }
 
@@ -103,7 +105,6 @@ public class CombatZenkaiHooks {
         // Va lo PRIMERO, antes incluso que los i-frames: no tiene sentido esquivar un /kill.
         // Sin esto, /kill entraba al pool como un golpe más y dejaba al jugador derribado en
         // vez de muerto — y a un inmortal ni eso.
-        // ⚠ API a verificar al compilar: DamageTypeTags.BYPASSES_INVULNERABILITY en 1.21.1.
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
 
         // FUEGO AMIGO DE PARTY: antes que cualquier otra cosa, incluidos los i-frames de
@@ -120,7 +121,7 @@ public class CombatZenkaiHooks {
 
         // I-frames: antes de tocar defensa o pools. Un dash esquiva de verdad.
         if (e.getEntity() instanceof ServerPlayer dodger
-                && PhysicalCombatServer.hasIFrames(dodger.getUUID())) {
+                && (PhysicalCombatServer.hasIFrames(dodger.getUUID()) || DashServer.hasIFrames(dodger))) {
             e.setNewDamage(0.0F);
             return;
         }
@@ -240,7 +241,6 @@ public class CombatZenkaiHooks {
         // Solo entra aquí la explosión donde el creeper ES el proyectil (direct == entity). Una
         // bola de ghast tiene direct = LargeFireball, así que cae en la rama indirecta de arriba
         // y se escala como proyectil, que es lo correcto.
-        // ⚠ API a verificar al compilar: DamageTypeTags.IS_EXPLOSION en 1.21.1.
         if (e.getSource().is(DamageTypeTags.IS_EXPLOSION)) {
             double full = ServerConfig.explosionReferenceDamage();
             double falloff = full <= 0.0

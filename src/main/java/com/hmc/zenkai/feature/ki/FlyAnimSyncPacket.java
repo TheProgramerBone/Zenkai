@@ -13,7 +13,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * ClientFlyAnimState y ClientZenkaiPalTick alimenta con él el mismo estado-máquina que usa el
  * jugador local (starts -> loops incluidos).
  */
-public record FlyAnimSyncPacket(int entityId, boolean flying, byte dir, boolean boosting)
+public record FlyAnimSyncPacket(int entityId, boolean flying, boolean boosting)
         implements CustomPacketPayload {
 
     public static final Type<FlyAnimSyncPacket> TYPE =
@@ -24,17 +24,16 @@ public record FlyAnimSyncPacket(int entityId, boolean flying, byte dir, boolean 
                     (buf, pkt) -> {
                         buf.writeVarInt(pkt.entityId());
                         buf.writeBoolean(pkt.flying());
-                        buf.writeByte(pkt.dir());
                         buf.writeBoolean(pkt.boosting());
                     },
                     buf -> new FlyAnimSyncPacket(buf.readVarInt(), buf.readBoolean(),
-                            buf.readByte(), buf.readBoolean()));
+                            buf.readBoolean()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(FlyAnimSyncPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() ->
-                ClientFlyAnimState.onSync(pkt.entityId(), pkt.flying(), pkt.dir(), pkt.boosting()));
+                ClientFlyAnimState.onSync(pkt.entityId(), pkt.flying(), pkt.boosting()));
     }
 }

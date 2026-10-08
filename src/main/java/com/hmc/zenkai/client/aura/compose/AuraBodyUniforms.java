@@ -90,6 +90,13 @@ public final class AuraBodyUniforms {
         apply(s, model, p, growth, core, edge, bloomPass, segs, camY, false);
     }
 
+    /** Cámara DENTRO del aura (primera persona propia): los .fsh de cuerpo dibujan entonces las caras
+     *  traseras, que son las únicas que se ven desde dentro. Reutiliza ZenkaiOrtho (valor 2). Se llama
+     *  DESPUÉS de apply(), que siempre reescribe el uniform. */
+    public static void setInside(ShaderInstance s, boolean inside) {
+        if (inside) set(uniforms(s), U.ORTHO, 2f);
+    }
+
     /** @param ortho true en la GUI (vista previa): proyección ortográfica, ver los .fsh. */
     public static void apply(ShaderInstance s, Matrix4f model, AuraBodyParams p, float growth,
                              float[] core, float[] edge, boolean bloomPass, float @Nullable [] segs, float camY,

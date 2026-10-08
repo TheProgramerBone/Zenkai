@@ -17,9 +17,6 @@ import software.bernie.geckolib.renderer.GeoItemRenderer;
  * traslaciones distintas para decir lo mismo, que se desincronizan a la primera.
  * Aquí se baja UNA vez, en unidades del modelo, y los display transforms del JSON quedan
  * siendo los de un bloque vanilla con la escala corregida por la altura extra.
- * ⚠ VERIFICAR en GeckoLib 4.8.4: firma de GeoItemRenderer#renderByItem(ItemStack,
- * ItemDisplayContext, PoseStack, MultiBufferSource, int, int). Si cambió, el cuerpo del
- * procedimiento sirve igual: lo único que hace es un translate antes de delegar.
  */
 public class ScouterBenchItemRenderer extends GeoItemRenderer<ScouterBenchBlockItem> {
 

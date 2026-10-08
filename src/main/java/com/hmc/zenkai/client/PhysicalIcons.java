@@ -66,7 +66,7 @@ public final class PhysicalIcons {
         RenderSystem.enableBlend();
         g.setColor(1f, 1f, 1f, 1f);
         g.blit(ATLAS, x, y, size, size, (float) (t.ordinal() * CELL), 0f,
-                CELL, CELL, ATLAS_W, ATLAS_H);   // ⚠ API: overload que escala
+                CELL, CELL, ATLAS_W, ATLAS_H);   // overload que escala
         g.setColor(1f, 1f, 1f, 1f);
         RenderSystem.disableBlend();
     }

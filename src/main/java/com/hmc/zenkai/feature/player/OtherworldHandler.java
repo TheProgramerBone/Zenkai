@@ -65,7 +65,7 @@ public final class OtherworldHandler {
             try {
                 // Se pudo haber ido en ese tick; teletransportar a un jugador desconectado deja
                 // basura en el nivel destino.
-                if (player.hasDisconnected()) return;                // ⚠ firma
+                if (player.hasDisconnected()) return;
                 // Recomprobamos: entre el evento y este tick alguien pudo revivirlo por comando.
                 if (!OtherworldManager.isInOtherworld(player)) return;
                 OtherworldManager.respawnIntoOtherworld(player);

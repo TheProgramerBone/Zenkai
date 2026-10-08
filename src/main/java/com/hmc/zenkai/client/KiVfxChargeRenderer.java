@@ -15,6 +15,7 @@ import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
 import com.hmc.zenkai.feature.technique.TechniqueAnimSet;
 import com.hmc.zenkai.feature.technique.TechniquePosition;
+import com.hmc.zenkai.client.render_and_model_entities.kivfx.KiVfxColors;
 import com.hmc.zenkai.registry.ModParticles;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -184,7 +185,11 @@ public final class KiVfxChargeRenderer {
             KiChargeClientState.rememberDrawn(p.getId(), origin, radius);
 
             if (KiVfxDebugMode.current().showsParticles()) {
-                spawnChargeArcs(p.getId(), origin, radius, c.rgb(), v.particles().chargeSparkRate(), now);
+                // Interior oscuro (Genki Dama malvada): rayos carmesí aunque el perfil no los tenga.
+                boolean dark = KiVfxColors.isDarkInterior(c.rgb2());
+                spawnChargeArcs(p.getId(), origin, radius, dark ? KiVfxColors.CRIMSON : c.rgb(),
+                        dark ? Math.max(v.particles().chargeSparkRate(), DARK_ARC_RATE)
+                                : v.particles().chargeSparkRate(), now);
             }
 
             if (fpOpacity > 0f) {
@@ -219,6 +224,9 @@ public final class KiVfxChargeRenderer {
             }
         }
     }
+
+    /** Arcos por tick de la bola de carga con interior oscuro (los de perfil mandan si son más). */
+    private static final float DARK_ARC_RATE = 1.2f;
 
     private static final Map<Integer, Long> lastArcTick = new HashMap<>();
 

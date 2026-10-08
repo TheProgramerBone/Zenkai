@@ -48,8 +48,6 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
         GeoLayerArmorItem.ColorChannel ch = animatable.getColorChannel();
         if (ch == GeoLayerArmorItem.ColorChannel.NONE) return Color.WHITE;
 
-        // ⚠ VERIFICAR en GeckoLib 4.8.4: accesor del portador de la armadura.
-        // En 4.x suele ser getCurrentEntity(); si no, mira el campo/getter equivalente del GeoArmorRenderer.
         Entity wearer = getCurrentEntity();
         if (!(wearer instanceof Player player)) return Color.WHITE;
 
@@ -60,8 +58,6 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
             default     -> 0xFFFFFF;
         };
 
-        // ⚠ VERIFICAR en GeckoLib 4.8.4: factory de Color a partir de un RGB opaco.
-        // Alternativas según versión: Color.ofOpaque(rgb), Color.ofRGB(rgb), new Color(0xFF000000 | rgb).
         return Color.ofOpaque(rgb);
     }
 

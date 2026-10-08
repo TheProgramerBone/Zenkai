@@ -35,8 +35,6 @@ public class KiWeaponRenderer extends GeoItemRenderer<KiWeaponItem> {
         DyedItemColor dyed = stack.get(DataComponents.DYED_COLOR);
         if (dyed == null) return Color.WHITE;   // sin color asignado todavía: gris tal cual
 
-        // ⚠ VERIFICAR en GeckoLib 4.8.4: Color.ofRGB(int). Si no existe, la alternativa es
-        // Color.ofOpaque(rgb) o construirlo por canales.
         return Color.ofOpaque(dyed.rgb());
     }
 }

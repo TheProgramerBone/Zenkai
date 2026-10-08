@@ -171,9 +171,9 @@ public final class AuraComposer {
             Runtime rt = RUNTIMES.get(id);
             boolean self = p == mc.player;
             boolean charging = composed && AuraClientState.isAuraActive(p);
-            // Ultra Instinct: el contorno está SIEMPRE encendido (en tercera persona) y cargar ki
-            // solo lo intensifica. En primera persona propia no se dibuja nunca, así que ahí no hay
-            // nada que mantener vivo.
+            // Ultra Instinct: el contorno está SIEMPRE encendido y cargar ki solo lo intensifica.
+            // En primera persona propia no se dibuja nunca (es FLOW), así que ahí no hay nada que
+            // mantener vivo.
             boolean alwaysOn = composed && alwaysOnAura(p)
                     && !(self && mc.options.getCameraType().isFirstPerson());
             boolean active = charging || alwaysOn;
@@ -478,8 +478,9 @@ public final class AuraComposer {
      */
     public static void submitBodyLayer(AuraFrame f, PoseStack pose, AuraBodyKind kind, AuraBodyParams params,
                                        float[] center, float[] edge, float alphaMul, float distScale) {
-        // El contorno que sigue la silueta del jugador (FLOW) no se dibuja nunca en primera persona
-        // propia: ahí queda pegado a los brazos y a la cámara.
+        // El contorno de silueta (FLOW: Ultra Instinct y toda forma que use ese sistema, incluido el
+        // aro) JAMÁS se dibuja en primera persona propia, sea cual sea la opción de % de aura
+        // (pedido explícito del usuario, 2026-10-07): queda pegado a los brazos y a la cámara.
         if (kind == AuraBodyKind.FLOW && f.selfFirstPerson) return;
         float alpha = Mth.clamp(f.growth * f.fpOpacity * params.get(Key.OPACITY) * f.burstAlpha * alphaMul, 0f, 1f);
         if (alpha <= 0.002f) return;
@@ -515,7 +516,7 @@ public final class AuraComposer {
             // se desplaza al volar. Con la de mundo, volar rápido barría el ruido por el contorno y
             // Ultra Instinct oscilaba mucho (2026-10-06).
             submitLayer(pose, fromCam, kind, params, growth, center, edge, alpha, lod, noBloom, segs,
-                    (float) (f.camY - f.y), !f.selfFirstPerson && params.get(Key.RIM_ONLY) < 2.5f);
+                    (float) (f.camY - f.y), !f.selfFirstPerson && params.get(Key.RIM_ONLY) < 2.5f, false);
             return;
         }
         pose.pushPose();
@@ -524,7 +525,7 @@ public final class AuraComposer {
         AuraTiltController.applyCurrent(pose, f.player.getId());
         pose.mulPose(Axis.YP.rotationDegrees(180f - f.bodyYaw));
         pose.scale(f.bodyScale, f.bodyScale, f.bodyScale);
-        submitLayer(pose, fromCam, kind, params, growth, center, edge, alpha, lod, noBloom, null, (float) f.camY, false);
+        submitLayer(pose, fromCam, kind, params, growth, center, edge, alpha, lod, noBloom, null, (float) f.camY, false, f.selfFirstPerson);
         pose.popPose();
     }
 
@@ -537,7 +538,8 @@ public final class AuraComposer {
      */
     private static void submitLayer(PoseStack pose, Vec3 fromCam, AuraBodyKind kind, AuraBodyParams params,
                                     float growth, float[] center, float[] edge, float alpha, int lod,
-                                    boolean noBloom, float @Nullable [] segs, float camY, boolean depthPrepass) {
+                                    boolean noBloom, float @Nullable [] segs, float camY, boolean depthPrepass,
+                                    boolean inside) {
         KiVfxFrameQueue.submitAura(pose, fromCam, (ps, buf) -> {
             boolean bloomPass = KiVfxFrameQueue.bloomPass();
             if (bloomPass && noBloom) return;
@@ -546,6 +548,7 @@ public final class AuraComposer {
             RenderType type = AuraComposeShaders.bodyType(kind);
             type.setupRenderState();
             AuraBodyUniforms.apply(sh, ps.last().pose(), params, growth, center, edge, bloomPass, segs, camY);
+            AuraBodyUniforms.setInside(sh, inside);
             RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
             if (kind == AuraBodyKind.FLOW) {
                 if (depthPrepass) {

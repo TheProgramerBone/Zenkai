@@ -146,7 +146,6 @@ public final class SenseKiWarnings {
         lastAnyWarn = now;
 
         assert mc.player != null && mc.level != null;
-        // ⚠ VERIFICAR 1.21.1: si SoundEvents.WARDEN_HEARTBEAT es Holder<SoundEvent>, añade .value()
         mc.level.playLocalSound(
                 mc.player.getX(), mc.player.getY(), mc.player.getZ(),
                 SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS,

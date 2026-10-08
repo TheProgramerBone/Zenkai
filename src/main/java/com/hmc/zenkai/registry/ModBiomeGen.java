@@ -78,7 +78,7 @@ public final class ModBiomeGen {
     private static Biome rockyWasteland(HolderGetter<PlacedFeature> features,
                                         HolderGetter<ConfiguredWorldCarver<?>> carvers) {
         MobSpawnSettings.Builder spawns = new MobSpawnSettings.Builder();
-        BiomeDefaultFeatures.commonSpawns(spawns);                       // ⚠ API
+        BiomeDefaultFeatures.commonSpawns(spawns);
 
         BiomeGenerationSettings.Builder gen = new BiomeGenerationSettings.Builder(features, carvers);
 

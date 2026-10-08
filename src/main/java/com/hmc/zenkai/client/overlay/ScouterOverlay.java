@@ -277,7 +277,7 @@ public final class ScouterOverlay {
         float r = ((tint >> 16) & 0xFF) / 255f;
         float gr = ((tint >> 8) & 0xFF) / 255f;
         float b = (tint & 0xFF) / 255f;
-        g.setColor(r, gr, b, 1f); // ⚠ GuiGraphics.setColor (existe en 1.21.1; se quitó en 1.21.2+)
+        g.setColor(r, gr, b, 1f); // GuiGraphics.setColor existe en 1.21.1; se quitó en 1.21.2+
         g.blit(FRAME_TINT_TEX, x, y, 0, 0, FRAME_W, FRAME_H, FRAME_W, FRAME_H);
         g.setColor(1f, 1f, 1f, 1f);
 

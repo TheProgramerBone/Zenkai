@@ -56,7 +56,9 @@ public final class KiTechnique {
 
     public String name()                  { return name; }
     public KiTechniqueType type()         { return type; }
-    public int rgb()                      { return rgb; }
+    /** En una técnica de maestro el color lo IMPONE su datapack (default_rgb), igual que el segundo
+     *  color: así una Genki Dama ya aprendida adopta un cambio de color sin que haya que olvidarla. */
+    public int rgb()                      { return isSignature() ? type.defaultRgb() : rgb; }
 
     /** Segundo color (interior) o -1. En una técnica de maestro lo IMPONE su datapack
      *  (default_rgb2), igual que animación y sonidos — ver el bloque de TÉCNICA DE MAESTRO. */

@@ -30,7 +30,7 @@ import java.util.function.Function;
  * quedarían técnicas que hacen daño y no se ven. {@link #available()} es la ÚNICA pregunta que
  * hace el renderer, y responde false salvo que el shader esté compilado y enlazado.
  *
- * ⚠ EL BUS IMPORTA. {@code RegisterShadersEvent} es un evento del MOD bus, y
+ * EL BUS IMPORTA. {@code RegisterShadersEvent} es un evento del MOD bus, y
  * {@code @EventBusSubscriber} usa el GAME bus por defecto: sin {@code bus = Bus.MOD} el listener
  * no se llama nunca, el shader se queda a null y cae al respaldo en silencio.
  *
@@ -247,7 +247,8 @@ public final class KiVfxRenderTypes extends RenderType {
         s.safeGetUniform("ZenkaiShape").set(sh.bandMode());
         s.safeGetUniform("ZenkaiBands").set(sh.bandCore(), sh.bandBorder(), sh.bandOutline());
         KiTechniqueType type = KiVfxProfile.typeOf(p);
-        float coreWhite = Mth.clamp(sh.coreWhite() * KiVfxTuning.get(KiVfxTuning.Param.CORE_WHITE_MUL, type), 0f, 1f);
+        float coreWhite = Mth.clamp(sh.coreWhite() * KiVfxTuning.get(KiVfxTuning.Param.CORE_WHITE_MUL, type)
+                * KiVfxColors.coreWhiteScale(), 0f, 1f);
         s.safeGetUniform("ZenkaiTone").set(coreWhite, sh.outlineDark(), sh.edgeFade());
         s.safeGetUniform("ZenkaiEmit").set(KiVfxTuning.get(KiVfxTuning.Param.EMIT_BODY, type),
                 KiVfxTuning.get(KiVfxTuning.Param.EMIT_CORE, type));

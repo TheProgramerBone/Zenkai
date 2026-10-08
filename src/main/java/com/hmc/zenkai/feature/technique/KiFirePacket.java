@@ -118,13 +118,55 @@ public record KiFirePacket(int slot, int chargeTicks, @Nullable Vec3 originHint)
             spawnAttached(sp, tech, damage, effect);
         } else {
             double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio;
-            for (int i = 0; i < Math.max(1, type.count()); i++) {
-                spawnProjectile(sp, tech, damage, effect, i);
+            if (type == KiTechniqueType.SPIRIT_BOMB) {
+                // Genki Dama viva: energía donada por las criaturas (SpiritBombGatherer) y un
+                // breve windup antes de que salga de las manos. El cobro, el cooldown y el
+                // estado RELEASING ya ocurrieron arriba; solo se retrasa la creación del proyectil.
+                damage *= 1.0 + SpiritBombGatherer.bonus(sp);
+                fireSpiritBomb(sp, tech, damage, effect);
+            } else {
+                for (int i = 0; i < Math.max(1, type.count()); i++) {
+                    spawnProjectile(sp, tech, damage, effect, i);
+                }
             }
         }
         ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
                 type.name().toLowerCase(java.util.Locale.ROOT), rawRatio);
         PlayerLifeCycle.syncIfServer(sp);
+    }
+
+    /**
+     * Secuencia de disparo de la Genki Dama: destello en la bola, espera (windup) y entonces
+     * sale el proyectil. Primer consumidor real de TechniqueSequence. La pista de origen del
+     * cliente solo vive durante handle(), así que se captura aquí y se restituye al crear el
+     * proyectil, ya con la secuencia resuelta. Si el tirador murió, cayó abatido o se desconectó
+     * durante la espera, no sale nada (el ki ya se cobró: soltar y morir no devuelve nada).
+     */
+    private static void fireSpiritBomb(ServerPlayer sp, KiTechnique tech, double damage,
+                                       TechniqueEffect effect) {
+        Vec3 hint = releaseHint;
+        var ctx = new com.hmc.zenkai.feature.technique.sequence.SequenceContext(
+                (net.minecraft.server.level.ServerLevel) sp.level(), sp.getEyePosition(),
+                tech.rgb(), sp);
+        var seq = new com.hmc.zenkai.feature.technique.sequence.TechniqueSequence(java.util.List.of(
+                new com.hmc.zenkai.feature.technique.sequence.steps.AnimationStep(() -> {
+                    if (ctx.level() != null) {
+                        ctx.level().sendParticles(net.minecraft.core.particles.ParticleTypes.FLASH,
+                                hint != null ? hint.x : sp.getX(),
+                                hint != null ? hint.y : sp.getEyeY() + 0.8,
+                                hint != null ? hint.z : sp.getZ(), 1, 0, 0, 0, 0);
+                    }
+                }, ServerConfig.spiritBombWindupTicks())));
+        seq.run(ctx).thenRun(() -> {
+            if (sp.isRemoved() || !sp.isAlive()
+                    || PlayerStatsAttachment.get(sp).flags().isDowned()) return;
+            releaseHint = hint;
+            try {
+                spawnProjectile(sp, tech, damage, effect, 0);
+            } finally {
+                releaseHint = null;
+            }
+        });
     }
 
     /**
@@ -134,10 +176,10 @@ public record KiFirePacket(int slot, int chargeTicks, @Nullable Vec3 originHint)
      * A carga máxima la fracción vale 1.0 y el cuerpo queda a cero. Que eso signifique quedar
      * ABATIDO y no muerto lo decide DownedDeathGuard interceptando LivingDeathEvent, igual que
      * con cualquier otra muerte: aquí no se duplica esa regla.
-     * ⚠ VERIFICAR EN JUEGO: mirrorHealth no toca la vida cuando queda <= 0, así que bajar el
-     *   cuerpo a cero puede NO disparar el evento de muerte. Por eso se fuerza con un hurt
-     *   masivo. Si el guardia no salta, dime y lo resuelvo por la vía que use tu pipeline.
-    /** @return puntos de cuerpo realmente gastados, que alimentan el daño del estallido. */
+     * ⚠ mirrorHealth no toca la vida cuando queda <= 0, así que bajar el cuerpo a cero puede
+     *   NO disparar el evento de muerte. Por eso se fuerza con un hurt masivo.
+     *
+     * @return puntos de cuerpo realmente gastados, que alimentan el daño del estallido. */
     private static int selfDamage(ServerPlayer sp, PlayerStatsAttachment att, double rawRatio) {
         int max = att.getBodyMax();
         int loss = Math.min(att.getBody(),
@@ -224,8 +266,9 @@ public record KiFirePacket(int slot, int chargeTicks, @Nullable Vec3 originHint)
 
         Vec3 dir = Vec3.directionFromRotation(sp.getXRot() + pitchJitter, sp.getYRot() + yawJitter);
 
-        proj.configure(sp, type, tech.rgb(), tech.size(), damage, 100, effect);
-        proj.setRgb2(tech.rgb2());
+        proj.configure(sp, type, EvilSpiritBomb.rgb(sp, tech), tech.size(), damage,
+                ServerConfig.kiProjectileLifeTicks(), effect);
+        proj.setRgb2(EvilSpiritBomb.rgb2(sp, tech));
         Vec3 spawn = spawnCenter(sp, tech, dir);
         // `spawn` es el CENTRO de la técnica; setPos coloca los PIES de la entidad. Antes se
         // pasaba el punto tal cual, así que el cuerpo nacía media altura por ENCIMA del punto de

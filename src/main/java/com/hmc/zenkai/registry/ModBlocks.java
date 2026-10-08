@@ -368,7 +368,7 @@ public class ModBlocks {
     // NAMEKIAN_SAND) — es la capa de superficie. HFIL_CINDER_SANDSTONE es la capa compactada
     // debajo (mismo rol que red_sandstone en la surface_rule), sólida, sin gravedad.
     public static final DeferredBlock<Block> HFIL_CINDER_SAND = registerBlock("hfil_cinder_sand",
-            ()-> new ColoredFallingBlock(new ColorRGBA(9013641), BlockBehaviour.Properties.of()   // ⚠ API
+            ()-> new ColoredFallingBlock(new ColorRGBA(9013641), BlockBehaviour.Properties.of()
                     .strength(0.5f)
                     .sound(SoundType.SAND)
                     .mapColor(MapColor.COLOR_GRAY)));
@@ -577,7 +577,7 @@ public class ModBlocks {
                     .mapColor(MapColor.SAND)));
 
     public static final DeferredBlock<Block> NAMEKIAN_SAND = registerBlock("namekian_sand",
-            ()-> new ColoredFallingBlock(new ColorRGBA(12109722), BlockBehaviour.Properties.of()   // ⚠ API
+            ()-> new ColoredFallingBlock(new ColorRGBA(12109722), BlockBehaviour.Properties.of()
                     .strength(0.5f)
                     .sound(SoundType.SAND)
                     .mapColor(MapColor.SAND)));
@@ -613,7 +613,7 @@ public class ModBlocks {
 
     /** Generador del sapling. La ConfiguredFeature se registra en la fase 2b; hasta
      *  entonces el hueso no hace nada, pero el bloque ya es válido. */
-    public static final TreeGrower AJISA_GROWER = new TreeGrower(              // ⚠ firma
+    public static final TreeGrower AJISA_GROWER = new TreeGrower(
             Zenkai.MOD_ID + ":ajisa",
             Optional.empty(),
             Optional.of(ModConfiguredFeatures.AJISA_TREE),
@@ -683,7 +683,7 @@ public class ModBlocks {
     // ── Vegetación de Namek ──────────────────────────────────────────────────
 
     public static final DeferredBlock<Block> AJISA_FLOWER = registerBlock("ajisa_flower",
-            ()-> new FlowerBlock(MobEffects.REGENERATION, 8, BlockBehaviour.Properties.of()   // ⚠ firma
+            ()-> new FlowerBlock(MobEffects.REGENERATION, 8, BlockBehaviour.Properties.of()
                     .noCollission()
                     .instabreak()
                     .sound(SoundType.GRASS)

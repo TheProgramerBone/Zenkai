@@ -26,7 +26,7 @@ procedimiento * LA RECURSIÓN ES SEGURA: la llamada de dentro pasa SURVIVAL, que
 public class ServerPlayerHardcoreMixin {
 
     /**
-     * ⚠ setGameMode devuelve boolean (true si el modo cambió de verdad), de ahí el
+     * setGameMode devuelve boolean (true si el modo cambió de verdad), de ahí el
      * CallbackInfoReturnable. Se devuelve el resultado de la llamada a SURVIVAL y no un true
      * fijo: quien pidió el cambio merece saber si ocurrió, y mentirle rompe a cualquier mod
      * que encadene lógica a ese retorno.

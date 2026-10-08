@@ -101,7 +101,7 @@ public final class RaceStatManager {
             Map<Race, Map<Style, double[]>> out = new EnumMap<>(Race.class);
             Map<Race, int[]> bases = new EnumMap<>(Race.class);
 
-            // ⚠ API: listResourceStacks devuelve el conjunto de capas del mismo path, de menor a
+            // listResourceStacks devuelve el conjunto de capas del mismo path, de menor a
             // mayor prioridad. listResources (sin Stacks) devolvería solo la de arriba.
             Map<ResourceLocation, List<Resource>> found =
                     rm.listResourceStacks(FOLDER, loc -> loc.getPath().endsWith(".json"));

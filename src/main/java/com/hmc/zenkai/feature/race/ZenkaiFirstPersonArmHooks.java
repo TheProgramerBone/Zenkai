@@ -34,11 +34,6 @@ import software.bernie.geckolib.util.Color;
  * Para razas con tinte multicapa (bodyTint: Namek, y futuras Majin/Arcosian) pinta además las
  * pasadas _detail y _lines sobre el brazo, igual que BodyTintGeoLayer hace en 3ª persona — si no,
  * el brazo se vería "hueco" donde la textura base es transparente.
- * ⚠ API de GeckoLib 4.8.4 a verificar al compilar:
- *   · GeoObjectRenderer (constructor + firma de render(...))
- *   · GeoModel.getBakedModel(...) / BakedGeoModel.topLevelBones()
- *   · GeoBone.setHidden(boolean) / setChildrenHidden(boolean)
- *   · Color.ofOpaque(rgb)  (mismo factory que GeoLayerArmorRenderer)
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class ZenkaiFirstPersonArmHooks {

@@ -604,7 +604,11 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
     private static long arcBudgetTick = Long.MIN_VALUE;
 
     private static void spawnArcs(KiProjectileEntity e, KiVfxProfile v, int rgb, boolean fxTick) {
-        if (v.particles().chargeSparkRate() <= 0f || !fxTick) return;
+        // Interior oscuro (Genki Dama malvada): rayos carmesí aunque el perfil no los tenga.
+        boolean dark = KiVfxColors.isDarkInterior(e.rgb2());
+        float baseRate = dark ? Math.max(v.particles().chargeSparkRate(), 1.0f) : v.particles().chargeSparkRate();
+        if (baseRate <= 0f || !fxTick) return;
+        if (dark) rgb = KiVfxColors.CRIMSON;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
 
@@ -615,7 +619,7 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         }
         if (arcBudget <= 0) return;
 
-        float rate = v.particles().chargeSparkRate() * (0.6f + 0.4f * e.size());
+        float rate = baseRate * (0.6f + 0.4f * e.size());
         int count = (int) rate;
         if (mc.level.random.nextFloat() < rate - count) count++;
         count = Math.min(count, arcBudget);

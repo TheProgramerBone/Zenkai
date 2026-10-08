@@ -44,7 +44,7 @@ public final class ModDataMaps {
             DataMapType.builder(
                     ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "model_credits"),
                     Registries.ITEM,
-                    ModelCredit.CODEC).synced(ModelCredit.CODEC, false).build();   // ⚠ API
+                    ModelCredit.CODEC).synced(ModelCredit.CODEC, false).build();
 
     @SubscribeEvent
     public static void onRegister(RegisterDataMapTypesEvent event) {

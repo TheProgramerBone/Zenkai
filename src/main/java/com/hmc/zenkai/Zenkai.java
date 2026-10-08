@@ -178,8 +178,6 @@ public class Zenkai {
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         // El banco de scouter acepta FE por las seis caras. No hay lado privilegiado: es un
         // consumidor, y obligar a conectar por una cara concreta solo estorba al construir.
-        // ⚠ Verificar en NeoForge 1.21.1: Capabilities.EnergyStorage.BLOCK y la firma
-        // registerBlockEntity(cap, blockEntityType, (be, side) -> handler).
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.SCOUTER_BENCH.get(),
@@ -384,11 +382,13 @@ public class Zenkai {
         }
 
         @SubscribeEvent
-        public static void registerParticleProviders(RegisterParticleProvidersEvent event) { // ⚠
+        public static void registerParticleProviders(RegisterParticleProvidersEvent event) {
             event.registerSpriteSet(ModParticles.KI_IMPACT.get(),
                     KiImpactParticle.Provider::new);
             event.registerSpriteSet(ModParticles.KI_SPARK.get(),
                     KiSparkParticle.Provider::new);
+            event.registerSpriteSet(ModParticles.ENERGY_MOTE.get(),
+                    com.hmc.zenkai.client.particle.EnergyMoteParticle.Provider::new);
             // El Black Flash no necesita clase propia: KiImpactParticle ya hace exactamente
             // lo que pide (quieto, 6 frames por edad, tinte de las opciones). Solo cambian
             // el sprite set, el color y la escala.

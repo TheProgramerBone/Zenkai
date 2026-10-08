@@ -91,8 +91,7 @@ public record ScouterRepairCost(ScouterUpgradeCost cost, int anvilLevels) {
         return new ScouterRepairCost(cost, buf.readVarInt());
     }
 
-    /** Primer ítem que representa cada material, para pintar iconos sin repetir lógica.
-     *  ⚠ VERIFICAR 1.21.1: BuiltInRegistries.ITEM.getTag(TagKey) dentro de displayItems(). */
+    /** Primer ítem que representa cada material, para pintar iconos sin repetir lógica. */
     public static Item iconOf(ScouterUpgradeCost.Material m) {
         List<Item> items = m.displayItems();
         return items.isEmpty() ? Items.BARRIER : items.getFirst();

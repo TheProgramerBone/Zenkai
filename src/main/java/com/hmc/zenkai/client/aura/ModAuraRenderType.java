@@ -40,13 +40,13 @@ public final class ModAuraRenderType extends RenderType {
                     DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256,
                     false, true,
                     RenderType.CompositeState.builder()
-                            .setShaderState(RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE_SHADER) // ⚠
+                            .setShaderState(RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE_SHADER)
                             .setTextureState(new TextureStateShard(tex, true, true))      // ⚠ blur=true: magnificación bilineal
-                            .setTransparencyState(TRANSLUCENT_TRANSPARENCY)                // ⚠
-                            .setCullState(NO_CULL)                                         // ⚠
-                            .setLightmapState(LIGHTMAP)                                    // ⚠
-                            .setOverlayState(OVERLAY)                                      // ⚠
-                            .setDepthTestState(LEQUAL_DEPTH_TEST)                          // ⚠
+                            .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                            .setCullState(NO_CULL)
+                            .setLightmapState(LIGHTMAP)
+                            .setOverlayState(OVERLAY)
+                            .setDepthTestState(LEQUAL_DEPTH_TEST)
                             .setWriteMaskState(COLOR_WRITE)                                // ⚠ no escribe profundidad
                             .createCompositeState(false)));
 

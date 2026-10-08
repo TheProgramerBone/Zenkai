@@ -15,10 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *    patrón que lastFlyBoostSent).
  * La DIRECCIÓN desapareció con el rediseño del vuelo: hay una sola postura de crucero y una
  * de boost, y la orientación la calcula el código a partir de la mirada y el movimiento real.
- * Sincronizar una dirección discreta ya no aporta nada.
- * DEUDA: FlyAnimPacket / FlyAnimSyncPacket / FlyAnimServerState siguen llevando el byte de
- * dirección, ahora siempre 0. Se mantiene para no tocar tres archivos de red por un campo
- * muerto; limpieza pendiente en un diff aparte.
+ * Sincronizar una dirección discreta ya no aporta nada, así que los packets no la llevan.
  */
 public final class ClientFlyAnimState {
     private ClientFlyAnimState() {}
@@ -36,8 +33,8 @@ public final class ClientFlyAnimState {
         return REMOTES.get(entityId);
     }
 
-    /** Desde FlyAnimSyncPacket. El byte de dirección se ignora (ver DEUDA arriba). */
-    public static void onSync(int entityId, boolean flying, byte dir, boolean boosting) {
+    /** Desde FlyAnimSyncPacket. */
+    public static void onSync(int entityId, boolean flying, boolean boosting) {
         if (!flying) {
             REMOTES.remove(entityId);
             return;
@@ -50,7 +47,7 @@ public final class ClientFlyAnimState {
         if (flying == lastFlying && boosting == lastBoosting) return;
         lastFlying = flying;
         lastBoosting = boosting;
-        PacketDistributor.sendToServer(new FlyAnimPacket(flying, (byte) 0, boosting));
+        PacketDistributor.sendToServer(new FlyAnimPacket(flying, boosting));
     }
 
     /** Poda de entidades que ya no existen (llamar del tick cliente, junto a la de STATES). */

@@ -36,9 +36,7 @@ public final class VanillaMitigation {
         double w = ServerConfig.vanillaArmorWeight();
         if (w <= 0.0) return 1.0;
 
-        // ⚠ API a verificar al compilar: LivingDamageEvent.Pre#getContainer() y
-        // DamageContainer#getOriginalDamage() en NeoForge 1.21.1. Si Pre expone
-        // getOriginalDamage() directamente, usa esa y quita el getContainer().
+        // El daño original sale del DamageContainer de LivingDamageEvent.Pre.
         double original = e.getContainer().getOriginalDamage();
         if (original <= 1.0e-6) return 1.0;
 
@@ -52,7 +50,7 @@ public final class VanillaMitigation {
     /** Daño vanilla ANTES de cualquier reducción. Es la referencia del arco para Ki Infuse:
      *  el daño post-armadura no sirve, porque la armadura se cobra aparte en armorMultiplier. */
     public static double originalDamage(LivingDamageEvent.Pre e) {
-        return e.getContainer().getOriginalDamage();   // ⚠ misma API que arriba
+        return e.getContainer().getOriginalDamage();
     }
 
     // =====================================================================

@@ -29,7 +29,6 @@ import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
  * Cada máscara en gris claro en sus zonas teñibles y transparente en el resto.
  * Si una máscara no existe, esa pasada se omite.
  *
- * ⚠ API GeckoLib 4.8.4 — verificar: render(...), getCurrentEntity(), reRender(...), color int ARGB.
  */
 public class BodyTintGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
 

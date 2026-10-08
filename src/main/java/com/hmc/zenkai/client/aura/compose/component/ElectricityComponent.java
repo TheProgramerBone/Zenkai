@@ -269,7 +269,8 @@ public final class ElectricityComponent implements AuraComponent {
 
     @Override
     public void submit(AuraFrame f, PoseStack pose) {
-        if (count == 0 || f.selfFirstPerson) return;
+        if (count == 0) return;
+        final float fp = f.fpOpacity; // primera persona propia: la opción de % de aura (1 para los demás)
         final float ox = (float) (f.x - f.camX), oy = (float) (f.y - f.camY), oz = (float) (f.z - f.camZ);
         final boolean bloomOk = f.bloomAllowed;
         KiVfxFrameQueue.submitAura(pose, new Vec3(ox, oy, oz), (ps, buf) -> {
@@ -282,7 +283,7 @@ public final class ElectricityComponent implements AuraComponent {
             for (int i = 0; i < count; i++) {
                 // Parpadeo del rayo de anime: sale a pleno y se apaga en la última mitad de su vida.
                 float t = age[i] / life[i];
-                float a = cfg.alpha() * weight * (t < 0.5f ? 1f : 1f - (t - 0.5f) * 2f);
+                float a = cfg.alpha() * weight * fp * (t < 0.5f ? 1f : 1f - (t - 0.5f) * 2f);
                 if (a <= 0.02f) continue;
                 Ribbons.strip(vc, m, main[i], MAIN_PTS, ox, oy, oz, w * 3.2f, cr, cg, cb, a * 0.45f);
                 Ribbons.strip(vc, m, main[i], MAIN_PTS, ox, oy, oz, w, kr, kg, kb, a);

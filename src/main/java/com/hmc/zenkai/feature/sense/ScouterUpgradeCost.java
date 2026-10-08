@@ -46,8 +46,7 @@ public record ScouterUpgradeCost(List<Material> materials, int energy) {
             return n;
         }
 
-        /** Items que representan este material, para el icono/nombre del tooltip.
-         *  ⚠ VERIFICAR en 1.21.1: BuiltInRegistries.ITEM.getTag(TagKey) -> Optional<HolderSet.Named<Item>>. */
+        /** Items que representan este material, para el icono/nombre del tooltip. */
         public List<Item> displayItems() {
             if (!isTag) {
                 Item it = BuiltInRegistries.ITEM.get(id);

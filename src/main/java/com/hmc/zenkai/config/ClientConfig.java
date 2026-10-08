@@ -290,7 +290,7 @@ public final class ClientConfig {
 
     public static void setScouterLastTint(int rgb) {
         SCOUTER_TINT.set(rgb & 0xFFFFFF);
-        SPEC.save();   // ⚠ API
+        SPEC.save();
     }
 
     /** Guarda la colocación COMPLETA de una vez: es la única vía de escritura de estos cuatro
@@ -302,7 +302,7 @@ public final class ClientConfig {
         HUD_OFFSET_X.set(offsetX);
         HUD_OFFSET_Y.set(offsetY);
         HUD_AVOID_HOTBAR.set(avoidHotbar);
-        SPEC.save();   // ⚠ API
+        SPEC.save();
     }
 
     /** Lista inmutable para la pantalla. */
@@ -327,6 +327,6 @@ public final class ClientConfig {
         MEDITATION_LANE_KEY_1.set(lane1);
         MEDITATION_LANE_KEY_2.set(lane2);
         MEDITATION_LANE_KEY_3.set(lane3);
-        SPEC.save();   // ⚠ API
+        SPEC.save();
     }
 }

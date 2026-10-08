@@ -283,6 +283,20 @@ public final class ZenkaiPalAnimations {
         ZenkaiTransitions.play(c, PHYS_ANIMS[t.ordinal()], ZenkaiTransitions.PHYS);
     }
 
+    // ── Dash y Paso rápido: un clip por dirección (0 adelante, 1 atrás, 2 izquierda, 3 derecha,
+    //    igual que DashServer.DIR_*). Se generan con tools/gen_dash_animations.py. ──
+    private static final String[] DASH_DIRS = {"forward", "back", "left", "right"};
+
+    public static void playDash(AbstractClientPlayer player, int dir, boolean step) {
+        if (dir < 0 || dir >= DASH_DIRS.length) return;
+        var c = (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
+        // Fundido de 2 ticks para el dash y de 1 para el Paso rápido, que tiene que ser más brusco.
+        ZenkaiTransitions.play(c, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                        "zenkai." + (step ? "step_" : "dash_") + DASH_DIRS[dir]),
+                step ? 1 : ZenkaiTransitions.PHYS);
+    }
+
     // ── Esquive automático de Ultra Instinct: dos clips one-shot, el servidor sortea cuál ──
     private static final ResourceLocation[] UI_DODGE_ANIMS = {
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_1"),

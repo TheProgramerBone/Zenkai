@@ -39,6 +39,12 @@ public final class TechniqueIcons {
     private static boolean atlasExists = false;
     private static long nextCheckMs = 0L;
 
+    /** Color del icono: el de la técnica para el jugador LOCAL (la Genki Dama de un malvado es otra). */
+    private static int rgbOf(KiTechnique t) {
+        var p = net.minecraft.client.Minecraft.getInstance().player;
+        return p == null ? t.rgb() : com.hmc.zenkai.feature.technique.EvilSpiritBomb.rgb(p, t);
+    }
+
     public static void draw(GuiGraphics g, int x, int y, KiTechnique t) {
         draw(g, x, y, CELL, t);
     }
@@ -50,7 +56,7 @@ public final class TechniqueIcons {
         // completo, incluido el marco de efecto — una técnica con textura propia dibuja su
         // propia identidad entera, no se mezcla con el lenguaje visual del atlas base.
         String custom = t.type().icon();
-        if (!custom.isEmpty() && drawCustom(g, x, y, size, custom, t.rgb())) return;
+        if (!custom.isEmpty() && drawCustom(g, x, y, size, custom, rgbOf(t))) return;
 
         long now = System.currentTimeMillis();
         if (now >= nextCheckMs) {
@@ -64,7 +70,7 @@ public final class TechniqueIcons {
             if (t.effect().borderRgb() != 0) {
                 g.fill(x, y, x + size, y + size, t.effect().borderRgb());
             }
-            g.fill(x + m3, y + m3, x + size - m3, y + size - m3, 0xFF000000 | t.rgb());
+            g.fill(x + m3, y + m3, x + size - m3, y + size - m3, 0xFF000000 | rgbOf(t));
             return;
         }
 
@@ -85,7 +91,7 @@ public final class TechniqueIcons {
         int u = t.type().ordinal() * CELL;
 
         // 1. CAPA BASE: Se tiñe con el color RGB de la técnica (Fila 0, Y = 0)
-        int rgb = t.rgb();
+        int rgb = rgbOf(t);
         g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
         blit(g, x, y, size, u, 0);
 

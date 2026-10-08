@@ -30,9 +30,7 @@ import java.util.Optional;
  *      [8,3,16], cuyo techo está en y=18 —, más un pelo de aire.
  * El bone "detalles" NO sirve para esto: su pivote es [0,0,0], el mismo que el del modelo
  * entero, así que anclar ahí es anclar al suelo del bloque.
- * ⚠ VERIFICAR en GeckoLib 4.8.4: GeoModel#getBone(String) -> Optional<GeoBone> y
- * GeoBone#getPivotX/Y/Z() en unidades de modelo. Si no compila, se borran las cuatro líneas
- * del bloque `anchor.isPresent()` y queda solo la constante derivada, que es lo que se usa hoy
+ * El bloque `anchor.isPresent()` lee el pivote del bone; hoy se usa la constante derivada
  * porque ese bone todavía no existe.
  */
 public class ScouterBenchRenderer extends GeoBlockRenderer<ScouterBenchBlockEntity> {

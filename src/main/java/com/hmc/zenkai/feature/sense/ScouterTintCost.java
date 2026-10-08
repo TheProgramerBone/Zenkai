@@ -93,7 +93,6 @@ public record ScouterTintCost(int energy, int minMaterials, int maxMaterials, fl
         return new Quote(dye, count, energy);
     }
 
-    /** ⚠ VERIFICAR 1.21.1: DyeColor#getTextureDiffuseColor() -> int 0xRRGGBB. */
     public static DyeColor nearestDye(int rgb) {
         int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
         DyeColor best = DyeColor.WHITE;

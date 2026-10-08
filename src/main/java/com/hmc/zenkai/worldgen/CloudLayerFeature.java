@@ -1,6 +1,6 @@
 package com.hmc.zenkai.worldgen;
 
-import com.hmc.zenkai.registry.ModBlocks;   // ⚠ ajusta al paquete real de tu ModBlocks
+import com.hmc.zenkai.registry.ModBlocks;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;

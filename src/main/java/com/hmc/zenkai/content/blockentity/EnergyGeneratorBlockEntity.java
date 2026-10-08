@@ -228,7 +228,7 @@ public class EnergyGeneratorBlockEntity extends BlockEntity implements MenuProvi
         for (Direction dir : Direction.values()) {
             if (energy.getEnergyStored() <= 0) return;
 
-            // ⚠ API a verificar: getCapability(cap, pos, side) en NeoForge 1.21.1. El 'side'
+            // getCapability(cap, pos, side): el 'side'
             // es la cara POR LA QUE ENTRA al vecino, o sea la opuesta a la que sale de aquí.
             IEnergyStorage target = level.getCapability(
                     Capabilities.EnergyStorage.BLOCK, pos.relative(dir), dir.getOpposite());

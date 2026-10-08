@@ -132,7 +132,7 @@ public final class AuraWispRenderer {
         VertexConsumer vc = buffers.getBuffer(
                 ModAuraRenderType.energy(AuraSkirtRenderer.sheet(frame)));
 
-        // ⚠ Signo del billboard cilíndrico en 1.21.1: heredado del código anterior,
+        // Signo del billboard cilíndrico en 1.21.1: heredado del código anterior,
         // sigue sin verificarse en juego.
         float yaw = -cam.getYRot();
 

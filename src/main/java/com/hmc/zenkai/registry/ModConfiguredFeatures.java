@@ -290,14 +290,14 @@ public class ModConfiguredFeatures {
         // ── Namek: vegetación ────────────────────────────────────────────────
         register(context, AJISA_TREE, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
                 BlockStateProvider.simple(ModBlocks.AJISA_LOG.get()),
-                new CherryTrunkPlacer(                                        // ⚠ firma
+                new CherryTrunkPlacer(
                         7, 1, 0,
                         UniformInt.of(1, 3),      // nº de ramas
                         UniformInt.of(2, 4),      // longitud horizontal de cada rama
                         UniformInt.of(-4, -3),    // dónde arrancan, contando desde la copa
                         UniformInt.of(-1, 0)),    // dónde terminan
                 BlockStateProvider.simple(ModBlocks.AJISA_LEAVES.get()),
-                new CherryFoliagePlacer(                                      // ⚠ firma
+                new CherryFoliagePlacer(
                         ConstantInt.of(4),        // radio
                         ConstantInt.of(0),        // offset
                         ConstantInt.of(5),        // altura de la copa
@@ -311,7 +311,7 @@ public class ModConfiguredFeatures {
 
         // Flor de ajisa: mata de hasta 32 intentos, como las flores de vainilla.
         register(context, AJISA_FLOWER_PATCH, Feature.FLOWER,
-                FeatureUtils.simpleRandomPatchConfiguration(32,               // ⚠ helper
+                FeatureUtils.simpleRandomPatchConfiguration(32,
                         PlacementUtils.onlyWhenEmpty(Feature.SIMPLE_BLOCK,
                                 new SimpleBlockConfiguration(
                                         BlockStateProvider.simple(ModBlocks.AJISA_FLOWER.get())))));

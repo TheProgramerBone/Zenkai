@@ -153,12 +153,12 @@ public final class FormSystem {
     /** Escala de la forma (render + hitbox + ojos) vía minecraft:generic.scale.
      *  Sin forma cae a la escala base de la RAZA. Syncable: los clientes la ven sin packet. */
     private static void applyFormScale(Player p, Race race, FormDef def) {
-        AttributeInstance scaleAttr = p.getAttribute(Attributes.SCALE); // ⚠
+        AttributeInstance scaleAttr = p.getAttribute(Attributes.SCALE);
         if (scaleAttr == null) return;
         double base = (race == null) ? 1.0 : race.baseScale();
         double target = (def != null && def.scale() > 0.0) ? def.scale() : base;
         double amount = target - 1.0;
-        AttributeModifier current = scaleAttr.getModifier(FORM_SCALE_MOD_ID); // ⚠
+        AttributeModifier current = scaleAttr.getModifier(FORM_SCALE_MOD_ID);
         if (amount == 0.0) {
             if (current != null) scaleAttr.removeModifier(FORM_SCALE_MOD_ID);
             return;
@@ -166,7 +166,7 @@ public final class FormSystem {
         if (current == null || current.amount() != amount) {
             scaleAttr.removeModifier(FORM_SCALE_MOD_ID);
             scaleAttr.addTransientModifier(new AttributeModifier(
-                    FORM_SCALE_MOD_ID, amount, AttributeModifier.Operation.ADD_VALUE)); // ⚠
+                    FORM_SCALE_MOD_ID, amount, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 }

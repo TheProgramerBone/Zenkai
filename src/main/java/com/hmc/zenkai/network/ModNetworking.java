@@ -12,6 +12,7 @@ import com.hmc.zenkai.feature.aura.TurboSyncPacket;
 import com.hmc.zenkai.feature.combat.BlockingPacket;
 import com.hmc.zenkai.feature.combat.BlockingSyncPacket;
 import com.hmc.zenkai.feature.combat.CombatModePacket;
+import com.hmc.zenkai.feature.combat.DashPacket;
 import com.hmc.zenkai.feature.combat.CombatModeSyncPacket;
 import com.hmc.zenkai.feature.forms.FormSyncPacket;
 import com.hmc.zenkai.feature.ki.*;
@@ -330,6 +331,11 @@ public class ModNetworking {
                 CombatModePacket.STREAM_CODEC,
                 CombatModePacket::handle);
 
+        registrar.playToServer(
+                DashPacket.TYPE,
+                DashPacket.STREAM_CODEC,
+                DashPacket::handle);
+
         registrar.playToClient(
                 CombatModeSyncPacket.TYPE,
                 CombatModeSyncPacket.STREAM_CODEC,
@@ -539,6 +545,11 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket.TYPE,
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.teleport.InstantTransmissionSyncPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.combat.DashAnimPacket.TYPE,
+                com.hmc.zenkai.feature.combat.DashAnimPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.DashAnimPacket::handle);
 
         registrar.playToClient(
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.TYPE,

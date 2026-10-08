@@ -36,9 +36,6 @@ import static com.zigythebird.playeranimcore.api.firstPerson.FirstPersonMode.isF
  *      y no depende de que PlayerModelHideMixin llegue a cancelar el renderToBuffer.
  * Cualquier excepción futura (p. ej. una representación especial de transformación) debe ser
  * una capa explícita nueva, NO una condición escondida aquí.
- * ⚠ A verificar al compilar:
- *   · FirstPersonMode.isFirstPersonPass()
- *   · e.getRenderer().getModel() devuelve el PlayerModel (M del LivingEntityRenderer).
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class ZenkaiFirstPersonBody {

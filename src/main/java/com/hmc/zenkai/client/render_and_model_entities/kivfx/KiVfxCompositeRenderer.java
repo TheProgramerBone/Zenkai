@@ -129,7 +129,7 @@ public final class KiVfxCompositeRenderer {
         // más pequeña lavada a blanco por coreWhite. El paso de una a otra es el degradado
         // caliente → blanco que en las referencias marca "aquí está lo más caliente".
         float white = Math.min(1f, p.shell().coreWhite()
-                * KiVfxTuning.get(KiVfxTuning.Param.CORE_WHITE_MUL, p));
+                * KiVfxTuning.get(KiVfxTuning.Param.CORE_WHITE_MUL, p) * KiVfxColors.coreWhiteScale());
         float[] h = hot(r, g, b);
         float wr = h[0] + (1f - h[0]) * white;
         float wg = h[1] + (1f - h[1]) * white;
@@ -194,7 +194,7 @@ public final class KiVfxCompositeRenderer {
 
         if (dbg.showsCore() && p.hasExplicitCore()) {
             float white = Math.min(1f, p.shell().coreWhite()
-                    * KiVfxTuning.get(KiVfxTuning.Param.CORE_WHITE_MUL, p));
+                    * KiVfxTuning.get(KiVfxTuning.Param.CORE_WHITE_MUL, p) * KiVfxColors.coreWhiteScale());
             float[] h = hot(r, g, b);
             float a = coreAlpha(p, alphaMul);
             float cr = radius * p.core().scale();

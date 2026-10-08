@@ -36,7 +36,7 @@ public final class TechniqueDump {
 
     public static final String PACK_NAME = "zenkai_overrides";
 
-    /** ⚠ pack_format de DATOS en 1.21.1. Si el pack sale marcado como incompatible, es esto. */
+    /** pack_format de DATOS en 1.21.1. Si el pack sale marcado como incompatible, es esto. */
     private static final int PACK_FORMAT = 48;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

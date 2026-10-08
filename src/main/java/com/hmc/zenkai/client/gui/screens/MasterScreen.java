@@ -634,7 +634,7 @@ public class MasterScreen extends Screen {
         int cyTop = top + PADDING;
         int cyBot = top + BG_H - PADDING;
 
-        InventoryScreen.renderEntityInInventoryFollowsMouse(          // ⚠ firma
+        InventoryScreen.renderEntityInInventoryFollowsMouse(
                 g,
                 left + PADDING / 2, cyTop, left + PORTRAIT_W, cyBot,
                 50,                    // escala; ajústala al alto real del geo

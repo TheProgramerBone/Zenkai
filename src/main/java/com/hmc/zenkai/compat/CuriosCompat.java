@@ -30,9 +30,8 @@ public final class CuriosCompat {
     /**
      * Handler del hueco, para engancharle un Slot de menú. Vacío si Curios no está o si la
      * entidad no tiene ese hueco.
-     * ⚠ API a verificar: ICurioStacksHandler.getStacks() devuelve IDynamicStackHandler, que
-     * extiende IItemHandlerModifiable. Si en tu versión de Curios cambió, es lo único que hay
-     * que tocar y solo aquí dentro.
+     * ICurioStacksHandler.getStacks() devuelve IDynamicStackHandler (extiende
+     * IItemHandlerModifiable); si Curios lo cambia, solo hay que tocar esta función.
      */
     public static Optional<IItemHandlerModifiable> handler(LivingEntity entity, String slotId) {
         if (!LOADED || entity == null) return Optional.empty();

@@ -70,7 +70,7 @@ public enum TechniquePosition {
         Vec3 eye = feet.add(0.0, p.getEyeHeight(), 0.0);
         Vec3 lookN = look.normalize();
         Vec3 right = new Vec3(-lookN.z, 0.0, lookN.x).normalize();
-        double scale = p.getScale(); // ⚠ acompaña a la escala de la forma
+        double scale = p.getScale(); // acompaña a la escala de la forma
 
         return eye.add(right.scale(side * scale))
                 .add(0.0, up * scale, 0.0)

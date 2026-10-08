@@ -91,7 +91,7 @@ public final class SenseKiOverlayRenderer {
 
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
 
-        // ⚠ VERIFICAR 1.21.1: textSeeThrough(tex) es el RenderType texturizado SIN test de
+        // textSeeThrough(tex) es el RenderType texturizado SIN test de
         // profundidad (es el que usan los nametags). Nos da "a través de paredes" y color por
         // vértice sin inventar un RenderType propio, que dejaría de dibujarse con Iris/Oculus.
         RenderType rt = RenderType.textSeeThrough(FLAME_TEX);

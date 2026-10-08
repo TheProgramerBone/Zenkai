@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * porque no hay forma limpia de interceptar el ratón sin pelear con él: cualquier corrección
  * hecha fuera de este punto se suma al giro del jugador en vez de sustituirlo, y eso es
  * justo lo que producía el mareo.
- * ⚠ El descriptor de turnPlayer(D) puede variar entre mappings de NeoForge 1.21.1. Si el
+ * El descriptor de turnPlayer(D) puede variar entre mappings de NeoForge 1.21.1. Si el
  * mixin no aplica, la alternativa SIN mixin es NeoForge CalculatePlayerTurnEvent.
  */
 @Mixin(MouseHandler.class)

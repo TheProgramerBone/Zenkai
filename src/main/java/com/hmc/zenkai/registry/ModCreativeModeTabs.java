@@ -48,7 +48,7 @@ public class ModCreativeModeTabs {
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("creativetab.zenkai"))
                     .icon(() -> new ItemStack(ModItems.SENZU_BEAN.get()))
-                    // ⚠ API a verificar al compilar: withSearchBar() en 1.21.1. La caja se
+                    // withSearchBar(): la caja se
                     // dibuja sobre el fondo estándar; si se solapa con la primera fila hará
                     // falta withBackgroundLocation() y una textura propia.
                     .withSearchBar()

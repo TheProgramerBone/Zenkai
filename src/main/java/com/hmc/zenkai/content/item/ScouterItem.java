@@ -47,8 +47,6 @@ public class ScouterItem extends GeoLayerArmorItem {
     /**
      * Solo cuando está roto. En un scouter sano esta información es ruido; en uno roto es la
      * única pista de que la rotura tiene arreglo y de que hay dos formas de conseguirlo.
-     * ⚠ VERIFICAR 1.21.1: firma appendHoverText(ItemStack, TooltipContext, List<Component>,
-     * TooltipFlag).
      */
     @Override
     public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext ctx,

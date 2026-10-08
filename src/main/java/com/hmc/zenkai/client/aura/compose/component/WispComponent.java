@@ -191,8 +191,9 @@ public final class WispComponent implements AuraComponent {
 
     @Override
     public void submit(AuraFrame f, PoseStack pose) {
-        if (count == 0 || f.selfFirstPerson) return;
+        if (count == 0) return;
         final double camX = f.camX, camY = f.camY, camZ = f.camZ;
+        final float fp = f.fpOpacity; // primera persona propia: la opción de % de aura (1 para los demás)
         final boolean bloomOk = f.bloomAllowed;
         KiVfxFrameQueue.submitAura(pose, new Vec3(f.x - camX, f.y - camY, f.z - camZ), (ps, buf) -> {
             boolean bloom = KiVfxFrameQueue.bloomPass();
@@ -204,7 +205,7 @@ public final class WispComponent implements AuraComponent {
                 int n = points[i];
                 if (n < 2) continue;
                 float t = age[i] / life[i];
-                float a = cfg.alpha() * weight * Math.min(t / 0.15f, 1f) * Math.min((1f - t) / 0.4f, 1f);
+                float a = cfg.alpha() * weight * fp * Math.min(t / 0.15f, 1f) * Math.min((1f - t) / 0.4f, 1f);
                 if (a <= 0.02f) continue;
                 double[] tr = trail[i];
                 for (int k = 0; k < n - 1; k++) {

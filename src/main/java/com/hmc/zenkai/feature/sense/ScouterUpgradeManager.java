@@ -150,9 +150,6 @@ public final class ScouterUpgradeManager {
 
         // ── Reparación ───────────────────────────────────────────────────────
 
-        /**
-         * ⚠ VERIFICAR 1.21.1: ResourceManager#getResource(ResourceLocation) -> Optional&lt;Resource&gt;.
-         */
         private ScouterRepairCost prepareRepair(ResourceManager rm) {
             ResourceLocation file =
                     ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, REPAIR_FILE);

@@ -300,6 +300,6 @@ public class KiAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
 
     /** triggerAnim viene de GeoEntity, garantizado por el bound del genérico. */
     private void triggerSafe(String anim) {
-        mob.triggerAnim("KiAttack", anim); // ⚠ (controllerName, animName) GeckoLib 4.x
+        mob.triggerAnim("KiAttack", anim);
     }
 }

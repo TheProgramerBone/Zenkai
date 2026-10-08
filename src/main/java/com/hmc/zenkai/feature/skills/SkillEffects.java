@@ -23,6 +23,8 @@ public final class SkillEffects {
     public static final String KI_INFUSE = "ki_infuse";
     public static final String KI_FIST   = "ki_fist";
     public static final String INSTANT_TRANSMISSION = "instant_transmission";
+    /** Paso rápido: habilidad comprable (Korin) que, con su interruptor de la rueda, sustituye al dash. */
+    public static final String QUICK_STEP = "quick_step";
     /** No es una habilidad comprable: se desbloquea por tener Ki Fist + Ki Infuse. */
     public static final String POTENTIAL_UNLOCK = "potential_unlock";
     /** No son habilidades comprables: se desbloquean por tener Ki Fist + Ki Infuse. */
@@ -146,6 +148,13 @@ public final class SkillEffects {
     public static double kiInfuseFactor(Player p) {
         return curve(p, KI_INFUSE, "damage_factor", 0.0);
     }
+
+    // ── Paso rápido ──────────────────────────────────────────────────────────
+    /** Multiplicador del coste de ki del Paso rápido (1.0 = el de ServerConfig step.energy_cost_pct). */
+    public static double quickStepKiCostMult(Player p) { return curve(p, QUICK_STEP, "ki_cost_mult", 1.0); }
+
+    /** Multiplicador del cooldown del Paso rápido (1.0 = el de ServerConfig step.cooldown_ticks). */
+    public static double quickStepCooldownMult(Player p) { return curve(p, QUICK_STEP, "cooldown_mult", 1.0); }
 
     // ── Ki Fist ──────────────────────────────────────────────────────────────
     /** Fracción del SPI (en escala de melee) que suma un golpe con los puños de ki. */

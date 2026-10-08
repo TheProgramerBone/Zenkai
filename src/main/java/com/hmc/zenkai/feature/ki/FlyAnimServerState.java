@@ -25,19 +25,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class FlyAnimServerState {
     private FlyAnimServerState() {}
 
-    private record State(boolean flying, byte dir, boolean boosting) {}
+    private record State(boolean flying, boolean boosting) {}
 
     private static final Map<UUID, State> STATES = new ConcurrentHashMap<>();
 
     /** Desde FlyAnimPacket: guarda y difunde a los trackers. */
-    public static void update(ServerPlayer sp, boolean flying, byte dir, boolean boosting) {
+    public static void update(ServerPlayer sp, boolean flying, boolean boosting) {
         if (flying) {
-            STATES.put(sp.getUUID(), new State(true, dir, boosting));
+            STATES.put(sp.getUUID(), new State(true, boosting));
         } else {
             STATES.remove(sp.getUUID());
         }
         PacketDistributor.sendToPlayersTrackingEntity(sp,
-                new FlyAnimSyncPacket(sp.getId(), flying, dir, boosting));
+                new FlyAnimSyncPacket(sp.getId(), flying, boosting));
     }
 
     @SubscribeEvent
@@ -47,7 +47,7 @@ public final class FlyAnimServerState {
         State st = STATES.get(target.getUUID());
         if (st != null && st.flying()) {
             PacketDistributor.sendToPlayer(tracker,
-                    new FlyAnimSyncPacket(target.getId(), true, st.dir(), st.boosting()));
+                    new FlyAnimSyncPacket(target.getId(), true, st.boosting()));
         }
     }
 
@@ -64,7 +64,7 @@ public final class FlyAnimServerState {
     private static void clear(ServerPlayer sp) {
         if (STATES.remove(sp.getUUID()) != null) {
             PacketDistributor.sendToPlayersTrackingEntity(sp,
-                    new FlyAnimSyncPacket(sp.getId(), false, (byte) 0, false));
+                    new FlyAnimSyncPacket(sp.getId(), false, false));
         }
     }
 }

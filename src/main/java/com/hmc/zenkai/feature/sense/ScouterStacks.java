@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
  * por aquí: si mañana el scouter deja de ser casco y pasa a ser solo curio, se cambia en este
  * archivo y ya. Nadie más lee el componente ni resuelve alcance o tope de PL por su cuenta.
  *
- * ⚠ API a verificar: CuriosCompat.findEquipped debe devolver el stack VIVO, no una copia, o
+ * CuriosCompat.findEquipped debe devolver el stack VIVO, no una copia, o
  * romper/mejorar el scouter no se guardaría. Si devuelve copia, hay que añadirle un setter.
  */
 public final class ScouterStacks {

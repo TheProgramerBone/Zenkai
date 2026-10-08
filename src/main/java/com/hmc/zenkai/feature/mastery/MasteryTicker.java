@@ -19,8 +19,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * La maestría de TÉCNICA se suma en el punto de uso (KiFirePacket / PhysicalCombatServer).
  * Sync: el mapa viaja dentro del NBT de PlayerFormAttachment; aquí se reenvía cada
  * SYNC_EVERY ticks mientras acumula (es dato de UI, no hace falta tick a tick).
- * ⚠ API a verificar al compilar: PlayerTickEvent.Post (NeoForge 1.21.1, paquete
- *   net.neoforged.neoforge.event.tick) — si tu mapping difiere, es el tick de jugador post.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class MasteryTicker {

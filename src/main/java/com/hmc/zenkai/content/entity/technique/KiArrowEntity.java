@@ -24,7 +24,6 @@ public class KiArrowEntity extends Arrow {
 
     public KiArrowEntity(EntityType<? extends KiArrowEntity> type, Level level) {
         super(type, level);
-        // ⚠ API a verificar al compilar: campo público 'pickup' de AbstractArrow en 1.21.1.
         this.pickup = Pickup.DISALLOWED;
     }
 

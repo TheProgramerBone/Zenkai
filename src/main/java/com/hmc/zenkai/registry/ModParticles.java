@@ -27,6 +27,14 @@ public final class ModParticles {
     public static final DeferredHolder<ParticleType<?>, ZenkaiParticleType> KI_SPARK =
             PARTICLES.register("ki_spark", ZenkaiParticleType::new);
 
+    /** Mota de energía: END_ROD con color propio (estela de la Genki Dama de un jugador malvado). */
+    public static final DeferredHolder<ParticleType<?>, ZenkaiParticleType> ENERGY_MOTE =
+            PARTICLES.register("energy_mote", ZenkaiParticleType::new);
+
+    public static ZenkaiParticleOptions energyMote(int rgb, float scale) {
+        return new ZenkaiParticleOptions(ENERGY_MOTE.get(), rgb, scale);
+    }
+
     /** Arco eléctrico: quieto, animado por edad (mismo Provider que KI_IMPACT — es un destello
      *  en un punto, no un fragmento que sale volando). Filo crepitante de Death Ball
      *  (KiVfxProjectileRenderer, esparcido por la superficie) y arcos de carga de Final Flash/

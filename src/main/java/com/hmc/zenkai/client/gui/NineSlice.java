@@ -12,7 +12,7 @@ import net.minecraft.resources.ResourceLocation;
  * algo fuera clicable.
  * Con 9-slice el mismo asset sirve para el botón de 46x16 de "Asignar" y para el de 170x20 de
  * un deseo, sin pedirte un PNG por tamaño.
- * ⚠ API: usa el overload de GuiGraphics#blit de 11 argumentos (x, y, w, h, u, v, uW, vH, texW,
+ * Usa el overload de GuiGraphics#blit de 11 argumentos (x, y, w, h, u, v, uW, vH, texW,
  * texH), que es el que ESCALA. El de 9 argumentos recorta 1:1 y aquí no sirve.
  */
 public final class NineSlice {
@@ -73,7 +73,7 @@ public final class NineSlice {
 
     private static void blit(GuiGraphics g, ResourceLocation tex, int x, int y, int w, int h,
                              int u, int v, int uW, int vH, int texW, int texH) {
-        g.blit(tex, x, y, w, h, (float) u, (float) v, uW, vH, texW, texH);   // ⚠ API
+        g.blit(tex, x, y, w, h, (float) u, (float) v, uW, vH, texW, texH);
     }
 
     /** Esquina de btn_tech.png: 8 px, lo justo para que el remache no se estire. */

@@ -112,8 +112,6 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
         // El yelmo gris de vanilla, el mismo sprite que el inventario del jugador. Vanilla lo
         // dibuja solo con el hueco vacío, que es justo lo que hace falta: un icono horneado
         // en el fondo asomaría por detrás del scouter puesto.
-        // ⚠ Verificar en 1.21.1: Slot#setBackground(ResourceLocation atlas, ResourceLocation
-        // sprite) e InventoryMenu.EMPTY_ARMOR_SLOT_HELMET.
         helmet.setBackground(InventoryMenu.BLOCK_ATLAS, InventoryMenu.EMPTY_ARMOR_SLOT_HELMET);
         addSlot(helmet);
         addPlayerInventory(inv);
@@ -126,8 +124,7 @@ public class ScouterBenchMenu extends AbstractContainerMenu {
      * desplazan y el menú se desincroniza. Si no hay handler, el slot queda muerto
      * (mayPlace false) sobre un contenedor de usar y tirar.
      *
-     * ⚠ API a verificar: ICurioStacksHandler.getStacks() debe seguir devolviendo un
-     * IItemHandlerModifiable en la versión de Curios que uses.
+     * ICurioStacksHandler.getStacks() devuelve un IItemHandlerModifiable.
      */
     private void addCuriosSlot(Inventory inv) {
         Optional<IItemHandlerModifiable> found = CuriosCompat.handler(inv.player, CURIOS_SLOT);

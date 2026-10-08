@@ -15,12 +15,10 @@ energy_generator * POR QUÉ SIGUE AL JUGADOR Y NO ES UN playSound EN EL SERVIDOR
  * coordenada y se queda ahí. Alguien cargando ki mientras vuela dejaría el zumbido flotando
  * en el punto donde empezó. Actualizar x/y/z en tick() es lo que hace que el sonido viaje
  * con él, y eso solo se puede hacer desde el cliente.
-energy_generator * SIGUE SIENDO POSICIONAL, que era el requisito: la categoría y las coordenadas hacen que se
+* SIGUE SIENDO POSICIONAL, que era el requisito: la categoría y las coordenadas hacen que se
  * atenúe con la distancia y que lo oigan los demás jugadores, no solo el dueño. Lo único que
  * es de cliente es QUIÉN lleva la cuenta; el estado que decide si suena (isChargingKi, turbo)
  * es del servidor y llega ya sincronizado.
-energy_generator * ⚠ VERIFICAR 1.21.1: constructor AbstractTickableSoundInstance(SoundEvent, SoundSource,
- * RandomSource) y SoundInstance.createUnseededRandom(). Mismo par que usa BenchLoopSound.
  */
 public class PlayerLoopSound extends AbstractTickableSoundInstance {
 

@@ -21,9 +21,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * al setup — algo que no controlamos y que hacía que el desplazamiento se perdiera. El final de
  * setup es lo último que la cámara hace consigo misma antes de que nadie la lea.
  *
- * ⚠ Verifica la firma de setup en tu IDE (Ctrl+click sobre Camera). En 1.21.1 debería ser
- * (BlockGetter, Entity, boolean, boolean, float). Si no coincide, ajusta los parámetros de
- * zenkai$senseShake: @Inject exige que coincidan EXACTAMENTE con los del destino.
+ * Los parámetros de zenkai$senseShake deben coincidir EXACTAMENTE con los de Camera#setup
+ * (BlockGetter, Entity, boolean, boolean, float): @Inject lo exige.
  */
 @Mixin(Camera.class)
 public abstract class CameraShakeMixin {

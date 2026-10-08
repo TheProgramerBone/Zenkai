@@ -66,7 +66,7 @@ final class FlightTrail {
         lastZ = headZ;
         hasLast = true;
 
-        boolean growing = f.active && f.dynamics.flying && speed > MIN_SPEED && !f.selfFirstPerson;
+        boolean growing = f.active && f.dynamics.flying && speed > MIN_SPEED && (!f.selfFirstPerson || f.fpOpacity > 0f);
         if (growing) {
             if (count == 0 || dist(0, headX, headY, headZ) >= MIN_STEP) push();
         } else if (count > 0) {

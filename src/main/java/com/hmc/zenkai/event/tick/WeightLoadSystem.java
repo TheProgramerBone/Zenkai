@@ -75,7 +75,7 @@ public final class WeightLoadSystem {
     }
 
     private static void applyJump(Player p, double factor) {
-        AttributeInstance jump = p.getAttribute(Attributes.JUMP_STRENGTH); // ⚠
+        AttributeInstance jump = p.getAttribute(Attributes.JUMP_STRENGTH);
         if (jump == null) return;
         double amount = factor - 1.0;
         if (amount >= 0.0) {

@@ -15,7 +15,7 @@ import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
  * Comer pasa a ser una decisión de recursos, no solo de hambre.
  * Va en el MOD bus (no en el de juego): ModifyDefaultComponentsEvent se dispara durante
  * la carga del mod, cuando aún se pueden tocar los componentes por defecto de los items.
- * ⚠ SIN VERIFICAR: la API exacta de ModifyDefaultComponentsEvent (getAllItems / modify) y
+ * La API exacta de ModifyDefaultComponentsEvent (getAllItems / modify) y
  * la aridad del constructor de FoodProperties cambian entre versiones de NeoForge/MC. En
  * 1.21.1 debería ser el de 5 argumentos que hay abajo; si tu IDE pide un Optional extra
  * (usingConvertsTo), es que tu mapeo es más nuevo: añádelo como Optional.empty().

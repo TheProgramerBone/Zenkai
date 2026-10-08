@@ -105,7 +105,6 @@ public final class RadialGauge {
      * degradado entre argbIn (borde interior) y argbOut (borde exterior). Primitivo compartido
      * con WheelScreen: un anillo hecho de rectángulos se ve escalonado, así que hace falta
      * Tesselator y no GuiGraphics.fill.
-     * ⚠ API de BufferBuilder/Tesselator: es la que más cambia entre versiones.
      */
     public static void arc(GuiGraphics g, float cx, float cy, float rIn, float rOut,
                            float startDeg, float sweepDeg, int argbIn, int argbOut) {
@@ -114,11 +113,11 @@ public final class RadialGauge {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader); // ⚠
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
         Matrix4f m = g.pose().last().pose();
         BufferBuilder bb = Tesselator.getInstance()
-                .begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR); // ⚠
+                .begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
         int segs = Math.max(1, Math.round(SEGMENTS_FULL * Math.min(1f, sweepDeg / 360f)));
         for (int i = 0; i <= segs; i++) {
@@ -128,7 +127,7 @@ public final class RadialGauge {
             bb.addVertex(m, cx + cos * rOut, cy + sin * rOut, 0f).setColor(argbOut);
         }
 
-        BufferUploader.drawWithShader(bb.buildOrThrow()); // ⚠
+        BufferUploader.drawWithShader(bb.buildOrThrow());
         RenderSystem.enableCull();
         RenderSystem.disableBlend();
     }

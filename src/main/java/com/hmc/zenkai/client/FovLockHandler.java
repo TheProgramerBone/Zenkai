@@ -42,7 +42,7 @@ public final class FovLockHandler {
         AttributeInstance attr = p.getAttribute(Attributes.MOVEMENT_SPEED);
         if (attr == null) return;
 
-        AttributeModifier ours = attr.getModifier(MovementLocks.MOVE_MOD_ID); // ⚠
+        AttributeModifier ours = attr.getModifier(MovementLocks.MOVE_MOD_ID);
         // Antes: "ours.amount() <= 0.0" — solo corregía boosts. Ahora corrige CUALQUIER
         // modificador del mod, boost o penalización (pesas/gravedad incluidas).
         if (ours == null || ours.amount() == 0.0) return; // sin modificador del mod: FOV vanilla tal cual
@@ -58,6 +58,6 @@ public final class FovLockHandler {
         float wanted = (float) ((without / walk + 1.0) / 2.0);
         if (actual <= 0.001f || !Float.isFinite(actual) || !Float.isFinite(wanted)) return;
 
-        e.setNewFovModifier(e.getNewFovModifier() * (wanted / actual)); // ⚠
+        e.setNewFovModifier(e.getNewFovModifier() * (wanted / actual));
     }
 }

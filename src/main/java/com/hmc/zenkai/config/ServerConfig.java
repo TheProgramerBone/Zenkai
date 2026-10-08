@@ -8,7 +8,6 @@ import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Config de servidor: ModConfig.Type.SERVER, un archivo POR MUNDO (vive en el save, bajo
@@ -73,7 +72,6 @@ public class ServerConfig {
     // ── Invocación: cooldown por jugador (1) + deseos por entidad (2) ───────────
     public static final ModConfigSpec.IntValue SUMMON_COOLDOWN_DAYS;
     public static final ModConfigSpec.IntValue SHENLONG_WISHES;
-    public static final ModConfigSpec.IntValue PORUNGA_WISHES;
     public static final ModConfigSpec.IntValue BROADCAST_RADIUS;
 
     // ── Transmisión Instantánea: dos toggles independientes (2) ─────────────────
@@ -96,13 +94,13 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue TARGET_PRACTICE_MIN_COOLDOWN_TICKS;
 
     static {
-        BUILDER.comment("Habilita o deshabilita cada deseo de Shenlong de forma individual.")
+        BUILDER.comment("Enables or disables each Shenlong wish individually.")
                 .push("wishes_enabled");
-        ENABLE_STACK            = BUILDER.comment("Deseo: stack de ítems.").define("stack", true);
-        ENABLE_REVIVE_PLAYER    = BUILDER.comment("Deseo: revivir jugador.").define("revive_player", true);
-        ENABLE_ENCHANT_VILLAGER = BUILDER.comment("Deseo: aldeano con encantamiento.").define("enchant_villager", true);
-        ENABLE_IMMORTAL         = BUILDER.comment("Deseo: inmortalidad.").define("immortal", true);
-        ENABLE_TRAINING_POINTS  = BUILDER.comment("Deseo: puntos de entrenamiento (TP).").define("training_points", true);
+        ENABLE_STACK            = BUILDER.comment("Wish: item stack.").define("stack", true);
+        ENABLE_REVIVE_PLAYER    = BUILDER.comment("Wish: revive a player.").define("revive_player", true);
+        ENABLE_ENCHANT_VILLAGER = BUILDER.comment("Wish: enchanted villager (sells an enchanted book).").define("enchant_villager", true);
+        ENABLE_IMMORTAL         = BUILDER.comment("Wish: immortality.").define("immortal", true);
+        ENABLE_TRAINING_POINTS  = BUILDER.comment("Wish: training points (TP).").define("training_points", true);
         BUILDER.pop();
 
         BUILDER.push("stack_wish");
@@ -117,9 +115,9 @@ public class ServerConfig {
                         List.of("minecraft:shulker_box"),
                         obj -> true);
         WHITELIST_ITEMS_RAW = BUILDER
-                .comment("Whitelist de ítems permitidos en el deseo de stack.",
-                        "Si está VACÍA, se permite cualquiera salvo la blacklist.",
-                        "Si tiene ítems, SOLO se permiten esos (la blacklist sigue teniendo prioridad).")
+                .comment("Whitelist of items allowed in the stack wish.",
+                            "If EMPTY, any item is allowed except the blacklist.",
+                            "If it has items, ONLY those are allowed (the blacklist still takes priority).")
                 .defineListAllowEmpty("whitelist_items",
                         List.of(),
                         obj -> true);
@@ -133,69 +131,66 @@ public class ServerConfig {
 
         BUILDER.push("enchant_villager");
         VILLAGER_BOOK_BASE_PRICE = BUILDER
-                .comment("Precio base (emeralds) del libro encantado del aldeano.")
+                .comment("Base price (in emeralds) of the villager's enchanted book.")
                 .defineInRange("base_price", 10, 0, 9999);
         VILLAGER_BOOK_PRICE_PER_LEVEL = BUILDER
-                .comment("Precio extra por nivel de encantamiento.")
+                .comment("Extra price per enchantment level.")
                 .defineInRange("price_per_level", 5, 0, 9999);
         BUILDER.pop();
 
         BUILDER.push("training_points");
         TRAINING_POINTS_AMOUNT = BUILDER
-                .comment("Cantidad de Training Points otorgados por el deseo.")
+                .comment("Amount of Training Points granted by the wish.")
                 .defineInRange("amount", 1000, 0, Integer.MAX_VALUE);
         BUILDER.pop();
 
         BUILDER.push("summoning");
         SUMMON_COOLDOWN_DAYS = BUILDER
-                .comment("Cooldown POR JUGADOR para invocar de nuevo, en días de juego.",
-                        "0 = sin cooldown (útil para tests).")
+                .comment("PER-PLAYER cooldown before summoning again, in game days.",
+                            "0 = no cooldown (useful for testing).")
                 .defineInRange("cooldown_days", 7, 0, 100000);
         SHENLONG_WISHES = BUILDER
-                .comment("Cuántos deseos concede Shenlong por invocación (pool compartido; se agota).")
+                .comment("How many wishes Shenlong grants per summoning (shared pool; it runs out).")
                 .defineInRange("shenlong_wishes", 1, 1, 100);
-        PORUNGA_WISHES = BUILDER
-                .comment("Cuántos deseos concede Porunga por invocación.")
-                .defineInRange("porunga_wishes", 3, 1, 100);
         BROADCAST_RADIUS = BUILDER
-                .comment("Radio (bloques) en el que los demás jugadores ven los mensajes públicos",
-                        "de Shenlong: invocación y deseo concedido (con qué se pidió).",
-                        "0 = solo el jugador que interactúa.")
+                .comment("Radius (blocks) within which other players see Shenlong's public messages:",
+                            "the summoning and the granted wish (and what it was asked for).",
+                            "0 = only the interacting player.")
                 .defineInRange("broadcast_radius", 32, 0, 256);
         BUILDER.pop();
 
         BUILDER.push("instant_transmission");
         INSTANT_TRANSMISSION_ENABLED = BUILDER
-                .comment("Habilita o deshabilita por completo la técnica de Transmisión Instantánea",
-                        "(comprarla, el blink, todo). Pensado para un server/modpack que la vea",
-                        "demasiado rota/OP y prefiera apagarla entera en vez de tocar números.")
+                .comment("Enables or disables the Instant Transmission technique entirely",
+                            "(buying it, the blink, everything). Meant for a server/modpack that finds it",
+                            "too broken/OP and would rather turn it off completely than touch numbers.")
                 .define("technique_enabled", true);
         INSTANT_TRANSMISSION_MENU_ENABLED = BUILDER
-                .comment("Habilita o deshabilita SOLO el menú de planetas (quedarse quieto para",
-                        "armarlo, saltos entre dimensiones, TP a la party). El blink de nivel 1",
-                        "(mirar un punto y confirmar) sigue funcionando aunque esto esté apagado —",
-                        "es un toggle independiente de technique_enabled, no un sub-caso.")
+                .comment("Enables or disables ONLY the planet menu (standing still to arm it,",
+                            "dimension jumps, party TP). The level 1 blink",
+                            "(look at a point and confirm) keeps working even when this is off -",
+                            "it is a toggle independent of technique_enabled, not a sub-case.")
                 .define("menu_enabled", true);
         BUILDER.pop();
 
         BUILDER.push("training_minigames");
         MEDITATION_TP_PER_COMBO = BUILDER
-                .comment("Meditation: TP por punto de racha (combo) al reportar el desempeño de una sesión.")
+                .comment("Meditation: TP per streak (combo) point when a session's performance is reported.")
                 .defineInRange("meditation.tp_per_combo", 0.5D, 0.0D, 1000.0D);
         MEDITATION_SESSION_TP_CAP = BUILDER
-                .comment("Meditation: tope de TP que UNA sola sesión puede otorgar, sin importar el combo reportado.")
+                .comment("Meditation: cap on the TP that ONE single session can grant, regardless of the reported combo.")
                 .defineInRange("meditation.session_tp_cap", 500, 0, Integer.MAX_VALUE);
         MEDITATION_MIN_COOLDOWN_TICKS = BUILDER
-                .comment("Meditation: ticks mínimos entre dos reportes de sesión del mismo jugador.")
+                .comment("Meditation: minimum ticks between two session reports from the same player.")
                 .defineInRange("meditation.min_cooldown_ticks", 200, 0, 72000);
         TARGET_PRACTICE_TP_PER_ORB = BUILDER
-                .comment("Ki Target Practice: TP por orbe reventado al reportar el desempeño de una sesión.")
+                .comment("Ki Target Practice: TP per popped orb when a session's performance is reported.")
                 .defineInRange("target_practice.tp_per_orb", 2.0D, 0.0D, 1000.0D);
         TARGET_PRACTICE_SESSION_TP_CAP = BUILDER
-                .comment("Ki Target Practice: tope de TP que UNA sola sesión puede otorgar.")
+                .comment("Ki Target Practice: cap on the TP that ONE single session can grant.")
                 .defineInRange("target_practice.session_tp_cap", 500, 0, Integer.MAX_VALUE);
         TARGET_PRACTICE_MIN_COOLDOWN_TICKS = BUILDER
-                .comment("Ki Target Practice: ticks mínimos entre dos reportes de sesión del mismo jugador.")
+                .comment("Ki Target Practice: minimum ticks between two session reports from the same player.")
                 .defineInRange("target_practice.min_cooldown_ticks", 200, 0, 72000);
         BUILDER.pop();
     }
@@ -205,7 +200,7 @@ public class ServerConfig {
     // =====================================================================
 
     private static final ModConfigSpec.DoubleValue TP_COEFFICIENT_RAW =
-            BUILDER.comment("m de la recta de coste: cost(n) = attribute_base_cost + coef * n. A 1.0 el punto n cuesta 1+n TP, o sea el coste sube de uno en uno. Bajarlo aplana la curva; subirlo la endurece de golpe, porque es lineal y no exponencial.")
+            BUILDER.comment("Slope of the cost line: cost(n) = attribute_base_cost + coef * n. At 1.0 point n costs 1+n TP, i.e. the cost rises one at a time. Lowering it flattens the curve; raising it hardens it abruptly, because it is linear and not exponential.")
                     .defineInRange("stats.tp_coefficient", 1.0D, 0.0D, 100D);
 
     private static final ModConfigSpec.IntValue GLOBAL_ATTRIBUTE_CAP_RAW =
@@ -217,7 +212,7 @@ public class ServerConfig {
                     .defineInRange("aura.reference_tp", 5_000_000D, 1.0D, 1.0E12D);
 
     private static final ModConfigSpec.DoubleValue ATTRIBUTE_BASE_COST_RAW =
-            BUILDER.comment("b de la recta de coste: lo que cuesta el primer punto, con cero invertidos.")
+            BUILDER.comment("Intercept of the cost line: what the first point costs, with zero invested.")
                     .defineInRange("stats.attribute_base_cost", 1.0D, 0.1D, 1000.0D);
 
     private static final ModConfigSpec.DoubleValue TRAINING_PL_RATIO_FLOOR_RAW =
@@ -243,6 +238,80 @@ public class ServerConfig {
     private static final ModConfigSpec.DoubleValue RUN_STAMINA_DRAIN_RAW =
             BUILDER.comment("Stamina drained per SECOND while sprinting (before the Run skill reduction)")
                     .defineInRange("run.stamina_drain_per_second", 2.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.IntValue DASH_COOLDOWN_RAW =
+            BUILDER.comment("Combat-mode dash (double-tap W/A/S/D): cooldown in ticks between dashes. It costs no stamina")
+                    .defineInRange("dash.cooldown_ticks", 15, 0, 200);
+
+    private static final ModConfigSpec.DoubleValue DASH_SPEED_RAW =
+            BUILDER.comment("Combat-mode dash: horizontal speed in blocks per tick (1.1 is roughly 5 blocks of travel)")
+                    .defineInRange("dash.speed", 1.1D, 0.2D, 4.0D);
+
+    private static final ModConfigSpec.IntValue STEP_COOLDOWN_RAW =
+            BUILDER.comment("Quick Step (a skill bought from Korin that overrides the combat dash): base cooldown in ticks between uses (each skill level shortens it)")
+                    .defineInRange("step.cooldown_ticks", 60, 0, 1200);
+
+    private static final ModConfigSpec.DoubleValue STEP_SPEED_RAW =
+            BUILDER.comment("Quick Step: horizontal speed in blocks per tick (1.8 is roughly 8 blocks of travel)")
+                    .defineInRange("step.speed", 1.8D, 0.2D, 6.0D);
+
+    private static final ModConfigSpec.DoubleValue STEP_ENERGY_PCT_RAW =
+            BUILDER.comment("Quick Step: base ki cost as a fraction of the maximum ki pool (0.03 = 3%); each skill level lowers it")
+                    .defineInRange("step.energy_cost_pct", 0.03D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.IntValue STEP_INVISIBLE_RAW =
+            BUILDER.comment("Quick Step: ticks the player model stays invisible while moving")
+                    .defineInRange("step.invisible_ticks", 8, 1, 60);
+
+    private static final ModConfigSpec.IntValue STEP_IFRAME_RAW =
+            BUILDER.comment("Quick Step: ticks of invulnerability from the moment it starts")
+                    .defineInRange("step.iframe_ticks", 10, 0, 60);
+
+    private static final ModConfigSpec.IntValue KI_LIFE_RAW =
+            BUILDER.comment("Lifetime in ticks of the ki techniques that travel (20 ticks = 1 s). A projectile flies in a",
+                            "straight line with no gravity or drag, so its RANGE = speed (blocks/tick) x lifetime (ticks).",
+                            "Range at 100 ticks (the old fixed value) / 200 ticks (default) / 400 ticks:",
+                            "  supernova 0.55 b/t:        55 / 110 / 220 blocks",
+                            "  big_blast 0.60:            60 / 120 / 240",
+                            "  death_ball 0.65:           65 / 130 / 260",
+                            "  spirit_bomb 0.70:          70 / 140 / 280",
+                            "  wave 0.80:                 80 / 160 / 320",
+                            "  kamehameha, galick 0.85:   85 / 170 / 340",
+                            "  final_flash 0.90:          90 / 180 / 360",
+                            "  spiral 1.00:              100 / 200 / 400",
+                            "  blast 1.20:               120 / 240 / 480",
+                            "  burst 1.60:               160 / 320 / 640",
+                            "  disk 1.80:                180 / 360 / 720",
+                            "  lazer 2.50:               250 / 500 / 1000",
+                            "  death_beam 3.00:          300 / 600 / 1200",
+                            "Beyond ~128 blocks from the player the client stops tracking the entity (it is no longer drawn,",
+                            "though it keeps flying on the server), and in chunks that are not loaded it freezes.",
+                            "Speeds come from the technique JSONs; if you edit those, recompute")
+                    .defineInRange("ki.projectile_life_ticks", 200, 20, 1200);
+
+    private static final ModConfigSpec.DoubleValue SB_RADIUS_RAW =
+            BUILDER.comment("Spirit Bomb: radius in blocks in which non-hostile creatures donate energy while charging")
+                    .defineInRange("spirit_bomb.gather_radius", 32.0D, 1.0D, 128.0D);
+
+    private static final ModConfigSpec.DoubleValue SB_GAIN_RAW =
+            BUILDER.comment("Spirit Bomb: damage bonus gained per second per sqrt(creatures nearby) (0.03 = +3%)")
+                    .defineInRange("spirit_bomb.gain_per_pulse", 0.03D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue SB_CAP_RAW =
+            BUILDER.comment("Spirit Bomb: maximum damage bonus from gathered energy (0.5 = +50%)")
+                    .defineInRange("spirit_bomb.bonus_cap", 0.5D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue SB_PARTY_GAIN_RAW =
+            BUILDER.comment("Spirit Bomb: damage bonus per second added by EACH party member who is charging ki (C) nearby (0.06 = +6%)")
+                    .defineInRange("spirit_bomb.party_gain_per_pulse", 0.06D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue SB_PARTY_RADIUS_RAW =
+            BUILDER.comment("Spirit Bomb: radius in blocks in which party members can lend their energy. 0 = unlimited (any distance, same dimension)")
+                    .defineInRange("spirit_bomb.party_radius", 0.0D, 0.0D, 1024.0D);
+
+    private static final ModConfigSpec.IntValue SB_WINDUP_RAW =
+            BUILDER.comment("Spirit Bomb: ticks between releasing the technique and the projectile leaving the hands")
+                    .defineInRange("spirit_bomb.windup_ticks", 8, 0, 100);
 
     private static final ModConfigSpec.DoubleValue FLY_MULT_CAP_RAW =
             BUILDER.comment("Max fly multiplier (cap)")
@@ -287,11 +356,11 @@ public class ServerConfig {
     // =====================================================================
 
     private static final ModConfigSpec.IntValue ENERGY_GENERATOR_CAPACITY_RAW =
-            BUILDER.comment("Búfer de FE del bloque generador de energía. Ver GeneratorEnergy.")
+            BUILDER.comment("FE buffer of the energy generator block. See GeneratorEnergy.")
                     .defineInRange("energy.generator_capacity", 100_000, 1, 10_000_000);
 
     private static final ModConfigSpec.IntValue ENERGY_GENERATOR_MAX_EXTRACT_RAW =
-            BUILDER.comment("Techo de FE por tick y por cara que el generador empuja a un vecino. Deja ver la barra bajar en vez de vaciarse de golpe al conectar una máquina hambrienta.")
+            BUILDER.comment("Ceiling of FE per tick and per face that the generator pushes to a neighbor. Lets you watch the bar drop instead of emptying at once when a hungry machine is connected.")
                     .defineInRange("energy.generator_max_extract", 1_000, 1, 1_000_000);
 
     // =====================================================================
@@ -400,15 +469,15 @@ public class ServerConfig {
                     .defineInRange("combat.immortal_overkill_fraction", 1.0D, 0.01D, 100.0D);
 
     private static final ModConfigSpec.IntValue IN_COMBAT_TICKS_RAW =
-            BUILDER.comment("Ticks que dura el estado 'en combate' desde el ultimo dano dado o recibido. 160 = 8 s.")
+            BUILDER.comment("Ticks the 'in combat' state lasts after the last damage dealt or received. 160 = 8 s.")
                     .defineInRange("combat.in_combat_ticks", 160, 0, 12000);
 
     private static final ModConfigSpec.DoubleValue IN_COMBAT_BODY_REGEN_MULT_RAW =
-            BUILDER.comment("Multiplicador de la regeneración de BODY mientras estas en combate. 0.5 = la mitad, 0.0 = no te curas peleando, 1.0 = desactiva la penalizacion. Solo body: la estamina y el ki son con lo que se pelea.")
+            BUILDER.comment("Multiplier of BODY regeneration while in combat. 0.5 = half, 0.0 = you do not heal while fighting, 1.0 = disables the penalty. Body only: stamina and ki are what you fight with.")
                     .defineInRange("combat.in_combat_body_regen_mult", 0.5D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.DoubleValue IN_COMBAT_RACIAL_REGEN_FLOOR_RAW =
-            BUILDER.comment("Suelo del multiplicador anterior para las razas cuya regeneración ES su pasiva (namekiano, majin). Aunque el mult general este a 0, ellos siguen curandose a este ritmo: si no, dejarian de ser esa raza en combate, que es justo donde su identidad tiene que notarse.")
+            BUILDER.comment("Floor for the multiplier above, for races whose regeneration IS their passive (Namekian, Majin). Even if the general multiplier is 0, they keep healing at this rate: otherwise they would stop being that race in combat, which is exactly where their identity has to show.")
                     .defineInRange("combat.in_combat_racial_regen_floor", 0.25D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.IntValue TECHNIQUE_MAX_SLOTS_RAW =
@@ -557,21 +626,21 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue TRAIN_DMG_TP_RAW =
             BUILDER.comment("Training: TP per point of effective damage dealt.",
-                            "Recalibrado 2026-08-20 (0.02 -> 0.10, x5): la simulacion de .claude/pendiente/verificar-y-deuda.md",
-                            "mostro que con el valor viejo, incluso ELIMINANDO la fatiga por completo, un jugador tardaba ~112h",
-                            "en llegar a los 5,000,000 TP de referencia peleando a ritmo moderado (15s/kill) -- muy por",
-                            "encima de las 20-40h que el usuario fijo como objetivo. Va de la mano con entity.tp_per_pl",
-                            "y training.fatigue_decay_per_minute; no tocar uno sin mirar los otros dos.")
+                            "Recalibrated 2026-08-20 (0.02 -> 0.10, x5): the balance simulation (tools/tp_economy_sim.py)",
+                            "showed that with the old value, even ELIMINATING fatigue entirely, a player took ~112h",
+                            "to reach the reference 5,000,000 TP fighting at a moderate pace (15s/kill) -- far above",
+                            "the 20-40h design target. It goes hand in hand with entity.tp_per_pl",
+                            "and training.fatigue_decay_per_minute; do not touch one without looking at the other two.")
                     .defineInRange("training.damage_tp_factor", 0.10D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue TP_PER_PL_RAW =
-            BUILDER.comment("Recompensa TP 'auto' al matar CUALQUIER entidad con stats Zenkai (zenkai_entities con",
-                            "rewards.tp=\"auto\", y el fallback vanilla) = PL de la victima x este factor. Antes vivia",
-                            "hardcodeado y DUPLICADO en EntityStats.TP_PER_PL y EntityDeathRewardHandler.VANILLA_TP_PER_PL",
-                            "(0.05 en los dos, sin pasar por config); se migro aqui para poder recalibrarlo sin recompilar",
-                            "y para dejar de tener el mismo numero mantenido a mano en dos sitios.",
-                            "Recalibrado 2026-08-20 (0.05 -> 0.25, x5) junto con training.damage_tp_factor -- ver el",
-                            "comentario de esa entrada para el porque.")
+            BUILDER.comment("Automatic ('auto') TP reward for killing ANY entity with Zenkai stats (zenkai_entities with",
+                            "rewards.tp=\"auto\", and the vanilla fallback) = the victim's PL x this factor. It used to be",
+                            "hardcoded and DUPLICATED in EntityStats.TP_PER_PL and EntityDeathRewardHandler.VANILLA_TP_PER_PL",
+                            "(0.05 in both, not going through config); it was moved here so it can be recalibrated without",
+                            "recompiling and so the same number is no longer maintained by hand in two places.",
+                            "Recalibrated 2026-08-20 (0.05 -> 0.25, x5) together with training.damage_tp_factor -- see that",
+                            "entry's comment for why.")
                     .defineInRange("entity.tp_per_pl", 0.25D, 0.0D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue TRAIN_AIR_TP_RAW =
@@ -592,13 +661,13 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue TRAIN_DECAY_RAW =
             BUILDER.comment("Training: fatigue recovered per real minute of play.",
-                            "Recalibrado 2026-08-20 (0.01 -> 0.2, x20): es la palanca DOMINANTE del sistema. En granjeo",
-                            "sostenido, TP/hora = 60 x este valor x tu PL -- el ritmo de combate (rapido o lento) se",
-                            "cancela solo y NO afecta ese numero (comprobado por simulacion: de 2s a 40s por kill daba",
-                            "el mismo resultado con el 0.01 viejo). Subir damage_tp_factor/entity.tp_per_pl sin tocar",
-                            "esto no sirve de mucho: el reward extra se cancela con la fatiga extra que genera.",
-                            "Sigue siendo una ESTIMACION del modelo (asume ~15s por kill 'de nivel'); hace falta",
-                            "playtesting real para afinarlo -- ver .claude/pendiente/verificar-y-deuda.md.")
+                            "Recalibrated 2026-08-20 (0.01 -> 0.2, x20): it is the DOMINANT lever of the system. In sustained",
+                            "farming, TP/hour = 60 x this value x your PL -- the combat pace (fast or slow) cancels itself out",
+                            "and does NOT affect that number (checked by simulation: from 2s to 40s per kill gave the same",
+                            "result with the old 0.01). Raising damage_tp_factor/entity.tp_per_pl without touching",
+                            "this is of little use: the extra reward is cancelled by the extra fatigue it generates.",
+                            "It is still an ESTIMATE of the model (assumes ~15s per 'leveled' kill); real playtesting is needed",
+                            "to tune it -- see the balance simulation (tools/tp_economy_sim.py).")
                     .defineInRange("training.fatigue_decay_per_minute", 0.20D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue TRAIN_HTC_MULT_RAW =
@@ -828,6 +897,20 @@ public class ServerConfig {
     private static volatile double SPEED_MULT_CAP = 3.0D;
     private static volatile double MOVE_SCALING = 1.0D;
     private static volatile double RUN_STAMINA_DRAIN = 2.0D;
+    private static volatile int DASH_COOLDOWN = 15;
+    private static volatile double DASH_SPEED = 1.1D;
+    private static volatile int STEP_COOLDOWN = 60;
+    private static volatile double STEP_SPEED = 1.8D;
+    private static volatile double STEP_ENERGY_PCT = 0.03D;
+    private static volatile int STEP_INVISIBLE = 8;
+    private static volatile int STEP_IFRAME = 10;
+    private static volatile double SB_RADIUS = 32.0D;
+    private static volatile int KI_LIFE = 200;
+    private static volatile double SB_GAIN = 0.03D;
+    private static volatile double SB_CAP = 0.5D;
+    private static volatile int SB_WINDUP = 8;
+    private static volatile double SB_PARTY_GAIN = 0.06D;
+    private static volatile double SB_PARTY_RADIUS = 0.0D;
     private static volatile double FLY_MULT_CAP = 15.0D;
     private static volatile double FLY_SCALING = 0.25D;
     private static volatile double FLY_BASE_SPEED = 0.05D;
@@ -950,6 +1033,20 @@ public class ServerConfig {
         SPEED_MULT_CAP    = SPEED_MULT_CAP_RAW.get();
         MOVE_SCALING      = MOVE_SCALING_RAW.get();
         RUN_STAMINA_DRAIN = RUN_STAMINA_DRAIN_RAW.get();
+        DASH_COOLDOWN     = DASH_COOLDOWN_RAW.get();
+        DASH_SPEED        = DASH_SPEED_RAW.get();
+        STEP_COOLDOWN     = STEP_COOLDOWN_RAW.get();
+        STEP_SPEED        = STEP_SPEED_RAW.get();
+        STEP_ENERGY_PCT   = STEP_ENERGY_PCT_RAW.get();
+        STEP_INVISIBLE    = STEP_INVISIBLE_RAW.get();
+        STEP_IFRAME       = STEP_IFRAME_RAW.get();
+        SB_RADIUS         = SB_RADIUS_RAW.get();
+        KI_LIFE           = KI_LIFE_RAW.get();
+        SB_GAIN           = SB_GAIN_RAW.get();
+        SB_CAP            = SB_CAP_RAW.get();
+        SB_WINDUP         = SB_WINDUP_RAW.get();
+        SB_PARTY_GAIN     = SB_PARTY_GAIN_RAW.get();
+        SB_PARTY_RADIUS   = SB_PARTY_RADIUS_RAW.get();
         FLY_MULT_CAP      = FLY_MULT_CAP_RAW.get();
         FLY_SCALING       = FLY_SCALING_RAW.get();
         FLY_BASE_SPEED    = FLY_BASE_SPEED_RAW.get();
@@ -1132,10 +1229,8 @@ public class ServerConfig {
 
     // ── Helpers de balance ──────────────────────────────────────────────────────
     public static int trainingPointsAmount()    { return TRAINING_POINTS_AMOUNT.get(); }
-    public static int summonCooldownDays()       { return SUMMON_COOLDOWN_DAYS.get(); }
     public static long summonCooldownTicks()     { return (long) SUMMON_COOLDOWN_DAYS.get() * 24000L; }
     public static int shenlongWishCount()        { return SHENLONG_WISHES.get(); }
-    public static int porungaWishCount()           { return PORUNGA_WISHES.get(); }
     public static int broadcastRadius()          { return BROADCAST_RADIUS.get(); }
     public static boolean instantTransmissionEnabled()     { return INSTANT_TRANSMISSION_ENABLED.get(); }
     public static boolean instantTransmissionMenuEnabled() { return INSTANT_TRANSMISSION_MENU_ENABLED.get(); }
@@ -1172,6 +1267,20 @@ public class ServerConfig {
     public static double speedMultiplierCap()       { return SPEED_MULT_CAP; }
     public static double movementScaling()          { return MOVE_SCALING; }
     public static double runStaminaDrainPerSecond() { return RUN_STAMINA_DRAIN; }
+    public static int dashCooldownTicks()           { return DASH_COOLDOWN; }
+    public static double dashSpeed()                { return DASH_SPEED; }
+    public static int stepCooldownTicks()           { return STEP_COOLDOWN; }
+    public static double stepSpeed()                { return STEP_SPEED; }
+    public static double stepEnergyPct()            { return STEP_ENERGY_PCT; }
+    public static int stepInvisibleTicks()          { return STEP_INVISIBLE; }
+    public static int stepIFrameTicks()             { return STEP_IFRAME; }
+    public static double spiritBombGatherRadius()   { return SB_RADIUS; }
+    public static int kiProjectileLifeTicks()       { return KI_LIFE; }
+    public static double spiritBombGainPerPulse()   { return SB_GAIN; }
+    public static double spiritBombBonusCap()       { return SB_CAP; }
+    public static int spiritBombWindupTicks()       { return SB_WINDUP; }
+    public static double spiritBombPartyGainPerPulse() { return SB_PARTY_GAIN; }
+    public static double spiritBombPartyRadius()    { return SB_PARTY_RADIUS; }
     public static double flyMultiplierCap()         { return FLY_MULT_CAP; }
     public static double flyScaling()               { return FLY_SCALING; }
     public static double flyBaseSpeed()             { return FLY_BASE_SPEED; }
@@ -1326,9 +1435,4 @@ public class ServerConfig {
         return copy;
     }
 
-    public static String overridesToString() {
-        return STACK_OVERRIDES.entrySet().stream()
-                .map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.joining(", "));
-    }
 }

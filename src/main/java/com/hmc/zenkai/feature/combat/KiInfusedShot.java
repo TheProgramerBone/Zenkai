@@ -34,7 +34,6 @@ public record KiInfusedShot(double bonusDamage, double refPower) {
     /** Lectura segura desde cualquier entidad. NONE si no lleva nada. */
     public static KiInfusedShot of(Entity e) {
         if (e == null) return NONE;
-        // ⚠ API a verificar al compilar: getExistingData devuelve Optional en NeoForge 1.21.1.
         return e.getExistingData(ZenkaiDataAttachments.KI_SHOT.get()).orElse(NONE);
     }
 }

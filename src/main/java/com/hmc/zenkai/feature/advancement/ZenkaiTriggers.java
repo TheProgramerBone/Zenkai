@@ -32,10 +32,6 @@ import java.util.Optional;
  * MILESTONE es el comodín deliberado: un `kind` de texto para eventos puntuales sin más
  * condiciones (black flash, ser revivido). Añadir uno nuevo es una constante y una línea de
  * JSON, no una clase.
- * ⚠ APIs a verificar al compilar (NeoForge 1.21.1):
- *   - BuiltInRegistries.TRIGGER_TYPES como registro de CriterionTrigger
- *   - EntityPredicate.ADVANCEMENT_CODEC -> Codec&lt;ContextAwarePredicate&gt;
- *   - SimpleCriterionTrigger.SimpleInstance y la firma de codec()
  */
 public final class ZenkaiTriggers {
     private ZenkaiTriggers() {}

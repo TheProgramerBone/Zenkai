@@ -1,6 +1,6 @@
 package com.hmc.zenkai.event.tick;
 
-import com.hmc.zenkai.event.CombatZenkaiHooks; // ⚠ ajustar si CombatZenkaiHooks quedó en feature.combat
+import com.hmc.zenkai.event.CombatZenkaiHooks;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.DeathCauseTracker;
 import com.hmc.zenkai.feature.combat.DownedDeathGuard;

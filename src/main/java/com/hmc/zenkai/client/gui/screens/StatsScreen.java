@@ -107,7 +107,6 @@ public class StatsScreen extends ZenkaiMenuScreen {
      * arrastre sobre 0..100, así que dejaba llegar a 0 —un estado que el resto del juego no
      * produce— y comprimía el rango útil hasta hacerlo inservible: con Ki Control a nivel 0 el
      * techo es 50, o sea que mínimo y máximo coinciden y no hay NADA que arrastrar.
-     * ⚠ Si SkillEffects expone una constante para esto, usar aquella y borrar esta.
      */
     private static final int KI_MIN = 0;
 
@@ -435,7 +434,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         renderKiBarTooltip(g, mouseX, mouseY);
         renderTpFieldTooltip(g, mouseX, mouseY);
         if (pendingTip != null) {
-            g.renderTooltip(this.font, this.font.split(pendingTip, 180), mouseX, mouseY); // ⚠ firma
+            g.renderTooltip(this.font, this.font.split(pendingTip, 180), mouseX, mouseY);
         }
     }
 

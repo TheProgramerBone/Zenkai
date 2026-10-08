@@ -164,7 +164,7 @@ public record ScouterAreaScanPacket(byte mode) implements CustomPacketPayload {
 
         for (int cx = minCx; cx <= maxCx; cx++) {
             for (int cz = minCz; cz <= maxCz; cz++) {
-                LevelChunk chunk = level.getChunkSource().getChunkNow(cx, cz); // ⚠ nunca carga
+                LevelChunk chunk = level.getChunkSource().getChunkNow(cx, cz); // nunca carga chunks, a propósito
                 if (chunk == null) continue;
 
                 // Poda horizontal: distancia mínima posible de este chunk al origen.

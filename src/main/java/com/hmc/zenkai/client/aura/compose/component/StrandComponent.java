@@ -176,7 +176,7 @@ public final class StrandComponent implements AuraComponent {
 
     @Override
     public void submit(AuraFrame f, PoseStack pose) {
-        if (!any || f.selfFirstPerson) return;
+        if (!any) return;
         final float ox = (float) (f.x - f.camX), oy = (float) (f.y - f.camY), oz = (float) (f.z - f.camZ);
         final boolean bloomOk = f.bloomAllowed;
         final float fp = f.fpOpacity;
