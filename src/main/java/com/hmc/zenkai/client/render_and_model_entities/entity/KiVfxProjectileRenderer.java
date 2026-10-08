@@ -145,7 +145,13 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
             renderTrail(entity, v, partialTick, pose, buffer, r, g, b);
         }
 
-        if (dbg.showsHalo()) {
+        // Retenido en un choque de haces: la cabeza (y su halo) la sustituye el lóbulo de su
+        // color en ClashOrbEntity. Si se pintara, una bola grande se tragaba la esfera entera y
+        // el bloom de las dos cabezas la lavaba a blanco (capturas 2026-10-08). El cuerpo de un
+        // haz anclado SÍ se sigue pintando: es el chorro que llega al punto de choque.
+        boolean clashHeld = entity.isClashHeld();
+
+        if (dbg.showsHalo() && !clashHeld) {
             renderHalo(entity, v, partialTick, pose, buffer, r, g, b);
         }
 
@@ -192,7 +198,7 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
             pose.mulPose(Axis.ZP.rotationDegrees(animT * 22f));
         }
 
-        if (dbg.showsShell() || dbg.showsCore()) {
+        if ((dbg.showsShell() || dbg.showsCore()) && !clashHeld) {
             // Haz anclado: aquí solo la cabeza — el cuerpo ya lo ha puesto renderColumn.
             KiVfxMesh mesh = v.column() ? KiVfxGeometry.head(v) : KiVfxGeometry.shell(v);
             // proximity: ver "BUG DE CÁMARA" en ki_energy.fsh. El radio ya escalado decide qué

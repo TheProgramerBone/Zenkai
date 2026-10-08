@@ -125,6 +125,49 @@ public final class ClashRulesGameTests {
         helper.succeed();
     }
 
+    /** Los ejemplos del diseño (.claude/docs/combate-y-muerte.md, «Choque por equipos») con el bonus por defecto. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void outnumberedMultiplierMatchesDesign(GameTestHelper helper) {
+        double b = 1.6;
+        near(helper, 1.0, ClashRules.outnumberedMultiplier(1, 1, b), 1e-9, "1 contra 1: sin compensación");
+        near(helper, 1.6, ClashRules.outnumberedMultiplier(1, 2, b), 1e-9, "2 contra 1: el solo x1,6");
+        near(helper, 2.2, ClashRules.outnumberedMultiplier(1, 3, b), 1e-9, "3 contra 1: el solo x2,2");
+        near(helper, 1.3, ClashRules.outnumberedMultiplier(2, 3, b), 1e-9, "3 contra 2: cada uno x1,3");
+        near(helper, 1.0, ClashRules.outnumberedMultiplier(2, 1, b), 1e-9, "el equipo grande nunca recibe nada");
+        near(helper, 1.0, ClashRules.outnumberedMultiplier(3, 3, b), 1e-9, "3 contra 3: igualados");
+        near(helper, 1.0, ClashRules.outnumberedMultiplier(1, 3, 1.0), 1e-9, "bonus 1 desactiva la compensación");
+        near(helper, 1.0, ClashRules.outnumberedMultiplier(0, 3, b), 1e-9, "un equipo vacío no divide por cero");
+        // El equipo pequeño nunca llega a alcanzar el máximo del grande: tiene que jugar mejor.
+        for (int big = 2; big <= 3; big++) {
+            for (int small = 1; small < big; small++) {
+                double maxSmall = small * ClashRules.MAX * ClashRules.outnumberedMultiplier(small, big, b);
+                helper.assertTrue(maxSmall < big * ClashRules.MAX,
+                        small + " contra " + big + ": el máximo del pequeño (" + maxSmall
+                                + ") no debe igualar al del grande");
+            }
+        }
+        helper.succeed();
+    }
+
+    /** Un equipo de uno con multiplicador 1 tiene que puntuar EXACTAMENTE como el 1 contra 1 de antes. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void teamScoreOfOneIsTheOldScore(GameTestHelper helper) {
+        for (double cursor : new double[]{0.0, 333.0, 960.0, 1000.0}) {
+            for (double rel : new double[]{0.5, 1.0, 1.4, 3.0}) {
+                near(helper, ClashRules.score(cursor, rel, 100.0),
+                        ClashRules.teamScore(new double[]{cursor}, 1.0, rel, 100.0), 1e-9,
+                        "equipo de uno (cursor " + cursor + ", potencia " + rel + ")");
+            }
+        }
+        near(helper, (900.0 + 700.0) * 1.0 + 50.0,
+                ClashRules.teamScore(new double[]{900.0, 700.0}, 1.0, 1.5, 100.0), 1e-9,
+                "dos miembros: suma + bonus de equipo");
+        near(helper, 900.0 * 1.6 - 50.0,
+                ClashRules.teamScore(new double[]{900.0}, 1.6, 0.5, 100.0), 1e-9,
+                "el multiplicador no afecta al bonus de potencia");
+        helper.succeed();
+    }
+
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void compareUsesTieMargin(GameTestHelper helper) {
         helper.assertTrue(ClashRules.compare(500, 505, 10) == Outcome.TIE, "5 puntos de diferencia es empate");

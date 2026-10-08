@@ -49,6 +49,11 @@ public final class ClientZenkaiPalTick {
         int kiSet = -1;
         int kiVisual = -1;
         long kiStart = -1L;
+        // Último clip de disparo de ki que se reprodujo, y si está congelado por un choque de
+        // haces. Se recuerda el CLIP y no la fase: cuando el haz choca, el RELEASING del
+        // ActionState puede haber terminado ya (un haz largo tarda en encontrar al otro).
+        ResourceLocation lastKiRelease = null;
+        boolean kiClashHold = false;
         // Subir ki: start -> loop, y solo quieto.
         boolean chargeKiPlaying = false;
         int chargeKiStartTicks = 0;
@@ -475,6 +480,34 @@ public final class ClientZenkaiPalTick {
      */
     private static void tickKiAnim(AbstractClientPlayer p, AnimState st) {
         var action = ActionStateClient.of(p.getId());
+
+        // CHOQUE DE HACES: el brazo se queda en la pose final del disparo (pedido del usuario,
+        // "más realismo") en vez de cortarse — antes, al pasar la acción a CLASH, la fase de ki
+        // quedaba en null y se ejecutaba stopKi. Al acabar el choque se suelta de golpe.
+        if (action.type() == ActionType.CLASH) {
+            if (!st.kiClashHold) {
+                st.kiClashHold = true;
+                // Quien se une sin haber disparado trae el set de su técnica en `visual`
+                // (ActionResolver.beginClash); quien disparó usa su último disparo.
+                ResourceLocation clip = st.lastKiRelease;
+                int v = action.visual();
+                if (v != 0) { // 0 = no viene técnica (ver ActionResolver.beginClash)
+                    TechniqueAnimOverride ov = TechniqueAnimOverride.decode(v);
+                    clip = ov != null ? TechniqueAnimSets.overrideRelease(ov)
+                            : TechniqueAnimSets.release(TechniqueAnimSets.clamp(v));
+                }
+                if (clip != null) ZenkaiPalAnimations.holdKiRelease(p, clip);
+            }
+            st.kiPhase = null;
+            st.kiStart = -1L;
+            st.kiVisual = -1;
+            return;
+        }
+        if (st.kiClashHold) {
+            st.kiClashHold = false;
+            ZenkaiPalAnimations.stopKi(p);
+            st.kiSet = -1;
+        }
         boolean ki = action.type() == ActionType.KI_TECHNIQUE;
 
         ActionPhase phase = ki ? action.phase() : null;
@@ -511,7 +544,10 @@ public final class ClientZenkaiPalTick {
                 switch (phase) {
                     case CHARGING     -> ZenkaiPalAnimations.playOverrideCharge(p, ov);
                     case OVERCHARGING -> ZenkaiPalAnimations.playOverrideOvercharge(p, ov);
-                    case RELEASING    -> ZenkaiPalAnimations.playOverrideRelease(p, ov);
+                    case RELEASING    -> {
+                        ZenkaiPalAnimations.playOverrideRelease(p, ov);
+                        st.lastKiRelease = TechniqueAnimSets.overrideRelease(ov);
+                    }
                     default           -> ZenkaiPalAnimations.stopKi(p);
                 }
             }
@@ -522,7 +558,10 @@ public final class ClientZenkaiPalTick {
         switch (phase) {
             case CHARGING     -> ZenkaiPalAnimations.playKiCharge(p, st.kiSet);
             case OVERCHARGING -> ZenkaiPalAnimations.playKiOvercharge(p, st.kiSet);
-            case RELEASING    -> ZenkaiPalAnimations.playKiRelease(p, st.kiSet);
+            case RELEASING    -> {
+                ZenkaiPalAnimations.playKiRelease(p, st.kiSet);
+                st.lastKiRelease = TechniqueAnimSets.release(st.kiSet);
+            }
             default           -> ZenkaiPalAnimations.stopKi(p);
         }
     }

@@ -3,7 +3,7 @@ package com.hmc.zenkai.client.clash;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.action.ActionStateClient;
 import com.hmc.zenkai.feature.technique.clash.ClashPressPacket;
-import com.hmc.zenkai.feature.technique.clash.ClashPressedPacket;
+import com.hmc.zenkai.feature.technique.clash.ClashRosterPacket;
 import com.hmc.zenkai.feature.technique.clash.ClashResultPacket;
 import com.hmc.zenkai.feature.technique.clash.ClashRules;
 import com.hmc.zenkai.feature.technique.clash.ClashStartPacket;
@@ -50,6 +50,14 @@ public final class ClashClientState {
     /** Ticks de juego de cada hito, solo para las animaciones del HUD (ClashBarOverlay). */
     private static long receivedAt, pressedAt, rivalPressedAt;
 
+    /** Quién está en cada lado (ClashRosterPacket), líder primero. Vacío hasta el primer roster:
+     *  entonces el HUD cae a las fichas de siempre con los datos de ClashStartPacket. */
+    private static java.util.List<ClashRosterPacket.Member> rosterMine = java.util.List.of();
+    private static java.util.List<ClashRosterPacket.Member> rosterRival = java.util.List.of();
+    private static float multMine = 1f, multRival = 1f;
+    /** Tick en que el HUD vio pulsar a cada luchador (por id de entidad), para animar su check. */
+    private static final java.util.Map<Integer, Long> PRESSED_AT = new java.util.HashMap<>();
+
     private static int result = -1;
     private static int mine, rival, mineStage, rivalStage;
     private static long resultAt;
@@ -76,10 +84,26 @@ public final class ClashClientState {
     public static long rivalPressedAt() { return rivalPressedAt; }
     public static long resultAt() { return resultAt; }
 
-    public static void rivalPressed(ClashPressedPacket p) {
-        if (active && p.clashId() == clashId && !rivalPressed) {
+    public static java.util.List<ClashRosterPacket.Member> rosterMine() { return rosterMine; }
+    public static java.util.List<ClashRosterPacket.Member> rosterRival() { return rosterRival; }
+    public static float multMine() { return multMine; }
+    public static float multRival() { return multRival; }
+    public static long pressedAtOf(int entityId) { return PRESSED_AT.getOrDefault(entityId, 0L); }
+
+    /** Roster nuevo (al empezar, al unirse o salir alguien, al pulsar y al resolver). El check del
+     *  rival líder se sigue sacando de aquí: lo que antes era ClashPressedPacket. */
+    public static void roster(ClashRosterPacket p) {
+        if (!active || p.clashId() != clashId) return;
+        rosterMine = java.util.List.copyOf(p.mine());
+        rosterRival = java.util.List.copyOf(p.rival());
+        multMine = p.multMine();
+        multRival = p.multRival();
+        long t = now();
+        for (var m : rosterMine) if (m.pressed()) PRESSED_AT.putIfAbsent(m.entityId(), t);
+        for (var m : rosterRival) if (m.pressed()) PRESSED_AT.putIfAbsent(m.entityId(), t);
+        if (!rosterRival.isEmpty() && rosterRival.get(0).pressed() && !rivalPressed) {
             rivalPressed = true;
-            rivalPressedAt = now();
+            rivalPressedAt = t;
         }
     }
 
@@ -89,6 +113,7 @@ public final class ClashClientState {
     }
 
     public static void start(ClashStartPacket p) {
+        boolean sameClash = active && clashId == p.clashId();
         active = true;
         clashId = p.clashId();
         rivalName = p.rivalName();
@@ -96,6 +121,14 @@ public final class ClashClientState {
         rivalIsPlayer = p.rivalIsPlayer();
         rivalUuid = p.rivalUuid();
         rivalPressed = false;
+        // Un ClashStartPacket nuevo para el MISMO choque es el reinicio del minijuego al unirse
+        // alguien (clash.join_resets_minigame): se conserva el roster, se borran las pulsaciones.
+        if (!sameClash) {
+            rosterMine = java.util.List.of();
+            rosterRival = java.util.List.of();
+            multMine = multRival = 1f;
+        }
+        PRESSED_AT.clear();
         params = p.params();
         seed = p.seed();
         startTick = p.minigameStartTick();
@@ -118,6 +151,9 @@ public final class ClashClientState {
 
     public static void clear() {
         active = false;
+        rosterMine = java.util.List.of();
+        rosterRival = java.util.List.of();
+        PRESSED_AT.clear();
         result = -1;
         pressed = false;
     }
@@ -150,6 +186,12 @@ public final class ClashClientState {
     }
 
     public static boolean beforeStart(long gameTime) { return active && gameTime < startTick; }
+
+    /** Mi barra ya terminó sin que pulsara (con incorporaciones el choque puede seguir: el plazo
+     *  se alarga para el recién llegado). El HUD pasa a «esperando». */
+    public static boolean myBarOver(long gameTime) {
+        return active && params != null && result < 0 && gameTime >= startTick + params.duration();
+    }
 
     public static int stageAt(long gameTime, float partial) {
         if (params == null) return 0;

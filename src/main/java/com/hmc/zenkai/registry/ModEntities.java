@@ -16,6 +16,7 @@ import com.hmc.zenkai.content.entity.otherworld.YemmaEntity;
 import com.hmc.zenkai.content.entity.misc.SpacePodEntity;
 import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.content.entity.overworld.ShenLongEntity;
+import com.hmc.zenkai.content.entity.technique.ClashOrbEntity;
 import com.hmc.zenkai.content.entity.technique.KiArrowEntity;
 import com.hmc.zenkai.content.entity.technique.KiLingeringZoneEntity;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
@@ -79,6 +80,17 @@ public class ModEntities {
                     .sized(0.5f, 0.5f)
                     .clientTrackingRange(0)
                     .build("ki_lingering_zone"));
+
+    /** Esfera del choque de haces (ClashManager). Visible a cualquiera que la siga: SÍ va al
+     *  cliente, a diferencia de KI_LINGERING_ZONE. updateInterval alto porque no se mueve. */
+    public static final Supplier<EntityType<ClashOrbEntity>> CLASH_ORB =
+            ENTITY_TYPES.register("clash_orb", () -> EntityType.Builder
+                    .<ClashOrbEntity>of(ClashOrbEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(8)
+                    .updateInterval(20)
+                    .noSave()
+                    .build("clash_orb"));
 
     public static final Supplier<EntityType<KiArrowEntity>> KI_ARROW =
             ENTITY_TYPES.register("ki_arrow", () -> EntityType.Builder

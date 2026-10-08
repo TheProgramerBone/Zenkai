@@ -87,6 +87,32 @@ public final class ClashRules {
         return cursorValue + statBonus(relativePower, bonusCap);
     }
 
+    /**
+     * Multiplicador de cada miembro del equipo PEQUEÑO en un choque por equipos:
+     * {@code 1 + (grande − pequeño) × (bonus − 1) / pequeño}. Con bonus 1,6: un 2 contra 1 deja al
+     * que va solo en ×1,6 (máximo 1600 frente a 2000), un 3 contra 2 en ×1,3 por miembro. El equipo
+     * igual o mayor siempre ×1, y un 1 contra 1 también: ahí el choque es exactamente el de siempre.
+     * @param own   miembros de este equipo
+     * @param other miembros del contrario
+     * @param bonus {@code clash.outnumbered_bonus} (1 = sin compensación)
+     */
+    public static double outnumberedMultiplier(int own, int other, double bonus) {
+        if (own <= 0 || own >= other || !(bonus > 1.0)) return 1.0;
+        return 1.0 + (other - own) * (bonus - 1.0) / own;
+    }
+
+    /**
+     * Puntuación de un equipo: suma de los valores de barra de sus miembros por el multiplicador
+     * del equipo pequeño, más el bonus de potencia (que es del EQUIPO, con el daño total de cada
+     * lado, y no se multiplica). Con un solo miembro y multiplicador 1 es {@link #score}.
+     */
+    public static double teamScore(double[] cursorValues, double multiplier,
+                                   double relativePower, double bonusCap) {
+        double sum = 0.0;
+        for (double v : cursorValues) sum += v;
+        return sum * multiplier + statBonus(relativePower, bonusCap);
+    }
+
     /** Resultado de comparar a los dos participantes. */
     public enum Outcome { A_WINS, B_WINS, TIE }
 

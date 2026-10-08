@@ -366,7 +366,7 @@ public class ServerConfig {
 
     private static final ModConfigSpec.IntValue CLASH_DURATION_RAW =
             BUILDER.comment("Beam clash: length of the timing minigame in ticks (100 = 5 seconds)")
-                    .defineInRange("clash.duration_ticks", 100, 20, 400);
+                    .defineInRange("clash.duration_ticks", 100, 20, 1200);
 
     private static final ModConfigSpec.IntValue CLASH_CONTACT_RAW =
             BUILDER.comment("Beam clash: ticks between the beams meeting and the bar starting (the sphere grows meanwhile)")
@@ -410,6 +410,25 @@ public class ServerConfig {
     private static final ModConfigSpec.DoubleValue CLASH_TIE_MARGIN_RAW =
             BUILDER.comment("Beam clash: bar-point difference below which the clash is a tie and both beams detonate")
                     .defineInRange("clash.tie_margin", 10.0D, 0.0D, 200.0D);
+
+    private static final ModConfigSpec.IntValue CLASH_TEAM_MAX_RAW =
+            BUILDER.comment("Beam clash in teams: maximum fighters per side (the two who fired count). Other players join by",
+                            "right-clicking a fighter while aiming at them. 1 disables joining")
+                    .defineInRange("clash.team_max_size", 3, 1, 3);
+
+    private static final ModConfigSpec.DoubleValue CLASH_JOIN_RANGE_RAW =
+            BUILDER.comment("Beam clash in teams: how close (blocks) a player must be to a fighter to join their side")
+                    .defineInRange("clash.join_range", 6.0D, 1.0D, 32.0D);
+
+    private static final ModConfigSpec.BooleanValue CLASH_JOIN_RESETS_RAW =
+            BUILDER.comment("Beam clash in teams: what happens to the minigame when someone joins.",
+                            "false (default) = presses already made are KEPT, the newcomer gets a full bar of their own and the deadline",
+                            "is extended until it ends. true = the minigame restarts for everyone (all presses are wiped)")
+                    .define("clash.join_resets_minigame", false);
+
+    private static final ModConfigSpec.DoubleValue CLASH_OUTNUMBERED_BONUS_RAW =
+            BUILDER.comment("Beam clash in teams: base multiplier B for each member of the SMALLER team. Each one's bar value is multiplied by 1 + (bigger - smaller) * (B - 1) / smaller (2 vs 1 with B = 1.6: the lone player scores x1.6). 1 disables the handicap")
+                    .defineInRange("clash.outnumbered_bonus", 1.6D, 1.0D, 3.0D);
 
     private static final ModConfigSpec.DoubleValue CLASH_TIE_DAMAGE_RAW =
             BUILDER.comment("Beam clash: fraction of its damage each beam still deals when the clash is a tie")
@@ -1113,6 +1132,10 @@ public class ServerConfig {
     private static volatile double CLASH_NO_PRESS = 0.5D;
     private static volatile double CLASH_STAT_BONUS_CAP = 100.0D;
     private static volatile double CLASH_TIE_MARGIN = 10.0D;
+    private static volatile double CLASH_OUTNUMBERED_BONUS = 1.6D;
+    private static volatile int CLASH_TEAM_MAX = 3;
+    private static volatile double CLASH_JOIN_RANGE = 6.0D;
+    private static volatile boolean CLASH_JOIN_RESETS = false;
     private static volatile double CLASH_TIE_DAMAGE = 0.5D;
     private static volatile double CLASH_SUM = 1.0D;
     private static volatile double CLASH_RETURN_SPEED = 0.9D;
@@ -1289,6 +1312,10 @@ public class ServerConfig {
         CLASH_NO_PRESS    = CLASH_NO_PRESS_RAW.get();
         CLASH_STAT_BONUS_CAP = CLASH_STAT_BONUS_CAP_RAW.get();
         CLASH_TIE_MARGIN  = CLASH_TIE_MARGIN_RAW.get();
+        CLASH_OUTNUMBERED_BONUS = CLASH_OUTNUMBERED_BONUS_RAW.get();
+        CLASH_TEAM_MAX    = CLASH_TEAM_MAX_RAW.get();
+        CLASH_JOIN_RANGE  = CLASH_JOIN_RANGE_RAW.get();
+        CLASH_JOIN_RESETS = CLASH_JOIN_RESETS_RAW.get();
         CLASH_TIE_DAMAGE  = CLASH_TIE_DAMAGE_RAW.get();
         CLASH_SUM         = CLASH_SUM_RAW.get();
         CLASH_RETURN_SPEED = CLASH_RETURN_SPEED_RAW.get();
@@ -1563,6 +1590,10 @@ public class ServerConfig {
     public static double clashNoPressMultiplier()   { return CLASH_NO_PRESS; }
     public static double clashStatBonusCap()        { return CLASH_STAT_BONUS_CAP; }
     public static double clashTieMargin()           { return CLASH_TIE_MARGIN; }
+    public static double clashOutnumberedBonus()    { return CLASH_OUTNUMBERED_BONUS; }
+    public static int clashTeamMaxSize()            { return CLASH_TEAM_MAX; }
+    public static double clashJoinRange()           { return CLASH_JOIN_RANGE; }
+    public static boolean clashJoinResetsMinigame() { return CLASH_JOIN_RESETS; }
     public static double clashTieDamageFraction()   { return CLASH_TIE_DAMAGE; }
     public static double clashDamageSumFraction()   { return CLASH_SUM; }
     public static double clashReturnSpeedMultiplier() { return CLASH_RETURN_SPEED; }

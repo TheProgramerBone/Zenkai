@@ -282,13 +282,23 @@ public final class ActionResolver {
      * de ActionRules que consultar. Corta lo que hubiera en curso (carga, guardia, física) con el
      * mismo camino que cualquier interrupción y cancela la carga de ki sostenida (Matriz B).
      */
-    public static void beginClash(ServerPlayer sp) {
+    public static void beginClash(ServerPlayer sp) { beginClash(sp, 0); }
+
+    /**
+     * @param visual set de animación de la técnica con la que entra (KiTechnique.visual()), o 0 si
+     *               no aplica. NO -1: los valores negativos son anulaciones de animación
+     *               (TechniqueAnimOverride.encode) y -1 es la primera de ellas; 0 nunca es un set.
+     *               Viaja en el canal `visual` del ActionState para que el cliente ponga la pose de
+     *               disparo de ESA técnica a quien se une a un choque sin haber disparado
+     *               (ClientZenkaiPalTick.tickKiAnim); los que dispararon usan su último disparo.
+     */
+    public static void beginClash(ServerPlayer sp, int visual) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         ActionState cur = ActionStateServer.get(sp);
         cancelCurrent(sp, cur);
         cancelSustained(sp, att, ActionType.CLASH);
         ActionStateServer.set(sp, new ActionState(ActionType.CLASH, ActionPhase.ACTIVE,
-                sp.level().getGameTime(), -1, -1));
+                sp.level().getGameTime(), -1, visual));
     }
 
     /** Libera al jugador. Solo limpia si lo que hay ES un CLASH: si murió o lo derribaron, otro

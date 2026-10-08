@@ -274,8 +274,24 @@ public class KiProjectileEntity extends Projectile {
     }
 
     /** ¿Puede participar en un choque? Solo lo que VIAJA, golpea y no atraviesa por identidad. */
+    /**
+     * ALIMENTADOR de un choque de haces (fase 3 del choque por equipos): el haz de quien se UNE a
+     * un choque sale de sus manos y vuela hasta la esfera, donde ClashManager lo retiene. Mientras
+     * vuela no puede empezar otro choque ni golpear a nada — es solo el chorro que conecta al
+     * ayudante con la esfera (el haz anclado se dibuja desde donde el cliente lo vio nacer, sus
+     * manos, hasta la cabeza). Solo servidor: el cliente no necesita saberlo.
+     */
+    private boolean clashFeeder;
+
+    public void markClashFeeder() {
+        this.clashFeeder = true;
+        this.life = Integer.MAX_VALUE; // ClashManager lo retira al acabar el choque
+    }
+
+    public boolean isClashFeeder() { return clashFeeder; }
+
     public boolean canClash() {
-        return !isFrozen() && !isClashHeld() && techniqueType().travels()
+        return !clashFeeder && !isFrozen() && !isClashHeld() && techniqueType().travels()
                 && techniqueType() != KiTechniqueType.DISK && damage > 0.0;
     }
 
@@ -407,7 +423,7 @@ public class KiProjectileEntity extends Projectile {
             return;
         }
 
-        if (!level().isClientSide) {
+        if (!level().isClientSide && !clashFeeder) {
             // ¿Se cruza con el haz de otro dueño? Si es así, ClashManager lo retiene y este tick
             // no avanza más (los dos quedan en el punto medio).
             if (com.hmc.zenkai.feature.technique.clash.ClashManager.tryStart(this)) return;

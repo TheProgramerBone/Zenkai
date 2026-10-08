@@ -138,6 +138,7 @@ public final class ClashBarOverlay {
         } else if (res >= 0) {
             drawBar(g, barCx, barCy, vertical, 1f, 0f, true, t);
             drawBanner(g, font, w, res, t);
+            drawTeamTotals(g, font, w, res, t);
         } else {
             float in = clamp01((float) ClashClientState.elapsed(now, partial) / BAR_IN_TICKS);
             drawBar(g, barCx, barCy, vertical, in, (1f - in) * 6f, false, t);
@@ -158,10 +159,13 @@ public final class ClashBarOverlay {
                 plate(g, font, timer, right - tw / 2, rowY + 2, in);
                 g.drawString(font, timer, right - tw, rowY + 2, timerCol);
             }
-            Component hint = ClashClientState.pressed()
+            // Esperando también si MI barra acabó sin pulsar: con incorporaciones (modo
+            // «alargar») el choque sigue hasta que termine la barra del último en llegar.
+            boolean waiting = ClashClientState.pressed() || ClashClientState.myBarOver(now);
+            Component hint = waiting
                     ? Component.translatable("zenkai.clash.waiting")
                     : Component.translatable("zenkai.clash.press");
-            int col = ClashClientState.pressed() ? C_OFFWHITE : C_GOLD;
+            int col = waiting ? C_OFFWHITE : C_GOLD;
             plate(g, font, hint, barCx, bottom + 6, in);
             g.drawCenteredString(font, hint, barCx, bottom + 6, withAlpha(col, in));
         }
@@ -337,16 +341,100 @@ public final class ClashBarOverlay {
 
     // ── Fichas ──────────────────────────────────────────────────────────────────────────────
 
+    /** Separación entre fichas del mismo equipo (hacia fuera desde el líder) y escala de los
+     *  ayudantes: el líder —quien disparó— sigue siendo la ficha grande. */
+    private static final int HELPER_GAP = 44;
+    private static final float HELPER_SCALE = 0.75f;
+    private static final int HELPER_NAME_W = 40;
+
     private static void drawCards(GuiGraphics g, Minecraft mc, int w, double t) {
         int res = ClashClientState.result();
         int mineState = res == ClashResultPacket.WIN ? 1 : res == ClashResultPacket.LOSE ? -1
                 : res == ClashResultPacket.TIE ? 2 : 0;
         int rivalState = mineState == 2 ? 2 : -mineState;
 
+        var mine = ClashClientState.rosterMine();
+        var rival = ClashClientState.rosterRival();
+        if (mine.isEmpty() || rival.isEmpty()) {
+            drawLegacyCards(g, mc, w, t, mineState, rivalState);
+            return;
+        }
+        drawSide(g, mc, w, t, mine, -1, mineState, ClashClientState.mineValue(), ClashClientState.multMine());
+        drawSide(g, mc, w, t, rival, 1, rivalState, ClashClientState.rivalValue(), ClashClientState.multRival());
+    }
+
+    /**
+     * Un equipo: el líder en ±CARD_OFFSET y los ayudantes hacia fuera, más pequeños. Con un
+     * solo miembro la cifra es el TOTAL del equipo (lo de siempre); con varios, cada ficha enseña
+     * su aportación y los totales van bajo el banner ({@link #drawTeamTotals}).
+     * @param dir -1 = mi lado (izquierda), +1 = el rival (derecha)
+     */
+    private static void drawSide(GuiGraphics g, Minecraft mc, int w, double t,
+                                 java.util.List<com.hmc.zenkai.feature.technique.clash.ClashRosterPacket.Member> side,
+                                 int dir, int state, int teamTotal, float mult) {
+        for (int i = side.size() - 1; i >= 0; i--) {
+            var m = side.get(i);
+            int cx = w / 2 + dir * (CARD_OFFSET + i * HELPER_GAP);
+            boolean me = mc.player != null && m.entityId() == mc.player.getId();
+            Component label = me ? Component.translatable("zenkai.clash.you") : Component.literal(m.name());
+            boolean pressed = me ? ClashClientState.pressed() : m.pressed();
+            long pressedAt = me ? ClashClientState.pressedAt() : ClashClientState.pressedAtOf(m.entityId());
+            int value = side.size() == 1 ? teamTotal : Math.max(0, m.value());
+            float scale = i == 0 ? 1f : HELPER_SCALE;
+            var pose = g.pose();
+            pose.pushPose();
+            pose.translate(cx, CARD_TOP, 0f);
+            pose.scale(scale, scale, 1f);
+            pose.translate(-cx, -CARD_TOP, 0f);
+            drawCard(g, mc, cx, faceOf(mc, m), label, pressed, pressedAt, state, value, t,
+                    i == 0 ? MAX_NAME_W : HELPER_NAME_W);
+            pose.popPose();
+        }
+        // Insignia del equipo pequeño («×1.6») bajo el líder mientras no hay resultado.
+        if (mult > 1.001f && state == 0) {
+            String txt = "\u00D7" + String.format(java.util.Locale.ROOT, "%.1f", mult);
+            int cx = w / 2 + dir * CARD_OFFSET;
+            plate(g, mc.font, Component.literal(txt), cx, CARD_TOP + CARD + 14, 1f);
+            g.drawCenteredString(mc.font, txt, cx, CARD_TOP + CARD + 14, C_GOLD);
+        }
+    }
+
+    private static Face faceOf(Minecraft mc,
+                               com.hmc.zenkai.feature.technique.clash.ClashRosterPacket.Member m) {
+        if (m.isPlayer()) {
+            var conn = mc.getConnection();
+            var info = conn == null ? null : conn.getPlayerInfo(m.uuid());
+            return Face.of(info != null ? info.getSkin() : DefaultPlayerSkin.get(m.uuid()));
+        }
+        return mobFace(mc, m.entityId());
+    }
+
+    /** Totales de cada equipo bajo el banner, solo si algún lado tiene más de un miembro (en un
+     *  1 contra 1 las cifras de las fichas ya son los totales). */
+    private static void drawTeamTotals(GuiGraphics g, Font font, int w, int res, double t) {
+        if (ClashClientState.rosterMine().size() <= 1 && ClashClientState.rosterRival().size() <= 1) return;
+        float k = clamp01((float) (t - ClashClientState.resultAt()) / NUMBERS_TICKS);
+        int mineCol = res == ClashResultPacket.WIN ? C_GOLD : res == ClashResultPacket.TIE ? C_COLD : C_OFFWHITE;
+        int rivalCol = res == ClashResultPacket.LOSE ? C_GOLD : res == ClashResultPacket.TIE ? C_COLD : C_OFFWHITE;
+        String a = Integer.toString(Math.round(ClashClientState.mineValue() * k));
+        String b = Integer.toString(Math.round(ClashClientState.rivalValue() * k));
+        String vs = "  \u2014  ";
+        int total = font.width(a) + font.width(vs) + font.width(b);
+        int x = w / 2 - total / 2, y = TITLE_Y + 22;
+        g.fill(x - 3, y - 2, x + total + 3, y + 9, C_PLATE);
+        g.drawString(font, a, x, y, mineCol);
+        g.drawString(font, vs, x + font.width(a), y, C_MUTED);
+        g.drawString(font, b, x + font.width(a) + font.width(vs), y, rivalCol);
+    }
+
+    /** Fichas de antes del primer roster (no debería verse más de un tick: el roster llega
+     *  justo detrás de ClashStartPacket). */
+    private static void drawLegacyCards(GuiGraphics g, Minecraft mc, int w, double t,
+                                        int mineState, int rivalState) {
         drawCard(g, mc, w / 2 - CARD_OFFSET, Face.of(mc.player.getSkin()),
                 Component.translatable("zenkai.clash.you"),
                 ClashClientState.pressed(), ClashClientState.pressedAt(), mineState,
-                ClashClientState.mineValue(), t);
+                ClashClientState.mineValue(), t, MAX_NAME_W);
 
         // Rival: cara de su skin si es un jugador (de la lista de jugadores, aunque la entidad no
         // esté cargada); si es un mob humanoide, la cara de su textura; si no, un «?».
@@ -357,22 +445,22 @@ public final class ClashBarOverlay {
             rivalFace = Face.of(info != null ? info.getSkin()
                     : DefaultPlayerSkin.get(ClashClientState.rivalUuid()));
         } else {
-            rivalFace = mobFace(mc);
+            rivalFace = mobFace(mc, ClashClientState.rivalEntityId());
         }
         drawCard(g, mc, w / 2 + CARD_OFFSET, rivalFace,
                 Component.literal(ClashClientState.rivalName()),
                 ClashClientState.rivalPressed(), ClashClientState.rivalPressedAt(), rivalState,
-                ClashClientState.rivalValue(), t);
+                ClashClientState.rivalValue(), t, MAX_NAME_W);
     }
 
     /** Ancho máximo del nombre bajo la ficha: con las fichas a ±CARD_OFFSET del centro, más ancho
      *  invade el VS (un «Dev's Shadow» entero ya se le acercaba). */
     private static final int MAX_NAME_W = 64;
 
-    private static String fitName(Font font, String name) {
-        if (font.width(name) <= MAX_NAME_W) return name;
+    private static String fitName(Font font, String name, int maxW) {
+        if (font.width(name) <= maxW) return name;
         String dots = "…";
-        return font.plainSubstrByWidth(name, MAX_NAME_W - font.width(dots)).stripTrailing() + dots;
+        return font.plainSubstrByWidth(name, maxW - font.width(dots)).stripTrailing() + dots;
     }
 
     /**
@@ -404,8 +492,8 @@ public final class ClashBarOverlay {
      * modelo tiene la textura en otro formato y daría un recorte sin sentido: «?». También «?»
      * si la entidad no está cargada en el cliente.
      */
-    private static Face mobFace(Minecraft mc) {
-        var entity = mc.level.getEntity(ClashClientState.rivalEntityId());
+    private static Face mobFace(Minecraft mc, int entityId) {
+        var entity = mc.level.getEntity(entityId);
         if (entity == null) return null;
         var renderer = mc.getEntityRenderDispatcher().getRenderer(entity);
         boolean humanoid, geckolib = false;
@@ -436,7 +524,7 @@ public final class ClashBarOverlay {
     /** @param state 0 en curso, 1 ganó, -1 perdió, 2 empate */
     private static void drawCard(GuiGraphics g, Minecraft mc, int cx, Face face,
                                  Component label, boolean pressed,
-                                 long pressedAt, int state, int value, double t) {
+                                 long pressedAt, int state, int value, double t, int maxNameW) {
         int x = cx - CARD / 2, y = CARD_TOP;
         int fx = x + (CARD - FACE) / 2, fy = y + (CARD - FACE) / 2;
 
@@ -459,7 +547,7 @@ public final class ClashBarOverlay {
         g.blit(TEX, x, y, U_CARD, V_ROW2, CARD, CARD, TEX_W, TEX_H);
         g.setColor(1f, 1f, 1f, 1f);
 
-        String text = fitName(mc.font, label.getString());
+        String text = fitName(mc.font, label.getString(), maxNameW);
         int nameCol = state == 1 ? C_GOLD : state == -1 ? C_MUTED : 0xFFFFFFFF;
         plate(g, mc.font, Component.literal(text), cx, y + CARD + 3, 1f);
         g.drawCenteredString(mc.font, text, cx, y + CARD + 3, nameCol);

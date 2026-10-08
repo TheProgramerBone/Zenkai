@@ -582,9 +582,14 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.technique.clash.ClashResultPacket::handle);
 
         registrar.playToClient(
-                com.hmc.zenkai.feature.technique.clash.ClashPressedPacket.TYPE,
-                com.hmc.zenkai.feature.technique.clash.ClashPressedPacket.STREAM_CODEC,
-                com.hmc.zenkai.feature.technique.clash.ClashPressedPacket::handle);
+                com.hmc.zenkai.feature.technique.clash.ClashRosterPacket.TYPE,
+                com.hmc.zenkai.feature.technique.clash.ClashRosterPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.clash.ClashRosterPacket::handle);
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.technique.clash.ClashJoinPacket.TYPE,
+                com.hmc.zenkai.feature.technique.clash.ClashJoinPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.clash.ClashJoinPacket::handle);
 
         registrar.playToServer(
                 com.hmc.zenkai.feature.technique.clash.ClashPressPacket.TYPE,

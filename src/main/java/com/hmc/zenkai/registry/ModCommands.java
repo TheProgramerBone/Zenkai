@@ -458,7 +458,18 @@ public class ModCommands {
                                 .then(dummyModes(true))
                                 .then(dummyModes(false))
                                 .then(Commands.literal("clear")
-                                        .executes(ModCommands::debugClearDummies))))
+                                        .executes(ModCommands::debugClearDummies))
+                                .then(Commands.literal("clash")
+                                        .executes(c -> debugDummyClash(c, "wave"))
+                                        .then(Commands.argument("type", StringArgumentType.word())
+                                                .suggests(KI_TYPE_IDS)
+                                                .executes(c -> debugDummyClash(c,
+                                                        StringArgumentType.getString(c, "type")))))
+                                .then(Commands.literal("join")
+                                        .then(Commands.literal("ally")
+                                                .executes(c -> debugDummyJoin(c, true)))
+                                        .then(Commands.literal("rival")
+                                                .executes(c -> debugDummyJoin(c, false))))))
 
 
 
@@ -1146,6 +1157,102 @@ public class ModCommands {
         ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] " + n
                 + " muñeco(s) ahora en modo " + mode.id()), false);
         return n;
+    }
+
+    /** Separación de los dos muñecos de «dummy clash» a cada lado de quien lo ejecuta, y cuánto
+     *  por delante: a ~5,4 bloques de cada uno, dentro del clash.join_range por defecto (6). */
+    private static final double CLASH_DUMMY_SIDE = 4.5, CLASH_DUMMY_AHEAD = 3.0;
+
+    /**
+     * «/zenkai debug dummy clash [tipo]»: dos muñecos nuevos, uno a cada lado, se disparan un haz
+     * el uno al otro y chocan. Es la única forma de tener en un mundo de un jugador un choque en el
+     * que TÚ no estás, para probar «Clic derecho para ayudar» (ClashJoinClient). Colores distintos
+     * para distinguir los lados en la esfera. Se borran con «dummy clear».
+     */
+    private static int debugDummyClash(CommandContext<CommandSourceStack> ctx, String typeId)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+        KiTechniqueType type = KiTechniqueType.byName(typeId);
+        if (type == null || !type.travels() || type.defensive() || type == KiTechniqueType.DISK) {
+            ctx.getSource().sendFailure(Component.literal(
+                    "[Zenkai] Tipo no válido para un choque (tiene que viajar y no ser DISK): " + typeId));
+            return 0;
+        }
+        Vec3 look = sp.getLookAngle();
+        Vec3 fwd = new Vec3(look.x, 0.0, look.z);
+        fwd = fwd.lengthSqr() < 1.0e-6 ? new Vec3(0, 0, 1) : fwd.normalize();
+        Vec3 side = new Vec3(-fwd.z, 0.0, fwd.x);
+        Vec3 base = sp.position().add(fwd.scale(CLASH_DUMMY_AHEAD)).add(0, 1.0, 0);
+        Vec3 pa = base.add(side.scale(CLASH_DUMMY_SIDE)), pb = base.subtract(side.scale(CLASH_DUMMY_SIDE));
+
+        var a = ModEntities.SHADOW_CLONE.get().create(sl);
+        var b = ModEntities.SHADOW_CLONE.get().create(sl);
+        if (a == null || b == null) return 0;
+        float yawA = (float) Math.toDegrees(Math.atan2(-(pb.x - pa.x), pb.z - pa.z));
+        a.moveTo(pa.x, pa.y, pa.z, yawA, 0f);
+        b.moveTo(pb.x, pb.y, pb.z, yawA + 180f, 0f);
+        for (var d : new com.hmc.zenkai.content.entity.misc.ShadowCloneEntity[]{a, b}) {
+            d.setOwner(sp);
+            d.setFlightAllowed(false);
+            d.setDebugScript(com.hmc.zenkai.content.entity.misc.ShadowDebugMode.IDLE, null,
+                    DUMMY_DEFAULT_SIZE, DUMMY_DEFAULT_INTERVAL);
+            sl.addFreshEntity(d);
+        }
+        // Daño de sobra por encima de clash.min_damage: con menos, los haces se atravesarían.
+        double dmg = Math.max(10.0, com.hmc.zenkai.config.ServerConfig.clashMinDamage() + 5.0);
+        fireDebugBeam(sl, a, b, type, 0x3FA9FF, dmg);
+        fireDebugBeam(sl, b, a, type, 0xFF5533, dmg);
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Choque entre muñecos ("
+                + type.name().toLowerCase(java.util.Locale.ROOT) + "). Apunta a uno y haz clic derecho "
+                + "para ayudarle; \"/zenkai debug dummy join ally|rival\" mete más muñecos."), false);
+        return 1;
+    }
+
+    private static void fireDebugBeam(ServerLevel sl, net.minecraft.world.entity.LivingEntity from,
+                                      net.minecraft.world.entity.LivingEntity to, KiTechniqueType type,
+                                      int rgb, double damage) {
+        Vec3 eye = from.getEyePosition();
+        Vec3 dir = to.getEyePosition().subtract(eye).normalize();
+        var proj = new com.hmc.zenkai.content.entity.technique.KiProjectileEntity(
+                ModEntities.KI_PROJECTILE.get(), sl);
+        proj.configure(from, type, rgb, DUMMY_DEFAULT_SIZE, damage, 100, TechniqueEffect.NONE);
+        Vec3 spawn = eye.add(dir.scale(0.9));
+        proj.setPos(spawn.x, spawn.y, spawn.z);
+        proj.setDeltaMovement(dir.scale(type.speed()));
+        sl.addFreshEntity(proj);
+    }
+
+    /** «/zenkai debug dummy join ally|rival»: el muñeco libre más cercano se une al choque de
+     *  haces en el que estás, en tu equipo o en el contrario (ClashManager.debugJoinMob). */
+    private static int debugDummyJoin(CommandContext<CommandSourceStack> ctx, boolean ally)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+        var dummies = sl.getEntitiesOfClass(
+                com.hmc.zenkai.content.entity.misc.ShadowCloneEntity.class,
+                sp.getBoundingBox().inflate(DUMMY_SEARCH_RADIUS),
+                s -> s.getTags().contains(
+                        com.hmc.zenkai.content.entity.misc.ShadowCloneEntity.DEBUG_DUMMY_TAG)
+                        && !com.hmc.zenkai.feature.technique.clash.ClashManager.inClash(s.getUUID()));
+        if (dummies.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal(
+                    "[Zenkai] No hay ningún muñeco libre cerca (crea otro con /zenkai debug dummy)"));
+            return 0;
+        }
+        dummies.sort(java.util.Comparator.comparingDouble(d -> d.distanceToSqr(sp)));
+        String why = com.hmc.zenkai.feature.technique.clash.ClashManager.debugJoinMob(sp, dummies.get(0), ally);
+        if (why != null) {
+            ctx.getSource().sendFailure(Component.literal("[Zenkai] No se pudo: " + switch (why) {
+                case "no_clash" -> "no estás en un choque de haces (o ya se resolvió)";
+                case "full" -> "ese equipo está lleno (clash.team_max_size)";
+                default -> "ese muñeco ya está en un choque";
+            }));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Muñeco unido al choque ("
+                + (ally ? "tu equipo" : "equipo rival") + ")"), false);
+        return 1;
     }
 
     private static int debugClearDummies(CommandContext<CommandSourceStack> ctx)

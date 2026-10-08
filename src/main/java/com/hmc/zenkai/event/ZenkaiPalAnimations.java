@@ -347,6 +347,19 @@ public final class ZenkaiPalAnimations {
                 ZenkaiTransitions.KI_RELEASE);
     }
 
+    /**
+     * Choque de haces: el jugador se queda en la POSE DEL DISPARO mientras dura. Reproduce
+     * {@code <clip>_hold} (player_animations/ki_release_holds.animation.json, generado por
+     * tools/gen_ki_release_holds.py): una sola pose con hold_on_last_frame, el mismo modo que las
+     * poses de carga. NO es el último tick del clip de disparo: esos clips son la recuperación del
+     * golpe y terminan con los brazos en reposo — sostener su final era justo el bug del primer
+     * intento (2026-10-08). Sin el clip _hold, play devuelve false y no pasa nada.
+     */
+    public static void holdKiRelease(AbstractClientPlayer p, ResourceLocation releaseClip) {
+        ZenkaiTransitions.play(kiController(p), ResourceLocation.fromNamespaceAndPath(
+                releaseClip.getNamespace(), releaseClip.getPath() + "_hold"), ZenkaiTransitions.KI_RELEASE);
+    }
+
     public static void playKiBarrier(AbstractClientPlayer p) {
         ZenkaiTransitions.play(kiController(p), TechniqueAnimSets.BARRIER,
                 ZenkaiTransitions.KI_CHARGE);
