@@ -1,0 +1,11 @@
+{
+  "max_level": 3,
+  "tp_cost": 400,
+  "mind_req": [5, 12, 22],
+  "purchasable": true,
+  "masters": ["korin"],
+  "values": {
+    "ki_cost_mult": [1.0, 0.8, 0.6],
+    "cooldown_mult": [1.0, 0.75, 0.5]
+  }
+}
