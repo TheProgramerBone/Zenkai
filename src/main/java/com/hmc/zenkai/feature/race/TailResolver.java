@@ -48,9 +48,9 @@ public final class TailResolver {
         if (!stats.isRaceChosen() || stats.getRace() != Race.SAIYAN) return ItemStack.EMPTY;
         if (!stats.hasTail()) return ItemStack.EMPTY;
 
-        // Oozaru/Super Oozaru YA incluyen la cola en su propio modelo de mono gigante (aunque
-        // hoy ese modelo todavía sea el cuerpo humano/saiyan escalado, ver geo-models-pendientes)
-        // — este overlay independiente se apagaría, no la duplicaría.
+        // Oozaru/Super Oozaru YA incluyen la cola en su propio modelo de mono gigante
+        // (geo/races/oozaru_player.geo.json, tools/gen_oozaru.py) — este overlay independiente
+        // se apaga para no duplicarla.
         PlayerFormAttachment form = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         ResourceLocation formId = form.getFormId();
         if (FormIds.OOZARU.equals(formId) || FormIds.SUPER_OOZARU.equals(formId)) return ItemStack.EMPTY;

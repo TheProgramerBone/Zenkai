@@ -31,6 +31,19 @@ public final class RaceSkinRenderHooks {
     private static final boolean DISABLE_CAPE_LAYER = true;
     private static final boolean DEBUG_LAYER_ORDER = true;
 
+    /**
+     * Capas de pelo, cola y halo de cada renderer de jugador (por modelo default/slim): la imagen
+     * residual del Paso rápido (AfterImageClient) las vuelve a llamar con la pasada fantasma
+     * activa para que la silueta lleve pelo, cola y halo y no solo el cuerpo vanilla.
+     */
+    private static final java.util.Map<PlayerRenderer,
+            List<RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>>> GHOST_LAYERS =
+            new java.util.IdentityHashMap<>();
+
+    public static List<RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>> ghostLayers(PlayerRenderer r) {
+        return GHOST_LAYERS.getOrDefault(r, List.of());
+    }
+
     @SubscribeEvent
     public static void onAddLayers(EntityRenderersEvent.AddLayers event) {
         var mc = Minecraft.getInstance();
@@ -70,18 +83,20 @@ public final class RaceSkinRenderHooks {
 
             // 3) Agregar layer de pelo Saiyan (también debajo de la armadura vanilla)
             //    (Solo renderiza cuando aplica; en otros casos hace return)
-            renderer.addLayer(new HairGeoLayer(
+            var hairLayer = new HairGeoLayer(
                     renderer,
                     event.getEntityModels(),
                     mc.getModelManager()
-            ));
+            );
+            renderer.addLayer(hairLayer);
 
             // 3b) Cola de Saiyan, mismo criterio que el pelo (solo renderiza si aplica).
-            renderer.addLayer(new TailGeoLayer(
+            var tailLayer = new TailGeoLayer(
                     renderer,
                     event.getEntityModels(),
                     mc.getModelManager()
-            ));
+            );
+            renderer.addLayer(tailLayer);
 
             // 4) Re-agregar armor layer vanilla (encima)
             for (RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> armorLayer : removedArmor) {
@@ -102,11 +117,13 @@ public final class RaceSkinRenderHooks {
             //    orden aquí, en el mismo sitio que ya reordena la armadura vanilla, Scouter/Halo
             //    quedan SIEMPRE después de Hair/RaceSkin/armadura real — nada necesita dibujarse
             //    detrás de ellos después, así que ese hueco no puede volver a aparecer.
-            renderer.addLayer(new HaloGeoLayer(
+            var haloLayer = new HaloGeoLayer(
                     renderer,
                     event.getEntityModels(),
                     mc.getModelManager()
-            ));
+            );
+            renderer.addLayer(haloLayer);
+            GHOST_LAYERS.put(renderer, List.of(hairLayer, tailLayer, haloLayer));
             renderer.addLayer(new ScouterGeoLayer(
                     renderer,
                     event.getEntityModels(),

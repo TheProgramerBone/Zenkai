@@ -142,7 +142,12 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
         if (active == null || !active.descendable()) return false;
 
         long now = sp.level().getGameTime();
-        if (now - st.getLastDescendTick() < DESCEND_COOLDOWN_TICKS) return false;
+        // lastDescendTick arranca en Long.MIN_VALUE ("nunca usado"): restarlo directamente
+        // desborda (now - MIN_VALUE da un número NEGATIVO enorme), la comparación salía siempre
+        // true y el cooldown bloqueaba Descender para siempre, porque lastDescendTick solo se
+        // escribe tras un uso que nunca llegaba a ocurrir. Por eso se compara sin restar.
+        long last = st.getLastDescendTick();
+        if (last != Long.MIN_VALUE && now >= last && now - last < DESCEND_COOLDOWN_TICKS) return false;
 
         fm.forceBase();
         st.setLastDescendTick(now);

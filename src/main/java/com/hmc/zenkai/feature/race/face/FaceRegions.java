@@ -34,24 +34,58 @@ public final class FaceRegions {
 
     private static final Map<ResourceLocation, FaceRegion> MANUAL = new HashMap<>();
 
+    /**
+     * EXCEPCIONES de color: modelos cuya cara NO está pintada con el color de la piel (capa 0) sino con
+     * el de otra capa tintable. Los rasgos de color "skin" (boca, nariz) toman el color de esa capa en
+     * vez del tono de piel del jugador. Sin entrada = la capa 0, que es lo normal.
+     */
+    private static final Map<ResourceLocation, Integer> SKIN_FEATURE_LAYER = new HashMap<>();
+
     static {
         // Primera forma arcosiana: cabeza con uv [0,16] → cara en (16,48)-(31,63). Con el modelo
         // actual el casco tapa las filas 0-7 de la cara (ly 48-55): un rasgo en la mitad superior
         // queda oculto. Al rediseñar el modelo, ajustar aquí (p. ej. solo la franja visible).
         put("geo/races/arcosian_first_form_player.geo.json", 16, 48, 31, 63);
 
+        // Segunda forma: quad NORTH de la cabeza en uv [22,16] (sobre 128) → (44,32)-(59,47) en el
+        // PNG de 256. El casco tapa las filas 0-7, como en la primera forma.
+        put("geo/races/arcosian_second_form_player.geo.json", 44, 32, 59, 47);
+
+        // Tercera forma: quad NORTH de la cabeza en uv [0,28] (sobre 128) → (0,56)-(15,71) en el
+        // PNG de 256. El casco tapa las filas 0-7.
+        put("geo/races/arcosian_third_form_player.geo.json", 0, 56, 15, 71);
+
+        // Forma final: quad NORTH de la cabeza en uv [0,14] (sobre 128) → (0,28)-(15,41) en el
+        // PNG de 256. El casco (head#1) tapa las columnas 2-13 de las filas 0-6.
+        put("geo/races/arcosian_final_form_player.geo.json", 0, 28, 15, 41);
+        // La cara de la forma final está pintada con el blanco de la armadura (capa 2), no con la piel:
+        // su boca y su nariz se tiñen con ese color.
+        putSkinLayer("geo/races/arcosian_final_form_player.geo.json", 2);
+
+        // Golden y Black Freezer: copias del modelo de la forma final (mismo geo, textura propia), así que
+        // la cara está en el mismo sitio. Su cara no es piel: boca y nariz toman el color "4" que la forma
+        // declara en layer_colors (no hay capa 4: la textura ya es el color final).
+        put("geo/races/arcosian_golden_form_player.geo.json", 0, 28, 15, 41);
+        put("geo/races/arcosian_black_form_player.geo.json", 0, 28, 15, 41);
+        putSkinLayer("geo/races/arcosian_golden_form_player.geo.json", 4);
+        putSkinLayer("geo/races/arcosian_black_form_player.geo.json", 4);
+
         // Formas con geo propia aún sin crear (rutas ya registradas en ModItems). Descomentar y
         // poner los números cuando exista cada modelo:
-        // put("geo/forms/arcosian_second_form_player.geo.json",      x0, y0, x1, y1);
-        // put("geo/forms/arcosian_third_form_player.geo.json",       x0, y0, x1, y1);
-        // put("geo/forms/arcosian_final_form_player.geo.json",       x0, y0, x1, y1);
-        // put("geo/forms/arcosian_golden_form_player.geo.json",      x0, y0, x1, y1);
-        // put("geo/forms/arcosian_black_form_player.geo.json",       x0, y0, x1, y1);
         // put("geo/forms/arcosian_fifth_form_player.geo.json",       x0, y0, x1, y1);
         // put("geo/forms/arcosian_golden_fifth_form_player.geo.json", x0, y0, x1, y1);
         // put("geo/forms/arcosian_black_fifth_form_player.geo.json",  x0, y0, x1, y1);
         // put("geo/forms/namek_orange_player.geo.json",              x0, y0, x1, y1);
         // put("geo/races/majin_player.geo.json",                     x0, y0, x1, y1);
+    }
+
+    private static void putSkinLayer(String geoPath, int layerIndex) {
+        SKIN_FEATURE_LAYER.put(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, geoPath), layerIndex);
+    }
+
+    /** Capa tintable cuyo color pinta los rasgos "skin" de la cara de este modelo; 0 = la piel del jugador. */
+    public static int skinFeatureLayer(@Nullable ResourceLocation geoPath) {
+        return geoPath == null ? 0 : SKIN_FEATURE_LAYER.getOrDefault(geoPath, 0);
     }
 
     private static void put(String geoPath, int x0, int y0, int x1, int y1) {

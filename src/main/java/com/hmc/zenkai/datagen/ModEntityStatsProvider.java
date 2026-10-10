@@ -21,8 +21,9 @@ import java.util.concurrent.CompletableFuture;
  * campo nuevo (como `alignment`) obliga a abrir 45 archivos y basta un olvido para que una
  * entidad se comporte distinto sin que nadie sepa por qué. Aquí los PL están en conjunto en la misma
  * pantalla, que es lo que hace falta para calibrarlos unos contra otros.
- * ANTES DE USARLO: borra src/main/resources/data/zenkai/zenkai_entities/ entero. Los dos
- * directorios de recursos se montan juntos y tendrías cada ficha duplicada.
+ * IDEMPOTENTE: los dos directorios de recursos (src/main y src/generated) se montan juntos, así
+ * que una copia vieja en src/main/resources/data/zenkai/zenkai_entities/ duplicaría cada ficha.
+ * run() la borra sola antes de generar; ya no hay precondición manual.
  * ALINEAMIENTO (-100..+100): es la maldad SENTIDA, no la hostilidad mecánica. Un enderman es
  * peligroso pero no malvado; un piglin zombificado es una víctima. Alimenta el color de la
  * llama y de la silueta del sentir el ki.
@@ -30,8 +31,10 @@ import java.util.concurrent.CompletableFuture;
 public class ModEntityStatsProvider implements DataProvider {
 
     private final PackOutput.PathProvider path;
+    private final java.nio.file.Path outputRoot;
 
     public ModEntityStatsProvider(PackOutput output) {
+        this.outputRoot = output.getOutputFolder();
         this.path = output.createPathProvider(PackOutput.Target.DATA_PACK, "zenkai_entities");
     }
 
@@ -40,6 +43,7 @@ public class ModEntityStatsProvider implements DataProvider {
 
     @Override
     public @NotNull CompletableFuture<?> run(@NotNull CachedOutput cache) {
+        removeStaleHandCopy();
         Map<String, JsonObject> defs = new LinkedHashMap<>();
         build(defs);
 
@@ -49,6 +53,20 @@ public class ModEntityStatsProvider implements DataProvider {
                     path.json(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, e.getKey()))));
         }
         return CompletableFuture.allOf(out.toArray(CompletableFuture[]::new));
+    }
+
+    /** Borra la copia de src/main/resources (hermana de src/generated/resources) si existe. */
+    private void removeStaleHandCopy() {
+        java.nio.file.Path stale = outputRoot.resolveSibling("../main/resources").normalize()
+                .resolve("data").resolve(Zenkai.MOD_ID).resolve("zenkai_entities");
+        if (outputRoot.normalize().equals(stale) || !java.nio.file.Files.isDirectory(stale)) return;
+        try (var files = java.nio.file.Files.walk(stale)) {
+            for (java.nio.file.Path f : (Iterable<java.nio.file.Path>) files.sorted(java.util.Comparator.reverseOrder())::iterator) {
+                java.nio.file.Files.delete(f);
+            }
+        } catch (java.io.IOException ex) {
+            throw new java.io.UncheckedIOException("No se pudo limpiar " + stale, ex);
+        }
     }
 
     // ─────────────────────────────────────────────────────────── el catálogo

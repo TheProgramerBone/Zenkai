@@ -62,8 +62,11 @@ public final class FaceCatalogGameTests {
         for (int n = 1; n <= 5; n++) {
             helper.assertTrue(FaceCatalog.get(id("eyes/" + n)) == null, "ya no hay ids numéricos: eyes/" + n);
         }
+        // Los vetos se escriben como "exclude_races" (baneado de esa raza), no como lista de razas
+        // permitidas (decisión del usuario, 2026-10-10): el único ojo vetado es wide, para Arcosiano.
         helper.assertTrue(FaceBans.isAllowed(Race.MAJIN, FaceCategory.EYES, id("eyes/wide"))
-                && !FaceBans.isAllowed(Race.HUMAN, FaceCategory.EYES, id("eyes/wide")), "eyes/wide: solo Majin");
+                && FaceBans.isAllowed(Race.HUMAN, FaceCategory.EYES, id("eyes/wide"))
+                && !FaceBans.isAllowed(Race.ARCOSIAN, FaceCategory.EYES, id("eyes/wide")), "eyes/wide: vetado solo para Arcosiano");
 
         // Opción A del usuario (2026-10-01): el trazo oscuro de los ojos sigue al color del pelo
         // (dorado en SSJ) — antes estaba en la capa base con color fijo y no cambiaba al transformarse.
@@ -111,21 +114,14 @@ public final class FaceCatalogGameTests {
                         && mouth.get(0).texture().getPath().equals("textures/customization/mouth/neutral.png"),
                 "mouth/neutral debe ser una capa neutral teñida con la piel");
 
-        // sparkle/arched/sleepy: para cualquier raza salvo Arcosiano (el casco se come su rasgo
-        // distintivo; vetados el 2026-10-06 viendo la cabeza real).
-        for (String p : new String[]{"eyes/sparkle", "eyes/arched", "eyes/sleepy"}) {
+        // Con la cabeza arcosiana nueva solo queda vetado wide (el usuario liberó sparkle, arched,
+        // sleepy, expressive y soft el 2026-10-10): todos valen para Human y Arcosiano.
+        for (String p : new String[]{"eyes/sparkle", "eyes/arched", "eyes/sleepy", "eyes/expressive", "eyes/soft"}) {
             var d = FaceCatalog.get(id(p));
-            helper.assertTrue(d != null && d.allows(Race.HUMAN) && !d.allows(Race.ARCOSIAN),
-                    p + ": sí Human, no Arcosiano");
+            helper.assertTrue(d != null && d.allows(Race.HUMAN) && d.allows(Race.ARCOSIAN),
+                    p + ": vale para Human y Arcosiano");
         }
-
-        // minimal para cualquier raza; expressive/soft sin Arcosiano (su remate de párpado pisa
-        // las marcas laterales; la cara arcosiana es un pendiente aparte del usuario).
         helper.assertTrue(FaceBans.isAllowed(Race.ARCOSIAN, FaceCategory.EYES, MINIMAL), "minimal debe valer para Arcosiano");
-        for (ResourceLocation r : new ResourceLocation[]{EXPRESSIVE, SOFT}) {
-            helper.assertTrue(!FaceBans.isAllowed(Race.ARCOSIAN, FaceCategory.EYES, r)
-                    && FaceBans.isAllowed(Race.HUMAN, FaceCategory.EYES, r), r + ": sí Human, no Arcosiano");
-        }
         // Sin "ninguno" en ojos/boca; sí en nariz.
         helper.assertTrue(!FaceBans.isAllowed(Race.HUMAN, FaceCategory.EYES, null), "ojos: ninguno no permitido");
         helper.assertTrue(!FaceBans.isAllowed(Race.HUMAN, FaceCategory.MOUTH, null), "boca: ninguno no permitido");
@@ -137,10 +133,10 @@ public final class FaceCatalogGameTests {
         // en ojos; la GUI las reordena alfabéticamente por nombre traducido.
         var humanEyes = FaceBans.choices(Race.HUMAN, FaceCategory.EYES);
         helper.assertTrue(humanEyes.contains(MINIMAL) && humanEyes.contains(EXPRESSIVE) && humanEyes.contains(SOFT)
-                && !humanEyes.contains(null) && !humanEyes.contains(id("eyes/wide")), "Human: opciones de ojos correctas");
+                && !humanEyes.contains(null) && humanEyes.contains(id("eyes/wide")), "Human: opciones de ojos correctas");
         var arcEyes = FaceBans.choices(Race.ARCOSIAN, FaceCategory.EYES);
         helper.assertTrue(arcEyes.stream().allMatch(r -> FaceBans.isAllowed(Race.ARCOSIAN, FaceCategory.EYES, r))
-                && !arcEyes.contains(EXPRESSIVE), "Arcosiano: solo sus ojos permitidos");
+                && arcEyes.contains(EXPRESSIVE) && !arcEyes.contains(id("eyes/wide")), "Arcosiano: solo sus ojos permitidos");
         helper.assertTrue(FaceBans.choices(Race.HUMAN, FaceCategory.NOSE).get(0) == null, "nariz: 'ninguna' primero");
 
         helper.succeed();
@@ -150,9 +146,9 @@ public final class FaceCatalogGameTests {
     public static void reconcileAndLegacyMigration(GameTestHelper helper) {
         // Un Arcosiano con un ojo que su raza no admite vuelve al default_for de su raza.
         PlayerVisualAttachment v = new PlayerVisualAttachment();
-        v.setFacePart(FaceCategory.EYES, EXPRESSIVE);
+        v.setFacePart(FaceCategory.EYES, id("eyes/wide"));
         helper.assertTrue(FaceBans.reconcile(Race.ARCOSIAN, v), "reconcile debe informar del cambio");
-        helper.assertTrue(MINIMAL.equals(v.getFacePart(FaceCategory.EYES)), "Arcosiano con expressive -> minimal");
+        helper.assertTrue(MINIMAL.equals(v.getFacePart(FaceCategory.EYES)), "Arcosiano con wide -> minimal");
         helper.assertTrue(!FaceBans.reconcile(Race.ARCOSIAN, v), "una cara ya válida no cambia");
 
         // Save posterior a S1 con un ojo legacy ya retirado ("zenkai:eyes/legacy_3"): -> minimal.

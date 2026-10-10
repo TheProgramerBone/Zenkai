@@ -11,7 +11,7 @@
   "ki_drain_untrained": 1.5,
   "ki_drain_mastered": 0.5,
   "spi_req": 134,
-  "parent": "zenkai:fifth_form",
+  "parent": "zenkai:final_form",
   "body_items": {
     "head": "zenkai:arcosian_golden_form_helmet",
     "chest": "zenkai:arcosian_golden_form_chestplate",
@@ -20,5 +20,9 @@
   },
   "aura_type": "golden",
   "aura_rgb": "0xFFD040",
-  "scale": 1.0
+  "scale": 1.0,
+  "layer_colors": {
+    "0": "0xFFFFFF",
+    "4": "0x7A4C90"
+  }
 }

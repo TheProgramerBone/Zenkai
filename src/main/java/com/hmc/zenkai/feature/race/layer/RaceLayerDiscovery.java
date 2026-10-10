@@ -53,6 +53,10 @@ public final class RaceLayerDiscovery {
 
         /** Color RGB efectivo: override del jugador si existe, si no el default del JSON. */
         public int rgb(Player player) {
+            // Una forma puede imponer el color de la capa (Golden/Black sobre el cuerpo de la forma final).
+            var form = com.hmc.zenkai.feature.forms.FormDef.get(
+                    player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId());
+            if (form != null && form.layerColor(index) >= 0) return form.layerColor(index);
             var att = PlayerVisualAttachment.get(player);
             if (att.hasLayerColor(index)) return att.getLayerColorRgb(index) & 0xFFFFFF;
             return defaultRgb & 0xFFFFFF;

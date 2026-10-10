@@ -48,6 +48,9 @@ public class TailGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
                        @NotNull AbstractClientPlayer player,
                        float limbSwing, float limbSwingAmount, float partialTick,
                        float ageInTicks, float netHeadYaw, float headPitch) {
+        // Invisible (poción o Paso rápido): sin cuerpo, la cola no puede quedarse flotando. La
+        // imagen residual (pasada fantasma) sí la dibuja, como silueta.
+        if (player.isInvisible() && !GeoLayerArmorRenderer.isGhostPass()) return;
         ItemStack tail = TailResolver.resolveTail(player);
         if (tail.isEmpty()) return;
 

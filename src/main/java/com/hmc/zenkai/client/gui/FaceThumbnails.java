@@ -85,7 +85,9 @@ public final class FaceThumbnails {
                 if (!RaceFaceTraits.shows(race, c, layer) || !resourceExists(layer.texture())) continue;
                 // Mismo color que FaceOverlayGeoLayer (trazo de ojos con brow_rgb, boca Namek oscura).
                 int rgb = layer.resolveRgb(vis, form, -1, c == FaceCategory.EYES);
-                if (layer.color() == FaceLayer.Color.SKIN) rgb = RaceFaceTraits.shadeSkin(race, rgb);
+                if (layer.color() == FaceLayer.Color.SKIN) {
+                    rgb = RaceFaceTraits.shadeSkin(race, FaceRemapTextures.skinFeatureRgb(geo, player, rgb));
+                }
                 blitFace(g, layer.texture(), rgb, FaceRegion.CANONICAL, x, y, scale);
             }
         }
@@ -107,7 +109,12 @@ public final class FaceThumbnails {
         int rgb;
         if (head.has(DataComponents.DYED_COLOR)) rgb = DyedItemColor.getOrDefault(head, 0xFFFFFF);
         else rgb = switch (geo.getColorChannel()) {
-            case SKIN -> vis.getSkinColorRgb();
+            case SKIN -> {
+                // Una forma puede imponer el color de la capa 0 (Golden/Black: blanco = textura tal cual).
+                FormDef activeForm = FormDef.get(player.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId());
+                int formSkin = activeForm == null ? -1 : activeForm.layerColor(0);
+                yield formSkin >= 0 ? formSkin : vis.getSkinColorRgb();
+            }
             case HAIR -> vis.getHairColorRgb();
             default   -> 0xFFFFFF;
         };

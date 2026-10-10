@@ -20,5 +20,9 @@
   },
   "aura_type": "black",
   "aura_rgb": "0x6040A0",
-  "scale": 1.0
+  "scale": 1.0,
+  "layer_colors": {
+    "0": "0xFFFFFF",
+    "4": "0x8F7FA6"
+  }
 }

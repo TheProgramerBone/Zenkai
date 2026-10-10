@@ -36,8 +36,11 @@ public final class TechniqueDump {
 
     public static final String PACK_NAME = "zenkai_overrides";
 
-    /** pack_format de DATOS en 1.21.1. Si el pack sale marcado como incompatible, es esto. */
-    private static final int PACK_FORMAT = 48;
+    /** pack_format de DATOS: se lee de la versión en ejecución (48 en 1.21.1) para no caducar. */
+    private static int packFormat() {
+        return net.minecraft.SharedConstants.getCurrentVersion()
+                .getPackVersion(net.minecraft.server.packs.PackType.SERVER_DATA);
+    }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -113,7 +116,7 @@ public final class TechniqueDump {
 
     private static String packMeta() {
         JsonObject pack = new JsonObject();
-        pack.addProperty("pack_format", PACK_FORMAT);
+        pack.addProperty("pack_format", packFormat());
         pack.addProperty("description", "Zenkai - overrides volcados con /zenkai tech dump");
         JsonObject root = new JsonObject();
         root.add("pack", pack);

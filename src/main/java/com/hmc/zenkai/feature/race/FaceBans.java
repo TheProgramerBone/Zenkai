@@ -13,8 +13,9 @@ import java.util.List;
 
 /**
  * Qué rasgos faciales puede elegir cada raza, sobre ids del catálogo ({@link FaceCatalog}).
- * La regla vive en el JSON de cada rasgo ("races" / "exclude_races" / "default_for"): un rasgo
- * exclusivo de Majin es un JSON con "races": ["majin"], sin tabla aparte.
+ * La regla vive en el JSON de cada rasgo ("races" / "exclude_races" / "default_for"), sin tabla
+ * aparte. Convención del usuario (2026-10-10): los vetos se escriben como "exclude_races" (baneado
+ * de esa raza en concreto), no como lista "races" de las permitidas. "races" sigue soportado.
  *
  * Historia: la primera versión (2026-10-01) era una tabla en código de ÍNDICES baneados por
  * raza. Funcionaba, pero el servidor no conocía el catálogo y reconciliaba "a ciegas" hacia el

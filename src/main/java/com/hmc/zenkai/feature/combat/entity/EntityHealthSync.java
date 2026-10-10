@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.combat.entity;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.combat.ZenkaiStats;
+import com.hmc.zenkai.registry.ModGameRules;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -21,6 +22,11 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
  * El reconcile es DELIBERADAMENTE conservador: umbral relativo y sin forzar deltas mínimos.
  * Antes hacía justo lo contrario y regalaba body por ruido de coma flotante, que contra un
  * jefe con pool de miles y golpes de pocos puntos lo dejaba inmortal.
+ *
+ * Con la gamerule zenkai_enableRaceBoosts en false NADA de esto corre: el daño va a la vida
+ * vanilla (CombatZenkaiHooks sale antes) y el pool se queda congelado. Si el espejo siguiera
+ * activo, onDamagePost devolvía la vida al pool lleno después de cada golpe y los mobs con stats
+ * quedaban inmortales — el "la gamerule apaga el mod" que se reportó el 2026-10-08.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
 public final class EntityHealthSync {
@@ -31,6 +37,7 @@ public final class EntityHealthSync {
         // Los jugadores los lleva CombatZenkaiHooks.onHeal, que cancela: su curación entra por
         // el pool. Aquí es al revés — la de las entidades es legítima y hay que traducirla.
         if (e.getEntity() instanceof Player) return;
+        if (!zenkaiLayerOn(e.getEntity())) return;
 
         EntityStats st = ZenkaiStats.entityStats(e.getEntity());
         if (st == null || st.getBodyMax() <= 0) return;
@@ -48,6 +55,7 @@ public final class EntityHealthSync {
     public static void onTick(EntityTickEvent.Post e) {
         if (!(e.getEntity() instanceof LivingEntity le) || le instanceof Player) return;
         if (le.level().isClientSide()) return;
+        if (!zenkaiLayerOn(le)) return;
 
         EntityStats st = ZenkaiStats.entityStats(le);
         if (st == null) return;
@@ -71,10 +79,16 @@ public final class EntityHealthSync {
         if (le instanceof Player) return;
         if (le.level().isClientSide()) return;
         if (le.isDeadOrDying()) return;
+        if (!zenkaiLayerOn(le)) return;
 
         EntityStats st = ZenkaiStats.entityStats(le);
         if (st == null || st.getBody() <= 0) return;
 
         st.mirrorToVanilla(le);
+    }
+
+    /** Capa Zenkai activa en el servidor de esta entidad (gamerule zenkai_enableRaceBoosts). */
+    private static boolean zenkaiLayerOn(LivingEntity le) {
+        return le.getServer() != null && ModGameRules.enableRaceBoosts(le.getServer());
     }
 }

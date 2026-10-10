@@ -201,7 +201,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
-                            "textures/models/races/namekian_player.png",
+                            "textures/models/races/namekian/namekian_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint()
                             .hideOnHelmet("antena1", "antena2", "oreja", "oreja2"));
@@ -211,7 +211,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
-                            "textures/models/races/namekian_player.png",
+                            "textures/models/races/namekian/namekian_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
@@ -220,7 +220,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
-                            "textures/models/races/namekian_player.png",
+                            "textures/models/races/namekian/namekian_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
@@ -229,7 +229,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
-                            "textures/models/races/namekian_player.png",
+                            "textures/models/races/namekian/namekian_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
@@ -238,7 +238,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
-                            "textures/models/races/namekian_player_layer_0.png",
+                            "textures/models/races/namekian/namekian_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
                             .hideOnHelmet("antena1", "antena2", "oreja", "oreja2"));
@@ -248,7 +248,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
-                            "textures/models/races/namekian_player_layer_0.png",
+                            "textures/models/races/namekian/namekian_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -257,7 +257,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
-                            "textures/models/races/namekian_player_layer_0.png",
+                            "textures/models/races/namekian/namekian_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -266,7 +266,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/namekian_player.geo.json",
-                            "textures/models/races/namekian_player_layer_0.png",
+                            "textures/models/races/namekian/namekian_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -281,7 +281,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/forms/namek_orange_player.geo.json",
-                            "textures/models/forms/namek_orange_player_layer_0.png",
+                            "textures/models/races/namekian/orange_form/namek_orange_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -290,7 +290,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/forms/namek_orange_player.geo.json",
-                            "textures/models/forms/namek_orange_player_layer_0.png",
+                            "textures/models/races/namekian/orange_form/namek_orange_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -299,7 +299,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/forms/namek_orange_player.geo.json",
-                            "textures/models/forms/namek_orange_player_layer_0.png",
+                            "textures/models/races/namekian/orange_form/namek_orange_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -308,7 +308,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/forms/namek_orange_player.geo.json",
-                            "textures/models/forms/namek_orange_player_layer_0.png",
+                            "textures/models/races/namekian/orange_form/namek_orange_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -317,7 +317,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
-                            "textures/models/races/human_player.png",
+                            "textures/models/races/human/human_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -326,7 +326,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
-                            "textures/models/races/human_player.png",
+                            "textures/models/races/human/human_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -335,7 +335,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
-                            "textures/models/races/human_player.png",
+                            "textures/models/races/human/human_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -344,7 +344,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
-                            "textures/models/races/human_player.png",
+                            "textures/models/races/human/human_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -353,7 +353,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
-                            "textures/models/races/human_player_colorable.png",
+                            "textures/models/races/human/human_player_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
@@ -362,7 +362,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
-                            "textures/models/races/human_player_colorable.png",
+                            "textures/models/races/human/human_player_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
@@ -371,7 +371,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
-                            "textures/models/races/human_player_colorable.png",
+                            "textures/models/races/human/human_player_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
@@ -380,7 +380,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/human_player.geo.json",
-                            "textures/models/races/human_player_colorable.png",
+                            "textures/models/races/human/human_player_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
@@ -390,7 +390,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
-                            "textures/models/races/human_player_female.png",
+                            "textures/models/races/human/human_player_female.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -399,7 +399,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
-                            "textures/models/races/human_player_female.png",
+                            "textures/models/races/human/human_player_female.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -408,7 +408,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
-                            "textures/models/races/human_player_female.png",
+                            "textures/models/races/human/human_player_female.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -417,7 +417,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
-                            "textures/models/races/human_player_female.png",
+                            "textures/models/races/human/human_player_female.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
 
@@ -426,7 +426,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
-                            "textures/models/races/human_player_female_colorable.png",
+                            "textures/models/races/human/human_player_female_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
@@ -435,7 +435,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
-                            "textures/models/races/human_player_female_colorable.png",
+                            "textures/models/races/human/human_player_female_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
@@ -444,7 +444,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
-                            "textures/models/races/human_player_female_colorable.png",
+                            "textures/models/races/human/human_player_female_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
@@ -453,7 +453,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/human_player_female.geo.json",
-                            "textures/models/races/human_player_female_colorable.png",
+                            "textures/models/races/human/human_player_female_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
 
@@ -462,7 +462,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/arcosian_first_form_player.geo.json",
-                            "textures/models/races/arcosian_first_form_player_layer_0.png",
+                            "textures/models/races/arcosian/first_form/arcosian_first_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
                             .hideOnHelmet("casco", "cacho", "cacho2", "cacho3"));
@@ -472,7 +472,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/arcosian_first_form_player.geo.json",
-                            "textures/models/races/arcosian_first_form_player_layer_0.png",
+                            "textures/models/races/arcosian/first_form/arcosian_first_form_player_layer_0.png",
                             "animations/freezer.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -481,7 +481,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/arcosian_first_form_player.geo.json",
-                            "textures/models/races/arcosian_first_form_player_layer_0.png",
+                            "textures/models/races/arcosian/first_form/arcosian_first_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -490,41 +490,43 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/arcosian_first_form_player.geo.json",
-                            "textures/models/races/arcosian_first_form_player_layer_0.png",
+                            "textures/models/races/arcosian/first_form/arcosian_first_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     // Transformaciones arcosianas (second/third/final/golden/black). A diferencia de
     // namek_giant/namek_god/human_*/majin_* (que reusan a propósito el cuerpo de su raza, ver
     // body_items:{} en su JSON), CADA forma arcosiana tiene su propio modelo geo distinto —
-    // no hay ninguna que reuse el cuerpo de arcosian_first_form_player. Registradas ya en
-    // Java (patrón Majin) para que exista el código mientras se modelan con calma: sin
-    // .geo.json/textura todavía, ver .claude/pendiente/arte-y-modelos.md — el sistema
+    // no hay ninguna que reuse el cuerpo de arcosian_first_form_player. second/third/final ya
+    // tienen geo y textura en geo/races + textures/models/races (capas con
+    // tools/gen_arcosian_form_layers.py); golden/black/fifth siguen registradas sin
+    // .geo.json/textura (rutas geo/forms), ver .claude/pendiente/arte-y-modelos.md — el sistema
     // de RaceSkinSlots.backedOrEmpty evita que crashee o se vea nada raro mientras tanto.
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_SECOND_FORM_HELMET =
             ITEMS.register("arcosian_second_form_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/forms/arcosian_second_form_player.geo.json",
-                            "textures/models/forms/arcosian_second_form_player_layer_0.png",
+                            "geo/races/arcosian_second_form_player.geo.json",
+                            "textures/models/races/arcosian/second_form/arcosian_second_form_player_layer_0.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
+                            .hideOnHelmet("casco", "cacho", "cacho2", "cacho3"));
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_SECOND_FORM_CHESTPLATE =
             ITEMS.register("arcosian_second_form_chestplate", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
-                            "geo/forms/arcosian_second_form_player.geo.json",
-                            "textures/models/forms/arcosian_second_form_player_layer_0.png",
-                            ""
+                            "geo/races/arcosian_second_form_player.geo.json",
+                            "textures/models/races/arcosian/second_form/arcosian_second_form_player_layer_0.png",
+                            "animations/freezer.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_SECOND_FORM_LEGGINGS =
             ITEMS.register("arcosian_second_form_leggings", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_second_form_player.geo.json",
-                            "textures/models/forms/arcosian_second_form_player_layer_0.png",
+                            "geo/races/arcosian_second_form_player.geo.json",
+                            "textures/models/races/arcosian/second_form/arcosian_second_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -532,8 +534,8 @@ public class ModItems {
             ITEMS.register("arcosian_second_form_boots", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_second_form_player.geo.json",
-                            "textures/models/forms/arcosian_second_form_player_layer_0.png",
+                            "geo/races/arcosian_second_form_player.geo.json",
+                            "textures/models/races/arcosian/second_form/arcosian_second_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -541,26 +543,27 @@ public class ModItems {
             ITEMS.register("arcosian_third_form_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/forms/arcosian_third_form_player.geo.json",
-                            "textures/models/forms/arcosian_third_form_player_layer_0.png",
+                            "geo/races/arcosian_third_form_player.geo.json",
+                            "textures/models/races/arcosian/third_form/arcosian_third_form_player_layer_0.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
+                            .hideOnHelmet("casco", "cacho", "cacho2", "cacho3", "cacho4"));
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_THIRD_FORM_CHESTPLATE =
             ITEMS.register("arcosian_third_form_chestplate", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
-                            "geo/forms/arcosian_third_form_player.geo.json",
-                            "textures/models/forms/arcosian_third_form_player_layer_0.png",
-                            ""
+                            "geo/races/arcosian_third_form_player.geo.json",
+                            "textures/models/races/arcosian/third_form/arcosian_third_form_player_layer_0.png",
+                            "animations/freezer.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_THIRD_FORM_LEGGINGS =
             ITEMS.register("arcosian_third_form_leggings", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_third_form_player.geo.json",
-                            "textures/models/forms/arcosian_third_form_player_layer_0.png",
+                            "geo/races/arcosian_third_form_player.geo.json",
+                            "textures/models/races/arcosian/third_form/arcosian_third_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -568,8 +571,8 @@ public class ModItems {
             ITEMS.register("arcosian_third_form_boots", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_third_form_player.geo.json",
-                            "textures/models/forms/arcosian_third_form_player_layer_0.png",
+                            "geo/races/arcosian_third_form_player.geo.json",
+                            "textures/models/races/arcosian/third_form/arcosian_third_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -577,26 +580,27 @@ public class ModItems {
             ITEMS.register("arcosian_final_form_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/forms/arcosian_final_form_player.geo.json",
-                            "textures/models/forms/arcosian_final_form_player_layer_0.png",
+                            "geo/races/arcosian_final_form_player.geo.json",
+                            "textures/models/races/arcosian/final_form/arcosian_final_form_player_layer_0.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
+                            .hideOnHelmet("casco"));
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_FINAL_FORM_CHESTPLATE =
             ITEMS.register("arcosian_final_form_chestplate", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
-                            "geo/forms/arcosian_final_form_player.geo.json",
-                            "textures/models/forms/arcosian_final_form_player_layer_0.png",
-                            ""
+                            "geo/races/arcosian_final_form_player.geo.json",
+                            "textures/models/races/arcosian/final_form/arcosian_final_form_player_layer_0.png",
+                            "animations/freezer.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_FINAL_FORM_LEGGINGS =
             ITEMS.register("arcosian_final_form_leggings", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_final_form_player.geo.json",
-                            "textures/models/forms/arcosian_final_form_player_layer_0.png",
+                            "geo/races/arcosian_final_form_player.geo.json",
+                            "textures/models/races/arcosian/final_form/arcosian_final_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -604,8 +608,8 @@ public class ModItems {
             ITEMS.register("arcosian_final_form_boots", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_final_form_player.geo.json",
-                            "textures/models/forms/arcosian_final_form_player_layer_0.png",
+                            "geo/races/arcosian_final_form_player.geo.json",
+                            "textures/models/races/arcosian/final_form/arcosian_final_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -613,26 +617,27 @@ public class ModItems {
             ITEMS.register("arcosian_golden_form_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/forms/arcosian_golden_form_player.geo.json",
-                            "textures/models/forms/arcosian_golden_form_player_layer_0.png",
+                            "geo/races/arcosian_golden_form_player.geo.json",
+                            "textures/models/races/arcosian/golden_form/arcosian_golden_form_player_layer_0.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
+                            .hideOnHelmet("casco"));
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_GOLDEN_FORM_CHESTPLATE =
             ITEMS.register("arcosian_golden_form_chestplate", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
-                            "geo/forms/arcosian_golden_form_player.geo.json",
-                            "textures/models/forms/arcosian_golden_form_player_layer_0.png",
-                            ""
+                            "geo/races/arcosian_golden_form_player.geo.json",
+                            "textures/models/races/arcosian/golden_form/arcosian_golden_form_player_layer_0.png",
+                            "animations/freezer.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_GOLDEN_FORM_LEGGINGS =
             ITEMS.register("arcosian_golden_form_leggings", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_golden_form_player.geo.json",
-                            "textures/models/forms/arcosian_golden_form_player_layer_0.png",
+                            "geo/races/arcosian_golden_form_player.geo.json",
+                            "textures/models/races/arcosian/golden_form/arcosian_golden_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -640,8 +645,8 @@ public class ModItems {
             ITEMS.register("arcosian_golden_form_boots", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_golden_form_player.geo.json",
-                            "textures/models/forms/arcosian_golden_form_player_layer_0.png",
+                            "geo/races/arcosian_golden_form_player.geo.json",
+                            "textures/models/races/arcosian/golden_form/arcosian_golden_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -649,26 +654,27 @@ public class ModItems {
             ITEMS.register("arcosian_black_form_helmet", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
-                            "geo/forms/arcosian_black_form_player.geo.json",
-                            "textures/models/forms/arcosian_black_form_player_layer_0.png",
+                            "geo/races/arcosian_black_form_player.geo.json",
+                            "textures/models/races/arcosian/black_form/arcosian_black_form_player_layer_0.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
+                            .hideOnHelmet("casco"));
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_BLACK_FORM_CHESTPLATE =
             ITEMS.register("arcosian_black_form_chestplate", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
-                            "geo/forms/arcosian_black_form_player.geo.json",
-                            "textures/models/forms/arcosian_black_form_player_layer_0.png",
-                            ""
+                            "geo/races/arcosian_black_form_player.geo.json",
+                            "textures/models/races/arcosian/black_form/arcosian_black_form_player_layer_0.png",
+                            "animations/freezer.animation.json"
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_BLACK_FORM_LEGGINGS =
             ITEMS.register("arcosian_black_form_leggings", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_black_form_player.geo.json",
-                            "textures/models/forms/arcosian_black_form_player_layer_0.png",
+                            "geo/races/arcosian_black_form_player.geo.json",
+                            "textures/models/races/arcosian/black_form/arcosian_black_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -676,10 +682,42 @@ public class ModItems {
             ITEMS.register("arcosian_black_form_boots", () ->
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
-                            "geo/forms/arcosian_black_form_player.geo.json",
-                            "textures/models/forms/arcosian_black_form_player_layer_0.png",
+                            "geo/races/arcosian_black_form_player.geo.json",
+                            "textures/models/races/arcosian/black_form/arcosian_black_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
+
+    // Oozaru / Super Oozaru: cuerpo de mono propio (tools/gen_oozaru.py), el mismo geo para las
+    // dos formas y solo cambia la textura (pelaje marrón / dorado). Sin channel/faceOverlays/
+    // bodyTint: el color del pelaje es fijo y la cara va horneada en el modelo (por eso
+    // FaceOverlayGeoLayer, TailResolver y HairResolver se apagan en estas dos formas). La
+    // animación (respiración, cola, mandíbula, orejas) va en HEAD y CHEST: cada ranura solo
+    // anima los huesos que pinta. FEET no pinta nada (sus huesos armor*Boot están vacíos), pero
+    // tiene que existir: sin él, FormSkinResolver dejaría los pies de la raza x3 dentro de los
+    // del mono.
+    public static final Supplier<GeoLayerArmorItem> OOZARU_HELMET =
+            ITEMS.register("oozaru_helmet", () -> oozaruBody(ArmorItem.Type.HELMET, "oozaru", true));
+    public static final Supplier<GeoLayerArmorItem> OOZARU_CHESTPLATE =
+            ITEMS.register("oozaru_chestplate", () -> oozaruBody(ArmorItem.Type.CHESTPLATE, "oozaru", true));
+    public static final Supplier<GeoLayerArmorItem> OOZARU_LEGGINGS =
+            ITEMS.register("oozaru_leggings", () -> oozaruBody(ArmorItem.Type.LEGGINGS, "oozaru", false));
+    public static final Supplier<GeoLayerArmorItem> OOZARU_BOOTS =
+            ITEMS.register("oozaru_boots", () -> oozaruBody(ArmorItem.Type.BOOTS, "oozaru", false));
+    public static final Supplier<GeoLayerArmorItem> SUPER_OOZARU_HELMET =
+            ITEMS.register("super_oozaru_helmet", () -> oozaruBody(ArmorItem.Type.HELMET, "super_oozaru", true));
+    public static final Supplier<GeoLayerArmorItem> SUPER_OOZARU_CHESTPLATE =
+            ITEMS.register("super_oozaru_chestplate", () -> oozaruBody(ArmorItem.Type.CHESTPLATE, "super_oozaru", true));
+    public static final Supplier<GeoLayerArmorItem> SUPER_OOZARU_LEGGINGS =
+            ITEMS.register("super_oozaru_leggings", () -> oozaruBody(ArmorItem.Type.LEGGINGS, "super_oozaru", false));
+    public static final Supplier<GeoLayerArmorItem> SUPER_OOZARU_BOOTS =
+            ITEMS.register("super_oozaru_boots", () -> oozaruBody(ArmorItem.Type.BOOTS, "super_oozaru", false));
+
+    private static GeoLayerArmorItem oozaruBody(ArmorItem.Type type, String texture, boolean animated) {
+        return new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, type, new Item.Properties(),
+                "geo/races/oozaru_player.geo.json",
+                "textures/models/races/saiyan/oozaru/" + texture + "_player.png",
+                animated ? "animations/oozaru.animation.json" : "");
+    }
 
     // Fifth Form Path (0.3.0, .claude/docs/jugador-razas-formas.md): dos
     // formas nuevas tras black_form — golden_fifth_form (extensión mortal) y black_fifth_form
@@ -692,7 +730,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/forms/arcosian_golden_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_golden_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/golden_fifth_form/arcosian_golden_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -701,7 +739,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/forms/arcosian_golden_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_golden_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/golden_fifth_form/arcosian_golden_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -710,7 +748,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/forms/arcosian_golden_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_golden_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/golden_fifth_form/arcosian_golden_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -719,7 +757,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/forms/arcosian_golden_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_golden_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/golden_fifth_form/arcosian_golden_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -728,7 +766,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/forms/arcosian_black_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_black_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/black_fifth_form/arcosian_black_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -737,7 +775,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/forms/arcosian_black_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_black_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/black_fifth_form/arcosian_black_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -746,7 +784,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/forms/arcosian_black_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_black_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/black_fifth_form/arcosian_black_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -755,7 +793,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/forms/arcosian_black_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_black_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/black_fifth_form/arcosian_black_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -767,7 +805,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/forms/arcosian_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/fifth_form/arcosian_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -776,7 +814,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/forms/arcosian_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/fifth_form/arcosian_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -785,7 +823,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/forms/arcosian_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/fifth_form/arcosian_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -794,7 +832,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/forms/arcosian_fifth_form_player.geo.json",
-                            "textures/models/forms/arcosian_fifth_form_player_layer_0.png",
+                            "textures/models/races/arcosian/fifth_form/arcosian_fifth_form_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -807,7 +845,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
-                            "textures/models/races/majin_player_layer_0.png",
+                            "textures/models/races/majin/majin_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -816,7 +854,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
-                            "textures/models/races/majin_player_layer_0.png",
+                            "textures/models/races/majin/majin_player_layer_0.png",
                             // "" hasta que exista animations/majin.animation.json: con una ruta
                             // no vacía apuntando a un archivo ausente, GeckoLib lanza al
                             // intentar cargar el controlador de animación — el mismo tipo de
@@ -830,7 +868,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
-                            "textures/models/races/majin_player_layer_0.png",
+                            "textures/models/races/majin/majin_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -839,7 +877,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
-                            "textures/models/races/majin_player_layer_0.png",
+                            "textures/models/races/majin/majin_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -848,7 +886,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
-                            "textures/models/races/majin_player_female_layer_0.png",
+                            "textures/models/races/majin/majin_player_female_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -857,7 +895,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
-                            "textures/models/races/majin_player_female_layer_0.png",
+                            "textures/models/races/majin/majin_player_female_layer_0.png",
                             "" // ver el comentario en MAJIN_RACE_CHESTPLATE
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -866,7 +904,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
-                            "textures/models/races/majin_player_female_layer_0.png",
+                            "textures/models/races/majin/majin_player_female_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -875,7 +913,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
-                            "textures/models/races/majin_player_female_layer_0.png",
+                            "textures/models/races/majin/majin_player_female_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -885,7 +923,7 @@ public class ModItems {
                     ArmorMaterials.LEATHER, ArmorItem.Type.HELMET,
                     new Item.Properties(),
                     "geo/halo.geo.json",
-                    "textures/models/races/halo.png",
+                    "textures/models/races/common/halo.png",
                     ""));
 
     public static final DeferredItem<ScouterItem> SCOUTER =

@@ -118,7 +118,8 @@ public class ModEntities {
 
     public static final Supplier<EntityType<ToriBotEntity>> TORIBOT =
             ENTITY_TYPES.register("toribot", () -> EntityType.Builder.of(ToriBotEntity::new, MobCategory.MISC)
-                    .sized(0.7f, 1.6f).build("toribot"));
+                    // Alto hasta la gorra con la flotación del idle (tools/gen_toribot.py); el halo queda fuera.
+                    .sized(0.8f, 2.1f).build("toribot"));
 
     /** "Train with your shadow" (ShadowTrainingManager): MISC = nunca spawnea sola de forma
      *  natural, solo la coloca el manager al empezar una sesión — mismo criterio que

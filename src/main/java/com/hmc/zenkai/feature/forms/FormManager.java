@@ -39,6 +39,14 @@ public final class FormManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Zenkai-Forms");
     private static final String FOLDER = "zenkai_forms";
+    /**
+     * Formas baneadas (data/zenkai/banned_forms.json): no se cargan. Sirve para tener definida una
+     * forma (JSON, ítems) mientras su modelo no existe, sin que nadie pueda usarla; quien la quiera
+     * borra su línea. Gana el archivo del pack de mayor prioridad, así un datapack puede
+     * desbanear todo con {"banned": []} sin tocar el mod.
+     */
+    private static final ResourceLocation BANNED_FILE =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "banned_forms.json");
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
@@ -70,6 +78,28 @@ public final class FormManager {
         return out;
     }
 
+    /** Ids de formas baneadas. Archivo ausente o roto = ninguna (nunca bloquea la carga). */
+    private static java.util.Set<ResourceLocation> readBanned(ResourceManager rm) {
+        java.util.Set<ResourceLocation> out = new java.util.HashSet<>();
+        var res = rm.getResource(BANNED_FILE);
+        if (res.isEmpty()) return out;
+        try (BufferedReader reader = res.get().openAsReader()) {
+            JsonObject o = JsonParser.parseReader(reader).getAsJsonObject();
+            if (o.has("banned")) {
+                for (var el : GsonHelper.getAsJsonArray(o, "banned")) {
+                    try {
+                        out.add(ResourceLocation.parse(el.getAsString().trim()));
+                    } catch (Exception bad) {
+                        LOGGER.warn("[Zenkai] Id inválido en banned_forms.json: {}", el);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[Zenkai] No se pudo leer banned_forms.json (se ignora): {}", ex.toString());
+        }
+        return out;
+    }
+
     /** Mapa clave -> id de item. Ausente = mapa vacío (la forma no cambia ese visual). */
     private static Map<String, ResourceLocation> readItemMap(JsonObject o, String key) {
         if (!o.has(key)) return Map.of();
@@ -92,6 +122,24 @@ public final class FormManager {
         return out;
     }
 
+    /** "layer_colors": {"0": "0xD9A21B", "2": "#F2C230"} (índice de capa -> RGB). Ausente = ninguna. */
+    private static Map<Integer, Integer> readLayerColors(JsonObject o) {
+        if (!o.has("layer_colors")) return Map.of();
+        Map<Integer, Integer> out = new LinkedHashMap<>();
+        JsonObject obj = GsonHelper.getAsJsonObject(o, "layer_colors");
+        for (String k : obj.keySet()) {
+            try {
+                var el = obj.get(k);
+                int rgb = el.isJsonPrimitive() && el.getAsJsonPrimitive().isString()
+                        ? Integer.decode(el.getAsString().trim().replace("#", "0x")) : el.getAsInt();
+                out.put(Integer.parseInt(k), rgb & 0xFFFFFF);
+            } catch (Exception bad) {
+                LOGGER.warn("[Zenkai] layer_colors: entrada inválida '{}' ignorada", k);
+            }
+        }
+        return out;
+    }
+
     /** Acepta 0xFFE55C, #FFE55C o un entero. */
     private static int readRgb(JsonObject o, String key, int fallback) {
         if (!o.has(key)) return fallback;
@@ -109,6 +157,7 @@ public final class FormManager {
                                                                   @NotNull ProfilerFiller profiler) {
             Map<ResourceLocation, FormDef> out = new LinkedHashMap<>();
             var found = rm.listResources(FOLDER, loc -> loc.getPath().endsWith(".json"));
+            java.util.Set<ResourceLocation> banned = readBanned(rm);
 
             for (var entry : found.entrySet()) {
                 ResourceLocation file = entry.getKey();
@@ -125,6 +174,10 @@ public final class FormManager {
 
                 if (FormIds.BASE.equals(id)) {
                     LOGGER.warn("[Zenkai] 'base' no se define en datapack (es el estado neutro): ignorada.");
+                    continue;
+                }
+                if (banned.contains(id)) {
+                    LOGGER.info("[Zenkai] Forma baneada (banned_forms.json), no se carga: {}", id);
                     continue;
                 }
 
@@ -167,11 +220,27 @@ public final class FormManager {
                             GsonHelper.getAsBoolean(o, "endgame_path", false),
                             FormDef.AlignBranch.byName(GsonHelper.getAsString(o, "alignment_branch", "none")),
                             readMasteryReqs(o),
-                            category));
+                            category,
+                            readLayerColors(o)));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }
             }
+            // Banear una forma banea también todo lo que cuelga de ella (su parent ya no existe):
+            // sin esto quedaría una rama huérfana y un error de "parent inexistente" por cada una.
+            boolean removed;
+            do {
+                removed = false;
+                for (var it = out.values().iterator(); it.hasNext(); ) {
+                    FormDef d = it.next();
+                    if (d.parent() != null && banned.contains(d.parent())) {
+                        LOGGER.info("[Zenkai] Forma {} descartada: su parent {} está baneado.", d.id(), d.parent());
+                        banned.add(d.id());
+                        it.remove();
+                        removed = true;
+                    }
+                }
+            } while (removed);
             return out;
         }
 

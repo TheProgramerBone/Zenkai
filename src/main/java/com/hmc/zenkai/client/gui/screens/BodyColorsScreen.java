@@ -170,6 +170,15 @@ public class BodyColorsScreen extends Screen {
     private boolean skinPickerActive = false;
     @Nullable private ColorPickerWidget picker = null;
 
+    /**
+     * Skin predeterminada (Human/Saiyan con "Skin Predeterminada" en la pantalla de raza): se ve la
+     * skin vanilla del jugador, sin cuerpo de raza, así que el tono de piel no se pinta en ningún
+     * sitio. La rejilla de tonos y "Default" se enseñan oscurecidas y bloqueadas, con tooltip.
+     */
+    private boolean vanillaSkin = false;
+    /** Rectángulos (x1, y1, x2, y2) de los controles de tono bloqueados, para el velo de render(). */
+    private final java.util.List<int[]> lockedRects = new java.util.ArrayList<>();
+
     public BodyColorsScreen(AppearanceScreen hub,
                              @Nullable CompoundTag statsSnapshot, @Nullable CompoundTag visualSnapshot) {
         super(Component.translatable("screen.zenkai.appearance.title"));
@@ -193,6 +202,8 @@ public class BodyColorsScreen extends Screen {
         skinColor         = visual.getSkinColorRgb() | 0xFF000000;
         customSkinColor   = visual.isCustomSkinColor();
         genderFemale      = visual.getGender() == com.hmc.zenkai.feature.player.PlayerVisualAttachment.Gender.FEMALE;
+        vanillaSkin       = !visual.shouldRenderRaceSkin();
+        lockedRects.clear();
 
         if (isMultiTintRace(race)) buildLayerRows();
         else                       buildSkinToneGrid();
@@ -424,22 +435,27 @@ public class BodyColorsScreen extends Screen {
                         () -> skinPickerActive,
                         this::toggleSkinPicker);
                 custom.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.body.custom_color")));
+                lockForVanillaSkin(custom);
                 addRenderableWidget(custom);
             } else {
                 final int c = presets[i];
-                addRenderableWidget(new ColorBoxButton(x, y, TONE_W, TONE_H,
+                var swatch = new ColorBoxButton(x, y, TONE_W, TONE_H,
                         () -> c,
                         () -> customSkinColor && (skinColor & 0xFFFFFF) == c,
-                        () -> { customSkinColor = true; skinColor = 0xFF000000 | c; closePicker(); applyPreview(); }));
+                        () -> { customSkinColor = true; skinColor = 0xFF000000 | c; closePicker(); applyPreview(); });
+                lockForVanillaSkin(swatch);
+                addRenderableWidget(swatch);
             }
         }
 
         int gridBottom = gridTop + rows * (TONE_H + TONE_GAP) - TONE_GAP;
         int naturalY = gridBottom + 8;
-        addRenderableWidget(new TextOnlyButton(cx - 30, naturalY, 60, DEFAULT_BTN_H,
+        var defaultBtn = new TextOnlyButton(cx - 30, naturalY, 60, DEFAULT_BTN_H,
                 Component.literal("Default"),
                 () -> { customSkinColor = false; closePicker(); applyPreview(); })
-                .onPanel());
+                .onPanel();
+        lockForVanillaSkin(defaultBtn);
+        addRenderableWidget(defaultBtn);
         contentBottom = naturalY + DEFAULT_BTN_H;
 
         // Género: mismo ajuste que la fila "Gender" del hub, aquí para que el flujo lineal
@@ -461,6 +477,18 @@ public class BodyColorsScreen extends Screen {
                 () -> { genderFemale = !genderFemale; closePicker(); applyPreview(); rebuildWidgets(); })
                 .onPanel());
         contentBottom = genderY + GENDER_ICON;
+    }
+
+    /**
+     * Con la skin predeterminada desactiva el control (active=false: no responde al clic, pero
+     * AbstractWidget sigue calculando el hover y enseñando el tooltip con el motivo) y anota su
+     * recuadro para el velo oscuro de render().
+     */
+    private void lockForVanillaSkin(net.minecraft.client.gui.components.AbstractWidget w) {
+        if (!vanillaSkin) return;
+        w.active = false;
+        w.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.body.locked_vanilla_skin")));
+        lockedRects.add(new int[]{w.getX() - 1, w.getY() - 1, w.getX() + w.getWidth() + 1, w.getY() + w.getHeight() + 1});
     }
 
     private void renderSkinToneLabel(GuiGraphics g) {
@@ -528,6 +556,9 @@ public class BodyColorsScreen extends Screen {
                 zoomedSize, 0.0625f, (float) mouseX, (float) mouseY, mc.player);
 
         super.render(g, mouseX, mouseY, partialTick);
+        // Velo oscuro sobre los controles bloqueados (después de los widgets: las casillas de color
+        // se pintan opacas, así que un velo por debajo no se vería).
+        for (int[] r : lockedRects) g.fill(r[0], r[1], r[2], r[3], 0x88000000);
 
         if (!isMultiTintRace(race)) {
             g.blit(ICONS_TEX, genderIconX, genderIconY,

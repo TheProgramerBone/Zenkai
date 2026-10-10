@@ -84,6 +84,9 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         if (!(wearer instanceof Player player)) return;
         PlayerVisualAttachment vis = PlayerVisualAttachment.get(player);
         PlayerFormAttachment form = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        // Oozaru / Super Oozaru: modelo y cara propios; los rasgos del catálogo no se aplican.
+        if (com.hmc.zenkai.feature.forms.FormIds.OOZARU.equals(form.getFormId())
+                || com.hmc.zenkai.feature.forms.FormIds.SUPER_OOZARU.equals(form.getFormId())) return;
         FormDef formDef = FormDef.get(form.getFormId());
         Race race = PlayerStatsAttachment.get(player).getRace();
 
@@ -126,7 +129,9 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
                 if (tex == null) continue;
                 int rgb = layer.resolveRgb(vis, formDef, eyeOverride, category == FaceCategory.EYES);
                 // Boca/nariz ("skin") más oscuras donde la raza lo pide (verde Namek).
-                if (layer.color() == FaceLayer.Color.SKIN) rgb = RaceFaceTraits.shadeSkin(race, rgb);
+                if (layer.color() == FaceLayer.Color.SKIN) {
+                    rgb = RaceFaceTraits.shadeSkin(race, FaceRemapTextures.skinFeatureRgb(animatable, player, rgb));
+                }
                 drawPass(tex, 0xFF000000 | rgb, poseStack, bakedModel,
                         animatable, bufferSource, partialTick, packedLight, packedOverlay);
             }

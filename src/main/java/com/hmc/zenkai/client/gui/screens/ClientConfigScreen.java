@@ -7,8 +7,11 @@ import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.buttons.ToggleButton;
+import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.config.ClientConfig;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -22,7 +25,7 @@ import java.util.List;
 /**
  * Pestaña de configuración de cliente.
  * Las filas salen de ClientConfig.entries(), así que añadir una opción no toca este archivo.
- * Entry es una interfaz sellada de tres casos y el switch los cubre por completo: si algún día aparece
+ * Entry es una interfaz sellada de cuatro casos (el cuarto, ColorEntry, abre ColorPickerWidget) y el switch los cubre por completo: si algún día aparece
  * un cuarto tipo, el compilador obliga a pasar por aquí. Ese es el punto de que sea sellada —
  * una opción sin control visible existiría en el toml y sería invisible en la GUI.
  * ═══ TEXTO SIN SOMBRA SOBRE EL BEIGE ═══
@@ -43,8 +46,12 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
     private static final int ROW_H = 30;
     private static final int SAVE_W = 84, SAVE_H = 20;
     private static final int SCROLLBAR_W = 4;
-    /** Ancho reservado al control de la derecha (reducido para no invadir el texto). */
-    private static final int CONTROL_W = 64;
+    /** Ancho reservado al control de la derecha. Era 64 y el valor de un ciclador tenía 32 px:
+     *  "Modern"/"Numbers" salían como "Mode…"/"Numb…" (visto en juego, 2026-10-09). A 88 caben
+     *  enteros; el título pierde ese ancho, pero su texto completo ya está en el tooltip. */
+    private static final int CONTROL_W = 88;
+    /** Muestra de color de una ColorEntry (a su izquierda va el hexadecimal). */
+    private static final int SWATCH_W = 22, SWATCH_H = 14;
     /** Lado real del icono de la flecha. */
     private static final int ARROW_W = 14;
     /** Separación entre la flecha y el valor. */
@@ -67,6 +74,12 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
     private int scroll = 0;
     private PanelButton saveButton;
 
+    /** Selector de color abierto (flota junto al panel, como en BodyColorsScreen) y la fila a la
+     *  que pertenece, o -1. El índice sobrevive a rebuild(): clearWidgets() se lleva el widget,
+     *  así que initContent() lo vuelve a crear si sigue abierto. */
+    @Nullable private ColorPickerWidget picker;
+    private int pickerIndex = -1;
+
     public ClientConfigScreen() { this(null); }
 
     public ClientConfigScreen(@Nullable Screen returnTo) {
@@ -81,7 +94,9 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
     // ── Geometría ────────────────────────────────────────────────────────────
 
     private int listTop()    { return panelTop + CONTENT_TOP; }
-    private int listHeight() { return BG_H - CONTENT_TOP - MARGIN - SAVE_H - 24; }
+    /** -14 y no -24: el aviso de "sin guardar" va a footY-12 y solo necesita su línea. Con -24
+     *  quedaba un hueco de casi dos filas antes de Save (2026-10-09) y cabía una fila menos. */
+    private int listHeight() { return BG_H - CONTENT_TOP - MARGIN - SAVE_H - 14; }
     private int visibleRows(){ return Math.max(1, listHeight() / ROW_H); }
     /** Filas de la pantalla = opciones + UNA fila de acción al final (colocar el HUD).
      *  La fila de acción NO está en ClientConfig.entries(): ese modelo es de valores con buffer
@@ -108,6 +123,8 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
             if (index == actionRow()) addActionRow(rowY);
             else addControlFor(entries.get(index), index, rowY);
         }
+
+        if (pickerIndex >= 0) openPicker(pickerIndex);
 
         int footY = panelTop + BG_H - MARGIN - SAVE_H;
         saveButton = PanelButton.primary(panelLeft + (BG_W - SAVE_W) / 2, footY,
@@ -142,6 +159,65 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
             }
             case ClientConfig.EnumEntry<?> e -> addCycler(e, index, rowY);
             case ClientConfig.IntEntry e -> addStepper(e, index, rowY);
+            case ClientConfig.ColorEntry ignored -> addColorSwatch(index, rowY);
+        }
+    }
+
+    /** Fila de color: "#RRGGBB" + muestra; clic en cualquiera de los dos abre el selector. */
+    private void addColorSwatch(int index, int rowY) {
+        int y = rowY + (ROW_H - SWATCH_H) / 2;
+        addRenderableWidget(new ColorSwatch(rowRight() - CONTROL_W, y, CONTROL_W, SWATCH_H,
+                () -> (Integer) staged.get(index), () -> openPicker(index)));
+    }
+
+    private void openPicker(int index) {
+        if (picker != null) removeWidget(picker);
+        pickerIndex = index;
+        // Junto al panel, por la derecha si cabe (mismo criterio que BodyColorsScreen).
+        int x = panelLeft + BG_W + 8;
+        if (x + ColorPickerWidget.TOTAL_W > this.width - 4) x = panelLeft - ColorPickerWidget.TOTAL_W - 8;
+        int y = Mth.clamp(listTop(), 4, Math.max(4, this.height - ColorPickerWidget.TOTAL_H - 4));
+        picker = new ColorPickerWidget(x, y, 0xFF000000 | (Integer) staged.get(index),
+                Component.translatable(ClientConfig.entries().get(index).titleKey()).getString(),
+                argb -> staged.set(index, argb & 0xFFFFFF));
+        addRenderableWidget(picker);
+    }
+
+    private void closePicker() {
+        if (picker != null) removeWidget(picker);
+        picker = null;
+        pickerIndex = -1;
+    }
+
+    /** Muestra de color con su hexadecimal, en el lenguaje del panel beige (sin sombra). */
+    private final class ColorSwatch extends AbstractWidget {
+        private final java.util.function.IntSupplier rgb;
+        private final Runnable onPress;
+
+        ColorSwatch(int x, int y, int w, int h, java.util.function.IntSupplier rgb, Runnable onPress) {
+            super(x, y, w, h, Component.empty());
+            this.rgb = rgb;
+            this.onPress = onPress;
+        }
+
+        @Override
+        protected void renderWidget(@NotNull GuiGraphics g, int mx, int my, float pt) {
+            int c = rgb.getAsInt() & 0xFFFFFF;
+            int sx = getX() + getWidth() - SWATCH_W;
+            int ink = isHovered() ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL;
+            g.fill(sx, getY(), sx + SWATCH_W, getY() + SWATCH_H, ink);
+            g.fill(sx + 1, getY() + 1, sx + SWATCH_W - 1, getY() + SWATCH_H - 1, 0xFF000000 | c);
+            Component hex = Component.literal(String.format("#%06X", c));
+            int tx = sx - 4 - ClientConfigScreen.this.font.width(hex);
+            PanelText.onPanel(g, ClientConfigScreen.this.font, hex, tx, getY() + (SWATCH_H - 8) / 2, ink);
+        }
+
+        @Override
+        public void onClick(double mx, double my) { onPress.run(); }
+
+        @Override
+        protected void updateWidgetNarration(@NotNull NarrationElementOutput out) {
+            defaultButtonNarrationText(out);
         }
     }
 
@@ -220,6 +296,7 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
             case ClientConfig.BoolEntry b -> b.value().get();
             case ClientConfig.EnumEntry<?> en -> en.value().get();
             case ClientConfig.IntEntry i -> i.value().get();
+            case ClientConfig.ColorEntry c -> c.value().get();
         };
     }
 
@@ -229,10 +306,22 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
             case ClientConfig.BoolEntry b -> b.value().set((Boolean) staged);
             case ClientConfig.EnumEntry en -> en.value().set((Enum) staged);
             case ClientConfig.IntEntry i -> i.value().set((Integer) staged);
+            case ClientConfig.ColorEntry c -> c.value().set((Integer) staged);
         }
     }
 
     // ── Interacción ──────────────────────────────────────────────────────────
+
+    /** Clic fuera del selector lo cierra (mismo criterio que BodyColorsScreen). */
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (picker != null) {
+            boolean inside = mx >= picker.getX() && mx < picker.getX() + ColorPickerWidget.TOTAL_W
+                    && my >= picker.getY() && my < picker.getY() + ColorPickerWidget.TOTAL_H;
+            if (!inside) closePicker();
+        }
+        return super.mouseClicked(mx, my, button);
+    }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
@@ -343,6 +432,10 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
      * exista.
      */
     private void renderRowTooltip(GuiGraphics g, int mx, int my) {
+        if (mx >= rowRight() - CONTROL_W && mx <= rowRight()) {
+            renderValueTooltip(g, mx, my);
+            return;
+        }
         if (mx < panelLeft + MARGIN || mx > textRight()) return;
 
         var entries = ClientConfig.entries();
@@ -370,6 +463,23 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
                         .withStyle(net.minecraft.ChatFormatting.GRAY));
             }
             g.renderComponentTooltip(this.font, lines, mx, my);
+            return;
+        }
+    }
+
+    /**
+     * Valor de un ciclador recortado ("Minimal…"): el nombre completo al pasar el ratón por el
+     * control. Solo si de verdad no cabe — un tooltip que repite lo que ya se lee es ruido.
+     */
+    private void renderValueTooltip(GuiGraphics g, int mx, int my) {
+        var entries = ClientConfig.entries();
+        int labelW = CONTROL_W - (ARROW_W + ARROW_GAP) * 2;
+        for (RowArea area : rowAreas) {
+            if (my < area.y() || my >= area.y() + ROW_H - 2) continue;
+            if (area.index() == actionRow()) return;
+            if (!(entries.get(area.index()) instanceof ClientConfig.EnumEntry<?>)) return;
+            Component full = Component.translatable(enumNameKey((Enum<?>) staged.get(area.index())));
+            if (this.font.width(full) > labelW - 2) g.renderTooltip(this.font, full, mx, my);
             return;
         }
     }

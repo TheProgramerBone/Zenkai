@@ -3,6 +3,9 @@ package com.hmc.zenkai.event;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.ClientZenkaiPalTick;
 import com.hmc.zenkai.client.aura.AuraClientState;
+import com.hmc.zenkai.client.overlay.hud.HudBarsStyle;
+import com.hmc.zenkai.client.overlay.hud.HudValueFormat;
+import com.hmc.zenkai.client.overlay.hud.ModernStatsHud;
 import com.hmc.zenkai.config.ClientConfig;
 import com.hmc.zenkai.client.InstantTransmissionClientState;
 import com.hmc.zenkai.client.ParryClientState;
@@ -69,18 +72,18 @@ public final class ClientZenkaiHooks {
     private static final int ROW_CONTENT_W_STAMINA = 224;
     private static final int ROW_CONTENT_W_KI = 206;
 
-    private static final int C_BODY_KAIOKEN = 0xFFFF6633;  // quemando vida
-    private static final int C_BODY_STRAIN  = 0xFF9966CC;  // fatiga, stats penalizadas
+    public static final int C_BODY_KAIOKEN = 0xFFFF6633;  // quemando vida
+    public static final int C_BODY_STRAIN  = 0xFF9966CC;  // fatiga, stats penalizadas
     /** Body crítico sin ningún otro estado activo: mismo lenguaje (lavado de color sobre el
      *  relleno) que Kaioken/strain, pero pulsando en vez de fijo para que llame la atención. */
-    private static final int C_BODY_CRITICAL = 0xFFFF2A2A;
-    private static final float BODY_CRITICAL_FRAC = 0.2f;
+    public static final int C_BODY_CRITICAL = 0xFFFF2A2A;
+    public static final float BODY_CRITICAL_FRAC = 0.2f;
 
-    private static final int ICONS_TEX_W = 256;
-    private static final int ICONS_TEX_H = 256;
+    public static final int ICONS_TEX_W = 256;
+    public static final int ICONS_TEX_H = 256;
 
     private static final int ICON_CELL = 20;     // tamaño real de celda en el atlas
-    private static final int ICON_DRAW = 20;     // tamaño al dibujar el icono
+    public static final int ICON_DRAW = 20;     // tamaño al dibujar el icono
     private static final int BADGE_SIZE = 20;    // cuadrito contenedor
     private static final int BADGE_PAD = 2;
 
@@ -161,7 +164,7 @@ public final class ClientZenkaiHooks {
      * para leerse como un drenaje continuo (login, revivir, teletransporte) — sin esto un salto
      * de 0 a full tras reconectar tardaría segundos en "rellenarse" en vez de aparecer ya lleno.
      */
-    private static float smoothTowards(float prevDisplayed, float target, float max, float prevMax) {
+    public static float smoothTowards(float prevDisplayed, float target, float max, float prevMax) {
         if (prevDisplayed < 0f || max != prevMax || Math.abs(target - prevDisplayed) > max * 0.5f) {
             return target;
         }
@@ -183,6 +186,13 @@ public final class ClientZenkaiHooks {
         if (!stats.isRaceChosen()) return;
 
         GuiGraphics g = e.getGuiGraphics();
+
+        // Dos estilos elegibles en la config de cliente (pedido del usuario, 2026-10-09): el
+        // MODERNO vive en su propia clase; lo de abajo es el MINIMALISTA de siempre, sin cambios.
+        if (ClientConfig.hudBarsStyle() == HudBarsStyle.MODERN) {
+            ModernStatsHud.render(g, mc, stats, form);
+            return;
+        }
 
         // ========================
         // Barras (sin recuadro de fondo detrás: el propio arte de bars_empty.png ya hace de
@@ -259,82 +269,65 @@ public final class ClientZenkaiHooks {
         // ========================
         int iconX = PANEL_X;
         int iconY = plY + plTextH + 4;
+        for (Badge b : collectBadges(mc, stats, form, tier, strained, now)) {
+            drawBadge(g, iconX, iconY, b.icon());
+            drawBadgeLabel(g, iconX, iconY, b.label(), b.labelColor());
+            iconX += BADGE_SIZE + BADGE_PAD;
+        }
+    }
+
+    /** Un icono de estado del HUD: celda del atlas + etiqueta corta opcional ("x20", "12s").
+     *  Los dos estilos (minimalista y ModernStatsHud) pintan la MISMA lista, cada uno a su manera. */
+    public record Badge(IconUV icon, String label, int labelColor) {
+        static Badge of(IconUV icon) { return new Badge(icon, null, 0); }
+    }
+
+    /**
+     * Qué iconos de estado salen ahora y en qué orden. Un único sitio para los dos estilos de
+     * HUD: si se añade un estado nuevo aquí, aparece en los dos sin duplicar condiciones.
+     */
+    public static java.util.List<Badge> collectBadges(Minecraft mc, PlayerStatsAttachment stats,
+            PlayerFormAttachment form, KaiokenTier tier, boolean strained, long now) {
+        java.util.List<Badge> out = new java.util.ArrayList<>();
 
         // --- Estados "especiales" (antes de acciones, misma altura) ---
-        if (form.isTransforming()) {
-            drawBadge(g, iconX, iconY, ICON_TRANSFORMING);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        }
-
-        if (stats.isDivine()) {
-            drawBadge(g, iconX, iconY, ICON_DIVINE);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        }
-
+        if (form.isTransforming()) out.add(Badge.of(ICON_TRANSFORMING));
+        if (stats.isDivine()) out.add(Badge.of(ICON_DIVINE));
         if (mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).isMajinControlled()) {
-            drawBadge(g, iconX, iconY, ICON_MAJIN);
-            iconX += BADGE_SIZE + BADGE_PAD;
+            out.add(Badge.of(ICON_MAJIN));
         }
-
-        if (AuraClientState.localTurbo) {
-            drawBadge(g, iconX, iconY, ICON_TURBO);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        }
+        if (AuraClientState.localTurbo) out.add(Badge.of(ICON_TURBO));
 
         // Excluyentes por construcción: el strain nace en el instante en que el kaioken se
         // apaga por agotamiento, así que nunca coinciden y comparten hueco en la fila.
         if (tier.isOn()) {
-            drawBadge(g, iconX, iconY, ICON_KAIOKEN);
-            drawBadgeLabel(g, iconX, iconY, tier.label(), 0xFFFF8866);
-            iconX += BADGE_SIZE + BADGE_PAD;
+            out.add(new Badge(ICON_KAIOKEN, tier.label(), 0xFFFF8866));
         } else if (strained) {
-            drawBadge(g, iconX, iconY, ICON_STRAIN);
-            drawBadgeLabel(g, iconX, iconY, Math.round(form.strainSecondsLeft(now)) + "s", C_BODY_STRAIN);
-            iconX += BADGE_SIZE + BADGE_PAD;
+            out.add(new Badge(ICON_STRAIN, Math.round(form.strainSecondsLeft(now)) + "s", C_BODY_STRAIN));
         }
 
-        if (stats.isImmortal()) {
-            drawBadge(g, iconX, iconY, ICON_IMMORTAL);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        }
-
-        if (stats.isLegendary()) {
-            drawBadge(g, iconX, iconY, ICON_LEGENDARY);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        }
+        if (stats.isImmortal()) out.add(Badge.of(ICON_IMMORTAL));
+        if (stats.isLegendary()) out.add(Badge.of(ICON_LEGENDARY));
 
         // Oozaru/Super Oozaru: se dispara solo por la luna (OozaruSystem), no por la rueda, así
         // que el jugador necesita un aviso propio — también mientras el gui de transformación
         // automática está en curso (oozaruForced), antes incluso de que formId cambie.
         ResourceLocation formId = form.getFormId();
         if (form.isOozaruForced() || FormIds.OOZARU.equals(formId) || FormIds.SUPER_OOZARU.equals(formId)) {
-            drawBadge(g, iconX, iconY, ICON_MOON);
-            iconX += BADGE_SIZE + BADGE_PAD;
+            out.add(Badge.of(ICON_MOON));
         }
 
         if (InCombatState.isInCombat(mc.player)) {
-            drawBadge(g, iconX, iconY, ICON_IN_COMBAT);
-            drawBadgeLabel(g, iconX, iconY,
-                    InCombatState.secondsLeft(mc.player) + "s", 0xFFFF8866);
-            iconX += BADGE_SIZE + BADGE_PAD;
+            out.add(new Badge(ICON_IN_COMBAT, InCombatState.secondsLeft(mc.player) + "s", 0xFFFF8866));
         }
 
         // --- Acciones (misma altura) ---
-        if (ClientZenkaiPalTick.fastFlightMode && SkillEffects.canFly(mc.player)) {
-            drawBadge(g, iconX, iconY, ICON_FLY);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        }
-
-        if (stats.isChargingKi()) {
-            drawBadge(g, iconX, iconY, ICON_KI_CHARGE);
-            iconX += BADGE_SIZE + BADGE_PAD;
-        }
+        if (ClientZenkaiPalTick.fastFlightMode && SkillEffects.canFly(mc.player)) out.add(Badge.of(ICON_FLY));
+        if (stats.isChargingKi()) out.add(Badge.of(ICON_KI_CHARGE));
 
         if (InstantTransmissionClientState.onCooldown()) {
-            drawBadge(g, iconX, iconY, ICON_INSTANT_TRANSMISSION);
             int secondsLeft = (InstantTransmissionClientState.cooldownTicks() + 19) / 20;
-            drawBadgeLabel(g, iconX, iconY, secondsLeft + "s", 0xFFAAAAFF);
-            iconX += BADGE_SIZE + BADGE_PAD;
+            out.add(new Badge(ICON_INSTANT_TRANSMISSION, secondsLeft + "s", 0xFFAAAAFF));
         }
 
         // Parry FALLIDO: la ventana se cerró sin parar nada (o se pulsó en cooldown). Mano tachada
@@ -342,11 +335,10 @@ public final class ClientZenkaiHooks {
         // «2s» a secas no dejaba ver cuándo vuelve.
         int parryCd = ParryClientState.cooldownTicks();
         if (parryCd > 0) {
-            drawBadge(g, iconX, iconY, ICON_PARRY_FAILED);
-            drawBadgeLabel(g, iconX, iconY, String.format(java.util.Locale.ROOT, "%.1f", parryCd / 20.0f),
-                    0xFFFF6666);
-            iconX += BADGE_SIZE + BADGE_PAD;
+            out.add(new Badge(ICON_PARRY_FAILED,
+                    String.format(java.util.Locale.ROOT, "%.1f", parryCd / 20.0f), 0xFFFF6666));
         }
+        return out;
     }
 
     // =========================================================
@@ -355,13 +347,28 @@ public final class ClientZenkaiHooks {
 
     /** cur/max -> fracción 0..1, con guarda de max<=0 (evita NaN mientras stats.getXMax() está
      *  sin inicializar en el primer frame tras elegir raza). */
-    private static float pctOf(float cur, float max) {
+    public static float pctOf(float cur, float max) {
         return max > 0f ? Mth.clamp(cur / max, 0f, 1f) : 0f;
+    }
+
+    /**
+     * Texto dentro de una barra según ClientConfig hud.bars_values, el MISMO para los dos estilos
+     * de HUD: "cur{sep}max" o "NN%". El porcentaje se redondea HACIA ABAJO para que nunca diga
+     * 100 % sin estar llena, y con algo de valor nunca baja de 1 % (un 0 % con la barra viva se
+     * lee como "agotado").
+     */
+    public static String barValueText(float cur, float max, String sep) {
+        if (ClientConfig.hudBarsValues() == HudValueFormat.PERCENT) {
+            int pct = (int) Math.floor(pctOf(cur, max) * 100f);
+            if (pct == 0 && cur > 0f) pct = 1;
+            return pct + "%";
+        }
+        return ZenkaiNumbers.format((int) cur) + sep + ZenkaiNumbers.format((int) max);
     }
 
     /** Color del pulso de Body crítico: mismo ARGB base (C_BODY_CRITICAL) con el alfa
      *  respirando con el reloj real (no el tick de juego, para que sea fluido a cualquier TPS). */
-    private static int criticalPulseColor() {
+    public static int criticalPulseColor() {
         float t = (System.currentTimeMillis() % 900) / 900f;
         float pulse = 0.5f + 0.5f * (float) Math.sin(t * Math.PI * 2);
         int alpha = 0x50 + Math.round(pulse * 0x50); // ~0x50..0xA0
@@ -440,7 +447,7 @@ public final class ClientZenkaiHooks {
 
         // texto cur/max, CENTRADO sobre el ancho real de ESTA barra (rowContentW ya escalado) —
         // no sobre el bloque completo, para que el número "escalone" igual que el contorno.
-        String txt = ZenkaiNumbers.format(cur) + "/" + ZenkaiNumbers.format(max);
+        String txt = barValueText(cur, max, "/");
         int textW = Math.round(mc.font.width(txt) * textScale);
         int textX = blockX + Math.round((contentDestW - textW) / 2f);
         drawScaledString(g, mc, txt, textX, textY, textScale, 0xFFFFFFFF);
@@ -452,7 +459,7 @@ public final class ClientZenkaiHooks {
      * en (0,0) del espacio ya escalado y (x,y) se mantiene como su esquina superior izquierda en
      * coordenadas de pantalla reales — permite alinear texto escalado igual que uno sin escalar.
      */
-    private static void drawScaledString(GuiGraphics g, Minecraft mc, String text, int x, int y,
+    public static void drawScaledString(GuiGraphics g, Minecraft mc, String text, int x, int y,
             float scale, int color) {
         g.pose().pushPose();
         g.pose().translate(x, y, 0);
@@ -461,7 +468,7 @@ public final class ClientZenkaiHooks {
         g.pose().popPose();
     }
 
-    private static void drawBadge(GuiGraphics g, int x, int y, IconUV icon) {
+    public static void drawBadge(GuiGraphics g, int x, int y, IconUV icon) {
         g.blit(ICONS_TEX, x, y, icon.u(), icon.v(), ICON_DRAW, ICON_DRAW, ICONS_TEX_W, ICONS_TEX_H);
     }
 
@@ -482,14 +489,14 @@ public final class ClientZenkaiHooks {
         drawBadge(g, x, y, charged ? ICON_INSTANT_TRANSMISSION_CHARGED : ICON_INSTANT_TRANSMISSION);
     }
 
-    private record IconUV(int u, int v) {
+    public record IconUV(int u, int v) {
         static IconUV grid(int col, int row) {
             return new IconUV(col * ICON_CELL, row * ICON_CELL);
         }
     }
 
     /** Etiqueta corta pegada al borde inferior derecho de un badge ("x20", "12s"). */
-    private static void drawBadgeLabel(GuiGraphics g, int x, int y, String text, int color) {
+    public static void drawBadgeLabel(GuiGraphics g, int x, int y, String text, int color) {
         if (text == null || text.isEmpty()) return;
         Minecraft mc = Minecraft.getInstance();
         int w = mc.font.width(text);

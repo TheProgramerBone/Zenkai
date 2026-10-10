@@ -47,7 +47,7 @@ public class HaloGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         if (com.hmc.zenkai.feature.race.ZenkaiFirstPersonBody.hideHeadAttachments(player)) return;
         // Solo si está en el otro mundo (flag sincronizado vía PlayerStatsAttachment).
         if (!player.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).isInOtherworld()) return;
-        if (player.isInvisible()) return;
+        if (player.isInvisible() && !GeoLayerArmorRenderer.isGhostPass()) return;
 
         ItemStack halo = ModItems.HALO.get().getDefaultInstance();
 

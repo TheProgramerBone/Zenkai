@@ -153,6 +153,16 @@ public class HeadAppearanceScreen extends Screen {
     private Tab tab = Tab.EYES;
     private int page = 0;
 
+    /**
+     * Skin predeterminada (Human/Saiyan con "Skin Predeterminada" en la pantalla de raza): se ve la
+     * skin vanilla del jugador, sin el cuerpo de raza, y los rasgos de cara (ojos, cejas, nariz,
+     * boca) se pintan SOBRE el cuerpo de raza, así que aquí no hacen nada. Solo queda editable el
+     * pelo; el resto de pestañas se enseñan oscurecidas y bloqueadas, con tooltip.
+     */
+    private boolean vanillaSkin = false;
+    /** Rectángulos (x, y, w, h) de las pestañas bloqueadas, para oscurecerlos en render. */
+    private final List<int[]> lockedTabRects = new ArrayList<>();
+
     /** Peinado elegido (id de HairCatalog), null = calvo. Un "custom:" (HairCode) se conserva aparte. */
     @Nullable private ResourceLocation hairStyle;
     /** true si el jugador lleva un código procedimental (HairCode): no se pisa hasta que toque las flechas. */
@@ -197,6 +207,7 @@ public class HeadAppearanceScreen extends Screen {
         eyeColor      = visual.getEyeColorRgb()  | 0xFF000000;
         eyeRightColor = visual.getEyeColorRightRgb();
         hairColor     = visual.getHairColorRgb() | 0xFF000000;
+        vanillaSkin   = !visual.shouldRenderRaceSkin();
 
         // Si venimos de otra raza (o de un save viejo) el rasgo guardado puede no ser válido:
         // se corrige en el preview ya, y llega al servidor al salir (UpdatePlayerVisualPacket).
@@ -212,7 +223,7 @@ public class HeadAppearanceScreen extends Screen {
 
         // Desde el hub se arranca en la primera pestaña (el flujo es lineal: Next recorre todas);
         // desde Back del cuerpo, en la última.
-        List<Tab> tabs = visibleTabs();
+        List<Tab> tabs = navigableTabs();
         tab = startAtLastTab ? tabs.get(tabs.size() - 1) : tabs.get(0);
         lastTab = tab;
         page = pageOfSelection();
@@ -232,6 +243,16 @@ public class HeadAppearanceScreen extends Screen {
         List<Tab> out = new ArrayList<>();
         for (Tab t : Tab.values()) if (isTabVisible(t)) out.add(t);
         return out;
+    }
+
+    /** Con la skin predeterminada solo el pelo es editable; las pestañas de cara quedan bloqueadas. */
+    private boolean isTabLocked(Tab t) { return vanillaSkin && t != Tab.HAIR; }
+
+    /** Pestañas por las que recorren Back/Next y en las que se puede entrar: las visibles y no bloqueadas. */
+    private List<Tab> navigableTabs() {
+        List<Tab> out = new ArrayList<>();
+        for (Tab t : visibleTabs()) if (!isTabLocked(t)) out.add(t);
+        return out.isEmpty() ? visibleTabs() : out;  // red de seguridad: nunca una lista vacía
     }
 
     /**
@@ -309,12 +330,21 @@ public class HeadAppearanceScreen extends Screen {
         int x0 = pl + IN_X1 + PAD;
         int total = (IN_X2 - PAD) - (IN_X1 + PAD);
         int w = total / tabs.size();
+        lockedTabRects.clear();
         for (int i = 0; i < tabs.size(); i++) {
             Tab t = tabs.get(i);
-            addRenderableWidget(new TextOnlyButton(x0 + i * w, pt + TAB_Y, w, TAB_H,
+            var btn = new TextOnlyButton(x0 + i * w, pt + TAB_Y, w, TAB_H,
                     Component.translatable(t.key()), () -> switchTab(t))
                     .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow()
-                    .selected(t == tab));
+                    .selected(t == tab);
+            if (isTabLocked(t)) {
+                // active=false: no responde al clic, pero AbstractWidget sigue calculando el hover
+                // y enseñando el tooltip, que es justo el "por qué" que se quiere dar.
+                btn.active = false;
+                btn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.head.locked_vanilla_skin")));
+                lockedTabRects.add(new int[]{x0 + i * w, pt + TAB_Y, w, TAB_H});
+            }
+            addRenderableWidget(btn);
         }
     }
 
@@ -478,6 +508,8 @@ public class HeadAppearanceScreen extends Screen {
         ScreenTitle.drawAbovePanel(g, mc.font, this.title, pl + BG_W / 2, pt);
 
         g.fill(pl + IN_X1 + PAD, pt + SEP1_Y, pl + IN_X2 - PAD, pt + SEP1_Y + 1, ZenkaiPalette.SEPARATOR);
+        // Pestañas bloqueadas: velo oscuro DEBAJO del texto (los widgets se pintan en super.render).
+        for (int[] r : lockedTabRects) g.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], 0x55000000);
         g.fill(pl + LEFT_X, pt + SEP2_Y, pl + LEFT_R, pt + SEP2_Y + 1, ZenkaiPalette.SEPARATOR);
 
         int leftCx = pl + LEFT_X + GRID_W / 2;
@@ -582,7 +614,7 @@ public class HeadAppearanceScreen extends Screen {
 
     /** "Back": retrocede a la pestaña anterior visible y solo desde la primera vuelve al hub. */
     private void goBack() {
-        List<Tab> tabs = visibleTabs();
+        List<Tab> tabs = navigableTabs();
         int i = tabs.indexOf(tab);
         if (i > 0) {
             switchTab(tabs.get(i - 1));
@@ -598,7 +630,7 @@ public class HeadAppearanceScreen extends Screen {
      * categorías sin que el jugador las viera.
      */
     private void goToStyle() {
-        List<Tab> tabs = visibleTabs();
+        List<Tab> tabs = navigableTabs();
         int i = tabs.indexOf(tab);
         if (i >= 0 && i + 1 < tabs.size()) {
             switchTab(tabs.get(i + 1));

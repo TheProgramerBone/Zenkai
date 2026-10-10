@@ -71,10 +71,23 @@ public final class AfterImageClient {
     /** Guarda la pose animada del jugador justo después de dibujarlo. */
     @SubscribeEvent
     public static void onRenderPlayerPost(RenderPlayerEvent.Post e) {
+        // El retrato del HUD moderno dibuja al jugador local cada frame con la cabeza girada
+        // hacia las barras: esa no es su pose en el mundo y no debe congelarse en la estela.
+        if (com.hmc.zenkai.client.overlay.hud.ModernStatsHud.renderingPortrait) return;
         PlayerModel<AbstractClientPlayer> m = e.getRenderer().getModel();
         LAST_POSE.put(e.getEntity().getUUID(), new Pose(m.head.storePose(), m.body.storePose(),
                 m.rightArm.storePose(), m.leftArm.storePose(),
                 m.rightLeg.storePose(), m.leftLeg.storePose()));
+    }
+
+    /**
+     * ¿Está esfumada esta entidad? El Paso rápido es invisibilidad vainilla sin partículas, así que
+     * basta isInvisible() y vale igual para la poción. Lo consulta GeoLayerArmorRenderer para no dibujar el arte GeckoLib del mod
+     * (pelo, cola, halo, scouter...) sobre un cuerpo que no se ve. La armadura vainilla no pasa por
+     * ahí y se queda, como en el juego base.
+     */
+    public static boolean isVanished(net.minecraft.world.entity.Entity e) {
+        return e instanceof AbstractClientPlayer p && p.isInvisible();
     }
 
     /** Lo llama DashAnimPacket cuando el servidor confirma un Paso rápido. */
@@ -109,6 +122,32 @@ public final class AfterImageClient {
             if (now < pe.atTick()) continue;
             it.remove();
             if (mc.level.getPlayerByUUID(pe.owner()) instanceof AbstractClientPlayer p) addGhost(p, now);
+        }
+    }
+
+    /**
+     * Pelo, cola y halo en la silueta: se vuelven a llamar las capas reales del jugador con la
+     * pasada fantasma activa (GeoLayerArmorRenderer.ghostArgb), que las pinta planas, translúcidas
+     * y del color de la imagen. Van en el mismo espacio de pose que el cuerpo (tras la transformación
+     * base) y copian la postura del modelo vanilla, que acaba de recibir la pose congelada. Si algo
+     * falla, la silueta sale sin adornos en vez de romper el render.
+     */
+    private static void renderGhostAttachments(net.minecraft.client.renderer.entity.player.PlayerRenderer pr,
+                                               Ghost g, PoseStack pose, MultiBufferSource.BufferSource buffers,
+                                               int argb, float pt, Minecraft mc) {
+        if (!(mc.level.getPlayerByUUID(g.owner()) instanceof AbstractClientPlayer owner)) return;
+        var layers = com.hmc.zenkai.feature.race.RaceSkinRenderHooks.ghostLayers(pr);
+        if (layers.isEmpty()) return;
+        com.hmc.zenkai.feature.race.layer.GeoLayerArmorRenderer.ghostArgb = argb;
+        try {
+            for (var layer : layers) {
+                layer.render(pose, buffers, LightTexture.FULL_BRIGHT, owner, 0f, 0f, pt,
+                        owner.tickCount + pt, 0f, 0f);
+            }
+        } catch (RuntimeException ex) {
+            // Silueta sin adornos antes que un crash de render en cada Paso rápido.
+        } finally {
+            com.hmc.zenkai.feature.race.layer.GeoLayerArmorRenderer.ghostArgb = 0;
         }
     }
 
@@ -165,6 +204,7 @@ public final class AfterImageClient {
             pose.scale(0.9375f, 0.9375f, 0.9375f);
             pose.translate(0f, -1.501f, 0f);
             model.renderToBuffer(pose, vc, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, argb);
+            renderGhostAttachments(pr, g, pose, buffers, argb, pt, mc);
             pose.popPose();
         }
         model.setAllVisible(true);

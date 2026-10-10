@@ -4,6 +4,8 @@ import com.hmc.zenkai.client.aura.AuraClassicQuality;
 import com.hmc.zenkai.client.aura.flame.AuraEngine;
 import com.hmc.zenkai.client.overlay.HudAnchor;
 import com.hmc.zenkai.client.overlay.HudOrientation;
+import com.hmc.zenkai.client.overlay.hud.HudBarsStyle;
+import com.hmc.zenkai.client.overlay.hud.HudValueFormat;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.lwjgl.glfw.GLFW;
 
@@ -23,7 +25,8 @@ import java.util.List;
  * TRES TIPOS DE OPCIÓN. Antes solo había booleanos y la pantalla podía asumir que cada fila era
  * un ON/OFF. Al llegar la colocación del HUD hicieron falta enumerados y números, así que Entry
  * pasa a ser una interfaz sellada: la pantalla hace un switch sobre los tres casos y el
- * compilador avisa si algún día se añade un cuarto y alguien olvida pintarlo.
+ * compilador avisa si algún día se añade un cuarto y alguien olvida pintarlo. Ese cuarto llegó
+ * (ColorEntry, 2026-10-09) y el aviso funcionó tal cual.
  */
 public final class ClientConfig {
     private ClientConfig() {}
@@ -31,7 +34,7 @@ public final class ClientConfig {
     // ── Modelo de opciones ───────────────────────────────────────────────────
 
     /** Una opción configurable, con su clave de traducción para la pantalla. */
-    public sealed interface Entry permits BoolEntry, EnumEntry, IntEntry {
+    public sealed interface Entry permits BoolEntry, EnumEntry, IntEntry, ColorEntry {
         String titleKey();
         String tooltipKey();
     }
@@ -69,6 +72,12 @@ public final class ClientConfig {
     public record IntEntry(ModConfigSpec.IntValue value, int min, int max, int step,
                            String titleKey, String tooltipKey) implements Entry {}
 
+    /** Color 0xRRGGBB guardado como entero. Tipo propio y no IntEntry porque la pantalla lo edita
+     *  con el selector de color (ColorPickerWidget), no con flechas: recorrer 16,7 millones de
+     *  valores de uno en uno no es un control. */
+    public record ColorEntry(ModConfigSpec.IntValue value, String titleKey, String tooltipKey)
+            implements Entry {}
+
     private static final List<Entry> ENTRIES = new ArrayList<>();
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
@@ -101,6 +110,13 @@ public final class ClientConfig {
         ModConfigSpec.IntValue v = BUILDER.comment(comment).defineInRange(path, def, min, max);
         ENTRIES.add(new IntEntry(v, min, max, step,
                 "config.zenkai." + key, "config.zenkai." + key + ".desc"));
+        return v;
+    }
+
+    /** Color 0xRRGGBB con fila de selector de color en la pantalla. */
+    private static ModConfigSpec.IntValue defineColor(String path, String key, String comment, int def) {
+        ModConfigSpec.IntValue v = BUILDER.comment(comment).defineInRange(path, def, 0x000000, 0xFFFFFF);
+        ENTRIES.add(new ColorEntry(v, "config.zenkai." + key, "config.zenkai." + key + ".desc"));
         return v;
     }
 
@@ -219,7 +235,39 @@ public final class ClientConfig {
     private static final ModConfigSpec.IntValue HUD_BARS_SCALE =
             defineInt("hud.bars_scale", "hud_bars_scale",
                     "Size, in percent of the native texture, of the Body/Stamina/Ki bars in the HUD",
-                    65, 20, 150, 5);
+                    60, 20, 150, 5);
+
+    /** Qué HUD de Body/Stamina/Ki se dibuja (ver HudBarsStyle). MODERN por defecto a petición
+     *  del usuario (2026-10-09); MINIMALIST conserva exactamente las barras de antes. El tamaño
+     *  (hud.bars_scale) vale para los dos. */
+    private static final ModConfigSpec.EnumValue<HudBarsStyle> HUD_BARS_STYLE =
+            defineEnum("hud.bars_style", "hud_bars_style",
+                    "Style of the Body/Stamina/Ki HUD. MODERN: pixel-art frame tinted by your form, portrait, "
+                            + "damage trail and ki segments. MINIMALIST: the simple bars",
+                    HudBarsStyle.MODERN, HudBarsStyle.class);
+
+    /** Texto dentro de las barras: "cur / max" o porcentaje. Vale para los dos estilos (ver
+     *  ClientZenkaiHooks.barValueText). */
+    private static final ModConfigSpec.EnumValue<HudValueFormat> HUD_BARS_VALUES =
+            defineEnum("hud.bars_values", "hud_bars_values",
+                    "What the Body/Stamina/Ki bars show inside. NUMBERS: current / max. PERCENT: a percentage",
+                    HudValueFormat.NUMBERS, HudValueFormat.class);
+
+    /** Color del marco del HUD moderno en forma base (y siempre, si hud.frame_follows_form está
+     *  apagado). Negro por defecto, a petición del usuario (2026-10-09). */
+    private static final ModConfigSpec.IntValue HUD_FRAME_COLOR =
+            defineColor("hud.frame_color", "hud_frame_color",
+                    "Frame colour of the Modern HUD in base form, as 0xRRGGBB (default black)",
+                    0x000000);
+
+    /** true = el marco toma el color de la transformación (y va cambiando mientras te
+     *  transformas); false = siempre hud.frame_color. Los avisos (vida crítica, strain, stamina
+     *  agotada) se ven en los dos casos: son avisos, no decoración. */
+    private static final ModConfigSpec.BooleanValue HUD_FRAME_FOLLOWS_FORM =
+            defineBool("hud.frame_follows_form", "hud_frame_follows_form",
+                    "The Modern HUD frame takes the colour of your transformation. Off: it always uses "
+                            + "hud.frame_color",
+                    true);
 
     // ── HUD de técnicas ──────────────────────────────────────────────────────
 
@@ -304,6 +352,10 @@ public final class ClientConfig {
     public static AuraEngine auraEngine() { return AURA_SYSTEM.get(); }
     public static AuraClassicQuality auraClassicQuality() { return AURA_CLASSIC_QUALITY.get(); }
     public static float hudBarsScaleFrac() { return HUD_BARS_SCALE.get() / 100f; }
+    public static HudBarsStyle hudBarsStyle() { return HUD_BARS_STYLE.get(); }
+    public static HudValueFormat hudBarsValues() { return HUD_BARS_VALUES.get(); }
+    public static int hudFrameColor() { return HUD_FRAME_COLOR.get() & 0xFFFFFF; }
+    public static boolean hudFrameFollowsForm() { return HUD_FRAME_FOLLOWS_FORM.get(); }
 
     public static HudAnchor hudAnchor() { return HUD_ANCHOR.get(); }
     public static HudOrientation hudOrientation() { return HUD_ORIENTATION.get(); }

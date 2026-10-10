@@ -55,6 +55,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *   2) Lado DEFENSOR: si recibe un jugador con raza, se mitiga con su DEF y el daño va al pool
  *      BODY (la vida vanilla nunca baja). Si body llega a 0 -> estado "derribado" (transición).
  * Si la víctima es un mob, recibe en su vida vanilla el daño ya recalculado del atacante.
+ * Un jugador SIN raza no queda fuera: entra con el perfil del Humano base (UnracedBaseline),
+ * tanto al pegar como al recibir.
  * onDamage solo ORQUESTA; cada paso vive en su propia forma (mismo criterio que
  * TickHandlers.onPlayerTick).
  */
@@ -140,13 +142,19 @@ public class CombatZenkaiHooks {
         // (El esquive automático de Ultra Instinct ya se resolvió en onIncomingDamage, antes de
         // que vanilla aplique la animación de daño: un golpe esquivado nunca llega hasta aquí.)
         MinecraftServer server = e.getEntity().getServer();
-        if (server == null || !ModGameRules.enableRaceBoosts(server)) return;
+        if (server == null) return;
+        if (!ModGameRules.enableRaceBoosts(server)) {
+            scaleKiToVanilla(e);
+            return;
+        }
 
         // La mitigación vanilla se lee AQUÍ, antes de que computeAttackDamage descarte el
         // daño entrante. Después ya es tarde: el ratio vive en el número que sustituimos.
         double armorMult = VanillaMitigation.armorMultiplier(e);
 
-        ZenkaiCombatStats atkStats = ZenkaiStats.of(e.getSource().getEntity());
+        // combatStatsOf y no ZenkaiStats.of: un jugador SIN raza entra con el perfil del Humano
+        // base (UnracedBaseline) en vez de quedar fuera del pipeline como un mob vanilla.
+        ZenkaiCombatStats atkStats = UnracedBaseline.combatStatsOf(e.getSource().getEntity());
         float dmg = computeAttackDamage(e, atkStats, armorMult);
         // Contraataque tras un parry: el primer golpe saliente del defensor sale reforzado.
         if (dmg > 0f && e.getSource().getEntity() != e.getEntity()) {
@@ -159,7 +167,11 @@ public class CombatZenkaiHooks {
         // a otro. Ver BlackFlash.consumeProc.
         boolean blackFlash = BlackFlash.consumeProc(e.getEntity().getUUID());
 
-        ZenkaiCombatStats defStats = ZenkaiStats.of(e.getEntity());
+        ZenkaiCombatStats defStats = UnracedBaseline.combatStatsOf(e.getEntity());
+        if (UnracedBaseline.is(defStats)) {
+            applyToUnracedVictim(e, atkStats, defStats, dmg, armorMult);
+            return;
+        }
         if (defStats != null && defStats.isCombatActive()) {
             applyToZenkaiVictim(e, atkStats, defStats, dmg, armorMult, blackFlash,
                     isEnvironmentalHazard(e.getSource()));
@@ -245,6 +257,9 @@ public class CombatZenkaiHooks {
 
         double strDamage = atkStats.computeMeleeFinal();
 
+        if (UnracedBaseline.is(atkStats) && e.getSource().getEntity() instanceof Player unraced) {
+            return unracedMeleeDamage(unraced, strDamage, VanillaMitigation.originalDamage(e));
+        }
         if (e.getSource().getEntity() instanceof Player attacker) {
             return playerMeleeDamage(e.getEntity(), attacker, atkStats, strDamage, dmg,
                     VanillaMitigation.originalDamage(e));
@@ -350,9 +365,65 @@ public class CombatZenkaiHooks {
         return (float) total;
     }
 
+    /**
+     * Golpe cuerpo a cuerpo de un jugador SIN raza (perfil UnracedBaseline). Igual que el de
+     * playerMeleeDamage pero sin compuerta de modo combate (no puede activarlo), sin estamina,
+     * sin ki y sin Black Flash: STR del Humano base x arma x encantamientos x carga x crítico.
+     * Antes salía su daño vanilla (1-7), que contra la DEF y el pool de un rival con raza (o de
+     * un mob con stats) no hacía nada.
+     */
+    private static float unracedMeleeDamage(Player attacker, double strDamage,
+                                            double originalVanillaDamage) {
+        float critMult = consumeCritMultiplier(attacker);
+        float scale = consumeAttackScale(attacker);
+        double chargeF = 0.2 + scale * scale * 0.8;
+        double enchantMult = KiInfusion.enchantMultiplier(attacker, originalVanillaDamage, critMult);
+        return (float) (strDamage * KiInfusion.weaponMultiplier(attacker) * enchantMult
+                * chargeF * critMult);
+    }
+
     // =====================================================================
     // LADO DEFENSOR
     // =====================================================================
+
+    /**
+     * Víctima: jugador SIN raza (perfil UnracedBaseline). Su vida vanilla es la de verdad; el
+     * golpe se mitiga con la DEF del Humano base y se aplica el MISMO % de vida vanilla que se
+     * llevaría de un body base. Así un golpe que a un Humano recién creado le quita un tercio, a
+     * él también — ni lo mata de uno (antes: STR entera contra 20 de vida) ni lo deja intocable.
+     * Sin atacante con stats (lava, caída, /damage, un mob sin stats) no se toca nada: eso es
+     * daño vanilla contra vida vanilla, ya cuadra. Sin derribado: muere como en vanilla.
+     */
+    private static void applyToUnracedVictim(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
+                                             ZenkaiCombatStats defStats, float dmg,
+                                             double armorMult) {
+        if (atkStats == null || !atkStats.isCombatActive()) return;
+        if (dmg <= 0f) {
+            e.setNewDamage(0.0F);
+            return;
+        }
+        double finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult, false);
+        float vanillaMax = e.getEntity().getMaxHealth();
+        float equivalent = (float) (finalDamage / defStats.getBodyMax() * vanillaMax);
+        e.setNewDamage(Math.max(0.0F, equivalent));
+        if (equivalent > 0f) grantTraining(e, Math.min(finalDamage, defStats.getBody()));
+    }
+
+    /**
+     * Gamerule zenkai_enableRaceBoosts en false: el combate va por vida vanilla, pero los
+     * proyectiles y zonas de ki siguen saliendo con su daño de escala Zenkai (kiPower, cientos o
+     * miles) y mataban de un toque. Se traduce a escala vanilla con la misma regla de % que el
+     * resto: la fracción del body del LANZADOR que vale el golpe, sobre la vida máxima vanilla
+     * del lanzador. Un ki blast de un personaje recién creado queda en unos pocos corazones y
+     * escala con su progreso igual que antes, solo que en la unidad que ahora se usa.
+     */
+    private static void scaleKiToVanilla(LivingDamageEvent.Pre e) {
+        if (!e.getSource().is(ModDamageTypes.KI_DAMAGE_TAG)) return;
+        if (!(e.getSource().getEntity() instanceof LivingEntity caster)) return;
+        ZenkaiCombatStats st = ZenkaiStats.of(caster);
+        if (st == null || !st.isCombatActive() || st.getBodyMax() <= 0) return;
+        e.setNewDamage((float) (e.getNewDamage() / st.getBodyMax() * caster.getMaxHealth()));
+    }
 
     /** Víctima CON stats zenkai: mitiga con DEF y el daño va al pool body. */
     private static void applyToZenkaiVictim(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
@@ -460,7 +531,9 @@ public class CombatZenkaiHooks {
             finalDamage *= blockDamageMultiplierOf(e.getEntity());
         }
 
-        if (e.getEntity() instanceof ServerPlayer defSp) {
+        // Jugador sin raza: no tiene barrera de ki y su absorción ya la cobró vanilla sobre su
+        // propia vida antes de este evento.
+        if (e.getEntity() instanceof ServerPlayer defSp && !UnracedBaseline.is(defStats)) {
             // Barrera de ki (habilidad activa) ANTES que la absorción (consumible): lo que
             // gastas gestionando tú se consume antes que lo que te comiste hace diez minutos.
             finalDamage = KiCombatServer.absorb(defSp, finalDamage);
@@ -781,6 +854,8 @@ public class CombatZenkaiHooks {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         if (!ServerConfig.mirrorHealth()) return;
         if (!PlayerStatsAttachment.get(sp).isRaceChosen()) return;
+        // Gamerule en false: la vida vanilla vuelve a ser la de verdad y debe regenerarse sola.
+        if (sp.getServer() == null || !ModGameRules.enableRaceBoosts(sp.getServer())) return;
         e.setCanceled(true);
     }
 }

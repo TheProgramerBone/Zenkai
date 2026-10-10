@@ -1,5 +1,5 @@
 {
-  "races": ["majin"],
+  "exclude_races": ["arcosian"],
   "sort": 220,
   "layers": [
     { "texture": "zenkai:textures/customization/face/eyes/wide/base.png", "color": "none" },

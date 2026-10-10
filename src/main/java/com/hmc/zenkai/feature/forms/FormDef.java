@@ -132,7 +132,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       double overdriveDrainMultUntrained, double overdriveDrainMultMastered,
                       boolean wheelSelectable, boolean divineTier, int auraOuterRgb, int eyeRgb,
                       int browRgb, Tier tier, boolean endgamePath, AlignBranch alignmentBranch,
-                      Map<ResourceLocation, Double> masteryReqs, String category) {
+                      Map<ResourceLocation, Double> masteryReqs, String category,
+                      Map<Integer, Integer> layerColors) {
 
     /**
      * Rango conceptual de una forma en el mid/late-game (campo "tier" del JSON, default NONE).
@@ -267,6 +268,17 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
      *  Con el pelo en escala de grises, un solo modelo sirve para cualquier forma. */
     public boolean tintsHair() { return hairRgb >= 0; }
 
+    /**
+     * Color RGB que esta forma impone a la capa tintable {@code index} del cuerpo (campo
+     * "layer_colors" del JSON: {"0": "0xD9A21B", "2": ...}), pisando el que eligió el jugador
+     * mientras la lleva puesta. -1 = la forma no toca esa capa. Permite que una forma reuse el
+     * cuerpo y las capas de otra y solo cambie de color (Golden/Black Freezer sobre la forma final).
+     */
+    public int layerColor(int index) {
+        Integer c = layerColors.get(index);
+        return c == null ? -1 : c & 0xFFFFFF;
+    }
+
     /** ¿Esta forma declara un color de cola propio? -1 = cae al color natural
      *  (TailResolver.DEFAULT_TAIL_RGB) — la cola nunca es "sin tinte" de verdad. */
     public boolean tintsTail() { return tailRgb >= 0; }
@@ -330,6 +342,11 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                     buf.writeDouble(e.getValue());
                 }
                 buf.writeUtf(d.category(), 32);
+                buf.writeVarInt(d.layerColors().size());
+                for (var e : d.layerColors().entrySet()) {
+                    buf.writeVarInt(e.getKey());
+                    buf.writeInt(e.getValue());
+                }
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -353,8 +370,15 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(),
                         readTier(buf), buf.readBoolean(), readAlign(buf), readReqs(buf),
-                        buf.readUtf(32));
+                        buf.readUtf(32), readLayerColors(buf));
             });
+
+    private static Map<Integer, Integer> readLayerColors(FriendlyByteBuf buf) {
+        int n = buf.readVarInt();
+        Map<Integer, Integer> out = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < n; i++) out.put(buf.readVarInt(), buf.readInt());
+        return out;
+    }
 
     private static Tier readTier(FriendlyByteBuf buf) {
         int o = buf.readVarInt();

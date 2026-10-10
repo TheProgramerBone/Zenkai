@@ -50,6 +50,28 @@ public final class FaceRemapTextures {
     private static int counter;
 
     /**
+     * Color de los rasgos de cara "skin" (boca, nariz) en este modelo: el tono de piel del jugador
+     * ({@code skinRgb}) salvo que {@link FaceRegions#skinFeatureLayer} diga que la cara está pintada con
+     * otra capa (forma final arcosiana: capa 2 = blanco de la armadura), y entonces el color efectivo
+     * de ESA capa (que ya incluye lo que imponga la forma, p. ej. Golden/Black).
+     */
+    public static int skinFeatureRgb(@Nullable com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem geo,
+                                     net.minecraft.world.entity.player.Player player, int skinRgb) {
+        if (geo == null) return skinRgb;
+        int idx = FaceRegions.skinFeatureLayer(geo.getModelPath());
+        if (idx <= 0) return skinRgb;
+        // Primero lo que imponga la forma activa (Golden/Black no tienen capa: la textura ya es el color
+        // final y solo declaran el color de boca/nariz en layer_colors).
+        var form = com.hmc.zenkai.feature.forms.FormDef.get(player.getData(
+                com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId());
+        if (form != null && form.layerColor(idx) >= 0) return form.layerColor(idx);
+        for (var layer : com.hmc.zenkai.feature.race.layer.RaceLayerDiscovery.layersFor(geo)) {
+            if (layer.index() == idx) return layer.rgb(player);
+        }
+        return skinRgb;
+    }
+
+    /**
      * Región de cara de un modelo: la tabla manual manda; sin entrada, la esquina leída del
      * modelo horneado (16×16); sin modelo cargado, la canónica.
      */

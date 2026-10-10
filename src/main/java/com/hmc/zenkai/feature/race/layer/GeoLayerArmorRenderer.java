@@ -11,20 +11,71 @@ import software.bernie.geckolib.util.Color;
 
 public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
 
+    /**
+     * Pasada de IMAGEN RESIDUAL (AfterImageClient): distinto de 0 = ARGB de la silueta. Mientras
+     * está puesto, TODO el arte GeckoLib del mod (pelo, cola, halo) se dibuja como una silueta
+     * plana translúcida de ese color, sin capas de cara/tinte, y no se oculta por invisibilidad.
+     * Solo hilo de render, y lo pone y quita siempre el mismo bloque try/finally.
+     */
+    public static int ghostArgb = 0;
+
+    public static boolean isGhostPass() { return ghostArgb != 0; }
+
     public GeoLayerArmorRenderer(GeoLayerArmorItem item) {
         super(new GeoLayerArmorModel());
-        // Cara (ojos/cejas/nariz/boca) solo para items de cuerpo (no pelo). Una sola capa que
-        // recorre las categorías del catálogo, ver FaceOverlayGeoLayer.
-        if (item.hasFaceOverlays()) {
-            addRenderLayer(new FaceOverlayGeoLayer(this));
-        }
         // Tinte de cuerpo multicapa (detalle + líneas) — razas multicolor (Namek).
+        // VA ANTES que la cara: las capas se ejecutan en el orden en que se añaden y, a igual
+        // profundidad, gana el ÚLTIMO pase. Con la cara primero, cualquier _layer_N que cubriera
+        // los píxeles de la cara la tapaba: pasó con la forma final arcosiana, cuya cara está
+        // pintada con el color de armadura (capa 2) y se quedaba sin ojos ni boca (2026-10-10).
         if (item.hasBodyTint()) {
             addRenderLayer(new BodyTintGeoLayer(this));
+        }
+        // Cara (ojos/cejas/nariz/boca) solo para items de cuerpo (no pelo). Una sola capa que
+        // recorre las categorías del catálogo, ver FaceOverlayGeoLayer. Siempre por encima del tinte.
+        if (item.hasFaceOverlays()) {
+            addRenderLayer(new FaceOverlayGeoLayer(this));
         }
         if (item.hasDyeTint()) {
             addRenderLayer(new DyedTintGeoLayer(this));
         }
+    }
+
+    /**
+     * Invisibilidad: el arte GeckoLib del mod (pelo, cola, halo, scouter, pesas...) NO se dibuja
+     * mientras su dueño está "esfumado" (Paso rápido) ni con una poción de invisibilidad. La
+     * armadura vainilla sí se queda (como en el juego base), pero esto es nuestro: pelo o cola
+     * flotando sin cuerpo era un fallo. firePreRenderEvent devuelve false = GeckoLib no pinta nada.
+     */
+    @Override
+    public boolean firePreRenderEvent(com.mojang.blaze3d.vertex.PoseStack poseStack,
+                                      software.bernie.geckolib.cache.object.BakedGeoModel model,
+                                      net.minecraft.client.renderer.MultiBufferSource bufferSource,
+                                      float partialTick, int packedLight) {
+        if (!isGhostPass() && getCurrentEntity() != null
+                && com.hmc.zenkai.client.AfterImageClient.isVanished(getCurrentEntity())) {
+            return false;
+        }
+        return super.firePreRenderEvent(poseStack, model, bufferSource, partialTick, packedLight);
+    }
+
+    /** En la pasada de imagen residual, silueta plana translúcida (textura blanca, sin cutout). */
+    @Override
+    public net.minecraft.client.renderer.RenderType getRenderType(GeoLayerArmorItem animatable,
+            net.minecraft.resources.ResourceLocation texture,
+            @org.jetbrains.annotations.Nullable net.minecraft.client.renderer.MultiBufferSource bufferSource,
+            float partialTick) {
+        if (isGhostPass()) {
+            return net.minecraft.client.renderer.RenderType.entityTranslucentEmissive(
+                    net.minecraft.resources.ResourceLocation.withDefaultNamespace("textures/misc/white.png"));
+        }
+        return super.getRenderType(animatable, texture, bufferSource, partialTick);
+    }
+
+    /** Sin capas (cara, tinte) en la imagen residual: serían pasadas a todo color encima de la silueta. */
+    @Override
+    public java.util.List<software.bernie.geckolib.renderer.layer.GeoRenderLayer<GeoLayerArmorItem>> getRenderLayers() {
+        return isGhostPass() ? java.util.List.of() : super.getRenderLayers();
     }
 
     /**
@@ -40,6 +91,10 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
      */
     @Override
     public Color getRenderColor(GeoLayerArmorItem animatable, float partialTick, int packedLight) {
+        if (isGhostPass()) {
+            return Color.ofARGB((ghostArgb >>> 24) & 0xFF, (ghostArgb >> 16) & 0xFF,
+                    (ghostArgb >> 8) & 0xFF, ghostArgb & 0xFF);
+        }
         ItemStack current = getCurrentStack();
         if (current != null && current.has(DataComponents.DYED_COLOR)) {
             return Color.ofOpaque(DyedItemColor.getOrDefault(current, 0xFFFFFF));
@@ -52,8 +107,12 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
         if (!(wearer instanceof Player player)) return Color.WHITE;
 
         var visual = player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        // La capa 0 es la piel: si la forma activa le impone color (layer_colors), manda sobre el del jugador.
+        var form = com.hmc.zenkai.feature.forms.FormDef.get(
+                player.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId());
+        int formSkin = form == null ? -1 : form.layerColor(0);
         int rgb = switch (ch) {
-            case SKIN   -> visual.getSkinColorRgb();
+            case SKIN   -> formSkin >= 0 ? formSkin : visual.getSkinColorRgb();
             case HAIR   -> visual.getHairColorRgb();
             default     -> 0xFFFFFF;
         };

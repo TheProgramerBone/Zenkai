@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.race;
 
 import com.hmc.zenkai.feature.forms.FormDef;
+import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
@@ -39,6 +40,12 @@ public final class HairResolver {
         if (!stats.isRaceChosen()) return ItemStack.EMPTY; // sin personaje creado aún → sin pelo
 
         PlayerFormAttachment form = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        // Oozaru/Super Oozaru: el mono gigante trae su propia cresta de pelo en el modelo
+        // (geo/races/oozaru_player.geo.json); el peinado del jugador saldría flotando sobre ella.
+        // Mismo corte que TailResolver y FaceOverlayGeoLayer.
+        ResourceLocation formId = form.getFormId();
+        if (FormIds.OOZARU.equals(formId) || FormIds.SUPER_OOZARU.equals(formId)) return ItemStack.EMPTY;
+
         PlayerVisualAttachment vis = player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         // Pelo procedimental (HairCode, aparcado): sin renderer todavía → calvo, sin romper.
         if (HairCode.isCustom(vis.getHairStyleId())) return ItemStack.EMPTY;

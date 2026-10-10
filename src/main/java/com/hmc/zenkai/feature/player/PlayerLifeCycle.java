@@ -2,6 +2,7 @@ package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.registry.ModEffects;
+import com.hmc.zenkai.registry.ModGameRules;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -129,6 +130,11 @@ public class PlayerLifeCycle {
         // otro escritor mete vida > 0, y a partir de ahí este guardia ya no protege nada. El
         // marcador de DeathScreenGuard no depende de la vida y sigue puesto hasta el respawn.
         if (sp.isDeadOrDying() || DeathScreenGuard.isAwaitingRespawn(sp)) return;
+
+        // Gamerule zenkai_enableRaceBoosts en false: el combate va por la vida vanilla y el pool
+        // se queda congelado. Copiarlo aquí devolvía la vida al pool lleno en cada sync (regen,
+        // gasto de ki...) y el jugador con raza quedaba casi inmortal.
+        if (sp.getServer() == null || !ModGameRules.enableRaceBoosts(sp.getServer())) return;
 
         PlayerStatsAttachment att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         if (!att.isRaceChosen()) return;

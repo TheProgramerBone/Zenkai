@@ -12,7 +12,12 @@
   "ki_drain_mastered": 0.0,
   "spi_req": 0,
   "parent": "zenkai:oozaru",
-  "body_items": {},
+  "body_items": {
+    "head": "zenkai:super_oozaru_helmet",
+    "chest": "zenkai:super_oozaru_chestplate",
+    "legs": "zenkai:super_oozaru_leggings",
+    "feet": "zenkai:super_oozaru_boots"
+  },
   "aura_type": "ssj",
   "aura_rgb": "0xFFD84D",
   "scale": 3.3,

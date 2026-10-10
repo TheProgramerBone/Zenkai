@@ -1,5 +1,4 @@
 {
-  "exclude_races": ["arcosian"],
   "sort": 240,
   "layers": [
     { "texture": "zenkai:textures/customization/face/eyes/sparkle/base.png", "color": "none" },
