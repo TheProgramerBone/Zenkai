@@ -8,6 +8,7 @@ import com.hmc.zenkai.feature.race.face.FaceCatalog;
 import com.hmc.zenkai.feature.race.face.FaceCategory;
 import com.hmc.zenkai.feature.race.face.FaceLayer;
 import com.hmc.zenkai.feature.race.face.FacePartDef;
+import com.hmc.zenkai.feature.race.face.LegacyFaceIds;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -52,8 +53,9 @@ public final class FaceCatalogGameTests {
         }
         // Los ojos antiguos, de vuelta con id numérico y con trazo de cejas; el 2 se FUSIONÓ con
         // minimal (misma silueta con el trazo) y el 3 sigue siendo exclusivo de Majin.
-        // Ids con nombre = carpeta (1 narrow, 3 wide, 4 sleepy, 5 arched); el 2 se fusionó con minimal.
-        for (String n : new String[]{"narrow", "wide", "sleepy", "arched"}) {
+        // Ids con nombre = carpeta (1 narrow, 3 wide, 4 sleepy); el 2 y el 5 (arched, 0.4.1) se
+        // fusionaron con minimal.
+        for (String n : new String[]{"narrow", "wide", "sleepy"}) {
             var d = FaceCatalog.get(id("eyes/" + n));
             helper.assertTrue(d != null, "falta el ojo antiguo eyes/" + n);
             helper.assertTrue(d.layers().stream().anyMatch(l -> l.color() == FaceLayer.Color.HAIR),
@@ -62,6 +64,10 @@ public final class FaceCatalogGameTests {
         for (int n = 1; n <= 5; n++) {
             helper.assertTrue(FaceCatalog.get(id("eyes/" + n)) == null, "ya no hay ids numéricos: eyes/" + n);
         }
+        helper.assertTrue(FaceCatalog.get(id("eyes/arched")) == null, "eyes/arched se fusionó con minimal");
+        helper.assertTrue(LegacyFaceIds.renamed(id("eyes/arched")).equals(MINIMAL)
+                && LegacyFaceIds.fromIndex(FaceCategory.EYES, 5).equals(MINIMAL),
+                "un save con eyes/arched (o el índice 5) debe cargar minimal");
         // Los vetos se escriben como "exclude_races" (baneado de esa raza), no como lista de razas
         // permitidas (decisión del usuario, 2026-10-10): el único ojo vetado es wide, para Arcosiano.
         helper.assertTrue(FaceBans.isAllowed(Race.MAJIN, FaceCategory.EYES, id("eyes/wide"))
@@ -101,7 +107,7 @@ public final class FaceCatalogGameTests {
                 .noneMatch(l -> l.color() == FaceLayer.Color.EYE_LEFT), "eyes/closed: sin iris");
         // Trazo de ceja marcado "eyebrow" (se oculta en Namek/Arcosiano/Majin); la línea del ojo
         // cerrado y el párpado NO son ceja y se ven en cualquier raza.
-        for (String n : new String[]{"minimal", "expressive", "soft", "narrow", "wide", "sleepy", "arched", "slanted", "sparkle"}) {
+        for (String n : new String[]{"minimal", "expressive", "soft", "narrow", "wide", "sleepy", "slanted", "sparkle"}) {
             helper.assertTrue(FaceCatalog.get(id("eyes/" + n)).layers().stream()
                     .anyMatch(l -> l.color() == FaceLayer.Color.HAIR && l.eyebrow()), "eyes/" + n + ": su trazo es ceja");
         }
@@ -114,9 +120,9 @@ public final class FaceCatalogGameTests {
                         && mouth.get(0).texture().getPath().equals("textures/customization/mouth/neutral.png"),
                 "mouth/neutral debe ser una capa neutral teñida con la piel");
 
-        // Con la cabeza arcosiana nueva solo queda vetado wide (el usuario liberó sparkle, arched,
-        // sleepy, expressive y soft el 2026-10-10): todos valen para Human y Arcosiano.
-        for (String p : new String[]{"eyes/sparkle", "eyes/arched", "eyes/sleepy", "eyes/expressive", "eyes/soft"}) {
+        // Con la cabeza arcosiana nueva solo queda vetado wide (el usuario liberó sparkle, arched
+        // —hoy fusionado con minimal—, sleepy, expressive y soft el 2026-10-10): valen para Human y Arcosiano.
+        for (String p : new String[]{"eyes/sparkle", "eyes/sleepy", "eyes/expressive", "eyes/soft"}) {
             var d = FaceCatalog.get(id(p));
             helper.assertTrue(d != null && d.allows(Race.HUMAN) && d.allows(Race.ARCOSIAN),
                     p + ": vale para Human y Arcosiano");

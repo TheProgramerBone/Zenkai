@@ -1,6 +1,6 @@
 {
   "max_level": 10,
-  "tp_cost": 20000,
+  "tp_cost": 30000,
   "mind_req": [
     60,
     63,

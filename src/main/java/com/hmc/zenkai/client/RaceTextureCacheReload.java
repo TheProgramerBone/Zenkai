@@ -22,6 +22,7 @@ public final class RaceTextureCacheReload {
         event.registerReloadListener((ResourceManagerReloadListener) rm -> {
             RaceTextureUtil.clearCache();
             FaceRemapTextures.clear();
+            com.hmc.zenkai.feature.race.layer.TailWaistPose.clear();
         });
     }
 }

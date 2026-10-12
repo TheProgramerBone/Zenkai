@@ -31,6 +31,14 @@ public class ShenLongEntity extends ZenkaiDefaultNPC {
 
     public ShenLongEntity(EntityType<? extends ZenkaiDefaultNPC> entityType, Level level) {
         super(entityType, level);
+        // Persistente: sin esto vanilla podía borrarlo si nadie quedaba a menos de 32 bloques un
+        // rato (categoría MISC). Se va solo al agotar los deseos (consumeWish).
+        this.setPersistenceRequired();
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return false;
     }
 
     @Override

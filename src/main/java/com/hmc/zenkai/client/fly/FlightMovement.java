@@ -96,6 +96,13 @@ public final class FlightMovement {
     public static void tick(LocalPlayer p, boolean flying) {
         if (!flying) {
             refSpeed = 0.0;
+            FlightCruise.reset();
+            return;
+        }
+
+        // Crucero: la velocidad fijada manda sobre el reparto por mirada y sobre el frenazo.
+        if (FlightCruise.tick(p)) {
+            refSpeed = 0.0;
             return;
         }
 

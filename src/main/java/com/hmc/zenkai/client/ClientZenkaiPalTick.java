@@ -65,6 +65,8 @@ public final class ClientZenkaiPalTick {
 
     /** Último valor del bit de boost enviado al servidor (edge-trigger, solo jugador local). */
     private static boolean lastFlyBoostSent = false;
+    /** Último valor del bit de empuje enviado al servidor (rampa de vuelo, ver FlyThrustPacket). */
+    private static boolean lastFlyThrustSent = false;
 
     /**
      * Modo rápido de vuelo: Control ALTERNA (toggle) mientras se está volando, no hace falta
@@ -131,6 +133,7 @@ public final class ClientZenkaiPalTick {
             com.hmc.zenkai.client.fly.FlightController.tick(p, false, false);
             driveFly(p, st, false, false);   // y aterriza la animación de vuelo
             if (p == mc.player) {
+                com.hmc.zenkai.client.fly.FlightCruise.reset();
                 applyLocalBoost(p, false); // por si se derriba en pleno boost (limpia hitbox/cámara)
                 p.setPose(Pose.SWIMMING);
                 p.setSwimming(true);
@@ -158,10 +161,23 @@ public final class ClientZenkaiPalTick {
                 if (flying) fastFlightMode = !fastFlightMode;
             }
             if (!flying) fastFlightMode = false;
-            boolean boosting = flying && fastFlightMode && mc.player.input.forwardImpulse > 0.1f;
-            applyLocalBoost(p, boosting);
-
             net.minecraft.client.player.LocalPlayer lp = (net.minecraft.client.player.LocalPlayer) p;
+            // Crucero: misma política de colas que el modo rápido (se drena aunque no se vuele).
+            if (KeyBindings.FLY_CRUISE != null) {
+                while (KeyBindings.FLY_CRUISE.consumeClick()) {
+                    com.hmc.zenkai.client.fly.FlightCruise.toggle(lp, flying);
+                }
+            }
+            if (!flying) com.hmc.zenkai.client.fly.FlightCruise.reset();
+            boolean cruising = flying && com.hmc.zenkai.client.fly.FlightCruise.isActive();
+            boolean thrusting = flying && (mc.player.input.forwardImpulse > 0.1f || cruising);
+            boolean boosting = flying && fastFlightMode && thrusting;
+            applyLocalBoost(p, boosting);
+            if (thrusting != lastFlyThrustSent) {
+                lastFlyThrustSent = thrusting;
+                PacketDistributor.sendToServer(new com.hmc.zenkai.feature.ki.FlyThrustPacket(thrusting));
+            }
+
             com.hmc.zenkai.client.fly.FlightMovement.tick(lp, flying);
             ClientFlyAnimState.sendIfChanged(flying, boosting);
             com.hmc.zenkai.client.fly.FlightController.tick(p, flying, boosting);

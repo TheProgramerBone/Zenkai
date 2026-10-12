@@ -62,7 +62,9 @@ public final class MasterManager {
         TOO_WEAK("messages.zenkai.master.too_weak"),
         BAD_ALIGNMENT("messages.zenkai.master.alignment"),
         TOO_FAR(null),          // silencioso: es anti-trampa, no un mensaje de juego
-        NO_RACE(null);
+        // Antes era silencioso y el jugador sin raza veía al maestro "no hacer nada" al
+        // clicarlo. Ahora cada maestro contesta en su tono (ver tell y NO_RACE_LINES).
+        NO_RACE("messages.zenkai.master.no_race");
 
         public final String key;
         Result(String key) { this.key = key; }
@@ -106,11 +108,17 @@ public final class MasterManager {
     }
 
     /** Manda el mensaje de rechazo al CHAT (no a la action bar) con el nombre del maestro
-     *  delante, para que se lea como si hablara él. Los motivos sin clave no dicen nada. */
+     *  delante, para que se lea como si hablara él. Los motivos sin clave no dicen nada. Al
+     *  jugador sin raza le contesta con una de sus frases (no_race_lines del JSON) al azar. */
     public static void tell(ServerPlayer sp, String masterId, Result result) {
         if (result.ok() || result.key == null) return;
-        sp.sendSystemMessage(Component.translatable(result.key,
-                Component.translatable(get(masterId).nameKey())).withStyle(ChatFormatting.GRAY));
+        MasterDef def = get(masterId);
+        String key = result.key;
+        if (result == Result.NO_RACE && def.noRaceLines() > 0) {
+            key = "messages.zenkai.master." + masterId + ".no_race." + sp.getRandom().nextInt(def.noRaceLines());
+        }
+        sp.sendSystemMessage(Component.translatable(key,
+                Component.translatable(def.nameKey())).withStyle(ChatFormatting.GRAY));
     }
 
     // ── Carga ────────────────────────────────────────────────────────────────
@@ -139,6 +147,7 @@ public final class MasterManager {
                     long plReq = GsonHelper.getAsLong(json, "pl_req", 0L);
                     int min = GsonHelper.getAsInt(json, "alignment_min", -100);
                     int max = GsonHelper.getAsInt(json, "alignment_max", 100);
+                    int noRaceLines = Math.max(0, GsonHelper.getAsInt(json, "no_race_lines", 0));
 
                     if (min > max) {
                         LOGGER.warn("Maestro {}: alignment_min ({}) > alignment_max ({}). " +
@@ -146,7 +155,7 @@ public final class MasterManager {
                         min = -100; max = 100;
                     }
 
-                    MasterDef prev = out.put(id, new MasterDef(id, plReq, min, max));
+                    MasterDef prev = out.put(id, new MasterDef(id, plReq, min, max, noRaceLines));
                     if (prev != null) LOGGER.warn("Maestro duplicado '{}': gana {}", id, file);
 
                 } catch (Exception e) {

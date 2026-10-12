@@ -21,6 +21,10 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
     @Override
     public void setCustomAnimations(GeoLayerArmorItem animatable, long instanceId, AnimationState<GeoLayerArmorItem> animationState) {
         super.setCustomAnimations(animatable, instanceId, animationState);
+        // Cola en la cintura: pose por render, no por controlador (ver TailWaistPose).
+        if (TailWaistPose.active && animatable == com.hmc.zenkai.registry.ModItems.TAIL_LOOSE.get()) {
+            TailWaistPose.apply(this, animationState.getAnimationTick());
+        }
         String[] bones = animatable.getHideOnHelmetBones();
         if (bones.length == 0) return;
         for (String name : bones) {

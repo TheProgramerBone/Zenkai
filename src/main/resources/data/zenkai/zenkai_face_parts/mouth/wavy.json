@@ -1,0 +1,9 @@
+{
+  "sort": 210,
+  "layers": [
+    {
+      "texture": "zenkai:textures/customization/face/mouth/wavy/base.png",
+      "color": "skin"
+    }
+  ]
+}

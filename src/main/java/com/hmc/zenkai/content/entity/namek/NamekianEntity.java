@@ -2,13 +2,20 @@ package com.hmc.zenkai.content.entity.namek;
 
 import com.hmc.zenkai.content.entity.ZenkaiCommonAnimations;
 import com.hmc.zenkai.content.entity.ModVillagerTrades;
+import com.hmc.zenkai.content.entity.overworld.SaibamanEntity;
 import com.hmc.zenkai.feature.alignment.AlignmentFearGoals;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -32,19 +39,39 @@ public class NamekianEntity extends AbstractVillager implements GeoEntity {
         super(entityType, level);
     }
 
+    /**
+     * Aldeano pacífico (revisado 2026-10-11): huye al recibir un golpe (PanicGoal), de los
+     * jugadores MALVADOS (los guerreros, en cambio, los atacan) y, como el comerciante errante,
+     * de monstruos y Saibaman cercanos (antes se quedaba quieto mientras un zombi lo mataba).
+     */
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new PanicGoal(this, 1D));
-        this.goalSelector.addGoal(1, new FloatGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new PanicGoal(this, 1.2D));
         this.goalSelector.addGoal(2, AlignmentFearGoals.avoidingEvilPlayers(this));
+        this.goalSelector.addGoal(2, new AvoidEntityGoal<>(this, Mob.class, 8.0F, 1.0D, 1.4D,
+                NamekianEntity::isThreat));
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
-        this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 8.0F));
+    }
+
+    /** Lo que asusta a un namekiano: monstruos (creepers incluidos) y Saibaman. */
+    private static boolean isThreat(LivingEntity e) {
+        return e instanceof Enemy || e instanceof SaibamanEntity;
     }
 
     @Override
     public @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
+        // Un jugador malvado no consigue comerciar: el namekiano se niega y sigue huyendo de él.
+        if (AlignmentFearGoals.isEvilPlayer(player)) {
+            if (!this.level().isClientSide) {
+                this.playSound(SoundEvents.VILLAGER_NO, 1.0F, this.getVoicePitch());
+                player.displayClientMessage(Component.translatable("messages.zenkai.namekian.refuses_evil")
+                        .withStyle(ChatFormatting.GRAY), true);
+            }
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
+        }
         if (!this.level().isClientSide && !this.isTrading() && !this.isBaby()) {
             this.setTradingPlayer(player);
             this.openTradingScreen(player, this.getDisplayName(), 1);

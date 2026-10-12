@@ -3,138 +3,118 @@
 	"animations": {
 		"misc.idle": {
 			"loop": true,
-			"animation_length": 2.0,
+			"animation_length": 1.75,
 			"bones": {
-				"torso": {
-					"scale": {
-						"0.00": {
-							"vector": [
-								1.0,
-								1.0,
-								1.0
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"0.90": {
-							"vector": [
-								1.01,
-								1.0,
-								1.01
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"2.00": {
-							"vector": [
-								1.0,
-								1.0,
-								1.0
-							],
-							"lerp_mode": "catmullrom"
-						}
-					}
-				},
-				"head": {
+				"left_leg": {
 					"position": {
-						"0.00": {
-							"vector": [
-								0.0,
-								0.0,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"0.90": {
-							"vector": [
-								0.0,
-								0.4,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"2.00": {
-							"vector": [
-								0.0,
-								0.0,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
-						}
+						"vector": [0, 21.75, -34]
 					}
 				},
-				"right_forearm": {
+				"body": {
+					"position": {
+						"vector": [0, -36.75, 47]
+					}
+				},
+				"right_arm": {
 					"rotation": {
-						"0.00": {
-							"vector": [
-								0.0,
-								0.0,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
+						"vector": [-45, 0, 0]
+					}
+				},
+				"right_leg": {
+					"position": {
+						"vector": [0, 21.75, -34]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"vector": [-45, 0, 0]
+					}
+				},
+				"lapiz": {
+					"rotation": {
+						"vector": [-107.5, 0, 0]
+					},
+					"position": {
+						"0.0": {
+							"vector": [1, 3, -25]
 						},
-						"0.25": {
-							"vector": [
-								0.0,
-								4.243,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"0.50": {
-							"vector": [
-								0.0,
-								6.0,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"0.75": {
-							"vector": [
-								0.0,
-								4.243,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"1.00": {
-							"vector": [
-								0.0,
-								0.0,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
+						"0.5": {
+							"vector": [-6, 3, -25]
 						},
 						"1.25": {
-							"vector": [
-								0.0,
-								-4.243,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"1.50": {
-							"vector": [
-								0.0,
-								-6.0,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
+							"vector": [7, 3, -25]
 						},
 						"1.75": {
-							"vector": [
-								0.0,
-								-4.243,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
-						},
-						"2.00": {
-							"vector": [
-								0.0,
-								-0.0,
-								0.0
-							],
-							"lerp_mode": "catmullrom"
+							"vector": [1, 3, -25]
 						}
+					}
+				},
+				"piernaiz1": {
+					"rotation": {
+						"vector": [-45, 0, 0]
+					},
+					"position": {
+						"vector": [0, 0.75, 1]
+					}
+				},
+				"piernaiz2": {
+					"position": {
+						"vector": [0, 15, -13]
+					}
+				},
+				"zapatoiz": {
+					"position": {
+						"vector": [0, 15, -13]
+					}
+				},
+				"piernade1": {
+					"rotation": {
+						"vector": [-45, 0, 0]
+					},
+					"position": {
+						"vector": [0, 0.75, 1]
+					}
+				},
+				"piernade2": {
+					"position": {
+						"vector": [0, 15, -13]
+					}
+				},
+				"zapatode": {
+					"position": {
+						"vector": [0, 15, -13]
+					}
+				},
+				"brazoiz2": {
+					"rotation": {
+						"vector": [-45, 0, 0]
+					},
+					"position": {
+						"vector": [0, 6.5, 4]
+					}
+				},
+				"brazode2": {
+					"rotation": {
+						"0.0": {
+							"vector": [-45, 0, 0]
+						},
+						"0.5": {
+							"vector": [-44.3129, 8.8035, 8.9092]
+						},
+						"1.25": {
+							"vector": [-44.3129, -8.8035, -8.9092]
+						},
+						"1.75": {
+							"vector": [-45, 0, 0]
+						}
+					},
+					"position": {
+						"vector": [0, 16.5, 1.25]
+					}
+				},
+				"todo": {
+					"position": {
+						"vector": [0, 0, -48]
 					}
 				}
 			}

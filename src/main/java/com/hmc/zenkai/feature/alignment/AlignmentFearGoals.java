@@ -31,7 +31,9 @@ public final class AlignmentFearGoals {
                 MAX_DIST, WALK_SPEED, SPRINT_SPEED, EntitySelector.NO_CREATIVE_OR_SPECTATOR::test);
     }
 
-    private static boolean isEvilPlayer(LivingEntity le) {
+    /** Jugador de alineamiento EVIL (< -20). Público: lo usan también los guerreros namekianos
+     *  (lo atacan sin esperar a que haga nada) y el namekiano (no comercia con él). */
+    public static boolean isEvilPlayer(LivingEntity le) {
         return le instanceof Player p
                 && AlignmentTier.of(PlayerStatsAttachment.get(p).getAlignment()) == AlignmentTier.EVIL;
     }

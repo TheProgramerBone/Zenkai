@@ -10,7 +10,8 @@ package com.hmc.zenkai.feature.master;
  * {
  *   "pl_req": 5000,
  *   "alignment_min": 20,
- *   "alignment_max": 100
+ *   "alignment_max": 100,
+ *   "no_race_lines": 3
  * }
  * </pre>
  *
@@ -18,12 +19,16 @@ package com.hmc.zenkai.feature.master;
  * @param plReq         PL LIBERABLE mínimo (ver PlayerStatsAttachment#getReleasablePowerLevel)
  * @param alignmentMin  alineamiento mínimo aceptado, en la escala -100..+100
  * @param alignmentMax  alineamiento máximo aceptado
+ * @param noRaceLines   cuántas frases propias tiene para el jugador sin raza
+ *                      (messages.zenkai.master.&lt;id&gt;.no_race.0..N-1); 0 = la genérica.
+ *                      Va en el JSON y no se deduce del lang porque el lang vive en el cliente:
+ *                      el servidor no puede saber qué claves existen.
  */
-public record MasterDef(String id, long plReq, int alignmentMin, int alignmentMax) {
+public record MasterDef(String id, long plReq, int alignmentMin, int alignmentMax, int noRaceLines) {
 
     /** Sin restricciones. Se usa cuando un maestro no tiene JSON: enseña a cualquiera. */
     public static MasterDef open(String id) {
-        return new MasterDef(id, 0L, -100, 100);
+        return new MasterDef(id, 0L, -100, 100, 0);
     }
 
     public boolean alignmentOk(int alignment) {

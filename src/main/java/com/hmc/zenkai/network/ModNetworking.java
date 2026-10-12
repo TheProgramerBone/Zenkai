@@ -157,6 +157,11 @@ public class ModNetworking {
                 FlyBoostPacket::handle);
 
         registrar.playToServer(
+                FlyThrustPacket.TYPE,
+                FlyThrustPacket.STREAM_CODEC,
+                FlyThrustPacket::handle);
+
+        registrar.playToServer(
                 ChooseRacePacket.TYPE,
                 ChooseRacePacket.STREAM_CODEC,
                 ChooseRacePacket::handle

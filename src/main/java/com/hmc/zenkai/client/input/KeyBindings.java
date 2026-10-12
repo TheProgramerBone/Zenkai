@@ -39,6 +39,8 @@ public final class KeyBindings {
     public static KeyMapping CHARGE_KI;
     public static KeyMapping SENSE_KI;
     public static KeyMapping TURBO;
+    /** Crucero de vuelo: fija la velocidad actual (ver client/fly/FlightCruise). */
+    public static KeyMapping FLY_CRUISE;
     public static KeyMapping COMBAT_MODE;
     public static KeyMapping LOCK_ON;
     /** Y: abre la ventana de parry sin necesidad de bloquear (ver ParryServer.tryActivate). */
@@ -149,6 +151,13 @@ public final class KeyBindings {
                 "key.categories.zenkai"
         );
         event.register(TURBO);
+
+        FLY_CRUISE = new KeyMapping(
+                "key.zenkai.fly_cruise",
+                GLFW.GLFW_KEY_Y,
+                "key.categories.zenkai"
+        );
+        event.register(FLY_CRUISE);
 
         COMBAT_MODE = new KeyMapping(
                 "key.zenkai.combat_mode",

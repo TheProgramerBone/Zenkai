@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -207,8 +208,10 @@ public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker
 
         // SOLO HurtByTargetGoal: a propósito no hay NearestAttackableTargetGoal aquí, así
         // nunca ataca primero — el pedido explícito era "IA neutral al inicio, solo se vuelve
-        // agresiva cuando el jugador le golpea".
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this, ShadowCloneEntity.class).setAlertOthers());
+        // agresiva cuando el jugador le golpea". Sin setAlertOthers: antes avisaba a las Sombras
+        // de alrededor, que son de OTROS jugadores y acababan persiguiendo a quien no era su dueño.
+        // Y solo puede fijar como objetivo a su dueño (canAttack), porque solo él le hace daño.
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this, ShadowCloneEntity.class));
     }
 
     public void setOwner(Player owner) {
@@ -219,6 +222,44 @@ public class ShadowCloneEntity extends ZenkaiDefaultMob implements PosedAttacker
     }
 
     public UUID getOwnerId() { return ownerId; }
+
+    /** ¿Puede esta Sombra hacerle daño a {@code victim}? Solo a su dueño (el muñeco de pruebas,
+     *  a cualquiera). Lo usa ShadowTrainingManager.onShadowOutgoingDamage para cualquier ruta de
+     *  daño (melee, ki, áreas, técnicas) sin repetir el filtro en cada una. */
+    public boolean mayHurt(Entity victim) {
+        return isDebugDummy() || isOwner(victim);
+    }
+
+    /** ¿Es esta entidad el dueño? Sin dueño (no debería pasar) cuenta cualquiera. */
+    private boolean isOwner(Entity e) {
+        return ownerId == null || (e != null && ownerId.equals(e.getUUID()));
+    }
+
+    /** El muñeco de "/zenkai debug dummy" es una herramienta de pruebas: lo puede golpear quien
+     *  sea (otro jugador, un mob) para probar bloqueo, parry o choques. */
+    private boolean isDebugDummy() {
+        return getTags().contains(DEBUG_DUMMY_TAG);
+    }
+
+    /**
+     * Un sparring personal (petición del usuario, 2026-10-11): solo su dueño le hace daño. Nada
+     * de otros jugadores, mobs, fuego, caída o ahogo; /kill y el vacío sí (BYPASSES_INVULNERABILITY).
+     * Lo que dispara el dueño (ki, técnicas) trae al dueño como atacante y sí cuenta.
+     */
+    @Override
+    public boolean isInvulnerableTo(@NotNull DamageSource source) {
+        if (source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) return super.isInvulnerableTo(source);
+        if (isDebugDummy()) return super.isInvulnerableTo(source);
+        if (!isOwner(source.getEntity())) return true;
+        return super.isInvulnerableTo(source);
+    }
+
+    /** Solo pelea con su dueño: aunque algo más le diera, nunca lo fijaría como objetivo. */
+    @Override
+    public boolean canAttack(@NotNull LivingEntity target) {
+        if (!isDebugDummy() && !isOwner(target)) return false;
+        return super.canAttack(target);
+    }
 
     @Override
     public boolean isAlliedTo(@NotNull Entity entity) {

@@ -165,6 +165,16 @@ public final class ShadowTrainingManager {
         return att.getPowerLevelWithStatMultiplier(statMult);
     }
 
+    /** La Sombra es un sparring personal (petición del usuario, 2026-10-11): sus golpes, su ki y
+     *  sus áreas solo le hacen daño a su dueño. Un filtro aquí cubre cada ruta de daño a la vez;
+     *  el daño que RECIBE lo filtra ShadowCloneEntity.isInvulnerableTo. */
+    @SubscribeEvent
+    public static void onShadowOutgoingDamage(net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent e) {
+        if (e.getSource().getEntity() instanceof ShadowCloneEntity shadow && !shadow.mayHurt(e.getEntity())) {
+            e.setCanceled(true);
+        }
+    }
+
     @SubscribeEvent
     public static void onShadowDeath(LivingDeathEvent e) {
         if (!(e.getEntity() instanceof ShadowCloneEntity shadow)) return;

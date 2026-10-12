@@ -1,0 +1,9 @@
+{
+  "sort": 180,
+  "layers": [
+    {
+      "texture": "zenkai:textures/customization/face/mouth/stoic/base.png",
+      "color": "skin"
+    }
+  ]
+}

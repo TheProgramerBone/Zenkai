@@ -1,0 +1,9 @@
+{
+  "sort": 170,
+  "layers": [
+    {
+      "texture": "zenkai:textures/customization/face/mouth/frown/base.png",
+      "color": "skin"
+    }
+  ]
+}

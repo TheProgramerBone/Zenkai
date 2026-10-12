@@ -1,0 +1,13 @@
+{
+  "sort": 200,
+  "layers": [
+    {
+      "texture": "zenkai:textures/customization/face/mouth/smug/base.png",
+      "color": "skin"
+    },
+    {
+      "texture": "zenkai:textures/customization/face/mouth/smug/teeth.png",
+      "color": "none"
+    }
+  ]
+}

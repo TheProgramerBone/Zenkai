@@ -1,0 +1,21 @@
+{
+  "sort": 230,
+  "layers": [
+    {
+      "texture": "zenkai:textures/customization/face/mouth/yell/base.png",
+      "color": "skin"
+    },
+    {
+      "texture": "zenkai:textures/customization/face/mouth/yell/interior.png",
+      "color": "none"
+    },
+    {
+      "texture": "zenkai:textures/customization/face/mouth/yell/teeth.png",
+      "color": "none"
+    },
+    {
+      "texture": "zenkai:textures/customization/face/mouth/yell/tongue.png",
+      "color": "none"
+    }
+  ]
+}

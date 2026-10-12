@@ -6,7 +6,6 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import com.hmc.zenkai.registry.ModItems;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -55,9 +54,9 @@ public final class TailResolver {
         ResourceLocation formId = form.getFormId();
         if (FormIds.OOZARU.equals(formId) || FormIds.SUPER_OOZARU.equals(formId)) return ItemStack.EMPTY;
 
-        PlayerVisualAttachment vis = PlayerVisualAttachment.get(player);
-        var item = "waist".equals(vis.getTailStyleId()) ? ModItems.TAIL_WAIST : ModItems.TAIL_LOOSE;
-        ItemStack stack = item.get().getDefaultInstance();
+        // Un solo ítem para los dos estilos: la cola en la cintura es la misma con otra pose, que
+        // aplica TailGeoLayer/TailWaistPose según getTailStyleId() (2026-10-11).
+        ItemStack stack = ModItems.TAIL_LOOSE.get().getDefaultInstance();
 
         // Sistema general "sin modelo GeckoLib -> vuelve al cuerpo por defecto" (ver
         // RaceSkinSlots.backedOrEmpty): los ítems de cola están registrados desde ya, pero su

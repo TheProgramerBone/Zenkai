@@ -201,7 +201,7 @@
 						}
 					}
 				},
-				"right_antenna": {
+				"antena1": {
 					"rotation": {
 						"0.00": {
 							"vector": [
@@ -341,7 +341,7 @@
 						}
 					}
 				},
-				"left_antenna": {
+				"antena2": {
 					"rotation": {
 						"0.00": {
 							"vector": [

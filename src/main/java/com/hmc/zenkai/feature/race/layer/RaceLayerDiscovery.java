@@ -23,7 +23,8 @@ import static com.hmc.zenkai.feature.race.RaceTextureUtil.resourceExists;
 
 /**
  * Descubre las capas de tinte numeradas de un item de cuerpo por convención, a partir de su
- * textura base: &lt;base&gt;_layer_0.png, _1.png, _2.png ... hasta el primer hueco.
+ * textura base: &lt;base&gt;_layer_0.png, _1.png, _2.png ... hasta el primer hueco. Las capas
+ * totalmente transparentes se saltan (conservando la numeración de las demás).
  * Cada capa lleva opcionalmente un JSON hermano &lt;base&gt;_layer_&lt;n&gt;.json:
  *   { "channel": "detail" }   (skin | hair | detail | lines)
  *   { "color":   "FF8800" }   (hex fijo, ignora el canal)
@@ -96,9 +97,34 @@ public final class RaceLayerDiscovery {
         for (int n = 0; ; n++) {
             ResourceLocation tex = deriveMask(base, "_layer_" + n);
             if (!resourceExists(tex)) break; // primer hueco = fin
+            // Una capa SIN un solo píxel opaco no tiñe nada: no sale en la GUI ni gasta un pase de
+            // render. Pasaba en la forma final del Arcosiano (Músculos, Detalle 2 y Cuernos vacíos:
+            // el generador de capas las crea para cada forma y Freezer final no tiene cuernos), y
+            // el jugador veía tres selectores que no hacían nada. Se SALTA sin cortar el bucle y
+            // conservando su número: los colores guardados van por índice de capa.
+            if (isFullyTransparent(tex)) continue;
             out.add(readConfig(base, tex, n));
         }
         return List.copyOf(out);
+    }
+
+    /** ¿No tiene ningún píxel con alfa? Un PNG ilegible cuenta como NO vacío (mejor un selector
+     *  de más que esconder una capa válida). */
+    private static boolean isFullyTransparent(ResourceLocation tex) {
+        var res = Minecraft.getInstance().getResourceManager().getResource(tex);
+        if (res.isEmpty()) return false;
+        try (var in = res.get().open();
+             var img = com.mojang.blaze3d.platform.NativeImage.read(in)) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                for (int x = 0; x < img.getWidth(); x++) {
+                    if ((img.getPixelRGBA(x, y) >>> 24) != 0) return false;
+                }
+            }
+            return true;
+        } catch (Exception ex) {
+            Zenkai.LOGGER.warn("[Zenkai] No se pudo leer la capa {}: {}", tex, ex.toString());
+            return false;
+        }
     }
 
     /**

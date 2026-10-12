@@ -1,0 +1,17 @@
+{
+  "sort": 160,
+  "layers": [
+    {
+      "texture": "zenkai:textures/customization/face/mouth/open_smile/base.png",
+      "color": "skin"
+    },
+    {
+      "texture": "zenkai:textures/customization/face/mouth/open_smile/interior.png",
+      "color": "none"
+    },
+    {
+      "texture": "zenkai:textures/customization/face/mouth/open_smile/tongue.png",
+      "color": "none"
+    }
+  ]
+}

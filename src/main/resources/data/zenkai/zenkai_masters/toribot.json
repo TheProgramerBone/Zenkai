@@ -1,5 +1,6 @@
 {
   "pl_req": 3000,
   "alignment_min": -100,
-  "alignment_max": 100
+  "alignment_max": 100,
+  "no_race_lines": 3
 }

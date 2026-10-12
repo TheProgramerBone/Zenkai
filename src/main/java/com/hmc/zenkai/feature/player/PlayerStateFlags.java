@@ -21,6 +21,14 @@ public class PlayerStateFlags {
     private boolean flyBoosting = false;
 
     /**
+     * El jugador empuja el vuelo (adelante pulsado o crucero activo). Bit cliente -> servidor por
+     * FlyThrustPacket. Transitorio como flyBoosting: nada de NBT ni sync.
+     */
+    private boolean flyThrust = false;
+    /** Rampa de vuelo 0..1 (ver FlightSystem). Solo servidor, transitoria. */
+    private double flyThrottle = 0.0;
+
+    /**
      * Tracker transitorio (por lado, NO se guarda ni sincroniza): si la hitbox de boost ya está
      * aplicada. Sirve para llamar refreshDimensions() SOLO en la transición (evita recalcular cada tick).
      */
@@ -114,6 +122,8 @@ public class PlayerStateFlags {
     public boolean isFlyEnabled()  { return flyEnabled; }
     public boolean isChargingKi()  { return chargingKi; }
     public boolean isFlyBoosting() { return flyBoosting; }
+    public boolean isFlyThrust() { return flyThrust; }
+    public double getFlyThrottle() { return flyThrottle; }
     public boolean isBoostSizeApplied() { return boostSizeApplied; }
     public int  getEmergencyLandingTicks() { return emergencyLandingTicks; }
     public boolean isOverdriveCharging() { return overdriveCharging; }
@@ -147,6 +157,8 @@ public class PlayerStateFlags {
     public void setFlyEnabled(boolean v)  { this.flyEnabled  = v; }
     public void setChargingKi(boolean v)  { this.chargingKi  = v; }
     public void setFlyBoosting(boolean v) { this.flyBoosting = v; }
+    public void setFlyThrust(boolean v) { this.flyThrust = v; }
+    public void setFlyThrottle(double v) { this.flyThrottle = Math.max(0.0, Math.min(1.0, v)); }
     public void setBoostSizeApplied(boolean v) { this.boostSizeApplied = v; }
     public void setEmergencyLandingTicks(int v) { this.emergencyLandingTicks = v; }
     public void setOverdriveCharging(boolean v) { this.overdriveCharging = v; }

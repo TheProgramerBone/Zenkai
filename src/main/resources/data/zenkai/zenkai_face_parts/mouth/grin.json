@@ -1,0 +1,13 @@
+{
+  "sort": 150,
+  "layers": [
+    {
+      "texture": "zenkai:textures/customization/face/mouth/grin/base.png",
+      "color": "skin"
+    },
+    {
+      "texture": "zenkai:textures/customization/face/mouth/grin/teeth.png",
+      "color": "none"
+    }
+  ]
+}

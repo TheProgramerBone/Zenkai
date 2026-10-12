@@ -176,6 +176,23 @@ public class BodyColorsScreen extends Screen {
      * sitio. La rejilla de tonos y "Default" se enseñan oscurecidas y bloqueadas, con tooltip.
      */
     private boolean vanillaSkin = false;
+
+    /**
+     * Arcosiano: qué forma enseña la vista previa (petición del usuario, 2026-10-11 — el editor se
+     * usa en la forma base y no había forma de ver cómo quedan los colores en la Definitiva). Las
+     * cuatro formas comparten la misma numeración de capas, así que un color tiñe la misma parte
+     * en todas; las filas que la forma elegida no usa se oscurecen (ver veiledRows). Estado de
+     * vista puro, como zoomMult: no se guarda ni se sincroniza.
+     */
+    private static final ResourceLocation[] PREVIEW_FORMS = {
+            com.hmc.zenkai.feature.forms.FormIds.BASE,
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "second_form"),
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "third_form"),
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "final_form")};
+    private int previewForm = 0;
+    @Nullable private TextOnlyButton previewFormBtn;
+    /** Índices de capa que la forma de la vista previa NO pinta (sus filas se oscurecen). */
+    private final java.util.Set<Integer> veiledLayers = new java.util.HashSet<>();
     /** Rectángulos (x1, y1, x2, y2) de los controles de tono bloqueados, para el velo de render(). */
     private final java.util.List<int[]> lockedRects = new java.util.ArrayList<>();
 
@@ -214,6 +231,17 @@ public class BodyColorsScreen extends Screen {
         resetViewBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.appearance.reset_view")));
         addRenderableWidget(resetViewBtn);
 
+        previewFormBtn = null;
+        if (race == Race.ARCOSIAN) {
+            int w = IN_X2 - IN_X1 - 2 * BTN_W - 8;
+            previewFormBtn = new TextOnlyButton(
+                    panelLeft + (BG_W - w) / 2, panelTop + BTN_BAR_Y, w, 20,
+                    previewFormLabel(), TEX_BTN, null, this::cyclePreviewForm);
+            previewFormBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.body.preview_form.tooltip")));
+            addRenderableWidget(previewFormBtn);
+        }
+        refreshVeiledLayers();
+
         addRenderableWidget(new TextOnlyButton(
                 panelLeft + IN_X1, panelTop + BTN_BAR_Y, BTN_W, 20,
                 Component.translatable("screen.zenkai.back"),
@@ -229,6 +257,42 @@ public class BodyColorsScreen extends Screen {
                 Component.translatable("screen.zenkai.next"),
                 TEX_BTN, null,
                 this::goToStyle));
+    }
+
+    /** Nombres CORTOS propios (no los form.zenkai.*): "Ver: Forma Final" con el prefijo no cabe bien en el
+     *  hueco entre Back y Next, y el botón aún añade "[ ]" al pasar el ratón. */
+    private static final String[] PREVIEW_FORM_KEYS = {"first", "second", "third", "final"};
+
+    private Component previewFormLabel() {
+        Component name = Component.translatable("screen.zenkai.body.preview_form." + PREVIEW_FORM_KEYS[previewForm]);
+        return Component.translatable("screen.zenkai.body.preview_form", name);
+    }
+
+    private void cyclePreviewForm() {
+        previewForm = (previewForm + 1) % PREVIEW_FORMS.length;
+        if (previewFormBtn != null) previewFormBtn.setMessage(previewFormLabel());
+        refreshVeiledLayers();
+    }
+
+    /** Capas que el cuerpo de la forma de la vista previa no tiene (o tiene vacías). */
+    private void refreshVeiledLayers() {
+        veiledLayers.clear();
+        if (race != Race.ARCOSIAN || previewForm == 0) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        ItemStack body;
+        com.hmc.zenkai.feature.forms.FormSkinResolver.setPreviewForm(PREVIEW_FORMS[previewForm]);
+        try {
+            body = com.hmc.zenkai.feature.forms.FormSkinResolver.resolveBodyOverride(mc.player, EquipmentSlot.CHEST);
+        } finally {
+            com.hmc.zenkai.feature.forms.FormSkinResolver.setPreviewForm(null);
+        }
+        if (!(body.getItem() instanceof GeoLayerArmorItem gi)) return;
+        java.util.Set<Integer> present = new java.util.HashSet<>();
+        for (RaceLayerDiscovery.Layer L : RaceLayerDiscovery.layersFor(gi)) present.add(L.index());
+        for (RaceLayerDiscovery.Layer L : tintLayers) {
+            if (!present.contains(L.index())) veiledLayers.add(L.index());
+        }
     }
 
     private int rowsTop()       { return panelTop + ROWS_TOP; }
@@ -551,14 +615,27 @@ public class BodyColorsScreen extends Screen {
         int previewSize = Mth.clamp(Math.round(boxH * PREVIEW_SIZE_RATIO), PREVIEW_SIZE_MIN, PREVIEW_SIZE_MAX);
         int zoomedSize   = Mth.clamp(Math.round(previewSize * zoomMult), ZOOMED_SIZE_MIN, ZOOMED_SIZE_MAX);
 
-        InventoryScreen.renderEntityInInventoryFollowsMouse(
-                g, rect[0], rect[1], rect[2], rect[3],
-                zoomedSize, 0.0625f, (float) mouseX, (float) mouseY, mc.player);
+        // La forma elegida en el botón de vista previa solo vale para ESTE render (try/finally).
+        if (race == Race.ARCOSIAN) com.hmc.zenkai.feature.forms.FormSkinResolver.setPreviewForm(PREVIEW_FORMS[previewForm]);
+        try {
+            InventoryScreen.renderEntityInInventoryFollowsMouse(
+                    g, rect[0], rect[1], rect[2], rect[3],
+                    zoomedSize, 0.0625f, (float) mouseX, (float) mouseY, mc.player);
+        } finally {
+            com.hmc.zenkai.feature.forms.FormSkinResolver.setPreviewForm(null);
+        }
 
         super.render(g, mouseX, mouseY, partialTick);
         // Velo oscuro sobre los controles bloqueados (después de los widgets: las casillas de color
         // se pintan opacas, así que un velo por debajo no se vería).
         for (int[] r : lockedRects) g.fill(r[0], r[1], r[2], r[3], 0x88000000);
+        // Filas de capas que la forma de la vista previa no usa: mismo velo, más suave (se pueden
+        // seguir editando; afectan a las otras formas).
+        for (int i = 0; i < tintLayers.size(); i++) {
+            if (!onScreen(i) || !veiledLayers.contains(tintLayers.get(i).index())) continue;
+            int y = rowTop(i);
+            g.fill(listLeft() - 2, y + 1, listRight() + 2, y + ROW_H - 1, 0x66000000);
+        }
 
         if (!isMultiTintRace(race)) {
             g.blit(ICONS_TEX, genderIconX, genderIconY,

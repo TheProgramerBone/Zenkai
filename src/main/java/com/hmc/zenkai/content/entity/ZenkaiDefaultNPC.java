@@ -2,12 +2,9 @@ package com.hmc.zenkai.content.entity;
 
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
@@ -15,7 +12,7 @@ import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-// Clase para los npc, inmortales, no se mueven, tienen una animación idle.
+// Clase para los npc: inmortales (salvo /kill y el vacío), no se mueven, tienen una animación idle.
 
 public abstract class ZenkaiDefaultNPC extends PathfinderMob implements GeoEntity {
 
@@ -35,26 +32,33 @@ public abstract class ZenkaiDefaultNPC extends PathfinderMob implements GeoEntit
         return cache;
     }
 
+    /**
+     * Inmunes a cualquier cosa salvo /kill y el vacío (la etiqueta vanilla
+     * BYPASSES_INVULNERABILITY). Antes solo ignoraban lo que venía de un jugador y morían como un
+     * mob cualquiera al fuego, la lava, un creeper, un rayo o el ki de un Saibaman: un maestro
+     * sacado de huevo no tiene bloque marcador que lo reponga (petición del usuario, 2026-10-11).
+     */
     @Override
-    public boolean isInvulnerableTo(DamageSource source) {
-        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) ||
-                source.is(DamageTypeTags.IS_EXPLOSION) ||
-                source.is(DamageTypeTags.IS_FREEZING) ||
-                source.is(DamageTypeTags.IS_FALL) ||
-                source.is(DamageTypeTags.IS_LIGHTNING) ||
-                source.is(DamageTypeTags.IS_FIRE))
-        {
-            return super.isInvulnerableTo(source);
-        }
-        Entity attacker = source.getEntity();
-        if (attacker instanceof Player) {
-            return true;
-        }
-        Entity direct = source.getDirectEntity();
-        if (direct instanceof Projectile proj && proj.getOwner() instanceof Player) {
-            return true;
-        }
-        return super.isInvulnerableTo(source);
+    public boolean isInvulnerableTo(@NotNull DamageSource source) {
+        return !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY);
+    }
+
+    /** Sin llamas encima: el fuego no les hace daño y no tiene sentido verlos ardiendo. */
+    @Override
+    public boolean fireImmune() {
+        return true;
+    }
+
+    /** Ningún efecto de poción (veneno, wither, levitación, lentitud...). */
+    @Override
+    public boolean canBeAffected(@NotNull MobEffectInstance effect) {
+        return false;
+    }
+
+    /** Tampoco se congelan en la nieve polvo (el contador de congelación no pasa por hurt). */
+    @Override
+    public boolean canFreeze() {
+        return false;
     }
 
     @Override
@@ -63,13 +67,10 @@ public abstract class ZenkaiDefaultNPC extends PathfinderMob implements GeoEntit
         setDeltaMovement(0, 0, 0);
     }
 
+    /** Doble cierre: algunas rutas llaman a hurt sin pasar antes por isInvulnerableTo. */
     @Override
-    public boolean hurt(DamageSource source, float amount) {
-        if (!source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-            if (source.getEntity() instanceof Player) return false;
-            Entity direct = source.getDirectEntity();
-            if (direct instanceof Projectile proj && proj.getOwner() instanceof Player) return false;
-        }
+    public boolean hurt(@NotNull DamageSource source, float amount) {
+        if (isInvulnerableTo(source)) return false;
         return super.hurt(source, amount);
     }
 }

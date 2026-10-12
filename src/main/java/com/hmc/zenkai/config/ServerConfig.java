@@ -531,6 +531,16 @@ public class ServerConfig {
             BUILDER.comment("One-time ki cost of the takeoff impulse (before the Fly skill reduction)")
                     .defineInRange("fly.takeoff_ki_cost", 2.0D, 0.0D, 200.0D);
 
+    private static final ModConfigSpec.IntValue FLY_RAMP_UP_RAW =
+            BUILDER.comment("Ticks of sustained thrust (forward held, or cruise) for flight to reach its full speed bonus.",
+                            "Flight starts at vanilla creative speed and ramps up. 0 = instant (old behaviour)")
+                    .defineInRange("fly.ramp_up_ticks", 30, 0, 400);
+
+    private static final ModConfigSpec.IntValue FLY_RAMP_DOWN_RAW =
+            BUILDER.comment("Ticks without thrust for the flight speed bonus to fall back to vanilla creative speed.",
+                            "Shorter than ramp_up on purpose (braking is faster than accelerating). 0 = instant")
+                    .defineInRange("fly.ramp_down_ticks", 12, 0, 400);
+
     private static final ModConfigSpec.DoubleValue TURBO_DRAIN_PCT_PER_SEC_RAW =
             BUILDER.comment("Energy drained per second while in turbo, as a fraction of energyMax (0.005 = 0.5%/s)")
                     .defineInRange("aura.turbo_drain_pct_per_sec", 0.005D, 0.0D, 1.0D);
@@ -1156,6 +1166,8 @@ public class ServerConfig {
     private static volatile double FLY_KI_DRAIN = 0.15D;
     private static volatile double FLY_TAKEOFF_IMPULSE = 0.55D;
     private static volatile double FLY_TAKEOFF_KI_COST = 2.0D;
+    private static volatile int FLY_RAMP_UP = 30;
+    private static volatile int FLY_RAMP_DOWN = 12;
     private static volatile double TURBO_DRAIN_PCT_PER_SEC = 0.005D;
 
     private static volatile double BODY_SCALE = 1.0D, STAMINA_SCALE = 1.0D, ENERGY_SCALE = 1.0D;
@@ -1336,6 +1348,8 @@ public class ServerConfig {
         FLY_KI_DRAIN      = FLY_KI_DRAIN_RAW.get();
         FLY_TAKEOFF_IMPULSE = FLY_TAKEOFF_IMPULSE_RAW.get();
         FLY_TAKEOFF_KI_COST = FLY_TAKEOFF_KI_COST_RAW.get();
+        FLY_RAMP_UP = FLY_RAMP_UP_RAW.get();
+        FLY_RAMP_DOWN = FLY_RAMP_DOWN_RAW.get();
         TURBO_DRAIN_PCT_PER_SEC = TURBO_DRAIN_PCT_PER_SEC_RAW.get();
         TRAINING_PL_RATIO_FULL   = TRAINING_PL_RATIO_FULL_RAW.get();
         REGEN_BODY_EXHAUSTION    = REGEN_BODY_EXHAUSTION_RAW.get();
@@ -1614,6 +1628,8 @@ public class ServerConfig {
     public static double flyKiDrainPerTick()        { return FLY_KI_DRAIN; }
     public static double flyTakeoffImpulse()        { return FLY_TAKEOFF_IMPULSE; }
     public static double flyTakeoffKiCost()         { return FLY_TAKEOFF_KI_COST; }
+    public static int flyRampUpTicks()              { return FLY_RAMP_UP; }
+    public static int flyRampDownTicks()            { return FLY_RAMP_DOWN; }
     public static double turboDrainPctPerSec()      { return TURBO_DRAIN_PCT_PER_SEC; }
     public static int    inCombatTicks()             { return IN_COMBAT_TICKS; }
     public static double inCombatBodyRegenMult()     { return IN_COMBAT_BODY_REGEN_MULT; }

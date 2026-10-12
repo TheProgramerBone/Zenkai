@@ -1,0 +1,13 @@
+{
+  "sort": 240,
+  "layers": [
+    {
+      "texture": "zenkai:textures/customization/face/mouth/determined/base.png",
+      "color": "skin"
+    },
+    {
+      "texture": "zenkai:textures/customization/face/mouth/determined/teeth.png",
+      "color": "none"
+    }
+  ]
+}

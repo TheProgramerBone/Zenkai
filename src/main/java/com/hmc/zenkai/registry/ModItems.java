@@ -143,6 +143,15 @@ public class ModItems {
     public static final DeferredItem<Item> ISAAC_SPAWN_EGG = ITEMS.register("isaac_spawn_egg",
     () -> new DeferredSpawnEggItem(ModEntities.ISAAC,0xe4c7c5,0x9c716f, new Item.Properties()));
 
+    /** Maestros: color dominante de su modelo y el de su detalle más reconocible. Kami: túnica
+     *  blanca y piel namek; Korin: pelo blanco y bastón; Tori-Bot: chapa gris azulada y rojo. */
+    public static final DeferredItem<Item> KAMI_SPAWN_EGG = ITEMS.register("kami_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.KAMI, 0xE5E5E5, 0x2DC31E, new Item.Properties()));
+    public static final DeferredItem<Item> KORIN_SPAWN_EGG = ITEMS.register("korin_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.KORIN, 0xEAEEEF, 0x5C3A22, new Item.Properties()));
+    public static final DeferredItem<Item> TORIBOT_SPAWN_EGG = ITEMS.register("toribot_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.TORIBOT, 0xC0C5E2, 0xCC2C2A, new Item.Properties()));
+
     // ── Pesas de entrenamiento ───────────────────────────────────────────────
     // Los rangos son los que definen la escalera: el máximo de las de Goku es el mínimo de
     // las de Piccolo, así que llevar las dos a tope da 2100 t y no hay hueco entre tramos.
@@ -971,15 +980,6 @@ public class ModItems {
                             "geo/tail/tail_loose.geo.json",
                             "textures/customization/tail/tail_loose.png",
                             "animations/tail_loose.animation.json"
-                    ));
-
-    public static final Supplier<GeoLayerArmorItem> TAIL_WAIST =
-            ITEMS.register("tail_waist", () ->
-                    new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
-                            new Item.Properties(),
-                            "geo/tail/tail_waist.geo.json",
-                            "textures/customization/tail/tail_waist.png",
-                            ""
                     ));
 
     public static void register(IEventBus eventBus) {

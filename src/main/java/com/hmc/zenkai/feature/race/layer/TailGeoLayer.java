@@ -18,7 +18,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Cola de Saiyan: mismo truco exacto que HairGeoLayer (backup-inyecta-render-restaura sobre
  * un HumanoidArmorLayer propio), solo que la ranura vehículo es CHESTPLATE (índice 2) en vez de
- * HEAD — la geometría real la pone el .geo.json de TAIL_LOOSE/TAIL_WAIST, la ranura vanilla
+ * HEAD — la geometría real la pone el .geo.json de TAIL_LOOSE (los dos estilos: la cintura es una pose,
+ * ver TailWaistPose), la ranura vanilla
  * es pura excusa para que HumanoidArmorLayer invoque al renderer de GeckoLib (ver
  * ModItems.TAIL_LOOSE). CHESTPLATE y no LEGGINGS a propósito: el hueso raíz de la cola cuelga de
  * "torso"→"armorBody", y GeoArmorRenderer.applyBoneVisibilityBySlot() de GeckoLib solo muestra
@@ -69,8 +70,15 @@ public class TailGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         inv.armor.set(1, ItemStack.EMPTY);
         inv.armor.set(0, ItemStack.EMPTY);
 
-        armorLayer.render(poseStack, buffer, packedLight, player,
-                limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
+        // Cola en la cintura: misma cola, otra pose (TailWaistPose); solo durante ESTE render.
+        TailWaistPose.active = "waist".equals(
+                com.hmc.zenkai.feature.player.PlayerVisualAttachment.get(player).getTailStyleId());
+        try {
+            armorLayer.render(poseStack, buffer, packedLight, player,
+                    limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
+        } finally {
+            TailWaistPose.active = false;
+        }
 
         // Restore
         inv.armor.set(3, oldHead);

@@ -1,6 +1,5 @@
 package com.hmc.zenkai.feature.forms;
 
-import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.race.RaceTextureUtil;
 import com.hmc.zenkai.feature.race.layer.GeoLayerArmorItem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -17,14 +16,30 @@ public final class FormSkinResolver {
     private FormSkinResolver() {}
 
     /**
+     * Forma que la VISTA PREVIA del editor de colores (BodyColorsScreen) enseña en lugar de la
+     * real, o null. Solo cliente y solo mientras dura ese render: la pantalla lo pone justo antes
+     * de dibujar al jugador y lo quita justo después (try/finally), así que ningún otro render
+     * lo ve. Existe porque el editor se usa en la forma base y el jugador no tenía forma de ver
+     * cómo quedan sus colores en las demás formas del Arcosiano (petición del usuario, 2026-10-11).
+     * FormIds.BASE = el cuerpo de la raza sin override.
+     */
+    @org.jetbrains.annotations.Nullable
+    private static ResourceLocation previewFormId;
+
+    public static void setPreviewForm(@org.jetbrains.annotations.Nullable ResourceLocation formId) {
+        previewFormId = formId;
+    }
+
+    /**
      * Devuelve SOLO overrides del BODY por forma.
      * Si la forma NO cambia body en ese slot, retorna ItemStack.EMPTY.
      * Nota: Aquí NO deberías meter pelo/halo/aura. Solo "body" (cuerpo gecko por forma),
      * especialmente para razas tipo Arcosian (Freezer) donde cambia el modelo.
      */
     public static ItemStack resolveBodyOverride(Player player, EquipmentSlot slot) {
-        PlayerFormAttachment form = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
-        FormDef def = FormRegistry.get(form.getFormId());
+        ResourceLocation formId = previewFormId != null ? previewFormId
+                : player.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId();
+        FormDef def = FormRegistry.get(formId);
         if (def == null) return ItemStack.EMPTY;
 
         // "head" / "chest" / "legs" / "feet" en el JSON de la forma.

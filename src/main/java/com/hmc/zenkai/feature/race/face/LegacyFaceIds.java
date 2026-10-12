@@ -18,6 +18,9 @@ import org.jetbrains.annotations.Nullable;
  *    de entre medias que guardaron "zenkai:eyes/legacy_N" se renombran a zenkai:eyes/N al cargar.
  *  · Después: el 2 se fusionó con minimal (misma silueta con el trazo de cejas) y los demás
  *    pasaron a ids con nombre = carpeta: 1 narrow, 3 wide, 4 sleepy, 5 arched.
+ *  · 0.4.1 (2026-10-11): eyes/arched se FUSIONÓ con minimal a petición del usuario ("son
+ *    exactamente la misma"): misma silueta, mismo iris; solo cambiaban 4 píxeles de la ceja, que
+ *    en Namek/Arcosiano/Majin ni se pinta. El número 5 y el id arched -> minimal.
  *  · 0.3.1: la boca zenkai:mouth/legacy_1 pasó a zenkai:mouth/neutral y los peinados
  *    legacy_1 / legacy_1_ssj a classic / classic_ssj (la personalización no lleva números).
  * Los índices los resolvía cada cliente sobre su lista de PNG: solo son fiables para los
@@ -31,11 +34,11 @@ public final class LegacyFaceIds {
     private static final String RENAMED_EYES_PREFIX = "eyes/legacy_";
 
     /**
-     * Ojo actual de cada número antiguo. El 2 se FUSIONÓ con minimal (con su trazo tenía la misma
+     * Ojo actual de cada número antiguo. El 2 (y en 0.4.1 el 5, arched) se FUSIONÓ con minimal (con su trazo tenía la misma
      * silueta capa por capa); el resto pasó a un id con nombre igual a su carpeta (petición del
      * usuario: "que los nombres concuerden con la carpeta").
      */
-    private static final String[] EYE_BY_NUMBER = {null, "narrow", "minimal", "wide", "sleepy", "arched"};
+    private static final String[] EYE_BY_NUMBER = {null, "narrow", "minimal", "wide", "sleepy", "minimal"};
 
     private static ResourceLocation eyeFor(int n) {
         return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "eyes/" + EYE_BY_NUMBER[n]);
@@ -59,6 +62,8 @@ public final class LegacyFaceIds {
     public static ResourceLocation renamed(ResourceLocation id) {
         if (!Zenkai.MOD_ID.equals(id.getNamespace())) return id;
         String path = id.getPath();
+        // 0.4.1: arched se fusionó con minimal.
+        if (path.equals("eyes/arched")) return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "eyes/minimal");
         // 0.3.1: la única boca con número pasó a llamarse "neutral".
         if (path.equals("mouth/legacy_1")) return ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "mouth/neutral");
         String n = path.startsWith(RENAMED_EYES_PREFIX) ? path.substring(RENAMED_EYES_PREFIX.length())

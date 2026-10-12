@@ -104,6 +104,8 @@ public final class FlightSystem {
         boolean control  = flags.isFlyBoosting();   // Ctrl+W en vuelo
         boolean flyTurbo = ab.flying && control && turboOn && !emergencyLanding;
 
+        double throttle = tickThrottle(flags, ab.flying && !emergencyLanding);
+
         float newSpeed;
         if (emergencyLanding) {
             // Planeo forzado: velocidad fija y baja, nada de escalones/turbo/pesas — el punto
@@ -118,6 +120,9 @@ public final class FlightSystem {
                     * PerformanceTier.of(control) * att.powerFraction();
             // El turbo multiplica FUERA del escalón: efecto constante y perceptible.
             if (flyTurbo) mult *= TURBO_SPEED_MULT;
+            // Rampa: el bono de velocidad (escalón + turbo) sube con el empuje sostenido y baja al
+            // soltarlo. Parte del vuelo vanilla (mult 1.0), igual que con 0 % de poder.
+            mult = 1.0 + Math.max(0.0, mult - 1.0) * throttle;
             // Pesas al final, igual que en tierra.
             mult *= WeightSystem.moveFactor(att.getWeightLoad());
             newSpeed = (float) (ServerConfig.flyBaseSpeed() * mult);
@@ -150,6 +155,27 @@ public final class FlightSystem {
             if (drain > 0.0) att.addKi(-drain);
         }
         if (!ab.flying) flags.setFlyBoosting(false);
+    }
+
+    /**
+     * Rampa de velocidad 0..1. Sube con el empuje (adelante pulsado o crucero, bit que manda el
+     * cliente por FlyThrustPacket) y baja sin él, más rápido que sube: frenar es más inmediato
+     * que acelerar, como en Invincible Inc. (auditoría de referencia, `.claude/pendiente/`).
+     * Fuera de vuelo se reinicia, así que cada despegue empieza en velocidad vanilla.
+     */
+    private static double tickThrottle(PlayerStateFlags flags, boolean flying) {
+        if (!flying) {
+            flags.setFlyThrottle(0.0);
+            flags.setFlyThrust(false);
+            return 0.0;
+        }
+        int up = ServerConfig.flyRampUpTicks();
+        int down = ServerConfig.flyRampDownTicks();
+        double t = flags.getFlyThrottle();
+        if (flags.isFlyThrust()) t = up <= 0 ? 1.0 : t + 1.0 / up;
+        else t = down <= 0 ? 0.0 : t - 1.0 / down;
+        flags.setFlyThrottle(t);
+        return flags.getFlyThrottle();
     }
 
     /** Distancia en bloques hasta el primer bloque sólido por debajo del jugador, con tope
