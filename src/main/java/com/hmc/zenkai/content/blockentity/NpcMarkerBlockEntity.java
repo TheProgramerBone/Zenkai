@@ -24,12 +24,19 @@ public class NpcMarkerBlockEntity extends BlockEntity {
     private static final int CHECK_INTERVAL = 100;
     /** Comprobaciones fallidas seguidas antes de re-spawnear (margen por chunks descargando). */
     private static final int GRACE_CHECKS = 3;
+    /** Espera por defecto hasta volver a aparecer, en ticks: la de siempre (3 comprobaciones). Un
+     *  marcador sin valor propio, incluidos los ya colocados en estructuras, se comporta igual que antes. */
+    public static final int DEFAULT_RESPAWN_TICKS = CHECK_INTERVAL * GRACE_CHECKS;
+    /** Tope del valor del editor, en segundos (un día). */
+    public static final int MAX_RESPAWN_SECONDS = 86400;
 
     private ResourceLocation npcType;
     private float yaw = 0.0F;
     private double offX = 0.0D, offY = 0.0D, offZ = 0.0D;
     private UUID npcUuid;
     private int missed = 0;
+    /** Segundos hasta volver a aparecer tras desaparecer; -1 = el valor por defecto. */
+    private int respawnSeconds = -1;
 
     public NpcMarkerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.NPC_MARKER.get(), pos, state);
@@ -45,18 +52,25 @@ public class NpcMarkerBlockEntity extends BlockEntity {
             Entity existing = server.getEntity(npcUuid);
             if (existing != null && existing.isAlive()) { missed = 0; return; }
         }
-        if (++missed < GRACE_CHECKS) return;
+        if (++missed < graceChecks()) return;
 
         spawnNpc(server);
     }
 
+    /** Comprobaciones seguidas sin el NPC antes de recrearlo; la granularidad es CHECK_INTERVAL (5 s). */
+    private int graceChecks() {
+        if (respawnSeconds < 0) return GRACE_CHECKS;
+        return Math.max(1, (int) Math.ceil(respawnSeconds * 20.0D / CHECK_INTERVAL));
+    }
+
     /** Aplica los valores del editor. Limpia el UUID: lo guardado deja de ser válido. */
-    public void applyFrom(ResourceLocation type, float newYaw, double x, double y, double z) {
+    public void applyFrom(ResourceLocation type, float newYaw, double x, double y, double z, int respawnSecs) {
         this.npcType = type;
         this.yaw = newYaw;
         this.offX = x;
         this.offY = y;
         this.offZ = z;
+        this.respawnSeconds = respawnSecs < 0 ? -1 : Math.min(respawnSecs, MAX_RESPAWN_SECONDS);
         this.npcUuid = null;
         this.missed = 0;
         setChanged();
@@ -100,6 +114,7 @@ public class NpcMarkerBlockEntity extends BlockEntity {
     public double getOffX() { return offX; }
     public double getOffY() { return offY; }
     public double getOffZ() { return offZ; }
+    public int getRespawnSeconds() { return respawnSeconds; }
 
     @Override
     protected void loadAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries) {
@@ -110,6 +125,8 @@ public class NpcMarkerBlockEntity extends BlockEntity {
         offY = tag.getDouble("OffY");
         offZ = tag.getDouble("OffZ");
         npcUuid = tag.hasUUID("NpcUuid") ? tag.getUUID("NpcUuid") : null;
+        // Sin la clave (marcadores ya colocados en estructuras) = el valor por defecto.
+        respawnSeconds = tag.contains("RespawnSeconds") ? tag.getInt("RespawnSeconds") : -1;
     }
 
     @Override
@@ -121,5 +138,6 @@ public class NpcMarkerBlockEntity extends BlockEntity {
         tag.putDouble("OffY", offY);
         tag.putDouble("OffZ", offZ);
         if (npcUuid != null) tag.putUUID("NpcUuid", npcUuid);
+        if (respawnSeconds >= 0) tag.putInt("RespawnSeconds", respawnSeconds);
     }
 }

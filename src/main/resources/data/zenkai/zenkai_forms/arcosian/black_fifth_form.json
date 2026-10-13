@@ -9,8 +9,8 @@
   "mastery_gain": 0.25,
   "stat_percent_untrained": 20.0,
   "stat_percent_mastered": 24.0,
-  "ki_drain_untrained": 5.0,
-  "ki_drain_mastered": 1.8,
+  "ki_drain_untrained": 5.3,
+  "ki_drain_mastered": 1.91,
   "spi_req": 210,
   "parent": "zenkai:fifth_form",
   "body_items": {

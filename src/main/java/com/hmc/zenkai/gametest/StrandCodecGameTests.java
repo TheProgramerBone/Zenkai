@@ -544,8 +544,8 @@ public final class StrandCodecGameTests {
             ResourceLocation ssj = ResourceLocation.fromNamespaceAndPath(HairPackWriter.NAMESPACE, "mi_pelo_ssj");
             helper.assertTrue(def.selectable() && def.model().getNamespace().equals(HairPackWriter.NAMESPACE),
                     "base elegible y con su geo");
-            helper.assertTrue(def.formOverrides().size() == 6 && def.formOverrides().values().stream().allMatch(ssj::equals),
-                    "las 7 formas SSJ van a la única variante distinta: " + def.formOverrides());
+            helper.assertTrue(def.formOverrides().size() == 7 && def.formOverrides().values().stream().allMatch(ssj::equals),
+                    "las 7 formas con pelo SSJ (incluida Beast) van a la única variante distinta: " + def.formOverrides());
             JsonObject variant = JsonParser.parseString(Files.readString(
                     folder.resolve("data/zenkai_hair/zenkai_hair_styles/mi_pelo_ssj.json"))).getAsJsonObject();
             helper.assertTrue(!HairStyleDef.parse(ssj, variant, w -> {}).selectable(), "la variante no sale en la lista");

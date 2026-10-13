@@ -111,10 +111,10 @@ public final class FormRegistry {
         return d == null ? 0.0 : d.statPercent(mastery);
     }
 
-    /** Ki drenado por tick por una forma con cierta maestría. 0 en base. */
+    /** Drenaje de catálogo (% de poder por segundo) de una forma con cierta maestría. 0 en base. */
     public static double kiDrain(ResourceLocation id, double mastery) {
         FormDef d = get(id);
-        return d == null ? 0.0 : d.kiDrainPerTick(mastery);
+        return d == null ? 0.0 : d.kiDrainPct(mastery);
     }
 
     /** Cadena completa de formas de una raza, en orden (índice 0 = la primera). Nunca null.

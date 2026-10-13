@@ -272,7 +272,9 @@ public final class ClientZenkaiHooks {
         for (Badge b : collectBadges(mc, stats, form, tier, strained, now)) {
             drawBadge(g, iconX, iconY, b.icon());
             drawBadgeLabel(g, iconX, iconY, b.label(), b.labelColor());
-            iconX += BADGE_SIZE + BADGE_PAD;
+            // Si la etiqueta es más ancha que el cuadro, el paso crece para no pisar la siguiente.
+            int labelW = b.label() == null ? 0 : mc.font.width(b.label());
+            iconX += Math.max(BADGE_SIZE, labelW) + BADGE_PAD;
         }
     }
 
@@ -495,11 +497,12 @@ public final class ClientZenkaiHooks {
         }
     }
 
-    /** Etiqueta corta pegada al borde inferior derecho de un badge ("x20", "12s"). */
+    /** Etiqueta corta ("x20", "12s") DEBAJO del badge y centrada, como en ModernStatsHud: pegada
+     *  a la esquina tapaba el dibujo del icono. */
     public static void drawBadgeLabel(GuiGraphics g, int x, int y, String text, int color) {
         if (text == null || text.isEmpty()) return;
         Minecraft mc = Minecraft.getInstance();
         int w = mc.font.width(text);
-        g.drawString(mc.font, text, x + BADGE_SIZE - w, y + BADGE_SIZE - 8, color, true);
+        g.drawString(mc.font, text, x + (BADGE_SIZE - w) / 2, y + BADGE_SIZE + 2, color, true);
     }
 }

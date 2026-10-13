@@ -12,7 +12,7 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 /**
- * Campo de azufre — propuesta E de .claude/pendiente/worldgen-pendiente.md. Referencia real:
+ * Campo de azufre — propuesta E de .claude/docs/worldgen.md. Referencia real:
  * Osorezan (Japón), monte volcánico tenido por la puerta del inframundo budista, con costras de
  * azufre amarillo y fumarolas. Exclusivo de cinder_dunes (el bioma volcánico).
  *

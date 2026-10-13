@@ -13,7 +13,7 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 /**
- * Géiser ("Tatsumaki Jigoku" de Beppu) — propuesta A de .claude/pendiente/worldgen-pendiente.md.
+ * Géiser ("Tatsumaki Jigoku" de Beppu) — propuesta A de .claude/docs/worldgen.md.
  * Una boca (HfilGeyserBlock) a ras de suelo con un pequeño cono de cráter alrededor.
  *
  * HECHO CON EL SUELO DEL BIOMA, por completo (decisión del usuario, 2026-10-02): la primera versión ponía una

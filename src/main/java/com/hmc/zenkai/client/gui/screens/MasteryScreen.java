@@ -12,7 +12,9 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.forms.FormRegistry;
 import com.hmc.zenkai.feature.forms.PotentialUnlock;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.skills.EndgamePaths;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.feature.technique.KiTechniqueType;
@@ -122,20 +124,27 @@ public class MasteryScreen extends ZenkaiMenuScreen {
             ResourceLocation id = formQueue.poll();
             if (!seenForms.add(id)) continue; // corta ciclos de un datapack roto
 
-            if (SuperForms.unlocked(mc.player, id)) {
-                FormDef d = FormDef.get(id);
-                if (d != null) {
-                    float m = form.getFormMastery(id);
-                    out.add(new Row(
-                            Component.translatable("form.zenkai." + id.getPath()),
-                            Component.literal(statsRange(d.statPercent(m), d.statPercentMastered())
-                                    + "  " + drainRange(d.kiDrainPerTick(m), d.kiDrainMastered())),
-                            m, holdRange(form.holdTicksFor(d), d.holdTicks())));
-                }
-            }
+            if (SuperForms.unlocked(mc.player, id)) addFormRow(out, id, st, form);
             for (ResourceLocation child : FormRegistry.childrenOf(id)) {
                 FormDef cd = FormDef.get(child);
                 if (cd != null && cd.allows(race)) formQueue.add(child);
+            }
+        }
+
+        // Las rutas de endgame (Ultra Instinct, Ultra Ego y Beast, la evolución de Mystic) NO cuelgan
+        // del árbol de la raza: la rueda las ofrece como ramas propias (WheelMenu.endgameBranch), y
+        // aquí faltaban. Mismas raíces y mismo filtro (EndgamePaths.unlocked) que la rueda.
+        for (ResourceLocation root : new ResourceLocation[]{
+                FormIds.ULTRA_INSTINCT_SIGN, FormIds.ULTRA_EGO, FormIds.BEAST}) {
+            Deque<ResourceLocation> endgameQueue = new ArrayDeque<>();
+            endgameQueue.add(root);
+            while (!endgameQueue.isEmpty()) {
+                ResourceLocation id = endgameQueue.poll();
+                if (!seenForms.add(id)) continue;
+                if (EndgamePaths.unlocked(mc.player, id)) addFormRow(out, id, st, form);
+                for (ResourceLocation child : FormRegistry.childrenOf(id)) {
+                    if (FormDef.get(child) != null) endgameQueue.add(child);
+                }
             }
         }
 
@@ -156,6 +165,17 @@ public class MasteryScreen extends ZenkaiMenuScreen {
         if (out.isEmpty()) return;
         rows.add(Row.header(Component.translatable("screen.zenkai.mastery.forms")));
         rows.addAll(out);
+    }
+
+    private void addFormRow(List<Row> out, ResourceLocation id, PlayerStatsAttachment st, PlayerFormAttachment form) {
+        FormDef d = FormDef.get(id);
+        if (d == null) return;
+        float m = form.getFormMastery(id);
+        out.add(new Row(
+                Component.translatable("form.zenkai." + id.getPath()),
+                Component.literal(statsRange(d.statPercent(m), d.statPercentMastered())
+                        + "  " + drainRange(d.kiDrainPerSecond(m, st), d.kiDrainPerSecond(100.0, st))),
+                m, holdRange(form.holdTicksFor(d), d.holdTicks())));
     }
 
     private void addKaioken(PlayerFormAttachment form) {
@@ -209,7 +229,7 @@ public class MasteryScreen extends ZenkaiMenuScreen {
 
     /** "0.40 -> 0.10 ki/s": el drenaje BAJA al dominar, de ahí que el orden parezca al revés. */
     private static String drainRange(double now, double mastered) {
-        return f2(now * 20.0) + " → " + f2(mastered * 20.0) + " ki/s";
+        return ZenkaiNumbers.format(now) + " → " + ZenkaiNumbers.format(mastered) + " ki/s";
     }
 
     /**

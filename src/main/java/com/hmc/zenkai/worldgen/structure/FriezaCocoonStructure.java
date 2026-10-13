@@ -14,7 +14,7 @@ import net.minecraft.world.level.levelgen.structure.StructureType;
 import java.util.Optional;
 
 /**
- * El capullo de Freezer — propuesta H de .claude/pendiente/worldgen-pendiente.md, guiño a Dragon
+ * El capullo de Freezer — propuesta H de .claude/docs/worldgen.md, guiño a Dragon
  * Ball Super. Estructura (no feature) por petición del usuario (2026-10-02): localizable con
  * {@code /locate structure zenkai:frieza_cocoon} y con su propio espaciado (structure_set), en vez
  * de una tirada de rareza por chunk. Solo hfil_needle_wastes (#has_structure/frieza_cocoon).

@@ -12,7 +12,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 
 /**
  * Lago de sangre congelada — pieza central de hfil_frozen_lake (propuesta D de
- * .claude/pendiente/worldgen-pendiente.md): el Blood Pond, helado. Referencias: el infierno de
+ * .claude/docs/worldgen.md): el Blood Pond, helado. Referencias: el infierno de
  * hielo de Dragon Ball GT y el Guren ("loto rojo"), uno de los infiernos fríos budistas, donde el
  * frío agrieta la piel como pétalos rojos.
  *

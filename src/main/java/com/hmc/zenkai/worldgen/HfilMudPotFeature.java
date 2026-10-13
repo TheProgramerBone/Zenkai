@@ -13,7 +13,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 
 /**
  * Charca de barro gris hirviendo ("Oniishibozu Jigoku" de Beppu) — propuesta A de
- * .claude/pendiente/worldgen-pendiente.md. No cava una cubeta: sustituye la capa de suelo por
+ * .claude/docs/worldgen.md. No cava una cubeta: sustituye la capa de suelo por
  * HFIL_BOILING_MUD en un disco irregular (el barro ya se hunde solo, ver HfilBoilingMudBlock),
  * con una segunda capa en el centro para que no sea una lámina de 1 bloque.
  */

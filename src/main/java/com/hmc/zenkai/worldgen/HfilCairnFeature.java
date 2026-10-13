@@ -16,7 +16,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 
 /**
  * Campo de mojones (pilas de piedras) del HFIL — propuesta C de
- * .claude/pendiente/worldgen-pendiente.md. Referencia: Sai no Kawara, la orilla del río Sanzu
+ * .claude/docs/worldgen.md. Referencia: Sai no Kawara, la orilla del río Sanzu
  * del budismo japonés, donde las almas de los niños apilan torres de piedras que los oni
  * derriban. En Osorezan (Japón, la "puerta del inframundo") esa orilla existe de verdad,
  * cubierta de montoncitos de piedra. El infierno de Dragon Ball sale de ese mismo Jigoku (el

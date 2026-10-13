@@ -52,7 +52,7 @@ import java.util.List;
  * catálogo FaceCatalog) y pelo (catálogo HairCatalog + biblioteca de peinados importados de
  * códigos DMZ/DBC, que se pegan en la propia pestaña Pelo; ver CustomHairLibrary).
  *
- * REDISEÑO S3 (2026-10-01, .claude/pendiente/sistema-visual-personajes-diseno.md): antes eran
+ * REDISEÑO S3 (2026-10-01, .claude/docs/customizacion-cara-y-pelo.md (decisiones cerradas)): antes eran
  * cuatro filas de flechas con etiquetas "Eyes N", y con el preview del cuerpo entero la cabeza
  * medía ~22 px — los cinco ojos apenas se distinguían entre sí (medido con render en
  * .claude/workbench/auditoria-2026-10-01/). Ahora:

@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  * sin jigsaw, sondeo de suelo LOCAL vía LocalGroundProbe, bloques colocados a mano.
  *
  * Deliberadamente NO toca la forma macro del terreno (density function / erosion) — ver la
- * sección "Ya descartado" de .claude/pendiente/worldgen-pendiente.md: el relieve suave
+ * sección "Ya descartado" de .claude/docs/worldgen.md: el relieve suave
  * (EROSION_5) se dejó así a propósito para evitar reabrir el bug de acantilados abruptos junto al
  * agua ya medido y arreglado. Esta feature logra el aspecto de cañón dramático solo con
  * decoración ENCIMA del terreno existente, igual que HfilOreBoulderFeature hace con los

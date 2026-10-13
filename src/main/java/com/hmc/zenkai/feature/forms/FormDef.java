@@ -1,6 +1,10 @@
 package com.hmc.zenkai.feature.forms;
 
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.Race;
+import com.hmc.zenkai.feature.ZenkaiAttributes;
+import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.util.BalanceUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
@@ -28,14 +32,12 @@ import java.util.Map;
  * archivo sin tocar el de la forma anterior, que es la gracia de los datapacks; la cadena
  * hacia delante se reconstruye al cargar (FormRegistry.nextFrom).
  *
- * SPI_REQ no es un candado: la forma se puede activar con cualquier SPI, pero el drenaje base
- * (ya interpolado por maestría) se multiplica por drainMultiplier(spi), que sube hasta 3x con
- * SPI muy por debajo del requisito y baja hasta 0.5x muy por encima. Antes el drenaje era un
- * número fijo del datapack sin relación con SPI, así que con la maestría dominada CUALQUIER
- * transformación (incluida la última de la cadena) se sostenía indefinidamente con el SPI base
- * de raza sin invertir un solo punto: el regen (1% del pool/seg) escala con el pool, que escala
- * con SPI, así que un pool minúsculo ya bastaba para superar un drenaje fijo minúsculo. spi_req
- * = 0 desactiva el multiplicador (queda en 1.0 siempre), para no romper datapacks viejos.
+ * ki_drain_* es un PORCENTAJE POR SEGUNDO del poder del jugador (STR+WIL), no ki fijo: ver
+ * kiDrainPerSecond. Antes era un número fijo de ki por tick sin relación con el jugador, así que con
+ * miles de puntos el pool crecía y el coste no: cualquier forma salía gratis en late game.
+ * SPI_REQ no es un candado: la forma se puede activar con cualquier SPI, pero el drenaje se
+ * multiplica por drainMultiplier(spi) (por defecto solo encarece: 1.0-1.5; el SPI alto no abarata, ya paga con un pool y regen mayores). spi_req = 0 desactiva
+ * el multiplicador (queda en 1.0 siempre), para no romper datapacks viejos.
  *
  * Los 4 campos antes de wheelSelectable son del sistema de "forzar" (powerPercent por encima
  * de 100%, ver OverdriveSystem): DESCENDABLE marca formas que el botón "Descender" de la rueda
@@ -206,34 +208,40 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
         return lerp(statPercentUntrained, statPercentMastered, mastery0to100 / 100.0);
     }
 
-    /** Ki drenado por tick, según la maestría (baja al dominarla). SIN el multiplicador de
-     *  SPI: es el número "de catálogo" que ya usaba la pantalla de maestrías. */
-    public double kiDrainPerTick(double mastery0to100) {
+    /** Drenaje "de catálogo" en % POR SEGUNDO, según la maestría (baja al dominarla). Es el dato
+     *  del datapack (ki_drain_*), sin poder ni SPI: el ki real sale de {@link #kiDrainPerSecond}. */
+    public double kiDrainPct(double mastery0to100) {
         return lerp(kiDrainUntrained, kiDrainMastered, mastery0to100 / 100.0);
     }
 
-    /** Techo/suelo del multiplicador de drenaje por SPI. Fuera de estos límites ni una
-     *  inversión enorme abarata más el sostenimiento, ni un SPI ínfimo lo encarece sin límite. */
-    private static final double MIN_DRAIN_MULT = 0.5;
-    private static final double MAX_DRAIN_MULT = 3.0;
-
     /**
      * Multiplicador de drenaje según cuánto SPI tenga el jugador respecto al requisito de la
-     * forma. spi_req = 0 -> 1.0 siempre (forma sin requisito, o dato de un datapack viejo).
-     * SPI en el requisito -> 1.0 (paridad con el drenaje base). Por debajo escala hasta 3x;
-     * por encima, hasta 0.5x. La curva es intencionalmente simple (razón inversa) para que se
-     * pueda razonar de cabeza: la mitad del requisito ya duplica el drenaje.
+     * forma: sqrt(spi_req / SPI), acotado a [forms.drain_spi_min, forms.drain_spi_max] (1.0 y
+     * 1.5 por defecto: el SPI alto ya no abarata, solo el bajo encarece). spi_req = 0 -> 1.0 siempre (forma sin requisito, o dato de un datapack
+     * viejo). El rango es corto a propósito: el SPI ya paga su aguante por otro lado (sube el pool
+     * de ki y con él la regen), así que aquí solo mueve el coste un poco; antes llegaba a 0.5x-3x y
+     * en late game (SPI de miles contra un requisito de decenas) dejaba cualquier forma gratis.
      */
     public double drainMultiplier(int spi) {
         if (spiReq <= 0) return 1.0;
-        double raw = spiReq / (double) Math.max(spi, 1);
-        return Math.max(MIN_DRAIN_MULT, Math.min(MAX_DRAIN_MULT, raw));
+        double raw = Math.sqrt(spiReq / (double) Math.max(spi, 1));
+        return Math.max(ServerConfig.formDrainSpiMin(), Math.min(ServerConfig.formDrainSpiMax(), raw));
     }
 
-    /** Ki drenado por tick YA CON el multiplicador de SPI aplicado: el número real que se
-     *  resta del pool en FormSystem. */
-    public double effectiveKiDrainPerTick(double mastery0to100, int spi) {
-        return kiDrainPerTick(mastery0to100) * drainMultiplier(spi);
+    /**
+     * Ki drenado por SEGUNDO por esta forma, el número real que se resta del pool en FormSystem:
+     * <pre>pct/100 · max( poder · drain_scale · drainMultiplier(SPI) , drain_floor · energyMax )</pre>
+     * El primer término copia al Kaioken (el coste lo marca tu poder, STR+WIL); el segundo es un
+     * piso proporcional al pool para que un pool enorme no la deje gratis. Sin el factor de
+     * "% de poder liberado": lo aplica quien lo conoce (FormSystem/StatsScreen).
+     */
+    public double kiDrainPerSecond(double mastery0to100, PlayerStatsAttachment att) {
+        double pct = kiDrainPct(mastery0to100);
+        if (pct <= 0.0) return 0.0;
+        double powerTerm = BalanceUtil.powerStat(att) * ServerConfig.formDrainScale()
+                * drainMultiplier(att.getAttribute(ZenkaiAttributes.SPIRIT));
+        double floorTerm = ServerConfig.formDrainFloor() * att.getEnergyMax();
+        return pct / 100.0 * Math.max(powerTerm, floorTerm);
     }
 
     /** Multiplicador del coste de FORZAR (powerPercent > 100%) mientras esta forma está puesta,

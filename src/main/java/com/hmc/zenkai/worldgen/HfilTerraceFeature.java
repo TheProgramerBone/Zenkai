@@ -17,7 +17,7 @@ import java.util.Set;
 
 /**
  * Terrazas escalonadas con pozas de sangre — propuesta B de
- * .claude/pendiente/worldgen-pendiente.md. Referencia real: Pamukkale (Turquía) y Mammoth Hot
+ * .claude/docs/worldgen.md. Referencia real: Pamukkale (Turquía) y Mammoth Hot
  * Springs (Yellowstone), terrazas de travertino blanco donde cada escalón es una poza somera
  * cuyo borde contiene el agua y desborda hacia el siguiente. Aquí el travertino es el SUELO DEL
  * BIOMA (regla del usuario, 2026-10-02: una estructura se hace con los bloques del bioma donde

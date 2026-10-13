@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Azufre de los campos de Osorezan (propuesta E de .claude/pendiente/worldgen-pendiente.md): el
+ * Azufre de los campos de Osorezan (propuesta E de .claude/docs/worldgen.md): el
  * monte volcánico de Japón considerado la puerta del inframundo, con costras de azufre amarillo y
  * olor a huevo podrido. Dos usos de la misma clase:
  * <ul>

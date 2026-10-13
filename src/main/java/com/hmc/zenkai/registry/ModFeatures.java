@@ -67,7 +67,7 @@ public final class ModFeatures {
     public static final DeferredHolder<Feature<?>, RockyWastelandSpireFeature> ROCKY_WASTELAND_SPIRE =
             FEATURES.register("rocky_wasteland_spire", () -> new RockyWastelandSpireFeature(NoneFeatureConfiguration.CODEC, ModBlocks.ROCKY_BLOCK));
 
-    // Propuestas C y A del HFIL (2026-10-02, ver .claude/pendiente/worldgen-pendiente.md):
+    // Propuestas C y A del HFIL (2026-10-02, ver .claude/docs/worldgen.md):
     // mojones de Sai no Kawara y pozas de los "infiernos" de Beppu.
     public static final DeferredHolder<Feature<?>, HfilCairnFeature> HFIL_CAIRNS =
             FEATURES.register("hfil_cairns", () -> new HfilCairnFeature(NoneFeatureConfiguration.CODEC));

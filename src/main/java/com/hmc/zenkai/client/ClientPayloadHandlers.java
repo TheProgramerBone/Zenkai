@@ -23,7 +23,7 @@ public final class ClientPayloadHandlers {
 
     public static void openNpcMarker(OpenNpcMarkerPayload p) {
         Minecraft.getInstance().setScreen(new NpcMarkerScreen(
-                p.pos(), p.npcType(), p.yaw(), p.offX(), p.offY(), p.offZ()));
+                p.pos(), p.npcType(), p.yaw(), p.offX(), p.offY(), p.offZ(), p.respawnSeconds()));
     }
 
     public static void openPieceConnector(OpenPieceConnectorPayload p) {

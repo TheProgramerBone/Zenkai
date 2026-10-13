@@ -1256,6 +1256,8 @@
   "--- GUI: NPC MARKER ---": "--- GUI: NPC MARKER ---",
   "gui.zenkai.npc_type": "Entity type",
   "gui.zenkai.yaw": "Rotation (yaw)",
+  "gui.zenkai.npc_respawn": "Respawn time (seconds)",
+  "gui.zenkai.npc_respawn.hint": "Empty = 15 s (default)",
   "gui.zenkai.offset": "Offset X / Y / Z",
   "gui.zenkai.apply_respawn": "Apply & respawn",
   "gui.zenkai.save_only": "Save only",

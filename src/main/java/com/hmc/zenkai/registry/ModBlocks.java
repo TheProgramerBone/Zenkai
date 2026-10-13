@@ -437,7 +437,7 @@ public class ModBlocks {
                     .sound(SoundType.TUFF), true));
 
     // Pozas del HFIL inspiradas en los "infiernos" reales de Beppu (2026-10-02, ver
-    // .claude/pendiente/worldgen-pendiente.md, propuesta A). Texturas: tools/gen_hfil_springs.py.
+    // .claude/docs/worldgen.md, propuesta A). Texturas: tools/gen_hfil_springs.py.
     /** Barro gris hirviendo (Oniishibozu Jigoku). Ver HfilBoilingMudBlock. */
     public static final DeferredBlock<Block> HFIL_BOILING_MUD = registerBlock("hfil_boiling_mud",
             () -> new HfilBoilingMudBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.MUD)

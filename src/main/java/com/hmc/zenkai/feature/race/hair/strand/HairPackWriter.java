@@ -154,7 +154,7 @@ public final class HairPackWriter {
         else o.addProperty("folder", NAMESPACE + ":exported");
         if (variantId != null) {
             JsonObject fo = new JsonObject();
-            // Misma tabla que el render de importados (HairFormVariants, plan §5.2).
+            // Misma tabla que el render de importados (HairFormVariants, guía customizacion-cara-y-pelo.md).
             for (var row : new java.util.TreeMap<>(HairFormVariants.FORMS).entrySet()) {
                 if (row.getValue() == HairFormVariants.Variant.BASE) continue;
                 String target = variantId.get(row.getValue().name().toLowerCase(Locale.ROOT));

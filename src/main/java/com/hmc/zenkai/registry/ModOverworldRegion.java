@@ -18,6 +18,9 @@ import java.util.function.Consumer;
 
 public class ModOverworldRegion extends Region {
 
+    /** Continentalness a partir de la cual deja de reservarse la franja costera (inicio de MID_INLAND). */
+    private static final float COAST_BUFFER_MAX_C = 0.03f;
+
     public ModOverworldRegion() {
         // El 'weight' es cuánto "pesa" nuestra región frente a la región vanilla del Overworld
         // (peso 10 por defecto, ver DefaultOverworldRegion en la fuente de TerraBlender) al
@@ -38,7 +41,11 @@ public class ModOverworldRegion extends Region {
         // cuenta (11.4% → 16.1% medido, sin tocar weight) — no hizo falta subir esto de nuevo,
         // pero sigue siendo la palanca si en juego se ve escaso. No hay techo salvo el propio 10
         // de vanilla perdiendo relevancia según sube.
-        super(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "overworld"), RegionType.OVERWORLD, 12);
+        // Subido a 20 (2026-10-12) al reservar la franja costera a vainilla (ver addBiomes): ese punto
+        // compite también tierra adentro y quitaba ~37% del área. Medido en 6 km de la seed 62890840:
+        // weight 12 = 439 celdas, 20 = 723 (el original sin franja tenía 701 tierra adentro), 28 = 706,
+        // así que 20 recupera el área y más no aporta.
+        super(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "overworld"), RegionType.OVERWORLD, 20);
     }
 
     @Override
@@ -49,8 +56,8 @@ public class ModOverworldRegion extends Region {
         // Cuanto más ancho el rango de cada eje, MÁS grande/frecuente el bioma (reemplaza más
         // biomas vanilla en ese nicho). Cuanto más estrecho, más raro y pequeño.
         //
-        // BUG real investigado y medido a fondo (2026-09-04, ver .claude/pendiente/
-        // worldgen-pendiente.md): rocky_wasteland podía aparecer como bioma
+        // BUG real investigado y medido a fondo (2026-09-04, ver .claude/docs/
+        // worldgen.md, sección de Rocky Wasteland): rocky_wasteland podía aparecer como bioma
         // EXPLÍCITO en pleno océano (confirmado con captura F3 real del usuario, C=-0.751 =
         // "Deep ocean"). Causa (terrablender.mixin.MixinParameterList.findValuePositional,
         // fuente real leída): la selección de bioma es NEAREST-NEIGHBOR por distancia acumulada
@@ -175,5 +182,25 @@ public class ModOverworldRegion extends Region {
                 .forEach(point -> builder.add(point, ModBiomes.ROCKY_WASTELAND));
 
         builder.build().forEach(mapper);
+
+        // FRANJA COSTERA RESERVADA A VAINILLA (2026-10-12, falso positivo en la seed 62890840,
+        // -1742 27 109: rocky_wasteland sobre una llanura a nivel del mar, junto a un océano, con
+        // continentalness -0.05, por debajo de la banda MID_INLAND declarada arriba). Medido con
+        // RockyWastelandSeedProbe en un cuadrado de 6 km: 14.7% de las celdas de rocky_wasteland
+        // caían por debajo de MID_INLAND (8.4% en costa u océano) y el 38% tenía el suelo a menos
+        // de 3 bloques del nivel del mar. Causa: la selección es por vecino más cercano, y un punto
+        // costero con erosion/weirdness algo fuera de banda sigue estando más cerca de nuestro
+        // punto que de cualquier hueco de vainilla. Estrechar o desplazar la propia banda de
+        // continentalness NO lo arregla (probado con span(0.15, 1.0) y span(0.3, 1.0): el punto del
+        // reporte seguía siendo rocky_wasteland y el bioma perdía 46% y 72% de su área): la distancia
+        // en C es solo un sumando más. Lo que sí funciona es un punto DEFERRED_PLACEHOLDER propio que
+        // cubre todo el rango de los demás ejes y continentalness hasta el inicio de MID_INLAND: ahí
+        // la distancia a ese punto es 0 y gana el bioma de vainilla del sitio. Medido: 0 celdas de
+        // rocky_wasteland por debajo de MID_INLAND; el punto del reporte pasa a ser sunflower_plains.
+        // Coste medido: el punto también compite tierra adentro (su distancia crece con la
+        // continentalness) y el bioma pierde ~37% de su área, de ahí el weight subido arriba.
+        Climate.Parameter any = Climate.Parameter.span(-2.0f, 2.0f);
+        mapper.accept(Pair.of(new Climate.ParameterPoint(any, any,
+                Climate.Parameter.span(-2.0f, COAST_BUFFER_MAX_C), any, any, any, 0L), Region.DEFERRED_PLACEHOLDER));
     }
 }

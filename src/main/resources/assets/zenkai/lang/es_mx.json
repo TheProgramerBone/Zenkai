@@ -1256,6 +1256,8 @@
   "--- GUI: NPC MARKER ---": "--- INTERFAZ: MARCADOR DE NPC ---",
   "gui.zenkai.npc_type": "Tipo de entidad",
   "gui.zenkai.yaw": "Rotación (Eje Y)",
+  "gui.zenkai.npc_respawn": "Reaparición (segundos)",
+  "gui.zenkai.npc_respawn.hint": "Vacío = 15 s (valor por defecto)",
   "gui.zenkai.offset": "Desplazamiento X / Y / Z",
   "gui.zenkai.apply_respawn": "Aplicar y reaparecer",
   "gui.zenkai.save_only": "Solo guardar",

@@ -200,15 +200,15 @@ public class PlayerFormAttachment {
         return formStatPercent() + getKaioken().statPercent();
     }
 
-    /** Ki drenado por tick por la forma activa, ya interpolado por maestría y con el
-     *  multiplicador de SPI aplicado (ver FormDef.drainMultiplier).
+    /** Ki drenado por tick por la forma activa (ver FormDef.kiDrainPerSecond: depende de la
+     *  maestría, del poder STR+WIL, del SPI y del pool de {@code att}).
      *  {@code powerFraction} = % de poder liberado (Ki Control) / 100, recortado a [0, 1]: si
      *  el jugador suprime su poder, la forma multiplica menos stats y cuesta proporcionalmente
      *  menos ki, igual que el Kaioken (KaiokenSystem.releaseFactor; petición del usuario,
      *  2026-10-12). Forzar por encima del 100 % no lo sube: eso ya cobra su propio ki. */
-    public double formKiDrainPerTick(int spi, double powerFraction) {
+    public double formKiDrainPerTick(PlayerStatsAttachment att, double powerFraction) {
         FormDef d = activeDef();
-        return d == null ? 0.0 : d.effectiveKiDrainPerTick(activeMastery(), spi)
+        return d == null ? 0.0 : d.kiDrainPerSecond(activeMastery(), att) / 20.0
                 * Math.max(0.0, Math.min(1.0, powerFraction));
     }
 

@@ -473,7 +473,7 @@ public class ModNetworking {
                                 "messages.zenkai.npc_marker.bad_type", payload.npcType()));
                         return;
                     }
-                    be.applyFrom(type, payload.yaw(), payload.offX(), payload.offY(), payload.offZ());
+                    be.applyFrom(type, payload.yaw(), payload.offX(), payload.offY(), payload.offZ(), payload.respawnSeconds());
                     if (payload.respawn()) be.forceRespawn();
                 }));
 

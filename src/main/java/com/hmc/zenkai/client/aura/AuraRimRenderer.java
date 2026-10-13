@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * PROTOTIPO (2026-09-02, ver el boceto "Rim Glow Aura" — cáscara inflada + depth-test,
  * comparado en vivo contra el barrido a blanco del halo aditivo anterior; retunado tras
- * la primera pasada en juego, ver "Rim glow" en .claude/pendiente/aura.md). Aro de
+ * la primera pasada en juego, ver "Rim glow" en .claude/docs/tecnicas-y-vfx.md). Aro de
  * borde alrededor del jugador: NO es el faldón de llama de siempre
  * ({@link AuraSkirtRenderer}) — es una copia INFLADA del propio modelo del jugador,
  * dibujada aditiva y detrás de él. El pecho y las piernas nunca se ven afectados: el

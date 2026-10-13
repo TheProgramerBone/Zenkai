@@ -764,10 +764,15 @@ public class StatsScreen extends ZenkaiMenuScreen {
                 ZenkaiPalette.GOLD, form.getFormMastery(form.getFormId()), ZenkaiPalette.BAR_MASTERY));
 
         if (!FormIds.BASE.equals(form.getFormId())) {
-            double kiPerSecond = form.formKiDrainPerTick(att.getAttribute(ZenkaiAttributes.SPIRIT), att.powerFraction()) * 20.0;
-            out.add(val("screen.zenkai.stats_screen.drain_short",
-                    kiPerSecond > 0.0 ? "-" + fmt(kiPerSecond) + " ki/s" : "—",
-                    kiPerSecond > 0.0 ? ZenkaiPalette.MAXED : ZenkaiPalette.TEXT_DIM));
+            double kiPerSecond = form.formKiDrainPerTick(att, att.powerFraction()) * 20.0;
+            // Compacto en la fila ("-3.4K ki/s"), exacto en el tooltip: el drenaje escala con el
+            // poder y crece sin techo.
+            out.add(kiPerSecond > 0.0
+                    ? Row.tip(Component.translatable("screen.zenkai.stats_screen.drain_short.label"),
+                            Component.literal("-" + ZenkaiNumbers.format(kiPerSecond) + " ki/s"), ZenkaiPalette.MAXED,
+                            Component.translatable("screen.zenkai.stats_screen.exact_tp",
+                                    "-" + ZenkaiNumbers.exact(kiPerSecond) + " ki/s"))
+                    : val("screen.zenkai.stats_screen.drain_short", "—", ZenkaiPalette.TEXT_DIM));
         }
 
         // Forzando por encima de 100%: mismo dato que ya drena OverdriveSystem cada tick, aquí
@@ -782,8 +787,11 @@ public class StatsScreen extends ZenkaiMenuScreen {
             double kiPerSecondOverdrive = OverdriveTuning.costPerTick(overPct, mult) * 20.0;
             out.add(val("screen.zenkai.stats_screen.overdrive_pct_short",
                     "+" + Math.round(overPct) + "%", ZenkaiPalette.SECTION_OVERDRIVE));
-            out.add(val("screen.zenkai.stats_screen.drain_short",
-                    "-" + fmt(kiPerSecondOverdrive) + " ki/s", ZenkaiPalette.SECTION_OVERDRIVE));
+            out.add(Row.tip(Component.translatable("screen.zenkai.stats_screen.drain_short.label"),
+                    Component.literal("-" + ZenkaiNumbers.format(kiPerSecondOverdrive) + " ki/s"),
+                    ZenkaiPalette.SECTION_OVERDRIVE,
+                    Component.translatable("screen.zenkai.stats_screen.exact_tp",
+                            "-" + ZenkaiNumbers.exact(kiPerSecondOverdrive) + " ki/s")));
         }
 
         KaiokenTier tier = form.getKaioken();

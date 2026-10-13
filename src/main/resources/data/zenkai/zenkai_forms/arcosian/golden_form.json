@@ -8,8 +8,8 @@
   "mastery_gain": 0.5,
   "stat_percent_untrained": 5.2,
   "stat_percent_mastered": 7.0,
-  "ki_drain_untrained": 1.5,
-  "ki_drain_mastered": 0.5,
+  "ki_drain_untrained": 2.22,
+  "ki_drain_mastered": 0.74,
   "spi_req": 134,
   "parent": "zenkai:final_form",
   "body_items": {

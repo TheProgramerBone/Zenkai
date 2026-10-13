@@ -91,7 +91,7 @@ public class NpcMarkerBlock extends BaseEntityBlock {
         PacketDistributor.sendToPlayer(sp, new OpenNpcMarkerPayload(
                 pos,
                 be.getNpcType() == null ? "" : be.getNpcType().toString(),
-                be.getYaw(), be.getOffX(), be.getOffY(), be.getOffZ()));
+                be.getYaw(), be.getOffX(), be.getOffY(), be.getOffZ(), be.getRespawnSeconds()));
         return InteractionResult.CONSUME;
     }
 }

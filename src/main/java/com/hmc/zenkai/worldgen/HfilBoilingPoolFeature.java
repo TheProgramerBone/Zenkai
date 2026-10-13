@@ -12,7 +12,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 
 /**
  * Poza de agua hirviendo azul cobalto ("Umi Jigoku", el infierno del mar de Beppu) — propuesta A
- * de .claude/pendiente/worldgen-pendiente.md. Reutiliza la cubeta abierta del charco de sangre
+ * de .claude/docs/worldgen.md. Reutiliza la cubeta abierta del charco de sangre
  * (HfilBloodPoolFeature.carve) con otro relleno. Más pequeña y menos honda que el charco de
  * sangre: es una poza, no un lago.
  *

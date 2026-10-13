@@ -35,7 +35,7 @@ import static com.hmc.zenkai.feature.race.RaceTextureUtil.resourceExists;
  *
  * Sin assets de miniatura que mantener: un rasgo nuevo del catálogo sale en la GUI con su
  * miniatura correcta solo por existir, y con los colores del jugador (decisión C8,
- * .claude/pendiente/sistema-visual-personajes-diseno.md).
+ * .claude/docs/customizacion-cara-y-pelo.md (decisiones cerradas)).
  *
  * El rasgo de UNA categoría puede sustituirse ({@code overrideCategory}/{@code overrideId}) para
  * enseñar una opción de la lista en contexto: con los demás rasgos que ya lleva el jugador.

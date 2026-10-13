@@ -409,7 +409,7 @@ public final class ModBiomeGen {
     }
 
     /**
-     * Infierno helado — propuesta D (2026-10-02, ver .claude/pendiente/worldgen-pendiente.md).
+     * Infierno helado — propuesta D (2026-10-02, ver .claude/docs/worldgen.md).
      * Referencias: el infierno de hielo de Dragon Ball GT (Goku contra Freezer y Cell, con una
      * zona helada junto a la de lava) y el Guren, el "infierno del loto rojo" de los infiernos
      * fríos budistas, donde el frío agrieta la piel como pétalos rojos. El Blood Pond, congelado:

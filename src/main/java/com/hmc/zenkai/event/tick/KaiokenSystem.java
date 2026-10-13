@@ -1,6 +1,5 @@
 package com.hmc.zenkai.event.tick;
 
-import com.hmc.zenkai.feature.ZenkaiAttributes;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
@@ -20,7 +19,7 @@ import net.minecraft.world.entity.player.Player;
  * con el MISMO atributo que el pool (CON) y ambos se cancelaban -> subir constitución no
  * daba ni un segundo extra (medido: 5 s en x20 con CON 100 y con CON 10.000).
  * Ahora el coste lo marca tu poder y el aguante lo marca CON:
- *   - CON ≈ 1.5 · max(STR,WIL) deja la duración CONSTANTE a lo largo de la progresión;
+ *   - CON proporcional al poder (STR+WIL) deja la duración CONSTANTE a lo largo de la progresión;
  *   - por debajo te quemas antes; por encima compras aguante.
  * Los DOS reductores son independientes a propósito:
  *   - skillFactor  (SkillEffects.kaiokenDrainFactor): nivel de la habilidad, 1.0 -> 0.35.
@@ -45,9 +44,6 @@ public final class KaiokenSystem {
 
     /** Multiplicador del drenaje con el escalón dominado al 100 %. */
     private static final double MASTERED_DRAIN_FACTOR = 0.5;
-
-    /** Suelo del poder: evita que un personaje recién creado tenga kaioken gratis. */
-    private static final double MIN_POWER_STAT = 10.0;
 
     /** Strain base al agotarse, en ticks (5 s). Se escala por escalón y lo recorta la maestría. */
     private static final int STRAIN_BASE_TICKS = 600;
@@ -153,7 +149,7 @@ public final class KaiokenSystem {
     }
 
     /**
-     * Poder que paga el kaioken: el PICO entre fuerza y voluntad, con multiplicadores de
+     * Poder que paga el kaioken: la SUMA de fuerza y voluntad, con multiplicadores de
      * raza/estilo (misma base que usa bodyMax para CON, así los dos lados de la balanza
      * hablan el mismo idioma).
      * OJO: NO usar att.computeMeleeFinal()/computeKiPowerFinal(): esos ya llevan dentro
@@ -162,11 +158,6 @@ public final class KaiokenSystem {
      * El % de poder SÍ abarata el kaioken, pero aparte y acotado a 1 (releaseFactor).
      */
     private static double powerStat(PlayerStatsAttachment att) {
-        double str = BalanceUtil.computeStat(att.getAttribute(ZenkaiAttributes.STRENGTH),
-                att.getRace(), att.getStyle(), ZenkaiAttributes.STRENGTH);
-        double wil = BalanceUtil.computeStat(att.getAttribute(ZenkaiAttributes.WILLPOWER),
-                att.getRace(), att.getStyle(), ZenkaiAttributes.WILLPOWER);
-        double total = str + wil;
-        return Math.max(MIN_POWER_STAT, total);
+        return BalanceUtil.powerStat(att);
     }
 }

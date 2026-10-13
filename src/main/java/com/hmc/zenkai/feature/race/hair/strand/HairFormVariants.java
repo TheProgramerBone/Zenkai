@@ -7,12 +7,14 @@ import java.util.Map;
 
 /**
  * Qué variante de un juego de DMZ (base / SSJ / SSJ2 / SSJ3) se ve con cada forma de Zenkai
- * (plan .claude/pendiente/pelo-importado-dmz-dbc.md §5.2). La que el código no traiga cae a la
+ * (.claude/docs/customizacion-cara-y-pelo.md, sección "Pelo importado: formatos…", tabla de formas). La que el código no traiga cae a la
  * anterior: SSJ3 -&gt; SSJ2 -&gt; SSJ -&gt; base (SSJ4 -&gt; SSJ). Las formas sin entrada usan la base,
  * teñida por la forma si esta declara hair_rgb.
  *
  * Decisión del usuario (2026-10-12): SSJ God, Ultra Instinto (señal y dominado) y Ultra Ego llevan
  * el pelo de la BASE; Blue (y Rosé, su par) el del SSJ. Por eso ssj_god no está en la tabla.
+ * Beast lleva el del SSJ2 (2026-10-12) y, como cualquier otra, cae por la cadena SSJ2 -&gt; SSJ -&gt;
+ * base si el juego no trae esa variante.
  */
 public final class HairFormVariants {
     private HairFormVariants() {}
@@ -32,7 +34,8 @@ public final class HairFormVariants {
             "zenkai:ssj3", Variant.SSJ3,
             "zenkai:ssj4", Variant.SSJ4,
             "zenkai:ssj_blue", Variant.SSJ,
-            "zenkai:ssj_rose", Variant.SSJ);
+            "zenkai:ssj_rose", Variant.SSJ,
+            "zenkai:beast", Variant.SSJ2);
 
     public static Variant wanted(@Nullable ResourceLocation formId) {
         return formId == null ? Variant.BASE : FORMS.getOrDefault(formId.toString(), Variant.BASE);
@@ -40,7 +43,7 @@ public final class HairFormVariants {
 
     /**
      * La variante pedida o, si el juego no la trae, la anterior que sí exista. SSJ4 sin variante
-     * propia usa la de SSJ (tabla §5.2), no la de SSJ3: el pelo largo de SSJ3 no es el de SSJ4.
+     * propia usa la de SSJ (tabla de formas de la guía), no la de SSJ3: el pelo largo de SSJ3 no es el de SSJ4.
      */
     public static Variant available(StrandSet.Variants v, Variant wanted) {
         Variant w = wanted == Variant.SSJ4 && v.ssj4() == null ? Variant.SSJ : wanted;

@@ -21,7 +21,7 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 /**
- * Caldero de los oni — propuesta G de .claude/pendiente/worldgen-pendiente.md. Referencia: el
+ * Caldero de los oni — propuesta G de .claude/docs/worldgen.md. Referencia: el
  * kama-yude, el castigo de hervir en un caldero del Jigoku (el infierno budista japonés, del que
  * sale el HFIL de Dragon Ball: el Blood Pond es su Chi no Ike), donde los oni vigilan la olla.
  * Lo custodian un ogro rojo y uno azul (OgreEntity), generados con él. Exclusivo de blood_shore,

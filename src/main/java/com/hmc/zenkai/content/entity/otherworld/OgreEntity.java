@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Ogro del HFIL (oni) — propuesta I de .claude/pendiente/worldgen-pendiente.md. Canon desde Dragon
+ * Ogro del HFIL (oni) — propuesta I de .claude/docs/worldgen.md. Canon desde Dragon
  * Ball original: los ogros trabajan para el Rey Yemma en el Otro Mundo (Goz y Mez, el rojo y el
  * azul, son los guardias del HFIL). Dos tipos de entidad (red_ogre / blue_ogre) con esta misma
  * clase; solo cambia la textura (skins del usuario, en .claude/imagenes_videos_referencias/entidades).

@@ -21,7 +21,7 @@ import net.minecraft.util.Mth;
  * LÍMITE DE DATOS (2026-09-29): las firmas de zenkai_aura_signatures/ tienen offsets pequeños y
  * hay parejas idénticas (divine = ssj2, dark = rose), y ninguna tiene spike negativo — así que
  * ninguna da lóbulos redondos todavía. Diferenciarlas más es trabajo de datos de
- * .claude/pendiente/aura.md, no de este mapeo.
+ * .claude/docs/tecnicas-y-vfx.md, no de este mapeo.
  * <p>
  * Mapeo (ver también la tabla del plan):
  * <ul>

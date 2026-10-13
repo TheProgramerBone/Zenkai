@@ -12,7 +12,7 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 /**
- * Cráter de gas en llamas — propuesta F de .claude/pendiente/worldgen-pendiente.md. Referencia
+ * Cráter de gas en llamas — propuesta F de .claude/docs/worldgen.md. Referencia
  * real: el cráter de Darvaza, la "Puerta del Infierno" del desierto de Karakum (Turkmenistán), un
  * pozo de gas que arde sin parar desde hace décadas. Exclusivo de cinder_dunes (el desierto del
  * HFIL).

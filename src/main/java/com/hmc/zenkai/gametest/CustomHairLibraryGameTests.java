@@ -136,7 +136,7 @@ public final class CustomHairLibraryGameTests {
 
         ResourceLocation base = CustomHairCodes.model(full, null);
         helper.assertTrue(base != null && base.getPath().equals(id + "/base"), "sin forma: base, es " + base);
-        for (String form : new String[]{"ssj1", "ssj2", "ssj3", "ssj4", "ssj_blue", "ssj_rose"}) {
+        for (String form : new String[]{"ssj1", "ssj2", "ssj3", "ssj4", "ssj_blue", "ssj_rose", "beast"}) {
             ResourceLocation m = CustomHairCodes.model(full, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, form));
             helper.assertTrue(m != null && m.getPath().equals(id + "/ssj"), form + ": sin SSJ2/SSJ3 cae a SSJ, es " + m);
         }

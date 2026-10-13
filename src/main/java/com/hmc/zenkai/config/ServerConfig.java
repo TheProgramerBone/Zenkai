@@ -978,6 +978,22 @@ public class ServerConfig {
             BUILDER.comment("Percent of the Power Point tank spent per second while they are being applied (Final Form or higher at 100%+ power).")
                     .defineInRange("arcosian.pp_drain_percent_per_second", 2.0D, 0.0D, 100.0D);
 
+    private static final ModConfigSpec.DoubleValue FORM_DRAIN_SCALE_RAW =
+            BUILDER.comment("Form ki drain per SECOND = ki_drain (percent, from the form datapack) / 100 * (STR + WIL, race-weighted) * this scale * SPI multiplier. Higher = every form costs more ki to hold, at any power level.")
+                    .defineInRange("forms.drain_scale", 4.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue FORM_DRAIN_SPI_MIN_RAW =
+            BUILDER.comment("Lower clamp of the SPI drain multiplier sqrt(spi_req / SPI). Reached when SPI is far above the form's requirement; 1.0 disables the discount.")
+                    .defineInRange("forms.drain_spi_min", 1.0D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue FORM_DRAIN_SPI_MAX_RAW =
+            BUILDER.comment("Upper clamp of the SPI drain multiplier sqrt(spi_req / SPI). Reached when SPI is far below the form's requirement; 1.0 disables the penalty.")
+                    .defineInRange("forms.drain_spi_max", 1.5D, 1.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue FORM_DRAIN_FLOOR_RAW =
+            BUILDER.comment("Minimum form ki drain, as a fraction of the ki pool (energyMax) multiplied by the form's ki_drain percent: floor/s = ki_drain / 100 * this * energyMax. Stops a huge pool from making a form free. 0 disables the floor.")
+                    .defineInRange("forms.drain_floor", 0.25D, 0.0D, 100.0D);
+
     private static final ModConfigSpec.DoubleValue ARC_PP_STAT_RAW =
             BUILDER.comment("Stat multiplier bonus (added, 2.0 = +200%) granted when the Power Point tank is full and being applied; scales linearly with the tank.")
                     .defineInRange("arcosian.pp_stat_bonus_max", 2.0D, 0.0D, 20.0D);
@@ -1253,6 +1269,10 @@ public class ServerConfig {
     private static volatile double ARC_PP_GAIN = 1.0D;
     private static volatile double ARC_PP_DRAIN = 2.0D;
     private static volatile double ARC_PP_STAT = 2.0D;
+    private static volatile double FORM_DRAIN_SCALE = 4.0D;
+    private static volatile double FORM_DRAIN_SPI_MIN = 1.0D;
+    private static volatile double FORM_DRAIN_SPI_MAX = 1.5D;
+    private static volatile double FORM_DRAIN_FLOOR = 0.25D;
     private static volatile double UI_HEAT_RATE = 2.0D;
     private static volatile double UI_HEAT_SLOW = 0.06D;
     private static volatile double UI_HEAT_COOL = 4.0D;
@@ -1434,6 +1454,10 @@ public class ServerConfig {
         ARC_PP_GAIN = ARC_PP_GAIN_RAW.get();
         ARC_PP_DRAIN = ARC_PP_DRAIN_RAW.get();
         ARC_PP_STAT = ARC_PP_STAT_RAW.get();
+        FORM_DRAIN_SCALE = FORM_DRAIN_SCALE_RAW.get();
+        FORM_DRAIN_SPI_MIN = FORM_DRAIN_SPI_MIN_RAW.get();
+        FORM_DRAIN_SPI_MAX = FORM_DRAIN_SPI_MAX_RAW.get();
+        FORM_DRAIN_FLOOR = FORM_DRAIN_FLOOR_RAW.get();
         UI_HEAT_RATE = UI_HEAT_RATE_RAW.get();
         UI_HEAT_SLOW = UI_HEAT_SLOW_RAW.get();
         UI_HEAT_COOL = UI_HEAT_COOL_RAW.get();
@@ -1687,6 +1711,10 @@ public class ServerConfig {
     public static double arcPpGain() { return ARC_PP_GAIN; }
     public static double arcPpDrain() { return ARC_PP_DRAIN; }
     public static double arcPpStat() { return ARC_PP_STAT; }
+    public static double formDrainScale() { return FORM_DRAIN_SCALE; }
+    public static double formDrainSpiMin() { return FORM_DRAIN_SPI_MIN; }
+    public static double formDrainSpiMax() { return FORM_DRAIN_SPI_MAX; }
+    public static double formDrainFloor() { return FORM_DRAIN_FLOOR; }
     public static double uiHeatRate() { return UI_HEAT_RATE; }
     public static double uiHeatSlow() { return UI_HEAT_SLOW; }
     public static double uiHeatCool() { return UI_HEAT_COOL; }

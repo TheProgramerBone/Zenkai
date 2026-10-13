@@ -9,7 +9,8 @@ import net.minecraft.resources.ResourceLocation;
 
 /** Servidor → cliente: abre el editor del marcador con los valores actuales. */
 public record OpenNpcMarkerPayload(BlockPos pos, String npcType, float yaw,
-                                   double offX, double offY, double offZ)
+                                   double offX, double offY, double offZ,
+                                   int respawnSeconds)
         implements CustomPacketPayload {
 
     public static final Type<OpenNpcMarkerPayload> TYPE = new Type<>(
@@ -24,10 +25,11 @@ public record OpenNpcMarkerPayload(BlockPos pos, String npcType, float yaw,
                         buf.writeDouble(p.offX());
                         buf.writeDouble(p.offY());
                         buf.writeDouble(p.offZ());
+                        buf.writeVarInt(p.respawnSeconds());
                     },
                     buf -> new OpenNpcMarkerPayload(
                             buf.readBlockPos(), buf.readUtf(), buf.readFloat(),
-                            buf.readDouble(), buf.readDouble(), buf.readDouble()));
+                            buf.readDouble(), buf.readDouble(), buf.readDouble(), buf.readVarInt()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }

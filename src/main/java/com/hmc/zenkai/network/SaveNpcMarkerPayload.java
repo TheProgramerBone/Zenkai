@@ -12,12 +12,14 @@ import net.minecraft.resources.ResourceLocation;
  * El servidor NO confía en nada de aquí: valida permiso, distancia, chunk cargado
  * y que el id de entidad exista antes de aplicar (ver ModNetworking).
  *
+ * @param respawnSeconds segundos hasta que el NPC vuelve a aparecer tras desaparecer; negativo = el valor
+ *                       por defecto de siempre (NpcMarkerBlockEntity.DEFAULT_RESPAWN_TICKS).
  * @param respawn true = "Aplicar y respawnear" (mata el NPC actual y lo recrea ya);
  *                false = "Solo guardar" (los cambios se ven al siguiente respawn).
  */
 public record SaveNpcMarkerPayload(BlockPos pos, String npcType, float yaw,
                                    double offX, double offY, double offZ,
-                                   boolean respawn)
+                                   int respawnSeconds, boolean respawn)
         implements CustomPacketPayload {
 
     public static final Type<SaveNpcMarkerPayload> TYPE = new Type<>(
@@ -32,6 +34,7 @@ public record SaveNpcMarkerPayload(BlockPos pos, String npcType, float yaw,
                         buf.writeDouble(p.offX());
                         buf.writeDouble(p.offY());
                         buf.writeDouble(p.offZ());
+                        buf.writeVarInt(p.respawnSeconds());
                         buf.writeBoolean(p.respawn());
                     },
                     buf -> new SaveNpcMarkerPayload(
@@ -41,6 +44,7 @@ public record SaveNpcMarkerPayload(BlockPos pos, String npcType, float yaw,
                             buf.readDouble(),
                             buf.readDouble(),
                             buf.readDouble(),
+                            buf.readVarInt(),
                             buf.readBoolean()));
 
     @Override
