@@ -4,6 +4,7 @@ import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.race.face.FaceCategory;
 import com.hmc.zenkai.feature.race.face.LegacyFaceIds;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
+import com.hmc.zenkai.feature.race.hair.CustomHairLibrary;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
@@ -11,7 +12,9 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 
 public class PlayerVisualAttachment {
 
@@ -25,6 +28,12 @@ public class PlayerVisualAttachment {
     // ── Colores ───────────────────────────────────────────────────────────────
     private int skinColorRgb   = 0xD5A07A; // piel humana por defecto
     private int hairColorRgb   = 0x000000; // negro por defecto
+    /**
+     * Colores propios de los mechones de un pelo por código (StrandColors): true = como los trae
+     * el código (p. ej. blanco con dos mechones negros), false = todo del color de pelo. Por
+     * defecto true: es el aspecto que eligió el autor del peinado. Sin efecto si no trae colores.
+     */
+    private boolean hairStrandColors = true;
     private int eyeColorRgb    = 0x2E86C1; // azul, el mismo que propone la GUI (negro hacía invisible el iris)
     /** Iris derecho (heterocromía). -1 = igual que el izquierdo (eyeColorRgb), el caso normal. */
     private int eyeColorRightRgb = -1;
@@ -102,6 +111,8 @@ public class PlayerVisualAttachment {
     public void setSkinColorRgb(int rgb)       { this.skinColorRgb   = rgb & 0xFFFFFF; }
 
     public int  getHairColorRgb()              { return hairColorRgb; }
+    public boolean isHairStrandColors()        { return hairStrandColors; }
+    public void setHairStrandColors(boolean v) { this.hairStrandColors = v; }
     public void setHairColorRgb(int rgb)       { this.hairColorRgb   = rgb & 0xFFFFFF; }
 
     public int  getEyeColorRgb()               { return eyeColorRgb; }
@@ -170,6 +181,50 @@ public class PlayerVisualAttachment {
         return raw;
     }
 
+    // ── Biblioteca de peinados importados (pestaña Pelo, CustomHairLibrary) ──
+    /**
+     * Fuera de {@link #save()} A PROPÓSITO: save() es lo que copian las pantallas como snapshot
+     * (y restauran con load() al cancelar) y lo que manda el cliente en UpdatePlayerVisualPacket.
+     * Si la biblioteca fuera dentro, cancelar la pantalla borraría un peinado recién importado y el
+     * paquete del cliente arrastraría hasta 64 KB de códigos. Va en {@link #saveFull()} (disco y
+     * sync al propio jugador) y, recortada a la entrada puesta, en {@link #saveForTracker()}.
+     */
+    private final List<CustomHairLibrary.Entry> customHairs = new ArrayList<>();
+    private static final String CUSTOM_HAIRS_KEY = "customHairs";
+
+    public List<CustomHairLibrary.Entry> getCustomHairs() { return List.copyOf(customHairs); }
+
+    public void setCustomHairs(List<CustomHairLibrary.Entry> entries) {
+        customHairs.clear();
+        for (CustomHairLibrary.Entry e : entries) {
+            if (customHairs.size() >= CustomHairLibrary.MAX_ENTRIES) break;
+            if (findCustomHair(e.id()) == null) customHairs.add(e);
+        }
+    }
+
+    @Nullable
+    public CustomHairLibrary.Entry findCustomHair(@Nullable String id) {
+        if (id == null) return null;
+        for (CustomHairLibrary.Entry e : customHairs) if (e.id().equals(id)) return e;
+        return null;
+    }
+
+    /** La entrada que lleva puesta (hairStyleId = "custom:&lt;id&gt;"), o null. */
+    @Nullable
+    public CustomHairLibrary.Entry activeCustomHair() {
+        return findCustomHair(CustomHairLibrary.idFromStyle(hairStyleId));
+    }
+
+    public boolean addCustomHair(CustomHairLibrary.Entry e) {
+        if (customHairs.size() >= CustomHairLibrary.MAX_ENTRIES || findCustomHair(e.id()) != null) return false;
+        customHairs.add(e);
+        return true;
+    }
+
+    public boolean removeCustomHair(String id) {
+        return customHairs.removeIf(e -> e.id().equals(id));
+    }
+
     public String getTailStyleId()             { return tailStyleId; }
     public void   setTailStyleId(String id)    { if (id != null && !id.isEmpty()) this.tailStyleId = id; }
 
@@ -188,6 +243,7 @@ public class PlayerVisualAttachment {
 
         tag.putInt("skinColor",   skinColorRgb);
         tag.putInt("hairColor",   hairColorRgb);
+        tag.putBoolean("hairStrandColors", hairStrandColors);
         tag.putInt("eyeColor",    eyeColorRgb);
         tag.putInt("eyeColorRight", eyeColorRightRgb);
         tag.putInt("auraColor",   auraColorRgb);
@@ -209,12 +265,28 @@ public class PlayerVisualAttachment {
         return tag;
     }
 
+    /** save() + la biblioteca entera: disco (codec del attachment) y sync al propio jugador. */
+    public CompoundTag saveFull() {
+        CompoundTag tag = save();
+        tag.put(CUSTOM_HAIRS_KEY, CustomHairLibrary.save(customHairs));
+        return tag;
+    }
+
+    /** Lo que ven los DEMÁS jugadores: de la biblioteca, solo el peinado puesto (si lo hay). */
+    public CompoundTag saveForTracker() {
+        CompoundTag tag = save();
+        CustomHairLibrary.Entry active = activeCustomHair();
+        tag.put(CUSTOM_HAIRS_KEY, CustomHairLibrary.save(active == null ? List.of() : List.of(active)));
+        return tag;
+    }
+
     public void load(CompoundTag tag) {
         if (tag.contains("renderRaceSkin"))  this.renderRaceSkin  = tag.getBoolean("renderRaceSkin");
         if (tag.contains("hideVanillaBody")) this.hideVanillaBody = tag.getBoolean("hideVanillaBody");
 
         if (tag.contains("skinColor"))   this.skinColorRgb   = tag.getInt("skinColor");
         if (tag.contains("hairColor"))   this.hairColorRgb   = tag.getInt("hairColor");
+        if (tag.contains("hairStrandColors")) this.hairStrandColors = tag.getBoolean("hairStrandColors");
         if (tag.contains("eyeColor"))    this.eyeColorRgb    = tag.getInt("eyeColor");
         if (tag.contains("eyeColorRight")) setEyeColorRightRgb(tag.getInt("eyeColorRight"));
         if (tag.contains("auraColor"))   this.auraColorRgb   = tag.getInt("auraColor");
@@ -243,6 +315,10 @@ public class PlayerVisualAttachment {
         if (tag.contains("layerColors")) {
             for (int v : tag.getIntArray("layerColors")) layerColors.add(v < 0 ? -1 : (v & 0xFFFFFF));
         }
+        // Solo si el tag la trae (saveFull / saveForTracker): un snapshot de save() no la toca.
+        if (tag.contains(CUSTOM_HAIRS_KEY, Tag.TAG_LIST)) {
+            setCustomHairs(CustomHairLibrary.load(tag.getList(CUSTOM_HAIRS_KEY, Tag.TAG_COMPOUND)));
+        }
 
     }
 
@@ -267,6 +343,7 @@ public class PlayerVisualAttachment {
     public void loadCosmeticFromClient(CompoundTag tag) {
         if (tag.contains("skinColor")) setSkinColorRgb(tag.getInt("skinColor"));
         if (tag.contains("hairColor")) setHairColorRgb(tag.getInt("hairColor"));
+        if (tag.contains("hairStrandColors")) setHairStrandColors(tag.getBoolean("hairStrandColors"));
         if (tag.contains("eyeColor"))  setEyeColorRgb(tag.getInt("eyeColor"));
         if (tag.contains("eyeColorRight")) setEyeColorRightRgb(tag.getInt("eyeColorRight"));
         if (tag.contains("auraColor")) setAuraColorRgb(tag.getInt("auraColor"));
@@ -279,6 +356,9 @@ public class PlayerVisualAttachment {
         if (tag.contains("hairStyleId")) {
             String id = tag.getString("hairStyleId");
             if (isAcceptableHairStyleId(id)) setHairStyleId(id);
+            // Un peinado importado solo si está en la biblioteca que guarda el SERVIDOR (la del
+            // cliente no viaja en este paquete); si el mundo no los permite lo corrige reconcile.
+            else if (findCustomHair(CustomHairLibrary.idFromStyle(id)) != null) this.hairStyleId = id;
         }
 
         if (tag.contains("customSkinColor")) setCustomSkinColor(tag.getBoolean("customSkinColor"));
@@ -330,10 +410,14 @@ public class PlayerVisualAttachment {
      * decide HairCatalog.reconcile, que el packet llama justo después.
      */
     private static boolean isAcceptableHairStyleId(String id) {
-        if (id == null || id.isEmpty() || id.length() > MAX_FACE_ID_LENGTH) return false;
+        if (id == null || id.isEmpty()) return false;
+        // Un código procedimental mide cientos de caracteres: su tope es el de HairCode, no el de un
+        // id de catálogo. Con el tope de 128 delante, un "custom:" real se descartaba en silencio.
+        // "custom:" solo vale para la biblioteca (ver loadCosmeticFromClient); el sobre HairCode
+        // (zh1, procedimental) quedó sustituido por los códigos importados.
+        if (com.hmc.zenkai.feature.race.HairCode.isCustom(id)) return false;
+        if (id.length() > MAX_FACE_ID_LENGTH) return false;
         if (HAIR_NONE.equals(id) || "bald".equalsIgnoreCase(id) || id.matches("hair\\d{1,3}")) return true;
-        if (com.hmc.zenkai.feature.race.HairCode.isCustom(id))
-            return com.hmc.zenkai.feature.race.HairCode.isWellFormed(id);
         return ResourceLocation.tryParse(id) != null;
     }
 

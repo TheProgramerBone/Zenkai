@@ -22,7 +22,8 @@ import java.util.List;
 public final class ZenkaiUiCredits {
     private ZenkaiUiCredits() {}
 
-    public enum Category { UI, ICONS, ANIMATIONS }
+    /** COMPAT: formatos ajenos que Zenkai sabe LEER (sin código ni assets de esos mods). */
+    public enum Category { UI, ICONS, ANIMATIONS, COMPAT }
 
     /**
      * iconU/iconV: esquina de la celda en textures/gui/icons.png (256x256, grid de 20px) para
@@ -179,6 +180,21 @@ public final class ZenkaiUiCredits {
         credit(Category.ANIMATIONS, "phys_kiai", AUTHOR, "player_animations/phys_kiai.animation.json");
         credit(Category.ANIMATIONS, "transformation1", AUTHOR, "player_animations/transformation1.animation.json");
         credit(Category.ANIMATIONS, "transformation2", AUTHOR, "player_animations/transformation2.animation.json");
+
+        // ── Compatibilidad (importar en la pestaña Pelo) ─────────────────────────────────
+        // Solo se lee el FORMATO de sus códigos de pelo; el lector y el convertidor son propios
+        // y no se empaqueta ningún peinado de estos mods (.claude/pendiente/pelo-importado-dmz-dbc.md §4).
+        credit(Category.COMPAT, "DragonMineZ hair codes", "DragonMineZ team",
+                "DMZ1/4/5/22 and DMZF hair code format (DragonMineZ 2.1 and 2.2), imported in the Hair tab");
+        // La carpeta DragonMineZ de la pestaña Pelo SÍ trae contenido suyo (27 peinados, GPLv3, ver
+        // assets/zenkai_dmz/NOTICE.txt): créditos a sus autores y a quienes DMZ acredita por peinado.
+        credit(Category.COMPAT, "DragonMineZ hairstyles (27)", "Yuseix, ezShokkoh, Bruno",
+                "Hair presets of DragonMineZ 2.2, GPLv3 (assets/zenkai_dmz, data/zenkai_dmz)");
+        credit(Category.COMPAT, "Hairstyle \"Travis\"", "__Travis__", "DragonMineZ Patreon preset, GPLv3");
+        credit(Category.COMPAT, "Hairstyle \"Android 21\"", "Chillir", "DragonMineZ preset, GPLv3");
+        credit(Category.COMPAT, "Hairstyle \"Gojo\"", "Re:Wheezer", "DragonMineZ Patreon preset, GPLv3");
+        credit(Category.COMPAT, "Dragon Block C hair strings", "JinRyuu",
+                "HairSalon / JRMCore hair string format, imported in the Hair tab (no DBC code or assets)");
     }
 
     public static List<Entry> byCategory(Category c) {

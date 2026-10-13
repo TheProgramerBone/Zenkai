@@ -141,7 +141,11 @@ public class BodyColorsScreen extends Screen {
 
     private static final int COLOR_SWATCH = ZenkaiPalette.LABEL_ON_PANEL;
 
-    private static final int[] SKIN_TONES = { 0xF5C7AC, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
+    /**
+     * El primero es EXACTAMENTE el tono principal del arte humano (F9C9AE, la "ref" de las capas
+     * human_player_layer_N): elegido, el cuerpo teñible se ve igual que con "Default" (2026-10-12).
+     */
+    private static final int[] SKIN_TONES = { 0xF9C9AE, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
 
     private final AppearanceScreen hub;
     private final CompoundTag statsSnapshot;
@@ -173,7 +177,7 @@ public class BodyColorsScreen extends Screen {
     /**
      * Skin predeterminada (Human/Saiyan con "Skin Predeterminada" en la pantalla de raza): se ve la
      * skin vanilla del jugador, sin cuerpo de raza, así que el tono de piel no se pinta en ningún
-     * sitio. La rejilla de tonos y "Default" se enseñan oscurecidas y bloqueadas, con tooltip.
+     * sitio. La rejilla de tonos se enseña oscurecida y bloqueada, con tooltip.
      */
     private boolean vanillaSkin = false;
 
@@ -218,6 +222,11 @@ public class BodyColorsScreen extends Screen {
         this.race        = stats.getRace();
         skinColor         = visual.getSkinColorRgb() | 0xFF000000;
         customSkinColor   = visual.isCustomSkinColor();
+        // Partida que seguía en "Default" (botón retirado): es el primer tono, mismo aspecto.
+        if (!customSkinColor && (stats.getRace() == Race.HUMAN || stats.getRace() == Race.SAIYAN)) {
+            customSkinColor = true;
+            skinColor = 0xFF000000 | SKIN_TONES[0];
+        }
         genderFemale      = visual.getGender() == com.hmc.zenkai.feature.player.PlayerVisualAttachment.Gender.FEMALE;
         vanillaSkin       = !visual.shouldRenderRaceSkin();
         lockedRects.clear();
@@ -512,15 +521,11 @@ public class BodyColorsScreen extends Screen {
             }
         }
 
+        // Sin botón "Default" (2026-10-12): el primer tono (F9C9AE) ya es idéntico al cuerpo por
+        // defecto gracias a las capas de piel (human_player_layer_N, LayerTone), así que el botón
+        // sobraba y además el primer tono antes NO coincidía con él (bug).
         int gridBottom = gridTop + rows * (TONE_H + TONE_GAP) - TONE_GAP;
-        int naturalY = gridBottom + 8;
-        var defaultBtn = new TextOnlyButton(cx - 30, naturalY, 60, DEFAULT_BTN_H,
-                Component.literal("Default"),
-                () -> { customSkinColor = false; closePicker(); applyPreview(); })
-                .onPanel();
-        lockForVanillaSkin(defaultBtn);
-        addRenderableWidget(defaultBtn);
-        contentBottom = naturalY + DEFAULT_BTN_H;
+        contentBottom = gridBottom + 2;
 
         // Género: mismo ajuste que la fila "Gender" del hub, aquí para que el flujo lineal
         // cabeza → cuerpo → estilo lo incluya sin volver al hub. Solo razas de tinte simple

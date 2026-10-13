@@ -764,7 +764,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
                 ZenkaiPalette.GOLD, form.getFormMastery(form.getFormId()), ZenkaiPalette.BAR_MASTERY));
 
         if (!FormIds.BASE.equals(form.getFormId())) {
-            double kiPerSecond = form.formKiDrainPerTick(att.getAttribute(ZenkaiAttributes.SPIRIT)) * 20.0;
+            double kiPerSecond = form.formKiDrainPerTick(att.getAttribute(ZenkaiAttributes.SPIRIT), att.powerFraction()) * 20.0;
             out.add(val("screen.zenkai.stats_screen.drain_short",
                     kiPerSecond > 0.0 ? "-" + fmt(kiPerSecond) + " ki/s" : "—",
                     kiPerSecond > 0.0 ? ZenkaiPalette.MAXED : ZenkaiPalette.TEXT_DIM));
@@ -796,8 +796,12 @@ public class StatsScreen extends ZenkaiMenuScreen {
             out.add(Row.bar(Component.translatable("screen.zenkai.stats_screen.mastery_short.label"),
                     Component.literal(fmt(form.getKaiokenMastery()) + "%"),
                     ZenkaiPalette.GOLD, form.getKaiokenMastery(), ZenkaiPalette.BAR_MASTERY));
-            out.add(val("screen.zenkai.stats_screen.drain_short",
-                    "-" + fmt(hpPerSecond) + " HP/s", ZenkaiPalette.ERROR));
+            // Compacto en la fila ("-3.4K HP/s"), exacto en el tooltip: con x20 y mucho poder el
+            // número crece sin techo (antes salía entero: "-12345.6 HP/s").
+            out.add(Row.tip(Component.translatable("screen.zenkai.stats_screen.drain_short.label"),
+                    Component.literal("-" + ZenkaiNumbers.format(hpPerSecond) + " HP/s"), ZenkaiPalette.ERROR,
+                    Component.translatable("screen.zenkai.stats_screen.exact_tp",
+                            "-" + ZenkaiNumbers.exact(hpPerSecond) + " HP/s")));
         }
         if (form.isStrained(mc.player.level().getGameTime())) {
             out.add(Row.tip(

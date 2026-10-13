@@ -26,6 +26,7 @@ public class ModItemModelProvider extends ItemModelProvider {
     protected void registerModels() {
         basicItem(ModItems.SENZU_BEAN.get());
         basicItem(ModItems.BASIC_CIRCUIT.get());
+        basicItem(ModItems.SCISSORS.get());
         basicItem(ModItems.ADVANCED_CIRCUIT.get());
         basicItem(ModItems.ELITE_CIRCUIT.get());
         basicItem(ModItems.SPACE_POD_ITEM.get());

@@ -96,6 +96,7 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
                     (ghostArgb >> 8) & 0xFF, ghostArgb & 0xFF);
         }
         ItemStack current = getCurrentStack();
+        if (current != null && com.hmc.zenkai.feature.race.hair.HairStacks.isStrandHair(current)) return Color.WHITE;
         if (current != null && current.has(DataComponents.DYED_COLOR)) {
             return Color.ofOpaque(DyedItemColor.getOrDefault(current, 0xFFFFFF));
         }
@@ -149,6 +150,33 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
     /** Textura efectiva según el stack que se pinta (embudo único, ver resolveTexture). */
     @Override
     public net.minecraft.resources.ResourceLocation getTextureLocation(GeoLayerArmorItem animatable) {
-        return animatable.resolveTexture(getCurrentStack());
+        ItemStack stack = getCurrentStack();
+        // Pelo por mechones: textura-rampa del color de pelo (tonos en Oklab, ver HairRampColors);
+        // el modelo apunta cada cara a su franja. El color ya va en la textura (getRenderColor = blanco).
+        if (stack != null && com.hmc.zenkai.feature.race.hair.HairStacks.isStrandHair(stack)) {
+            int hair = strandHairRgb(stack);
+            // Colores propios de los mechones (StrandColors): una columna por color, mezclada con
+            // el de pelo según el peso que fija HairResolver (interruptor, forma que tiñe, transición).
+            Integer weight = stack.get(com.hmc.zenkai.registry.ModDataComponents.HAIR_STRAND_COLORS.get());
+            if (weight != null && weight > 0) {
+                var palette = com.hmc.zenkai.feature.race.hair.strand.CustomHairCodes.palette(
+                        com.hmc.zenkai.feature.race.hair.HairStacks.model(stack));
+                if (palette != null && !palette.plain()) {
+                    return com.hmc.zenkai.client.hair.HairRampTextures.forColors(palette.resolve(hair,
+                            weight / (float) com.hmc.zenkai.feature.race.HairResolver.COLOR_STEPS));
+                }
+            }
+            return com.hmc.zenkai.client.hair.HairRampTextures.forColor(hair);
+        }
+        return animatable.resolveTexture(stack);
+    }
+
+    /** Color de un pelo por mechones: el fijado en el stack (forma que tiñe) o el del jugador. */
+    private int strandHairRgb(ItemStack stack) {
+        if (stack.has(DataComponents.DYED_COLOR)) return DyedItemColor.getOrDefault(stack, 0xFFFFFF);
+        if (getCurrentEntity() instanceof Player player) {
+            return player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).getHairColorRgb();
+        }
+        return 0x1A1A1A;
     }
 }

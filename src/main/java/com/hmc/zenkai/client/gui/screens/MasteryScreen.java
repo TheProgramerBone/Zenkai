@@ -61,8 +61,13 @@ public class MasteryScreen extends ZenkaiMenuScreen {
     // así que una barra llena y su etiqueta eran indistinguibles. Ahora "al máximo" lo dice el
     // color de la barra (azul pizarra) y el nombre conserva el verde de "algo que posees".
 
-    /** Una fila: cabecera de sección (mastery &lt; 0) o entrada con progreso. */
-    private record Row(Component name, Component detail, float mastery) {
+    /**
+     * Una fila: cabecera de sección (mastery &lt; 0) o entrada con progreso. {@code hold} = tiempo
+     * de transformación actual y al 100 % (formas y kaioken), pintado a la izquierda del %;
+     * vacío en el resto. Va en la línea del nombre porque la del detalle ya está llena.
+     */
+    private record Row(Component name, Component detail, float mastery, Component hold) {
+        Row(Component name, Component detail, float mastery) { this(name, detail, mastery, Component.empty()); }
         static Row header(Component name) { return new Row(name, Component.empty(), -1f); }
         boolean isHeader() { return mastery < 0f; }
     }
@@ -125,7 +130,7 @@ public class MasteryScreen extends ZenkaiMenuScreen {
                             Component.translatable("form.zenkai." + id.getPath()),
                             Component.literal(statsRange(d.statPercent(m), d.statPercentMastered())
                                     + "  " + drainRange(d.kiDrainPerTick(m), d.kiDrainMastered())),
-                            m));
+                            m, holdRange(form.holdTicksFor(d), d.holdTicks())));
                 }
             }
             for (ResourceLocation child : FormRegistry.childrenOf(id)) {
@@ -164,7 +169,7 @@ public class MasteryScreen extends ZenkaiMenuScreen {
                 Component.translatable("screen.zenkai.mastery.kaioken_row"),
                 Component.translatable("screen.zenkai.mastery.kaioken_detail",
                         pct((1.0 - factor) * 100.0)),
-                m));
+                m, holdRange(form.kaiokenHoldTicks(), PlayerFormAttachment.KAIOKEN_HOLD_TICKS)));
     }
 
     private void addKiTechniques(PlayerStatsAttachment st) {
@@ -205,6 +210,16 @@ public class MasteryScreen extends ZenkaiMenuScreen {
     /** "0.40 -> 0.10 ki/s": el drenaje BAJA al dominar, de ahí que el orden parezca al revés. */
     private static String drainRange(double now, double mastered) {
         return f2(now * 20.0) + " → " + f2(mastered * 20.0) + " ki/s";
+    }
+
+    /**
+     * "Tiempo 1.5 → 0.8s": hold actual (ya recortado por la maestría) y el del 100 %, que es el
+     * base por MASTERED_HOLD_FACTOR. Vacío si no se transforma con hold.
+     */
+    private static Component holdRange(int nowTicks, int baseTicks) {
+        if (baseTicks <= 0) return Component.empty();
+        double mastered = Math.max(1, Math.round(baseTicks * PlayerFormAttachment.MASTERED_HOLD_FACTOR));
+        return Component.translatable("screen.zenkai.mastery.hold", f1(nowTicks / 20.0), f1(mastered / 20.0));
     }
 
     private static String noDrainLabel() { return "0 ki/s"; }
@@ -294,6 +309,11 @@ public class MasteryScreen extends ZenkaiMenuScreen {
             PanelText.rightOnPanel(g, this.font, Component.literal(pctText),
                     panelLeft + BG_W - TEXT_X_OFF, y + 1,
                     maxed ? ZenkaiPalette.MAXED_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL);
+            if (!r.hold().getString().isEmpty()) {
+                PanelText.rightOnPanel(g, this.font, r.hold(),
+                        panelLeft + BG_W - TEXT_X_OFF - this.font.width(pctText) - 8, y + 1,
+                        ZenkaiPalette.BODY_ON_PANEL);
+            }
 
             PanelText.onPanel(g, this.font, r.detail(), textX + 4, y + 11, ZenkaiPalette.BODY_ON_PANEL);
 

@@ -1,0 +1,7 @@
+{
+  "label": "Painted hair",
+  "follows": "hair",
+  "tone": "FFFFFF",
+  "ref": "FFFFFF",
+  "requires": "hair"
+}

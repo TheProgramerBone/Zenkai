@@ -96,14 +96,14 @@ public class ModCommands {
                 //      /zenkai attr maxall [objetivos]
                 .then(Commands.literal("attr")
                         .then(Commands.literal("set")
-                                .then(Commands.argument("attr", StringArgumentType.string())
+                                .then(Commands.argument("attr", StringArgumentType.word()).suggests(ATTR_IDS)
                                         .then(Commands.argument("value", IntegerArgumentType.integer(0))
                                                 .executes(ctx -> setAttr(ctx,
                                                         ctx.getSource().getPlayerOrException(),
                                                         StringArgumentType.getString(ctx, "attr"),
                                                         IntegerArgumentType.getInteger(ctx, "value")))))
                                 .then(Commands.argument("player", EntityArgument.players())
-                                        .then(Commands.argument("attr", StringArgumentType.string())
+                                        .then(Commands.argument("attr", StringArgumentType.word()).suggests(ATTR_IDS)
                                                 .then(Commands.argument("value", IntegerArgumentType.integer(0))
                                                         .executes(ctx -> forEach(ctx, targets(ctx),
                                                                 (c, sp) -> setAttr(c, sp,
@@ -554,10 +554,10 @@ public class ModCommands {
     private static int setAttr(CommandContext<CommandSourceStack> ctx,
                                ServerPlayer sp, String attrName, int value) {
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
-        ZenkaiAttributes a = ZenkaiAttributes.fromString(attrName);
+        ZenkaiAttributes a = parseAttr(attrName);
         if (a == null) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] Unknown attribute: " + attrName
-                    + ". Valid: STR, CON, DEX, WIL, SPI, MND"));
+                    + ". Valid: strength, constitution, dexterity, willpower, spirit, mind (or STR, CON, DEX, WIL, SPI, MND)"));
             return 0;
         }
         att.setAttribute(a, value);
@@ -920,6 +920,30 @@ public class ModCommands {
      * Los alias antiguos SIGUEN aceptándose al escribirlos (resolveMasteryId), solo dejan de
      * ofrecerse.
      */
+    /** Atributos para /zenkai attr set: antes el admin tenía que adivinar el nombre (y "STR",
+     *  que sugería el propio mensaje de error, no funcionaba). */
+    private static final SuggestionProvider<CommandSourceStack> ATTR_IDS = (ctx, b) -> {
+        List<String> ids = new ArrayList<>();
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) ids.add(a.name().toLowerCase(java.util.Locale.ROOT));
+        return SharedSuggestionProvider.suggest(ids, b);
+    };
+
+    /** Nombre completo o abreviatura de 3 letras (str, con, dex, wil, spi, mnd); null si no existe. */
+    @org.jetbrains.annotations.Nullable
+    private static ZenkaiAttributes parseAttr(String raw) {
+        String s = raw.toUpperCase(java.util.Locale.ROOT);
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) if (a.name().equals(s)) return a;
+        return switch (s) {
+            case "STR" -> ZenkaiAttributes.STRENGTH;
+            case "CON" -> ZenkaiAttributes.CONSTITUTION;
+            case "DEX" -> ZenkaiAttributes.DEXTERITY;
+            case "WIL" -> ZenkaiAttributes.WILLPOWER;
+            case "SPI" -> ZenkaiAttributes.SPIRIT;
+            case "MND" -> ZenkaiAttributes.MIND;
+            default -> null;
+        };
+    }
+
     private static final SuggestionProvider<CommandSourceStack> MASTERY_IDS = (ctx, b) -> {
         List<String> ids = new ArrayList<>();
         for (FormDef d : FormDef.all()) ids.add(d.id().toString());

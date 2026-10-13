@@ -74,6 +74,18 @@ public final class ModDataComponents {
                     .networkSynchronized(net.minecraft.resources.ResourceLocation.STREAM_CODEC)
                     .build());
 
+    /**
+     * Cuánto se ven los colores propios de los mechones en un pelo por mechones (StrandColors), en
+     * pasos de HairResolver.COLOR_STEPS: 0 o ausente = todo del color de pelo; el máximo = los
+     * colores del código. Lo pone HairResolver en el mismo stack virtual (interruptor del jugador,
+     * forma que tiñe el pelo y su transición).
+     */
+    public static final Supplier<DataComponentType<Integer>> HAIR_STRAND_COLORS =
+            COMPONENTS.register("hair_strand_colors", () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
     public static void register(IEventBus modBus) {
         COMPONENTS.register(modBus);
     }

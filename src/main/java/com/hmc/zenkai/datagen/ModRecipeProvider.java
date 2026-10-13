@@ -183,6 +183,15 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('C', itemtag("c:circuits/advanced"))
                 .unlockedBy("has_amethyst",has(Items.IRON_INGOT)).save(recipeOutput);
 
+        // Tijeras: dos hojas de hierro cruzadas con sus anillas (pepitas).
+        ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.SCISSORS.get(), 1)
+                .pattern("I N")
+                .pattern(" I ")
+                .pattern("N I")
+                .define('I', Items.IRON_INGOT)
+                .define('N', Items.IRON_NUGGET)
+                .unlockedBy("has_iron", has(Items.IRON_INGOT)).save(recipeOutput);
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.BASIC_CIRCUIT.get(),1)
                 .pattern(" C ")
                 .pattern("CRC")

@@ -38,13 +38,27 @@ import java.util.function.Consumer;
  *                      pelo largo, Ultra Instinct...). Sustituye a la vieja cadena por convención
  *                      de nombres "&lt;grupo&gt;_hair&lt;N&gt;" de HairResolver.
  * @param selectable    false = solo existe como destino de un form_override (no sale en la lista).
+ * @param folder        carpeta de la biblioteca de la pestaña Pelo (p. ej. zenkai_dmz:dragonminez),
+ *                      o null = en la raíz. Ícono por convención en
+ *                      &lt;ns&gt;:textures/gui/hair_folders/&lt;nombre&gt;.png y nombre en la clave
+ *                      hair_folder.&lt;ns&gt;.&lt;nombre&gt;.
  */
 public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<Race> defaultFor,
                            Representation representation, @Nullable ResourceLocation model,
                            ResourceLocation texture, FaceLayer.Color color, int fixedRgb,
-                           Map<ResourceLocation, ResourceLocation> formOverrides, boolean selectable) {
+                           Map<ResourceLocation, ResourceLocation> formOverrides, boolean selectable,
+                           @Nullable ResourceLocation folder, @Nullable String code) {
 
-    public enum Representation { GEO, TEXTURE }
+    /**
+     * GEO = .geo.json de Blockbench; TEXTURE = pintado plano; CODE = código de pelo por mechones
+     * (formato de DragonMineZ / Dragon Block C) que cada cliente convierte al vuelo, como los
+     * importados (CustomHairCodes). Lo usan los peinados de DragonMineZ que trae el mod: viaja el
+     * código (unos KB) en vez de un .geo.json por forma (cientos de KB), y el código ES su fuente.
+     */
+    public enum Representation { GEO, TEXTURE, CODE }
+
+    /** Tope del código de un estilo CODE (el mismo que un importado). */
+    public static final int MAX_CODE_LENGTH = CustomHairLibrary.MAX_CODE_LENGTH;
 
     public boolean allows(Race race) { return races.contains(race); }
 
@@ -60,6 +74,18 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
         return "hair_style." + id.getNamespace() + "." + id.getPath().replace('/', '.');
     }
 
+    /** Nombre de una carpeta de la biblioteca (clave hair_folder.&lt;ns&gt;.&lt;nombre&gt;). */
+    public static Component folderName(ResourceLocation folder) {
+        return Component.translatableWithFallback("hair_folder." + folder.getNamespace() + "."
+                + folder.getPath().replace('/', '.'), folder.getPath().replace('_', ' '));
+    }
+
+    /** Ícono de una carpeta por convención (puede no existir: entonces se usa el genérico). */
+    public static ResourceLocation folderIcon(ResourceLocation folder) {
+        return ResourceLocation.fromNamespaceAndPath(folder.getNamespace(),
+                "textures/gui/hair_folders/" + folder.getPath() + ".png");
+    }
+
     public Component displayName() {
         String path = id.getPath();
         String fallback = path.substring(path.lastIndexOf('/') + 1).replace('_', ' ');
@@ -70,13 +96,15 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
 
     /**
      * <pre>
-     * "representation": "geo" | "texture"          (defecto geo)
+     * "representation": "geo" | "texture" | "code" (defecto geo)
+     * "code":    "DMZF22:..."                       (obligatorio si code; textura blanca por defecto)
      * "model":   "zenkai:geo/hair/x.geo.json"       (obligatorio si geo)
      * "texture": "zenkai:textures/....png"          (obligatorio)
      * "color":   "hair" | "none" | "#RRGGBB"        (defecto hair)
      * "races", "exclude_races", "default_for", "sort"  — como los rasgos faciales
      * "form_overrides": {"zenkai:ssj1": "zenkai:otro_peinado", ...}
      * "selectable": true | false                    (defecto true)
+     * "folder": "zenkai_dmz:dragonminez"            (carpeta de la biblioteca; sin ella, en la raíz)
      * </pre>
      */
     public static HairStyleDef parse(ResourceLocation id, JsonObject o, Consumer<String> warn) {
@@ -88,7 +116,13 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
                 GsonHelper.getAsString(o, "representation", "geo").toUpperCase(Locale.ROOT));
         ResourceLocation model = o.has("model") ? ResourceLocation.parse(GsonHelper.getAsString(o, "model")) : null;
         if (rep == Representation.GEO && model == null) throw new IllegalArgumentException("geo sin \"model\"");
-        ResourceLocation texture = ResourceLocation.parse(GsonHelper.getAsString(o, "texture"));
+        String code = o.has("code") ? GsonHelper.getAsString(o, "code") : null;
+        if (rep == Representation.CODE && (code == null || code.isEmpty() || code.length() > MAX_CODE_LENGTH)) {
+            throw new IllegalArgumentException("code sin \"code\" válido");
+        }
+        // Un estilo CODE va con la textura blanca de los mechones salvo que diga otra.
+        ResourceLocation texture = ResourceLocation.parse(GsonHelper.getAsString(o, "texture",
+                rep == Representation.CODE ? "zenkai:textures/customization/hair/flat_white.png" : null));
 
         FaceLayer colorLayer = FaceLayer.Color.parse(texture, GsonHelper.getAsString(o, "color", null),
                 FaceLayer.Color.HAIR);
@@ -102,7 +136,8 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
         }
         return new HairStyleDef(id, GsonHelper.getAsInt(o, "sort", 1000), races, defaultFor, rep, model,
                 texture, colorLayer.color(), colorLayer.fixedRgb(), Map.copyOf(overrides),
-                GsonHelper.getAsBoolean(o, "selectable", true));
+                GsonHelper.getAsBoolean(o, "selectable", true),
+                o.has("folder") ? ResourceLocation.parse(GsonHelper.getAsString(o, "folder")) : null, code);
     }
 
     private static Set<Race> readRaceList(JsonObject o, String key, boolean absentMeansAll, Consumer<String> warn) {
@@ -142,6 +177,10 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
             buf.writeResourceLocation(e.getValue());
         }
         buf.writeBoolean(d.selectable);
+        buf.writeBoolean(d.folder != null);
+        if (d.folder != null) buf.writeResourceLocation(d.folder);
+        buf.writeBoolean(d.code != null);
+        if (d.code != null) buf.writeUtf(d.code, MAX_CODE_LENGTH);
     }
 
     private static HairStyleDef read(FriendlyByteBuf buf) {
@@ -159,8 +198,10 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
         Map<ResourceLocation, ResourceLocation> overrides = new LinkedHashMap<>();
         for (int i = 0; i < n; i++) overrides.put(buf.readResourceLocation(), buf.readResourceLocation());
         boolean selectable = buf.readBoolean();
+        ResourceLocation folder = buf.readBoolean() ? buf.readResourceLocation() : null;
+        String code = buf.readBoolean() ? buf.readUtf(MAX_CODE_LENGTH) : null;
         return new HairStyleDef(id, sort, races, defaultFor, rep, model, texture, color, fixed,
-                Map.copyOf(overrides), selectable);
+                Map.copyOf(overrides), selectable, folder, code);
     }
 
     private static void writeRaces(FriendlyByteBuf buf, Set<Race> set) {

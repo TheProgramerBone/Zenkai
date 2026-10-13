@@ -30,6 +30,17 @@ Depending on Zenkai from an addon and referencing these assets at runtime
 exposes) is NOT copying, and is permitted. Shipping copies of the files is not.
 
 
+1b. EXCEPTION — DRAGONMINEZ HAIRSTYLES, GPLv3
+--------------------------------------------
+
+  src/main/resources/assets/zenkai_dmz/**
+  src/main/resources/data/zenkai_dmz/**
+
+are NOT covered by this file. They contain hairstyle presets taken from DragonMineZ
+(https://github.com/DragonMineZ/dragonminez) and are licensed under the GNU General
+Public License v3.0. See LICENSE.txt and NOTICE.txt inside those folders.
+
+
 2. DATAPACK JSON — MIT
 ----------------------
 

@@ -18,9 +18,8 @@ import java.util.Objects;
  * el pelo). Lo rellena {@link HairCatalogManager} en el servidor y {@link HairCatalogSyncPacket}
  * en el cliente (mismo patrón que FormDef.replaceAll).
  *
- * "Calvo" (null) es SIEMPRE una opción válida. Los códigos procedimentales ("custom:...",
- * HairCode, aparcado por decisión del usuario) no se tocan aquí: siguen siendo válidos si el
- * sobre está bien formado y se pintan calvos hasta que exista su renderer.
+ * "Calvo" (null) es SIEMPRE una opción válida. Los peinados importados ("custom:&lt;id&gt;", de la
+ * biblioteca del jugador, CustomHairLibrary) no son del catálogo: los valida customAllowed.
  */
 public final class HairCatalog {
     private HairCatalog() {}
@@ -103,20 +102,31 @@ public final class HairCatalog {
     /**
      * Si el peinado guardado no vale para la raza (no existe, no seleccionable, otra raza), lo
      * cambia por el default_for de la raza o por calvo. Con el catálogo vacío no toca nada.
-     * Los "custom:" (HairCode) se respetan. Devuelve true si cambió algo.
+     * Un importado ("custom:&lt;id&gt;", CustomHairLibrary) se respeta si el mundo los permite, está en
+     * la biblioteca del jugador y su raza tiene pelo; si no, cae igual que un id inválido.
+     * Devuelve true si cambió algo.
      */
     public static boolean reconcile(Race race, PlayerVisualAttachment visual) {
         if (isEmpty()) return false;
         String raw = visual.getHairStyleId();
-        if (HairCode.isCustom(raw)) return false;
         ResourceLocation current = visual.getHairStyle();
-        if (isAllowed(race, current)) return false;
+        if (HairCode.isCustom(raw)) {
+            if (customAllowed(race, visual)) return false;
+        } else if (isAllowed(race, current)) {
+            return false;
+        }
         ResourceLocation fallback = null;
         for (HairStyleDef d : options(race)) {
             if (d.isDefaultFor(race)) { fallback = d.id(); break; }
         }
-        if (Objects.equals(fallback, current)) return false;
+        if (!HairCode.isCustom(raw) && Objects.equals(fallback, current)) return false;
         visual.setHairStyle(fallback);
         return true;
+    }
+
+    /** ¿Puede llevar el peinado importado que tiene puesto? */
+    public static boolean customAllowed(Race race, PlayerVisualAttachment visual) {
+        return com.hmc.zenkai.config.ServerConfig.allowCustomHair()
+                && visual.activeCustomHair() != null && !options(race).isEmpty();
     }
 }

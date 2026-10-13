@@ -52,6 +52,7 @@ public class BodyTintGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
             // La capa 0 = piel/base: ya la tiñe el pase base del renderer (canal SKIN).
             // Repintarla aquí multiplicaría el color dos veces (piel más oscura). La omitimos.
             if (layer.index() == 0) continue;
+            if (!layer.visibleFor(player, animatable)) continue;
             drawPass(layer.texture(), layer.argb(player), poseStack, bakedModel, animatable,
                     bufferSource, partialTick, packedLight, packedOverlay);
         }

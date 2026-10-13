@@ -43,7 +43,14 @@ public class PlayerFormAttachment {
     private static final int PROGRESS_SYNC_EVERY = 1;
 
     /** El kaioken no está en el datapack (son cinco números), así que su hold vive aquí. */
-    private static final int KAIOKEN_HOLD_TICKS = 30; // 1.5 s por escalón
+    public static final int KAIOKEN_HOLD_TICKS = 30; // 1.5 s por escalón
+
+    /**
+     * Hold con la forma (o el kaioken) dominada al 100 %: la mitad. Lineal con la maestría, como
+     * el drenaje (petición del usuario, 2026-10-12: "la maestría disminuye el tiempo de
+     * transformación hasta un 50 %"). Público: MasteryScreen lo muestra.
+     */
+    public static final double MASTERED_HOLD_FACTOR = 0.5;
 
     /** Radio del grito del kaioken, en bloques. */
     private static final double SHOUT_RANGE = 32.0;
@@ -69,6 +76,14 @@ public class PlayerFormAttachment {
 
     private ResourceLocation formId = FormIds.BASE;
     private KaiokenTier kaioken = KaiokenTier.OFF;
+
+    /**
+     * Forma hacia la que avanza el hold en curso (null = ninguno, o la escalera del kaioken, que no
+     * cambia el pelo). La escribe el servidor y viaja en el sync de cada tick: el cliente la usa
+     * para que el pelo pase poco a poco de la forma actual a esta (HairTransition). No se deduce
+     * en el cliente con targetForm() porque para OTROS jugadores no tiene sus skills ni su rueda.
+     */
+    private ResourceLocation holdTargetForm = null;
 
     /** Forma OBJETIVO elegida en la rueda: ATAJO de un solo uso, no un techo. null = sin
      *  límite, la tecla sube un escalón por vez como antes. Ponlo a FormIds.BASE si quieres
@@ -106,6 +121,7 @@ public class PlayerFormAttachment {
     public int getCooldownTicks()         { return cooldownTicks; }
     public ResourceLocation getFormId()   { return formId; }
     public ResourceLocation getSelectedForm() { return selectedForm; }
+    public ResourceLocation getHoldTargetForm() { return transforming ? holdTargetForm : null; }
     public boolean isKaiokenSwitch()      { return kaiokenSwitch; }
     public boolean isOozaruForced()       { return oozaruForced; }
 
@@ -185,10 +201,15 @@ public class PlayerFormAttachment {
     }
 
     /** Ki drenado por tick por la forma activa, ya interpolado por maestría y con el
-     *  multiplicador de SPI aplicado (ver FormDef.drainMultiplier). */
-    public double formKiDrainPerTick(int spi) {
+     *  multiplicador de SPI aplicado (ver FormDef.drainMultiplier).
+     *  {@code powerFraction} = % de poder liberado (Ki Control) / 100, recortado a [0, 1]: si
+     *  el jugador suprime su poder, la forma multiplica menos stats y cuesta proporcionalmente
+     *  menos ki, igual que el Kaioken (KaiokenSystem.releaseFactor; petición del usuario,
+     *  2026-10-12). Forzar por encima del 100 % no lo sube: eso ya cobra su propio ki. */
+    public double formKiDrainPerTick(int spi, double powerFraction) {
         FormDef d = activeDef();
-        return d == null ? 0.0 : d.effectiveKiDrainPerTick(activeMastery(), spi);
+        return d == null ? 0.0 : d.effectiveKiDrainPerTick(activeMastery(), spi)
+                * Math.max(0.0, Math.min(1.0, powerFraction));
     }
 
     // ── Máquina de estados del hold ──────────────────────────────────────────
@@ -249,10 +270,11 @@ public class PlayerFormAttachment {
      *  transformación, sin código de cliente nuevo — ver currentHoldTarget(). */
     private boolean tickOozaruLadder(Player p) {
         FormDef def = FormRegistry.get(FormIds.OOZARU);
-        int required = (def == null) ? 0 : def.holdTicks();
+        int required = holdTicksFor(def);
         if (required <= 0) return clearProgress(false);
 
         boolean was = transforming;
+        holdTargetForm = FormIds.OOZARU;
         if (advanceHold(required)) return progressDirty(was);
 
         setFormId(p, FormIds.OOZARU);
@@ -270,10 +292,12 @@ public class PlayerFormAttachment {
         if (target == null) return clearProgress(false);
 
         FormDef targetDef = FormRegistry.get(target);
-        int required = (targetDef == null) ? 0 : targetDef.holdTicks();
+        int required = holdTicksFor(targetDef);
         if (required <= 0) return clearProgress(false);
 
         boolean was = transforming;
+        if (!target.equals(holdTargetForm)) was = false; // otro destino: sync ya
+        holdTargetForm = target;
         if (advanceHold(required)) return progressDirty(was); // aún cargando
 
         // Último tramo del ritual de Oozaru: llegar aquí ES lo que desbloquea SSJ4 para
@@ -301,7 +325,8 @@ public class PlayerFormAttachment {
         if (next == null) return clearProgress(false); // ya en el tope que permite su nivel
 
         boolean was = transforming;
-        if (advanceHold(KAIOKEN_HOLD_TICKS)) return progressDirty(was);
+        holdTargetForm = null;
+        if (advanceHold(kaiokenHoldTicks())) return progressDirty(was);
 
         setKaioken(next);
         // El grito va AQUÍ, no antes: solo cuando el escalón se aplica de verdad. Anunciarlo
@@ -309,6 +334,27 @@ public class PlayerFormAttachment {
         announceKaioken(p, next);
         finishHold();
         return true;
+    }
+
+    /** Multiplicador del hold para una maestría 0..100: 1.0 -> MASTERED_HOLD_FACTOR. */
+    public static double holdFactor(float mastery) {
+        return 1.0 - (1.0 - MASTERED_HOLD_FACTOR) * (Math.max(0f, Math.min(100f, mastery)) / 100.0);
+    }
+
+    /**
+     * Ticks de hold que le pide ESTA forma a ESTE jugador, recortados por su maestría en ella.
+     * Punto único: servidor (escaleras), HUD (TransformGaugeOverlay, ModernStatsHud) y pelo
+     * (HairTransition) lo leen de aquí; si uno usara def.holdTicks() a pelo, la barra y el
+     * pelo irían a otro ritmo que la transformación real. 0 = la forma no se carga con hold.
+     */
+    public int holdTicksFor(@org.jetbrains.annotations.Nullable FormDef def) {
+        if (def == null || def.holdTicks() <= 0) return 0;
+        return Math.max(1, (int) Math.round(def.holdTicks() * holdFactor(getFormMastery(def.id()))));
+    }
+
+    /** Hold de un escalón de kaioken, recortado por la maestría de kaioken. */
+    public int kaiokenHoldTicks() {
+        return Math.max(1, (int) Math.round(KAIOKEN_HOLD_TICKS * holdFactor(getKaiokenMastery())));
     }
 
     /**
@@ -332,12 +378,14 @@ public class PlayerFormAttachment {
     private void finishHold() {
         transforming = false;
         holdTicks = 0;
+        holdTargetForm = null;
         transformHeld = false;
         cooldownTicks = 10;
     }
 
     /** Corta el proceso de hold. Devuelve true si había algo que cortar (hay que sincronizar). */
     private boolean clearProgress(boolean dirty) {
+        holdTargetForm = null;
         if (transforming || holdTicks != 0) {
             transforming = false;
             holdTicks = 0;
@@ -459,13 +507,13 @@ public class PlayerFormAttachment {
         if (!transforming) return new HoldTarget(0, -1);
         if (oozaruForced && FormIds.BASE.equals(formId)) {
             FormDef d = FormRegistry.get(FormIds.OOZARU);
-            return d == null ? new HoldTarget(0, -1) : new HoldTarget(d.holdTicks(), d.auraRgb());
+            return d == null ? new HoldTarget(0, -1) : new HoldTarget(holdTicksFor(d), d.auraRgb());
         }
-        if (kaiokenSwitch) return new HoldTarget(KAIOKEN_HOLD_TICKS, AuraColors.KAIOKEN_RGB);
+        if (kaiokenSwitch) return new HoldTarget(kaiokenHoldTicks(), AuraColors.KAIOKEN_RGB);
 
         ResourceLocation target = targetForm(p, race);
         FormDef d = target == null ? null : FormRegistry.get(target);
-        return d == null ? new HoldTarget(0, -1) : new HoldTarget(d.holdTicks(), d.auraRgb());
+        return d == null ? new HoldTarget(0, -1) : new HoldTarget(holdTicksFor(d), d.auraRgb());
     }
 
     // ── Anuncios ─────────────────────────────────────────────────────────────
@@ -615,6 +663,7 @@ public class PlayerFormAttachment {
         tag.putLong("strainUntil", strainUntil);
         tag.putDouble("puCeiling", puCeiling);
         if (selectedForm != null) tag.putString("selectedForm", selectedForm.toString());
+        if (holdTargetForm != null) tag.putString("holdTargetForm", holdTargetForm.toString());
 
         CompoundTag fm = new CompoundTag();
         for (Map.Entry<String, Float> e : formMastery.entrySet()) fm.putFloat(e.getKey(), e.getValue());
@@ -640,6 +689,8 @@ public class PlayerFormAttachment {
         this.oozaruForced = tag.getBoolean("oozaruForced");
         this.selectedForm = tag.contains("selectedForm")
                 ? ResourceLocation.tryParse(tag.getString("selectedForm")) : null;
+        this.holdTargetForm = tag.contains("holdTargetForm")
+                ? ResourceLocation.tryParse(tag.getString("holdTargetForm")) : null;
         this.strainUntil = tag.getLong("strainUntil");
         this.puCeiling = tag.getDouble("puCeiling");
         formMastery.clear();

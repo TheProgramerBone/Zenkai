@@ -118,6 +118,15 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         int eyeOverride = (SkillEffects.level(player, SkillEffects.ULTRA_INSTINCT) > 0
                 && SkillToggles.isOn(player, SkillEffects.ULTRA_INSTINCT)) ? 0xFFFFFF : -1;
 
+        // Cambio de forma en curso (hold o transición automática): ojos y cejas pasan del color de
+        // la forma de origen al de la de destino al mismo ritmo que el pelo (HairTransition), en vez
+        // de saltar de golpe al completarse (petición del usuario, 2026-10-12). current() y no
+        // peek(): las razas sin pelo 3D (Namek, Arcosiano) son justo las que tiñen los ojos, y
+        // peek() solo sabe del cambio si el pelo 3D se ha pintado hace nada.
+        var blend = com.hmc.zenkai.client.hair.HairTransition.current(player, partialTick);
+        FormDef blendFrom = blend.blending() ? FormDef.get(blend.from()) : null;
+        FormDef blendTo = blend.blending() ? FormDef.get(blend.to()) : null;
+
         for (FaceCategory category : FaceCategory.values()) {
             FacePartDef part = FaceCatalog.get(vis.getFacePart(category));
             if (part == null) continue;
@@ -127,7 +136,12 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
                 if (!RaceFaceTraits.shows(race, category, layer)) continue;
                 ResourceLocation tex = textureFor(layer, region);
                 if (tex == null) continue;
-                int rgb = layer.resolveRgb(vis, formDef, eyeOverride, category == FaceCategory.EYES);
+                boolean eyes = category == FaceCategory.EYES;
+                int rgb = blend.blending() && layer.color() != FaceLayer.Color.SKIN
+                        ? com.hmc.zenkai.feature.race.hair.strand.HairRampColors.mix(
+                                layer.resolveRgb(vis, blendFrom, eyeOverride, eyes),
+                                layer.resolveRgb(vis, blendTo, eyeOverride, eyes), blend.t())
+                        : layer.resolveRgb(vis, formDef, eyeOverride, eyes);
                 // Boca/nariz ("skin") más oscuras donde la raza lo pide (verde Namek).
                 if (layer.color() == FaceLayer.Color.SKIN) {
                     rgb = RaceFaceTraits.shadeSkin(race, FaceRemapTextures.skinFeatureRgb(animatable, player, rgb));

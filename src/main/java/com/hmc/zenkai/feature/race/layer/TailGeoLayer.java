@@ -71,13 +71,16 @@ public class TailGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         inv.armor.set(0, ItemStack.EMPTY);
 
         // Cola en la cintura: misma cola, otra pose (TailWaistPose); solo durante ESTE render.
-        TailWaistPose.active = "waist".equals(
+        // Con peso entre 0 y 1 la cola se está enrollando o desenrollando (cambio de estilo animado).
+        // Agachado: suelta mientras dure (en la cintura se metía en las piernas; decisión del usuario).
+        boolean waist = "waist".equals(
                 com.hmc.zenkai.feature.player.PlayerVisualAttachment.get(player).getTailStyleId());
+        TailWaistPose.weight = TailWaistPose.weightFor(player, waist && !player.isCrouching(), partialTick);
         try {
             armorLayer.render(poseStack, buffer, packedLight, player,
                     limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
         } finally {
-            TailWaistPose.active = false;
+            TailWaistPose.weight = 0f;
         }
 
         // Restore

@@ -28,9 +28,19 @@ public record SyncPlayerVisualPacket(int entityId, CompoundTag data) implements 
                     SyncPlayerVisualPacket::new
             );
 
-    public static SyncPlayerVisualPacket from(Player target) {
+    /** Para el PROPIO jugador: incluye su biblioteca de peinados importados entera. */
+    public static SyncPlayerVisualPacket forSelf(Player target) {
         PlayerVisualAttachment att = target.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
-        return new SyncPlayerVisualPacket(target.getId(), att.save());
+        return new SyncPlayerVisualPacket(target.getId(), att.saveFull());
+    }
+
+    /**
+     * Para quien lo VE: de la biblioteca solo viaja el peinado puesto (el resto es asunto suyo y
+     * pesaría hasta 64 KB por jugador). Con eso cada cliente construye el peinado sin archivos.
+     */
+    public static SyncPlayerVisualPacket forTracker(Player target) {
+        PlayerVisualAttachment att = target.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        return new SyncPlayerVisualPacket(target.getId(), att.saveForTracker());
     }
 
     @Override

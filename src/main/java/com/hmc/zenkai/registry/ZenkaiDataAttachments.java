@@ -35,7 +35,7 @@ public class ZenkaiDataAttachments {
                 att.load(tag);
                 return att;
             },
-            PlayerVisualAttachment::save // de objeto a NBT
+            PlayerVisualAttachment::saveFull // de objeto a NBT (con la biblioteca de peinados)
     );
 
     public static final Codec<PlayerFormAttachment> PLAYER_FORM_CODEC =

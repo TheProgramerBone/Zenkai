@@ -121,8 +121,9 @@ public final class FormSystem {
                 // El drenaje viene interpolado por maestría desde el datapack
                 // (ki_drain_untrained -> ki_drain_mastered) y multiplicado por SPI frente al
                 // spi_req de la forma (FormDef.drainMultiplier): sin invertir en SPI, incluso
-                // una forma ya dominada puede seguir costando caro de sostener.
-                double drain = form.formKiDrainPerTick(att.getAttribute(ZenkaiAttributes.SPIRIT));
+                // una forma ya dominada puede seguir costando caro de sostener. Y escalado por el
+                // % de poder liberado (hasta 1), como el Kaioken.
+                double drain = form.formKiDrainPerTick(att.getAttribute(ZenkaiAttributes.SPIRIT), att.powerFraction());
                 if (drain > 0.0) {
                     int before = att.getKiCurrent();
                     att.addKi(-drain);

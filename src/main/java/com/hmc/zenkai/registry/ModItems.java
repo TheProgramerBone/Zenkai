@@ -37,6 +37,10 @@ public class ModItems {
             props -> new BlockItem(ModBlocks.ALL_DRAGON_BALLS.get(), props),
             new Item.Properties().stacksTo(1));
 
+    /** Tijeras: abren solo la pestaña Pelo de la apariencia (ScissorsItem). */
+    public static final DeferredItem<Item> SCISSORS = ITEMS.registerItem("scissors",
+            com.hmc.zenkai.content.item.ScissorsItem::new, new Item.Properties().stacksTo(1));
+
     public static final DeferredItem<Item> BASIC_CIRCUIT = ITEMS.registerItem("basic_circuit",
             Item::new, new Item.Properties());
 
@@ -328,7 +332,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human/human_player.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE =
             ITEMS.register("human_race_chestplate", () ->
@@ -337,7 +341,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human/human_player.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS =
             ITEMS.register("human_race_leggings", () ->
@@ -346,7 +350,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human/human_player.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS =
             ITEMS.register("human_race_boots", () ->
@@ -355,7 +359,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human/human_player.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET_COLORABLE =
             ITEMS.register("human_race_helmet_colorable", () ->
@@ -364,7 +368,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human/human_player_colorable.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_COLORABLE =
             ITEMS.register("human_race_chestplate_colorable", () ->
@@ -373,7 +377,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human/human_player_colorable.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_COLORABLE =
             ITEMS.register("human_race_leggings_colorable", () ->
@@ -382,7 +386,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human/human_player_colorable.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_COLORABLE =
             ITEMS.register("human_race_boots_colorable", () ->
@@ -391,7 +395,7 @@ public class ModItems {
                             "geo/races/human_player.geo.json",
                             "textures/models/races/human/human_player_colorable.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     // ── Human/Saiyan FEMENINO (modelo + textura femeninos) ─────────────────────
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET_FEMALE =
@@ -401,7 +405,7 @@ public class ModItems {
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human/human_player_female.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_FEMALE =
             ITEMS.register("human_race_chestplate_female", () ->
@@ -410,7 +414,7 @@ public class ModItems {
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human/human_player_female.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_FEMALE =
             ITEMS.register("human_race_leggings_female", () ->
@@ -419,7 +423,7 @@ public class ModItems {
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human/human_player_female.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_FEMALE =
             ITEMS.register("human_race_boots_female", () ->
@@ -428,7 +432,7 @@ public class ModItems {
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human/human_player_female.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_HELMET_COLORABLE_FEMALE =
             ITEMS.register("human_race_helmet_colorable_female", () ->
@@ -437,7 +441,7 @@ public class ModItems {
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human/human_player_female_colorable.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_CHESTPLATE_COLORABLE_FEMALE =
             ITEMS.register("human_race_chestplate_colorable_female", () ->
@@ -446,7 +450,7 @@ public class ModItems {
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human/human_player_female_colorable.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_LEGGINGS_COLORABLE_FEMALE =
             ITEMS.register("human_race_leggings_colorable_female", () ->
@@ -455,7 +459,7 @@ public class ModItems {
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human/human_player_female_colorable.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> HUMAN_RACE_BOOTS_COLORABLE_FEMALE =
             ITEMS.register("human_race_boots_colorable_female", () ->
@@ -464,7 +468,7 @@ public class ModItems {
                             "geo/races/human_player_female.geo.json",
                             "textures/models/races/human/human_player_female_colorable.png",
                             ""
-                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays());
+                    ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
     public static final Supplier<GeoLayerArmorItem> ARCOSIAN_RACE_HELMET =
             ITEMS.register("arcosian_race_helmet", () ->

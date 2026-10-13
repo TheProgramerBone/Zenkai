@@ -406,6 +406,16 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.race.hair.HairCatalogSyncPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.race.hair.HairCatalogSyncPacket::handle);
 
+        // Biblioteca de peinados importados (pestaña Pelo): añadir/quitar y la lista de vuelta.
+        registrar.playToServer(
+                com.hmc.zenkai.feature.race.hair.CustomHairLibraryPacket.TYPE,
+                com.hmc.zenkai.feature.race.hair.CustomHairLibraryPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.race.hair.CustomHairLibraryPacket::handle);
+        registrar.playToClient(
+                com.hmc.zenkai.feature.race.hair.CustomHairLibrarySyncPacket.TYPE,
+                com.hmc.zenkai.feature.race.hair.CustomHairLibrarySyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.race.hair.CustomHairLibrarySyncPacket::handle);
+
         registrar.playToClient(
                 OverlayStateSyncPacket.TYPE,
                 OverlayStateSyncPacket.STREAM_CODEC,

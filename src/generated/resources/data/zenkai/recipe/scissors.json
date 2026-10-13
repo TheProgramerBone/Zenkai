@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "N": {
+      "item": "minecraft:iron_nugget"
+    }
+  },
+  "pattern": [
+    "I N",
+    " I ",
+    "N I"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zenkai:scissors"
+  }
+}

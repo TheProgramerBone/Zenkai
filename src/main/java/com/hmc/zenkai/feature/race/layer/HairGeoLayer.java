@@ -46,7 +46,9 @@ public class HairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         ItemStack head = player.getInventory().getArmor(3);
         if (!head.isEmpty() && !head.is(ModTags.Items.KEEPS_HAIR)) return;
 
-        ItemStack hair = HairResolver.resolveHairHead(player);
+        // En pleno cambio de forma, el peinado intermedio (HairTransition).
+        ItemStack hair = HairResolver.resolveHairHead(player,
+                com.hmc.zenkai.client.hair.HairTransition.current(player, partialTick));
         if (hair.isEmpty()) return;
 
         var inv = player.getInventory();
@@ -63,8 +65,14 @@ public class HairGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         inv.armor.set(1, ItemStack.EMPTY);
         inv.armor.set(0, ItemStack.EMPTY);
 
-        armorLayer.render(poseStack, buffer, packedLight, player,
-                limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
+        com.hmc.zenkai.client.hair.HairMotion.current = player;
+        com.hmc.zenkai.client.hair.HairMotion.partialTick = partialTick;
+        try {
+            armorLayer.render(poseStack, buffer, packedLight, player,
+                    limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
+        } finally {
+            com.hmc.zenkai.client.hair.HairMotion.current = null;
+        }
 
         // Restore
         inv.armor.set(3, oldHead);

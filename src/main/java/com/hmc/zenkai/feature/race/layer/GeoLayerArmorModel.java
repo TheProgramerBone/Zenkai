@@ -21,9 +21,14 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
     @Override
     public void setCustomAnimations(GeoLayerArmorItem animatable, long instanceId, AnimationState<GeoLayerArmorItem> animationState) {
         super.setCustomAnimations(animatable, instanceId, animationState);
-        // Cola en la cintura: pose por render, no por controlador (ver TailWaistPose).
-        if (TailWaistPose.active && animatable == com.hmc.zenkai.registry.ModItems.TAIL_LOOSE.get()) {
+        // Cola en la cintura: pose por render, no por controlador (ver TailWaistPose). Se llama
+        // también con peso 0: así devuelve tail_base a su sitio tras agacharse en la cintura.
+        if (animatable == com.hmc.zenkai.registry.ModItems.TAIL_LOOSE.get()) {
             TailWaistPose.apply(this, animationState.getAnimationTick());
+        }
+        // Pelo por mechones: balanceo, inercia y aleteo al cargar ki (HairMotion).
+        if (animatable == com.hmc.zenkai.registry.ModItems.HAIR.get()) {
+            com.hmc.zenkai.client.hair.HairMotion.apply(this);
         }
         String[] bones = animatable.getHideOnHelmetBones();
         if (bones.length == 0) return;
@@ -33,6 +38,18 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
                 b.setChildrenHidden(wearerHasRealHeadwear);
             });
         }
+    }
+
+    /**
+     * Peinados importados (biblioteca del jugador): su modelo no existe como archivo, se construye
+     * al vuelo la primera vez que se pide (CustomHairModels) y se sirve como cualquier otro.
+     */
+    @Override
+    public software.bernie.geckolib.cache.object.BakedGeoModel getBakedModel(ResourceLocation location) {
+        if (com.hmc.zenkai.feature.race.hair.strand.CustomHairCodes.MODEL_NAMESPACE.equals(location.getNamespace())) {
+            com.hmc.zenkai.client.hair.CustomHairModels.ensure(location);
+        }
+        return super.getBakedModel(location);
     }
 
     @Override

@@ -154,6 +154,7 @@ Zenkai uses a split licence. **The code and the art are not under the same terms
 | Source code (`src/main/java`) | Mozilla Public License 2.0 | `LICENSE.txt` |
 | Assets — textures, models, `.geo.json`, animations, sounds, structures | All Rights Reserved | `LICENSE_ASSETS.txt` |
 | Datapack JSON (`src/main/resources/data`) | MIT | `LICENSE_ASSETS.txt` |
+| DragonMineZ hairstyles (`assets/zenkai_dmz`, `data/zenkai_dmz`) | GNU GPL v3.0 | `LICENSE.txt` + `NOTICE.txt` in those folders |
 
 In plain terms:
 
@@ -357,6 +358,7 @@ Zenkai usa una licencia dividida. **El código y el arte no tienen los mismos t�
 | Código fuente (`src/main/java`) | Mozilla Public License 2.0 | `LICENSE.txt` |
 | Assets — texturas, modelos, `.geo.json`, animaciones, sonidos, estructuras | Todos los derechos reservados | `LICENSE_ASSETS.txt` |
 | JSON de datapack (`src/main/resources/data`) | MIT | `LICENSE_ASSETS.txt` |
+| Peinados de DragonMineZ (`assets/zenkai_dmz`, `data/zenkai_dmz`) | GNU GPL v3.0 | `LICENSE.txt` + `NOTICE.txt` en esas carpetas |
 
 En lenguaje llano:
 

@@ -15,7 +15,7 @@ import net.minecraft.world.entity.player.Player;
  * Kaioken: quema VIDA mientras esté activo. Es lo que impide que sea gratis, y por eso
  * drena body y no ki. Se apaga solo al caer al mínimo o al perder la habilidad.
  * MODELO DE DRENAJE (v3): coste ABSOLUTO sacado de STR/WIL, con dos reductores encima.
- *     drain/s = pct/100 · powerStat · KAIOKEN_DRAIN_SCALE · skillFactor · masteryFactor
+ *     drain/s = pct/100 · powerStat · KAIOKEN_DRAIN_SCALE · skillFactor · masteryFactor · releaseFactor
  * Por qué no es un % del pool: antes era bodyMax · pct/100, así que el drenaje escalaba
  * con el MISMO atributo que el pool (CON) y ambos se cancelaban -> subir constitución no
  * daba ni un segundo extra (medido: 5 s en x20 con CON 100 y con CON 10.000).
@@ -27,10 +27,15 @@ import net.minecraft.world.entity.player.Player;
  *     Se compra con TP: es la vía "teórica".
  *   - masteryFactor: maestría del ESCALÓN concreto, 1.0 -> MASTERED_DRAIN_FACTOR.
  *     Solo sube usándolo: es la vía "práctica". Ver MasteryTicker.
+ * releaseFactor (2026-10-12): el % de poder liberado (Ki Control), hasta 1. Si el jugador
+ * suprime su poder, el kaioken multiplica menos stats y quema proporcionalmente menos vida;
+ * antes quemaba lo mismo al 10 % que al 100 % (bug reportado). Por encima de 100 % (forzar)
+ * no se cobra más aquí: forzar ya tiene su coste de ki propio (OverdriveSystem).
  * KAIOKEN_DRAIN_SCALE está calibrado para que, al dominar un escalón, el coste aterrice
  * donde estaba antes de existir la maestría (2.5 · 0.5 = 1.25), y sin maestría cueste el doble.
  * Los escalones bajos quedan sostenibles con buen CON: los compensa la regen de body, que
- * comparte acumulador con este drenaje (ver PlayerTickState#carry). No son gratis porque la regen cobra exhaustion (comida).
+ * comparte acumulador con este drenaje (ver PlayerTickState#carry). No son gratis porque la regen cobra exhaustion (comida),
+ * aunque solo por la curación NETA (RegenSystem.kaiokenNetFraction): la vida que el kaioken se lleva no se paga.
  */
 
 public final class KaiokenSystem {
@@ -107,7 +112,12 @@ public final class KaiokenSystem {
         if (!tier.isOn()) return 0.0;
         return tier.drainPctPerSecond() / 100.0
                 * powerStat(att) * KAIOKEN_DRAIN_SCALE / 20.0
-                * skillFactor * masteryFactor(form) * formFactor(form);
+                * skillFactor * masteryFactor(form) * formFactor(form) * releaseFactor(att);
+    }
+
+    /** Fracción del poder liberado (Ki Control), recortada a [0, 1]. Ver releaseFactor arriba. */
+    private static double releaseFactor(PlayerStatsAttachment att) {
+        return Math.max(0.0, Math.min(1.0, att.powerFraction()));
     }
 
     /** 1.0 sin maestría -> MASTERED_DRAIN_FACTOR al 100 %. Lineal: el progreso se nota desde el principio. */
@@ -148,8 +158,8 @@ public final class KaiokenSystem {
      * hablan el mismo idioma).
      * OJO: NO usar att.computeMeleeFinal()/computeKiPowerFinal(): esos ya llevan dentro
      * powerFraction() y statMultiplier, y statMultiplier INCLUYE el % del propio kaioken
-     * -> el drenaje se retroalimentaría (x20 multiplicaría su propio coste por ~20) y
-     * bajar el % de poder abarataría el kaioken.
+     * -> el drenaje se retroalimentaría (x20 multiplicaría su propio coste por ~20).
+     * El % de poder SÍ abarata el kaioken, pero aparte y acotado a 1 (releaseFactor).
      */
     private static double powerStat(PlayerStatsAttachment att) {
         double str = BalanceUtil.computeStat(att.getAttribute(ZenkaiAttributes.STRENGTH),

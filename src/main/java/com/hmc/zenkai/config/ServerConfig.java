@@ -1066,6 +1066,10 @@ public class ServerConfig {
             BUILDER.comment("God Ki levels an Arcosian can learn. The race has no divine forms, so these levels unlock no transformation yet: they are the gate for the divine-ki mechanics planned for the race. Each level costs the same TP as the same level of the Saiyan divine chain. 0 hides God Ki from Arcosians entirely.")
                     .defineInRange("arcosian.god_ki_levels", 1, 0, 10);
 
+    private static final ModConfigSpec.BooleanValue ALLOW_CUSTOM_HAIR_RAW =
+            BUILDER.comment("Players can import hair codes (DragonMineZ codes and Dragon Block C / HairSalon strings) in the Hair tab of the appearance screen, keep them in a personal library and wear them; everyone sees them, no files needed. When false the import UI is hidden, the server rejects new imports and anyone wearing an imported hair falls back to the default style.")
+                    .define("customization.allow_custom_hair", true);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     // ── API de toggles ──────────────────────────────────────────────────────────
@@ -1197,6 +1201,7 @@ public class ServerConfig {
 
     private static volatile double FORM_MASTERY_PER_MINUTE = 0.5D;
     private static volatile boolean SSJ_BLUE_ROSE_SHARE_MASTERY = true;
+    private static volatile boolean ALLOW_CUSTOM_HAIR = true;
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
     private static volatile double M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
     private static volatile double KI_COST_PER_POWER = 0.70D;
@@ -1387,6 +1392,7 @@ public class ServerConfig {
 
         FORM_MASTERY_PER_MINUTE = FORM_MASTERY_PER_MINUTE_RAW.get();
         SSJ_BLUE_ROSE_SHARE_MASTERY = SSJ_BLUE_ROSE_SHARE_MASTERY_RAW.get();
+        ALLOW_CUSTOM_HAIR = ALLOW_CUSTOM_HAIR_RAW.get();
         TECH_MASTERY_PER_USE    = TECH_MASTERY_PER_USE_RAW.get();
         M_TECH_DMG       = MASTERY_TECH_DMG_RAW.get();
         M_TECH_COST      = MASTERY_TECH_COST_RAW.get();
@@ -1664,6 +1670,8 @@ public class ServerConfig {
 
     public static double formMasteryPerMinute()      { return FORM_MASTERY_PER_MINUTE; }
     public static boolean ssjBlueRoseShareMastery()  { return SSJ_BLUE_ROSE_SHARE_MASTERY; }
+    /** Peinados importados (códigos DMZ/DBC) permitidos en este mundo. */
+    public static boolean allowCustomHair()          { return ALLOW_CUSTOM_HAIR; }
     public static double techMasteryPerUse()         { return TECH_MASTERY_PER_USE; }
     public static double masteryTechDamageBonus()    { return M_TECH_DMG; }
     public static double masteryTechCostReduction()  { return M_TECH_COST; }

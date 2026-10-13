@@ -50,7 +50,8 @@ public class CreditsScreen extends ZenkaiMenuScreen {
         MODELS("screen.zenkai.credits.category.models"),
         UI("screen.zenkai.credits.category.ui"),
         ICONS("screen.zenkai.credits.category.icons"),
-        ANIMATIONS("screen.zenkai.credits.category.animations");
+        ANIMATIONS("screen.zenkai.credits.category.animations"),
+        COMPAT("screen.zenkai.credits.category.compat");
 
         private final String key;
         Category(String key) { this.key = key; }
@@ -134,6 +135,7 @@ public class CreditsScreen extends ZenkaiMenuScreen {
             case UI -> addFrom(ZenkaiUiCredits.Category.UI);
             case ICONS -> addFrom(ZenkaiUiCredits.Category.ICONS);
             case ANIMATIONS -> addFrom(ZenkaiUiCredits.Category.ANIMATIONS);
+            case COMPAT -> addFrom(ZenkaiUiCredits.Category.COMPAT);
         }
     }
 

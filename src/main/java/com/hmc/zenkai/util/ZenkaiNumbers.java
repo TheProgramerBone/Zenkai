@@ -38,6 +38,18 @@ public final class ZenkaiNumbers {
         return s + UNITS[u];
     }
 
+    /** Compacto para un número con decimales (un ritmo por segundo): 1 decimal por debajo de
+     *  1000 ("12.5"), sufijo a partir de ahí ("3.4K"). */
+    public static String format(double v) {
+        if (Math.abs(v) < 1000.0) return String.format(Locale.ROOT, "%.1f", v);
+        return format(Math.round(v));
+    }
+
+    /** Exacto con decimales y separadores de miles (p. ej. 12,345.67), para el tooltip. */
+    public static String exact(double v) {
+        return String.format(Locale.ROOT, "%,.2f", v);
+    }
+
     /** Exacto con separadores de miles (p. ej. 12,000,000). */
     public static String exact(long v) {
         return String.format(Locale.ROOT, "%,d", v);

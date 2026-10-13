@@ -32,6 +32,9 @@ public class FacePartTile extends AbstractWidget {
     @Nullable private final ResourceLocation id;
     private final BooleanSupplier selected;
     private final Runnable onClick;
+    /** Clic derecho: favorito (Favorites). null = la casilla no admite favorito ("ninguno"). */
+    @Nullable private Runnable onRightClick;
+    private BooleanSupplier favorite = () -> false;
 
     public FacePartTile(int x, int y, FaceCategory category, @Nullable ResourceLocation id,
                         Component name, BooleanSupplier selected, Runnable onClick) {
@@ -51,6 +54,24 @@ public class FacePartTile extends AbstractWidget {
         g.fill(x, y, x + SIZE, y + SIZE, frame);
         var player = Minecraft.getInstance().player;
         if (player != null) FaceThumbnails.draw(g, player, category, id, x + 1, y + 1, SCALE);
+        if (favorite.getAsBoolean()) com.hmc.zenkai.client.gui.LibraryIcons.favoriteBadge(g, x, y, SIZE);
+    }
+
+    /** Activa el favorito con clic derecho: {@code isFavorite} pinta la estrella, {@code toggle} la cambia. */
+    public FacePartTile favorite(BooleanSupplier isFavorite, Runnable toggle) {
+        this.favorite = isFavorite;
+        this.onRightClick = toggle;
+        return this;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 1 && onRightClick != null && this.active && this.visible && isMouseOver(mouseX, mouseY)) {
+            playDownSound(net.minecraft.client.Minecraft.getInstance().getSoundManager());
+            onRightClick.run();
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override

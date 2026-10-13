@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-06T23:14:43.8280232	Recipes
+// 1.21.1	2026-10-12T19:39:15.041272	Recipes
 2c28b7630937de9cb1eb9e8be7946e92624dc599 data/minecraft/advancement/recipes/misc/gunpowder.json
 e4f948f390365f84ebbb5f48ea8492234d9d147b data/minecraft/recipe/gunpowder.json
 35fcf343d1718408855c2a7524fbde94ce69ec14 data/zenkai/advancement/recipes/building_blocks/ajisa_planks.json
@@ -431,6 +431,7 @@ b1c4e1ec8e36f1799fb3532590ab1bf683829dba data/zenkai/advancement/recipes/misc/sa
 0a60632b2819fd733349bc5f3a6b328178cc8e40 data/zenkai/advancement/recipes/redstone/ajisa_fence_gate.json
 0927c6e7128ad387610c7eae165eac14568824c7 data/zenkai/advancement/recipes/redstone/ajisa_pressure_plate.json
 530a1703cf38ec2c8d4d8b17fa96678a4e3c0d41 data/zenkai/advancement/recipes/redstone/ajisa_trapdoor.json
+76ad5c7e8118779b51cce5f6d87c4465f54d43e9 data/zenkai/advancement/recipes/tools/scissors.json
 c14be46a54bba544e5325b52adccd8933cab9871 data/zenkai/advancement/recipes/tools/scouter.json
 0aa6dbc707deacf7a81acb603344816c29486db7 data/zenkai/recipe/advanced_circuit.json
 cf49a8c02f647711f31a9afdd22b4ec9dfbe8cfb data/zenkai/recipe/ajisa_button.json
@@ -729,6 +730,7 @@ d6e270c613bee3d1c3c4b5e5aa1c0a4cd6d51b90 data/zenkai/recipe/sacred_stone_stairs.
 8827108d762b696d10f4f59043c8c80ef69b7e13 data/zenkai/recipe/sacred_stone_stairs_from_sacred_stone_block_stonecutting.json
 3e16f935df1858d1d6dcb5e740a9b30b9ec31352 data/zenkai/recipe/sacred_stone_wall.json
 609c961230196caa4c84d806751d4a7eb592cdaf data/zenkai/recipe/sacred_stone_wall_from_sacred_stone_block_stonecutting.json
+7951dbc0c5d1f9b4faac8aafe50c56fa8e85b7f8 data/zenkai/recipe/scissors.json
 8069093361572736e67e4654185c6f38c477e9f5 data/zenkai/recipe/scouter.json
 807546b8ed05bbf59128fc04b0f503fac5255779 data/zenkai/recipe/scouter_bench.json
 e64f4d05c79c82b1fda37ac7664bdb4a18f3d0fd data/zenkai/recipe/scouter_radar_upgrade.json

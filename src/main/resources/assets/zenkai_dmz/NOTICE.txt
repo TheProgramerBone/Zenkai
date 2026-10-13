@@ -1,0 +1,35 @@
+Zenkai — DragonMineZ hairstyles (namespace "zenkai_dmz")
+========================================================
+
+Everything under these two folders of the Zenkai mod:
+
+  assets/zenkai_dmz/**
+  data/zenkai_dmz/**
+
+is licensed under the GNU General Public License v3.0 (LICENSE.txt in this folder),
+NOT under Zenkai's own licences (MPL-2.0 for code, All Rights Reserved for assets).
+
+Origin
+------
+The hairstyle presets come from DragonMineZ
+  https://github.com/DragonMineZ/dragonminez  (branch v2.2,
+  src/main/java/com/dragonminez/common/hair/HairPresets.java)
+Copyright (C) the DragonMineZ authors: Yuseix, ezShokkoh and Bruno (founders),
+with contributors Bati2ra, KyoSleep, JotaJoestar, Toji71_, ZoneMC and Darkeryr.
+Individual presets credited by DragonMineZ to:
+  - "Travis": __Travis__ (DragonMineZ Patreon)
+  - "Android 21": Chillir
+  - "Gojo": Re:Wheezer (DragonMineZ Patreon)
+The folder icon (textures/gui/hair_folders/dragonminez.png) is DragonMineZ's mod icon.
+
+Changes made by Zenkai
+----------------------
+- The 28 presets were copied as hair codes (unchanged) into source/presets.json, which
+  is the preferred form for modifying them. Preset 5 (Krillin, bald) was left out.
+- Each preset became a Zenkai hair-catalog entry (data/zenkai_dmz/zenkai_hair_styles/),
+  grouped in the "DragonMineZ" folder of the Hair tab. Zenkai converts the code into a
+  model at runtime with its own reader (no DragonMineZ code is included).
+- Display names (assets/zenkai_dmz/lang/) and SSJ4 fallbacks follow DragonMineZ's
+  HairPresets (shared SSJ4 styles: default, Trunks, Gohan).
+Regenerated with tools/dmz_presets/ (extract_presets.py + gen_dmz_presets.py) in the
+Zenkai repository.

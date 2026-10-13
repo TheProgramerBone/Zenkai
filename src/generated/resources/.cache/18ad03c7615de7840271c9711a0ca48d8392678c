@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-06T23:14:43.8153673	Item Models: zenkai
+// 1.21.1	2026-10-12T19:39:15.0322232	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -96,11 +96,13 @@ cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/human_race_le
 cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/human_race_leggings_colorable_female.json
 cbcee1aa6bf34d91e0f1aa20f1a48c8d7bd8ff97 assets/zenkai/models/item/human_race_leggings_female.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/isaac_spawn_egg.json
+63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/kami_spawn_egg.json
 67665220fa8330606df92ab7371d9d2d047a560f assets/zenkai/models/item/katchin_ingot.json
 4773d6a28dcbc680c3ed76a73308e83d3cb92b7e assets/zenkai/models/item/katchin_pillar.json
 cf0c021ac47f4c96a569e2497d53258d04d5a607 assets/zenkai/models/item/kintoun_item.json
 46caf766bc191626aa6f23e3bb63262dbb2d2895 assets/zenkai/models/item/kintoun_shadow_item.json
 fd77afa9553271653dc7ec9ba987a43c5a9b09b5 assets/zenkai/models/item/ki_scythe.json
+63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/korin_spawn_egg.json
 591a65dc0fb399f79cfbf922850025b7e4bac0bf assets/zenkai/models/item/majin_race_boots.json
 591a65dc0fb399f79cfbf922850025b7e4bac0bf assets/zenkai/models/item/majin_race_boots_female.json
 124e3c1adc981c85365f4cee0ce3a6b77652da5c assets/zenkai/models/item/majin_race_chestplate.json
@@ -155,6 +157,7 @@ b1b44d67f3636fa4da9814085ddda7d70b935768 assets/zenkai/models/item/sacred_stone_
 15937199fbe16d3d8e7f675c3b4e111143f13a7c assets/zenkai/models/item/sacred_stone_stairs.json
 cbc58156863501ef3999d1f3f7a691697efd9c13 assets/zenkai/models/item/sacred_stone_wall.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/saibaman_spawn_egg.json
+7b3ae15c1394fe8b61b59c0038904d6ac666ac6d assets/zenkai/models/item/scissors.json
 8a2c41f065a7df96ee3642e71ebc4ae4056347ea assets/zenkai/models/item/scouter_radar_upgrade.json
 340e5a499537ca1c3856387e5dbacb789e98e351 assets/zenkai/models/item/senzu_bean.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/shenlong_spawn_egg.json
@@ -216,5 +219,5 @@ d7981ec156b0d8cacad4e2c051686b1841ce4bda assets/zenkai/models/item/structural_co
 534c07dbdb2aeff426aacea39c689db0bc259fd6 assets/zenkai/models/item/structural_concrete_yellow_stairs.json
 a367e6abbb7ef46c639a944b3edad7aa35c1af96 assets/zenkai/models/item/structural_concrete_yellow_wall.json
 124e3c1adc981c85365f4cee0ce3a6b77652da5c assets/zenkai/models/item/tail_loose.json
-124e3c1adc981c85365f4cee0ce3a6b77652da5c assets/zenkai/models/item/tail_waist.json
+63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/toribot_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/yemma_spawn_egg.json

@@ -123,6 +123,7 @@ public final class FaceThumbnails {
         if (geo.hasBodyTint()) {
             for (RaceLayerDiscovery.Layer layer : RaceLayerDiscovery.layersFor(geo)) {
                 if (layer.index() == 0) continue;
+                if (!layer.visibleFor(player, geo)) continue; // mismo filtro que BodyTintGeoLayer
                 blitFace(g, layer.texture(), layer.argb(player), region, x, y, scale);
             }
         }

@@ -94,7 +94,7 @@ public class PlayerLifeCycle {
         if (target instanceof ServerPlayer targetPlayer) {
             // tracker ahora puede verlo -> mandarle su data
             PacketDistributor.sendToPlayer(tracker, SyncPlayerStatsPacket.from(targetPlayer));
-            PacketDistributor.sendToPlayer(tracker, SyncPlayerVisualPacket.from(targetPlayer));
+            PacketDistributor.sendToPlayer(tracker, SyncPlayerVisualPacket.forTracker(targetPlayer));
             // Y su FORMA (formId, Kaioken, transformándose). Sin esto, un jugador que entraba en
             // el rango de visión ya transformado se veía en base (aura, color, pelo) para ese
             // observador hasta su siguiente cambio de forma: el ticker de maestría solo reenvía la
@@ -154,7 +154,7 @@ public class PlayerLifeCycle {
     // Sync Visual
     // ==========================
     public static void syncVisual(ServerPlayer sp) {
-        PacketDistributor.sendToPlayer(sp, SyncPlayerVisualPacket.from(sp));
+        PacketDistributor.sendToPlayer(sp, SyncPlayerVisualPacket.forSelf(sp));
     }
 
     public static void syncVisualIfServer(Player p) {
@@ -168,14 +168,10 @@ public class PlayerLifeCycle {
      * Si tu NeoForge no tiene este helper exacto en PacketDistributor, te digo abajo qué hacer.
      */
     public static void syncVisualToTrackersAndSelf(ServerPlayer target) {
-        var pkt = SyncPlayerVisualPacket.from(target);
-
-        // Opción A (si existe en tu NeoForge):
-        // PacketDistributor.sendToPlayersTrackingEntityAndSelf(target, pkt);
-
-        // Opción B (si no existe): manda a self y a tracking en 2 pasos.
-        PacketDistributor.sendToPlayer(target, pkt);
-        PacketDistributor.sendToPlayersTrackingEntity(target, pkt);
+        // En dos paquetes distintos: el propio jugador recibe su biblioteca de peinados entera,
+        // los demás solo el peinado que lleva puesto (SyncPlayerVisualPacket.forTracker).
+        PacketDistributor.sendToPlayer(target, SyncPlayerVisualPacket.forSelf(target));
+        PacketDistributor.sendToPlayersTrackingEntity(target, SyncPlayerVisualPacket.forTracker(target));
     }
 
     public static void syncForm(ServerPlayer sp) {

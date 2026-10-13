@@ -1,8 +1,18 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
+import com.hmc.zenkai.feature.race.hair.CustomHairLibrary;
+import com.hmc.zenkai.feature.race.hair.CustomHairLibraryPacket;
 import com.hmc.zenkai.feature.race.hair.HairCatalog;
+import com.hmc.zenkai.feature.race.hair.HairPackSource;
 import com.hmc.zenkai.feature.race.hair.HairStyleDef;
+import com.hmc.zenkai.feature.race.hair.strand.DmzHairCodec;
+import com.hmc.zenkai.feature.race.hair.strand.HairCodeException;
+import com.hmc.zenkai.feature.race.hair.strand.HairCodes;
+import com.hmc.zenkai.feature.race.hair.strand.HairPackWriter;
+import com.hmc.zenkai.client.gui.Favorites;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -12,6 +22,7 @@ import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
 import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.client.gui.widgets.FacePartTile;
+import com.hmc.zenkai.client.gui.widgets.HairTile;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.race.FaceBans;
 import com.hmc.zenkai.feature.race.face.FaceCatalog;
@@ -20,6 +31,7 @@ import com.hmc.zenkai.feature.race.face.FacePartDef;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -27,6 +39,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,7 +49,8 @@ import java.util.List;
 
 /**
  * Sección "Head" del hub de apariencia ({@link AppearanceScreen}): ojos, cejas, nariz, boca (del
- * catálogo FaceCatalog) y pelo (solo Human/Saiyan, todavía por índice hasta S5).
+ * catálogo FaceCatalog) y pelo (catálogo HairCatalog + biblioteca de peinados importados de
+ * códigos DMZ/DBC, que se pegan en la propia pestaña Pelo; ver CustomHairLibrary).
  *
  * REDISEÑO S3 (2026-10-01, .claude/pendiente/sistema-visual-personajes-diseno.md): antes eran
  * cuatro filas de flechas con etiquetas "Eyes N", y con el preview del cuerpo entero la cabeza
@@ -141,7 +155,12 @@ public class HeadAppearanceScreen extends Screen {
     private static Tab lastTab = Tab.EYES;
     private static boolean faceView = true;
 
-    private final AppearanceScreen hub;
+    @Nullable private final AppearanceScreen hub;
+    /**
+     * Abierta con las tijeras (ScissorsItem): solo la pestaña Pelo, "Cancelar" deshace y "Hecho"
+     * guarda al momento (UpdatePlayerVisualPacket), sin pasar por el resto del creador de personaje.
+     */
+    private boolean hairOnly;
     private final CompoundTag statsSnapshot;
     private final CompoundTag visualSnapshot;
 
@@ -163,13 +182,39 @@ public class HeadAppearanceScreen extends Screen {
     /** Rectángulos (x, y, w, h) de las pestañas bloqueadas, para oscurecerlos en render. */
     private final List<int[]> lockedTabRects = new ArrayList<>();
 
-    /** Peinado elegido (id de HairCatalog), null = calvo. Un "custom:" (HairCode) se conserva aparte. */
-    @Nullable private ResourceLocation hairStyle;
-    /** true si el jugador lleva un código procedimental (HairCode): no se pisa hasta que toque las flechas. */
-    private boolean keepCustomHair;
+    /**
+     * Peinado elegido, en el formato de hairStyleId: "none", un id del catálogo o "custom:&lt;id&gt;"
+     * (uno de la biblioteca de importados, CustomHairLibrary).
+     */
+    private String hairSel = PlayerVisualAttachment.HAIR_NONE;
+    /**
+     * Biblioteca de pelo (2026-10-12): cuadrícula como la de la cara, con carpetas. Carpeta abierta:
+     * null = raíz; CUSTOM_FOLDER = importados (casilla "+"); si no, el id de la carpeta del catálogo
+     * (HairStyleDef.folder, p. ej. la de DragonMineZ).
+     */
+    @Nullable private String hairFolder;
+    private static final String CUSTOM_FOLDER = "#custom";
+    private int hairPage = 0;
+    /** Panel de importar abierto (carpeta Custom, casilla "+"). */
+    private boolean importOpen;
+    /** Textos del panel de importar: sobreviven a rebuildWidgets() (cambio de pestaña, picker...). */
+    private String importDraft = "";
+    private String importName = "";
+    /** Resultado del último importar/borrar/exportar. */
+    @Nullable private Component hairStatus;
+    private boolean hairStatusError;
+    private static final String HAIR_FAV = "hair";
+
+    /** Una casilla de la biblioteca de pelo. */
+    private record HairItem(HairTile.Kind kind, @Nullable String styleId, @Nullable ResourceLocation folder,
+                            Component name) {}
     /** Rasgo elegido por categoría (id del FaceCatalog); sin entrada = ninguno. */
     private final EnumMap<FaceCategory, ResourceLocation> faceParts = new EnumMap<>(FaceCategory.class);
     private int eyeColor = 0xFF2E86C1, hairColor = 0xFF1A1A1A;
+    /** Colores propios de los mechones (StrandColors) encendidos; ver PlayerVisualAttachment. */
+    private boolean hairStrandColors = true;
+    /** ¿El peinado elegido trae colores propios? Se recalcula al reconstruir (leerlo cuesta un SHA-1). */
+    private boolean hairHasColors;
     /** Iris derecho: -1 = sin heterocromía (sigue al izquierdo). */
     private int eyeRightColor = -1;
     /** Estado de vista puro: nunca entra en los snapshots ni en removed(). */
@@ -186,7 +231,18 @@ public class HeadAppearanceScreen extends Screen {
         this(hub, statsSnapshot, visualSnapshot, false);
     }
 
-    public HeadAppearanceScreen(AppearanceScreen hub,
+    /** Tijeras: solo el pelo, guardando al pulsar "Hecho" (ver {@link #hairOnly}). */
+    public static void openHairOnly() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        var stats  = mc.player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        HeadAppearanceScreen s = new HeadAppearanceScreen(null, stats.save(), visual.save(), false);
+        s.hairOnly = true;
+        mc.setScreen(s);
+    }
+
+    public HeadAppearanceScreen(@Nullable AppearanceScreen hub,
                                 @Nullable CompoundTag statsSnapshot, @Nullable CompoundTag visualSnapshot,
                                 boolean startAtLastTab) {
         super(Component.translatable("screen.zenkai.appearance.title"));
@@ -207,6 +263,7 @@ public class HeadAppearanceScreen extends Screen {
         eyeColor      = visual.getEyeColorRgb()  | 0xFF000000;
         eyeRightColor = visual.getEyeColorRightRgb();
         hairColor     = visual.getHairColorRgb() | 0xFF000000;
+        hairStrandColors = visual.isHairStrandColors();
         vanillaSkin   = !visual.shouldRenderRaceSkin();
 
         // Si venimos de otra raza (o de un save viejo) el rasgo guardado puede no ser válido:
@@ -218,8 +275,7 @@ public class HeadAppearanceScreen extends Screen {
             if (id != null) faceParts.put(c, id);
         }
         // Después de reconcile (que también corrige el pelo): ya es válido para la raza.
-        hairStyle = visual.getHairStyle();
-        keepCustomHair = com.hmc.zenkai.feature.race.HairCode.isCustom(visual.getHairStyleId());
+        hairSel = visual.getHairStyleId();
 
         // Desde el hub se arranca en la primera pestaña (el flujo es lineal: Next recorre todas);
         // desde Back del cuerpo, en la última.
@@ -234,6 +290,7 @@ public class HeadAppearanceScreen extends Screen {
 
     /** Cejas solo si el catálogo trae alguna para esta raza; pelo solo Human/Saiyan. */
     private boolean isTabVisible(Tab t) {
+        if (hairOnly) return t == Tab.HAIR;
         if (t == Tab.HAIR) return hasHair();
         if (t == Tab.EYEBROWS) return !FaceCatalog.options(FaceCategory.EYEBROWS, race).isEmpty();
         return true;
@@ -269,9 +326,14 @@ public class HeadAppearanceScreen extends Screen {
         for (ResourceLocation id : raw) {
             if (id == null) out.add(null); else named.add(id);
         }
-        java.text.Collator collator = java.text.Collator.getInstance(java.util.Locale.ROOT);
-        collator.setStrength(java.text.Collator.PRIMARY);
-        named.sort((a, b) -> collator.compare(nameOf(a).getString(), nameOf(b).getString()));
+        // Favoritos (clic derecho, Favorites) delante de todo, también de "Ninguno"; cada grupo
+        // en orden alfabético.
+        String cat = tab.category.key();
+        Favorites.sort(named, cat, ResourceLocation::toString, id -> nameOf(id).getString());
+        List<ResourceLocation> favs = new ArrayList<>();
+        for (ResourceLocation id : named) if (Favorites.is(cat, id.toString())) favs.add(id);
+        named.removeAll(favs);
+        out.addAll(0, favs);
         out.addAll(named);
         return out;
     }
@@ -302,7 +364,10 @@ public class HeadAppearanceScreen extends Screen {
         int pl = panelLeft, pt = panelTop;
 
         buildTabs(pl, pt);
-        if (tab == Tab.HAIR) buildHairSelector(pl, pt);
+        // ANTES de la biblioteca: Borrar/Exportar se colocan según haya o no casilla de colores
+        // (calcularlo después, en buildColorRows, dejaba la casilla encima de los botones).
+        hairHasColors = tab == Tab.HAIR && !importOpen && selectedHairHasColors();
+        if (tab == Tab.HAIR) buildHairLibrary(pl, pt);
         else buildGrid(pl, pt);
         buildColorRows(pl, pt);
         buildViewToggle(pl, pt);
@@ -314,15 +379,15 @@ public class HeadAppearanceScreen extends Screen {
 
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
-                Component.translatable("screen.zenkai.back"),
+                Component.translatable(hairOnly ? "screen.zenkai.cancel" : "screen.zenkai.back"),
                 TEX_BTN, null,
-                this::goBack));
+                hairOnly ? this::onClose : this::goBack));
 
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20,
-                Component.translatable("screen.zenkai.next"),
+                Component.translatable(hairOnly ? "screen.zenkai.confirm" : "screen.zenkai.next"),
                 TEX_BTN, null,
-                this::goToStyle));
+                hairOnly ? this::confirmHairOnly : this::goToStyle));
     }
 
     private void buildTabs(int pl, int pt) {
@@ -362,7 +427,15 @@ public class HeadAppearanceScreen extends Screen {
             var tile = new FacePartTile(x, y, cat, id, name,
                     () -> java.util.Objects.equals(faceParts.get(cat), id),
                     () -> selectPart(cat, id));
-            tile.setTooltip(Tooltip.create(name));
+            tile.setTooltip(Tooltip.create(id == null ? name : name.copy().append("\n")
+                    .append(Component.translatable("screen.zenkai.head.favorite_hint").withStyle(net.minecraft.ChatFormatting.GRAY))));
+            if (id != null) {
+                String key = id.toString();
+                tile.favorite(() -> Favorites.is(cat.key(), key), () -> {
+                    Favorites.toggle(cat.key(), key);
+                    rebuildWidgets(); // el orden cambia
+                });
+            }
             addRenderableWidget(tile);
         }
         if (pageCount() > 1) {
@@ -373,23 +446,261 @@ public class HeadAppearanceScreen extends Screen {
         }
     }
 
+    // ── Biblioteca de pelo ─────────────────────────────────────────────────────
+
     /**
-     * Pelo: peinados del catálogo (HairCatalog, S5) con flechas + nombre. Sin miniaturas todavía:
-     * un peinado 3D no cabe en una miniatura plana de la cara (haría falta un render 3D por
-     * casilla); el preview grande con la cámara a la cara ya lo enseña.
+     * Pelo: cuadrícula de 3×3 con miniatura 3D de tu cabeza con cada peinado (HairTile), igual que
+     * ojos/boca/nariz, y carpetas (petición del usuario, 2026-10-12). Raíz: favoritos (de cualquier
+     * carpeta), calvo, los peinados sin carpeta, las carpetas y al final "+" (Custom). Dentro de
+     * una carpeta: volver y sus peinados. En Custom: volver, "+" para importar y los importados.
+     * Clic derecho en un peinado = favorito (Favorites), que sale siempre primero.
      */
-    private void buildHairSelector(int pl, int pt) {
-        int y = pt + GRID_Y + GRID_H / 2 - 6;
-        addRenderableWidget(new ArrowIconButton(pl + LEFT_X, y, ArrowIconButton.Dir.LEFT, () -> {
-            hairStyle = HairCatalog.step(race, hairStyle, -1);
-            keepCustomHair = false;
-            applyPreview();
-        }));
-        addRenderableWidget(new ArrowIconButton(pl + LEFT_R - ARROW_W, y, ArrowIconButton.Dir.RIGHT, () -> {
-            hairStyle = HairCatalog.step(race, hairStyle, +1);
-            keepCustomHair = false;
-            applyPreview();
-        }));
+    private void buildHairLibrary(int pl, int pt) {
+        if (importOpen) {
+            buildImportPanel(pl, pt);
+            return;
+        }
+        List<HairItem> items = hairItems();
+        int pages = Math.max(1, (items.size() + PER_PAGE - 1) / PER_PAGE);
+        hairPage = Mth.clamp(hairPage, 0, pages - 1);
+        int from = hairPage * PER_PAGE;
+        for (int i = from; i < Math.min(items.size(), from + PER_PAGE); i++) {
+            HairItem it = items.get(i);
+            int slot = i - from;
+            int x = pl + LEFT_X + (slot % GRID_COLS) * (HairTile.SIZE + GRID_GAP);
+            int y = pt + GRID_Y + (slot / GRID_COLS) * (HairTile.SIZE + GRID_GAP);
+            HairTile tile = switch (it.kind()) {
+                case STYLE -> {
+                    String id = it.styleId();
+                    HairTile t = HairTile.style(x, y, id, it.name(), () -> id.equals(hairSel), () -> selectHair(id));
+                    if (!PlayerVisualAttachment.HAIR_NONE.equals(id)) {
+                        t.favorite(() -> Favorites.is(HAIR_FAV, id), () -> {
+                            Favorites.toggle(HAIR_FAV, id);
+                            rebuildWidgets(); // el orden cambia
+                        });
+                    }
+                    yield t;
+                }
+                case FOLDER -> HairTile.folder(x, y, HairStyleDef.folderIcon(it.folder()), it.name(),
+                        () -> openHairFolder(it.folder().toString()));
+                case PLUS -> HairTile.special(x, y, HairTile.Kind.PLUS, it.name(),
+                        CUSTOM_FOLDER.equals(hairFolder) ? this::openImport : () -> openHairFolder(CUSTOM_FOLDER));
+                case BACK -> HairTile.special(x, y, HairTile.Kind.BACK, it.name(), () -> openHairFolder(null));
+            };
+            boolean styleTile = it.kind() == HairTile.Kind.STYLE && !PlayerVisualAttachment.HAIR_NONE.equals(it.styleId());
+            tile.setTooltip(Tooltip.create(styleTile
+                    ? it.name().copy().append("\n").append(Component.translatable("screen.zenkai.head.favorite_hint")
+                            .withStyle(net.minecraft.ChatFormatting.GRAY))
+                    : it.name()));
+            addRenderableWidget(tile);
+        }
+        if (pages > 1) {
+            addRenderableWidget(new ArrowIconButton(pl + LEFT_X, pt + NAME_Y - 2, ArrowIconButton.Dir.LEFT,
+                    () -> { hairPage = Math.floorMod(hairPage - 1, pages); rebuildWidgets(); }));
+            addRenderableWidget(new ArrowIconButton(pl + LEFT_R - ARROW_W, pt + NAME_Y - 2, ArrowIconButton.Dir.RIGHT,
+                    () -> { hairPage = Math.floorMod(hairPage + 1, pages); rebuildWidgets(); }));
+        }
+        // Borrar / Exportar: solo con un importado elegido, bajo el color de pelo (y bajo la
+        // casilla de "Colores del código" si el peinado trae colores).
+        if (selectedCustom() != null) {
+            int half = GRID_W / 2, y = pt + ROW1_Y + ROW_H + (hairHasColors ? 15 : 2);
+            addRenderableWidget(new TextOnlyButton(pl + LEFT_X, y, half, 12,
+                    Component.translatable("screen.zenkai.head.delete"), this::deleteHair)
+                    .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow());
+            var export = new TextOnlyButton(pl + LEFT_X + half, y, GRID_W - half, 12,
+                    Component.translatable("screen.zenkai.head.export"), this::exportHair)
+                    .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow();
+            export.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.head.export_tooltip")));
+            addRenderableWidget(export);
+        }
+    }
+
+    /** Las casillas de la carpeta abierta, en orden (favoritos primero, luego alfabético). */
+    private List<HairItem> hairItems() {
+        List<HairItem> out = new ArrayList<>();
+        Minecraft mc = Minecraft.getInstance();
+        List<CustomHairLibrary.Entry> customs = mc.player == null || !ServerConfig.allowCustomHair() || !hasHair()
+                ? List.of() : mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get()).getCustomHairs();
+        if (hairFolder == null) {
+            List<HairItem> favs = new ArrayList<>(), rest = new ArrayList<>();
+            java.util.Map<ResourceLocation, HairItem> folders = new java.util.LinkedHashMap<>();
+            for (HairStyleDef d : HairCatalog.options(race)) {
+                HairItem it = styleItem(d.id().toString(), d.displayName());
+                if (Favorites.is(HAIR_FAV, it.styleId())) favs.add(it);
+                else if (d.folder() == null) rest.add(it);
+                if (d.folder() != null) {
+                    folders.putIfAbsent(d.folder(), new HairItem(HairTile.Kind.FOLDER, null, d.folder(),
+                            HairStyleDef.folderName(d.folder())));
+                }
+            }
+            for (CustomHairLibrary.Entry e : customs) {
+                if (Favorites.is(HAIR_FAV, e.styleId())) favs.add(styleItem(e.styleId(), Component.literal(e.name())));
+            }
+            sortHair(favs);
+            sortHair(rest);
+            List<HairItem> folderList = new ArrayList<>(folders.values());
+            sortHair(folderList);
+            out.addAll(favs);
+            out.add(styleItem(PlayerVisualAttachment.HAIR_NONE, Component.translatable("screen.zenkai.head.none")));
+            out.addAll(rest);
+            out.addAll(folderList);
+            if (ServerConfig.allowCustomHair() && hasHair()) {
+                out.add(new HairItem(HairTile.Kind.PLUS, null, null, Component.translatable("screen.zenkai.head.custom_folder")));
+            }
+            return out;
+        }
+        out.add(new HairItem(HairTile.Kind.BACK, null, null, Component.translatable("screen.zenkai.head.back")));
+        List<HairItem> inside = new ArrayList<>();
+        if (CUSTOM_FOLDER.equals(hairFolder)) {
+            out.add(new HairItem(HairTile.Kind.PLUS, null, null, Component.translatable("screen.zenkai.head.import_new")));
+            for (CustomHairLibrary.Entry e : customs) inside.add(styleItem(e.styleId(), Component.literal(e.name())));
+        } else {
+            for (HairStyleDef d : HairCatalog.options(race)) {
+                if (d.folder() != null && d.folder().toString().equals(hairFolder)) {
+                    inside.add(styleItem(d.id().toString(), d.displayName()));
+                }
+            }
+        }
+        sortHair(inside);
+        out.addAll(inside);
+        return out;
+    }
+
+    private static HairItem styleItem(String id, Component name) {
+        return new HairItem(HairTile.Kind.STYLE, id, null, name);
+    }
+
+    private static void sortHair(List<HairItem> items) {
+        Favorites.sort(items, HAIR_FAV, it -> it.styleId() == null ? "" : it.styleId(), it -> it.name().getString());
+    }
+
+    private void openHairFolder(@Nullable String folder) {
+        hairFolder = folder;
+        hairPage = 0;
+        hairStatus = null;
+        rebuildWidgets();
+    }
+
+    private void openImport() {
+        importOpen = true;
+        hairStatus = null;
+        rebuildWidgets();
+    }
+
+    private void selectHair(String id) {
+        hairSel = id;
+        hairStatus = null;
+        applyPreview();
+        rebuildWidgets(); // Borrar/Exportar dependen de si el elegido es importado
+    }
+
+    /**
+     * Panel de importar (carpeta Custom, "+"): el código se PEGA aquí (Ctrl+V). No es un comando a
+     * propósito: el chat corta a 256 caracteres y un código mide hasta 30 KB. Nombre opcional.
+     * La casilla admite más que el tope de la biblioteca a propósito: un EditBox recorta lo pegado
+     * sin avisar, y un código recortado se lee como "dañado"; así llega entero y el error es
+     * "demasiado largo".
+     */
+    private void buildImportPanel(int pl, int pt) {
+        int x = pl + LEFT_X, y = pt + GRID_Y;
+        EditBox code = new EditBox(this.font, x, y + 11, GRID_W, 14, Component.translatable("screen.zenkai.head.code"));
+        code.setMaxLength(DmzHairCodec.MAX_CODE_LENGTH);
+        code.setHint(Component.translatable("screen.zenkai.head.import_hint").withStyle(st -> st.withColor(0x8A8A8A)));
+        code.setValue(importDraft);
+        code.setResponder(v -> importDraft = v);
+        addRenderableWidget(code);
+        EditBox name = new EditBox(this.font, x, y + 41, GRID_W, 14, Component.translatable("screen.zenkai.head.name"));
+        name.setMaxLength(CustomHairLibrary.MAX_NAME_LENGTH);
+        name.setHint(Component.translatable("screen.zenkai.head.name_hint").withStyle(st -> st.withColor(0x8A8A8A)));
+        name.setValue(importName);
+        name.setResponder(v -> importName = v);
+        addRenderableWidget(name);
+        int half = GRID_W / 2;
+        addRenderableWidget(new TextOnlyButton(x, y + 61, half, 12,
+                Component.translatable("screen.zenkai.head.import"), this::importHair)
+                .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow());
+        addRenderableWidget(new TextOnlyButton(x + half, y + 61, GRID_W - half, 12,
+                Component.translatable("screen.zenkai.head.cancel"), () -> { importOpen = false; hairStatus = null; rebuildWidgets(); })
+                .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow());
+    }
+
+    @Nullable
+    private CustomHairLibrary.Entry selectedCustom() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return null;
+        return mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get())
+                .findCustomHair(CustomHairLibrary.idFromStyle(hairSel));
+    }
+
+    /**
+     * Valida el código aquí mismo (para avisar al momento, con el mismo lector que usa el
+     * servidor), lo añade a la copia local y lo manda al servidor, que lo vuelve a validar y
+     * responde con la biblioteca buena (CustomHairLibrarySyncPacket).
+     */
+    private void importHair() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        CustomHairLibrary.Entry existing = importDraft.isBlank() ? null
+                : visual.findCustomHair(CustomHairLibrary.idOf(importDraft));
+        if (existing != null) {
+            hairSel = existing.styleId();
+            setHairStatus(Component.translatable("zenkai.hair_code.error.duplicate", existing.name()), false);
+        } else {
+            try {
+                CustomHairLibrary.Entry e = CustomHairLibraryPacket.tryAdd(visual, race, true, importName, importDraft);
+                PacketDistributor.sendToServer(CustomHairLibraryPacket.add(e.name(), e.code()));
+                hairSel = e.styleId();
+                importDraft = "";
+                importName = "";
+                setHairStatus(Component.translatable("zenkai.hair_library.added", e.name()), false);
+            } catch (HairCodeException ex) {
+                setHairStatus(ex.component(), true);
+                rebuildWidgets();
+                return;
+            }
+        }
+        importOpen = false;
+        hairFolder = CUSTOM_FOLDER;
+        applyPreview();
+        rebuildWidgets();
+    }
+
+    private void deleteHair() {
+        Minecraft mc = Minecraft.getInstance();
+        CustomHairLibrary.Entry e = selectedCustom();
+        if (mc.player == null || e == null) return;
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        visual.setHairStyleId(hairSel);
+        CustomHairLibraryPacket.remove(visual, race, e.id());
+        PacketDistributor.sendToServer(CustomHairLibraryPacket.remove(e.id()));
+        hairSel = visual.getHairStyleId();
+        setHairStatus(Component.translatable("zenkai.hair_library.deleted", e.name()), false);
+        applyPreview();
+        rebuildWidgets();
+    }
+
+    /**
+     * Para autores de modpacks: escribe el peinado como carpeta de hair_packs (pack de recursos +
+     * datos que el mod carga solo), así entra en el CATÁLOGO del modpack para cualquier jugador.
+     */
+    private void exportHair() {
+        CustomHairLibrary.Entry e = selectedCustom();
+        if (e == null) return;
+        try {
+            var report = HairPackWriter.write(HairPackSource.root(), e.name(), HairCodes.decode(e.code()), true);
+            setHairStatus(Component.translatable("zenkai.hair_library.exported",
+                    report.folder().getFileName().toString()), false);
+        } catch (HairCodeException ex) {
+            setHairStatus(ex.component(), true);
+        } catch (java.io.IOException ex) {
+            setHairStatus(Component.translatable("zenkai.hair_library.export_error", ex.getMessage()), true);
+        }
+    }
+
+    private void setHairStatus(Component c, boolean error) {
+        hairStatus = c;
+        hairStatusError = error;
     }
 
     /** Fila(s) de color según la pestaña: ojos (izq. + heterocromía), pelo; el resto es informativo. */
@@ -409,7 +720,38 @@ public class HeadAppearanceScreen extends Screen {
             if (hetero) addColorBox(boxX, pt + ROW1_Y + ROW_H, ColorChannel.EYE_RIGHT);
         } else if (tab == Tab.HAIR) {
             addColorBox(boxX, pt + ROW1_Y, ColorChannel.HAIR);
+            if (hairHasColors) {
+                // Mismo patrón que la heterocromía: casilla pintada en renderColorLabels + texto.
+                Component label = Component.translatable("screen.zenkai.head.strand_colors");
+                var b = new TextOnlyButton(pl + LEFT_X, pt + ROW1_Y + ROW_H - 1, CHECK_W * 2 + this.font.width(label), 12,
+                        label, this::toggleStrandColors)
+                        .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow();
+                b.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.head.strand_colors_tooltip")));
+                addRenderableWidget(b);
+            }
         }
+    }
+
+    /**
+     * ¿El peinado elegido (importado o del catálogo por código) trae colores propios en algún
+     * mechón? Sin ellos la casilla no significaría nada y no se enseña.
+     */
+    private boolean selectedHairHasColors() {
+        String code = null;
+        CustomHairLibrary.Entry custom = selectedCustom();
+        if (custom != null) {
+            code = custom.code();
+        } else if (hairSel != null && !PlayerVisualAttachment.HAIR_NONE.equals(hairSel)) {
+            HairStyleDef style = com.hmc.zenkai.feature.race.hair.HairCatalog.get(ResourceLocation.tryParse(hairSel));
+            if (style != null && style.representation() == HairStyleDef.Representation.CODE) code = style.code();
+        }
+        return code != null && com.hmc.zenkai.feature.race.hair.strand.CustomHairCodes.hasColors(code);
+    }
+
+    private void toggleStrandColors() {
+        hairStrandColors = !hairStrandColors;
+        applyPreview();
+        rebuildWidgets();
     }
 
     private void addColorBox(int x, int y, ColorChannel ch) {
@@ -514,15 +856,31 @@ public class HeadAppearanceScreen extends Screen {
 
         int leftCx = pl + LEFT_X + GRID_W / 2;
         if (tab == Tab.HAIR) {
-            text(g, Component.translatable("screen.zenkai.head.style"), leftCx, pt + GRID_Y + GRID_H / 2 - 20, COLOR_TITLE);
-            HairStyleDef hairDef = HairCatalog.get(hairStyle);
-            Component hairName = keepCustomHair ? Component.literal("Custom")
-                    : hairDef != null ? hairDef.displayName() : Component.translatable("screen.zenkai.head.none");
-            text(g, hairName, leftCx, pt + GRID_Y + GRID_H / 2 - 4, COLOR_VALUE);
+            if (importOpen) {
+                g.drawString(this.font, Component.translatable("screen.zenkai.head.code"), pl + LEFT_X, pt + GRID_Y + 1, COLOR_TITLE, false);
+                g.drawString(this.font, Component.translatable("screen.zenkai.head.name"), pl + LEFT_X, pt + GRID_Y + 31, COLOR_TITLE, false);
+            } else if (!(hairStatus != null && hairHasColors && selectedCustom() != null)) {
+                text(g, fitBetweenArrows(hairName()), leftCx, pt + NAME_Y, COLOR_VALUE);
+            }
+            if (hairStatus != null && hairHasColors && selectedCustom() != null && !importOpen) {
+                // Sin hueco abajo (casilla de colores + Borrar/Exportar): el aviso va en la línea
+                // del nombre, que sigue en el tooltip de la casilla.
+                text(g, fitBetweenArrows(hairStatus), leftCx, pt + NAME_Y, hairStatusError ? 0xFFB03A2E : COLOR_VALUE);
+            } else if (hairStatus != null) {
+                // Hasta dos líneas al ancho de la columna: en el panel de importar, bajo sus botones;
+                // si no, en el hueco de debajo del color de pelo (sin pisar Borrar/Exportar).
+                var lines = this.font.split(hairStatus, GRID_W);
+                int y = importOpen ? pt + GRID_Y + 78 : pt + ROW1_Y + ROW_H + 16;
+                int max = importOpen ? 2 : 1;
+                for (int i = 0; i < Math.min(max, lines.size()); i++) {
+                    g.drawString(this.font, lines.get(i), leftCx - this.font.width(lines.get(i)) / 2,
+                            y + i * 10, hairStatusError ? 0xFFB03A2E : COLOR_VALUE, false);
+                }
+            }
         } else {
             Component name = nameOf(faceParts.get(tab.category));
             if (pageCount() > 1) name = Component.literal((page + 1) + "/" + pageCount() + "  ").append(name);
-            text(g, name, leftCx, pt + NAME_Y, COLOR_VALUE);
+            text(g, fitBetweenArrows(name), leftCx, pt + NAME_Y, COLOR_VALUE);
             if (choices().isEmpty()) {
                 text(g, Component.translatable("screen.zenkai.head.no_options"), leftCx, pt + GRID_Y + GRID_H / 2 - 4, COLOR_MUTED);
             }
@@ -558,8 +916,16 @@ public class HeadAppearanceScreen extends Screen {
                 g.fill(cx + 1, cy + 1, cx + CHECK_W - 3, cy + CHECK_W - 3, ZenkaiPalette.BEIGE);
                 if (eyeRightColor >= 0) g.fill(cx + 2, cy + 2, cx + CHECK_W - 4, cy + CHECK_W - 4, COLOR_VALUE);
             }
-            case HAIR -> g.drawString(font, Component.translatable("screen.zenkai.head.hair_color"),
-                    x, pt + ROW1_Y + 1, COLOR_TITLE, false);
+            case HAIR -> {
+                g.drawString(font, Component.translatable("screen.zenkai.head.hair_color"),
+                        x, pt + ROW1_Y + 1, COLOR_TITLE, false);
+                if (hairHasColors && !importOpen) {
+                    int cx = x + 1, cy = pt + ROW1_Y + ROW_H + 1;
+                    g.fill(cx, cy, cx + CHECK_W - 2, cy + CHECK_W - 2, COLOR_TITLE);
+                    g.fill(cx + 1, cy + 1, cx + CHECK_W - 3, cy + CHECK_W - 3, ZenkaiPalette.BEIGE);
+                    if (hairStrandColors) g.fill(cx + 2, cy + 2, cx + CHECK_W - 4, cy + CHECK_W - 4, COLOR_VALUE);
+                }
+            }
             case EYEBROWS -> g.drawString(font, Component.translatable("screen.zenkai.head.color_follows_hair"),
                     x, pt + ROW1_Y + 1, COLOR_MUTED, false);
             case NOSE, MOUTH -> g.drawString(font, Component.translatable("screen.zenkai.head.color_follows_skin"),
@@ -567,8 +933,26 @@ public class HeadAppearanceScreen extends Screen {
         }
     }
 
+    /**
+     * El nombre bajo la cuadrícula va entre las flechas de página: si no cabe se recorta con "…"
+     * (nombres largos como "Broly Super II (Heroes of Eden)" pisaban las flechas). Entero en el tooltip.
+     */
+    private Component fitBetweenArrows(Component c) {
+        int max = GRID_W - 2 * ARROW_W - 6;
+        String s = c.getString();
+        if (this.font.width(s) <= max) return c;
+        return Component.literal(this.font.plainSubstrByWidth(s, max - this.font.width("…")).stripTrailing() + "…");
+    }
+
     private void text(GuiGraphics g, Component c, int cx, int y, int color) {
         PanelText.centeredOnPanel(g, Minecraft.getInstance().font, c, cx, y, color);
+    }
+
+    private Component hairName() {
+        CustomHairLibrary.Entry custom = selectedCustom();
+        if (custom != null) return Component.literal(custom.name());
+        HairStyleDef def = HairCatalog.get(ResourceLocation.tryParse(hairSel));
+        return def != null ? def.displayName() : Component.translatable("screen.zenkai.head.none");
     }
 
     private static Component nameOf(@Nullable ResourceLocation id) {
@@ -607,9 +991,9 @@ public class HeadAppearanceScreen extends Screen {
         visual.setEyeColorRgb(eyeColor & 0xFFFFFF);
         visual.setEyeColorRightRgb(eyeRightColor);
         visual.setHairColorRgb(hairColor & 0xFFFFFF);
+        visual.setHairStrandColors(hairStrandColors);
         for (FaceCategory c : FaceCategory.values()) visual.setFacePart(c, faceParts.get(c));
-        // Un código procedimental (HairCode) se respeta hasta que el jugador toque las flechas.
-        if (!keepCustomHair) visual.setHairStyle(hairStyle);
+        visual.setHairStyleId(hairSel);
     }
 
     /** "Back": retrocede a la pestaña anterior visible y solo desde la primera vuelve al hub. */
@@ -640,6 +1024,19 @@ public class HeadAppearanceScreen extends Screen {
         if (mc.player == null) return;
         goingNext = true;
         mc.setScreen(new BodyColorsScreen(hub, statsSnapshot, visualSnapshot));
+    }
+
+    /** "Confirmar" de las tijeras: guarda el pelo y cierra (removed() ya no revierte). */
+    private void confirmHairOnly() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        applyPreview();
+        var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        // El servidor solo toma los campos cosméticos de la lista blanca (loadCosmeticFromClient)
+        // y vuelve a comprobar el peinado para la raza (FaceBans.reconcile).
+        PacketDistributor.sendToServer(com.hmc.zenkai.feature.race.UpdatePlayerVisualPacket.from(visual));
+        goingNext = true;
+        mc.setScreen(null);
     }
 
     @Override

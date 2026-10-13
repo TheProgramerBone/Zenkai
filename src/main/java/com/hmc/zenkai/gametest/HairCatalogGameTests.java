@@ -52,11 +52,13 @@ public final class HairCatalogGameTests {
         helper.assertTrue(!HairCatalog.choices(Race.SAIYAN).contains(SSJ), "classic_ssj no debe salir en la lista");
         helper.assertTrue(HairCatalog.choices(Race.SAIYAN).get(0) == null, "calvo es la primera opción");
 
-        // La cadena SSJ de antes (cualquier forma "ssj*" caía en ssj1_hair1) se conserva.
-        for (String f : new String[]{"ssj1", "ssj2", "ssj3", "ssj4", "ssj_blue", "ssj_god", "ssj_rose"}) {
+        // Las formas SSJ usan classic_ssj; SSJ God lleva el pelo de la base (decisión del usuario, 2026-10-12).
+        for (String f : new String[]{"ssj1", "ssj2", "ssj3", "ssj4", "ssj_blue", "ssj_rose"}) {
             HairStyleDef shown = HairCatalog.effectiveStyle(BASE, id(f), Race.SAIYAN);
             helper.assertTrue(shown != null && shown.id().equals(SSJ), f + ": debe verse classic_ssj");
         }
+        HairStyleDef god = HairCatalog.effectiveStyle(BASE, id("ssj_god"), Race.SAIYAN);
+        helper.assertTrue(god != null && god.id().equals(BASE), "ssj_god: pelo de la base");
         HairStyleDef inBase = HairCatalog.effectiveStyle(BASE, null, Race.SAIYAN);
         helper.assertTrue(inBase != null && inBase.id().equals(BASE), "sin forma: classic");
         helper.assertTrue(HairCatalog.effectiveStyle(BASE, null, Race.NAMEKIAN) == null, "Namek: sin pelo");
@@ -76,6 +78,61 @@ public final class HairCatalogGameTests {
         helper.succeed();
     }
 
+    /**
+     * Carpeta DragonMineZ (assets/data zenkai_dmz, GPLv3): 27 peinados por código en su carpeta, todos
+     * legibles, y el SSJ4 compartido que DMZ asigna a los que no traen el suyo.
+     */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void dragonMineZFolder(GameTestHelper helper) {
+        ResourceLocation folder = ResourceLocation.fromNamespaceAndPath("zenkai_dmz", "dragonminez");
+        int n = 0;
+        for (HairStyleDef d : HairCatalog.options(Race.SAIYAN)) {
+            if (!folder.equals(d.folder())) continue;
+            n++;
+            helper.assertTrue(d.representation() == HairStyleDef.Representation.CODE && d.code() != null,
+                    d.id() + ": debe ser un estilo por código");
+            try {
+                com.hmc.zenkai.feature.race.hair.strand.HairCodes.decode(d.code());
+            } catch (com.hmc.zenkai.feature.race.hair.strand.HairCodeException e) {
+                helper.fail(d.id() + ": código ilegible (" + e.getMessage() + ")");
+            }
+        }
+        helper.assertTrue(n == 27, "27 peinados en la carpeta DragonMineZ, hay " + n);
+        ResourceLocation goku = ResourceLocation.fromNamespaceAndPath("zenkai_dmz", "goku");
+        HairStyleDef ssj4 = HairCatalog.effectiveStyle(goku, id("ssj4"), Race.SAIYAN);
+        helper.assertTrue(ssj4 != null && ssj4.id().getPath().equals("ssj4_default") && !ssj4.selectable(),
+                "Goku en SSJ4 usa el SSJ4 común de DMZ");
+        HairStyleDef base = HairCatalog.effectiveStyle(goku, id("ssj1"), Race.SAIYAN);
+        helper.assertTrue(base != null && base.id().equals(goku), "en SSJ1 sigue el mismo estilo (la variante la elige el código)");
+        helper.assertTrue(com.hmc.zenkai.feature.race.hair.strand.CustomHairCodes.model(base.code(), id("ssj1")) != null,
+                "modelo SSJ construible");
+        // Ida y vuelta por red con el código dentro.
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        HairStyleDef.STREAM_CODEC.encode(buf, base);
+        helper.assertTrue(HairStyleDef.STREAM_CODEC.decode(buf).equals(base), "estilo por código por la red");
+        helper.succeed();
+    }
+
+    /**
+     * Capas de piel del humano (LayerTone): con la piel de referencia F9C9AE cada capa da su tono
+     * exacto (el primer tono de la rejilla == "Default"); con otra piel, la misma proporción.
+     */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void layerToneFollowsOneColor(GameTestHelper helper) {
+        int ref = 0xF9C9AE;
+        for (int tone : new int[]{0xF9C9AE, 0xF6C0A3, 0xEFB08B, 0xE6A27A, 0xFCD5C1}) {
+            int got = com.hmc.zenkai.feature.race.layer.LayerTone.apply(ref, tone, ref);
+            helper.assertTrue(got == tone, String.format("con la piel de referencia: %06X, salió %06X", tone, got));
+        }
+        // Piel oscura: la sombra queda más oscura que la piel y el brillo más claro, sin pasarse de 255.
+        int dark = 0x5C3A21;
+        int shade = com.hmc.zenkai.feature.race.layer.LayerTone.apply(dark, 0xE6A27A, ref);
+        int light = com.hmc.zenkai.feature.race.layer.LayerTone.apply(dark, 0xFCD5C1, ref);
+        helper.assertTrue(((shade >> 16) & 0xFF) < 0x5C && ((light >> 8) & 0xFF) > 0x3A, "sombra y brillo relativos");
+        helper.assertTrue(com.hmc.zenkai.feature.race.layer.LayerTone.apply(0xFFFFFF, 0xFCD5C1, ref) <= 0xFFFFFF, "tope 255");
+        helper.succeed();
+    }
+
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void migrationAndReconcile(GameTestHelper helper) {
         // Valores de antes del catálogo.
@@ -91,11 +148,12 @@ public final class HairCatalogGameTests {
             helper.assertTrue(c[1].equals(v.getHairStyleId()), c[0] + " debe migrar a " + c[1] + ", es " + v.getHairStyleId());
             helper.assertTrue(!v.save().contains("hairIndex"), "el formato nuevo no escribe hairIndex");
         }
-        // Un código procedimental (HairCode, aparcado) no se toca.
+        // Un "custom:" que no está en la biblioteca (p. ej. el viejo sobre zh1 del pelo
+        // procedimental, sustituido por los importados) cae al peinado de la raza.
         PlayerVisualAttachment custom = new PlayerVisualAttachment();
         custom.setHairStyleId("custom:zh1.h.a;b");
-        helper.assertTrue(!HairCatalog.reconcile(Race.SAIYAN, custom) && custom.getHairStyle() == null,
-                "custom: se respeta y se pinta calvo");
+        helper.assertTrue(HairCatalog.reconcile(Race.SAIYAN, custom) && BASE.equals(custom.getHairStyle()),
+                "custom: fuera de la biblioteca -> classic");
 
         // Namek con el pelo humano -> calvo (no tiene default_for); Saiyan con un id inventado -> classic.
         PlayerVisualAttachment namek = new PlayerVisualAttachment();

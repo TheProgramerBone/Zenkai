@@ -38,12 +38,16 @@ public final class RegenSystem {
         // se resta de su quema (mecánica intencional, ver PlayerTickState#carry).
         double[] carry = PlayerTickState.carry(p.getUUID());
         boolean didBody = false, didStamina = false;
+        // Fracción de la curación de body que es vida ganada de verdad (1 = toda).
+        double bodyNetFraction = 1.0;
 
         int bodyCur = att.getBody(), bodyMax = att.getBodyMax();
         if (bodyCur > 0 && bodyCur < bodyMax) {
-            int gain = accrue(carry, 0, bodyMax * (ServerConfig.baseRegenBody() / 100.0)
+            double regenPerSecond = bodyMax * (ServerConfig.baseRegenBody() / 100.0)
                     * RacePassives.bodyRegenMult(p)
-                    * CombatRegen.bodyMult(p));
+                    * CombatRegen.bodyMult(p);
+            bodyNetFraction = kaiokenNetFraction(c, regenPerSecond);
+            int gain = accrue(carry, 0, regenPerSecond);
             if (gain > 0) {
                 att.addBody(gain);
                 didBody = true;
@@ -67,9 +71,25 @@ public final class RegenSystem {
         }
 
         if (!p.isCreative()) {
-            if (didBody)    food.addExhaustion((float) ServerConfig.regenBodyExhaustion());
+            if (didBody)    food.addExhaustion((float) (ServerConfig.regenBodyExhaustion() * bodyNetFraction));
             if (didStamina) food.addExhaustion((float) ServerConfig.regenStaminaExhaustion());
         }
+    }
+
+    /**
+     * Con el Kaioken activo, qué parte de la regen de body es curación NETA: (regen - quema) /
+     * regen, en [0, 1]. Sin Kaioken, 1. La comida paga solo esa parte (2026-10-12): antes el
+     * cobro era fijo por segundo y, como el Kaioken te tiene siempre por debajo del máximo, la
+     * regen corría sin parar y se comía un muslo cada ~7 s en CUALQUIER escalón, pagando vida que
+     * el propio Kaioken se volvía a llevar. Así, un escalón que te va bajando la vida no cuesta
+     * comida (ya lo limitan la vida y el strain) y uno que tu CON sostiene paga lo que cura de
+     * más, de modo que mantener x2 para siempre sigue sin ser gratis.
+     */
+    private static double kaiokenNetFraction(TickCtx c, double regenPerSecond) {
+        if (regenPerSecond <= 0.0 || !c.form().getKaioken().isOn()) return 1.0;
+        double burnPerSecond = KaiokenSystem.drainPerTick(c.att(), c.form(),
+                SkillEffects.kaiokenDrainFactor(c.p())) * 20.0;
+        return Math.max(0.0, Math.min(1.0, (regenPerSecond - burnPerSecond) / regenPerSecond));
     }
 
     /** Acumula la fracción y devuelve los puntos enteros a otorgar este segundo. */
