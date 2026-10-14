@@ -1,7 +1,7 @@
 package com.hmc.zenkai.feature.combat;
 
 import com.hmc.zenkai.config.ServerConfig;
-import com.hmc.zenkai.content.item.KiWeaponItem;
+import com.hmc.zenkai.feature.kiweapon.KiWeaponDef;
 import com.hmc.zenkai.feature.kiweapon.KiWeaponServer;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SkillToggles;
@@ -83,8 +83,8 @@ public final class KiInfusion {
         // El arma de ki no usa la fórmula del attack_damage: su multiplicador es un número
         // de datapack, porque no representa "una hoja mejor" sino ki moldeado.
         if (e instanceof Player p) {
-            KiWeaponItem w = KiWeaponServer.heldWeapon(p);
-            if (w != null) return w.def().damageMult();
+            KiWeaponDef w = KiWeaponServer.heldWeapon(p);
+            if (w != null) return w.damageMult();
         }
         double extra = Math.max(0.0, attackDamageOf(e) - 1.0);
         return 1.0 + extra * ServerConfig.weaponScale();
@@ -151,7 +151,7 @@ public final class KiInfusion {
     *  aparte porque, si no, el multiplicador saldría gratis y no habría decisión que tomar
     *  entre invocarla o no. */
     public static double kiWeaponExtra(Player p, double strDamage, double chargeF) {
-        KiWeaponItem w = KiWeaponServer.heldWeapon(p);
-        return w == null ? 0.0 : strDamage * chargeF * Math.max(0.0, w.def().damageMult() - 1.0);
+        KiWeaponDef w = KiWeaponServer.heldWeapon(p);
+        return w == null ? 0.0 : strDamage * chargeF * Math.max(0.0, w.damageMult() - 1.0);
     }
 }

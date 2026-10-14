@@ -196,7 +196,7 @@ public final class TechniqueHotbarOverlay {
      */
     private static Component handsNeed(Minecraft mc, KiTechnique ki, PhysicalTechnique ph) {
         if (mc.player == null) return null;
-        boolean free = mc.player.getMainHandItem().isEmpty() && mc.player.getOffhandItem().isEmpty();
+        boolean free = com.hmc.zenkai.feature.combat.GuardHands.handsFree(mc.player);
         if (ki != null) {
             return free ? null : Component.translatable("hud.zenkai.requires_free_hands");
         }

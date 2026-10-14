@@ -172,42 +172,6 @@ public class ModItems {
                     100.0, 2000.0));
 
 
-    /** Espada de ki. Equilibrada: alcance +1, velocidad de espada. */
-    public static final DeferredItem<Item> KI_BLADE = ITEMS.registerItem("ki_blade",
-            p -> new KiWeaponItem(p, SkillEffects.KI_BLADE,"ki_blade"), new Item.Properties()
-                    .attributes(ItemAttributeModifiers.builder()
-                            .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_blade_dmg"),
-                                            3.0, AttributeModifier.Operation.ADD_VALUE),
-                                    EquipmentSlotGroup.MAINHAND)
-                            .add(Attributes.ATTACK_SPEED, new AttributeModifier(
-                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_blade_spd"),
-                                            -2.4, AttributeModifier.Operation.ADD_VALUE),
-                                    EquipmentSlotGroup.MAINHAND)
-                            .add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(
-                                    ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_blade_reach"),
-                                            1.0, AttributeModifier.Operation.ADD_VALUE),
-                                    EquipmentSlotGroup.MAINHAND).build()));
-
-        /** Guadaña de ki. Más daño y alcance, más lenta y mucho más cara en ki. */
-        public static final DeferredItem<Item> KI_SCYTHE = ITEMS.registerItem("ki_scythe",
-                        p -> new KiWeaponItem(p, SkillEffects.KI_SCYTHE,"ki_scythe"), new Item.Properties()
-                        .attributes(ItemAttributeModifiers.builder()
-                                .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(
-                                        ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_scythe_dmg"),
-                                                4.0, AttributeModifier.Operation.ADD_VALUE),
-                                        EquipmentSlotGroup.MAINHAND)
-                                .add(Attributes.ATTACK_SPEED, new AttributeModifier(
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_scythe_spd"),
-                                                -3.0, AttributeModifier.Operation.ADD_VALUE),
-                                        EquipmentSlotGroup.MAINHAND)
-                                .add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(
-                                        ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "ki_scythe_reach"),
-                                                2.0, AttributeModifier.Operation.ADD_VALUE),
-                                        EquipmentSlotGroup.MAINHAND).build()));
-
-
-
     //Razas
     public static final DeferredItem<GeoLayerArmorItem> NAMEKIAN_RACE_HELMET =
             ITEMS.register("namekian_race_helmet", () ->

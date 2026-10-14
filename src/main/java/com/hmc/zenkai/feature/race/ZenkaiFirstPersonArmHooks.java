@@ -26,6 +26,9 @@ import software.bernie.geckolib.animation.state.BoneSnapshot;
 import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.GeoObjectRenderer;
 import software.bernie.geckolib.util.Color;
+import software.bernie.geckolib.util.RenderUtil;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 
 /**
  * Brazo en 1ª persona usando el MISMO modelo del cuerpo (reusado): oculta cada uno de los huesos
@@ -130,6 +133,25 @@ public final class ZenkaiFirstPersonArmHooks {
 
     private static com.hmc.zenkai.feature.race.ZenkaiFirstPersonArmHooks.ArmRenderer RENDERER; // cache perezoso (en hilo de render)
 
+    /** PAL dibuja el cuerpo entero en 1ª persona (la mano vanilla se cancela): lo que cuelga de la
+     *  mano lo pintan entonces las capas del jugador, no el hook de brazo. */
+    public static boolean palFullBodyActive(Player player) {
+        var mgr = ((com.zigythebird.playeranim.accessors.IAnimatedPlayer) player)
+                .playerAnimLib$getAnimManager();
+        return mgr != null && mgr.isActive()
+                && mgr.getFirstPersonMode()
+                == com.zigythebird.playeranimcore.api.firstPerson.FirstPersonMode.THIRD_PERSON_MODEL;
+    }
+
+    /** ¿Este hook sustituye el brazo vanilla por el de la raza? Entonces el hombro NO está donde lo
+     *  pone vanilla sino en OFF_*, y lo que se ancle a la mano tiene que seguirlo. */
+    public static boolean raceArmReplaced(Player player) {
+        var visual = player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
+        var stats  = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        if (!visual.shouldRenderRaceSkin() || !stats.isRaceChosen()) return false;
+        return RaceSkinSlots.getVirtualRaceArmor(player, EquipmentSlot.CHEST).getItem() instanceof GeoLayerArmorItem;
+    }
+
     @SubscribeEvent
     public static void onRenderArm(RenderArmEvent e) {
         // Mientras PAL tiene una animación en THIRD_PERSON_MODEL, el cuerpo entero ya se dibuja:
@@ -165,6 +187,11 @@ public final class ZenkaiFirstPersonArmHooks {
     /** GeoObjectRenderer que pinta SOLO el brazo del cuerpo, tintado según el canal del item. */
     private static final class ArmRenderer extends GeoObjectRenderer<GeoLayerArmorItem> {
         private Player current;
+        /** Hueso del brazo del que se captura la matriz (null = no capturar). */
+        private String captureBone = null;
+        private final Matrix4f capturedPose = new Matrix4f();
+        private final Matrix3f capturedNormal = new Matrix3f();
+        private boolean captured = false;
         /** Si != null, getRenderColor devuelve este color (para las pasadas detail/lines). */
         private Integer passColor = null;
 
@@ -173,10 +200,12 @@ public final class ZenkaiFirstPersonArmHooks {
         void renderArm(GeoLayerArmorItem item, Player player, HumanoidArm arm,
                        PoseStack poseStack, MultiBufferSource buffers, int light) {
             this.current = player;
+            this.captured = false;
 
             GeoModel<GeoLayerArmorItem> model = getGeoModel();
             BakedGeoModel baked = model.getBakedModel(model.getModelResource(item));
             String armRoot = (arm == HumanoidArm.RIGHT) ? RIGHT_ARM_BONE : LEFT_ARM_BONE;
+            this.captureBone = armRoot;
 
             try {
                 for (GeoBone b : baked.topLevelBones()) {
@@ -230,7 +259,16 @@ public final class ZenkaiFirstPersonArmHooks {
                 }
 
                 poseStack.popPose();
+
+                // El arma de ki se cuelga de la matriz REAL del hueso del brazo (ya con el offset de
+                // este hook, el translate(0.5, 0.51, 0.5) de GeoObjectRenderer, la escala y la pose
+                // de vanilla): la misma idea que translateToHand en 3ª persona, sin calibrar a mano.
+                if (captured) {
+                    com.hmc.zenkai.client.kiweapon.KiWeaponFirstPerson.drawOnRaceArm(
+                            player, arm, capturedPose, capturedNormal, buffers);
+                }
             } finally {
+                this.captureBone = null;
                 for (GeoBone b : baked.topLevelBones()) {
                     setBranchHidden(b, false);
                 }
@@ -259,6 +297,25 @@ public final class ZenkaiFirstPersonArmHooks {
             for (GeoBone child : bone.getChildBones()) {
                 resetBranchToBind(child);
             }
+        }
+
+        /** Apunta la matriz del hueso del brazo (espacio local del geo: px/16, Y hacia arriba) con
+         *  la MISMA preparación que hace GeckoLib antes de pintar sus cubos. */
+        @Override
+        public void renderRecursively(PoseStack poseStack, GeoLayerArmorItem animatable, GeoBone bone,
+                                      RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
+                                      boolean isReRender, float partialTick, int packedLight, int packedOverlay,
+                                      int colour) {
+            if (captureBone != null && bone.getName().equals(captureBone)) {
+                poseStack.pushPose();
+                RenderUtil.prepMatrixForBone(poseStack, bone);
+                capturedPose.set(poseStack.last().pose());
+                capturedNormal.set(poseStack.last().normal());
+                captured = true;
+                poseStack.popPose();
+            }
+            super.renderRecursively(poseStack, animatable, bone, renderType, bufferSource, buffer,
+                    isReRender, partialTick, packedLight, packedOverlay, colour);
         }
 
         /**

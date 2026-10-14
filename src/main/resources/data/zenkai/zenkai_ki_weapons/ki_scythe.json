@@ -1,4 +1,9 @@
 {
   "damage_mult": 2.05,
-  "ki_cost_mult": 2.00
+  "ki_cost_mult": 2.0,
+  "reach": 2.0,
+  "attack_speed": -3.0,
+  "attack_damage": 4.0,
+  "two_handed": true,
+  "guard_break": 0.15
 }

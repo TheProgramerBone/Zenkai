@@ -226,8 +226,6 @@ public class ModItemModelProvider extends ItemModelProvider {
 
         // Pelo genérico: un solo ítem, con la silueta de casco.
         flatGroup("race_helmet", "hair");
-        // ki_scythe.png no existe (solo su .mcmeta): se usa la textura de la hoja de ki.
-        flatGroup("ki_blade", "ki_scythe");
     }
 
     private void flatGroup(String texture, String... names) {

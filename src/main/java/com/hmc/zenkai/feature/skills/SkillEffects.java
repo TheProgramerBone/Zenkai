@@ -32,6 +32,12 @@ public final class SkillEffects {
     /** No son habilidades comprables: se desbloquean por tener Ki Fist + Ki Infuse. */
     public static final String KI_BLADE = "ki_blade";
     public static final String KI_SCYTHE = "ki_scythe";
+    public static final String KI_SWORD = "ki_sword";
+    public static final String KI_AXE = "ki_axe";
+    public static final String KI_MACE = "ki_mace";
+    public static final String KI_HAMMER = "ki_hammer";
+    /** Mano SECUNDARIA: convive con cualquier arma de una mano. */
+    public static final String KI_SHIELD = "ki_shield";
     /** Overlay genérico (0.3.0, ver OverlayStateSystem): interruptor ON/OFF que se puede usar
      *  sobre CUALQUIER Transformación primaria (Base, SSJ, SSB...) — distinto de la
      *  Transformación completa "Ultra Instinct" (FormDef ultra_instinct_sign/ultra_instinct),

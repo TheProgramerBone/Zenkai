@@ -22,10 +22,10 @@ import java.util.Map;
 /**
  * Números de las armas de ki, recargables con /reload.
  *   data/&lt;ns&gt;/zenkai_ki_weapons/ki_blade.json
- *   { "damage_mult": 1.60, "ki_cost_mult": 1.40 }
+ *   { "damage_mult": 1.60, "ki_cost_mult": 1.40, "reach": 1.0, "attack_speed": -2.4, "attack_damage": 3.0 }
  *
- * La clave es el nombre del archivo, que coincide con el id del interruptor y del item. No se
- * pueden AÑADIR armas desde datapack (los items se registran en Java), pero sí ajustarlas sin
+ * La clave es el nombre del archivo, que coincide con el id del interruptor. No se pueden AÑADIR
+ * armas desde datapack (el interruptor y el modelo se registran en Java), pero sí ajustarlas sin
  * reiniciar, que es lo que de verdad hace falta al balancear combate.
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
@@ -64,7 +64,15 @@ public final class KiWeaponRegistry {
                     JsonObject o = JsonParser.parseReader(reader).getAsJsonObject();
                     out.put(id, new KiWeaponDef(
                             GsonHelper.getAsDouble(o, "damage_mult", 1.0),
-                            GsonHelper.getAsDouble(o, "ki_cost_mult", 1.0)));
+                            GsonHelper.getAsDouble(o, "ki_cost_mult", 1.0),
+                            GsonHelper.getAsDouble(o, "reach", 0.0),
+                            GsonHelper.getAsDouble(o, "attack_speed", 0.0),
+                            GsonHelper.getAsDouble(o, "attack_damage", 2.0),
+                            GsonHelper.getAsBoolean(o, "two_handed", false),
+                            GsonHelper.getAsDouble(o, "knockback", 0.0),
+                            Math.max(0.0, Math.min(1.0, GsonHelper.getAsDouble(o, "guard_break", 0.0))),
+                            GsonHelper.getAsDouble(o, "block_bonus", 0.0),
+                            GsonHelper.getAsDouble(o, "block_ki_pct", 0.0)));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer {}: {}", file, ex.toString());
                 }

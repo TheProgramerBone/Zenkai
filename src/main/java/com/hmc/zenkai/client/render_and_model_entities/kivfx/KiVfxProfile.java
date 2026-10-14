@@ -293,6 +293,26 @@ public record KiVfxProfile(
 
     public static KiVfxProfile of(KiTechniqueType type) { return BY_TYPE[type.ordinal()]; }
 
+    /**
+     * Perfil del ARMA de ki (espada y guadaña): no es una técnica, así que no está en la tabla de
+     * tipos. Es un BEAM anclado (tubos barridos por {@link KiVfxCompositeRenderer#renderColumn}) de
+     * mallas aplanadas por el que dibuja {@code KiWeaponVfx}: mismo shader, mismas cuatro capas
+     * (contorno → tinte → caliente → blanco) y mismo bloom que un Kamehameha, para que parezca
+     * energía y no un modelo con textura. {@link #typeOf} devuelve null para él, así que los
+     * ajustes por técnica de /zkvfx no le afectan (sí los globales).
+     */
+    public static final KiVfxProfile KI_WEAPON = b(KiVfxShape.BEAM)
+            .mesh(1.0f, 0.05f, 0.05f).anchored().column().shell(0.78f).envelope(1.45f, 0.22f).core(0.55f, 0.95f)
+            .bands(0.64f, 0.30f, 0.05f).tone(0.92f, 0.45f).edge(0.30f).wobble(0.60f)
+            .halo(0f, 0f).build();
+
+    /** Como {@link #KI_WEAPON} pero con el borde MUY dentado (wobble alto, desvanecido corto): la
+     *  hoja de Zamasu (ki_blade_zamasu2) es un cometa con el filo en llamas, no un cristal liso. */
+    public static final KiVfxProfile KI_WEAPON_JAGGED = b(KiVfxShape.BEAM)
+            .mesh(1.0f, 0.05f, 0.05f).anchored().column().shell(0.80f).envelope(1.55f, 0.24f).core(0.45f, 0.90f)
+            .bands(0.60f, 0.28f, 0.06f).tone(0.88f, 0.42f).edge(0.24f).wobble(1.45f)
+            .halo(0f, 0f).build();
+
     /** Inverso de {@link #of}: qué técnica tiene ESTE perfil (cada fila de la tabla es una
      *  instancia propia). Lo usa KiVfxTuning para los overrides por técnica, sin tener que pasar
      *  el tipo por cada firma del pipeline. null si el perfil no sale de la tabla. */

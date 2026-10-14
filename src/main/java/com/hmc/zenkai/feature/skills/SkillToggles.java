@@ -34,6 +34,11 @@ public final class SkillToggles {
     /** Categorías de la rueda. El valor es la clave de lang: wheel.zenkai.&lt;categoría&gt;. */
     public static final String CAT_KI_WEAPONS = "ki_weapons";
 
+    /** Armas de ki de la MANO PRINCIPAL, por orden de rueda. */
+    public static final java.util.List<String> KI_MAIN_WEAPONS = java.util.List.of(
+            SkillEffects.KI_BLADE, SkillEffects.KI_SWORD, SkillEffects.KI_AXE,
+            SkillEffects.KI_MACE, SkillEffects.KI_SCYTHE, SkillEffects.KI_HAMMER);
+
     /**
      * @param id            id del interruptor (coincide con el id de habilidad si la tiene)
      * @param needsOwnSkill true si exige tener ESA habilidad a nivel > 0. Las armas de ki no:
@@ -71,13 +76,16 @@ public final class SkillToggles {
         // dos. Van agrupadas en su propia rama de la rueda porque son variantes de una misma
         // cosa, no dos interruptores independientes.
         Set<String> weaponReq = Set.of(SkillEffects.KI_FIST, SkillEffects.KI_INFUSE);
-        // APARCADAS: enabled=false hasta que estén los modelos y las animaciones. El código
-        // sigue compilado y probado; solo deja de ser alcanzable. Volver a activarlas es
-        // cambiar estos dos false por true.
-        register(new Toggle(SkillEffects.KI_BLADE,  false, weaponReq,
-                Set.of(SkillEffects.KI_SCYTHE), CAT_KI_WEAPONS, false));
-        register(new Toggle(SkillEffects.KI_SCYTHE, false, weaponReq,
-                Set.of(SkillEffects.KI_BLADE),  CAT_KI_WEAPONS, false));
+        // Activadas el 2026-10-13, con el render ya hecho como capa del jugador (KiWeaponLayer).
+        // Las de mano principal compiten por la misma mano: encender una apaga las demás.
+        for (String w : KI_MAIN_WEAPONS) {
+            Set<String> others = new java.util.LinkedHashSet<>(KI_MAIN_WEAPONS);
+            others.remove(w);
+            register(new Toggle(w, false, weaponReq, others, CAT_KI_WEAPONS, true));
+        }
+        // El escudo va en la mano secundaria: no compite con ninguna (las de dos manos lo anulan
+        // por su cuenta, ver KiWeaponServer.activeOffhand).
+        register(new Toggle(SkillEffects.KI_SHIELD, false, weaponReq, Set.of(), CAT_KI_WEAPONS, true));
 
         // Potential Unlock YA NO es un interruptor: Mystic es una forma propia que se elige en la
         // rueda y se carga con la tecla de transformar, como cualquier otra (ver PotentialUnlock).

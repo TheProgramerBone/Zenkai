@@ -73,8 +73,6 @@ public class ModCreativeModeTabs {
     private static Set<Item> hidden() {
         return Set.of(
                 ModItems.ALL_DRAGON_BALLS_ITEM.get(),
-                ModItems.KI_BLADE.get(),
-                ModItems.KI_SCYTHE.get(),
                 ModBlocks.HTC_PORTAL.get().asItem());
     }
 

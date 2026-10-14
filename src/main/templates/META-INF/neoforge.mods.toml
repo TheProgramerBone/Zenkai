@@ -81,6 +81,16 @@ versionRange="[1.0.82,)"
 ordering="AFTER"
 side="CLIENT"
 
+# Better Combat (opcional) — ver compat/BetterCombatCompat.java. Solo para que el escudo de ki ceda ante
+# un arma de dos manos de BC. BC 1.21.1 necesita ADEMÁS playerAnimator (KosmX) y Cloth Config.
+[[dependencies.${mod_id}]]
+modId="bettercombat"
+type="optional"
+reason="Con Better Combat, el escudo de ki se desvanece al empuñar un arma de dos manos suya"
+versionRange="[2.4.0,)"
+ordering="AFTER"
+side="BOTH"
+
 [modproperties.${mod_id}]
 catalogueImageIcon="assets/zenkai/icon.png"
 catalogueBackground = "assets/zenkai/background.png"

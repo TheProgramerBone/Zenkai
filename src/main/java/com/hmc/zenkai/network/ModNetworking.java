@@ -14,6 +14,7 @@ import com.hmc.zenkai.feature.combat.BlockingSyncPacket;
 import com.hmc.zenkai.feature.combat.CombatModePacket;
 import com.hmc.zenkai.feature.combat.DashPacket;
 import com.hmc.zenkai.feature.combat.CombatModeSyncPacket;
+import com.hmc.zenkai.feature.kiweapon.KiWeaponSyncPacket;
 import com.hmc.zenkai.feature.forms.FormSyncPacket;
 import com.hmc.zenkai.feature.ki.*;
 import com.hmc.zenkai.feature.skills.OverlayStateSyncPacket;
@@ -345,6 +346,11 @@ public class ModNetworking {
                 CombatModeSyncPacket.TYPE,
                 CombatModeSyncPacket.STREAM_CODEC,
                 CombatModeSyncPacket::handle);
+
+        registrar.playToClient(
+                KiWeaponSyncPacket.TYPE,
+                KiWeaponSyncPacket.STREAM_CODEC,
+                KiWeaponSyncPacket::handle);
 
         registrar.playToServer(
                 BlockingPacket.TYPE,

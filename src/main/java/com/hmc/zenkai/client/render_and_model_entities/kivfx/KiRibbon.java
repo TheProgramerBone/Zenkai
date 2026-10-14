@@ -127,6 +127,26 @@ public final class KiRibbon {
     }
 
     /**
+     * SUPERFICIE entre dos polilíneas paralelas ({@code aPts[i]} con {@code bPts[i]}), cabeza
+     * primero, con un alfa PROPIO por muestra ({@code alpha[i]}). Es lo que necesita una estela de
+     * espada: el ancho no lo da un lateral fijo sino la distancia entre la punta y la base del arma
+     * en cada instante. Se emite por las dos caras (el RenderType no culla) y el UV corre a lo
+     * largo de la estela.
+     * @param origin punto de referencia del PoseStack ({@code punto - origin} por vértice).
+     */
+    public static void surface(VertexConsumer vc, PoseStack.Pose mat, List<Vec3> aPts, List<Vec3> bPts,
+                               float[] alpha, Vec3 origin, float r, float g, float b) {
+        int n = Math.min(aPts.size(), bPts.size());
+        for (int i = 1; i < n; i++) {
+            Vec3 aPrev = aPts.get(i - 1).subtract(origin), bPrev = bPts.get(i - 1).subtract(origin);
+            Vec3 aCur = aPts.get(i).subtract(origin), bCur = bPts.get(i).subtract(origin);
+            float v0 = (float) (i - 1) / (n - 1), v1 = (float) i / (n - 1);
+            quad(vc, mat, aPrev, bPrev, bCur, aCur, r, g, b, alpha[i - 1], alpha[i], v0, v1);
+            quad(vc, mat, aCur, bCur, bPrev, aPrev, r, g, b, alpha[i], alpha[i - 1], v1, v0);
+        }
+    }
+
+    /**
      * Desplaza cada punto de {@code centerPts} en espiral alrededor de sí mismo, usando la MISMA
      * fórmula de torsión que hornea la malla HELIX ({@link KiVfxGeometry#helixAngleFromTip}) —
      * es lo que hace que la estela en hélice continúe la geometría horneada sin costura visible

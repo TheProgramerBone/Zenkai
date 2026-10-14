@@ -189,8 +189,7 @@ public final class CombatModeClientState {
         tickDash(mc);
 
         boolean blockDown = KeyBindings.BLOCK != null && KeyBindings.BLOCK.isDown();
-        boolean handsFree = mc.player.getMainHandItem().isEmpty()
-                && mc.player.getOffhandItem().isEmpty();
+        boolean handsFree = GuardHands.handsFree(mc.player);
         boolean inGame = mc.screen == null && mc.getConnection() != null;
         // Manos válidas para DEFENDERSE: vacías, un arma en la mano principal o un escudo en la
         // secundaria (ver GuardHands). Distinto de handsFree, que sigue mandando en las técnicas.

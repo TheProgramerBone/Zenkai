@@ -58,7 +58,7 @@ public final class ActionStateClient {
                 combatMode,
                 blockingLocal,
                 att.flags().isDowned(),
-                p.getMainHandItem().isEmpty() && p.getOffhandItem().isEmpty(),
+                com.hmc.zenkai.feature.combat.GuardHands.handsFree(p),
                 com.hmc.zenkai.feature.combat.GuardHands.isHoldingSword(p),
                 st.physBusy(),
                 st.chargingSlot(),

@@ -30,6 +30,7 @@ public record TrainingSwingPacket() implements CustomPacketPayload {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
             if (!sp.getItemInHand(InteractionHand.MAIN_HAND).isEmpty()) return; // puños
+            if (com.hmc.zenkai.feature.kiweapon.KiWeaponServer.activeVariant(sp) != null) return; // arma de ki: no son puños
             if (KiCombatServer.isBlocking(sp)) return; // defendiendo: sin TP al aire
             if (!CombatModeServerState.isActive(sp.getUUID())) return; // entrenar solo en modo combate
             TrainingHooks.grantFromSwing(sp);

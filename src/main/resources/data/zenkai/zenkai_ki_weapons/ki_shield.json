@@ -1,0 +1,9 @@
+{
+  "damage_mult": 1.0,
+  "ki_cost_mult": 1.0,
+  "reach": 0.0,
+  "attack_speed": 0.0,
+  "attack_damage": 0.0,
+  "block_bonus": 0.15,
+  "block_ki_pct": 0.004
+}

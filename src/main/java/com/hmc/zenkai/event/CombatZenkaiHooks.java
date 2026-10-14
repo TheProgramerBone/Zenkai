@@ -5,7 +5,7 @@ import com.hmc.zenkai.feature.combat.DashServer;
 import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.content.entity.ai.BlockingMob;
 import com.hmc.zenkai.content.entity.technique.KiProjectileEntity;
-import com.hmc.zenkai.content.item.KiWeaponItem;
+import com.hmc.zenkai.feature.kiweapon.KiWeaponDef;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
 import com.hmc.zenkai.feature.combat.*;
 import com.hmc.zenkai.feature.kiweapon.KiWeaponServer;
@@ -317,7 +317,7 @@ public class CombatZenkaiHooks {
         // KiInfusion.enchantMultiplier. Un arma de ki NO pasa por aquí: su multiplicador ya es
         // un número de datapack (weaponMultiplier), ajeno al atributo attack_damage en el que
         // se basa este cociente.
-        KiWeaponItem heldKiWeapon = KiWeaponServer.heldWeapon(attacker);
+        KiWeaponDef heldKiWeapon = KiWeaponServer.heldWeapon(attacker);
         double enchantMult = heldKiWeapon == null
                 ? KiInfusion.enchantMultiplier(attacker, originalVanillaDamage, critMult)
                 : 1.0;
@@ -326,9 +326,9 @@ public class CombatZenkaiHooks {
 
         double kiWeaponExtra = KiInfusion.kiWeaponExtra(attacker, strDamage, chargeF);
         if (kiWeaponExtra > 0.0) {
-            KiWeaponItem w = KiWeaponServer.heldWeapon(attacker);
+            KiWeaponDef w = KiWeaponServer.heldWeapon(attacker);
             int wCost = (int) Math.ceil(KiInfusion.kiCost(atkStats, kiWeaponExtra)
-                    * (w == null ? 1.0 : w.def().kiCostMult()));
+                    * (w == null ? 1.0 : w.kiCostMult()));
             if (atkStats.getEnergy() >= wCost) {
                 atkStats.consumeEnergy(wCost);
             } else {
@@ -528,7 +528,13 @@ public class CombatZenkaiHooks {
         }
 
         if (isBlockingNow(e.getEntity())) {
-            finalDamage *= blockDamageMultiplierOf(e.getEntity());
+            double blockMult = blockDamageMultiplierOf(e.getEntity());
+            // Arma que rompe guardias (el hacha): ignora parte de lo que la guardia le quitaría.
+            if (e.getSource().getEntity() instanceof Player axeman) {
+                KiWeaponDef w = KiWeaponServer.heldWeapon(axeman);
+                if (w != null && w.guardBreak() > 0.0) blockMult += (1.0 - blockMult) * w.guardBreak();
+            }
+            finalDamage *= blockMult;
         }
 
         // Jugador sin raza: no tiene barrera de ki y su absorción ya la cobró vanilla sobre su
@@ -721,7 +727,7 @@ public class CombatZenkaiHooks {
         if (e.getHand() != InteractionHand.MAIN_HAND) return;
 
         Player healer = e.getEntity();
-        if (!healer.getMainHandItem().isEmpty()) return;               // mano vacía
+        if (!healer.getMainHandItem().isEmpty() || KiWeaponServer.activeVariant(healer) != null) return;   // mano vacía
         if (!(e.getTarget() instanceof ServerPlayer target)) return;
 
         // Un jugador derribado no puede revivir a nadie más — mismo chequeo que SenzuBean.

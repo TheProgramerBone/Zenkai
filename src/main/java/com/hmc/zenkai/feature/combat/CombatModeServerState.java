@@ -94,6 +94,16 @@ public final class CombatModeServerState {
                 COMBAT_ATTACK_SPEED_ID, delta, AttributeModifier.Operation.ADD_VALUE));
     }
 
+    /**
+     * Recalcula el techo de attack_speed sin esperar a que cambie la mano. El arma de ki no
+     * cambia ningún ítem, solo añade o quita su propio modificador de velocidad, y el techo se
+     * mide contra getValue(): si no se rehace, el modificador del arma se sumaría al techo y
+     * podría llegar a 0 (delay infinito, ver applyAttackSpeed).
+     */
+    public static void refreshAttackSpeed(ServerPlayer sp) {
+        if (isActive(sp.getUUID())) applyAttackSpeed(sp, true);
+    }
+
     @SubscribeEvent
     public static void onStartTracking(PlayerEvent.StartTracking e) {
         if (!(e.getTarget() instanceof ServerPlayer target)) return;
