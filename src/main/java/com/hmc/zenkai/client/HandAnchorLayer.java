@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.hmc.zenkai.client.fx.ArmGeometry;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -79,10 +80,46 @@ public class HandAnchorLayer extends PlayerItemInHandLayer<AbstractClientPlayer,
         Vec3 forehead = anchor(pose, model.head, 0.0F, FOREHEAD_Y, FACE_Z);
 
         PlayerHandTracker.put(player.getId(), right, left, mouth, forehead, eyes);
+        Vec3[] r = axes(pose, model.rightArm), l = axes(pose, model.leftArm);
+        // Pivote del hombro del modelo que se VE (en el Oozaru no coincide con el vanilla), para anclar la caja del puño.
+        Vec3 rPiv = geoPivot(pose, model.rightArm, ArmGeometry.of(player, true), true);
+        Vec3 lPiv = geoPivot(pose, model.leftArm, ArmGeometry.of(player, false), false);
+        PlayerHandTracker.putAxes(player.getId(), new Vec3[]{r[0], r[1], r[2], l[0], l[1], l[2], rPiv, lPiv});
         // A PROPÓSITO sin super.render(): heredamos de PlayerItemInHandLayer solo para pasar su
         // filtro de 1ª persona (ver el javadoc de la clase), no para dibujar ítems — de eso ya
         // se encarga la capa real que PlayerRenderer trae de serie. Llamar a super pintaría el
         // objeto de la mano DOS veces.
+    }
+
+    /** Los tres ejes locales del hueso (X, Y, Z) como direcciones relativas a la cámara. NO se normalizan: su
+     *  longitud es la escala con la que se dibuja el modelo (tamaño de raza, atributo scale, animación), para que
+     *  lo que se ancle a la mano (la caja de los puños) crezca o encoja con el jugador. */
+    private static Vec3[] axes(PoseStack pose, ModelPart part) {
+        pose.pushPose();
+        part.translateAndRotate(pose);
+        Vec3[] out = new Vec3[3];
+        for (int i = 0; i < 3; i++) {
+            Vector3f d = pose.last().pose().transformDirection(i == 0 ? 1F : 0F, i == 1 ? 1F : 0F, i == 2 ? 1F : 0F,
+                    new Vector3f());
+            out[i] = new Vec3(d.x(), d.y(), d.z());
+        }
+        pose.popPose();
+        return out;
+    }
+
+    /** Pivote del hombro del geo racial en espacio de cámara: el del hueso vanilla corrido lo que difiere el del geo
+     *  (px de modelo; Y del geo sube y la de ModelPart baja). Con los modelos de pivote vanilla es el mismo punto. */
+    private static Vec3 geoPivot(PoseStack pose, ModelPart part, ArmGeometry.Arm arm, boolean right) {
+        float ox = part.x, oy = part.y;
+        part.x += arm.pivX() - ArmGeometry.vanillaPivX(right);
+        part.y -= arm.pivY() - ArmGeometry.VANILLA_PIV_Y;
+        pose.pushPose();
+        part.translateAndRotate(pose);
+        Vector3f p = pose.last().pose().transformPosition(0.0F, 0.0F, 0.0F, new Vector3f());
+        pose.popPose();
+        part.x = ox;
+        part.y = oy;
+        return new Vec3(p.x(), p.y(), p.z());
     }
 
     /** Posición del punto (x,y,z) del hueso, en espacio relativo a la cámara. */

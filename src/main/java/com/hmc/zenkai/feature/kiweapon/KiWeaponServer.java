@@ -60,6 +60,7 @@ public final class KiWeaponServer {
 
     /** ¿Este jugador quiere esta variante ahora mismo? Interruptor + habilidades + combate. */
     public static boolean wants(Player p, String variant) {
+        if (KiWeaponRegistry.isBanned(variant)) return false;   // banned_ki_weapons.json
         if (!SkillToggles.isOn(p, variant)) return false;
         // Fuera del modo combate no hay arma: es un arma, no un accesorio.
         return !(p instanceof ServerPlayer sp) || CombatModeServerState.isActive(sp.getUUID());
@@ -82,18 +83,21 @@ public final class KiWeaponServer {
     }
 
     /**
-     * El escudo de ki, o null. Va en la mano SECUNDARIA: exige que esté vacía y que el arma de la
-     * principal (si la hay) sea de UNA mano. Un escudo vanilla en la mano secundaria lo desplaza,
-     * igual que una espada normal desplaza al arma de la principal.
+     * El escudo de ki, o null. Va en la mano SECUNDARIA: exige que esté vacía. Un escudo vanilla en la mano
+     * secundaria lo desplaza, igual que una espada normal desplaza al arma de la principal.
+     * Convive con CUALQUIER arma de ki, también las de dos manos (Scythe, Hammer): decisión del usuario
+     * 2026-10-15 (antes el escudo se apagaba con ellas).
+     * Es la ÚNICA puerta del escudo: con el interruptor apagado (o fuera del modo combate, o baneado) devuelve
+     * null, y de aquí cuelgan su protección (GuardHands.hasKiShield / kiShieldReduction vía heldShield) y su
+     * dibujo (KiWeaponSyncPacket manda el cambio en el mismo tick), así que apagarlo no deja ningún buff.
      */
     public static String activeOffhand(Player p) {
         if (p.isSpectator() || !p.isAlive()) return null;
         if (!p.getOffhandItem().isEmpty()) return null;
         if (!wants(p, SkillEffects.KI_SHIELD)) return null;
-        // Better Combat solo exige la mano secundaria VACÍA para blandir un arma de dos manos.
+        // Better Combat solo exige la mano secundaria VACÍA para blandir un arma de dos manos (un ítem suyo, no
+        // un arma de ki).
         if (BetterCombatCompat.isTwoHandedWeapon(p.getMainHandItem())) return null;
-        String main = activeVariant(p);
-        if (main != null && KiWeaponRegistry.get(main).twoHanded()) return null;
         return SkillEffects.KI_SHIELD;
     }
 

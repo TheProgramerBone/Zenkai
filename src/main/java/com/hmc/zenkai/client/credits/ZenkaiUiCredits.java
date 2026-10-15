@@ -178,6 +178,12 @@ public final class ZenkaiUiCredits {
         credit(Category.ANIMATIONS, "phys_dash_punch", AUTHOR, "player_animations/phys_dash_punch.animation.json");
         credit(Category.ANIMATIONS, "phys_heavy_blow", AUTHOR, "player_animations/phys_heavy_blow.animation.json");
         credit(Category.ANIMATIONS, "phys_kiai", AUTHOR, "player_animations/phys_kiai.animation.json");
+        credit(Category.ANIMATIONS, "phys_rising_slash", AUTHOR, "player_animations/phys_rising_slash.animation.json");
+        credit(Category.ANIMATIONS, "phys_cross_slash", AUTHOR, "player_animations/phys_cross_slash.animation.json");
+        credit(Category.ANIMATIONS, "phys_piercing_thrust", AUTHOR, "player_animations/phys_piercing_thrust.animation.json");
+        credit(Category.ANIMATIONS, "phys_spin_slash", AUTHOR, "player_animations/phys_spin_slash.animation.json");
+        credit(Category.ANIMATIONS, "phys_sky_cleave", AUTHOR, "player_animations/phys_sky_cleave.animation.json");
+        credit(Category.ANIMATIONS, "phys_light_blade", AUTHOR, "player_animations/phys_light_blade.animation.json");
         credit(Category.ANIMATIONS, "transformation1", AUTHOR, "player_animations/transformation1.animation.json");
         credit(Category.ANIMATIONS, "transformation2", AUTHOR, "player_animations/transformation2.animation.json");
 

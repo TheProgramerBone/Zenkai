@@ -198,7 +198,9 @@ public final class TechniqueHotbarOverlay {
         if (mc.player == null) return null;
         boolean free = com.hmc.zenkai.feature.combat.GuardHands.handsFree(mc.player);
         if (ki != null) {
-            return free ? null : Component.translatable("hud.zenkai.requires_free_hands");
+            // Un arma o escudo de ki no impiden las técnicas de ki (se ocultan al cargar).
+            return com.hmc.zenkai.feature.combat.GuardHands.kiHandsFree(mc.player)
+                    ? null : Component.translatable("hud.zenkai.requires_free_hands");
         }
         if (ph == null) return null;
         return switch (ph.weaponRequirement()) {
@@ -266,7 +268,8 @@ public final class TechniqueHotbarOverlay {
         if (t != null) {
             int fullCost = KiCombatServer.computeCost(att, t.type(), t.size(), t.effect());
             int cost = (int) Math.max(1, Math.ceil(
-                    fullCost * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()));
+                    fullCost * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()
+                            * KiCombatServer.ueImbueCostMult(mc.player)));
             boolean affordable = att.getEnergy() >= cost;
             g.drawCenteredString(mc.font, Component.literal("◆ " + cost),
                     g.guiWidth() / 2, by + CHARGE_H + 23,
@@ -285,6 +288,6 @@ public final class TechniqueHotbarOverlay {
                                         KiTechnique t, double ratio) {
         if (mc.player == null || t == null || t.type().defensive()) return 0;
         double kiPower = att.computeKiPowerFinal();
-        return KiCombatServer.computeDamage(kiPower, t.type(), t.size()) * ratio;
+        return KiCombatServer.computePlayerDamage(kiPower, t.type(), t.size()) * ratio;
     }
 }

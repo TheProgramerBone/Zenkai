@@ -307,11 +307,39 @@ public record KiVfxProfile(
             .halo(0f, 0f).build();
 
     /** Como {@link #KI_WEAPON} pero con el borde MUY dentado (wobble alto, desvanecido corto): la
-     *  hoja de Zamasu (ki_blade_zamasu2) es un cometa con el filo en llamas, no un cristal liso. */
+     *  hoja del hacha y la pasada de Ultra Ego lo usan. */
     public static final KiVfxProfile KI_WEAPON_JAGGED = b(KiVfxShape.BEAM)
             .mesh(1.0f, 0.05f, 0.05f).anchored().column().shell(0.80f).envelope(1.55f, 0.24f).core(0.45f, 0.90f)
             .bands(0.60f, 0.28f, 0.06f).tone(0.88f, 0.42f).edge(0.24f).wobble(1.45f)
             .halo(0f, 0f).build();
+
+    /**
+     * Perfiles de la MANO de 1ª persona (2026-10-15, ajustados con las capturas automáticas de
+     * {@code client/dev/FpWeaponShots}). Ahí no hay bloom: el resplandor lo pone KiWeaponVfx.handHalo, y lo que en el
+     * mundo se funde con el bloom aquí se ve tal cual. Sin envoltura (sin bloom se lee como un cristal gris facetado
+     * alrededor de la hoja), hervor bajo (en una hoja aplanada el dentado y las vetas salen como arañazos grises) y
+     * contorno menos oscuro (con un aura blanca el contorno a 0.45 es gris sucio). Caras traseras descartadas: por el
+     * borde de una hoja aplanada y por el extremo abierto de un tubo grueso se veía el reverso/interior como rayas y
+     * conchas grises. El borde dentado ya no rompe la silueta en la mano: dientes cortos de través leídos como sierra.
+     * Los primeros perfiles de mano (KI_WEAPON_FP, borrados y rehechos aquí) tapaban un bug de ejes de la pasada de
+     * mano (ver KiWeaponVfx.drawNow); estos se ajustan con ese bug ya arreglado.
+     */
+    public static final KiVfxProfile KI_WEAPON_HAND = b(KiVfxShape.BEAM)
+            .mesh(1.0f, 0.05f, 0.05f).anchored().column().shell(0.78f).core(0.55f, 0.95f)
+            .bands(0.64f, 0.30f, 0.05f).tone(0.92f, 0.85f).edge(0.50f).wobble(0.05f).backfaceCull()
+            .halo(0f, 0f).build();
+
+    public static final KiVfxProfile KI_WEAPON_JAGGED_HAND = b(KiVfxShape.BEAM)
+            .mesh(1.0f, 0.05f, 0.05f).anchored().column().shell(0.80f).core(0.45f, 0.90f)
+            .bands(0.60f, 0.28f, 0.06f).tone(0.88f, 0.85f).edge(0.50f).wobble(0.05f).backfaceCull()
+            .halo(0f, 0f).build();
+
+    /** El perfil de mano que corresponde a uno de arma (cualquier otro pasa igual). */
+    public static KiVfxProfile hand(KiVfxProfile p) {
+        if (p == KI_WEAPON) return KI_WEAPON_HAND;
+        if (p == KI_WEAPON_JAGGED) return KI_WEAPON_JAGGED_HAND;
+        return p;
+    }
 
     /** Inverso de {@link #of}: qué técnica tiene ESTE perfil (cada fila de la tabla es una
      *  instancia propia). Lo usa KiVfxTuning para los overrides por técnica, sin tener que pasar

@@ -306,6 +306,9 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.CLASH_ORB.get(),
                     com.hmc.zenkai.client.render_and_model_entities.entity.ClashOrbRenderer::new);
 
+            EntityRenderers.register(ModEntities.SWORD_WAVE.get(),
+                    com.hmc.zenkai.client.render_and_model_entities.entity.SwordWaveRenderer::new);
+
             EntityRenderers.register(ModEntities.KI_ARROW.get(),
                     TippableArrowRenderer::new);
 

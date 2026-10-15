@@ -61,6 +61,13 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> HEAVY_BLOW = key("heavy_blow");
     public static final ResourceKey<DamageType> BARRAGE = key("barrage");
     public static final ResourceKey<DamageType> KIAI = key("kiai");
+    // Técnicas de espada
+    public static final ResourceKey<DamageType> RISING_SLASH = key("rising_slash");
+    public static final ResourceKey<DamageType> CROSS_SLASH = key("cross_slash");
+    public static final ResourceKey<DamageType> PIERCING_THRUST = key("piercing_thrust");
+    public static final ResourceKey<DamageType> SPIN_SLASH = key("spin_slash");
+    public static final ResourceKey<DamageType> SKY_CLEAVE = key("sky_cleave");
+    public static final ResourceKey<DamageType> LIGHT_BLADE = key("light_blade");
     public static final ResourceKey<DamageType> PARRY = key("parry");
 
     // ── Combate cuerpo a cuerpo ─────────────────────────────────────────────

@@ -100,6 +100,18 @@ public class ModEntities {
                     .updateInterval(20)
                     .build("ki_arrow"));
 
+    /** Hoja de luz de la técnica LIGHT_BLADE. updateInterval alto: el cliente la mueve por su cuenta
+     *  (ver SwordWaveEntity), el servidor solo la corrige de vez en cuando. */
+    public static final Supplier<EntityType<com.hmc.zenkai.content.entity.technique.SwordWaveEntity>> SWORD_WAVE =
+            ENTITY_TYPES.register("sword_wave", () -> EntityType.Builder
+                    .<com.hmc.zenkai.content.entity.technique.SwordWaveEntity>of(
+                            com.hmc.zenkai.content.entity.technique.SwordWaveEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(8)
+                    .updateInterval(20)
+                    .noSave()
+                    .build("sword_wave"));
+
     public static final Supplier<EntityType<YemmaEntity>> YEMMA =
             ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)
                     .sized(4, 10.0f).build("yemma"));

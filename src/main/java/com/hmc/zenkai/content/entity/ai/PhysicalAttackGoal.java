@@ -192,6 +192,8 @@ public class PhysicalAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
             case HEAVY_BLOW -> "phys_heavy_blow";
             case BARRAGE    -> "phys_barrage";
             case KIAI       -> "phys_kiai";
+            // Las técnicas de espada son solo de jugador (ninguna ficha de NPC las lleva).
+            default         -> "phys_heavy_blow";
         });
     }
 
@@ -276,6 +278,7 @@ public class PhysicalAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
             // daño, empuje radial escalado con STR y desvío lateral de proyectiles ajenos. Solo lo usa
             // quien lleva "kiai" en su ficha (entity physical_attacks), que es lo que lo "habilita".
             case KIAI -> kiaiBurst(str);
+            default -> { }   // técnicas de espada: solo de jugador
         }
     }
 

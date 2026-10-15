@@ -69,6 +69,24 @@ public final class PlayerHandTracker {
 
     public static boolean capturing() { return inLevelPass; }
 
+    /** Ejes locales (X ancho, Y a lo largo del brazo, Z grosor) de cada brazo, normalizados y relativos a la
+     *  cámara: {@code [0..2]} derecho, {@code [3..5]} izquierdo. Para dibujar algo que ABRACE la mano. */
+    private static final Map<Integer, Vec3[]> AXES = new ConcurrentHashMap<>();
+    private static final Map<Integer, Long> AXES_FRAME = new ConcurrentHashMap<>();
+
+    public static void putAxes(int entityId, Vec3[] axes) {
+        if (!inLevelPass) return;
+        AXES.put(entityId, axes);
+        AXES_FRAME.put(entityId, frame);
+    }
+
+    /** null si no hay dato de ESTE frame (mismas reglas que {@link #get}). */
+    @Nullable
+    public static Vec3[] axes(int entityId) {
+        Long f = AXES_FRAME.get(entityId);
+        return (f != null && f == frame) ? AXES.get(entityId) : null;
+    }
+
     public static void put(int entityId, Vec3 right, Vec3 left,
                            Vec3 mouth, Vec3 forehead, Vec3 eyes) {
         if (!inLevelPass) return;

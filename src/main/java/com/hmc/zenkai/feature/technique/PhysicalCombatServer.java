@@ -46,6 +46,13 @@ import java.util.UUID;
  *  - DASH_PUNCH: 8 ticks de embestida, golpea al que toque (una vez a cada uno);
  *    chocar contra pared lo corta.
  *  - BARRAGE: 6 golpes, uno cada 2 ticks (12 ticks = 0.6 s), cono frontal por pulso.
+ * Técnicas de espada (weapon_requirement "sword", las enseña Tori-Bot; siempre con el arma en la mano
+ * principal, por eso cada tajo hace swing() de la mano: el brazo del arma de ki y su estela lo siguen):
+ *  - RISING_SLASH: cono frontal instantáneo que lanza al rival hacia arriba.
+ *  - CROSS_SLASH: dos tajos en X, uno cada 4 ticks (8 ticks en total), cono frontal por pulso.
+ *  - PIERCING_THRUST: estocada en línea recta (6 ticks), atraviesa y golpea a cada uno una vez.
+ *  - SPIN_SLASH: giro completo, círculo alrededor del jugador con empuje radial.
+ *  - SKY_CLEAVE: tajo vertical pesado que rompe la guardia; mismo golpe-explosión que HEAVY_BLOW.
  * Morir, caer derribado, bloquear o salir del modo combate cancela el movimiento activo.
  * COSTE: absoluto y escalado con STR (staminaCost), igual que el golpe básico y que el ki.
  * El cliente NO reimplementa la fórmula: llama a staminaCost() para su predicción, porque
@@ -59,6 +66,8 @@ public final class PhysicalCombatServer {
     private static final int DASH_TICKS = 8;      // 0.4 s de trayecto
     private static final int BARRAGE_TICKS = 12;  // 6 pulsos (cada 2 ticks)
     private static final double DASH_SPEED = 1.1;
+    private static final int CROSS_TICKS = 8;     // dos tajos: pulsos en ticksLeft 6 y 2
+    private static final int THRUST_TICKS = 6;    // estocada; la velocidad sale de range()/THRUST_TICKS
 
     /**
      * Techo del coste como fracción del pool. El coste escala con STR y el pool con CON,
@@ -149,6 +158,7 @@ public final class PhysicalCombatServer {
     public static int hitsPerUse(PhysicalTechnique t) {
         return switch (t) {
             case BARRAGE -> BARRAGE_TICKS / 2;
+            case CROSS_SLASH -> 2;
             case DASH_PUNCH -> 1;   // hitAll no repite objetivo: un blanco recibe UN golpe
             default -> 1;
         };
@@ -212,7 +222,13 @@ public final class PhysicalCombatServer {
             }
         }
 
-        double str = (att.computeMeleeFinal() + fistBonus)
+        // Técnicas de espada: aplican la MITAD del multiplicador del arma, 1 + (mult - 1) / 2 (Sword x1,25, Hammer
+        // x1,8). Antes lo ignoraban y pegaban igual con cualquier arma (2026-10-15). Solo es seguro con la fórmula
+        // de defensa única (CombatZenkaiHooks.computeDefense): con la antigua, los multiplicadores rendían más que
+        // lineal y esto se habría disparado.
+        double weaponF = t.weaponRequirement() == WeaponRequirement.SWORD
+                ? 1.0 + (com.hmc.zenkai.feature.combat.KiInfusion.weaponMultiplier(sp) - 1.0) * 0.5 : 1.0;
+        double str = (att.computeMeleeFinal() + fistBonus) * weaponF
                 * MasteryEffects.techDamageFactor(att, t.name());
         Vec3 look = sp.getLookAngle();
 
@@ -224,6 +240,15 @@ public final class PhysicalCombatServer {
             case BARRAGE -> ACTIVE.put(sp.getUUID(), new Active(t, str, look, BARRAGE_TICKS));
             case HEAVY_BLOW -> heavyBlow(sp, str, t);
             case KIAI -> kiai(sp, str, t);
+            case RISING_SLASH -> risingSlash(sp, str, t);
+            case CROSS_SLASH -> ACTIVE.put(sp.getUUID(), new Active(t, str, look, CROSS_TICKS));
+            case PIERCING_THRUST -> {
+                swingFx(sp, 1.3f, t, 0);
+                ACTIVE.put(sp.getUUID(), new Active(t, str, look, THRUST_TICKS));
+            }
+            case SPIN_SLASH -> spinSlash(sp, str, t);
+            case SKY_CLEAVE -> smash(sp, str, t, true, 0.4, 3.0, 1.2);
+            case LIGHT_BLADE -> lightBlade(sp, str, t);
         }
         ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
                 t.name().toLowerCase(java.util.Locale.ROOT), 0.0);
@@ -270,6 +295,23 @@ public final class PhysicalCombatServer {
                     pulse(sp, a.str * a.tech.dmgMult(), a.tech);
                 }
             }
+            case CROSS_SLASH -> {
+                if (a.ticksLeft == 6 || a.ticksLeft == 2) {
+                    swingFx(sp, a.ticksLeft == 6 ? 1.2f : 1.0f, a.tech, a.ticksLeft == 6 ? 0 : 1);
+                    if (damageEnabled(sp)) slashCone(sp, a.str * a.tech.dmgMult(), a.tech, 0.3);
+                }
+            }
+            case PIERCING_THRUST -> {
+                // Línea recta a velocidad fija: el alcance del JSON es lo que recorre en total.
+                double speed = a.tech.range() / THRUST_TICKS;
+                sp.setDeltaMovement(a.dir.x * speed, Math.max(sp.getDeltaMovement().y, a.dir.y * speed * 0.3),
+                        a.dir.z * speed);
+                sp.hurtMarked = true;
+                if (damageEnabled(sp)) {
+                    hitAll(sp, a, sp.getBoundingBox().inflate(1.0), a.str * a.tech.dmgMult());
+                }
+                if (sp.horizontalCollision) a.ticksLeft = 0;
+            }
             default -> a.ticksLeft = 0; // no debería: los instantáneos no se registran
         }
         if (a.ticksLeft <= 0) {
@@ -293,7 +335,15 @@ public final class PhysicalCombatServer {
      *  (bloque mirado o aire a rango máximo). En ambos casos: explosión (partículas +
      *  sonido + AoE 50% con caída + empuje radial). Sin romper bloques: físico, no ki. */
     private static void heavyBlow(ServerPlayer sp, double str, PhysicalTechnique t) {
+        smash(sp, str, t, false, 0.5, 2.5, 1.8);
+    }
+
+    /** Cuerpo común de HEAVY_BLOW y SKY_CLEAVE: golpe directo + onda expansiva. {@code sword} añade la
+     *  ruptura de guardia (ANTES del daño, como el kiai) y dibuja tajos además de la explosión. */
+    private static void smash(ServerPlayer sp, double str, PhysicalTechnique t, boolean sword,
+                              double aoeFrac, double radius, double knock) {
         double dmg = str * t.dmgMult();
+        if (sword) swingFx(sp, 0.8f, t, 0);
         Vec3 look = sp.getLookAngle();
         LivingEntity target = firstInRay(sp, t.range(), 1.0);
 
@@ -312,21 +362,33 @@ public final class PhysicalCombatServer {
                     ? clip.getLocation() : end;
         }
 
+        if (sword) {
+            int breakTicks = ServerConfig.kiaiGuardBreakTicks();
+            for (LivingEntity e : sp.serverLevel().getEntitiesOfClass(LivingEntity.class,
+                    AABB.ofSize(c, radius * 2, radius * 2, radius * 2),
+                    x -> x != sp && x.isAlive())) {
+                if (com.hmc.zenkai.feature.combat.GuardBreak.breakGuard(e, breakTicks)) {
+                    sp.serverLevel().playSound(null, e.getX(), e.getY(), e.getZ(),
+                            net.minecraft.sounds.SoundEvents.SHIELD_BREAK,
+                            SoundSource.PLAYERS, 0.9f, 1.1f);
+                }
+            }
+        }
+
         withBridge(t.dmgMult(), () -> {
             if (target != null) {
                 hit(sp, target, dmg, t);
-                target.knockback(1.8, -look.x, -look.z);
+                target.knockback(knock, -look.x, -look.z);
             }
 
-            // Onda expansiva: 50% con caída lineal, radio 2.5, empuje radial. Siempre.
-            double radius = 2.5;
+            // Onda expansiva: fracción del daño con caída lineal y empuje radial. Siempre.
             for (LivingEntity e : sp.serverLevel().getEntitiesOfClass(LivingEntity.class,
                     AABB.ofSize(c, radius * 2, radius * 2, radius * 2),
                     x -> x != sp && x != target && x.isAlive())) {
                 double dist = e.position().add(0, e.getBbHeight() * 0.5, 0).distanceTo(c);
                 if (dist > radius) continue;
                 double falloff = 1.0 - dist / radius;
-                hit(sp, e, dmg * 0.5 * falloff, t);
+                hit(sp, e, dmg * aoeFrac * falloff, t);
                 Vec3 away = e.position().subtract(c).normalize();
                 e.setDeltaMovement(e.getDeltaMovement().add(away.x * 0.8, 0.25, away.z * 0.8));
                 e.hurtMarked = true;
@@ -334,6 +396,85 @@ public final class PhysicalCombatServer {
         });
 
         sp.serverLevel().sendParticles(ParticleTypes.EXPLOSION, c.x, c.y, c.z, 1, 0, 0, 0, 0);
+    }
+
+    /** Tajo ascendente: cono frontal; todo el que lo recibe sale disparado hacia arriba (se aplica
+     *  DESPUÉS del daño para que el knockback vanilla de hurt() no lo pise). */
+    private static void risingSlash(ServerPlayer sp, double str, PhysicalTechnique t) {
+        swingFx(sp, 1.4f, t, 0);
+        List<LivingEntity> targets = slashCone(sp, str * t.dmgMult(), t, 0.5);
+        for (LivingEntity e : targets) {
+            Vec3 m = e.getDeltaMovement();
+            e.setDeltaMovement(m.x * 0.3, 0.85, m.z * 0.3);
+            e.hurtMarked = true;
+        }
+    }
+
+    /** Tajo giratorio: círculo completo alrededor del jugador, empuje radial. */
+    private static void spinSlash(ServerPlayer sp, double str, PhysicalTechnique t) {
+        swingFx(sp, 0.9f, t, 0);
+        List<LivingEntity> targets = inCone(sp, t.range(), -1.1);
+        double dmg = str * t.dmgMult();
+        if (damageEnabled(sp)) {
+            withBridge(t.dmgMult(), () -> { for (LivingEntity e : targets) hit(sp, e, dmg, t); });
+        }
+        for (LivingEntity e : targets) {
+            double dx = e.getX() - sp.getX(), dz = e.getZ() - sp.getZ();
+            double len = Math.sqrt(dx * dx + dz * dz);
+            if (len < 1.0e-4) continue;
+            e.setDeltaMovement(e.getDeltaMovement().add(dx / len, 0.25, dz / len));
+            e.hurtMarked = true;
+        }
+    }
+
+    /** Un tajo en cono frontal. Resetea i-frames como el pulso del barrage: dos tajos seguidos del
+     *  mismo uso tienen que conectar los dos, no quedar tapados por la invulnerabilidad vanilla. */
+    private static List<LivingEntity> slashCone(ServerPlayer sp, double dmg, PhysicalTechnique t, double minDot) {
+        List<LivingEntity> targets = inCone(sp, t.range(), minDot);
+        if (!damageEnabled(sp)) return targets;
+        withBridge(t.dmgMult(), () -> {
+            for (LivingEntity e : targets) {
+                e.invulnerableTime = 0;
+                hit(sp, e, dmg, t);
+            }
+        });
+        return targets;
+    }
+
+    /** Swing de la mano principal (mueve el arma de ki y dispara su estela) + silbido del filo + el arco de
+     *  ki del tajo (SwordFxPacket, lo dibuja SwordFx en todos los clientes cercanos), sin la partícula
+     *  de barrido vanilla (la sustituyen esos VFX). {@code variant} distingue los dos tajos del corte cruzado. */
+    private static void swingFx(ServerPlayer sp, float pitch, PhysicalTechnique t, int variant) {
+        sp.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+        var lvl = sp.serverLevel();
+        lvl.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.9f, pitch);
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp,
+                new SwordFxPacket(sp.getId(), t.ordinal(), variant));
+        if (t == PhysicalTechnique.SPIN_SLASH || t == PhysicalTechnique.SKY_CLEAVE) {
+            // Polvo levantado alrededor de los pies: el golpe pesa.
+            lvl.sendParticles(ParticleTypes.CLOUD, sp.getX(), sp.getY() + 0.1, sp.getZ(), 14, 1.4, 0.05, 1.4, 0.08);
+        }
+    }
+
+    /** LIGHT_BLADE: suelta la hoja de luz hacia donde mira. Velocidad fija; el alcance del JSON es lo que recorre
+     *  antes de apagarse (o hasta chocar con un bloque). */
+    private static void lightBlade(ServerPlayer sp, double str, PhysicalTechnique t) {
+        swingFx(sp, 1.1f, t, 0);
+        double speed = 1.4;
+        Vec3 look = sp.getLookAngle();
+        var wave = new com.hmc.zenkai.content.entity.technique.SwordWaveEntity(
+                com.hmc.zenkai.registry.ModEntities.SWORD_WAVE.get(), sp.level());
+        wave.configure(sp, str * t.dmgMult(), (int) Math.ceil(t.range() / speed), look.scale(speed),
+                com.hmc.zenkai.feature.aura.AuraColors.resolve(sp), 30);
+        Vec3 start = sp.getEyePosition().add(look.scale(0.9)).add(0, -0.35, 0);
+        wave.setPos(start.x, start.y, start.z);
+        sp.level().addFreshEntity(wave);
+    }
+
+    /** Impacto de la hoja de luz (SwordWaveEntity): mismo puente de defensa y mismo funnel que cualquier física. */
+    public static void waveHit(ServerPlayer sp, LivingEntity target, double dmg, PhysicalTechnique t) {
+        withBridge(t.dmgMult(), () -> hit(sp, target, dmg, t));
     }
 
     /** Kiai: cono frontal con daño moderado + empujón ESCALADO CON STR (softcap: 0.7 débiles
@@ -502,6 +643,12 @@ public final class PhysicalCombatServer {
             case HEAVY_BLOW -> new Vol(1.0f, 0.8f);
             case BARRAGE    -> new Vol(0.7f, 1.6f);
             case KIAI       -> new Vol(0.9f, 1.4f);
+            case RISING_SLASH -> new Vol(0.9f, 1.3f);
+            case CROSS_SLASH -> new Vol(0.7f, 1.5f);
+            case PIERCING_THRUST -> new Vol(0.9f, 1.2f);
+            case SPIN_SLASH -> new Vol(0.8f, 1.0f);
+            case SKY_CLEAVE -> new Vol(1.0f, 0.7f);
+            case LIGHT_BLADE -> new Vol(0.9f, 1.3f);
         };
         boolean blocked = target instanceof ServerPlayer defSp
                 ? KiCombatServer.isBlocking(defSp)
@@ -528,6 +675,12 @@ public final class PhysicalCombatServer {
             case HEAVY_BLOW -> ModDamageTypes.HEAVY_BLOW;
             case BARRAGE -> ModDamageTypes.BARRAGE;
             case KIAI -> ModDamageTypes.KIAI;
+            case RISING_SLASH -> ModDamageTypes.RISING_SLASH;
+            case CROSS_SLASH -> ModDamageTypes.CROSS_SLASH;
+            case PIERCING_THRUST -> ModDamageTypes.PIERCING_THRUST;
+            case SPIN_SLASH -> ModDamageTypes.SPIN_SLASH;
+            case SKY_CLEAVE -> ModDamageTypes.SKY_CLEAVE;
+            case LIGHT_BLADE -> ModDamageTypes.LIGHT_BLADE;
         };
     }
 

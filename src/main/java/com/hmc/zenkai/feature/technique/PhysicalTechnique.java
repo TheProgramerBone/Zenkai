@@ -17,7 +17,16 @@ public enum PhysicalTechnique {
     DASH_PUNCH,
     HEAVY_BLOW,
     BARRAGE,
-    KIAI;
+    KIAI,
+    // Técnicas de espada (las enseña Tori-Bot, weapon_requirement "sword"). Sus iconos son PNG
+    // propios (campo icon del JSON), no celdas del atlas: NO ampliar physical_icons.png por ellas.
+    RISING_SLASH,
+    CROSS_SLASH,
+    PIERCING_THRUST,
+    SPIN_SLASH,
+    SKY_CLEAVE,
+    /** Ataque a distancia de espada: lanza una media luna de ki (SwordWaveEntity). */
+    LIGHT_BLADE;
 
     private final String id;
 

@@ -618,6 +618,11 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.technique.clash.ClashPressPacket::handle);
 
         registrar.playToClient(
+                com.hmc.zenkai.feature.technique.SwordFxPacket.TYPE,
+                com.hmc.zenkai.feature.technique.SwordFxPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.SwordFxPacket::handle);
+
+        registrar.playToClient(
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.TYPE,
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket::handle);

@@ -32,9 +32,13 @@ public final class KiFist {
         return SkillToggles.isOn(p, SkillEffects.KI_FIST);
     }
 
-    /** Daño extra bruto, sin escalar por la carga del golpe. 0 si el interruptor está apagado. */
+    /** Daño extra bruto, sin escalar por la carga del golpe. 0 si el interruptor está apagado o si el puño
+     *  que golpea no está libre (un ítem o un arma de ki en la mano principal): decisión del usuario 2026-10-15,
+     *  coincide con lo que se ve (la caja de energía solo envuelve puños libres) y deja el Black Flash como cosa
+     *  de pelear sin arma. Antes se apilaba con cualquier arma. Con arma, el extra de ki es el de Ki Infuse. */
     public static double rawBonus(Player p, ZenkaiCombatStats st) {
         if (!isOn(p)) return 0.0;
+        if (!p.getMainHandItem().isEmpty() || GuardHands.hasKiWeapon(p)) return 0.0;
         double f = SkillEffects.kiFistFactor(p);
         return f <= 0.0 ? 0.0 : st.computeSpiritMeleeFinal() * f;
     }

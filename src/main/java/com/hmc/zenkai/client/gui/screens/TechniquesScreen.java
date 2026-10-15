@@ -1071,7 +1071,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             return Component.translatable("screen.zenkai.technique.row_ki_barrier",
                     fmt(KiCombatServer.barrierPool(kiPower, t.size(), 1.0)), cost);
         }
-        double dmg = KiCombatServer.computeDamage(kiPower, t.type(), t.size())
+        double dmg = KiCombatServer.computePlayerDamage(kiPower, t.type(), t.size())
                 * Math.max(1, t.type().count());
         return Component.translatable("screen.zenkai.technique.row_ki", fmt(dmg), cost);
     }

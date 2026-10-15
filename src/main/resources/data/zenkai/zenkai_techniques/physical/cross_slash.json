@@ -1,0 +1,12 @@
+{
+  "tp_cost": 600,
+  "mind_req": 12,
+  "master": "toribot",
+  "weapon_requirement": "sword",
+  "icon": "zenkai:textures/gui/technique_physical/cross_slash.png",
+  "damage_mult": 0.95,
+  "stamina_pct": 3.0,
+  "cooldown_ticks": 140,
+  "range": 3.6,
+  "anim_ticks": 14
+}

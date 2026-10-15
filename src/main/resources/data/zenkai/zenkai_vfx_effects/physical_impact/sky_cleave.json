@@ -1,0 +1,6 @@
+{
+  "particles": [
+    { "type": "impact", "count": 1, "scale": 2.2 },
+    { "type": "spark", "count": 22, "scale": 1.0, "spread_from_target": true, "spread_y": 0.2, "speed": 0.5 }
+  ]
+}

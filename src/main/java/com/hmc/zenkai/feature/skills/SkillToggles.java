@@ -36,7 +36,7 @@ public final class SkillToggles {
 
     /** Armas de ki de la MANO PRINCIPAL, por orden de rueda. */
     public static final java.util.List<String> KI_MAIN_WEAPONS = java.util.List.of(
-            SkillEffects.KI_BLADE, SkillEffects.KI_SWORD, SkillEffects.KI_AXE,
+            SkillEffects.KI_SWORD, SkillEffects.KI_AXE,
             SkillEffects.KI_MACE, SkillEffects.KI_SCYTHE, SkillEffects.KI_HAMMER);
 
     /**
@@ -83,8 +83,8 @@ public final class SkillToggles {
             others.remove(w);
             register(new Toggle(w, false, weaponReq, others, CAT_KI_WEAPONS, true));
         }
-        // El escudo va en la mano secundaria: no compite con ninguna (las de dos manos lo anulan
-        // por su cuenta, ver KiWeaponServer.activeOffhand).
+        // El escudo va en la mano secundaria: no compite con ninguna y convive con todas, también las de
+        // dos manos (ver KiWeaponServer.activeOffhand).
         register(new Toggle(SkillEffects.KI_SHIELD, false, weaponReq, Set.of(), CAT_KI_WEAPONS, true));
 
         // Potential Unlock YA NO es un interruptor: Mystic es una forma propia que se elige en la

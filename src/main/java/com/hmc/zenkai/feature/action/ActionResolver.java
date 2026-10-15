@@ -157,7 +157,7 @@ public final class ActionResolver {
         // aplica más abajo), así que nunca puede quedarse sin ki por sobrecargar.
         if (!type.defensive()) {
             double baseCostWithFraction = KiCombatServer.computeCost(att, type, tech.size(), effect)
-                    * att.powerFraction();
+                    * att.powerFraction() * KiCombatServer.ueImbueCostMult(sp);
             rawRatio = Math.min(rawRatio,
                     KiCombatServer.maxAffordableRatio(baseCostWithFraction, att.getEnergy()));
         }
@@ -165,7 +165,9 @@ public final class ActionResolver {
 
         int cost = (int) Math.max(1, Math.ceil(
                 KiCombatServer.computeCost(att, type, tech.size(), effect)
-                        * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()));
+                        * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()
+                        // Ultra Ego imbuyendo la técnica: +20 % de ki (no a la barrera, que no daña).
+                        * (type.defensive() ? 1.0 : KiCombatServer.ueImbueCostMult(sp))));
 
         // El contexto se construye con la instantánea de ANTES de limpiar: si no, chargingSlot
         // sería -1 y release daría NO_CHARGE.

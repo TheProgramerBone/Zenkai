@@ -1,0 +1,4 @@
+{
+  "_comment": "Armas de ki BLOQUEADAS: no se materializan aunque el jugador tenga el interruptor puesto (la tecla/rueda no hace nada con ellas). Ids: ki_sword, ki_axe, ki_mace, ki_scythe, ki_hammer, ki_shield. Ejemplo: \"banned\": [\"ki_hammer\", \"ki_shield\"]. Gana el archivo del pack de mayor prioridad, asi que un datapack o un servidor puede sobrescribir este archivo (data/zenkai/banned_ki_weapons.json) sin tocar el mod. /reload lo aplica.",
+  "banned": []
+}

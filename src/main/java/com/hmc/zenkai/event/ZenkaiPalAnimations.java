@@ -216,8 +216,20 @@ public final class ZenkaiPalAnimations {
         return (PlayerAnimationController) PlayerAnimationAccess.getPlayerAnimationLayer(player, ZenkaiPalLayers.BLOCK_LAYER);
     }
 
+    private static final ResourceLocation BLOCK_SHIELD_LEFT =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.block_shield_left");
+    private static final ResourceLocation BLOCK_SHIELD_RIGHT =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.block_shield_right");
+
     public static void playBlock(AbstractClientPlayer player) {
-        ZenkaiTransitions.play(blockController(player), BLOCK_ANIM, ZenkaiTransitions.BLOCK_IN);
+        // Con un escudo de ki materializado la defensa es la de vanilla con escudo: solo el brazo del escudo
+        // (la mano secundaria) se levanta; el otro queda libre para el arma.
+        ResourceLocation anim = BLOCK_ANIM;
+        if (com.hmc.zenkai.feature.combat.GuardHands.hasKiShield(player)) {
+            anim = player.getMainArm() == net.minecraft.world.entity.HumanoidArm.RIGHT
+                    ? BLOCK_SHIELD_LEFT : BLOCK_SHIELD_RIGHT;
+        }
+        ZenkaiTransitions.play(blockController(player), anim, ZenkaiTransitions.BLOCK_IN);
     }
 
     public static void stopBlock(AbstractClientPlayer player) {

@@ -113,11 +113,11 @@ public record KiFirePacket(int slot, int chargeTicks, @Nullable Vec3 originHint)
             // El sacrificio se cobra PRIMERO porque es parte de la munición: el daño no se
             // puede calcular hasta saber cuánta vida se ha quemado.
             int spent = selfDamage(sp, att, rawRatio);
-            double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio
+            double damage = KiCombatServer.computePlayerDamage(kiPower, type, tech.size()) * ratio
                     + KiCombatServer.explosionSacrificeDamage(spent);
             spawnAttached(sp, tech, damage, effect);
         } else {
-            double damage = KiCombatServer.computeDamage(kiPower, type, tech.size()) * ratio;
+            double damage = KiCombatServer.computePlayerDamage(kiPower, type, tech.size()) * ratio;
             if (type == KiTechniqueType.SPIRIT_BOMB) {
                 // Genki Dama viva: energía donada por las criaturas (SpiritBombGatherer) y un
                 // breve windup antes de que salga de las manos. El cobro, el cooldown y el

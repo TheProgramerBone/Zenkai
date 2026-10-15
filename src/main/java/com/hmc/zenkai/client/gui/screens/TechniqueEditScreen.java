@@ -706,7 +706,7 @@ public class TechniqueEditScreen extends Screen {
         // speedLabel() ya usa (type.defensive(), no una comparación literal al tipo).
         boolean isBarrier = type.defensive();
         double dmg = isBarrier ? 0
-                : KiCombatServer.computeDamage(kiPower, type, size) * Math.max(1, type.count());
+                : KiCombatServer.computePlayerDamage(kiPower, type, size) * Math.max(1, type.count());
         // 1.0 = referencia a carga normal (100%, sin sobrecarga), mismo criterio que dmg de
         // arriba (computeDamage sin multiplicar por ratio): el editor enseña el número base,
         // no una sobrecarga que el jugador aún no ha elegido.

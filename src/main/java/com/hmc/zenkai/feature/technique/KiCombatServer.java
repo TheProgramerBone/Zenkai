@@ -76,9 +76,15 @@ public final class KiCombatServer {
         return Math.max(1, (int) Math.round(type.chargeTicks() * curve(SIZE_CAST, size)));
     }
 
-    /** Ídem para el enfriamiento. */
+    /**
+     * Enfriamiento QUE QUEDA al soltar. Desde 2026-10-15 el enfriamiento corre durante la carga: el ciclo de una
+     * técnica es el mayor de carga y enfriamiento, no la suma (antes un Kamehameha salía cada 9,5 s y el ki no
+     * podía competir con 1,6 golpes por segundo; ver docs/combate-y-muerte.md). Lo usan el servidor (tryFire),
+     * la predicción del cliente y las pantallas, así que basta con cambiarlo aquí.
+     */
     public static int cooldownTicksFor(KiTechniqueType type, int size) {
-        return Math.max(0, (int) Math.round(type.cooldownTicks() * curve(SIZE_CD, size)));
+        int cd = (int) Math.round(type.cooldownTicks() * curve(SIZE_CD, size));
+        return Math.max(0, cd - chargeTicksFor(type, size));
     }
 
     /** Techo de carga: 2.0 = 200%. Como el daño escala lineal con el ratio, sobrecargar
@@ -88,6 +94,19 @@ public final class KiCombatServer {
     /** Daño por proyectil a carga completa. */
     public static double computeDamage(double kiPower, KiTechniqueType type, int size) {
         return kiPower * type.damageMult() * sizeFactor(size);
+    }
+
+    /** Daño de una técnica de ki de un JUGADOR: {@link #computeDamage} por {@code combat.ki_damage_scale} (1,5 por
+     *  defecto, 2026-10-15). Los mobs siguen con computeDamage a secas: el ajuste es de PvP y de jugador. */
+    public static double computePlayerDamage(double kiPower, KiTechniqueType type, int size) {
+        return computeDamage(kiPower, type, size) * ServerConfig.kiDamageScale();
+    }
+
+    /** Recargo de ki de una técnica de ki IMBUIDA por Ultra Ego (aura morada, perfora la mitad que una física, ver
+     *  CombatZenkaiHooks.computeDefense): +20 %. 1.0 sin Ultra Ego. Lado común: lo usan el servidor al cobrar y el
+     *  cliente al predecir, para que la barra y el cobro no discrepen. */
+    public static double ueImbueCostMult(net.minecraft.world.entity.player.Player p) {
+        return com.hmc.zenkai.event.tick.OverlayMetersSystem.uePenetration(p) > 0.0 ? 1.2 : 1.0;
     }
 
     /** Coste de ki del disparo a carga completa. Escala con el PODER (WIL), no con el pool:

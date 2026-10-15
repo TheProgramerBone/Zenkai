@@ -91,8 +91,10 @@ public class ShadowScriptGoal extends Goal {
                 mob.setAttackPose(PosedAttacker.POSE_KI_RIGHT);
                 // Intervalo 0 = el cooldown real de la técnica (el mismo que tendría un jugador).
                 int interval = mob.debugKiInterval() > 0 ? mob.debugKiInterval()
-                        : Math.max(1, KiCombatServer.cooldownTicksFor(mob.debugKiType(),
-                                mob.debugKiSize()));
+                        // Ciclo completo de un jugador: el enfriamiento que queda al soltar + la carga (desde
+                        // 2026-10-15 cooldownTicksFor ya descuenta la carga, ver su javadoc).
+                        : Math.max(1, KiCombatServer.cooldownTicksFor(mob.debugKiType(), mob.debugKiSize())
+                                + KiCombatServer.chargeTicksFor(mob.debugKiType(), mob.debugKiSize()));
                 if (++ticks >= interval) {
                     ticks = 0;
                     fireKi(target);

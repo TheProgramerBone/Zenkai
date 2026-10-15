@@ -700,7 +700,7 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue KI_COST_PER_POWER_RAW =
             BUILDER.comment("Ki cost per point of ki power (WIL). Higher = ki drains faster, SPI matters more.")
-                    .defineInRange("cost.ki_per_power", 0.70D, 0.0D, 10.0D);
+                    .defineInRange("cost.ki_per_power", 0.42D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue MELEE_STAMINA_PER_HIT_RAW =
             BUILDER.comment("Stamina per point of melee damage (STR). Higher = fewer hits, CON matters more.")
@@ -744,7 +744,21 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue KI_PER_BONUS_DAMAGE_RAW =
             BUILDER.comment("Ki spent per point of BONUS damage added by Ki Infuse / Ki Fist. Higher = fewer empowered hits per bar.")
-                    .defineInRange("cost.ki_per_bonus_damage", 0.50D, 0.0D, 10.0D);
+                    .defineInRange("cost.ki_per_bonus_damage", 0.30D, 0.0D, 10.0D);
+
+    // Balance PvP (2026-10-15, ver docs/combate-y-muerte.md "Fórmula de defensa única"). Los dos costes de ki de arriba
+    // bajaron un 40 % a la vez (0.70 -> 0.42 y 0.50 -> 0.30): con combates más largos el ki se agotaba antes de matar.
+    private static final ModConfigSpec.DoubleValue PVP_DAMAGE_SCALE_RAW =
+            BUILDER.comment("Multiplier for damage dealt by a PLAYER to another PLAYER, after defense. 0.5 = PvP fights last about twice as long. Mobs and PvE are unaffected. 1.0 = off.")
+                    .defineInRange("combat.pvp_damage_scale", 0.5D, 0.05D, 2.0D);
+
+    private static final ModConfigSpec.DoubleValue KI_DEFENSE_FACTOR_RAW =
+            BUILDER.comment("Fraction of the target's defense that counts against KI projectiles (energy is harder to stop than a fist, and it can be dodged). 0.6 = 60%. 1.0 = same as melee.")
+                    .defineInRange("combat.ki_defense_factor", 0.6D, 0.0D, 2.0D);
+
+    private static final ModConfigSpec.DoubleValue KI_DAMAGE_SCALE_RAW =
+            BUILDER.comment("Multiplier for the damage of PLAYER ki techniques (beams, blasts, bombs). 1.5 = +50%. Mob ki attacks are unaffected.")
+                    .defineInRange("combat.ki_damage_scale", 1.5D, 0.1D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue COMBAT_ATTACK_SPEED_RAW =
             BUILDER.comment("Attack speed while in combat mode. Vanilla base is 4.0 (5-tick recharge); anything BELOW 4.0 enables the vanilla swing cooldown and the crosshair indicator. 1.6 = sword-like, 12.5 ticks.")
@@ -1220,7 +1234,7 @@ public class ServerConfig {
     private static volatile boolean ALLOW_CUSTOM_HAIR = true;
     private static volatile double TECH_MASTERY_PER_USE = 0.2D;
     private static volatile double M_TECH_DMG = 0.25D, M_TECH_COST = 0.30D, M_TECH_CAST = 0.30D;
-    private static volatile double KI_COST_PER_POWER = 0.70D;
+    private static volatile double KI_COST_PER_POWER = 0.42D;
     private static volatile double MELEE_STAMINA_PER_HIT = 0.10D;
     private static volatile double WEAPON_SCALE = 0.04D;
     private static volatile double MELEE_ENCHANT_SCALE = 1.0D;
@@ -1229,7 +1243,10 @@ public class ServerConfig {
     private static volatile double PROJECTILE_BASE_DAMAGE = 6.0D;
     private static volatile double PROJECTILE_SCALE = 1.0D;
     private static volatile double PROJECTILE_MULT_CAP = 3.0D;
-    private static volatile double KI_PER_BONUS_DAMAGE = 0.50D;
+    private static volatile double KI_PER_BONUS_DAMAGE = 0.30D;
+    private static volatile double PVP_DAMAGE_SCALE = 0.5D;
+    private static volatile double KI_DEFENSE_FACTOR = 0.6D;
+    private static volatile double KI_DAMAGE_SCALE = 1.5D;
     private static volatile double COMBAT_ATTACK_SPEED = 1.6D;
     private static volatile double OVERCHARGE_TIME_MULT = 2.5D;
     private static volatile double OVERCHARGE_COST_MULT = 1.5D;
@@ -1486,6 +1503,9 @@ public class ServerConfig {
         PROJECTILE_SCALE       = PROJECTILE_SCALE_RAW.get();
         PROJECTILE_MULT_CAP    = PROJECTILE_MULT_CAP_RAW.get();
         KI_PER_BONUS_DAMAGE   = KI_PER_BONUS_DAMAGE_RAW.get();
+        PVP_DAMAGE_SCALE      = PVP_DAMAGE_SCALE_RAW.get();
+        KI_DEFENSE_FACTOR     = KI_DEFENSE_FACTOR_RAW.get();
+        KI_DAMAGE_SCALE       = KI_DAMAGE_SCALE_RAW.get();
         COMBAT_ATTACK_SPEED   = COMBAT_ATTACK_SPEED_RAW.get();
         OVERCHARGE_TIME_MULT  = OVERCHARGE_TIME_MULT_RAW.get();
         OVERCHARGE_COST_MULT  = OVERCHARGE_COST_MULT_RAW.get();
@@ -1749,6 +1769,9 @@ public class ServerConfig {
     public static double projectileMultCap()   { return PROJECTILE_MULT_CAP; }
     /** Ki por punto de daño EXTRA de Ki Infuse / Ki Fist. */
     public static double kiPerBonusDamage()  { return KI_PER_BONUS_DAMAGE; }
+    public static double pvpDamageScale()    { return PVP_DAMAGE_SCALE; }
+    public static double kiDefenseFactor()   { return KI_DEFENSE_FACTOR; }
+    public static double kiDamageScale()     { return KI_DAMAGE_SCALE; }
 
     public static double blackFlashChance() {return BF_CHANCE;}
     public static double blackFlashMaxChance() {return BF_MAX_CHANCE;}

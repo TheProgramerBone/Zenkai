@@ -106,7 +106,7 @@ public final class CombatModeClientState {
         double timeRatio = KiCombatServer.chargeRatio(chargeTicks, reqChargeFor(mc, t));
         if (t.type().defensive()) return timeRatio;
         double baseCostWithFraction = KiCombatServer.computeCost(att, t.type(), t.size(), t.effect())
-                * att.powerFraction();
+                * att.powerFraction() * KiCombatServer.ueImbueCostMult(mc.player);
         double maxAffordable = KiCombatServer.maxAffordableRatio(baseCostWithFraction, att.getEnergy());
         return Math.min(timeRatio, maxAffordable);
     }
@@ -190,6 +190,8 @@ public final class CombatModeClientState {
 
         boolean blockDown = KeyBindings.BLOCK != null && KeyBindings.BLOCK.isDown();
         boolean handsFree = GuardHands.handsFree(mc.player);
+        // Técnicas de ki: un arma o un escudo de ki no estorban (se ocultan al cargar), solo los ítems reales.
+        boolean kiHandsFree = GuardHands.kiHandsFree(mc.player);
         boolean inGame = mc.screen == null && mc.getConnection() != null;
         // Manos válidas para DEFENDERSE: vacías, un arma en la mano principal o un escudo en la
         // secundaria (ver GuardHands). Distinto de handsFree, que sigue mandando en las técnicas.
@@ -269,7 +271,7 @@ public final class CombatModeClientState {
                     PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks()); // optimista
                     ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: fase 6)
                 }
-            } else if (chargingSlot < 0 && handsFree) {
+            } else if (chargingSlot < 0 && kiHandsFree) {
                 int bound = techniques.binding(selected);
                 // El cooldown bloquea la carga, no solo el disparo: así la tecla no responde
                 // en vez de dejar cargar para rechazar al soltar.
@@ -288,7 +290,7 @@ public final class CombatModeClientState {
             boolean held = chargingKey >= 0
                     && chargingKey < KeyBindings.COMBAT_SLOTS.length
                     && KeyBindings.COMBAT_SLOTS[chargingKey].isDown();
-            if (!active || !inGame || !handsFree || t == null) {
+            if (!active || !inGame || !kiHandsFree || t == null) {
                 cancelCharge();
             } else if (!held) {
                 // Soltar el número: DISPARA si llegó al mínimo y hay ki; si no, cancela.
@@ -302,7 +304,8 @@ public final class CombatModeClientState {
                         KiCombatServer.computeCost(
                                 fAtt, t.type(), t.size(), t.effect())
                                 * (defensive ? 1.0 : KiCombatServer.chargeCostFactor(ratio))
-                                * fAtt.powerFraction()));
+                                * fAtt.powerFraction()
+                                * (defensive ? 1.0 : KiCombatServer.ueImbueCostMult(mc.player))));
                 if (ratio >= KiTechniqueType.MIN_CHARGE && fAtt.getEnergy() >= fCost) {
                     PacketDistributor.sendToServer(new KiFirePacket(chargingSlot, chargeTicks,
                             KiChargeClientState.releaseOrigin(mc.player)));

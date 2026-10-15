@@ -95,9 +95,10 @@ public final class ActionRules {
         return ActionReject.OK;
     }
 
-    /** Las técnicas de ki siempre piden las manos vacías; las físicas, lo que diga su requisito. */
+    /** Las técnicas de ki piden las manos sin ítems (un arma o escudo de ki valen); las físicas, lo que diga su
+     *  requisito. */
     private static ActionReject emptyHands(ActionContext ctx) {
-        return ctx.handsFree() ? ActionReject.OK : ActionReject.HANDS_BUSY;
+        return ctx.kiHandsFree() ? ActionReject.OK : ActionReject.HANDS_BUSY;
     }
 
     // ── Técnicas físicas ──────────────────────────────────────────────────────
@@ -139,7 +140,7 @@ public final class ActionRules {
                                                 boolean cooldownReady) {
         ActionReject c = common(ctx);
         if (!c.ok()) return c;
-        if (!ctx.handsFree()) return ActionReject.HANDS_BUSY;
+        if (!ctx.kiHandsFree()) return ActionReject.HANDS_BUSY;
         if (ctx.blocking())   return ActionReject.BLOCKING;
         if (ctx.physBusy())   return ActionReject.BUSY;
         if (!enabled)         return ActionReject.DISABLED;
@@ -159,7 +160,7 @@ public final class ActionRules {
                                             double energy, int cost) {
         ActionReject c = common(ctx);
         if (!c.ok()) return c;
-        if (!ctx.handsFree())             return ActionReject.HANDS_BUSY;
+        if (!ctx.kiHandsFree())           return ActionReject.HANDS_BUSY;
         if (ctx.blocking())               return ActionReject.BLOCKING;
         if (!ctx.chargingTechnique())     return ActionReject.NO_CHARGE;
         if (ctx.chargingSlot() != slot)   return ActionReject.WRONG_SLOT;

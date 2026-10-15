@@ -128,6 +128,18 @@ public final class ClientConfig {
 
     // ── Opciones ─────────────────────────────────────────────────────────────
 
+    private static final ModConfigSpec.BooleanValue KI_FIST_AURA =
+            defineBool("combat.ki_fist_aura", "ki_fist_aura",
+                    "Draw ki-coloured energy around the fists while Ki Fist is on (and Ultra Ego's destruction energy)", true);
+
+    private static final ModConfigSpec.BooleanValue KI_INFUSE_GLOW =
+            defineBool("combat.ki_infuse_glow", "ki_infuse_glow",
+                    "Make the weapon in hand glow with the player's aura while Ki Infuse is on", true);
+
+    private static final ModConfigSpec.BooleanValue SWORD_TECH_FX =
+            defineBool("combat.sword_technique_fx", "sword_technique_fx",
+                    "Draw slash arcs, shockwaves and streaks for the sword techniques", true);
+
     private static final ModConfigSpec.BooleanValue KI_SENSE_CAMERA_SHAKE =
             defineBool("sense.ki_sense_camera_shake", "ki_sense_camera_shake",
                     "Shake the camera when your ki sense warns you of a nearby threat", true);
@@ -339,6 +351,9 @@ public final class ClientConfig {
 
     // ── Lectura ──────────────────────────────────────────────────────────────
 
+    public static boolean kiFistAura() { return KI_FIST_AURA.get(); }
+    public static boolean kiInfuseGlow() { return KI_INFUSE_GLOW.get(); }
+    public static boolean swordTechniqueFx() { return SWORD_TECH_FX.get(); }
     public static boolean kiSenseCameraShake() { return KI_SENSE_CAMERA_SHAKE.get(); }
 
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */

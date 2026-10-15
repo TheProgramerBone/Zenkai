@@ -56,12 +56,10 @@ public final class GuardHands {
         return KiWeaponState.offhandOf(e) != null;
     }
 
-    /** ¿Lleva un arma de ki que cuenta como ESPADA (Blade o Sword)? El hacha, la maza, el mazo y la
-     *  guadaña son armas de melee pero no abren las técnicas de espada. */
+    /** ¿Lleva un arma de ki que habilita las técnicas de espada? CUALQUIERA de las armas de ki de la mano
+     *  principal (decisión del usuario 2026-10-14): Blade, Sword, Axe, Mace, Scythe y Hammer. */
     public static boolean hasKiSword(LivingEntity e) {
-        String v = KiWeaponState.variantOf(e);
-        return com.hmc.zenkai.feature.skills.SkillEffects.KI_BLADE.equals(v)
-                || com.hmc.zenkai.feature.skills.SkillEffects.KI_SWORD.equals(v);
+        return hasKiWeapon(e);
     }
 
     /** Manos realmente libres para una técnica: nada en ninguna mano Y ningún arma de ki activa.
@@ -71,12 +69,24 @@ public final class GuardHands {
                 && !hasKiWeapon(e) && !hasKiShield(e);
     }
 
+    /** Manos libres para una técnica de KI: ningún ítem en ninguna mano. A diferencia de {@link #handsFree}, un arma o un
+     *  escudo de ki NO estorban: al cargar la técnica se ocultan un momento (decisión del usuario 2026-10-15). */
+    public static boolean kiHandsFree(LivingEntity e) {
+        return e.getMainHandItem().isEmpty() && e.getOffhandItem().isEmpty();
+    }
+
     /** Espada de verdad (o arma de ki) en la mano principal, sin nada raro en la secundaria. Es lo
      *  que exige una técnica con {@code weapon_requirement: sword}; el hacha defiende pero no cuenta. */
     public static boolean isHoldingSword(LivingEntity e) {
         ItemStack main = e.getMainHandItem();
-        boolean sword = (!main.isEmpty() && main.is(ItemTags.SWORDS)) || hasKiSword(e);
-        return sword && kind(e) != Kind.INVALID;
+        // Con un arma de ki en la mano principal, lo que haya en la secundaria (otra espada, un hacha, un
+        // escudo) no invalida la técnica: kind() marcaba INVALID una espada en la secundaria y las
+        // técnicas dejaban de dejarse activar. Solo estorba lo que no es arma ni escudo (comida, bloques...).
+        if (hasKiSword(e)) {
+            ItemStack off = e.getOffhandItem();
+            return off.isEmpty() || isWeapon(off) || isShield(off);
+        }
+        return !main.isEmpty() && main.is(ItemTags.SWORDS) && kind(e) != Kind.INVALID;
     }
 
     public static Kind kind(LivingEntity e) {
@@ -147,7 +157,10 @@ public final class GuardHands {
         att.consumeEnergy(cost);
         com.hmc.zenkai.feature.advancement.ZenkaiTriggers.MILESTONE.get().trigger(sp,
                 com.hmc.zenkai.feature.advancement.ZenkaiTriggers.Kinds.SHIELD_BLOCKED);
-        double r = base * (1.0 + ServerConfig.blockShieldBonus()) + def.blockBonus();
+        // Ki Infuse también refuerza el escudo de ki, a la MITAD que a un escudo normal (+2 a +8,5 puntos): así sirve
+        // con los dos sin que el normal desaparezca (2026-10-15). Sin coste extra: el escudo de ki ya cobra ki.
+        double r = base * (1.0 + ServerConfig.blockShieldBonus()) + def.blockBonus()
+                + SkillEffects.kiInfuseShieldBonus(sp) * 0.5;
         return Math.min(r, ServerConfig.blockShieldCap());
     }
 

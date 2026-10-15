@@ -14,7 +14,8 @@ package com.hmc.zenkai.feature.kiweapon;
  * @param attackSpeed  modificador ADD_VALUE de attack_speed (negativo = más lento)
  * @param attackDamage modificador ADD_VALUE de attack_damage; solo importa para que
  *                     {@code KiInfusion.hasWeapon} vea "un arma" (el daño real sale de damageMult)
- * @param twoHanded    true = ocupa las dos manos: mientras está activa NO puede haber un escudo de ki
+ * @param twoHanded    true = arma de dos manos. Desde 2026-10-15 ya NO quita el escudo de ki (convive con
+ *                     cualquier arma de ki, decisión del usuario); se conserva para los datapacks y como dato
  * @param knockback    empuje extra al golpear (0 = el de vanilla). Lo aplica KiWeaponServer
  * @param guardBreak   0..1: fracción de la reducción de daño de la GUARDIA del rival que este arma
  *                     ignora (el hacha rompe guardias)

@@ -24,8 +24,9 @@ import java.util.Map;
  * DOS RUTAS, igual que el arma ({@link KiWeaponVfx}):
  *  - MUNDO: las muestras se guardan en coordenadas de MUNDO (cámara + relativas) porque la cámara
  *    se mueve entre frames, y se reconvierten al encolar. Se dibuja en la cola de ki, con bloom.
- *  - MANO (1ª persona): las muestras van en el espacio de la pasada de mano, que es fijo respecto
- *    a la pantalla, así que se guardan tal cual y se dibujan al momento, sin bloom.
+ *  - MANO (1ª persona): las muestras van en ESPACIO DE VISTA (KiWeaponVfx.drawNow lo prepara: la
+ *    pasada de mano vanilla va en ejes de mundo), que es fijo respecto a la pantalla, así que se
+ *    guardan tal cual y se dibujan al momento, sin bloom.
  * Solo el brazo principal deja estela: el escudo no golpea.
  */
 public final class KiWeaponTrail {

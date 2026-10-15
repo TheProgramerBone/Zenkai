@@ -1,0 +1,12 @@
+{
+  "tp_cost": 900,
+  "mind_req": 18,
+  "master": "toribot",
+  "weapon_requirement": "sword",
+  "icon": "zenkai:textures/gui/technique_physical/light_blade.png",
+  "damage_mult": 1.4,
+  "stamina_pct": 3.2,
+  "cooldown_ticks": 160,
+  "range": 24.0,
+  "anim_ticks": 10
+}

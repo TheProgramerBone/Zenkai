@@ -900,7 +900,7 @@ public class ModCommands {
                 name.toUpperCase(java.util.Locale.ROOT));
         if (t == null) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] Unknown: " + name
-                    + " (dash_punch|heavy_blow|barrage|kiai)"));
+                    + " (dash_punch|heavy_blow|barrage|kiai|rising_slash|cross_slash|piercing_thrust|spin_slash|sky_cleave|light_blade)"));
             return 0;
         }
         PlayerStatsAttachment.get(sp).techniques().unlock(t);

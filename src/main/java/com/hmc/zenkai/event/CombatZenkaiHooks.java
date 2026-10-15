@@ -349,6 +349,7 @@ public class CombatZenkaiHooks {
 
         // El crítico multiplica el golpe COMPLETO (base de arma + bonus de ki), igual que en
         // vanilla multiplica el float final antes de hurt() — no solo la parte de STR.
+        MELEE_REF.put(attacker.getUUID(), strDamage * chargeF);
         double total = (base + bonus) * critMult;
 
         // BLACK FLASH sobre el golpe COMPLETO y en crudo: lo que sale de aquí es lo que entra
@@ -378,6 +379,7 @@ public class CombatZenkaiHooks {
         float scale = consumeAttackScale(attacker);
         double chargeF = 0.2 + scale * scale * 0.8;
         double enchantMult = KiInfusion.enchantMultiplier(attacker, originalVanillaDamage, critMult);
+        MELEE_REF.put(attacker.getUUID(), strDamage * chargeF);
         return (float) (strDamage * KiInfusion.weaponMultiplier(attacker) * enchantMult
                 * chargeF * critMult);
     }
@@ -402,7 +404,7 @@ public class CombatZenkaiHooks {
             e.setNewDamage(0.0F);
             return;
         }
-        double finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult, false);
+        double finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult, false, false);
         float vanillaMax = e.getEntity().getMaxHealth();
         float equivalent = (float) (finalDamage / defStats.getBodyMax() * vanillaMax);
         e.setNewDamage(Math.max(0.0F, equivalent));
@@ -433,7 +435,8 @@ public class CombatZenkaiHooks {
         int bodySpent = 0;
         double finalDamage = 0.0;
         if (dmg > 0f) {
-            finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult, environmental);
+            // Black Flash: atraviesa la guardia del rival (no su defensa), ver mitigate.
+            finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult, environmental, blackFlash);
 
             int bodyBefore = defStats.getBody();
             defStats.addBody(-(int) Math.ceil(finalDamage));
@@ -499,7 +502,7 @@ public class CombatZenkaiHooks {
      *  @return daño que llega al body. */
     private static double mitigate(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
                                    ZenkaiCombatStats defStats, float dmg, double armorMult,
-                                   boolean environmental) {
+                                   boolean environmental, boolean ignoreGuard) {
         double finalDamage;
 
         if (environmental) {
@@ -525,9 +528,20 @@ public class CombatZenkaiHooks {
 
             finalDamage *= armorMult;
             finalDamage = Math.max(finalDamage, dmg * ServerConfig.minDamagePercent());
+
+            // PvP: entre jugadores el daño se escala (combat.pvp_damage_scale, 0,5). Sin esto dos iguales se
+            // mataban en 1-2 s (simulación 2026-10-15, docs/combate-y-muerte.md). Solo jugador contra jugador:
+            // el PvE no cambia.
+            if (e.getSource().getEntity() instanceof Player && e.getEntity() instanceof Player
+                    && e.getSource().getEntity() != e.getEntity()) {
+                finalDamage *= ServerConfig.pvpDamageScale();
+            }
         }
 
-        if (isBlockingNow(e.getEntity())) {
+        // Black Flash (ignoreGuard): el golpe perfecto atraviesa la guardia. Se eligió la guardia y no la defensa
+        // porque entre iguales perforar defensa apenas cambia nada (+2 %) y contra rivales muy superiores lo
+        // volvía un mata-gigantes, justo lo que BlackFlash se diseñó para no ser.
+        if (!ignoreGuard && isBlockingNow(e.getEntity())) {
             double blockMult = blockDamageMultiplierOf(e.getEntity());
             // Arma que rompe guardias (el hacha): ignora parte de lo que la guardia le quitaría.
             if (e.getSource().getEntity() instanceof Player axeman) {
@@ -569,6 +583,21 @@ public class CombatZenkaiHooks {
         return 1.0;
     }
 
+    /** Golpe BASE (fuerza x carga, sin arma ni Ki Fist ni crítico) del último golpe cuerpo a cuerpo de cada jugador,
+     *  la K de la fórmula de defensa única. Lo escribe playerMeleeDamage/unracedMeleeDamage y lo consume
+     *  computeDefense en el mismo evento. */
+    private static final java.util.Map<java.util.UUID, Double> MELEE_REF = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Tope de perforación de defensa sumando cualquier fuente. */
+    private static final double PIERCE_CAP = 0.40;
+
+    /** Perforación total: las fuentes se MULTIPLICAN (dos de 30 % = 51 %), nunca se suman, y no pasan del 40 %. */
+    private static double totalPierce(double... sources) {
+        double keep = 1.0;
+        for (double p : sources) keep *= 1.0 - Math.max(0.0, Math.min(1.0, p));
+        return Math.min(PIERCE_CAP, 1.0 - keep);
+    }
+
     /** DEF efectiva del defensor frente a ESTE golpe. Se mantiene SIEMPRE, en modo combate o no. */
     private static double computeDefense(LivingDamageEvent.Pre e, ZenkaiCombatStats atkStats,
                                          ZenkaiCombatStats defStats, float dmg) {
@@ -582,6 +611,12 @@ public class CombatZenkaiHooks {
                     ? proj.refPower()
                     : (atkStats != null ? atkStats.computeKiPowerFinal() : 0.0);
             if (kiPower > 1.0e-6) defense *= (dmg / kiPower);
+            // La energía se para peor que un puño (y se puede esquivar): solo cuenta parte de la defensa.
+            defense *= ServerConfig.kiDefenseFactor();
+            // Ultra Ego IMBUYENDO la técnica de ki (aura morada): perfora la MITAD que una técnica física. Con la
+            // perforación entera, la técnica de ki ganaba ~4 veces más que una física (la defensa le quita al ki
+            // una parte fija y a un golpe grande casi nada); además cuesta un 20 % más de ki (KiCombatServer.ueImbueCostMult).
+            defense *= 1.0 - totalPierce(OverlayMetersSystem.uePenetration(e.getSource().getEntity()) * 0.5);
         } else {
             // Proyectil infusionado: misma regla que el ki. La defensa se escala según lo
             // que este disparo vale frente al poder de quien lo lanzó, congelado al salir
@@ -591,10 +626,25 @@ public class CombatZenkaiHooks {
                 defense *= (dmg / shot.refPower());
             }
         }
-        // Ultra Ego: perforación de defensa SOLO de técnicas físicas (PhysicalCombatServer marca
+        // FÓRMULA DE DEFENSA ÚNICA (2026-10-15). El ki ya resolvía su defensa como golpe × K / (K + defensa), con
+        // K = el poder de quien lo lanza: escalar la defensa por golpe/K convierte golpe²/(golpe+defensa) en eso.
+        // Ahora el cuerpo a cuerpo hace lo mismo con K = su golpe BASE sin multiplicadores (fuerza x carga del
+        // jugador, o la fuerza de una entidad). Efecto: el puñetazo normal queda EXACTAMENTE igual (golpe = K),
+        // incluido el castigo a golpear sin cargar; los multiplicadores (armas, Ki Fist, críticos, técnicas) pasan
+        // a ser lineales. Antes rendían más que lineal: el Hammer x2,6 mataba de un golpe a un Saiyan guerrero
+        // igual. Solo golpes DIRECTOS: las flechas y proyectiles de mobs siguen con la fórmula de siempre.
+        Entity src = e.getSource().getEntity();
+        boolean direct = src != null && (e.getSource().getDirectEntity() == src || PhysicalCombatServer.isFiring());
+        if (direct && atkStats != null && dmg > 0f && !(e.getSource().getDirectEntity() instanceof KiProjectileEntity)
+                && !KiInfusedShot.of(e.getSource().getDirectEntity()).isInfused()) {
+            Double ref = PhysicalCombatServer.isFiring() ? null : MELEE_REF.remove(src.getUUID());
+            double k = ref != null ? ref : atkStats.computeMeleeFinal();
+            if (k > 1.0e-6) defense *= (dmg / k);
+        }
+        // Ultra Ego: perforación de defensa entera de las técnicas físicas (PhysicalCombatServer marca
         // el puente mientras reparte el daño de la técnica; un puñetazo normal no pasa por aquí).
         if (PhysicalCombatServer.isFiring()) {
-            defense *= 1.0 - OverlayMetersSystem.uePenetration(e.getSource().getEntity());
+            defense *= 1.0 - totalPierce(OverlayMetersSystem.uePenetration(src));
         }
         return defense;
     }

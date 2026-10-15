@@ -128,6 +128,35 @@ public final class KiVfxGeometry {
         }
 
         public float length() { return length; }
+
+        /** Punto de la raíz ({@code tipEnd} = false) o de la punta. */
+        public net.minecraft.world.phys.Vec3 end(boolean tipEnd) {
+            int k = tipEnd ? n - 1 : 0;
+            return new net.minecraft.world.phys.Vec3(px[k], py[k], pz[k]);
+        }
+
+        /** Dirección media del tubo (de la raíz a la punta). En un camino cerrado (un aro) la cuerda es nula y se
+         *  devuelve la tangente de la punta. */
+        public net.minecraft.world.phys.Vec3 chord() {
+            float dx = px[n - 1] - px[0], dy = py[n - 1] - py[0], dz = pz[n - 1] - pz[0];
+            if (dx * dx + dy * dy + dz * dz < 1.0e-6f) return tipTangent();
+            return new net.minecraft.world.phys.Vec3(dx, dy, dz);
+        }
+
+        /** Perfil de radio opcional: multiplicador del radio por punto (null = el ahusado lineal de siempre). */
+        float[] radiusMul;
+
+        /**
+         * Fija un perfil de radio: {@code f(distancia desde la raíz, longitud)} da el multiplicador del radio en cada
+         * punto. Sirve para hacer una hoja entera (cuerpo recto + punta afilada) como UN solo tubo: con dos tubos
+         * empalmados, la normal y la UV saltaban en la junta y salía una costura gris de través (espada en 1ª
+         * persona, 2026-10-15). Devuelve este mismo camino.
+         */
+        public TubePath withRadiusProfile(java.util.function.BiFunction<Float, Float, Float> f) {
+            radiusMul = new float[n];
+            for (int i = 0; i < n; i++) radiusMul[i] = f.apply(s[i], length);
+            return this;
+        }
     }
 
     /**
@@ -139,6 +168,15 @@ public final class KiVfxGeometry {
      * @return null si lo que queda es demasiado corto para dibujar un tubo.
      */
     public static TubePath tubePath(java.util.List<net.minecraft.world.phys.Vec3> pts, float trimTip) {
+        return tubePath(pts, trimTip, PATH_RING_STEP);
+    }
+
+    /**
+     * Como {@link #tubePath(java.util.List, float)} con la separación entre anillos indicada. Las armas de ki usan una
+     * fina: con la de los haces (0,8 bloques) una hoja de hacha de medio bloque definida con tres puntos quedaba en
+     * tres anillos, facetada y con franjas de sombreado (1ª persona, 2026-10-15).
+     */
+    public static TubePath tubePath(java.util.List<net.minecraft.world.phys.Vec3> pts, float trimTip, float ringStep) {
         int m = pts.size();
         if (m < 2) return null;
         java.util.ArrayList<double[]> dense = new java.util.ArrayList<>();
@@ -146,7 +184,7 @@ public final class KiVfxGeometry {
             net.minecraft.world.phys.Vec3 p1 = pts.get(i), p2 = pts.get(i + 1);
             net.minecraft.world.phys.Vec3 p0 = i > 0 ? pts.get(i - 1) : p1.subtract(p2.subtract(p1));
             net.minecraft.world.phys.Vec3 p3 = i + 2 < m ? pts.get(i + 2) : p2.add(p2.subtract(p1));
-            int k = Math.max(1, (int) Math.ceil(p1.distanceTo(p2) / PATH_RING_STEP));
+            int k = Math.max(1, (int) Math.ceil(p1.distanceTo(p2) / ringStep));
             for (int j = 0; j < k; j++) addDense(dense, catmull(p0, p1, p2, p3, (double) j / k));
         }
         net.minecraft.world.phys.Vec3 last = pts.get(m - 1);
@@ -250,15 +288,123 @@ public final class KiVfxGeometry {
         if (tp == null || radius <= 1.0e-4f) return;
         float slope = radius * (1f - rootRadiusMul) / tp.length;
         float nl = (float) Math.sqrt(1f + slope * slope);
-        for (int k = tp.n - 1; k > 0; k--) {
-            for (int j = 0; j < TUBE_SECTORS; j++) {
-                float a0 = (float) j / TUBE_SECTORS, a1 = (float) (j + 1) / TUBE_SECTORS;
-                pathVertex(vc, pose, tp, k, a0, radius, rootRadiusMul, slope, nl, r, g, b, alpha, flatUv);
-                pathVertex(vc, pose, tp, k - 1, a0, radius, rootRadiusMul, slope, nl, r, g, b, alpha, flatUv);
-                pathVertex(vc, pose, tp, k - 1, a1, radius, rootRadiusMul, slope, nl, r, g, b, alpha, flatUv);
-                pathVertex(vc, pose, tp, k, a1, radius, rootRadiusMul, slope, nl, r, g, b, alpha, flatUv);
+        float[] sl = null, nls = null;
+        if (tp.radiusMul != null) {
+            // Con perfil, la pendiente (d radio / d distancia desde la raíz) cambia por punto: diferencia centrada.
+            sl = new float[tp.n];
+            nls = new float[tp.n];
+            for (int k = 0; k < tp.n; k++) {
+                int a = Math.max(0, k - 1), c = Math.min(tp.n - 1, k + 1);
+                float ds = tp.s[c] - tp.s[a];
+                sl[k] = ds > 1.0e-6f ? radius * (tp.radiusMul[c] - tp.radiusMul[a]) / ds : 0f;
+                nls[k] = (float) Math.sqrt(1f + sl[k] * sl[k]);
             }
         }
+        for (int k = tp.n - 1; k > 0; k--) {
+            float sk = sl != null ? sl[k] : slope, nk = sl != null ? nls[k] : nl;
+            float sk1 = sl != null ? sl[k - 1] : slope, nk1 = sl != null ? nls[k - 1] : nl;
+            for (int j = 0; j < TUBE_SECTORS; j++) {
+                float a0 = (float) j / TUBE_SECTORS, a1 = (float) (j + 1) / TUBE_SECTORS;
+                pathVertex(vc, pose, tp, k, a0, radius, rootRadiusMul, sk, nk, r, g, b, alpha, flatUv);
+                pathVertex(vc, pose, tp, k - 1, a0, radius, rootRadiusMul, sk1, nk1, r, g, b, alpha, flatUv);
+                pathVertex(vc, pose, tp, k - 1, a1, radius, rootRadiusMul, sk1, nk1, r, g, b, alpha, flatUv);
+                pathVertex(vc, pose, tp, k, a1, radius, rootRadiusMul, sk, nk, r, g, b, alpha, flatUv);
+            }
+        }
+    }
+
+    /**
+     * HALO a lo largo de un {@link TubePath}: discos de una textura radial (ki_halo) paralelos a la PANTALLA,
+     * repartidos por la longitud del tubo y solapados, así que la suma es un resplandor continuo que cae en suave
+     * hacia fuera y redondea los extremos. Es el sustituto del bloom donde no hay bloom (la mano de 1ª persona, ver
+     * KiWeaponVfx.drawNow).
+     * Primera versión (2026-10-15): una CINTA encarada a la cámara con lateral cross(tangente, vista). Donde la pieza
+     * apunta casi hacia la cámara (punta, guarda, aros, la curva de la guadaña) ese lateral se hace casi nulo y gira
+     * de golpe: la cinta se retorcía en abanico y se veían rayos/estrellas. Los discos no dependen de la orientación.
+     * REQUISITO: {@code pose} lleva a ESPACIO DE VISTA (X derecha, Y arriba de la pantalla).
+     * Tamaño del disco: {@code halfMul * radioDelTubo + halfAdd} de medio lado.
+     */
+    /** Medio lado máximo de un disco de {@link #emitViewHalo}, en bloques (lo visible es ~0,4 de esto). */
+    private static final float HALO_MAX_HALF = 0.45f;
+
+    public static void emitViewHalo(com.mojang.blaze3d.vertex.VertexConsumer vc,
+                                    com.mojang.blaze3d.vertex.PoseStack.Pose pose, TubePath tp,
+                                    float radius, float rootRadiusMul, float halfMul, float halfAdd,
+                                    float r, float g, float b, float alpha) {
+        if (tp == null || tp.n < 2) return;
+        org.joml.Matrix4f m = pose.pose();
+        // ki_halo solo se ve en su 40 % central: el paso entre discos va a ~0,15 del medio lado para que el
+        // resplandor salga continuo y no como cuentas de collar.
+        float s = 0f;
+        int k = 1;
+        while (true) {
+            while (k < tp.n - 1 && tp.s[k] < s) k++;
+            float s0 = tp.s[k - 1], s1 = tp.s[k];
+            float f = s1 > s0 ? Math.min(1f, Math.max(0f, (s - s0) / (s1 - s0))) : 0f;
+            float x = tp.px[k - 1] + (tp.px[k] - tp.px[k - 1]) * f;
+            float y = tp.py[k - 1] + (tp.py[k] - tp.py[k - 1]) * f;
+            float z = tp.pz[k - 1] + (tp.pz[k] - tp.pz[k - 1]) * f;
+            float fromTip = Math.max(0f, tp.length - s);
+            float rr = tp.radiusMul != null
+                    ? radius * (tp.radiusMul[k - 1] + (tp.radiusMul[k] - tp.radiusMul[k - 1]) * f)
+                    : radius * (1f + (rootRadiusMul - 1f) * fromTip / tp.length);
+            // Tope: la cabeza del martillo (radio 0,13-0,17) daba un resplandor del doble que el resto (captura 2026-10-15).
+            float half = Math.min(HALO_MAX_HALF, halfMul * rr + halfAdd);
+            org.joml.Vector3f p = m.transformPosition(x, y, z, new org.joml.Vector3f());
+            haloVertex(vc, p.x - half, p.y - half, p.z, 0f, 1f, r, g, b, alpha);
+            haloVertex(vc, p.x + half, p.y - half, p.z, 1f, 1f, r, g, b, alpha);
+            haloVertex(vc, p.x + half, p.y + half, p.z, 1f, 0f, r, g, b, alpha);
+            haloVertex(vc, p.x - half, p.y + half, p.z, 0f, 0f, r, g, b, alpha);
+            if (s >= tp.length) break;
+            s = Math.min(tp.length, s + Math.max(0.01f, half * 0.15f));
+        }
+    }
+
+    /**
+     * TAPA de un extremo de un {@link TubePath} (los tubos son abiertos): disco perpendicular al tubo con la textura
+     * radial de halo, brillante en el centro. Sin tapa, en una pieza gruesa vista de cerca (la cabeza del martillo en
+     * 1ª persona) se veía el hueco por el extremo. No pasa por el fresnel: un disco es plano y el fresnel axial lo
+     * dejaría transparente. {@code tipEnd} = la punta (último punto) o la raíz.
+     * {@code uvRim}: distancia al centro de la textura que cae en el borde del disco (0.5 = textura entera).
+     */
+    public static void emitEndCap(com.mojang.blaze3d.vertex.VertexConsumer vc,
+                                  com.mojang.blaze3d.vertex.PoseStack.Pose pose, TubePath tp, boolean tipEnd,
+                                  float radius, float uvRim, float r, float g, float b, float alpha) {
+        if (tp == null || radius <= 1.0e-4f) return;
+        int k = tipEnd ? tp.n - 1 : 0;
+        final int seg = 16;
+        for (int i = 0; i < seg; i++) {
+            double a0 = 2 * Math.PI * i / seg, a1 = 2 * Math.PI * (i + 1) / seg;
+            capVertex(vc, pose, tp, k, 0.0, 0f, uvRim, r, g, b, alpha);
+            capVertex(vc, pose, tp, k, 0.0, 0f, uvRim, r, g, b, alpha);
+            capVertex(vc, pose, tp, k, a0, radius, uvRim, r, g, b, alpha);
+            capVertex(vc, pose, tp, k, a1, radius, uvRim, r, g, b, alpha);
+        }
+    }
+
+    private static void capVertex(com.mojang.blaze3d.vertex.VertexConsumer vc,
+                                  com.mojang.blaze3d.vertex.PoseStack.Pose pose, TubePath tp, int k, double ang,
+                                  float rr, float uvRim, float r, float g, float b, float alpha) {
+        float c = (float) Math.cos(ang), s = (float) Math.sin(ang);
+        float dx = tp.nx[k] * c + tp.bx[k] * s, dy = tp.ny[k] * c + tp.by[k] * s, dz = tp.nz[k] * c + tp.bz[k] * s;
+        float f = rr > 0f ? 1f : 0f;
+        vc.addVertex(pose, tp.px[k] + dx * rr, tp.py[k] + dy * rr, tp.pz[k] + dz * rr)
+                .setColor(r, g, b, alpha)
+                .setUv(0.5f + uvRim * c * f, 0.5f + uvRim * s * f)
+                .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY)
+                .setLight(0xF000F0)
+                .setNormal(pose, tp.tx[k], tp.ty[k], tp.tz[k]);
+    }
+
+    /** Vértice de {@link #emitViewHalo}: ya en el espacio final (pose identidad). */
+    private static void haloVertex(com.mojang.blaze3d.vertex.VertexConsumer vc, float x, float y, float z,
+                                   float u, float v, float r, float g, float b, float alpha) {
+        vc.addVertex(x, y, z)
+                .setColor(r, g, b, alpha)
+                .setUv(u, v)
+                .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY)
+                .setLight(0xF000F0)
+                .setNormal(0f, 0f, 1f);
     }
 
     private static void pathVertex(com.mojang.blaze3d.vertex.VertexConsumer vc,
@@ -272,7 +418,7 @@ public final class KiVfxGeometry {
         float dz = tp.nz[k] * c + tp.bz[k] * sn;
         float fromTip = tp.length - tp.s[k];
         float f = fromTip / tp.length; // 0 = punta, 1 = raíz
-        float rr = radius * (1f + (rootMul - 1f) * f);
+        float rr = tp.radiusMul != null ? radius * tp.radiusMul[k] : radius * (1f + (rootMul - 1f) * f);
         vc.addVertex(pose, tp.px[k] + dx * rr, tp.py[k] + dy * rr, tp.pz[k] + dz * rr)
                 .setColor(r, g, b, alpha)
                 .setUv(flatUv ? 0.5f : around, flatUv ? 0.5f : fromTip / radius)

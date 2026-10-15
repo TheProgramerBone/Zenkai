@@ -17,6 +17,9 @@ public record ActionContext(
         boolean blocking,
         boolean downed,
         boolean handsFree,
+        // Manos libres para una técnica de KI: sin ítems reales en ninguna mano. Un arma o un escudo de ki NO
+        // estorban (decisión del usuario 2026-10-15): al cargar se ocultan un momento, ver KiWeaponState.
+        boolean kiHandsFree,
         // Espada (o arma de ki) en la mano principal: lo que piden las técnicas de espada.
         boolean swordHeld,
         // Hay un movimiento físico CON DURACIÓN en curso (dash, barrage).

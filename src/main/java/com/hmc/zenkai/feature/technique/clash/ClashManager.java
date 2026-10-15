@@ -444,7 +444,8 @@ public final class ClashManager {
         int cost = (int) Math.max(1, Math.ceil(
                 com.hmc.zenkai.feature.technique.KiCombatServer.computeCost(att, type, tech.size(), tech.effect())
                         * com.hmc.zenkai.feature.technique.KiCombatServer.chargeCostFactor(1.0)
-                        * att.powerFraction()));
+                        * att.powerFraction()
+                        * com.hmc.zenkai.feature.technique.KiCombatServer.ueImbueCostMult(sp)));
         if (att.getEnergy() < cost) { joinReject(sp, "no_ki"); return; }
         if (!com.hmc.zenkai.feature.technique.KiCombatServer.tryFire(sp, slot,
                 com.hmc.zenkai.feature.technique.KiCombatServer.cooldownTicksFor(type, tech.size()))) {
@@ -453,7 +454,7 @@ public final class ClashManager {
         }
         att.addEnergy(-cost);
         com.hmc.zenkai.feature.player.PlayerLifeCycle.syncIfServer(sp);
-        double damage = com.hmc.zenkai.feature.technique.KiCombatServer.computeDamage(
+        double damage = com.hmc.zenkai.feature.technique.KiCombatServer.computePlayerDamage(
                 att.computeKiPowerFinal(), type, tech.size());
 
         long now = lvl.getGameTime();

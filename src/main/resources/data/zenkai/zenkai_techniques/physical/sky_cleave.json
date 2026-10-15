@@ -1,0 +1,12 @@
+{
+  "tp_cost": 1200,
+  "mind_req": 24,
+  "master": "toribot",
+  "weapon_requirement": "sword",
+  "icon": "zenkai:textures/gui/technique_physical/sky_cleave.png",
+  "damage_mult": 3.0,
+  "stamina_pct": 4.5,
+  "cooldown_ticks": 260,
+  "range": 4.0,
+  "anim_ticks": 16
+}
