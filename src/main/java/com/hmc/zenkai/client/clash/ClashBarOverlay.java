@@ -495,7 +495,11 @@ public final class ClashBarOverlay {
     private static Face mobFace(Minecraft mc, int entityId) {
         var entity = mc.level.getEntity(entityId);
         if (entity == null) return null;
-        var renderer = mc.getEntityRenderDispatcher().getRenderer(entity);
+        var typed = mc.getEntityRenderDispatcher().getRenderer(entity);
+        // Vista sin captura para los instanceof: con EntityRenderer<? super Entity> javac rechaza
+        // el cast a LivingEntityRenderer (su T extiende LivingEntity, no puede ser supertipo de
+        // Entity). getTextureLocation sigue yendo por `typed`, que sí acepta la entidad.
+        net.minecraft.client.renderer.entity.EntityRenderer<?> renderer = typed;
         boolean humanoid, geckolib = false;
         if (renderer instanceof software.bernie.geckolib.renderer.GeoEntityRenderer<?> geo) {
             geckolib = true;
@@ -506,7 +510,7 @@ public final class ClashBarOverlay {
                     && lr.getModel() instanceof net.minecraft.client.model.HumanoidModel<?>;
         }
         if (!humanoid) return null;
-        ResourceLocation tex = renderer.getTextureLocation(entity);
+        ResourceLocation tex = typed.getTextureLocation(entity);
         int[] size = TEX_SIZES.computeIfAbsent(tex, ClashBarOverlay::readSize);
         if (size[0] <= 0) return null;
         return new Face(tex, size[0], size[1], !geckolib);
