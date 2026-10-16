@@ -55,8 +55,8 @@ import java.util.Map;
  * lo que antes eran 6 switch exhaustivos de {@link KiTechniqueType} ahora son datos aquí —
  * {@code travels}, {@code projectileSizeBase/Step}, {@code explosionRadiusMult}, {@code aoeFactor},
  * {@code aoeEdgeFalloff}, {@code chargeShowsRealSize}, {@code animOverride}, {@code allowedEffects}
- * — más {@code icon}, una textura propia opcional que sustituye la celda fija del atlas
- * ({@code technique_icons.png}/{@code physical_icons.png}) cuando no está vacía. El ENUM sigue
+ * — más {@code icon}, una textura propia opcional que sustituye el PNG por defecto
+ * ({@code technique_ki/<id>.png}/{@code technique_physical/<id>.png}) cuando no está vacía. El ENUM sigue
  * siendo la identidad (nombre = clave NBT); estos campos son solo su FORMA, ahora editable por
  * datapack sin tocar switches Java.
  * {@code animOverride}: "" = sin imponer (el jugador elige set); si no, nombre de

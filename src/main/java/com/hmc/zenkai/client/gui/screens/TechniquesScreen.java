@@ -171,17 +171,17 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     private static final ResourceLocation ICONS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
     private static final ResourceLocation TEX_X =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_x.png");
     private static final ResourceLocation TEX_X_HL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x_highlight.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_x_highlight.png");
     private static final ResourceLocation TEX_PENCIL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_pencil.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_pencil.png");
     private static final ResourceLocation TEX_PENCIL_HL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_pencil_highlight.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_pencil_highlight.png");
     private static final ResourceLocation TEX_TRASH =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_trash.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_trash.png");
     private static final ResourceLocation TEX_TRASH_HL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_trash_highlight.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_trash_highlight.png");
 
     // ── Estado ───────────────────────────────────────────────────────────────
 

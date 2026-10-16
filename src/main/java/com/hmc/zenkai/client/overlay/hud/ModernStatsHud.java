@@ -30,7 +30,7 @@ import org.lwjgl.opengl.GL11;
  * del atlas y la fuente se ven exactos, sin el borroso/irregular de un escalado fraccionario. El
  * slider hud_bars_scale elige k = round(4 · escala): 65 % por defecto ⇒ 3, 20 % ⇒ 1, 150 % ⇒ 6.
  *
- * Arte: textures/gui/hud_modern.png de tools/gen_hud_modern.py; geometría DUPLICADA en el script.
+ * Arte: textures/gui/hud/hud_modern.png de tools/gen_hud_modern.py; geometría DUPLICADA en el script.
  * Capas por fila, de abajo arriba: fondo vacío (MASK en gris oscuro, sin teñir) → estela de daño →
  * relleno → lavado de estado (Kaioken/strain/crítico) → muescas del ki → marco tintado. El
  * marco, el del retrato, la placa del PL y los marcos de icono son grises y se tiñen con
@@ -42,7 +42,7 @@ public final class ModernStatsHud {
     private ModernStatsHud() {}
 
     public static final ResourceLocation TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/hud_modern.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/hud/hud_modern.png");
     private static final int TEX_W = 256, TEX_H = 208;
 
     // ── Atlas (== tools/gen_hud_modern.py) ───────────────────────────────────

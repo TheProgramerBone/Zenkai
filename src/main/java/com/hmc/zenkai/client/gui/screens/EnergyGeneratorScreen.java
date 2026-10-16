@@ -36,7 +36,7 @@ import java.util.Locale;
 public class EnergyGeneratorScreen extends TechPanelScreen<EnergyGeneratorMenu> {
 
     private static final ResourceLocation BG =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/energy_generator.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/energy_generator.png");
 
     // ── Layout (coordenadas del PNG) ─────────────────────────────────────────
     private static final int TITLE_X = 12, TITLE_Y = 7;

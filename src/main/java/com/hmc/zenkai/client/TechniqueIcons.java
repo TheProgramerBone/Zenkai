@@ -10,34 +10,47 @@ import net.minecraft.resources.ResourceLocation;
 
 /**
  * Íconos de técnicas para GUI/HUD (overlay de combate, menú, barra de asignación).
- * Atlas: textures/gui/technique_icons.png (180x20, celdas 20x20):
- *  - Celdas 0-6: ícono por tipo, en orden del enum (WAVE, BLAST, LAZER, SPIRAL, BIG_BLAST,
- *    BARRIER, BURST), dibujados en BLANCO/grises -> se TIÑEN con el color de la técnica.
- *  - Celda 8: base EXPLOSIVA (se dibuja debajo del ícono, SIN teñir).
- * NUEVO: overload con tamaño. Los íconos son 20x20 y las celdas de la barra de asignación
- * también, así que dibujados a tamaño natural ocupaban la celda ENTERA y se comían el marco
- * y el número de la posición. Con el marco ahora dentro de SlotCell hace falta poder pedirlos
- * a 16x16 sin recortarlos.
+ * Un PNG por tipo: textures/gui/technique_ki/<id>.png (20x40, id = KiTechniqueType en minúsculas):
+ *  - Fila 0 (y=0): capa BASE en BLANCO/grises -> se TIÑE con el color de la técnica.
+ *  - Fila 1 (y=20): capa de DETALLE blanca, SIN teñir.
+ * Los PNG salen de tools/atlas_src/technique_icons.png con tools/split_technique_icons.py; ya NO
+ * hay atlas en runtime ni ordinal() que mantener alineado: un tipo nuevo = un PNG nuevo.
+ * Overload con tamaño: los íconos son 20x20 y las celdas de la barra de asignación también, así
+ * que a tamaño natural ocupaban la celda ENTERA y se comían el marco y el número de la posición.
  * Se hereda el estado de blend explícito que ya tenía PhysicalIcons: setColor es GLOBAL y
  * cualquier widget anterior del frame puede haber dejado un alfa < 1 sin resetear.
  */
 public final class TechniqueIcons {
     private TechniqueIcons() {}
 
-    private static final ResourceLocation ATLAS =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/technique_icons.png");
     private static final int CELL = 20;
-    // Ampliado de 180 a 200 (9 -> 10 celdas) al añadir SPIRIT_BOMB (KiTechniqueType.ordinal 9,
-    // ver tools/gen_spirit_bomb_icon.py), y de 200 a 320 (10 -> 16 celdas) al añadir las 6
-    // técnicas firma nuevas (KAMEHAMEHA..SUPERNOVA, ordinales 10-15, ver
-    // tools/gen_signature_technique_icons.py). ACOPLAMIENTO: si el atlas cambia de ancho otra
-    // vez, esta constante y el script Python tienen que actualizarse juntos.
-    private static final int ATLAS_W = 320;
-    private static final int ATLAS_H = 40; // ◄ Ampliado a 40px para 2 filas
-    private static final int EXPLOSIVE_CELL = 8;
+    private static final int TEX_W = 20;
+    private static final int TEX_H = 40; // 2 filas: base teñible + detalle blanco
 
-    private static boolean atlasExists = false;
+    private static final ResourceLocation[] LOCATIONS = new ResourceLocation[KiTechniqueType.values().length];
+    private static final boolean[] exists = new boolean[LOCATIONS.length];
     private static long nextCheckMs = 0L;
+
+    private static ResourceLocation locationOf(KiTechniqueType type) {
+        int i = type.ordinal();
+        if (LOCATIONS[i] == null) {
+            LOCATIONS[i] = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                    "textures/gui/technique_ki/" + type.id() + ".png");
+        }
+        return LOCATIONS[i];
+    }
+
+    /** Existencia cacheada y refrescada cada 2 s (resourceExists toca el ResourceManager). */
+    private static boolean existsFor(KiTechniqueType type) {
+        long now = System.currentTimeMillis();
+        if (now >= nextCheckMs) {
+            nextCheckMs = now + 2000;
+            for (KiTechniqueType t : KiTechniqueType.values()) {
+                exists[t.ordinal()] = RaceTextureUtil.resourceExists(locationOf(t));
+            }
+        }
+        return exists[type.ordinal()];
+    }
 
     /** Color del icono: el de la técnica para el jugador LOCAL (la Genki Dama de un malvado es otra). */
     private static int rgbOf(KiTechnique t) {
@@ -58,13 +71,7 @@ public final class TechniqueIcons {
         String custom = t.type().icon();
         if (!custom.isEmpty() && drawCustom(g, x, y, size, custom, rgbOf(t))) return;
 
-        long now = System.currentTimeMillis();
-        if (now >= nextCheckMs) {
-            nextCheckMs = now + 2000;
-            atlasExists = RaceTextureUtil.resourceExists(ATLAS);
-        }
-
-        if (!atlasExists) {
+        if (!existsFor(t.type())) {
             int m1 = Math.max(1, size / 20);
             int m3 = Math.max(2, size * 3 / 20);
             if (t.effect().borderRgb() != 0) {
@@ -88,16 +95,14 @@ public final class TechniqueIcons {
             g.fill(x + size - w, y + w, x + size, y + size - w, border);
         }
 
-        int u = t.type().ordinal() * CELL;
-
         // 1. CAPA BASE: Se tiñe con el color RGB de la técnica (Fila 0, Y = 0)
         int rgb = rgbOf(t);
         g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
-        blit(g, x, y, size, u, 0);
+        blit(g, x, y, size, t.type(), 0);
 
         // 2. CAPA SUPERIOR: Detalle/Brillo blanco puro SIN teñir (Fila 1, Y = CELL)
         g.setColor(1f, 1f, 1f, 1f); // Reset del tinte a blanco
-        blit(g, x, y, size, u, CELL);
+        blit(g, x, y, size, t.type(), CELL);
 
         RenderSystem.disableBlend();
     }
@@ -132,32 +137,24 @@ public final class TechniqueIcons {
         String custom = type.icon();
         if (!custom.isEmpty() && drawCustom(g, x, y, size, custom, rgb)) return;
 
-        long now = System.currentTimeMillis();
-        if (now >= nextCheckMs) {
-            nextCheckMs = now + 2000;
-            atlasExists = RaceTextureUtil.resourceExists(ATLAS);
-        }
-
-        if (!atlasExists) {
+        if (!existsFor(type)) {
             int m3 = Math.max(2, size * 3 / 20);
             g.fill(x + m3, y + m3, x + size - m3, y + size - m3, 0xFF000000 | rgb);
             return;
         }
 
         RenderSystem.enableBlend();
-        int u = type.ordinal() * CELL;
-
         g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
-        blit(g, x, y, size, u, 0);
+        blit(g, x, y, size, type, 0);
 
         g.setColor(1f, 1f, 1f, 1f);
-        blit(g, x, y, size, u, CELL);
+        blit(g, x, y, size, type, CELL);
 
         RenderSystem.disableBlend();
     }
 
-    /** Overload de blit adaptado para recibir coordenada V (fila). */
-    private static void blit(GuiGraphics g, int x, int y, int size, int u, int v) {
-        g.blit(ATLAS, x, y, size, size, (float) u, (float) v, CELL, CELL, ATLAS_W, ATLAS_H);
+    /** blit de una fila (v = 0 base, CELL detalle) del PNG del tipo. */
+    private static void blit(GuiGraphics g, int x, int y, int size, KiTechniqueType type, int v) {
+        g.blit(locationOf(type), x, y, size, size, 0f, (float) v, CELL, CELL, TEX_W, TEX_H);
     }
 }

@@ -30,9 +30,9 @@ public class VArrowButton extends AbstractButton {
     private static final int SIZE = 12;
 
     private static final ResourceLocation TEX = ResourceLocation.fromNamespaceAndPath(
-            Zenkai.MOD_ID, "textures/gui/btn_arrow_left.png");
+            Zenkai.MOD_ID, "textures/gui/buttons/btn_arrow_left.png");
     private static final ResourceLocation TEX_HL = ResourceLocation.fromNamespaceAndPath(
-            Zenkai.MOD_ID, "textures/gui/btn_arrow_left_highlight.png");
+            Zenkai.MOD_ID, "textures/gui/buttons/btn_arrow_left_highlight.png");
 
     private final Dir dir;
     private final Runnable onClick;

@@ -39,7 +39,7 @@ import org.jetbrains.annotations.NotNull;
 public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
 
     private static final ResourceLocation BG_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/stack_wish.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/stack_wish.png");
 
     /** Zona útil de la textura (el PNG es 256x256 por potencia de dos). */
     private static final int PANEL_W = 176, PANEL_H = 133;

@@ -29,9 +29,9 @@ public final class TransformMetersOverlay {
     private TransformMetersOverlay() {}
 
     private static final ResourceLocation BARS_EMPTY =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/meter_bars_empty.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/bars/meter_bars_empty.png");
     private static final ResourceLocation BARS_FULL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/meter_bars_full.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/bars/meter_bars_full.png");
     private static final ResourceLocation ICONS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
 

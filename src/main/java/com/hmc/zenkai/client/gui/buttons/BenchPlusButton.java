@@ -29,7 +29,7 @@ public class BenchPlusButton extends AbstractButton {
     public static final int SIZE = 16;
 
     private static final ResourceLocation TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_plus_bench.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_plus_bench.png");
     private static final int ATLAS_W = 48;
     private static final int ATLAS_H = 16;
 

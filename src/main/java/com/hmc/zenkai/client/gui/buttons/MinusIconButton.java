@@ -25,9 +25,9 @@ public class MinusIconButton extends AbstractButton {
     public static final int SIZE = 12;
 
     private static final ResourceLocation TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_minus.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_minus.png");
     private static final ResourceLocation TEX_HL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_minus_highlight.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_minus_highlight.png");
 
     private final Runnable onClick;
 

@@ -46,7 +46,7 @@ public abstract class TechPanelScreen<M extends AbstractContainerMenu>
 
     /** Piloto de la familia: atlas de 32x16, dos celdas de 16x16 (apagado, encendido). */
     protected static final ResourceLocation LED =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/tech_led.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/tech_led.png");
     protected static final int LED_SIZE = 16;
 
     protected TechPanelScreen(M menu, Inventory inv, Component title) {

@@ -29,10 +29,10 @@ import org.jetbrains.annotations.NotNull;
 public class RaceSelectionScreen extends Screen {
 
     private static final ResourceLocation BG =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/common_screen.png");
 
     private static final ResourceLocation TEX_BTN =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_wide.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_wide.png");
 
     private static final int BG_W = 256;
     private static final int BG_H = 256;

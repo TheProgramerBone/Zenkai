@@ -16,7 +16,7 @@ import java.util.Objects;
  * que layoutRows apaga al llegar al nivel máximo — justo el momento en que uno quiere
  * rectificar. Un botón propio, con su propia condición de visibilidad, no puede heredar
  * el apagado del otro.
- * Necesita textures/gui/btn_x.png y btn_x_highlight.png (12x12).
+ * Necesita textures/gui/buttons/btn_x.png y btn_x_highlight.png (12x12).
  * Tamaño configurable (constructor de 3 args): reusado a mayor escala como "Cancel"/"Back" de
  * las pantallas de Training (pedido explícito del usuario, "esa textura ya existe") — el
  * blit ya usaba this.width/this.height como destino, así que solo hacía falta un constructor
@@ -25,10 +25,10 @@ import java.util.Objects;
 public class XIconButton extends AbstractButton {
 
     private static final ResourceLocation TEX_NORMAL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_x.png");
 
     private static final ResourceLocation TEX_HOVER =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x_highlight.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_x_highlight.png");
 
     private final Runnable onClick;
 

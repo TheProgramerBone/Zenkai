@@ -5,10 +5,9 @@ import java.util.Locale;
 /**
  * Tipos de técnica ki. El enum es solo IDENTIDAD:
  *  - name() = clave NBT / packets.
- *  - ordinal() = celda del ícono en technique_icons.png (NO reordenar) SOLO mientras
- *    {@link #icon()} esté vacío — con una textura propia en datapack, TechniqueIcons la usa en
- *    vez de la celda del atlas (ver TechniqueDef.icon, 0.3.0). EXPLOSION ocupa la celda 8, que
- *    antes era la base de la marca explosiva; el atlas no cambia de tamaño.
+ *  - el ícono es textures/gui/technique_ki/<id>.png (un PNG por tipo, ya sin atlas ni ordinal);
+ *    con {@link #icon()} no vacío, TechniqueIcons usa esa textura propia en su lugar (ver
+ *    TechniqueDef.icon, 0.3.0).
  *  - la estela 3D se queda aquí (es visual, no balance).
  * Cada NÚMERO vive en datapack: data/&lt;ns&gt;/zenkai_techniques/ki/&lt;id&gt;.json
  * (ver TechniqueDef / TechniqueManager). Sin JSON, enabled() es false y la técnica
@@ -33,8 +32,7 @@ public enum KiTechniqueType {
 
     // Técnicas firma nuevas (2026-09-23), TODAS con master="kami" como placeholder — Roshi/
     // Vegeta/Freezer no existen todavía como NPC maestro (ver .claude/pendiente/contenido-futuro.md).
-    // Van DESPUÉS de SPIRIT_BOMB a propósito: ordinal() es la celda del icono en
-    // technique_icons.png, así que añadirlas aquí no reordena las 10 celdas ya existentes.
+    // Van DESPUÉS de SPIRIT_BOMB a propósito: ordinal() es la clave NBT/packet en algunos sitios.
     KAMEHAMEHA,   // el haz por antonomasia: núcleo blanco limpio, borde azul dentado
     FINAL_FLASH,  // beam ANCHO, núcleo extremadamente brillante, carga con arcos eléctricos
     GALICK_GUN,   // mismo perfil que Kamehameha pero denso/compacto, violeta
@@ -226,9 +224,8 @@ public enum KiTechniqueType {
      *  TechniquePacket.handleUnlock y el javadoc de TechniqueDef ("TÉCNICA FIRMA"). */
     public String master() { TechniqueDef d = def(); return d == null ? "" : d.master(); }
 
-    /** "" = usar la celda fija del atlas compartido (technique_icons.png, indexada por
-     *  ordinal(), como siempre). Con una ResourceLocation propia, TechniqueIcons la dibuja en
-     *  su lugar — ver TechniqueDef.icon, campo 0.3.0. */
+    /** "" = usar textures/gui/technique_ki/<id>.png. Con una ResourceLocation propia,
+     *  TechniqueIcons la dibuja en su lugar — ver TechniqueDef.icon, campo 0.3.0. */
     public String icon() { TechniqueDef d = def(); return d == null ? "" : d.icon(); }
 
     /** Segundo color (interior) de fábrica, campo datapack {@code default_rgb2} ("0xRRGGBB"; "" o

@@ -124,7 +124,7 @@ public class MasterScreen extends Screen {
     // ACOPLAMIENTO A VIGILAR: BG_W/BG_H/PORTRAIT_W/PADDING de aquí abajo están DUPLICADOS en el
     // script Python (no puede leer las constantes Java). Si cambian aquí, regenerar la textura.
     private static final ResourceLocation BG_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/master_screen.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/master_screen.png");
 
     // Icono del hub: "Skills" reutiliza el ya existente de ZenkaiTab.SKILLS (mismo concepto
     // visual que la pestaña del menú del jugador); "Técnicas" y "Servicios" son nuevos (ver

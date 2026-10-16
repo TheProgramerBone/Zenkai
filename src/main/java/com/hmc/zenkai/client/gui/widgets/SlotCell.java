@@ -38,7 +38,7 @@ public class SlotCell extends AbstractButton {
     public static final int GAP = 2;
 
     private static final ResourceLocation ATLAS =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/slot.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/slots/slot.png");
     private static final int ATLAS_W = 60, ATLAS_H = 20;
     /** Margen del marco: el icono se dibuja dentro para no comerse el borde. */
     private static final int INSET = 2;

@@ -46,7 +46,7 @@ public final class TechniqueHotbarOverlay {
     private static final ResourceLocation ICONS_TEX =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
     private static final ResourceLocation SLOT_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/slot_hud.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/slots/slot_hud.png");
 
     private static final int SLOT_ATLAS_W = 60, SLOT_ATLAS_H = 20;
     private static final int ICON_INSET = 2;

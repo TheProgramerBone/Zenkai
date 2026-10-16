@@ -16,19 +16,19 @@ public class PlusIconButton extends AbstractButton {
     private static final ResourceLocation TEX_NORMAL =
             ResourceLocation.fromNamespaceAndPath(
                     Zenkai.MOD_ID,
-                    "textures/gui/btn_plus.png"
+                    "textures/gui/buttons/btn_plus.png"
             );
 
     private static final ResourceLocation TEX_HOVER =
             ResourceLocation.fromNamespaceAndPath(
                     Zenkai.MOD_ID,
-                    "textures/gui/btn_plus_highlight.png"
+                    "textures/gui/buttons/btn_plus_highlight.png"
             );
 
     // Mismo PNG que XIconButton (12x12): reutilizarlo aquí evita un asset nuevo solo para
     // "este + está bloqueado" — la cruz ya es el lenguaje visual de "no" en este mod.
     private static final ResourceLocation TEX_CROSS =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_x.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_x.png");
 
     // Acción al pulsar
     private final Runnable onClick;

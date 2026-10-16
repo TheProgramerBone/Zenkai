@@ -25,10 +25,10 @@ public class ArrowIconButton extends AbstractButton {
         String base = (dir == Dir.LEFT) ? "btn_arrow_left" : "btn_arrow_right";
 
         this.texNormal = ResourceLocation.fromNamespaceAndPath(
-                Zenkai.MOD_ID, "textures/gui/" + base + ".png"
+                Zenkai.MOD_ID, "textures/gui/buttons/" + base + ".png"
         );
         this.texHover = ResourceLocation.fromNamespaceAndPath(
-                Zenkai.MOD_ID, "textures/gui/" + base + "_highlight.png"
+                Zenkai.MOD_ID, "textures/gui/buttons/" + base + "_highlight.png"
         );
     }
 

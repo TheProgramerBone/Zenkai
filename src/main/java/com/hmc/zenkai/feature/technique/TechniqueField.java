@@ -92,10 +92,9 @@ public enum TechniqueField {
     /** "" = default (todos menos FRAGMENTATION); "none" = ninguno; si no, lista separada por
      *  comas de nombres de TechniqueEffect. Ver KiTechniqueType.allowsEffect. */
     ALLOWED_EFFECTS("allowed_effects", ValueType.STRING, "",                            Kind.KI),
-    /** "" = usar el atlas fijo (technique_icons.png/physical_icons.png, indexado por ordinal,
-     *  igual que siempre). Con una ResourceLocation, TechniqueIcons/PhysicalIcons dibujan esa
-     *  textura propia en su lugar — la vía real para que un addon dé icono a una técnica sin
-     *  tocar el atlas compartido. */
+    /** "" = usar el PNG por defecto (textures/gui/technique_ki/<id>.png o
+     *  technique_physical/<id>.png). Con una ResourceLocation, TechniqueIcons/PhysicalIcons
+     *  dibujan esa textura propia en su lugar — la vía para que un addon dé icono a una técnica. */
     ICON          ("icon",           ValueType.STRING, "",                              Kind.KI, Kind.PHYSICAL),
     /** "" = manos vacías (lo de siempre); "none" o "sword". Ver WeaponRequirement. */
     WEAPON_REQUIREMENT("weapon_requirement", ValueType.STRING, "",                      Kind.PHYSICAL),

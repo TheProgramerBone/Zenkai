@@ -88,7 +88,7 @@ public final class ZenkaiUiCredits {
         credit(Category.UI, "ClientZenkaiHooks", "Spongtari", "HUD overlay design");
         credit(Category.UI, "bars_empty.png / bars_full.png", "Spongtari", "HUD Body/Stamina/Ki bar art (tools/gen_bars.py)");
 
-        // ── Íconos (textures/gui/icons.png, textures/gui/technique_icons.png) ───
+        // ── Íconos (textures/gui/icons.png, textures/gui/technique_ki/) ───
         // Una línea por celda de atlas identificada como arte propio (no vainilla), con su (u,v)
         // real para que CreditsScreen pinte la miniatura tal cual se ve en el atlas — mismo
         // espíritu que Modelos pinta el ItemStack. El usuario decide caso a caso si un ícono
@@ -138,9 +138,9 @@ public final class ZenkaiUiCredits {
         creditIcon("icon_hud_moon", AUTHOR, 120, 0, "icons.png (120,0)");
         creditIcon("icon_hud_instant_transmission", AUTHOR, 20, 100, "icons.png (20,100)");
         creditIcon("icon_hud_instant_transmission_charged", AUTHOR, 40, 100, "icons.png (40,100)");
-        // Sin (u,v) propio: son varios íconos en OTRO archivo (technique_icons.png), no una celda.
-        credit(Category.ICONS, "technique_icons_atlas", "@Sor_Sylvie", "technique_icons.png — one icon per KiTechniqueType");
-        credit(Category.ICONS, "physical_icons_atlas", "@Sor_Sylvie", "physical_icons.png — one icon per PhysicalTechniqueType");
+        // Sin (u,v) propio: son varios íconos en OTRO archivo (gui/technique_ki/), no una celda.
+        credit(Category.ICONS, "technique_icons_atlas", "@Sor_Sylvie", "gui/technique_ki/ — one icon per KiTechniqueType");
+        credit(Category.ICONS, "physical_icons_atlas", "@Sor_Sylvie", "gui/technique_physical/ — one icon per PhysicalTechnique");
         // Ídem: atlas propio de una sola pantalla, en OTRO archivo que CreditsScreen no sabe
         // pintar como miniatura (solo sabe leer celdas de icons.png) — mismo criterio que la
         // línea de arriba. icons_galactic_menu.png (Earth/Namek/Yardrat de GalacticMenuScreen)

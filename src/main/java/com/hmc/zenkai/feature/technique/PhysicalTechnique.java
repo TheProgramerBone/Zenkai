@@ -4,7 +4,7 @@ import java.util.Locale;
 
 /**
  * Técnicas físicas. El enum es solo IDENTIDAD: name() = clave NBT/maestría,
- * ordinal() = celda del atlas physical_icons.png (NO reordenar).
+ * ordinal() = índice persistido en algunos sitios (NO reordenar). Icono: textures/gui/technique_physical/<id>.png.
  *
  * Los NÚMEROS viven en datapack:
  * data/&lt;ns&gt;/zenkai_techniques/physical/&lt;id&gt;.json (ver TechniqueDef /
@@ -18,8 +18,8 @@ public enum PhysicalTechnique {
     HEAVY_BLOW,
     BARRAGE,
     KIAI,
-    // Técnicas de espada (las enseña Tori-Bot, weapon_requirement "sword"). Sus iconos son PNG
-    // propios (campo icon del JSON), no celdas del atlas: NO ampliar physical_icons.png por ellas.
+    // Técnicas de espada (las enseña Tori-Bot, weapon_requirement "sword"). Cada técnica
+    // tiene su PNG en textures/gui/technique_physical/<id>.png (ya no hay atlas).
     RISING_SLASH,
     CROSS_SLASH,
     PIERCING_THRUST,
@@ -89,7 +89,7 @@ public enum PhysicalTechnique {
      *  el ActionState para que los demás vean la animación entera. */
     public int animTicks() { TechniqueDef d = def(); return d == null ? 12 : d.animTicks(); }
 
-    /** "" = usar la celda fija del atlas compartido (physical_icons.png, indexada por
-     *  ordinal()). Con una ResourceLocation propia, PhysicalIcons la dibuja en su lugar. */
+    /** "" = usar textures/gui/technique_physical/<id>.png. Con una ResourceLocation propia,
+     *  PhysicalIcons la dibuja en su lugar. */
     public String icon() { TechniqueDef d = def(); return d == null ? "" : d.icon(); }
 }

@@ -63,10 +63,10 @@ import org.jetbrains.annotations.Nullable;
 public class AppearanceScreen extends Screen {
 
     private static final ResourceLocation BG =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/common_screen.png");
 
     private static final ResourceLocation TEX_BTN =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_wide.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_wide.png");
 
     // Iconos de fila: v=80 de icons.png — (0,80)/(20,80) ya las usa MasterScreen (Técnicas/
     // Servicios). 40/60 = Head/Body (pintados por gen_appearance_icons.py). 80/100 = Gender

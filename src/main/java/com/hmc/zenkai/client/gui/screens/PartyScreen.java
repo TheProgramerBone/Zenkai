@@ -112,9 +112,9 @@ import org.jetbrains.annotations.NotNull;
 public class PartyScreen extends ZenkaiMenuScreen {
 
     private static final ResourceLocation TEX_TRASH =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_trash.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_trash.png");
     private static final ResourceLocation TEX_TRASH_HL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_trash_highlight.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_trash_highlight.png");
     private static final int DISBAND_SIZE = 16;
 
     /** Mismo atlas que FriendlyFireIconButton/AtlasIconButton, para el blit manual del ícono

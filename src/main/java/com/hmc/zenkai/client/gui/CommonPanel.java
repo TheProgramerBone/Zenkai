@@ -33,7 +33,7 @@ public final class CommonPanel {
     private CommonPanel() {}
 
     private static final ResourceLocation TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/common_screen.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/common_screen.png");
 
     /** Tamaño "ideal": el que asumen los layouts de contenido de cada pantalla hija, y el lado
      *  real del PNG. El panel nunca crece más allá de esto — solo encoge cuando no cabe. */

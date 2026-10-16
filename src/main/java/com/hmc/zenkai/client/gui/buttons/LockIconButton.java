@@ -33,9 +33,9 @@ public class LockIconButton extends AbstractButton {
     public static final int SIZE = 16;
 
     private static final ResourceLocation TEX_NORMAL =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_lock.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_lock.png");
     private static final ResourceLocation TEX_HOVER =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_lock_highlight.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_lock_highlight.png");
 
     private final Runnable onClick;
 

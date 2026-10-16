@@ -49,9 +49,9 @@ public final class ClientZenkaiHooks {
     // maná/XP vanilla), así la punta derecha (el chevron) se queda vacía hasta que la barra está
     // casi llena, que es el efecto correcto sin tratarla como caso aparte.
     public static final ResourceLocation BARS_EMPTY_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/bars_empty.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/bars/bars_empty.png");
     public static final ResourceLocation BARS_FULL_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/bars_full.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/bars/bars_full.png");
 
     // == tools/gen_bars.py (TEX_W/TEX_H/ROW_V/ROW_H): si esa geometría cambia ahí, regenerar el
     // PNG con el script y actualizar estas constantes a mano — el script no puede escribir aquí.

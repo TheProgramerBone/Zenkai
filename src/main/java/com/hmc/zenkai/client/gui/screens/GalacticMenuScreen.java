@@ -61,7 +61,7 @@ public class GalacticMenuScreen extends Screen {
     private static final int TOOLTIP_W = 180;
 
     private static final ResourceLocation BG_TEX = ResourceLocation
-            .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/galactic_menu.png");
+            .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/galactic_menu.png");
     private static final ResourceLocation ICONS_TEX = ResourceLocation
             .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons_instant_transmision.png");
     private static final int ICONS_ATLAS = 256;

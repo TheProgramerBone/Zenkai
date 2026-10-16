@@ -9,22 +9,29 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * Íconos de técnicas físicas (overlay + pestaña). Atlas physical_icons.png 80x20, celdas 20x20
- * en orden del enum. Sin teñir (las físicas no tienen color).
+ * Íconos de técnicas físicas (overlay + pestaña). Un PNG de 20x20 por técnica en
+ * textures/gui/technique_physical/<id>.png (id = enum en minúsculas, incluidas las de espada);
+ * el campo icon del JSON, si existe, manda sobre esa ruta. Sin teñir (las físicas no tienen color).
  * Mismo añadido que TechniqueIcons: overload con tamaño, para que quepan dentro del marco de
  * SlotCell sin taparlo. Dibujados a 20x20 sobre una celda de 20x20 pisaban el borde y el número.
  */
 public final class PhysicalIcons {
     private PhysicalIcons() {}
 
-    private static final ResourceLocation ATLAS =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/physical_icons.png");
     private static final int CELL = 20;
-    private static final int ATLAS_W = 80;
-    private static final int ATLAS_H = 20;
 
-    private static boolean atlasExists = false;
+    private static final ResourceLocation[] LOCATIONS = new ResourceLocation[PhysicalTechnique.values().length];
+    private static final boolean[] exists = new boolean[LOCATIONS.length];
     private static long nextCheckMs = 0L;
+
+    private static ResourceLocation locationOf(PhysicalTechnique t) {
+        int i = t.ordinal();
+        if (LOCATIONS[i] == null) {
+            LOCATIONS[i] = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                    "textures/gui/technique_physical/" + t.id() + ".png");
+        }
+        return LOCATIONS[i];
+    }
 
     public static void draw(GuiGraphics g, int x, int y, PhysicalTechnique t) {
         draw(g, x, y, CELL, t);
@@ -49,10 +56,12 @@ public final class PhysicalIcons {
         long now = System.currentTimeMillis();
         if (now >= nextCheckMs) {
             nextCheckMs = now + 2000;
-            atlasExists = RaceTextureUtil.resourceExists(ATLAS);
+            for (PhysicalTechnique p : PhysicalTechnique.values()) {
+                exists[p.ordinal()] = RaceTextureUtil.resourceExists(locationOf(p));
+            }
         }
 
-        if (!atlasExists) {
+        if (!exists[t.ordinal()]) {
             int m = Math.max(1, size / 10);
             g.fill(x + m, y + m, x + size - m, y + size - m, 0xFF808080);
             g.drawString(Minecraft.getInstance().font, t.name().substring(0, 1),
@@ -65,8 +74,7 @@ public final class PhysicalIcons {
         // transparencia y aparece medio invisible según qué pantalla esté abierta.
         RenderSystem.enableBlend();
         g.setColor(1f, 1f, 1f, 1f);
-        g.blit(ATLAS, x, y, size, size, (float) (t.ordinal() * CELL), 0f,
-                CELL, CELL, ATLAS_W, ATLAS_H);   // overload que escala
+        g.blit(locationOf(t), x, y, size, size, 0f, 0f, CELL, CELL, CELL, CELL);
         g.setColor(1f, 1f, 1f, 1f);
         RenderSystem.disableBlend();
     }

@@ -51,13 +51,13 @@ import java.util.Locale;
 public class ScouterBenchScreen extends TechPanelScreen<ScouterBenchMenu> {
 
     private static final ResourceLocation BG =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/scouter_bench.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/scouter_bench.png");
     private static final ResourceLocation SLOT_BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/slot/empty_scouter_slot.png");
     private static final ResourceLocation CURIOS_BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/slot/empty_curios_slot.png");
     private static final ResourceLocation TINT_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/btn_tint.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_tint.png");
 
     // ── Layout (coordenadas del PNG) ─────────────────────────────────────────
     private static final int TITLE_X = 12, TITLE_Y = 7;

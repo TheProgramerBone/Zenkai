@@ -41,7 +41,7 @@ public final class ClashBarOverlay {
     private ClashBarOverlay() {}
 
     private static final ResourceLocation TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/clash_hud.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/hud/clash_hud.png");
     private static final int TEX_W = 256, TEX_H = 64;
 
     // ── Atlas (== tools/gen_clash_hud.py) ──

@@ -24,7 +24,7 @@ public final class NineSlice {
     public static final int BTN_TEX_H = 25;
 
     public static final ResourceLocation BTN_WIDE =
-            ResourceLocation.fromNamespaceAndPath("zenkai", "textures/gui/btn_wide.png");
+            ResourceLocation.fromNamespaceAndPath("zenkai", "textures/gui/buttons/btn_wide.png");
 
     /** btn_wide con sus medidas ya puestas. Lo que llama el mod. */
     public static void button(GuiGraphics g, int x, int y, int w, int h) {
@@ -80,7 +80,7 @@ public final class NineSlice {
     public static final int BTN_TECH_CORNER = 8;
 
     public static final ResourceLocation BTN_TECH =
-            ResourceLocation.fromNamespaceAndPath("zenkai", "textures/gui/btn_tech.png");
+            ResourceLocation.fromNamespaceAndPath("zenkai", "textures/gui/buttons/btn_tech.png");
 
     /** btn_tech con sus medidas ya puestas. Familia tecnológica (TechButton). */
     public static void techButton(GuiGraphics g, int x, int y, int w, int h) {

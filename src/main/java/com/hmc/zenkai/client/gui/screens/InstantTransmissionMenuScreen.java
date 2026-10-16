@@ -132,7 +132,7 @@ public class InstantTransmissionMenuScreen extends Screen {
      *  El marco viene YA HORNEADO dentro de los BG_W×BG_H píxeles (mismo criterio que
      *  master_screen.png), no dibujado aparte por fuera como antes. */
     private static final ResourceLocation BG_TEX = ResourceLocation
-            .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/instant_transmission_menu.png");
+            .fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/instant_transmission_menu.png");
 
     private static void drawIcon(GuiGraphics g, int x, int y, IconUV icon) {
         drawIcon(g, x, y, ICONS_TEX, icon);

@@ -45,7 +45,7 @@ public final class ClashJoinClient {
     private ClashJoinClient() {}
 
     private static final ResourceLocation TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/clash_hud.png");
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/hud/clash_hud.png");
     /** == tools/gen_clash_hud.py, «mano». */
     private static final int U_HAND = 184, V_HAND = 0, HAND = 16;
     /** Alcance del raycast que busca al luchador apuntado (la distancia real la decide la esfera). */
