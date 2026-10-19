@@ -213,7 +213,15 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
         }
 
         @Override
-        public void onClick(double mx, double my) { onPress.run(); }
+        public boolean mouseClicked(double mx, double my, int button) {
+            // Sustituye a onClick(double,double) (deprecada): mismo comportamiento que AbstractWidget.mouseClicked.
+            if (this.active && this.visible && isValidClickButton(button) && clicked(mx, my)) {
+                playDownSound(net.minecraft.client.Minecraft.getInstance().getSoundManager());
+                onPress.run();
+                return true;
+            }
+            return false;
+        }
 
         @Override
         protected void updateWidgetNarration(@NotNull NarrationElementOutput out) {

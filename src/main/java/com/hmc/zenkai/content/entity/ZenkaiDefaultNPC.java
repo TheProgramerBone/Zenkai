@@ -2,7 +2,6 @@ package com.hmc.zenkai.content.entity;
 
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.level.Level;
@@ -14,7 +13,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 // Clase para los npc: inmortales (salvo /kill y el vacío), no se mueven, tienen una animación idle.
 
-public abstract class ZenkaiDefaultNPC extends PathfinderMob implements GeoEntity {
+public abstract class ZenkaiDefaultNPC extends PathfinderMob implements com.hmc.zenkai.content.entity.EffectImmune, GeoEntity {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -49,11 +48,6 @@ public abstract class ZenkaiDefaultNPC extends PathfinderMob implements GeoEntit
         return true;
     }
 
-    /** Ningún efecto de poción (veneno, wither, levitación, lentitud...). */
-    @Override
-    public boolean canBeAffected(@NotNull MobEffectInstance effect) {
-        return false;
-    }
 
     /** Tampoco se congelan en la nieve polvo (el contador de congelación no pasa por hurt). */
     @Override

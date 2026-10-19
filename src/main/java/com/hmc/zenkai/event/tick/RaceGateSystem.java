@@ -16,12 +16,11 @@ public final class RaceGateSystem {
         c.att().setChargingKi(false);
         c.form().resetAll();
 
-        // Sin esto, tras /zenkai reset full el jugador conservaba mayfly y la velocidad
+        // Sin esto, tras /zenkai reset full el jugador conservaba la capacidad de vuelo y la velocidad
         // de vuelo vieja (este gate retornaba antes de la sección de vuelo).
         if (!p.isCreative() && !p.isSpectator()) {
             var ab = p.getAbilities();
-            if (ab.mayfly || ab.flying) {
-                ab.mayfly = false;
+            if (FlightSystem.setFlightCapability(p, false) || ab.flying) {
                 ab.flying = false;
                 ab.setFlyingSpeed(0.05F); // default vanilla
                 p.onUpdateAbilities();

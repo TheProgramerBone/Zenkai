@@ -71,12 +71,13 @@ public class FacePartTile extends AbstractWidget {
             onRightClick.run();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override
-    public void onClick(double mouseX, double mouseY) {
-        onClick.run();
+        // Clic izquierdo: lo que hacía AbstractWidget.mouseClicked vía onClick(double,double), deprecada.
+        if (this.active && this.visible && isValidClickButton(button) && clicked(mouseX, mouseY)) {
+            playDownSound(net.minecraft.client.Minecraft.getInstance().getSoundManager());
+            onClick.run();
+            return true;
+        }
+        return false;
     }
 
     @Override

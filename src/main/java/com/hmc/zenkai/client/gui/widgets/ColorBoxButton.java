@@ -45,8 +45,14 @@ public class ColorBoxButton extends AbstractWidget {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
-        onClick.run();
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Sustituye a onClick(double,double) (deprecada): mismo comportamiento que AbstractWidget.mouseClicked.
+        if (this.active && this.visible && isValidClickButton(button) && clicked(mouseX, mouseY)) {
+            playDownSound(net.minecraft.client.Minecraft.getInstance().getSoundManager());
+            onClick.run();
+            return true;
+        }
+        return false;
     }
 
     @Override

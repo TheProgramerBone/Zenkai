@@ -203,7 +203,7 @@ public final class ZenkaiFirstPersonArmHooks {
             this.captured = false;
 
             GeoModel<GeoLayerArmorItem> model = getGeoModel();
-            BakedGeoModel baked = model.getBakedModel(model.getModelResource(item));
+            BakedGeoModel baked = model.getBakedModel(model.getModelResource(item, null));
             String armRoot = (arm == HumanoidArm.RIGHT) ? RIGHT_ARM_BONE : LEFT_ARM_BONE;
             this.captureBone = armRoot;
 
@@ -218,7 +218,7 @@ public final class ZenkaiFirstPersonArmHooks {
                     if (isArm) resetBranchToBind(b);
                 }
 
-                ResourceLocation baseTex = model.getTextureResource(item);
+                ResourceLocation baseTex = model.getTextureResource(item, null);
                 RenderType rt = RenderType.entityTranslucent(baseTex);
 
                 boolean isRight = (arm == HumanoidArm.RIGHT);

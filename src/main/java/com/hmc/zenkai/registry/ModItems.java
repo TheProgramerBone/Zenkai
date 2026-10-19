@@ -108,7 +108,7 @@ public class ModItems {
                             .nutrition(0)
                             .saturationModifier(0f)
                             .alwaysEdible()
-                            .effect(new MobEffectInstance(MobEffects.REGENERATION, 200, 1), 1.0f)
+                            .effect(() -> new MobEffectInstance(MobEffects.REGENERATION, 200, 1), 1.0f)
                             .build()));
 
     /** Cubo del agua curativa en forma de fluido (ver ModFluids/HealingWaterBlock). Se

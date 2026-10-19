@@ -31,7 +31,7 @@ side="BOTH"
 modId="geckolib"
 type="required"
 reason="Necesario para animaciones de entidades y modelos 3D"
-versionRange="[4.8.4,)"
+versionRange="[4.9.3,)"
 ordering="AFTER"
 side="BOTH"
 

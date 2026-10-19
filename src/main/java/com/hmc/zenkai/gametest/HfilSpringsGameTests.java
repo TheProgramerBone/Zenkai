@@ -490,7 +490,7 @@ public final class HfilSpringsGameTests {
                 "el tinte cian vuelve cian la gelatina (es " + dyed + ")");
         helper.assertTrue(dye.getCount() == 1, "se gasta un tinte");
 
-        ItemStack picked = bubble.getCloneItemStack(level, pos, level.getBlockState(pos));
+        ItemStack picked = bubble.getCloneItemStack(level.getBlockState(pos), null, level, pos, null);
         helper.assertTrue(com.hmc.zenkai.content.block.JanembaBubbleBlock.colorOf(picked)
                         == com.hmc.zenkai.content.block.JanembaBubbleBlock.Color.CYAN,
                 "el ítem conserva el color");

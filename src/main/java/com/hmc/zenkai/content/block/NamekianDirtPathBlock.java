@@ -36,6 +36,7 @@ public class NamekianDirtPathBlock extends Block {
     }
 
     /** Igual que vainilla: no sobrevive con un bloque sólido encima, salvo vallas-puerta. */
+    @SuppressWarnings("deprecation") // isSolid(): mismo test que el DirtPathBlock vanilla; blocksMotion/isSolidRender cambian el resultado
     @Override
     protected boolean canSurvive(BlockState state, @NotNull LevelReader level, @NotNull BlockPos pos) {
         BlockState above = level.getBlockState(pos.above());

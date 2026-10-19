@@ -100,8 +100,8 @@ public class NpcMarkerBlockEntity extends BlockEntity {
         mob.setYHeadRot(yaw);
         mob.setPersistenceRequired();
         mob.restrictTo(worldPosition, 12);
-        mob.finalizeSpawn(server, server.getCurrentDifficultyAt(worldPosition),
-                MobSpawnType.STRUCTURE, null);
+        net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(mob, server,
+                server.getCurrentDifficultyAt(worldPosition), MobSpawnType.STRUCTURE, null);
         server.addFreshEntity(mob);
 
         npcUuid = mob.getUUID();

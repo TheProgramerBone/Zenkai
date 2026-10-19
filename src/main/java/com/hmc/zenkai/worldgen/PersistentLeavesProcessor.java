@@ -31,11 +31,12 @@ public class PersistentLeavesProcessor extends StructureProcessor {
     private PersistentLeavesProcessor() {}
 
     @Override
-    public @Nullable StructureTemplate.StructureBlockInfo processBlock(
+    public @Nullable StructureTemplate.StructureBlockInfo process(
             LevelReader level, BlockPos offset, BlockPos pos,
             StructureTemplate.StructureBlockInfo original,
             StructureTemplate.StructureBlockInfo current,
-            StructurePlaceSettings settings) {
+            StructurePlaceSettings settings,
+            @Nullable StructureTemplate template) {
 
         BlockState state = current.state();
         if (!state.hasProperty(LeavesBlock.PERSISTENT)) return current;

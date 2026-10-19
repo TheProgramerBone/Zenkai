@@ -5,11 +5,16 @@ import com.hmc.zenkai.feature.player.PlayerStateFlags;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.weights.WeightSystem;
+import com.hmc.zenkai.Zenkai;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.NeoForgeMod;
 
 /** Vuelo: habilitación, velocidad, coste de ki y hitbox del boost. */
 public final class FlightSystem {
@@ -35,6 +40,27 @@ public final class FlightSystem {
     private static final double EMERGENCY_LANDING_DESCENT_SPEED = 0.12;
     private static final double EMERGENCY_LANDING_VERTICAL_LERP = 0.3;
     private static final double GROUND_CHECK_MAX_DIST = 64.0;
+
+    /** Modificador transitorio sobre {@code NeoForgeMod.CREATIVE_FLIGHT}: es la CAPACIDAD de volar
+     *  (el sustituto no deprecado de {@code Abilities.mayfly}; {@code Player.mayFly()} lee ambos). */
+    private static final ResourceLocation FLIGHT_CAPABILITY_ID =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "flight_capability");
+
+    /** Activa/desactiva la capacidad de volar. @return true si cambió. El atributo se sincroniza
+     *  solo al cliente (es syncable), así que el doble salto nativo lo ve sin paquete propio. */
+    public static boolean setFlightCapability(Player p, boolean can) {
+        AttributeInstance attr = p.getAttribute(NeoForgeMod.CREATIVE_FLIGHT);
+        if (attr == null) return false;
+        boolean has = attr.hasModifier(FLIGHT_CAPABILITY_ID);
+        if (can == has) return false;
+        if (can) {
+            attr.addTransientModifier(new AttributeModifier(
+                    FLIGHT_CAPABILITY_ID, 1.0, AttributeModifier.Operation.ADD_VALUE));
+        } else {
+            attr.removeModifier(FLIGHT_CAPABILITY_ID);
+        }
+        return true;
+    }
 
     public static void tick(TickCtx c, boolean turboOn) {
         Player p = c.p();
@@ -76,8 +102,7 @@ public final class FlightSystem {
         flags.setEmergencyLandingTicks(emergencyLanding ? grace - 1 : 0);
 
         boolean effectiveCanFly = canFlyNow || emergencyLanding;
-        if (ab.mayfly != effectiveCanFly) {
-            ab.mayfly = effectiveCanFly;
+        if (setFlightCapability(p, effectiveCanFly)) {
             if (!effectiveCanFly) ab.flying = false;
             p.onUpdateAbilities();
         }

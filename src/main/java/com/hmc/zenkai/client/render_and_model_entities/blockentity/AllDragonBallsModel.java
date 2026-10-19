@@ -29,11 +29,15 @@ public class AllDragonBallsModel extends GeoModel<AllDragonBallsEntity> {
         return be.getBlockState().getBlock() instanceof com.hmc.zenkai.content.blockentity.AllDragonBalls.NamekAllDragonBallsBlock;
     }
 
+    // GeckoLib 4.8 deja esta firma deprecada pero abstracta: hay que implementarla; el render usa la sobrecarga con renderer.
+    @SuppressWarnings("deprecation")
     @Override
     public ResourceLocation getModelResource(AllDragonBallsEntity animatable) {
         return isNamek(animatable) ? NAMEK_MODEL : MODEL;
     }
 
+    // GeckoLib 4.8 deja esta firma deprecada pero abstracta: hay que implementarla; el render usa la sobrecarga con renderer.
+    @SuppressWarnings("deprecation")
     @Override
     public ResourceLocation getTextureResource(AllDragonBallsEntity animatable) {
         return isNamek(animatable) ? NAMEK_TEXTURE : TEXTURE;

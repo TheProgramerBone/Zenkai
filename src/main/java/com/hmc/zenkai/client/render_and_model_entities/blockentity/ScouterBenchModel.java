@@ -15,11 +15,15 @@ public class ScouterBenchModel extends GeoModel<ScouterBenchBlockEntity> {
     private static final ResourceLocation ANIMATION =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "animations/scouter_bench.animation.json");
 
+    // GeckoLib 4.8 deja esta firma deprecada pero abstracta: hay que implementarla; el render usa la sobrecarga con renderer.
+    @SuppressWarnings("deprecation")
     @Override
     public ResourceLocation getModelResource(ScouterBenchBlockEntity be) {
         return MODEL;
     }
 
+    // GeckoLib 4.8 deja esta firma deprecada pero abstracta: hay que implementarla; el render usa la sobrecarga con renderer.
+    @SuppressWarnings("deprecation")
     @Override
     public ResourceLocation getTextureResource(ScouterBenchBlockEntity be) {
         return TEXTURE;

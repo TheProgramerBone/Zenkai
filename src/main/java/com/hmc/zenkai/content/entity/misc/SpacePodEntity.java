@@ -20,7 +20,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -41,7 +40,7 @@ import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class SpacePodEntity extends Animal implements GeoEntity, VerticalControlVehicle {
+public class SpacePodEntity extends Animal implements com.hmc.zenkai.content.entity.EffectImmune, GeoEntity, VerticalControlVehicle {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -396,11 +395,6 @@ public class SpacePodEntity extends Animal implements GeoEntity, VerticalControl
     // Inmunidades (igual que KintounEntity): no se ahoga ni muere por pociones
     // -------------------------
 
-    /** Inmune a cualquier efecto de poción (veneno, wither, etc.). */
-    @Override
-    public boolean canBeAffected(@NotNull MobEffectInstance effect) {
-        return false;
-    }
 
     /** Inmune a ahogo, asfixia en bloque y daño mágico/pociones (harming/veneno/wither) — mismo
      *  criterio que KintounEntity, pedido explícito del usuario ("ajustar la IA y protecciones

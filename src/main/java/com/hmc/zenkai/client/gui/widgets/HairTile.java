@@ -113,18 +113,19 @@ public class HairTile extends AbstractWidget {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
-        onClick.run();
-    }
-
-    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 1 && onRightClick != null && this.active && this.visible && isMouseOver(mouseX, mouseY)) {
             playDownSound(Minecraft.getInstance().getSoundManager());
             onRightClick.run();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        // Clic izquierdo: lo que hacía AbstractWidget.mouseClicked vía onClick(double,double), deprecada.
+        if (this.active && this.visible && isValidClickButton(button) && clicked(mouseX, mouseY)) {
+            playDownSound(Minecraft.getInstance().getSoundManager());
+            onClick.run();
+            return true;
+        }
+        return false;
     }
 
     @Override

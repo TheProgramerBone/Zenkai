@@ -109,12 +109,14 @@ public class ServerConfig {
                 .comment("Overrides the amount of the item given with this format: 'namespace:item=count'. Ex: minecraft:diamond=32")
                 .defineListAllowEmpty("stack_overrides",
                         List.of("minecraft:ender_pearl=32"),
+                        () -> "",
                         obj -> true);
         BANNED_ITEMS_RAW = BUILDER
                 .comment("List of items banned from wishes. Ex: minecraft:shulker_box",
                          "Items with the tag zenkai:wish_banned (Dragon Balls, the fused seven, the ball stones) are ALWAYS banned too.")
                 .defineListAllowEmpty("banned_items",
                         List.of("minecraft:shulker_box"),
+                        () -> "",
                         obj -> true);
         WHITELIST_ITEMS_RAW = BUILDER
                 .comment("Whitelist of items allowed in the stack wish.",
@@ -122,6 +124,7 @@ public class ServerConfig {
                             "If it has items, ONLY those are allowed (the blacklist still takes priority).")
                 .defineListAllowEmpty("whitelist_items",
                         List.of(),
+                        () -> "",
                         obj -> true);
         ALLOW_ABOVE_MAX = BUILDER
                 .comment("Allow Overrides above max (ex: get 64 ender pearls instead of the max stack size of 16).")
@@ -1864,7 +1867,7 @@ public class ServerConfig {
      */
     public static boolean isBanned(net.minecraft.world.item.Item item) {
         return isBanned(BuiltInRegistries.ITEM.getKey(item))
-                || item.builtInRegistryHolder().is(com.hmc.zenkai.registry.ModTags.Items.WISH_BANNED);
+                || BuiltInRegistries.ITEM.wrapAsHolder(item).is(com.hmc.zenkai.registry.ModTags.Items.WISH_BANNED);
     }
 
     /**

@@ -131,7 +131,7 @@ public class HfilOniCauldronFeature extends Feature<NoneFeatureConfiguration> {
         OgreEntity ogre = type.create(level.getLevel());
         if (ogre == null) return;
         ogre.moveTo(at.getX() + 0.5, g, at.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0f);
-        ogre.finalizeSpawn(level, level.getCurrentDifficultyAt(at), MobSpawnType.STRUCTURE, null);
+        net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(ogre, level, level.getCurrentDifficultyAt(at), MobSpawnType.STRUCTURE, null);
         ogre.setPersistenceRequired();
         ogre.guard(post);
         level.addFreshEntityWithPassengers(ogre);

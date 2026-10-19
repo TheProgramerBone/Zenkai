@@ -50,7 +50,8 @@ public class AuraRockParticle extends Particle {
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
-        this.sprite = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getParticleIcon(state);
+        this.sprite = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper().getBlockModel(state)
+                .getParticleIcon(net.neoforged.neoforge.client.model.data.ModelData.EMPTY);
 
         float uo = level.random.nextInt(4) * WINDOW;
         float vo = level.random.nextInt(4) * WINDOW;

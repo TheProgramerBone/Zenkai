@@ -10,7 +10,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -26,7 +25,7 @@ import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class KintounEntity extends Animal implements GeoEntity, VerticalControlVehicle {
+public class KintounEntity extends Animal implements com.hmc.zenkai.content.entity.EffectImmune, GeoEntity, VerticalControlVehicle {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -219,11 +218,6 @@ public class KintounEntity extends Animal implements GeoEntity, VerticalControlV
     // Inmunidades (#2): no se ahoga ni muere por pociones
     // -------------------------
 
-    /** Inmune a cualquier efecto de poción (veneno, wither, etc.). */
-    @Override
-    public boolean canBeAffected(@NotNull MobEffectInstance effect) {
-        return false;
-    }
 
     /** Inmune a ahogo, asfixia en bloque y daño mágico/pociones (harming/veneno/wither). */
     @Override

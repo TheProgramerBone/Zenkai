@@ -272,7 +272,7 @@ public class FriezaCocoonPiece extends StructurePiece {
         angel.moveTo(x, y, z, 0f, 0f);
         angel.orbit(center, phase, voice);
         angel.setPersistenceRequired();
-        angel.finalizeSpawn(level, level.getCurrentDifficultyAt(angel.blockPosition()), MobSpawnType.STRUCTURE, null);
+        net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(angel, level, level.getCurrentDifficultyAt(angel.blockPosition()), MobSpawnType.STRUCTURE, null);
         level.addFreshEntityWithPassengers(angel);
     }
 

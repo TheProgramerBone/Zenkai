@@ -52,6 +52,8 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
         return super.getBakedModel(location);
     }
 
+    // GeckoLib 4.8 deja esta firma deprecada pero abstracta: hay que implementarla; el render usa la sobrecarga con renderer.
+    @SuppressWarnings("deprecation")
     @Override
     public ResourceLocation getModelResource(GeoLayerArmorItem item) {
         return item.getModelPath();
@@ -69,6 +71,8 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
         return item.getModelPath();
     }
 
+    // GeckoLib 4.8 deja esta firma deprecada pero abstracta: hay que implementarla; el render usa la sobrecarga con renderer.
+    @SuppressWarnings("deprecation")
     @Override
     public ResourceLocation getTextureResource(GeoLayerArmorItem item) {
         return item.getTexturePath();

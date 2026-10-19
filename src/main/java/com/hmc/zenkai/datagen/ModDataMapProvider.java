@@ -1,5 +1,6 @@
 package com.hmc.zenkai.datagen;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.hmc.zenkai.registry.ModBlocks;
 import com.hmc.zenkai.registry.ModDataMaps;
 import com.hmc.zenkai.registry.ModItems;
@@ -61,6 +62,6 @@ public class ModDataMapProvider extends DataMapProvider {
     private void credit(ItemLike itemLike, String author, String detail) {
         Item item = itemLike.asItem();
         builder(ModDataMaps.MODEL_CREDITS)
-                .add(item.builtInRegistryHolder().key(), new ModDataMaps.ModelCredit(author, detail), false);
+                .add(BuiltInRegistries.ITEM.getKey(item), new ModDataMaps.ModelCredit(author, detail), false);
     }
 }

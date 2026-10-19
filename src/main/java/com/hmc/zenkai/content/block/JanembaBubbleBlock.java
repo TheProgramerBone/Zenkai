@@ -157,7 +157,7 @@ public class JanembaBubbleBlock extends TransparentBlock {
 
     /** Clic central: el ítem con el color del bloque, no la gelatina rosa por defecto. */
     @Override
-    public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+    public ItemStack getCloneItemStack(BlockState state, net.minecraft.world.phys.HitResult target, LevelReader level, BlockPos pos, Player player) {
         return stackOf(state.getValue(COLOR), 1);
     }
 }
