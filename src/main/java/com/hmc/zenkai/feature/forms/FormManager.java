@@ -221,7 +221,9 @@ public final class FormManager {
                             FormDef.AlignBranch.byName(GsonHelper.getAsString(o, "alignment_branch", "none")),
                             readMasteryReqs(o),
                             category,
-                            readLayerColors(o)));
+                            readLayerColors(o),
+                            readRgb(o, "fur_rgb", -1),
+                            GsonHelper.getAsBoolean(o, "no_brows", false)));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }

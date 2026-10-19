@@ -39,8 +39,6 @@ public final class KeyBindings {
     public static KeyMapping CHARGE_KI;
     public static KeyMapping SENSE_KI;
     public static KeyMapping TURBO;
-    /** Crucero de vuelo: fija la velocidad actual (ver client/fly/FlightCruise). */
-    public static KeyMapping FLY_CRUISE;
     public static KeyMapping COMBAT_MODE;
     public static KeyMapping LOCK_ON;
     /** Y: abre la ventana de parry sin necesidad de bloquear (ver ParryServer.tryActivate). */
@@ -80,13 +78,6 @@ public final class KeyBindings {
 
     /** B: toque = destransformar, sostenido = transformar (la máquina de hold es del servidor). */
     public static KeyMapping FORM;
-
-    /** K: recorre los modos de depuración del VFX de ki (ver KiVfxDebugMode) — SIN tecla F1-F12:
-     *  la mod ya ocupa V/C/Z/H/F4/R/X/Alt/Tab, y F1-F12 chocan con vainilla (F1 oculta el HUD, F3
-     *  el depurador, F5 la cámara, F11 pantalla completa). Un solo bind cíclico + el aviso en la
-     *  action bar (KiVfxDebugMode.cycle()) evita tener que memorizar doce teclas para algo que
-     *  solo se usa mientras se depura el VFX, nunca en juego normal. */
-    public static KeyMapping KI_VFX_DEBUG_CYCLE;
 
     private static boolean REGISTERED = false;
 
@@ -152,13 +143,6 @@ public final class KeyBindings {
         );
         event.register(TURBO);
 
-        FLY_CRUISE = new KeyMapping(
-                "key.zenkai.fly_cruise",
-                GLFW.GLFW_KEY_Y,
-                "key.categories.zenkai"
-        );
-        event.register(FLY_CRUISE);
-
         COMBAT_MODE = new KeyMapping(
                 "key.zenkai.combat_mode",
                 GLFW.GLFW_KEY_X,
@@ -215,12 +199,6 @@ public final class KeyBindings {
             event.register(COMBAT_SLOTS[i]);
         }
 
-        KI_VFX_DEBUG_CYCLE = new KeyMapping(
-                "key.zenkai.ki_vfx_debug_cycle",
-                GLFW.GLFW_KEY_K,
-                "key.categories.zenkai"
-        );
-        event.register(KI_VFX_DEBUG_CYCLE);
     }
 
     /**
@@ -252,9 +230,6 @@ public final class KeyBindings {
             SenseKiClientState.onKeyPress(mc);
         }
 
-        if (KI_VFX_DEBUG_CYCLE != null && KI_VFX_DEBUG_CYCLE.consumeClick()) {
-            KiVfxDebugMode.cycle();
-        }
     }
 
     /**

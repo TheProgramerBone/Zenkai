@@ -132,6 +132,7 @@ public class PhysicalAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
     @Override
     public boolean canUse() {
         if (!mob.combatGoalAllowed(com.hmc.zenkai.content.entity.ZenkaiDefaultMob.GOAL_PHYSICAL)) return false;
+        if (com.hmc.zenkai.feature.combat.StunState.isStunned(mob)) return false;
         LivingEntity tgt = mob.getTarget();
         if (tgt == null || !tgt.isAlive()) return false;
         if (mob instanceof BlockingMob bm && bm.isBlockingNow()) return false;
@@ -167,7 +168,8 @@ public class PhysicalAttackGoal<T extends ZenkaiDefaultMob> extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return windup > 0 && target != null && target.isAlive();
+        return windup > 0 && target != null && target.isAlive()
+                && !com.hmc.zenkai.feature.combat.StunState.isStunned(mob);
     }
 
     @Override

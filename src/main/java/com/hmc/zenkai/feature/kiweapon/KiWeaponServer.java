@@ -1,11 +1,13 @@
 package com.hmc.zenkai.feature.kiweapon;
 
 import com.hmc.zenkai.Zenkai;
-import com.hmc.zenkai.compat.BetterCombatCompat;
+import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.combat.CombatModeServerState;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SkillToggles;
+import com.hmc.zenkai.registry.ModParticles;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,6 +15,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
@@ -95,9 +98,6 @@ public final class KiWeaponServer {
         if (p.isSpectator() || !p.isAlive()) return null;
         if (!p.getOffhandItem().isEmpty()) return null;
         if (!wants(p, SkillEffects.KI_SHIELD)) return null;
-        // Better Combat solo exige la mano secundaria VACÍA para blandir un arma de dos manos (un ítem suyo, no
-        // un arma de ki).
-        if (BetterCombatCompat.isTwoHandedWeapon(p.getMainHandItem())) return null;
         return SkillEffects.KI_SHIELD;
     }
 
@@ -187,9 +187,12 @@ public final class KiWeaponServer {
     }
 
     /**
-     * Empuje extra del arma de ki (la maza, el mazo). Solo en el golpe cuerpo a cuerpo de vanilla
-     * (PLAYER_ATTACK): una técnica física o un proyectil que firme el mismo jugador no debe heredar
-     * el empuje de un arma que no está usando.
+     * Golpe cuerpo a cuerpo con el arma de ki: chispas de impacto y empuje extra (la maza, el mazo).
+     * Solo en el golpe de vanilla (PLAYER_ATTACK): una técnica física o un proyectil que firme el
+     * mismo jugador no debe heredar ni el empuje ni las chispas de un arma que no está usando.
+     * Las chispas se resuelven en SERVIDOR con {@link AuraColors#resolve}, igual que el destello
+     * de impacto de los golpes físicos y el fogonazo de Ki Infuse, para que cada cliente vea el
+     * mismo color. La cantidad sube con el multiplicador de daño del arma, con tope.
      */
     @SubscribeEvent
     public static void onMeleeHit(LivingDamageEvent.Post e) {
@@ -197,9 +200,20 @@ public final class KiWeaponServer {
         if (!(e.getSource().getEntity() instanceof ServerPlayer attacker)) return;
         if (e.getNewDamage() <= 0.0F) return;
         KiWeaponDef w = heldWeapon(attacker);
-        if (w == null || w.knockback() <= 0.0) return;
+        if (w == null) return;
 
         LivingEntity victim = e.getEntity();
+        if (attacker.level() instanceof ServerLevel sl) {
+            int rgb = AuraColors.resolve(attacker);
+            Vec3 at = victim.position().add(0.0, victim.getBbHeight() * 0.6, 0.0);
+            float power = (float) Math.min(2.0, Math.max(0.5, w.damageMult()));
+            sl.sendParticles(ModParticles.impact(rgb, 0.8F + 0.4F * power),
+                    at.x, at.y, at.z, 1, 0.0, 0.0, 0.0, 0.0);
+            sl.sendParticles(ModParticles.spark(rgb, 1.0F),
+                    at.x, at.y, at.z, 4 + Math.round(4 * power), 0.2, 0.2, 0.2, 0.12);
+        }
+
+        if (w.knockback() <= 0.0) return;
         double yaw = Math.toRadians(attacker.getYRot());
         victim.knockback(w.knockback(), Math.sin(yaw), -Math.cos(yaw));
     }

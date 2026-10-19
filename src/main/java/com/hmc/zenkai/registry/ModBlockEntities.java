@@ -22,7 +22,7 @@ public class ModBlockEntities {
             "all_dragon_balls",
             () -> new BlockEntityType<>(
                     AllDragonBallsEntity::new,
-                    Set.of(ModBlocks.ALL_DRAGON_BALLS.get()),
+                    Set.of(ModBlocks.ALL_DRAGON_BALLS.get(), ModBlocks.NAMEK_ALL_DRAGON_BALLS.get()),
                     null));
 
     public static final Supplier<BlockEntityType<NpcMarkerBlockEntity>> NPC_MARKER =

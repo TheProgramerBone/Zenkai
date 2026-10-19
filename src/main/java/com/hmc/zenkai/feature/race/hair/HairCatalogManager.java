@@ -26,7 +26,8 @@ import java.util.Map;
  * Espeja FaceCatalogManager / FormManager.
  *
  * Ruta: data/&lt;ns&gt;/zenkai_hair_styles/&lt;nombre&gt;.json → id &lt;ns&gt;:&lt;nombre&gt; (campos en
- * HairStyleDef.parse). Un form_override que apunta a un peinado inexistente se avisa en el log
+ * HairStyleDef.parse), y data/&lt;ns&gt;/zenkai_hair_packs/&lt;pack&gt;.json = carpeta con sus peinados en un
+ * solo manifiesto (HairPacks). Un form_override que apunta a un peinado inexistente se avisa en el log
  * y en el juego cae al peinado base (nunca crash).
  */
 @EventBusSubscriber(modid = Zenkai.MOD_ID)
@@ -35,6 +36,10 @@ public final class HairCatalogManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Zenkai-HairCatalog");
     private static final String FOLDER = "zenkai_hair_styles";
+    private static final String PACKS = "zenkai_hair_packs";
+
+    /** Lo leído de los datapacks: peinados (sueltos y de manifiestos) y carpetas de los manifiestos. */
+    private record Loaded(Map<ResourceLocation, HairStyleDef> styles, Map<ResourceLocation, HairFolderDef> folders) {}
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
@@ -43,7 +48,8 @@ public final class HairCatalogManager {
 
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent event) {
-        HairCatalogSyncPacket pkt = new HairCatalogSyncPacket(List.copyOf(HairCatalog.all()));
+        HairCatalogSyncPacket pkt = new HairCatalogSyncPacket(List.copyOf(HairCatalog.all()),
+                List.copyOf(HairCatalog.allFolders()));
         if (event.getPlayer() != null) {
             PacketDistributor.sendToPlayer(event.getPlayer(), pkt);
         } else {
@@ -51,12 +57,13 @@ public final class HairCatalogManager {
         }
     }
 
-    private static final class Loader extends SimplePreparableReloadListener<Map<ResourceLocation, HairStyleDef>> {
+    private static final class Loader extends SimplePreparableReloadListener<Loaded> {
 
         @Override
-        protected @NotNull Map<ResourceLocation, HairStyleDef> prepare(@NotNull ResourceManager rm,
+        protected @NotNull Loaded prepare(@NotNull ResourceManager rm,
                                                                        @NotNull ProfilerFiller profiler) {
             Map<ResourceLocation, HairStyleDef> out = new LinkedHashMap<>();
+            Map<ResourceLocation, HairFolderDef> folders = new LinkedHashMap<>();
             var found = rm.listResources(FOLDER, loc -> loc.getPath().endsWith(".json"));
             for (var entry : found.entrySet()) {
                 ResourceLocation file = entry.getKey();
@@ -71,12 +78,42 @@ public final class HairCatalogManager {
                     LOGGER.error("[Zenkai] No se pudo leer el peinado {}: {}", file, ex.toString());
                 }
             }
-            return out;
+            readPacks(rm, out, folders);
+            return new Loaded(out, folders);
+        }
+
+        /**
+         * Manifiestos de pack (HairPacks). Un peinado de un manifiesto que repite el id de uno
+         * suelto se descarta con aviso: gana el suelto, como el resto de datapacks por orden.
+         */
+        private static void readPacks(ResourceManager rm, Map<ResourceLocation, HairStyleDef> out,
+                                      Map<ResourceLocation, HairFolderDef> folders) {
+            var packs = rm.listResources(PACKS, loc -> loc.getPath().endsWith(".json"));
+            for (var entry : packs.entrySet()) {
+                ResourceLocation file = entry.getKey();
+                String rel = file.getPath().substring(PACKS.length() + 1,
+                        file.getPath().length() - ".json".length());
+                ResourceLocation packId = ResourceLocation.fromNamespaceAndPath(file.getNamespace(), rel);
+                try (BufferedReader reader = entry.getValue().openAsReader()) {
+                    JsonObject o = JsonParser.parseReader(reader).getAsJsonObject();
+                    HairPacks.Parsed parsed = HairPacks.parse(packId, o,
+                            msg -> LOGGER.warn("[Zenkai] Pack de peinados {}: {}", file, msg));
+                    folders.put(packId, parsed.folder());
+                    for (HairStyleDef d : parsed.styles()) {
+                        if (out.putIfAbsent(d.id(), d) != null) {
+                            LOGGER.warn("[Zenkai] Pack de peinados {}: el id {} ya existe, se ignora", file, d.id());
+                        }
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error("[Zenkai] No se pudo leer el pack de peinados {}: {}", file, ex.toString());
+                }
+            }
         }
 
         @Override
-        protected void apply(@NotNull Map<ResourceLocation, HairStyleDef> styles, @NotNull ResourceManager rm,
+        protected void apply(@NotNull Loaded loaded, @NotNull ResourceManager rm,
                              @NotNull ProfilerFiller profiler) {
+            Map<ResourceLocation, HairStyleDef> styles = loaded.styles();
             for (HairStyleDef d : styles.values()) {
                 for (var e : d.formOverrides().entrySet()) {
                     if (!styles.containsKey(e.getValue())) {
@@ -85,8 +122,8 @@ public final class HairCatalogManager {
                     }
                 }
             }
-            HairCatalog.replaceAll(styles);
-            LOGGER.info("[Zenkai] Peinados cargados: {}.", styles.size());
+            HairCatalog.replaceAll(styles, loaded.folders());
+            LOGGER.info("[Zenkai] Peinados cargados: {} ({} carpetas de pack).", styles.size(), loaded.folders().size());
         }
     }
 }

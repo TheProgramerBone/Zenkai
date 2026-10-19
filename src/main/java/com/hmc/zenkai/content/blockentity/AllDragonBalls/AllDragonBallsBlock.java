@@ -44,6 +44,21 @@ public class AllDragonBallsBlock extends BaseEntityBlock implements SimpleWaterl
 
     public static final MapCodec<AllDragonBallsBlock> CODEC = simpleCodec(AllDragonBallsBlock::new);
 
+    /** Deseos de la invocación (la variante de Namek da los suyos). */
+    protected int wishCount() { return ServerConfig.shenlongWishCount(); }
+
+    /** Mensaje de la invocación, visto por los jugadores cercanos. */
+    protected void announceSummon(Player player) {
+        WishBroadcast.nearby(player, Component.translatable("messages.zenkai.shenron_summon"), true);
+    }
+
+    /** Las siete esferas que se devuelven al romper el bloque. */
+    protected Block[] returnedBalls() {
+        return new Block[]{ModBlocks.DRAGON_BALL_1.get(), ModBlocks.DRAGON_BALL_2.get(), ModBlocks.DRAGON_BALL_3.get(),
+                ModBlocks.DRAGON_BALL_4.get(), ModBlocks.DRAGON_BALL_5.get(), ModBlocks.DRAGON_BALL_6.get(),
+                ModBlocks.DRAGON_BALL_7.get()};
+    }
+
     private static final VoxelShape SHAPE = Block.box(-8.0, 0.0, -8.0, 24.0, 8.0, 24.0);
 
     @Override
@@ -89,8 +104,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock implements SimpleWaterl
                 return InteractionResult.SUCCESS;
             }
 
-            WishBroadcast.nearby(
-                    player, Component.translatable("messages.zenkai.shenron_summon"), true);
+            announceSummon(player);
             long currentTime = serverLevel.getDayTime();
             long timeOfDay = currentTime % 24000L;
             long ticksUntilNight = timeOfDay < 13000 ? 13000 - timeOfDay : (24000 - timeOfDay + 13000);
@@ -156,7 +170,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock implements SimpleWaterl
             entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
             entity.rotate(Rotation.CLOCKWISE_180);
             if (entity instanceof ShenLongEntity shenlong) {
-                shenlong.setWishesRemaining(ServerConfig.shenlongWishCount()); // (2) pool por invocación
+                shenlong.setWishesRemaining(wishCount()); // (2) pool por invocación
             }
             level.addFreshEntity(entity);
         }
@@ -166,13 +180,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock implements SimpleWaterl
     @Override
     public @NotNull BlockState playerWillDestroy(Level level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull Player player) {
         if (!level.isClientSide) {
-            dropItem(level, pos, ModBlocks.DRAGON_BALL_1.get().asItem());
-            dropItem(level, pos, ModBlocks.DRAGON_BALL_2.get().asItem());
-            dropItem(level, pos, ModBlocks.DRAGON_BALL_3.get().asItem());
-            dropItem(level, pos, ModBlocks.DRAGON_BALL_4.get().asItem());
-            dropItem(level, pos, ModBlocks.DRAGON_BALL_5.get().asItem());
-            dropItem(level, pos, ModBlocks.DRAGON_BALL_6.get().asItem());
-            dropItem(level, pos, ModBlocks.DRAGON_BALL_7.get().asItem());
+            for (Block ball : returnedBalls()) dropItem(level, pos, ball.asItem());
         }
         super.playerWillDestroy(level, pos, state, player);
         return state;

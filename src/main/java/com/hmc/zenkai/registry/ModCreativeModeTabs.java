@@ -73,6 +73,7 @@ public class ModCreativeModeTabs {
     private static Set<Item> hidden() {
         return Set.of(
                 ModItems.ALL_DRAGON_BALLS_ITEM.get(),
+                ModItems.NAMEK_ALL_DRAGON_BALLS_ITEM.get(),
                 ModBlocks.HTC_PORTAL.get().asItem());
     }
 
@@ -107,7 +108,8 @@ public class ModCreativeModeTabs {
                 ModBlocks.NAMEK_DRAGON_BALL_4.get().asItem(),
                 ModBlocks.NAMEK_DRAGON_BALL_5.get().asItem(),
                 ModBlocks.NAMEK_DRAGON_BALL_6.get().asItem(),
-                ModBlocks.NAMEK_DRAGON_BALL_7.get().asItem());
+                ModBlocks.NAMEK_DRAGON_BALL_7.get().asItem(),
+                ModItems.NAMEK_ALL_DRAGON_BALLS_ITEM.get());
     }
 
     /** Posición de cada esfera dentro de {@link #dragonBallsGroup()}, para mantenerlas juntas

@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-07T23:35:06.1614575	Advancements
+// 1.21.1	2026-10-18T12:42:11.3087849	Advancements
 f9a5c0de397f24c185f402bcbc5d5ecb1b6aafa8 data/zenkai/advancement/all_skills.json
 1e4b0aa0238e933eb91f3567c473703ef287a782 data/zenkai/advancement/all_skills_max.json
 5c11b5aaa82f4098d857b7a660bd16cebe7f2b0a data/zenkai/advancement/all_wishes.json
@@ -10,10 +10,12 @@ e39a1cd99e6f8879d4ecd17a000e8d9e6f197621 data/zenkai/advancement/choose_race.jso
 3b600111952acb5f99b60357e71ea3f2117794a1 data/zenkai/advancement/clash_win.json
 b746e7a731a6deecda5091c777867021ccfe0dda data/zenkai/advancement/combat_stance.json
 5731005bd12307f4034b3649e46fc252bd680f67 data/zenkai/advancement/dash.json
+08f3f4ee0171b345934e5023718338a6a3c05b26 data/zenkai/advancement/dragon_h.json
+50dcc7029af7db76561227169d2417efc7a716b3 data/zenkai/advancement/dragon_h_namek.json
 e3c3b1f212ab3425cf53261a3aecdb1a93596e01 data/zenkai/advancement/first_ball.json
 e58b44fe8e725095c057b4ed44303f1520f54c36 data/zenkai/advancement/first_technique.json
 04e1731a8150b1508615b97efaf1fe02ea7430b4 data/zenkai/advancement/first_tp.json
-0475cb741a3e78d40dfe85699cf241cd10376ba5 data/zenkai/advancement/first_wish.json
+1b75f7198381e359f31d2052102f5c5c2f250d0e data/zenkai/advancement/first_wish.json
 cc9f5f009871b4de3cf13fc2b4fa8aaaf0dc4444 data/zenkai/advancement/fly.json
 06771dd28b1509e6c3229ef159705bb4bc1ae144 data/zenkai/advancement/full_charge.json
 865f79e8f597ca52999913a28b87753a90a527c9 data/zenkai/advancement/guard_break.json

@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-06T23:23:41.2653707	Tags for minecraft:block mod id zenkai
+// 1.21.1	2026-10-18T12:35:41.4529692	Tags for minecraft:block mod id zenkai
 8912682f310bd3f4d32caa8aa6602d47f7ae797a data/c/tags/block/cobblestones.json
 e35360f19a76a691d096e179818b83ba31bea13e data/c/tags/block/gravels.json
 8c1139716227b52d587ceff2a1aca439af78ee88 data/c/tags/block/ores/coal.json
@@ -51,6 +51,6 @@ de8fa1a601de203ddf19468d2d8c389cac54d17e data/minecraft/tags/block/stone_ore_rep
 d287a79e872d1dc165e145206a990705a3cfd757 data/minecraft/tags/block/wooden_slabs.json
 75c8737a6f3024ee2ab0d55d157d1d314eeea305 data/minecraft/tags/block/wooden_stairs.json
 f51b1d519ecda61e7e1bab31ee1cad68f9fee275 data/minecraft/tags/block/wooden_trapdoors.json
-0aee6efe81b8d51f8eb5660cd4ea0f8a99cdf80e data/zenkai/tags/block/dragon_balls_block.json
+5849ba0c4cf7636bc3c3bcf338ef337a0aaff44c data/zenkai/tags/block/dragon_balls_block.json
 dd41ebe71e11313abeba606a55d2cc5c93306cce data/zenkai/tags/block/ki_indestructible.json
 9ca1bdd176a0137c9324c09ee5f0017a52561844 data/zenkai/tags/block/namekian_ore_replaceables.json

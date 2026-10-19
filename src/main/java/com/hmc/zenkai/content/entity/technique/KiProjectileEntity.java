@@ -138,8 +138,8 @@ public class KiProjectileEntity extends Projectile {
     //    SOLA VEZ, la primera vez que hace falta, a partir de la dirección de vuelo EN ESE
     //    INSTANTE — nunca se recalcula después. Si se recalculara contra la dirección
     //    instantánea, un giro brusco del proyectil (p. ej. HOMING corrigiendo el rumbo)
-    //    retorcería la geometría de golpe en vez de dejarla girar suavemente (misma lección que
-    //    FlightMovement.refSpeed: no derivar "cómo debería ser esto ahora" de un valor que
+    //    retorcería la geometría de golpe en vez de dejarla girar suavemente (misma lección que la
+    //    referencia de velocidad que tuvo FlightMovement (quitada): no derivar "cómo debería ser esto ahora" de un valor que
     //    cambia tick a tick). ──
     private Vec3 flightRight, flightUp;
 

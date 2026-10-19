@@ -91,6 +91,7 @@ public final class ActionRules {
         if (!ctx.raceChosen()) return ActionReject.NO_RACE;
         if (ctx.downed())      return ActionReject.DOWNED;
         if (ctx.clash())       return ActionReject.IN_CLASH;
+        if (ctx.stunned())     return ActionReject.STUNNED;
         if (!ctx.combatMode()) return ActionReject.NOT_COMBAT_MODE;
         return ActionReject.OK;
     }

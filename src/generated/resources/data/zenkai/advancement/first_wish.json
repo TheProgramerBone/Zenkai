@@ -1,5 +1,5 @@
 {
-  "parent": "zenkai:seven_earth",
+  "parent": "zenkai:dragon_h",
   "criteria": {
     "wish": {
       "trigger": "zenkai:wish_granted"

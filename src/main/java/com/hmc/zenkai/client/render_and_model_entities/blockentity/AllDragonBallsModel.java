@@ -17,19 +17,31 @@ public class AllDragonBallsModel extends GeoModel<AllDragonBallsEntity> {
     private static final ResourceLocation ANIMATION =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "animations/all_dragon_balls.animation.json");
 
+    private static final ResourceLocation NAMEK_MODEL =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "geo/namek_all_dragon_balls.geo.json");
+    private static final ResourceLocation NAMEK_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/block/namek_all_dragon_balls_texture.png");
+    private static final ResourceLocation NAMEK_ANIMATION =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "animations/namek_all_dragon_balls.animation.json");
+
+    /** ¿Es el bloque de Namek? Tiene su propio modelo (PLACEHOLDER, lo sustituirá el usuario). */
+    private static boolean isNamek(AllDragonBallsEntity be) {
+        return be.getBlockState().getBlock() instanceof com.hmc.zenkai.content.blockentity.AllDragonBalls.NamekAllDragonBallsBlock;
+    }
+
     @Override
     public ResourceLocation getModelResource(AllDragonBallsEntity animatable) {
-        return MODEL;
+        return isNamek(animatable) ? NAMEK_MODEL : MODEL;
     }
 
     @Override
     public ResourceLocation getTextureResource(AllDragonBallsEntity animatable) {
-        return TEXTURE;
+        return isNamek(animatable) ? NAMEK_TEXTURE : TEXTURE;
     }
 
     @Override
     public ResourceLocation getAnimationResource(AllDragonBallsEntity animatable) {
-        return ANIMATION;
+        return isNamek(animatable) ? NAMEK_ANIMATION : ANIMATION;
     }
 
     @Override

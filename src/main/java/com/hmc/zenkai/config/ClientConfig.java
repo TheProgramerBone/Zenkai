@@ -144,6 +144,22 @@ public final class ClientConfig {
             defineBool("sense.ki_sense_camera_shake", "ki_sense_camera_shake",
                     "Shake the camera when your ki sense warns you of a nearby threat", true);
 
+    private static final ModConfigSpec.BooleanValue FLIGHT_FX_DUST =
+            defineBool("flight_fx.ground_dust", "flight_fx_dust",
+                    "Kick up dust and debris from the ground while flying fast and low", true);
+
+    private static final ModConfigSpec.BooleanValue FLIGHT_FX_SONIC_BOOM =
+            defineBool("flight_fx.sonic_boom", "flight_fx_sonic_boom",
+                    "Play a sonic boom (ring and sound) once each time you break the speed threshold", true);
+
+    private static final ModConfigSpec.BooleanValue FLIGHT_FX_SPEED_LINES =
+            defineBool("flight_fx.speed_lines", "flight_fx_speed_lines",
+                    "Draw thin speed lines streaking past you while flying at high speed", true);
+
+    private static final ModConfigSpec.BooleanValue FLIGHT_FX_LANDING =
+            defineBool("flight_fx.landing_shockwave", "flight_fx_landing",
+                    "Draw a dust shockwave ring when you land at high speed", true);
+
     /** 0 = igual que el comportamiento de siempre: el aura de uno mismo no se dibuja en
      *  primera persona (ver AuraRenderer). Por encima de 0 deja de ser un simple on/off — el
      *  jugador que quiera verla aunque sea tenue puede subirla sin llegar al 100%. */
@@ -355,6 +371,10 @@ public final class ClientConfig {
     public static boolean kiInfuseGlow() { return KI_INFUSE_GLOW.get(); }
     public static boolean swordTechniqueFx() { return SWORD_TECH_FX.get(); }
     public static boolean kiSenseCameraShake() { return KI_SENSE_CAMERA_SHAKE.get(); }
+    public static boolean flightFxDust() { return FLIGHT_FX_DUST.get(); }
+    public static boolean flightFxSonicBoom() { return FLIGHT_FX_SONIC_BOOM.get(); }
+    public static boolean flightFxLanding() { return FLIGHT_FX_LANDING.get(); }
+    public static boolean flightFxSpeedLines() { return FLIGHT_FX_SPEED_LINES.get(); }
 
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }

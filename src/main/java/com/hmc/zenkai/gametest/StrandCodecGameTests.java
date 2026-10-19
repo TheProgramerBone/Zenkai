@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.race.hair.HairPacks;
 import com.hmc.zenkai.feature.race.hair.HairStyleDef;
 import com.hmc.zenkai.feature.race.hair.strand.DbcHairCodec;
 import com.hmc.zenkai.feature.race.hair.strand.DmzHairCodec;
@@ -336,11 +337,24 @@ public final class StrandCodecGameTests {
                     "frente: curvatura en X, con signo invertido");
             // Caja base de ModelRenderer y de -1 a 2 -> en render de -2 a 1 (crece hacia -Y antes de rotar).
             helper.assertTrue(front.segments().get(0).y0() == -2f && front.segments().get(0).y1() == 1f, "caja base reflejada en Y");
-            helper.assertTrue(!d.warnings().isEmpty(), "T>18 avisa de que no se importa la reacción SSJ");
+            helper.assertTrue(!d.warnings().isEmpty(), "T>18 avisa de que SSJ1/SSJ2 son aproximados");
+
+            // SSJ1/SSJ2 horneados desde el campo T: el mechón 45 (T=60) se abre; el 0 (T=18, sin reacción) solo se
+            // alarga con el SSJ2 (l 50 -> 70: aparece el cuarto segmento).
+            StrandSet.Variants v = d.variants();
+            helper.assertTrue(v.ssj() != null && v.ssj2() != null && v.ssj3() == null && v.ssj4() == null,
+                    "DBC trae SSJ y SSJ2 aproximados; SSJ3/SSJ4 quedan a los defaults de Zenkai");
+            Strand topBase = v.base().strands().get(1);
+            Strand topSsj = v.ssj().strands().get(1);
+            helper.assertTrue(Math.abs(topSsj.rx() - topBase.rx()) > 10f, "el mechón con T=60 cambia de rotación en SSJ");
+            helper.assertTrue(v.ssj().strands().get(0).segments().size() == 3 && v.ssj2().strands().get(0).segments().size() == 4,
+                    "SSJ2 alarga el mechón: 3 -> 4 segmentos");
 
             // G1 antigua: l de 1 dígito -> l·11-10.
             StringBuilder g1 = new StringBuilder("1505050");
             for (int i = 1; i < 56; i++) g1.append("0505050");
+            helper.assertTrue(!HairCodes.decode(g1.toString()).variants().hasForms(),
+                    "G1 rellena T=00: sin reacción no hay variantes (defaults de Zenkai)");
             StrandSet old = HairCodes.decode(g1.toString()).variants().base();
             helper.assertTrue(old.strands().size() == 1 && old.strands().get(0).segments().size() == 2, "G1: l=1 -> 2 segmentos");
 
@@ -508,6 +522,57 @@ public final class StrandCodecGameTests {
     private static double[] arr(JsonObject o, String key) {
         JsonArray a = o.getAsJsonArray(key);
         return new double[]{a.get(0).getAsDouble(), a.get(1).getAsDouble(), a.get(2).getAsDouble()};
+    }
+
+    // ── Manifiesto de pack (zenkai_hair_packs) ───────────────────────────────
+
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void hairPackManifest(GameTestHelper helper) {
+        try {
+            String dmz = DmzHairCodec.encode(dmzHair("Mi Pelo", -90f), 5, true);
+            StringBuilder dbc = new StringBuilder();
+            dbc.append(dbcStrand(50, 50, 50, 50, 60, 50, 18));
+            for (int i = 1; i < 56; i++) dbc.append("00000000000000");
+            dbc.append("20");
+
+            JsonObject pack = new JsonObject();
+            pack.addProperty("name", "Pack mixto");
+            pack.add("races", JsonParser.parseString("[\"human\",\"saiyan\"]"));
+            JsonArray styles = new JsonArray();
+            styles.add(JsonParser.parseString("{\"id\":\"a\",\"format\":\"dmz\",\"name\":\"A\",\"code\":\"" + dmz
+                    + "\",\"form_overrides\":{\"zenkai:ssj1\":\"b\"}}"));
+            styles.add(JsonParser.parseString("{\"id\":\"b\",\"format\":\"dbc\",\"code\":\"" + dbc + "\"}"));
+            // declara dbc pero el código es DMZ -> se descarta
+            styles.add(JsonParser.parseString("{\"id\":\"mala\",\"format\":\"dbc\",\"code\":\"" + dmz + "\"}"));
+            // "auto" detecta; formato inventado -> se descarta
+            styles.add(JsonParser.parseString("{\"id\":\"auto\",\"code\":\"" + dbc + "\"}"));
+            styles.add(JsonParser.parseString("{\"id\":\"rara\",\"format\":\"xyz\",\"code\":\"" + dbc + "\"}"));
+            // peinado de cubos: "model" en lugar de "code" (el rectángulo original del ejemplo)
+            styles.add(JsonParser.parseString("{\"id\":\"cubos\",\"model\":\"prueba:geo/hair/x.geo.json\"}"));
+            pack.add("styles", styles);
+
+            ResourceLocation packId = ResourceLocation.fromNamespaceAndPath("prueba", "mixto");
+            List<String> warns = new ArrayList<>();
+            HairPacks.Parsed p = HairPacks.parse(packId, pack, warns::add);
+            helper.assertTrue("Pack mixto".equals(p.folder().name()), "nombre de la carpeta");
+            helper.assertTrue(p.styles().size() == 4, "a, b, auto y cubos entran; mala y rara no: " + p.styles().size());
+            HairStyleDef geo = p.styles().get(3);
+            helper.assertTrue(geo.representation() == HairStyleDef.Representation.GEO && geo.model() != null
+                    && geo.texture().getPath().endsWith("flat_white.png"), "estilo de cubos con la textura blanca por defecto");
+            helper.assertTrue(warns.size() == 2, "dos avisos: " + warns);
+            HairStyleDef a = p.styles().get(0);
+            helper.assertTrue(a.id().toString().equals("prueba:mixto/a") && packId.equals(a.folder()),
+                    "id con el pack y carpeta del pack: " + a.id());
+            helper.assertTrue(a.allows(com.hmc.zenkai.feature.Race.SAIYAN) && !a.allows(com.hmc.zenkai.feature.Race.NAMEKIAN),
+                    "las razas del pack se heredan");
+            helper.assertTrue(a.formOverrides().values().stream().allMatch(
+                    v -> v.toString().equals("prueba:mixto/b")), "override local resuelto al mismo pack");
+            helper.assertTrue("A".equals(a.displayName().getString()), "nombre literal del peinado");
+            helper.assertTrue(a.representation() == HairStyleDef.Representation.CODE, "siempre por código");
+        } catch (Exception e) {
+            helper.fail("hair pack manifest: " + e);
+        }
+        helper.succeed();
     }
 
     // ── Carpeta de hair_packs ────────────────────────────────────────────────

@@ -72,6 +72,17 @@ public final class ActionStateServer {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         if (att.flags().isDowned()) { clear(sp); return; }
 
+        // La guardia solo se sostiene mientras las manos valgan y no haya aturdimiento ni guardia rota:
+        // el cliente manda el bloqueo por flanco y cambiar de objeto con la tecla pulsada podía dejarla
+        // levantada en el servidor con las manos ya inválidas.
+        if (cur.type() == ActionType.BLOCK
+                && (!com.hmc.zenkai.feature.combat.GuardHands.canGuard(sp)
+                    || com.hmc.zenkai.feature.combat.StunState.isStunned(sp)
+                    || com.hmc.zenkai.feature.combat.GuardBreak.isBroken(sp))) {
+            ActionResolver.setBlocking(sp, false);
+            return;
+        }
+
         long now = sp.level().getGameTime();
 
         // Estados que se apagan SOLOS por tiempo: nadie manda un paquete de "ya terminó la

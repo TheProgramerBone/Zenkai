@@ -387,8 +387,7 @@ public final class KiWeaponVfx {
     /** Opacidad del halo sobre un ítem corriente: más alta que la de las armas de ki (su silueta es más fina). */
     private static final float ITEM_GLOW_ALPHA = 0.45F;
 
-    /** Clase de ítem a efectos del halo. Se decide por etiqueta de ítem y, si no, por el id (como hace Better Combat
-     *  para elegir su animación: el id contiene "sword", "axe"...), así que también vale para ítems de otros mods. */
+    /** Clase de ítem a efectos del halo. Se decide por etiqueta de ítem y, si no, por el id (el id contiene "sword", "axe"...), así que también vale para ítems de otros mods. */
     private enum ItemKind { SWORD, AXE, PICKAXE, SHOVEL, HOE, OTHER }
 
     private static ItemKind kindOf(net.minecraft.world.item.ItemStack st) {

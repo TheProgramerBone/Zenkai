@@ -996,9 +996,21 @@ public class StatsScreen extends ZenkaiMenuScreen {
                         fmt(RaceStatTable.stamina(race, style))));
                 out.add(cross("tooltip.zenkai.attr.con.cross",
                         fmt(RaceStatTable.defense(race, style) * StatSynergy.DEFENSE_FROM_CON)));
+                var me = net.minecraft.client.Minecraft.getInstance().player;
+                if (me != null && com.hmc.zenkai.feature.combat.GuardStamina.max() > 0f) {
+                    out.add(cross("tooltip.zenkai.attr.con.guard", String.valueOf(
+                            Math.round(com.hmc.zenkai.feature.combat.GuardStamina.max(me)))));
+                }
             }
-            case DEXTERITY -> out.add(Component.translatable("tooltip.zenkai.attr.dex",
-                    fmt(RaceStatTable.defense(race, style))));
+            case DEXTERITY -> {
+                out.add(Component.translatable("tooltip.zenkai.attr.dex",
+                        fmt(RaceStatTable.defense(race, style))));
+                var me = net.minecraft.client.Minecraft.getInstance().player;
+                if (me != null && com.hmc.zenkai.feature.combat.GuardStamina.max() > 0f) {
+                    out.add(cross("tooltip.zenkai.attr.dex.guard", String.format(java.util.Locale.ROOT, "%.1f",
+                            com.hmc.zenkai.feature.combat.GuardStamina.regenPerTick(me) * 20f)));
+                }
+            }
             case WILLPOWER -> {
                 out.add(Component.translatable("tooltip.zenkai.attr.wil",
                         fmt(RaceStatTable.kiDamage(race, style))));

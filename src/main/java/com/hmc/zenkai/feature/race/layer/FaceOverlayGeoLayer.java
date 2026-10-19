@@ -134,6 +134,9 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
             for (FaceLayer layer : part.layersFor(race)) {
                 // Namek/Arcosiano/Majin no tienen cejas: ni la categoría ni el trazo-ceja del ojo.
                 if (!RaceFaceTraits.shows(race, category, layer)) continue;
+                // Formas sin cejas (SSJ3): fuera el trazo de ceja del ojo y la categoría de cejas.
+                if (formDef != null && formDef.hidesBrows()
+                        && (category == FaceCategory.EYEBROWS || layer.eyebrow())) continue;
                 ResourceLocation tex = textureFor(layer, region);
                 if (tex == null) continue;
                 boolean eyes = category == FaceCategory.EYES;

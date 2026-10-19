@@ -393,6 +393,8 @@ public class Zenkai {
                     KiImpactParticle.Provider::new);
             event.registerSpriteSet(ModParticles.KI_SPARK.get(),
                     KiSparkParticle.Provider::new);
+            event.registerSpriteSet(ModParticles.STUN_STAR.get(),
+                    com.hmc.zenkai.client.particle.StunStarParticle.Provider::new);
             event.registerSpriteSet(ModParticles.ENERGY_MOTE.get(),
                     com.hmc.zenkai.client.particle.EnergyMoteParticle.Provider::new);
             // El Black Flash no necesita clase propia: KiImpactParticle ya hace exactamente

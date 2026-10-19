@@ -29,9 +29,21 @@ public final class HairCatalog {
 
     private static volatile Map<ResourceLocation, HairStyleDef> styles = Map.of();
 
-    public static void replaceAll(Map<ResourceLocation, HairStyleDef> newStyles) {
+    private static volatile Map<ResourceLocation, HairFolderDef> folders = Map.of();
+
+    public static void replaceAll(Map<ResourceLocation, HairStyleDef> newStyles,
+                                  Map<ResourceLocation, HairFolderDef> newFolders) {
         styles = Map.copyOf(newStyles);
+        folders = Map.copyOf(newFolders);
     }
+
+    /** Metadatos de una carpeta declarada por un manifiesto de pack; null = por convención. */
+    @Nullable
+    public static HairFolderDef folder(@Nullable ResourceLocation id) {
+        return id == null ? null : folders.get(id);
+    }
+
+    public static Collection<HairFolderDef> allFolders() { return folders.values(); }
 
     public static boolean isEmpty() { return styles.isEmpty(); }
 

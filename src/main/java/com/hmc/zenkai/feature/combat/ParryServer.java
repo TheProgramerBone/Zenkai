@@ -107,7 +107,7 @@ public final class ParryServer {
     public static void tryActivate(ServerPlayer sp) {
         if (!ServerConfig.parryEnabled()) return;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (!att.isRaceChosen() || att.flags().isDowned()) return;
+        if (!att.isRaceChosen() || att.flags().isDowned() || StunState.isStunned(sp)) return;
         if (!CombatModeServerState.isActive(sp.getUUID())) return;
         // Con las manos ocupadas por otra cosa que no sea un arma o un escudo no hay parry.
         if (!GuardHands.canGuard(sp)) return;

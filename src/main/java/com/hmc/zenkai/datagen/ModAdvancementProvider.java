@@ -319,7 +319,7 @@ public class ModAdvancementProvider extends AdvancementProvider {
                             ModBlocks.DRAGON_BALL_5.get(), ModBlocks.DRAGON_BALL_6.get(),
                             ModBlocks.DRAGON_BALL_7.get()));
 
-            child(saver, efh, radar, "seven_namek",
+            AdvancementHolder sevenNamek = child(saver, efh, radar, "seven_namek",
                     ModBlocks.NAMEK_DRAGON_BALL_7.get(), AdvancementType.GOAL, false,
                     "seven", hasItems(
                             ModBlocks.NAMEK_DRAGON_BALL_1.get(), ModBlocks.NAMEK_DRAGON_BALL_2.get(),
@@ -327,7 +327,16 @@ public class ModAdvancementProvider extends AdvancementProvider {
                             ModBlocks.NAMEK_DRAGON_BALL_5.get(), ModBlocks.NAMEK_DRAGON_BALL_6.get(),
                             ModBlocks.NAMEK_DRAGON_BALL_7.get()));
 
-            AdvancementHolder firstWish = child(saver, efh, sevenEarth, "first_wish",
+            // El tutorial de la H, UN logro por juego con el paso a paso en su descripción. Se otorga al
+            // fundirse las esferas (la última, en el centro de la H); cuelga de juntar las siete.
+            AdvancementHolder hEarth = child(saver, efh, sevenEarth, "dragon_h",
+                    ModItems.ALL_DRAGON_BALLS_ITEM.get(), AdvancementType.TASK, false,
+                    "fused", milestone(ZenkaiTriggers.Kinds.DRAGON_BALLS_FUSED));
+            child(saver, efh, sevenNamek, "dragon_h_namek",
+                    ModItems.NAMEK_ALL_DRAGON_BALLS_ITEM.get(), AdvancementType.TASK, false,
+                    "fused", milestone(ZenkaiTriggers.Kinds.NAMEK_DRAGON_BALLS_FUSED));
+
+            AdvancementHolder firstWish = child(saver, efh, hEarth, "first_wish",
                     ModBlocks.ALL_DRAGON_BALLS.get(), AdvancementType.TASK, false,
                     "wish", wish(null));
 

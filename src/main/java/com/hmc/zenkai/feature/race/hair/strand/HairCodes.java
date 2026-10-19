@@ -40,7 +40,7 @@ public final class HairCodes {
         Format format = detect(code);
         StrandSet.Variants raw = switch (format) {
             case DMZ -> DmzHairCodec.decode(code, warnings::add);
-            case DBC -> StrandSet.Variants.single(DbcHairCodec.decode(code, warnings::add));
+            case DBC -> DbcHairCodec.decodeVariants(code, warnings::add);
         };
         StrandSet base = StrandLimits.clamp(raw.base(), warnings::add);
         if (base.isEmpty()) throw new HairCodeException("no_strands");

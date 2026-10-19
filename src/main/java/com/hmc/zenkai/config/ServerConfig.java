@@ -72,6 +72,7 @@ public class ServerConfig {
     // ── Invocación: cooldown por jugador (1) + deseos por entidad (2) ───────────
     public static final ModConfigSpec.IntValue SUMMON_COOLDOWN_DAYS;
     public static final ModConfigSpec.IntValue SHENLONG_WISHES;
+    public static final ModConfigSpec.IntValue NAMEK_DRAGON_WISHES;
     public static final ModConfigSpec.IntValue BROADCAST_RADIUS;
 
     // ── Transmisión Instantánea: dos toggles independientes (2) ─────────────────
@@ -152,6 +153,10 @@ public class ServerConfig {
         SHENLONG_WISHES = BUILDER
                 .comment("How many wishes Shenlong grants per summoning (shared pool; it runs out).")
                 .defineInRange("shenlong_wishes", 1, 1, 100);
+        NAMEK_DRAGON_WISHES = BUILDER
+                .comment("How many wishes the Namekian Dragon Balls grant per summoning (shared pool).",
+                            "Porunga has no model yet, so Shenlong answers with THIS amount instead.")
+                .defineInRange("namek_dragon_wishes", 3, 1, 100);
         BROADCAST_RADIUS = BUILDER
                 .comment("Radius (blocks) within which other players see Shenlong's public messages:",
                             "the summoning and the granted wish (and what it was asked for).",
@@ -289,7 +294,65 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue BLOCK_SHIELD_KI_RAW =
             BUILDER.comment("Ki-infused shield (Ki Infuse skill): ki spent per blocked hit as a fraction of your maximum ki. Without enough ki the shield is not infused")
-                    .defineInRange("block.shield_ki_cost_pct", 0.01D, 0.0D, 1.0D);
+                    .defineInRange("block.shield_ki_cost_pct", 0.005D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue GUARD_MAX_RAW =
+            BUILDER.comment("Guard stamina: base maximum. Every blocked hit drains it; at 0 the guard breaks and the defender is stunned. 0 disables guard stamina")
+                    .defineInRange("block.guard_max_base", 100.0D, 0.0D, 10000.0D);
+
+    private static final ModConfigSpec.DoubleValue GUARD_CON_BONUS_RAW =
+            BUILDER.comment("Guard stamina: maximum extra stamina Constitution can add (1.0 = up to +100%). The bonus follows an ease-out curve and reaches exactly this maximum at guard_con_full")
+                    .defineInRange("block.guard_con_bonus", 1.0D, 0.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue GUARD_CON_FULL_RAW =
+            BUILDER.comment("Guard stamina: effective Constitution (attribute x race/style multiplier) at which the full guard_con_bonus is reached (no further growth beyond it)")
+                    .defineInRange("block.guard_con_full", 500.0D, 1.0D, 1000000.0D);
+
+    private static final ModConfigSpec.DoubleValue GUARD_DEX_BONUS_RAW =
+            BUILDER.comment("Guard stamina: maximum extra regeneration Dexterity can add (1.5 = up to +150%), same ease-out curve, reaching it at guard_dex_full")
+                    .defineInRange("block.guard_dex_bonus", 1.5D, 0.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue GUARD_DEX_FULL_RAW =
+            BUILDER.comment("Guard stamina: effective defense (Dexterity, with form and power multipliers) at which the full guard_dex_bonus is reached")
+                    .defineInRange("block.guard_dex_full", 500.0D, 1.0D, 1000000.0D);
+
+    private static final ModConfigSpec.DoubleValue GUARD_DRAIN_RAW =
+            BUILDER.comment("Guard stamina: drained per blocked hit = damage that got through the guard, as a % of the defender's max body health, x this multiplier.",
+                            "With the defaults (100 stamina, x3) the guard breaks after blocking ~33% of max health worth of damage")
+                    .defineInRange("block.guard_drain_mult", 3.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue GUARD_REGEN_RAW =
+            BUILDER.comment("Guard stamina: regenerated per tick while NOT blocking (after the regen delay)")
+                    .defineInRange("block.guard_regen_per_tick", 0.5D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.IntValue GUARD_REGEN_DELAY_RAW =
+            BUILDER.comment("Guard stamina: ticks after lowering the guard (or taking a blocked hit) before it starts regenerating")
+                    .defineInRange("block.guard_regen_delay_ticks", 40, 0, 600);
+
+    private static final ModConfigSpec.IntValue GUARD_BREAK_STUN_RAW =
+            BUILDER.comment("Guard stamina: ticks of guard break AND stun when the stamina runs out. 0 = no stun, only the guard break (uses 40 ticks)")
+                    .defineInRange("block.guard_break_stun_ticks", 40, 0, 400);
+
+    private static final ModConfigSpec.BooleanValue STUN_PLAYERS_RAW =
+            BUILDER.comment("Stun: whether players can be stunned (false = only mobs; players ignore any stun)")
+                    .define("stun.affect_players", true);
+
+    private static final ModConfigSpec.IntValue STUN_MAX_RAW =
+            BUILDER.comment("Stun: hard cap, in ticks, for any single stun")
+                    .defineInRange("stun.max_ticks", 100, 1, 600);
+
+    private static final ModConfigSpec.DoubleValue STUN_DR_RAW =
+            BUILDER.comment("Stun: diminishing returns. A stun that lands within stun.dr_window_ticks after the previous one ended lasts",
+                            "this fraction of its duration per consecutive stun (0.5 = half, then a quarter...). 1 = no diminishing returns")
+                    .defineInRange("stun.diminishing_returns", 0.5D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.IntValue STUN_DR_WINDOW_RAW =
+            BUILDER.comment("Stun: ticks after a stun ends during which the next one counts as consecutive for the diminishing returns")
+                    .defineInRange("stun.dr_window_ticks", 100, 0, 1200);
+
+    private static final ModConfigSpec.IntValue STUN_IMMUNITY_RAW =
+            BUILDER.comment("Stun: ticks of immunity right after a stun ends (nothing can stun the target again meanwhile)")
+                    .defineInRange("stun.immunity_ticks", 40, 0, 600);
 
     private static final ModConfigSpec.BooleanValue KIAI_OMNI_RAW =
             BUILDER.comment("Kiai: true = it blasts in a full circle around the user (crowd control, pushes everyone away from you);",
@@ -405,7 +468,7 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue CLASH_STAT_BONUS_CAP_RAW =
             BUILDER.comment("Beam clash: the stronger beam gets up to this many bar points of bonus (out of 1000) so power level matters without deciding the minigame. 0 disables it")
-                    .defineInRange("clash.stat_bonus_cap", 100.0D, 0.0D, 500.0D);
+                    .defineInRange("clash.stat_bonus_cap", 100.0D, 0.0D, 1000.0D);
 
     private static final ModConfigSpec.DoubleValue CLASH_TIE_MARGIN_RAW =
             BUILDER.comment("Beam clash: bar-point difference below which the clash is a tie and both beams detonate")
@@ -689,6 +752,12 @@ public class ServerConfig {
     private static final ModConfigSpec.IntValue SENSE_KI_RANGE_RAW =
             BUILDER.comment("Sense Ki: range in blocks")
                     .defineInRange("sense_ki.range", 64, 8, 256);
+
+    private static final ModConfigSpec.DoubleValue TECHNIQUE_EXPLOSION_RADIUS_CAP_RAW =
+            BUILDER.comment("Ki techniques: global ceiling (in blocks) for the explosion radius of any technique.",
+                            "0 = no ceiling (default): big fights are meant to be disproportionate.",
+                            "Only worth setting on servers where a max-size Supernova (radius ~19.5) is too much.")
+                    .defineInRange("technique.explosion_radius_cap", 0.0D, 0.0D, 256.0D);
 
     private static final ModConfigSpec.DoubleValue VANILLA_PL_FACTOR_RAW =
             BUILDER.comment("PL of vanilla mobs / raceless players = max_health * factor")
@@ -1148,7 +1217,21 @@ public class ServerConfig {
     private static volatile double BLOCK_SHIELD_CAP = 0.85D;
     private static volatile double BLOCK_SHIELD_SLOW = 0.0D;
     private static volatile int BLOCK_SHIELD_DURABILITY = 1;
-    private static volatile double BLOCK_SHIELD_KI = 0.01D;
+    private static volatile double BLOCK_SHIELD_KI = 0.005D;
+    private static volatile double GUARD_MAX = 100.0D;
+    private static volatile double GUARD_DRAIN = 3.0D;
+    private static volatile double GUARD_CON_BONUS = 1.0D;
+    private static volatile double GUARD_CON_FULL = 500.0D;
+    private static volatile double GUARD_DEX_BONUS = 1.5D;
+    private static volatile double GUARD_DEX_FULL = 500.0D;
+    private static volatile double GUARD_REGEN = 0.5D;
+    private static volatile int GUARD_REGEN_DELAY = 40;
+    private static volatile int GUARD_BREAK_STUN = 40;
+    private static volatile boolean STUN_PLAYERS = true;
+    private static volatile int STUN_MAX = 100;
+    private static volatile double STUN_DR = 0.5D;
+    private static volatile int STUN_DR_WINDOW = 100;
+    private static volatile int STUN_IMMUNITY = 40;
     private static volatile boolean KIAI_OMNI = true;
     private static volatile double KIAI_EXTRA_STAMINA = 0.12D;
     private static volatile int KIAI_EXTRA_CAP = 6;
@@ -1214,6 +1297,7 @@ public class ServerConfig {
     private static volatile double IMMORTAL_OVERKILL_FRACTION = 1.0D;
     private static volatile int    TECHNIQUE_MAX_SLOTS = 12;
     private static volatile int    SENSE_KI_RANGE = 64;
+    private static volatile double TECHNIQUE_EXPLOSION_RADIUS_CAP = 0.0D;
     private static volatile double VANILLA_PL_FACTOR = 1.0D;
     private static volatile int    SCOUTER_RANGE = 64;
     private static volatile double ATTRIBUTE_BASE_COST = 1.0D;
@@ -1339,6 +1423,20 @@ public class ServerConfig {
         BLOCK_SHIELD_SLOW = BLOCK_SHIELD_SLOW_RAW.get();
         BLOCK_SHIELD_DURABILITY = BLOCK_SHIELD_DURABILITY_RAW.get();
         BLOCK_SHIELD_KI   = BLOCK_SHIELD_KI_RAW.get();
+        GUARD_MAX         = GUARD_MAX_RAW.get();
+        GUARD_DRAIN       = GUARD_DRAIN_RAW.get();
+        GUARD_CON_BONUS   = GUARD_CON_BONUS_RAW.get();
+        GUARD_CON_FULL    = GUARD_CON_FULL_RAW.get();
+        GUARD_DEX_BONUS   = GUARD_DEX_BONUS_RAW.get();
+        GUARD_DEX_FULL    = GUARD_DEX_FULL_RAW.get();
+        GUARD_REGEN       = GUARD_REGEN_RAW.get();
+        GUARD_REGEN_DELAY = GUARD_REGEN_DELAY_RAW.get();
+        GUARD_BREAK_STUN  = GUARD_BREAK_STUN_RAW.get();
+        STUN_PLAYERS      = STUN_PLAYERS_RAW.get();
+        STUN_MAX          = STUN_MAX_RAW.get();
+        STUN_DR           = STUN_DR_RAW.get();
+        STUN_DR_WINDOW    = STUN_DR_WINDOW_RAW.get();
+        STUN_IMMUNITY     = STUN_IMMUNITY_RAW.get();
         KIAI_OMNI         = KIAI_OMNI_RAW.get();
         KIAI_EXTRA_STAMINA = KIAI_EXTRA_STAMINA_RAW.get();
         KIAI_EXTRA_CAP    = KIAI_EXTRA_CAP_RAW.get();
@@ -1424,6 +1522,7 @@ public class ServerConfig {
         IMMORTAL_OVERKILL_FRACTION = IMMORTAL_OVERKILL_FRACTION_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
         SENSE_KI_RANGE      = SENSE_KI_RANGE_RAW.get();
+        TECHNIQUE_EXPLOSION_RADIUS_CAP = TECHNIQUE_EXPLOSION_RADIUS_CAP_RAW.get();
         VANILLA_PL_FACTOR   = VANILLA_PL_FACTOR_RAW.get();
         SCOUTER_RANGE       = SCOUTER_RANGE_RAW.get();
 
@@ -1578,6 +1677,7 @@ public class ServerConfig {
     public static int trainingPointsAmount()    { return TRAINING_POINTS_AMOUNT.get(); }
     public static long summonCooldownTicks()     { return (long) SUMMON_COOLDOWN_DAYS.get() * 24000L; }
     public static int shenlongWishCount()        { return SHENLONG_WISHES.get(); }
+    public static int namekDragonWishCount()     { return NAMEK_DRAGON_WISHES.get(); }
     public static int broadcastRadius()          { return BROADCAST_RADIUS.get(); }
     public static boolean instantTransmissionEnabled()     { return INSTANT_TRANSMISSION_ENABLED.get(); }
     public static boolean instantTransmissionMenuEnabled() { return INSTANT_TRANSMISSION_MENU_ENABLED.get(); }
@@ -1627,6 +1727,20 @@ public class ServerConfig {
     public static double blockShieldSlow()          { return BLOCK_SHIELD_SLOW; }
     public static int blockShieldDurability()       { return BLOCK_SHIELD_DURABILITY; }
     public static double blockShieldKiPct()         { return BLOCK_SHIELD_KI; }
+    public static double guardMaxBase()             { return GUARD_MAX; }
+    public static double guardDrainMult()           { return GUARD_DRAIN; }
+    public static double guardConBonus()            { return GUARD_CON_BONUS; }
+    public static double guardConFull()             { return GUARD_CON_FULL; }
+    public static double guardDexBonus()            { return GUARD_DEX_BONUS; }
+    public static double guardDexFull()             { return GUARD_DEX_FULL; }
+    public static double guardRegenPerTick()        { return GUARD_REGEN; }
+    public static int guardRegenDelayTicks()        { return GUARD_REGEN_DELAY; }
+    public static int guardBreakStunTicks()         { return GUARD_BREAK_STUN; }
+    public static boolean stunAffectsPlayers()      { return STUN_PLAYERS; }
+    public static int stunMaxTicks()                { return STUN_MAX; }
+    public static double stunDiminishingReturns()   { return STUN_DR; }
+    public static int stunDrWindowTicks()           { return STUN_DR_WINDOW; }
+    public static int stunImmunityTicks()           { return STUN_IMMUNITY; }
     public static boolean kiaiOmnidirectional()     { return KIAI_OMNI; }
     public static double kiaiExtraTargetStamina()   { return KIAI_EXTRA_STAMINA; }
     public static int kiaiExtraTargetCap()          { return KIAI_EXTRA_CAP; }
@@ -1709,6 +1823,8 @@ public class ServerConfig {
     public static double immortalOverkillFraction() { return IMMORTAL_OVERKILL_FRACTION; }
     public static int techniqueMaxSlots()          { return TECHNIQUE_MAX_SLOTS; }
     public static int senseKiRange()               { return SENSE_KI_RANGE; }
+    /** Techo global del radio de explosión de las técnicas, en bloques. 0 = sin techo. */
+    public static double techniqueExplosionRadiusCap() { return TECHNIQUE_EXPLOSION_RADIUS_CAP; }
     public static double vanillaPowerLevelFactor() { return VANILLA_PL_FACTOR; }
     public static int scouterRange()               { return SCOUTER_RANGE; }
 

@@ -48,6 +48,7 @@ public class ZenkaiMeleeAttackGoal extends MeleeAttackGoal {
     @Override
     public boolean canUse() {
         if (!zenkaiMob.combatGoalAllowed(ZenkaiDefaultMob.GOAL_MELEE)) return false;
+        if (com.hmc.zenkai.feature.combat.StunState.isStunned(zenkaiMob)) return false;
         if (zenkaiMob.isActionOnCooldown()) {
             logDiag("en respiro (isActionOnCooldown)");
             return false;

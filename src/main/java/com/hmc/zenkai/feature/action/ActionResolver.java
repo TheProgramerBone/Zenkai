@@ -220,6 +220,7 @@ public final class ActionResolver {
                 || !com.hmc.zenkai.feature.combat.GuardHands.canGuard(sp) || ctx.downed()) {
             return reject(sp, ActionType.BLOCK, ActionReject.NOT_COMBAT_MODE, -1);
         }
+        if (ctx.stunned()) return reject(sp, ActionType.BLOCK, ActionReject.STUNNED, -1);
         if (cur.type() == ActionType.BLOCK) return ActionResult.ok(cur); // ya defendía
         // Guardia rota por un kiai: no se puede volver a levantar hasta que caduque.
         if (com.hmc.zenkai.feature.combat.GuardBreak.isBroken(sp)) {
@@ -261,6 +262,9 @@ public final class ActionResolver {
         }
 
         if (att.flags().isDowned()) return reject(sp, ActionType.TRANSFORM, ActionReject.DOWNED, -1);
+        if (com.hmc.zenkai.feature.combat.StunState.isStunned(sp)) {
+            return reject(sp, ActionType.TRANSFORM, ActionReject.STUNNED, -1);
+        }
         if (cur.type() == ActionType.TRANSFORM) return ActionResult.ok(cur);
         if (!ActionRules.canInterrupt(cur.type(), cur.phase(), ActionType.TRANSFORM)) {
             return reject(sp, ActionType.TRANSFORM, ActionReject.BUSY, -1);
@@ -307,6 +311,18 @@ public final class ActionResolver {
      *  gate ya lo sustituyó y no hay que pisarlo. */
     public static void endClash(ServerPlayer sp) {
         ActionStateServer.clearIf(sp, ActionType.CLASH);
+    }
+
+    /** Corta lo que el jugador tuviera en curso al quedar aturdido (carga de ki, físico, transformación).
+     *  La guardia no se toca aquí: GuardBreak.breakGuard ya la rompe. */
+    public static void interruptByStun(ServerPlayer sp) {
+        ActionState cur = ActionStateServer.get(sp);
+        if (cur.type() == ActionType.NONE || cur.type() == ActionType.BLOCK) return;
+        cancelCurrent(sp, cur);
+        if (cur.type() == ActionType.TRANSFORM) {
+            sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).setTransformHeld(false);
+        }
+        ActionStateServer.clear(sp);
     }
 
     // ── Interno ──────────────────────────────────────────────────────────────

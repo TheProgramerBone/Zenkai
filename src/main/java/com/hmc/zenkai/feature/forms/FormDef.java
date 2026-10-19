@@ -135,7 +135,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       boolean wheelSelectable, boolean divineTier, int auraOuterRgb, int eyeRgb,
                       int browRgb, Tier tier, boolean endgamePath, AlignBranch alignmentBranch,
                       Map<ResourceLocation, Double> masteryReqs, String category,
-                      Map<Integer, Integer> layerColors) {
+                      Map<Integer, Integer> layerColors, int furRgb, boolean noBrows) {
 
     /**
      * Rango conceptual de una forma en el mid/late-game (campo "tier" del JSON, default NONE).
@@ -287,6 +287,20 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
         return c == null ? -1 : c & 0xFFFFFF;
     }
 
+    /**
+     * ¿Esta forma lleva la capa de PELAJE del Saiyan (campo "fur_rgb", textura gris
+     * saiyan_fur*.png sobre torso y brazos, tintada con este color)? -1 = no la lleva. Solo se
+     * pinta en el Saiyan con el cuerpo humano; otra raza con este campo no ve nada. SSJ4 la declara
+     * en rojo; una forma propia (un "SSJ5" gris) pone su color sin tocar texturas.
+     */
+    public boolean hasFur() { return furRgb >= 0; }
+
+    /**
+     * ¿Esta forma NO lleva cejas (campo "no_brows")? Oculta las capas de ceja del ojo ("eyebrow": true) mientras
+     * está activa, como el SSJ3 del anime, que no tiene. El resto del ojo se pinta igual.
+     */
+    public boolean hidesBrows() { return noBrows; }
+
     /** ¿Esta forma declara un color de cola propio? -1 = cae al color natural
      *  (TailResolver.DEFAULT_TAIL_RGB) — la cola nunca es "sin tinte" de verdad. */
     public boolean tintsTail() { return tailRgb >= 0; }
@@ -355,6 +369,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                     buf.writeVarInt(e.getKey());
                     buf.writeInt(e.getValue());
                 }
+                buf.writeInt(d.furRgb());
+                buf.writeBoolean(d.noBrows());
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -378,7 +394,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(),
                         readTier(buf), buf.readBoolean(), readAlign(buf), readReqs(buf),
-                        buf.readUtf(32), readLayerColors(buf));
+                        buf.readUtf(32), readLayerColors(buf), buf.readInt(), buf.readBoolean());
             });
 
     private static Map<Integer, Integer> readLayerColors(FriendlyByteBuf buf) {

@@ -43,6 +43,12 @@ public final class GuardBreak {
         }
         if (wasBlocking) {
             BROKEN_UNTIL.put(target.getUUID(), target.level().getGameTime() + ticks);
+            // El cliente del propio jugador tiene que dejar de mandar «estoy bloqueando» aunque siga
+            // pulsando la tecla (el packet de bloqueo solo viaja al cambiar, no se reenvía).
+            if (target instanceof ServerPlayer sp) {
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp,
+                        new GuardSyncPacket(GuardStamina.current(sp), GuardStamina.max(sp), ticks));
+            }
         }
         return wasBlocking;
     }

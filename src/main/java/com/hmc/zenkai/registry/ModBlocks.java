@@ -107,6 +107,15 @@ public class ModBlocks {
                     .sound(SoundType.AMETHYST)
                     .mapColor(MapColor.COLOR_ORANGE)));
 
+    /** Las 7 esferas de Namek fundidas. Invoca a Shenlong con los deseos de namek_dragon_wishes hasta que Porunga tenga modelo. */
+    public static final DeferredBlock<Block> NAMEK_ALL_DRAGON_BALLS = MOD_BLOCKS.register("namek_all_dragon_balls",
+            () -> new com.hmc.zenkai.content.blockentity.AllDragonBalls.NamekAllDragonBallsBlock(BlockBehaviour.Properties.of()
+                    .noOcclusion()
+                    .lightLevel(state -> 15)
+                    .strength(0f,100f)
+                    .sound(SoundType.AMETHYST)
+                    .mapColor(MapColor.COLOR_ORANGE)));
+
     public static final DeferredBlock<Block> NAMEK_DRAGON_BALL_STONE = registerBlock("namek_dragon_ball_stone",
             ()-> new NamekDragonBalls(BlockBehaviour.Properties.of()
                     .noOcclusion()

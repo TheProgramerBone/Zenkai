@@ -450,6 +450,13 @@ public class ModCommands {
                         // de diferencia, delante de quien ejecuta, tintados con SU color de aura.
                         .then(Commands.literal("sequence")
                                 .executes(ModCommands::debugRunSequence))
+                        // ── /zenkai debug stun [ticks] ────────────────────────────────
+                        // Aturde a quien ejecuta y a los muñecos cercanos (StunState.apply, con
+                        // sus frenos: tope, rendimientos decrecientes e inmunidad).
+                        .then(Commands.literal("stun")
+                                .executes(c -> debugStun(c, 60))
+                                .then(Commands.argument("ticks", IntegerArgumentType.integer(1, 600))
+                                        .executes(c -> debugStun(c, IntegerArgumentType.getInteger(c, "ticks")))))
                         // ── /zenkai debug dummy ───────────────────────────────────────
                         // Muñeco de pruebas: una Sombra con guion que hace UNA sola cosa
                         // (spamear ki, quedarse quieta, guardia...), para probar el choque de
@@ -1276,6 +1283,24 @@ public class ModCommands {
         }
         ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Muñeco unido al choque ("
                 + (ally ? "tu equipo" : "equipo rival") + ")"), false);
+        return 1;
+    }
+
+    private static int debugStun(CommandContext<CommandSourceStack> ctx, int ticks)
+            throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+        int self = com.hmc.zenkai.feature.combat.StunState.apply(sp, ticks);
+        int mobs = 0;
+        for (var d : sl.getEntitiesOfClass(
+                com.hmc.zenkai.content.entity.misc.ShadowCloneEntity.class,
+                sp.getBoundingBox().inflate(DUMMY_SEARCH_RADIUS))) {
+            if (com.hmc.zenkai.feature.combat.StunState.apply(d, ticks) > 0) mobs++;
+        }
+        final int s = self;
+        final int m = mobs;
+        ctx.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal(
+                "Stun: tú " + s + " ticks, " + m + " muñecos"), false);
         return 1;
     }
 

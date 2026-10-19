@@ -27,7 +27,7 @@ public record StrandSet(@Nullable String name, List<Strand> strands) {
 
     /**
      * Juego de peinados por forma. DMZ guarda hasta 5 (base, SSJ, SSJ2, SSJ3 y, desde su formato
-     * v2.2, SSJ4); DBC solo uno (su variante SSJ se deforma en vivo y aquí no se importa).
+     * v2.2, SSJ4); DBC guarda uno y las variantes SSJ/SSJ2 se HORNEAN deformándolo (DbcHairCodec.deform).
      */
     public record Variants(StrandSet base, @Nullable StrandSet ssj, @Nullable StrandSet ssj2,
                            @Nullable StrandSet ssj3, @Nullable StrandSet ssj4) {

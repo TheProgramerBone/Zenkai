@@ -27,10 +27,11 @@ solos, sin que el addon toque ninguna clase de Zenkai:
 | `zenkai_techniques/physical/<id>.json` | Números de un `PhysicalTechnique` existente | ídem |
 | `zenkai_entities/<entity_type_id>.json` | Moveset/stats de un NPC de combate | `EntityStatsManager` |
 | `zenkai_race_stats/<race>.json` | Curvas de stats de una raza | `RaceStatTable` |
-| `zenkai_forms/<id>.json` | Una transformación nueva colgada de una cadena existente (`parent`) | `FormDef`/`FormRegistry` |
+| `zenkai_forms/<id>.json` | Una transformación nueva colgada de una cadena existente (`parent`). `fur_rgb` (solo Saiyan) activa la capa de pelaje de torso y brazos con ese color: una forma propia tipo SSJ4 gris no necesita texturas nuevas. `no_brows: true` quita las cejas mientras la forma está activa (el SSJ3 las lleva así) | `FormDef`/`FormRegistry` |
 | `zenkai_archetypes/<nombre>.json` | Un arquetipo de entidad nuevo (forma de atributos + multiplicadores) | `EntityArchetype`/`EntityArchetypeManager` |
 | `zenkai_face_parts/<categoría>/<nombre>.json` | Un rasgo facial nuevo (ojos, cejas, nariz, boca): capas PNG con su fuente de color, razas, variante por raza | `FacePartDef`/`FaceCatalog` |
 | `zenkai_hair_styles/<nombre>.json` | Un peinado nuevo (geo de cubos o textura plana), razas, variante por transformación | `HairStyleDef`/`HairCatalog` |
+| `zenkai_hair_packs/<pack>.json` | Una CARPETA de la biblioteca de pelo con sus peinados en un solo archivo: nombre, ícono, formato DMZ/DBC por peinado, razas, variantes. Ver §1b | `HairPacks`/`HairFolderDef` |
 
 En todos los casos: el `id` del archivo tiene que coincidir con un valor **ya existente** del
 enum/cadena correspondiente (excepto `zenkai_forms`, `zenkai_archetypes`, `zenkai_masters`,
@@ -39,6 +40,42 @@ nuevo funciona). Las texturas/geo de rasgos y peinados van en `assets/<tu_modid>
 visible, en la clave de lang `face_part.<ns>.<categoría>.<nombre>` o `hair_style.<ns>.<nombre>`.
 Formato completo de los campos en el javadoc de `FacePartDef.parse` y `HairStyleDef.parse`. Un archivo cuyo `id` no encaja en
 ningún enum se ignora con un aviso en el log, nunca crashea.
+
+### 1b. Packs de peinados (`zenkai_hair_packs`)
+
+Para añadir muchos peinados sin escribir un json por cada uno. Un archivo = una carpeta en la
+pestaña Pelo, con su nombre, su ícono y sus peinados. Ejemplo completo y funcional en
+[`examples/hair_pack_ejemplo/`](examples/hair_pack_ejemplo/) (copiarlo a `<juego>/zenkai/hair_packs/`).
+
+```json
+// data/<tu_modid>/zenkai_hair_packs/<pack>.json  ->  carpeta <tu_modid>:<pack>
+{
+  "name": "Mi pack",                 // literal; sin él: lang hair_folder.<ns>.<pack>, o el id
+  "icon": "<ns>:textures/gui/hair_folders/otro.png",   // opcional (defecto: .../hair_folders/<pack>.png)
+  "format": "auto",                  // auto | dmz | dbc: formato por defecto de los códigos
+  "races": ["human", "saiyan"],      // por defecto de los peinados (ausente = cualquier raza)
+  "sort": 100,                       // orden de la carpeta
+  "styles": [
+    {"id": "puas", "name": "Púas", "format": "dmz", "code": "DMZF22:...",
+     "sort": 10, "races": [...], "exclude_races": [...], "default_for": [...],
+     "form_overrides": {"zenkai:ssj1": "puas_ssj"}},   // id sin ":" = de este mismo pack
+    {"id": "melena", "name": "Melena", "format": "dbc", "code": "5050...786 dígitos...20"},
+    {"id": "cubos", "name": "De cubos", "model": "<tu_modid>:geo/hair/x.geo.json"}   // geo de Blockbench; sin "format"
+  ]
+}
+```
+- Un mismo pack puede traer solo DMZ, solo DBC (HairSalon de JRMCore) o ambos. `format` se puede poner por
+  pack y por peinado; si NO coincide con el código, ese peinado se descarta con un aviso en el log (`Zenkai-HairCatalog`).
+  Con `auto` se detecta solo.
+- Id de cada peinado: `<tu_modid>:<pack>/<id>`. Un código DMZ de juego completo (`DMZF…`) trae solo sus variantes
+  SSJ/SSJ2/SSJ3/SSJ4; un código DBC suelto genera SSJ1/SSJ2 aproximados (los mechones llevan su reacción al SSJ).
+  `form_overrides` solo hace falta para apuntar una forma a OTRO peinado.
+- El **ícono** es un asset de cliente (PNG cuadrado, 64×64 recomendado) en `assets/<tu_modid>/textures/gui/hair_folders/`.
+  Sin él se usa el ícono genérico. Datos y assets deben ir en el mismo zip/mod o en `hair_packs/` (sirve a los dos lados).
+- `/reload` carga los datos y F3+T los assets, sin reiniciar. Los peinados sueltos de `zenkai_hair_styles` con `"folder"`
+  siguen funcionando.
+- **Licencia:** no redistribuyas códigos de Dragon Block C que no sean tuyos (JinRyuu lo prohíbe) ni de DragonMineZ sin
+  respetar su GPLv3. Los del ejemplo son propios.
 
 **Conflictos entre datapacks**: `FormRegistry` avisa por log (`Zenkai-Forms`) si dos datapacks
 compiten por la raíz de la misma raza — gana el primero en cargar, igual que cualquier otro
@@ -137,10 +174,11 @@ them up by itself, without the addon touching any Zenkai class:
 | `zenkai_techniques/physical/<id>.json` | Numbers of an existing `PhysicalTechnique` | same |
 | `zenkai_entities/<entity_type_id>.json` | Moveset/stats of a combat NPC | `EntityStatsManager` |
 | `zenkai_race_stats/<race>.json` | Stat curves of a race | `RaceStatTable` |
-| `zenkai_forms/<id>.json` | A new transformation hanging off an existing chain (`parent`) | `FormDef`/`FormRegistry` |
+| `zenkai_forms/<id>.json` | A new transformation hanging off an existing chain (`parent`). `fur_rgb` (Saiyan only) turns on the torso/arm fur layer in that color: a custom grey SSJ4-like form needs no new textures. `no_brows: true` hides the eyebrows while the form is active (SSJ3 uses it) | `FormDef`/`FormRegistry` |
 | `zenkai_archetypes/<name>.json` | A new entity archetype (attribute shape + multipliers) | `EntityArchetype`/`EntityArchetypeManager` |
 | `zenkai_face_parts/<category>/<name>.json` | A new face feature (eyes, eyebrows, nose, mouth): PNG layers with their color source, races, per-race variant | `FacePartDef`/`FaceCatalog` |
 | `zenkai_hair_styles/<name>.json` | A new hairstyle (cube geo or flat texture), races, per-transformation variant | `HairStyleDef`/`HairCatalog` |
+| `zenkai_hair_packs/<pack>.json` | A hair-library FOLDER with its hairstyles in a single file: name, icon, per-style DMZ/DBC format, races, variants. See §1b | `HairPacks`/`HairFolderDef` |
 
 In every case the file's `id` must match an **already existing** value of the corresponding
 enum/chain (except `zenkai_forms`, `zenkai_archetypes`, `zenkai_masters`, `zenkai_face_parts`
@@ -149,6 +187,40 @@ go under `assets/<your_modid>/`; their display name in the lang key
 `face_part.<ns>.<category>.<name>` or `hair_style.<ns>.<name>`. Full field format in the javadoc
 of `FacePartDef.parse` and `HairStyleDef.parse`. A file whose `id` fits no enum is ignored with a log warning, and
 never crashes.
+
+### 1b. Hair packs (`zenkai_hair_packs`)
+
+For adding many hairstyles without one json per style. One file = one folder in the Hair tab, with
+its name, its icon and its styles. A full working example lives in
+[`examples/hair_pack_ejemplo/`](examples/hair_pack_ejemplo/) (copy it to `<game>/zenkai/hair_packs/`).
+
+```json
+// data/<your_modid>/zenkai_hair_packs/<pack>.json  ->  folder <your_modid>:<pack>
+{
+  "name": "My pack",                 // literal; without it: lang hair_folder.<ns>.<pack>, or the id
+  "icon": "<ns>:textures/gui/hair_folders/other.png",  // optional (default: .../hair_folders/<pack>.png)
+  "format": "auto",                  // auto | dmz | dbc: default format of the codes
+  "races": ["human", "saiyan"],      // default for the styles (absent = any race)
+  "sort": 100,                       // folder order
+  "styles": [
+    {"id": "spikes", "name": "Spikes", "format": "dmz", "code": "DMZF22:...",
+     "sort": 10, "races": [...], "exclude_races": [...], "default_for": [...],
+     "form_overrides": {"zenkai:ssj1": "spikes_ssj"}},  // an id without ":" belongs to this same pack
+    {"id": "mane", "name": "Mane", "format": "dbc", "code": "5050...786 digits...20"},
+    {"id": "blocks", "name": "Cubes", "model": "<your_modid>:geo/hair/x.geo.json"}   // Blockbench geo; no "format"
+  ]
+}
+```
+- One pack may carry DMZ only, DBC only (JRMCore's HairSalon) or both. `format` can be set per pack and per
+  style; if it does NOT match the code, that style is dropped with a log warning (`Zenkai-HairCatalog`). `auto` detects it.
+- Each style's id is `<your_modid>:<pack>/<id>`. A full-set DMZ code (`DMZF…`) carries its own SSJ/SSJ2/SSJ3/SSJ4
+  variants; a single DBC code yields approximated SSJ1/SSJ2 (its strands carry their SSJ reaction).
+  `form_overrides` is only needed to point a form at ANOTHER style.
+- The **icon** is a client asset (square PNG, 64×64 recommended) under `assets/<your_modid>/textures/gui/hair_folders/`.
+  Without it the generic icon is used. Data and assets must ship in the same zip/mod, or in `hair_packs/` (serves both sides).
+- `/reload` loads the data and F3+T the assets, no restart. Loose `zenkai_hair_styles` entries with `"folder"` keep working.
+- **Licensing:** do not redistribute Dragon Block C codes that are not yours (JinRyuu forbids it), nor DragonMineZ ones
+  without honouring its GPLv3. The example's codes are original.
 
 **Datapack conflicts**: `FormRegistry` logs a warning (`Zenkai-Forms`) if two datapacks compete
 for the root of the same race — the first one to load wins, like any other Minecraft registry,

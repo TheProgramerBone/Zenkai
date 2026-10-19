@@ -10,11 +10,9 @@ import net.minecraft.network.chat.Component;
  * real: cada modo apaga TODO menos la capa que se quiere inspeccionar, así que un artefacto solo
  * puede venir de la capa que sigue encendida.
  *
- * NO son teclas F1-F12: la propia mod ya ocupa V/C/Z/H/F4/R/X/Alt/Tab (ver KeyBindings), y F1-F12
- * chocan con vainilla (F1 oculta el HUD, F3 el depurador, F5 la cámara, F11 pantalla completa) —
- * exactamente el tipo de colisión que un modo de depuración NO debe añadir. Un solo bind
- * (KeyBindings.KI_VFX_DEBUG_CYCLE) va RECORRIENDO esta lista y anuncia el modo activo en la
- * action bar, así no hace falta memorizar qué tecla es cada capa.
+ * Ya NO hay tecla para cambiarlo (se quitó la K de Controles: una herramienta de desarrollador no
+ * debe estar a mano del jugador). Para volver a usarlo, llamar a {@link #cycle()} desde un punto
+ * temporal de depuración y retirarlo después.
  *
  * Los métodos "showsX()" son lo que consultan los renderers — nunca un `switch` disperso por
  * cada uno: añadir un modo nuevo solo toca esta clase.

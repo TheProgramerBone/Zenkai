@@ -55,14 +55,6 @@ repositories {
         url = "https://maven.createmod.net"
     }
     maven {
-        // Better Combat (compat OPCIONAL, ver compat/BetterCombatCompat.java). Solo ese grupo.
-        name = "Modrinth"
-        url = "https://api.modrinth.com/maven"
-        content {
-            includeGroup("maven.modrinth")
-        }
-    }
-    maven {
         name = "BlameJared (JEI)"
         url = "https://maven.blamejared.com"
     }
@@ -171,11 +163,6 @@ dependencies {
     // un usuario sin Ponder instalado simplemente no ve el boton de tutorial en esos bloques.
     compileOnly "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
     runtimeOnly "net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}"
-
-    // Better Combat: compat OPCIONAL, solo su API en compileOnly (ver compat/BetterCombatCompat.java).
-    // OJO: en 1.21.1 BC depende de la librería playerAnimator de KosmX (modId "playeranimator") y de
-    // Cloth Config, NO de la PAL de zigythebird que usa Zenkai: probar con las tres en run/mods.
-    compileOnly "maven.modrinth:5sy6g3kz:2.4.0+1.21.1-neoforge"
 
     // JEI: compat OPCIONAL, solo la API en compileOnly (ver compat/JeiCompat.java). En runClient
     // JEI llega desde run/mods; un usuario sin JEI nunca carga esa clase.

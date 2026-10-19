@@ -29,7 +29,9 @@ public record ActionContext(
         // Ticks transcurridos desde que empezó esa carga. 0 si chargingSlot < 0.
         long chargeElapsedTicks,
         // Está atrapado en un choque de haces (inmóvil, sin poder actuar).
-        boolean clash
+        boolean clash,
+        // Aturdido (StunState): no puede actuar mientras dure.
+        boolean stunned
 ) {
     public boolean chargingTechnique() { return chargingSlot >= 0; }
 }

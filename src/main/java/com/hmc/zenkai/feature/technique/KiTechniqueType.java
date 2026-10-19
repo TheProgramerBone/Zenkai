@@ -1,5 +1,7 @@
 package com.hmc.zenkai.feature.technique;
 
+import com.hmc.zenkai.config.ServerConfig;
+
 import java.util.Locale;
 
 /**
@@ -152,11 +154,14 @@ public enum KiTechniqueType {
         return d != null && d.chargeShowsRealSize();
     }
 
-    /** Radio de la explosión en bloques. SIN TECHO a propósito: los techos por tipo aplastaban
-     *  la diferencia entre tamaños justo donde tenía que notarse, y las peleas grandes deben
-     *  poder ser desproporcionadas. */
+    /** Radio de la explosión en bloques. SIN TECHO por defecto a propósito: los techos por tipo
+     *  aplastaban la diferencia entre tamaños justo donde tenía que notarse, y las peleas grandes
+     *  deben poder ser desproporcionadas. Un servidor que lo pida puede fijar un techo GLOBAL
+     *  (no por tipo) con {@code technique.explosion_radius_cap}; 0 lo desactiva. */
     public double explosionRadius(int size) {
-        return explosionRadiusMult() * Math.max(1, size);
+        double radius = explosionRadiusMult() * Math.max(1, size);
+        double cap = ServerConfig.techniqueExplosionRadiusCap();
+        return cap > 0.0 ? Math.min(radius, cap) : radius;
     }
 
     private double explosionRadiusMult() {

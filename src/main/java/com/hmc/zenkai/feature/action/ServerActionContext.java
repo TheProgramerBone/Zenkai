@@ -45,7 +45,8 @@ public final class ServerActionContext {
                 st.physBusy(),
                 st.chargingSlot(),
                 st.elapsed(now),
-                st.inClash());
+                st.inClash(),
+                com.hmc.zenkai.feature.combat.StunState.isStunned(sp));
     }
 
     /** Contexto con un ActionState dado en vez del actual. Lo usa el release de ki, que ya
@@ -64,6 +65,7 @@ public final class ServerActionContext {
                 st.physBusy(),
                 st.chargingSlot(),
                 st.elapsed(now),
-                st.inClash());
+                st.inClash(),
+                com.hmc.zenkai.feature.combat.StunState.isStunned(sp));
     }
 }

@@ -126,6 +126,14 @@ public final class ModParticles {
         return new ZenkaiParticleOptions(AURA_DUST.get(), rgb, scale);
     }
 
+    /** Estrella de aturdimiento: orbita despacio sobre la cabeza del aturdido (StunStarParticle). */
+    public static final DeferredHolder<ParticleType<?>, ZenkaiParticleType> STUN_STAR =
+            PARTICLES.register("stun_star", ZenkaiParticleType::new);
+
+    public static ZenkaiParticleOptions stunStar(int rgb, float scale) {
+        return new ZenkaiParticleOptions(STUN_STAR.get(), rgb, scale);
+    }
+
     public static void register(IEventBus bus) {
         PARTICLES.register(bus);
     }

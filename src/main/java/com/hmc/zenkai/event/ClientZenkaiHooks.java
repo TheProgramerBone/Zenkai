@@ -142,6 +142,10 @@ public final class ClientZenkaiHooks {
     /** Parry (fila v=160 del atlas, ver tools/gen_parry_icons.py): el fallido se pinta con su
      *  cuenta atrás mientras dura el cooldown tras una ventana sin acierto. */
     private static final IconUV ICON_PARRY_FAILED = IconUV.grid(1, 8);
+    /** Aturdido (fila v=160, celda 2; ver tools/gen_stun_assets.py): estrellas, con la cuenta atrás. */
+    private static final IconUV ICON_STUNNED = IconUV.grid(2, 8);
+    /** Inmune al aturdimiento (celda 3 de la misma fila): escudo con estrella, con la cuenta atrás. */
+    private static final IconUV ICON_STUN_IMMUNE = IconUV.grid(3, 8);
     private static final IconUV ICON_INSTANT_TRANSMISSION = IconUV.grid(1, 5);
     private static final IconUV ICON_INSTANT_TRANSMISSION_CHARGED = IconUV.grid(2, 5);
 
@@ -321,6 +325,20 @@ public final class ClientZenkaiHooks {
 
         if (InCombatState.isInCombat(mc.player)) {
             out.add(new Badge(ICON_IN_COMBAT, InCombatState.secondsLeft(mc.player) + "s", 0xFFFF8866));
+        }
+
+        // Aturdido (StunState): estrellas con los segundos que faltan, con un decimal.
+        int stunLeft = com.hmc.zenkai.client.combat.StunClientState.remainingTicks(mc.player.getId());
+        if (stunLeft > 0) {
+            out.add(new Badge(ICON_STUNNED,
+                    String.format(java.util.Locale.ROOT, "%.1f", stunLeft / 20.0f), 0xFFFFE066));
+        } else {
+            // Inmunidad posterior: explica por qué un golpe a la guardia rota ya no aturde.
+            int immune = com.hmc.zenkai.client.combat.StunClientState.immunityRemainingTicks(mc.player.getId());
+            if (immune > 0) {
+                out.add(new Badge(ICON_STUN_IMMUNE,
+                        String.format(java.util.Locale.ROOT, "%.1f", immune / 20.0f), 0xFF9BE8FF));
+            }
         }
 
         // --- Acciones (misma altura) ---

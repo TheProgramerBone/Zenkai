@@ -69,8 +69,8 @@ public final class ClientZenkaiPalTick {
     private static boolean lastFlyThrustSent = false;
 
     /**
-     * Modo rápido de vuelo: Control ALTERNA (toggle) mientras se está volando, no hace falta
-     * mantenerlo pulsado (antes había que sostener Ctrl+adelante sin soltar, y combinado con
+     * Modo rápido de vuelo: Control lo enciende (y luego pasa a crucero y a OFF, ver el ciclo en
+     * tickPlayer) mientras se está volando, no hace falta mantenerlo pulsado (antes había que sostener Ctrl+adelante sin soltar, y combinado con
      * mirar arriba/abajo se sentía mal). Solo jugador local: es un campo simple, no un mapa por
      * UUID.
      * Se apaga solo en cuanto se deja de volar (ver tickPlayer) — bug real reportado por el
@@ -154,20 +154,25 @@ public final class ClientZenkaiPalTick {
                     && stats.isFlyEnabled()
                     && p.getAbilities().flying;
 
-            // Modo rápido: alternar con Control (ver doc de fastFlightMode). Se drena la cola
+            // Modo rápido / crucero: ciclo de Control (ver doc de fastFlightMode). Se drena la cola
             // de clicks SIEMPRE (aunque no se esté volando) para no arrastrar pulsaciones
             // hechas en tierra hasta el próximo despegue.
-            while (mc.options.keySprint.consumeClick()) {
-                if (flying) fastFlightMode = !fastFlightMode;
-            }
-            if (!flying) fastFlightMode = false;
             net.minecraft.client.player.LocalPlayer lp = (net.minecraft.client.player.LocalPlayer) p;
-            // Crucero: misma política de colas que el modo rápido (se drena aunque no se vuele).
-            if (KeyBindings.FLY_CRUISE != null) {
-                while (KeyBindings.FLY_CRUISE.consumeClick()) {
-                    com.hmc.zenkai.client.fly.FlightCruise.toggle(lp, flying);
+            // Ciclo de Control: OFF -> Vuelo rápido -> Crucero -> OFF. El crucero es el vuelo
+            // rápido con adelante virtual (ver FlightCruise), así que fastFlightMode sigue
+            // true mientras dura.
+            while (mc.options.keySprint.consumeClick()) {
+                if (!flying) continue;
+                if (!fastFlightMode) {
+                    fastFlightMode = true;
+                } else if (!com.hmc.zenkai.client.fly.FlightCruise.isActive()) {
+                    com.hmc.zenkai.client.fly.FlightCruise.start(lp);
+                } else {
+                    com.hmc.zenkai.client.fly.FlightCruise.stop(lp);
+                    fastFlightMode = false;
                 }
             }
+            if (!flying) fastFlightMode = false;
             if (!flying) com.hmc.zenkai.client.fly.FlightCruise.reset();
             boolean cruising = flying && com.hmc.zenkai.client.fly.FlightCruise.isActive();
             boolean thrusting = flying && (mc.player.input.forwardImpulse > 0.1f || cruising);

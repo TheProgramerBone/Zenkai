@@ -41,13 +41,16 @@ import java.util.function.Consumer;
  * @param folder        carpeta de la biblioteca de la pestaña Pelo (p. ej. zenkai_dmz:dragonminez),
  *                      o null = en la raíz. Ícono por convención en
  *                      &lt;ns&gt;:textures/gui/hair_folders/&lt;nombre&gt;.png y nombre en la clave
- *                      hair_folder.&lt;ns&gt;.&lt;nombre&gt;.
+ *                      hair_folder.&lt;ns&gt;.&lt;nombre&gt;. Un manifiesto de pack ({@link HairPacks}) puede
+ *                      darle nombre e ícono propios ({@link HairFolderDef}).
+ * @param name          nombre literal opcional (lo trae un peinado de un pack de datos, para que
+ *                      su autor no tenga que escribir un lang); sin él, clave de lang o nombre del id.
  */
 public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<Race> defaultFor,
                            Representation representation, @Nullable ResourceLocation model,
                            ResourceLocation texture, FaceLayer.Color color, int fixedRgb,
                            Map<ResourceLocation, ResourceLocation> formOverrides, boolean selectable,
-                           @Nullable ResourceLocation folder, @Nullable String code) {
+                           @Nullable ResourceLocation folder, @Nullable String code, @Nullable String name) {
 
     /**
      * GEO = .geo.json de Blockbench; TEXTURE = pintado plano; CODE = código de pelo por mechones
@@ -76,17 +79,22 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
 
     /** Nombre de una carpeta de la biblioteca (clave hair_folder.&lt;ns&gt;.&lt;nombre&gt;). */
     public static Component folderName(ResourceLocation folder) {
+        HairFolderDef def = HairCatalog.folder(folder);
+        if (def != null && def.name() != null) return Component.literal(def.name());
         return Component.translatableWithFallback("hair_folder." + folder.getNamespace() + "."
                 + folder.getPath().replace('/', '.'), folder.getPath().replace('_', ' '));
     }
 
     /** Ícono de una carpeta por convención (puede no existir: entonces se usa el genérico). */
     public static ResourceLocation folderIcon(ResourceLocation folder) {
+        HairFolderDef def = HairCatalog.folder(folder);
+        if (def != null && def.icon() != null) return def.icon();
         return ResourceLocation.fromNamespaceAndPath(folder.getNamespace(),
                 "textures/gui/hair_folders/" + folder.getPath() + ".png");
     }
 
     public Component displayName() {
+        if (name != null) return Component.literal(name);
         String path = id.getPath();
         String fallback = path.substring(path.lastIndexOf('/') + 1).replace('_', ' ');
         return Component.translatableWithFallback(translationKey(), fallback);
@@ -105,6 +113,7 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
      * "form_overrides": {"zenkai:ssj1": "zenkai:otro_peinado", ...}
      * "selectable": true | false                    (defecto true)
      * "folder": "zenkai_dmz:dragonminez"            (carpeta de la biblioteca; sin ella, en la raíz)
+     * "name":   "Goku"                              (nombre literal; sin él, lang o el nombre del id)
      * </pre>
      */
     public static HairStyleDef parse(ResourceLocation id, JsonObject o, Consumer<String> warn) {
@@ -137,10 +146,11 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
         return new HairStyleDef(id, GsonHelper.getAsInt(o, "sort", 1000), races, defaultFor, rep, model,
                 texture, colorLayer.color(), colorLayer.fixedRgb(), Map.copyOf(overrides),
                 GsonHelper.getAsBoolean(o, "selectable", true),
-                o.has("folder") ? ResourceLocation.parse(GsonHelper.getAsString(o, "folder")) : null, code);
+                o.has("folder") ? ResourceLocation.parse(GsonHelper.getAsString(o, "folder")) : null, code,
+                o.has("name") ? GsonHelper.getAsString(o, "name") : null);
     }
 
-    private static Set<Race> readRaceList(JsonObject o, String key, boolean absentMeansAll, Consumer<String> warn) {
+    static Set<Race> readRaceList(JsonObject o, String key, boolean absentMeansAll, Consumer<String> warn) {
         if (!o.has(key)) return absentMeansAll ? EnumSet.allOf(Race.class) : EnumSet.noneOf(Race.class);
         EnumSet<Race> out = EnumSet.noneOf(Race.class);
         JsonArray arr = GsonHelper.getAsJsonArray(o, key);
@@ -181,6 +191,8 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
         if (d.folder != null) buf.writeResourceLocation(d.folder);
         buf.writeBoolean(d.code != null);
         if (d.code != null) buf.writeUtf(d.code, MAX_CODE_LENGTH);
+        buf.writeBoolean(d.name != null);
+        if (d.name != null) buf.writeUtf(d.name, 128);
     }
 
     private static HairStyleDef read(FriendlyByteBuf buf) {
@@ -200,8 +212,9 @@ public record HairStyleDef(ResourceLocation id, int sort, Set<Race> races, Set<R
         boolean selectable = buf.readBoolean();
         ResourceLocation folder = buf.readBoolean() ? buf.readResourceLocation() : null;
         String code = buf.readBoolean() ? buf.readUtf(MAX_CODE_LENGTH) : null;
+        String name = buf.readBoolean() ? buf.readUtf(128) : null;
         return new HairStyleDef(id, sort, races, defaultFor, rep, model, texture, color, fixed,
-                Map.copyOf(overrides), selectable, folder, code);
+                Map.copyOf(overrides), selectable, folder, code, name);
     }
 
     private static void writeRaces(FriendlyByteBuf buf, Set<Race> set) {

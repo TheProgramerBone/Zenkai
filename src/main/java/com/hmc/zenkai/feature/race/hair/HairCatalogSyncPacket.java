@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /** S2C: snapshot completo del catálogo de peinados (login y /reload). Espeja FaceCatalogSyncPacket. */
-public record HairCatalogSyncPacket(List<HairStyleDef> styles) implements CustomPacketPayload {
+public record HairCatalogSyncPacket(List<HairStyleDef> styles, List<HairFolderDef> folders) implements CustomPacketPayload {
 
     public static final Type<HairCatalogSyncPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "hair_catalog_sync"));
@@ -21,6 +21,7 @@ public record HairCatalogSyncPacket(List<HairStyleDef> styles) implements Custom
     public static final StreamCodec<FriendlyByteBuf, HairCatalogSyncPacket> STREAM_CODEC =
             StreamCodec.composite(
                     HairStyleDef.STREAM_CODEC.apply(ByteBufCodecs.list()), HairCatalogSyncPacket::styles,
+                    HairFolderDef.STREAM_CODEC.apply(ByteBufCodecs.list()), HairCatalogSyncPacket::folders,
                     HairCatalogSyncPacket::new);
 
     @Override
@@ -30,7 +31,9 @@ public record HairCatalogSyncPacket(List<HairStyleDef> styles) implements Custom
         ctx.enqueueWork(() -> {
             Map<ResourceLocation, HairStyleDef> map = new LinkedHashMap<>();
             for (HairStyleDef d : pkt.styles()) map.put(d.id(), d);
-            HairCatalog.replaceAll(map);
+            Map<ResourceLocation, HairFolderDef> folders = new LinkedHashMap<>();
+            for (HairFolderDef f : pkt.folders()) folders.put(f.id(), f);
+            HairCatalog.replaceAll(map, folders);
         });
     }
 }

@@ -363,6 +363,16 @@ public class ModNetworking {
                 BlockingSyncPacket::handle);
 
         registrar.playToClient(
+                com.hmc.zenkai.feature.combat.StunSyncPacket.TYPE,
+                com.hmc.zenkai.feature.combat.StunSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.StunSyncPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.combat.GuardSyncPacket.TYPE,
+                com.hmc.zenkai.feature.combat.GuardSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.GuardSyncPacket::handle);
+
+        registrar.playToClient(
                 SkillSyncPacket.TYPE,
                 SkillSyncPacket.STREAM_CODEC,
                 SkillSyncPacket::handle);

@@ -85,6 +85,9 @@ public final class ZenkaiTriggers {
         public static final String SHADOW_TRAINING_DONE  = "shadow_training_done";
         public static final String MEDITATION_DONE       = "meditation_done";
         public static final String TARGET_PRACTICE_DONE  = "target_practice_done";
+        // Esferas del Dragón: se dispara al colocar la ÚLTIMA esfera en el centro de la H y fundirse
+        public static final String DRAGON_BALLS_FUSED       = "dragon_balls_fused";
+        public static final String NAMEK_DRAGON_BALLS_FUSED = "namek_dragon_balls_fused";
     }
 
     // =====================================================================

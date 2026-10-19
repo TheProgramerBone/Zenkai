@@ -165,6 +165,7 @@ public final class ModernStatsHud {
         drawRow(g, mc, HP, HP_STATE, stats.getBody(), bodyMax, "HP", bodyWash, frame, nowMs);
         drawRow(g, mc, STM, STM_STATE, stats.getStamina(), stats.getStaminaMax(), "STM", 0, frame, nowMs);
         drawRow(g, mc, KI, KI_STATE, stats.getEnergy(), stats.getEnergyMax(), "KI", 0, frame, nowMs);
+        drawGuardBar(g, 58, 51, 104, 2);
 
         // Fondo del retrato (el jugador va encima, fuera de este pose: ver drawPortraitModel).
         g.blit(TEX, 0, 0, U_PORTRAIT_BACK, 0, PORTRAIT, PORTRAIT, TEX_W, TEX_H);
@@ -215,6 +216,25 @@ public final class ModernStatsHud {
     }
 
     // ── Barras ───────────────────────────────────────────────────────────────
+
+    /** Barra fina del aguante de guardia: una línea de 2 texels bajo KI, sin contorno (pista
+     *  translúcida + relleno con la fila de arriba más clara, como un bisel). Solo se ve mientras
+     *  bloqueas o se regenera; pasa a rojo parpadeante cuando está a punto de romperse. Las
+     *  coordenadas son del pose ya escalado y no pisan los iconos de estado (empiezan en PL_Y). */
+    static void drawGuardBar(GuiGraphics g, int x, int y, int w, int h) {
+        if (!com.hmc.zenkai.client.combat.GuardClientState.visible()) return;
+        float frac = com.hmc.zenkai.client.combat.GuardClientState.fraction();
+        boolean low = frac <= 0.3f;
+        boolean blink = low && System.currentTimeMillis() / 120 % 2 == 0;
+        int base = low ? (blink ? 0xFFE84B4B : 0xFFB03030) : 0xFF3FB6D8;
+        int top = low ? (blink ? 0xFFFF8A8A : 0xFFE05A5A) : 0xFF9BE8FF;
+        g.fill(x, y, x + w, y + h, 0x99101419);
+        int fill = Math.round(w * frac);
+        if (fill > 0) {
+            g.fill(x, y, x + fill, y + 1, top);
+            g.fill(x, y + 1, x + fill, y + h, base);
+        }
+    }
 
     private static void drawRow(GuiGraphics g, Minecraft mc, Row row, BarState st, float cur, float max,
                                 String label, int washArgb, int frame, long nowMs) {

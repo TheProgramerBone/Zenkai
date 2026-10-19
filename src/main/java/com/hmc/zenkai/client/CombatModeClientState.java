@@ -75,6 +75,8 @@ public final class CombatModeClientState {
     // Bloqueo local (edge-trigger). Es lo ÚLTIMO enviado al servidor, así que es
     // exactamente el estado con el que él va a validar.
     private static boolean lastBlockingSent = false;
+    /** Ticks seguidos con el bloqueo del cliente distinto del que el servidor confirma por ActionState. */
+    private static int blockMismatchTicks = 0;
 
     /** Cooldowns cliente de físicas (gameTime listo), por ordinal. */
     private static final Map<Integer, Long> PHYS_READY_AT = new HashMap<>();
@@ -325,8 +327,26 @@ public final class CombatModeClientState {
         // ── DEFENSA: la tecla de bloqueo (clic derecho por defecto) con manos válidas (edge-trigger
         //    al server) ──
         boolean blocking = active && inGame && blockDown
-                && chargingSlot < 0 && guardHands;
+                && chargingSlot < 0 && guardHands
+                // Guardia rota o aturdido: no se bloquea aunque siga pulsada la tecla.
+                && !com.hmc.zenkai.client.combat.GuardClientState.broken()
+                && !com.hmc.zenkai.client.combat.StunClientState.localStunned();
+        // Reconciliación: el bloqueo viaja solo por flanco, así que un cambio perdido o rechazado (cambiar de
+        // objeto con la tecla pulsada, un rechazo del servidor) dejaba cliente y servidor discrepando para
+        // siempre. Si llevan 20 ticks seguidos sin coincidir se reenvía lo que el cliente quiere. El margen
+        // cubre la espera del parry por bloqueo, que aplaza la guardia real unos ticks.
+        boolean serverBlocking = ActionStateClient.local().type()
+                == com.hmc.zenkai.feature.action.ActionType.BLOCK;
+        if (blocking == lastBlockingSent && blocking != serverBlocking) {
+            if (++blockMismatchTicks >= 20) {
+                blockMismatchTicks = 0;
+                if (mc.getConnection() != null) PacketDistributor.sendToServer(new BlockingPacket(blocking));
+            }
+        } else if (blocking == lastBlockingSent) {
+            blockMismatchTicks = 0;
+        }
         if (blocking != lastBlockingSent) {
+            blockMismatchTicks = 0;
             lastBlockingSent = blocking;
             if (mc.getConnection() != null) {
                 PacketDistributor.sendToServer(new BlockingPacket(blocking));

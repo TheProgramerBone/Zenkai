@@ -83,6 +83,11 @@ public class ModSounds {
     public static final Supplier<SoundEvent> SCOUTER_BENCH_FINISH  = registerSoundEvent("scouter_bench_finish");
     public static final Supplier<SoundEvent> SCOUTER_BENCH_CANCEL  = registerSoundEvent("scouter_bench_cancel");
     public static final Supplier<SoundEvent> SCOUTER_BENCH_FAIL    = registerSoundEvent("scouter_bench_fail");
+    /** Estampido sónico del vuelo (FlightFx). Evento propio para tener subtítulo propio; el audio
+     *  de relleno es el de vanilla hasta que haya uno del mod. */
+    public static final Supplier<SoundEvent> FLIGHT_SONIC_BOOM = registerSoundEvent("flight_sonic_boom");
+    /** Golpe del aterrizaje a gran velocidad (FlightFx). Mismo criterio que FLIGHT_SONIC_BOOM. */
+    public static final Supplier<SoundEvent> FLIGHT_LANDING = registerSoundEvent("flight_landing");
 
     private static Supplier<SoundEvent> registerSoundEvent(String name) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, name);

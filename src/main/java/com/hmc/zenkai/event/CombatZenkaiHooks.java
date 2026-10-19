@@ -549,6 +549,9 @@ public class CombatZenkaiHooks {
                 if (w != null && w.guardBreak() > 0.0) blockMult += (1.0 - blockMult) * w.guardBreak();
             }
             finalDamage *= blockMult;
+            // Aguante de guardia: lo que pasó la guardia lo gasta. Va DESPUÉS de consumeBlockMultiplier
+            // (que ya cobró durabilidad y ki del escudo) y solo si la guardia sigue en pie (no Black Flash).
+            GuardStamina.onBlockedHit(e.getEntity(), finalDamage, defStats.getBodyMax());
         }
 
         // Jugador sin raza: no tiene barrera de ki y su absorción ya la cobró vanilla sobre su

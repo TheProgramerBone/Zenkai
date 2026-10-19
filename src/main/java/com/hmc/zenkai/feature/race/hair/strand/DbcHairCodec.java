@@ -16,7 +16,10 @@ import java.util.function.Consumer;
  *
  * G2: 56 mechones x 7 campos de 2 dígitos (l X Y Z B P T) + "20". l = largo (0 = ausente), X/Y/Z =
  * rotación (v-50)·0,1 rad acotada a 18..82, B = curvatura, P = reparto de la curvatura entre los
- * segmentos 1 y 3, T = cuánto reacciona al SSJ (se ignora: solo se importa el peinado base).
+ * segmentos 1 y 3, T = cuánto reacciona al SSJ (0..~1 tras acotar a 18..82). DBC no guarda variantes SSJ:
+ * deforma el peinado base en vivo según el progreso de la transformación. Aquí se HORNEA esa
+ * deformación con el progreso al máximo ({@link #deform}) para obtener SSJ1 y SSJ2 aproximados;
+ * SSJ3 y SSJ4 de DBC son modelos fijos que no se importan (caen a la cadena de {@link HairFormVariants}).
  * Ranuras: 0-3 frente, 4-13 derecha, 14-23 izquierda, 24-39 espalda, 40-55 arriba.
  *
  * Espacio: DBC dibuja con ModelRenderer de 1.7.10 (Y hacia abajo, glRotate Z·Y·X). Al pasar al
@@ -38,6 +41,9 @@ public final class DbcHairCodec {
     private static final int[] GRID_A = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
     private static final int[] GRID_B = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3};
 
+    /** Progreso máximo de la transformación en DBC: stateChange (SSJ) y state2Change (SSJ2) llegan a 200. */
+    private static final int FULL_PROGRESS = 200;
+
     private static final float RAD_TO_DEG = (float) (180.0 / Math.PI);
 
     public static boolean looksLike(String code) {
@@ -47,7 +53,20 @@ public final class DbcHairCodec {
         return true;
     }
 
+    /** Un mechón tal como viene en la cadena (campos ya acotados; la rotación en radianes). */
+    record Raw(int face, int l, float x, float y, float z, float b, float p, int t) {}
+
+    /** Solo el peinado base (lo que usan las pruebas y el importador sin variantes). */
     public static StrandSet decode(String raw, Consumer<Component> warn) throws HairCodeException {
+        return decodeVariants(raw, warn).base();
+    }
+
+    /**
+     * Base + SSJ1 + SSJ2 aproximados. Las variantes solo existen si algún mechón reacciona al SSJ
+     * (T por encima del mínimo, 18); sin reacción (p. ej. un G1 antiguo, que rellena T=00) valen los
+     * defaults de Zenkai para esas formas, como pidió el usuario (2026-10-18).
+     */
+    public static StrandSet.Variants decodeVariants(String raw, Consumer<Component> warn) throws HairCodeException {
         String code = DmzHairCodec.stripWhitespace(raw);
         for (int i = 0; i < code.length(); i++) {
             char c = code.charAt(i);
@@ -59,22 +78,22 @@ public final class DbcHairCodec {
             throw new HairCodeException("dbc_length", G2_LENGTH, G1_LENGTH, code.length());
         }
 
-        List<Strand> strands = new ArrayList<>();
+        List<Raw> raws = new ArrayList<>();
         boolean usesSsjReaction = false;
         for (int face = 0; face < STRANDS; face++) {
             int at = face * 14;
             int l = two(code, at);
             if (l == 0) continue;
-            float x = rot(two(code, at + 2));
-            float y = rot(two(code, at + 4));
-            float z = rot(two(code, at + 6));
-            float b = rot(two(code, at + 8));
-            float p = rot(two(code, at + 10));
-            usesSsjReaction |= clampField(two(code, at + 12)) > 18;
-            strands.add(strand(face, l, x, y, z, b, p));
+            int t = clampField(two(code, at + 12));
+            usesSsjReaction |= t > 18;
+            raws.add(new Raw(face, l, rot(two(code, at + 2)), rot(two(code, at + 4)), rot(two(code, at + 6)),
+                    rot(two(code, at + 8)), rot(two(code, at + 10)), t));
         }
-        if (usesSsjReaction) warn.accept(Component.translatable("zenkai.hair_code.warn.dbc_ssj"));
-        return new StrandSet(null, strands);
+        StrandSet base = build(raws, 0, 0);
+        if (!usesSsjReaction) return StrandSet.Variants.single(base);
+        warn.accept(Component.translatable("zenkai.hair_code.warn.dbc_ssj"));
+        return new StrandSet.Variants(base, build(raws, FULL_PROGRESS, 0), build(raws, FULL_PROGRESS, FULL_PROGRESS),
+                null, null);
     }
 
     /** JRMCore: l de 1 dígito pasa a l·11-10, se conservan X/Y/Z y se rellena B=50 P=50 T=00. */
@@ -87,6 +106,110 @@ public final class DbcHairCodec {
                     .append("505000");
         }
         return sb.append("20").toString();
+    }
+
+    private static StrandSet build(List<Raw> raws, int stateChange, int state2Change) {
+        List<Strand> out = new ArrayList<>(raws.size());
+        for (Raw r : raws) {
+            float[] v = deform(r, stateChange, state2Change);
+            out.add(strand(r.face(), (int) v[0], v[1], v[2], v[3], v[4], r.p()));
+        }
+        return new StrandSet(null, out);
+    }
+
+    /**
+     * Deformación SSJ de un mechón (DBC la calcula al dibujar; aquí se hornea). `change` es el progreso
+     * del SSJ (0..200) y `change2` el del SSJ2. La intensidad del mechón sale de su campo T:
+     * Int = (int)((T-18)·1,62)·0,01. Devuelve {l, x, y, z, b}.
+     *
+     * Reglas (comportamiento observado en la reimplementación de npcdbc 1.2.1; las fórmulas son esas, el
+     * código es propio): el SSJ abre los mechones hacia fuera (más Z, y más X en los que apuntan quietos)
+     * y los endereza (b hacia 0); el SSJ2 además los alarga y rectifica. Los acotados (±3,2, ±2,8,
+     * ±2,2, ±0,4, ±0,2) evitan que el mechón dé la vuelta.
+     */
+    static float[] deform(Raw r, int change, int change2) {
+        float x = r.x(), y = r.y(), z = r.z(), b = r.b();
+        int l = r.l();
+        int face = r.face();
+        float intensity = (int) ((r.t() - 18) * 1.62f) * 0.01f;
+        boolean front = face < 4;
+        boolean back = face >= 24 && face < 40;
+        boolean top = face >= 40;
+
+        if (change > 0) {
+            if (inOpen(y) && inOpen(z) && back) {
+                x += change * intensity * (x < 0f ? -0.01f : 0.01f) * l * 0.01f;
+                x = clamp(x, 3f);
+            }
+            if (inOpen(y) && inOpen(x) && !back) {
+                z += change * intensity * (z < 0f ? -0.01f : 0.01f);
+                z = clamp(z, 3.2f);
+                if (!front || x < 0f) {
+                    x += change * intensity * 0.01f;
+                    x = clamp(x, 0.4f);
+                }
+                // Arriba, las filas 0 y 2 de las columnas de los bordes no pasan de 0 hacia fuera.
+                int row = top ? GRID_B[face - 40] : -1;
+                boolean limitedToZero = top && (row == 0 || row == 2) && (face % 4 == 0 || face % 4 == 3);
+                float limit = limitedToZero ? 0f : 0.2f;
+                if (z > 0f) {
+                    b += change * intensity * -0.02f;
+                    b = Math.max(b, -limit);
+                } else if (z < 0f) {
+                    b += change * intensity * 0.02f;
+                    b = Math.min(b, limit);
+                }
+            } else if (inOpen(y)) {
+                x += change * intensity * (x < 0f ? -0.01f : 0.01f);
+                x = clamp(x, 2.8f);
+                if (b > 1.5f) {
+                    x = clamp(x, 1.5f);
+                    b += change * intensity * (b < 0f ? 0.03f : -0.03f);
+                    b = clamp(b, 2.8f);
+                }
+            } else if (inOpen(x)) {
+                z += change * intensity * (z < 0f ? -0.01f : 0.01f);
+                z = clamp(z, 2.8f);
+                if (b > 0f && z > 0f && y < 1.6f) {
+                    z = clamp(z, 2.2f);
+                    b = Math.max(-b, Math.min(b, b + change * intensity * -0.02f));
+                } else if (b > 0f && z < 0f && y > 0f) {
+                    z = clamp(z, 2.2f);
+                    b = Math.max(-b, Math.min(b, b + change * intensity * -0.02f));
+                } else if (y < -1.3f && b > 0f) {
+                    z = clamp(z, 2.2f);
+                    b = Math.max(0.5f, b + change * intensity * -0.02f);
+                }
+            }
+        }
+
+        if (change2 > 0) {
+            if (inOpen(y) && inOpen(x) && front) {
+                float intensity2 = intensity > 0.02f ? 0.6f : intensity;
+                x += change2 * intensity2 * 0.01f;
+                x = clamp(x, 0.2f);
+                z += change2 * intensity2 * (z < 0f ? -0.02f : 0.02f);
+                z = clamp(z, 2.8f);
+            }
+            l = (int) (l + change2 * 0.1f);
+            if (b < 0f) {
+                b += change2 * 5.0E-4f;
+                b = b >= 0f ? 0.2f : b;
+            }
+            if (b > 0f) {
+                b -= change2 * 5.0E-4f;
+                b = b <= 0f ? -0.2f : b;
+            }
+        }
+        return new float[]{l, x, y, z, b};
+    }
+
+    private static boolean inOpen(float v) {
+        return v > -1f && v < 1f;
+    }
+
+    private static float clamp(float v, float limit) {
+        return v > limit ? limit : Math.max(v, -limit);
     }
 
     private static Strand strand(int face, int l, float x, float y, float z, float b, float p) {

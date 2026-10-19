@@ -85,7 +85,7 @@ public class DragonBalls extends HorizontalDirectionalBlock implements SimpleWat
     public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state,
                             @Nullable LivingEntity placer, @NotNull ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        DragonBallStructureGenerator.tryFormStructure(level, pos);
+        DragonBallStructureGenerator.tryFormStructure(level, pos, placer);
     }
 
     @Override

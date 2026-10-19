@@ -106,5 +106,13 @@
     "sounds": [
       "zenkai:wish_granted"
     ]
+  },
+  "flight_sonic_boom": {
+    "subtitle": "sounds.zenkai.flight_sonic_boom",
+    "sounds": ["minecraft:mob/warden/sonic_boom"]
+  },
+  "flight_landing": {
+    "subtitle": "sounds.zenkai.flight_landing",
+    "sounds": ["minecraft:random/explode1", "minecraft:random/explode2"]
   }
 }

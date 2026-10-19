@@ -64,6 +64,7 @@ public final class ActionStateClient {
                 st.physBusy(),
                 st.chargingSlot(),
                 st.elapsed(now),
-                st.inClash());
+                st.inClash(),
+                com.hmc.zenkai.client.combat.StunClientState.isStunned(p.getId()));
     }
 }

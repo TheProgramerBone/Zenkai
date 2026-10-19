@@ -37,6 +37,10 @@ public class ModItems {
             props -> new BlockItem(ModBlocks.ALL_DRAGON_BALLS.get(), props),
             new Item.Properties().stacksTo(1));
 
+    public static final DeferredItem<Item> NAMEK_ALL_DRAGON_BALLS_ITEM = ITEMS.registerItem("namek_all_dragon_balls",
+            props -> new BlockItem(ModBlocks.NAMEK_ALL_DRAGON_BALLS.get(), props),
+            new Item.Properties().stacksTo(1));
+
     /** Tijeras: abren solo la pestaña Pelo de la apariencia (ScissorsItem). */
     public static final DeferredItem<Item> SCISSORS = ITEMS.registerItem("scissors",
             com.hmc.zenkai.content.item.ScissorsItem::new, new Item.Properties().stacksTo(1));

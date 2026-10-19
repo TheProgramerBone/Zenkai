@@ -105,7 +105,7 @@ public final class DashServer {
     public static boolean tryDash(ServerPlayer sp, int dir) {
         if (dir < DIR_FORWARD || dir > DIR_RIGHT) return false;
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (!att.isRaceChosen() || att.flags().isDowned()) return false;
+        if (!att.isRaceChosen() || att.flags().isDowned() || StunState.isStunned(sp)) return false;
         if (!CombatModeServerState.isActive(sp.getUUID())) return false;
         // Volando no se esquiva: el vuelo ya tiene su propio movimiento (y su impulso).
         if (att.flags().isFlyEnabled() || sp.getAbilities().flying) return false;

@@ -441,7 +441,8 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 ModBlocks.NAMEK_DRAGON_BALL_5.get(),
                 ModBlocks.NAMEK_DRAGON_BALL_6.get(),
                 ModBlocks.NAMEK_DRAGON_BALL_7.get(),
-                ModBlocks.ALL_DRAGON_BALLS.get()
+                ModBlocks.ALL_DRAGON_BALLS.get(),
+                ModBlocks.NAMEK_ALL_DRAGON_BALLS.get()
         );
     }
 }

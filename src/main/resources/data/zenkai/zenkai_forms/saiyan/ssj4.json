@@ -19,5 +19,6 @@
   "scale": 1.05,
   "hair_rgb": "0x1E1E1E",
   "tail_rgb": "0xE03030",
-  "eye_rgb": "0xFFE347"
+  "eye_rgb": "0xFFE347",
+  "fur_rgb": "0xD83434"
 }
