@@ -351,6 +351,16 @@ public class CombatZenkaiHooks {
         // vanilla multiplica el float final antes de hurt() — no solo la parte de STR.
         MELEE_REF.put(attacker.getUUID(), strDamage * chargeF);
         double total = (base + bonus) * critMult;
+        // Combo ANTES del Black Flash (orden fijado en ComboTracker). Un golpe sin cargar (scale bajo) no
+        // cuenta: abanicar el aire no debe alimentar la cadena.
+        if (attacker instanceof ServerPlayer comboSp && scale >= 0.5f) {
+            total *= com.hmc.zenkai.feature.combat.ComboTracker.registerHit(comboSp);
+            // Remate (cada Nº golpe seguido a mano vacía): aleja al rival.
+            if (comboSp.getMainHandItem().isEmpty()
+                    && com.hmc.zenkai.feature.combat.ComboTracker.isFinisher(comboSp)) {
+                com.hmc.zenkai.feature.combat.ComboTracker.queueFinisher(comboSp, victim);
+            }
+        }
 
         // BLACK FLASH sobre el golpe COMPLETO y en crudo: lo que sale de aquí es lo que entra
         // a mitigate(), o sea antes de defensa, armadura y barreras.
@@ -819,6 +829,12 @@ public class CombatZenkaiHooks {
     public static void onAttackWhileBlocking(AttackEntityEvent e) {
         if (e.getEntity().level().isClientSide()) return;
         if (e.getEntity() instanceof ServerPlayer sp && KiCombatServer.isBlocking(sp)) {
+            e.setCanceled(true);
+        }
+        // Aturdido o agarrado: no puede pegar (el cliente ya descarta los clics; este es el guard autoritativo).
+        if (e.getEntity() instanceof ServerPlayer sp
+                && (com.hmc.zenkai.feature.combat.StunState.isStunned(sp)
+                || com.hmc.zenkai.feature.technique.PhysicalCombatServer.isHeld(sp))) {
             e.setCanceled(true);
         }
         // Cargando una técnica de ki: las manos están ocupadas con la bola, no se puede pegar.

@@ -63,6 +63,9 @@ public final class TeleportExecution {
         // nivel 1 y menú de planetas por igual), en vez de en cada llamador por separado.
         PacketDistributor.sendToPlayersTrackingEntity(sp, new InstantTransmissionReleaseAnimPacket(sp.getId()));
 
+        // Agarrado: Instant Transmission es una salida legítima del agarre (se paga y se enfría como siempre).
+        com.hmc.zenkai.feature.technique.PhysicalCombatServer.releaseHeld(sp);
+
         if (crossingDimension) DimensionEntryTracker.suppressNextEntry(sp);
         sp.teleportTo(destLevel, dest.x, dest.y, dest.z, sp.getYRot(), sp.getXRot());
 

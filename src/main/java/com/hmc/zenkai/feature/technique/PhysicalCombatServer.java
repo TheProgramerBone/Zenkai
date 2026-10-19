@@ -3,6 +3,10 @@ package com.hmc.zenkai.feature.technique;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.api.event.TechniqueFiredEvent;
 import com.hmc.zenkai.feature.advancement.ZenkaiTriggers;
+import com.hmc.zenkai.feature.combat.ComboTracker;
+import com.hmc.zenkai.feature.combat.StunState;
+import com.hmc.zenkai.feature.action.ActionReject;
+import com.hmc.zenkai.feature.combat.GuardBreak;
 import com.hmc.zenkai.feature.combat.KiFist;
 import com.hmc.zenkai.feature.combat.KiInfusion;
 import com.hmc.zenkai.registry.ModGameRules;
@@ -15,7 +19,11 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.technique.vfx.ZenkaiVfxEffect;
 import com.hmc.zenkai.feature.technique.vfx.ZenkaiVfxRegistry;
 import com.hmc.zenkai.registry.ModDamageTypes;
+import com.hmc.zenkai.registry.ModTags;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -89,6 +97,21 @@ public final class PhysicalCombatServer {
         final Vec3 dir;
         final Set<Integer> hitIds = new HashSet<>();
         int ticksLeft;
+        /** Ticks vividos (DIVE: no choca contra el suelo en los primeros; GRAB: no suelta nada más agarrar). */
+        int age;
+        /** Altura de salida del picado, para medir cuánto ha caído. */
+        double startY;
+        /** GRAB: id de la entidad sujeta (-1 si ninguna). */
+        int heldId = -1;
+        /** GRAB: uuid de la entidad sujeta (para soltarla aunque ya no esté en el nivel del agarrador). */
+        UUID heldUuid;
+        /** GRAB, skill check del agarrado (solo si es un jugador): aciertos, check en curso, su inicio (-1 = pausa),
+         *  cuándo toca el siguiente y la semilla de las zonas. */
+        int checksDone;
+        int checkIndex = -1;
+        long checkStart = -1;
+        long nextCheckAt;
+        long seed;
 
         Active(PhysicalTechnique tech, double str, Vec3 dir, int ticks) {
             this.tech = tech;
@@ -106,7 +129,8 @@ public final class PhysicalCombatServer {
      *  ES la esquiva, así que durante sus 8 ticks el jugador no recibe daño. */
     public static boolean hasIFrames(UUID id) {
         Active a = ACTIVE.get(id);
-        return a != null && a.tech == PhysicalTechnique.DASH_PUNCH && a.ticksLeft > 0;
+        return a != null && (a.tech == PhysicalTechnique.DASH_PUNCH || a.tech == PhysicalTechnique.EVADE)
+                && a.ticksLeft > 0;
     }
 
     /** ¿Hay un movimiento CON DURACIÓN en curso? Lo consulta ServerActionContext. */
@@ -115,6 +139,81 @@ public final class PhysicalCombatServer {
     }
 
     public static double currentDefenseScale() { return defenseScale; }
+
+    /** Tras zafarse, gameTime hasta el que el rival no puede ser agarrado de nuevo (UUID de la víctima). */
+    private static final Map<UUID, Long> REGRAB_BLOCK = new HashMap<>();
+    /** «Sin límite» para la cuenta atrás del agarre y la sujeción (20 horas de juego: la suelta es siempre explícita). */
+    private static final int HOLD_FOREVER = 1_440_000;
+    /** Ticks sin poder volver a ser agarrado tras zafarse. */
+    private static final int REGRAB_BLOCK_TICKS = 60;
+
+    /** El agarre en curso cuya víctima es {@code victim}, o null. ACTIVE es diminuto: recorrerlo sale gratis. */
+    private static Map.Entry<UUID, Active> holdOf(LivingEntity victim) {
+        for (var en : ACTIVE.entrySet()) {
+            Active a = en.getValue();
+            if (a.tech == PhysicalTechnique.GRAB && a.heldId == victim.getId()) return en;
+        }
+        for (var en : DEBUG_HOLDS.entrySet()) {
+            if (en.getValue().heldId == victim.getId()) return en;
+        }
+        return null;
+    }
+
+    /**
+     * Agarres de PRUEBA cuyo agarrador no es un jugador (el muñeco de «/zenkai debug dummy grab»), por UUID del
+     * agarrador. Mismo {@link Active}, mismo skill check y mismas salidas que un agarre real; se tickea desde el
+     * PlayerTickEvent de la VÍCTIMA ({@link #tickDebugHold}) porque el agarrador no es un jugador. Nunca entra en ACTIVE
+     * para que no cuente como «movimiento en curso» de nadie.
+     */
+    private static final Map<UUID, Active> DEBUG_HOLDS = new HashMap<>();
+
+    /** Empieza un agarre de prueba: {@code grabber} (un muñeco) sujeta a {@code victim} hasta que este se zafe. */
+    public static void startDebugGrab(LivingEntity grabber, ServerPlayer victim) {
+        releaseHeld(victim);
+        Active a = new Active(PhysicalTechnique.GRAB, 0.0, grabber.getLookAngle(), HOLD_FOREVER);
+        a.heldId = victim.getId();
+        a.heldUuid = victim.getUUID();
+        a.seed = victim.getRandom().nextLong();
+        a.nextCheckAt = victim.level().getGameTime() + ServerConfig.grabCheckGapTicks();
+        DEBUG_HOLDS.put(grabber.getUUID(), a);
+        StunState.hold(victim, HOLD_FOREVER);
+        sendGrabState(victim, a, 0);
+    }
+
+    /** Tick del agarre de prueba que sujeta a este jugador. El muñeco que agarra se queda quieto delante de él. */
+    private static void tickDebugHold(ServerPlayer victim) {
+        for (var it = DEBUG_HOLDS.entrySet().iterator(); it.hasNext(); ) {
+            var en = it.next();
+            Active a = en.getValue();
+            if (a.heldId != victim.getId()) continue;
+            Entity grabber = victim.serverLevel().getEntity(en.getKey());
+            if (grabber == null || !grabber.isAlive() || !victim.isAlive()) {
+                it.remove();
+                dropHold(victim.getServer(), a, true);
+                return;
+            }
+            a.age++;
+            Vec3 pos = grabber.getEyePosition().add(grabber.getLookAngle().scale(1.6))
+                    .subtract(0, victim.getBbHeight() * 0.5, 0);
+            holdInPlace(victim, pos);
+            victim.setDeltaMovement(Vec3.ZERO);
+            victim.hurtMarked = true;
+            victim.fallDistance = 0.0f;
+            tickEscapeCheck(victim, a);
+            return;
+        }
+    }
+
+    /** ¿Está esta entidad sujeta por un agarre ahora mismo? */
+    public static boolean isHeld(LivingEntity victim) {
+        return holdOf(victim) != null;
+    }
+
+    /** ¿Tiene este jugador un agarre en curso (como agarrador)? */
+    public static boolean isHolding(ServerPlayer sp) {
+        Active a = ACTIVE.get(sp.getUUID());
+        return a != null && a.tech == PhysicalTechnique.GRAB && a.heldId >= 0;
+    }
 
     /**
      * Coste de estamina de una técnica. ÚNICA fuente de verdad: la llaman el servidor al
@@ -185,7 +284,99 @@ public final class PhysicalCombatServer {
 
     /** Corta el movimiento con duración en curso, si lo hay. */
     public static void cancelActive(ServerPlayer sp) {
-        ACTIVE.remove(sp.getUUID());
+        Active a = ACTIVE.remove(sp.getUUID());
+        if (a != null) dropHold(sp.getServer(), a, true);
+    }
+
+    /**
+     * Suelta a la víctima de un agarre que termina SIN lanzamiento (interrumpido, agarrador muerto, distancia, fin
+     * de la espera): le quita el aturdimiento del agarre y le avisa de que ya no está sujeta. Tolerante a que la
+     * víctima ya no exista.
+     * @param keepImmunity true = la inmunidad normal de un aturdimiento; false = sin ella, para que el golpe de
+     *                     aterrizaje de un lanzamiento todavía pueda aturdir.
+     */
+    private static void dropHold(net.minecraft.server.MinecraftServer server, Active a, boolean keepImmunity) {
+        if (a.tech != PhysicalTechnique.GRAB || a.heldUuid == null || server == null) return;
+        for (var lvl : server.getAllLevels()) {
+            if (lvl.getEntity(a.heldUuid) instanceof LivingEntity victim) {
+                StunState.release(victim, keepImmunity);
+                if (victim instanceof ServerPlayer vp) {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(vp,
+                            com.hmc.zenkai.feature.combat.GrabStatePacket.released());
+                }
+                return;
+            }
+        }
+    }
+
+    /**
+     * El jugador agarrado se zafa por otra vía que el skill check (evasiva, Instant Transmission): termina el
+     * agarre de su agarrador sin lanzamiento y le impide volver a agarrarlo al instante.
+     * @return si había un agarre que soltar
+     */
+    public static boolean releaseHeld(ServerPlayer victim) {
+        var en = holdOf(victim);
+        if (en == null) return false;
+        Active a = en.getValue();
+        ACTIVE.remove(en.getKey());
+        DEBUG_HOLDS.remove(en.getKey());
+        dropHold(victim.getServer(), a, true);
+        REGRAB_BLOCK.put(victim.getUUID(), victim.level().getGameTime() + REGRAB_BLOCK_TICKS);
+        ServerPlayer grabber = victim.getServer().getPlayerList().getPlayer(en.getKey());
+        if (grabber != null) {
+            com.hmc.zenkai.feature.action.ActionStateServer.clearIf(
+                    grabber, com.hmc.zenkai.feature.action.ActionType.PHYSICAL);
+        }
+        return true;
+    }
+
+    /** Pulsación del skill check del agarrado (GrabEscapePressPacket). El servidor juzga con su reloj. */
+    public static void onEscapePress(ServerPlayer victim, int checkIndex, float clientElapsed) {
+        var en = holdOf(victim);
+        if (en == null) return;
+        Active a = en.getValue();
+        if (a.checkStart < 0 || checkIndex != a.checkIndex) return;   // pausa o check viejo: se ignora
+        long now = victim.level().getGameTime();
+        double serverElapsed = now - a.checkStart;
+        // El cliente ve la aguja con el retraso de la red: se le deja ir algo por detrás del reloj del servidor, pero
+        // no por delante ni por mucho detrás.
+        double e = Mth.clamp(clientElapsed,
+                serverElapsed - com.hmc.zenkai.feature.combat.GrabSkillCheck.LATENCY_TICKS, serverElapsed);
+        double pos = com.hmc.zenkai.feature.combat.GrabSkillCheck.needlePos(
+                Math.max(0.0, e), ServerConfig.grabNeedleTicks());
+        double zs = com.hmc.zenkai.feature.combat.GrabSkillCheck.zoneStart(
+                a.seed, a.checkIndex, ServerConfig.grabZoneSize());
+        boolean ok = com.hmc.zenkai.feature.combat.GrabSkillCheck.inZone(pos, zs, ServerConfig.grabZoneSize());
+        resolveCheck(victim, a, ok);
+    }
+
+    /** Cierra el check en curso (acierto, fallo o caducidad) y, si ya hay suficientes aciertos, suelta al agarrado. */
+    private static void resolveCheck(ServerPlayer victim, Active a, boolean success) {
+        long now = victim.level().getGameTime();
+        a.checkStart = -1;
+        a.nextCheckAt = now + ServerConfig.grabCheckGapTicks();
+        if (success) {
+            a.checksDone++;
+            if (a.checksDone >= ServerConfig.grabChecksToEscape()) {
+                victim.serverLevel().playSound(null, victim.getX(), victim.getY(), victim.getZ(),
+                        net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.0f, 1.3f);
+                releaseHeld(victim);
+                return;
+            }
+        } else {
+            // Fallar (o dejar caducar) castiga con una pausa más larga hasta el siguiente check.
+            a.nextCheckAt = now + ServerConfig.grabCheckGapTicks() + ServerConfig.grabFailPenaltyTicks();
+        }
+        sendGrabState(victim, a, success ? 1 : 2);
+    }
+
+    /** Estado del agarre y del check para el agarrado. */
+    private static void sendGrabState(ServerPlayer victim, Active a, int lastResult) {
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(victim,
+                new com.hmc.zenkai.feature.combat.GrabStatePacket(true,
+                        a.checkStart >= 0 ? a.checkIndex : -1, a.seed, (float) ServerConfig.grabZoneSize(),
+                        ServerConfig.grabNeedleTicks(), a.checksDone, ServerConfig.grabChecksToEscape(),
+                        a.ticksLeft, lastResult));
     }
 
     /**
@@ -230,6 +421,14 @@ public final class PhysicalCombatServer {
                 ? 1.0 + (com.hmc.zenkai.feature.combat.KiInfusion.weaponMultiplier(sp) - 1.0) * 0.5 : 1.0;
         double str = (att.computeMeleeFinal() + fistBonus) * weaponF
                 * MasteryEffects.techDamageFactor(att, t.name());
+        // Orden de multiplicadores fijado en ComboTracker: combo × carga (× Black Flash, que no aplica aquí).
+        // La evasiva no golpea: ni suma ni alimenta la cadena.
+        if (t != PhysicalTechnique.EVADE) str *= ComboTracker.registerHit(sp);
+        int chargeLevel = t == PhysicalTechnique.HEAVY_BLOW ? consumeChargeLevel(sp) : 0;
+        if (chargeLevel > 0) {
+            str *= 1.0 + chargeLevel * ServerConfig.heavyDamagePerLevel();
+            att.consumeStamina((int) Math.ceil(staminaCost * ServerConfig.heavyStaminaPerLevel() * chargeLevel));
+        }
         Vec3 look = sp.getLookAngle();
 
         switch (t) {
@@ -238,7 +437,8 @@ public final class PhysicalCombatServer {
                 ACTIVE.put(sp.getUUID(), new Active(t, str, look, DASH_TICKS));
             }
             case BARRAGE -> ACTIVE.put(sp.getUUID(), new Active(t, str, look, BARRAGE_TICKS));
-            case HEAVY_BLOW -> heavyBlow(sp, str, t);
+            case HEAVY_BLOW -> smash(sp, str, t, false, 0.5, 2.5 + chargeLevel * 0.4,
+                    1.8 + chargeLevel * ServerConfig.heavyKnockbackPerLevel());
             case KIAI -> kiai(sp, str, t);
             case RISING_SLASH -> risingSlash(sp, str, t);
             case CROSS_SLASH -> ACTIVE.put(sp.getUUID(), new Active(t, str, look, CROSS_TICKS));
@@ -249,16 +449,40 @@ public final class PhysicalCombatServer {
             case SPIN_SLASH -> spinSlash(sp, str, t);
             case SKY_CLEAVE -> smash(sp, str, t, true, 0.4, 3.0, 1.2);
             case LIGHT_BLADE -> lightBlade(sp, str, t);
+            case DIVE -> startDive(sp, str, t);
+            case GRAB -> startGrab(sp, str, t);
+            case EVADE -> startEvade(sp, str, t);
         }
         ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
                 t.name().toLowerCase(java.util.Locale.ROOT), 0.0);
         PlayerLifeCycle.sync(sp);
     }
 
+    /** Mantiene la carga de HEAVY_BLOW: se pierde al quedar aturdido, derribado, bloqueando o fuera de combate,
+     *  y cada nivel alcanzado suena más agudo. */
+    private static void tickCharge(ServerPlayer sp) {
+        if (!CHARGE_START.containsKey(sp.getUUID())) return;
+        if (StunState.isStunned(sp) || PlayerStatsAttachment.get(sp).flags().isDowned()
+                || KiCombatServer.isBlocking(sp) || !CombatModeServerState.isActive(sp.getUUID())) {
+            cancelCharge(sp.getUUID());
+            return;
+        }
+        int level = chargeLevelOf(sp);
+        if (level > CHARGE_ANNOUNCED.getOrDefault(sp.getUUID(), 0)) {
+            CHARGE_ANNOUNCED.put(sp.getUUID(), level);
+            sp.serverLevel().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                    net.minecraft.sounds.SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS,
+                    0.6f, 0.8f + 0.3f * level);
+        }
+    }
+
     /** Tick de los movimientos con duración. */
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
+        tickCharge(sp);
+        tickThrown(sp);
+        if (!DEBUG_HOLDS.isEmpty()) tickDebugHold(sp);
         Active a = ACTIVE.get(sp.getUUID());
         if (a == null) return;
 
@@ -271,6 +495,7 @@ public final class PhysicalCombatServer {
                 || KiCombatServer.isBlocking(sp) || !CombatModeServerState.isActive(sp.getUUID());
         if (cancel) {
             ACTIVE.remove(sp.getUUID());
+            dropHold(sp.getServer(), a, true);
             com.hmc.zenkai.feature.action.ActionStateServer.clearIf(
                     sp, com.hmc.zenkai.feature.action.ActionType.PHYSICAL);
             return;
@@ -312,6 +537,9 @@ public final class PhysicalCombatServer {
                 }
                 if (sp.horizontalCollision) a.ticksLeft = 0;
             }
+            case DIVE -> tickDive(sp, a);
+            case GRAB -> tickGrab(sp, a);
+            case EVADE -> tickEvade(sp, a);
             default -> a.ticksLeft = 0; // no debería: los instantáneos no se registran
         }
         if (a.ticksLeft <= 0) {
@@ -330,12 +558,38 @@ public final class PhysicalCombatServer {
         sp.hurtMarked = true;
     }
 
-    /** Golpe único pesado: SIEMPRE se ejecuta. Con objetivo directo: daño completo +
-     *  knockback en él. Sin objetivo: el golpe revienta donde termina la trayectoria
-     *  (bloque mirado o aire a rango máximo). En ambos casos: explosión (partículas +
-     *  sonido + AoE 50% con caída + empuje radial). Sin romper bloques: físico, no ki. */
-    private static void heavyBlow(ServerPlayer sp, double str, PhysicalTechnique t) {
-        smash(sp, str, t, false, 0.5, 2.5, 1.8);
+    // ── Carga de HEAVY_BLOW ──────────────────────────────────────────────────
+
+    /** gameTime en que el jugador empezó a mantener la tecla de HEAVY_BLOW. El nivel lo calcula SIEMPRE el
+     *  servidor al soltar: el cliente solo avisa de cuándo empezó y cuándo suelta, nunca manda el nivel. */
+    private static final Map<UUID, Long> CHARGE_START = new HashMap<>();
+    /** Último nivel anunciado por sonido, para no repetirlo cada tick. */
+    private static final Map<UUID, Integer> CHARGE_ANNOUNCED = new HashMap<>();
+
+    public static void beginCharge(ServerPlayer sp) {
+        if (ServerConfig.heavyMaxLevel() <= 0) return;
+        CHARGE_START.put(sp.getUUID(), sp.level().getGameTime());
+        CHARGE_ANNOUNCED.put(sp.getUUID(), 0);
+    }
+
+    public static void cancelCharge(UUID id) {
+        CHARGE_START.remove(id);
+        CHARGE_ANNOUNCED.remove(id);
+    }
+
+    private static int chargeLevelOf(ServerPlayer sp) {
+        Long start = CHARGE_START.get(sp.getUUID());
+        if (start == null) return 0;
+        long held = sp.level().getGameTime() - start;
+        return (int) Math.min(ServerConfig.heavyMaxLevel(),
+                held / Math.max(1, ServerConfig.heavyChargeTicksPerLevel()));
+    }
+
+    /** Nivel de carga al soltar, y apaga la carga. Un toque rápido da 0 (golpe sin cargar de siempre). */
+    private static int consumeChargeLevel(ServerPlayer sp) {
+        int level = chargeLevelOf(sp);
+        cancelCharge(sp.getUUID());
+        return level;
     }
 
     /** Cuerpo común de HEAVY_BLOW y SKY_CLEAVE: golpe directo + onda expansiva. {@code sword} añade la
@@ -572,6 +826,404 @@ public final class PhysicalCombatServer {
         });
     }
 
+    // ── Picado y agarre (tanda D) ────────────────────────────────────────────
+
+    /** Rival lanzado por un Agarre: se vigila desde el tick de SU lanzador hasta que choca o caduca. */
+    private static final class Thrown {
+        final UUID owner;
+        final double str;
+        int ticksLeft = 40;
+        int age;
+
+        Thrown(UUID owner, double str) {
+            this.owner = owner;
+            this.str = str;
+        }
+    }
+
+    private static final Map<UUID, Thrown> THROWN = new HashMap<>();
+
+    /**
+     * Condiciones PROPIAS de picado y agarre, que ActionRules no conoce (dependen de vuelo, altura y
+     * entidades cercanas). Las llama ActionResolver antes de ejecutar; así el servidor rechaza sin gastar
+     * estamina ni cooldown y el cliente deshace su cooldown optimista con el rechazo.
+     */
+    public static ActionReject checkStart(ServerPlayer sp, PhysicalTechnique t) {
+        if (t == PhysicalTechnique.DIVE) {
+            if (!sp.getAbilities().flying || groundDistance(sp) < ServerConfig.diveMinHeight()) {
+                sp.displayClientMessage(Component.translatable("hud.zenkai.dive_needs_flight"), true);
+                return ActionReject.NO_TARGET;
+            }
+        } else if (t == PhysicalTechnique.GRAB) {
+            if (findGrabTarget(sp) == null) {
+                sp.displayClientMessage(Component.translatable("hud.zenkai.grab_no_target"), true);
+                return ActionReject.NO_TARGET;
+            }
+        }
+        return ActionReject.OK;
+    }
+
+    /** Distancia vertical hasta el suelo bajo el jugador (256 si no hay nada debajo). */
+    public static double groundDistance(net.minecraft.world.entity.player.Player sp) {
+        Vec3 from = sp.position();
+        var clip = sp.level().clip(new net.minecraft.world.level.ClipContext(
+                from, from.add(0, -256, 0),
+                net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE, sp));
+        return clip.getType() == net.minecraft.world.phys.HitResult.Type.MISS
+                ? 256.0 : from.y - clip.getLocation().y;
+    }
+
+    private static void startDive(ServerPlayer sp, double str, PhysicalTechnique t) {
+        // Siempre hacia abajo: lo que se mira solo reparte el rumbo horizontal.
+        Vec3 look = sp.getLookAngle();
+        Vec3 dir = new Vec3(look.x * 0.5, Math.min(look.y, -0.7), look.z * 0.5).normalize();
+        Active a = new Active(t, str, dir, ServerConfig.diveMaxTicks());
+        a.startY = sp.getY();
+        ACTIVE.put(sp.getUUID(), a);
+    }
+
+    private static void tickDive(ServerPlayer sp, Active a) {
+        double speed = ServerConfig.diveSpeed();
+        sp.setDeltaMovement(a.dir.scale(speed));
+        sp.hurtMarked = true;
+        sp.fallDistance = 0.0f;
+        a.age++;
+        // groundDistance cubre el túnel: a 2 bloques por tick el servidor puede no ver nunca el choque.
+        if (a.age > 2 && (sp.onGround() || sp.verticalCollision || sp.horizontalCollision
+                || groundDistance(sp) < speed * 0.6)) {
+            diveImpact(sp, a);
+            a.ticksLeft = 0;
+        }
+    }
+
+    /** Impacto del picado: onda radial cuyo alcance y daño crecen con lo que se ha caído. Solo visual, sin
+     *  romper bloques (decisión de diseño: un cráter real sería un grief en servidores). */
+    private static void diveImpact(ServerPlayer sp, Active a) {
+        PhysicalTechnique t = PhysicalTechnique.DIVE;
+        double fallF = Mth.clamp((a.startY - sp.getY()) / 16.0, 0.5, 1.5);
+        double radius = Math.min(ServerConfig.diveMaxRadius(),
+                ServerConfig.diveRadiusPerSpeed() * ServerConfig.diveSpeed() * fallF);
+        double dmg = a.str * t.dmgMult() * fallF;
+        Vec3 c = sp.position();
+        var lvl = sp.serverLevel();
+
+        withBridge(t.dmgMult(), () -> {
+            for (LivingEntity e : lvl.getEntitiesOfClass(LivingEntity.class,
+                    AABB.ofSize(c, radius * 2, radius * 2, radius * 2), x -> x != sp && x.isAlive())) {
+                double dist = e.position().distanceTo(c);
+                if (dist > radius) continue;
+                double falloff = 1.0 - 0.6 * dist / radius;
+                hit(sp, e, dmg * falloff, t);
+                Vec3 away = e.position().subtract(c);
+                away = new Vec3(away.x, 0, away.z);
+                away = away.lengthSqr() < 1.0e-4 ? Vec3.ZERO : away.normalize();
+                double k = ServerConfig.diveKnockback() * falloff;
+                e.setDeltaMovement(e.getDeltaMovement().add(away.x * k, 0.4 * falloff, away.z * k));
+                e.hurtMarked = true;
+            }
+        });
+
+        lvl.sendParticles(ParticleTypes.EXPLOSION, c.x, c.y + 0.2, c.z, 3, radius * 0.25, 0.1, radius * 0.25, 0);
+        lvl.sendParticles(ParticleTypes.CLOUD, c.x, c.y + 0.1, c.z, (int) (12 + radius * 6),
+                radius * 0.5, 0.05, radius * 0.5, 0.12);
+        lvl.playSound(null, c.x, c.y, c.z, net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE.value(),
+                SoundSource.PLAYERS, 0.9f, 0.8f);
+        sp.setDeltaMovement(Vec3.ZERO);
+        sp.hurtMarked = true;
+    }
+
+    /** Agarrable: cualquiera a la vista y cerca que no sea jefe ni esté ya lanzado. El más cercano. */
+    private static LivingEntity findGrabTarget(ServerPlayer sp) {
+        double range = ServerConfig.grabRange();
+        LivingEntity best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (LivingEntity e : inCone(sp, range, 0.5)) {
+            if (e.getType().is(ModTags.EntityTypes.UNGRABBABLE) || THROWN.containsKey(e.getUUID())) continue;
+            Long blocked = REGRAB_BLOCK.get(e.getUUID());
+            if (blocked != null && blocked > sp.level().getGameTime()) continue;   // acaba de zafarse
+            if (isHeld(e)) continue;
+            if (e instanceof ServerPlayer other && other.isSpectator()) continue;
+            double d = e.distanceTo(sp);
+            if (d < bestDist) { bestDist = d; best = e; }
+        }
+        return best;
+    }
+
+    /**
+     * EVADE = SUPER EXPLOSIVE WAVE: el jugador se planta INMÓVIL (en el suelo o en el aire), carga el ki comprimido
+     * unos ticks (la pose de sentadilla y brazos recogidos la pone el clip phys_evade), abre los brazos y libera una
+     * onda omnidireccional sin daño; mantiene la pose rígida mientras la cúpula barre el entorno y se descarga. Es
+     * intocable todo el rato (hasIFrames). El empuje sale en {@link #tickEvade} al terminar la carga; si estaba
+     * agarrado, ese es el momento en que se suelta (y la onda aparta al agarrador).
+     */
+    private static void startEvade(ServerPlayer sp, double str, PhysicalTechnique t) {
+        ACTIVE.put(sp.getUUID(), new Active(t, str, Vec3.ZERO, ServerConfig.evadeTicks()));
+        var lvl = sp.serverLevel();
+        lvl.playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                net.minecraft.sounds.SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8f, 1.8f);
+    }
+
+    /**
+     * Onda expansiva SIN daño: empuja en horizontal (y un poco hacia arriba) a todo ser vivo del radio, más fuerte
+     * cuanto más cerca, y dibuja un anillo de polvo que se abre desde {@code c}. La evasiva la usa para quitarse de
+     * encima a quien la rodea (mobs y jugadores). El aturdimiento opcional respeta los frenos de StunState, y los
+     * jefes (UNGRABBABLE) se empujan igual pero no se aturden.
+     */
+    private static void shockwave(ServerPlayer sp, Vec3 c, double radius, double knock, int stunTicks) {
+        if (radius <= 0.0) return;
+        var lvl = sp.serverLevel();
+        for (LivingEntity e : lvl.getEntitiesOfClass(LivingEntity.class,
+                AABB.ofSize(c, radius * 2, radius * 2, radius * 2), x -> x != sp && x.isAlive())) {
+            if (e instanceof ServerPlayer o && o.isSpectator()) continue;
+            double dist = e.position().distanceTo(c);
+            if (dist > radius) continue;
+            double falloff = 1.0 - 0.5 * dist / radius;
+            Vec3 away = new Vec3(e.getX() - c.x, 0, e.getZ() - c.z);
+            away = away.lengthSqr() < 1.0e-4 ? sp.getLookAngle().multiply(1, 0, 1) : away;
+            away = away.lengthSqr() < 1.0e-4 ? new Vec3(1, 0, 0) : away.normalize();
+            double k = knock * falloff;
+            e.setDeltaMovement(e.getDeltaMovement().add(away.x * k, 0.35 * falloff, away.z * k));
+            e.hurtMarked = true;
+            if (stunTicks > 0 && !e.getType().is(ModTags.EntityTypes.UNGRABBABLE)) StunState.apply(e, stunTicks);
+        }
+        // Los ataques de ki ajenos que toca la cúpula salen despedidos (sin devolverlos: eso es del parry).
+        java.util.Random rng = new java.util.Random(sp.getRandom().nextLong());
+        for (var proj : lvl.getEntitiesOfClass(com.hmc.zenkai.content.entity.technique.KiProjectileEntity.class,
+                AABB.ofSize(c, radius * 2, radius * 2, radius * 2),
+                pr -> pr.getOwner() != sp && pr.canBeDeflected() && !pr.isClashHeld())) {
+            proj.scatter(rng);
+        }
+        // Cúpula con el VFX del mod y el color del ki del usuario: destello, chispas y arcos (efecto data-driven
+        // movement/evade_burst) y tres anillos de motas de energía a distinta altura que se abren a la vez (parece un
+        // hemisferio). Partículas con velocidad radial (count 0 = dx,dy,dz es la dirección y speed la fuerza).
+        int rgb = com.hmc.zenkai.feature.aura.AuraColors.resolve(sp);
+        Vec3 chest = c.add(0, sp.getBbHeight() * 0.6, 0);
+        spawnVfx(lvl, "movement/evade_burst", chest, rgb, radius * 0.15);
+        int points = 36;
+        double[] heights = {0.15, 0.9, 1.7};
+        double[] lift = {0.0, 0.05, 0.12};
+        float[] scale = {1.3f, 1.0f, 0.8f};
+        for (int h = 0; h < heights.length; h++) {
+            for (int i = 0; i < points; i++) {
+                double ang = i * (Math.PI * 2.0 / points);
+                double dx = Math.cos(ang), dz = Math.sin(ang);
+                lvl.sendParticles(com.hmc.zenkai.registry.ModParticles.energyMote(rgb, scale[h]),
+                        c.x + dx * 0.5, c.y + heights[h], c.z + dz * 0.5, 0, dx, lift[h], dz, radius * 0.1);
+            }
+        }
+        // «Cráter»: solo visual (nada de tocar bloques). Rocas del mod que saltan si hay suelo bajo los pies.
+        var below = lvl.getBlockState(net.minecraft.core.BlockPos.containing(c.x, c.y - 0.5, c.z));
+        if (!below.isAir()) {
+            lvl.sendParticles(new net.minecraft.core.particles.BlockParticleOption(
+                            com.hmc.zenkai.registry.ModParticles.AURA_ROCK.get(), below),
+                    c.x, c.y + 0.2, c.z, 28, radius * 0.25, 0.1, radius * 0.25, 0.3);
+        }
+        lvl.playSound(null, c.x, c.y, c.z, net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE.value(),
+                SoundSource.PLAYERS, 1.0f, 0.7f);
+    }
+
+    /** Dispara un efecto data-driven del mod (zenkai_vfx_effects/<path>.json) tintado en {@code rgb}. */
+    private static void spawnVfx(net.minecraft.server.level.ServerLevel lvl, String path, Vec3 at, int rgb, double spread) {
+        ZenkaiVfxEffect fx = ZenkaiVfxRegistry.get(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, path));
+        if (fx == null) {
+            Zenkai.LOGGER.warn("[Zenkai] Sin efecto VFX '{}' (datapack roto/borrado).", path);
+            return;
+        }
+        fx.spawn(lvl, at, rgb, spread);
+    }
+
+    private static void tickEvade(ServerPlayer sp, Active a) {
+        var lvl = sp.serverLevel();
+        int elapsed = Math.max(1, ServerConfig.evadeTicks()) - a.ticksLeft;
+        int charge = Math.min(ServerConfig.evadeChargeTicks(), Math.max(1, ServerConfig.evadeTicks() - 1));
+        // Anclado: el centro de la onda no se mueve (salvo que lo estén lanzando). En el aire se queda suspendido.
+        if (!THROWN.containsKey(sp.getUUID())) {
+            double y = sp.getAbilities().flying ? 0.0 : Math.min(sp.getDeltaMovement().y, 0.0);
+            sp.setDeltaMovement(0, y, 0);
+            sp.hurtMarked = true;
+        }
+        Vec3 chest = sp.position().add(0, sp.getBbHeight() * 0.6, 0);
+        int rgb = com.hmc.zenkai.feature.aura.AuraColors.resolve(sp);
+        if (elapsed < charge) {
+            // Compresión: el aura vibra pegada al cuerpo (arcos y chispas del VFX del mod, con el color del ki del
+            // usuario) y unas motas de energía convergen hacia el pecho.
+            if (elapsed % 2 == 0) {
+                spawnVfx(lvl, "movement/evade_charge", chest, rgb, 0.6);
+                for (int i = 0; i < 6; i++) {
+                    double ang = sp.getRandom().nextDouble() * Math.PI * 2.0;
+                    double h = sp.getRandom().nextDouble() * 1.6 - 0.6;
+                    double r = 1.7;
+                    double ox = Math.cos(ang) * r, oz = Math.sin(ang) * r;
+                    lvl.sendParticles(com.hmc.zenkai.registry.ModParticles.energyMote(rgb, 1.0f),
+                            chest.x + ox, chest.y + h, chest.z + oz, 0, -ox, -h, -oz, 0.09);
+                }
+            }
+        } else if (elapsed == charge) {
+            // Punto cero: destello en el pecho y estallido. Un agarrado se suelta AHORA.
+            releaseHeld(sp);
+            shockwave(sp, sp.position().add(0, 0.1, 0), ServerConfig.evadeWaveRadius(),
+                    ServerConfig.evadeWaveKnockback(), ServerConfig.evadeWaveStunTicks());
+        }
+    }
+
+    private static void startGrab(ServerPlayer sp, double str, PhysicalTechnique t) {
+        LivingEntity target = findGrabTarget(sp);
+        if (target == null) return;   // checkStart ya lo garantizó en este mismo tick
+        // El agarre se hace con la mano CONTRARIA a la principal: la principal queda libre para golpear al agarrado.
+        sp.swing(grabHand(sp), true);
+        // Agarre SIN límite de tiempo: dura hasta que el agarrado se zafa (skill check, Evasiva, Instant Transmission) o
+        // el agarrador lo lanza. grab.hold_ticks > 0 pone un tope opcional (0 = sin tope).
+        Active a = new Active(t, str, sp.getLookAngle(),
+                ServerConfig.grabHoldTicks() > 0 ? ServerConfig.grabHoldTicks() : HOLD_FOREVER);
+        a.heldId = target.getId();
+        a.heldUuid = target.getUUID();
+        a.seed = sp.getRandom().nextLong();
+        a.nextCheckAt = sp.level().getGameTime() + ServerConfig.grabCheckGapTicks();
+        ACTIVE.put(sp.getUUID(), a);
+        // Inmóvil mientras lo sostienen. hold ignora tope, rendimientos e inmunidad: el agarre manda y lo
+        // termina SIEMPRE una suelta explícita (dropHold), así que dura de sobra aunque los fallos lo alarguen.
+        StunState.hold(target, HOLD_FOREVER);
+        if (target instanceof ServerPlayer vp) sendGrabState(vp, a, 0);
+        withBridge(t.dmgMult(), () -> hit(sp, target, 0.0, t));
+    }
+
+    /** Mano con la que se agarra: la contraria a la principal. */
+    public static net.minecraft.world.InteractionHand grabHand(net.minecraft.world.entity.player.Player p) {
+        return p.getMainArm() == net.minecraft.world.entity.HumanoidArm.RIGHT
+                ? net.minecraft.world.InteractionHand.OFF_HAND : net.minecraft.world.InteractionHand.MAIN_HAND;
+    }
+
+    /** Sujeta al rival delante del jugador. Se lanza al acabar la espera o antes, volviendo a activar la técnica
+     *  ({@link #throwNow}); los golpes con la mano libre NO lanzan, golpean al agarrado. Si el agarrado es un
+     *  jugador, aquí corre también su skill check de escape. */
+    private static void tickGrab(ServerPlayer sp, Active a) {
+        Entity ent = sp.serverLevel().getEntity(a.heldId);
+        if (!(ent instanceof LivingEntity held) || !held.isAlive() || held.distanceTo(sp) > 8.0) {
+            dropHold(sp.getServer(), a, true);
+            a.ticksLeft = 0;
+            return;
+        }
+        a.age++;
+        // Los mobs no juegan el skill check: se zafan solos pasado grab.mob_max_hold_ticks (sin lanzamiento).
+        if (!(held instanceof ServerPlayer) && a.age >= ServerConfig.grabMobHoldTicks()) {
+            dropHold(sp.getServer(), a, true);
+            REGRAB_BLOCK.put(held.getUUID(), sp.level().getGameTime() + REGRAB_BLOCK_TICKS);
+            sp.serverLevel().playSound(null, held.getX(), held.getY(), held.getZ(),
+                    net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.0f, 1.3f);
+            a.ticksLeft = 0;
+            return;
+        }
+        Vec3 pos = sp.getEyePosition().add(sp.getLookAngle().scale(1.6))
+                .subtract(0, held.getBbHeight() * 0.5, 0);
+        if (held instanceof ServerPlayer hp) {
+            holdInPlace(hp, pos);
+        } else {
+            held.moveTo(pos.x, pos.y, pos.z);
+        }
+        held.setDeltaMovement(Vec3.ZERO);
+        held.hurtMarked = true;
+        held.fallDistance = 0.0f;
+
+        if (held instanceof ServerPlayer hp) tickEscapeCheck(hp, a);
+
+        // Sin tope de tiempo: solo se lanza al llegar (si se configuró) a 0 o por throwNow.
+        if (a.ticksLeft <= 1) {
+            throwHeld(sp, a, held);
+            a.ticksLeft = 0;
+        }
+    }
+
+    /**
+     * Coloca al agarrado en {@code pos} SIN tocar hacia dónde mira: la rotación va como RELATIVA con delta 0, así que su
+     * cliente conserva la suya. Con la rotación absoluta (getYRot/getXRot del servidor) cada tick le devolvía la cámara a
+     * donde el servidor creía que miraba y no podía girarla agarrado.
+     * <p>
+     * OJO: {@code ServerGamePacketListenerImpl.teleport} manda {@code yaw - rotaciónActualDelServidor} como delta, no el
+     * {@code yaw} tal cual. Pasar {@code 0f, 0f} (lo que hacía la primera versión de este arreglo) enviaba
+     * {@code -rotaciónDelServidor}: en cuanto el servidor conocía la rotación del cliente, cada tick le reiniciaba la vista
+     * a ~0 y la cámara seguía sin girar. Se pasa la rotación actual del servidor para que la delta sea exactamente 0
+     * ({@code absMoveTo} del servidor también la conserva).
+     */
+    private static void holdInPlace(ServerPlayer victim, Vec3 pos) {
+        victim.connection.teleport(pos.x, pos.y, pos.z, victim.getYRot(), victim.getXRot(), java.util.EnumSet.of(
+                net.minecraft.world.entity.RelativeMovement.X_ROT, net.minecraft.world.entity.RelativeMovement.Y_ROT));
+    }
+
+    /** Arranca el siguiente check cuando toca y da por fallido el que caducó sin pulsar. */
+    private static void tickEscapeCheck(ServerPlayer victim, Active a) {
+        long now = victim.level().getGameTime();
+        int needle = ServerConfig.grabNeedleTicks();
+        if (a.checkStart < 0) {
+            if (now >= a.nextCheckAt) {
+                a.checkIndex++;
+                a.checkStart = now;
+                sendGrabState(victim, a, 0);
+            }
+        } else if (now - a.checkStart > 2L * needle + 2) {
+            resolveCheck(victim, a, false);   // caducó sin pulsar
+        }
+    }
+
+    /** Re-activar Agarre mientras se sostiene = lanzar ya. Lo llama ActionResolver.firePhysical. */
+    public static boolean throwNow(ServerPlayer sp) {
+        Active a = ACTIVE.get(sp.getUUID());
+        if (a == null || a.tech != PhysicalTechnique.GRAB || a.heldId < 0 || a.age < 3) return false;
+        a.ticksLeft = 1;   // el siguiente tick de tickGrab lo lanza con todas sus comprobaciones
+        return true;
+    }
+
+    private static void throwHeld(ServerPlayer sp, Active a, LivingEntity held) {
+        Vec3 look = sp.getLookAngle();
+        double v = ServerConfig.grabThrowSpeed();
+        // Sin inmunidad: el aturdimiento del agarre se corta y el del aterrizaje todavía tiene que poder entrar.
+        dropHold(sp.getServer(), a, false);
+        held.setDeltaMovement(look.x * v, look.y * v + 0.15, look.z * v);
+        held.hurtMarked = true;
+        THROWN.put(held.getUUID(), new Thrown(sp.getUUID(), a.str));
+        sp.serverLevel().playSound(null, sp.getX(), sp.getY(), sp.getZ(),
+                net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.0f, 0.7f);
+    }
+
+    /** Vigila a los rivales lanzados por ESTE jugador: al chocar con pared, suelo u otra entidad cobran el
+     *  impacto (DamageType SLAM) y quedan aturdidos un momento. */
+    private static void tickThrown(ServerPlayer sp) {
+        if (THROWN.isEmpty()) return;
+        var it = THROWN.entrySet().iterator();
+        while (it.hasNext()) {
+            var en = it.next();
+            Thrown th = en.getValue();
+            if (!th.owner.equals(sp.getUUID())) continue;
+            Entity ent = sp.serverLevel().getEntities().get(en.getKey());
+            if (!(ent instanceof LivingEntity victim) || !victim.isAlive() || --th.ticksLeft <= 0) {
+                it.remove();
+                continue;
+            }
+            th.age++;
+            LivingEntity other = null;
+            for (LivingEntity o : sp.serverLevel().getEntitiesOfClass(LivingEntity.class,
+                    victim.getBoundingBox().inflate(0.3), x -> x != victim && x != sp && x.isAlive())) {
+                other = o;
+                break;
+            }
+            boolean crashed = other != null
+                    || (th.age > 2 && (victim.horizontalCollision || victim.verticalCollision || victim.onGround()));
+            if (!crashed) continue;
+
+            it.remove();
+            PhysicalTechnique t = PhysicalTechnique.GRAB;
+            double dmg = th.str * t.dmgMult();
+            LivingEntity hitOther = other;
+            withBridge(t.dmgMult(), () -> {
+                hit(sp, victim, dmg, t, ModDamageTypes.SLAM);
+                if (hitOther != null) hit(sp, hitOther, dmg * 0.5, t, ModDamageTypes.SLAM);
+            });
+            victim.setDeltaMovement(Vec3.ZERO);
+            victim.hurtMarked = true;
+            StunState.apply(victim, ServerConfig.grabLandingStunTicks());
+        }
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /** Ejecuta el daño con el puente hacia CombatZenkaiHooks activado. */
@@ -649,6 +1301,9 @@ public final class PhysicalCombatServer {
             case SPIN_SLASH -> new Vol(0.8f, 1.0f);
             case SKY_CLEAVE -> new Vol(1.0f, 0.7f);
             case LIGHT_BLADE -> new Vol(0.9f, 1.3f);
+            case DIVE       -> new Vol(1.0f, 0.6f);
+            case GRAB       -> new Vol(0.9f, 0.9f);
+            case EVADE      -> new Vol(0.6f, 1.5f);
         };
         boolean blocked = target instanceof ServerPlayer defSp
                 ? KiCombatServer.isBlocking(defSp)
@@ -661,8 +1316,14 @@ public final class PhysicalCombatServer {
     /** Funnel de daño físico: aquí (y SOLO aquí) se pega y se dibuja el impacto.
      *  Las partículas salen aunque el daño esté desactivado por gamerule. */
     private static void hit(ServerPlayer sp, LivingEntity e, double dmg, PhysicalTechnique t) {
+        hit(sp, e, dmg, t, damageTypeOf(t));
+    }
+
+    /** Igual, con otro DamageType (el impacto de un lanzado es SLAM aunque la técnica sea GRAB). */
+    private static void hit(ServerPlayer sp, LivingEntity e, double dmg, PhysicalTechnique t,
+                            ResourceKey<DamageType> type) {
         if (damageEnabled(sp)) {
-            e.hurt(sp.damageSources().source(damageTypeOf(t), sp), (float) dmg);
+            e.hurt(sp.damageSources().source(type, sp), (float) dmg);
         }
         impactFx(sp, e, t);
     }
@@ -681,6 +1342,9 @@ public final class PhysicalCombatServer {
             case SPIN_SLASH -> ModDamageTypes.SPIN_SLASH;
             case SKY_CLEAVE -> ModDamageTypes.SKY_CLEAVE;
             case LIGHT_BLADE -> ModDamageTypes.LIGHT_BLADE;
+            case DIVE -> ModDamageTypes.DIVE;
+            case GRAB -> ModDamageTypes.GRAB;
+            case EVADE -> ModDamageTypes.DASH_PUNCH;   // no daña: el tipo no se usa nunca
         };
     }
 
@@ -726,6 +1390,15 @@ public final class PhysicalCombatServer {
      *  al sync. */
     public static void clear(UUID id) {
         COOLDOWNS.remove(id);
-        ACTIVE.remove(id);
+        REGRAB_BLOCK.remove(id);
+        DEBUG_HOLDS.values().removeIf(h -> id.equals(h.heldUuid));
+        Active gone = ACTIVE.remove(id);
+        if (gone != null) {
+            var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+            dropHold(server, gone, true);
+        }
+        cancelCharge(id);
+        // Un lanzado cuyo dueño se va deja de vigilarse (no hay quién cobre el impacto).
+        THROWN.values().removeIf(th -> th.owner.equals(id));
     }
 }

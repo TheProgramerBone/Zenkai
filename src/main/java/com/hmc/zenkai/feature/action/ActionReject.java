@@ -21,7 +21,8 @@ public enum ActionReject {
     WRONG_SLOT,      // release de un slot distinto al que cargaba
     UNDERCHARGED,    // por debajo de MIN_CHARGE
     IN_CLASH,        // atrapado en un choque de haces
-    STUNNED;         // aturdido (StunState)
+    STUNNED,         // aturdido (StunState)
+    NO_TARGET;       // picado sin altura/vuelo o agarre sin objetivo válido (se añade al final: viaja por ordinal)
 
     public boolean ok() { return this == OK; }
 }

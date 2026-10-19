@@ -10,11 +10,15 @@ import net.minecraft.resources.ResourceLocation;
 
 /**
  * Íconos de técnicas para GUI/HUD (overlay de combate, menú, barra de asignación).
- * Un PNG por tipo: textures/gui/technique_ki/<id>.png (20x40, id = KiTechniqueType en minúsculas):
- *  - Fila 0 (y=0): capa BASE en BLANCO/grises -> se TIÑE con el color de la técnica.
- *  - Fila 1 (y=20): capa de DETALLE blanca, SIN teñir.
+ * Dos PNG de 20x20 por tipo (id = KiTechniqueType en minúsculas), en textures/gui/technique_ki/:
+ *  - <id>.png: capa BASE en grises -> se TIÑE con el color de la técnica (el gris es luminosidad).
+ *  - <id>_detail.png: capa de DETALLE, SIN teñir y encima de la base; puede llevar CUALQUIER
+ *    color (la piel de unas manos, el negro de Goku), no solo blanco. Es OPCIONAL: si no existe,
+ *    el icono es solo la base.
+ * Antes eran un único PNG de 20x40 con las dos capas apiladas; se separaron para poder editar
+ * cada capa por su cuenta sin acertar el desfase de fila.
  * Los PNG salen de tools/atlas_src/technique_icons.png con tools/split_technique_icons.py; ya NO
- * hay atlas en runtime ni ordinal() que mantener alineado: un tipo nuevo = un PNG nuevo.
+ * hay atlas en runtime ni ordinal() que mantener alineado: un tipo nuevo = un par de PNG nuevo.
  * Overload con tamaño: los íconos son 20x20 y las celdas de la barra de asignación también, así
  * que a tamaño natural ocupaban la celda ENTERA y se comían el marco y el número de la posición.
  * Se hereda el estado de blend explícito que ya tenía PhysicalIcons: setColor es GLOBAL y
@@ -24,11 +28,11 @@ public final class TechniqueIcons {
     private TechniqueIcons() {}
 
     private static final int CELL = 20;
-    private static final int TEX_W = 20;
-    private static final int TEX_H = 40; // 2 filas: base teñible + detalle blanco
 
     private static final ResourceLocation[] LOCATIONS = new ResourceLocation[KiTechniqueType.values().length];
+    private static final ResourceLocation[] DETAIL_LOCATIONS = new ResourceLocation[LOCATIONS.length];
     private static final boolean[] exists = new boolean[LOCATIONS.length];
+    private static final boolean[] detailExists = new boolean[LOCATIONS.length];
     private static long nextCheckMs = 0L;
 
     private static ResourceLocation locationOf(KiTechniqueType type) {
@@ -40,6 +44,15 @@ public final class TechniqueIcons {
         return LOCATIONS[i];
     }
 
+    private static ResourceLocation detailLocationOf(KiTechniqueType type) {
+        int i = type.ordinal();
+        if (DETAIL_LOCATIONS[i] == null) {
+            DETAIL_LOCATIONS[i] = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
+                    "textures/gui/technique_ki/" + type.id() + "_detail.png");
+        }
+        return DETAIL_LOCATIONS[i];
+    }
+
     /** Existencia cacheada y refrescada cada 2 s (resourceExists toca el ResourceManager). */
     private static boolean existsFor(KiTechniqueType type) {
         long now = System.currentTimeMillis();
@@ -47,6 +60,7 @@ public final class TechniqueIcons {
             nextCheckMs = now + 2000;
             for (KiTechniqueType t : KiTechniqueType.values()) {
                 exists[t.ordinal()] = RaceTextureUtil.resourceExists(locationOf(t));
+                detailExists[t.ordinal()] = RaceTextureUtil.resourceExists(detailLocationOf(t));
             }
         }
         return exists[type.ordinal()];
@@ -95,14 +109,14 @@ public final class TechniqueIcons {
             g.fill(x + size - w, y + w, x + size, y + size - w, border);
         }
 
-        // 1. CAPA BASE: Se tiñe con el color RGB de la técnica (Fila 0, Y = 0)
+        // 1. CAPA BASE: Se tiñe con el color RGB de la técnica (<id>.png)
         int rgb = rgbOf(t);
         g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
-        blit(g, x, y, size, t.type(), 0);
+        blit(g, x, y, size, locationOf(t.type()));
 
-        // 2. CAPA SUPERIOR: Detalle/Brillo blanco puro SIN teñir (Fila 1, Y = CELL)
+        // 2. CAPA SUPERIOR: detalle SIN teñir, con sus colores propios (<id>_detail.png, opcional)
         g.setColor(1f, 1f, 1f, 1f); // Reset del tinte a blanco
-        blit(g, x, y, size, t.type(), CELL);
+        if (detailExists[t.type().ordinal()]) blit(g, x, y, size, detailLocationOf(t.type()));
 
         RenderSystem.disableBlend();
     }
@@ -145,16 +159,16 @@ public final class TechniqueIcons {
 
         RenderSystem.enableBlend();
         g.setColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 1f);
-        blit(g, x, y, size, type, 0);
+        blit(g, x, y, size, locationOf(type));
 
         g.setColor(1f, 1f, 1f, 1f);
-        blit(g, x, y, size, type, CELL);
+        if (detailExists[type.ordinal()]) blit(g, x, y, size, detailLocationOf(type));
 
         RenderSystem.disableBlend();
     }
 
-    /** blit de una fila (v = 0 base, CELL detalle) del PNG del tipo. */
-    private static void blit(GuiGraphics g, int x, int y, int size, KiTechniqueType type, int v) {
-        g.blit(locationOf(type), x, y, size, size, 0f, (float) v, CELL, CELL, TEX_W, TEX_H);
+    /** blit de un PNG de capa (20x20) escalado a {@code size}. */
+    private static void blit(GuiGraphics g, int x, int y, int size, ResourceLocation tex) {
+        g.blit(tex, x, y, size, size, 0f, 0f, CELL, CELL, CELL, CELL);
     }
 }

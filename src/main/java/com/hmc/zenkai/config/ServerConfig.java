@@ -354,6 +354,130 @@ public class ServerConfig {
             BUILDER.comment("Stun: ticks of immunity right after a stun ends (nothing can stun the target again meanwhile)")
                     .defineInRange("stun.immunity_ticks", 40, 0, 600);
 
+    private static final ModConfigSpec.IntValue COMBO_WINDOW_RAW =
+            BUILDER.comment("Combo: ticks allowed between two consecutive hits for the chain to continue")
+                    .defineInRange("combo.window_ticks", 30, 5, 200);
+
+    private static final ModConfigSpec.DoubleValue COMBO_DMG_RAW =
+            BUILDER.comment("Combo: extra damage per consecutive hit (0.05 = +5% each, starting from the 2nd hit). 0 = combos give no bonus")
+                    .defineInRange("combo.damage_mult_per_hit", 0.05D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.IntValue COMBO_MAX_RAW =
+            BUILDER.comment("Combo: number of hits after which the bonus stops growing")
+                    .defineInRange("combo.max_hits", 10, 1, 100);
+
+    private static final ModConfigSpec.IntValue HEAVY_TICKS_RAW =
+            BUILDER.comment("Heavy blow charge: ticks holding the key per charge level (a quick tap = no charge)")
+                    .defineInRange("heavy.charge_ticks_per_level", 15, 1, 200);
+
+    private static final ModConfigSpec.IntValue HEAVY_LEVELS_RAW =
+            BUILDER.comment("Heavy blow charge: maximum charge level. 0 = charging disabled")
+                    .defineInRange("heavy.max_level", 3, 0, 10);
+
+    private static final ModConfigSpec.DoubleValue HEAVY_DMG_RAW =
+            BUILDER.comment("Heavy blow charge: extra damage per charge level (0.35 = +35% each)")
+                    .defineInRange("heavy.damage_mult_per_level", 0.35D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue HEAVY_KNOCK_RAW =
+            BUILDER.comment("Heavy blow charge: extra knockback per charge level")
+                    .defineInRange("heavy.knockback_per_level", 0.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue HEAVY_STAMINA_RAW =
+            BUILDER.comment("Heavy blow charge: extra stamina per charge level, as a fraction of the technique's base stamina cost")
+                    .defineInRange("heavy.stamina_fraction_per_level", 0.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue DIVE_MIN_HEIGHT_RAW =
+            BUILDER.comment("Dive: minimum height above the ground (blocks) required to start it. Only usable while flying")
+                    .defineInRange("dive.min_height", 8.0D, 1.0D, 256.0D);
+
+    private static final ModConfigSpec.DoubleValue DIVE_SPEED_RAW =
+            BUILDER.comment("Dive: speed, in blocks per tick, held during the dive")
+                    .defineInRange("dive.speed", 2.0D, 0.5D, 6.0D);
+
+    private static final ModConfigSpec.IntValue DIVE_MAX_TICKS_RAW =
+            BUILDER.comment("Dive: hard cap of ticks a dive can last (safety so it always ends)")
+                    .defineInRange("dive.max_ticks", 80, 5, 400);
+
+    private static final ModConfigSpec.DoubleValue DIVE_RADIUS_RAW =
+            BUILDER.comment("Dive: impact radius per block/tick of speed reached")
+                    .defineInRange("dive.radius_per_speed", 1.5D, 0.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue DIVE_MAX_RADIUS_RAW =
+            BUILDER.comment("Dive: maximum impact radius, in blocks")
+                    .defineInRange("dive.max_radius", 6.0D, 1.0D, 32.0D);
+
+    private static final ModConfigSpec.DoubleValue DIVE_KNOCK_RAW =
+            BUILDER.comment("Dive: radial knockback of the impact")
+                    .defineInRange("dive.knockback", 1.4D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.IntValue EVADE_TICKS_RAW =
+            BUILDER.comment("Evade (Super Explosive Wave): total ticks the user stays planted, from the start of the charge to the end of the cooldown pose. The user cannot be hurt during them")
+                    .defineInRange("evade.duration_ticks", 34, 6, 200);
+
+    private static final ModConfigSpec.IntValue EVADE_CHARGE_TICKS_RAW =
+            BUILDER.comment("Evade: ticks of the ki-compression charge before the wave goes off (the grab is released at that moment)")
+                    .defineInRange("evade.charge_ticks", 12, 1, 100);
+
+    private static final ModConfigSpec.DoubleValue GRAB_RANGE_RAW =
+            BUILDER.comment("Grab: reach in blocks. It works on any non-boss target in front of the user")
+                    .defineInRange("grab.range", 3.5D, 1.0D, 16.0D);
+
+    private static final ModConfigSpec.IntValue GRAB_HOLD_RAW =
+            BUILDER.comment("Grab: optional cap, in ticks, on how long a target is held before being thrown automatically. 0 = no cap: the hold lasts until the target breaks free (skill check, Evade, Instant Transmission) or the grabber throws them")
+                    .defineInRange("grab.max_hold_ticks", 0, 0, 72000);
+
+    private static final ModConfigSpec.DoubleValue GRAB_THROW_RAW =
+            BUILDER.comment("Grab: speed (blocks per tick) the target is thrown at")
+                    .defineInRange("grab.throw_speed", 1.8D, 0.2D, 6.0D);
+
+    private static final ModConfigSpec.IntValue GRAB_STUN_RAW =
+            BUILDER.comment("Grab: ticks the target stays stunned after the throw lands")
+                    .defineInRange("grab.landing_stun_ticks", 30, 0, 200);
+
+    private static final ModConfigSpec.IntValue GRAB_MOB_HOLD_RAW =
+            BUILDER.comment("Grab: ticks a MOB stays held before it breaks free on its own (mobs do not play the skill check). 300 = 15 s")
+                    .defineInRange("grab.mob_max_hold_ticks", 300, 20, 72000);
+
+    private static final ModConfigSpec.IntValue GRAB_CHECKS_RAW =
+            BUILDER.comment("Grab: skill checks the held PLAYER must hit to break free (mobs just wait out the timer)")
+                    .defineInRange("grab.checks_to_escape", 2, 1, 10);
+
+    private static final ModConfigSpec.DoubleValue GRAB_ZONE_RAW =
+            BUILDER.comment("Grab: size of the success zone of a skill check, as a fraction of the bar (0.2 = 20%)")
+                    .defineInRange("grab.zone_size", 0.2D, 0.05D, 0.6D);
+
+    private static final ModConfigSpec.IntValue GRAB_NEEDLE_RAW =
+            BUILDER.comment("Grab: ticks the needle takes to cross the bar once (lower = harder)")
+                    .defineInRange("grab.needle_ticks", 18, 4, 100);
+
+    private static final ModConfigSpec.IntValue GRAB_FAIL_RAW =
+            BUILDER.comment("Grab: extra ticks of pause before the next skill check every time the held player misses one")
+                    .defineInRange("grab.fail_penalty_ticks", 20, 0, 200);
+
+    private static final ModConfigSpec.IntValue GRAB_GAP_RAW =
+            BUILDER.comment("Grab: ticks of pause between one skill check and the next")
+                    .defineInRange("grab.check_gap_ticks", 12, 0, 100);
+
+    private static final ModConfigSpec.DoubleValue EVADE_WAVE_RADIUS_RAW =
+            BUILDER.comment("Evade: radius (blocks) of the shockwave that pushes everything away from the user. 0 = no wave")
+                    .defineInRange("evade.wave_radius", 6.0D, 0.0D, 24.0D);
+
+    private static final ModConfigSpec.DoubleValue EVADE_WAVE_KNOCK_RAW =
+            BUILDER.comment("Evade: horizontal knockback of the shockwave (it deals no damage)")
+                    .defineInRange("evade.wave_knockback", 1.8D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.IntValue EVADE_WAVE_STUN_RAW =
+            BUILDER.comment("Evade: ticks the shockwave stuns whoever it hits (stun rules apply: bosses, immunity and diminishing returns). 0 = no stun")
+                    .defineInRange("evade.wave_stun_ticks", 0, 0, 100);
+
+    private static final ModConfigSpec.IntValue COMBO_FINISHER_EVERY_RAW =
+            BUILDER.comment("Combo: every Nth consecutive bare-hand hit is a finisher that knocks the target away. 0 = no finisher")
+                    .defineInRange("combo.finisher_every", 4, 0, 20);
+
+    private static final ModConfigSpec.DoubleValue COMBO_FINISHER_KNOCK_RAW =
+            BUILDER.comment("Combo: knockback of the finisher hit")
+                    .defineInRange("combo.finisher_knockback", 1.4D, 0.0D, 10.0D);
+
     private static final ModConfigSpec.BooleanValue KIAI_OMNI_RAW =
             BUILDER.comment("Kiai: true = it blasts in a full circle around the user (crowd control, pushes everyone away from you);",
                             "false = only the frontal cone, pushing along the look direction")
@@ -833,6 +957,10 @@ public class ServerConfig {
             BUILDER.comment("Attack speed while in combat mode. Vanilla base is 4.0 (5-tick recharge); anything BELOW 4.0 enables the vanilla swing cooldown and the crosshair indicator. 1.6 = sword-like, 12.5 ticks.")
                     .defineInRange("combat.attack_speed", 1.6D, 0.1D, 4.0D);
 
+    private static final ModConfigSpec.DoubleValue BARE_ATTACK_SPEED_RAW =
+            BUILDER.comment("Attack speed while in combat mode with NO weapon in hand (bare hands). Higher than combat.attack_speed so PvP does not feel slow: 3.2 = ~6 ticks between full hits.")
+                    .defineInRange("combat.bare_hand_attack_speed", 3.2D, 0.1D, 4.0D);
+
     private static final ModConfigSpec.DoubleValue EXPLOSION_SACRIFICE_CONVERSION_RAW =
             BUILDER.comment("Damage per point of health sacrificed by an Explosion technique")
                     .defineInRange("combat.explosion_sacrifice",0.5,0,1);
@@ -1232,6 +1360,38 @@ public class ServerConfig {
     private static volatile double STUN_DR = 0.5D;
     private static volatile int STUN_DR_WINDOW = 100;
     private static volatile int STUN_IMMUNITY = 40;
+    private static volatile int COMBO_WINDOW = 30;
+    private static volatile double COMBO_DMG = 0.05D;
+    private static volatile int COMBO_MAX = 10;
+    private static volatile int HEAVY_TICKS = 15;
+    private static volatile int HEAVY_LEVELS = 3;
+    private static volatile double HEAVY_DMG = 0.35D;
+    private static volatile double HEAVY_KNOCK = 0.5D;
+    private static volatile double HEAVY_STAMINA = 0.5D;
+    private static volatile double DIVE_MIN_HEIGHT = 8.0D;
+    private static volatile double DIVE_SPEED = 2.0D;
+    private static volatile int DIVE_MAX_TICKS = 80;
+    private static volatile double DIVE_RADIUS = 1.5D;
+    private static volatile double DIVE_MAX_RADIUS = 6.0D;
+    private static volatile double DIVE_KNOCK = 1.4D;
+    private static volatile int EVADE_TICKS = 34;
+    private static volatile int EVADE_CHARGE_TICKS = 12;
+    private static volatile double GRAB_RANGE = 3.5D;
+    private static volatile int GRAB_HOLD = 0;
+    private static volatile int GRAB_MOB_HOLD = 300;
+    private static volatile int GRAB_CHECKS = 2;
+    private static volatile double GRAB_ZONE = 0.2D;
+    private static volatile int GRAB_NEEDLE = 18;
+    private static volatile int GRAB_FAIL = 20;
+    private static volatile int GRAB_GAP = 12;
+    private static volatile double EVADE_WAVE_RADIUS = 6.0D;
+    private static volatile double EVADE_WAVE_KNOCK = 1.8D;
+    private static volatile int EVADE_WAVE_STUN = 0;
+    private static volatile int COMBO_FINISHER_EVERY = 4;
+    private static volatile double COMBO_FINISHER_KNOCK = 1.4D;
+    private static volatile double BARE_ATTACK_SPEED = 3.2D;
+    private static volatile double GRAB_THROW = 1.8D;
+    private static volatile int GRAB_STUN = 30;
     private static volatile boolean KIAI_OMNI = true;
     private static volatile double KIAI_EXTRA_STAMINA = 0.12D;
     private static volatile int KIAI_EXTRA_CAP = 6;
@@ -1437,6 +1597,38 @@ public class ServerConfig {
         STUN_DR           = STUN_DR_RAW.get();
         STUN_DR_WINDOW    = STUN_DR_WINDOW_RAW.get();
         STUN_IMMUNITY     = STUN_IMMUNITY_RAW.get();
+        COMBO_WINDOW      = COMBO_WINDOW_RAW.get();
+        COMBO_DMG         = COMBO_DMG_RAW.get();
+        COMBO_MAX         = COMBO_MAX_RAW.get();
+        HEAVY_TICKS       = HEAVY_TICKS_RAW.get();
+        HEAVY_LEVELS      = HEAVY_LEVELS_RAW.get();
+        HEAVY_DMG         = HEAVY_DMG_RAW.get();
+        HEAVY_KNOCK       = HEAVY_KNOCK_RAW.get();
+        HEAVY_STAMINA     = HEAVY_STAMINA_RAW.get();
+        DIVE_MIN_HEIGHT   = DIVE_MIN_HEIGHT_RAW.get();
+        DIVE_SPEED        = DIVE_SPEED_RAW.get();
+        DIVE_MAX_TICKS    = DIVE_MAX_TICKS_RAW.get();
+        DIVE_RADIUS       = DIVE_RADIUS_RAW.get();
+        DIVE_MAX_RADIUS   = DIVE_MAX_RADIUS_RAW.get();
+        DIVE_KNOCK        = DIVE_KNOCK_RAW.get();
+        EVADE_TICKS       = EVADE_TICKS_RAW.get();
+        EVADE_CHARGE_TICKS = EVADE_CHARGE_TICKS_RAW.get();
+        GRAB_RANGE        = GRAB_RANGE_RAW.get();
+        GRAB_HOLD         = GRAB_HOLD_RAW.get();
+        GRAB_THROW        = GRAB_THROW_RAW.get();
+        GRAB_STUN         = GRAB_STUN_RAW.get();
+        GRAB_MOB_HOLD     = GRAB_MOB_HOLD_RAW.get();
+        GRAB_CHECKS       = GRAB_CHECKS_RAW.get();
+        GRAB_ZONE         = GRAB_ZONE_RAW.get();
+        GRAB_NEEDLE       = GRAB_NEEDLE_RAW.get();
+        GRAB_FAIL         = GRAB_FAIL_RAW.get();
+        GRAB_GAP          = GRAB_GAP_RAW.get();
+        EVADE_WAVE_RADIUS = EVADE_WAVE_RADIUS_RAW.get();
+        EVADE_WAVE_KNOCK  = EVADE_WAVE_KNOCK_RAW.get();
+        EVADE_WAVE_STUN   = EVADE_WAVE_STUN_RAW.get();
+        COMBO_FINISHER_EVERY = COMBO_FINISHER_EVERY_RAW.get();
+        COMBO_FINISHER_KNOCK = COMBO_FINISHER_KNOCK_RAW.get();
+        BARE_ATTACK_SPEED = BARE_ATTACK_SPEED_RAW.get();
         KIAI_OMNI         = KIAI_OMNI_RAW.get();
         KIAI_EXTRA_STAMINA = KIAI_EXTRA_STAMINA_RAW.get();
         KIAI_EXTRA_CAP    = KIAI_EXTRA_CAP_RAW.get();
@@ -1741,6 +1933,38 @@ public class ServerConfig {
     public static double stunDiminishingReturns()   { return STUN_DR; }
     public static int stunDrWindowTicks()           { return STUN_DR_WINDOW; }
     public static int stunImmunityTicks()           { return STUN_IMMUNITY; }
+    public static int comboWindowTicks()            { return COMBO_WINDOW; }
+    public static double comboDamagePerHit()        { return COMBO_DMG; }
+    public static int comboMaxHits()                { return COMBO_MAX; }
+    public static int heavyChargeTicksPerLevel()    { return HEAVY_TICKS; }
+    public static int heavyMaxLevel()               { return HEAVY_LEVELS; }
+    public static double heavyDamagePerLevel()      { return HEAVY_DMG; }
+    public static double heavyKnockbackPerLevel()   { return HEAVY_KNOCK; }
+    public static double heavyStaminaPerLevel()     { return HEAVY_STAMINA; }
+    public static double diveMinHeight()            { return DIVE_MIN_HEIGHT; }
+    public static double diveSpeed()                { return DIVE_SPEED; }
+    public static int diveMaxTicks()                { return DIVE_MAX_TICKS; }
+    public static double diveRadiusPerSpeed()       { return DIVE_RADIUS; }
+    public static double diveMaxRadius()            { return DIVE_MAX_RADIUS; }
+    public static double diveKnockback()            { return DIVE_KNOCK; }
+    public static int evadeTicks()                  { return EVADE_TICKS; }
+    public static int evadeChargeTicks()            { return EVADE_CHARGE_TICKS; }
+    public static double grabRange()                { return GRAB_RANGE; }
+    public static int grabHoldTicks()               { return GRAB_HOLD; }
+    public static double grabThrowSpeed()           { return GRAB_THROW; }
+    public static int grabLandingStunTicks()        { return GRAB_STUN; }
+    public static int grabMobHoldTicks()            { return GRAB_MOB_HOLD; }
+    public static int grabChecksToEscape()          { return GRAB_CHECKS; }
+    public static double grabZoneSize()             { return GRAB_ZONE; }
+    public static int grabNeedleTicks()             { return GRAB_NEEDLE; }
+    public static int grabFailPenaltyTicks()        { return GRAB_FAIL; }
+    public static int grabCheckGapTicks()           { return GRAB_GAP; }
+    public static double evadeWaveRadius()          { return EVADE_WAVE_RADIUS; }
+    public static double evadeWaveKnockback()       { return EVADE_WAVE_KNOCK; }
+    public static int evadeWaveStunTicks()          { return EVADE_WAVE_STUN; }
+    public static int comboFinisherEvery()          { return COMBO_FINISHER_EVERY; }
+    public static double comboFinisherKnockback()   { return COMBO_FINISHER_KNOCK; }
+    public static double bareHandAttackSpeed()      { return BARE_ATTACK_SPEED; }
     public static boolean kiaiOmnidirectional()     { return KIAI_OMNI; }
     public static double kiaiExtraTargetStamina()   { return KIAI_EXTRA_STAMINA; }
     public static int kiaiExtraTargetCap()          { return KIAI_EXTRA_CAP; }

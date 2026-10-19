@@ -86,8 +86,10 @@ public final class CombatModeServerState {
         if (attr == null) return;
         attr.removeModifier(COMBAT_ATTACK_SPEED_ID);   // idempotente: re-aplicar es seguro
         if (!active) return;
-        double target = ServerConfig.combatAttackSpeed();
         double current = attr.getValue();   // sin el nuestro, CON el del arma
+        // Sin arma (valor base de vanilla, 4.0) rige el techo propio de mano vacía, más alto: el PvP a puños no puede
+        // sentirse lento. Con arma manda el techo de siempre.
+        double target = current >= 3.99 ? ServerConfig.bareHandAttackSpeed() : ServerConfig.combatAttackSpeed();
         double delta = target - current;
         if (delta >= 0.0) return;   // ya es igual de lento o más: nada que hacer
         attr.addTransientModifier(new AttributeModifier(

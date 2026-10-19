@@ -5,7 +5,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 
 /**
- * Crucero de vuelo: tercer paso del ciclo de Control (OFF → Vuelo rápido → Crucero → OFF, ver
+ * Crucero de vuelo: tercer paso del ciclo de Control (OFF → Vuelo rápido → Crucero → Vuelo rápido → OFF, ver
  * ClientZenkaiPalTick). Es el vuelo rápido con "adelante" pulsado de forma virtual: sigue la
  * mirada a la velocidad que da flyingSpeed (rampa y turbo del servidor incluidos) sin tener que
  * sostener W. No fija una velocidad medida: eso obligaba a ir ya rápido para poder activarlo.

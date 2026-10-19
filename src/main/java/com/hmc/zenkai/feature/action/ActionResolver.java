@@ -31,13 +31,26 @@ public final class ActionResolver {
     public static ActionResult firePhysical(ServerPlayer sp, PhysicalTechnique t) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
 
+        // Volver a activar Agarre mientras se sostiene a alguien = lanzarlo ya (sin coste ni enfriamiento extra).
+        if (t == PhysicalTechnique.GRAB && PhysicalCombatServer.isHolding(sp)) {
+            return PhysicalCombatServer.throwNow(sp) ? ActionResult.ok() : ActionResult.fail(ActionReject.BUSY);
+        }
+
         ActionContext ctx = ServerActionContext.of(sp);
+        // Agarrado = aturdido, pero la evasiva es la salida que se le deja (el agarrador sale despedido por la onda).
+        if (t == PhysicalTechnique.EVADE && ctx.stunned() && PhysicalCombatServer.isHeld(sp)) {
+            ctx = ctx.withStunned(false);
+        }
         int cost = PhysicalCombatServer.staminaCost(att, t);
 
         ActionReject verdict = ActionRules.canFirePhysical(
                 ctx, t.weaponRequirement(), t.enabled(), att.techniques().isUnlocked(t),
                 PhysicalCombatServer.isReady(sp, t), cost, att.getStamina());
         if (!verdict.ok()) return reject(sp, ActionType.PHYSICAL, verdict, t.ordinal());
+
+        // Condiciones propias de picado (volando y con altura) y agarre (objetivo agarrable a mano).
+        ActionReject special = PhysicalCombatServer.checkStart(sp, t);
+        if (!special.ok()) return reject(sp, ActionType.PHYSICAL, special, t.ordinal());
 
         ActionState cur = ActionStateServer.get(sp);
         if (!ActionRules.canInterrupt(cur.type(), cur.phase(), ActionType.PHYSICAL)) {

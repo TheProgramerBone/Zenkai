@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:seven_earth",
+  "criteria": {
+    "fused": {
+      "conditions": {
+        "kind": "dragon_balls_fused"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.dragon_h.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "zenkai:all_dragon_balls"
+    },
+    "title": {
+      "translate": "advancements.zenkai.dragon_h.title"
+    }
+  },
+  "requirements": [
+    [
+      "fused"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

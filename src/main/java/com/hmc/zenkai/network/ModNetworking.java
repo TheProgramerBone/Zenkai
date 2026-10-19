@@ -362,6 +362,26 @@ public class ModNetworking {
                 BlockingSyncPacket.STREAM_CODEC,
                 BlockingSyncPacket::handle);
 
+        registrar.playToServer(
+                com.hmc.zenkai.feature.combat.BasicStrikePacket.TYPE,
+                com.hmc.zenkai.feature.combat.BasicStrikePacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.BasicStrikePacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.combat.BasicStrikeAnimPacket.TYPE,
+                com.hmc.zenkai.feature.combat.BasicStrikeAnimPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.BasicStrikeAnimPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.combat.GrabStatePacket.TYPE,
+                com.hmc.zenkai.feature.combat.GrabStatePacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.GrabStatePacket::handle);
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.combat.GrabEscapePressPacket.TYPE,
+                com.hmc.zenkai.feature.combat.GrabEscapePressPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.combat.GrabEscapePressPacket::handle);
+
         registrar.playToClient(
                 com.hmc.zenkai.feature.combat.StunSyncPacket.TYPE,
                 com.hmc.zenkai.feature.combat.StunSyncPacket.STREAM_CODEC,
@@ -386,6 +406,11 @@ public class ModNetworking {
                 PhysicalFirePacket.TYPE,
                 PhysicalFirePacket.STREAM_CODEC,
                 PhysicalFirePacket::handle);
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.technique.PhysicalChargePacket.TYPE,
+                com.hmc.zenkai.feature.technique.PhysicalChargePacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.PhysicalChargePacket::handle);
 
         registrar.playToServer(
                 TurboPacket.TYPE,

@@ -68,6 +68,10 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> SPIN_SLASH = key("spin_slash");
     public static final ResourceKey<DamageType> SKY_CLEAVE = key("sky_cleave");
     public static final ResourceKey<DamageType> LIGHT_BLADE = key("light_blade");
+    public static final ResourceKey<DamageType> DIVE = key("dive");
+    public static final ResourceKey<DamageType> GRAB = key("grab");
+    /** Impacto del rival lanzado por un Agarre contra el suelo, una pared u otra entidad. */
+    public static final ResourceKey<DamageType> SLAM = key("slam");
     public static final ResourceKey<DamageType> PARRY = key("parry");
 
     // ── Combate cuerpo a cuerpo ─────────────────────────────────────────────

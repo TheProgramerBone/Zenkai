@@ -34,4 +34,11 @@ public record ActionContext(
         boolean stunned
 ) {
     public boolean chargingTechnique() { return chargingSlot >= 0; }
+
+    /** Copia con el aturdimiento sustituido. Lo usa la evasiva de un jugador AGARRADO: está aturdido por el agarre,
+     *  pero zafarse con una evasiva es la excepción que el diseño le deja. */
+    public ActionContext withStunned(boolean stunned) {
+        return new ActionContext(raceChosen, combatMode, blocking, downed, handsFree, kiHandsFree, swordHeld,
+                physBusy, chargingSlot, chargeElapsedTicks, clash, stunned);
+    }
 }

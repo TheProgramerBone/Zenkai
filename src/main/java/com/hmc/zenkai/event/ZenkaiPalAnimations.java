@@ -292,7 +292,33 @@ public final class ZenkaiPalAnimations {
                 .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
         // 2 ticks: el golpe tiene que salir seco. Fundir más se siente como lag aunque el
         // daño se haya resuelto en el tick 0.
-        ZenkaiTransitions.play(c, PHYS_ANIMS[t.ordinal()], ZenkaiTransitions.PHYS);
+        ResourceLocation clip = PHYS_ANIMS[t.ordinal()];
+        // El agarre se hace con la mano contraria a la principal (PhysicalCombatServer.grabHand): zurdo = clip espejado.
+        if (t == PhysicalTechnique.GRAB && player.getMainArm() == net.minecraft.world.entity.HumanoidArm.LEFT) {
+            clip = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.phys_grab_r");
+        }
+        ZenkaiTransitions.play(c, clip, ZenkaiTransitions.PHYS);
+    }
+
+    /** Golpe básico de mano vacía. variant: 0 puño de la mano principal, 1 puño de la otra, 2 puño (principal), 3 patada.
+     *  Solo presentación (client/combat/BasicStrikeAnim). Fundido de 1 tick: el golpe tiene que arrancar seco. */
+    public static void playBasicStrike(AbstractClientPlayer player, int variant) {
+        boolean leftHanded = player.getMainArm() == net.minecraft.world.entity.HumanoidArm.LEFT;
+        String name = switch (variant) {
+            case 3 -> "phys_kick";
+            case 1 -> leftHanded ? "phys_punch_r" : "phys_punch_l";
+            default -> leftHanded ? "phys_punch_l" : "phys_punch_r";
+        };
+        var c = (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
+        ZenkaiTransitions.play(c, ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai." + name), 1);
+    }
+
+    /** Corta la técnica física en curso (el picado mantiene su pose hasta el impacto y se apaga aquí). */
+    public static void stopPhysical(AbstractClientPlayer player) {
+        var c = (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
+        ZenkaiTransitions.stop(c, ZenkaiTransitions.PHYS);
     }
 
     // ── Dash y Paso rápido: un clip por dirección (0 adelante, 1 atrás, 2 izquierda, 3 derecha,

@@ -26,7 +26,13 @@ public enum PhysicalTechnique {
     SPIN_SLASH,
     SKY_CLEAVE,
     /** Ataque a distancia de espada: lanza una media luna de ki (SwordWaveEntity). */
-    LIGHT_BLADE;
+    LIGHT_BLADE,
+    /** Picado: solo volando y desde cierta altura; daño en área al impactar según la velocidad. */
+    DIVE,
+    /** Agarre: solo a un rival aturdido o con la guardia rota; lo sujeta y lo lanza. */
+    GRAB,
+    /** Evasiva: ráfaga de empuje sin daño, con invulnerabilidad breve. Hacia donde te mueves; quieto, hacia atrás. */
+    EVADE;
 
     private final String id;
 

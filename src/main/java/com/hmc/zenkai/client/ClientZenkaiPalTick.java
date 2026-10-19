@@ -59,6 +59,8 @@ public final class ClientZenkaiPalTick {
         int chargeKiStartTicks = 0;
         // Físicas: solo remotos. El jugador local anima por predicción, no por sync.
         long physSeenStart = -1L;
+        /** El clip del picado dura más que cualquier picado: se apaga al terminar la acción. */
+        boolean diving;
     }
 
     private static final Map<UUID, AnimState> STATES = new HashMap<>();
@@ -67,6 +69,8 @@ public final class ClientZenkaiPalTick {
     private static boolean lastFlyBoostSent = false;
     /** Último valor del bit de empuje enviado al servidor (rampa de vuelo, ver FlyThrustPacket). */
     private static boolean lastFlyThrustSent = false;
+    /** El último paso del ciclo de Control fue SALIR del crucero: el siguiente Control apaga el vuelo rápido. */
+    private static boolean cruiseReturn = false;
 
     /**
      * Modo rápido de vuelo: Control lo enciende (y luego pasa a crucero y a OFF, ver el ciclo en
@@ -158,20 +162,27 @@ public final class ClientZenkaiPalTick {
             // de clicks SIEMPRE (aunque no se esté volando) para no arrastrar pulsaciones
             // hechas en tierra hasta el próximo despegue.
             net.minecraft.client.player.LocalPlayer lp = (net.minecraft.client.player.LocalPlayer) p;
-            // Ciclo de Control: OFF -> Vuelo rápido -> Crucero -> OFF. El crucero es el vuelo
-            // rápido con adelante virtual (ver FlightCruise), así que fastFlightMode sigue
-            // true mientras dura.
+            // Ciclo de Control: OFF -> Vuelo rápido -> Crucero -> Vuelo rápido -> OFF. El crucero es el vuelo
+            // rápido con adelante virtual (ver FlightCruise), así que fastFlightMode sigue true mientras dura.
+            // Al salir del crucero con Control se vuelve al vuelo rápido (cruiseReturn) y un Control más apaga todo;
+            // si el crucero se corta solo (atrás, pared) el ciclo se reinicia en el vuelo rápido normal.
             while (mc.options.keySprint.consumeClick()) {
                 if (!flying) continue;
+                boolean cruisingNow = com.hmc.zenkai.client.fly.FlightCruise.isActive();
                 if (!fastFlightMode) {
                     fastFlightMode = true;
-                } else if (!com.hmc.zenkai.client.fly.FlightCruise.isActive()) {
-                    com.hmc.zenkai.client.fly.FlightCruise.start(lp);
-                } else {
+                    cruiseReturn = false;
+                } else if (cruisingNow) {
                     com.hmc.zenkai.client.fly.FlightCruise.stop(lp);
+                    cruiseReturn = true;
+                } else if (cruiseReturn) {
                     fastFlightMode = false;
+                    cruiseReturn = false;
+                } else {
+                    com.hmc.zenkai.client.fly.FlightCruise.start(lp);
                 }
             }
+            if (!fastFlightMode || !flying) cruiseReturn = false;
             if (!flying) fastFlightMode = false;
             if (!flying) com.hmc.zenkai.client.fly.FlightCruise.reset();
             boolean cruising = flying && com.hmc.zenkai.client.fly.FlightCruise.isActive();
@@ -266,6 +277,7 @@ public final class ClientZenkaiPalTick {
         // ── Técnicas de ki: local y remotos por igual, desde el estado sincronizado ──
         tickKiAnim(p, st);
         if (p != mc.player) tickPhysAnim(p, st);
+        tickDiveEnd(p, st, mc);
 
         // ── Animación de defensa (local: estado propio instantáneo; remotos: sync) ──
         boolean blockingNow = (p == mc.player)
@@ -605,6 +617,17 @@ public final class ClientZenkaiPalTick {
                 && --st.chargeKiStartTicks == 0) {
             ZenkaiPalAnimations.playChargeKiLoop(p);
         }
+    }
+
+    /** Mantiene el clip del picado y del agarre (poses sostenidas) mientras dure la acción y lo apaga al acabar
+     *  (local y remotos). */
+    private static void tickDiveEnd(AbstractClientPlayer p, AnimState st, Minecraft mc) {
+        var action = p == mc.player ? ActionStateClient.local() : ActionStateClient.of(p.getId());
+        boolean diveNow = action.physBusy()
+                && (action.payload() == com.hmc.zenkai.feature.technique.PhysicalTechnique.DIVE.ordinal()
+                || action.payload() == com.hmc.zenkai.feature.technique.PhysicalTechnique.GRAB.ordinal());
+        if (st.diving && !diveNow) ZenkaiPalAnimations.stopPhysical(p);
+        st.diving = diveNow;
     }
 
     /**

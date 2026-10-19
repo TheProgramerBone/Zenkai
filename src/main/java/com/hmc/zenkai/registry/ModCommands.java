@@ -472,6 +472,11 @@ public class ModCommands {
                                                 .suggests(KI_TYPE_IDS)
                                                 .executes(c -> debugDummyClash(c,
                                                         StringArgumentType.getString(c, "type")))))
+                                // ── /zenkai debug dummy grab ──────────────────────────
+                                // Un muñeco te AGARRA para probar el skill check de escape (clic/espacio en la
+                                // zona dorada, Evasiva o Instant Transmission). Sin límite de tiempo, como el real.
+                                .then(Commands.literal("grab")
+                                        .executes(ModCommands::debugDummyGrab))
                                 .then(Commands.literal("join")
                                         .then(Commands.literal("ally")
                                                 .executes(c -> debugDummyJoin(c, true)))
@@ -907,7 +912,7 @@ public class ModCommands {
                 name.toUpperCase(java.util.Locale.ROOT));
         if (t == null) {
             ctx.getSource().sendFailure(Component.literal("[Zenkai] Unknown: " + name
-                    + " (dash_punch|heavy_blow|barrage|kiai|rising_slash|cross_slash|piercing_thrust|spin_slash|sky_cleave|light_blade)"));
+                    + " (dash_punch|heavy_blow|barrage|kiai|rising_slash|cross_slash|piercing_thrust|spin_slash|sky_cleave|light_blade|dive|grab|evade)"));
             return 0;
         }
         PlayerStatsAttachment.get(sp).techniques().unlock(t);
@@ -1283,6 +1288,28 @@ public class ModCommands {
         }
         ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Muñeco unido al choque ("
                 + (ally ? "tu equipo" : "equipo rival") + ")"), false);
+        return 1;
+    }
+
+    /** «/zenkai debug dummy grab»: un muñeco nuevo, quieto delante de quien ejecuta, lo agarra al instante. */
+    private static int debugDummyGrab(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer sp = ctx.getSource().getPlayerOrException();
+        if (!(sp.level() instanceof ServerLevel sl)) return 0;
+        var shadow = ModEntities.SHADOW_CLONE.get().create(sl);
+        if (shadow == null) return 0;
+        Vec3 look = sp.getLookAngle();
+        Vec3 flat = new Vec3(look.x, 0.0, look.z);
+        flat = flat.lengthSqr() < 1.0e-6 ? new Vec3(0, 0, 1) : flat.normalize();
+        Vec3 pos = sp.position().add(flat.scale(2.6)).add(0, 0.2, 0);
+        shadow.moveTo(pos.x, pos.y, pos.z, sp.getYRot() + 180f, 0f);
+        shadow.setOwner(sp);
+        shadow.setFlightAllowed(false);
+        shadow.setDebugScript(com.hmc.zenkai.content.entity.misc.ShadowDebugMode.IDLE, null,
+                DUMMY_DEFAULT_SIZE, DUMMY_DEFAULT_INTERVAL);
+        sl.addFreshEntity(shadow);
+        com.hmc.zenkai.feature.technique.PhysicalCombatServer.startDebugGrab(shadow, sp);
+        ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] Un muñeco te ha agarrado: acierta la barra "
+                + "(ESPACIO), usa Evasiva o Instant Transmission. \"/zenkai debug dummy clear\" lo borra."), false);
         return 1;
     }
 

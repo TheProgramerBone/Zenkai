@@ -47,6 +47,8 @@ public class ModTags {
     public static class EntityTypes {
         /** Mobs que merecen escala de jefe. El resto se reparte por MobCategory. */
         public static final TagKey<EntityType<?>> BOSSES = createTag("bosses");
+        /** No se puede agarrar con la técnica Agarre (jefes y similares). */
+        public static final TagKey<EntityType<?>> UNGRABBABLE = createTag("ungrabbable");
 
         private static TagKey<EntityType<?>> createTag(String name) {
             return TagKey.create(Registries.ENTITY_TYPE,

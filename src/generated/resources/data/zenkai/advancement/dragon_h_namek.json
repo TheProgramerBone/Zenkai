@@ -1,0 +1,29 @@
+{
+  "parent": "zenkai:seven_namek",
+  "criteria": {
+    "fused": {
+      "conditions": {
+        "kind": "namek_dragon_balls_fused"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.dragon_h_namek.description"
+    },
+    "icon": {
+      "count": 1,
+      "id": "zenkai:namek_all_dragon_balls"
+    },
+    "title": {
+      "translate": "advancements.zenkai.dragon_h_namek.title"
+    }
+  },
+  "requirements": [
+    [
+      "fused"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

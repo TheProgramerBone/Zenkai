@@ -1,0 +1,65 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "zenkai.phys_grab": {
+            "loop": "hold_on_last_frame",
+            "animation_length": 0.12,
+            "bones": {
+                "body": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.12": {
+                            "vector": [
+                                0,
+                                38,
+                                0
+                            ]
+                        }
+                    }
+                },
+                "head": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.12": {
+                            "vector": [
+                                0,
+                                -38,
+                                0
+                            ]
+                        }
+                    }
+                },
+                "left_arm": {
+                    "rotation": {
+                        "0.0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
+                            ]
+                        },
+                        "0.12": {
+                            "vector": [
+                                -93,
+                                -30,
+                                0
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

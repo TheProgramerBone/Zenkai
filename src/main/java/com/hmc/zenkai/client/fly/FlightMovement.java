@@ -59,6 +59,14 @@ public final class FlightMovement {
             FlightCruise.reset();
             return;
         }
+        // Picado en curso: la velocidad la fija el servidor cada tick (PhysicalCombatServer.tickDive);
+        // dirigir o frenar aquí la peleaba y lo dejaba a medias.
+        var action = com.hmc.zenkai.client.action.ActionStateClient.local();
+        if (action.physBusy()
+                && (action.payload() == com.hmc.zenkai.feature.technique.PhysicalTechnique.DIVE.ordinal()
+                || action.payload() == com.hmc.zenkai.feature.technique.PhysicalTechnique.EVADE.ordinal())) {
+            return;
+        }
 
         // Crucero: "adelante" pulsado de forma virtual (ver FlightCruise). Manda sobre el frenazo
         // y no necesita W; el movimiento es el mismo que con W sostenida, salvo que vanilla no

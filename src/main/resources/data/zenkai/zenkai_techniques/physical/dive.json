@@ -1,0 +1,9 @@
+{
+  "tp_cost": 400,
+  "mind_req": 10,
+  "damage_mult": 2.2,
+  "stamina_pct": 3.0,
+  "cooldown_ticks": 300,
+  "range": 0.0,
+  "anim_ticks": 20
+}

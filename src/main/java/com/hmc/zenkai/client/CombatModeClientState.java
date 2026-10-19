@@ -248,30 +248,17 @@ public final class CombatModeClientState {
             var techniques = att.techniques();
             PhysicalTechnique phys = techniques.physicalBinding(selected);
             if (phys != null) {
-                // Física: instantánea (con cooldown local optimista + anim).
-                // La carga ya se canceló arriba, al detectar que la casilla era física.
-                long now = mc.level.getGameTime();
-                int cost = PhysicalCombatServer.staminaCost(att, phys);
-
-                // MISMAS reglas que el servidor: lo único propio del cliente es de dónde
-                // salen los booleanos; la decisión la toma ActionRules. Antes esta rama
-                // reimplementaba las guardas a mano y se desincronizaba.
-                var ctx = com.hmc.zenkai.client.action.ActionStateClient.contextOf(
-                        mc.player, active, lastBlockingSent);
-
-                var verdict = com.hmc.zenkai.feature.action.ActionRules.canFirePhysical(
-                        ctx,
-                        phys.weaponRequirement(),
-                        phys.enabled(),
-                        att.techniques().isUnlocked(phys),
-                        PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now,
-                        cost,
-                        att.getStamina());
-
-                if (verdict.ok()) {
-                    PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
-                    PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks()); // optimista
-                    ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: fase 6)
+                if (phys == PhysicalTechnique.HEAVY_BLOW
+                        && com.hmc.zenkai.config.ServerConfig.heavyMaxLevel() > 0) {
+                    // HEAVY_BLOW se CARGA: el golpe sale al SOLTAR la tecla (un toque corto sale igual de
+                    // rápido, sin cargar). El servidor mide el tiempo; aquí solo se avisa del inicio.
+                    if (heavyChargeKey < 0) {
+                        heavyChargeKey = selected;
+                        PacketDistributor.sendToServer(
+                                new com.hmc.zenkai.feature.technique.PhysicalChargePacket(true));
+                    }
+                } else {
+                    firePhysicalNow(mc, phys);
                 }
             } else if (chargingSlot < 0 && kiHandsFree) {
                 int bound = techniques.binding(selected);
@@ -283,6 +270,20 @@ public final class CombatModeClientState {
                     chargeTicks = 0;
                     PacketDistributor.sendToServer(new KiChargeStartPacket(bound, true));
                 }
+            }
+        }
+
+        // ── Carga de HEAVY_BLOW: soltar la tecla de la casilla = golpear (con el nivel que mida el servidor). ──
+        if (heavyChargeKey >= 0) {
+            boolean held = heavyChargeKey < KeyBindings.COMBAT_SLOTS.length
+                    && KeyBindings.COMBAT_SLOTS[heavyChargeKey].isDown();
+            if (!active || !inGame || mc.level == null) {
+                PacketDistributor.sendToServer(
+                        new com.hmc.zenkai.feature.technique.PhysicalChargePacket(false));
+                heavyChargeKey = -1;
+            } else if (!held) {
+                heavyChargeKey = -1;
+                firePhysicalNow(mc, PhysicalTechnique.HEAVY_BLOW);
             }
         }
 
@@ -353,6 +354,13 @@ public final class CombatModeClientState {
             }
         }
 
+        // Aturdido tampoco golpea. El AGARRADO se queda con sus clics: son el botón del skill check de escape
+        // (GrabClientState los consume y los manda al servidor).
+        if (com.hmc.zenkai.client.combat.StunClientState.localStunned()
+                && !com.hmc.zenkai.client.combat.GrabClientState.isHeld() && mc.screen == null) {
+            while (mc.options.keyAttack.consumeClick()) { /* descartado */ }
+            mc.options.keyAttack.setDown(false);
+        }
         // Bloquear = no atacar: consume los clicks de ataque para que ni haga el swing
         // (el server además cancela AttackEntityEvent — guard en ambos lados).
         if (blocking) {
@@ -363,6 +371,61 @@ public final class CombatModeClientState {
         if (chargingSlot >= 0 && mc.screen == null) {
             while (mc.options.keyAttack.consumeClick()) { /* descartado */ }
             mc.options.keyAttack.setDown(false);
+        }
+    }
+
+    /** Casilla de la que se mantiene la carga de HEAVY_BLOW (-1 = ninguna). */
+    private static int heavyChargeKey = -1;
+
+    /** Dispara una física: cooldown optimista, animación local y packet. Mismas guardas que el servidor
+     *  (ActionRules); si fallan, no se manda nada y se cancela la carga que hubiera armada en el servidor. */
+    private static void firePhysicalNow(Minecraft mc, PhysicalTechnique phys) {
+        var att = PlayerStatsAttachment.get(mc.player);
+        long now = mc.level.getGameTime();
+        // El picado exige vuelo y altura: sin esto la animación (predicha) se podía spamear en el suelo.
+        if (phys == PhysicalTechnique.DIVE && (!mc.player.getAbilities().flying
+                || PhysicalCombatServer.groundDistance(mc.player)
+                        < com.hmc.zenkai.config.ServerConfig.diveMinHeight())) {
+            mc.player.displayClientMessage(
+                    net.minecraft.network.chat.Component.translatable("hud.zenkai.dive_needs_flight"), true);
+            return;
+        }
+        int cost = PhysicalCombatServer.staminaCost(att, phys);
+
+        // MISMAS reglas que el servidor: lo único propio del cliente es de dónde
+        // salen los booleanos; la decisión la toma ActionRules. Antes esta rama
+        // reimplementaba las guardas a mano y se desincronizaba.
+        var ctx = com.hmc.zenkai.client.action.ActionStateClient.contextOf(
+                mc.player, active, lastBlockingSent);
+        // Agarrado: aturdido, salvo para la evasiva (misma excepción que ActionResolver.firePhysical).
+        if (phys == PhysicalTechnique.EVADE && com.hmc.zenkai.client.combat.GrabClientState.isHeld()) {
+            ctx = ctx.withStunned(false);
+        }
+
+        var verdict = com.hmc.zenkai.feature.action.ActionRules.canFirePhysical(
+                ctx,
+                phys.weaponRequirement(),
+                phys.enabled(),
+                att.techniques().isUnlocked(phys),
+                PHYS_READY_AT.getOrDefault(phys.ordinal(), 0L) <= now,
+                cost,
+                att.getStamina());
+
+        // Volver a activar Agarre mientras se sostiene a alguien = lanzarlo: ActionRules diría BUSY, pero el servidor
+        // (ActionResolver.firePhysical) lo trata aparte y no cobra nada.
+        var curAction = com.hmc.zenkai.client.action.ActionStateClient.local();
+        if (phys == PhysicalTechnique.GRAB && curAction.type() == com.hmc.zenkai.feature.action.ActionType.PHYSICAL
+                && curAction.payload() == PhysicalTechnique.GRAB.ordinal()) {
+            PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
+            return;
+        }
+
+        if (verdict.ok()) {
+            PacketDistributor.sendToServer(new PhysicalFirePacket(phys.ordinal()));
+            PHYS_READY_AT.put(phys.ordinal(), now + phys.cooldownTicks()); // optimista
+            ZenkaiPalAnimations.playPhysical(mc.player, phys); // anim local (sync remoto: fase 6)
+        } else if (phys == PhysicalTechnique.HEAVY_BLOW) {
+            PacketDistributor.sendToServer(new com.hmc.zenkai.feature.technique.PhysicalChargePacket(false));
         }
     }
 
@@ -469,7 +532,16 @@ public final class CombatModeClientState {
                                   com.hmc.zenkai.feature.action.ActionReject reason,
                                   int payload) {
         switch (type) {
-            case PHYSICAL -> { if (payload >= 0) PHYS_READY_AT.remove(payload); }
+            case PHYSICAL -> {
+                if (payload >= 0) PHYS_READY_AT.remove(payload);
+                // Picado y agarre sostienen su pose hasta que la acción acaba: si el servidor los rechaza (sin objetivo,
+                // sin altura) no habrá acción que la apague, así que se corta aquí la que se predijo.
+                var mc = Minecraft.getInstance();
+                if (mc.player != null && (payload == PhysicalTechnique.DIVE.ordinal()
+                        || payload == PhysicalTechnique.GRAB.ordinal())) {
+                    ZenkaiPalAnimations.stopPhysical(mc.player);
+                }
+            }
             case KI_TECHNIQUE -> {
                 if (payload >= 0) READY_AT.remove(payload);
                 cancelCharge();

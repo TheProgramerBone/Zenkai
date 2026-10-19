@@ -1,0 +1,218 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.namek_all_dragon_balls_placeholder",
+        "texture_width": 64,
+        "texture_height": 64,
+        "visible_bounds_width": 4,
+        "visible_bounds_height": 2.5,
+        "visible_bounds_offset": [
+          0,
+          0.75,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "Esferas",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "esfera_1",
+          "parent": "Esferas",
+          "pivot": [
+            -10.666666666666666,
+            4.0,
+            -10.666666666666666
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -14.667,
+                0,
+                -14.667
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "esfera_2",
+          "parent": "Esferas",
+          "pivot": [
+            10.666666666666666,
+            4.0,
+            -10.666666666666666
+          ],
+          "cubes": [
+            {
+              "origin": [
+                6.667,
+                0,
+                -14.667
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "esfera_3",
+          "parent": "Esferas",
+          "pivot": [
+            -10.666666666666666,
+            4.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -14.667,
+                0,
+                -4.0
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "esfera_4",
+          "parent": "Esferas",
+          "pivot": [
+            0.0,
+            4.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                0,
+                -4.0
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "esfera_5",
+          "parent": "Esferas",
+          "pivot": [
+            10.666666666666666,
+            4.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                6.667,
+                0,
+                -4.0
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "esfera_6",
+          "parent": "Esferas",
+          "pivot": [
+            -10.666666666666666,
+            4.0,
+            10.666666666666666
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -14.667,
+                0,
+                6.667
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "esfera_7",
+          "parent": "Esferas",
+          "pivot": [
+            10.666666666666666,
+            4.0,
+            10.666666666666666
+          ],
+          "cubes": [
+            {
+              "origin": [
+                6.667,
+                0,
+                6.667
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
