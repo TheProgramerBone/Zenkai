@@ -4,7 +4,6 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.registry.ModBlocks;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.ingredients.subtypes.IIngredientSubtypeInterpreter;
 import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import mezz.jei.api.registration.ISubtypeRegistration;
@@ -42,11 +41,16 @@ public class JeiCompat implements IModPlugin {
                         return props == null || props.isEmpty() ? null : props;
                     }
 
+                    /**
+                     * JEI aún obliga a implementarlo (deprecated desde 19.9.0), pero solo sirve para leer configs
+                     * ANTIGUAS que guardaban ids de subtipo como texto. Este plugin es nuevo y no tiene ninguna:
+                     * la documentación de JEI dice que se devuelve "" en ese caso. Se evita a propósito
+                     * IIngredientSubtypeInterpreter.NONE, que está marcada "forRemoval".
+                     */
+                    @SuppressWarnings("deprecation")
                     @Override
                     public String getLegacyStringSubtypeInfo(ItemStack stack, UidContext context) {
-                        var props = stack.get(DataComponents.BLOCK_STATE);
-                        return props == null || props.isEmpty() ? IIngredientSubtypeInterpreter.NONE
-                                : props.properties().toString();
+                        return "";
                     }
                 });
     }

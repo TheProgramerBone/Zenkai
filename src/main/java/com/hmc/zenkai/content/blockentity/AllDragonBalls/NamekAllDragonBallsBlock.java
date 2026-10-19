@@ -4,10 +4,15 @@ import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.wishes.WishBroadcast;
 import com.hmc.zenkai.registry.ModBlocks;
 import com.mojang.serialization.MapCodec;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -28,6 +33,13 @@ public class NamekAllDragonBallsBlock extends AllDragonBallsBlock {
     @Override
     protected @NotNull MapCodec<? extends BaseEntityBlock> codec() {
         return NAMEK_CODEC;
+    }
+
+    private static final VoxelShape SHAPE = Block.box(-13.0, 0.0, -13.0, 29.0, 12.0, 29.0);
+
+    @Override
+    protected @NotNull VoxelShape getShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos, @NotNull CollisionContext context) {
+        return SHAPE;
     }
 
     @Override

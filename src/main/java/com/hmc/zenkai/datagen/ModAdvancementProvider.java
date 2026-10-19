@@ -320,7 +320,7 @@ public class ModAdvancementProvider extends AdvancementProvider {
                             ModBlocks.DRAGON_BALL_7.get()));
 
             AdvancementHolder sevenNamek = child(saver, efh, radar, "seven_namek",
-                    ModBlocks.NAMEK_DRAGON_BALL_7.get(), AdvancementType.GOAL, false,
+                    ModItems.NAMEK_ALL_DRAGON_BALLS_ITEM.get(), AdvancementType.GOAL, false,
                     "seven", hasItems(
                             ModBlocks.NAMEK_DRAGON_BALL_1.get(), ModBlocks.NAMEK_DRAGON_BALL_2.get(),
                             ModBlocks.NAMEK_DRAGON_BALL_3.get(), ModBlocks.NAMEK_DRAGON_BALL_4.get(),

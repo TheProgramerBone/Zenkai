@@ -26,6 +26,11 @@ public class ModTags {
     public static class Items{
 
         public static final TagKey<Item> DRAGON_BALLS_ITEM = createTag("dragon_balls_item");
+        /** Objetos que el deseo "Quiero más de..." NUNCA duplica, diga lo que diga la config: las esferas
+         *  (#dragon_balls_item), los bloques de las siete fundidas y las piedras de esfera (sueltan esferas
+         *  al romperse, así que duplicarlas sería una forma de farmearlas). Es un tag, o sea data-driven:
+         *  un datapack puede ampliarlo. */
+        public static final TagKey<Item> WISH_BANNED = createTag("wish_banned");
         public static final TagKey<Item> KEEPS_HAIR = createTag("keeps_hair");
         public static final TagKey<Item> AJISA_LOGS = createTag("ajisa_logs");
         public static final TagKey<Item> WORLDGEN_DEBRIS = createTag("worldgen_debris");

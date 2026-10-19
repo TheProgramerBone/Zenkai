@@ -206,5 +206,15 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 ModBlocks.NAMEK_DRAGON_BALL_6.get().asItem(),
                 ModBlocks.NAMEK_DRAGON_BALL_7.get().asItem()
         );
+
+        // Deseo "Quiero más de...": las esferas, las siete fundidas y las piedras que las sueltan no se duplican.
+        tag(ModTags.Items.WISH_BANNED)
+                .addTag(ModTags.Items.DRAGON_BALLS_ITEM)
+                .add(
+                        ModItems.ALL_DRAGON_BALLS_ITEM.get(),
+                        ModItems.NAMEK_ALL_DRAGON_BALLS_ITEM.get(),
+                        ModBlocks.DRAGON_BALL_STONE.get().asItem(),
+                        ModBlocks.NAMEK_DRAGON_BALL_STONE.get().asItem()
+                );
     }
 }

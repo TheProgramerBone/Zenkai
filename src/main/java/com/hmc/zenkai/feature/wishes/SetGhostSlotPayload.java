@@ -41,7 +41,7 @@ public record SetGhostSlotPayload(ItemStack chosen) implements CustomPacketPaylo
 
                 // Validación server-side: no permitir banned items
                 ResourceLocation id = BuiltInRegistries.ITEM.getKey(chosen.getItem());
-                if (ServerConfig.isBanned(id)) {
+                if (ServerConfig.isBanned(chosen)) {
                     player.displayClientMessage(Component.translatable("messages.zenkai.item_banned"), false);
                     menu.clearChosenItem();
                     return;

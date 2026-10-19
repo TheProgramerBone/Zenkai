@@ -111,7 +111,8 @@ public class ServerConfig {
                         List.of("minecraft:ender_pearl=32"),
                         obj -> true);
         BANNED_ITEMS_RAW = BUILDER
-                .comment("List of items banned from wishes. Ex: minecraft:shulker_box")
+                .comment("List of items banned from wishes. Ex: minecraft:shulker_box",
+                         "Items with the tag zenkai:wish_banned (Dragon Balls, the fused seven, the ball stones) are ALWAYS banned too.")
                 .defineListAllowEmpty("banned_items",
                         List.of("minecraft:shulker_box"),
                         obj -> true);
@@ -1856,6 +1857,33 @@ public class ServerConfig {
         return BANNED_ITEMS.contains(id);
     }
 
+    /**
+     * Prohibido en el deseo de duplicación: o está en {@code banned_items} (config) o lleva el tag
+     * {@code zenkai:wish_banned} (esferas del dragón, siete fundidas, piedras de esfera). El tag NO se puede
+     * quitar desde la config: duplicar esferas rompería la búsqueda de las siete.
+     */
+    public static boolean isBanned(net.minecraft.world.item.Item item) {
+        return isBanned(BuiltInRegistries.ITEM.getKey(item))
+                || item.builtInRegistryHolder().is(com.hmc.zenkai.registry.ModTags.Items.WISH_BANNED);
+    }
+
+    /**
+     * Prohibido en el deseo de duplicación, mirando el STACK entero: lo de {@link #isBanned(net.minecraft.world.item.Item)}
+     * y, además, todo objeto con INVENTARIO PROPIO. Duplicar una mochila copia su contenido: es un exploit fijo, y hay
+     * demasiados mods de mochilas para listarlos por id. Casi todos exponen {@code Capabilities.ItemHandler.ITEM} en el
+     * stack, así que se detecta por eso (mochilas, cofres portátiles...) y no por mod. También se rechazan los de vanilla
+     * que guardan objetos en componentes (shulker, bundle) si llevan algo dentro. Se mira el stack y no solo el objeto
+     * porque la capability y los componentes viven en el stack.
+     */
+    public static boolean isBanned(ItemStack stack) {
+        if (isBanned(stack.getItem())) return true;
+        if (stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.ITEM) != null) return true;
+        var container = stack.get(net.minecraft.core.component.DataComponents.CONTAINER);
+        if (container != null && container.nonEmptyStream().findAny().isPresent()) return true;
+        var bundle = stack.get(net.minecraft.core.component.DataComponents.BUNDLE_CONTENTS);
+        return bundle != null && !bundle.isEmpty();
+    }
+
     public static Set<ResourceLocation> getBannedItems() {
         return BANNED_ITEMS;
     }
@@ -2158,7 +2186,7 @@ public class ServerConfig {
         if (chosen == null || chosen.isEmpty()) return ItemStack.EMPTY;
 
         ResourceLocation id = BuiltInRegistries.ITEM.getKey(chosen.getItem());
-        if (isBanned(id)) return ItemStack.EMPTY;
+        if (isBanned(chosen)) return ItemStack.EMPTY;
         if (!isAllowedByWhitelist(id)) return ItemStack.EMPTY;
 
         int override = STACK_OVERRIDES.getOrDefault(id, -1);

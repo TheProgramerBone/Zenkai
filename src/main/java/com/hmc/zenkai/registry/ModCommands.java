@@ -163,6 +163,7 @@ public class ModCommands {
                 // Resetea el progreso del jugador.
                 // /zenkai reset stats [objetivos] → devuelve los TP invertidos (respec)
                 // /zenkai reset full  [objetivos] → borra raza, estilo, stats, TP y apariencia
+                // /zenkai reset summon [objetivos] → quita el cooldown de invocar al dragón
                 .then(Commands.literal("reset")
                         .then(Commands.literal("stats")
                                 .executes(ctx -> resetStats(ctx, ctx.getSource().getPlayerOrException()))
@@ -175,7 +176,11 @@ public class ModCommands {
                         .then(Commands.literal("training_fatigue")
                                 .executes(ctx -> resetTrainingFatigue(ctx, ctx.getSource().getPlayerOrException()))
                                 .then(Commands.argument("player", EntityArgument.players())
-                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::resetTrainingFatigue)))))
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::resetTrainingFatigue))))
+                        .then(Commands.literal("summon")
+                                .executes(ctx -> resetSummon(ctx, ctx.getSource().getPlayerOrException()))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .executes(ctx -> forEach(ctx, targets(ctx), ModCommands::resetSummon)))))
 
                 .then(Commands.literal("revive")
                         .then(Commands.argument("player", EntityArgument.players())
@@ -757,6 +762,19 @@ public class ModCommands {
         }
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "[Zenkai] Training fatigue reset → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /**
+     * Devuelve el derecho a invocar al dragón: borra el cooldown POR JUGADOR de la invocación. Ese cooldown
+     * ({@code summon_cooldown_ticks}) corre desde el último DESEO concedido (WishFinalizer guarda el instante en
+     * {@code lastSummonTick}); {@code Long.MIN_VALUE} es "sin deseos todavía", o sea sin cooldown. No toca el
+     * gamerule de invocación ni al dragón que ya esté invocado.
+     */
+    private static int resetSummon(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).setLastSummonTick(Long.MIN_VALUE);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Dragon summon cooldown reset → " + sp.getGameProfile().getName()), true);
         return 1;
     }
 
