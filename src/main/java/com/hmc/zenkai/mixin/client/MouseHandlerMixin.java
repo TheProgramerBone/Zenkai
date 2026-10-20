@@ -5,39 +5,42 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Ancla la cámara al objetivo del lock-on (habilidad Ki Sense).
- * Patrón del mod TFAR Lock-On: en vez de empujar la cámara cada tick (lo que marea en
- * primera persona), se intercepta el giro del RATÓN. Cuando hay objetivo fijado, se
- * reemplaza el giro libre por "mirar al objetivo" y se cancela el turn original. Con el
- * ratón quieto no pasa nada; al moverlo, la vista se mantiene sobre el objetivo.
- * SEGUNDO mixin del proyecto (el primero es PlayerModelHideMixin). Se acepta como excepción
- * porque no hay forma limpia de interceptar el ratón sin pelear con él: cualquier corrección
- * hecha fuera de este punto se suma al giro del jugador en vez de sustituirlo, y eso es
- * justo lo que producía el mareo.
- * El descriptor de turnPlayer(D) puede variar entre mappings de NeoForge 1.21.1. Si el
- * mixin no aplica, la alternativa SIN mixin es NeoForge CalculatePlayerTurnEvent.
+ * Cede la cámara al lock-on (LockOnClientState#applyAim) mientras hay objetivo fijado.
+ * SEGUNDO mixin del proyecto (el primero es PlayerModelHideMixin). Se acepta como excepción:
+ * se comprobó contra las fuentes de NeoForge 21.1.233 que CalculatePlayerTurnEvent
+ * (ClientHooks.getTurnPlayerValues) solo deja ajustar la sensibilidad y el modo cinemático, no
+ * sustituir el giro, así que no hay forma limpia sin tocar turnPlayer.
+ *
+ * Hechos verificados que el comentario anterior de este archivo tenía mal:
+ *  - turnPlayer(double) lo llama handleAccumulatedMovement CADA FRAME de render, con el ratón
+ *    quieto o no. Por eso el lock sigue al objetivo a ritmo de frame (suave, sin saltos de 20 Hz).
+ *  - Entity.turn multiplica por 0.15 lo que recibe; applyAim lo compensa.
+ *  - accumulatedDX/DY se ponen a cero DESPUÉS de turnPlayer, así que cancelar aquí no deja
+ *    movimiento pendiente que "salte" al soltar el lock.
+ * El descriptor de turnPlayer puede variar entre mappings: si el mixin no aplica, el juego avisa
+ * al arrancar y la alternativa es un @WrapOperation sobre la llamada a LocalPlayer.turn.
  */
 @Mixin(MouseHandler.class)
 public class MouseHandlerMixin {
 
+    @Shadow private double accumulatedDX;
+    @Shadow private double accumulatedDY;
+
     @Inject(method = "turnPlayer", at = @At("HEAD"), cancellable = true)
-    private void zenkai$lockOnTurn(CallbackInfo ci) {
+    private void zenkai$lockOnTurn(double movementTime, CallbackInfo ci) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.isPaused() || !(mc.player instanceof LocalPlayer player)) return;
         if (!LockOnClientState.hasTarget()) return;
 
-        float[] delta = LockOnClientState.aimDelta(mc);
-        if (delta == null) return; // sin línea de visión: el ratón manda este frame
-
-        // Cancelamos turnPlayer entero, así que el factor 0.15 de sensibilidad NO se aplica:
-        // LocalPlayer.turn toma los grados directos (a diferencia de Entity.turn). Pasamos el
-        // error angular tal cual, en grados de mundo. (Igual que TFAR: player.turn(dyaw,dpitch).)
-        player.turn(delta[0], delta[1]);
-        ci.cancel();
+        // false = sin objetivo válido o sin línea de vista demasiado rato: manda el ratón.
+        if (LockOnClientState.applyAim(mc, player, movementTime, accumulatedDX, accumulatedDY)) {
+            ci.cancel();
+        }
     }
 }

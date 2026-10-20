@@ -113,22 +113,9 @@ public final class SkillEffects {
     /** Multiplicador del rango de sentido. 1.0 sin la habilidad. */
     public static double senseRangeFactor(Player p) { return curve(p, KI_SENSE, "range_mult", 1.0); }
 
-    /** La vida se lee en el llenado de la llama desde el nivel 1; a partir del 2 es continua
-     *  en vez de por tramos. Nunca hay barra: el ki sense no dibuja rectángulos. */
+    /** La vida se lee en la barra sobre la cabeza desde el nivel 1; a partir del 2 es continua
+     *  en vez de por tramos. */
     public static boolean sensePreciseHealth(Player p) { return level(p, KI_SENSE) >= 2; }
-
-    /** Siluetas a través de paredes. */
-    public static boolean senseShowsSilhouettes(Player p) { return level(p, KI_SENSE) >= 3; }
-
-    /** Cuántas siluetas como mucho a la vez. 0 = ninguna. */
-    public static int senseSilhouetteCap(Player p) {
-        return (int) Math.round(curve(p, KI_SENSE, "silhouette_cap", 0.0));
-    }
-
-    /** Radio de las siluetas como FRACCIÓN del rango del sentido. */
-    public static double senseSilhouetteRangeFrac(Player p) {
-        return curve(p, KI_SENSE, "silhouette_range_frac", 0.0);
-    }
 
     /** Avisos no visuales. */
     public static boolean senseShowsWarnings(Player p) { return level(p, KI_SENSE) >= 5; }
@@ -146,9 +133,27 @@ public final class SkillEffects {
         return KaiokenTier.highestFor(level(p, KAIOKEN));
     }
 
-    /** true si el jugador NO puede fijar objetivo (sin la habilidad). Se llamaba canLockOn
-     *  y devolvía justo lo contrario de lo que su nombre prometía. */
-    public static boolean lockOnBlocked(Player p) { return level(p, KI_SENSE) <= 0; }
+    /** Motivo por el que un jugador no puede fijar objetivo. */
+    public enum LockOnBlock { NONE, DISABLED, FLYING }
+
+    /**
+     * Por qué NO puede fijar objetivo ahora mismo. Desde 0.5.1 el lock-on es una función base:
+     * ya no exige Ki Sense (la queja era "limita en vez de recompensar"). Solo lo cierra el
+     * servidor: lock_on.enabled apagado, o lock_on.while_flying apagado y el jugador volando.
+     * Las dos opciones son de ServerConfig, que el cliente recibe sincronizada.
+     */
+    public static LockOnBlock lockOnBlockReason(Player p) {
+        if (!ServerConfig.lockOnEnabled()) return LockOnBlock.DISABLED;
+        if (!ServerConfig.lockOnWhileFlying()
+                && (p.getAbilities().flying || PlayerStatsAttachment.get(p).isFlyEnabled())) {
+            return LockOnBlock.FLYING;
+        }
+        return LockOnBlock.NONE;
+    }
+
+    /** true si el jugador NO puede fijar objetivo (ver {@link #lockOnBlockReason}). Se llamaba
+     *  canLockOn y devolvía justo lo contrario de lo que su nombre prometía. */
+    public static boolean lockOnBlocked(Player p) { return lockOnBlockReason(p) != LockOnBlock.NONE; }
 
     // ── Ki Infuse ────────────────────────────────────────────────────────────
     /** Fracción de la potencia de ki (WIL) que suma un golpe infusionado. 0 sin la habilidad. */

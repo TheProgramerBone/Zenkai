@@ -362,6 +362,44 @@ public final class PartyService {
         return names;
     }
 
+    // ── Depuración ───────────────────────────────────────────────────────────
+
+    /**
+     * {@code /zenkai debug party [n]}: llena la party de quien ejecuta con {@code n} compañeros FALSOS
+     * (sin jugador detrás) para poder probar el panel de party en un mundo de un solo jugador. Sus
+     * signos vitales los inventa PartyVitalsServer. Crea la party si no existe; no pasa del tope.
+     * Devuelve cuántos añadió.
+     */
+    public static int debugFill(MinecraftServer server, ServerPlayer sp, int n) {
+        var mgr = PartyManager.get(server);
+        PartyManager.Party party = mgr.partyOf(sp.getUUID());
+        if (party == null) party = mgr.createFor(sp.getUUID());
+        int added = 0;
+        for (int i = 1; i <= n && party.members.size() < party.maxSize; i++) {
+            UUID id = PartyVitalsServer.fakeId(i);
+            if (party.members.contains(id)) continue;
+            mgr.addMember(party, id);
+            added++;
+        }
+        syncAll(server, party);
+        return added;
+    }
+
+    /** {@code /zenkai debug party clear}: quita a los compañeros falsos de la party de quien ejecuta. */
+    public static int debugClear(MinecraftServer server, ServerPlayer sp) {
+        var mgr = PartyManager.get(server);
+        PartyManager.Party party = mgr.partyOf(sp.getUUID());
+        if (party == null) return 0;
+        int removed = 0;
+        for (UUID id : new ArrayList<>(party.members)) {
+            if (PartyVitalsServer.fakeName(id) == null) continue;
+            mgr.removeMember(party, id);
+            removed++;
+        }
+        syncAll(server, party);
+        return removed;
+    }
+
     // ── Ayudantes ────────────────────────────────────────────────────────────
 
     /** Busca por nombre SOLO entre los miembros actuales de esa party (online u offline):
@@ -379,6 +417,8 @@ public final class PartyService {
     private static String resolveName(MinecraftServer server, UUID id) {
         ServerPlayer online = server.getPlayerList().getPlayer(id);
         if (online != null) return online.getGameProfile().getName();
+        String fake = PartyVitalsServer.fakeName(id);
+        if (fake != null) return fake;
         return id.toString();
     }
 

@@ -431,6 +431,22 @@ public class ModNetworking {
                 LockOnPacket.TYPE,
                 LockOnPacket.STREAM_CODEC,
                 LockOnPacket::handle);
+        registrar.playToServer(
+                com.hmc.zenkai.feature.party.PartyHudSelectionPacket.TYPE,
+                com.hmc.zenkai.feature.party.PartyHudSelectionPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.party.PartyHudSelectionPacket::handle);
+        registrar.playToClient(
+                com.hmc.zenkai.feature.party.PartyVitalsPacket.TYPE,
+                com.hmc.zenkai.feature.party.PartyVitalsPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.party.PartyVitalsPacket::handle);
+        registrar.playToClient(
+                com.hmc.zenkai.feature.sense.DamageNumberPacket.TYPE,
+                com.hmc.zenkai.feature.sense.DamageNumberPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.sense.DamageNumberPacket::handle);
+        registrar.playToClient(
+                com.hmc.zenkai.feature.sense.LockOnAlertPacket.TYPE,
+                com.hmc.zenkai.feature.sense.LockOnAlertPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.sense.LockOnAlertPacket::handle);
 
         registrar.playToClient(
                 FormSyncPacket.TYPE,

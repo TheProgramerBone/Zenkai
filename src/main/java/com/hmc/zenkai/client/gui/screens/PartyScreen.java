@@ -11,6 +11,8 @@ import com.hmc.zenkai.client.gui.buttons.FriendlyFireIconButton;
 import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
+import com.hmc.zenkai.client.overlay.PartyHudLayout;
+import com.hmc.zenkai.client.overlay.PartyHudOverlay;
 import com.hmc.zenkai.client.party.ClientPartyState;
 import com.hmc.zenkai.feature.party.PartySyncPacket;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -513,6 +515,22 @@ public class PartyScreen extends ZenkaiMenuScreen {
         g.fill(x, thumbY, x + SCROLLBAR_W, thumbY + thumbH, ZenkaiPalette.VALUE_ON_PANEL);
     }
 
+    /** Hueco que se roba al texto de la fila para el diamante del panel de party. */
+    private static final int DIAMOND_COLUMN = 10;
+
+    private static int diamondX(int rowLeft) { return rowLeft + HEAD_SIZE + 3; }
+    private static int diamondY(int rowY) { return rowY + (HEAD_SIZE - PartyHudLayout.DIAMOND) / 2; }
+
+    /** Contorno del rombo de 7x7 (mismo tamaño que el relleno de PartyHudOverlay.diamond). */
+    private static void diamondOutline(GuiGraphics g, int x, int y, int argb) {
+        int n = PartyHudLayout.DIAMOND, mid = n / 2;
+        for (int r = 0; r < n; r++) {
+            int half = mid - Math.abs(mid - r);
+            g.fill(x + mid - half, y + r, x + mid - half + 1, y + r + 1, argb);
+            g.fill(x + mid + half, y + r, x + mid + half + 1, y + r + 1, argb);
+        }
+    }
+
     /** Devuelve el tooltip de "Expulsar a X" si el ratón está sobre la cabeza de esta fila
      *  (y es expulsable), o null. El llamador lo renderiza al final, ver render(). */
     @org.jetbrains.annotations.Nullable
@@ -549,7 +567,25 @@ public class PartyScreen extends ZenkaiMenuScreen {
         int nameY = rowY + topPad;
         int barY = nameY + this.font.lineHeight + ROW_TEXT_GAP;
 
-        int barX = rowLeft + HEAD_SIZE + 6;
+        // Diamante del panel de party, entre la cabeza y el texto: lleno y con color = ese compañero
+        // sale en el HUD (hasta 4); vacío = no sale. Un clic lo alterna (ver mouseClicked).
+        if (!isSelf) {
+            int dx = diamondX(rowLeft), dy = diamondY(rowY);
+            int slot = ClientPartyState.slotOf(member.id());
+            if (slot >= 0) {
+                PartyHudOverlay.diamond(g, dx, dy,
+                        0xFF000000 | PartyHudOverlay.SLOT_COLORS[slot % PartyHudOverlay.SLOT_COLORS.length]);
+            } else {
+                diamondOutline(g, dx, dy, 0xFF000000 | ZenkaiPalette.MUTED_ON_PANEL);
+            }
+            boolean hoveringDiamond = mouseX >= dx - 1 && mouseX < dx + 9 && mouseY >= dy - 1 && mouseY < dy + 9;
+            if (hoveringDiamond) {
+                tooltip = Component.translatable(slot >= 0
+                        ? "screen.zenkai.party.hud_hide" : "screen.zenkai.party.hud_show");
+            }
+        }
+
+        int barX = rowLeft + HEAD_SIZE + 6 + DIAMOND_COLUMN;
         String tag = isLeader ? "★ " : "";
         PanelText.onPanel(g, this.font, Component.literal(tag + member.name()),
                 barX, nameY, nameColor);
@@ -653,7 +689,22 @@ public class PartyScreen extends ZenkaiMenuScreen {
         }
 
         var state = ClientPartyState.current();
-        if (state == null || !isSelfLeader(state)) return false;
+        if (state == null) return false;
+
+        // Diamante del panel de party: lo puede usar cualquiera, no solo el líder.
+        int diamondLeft = panelLeft + MARGIN;
+        for (int i = 0; i < state.members().size(); i++) {
+            if (!rowVisible(i)) continue;
+            PartySyncPacket.Member member = state.members().get(i);
+            if (mc.player != null && member.id().equals(mc.player.getUUID())) continue;
+            int dx = diamondX(diamondLeft), dy = diamondY(rowY(i));
+            if (mouseX >= dx - 1 && mouseX < dx + 9 && mouseY >= dy - 1 && mouseY < dy + 9) {
+                ClientPartyState.toggleShown(member.id());
+                return true;
+            }
+        }
+
+        if (!isSelfLeader(state)) return false;
 
         int rowLeft = panelLeft + MARGIN;
         for (int i = 0; i < state.members().size(); i++) {

@@ -1,7 +1,6 @@
 package com.hmc.zenkai.client.overlay;
 
 import com.hmc.zenkai.config.ClientConfig;
-import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.sense.SenseKiDataPacket;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import net.minecraft.client.Minecraft;
@@ -16,10 +15,10 @@ import java.util.Map;
 
 /**
  * Avisos NO VISUALES del sentir el ki (nivel 5). Dos disparadores:
- *  1. AMENAZA — entra en rango algo con PL aparente >= 3x el tuyo.
- *  2. SUBIDA  — alguien duplica su PL aparente entre dos escaneos consecutivos. Suprimir el ki
- *     ya existe (powerPercent de Ki Control) y el PL que llega es el APARENTE, así que dejar de
- *     esconderse ES un salto de PL. No hay que detectar nada más.
+ *  1. AMENAZA — entra en rango una presencia ABRUMADORA (PL aparente >= 4x el tuyo).
+ *  2. SUBIDA  — alguien sube dos categorías de fuerza entre dos escaneos consecutivos. Suprimir
+ *     el ki ya existe (powerPercent de Ki Control) y la categoría se calcula con el PL APARENTE,
+ *     así que dejar de esconderse ES un salto. No hay que detectar nada más.
  * IGNORAN EL FILTRO DE MODO a propósito. Las llamas son una preferencia de visualización; un
  * aviso es un peligro. Estar en modo MOBS no puede silenciar a un jugador que te triplica —
  * eso convertiría una opción de comodidad en una trampa mortal.
@@ -38,10 +37,13 @@ public final class SenseKiWarnings {
     private SenseKiWarnings() {}
 
     // ── Diales de detección ──────────────────────────────────────────────────
-    private static final double THREAT_RATIO = 3.0;   // x tu PL para que entrar en rango avise
-    private static final double SPIKE_RATIO  = 2.0;   // x su PL anterior para contar como salto
-    /** Y además debe quedar cerca de ti: un pollo que sube de 8 a 16 no es una subida de poder. */
-    private static final double SPIKE_RELEVANCE = 0.75;
+    // El PL ya no viaja (solo su categoría relativa a ti, ver SenseKiDataPacket.STRENGTH_*): los
+    // disparadores se expresan en categorías. Abrumadora = x4 o más tu PL.
+    private static final int THREAT_STRENGTH = SenseKiDataPacket.STRENGTH_OVERWHELMING;
+    /** Categorías que tiene que subir entre dos escaneos para contar como salto (x2-x3 o más). */
+    private static final int SPIKE_STEPS = 2;
+    /** Y además debe quedar al menos parejo contigo: un pollo que se duplica no es una subida de poder. */
+    private static final int SPIKE_RELEVANCE = SenseKiDataPacket.STRENGTH_COMPARABLE;
 
     // ── Diales de anti-spam (en ticks) ───────────────────────────────────────
     private static final int REARM_TICKS  = 1200; // 60 s sin verla para que vuelva a avisar
@@ -65,7 +67,7 @@ public final class SenseKiWarnings {
 
     /** Lo que se recuerda de cada entidad vista. */
     private static final class Track {
-        long lastPl;
+        int lastStrength = -1;
         long lastSeen;
         long lastSpike = NEVER;
     }
@@ -94,12 +96,11 @@ public final class SenseKiWarnings {
         if (!SkillEffects.senseShowsWarnings(mc.player)) return;
 
         long now = mc.level.getGameTime();
-        long myPl = PlayerStatsAttachment.get(mc.player).getPowerLevel();
 
         for (SenseKiDataPacket.Entry en : entries) {
             if (en.entityId() == mc.player.getId()) continue;
 
-            long pl = en.powerLevel();
+            int strength = en.strength();
             Track t = TRACKS.get(en.entityId());
             boolean isNew = (t == null) || (now - t.lastSeen > REARM_TICKS);
 
@@ -110,31 +111,30 @@ public final class SenseKiWarnings {
 
             if (isNew) {
                 // AMENAZA: solo al entrar. Que siga ahí no es noticia nueva.
-                if (myPl > 0 && pl >= myPl * THREAT_RATIO) {
-                    fire(mc, now, ratioIntensity(pl, myPl));
-                }
-            } else if (t.lastPl > 0
-                    && pl >= t.lastPl * SPIKE_RATIO
-                    && myPl > 0 && pl >= myPl * SPIKE_RELEVANCE
+                if (strength >= THREAT_STRENGTH) fire(mc, now, strengthIntensity(strength));
+            } else if (t.lastStrength >= 0
+                    && strength - t.lastStrength >= SPIKE_STEPS
+                    && strength >= SPIKE_RELEVANCE
                     && now - t.lastSpike >= SPIKE_COOL) {
                 // SUBIDA: alguien acaba de soltar lo que estaba escondiendo.
                 t.lastSpike = now;
-                fire(mc, now, ratioIntensity(pl, myPl));
+                fire(mc, now, strengthIntensity(strength));
             }
 
-            t.lastPl = pl;
+            t.lastStrength = strength;
             t.lastSeen = now;
         }
 
         purge(now);
     }
 
-    /** Intensidad 0.25..1: x1 tu PL apenas se nota, x8 o más satura. Logarítmica porque el PL
-     *  crece por órdenes de magnitud. */
-    private static float ratioIntensity(long pl, long myPl) {
-        if (myPl <= 0) return 1f;
-        double octaves = Math.log((double) pl / myPl) / Math.log(2);
-        return Mth.clamp((float) (octaves / 3.0), INTENSITY_FLOOR, 1f); // 3 octavas = x8
+    /** Intensidad 0.25..1 por categoría: pareja apenas se nota, abrumadora satura. */
+    private static float strengthIntensity(int strength) {
+        return switch (strength) {
+            case SenseKiDataPacket.STRENGTH_OVERWHELMING -> 1f;
+            case SenseKiDataPacket.STRENGTH_SUPERIOR -> 0.6f;
+            default -> INTENSITY_FLOOR;
+        };
     }
 
     /**

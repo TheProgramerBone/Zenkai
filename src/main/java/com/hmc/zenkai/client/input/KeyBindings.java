@@ -26,6 +26,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import com.hmc.zenkai.config.ClientConfig;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -41,6 +42,9 @@ public final class KeyBindings {
     public static KeyMapping TURBO;
     public static KeyMapping COMBAT_MODE;
     public static KeyMapping LOCK_ON;
+    /** Cambiar de objetivo fijado: siguiente (a la derecha) y anterior (a la izquierda). */
+    public static KeyMapping LOCK_ON_NEXT;
+    public static KeyMapping LOCK_ON_PREV;
     /** Y: abre la ventana de parry sin necesidad de bloquear (ver ParryServer.tryActivate). */
     public static KeyMapping PARRY;
 
@@ -156,6 +160,20 @@ public final class KeyBindings {
                 "key.categories.zenkai"
         );
         event.register(LOCK_ON);
+
+        LOCK_ON_NEXT = new KeyMapping(
+                "key.zenkai.lock_on_next",
+                GLFW.GLFW_KEY_PERIOD,
+                "key.categories.zenkai"
+        );
+        event.register(LOCK_ON_NEXT);
+
+        LOCK_ON_PREV = new KeyMapping(
+                "key.zenkai.lock_on_prev",
+                GLFW.GLFW_KEY_COMMA,
+                "key.categories.zenkai"
+        );
+        event.register(LOCK_ON_PREV);
 
         INSTANT_TRANSMISSION = new KeyMapping(
                 "key.zenkai.instant_transmission",
@@ -284,7 +302,18 @@ public final class KeyBindings {
         boolean hasRace = stats.isRaceChosen();
 
         if (LOCK_ON != null) {
-            while (LOCK_ON.consumeClick()) LockOnClientState.toggle(mc);
+            while (LOCK_ON.consumeClick()) LockOnClientState.press(mc);
+            // Modo "mantener": al levantar la tecla se suelta. Con un screen abierto isDown() es
+            // false aunque la tecla siga física, y no debe soltar el lock al abrir el inventario.
+            if (mc.screen == null && ClientConfig.lockOnHold() && !LOCK_ON.isDown()) {
+                LockOnClientState.release(mc);
+            }
+        }
+        if (LOCK_ON_NEXT != null) {
+            while (LOCK_ON_NEXT.consumeClick()) LockOnClientState.cycle(mc, +1);
+        }
+        if (LOCK_ON_PREV != null) {
+            while (LOCK_ON_PREV.consumeClick()) LockOnClientState.cycle(mc, -1);
         }
         LockOnClientState.tick(mc);
 

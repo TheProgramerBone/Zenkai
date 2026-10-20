@@ -297,6 +297,46 @@ public final class ClientConfig {
                             + "hud.frame_color",
                     true);
 
+    // ── Lock-on (solo presentación y comodidad de entrada; el balance vive en ServerConfig) ──
+
+    private static final ModConfigSpec.BooleanValue LOCK_ON_HOLD =
+            defineBool("lock_on.hold", "lock_on_hold",
+                    "Lock-on key mode. Off: press once to lock, press again to release. "
+                            + "On: the target is locked only while you hold the key",
+                    false);
+
+    private static final ModConfigSpec.BooleanValue LOCK_ON_MOUSE_WHEEL =
+            defineBool("lock_on.mouse_wheel", "lock_on_mouse_wheel",
+                    "While locked on, the mouse wheel switches to the next/previous target "
+                            + "instead of scrolling the hotbar",
+                    false);
+
+    private static final ModConfigSpec.IntValue LOCK_ON_SMOOTHING =
+            defineInt("lock_on.smoothing", "lock_on_smoothing",
+                    "How softly the camera follows the locked target, in percent. 0 = snappy, "
+                            + "100 = very floaty. Never moves the camera when there is nothing to follow",
+                    30, 0, 100, 10);
+
+    private static final ModConfigSpec.IntValue LOCK_ON_MARKER_OPACITY =
+            defineInt("lock_on.marker_opacity", "lock_on_marker_opacity",
+                    "Opacity, in percent, of the ring drawn over the locked target and of the "
+                            + "off-screen arrow. 0 hides the marker completely",
+                    75, 0, 100, 5);
+
+    // ── Ki Sense: números de daño e icono de jefe (presentación) ──
+
+    private static final ModConfigSpec.BooleanValue SENSE_DAMAGE_NUMBERS =
+            defineBool("sense_ki.damage_numbers", "sense_damage_numbers",
+                    "Show floating damage numbers over the enemies you hit. Only players who own the "
+                            + "Ki Sense skill receive them, whether the sense is switched on or not",
+                    true);
+
+    private static final ModConfigSpec.BooleanValue BOSS_ICON =
+            defineBool("sense_ki.boss_icon", "boss_icon",
+                    "Draw a small demon icon over bosses (entities in the zenkai:bosses tag), "
+                            + "so you know at a glance that they cannot be grabbed or stunned",
+                    true);
+
     // ── HUD de técnicas ──────────────────────────────────────────────────────
 
     // NINGUNA de las tres aparece como fila. La colocación entera se decide en
@@ -324,11 +364,48 @@ public final class ClientConfig {
     // peor de los dos mundos — tedioso de ajustar e imposible de previsualizar.
     private static final ModConfigSpec.IntValue HUD_OFFSET_X =
             defineHiddenInt("hud.technique_offset_x",
-                    "Horizontal offset from the anchor, in GUI pixels", -4, -4096, 4096);
+                    "Horizontal offset from the anchor, in GUI pixels", 0, -4096, 4096);
 
     private static final ModConfigSpec.IntValue HUD_OFFSET_Y =
             defineHiddenInt("hud.technique_offset_y",
                     "Vertical offset from the anchor, in GUI pixels", 0, -4096, 4096);
+
+    // ── HUD de la party (izquierda de la pantalla) ──
+
+    private static final ModConfigSpec.BooleanValue PARTY_HUD_ENABLED =
+            defineBool("party_hud.enabled", "party_hud_enabled",
+                    "Show the party members you picked (up to 4) on the HUD: face, health, stamina and ki bars",
+                    true);
+
+    // Como el HUD de técnicas: la colocación se decide arrastrando en HudPlacementScreen y se
+    // guarda de una vez, así que ninguna de estas tres es una fila de la lista.
+    private static final ModConfigSpec.EnumValue<HudAnchor> PARTY_HUD_ANCHOR =
+            defineHiddenEnum("party_hud.anchor",
+                    "Screen corner or edge the party panel hangs from", HudAnchor.MIDDLE_LEFT);
+    private static final ModConfigSpec.IntValue PARTY_HUD_OFFSET_X =
+            defineHiddenInt("party_hud.offset_x",
+                    "Horizontal offset from the anchor, in GUI pixels", 0, -4096, 4096);
+    private static final ModConfigSpec.IntValue PARTY_HUD_OFFSET_Y =
+            defineHiddenInt("party_hud.offset_y",
+                    "Vertical offset from the anchor, in GUI pixels", -77, -4096, 4096);
+
+    // Panel de lectura del Ki Sense (nivel 5): misma mecánica de colocación que el panel de party.
+    // Por defecto, pegado a la izquierda bajo el panel de party (que sube 77 px del centro).
+    private static final ModConfigSpec.EnumValue<HudAnchor> READING_HUD_ANCHOR =
+            defineHiddenEnum("sense_ki.reading_hud.anchor",
+                    "Screen corner or edge the Ki Sense reading panel hangs from", HudAnchor.MIDDLE_LEFT);
+    private static final ModConfigSpec.IntValue READING_HUD_OFFSET_X =
+            defineHiddenInt("sense_ki.reading_hud.offset_x",
+                    "Horizontal offset from the anchor, in GUI pixels", 0, -4096, 4096);
+    private static final ModConfigSpec.IntValue READING_HUD_OFFSET_Y =
+            defineHiddenInt("sense_ki.reading_hud.offset_y",
+                    "Vertical offset from the anchor, in GUI pixels", 27, -4096, 4096);
+
+    /** UUID de los miembros elegidos para el panel, separados por comas. Vacío = nunca se ha
+     *  elegido (el panel completa solo con los primeros miembros). */
+    private static final ModConfigSpec.ConfigValue<String> PARTY_HUD_SELECTED =
+            BUILDER.comment("Party members shown on the party HUD, comma-separated UUIDs (max 4). Edited from the Party screen")
+                    .define("party_hud.selected", "");
 
     // El último color elegido en el banco de scouter. Oculto: no es una opción que se toque
     // en una lista, es memoria de lo que hiciste la última vez. Y va en config de cliente y
@@ -338,7 +415,7 @@ public final class ClientConfig {
                     "Last colour picked in the scouter bench, as 0xRRGGBB",
                     0xd82624, 0x000000, 0xFFFFFF);
 
-    // ── Teclas de carril de Meditation (A/S/D/F) ────────────────────────────────
+    // ── Teclas de carril de Meditation (flechas: izquierda, abajo, arriba, derecha) ────────────────────────────────
 
     /** Ocultas de ClientConfigScreen: se editan desde un popup propio dentro de
      *  MeditationScreen (engranaje, icons.png 80,60), no de la lista genérica de opciones —
@@ -349,19 +426,19 @@ public final class ClientConfig {
     private static final ModConfigSpec.IntValue MEDITATION_LANE_KEY_0 =
             defineHiddenInt("meditation.lane_key_0",
                     "GLFW key code for lane 1 (leftmost) of the Meditation rhythm minigame",
-                    GLFW.GLFW_KEY_A, 0, GLFW.GLFW_KEY_LAST);
+                    GLFW.GLFW_KEY_LEFT, 0, GLFW.GLFW_KEY_LAST);
     private static final ModConfigSpec.IntValue MEDITATION_LANE_KEY_1 =
             defineHiddenInt("meditation.lane_key_1",
                     "GLFW key code for lane 2 of the Meditation rhythm minigame",
-                    GLFW.GLFW_KEY_S, 0, GLFW.GLFW_KEY_LAST);
+                    GLFW.GLFW_KEY_DOWN, 0, GLFW.GLFW_KEY_LAST);
     private static final ModConfigSpec.IntValue MEDITATION_LANE_KEY_2 =
             defineHiddenInt("meditation.lane_key_2",
                     "GLFW key code for lane 3 of the Meditation rhythm minigame",
-                    GLFW.GLFW_KEY_D, 0, GLFW.GLFW_KEY_LAST);
+                    GLFW.GLFW_KEY_UP, 0, GLFW.GLFW_KEY_LAST);
     private static final ModConfigSpec.IntValue MEDITATION_LANE_KEY_3 =
             defineHiddenInt("meditation.lane_key_3",
                     "GLFW key code for lane 4 (rightmost) of the Meditation rhythm minigame",
-                    GLFW.GLFW_KEY_F, 0, GLFW.GLFW_KEY_LAST);
+                    GLFW.GLFW_KEY_RIGHT, 0, GLFW.GLFW_KEY_LAST);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -375,6 +452,14 @@ public final class ClientConfig {
     public static boolean flightFxSonicBoom() { return FLIGHT_FX_SONIC_BOOM.get(); }
     public static boolean flightFxLanding() { return FLIGHT_FX_LANDING.get(); }
     public static boolean flightFxSpeedLines() { return FLIGHT_FX_SPEED_LINES.get(); }
+    public static boolean lockOnHold() { return LOCK_ON_HOLD.get(); }
+    public static boolean lockOnMouseWheel() { return LOCK_ON_MOUSE_WHEEL.get(); }
+    /** 0..1, ya normalizado. */
+    public static float lockOnSmoothing() { return LOCK_ON_SMOOTHING.get() / 100f; }
+    /** 0f..1f, listo para multiplicar sobre un alpha. */
+    public static float lockOnMarkerOpacity() { return LOCK_ON_MARKER_OPACITY.get() / 100f; }
+    public static boolean senseDamageNumbers() { return SENSE_DAMAGE_NUMBERS.get(); }
+    public static boolean bossIcon() { return BOSS_ICON.get(); }
 
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }
@@ -413,6 +498,54 @@ public final class ClientConfig {
         HUD_OFFSET_X.set(offsetX);
         HUD_OFFSET_Y.set(offsetY);
         HUD_AVOID_HOTBAR.set(avoidHotbar);
+        SPEC.save();
+    }
+
+    public static HudAnchor readingHudAnchor() { return READING_HUD_ANCHOR.get(); }
+    public static int readingHudOffsetX() { return READING_HUD_OFFSET_X.get(); }
+    public static int readingHudOffsetY() { return READING_HUD_OFFSET_Y.get(); }
+
+    /** Guarda la colocación completa del panel de lectura del Ki Sense de una vez. */
+    public static void setReadingHudPlacement(HudAnchor anchor, int offsetX, int offsetY) {
+        READING_HUD_ANCHOR.set(anchor);
+        READING_HUD_OFFSET_X.set(offsetX);
+        READING_HUD_OFFSET_Y.set(offsetY);
+        SPEC.save();
+    }
+
+    public static boolean partyHudEnabled() { return PARTY_HUD_ENABLED.get(); }
+    public static HudAnchor partyHudAnchor() { return PARTY_HUD_ANCHOR.get(); }
+    public static int partyHudOffsetX() { return PARTY_HUD_OFFSET_X.get(); }
+    public static int partyHudOffsetY() { return PARTY_HUD_OFFSET_Y.get(); }
+
+    /** Guarda la colocación completa del panel de party de una vez (misma razón que el HUD de técnicas). */
+    public static void setPartyHudPlacement(HudAnchor anchor, int offsetX, int offsetY) {
+        PARTY_HUD_ANCHOR.set(anchor);
+        PARTY_HUD_OFFSET_X.set(offsetX);
+        PARTY_HUD_OFFSET_Y.set(offsetY);
+        SPEC.save();
+    }
+
+    /** Miembros elegidos para el panel, en el orden elegido; vacía si nunca se ha elegido. */
+    public static List<java.util.UUID> partyHudSelected() {
+        List<java.util.UUID> out = new ArrayList<>();
+        for (String s : PARTY_HUD_SELECTED.get().split(",")) {
+            try {
+                if (!s.isBlank()) out.add(java.util.UUID.fromString(s.trim()));
+            } catch (IllegalArgumentException ignored) {
+                // Un toml editado a mano con basura: se salta esa entrada.
+            }
+        }
+        return out;
+    }
+
+    public static void setPartyHudSelected(List<java.util.UUID> ids) {
+        StringBuilder sb = new StringBuilder();
+        for (java.util.UUID id : ids) {
+            if (sb.length() > 0) sb.append(',');
+            sb.append(id);
+        }
+        PARTY_HUD_SELECTED.set(sb.toString());
         SPEC.save();
     }
 

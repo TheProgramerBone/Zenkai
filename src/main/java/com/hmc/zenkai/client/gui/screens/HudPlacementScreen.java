@@ -6,6 +6,10 @@ import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.overlay.HudAnchor;
 import com.hmc.zenkai.client.overlay.HudOrientation;
+import com.hmc.zenkai.client.overlay.PartyHudLayout;
+import com.hmc.zenkai.client.overlay.PartyHudOverlay;
+import com.hmc.zenkai.client.overlay.ReadingHudLayout;
+import com.hmc.zenkai.client.overlay.TargetReadingOverlay;
 import com.hmc.zenkai.client.overlay.TechniqueHotbarOverlay;
 import com.hmc.zenkai.client.overlay.TechniqueHudLayout;
 import com.hmc.zenkai.config.ClientConfig;
@@ -49,6 +53,20 @@ public class HudPlacementScreen extends Screen {
     private int grabDX, grabDY;
     private boolean dragging = false;
 
+    // Panel de party: segundo bloque arrastrable de esta misma pantalla, para que se vea al
+    // instante si se pisa con el HUD de técnicas (mismo motivo de ser que esta pantalla).
+    private HudAnchor partyAnchor;
+    private int partyOffX, partyOffY;
+    private boolean draggingParty = false;
+    // Panel de lectura del Ki Sense: tercer bloque arrastrable.
+    private HudAnchor readAnchor;
+    private int readOffX, readOffY;
+    private boolean draggingRead = false;
+    /** Filas de muestra del panel de party: el peor caso (4), no las que haya ahora mismo. */
+    private static final int PARTY_SAMPLE_ROWS = 4;
+    private static final java.util.UUID SAMPLE_ID = new java.util.UUID(0L, 1L);
+    private static final int[][] SAMPLE_VITALS = {{900, 650, 800}, {520, 900, 300}, {250, 400, 950}, {1000, 1000, 1000}};
+
     public HudPlacementScreen(@Nullable Screen parent) {
         super(Component.translatable("screen.zenkai.hud_placement.title"));
         this.parent = parent;
@@ -57,6 +75,36 @@ public class HudPlacementScreen extends Screen {
         this.avoidHotbar = ClientConfig.hudAvoidHotbar();
         this.offsetX = ClientConfig.hudOffsetX();
         this.offsetY = ClientConfig.hudOffsetY();
+        this.partyAnchor = ClientConfig.partyHudAnchor();
+        this.partyOffX = ClientConfig.partyHudOffsetX();
+        this.partyOffY = ClientConfig.partyHudOffsetY();
+        this.readAnchor = ClientConfig.readingHudAnchor();
+        this.readOffX = ClientConfig.readingHudOffsetX();
+        this.readOffY = ClientConfig.readingHudOffsetY();
+    }
+
+    private ReadingHudLayout readLayout() {
+        return ReadingHudLayout.of(this.width, this.height, readAnchor, readOffX, readOffY,
+                TargetReadingOverlay.SAMPLE_HEIGHT);
+    }
+
+    /** ¿Se pisa el panel de lectura del Ki Sense con el de party o con el HUD de técnicas? */
+    private boolean readingOverlaps() {
+        ReadingHudLayout r = readLayout();
+        TechniqueHudLayout t = layout();
+        PartyHudLayout p = partyLayout();
+        return r.overlaps(t.x(), t.y(), t.width(), t.height())
+                || r.overlaps(p.x(), p.y(), p.width(), p.height());
+    }
+
+    private PartyHudLayout partyLayout() {
+        return PartyHudLayout.of(this.width, this.height, partyAnchor, partyOffX, partyOffY, PARTY_SAMPLE_ROWS);
+    }
+
+    /** ¿Se pisan el panel de party y el HUD de técnicas tal como están colocados ahora? */
+    private boolean partyOverlapsTechniques() {
+        TechniqueHudLayout t = layout();
+        return partyLayout().overlaps(t.x(), t.y(), t.width(), t.height());
     }
 
     @Override
@@ -99,6 +147,8 @@ public class HudPlacementScreen extends Screen {
 
     private void save() {
         ClientConfig.setHudPlacement(anchor, orientation, offsetX, offsetY, avoidHotbar);
+        ClientConfig.setPartyHudPlacement(partyAnchor, partyOffX, partyOffY);
+        ClientConfig.setReadingHudPlacement(readAnchor, readOffX, readOffY);
         onClose();
     }
 
@@ -115,6 +165,20 @@ public class HudPlacementScreen extends Screen {
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (button == 0) {
+            ReadingHudLayout rl = readLayout();
+            if (rl.contains(mx, my)) {
+                draggingRead = true;
+                grabDX = (int) mx - rl.x();
+                grabDY = (int) my - rl.y();
+                return true;
+            }
+            PartyHudLayout pl = partyLayout();
+            if (pl.contains(mx, my)) {
+                draggingParty = true;
+                grabDX = (int) mx - pl.x();
+                grabDY = (int) my - pl.y();
+                return true;
+            }
             TechniqueHudLayout l = layout();
             if (l.contains(mx, my)) {
                 dragging = true;
@@ -128,13 +192,93 @@ public class HudPlacementScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
+        if (draggingRead) {
+            applyReadDrag((int) mx - grabDX, (int) my - grabDY);
+            return true;
+        }
+        if (draggingParty) {
+            applyPartyDrag((int) mx - grabDX, (int) my - grabDY);
+            return true;
+        }
         if (!dragging) return super.mouseDragged(mx, my, button, dx, dy);
         applyDrag((int) mx - grabDX, (int) my - grabDY);
         return true;
     }
 
+    private enum Block { TECHNIQUES, PARTY, READING }
+
+    /**
+     * Los bloques CHOCAN entre sí: el que se arrastra no puede meterse encima de otro. Si la posición
+     * pedida solapa, se prueba a deslizar solo en X o solo en Y (así un bloque corre pegado al otro
+     * en vez de quedarse clavado) y, si tampoco cabe, se queda donde estaba. El solape intencional
+     * ya no se puede hacer a mano; el aviso rojo solo queda para posiciones heredadas (otra
+     * resolución, rotar la barra).
+     */
+    private int[] resolveCollision(int tx, int ty, int w, int h, int curX, int curY, Block self) {
+        if (!hitsOthers(tx, ty, w, h, self)) return new int[]{tx, ty};
+        if (!hitsOthers(tx, curY, w, h, self)) return new int[]{tx, curY};
+        if (!hitsOthers(curX, ty, w, h, self)) return new int[]{curX, ty};
+        return new int[]{curX, curY};
+    }
+
+    private boolean hitsOthers(int x, int y, int w, int h, Block self) {
+        if (self != Block.TECHNIQUES) {
+            TechniqueHudLayout t = layout();
+            if (overlap(x, y, w, h, t.x(), t.y(), t.width(), t.height())) return true;
+        }
+        if (self != Block.PARTY) {
+            PartyHudLayout p = partyLayout();
+            if (overlap(x, y, w, h, p.x(), p.y(), p.width(), p.height())) return true;
+        }
+        if (self != Block.READING) {
+            ReadingHudLayout r = readLayout();
+            return overlap(x, y, w, h, r.x(), r.y(), r.width(), r.height());
+        }
+        return false;
+    }
+
+    private static boolean overlap(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh) {
+        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    /** Igual que applyDrag, para el panel de lectura del Ki Sense. */
+    private void applyReadDrag(int targetX, int targetY) {
+        int w = TargetReadingOverlay.WIDTH;
+        int h = TargetReadingOverlay.SAMPLE_HEIGHT;
+        targetX = Math.max(0, Math.min(targetX, this.width - w));
+        targetY = Math.max(0, Math.min(targetY, this.height - h));
+        ReadingHudLayout cur = readLayout();
+        int[] ok = resolveCollision(targetX, targetY, w, h, cur.x(), cur.y(), Block.READING);
+        targetX = ok[0];
+        targetY = ok[1];
+        readAnchor = HudAnchor.nearest(targetX, targetY, this.width, this.height, w, h);
+        readOffX = targetX - readAnchor.originX(this.width, w);
+        readOffY = targetY - readAnchor.originY(this.height, h);
+        if (Math.abs(readOffX) <= SNAP_DISTANCE) readOffX = 0;
+        if (Math.abs(readOffY) <= SNAP_DISTANCE) readOffY = 0;
+    }
+
+    /** Igual que applyDrag, para el panel de party: ancla por cercanía e imantado a 12 px. */
+    private void applyPartyDrag(int targetX, int targetY) {
+        int w = PartyHudLayout.blockWidth();
+        int h = PartyHudLayout.blockHeight(PARTY_SAMPLE_ROWS);
+        targetX = Math.max(0, Math.min(targetX, this.width - w));
+        targetY = Math.max(0, Math.min(targetY, this.height - h));
+        PartyHudLayout cur = partyLayout();
+        int[] ok = resolveCollision(targetX, targetY, w, h, cur.x(), cur.y(), Block.PARTY);
+        targetX = ok[0];
+        targetY = ok[1];
+        partyAnchor = HudAnchor.nearest(targetX, targetY, this.width, this.height, w, h);
+        partyOffX = targetX - partyAnchor.originX(this.width, w);
+        partyOffY = targetY - partyAnchor.originY(this.height, h);
+        if (Math.abs(partyOffX) <= SNAP_DISTANCE) partyOffX = 0;
+        if (Math.abs(partyOffY) <= SNAP_DISTANCE) partyOffY = 0;
+    }
+
     @Override
     public boolean mouseReleased(double mx, double my, int button) {
+        if (draggingRead) { draggingRead = false; return true; }
+        if (draggingParty) { draggingParty = false; return true; }
         if (dragging) { dragging = false; return true; }
         return super.mouseReleased(mx, my, button);
     }
@@ -151,6 +295,10 @@ public class HudPlacementScreen extends Screen {
 
         targetX = Math.max(0, Math.min(targetX, this.width - w));
         targetY = Math.max(0, Math.min(targetY, this.height - h));
+        TechniqueHudLayout cur = layout();
+        int[] ok = resolveCollision(targetX, targetY, w, h, cur.x(), cur.y(), Block.TECHNIQUES);
+        targetX = ok[0];
+        targetY = ok[1];
 
         anchor = HudAnchor.nearest(targetX, targetY, this.width, this.height, w, h);
         offsetX = targetX - anchor.originX(this.width, w);
@@ -194,11 +342,36 @@ public class HudPlacementScreen extends Screen {
             TechniqueHotbarOverlay.renderBar(g, mc, att, l, 0);
         }
 
+        // Panel de party con filas de muestra, tal como se verá en juego.
+        PartyHudLayout pl = partyLayout();
+        boolean partyHover = draggingParty || pl.contains(mouseX, mouseY);
+        g.fill(pl.x() - 3, pl.y() - 3, pl.x() + pl.width() + 3, pl.y() + pl.height() + 3,
+                partyHover ? ZenkaiPalette.GRAB_ACTIVE : ZenkaiPalette.GRAB_IDLE);
+        for (int i = 0; i < PARTY_SAMPLE_ROWS; i++) {
+            PartyHudOverlay.draw(g, mc, pl.rowX(), pl.rowY(i), i, SAMPLE_ID, SAMPLE_VITALS[i]);
+        }
+
+        // Panel de lectura del Ki Sense (maqueta con el alto de muestra).
+        ReadingHudLayout rl = readLayout();
+        boolean readHover = draggingRead || rl.contains(mouseX, mouseY);
+        g.fill(rl.x() - 3, rl.y() - 3, rl.x() + rl.width() + 3, rl.y() + rl.height() + 3,
+                readHover ? ZenkaiPalette.GRAB_ACTIVE : ZenkaiPalette.GRAB_IDLE);
+        TargetReadingOverlay.drawSample(g, this.font, rl.x(), rl.y());
+
         ScreenTitle.drawCentered(g, this.font, this.title, this.width / 2, 10);
 
         int y = 26;
         drawInfo(g, y, "screen.zenkai.hud_placement.hint", ZenkaiPalette.TEXT_DIM);
         y += 12;
+        // Aviso de solape: lo que esta pantalla existe para evitar. No bloquea el guardado (el jugador
+        // decide), pero en juego tampoco se mueve nada solo.
+        if (readingOverlaps()) {
+            drawInfo(g, this.height - PanelButton.H - 28, "screen.zenkai.hud_placement.reading_overlap", ZenkaiPalette.DENIED);
+        } else if (partyOverlapsTechniques()) {
+            drawInfo(g, this.height - PanelButton.H - 28, "screen.zenkai.hud_placement.party_overlap", ZenkaiPalette.DENIED);
+        } else {
+            drawInfo(g, this.height - PanelButton.H - 28, "screen.zenkai.hud_placement.party_hint", ZenkaiPalette.TEXT_DIM);
+        }
         drawInfo(g, y, anchor.nameKey(), ZenkaiPalette.GOLD);
         y += 11;
         PanelText.centeredOnDark(g, this.font,

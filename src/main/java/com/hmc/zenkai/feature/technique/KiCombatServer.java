@@ -91,15 +91,17 @@ public final class KiCombatServer {
      *  al máximo dobla el daño del disparo. */
     public static final double MAX_CHARGE = 2.0;
 
-    /** Daño por proyectil a carga completa. */
+    /** Daño por proyectil a carga completa, YA multiplicado por {@code combat.ki_damage_scale} (1,5 por defecto).
+     *  Un único config escala el ki de jugadores y el de mobs/NPC: antes el factor vivía solo en
+     *  {@link #computePlayerDamage} y los mobs quedaban fuera, así que había dos balances de ki que mantener. */
     public static double computeDamage(double kiPower, KiTechniqueType type, int size) {
-        return kiPower * type.damageMult() * sizeFactor(size);
+        return kiPower * type.damageMult() * sizeFactor(size) * ServerConfig.kiDamageScale();
     }
 
-    /** Daño de una técnica de ki de un JUGADOR: {@link #computeDamage} por {@code combat.ki_damage_scale} (1,5 por
-     *  defecto, 2026-10-15). Los mobs siguen con computeDamage a secas: el ajuste es de PvP y de jugador. */
+    /** Daño de una técnica de ki de un JUGADOR. Alias de {@link #computeDamage}: se conserva porque lo llaman el
+     *  servidor y las pantallas del cliente, y ya no necesita un factor propio. */
     public static double computePlayerDamage(double kiPower, KiTechniqueType type, int size) {
-        return computeDamage(kiPower, type, size) * ServerConfig.kiDamageScale();
+        return computeDamage(kiPower, type, size);
     }
 
     /** Recargo de ki de una técnica de ki IMBUIDA por Ultra Ego (aura morada, perfora la mitad que una física, ver

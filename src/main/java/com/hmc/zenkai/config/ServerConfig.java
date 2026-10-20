@@ -881,6 +881,32 @@ public class ServerConfig {
             BUILDER.comment("Sense Ki: range in blocks")
                     .defineInRange("sense_ki.range", 64, 8, 256);
 
+    private static final ModConfigSpec.BooleanValue LOCK_ON_ENABLED_RAW =
+            BUILDER.comment("Lock-on: allow players to lock onto a target. Off disables it for everyone, "
+                            + "including the homing of ki techniques that depends on the lock.")
+                    .define("lock_on.enabled", true);
+
+    private static final ModConfigSpec.BooleanValue LOCK_ON_WHILE_FLYING_RAW =
+            BUILDER.comment("Lock-on: allow locking (and keeping the lock) while flying.")
+                    .define("lock_on.while_flying", true);
+
+    private static final ModConfigSpec.IntValue LOCK_ON_RANGE_RAW =
+            BUILDER.comment("Lock-on: maximum distance in blocks at which a target can be locked. "
+                            + "A locked target is released 8 blocks beyond this.")
+                    .defineInRange("lock_on.range", 64, 8, 256);
+
+    private static final ModConfigSpec.DoubleValue LOCK_ON_HOMING_TURN_RAW =
+            BUILDER.comment("Lock-on: how strongly ki projectiles curve towards the locked target each tick "
+                            + "(blend weight, not an angle). 0 = no homing, 0.144 = the old value, "
+                            + "0.2 = default, 0.5 = very aggressive.")
+                    .defineInRange("lock_on.homing_turn", 0.20D, 0.0D, 0.5D);
+
+    private static final ModConfigSpec.BooleanValue LOCK_ON_DIRECTED_DASH_RAW =
+            BUILDER.comment("Lock-on: while a target is locked, the combat dash and Quick Step are "
+                            + "aimed relative to the target (forward = towards it, left/right = orbit) "
+                            + "instead of relative to where the camera looks.")
+                    .define("lock_on.directed_dash", true);
+
     private static final ModConfigSpec.DoubleValue TECHNIQUE_EXPLOSION_RADIUS_CAP_RAW =
             BUILDER.comment("Ki techniques: global ceiling (in blocks) for the explosion radius of any technique.",
                             "0 = no ceiling (default): big fights are meant to be disproportionate.",
@@ -954,7 +980,7 @@ public class ServerConfig {
                     .defineInRange("combat.ki_defense_factor", 0.6D, 0.0D, 2.0D);
 
     private static final ModConfigSpec.DoubleValue KI_DAMAGE_SCALE_RAW =
-            BUILDER.comment("Multiplier for the damage of PLAYER ki techniques (beams, blasts, bombs). 1.5 = +50%. Mob ki attacks are unaffected.")
+            BUILDER.comment("Multiplier for the damage of ALL ki techniques (beams, blasts, bombs), fired by players and by mobs/NPCs alike. 1.5 = +50%.")
                     .defineInRange("combat.ki_damage_scale", 1.5D, 0.1D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue COMBAT_ATTACK_SPEED_RAW =
@@ -1461,6 +1487,9 @@ public class ServerConfig {
     private static volatile double IMMORTAL_OVERKILL_FRACTION = 1.0D;
     private static volatile int    TECHNIQUE_MAX_SLOTS = 12;
     private static volatile int    SENSE_KI_RANGE = 64;
+    private static volatile boolean LOCK_ON_ENABLED = true, LOCK_ON_WHILE_FLYING = true;
+    private static volatile int    LOCK_ON_RANGE = 64;
+    private static volatile double LOCK_ON_HOMING_TURN = 0.20D;
     private static volatile double TECHNIQUE_EXPLOSION_RADIUS_CAP = 0.0D;
     private static volatile double VANILLA_PL_FACTOR = 1.0D;
     private static volatile int    SCOUTER_RANGE = 64;
@@ -1718,6 +1747,10 @@ public class ServerConfig {
         IMMORTAL_OVERKILL_FRACTION = IMMORTAL_OVERKILL_FRACTION_RAW.get();
         TECHNIQUE_MAX_SLOTS = TECHNIQUE_MAX_SLOTS_RAW.get();
         SENSE_KI_RANGE      = SENSE_KI_RANGE_RAW.get();
+        LOCK_ON_ENABLED     = LOCK_ON_ENABLED_RAW.get();
+        LOCK_ON_WHILE_FLYING = LOCK_ON_WHILE_FLYING_RAW.get();
+        LOCK_ON_RANGE       = LOCK_ON_RANGE_RAW.get();
+        LOCK_ON_HOMING_TURN = LOCK_ON_HOMING_TURN_RAW.get();
         TECHNIQUE_EXPLOSION_RADIUS_CAP = TECHNIQUE_EXPLOSION_RADIUS_CAP_RAW.get();
         VANILLA_PL_FACTOR   = VANILLA_PL_FACTOR_RAW.get();
         SCOUTER_RANGE       = SCOUTER_RANGE_RAW.get();
@@ -2078,6 +2111,11 @@ public class ServerConfig {
     public static double immortalOverkillFraction() { return IMMORTAL_OVERKILL_FRACTION; }
     public static int techniqueMaxSlots()          { return TECHNIQUE_MAX_SLOTS; }
     public static int senseKiRange()               { return SENSE_KI_RANGE; }
+    public static boolean lockOnEnabled()          { return LOCK_ON_ENABLED; }
+    public static boolean lockOnWhileFlying()      { return LOCK_ON_WHILE_FLYING; }
+    public static int lockOnRange()                { return LOCK_ON_RANGE; }
+    public static double lockOnHomingTurn()        { return LOCK_ON_HOMING_TURN; }
+    public static boolean lockOnDirectedDash()     { return LOCK_ON_DIRECTED_DASH_RAW.get(); }
     /** Techo global del radio de explosión de las técnicas, en bloques. 0 = sin techo. */
     public static double techniqueExplosionRadiusCap() { return TECHNIQUE_EXPLOSION_RADIUS_CAP; }
     public static double vanillaPowerLevelFactor() { return VANILLA_PL_FACTOR; }

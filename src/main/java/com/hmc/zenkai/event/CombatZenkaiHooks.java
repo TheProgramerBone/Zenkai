@@ -1,6 +1,7 @@
 package com.hmc.zenkai.event;
 
 import com.hmc.zenkai.feature.combat.DashServer;
+import com.hmc.zenkai.feature.sense.DamageNumberPacket;
 
 import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.content.entity.ai.BlockingMob;
@@ -418,7 +419,23 @@ public class CombatZenkaiHooks {
         float vanillaMax = e.getEntity().getMaxHealth();
         float equivalent = (float) (finalDamage / defStats.getBodyMax() * vanillaMax);
         e.setNewDamage(Math.max(0.0F, equivalent));
-        if (equivalent > 0f) grantTraining(e, Math.min(finalDamage, defStats.getBody()));
+        if (equivalent > 0f) {
+            showDamageNumber(e, finalDamage, false);
+            grantTraining(e, Math.min(finalDamage, defStats.getBody()));
+        }
+    }
+
+    /**
+     * Número de daño flotante para el atacante (solo jugadores con Ki Sense, ver DamageNumberPacket).
+     * Se llama con el daño REAL tras la mitigación, no con el entrante, para que el número sea lo que
+     * de verdad se le quitó a la víctima. Los flags solo cambian el color en el cliente.
+     */
+    private static void showDamageNumber(LivingDamageEvent.Pre e, double amount, boolean blackFlash) {
+        int flags = 0;
+        if (blackFlash) flags |= DamageNumberPacket.FLAG_BLACK_FLASH;
+        if (isBlockingNow(e.getEntity())) flags |= DamageNumberPacket.FLAG_BLOCKED;
+        if (e.getSource().is(ModDamageTypes.KI_DAMAGE_TAG)) flags |= DamageNumberPacket.FLAG_KI;
+        DamageNumberPacket.sendToAttacker(e.getSource().getEntity(), e.getEntity(), amount, flags);
     }
 
     /**
@@ -452,6 +469,7 @@ public class CombatZenkaiHooks {
             defStats.addBody(-(int) Math.ceil(finalDamage));
             bodySpent = bodyBefore - defStats.getBody();
 
+            showDamageNumber(e, bodySpent, blackFlash);
             grantTraining(e, Math.min(finalDamage, bodyBefore));
             if (e.getEntity() instanceof ServerPlayer ueVictim) {
                 OverlayMetersSystem.onDamaged(ueVictim, bodySpent, defStats.getBodyMax());
@@ -669,7 +687,10 @@ public class CombatZenkaiHooks {
         float finalDamage = (float) Math.max(dmg * armorMult,
                 dmg * ServerConfig.minDamagePercent());
         e.setNewDamage(finalDamage);
-        if (finalDamage > 0f) grantTraining(e, Math.min(finalDamage, e.getEntity().getHealth()));
+        if (finalDamage > 0f) {
+            showDamageNumber(e, Math.min(finalDamage, e.getEntity().getHealth()), false);
+            grantTraining(e, Math.min(finalDamage, e.getEntity().getHealth()));
+        }
     }
 
     /** TP de entrenamiento al atacante, si es un jugador distinto de la víctima. */

@@ -47,7 +47,7 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * "Meditation" (TrainingHubScreen): ritmo estilo FNF — 4 carriles (A/S/D/F), las notas caen
+ * "Meditation" (TrainingHubScreen): ritmo estilo FNF — 4 carriles (flechas por defecto), las notas caen
  * hacia una zona de impacto fija; acertar en ventana sube la racha, fallar la corta. Dos modos:
  *
  *  - PRÁCTICA LIBRE (por defecto): generador procedural (spawnea una nota en un carril al azar a
@@ -101,7 +101,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
      *  usuario ("un ajuste para poder cambiar las teclas a gusto del jugador", ver el popup de
      *  configuración/engranaje más abajo). Cargados de ClientConfig en init() y refrescados tras
      *  confirmar el popup — instancia, no static, porque el valor puede cambiar en caliente sin
-     *  reabrir la pantalla. GLFW_KEY_A/S/D/F siguen siendo el default de ClientConfig. */
+     *  reabrir la pantalla. Las flechas (izquierda, abajo, arriba, derecha) son el default de ClientConfig. */
     private final int[] keys = new int[LANES];
 
     private static final long BASE_SPAWN_INTERVAL_MS = 450;

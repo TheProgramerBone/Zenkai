@@ -462,6 +462,15 @@ public class ModCommands {
                                 .executes(c -> debugStun(c, 60))
                                 .then(Commands.argument("ticks", IntegerArgumentType.integer(1, 600))
                                         .executes(c -> debugStun(c, IntegerArgumentType.getInteger(c, "ticks")))))
+                        // ── /zenkai debug party [n] | clear ───────────────────────────
+                        // Llena tu party con compañeros FALSOS (vitales inventados) para probar el panel
+                        // de party en un mundo de un solo jugador.
+                        .then(Commands.literal("party")
+                                .executes(c -> debugParty(c, 4))
+                                .then(Commands.argument("n", IntegerArgumentType.integer(1, 8))
+                                        .executes(c -> debugParty(c, IntegerArgumentType.getInteger(c, "n"))))
+                                .then(Commands.literal("clear")
+                                        .executes(ModCommands::debugPartyClear)))
                         // ── /zenkai debug dummy ───────────────────────────────────────
                         // Muñeco de pruebas: una Sombra con guion que hace UNA sola cosa
                         // (spamear ki, quedarse quieta, guardia...), para probar el choque de
@@ -491,6 +500,21 @@ public class ModCommands {
 
 
         );
+    }
+
+    private static int debugParty(CommandContext<CommandSourceStack> c, int n) throws CommandSyntaxException {
+        ServerPlayer sp = c.getSource().getPlayerOrException();
+        int added = com.hmc.zenkai.feature.party.PartyService.debugFill(c.getSource().getServer(), sp, n);
+        c.getSource().sendSuccess(() -> Component.literal("Party de prueba: +" + added
+                + " compañeros falsos. Elígelos con el diamante en la pestaña Party."), false);
+        return added;
+    }
+
+    private static int debugPartyClear(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer sp = c.getSource().getPlayerOrException();
+        int removed = com.hmc.zenkai.feature.party.PartyService.debugClear(c.getSource().getServer(), sp);
+        c.getSource().sendSuccess(() -> Component.literal("Quitados " + removed + " compañeros falsos."), false);
+        return removed;
     }
 
     // ── Selectores múltiples ─────────────────────────────────────────────────

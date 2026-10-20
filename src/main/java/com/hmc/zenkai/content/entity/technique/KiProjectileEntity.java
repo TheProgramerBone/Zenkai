@@ -17,6 +17,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import com.hmc.zenkai.config.ServerConfig;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -522,32 +523,28 @@ public class KiProjectileEntity extends Projectile {
     }
 
     /**
-     * HOMING: si el dueño tiene un lock de Ki Sense (tecla de fijar), curva el rumbo hacia el
-     * objetivo un poco cada tick — corrección SUAVE (HOMING_TURN), no un misil de persecución
-     * perfecta. Atado a la HABILIDAD, no al MODO: basta con tener Ki Sense desbloqueado
-     * (SkillEffects.lockOnBlocked, el mismo gate que ya usa el fijado en cliente —
-     * LockOnClientState/SkillEffects.lockOnBlocked) para fijar y para que esto funcione; NO
-     * hace falta tener el sentir el ki encendido (SenseServerState.senseActive es una cosa
-     * distinta: si el escaneo periódico de modo sigue llegando, no si HAY lock). Sin la
-     * habilidad o sin lock, no corrige nada y vuela recto como cualquier otro proyectil.
+     * HOMING: si el dueño tiene un lock válido (tecla de fijar), curva el rumbo hacia el objetivo
+     * un poco cada tick — corrección SUAVE, no un misil de persecución perfecta. Desde 0.5.1 el
+     * lock es una función base (ya no exige Ki Sense): el gate es SkillEffects.lockOnBlocked, que
+     * solo cierra la config del servidor (lock_on.enabled / lock_on.while_flying). Sin lock, o con
+     * el lock inválido (SenseServerState.lockedTarget), no corrige nada y vuela recto como
+     * cualquier otro proyectil.
      *
-     * HOMING_TURN es el PESO de la mezcla, no un ángulo: el giro máximo por tick sale de
-     * atan(t/(1-t)), así que subirlo un 20 % (0.12 -> 0.144, ajuste pedido en 2026-09-06) da
-     * algo más de un 20 % de ángulo — de 7.8° a 9.6° por tick. Se sube el peso y no el ángulo
-     * porque es lo que de verdad hay escrito en la fórmula; si algún día se quiere razonar en
-     * grados, hay que cambiar la mezcla por una rotación acotada, no reinterpretar esta
-     * constante.
+     * El peso (lock_on.homing_turn, 0.20 por defecto) es el PESO de la mezcla, no un ángulo: el
+     * giro máximo por tick sale de atan(t/(1-t)). 0.144 daba 9.6° por tick; 0.20 da ~14°. Se
+     * sube el peso y no el ángulo porque es lo que de verdad hay escrito en la fórmula; si algún
+     * día se quiere razonar en grados, hay que cambiar la mezcla por una rotación acotada, no
+     * reinterpretar este valor.
      */
-    private static final double HOMING_TURN = 0.144;
-
     private void applyHoming() {
         if (!(getOwner() instanceof ServerPlayer sp)) return;
         if (SkillEffects.lockOnBlocked(sp)) return;
-        int lockId = SenseServerState.lockOf(sp);
-        if (lockId < 0) return;
-
-        Entity target = level().getEntity(lockId);
-        if (!(target instanceof LivingEntity le) || !le.isAlive() || target == getOwner()) return;
+        // lockedTarget valida existencia en este nivel, vida y distancia: un id viejo del cliente
+        // (otra dimensión, objetivo muerto) ya no curva el proyectil hacia la nada.
+        LivingEntity le = SenseServerState.lockedTarget(sp);
+        if (le == null) return;
+        double turn = ServerConfig.lockOnHomingTurn();
+        if (turn <= 0.0) return;
 
         Vec3 toTarget = le.getBoundingBox().getCenter().subtract(position());
         if (toTarget.lengthSqr() < 1.0E-4) return;
@@ -556,8 +553,8 @@ public class KiProjectileEntity extends Projectile {
         double speed = vel.length();
         if (speed <= 0.0) return;
 
-        Vec3 newDir = vel.normalize().scale(1.0 - HOMING_TURN)
-                .add(toTarget.normalize().scale(HOMING_TURN))
+        Vec3 newDir = vel.normalize().scale(1.0 - turn)
+                .add(toTarget.normalize().scale(turn))
                 .normalize();
         setDeltaMovement(newDir.scale(speed));
     }

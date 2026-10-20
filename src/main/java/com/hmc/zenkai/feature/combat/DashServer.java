@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.phys.Vec3;
@@ -143,6 +144,17 @@ public final class DashServer {
         // Eje horizontal según hacia dónde mira el cuerpo (yaw), sin la inclinación vertical.
         double yaw = Math.toRadians(sp.getYRot());
         Vec3 fwd = new Vec3(-Math.sin(yaw), 0.0, Math.cos(yaw));
+        // Con un lock válido el eje "adelante" apunta AL OBJETIVO, no a donde mira la cámara: así
+        // izquierda/derecha orbitan al fijado y atrás se aleja de él, aunque la cámara aún no haya
+        // terminado de girar (suavizado) o el ratón la haya desviado un poco. Se valida en el
+        // servidor (lockedTarget); a menos de medio bloque no hay dirección fiable y se queda el yaw.
+        if (ServerConfig.lockOnDirectedDash() && !SkillEffects.lockOnBlocked(sp)) {
+            LivingEntity locked = SenseServerState.lockedTarget(sp);
+            if (locked != null) {
+                Vec3 to = new Vec3(locked.getX() - sp.getX(), 0.0, locked.getZ() - sp.getZ());
+                if (to.lengthSqr() > 0.25) fwd = to.normalize();
+            }
+        }
         Vec3 right = new Vec3(-fwd.z, 0.0, fwd.x);
         Vec3 d = switch (dir) {
             case DIR_BACK -> fwd.scale(-1.0);
