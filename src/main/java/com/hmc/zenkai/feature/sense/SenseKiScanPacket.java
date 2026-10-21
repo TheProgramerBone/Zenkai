@@ -199,6 +199,7 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
                 int flags = 0;
                 if (att.flags().isChargingKi()) flags |= SenseKiDataPacket.FLAG_CHARGING;
                 var form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+                if (form.isTransforming()) flags |= SenseKiDataPacket.FLAG_TRANSFORMING;
                 if (!FormIds.BASE.equals(form.getFormId()) || form.getKaioken() != KaiokenTier.OFF) {
                     flags |= SenseKiDataPacket.FLAG_TRANSFORMED;
                 }
@@ -213,6 +214,22 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
                         frac(att.getStamina(), att.getStaminaMax()), flags);
             }
             return vanillaRaw(le, true);
+        }
+
+        // Muñeco de depuración: ningún mob tiene ki ni stamina, así que se inventan unos que oscilan
+        // y unos estados que se encienden y apagan solapados, solo para poder ver los arcos y los iconos del nivel 3-4.
+        if (le.getTags().contains(com.hmc.zenkai.content.entity.misc.ShadowCloneEntity.DEBUG_DUMMY_TAG)) {
+            long t = le.level().getGameTime();
+            float ki = 0.5f + 0.5f * (float) Math.sin(t * 0.05);
+            float sta = 0.5f + 0.5f * (float) Math.sin(t * 0.03 + 2.0);
+            int flags = SenseKiDataPacket.FLAG_IN_COMBAT;
+            // Cada estado con su propio periodo, para que se solapen (en un jugador real son bits independientes).
+            if (t / 60 % 2 == 0) flags |= SenseKiDataPacket.FLAG_CHARGING;
+            if (t / 90 % 2 == 0) flags |= SenseKiDataPacket.FLAG_TRANSFORMED;
+            if (t / 110 % 3 == 0) flags |= SenseKiDataPacket.FLAG_TRANSFORMING;
+            if (t / 140 % 2 == 0) flags |= SenseKiDataPacket.FLAG_SUPPRESSING;
+            return new Raw(Math.round(le.getHealth()), Math.round(le.getMaxHealth()), entityAlignment(le),
+                    vanillaRaw(le, false).powerLevel(), false, ki, sta, flags);
         }
 
         // Entidad con stats de combate resueltos.
@@ -241,7 +258,13 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
 
     /** De un mob solo se sabe si está en combate: tiene un objetivo al que ataca. */
     private static int mobFlags(LivingEntity le) {
-        return le instanceof Mob m && m.getTarget() != null ? SenseKiDataPacket.FLAG_IN_COMBAT : 0;
+        int flags = le instanceof Mob m && m.getTarget() != null ? SenseKiDataPacket.FLAG_IN_COMBAT : 0;
+        if (le instanceof com.hmc.zenkai.content.entity.ZenkaiDefaultMob zm && zm.isTransforming()) {
+            flags |= SenseKiDataPacket.FLAG_TRANSFORMING;
+        }
+        EntityStats stats = ZenkaiStats.entityStats(le);
+        if (stats != null && stats.isTransformed()) flags |= SenseKiDataPacket.FLAG_TRANSFORMED;
+        return flags;
     }
 
     private static float frac(int cur, int max) {

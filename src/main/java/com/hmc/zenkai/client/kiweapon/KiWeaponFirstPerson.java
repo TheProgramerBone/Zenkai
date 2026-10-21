@@ -14,6 +14,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RenderArmEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.minecraft.client.renderer.MultiBufferSource;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -55,9 +56,16 @@ public final class KiWeaponFirstPerson {
         pose.pushPose();
         // Brazo vanilla: su pivote de hombro, igual que translateToHand con el brazo a 0.
         pose.translate((left ? 5.0F : -5.0F) / 16.0F, 2.0F / 16.0F, 0.0F);
+        Matrix4f armFrame = new Matrix4f(pose.last().pose());
         itemFrame(pose, left);
-        KiWeaponVfx.drawNow(pose, e.getMultiBufferSource(), player, partial, e.getArm());
+        KiWeaponVfx.drawNow(pose, e.getMultiBufferSource(), player, partial, e.getArm(), armFrame);
         pose.popPose();
+    }
+
+    /** Con shaderpack, el arma de la mano se dibuja aquí (ver KiWeaponVfx.drawNow): ya pasado el compuesto del pack. */
+    @SubscribeEvent
+    public static void onRenderGui(RenderGuiEvent.Pre e) {
+        KiWeaponVfx.flushPendingHands();
     }
 
     /** Marco de ítem de vanilla (igual que KiWeaponLayer), desde el pivote del hombro. */
@@ -86,8 +94,9 @@ public final class KiWeaponFirstPerson {
         // Para volver al marco vanilla (Y hacia abajo, brazo derecho en -X) hay que invertir X e Y.
         pose.translate((left ? -5.0F : 5.0F) / 16.0F, 22.0F / 16.0F, 0.0F);
         pose.scale(-1.0F, -1.0F, 1.0F);
+        Matrix4f armFrame = new Matrix4f(pose.last().pose());
         itemFrame(pose, left);
-        KiWeaponVfx.drawNow(pose, buffers, player, partial, arm);
+        KiWeaponVfx.drawNow(pose, buffers, player, partial, arm, armFrame);
     }
 
     /** Los ids de entidad se reutilizan entre mundos: sin esto un arma "fantasma" podría

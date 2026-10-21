@@ -8,6 +8,7 @@
     "client.PlayerModelHideMixin",
     "client.MouseHandlerMixin",
     "client.CameraShakeMixin",
+    "client.ItemInHandGlowMixin",
     "client.DamageEventMarkMixin",
     "client.SyncHurtFlashMixin"
   ],

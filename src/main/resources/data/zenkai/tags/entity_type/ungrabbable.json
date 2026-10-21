@@ -1,8 +1,5 @@
 {
   "values": [
-    "#zenkai:bosses",
-    "minecraft:ender_dragon",
-    "minecraft:wither",
-    "minecraft:warden"
+    "#zenkai:bosses"
   ]
 }

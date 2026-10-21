@@ -6,6 +6,7 @@ import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.wishes.SetGhostSlotPayload;
 import com.hmc.zenkai.feature.wishes.StackWishPayload;
 import net.minecraft.client.Minecraft;
@@ -132,6 +133,15 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
     protected void slotClicked(@NotNull Slot slot, int slotId, int mouseButton, @NotNull ClickType clickType) {
         if (slotId == 0) {
             ItemStack cursor = this.menu.getCarried();
+            // Prohibido: ni siquiera entra al slot (el servidor lo vuelve a validar igual; esto es solo para
+            // que el rechazo sea inmediato y con aviso, sin esperar el viaje de ida y vuelta).
+            if (!cursor.isEmpty() && ServerConfig.isBanned(cursor)) {
+                if (this.minecraft != null && this.minecraft.player != null) {
+                    this.minecraft.player.displayClientMessage(
+                            Component.translatable("messages.zenkai.item_banned"), true);
+                }
+                return;
+            }
             var conn = Minecraft.getInstance().getConnection();
             if (conn != null) conn.send(new SetGhostSlotPayload(cursor.copy()));
             return;

@@ -123,16 +123,18 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_FLY = IconUV.grid(3, 0);
     private static final IconUV ICON_POTENTIAL_UNLOCKED = IconUV.grid(6,3);
     private static final IconUV ICON_IMMORTAL = IconUV.grid(11, 0);
-    private static final IconUV ICON_IN_COMBAT = IconUV.grid(0, 0);
+    public static final IconUV ICON_IN_COMBAT = IconUV.grid(0, 0);
     private static final IconUV ICON_KAIOKEN = IconUV.grid(2, 2);
-    private static final IconUV ICON_KI_CHARGE = IconUV.grid(0, 2);
+    public static final IconUV ICON_KI_CHARGE = IconUV.grid(0, 2);
     private static final IconUV ICON_LEGENDARY = IconUV.grid(5, 2);
     // "Majin" en el HUD es SOLO PlayerVisualAttachment.isMajinControlled (la maldición/
     // posesión, ver MajinEffect/PersistentEffectsSystem). PlayerStateFlags llegó a tener un
     // campo isMajin aparte que no representaba nada real; se eliminó para no confundir los dos.
     private static final IconUV ICON_MAJIN = IconUV.grid(4, 0);
     private static final IconUV ICON_STRAIN = IconUV.grid(10, 1);
-    private static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);
+    public static final IconUV ICON_TRANSFORMING = IconUV.grid(4, 2);
+    /** Solo lo usa el Ki Sense (forma ya activa): el HUD propio ya muestra la forma con su aura. */
+    public static final IconUV ICON_TRANSFORMED = IconUV.grid(8, 0);
     private static final IconUV ICON_TURBO = IconUV.grid(1, 2);
     private static final IconUV ICON_MOON = IconUV.grid(6, 0);
     /** Celda del cooldown de Transmisión Instantánea — mismo ícono que

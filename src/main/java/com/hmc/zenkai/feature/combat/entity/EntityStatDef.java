@@ -44,10 +44,23 @@ public record EntityStatDef(
         String rewardTp,                // "auto" (escala por PL) o número en string
         List<EntityPhysicalAttack> physicalAttacks, // técnicas físicas que puede usar (vacío = ninguna)
         boolean canFly,                 // "moveset.can_fly" — ver ZenkaiDefaultMob (vuelo estilo Vex)
-        boolean canBlock                // "moveset.can_block" — ver ZenkaiDefaultMob (guardia, BlockHabitGoal)
+        boolean canBlock,               // "moveset.can_block" — ver ZenkaiDefaultMob (guardia, BlockHabitGoal)
+        List<EntityTransformation> transformations // "transformations": fases por vida, de mayor a menor umbral (vacío = ninguna)
 ) {
+    /** Sin transformación: la aridad de siempre, para quien construye una ficha a mano. */
+    public EntityStatDef(ResourceLocation entity, long powerLevel, boolean displayOnly, String archetype,
+            Integer alignment, EnumMap<ZenkaiAttributes, AttrOverride> attributeOverrides,
+            double bodyMultOverride, double kiMultOverride, List<EntityKiAttack> kiAttacks,
+            boolean movesetMelee, String rewardTp, List<EntityPhysicalAttack> physicalAttacks,
+            boolean canFly, boolean canBlock) {
+        this(entity, powerLevel, displayOnly, archetype, alignment, attributeOverrides, bodyMultOverride,
+                kiMultOverride, kiAttacks, movesetMelee, rewardTp, physicalAttacks, canFly, canBlock, List.of());
+    }
+
     /** Un override de atributo: absoluto (percent=false) o relativo en % (percent=true). */
     public record AttrOverride(boolean percent, double value) {}
+
+    public boolean hasTransformation() { return transformations != null && !transformations.isEmpty(); }
 
     /** ¿La entidad tiene al menos un ataque de ki definido? */
     public boolean hasKiAttacks() { return kiAttacks != null && !kiAttacks.isEmpty(); }

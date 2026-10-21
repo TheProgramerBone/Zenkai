@@ -96,6 +96,8 @@ public class ModEntityStatsProvider implements DataProvider {
 
         put(out, "namekian_warrior", Def.of("zenkai:namekian_warrior", 3000, "brawler", 60)
                 .attr("strength", "+20%").mults(1.0, 1.0)
+                // Primer NPC con fase de transformación (prueba): al 40 % de vida, 3 s de animación y PL x1,5.
+                .transformation(40, 1.5, 60, 0)
                 .ki("wave",  3, "0x49cc5d", 400, 20, null)
                 .ki("blast", 5, "0xFFAA00", 200, 24, 1.3));
 
@@ -309,6 +311,24 @@ public class ModEntityStatsProvider implements DataProvider {
          *  false (no escribir la clave) si nunca se llama. */
         Def canBlock(boolean canBlock) {
             if (moveset != null) moveset.addProperty("can_block", canBlock);
+            return this;
+        }
+
+        private JsonArray transformations;
+
+        /** Añade una fase de transformación por vida (ver EntityTransformation / TransformationGoal).
+         *  Las fases se disparan en el orden en que se declaran: umbral de mayor a menor. */
+        Def transformation(int atHealthPct, double powerMult, int durationTicks, double healPct) {
+            if (transformations == null) {
+                transformations = new JsonArray();
+                root.add("transformations", transformations);
+            }
+            JsonObject t = new JsonObject();
+            t.addProperty("at_health_pct", atHealthPct);
+            t.addProperty("power_mult", powerMult);
+            t.addProperty("duration_ticks", durationTicks);
+            t.addProperty("heal_pct", healPct);
+            transformations.add(t);
             return this;
         }
 

@@ -56,7 +56,7 @@ public final class TargetReadingOverlay {
     private static final int C_TRACK = 0xFF2F434E;
 
     /** Estados que se listan como líneas (jefe y «te fija» van aparte). */
-    private static final int STATE_MASK = SenseKiDataPacket.FLAG_CHARGING | SenseKiDataPacket.FLAG_TRANSFORMED
+    private static final int STATE_MASK = SenseKiDataPacket.FLAG_CHARGING | SenseKiDataPacket.FLAG_TRANSFORMING | SenseKiDataPacket.FLAG_TRANSFORMED
             | SenseKiDataPacket.FLAG_SUPPRESSING | SenseKiDataPacket.FLAG_IN_COMBAT;
 
     /** Alto de muestra para colocar el panel: cabecera, vida, ki, stamina y un estado. */
@@ -140,6 +140,7 @@ public final class TargetReadingOverlay {
         }
 
         ty = state(g, font, tx, ty, flags, SenseKiDataPacket.FLAG_CHARGING, "hud.zenkai.ki_sense.state.charging", C_CYAN);
+        ty = state(g, font, tx, ty, flags, SenseKiDataPacket.FLAG_TRANSFORMING, "hud.zenkai.ki_sense.state.transforming", C_GOLD);
         ty = state(g, font, tx, ty, flags, SenseKiDataPacket.FLAG_TRANSFORMED, "hud.zenkai.ki_sense.state.transformed", C_GOLD);
         ty = state(g, font, tx, ty, flags, SenseKiDataPacket.FLAG_SUPPRESSING, "hud.zenkai.ki_sense.state.suppressing", C_VIOLET);
         ty = state(g, font, tx, ty, flags, SenseKiDataPacket.FLAG_IN_COMBAT, "hud.zenkai.ki_sense.state.in_combat", C_TEXT);

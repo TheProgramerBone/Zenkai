@@ -35,6 +35,8 @@ public final class EntityStats implements ZenkaiCombatStats {
     private int energy,  energyMax;
     private int tpReward = 0;
     private boolean initialized = false;
+    /** Fases de transformación ya hechas (0 = base; EntityStatDef.transformations). Cada fase, una sola vez. */
+    private int stage = 0;
 
     /** Constructor por defecto (attachment sin poblar). isCombatActive()=false hasta applyDef/load. */
     public EntityStats() {
@@ -85,6 +87,40 @@ public final class EntityStats implements ZenkaiCombatStats {
         mirrorToVanilla(le);
     }
 
+    /**
+     * Pasa a la fase siguiente: el PL REAL pasa a ser el PL BASE de la ficha por {@code t.powerMult()}
+     * y los atributos se vuelven a resolver con el mismo arquetipo y los mismos overrides, así que vida,
+     * daño, defensa y pools suben como si el mob hubiera nacido con ese PL. La vida se conserva en
+     * PROPORCIÓN (sube el máximo y el body con él) y encima recupera {@code t.healPct()} % del máximo;
+     * stamina y ki se rellenan. El multiplicador es sobre el PL base, no encadenado.
+     */
+    public void advanceStage(EntityStatDef def, LivingEntity le, EntityTransformation t) {
+        if (!initialized) return;
+        float ratio = bodyMax <= 0 ? 1f : body / (float) bodyMax;
+
+        EntityArchetype arch = EntityArchetype.get(def.archetype());
+        EnumMap<ZenkaiAttributes, Integer> solved =
+                PowerLevel.solveAttributes(Math.round(def.powerLevel() * t.powerMult()), arch);
+        for (var e : def.attributeOverrides().entrySet()) {
+            EntityStatDef.AttrOverride ov = e.getValue();
+            int base = solved.getOrDefault(e.getKey(), 0);
+            int val  = ov.percent()
+                    ? (int) Math.round(base * (1.0 + ov.value() / 100.0))
+                    : (int) Math.round(ov.value());
+            solved.put(e.getKey(), Math.max(0, val));
+        }
+        attr.clear();
+        attr.putAll(solved);
+        recalc();
+
+        body    = MathUtil.clamp(Math.round(bodyMax * ratio) + (int) Math.round(bodyMax * t.healPct() / 100.0), 1, bodyMax);
+        stamina = staminaMax;
+        energy  = energyMax;
+        tpReward = resolveReward(def.rewardTp(), getPowerLevel());
+        stage++;
+        mirrorToVanilla(le);
+    }
+
     private static int resolveReward(String raw, long pl) {
         int auto = (int) Math.max(1, Math.round(pl * ServerConfig.tpPerPl()));
         if (raw == null || raw.equalsIgnoreCase("auto")) return auto;
@@ -104,6 +140,8 @@ public final class EntityStats implements ZenkaiCombatStats {
 
     public int getAttr(ZenkaiAttributes a) { return attr.getOrDefault(a, 0); }
     public boolean isInitialized()       { return initialized; }
+    public boolean isTransformed()       { return stage > 0; }
+    public int getStage()                { return stage; }
     public int getTpReward()             { return tpReward; }
 
     // ── ZenkaiCombatStats ─────────────────────────────────────────────────────
@@ -128,6 +166,7 @@ public final class EntityStats implements ZenkaiCombatStats {
     public CompoundTag save() {
         CompoundTag t = new CompoundTag();
         t.putBoolean("init", initialized);
+        t.putInt("stage", stage);
         CompoundTag a = new CompoundTag();
         for (var e : attr.entrySet()) a.putInt(e.getKey().name(), e.getValue());
         t.put("attr", a);
@@ -142,6 +181,8 @@ public final class EntityStats implements ZenkaiCombatStats {
 
     public void load(CompoundTag t) {
         this.initialized = t.getBoolean("init");
+        // "transformed" (booleano) es el formato de la primera versión: equivale a la fase 1.
+        this.stage = t.contains("stage") ? t.getInt("stage") : (t.getBoolean("transformed") ? 1 : 0);
         CompoundTag a = t.getCompound("attr");
         for (ZenkaiAttributes x : ZenkaiAttributes.values()) attr.put(x, a.getInt(x.name()));
         this.bodyMult = t.contains("bodyMult") ? t.getDouble("bodyMult") : 1.0;

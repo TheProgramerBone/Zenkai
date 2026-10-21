@@ -43,6 +43,9 @@ public class ZenkaiCommonAnimations {
     public static final RawAnimation KI_ATTACK_2_RELEASE = RawAnimation.begin().thenPlayAndHold("zenkai.ki_attack_2_release");
     public static final RawAnimation TRANSFORMATION1 = RawAnimation.begin().thenPlayAndHold("zenkai.transformation1");
     public static final RawAnimation TRANSFORMATION2 = RawAnimation.begin().thenLoop("zenkai.transformation2");
+    /** Transformación de un NPC: el arranque (una vez) y luego el temblor en bucle mientras dure. */
+    public static final RawAnimation TRANSFORMATION_MOB = RawAnimation.begin()
+            .thenPlay("zenkai.transformation1").thenLoop("zenkai.transformation2");
     public static final RawAnimation DODGE1 = RawAnimation.begin().thenPlay("zenkai.dodge1");
     public static final RawAnimation DODGE2 = RawAnimation.begin().thenPlay("zenkai.dodge2");
 

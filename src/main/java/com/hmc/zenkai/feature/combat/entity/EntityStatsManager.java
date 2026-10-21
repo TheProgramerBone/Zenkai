@@ -156,8 +156,33 @@ public final class EntityStatsManager {
             if (rw.has("tp")) rewardTp = rw.get("tp").getAsString();
         }
 
+        // "transformations" (lista) o el "transformation" (objeto) de la primera versión.
+        List<EntityTransformation> transformations = new ArrayList<>();
+        JsonElement tf = o.has("transformations") ? o.get("transformations") : o.get("transformation");
+        if (tf != null) {
+            List<JsonObject> raw = new ArrayList<>();
+            if (tf.isJsonArray()) {
+                for (JsonElement el : tf.getAsJsonArray()) if (el.isJsonObject()) raw.add(el.getAsJsonObject());
+            } else if (tf.isJsonObject()) {
+                raw.add(tf.getAsJsonObject());
+            }
+            for (JsonObject t : raw) {
+                EntityTransformation parsed = new EntityTransformation(
+                        t.has("at_health_pct") ? t.get("at_health_pct").getAsDouble() : 50.0,
+                        t.has("power_mult") ? t.get("power_mult").getAsDouble() : 1.5,
+                        t.has("duration_ticks") ? t.get("duration_ticks").getAsInt()
+                                : EntityTransformation.DEFAULT_DURATION_TICKS,
+                        t.has("heal_pct") ? t.get("heal_pct").getAsDouble() : 0.0);
+                if (parsed.valid()) transformations.add(parsed);
+                else LOGGER.warn("[Zenkai] fase de transformación inválida en {} (at_health_pct 0..100, power_mult > 1, heal_pct 0..100)", entity);
+            }
+            // Se dispararán en el orden de la lista: umbral de mayor a menor.
+            transformations.sort(java.util.Comparator.comparingDouble(EntityTransformation::atHealthPct).reversed());
+        }
+
         return new EntityStatDef(entity, powerLevel, displayOnly, archetype, alignment,
-                attrOv, bodyMult, kiMult, kiAttacks, melee, rewardTp, physicalAttacks, canFly, canBlock);
+                attrOv, bodyMult, kiMult, kiAttacks, melee, rewardTp, physicalAttacks, canFly, canBlock,
+                List.copyOf(transformations));
     }
 
     /** "+20%" / "-10%" -> relativo; "250" -> absoluto. */

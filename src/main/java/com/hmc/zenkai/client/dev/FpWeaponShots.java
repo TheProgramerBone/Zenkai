@@ -75,6 +75,9 @@ public final class FpWeaponShots {
             }
             return;
         }
+        // Sin foco de ventana el juego abre el menú de pausa y tapa la captura: se cierra cada tick.
+        mc.options.pauseOnLostFocus = false;
+        if (mc.screen instanceof net.minecraft.client.gui.screens.PauseScreen) mc.setScreen(null);
         if (++ticks < WAIT_LOAD) return;
         if (PLAN.isEmpty() && step == 0) buildPlan(mc);
         if (wait > 0) { wait--; return; }
@@ -93,8 +96,67 @@ public final class FpWeaponShots {
         return d;
     }
 
+    /** Segunda línea de zenkai_fpshots.txt = "infuse": en vez de las armas de ki, un ítem corriente con Ki Infuse. */
+    private static boolean infuseScene() {
+        try {
+            var lines = Files.readAllLines(new File(Minecraft.getInstance().gameDirectory, "zenkai_fpshots.txt").toPath());
+            return lines.size() > 1 && lines.get(1).trim().equals("infuse");
+        } catch (Exception e) { return false; }
+    }
+
+    /** Escena Ki Infuse: concede la habilidad, enciende el interruptor, pone una espada de diamante y captura en 1ª y 3ª
+     *  persona de día y de noche, registrando cada condición de {@code infuseGlowActive}. */
+    private static void buildInfusePlan(Minecraft mc) {
+        PLAN.add(() -> {
+            var server = mc.getSingleplayerServer();
+            if (server == null) return;
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(sp).skills()
+                        .grant(com.hmc.zenkai.feature.skills.SkillEffects.KI_INFUSE, 1);
+                com.hmc.zenkai.feature.skills.SkillToggles.set(sp, com.hmc.zenkai.feature.skills.SkillEffects.KI_INFUSE, true);
+                sp.getInventory().selected = 0;
+                sp.getInventory().setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD));
+            });
+            wait = WAIT_TIME;
+        });
+        for (int ti = 0; ti < TIMES.length; ti++) {
+            final long time = TIMES[ti];
+            final int row = ti;
+            PLAN.add(() -> {
+                var server = mc.getSingleplayerServer();
+                if (server != null) server.execute(() -> server.overworld().setDayTime(time));
+                wait = WAIT_TIME;
+            });
+            for (CameraType cam : new CameraType[]{CameraType.FIRST_PERSON, CameraType.THIRD_PERSON_FRONT}) {
+                PLAN.add(() -> {
+                    mc.options.setCameraType(cam);
+                    Player pl = mc.player;
+                    pl.getInventory().selected = 0;
+                    pl.setYRot(0F); pl.yRotO = 0F; float pitchI = cam == CameraType.FIRST_PERSON ? -30F : 15F; pl.setXRot(pitchI); pl.xRotO = pitchI;
+                    Zenkai.LOGGER.info("[DIAG-INFUSE] cam={} skillLevel={} toggleOn={} cfgGlow={} attackDmg={} hasWeapon={} active={} item={}",
+                            cam, com.hmc.zenkai.feature.skills.SkillEffects.level(pl, com.hmc.zenkai.feature.skills.SkillEffects.KI_INFUSE),
+                            com.hmc.zenkai.feature.skills.SkillToggles.isOn(pl, com.hmc.zenkai.feature.skills.SkillEffects.KI_INFUSE),
+                            com.hmc.zenkai.config.ClientConfig.kiInfuseGlow(),
+                            com.hmc.zenkai.feature.combat.KiInfusion.attackDamageOf(pl),
+                            com.hmc.zenkai.feature.combat.KiInfusion.hasWeapon(pl),
+                            com.hmc.zenkai.client.kiweapon.KiWeaponVfx.infuseGlowActive(pl), pl.getMainHandItem());
+                    var srv = mc.getSingleplayerServer();
+                    if (srv != null) srv.execute(() -> { var sp = srv.getPlayerList().getPlayers().get(0);
+                        Zenkai.LOGGER.info("[DIAG-INFUSE] SERVIDOR attackDmg={} hasWeapon={} item={} mods={}",
+                                com.hmc.zenkai.feature.combat.KiInfusion.attackDamageOf(sp),
+                                com.hmc.zenkai.feature.combat.KiInfusion.hasWeapon(sp), sp.getMainHandItem(),
+                                sp.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE).getModifiers()); });
+                    wait = WAIT_SHOT * 2;
+                });
+                PLAN.add(() -> capture(mc, "infuse_" + (cam == CameraType.FIRST_PERSON ? "fp" : "tp"), row, 0));
+            }
+        }
+    }
+
     private static void buildPlan(Minecraft mc) {
         mc.options.pauseOnLostFocus = false;
+        if (infuseScene()) { buildInfusePlan(mc); return; }
         mc.options.setCameraType(CameraType.FIRST_PERSON);
         Player p = mc.player;
         for (int i = 0; i < 9; i++) {
@@ -144,7 +206,7 @@ public final class FpWeaponShots {
     private static void capture(Minecraft mc, String variant, int row, int col) {
         try (NativeImage shot = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
             int w = shot.getWidth(), h = shot.getHeight();
-            int x0 = (int) (w * 0.36F), y0 = (int) (h * 0.22F);
+            int x0 = (int) (w * (variant.startsWith("infuse_fp") ? 0.50F : 0.36F)), y0 = (int) (h * 0.22F);
             int cw = (int) (w * 0.50F), ch = h - y0;
             try (NativeImage tile = new NativeImage(800, 646, true)) {
                 shot.resizeSubRectTo(x0, y0, cw, ch, tile);

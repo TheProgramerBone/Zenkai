@@ -45,6 +45,15 @@ public record StackWishPayload() implements CustomPacketPayload {
                     return;
                 }
 
+                // Prohibido (blacklist, tag, mochilas/contenedores con contenido): se dice claro y no como
+                // "deseo no disponible". Se vuelve a comprobar aquí porque el contenido del stack puede
+                // haber cambiado entre elegirlo y confirmar.
+                if (ServerConfig.isBanned(chosen)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.item_banned"), false);
+                    menu.clearChosenItem();
+                    return;
+                }
+
                 ItemStack resolved = ServerConfig.resolveWishStack(chosen);
 
                 if (resolved.isEmpty()) {

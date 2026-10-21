@@ -32,5 +32,13 @@
   "power_level": 3000,
   "rewards": {
     "tp": "auto"
-  }
+  },
+  "transformations": [
+    {
+      "at_health_pct": 40,
+      "duration_ticks": 60,
+      "heal_pct": 0.0,
+      "power_mult": 1.5
+    }
+  ]
 }

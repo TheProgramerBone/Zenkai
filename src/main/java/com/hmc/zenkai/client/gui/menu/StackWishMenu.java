@@ -75,6 +75,12 @@ public class StackWishMenu extends AbstractContainerMenu {
                 // No movemos desde el ghost slot hacia el inventario
                 return ItemStack.EMPTY;
             } else {
+                // Mismo veto que el clic normal: shift+click no puede colarse por aquí (mochilas, esferas...).
+                if (ServerConfig.isBanned(stackInSlot)) {
+                    player.displayClientMessage(
+                            net.minecraft.network.chat.Component.translatable("messages.zenkai.item_banned"), true);
+                    return ItemStack.EMPTY;
+                }
                 // Copiar 1 al ghost slot sin consumir el original
                 ItemStack ghostCopy = stackInSlot.copy();
                 ghostCopy.setCount(1);
@@ -109,10 +115,9 @@ public class StackWishMenu extends AbstractContainerMenu {
         @Override
         public boolean mayPlace(ItemStack stack) {
             if (stack == null || stack.isEmpty()) return false;
-            // Validación rápida en cliente/servidor: si está baneado, no permitir colocarlo.
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
-            if (id == null) return true; // fallback: permitir
-            return !ServerConfig.getBannedItems().contains(id);
+            // Validación rápida en cliente/servidor sobre el STACK entero (blacklist, tag, mochilas y
+            // contenedores con contenido), no solo por id.
+            return !ServerConfig.isBanned(stack);
         }
 
         @Override

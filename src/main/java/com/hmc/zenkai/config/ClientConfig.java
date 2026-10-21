@@ -331,6 +331,12 @@ public final class ClientConfig {
                             + "Ki Sense skill receive them, whether the sense is switched on or not",
                     true);
 
+    private static final ModConfigSpec.IntValue SENSE_OPACITY =
+            defineInt("sense_ki.opacity", "sense_opacity",
+                    "Opacity, in percent, of everything the Ki Sense draws in the world (cores, waves, "
+                            + "rings and bars). Lower it if it covers too much, raise it if it gets lost",
+                    100, 20, 100, 5);
+
     private static final ModConfigSpec.BooleanValue BOSS_ICON =
             defineBool("sense_ki.boss_icon", "boss_icon",
                     "Draw a small demon icon over bosses (entities in the zenkai:bosses tag), "
@@ -460,6 +466,8 @@ public final class ClientConfig {
     public static float lockOnMarkerOpacity() { return LOCK_ON_MARKER_OPACITY.get() / 100f; }
     public static boolean senseDamageNumbers() { return SENSE_DAMAGE_NUMBERS.get(); }
     public static boolean bossIcon() { return BOSS_ICON.get(); }
+    /** 0.2f..1f, listo para multiplicar sobre un alpha. */
+    public static float senseOpacity() { return SENSE_OPACITY.get() / 100f; }
 
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }

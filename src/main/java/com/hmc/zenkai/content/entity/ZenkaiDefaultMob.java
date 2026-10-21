@@ -41,6 +41,10 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
     private static final Logger LOGGER = LoggerFactory.getLogger("Zenkai-CombatAI");
 
     /** Guardia sincronizada al cliente (la anima el controlador "Block"). */
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> DATA_TRANSFORMING =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(ZenkaiDefaultMob.class,
+                    net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+
     private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> DATA_BLOCKING =
             net.minecraft.network.syncher.SynchedEntityData.defineId(ZenkaiDefaultMob.class,
                     net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
@@ -58,6 +62,22 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
     protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.@NotNull Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_BLOCKING, false);
+        builder.define(DATA_TRANSFORMING, false);
+    }
+
+    /** En plena animación de transformación (TransformationGoal). Sincronizado: lo anima el controlador
+     *  "Transform" y lo lee el Ki Sense. Mientras dura el mob es invulnerable. */
+    public boolean isTransforming() { return this.entityData.get(DATA_TRANSFORMING); }
+
+    public void setTransforming(boolean transforming) { this.entityData.set(DATA_TRANSFORMING, transforming); }
+
+    /** La ficha JSON de este mob, o null. */
+    public com.hmc.zenkai.feature.combat.entity.EntityStatDef statDef() { return EntityStatsManager.get(entityId()); }
+
+    @Override
+    public boolean isInvulnerableTo(@NotNull DamageSource source) {
+        if (isTransforming() && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) return true;
+        return super.isInvulnerableTo(source);
     }
 
     @Override
@@ -91,7 +111,7 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
      * La IA de combate entera, igual para cualquier NPC — llamar desde registerGoals() y luego
      * añadir solo lo propio (objetivos, puesto de guardia...). Prioridades:
      * <ol start="0">
-     *   <li>Flotar en el agua.</li>
+     *   <li>Flotar en el agua y, si la ficha trae "transformation", transformarse por vida.</li>
      *   <li>Ki (si la ficha trae ki_attacks).</li>
      *   <li>Físicas (si trae physical_attacks).</li>
      *   <li>Cuerpo a cuerpo (si "melee" no es false).</li>
@@ -115,6 +135,9 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
         boolean split = ki && phys;
 
         this.goalSelector.addGoal(0, new net.minecraft.world.entity.ai.goal.FloatGoal(this));
+        if (def != null && def.hasTransformation()) {
+            this.goalSelector.addGoal(0, new com.hmc.zenkai.content.entity.ai.TransformationGoal(this, def.transformations()));
+        }
         if (ki) addKiAttackGoalIfDefined(1, speed, split ? KI_PHYSICAL_SWITCH_DISTANCE : 0.0);
         if (phys) addPhysicalAttackGoalIfDefined(2, speed * 1.15, split ? KI_PHYSICAL_SWITCH_DISTANCE : Double.MAX_VALUE);
         if (def == null || def.movesetMelee()) {
@@ -282,6 +305,12 @@ public abstract class ZenkaiDefaultMob extends PathfinderMob implements GeoEntit
         // pone isBlockingNow a true, así que el controlador simplemente no hace nada. Se registra
         // siempre (y no según la ficha) porque esto corre también en el cliente, que no tiene por
         // qué tener la ficha JSON cargada.
+        // Transformación: predicado sobre el dato sincronizado, como el bloqueo. STOP al terminar.
+        controllers.add(new AnimationController<>(this, "Transform", 5,
+                state -> isTransforming()
+                        ? state.setAndContinue(ZenkaiCommonAnimations.TRANSFORMATION_MOB)
+                        : PlayState.STOP));
+
         controllers.add(new AnimationController<>(this, "Block", 5,
                 state -> isBlockingNow()
                         ? state.setAndContinue(ZenkaiCommonAnimations.ZENKAI_BLOCK)

@@ -39,6 +39,8 @@ public record SenseKiDataPacket(int level, List<Entry> entries, @Nullable Target
     public static final int FLAG_BOSS = 16;
     /** Esta entidad te tiene fijado (lock-on de un jugador o objetivo de un mob). */
     public static final int FLAG_TARGETING_YOU = 32;
+    /** En mitad de la transformación (la animación); FLAG_TRANSFORMED es la forma ya activa. */
+    public static final int FLAG_TRANSFORMING = 64;
 
     /** Fuerza relativa a quien siente: muy por debajo, inferior, pareja, superior, abrumadora. */
     public static final int STRENGTH_FAINT = 0;

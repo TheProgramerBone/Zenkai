@@ -375,8 +375,26 @@ public final class KiWeaponVfx {
     public static boolean infuseGlowActive(Player p) {
         if (!com.hmc.zenkai.config.ClientConfig.kiInfuseGlow()) return false;
         if (!com.hmc.zenkai.feature.skills.SkillToggles.isOn(p, com.hmc.zenkai.feature.skills.SkillEffects.KI_INFUSE)) return false;
-        return KiWeaponState.variantForArm(p, p.getMainArm()) != null
-                || com.hmc.zenkai.feature.combat.KiInfusion.hasWeapon(p);
+        return KiWeaponState.variantForArm(p, p.getMainArm()) != null || heldItemIsWeapon(p);
+    }
+
+    /**
+     * ¿Lo que lleva en la mano principal cuenta como arma? Se mira el PROPIO ítem y no
+     * {@code KiInfusion.hasWeapon} (atributo ATTACK_DAMAGE): en el CLIENTE ese atributo se queda en 1.0 con una espada
+     * de diamante en la mano (el servidor sí marca 7.0; medido con FpWeaponShots 2026-10-20), así que el halo nunca se
+     * activaba en ningún ítem corriente. Los modificadores del ítem sí están en el stack en ambos lados.
+     */
+    private static boolean heldItemIsWeapon(Player p) {
+        net.minecraft.world.item.ItemStack st = p.getMainHandItem();
+        if (st.isEmpty()) return false;
+        final double[] dmg = {0.0};
+        st.forEachModifier(net.minecraft.world.entity.EquipmentSlot.MAINHAND, (attr, mod) -> {
+            if (attr.is(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)
+                    && mod.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE) {
+                dmg[0] += mod.amount();
+            }
+        });
+        return dmg[0] > 1.0e-6 || com.hmc.zenkai.feature.combat.KiInfusion.hasWeapon(p);
     }
 
     /** Pulso lento del halo (0.75..1). */
@@ -385,57 +403,43 @@ public final class KiWeaponVfx {
     }
 
     /** Opacidad del halo sobre un ítem corriente: más alta que la de las armas de ki (su silueta es más fina). */
-    private static final float ITEM_GLOW_ALPHA = 0.45F;
+    private static final float ITEM_GLOW_ALPHA = 0.5F;
 
-    /** Clase de ítem a efectos del halo. Se decide por etiqueta de ítem y, si no, por el id (el id contiene "sword", "axe"...), así que también vale para ítems de otros mods. */
-    private enum ItemKind { SWORD, AXE, PICKAXE, SHOVEL, HOE, OTHER }
+    /** Cuánto se aleja el halo de la cámara (bloques): más que el grosor del ítem, para que este lo tape por delante. */
+    private static final float GLOW_PUSH_BACK = 0.03F;
 
-    private static ItemKind kindOf(net.minecraft.world.item.ItemStack st) {
-        if (st.is(net.minecraft.tags.ItemTags.SWORDS)) return ItemKind.SWORD;
-        if (st.is(net.minecraft.tags.ItemTags.AXES)) return ItemKind.AXE;
-        if (st.is(net.minecraft.tags.ItemTags.PICKAXES)) return ItemKind.PICKAXE;
-        if (st.is(net.minecraft.tags.ItemTags.SHOVELS)) return ItemKind.SHOVEL;
-        if (st.is(net.minecraft.tags.ItemTags.HOES)) return ItemKind.HOE;
-        String id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(st.getItem()).getPath();
-        if (id.contains("sword") || id.contains("katana") || id.contains("saber") || id.contains("rapier")) return ItemKind.SWORD;
-        if (id.contains("pickaxe")) return ItemKind.PICKAXE;
-        if (id.contains("axe")) return ItemKind.AXE;
-        if (id.contains("shovel")) return ItemKind.SHOVEL;
-        if (id.contains("hoe")) return ItemKind.HOE;
-        return ItemKind.OTHER;
-    }
+    private static boolean inFirstPersonGlow;
 
     /**
-     * Piezas del halo de un ítem, en el marco de ítem de vanilla (el de {@link KiWeaponLayer}), donde +Y es hacia
-     * donde apunta la hoja/el mango una vez aplicada la transformación de mano de los ítems "handheld" y el plano del
-     * sprite es YZ (la cabeza de un hacha o un pico se abre en Z). Aproximado a propósito.
+     * Halo sobre el ítem de la mano principal en 1ª PERSONA. Lo llama un mixin al final de
+     * {@code ItemInHandRenderer.renderItem}, con la pila ya en el marco exacto del ítem; la pasada de mano usa render
+     * types de vanilla, que Iris sí sustituye, así que no necesita el rodeo de {@link #flushPendingHands}. Las armas de
+     * ki llevan su propio halo y no pasan por aquí.
      */
-    private static List<Part> itemParts(ItemKind kind) {
-        List<Part> p = new ArrayList<>();
-        switch (kind) {
-            case SWORD -> {
-                p.add(pipe(0.05F, 0.98F, 0.05F, 0.035F));
-                p.add(span(new Vec3(0, 0.12, -0.10), new Vec3(0, 0.12, 0.10), 0.03F));   // guarda
+    public static void firstPersonItemGlow(net.minecraft.world.entity.LivingEntity entity,
+                                           net.minecraft.world.item.ItemStack stack,
+                                           net.minecraft.world.item.ItemDisplayContext ctx, boolean left,
+                                           PoseStack pose, MultiBufferSource buffer) {
+        if (inFirstPersonGlow || !ctx.firstPerson() || stack.isEmpty()) return;
+        if (!(entity instanceof Player p) || p != Minecraft.getInstance().player || stack != p.getMainHandItem()) return;
+        if (KiWeaponState.variantForArm(p, p.getMainArm()) != null) return;
+        boolean infuse = infuseGlowActive(p);
+        boolean ue = destructionLayerActive(p);
+        if (!infuse && !ue) return;
+        float partial = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false);
+        int rgb = AuraColors.resolve(p) & 0xFFFFFF;
+        final float a = Math.min(1F, ITEM_GLOW_ALPHA * glowPulse(p, partial) * 1.4F);
+        inFirstPersonGlow = true;   // collectItem vuelve a pasar por renderItem: sin esto el mixin se llamaría a sí mismo
+        try {
+            GlowCollector col = collectItem(pose, p, stack, ctx, left);
+            if (infuse) {
+                col.emit(buffer, 1.14F, rgb, a * 0.3F);
+                col.emit(buffer, 1.06F, rgb, a * 0.8F);
             }
-            case AXE -> {
-                p.add(pipe(0.0F, 0.95F, 0.04F, 0.04F));
-                p.add(span(new Vec3(0, 0.62, -0.02), new Vec3(0, 0.90, 0.26), 0.07F));   // hoja del hacha
-            }
-            case PICKAXE -> {
-                p.add(pipe(0.0F, 0.92F, 0.04F, 0.04F));
-                p.add(span(new Vec3(0, 0.88, -0.30), new Vec3(0, 0.88, 0.30), 0.045F));  // pico
-            }
-            case SHOVEL -> {
-                p.add(pipe(0.0F, 0.80F, 0.04F, 0.04F));
-                p.add(span(new Vec3(0, 0.84, 0), new Vec3(0, 1.00, 0), 0.10F));          // pala
-            }
-            case HOE -> {
-                p.add(pipe(0.0F, 0.92F, 0.04F, 0.04F));
-                p.add(span(new Vec3(0, 0.90, -0.02), new Vec3(0, 0.90, 0.28), 0.04F));   // azada
-            }
-            default -> p.add(pipe(0.05F, 0.90F, 0.05F, 0.05F));
+            if (ue) col.emit(buffer, infuse ? 1.22F : 1.14F, com.hmc.zenkai.client.fx.FistEnergyFx.UE_TINT, 0.40F);
+        } finally {
+            inFirstPersonGlow = false;
         }
-        return p;
     }
 
     /**
@@ -458,8 +462,8 @@ public final class KiWeaponVfx {
         KiVfxFrameQueue.submit(pose, new Vec3(o.x(), o.y(), o.z()), (ps, buf) -> {
             GlowCollector col = collectItem(ps, player, stack);
             if (infuse) {
-                col.emit(buf, 1.32F, rgb, a * 0.55F);
-                col.emit(buf, 1.14F, rgb, a);
+                col.emit(buf, 1.14F, rgb, a * 0.3F);
+                col.emit(buf, 1.06F, rgb, a * 0.8F);
             }
             if (ue) col.emit(buf, infuse ? 1.22F : 1.14F,
                     com.hmc.zenkai.client.fx.FistEnergyFx.UE_TINT, 0.40F);
@@ -468,11 +472,15 @@ public final class KiWeaponVfx {
 
     /** Dibuja el ítem de la mano principal en un recolector (sin pintar nada todavía). */
     private static GlowCollector collectItem(PoseStack ps, Player player, net.minecraft.world.item.ItemStack stack) {
-        GlowCollector col = new GlowCollector();
         boolean left = player.getMainArm() == HumanoidArm.LEFT;
-        net.minecraft.world.item.ItemDisplayContext ctx = left
+        return collectItem(ps, player, stack, left
                 ? net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_LEFT_HAND
-                : net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
+                : net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, left);
+    }
+
+    private static GlowCollector collectItem(PoseStack ps, Player player, net.minecraft.world.item.ItemStack stack,
+                                             net.minecraft.world.item.ItemDisplayContext ctx, boolean left) {
+        GlowCollector col = new GlowCollector();
         // El brillo de encantamiento (glint) se descarta: duplicaría la geometría dentro del recolector.
         Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer().renderItem(
                 player, stack, ctx, left, ps,
@@ -502,21 +510,27 @@ public final class KiWeaponVfx {
             return this;
         }
 
-        void emit(MultiBufferSource.BufferSource buf, float scale, int rgb, float alpha) {
+        void emit(MultiBufferSource buf, float scale, int rgb, float alpha) {
             if (verts.isEmpty()) return;
             float cx = 0, cy = 0, cz = 0;
             for (float[] v : verts) { cx += v[0]; cy += v[1]; cz += v[2]; }
             cx /= verts.size(); cy /= verts.size(); cz /= verts.size();
-            net.minecraft.client.renderer.RenderType rt = net.minecraft.client.renderer.RenderType
-                    .entityTranslucentEmissive(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS);
+            // Silueta plana del color del aura (atlas blanco); si no se pudo construir, el atlas real teñido.
+            net.minecraft.resources.ResourceLocation sil = ItemSilhouetteAtlas.get();
+            net.minecraft.client.renderer.RenderType rt = net.minecraft.client.renderer.RenderType.entityTranslucentEmissive(
+                    sil != null ? sil : net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS);
             com.mojang.blaze3d.vertex.VertexConsumer vc = buf.getBuffer(rt);
             int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF, a = (int) (Mth.clamp(alpha, 0F, 1F) * 255F);
+            // Se empuja hacia atrás (lejos de la cámara) para que el ítem, que ya escribió su profundidad, tape el halo
+            // por delante y solo asome el contorno: sin esto, visto de canto (3ª persona) el halo tapaba la hoja entera.
+            org.joml.Vector3f look = Minecraft.getInstance().gameRenderer.getMainCamera().getLookVector();
+            float px = look.x() * GLOW_PUSH_BACK, py = look.y() * GLOW_PUSH_BACK, pz = look.z() * GLOW_PUSH_BACK;
             for (float[] v : verts) {
-                vc.addVertex(cx + (v[0] - cx) * scale, cy + (v[1] - cy) * scale, cz + (v[2] - cz) * scale)
+                vc.addVertex(cx + (v[0] - cx) * scale + px, cy + (v[1] - cy) * scale + py, cz + (v[2] - cz) * scale + pz)
                         .setColor(r, g, b, a).setUv(v[3], v[4]).setUv1(0, 10).setUv2(240, 240)
                         .setNormal(v[5], v[6], v[7]);
             }
-            buf.endBatch(rt);
+            if (buf instanceof MultiBufferSource.BufferSource bs) bs.endBatch(rt);
         }
     }
 
@@ -648,6 +662,11 @@ public final class KiWeaponVfx {
         }
     }
 
+    /** Arma de la mano que espera a dibujarse tras el compuesto de Iris (ver drawNow). */
+    private record PendingHand(PoseStack viewPose, org.joml.Matrix4f proj, Player player, float partial,
+                               HumanoidArm arm, String variant, org.joml.Matrix4f armView) {}
+    private static final List<PendingHand> PENDING_HANDS = new java.util.ArrayList<>();
+
     /**
      * Ruta de la MANO en 1ª persona: se dibuja ahora, en ESPACIO DE VISTA.
      *
@@ -663,6 +682,15 @@ public final class KiWeaponVfx {
      */
     public static void drawNow(PoseStack pose, MultiBufferSource buffers, Player player, float partialTick,
                                HumanoidArm arm) {
+        drawNow(pose, buffers, player, partialTick, arm, null);
+    }
+
+    /**
+     * {@code armFrame}: pose del brazo en su pivote de hombro (marco vanilla, antes del marco de ítem). Solo se usa
+     * bajo shaderpack, para tapar con el brazo el trozo de mango que queda dentro del puño (ver flushPendingHands).
+     */
+    public static void drawNow(PoseStack pose, MultiBufferSource buffers, Player player, float partialTick,
+                               HumanoidArm arm, org.joml.Matrix4f armFrame) {
         String variant = KiWeaponState.variantForArm(player, arm);
         if (variant == null || !(buffers instanceof MultiBufferSource.BufferSource src)) return;
         if (kiChargeVisibility(player, partialTick) <= 0.0F) return;   // oculta mientras carga ki
@@ -670,10 +698,82 @@ public final class KiWeaponVfx {
         PoseStack viewPose = new PoseStack();
         viewPose.last().pose().set(view).mul(pose.last().pose());
         viewPose.last().normal().set(new org.joml.Matrix3f(view)).mul(pose.last().normal());
+        // SHADERPACK (Iris/Oculus, diagnosticado con FpWeaponShots 2026-10-20): la mano se dibuja ANTES del
+        // compuesto del pack, que reescribe el framebuffer principal entero desde sus propias texturas, y un
+        // RenderType propio (fuera del pipeline del pack) se pierde ahí: el brazo se ve y el arma no. Además la
+        // mano recibe un UnflushableWrapper cuyo endBatch no vuelca. La 3ª persona sí se ve porque se dibuja en
+        // AFTER_LEVEL, ya pasado el compuesto. Aquí se guarda la pose en espacio de vista con la proyección de
+        // mano y se dibuja en el MISMO fotograma desde flushPendingHands (RenderGuiEvent.Pre), sin retraso.
+        if (com.hmc.zenkai.compat.IrisCompat.shaderPackActive()) {
+            PENDING_HANDS.add(new PendingHand(viewPose,
+                    new org.joml.Matrix4f(com.mojang.blaze3d.systems.RenderSystem.getProjectionMatrix()),
+                    player, partialTick, arm, variant,
+                    armFrame == null ? null : new org.joml.Matrix4f(view).mul(armFrame)));
+            return;
+        }
+        drawHandInView(viewPose, src, player, partialTick, arm, variant, null);
+    }
+
+    /** Dibuja las armas guardadas por {@link #drawNow} bajo shaderpack. Llamar al empezar el GUI. */
+    public static void flushPendingHands() {
+        if (PENDING_HANDS.isEmpty()) return;
+        Minecraft mc = Minecraft.getInstance();
+        MultiBufferSource.BufferSource src = mc.renderBuffers().bufferSource();
+        org.joml.Matrix4f guiProj = new org.joml.Matrix4f(com.mojang.blaze3d.systems.RenderSystem.getProjectionMatrix());
+        com.mojang.blaze3d.vertex.VertexSorting sorting = com.mojang.blaze3d.systems.RenderSystem.getVertexSorting();
+        try {
+            // Como la pasada de mano de vanilla: el arma va por encima del mundo.
+            com.mojang.blaze3d.systems.RenderSystem.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT,
+                    net.minecraft.client.Minecraft.ON_OSX);
+            for (PendingHand h : PENDING_HANDS) {
+                com.mojang.blaze3d.systems.RenderSystem.setProjectionMatrix(h.proj(),
+                        com.mojang.blaze3d.vertex.VertexSorting.DISTANCE_TO_ORIGIN);
+                drawHandInView(h.viewPose(), src, h.player(), h.partial(), h.arm(), h.variant(), h.armView());
+            }
+        } finally {
+            PENDING_HANDS.clear();
+            com.mojang.blaze3d.systems.RenderSystem.setProjectionMatrix(guiProj, sorting);
+            // El depth de la mano no debe tapar el GUI que se dibuja después.
+            com.mojang.blaze3d.systems.RenderSystem.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT,
+                    net.minecraft.client.Minecraft.ON_OSX);
+        }
+    }
+
+    /**
+     * Escribe SOLO en el depth un cajón con la forma del brazo vanilla (4x12x4 px desde el pivote del hombro). Con
+     * shaderpack el brazo ya salió en el compuesto y no deja depth: sin esto el mango se vería delante del puño.
+     */
+    private static void drawArmOccluder(org.joml.Matrix4f m, HumanoidArm arm) {
+        float x0 = (arm == HumanoidArm.LEFT ? -1F : -3F) / 16F, x1 = x0 + 4F / 16F;
+        float y0 = -2F / 16F, y1 = 10F / 16F, z0 = -2F / 16F, z1 = 2F / 16F;
+        com.mojang.blaze3d.systems.RenderSystem.setShader(net.minecraft.client.renderer.GameRenderer::getPositionShader);
+        com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
+        com.mojang.blaze3d.systems.RenderSystem.depthFunc(org.lwjgl.opengl.GL11.GL_LEQUAL);
+        com.mojang.blaze3d.systems.RenderSystem.depthMask(true);
+        com.mojang.blaze3d.systems.RenderSystem.disableCull();
+        com.mojang.blaze3d.systems.RenderSystem.colorMask(false, false, false, false);
+        com.mojang.blaze3d.vertex.BufferBuilder b = com.mojang.blaze3d.vertex.Tesselator.getInstance().begin(
+                com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS,
+                com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION);
+        float[][] c = {
+                {x0, y0, z0}, {x1, y0, z0}, {x1, y1, z0}, {x0, y1, z0},   // -Z
+                {x0, y0, z1}, {x1, y0, z1}, {x1, y1, z1}, {x0, y1, z1}};  // +Z
+        int[][] faces = {{0, 1, 2, 3}, {4, 5, 6, 7}, {0, 4, 7, 3}, {1, 5, 6, 2}, {0, 1, 5, 4}, {3, 2, 6, 7}};
+        for (int[] f : faces) for (int i : f) b.addVertex(m, c[i][0], c[i][1], c[i][2]);
+        com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(b.buildOrThrow());
+        com.mojang.blaze3d.systems.RenderSystem.colorMask(true, true, true, true);
+        com.mojang.blaze3d.systems.RenderSystem.enableCull();
+    }
+
+    /** Dibuja con {@code ModelViewMat} en identidad (la pose ya está en espacio de vista; ver el javadoc de drawNow). */
+    private static void drawHandInView(PoseStack viewPose, MultiBufferSource.BufferSource src, Player player,
+                                       float partialTick, HumanoidArm arm, String variant,
+                                       org.joml.Matrix4f armView) {
         org.joml.Matrix4fStack mv = com.mojang.blaze3d.systems.RenderSystem.getModelViewStack();
         mv.pushMatrix().identity();
         com.mojang.blaze3d.systems.RenderSystem.applyModelViewMatrix();
         try {
+            if (armView != null) drawArmOccluder(armView, arm);
             drawNowInView(viewPose, src, player, partialTick, arm, variant);
         } finally {
             mv.popMatrix();

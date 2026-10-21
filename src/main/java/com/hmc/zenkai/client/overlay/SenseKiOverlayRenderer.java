@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.LockOnClientState;
 import com.hmc.zenkai.client.gui.AlignmentPalette;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.event.ClientZenkaiHooks;
 import com.hmc.zenkai.feature.combat.SenseKiMode;
 import com.hmc.zenkai.feature.sense.SenseKiDataPacket;
 import com.hmc.zenkai.feature.skills.SkillEffects;
@@ -28,7 +29,7 @@ import java.util.List;
 
 /**
  * Sentir Ki «Resonancia»: cada presencia percibida es un ECO (núcleo en rombo + ondas que se
- * abren), no una barra de vida. Dirección de arte en .claude/pendiente/ki-sense-resonancia.md.
+ * abren), no una barra de vida. Dirección de arte en .claude/docs/ki-sense-resonancia.md.
  *
  * POR QUÉ EN PANTALLA: la versión en el mundo (quads con RenderType.text/textSeeThrough en
  * AFTER_PARTICLES) salió emborronada en juego —un degradado vertical de ~14 px en una barra de 4—,
@@ -89,16 +90,11 @@ public final class SenseKiOverlayRenderer {
     private static final int HEALTH_STEPS = 8;
     private static final int SIDE_STEPS = 6;
 
-    // Estados: iconos del atlas general de la GUI (icons.png, rejilla de 20 px), sin atlas propio.
-    // Se dibujan a su tamaño nativo (20 px) para no emborronar el contorno de 1 px.
-    private static final ResourceLocation STATUS_TEX =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
-    private static final int STATUS_TEX_SIZE = 256;
-    /** Celda (u, v) en icons.png: rayo = cargando, silueta dorada con aura = transformado, esfera violeta
-     *  bajo una tapa (tools/gen_sense_suppress_icon.py) = suprimiendo, espadas = en combate. */
-    private static final int[] U_CHARGING = {40, 140}, U_TRANSFORMED = {80, 40},
-            U_SUPPRESSING = {60, 140}, U_COMBAT = {0, 0};
-    private static final int STATUS_ICON = 20;
+    // Estados: los MISMOS iconos que el HUD del jugador (ClientZenkaiHooks), a su tamaño nativo (20 px)
+    // para no emborronar el contorno de 1 px. Solo «suprimiendo» es propio del Ki Sense: el HUD no lo
+    // muestra (tools/gen_sense_suppress_icon.py, celda (3,7) de icons.png).
+    private static final ClientZenkaiHooks.IconUV U_SUPPRESSING = new ClientZenkaiHooks.IconUV(60, 140);
+    private static final int STATUS_ICON = ClientZenkaiHooks.ICON_DRAW;
     /** Jefe sin Ki Sense: el demonio del clash mide 16 px. */
     private static final int ICON = 16;
     private static final int ICON_GAP = 1;
@@ -125,7 +121,7 @@ public final class SenseKiOverlayRenderer {
     public static final int C_CORE = 0xE9F5F2;
     /** Pista apagada de corona y arcos. */
     private static final int C_TRACK = 0x2F434E;
-    private static final float TRACK_ALPHA = 0.7f;
+    private static final float TRACK_ALPHA = 0.85f;
 
     // ── Animación (en ticks de juego) ────────────────────────────────────────
     private static final float PERIOD_BASE = 36f;
@@ -148,9 +144,9 @@ public final class SenseKiOverlayRenderer {
     private static final float[] STRENGTH_ALPHA = {0.40f, 0.60f, 0.80f, 0.95f, 1.00f};
     private static final int[] STRENGTH_CORE = {0, 0, 1, 2, 2};
     private static final int[] HALO_SIZE = {0, 0, 0, 22, 32};
-    private static final float[] HALO_ALPHA = {0f, 0f, 0f, 0.22f, 0.40f};
+    private static final float[] HALO_ALPHA = {0f, 0f, 0f, 0.32f, 0.55f};
     private static final int CHARGING_HALO_SIZE = 26;
-    private static final float CHARGING_HALO_ALPHA = 0.30f;
+    private static final float CHARGING_HALO_ALPHA = 0.40f;
 
     /** Margen fuera de pantalla hasta el que aún se dibuja (entra poco a poco por el borde). */
     private static final int OFFSCREEN_MARGIN = 24;
@@ -208,7 +204,7 @@ public final class SenseKiOverlayRenderer {
         if (sense) {
             long now = System.nanoTime();
             float time = mc.level.getGameTime() + partial;
-            float fade = SenseKiClientState.fadeIn();
+            float fade = SenseKiClientState.fadeIn() * ClientConfig.senseOpacity();
             for (SenseKiClientState.Cluster c : SenseKiClientState.clusters()) {
                 drawCluster(g, c, time, fade);
             }
@@ -250,6 +246,8 @@ public final class SenseKiOverlayRenderer {
         int strength = Mth.clamp(e.strength(), 0, STRENGTH_ALPHA.length - 1);
         float alpha = fade * p.lifeAlpha(now) * STRENGTH_ALPHA[strength];
         if (alpha <= 0.01f) return;
+        // Las barras no se atenúan con la fuerza relativa: una presencia débil sigue teniendo vida legible.
+        float barAlpha = Math.max(alpha, 0.85f * fade * p.lifeAlpha(now));
 
         boolean locked = p.id == LockOnClientState.targetId();
         boolean states = level >= 4;
@@ -320,15 +318,15 @@ public final class SenseKiOverlayRenderer {
                     else cell(g, i, ROW_CROWN, cx, cy, C_TRACK, alpha * TRACK_ALPHA);
                 }
             } else {
-                arc(g, ROW_HEALTH_ARC, HEALTH_STEPS, h, cx, cy, h <= 0.25f ? C_CORAL : C_CORE, alpha);
+                arc(g, ROW_HEALTH_ARC, HEALTH_STEPS, h, cx, cy, h <= 0.25f ? C_CORAL : C_CORE, barAlpha);
             }
         }
 
         if (tier != SenseKiPresence.Tier.FULL) return;
 
         // Ki y stamina (nivel 3; el servidor manda -1 si no tiene o no toca).
-        if (e.ki() >= 0) arc(g, ROW_KI_ARC, SIDE_STEPS, e.ki() / 1000f, cx, cy, C_CYAN, alpha);
-        if (e.stamina() >= 0) arc(g, ROW_STAMINA_ARC, SIDE_STEPS, e.stamina() / 1000f, cx, cy, C_GOLD, alpha);
+        if (e.ki() >= 0) arc(g, ROW_KI_ARC, SIDE_STEPS, e.ki() / 1000f, cx, cy, C_CYAN, barAlpha);
+        if (e.stamina() >= 0) arc(g, ROW_STAMINA_ARC, SIDE_STEPS, e.stamina() / 1000f, cx, cy, C_GOLD, barAlpha);
 
         // Fuerza relativa (nivel 3): marca bajo el núcleo.
         if (level >= 3) {
@@ -340,6 +338,7 @@ public final class SenseKiOverlayRenderer {
             int flags = e.flags();
             int count = 0;
             if ((flags & SenseKiDataPacket.FLAG_CHARGING) != 0) count++;
+            if ((flags & SenseKiDataPacket.FLAG_TRANSFORMING) != 0) count++;
             if ((flags & SenseKiDataPacket.FLAG_TRANSFORMED) != 0) count++;
             if ((flags & SenseKiDataPacket.FLAG_SUPPRESSING) != 0) count++;
             if ((flags & SenseKiDataPacket.FLAG_IN_COMBAT) != 0) count++;
@@ -347,10 +346,11 @@ public final class SenseKiOverlayRenderer {
                 int top = cy - ICON_ROW_OFFSET - STATUS_ICON;
                 int x = cx - (count * STATUS_ICON + (count - 1) * ICON_GAP) / 2;
                 g.setColor(1f, 1f, 1f, alpha);
-                x = status(g, x, top, flags, SenseKiDataPacket.FLAG_CHARGING, U_CHARGING);
-                x = status(g, x, top, flags, SenseKiDataPacket.FLAG_TRANSFORMED, U_TRANSFORMED);
+                x = status(g, x, top, flags, SenseKiDataPacket.FLAG_TRANSFORMING, ClientZenkaiHooks.ICON_TRANSFORMING);
+                x = status(g, x, top, flags, SenseKiDataPacket.FLAG_TRANSFORMED, ClientZenkaiHooks.ICON_TRANSFORMED);
+                x = status(g, x, top, flags, SenseKiDataPacket.FLAG_CHARGING, ClientZenkaiHooks.ICON_KI_CHARGE);
                 x = status(g, x, top, flags, SenseKiDataPacket.FLAG_SUPPRESSING, U_SUPPRESSING);
-                status(g, x, top, flags, SenseKiDataPacket.FLAG_IN_COMBAT, U_COMBAT);
+                status(g, x, top, flags, SenseKiDataPacket.FLAG_IN_COMBAT, ClientZenkaiHooks.ICON_IN_COMBAT);
             }
         }
     }
@@ -389,9 +389,9 @@ public final class SenseKiOverlayRenderer {
         cell(g, n - 1, row, cx, cy, color, alpha);
     }
 
-    private static int status(GuiGraphics g, int x, int y, int flags, int bit, int[] uv) {
+    private static int status(GuiGraphics g, int x, int y, int flags, int bit, ClientZenkaiHooks.IconUV uv) {
         if ((flags & bit) == 0) return x;
-        g.blit(STATUS_TEX, x, y, uv[0], uv[1], STATUS_ICON, STATUS_ICON, STATUS_TEX_SIZE, STATUS_TEX_SIZE);
+        ClientZenkaiHooks.drawBadge(g, x, y, uv);
         return x + STATUS_ICON + ICON_GAP;
     }
 
