@@ -1,0 +1,10 @@
+{
+  "node": "zenkai:node/race_arcosian",
+  "race": "arcosian",
+  "max_level": 4,
+  "tp_cost": [0, 3000, 8000, 18000],
+  "mind_req": [0, 8, 14, 22],
+  "values": {
+    "ki_discount": [0.10, 0.13, 0.16, 0.20]
+  }
+}

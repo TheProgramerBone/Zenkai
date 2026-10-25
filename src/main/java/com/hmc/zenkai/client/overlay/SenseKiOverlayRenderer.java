@@ -140,6 +140,9 @@ public final class SenseKiOverlayRenderer {
     /** Segundos de la reacción breve cuando algo empieza a fijarte. */
     private static final float THREAT_BURST_SECONDS = 1.2f;
 
+    /** Color de una firma divina que no se puede leer: lavanda casi blanca. */
+    private static final int C_DIVINE_UNKNOWN = 0xD8CCFF;
+
     // ── Intensidad por fuerza relativa (STRENGTH_FAINT..OVERWHELMING) ────────
     private static final float[] STRENGTH_ALPHA = {0.40f, 0.60f, 0.80f, 0.95f, 1.00f};
     private static final int[] STRENGTH_CORE = {0, 0, 1, 2, 2};
@@ -256,6 +259,12 @@ public final class SenseKiOverlayRenderer {
         boolean charging = states && e.has(SenseKiDataPacket.FLAG_CHARGING);
         boolean transformed = states && e.has(SenseKiDataPacket.FLAG_TRANSFORMED);
         int color = colorOf(e, level, locked);
+        // Firma divina ilegible (sin God Ki): pálida, temblorosa y sin datos (skill tree F5).
+        boolean divineUnknown = e.has(SenseKiDataPacket.FLAG_DIVINE_UNKNOWN);
+        if (divineUnknown) {
+            color = C_DIVINE_UNKNOWN;
+            alpha *= 0.55f + 0.45f * flicker(time, p.id);
+        }
 
         float t = frac(time / period(e, level) + p.phase);
         float flicker = suppressing ? flicker(time, p.id) : 1f;
@@ -306,7 +315,7 @@ public final class SenseKiOverlayRenderer {
         cell(g, col, ROW_CORE_FILL, cx, cy, color, coreAlpha);
         cell(g, col, ROW_CORE_INK, cx, cy, 0xFFFFFF, coreAlpha);
 
-        if (brief) return;
+        if (brief || divineUnknown) return;
 
         // Vida: corona de cuatro segmentos (nivel 2) o arco continuo (nivel 3+).
         if (e.hasHealth()) {

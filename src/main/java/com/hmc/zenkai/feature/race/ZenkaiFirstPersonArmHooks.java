@@ -149,7 +149,26 @@ public final class ZenkaiFirstPersonArmHooks {
         var visual = player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         var stats  = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         if (!visual.shouldRenderRaceSkin() || !stats.isRaceChosen()) return false;
-        return RaceSkinSlots.getVirtualRaceArmor(player, EquipmentSlot.CHEST).getItem() instanceof GeoLayerArmorItem;
+        return bodyFor(player).getItem() instanceof GeoLayerArmorItem;
+    }
+
+    /**
+     * Cuerpo cuyo brazo se dibuja: el de la FORMA que lleva el jugador (Oozaru, Arcosiano 2ª/3ª/final...)
+     * y, si esa forma aún no tiene modelo propio (Namekiano Naranja), el de su raza. EXCEPCIÓN: Oozaru y
+     * Súper Oozaru conservan la mano del Saiyan normal (el brazo de su cuerpo gigante no gustó, 2026-10-21).
+     * Ni Naranja ni el Gigante Namekiano tocan la mano: solo se hacen más grandes.
+     */
+    private static ItemStack bodyFor(Player player) {
+        var formId = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId();
+        if (com.hmc.zenkai.feature.forms.FormIds.OOZARU.equals(formId)
+                || com.hmc.zenkai.feature.forms.FormIds.SUPER_OOZARU.equals(formId)) {
+            return RaceSkinSlots.getVirtualRaceArmor(player, EquipmentSlot.CHEST);
+        }
+        ItemStack forForm = RaceBodyResolver.resolve(player, EquipmentSlot.CHEST);
+        if (forForm.getItem() instanceof GeoLayerArmorItem g && RaceTextureUtil.resourceExists(g.getModelPath())) {
+            return forForm;
+        }
+        return RaceSkinSlots.getVirtualRaceArmor(player, EquipmentSlot.CHEST);
     }
 
     @SubscribeEvent
@@ -174,7 +193,7 @@ public final class ZenkaiFirstPersonArmHooks {
         var stats  = player.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         if (!visual.shouldRenderRaceSkin() || !stats.isRaceChosen()) return;
 
-        ItemStack body = RaceSkinSlots.getVirtualRaceArmor(player, EquipmentSlot.CHEST);
+        ItemStack body = bodyFor(player);
         if (!(body.getItem() instanceof GeoLayerArmorItem item)) return;
 
         e.setCanceled(true); // ocultar el brazo vanilla
@@ -233,7 +252,6 @@ public final class ZenkaiFirstPersonArmHooks {
                 float rotY = isRight ? ROT_Y : LEFT_ROT_Y;
                 float rotZ = isRight ? ROT_Z : LEFT_ROT_Z;
                 float scale = isRight ? SCALE : LEFT_SCALE;
-
                 poseStack.pushPose();
                 poseStack.translate(offX, offY, offZ);
                 poseStack.mulPose(Axis.XP.rotationDegrees(rotX));

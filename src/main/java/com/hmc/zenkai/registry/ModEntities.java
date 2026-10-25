@@ -112,6 +112,17 @@ public class ModEntities {
                     .noSave()
                     .build("sword_wave"));
 
+    /** Masa de la técnica ABSORB del Majin (ver AbsorbMassEntity): como la hoja de luz, la mueve el cliente por su cuenta. */
+    public static final Supplier<EntityType<com.hmc.zenkai.content.entity.technique.AbsorbMassEntity>> ABSORB_MASS =
+            ENTITY_TYPES.register("absorb_mass", () -> EntityType.Builder
+                    .<com.hmc.zenkai.content.entity.technique.AbsorbMassEntity>of(
+                            com.hmc.zenkai.content.entity.technique.AbsorbMassEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(8)
+                    .updateInterval(20)
+                    .noSave()
+                    .build("absorb_mass"));
+
     public static final Supplier<EntityType<YemmaEntity>> YEMMA =
             ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)
                     .sized(4, 10.0f).build("yemma"));
@@ -159,6 +170,18 @@ public class ModEntities {
             ENTITY_TYPES.register("angel", () -> EntityType.Builder.of(
                             com.hmc.zenkai.content.entity.otherworld.AngelEntity::new, MobCategory.CREATURE)
                     .sized(0.6f, 1.8f).build("angel"));
+
+    /** Cuerpo de un jugador muerto (inventario + rage forms). Tumbado: caja ancha y baja. Se guarda con el
+     *  chunk (lleva los objetos) y se sigue a poca distancia: es un objeto del mundo, no un combatiente. */
+    public static final Supplier<EntityType<com.hmc.zenkai.content.entity.misc.PlayerBodyEntity>> PLAYER_BODY =
+            ENTITY_TYPES.register("player_body", () -> EntityType.Builder
+                    .<com.hmc.zenkai.content.entity.misc.PlayerBodyEntity>of(
+                            com.hmc.zenkai.content.entity.misc.PlayerBodyEntity::new, MobCategory.MISC)
+                    .sized(1.0f, 0.4f)
+                    .fireImmune()
+                    .clientTrackingRange(8)
+                    .updateInterval(20)
+                    .build("player_body"));
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);

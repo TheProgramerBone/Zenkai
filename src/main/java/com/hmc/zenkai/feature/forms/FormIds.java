@@ -26,12 +26,18 @@ public final class FormIds {
     public static final ResourceLocation SSJ2 = id("ssj2");
     public static final ResourceLocation SSJ3 = id("ssj3");
     public static final ResourceLocation SSJ4 = id("ssj4");
+    /** Línea del LEGENDARIO (solo Saiyan con isLegendary, que concede el deseo a Shenlong). */
+    public static final ResourceLocation SSJ_GREEN = id("ssj_green");
+    public static final ResourceLocation SSJ_GREEN_MAX = id("ssj_green_max");
 
     public static final ResourceLocation SECOND_FORM = id("second_form");
     public static final ResourceLocation THIRD_FORM  = id("third_form");
     public static final ResourceLocation FINAL_FORM  = id("final_form");
     public static final ResourceLocation GOLDEN_FORM = id("golden_form");
     public static final ResourceLocation BLACK_FORM  = id("black_form");
+    /** Forma divina del Arcosiano (skill tree F5): placeholder sobre el cuerpo de la final, con
+     *  ojos y aura divinos, hasta que tenga modelo propio. */
+    public static final ResourceLocation ARCOSIAN_GOD = id("arcosian_god");
     public static final ResourceLocation FIFTH_FORM  = id("fifth_form");
     public static final ResourceLocation GOLDEN_FIFTH_FORM = id("golden_fifth_form");
     public static final ResourceLocation BLACK_FIFTH_FORM  = id("black_fifth_form");
@@ -51,6 +57,23 @@ public final class FormIds {
      *  decidir si comparten maestría (ServerConfig.ssjBlueRoseShareMastery()). */
     public static final ResourceLocation SSJ_BLUE = id("ssj_blue");
     public static final ResourceLocation SSJ_ROSE = id("ssj_rose");
+    /** Evoluciones de cada hermana (padre: Blue / Rosé). Mismo reemplazo según isDivine. */
+    public static final ResourceLocation SSJ_BLUE_EVOLUTION = id("ssj_blue_evolution");
+    public static final ResourceLocation SSJ_ROSE_EVOLUTION = id("ssj_rose_evolution");
+
+    /** ¿Es de la línea Rosé (la que ve un jugador divino en lugar de la Blue)? */
+    public static boolean isRoseLine(ResourceLocation f) {
+        return SSJ_ROSE.equals(f) || SSJ_ROSE_EVOLUTION.equals(f);
+    }
+
+    /** La hermana empatada de Blue/Rosé/Evolutions (Blue↔Rosé, Blue Evo↔Rosé Evo), o null. */
+    public static ResourceLocation blueRoseTwin(ResourceLocation f) {
+        if (SSJ_BLUE.equals(f)) return SSJ_ROSE;
+        if (SSJ_ROSE.equals(f)) return SSJ_BLUE;
+        if (SSJ_BLUE_EVOLUTION.equals(f)) return SSJ_ROSE_EVOLUTION;
+        if (SSJ_ROSE_EVOLUTION.equals(f)) return SSJ_BLUE_EVOLUTION;
+        return null;
+    }
 
     /** Rutas de endgame universales (0.3.0, Destroyer/Angels/Mystic Path — ver
      *  {@code .claude/docs/jugador-razas-formas.md}). Igual que OOZARU/

@@ -46,60 +46,82 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
     public static void handle(SkillBuyPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
-
             SkillDef def = SkillDef.get(pkt.skillId());
             if (def == null) return;
-            if (!def.purchasable()) return; // solo maestros / comando
-
-            PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-            if (!att.isRaceChosen()) return;
-
-            // Con levels_from_forms el techo y el precio salen de la cadena de formas de SU
-            // raza: un saiyan no puede comprar el nivel que solo existe para arcosianos. Hay
-            // DOS proveedores posibles (super_forms, god_ki) — FormDrivenSkills decide cuál.
-            int max = FormDrivenSkills.maxLevel(def, sp);
-
-            int current = att.skills().level(def.id());
-            if (current >= max) return;                        // ya al máximo
-            // El nivel 1 de una habilidad CON maestro solo lo da UNO DE SUS maestros (puede
-            // enseñarla más de uno), en persona, ante el maestro concreto que mandó el paquete.
-            boolean masterPurchase = current <= 0 && def.hasMaster();
-            if (masterPurchase) {
-                if (!def.masters().contains(pkt.masterId())) return;
-
-                Entity master = MasterManager.findNearby(sp, pkt.masterId());
-                if (master == null) return;                       // no estás delante de él
-
-                MasterManager.Result r = MasterManager.check(sp, pkt.masterId(), master);
-                if (!r.ok()) { MasterManager.tell(sp, pkt.masterId(), r); return; }
-            }
-
-            int next = current + 1;
-            int cost = FormDrivenSkills.tpCostForLevel(def, sp, next);
-
-            // LECTURA A: mind_req[n-1] es el TOTAL que la habilidad ocupa EN ese nivel. Subir
-            // del 4 al 5 libera los 26 del 4 y ocupa los 34 del 5: hacen falta 8 LIBRES.
-            // Antes se comparaba mindReqFor(next) contra la MIND total, o sea un umbral — y por
-            // eso MIND dejaba de significar nada en cuanto pasabas el listón más alto.
-            int mindDelta = def.mindReqFor(next) - def.mindReqFor(current);
-            if (att.mindFree() < mindDelta) return;
-            if (SkillEffects.POTENTIAL_UNLOCK.equals(def.id()) && !PotentialUnlock.canPurchase(sp)) {
-                sp.displayClientMessage(Component.translatable(
-                        "messages.zenkai.alignment_too_low",
-                        ServerConfig.potentialUnlockAlignmentReq()), true);
-                return;
-            }
-            if (att.getTP() < cost) return;
-
-            if (masterPurchase) {
-                var event = new MasterPurchaseEvent(sp, pkt.masterId(), def.id());
-                NeoForge.EVENT_BUS.post(event);
-                if (event.isCanceled()) return;
-            }
-
-            att.addTP(-cost);
-            att.skills().raise(def.id(), max);
-            PlayerLifeCycle.syncIfServer(sp);
+            // Las skills del skill tree de transformaciones solo se compran con TP en el árbol
+            // (SkillTreeBuyPacket, que además exige el nodo padre). Ante un maestro sí: su
+            // nivel 1 lo sigue enseñando él.
+            if (pkt.masterId().isEmpty()
+                    && com.hmc.zenkai.feature.skilltree.SkillTreeNodes.isTreeSkill(def.id())) return;
+            purchase(sp, def, pkt.masterId());
         });
+    }
+
+    /**
+     * Compra UN nivel de la skill con todas las comprobaciones de siempre. La comparten esta
+     * pantalla de habilidades/el maestro y el skill tree (SkillTreeBuyPacket), para que las
+     * reglas de TP, MIND, maestro y alineamiento vivan en un único sitio.
+     * @return true si compró.
+     */
+    public static boolean purchase(ServerPlayer sp, SkillDef def, String masterId) {
+        if (!def.purchasable()) return false; // solo maestros / comando
+
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        if (!att.isRaceChosen()) return false;
+
+        // Con levels_from_forms el techo y el precio salen de la cadena de formas de SU
+        // raza: un saiyan no puede comprar el nivel que solo existe para arcosianos
+        // (FormDrivenSkills decide).
+        int max = FormDrivenSkills.maxLevel(def, sp);
+
+        int current = att.skills().level(def.id());
+        if (current >= max) return false;                        // ya al máximo
+        // Doctrinas de los dioses (UI/UE): exigen God Ki también ante el maestro (skill tree F5).
+        // Antes Tori-Bot vendía su nivel 1 sin él: el árbol lo pedía, pero esta vía no.
+        if ((SkillEffects.ULTRA_INSTINCT.equals(def.id()) || SkillEffects.ULTRA_EGO.equals(def.id()))
+                && !EndgamePaths.hasGodKi(sp)) {
+            sp.displayClientMessage(Component.translatable("messages.zenkai.needs_god_ki"), true);
+            return false;
+        }
+        // El nivel 1 de una habilidad CON maestro solo lo da UNO DE SUS maestros (puede
+        // enseñarla más de uno), en persona, ante el maestro concreto que mandó el paquete.
+        boolean masterPurchase = current <= 0 && def.hasMaster();
+        if (masterPurchase) {
+            if (!def.masters().contains(masterId)) return false;
+
+            Entity master = MasterManager.findNearby(sp, masterId);
+            if (master == null) return false;                       // no estás delante de él
+
+            MasterManager.Result r = MasterManager.check(sp, masterId, master);
+            if (!r.ok()) { MasterManager.tell(sp, masterId, r); return false; }
+        }
+
+        int next = current + 1;
+        int cost = FormDrivenSkills.tpCostForLevel(def, sp, next);
+
+        // LECTURA A: mind_req[n-1] es el TOTAL que la habilidad ocupa EN ese nivel. Subir
+        // del 4 al 5 libera los 26 del 4 y ocupa los 34 del 5: hacen falta 8 LIBRES.
+        // Antes se comparaba mindReqFor(next) contra la MIND total, o sea un umbral — y por
+        // eso MIND dejaba de significar nada en cuanto pasabas el listón más alto.
+        int mindDelta = def.mindReqFor(next) - def.mindReqFor(current);
+        if (att.mindFree() < mindDelta) return false;
+        if (SkillEffects.POTENTIAL_UNLOCK.equals(def.id()) && !PotentialUnlock.canPurchase(sp)) {
+            sp.displayClientMessage(Component.translatable(
+                    "messages.zenkai.alignment_too_low",
+                    ServerConfig.potentialUnlockAlignmentReq()), true);
+            return false;
+        }
+        if (att.getTP() < cost) return false;
+
+        if (masterPurchase) {
+            var event = new MasterPurchaseEvent(sp, masterId, def.id());
+            NeoForge.EVENT_BUS.post(event);
+            if (event.isCanceled()) return false;
+        }
+
+        att.addTP(-cost);
+        att.skills().raise(def.id(), max);
+        PlayerLifeCycle.syncIfServer(sp);
+        return true;
     }
 }

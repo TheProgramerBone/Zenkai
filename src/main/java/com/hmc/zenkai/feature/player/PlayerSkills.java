@@ -27,6 +27,12 @@ public final class PlayerSkills {
     private final Map<String, Integer> grantedFloor = new LinkedHashMap<>();
     private final Set<String> toggles = new LinkedHashSet<>();
 
+    /** Aviso de "cambió el conjunto de niveles". Lo engancha PlayerStatsAttachment para refrescar
+     *  el espejo del skill tree (SkillTreeMigration.refresh); load() NO lo dispara a propósito. */
+    private Runnable onChange = () -> {};
+
+    public void setOnChange(Runnable r) { this.onChange = r == null ? () -> {} : r; }
+
     /** Nivel actual (0 = no la tiene). */
     public int level(String id) { return levels.getOrDefault(id, 0); }
 
@@ -39,8 +45,8 @@ public final class PlayerSkills {
 
     /** Fija el nivel exacto (comando/admin). 0 o menos la elimina. */
     public void setLevel(String id, int lvl) {
-        if (lvl <= 0) { levels.remove(id); return; }
-        levels.put(id, lvl);
+        if (lvl <= 0) levels.remove(id); else levels.put(id, lvl);
+        onChange.run();
     }
 
     /**
@@ -55,6 +61,7 @@ public final class PlayerSkills {
         if (lvl <= 0) return;
         grantedFloor.merge(id, lvl, Math::max);
         levels.merge(id, lvl, Math::max);
+        onChange.run();
     }
 
     /**
@@ -73,6 +80,7 @@ public final class PlayerSkills {
         if (lvl <= 0) return;
         grantedFloor.merge(id, 1, Math::max);
         levels.merge(id, lvl, Math::max);
+        onChange.run();
     }
 
     /** Sube un nivel con TP, respetando el máximo. true si subió. */
@@ -80,6 +88,7 @@ public final class PlayerSkills {
         int cur = level(id);
         if (cur >= maxLevel) return false;
         levels.put(id, cur + 1);
+        onChange.run();
         return true;
     }
 
@@ -87,7 +96,9 @@ public final class PlayerSkills {
     public boolean revoke(String id) {
         grantedFloor.remove(id);
         toggles.remove(id);
-        return levels.remove(id) != null;
+        boolean had = levels.remove(id) != null;
+        onChange.run();
+        return had;
     }
 
     /** El conjunto que tiene, en orden de desbloqueo. Para la GUI. */
@@ -96,17 +107,23 @@ public final class PlayerSkills {
     public Map<String, Integer> allLevels() { return Collections.unmodifiableMap(levels); }
 
     /** Respec: baja cada habilidad a su suelo otorgado (quien llama devuelve el TP). */
-    public void clearBought() {
+    public void clearBought() { clearBought(id -> false); }
+
+    /** Igual, pero sin tocar las habilidades para las que {@code keep} diga true (las del skill
+     *  tree de transformaciones: el respec general no toca el árbol, ver PlayerStatsAttachment#respec). */
+    public void clearBought(java.util.function.Predicate<String> keep) {
         levels.entrySet().removeIf(e -> {
+            if (keep.test(e.getKey())) return false;
             int floor = grantedFloor.getOrDefault(e.getKey(), 0);
             if (floor <= 0) return true;
             e.setValue(floor);
             return false;
         });
+        onChange.run();
     }
 
     /** Reset full: el conjunto entero. */
-    public void clear() { levels.clear(); grantedFloor.clear(); toggles.clear(); }
+    public void clear() { levels.clear(); grantedFloor.clear(); toggles.clear(); onChange.run(); }
 
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
@@ -223,6 +240,7 @@ public final class PlayerSkills {
         } else {
             levels.put(id, cur - 1);
         }
+        onChange.run();
         return cur;
     }
 }

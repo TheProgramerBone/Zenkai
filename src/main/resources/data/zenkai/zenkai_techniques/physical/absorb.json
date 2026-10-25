@@ -1,0 +1,10 @@
+{
+  "tp_cost": 0,
+  "mind_req": 0,
+  "damage_mult": 0.0,
+  "stamina_pct": 4.0,
+  "cooldown_ticks": 120,
+  "range": 10.0,
+  "anim_ticks": 14,
+  "innate_race": "majin"
+}

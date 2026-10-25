@@ -102,6 +102,10 @@ public final class SkillToggles {
         register(new Toggle(SkillEffects.ULTRA_EGO, true, Set.of(),
                 Set.of(SkillEffects.ULTRA_INSTINCT), null, true));
 
+        // Gigante Namekiano (2026-10-21): estado comprable en el árbol, no una forma de la cadena.
+        // Convive con cualquier forma (Piccolo se hace gigante también con el naranja).
+        register(new Toggle(SkillEffects.NAMEK_GIANT, true, Set.of(), Set.of(), null, true));
+
         // Paso rápido: ENCENDIDO por defecto (defaultOn). Quien ya lo tenía comprado conserva el
         // comportamiento de siempre (el doble toque es Paso rápido); apagarlo en la rueda devuelve
         // el dash normal. Lo lee DashServer.tryDash.

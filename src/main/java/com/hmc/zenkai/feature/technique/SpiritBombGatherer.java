@@ -61,7 +61,7 @@ public final class SpiritBombGatherer {
     private static final int MAX_STREAKS = 24;
 
     /** Rojo de la estela de energía hostil: la misma mota que END_ROD, teñida. */
-    private static final int EVIL_STREAK_RGB = 0xFF1A1A;
+    public static final int EVIL_STREAK_RGB = 0xFF1A1A;
 
     private static final Map<UUID, Double> BONUS = new ConcurrentHashMap<>();
     /** Quién ya avisó a su party en esta carga (el aviso sale una vez por carga, no por pulso). */
@@ -164,7 +164,7 @@ public final class SpiritBombGatherer {
      * velocidad justa para deslizarse un tramo hacia él. Con count 0 los tres «offset» del
      * packet son la velocidad.
      */
-    private static void streak(ServerLevel lvl, net.minecraft.core.particles.ParticleOptions particle,
+    public static void streak(ServerLevel lvl, net.minecraft.core.particles.ParticleOptions particle,
                                Vec3 from, Vec3 to, int minPoints, int maxPoints) {
         Vec3 d = to.subtract(from);
         double len = d.length();

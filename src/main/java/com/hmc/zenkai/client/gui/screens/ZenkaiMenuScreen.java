@@ -98,9 +98,11 @@ public abstract class ZenkaiMenuScreen extends Screen {
      *  abajo tiene que eximirlas o no habría forma de volver al hub pulsando la pestaña de nuevo
      *  estando ya dentro de una.
      *  TECHNIQUES salió de aquí al fusionarse sus tres pantallas en TechniquesScreen: ya no hay
-     *  hub del que volver, y su único hijo (TechniqueEditScreen) no dibuja barra de pestañas. */
+     *  hub del que volver, y su único hijo (TechniqueEditScreen) no dibuja barra de pestañas.
+     *  CONFIG entra por CreditsScreen, que se abre desde un botón de ClientConfigScreen y
+     *  marca Config como pestaña activa: pulsarla tiene que devolver a la configuración. */
     private static final java.util.Set<ZenkaiTab> ALWAYS_REOPEN =
-            java.util.EnumSet.of(ZenkaiTab.TRAINING);
+            java.util.EnumSet.of(ZenkaiTab.TRAINING, ZenkaiTab.CONFIG);
 
     private void open(ZenkaiTab t) {
         if (t == currentTab() && !ALWAYS_REOPEN.contains(t)) return;
@@ -111,13 +113,12 @@ public abstract class ZenkaiMenuScreen extends Screen {
     public static Screen createScreen(ZenkaiTab t) {
         return switch (t) {
             case STATS -> new StatsScreen();
-            case SKILLS -> new SkillsScreen();
+            case SKILLS -> new com.hmc.zenkai.client.gui.screens.skilltree.SkillsTreeScreen();
             case TECHNIQUES -> new TechniquesScreen();
             case TRAINING -> new TrainingHubScreen();
-            case MASTERY -> new MasteryScreen();
+            case TRANSFORMATIONS -> new com.hmc.zenkai.client.gui.screens.skilltree.SkillTreeScreen();
             case PARTY -> new PartyScreen();
             case CONFIG -> new ClientConfigScreen();
-            case CREDITS -> new CreditsScreen();
             default -> new ComingSoonScreen(t);
         };
     }

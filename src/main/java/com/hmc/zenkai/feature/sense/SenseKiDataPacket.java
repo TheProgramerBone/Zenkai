@@ -41,6 +41,8 @@ public record SenseKiDataPacket(int level, List<Entry> entries, @Nullable Target
     public static final int FLAG_TARGETING_YOU = 32;
     /** En mitad de la transformación (la animación); FLAG_TRANSFORMED es la forma ya activa. */
     public static final int FLAG_TRANSFORMING = 64;
+    /** Firma DIVINA que quien siente no puede leer (no tiene God Ki): llega tenue y sin datos. */
+    public static final int FLAG_DIVINE_UNKNOWN = 128;
 
     /** Fuerza relativa a quien siente: muy por debajo, inferior, pareja, superior, abrumadora. */
     public static final int STRENGTH_FAINT = 0;

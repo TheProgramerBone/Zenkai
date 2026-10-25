@@ -63,6 +63,7 @@ public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC {
     @Override
     protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (!this.level().isClientSide && player instanceof ServerPlayer sp) {
+            MasterManager.meet(sp, masterId());
             MasterManager.Result r = MasterManager.check(sp, masterId(), this);
             if (!r.ok()) {
                 MasterManager.tell(sp, masterId(), r);

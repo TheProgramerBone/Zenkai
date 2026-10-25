@@ -23,7 +23,8 @@ import java.util.Map;
  * 15 filas fijas, así que un codec compuesto no aporta nada y esto se lee de un vistazo.
  */
 public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
-                                 Map<Race, int[]> bases) implements CustomPacketPayload {
+                                 Map<Race, int[]> bases,
+                                 Map<Race, Double> universalScales) implements CustomPacketPayload {
 
     public static final Type<RaceStatSyncPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "race_stat_sync"));
@@ -44,7 +45,9 @@ public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
         }
         Map<Race, int[]> bases = new EnumMap<>(Race.class);
         for (Race race : Race.values()) bases.put(race, RaceStatTable.baseAttributes(race));
-        return new RaceStatSyncPacket(out, bases);
+        Map<Race, Double> scales = new EnumMap<>(Race.class);
+        scales.putAll(RaceStatTable.universalScales());
+        return new RaceStatSyncPacket(out, bases, scales);
     }
 
     private static void write(FriendlyByteBuf buf, RaceStatSyncPacket pkt) {
@@ -68,6 +71,11 @@ public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
             buf.writeEnum(e.getKey());
             for (int v : e.getValue()) buf.writeVarInt(v);
         }
+        buf.writeVarInt(pkt.universalScales().size());
+        for (var e : pkt.universalScales().entrySet()) {
+            buf.writeEnum(e.getKey());
+            buf.writeDouble(e.getValue());
+        }
     }
 
     private static RaceStatSyncPacket read(FriendlyByteBuf buf) {
@@ -88,7 +96,10 @@ public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
             for (int j = 0; j < 6; j++) vals[j] = buf.readVarInt();
             bases.put(race, vals);
         }
-        return new RaceStatSyncPacket(out, bases);
+        int nScales = buf.readVarInt();
+        Map<Race, Double> scales = new EnumMap<>(Race.class);
+        for (int i = 0; i < nScales; i++) scales.put(buf.readEnum(Race.class), buf.readDouble());
+        return new RaceStatSyncPacket(out, bases, scales);
     }
 
     @Override
@@ -99,6 +110,7 @@ public record RaceStatSyncPacket(Map<Race, Map<Style, double[]>> table,
             RaceStatTable.replaceAll(pkt.table());
             AuraCeiling.invalidate();
             RaceStatTable.replaceBases(pkt.bases());
+            RaceStatTable.replaceUniversalScales(pkt.universalScales());
         });
     }
 }

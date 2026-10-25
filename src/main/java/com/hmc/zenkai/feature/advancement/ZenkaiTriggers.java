@@ -88,6 +88,9 @@ public final class ZenkaiTriggers {
         // Esferas del Dragón: se dispara al colocar la ÚLTIMA esfera en el centro de la H y fundirse
         public static final String DRAGON_BALLS_FUSED       = "dragon_balls_fused";
         public static final String NAMEK_DRAGON_BALLS_FUSED = "namek_dragon_balls_fused";
+        // Skill tree F5: God Ki por el ritual de los guerreros o por la prueba del maestro
+        public static final String GOD_KI_RITUAL = "god_ki_ritual";
+        public static final String GOD_KI_TRIAL  = "god_ki_trial";
     }
 
     // =====================================================================

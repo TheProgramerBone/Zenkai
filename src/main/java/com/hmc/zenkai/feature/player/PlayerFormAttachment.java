@@ -185,19 +185,20 @@ public class PlayerFormAttachment {
     /** Maestría de la forma activa (0..100). */
     public float activeMastery() { return getFormMastery(formId); }
 
-    /** Fracción que la FORMA suma al multiplicador, ya interpolada por maestría. */
-    public double formStatPercent() {
+    /** Fracción que la FORMA suma al multiplicador, ya interpolada por maestría. Recibe la raza
+     *  porque las formas universales se escalan por raza (skill tree F8). */
+    public double formStatPercent(com.hmc.zenkai.feature.Race race) {
         // Potential Unlock no saca su % del JSON: va acoplado al techo del jugador.
         if (FormIds.POTENTIAL_UNLOCK.equals(formId)) {
             return PotentialUnlock.statPercent(puCeiling, activeMastery());
         }
         FormDef d = activeDef();
-        return d == null ? 0.0 : d.statPercent(activeMastery());
+        return d == null ? 0.0 : d.statPercent(race, activeMastery());
     }
 
     /** Fracción que suman FORMA + KAIOKEN. Modelo aditivo: total = 1 + esto. */
-    public double totalStatPercent() {
-        return formStatPercent() + getKaioken().statPercent();
+    public double totalStatPercent(com.hmc.zenkai.feature.Race race) {
+        return formStatPercent(race) + getKaioken().statPercent();
     }
 
     /** Ki drenado por tick por la forma activa (ver FormDef.kiDrainPerSecond: depende de la
@@ -228,9 +229,10 @@ public class PlayerFormAttachment {
         }
         // Último tramo del ritual de Oozaru (ver resolveNextForm): SuperForms.unlocked(SSJ4)
         // da FALSE hasta que el ritual está completo, así que exigirlo aquí lo haría imposible
-        // de completar — completar ESTE hold es justo lo que lo marca (completeSsj4Ritual).
+        // de completar — completar ESTE hold es justo lo que lo marca (completeSsj4Ritual). Lo
+        // que sí se exige es SSJ3, el padre real de SSJ4 (SuperForms.readyForSsj4Ritual).
         if (FormIds.SUPER_OOZARU.equals(formId)) {
-            return FormRegistry.get(FormIds.SSJ4) != null;
+            return SuperForms.readyForSsj4Ritual(p);
         }
         ResourceLocation target = targetForm(p, race);
         if (target == null) return false;
@@ -278,6 +280,7 @@ public class PlayerFormAttachment {
         if (advanceHold(required)) return progressDirty(was);
 
         setFormId(p, FormIds.OOZARU);
+        hintHiddenPath(p);
         finishHold();
         return true;
     }
@@ -305,9 +308,25 @@ public class PlayerFormAttachment {
         // setFormId para que quede claro que es un efecto de ESTE hold completándose.
         if (FormIds.SUPER_OOZARU.equals(formId) && FormIds.SSJ4.equals(target)) {
             completeSsj4Ritual(p);
+            // Quien encuentra el camino oculto no tiene que pagarlo después (decisión del usuario,
+            // 2026-10-21): el ritual REGALA SSJ4 si aún no estaba comprado. Si no se pudiera
+            // conceder (raza sin SSJ4 en su cadena, datapack raro), FormSystem lo echaría al tick
+            // siguiente con un parpadeo de SSJ4: se vuelve a Base aquí, limpio.
+            if (!SuperForms.unlocked(p, FormIds.SSJ4) && !grantSsj4(p)) {
+                forceBase();
+                return true;
+            }
         }
 
         setFormId(p, target);
+        if (FormIds.SUPER_OOZARU.equals(target)) {
+            PlayerStatsAttachment stats = PlayerStatsAttachment.get(p);
+            if (!stats.hasReachedSuperOozaru()) {
+                stats.setReachedSuperOozaru(true);
+                PlayerLifeCycle.syncIfServer(p); // el árbol del cliente revela el nodo con este flag
+            }
+            hintHiddenPath(p);
+        }
         // La selección de la rueda es un ATAJO de un solo uso, no un techo permanente: al
         // alcanzarla se consume (selectedForm vuelve a null) para que targetForm() caiga en
         // resolveNextForm() en el siguiente hold. Sin esto, seleccionar SSJ2 y llegar a SSJ2
@@ -421,25 +440,22 @@ public class PlayerFormAttachment {
 
         // Último tramo del ritual de Oozaru: Super Oozaru no declara 'parent' hacia SSJ4 en el
         // datapack (SSJ4 ya es hijo de SSJ3 en la cadena normal, comprada con TP) — este salto
-        // es la excepción explícita. Se puede intentar en cuanto se llega a Super Oozaru
-        // (SuperForms.readyForSuperOozaru ya exigió el nivel máximo para llegar hasta aquí);
-        // completarlo MARCA el ritual (completeSsj4Ritual) — sin él, SuperForms.unlocked(SSJ4)
-        // sigue dando false aunque el nivel ya esté comprado.
+        // es la excepción explícita. Se puede intentar desde Super Oozaru con SSJ3
+        // (SuperForms.readyForSsj4Ritual); completarlo MARCA el ritual (completeSsj4Ritual) —
+        // sin él, SuperForms.unlocked(SSJ4) sigue dando false aunque el nivel ya esté comprado.
         if (FormIds.SUPER_OOZARU.equals(current)) {
-            return FormRegistry.get(FormIds.SSJ4) != null ? FormIds.SSJ4 : null;
+            return SuperForms.readyForSsj4Ritual(p) ? FormIds.SSJ4 : null;
         }
 
         ResourceLocation next = FormRegistry.nextFrom(
                 current == null ? FormIds.BASE : current, race);
         if (next == null || !FormRegistry.isAllowed(race, next)) return null;
-        // Oozaru -> Super Oozaru exige tener YA comprado super_forms hasta el nivel MÁXIMO
-        // (SuperForms.readyForSuperOozaru): SuperForms.unlocked() por sí solo daría true de
-        // oficio (super_oozaru está fuera de la cadena, depthOf <= 0), así que sin este
-        // chequeo cualquier saiyan que llegara a Oozaru podría controlar la mutación sin haber
-        // entrenado nada. Este MISMO chequeo, aplicado a 'next' == SSJ4 vía
-        // SuperForms.unlocked() más abajo, es también lo que bloquea la cadena NORMAL
-        // (SSJ3 -sube la tecla-> SSJ4) hasta que el ritual esté hecho, aunque el nivel ya
-        // esté pagado: unlocked(SSJ4) exige AMBAS cosas (ver su javadoc).
+        // Oozaru -> Super Oozaru exige tener SSJ1 (SuperForms.readyForSuperOozaru):
+        // SuperForms.unlocked() por sí solo daría true de oficio (super_oozaru está fuera de la
+        // cadena, depthOf <= 0), así que sin este chequeo cualquier saiyan que llegara a Oozaru
+        // podría controlar la mutación sin haber entrenado nada. SuperForms.unlocked(SSJ4), más
+        // abajo, es lo que bloquea la cadena NORMAL (SSJ3 -sube la tecla-> SSJ4) hasta que el
+        // ritual esté hecho, aunque el nivel ya esté pagado: exige AMBAS cosas (ver su javadoc).
         if (FormIds.SUPER_OOZARU.equals(next) && !SuperForms.readyForSuperOozaru(p)) return null;
         // FormRegistry.nextFrom solo sabe seguir "el primer hijo" — con hermanas divinas
         // (ssj_blue/ssj_rose) eso siempre sería la misma, sin importar si este jugador es
@@ -448,18 +464,64 @@ public class PlayerFormAttachment {
         // devuelve tal cual.
         next = SuperForms.resolveSibling(p, next);
         next = DivineForms.resolveForPlayer(p, next);
-        return SuperForms.unlocked(p, next) ? next : null;
+        if (SuperForms.unlocked(p, next)) return next;
+        // El hijo mortal no está desbloqueado, pero puede haber un hijo DIVINO que sí: SSJ3 tiene
+        // a SSJ4 (camino oculto, no tiene por qué tenerse) y a SSJ God (decisión del usuario,
+        // 2026-10-21: lo divino sale de SSJ3, SSJ4 no condiciona el avance). Sin esto, mantener
+        // la tecla en SSJ3 se paraba ahí aunque SSJ God estuviera comprado.
+        for (ResourceLocation child : FormRegistry.childrenOf(current == null ? FormIds.BASE : current)) {
+            FormDef d = FormRegistry.get(child);
+            if (d == null || !d.divineTier() || !d.allows(race)) continue;
+            ResourceLocation divine = DivineForms.resolveForPlayer(p, child);
+            if (SuperForms.unlocked(p, divine)) return divine;
+        }
+        return null;
     }
 
     /**
      * Marca el ritual de Oozaru como completado (PlayerStatsAttachment.hasSsj4Ritual,
-     * persistente). NO otorga ningún nivel de super_forms: el nivel máximo ya se pagó con TP
-     * para poder llegar hasta aquí (SuperForms.readyForSuperOozaru) — lo que faltaba era
-     * ESTO, la parte que SuperForms.unlocked(SSJ4) exige además del nivel. A partir de aquí
-     * SSJ4 queda desbloqueado/visible en la rueda para siempre (ver WheelMenu.forms), incluso
-     * si el nivel se pierde y hay que volver a comprarlo por un respec. No hace nada si ya
-     * estaba hecho (repetir el ritual no debe reanunciar).
+     * persistente). El nivel de SSJ4 lo regala aparte grantSsj4 si faltaba. El flag es la parte
+     * que SuperForms.unlocked(SSJ4) exige además del nivel y revela el nodo en el árbol (ver
+     * SkillTreeNodes.secret); vale para siempre, incluso si el nivel se pierde por un respec.
+     * No hace nada si ya estaba hecho (repetir el ritual no debe reanunciar).
      */
+    /**
+     * Pista en el chat de los caminos ocultos (idea del usuario, 2026-10-21): al hacerse Oozaru
+     * teniendo ya SSJ1 sin haber llegado nunca a Súper Oozaru, y al llegar a Súper Oozaru con
+     * SSJ3 sin haber hecho el ritual. Se repite cada vez que se da la situación, hasta que el
+     * jugador encuentra el camino (no hay flag de «ya avisado»: la pista es el único rastro).
+     */
+    private static void hintHiddenPath(Player p) {
+        if (p.level().isClientSide()) return;
+        PlayerStatsAttachment stats = PlayerStatsAttachment.get(p);
+        String key = null;
+        PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        ResourceLocation cur = form.getFormId();
+        if (FormIds.OOZARU.equals(cur) && !stats.hasReachedSuperOozaru() && !stats.hasSsj4Ritual()
+                && SuperForms.readyForSuperOozaru(p)) {
+            key = "message.zenkai.oozaru.hint_super";
+        } else if (FormIds.SUPER_OOZARU.equals(cur) && !stats.hasSsj4Ritual() && SuperForms.readyForSsj4Ritual(p)) {
+            key = "message.zenkai.oozaru.hint_ssj4";
+        }
+        if (key != null) {
+            p.displayClientMessage(Component.translatable(key).withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC), false);
+        }
+    }
+
+    /**
+     * SSJ4 gratis por el ritual: sube super_forms hasta el nivel de SSJ4 sin cobrar TP. NO mira
+     * el MND libre (es un regalo, no una compra): puede dejarlo en negativo, como cualquier
+     * nivel concedido por comando. Devuelve si SSJ4 quedó desbloqueado.
+     */
+    private static boolean grantSsj4(Player p) {
+        PlayerStatsAttachment stats = PlayerStatsAttachment.get(p);
+        int lvl = SuperForms.requiredLevel(stats.getRace(), FormIds.SSJ4);
+        if (lvl == Integer.MAX_VALUE) return false;
+        if (stats.skills().level(SuperForms.SKILL) < lvl) stats.skills().setLevel(SuperForms.SKILL, lvl);
+        PlayerLifeCycle.syncIfServer(p);
+        return SuperForms.unlocked(p, FormIds.SSJ4);
+    }
+
     private static void completeSsj4Ritual(Player p) {
         if (p.level().isClientSide()) return;
         PlayerStatsAttachment stats = PlayerStatsAttachment.get(p);
@@ -551,7 +613,7 @@ public class PlayerFormAttachment {
         // "el config acaba de cambiar de false a true con las dos ya divergidas" — no hace
         // falta migrar nada aparte, el propio getter ya las trata como una.
         if (isBlueRoseSibling(form) && ServerConfig.ssjBlueRoseShareMastery()) {
-            return Math.max(rawMastery(FormIds.SSJ_BLUE), rawMastery(FormIds.SSJ_ROSE));
+            return Math.max(rawMastery(form), rawMastery(FormIds.blueRoseTwin(form)));
         }
         return rawMastery(form);
     }
@@ -561,7 +623,7 @@ public class PlayerFormAttachment {
     }
 
     private static boolean isBlueRoseSibling(ResourceLocation form) {
-        return FormIds.SSJ_BLUE.equals(form) || FormIds.SSJ_ROSE.equals(form);
+        return FormIds.blueRoseTwin(form) != null;
     }
 
     /** El ritmo lo marca la propia forma (mastery_gain del datapack). */
@@ -574,8 +636,8 @@ public class PlayerFormAttachment {
         if (isBlueRoseSibling(form) && ServerConfig.ssjBlueRoseShareMastery()) {
             // Sumar a las DOS a la vez las mantiene iguales desde ya: si el config se apaga
             // más tarde no hace falta ninguna migración, ya estaban sincronizadas.
-            addRawMastery(FormIds.SSJ_BLUE, scaled);
-            addRawMastery(FormIds.SSJ_ROSE, scaled);
+            addRawMastery(form, scaled);
+            addRawMastery(FormIds.blueRoseTwin(form), scaled);
             return;
         }
         addRawMastery(form, scaled);

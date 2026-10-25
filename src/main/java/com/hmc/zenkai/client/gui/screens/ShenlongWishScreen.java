@@ -88,6 +88,15 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
                     () -> mc.setScreen(new ImmortalWishScreen(this)));
             y += ROW_H + ROW_GAP;
         }
+        // Legendario: solo para un Saiyan que aún no lo es (el servidor lo vuelve a validar).
+        if (ClientWishToggles.isEnabled(WishType.LEGENDARY) && mc.player != null) {
+            var stats = mc.player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_STATS.get());
+            if (stats.getRace() == com.hmc.zenkai.feature.Race.SAIYAN && !stats.isLegendary()) {
+                addWish(x, y, w, "screen.zenkai.wish.legendary",
+                        () -> mc.setScreen(new com.hmc.zenkai.client.gui.screens.wishes.LegendaryWishScreen(this)));
+                y += ROW_H + ROW_GAP;
+            }
+        }
         if (ClientWishToggles.isEnabled(WishType.TRAINING_POINTS)) {
             addWish(x, y, w, "screen.zenkai.wish.training_points",
                     () -> mc.setScreen(new TrainingPointsWishScreen(this)));

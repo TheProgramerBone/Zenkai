@@ -1,0 +1,11 @@
+{
+  "node": "zenkai:node/race_human",
+  "race": "human",
+  "max_level": 4,
+  "tp_cost": [0, 3000, 8000, 18000],
+  "mind_req": [0, 8, 14, 22],
+  "values": {
+    "tp_gain": [0.15, 0.20, 0.25, 0.30],
+    "stamina_regen": [1.5, 1.65, 1.8, 2.0]
+  }
+}

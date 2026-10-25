@@ -76,6 +76,10 @@ public class ZenkaiTickHandlers {
         OozaruSystem.tick(c);
 
         ArcosianPowerSystem.tick(c);
+        com.hmc.zenkai.feature.race.MajinAbsorption.tick(c);
+        if (p instanceof net.minecraft.server.level.ServerPlayer isp && p.tickCount % 20 == 0) {
+            com.hmc.zenkai.feature.technique.InnateTechniques.ensure(isp, c.att());
+        }
         OverlayMetersSystem.tick(c);
         if (FormSystem.tick(c)) return;
         KaiokenSystem.tick(c);

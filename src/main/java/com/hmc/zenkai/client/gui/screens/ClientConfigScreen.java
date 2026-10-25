@@ -130,6 +130,31 @@ public class ClientConfigScreen extends ZenkaiMenuScreen {
         saveButton = PanelButton.primary(panelLeft + (BG_W - SAVE_W) / 2, footY,
                 Component.translatable("screen.zenkai.gui.save"), this::save);
         addRenderableWidget(saveButton);
+        addCreditsButton(footY);
+    }
+
+    /** Celda de icons.png de la estrella de créditos (tools/gen_credits_icon.py). */
+    private static final int CREDITS_U = 120, CREDITS_V = 80;
+
+    /**
+     * Créditos dejó de ser pestaña en la 0.6.0 (su pantalla está muy desactualizada): queda
+     * "oculta pero accesible" detrás de este icono. Va FUERA del panel, pegado a su esquina
+     * superior derecha: dentro no hay hueco (la lista empieza en CONTENT_TOP y la columna de
+     * controles llega al margen) y encima del panel solo quedan los 14 px del título. Si la
+     * ventana es tan estrecha que no cabe fuera, baja al pie, a la derecha de Save.
+     */
+    private void addCreditsButton(int footY) {
+        int x = panelLeft + BG_W + 2;
+        int y = panelTop;
+        if (x + 20 > this.width) {
+            x = rowRight() - 20;
+            y = footY;
+        }
+        var credits = new com.hmc.zenkai.client.gui.buttons.AtlasIconButton(x, y, CREDITS_U, CREDITS_V,
+                () -> mc.setScreen(new CreditsScreen()));
+        credits.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                Component.translatable("screen.zenkai.credits.title")));
+        addRenderableWidget(credits);
     }
 
     /**

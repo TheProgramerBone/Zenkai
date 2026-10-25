@@ -64,11 +64,20 @@ public final class MasteryEffects {
      * YA NO se llama desde los sitios de combate: lo consume TickHandlers.tickForms, que lo
      * guarda en PlayerStatsAttachment.setStatMultiplier(). Así el PL, la pantalla de stats se actualiza sola.
      */
+    /** Gigante Namekiano (interruptor): bonus de stats aditivo mientras está encendido. */
+    private static double namekGiantBonus(Player p) {
+        return com.hmc.zenkai.feature.skills.SkillToggles.isOn(p, com.hmc.zenkai.feature.skills.SkillEffects.NAMEK_GIANT)
+                ? ServerConfig.namekGiantStatBonus() : 0.0;
+    }
+
     public static double formStatFactor(Player p) {
         PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
-        double f = 1.0 + form.totalStatPercent() + OverlayStateSystem.statPercent(p)
+        double f = 1.0 + form.totalStatPercent(com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(p).getRace())
+                + OverlayStateSystem.statPercent(p)
                 + ArcosianPowerSystem.statBonus(p) + beastOverdriveBonus(p, form)
-                + OverlayMetersSystem.ueStatBonus(p);
+                + OverlayMetersSystem.ueStatBonus(p)
+                + namekGiantBonus(p)
+                + com.hmc.zenkai.feature.race.MajinAbsorption.statBonus(p);
         if (MajinEffect.isActive(p)) {
             f *= 1.0 + ServerConfig.majinStatBonus();
         }

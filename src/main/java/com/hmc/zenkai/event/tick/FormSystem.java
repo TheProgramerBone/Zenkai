@@ -54,8 +54,15 @@ public final class FormSystem {
             PlayerLifeCycle.syncIfServer(p);
         }
 
+        // Una divinidad con cargo (isDivine) tiene God Ki SIEMPRE (skill tree F5, §5). Aquí y no
+        // en el comando que activa isDivine para cubrir cualquier vía futura (Kaioshin, Ángel...).
+        if (p instanceof net.minecraft.server.level.ServerPlayer sp
+                && com.hmc.zenkai.feature.skilltree.SkillTree.ensureDivineGodKi(sp)) {
+            PlayerLifeCycle.syncIfServer(p);
+        }
+
         // Autocorrección: ninguna skill levels_from_forms debería tener MÁS nivel que su techo
-        // real (FormDrivenSkills.maxLevel, que sabe si el proveedor es super_forms o god_ki).
+        // real (FormDrivenSkills.maxLevel).
         // Repara solo las partidas que ya quedaran con un nivel de sobra por el bug real de
         // ModCommands.skillGive/giveAll/skillList (comparaban SIEMPRE contra
         // SuperForms.maxLevel, sin importar qué skill fuera — así "God Ki" podía acabar en 5/2)
@@ -133,7 +140,8 @@ public final class FormSystem {
                 }
             }
         }
-        applyFormScale(p, att.getRace(), activeDef);
+        applyFormScale(p, att.getRace(), activeDef,
+                com.hmc.zenkai.feature.skills.SkillToggles.isOn(p, com.hmc.zenkai.feature.skills.SkillEffects.NAMEK_GIANT));
 
         // Banda de forzar (powerPercent > 100%): genérica, drena ki aparte del de la forma.
         // Va AQUÍ y no puede esperar al siguiente tick sin cortar: form.isTransforming() puede
@@ -152,11 +160,13 @@ public final class FormSystem {
 
     /** Escala de la forma (render + hitbox + ojos) vía minecraft:generic.scale.
      *  Sin forma cae a la escala base de la RAZA. Syncable: los clientes la ven sin packet. */
-    private static void applyFormScale(Player p, Race race, FormDef def) {
+    private static void applyFormScale(Player p, Race race, FormDef def, boolean giant) {
         AttributeInstance scaleAttr = p.getAttribute(Attributes.SCALE);
         if (scaleAttr == null) return;
         double base = (race == null) ? 1.0 : race.baseScale();
         double target = (def != null && def.scale() > 0.0) ? def.scale() : base;
+        // Gigante Namekiano (interruptor): tamaño de Oozaru, encima de la forma que lleve (nunca menor que ella).
+        if (giant && race == Race.NAMEKIAN) target = Math.max(target, com.hmc.zenkai.feature.skills.SkillEffects.NAMEK_GIANT_SCALE);
         double amount = target - 1.0;
         AttributeModifier current = scaleAttr.getModifier(FORM_SCALE_MOD_ID);
         if (amount == 0.0) {

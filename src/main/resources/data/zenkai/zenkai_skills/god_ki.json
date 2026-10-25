@@ -1,8 +1,7 @@
 {
-  "max_level": 10,
+  "max_level": 1,
   "tp_cost": 0,
-  "mind_req": [50, 90],
-  "purchasable": true,
-  "masters": ["toribot"],
-  "levels_from_forms": true
+  "mind_req": [50],
+  "purchasable": false,
+  "masters": ["toribot"]
 }

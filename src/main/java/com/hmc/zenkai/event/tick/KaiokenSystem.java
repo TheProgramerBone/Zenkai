@@ -108,7 +108,7 @@ public final class KaiokenSystem {
         if (!tier.isOn()) return 0.0;
         return tier.drainPctPerSecond() / 100.0
                 * powerStat(att) * KAIOKEN_DRAIN_SCALE / 20.0
-                * skillFactor * masteryFactor(form) * formFactor(form) * releaseFactor(att);
+                * skillFactor * masteryFactor(form) * formFactor(form, att.getRace()) * releaseFactor(att);
     }
 
     /** Fracción del poder liberado (Ki Control), recortada a [0, 1]. Ver releaseFactor arriba. */
@@ -130,8 +130,8 @@ public final class KaiokenSystem {
      * Usa formStatPercent() y NO totalStatPercent(): el segundo INCLUYE el % del propio
      * kaioken, así que el drenaje se retroalimentaría (x20 multiplicaría su coste por ~20).
      */
-    private static double formFactor(PlayerFormAttachment form) {
-        return Math.sqrt(1.0 + Math.max(0.0, form.formStatPercent()));
+    private static double formFactor(PlayerFormAttachment form, com.hmc.zenkai.feature.Race race) {
+        return Math.sqrt(1.0 + Math.max(0.0, form.formStatPercent(race)));
     }
 
     /**

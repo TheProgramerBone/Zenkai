@@ -34,7 +34,7 @@ public class PlayerVisualAttachment {
      * defecto true: es el aspecto que eligió el autor del peinado. Sin efecto si no trae colores.
      */
     private boolean hairStrandColors = true;
-    private int eyeColorRgb    = 0x2E86C1; // azul, el mismo que propone la GUI (negro hacía invisible el iris)
+    private int eyeColorRgb    = 0x000000; // negro por defecto, el mismo que propone la GUI (negro hacía invisible el iris)
     /** Iris derecho (heterocromía). -1 = igual que el izquierdo (eyeColorRgb), el caso normal. */
     private int eyeColorRightRgb = -1;
     private int auraColorRgb   = 0x33CCFF; // ki azul

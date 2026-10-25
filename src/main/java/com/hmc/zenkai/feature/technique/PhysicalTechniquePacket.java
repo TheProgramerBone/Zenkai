@@ -81,6 +81,9 @@ public record PhysicalTechniquePacket(int op, int tech, int position, String mas
                     if (!r.ok()) { MasterManager.tell(sp, master, r); return; }
                 }
 
+                // Las técnicas innatas no se compran: las trae la raza (InnateTechniques).
+                if (!t.innateRace().isEmpty()) return;
+
                 if (att.getTP() < t.tpCost()) return;
 
                 if (!master.isEmpty()) {

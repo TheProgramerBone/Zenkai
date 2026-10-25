@@ -1,6 +1,5 @@
 package com.hmc.zenkai.feature.skills;
 
-import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
@@ -12,12 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Habilidad "god_ki": UNA sola skill (no una por raza) que desbloquea la rama de energía
- * divina de la raza del jugador, igual de "genérica por raza" que ya es super_forms — mismo
- * espíritu, apuntando a un subconjunto distinto de la cadena de formas (las marcadas
- * {@code divine_tier} en su FormDef, ver el javadoc de esa clase).
+ * Rama divina de cada raza (las formas {@code divine_tier} de su FormDef) y la skill "god_ki".
+ * Desde F5 del skill tree (2026-10-21) god_ki es de NIVEL 1 y no se compra con TP: es la puerta
+ * (la dan la prueba del maestro, el ritual o ser una divinidad con cargo) y cada forma divina es
+ * un nodo PROPIO del árbol que se compra con su tp_cost (antes: nivel N de god_ki = peldaño N).
  *
- * MAESTRO: hoy la enseña Tori-Bot, pero SOLO como placeholder — no hay ningún NPC "Whis"/"Bills"
+ * MAESTRO: hoy concede la audiencia Tori-Bot (GodKiServices), pero SOLO como placeholder — no hay ningún NPC "Whis"/"Bills"
  * (Beerus) en el mod todavía, y Tori-Bot es el catch-all de "cosas sin maestro adecuado" (junto a
  * instant_transmission y potential_unlock). Canónicamente debería ser uno de esos dos (los guías
  * angelicales/el Dios de la Destrucción son quienes enseñan el ki divino en la serie); en cuanto
@@ -62,7 +61,7 @@ public final class DivineForms {
      * parent, ambas divineTier) quedan a la MISMA profundidad a propósito — ver javadoc de
      * clase. 0 si la forma no es divina o no pertenece a esa raza.
      */
-    private static int depthOf(Race race, ResourceLocation form) {
+    public static int depthOf(Race race, ResourceLocation form) {
         FormDef d = FormDef.get(form);
         if (d == null || !d.divineTier() || !d.allows(race)) return 0;
         int depth = 1;
@@ -92,7 +91,7 @@ public final class DivineForms {
 
         boolean divine = PlayerStatsAttachment.get(p).isDivine();
         for (ResourceLocation id : atDepth) {
-            if (FormIds.SSJ_ROSE.equals(id) == divine) return id;
+            if (FormIds.isRoseLine(id) == divine) return id;
         }
         return atDepth.get(0); // ninguna hermana coincide con la regla: no dejar sin resolver
     }
@@ -124,31 +123,20 @@ public final class DivineForms {
         return unlocked(p, resolved) ? resolved : null;
     }
 
-    /** Niveles que "god_ki" puede llegar a tener para esa raza. 0 si no tiene ninguna forma
-     *  divina (hoy: Arcosiano). */
+    /** Profundidad máxima de la rama divina de esa raza (0 si no tiene ninguna forma divina).
+     *  Desde F5 ya no es el techo de god_ki (que es de nivel 1): es solo información. */
     public static int maxLevel(Race race) {
         int max = 0;
         for (ResourceLocation id : divineFormsFor(race)) max = Math.max(max, depthOf(race, id));
-        return max > 0 ? max : placeholderLevels(race);
-    }
-
-    /**
-     * Niveles de god_ki para una raza SIN ninguna forma divina propia (hoy: Arcosiano). No
-     * desbloquean ninguna transformación todavía: son la puerta para las mecánicas de ki divino
-     * que el diseño del Arcosiano va a colgar de esta skill (y evitan que god_ki sea
-     * inalcanzable para él, lo que también le impedía el logro de "todas las habilidades").
-     * Cuántos: ServerConfig arcosian.god_ki_levels. El precio NO es propio: ver tpCostForLevel.
-     */
-    private static int placeholderLevels(Race race) {
-        return race == Race.ARCOSIAN ? ServerConfig.arcGodKiLevels() : 0;
+        return max;
     }
 
     public static int maxLevel(Player p) { return maxLevel(SuperForms.raceOf(p)); }
 
     /**
-     * Coste en TP de ese nivel: el tp_cost de CUALQUIER forma divina en esa profundidad (las
-     * hermanas deben compartir el mismo tp_cost por diseño — ver zenkai_forms/ssj_blue.json /
-     * ssj_rose.json). MAX_VALUE si ese nivel no existe para esta raza.
+     * Coste en TP de la forma divina de esa profundidad: el tp_cost de CUALQUIER forma divina en
+     * ella (las hermanas deben compartir el mismo tp_cost por diseño, ver ssj_blue.json /
+     * ssj_rose.json). MAX_VALUE si no existe para esta raza.
      */
     public static int tpCostForLevel(Race race, int level) {
         for (ResourceLocation id : divineFormsFor(race)) {
@@ -157,25 +145,31 @@ public final class DivineForms {
                 return d == null ? Integer.MAX_VALUE : d.tpCost();
             }
         }
-        if (level >= 1 && level <= placeholderLevels(race) && divineFormsFor(race).isEmpty()) {
-            // Sin coste propio (pedido del usuario): el del MISMO nivel de la cadena divina de
-            // referencia (Saiyan), no un número inventado para el Arcosiano.
-            return tpCostForLevel(Race.SAIYAN, level);
-        }
         return Integer.MAX_VALUE;
     }
 
-    public static int tpCostForLevel(Player p, int level) {
-        return tpCostForLevel(SuperForms.raceOf(p), level);
-    }
-
-    /** ¿Tiene god_ki algún nivel para esta raza? (El Arcosiano sí, por los niveles placeholder.)
-     *  Usado para ocultar la fila de "god_ki" en la tienda de su maestro a quien no le sirve. */
+    /** ¿Tiene esta raza alguna forma divina? Desde F5 las cinco la tienen (Arcosian GOD). */
     public static boolean appliesTo(Race race) { return maxLevel(race) > 0; }
 
     /**
-     * ¿Desbloqueada esta forma divina para este jugador? Exige la cadena "mortal" de su raza
-     * (SuperForms) ya agotada Y el nivel correspondiente de "god_ki" — Y, si tiene hermanas,
+     * ¿Posee el jugador el PELDAÑO divino de esa forma? Las formas divinas son nodos propios del
+     * skill tree desde F5 (antes eran niveles de god_ki); poseer una hermana empatada (Blue)
+     * cuenta como poseer el peldaño entero, porque resolveTie decide cuál de las dos existe para
+     * él según isDivine.
+     */
+    public static boolean ownsDepth(Player p, Race race, ResourceLocation form) {
+        int depth = depthOf(race, form);
+        if (depth <= 0) return false;
+        var tree = PlayerStatsAttachment.get(p).skillTree();
+        for (ResourceLocation id : divineFormsFor(race)) {
+            if (depthOf(race, id) == depth && tree.owns(id)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * ¿Desbloqueada esta forma divina para este jugador? Exige el peldaño mortal del que cuelga
+     * (SuperForms), God Ki, y el nodo de ese peldaño divino comprado en el árbol — Y, si tiene hermanas,
      * ser la que resuelve para él (ver resolveTie): con isDivine puesto, Blue deja de estar
      * "unlocked" para él aunque tenga de sobra el nivel de god_ki, porque para él esa forma ya
      * no existe — lo que existe en su lugar es Rosé.
@@ -185,7 +179,8 @@ public final class DivineForms {
         int depth = depthOf(race, form);
         if (depth <= 0) return false;
         if (SuperForms.level(p) < SuperForms.mortalLevelNeededForDivine(race, form)) return false;
-        if (SkillEffects.level(p, SKILL) < depth) return false;
+        if (SkillEffects.level(p, SKILL) <= 0) return false;
+        if (!ownsDepth(p, race, form)) return false;
         return form.equals(resolveTie(race, depth, p));
     }
 }

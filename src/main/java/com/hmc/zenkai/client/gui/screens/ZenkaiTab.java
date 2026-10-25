@@ -18,14 +18,16 @@ public enum ZenkaiTab {
      *  fila v=20 que el resto de íconos de pestaña (0/20/40/80/100/120/160/200 ya ocupadas) —
      *  220 es la siguiente celda libre a la derecha. */
     TRAINING(220,20),
-    MASTERY(160,20),
+    /** Skill tree de transformaciones (0.6.0), ver SkillTreeScreen. Icono propio en la celda
+     *  140,40 (tools/gen_transformations_tab_icon.py). Ocupa el hueco de MASTERY, que dejó de
+     *  ser pestaña: la maestría de formas se ve en el panel de cada nodo y la de técnicas en
+     *  la categoría Mastery de TechniquesScreen (con el icono del cerebro, 160,20). */
+    TRANSFORMATIONS(140,40),
     STORY(20,20),
     PARTY(80,20),
-    CONFIG(100,20),
-    /** Celda candidata: fila v=80 tiene 0/20/40/60/80/100 ya ocupadas o reservadas
-     *  (ver gen_master_icons.py / gen_appearance_icons.py) — 120 es la siguiente libre.
-     *  Reconfirmar por muestreo de píxeles antes de generar el PNG real (tools/gen_credits_icon.py). */
-    CREDITS(120,80);
+    /** CREDITS (120,80) dejó de ser pestaña en la 0.6.0: su icono es ahora un botón en una
+     *  esquina de ClientConfigScreen que abre CreditsScreen ("oculta pero accesible"). */
+    CONFIG(100,20);
 
     /** Esquina del ícono de la pestaña dentro de textures/gui/icons.png (256x256). */
     public final int u, v;

@@ -30,9 +30,20 @@ public final class MindBudget {
         return att.getAttribute(ZenkaiAttributes.MIND);
     }
 
-    /** MIND ocupada por habilidades + tipos de ki + técnicas físicas. */
+    /** MIND ocupada por habilidades + tipos de ki + técnicas físicas + nodos propios del árbol. */
     public static int used(PlayerStatsAttachment att) {
-        return att.skills().mindUsed() + techniquesUsed(att);
+        return att.skills().mindUsed() + techniquesUsed(att) + treeUsed(att);
+    }
+
+    /** MIND ocupada por los nodos PROPIOS del skill tree (las pasivas mejoradas, F4): cada uno
+     *  ocupa el mind_req de su JSON en su nivel, igual que una habilidad. */
+    public static int treeUsed(PlayerStatsAttachment att) {
+        int total = 0;
+        for (var e : att.skillTree().ownedNodes().entrySet()) {
+            var d = com.hmc.zenkai.feature.skilltree.SkillTreeData.get(e.getKey());
+            if (d != null) total += sane(d.mindReqFor(e.getValue()));
+        }
+        return total;
     }
 
     /**

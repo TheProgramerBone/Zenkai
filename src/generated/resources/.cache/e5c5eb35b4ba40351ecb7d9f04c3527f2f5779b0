@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-18T12:42:11.3087849	Advancements
+// 1.21.1	2026-10-21T20:03:42.1234178	Advancements
 f9a5c0de397f24c185f402bcbc5d5ecb1b6aafa8 data/zenkai/advancement/all_skills.json
 1e4b0aa0238e933eb91f3567c473703ef287a782 data/zenkai/advancement/all_skills_max.json
 5c11b5aaa82f4098d857b7a660bd16cebe7f2b0a data/zenkai/advancement/all_wishes.json
@@ -18,6 +18,8 @@ e58b44fe8e725095c057b4ed44303f1520f54c36 data/zenkai/advancement/first_technique
 1b75f7198381e359f31d2052102f5c5c2f250d0e data/zenkai/advancement/first_wish.json
 cc9f5f009871b4de3cf13fc2b4fa8aaaf0dc4444 data/zenkai/advancement/fly.json
 06771dd28b1509e6c3229ef159705bb4bc1ae144 data/zenkai/advancement/full_charge.json
+88489e2068ee364e3d5617283048ed59add8957e data/zenkai/advancement/god_ki_ritual.json
+8e3e9d7bdac63245fa22315e0d5af99a180a9ecc data/zenkai/advancement/god_ki_trial.json
 865f79e8f597ca52999913a28b87753a90a527c9 data/zenkai/advancement/guard_break.json
 83925dd4721f4258456976842251b0eb586452c6 data/zenkai/advancement/hfil_biomes.json
 4e0182ac5bc952898432da9b2ac68677249dc6e5 data/zenkai/advancement/htc.json
@@ -44,7 +46,7 @@ d55afc0bd95d1be163b060a143d62304861557a8 data/zenkai/advancement/radar.json
 6f67a62258120d8b1468801518b13f29813948c8 data/zenkai/advancement/revived.json
 cc036db5917930a88443cc8e87db6a6ac71ff60c data/zenkai/advancement/scouter.json
 4a2de562afab87fe34b38a2265a44196527023f3 data/zenkai/advancement/seven_earth.json
-7f5340696a9fe7173747db7d5562f3e89c04857e data/zenkai/advancement/seven_namek.json
+42bf9d41984b35c4ab95bd46a94b67b3ec2785bf data/zenkai/advancement/seven_namek.json
 7e703a31d69dc4e94d6ba9af4d97ad37cf8980ee data/zenkai/advancement/shadow_training.json
 5067d1def14bf8f929dc1e756054a2ab9a71b8b7 data/zenkai/advancement/shield_block.json
 9bce4721277029512478dcbbbcd57ae77ba248d0 data/zenkai/advancement/space_pod.json

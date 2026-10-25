@@ -138,11 +138,12 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       Map<Integer, Integer> layerColors, int furRgb, boolean noBrows) {
 
     /**
-     * Rango conceptual de una forma en el mid/late-game (campo "tier" del JSON, default NONE).
-     * GOD = primer escalón del poder superior; EVOLUTION = hito intermedio que, al desbloquearlo,
-     * abre las rutas de endgame universales (ver EndgamePaths.entryUnlocked); ULTRA = pináculo de
-     * la rama. Es solo un rótulo de diseño: NO implica {@code divineTier} (el Arcosiano tiene
-     * Evolution y Ultra sin ninguna forma divina).
+     * Rango de balance de una forma (campo "tier" del JSON, default NONE), con significado fijo
+     * desde F8 del skill tree (.claude/archivo/2026-10-22-pendientes-0.6.0-previo/skill-tree-balance-formas.md §3.1): NONE = peldaño mortal de la
+     * cadena; GOD = primer escalón divino (exige God Ki); EVOLUTION = segundo escalón divino o
+     * evolución mortal paralela; ULTRA = pináculo. SIN lógica de juego (la de EVOLUTION que abría
+     * el endgame se quitó en F8): solo lo leen el balance y los efectos del árbol (marcos que
+     * laten más cuanto más alto el tier). NO implica {@code divineTier}.
      */
     public enum Tier {
         NONE, GOD, EVOLUTION, ULTRA;
@@ -201,6 +202,21 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
     private static double lerp(double a, double b, double t) {
         double c = Math.max(0.0, Math.min(1.0, t));
         return a + (b - a) * c;
+    }
+
+    /** ¿Es una forma UNIVERSAL cuyo % se escala por raza (UI, UE, Beast, Señal; F8)? Mystic
+     *  se escala aparte, en PotentialUnlock (su % sale del techo del propio jugador). */
+    public boolean universalScaled() { return endgamePath; }
+
+    /** Como {@link #statPercent(double)}, con la escala universal de la raza aplicada (F8). */
+    public double statPercent(com.hmc.zenkai.feature.Race race, double mastery0to100) {
+        double v = statPercent(mastery0to100);
+        return universalScaled() ? v * com.hmc.zenkai.feature.RaceStatTable.universalFormScale(race) : v;
+    }
+
+    /** % a maestría 100 con la escala universal de la raza (F8). */
+    public double statPercentMastered(com.hmc.zenkai.feature.Race race) {
+        return statPercent(race, 100.0);
     }
 
     /** Fracción que SUMA al multiplicador total (1.5 = +150%), según la maestría. */

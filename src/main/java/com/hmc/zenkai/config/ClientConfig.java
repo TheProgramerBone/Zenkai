@@ -253,6 +253,26 @@ public final class ClientConfig {
                             + "When off you see vanilla hands; other players still see the animation",
                     true);
 
+    /** Skill tree de transformaciones (F6): apaga la deriva de los fondos, el titileo de estrellas
+     *  y el pulso/destellos de los marcos de las formas poderosas. Para quien se maree o quiera
+     *  ahorrar FPS; lo estático se ve igual. */
+    private static final ModConfigSpec.BooleanValue SKILL_TREE_REDUCED_FX =
+            defineBool("skill_tree.reduced_effects", "skill_tree_reduced_effects",
+                    "Transformation tree: turn off the animated backgrounds, twinkling stars and the "
+                            + "pulsing frames of powerful forms",
+                    false);
+
+    /** Tutoriales de pantalla ya vistos (TutorialOverlay): se enseñan UNA vez por instalación; el
+     *  botón «?» los repite. Oculta: se escribe sola. */
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> SEEN_TUTORIALS =
+            BUILDER.comment("Screen tutorials already shown (the ? button replays them). Clear to see them again")
+                    .defineListAllowEmpty("ui.seen_tutorials", List.of(), () -> "", o -> o instanceof String);
+
+    /** Nodos secretos del árbol cuyo REVELADO ya se animó (F3): la animación sale una sola vez. */
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> SEEN_TREE_REVEALS =
+            BUILDER.comment("Secret transformation-tree nodes whose reveal animation was already played")
+                    .defineListAllowEmpty("skill_tree.seen_reveals", List.of(), () -> "", o -> o instanceof String);
+
     /** 100 = tamaño nativo de bars_empty.png/bars_full.png (256x64 el bloque de las 3 barras).
      *  Pedido para que el HUD de Body/Stamina/Ki no se salga de pantalla con un GUI Scale alto
      *  o una ventana pequeña — el arte se pensó a un GUI Scale concreto y el resto de jugadores
@@ -491,6 +511,35 @@ public final class ClientConfig {
     public static int hudOffsetX() { return HUD_OFFSET_X.get(); }
     public static int hudOffsetY() { return HUD_OFFSET_Y.get(); }
     public static int scouterLastTint() { return SCOUTER_TINT.get(); }
+
+    public static boolean skillTreeReducedFx() { return SKILL_TREE_REDUCED_FX.get(); }
+
+    public static boolean tutorialSeen(String id) { return SEEN_TUTORIALS.get().contains(id); }
+
+    public static void markTutorialSeen(String id) {
+        if (tutorialSeen(id)) return;
+        List<String> l = new ArrayList<>(SEEN_TUTORIALS.get());
+        l.add(id);
+        SEEN_TUTORIALS.set(l);
+        SPEC.save();
+    }
+
+    /** Olvida tutoriales y revelados vistos. Solo la herramienta de capturas SkillTreeShots. */
+    public static void resetSeenForDev() {
+        SEEN_TUTORIALS.set(new ArrayList<>());
+        SEEN_TREE_REVEALS.set(new ArrayList<>());
+        SPEC.save();
+    }
+
+    public static boolean treeRevealSeen(String nodeId) { return SEEN_TREE_REVEALS.get().contains(nodeId); }
+
+    public static void markTreeRevealSeen(String nodeId) {
+        if (treeRevealSeen(nodeId)) return;
+        List<String> l = new ArrayList<>(SEEN_TREE_REVEALS.get());
+        l.add(nodeId);
+        SEEN_TREE_REVEALS.set(l);
+        SPEC.save();
+    }
 
     public static void setScouterLastTint(int rgb) {
         SCOUTER_TINT.set(rgb & 0xFFFFFF);

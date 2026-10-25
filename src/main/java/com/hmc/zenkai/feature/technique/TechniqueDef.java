@@ -51,6 +51,10 @@ import java.util.Map;
  * tipo puede partir ya por encima de lo que cualquier size 1..5 del tipo genérico alcanza
  * (mismo patrón que EXPLOSION/BIG_BLAST, ver git history).
  *
+ * TÉCNICA INNATA DE RAZA ({@code innate_race}, solo físicas; "" = ninguna): el id de una {@link com.hmc.zenkai.feature.Race}
+ * en minúsculas ("majin"). Esa raza la TIENE desde el principio (InnateTechniques la desbloquea sola, sin TP), las demás ni la ven
+ * en la lista ni pueden desbloquearla (PhysicalTechniquePacket lo vuelve a validar). Hoy: la absorción del Majin.
+ *
  * FORMA de una técnica ki (0.3.0, ver {@code .claude/pendiente/verificar-y-deuda.md} §2):
  * lo que antes eran 6 switch exhaustivos de {@link KiTechniqueType} ahora son datos aquí —
  * {@code travels}, {@code projectileSizeBase/Step}, {@code explosionRadiusMult}, {@code aoeFactor},
@@ -73,7 +77,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                            boolean travels, double projectileSizeBase, double projectileSizeStep,
                            double explosionRadiusMult, double aoeFactor, double aoeEdgeFalloff,
                            boolean chargeShowsRealSize, String animOverride, String allowedEffects,
-                           String icon, String weaponRequirement, boolean breaksBlocks) {
+                           String icon, String weaponRequirement, boolean breaksBlocks, String innateRace) {
 
     public enum Kind {
         KI, PHYSICAL;
@@ -138,6 +142,7 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                 buf.writeUtf(d.icon(), 256);
                 buf.writeUtf(d.weaponRequirement(), 64);
                 buf.writeBoolean(d.breaksBlocks());
+                buf.writeUtf(d.innateRace(), 64);
             },
             buf -> {
                 String id = buf.readUtf();
@@ -153,6 +158,6 @@ public record TechniqueDef(String id, Kind kind, int tpCost, int mindReq, String
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(),
                         buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readBoolean(), buf.readUtf(64), buf.readUtf(256), buf.readUtf(256),
-                        buf.readUtf(64), buf.readBoolean());
+                        buf.readUtf(64), buf.readBoolean(), buf.readUtf(64));
             });
 }

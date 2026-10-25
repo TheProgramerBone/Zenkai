@@ -54,6 +54,9 @@ public class ModTags {
         public static final TagKey<EntityType<?>> BOSSES = createTag("bosses");
         /** No se puede agarrar con la técnica Agarre (jefes y similares). */
         public static final TagKey<EntityType<?>> UNGRABBABLE = createTag("ungrabbable");
+        /** Seres con ki divino (Ángeles, Janemba…): el Ki Sense de quien no tiene God Ki los
+         *  percibe como una firma desconocida y tenue (skill tree F5). */
+        public static final TagKey<EntityType<?>> DIVINE = createTag("divine");
 
         private static TagKey<EntityType<?>> createTag(String name) {
             return TagKey.create(Registries.ENTITY_TYPE,

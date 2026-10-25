@@ -57,7 +57,7 @@ public final class RacePassiveSystem {
 
     /** Bonus multiplicativo que aporta el zenkai. 1.0 si no está activo. */
     public static double zenkaiMultiplier(Player p) {
-        return zenkaiActive(p) ? 1.0 + RacePassives.ZENKAI_BONUS : 1.0;
+        return zenkaiActive(p) ? 1.0 + RacePassives.zenkaiBonus(p) : 1.0;
     }
 
     /** Segundos restantes del zenkai. Para la pantalla de stats. */
@@ -81,6 +81,11 @@ public final class RacePassiveSystem {
             if (s.activeTicks == 0 && p instanceof ServerPlayer sp) {
                 sp.displayClientMessage(Component.translatable("message.zenkai.zenkai_faded"), true);
             }
+        }
+
+        // Sangre fría: tampoco se congela (sin ralentización ni escarcha en pantalla).
+        if (att.getRace() == com.hmc.zenkai.feature.Race.ARCOSIAN && p.getTicksFrozen() > 0) {
+            p.setTicksFrozen(0);
         }
 
         switch (att.getRace()) {
@@ -111,7 +116,7 @@ public final class RacePassiveSystem {
         if (!s.armed || frac < RacePassives.ZENKAI_RECOVER) return;
 
         long now = p.level().getGameTime();
-        if (now - s.lastTriggerTick < RacePassives.ZENKAI_COOLDOWN) {
+        if (now - s.lastTriggerTick < RacePassives.zenkaiCooldown(p)) {
             // En enfriamiento: se desarma igualmente, o el jugador acumularía un disparo
             // pendiente y lo cobraría gratis en cuanto expirara el cooldown.
             s.armed = false;
@@ -119,12 +124,12 @@ public final class RacePassiveSystem {
         }
 
         s.armed = false;
-        s.activeTicks = RacePassives.ZENKAI_DURATION;
+        s.activeTicks = RacePassives.zenkaiDuration(p);
         s.lastTriggerTick = now;
 
         if (p instanceof ServerPlayer sp) {
             sp.displayClientMessage(Component.translatable("message.zenkai.zenkai_triggered",
-                    Math.round(RacePassives.ZENKAI_BONUS * 100)), true);
+                    Math.round(RacePassives.zenkaiBonus(p) * 100)), true);
         }
     }
 
@@ -137,7 +142,7 @@ public final class RacePassiveSystem {
         // El canal del majin es propio y no pasa por RegenSystem, así que la penalización de
         // combate hay que aplicarla también aquí o el majin sería el único que se cura a
         // ritmo normal peleando. CombatRegen ya le garantiza el suelo racial.
-        s.regenCarry += max * RacePassives.MAJIN_PASSIVE_REGEN * CombatRegen.bodyMult(p);
+        s.regenCarry += max * RacePassives.majinPassiveRegen(p) * CombatRegen.bodyMult(p);
         int whole = (int) s.regenCarry;
         if (whole > 0) {
             s.regenCarry -= whole;
@@ -148,6 +153,6 @@ public final class RacePassiveSystem {
     /** Namekiano: cobra el ki de lo que RegenSystem le haya regenerado de más. */
     public static void chargeNamekianRegen(Player p, PlayerStatsAttachment att, int bodyGained) {
         if (bodyGained <= 0 || !RacePassives.is(p, Race.NAMEKIAN)) return;
-        att.consumeEnergy(RacePassives.namekianRegenKiCost(bodyGained));
+        att.consumeEnergy(RacePassives.namekianRegenKiCost(p, bodyGained));
     }
 }

@@ -1,0 +1,8 @@
+{
+  "max_level": 1,
+  "tp_cost": 4500,
+  "mind_req": [
+    8
+  ],
+  "purchasable": true
+}

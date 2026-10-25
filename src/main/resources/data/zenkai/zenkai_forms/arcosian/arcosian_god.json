@@ -1,0 +1,28 @@
+{
+  "races": [
+    "arcosian"
+  ],
+  "kind": "extension",
+  "tp_cost": 110000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.22,
+  "stat_percent_untrained": 9.4,
+  "stat_percent_mastered": 16.0,
+  "ki_drain_untrained": 4.15,
+  "ki_drain_mastered": 1.3,
+  "spi_req": 190,
+  "parent": "zenkai:final_form",
+  "body_items": {
+    "head": "zenkai:arcosian_final_form_helmet",
+    "chest": "zenkai:arcosian_final_form_chestplate",
+    "legs": "zenkai:arcosian_final_form_leggings",
+    "feet": "zenkai:arcosian_final_form_boots"
+  },
+  "aura_type": "god",
+  "aura_rgb": "0xC060FF",
+  "aura_outer_rgb": "0x7A2CFF",
+  "eye_rgb": "0xFFD24C",
+  "scale": 1.0,
+  "divine_tier": true,
+  "tier": "god"
+}

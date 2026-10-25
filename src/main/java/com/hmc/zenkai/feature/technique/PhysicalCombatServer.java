@@ -403,7 +403,7 @@ public final class PhysicalCombatServer {
         // movimiento sale igual: la estamina ya se pagó.
         double fistBonus = 0.0;
         double raw = KiFist.rawBonus(sp, att);
-        if (raw > 0.0) {
+        if (raw > 0.0 && t != PhysicalTechnique.ABSORB) {
             double effective = raw * t.dmgMult() * MasteryEffects.techCostFactor(att, t.name());
             int kiCost = Math.min(KiInfusion.kiCost(att, effective),
                     (int) (att.getEnergyMax() * MAX_COST_PCT_OF_POOL));
@@ -423,7 +423,7 @@ public final class PhysicalCombatServer {
                 * MasteryEffects.techDamageFactor(att, t.name());
         // Orden de multiplicadores fijado en ComboTracker: combo × carga (× Black Flash, que no aplica aquí).
         // La evasiva no golpea: ni suma ni alimenta la cadena.
-        if (t != PhysicalTechnique.EVADE) str *= ComboTracker.registerHit(sp);
+        if (t != PhysicalTechnique.EVADE && t != PhysicalTechnique.ABSORB) str *= ComboTracker.registerHit(sp);
         int chargeLevel = t == PhysicalTechnique.HEAVY_BLOW ? consumeChargeLevel(sp) : 0;
         if (chargeLevel > 0) {
             str *= 1.0 + chargeLevel * ServerConfig.heavyDamagePerLevel();
@@ -452,6 +452,7 @@ public final class PhysicalCombatServer {
             case DIVE -> startDive(sp, str, t);
             case GRAB -> startGrab(sp, str, t);
             case EVADE -> startEvade(sp, str, t);
+            case ABSORB -> com.hmc.zenkai.feature.race.MajinAbsorption.throwMass(sp);
         }
         ZenkaiTriggers.TECHNIQUE_USED.get().trigger(sp,
                 t.name().toLowerCase(java.util.Locale.ROOT), 0.0);
@@ -859,6 +860,11 @@ public final class PhysicalCombatServer {
                 sp.displayClientMessage(Component.translatable("hud.zenkai.grab_no_target"), true);
                 return ActionReject.NO_TARGET;
             }
+        } else if (t == PhysicalTechnique.ABSORB) {
+            // Sin ser Majin o sin el ki que cuesta NO se gasta estamina ni enfriamiento (MajinAbsorption avisa del
+            // motivo). A quién se absorbe se decide al impacto de la masa, no aquí.
+            return com.hmc.zenkai.feature.race.MajinAbsorption.canThrow(sp)
+                    ? ActionReject.OK : ActionReject.NO_RESOURCE;
         }
         return ActionReject.OK;
     }
@@ -1304,6 +1310,7 @@ public final class PhysicalCombatServer {
             case DIVE       -> new Vol(1.0f, 0.6f);
             case GRAB       -> new Vol(0.9f, 0.9f);
             case EVADE      -> new Vol(0.6f, 1.5f);
+            case ABSORB     -> new Vol(0.8f, 0.6f);
         };
         boolean blocked = target instanceof ServerPlayer defSp
                 ? KiCombatServer.isBlocking(defSp)
@@ -1345,6 +1352,7 @@ public final class PhysicalCombatServer {
             case DIVE -> ModDamageTypes.DIVE;
             case GRAB -> ModDamageTypes.GRAB;
             case EVADE -> ModDamageTypes.DASH_PUNCH;   // no daña: el tipo no se usa nunca
+            case ABSORB -> ModDamageTypes.GRAB;        // absorber mata por MajinAbsorption, no por hit()
         };
     }
 

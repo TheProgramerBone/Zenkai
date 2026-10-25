@@ -35,6 +35,8 @@ public final class HairFormVariants {
             "zenkai:ssj4", Variant.SSJ4,
             "zenkai:ssj_blue", Variant.SSJ,
             "zenkai:ssj_rose", Variant.SSJ,
+            "zenkai:ssj_blue_evolution", Variant.SSJ,
+            "zenkai:ssj_rose_evolution", Variant.SSJ,
             "zenkai:beast", Variant.SSJ2);
 
     public static Variant wanted(@Nullable ResourceLocation formId) {

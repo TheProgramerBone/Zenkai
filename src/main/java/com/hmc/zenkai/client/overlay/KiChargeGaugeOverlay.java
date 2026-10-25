@@ -65,6 +65,9 @@ public final class KiChargeGaugeOverlay {
             lastChangeTick = now;
         }
 
+        // Durante el ritual de God Ki el anillo NO se pinta (solo ahí): el aviso de progreso ocupa su sitio.
+        if (now < att.flags().getGodKiRitualUntil()) return;
+
         boolean charging = att.isChargingKi();
         boolean flashing = (now - lastChangeTick) < FLASH_TICKS;
         if (!charging && !flashing) return;

@@ -72,7 +72,7 @@ public final class FormRegistry {
      * forma DETERMINISTA (antes ganaba el orden de carga del datapack): primero los hijos que no
      * son divinos, ni de endgame, ni exigen maestría de otras formas (esos cuelgan como ramas);
      * entre ellos, una hermana de alineamiento GOOD antes que una EVIL. Solo si no queda ninguno
-     * cae a un hijo divino (Saiyan: ssj4 -> ssj_god). Las ramas fuera de la cadena las ofrece la
+     * cae a un hijo divino (Namekiano: namek_orange -> namek_god). Las ramas fuera de la cadena las ofrece la
      * rueda recorriendo childrenOf, no esta función.
      */
     public static ResourceLocation nextFrom(ResourceLocation current, Race race) {
@@ -106,6 +106,12 @@ public final class FormRegistry {
     }
 
     /** Multiplicador (fracción a SUMAR) de una forma con cierta maestría. 0 en base. */
+    /** Con la escala universal de la raza (F8): la que usan los sitios con jugador. */
+    public static double statPercent(ResourceLocation id, com.hmc.zenkai.feature.Race race, double mastery) {
+        FormDef d = get(id);
+        return d == null ? 0.0 : d.statPercent(race, mastery);
+    }
+
     public static double statPercent(ResourceLocation id, double mastery) {
         FormDef d = get(id);
         return d == null ? 0.0 : d.statPercent(mastery);

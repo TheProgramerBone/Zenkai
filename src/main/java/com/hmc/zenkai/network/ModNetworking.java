@@ -97,6 +97,12 @@ public class ModNetworking {
         );
 
         registrar.playToServer(
+                com.hmc.zenkai.feature.wishes.WishLegendaryPayload.TYPE,
+                com.hmc.zenkai.feature.wishes.WishLegendaryPayload.STREAM_CODEC,
+                com.hmc.zenkai.feature.wishes.WishLegendaryPayload.Handler::handle
+        );
+
+        registrar.playToServer(
                 WishImmortalPayload.TYPE,
                 WishImmortalPayload.STREAM_CODEC,
                 WishImmortalPayload.WishImmortalPayloadHandler::handle
@@ -321,6 +327,17 @@ public class ModNetworking {
                 SkillBuyPacket.TYPE,
                 SkillBuyPacket.STREAM_CODEC,
                 SkillBuyPacket::handle);
+
+        // Compra de un nodo del skill tree de transformaciones (SkillTreeScreen).
+        registrar.playToServer(
+                com.hmc.zenkai.feature.skilltree.SkillTreeBuyPacket.TYPE,
+                com.hmc.zenkai.feature.skilltree.SkillTreeBuyPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.skilltree.SkillTreeBuyPacket::handle);
+        // Datos del árbol (requisitos, pistas, secretos, vías, curvas de pasivas): S2C en login y /reload.
+        registrar.playToClient(
+                com.hmc.zenkai.feature.skilltree.SkillTreeDataSyncPacket.TYPE,
+                com.hmc.zenkai.feature.skilltree.SkillTreeDataSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.skilltree.SkillTreeDataSyncPacket::handle);
 
         registrar.playToServer(
                 TechniquePacket.TYPE,

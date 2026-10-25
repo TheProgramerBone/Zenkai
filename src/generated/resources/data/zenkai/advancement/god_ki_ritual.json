@@ -1,0 +1,31 @@
+{
+  "parent": "zenkai:transformation",
+  "criteria": {
+    "ritual": {
+      "conditions": {
+        "kind": "god_ki_ritual"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.god_ki_ritual.description"
+    },
+    "frame": "challenge",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:nether_star"
+    },
+    "title": {
+      "translate": "advancements.zenkai.god_ki_ritual.title"
+    }
+  },
+  "requirements": [
+    [
+      "ritual"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

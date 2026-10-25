@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.feature.technique.InnateTechniques;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.PhysicalIcons;
 import com.hmc.zenkai.client.TechniqueIcons;
@@ -80,7 +81,12 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     private enum Category {
         KI(40, 20, "screen.zenkai.techniques.category.ki"),
         PHYSICAL(120, 20, "screen.zenkai.techniques.category.physical"),
-        MASTER(0, 80, "screen.zenkai.techniques.category.master");
+        MASTER(0, 80, "screen.zenkai.techniques.category.master"),
+        /** Maestría de técnicas (ki, físicas y Kaioken). Vivía en la pestaña MASTERY, que
+         *  desapareció con el skill tree de transformaciones (0.6.0): la maestría de FORMAS
+         *  pasó al panel de cada nodo del árbol, y la de técnicas vino aquí con el icono del
+         *  cerebro (la misma celda 160,20 que tenía la pestaña). Filas sin botones: solo leen. */
+        MASTERY(160, 20, "screen.zenkai.techniques.category.mastery");
 
         final int u, v;
         final String labelKey;
@@ -94,6 +100,9 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         record Ki(int index, KiTechnique tech) implements Row {}
         record Phys(PhysicalTechnique tech, boolean fromMaster) implements Row {}
         record MasterKi(KiTechniqueType type, int index) implements Row {}
+        /** Fila de maestría: ki, física, o Kaioken (las dos a null). El % se lee en cada
+         *  frame del attachment, no se guarda aquí: sube sola con cada sync. */
+        record Mastery(@Nullable KiTechniqueType ki, @Nullable PhysicalTechnique phys) implements Row {}
     }
 
     /** Widget de una fila con su desplazamiento vertical dentro de ella y si debe poder
@@ -329,7 +338,8 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             }
             case PHYSICAL -> {
                 for (PhysicalTechnique t : PhysicalTechnique.values()) {
-                    if (t.enabled()) rows.add(new Row.Phys(t, false));
+                    // Una técnica INNATA de otra raza ni se enseña (TechniqueDef.innateRace).
+                    if (t.enabled() && InnateTechniques.availableTo(t, att.getRace())) rows.add(new Row.Phys(t, false));
                 }
             }
             case MASTER -> {
@@ -342,6 +352,19 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                 }
                 for (PhysicalTechnique t : PhysicalTechnique.values()) {
                     if (!t.master().isEmpty()) rows.add(new Row.Phys(t, true));
+                }
+            }
+            case MASTERY -> {
+                // Solo lo que el jugador YA TIENE, en orden de desbloqueo (mismo criterio que
+                // la vieja MasteryScreen: un registro de progreso, no un catálogo).
+                if (com.hmc.zenkai.feature.skills.SkillEffects.level(mc.player, "kaioken") > 0) {
+                    rows.add(new Row.Mastery(null, null));
+                }
+                for (KiTechniqueType t : tech.unlockedTypesOrdered()) {
+                    if (t.enabled()) rows.add(new Row.Mastery(t, null));
+                }
+                for (PhysicalTechnique t : tech.unlockedPhysicalOrdered()) {
+                    if (t.enabled()) rows.add(new Row.Mastery(null, t));
                 }
             }
         }
@@ -927,6 +950,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                         case KI -> "screen.zenkai.technique.empty";
                         case PHYSICAL -> "screen.zenkai.physical.empty";
                         case MASTER -> "screen.zenkai.master_techniques.empty";
+                        case MASTERY -> "screen.zenkai.mastery.empty";
                     }),
                     panelLeft + BG_W / 2, listTop() + viewHeight() / 2 - 4,
                     ZenkaiPalette.MUTED_ON_PANEL);
@@ -1004,6 +1028,11 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             return inst != null ? null : name;
         }
 
+        if (row instanceof Row.Mastery m) {
+            drawMasteryRow(g, m, y);
+            return null;
+        }
+
         if (row instanceof Row.Phys(PhysicalTechnique t, boolean fromMaster)) {
             boolean unlocked = tech.isUnlocked(t);
             if (armedPhys == t) veil(g, y);
@@ -1037,6 +1066,63 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             return null;   // tooltip compuesto, ver physRowTooltip
         }
         return null;
+    }
+
+    /**
+     * Fila de la categoría Mastery: icono, nombre y % arriba; detalle (lo que da la maestría
+     * ahora) abajo; barra fina al pie. Los factores salen de ServerConfig igual que en la
+     * vieja MasteryScreen: la pantalla evalúa las curvas, no las reimplementa.
+     */
+    private void drawMasteryRow(GuiGraphics g, Row.Mastery row, int y) {
+        int x = xIcon();
+        Component name;
+        float mastery;
+        Component detail;
+        if (row.ki() != null) {
+            TechniqueIcons.draw(g, x, y + 5, ICON, row.ki(), row.ki().defaultRgb());
+            name = Component.translatable(row.ki().nameKey());
+            mastery = att.getTechniqueMastery(row.ki().name());
+            detail = techMasteryDetail(mastery, true);
+        } else if (row.phys() != null) {
+            PhysicalIcons.draw(g, x, y + 5, ICON, row.phys());
+            name = Component.translatable(row.phys().nameKey());
+            mastery = att.getTechniqueMastery(row.phys().name());
+            detail = techMasteryDetail(mastery, false);
+        } else {
+            var form = mc.player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get());
+            mastery = form.getKaiokenMastery();
+            name = Component.translatable("screen.zenkai.mastery.kaioken_row");
+            // Una sola fila: la maestría es general; lo que cambia entre escalones es el ritmo
+            // de ganancia, no el progreso.
+            detail = Component.translatable("screen.zenkai.mastery.kaioken_detail",
+                    String.format(Locale.ROOT, "%.0f%%",
+                            (1.0 - com.hmc.zenkai.event.tick.KaiokenSystem.masteryFactor(form)) * 100.0));
+        }
+        boolean maxed = mastery >= 100f;
+        String pct = String.format(Locale.ROOT, "%.1f%%", mastery);
+        int right = rightEdge();
+        PanelText.rightOnPanel(g, this.font, Component.literal(pct), right, y + 3,
+                maxed ? ZenkaiPalette.MAXED_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL);
+        int nameX = xText();
+        PanelText.onPanel(g, this.font,
+                PanelText.fit(this.font, name, right - this.font.width(pct) - 6 - nameX),
+                nameX, y + 3, ZenkaiPalette.OWNED_ON_PANEL);
+        PanelText.onPanel(g, this.font, PanelText.fit(this.font, detail, right - nameX),
+                nameX, y + 14, ZenkaiPalette.BODY_ON_PANEL);
+        com.hmc.zenkai.client.gui.StatBar.draw(g, nameX, y + 24, right - nameX, 3, mastery, 100.0,
+                maxed ? ZenkaiPalette.MAXED_ON_PANEL : ZenkaiPalette.BAR_MASTERY);
+    }
+
+    /** "+12% dmg  -8% cost  -5% charge": lo que da la maestría AHORA (al 100 % es el valor de config). */
+    private static Component techMasteryDetail(float mastery, boolean ki) {
+        double m = mastery / 100.0;
+        StringBuilder sb = new StringBuilder();
+        sb.append("+").append(String.format(Locale.ROOT, "%.0f%%", ServerConfig.masteryTechDamageBonus() * m * 100.0)).append(" dmg");
+        sb.append("  -").append(String.format(Locale.ROOT, "%.0f%%", ServerConfig.masteryTechCostReduction() * m * 100.0)).append(" cost");
+        if (ki) {
+            sb.append("  -").append(String.format(Locale.ROOT, "%.0f%%", ServerConfig.masteryTechCastReduction() * m * 100.0)).append(" charge");
+        }
+        return Component.literal(sb.toString());
     }
 
     /** Nombre + la tecla asignada, pegada a él. En columna fija quedaba un salto vacío entre

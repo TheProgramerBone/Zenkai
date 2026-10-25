@@ -100,6 +100,10 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
      *  detrás de un botón en vez de varias filas siempre visibles. */
     private boolean showGravityPopup;
 
+    /** Mini tutorial del hub (reporte #3), el mismo widget que el del skill tree. */
+    private com.hmc.zenkai.client.gui.widgets.TutorialOverlay tutorial;
+    private static final int HELP_BTN = 12;
+
     public TrainingHubScreen() {
         super(Component.translatable(ZenkaiTab.TRAINING.titleKey()));
     }
@@ -109,6 +113,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
 
     @Override
     protected void initContent() {
+        initTutorial();
         // Sin widgets propios: filas y panel se dibujan/hit-testean a mano.
         combatFatigueEfficiency = null;
         meditationFatigueEfficiency = null;
@@ -126,6 +131,41 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         combatFatigueEfficiency = combatEfficiency;
         meditationFatigueEfficiency = meditationEfficiency;
         targetPracticeFatigueEfficiency = targetPracticeEfficiency;
+    }
+
+    /** Botón «?» (repite el tutorial) a la derecha del título del panel de modificadores, donde
+     *  no tapa ninguna fila. */
+    private void initTutorial() {
+        int hx = panelLeft + IN_X2 - HELP_BTN - 2, hy = panelTop + PANEL_Y - 2;
+        var help = new com.hmc.zenkai.client.gui.buttons.HelpIconButton(hx, hy, HELP_BTN, () -> tutorial.start());
+        help.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.tutorial.replay")));
+        addRenderableWidget(help);
+        int x = panelLeft + IN_X1, w = IN_X2 - IN_X1;
+        List<com.hmc.zenkai.client.gui.widgets.TutorialOverlay.Step> steps = new ArrayList<>();
+        steps.add(tutorialStep(1, () -> new int[]{x, panelTop + ROW1_Y, w, HUB_ROW_H}));
+        steps.add(tutorialStep(2, () -> new int[]{x, panelTop + ROW2_Y, w, HUB_ROW_H}));
+        steps.add(tutorialStep(3, () -> new int[]{x, panelTop + ROW3_Y, w, HUB_ROW_H}));
+        steps.add(tutorialStep(4, () -> new int[]{x, panelTop + PANEL_Y - 2, w, panelTop + IN_Y2_HUB - (panelTop + PANEL_Y - 2)}));
+        steps.add(tutorialStep(5, () -> new int[]{x, panelTop + GRAVITY_ROW_Y - 1, w, GRAVITY_ROW_H + 1}));
+        steps.add(tutorialStep(6, () -> new int[]{hx - 2, hy - 2, HELP_BTN + 4, HELP_BTN + 4}));
+        tutorial = new com.hmc.zenkai.client.gui.widgets.TutorialOverlay("training_hub", steps);
+        tutorial.startIfFirstTime();
+    }
+
+    /** Fondo del beige del panel (y=242 en el panel de 256, ver docs/gui.md). */
+    private static final int IN_Y2_HUB = 242;
+
+    private static com.hmc.zenkai.client.gui.widgets.TutorialOverlay.Step tutorialStep(
+            int n, java.util.function.Supplier<int[]> rect) {
+        String k = "screen.zenkai.tutorial.training_hub." + n;
+        return new com.hmc.zenkai.client.gui.widgets.TutorialOverlay.Step(
+                Component.translatable(k + ".title"), Component.translatable(k), rect);
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scan, int mods) {
+        if (tutorial != null && tutorial.keyPressed(key)) return true;
+        return super.keyPressed(key, scan, mods);
     }
 
     @Override
@@ -151,6 +191,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         renderModifiersPanel(g, x, panelTop + PANEL_Y, w, mouseX, mouseY);
 
         if (showGravityPopup) renderGravityPopup(g, mouseX, mouseY);
+        if (tutorial != null) tutorial.render(g, this.font, this.width, this.height);
     }
 
     /** Botón grande horizontal (ícono izq + etiqueta der), mismo idioma que
@@ -418,6 +459,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (tutorial != null && tutorial.mouseClicked()) return true;
         if (button == 0 && clickHub(mouseX, mouseY)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
     }

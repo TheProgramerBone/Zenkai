@@ -50,6 +50,10 @@ public final class PotentialUnlock {
 
         Race race = SuperForms.raceOf(p);
         if (race == null) return floor;
+        // Escala universal de la raza (skill tree F8, §3.2): el suelo y el tope son cifras de la
+        // escala Saiyan; el techo acoplado ya sale de las formas de la propia raza.
+        double scale = com.hmc.zenkai.feature.RaceStatTable.universalFormScale(race);
+        floor *= scale;
 
         List<ResourceLocation> chain = SuperForms.chain(race);
         int owned = SuperForms.level(p) - 1;   // formas compradas por encima de la base
@@ -64,7 +68,7 @@ public final class PotentialUnlock {
         // su evolución. El tope se aplica al TECHO y no al
         // resultado: así la curva de maestría sigue recorriendo de 30 % a 85 % del techo reescalado
         // (el máximo real es exactamente el tope) en vez de aplastarse contra él a media maestría.
-        double cap = ServerConfig.potentialUnlockMaxStatPercent() / MASTERY_CEIL_FACTOR;
+        double cap = ServerConfig.potentialUnlockMaxStatPercent() * scale / MASTERY_CEIL_FACTOR;
         return Math.max(Math.min(best, cap), Math.min(floor, cap));
     }
 

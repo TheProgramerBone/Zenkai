@@ -91,7 +91,8 @@ public final class RaceStatManager {
     }
 
     /** Lo que sale de una recarga: coeficientes por estilo + atributos de salida. */
-    public record Loaded(Map<Race, Map<Style, double[]>> rows, Map<Race, int[]> bases) {}
+    public record Loaded(Map<Race, Map<Style, double[]>> rows, Map<Race, int[]> bases,
+                         Map<Race, Double> universalScales) {}
 
     private static final class Loader extends SimplePreparableReloadListener<Loaded> {
 
@@ -100,6 +101,7 @@ public final class RaceStatManager {
                 @NotNull ResourceManager rm, @NotNull ProfilerFiller profiler) {
             Map<Race, Map<Style, double[]>> out = new EnumMap<>(Race.class);
             Map<Race, int[]> bases = new EnumMap<>(Race.class);
+            Map<Race, Double> scales = new EnumMap<>(Race.class);
 
             // listResourceStacks devuelve el conjunto de capas del mismo path, de menor a
             // mayor prioridad. listResources (sin Stacks) devolvería solo la de arriba.
@@ -132,6 +134,9 @@ public final class RaceStatManager {
                         // Claves NOMBRADAS y no una lista posicional: el formato viejo de config
                         // documentaba [STR, DEX, CON, ...] y el consumidor leía
                         // [STR, CON, DEX, ...], así que CON y DEX salían intercambiadas.
+                        if (o.has("universal_form_scale")) {
+                            scales.put(race, GsonHelper.getAsDouble(o, "universal_form_scale"));
+                        }
                         if (o.has("base_attributes") && o.get("base_attributes").isJsonObject()) {
                             base = readBase(o.getAsJsonObject("base_attributes"), base);
                         }
@@ -157,7 +162,7 @@ public final class RaceStatManager {
                     out.computeIfAbsent(race, k -> new EnumMap<>(Style.class)).putAll(byStyle);
                 }
             }
-            return new Loaded(out, bases);
+            return new Loaded(out, bases, scales);
         }
 
         /**
@@ -216,6 +221,7 @@ public final class RaceStatManager {
             RaceStatTable.replaceAll(loaded.rows());
             AuraCeiling.invalidate();
             RaceStatTable.replaceBases(loaded.bases());
+            RaceStatTable.replaceUniversalScales(loaded.universalScales());
             LOGGER.info("[Zenkai] Stats de raza cargadas: {} raza(s), {} con atributos base.",
                     loaded.rows().size(), loaded.bases().size());
         }

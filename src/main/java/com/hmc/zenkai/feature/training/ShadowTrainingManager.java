@@ -72,21 +72,21 @@ public final class ShadowTrainingManager {
      *                         para su raza cae a BASE, server-authoritative, nunca se confía en
      *                         el id que mande el cliente sin validarlo aquí.
      */
-    public static void start(ServerPlayer sp, float frac, ResourceLocation simulatedFormId) {
+    public static ShadowCloneEntity start(ServerPlayer sp, float frac, ResourceLocation simulatedFormId) {
         ServerLevel level = sp.serverLevel();
         // Ya tiene una sombra activa DE VERDAD (no una entrada colgada de una que ya
         // desapareció sin pasar por onDeath, p. ej. un /kill de admin).
         if (ACTIVE.containsKey(sp.getUUID())) {
-            if (stillTracked(sp, level)) return;
+            if (stillTracked(sp, level)) return null;
             ACTIVE.remove(sp.getUUID());
         }
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
-        if (!att.isRaceChosen()) return;
+        if (!att.isRaceChosen()) return null;
 
         long shadowPl = Math.max(1, Math.round(simulatedPowerLevel(sp, att, simulatedFormId) * frac));
 
         ShadowCloneEntity shadow = ModEntities.SHADOW_CLONE.get().create(level);
-        if (shadow == null) return;
+        if (shadow == null) return null;
 
         // +1 bloque en Y: sin este margen, delante de una cuesta/escalón la sombra podía
         // spawnear a media altura dentro de un bloque de tierra en vez de encima. Con +1 cae
@@ -127,6 +127,20 @@ public final class ShadowTrainingManager {
         // Snapshot para poder calcular "TP ganado ESTA pelea" al morir el clon — ver
         // TrainingData.shadowSessionStartTp y onShadowDeath() más abajo.
         sp.getData(ZenkaiDataAttachments.TRAINING.get()).setShadowSessionStartTp(att.getTP());
+        return shadow;
+    }
+
+    /** ¿Tiene una sombra activa ahora mismo? (La prueba de God Ki no deja empezar otra.) */
+    public static boolean hasActive(ServerPlayer sp) {
+        return ACTIVE.containsKey(sp.getUUID()) && stillTracked(sp, sp.serverLevel());
+    }
+
+    /** Prueba de God Ki (GodKi.TRIAL_TAG): caer derribado a mitad de ella es perderla. */
+    public static void checkTrialDowned(ServerPlayer sp) {
+        UUID shadowId = ACTIVE.get(sp.getUUID());
+        if (shadowId == null || !PlayerStatsAttachment.get(sp).flags().isDowned()) return;
+        Entity e = sp.serverLevel().getEntity(shadowId);
+        if (e != null && e.getTags().contains(com.hmc.zenkai.feature.skilltree.GodKi.TRIAL_TAG)) despawnFor(sp);
     }
 
     /** ¿Sigue vivo el mob que rastreamos para este jugador? Si desapareció sin pasar por
@@ -161,7 +175,7 @@ public final class ShadowTrainingManager {
                 ? simulatedFormId : FormIds.BASE;
         PlayerFormAttachment formAtt = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         double mastery = formAtt.getFormMastery(formId);
-        double statMult = 1.0 + FormRegistry.statPercent(formId, mastery);
+        double statMult = 1.0 + FormRegistry.statPercent(formId, att.getRace(), mastery);
         return att.getPowerLevelWithStatMultiplier(statMult);
     }
 
@@ -194,6 +208,11 @@ public final class ShadowTrainingManager {
         ServerPlayer owner = level.getServer().getPlayerList().getPlayer(ownerId);
         if (owner == null) return;
 
+        // Prueba de God Ki (skill tree F5): vencerla da God Ki; no es una sesión de entrenamiento.
+        if (shadow.getTags().contains(com.hmc.zenkai.feature.skilltree.GodKi.TRIAL_TAG)) {
+            com.hmc.zenkai.feature.skilltree.GodKi.onTrialWon(owner);
+            return;
+        }
         com.hmc.zenkai.feature.advancement.ZenkaiTriggers.MILESTONE.get().trigger(owner, com.hmc.zenkai.feature.advancement.ZenkaiTriggers.Kinds.SHADOW_TRAINING_DONE);
         PlayerStatsAttachment att = PlayerStatsAttachment.get(owner);
         TrainingData td = owner.getData(ZenkaiDataAttachments.TRAINING.get());
@@ -225,6 +244,9 @@ public final class ShadowTrainingManager {
         UUID shadowId = ACTIVE.remove(sp.getUUID());
         if (shadowId == null) return;
         Entity e = sp.serverLevel().getEntity(shadowId);
+        if (e != null && e.getTags().contains(com.hmc.zenkai.feature.skilltree.GodKi.TRIAL_TAG)) {
+            com.hmc.zenkai.feature.skilltree.GodKi.onTrialLost(sp);
+        }
         if (e != null) e.discard();
     }
 }

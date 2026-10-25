@@ -32,7 +32,10 @@ public enum PhysicalTechnique {
     /** Agarre: solo a un rival aturdido o con la guardia rota; lo sujeta y lo lanza. */
     GRAB,
     /** Evasiva: ráfaga de empuje sin daño, con invulnerabilidad breve. Hacia donde te mueves; quieto, hacia atrás. */
-    EVADE;
+    EVADE,
+    /** Absorción del Majin (técnica INNATA de la raza, ver TechniqueDef.innateRace y MajinAbsorption): mata al objetivo
+     *  debilitado que mira y suma masa. Va el ÚLTIMA: el ordinal viaja en estados de acción y NBT. */
+    ABSORB;
 
     private final String id;
 
@@ -86,6 +89,9 @@ public enum PhysicalTechnique {
         TechniqueDef d = def();
         return WeaponRequirement.byId(d == null ? "" : d.weaponRequirement());
     }
+
+    /** Raza que la tiene de nacimiento ("majin"), o "" si cualquiera puede comprarla. */
+    public String innateRace() { TechniqueDef d = def(); return d == null ? "" : d.innateRace(); }
 
     /** Alcance en bloques (rayo/cono según la técnica). */
     public double range() { TechniqueDef d = def(); return d == null ? 0.0 : d.range(); }

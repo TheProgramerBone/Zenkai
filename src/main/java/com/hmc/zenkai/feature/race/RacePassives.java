@@ -67,6 +67,42 @@ public final class RacePassives {
     /** Multiplicador de la regeneración de estamina. */
     public static final double HUMAN_STAMINA_REGEN = 1.5;
 
+    // ── Nivel de la pasiva (skill tree, F4) ──────────────────────────────────
+    //
+    // QUÉ hace cada pasiva sigue aquí, hardcodeado (es la identidad de la raza). CUÁNTO rinde
+    // en cada nivel sale del nodo de pasiva del árbol (data/zenkai/zenkai_skill_tree/
+    // race_<raza>.json, campo "values"; ver SkillTreeData): el nivel 1 es gratis y vale lo
+    // mismo que las constantes de arriba, que quedan como respaldo si el datapack no trae el
+    // nodo o le falta una curva.
+
+    /** Nivel de la pasiva de su raza (1..4); 1 si no ha mejorado nada. */
+    public static int level(Player p) {
+        return com.hmc.zenkai.feature.skilltree.SkillTreeNodes.passiveLevel(PlayerStatsAttachment.get(p));
+    }
+
+    /** Valor de la curva {@code key} de la pasiva de su raza en su nivel actual. */
+    public static double value(Player p, String key, double fallback) {
+        Race r = raceOf(p);
+        if (r == null) return fallback;
+        return valueAt(r, key, level(p), fallback);
+    }
+
+    /** Valor de la curva {@code key} de la pasiva de esa raza en un nivel concreto (para la
+     *  pantalla de raza y el tooltip del árbol). */
+    public static double valueAt(Race race, String key, int level, double fallback) {
+        var d = com.hmc.zenkai.feature.skilltree.SkillTreeData.get(
+                com.hmc.zenkai.feature.skilltree.SkillTreeNodes.passiveNode(race));
+        return d == null ? fallback : d.value(key, level, fallback);
+    }
+
+    public static double zenkaiBonus(Player p)  { return value(p, "zenkai_bonus", ZENKAI_BONUS); }
+    public static int zenkaiDuration(Player p) {
+        return (int) Math.round(value(p, "zenkai_duration_s", ZENKAI_DURATION / 20.0) * 20);
+    }
+    public static int zenkaiCooldown(Player p) {
+        return (int) Math.round(value(p, "zenkai_cooldown_s", ZENKAI_COOLDOWN / 20.0) * 20);
+    }
+
     // ── Consulta ─────────────────────────────────────────────────────────────
 
     private static Race raceOf(Player p) {
@@ -79,7 +115,7 @@ public final class RacePassives {
 
     /** Multiplicador de la regeneración de body por raza. Lo consulta RegenSystem. */
     public static double bodyRegenMult(Player p) {
-        return is(p, Race.NAMEKIAN) ? NAMEKIAN_REGEN_MULT : 1.0;
+        return is(p, Race.NAMEKIAN) ? value(p, "regen_mult", NAMEKIAN_REGEN_MULT) : 1.0;
     }
 
     /** ¿La regeneración de esta raza ES su pasiva? Lo consulta CombatRegen para no anularla
@@ -90,24 +126,36 @@ public final class RacePassives {
     }
 
     /** Ki que cuesta la regeneración extra namekiana, dados los puntos de body regenerados. */
-    public static int namekianRegenKiCost(int bodyRegenerated) {
-        int extra = (int) Math.round(bodyRegenerated * (1.0 - 1.0 / NAMEKIAN_REGEN_MULT));
-        return (int) Math.ceil(extra * NAMEKIAN_REGEN_KI_COST);
+    public static int namekianRegenKiCost(Player p, int bodyRegenerated) {
+        double mult = value(p, "regen_mult", NAMEKIAN_REGEN_MULT);
+        int extra = (int) Math.round(bodyRegenerated * (1.0 - 1.0 / mult));
+        return (int) Math.ceil(extra * value(p, "regen_ki_per_point", NAMEKIAN_REGEN_KI_COST));
+    }
+
+    /** Regeneración pasiva del majin por segundo, en fracción del máximo. */
+    public static double majinPassiveRegen(Player p) {
+        return value(p, "regen_per_second", MAJIN_PASSIVE_REGEN);
     }
 
     /** Multiplicador de la regeneración de estamina por raza. */
     public static double staminaRegenMult(Player p) {
-        return is(p, Race.HUMAN) ? HUMAN_STAMINA_REGEN : 1.0;
+        return is(p, Race.HUMAN) ? value(p, "stamina_regen", HUMAN_STAMINA_REGEN) : 1.0;
     }
 
-    /** Multiplicador del TP ganado. Lo consulta el sistema de entrenamiento. */
+    /** Multiplicador del TP ganado. Lo consulta el reparto de TP (PlayerStatsAttachment#addTrainingTP). */
     public static double tpGainMult(Player p) {
-        return is(p, Race.HUMAN) ? HUMAN_TP_GAIN : 1.0;
+        return is(p, Race.HUMAN) ? 1.0 + value(p, "tp_gain", HUMAN_TP_GAIN - 1.0) : 1.0;
     }
 
-    /** Descuento racial sobre el coste de ki. Se MULTIPLICA con kiCostMult del datapack. */
-    public static double kiCostMult(Player p) {
-        return is(p, Race.ARCOSIAN) ? ARCOSIAN_KI_DISCOUNT : 1.0;
+    /**
+     * Descuento racial sobre el coste de ki. Se MULTIPLICA con kiCostMult del datapack. Recibe
+     * el attachment y no el jugador porque lo consume PlayerStatsAttachment#kiCostMult, que es el
+     * punto único por el que pasa cualquier coste de ki (técnicas, Ki Infuse) y no tiene jugador.
+     */
+    public static double kiCostMult(PlayerStatsAttachment att) {
+        if (att == null || !att.isRaceChosen() || att.getRace() != Race.ARCOSIAN) return 1.0;
+        int lvl = com.hmc.zenkai.feature.skilltree.SkillTreeNodes.passiveLevel(att);
+        return 1.0 - valueAt(Race.ARCOSIAN, "ki_discount", lvl, 1.0 - ARCOSIAN_KI_DISCOUNT);
     }
 
     /**
@@ -123,7 +171,7 @@ public final class RacePassives {
             return amount;
         }
         if (isKiDamage(source)) return amount;   // la energía sí le entra entera
-        return amount * (1.0f - (float) MAJIN_PHYSICAL_REDUCTION);
+        return amount * (1.0f - (float) value(p, "phys_reduction", MAJIN_PHYSICAL_REDUCTION));
     }
 
     /** Tag data-driven (ver {@link ModDamageTypes#KI_DAMAGE_TAG}) en vez de namespace

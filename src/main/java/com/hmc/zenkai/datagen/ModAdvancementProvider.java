@@ -195,9 +195,18 @@ public class ModAdvancementProvider extends AdvancementProvider {
             // con transformaciones (ver SuperForms javadoc) — con el criterio en 1 el logro se
             // completaba solo con elegir raza, sin haber comprado ni transformado nunca. El
             // nivel 2 es la primera forma de verdad comprada.
-            child(saver, efh, chooseRace, "transformation",
+            AdvancementHolder transformation = child(saver, efh, chooseRace, "transformation",
                     net.minecraft.world.item.Items.GOLDEN_APPLE, AdvancementType.TASK, false,
                     "skill", skill(SuperForms.SKILL, 2));
+
+            // God Ki (skill tree F5): las dos vías con logro. Ocultos: son el final de la cadena
+            // mortal y su gracia es descubrirlos. Frases del usuario para el del ritual.
+            child(saver, efh, transformation, "god_ki_ritual",
+                    Items.NETHER_STAR, AdvancementType.CHALLENGE, true,
+                    "ritual", milestone(ZenkaiTriggers.Kinds.GOD_KI_RITUAL));
+            child(saver, efh, transformation, "god_ki_trial",
+                    Items.TOTEM_OF_UNDYING, AdvancementType.GOAL, true,
+                    "trial", milestone(ZenkaiTriggers.Kinds.GOD_KI_TRIAL));
 
             AdvancementHolder allSkills = Advancement.Builder.advancement().parent(chooseRace)
                     .display(ModItems.ELITE_CIRCUIT.get(), title("all_skills"), desc("all_skills"),

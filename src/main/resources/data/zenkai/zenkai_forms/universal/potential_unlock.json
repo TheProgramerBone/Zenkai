@@ -12,5 +12,6 @@
   "body_items": {},
   "aura_type": "mystic",
   "aura_rgb": "0xFFFFFF",
-  "scale": 1.0
+  "scale": 1.0,
+  "tier": "none"
 }

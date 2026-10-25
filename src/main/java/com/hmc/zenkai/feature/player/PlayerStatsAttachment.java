@@ -35,6 +35,8 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     private final PlayerResourcePools pools      = new PlayerResourcePools();
     private final PlayerStateFlags    flags      = new PlayerStateFlags();
     private final PlayerSkills        skills     = new PlayerSkills();
+    private final PlayerSkillTree     skillTree  = new PlayerSkillTree();
+    { skills.setOnChange(this::refreshSkillTree); }
     private final PlayerTechniques    techniques = new PlayerTechniques();
 
     /** % de poder en uso (Ki Control): 50 maxPowerPercent. Multiplica STR/DEX-def/WIL. */
@@ -50,6 +52,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     /** NBT completo de las mascotas muertas del jugador (para el deseo de revivir). Más reciente al final. */
     private static final int MAX_DEAD_PETS = 6;
     private final List<CompoundTag> deadPets = new ArrayList<>();
+    /**
+     * Maestros a los que el jugador ya les ha hecho clic derecho al menos una vez («maestro conocido»).
+     * Va dentro de save()/load() a propósito: SyncPlayerStatsPacket ya serializa con save(), así que el
+     * cliente lo recibe sin un packet nuevo y el árbol de skills decide con él entre el retrato y el «?».
+     */
+    private final java.util.Set<String> metMasters = new java.util.LinkedHashSet<>();
 
     public PlayerStatsAttachment() {
         // Calcular los máximos iniciales y llenar los pools
@@ -86,6 +94,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     public PlayerResourcePools pools()      { return pools; }
     public PlayerStateFlags    flags()      { return flags; }
     public PlayerSkills        skills()     { return skills; }
+    public PlayerSkillTree     skillTree()  { return skillTree; }
+
+    /** Recalcula el espejo del skill tree desde las skills (ver SkillTreeMigration). */
+    public void refreshSkillTree() {
+        com.hmc.zenkai.feature.skilltree.SkillTreeMigration.refresh(this);
+    }
     public PlayerTechniques    techniques() { return techniques; }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -99,7 +113,9 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
     /** Coste de ki de esta combinación raza/estilo (columna KI_COST del datapack). */
     @Override
     public double kiCostMult() {
-        return com.hmc.zenkai.feature.RaceStatTable.kiCostMult(getRace(), getStyle());
+        // Sangre fría del Arcosiano (RacePassives): descuento por nivel de su pasiva.
+        return com.hmc.zenkai.feature.RaceStatTable.kiCostMult(getRace(), getStyle())
+                * com.hmc.zenkai.feature.race.RacePassives.kiCostMult(this);
     }
 
     /** Coste de estamina de esta combinación raza/estilo (columna STAM_COST). */
@@ -108,12 +124,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         return com.hmc.zenkai.feature.RaceStatTable.staminaCostMult(getRace(), getStyle());
     }
 
-    public void setRace(Race r)   { raceStats.setRace(r);   applyRecalc(); }
+    public void setRace(Race r)   { raceStats.setRace(r);   applyRecalc(); refreshSkillTree(); }
     public void setStyle(Style s) { raceStats.setStyle(s);  applyRecalc(); }
 
     public boolean isRaceChosen()       { return raceStats.isRaceChosen(); }
     public boolean isStyleChosen()      { return raceStats.isStyleChosen(); }
-    public void setRaceChosen(boolean v)  { raceStats.setRaceChosen(v); }
+    public void setRaceChosen(boolean v)  { raceStats.setRaceChosen(v); refreshSkillTree(); }
     public void setStyleChosen(boolean v) { raceStats.setStyleChosen(v); }
 
     public void applyRaceBaseAttributes() { raceStats.applyRaceBaseAttributes(); applyRecalc(); }
@@ -155,6 +171,10 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         for (String id : skills.allLevels().keySet()) {
             SkillDef def = SkillDef.get(id);
             if (def == null) continue;
+            // El árbol de transformaciones no se reembolsa ni se reinicia con el respec general
+            // (decisión de diseño del skill tree: compras sin reembolso; solo un futuro
+            // "reiniciar árbol" de Kami/Shenlong/Yemma lo hará).
+            if (com.hmc.zenkai.feature.skilltree.SkillTreeNodes.isTreeSkill(id)) continue;
             int bought = skills.boughtLevels(id);
             if (bought <= 0) continue;
 
@@ -171,7 +191,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
                 skillRefund += def.tpCost() * bought;
             }
         }
-        skills.clearBought();
+        skills.clearBought(com.hmc.zenkai.feature.skilltree.SkillTreeNodes::isTreeSkill);
         raceStats.respec();
         raceStats.addTP(skillRefund);
         applyRecalc();
@@ -292,8 +312,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
     public void setHasTail(boolean v) { flags.setHasTail(v); }
     public void setHasSsj4Ritual(boolean v) { flags.setHasSsj4Ritual(v); }
+    public boolean hasReachedSuperOozaru() { return flags.hasReachedSuperOozaru(); }
+    public void setReachedSuperOozaru(boolean v) { flags.setReachedSuperOozaru(v); }
     public boolean hasBeastFury() { return flags.hasBeastFury(); }
     public void setBeastFury(boolean v) { flags.setBeastFury(v); }
+    public boolean hasGodKiAudience() { return flags.hasGodKiAudience(); }
+    public void setGodKiAudience(boolean v) { flags.setGodKiAudience(v); }
     public void setReceivedKaioWeights(boolean v) { flags.setReceivedKaioWeights(v); }
     public void setFlyEnabled(boolean v)  { flags.setFlyEnabled(v); }
     public void setChargingKi(boolean v)  { flags.setChargingKi(v); }
@@ -326,6 +350,11 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
 
     // ── Mascotas muertas (deseo de revivir) ──────────────────────────────────
     /** Lista de solo lectura del NBT de mascotas muertas (la más reciente al final). */
+    public boolean hasMetMaster(String masterId) { return metMasters.contains(masterId); }
+
+    /** @return true si es la PRIMERA vez (el llamador muestra el mensaje de bienvenida). */
+    public boolean markMasterMet(String masterId) { return metMasters.add(masterId); }
+
     public List<CompoundTag> getDeadPets() { return Collections.unmodifiableList(deadPets); }
 
     /** Añade una mascota muerta (NBT ya serializado). Respeta el tope, descartando la más antigua. */
@@ -387,6 +416,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         tag.put("pools",      pools.save());
         tag.put("flags",      flags.save());
         tag.put("skills",     skills.save());
+        tag.put("skillTree",  skillTree.save());
         tag.put("techniques", techniques.save());
         tag.putLong("lastSummonTick", lastSummonTick);
         tag.putLong("lastDescendTick", lastDescendTick);
@@ -398,6 +428,9 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         for (var e : techMastery.entrySet()) tm.putFloat(e.getKey(), e.getValue());
         tag.put("techMastery", tm);
         tag.putInt("powerPercent", powerPercent);
+        ListTag met = new ListTag();
+        for (String m : metMasters) met.add(net.minecraft.nbt.StringTag.valueOf(m));
+        tag.put("metMasters", met);
         return tag;
     }
 
@@ -406,6 +439,12 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         if (tag.contains("pools"))      pools.load(tag.getCompound("pools"));
         if (tag.contains("flags"))      flags.load(tag.getCompound("flags"));
         if (tag.contains("skills"))     skills.load(tag.getCompound("skills"));
+        // Partidas anteriores al skill tree (sin "skillTree") o con una regla de derivación vieja:
+        // se migran desde las skills. El resto confía en lo guardado/sincronizado.
+        if (tag.contains("skillTree")) skillTree.load(tag.getCompound("skillTree"));
+        if (skillTree.version() < PlayerSkillTree.VERSION) {
+            com.hmc.zenkai.feature.skilltree.SkillTreeMigration.migrate(this);
+        }
         if (tag.contains("techniques")) techniques.load(tag.getCompound("techniques"));
         lastSummonTick = tag.contains("lastSummonTick") ? tag.getLong("lastSummonTick") : Long.MIN_VALUE;
         lastDescendTick = tag.contains("lastDescendTick") ? tag.getLong("lastDescendTick") : Long.MIN_VALUE;
@@ -421,6 +460,11 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             for (int i = 0; i < pets.size(); i++) deadPets.add(pets.getCompound(i));
         }
         powerPercent = tag.contains("powerPercent") ? Math.max(0, tag.getInt("powerPercent")) : 50;
+        metMasters.clear();
+        if (tag.contains("metMasters")) {
+            ListTag met = tag.getList("metMasters", Tag.TAG_STRING);
+            for (int i = 0; i < met.size(); i++) metMasters.add(met.getString(i));
+        }
         // Recalc por si los atributos cambiaron al cargar
         applyRecalc();
     }

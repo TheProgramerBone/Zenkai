@@ -4,12 +4,12 @@ import com.hmc.zenkai.feature.Race;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Único punto que sabe que "levels_from_forms" tiene DOS proveedores posibles: super_forms
- * (cadena de formas normal) y god_ki (cadena de formas divine_tier, ver DivineForms). Antes de
- * god_ki, "levels_from_forms" significaba siempre "pregúntale a SuperForms" y varios sitios
- * (SkillBuyPacket, ForgetSkillPacket, PlayerStatsAttachment#respec, SkillsScreen, MasterScreen)
- * lo asumían así a pelo — con un segundo proveedor real, ese despacho tiene que vivir en un
- * solo sitio en vez de repetirse en cada uno.
+ * Único punto que sabe de dónde salen el techo y el precio de una skill "levels_from_forms"
+ * (SkillBuyPacket, ForgetSkillPacket, PlayerStatsAttachment#respec, SkillsScreen, MasterScreen,
+ * ModCommands pasan por aquí). Hubo DOS proveedores, super_forms y god_ki; desde F5 del skill
+ * tree god_ki es de nivel 1 sin levels_from_forms y las formas divinas son nodos propios, así que
+ * hoy el único proveedor es SuperForms. El despacho se queda en un solo sitio por si vuelve a
+ * haber otro.
  */
 public final class FormDrivenSkills {
     private FormDrivenSkills() {}
@@ -21,10 +21,7 @@ public final class FormDrivenSkills {
     /** Variante por raza: la usan el logro de "todas las habilidades" y cualquiera sin Player. */
     public static int maxLevel(SkillDef def, Race race) {
         if (!def.levelsFromForms()) return def.maxLevel();
-        int derived = SuperForms.SKILL.equals(def.id())
-                ? SuperForms.maxLevel(race)
-                : DivineForms.maxLevel(race);
-        return Math.min(def.maxLevel(), derived);
+        return Math.min(def.maxLevel(), SuperForms.maxLevel(race));
     }
 
     public static int tpCostForLevel(SkillDef def, Player p, int level) {
@@ -35,13 +32,11 @@ public final class FormDrivenSkills {
      *  mano (el attachment no guarda referencia al jugador). */
     public static int tpCostForLevel(SkillDef def, Race race, int level) {
         if (!def.levelsFromForms()) return def.tpCost();
-        return SuperForms.SKILL.equals(def.id())
-                ? SuperForms.tpCostForLevel(race, level)
-                : DivineForms.tpCostForLevel(race, level);
+        return SuperForms.tpCostForLevel(race, level);
     }
 
     /** ¿Tiene sentido esta skill para esa raza? Una skill derivada de formas sin ningún nivel
-     *  posible (god_ki sin rama divina y sin niveles placeholder) no existe para ella. */
+     *  posible no existe para ella. */
     public static boolean appliesTo(SkillDef def, Race race) {
         if (!def.levelsFromForms()) return true;
         return maxLevel(def, race) > 0;

@@ -89,7 +89,10 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
             for (LivingEntity le : found) {
                 Raw raw = read(le);
                 out.add(entryOf(le, raw, level, myPl, sp));
-                if (le == locked && level >= SENSE_READING_LEVEL) reading = readingOf(le, raw);
+                if (le == locked && level >= SENSE_READING_LEVEL
+                        && !out.get(out.size() - 1).has(SenseKiDataPacket.FLAG_DIVINE_UNKNOWN)) {
+                    reading = readingOf(le, raw);
+                }
                 if (out.size() >= MAX_ENTRIES) break;
             }
             PacketDistributor.sendToPlayer(sp, new SenseKiDataPacket(level, out, reading));
@@ -149,6 +152,13 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
      * -1 / NO_ALIGNMENT / bit a cero, nunca como dato real que el cliente tenga que esconder.
      */
     private static SenseKiDataPacket.Entry entryOf(LivingEntity le, Raw raw, int level, long myPl, ServerPlayer sp) {
+        // Ki divino (skill tree F5, §5): sin God Ki no se lee. La firma no desaparece (sigue ahí,
+        // «algo» está), pero llega como desconocida y tenue: ni fuerza, ni vida, ni estados.
+        if (hasDivineKi(le) && !com.hmc.zenkai.feature.skilltree.SkillTree.hasGodKi(sp)) {
+            return new SenseKiDataPacket.Entry(le.getId(), (float) le.getX(), (float) le.getY(), (float) le.getZ(),
+                    le.getBbHeight(), le instanceof Player, SenseKiDataPacket.STRENGTH_FAINT,
+                    SenseKiDataPacket.NO_ALIGNMENT, -1, -1, -1, SenseKiDataPacket.FLAG_DIVINE_UNKNOWN);
+        }
         int health = -1;
         int alignment = SenseKiDataPacket.NO_ALIGNMENT;
         if (level >= SENSE_HEALTH_LEVEL) {
@@ -170,6 +180,15 @@ public record SenseKiScanPacket() implements CustomPacketPayload {
         return new SenseKiDataPacket.Entry(le.getId(), (float) le.getX(), (float) le.getY(), (float) le.getZ(),
                 le.getBbHeight(), raw.isPlayer(), strengthOf(raw.powerLevel(), myPl), alignment,
                 health, sta, ki, flags);
+    }
+
+    /** ¿Irradia ki divino? Jugadores con God Ki (o divinidades con cargo) y los mobs del tag zenkai:divine. */
+    private static boolean hasDivineKi(LivingEntity le) {
+        if (le instanceof Player p) {
+            PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
+            return att.isDivine() || com.hmc.zenkai.feature.skilltree.SkillTree.hasGodKi(p);
+        }
+        return le.getType().is(ModTags.EntityTypes.DIVINE);
     }
 
     private static SenseKiDataPacket.TargetReading readingOf(LivingEntity le, Raw raw) {

@@ -1,0 +1,12 @@
+{
+  "node": "zenkai:node/race_saiyan",
+  "race": "saiyan",
+  "max_level": 4,
+  "tp_cost": [0, 3000, 8000, 18000],
+  "mind_req": [0, 8, 14, 22],
+  "values": {
+    "zenkai_bonus": [0.12, 0.14, 0.17, 0.20],
+    "zenkai_duration_s": [60, 70, 80, 90],
+    "zenkai_cooldown_s": [600, 480, 360, 240]
+  }
+}

@@ -41,6 +41,8 @@ public record ForgetSkillPacket(String skillId) implements CustomPacketPayload {
 
             SkillDef def = SkillDef.get(pkt.skillId());
             if (def == null) return;
+            // El skill tree de transformaciones no tiene reembolso (decisión de diseño).
+            if (com.hmc.zenkai.feature.skilltree.SkillTreeNodes.isTreeSkill(def.id())) return;
 
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             if (!att.isRaceChosen()) return;

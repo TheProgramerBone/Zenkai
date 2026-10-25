@@ -42,7 +42,7 @@ public class ServerConfig {
     private ServerConfig() {}
 
     /** Tipos de deseo, para habilitar/deshabilitar y cualquier lógica genérica. */
-    public enum WishType { STACK, REVIVE_PLAYER, ENCHANT_VILLAGER, IMMORTAL, TRAINING_POINTS }
+    public enum WishType { STACK, REVIVE_PLAYER, ENCHANT_VILLAGER, IMMORTAL, TRAINING_POINTS, LEGENDARY }
 
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
@@ -52,6 +52,7 @@ public class ServerConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_ENCHANT_VILLAGER;
     public static final ModConfigSpec.BooleanValue ENABLE_IMMORTAL;
     public static final ModConfigSpec.BooleanValue ENABLE_TRAINING_POINTS;
+    public static final ModConfigSpec.BooleanValue ENABLE_LEGENDARY;
 
     // ── Stack wish ─────────────────────────────────────────────────────────────
     public static final ModConfigSpec.ConfigValue<List<? extends String>> STACK_OVERRIDES_RAW;
@@ -102,6 +103,7 @@ public class ServerConfig {
         ENABLE_ENCHANT_VILLAGER = BUILDER.comment("Wish: enchanted villager (sells an enchanted book).").define("enchant_villager", true);
         ENABLE_IMMORTAL         = BUILDER.comment("Wish: immortality.").define("immortal", true);
         ENABLE_TRAINING_POINTS  = BUILDER.comment("Wish: training points (TP).").define("training_points", true);
+        ENABLE_LEGENDARY        = BUILDER.comment("Wish: become Legendary (Saiyan only, unlocks the Legendary Super Saiyan line).").define("legendary", true);
         BUILDER.pop();
 
         BUILDER.push("stack_wish");
@@ -1059,6 +1061,11 @@ public class ServerConfig {
             BUILDER.comment("At 100% technique mastery: charge-time reduction fraction (0.30 = charges 30% faster)")
                     .defineInRange("mastery.tech_cast_reduction", 0.30D, 0.0D, 0.95D);
 
+    private static final ModConfigSpec.DoubleValue NAMEK_GIANT_STAT_RAW =
+            BUILDER.comment("Stat bonus fraction while the Namekian Giant toggle is on (0.60 = +60%).",
+                            "Additive with the form and Kaioken bonuses.")
+                    .defineInRange("namekian.giant_stat_bonus", 0.60D, 0.0D, 10.0D);
+
     private static final ModConfigSpec.DoubleValue MAJIN_STAT_BONUS_RAW =
             BUILDER.comment("Stat bonus fraction while under the Majin effect (0.10 = +10%)")
                     .defineInRange("majin.effect_stat_bonus", 0.10D, 0.0D, 5.0D);
@@ -1200,8 +1207,8 @@ public class ServerConfig {
                     .defineInRange("training.potential_unlock_tp_mult", 0.50D, 0.0D, 1.0D);
 
     private static final ModConfigSpec.DoubleValue PU_MAX_STAT_RAW =
-            BUILDER.comment("Mystic (Potential Unlock): ABSOLUTE ceiling of the stat bonus the form can give at 100% mastery (added, 16.0 = +1600%). Mystic scales with the best form you own, which let it overtake Beast (24-32); this caps it below Beast's untrained value so Mystic -> Beast stays an upgrade. Mastery still spans the whole curve (the cap rescales it, it does not just clip it). Races with low-bonus chains are not affected.")
-                    .defineInRange("skills.potential_unlock_max_stat_percent", 16.0D, 0.0D, 1000.0D);
+            BUILDER.comment("Mystic (Potential Unlock): ABSOLUTE ceiling of the stat bonus the form can give at 100% mastery (added, 12.0 = +1200%). Mystic scales with the best form you own, which let it overtake Beast (18-24 after the 2026-10-22 balance); this caps it below Beast's untrained value so Mystic -> Beast stays an upgrade. Mastery still spans the whole curve (the cap rescales it, it does not just clip it). Races with low-bonus chains are not affected.")
+                    .defineInRange("skills.potential_unlock_max_stat_percent", 12.0D, 0.0D, 1000.0D);
 
     private static final ModConfigSpec.IntValue PU_ALIGNMENT_REQ_RAW =
             BUILDER.comment("Minimum alignment (-100..100) required to BUY Potential Unlock. Not checked afterwards.")
@@ -1218,6 +1225,70 @@ public class ServerConfig {
     private static final ModConfigSpec.DoubleValue ARC_PP_DRAIN_RAW =
             BUILDER.comment("Percent of the Power Point tank spent per second while they are being applied (Final Form or higher at 100%+ power).")
                     .defineInRange("arcosian.pp_drain_percent_per_second", 2.0D, 0.0D, 100.0D);
+
+    // =====================================================================
+    // SPEC — Majin: absorción innata y masa (feature/race/MajinAbsorption)
+    // =====================================================================
+
+    private static final ModConfigSpec.BooleanValue MAJIN_ABSORB_ENABLED_RAW =
+            BUILDER.comment("Majin innate Absorption: master switch. When off the key does nothing.")
+                    .define("majin.absorb_enabled", true);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_ABSORB_DOMINANT_PL_RATIO_RAW =
+            BUILDER.comment("Majin Absorption: if the Majin power level is at least this many times the target power level, the target can be absorbed even at full health (1.5 = 50% more power; 2.0 = double). Below that, the health and max power level rules apply.")
+                    .defineInRange("majin.absorb_dominant_pl_ratio", 1.5D, 1.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_ABSORB_MAX_HEALTH_PCT_RAW =
+            BUILDER.comment("Majin Absorption: the target must be at or below this percent of its max health to be absorbed.")
+                    .defineInRange("majin.absorb_max_health_percent", 30.0D, 1.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_ABSORB_MAX_PL_RATIO_RAW =
+            BUILDER.comment("Majin Absorption: the target power level may not exceed this multiple of the Majin power level.")
+                    .defineInRange("majin.absorb_max_pl_ratio", 1.5D, 0.1D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_ABSORB_KI_COST_PCT_RAW =
+            BUILDER.comment("Majin Absorption: ki spent per absorption, as a percent of the max ki pool.")
+                    .defineInRange("majin.absorb_ki_cost_percent", 15.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.BooleanValue MAJIN_ABSORB_PVP_RAW =
+            BUILDER.comment("Majin Absorption: whether other PLAYERS can be absorbed (they die). Off by default; mobs are always valid.")
+                    .define("majin.absorb_pvp", false);
+
+    private static final ModConfigSpec.IntValue MAJIN_MASS_CAP_RAW =
+            BUILDER.comment("Majin mass: maximum stacks of temporary mass (Mass Voracious adds majin.voraz_extra_cap on top).")
+                    .defineInRange("majin.mass_cap", 5, 1, 50);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_MASS_SECONDS_RAW =
+            BUILDER.comment("Majin mass: seconds all the stacks last after the LAST absorption (forms scale this).")
+                    .defineInRange("majin.mass_seconds", 120.0D, 1.0D, 36000.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_MASS_STAT_PER_STACK_RAW =
+            BUILDER.comment("Majin mass: stat bonus per stack, added to the form multiplier (0.04 = +4% each, +20% at 5 stacks).")
+                    .defineInRange("majin.mass_stat_per_stack", 0.04D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_MASS_PERM_PER_ABSORB_RAW =
+            BUILDER.comment("Majin mass: PERMANENT stat bonus gained per absorption (0.002 = +0.2% each).")
+                    .defineInRange("majin.mass_permanent_per_absorb", 0.002D, 0.0D, 1.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_MASS_PERM_CAP_RAW =
+            BUILDER.comment("Majin mass: ceiling of the permanent bonus (0.05 = +5%).")
+                    .defineInRange("majin.mass_permanent_cap", 0.05D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.IntValue MAJIN_VORAZ_EXTRA_CAP_RAW =
+            BUILDER.comment("Majin mass: extra stacks Mass Voracious (majin_super) can hold above majin.mass_cap.")
+                    .defineInRange("majin.voraz_extra_cap", 2, 0, 50);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_SACIADO_DURATION_MULT_RAW =
+            BUILDER.comment("Majin mass: Satiated Majin (majin_harmony) RETAINS mass: it lasts this many times longer.")
+                    .defineInRange("majin.saciado_duration_mult", 2.0D, 0.1D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_PRIMITIVO_BONUS_MULT_RAW =
+            BUILDER.comment("Majin mass: Primitive Majin (majin_pure_chaos) RELEASES mass: every stack is worth this many times more...")
+                    .defineInRange("majin.primitivo_bonus_mult", 1.5D, 0.1D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_PRIMITIVO_DURATION_MULT_RAW =
+            BUILDER.comment("...but lasts only this fraction of the normal time.")
+                    .defineInRange("majin.primitivo_duration_mult", 0.5D, 0.05D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue FORM_DRAIN_SCALE_RAW =
             BUILDER.comment("Form ki drain per SECOND = ki_drain (percent, from the form datapack) / 100 * (STR + WIL, race-weighted) * this scale * SPI multiplier. Higher = every form costs more ki to hold, at any power level.")
@@ -1319,13 +1390,47 @@ public class ServerConfig {
             BUILDER.comment("Beast unlock: radius in blocks within which the death of a tamed pet (owned by the player) or of a party member counts as the fury trigger.")
                     .defineInRange("beast.fury_radius", 32.0D, 1.0D, 256.0D);
 
-    private static final ModConfigSpec.IntValue ARC_GODKI_LEVELS_RAW =
-            BUILDER.comment("God Ki levels an Arcosian can learn. The race has no divine forms, so these levels unlock no transformation yet: they are the gate for the divine-ki mechanics planned for the race. Each level costs the same TP as the same level of the Saiyan divine chain. 0 hides God Ki from Arcosians entirely.")
-                    .defineInRange("arcosian.god_ki_levels", 1, 0, 10);
+    // God Ki (skill tree F5): prueba del maestro y ritual de N jugadores. Sustituye a la vieja
+    // arcosian.god_ki_levels (niveles placeholder sin forma): desde F5 las cinco razas tienen forma divina.
+    private static final ModConfigSpec.DoubleValue GODKI_TRIAL_FRACTION_RAW =
+            BUILDER.comment("God Ki master trial: power of the shadow you must defeat, as a fraction of your power level wearing your highest mortal form (1.0 = an exact copy). The trial is offered by the master after the divine audience.")
+                    .defineInRange("god_ki.trial_shadow_fraction", 1.5D, 0.1D, 5.0D);
+    private static final ModConfigSpec.IntValue GODKI_RITUAL_PARTICIPANTS_RAW =
+            BUILDER.comment("God Ki ritual: players (besides the candidate) that must charge ki around the candidate at the same time. Set it to 1 to test alone with a friend, or on a small server.")
+                    .defineInRange("god_ki.ritual_participants", 5, 1, 20);
+    private static final ModConfigSpec.BooleanValue GODKI_RITUAL_SAME_RACE_RAW =
+            BUILDER.comment("God Ki ritual: participants must share the candidate's race.")
+                    .define("god_ki.ritual_same_race", false);
+    private static final ModConfigSpec.IntValue GODKI_RITUAL_MIN_ALIGNMENT_RAW =
+            BUILDER.comment("God Ki ritual: minimum alignment every participant (and the candidate) needs. -100 = any alignment (default).")
+                    .defineInRange("god_ki.ritual_min_alignment", -100, -100, 100);
+    private static final ModConfigSpec.DoubleValue GODKI_RITUAL_RADIUS_RAW =
+            BUILDER.comment("God Ki ritual: radius in blocks around the candidate in which participants count.")
+                    .defineInRange("god_ki.ritual_radius", 8.0D, 2.0D, 64.0D);
+    private static final ModConfigSpec.IntValue GODKI_RITUAL_SECONDS_RAW =
+            BUILDER.comment("God Ki ritual: seconds everyone must keep charging ki without interruption.")
+                    .defineInRange("god_ki.ritual_seconds", 10, 1, 120);
 
     private static final ModConfigSpec.BooleanValue ALLOW_CUSTOM_HAIR_RAW =
             BUILDER.comment("Players can import hair codes (DragonMineZ codes and Dragon Block C / HairSalon strings) in the Hair tab of the appearance screen, keep them in a personal library and wear them; everyone sees them, no files needed. When false the import UI is hidden, the server rejects new imports and anyone wearing an imported hair falls back to the default style.")
                     .define("customization.allow_custom_hair", true);
+
+    // ── Muerte permanente y cuerpos: baja frecuencia (.get() directo) ──────────────────────────────
+    public static final ModConfigSpec.BooleanValue PERMADEATH_ENABLED =
+            BUILDER.comment("Permanent death. When true, dying sends you to the Otherworld and Yemma no longer revives you after a timer: you need the Dragon Balls wish or you give up and start a new character. The body that holds your items exists even when this is off.")
+                    .define("permadeath.enabled", false);
+    public static final ModConfigSpec.IntValue PERMADEATH_VISIT_DAYS =
+            BUILDER.comment("Days (24000 ticks each) a dead player may visit the Earth through Uranai Baba. The clock only runs while the player is online.")
+                    .defineInRange("permadeath.visit_days", 7, 1, 365);
+    public static final ModConfigSpec.IntValue PERMADEATH_BODY_CAP =
+            BUILDER.comment("Maximum bodies one player can have in the world. When exceeded, the oldest one is emptied onto the ground and removed.")
+                    .defineInRange("permadeath.body_cap_per_player", 3, 1, 32);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_KI_DISINTEGRATES =
+            BUILDER.comment("Ki techniques that hit a body disintegrate it (its items fall to the ground).")
+                    .define("permadeath.ki_disintegrates_bodies", false);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_BODY_OPEN_PARTY =
+            BUILDER.comment("Party members of the owner can open the body too. When false only the owner can.")
+                    .define("permadeath.body_open_party", true);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -1337,6 +1442,7 @@ public class ServerConfig {
             case ENCHANT_VILLAGER -> ENABLE_ENCHANT_VILLAGER.get();
             case IMMORTAL         -> ENABLE_IMMORTAL.get();
             case TRAINING_POINTS  -> ENABLE_TRAINING_POINTS.get();
+            case LEGENDARY        -> ENABLE_LEGENDARY.get();
         };
     }
 
@@ -1528,6 +1634,7 @@ public class ServerConfig {
     private static volatile double OVERCHARGE_TIME_MULT = 2.5D;
     private static volatile double OVERCHARGE_COST_MULT = 1.5D;
     private static volatile double MAJIN_STAT_BONUS = 0.10D;
+    private static volatile double NAMEK_GIANT_STAT = 0.60D;
     private static volatile boolean VANILLA_STATS_FALLBACK = true;
     private static volatile double  VANILLA_TP_REWARD_FACTOR = 0.25D;
     private static volatile double VANILLA_PASSIVE_FACTOR = 1.0D;
@@ -1555,14 +1662,34 @@ public class ServerConfig {
             WEIGHT_HTC_TONS = 3.0D, WEIGHT_HTC_GRAVITY_MULT = 2.0D;
     private static volatile double PU_TP_MULT = 0.50D;
     private static volatile int    PU_ALIGNMENT_REQ = 50;
-    private static volatile double PU_MAX_STAT = 16.0D;
-    private static volatile int ARC_GODKI_LEVELS = 1;
+    private static volatile double PU_MAX_STAT = 12.0D;
+    private static volatile double GODKI_TRIAL_FRACTION = 1.5D;
+    private static volatile int GODKI_RITUAL_PARTICIPANTS = 5;
+    private static volatile boolean GODKI_RITUAL_SAME_RACE = false;
+    private static volatile int GODKI_RITUAL_MIN_ALIGNMENT = -100;
+    private static volatile double GODKI_RITUAL_RADIUS = 8.0D;
+    private static volatile int GODKI_RITUAL_SECONDS = 10;
     private static volatile double BEAST_OD_STAT = 0.5D;
     private static volatile double BEAST_MASTERY_REQ = 50.0D;
     private static volatile double BEAST_FURY_RADIUS = 32.0D;
     private static volatile double ARC_PP_GAIN = 1.0D;
     private static volatile double ARC_PP_DRAIN = 2.0D;
     private static volatile double ARC_PP_STAT = 2.0D;
+    private static volatile boolean MAJIN_ABSORB_ENABLED = true;
+    private static volatile double MAJIN_ABSORB_DOMINANT_PL_RATIO = 1.5D;
+    private static volatile double MAJIN_ABSORB_MAX_HEALTH_PCT = 30.0D;
+    private static volatile double MAJIN_ABSORB_MAX_PL_RATIO = 1.5D;
+    private static volatile double MAJIN_ABSORB_KI_COST_PCT = 15.0D;
+    private static volatile boolean MAJIN_ABSORB_PVP = false;
+    private static volatile int MAJIN_MASS_CAP = 5;
+    private static volatile double MAJIN_MASS_SECONDS = 120.0D;
+    private static volatile double MAJIN_MASS_STAT_PER_STACK = 0.04D;
+    private static volatile double MAJIN_MASS_PERM_PER_ABSORB = 0.002D;
+    private static volatile double MAJIN_MASS_PERM_CAP = 0.05D;
+    private static volatile int MAJIN_VORAZ_EXTRA_CAP = 2;
+    private static volatile double MAJIN_SACIADO_DURATION_MULT = 2.0D;
+    private static volatile double MAJIN_PRIMITIVO_BONUS_MULT = 1.5D;
+    private static volatile double MAJIN_PRIMITIVO_DURATION_MULT = 0.5D;
     private static volatile double FORM_DRAIN_SCALE = 4.0D;
     private static volatile double FORM_DRAIN_SPI_MIN = 1.0D;
     private static volatile double FORM_DRAIN_SPI_MAX = 1.5D;
@@ -1763,6 +1890,7 @@ public class ServerConfig {
         M_TECH_COST      = MASTERY_TECH_COST_RAW.get();
         M_TECH_CAST      = MASTERY_TECH_CAST_RAW.get();
         MAJIN_STAT_BONUS = MAJIN_STAT_BONUS_RAW.get();
+        NAMEK_GIANT_STAT = NAMEK_GIANT_STAT_RAW.get();
 
         TRAIN_DMG_TP    = TRAIN_DMG_TP_RAW.get();
         TP_PER_PL       = TP_PER_PL_RAW.get();
@@ -1792,13 +1920,33 @@ public class ServerConfig {
         PU_TP_MULT       = PU_TP_MULT_RAW.get();
         PU_ALIGNMENT_REQ = PU_ALIGNMENT_REQ_RAW.get();
         PU_MAX_STAT      = PU_MAX_STAT_RAW.get();
-        ARC_GODKI_LEVELS = ARC_GODKI_LEVELS_RAW.get();
+        GODKI_TRIAL_FRACTION = GODKI_TRIAL_FRACTION_RAW.get();
+        GODKI_RITUAL_PARTICIPANTS = GODKI_RITUAL_PARTICIPANTS_RAW.get();
+        GODKI_RITUAL_SAME_RACE = GODKI_RITUAL_SAME_RACE_RAW.get();
+        GODKI_RITUAL_MIN_ALIGNMENT = GODKI_RITUAL_MIN_ALIGNMENT_RAW.get();
+        GODKI_RITUAL_RADIUS = GODKI_RITUAL_RADIUS_RAW.get();
+        GODKI_RITUAL_SECONDS = GODKI_RITUAL_SECONDS_RAW.get();
         BEAST_OD_STAT = BEAST_OD_STAT_RAW.get();
         BEAST_MASTERY_REQ = BEAST_MASTERY_REQ_RAW.get();
         BEAST_FURY_RADIUS = BEAST_FURY_RADIUS_RAW.get();
         ARC_PP_GAIN = ARC_PP_GAIN_RAW.get();
         ARC_PP_DRAIN = ARC_PP_DRAIN_RAW.get();
         ARC_PP_STAT = ARC_PP_STAT_RAW.get();
+        MAJIN_ABSORB_ENABLED = MAJIN_ABSORB_ENABLED_RAW.get();
+        MAJIN_ABSORB_MAX_HEALTH_PCT = MAJIN_ABSORB_MAX_HEALTH_PCT_RAW.get();
+        MAJIN_ABSORB_DOMINANT_PL_RATIO = MAJIN_ABSORB_DOMINANT_PL_RATIO_RAW.get();
+        MAJIN_ABSORB_MAX_PL_RATIO = MAJIN_ABSORB_MAX_PL_RATIO_RAW.get();
+        MAJIN_ABSORB_KI_COST_PCT = MAJIN_ABSORB_KI_COST_PCT_RAW.get();
+        MAJIN_ABSORB_PVP = MAJIN_ABSORB_PVP_RAW.get();
+        MAJIN_MASS_CAP = MAJIN_MASS_CAP_RAW.get();
+        MAJIN_MASS_SECONDS = MAJIN_MASS_SECONDS_RAW.get();
+        MAJIN_MASS_STAT_PER_STACK = MAJIN_MASS_STAT_PER_STACK_RAW.get();
+        MAJIN_MASS_PERM_PER_ABSORB = MAJIN_MASS_PERM_PER_ABSORB_RAW.get();
+        MAJIN_MASS_PERM_CAP = MAJIN_MASS_PERM_CAP_RAW.get();
+        MAJIN_VORAZ_EXTRA_CAP = MAJIN_VORAZ_EXTRA_CAP_RAW.get();
+        MAJIN_SACIADO_DURATION_MULT = MAJIN_SACIADO_DURATION_MULT_RAW.get();
+        MAJIN_PRIMITIVO_BONUS_MULT = MAJIN_PRIMITIVO_BONUS_MULT_RAW.get();
+        MAJIN_PRIMITIVO_DURATION_MULT = MAJIN_PRIMITIVO_DURATION_MULT_RAW.get();
         FORM_DRAIN_SCALE = FORM_DRAIN_SCALE_RAW.get();
         FORM_DRAIN_SPI_MIN = FORM_DRAIN_SPI_MIN_RAW.get();
         FORM_DRAIN_SPI_MAX = FORM_DRAIN_SPI_MAX_RAW.get();
@@ -2130,16 +2278,37 @@ public class ServerConfig {
     public static double masteryTechCostReduction()  { return M_TECH_COST; }
     public static double masteryTechCastReduction()  { return M_TECH_CAST; }
     public static double majinStatBonus()            { return MAJIN_STAT_BONUS; }
+    public static double namekGiantStatBonus()       { return NAMEK_GIANT_STAT; }
     public static double potentialUnlockTpMult()     { return PU_TP_MULT; }
     public static int    potentialUnlockAlignmentReq() { return PU_ALIGNMENT_REQ; }
     public static double potentialUnlockMaxStatPercent() { return PU_MAX_STAT; }
-    public static int arcGodKiLevels() { return ARC_GODKI_LEVELS; }
+    public static double godKiTrialFraction() { return GODKI_TRIAL_FRACTION; }
+    public static int godKiRitualParticipants() { return GODKI_RITUAL_PARTICIPANTS; }
+    public static boolean godKiRitualSameRace() { return GODKI_RITUAL_SAME_RACE; }
+    public static int godKiRitualMinAlignment() { return GODKI_RITUAL_MIN_ALIGNMENT; }
+    public static double godKiRitualRadius() { return GODKI_RITUAL_RADIUS; }
+    public static int godKiRitualSeconds() { return GODKI_RITUAL_SECONDS; }
     public static double beastOverdriveStatBonus() { return BEAST_OD_STAT; }
     public static double beastUnlockMysticMastery() { return BEAST_MASTERY_REQ; }
     public static double beastFuryRadius() { return BEAST_FURY_RADIUS; }
     public static double arcPpGain() { return ARC_PP_GAIN; }
     public static double arcPpDrain() { return ARC_PP_DRAIN; }
     public static double arcPpStat() { return ARC_PP_STAT; }
+    public static boolean majinAbsorbEnabled() { return MAJIN_ABSORB_ENABLED; }
+    public static double majinAbsorbDominantPlRatio() { return MAJIN_ABSORB_DOMINANT_PL_RATIO; }
+    public static double majinAbsorbMaxHealthPct() { return MAJIN_ABSORB_MAX_HEALTH_PCT; }
+    public static double majinAbsorbMaxPlRatio() { return MAJIN_ABSORB_MAX_PL_RATIO; }
+    public static double majinAbsorbKiCostPct() { return MAJIN_ABSORB_KI_COST_PCT; }
+    public static boolean majinAbsorbPvp() { return MAJIN_ABSORB_PVP; }
+    public static int majinMassCap() { return MAJIN_MASS_CAP; }
+    public static double majinMassSeconds() { return MAJIN_MASS_SECONDS; }
+    public static double majinMassStatPerStack() { return MAJIN_MASS_STAT_PER_STACK; }
+    public static double majinMassPermanentPerAbsorb() { return MAJIN_MASS_PERM_PER_ABSORB; }
+    public static double majinMassPermanentCap() { return MAJIN_MASS_PERM_CAP; }
+    public static int majinVorazExtraCap() { return MAJIN_VORAZ_EXTRA_CAP; }
+    public static double majinSaciadoDurationMult() { return MAJIN_SACIADO_DURATION_MULT; }
+    public static double majinPrimitivoBonusMult() { return MAJIN_PRIMITIVO_BONUS_MULT; }
+    public static double majinPrimitivoDurationMult() { return MAJIN_PRIMITIVO_DURATION_MULT; }
     public static double formDrainScale() { return FORM_DRAIN_SCALE; }
     public static double formDrainSpiMin() { return FORM_DRAIN_SPI_MIN; }
     public static double formDrainSpiMax() { return FORM_DRAIN_SPI_MAX; }

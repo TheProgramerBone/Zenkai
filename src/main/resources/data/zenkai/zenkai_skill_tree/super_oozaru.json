@@ -1,0 +1,8 @@
+{
+  "node": "zenkai:super_oozaru",
+  "secret": true,
+  "reveal": [{"type": "any_of", "of": [
+    {"type": "flag", "flag": "reached_super_oozaru"},
+    {"type": "flag", "flag": "ssj4_ritual"}
+  ]}]
+}

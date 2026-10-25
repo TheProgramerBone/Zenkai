@@ -1,0 +1,20 @@
+{
+  "races": [
+    "human"
+  ],
+  "kind": "extension",
+  "tier": "evolution",
+  "tp_cost": 110000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.2,
+  "stat_percent_untrained": 10.0,
+  "stat_percent_mastered": 17.0,
+  "ki_drain_untrained": 0.85,
+  "ki_drain_mastered": 0.28,
+  "spi_req": 90,
+  "parent": "zenkai:human_ultra",
+  "body_items": {},
+  "aura_type": "spirit",
+  "aura_rgb": "0x6FE0C8",
+  "scale": 1.0
+}

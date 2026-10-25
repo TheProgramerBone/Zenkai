@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-06T23:23:41.2623723	Tags for minecraft:item mod id zenkai
+// 1.21.1	2026-10-21T20:03:42.1184174	Tags for minecraft:item mod id zenkai
 fe588a35d47219c3f97563e3eb732b9225fd3212 data/c/tags/item/ores/coal.json
 c3a2c9d4ecdc046cab4c9113b70a7c6537df9627 data/c/tags/item/ores/copper.json
 403711dce9705a591c90e8b9092daa0210c8fd66 data/c/tags/item/ores/diamond.json
@@ -39,4 +39,5 @@ f51b1d519ecda61e7e1bab31ee1cad68f9fee275 data/minecraft/tags/item/wooden_trapdoo
 9f343c7e578238b731c8e2ae90110c3eae28dffc data/zenkai/tags/item/ajisa_logs.json
 35a86cae77384b327c7e666ab7e608609c407cce data/zenkai/tags/item/dragon_balls_item.json
 ffbe12e8b2f49ccaf3290ac63cc2fb50397e8e69 data/zenkai/tags/item/keeps_hair.json
+4ba39d954c2755d85b1a4c5b975c5a2079e9a12d data/zenkai/tags/item/wish_banned.json
 e3cf37fbd4109eb5b7e8ea41ea0216697f3e4bc8 data/zenkai/tags/item/worldgen_debris.json

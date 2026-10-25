@@ -221,15 +221,11 @@ public class MasterScreen extends Screen {
         top  = h.pos();
 
         skillRows.clear();
-        // god_ki lo enseña Tori-Bot a cualquier raza (una sola skill, ver DivineForms), pero no
-        // le sirve de nada a una raza sin ninguna forma divina (Arcosiano hoy) — no tiene sentido
-        // enseñársela en la tienda si comprarla no desbloquearía nada.
-        PlayerStatsAttachment raceCheck = stats();
+        // god_ki (skill tree F5) ya no se vende: el maestro concede la AUDIENCIA y la PRUEBA desde
+        // su pestaña Servicios (GodKiServices). Cualquier otra skill sin compra posible tampoco
+        // tiene fila que pulsar.
         for (SkillDef d : SkillDef.taughtBy(masterId)) {
-            if (DivineForms.SKILL.equals(d.id())
-                    && raceCheck != null && !DivineForms.appliesTo(raceCheck.getRace())) {
-                continue;
-            }
+            if (DivineForms.SKILL.equals(d.id()) || !d.purchasable()) continue;
             skillRows.add(d);
         }
 

@@ -1,0 +1,13 @@
+{
+  "node": "zenkai:ssj_green_max",
+  "secret": true,
+  "reveal": [
+    {
+      "type": "flag",
+      "flag": "legendary"
+    }
+  ],
+  "acquisition": [
+    "mastery"
+  ]
+}

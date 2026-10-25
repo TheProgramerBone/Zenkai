@@ -21,4 +21,11 @@ public class ToriBotEntity extends ZenkaiMasterEntity {
 
     @Override
     public String masterId() { return "toribot"; }
+
+    /** Audiencia divina y prueba de God Ki (skill tree F5): los da cualquier maestro de la lista
+     *  "masters" de god_ki.json, ver GodKi.services. */
+    @Override
+    protected java.util.List<com.hmc.zenkai.feature.master.MasterService> services() {
+        return com.hmc.zenkai.feature.skilltree.GodKi.services(masterId());
+    }
 }

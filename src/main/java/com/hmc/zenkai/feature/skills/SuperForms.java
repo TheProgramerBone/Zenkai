@@ -180,9 +180,9 @@ public final class SuperForms {
 
     /**
      * ¿Este jugador tiene desbloqueada esa forma? BASE siempre sí.
-     * SSJ4 es la ÚNICA excepción de "solo el nivel importa": comprar super_forms hasta su
-     * nivel con TP da DERECHO a intentar el ritual de Oozaru (readyForSuperOozaru), pero la
-     * forma en sí no queda desbloqueada/visible en la rueda hasta completarlo una vez (ver
+     * SSJ4 es la ÚNICA excepción de "solo el nivel importa": además de comprar su nivel con TP
+     * hace falta haber completado una vez el ritual de Oozaru (readyForSuperOozaru y
+     * readyForSsj4Ritual), y la forma no queda desbloqueada/visible en la rueda hasta entonces (ver
      * PlayerStatsAttachment.hasSsj4Ritual, marcado por PlayerFormAttachment tras el hold
      * Super Oozaru -> SSJ4). El nivel comprado sigue haciendo falta aparte: si se pierde por
      * respec, hay que volver a comprarlo aunque el ritual ya esté hecho — no hay que repetir
@@ -200,6 +200,13 @@ public final class SuperForms {
         }
         if (def != null && def.endgamePath()) return EndgamePaths.unlocked(p, form);
         if (def != null && def.divineTier()) return DivineForms.unlocked(p, form);
+        // Línea del Legendario: solo un Saiyan al que Shenlong se lo concedió (isLegendary). El resto del desbloqueo
+        // (padre desbloqueado + mastery_reqs) es el de cualquier rama por maestría, justo debajo. ssj_green lleva un
+        // mastery_reqs trivial (SSJ1 al 0 %) A PROPÓSITO: FormRegistry.nextFrom salta las formas con mastery_reqs al
+        // elegir el siguiente peldaño de la cadena, y sin él ssj_green (hijo de ssj1) podía ganarle el sitio a ssj2.
+        if (FormIds.SSJ_GREEN.equals(form) || FormIds.SSJ_GREEN_MAX.equals(form)) {
+            if (race != Race.SAIYAN || !PlayerStatsAttachment.get(p).isLegendary()) return false;
+        }
         if (!masteryReqsMet(p, def)) return false;
         if (depthOf(race, form) <= 0) {
             // Rama fuera de la cadena que se desbloquea por maestría (golden_fifth_form...): con
@@ -215,15 +222,24 @@ public final class SuperForms {
     }
 
     /**
-     * ¿Puede este saiyan intentar controlar la mutación Oozaru -> Super Oozaru (ver
-     * OozaruSystem/PlayerFormAttachment)? Hace falta tener super_forms comprado hasta el nivel
-     * MÁXIMO (el de SSJ4 incluido) con TP: ese pago es lo que "desbloquea" el DERECHO al
-     * ritual, no la forma en sí — completarlo de verdad (ver unlocked() arriba) es aparte.
+     * ¿Puede este saiyan controlar la mutación Oozaru -> Super Oozaru (ver
+     * OozaruSystem/PlayerFormAttachment)? Basta con tener SSJ1 (decisión del usuario,
+     * 2026-10-21; diseño §3 de .claude/archivo/2026-10-22-pendientes-0.6.0-previo/skill-tree-transformaciones.md). Antes pedía super_forms al nivel
+     * MÁXIMO, SSJ4 incluido: había que comprar SSJ4 a ciegas para poder hacer el ritual que lo
+     * revela, y por eso el árbol no podía esconder SSJ4.
      */
     public static boolean readyForSuperOozaru(Player p) {
-        Race race = raceOf(p);
-        int lvl = requiredLevel(race, FormIds.SSJ4);
-        return lvl != Integer.MAX_VALUE && level(p) >= lvl;
+        return unlocked(p, FormIds.SSJ1);
+    }
+
+    /**
+     * ¿Puede arrancar el último tramo del ritual (Super Oozaru -> SSJ4)? Hace falta SSJ3, el
+     * padre real de SSJ4 (decisión del usuario, 2026-10-21): quien llega a Super Oozaru con solo
+     * SSJ1 se queda ahí. Completarlo transforma en SSJ4 esa vez y marca el ritual; para volver a
+     * usar SSJ4 después hay que COMPRARLO en el árbol (unlocked() pide nivel + ritual).
+     */
+    public static boolean readyForSsj4Ritual(Player p) {
+        return FormRegistry.get(FormIds.SSJ4) != null && unlocked(p, FormIds.SSJ3);
     }
 
     /**

@@ -44,6 +44,11 @@ public final class SkillEffects {
     public static final String ULTRA_INSTINCT = "ultra_instinct";
     /** Overlay genérico gemelo de {@link #ULTRA_INSTINCT} para Ultra Ego — mismo comentario. */
     public static final String ULTRA_EGO = "ultra_ego";
+    /** Gigante Namekiano: INTERRUPTOR comprable en el árbol (no una forma). Agranda al jugador
+     *  encima de la forma que lleve; ver FormSystem.applyFormScale. */
+    public static final String NAMEK_GIANT = "namek_giant";
+    /** Escala del Gigante Namekiano: la misma que el Oozaru (scale 3.0 de oozaru.json), sea cual sea la forma. */
+    public static final double NAMEK_GIANT_SCALE = 3.0;
 
     public static int level(Player p, String skillId) {
         if (p == null) return 0;

@@ -27,7 +27,7 @@ public final class ArcosianPowerSystem {
 
     private static final Set<ResourceLocation> FINAL_OR_HIGHER = Set.of(
             FormIds.FINAL_FORM, FormIds.FIFTH_FORM, FormIds.GOLDEN_FORM, FormIds.BLACK_FORM,
-            FormIds.GOLDEN_FIFTH_FORM, FormIds.BLACK_FIFTH_FORM);
+            FormIds.GOLDEN_FIFTH_FORM, FormIds.BLACK_FIFTH_FORM, FormIds.ARCOSIAN_GOD);
 
     /** Capacidad del tanque según el nivel de la skill (0 sin la skill). */
     public static double ppMax(Player p) {

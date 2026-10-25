@@ -121,6 +121,22 @@ public final class MasterManager {
                 Component.translatable(def.nameKey())).withStyle(ChatFormatting.GRAY));
     }
 
+    /**
+     * Primer clic derecho del jugador sobre este maestro: lo marca como conocido y le da la bienvenida.
+     * Va ANTES de la admisión (check) a propósito: conocerlo no depende de que te enseñe, así que un
+     * maestro que te rechaza por alineamiento también queda en el árbol de skills con su retrato.
+     */
+    public static void meet(ServerPlayer sp, String masterId) {
+        var att = com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(sp);
+        if (!att.markMasterMet(masterId)) return;
+        MasterDef def = get(masterId);
+        if (def != null) {
+            sp.sendSystemMessage(Component.translatable("messages.zenkai.master." + masterId + ".first_meeting",
+                    Component.translatable(def.nameKey())).withStyle(ChatFormatting.YELLOW));
+        }
+        com.hmc.zenkai.feature.player.PlayerLifeCycle.sync(sp);
+    }
+
     // ── Carga ────────────────────────────────────────────────────────────────
 
     @SubscribeEvent

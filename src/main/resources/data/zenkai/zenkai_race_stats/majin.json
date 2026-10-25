@@ -1,4 +1,5 @@
 {
+  "universal_form_scale": 1.0,
   "base_attributes": {
     "str": 5,
     "con": 4,
@@ -8,31 +9,31 @@
     "mnd": 10
   },
   "warrior": {
-    "melee": 9.6,
-    "defense": 3.8,
+    "melee": 10.5,
+    "defense": 4.5,
     "health": 52,
     "stamina": 14.5,
-    "ki_damage": 4.1,
+    "ki_damage": 4.3,
     "ki_reserves": 44,
     "ki_cost_mult": 1.05,
     "stamina_cost_mult": 0.75
   },
   "martial_artist": {
-    "melee": 7.0,
-    "defense": 4.4,
+    "melee": 7.6,
+    "defense": 5.2,
     "health": 64,
     "stamina": 17.0,
-    "ki_damage": 5.4,
+    "ki_damage": 5.6,
     "ki_reserves": 66,
     "ki_cost_mult": 1.1,
     "stamina_cost_mult": 0.95
   },
   "spiritualist": {
-    "melee": 3.9,
-    "defense": 3.4,
+    "melee": 4.3,
+    "defense": 4.0,
     "health": 47,
     "stamina": 7.6,
-    "ki_damage": 8.2,
+    "ki_damage": 8.5,
     "ki_reserves": 82,
     "ki_cost_mult": 0.9,
     "stamina_cost_mult": 1.0

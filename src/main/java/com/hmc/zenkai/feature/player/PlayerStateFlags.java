@@ -63,13 +63,21 @@ public class PlayerStateFlags {
 
     /**
      * Completó el ritual de Oozaru al menos una vez (Oozaru -> Super Oozaru -> SSJ4, ver
-     * OozaruSystem/PlayerFormAttachment). Comprar super_forms hasta el nivel máximo con TP
-     * solo da DERECHO a intentar el ritual (SuperForms.readyForSuperOozaru); la forma en sí
-     * no queda utilizable/visible en la rueda hasta completarlo una vez — ver
+     * OozaruSystem/PlayerFormAttachment). Super Oozaru se controla con SSJ1
+     * (SuperForms.readyForSuperOozaru) y el salto a SSJ4 pide SSJ3 (readyForSsj4Ritual); SSJ4
+     * no queda utilizable/visible en la rueda ni en el árbol hasta completarlo una vez — ver
      * SuperForms.unlocked(SSJ4). Persistente: no hay que repetir el ritual cada partida ni
      * cada respec, solo re-comprar el nivel si se pierde por respec.
      */
     private boolean hasSsj4Ritual = false;
+
+    /**
+     * Llegó a Súper Oozaru al menos una vez. Lo REVELA en el árbol de transformaciones
+     * (SkillTreeNodes.revealed): se puede controlar desde SSJ1, pero el usuario quiere que el
+     * nodo no aparezca hasta que el jugador lo consiga (2026-10-21). Persistente, viaja al
+     * cliente por este mismo save()/load().
+     */
+    private boolean reachedSuperOozaru = false;
 
     /**
      * Beast desbloqueado por furia: una mascota propia o un miembro de la party murió cerca del
@@ -77,6 +85,13 @@ public class PlayerStateFlags {
      * hasSsj4Ritual, y viaja al cliente por este mismo save()/load() para que la rueda lo sepa.
      */
     private boolean beastFury = false;
+
+    /**
+     * Audiencia divina concedida por un maestro (Tori-Bot hoy; ver GodKiAudiencePacket): la
+     * cadena de God Ki del árbol pasa de SELLADA a HABILITADA y se puede afrontar la prueba. No
+     * da God Ki por sí sola. Persistente, viaja al cliente por este mismo save()/load().
+     */
+    private boolean godKiAudience = false;
 
     /**
      * Cola de saiyan: una de las tres condiciones de Oozaru (junto con raza y luna llena, ver
@@ -92,6 +107,19 @@ public class PlayerStateFlags {
      *  save()/load() porque ese round-trip de NBT es también el transporte de red (ver
      *  overdriveCharging). */
     private double arcosianPp = 0.0;
+    /** Absorción del Majin (ver MajinAbsorption): pilas de masa vivas, gameTime en que caducan y absorciones
+     *  totales (parte permanente). El enfriamiento es el de la técnica física. Van en save()/load(), que es también
+     *  el transporte de red: el cliente calcula el mismo bono de stats que el servidor. */
+    private int absorbMass = 0;
+    private long absorbMassUntil = 0L;
+    private int absorbedTotal = 0;
+    public int getAbsorbMass() { return absorbMass; }
+    public void setAbsorbMass(int v) { this.absorbMass = Math.max(0, v); }
+    public long getAbsorbMassUntil() { return absorbMassUntil; }
+    public void setAbsorbMassUntil(long v) { this.absorbMassUntil = v; }
+    public int getAbsorbedTotal() { return absorbedTotal; }
+    public void setAbsorbedTotal(int v) { this.absorbedTotal = Math.max(0, v); }
+
     /** Barra de calor de Ultra Instinct, 0-100 (ver OverlayMetersSystem). */
     private double uiHeat = 0.0;
     /** Barra de daño acumulado de Ultra Ego, 0-100. */
@@ -110,6 +138,11 @@ public class PlayerStateFlags {
     /** gameTime en que expira el estado "en combate". Ver InCombatState: es un instante
      *  futuro y no un contador para no tener que decrementarlo cada tick. */
     private long inCombatUntil = 0L;
+
+    /** gameTime hasta el que el jugador está EN el ritual de God Ki (candidato o participante): el
+     *  cliente oculta el gauge de carga de ki (el texto del ritual se solapaba con él). Instante futuro,
+     *  como inCombatUntil: caduca solo, sin tener que apagarlo. Viaja en save()/load() (transporte de sync). */
+    private long godKiRitualUntil = 0L;
 
     /** El jugador está "derribado" (acostado, transición previa al otro mundo). */
     private boolean downed = false;
@@ -132,6 +165,8 @@ public class PlayerStateFlags {
     public long getOtherworldSince() { return otherworldSince; }
     public boolean isDowned()     { return downed; }
     public long getDownedUntil()  { return downedUntil; }
+    public long getGodKiRitualUntil() { return godKiRitualUntil; }
+    public void setGodKiRitualUntil(long t) { this.godKiRitualUntil = t; }
     public long getInCombatUntil()  { return inCombatUntil; }
     public void setInCombatUntil(long t) { this.inCombatUntil = t; }
     public boolean isHardcoreDeath() { return hardcoreDeath; }
@@ -146,8 +181,12 @@ public class PlayerStateFlags {
     public void setUeCharge(double v) { this.ueCharge = Math.max(0.0, Math.min(100.0, v)); }
     public boolean hasSsj4Ritual() { return hasSsj4Ritual; }
     public void setHasSsj4Ritual(boolean v) { this.hasSsj4Ritual = v; }
+    public boolean hasReachedSuperOozaru() { return reachedSuperOozaru; }
+    public void setReachedSuperOozaru(boolean v) { this.reachedSuperOozaru = v; }
     public boolean hasBeastFury() { return beastFury; }
     public void setBeastFury(boolean v) { this.beastFury = v; }
+    public boolean hasGodKiAudience() { return godKiAudience; }
+    public void setGodKiAudience(boolean v) { this.godKiAudience = v; }
     public boolean hasReceivedKaioWeights() { return receivedKaioWeights; }
     public void setReceivedKaioWeights(boolean v) { this.receivedKaioWeights = v; }
 
@@ -181,13 +220,19 @@ public class PlayerStateFlags {
         tag.putBoolean("downed", downed);
         tag.putLong("downedUntil", downedUntil);
         tag.putLong("inCombatUntil", inCombatUntil);
+        tag.putLong("godKiRitualUntil", godKiRitualUntil);
         tag.putBoolean("hardcoreDeath", hardcoreDeath);
         tag.putBoolean("hasBrokenOverdriveOnce", hasBrokenOverdriveOnce);
         tag.putBoolean("overdriveCharging", overdriveCharging);
         tag.putBoolean("hasTail", hasTail);
         tag.putBoolean("hasSsj4Ritual", hasSsj4Ritual);
+        tag.putBoolean("reachedSuperOozaru", reachedSuperOozaru);
         tag.putBoolean("beastFury", beastFury);
+        tag.putBoolean("godKiAudience", godKiAudience);
         tag.putDouble("arcosianPp", arcosianPp);
+        tag.putInt("absorbMass", absorbMass);
+        tag.putLong("absorbMassUntil", absorbMassUntil);
+        tag.putInt("absorbedTotal", absorbedTotal);
         tag.putDouble("uiHeat", uiHeat);
         tag.putDouble("ueCharge", ueCharge);
         tag.putBoolean("receivedKaioWeights", receivedKaioWeights);
@@ -200,8 +245,13 @@ public class PlayerStateFlags {
         // como haría getBoolean() con una key ausente.
         this.hasTail = !tag.contains("hasTail") || tag.getBoolean("hasTail");
         this.hasSsj4Ritual = tag.getBoolean("hasSsj4Ritual");
+        this.reachedSuperOozaru = tag.getBoolean("reachedSuperOozaru");
         this.beastFury = tag.getBoolean("beastFury");
+        this.godKiAudience = tag.getBoolean("godKiAudience");
         this.arcosianPp = tag.getDouble("arcosianPp");
+        this.absorbMass = tag.getInt("absorbMass");
+        this.absorbMassUntil = tag.getLong("absorbMassUntil");
+        this.absorbedTotal = tag.getInt("absorbedTotal");
         this.uiHeat = tag.getDouble("uiHeat");
         this.ueCharge = tag.getDouble("ueCharge");
         this.receivedKaioWeights = tag.getBoolean("receivedKaioWeights");
@@ -215,6 +265,7 @@ public class PlayerStateFlags {
         this.downed = tag.getBoolean("downed");
         this.downedUntil = tag.getLong("downedUntil");
         this.inCombatUntil = tag.getLong("inCombatUntil");
+        this.godKiRitualUntil = tag.getLong("godKiRitualUntil");
         this.hardcoreDeath = tag.getBoolean("hardcoreDeath");
         this.hasBrokenOverdriveOnce = tag.getBoolean("hasBrokenOverdriveOnce");
         this.overdriveCharging = tag.getBoolean("overdriveCharging");

@@ -50,6 +50,24 @@ public final class RaceStatTable {
 
     private static volatile Map<Race, Map<Style, double[]>> TABLE = Map.of();
     private static volatile Map<Race, int[]> BASES = Map.of();
+    /**
+     * Escala de las formas UNIVERSALES (UI, UE, Beast, Señal, Mystic) por raza (skill tree F8,
+     * .claude/archivo/2026-10-22-pendientes-0.6.0-previo/skill-tree-balance-formas.md §3.2): techo divino de la raza / 26, para que UI quede ×1,3
+     * sobre el techo de CADA raza y no solo del Saiyan. Campo "universal_form_scale" del JSON;
+     * 1.0 si falta.
+     */
+    private static volatile Map<Race, Double> UNIVERSAL_SCALE = Map.of();
+
+    public static double universalFormScale(Race race) {
+        if (race == null) return 1.0;
+        return UNIVERSAL_SCALE.getOrDefault(race, 1.0);
+    }
+
+    public static Map<Race, Double> universalScales() { return UNIVERSAL_SCALE; }
+
+    public static void replaceUniversalScales(Map<Race, Double> loaded) {
+        UNIVERSAL_SCALE = Map.copyOf(loaded);
+    }
 
     /** ¿Hay datos cargados? Lo consultan las pantallas de cliente antes del primer sync. */
     public static boolean isLoaded() { return !TABLE.isEmpty() && !BASES.isEmpty(); }

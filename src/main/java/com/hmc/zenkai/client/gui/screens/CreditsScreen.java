@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Pestaña de créditos: centraliza en un solo sitio el reconocimiento de quien hizo el mod,
+ * Pantalla de créditos (botón en una esquina de Config desde la 0.6.0; antes pestaña): centraliza en un solo sitio el reconocimiento de quien hizo el mod,
  * repartido hoy en dos almacenes que no tienen por qué mezclarse:
  *   Modelos     -&gt; ModDataMaps.MODEL_CREDITS (DataMap sobre Item, ya existente, sin tocar aquí).
  *   UI/Íconos/Animaciones -&gt; ZenkaiUiCredits (registro Java puramente cliente, ver esa clase
@@ -73,8 +73,11 @@ public class CreditsScreen extends ZenkaiMenuScreen {
         super(Component.translatable("screen.zenkai.credits.title"));
     }
 
+    /** Ya no es pestaña (0.6.0): se abre desde el botón de la esquina de ClientConfigScreen,
+     *  así que marca CONFIG como activa y pulsarla vuelve a la configuración (ver
+     *  ZenkaiMenuScreen.ALWAYS_REOPEN). */
     @Override
-    protected ZenkaiTab currentTab() { return ZenkaiTab.CREDITS; }
+    protected ZenkaiTab currentTab() { return ZenkaiTab.CONFIG; }
 
     // ── Geometría ────────────────────────────────────────────────────────────
 

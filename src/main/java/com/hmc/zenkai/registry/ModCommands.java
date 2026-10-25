@@ -318,6 +318,26 @@ public class ModCommands {
                 .then(Commands.literal("debug")
                         .then(Commands.literal("entity")
                                 .executes(ModCommands::debugEntity))
+                        // Skill tree de transformaciones (F1): verify (por defecto) compara el espejo
+                        // de nodos con SuperForms.unlocked(); nodes los lista; refresh lo recalcula.
+                        .then(Commands.literal("tree")
+                                .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::verify)
+                                .then(Commands.literal("verify")
+                                        .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::verify))
+                                .then(Commands.literal("nodes")
+                                        .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::nodes))
+                                .then(Commands.literal("refresh")
+                                        .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::refresh))
+                                // F5: audiencia, prueba y ritual sin maestro ni 5 jugadores; reset
+                                // del árbol (el punto único de la futura reencarnación).
+                                .then(Commands.literal("audience")
+                                        .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::audience))
+                                .then(Commands.literal("trial")
+                                        .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::trial))
+                                .then(Commands.literal("ritual")
+                                        .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::ritual))
+                                .then(Commands.literal("reset")
+                                        .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::reset)))
                         // Todas las ramas "set a flag" de abajo (divine/legendary/immortal/
                         // majin) aceptan ahora un <player> opcional, MISMO patrón que el resto de
                         // /zenkai (ver "tp add"/"attr setall": sin argumento actúa sobre quien
@@ -471,6 +491,13 @@ public class ModCommands {
                                         .executes(c -> debugParty(c, IntegerArgumentType.getInteger(c, "n"))))
                                 .then(Commands.literal("clear")
                                         .executes(ModCommands::debugPartyClear)))
+                        // ── /zenkai debug body spawn|fill|clear ───────────────────────
+                        // Cuerpos de jugador (muerte permanente, fase 2-3). spawn: uno vacío a tus pies.
+                        // fill: uno con una copia de tu inventario (no te lo quita). clear: borra los tuyos.
+                        .then(Commands.literal("body")
+                                .then(Commands.literal("spawn").executes(c -> debugBody(c, false)))
+                                .then(Commands.literal("fill").executes(c -> debugBody(c, true)))
+                                .then(Commands.literal("clear").executes(ModCommands::debugBodyClear)))
                         // ── /zenkai debug dummy ───────────────────────────────────────
                         // Muñeco de pruebas: una Sombra con guion que hace UNA sola cosa
                         // (spamear ki, quedarse quieta, guardia...), para probar el choque de
@@ -491,6 +518,9 @@ public class ModCommands {
                                 // zona dorada, Evasiva o Instant Transmission). Sin límite de tiempo, como el real.
                                 .then(Commands.literal("grab")
                                         .executes(ModCommands::debugDummyGrab))
+                                // Ritual de God Ki con muñecos de participantes (flujo real, cargando ki).
+                                .then(Commands.literal("ritual")
+                                        .executes(com.hmc.zenkai.feature.skilltree.SkillTreeDebug::ritualDummies))
                                 .then(Commands.literal("join")
                                         .then(Commands.literal("ally")
                                                 .executes(c -> debugDummyJoin(c, true)))
@@ -500,6 +530,41 @@ public class ModCommands {
 
 
         );
+    }
+
+    private static int debugBody(CommandContext<CommandSourceStack> c, boolean fill) throws CommandSyntaxException {
+        ServerPlayer sp = c.getSource().getPlayerOrException();
+        java.util.List<net.minecraft.world.item.ItemStack> items = new java.util.ArrayList<>();
+        if (fill) {
+            for (int i = 0; i < sp.getInventory().getContainerSize(); i++) {
+                var s = sp.getInventory().getItem(i);
+                if (!s.isEmpty()) items.add(s.copy());
+            }
+        }
+        var body = com.hmc.zenkai.feature.player.death.PlayerBodyManager.spawnFor(sp, sp.serverLevel(), items);
+        if (body == null) {
+            c.getSource().sendFailure(Component.literal("No se pudo crear el cuerpo."));
+            return 0;
+        }
+        c.getSource().sendSuccess(() -> Component.literal("Cuerpo creado" + (fill ? " con una copia de tu inventario." : " vacío.")), false);
+        return 1;
+    }
+
+    private static int debugBodyClear(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer sp = c.getSource().getPlayerOrException();
+        var reg = com.hmc.zenkai.feature.player.death.PlayerBodyRegistry.get(c.getSource().getServer());
+        int n = 0;
+        for (var e : reg.of(sp.getUUID())) {
+            var lvl = c.getSource().getServer().getLevel(e.dimension());
+            if (lvl != null) {
+                lvl.getChunkAt(e.pos());
+                if (lvl.getEntity(e.bodyId()) != null) { lvl.getEntity(e.bodyId()).discard(); n++; continue; }
+            }
+            reg.remove(e.bodyId());
+        }
+        int removed = n;
+        c.getSource().sendSuccess(() -> Component.literal("Cuerpos borrados: " + removed + " (sin soltar su contenido)."), false);
+        return removed;
     }
 
     private static int debugParty(CommandContext<CommandSourceStack> c, int n) throws CommandSyntaxException {
@@ -719,6 +784,10 @@ public class ModCommands {
         // aunque el ítem de cola puede haberla puesto en false.
         att.setHasSsj4Ritual(false);
         att.setBeastFury(false); // idem: Beast se vuelve a desbloquear con una nueva furia
+        att.setReachedSuperOozaru(false);
+        // Skill tree: nodos propios (pasivas, formas divinas), God Ki y audiencia divina. Mismo
+        // punto único que usará la reencarnación (SkillTree.resetTree).
+        com.hmc.zenkai.feature.skilltree.SkillTree.resetTree(sp);
         att.setHasTail(true);
         // Servicio de Kaiosama: un reset "full" también devuelve el derecho a pedir las
         // pesas de nuevo, igual que borra lo demás — no sería full si dejara este

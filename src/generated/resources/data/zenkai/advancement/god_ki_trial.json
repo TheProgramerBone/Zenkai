@@ -1,0 +1,31 @@
+{
+  "parent": "zenkai:transformation",
+  "criteria": {
+    "trial": {
+      "conditions": {
+        "kind": "god_ki_trial"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.god_ki_trial.description"
+    },
+    "frame": "goal",
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:totem_of_undying"
+    },
+    "title": {
+      "translate": "advancements.zenkai.god_ki_trial.title"
+    }
+  },
+  "requirements": [
+    [
+      "trial"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

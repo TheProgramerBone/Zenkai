@@ -32,6 +32,7 @@ solos, sin que el addon toque ninguna clase de Zenkai:
 | `zenkai_face_parts/<categoría>/<nombre>.json` | Un rasgo facial nuevo (ojos, cejas, nariz, boca): capas PNG con su fuente de color, razas, variante por raza | `FacePartDef`/`FaceCatalog` |
 | `zenkai_hair_styles/<nombre>.json` | Un peinado nuevo (geo de cubos o textura plana), razas, variante por transformación | `HairStyleDef`/`HairCatalog` |
 | `zenkai_hair_packs/<pack>.json` | Una CARPETA de la biblioteca de pelo con sus peinados en un solo archivo: nombre, ícono, formato DMZ/DBC por peinado, razas, variantes. Ver §1b | `HairPacks`/`HairFolderDef` |
+| `zenkai_skill_tree/<archivo>.json` | Datos de un nodo del skill tree de transformaciones (`"node"`: el id de la forma o `zenkai:node/...`): requisitos extra (`pl`, `stat`, `mastery`, `alignment`, `flag`, `skill`, `node`, `any_of`), pista (`hint`), nodo secreto con `reveal`, vías de adquisición (`acquisition`: `tp`, `ritual`…; cualquier vía distinta de `tp` regala el nodo) y, para nodos con niveles propios como las pasivas de raza, `max_level`/`tp_cost`/`mind_req`/`values`. Ver §1c | `SkillTreeData`/`SkillTreeRequirement` |
 
 En todos los casos: el `id` del archivo tiene que coincidir con un valor **ya existente** del
 enum/cadena correspondiente (excepto `zenkai_forms`, `zenkai_archetypes`, `zenkai_masters`,
@@ -80,6 +81,29 @@ pestaña Pelo, con su nombre, su ícono y sus peinados. Ejemplo completo y funci
 **Conflictos entre datapacks**: `FormRegistry` avisa por log (`Zenkai-Forms`) si dos datapacks
 compiten por la raíz de la misma raza — gana el primero en cargar, igual que cualquier otro
 registro de Minecraft, pero ahora queda registrado en vez de fallar en silencio.
+
+### 1c. Nodos del skill tree (`zenkai_skill_tree`)
+
+El árbol se construye solo a partir de `zenkai_forms` (`parent`, `tp_cost`): una forma nueva de un
+addon ya tiene nodo sin escribir nada más. El JSON del árbol solo AÑADE cosas a ese nodo:
+
+```json
+{
+  "node": "mi_addon:ssj_rage",
+  "requirements": [
+    {"type": "mastery", "form": "zenkai:ssj2", "min": 50},
+    {"type": "any_of", "of": [{"type": "flag", "flag": "beast_fury"}, {"type": "pl", "min": 500000}]}
+  ],
+  "secret": true,
+  "reveal": [{"type": "flag", "flag": "ssj4_ritual"}],
+  "acquisition": ["tp", "ritual"]
+}
+```
+
+Banderas disponibles en `flag`: `ssj4_ritual`, `reached_super_oozaru`, `beast_fury`, `divine`,
+`legendary`, `immortal`, `god_ki_audience`, `tail` (una desconocida da false). La pista se lee de
+`skill_tree.<ns>.<ruta>.hint` (o de la clave que diga `"hint"`). Las formas baneadas en
+`banned_forms.json` no tienen nodo. Un archivo roto se ignora con un error en el log.
 
 ## 2. Bus de eventos (`com.hmc.zenkai.api.event`)
 
@@ -179,6 +203,7 @@ them up by itself, without the addon touching any Zenkai class:
 | `zenkai_face_parts/<category>/<name>.json` | A new face feature (eyes, eyebrows, nose, mouth): PNG layers with their color source, races, per-race variant | `FacePartDef`/`FaceCatalog` |
 | `zenkai_hair_styles/<name>.json` | A new hairstyle (cube geo or flat texture), races, per-transformation variant | `HairStyleDef`/`HairCatalog` |
 | `zenkai_hair_packs/<pack>.json` | A hair-library FOLDER with its hairstyles in a single file: name, icon, per-style DMZ/DBC format, races, variants. See §1b | `HairPacks`/`HairFolderDef` |
+| `zenkai_skill_tree/<file>.json` | Data for a transformation skill-tree node (`"node"`: the form id or `zenkai:node/...`): extra requirements (`pl`, `stat`, `mastery`, `alignment`, `flag`, `skill`, `node`, `any_of`), a hint, secret nodes with `reveal`, acquisition routes (`acquisition`: `tp`, `ritual`…; any route other than `tp` grants the node for free) and, for nodes with their own levels such as racial passives, `max_level`/`tp_cost`/`mind_req`/`values` | `SkillTreeData`/`SkillTreeRequirement` |
 
 In every case the file's `id` must match an **already existing** value of the corresponding
 enum/chain (except `zenkai_forms`, `zenkai_archetypes`, `zenkai_masters`, `zenkai_face_parts`

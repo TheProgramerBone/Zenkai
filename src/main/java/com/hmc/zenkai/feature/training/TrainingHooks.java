@@ -155,6 +155,7 @@ public final class TrainingHooks {
         boolean inHtc = sp.level().dimension() == ModDimensions.HTC_LEVEL;
         if (inHtc) granted *= ServerConfig.trainingHtcMultiplier();
         granted *= WeightSystem.tpFactor(att.getWeightLoad());
+        granted *= com.hmc.zenkai.feature.race.RacePassives.tpGainMult(sp);
 
         if (potentialUnlockBonusApplies(sp)) {
             granted *= ServerConfig.potentialUnlockTpMult();
@@ -200,7 +201,9 @@ public final class TrainingHooks {
         boolean inHtc = sp.level().dimension() == ModDimensions.HTC_LEVEL;
         double granted = base
                 * (inHtc ? ServerConfig.trainingHtcMultiplier() : 1.0)
-                * WeightSystem.tpFactor(att.getWeightLoad());
+                * WeightSystem.tpFactor(att.getWeightLoad())
+                // Potencial del Humano (RacePassives): más TP por lo mismo, sin tocar la fatiga.
+                * com.hmc.zenkai.feature.race.RacePassives.tpGainMult(sp);
 
         // Potential Unlock: estás USANDO tu potencial, no entrenándolo. Se comprueba contra
         // la forma ACTIVA, nunca contra tener la habilidad: llevarla comprada no debe costar

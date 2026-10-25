@@ -62,9 +62,8 @@ public final class ZenkaiUiCredits {
         // Una línea por Screen: diseño propio, TheGrim0508.
         credit(Category.UI, "MasterScreen", AUTHOR, "Screen design");
         credit(Category.UI, "StatsScreen", AUTHOR, "Screen design");
-        credit(Category.UI, "SkillsScreen", AUTHOR, "Screen design");
+        credit(Category.UI, "SkillsTreeScreen", AUTHOR, "Screen design");
         credit(Category.UI, "TechniquesScreen", AUTHOR, "Screen design");
-        credit(Category.UI, "MasteryScreen", AUTHOR, "Screen design");
         credit(Category.UI, "PartyScreen", AUTHOR, "Screen design");
         credit(Category.UI, "ClientConfigScreen", AUTHOR, "Screen design");
         credit(Category.UI, "TechniqueEditScreen", AUTHOR, "Screen design");

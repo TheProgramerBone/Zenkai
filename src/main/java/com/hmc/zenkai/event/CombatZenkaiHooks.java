@@ -100,6 +100,12 @@ public class CombatZenkaiHooks {
             return;
         }
         if (!(e.getEntity() instanceof ServerPlayer sp) || sp.level().isClientSide()) return;
+        // Sangre fría del Arcosiano: el frío (nieve en polvo) no le hace daño.
+        if (e.getSource().is(DamageTypeTags.IS_FREEZING)
+                && com.hmc.zenkai.feature.race.RacePassives.immuneToCold(sp)) {
+            e.setCanceled(true);
+            return;
+        }
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
         if (e.getSource().getEntity() instanceof ServerPlayer attacker
                 && PartyService.friendlyFireBlocked(attacker, sp)) return;
@@ -464,6 +470,10 @@ public class CombatZenkaiHooks {
         if (dmg > 0f) {
             // Black Flash: atraviesa la guardia del rival (no su defensa), ver mitigate.
             finalDamage = mitigate(e, atkStats, defStats, dmg, armorMult, environmental, blackFlash);
+            // Cuerpo elástico del Majin (RacePassives.mitigate): solo lo físico, por nivel de pasiva.
+            if (e.getEntity() instanceof ServerPlayer majin) {
+                finalDamage = com.hmc.zenkai.feature.race.RacePassives.mitigate(majin, e.getSource(), (float) finalDamage);
+            }
 
             int bodyBefore = defStats.getBody();
             defStats.addBody(-(int) Math.ceil(finalDamage));

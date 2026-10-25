@@ -215,7 +215,9 @@ public class RaceSelectionScreen extends Screen {
         int nPassiveLines = Math.min(wrapText(Component.translatable(RacePassives.descKey(r)).getString(), mc.font, descW).length, MAX_PASSIVE_DESC_LINES);
         // 34 = label raza(12) + separador(4+1+5) + label pasiva(12); +8 de margen arriba/abajo.
         // Reproduce EXACTO el TEXT_BLOCK_H=92 viejo cuando nDesc=2 y nPassive=3.
-        int textBlockH = 42 + (nDescLines + nPassiveLines) * 10;
+        // +10: la línea con los NÚMEROS de la pasiva a nivel 1 (skill tree F4, los mismos que
+        // enseña el nodo de pasiva del árbol).
+        int textBlockH = 42 + (nDescLines + nPassiveLines) * 10 + 10;
 
         int boxTop    = pt + div2Y + 6;
         int boxBottom = pt + IN_Y2 - textBlockH;
@@ -249,8 +251,11 @@ public class RaceSelectionScreen extends Screen {
                         Component.translatable(RacePassives.nameKey(r))),
                 descX, y, COLOR_SECTION, false);
         y += 12;
-        drawWrapped(g, mc.font, Component.translatable(RacePassives.descKey(r)).getString(),
+        y = drawWrapped(g, mc.font, Component.translatable(RacePassives.descKey(r)).getString(),
                 descX, y, descW, MAX_PASSIVE_DESC_LINES);
+        g.drawString(mc.font, PanelText.fit(mc.font,
+                        com.hmc.zenkai.client.gui.screens.skilltree.SkillTreeScreen.passiveValues(r, 1), descW),
+                descX, y, ZenkaiPalette.VALUE_ON_PANEL, false);
 
         super.render(g, mouseX, mouseY, partialTick);
     }

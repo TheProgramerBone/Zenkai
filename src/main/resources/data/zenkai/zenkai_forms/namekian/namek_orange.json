@@ -2,17 +2,15 @@
   "races": [
     "namekian"
   ],
-  "kind": "extension",
-  "tier": "evolution",
+  "kind": "super",
   "tp_cost": 11000,
   "hold_ticks": 60,
   "mastery_gain": 0.8,
-  "stat_percent_untrained": 1.2,
-  "stat_percent_mastered": 1.6,
+  "stat_percent_untrained": 3.75,
+  "stat_percent_mastered": 5.0,
   "ki_drain_untrained": 1.13,
   "ki_drain_mastered": 0.38,
   "spi_req": 58,
-  "parent": "zenkai:namek_giant",
   "body_items": {
     "head": "zenkai:namek_orange_helmet",
     "chest": "zenkai:namek_orange_chestplate",
