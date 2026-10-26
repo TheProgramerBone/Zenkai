@@ -98,7 +98,6 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     private static final float RING_ARC = 200f;
     /** Celdas de icons.png: la lupa y el busto «yo» (como SkillTreeScreen), y la puerta (pestaña de formas). */
     private static final int ZOOM_U = 0, ZOOM_V = 100, CENTER_U = 40, CENTER_V = 80;
-    private static final int GATE_U = ZenkaiTab.TRANSFORMATIONS.u, GATE_V = ZenkaiTab.TRANSFORMATIONS.v;
 
     // ── Colores ──
 
@@ -118,6 +117,13 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     // ── Ramas ──
 
     private static final String[] MASTERS = {"kami", "korin", "kaio", "toribot"};
+    /**
+     * Fondo del retrato de cada maestro (mismo orden que MASTERS): tono medio-oscuro del matiz del cielo de su
+     * rama (medido en las capturas) y aro interior más oscuro. Fijados a mano, no derivados de Sky.accent: el
+     * acento no casa con el cielo (Korin salía marrón sobre cielo verde) y Kaio/Tori-Bot compartían casi el mismo.
+     */
+    private static final int[] PORTRAIT_BG = {0xFF4A74A8, 0xFF2F7D66, 0xFFB4642E, 0xFF2F6CB4};
+    private static final int[] PORTRAIT_RIM = {0xFF2E4C78, 0xFF1E5545, 0xFF7A3E1C, 0xFF1A3F70};
     /** Centro de cada rama en el mundo y hacia dónde abre su abanico (grados; 0 = derecha, 90 = abajo). */
     private static final float[][] CENTERS = {{0, -170}, {-190, 0}, {190, 0}, {0, 170}};
     private static final float[] OUTWARD = {-90f, 180f, 0f, 90f};
@@ -688,8 +694,16 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
             boolean known = st.hasMetMaster(MASTERS[n.branch()]);
             frame(g, x, y, true, known ? 1f : 0.7f);
             if (known) {
-                // Retrato (placeholder hasta la fase E): el icono de reserva con el color de la rama.
-                tintedIcon(g, x, y, sky.accent, 1f);
+                // Retrato del maestro: celda de 32 texeles a 16 px de GUI (1:1), centrada en el marco.
+                // Solo si ya lo conoce: el desconocido sigue con «?» para no revelar quién es.
+                int inset = (NODE - ICON) / 2;
+                // Fondo propio del maestro: el interior del marco es casi negro y se comía el contorno
+                // oscuro del retrato (la gorra de Tori-Bot, el pelo de Kaio). Aro + fondo planos (sin degradado).
+                g.fill(x + inset, y + inset, x + NODE - inset, y + NODE - inset, PORTRAIT_RIM[n.branch()]);
+                g.fill(x + inset + 1, y + inset + 1, x + NODE - inset - 1, y + NODE - inset - 1, PORTRAIT_BG[n.branch()]);
+                SkillTreeArt.blit(g, SkillTreeArt.MASTER_PORTRAITS, x + inset, y + inset,
+                        n.branch() * SkillTreeArt.ICON_TEX, 0, SkillTreeArt.ICON_TEX, SkillTreeArt.ICON_TEX,
+                        SkillTreeArt.MASTER_PORTRAITS_W, SkillTreeArt.MASTER_PORTRAITS_H);
             } else {
                 g.fill(x + 4, y + 4, x + NODE - 4, y + NODE - 4, 0xFF1A2236);
                 labels.add(new Label(n.x(), n.y() - 4, Component.literal("?"), 0xFFFFFFFF, true, 2f));
@@ -702,10 +716,12 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         }
 
         if (n.kind() == Kind.GATE) {
-            frame(g, x, y, true, 1f);
-            if (fx) softGlow(g, x, y, sky.accent, pulseAlpha(1600L, 0x20, 0x50));
+            // El mismo icono que la pestaña Transformaciones (un solo arte: tools/gen_transformations_tab_icon.py).
+            // SIN marco: el icono mide 20 px y el hueco del marco 16, así que el arco se montaba sobre el
+            // borde; la puerta es su propio marco (y se distingue de un nodo de skill). Tampoco softGlow ni
+            // velo de hover: los dos rellenan el cuadrado entero y se verían en las esquinas transparentes.
             g.blit(ICON_ATLAS, x + 2, y + 2, GATE_U, GATE_V, 20, 20, 256, 256);
-            if (hovered) g.fill(x + 4, y + 4, x + NODE - 4, y + NODE - 4, ZenkaiPalette.HOVER_VEIL);
+            if (hovered) ring(g, x, y, NODE, fx ? pulse(sky.accent, 900L) : sky.accent);
             labels.add(new Label(n.x(), y + NODE + 3, Component.translatable("screen.zenkai.tab.transformations"),
                     sky.accent, true, 1f));
             return;
@@ -739,6 +755,7 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
 
     private static final ResourceLocation ICON_ATLAS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");
+    private static final int GATE_U = ZenkaiTab.TRANSFORMATIONS.u, GATE_V = ZenkaiTab.TRANSFORMATIONS.v;
 
     private static void frame(GuiGraphics g, int x, int y, boolean ornate, float b) {
         SkillTreeArt.blitTinted(g, SkillTreeArt.FRAMES, x, y, Frame.UNIVERSAL.ordinal() * SkillTreeArt.FRAME_TEX,

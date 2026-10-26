@@ -38,7 +38,7 @@ public final class AuraBodyUniforms {
         CEL_SHAPE("ZenkaiShellCelShape"), BASE_FADE("ZenkaiShellBaseFade"), CEL("ZenkaiShellCel"),
         ALPHA("ZenkaiShellAlpha"), FRESNEL("ZenkaiShellFresnel"), CORE("ZenkaiShellCoreColor"),
         OUTER("ZenkaiShellOuterColor"), SHAPE("ZenkaiBodyShape"), LOOK("ZenkaiBodyLook"),
-        FLOW_SHAPE("ZenkaiFlowShape"), PEAK_VAR("ZenkaiShellPeakVar"), ORTHO("ZenkaiOrtho"), FLOW_LOOK("ZenkaiFlowLook"),
+        FLOW_SHAPE("ZenkaiFlowShape"), PEAK_VAR("ZenkaiShellPeakVar"), ORTHO("ZenkaiOrtho"), FLOW_LOOK("ZenkaiFlowLook"), AURA_LOOK("ZenkaiAuraLook"), TEAR("ZenkaiShellTear"),
         S0A("ZenkaiSeg0A"), S0B("ZenkaiSeg0B"), S1A("ZenkaiSeg1A"), S1B("ZenkaiSeg1B"),
         S2A("ZenkaiSeg2A"), S2B("ZenkaiSeg2B"), S3A("ZenkaiSeg3A"), S3B("ZenkaiSeg3B"),
         S4A("ZenkaiSeg4A"), S4B("ZenkaiSeg4B"), S5A("ZenkaiSeg5A"), S5B("ZenkaiSeg5B"),
@@ -105,6 +105,8 @@ public final class AuraBodyUniforms {
         // Siempre se escribe (también a 0): el uniform vive en el ShaderInstance y una vista
         // previa anterior lo dejaría encendido para el mundo.
         set(c, U.ORTHO, ortho ? 1f : 0f);
+        // Prueba de dirección de arte (AuraDebug.look*): a 0 los shaders hacen lo de siempre.
+        set(c, U.AURA_LOOK, AuraDebug.lookFps, AuraDebug.lookBands3 ? 1f : 0f, AuraDebug.lookWhiteCap, AuraDebug.lookTopFill);
         Uniform m = u(c, U.MODEL);
         if (m != null) m.set(model);
         set(c, U.BLOOM_MODE, bloomPass ? 1f : 0f);
@@ -126,6 +128,7 @@ public final class AuraBodyUniforms {
         set(c, U.TIP, p.get(Key.TIP));
         set(c, U.POLE_CALM, p.get(Key.POLE_CALM));
         set(c, U.PEAK_VAR, p.get(Key.PEAK_VAR));
+        set(c, U.TEAR, p.get(Key.TEARDROP), p.get(Key.TOP_FILL));
         set(c, U.LOWER_HALF, p.get(Key.LOWER_HALF));
         set(c, U.SIDE_UP_DIR, p.get(Key.SIDE_UP_DIR));
         set(c, U.CROWN, p.get(Key.CROWN_KNEE), p.get(Key.CROWN_SOFT));

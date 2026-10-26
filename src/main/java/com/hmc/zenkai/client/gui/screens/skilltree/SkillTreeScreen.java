@@ -1339,6 +1339,7 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
         lines.add(new TipLine(level == null ? nameOf(n) : nameOf(n).copy().append("  ").append(level), TIP_NAME));
         lines.add(new TipLine(stateLine(n, e), stateColor(e.state())));
         if (n.kind() == Kind.PASSIVE) addPassiveLines(lines, e);
+        if (SkillTreeMigration.NODE_ARCOSIAN_POWER.equals(n.id()) && e.level() > 0) addPowerPointLines(lines);
 
         // Requisitos tipo advancement (F3): verde lo cumplido, rojo lo que falta.
         for (SkillTreeNodes.ReqLine r : SkillTreeNodes.requirementLines(mc.player, n)) {
@@ -1391,6 +1392,18 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
 
     /** Pasiva de raza (F4): qué hace a su nivel actual y qué hará en el siguiente, con los
      *  números reales de su curva. */
+    /** Power Points del arcosiano en cifras (en la HUD solo se ve el porcentaje): tanque actual / máximo y cómo se carga y se gasta. */
+    private void addPowerPointLines(List<TipLine> lines) {
+        double max = com.hmc.zenkai.event.tick.ArcosianPowerSystem.ppMax(mc.player);
+        if (max <= 0.0) return;
+        double pp = att == null ? 0.0 : Math.min(max, att.getArcosianPp());
+        lines.add(new TipLine(Component.translatable("skill_tree.zenkai.pp.tank",
+                Math.round(pp), Math.round(max), Math.round(pp / max * 100.0)), ZenkaiPalette.OK));
+        for (var seq : this.font.split(Component.translatable("skill_tree.zenkai.pp.how"), TIP_WRAP)) {
+            lines.add(new TipLine(seqToComponent(seq), TIP_MUTED));
+        }
+    }
+
     private void addPassiveLines(List<TipLine> lines, Eval e) {
         Race race = att.getRace();
         for (var seq : this.font.split(Component.translatable(RacePassives.descKey(race)), TIP_WRAP)) {

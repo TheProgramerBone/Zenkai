@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.screens.ZenkaiPanelScreen;
@@ -120,8 +121,8 @@ public class RevivePetWishScreen extends ZenkaiPanelScreen {
         }
 
         // Marco del retrato.
-        g.fill(fx - 1, fy - 1, fx + FRAME_W + 1, fy + FRAME_H + 1, ZenkaiPalette.BORDER_IN);
         g.fill(fx, fy, fx + FRAME_W, fy + FRAME_H, ZenkaiPalette.BEIGE_DEEP);
+        NineSlice.plateBorder(g, fx - 2, fy - 2, FRAME_W + 4, FRAME_H + 4);
 
         // El recorte impide que una mascota grande (un caballo) se salga del marco.
         g.enableScissor(fx, fy, fx + FRAME_W, fy + FRAME_H);

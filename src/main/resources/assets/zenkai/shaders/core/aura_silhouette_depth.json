@@ -1,0 +1,7 @@
+{
+  "vertex": "zenkai:ki_bloom_blur",
+  "fragment": "zenkai:aura_silhouette_depth",
+  "attributes": [ "Position", "UV0" ],
+  "samplers": [ { "name": "Sampler0" } ],
+  "uniforms": []
+}

@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.StatBar;
 import com.hmc.zenkai.config.ServerConfig;
@@ -426,9 +427,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         int x = Mth.clamp(panelLeft + BG_W + GRAVITY_POPUP_GAP, 2, this.width - GRAVITY_POPUP_W - 2);
         int y = panelTop + GRAVITY_ROW_Y;
 
-        g.fill(x - 2, y - 2, x + GRAVITY_POPUP_W + 2, y + h + 2, ZenkaiPalette.BORDER_IN);
-        g.fill(x - 1, y - 1, x + GRAVITY_POPUP_W + 1, y + h + 1, ZenkaiPalette.BORDER_MID);
-        g.fill(x, y, x + GRAVITY_POPUP_W, y + h, ZenkaiPalette.POPUP_BG);
+        NineSlice.plateFrame(g, x, y, GRAVITY_POPUP_W, h);
 
         int tx = x + 8, tr = x + GRAVITY_POPUP_W - 8, ty = y + 6;
         g.drawString(this.font, ScreenTitle.styled(

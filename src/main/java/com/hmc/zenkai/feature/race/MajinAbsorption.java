@@ -61,6 +61,8 @@ public final class MajinAbsorption {
     private static final ResourceLocation SACIADO = id("majin_harmony");
     private static final ResourceLocation PRIMITIVO = id("majin_pure_chaos");
     private static final ResourceLocation PRIMIGENIO = id("majin_god");
+    /** «Majin Devorador»: la forma Legendaria del Majin (LegendaryForms). */
+    private static final ResourceLocation DEVORADOR = id("majin_legendary");
 
     /** Velocidad de la masa en bloques por tick. */
     private static final double MASS_SPEED = 0.9;
@@ -78,6 +80,7 @@ public final class MajinAbsorption {
     public static int massCap(ResourceLocation form) {
         int cap = ServerConfig.majinMassCap();
         if (VORAZ.equals(form)) cap += ServerConfig.majinVorazExtraCap();
+        if (DEVORADOR.equals(form)) cap += ServerConfig.majinLegendExtraCap();
         return cap;
     }
 
@@ -85,6 +88,7 @@ public final class MajinAbsorption {
         double s = ServerConfig.majinMassSeconds();
         if (SACIADO.equals(form)) s *= ServerConfig.majinSaciadoDurationMult();
         if (PRIMITIVO.equals(form)) s *= ServerConfig.majinPrimitivoDurationMult();
+        if (DEVORADOR.equals(form)) s *= ServerConfig.majinLegendDurationMult();
         return s * 20.0;
     }
 
@@ -117,6 +121,8 @@ public final class MajinAbsorption {
         double bonus = 0.0;
         int stacks = Math.min(liveStacks(p), massCap(formOf(p)));
         if (stacks > 0) bonus += stacks * perStack(formOf(p));
+        // Poder robado con «Majin Devorador»: solo cuenta mientras lleva la forma y la masa sigue viva.
+        if (stacks > 0 && DEVORADOR.equals(formOf(p))) bonus += att.flags().getAbsorbStolen();
         bonus += Math.min(ServerConfig.majinMassPermanentCap(),
                 att.flags().getAbsorbedTotal() * ServerConfig.majinMassPermanentPerAbsorb());
         return bonus;
@@ -137,6 +143,7 @@ public final class MajinAbsorption {
         }
         if (c.p().level().getGameTime() > f.getAbsorbMassUntil()) {
             f.setAbsorbMass(0);
+            f.setAbsorbStolen(0.0);
             if (c.p() instanceof ServerPlayer sp) {
                 sp.displayClientMessage(Component.translatable("messages.zenkai.absorb.mass_gone"), true);
             }
@@ -218,6 +225,8 @@ public final class MajinAbsorption {
         }
         PlayerStatsAttachment att = PlayerStatsAttachment.get(owner);
         long now = owner.level().getGameTime();
+        // PL del objetivo ANTES de matarlo: lo que «Majin Devorador» le roba depende de cuánto pesa frente al Majin.
+        double plRatio = (double) powerLevelOf(target) / Math.max(1L, att.getPowerLevel());
 
         impactFx(owner.serverLevel(), target, massColor(owner), true);
         // Muere como si lo hubiera matado el Majin (TP y botín normales); si algo lo salva, se fuerza.
@@ -229,6 +238,12 @@ public final class MajinAbsorption {
         f.setAbsorbMass(Math.min(massCap(form), f.getAbsorbMass() + 1));
         f.setAbsorbMassUntil(now + Math.round(durationTicks(form)));
         f.setAbsorbedTotal(f.getAbsorbedTotal() + 1);
+        if (DEVORADOR.equals(form)) {
+            // Roba un % del poder del objetivo como stats temporales y recupera ki (alarga la forma).
+            double steal = Math.min(ServerConfig.majinLegendStealPerAbsorbMax(), plRatio * ServerConfig.majinLegendStealRatio());
+            f.setAbsorbStolen(Math.min(ServerConfig.majinLegendStealCap(), f.getAbsorbStolen() + steal));
+            att.addEnergy((int) Math.round(att.getEnergyMax() * ServerConfig.majinLegendKiRefundPct() / 100.0));
+        }
         owner.displayClientMessage(Component.translatable("messages.zenkai.absorb.done",
                 f.getAbsorbMass(), massCap(form)), true);
         PlayerLifeCycle.sync(owner);

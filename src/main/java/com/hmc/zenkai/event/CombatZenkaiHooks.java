@@ -475,9 +475,36 @@ public class CombatZenkaiHooks {
                 finalDamage = com.hmc.zenkai.feature.race.RacePassives.mitigate(majin, e.getSource(), (float) finalDamage);
             }
 
+            // «Temerario» (forma Legendaria del humano): su poder se paga con defensa, recibe más daño.
+            if (e.getEntity() instanceof ServerPlayer reckless
+                    && com.hmc.zenkai.feature.race.RacePassives.wearingHumanLegendary(reckless)) {
+                finalDamage *= 1.0 + com.hmc.zenkai.config.ServerConfig.humanLegendDamageTakenExtra();
+            }
+
             int bodyBefore = defStats.getBody();
             defStats.addBody(-(int) Math.ceil(finalDamage));
             bodySpent = bodyBefore - defStats.getBody();
+
+            // Power Points del arcosiano: la contención (Segunda/Tercera) carga peleando y el Arcosian God se repone al pegar.
+            if (bodySpent > 0) {
+                if (e.getSource().getEntity() instanceof ServerPlayer hitter && hitter != e.getEntity()) {
+                    com.hmc.zenkai.event.tick.ArcosianPowerSystem.onCombatHit(hitter, true);
+                }
+                if (e.getEntity() instanceof ServerPlayer struck) {
+                    com.hmc.zenkai.event.tick.ArcosianPowerSystem.onCombatHit(struck, false);
+                }
+            }
+
+            // «Ancestros» (forma Legendaria del namekiano): una parte del daño que hace le cura el cuerpo.
+            if (bodySpent > 0 && e.getSource().getEntity() instanceof ServerPlayer ancestor
+                    && ancestor != e.getEntity()
+                    && com.hmc.zenkai.feature.race.RacePassives.wearingNamekLegendary(ancestor)) {
+                int heal = (int) Math.round(bodySpent * com.hmc.zenkai.config.ServerConfig.namekLegendLifesteal());
+                if (heal > 0) {
+                    PlayerStatsAttachment.get(ancestor).addBody(heal);
+                    PlayerLifeCycle.syncIfServer(ancestor);
+                }
+            }
 
             showDamageNumber(e, bodySpent, blackFlash);
             grantTraining(e, Math.min(finalDamage, bodyBefore));

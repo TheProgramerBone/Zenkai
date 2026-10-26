@@ -113,6 +113,10 @@ public class PlayerStateFlags {
     private int absorbMass = 0;
     private long absorbMassUntil = 0L;
     private int absorbedTotal = 0;
+    /** Poder robado a lo absorbido con «Majin Devorador» (fracción aditiva de stats); caduca con la masa. */
+    private double absorbStolen = 0.0;
+    public double getAbsorbStolen() { return absorbStolen; }
+    public void setAbsorbStolen(double v) { this.absorbStolen = Math.max(0.0, v); }
     public int getAbsorbMass() { return absorbMass; }
     public void setAbsorbMass(int v) { this.absorbMass = Math.max(0, v); }
     public long getAbsorbMassUntil() { return absorbMassUntil; }
@@ -233,6 +237,7 @@ public class PlayerStateFlags {
         tag.putInt("absorbMass", absorbMass);
         tag.putLong("absorbMassUntil", absorbMassUntil);
         tag.putInt("absorbedTotal", absorbedTotal);
+        tag.putDouble("absorbStolen", absorbStolen);
         tag.putDouble("uiHeat", uiHeat);
         tag.putDouble("ueCharge", ueCharge);
         tag.putBoolean("receivedKaioWeights", receivedKaioWeights);
@@ -252,6 +257,7 @@ public class PlayerStateFlags {
         this.absorbMass = tag.getInt("absorbMass");
         this.absorbMassUntil = tag.getLong("absorbMassUntil");
         this.absorbedTotal = tag.getInt("absorbedTotal");
+        this.absorbStolen = tag.getDouble("absorbStolen");
         this.uiHeat = tag.getDouble("uiHeat");
         this.ueCharge = tag.getDouble("ueCharge");
         this.receivedKaioWeights = tag.getBoolean("receivedKaioWeights");

@@ -1,5 +1,6 @@
 package com.hmc.zenkai.content.effect;
 
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
@@ -34,6 +35,17 @@ public class MajinEffect extends MobEffect {
         if (!(entity instanceof ServerPlayer sp)) return true;
 
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        // Exclusión mutua con el estado Legendario (config): el Legendario es irreversible y gana, así que la marca se retira.
+        // Solo se baja el flag: quitar el efecto AQUÍ, dentro de su propio tick, rompería la iteración de vainilla;
+        // PersistentEffectsSystem (PlayerTickEvent.Post) lo quita en cuanto ve el flag apagado.
+        if (blockedByLegendary(sp)) {
+            PlayerVisualAttachment v = PlayerVisualAttachment.get(sp);
+            if (v.isMajinControlled()) {
+                v.setMajinControlled(false);
+                PlayerLifeCycle.syncVisualToTrackersAndSelf(sp);
+            }
+            return true;
+        }
         if (att.getAlignment() != -100) {
             att.setAlignment(-100);
             PlayerLifeCycle.sync(sp);
@@ -53,6 +65,11 @@ public class MajinEffect extends MobEffect {
         // SIEMPRE true: con "infinite" la duración se queda en -1, así que un gate tipo
         // "duration % 20 == 0" NUNCA dispararía. El cuerpo es idempotente y barato.
         return true;
+    }
+
+    /** ¿Impide el estado Legendario aplicar la marca Majin a este jugador? (majin.legendary_mutually_exclusive) */
+    public static boolean blockedByLegendary(Player p) {
+        return ServerConfig.majinLegendaryExclusive() && PlayerStatsAttachment.get(p).isLegendary();
     }
 
     /** ¿El jugador está bajo la marca majin? (server: efecto real). */
@@ -78,6 +95,7 @@ public class MajinEffect extends MobEffect {
      * que el efecto pueda seguir vivo para volver a reafirmar el flag.
      */
     public static void setControlled(ServerPlayer sp, boolean value) {
+        if (value && blockedByLegendary(sp)) value = false;
         PlayerVisualAttachment visual = PlayerVisualAttachment.get(sp);
         visual.setMajinControlled(value);
         if (value) {

@@ -113,10 +113,18 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
             }
         }
 
-        // Ultra Instinct ACTIVADO COMO TÉCNICA (interruptor, con la skill): ojos blancos sea cual sea
-        // la forma, para que se vea de un vistazo si el jugador la está usando.
+        // Ultra Instinct ACTIVADO COMO TÉCNICA (interruptor, con la skill): los ojos del UI dominado (el eye_rgb de la
+        // forma ultra_instinct, no un blanco puro) sea cual sea la forma, para que se vea de un vistazo si el jugador
+        // la está usando.
+        FormDef uiForm = FormDef.get(com.hmc.zenkai.feature.forms.FormIds.ULTRA_INSTINCT);
+        int uiEyes = uiForm != null && uiForm.tintsEyes() ? uiForm.eyeRgb() & 0xFFFFFF : 0xFFFFFF;
         int eyeOverride = (SkillEffects.level(player, SkillEffects.ULTRA_INSTINCT) > 0
-                && SkillToggles.isOn(player, SkillEffects.ULTRA_INSTINCT)) ? 0xFFFFFF : -1;
+                && SkillToggles.isOn(player, SkillEffects.ULTRA_INSTINCT)) ? uiEyes : -1;
+        // Legendario: el iris depende de la maestría (aparece desde el 50 %) y, en el Pleno, del overdrive. No se
+        // aplica durante el cambio de forma: ahí manda la mezcla de colores de abajo.
+        if (eyeOverride < 0 && !com.hmc.zenkai.client.hair.HairTransition.current(player, partialTick).blending()) {
+            eyeOverride = com.hmc.zenkai.feature.forms.LegendaryEyes.rgb(player);
+        }
 
         // Cambio de forma en curso (hold o transición automática): ojos y cejas pasan del color de
         // la forma de origen al de la de destino al mismo ritmo que el pelo (HairTransition), en vez
@@ -154,8 +162,19 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
             }
         }
 
+        // «M» de Babidi en la frente mientras dura la marca Majin: una capa extra, pintada en la cara
+        // canónica y recolocada a la región de cada modelo como cualquier rasgo (FaceRegions).
+        if (vis.isMajinControlled() && resourceExists(MAJIN_MARK)) {
+            drawPass(FaceRemapTextures.remap(MAJIN_MARK, region), 0xFFFFFFFF, poseStack, bakedModel,
+                    animatable, bufferSource, partialTick, packedLight, packedOverlay);
+        }
+
         poseStack.popPose();
     }
+
+    /** La «M» de la marca Majin (tools/gen_majin_mark.py). Lleva su propio color: no se tiñe. */
+    private static final ResourceLocation MAJIN_MARK = ResourceLocation.fromNamespaceAndPath(
+            "zenkai", "textures/customization/face/majin_mark.png");
 
     /**
      * Textura de una capa, o null si este cliente no la tiene. Punto ÚNICO de elección de

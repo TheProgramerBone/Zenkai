@@ -1,0 +1,13 @@
+{
+  "node": "zenkai:namek_legendary",
+  "secret": true,
+  "reveal": [
+    {
+      "type": "flag",
+      "flag": "legendary"
+    }
+  ],
+  "acquisition": [
+    "wish"
+  ]
+}

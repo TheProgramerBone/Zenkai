@@ -9,7 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * Deseo de ser Legendario (solo Saiyan). Confirmación pura, con la misma estructura que ImmortalWishScreen: lo que
+ * Deseo de ser Legendario (todas las razas; el texto cambia según la raza). Confirmación pura, con la misma estructura que ImmortalWishScreen: lo que
  * concede y, aparte y en rojo, lo que cuesta, porque es irreversible.
  */
 public class LegendaryWishScreen extends ZenkaiPanelScreen {
@@ -33,12 +33,17 @@ public class LegendaryWishScreen extends ZenkaiPanelScreen {
     @Override
     protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         int y = panelTop + CONTENT_TOP + 24;
-        y = drawWrappedOnPanel(g, Component.translatable("screen.zenkai.wish.legendary.desc"),
-                y, ZenkaiPalette.LABEL_ON_PANEL);
+        // El Saiyan conserva sus textos de siempre; las demás razas tienen su descripción y un aviso común.
+        var race = Minecraft.getInstance().player == null ? null
+                : com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(Minecraft.getInstance().player).getRace();
+        boolean saiyan = race == null || race == com.hmc.zenkai.feature.Race.SAIYAN;
+        String descKey = saiyan ? "screen.zenkai.wish.legendary.desc"
+                : "screen.zenkai.wish.legendary.desc." + race.name().toLowerCase(java.util.Locale.ROOT);
+        y = drawWrappedOnPanel(g, Component.translatable(descKey), y, ZenkaiPalette.LABEL_ON_PANEL);
         y += 10;
         drawDivider(g, y);
         y += 10;
-        drawWrappedOnPanel(g, Component.translatable("screen.zenkai.wish.legendary.warning"),
-                y, ZenkaiPalette.DENIED);
+        drawWrappedOnPanel(g, Component.translatable(saiyan ? "screen.zenkai.wish.legendary.warning"
+                : "screen.zenkai.wish.legendary.warning.other"), y, ZenkaiPalette.DENIED);
     }
 }

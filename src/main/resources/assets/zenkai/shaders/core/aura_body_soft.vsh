@@ -20,6 +20,7 @@ in vec3 Normal;
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
 uniform float GameTime;
+uniform vec4 ZenkaiAuraLook;     // PRUEBA de dirección de arte (2026-10-26, AuraDebug.look*): x = fps a saltos (0 = suave), y = 1 tres bandas duras, z = tope de blanco del borde (0 = el de siempre), w = relleno de la parte alta (solo la llama)
 uniform sampler2D Sampler0; // aura_noise.png
 
 uniform mat4 ZenkaiShellModelMat;
@@ -66,6 +67,9 @@ void main() {
     vec3 p = Position;
     float localY = p.y;
     float t = GameTime * 1200.0; // segundos de juego, ver aura_flame_shell.vsh
+    // Movimiento A SALTOS (prueba de dirección de arte): el tiempo avanza a pocos fotogramas por
+    // segundo, como animación dibujada; 0 = continuo.
+    if (ZenkaiAuraLook.x > 0.0) t = floor(t * ZenkaiAuraLook.x) / ZenkaiAuraLook.x;
 
     float angle = atan(p.z, p.x == 0.0 ? 0.00001 : p.x);
     float lobes = max(ZenkaiShellPeaks, 1.0);
@@ -119,7 +123,14 @@ void main() {
     vec4 viewPos = ModelViewMat * world;
     gl_Position = ProjMat * viewPos;
 
-    vec3 nLocal = normalize(pos + vec3(0.0, 0.00001, 0.0));
+    // Normal REAL de la elipsoide (2026-10-26, mismo fallo medido en la llama con el barrido de
+    // cámara): la radial desde el centro, normalize(pos), apunta hacia arriba en la parte alta y hacia
+    // abajo en la baja; según el cabeceo de la cámara de 3ª persona, el fsh tomaba media aura por cara
+    // trasera (alfa 0.01) y el aura se encogía o se partía. Gradiente de x²/R² + y²/H² (H = semieje de
+    // arriba o de abajo) sobre el punto sin desplazar: las lenguas no cambian el contorno de fresnel.
+    float semiY = p.y < 0.0 ? ZenkaiShellLowerHalf : ZenkaiShellSize.y;
+    vec3 nLocal = normalize(vec3(p.x / max(ZenkaiShellSize.x, 0.001), p.y / max(semiY, 0.001),
+                                 p.z / max(ZenkaiShellSize.z, 0.001)) + vec3(0.0, 0.00001, 0.0));
     vNormal  = normalize(mat3(ModelViewMat) * mat3(ZenkaiShellModelMat) * nLocal);
     vViewDir = -viewPos.xyz;
     vColor   = Color;

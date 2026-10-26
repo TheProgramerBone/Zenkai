@@ -14,8 +14,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Deseo de ser LEGENDARIO (solo Saiyan). Marca {@code isLegendary}, que revela y habilita la línea del Super
- * Saiyan Legendario (ssj_green / ssj_green_max, ver SuperForms.unlocked). Irreversible, como la inmortalidad. La
+ * Deseo de ser LEGENDARIO (todas las razas). Marca {@code isLegendary}, que revela y habilita la línea del Super
+ * Saiyan Legendario (ssj_green / ssj_green_max) o la forma Legendaria de la raza (ver SuperForms.unlocked). Irreversible, como la inmortalidad. La
  * validación es TODA del servidor: la pantalla solo esconde la opción a quien no puede pedirla.
  */
 public record WishLegendaryPayload() implements CustomPacketPayload {
@@ -34,11 +34,19 @@ public record WishLegendaryPayload() implements CustomPacketPayload {
                     return;
                 }
                 PlayerStatsAttachment att = PlayerStatsAttachment.get(player);
-                if (att.getRace() != Race.SAIYAN) {
+                // Cualquier raza con una forma Legendaria puede pedirlo (el Saiyan tiene la cadena de la película).
+                if (att.getRace() != Race.SAIYAN
+                        && com.hmc.zenkai.feature.forms.LegendaryForms.formOf(att.getRace()) == null) {
                     player.displayClientMessage(Component.translatable("messages.zenkai.wish.legendary_saiyan_only"), false);
                     return;
                 }
                 if (att.isLegendary()) return; // ya lo es: no se gasta el deseo
+                // Exclusión mutua con la marca Majin (config): no se concede mientras la lleve.
+                if (ServerConfig.majinLegendaryExclusive()
+                        && com.hmc.zenkai.content.effect.MajinEffect.isActive(player)) {
+                    player.displayClientMessage(Component.translatable("messages.zenkai.wish.legendary_majin_exclusive"), false);
+                    return;
+                }
                 att.setLegendary(true);
                 PlayerLifeCycle.sync(player);
                 player.displayClientMessage(Component.translatable("messages.zenkai.legendary"), false);

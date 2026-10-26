@@ -30,6 +30,9 @@ final class SkillTreeArt {
     static final ResourceLocation ICONS = tex("node_icons.png");
     static final ResourceLocation FRAMES = tex("frames.png");
     static final ResourceLocation HUD = tex("hud.png");
+    /** Retratos de los maestros (tools/gen_master_portraits.py): celdas de 32 en el orden de SkillsTreeScreen.MASTERS. */
+    static final ResourceLocation MASTER_PORTRAITS = tex("master_portraits.png");
+    static final int MASTER_PORTRAITS_W = 128, MASTER_PORTRAITS_H = 32;
 
     static final int ICONS_SIZE = 256;
     static final int FRAMES_W = 384, FRAMES_H = 96;
@@ -178,6 +181,13 @@ final class SkillTreeArt {
             key = "unknown";
         }
         int i = ICON_ORDER.indexOf(key);
+        return i < 0 ? UNKNOWN_ICON : i;
+    }
+
+    /** Celda del icono de una forma por su id; {@link #UNKNOWN_ICON} si no tiene. Misma lista que {@link #iconIndex}. */
+    static int iconIndexOf(@org.jetbrains.annotations.Nullable ResourceLocation form) {
+        if (form == null || !Zenkai.MOD_ID.equals(form.getNamespace())) return UNKNOWN_ICON;
+        int i = ICON_ORDER.indexOf(form.getPath());
         return i < 0 ? UNKNOWN_ICON : i;
     }
 

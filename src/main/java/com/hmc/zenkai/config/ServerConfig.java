@@ -57,6 +57,7 @@ public class ServerConfig {
     // ── Stack wish ─────────────────────────────────────────────────────────────
     public static final ModConfigSpec.ConfigValue<List<? extends String>> STACK_OVERRIDES_RAW;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> BANNED_ITEMS_RAW;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BANNED_RACES_RAW;
     public static final ModConfigSpec.BooleanValue ALLOW_ABOVE_MAX;
     public static final ModConfigSpec.IntValue GLOBAL_HARD_CAP;
 
@@ -103,7 +104,7 @@ public class ServerConfig {
         ENABLE_ENCHANT_VILLAGER = BUILDER.comment("Wish: enchanted villager (sells an enchanted book).").define("enchant_villager", true);
         ENABLE_IMMORTAL         = BUILDER.comment("Wish: immortality.").define("immortal", true);
         ENABLE_TRAINING_POINTS  = BUILDER.comment("Wish: training points (TP).").define("training_points", true);
-        ENABLE_LEGENDARY        = BUILDER.comment("Wish: become Legendary (Saiyan only, unlocks the Legendary Super Saiyan line).").define("legendary", true);
+        ENABLE_LEGENDARY        = BUILDER.comment("Wish: become Legendary (any race: unlocks the Saiyan Legendary line or the race's own Legendary form).").define("legendary", true);
         BUILDER.pop();
 
         BUILDER.push("stack_wish");
@@ -118,6 +119,14 @@ public class ServerConfig {
                          "Items with the tag zenkai:wish_banned (Dragon Balls, the fused seven, the ball stones) are ALWAYS banned too.")
                 .defineListAllowEmpty("banned_items",
                         List.of("minecraft:shulker_box"),
+                        () -> "",
+                        obj -> true);
+        BANNED_RACES_RAW = BUILDER
+                .comment("Races players CANNOT pick in the race menu (names: human, saiyan, namekian, arcosian, majin).",
+                         "Only blocks choosing: characters that already have the race keep it. Majin is banned by default",
+                         "until its art direction is defined (see .claude/pendiente/pendiente-majin.md).")
+                .defineListAllowEmpty("banned_races",
+                        List.of("majin"),
                         () -> "",
                         obj -> true);
         WHITELIST_ITEMS_RAW = BUILDER
@@ -1067,8 +1076,108 @@ public class ServerConfig {
                     .defineInRange("namekian.giant_stat_bonus", 0.60D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue MAJIN_STAT_BONUS_RAW =
-            BUILDER.comment("Stat bonus fraction while under the Majin effect (0.10 = +10%)")
-                    .defineInRange("majin.effect_stat_bonus", 0.10D, 0.0D, 5.0D);
+            BUILDER.comment("Stat bonus fraction while under the Majin effect (0.20 = +20%, 0.15 = +15%). The downside is that the effect pins alignment at -100.")
+                    .defineInRange("majin.effect_stat_bonus", 0.20D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue NAMEK_LEGEND_REGEN_RAW =
+            BUILDER.comment("Namekian God form (namek_god): extra body regeneration per second while it is worn, as a percent of max body (1.0 = 1%/s). It scales from 50% (mastery 0) to 100% (mastery 100) and ignores the in-combat regen penalty: the value is in enduring.")
+                    .defineInRange("namek_god.regen_percent_per_second", 1.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue NAMEK_LEGEND_REGEN_KI_RAW =
+            BUILDER.comment("Namekian God form: ki spent per body point of the extra regeneration (the Namekian passive costs 1.5 per extra point). Almost nothing on purpose.")
+                    .defineInRange("namek_god.regen_ki_per_point", 0.15D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue NAMEK_LEGEND_PASSIVE_COST_RAW =
+            BUILDER.comment("Namekian God form: multiplier on the ki cost of the regular Namekian regeneration passive while the form is worn (0.25 = a quarter of the usual cost).")
+                    .defineInRange("namek_god.passive_ki_cost_mult", 0.25D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue HUMAN_WILL_ALLY_BONUS_RAW =
+            BUILDER.comment("Human God form (human_god, collective will): stat bonus per nearby ally (party member, own pet, master or friendly NPC), as a fraction (0.08 = +8%). With allies around the momentum below does not apply.")
+                    .defineInRange("human_god.bonus_per_ally", 0.08D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue HUMAN_WILL_HIT_BONUS_RAW =
+            BUILDER.comment("Human God form: stat bonus per hit of the current combo chain while ALONE (no ally nearby). The chain breaks when you get hit, so it rewards not being touched (0.04 = +4% per hit).")
+                    .defineInRange("human_god.bonus_per_hit", 0.04D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.DoubleValue HUMAN_WILL_MAX_RAW =
+            BUILDER.comment("Human God form: cap of the collective will bonus, from allies or from momentum (0.40 = +40%).")
+                    .defineInRange("human_god.max_bonus", 0.40D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue HUMAN_WILL_RADIUS_RAW =
+            BUILDER.comment("Human God form: radius in blocks in which allies count.")
+                    .defineInRange("human_god.ally_radius", 24.0D, 1.0D, 128.0D);
+
+    private static final ModConfigSpec.IntValue MAJIN_LEGEND_EXTRA_CAP_RAW =
+            BUILDER.comment("Majin Legendary form (Devouring Majin): extra mass stacks it can hold above majin.mass_cap.")
+                    .defineInRange("majin_legendary.extra_cap", 6, 0, 50);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_DURATION_MULT_RAW =
+            BUILDER.comment("Majin Legendary form: multiplier on how long the mass lasts after the last absorption (the charges decay slowly).")
+                    .defineInRange("majin_legendary.duration_mult", 3.0D, 1.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_STEAL_RAW =
+            BUILDER.comment("Majin Legendary form: each absorption steals this fraction of the target/self power-level ratio as a temporary stat bonus (0.25 = absorbing an equal-PL target gives +25%, before the per-absorption cap).")
+                    .defineInRange("majin_legendary.steal_ratio", 0.25D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_STEAL_MAX_RAW =
+            BUILDER.comment("Majin Legendary form: most stat bonus a single absorption can steal (0.10 = +10%).")
+                    .defineInRange("majin_legendary.steal_per_absorb_max", 0.10D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_STEAL_CAP_RAW =
+            BUILDER.comment("Majin Legendary form: cap of the total stolen stat bonus (0.50 = +50%). It expires with the mass.")
+                    .defineInRange("majin_legendary.steal_cap", 0.50D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue MAJIN_LEGEND_KI_REFUND_RAW =
+            BUILDER.comment("Majin Legendary form: percent of max ki restored by each absorption. It prolongs the form, whose duration is the ki it burns.")
+                    .defineInRange("majin_legendary.ki_refund_percent", 10.0D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_LEGEND_PERCENT_RAW =
+            BUILDER.comment("Arcosian Legendary form (Broken Restraint): FIXED stat percent while it is worn (14.0 = +1400%). It does not grow with TP or mastery; God Ki resonance (legendary.divine_resonance_mult) still multiplies it.")
+                    .defineInRange("arcosian_legendary.stat_percent", 14.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_LEGEND_TENSION_RAW =
+            BUILDER.comment("Arcosian Legendary form: seconds of TENSION once transformed. When it runs out the form collapses (back to Base with ki and stamina at zero) and a long cooldown starts. No continuous ki drain.")
+                    .defineInRange("arcosian_legendary.tension_seconds", 45.0D, 1.0D, 3600.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_LEGEND_TENSION_MASTERY_RAW =
+            BUILDER.comment("Arcosian Legendary form: extra tension from the shared mastery (1.0 = up to x2 of the tension at 100% mastery of the form it starts from).")
+                    .defineInRange("arcosian_legendary.tension_mastery_bonus", 1.0D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_LEGEND_COOLDOWN_RAW =
+            BUILDER.comment("Arcosian Legendary form: cooldown in seconds after a collapse. Leaving on your own earlier gives a cooldown proportional to the tension used.")
+                    .defineInRange("arcosian_legendary.cooldown_seconds", 600.0D, 0.0D, 86400.0D);
+
+    private static final ModConfigSpec.DoubleValue HUMAN_LEGEND_DEFENSE_RAW =
+            BUILDER.comment("Human Legendary form (Reckless): extra damage taken while it is worn, as a fraction (0.25 = takes +25% damage). The price of its power: whoever hits first wins.")
+                    .defineInRange("human_legendary.damage_taken_extra", 0.25D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue NAMEK_LEGEND_LIFESTEAL_RAW =
+            BUILDER.comment("Namekian Legendary form (Ancestors): fraction of the body damage you deal that heals your own body (0.15 = 15%).")
+                    .defineInRange("namek_legendary.lifesteal_percent", 0.15D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.BooleanValue NAMEK_LEGEND_NO_REGEN_RAW =
+            BUILDER.comment("Namekian Legendary form (Ancestors): if true, natural body regeneration (including the Namekian passive) is off while it is worn; healing only comes from fighting.")
+                    .define("namek_legendary.block_natural_regen", true);
+
+    private static final ModConfigSpec.DoubleValue ARC_GOD_PP_CAP_RAW =
+            BUILDER.comment("Arcosian God (divine tank): multiplier on the Power Point tank capacity once the form is UNLOCKED (the tank charges in Base, so it must apply there too). A bigger tank lasts longer because the Power Points are spent in absolute amounts per second.")
+                    .defineInRange("arcosian_god.pp_capacity_mult", 1.5D, 1.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_GOD_PP_DRAIN_RAW =
+            BUILDER.comment("Arcosian God (divine tank): multiplier on how fast the Power Point tank drains while the form is WORN (0.5 = half as fast).")
+                    .defineInRange("arcosian_god.pp_drain_mult", 0.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_GOD_PP_STAT_RAW =
+            BUILDER.comment("Arcosian God (divine tank): multiplier on the stat bonus the Power Point tank grants while the form is WORN.")
+                    .defineInRange("arcosian_god.pp_stat_mult", 1.5D, 0.0D, 20.0D);
+
+    private static final ModConfigSpec.DoubleValue LEGENDARY_STATE_BONUS_RAW =
+            BUILDER.comment("Stat bonus fraction for being Legendary (the Shenlong wish), whatever the race and form worn (0.10 = +10%). It opens more paths, so it is smaller than the Majin bonus.")
+                    .defineInRange("legendary.state_stat_bonus", 0.10D, 0.0D, 5.0D);
+
+    private static final ModConfigSpec.BooleanValue MAJIN_LEGENDARY_EXCLUSIVE_RAW =
+            BUILDER.comment("If true, the Majin effect and being Legendary are mutually exclusive: a Majin cannot make the Legendary wish and a Legendary cannot be put under the Majin effect.")
+                    .define("majin.legendary_mutually_exclusive", true);
 
     // =====================================================================
     // SPEC — Entrenamiento
@@ -1219,12 +1328,24 @@ public class ServerConfig {
     // =====================================================================
 
     private static final ModConfigSpec.DoubleValue ARC_PP_GAIN_RAW =
-            BUILDER.comment("Arcosian Power Points gained per second while in BASE form and power below 50%.")
-                    .defineInRange("arcosian.pp_gain_per_second", 1.0D, 0.0D, 1000.0D);
+            BUILDER.comment("Arcosian Power Points gained per second while in BASE form and power below 50%. Second form charges at half this rate and Third form at a quarter (the lower the form, the faster the tank charges, as in DBC).")
+                    .defineInRange("arcosian.pp_gain_per_second", 4.0D, 0.0D, 1000.0D);
 
     private static final ModConfigSpec.DoubleValue ARC_PP_DRAIN_RAW =
-            BUILDER.comment("Percent of the Power Point tank spent per second while they are being applied (Final Form or higher at 100%+ power).")
-                    .defineInRange("arcosian.pp_drain_percent_per_second", 2.0D, 0.0D, 100.0D);
+            BUILDER.comment("Power Points spent PER SECOND in the Final Form while they are being applied (Final Form or higher with power at 100% OR MORE, overdrive included). Higher forms multiply it (Golden/Black x1.5, 5th x2, Golden/Black 5th x2.75). It is an absolute amount, so a bigger tank lasts longer.")
+                    .defineInRange("arcosian.pp_cost_per_second", 4.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_PP_COMBAT_DEALT_RAW =
+            BUILDER.comment("Second and Third form (restraint forms): Power Points gained per hit you DEAL while your power is below 100%.")
+                    .defineInRange("arcosian.pp_combat_gain_dealt", 2.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_PP_COMBAT_TAKEN_RAW =
+            BUILDER.comment("Second and Third form (restraint forms): Power Points gained per hit you TAKE while your power is below 100%.")
+                    .defineInRange("arcosian.pp_combat_gain_taken", 3.0D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue ARC_GOD_REFILL_RAW =
+            BUILDER.comment("Arcosian God: Power Points refilled per hit you deal, at any power level (the divine tank keeps feeding itself in combat).")
+                    .defineInRange("arcosian_god.pp_refill_per_hit", 2.0D, 0.0D, 1000.0D);
 
     // =====================================================================
     // SPEC — Majin: absorción innata y masa (feature/race/MajinAbsorption)
@@ -1314,6 +1435,10 @@ public class ServerConfig {
             BUILDER.comment("Ultra Instinct heat bar: percent filled per second while in an Ultra Instinct form. At 100% dodging stops (the form is kept) until the bar cools down.")
                     .defineInRange("ultra_instinct.heat_percent_per_second", 2.0D, 0.0D, 100.0D);
 
+    private static final ModConfigSpec.DoubleValue UI_HEAT_PER_DODGE_RAW =
+            BUILDER.comment("Ultra Instinct heat bar: percent of heat added by EVERY dodged hit, on top of the time-based fill. The HUD shows the bar the other way round (full = fresh, empty = about to overheat), so dodging more hits drains it faster.")
+                    .defineInRange("ultra_instinct.heat_per_dodge_percent", 3.0D, 0.0D, 100.0D);
+
     private static final ModConfigSpec.DoubleValue UI_HEAT_SLOW_RAW =
             BUILDER.comment("Fraction of the heat fill rate removed per Ultra Instinct skill level above 1 (0.06 = -6% per level).")
                     .defineInRange("ultra_instinct.heat_slowdown_per_skill_level", 0.06D, 0.0D, 0.1D);
@@ -1364,15 +1489,15 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue UE_DECAY_RAW =
             BUILDER.comment("Ultra Ego damage bar percent lost per second.")
-                    .defineInRange("ultra_ego.charge_decay_per_second", 1.5D, 0.0D, 100.0D);
+                    .defineInRange("ultra_ego.charge_decay_per_second", 1.0D, 0.0D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue UE_STAT_LV5_RAW =
-            BUILDER.comment("Ultra Ego: stat bonus (added, 0.2 = +20%) granted by a FULL damage bar at skill level 5 (the level the transformation unlocks). The bar only acts from level 5.")
-                    .defineInRange("ultra_ego.max_stat_bonus_level5", 0.2D, 0.0D, 10.0D);
+            BUILDER.comment("Ultra Ego: stat bonus (added, 1.0 = +100%) granted by a FULL damage bar at skill level 5 (the level the transformation unlocks). The bar only acts from level 5. It is added to the form's own percent (16-22), so it has to be in whole numbers to matter (it was 0.2, under 2% of the total).")
+                    .defineInRange("ultra_ego.max_stat_bonus_level5", 1.0D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue UE_STAT_LV10_RAW =
             BUILDER.comment("Ultra Ego: stat bonus (added) granted by a FULL damage bar at skill level 10. Levels 6-9 interpolate linearly between the level 5 and level 10 values.")
-                    .defineInRange("ultra_ego.max_stat_bonus_level10", 0.6D, 0.0D, 10.0D);
+                    .defineInRange("ultra_ego.max_stat_bonus_level10", 3.0D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue UE_PEN_RAW =
             BUILDER.comment("Ultra Ego: fraction of the target's defense ignored by PHYSICAL techniques at skill level 10 (0.2 = 20%). Scales linearly from level 1 (1/10 of this value). Applies while the Ultra Ego technique is on or the Ultra Ego form is worn.")
@@ -1381,6 +1506,22 @@ public class ServerConfig {
     private static final ModConfigSpec.DoubleValue BEAST_OD_STAT_RAW =
             BUILDER.comment("Extra stat multiplier bonus (added, 0.5 = +50%) while wearing Beast with power above 100% (overdrive). Stacks with Beast's cheaper overdrive drain.")
                     .defineInRange("beast.overdrive_stat_bonus", 0.5D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue LEGENDARY_OD_STAT_RAW =
+            BUILDER.comment("Extra stat multiplier bonus (added, 0.3 = +30%) while wearing Legendary Full Power (ssj_green_max) with power above 100% (overdrive). Lower than beast.overdrive_stat_bonus on purpose: the Legendary overdrive is cheaper but reaches a lower ceiling.")
+                    .defineInRange("legendary.overdrive_stat_bonus", 0.3D, 0.0D, 10.0D);
+
+    private static final ModConfigSpec.DoubleValue LEGENDARY_GROWTH_RAW =
+            BUILDER.comment("Race Legendary forms (non-Saiyan): stat percent (0-100 mastery scale, 1.5 = +150%) at 5,000 TP spent on attributes. It grows with the square root of the TP spent until legendary.ceiling_percent.")
+                    .defineInRange("legendary.growth_percent_at_5000_tp", 1.5D, 0.0D, 100.0D);
+
+    private static final ModConfigSpec.DoubleValue LEGENDARY_CEILING_RAW =
+            BUILDER.comment("Race Legendary forms (non-Saiyan): ceiling of the stat percent without God Ki (fraction, 12.5 = +1250%). Meant to sit a bit under the race's divine form (16).")
+                    .defineInRange("legendary.ceiling_percent", 12.5D, 0.0D, 1000.0D);
+
+    private static final ModConfigSpec.DoubleValue LEGENDARY_RESONANCE_RAW =
+            BUILDER.comment("Race Legendary forms (non-Saiyan): multiplier on the whole stat percent (growth AND ceiling) when the player has God Ki (divine resonance). 1.45 puts the ceiling above the divine form.")
+                    .defineInRange("legendary.divine_resonance_mult", 1.45D, 1.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue BEAST_MASTERY_REQ_RAW =
             BUILDER.comment("Beast unlock, requirement 1: minimum Mystic mastery (0-100, in percent) the player must have when the fury trigger happens. Requirement 2 is the trigger itself: a tamed pet or a party member dying near the player (see beast.fury_radius).")
@@ -1452,6 +1593,8 @@ public class ServerConfig {
 
     private static volatile Map<ResourceLocation, Integer> STACK_OVERRIDES = Collections.emptyMap();
     private static volatile Set<ResourceLocation> BANNED_ITEMS = Collections.emptySet();
+    /** Nombres en minúscula de BANNED_RACES_RAW; el default del RAW es ["majin"], y este arranque lo iguala. */
+    private static volatile Set<String> BANNED_RACES = Set.of("majin");
     private static volatile Set<ResourceLocation> WHITELIST_ITEMS = Collections.emptySet();
 
     // =====================================================================
@@ -1633,7 +1776,32 @@ public class ServerConfig {
     private static volatile double COMBAT_ATTACK_SPEED = 1.6D;
     private static volatile double OVERCHARGE_TIME_MULT = 2.5D;
     private static volatile double OVERCHARGE_COST_MULT = 1.5D;
-    private static volatile double MAJIN_STAT_BONUS = 0.10D;
+    private static volatile double MAJIN_STAT_BONUS = 0.20D;
+    private static volatile double LEGENDARY_STATE_BONUS = 0.10D;
+    private static volatile double ARC_GOD_PP_CAP = 1.5D;
+    private static volatile double ARC_GOD_PP_DRAIN = 0.5D;
+    private static volatile double ARC_GOD_PP_STAT = 1.5D;
+    private static volatile double HUMAN_LEGEND_DAMAGE_TAKEN = 0.25D;
+    private static volatile double NAMEK_LEGEND_LIFESTEAL = 0.15D;
+    private static volatile boolean NAMEK_LEGEND_NO_REGEN = true;
+    private static volatile double ARC_LEGEND_PERCENT = 14.0D;
+    private static volatile double ARC_LEGEND_TENSION = 45.0D;
+    private static volatile double ARC_LEGEND_TENSION_MASTERY = 1.0D;
+    private static volatile double ARC_LEGEND_COOLDOWN = 600.0D;
+    private static volatile int MAJIN_LEGEND_EXTRA_CAP = 6;
+    private static volatile double MAJIN_LEGEND_DURATION = 3.0D;
+    private static volatile double MAJIN_LEGEND_STEAL = 0.25D;
+    private static volatile double MAJIN_LEGEND_STEAL_MAX = 0.10D;
+    private static volatile double MAJIN_LEGEND_STEAL_CAP = 0.50D;
+    private static volatile double MAJIN_LEGEND_KI_REFUND = 10.0D;
+    private static volatile double HUMAN_WILL_ALLY = 0.08D;
+    private static volatile double HUMAN_WILL_HIT = 0.04D;
+    private static volatile double HUMAN_WILL_MAX = 0.40D;
+    private static volatile double HUMAN_WILL_RADIUS = 24.0D;
+    private static volatile double NAMEK_LEGEND_REGEN = 1.0D;
+    private static volatile double NAMEK_LEGEND_REGEN_KI = 0.15D;
+    private static volatile double NAMEK_LEGEND_PASSIVE_COST = 0.25D;
+    private static volatile boolean MAJIN_LEGENDARY_EXCLUSIVE = true;
     private static volatile double NAMEK_GIANT_STAT = 0.60D;
     private static volatile boolean VANILLA_STATS_FALLBACK = true;
     private static volatile double  VANILLA_TP_REWARD_FACTOR = 0.25D;
@@ -1670,10 +1838,17 @@ public class ServerConfig {
     private static volatile double GODKI_RITUAL_RADIUS = 8.0D;
     private static volatile int GODKI_RITUAL_SECONDS = 10;
     private static volatile double BEAST_OD_STAT = 0.5D;
+    private static volatile double LEGENDARY_OD_STAT = 0.3D;
+    private static volatile double LEGENDARY_GROWTH = 1.5D;
+    private static volatile double LEGENDARY_CEILING = 12.5D;
+    private static volatile double LEGENDARY_RESONANCE = 1.45D;
     private static volatile double BEAST_MASTERY_REQ = 50.0D;
     private static volatile double BEAST_FURY_RADIUS = 32.0D;
-    private static volatile double ARC_PP_GAIN = 1.0D;
-    private static volatile double ARC_PP_DRAIN = 2.0D;
+    private static volatile double ARC_PP_GAIN = 4.0D;
+    private static volatile double ARC_PP_DRAIN = 4.0D;
+    private static volatile double ARC_PP_COMBAT_DEALT = 2.0D;
+    private static volatile double ARC_PP_COMBAT_TAKEN = 3.0D;
+    private static volatile double ARC_GOD_REFILL = 2.0D;
     private static volatile double ARC_PP_STAT = 2.0D;
     private static volatile boolean MAJIN_ABSORB_ENABLED = true;
     private static volatile double MAJIN_ABSORB_DOMINANT_PL_RATIO = 1.5D;
@@ -1695,6 +1870,7 @@ public class ServerConfig {
     private static volatile double FORM_DRAIN_SPI_MAX = 1.5D;
     private static volatile double FORM_DRAIN_FLOOR = 0.25D;
     private static volatile double UI_HEAT_RATE = 2.0D;
+    private static volatile double UI_HEAT_PER_DODGE = 3.0D;
     private static volatile double UI_HEAT_SLOW = 0.06D;
     private static volatile double UI_HEAT_COOL = 4.0D;
     private static volatile double UI_DODGE_COST = 8.0D;
@@ -1707,9 +1883,9 @@ public class ServerConfig {
     private static volatile double UI_MASTERY_HEAT = 0.4D;
     private static volatile double UE_MASTERY_BONUS = 0.5D;
     private static volatile double UE_CHARGE = 2.0D;
-    private static volatile double UE_DECAY = 1.5D;
-    private static volatile double UE_STAT_LV5 = 0.2D;
-    private static volatile double UE_STAT_LV10 = 0.6D;
+    private static volatile double UE_DECAY = 1.0D;
+    private static volatile double UE_STAT_LV5 = 1.0D;
+    private static volatile double UE_STAT_LV10 = 3.0D;
     private static volatile double UE_PEN = 0.2D;
 
 
@@ -1890,6 +2066,31 @@ public class ServerConfig {
         M_TECH_COST      = MASTERY_TECH_COST_RAW.get();
         M_TECH_CAST      = MASTERY_TECH_CAST_RAW.get();
         MAJIN_STAT_BONUS = MAJIN_STAT_BONUS_RAW.get();
+        LEGENDARY_STATE_BONUS = LEGENDARY_STATE_BONUS_RAW.get();
+        ARC_GOD_PP_CAP = ARC_GOD_PP_CAP_RAW.get();
+        ARC_GOD_PP_DRAIN = ARC_GOD_PP_DRAIN_RAW.get();
+        ARC_GOD_PP_STAT = ARC_GOD_PP_STAT_RAW.get();
+        HUMAN_LEGEND_DAMAGE_TAKEN = HUMAN_LEGEND_DEFENSE_RAW.get();
+        NAMEK_LEGEND_LIFESTEAL = NAMEK_LEGEND_LIFESTEAL_RAW.get();
+        NAMEK_LEGEND_NO_REGEN = NAMEK_LEGEND_NO_REGEN_RAW.get();
+        ARC_LEGEND_PERCENT = ARC_LEGEND_PERCENT_RAW.get();
+        ARC_LEGEND_TENSION = ARC_LEGEND_TENSION_RAW.get();
+        ARC_LEGEND_TENSION_MASTERY = ARC_LEGEND_TENSION_MASTERY_RAW.get();
+        ARC_LEGEND_COOLDOWN = ARC_LEGEND_COOLDOWN_RAW.get();
+        MAJIN_LEGEND_EXTRA_CAP = MAJIN_LEGEND_EXTRA_CAP_RAW.get();
+        MAJIN_LEGEND_DURATION = MAJIN_LEGEND_DURATION_MULT_RAW.get();
+        MAJIN_LEGEND_STEAL = MAJIN_LEGEND_STEAL_RAW.get();
+        MAJIN_LEGEND_STEAL_MAX = MAJIN_LEGEND_STEAL_MAX_RAW.get();
+        MAJIN_LEGEND_STEAL_CAP = MAJIN_LEGEND_STEAL_CAP_RAW.get();
+        MAJIN_LEGEND_KI_REFUND = MAJIN_LEGEND_KI_REFUND_RAW.get();
+        HUMAN_WILL_ALLY = HUMAN_WILL_ALLY_BONUS_RAW.get();
+        HUMAN_WILL_HIT = HUMAN_WILL_HIT_BONUS_RAW.get();
+        HUMAN_WILL_MAX = HUMAN_WILL_MAX_RAW.get();
+        HUMAN_WILL_RADIUS = HUMAN_WILL_RADIUS_RAW.get();
+        NAMEK_LEGEND_REGEN = NAMEK_LEGEND_REGEN_RAW.get();
+        NAMEK_LEGEND_REGEN_KI = NAMEK_LEGEND_REGEN_KI_RAW.get();
+        NAMEK_LEGEND_PASSIVE_COST = NAMEK_LEGEND_PASSIVE_COST_RAW.get();
+        MAJIN_LEGENDARY_EXCLUSIVE = MAJIN_LEGENDARY_EXCLUSIVE_RAW.get();
         NAMEK_GIANT_STAT = NAMEK_GIANT_STAT_RAW.get();
 
         TRAIN_DMG_TP    = TRAIN_DMG_TP_RAW.get();
@@ -1927,10 +2128,17 @@ public class ServerConfig {
         GODKI_RITUAL_RADIUS = GODKI_RITUAL_RADIUS_RAW.get();
         GODKI_RITUAL_SECONDS = GODKI_RITUAL_SECONDS_RAW.get();
         BEAST_OD_STAT = BEAST_OD_STAT_RAW.get();
+        LEGENDARY_OD_STAT = LEGENDARY_OD_STAT_RAW.get();
+        LEGENDARY_GROWTH = LEGENDARY_GROWTH_RAW.get();
+        LEGENDARY_CEILING = LEGENDARY_CEILING_RAW.get();
+        LEGENDARY_RESONANCE = LEGENDARY_RESONANCE_RAW.get();
         BEAST_MASTERY_REQ = BEAST_MASTERY_REQ_RAW.get();
         BEAST_FURY_RADIUS = BEAST_FURY_RADIUS_RAW.get();
         ARC_PP_GAIN = ARC_PP_GAIN_RAW.get();
         ARC_PP_DRAIN = ARC_PP_DRAIN_RAW.get();
+        ARC_PP_COMBAT_DEALT = ARC_PP_COMBAT_DEALT_RAW.get();
+        ARC_PP_COMBAT_TAKEN = ARC_PP_COMBAT_TAKEN_RAW.get();
+        ARC_GOD_REFILL = ARC_GOD_REFILL_RAW.get();
         ARC_PP_STAT = ARC_PP_STAT_RAW.get();
         MAJIN_ABSORB_ENABLED = MAJIN_ABSORB_ENABLED_RAW.get();
         MAJIN_ABSORB_MAX_HEALTH_PCT = MAJIN_ABSORB_MAX_HEALTH_PCT_RAW.get();
@@ -1952,6 +2160,7 @@ public class ServerConfig {
         FORM_DRAIN_SPI_MAX = FORM_DRAIN_SPI_MAX_RAW.get();
         FORM_DRAIN_FLOOR = FORM_DRAIN_FLOOR_RAW.get();
         UI_HEAT_RATE = UI_HEAT_RATE_RAW.get();
+        UI_HEAT_PER_DODGE = UI_HEAT_PER_DODGE_RAW.get();
         UI_HEAT_SLOW = UI_HEAT_SLOW_RAW.get();
         UI_HEAT_COOL = UI_HEAT_COOL_RAW.get();
         UI_DODGE_COST = UI_DODGE_COST_RAW.get();
@@ -2022,6 +2231,10 @@ public class ServerConfig {
         }
         BANNED_ITEMS = Collections.unmodifiableSet(parsedBanned);
 
+        Set<String> parsedRaces = new HashSet<>();
+        for (String r : BANNED_RACES_RAW.get()) parsedRaces.add(r.trim().toLowerCase(java.util.Locale.ROOT));
+        BANNED_RACES = Collections.unmodifiableSet(parsedRaces);
+
         Set<ResourceLocation> parsedWhitelist = new HashSet<>();
         for (String rawId : WHITELIST_ITEMS_RAW.get()) {
             try {
@@ -2035,6 +2248,11 @@ public class ServerConfig {
 
     public static Map<ResourceLocation, Integer> getStackOverrides() {
         return STACK_OVERRIDES;
+    }
+
+    /** ¿Está vetada esta raza en el menú de razas? (solo impide ELEGIRLA; ver banned_races) */
+    public static boolean isRaceBanned(com.hmc.zenkai.feature.Race race) {
+        return race != null && BANNED_RACES.contains(race.name().toLowerCase(java.util.Locale.ROOT));
     }
 
     public static boolean isBanned(ResourceLocation id) {
@@ -2278,6 +2496,31 @@ public class ServerConfig {
     public static double masteryTechCostReduction()  { return M_TECH_COST; }
     public static double masteryTechCastReduction()  { return M_TECH_CAST; }
     public static double majinStatBonus()            { return MAJIN_STAT_BONUS; }
+    public static double legendaryStateStatBonus()   { return LEGENDARY_STATE_BONUS; }
+    public static double arcosianGodPpCapacityMult() { return ARC_GOD_PP_CAP; }
+    public static double arcosianGodPpDrainMult()    { return ARC_GOD_PP_DRAIN; }
+    public static double arcosianGodPpStatMult()     { return ARC_GOD_PP_STAT; }
+    public static double humanLegendDamageTakenExtra() { return HUMAN_LEGEND_DAMAGE_TAKEN; }
+    public static double namekLegendLifesteal()      { return NAMEK_LEGEND_LIFESTEAL; }
+    public static boolean namekLegendBlockRegen()    { return NAMEK_LEGEND_NO_REGEN; }
+    public static double arcosianLegendPercent()     { return ARC_LEGEND_PERCENT; }
+    public static double arcosianLegendTensionSeconds() { return ARC_LEGEND_TENSION; }
+    public static double arcosianLegendTensionMasteryBonus() { return ARC_LEGEND_TENSION_MASTERY; }
+    public static double arcosianLegendCooldownSeconds() { return ARC_LEGEND_COOLDOWN; }
+    public static int majinLegendExtraCap()          { return MAJIN_LEGEND_EXTRA_CAP; }
+    public static double majinLegendDurationMult()   { return MAJIN_LEGEND_DURATION; }
+    public static double majinLegendStealRatio()     { return MAJIN_LEGEND_STEAL; }
+    public static double majinLegendStealPerAbsorbMax() { return MAJIN_LEGEND_STEAL_MAX; }
+    public static double majinLegendStealCap()       { return MAJIN_LEGEND_STEAL_CAP; }
+    public static double majinLegendKiRefundPct()    { return MAJIN_LEGEND_KI_REFUND; }
+    public static double humanWillBonusPerAlly()     { return HUMAN_WILL_ALLY; }
+    public static double humanWillBonusPerHit()      { return HUMAN_WILL_HIT; }
+    public static double humanWillMaxBonus()         { return HUMAN_WILL_MAX; }
+    public static double humanWillAllyRadius()       { return HUMAN_WILL_RADIUS; }
+    public static double namekLegendRegenPercent()   { return NAMEK_LEGEND_REGEN; }
+    public static double namekLegendRegenKiPerPoint() { return NAMEK_LEGEND_REGEN_KI; }
+    public static double namekLegendPassiveCostMult() { return NAMEK_LEGEND_PASSIVE_COST; }
+    public static boolean majinLegendaryExclusive()  { return MAJIN_LEGENDARY_EXCLUSIVE; }
     public static double namekGiantStatBonus()       { return NAMEK_GIANT_STAT; }
     public static double potentialUnlockTpMult()     { return PU_TP_MULT; }
     public static int    potentialUnlockAlignmentReq() { return PU_ALIGNMENT_REQ; }
@@ -2289,10 +2532,17 @@ public class ServerConfig {
     public static double godKiRitualRadius() { return GODKI_RITUAL_RADIUS; }
     public static int godKiRitualSeconds() { return GODKI_RITUAL_SECONDS; }
     public static double beastOverdriveStatBonus() { return BEAST_OD_STAT; }
+    public static double legendaryOverdriveStatBonus() { return LEGENDARY_OD_STAT; }
+    public static double legendaryGrowthPercent() { return LEGENDARY_GROWTH; }
+    public static double legendaryCeilingPercent() { return LEGENDARY_CEILING; }
+    public static double legendaryResonanceMult() { return LEGENDARY_RESONANCE; }
     public static double beastUnlockMysticMastery() { return BEAST_MASTERY_REQ; }
     public static double beastFuryRadius() { return BEAST_FURY_RADIUS; }
     public static double arcPpGain() { return ARC_PP_GAIN; }
     public static double arcPpDrain() { return ARC_PP_DRAIN; }
+    public static double arcPpCombatDealt() { return ARC_PP_COMBAT_DEALT; }
+    public static double arcPpCombatTaken() { return ARC_PP_COMBAT_TAKEN; }
+    public static double arcosianGodPpRefillPerHit() { return ARC_GOD_REFILL; }
     public static double arcPpStat() { return ARC_PP_STAT; }
     public static boolean majinAbsorbEnabled() { return MAJIN_ABSORB_ENABLED; }
     public static double majinAbsorbDominantPlRatio() { return MAJIN_ABSORB_DOMINANT_PL_RATIO; }
@@ -2314,6 +2564,7 @@ public class ServerConfig {
     public static double formDrainSpiMax() { return FORM_DRAIN_SPI_MAX; }
     public static double formDrainFloor() { return FORM_DRAIN_FLOOR; }
     public static double uiHeatRate() { return UI_HEAT_RATE; }
+    public static double uiHeatPerDodge() { return UI_HEAT_PER_DODGE; }
     public static double uiHeatSlow() { return UI_HEAT_SLOW; }
     public static double uiHeatCool() { return UI_HEAT_COOL; }
     public static double uiDodgeCost() { return UI_DODGE_COST; }

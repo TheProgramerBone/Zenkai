@@ -54,9 +54,12 @@ public final class AuraStyleManager extends SimpleJsonResourceReloadListener {
 
     private static final Gson GSON = new Gson();
     private static final Set<String> TOP_KEYS = Set.of("family", "body", "body_set", "inner", "components",
-            "extra_components", "ground", "transform", "trail", "_comment");
+            "extra_components", "ground", "transform", "trail", "_comment", "silhouette");
 
     private static volatile Map<String, AuraStyle> styles = Map.of();
+    /** Contorno de llama sobre la silueta por aura_type (bloque "silhouette"); aparte del record
+     *  AuraStyle porque su equals decide cuándo se reconstruyen los componentes. */
+    private static volatile Map<String, com.hmc.zenkai.client.aura.silhouette.SilhouetteFlameSpec> silhouettes = Map.of();
 
     public static final AuraStyleManager INSTANCE = new AuraStyleManager();
 
@@ -76,6 +79,11 @@ public final class AuraStyleManager extends SimpleJsonResourceReloadListener {
 
     public static Set<String> loadedTypes() { return styles.keySet(); }
 
+    /** Contorno de llama de la silueta de un aura_type, o null si su estilo no lo lleva. */
+    public static @Nullable com.hmc.zenkai.client.aura.silhouette.SilhouetteFlameSpec silhouette(@Nullable String auraType) {
+        return auraType == null ? null : silhouettes.get(auraType);
+    }
+
     /** Relectura síncrona solo de los estilos, para {@code /zenkaiaura reload} (F3+T relee los recursos enteros). */
     public void reloadNow(ResourceManager rm, ProfilerFiller profiler) {
         apply(prepare(rm, profiler), rm, profiler);
@@ -84,15 +92,21 @@ public final class AuraStyleManager extends SimpleJsonResourceReloadListener {
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> files, ResourceManager rm, ProfilerFiller profiler) {
         Map<String, AuraStyle> out = new HashMap<>();
+        Map<String, com.hmc.zenkai.client.aura.silhouette.SilhouetteFlameSpec> sil = new HashMap<>();
         for (Map.Entry<ResourceLocation, JsonElement> e : files.entrySet()) {
             String type = e.getKey().getPath();
             try {
-                out.put(type, parse(type, e.getValue().getAsJsonObject()));
+                JsonObject o = e.getValue().getAsJsonObject();
+                out.put(type, parse(type, o));
+                if (o.has("silhouette")) {
+                    sil.put(type, com.hmc.zenkai.client.aura.silhouette.SilhouetteFlameSpec.parse(type, o.getAsJsonObject("silhouette")));
+                }
             } catch (RuntimeException ex) {
                 Zenkai.LOGGER.error("[Zenkai] Estilo de aura {} ignorado: {}", e.getKey(), ex.getMessage());
             }
         }
         styles = Map.copyOf(out);
+        silhouettes = Map.copyOf(sil);
         Zenkai.LOGGER.info("[Zenkai] Estilos de aura cargados: {}", out.keySet());
     }
 

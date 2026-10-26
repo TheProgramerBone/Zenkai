@@ -1,0 +1,6 @@
+{
+  "races": ["majin"],
+  "sort": 10,
+  "default": true,
+  "bones": ["majin_antenna_1"]
+}

@@ -1,0 +1,11 @@
+{
+  "vertex": "zenkai:ki_bloom_blur",
+  "fragment": "zenkai:aura_silhouette_field",
+  "attributes": [ "Position", "UV0" ],
+  "samplers": [ { "name": "Sampler0" } ],
+  "uniforms": [
+    { "name": "MaskTexel", "type": "float", "count": 2, "values": [ 0.0, 0.0 ] },
+    { "name": "Footprint", "type": "float", "count": 1, "values": [ 8.0 ] },
+    { "name": "Id",        "type": "float", "count": 1, "values": [ 0.125 ] }
+  ]
+}

@@ -74,6 +74,9 @@ public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, Pla
         // (si lo hay), no la pieza racial virtual que estamos a punto de meter en su lugar.
         // GeoLayerArmorModel.setCustomAnimations lo lee para ocultar cuernos/antenas/cresta.
         GeoLayerArmorModel.wearerHasRealHeadwear = !oldHead.isEmpty();
+        GeoLayerArmorModel.wearerBodyOptions = com.hmc.zenkai.feature.race.body.BodyCatalog.resolveAll(
+                com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(player).getRace(),
+                com.hmc.zenkai.feature.player.PlayerVisualAttachment.get(player).getBodyOptions());
 
         inv.armor.set(3, head);
         inv.armor.set(2, chest);

@@ -90,7 +90,7 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
             // que no esté en la cadena de super_forms) las dejarían pasar aunque la rueda del
             // cliente nunca las enseñe.
             if (!def.wheelSelectable()) return false;
-            if (!SuperForms.unlocked(sp, target)) return false;
+            if (!SuperForms.usable(sp, target)) return false;
         }
         if (target.equals(fm.getSelectedForm())) return false;
 

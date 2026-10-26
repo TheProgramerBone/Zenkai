@@ -34,6 +34,13 @@ public final class FormSystem {
         var form = c.form();
         // Antes del multiplicador: si el techo llega tarde, el tick entero usa el de ayer.
         form.refreshPotentialCeiling(p);
+        com.hmc.zenkai.feature.forms.ArcosianContainment.tick(p, att, form);
+        // Bono de Voluntad colectiva para la HUD: se re-sincroniza solo cuando cambia el porcentaje mostrado.
+        double will = com.hmc.zenkai.feature.forms.HumanWill.bonus(p);
+        if (Math.round(will * 100.0) != Math.round(form.getWillBonus() * 100.0)) {
+            form.setWillBonus(will);
+            PlayerLifeCycle.syncFormIfServer(p);
+        }
 
         // Nivel 1 de super_forms: REGALADO. Es el estado base, así que el jugador SIEMPRE tiene
         // la habilidad y solo compra del 2 en adelante. grant() sube el suelo otorgado -> el
@@ -101,7 +108,7 @@ public final class FormSystem {
             // Forma inválida para esta raza, o desaparecida del datapack tras un /reload:
             // se vuelve a base. Antes solo se saltaba el drenaje, así que el jugador se
             // quedaba transformado GRATIS.
-            if (def == null || !def.allows(att.getRace()) || !SuperForms.unlocked(p, currentFormId) || !PotentialUnlock.canRemain(p, currentFormId)) {
+            if (def == null || !def.allows(att.getRace()) || !SuperForms.usable(p, currentFormId) || !PotentialUnlock.canRemain(p, currentFormId)) {
                 // Antes de forzar Base del todo: si lo único que cambió es que dejó de ser la
                 // hermana divina que le corresponde (isDivine se volteó mientras la llevaba
                 // puesta — ver DivineForms), pasar a la hermana correcta en vez de desvestirlo.

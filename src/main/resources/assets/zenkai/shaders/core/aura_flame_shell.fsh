@@ -27,9 +27,12 @@ in vec3 vViewDir;
 in float vPeak;
 in float vLocalY;
 in vec3 vUnit;
+in vec3 vUpView;
 
 uniform vec4 ColorModulator;
 uniform float GameTime;
+uniform vec2 ZenkaiShellTear;      // x = lágrima (en el vsh), y = relleno de la parte alta (0..1)
+uniform vec4 ZenkaiAuraLook;     // PRUEBA de dirección de arte (2026-10-26, AuraDebug.look*): x = fps a saltos (0 = suave), y = 1 tres bandas duras, z = tope de blanco del borde (0 = el de siempre), w = relleno de la parte alta (0 = solo fresnel)
 uniform sampler2D Sampler0;         // aura_noise.png (canal G: rayas verticales)
 uniform float ZenkaiShellSpeed;
 uniform float ZenkaiShellStreak;    // 0 = superficie lisa, 1 = rayas muy marcadas
@@ -57,7 +60,34 @@ vec3 lift(vec3 c, float k) {
 
 // Borde: el tono aclarado con un toque de blanco. El blanco es un acento, nunca el relleno.
 vec3 rimColor(vec3 c) {
-    return mix(lift(c, 1.6), vec3(1.0), 0.3);
+    return mix(lift(c, 1.6), vec3(1.0), ZenkaiAuraLook.z > 0.0 ? ZenkaiAuraLook.z : 0.3);
+}
+
+// TOPE DE BLANCO (prueba de dirección de arte 2026-10-26, ZenkaiAuraLook.z): el borde se aclara con
+// como mucho z de blanco en vez de 0.3, y ningún color pierde más de un cuarto de la saturación del
+// tinte. Ataca el "Base casi blanca": idea vista en DMZ 2.2 (aura_color.glsl), escrita aparte.
+float satOf(vec3 c) {
+    float hi = max(max(c.r, c.g), c.b);
+    return hi > 0.0001 ? (hi - min(min(c.r, c.g), c.b)) / hi : 0.0;
+}
+
+vec3 keepSat(vec3 c, vec3 base) {
+    if (ZenkaiAuraLook.z <= 0.0) return c;
+    float want = satOf(base) * 0.75;
+    float s = satOf(c);
+    if (s >= want) return c;
+    float hi = max(max(c.r, c.g), c.b);
+    // Gris: se empuja hacia el tono del tinte; si no, se estira la distancia al gris.
+    if (s < 0.001) return mix(vec3(hi), base / max(max(max(base.r, base.g), base.b), 0.001) * hi, 0.75);
+    return vec3(hi) - (vec3(hi) - c) * (want / s);
+}
+
+// Relleno de la parte alta, solo con la cámara a los lados (2026-10-26, barrido de cámara): visto
+// desde ARRIBA, la punta densa se proyecta sobre el jugador como una columna que lo tapa. Las
+// referencias son siempre vistas laterales: el relleno se apaga al subir la cámara.
+float topFill(vec3 V) {
+    float above = dot(V, normalize(vUpView)); // > 0 = cámara por encima del aura
+    return max(ZenkaiShellTear.y, ZenkaiAuraLook.w) * (1.0 - smoothstep(0.25, 0.65, above));
 }
 
 void main() {
@@ -83,6 +113,9 @@ void main() {
     // rápido que las lenguas — las estrías que recorren la llama en aura_3. UV calculada aquí por
     // píxel desde el punto de la esfera (ver vUnit en el vsh); U x3, entero, sin costura en atan.
     float t = GameTime * 1200.0;
+    // Movimiento A SALTOS (prueba de dirección de arte): el tiempo avanza a pocos fotogramas por
+    // segundo, como animación dibujada; 0 = continuo.
+    if (ZenkaiAuraLook.x > 0.0) t = floor(t * ZenkaiAuraLook.x) / ZenkaiAuraLook.x;
     float ang = atan(vUnit.z, vUnit.x);
     vec2 streakUV = vec2(ang / 6.28318530718 * 3.0, vUnit.y * 0.6 - t * ZenkaiShellSpeed * 1.6);
     float streak = texture(Sampler0, streakUV).g;
@@ -104,12 +137,18 @@ void main() {
         // y en el anime la base no tiene contorno: se abre y se funde. Hacia abajo, la intensidad
         // baja (ZenkaiShellCelShape.y) y el contorno cae a bandas más tenues.
         i *= mix(ZenkaiShellCelShape.y, 1.0, smoothstep(-0.7, -0.1, vLocalY));
+        // RELLENO DE ARRIBA (prueba contra aura_4/aura_11, 2026-10-26): en las referencias la parte
+        // alta de la llama es la más densa y la que brilla; con solo fresnel, la punta estrecha vista
+        // de frente quedaba transparente y el aura se leía como una cápsula hasta la cabeza.
+        i = max(i, topFill(V) * smoothstep(0.0, 0.7, vLocalY));
         vec3 tint = ZenkaiShellOuterColor.rgb;
         if (i >= ZenkaiShellCel.y) {
             color = rimColor(tint);
             alpha = ZenkaiShellAlpha.y;
             emitBlend = 1.0;
-        } else if (i >= ZenkaiShellCel.z) {
+        } else if (i >= ZenkaiShellCel.z && ZenkaiAuraLook.y < 0.5) {
+            // (Con ZenkaiAuraLook.y = 1, prueba de "3 bandas + borde", esta banda clara se
+            // salta y cae al cuerpo: borde, cuerpo y núcleo.)
             color = lift(tint, 1.3);
             alpha = ZenkaiShellAlpha.y * 0.8;
             emitBlend = 0.5;
@@ -128,20 +167,34 @@ void main() {
         // Brillo y opacidad modulados por la raya: nunca oscurece por debajo del 80% (un aura
         // oscurecida se lee sucia, lección de aura.md §2).
         color *= mix(1.0, mix(0.8, 1.15, streak), streakMix);
+        alphaBlend = max(alphaBlend, topFill(V) * smoothstep(0.0, 0.7, vLocalY));
         alpha = mix(ZenkaiShellAlpha.x, ZenkaiShellAlpha.y, alphaBlend) * vColor.a;
         alpha *= mix(1.0, mix(0.55, 1.2, streak), streakMix);
     }
+    color = keepSat(color, ZenkaiShellOuterColor.rgb);
     // La base se funde en vez de cortarse contra el suelo. Banda subida (antes -1.0..-0.55): el
     // casquete inferior de la elipsoide asomaba sobre el suelo como un "cuenco" con el borde
     // encendido por el fresnel (visto en juego); en las referencias las lenguas NACEN del suelo.
     // Banda configurable desde el 2026-09-30 (ZenkaiShellBaseFade): con la base bajada bajo los
     // pies, la llama se lee entera hasta el suelo y solo se funde el último tramo.
     alpha *= smoothstep(ZenkaiShellBaseFade.x, ZenkaiShellBaseFade.y, vLocalY);
+    // Cámara por ENCIMA (barrido de cámara 2026-10-26): la llama alta queda entre la cámara y el
+    // jugador y lo tapaba con una columna brillante (los flancos, de canto, se encienden como borde).
+    // La parte de encima de la cabeza se aclara al subir la cámara; de lado no cambia nada.
+    if (ZenkaiShellTear.x > 0.0 && ZenkaiOrtho < 1.5) {
+        float above = smoothstep(0.25, 0.65, dot(V, normalize(vUpView)));
+        alpha *= 1.0 - 0.7 * above * smoothstep(0.1, 0.5, vLocalY);
+    }
     // Cara trasera casi invisible (mecanismo real de dbrebirth: finalAlpha = 0.01).
     // ZenkaiOrtho = 2: la cámara está DENTRO del aura (primera persona propia) y solo ve caras
     // traseras; sin esto el aura propia no se vería nunca en primera persona.
     if (facingRaw < 0.0 && ZenkaiOrtho < 1.5) alpha = min(alpha, 0.01);
 
+    // Fundido CERCA de la cámara (barrido de cámara 2026-10-26): con la cámara de 3ª persona pegada al
+    // jugador por el suelo o una pared, la pared del aura quedaba a centímetros del objetivo y cruzaba
+    // la pantalla como un arco brillante. Lo que está a menos de ~1 bloque de la cámara se desvanece.
+    // No en 1ª persona ni en la GUI (ZenkaiOrtho != 0): allí la cámara está dentro a propósito.
+    if (ZenkaiOrtho < 0.5) alpha *= smoothstep(0.6, 1.6, length(vViewDir));
     if (ZenkaiBloomMode > 0.5) {
         alpha *= ZenkaiShellBloom.x * mix(ZenkaiShellBloom.y, 1.0, emitBlend);
     }

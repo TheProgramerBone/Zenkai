@@ -1,0 +1,9 @@
+{
+  "vertex": "zenkai:ki_bloom_blur",
+  "fragment": "zenkai:aura_silhouette_mark",
+  "attributes": [ "Position", "UV0" ],
+  "samplers": [ { "name": "Sampler0" }, { "name": "Sampler1" } ],
+  "uniforms": [
+    { "name": "Id", "type": "float", "count": 1, "values": [ 0.125 ] }
+  ]
+}

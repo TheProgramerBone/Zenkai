@@ -29,6 +29,7 @@ in vec3 Normal;
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
 uniform float GameTime;
+uniform vec4 ZenkaiAuraLook;     // PRUEBA de dirección de arte (2026-10-26, AuraDebug.look*): x = fps a saltos (0 = suave), y = 1 tres bandas duras, z = tope de blanco del borde (0 = el de siempre), w = relleno de la parte alta (solo la llama)
 uniform sampler2D Sampler0;
 
 uniform mat4 ZenkaiShellModelMat;   // pose del stage (sin traslación al jugador: los segmentos ya son relativos a la cámara)
@@ -64,6 +65,9 @@ void main() {
     else if (seg == 5) { A = ZenkaiSeg5A; B = ZenkaiSeg5B; L = ZenkaiSeg5X; }
 
     float t = GameTime * 1200.0;
+    // Movimiento A SALTOS (prueba de dirección de arte): el tiempo avanza a pocos fotogramas por
+    // segundo, como animación dibujada; 0 = continuo.
+    if (ZenkaiAuraLook.x > 0.0) t = floor(t * ZenkaiAuraLook.x) / ZenkaiAuraLook.x;
     vec3 axis = B.xyz - A.xyz;
     float len = max(length(axis), 0.0001);
     vec3 Y = axis / len;

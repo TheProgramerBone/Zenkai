@@ -826,7 +826,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
-                            "textures/models/races/majin/majin_player_layer_0.png",
+                            "textures/models/races/majin/majin_player_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -835,7 +835,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
-                            "textures/models/races/majin/majin_player_layer_0.png",
+                            "textures/models/races/majin/majin_player_colorable.png",
                             // "" hasta que exista animations/majin.animation.json: con una ruta
                             // no vacía apuntando a un archivo ausente, GeckoLib lanza al
                             // intentar cargar el controlador de animación — el mismo tipo de
@@ -849,7 +849,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
-                            "textures/models/races/majin/majin_player_layer_0.png",
+                            "textures/models/races/majin/majin_player_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -858,7 +858,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/majin_player.geo.json",
-                            "textures/models/races/majin/majin_player_layer_0.png",
+                            "textures/models/races/majin/majin_player_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -867,7 +867,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.HELMET,
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
-                            "textures/models/races/majin/majin_player_female_layer_0.png",
+                            "textures/models/races/majin/majin_player_female_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -876,7 +876,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE,
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
-                            "textures/models/races/majin/majin_player_female_layer_0.png",
+                            "textures/models/races/majin/majin_player_female_colorable.png",
                             "" // ver el comentario en MAJIN_RACE_CHESTPLATE
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -885,7 +885,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.LEGGINGS,
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
-                            "textures/models/races/majin/majin_player_female_layer_0.png",
+                            "textures/models/races/majin/majin_player_female_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 
@@ -894,7 +894,7 @@ public class ModItems {
                     new GeoLayerArmorItem(ModArmorMaterials.RACE_ARMOR_MATERIAL, ArmorItem.Type.BOOTS,
                             new Item.Properties(),
                             "geo/races/majin_player_female.geo.json",
-                            "textures/models/races/majin/majin_player_female_layer_0.png",
+                            "textures/models/races/majin/majin_player_female_colorable.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint());
 

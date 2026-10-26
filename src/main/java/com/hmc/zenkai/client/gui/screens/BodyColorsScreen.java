@@ -15,6 +15,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.Minecraft;
 import com.hmc.zenkai.client.gui.PanelText;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -140,12 +141,25 @@ public class BodyColorsScreen extends Screen {
     private int genderIconX, genderIconY;
 
     private static final int COLOR_SWATCH = ZenkaiPalette.LABEL_ON_PANEL;
+    private static final int COLOR_TITLE = ZenkaiPalette.LABEL_ON_PANEL;
+    private static final int COLOR_VALUE = ZenkaiPalette.VALUE_ON_PANEL;
+    private static final int COLOR_MUTED = ZenkaiPalette.MUTED_ON_PANEL;
 
     /**
      * El primero es EXACTAMENTE el tono principal del arte humano (F9C9AE, la "ref" de las capas
      * human_player_layer_N): elegido, el cuerpo teñible se ve igual que con "Default" (2026-10-12).
      */
     private static final int[] SKIN_TONES = { 0xF9C9AE, 0xEAB58E, 0xD5A07A, 0xC68642, 0x8D5524, 0x5C3A21 };
+
+    /**
+     * Paleta propia del Majin (2026-10-25): antes compartía la rejilla de tonos humanos, que no
+     * tiene sentido en una raza rosa. El primero es el tono por defecto de la raza
+     * (PlayerVisualAttachment.defaultSkinColorFor) y los demás salen del rango del arte de
+     * las capas majin_player_layer_0: de pastel a fucsia, más un lavanda y un rosa rojizo (antes un durazno que se parecía a la piel humana).
+     */
+    private static final int[] MAJIN_SKIN_TONES = { 0xF2A0C4, 0xF7B8D2, 0xE58BB5, 0xD06A9A, 0xC9A0E0, 0xE0607E };
+
+    private static int[] skinTonesFor(Race r) { return r == Race.MAJIN ? MAJIN_SKIN_TONES : SKIN_TONES; }
 
     private final AppearanceScreen hub;
     private final CompoundTag statsSnapshot;
@@ -158,6 +172,40 @@ public class BodyColorsScreen extends Screen {
     private int skinColor = 0xFFD5A07A;
     private boolean customSkinColor = false;
     private boolean genderFemale = false;
+
+    /**
+     * Pestañas del cuerpo, mismo patrón que HeadAppearanceScreen: solo salen las que la raza usa
+     * (visibleTabs) y la barra no se dibuja si hay una sola. SKIN y BODY mantienen el cuerpo
+     * TEÑIBLE (colorable + capas de piel) de Humano/Saiyan/Majin: aquí solo se reparte la UI.
+     */
+    private enum Tab {
+        SKIN, COLORS, BODY, HEAD;
+        String key() { return "screen.zenkai.body.tab." + name().toLowerCase(java.util.Locale.ROOT); }
+    }
+    private static Tab lastTab = Tab.SKIN;
+    private Tab tab = Tab.SKIN;
+    private static final int TAB_Y = CONTENT_Y0, TAB_H = 12, TAB_GAP_BELOW = 8;
+    /** Alto que la barra de pestañas quita a la zona de contenido (0 si la raza solo tiene una pestaña). */
+    private int tabBarH = 0;
+
+    private java.util.List<Tab> visibleTabs() {
+        java.util.List<Tab> out = new java.util.ArrayList<>(switch (race) {
+            case HUMAN, SAIYAN, MAJIN -> java.util.List.of(Tab.SKIN, Tab.BODY);
+            default -> java.util.List.of(Tab.COLORS); // Namek/Arcosiano: una fila de color por capa
+        });
+        // Universal: cualquier raza con opciones de «head» en el catálogo (zenkai_body_options) gana la pestaña.
+        if (!com.hmc.zenkai.feature.race.body.BodyCatalog.options(com.hmc.zenkai.feature.race.body.BodyCatalog.HEAD, race).isEmpty()) {
+            out.add(Tab.HEAD);
+        }
+        return out;
+    }
+
+    /** Vista del preview (como Head): cara fija o cuerpo que sigue al ratón. Se recuerda entre visitas. */
+    private static boolean faceView = false;
+    private static final float FACE_Y_OFFSET = 0.65f;
+    private static final int FACE_SIZE = 140;
+    /** Opción elegida por categoría del catálogo de cuerpo (solo las que el jugador ha tocado). */
+    private final java.util.Map<String, String> bodyOptions = new java.util.LinkedHashMap<>();
     private int toneLabelY;
     /** Y absoluta (pantalla) donde termina el contenido real de la raza actual — la fija
      *  buildLayerRows()/buildSkinToneGrid(), la lee render() para el divisor y el preview. */
@@ -227,18 +275,29 @@ public class BodyColorsScreen extends Screen {
             customSkinColor = true;
             skinColor = 0xFF000000 | SKIN_TONES[0];
         }
+        bodyOptions.clear();
+        bodyOptions.putAll(visual.getBodyOptions());
         genderFemale      = visual.getGender() == com.hmc.zenkai.feature.player.PlayerVisualAttachment.Gender.FEMALE;
         vanillaSkin       = !visual.shouldRenderRaceSkin();
         lockedRects.clear();
 
-        if (isMultiTintRace(race)) buildLayerRows();
-        else                       buildSkinToneGrid();
+        var tabs = visibleTabs();
+        if (!tabs.contains(tab)) tab = tabs.get(0);
+        tabBarH = tabs.size() > 1 ? TAB_H + TAB_GAP_BELOW : 0;
+        if (tabBarH > 0) buildTabs(tabs);
+        switch (tab) {
+            case COLORS -> buildLayerRows();
+            case BODY   -> buildBodyTab();
+            case HEAD   -> buildHeadTab();
+            default     -> buildSkinToneGrid();
+        }
 
         int[] rect = previewRect();
         var resetViewBtn = new AtlasIconButton(rect[2] - 18, rect[1] + 2,
                 ICON_RESET_VIEW_U, ICON_RESET_VIEW_V, () -> zoomMult = 1.0f);
         resetViewBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.appearance.reset_view")));
         addRenderableWidget(resetViewBtn);
+        buildViewToggle();
 
         previewFormBtn = null;
         if (race == Race.ARCOSIAN) {
@@ -304,7 +363,7 @@ public class BodyColorsScreen extends Screen {
         }
     }
 
-    private int rowsTop()       { return panelTop + ROWS_TOP; }
+    private int rowsTop()       { return panelTop + ROWS_TOP + tabBarH; }
     private int listLeft()      { return panelLeft + IN_X1 + PAD; }
     private int trackRight()    { return panelLeft + IN_X2 - PAD; }
     private int scrollbarX()    { return trackRight() - SCROLLBAR_W; }
@@ -483,7 +542,7 @@ public class BodyColorsScreen extends Screen {
     // ── Human/Saiyan/Majin: rejilla de tonos, centrada en el área de filas ──
 
     private void buildSkinToneGrid() {
-        int[] presets = SKIN_TONES;
+        int[] presets = skinTonesFor(race);
         int perRow = 4;
         int total  = presets.length + 1;
         int rows   = (total + perRow - 1) / perRow;
@@ -526,11 +585,28 @@ public class BodyColorsScreen extends Screen {
         // sobraba y además el primer tono antes NO coincidía con él (bug).
         int gridBottom = gridTop + rows * (TONE_H + TONE_GAP) - TONE_GAP;
         contentBottom = gridBottom + 2;
+    }
 
-        // Género: mismo ajuste que la fila "Gender" del hub, aquí para que el flujo lineal
-        // cabeza → cuerpo → estilo lo incluya sin volver al hub. Solo razas de tinte simple
-        // (las que tienen modelo masculino/femenino); esta rejilla ya es solo de ellas.
-        int genderY = contentBottom + 6;
+    // ── Pestañas ─────────────────────────────────────────────────────────────
+
+    private void buildTabs(java.util.List<Tab> tabs) {
+        int x0 = panelLeft + IN_X1 + PAD;
+        int total = (IN_X2 - PAD) - (IN_X1 + PAD);
+        int w = total / tabs.size();
+        for (int i = 0; i < tabs.size(); i++) {
+            Tab t = tabs.get(i);
+            addRenderableWidget(new TextOnlyButton(x0 + i * w, panelTop + TAB_Y, w, TAB_H,
+                    Component.translatable(t.key()), () -> { tab = t; lastTab = t; closePicker(); rebuildWidgets(); })
+                    .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow()
+                    .selected(t == tab));
+        }
+    }
+
+    // ── Pestaña Cuerpo: género (Human/Saiyan/Majin, las razas con modelo masculino/femenino) ──
+
+    private void buildBodyTab() {
+        int cx = panelLeft + BG_W / 2;
+        int genderY = rowsTop() + 6;
         Component genderName = Component.translatable(genderFemale
                 ? "screen.zenkai.body.gender.female" : "screen.zenkai.body.gender.male");
         // Icono (celda 20x20 de icons.png, las mismas que la fila del hub) + botón a su derecha.
@@ -546,6 +622,57 @@ public class BodyColorsScreen extends Screen {
                 () -> { genderFemale = !genderFemale; closePicker(); applyPreview(); rebuildWidgets(); })
                 .onPanel());
         contentBottom = genderY + GENDER_ICON;
+        // Complexión (catálogo `build`: delgado/gordito del Majin y lo que vengan a añadir otras razas).
+        if (!com.hmc.zenkai.feature.race.body.BodyCatalog.options("build", race).isEmpty()) {
+            contentBottom = addOptionRow("build", contentBottom + 8);
+        }
+    }
+
+    // ── Pestaña Cabeza (Majin): apéndice que hereda el movimiento de la cabeza y se tiñe con la piel ──
+
+    private void buildHeadTab() {
+        contentBottom = addOptionRow(com.hmc.zenkai.feature.race.body.BodyCatalog.HEAD, rowsTop() + 6);
+    }
+
+    /**
+     * Una fila de botones de texto con las opciones del catálogo de esa categoría para la raza (la elegida resaltada).
+     * @return la Y donde termina la fila (o {@code y} si la raza no tiene opciones en esa categoría).
+     */
+    private int addOptionRow(String cat, int y) {
+        var options = com.hmc.zenkai.feature.race.body.BodyCatalog.options(cat, race);
+        if (options.isEmpty()) return y;
+        String current = com.hmc.zenkai.feature.race.body.BodyCatalog.resolve(race, cat, bodyOptions.get(cat));
+        int total = (IN_X2 - PAD) - (IN_X1 + PAD);
+        int gap = 6, w = (total - gap * (options.size() - 1)) / options.size();
+        int x0 = panelLeft + IN_X1 + PAD;
+        for (int i = 0; i < options.size(); i++) {
+            var opt = options.get(i);
+            var btn = new TextOnlyButton(x0 + i * (w + gap), y, w, 20,
+                    Component.translatable(opt.langKey()),
+                    () -> { bodyOptions.put(cat, opt.name()); closePicker(); applyPreview(); rebuildWidgets(); })
+                    .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow()
+                    .selected(opt.name().equals(current));
+            if (opt.comingSoon()) {
+                btn.active = false; // sigue calculando el hover: el tooltip dice por qué no se puede elegir
+                btn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.body.coming_soon")));
+            }
+            addRenderableWidget(btn);
+        }
+        return y + 20;
+    }
+
+    /** Botones Cara / Cuerpo del preview (mismo patrón que Head), pegados a la izquierda bajo el divisor. */
+    private void buildViewToggle() {
+        int[] r = previewRect();
+        int x = panelLeft + IN_X1 + PAD, w = 44;
+        addRenderableWidget(new TextOnlyButton(x, r[1], w, 12,
+                Component.translatable("screen.zenkai.head.view_face"),
+                () -> { faceView = true; zoomMult = 1.0f; rebuildWidgets(); })
+                .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow().selected(faceView));
+        addRenderableWidget(new TextOnlyButton(x, r[1] + 13, w, 12,
+                Component.translatable("screen.zenkai.head.view_body"),
+                () -> { faceView = false; zoomMult = 1.0f; rebuildWidgets(); })
+                .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow().selected(!faceView));
     }
 
     /**
@@ -606,8 +733,8 @@ public class BodyColorsScreen extends Screen {
 
         ScreenTitle.drawAbovePanel(g, mc.font, this.title, pl + BG_W / 2, pt);
 
-        if (isMultiTintRace(race)) renderLayerRows(g);
-        else                       renderSkinToneLabel(g);
+        if (tab == Tab.COLORS)    renderLayerRows(g);
+        else if (tab == Tab.SKIN) renderSkinToneLabel(g);
 
         // Divisor y preview DINÁMICOS: contentBottom es dónde termina el contenido real de
         // ESTA raza (ver buildLayerRows/buildSkinToneGrid) — cuanto menos contenido, más
@@ -617,15 +744,22 @@ public class BodyColorsScreen extends Screen {
 
         int[] rect = previewRect();
         int boxH = Math.max(1, rect[3] - rect[1]);
+        // Mismo borde de placa (2 px, por fuera del área del render) que el preview de Face.
+        NineSlice.plateBorder(g, rect[0] - 2, rect[1] - 2, rect[2] - rect[0] + 4, boxH + 4);
         int previewSize = Mth.clamp(Math.round(boxH * PREVIEW_SIZE_RATIO), PREVIEW_SIZE_MIN, PREVIEW_SIZE_MAX);
         int zoomedSize   = Mth.clamp(Math.round(previewSize * zoomMult), ZOOMED_SIZE_MIN, ZOOMED_SIZE_MAX);
 
         // La forma elegida en el botón de vista previa solo vale para ESTE render (try/finally).
         if (race == Race.ARCOSIAN) com.hmc.zenkai.feature.forms.FormSkinResolver.setPreviewForm(PREVIEW_FORMS[previewForm]);
         try {
-            InventoryScreen.renderEntityInInventoryFollowsMouse(
-                    g, rect[0], rect[1], rect[2], rect[3],
-                    zoomedSize, 0.0625f, (float) mouseX, (float) mouseY, mc.player);
+            if (faceView) {
+                InventoryScreen.renderEntityInInventoryFollowsAngle(g, rect[0], rect[1], rect[2], rect[3],
+                        Math.round(FACE_SIZE * zoomMult * (boxH / 180f)), FACE_Y_OFFSET, 0f, 0f, mc.player);
+            } else {
+                InventoryScreen.renderEntityInInventoryFollowsMouse(
+                        g, rect[0], rect[1], rect[2], rect[3],
+                        zoomedSize, 0.0625f, (float) mouseX, (float) mouseY, mc.player);
+            }
         } finally {
             com.hmc.zenkai.feature.forms.FormSkinResolver.setPreviewForm(null);
         }
@@ -642,7 +776,7 @@ public class BodyColorsScreen extends Screen {
             g.fill(listLeft() - 2, y + 1, listRight() + 2, y + ROW_H - 1, 0x66000000);
         }
 
-        if (!isMultiTintRace(race)) {
+        if (tab == Tab.BODY) {
             g.blit(ICONS_TEX, genderIconX, genderIconY,
                     genderFemale ? ICON_GENDER_FEMALE_U : ICON_GENDER_MALE_U, ICON_GENDER_V,
                     GENDER_ICON, GENDER_ICON, ICONS_ATLAS, ICONS_ATLAS);
@@ -673,6 +807,9 @@ public class BodyColorsScreen extends Screen {
         var visual = mc.player.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         visual.setSkinColorRgb(skinColor & 0xFFFFFF);
         visual.setCustomSkinColor(customSkinColor);
+        // Majin: el pelo SIEMPRE toma el color de la piel (los mechones con color propio se respetan aparte).
+        if (race == Race.MAJIN) visual.setHairColorRgb(skinColor & 0xFFFFFF);
+        bodyOptions.forEach(visual::setBodyOption);
         if (isTintRace(race)) {
             visual.setGender(genderFemale ? com.hmc.zenkai.feature.player.PlayerVisualAttachment.Gender.FEMALE
                     : com.hmc.zenkai.feature.player.PlayerVisualAttachment.Gender.MALE);

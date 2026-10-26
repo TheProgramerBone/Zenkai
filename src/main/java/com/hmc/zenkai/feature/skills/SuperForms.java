@@ -120,6 +120,24 @@ public final class SuperForms {
         return form;
     }
 
+    /**
+     * BLOQUEO LEGENDARIO (decisión del usuario, 2026-10-25): un Saiyan Legendario sigue la cadena de la película
+     * (Ikari -> SSJ1 -> Legendario -> Pleno) y NO puede USAR SSJ2 ni SSJ3. Solo se bloquea el USO (rueda, tecla de
+     * transformar, mantener la forma puesta): {@link #unlocked} sigue dando true si se compró, porque SSJ4 y los
+     * dioses cuelgan de SSJ3 y el progreso no puede romperse (los peldaños se siguen comprando en el árbol aunque
+     * no se puedan llevar puestos).
+     */
+    public static boolean legendaryBlocked(Player p, ResourceLocation form) {
+        if (!FormIds.SSJ2.equals(form) && !FormIds.SSJ3.equals(form)) return false;
+        PlayerStatsAttachment st = PlayerStatsAttachment.get(p);
+        return st.getRace() == Race.SAIYAN && st.isLegendary();
+    }
+
+    /** ¿Puede el jugador LLEVAR PUESTA esta forma ahora? = desbloqueada y no bloqueada por la sangre legendaria. */
+    public static boolean usable(Player p, ResourceLocation form) {
+        return unlocked(p, form) && !legendaryBlocked(p, form);
+    }
+
     /** ¿Cumple el jugador cada maestría mínima declarada en {@code mastery_reqs} de la forma? */
     public static boolean masteryReqsMet(Player p, FormDef def) {
         if (def == null || def.masteryReqs().isEmpty()) return true;
@@ -204,8 +222,10 @@ public final class SuperForms {
         // (padre desbloqueado + mastery_reqs) es el de cualquier rama por maestría, justo debajo. ssj_green lleva un
         // mastery_reqs trivial (SSJ1 al 0 %) A PROPÓSITO: FormRegistry.nextFrom salta las formas con mastery_reqs al
         // elegir el siguiente peldaño de la cadena, y sin él ssj_green (hijo de ssj1) podía ganarle el sitio a ssj2.
-        if (FormIds.SSJ_GREEN.equals(form) || FormIds.SSJ_GREEN_MAX.equals(form)) {
-            if (race != Race.SAIYAN || !PlayerStatsAttachment.get(p).isLegendary()) return false;
+        // Las formas Legendarias de las demás razas siguen la misma regla: solo su raza y solo con el flag.
+        Race legendOwner = com.hmc.zenkai.feature.forms.LegendaryForms.ownerOf(form);
+        if (legendOwner != null) {
+            if (race != legendOwner || !PlayerStatsAttachment.get(p).isLegendary()) return false;
         }
         if (!masteryReqsMet(p, def)) return false;
         if (depthOf(race, form) <= 0) {

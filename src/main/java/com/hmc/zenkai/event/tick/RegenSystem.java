@@ -43,15 +43,26 @@ public final class RegenSystem {
 
         int bodyCur = att.getBody(), bodyMax = att.getBodyMax();
         if (bodyCur > 0 && bodyCur < bodyMax) {
-            double regenPerSecond = bodyMax * (ServerConfig.baseRegenBody() / 100.0)
+            double baseRegen = bodyMax * (ServerConfig.baseRegenBody() / 100.0)
                     * RacePassives.bodyRegenMult(p)
                     * CombatRegen.bodyMult(p);
+            // Forma divina del namekiano (namek_god): regeneración extra casi gratis en ki.
+            double legendRegen = bodyMax * RacePassives.namekLegendRegenFraction(p);
+            // «Ancestros» (forma Legendaria del namekiano): sin regeneración natural; solo cura peleando (CombatZenkaiHooks).
+            if (ServerConfig.namekLegendBlockRegen() && RacePassives.wearingNamekLegendary(p)) baseRegen = 0.0;
+            double regenPerSecond = baseRegen + legendRegen;
             bodyNetFraction = kaiokenNetFraction(c, regenPerSecond);
             int gain = accrue(carry, 0, regenPerSecond);
             if (gain > 0) {
                 att.addBody(gain);
                 didBody = true;
-                RacePassiveSystem.chargeNamekianRegen(p, att, gain);
+                // El coste se reparte según de dónde viene cada punto: la pasiva de siempre y la de la forma.
+                double legendShare = regenPerSecond > 0.0 ? legendRegen / regenPerSecond : 0.0;
+                int legendGain = (int) Math.round(gain * legendShare);
+                RacePassiveSystem.chargeNamekianRegen(p, att, gain - legendGain);
+                if (legendGain > 0) {
+                    att.consumeEnergy((int) Math.ceil(legendGain * ServerConfig.namekLegendRegenKiPerPoint()));
+                }
             }
         }
 

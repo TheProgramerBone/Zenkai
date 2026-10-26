@@ -1,5 +1,7 @@
 {
   "label": "Skin",
   "color": "F2A0C4",
-  "presets": ["F2A0C4", "E58BB5", "F7B8D2", "C9A0E0"]
+  "follows": "skin",
+  "tone": "F9C9AE",
+  "ref": "F9C9AE"
 }

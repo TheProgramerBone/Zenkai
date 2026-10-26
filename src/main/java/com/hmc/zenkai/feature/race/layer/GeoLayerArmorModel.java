@@ -18,6 +18,13 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
      */
     static boolean wearerHasRealHeadwear = false;
 
+    /**
+     * Opciones de cuerpo EFECTIVAS (categoría -> nombre, ya resueltas con el catálogo) del jugador que se
+     * renderiza AHORA. Lo fija RaceSkinGeoArmorLayer junto a wearerHasRealHeadwear y lo lee
+     * GeoLayerArmorRenderer.preRender para ocultar los huesos de las opciones no elegidas.
+     */
+    static java.util.Map<String, String> wearerBodyOptions = java.util.Map.of();
+
     @Override
     public void setCustomAnimations(GeoLayerArmorItem animatable, long instanceId, AnimationState<GeoLayerArmorItem> animationState) {
         super.setCustomAnimations(animatable, instanceId, animationState);

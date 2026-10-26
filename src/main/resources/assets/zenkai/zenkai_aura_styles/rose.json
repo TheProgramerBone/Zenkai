@@ -1,11 +1,6 @@
 {
-  "_comment": "Rosé (canon): energía divina como SSB pero con lenguas más afiladas y altas, y destellos; sin rayos.",
-  "family": "divine",
-  "body_set": {
-    "tongue_sharp": 0.85,
-    "sway": 0.08,
-    "peaks": 9
-  },
+  "_comment": "Rosé (canon): lágrima alta de llama (pedido del usuario 2026-10-26, antes divine) con destellos; sin rayos.",
+  "family": "flame",
   "extra_components": [
     {
       "type": "motes",

@@ -275,19 +275,45 @@ public final class ClientZenkaiHooks {
         // ========================
         int iconX = PANEL_X;
         int iconY = plY + plTextH + 4;
+        boolean anyLabel = false;
         for (Badge b : collectBadges(mc, stats, form, tier, strained, now)) {
-            drawBadge(g, iconX, iconY, b.icon());
+            if (b.label() != null && !b.label().isEmpty()) anyLabel = true;
+            drawBadge(g, iconX, iconY, b);
             drawBadgeLabel(g, iconX, iconY, b.label(), b.labelColor());
             // Si la etiqueta es más ancha que el cuadro, el paso crece para no pisar la siguiente.
             int labelW = b.label() == null ? 0 : mc.font.width(b.label());
             iconX += Math.max(BADGE_SIZE, labelW) + BADGE_PAD;
         }
+        // Medidores de Ultra Instinto / Ultra Ego en su propia fila, centrada bajo el PL y justo debajo de las insignias
+        // (y de sus etiquetas si las hay).
+        int rowW = com.hmc.zenkai.client.overlay.TransformMeterIcons.rowWidth(mc);
+        if (rowW > 0) {
+            int plW = Math.round(mc.font.width("PL " + ZenkaiNumbers.format(stats.getApparentPowerLevel())) * textScale);
+            int mx = PANEL_X + (com.hmc.zenkai.client.overlay.TransformMeterIcons.count(mc) == 1 ? Math.max(0, (plW - rowW) / 2) : 0);
+            com.hmc.zenkai.client.overlay.TransformMeterIcons.render(g, mc, mx, iconY + BADGE_SIZE + (anyLabel ? 12 : 4));
+        }
     }
 
     /** Un icono de estado del HUD: celda del atlas + etiqueta corta opcional ("x20", "12s").
      *  Los dos estilos (minimalista y ModernStatsHud) pintan la MISMA lista, cada uno a su manera. */
-    public record Badge(IconUV icon, String label, int labelColor) {
-        static Badge of(IconUV icon) { return new Badge(icon, null, 0); }
+    public record Badge(IconUV icon, String label, int labelColor, ResourceLocation form) {
+        public Badge(IconUV icon, String label, int labelColor) { this(icon, label, labelColor, null); }
+        static Badge of(IconUV icon) { return new Badge(icon, null, 0, null); }
+        /** Insignia con el ICONO DE LA FORMA del atlas del árbol (se actualiza sola si cambia el arte) y un número debajo. */
+        static Badge ofForm(ResourceLocation form, String label, int labelColor) {
+            return new Badge(null, label, labelColor, form);
+        }
+    }
+
+    /** Dibuja una insignia: el icono del atlas de la HUD o, si es de una forma, el del atlas del árbol. */
+    public static void drawBadge(GuiGraphics g, int x, int y, Badge b) {
+        if (b.form() != null) {
+            com.hmc.zenkai.feature.forms.FormDef d = com.hmc.zenkai.feature.forms.FormDef.get(b.form());
+            com.hmc.zenkai.client.gui.screens.skilltree.FormIcons.draw(g, b.form(), x, y, ICON_DRAW,
+                    d != null && d.auraRgb() >= 0 ? d.auraRgb() : -1);
+        } else {
+            drawBadge(g, x, y, b.icon());
+        }
     }
 
     /**
@@ -314,6 +340,20 @@ public final class ClientZenkaiHooks {
             out.add(new Badge(ICON_STRAIN, Math.round(form.strainSecondsLeft(now)) + "s", C_BODY_STRAIN));
         }
 
+        // Formas Legendarias: su icono del atlas del árbol y debajo el número que importa de cada una.
+        ResourceLocation fid = form.getFormId();
+        if (com.hmc.zenkai.feature.forms.FormIds.ARCOSIAN_LEGENDARY.equals(fid)) {
+            // Contención Rota: tensión que queda antes del colapso, en segundos.
+            out.add(Badge.ofForm(fid, Math.round(form.tensionSecondsLeft(now)) + "s", 0xFFFF5544));
+        } else if (com.hmc.zenkai.feature.forms.FormIds.HUMAN_GOD.equals(fid)) {
+            // Voluntad colectiva (human_god): bono de stats de aliados / impulso (sincronizado desde el servidor).
+            out.add(Badge.ofForm(fid, "+" + Math.round(form.getWillBonus() * 100.0) + "%", 0xFFFFE680));
+        } else if (com.hmc.zenkai.feature.forms.FormIds.MAJIN_LEGENDARY.equals(fid)) {
+            // Majin Devorador: poder robado vivo (caduca con la masa).
+            double stolen = com.hmc.zenkai.feature.race.MajinAbsorption.liveStacks(mc.player) > 0
+                    ? stats.flags().getAbsorbStolen() : 0.0;
+            out.add(Badge.ofForm(fid, "+" + Math.round(stolen * 100.0) + "%", 0xFFFF8FC8));
+        }
         if (stats.isImmortal()) out.add(Badge.of(ICON_IMMORTAL));
         if (stats.isLegendary()) out.add(Badge.of(ICON_LEGENDARY));
 

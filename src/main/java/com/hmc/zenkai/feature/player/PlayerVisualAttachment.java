@@ -80,6 +80,10 @@ public class PlayerVisualAttachment {
     public enum Gender { MALE, FEMALE }
     private Gender gender = Gender.MALE;
 
+    // ── Opciones de cuerpo (catálogo zenkai_body_options): categoría -> nombre de la opción elegida ──
+    // Sin entrada = la opción por defecto de la raza (BodyCatalog.resolve). Ej.: "head" -> "tail" en el Majin.
+    private final java.util.Map<String, String> bodyOptions = new java.util.LinkedHashMap<>();
+
     public PlayerVisualAttachment() {}
 
     // ── Acceso estático ───────────────────────────────────────────────────────
@@ -138,6 +142,22 @@ public class PlayerVisualAttachment {
 
     public Gender getGender()                  { return gender; }
     public void   setGender(Gender g)          { if (g != null) this.gender = g; }
+
+    public java.util.Map<String, String> getBodyOptions() { return java.util.Collections.unmodifiableMap(bodyOptions); }
+    public String getBodyOption(String category)          { return bodyOptions.get(category); }
+    /** Ignora lo que no esté en el catálogo (un cliente modificado no puede colar un hueso que no existe). */
+    public void setBodyOption(String category, String name) {
+        if (category != null && name != null
+                && com.hmc.zenkai.feature.race.body.BodyCatalog.exists(category, name)) bodyOptions.put(category, name);
+    }
+    private CompoundTag saveBodyOptions() {
+        CompoundTag t = new CompoundTag();
+        bodyOptions.forEach(t::putString);
+        return t;
+    }
+    private void loadBodyOptions(CompoundTag t) {
+        for (String k : t.getAllKeys()) setBodyOption(k, t.getString(k));
+    }
 
     // ── Rasgos faciales API ───────────────────────────────────────────────────
     /** Id del rasgo elegido en esa categoría, o null = ninguno. */
@@ -256,6 +276,7 @@ public class PlayerVisualAttachment {
         tag.putBoolean("customSkinColor", customSkinColor);
         tag.putBoolean("customAuraColor", customAuraColor);
         tag.putString("gender", gender.name());
+        tag.put("bodyOptions", saveBodyOptions());
         tag.putBoolean("majinControlled", majinControlled);
 
         int[] lc = new int[layerColors.size()];
@@ -310,6 +331,7 @@ public class PlayerVisualAttachment {
         if (tag.contains("gender")) {
             try { this.gender = Gender.valueOf(tag.getString("gender")); } catch (IllegalArgumentException ignored) {}
         }
+        if (tag.contains("bodyOptions", Tag.TAG_COMPOUND)) loadBodyOptions(tag.getCompound("bodyOptions"));
 
         layerColors.clear();
         if (tag.contains("layerColors")) {
@@ -366,6 +388,7 @@ public class PlayerVisualAttachment {
         if (tag.contains("gender")) {
             try { setGender(Gender.valueOf(tag.getString("gender"))); } catch (IllegalArgumentException ignored) {}
         }
+        if (tag.contains("bodyOptions", Tag.TAG_COMPOUND)) loadBodyOptions(tag.getCompound("bodyOptions"));
         if (tag.contains("renderRaceSkin"))  setRenderRaceSkin(tag.getBoolean("renderRaceSkin"));
         if (tag.contains("hideVanillaBody")) setHideVanillaBody(tag.getBoolean("hideVanillaBody"));
 

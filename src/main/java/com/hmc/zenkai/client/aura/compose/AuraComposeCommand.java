@@ -5,6 +5,7 @@ import com.hmc.zenkai.client.aura.flame.AuraSystemDispatcher;
 import com.hmc.zenkai.client.aura.flame.AuraSystemMode;
 import com.hmc.zenkai.client.aura.compose.component.AuraComponentTypes;
 import com.hmc.zenkai.feature.aura.AuraSignatureRegistry;
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
@@ -42,6 +43,9 @@ import java.util.TreeSet;
  *       (charging, high_charge, transforming, turbo, kaioken, low_ki, suppressed, flying,
  *       perturbed) sin gastar ki ni cambiar nada en el servidor.</li>
  *   <li>{@code transform} — reproduce la secuencia de transformación del estilo actual.</li>
+ *   <li>{@code look fps <n>} / {@code look bands3 on|off} / {@code look whitecap <0..1>} / {@code look topfill <0..1>} /
+ *       {@code look reset} — prueba de dirección de arte (2026-10-26): movimiento a saltos, tres
+ *       bandas duras y tope de blanco del borde, para CUALQUIER aura compuesta.</li>
  *   <li>{@code compare <aura_type>|off} — dibuja un aura fantasma con otro aura_type a tu derecha,
  *       con tu misma pose y tu mismo poder: dos auras lado a lado sin reiniciar.</li>
  * </ul>
@@ -90,6 +94,25 @@ public final class AuraComposeCommand {
                                 .then(Commands.literal("off").executes(c -> state(c.getSource(), StringArgumentType.getString(c, "state"), Boolean.FALSE)))
                                 .then(Commands.literal("auto").executes(c -> state(c.getSource(), StringArgumentType.getString(c, "state"), null)))))
                 .then(Commands.literal("transform").executes(c -> transform(c.getSource())))
+                .then(Commands.literal("look")
+                        .then(Commands.literal("reset").executes(c -> { AuraDebug.lookTopFill = 0f; return look(c.getSource(), 0f, false, 0f); }))
+                        .then(Commands.literal("topfill")
+                                .then(Commands.argument("fill", FloatArgumentType.floatArg(0f, 1f))
+                                        .executes(c -> {
+                                            AuraDebug.lookTopFill = FloatArgumentType.getFloat(c, "fill");
+                                            return look(c.getSource(), AuraDebug.lookFps, AuraDebug.lookBands3, AuraDebug.lookWhiteCap);
+                                        })))
+                        .then(Commands.literal("fps")
+                                .then(Commands.argument("fps", FloatArgumentType.floatArg(0f, 60f))
+                                        .executes(c -> look(c.getSource(), FloatArgumentType.getFloat(c, "fps"),
+                                                AuraDebug.lookBands3, AuraDebug.lookWhiteCap))))
+                        .then(Commands.literal("bands3")
+                                .then(Commands.literal("on").executes(c -> look(c.getSource(), AuraDebug.lookFps, true, AuraDebug.lookWhiteCap)))
+                                .then(Commands.literal("off").executes(c -> look(c.getSource(), AuraDebug.lookFps, false, AuraDebug.lookWhiteCap))))
+                        .then(Commands.literal("whitecap")
+                                .then(Commands.argument("cap", FloatArgumentType.floatArg(0f, 1f))
+                                        .executes(c -> look(c.getSource(), AuraDebug.lookFps, AuraDebug.lookBands3,
+                                                FloatArgumentType.getFloat(c, "cap"))))))
                 .then(Commands.literal("compare")
                         .then(Commands.literal("off").executes(c -> compare(c.getSource(), null)))
                         .then(Commands.argument("aura_type", StringArgumentType.word())
@@ -196,6 +219,17 @@ public final class AuraComposeCommand {
     private static int transform(CommandSourceStack src) {
         AuraDebug.burstRequested = true;
         src.sendSuccess(() -> Component.literal("[Aura] secuencia de transformación (con el aura encendida: carga ki)"), false);
+        return 1;
+    }
+
+    private static int look(CommandSourceStack src, float fps, boolean bands3, float whiteCap) {
+        AuraDebug.lookFps = fps;
+        AuraDebug.lookBands3 = bands3;
+        AuraDebug.lookWhiteCap = whiteCap;
+        src.sendSuccess(() -> Component.literal("[Aura] look: " + (fps > 0f ? "a saltos " + fps + " fps" : "movimiento continuo")
+                + ", " + (bands3 ? "3 bandas" : "bandas de siempre")
+                + ", " + (whiteCap > 0f ? "tope de blanco " + whiteCap : "blanco de siempre")
+                + (AuraDebug.lookTopFill > 0f ? ", relleno arriba " + AuraDebug.lookTopFill : "")), false);
         return 1;
     }
 

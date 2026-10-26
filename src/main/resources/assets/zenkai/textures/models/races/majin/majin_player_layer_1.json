@@ -1,5 +1,6 @@
 {
-  "label": "Pants",
-  "color": "EEEDF5",
-  "presets": ["EEEDF5", "D9D2F0", "F2E6C8", "C8D8F0"]
+  "label": "Skin shade 3",
+  "follows": "skin",
+  "tone": "E6A27A",
+  "ref": "F9C9AE"
 }

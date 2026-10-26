@@ -62,9 +62,40 @@ public class PlayerFormAttachment {
 
     public double getPuCeiling() { return puCeiling; }
 
+    /** Techo del Legendario de las demás razas (% a maestría 100, ya con la resonancia divina). Mismo patrón que
+     *  puCeiling: lo calcula el servidor cada tick y viaja en el sync; el cliente solo lo lee. */
+    private double legendCeiling = 0.0;
+
+    public double getLegendCeiling() { return legendCeiling; }
+
+    // ── Contención Rota (forma Legendaria del arcosiano), ver ArcosianContainment ──
+    /** Tick de juego en que se agota la tensión (0 = no hay). Total = su duración, para la HUD y el enfriamiento. */
+    private long tensionUntil = 0L, tensionTotal = 0L;
+    /** Hasta cuándo no puede volver a entrar. Sobrevive a forceBase/resetAll a propósito. */
+    private long legendCooldownUntil = 0L;
+    /** Forma arcosiana de la que partió: de ella toma (y a ella suma) su maestría. */
+    private ResourceLocation legendOrigin = null;
+
+    /** Bono de «Voluntad colectiva» (fracción, 0.25 = +25 %) que FormSystem calcula en el servidor y viaja en el sync, para la HUD. */
+    private double willBonus = 0.0;
+    public double getWillBonus() { return willBonus; }
+    public void setWillBonus(double v) { this.willBonus = v; }
+
+    public long getTensionUntil() { return tensionUntil; }
+    public long getTensionTotal() { return tensionTotal; }
+    public void setTension(long until, long total) { this.tensionUntil = until; this.tensionTotal = total; }
+    public long getLegendCooldownUntil() { return legendCooldownUntil; }
+    public void setLegendCooldownUntil(long t) { this.legendCooldownUntil = t; }
+
+    /** Segundos de tensión que quedan (para la HUD); 0 si no hay. */
+    public float tensionSecondsLeft(long gameTime) {
+        return tensionUntil > gameTime ? (tensionUntil - gameTime) / 20f : 0f;
+    }
+
     /** Servidor: recalcula el techo. Barato (recorre como mucho 5 formas). */
     public void refreshPotentialCeiling(Player p) {
         this.puCeiling = PotentialUnlock.referenceCeiling(p);
+        this.legendCeiling = com.hmc.zenkai.feature.forms.LegendaryForms.ceiling(p);
     }
 
     // ── Estado ───────────────────────────────────────────────────────────────
@@ -192,6 +223,11 @@ public class PlayerFormAttachment {
         if (FormIds.POTENTIAL_UNLOCK.equals(formId)) {
             return PotentialUnlock.statPercent(puCeiling, activeMastery());
         }
+        // Legendario de las demás razas: el % crece con el TP y se acopla aquí, no sale del JSON.
+        if (FormIds.ARCOSIAN_LEGENDARY.equals(formId)) return legendCeiling; // % fijo, sin maestría
+        if (com.hmc.zenkai.feature.forms.LegendaryForms.isScaled(formId)) {
+            return com.hmc.zenkai.feature.forms.LegendaryForms.statPercent(legendCeiling, activeMastery());
+        }
         FormDef d = activeDef();
         return d == null ? 0.0 : d.statPercent(race, activeMastery());
     }
@@ -239,7 +275,7 @@ public class PlayerFormAttachment {
 
         return FormRegistry.isAllowed(race, target)
                 && FormRegistry.get(target) != null
-                && SuperForms.unlocked(p, target);
+                && SuperForms.usable(p, target);
     }
 
     /**
@@ -318,6 +354,7 @@ public class PlayerFormAttachment {
             }
         }
 
+        if (FormIds.ARCOSIAN_LEGENDARY.equals(target)) legendOrigin = formId; // de ella toma la maestría
         setFormId(p, target);
         if (FormIds.SUPER_OOZARU.equals(target)) {
             PlayerStatsAttachment stats = PlayerStatsAttachment.get(p);
@@ -427,6 +464,9 @@ public class PlayerFormAttachment {
         // Mystic (Potential Unlock) es "el estado definitivo", no una capa encima de otra forma:
         // solo se entra desde BASE (hay que bajar antes de sacarlo).
         if (FormIds.POTENTIAL_UNLOCK.equals(target) && !FormIds.BASE.equals(formId)) return null;
+        // Contención Rota: solo desde una forma arcosiana ya puesta y fuera de enfriamiento.
+        if (FormIds.ARCOSIAN_LEGENDARY.equals(target)
+                && !com.hmc.zenkai.feature.forms.ArcosianContainment.canEnter(p, this)) return null;
         return target;
     }
 
@@ -447,6 +487,18 @@ public class PlayerFormAttachment {
             return SuperForms.readyForSsj4Ritual(p) ? FormIds.SSJ4 : null;
         }
 
+        // Cadena del Saiyan LEGENDARIO con la tecla de transformar (película: Ikari -> SSJ1 -> Legendario -> Pleno).
+        // FormRegistry.nextFrom no la sigue: Ikari está fuera de la cadena y las legendarias llevan mastery_reqs.
+        if (race == Race.SAIYAN && PlayerStatsAttachment.get(p).isLegendary()) {
+            ResourceLocation cur = current == null ? FormIds.BASE : current;
+            ResourceLocation step = null;
+            if (FormIds.BASE.equals(cur)) step = FormIds.IKARI;
+            else if (FormIds.IKARI.equals(cur)) step = FormIds.SSJ1;
+            else if (FormIds.SSJ1.equals(cur)) step = FormIds.SSJ_GREEN;
+            else if (FormIds.SSJ_GREEN.equals(cur)) step = FormIds.SSJ_GREEN_MAX;
+            if (step != null) return SuperForms.usable(p, step) ? step : null;
+        }
+
         ResourceLocation next = FormRegistry.nextFrom(
                 current == null ? FormIds.BASE : current, race);
         if (next == null || !FormRegistry.isAllowed(race, next)) return null;
@@ -464,7 +516,7 @@ public class PlayerFormAttachment {
         // devuelve tal cual.
         next = SuperForms.resolveSibling(p, next);
         next = DivineForms.resolveForPlayer(p, next);
-        if (SuperForms.unlocked(p, next)) return next;
+        if (SuperForms.usable(p, next)) return next;
         // El hijo mortal no está desbloqueado, pero puede haber un hijo DIVINO que sí: SSJ3 tiene
         // a SSJ4 (camino oculto, no tiene por qué tenerse) y a SSJ God (decisión del usuario,
         // 2026-10-21: lo divino sale de SSJ3, SSJ4 no condiciona el avance). Sin esto, mantener
@@ -473,7 +525,7 @@ public class PlayerFormAttachment {
             FormDef d = FormRegistry.get(child);
             if (d == null || !d.divineTier() || !d.allows(race)) continue;
             ResourceLocation divine = DivineForms.resolveForPlayer(p, child);
-            if (SuperForms.unlocked(p, divine)) return divine;
+            if (SuperForms.usable(p, divine)) return divine;
         }
         return null;
     }
@@ -607,6 +659,8 @@ public class PlayerFormAttachment {
 
     public float getFormMastery(ResourceLocation form) {
         if (form == null) return 0f;
+        // Contención Rota comparte la maestría de la forma de la que parte.
+        if (FormIds.ARCOSIAN_LEGENDARY.equals(form) && legendOrigin != null) form = legendOrigin;
         // SSJ Blue/Rose son hermanas equivalentes (mismo parent, mismos números — ver
         // feature.skills.DivineForms): con el config activo se leen como una sola pista de
         // maestría, la MAYOR de las dos ya acumuladas. Esto también resuelve solo el caso de
@@ -629,6 +683,7 @@ public class PlayerFormAttachment {
     /** El ritmo lo marca la propia forma (mastery_gain del datapack). */
     public void addFormMastery(ResourceLocation form, float delta) {
         if (form == null || delta <= 0) return;
+        if (FormIds.ARCOSIAN_LEGENDARY.equals(form) && legendOrigin != null) form = legendOrigin;
         FormDef def = FormRegistry.get(form);
         float scaled = delta * (def == null ? 1f : (float) def.masteryGain());
         if (scaled <= 0) return;
@@ -724,6 +779,12 @@ public class PlayerFormAttachment {
         tag.putBoolean("oozaruForced", oozaruForced);
         tag.putLong("strainUntil", strainUntil);
         tag.putDouble("puCeiling", puCeiling);
+        tag.putDouble("legendCeiling", legendCeiling);
+        tag.putDouble("willBonus", willBonus);
+        tag.putLong("tensionUntil", tensionUntil);
+        tag.putLong("tensionTotal", tensionTotal);
+        tag.putLong("legendCooldownUntil", legendCooldownUntil);
+        if (legendOrigin != null) tag.putString("legendOrigin", legendOrigin.toString());
         if (selectedForm != null) tag.putString("selectedForm", selectedForm.toString());
         if (holdTargetForm != null) tag.putString("holdTargetForm", holdTargetForm.toString());
 
@@ -755,6 +816,12 @@ public class PlayerFormAttachment {
                 ? ResourceLocation.tryParse(tag.getString("holdTargetForm")) : null;
         this.strainUntil = tag.getLong("strainUntil");
         this.puCeiling = tag.getDouble("puCeiling");
+        this.legendCeiling = tag.getDouble("legendCeiling");
+        this.willBonus = tag.getDouble("willBonus");
+        this.tensionUntil = tag.getLong("tensionUntil");
+        this.tensionTotal = tag.getLong("tensionTotal");
+        this.legendCooldownUntil = tag.getLong("legendCooldownUntil");
+        this.legendOrigin = tag.contains("legendOrigin") ? ResourceLocation.tryParse(tag.getString("legendOrigin")) : null;
         formMastery.clear();
         if (tag.contains("formMastery")) {
             CompoundTag fm = tag.getCompound("formMastery");

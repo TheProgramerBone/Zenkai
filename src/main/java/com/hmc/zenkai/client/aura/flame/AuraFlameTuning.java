@@ -98,7 +98,9 @@ public final class AuraFlameTuning {
         // lenguas (amp) y ensanchaba un 12% el radio: entre un novato y un endgame la llama crecía
         // unos 0.3 bloques. Ahora el poder ESCALA LA LLAMA ENTERA desde los pies.
         /** Escala de la llama entera con poder base (1 = la lágrima de la primera pasada). */
-        SIZE("size", 1.2f),
+        // 1.2 -> 1.35 (2026-10-26, pedido del usuario): "a veces es demasiado pequeña para el
+        // personaje". Sube el SUELO (el aura de poder base); el crecimiento con el poder no cambia.
+        SIZE("size", 1.35f),
         /** Crecimiento de la escala por cada unidad de poder sobre la base
          *  (AuraProfile.pulsedSize / SIZE_BASE - 1: 0 de novato, ~1-1.3 de endgame a plena
          *  potencia). 0.4 da ~x1.4 de endgame sobre la base ya agrandada. */

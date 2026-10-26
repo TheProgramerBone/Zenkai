@@ -88,10 +88,14 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
                     () -> mc.setScreen(new ImmortalWishScreen(this)));
             y += ROW_H + ROW_GAP;
         }
-        // Legendario: solo para un Saiyan que aún no lo es (el servidor lo vuelve a validar).
+        // Legendario: para cualquier raza con forma legendaria que aún no lo sea (el servidor lo vuelve a validar).
         if (ClientWishToggles.isEnabled(WishType.LEGENDARY) && mc.player != null) {
             var stats = mc.player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_STATS.get());
-            if (stats.getRace() == com.hmc.zenkai.feature.Race.SAIYAN && !stats.isLegendary()) {
+            boolean canAsk = stats.getRace() == com.hmc.zenkai.feature.Race.SAIYAN
+                    || com.hmc.zenkai.feature.forms.LegendaryForms.formOf(stats.getRace()) != null;
+            boolean majinBlocks = com.hmc.zenkai.config.ServerConfig.majinLegendaryExclusive()
+                    && mc.player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_VISUAL.get()).isMajinControlled();
+            if (canAsk && !stats.isLegendary() && !majinBlocks) {
                 addWish(x, y, w, "screen.zenkai.wish.legendary",
                         () -> mc.setScreen(new com.hmc.zenkai.client.gui.screens.wishes.LegendaryWishScreen(this)));
                 y += ROW_H + ROW_GAP;

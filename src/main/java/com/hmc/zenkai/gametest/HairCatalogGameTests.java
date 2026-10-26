@@ -43,9 +43,9 @@ public final class HairCatalogGameTests {
                         && ssj.model().getPath().equals("geo/hair/classic_ssj.geo.json"),
                 "deben apuntar a las geo de siempre (cero cambio visual)");
 
-        // Quién tiene pelo: como antes, solo Human/Saiyan.
+        // Quién tiene pelo: Human/Saiyan y, desde 2026-10-25, el Majin (peinados DMZ; su color es el de su piel).
         for (Race r : Race.values()) {
-            boolean expected = r == Race.HUMAN || r == Race.SAIYAN;
+            boolean expected = r == Race.HUMAN || r == Race.SAIYAN || r == Race.MAJIN;
             helper.assertTrue(HairCatalog.options(r).isEmpty() != expected, r + ": pelo " + (expected ? "sí" : "no"));
         }
         // classic_ssj solo existe como override: no se elige en la lista.

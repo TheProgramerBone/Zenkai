@@ -37,6 +37,9 @@ public final class AuraFrame {
     /** Nivel de detalle de la malla ({@link AuraBodyMesh#LOD_NEAR}...). */
     public int lod;
     public boolean selfFirstPerson;
+    /** La cámara está DENTRO del volumen del cuerpo en 3ª persona (cámara pegada por una pared o el
+     *  suelo, o aura muy grande): se dibuja como desde dentro, ver AuraComposer.cameraInside. */
+    public boolean cameraInside;
     public float fpOpacity;
     /** false en primera persona propia o con el bloom del aura apagado. */
     public boolean bloomAllowed;

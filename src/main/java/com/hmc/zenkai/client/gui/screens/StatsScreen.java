@@ -2,6 +2,7 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.StatBar;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
@@ -445,14 +446,10 @@ public class StatsScreen extends ZenkaiMenuScreen {
      * píxeles de separación con el borde del panel y el retrato acababa pegado a él.
      */
     private void drawPortraitFrame(GuiGraphics g, int x1, int y1, int x2, int y2) {
-        g.fill(x1, y1, x2, y2, ZenkaiPalette.BORDER_IN);
-        g.fill(x1 + 1, y1 + 1, x2 - 1, y2 - 1, ZenkaiPalette.BORDER_MID);
-        g.fill(x1 + 2, y1 + 2, x2 - 2, y2 - 2, ZenkaiPalette.BORDER_OUT);
-        g.fill(x1 + 3, y1 + 3, x2 - 3, y2 - 3, ZenkaiPalette.BEIGE_DEEP);
-        // Esquinas recortadas, como common_screen: sin esto el marco parece de otro mod.
-        for (int[] c : new int[][]{{x1, y1}, {x2 - 3, y1}, {x1, y2 - 3}, {x2 - 3, y2 - 3}}) {
-            g.fill(c[0], c[1], c[0] + 3, c[1] + 3, ZenkaiPalette.BEIGE);
-        }
+        // Borde = placa de TP/MND del skill tree (2 px); el interior beige conserva su inset de 3 px
+        // (el área del render no se mueve), así que el anillo de 1 px entre ambos va en BEIGE_DEEP.
+        g.fill(x1 + 1, y1 + 1, x2 - 1, y2 - 1, ZenkaiPalette.BEIGE_DEEP);
+        NineSlice.plateBorder(g, x1, y1, x2 - x1, y2 - y1);
     }
 
     /** Etiqueta en marrón + valor en color. Sin sombra: el panel es beige claro. */
@@ -656,10 +653,8 @@ public class StatsScreen extends ZenkaiMenuScreen {
         x = Mth.clamp(x, 2, this.width - POPUP_W - 2);
         int y = panelTop + CONTENT_TOP;
 
-        // Marco de tres anillos: pertenece a la misma familia visual que el panel.
-        g.fill(x - 2, y - 2, x + POPUP_W + 2, y + h + 2, ZenkaiPalette.BORDER_IN);
-        g.fill(x - 1, y - 1, x + POPUP_W + 1, y + h + 1, ZenkaiPalette.BORDER_MID);
-        g.fill(x, y, x + POPUP_W, y + h, ZenkaiPalette.POPUP_BG);
+        // Marco con la placa de TP/MND del skill tree (hud.png): misma familia visual que ese menú.
+        NineSlice.plateFrame(g, x, y, POPUP_W, h);
 
         int tx = x + 8, tr = x + POPUP_W - 8, ty = y + 6;
 

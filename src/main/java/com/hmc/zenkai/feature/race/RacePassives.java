@@ -1,5 +1,6 @@
 package com.hmc.zenkai.feature.race;
 
+import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ModDamageTypes;
@@ -125,11 +126,46 @@ public final class RacePassives {
         return is(p, Race.NAMEKIAN) || is(p, Race.MAJIN);
     }
 
-    /** Ki que cuesta la regeneración extra namekiana, dados los puntos de body regenerados. */
+    /** Ki que cuesta la regeneración extra namekiana, dados los puntos de body regenerados. Con la forma
+     *  divina puesta la pasiva cuesta una fracción (namek_god.passive_ki_cost_mult). */
     public static int namekianRegenKiCost(Player p, int bodyRegenerated) {
         double mult = value(p, "regen_mult", NAMEKIAN_REGEN_MULT);
         int extra = (int) Math.round(bodyRegenerated * (1.0 - 1.0 / mult));
-        return (int) Math.ceil(extra * value(p, "regen_ki_per_point", NAMEKIAN_REGEN_KI_COST));
+        double cost = extra * value(p, "regen_ki_per_point", NAMEKIAN_REGEN_KI_COST);
+        if (wearingNamekGod(p)) cost *= ServerConfig.namekLegendPassiveCostMult();
+        return (int) Math.ceil(cost);
+    }
+
+    /** ¿Lleva puesta la forma Legendaria del humano («Temerario»)? */
+    public static boolean wearingHumanLegendary(Player p) {
+        return p != null && is(p, Race.HUMAN)
+                && com.hmc.zenkai.feature.forms.FormIds.HUMAN_LEGENDARY.equals(
+                        p.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId());
+    }
+
+    /** ¿Lleva puesta la forma Legendaria del namekiano («Ancestros»)? */
+    public static boolean wearingNamekLegendary(Player p) {
+        return p != null && is(p, Race.NAMEKIAN)
+                && com.hmc.zenkai.feature.forms.FormIds.NAMEK_LEGENDARY.equals(
+                        p.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId());
+    }
+
+    /** ¿Lleva puesta la forma divina del namekiano (namek_god)? */
+    public static boolean wearingNamekGod(Player p) {
+        return p != null && is(p, Race.NAMEKIAN)
+                && com.hmc.zenkai.feature.forms.FormIds.NAMEK_GOD.equals(
+                        p.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId());
+    }
+
+    /**
+     * Regeneración EXTRA de la forma divina del namekiano, en fracción del body máximo por segundo (0 sin la forma). Sube del 50 %
+     * al 100 % con su maestría y NO la recorta el castigo de regeneración en combate: el valor de la forma es aguantar.
+     */
+    public static double namekLegendRegenFraction(Player p) {
+        if (!wearingNamekGod(p)) return 0.0;
+        float mastery = p.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).activeMastery();
+        double scale = 0.5 + 0.5 * Math.max(0f, Math.min(100f, mastery)) / 100.0;
+        return ServerConfig.namekLegendRegenPercent() / 100.0 * scale;
     }
 
     /** Regeneración pasiva del majin por segundo, en fracción del máximo. */

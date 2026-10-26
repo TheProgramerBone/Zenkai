@@ -76,6 +76,42 @@ public final class NineSlice {
         g.blit(tex, x, y, w, h, (float) u, (float) v, uW, vH, texW, texH);
     }
 
+    /** hud.png del skill tree: la placa de TP/MND (0,0)-(24,28 texeles) sirve de marco. El arte va
+     *  a 2 texeles por píxel de GUI, así que su borde de 4 texeles son 2 px. */
+    public static final ResourceLocation PLATE_TEX =
+            ResourceLocation.fromNamespaceAndPath("zenkai", "textures/gui/skill_tree/hud.png");
+    private static final int PLATE_TEX_W = 256, PLATE_TEX_H = 128;
+    /** Interior de la placa. Su punteado se deformaría al estirarlo y estorba tras el texto. */
+    private static final int PLATE_INNER = 0xFF1C1824;
+
+    /**
+     * Fondo + marco de un popup con la placa del skill tree. (x, y, w, h) es el área de CONTENIDO:
+     * el marco se dibuja 2 px por fuera, igual que los tres anillos de g.fill que sustituye.
+     */
+    public static void plateFrame(GuiGraphics g, int x, int y, int w, int h) {
+        g.fill(x, y, x + w, y + h, PLATE_INNER);
+        plateBorder(g, x - 2, y - 2, w + 4, h + 4);
+    }
+
+    /** Solo el borde de la placa (2 px), sobre el rectángulo EXTERIOR (X, Y, W, H): el interior lo
+     *  pone quien llama. */
+    public static void plateBorder(GuiGraphics g, int X, int Y, int W, int H) {
+        // Esquinas (4x4 texeles -> 2x2 px)
+        plate(g, X, Y, 2, 2, 0, 0, 4, 4);
+        plate(g, X + W - 2, Y, 2, 2, 20, 0, 4, 4);
+        plate(g, X, Y + H - 2, 2, 2, 0, 24, 4, 4);
+        plate(g, X + W - 2, Y + H - 2, 2, 2, 20, 24, 4, 4);
+        // Bordes: tramo central de la placa (8..16) en horizontal, filas 4..24 en vertical
+        plate(g, X + 2, Y, W - 4, 2, 8, 0, 8, 4);
+        plate(g, X + 2, Y + H - 2, W - 4, 2, 8, 24, 8, 4);
+        plate(g, X, Y + 2, 2, H - 4, 0, 4, 4, 20);
+        plate(g, X + W - 2, Y + 2, 2, H - 4, 20, 4, 4, 20);
+    }
+
+    private static void plate(GuiGraphics g, int x, int y, int w, int h, int u, int v, int uW, int vH) {
+        g.blit(PLATE_TEX, x, y, w, h, (float) u, (float) v, uW, vH, PLATE_TEX_W, PLATE_TEX_H);
+    }
+
     /** Esquina de btn_tech.png: 8 px, lo justo para que el remache no se estire. */
     public static final int BTN_TECH_CORNER = 8;
 

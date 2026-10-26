@@ -19,6 +19,7 @@ in vec3 vUnit;
 
 uniform vec4 ColorModulator;
 uniform float GameTime;
+uniform vec4 ZenkaiAuraLook;     // PRUEBA de dirección de arte (2026-10-26, AuraDebug.look*): x = fps a saltos (0 = suave), y = 1 tres bandas duras, z = tope de blanco del borde (0 = el de siempre), w = relleno de la parte alta (solo la llama)
 uniform sampler2D Sampler0;
 uniform float ZenkaiShellSpeed;
 uniform float ZenkaiBloomMode;
@@ -42,7 +43,26 @@ vec3 lift(vec3 c, float k) {
 }
 
 vec3 rimColor(vec3 c) {
-    return mix(lift(c, 1.6), vec3(1.0), 0.25);
+    return mix(lift(c, 1.6), vec3(1.0), ZenkaiAuraLook.z > 0.0 ? ZenkaiAuraLook.z : 0.25);
+}
+
+// TOPE DE BLANCO (mismo que aura_flame_shell.fsh) (prueba de dirección de arte 2026-10-26, ZenkaiAuraLook.z): el borde se aclara con
+// como mucho z de blanco en vez de 0.3, y ningún color pierde más de un cuarto de la saturación del
+// tinte. Ataca el "Base casi blanca": idea vista en DMZ 2.2 (aura_color.glsl), escrita aparte.
+float satOf(vec3 c) {
+    float hi = max(max(c.r, c.g), c.b);
+    return hi > 0.0001 ? (hi - min(min(c.r, c.g), c.b)) / hi : 0.0;
+}
+
+vec3 keepSat(vec3 c, vec3 base) {
+    if (ZenkaiAuraLook.z <= 0.0) return c;
+    float want = satOf(base) * 0.75;
+    float s = satOf(c);
+    if (s >= want) return c;
+    float hi = max(max(c.r, c.g), c.b);
+    // Gris: se empuja hacia el tono del tinte; si no, se estira la distancia al gris.
+    if (s < 0.001) return mix(vec3(hi), base / max(max(max(base.r, base.g), base.b), 0.001) * hi, 0.75);
+    return vec3(hi) - (vec3(hi) - c) * (want / s);
 }
 
 void main() {
@@ -56,6 +76,9 @@ void main() {
     float edge = clamp(pow(1.0 - facingAbs, ZenkaiShellFresnel.x) / max(ZenkaiShellFresnel.y, 0.001), 0.0, 1.0);
 
     float t = GameTime * 1200.0;
+    // Movimiento A SALTOS (prueba de dirección de arte): el tiempo avanza a pocos fotogramas por
+    // segundo, como animación dibujada; 0 = continuo.
+    if (ZenkaiAuraLook.x > 0.0) t = floor(t * ZenkaiAuraLook.x) / ZenkaiAuraLook.x;
     float ang = atan(vUnit.z, vUnit.x);
     // Nube: U entera (x2, x3) para no dejar costura en atan; suben a distinta velocidad.
     float c1 = texture(Sampler0, vec2(ang / 6.28318530718 * 2.0, vUnit.y * 0.5 - t * ZenkaiShellSpeed * 0.25)).r;
@@ -65,7 +88,8 @@ void main() {
 
     float i = clamp(max(edge, vPeak * ZenkaiShellCelShape.x), 0.0, 1.0);
     i *= mix(ZenkaiShellCelShape.y, 1.0, smoothstep(-0.7, -0.1, vLocalY));
-    float w = max(ZenkaiBodyLook.z, 0.005);
+    // Prueba "3 bandas + borde" (ZenkaiAuraLook.y): saltos duros entre bandas, sin suavizado.
+    float w = ZenkaiAuraLook.y > 0.5 ? 0.005 : max(ZenkaiBodyLook.z, 0.005);
     float rimB = smoothstep(ZenkaiShellCel.y - w, ZenkaiShellCel.y + w, i);
     float lightB = smoothstep(ZenkaiShellCel.z - w * 1.2, ZenkaiShellCel.z + w * 1.2, i);
 
@@ -74,6 +98,8 @@ void main() {
     vec3 inner = mix(ZenkaiShellCoreColor.rgb, lift(ZenkaiShellCoreColor.rgb, 1.3), cloud * cloudAmt);
     vec3 color = mix(inner, lift(tint, 1.2), lightB);
     color = mix(color, rimColor(tint), rimB);
+
+    color = keepSat(color, tint);
 
     float aIn = ZenkaiShellAlpha.x * mix(1.0, 0.4 + 1.2 * cloud, cloudAmt);
     float alpha = mix(aIn, ZenkaiShellAlpha.y * 0.75, lightB);
@@ -85,6 +111,11 @@ void main() {
     // traseras; sin esto el aura propia no se vería nunca en primera persona.
     if (facingRaw < 0.0 && ZenkaiOrtho < 1.5) alpha = min(alpha, 0.01);
 
+    // Fundido CERCA de la cámara (barrido de cámara 2026-10-26): con la cámara de 3ª persona pegada al
+    // jugador por el suelo o una pared, la pared del aura quedaba a centímetros del objetivo y cruzaba
+    // la pantalla como un arco brillante. Lo que está a menos de ~1 bloque de la cámara se desvanece.
+    // No en 1ª persona ni en la GUI (ZenkaiOrtho != 0): allí la cámara está dentro a propósito.
+    if (ZenkaiOrtho < 0.5) alpha *= smoothstep(0.6, 1.6, length(vViewDir));
     if (ZenkaiBloomMode > 0.5) {
         alpha *= ZenkaiShellBloom.x * mix(ZenkaiShellBloom.y, 1.0, emitBlend);
     }

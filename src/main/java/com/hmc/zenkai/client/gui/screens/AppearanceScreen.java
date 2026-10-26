@@ -117,6 +117,8 @@ public class AppearanceScreen extends Screen {
     // Head/Body y vuelta, en vez de resetearse a 1.0 cada vez, igual que "race"/"genderFemale"
     // ya sobreviven a esos viajes.
     private static final float ZOOM_MIN = 0.6f, ZOOM_MAX = 1.8f, ZOOM_STEP = 0.1f;
+    /** Zoom inicial (y del botón de restablecer): casi el mínimo, el personaje entero y alejado. */
+    private static final float ZOOM_DEFAULT = 0.7f;
     private static final int ZOOMED_SIZE_MIN = 20, ZOOMED_SIZE_MAX = 110;
     // Misma celda reservada que Head/Body (ver su javadoc): pintada a mano por el usuario.
     private static final int ICON_RESET_VIEW_U = 0, ICON_RESET_VIEW_V = 100;
@@ -128,7 +130,7 @@ public class AppearanceScreen extends Screen {
     private boolean confirmed = false, goingBack = false, goingNext = false;
     private boolean goingToHead = false, goingToBody = false;
     private int panelLeft, panelTop;
-    private float zoomMult = 1.0f;
+    private float zoomMult = ZOOM_DEFAULT;
 
     private Race race = Race.HUMAN;
     private boolean genderFemale = false;
@@ -175,7 +177,7 @@ public class AppearanceScreen extends Screen {
 
         int[] rect = previewRect();
         var resetViewBtn = new AtlasIconButton(rect[2] - 18, rect[1] + 2,
-                ICON_RESET_VIEW_U, ICON_RESET_VIEW_V, () -> zoomMult = 1.0f);
+                ICON_RESET_VIEW_U, ICON_RESET_VIEW_V, () -> zoomMult = ZOOM_DEFAULT);
         resetViewBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.appearance.reset_view")));
         addRenderableWidget(resetViewBtn);
     }

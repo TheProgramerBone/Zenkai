@@ -96,7 +96,14 @@ public class RaceSelectionScreen extends Screen {
     private boolean confirmed = false;
     private boolean goingNext = false;
 
-    private final Race[] races = Race.values();
+    private final Race[] races = selectableRaces();
+
+    /** Razas del carrusel: todas menos las de `banned_races` (ServerConfig); si se vetaran todas, salen todas. */
+    private static Race[] selectableRaces() {
+        Race[] ok = java.util.Arrays.stream(Race.values())
+                .filter(r -> !com.hmc.zenkai.config.ServerConfig.isRaceBanned(r)).toArray(Race[]::new);
+        return ok.length == 0 ? Race.values() : ok;
+    }
     private int raceIndex = 0;
     private boolean useCustomSkin = true;
 
@@ -295,6 +302,7 @@ public class RaceSelectionScreen extends Screen {
             // Los demás colores por capa ya NO se siembran aquí: salen del JSON de cada capa
             // (layerColors vacío => cada capa usa su default) tras el clearLayerColors() de arriba.
             visual.setSkinColorRgb(seedSkinColorFor(mc.player, r));
+            if (r == Race.MAJIN) visual.setHairColorRgb(visual.getSkinColorRgb()); // el pelo del Majin = su piel
             // Majin entra aquí con Namek/Arcosian: su color ES la identidad del personaje
             // (rosa, azul, gordo) y arrancar en tono de piel humano no tiene sentido.
             visual.setCustomSkinColor(r == Race.NAMEKIAN || r == Race.ARCOSIAN || r == Race.MAJIN);

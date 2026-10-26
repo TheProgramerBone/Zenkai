@@ -191,7 +191,9 @@ public final class SkillTreeNodes {
                 }
                 drawParent = SkillTreeMigration.NODE_GOD_KI;
             }
-            put(out, new Node(id, Kind.FORM, drawParent, id, null));
+            if (!com.hmc.zenkai.feature.forms.LegendaryForms.hiddenNode(id)) {
+                put(out, new Node(id, Kind.FORM, drawParent, id, null));
+            }
             for (ResourceLocation child : FormRegistry.childrenOf(id)) queue.add(child);
         }
 
@@ -459,6 +461,9 @@ public final class SkillTreeNodes {
                 out.add(new ReqLine(Component.translatable("skill_tree.zenkai.req.node",
                         SkillTreeData.displayName(parent)), ownedParent(p, race, parent)));
             }
+        }
+        if (d != null && SuperForms.legendaryBlocked(p, d.id())) {
+            out.add(new ReqLine(Component.translatable("skill_tree.zenkai.req.legendary_blocked"), false));
         }
         if (d != null && d.divineTier() && !d.endgamePath()) {
             out.add(new ReqLine(Component.translatable("skill_tree.zenkai.req.god_ki"),

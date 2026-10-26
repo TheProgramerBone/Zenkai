@@ -1,7 +1,8 @@
 {
   "races": [
     "human",
-    "saiyan"
+    "saiyan",
+    "majin"
   ],
   "sort": 600,
   "representation": "code",
@@ -9,6 +10,8 @@
   "color": "hair",
   "folder": "zenkai_dmz:dragonminez",
   "form_overrides": {
-    "zenkai:ssj4": "zenkai_dmz:ssj4_default"
+    "zenkai:ssj4": "zenkai_dmz:ssj4_default",
+    "zenkai:ssj_green": "zenkai_dmz:broly_super_heroes_ssj",
+    "zenkai:ssj_green_max": "zenkai_dmz:broly_super_heroes_ssj"
   }
 }

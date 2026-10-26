@@ -1,0 +1,24 @@
+{
+  "races": [
+    "human"
+  ],
+  "kind": "extension",
+  "tp_cost": 0,
+  "hold_ticks": 60,
+  "mastery_gain": 0.5,
+  "stat_percent_untrained": 6.88,
+  "stat_percent_mastered": 12.5,
+  "ki_drain_untrained": 3.0,
+  "ki_drain_mastered": 1.4,
+  "spi_req": 60,
+  "parent": "zenkai:human_ultra",
+  "mastery_reqs": {
+    "zenkai:human_ultra": 0.0
+  },
+  "body_items": {},
+  "aura_type": "legendary",
+  "aura_rgb": "0x5CFF3A",
+  "aura_outer_rgb": "0x1E8A22",
+  "scale": 1.06,
+  "eye_rgb": "0xE4FFE0"
+}

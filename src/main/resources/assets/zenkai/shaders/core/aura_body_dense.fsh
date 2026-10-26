@@ -18,6 +18,7 @@ in vec3 vUnit;
 
 uniform vec4 ColorModulator;
 uniform float GameTime;
+uniform vec4 ZenkaiAuraLook;     // PRUEBA de dirección de arte (2026-10-26, AuraDebug.look*): x = fps a saltos (0 = suave), y = 1 tres bandas duras, z = tope de blanco del borde (0 = el de siempre), w = relleno de la parte alta (solo la llama)
 uniform sampler2D Sampler0;
 uniform float ZenkaiShellSpeed;
 uniform float ZenkaiBloomMode;
@@ -57,6 +58,9 @@ void main() {
     float edge = clamp(pow(1.0 - facingAbs, ZenkaiShellFresnel.x) / max(ZenkaiShellFresnel.y, 0.001), 0.0, 1.0);
 
     float t = GameTime * 1200.0;
+    // Movimiento A SALTOS (prueba de dirección de arte): el tiempo avanza a pocos fotogramas por
+    // segundo, como animación dibujada; 0 = continuo.
+    if (ZenkaiAuraLook.x > 0.0) t = floor(t * ZenkaiAuraLook.x) / ZenkaiAuraLook.x;
     float ang = atan(vUnit.z, vUnit.x);
     float swirl = texture(Sampler0, vec2(ang / 6.28318530718 * 3.0 + t * 0.02, vUnit.y * 0.8 - t * ZenkaiShellSpeed * 0.15)).g;
     float veins = clamp(ZenkaiBodyLook.x, 0.0, 1.0);
@@ -97,6 +101,9 @@ void main() {
     // traseras; sin esto el aura propia no se vería nunca en primera persona.
     if (facingRaw < 0.0 && ZenkaiOrtho < 1.5) alpha = min(alpha, 0.01);
 
+    // Fundido CERCA de la cámara (barrido de cámara 2026-10-26, igual que la llama y SOFT): con la
+    // cámara de 3ª persona pegada al jugador, la pared del aura cruzaba la pantalla en láminas.
+    if (ZenkaiOrtho < 0.5) alpha *= smoothstep(0.6, 1.6, length(vViewDir));
     if (ZenkaiBloomMode > 0.5) {
         // Solo el borde brilla: el interior oscuro nunca entra al bloom.
         alpha *= ZenkaiShellBloom.x * mix(0.0, 1.0, emitBlend);

@@ -362,6 +362,17 @@
       ]
     },
     {
+      "name": "ZenkaiAuraLook",
+      "type": "float",
+      "count": 4,
+      "values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
       "name": "ZenkaiOrtho",
       "type": "float",
       "count": 1,

@@ -39,6 +39,23 @@ public final class AuraDebug {
     public static @Nullable String solo;
     /** aura_type del aura "fantasma" de comparación a tu derecha; null = sin comparación. */
     public static @Nullable String compareType;
+    /**
+     * Prueba de DIRECCIÓN DE ARTE (2026-10-26, {@code /zenkaiaura look}, ver
+     * .claude/pendiente/aura-direccion-de-arte.md): a diferencia del resto, vale para CUALQUIER aura
+     * compuesta, no solo la propia (es un uniform global de los cuatro programas de cuerpo).
+     * {@code lookFps} = fotogramas por segundo del movimiento a saltos (0 = continuo);
+     * {@code lookBands3} = tres bandas duras (borde, cuerpo, núcleo); {@code lookWhiteCap} = blanco
+     * máximo del borde, con saturación conservada (0 = el de siempre).
+     */
+    public static float lookFps;
+    public static boolean lookBands3;
+    public static float lookWhiteCap;
+    /** Relleno de la parte alta de la llama (0..1, 0 = solo fresnel): aura_4/aura_11 son densas arriba. */
+    public static float lookTopFill;
+    /** Calibración contra referencias (AuraShots modo tune): valores del CUERPO que se imponen después
+     *  del estilo y la familia, para cualquier aura compuesta. Vacío = nada. Valores dimensionales en
+     *  bloques SIN la escala por poder (la pone {@link AuraBodyParams#set}). */
+    public static final EnumMap<AuraBodyParams.Key, Float> BODY_OVERRIDES = new EnumMap<>(AuraBodyParams.Key.class);
     /** {@code /zenkaiaura transform}: reproducir la secuencia de transformación en el próximo frame. */
     public static boolean burstRequested;
 

@@ -145,6 +145,19 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
                 b.setChildrenHidden(hide);
             });
         }
+        // Opciones de cuerpo del catálogo: solo se ven los huesos de la opción elegida en cada categoría (y
+        // ninguno de la cabeza bajo un casco real, como las antenas namek). Cada opción lista sus huesos RAÍZ;
+        // ocultar un hueso oculta también a sus hijos.
+        for (var def : com.hmc.zenkai.feature.race.body.BodyCatalog.all()) {
+            boolean chosen = def.name().equals(GeoLayerArmorModel.wearerBodyOptions.get(def.category()));
+            boolean hideOpt = !chosen || (hide && com.hmc.zenkai.feature.race.body.BodyCatalog.HEAD.equals(def.category()));
+            for (String bone : def.bones()) {
+                model.getBone(bone).ifPresent(b -> {
+                    b.setHidden(hideOpt);
+                    b.setChildrenHidden(hideOpt);
+                });
+            }
+        }
     }
 
     /** Textura efectiva según el stack que se pinta (embudo único, ver resolveTexture). */

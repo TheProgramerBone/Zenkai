@@ -147,6 +147,8 @@ public final class WheelMenu {
         Deque<ResourceLocation> queue = new ArrayDeque<>();
         ResourceLocation first = FormRegistry.firstFormFor(race);
         if (first != null) queue.add(first);
+        // Ikari es raíz fuera de la cadena (como Oozaru) pero SÍ se elige en la rueda: solo aparece si se tiene.
+        if (FormRegistry.get(FormIds.IKARI) != null && FormRegistry.isAllowed(race, FormIds.IKARI)) queue.add(FormIds.IKARI);
         while (!queue.isEmpty()) {
             ResourceLocation id = queue.poll();
             if (!seen.add(id)) continue; // corta ciclos de un datapack roto
@@ -154,7 +156,7 @@ public final class WheelMenu {
             // Solo se enseña lo que ya se tiene. Con super_forms a nivel 1, un saiyan ve
             // SSJ1 y nada más: SSJ2/3/4 no existen para él hasta comprarlos. Enseñarlos en
             // gris adelantaba la progresión y llenaba la rueda de opciones muertas.
-            if (SuperForms.unlocked(p, id)) {
+            if (SuperForms.usable(p, id)) {
                 addTieredLeaf(raceTier, superTier, divineTier, id, selected);
             }
             for (ResourceLocation child : FormRegistry.childrenOf(id)) {

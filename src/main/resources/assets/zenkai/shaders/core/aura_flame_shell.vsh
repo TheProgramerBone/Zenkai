@@ -33,6 +33,8 @@ in vec3 Normal;
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
 uniform float GameTime;
+uniform vec2 ZenkaiShellTear;      // x = perfil de lágrima arriba (0 = elipsoide, 1 = punta), y = relleno arriba (en el fsh)
+uniform vec4 ZenkaiAuraLook;     // PRUEBA de dirección de arte (2026-10-26, AuraDebug.look*): x = fps a saltos (0 = suave), y = 1 tres bandas duras, z = tope de blanco del borde (0 = el de siempre), w = relleno de la parte alta (solo la llama)
 uniform sampler2D Sampler0; // aura_noise.png
 
 uniform mat4 ZenkaiShellModelMat;
@@ -61,6 +63,7 @@ out vec3 vViewDir;
 out float vPeak;   // 0 = valle, 1 = punta de pico (para teñir las puntas hacia el color exterior)
 out float vLocalY; // Y de la esfera unitaria, -1 (pies) .. 1 (punta)
 out vec3 vUnit;    // punto de la esfera unitaria: el fragment calcula su propia UV de ruido
+out vec3 vUpView;  // "arriba" del aura en espacio de vista: el fsh sabe si la cámara la mira desde arriba
                    // (interpolar una UV angular entre vértices la mancharía en la costura de atan)
 
 const float TAU = 6.28318530718;
@@ -75,6 +78,9 @@ void main() {
     // GameTime es la fracción del día (0..1 cada 24000 ticks): *1200 = segundos de juego, mismo
     // criterio que ki_energy.fsh. (El aura_flame.vsh viejo usaba GameTime*0.6, casi inmóvil.)
     float t = GameTime * 1200.0;
+    // Movimiento A SALTOS (prueba de dirección de arte): el tiempo avanza a pocos fotogramas por
+    // segundo, como animación dibujada; 0 = continuo.
+    if (ZenkaiAuraLook.x > 0.0) t = floor(t * ZenkaiAuraLook.x) / ZenkaiAuraLook.x;
 
     float angle = atan(p.z, p.x == 0.0 ? 0.00001 : p.x);
     // Fase 6: la forma del pico sale de AuraProfile.spike — onda triangular (filo, SSJ) o coseno
@@ -120,6 +126,15 @@ void main() {
     // propio semieje. Con el centro en la cadera, la llama es ancha abajo y larga arriba (vela,
     // no huevo con el ancho en la cabeza), y la base baja ~1 bloque por debajo de los pies.
     if (p.y < 0.0) pos.y = p.y * ZenkaiShellLowerHalf;
+    // LÁGRIMA (2026-10-26, aura_1/aura_4/aura_11): en la mitad de arriba el ancho deja de ser el de
+    // la elipsoide, sqrt(1-y²), y pasa a w(y) = (1-y)^1.1 (1+1.2y): casi igual hasta el pecho, luego
+    // se cierra recto hasta una punta. Sin esto la llama acababa en una cúpula a la altura de la
+    // cabeza por mucho que subiera el semieje (capturas con la cáscara opaca).
+    if (ZenkaiShellTear.x > 0.0 && p.y > 0.0) {
+        float ell = sqrt(max(1.0 - p.y * p.y, 0.0));
+        float w = pow(1.0 - p.y, 1.1) * (1.0 + 1.2 * p.y);
+        pos.xz *= mix(1.0, ell > 0.0001 ? w / ell : 0.0, ZenkaiShellTear.x);
+    }
     pos.xz *= smoothGrowth;
     vec3 radial = normalize(pos + vec3(0.0, 0.00001, 0.0));
     // Dirección de las lenguas por ALTURA (2026-09-30, cuarto vídeo): con un up_dir único y alto,
@@ -164,10 +179,29 @@ void main() {
     // Normal "radial" de la superficie desplazada, igual que dbrebirth (normalize(pos)): da un
     // fresnel de elipsoide suave; las puntas se leen por su silueta, no por la normal.
     vec3 nLocal = normalize(pos + vec3(0.0, 0.00001, 0.0));
+    // Normal REAL en la lágrima (2026-10-26, medido con la cáscara opaca): la radial desde el centro
+    // (a la altura de la cintura) apunta hacia ARRIBA en toda la parte alta de una llama alta; vista
+    // desde abajo, el fsh la tomaba por cara trasera (alfa 0.01) y la llama era invisible por encima
+    // de los ojos: se leía como una cápsula hasta la cabeza. Abajo, gradiente de la elipsoide; arriba,
+    // perpendicular al perfil w(y) del bloque de la lágrima.
+    if (ZenkaiShellTear.x > 0.0) {
+        float R = ZenkaiShellSize.x;
+        vec2 d = normalize(p.xz + vec2(0.00001, 0.0));
+        vec3 nT;
+        if (p.y > 0.0) {
+            float y = min(p.y, 0.999);
+            float dw = -1.1 * pow(1.0 - y, 0.1) * (1.0 + 1.2 * y) + 1.2 * pow(1.0 - y, 1.1);
+            nT = normalize(vec3(d.x * ZenkaiShellSize.y, -dw * R, d.y * ZenkaiShellSize.y));
+        } else {
+            nT = normalize(vec3(p.x / R, p.y / max(ZenkaiShellLowerHalf, 0.001), p.z / R));
+        }
+        nLocal = normalize(mix(nLocal, nT, ZenkaiShellTear.x));
+    }
     vNormal  = normalize(mat3(ModelViewMat) * mat3(ZenkaiShellModelMat) * nLocal);
     vViewDir = -viewPos.xyz;
     vColor   = Color;
     vPeak    = clamp(total * falloff, 0.0, 1.0);
     vLocalY  = localY;
     vUnit    = p;
+    vUpView  = normalize(mat3(ModelViewMat) * mat3(ZenkaiShellModelMat) * vec3(0.0, 1.0, 0.0));
 }

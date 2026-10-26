@@ -27,8 +27,18 @@ public final class FormIds {
     public static final ResourceLocation SSJ3 = id("ssj3");
     public static final ResourceLocation SSJ4 = id("ssj4");
     /** Línea del LEGENDARIO (solo Saiyan con isLegendary, que concede el deseo a Shenlong). */
+    /** Ikari: la furia PREVIA al Super Saiyan del Legendario (primera forma de Broly en la película). */
+    public static final ResourceLocation IKARI = id("ikari");
     public static final ResourceLocation SSJ_GREEN = id("ssj_green");
     public static final ResourceLocation SSJ_GREEN_MAX = id("ssj_green_max");
+    /** Legendario de las DEMÁS razas (una forma por raza, mismo deseo y flag que el del Saiyan). Ver LegendaryForms. */
+    /** Formas divinas con mecánica propia (pasan a ellas la regeneración del namekiano y la voluntad colectiva del humano). */
+    public static final ResourceLocation HUMAN_GOD = id("human_god");
+    public static final ResourceLocation NAMEK_GOD = id("namek_god");
+    public static final ResourceLocation HUMAN_LEGENDARY = id("human_legendary");
+    public static final ResourceLocation NAMEK_LEGENDARY = id("namek_legendary");
+    public static final ResourceLocation ARCOSIAN_LEGENDARY = id("arcosian_legendary");
+    public static final ResourceLocation MAJIN_LEGENDARY = id("majin_legendary");
 
     public static final ResourceLocation SECOND_FORM = id("second_form");
     public static final ResourceLocation THIRD_FORM  = id("third_form");

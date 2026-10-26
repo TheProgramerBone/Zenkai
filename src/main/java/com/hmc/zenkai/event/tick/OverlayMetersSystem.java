@@ -176,6 +176,13 @@ public final class OverlayMetersSystem {
         if (att.getKiCurrent() < cost) return false;
         att.addKi(-cost);
         DODGE_COOLDOWN.put(sp.getUUID(), now + DODGE_COOLDOWN_TICKS);
+        // Cada esquive gasta concentración: sube el calor (la HUD lo enseña al revés, como lo que QUEDA). Al llegar al 100 %
+        // pasa lo de siempre: sin esquive hasta enfriarse (tick).
+        double heatNow = Math.min(100.0, att.getUiHeat() + ServerConfig.uiHeatPerDodge());
+        att.setUiHeat(heatNow);
+        if (heatNow >= 100.0 && isUiForm(formOf(sp)) && EXHAUSTED.add(sp.getUUID())) {
+            sp.displayClientMessage(Component.translatable("message.zenkai.ui_overheat"), true);
+        }
         // Dos clips de esquive, alternados en ciclo por jugador (1, 2, 1, 2...); el servidor decide
         // para que todos vean el mismo.
         int variant = DODGE_NEXT.merge(sp.getUUID(), 1, (old, one) -> old + 1) - 1;

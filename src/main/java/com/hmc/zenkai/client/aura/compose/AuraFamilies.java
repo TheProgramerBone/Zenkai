@@ -46,8 +46,17 @@ public final class AuraFamilies {
                     AuraFlameTuning.get(AuraFlameTuning.Param.INNER_SCALE),
                     AuraFlameTuning.get(AuraFlameTuning.Param.INNER_AMP),
                     AuraFlameTuning.get(AuraFlameTuning.Param.INNER_ALPHA), 0.5f, 0.4f),
-            AuraFamilies::needleCandle,
+            AuraFamilies::tallTeardrop,
             List.of(strands(48), sparks()),
+            "dust", "burst", AuraTrailSpec.FLAME));
+
+    /**
+     * CANDLE — la llama de VELA de agujas (2026-09-30 a 2026-10-26), la que fue FLAME hasta que el
+     * usuario aprobó la lágrima alta (2026-10-26: "ponla en todas las formas, también SSJ2 y Rosé").
+     * Se conserva para comparar ({@code /zenkaiaura family candle}); ningún estilo la usa.
+     */
+    public static final AuraFamily CANDLE = register(new AuraFamily("candle", AuraBodyKind.FLAME,
+            FLAME.inner(), AuraFamilies::needleCandle, List.of(strands(48), sparks()),
             "dust", "burst", AuraTrailSpec.FLAME));
 
     /**
@@ -133,14 +142,15 @@ public final class AuraFamilies {
     public static final AuraFamily ELECTRIC_FLAME = register(new AuraFamily("electric_flame", AuraBodyKind.FLAME,
             FLAME.inner(),
             b -> {
-                needleCandle(b);
+                // Sobre la lágrima alta desde el 2026-10-26 (antes la vela). Sin el crown_soft 0.75 de
+                // la vela: volvía a comprimir la corona y aplastaba la punta.
+                tallTeardrop(b);
                 b.mul(Key.PEAKS, 1.15f);
                 b.set(Key.SHARP, 1f);
                 b.mul(Key.SPEED, 1.45f);
                 b.mul(Key.DETAIL, 1.4f);
                 b.mul(Key.STREAK, 1.3f);
                 b.mul(Key.AMP, 1.15f);
-                b.set(Key.CROWN_SOFT, 0.75f);
                 b.mul(Key.TIP, 1.2f);
                 b.mul(Key.TOP_BOOST, 1.2f);
             },
@@ -289,6 +299,32 @@ public final class AuraFamilies {
         b.set(Key.CEL_RIM, 0.9f);
         b.mul(Key.EMIT_EDGE, 0.7f);
         b.mul(Key.BLOOM, 0.6f);
+    }
+
+    /**
+     * LÁGRIMA ALTA (la llama de FLAME desde el 2026-10-26, guiada por aura_1/aura_3/aura_4/aura_11): la
+     * vela de agujas cerrada en punta muy por encima de la cabeza en vez de acabar en cúpula a su
+     * altura, casi transparente junto al cuerpo y densa y brillante arriba, sin corona comprimida y
+     * con la base abierta.
+     */
+    static void tallTeardrop(AuraBodyParams b) {
+        needleCandle(b);
+        b.set(Key.TEARDROP, 1f);
+        // Proporciones elegidas con capturas contra aura_4 (2026-10-26, variante "lagrima_a"): unas 2,3
+        // veces el jugador con poder base y más ancha que la vela. La altura ya la tenía la vela; lo
+        // que la escondía era la normal (ver aura_flame_shell.vsh). Con x1.4 salía un géiser.
+        b.mul(Key.RADIUS, 1.25f);
+        // La punta la da el perfil de lágrima: ni estrechamiento extra ni corona comprimida.
+        b.set(Key.TAPER, 0f);
+        b.set(Key.CROWN_KNEE, 3f);
+        b.set(Key.CROWN_SOFT, 1f);
+        b.set(Key.POLE_CALM, 0.3f);
+        // Base abierta: sin el anillo encendido bajo los pies.
+        b.set(Key.BASE_FADE_LO, -0.75f);
+        b.set(Key.BASE_FADE_HI, -0.3f);
+        // Transparente junto al cuerpo, densa arriba.
+        b.mul(Key.ALPHA_CENTER, 0.5f);
+        b.set(Key.TOP_FILL, 1f);
     }
 
     private static AuraFamily register(AuraFamily f) {

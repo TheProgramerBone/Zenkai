@@ -1,0 +1,12 @@
+{
+  "_comment": "Ikari y Legendarios (Saiyan y demás razas): la llama de siempre más el contorno de llama sobre la silueta (\"humo\", referencia smoke.png del usuario, 2026-10-26). Colores fijos: amarillo dentro, verde fuera.",
+  "family": "flame",
+  "silhouette": {
+    "inner": "#F6FF5A",
+    "outer": "#5CFF3A",
+    "thickness": 1.0,
+    "reach": 1.0,
+    "speed": 1.0,
+    "alpha": 0.95
+  }
+}

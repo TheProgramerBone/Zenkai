@@ -44,6 +44,7 @@ public final class SkillTreeShots {
     private static boolean skillsOnly;
     private static boolean absorbOnly;
     private static boolean legendaryOnly;
+    private static boolean mastersOnly;
     private static boolean opened;
     private static int ticks, step, wait;
     private static final List<Runnable> PLAN = new ArrayList<>();
@@ -61,6 +62,7 @@ public final class SkillTreeShots {
                     skillsOnly = lines.size() > 1 && lines.get(1).trim().equals("skills"); // solo el árbol de skills por maestro
                     absorbOnly = lines.size() > 1 && lines.get(1).trim().equals("absorb"); // solo la absorción del Majin
                     legendaryOnly = lines.size() > 1 && lines.get(1).trim().equals("legendary"); // solo la línea del Legendario
+                    mastersOnly = lines.size() > 1 && lines.get(1).trim().equals("masters"); // solo los retratos de los maestros
                     enabled = !world.isEmpty();
                 } catch (Exception ignored) {}
             }
@@ -130,6 +132,7 @@ public final class SkillTreeShots {
         if (skillsOnly) { skillsPlan(mc); return; }
         if (absorbOnly) { absorbPlan(mc); return; }
         if (legendaryOnly) { legendaryPlan(mc); return; }
+        if (mastersOnly) { mastersPlan(mc); return; }
         // Tutorial (F7): la primera apertura lo enseña; se captura y se cierra con Esc.
         PLAN.add(() -> {
             setup(mc, Race.SAIYAN, 3, false, false, false, sp -> {});
@@ -245,6 +248,94 @@ public final class SkillTreeShots {
             wait = WAIT / 2;
         });
         PLAN.add(() -> capture(mc, "skills_overview"));
+    }
+
+    /**
+     * Retratos de los maestros en el árbol de skills: los cuatro conocidos; por rama, el nodo sin hover, con
+     * hover y con zoom x2; al final la vista general (zoom 0,5) con los cuatro a la vez.
+     */
+    private static void mastersPlan(Minecraft mc) {
+        String[] masters = {"kami", "korin", "kaio", "toribot"};
+        PLAN.add(() -> {
+            setup(mc, Race.SAIYAN, 3, false, false, false, sp -> {
+                var att = PlayerStatsAttachment.get(sp);
+                for (String m : masters) att.markMasterMet(m);
+                att.skills().setLevel("ki_sense", 3);
+                att.skills().setLevel("run", 4);
+            });
+            wait = WAIT;
+        });
+        PLAN.add(() -> { mc.setScreen(new SkillsTreeScreen()); wait = WAIT; });
+        PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); wait = 5; });
+        PLAN.add(() -> { mc.setScreen(new SkillsTreeScreen()); wait = WAIT; });
+        for (int b = 0; b < masters.length; b++) {
+            final int bb = b;
+            final String m = masters[b];
+            PLAN.add(() -> {
+                SkillsTreeScreen.devMouse = null;
+                if (mc.screen instanceof SkillsTreeScreen s) s.devFocus(bb, "m:" + m);
+                wait = 90; // el fundido del cielo dura 3,2 s
+            });
+            PLAN.add(() -> capture(mc, "masters_" + m));
+            PLAN.add(() -> {
+                if (mc.screen instanceof SkillsTreeScreen s) {
+                    int[] p = s.devFocus(bb, "m:" + m);
+                    SkillsTreeScreen.devMouse = p == null ? null : new int[]{p[0] + 3, p[1] + 3};
+                }
+                wait = 10;
+            });
+            PLAN.add(() -> capture(mc, "masters_" + m + "_hover"));
+            PLAN.add(() -> {
+                SkillsTreeScreen.devMouse = null;
+                if (mc.screen instanceof SkillsTreeScreen s) {
+                    int[] p = s.devFocus(bb, "m:" + m);
+                    if (p != null) s.mouseScrolled(p[0], p[1], 0, 1);
+                }
+                wait = 10;
+            });
+            PLAN.add(() -> capture(mc, "masters_" + m + "_zoom2"));
+            PLAN.add(() -> {
+                if (mc.screen instanceof SkillsTreeScreen s) {
+                    int[] p = s.devFocus(bb, "m:" + m);
+                    if (p != null) s.mouseScrolled(p[0], p[1], 0, -1);
+                }
+                wait = 5;
+            });
+        }
+        // Puerta «Transformaciones» de la rama de Tori-Bot: normal, con hover y con zoom x2.
+        PLAN.add(() -> { SkillsTreeScreen.devMouse = null; if (mc.screen instanceof SkillsTreeScreen s) s.devFocus(3, "gate"); wait = 10; });
+        PLAN.add(() -> capture(mc, "masters_gate"));
+        PLAN.add(() -> {
+            if (mc.screen instanceof SkillsTreeScreen s) {
+                int[] p = s.devFocus(3, "gate");
+                SkillsTreeScreen.devMouse = p == null ? null : new int[]{p[0] + 3, p[1] + 3};
+            }
+            wait = 10;
+        });
+        PLAN.add(() -> capture(mc, "masters_gate_hover"));
+        PLAN.add(() -> {
+            SkillsTreeScreen.devMouse = null;
+            if (mc.screen instanceof SkillsTreeScreen s) {
+                int[] p = s.devFocus(3, "gate");
+                if (p != null) s.mouseScrolled(p[0], p[1], 0, 1);
+            }
+            wait = 10;
+        });
+        PLAN.add(() -> capture(mc, "masters_gate_zoom2"));
+        PLAN.add(() -> {
+            if (mc.screen instanceof SkillsTreeScreen s) {
+                int[] p = s.devFocus(3, "gate");
+                if (p != null) s.mouseScrolled(p[0], p[1], 0, -1);
+            }
+            wait = 5;
+        });
+        PLAN.add(() -> {
+            SkillsTreeScreen.devMouse = null;
+            if (mc.screen != null) mc.screen.mouseScrolled(mc.getWindow().getGuiScaledWidth() / 2.0,
+                    mc.getWindow().getGuiScaledHeight() / 2.0, 0, -1);
+            wait = WAIT / 2;
+        });
+        PLAN.add(() -> capture(mc, "masters_overview"));
     }
 
     private static net.minecraft.world.entity.LivingEntity absZ1, absZ2, absZ3;
@@ -363,7 +454,7 @@ public final class SkillTreeShots {
      * cambiar (nextFrom). Se transforma de verdad en ssj_green para la captura (pelo verde, aura wild, escala). Al log.
      */
     private static void legendaryPlan(Minecraft mc) {
-        PLAN.add(() -> { setup(mc, Race.SAIYAN, 2, false, false, false, sp -> {
+        PLAN.add(() -> { setup(mc, Race.SAIYAN, 4, true, false, false, sp -> {
             var att = PlayerStatsAttachment.get(sp);
             att.setLegendary(false);
             sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).addFormMastery(
@@ -391,6 +482,19 @@ public final class SkillTreeShots {
                         com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, M),
                         com.hmc.zenkai.feature.skilltree.SkillTreeNodes.revealed(sp,
                                 com.hmc.zenkai.feature.skilltree.SkillTreeNodes.find(Race.SAIYAN, G)));
+                var SU = com.hmc.zenkai.feature.skills.SuperForms.class;
+                var I = com.hmc.zenkai.feature.forms.FormIds.IKARI;
+                var S2 = com.hmc.zenkai.feature.forms.FormIds.SSJ2;
+                var S3 = com.hmc.zenkai.feature.forms.FormIds.SSJ3;
+                Zenkai.LOGGER.info("[TREESHOTS] legendary BLOQUEO: ikari usable={} ssj2 unlocked={} usable={} (debe ser true/false) ssj3 unlocked={} usable={} (true/false) ssj4 unlocked={}",
+                        com.hmc.zenkai.feature.skills.SuperForms.usable(sp, I),
+                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, S2), com.hmc.zenkai.feature.skills.SuperForms.usable(sp, S2),
+                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, S3), com.hmc.zenkai.feature.skills.SuperForms.usable(sp, S3),
+                        com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, com.hmc.zenkai.feature.forms.FormIds.SSJ4));
+                att.setLegendary(false);
+                Zenkai.LOGGER.info("[TREESHOTS] legendary SIN flag: ikari usable={} ssj2 usable={} (debe ser false/true)",
+                        com.hmc.zenkai.feature.skills.SuperForms.usable(sp, I), com.hmc.zenkai.feature.skills.SuperForms.usable(sp, S2));
+                att.setLegendary(true);
                 sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).addFormMastery(G, 250f);
                 Zenkai.LOGGER.info("[TREESHOTS] legendary verde al 100%: max={} (debe ser true)",
                         com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, M));
@@ -405,7 +509,7 @@ public final class SkillTreeShots {
         PLAN.add(() -> { mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON); mc.setScreen(new SkillTreeScreen()); wait = 30; });
         PLAN.add(() -> {
             if (mc.screen instanceof SkillTreeScreen sc) {
-                int[] p = sc.devFocus(ResourceLocation.parse("zenkai:ssj_green"));
+                int[] p = sc.devFocus(ResourceLocation.parse("zenkai:ssj2"));
                 SkillTreeScreen.devMouse = p == null ? null : new int[]{p[0] + 3, p[1] + 3};
             }
             wait = 90;

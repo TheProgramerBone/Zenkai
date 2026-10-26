@@ -18,6 +18,7 @@ in vec2 vFlowUV;
 
 uniform vec4 ColorModulator;
 uniform float GameTime;
+uniform vec4 ZenkaiAuraLook;     // PRUEBA de dirección de arte (2026-10-26, AuraDebug.look*): x = fps a saltos (0 = suave), y = 1 tres bandas duras, z = tope de blanco del borde (0 = el de siempre), w = relleno de la parte alta (solo la llama)
 uniform sampler2D Sampler0;
 uniform float ZenkaiBloomMode;
 uniform float ZenkaiOrtho;        // 1 = vista ortográfica (GUI)
@@ -74,6 +75,9 @@ void main() {
 
     // Motas de luz: puntos del ruido fino por encima de un umbral, titilando con el tiempo.
     float t = GameTime * 1200.0;
+    // Movimiento A SALTOS (prueba de dirección de arte): el tiempo avanza a pocos fotogramas por
+    // segundo, como animación dibujada; 0 = continuo.
+    if (ZenkaiAuraLook.x > 0.0) t = floor(t * ZenkaiAuraLook.x) / ZenkaiAuraLook.x;
     float fleck = texture(Sampler0, vFlowUV * vec2(5.0, 4.0) + vec2(0.0, t * 0.05)).r;
     float fleckOn = step(0.9, fleck) * ZenkaiFlowLook.x * (0.6 + 0.4 * sin(t * 9.0 + fleck * 40.0));
     color = mix(color, vec3(1.0), clamp(fleckOn, 0.0, 1.0));

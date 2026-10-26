@@ -55,6 +55,8 @@ public record ChooseRacePacket(Race race) implements CustomPacketPayload {
                 );
                 return;
             }
+            // Razas vetadas (ServerConfig banned_races): un cliente modificado no puede elegirlas.
+            if (com.hmc.zenkai.config.ServerConfig.isRaceBanned(pkt.race())) return;
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             att.setRace(pkt.race());
             att.setRaceChosen(true);

@@ -189,28 +189,41 @@ public final class ModernStatsHud {
         g.blit(TEX, plW - PL_CAP, PL_Y, U_PL + PL_CAP + 1, 0, PL_CAP, PL_H, TEX_W, TEX_H);
         g.setColor(1f, 1f, 1f, 1f);
         g.drawString(mc.font, pl, (plW - mc.font.width(pl)) / 2 + 1,
-                PL_Y + BAR_RIM + (PL_H - 2 * BAR_RIM - TEXT_H + 1) / 2, PL_TEXT);
+                PL_Y + BAR_RIM + (PL_H - 2 * BAR_RIM - TEXT_H + 1) / 2 + 1, PL_TEXT);
 
         // Iconos de estado: la MISMA lista que el minimalista, cada uno en su marco tintado.
         int ix = plW + 2;
+        boolean anyBadge = false, anyLabel = false;
         for (ClientZenkaiHooks.Badge b : ClientZenkaiHooks.collectBadges(mc, stats, form, tier, strained, gameTime)) {
             tint(g, frame);
             g.blit(TEX, ix, PL_Y, U_ICON, 0, ICON_FRAME, ICON_FRAME, TEX_W, TEX_H);
             g.setColor(1f, 1f, 1f, 1f);
-            ClientZenkaiHooks.drawBadge(g, ix + 1, PL_Y + 1, b.icon());
+            ClientZenkaiHooks.drawBadge(g, ix + 1, PL_Y + 1, b);
             // Etiqueta ("229s", "x20") DEBAJO del marco, centrada y a escala 1. En la esquina del
             // icono (como el minimalista) se salía del marco y tapaba el dibujo (visto en juego
             // con strain, 2026-10-09). Más pequeña no: media escala no cae en píxeles enteros y la
             // fuente se vería irregular. Si la etiqueta es más ancha que el marco, el paso crece
             // para que no pise la del icono siguiente.
             int step = ICON_STEP;
+            anyBadge = true;
             if (b.label() != null && !b.label().isEmpty()) {
+                anyLabel = true;
                 int lw = mc.font.width(b.label());
                 g.drawString(mc.font, b.label(), ix + (ICON_FRAME - lw) / 2, PL_Y + ICON_FRAME + 2,
                         b.labelColor(), true);
                 step = Math.max(step, lw + 2);
             }
             ix += step;
+        }
+        // Medidores de Ultra Instinto / Ultra Ego: fila propia pegada bajo la placa del PL y CENTRADA en ella. Si la fila
+        // es más ancha que la placa y hay insignias a su derecha, baja por debajo de ellas (y de sus etiquetas).
+        int rowW = com.hmc.zenkai.client.overlay.TransformMeterIcons.rowWidth(mc);
+        if (rowW > 0) {
+            // Una celda va centrada bajo la placa; con varias (arcosiano: PP + UI/UE) arrancan a la izquierda, contiguas.
+            int mx = com.hmc.zenkai.client.overlay.TransformMeterIcons.count(mc) == 1 ? Math.max(0, (plW - rowW) / 2) : 0;
+            int my = PL_Y + PL_H + 3;
+            if (anyBadge && mx + rowW > plW) my = PL_Y + ICON_FRAME + (anyLabel ? 12 : 3);
+            com.hmc.zenkai.client.overlay.TransformMeterIcons.render(g, mc, mx, my);
         }
         g.pose().popPose();
     }

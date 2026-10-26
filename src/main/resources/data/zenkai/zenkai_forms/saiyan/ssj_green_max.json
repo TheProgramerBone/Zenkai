@@ -21,6 +21,9 @@
   "aura_outer_rgb": "0x2BB02E",
   "scale": 1.28,
   "hair_rgb": "0xB4FF80",
-  "eye_rgb": "0xFFFFFF",
-  "no_brows": true
+  "eye_rgb": "0x6FD65A",
+  "no_brows": true,
+  "overdrive_ceiling_bonus": 20.0,
+  "overdrive_drain_mult_untrained": 0.3,
+  "overdrive_drain_mult_mastered": 0.1
 }

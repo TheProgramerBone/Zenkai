@@ -125,6 +125,11 @@ public final class SkillToggles {
         Toggle t = REGISTRY.get(id);
         if (t == null || !t.enabled()) return false;
         if (t.needsOwnSkill() && SkillEffects.level(p, id) <= 0) return false;
+        // El Gigante es SOLO del Namekiano: la skill (namek_giant) no lleva raza en su JSON, así que un
+        // jugador de otra raza que la tuviera (comando, guardado viejo, cambio de raza) veía el interruptor
+        // en la rueda y ganaba tamaño y stats. Este es el único lector (isOn/flip/rueda), así que basta aquí.
+        if (SkillEffects.NAMEK_GIANT.equals(id)
+                && PlayerStatsAttachment.get(p).getRace() != com.hmc.zenkai.feature.Race.NAMEKIAN) return false;
         for (String req : t.requires()) {
             if (SkillEffects.level(p, req) <= 0) return false;
         }

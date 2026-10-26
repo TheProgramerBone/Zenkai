@@ -15,6 +15,7 @@ import com.hmc.zenkai.feature.race.hair.strand.HairPackWriter;
 import com.hmc.zenkai.client.gui.Favorites;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.AtlasIconButton;
@@ -263,6 +264,7 @@ public class HeadAppearanceScreen extends Screen {
         eyeColor      = visual.getEyeColorRgb()  | 0xFF000000;
         eyeRightColor = visual.getEyeColorRightRgb();
         hairColor     = visual.getHairColorRgb() | 0xFF000000;
+        if (stats.getRace() == Race.MAJIN) hairColor = visual.getSkinColorRgb() | 0xFF000000; // el pelo del Majin = su piel
         hairStrandColors = visual.isHairStrandColors();
         vanillaSkin   = !visual.shouldRenderRaceSkin();
 
@@ -719,7 +721,7 @@ public class HeadAppearanceScreen extends Screen {
                     .textColors(COLOR_TITLE, COLOR_VALUE, COLOR_MUTED).noShadow());
             if (hetero) addColorBox(boxX, pt + ROW1_Y + ROW_H, ColorChannel.EYE_RIGHT);
         } else if (tab == Tab.HAIR) {
-            addColorBox(boxX, pt + ROW1_Y, ColorChannel.HAIR);
+            if (race != Race.MAJIN) addColorBox(boxX, pt + ROW1_Y, ColorChannel.HAIR);
             if (hairHasColors) {
                 // Mismo patrón que la heterocromía: casilla pintada en renderColorLabels + texto.
                 Component label = Component.translatable("screen.zenkai.head.strand_colors");
@@ -888,7 +890,8 @@ public class HeadAppearanceScreen extends Screen {
         renderColorLabels(g, pl, pt);
 
         // Preview: marco + jugador. Cara = vista frontal fija; cuerpo = sigue al ratón como antes.
-        g.fill(pl + PV_X1 - 1, pt + PV_Y1 - 1, pl + PV_X2 + 1, pt + PV_Y2 + 1, ZenkaiPalette.SEPARATOR);
+        // Borde de la placa de TP/MND del skill tree (2 px), por FUERA del área del render.
+        NineSlice.plateBorder(g, pl + PV_X1 - 2, pt + PV_Y1 - 2, PV_X2 - PV_X1 + 4, PV_Y2 - PV_Y1 + 4);
         if (faceView) {
             int size = Math.round(FACE_SIZE * zoomMult);
             InventoryScreen.renderEntityInInventoryFollowsAngle(g, pl + PV_X1, pt + PV_Y1, pl + PV_X2, pt + PV_Y2,
@@ -917,8 +920,13 @@ public class HeadAppearanceScreen extends Screen {
                 if (eyeRightColor >= 0) g.fill(cx + 2, cy + 2, cx + CHECK_W - 4, cy + CHECK_W - 4, COLOR_VALUE);
             }
             case HAIR -> {
-                g.drawString(font, Component.translatable("screen.zenkai.head.hair_color"),
-                        x, pt + ROW1_Y + 1, COLOR_TITLE, false);
+                if (race == Race.MAJIN) {
+                    g.drawString(font, Component.translatable("screen.zenkai.head.color_follows_skin"),
+                            x, pt + ROW1_Y + 1, COLOR_MUTED, false);
+                } else {
+                    g.drawString(font, Component.translatable("screen.zenkai.head.hair_color"),
+                            x, pt + ROW1_Y + 1, COLOR_TITLE, false);
+                }
                 if (hairHasColors && !importOpen) {
                     int cx = x + 1, cy = pt + ROW1_Y + ROW_H + 1;
                     g.fill(cx, cy, cx + CHECK_W - 2, cy + CHECK_W - 2, COLOR_TITLE);

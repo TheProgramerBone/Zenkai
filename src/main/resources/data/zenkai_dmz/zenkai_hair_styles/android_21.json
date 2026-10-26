@@ -1,7 +1,8 @@
 {
   "races": [
     "human",
-    "saiyan"
+    "saiyan",
+    "majin"
   ],
   "sort": 600,
   "representation": "code",

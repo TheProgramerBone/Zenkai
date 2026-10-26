@@ -20,6 +20,9 @@ public final class FormDrivenSkills {
 
     /** Variante por raza: la usan el logro de "todas las habilidades" y cualquiera sin Player. */
     public static int maxLevel(SkillDef def, Race race) {
+        // El Gigante es exclusivo del Namekiano pero su JSON no lleva raza: sin esto /zenkai skill give
+        // (y give all) se lo daban a cualquiera, y SkillBuyPacket también lo habría vendido. Techo 0 = "N/A para su raza".
+        if (SkillEffects.NAMEK_GIANT.equals(def.id()) && race != Race.NAMEKIAN) return 0;
         if (!def.levelsFromForms()) return def.maxLevel();
         return Math.min(def.maxLevel(), SuperForms.maxLevel(race));
     }

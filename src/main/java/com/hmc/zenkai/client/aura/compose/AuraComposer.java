@@ -158,6 +158,9 @@ public final class AuraComposer {
         Vector3f left = cam.getLeftVector(), up = cam.getUpVector();
         float pt = e.getPartialTick().getGameTimeDeltaPartialTick(true);
         float seconds = (float) ((mc.level.getGameTime() + pt) / 20.0);
+        // Prueba de movimiento A SALTOS (AuraDebug.lookFps): el mismo reloj cuantizado que los shaders de
+        // cuerpo, para que agujas, rayos y vaivén salten a la vez. Las partículas simuladas (dt) no.
+        if (AuraDebug.lookFps > 0f) seconds = (float) Math.floor(seconds * AuraDebug.lookFps) / AuraDebug.lookFps;
         long now = System.nanoTime();
         PoseStack pose = e.getPoseStack();
         boolean hud = AuraDebug.hud;
@@ -440,12 +443,17 @@ public final class AuraComposer {
         AuraFlameParams base = AuraFlameParams.from(f.profile, seconds);
         AuraBodyParams outer = AuraBodyParams.from(base, f.powerScale);
         style.shape(outer);
+        AuraDebug.BODY_OVERRIDES.forEach(outer::set);
         f.dynamics.applyToBody(outer, seconds, seed);
         if (f.burstScale != 1f) {
             for (Key k : Key.values()) if (k.dimensional) outer.mul(k, f.burstScale);
         }
         f.body = outer;
         f.bodyKind = style.family().body();
+        f.cameraInside = !f.selfFirstPerson && cameraInside(f, outer);
+        // Dentro del aura en 3ª persona = la misma situación que la 1ª persona: misma opacidad
+        // (aura.first_person_opacity); a plena opacidad era un arco brillante cruzando la pantalla.
+        if (f.cameraInside) f.fpOpacity = ClientConfig.auraFirstPersonOpacityFrac();
 
         float coreWhite = outer.get(Key.CORE_WHITE);
         copy(AuraFlameColors.heatedCenter(f.outer, coreWhite), f.outerCenter);
@@ -454,6 +462,35 @@ public final class AuraComposer {
         if (f.twoTone) copy(f.inner, f.innerEdge);
         else copy(f.outerCenter, f.innerEdge);
         copy(AuraFlameColors.heatedCenter(f.innerEdge, coreWhite), f.innerCenter);
+    }
+
+    /**
+     * ¿Cámara dentro del cuerpo en 3ª persona? (2026-10-26, barrido de cámara del usuario: "el aura se
+     * hace más pequeña, se malforma según la cámara"). Al chocar con el suelo o una pared la cámara de
+     * 3ª persona se acerca y acaba DENTRO de la cáscara; el fsh oculta las caras traseras (las únicas
+     * que se ven desde dentro) y el aura quedaba en arcos sueltos. Mismo volumen que dibuja el vsh de
+     * la llama: elipsoide abajo, lágrima o elipsoide arriba; con un margen del 10%.
+     */
+    private static boolean cameraInside(AuraFrame f, AuraBodyParams b) {
+        if (f.bodyKind == AuraBodyKind.FLOW) return false;
+        // Las medidas del cuerpo ya llevan el estallido (burstScale); la escala del jugador va en la pose.
+        double s = f.bodyScale;
+        double dx = (f.camX - f.x) / s, dz = (f.camZ - f.z) / s, dy = (f.camY - f.y) / s - b.get(Key.CENTER_Y);
+        double d = Math.sqrt(dx * dx + dz * dz);
+        double r = b.get(Key.RADIUS) * 1.1;
+        double w;
+        if (dy < 0) {
+            double y = -dy / Math.max(b.get(Key.LOWER_HALF), 0.001);
+            if (y >= 1) return false;
+            w = Math.sqrt(1 - y * y);
+        } else {
+            double y = dy / Math.max(b.get(Key.HALF_HEIGHT), 0.001);
+            if (y >= 1) return false;
+            double ell = Math.sqrt(1 - y * y);
+            double tear = Math.pow(1 - y, 1.1) * (1 + 1.2 * y);
+            w = Mth.lerp(b.get(Key.TEARDROP), ell, tear);
+        }
+        return d < r * w;
     }
 
     private static void submitBody(AuraFrame f, AuraStyle style, PoseStack pose) {
@@ -525,7 +562,8 @@ public final class AuraComposer {
         AuraTiltController.applyCurrent(pose, f.player.getId());
         pose.mulPose(Axis.YP.rotationDegrees(180f - f.bodyYaw));
         pose.scale(f.bodyScale, f.bodyScale, f.bodyScale);
-        submitLayer(pose, fromCam, kind, params, growth, center, edge, alpha, lod, noBloom, null, (float) f.camY, false, f.selfFirstPerson);
+        submitLayer(pose, fromCam, kind, params, growth, center, edge, alpha, lod, noBloom, null, (float) f.camY, false,
+                f.selfFirstPerson || f.cameraInside);
         pose.popPose();
     }
 

@@ -53,6 +53,17 @@ public final class ComboTracker {
     }
 
     /**
+     * Golpes de la cadena VIVA de este jugador (0 si caducó o se rompió). Lo lee «Voluntad colectiva» (HumanWill)
+     * como «impulso»: se acumula al encadenar golpes y se pierde al recibir daño.
+     */
+    public static int currentHits(ServerPlayer sp) {
+        Chain c = CHAINS.get(sp.getUUID());
+        if (c == null) return 0;
+        if (sp.level().getGameTime() - c.lastHit() > ServerConfig.comboWindowTicks()) return 0;
+        return Math.min(c.hits(), ServerConfig.comboMaxHits());
+    }
+
+    /**
      * ¿El último golpe registrado de este jugador es un REMATE (cada {@code combo.finisher_every} golpes seguidos)?
      * El remate de mano vacía aleja al rival: separa a los combatientes y le da aire al PvP, y de paso hace que el
      * spam de clics no rinda más que un ritmo cómodo. 0 = sin remate.
@@ -103,5 +114,6 @@ public final class ComboTracker {
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent e) {
         reset(e.getEntity().getUUID());
+        com.hmc.zenkai.feature.forms.HumanWill.forget(e.getEntity().getUUID());
     }
 }

@@ -58,7 +58,13 @@ public final class AuraBodyParams {
         /** FLOW: 1 = solo la banda del borde (el componente rim), 0 = cuerpo entero. */
         RIM_ONLY("rim_only"),
         /** FLAME: largo aleatorio por pico (0 = picos iguales, 0.6 = de 0.4x a 1.6x). */
-        PEAK_VAR("peak_var");
+        PEAK_VAR("peak_var"),
+        /** FLAME: perfil de LÁGRIMA en la mitad de arriba (0 = elipsoide, 1 = se cierra en punta).
+         *  aura_1/aura_4/aura_11: la llama se estrecha hasta una punta alta, no acaba en cúpula. */
+        TEARDROP("teardrop"),
+        /** FLAME: relleno de la parte alta (0..1). En las referencias la llama es densa y brilla
+         *  ARRIBA y casi transparente junto al cuerpo; con solo fresnel pasaba al revés. */
+        TOP_FILL("top_fill");
 
         public final String key;
         /** true = está en bloques y lleva dentro la escala por poder. */

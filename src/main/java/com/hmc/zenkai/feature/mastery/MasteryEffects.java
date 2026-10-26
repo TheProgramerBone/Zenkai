@@ -34,7 +34,16 @@ public final class MasteryEffects {
                 && PlayerStatsAttachment.get(p).getPowerPercent() > 100;
     }
 
+    /** ¿Lleva el Legendario Pleno puesto Y está forzando (powerPercent > 100)? Su overdrive es el hermano barato
+     *  del de Beast: techo más bajo, coste menor y un bono de stats propio. También lo lee el cliente (iris blanco). */
+    public static boolean isLegendaryOverdrive(Player p) {
+        PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+        return com.hmc.zenkai.feature.forms.FormIds.SSJ_GREEN_MAX.equals(form.getFormId())
+                && PlayerStatsAttachment.get(p).getPowerPercent() > 100;
+    }
+
     private static double beastOverdriveBonus(Player p, PlayerFormAttachment form) {
+        if (isLegendaryOverdrive(p)) return ServerConfig.legendaryOverdriveStatBonus();
         return isBeastOverdrive(p) ? ServerConfig.beastOverdriveStatBonus() : 0.0;
     }
 
@@ -77,9 +86,14 @@ public final class MasteryEffects {
                 + ArcosianPowerSystem.statBonus(p) + beastOverdriveBonus(p, form)
                 + OverlayMetersSystem.ueStatBonus(p)
                 + namekGiantBonus(p)
-                + com.hmc.zenkai.feature.race.MajinAbsorption.statBonus(p);
+                + com.hmc.zenkai.feature.race.MajinAbsorption.statBonus(p)
+                + com.hmc.zenkai.feature.forms.HumanWill.bonus(p);
         if (MajinEffect.isActive(p)) {
             f *= 1.0 + ServerConfig.majinStatBonus();
+        }
+        // Estado Legendario (el deseo): bono propio, menor que el Majin porque abre más caminos.
+        if (PlayerStatsAttachment.get(p).isLegendary()) {
+            f *= 1.0 + ServerConfig.legendaryStateStatBonus();
         }
         // Fatiga por agotar el kaioken. Va aquí porque FormSystem vuelca este valor en
         // setStatMultiplier cada tick: así el castigo se propaga solo al PL, al daño y a la GUI.

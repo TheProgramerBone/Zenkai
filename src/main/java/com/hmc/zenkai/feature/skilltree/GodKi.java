@@ -335,7 +335,7 @@ public final class GodKi {
         grantGodKi(sp, SkillTree.Via.RITUAL);
         PlayerFormAttachment form = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         ResourceLocation resolved = com.hmc.zenkai.feature.skills.DivineForms.resolveForPlayer(sp, first);
-        if (SuperForms.unlocked(sp, resolved)) form.setFormId(sp, resolved);
+        if (SuperForms.usable(sp, resolved)) form.setFormId(sp, resolved);
         flash(sp.serverLevel(), sp.position().add(0, sp.getBbHeight() * 0.55, 0), isEvil(sp));
         sp.serverLevel().playSound(null, sp.blockPosition(), SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1f, 0.8f);
         ZenkaiTriggers.MILESTONE.get().trigger(sp, ZenkaiTriggers.Kinds.GOD_KI_RITUAL);

@@ -6,6 +6,7 @@ import com.hmc.zenkai.client.TechniqueAnimSets;
 import com.hmc.zenkai.client.TechniqueIcons;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
 import com.hmc.zenkai.client.gui.buttons.LockIconButton;
@@ -746,8 +747,9 @@ public class TechniqueEditScreen extends Screen {
 
         int cx = leftPos + BG_W / 2;
         int top = topPos + Y_PREVIEW;
-        g.fill(cx - 45, top - 1, cx + 45, top + PREVIEW_H + 1, ZenkaiPalette.BORDER_IN);
         g.fill(cx - 44, top, cx + 44, top + PREVIEW_H, ZenkaiPalette.BEIGE_DEEP);
+        // Borde de la placa de TP/MND del skill tree (2 px), por FUERA del interior.
+        NineSlice.plateBorder(g, cx - 46, top - 2, 92, PREVIEW_H + 4);
         if (mc.player != null) {
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     g, cx - 40, top + 2, cx + 40, top + PREVIEW_H - 2,

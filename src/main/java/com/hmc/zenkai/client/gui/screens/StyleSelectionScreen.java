@@ -19,6 +19,7 @@ import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.feature.race.UpdatePlayerVisualPacket;
 import net.minecraft.client.Minecraft;
 import com.hmc.zenkai.client.gui.PanelText;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -300,6 +301,8 @@ public class StyleSelectionScreen extends Screen {
         int pvY1 = tp + div2Y + 8;
         int pvX2 = lp + IN_X1 + PAD + PREVIEW_W;
         int pvY2 = tp + IN_Y2 - 4;
+        // Borde de la placa de TP/MND del skill tree (2 px), por fuera del recorte.
+        NineSlice.plateBorder(g, pvX1 - 2, pvY1 - 2, pvX2 - pvX1 + 4, pvY2 - pvY1 + 4);
         g.enableScissor(pvX1, pvY1, pvX2, pvY2);   // recorta el aura al recuadro del preview
         AuraPreviewRenderer.ACTIVE = true;         // el hook dibuja el aura SOLO en esta pasada
         // El color de ki elegido aquí (Default/Custom + swatch) no se guarda en el attachment

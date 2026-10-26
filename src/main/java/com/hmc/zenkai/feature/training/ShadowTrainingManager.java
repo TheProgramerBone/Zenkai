@@ -171,7 +171,7 @@ public final class ShadowTrainingManager {
     static long simulatedPowerLevel(ServerPlayer sp, PlayerStatsAttachment att,
                                      ResourceLocation simulatedFormId) {
         ResourceLocation formId = (simulatedFormId != null
-                && (FormIds.BASE.equals(simulatedFormId) || SuperForms.unlocked(sp, simulatedFormId)))
+                && (FormIds.BASE.equals(simulatedFormId) || SuperForms.usable(sp, simulatedFormId)))
                 ? simulatedFormId : FormIds.BASE;
         PlayerFormAttachment formAtt = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         double mastery = formAtt.getFormMastery(formId);
