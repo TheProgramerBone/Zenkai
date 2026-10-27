@@ -2,7 +2,6 @@ package com.hmc.zenkai.client;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.aura.AuraEmberRenderer;
-import com.hmc.zenkai.client.aura.AuraRimRenderer;
 import com.hmc.zenkai.client.aura.AuraSparkRenderer;
 import com.hmc.zenkai.client.aura.AuraTiltController;
 import com.hmc.zenkai.client.aura.AuraTrailRenderer;
@@ -47,7 +46,6 @@ public final class ClientVfxStateReset {
             AuraWispRenderer.clear(id);
             AuraSparkRenderer.clear(id);
             AuraEmberRenderer.clear(id);
-            AuraRimRenderer.clear(id);
             KiChargeClientState.forget(id);
         });
     }

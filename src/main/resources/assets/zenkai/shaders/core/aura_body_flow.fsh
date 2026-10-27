@@ -1,12 +1,13 @@
 #version 150
 
-// CUERPO FLOWING / contorno RIM — fragment. Mismo contrato de salida que el resto de cuerpos
+// CUERPO FLOWING — fragment. Mismo contrato de salida que el resto de cuerpos
 // (premultiplicado, cara trasera casi invisible, pasada de bloom).
 //
 // Lenguaje (aura_6/aura_12/aura_14): interior casi vacío (el cuerpo se lee entero), contorno
 // PLATEADO que pasa al color exterior hacia fuera, estrías que suben por la superficie siguiendo el
-// flujo del vsh, y MOTAS de luz sueltas (ZenkaiFlowLook.x) que titilan. Con ZenkaiFlowLook.y = 1
-// solo se dibuja la banda del borde: es el contorno fino del componente rim.
+// flujo del vsh, y MOTAS de luz sueltas (ZenkaiFlowLook.x) que titilan.
+// Los modos "solo borde" (componente rim) y "contorno de silueta" (Beast forzando) sobre las cajas de
+// la pose se BORRARON el 2026-10-26: los contornos de las formas son el humo de SilhouetteFlameRenderer.
 
 in vec4 vColor;
 in vec3 vNormal;
@@ -29,7 +30,7 @@ uniform vec2 ZenkaiShellFresnel;
 uniform vec4 ZenkaiShellCoreColor;
 uniform vec4 ZenkaiShellOuterColor;
 uniform vec4 ZenkaiShellCel;
-uniform vec4 ZenkaiFlowLook;        // x = motas, y = solo borde, z = suavizado de bandas, w = 1 en la pre-pasada de profundidad
+uniform vec4 ZenkaiFlowLook;        // x = motas, y = sin uso, z = suavizado de bandas, w = 1 en la pre-pasada de profundidad
 
 out vec4 fragColor;
 
@@ -49,10 +50,7 @@ void main() {
     float edge = clamp(pow(1.0 - facingAbs, ZenkaiShellFresnel.x) / max(ZenkaiShellFresnel.y, 0.001), 0.0, 1.0);
 
     float streak = texture(Sampler0, vFlowUV * vec2(1.0, 2.5)).g;
-    // ZenkaiFlowLook.y >= 2 = contorno ESTABLE (Beast forzando): sin estrías. Su textura se muestrea con
-    // la altura de MUNDO, así que al volar pasa a toda velocidad por la banda y el borde titila.
-    bool steady = ZenkaiFlowLook.y > 1.5;
-    float i = clamp(edge + (streak - 0.5) * (steady ? 0.0 : 0.25), 0.0, 1.0);
+    float i = clamp(edge + (streak - 0.5) * 0.25, 0.0, 1.0);
     float w = max(ZenkaiFlowLook.z, 0.005);
     float rimB = smoothstep(ZenkaiShellCel.y - w, ZenkaiShellCel.y + w, i);
     float lightB = smoothstep(ZenkaiShellCel.z - w, ZenkaiShellCel.z + w, i);
@@ -66,13 +64,6 @@ void main() {
     alpha = mix(alpha, ZenkaiShellAlpha.y, rimB);
     float emitBlend = max(lightB * 0.5, rimB);
 
-    // Solo borde (rim): fuera de la banda del borde, nada.
-    if (ZenkaiFlowLook.y > 0.5) {
-        alpha = ZenkaiShellAlpha.y * rimB;
-        color = steady ? lift(outer, 1.15) : mix(outer, silver, 0.6);
-        emitBlend = 1.0;
-    }
-
     // Motas de luz: puntos del ruido fino por encima de un umbral, titilando con el tiempo.
     float t = GameTime * 1200.0;
     // Movimiento A SALTOS (prueba de dirección de arte): el tiempo avanza a pocos fotogramas por
@@ -84,17 +75,7 @@ void main() {
     alpha = max(alpha, clamp(fleckOn, 0.0, 1.0) * 0.9);
     emitBlend = max(emitBlend, fleckOn);
 
-    if (ZenkaiFlowLook.y > 2.5) {
-        // CONTORNO DE SILUETA (Beast forzando): solo las caras TRASERAS de las cajas infladas, lisas y
-        // del color puro. El cuerpo real, más cerca de la cámara, las tapa por profundidad y queda
-        // únicamente el borde que asoma alrededor de la silueta (casco invertido).
-        if (facingRaw >= 0.0) discard;
-        color = lift(outer, 1.15);
-        alpha = ZenkaiShellAlpha.y;
-        emitBlend = 1.0;
-    } else if (facingRaw < 0.0) {
-        alpha = min(alpha, 0.01);
-    }
+    if (facingRaw < 0.0) alpha = min(alpha, 0.01);
 
     if (ZenkaiBloomMode > 0.5) {
         alpha *= ZenkaiShellBloom.x * mix(ZenkaiShellBloom.y, 1.0, emitBlend);

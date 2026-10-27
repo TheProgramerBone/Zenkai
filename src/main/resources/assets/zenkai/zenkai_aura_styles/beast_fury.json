@@ -1,4 +1,11 @@
 {
-  "_comment": "Contorno rojo de Beast forzando (overdrive): solo el borde ceñido a la pose real, sin cuerpo de aura. Lo dibuja AuraComposer aparte del aura normal de Beast, ver familia outline.",
-  "family": "outline"
+  "_comment": "Beast forzando (overdrive): SOLO el humo rojo sobre la silueta real, también en reposo (SilhouetteFlameRenderer.specFor). Antes era un contorno sobre las cajas de la pose (familia outline, borrada el 2026-10-26). Ninguna forma usa este aura_type para su aura.",
+  "silhouette": {
+    "inner": "#FF7A4A",
+    "outer": "#FF2A1A",
+    "thickness": 1.0,
+    "reach": 1.1,
+    "speed": 1.3,
+    "alpha": 0.95
+  }
 }

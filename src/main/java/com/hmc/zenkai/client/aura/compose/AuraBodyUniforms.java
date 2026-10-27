@@ -76,7 +76,7 @@ public final class AuraBodyUniforms {
 
     /** Marca (o desmarca) la pre-pasada de profundidad de FLOW: el fragment no descarta nada. */
     public static void setDepthPass(ShaderInstance s, AuraBodyParams p, boolean depthPass) {
-        set(uniforms(s), U.FLOW_LOOK, p.get(Key.FLECKS), p.get(Key.RIM_ONLY), p.get(Key.BAND_SOFT), depthPass ? 1f : 0f);
+        set(uniforms(s), U.FLOW_LOOK, p.get(Key.FLECKS), 0f, p.get(Key.BAND_SOFT), depthPass ? 1f : 0f);
     }
 
     /**
@@ -142,7 +142,7 @@ public final class AuraBodyUniforms {
         set(c, U.SHAPE, p.get(Key.SWAY), p.get(Key.BREATHE), p.get(Key.TONGUE_SHARP), 0f);
         set(c, U.LOOK, p.get(Key.CLOUD), p.get(Key.DEPTH), p.get(Key.BAND_SOFT), 0f);
         set(c, U.FLOW_SHAPE, p.get(Key.INFLATE), p.get(Key.LICKS), camY, 0f);
-        set(c, U.FLOW_LOOK, p.get(Key.FLECKS), p.get(Key.RIM_ONLY), p.get(Key.BAND_SOFT), 0f);
+        set(c, U.FLOW_LOOK, p.get(Key.FLECKS), 0f, p.get(Key.BAND_SOFT), 0f);
         if (segs != null) {
             for (int i = 0; i < AuraAnchor.SEGMENTS; i++) {
                 int o = i * AuraAnchor.SEG_FLOATS;

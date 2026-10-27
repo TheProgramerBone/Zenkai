@@ -60,7 +60,7 @@ public final class ShellComponent implements AuraComponent {
             } catch (IllegalArgumentException ex) {
                 throw new JsonParseException("kind (flame, soft, dense, flow) o pulse (none, sine, heartbeat) desconocido");
             }
-            if (kind == AuraBodyKind.FLOW) throw new JsonParseException("una cáscara no puede ser flow (usa el componente rim)");
+            if (kind == AuraBodyKind.FLOW) throw new JsonParseException("una cáscara no puede ser flow (el cuerpo flow es solo el de la familia flowing)");
             return new Config(kind,
                     AuraComponentTypes.f(o, "scale", 1.3f),
                     AuraComponentTypes.f(o, "amp", 1.5f),

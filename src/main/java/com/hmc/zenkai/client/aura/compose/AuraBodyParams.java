@@ -55,8 +55,6 @@ public final class AuraBodyParams {
         LICKS("licks"),
         /** FLOW: motas de luz en la superficie (0..1, aura_6). */
         FLECKS("flecks"),
-        /** FLOW: 1 = solo la banda del borde (el componente rim), 0 = cuerpo entero. */
-        RIM_ONLY("rim_only"),
         /** FLAME: largo aleatorio por pico (0 = picos iguales, 0.6 = de 0.4x a 1.6x). */
         PEAK_VAR("peak_var"),
         /** FLAME: perfil de LÁGRIMA en la mitad de arriba (0 = elipsoide, 1 = se cierra en punta).

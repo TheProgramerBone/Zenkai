@@ -38,7 +38,7 @@ import java.util.TreeSet;
  *       {@code ./gradlew processResources} antes.</li>
  *   <li>{@code layer <capa> on|off|solo} / {@code layer all} — apaga o aísla una capa del aura propia
  *       ({@code body}, {@code trail} o el tipo de un componente: motes, electricity, wisps, shell,
- *       rim, strands).</li>
+ *       strands).</li>
  *   <li>{@code state <estado> on|off|auto} / {@code state reset} — fuerza un estado dinámico
  *       (charging, high_charge, transforming, turbo, kaioken, low_ki, suppressed, flying,
  *       perturbed) sin gastar ki ni cambiar nada en el servidor.</li>

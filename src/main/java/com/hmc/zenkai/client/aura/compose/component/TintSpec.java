@@ -33,6 +33,17 @@ public record TintSpec(Kind kind, float[] fixed) {
         };
     }
 
+    /** Mismo color con las capas ya resueltas, sin frame de aura (el humo de la silueta se ve también
+     *  con el aura apagada). */
+    public float[] of(float[] inner, float[] outer, float[] hot) {
+        return switch (kind) {
+            case INNER -> inner;
+            case OUTER -> outer;
+            case HOT -> hot;
+            case FIXED -> fixed;
+        };
+    }
+
     public float[] of(AuraFrame f) {
         return switch (kind) {
             case INNER -> f.inner;

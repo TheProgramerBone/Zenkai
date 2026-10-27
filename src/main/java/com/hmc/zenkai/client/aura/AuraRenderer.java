@@ -207,6 +207,5 @@ public final class AuraRenderer {
         AuraWispRenderer.clear(id);
         AuraSparkRenderer.clear(id);
         AuraEmberRenderer.clear(id);
-        AuraRimRenderer.clear(id);
     }
 }

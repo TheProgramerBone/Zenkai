@@ -27,7 +27,6 @@ public final class AuraComponentTypes {
         TYPES.put(ElectricityComponent.TYPE, ElectricityComponent.Config::parse);
         TYPES.put(WispComponent.TYPE, WispComponent.Config::parse);
         TYPES.put(ShellComponent.TYPE, ShellComponent.Config::parse);
-        TYPES.put(RimComponent.TYPE, RimComponent.Config::parse);
         TYPES.put(StrandComponent.TYPE, StrandComponent.Config::parse);
     }
 

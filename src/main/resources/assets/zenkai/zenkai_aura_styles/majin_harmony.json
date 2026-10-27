@@ -1,6 +1,15 @@
 {
   "_comment": "Majin Armonía: el aura rosa blanda de Buu, más serena, con destellos.",
   "family": "divine",
+  "silhouette": {
+    "inner": "hot",
+    "outer": "outer",
+    "thickness": 1.0,
+    "reach": 0.85,
+    "speed": 0.7,
+    "alpha": 0.95,
+    "while_charging": true
+  },
   "body": {
     "amp": 1.0,
     "speed": 0.7

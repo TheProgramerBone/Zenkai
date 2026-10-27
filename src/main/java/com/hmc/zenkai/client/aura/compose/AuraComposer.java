@@ -23,7 +23,6 @@ import com.hmc.zenkai.feature.aura.AuraSignatureRegistry;
 import com.hmc.zenkai.feature.aura.AuraState;
 import com.hmc.zenkai.feature.aura.RaceSignature;
 import com.hmc.zenkai.feature.forms.FormDef;
-import com.hmc.zenkai.feature.mastery.MasteryEffects;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
@@ -122,13 +121,9 @@ public final class AuraComposer {
     private static final Map<Integer, Runtime> RUNTIMES = new HashMap<>();
     private static final Set<Integer> SEEN = new HashSet<>();
     private static @Nullable Runtime ghost;
-    /** Contorno rojo de Beast forzando: un runtime aparte por jugador, independiente del aura normal
-     *  (que sigue su curso al cargar ki). Ver la familia OUTLINE. */
-    private static final Map<Integer, Runtime> FURY = new HashMap<>();
-    private static final String FURY_TYPE = "beast_fury";
 
     /** ¿Tiene este jugador un aura compuesta viva (encendida o apagándose)? Lo usa la captura de pose. */
-    public static boolean hasRuntime(int id) { return RUNTIMES.containsKey(id) || FURY.containsKey(id); }
+    public static boolean hasRuntime(int id) { return RUNTIMES.containsKey(id); }
 
     /**
      * Respuesta de suelo del aura compuesta de un jugador (campo "ground" del estilo o de su familia),
@@ -146,9 +141,8 @@ public final class AuraComposer {
         if (e.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
         Minecraft mc = Minecraft.getInstance();
         boolean composed = mc.level != null && AuraSystemDispatcher.useComposed();
-        if (mc.level == null || (!composed && RUNTIMES.isEmpty() && FURY.isEmpty() && ghost == null)) {
+        if (mc.level == null || (!composed && RUNTIMES.isEmpty() && ghost == null)) {
             RUNTIMES.clear();
-            FURY.clear();
             ghost = null;
             return;
         }
@@ -194,25 +188,6 @@ public final class AuraComposer {
         }
         RUNTIMES.keySet().retainAll(SEEN);
         AuraAnchor.retain(SEEN);
-
-        // Contorno rojo de Beast forzando (overdrive). Se apaga con fundido: el runtime sobrevive
-        // hasta que su rampa llega a 0 (process devuelve false).
-        FURY.keySet().retainAll(SEEN);
-        for (Player pl : mc.level.players()) {
-            if (!(pl instanceof AbstractClientPlayer p)) continue;
-            int id = p.getId();
-            boolean on = composed && MasteryEffects.isBeastOverdrive(p);
-            Runtime rt = FURY.get(id);
-            if (rt == null) {
-                if (!on) continue;
-                rt = new Runtime();
-                FURY.put(id, rt);
-            }
-            boolean self = p == mc.player;
-            if (!process(rt, p, self, false, FURY_TYPE, on, false, on, pt, seconds, now, camPos, left, up, pose, mc)) {
-                FURY.remove(id);
-            }
-        }
 
         // Aura FANTASMA de comparación: la misma pose y el mismo poder que el aura propia, con otro
         // aura_type, a tu derecha. Siempre encendida mientras dure la comparación.
@@ -292,8 +267,7 @@ public final class AuraComposer {
         boolean inRange = f.distSq <= MAX_DIST * MAX_DIST;
         if (profile != null && rt.ramp > 0.002f && !hidden && inRange) {
             buildBody(f, style, seconds, p.getId());
-            // OUTLINE no tiene cuerpo: el único trazo es el contorno del componente rim.
-            if (style.family() != AuraFamilies.OUTLINE && layerOn(self, isGhost, "body")) submitBody(f, style, pose);
+            if (layerOn(self, isGhost, "body")) submitBody(f, style, pose);
         }
 
         // ── Componentes: simulan siempre (lo vivo termina su vida aunque el aura se apague),
@@ -304,7 +278,7 @@ public final class AuraComposer {
         }
         if (!hidden && inRange) rt.transform.submit(f, pose);
         // Estela de vuelo (no para el fantasma de comparación: no vuela).
-        if (!isGhost && style.family() != AuraFamilies.OUTLINE) {
+        if (!isGhost) {
             rt.trail.update(f, style.effectiveTrail());
             if (inRange && layerOn(self, false, "trail")) rt.trail.submit(f, pose);
         }
@@ -546,14 +520,12 @@ public final class AuraComposer {
             }
             // Pre-pasada de profundidad salvo en primera persona propia (con la cámara dentro de una
             // cápsula, sus caras traseras taparían cualquier cosa que se dibuje después).
-            // Sin pre-pasada también en el contorno de silueta (RIM_ONLY 3): dibuja SOLO las caras traseras
-            // y la profundidad de las delanteras las taparía.
             // El "camY" que recibe el shader es ahora la altura de la cámara SOBRE LOS PIES del jugador
             // (no la de mundo): el ruido del flujo se muestrea con la altura sobre los pies, así que no
             // se desplaza al volar. Con la de mundo, volar rápido barría el ruido por el contorno y
             // Ultra Instinct oscilaba mucho (2026-10-06).
             submitLayer(pose, fromCam, kind, params, growth, center, edge, alpha, lod, noBloom, segs,
-                    (float) (f.camY - f.y), !f.selfFirstPerson && params.get(Key.RIM_ONLY) < 2.5f, false);
+                    (float) (f.camY - f.y), !f.selfFirstPerson, false);
             return;
         }
         pose.pushPose();

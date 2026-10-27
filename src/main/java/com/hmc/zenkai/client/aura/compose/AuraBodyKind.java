@@ -21,7 +21,6 @@ public enum AuraBodyKind {
     DENSE,
     /** aura_body_flow: NO usa la esfera, sino seis cápsulas colocadas sobre la pose real del cuerpo
      *  ({@link AuraAnchor}) — energía CEÑIDA al contorno que fluye hacia arriba, con motas de luz y
-     *  borde plateado (Ultra Instinct, aura_6/aura_12/aura_14). También el contorno fino del
-     *  componente de borde (rim). */
+     *  borde plateado (Ultra Instinct, aura_6/aura_12/aura_14). */
     FLOW
 }

@@ -1,6 +1,15 @@
 {
   "_comment": "SSB (canon): divina COMPACTA y densa, con los destellos blancos del aura de Blue.",
   "family": "divine",
+  "silhouette": {
+    "inner": "hot",
+    "outer": "outer",
+    "thickness": 1.0,
+    "reach": 0.85,
+    "speed": 0.7,
+    "alpha": 0.95,
+    "while_charging": true
+  },
   "body": {
     "radius": 0.88,
     "half_height": 0.85,

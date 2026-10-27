@@ -4,6 +4,7 @@
   "attributes": [ "Position", "UV0" ],
   "samplers": [ { "name": "Sampler0" }, { "name": "Sampler1" } ],
   "uniforms": [
-    { "name": "Id", "type": "float", "count": 1, "values": [ 0.125 ] }
+    { "name": "Id",         "type": "float", "count": 1, "values": [ 0.125 ] },
+    { "name": "ProjParams", "type": "float", "count": 2, "values": [ -1.0, -0.1 ] }
   ]
 }

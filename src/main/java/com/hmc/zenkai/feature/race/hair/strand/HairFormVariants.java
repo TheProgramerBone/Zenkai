@@ -14,7 +14,8 @@ import java.util.Map;
  * Decisión del usuario (2026-10-12): SSJ God, Ultra Instinto (señal y dominado) y Ultra Ego llevan
  * el pelo de la BASE; Blue (y Rosé, su par) el del SSJ. Por eso ssj_god no está en la tabla.
  * Beast lleva el del SSJ2 (2026-10-12) y, como cualquier otra, cae por la cadena SSJ2 -&gt; SSJ -&gt;
- * base si el juego no trae esa variante.
+ * base si el juego no trae esa variante. Legendario y Legendario Pleno llevan el del SSJ (2026-10-26,
+ * "cambia el peinado del legendary haciéndolo del SSJ"); Ikari, la furia previa al SSJ, la base.
  */
 public final class HairFormVariants {
     private HairFormVariants() {}
@@ -28,16 +29,18 @@ public final class HairFormVariants {
     }
 
     /** Forma de Zenkai -&gt; variante pedida. */
-    public static final Map<String, Variant> FORMS = Map.of(
-            "zenkai:ssj1", Variant.SSJ,
-            "zenkai:ssj2", Variant.SSJ2,
-            "zenkai:ssj3", Variant.SSJ3,
-            "zenkai:ssj4", Variant.SSJ4,
-            "zenkai:ssj_blue", Variant.SSJ,
-            "zenkai:ssj_rose", Variant.SSJ,
-            "zenkai:ssj_blue_evolution", Variant.SSJ,
-            "zenkai:ssj_rose_evolution", Variant.SSJ,
-            "zenkai:beast", Variant.SSJ2);
+    public static final Map<String, Variant> FORMS = Map.ofEntries(
+            Map.entry("zenkai:ssj1", Variant.SSJ),
+            Map.entry("zenkai:ssj2", Variant.SSJ2),
+            Map.entry("zenkai:ssj3", Variant.SSJ3),
+            Map.entry("zenkai:ssj4", Variant.SSJ4),
+            Map.entry("zenkai:ssj_blue", Variant.SSJ),
+            Map.entry("zenkai:ssj_rose", Variant.SSJ),
+            Map.entry("zenkai:ssj_blue_evolution", Variant.SSJ),
+            Map.entry("zenkai:ssj_rose_evolution", Variant.SSJ),
+            Map.entry("zenkai:beast", Variant.SSJ2),
+            Map.entry("zenkai:ssj_green", Variant.SSJ),
+            Map.entry("zenkai:ssj_green_max", Variant.SSJ));
 
     public static Variant wanted(@Nullable ResourceLocation formId) {
         return formId == null ? Variant.BASE : FORMS.getOrDefault(formId.toString(), Variant.BASE);

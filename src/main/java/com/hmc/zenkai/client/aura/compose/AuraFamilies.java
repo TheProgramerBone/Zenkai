@@ -4,7 +4,6 @@ import com.hmc.zenkai.client.aura.compose.AuraBodyParams.Key;
 import com.hmc.zenkai.client.aura.compose.component.AuraComponentConfig;
 import com.hmc.zenkai.client.aura.compose.component.ElectricityComponent;
 import com.hmc.zenkai.client.aura.compose.component.MoteComponent;
-import com.hmc.zenkai.client.aura.compose.component.RimComponent;
 import com.hmc.zenkai.client.aura.compose.component.ShellComponent;
 import com.hmc.zenkai.client.aura.compose.component.StrandComponent;
 import com.hmc.zenkai.client.aura.compose.component.TintSpec;
@@ -92,7 +91,9 @@ public final class AuraFamilies {
                 b.mul(Key.ALPHA_CENTER, 1.3f);
                 b.mul(Key.EMIT_EDGE, 0.9f);
             },
-            List.of(embers(), rim(0.35f, 0.22f, 1.2f, 0.15f, TintSpec.HOT)),
+            // El contorno de cajas (componente rim) se cambió por el humo sobre la silueta real
+            // (bloque "silhouette" de cada estilo, SilhouetteFlameRenderer), 2026-10-26.
+            List.of(embers()),
             "clean", "radiant",
             new AuraTrailSpec(0.75f, 0.1f, 0.5f, 0.5f, 0.7f, false, 16)));
 
@@ -136,8 +137,8 @@ public final class AuraFamilies {
     /**
      * ELECTRIC_FLAME — la llama agresiva con ELECTRICIDAD integrada (SSJ2 aura_11, Rosé). Misma vela
      * que flame pero con más púas, más afiladas, corona más activa (menos compresión arriba) y
-     * ritmo más rápido. Rayos que salen del cuerpo hasta el borde de la cáscara, chispas más densas
-     * y un contorno que late.
+     * ritmo más rápido. Rayos que salen del cuerpo hasta el borde de la cáscara y chispas más densas;
+     * el contorno es el humo sobre la silueta (bloque "silhouette" de ssj2/ssj3).
      */
     public static final AuraFamily ELECTRIC_FLAME = register(new AuraFamily("electric_flame", AuraBodyKind.FLAME,
             FLAME.inner(),
@@ -159,8 +160,7 @@ public final class AuraFamilies {
                     // SSJ3 en el anime es así (con el tono caliente del amarillo salían rayos
                     // amarillos que se perdían dentro de la llama).
                     new ElectricityComponent.Config(7f, 8, 1, new float[]{0.6f, 1.3f}, 0.035f, new float[]{0.08f, 0.2f},
-                            ElectricityComponent.Attach.MIXED, ELECTRIC_BLUE, TintSpec.WHITE, 1f, 0.3f, 22f, 1f),
-                    rim(0.4f, 0.2f, 3f, 0.35f, TintSpec.HOT)),
+                            ElectricityComponent.Attach.MIXED, ELECTRIC_BLUE, TintSpec.WHITE, 1f, 0.3f, 22f, 1f)),
             "aggressive", "electric_burst",
             new AuraTrailSpec(0.85f, 0.45f, 0.0f, 0.6f, 0.95f, false, 18)));
 
@@ -239,22 +239,6 @@ public final class AuraFamilies {
                             new float[]{1f, 1f, 1f}, 0.9f, 1f, 0.8f)),
             "clean", "calm_shift",
             new AuraTrailSpec(0.4f, 0.05f, 0.6f, 0.5f, 1.0f, false, 22)));
-
-    /**
-     * OUTLINE — solo el CONTORNO rojo ceñido de Beast forzando (2026-10-06, sustituye a la animación
-     * idle de overdrive). No es un aura de verdad: no dibuja cuerpo (AuraComposer lo salta para esta
-     * familia) ni estela, solo el componente rim, que se pinta con las cápsulas de la pose real
-     * (AuraAnchor), así que sigue brazos y piernas en vez de ser una esfera alrededor del jugador.
-     * Contorno de SILUETA uniforme (rim en modo steady): grosor ABSOLUTO de 0.05 bloques, dibujado con
-     * las caras traseras de las cajas para que el cuerpo real las tape. AuraComposer.hasRuntime cuenta
-     * también este runtime para que la captura de pose corra en reposo y siga las animaciones.
-     */
-    public static final AuraFamily OUTLINE = register(new AuraFamily("outline", AuraBodyKind.FLOW,
-            AuraInnerSpec.NONE,
-            b -> { },
-            List.of(new RimComponent.Config(1.0f, 0.05f, ShellComponent.Pulse.SINE, 1.0f, 0.05f,
-                    TintSpec.parse("#FF2A1A"), 0f, true)),
-            "clean", "none", FLOWING.trail()));
 
     /**
      * LLAMA DE AGUJAS (2026-09-30, vídeo del usuario comparado con DragonMine Z): sobre la vela
@@ -365,10 +349,6 @@ public final class AuraFamilies {
                 new float[]{1.2f, 2.0f}, new float[]{0.07f, 0.1f}, new float[]{0.5f, 0.9f},
                 new float[]{0.35f, 0.9f}, new float[]{0.1f, 1.9f}, MoteComponent.Tint.HOT, new float[]{1f, 1f, 1f},
                 1f, 1f, 0.9f);
-    }
-
-    private static AuraComponentConfig rim(float strength, float width, float hz, float amp, TintSpec color) {
-        return new RimComponent.Config(strength, width, ShellComponent.Pulse.SINE, hz, amp, color, 0f, false);
     }
 
     private static AuraComponentConfig drift() {

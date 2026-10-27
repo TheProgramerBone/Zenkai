@@ -2,7 +2,7 @@
   "vertex": "zenkai:ki_bloom_blur",
   "fragment": "zenkai:aura_silhouette_flame",
   "attributes": [ "Position", "UV0" ],
-  "samplers": [ { "name": "Sampler0" }, { "name": "Sampler1" }, { "name": "Sampler2" } ],
+  "samplers": [ { "name": "Sampler0" }, { "name": "Sampler1" }, { "name": "Sampler2" }, { "name": "Sampler3" } ],
   "uniforms": [
     { "name": "ScreenSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
     { "name": "Id",         "type": "float", "count": 1, "values": [ 0.125 ] },
@@ -11,6 +11,9 @@
     { "name": "Time",       "type": "float", "count": 1, "values": [ 0.0 ] },
     { "name": "Look",       "type": "float", "count": 4, "values": [ 1.0, 1.0, 0.95, 0.0 ] },
     { "name": "Inner",      "type": "float", "count": 3, "values": [ 1.0, 0.95, 0.35 ] },
-    { "name": "Outer",      "type": "float", "count": 3, "values": [ 0.36, 1.0, 0.23 ] }
+    { "name": "Outer",      "type": "float", "count": 3, "values": [ 0.36, 1.0, 0.23 ] },
+    { "name": "ProjParams", "type": "float", "count": 2, "values": [ -1.0, -0.1 ] },
+    { "name": "Occlusion",  "type": "float", "count": 1, "values": [ 1.0 ] },
+    { "name": "WriteDepth", "type": "float", "count": 1, "values": [ 1.0 ] }
   ]
 }

@@ -1,4 +1,13 @@
 {
-  "_comment": "SSJ2: llama agresiva con electricidad integrada y contorno que late (aura_11).",
-  "family": "electric_flame"
+  "_comment": "SSJ2: llama agresiva con electricidad integrada (aura_11); contorno de humo sobre la silueta (antes un borde que latía sobre las cajas de la pose).",
+  "family": "electric_flame",
+  "silhouette": {
+    "inner": "hot",
+    "outer": "outer",
+    "thickness": 1.0,
+    "reach": 1.2,
+    "speed": 1.4,
+    "alpha": 0.95,
+    "while_charging": true
+  }
 }

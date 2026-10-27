@@ -1,6 +1,15 @@
 {
-  "_comment": "Rosé (canon): lágrima alta de llama (pedido del usuario 2026-10-26, antes divine) con destellos; sin rayos.",
+  "_comment": "Rosé (canon): lágrima alta de llama (pedido del usuario 2026-10-26, antes divine) con destellos; sin rayos. Humo momentáneo sobre la silueta (al cargar/turbo), como el resto de formas divinas; vale también para Rosé Evolución.",
   "family": "flame",
+  "silhouette": {
+    "inner": "hot",
+    "outer": "outer",
+    "thickness": 1.0,
+    "reach": 0.85,
+    "speed": 0.7,
+    "alpha": 0.95,
+    "while_charging": true
+  },
   "extra_components": [
     {
       "type": "motes",

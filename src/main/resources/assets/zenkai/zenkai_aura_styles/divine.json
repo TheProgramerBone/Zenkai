@@ -1,4 +1,13 @@
 {
   "_comment": "Divina genérica (Ultimate/Mystic; Ultra Instinct hasta que tenga su familia en la ronda 2).",
-  "family": "divine"
+  "family": "divine",
+  "silhouette": {
+    "inner": "hot",
+    "outer": "outer",
+    "thickness": 1.0,
+    "reach": 0.85,
+    "speed": 0.7,
+    "alpha": 0.95,
+    "while_charging": true
+  }
 }

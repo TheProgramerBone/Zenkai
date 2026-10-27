@@ -281,8 +281,8 @@ public final class TrainingHooks {
      * "que el potencial unlocked escale también con las divinas" — antes SOLO se activaba con la
      * forma literal `potential_unlock` (el "así despierta tu Kaiō-shin tu potencial" de Gohan).
      * Ahora también cuenta CUALQUIER forma `divineTier()` (human_god/namek_god/majin_god/
-     * ssj_god/ssj_blue/ssj_rose — ver FormDef.divineTier(), mismo flag mecánico que ya usa
-     * AuraRimRenderer para el aro de aura, no aura_type). Mismo multiplicador configurado para
+     * ssj_god/ssj_blue/ssj_rose — ver FormDef.divineTier(), el mismo flag mecánico que usaba
+     * el aro de aura antiguo, borrado el 2026-10-26; no aura_type). Mismo multiplicador configurado para
      * las dos — no dos números distintos por ahora: separarlos es una decisión de balance que
      * todavía no se ha tomado, esto solo abre la puerta mecánica.
      */

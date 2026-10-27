@@ -1,6 +1,15 @@
 {
   "_comment": "SSJ3 (canon): la llama eléctrica de SSJ2, más alta y vertical; agujas más largas en la corona. Sin corona comprimida desde la lágrima alta (2026-10-26).",
   "family": "electric_flame",
+  "silhouette": {
+    "inner": "hot",
+    "outer": "outer",
+    "thickness": 1.0,
+    "reach": 1.2,
+    "speed": 1.4,
+    "alpha": 0.95,
+    "while_charging": true
+  },
   "body": {
     "half_height": 1.15,
     "tip": 1.8,

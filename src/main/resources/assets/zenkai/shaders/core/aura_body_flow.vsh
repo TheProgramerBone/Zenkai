@@ -37,7 +37,7 @@ uniform float ZenkaiShellAmp;       // bloques de ondulación del contorno
 uniform float ZenkaiShellSpeed;     // velocidad del flujo hacia arriba
 uniform float ZenkaiShellGrowth;
 uniform vec4 ZenkaiFlowShape;       // x = inflado relativo, y = lenguas, z = Y de la cámara SOBRE LOS PIES del jugador (para el ruido: así el flujo no depende de dónde esté el jugador en el mundo)
-uniform vec4 ZenkaiFlowLook;        // y >= 3 = contorno de SILUETA (x pasa a ser el grosor ABSOLUTO en bloques)
+uniform vec4 ZenkaiFlowLook;        // aquí sin uso (lo lee el fsh)
 uniform vec4 ZenkaiSeg0A; uniform vec4 ZenkaiSeg0B; uniform vec4 ZenkaiSeg0X;
 uniform vec4 ZenkaiSeg1A; uniform vec4 ZenkaiSeg1B; uniform vec4 ZenkaiSeg1X;
 uniform vec4 ZenkaiSeg2A; uniform vec4 ZenkaiSeg2B; uniform vec4 ZenkaiSeg2X;
@@ -90,10 +90,7 @@ void main() {
     // quedan en 1, las diagonales salen a ~1.19: casi un cuadrado con esquinas suaves).
     vec2 c = Position.xz;
     float cl = length(c);
-    // Contorno de silueta: esquinas casi vivas (norma 8) para que el cubo real no asome por ellas.
-    bool sil = ZenkaiFlowLook.y > 2.5;
-    float nrmExp = sil ? 8.0 : 4.0;
-    float n4 = pow(pow(abs(c.x), nrmExp) + pow(abs(c.y), nrmExp), 1.0 / nrmExp);
+    float n4 = pow(pow(abs(c.x), 4.0) + pow(abs(c.y), 4.0), 0.25);
     vec2 cs = n4 > 0.0001 ? c * (cl / n4) : c;
     vec3 off = X * (cs.x * rx) + Z * (cs.y * rz) + Y * (Position.y * rcap);
     // Normal de elipsoide (suave sobre las caras planas: el borde fresnel no se parte en facetas).
@@ -102,10 +99,8 @@ void main() {
 
     float g = clamp(ZenkaiShellGrowth, 0.0, 1.0);
     float smoothGrowth = g * g * (3.0 - 2.0 * g);
-    // Silueta: la caja a su tamaño y el grosor sumado a lo largo de la normal (igual en todos los
-    // huesos); el resto de modos inflan en proporción al tamaño de cada hueso.
-    float f = (sil ? 1.0 : 1.0 + ZenkaiFlowShape.x) * smoothGrowth;
-    float thick = sil ? ZenkaiFlowShape.x * smoothGrowth : 0.0;
+    // Inflado en proporción al tamaño de cada hueso.
+    float f = (1.0 + ZenkaiFlowShape.x) * smoothGrowth;
     vec3 center = mix(A.xyz, B.xyz, Color.r);
 
     // Flujo: U = ángulo alrededor del segmento (entero, sin costura) desfasado por segmento;
@@ -118,7 +113,7 @@ void main() {
 
     float disp = ZenkaiShellAmp * (n - 0.35) * smoothGrowth;
     float rmin = min(rx, rz) * (1.0 + ZenkaiFlowShape.x);
-    vec3 pos = center + off * f + nrm * (max(disp, -rmin * 0.3) + thick);
+    vec3 pos = center + off * f + nrm * max(disp, -rmin * 0.3);
     // Lenguas suaves hacia arriba desde las caras que miran al cielo (hombros, cabeza).
     float lick = max(n - 0.5, 0.0) * 2.0 * smoothstep(-0.1, 0.9, nrm.y);
     pos.y += ZenkaiShellAmp * ZenkaiFlowShape.y * lick * 2.5 * smoothGrowth;
