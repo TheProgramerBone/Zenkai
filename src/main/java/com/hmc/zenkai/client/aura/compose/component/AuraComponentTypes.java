@@ -28,6 +28,7 @@ public final class AuraComponentTypes {
         TYPES.put(WispComponent.TYPE, WispComponent.Config::parse);
         TYPES.put(ShellComponent.TYPE, ShellComponent.Config::parse);
         TYPES.put(StrandComponent.TYPE, StrandComponent.Config::parse);
+        TYPES.put(FlameSheetComponent.TYPE, FlameSheetComponent.Config::parse);
     }
 
     public static Set<String> ids() { return TYPES.keySet(); }

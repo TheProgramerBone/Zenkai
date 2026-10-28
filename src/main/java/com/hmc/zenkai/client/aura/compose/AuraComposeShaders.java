@@ -37,6 +37,8 @@ public final class AuraComposeShaders extends RenderType {
     private static @Nullable ShaderInstance softShader;
     private static @Nullable ShaderInstance denseShader;
     private static @Nullable ShaderInstance flowShader;
+    private static final ResourceLocation SHEET_ID = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "aura_flame_sheet");
+    private static @Nullable ShaderInstance sheetShader;
 
     @SubscribeEvent
     public static void onRegisterShaders(RegisterShadersEvent event) {
@@ -60,6 +62,14 @@ public final class AuraComposeShaders extends RenderType {
         } catch (Exception ex) {
             flowShader = null;
             logFailure(FLOW_ID, ex);
+        }
+        try {
+            event.registerShader(new ShaderInstance(event.getResourceProvider(), SHEET_ID,
+                    DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL), s -> sheetShader = s);
+        } catch (Exception ex) {
+            // Sin láminas el aura sigue: el componente "sheets" simplemente no dibuja.
+            sheetShader = null;
+            logFailure(SHEET_ID, ex);
         }
     }
 
@@ -160,5 +170,25 @@ public final class AuraComposeShaders extends RenderType {
                     .createCompositeState(false));
 
     public static RenderType ribbons() { return RIBBONS; }
+
+    // ── Láminas de llama / columnas de luz ──────────────────────────────────
+
+    /** Láminas del componente "sheets" (FlameSheetComponent): la llama la dibuja el fsh por UV sobre
+     *  quads planos. Mezcla premultiplicada como los cuerpos (el fsh emite parte de su luz), sin
+     *  escritura de depth y sin culling. */
+    private static final RenderType SHEETS = RenderType.create("zenkai_aura_flame_sheets",
+            DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL, VertexFormat.Mode.QUADS, 1024, false, false,
+            RenderType.CompositeState.builder()
+                    .setShaderState(new ShaderStateShard(() -> sheetShader))
+                    .setTextureState(new TextureStateShard(NOISE_TEX, true, false))
+                    .setTransparencyState(PREMULTIPLIED)
+                    .setCullState(NO_CULL)
+                    .setDepthTestState(LEQUAL_DEPTH_TEST)
+                    .setWriteMaskState(COLOR_WRITE)
+                    .createCompositeState(false));
+
+    public static boolean sheetsAvailable() { return sheetShader != null; }
+
+    public static RenderType sheets() { return SHEETS; }
 
 }

@@ -121,10 +121,20 @@ public final class AuraShots {
     private static boolean reviewMode;
     /** Modo {@code humo_momentaneo}: el humo de las formas divinas aparece al cargar y se va al soltar. */
     private static boolean momentaryMode;
+    /** Modo {@code divinas}: hojas "mod vs referencia" del rework de las auras divinas
+     *  (.claude/pendiente/aura-divinas-plan.md). Tercera línea opcional: ids de forma separados por espacios. */
+    private static boolean divineMode;
+    private static final List<String> DIVINE_FORMS = new ArrayList<>();
     /** Beast forzando: % de poder que se impone cada tick en el cliente (0 = no se toca). */
     private static int forcedPowerPercent;
     /** Vuelo lateral para la estela: Y fija en el aire y avance por tick en X (0 = quieto). */
     private static double moveStep, moveY;
+    /** Avance por tick en Z (vuelo hacia la cámara o alejándose) y "en el aire" aunque no avance
+     *  (vuelo quieto: la Y se fija cada tick para que no caiga). Modo divinas, 2026-10-26. */
+    private static double moveStepZ;
+    /** Subida por tick (vuelo vertical: el aura se aplastaba al subir, 2026-10-27). */
+    private static double moveStepY, moveYStart;
+    private static boolean airborne;
     private static boolean auraOff;
 
     /** {@code id | fps bandas3 tope | param=valor ...} */
@@ -162,6 +172,10 @@ public final class AuraShots {
                     smokeTestMode = lines.size() > 1 && lines.get(1).trim().equals("humo_prueba");
                     reviewMode = lines.size() > 1 && lines.get(1).trim().equals("revision");
                     momentaryMode = lines.size() > 1 && lines.get(1).trim().equals("humo_momentaneo");
+                    divineMode = lines.size() > 1 && lines.get(1).trim().equals("divinas");
+                    if (divineMode && lines.size() > 2) {
+                        for (String id : lines.get(2).trim().split("\\s+")) if (!id.isEmpty()) DIVINE_FORMS.add(id);
+                    }
                     if (lines.size() > 1 && lines.get(1).trim().equals("tune")) {
                         for (String l : lines.subList(2, lines.size())) if (!l.isBlank()) TUNE.add(parseLook(l));
                     }
@@ -226,10 +240,11 @@ public final class AuraShots {
             var stats = com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(p);
             if (stats.getPowerPercent() != forcedPowerPercent) stats.setPowerPercent(forcedPowerPercent, forcedPowerPercent);
         }
-        if (moveStep != 0) {
-            // Vuelo lateral (estela): solo en el cliente; el servidor integrado acepta el avance.
-            p.setPos(p.getX() + moveStep, moveY, p.getZ());
-            p.setDeltaMovement(moveStep, 0, 0);
+        if (moveStep != 0 || moveStepZ != 0 || airborne) {
+            // Vuelo (estela, divinas): solo en el cliente; el servidor integrado acepta el avance.
+            moveY += moveStepY;
+            p.setPos(p.getX() + moveStep, moveY, p.getZ() + moveStepZ);
+            p.setDeltaMovement(moveStep, moveStepY, moveStepZ);
         }
         float yaw = yawOverride != null ? yawOverride : 0F;
         p.setYRot(yaw); p.yRotO = yaw; p.setYHeadRot(yaw); p.yHeadRotO = yaw; p.yBodyRot = yaw; p.yBodyRotO = yaw;
@@ -284,6 +299,7 @@ public final class AuraShots {
         if (smokeTestMode) { smokeTestPlan(mc); return; }
         if (reviewMode) { reviewPlan(mc); return; }
         if (momentaryMode) { momentaryPlan(mc); return; }
+        if (divineMode) { divinePlan(mc); return; }
         if (smokeMode) { smokePlan(mc); return; }
         setTime(mc, DAY);
         for (Scene s : SCENES) {
@@ -694,6 +710,117 @@ public final class AuraShots {
         });
     }
 
+    /**
+     * Hojas "mod vs referencia" del rework de las auras divinas (2026-10-26,
+     * .claude/pendiente/aura-divinas-plan.md, fase F0 y verificación de cada fase). SIEMPRE EN VUELO
+     * (pedido del usuario, 2026-10-26: "que no se vean planas o cuadradas"), a 4 bloques del suelo, con el
+     * poder del mundo y después con {@code /zenkai attr maxall}:
+     * <ul>
+     *   <li>quieto en el aire: 8 fotogramas de frente y una foto de 3/4, espaldas, desde arriba (+50),
+     *       desde abajo (-25) y con la cámara pegada (pared detrás);</li>
+     *   <li>{@code lateral}: avanzando de lado a 8 bloques/s, 8 fotogramas (la inclinación de vuelo de
+     *       perfil);</li>
+     *   <li>{@code hacia_camara} / {@code alejandose}: avanzando a lo largo de la visual, 6 fotogramas cada
+     *       uno (el caso en que una lámina se ve de punta).</li>
+     * </ul>
+     * Una foto de noche quieto en el aire. Carpeta {@code divinas/<poder>/<forma>/}; el montaje con las
+     * referencias se hace fuera del juego.
+     */
+    private static void divinePlan(Minecraft mc) {
+        List<String> ids = DIVINE_FORMS.isEmpty()
+                ? List.of("ssj_god", "ssj_blue", "ultra_instinct", "golden_form")
+                : DIVINE_FORMS;
+        PLAN.add(() -> Zenkai.LOGGER.info("AuraShots divinas: shaderpack en uso = {}",
+                com.hmc.zenkai.compat.IrisCompat.shaderPackActive()));
+        // Al spawn y al suelo antes de empezar: los vuelos de las tomas se guardan en el mundo y cada tanda
+        // empezaba más lejos, hasta acabar delante de una aldea y contra una pared (v15, 2026-10-27).
+        PLAN.add(() -> { var sp = mc.level.getSharedSpawnPos();
+                command(mc, "spreadplayers " + sp.getX() + " " + sp.getZ() + " 0 1 false @s"); wait = 40; });
+        PLAN.add(() -> { command(mc, "fill ~-6 ~ ~-6 ~6 ~8 ~6 minecraft:air"); moveY = mc.player.getY() + 4.0; airborne = true; });
+        for (String power : new String[]{"base", "max"}) {
+            if (power.equals("max")) PLAN.add(() -> { command(mc, "zenkai attr maxall"); wait = WAIT_TIME; });
+            setTime(mc, DAY);
+            for (String id : ids) {
+                Scene s = form(id, true);
+                String dir = "divinas/" + power + "/" + id;
+                PLAN.add(() -> { active = s; auraOff = false; yawOverride = 0F; pitchOverride = 10F; moveStep = 0; moveStepZ = 0;
+                        mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); wait = 60; });
+                for (int fr = 0; fr < 8; fr++) {
+                    final int frame = fr;
+                    PLAN.add(() -> { wait = 3; });
+                    PLAN.add(() -> capture(mc, s, dir, String.format("frente_f%02d", frame)));
+                }
+                // {nombre, cámara, giro, cabeceo}
+                Object[][] views = {
+                        {"tres_cuartos", CameraType.THIRD_PERSON_FRONT, 35F, 10F},
+                        {"espaldas", CameraType.THIRD_PERSON_BACK, 0F, 10F},
+                        {"arriba", CameraType.THIRD_PERSON_BACK, 0F, 50F},
+                        {"abajo", CameraType.THIRD_PERSON_FRONT, 0F, -25F},
+                        // Cámara justo encima y justo debajo: ahí el aura desaparecía (2026-10-27).
+                        {"cenit", CameraType.THIRD_PERSON_BACK, 0F, 90F},
+                        {"nadir", CameraType.THIRD_PERSON_BACK, 0F, -90F},
+                };
+                for (Object[] v : views) {
+                    // Desde debajo, a 4 bloques del suelo la cámara de 3ª persona chocaba con el terreno y
+                    // se pegaba a los pies: se sube el jugador 8 bloques solo para esa toma.
+                    boolean high = "nadir".equals(v[0]);
+                    PLAN.add(() -> { yawOverride = (Float) v[2]; pitchOverride = (Float) v[3]; if (high) moveY += 8;
+                            mc.options.setCameraType((CameraType) v[1]); wait = 20; });
+                    PLAN.add(() -> capture(mc, s, dir, (String) v[0]));
+                    if (high) PLAN.add(() -> { moveY -= 8; wait = 10; });
+                }
+                // Cámara pegada: pared de espaldas (detrás del jugador = -Z) que acerca la cámara.
+                PLAN.add(() -> { command(mc, "fill ~-3 ~-1 ~-2 ~3 ~4 ~-2 minecraft:stone"); yawOverride = 0F; pitchOverride = 10F;
+                        mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); wait = 25; });
+                PLAN.add(() -> capture(mc, s, dir, "pegada"));
+                PLAN.add(() -> { command(mc, "fill ~-3 ~-1 ~-2 ~3 ~4 ~-2 minecraft:air"); wait = 10; });
+                // {nombre, avance X, avance Z, cámara, fotogramas, eje de inclinación del aura}. El eje se
+                // impone (AuraTiltController.debugAxis): el de verdad sale de la entrada de vuelo, que el
+                // arnés no da. Unos 60 grados hacia donde avanza, como un vuelo rápido.
+                Object[][] moves = {
+                        {"lateral", 0.4, 0.0, CameraType.THIRD_PERSON_FRONT, 8, new org.joml.Vector3f(0.87f, 0.5f, 0f)},
+                        {"hacia_camara", 0.0, 0.4, CameraType.THIRD_PERSON_FRONT, 6, new org.joml.Vector3f(0f, 0.5f, 0.87f)},
+                        {"alejandose", 0.0, 0.4, CameraType.THIRD_PERSON_BACK, 6, new org.joml.Vector3f(0f, 0.5f, 0.87f)},
+                        // Vuelo RÁPIDO con la cámara detrás y el cuerpo casi tumbado: el aura desaparecía
+                        // (2026-10-27). Y subiendo en vertical: se aplastaba.
+                        {"rapido_detras", 0.0, 1.0, CameraType.THIRD_PERSON_BACK, 6, new org.joml.Vector3f(0f, 0.17f, 0.98f)},
+                        {"subiendo", 0.0, 0.0, CameraType.THIRD_PERSON_FRONT, 6, new org.joml.Vector3f(0f, 1f, 0f), 0.4},
+                };
+                for (Object[] mv : moves) {
+                    PLAN.add(() -> { yawOverride = 0F; pitchOverride = 10F; moveStep = (Double) mv[1]; moveStepZ = (Double) mv[2];
+                            moveStepY = mv.length > 6 ? (Double) mv[6] : 0; moveYStart = moveY;
+                            com.hmc.zenkai.client.aura.AuraTiltController.debugAxis = (org.joml.Vector3f) mv[5];
+                            mc.options.setCameraType((CameraType) mv[3]); wait = 30; });
+                    for (int fr = 0; fr < (Integer) mv[4]; fr++) {
+                        final int frame = fr;
+                        PLAN.add(() -> { wait = 2; });
+                        PLAN.add(() -> capture(mc, s, dir, String.format("%s_f%02d", mv[0], frame)));
+                    }
+                    // Tras subir, de vuelta a la altura de las tomas (4 sobre el suelo despejado).
+                    PLAN.add(() -> { moveStep = 0; moveStepZ = 0; moveStepY = 0; moveY = moveYStart;
+                            com.hmc.zenkai.client.aura.AuraTiltController.debugAxis = null; wait = 30; });
+                }
+            }
+            if (power.equals("base")) {
+                setTime(mc, NIGHT);
+                for (String id : ids) {
+                    Scene s = form(id, true);
+                    PLAN.add(() -> { active = s; yawOverride = 0F; pitchOverride = 10F;
+                            mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); wait = 40; });
+                    PLAN.add(() -> capture(mc, s, "divinas/base/" + id, "noche"));
+                }
+            }
+        }
+        PLAN.add(() -> {
+            active = null; pitchOverride = null; yawOverride = null; auraOff = false;
+            moveStep = 0; moveStepZ = 0; airborne = false;
+            AuraClientState.localTurbo = false;
+            mc.options.fov().set(savedFov);
+            mc.options.hideGui = false;
+            mc.options.setCameraType(CameraType.FIRST_PERSON);
+        });
+    }
+
     /** Foto sin aura y con aura de una forma (de frente), con el % de poder impuesto si {@code power} > 0. */
     private static void reviewPair(Minecraft mc, Scene s, String dir, String name, int power) {
         PLAN.add(() -> {
@@ -797,12 +924,13 @@ public final class AuraShots {
     private static void capture(Minecraft mc, Scene s, String dir, String name) {
         try (NativeImage shot = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
             int w = shot.getWidth(), h = shot.getHeight();
-            boolean full = s.firstPerson() || cameraMode || smokeMode || smokeShadersMode || smokeTestMode || reviewMode || momentaryMode;
-            int x0 = full ? (cameraMode || smokeMode || smokeShadersMode || smokeTestMode || reviewMode || momentaryMode ? (int) (w * 0.15F) : 0) : (int) (w * 0.30F);
+            boolean wide = cameraMode || smokeMode || smokeShadersMode || smokeTestMode || reviewMode || momentaryMode || divineMode;
+            boolean full = s.firstPerson() || wide;
+            int x0 = full ? (wide ? (int) (w * 0.15F) : 0) : (int) (w * 0.30F);
             int y0 = full ? 0 : (int) (h * 0.04F);
-            int cw = full ? (cameraMode || smokeMode || smokeShadersMode || smokeTestMode || reviewMode || momentaryMode ? (int) (w * 0.70F) : w) : (int) (w * 0.40F);
+            int cw = full ? (wide ? (int) (w * 0.70F) : w) : (int) (w * 0.40F);
             int ch = full ? h : (int) (h * 0.92F);
-            int tw = s.firstPerson() ? 640 : cameraMode || smokeMode || smokeShadersMode || smokeTestMode || reviewMode || momentaryMode ? 560 : 400;
+            int tw = s.firstPerson() ? 640 : wide ? 560 : 400;
             int th = Math.round(tw * (float) ch / cw);
             File d = new File(out(mc), dir);
             d.mkdirs();

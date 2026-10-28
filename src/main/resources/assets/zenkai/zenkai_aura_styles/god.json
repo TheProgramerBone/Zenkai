@@ -1,17 +1,13 @@
 {
-  "_comment": "SSG: lenguas divinas redondeadas que se mecen, ascuas flotando (aura_7).",
-  "family": "divine",
+  "_comment": "SSG y formas *_god: pared de láminas verticales de llama (familia divine_flame, rework 2026-10-26, ver .claude/pendiente/aura-divinas-plan.md). Humo momentáneo sobre la silueta al cargar: UN solo color (el exterior, carmesí en SSG) y algo más fino, para que se lea como una sola capa (pedido del usuario, 2026-10-27).",
+  "family": "divine_flame",
   "silhouette": {
-    "inner": "hot",
+    "inner": "outer",
     "outer": "outer",
-    "thickness": 1.0,
+    "thickness": 0.75,
     "reach": 0.85,
     "speed": 0.7,
     "alpha": 0.95,
     "while_charging": true
-  },
-  "body_set": {
-    "tongue_sharp": 0.55,
-    "sway": 0.15
   }
 }

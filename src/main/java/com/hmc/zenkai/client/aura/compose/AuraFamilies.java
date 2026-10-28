@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.aura.compose;
 import com.hmc.zenkai.client.aura.compose.AuraBodyParams.Key;
 import com.hmc.zenkai.client.aura.compose.component.AuraComponentConfig;
 import com.hmc.zenkai.client.aura.compose.component.ElectricityComponent;
+import com.hmc.zenkai.client.aura.compose.component.FlameSheetComponent;
 import com.hmc.zenkai.client.aura.compose.component.MoteComponent;
 import com.hmc.zenkai.client.aura.compose.component.ShellComponent;
 import com.hmc.zenkai.client.aura.compose.component.StrandComponent;
@@ -96,6 +97,37 @@ public final class AuraFamilies {
             List.of(embers()),
             "clean", "radiant",
             new AuraTrailSpec(0.75f, 0.1f, 0.5f, 0.5f, 0.7f, false, 16)));
+
+    /**
+     * DIVINE_FLAME — el fuego divino de SSG y las formas *_god (rework 2026-10-26,
+     * .claude/pendiente/aura-divinas-plan.md). En los fotogramas (ReferenciaAuraGokuGod2,
+     * VideoSinRecortarGokuGOD2) no hay volumen con contorno: es una PARED de láminas verticales de llama
+     * con núcleos casi blancos y sombras rojas entre las lenguas, mucho más alta que la cabeza. Lo dan las
+     * láminas ({@code sheets}); la lágrima de FLAME sigue en la familia pero con opacidad 0 (se leía como
+     * planos rosas, v13). Sin agujas: competían con las láminas.
+     */
+    public static final AuraFamily DIVINE_FLAME = register(new AuraFamily("divine_flame", AuraBodyKind.FLAME,
+            FLAME.inner(),
+            b -> {
+                tallTeardrop(b);
+                b.mul(Key.RADIUS, 1.1f);
+                // APAGADA: incluso al 25 % su cáscara roja translúcida se leía ROSA sobre el cielo y,
+                // volando hacia la cámara, eran los planos rosas de borde recto que llenaban la pantalla
+                // (medido apagándola, v13, 2026-10-27); en la referencia no hay rosa. De lejos la silueta
+                // la dan unas pocas láminas (FlameSheetComponent, LOD lejano).
+                b.mul(Key.OPACITY, 0.0f);
+                // Más baja que la lágrima de SSJ: su punta asomaba como una aguja por encima de las
+                // láminas (v9); en la referencia lo más alto son las lenguas.
+                b.mul(Key.HALF_HEIGHT, 0.55f);
+                // Ritmo lento: fuego en calma, plasma (pedido del usuario, 2026-10-27).
+                b.mul(Key.SPEED, 0.45f);
+                b.mul(Key.EMIT_EDGE, 0.6f);
+            },
+            List.of(sheets(20), divineEmbers(MoteComponent.Tint.OUTER, 11f), divineEmbers(MoteComponent.Tint.INNER, 7f)),
+            "clean", "radiant",
+            // Estela más estrecha, ondulante y de núcleo suave: la de antes era un tubo amarillo recto y
+            // rígido en el dash (pedido del usuario, 2026-10-27); la cola de cometa la dan las láminas.
+            new AuraTrailSpec(0.55f, 0.3f, 0.55f, 0.4f, 0.5f, false, 18)));
 
     /**
      * DARK_DENSE — energía oscura y PESADA (aura_5, Ultra Ego, majin malvado). Masa ancha y
@@ -337,6 +369,22 @@ public final class AuraFamilies {
                 14, new float[]{0.5f, 1.1f}, TintSpec.OUTER, TintSpec.OUTER, 0.8f, 0.45f);
     }
 
+    private static AuraComponentConfig sheets(int count) {
+        // Alto 2,4-3,2 bloques a poder base: el shader corta cada lengua entre el 45 y el 95 % del quad,
+        // así que la punta queda a ~2,5 bloques, la de la referencia del usuario (GokuGod.jpg,
+        // 2026-10-27: ~1,4 veces el jugador). Con 1,7-2,6 la punta no pasaba de la cabeza (v18). Pegadas y anchas, con las de delante tenues (front 0.2) pero presentes: la llama
+        // ENVUELVE el cuerpo. El usuario eligió esta versión (v1) frente a otra con las láminas
+        // apartadas detrás del jugador, que se leían como columnas sueltas (2026-10-26).
+        // Radio algo mayor que en la v19 (la lágrima de la referencia es más ancha), pero el ancho de cada
+        // lámina igual: con los dos a la vez (v20-v21) la lágrima salió redonda, una bola (alto/ancho
+        // 1,1 frente a ~1,7 en GokuGod.jpg).
+        return new FlameSheetComponent.Config(count, new float[]{0.33f, 0.65f}, new float[]{0.8f, 1.2f},
+                // Base 0,6 bajo los pies y 0,6 más de alto: la lágrima EMPIEZA bajo el jugador y lo
+                // rodea entero en vez de nacer en los pies (pedido del usuario sobre la v22, 2026-10-27).
+                new float[]{3.0f, 3.8f}, -0.6f, new float[]{4.0f, 7.0f}, 0.12f, FlameSheetComponent.Mode.FLAME,
+                TintSpec.INNER, TintSpec.OUTER, 0.9f, 0.5f, false);
+    }
+
     private static AuraComponentConfig sparks(float rate) {
         return new MoteComponent.Config(MoteComponent.Behavior.RISE, MoteComponent.Sprite.SPARK, rate,
                 new float[]{0.3f, 0.55f}, new float[]{0.05f, 0.08f}, new float[]{2.5f, 4f},
@@ -348,6 +396,19 @@ public final class AuraFamilies {
         return new MoteComponent.Config(MoteComponent.Behavior.FLOAT, MoteComponent.Sprite.EMBER, 8f,
                 new float[]{1.2f, 2.0f}, new float[]{0.07f, 0.1f}, new float[]{0.5f, 0.9f},
                 new float[]{0.35f, 0.9f}, new float[]{0.1f, 1.9f}, MoteComponent.Tint.HOT, new float[]{1f, 1f, 1f},
+                1f, 1f, 0.9f);
+    }
+
+    /**
+     * Brasas divinas de SSG (pedido del usuario, 2026-10-27): destellos carmesí (OUTER) y naranja (INNER)
+     * que nacen dentro de la caja del jugador, suben constantes (lo bastante para pasar por encima del aura,
+     * como en GokuGod.jpg), derivan de lado y se encogen y
+     * apagan en 20-30 ticks. Sustituyen a las ascuas FLOAT y a las chispas RISE en divine_flame.
+     */
+    private static AuraComponentConfig divineEmbers(MoteComponent.Tint tint, float rate) {
+        return new MoteComponent.Config(MoteComponent.Behavior.EMBER, MoteComponent.Sprite.EMBER, rate,
+                new float[]{1.2f, 1.5f}, new float[]{0.1f, 0.16f}, new float[]{0.9f, 1.3f},
+                new float[]{0.0f, 0.5f}, new float[]{0.4f, 2.2f}, tint, new float[]{1f, 1f, 1f},
                 1f, 1f, 0.9f);
     }
 

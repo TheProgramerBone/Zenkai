@@ -29,6 +29,8 @@ import java.util.Set;
  *   <li>{@link Behavior#DRIFT}: motas grandes y pesadas que se alejan despacio y caen un poco
  *       (oscura, Ultra Ego).</li>
  *   <li>{@link Behavior#GLINT}: destellos quietos que crecen y se apagan (Ultra Instinct).</li>
+ *   <li>{@link Behavior#EMBER}: brasas divinas (SSG, 2026-10-27): suben lentas y constantes, derivan
+ *       de lado al azar y se encogen y apagan a lo largo de la vida entera.</li>
  * </ul>
  * Viven en coordenadas de MUNDO: al moverse o volar, las que ya nacieron se quedan atrás.
  * Pool fijo de {@link #CAP} por componente y arrays primitivos: sin asignaciones por frame.
@@ -38,7 +40,7 @@ public final class MoteComponent implements AuraComponent {
     public static final String TYPE = "motes";
     private static final int CAP = 64;
 
-    public enum Behavior { RISE, FLOAT, DRIFT, GLINT }
+    public enum Behavior { RISE, FLOAT, DRIFT, GLINT, EMBER }
 
     public enum Sprite { SPARK, EMBER, MOTE, GLINT }
 
@@ -173,6 +175,13 @@ public final class MoteComponent implements AuraComponent {
                     vy[i] -= 0.12f * dt;
                 }
                 case GLINT -> { }
+                case EMBER -> {
+                    // Deriva lateral al azar, amortiguada: flotan sin salir disparadas.
+                    vx[i] += (rng.nextFloat() - 0.5f) * 0.8f * dt;
+                    vz[i] += (rng.nextFloat() - 0.5f) * 0.8f * dt;
+                    vx[i] *= 1f - 0.5f * dt;
+                    vz[i] *= 1f - 0.5f * dt;
+                }
             }
             px[i] += vx[i] * dt;
             py[i] += vy[i] * dt;
@@ -203,6 +212,7 @@ public final class MoteComponent implements AuraComponent {
             case FLOAT -> { vx[i] = ca * sp * 0.1f; vy[i] = sp; vz[i] = sa * sp * 0.1f; }
             case DRIFT -> { vx[i] = ca * sp; vy[i] = (rng.nextFloat() - 0.5f) * 0.2f; vz[i] = sa * sp; }
             case GLINT -> { vx[i] = 0f; vy[i] = sp * 0.1f; vz[i] = 0f; }
+            case EMBER -> { vx[i] = ca * sp * 0.08f; vy[i] = sp; vz[i] = sa * sp * 0.08f; }
         }
         age[i] = 0f;
         life[i] = lerp(cfg.life());
@@ -230,6 +240,7 @@ public final class MoteComponent implements AuraComponent {
                     * (0.75f + 0.25f * Mth.sin(age[i] * 20f + phase[i]));
             case DRIFT -> Math.min(t / 0.25f, 1f) * Math.min((1f - t) / 0.5f, 1f);
             case GLINT -> Mth.sin(t * Mth.PI);
+            case EMBER -> Math.min(t / 0.15f, 1f) * (1f - t);
         };
     }
 
@@ -251,7 +262,11 @@ public final class MoteComponent implements AuraComponent {
                 float a = Mth.clamp(cfg.alpha() * fade(i) * fp * weight, 0f, 1f);
                 if (a <= 0.01f) continue;
                 float x = (float) (px[i] - camX), y = (float) (py[i] - camY), z = (float) (pz[i] - camZ);
-                float s = size[i] * (cfg.behavior() == Behavior.GLINT ? (0.4f + 0.6f * fade(i)) : 1f);
+                float s = size[i] * switch (cfg.behavior()) {
+                    case GLINT -> 0.4f + 0.6f * fade(i);
+                    case EMBER -> 1f - 0.7f * age[i] / life[i];
+                    default -> 1f;
+                };
                 if (cfg.behavior() == Behavior.RISE && cfg.stretch() > 1f) {
                     quadAlong(vc, m, x, y, z, i, s, u0, u1, a);
                 } else {

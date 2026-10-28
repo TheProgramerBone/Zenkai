@@ -39,6 +39,12 @@ public final class AuraTiltController {
     /** Muestra de movimiento por frame: velocidad real + alpha de suavizado. */
     public record Motion(Vec3 vel, float alpha, boolean flying) {}
 
+    /** HERRAMIENTA DE DESARROLLO (client/dev/AuraShots): eje de inclinación impuesto en mundo, null =
+     *  el normal. La inclinación real sale del FlightController (entrada del jugador), que un jugador
+     *  movido a mano por el arnés nunca activa; sin esto las capturas "en vuelo" salían con el aura
+     *  recta (2026-10-27). */
+    public static @org.jetbrains.annotations.Nullable Vector3f debugAxis;
+
     /**
      * Velocidad REAL por delta de posición: getDeltaMovement no refleja cada uno de los modos
      * de vuelo (por ejemplo descender con ctrl+shift+WASD). En bloques/tick.
@@ -90,7 +96,9 @@ public final class AuraTiltController {
     public static void apply(PoseStack pose, AbstractClientPlayer p, Motion mo) {
         Vector3f target = new Vector3f(0f, 1f, 0f);
         var fp = ClientZenkaiPalTick.flyPoseOf(p.getUUID());
-        if (mo.flying() && fp.flying()) {
+        if (debugAxis != null) {
+            target.set(debugAxis).normalize();
+        } else if (mo.flying() && fp.flying()) {
             float[] ang = anglesFor(p, mo);
             float pitch = (float) Math.toRadians(ang[0]);
             float side = (float) Math.toRadians(ang[1]);
