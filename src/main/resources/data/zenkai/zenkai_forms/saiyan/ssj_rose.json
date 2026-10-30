@@ -10,7 +10,7 @@
   "stat_percent_mastered": 19.41,
   "ki_drain_untrained": 5.3,
   "ki_drain_mastered": 1.53,
-  "spi_req": 230,
+  "spi_req": 255,
   "parent": "zenkai:ssj_god",
   "body_items": {},
   "aura_type": "rose",

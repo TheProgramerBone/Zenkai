@@ -93,6 +93,12 @@ public enum PhysicalTechnique {
     /** Raza que la tiene de nacimiento ("majin"), o "" si cualquiera puede comprarla. */
     public String innateRace() { TechniqueDef d = def(); return d == null ? "" : d.innateRace(); }
 
+    /**
+     * Va en la categoría ESPECIAL de la pantalla de técnicas: no es un golpe — evasiva, agarre — o es propia de una
+     * raza (absorción del Majin). Es la lista cerrada que decide la UI; no cambia nada del combate.
+     */
+    public boolean special() { return this == EVADE || this == GRAB || !innateRace().isEmpty(); }
+
     /** Alcance en bloques (rayo/cono según la técnica). */
     public double range() { TechniqueDef d = def(); return d == null ? 0.0 : d.range(); }
 

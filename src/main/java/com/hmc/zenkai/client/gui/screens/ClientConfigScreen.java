@@ -42,7 +42,7 @@ import java.util.List;
 public class ClientConfigScreen extends ZenkaiMenuScreen {
 
     /** 20 y no 16: deja hueco para la barra de scroll sin que pise los controles. */
-    private static final int MARGIN = 20;
+    private static final int MARGIN = 15; // = StatsScreen/PartyScreen (era 20: el contenido quedaba más metido que en las demás pestañas)
     private static final int ROW_H = 30;
     private static final int SAVE_W = 84, SAVE_H = 20;
     private static final int SCROLLBAR_W = 4;

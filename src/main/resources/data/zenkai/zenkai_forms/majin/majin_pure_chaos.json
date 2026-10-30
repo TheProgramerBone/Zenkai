@@ -12,7 +12,7 @@
   "stat_percent_mastered": 19.0,
   "ki_drain_untrained": 1.55,
   "ki_drain_mastered": 0.52,
-  "spi_req": 80,
+  "spi_req": 165,
   "parent": "zenkai:majin_super",
   "body_items": {},
   "aura_type": "majin_evil",

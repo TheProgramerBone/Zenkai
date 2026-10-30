@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
@@ -43,8 +44,8 @@ public class WeightScreen extends Screen {
     private static final ResourceLocation TEX_BTN =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_wide.png");
 
-    private static final int BG_W = 256;
-    private static final int BG_H = 256;
+    private static final int BG_W = CommonPanel.IDEAL;
+    private static final int BG_H = CommonPanel.IDEAL;
     private static final int MARGIN = 16;
     private static final int Y_LABEL  = ScreenTitle.CONTENT_TOP;
     private static final int Y_FIELD  = Y_LABEL + 14;
@@ -56,7 +57,7 @@ public class WeightScreen extends Screen {
     private static final int FIELD_H  = 16;
     private static final int ARROW    = 12;
 
-    private static final int BTN_W = 60;
+    private static final int BTN_W = CommonPanel.FOOTER_BTN_W;
     private static final int BTN_H = 25;
     private static final int Y_BUTTONS = BG_H + 4; // FUERA del panel
 

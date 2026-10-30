@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -50,8 +51,8 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
     private static final int[] STEPS_PCT = {5, 10, 25, 50, 75, 100, 125, 150, 175, 200};
     // El beige real de common_screen.png va de x=12 a x=244 (muestreado píxel a píxel, ver
     // TrainingHubScreen) — 10/245 se metían 2px dentro del marco por cada lado.
-    private static final int IN_X1 = 12;
-    private static final int IN_X2 = 243;
+    private static final int IN_X1 = CommonPanel.IN_X1;
+    private static final int IN_X2 = CommonPanel.IN_X2;
 
     private int stepIndex = 5; // arranca en 100%
 
@@ -91,7 +92,7 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
     @Override
     protected void initContent() {
         Component desc = Component.translatable("screen.zenkai.training_hub.row.shadow.tooltip");
-        descLines = this.font.split(desc, BG_W - 24);
+        descLines = this.font.split(desc, (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
         descY = CONTENT_TOP + 20;
         stepperY = descY + descLines.size() * 10 + 14;
         formLabelY = stepperY + 16;

@@ -43,6 +43,24 @@ public final class TailResolver {
     public static final int DEFAULT_TAIL_RGB = 0x8B4512;
 
     public static ItemStack resolveTail(Player player) {
+        return resolveTail(player, 0f);
+    }
+
+    /** Color de la cola para una forma: su {@code tail_rgb}, si no el del pelo de la forma, si no el natural. */
+    private static int formRgb(FormDef def) {
+        if (def != null) {
+            if (def.tintsTail()) return def.tailRgb();
+            if (def.tintsHair()) return def.hairRgb();
+        }
+        return DEFAULT_TAIL_RGB;
+    }
+
+    /**
+     * @param partialTick para el cambio de forma gradual (solo cliente, al pintar): la cola pasa del color
+     *                    de la forma de origen al de la de destino al mismo ritmo que el pelo y los ojos
+     *                    ({@code HairTransition}), en vez de saltar al completarse.
+     */
+    public static ItemStack resolveTail(Player player, float partialTick) {
         PlayerStatsAttachment stats = PlayerStatsAttachment.get(player);
         if (!stats.isRaceChosen() || stats.getRace() != Race.SAIYAN) return ItemStack.EMPTY;
         if (!stats.hasTail()) return ItemStack.EMPTY;
@@ -65,10 +83,11 @@ public final class TailResolver {
         if (!RaceTextureUtil.resourceExists(geo.getModelPath())) return ItemStack.EMPTY;
 
         FormDef def = FormRegistry.get(formId);
-        int rgb = DEFAULT_TAIL_RGB;
-        if (def != null) {
-            if (def.tintsTail()) rgb = def.tailRgb();
-            else if (def.tintsHair()) rgb = def.hairRgb();
+        int rgb = formRgb(def);
+        var blend = com.hmc.zenkai.client.hair.HairTransition.current(player, partialTick);
+        if (blend.blending()) {
+            rgb = com.hmc.zenkai.feature.race.hair.strand.HairRampColors.mix(
+                    formRgb(FormRegistry.get(blend.from())), formRgb(FormRegistry.get(blend.to())), blend.t());
         }
         stack.set(DataComponents.DYED_COLOR, new DyedItemColor(rgb, false));
 

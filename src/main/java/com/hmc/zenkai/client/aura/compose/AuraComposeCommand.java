@@ -95,7 +95,7 @@ public final class AuraComposeCommand {
                                 .then(Commands.literal("auto").executes(c -> state(c.getSource(), StringArgumentType.getString(c, "state"), null)))))
                 .then(Commands.literal("transform").executes(c -> transform(c.getSource())))
                 .then(Commands.literal("look")
-                        .then(Commands.literal("reset").executes(c -> { AuraDebug.lookTopFill = 0f; return look(c.getSource(), 0f, false, 0f); }))
+                        .then(Commands.literal("reset").executes(c -> { AuraDebug.lookTopFill = 0f; return look(c.getSource(), 8f, true, 0.10f); }))
                         .then(Commands.literal("topfill")
                                 .then(Commands.argument("fill", FloatArgumentType.floatArg(0f, 1f))
                                         .executes(c -> {

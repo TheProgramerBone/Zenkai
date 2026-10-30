@@ -2,7 +2,7 @@
   "races": [
     "saiyan"
   ],
-  "kind": "divine",
+  "kind": "extension",
   "tp_cost": 0,
   "hold_ticks": 100,
   "mastery_gain": 0.4,

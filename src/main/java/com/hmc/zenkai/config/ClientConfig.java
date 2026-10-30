@@ -169,6 +169,15 @@ public final class ClientConfig {
                             + "completely (previous behaviour), 100 shows it at full strength",
                     30, 0, 100, 10);
 
+    /** Cuánto crece el aura COMPUESTA al subir el poder, en % del crecimiento de siempre. 100 = el actual
+     *  (es el mínimo: no se puede hacer crecer MENOS que el diseño aprobado); por encima, el tramo
+     *  por encima del poder base crece proporcionalmente más. Solo visual, por eso va en el cliente. */
+    private static final ModConfigSpec.IntValue AURA_POWER_GROWTH =
+            defineInt("aura.power_growth_percent", "aura_power_growth",
+                    "How much your aura grows as your power rises, in percent of the default growth. "
+                            + "100 = default (minimum); 200 = the part of the size above base power grows twice as fast",
+                    100, 100, 300, 10);
+
     /** Cómo prefiere ESTE jugador activar el parry: KEY (por defecto, solo la tecla de parry), BLOCK
      *  (al pulsar la guardia: la guardia real se aplaza hasta que acaba la ventana) o BOTH. Es una
      *  preferencia del jugador: el cliente la manda al servidor (ParryPrefPacket) al entrar y cada
@@ -491,6 +500,8 @@ public final class ClientConfig {
 
     /** Fracción 0f..1f, lista para multiplicar directamente sobre un alpha. */
     public static float auraFirstPersonOpacityFrac() { return AURA_FP_OPACITY.get() / 100f; }
+    /** 1f = crecimiento por poder de siempre; hasta 3f. */
+    public static float auraPowerGrowthFactor() { return AURA_POWER_GROWTH.get() / 100f; }
     public static int clashBarStyle() { return CLASH_BAR_STYLE.get(); }
     public static com.hmc.zenkai.feature.combat.ParryTrigger parryTrigger() { return PARRY_TRIGGER.get(); }
     public static float kiFirstPersonOpacityFrac() { return KI_FP_OPACITY.get() / 100f; }

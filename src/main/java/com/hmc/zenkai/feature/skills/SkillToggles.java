@@ -72,8 +72,9 @@ public final class SkillToggles {
         register(new Toggle(SkillEffects.KI_INFUSE, true, Set.of(), Set.of(), null, true));
         register(new Toggle(SkillEffects.KI_FIST,   true, Set.of(), Set.of(), null, true));
 
-        // Las armas de ki no son habilidades comprables: son lo que pasa cuando tienes las
-        // dos. Van agrupadas en su propia rama de la rueda porque son variantes de una misma
+        // Las armas de ki son habilidades de 1 nivel, baratas (TP y MND pocos), que se compran en la
+        // pestaña Habilidades y exigen Ki Infuse + Ki Fist (SkillBuyPacket.purchase lee `requires`).
+        // Comprarlas es distinto de usarlas: el interruptor las apaga sin olvidarlas. Van agrupadas en su propia rama de la rueda porque son variantes de una misma
         // cosa, no dos interruptores independientes.
         Set<String> weaponReq = Set.of(SkillEffects.KI_FIST, SkillEffects.KI_INFUSE);
         // Activadas el 2026-10-13, con el render ya hecho como capa del jugador (KiWeaponLayer).
@@ -81,11 +82,11 @@ public final class SkillToggles {
         for (String w : KI_MAIN_WEAPONS) {
             Set<String> others = new java.util.LinkedHashSet<>(KI_MAIN_WEAPONS);
             others.remove(w);
-            register(new Toggle(w, false, weaponReq, others, CAT_KI_WEAPONS, true));
+            register(new Toggle(w, true, weaponReq, others, CAT_KI_WEAPONS, true));
         }
         // El escudo va en la mano secundaria: no compite con ninguna y convive con todas, también las de
         // dos manos (ver KiWeaponServer.activeOffhand).
-        register(new Toggle(SkillEffects.KI_SHIELD, false, weaponReq, Set.of(), CAT_KI_WEAPONS, true));
+        register(new Toggle(SkillEffects.KI_SHIELD, true, weaponReq, Set.of(), CAT_KI_WEAPONS, true));
 
         // Potential Unlock YA NO es un interruptor: Mystic es una forma propia que se elige en la
         // rueda y se carga con la tecla de transformar, como cualquier otra (ver PotentialUnlock).

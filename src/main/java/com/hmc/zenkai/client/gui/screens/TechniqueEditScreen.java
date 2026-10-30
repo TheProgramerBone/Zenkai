@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.render_and_model_entities.entity.KiVfxProjectileRenderer;
 import com.hmc.zenkai.client.TechniqueAnimSets;
@@ -71,13 +72,13 @@ public class TechniqueEditScreen extends Screen {
     private static final ResourceLocation TEX_TRASH_HL =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_trash_highlight.png");
 
-    private static final int BG_W = 256;
-    private static final int BG_H = 256;
+    private static final int BG_W = CommonPanel.IDEAL;
+    private static final int BG_H = CommonPanel.IDEAL;
     private static final int MARGIN = 16;
     private static final int ROW_H = 18;
     private static final int ARROW_W = 12;
 
-    private static final int BTN_W = 60;
+    private static final int BTN_W = CommonPanel.FOOTER_BTN_W;
     private static final int BTN_H = 25;
     private static final int X_SIZE = 12;
 
@@ -188,7 +189,9 @@ public class TechniqueEditScreen extends Screen {
         picker = null;
 
         leftPos = (this.width - BG_W) / 2;
-        topPos = (this.height - BG_H) / 2;
+        // Misma altura que TechniquesScreen (la pantalla desde la que se abre): centrado a secas dejaba el panel 5 px
+        // de GUI más abajo y saltaba al abrir el editor (medido con ScreenShots, 2026-10-29).
+        topPos = com.hmc.zenkai.client.gui.CommonPanel.fitAxis(this.height, com.hmc.zenkai.client.gui.CommonPanel.TITLE_RESERVE, ZenkaiMenuScreen.TAB_RESERVE).pos();
         int x = leftPos + MARGIN;
         int contentW = BG_W - MARGIN * 2;
 

@@ -41,7 +41,9 @@ public class ShadowResultScreen extends Screen {
     @Override
     protected void init() {
         var w = CommonPanel.fitAxis(this.width, CommonPanel.MARGIN, CommonPanel.MARGIN);
-        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, CommonPanel.MARGIN);
+        // Misma reserva inferior que ZenkaiMenuScreen (TrainingHub y Shadow): con CommonPanel.MARGIN el panel
+        // quedaba 5 px de GUI más abajo y saltaba al entrar desde el hub (medido con ScreenShots, 2026-10-29).
+        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, ZenkaiMenuScreen.TAB_RESERVE);
         panelW = w.size();
         panelH = h.size();
         panelLeft = w.pos();

@@ -39,7 +39,7 @@ public abstract class ZenkaiMenuScreen extends Screen {
     private static final int TAB_ROW_MARGIN = 2;
     /** Alto que hay que reservar por DEBAJO del panel para la fila de pestañas — igual que
      *  CommonPanel.TITLE_RESERVE pero para lo que vive bajo el panel en vez de encima. */
-    private static final int TAB_RESERVE = TAB_ROW_GAP + TAB_ICON + TAB_ROW_MARGIN;
+    static final int TAB_RESERVE = TAB_ROW_GAP + TAB_ICON + TAB_ROW_MARGIN;
 
     protected final Minecraft mc = Minecraft.getInstance();
     protected PlayerStatsAttachment att;

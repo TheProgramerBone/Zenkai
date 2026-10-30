@@ -17,6 +17,9 @@ import com.hmc.zenkai.feature.skills.ForgetSkillPacket;
 import com.hmc.zenkai.feature.skills.FormDrivenSkills;
 import com.hmc.zenkai.feature.skills.SkillBuyPacket;
 import com.hmc.zenkai.feature.skills.SkillDef;
+import com.hmc.zenkai.feature.skills.SkillEffects;
+import com.hmc.zenkai.feature.skills.SkillTogglePacket;
+import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.feature.skilltree.SkillTreeNodes;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import com.hmc.zenkai.util.ZenkaiNumbers;
@@ -29,6 +32,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.locale.Language;
@@ -97,7 +101,9 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     private static final float CENTER_SHIFT = 38f;
     private static final float RING_ARC = 200f;
     /** Celdas de icons.png: la lupa y el busto «yo» (como SkillTreeScreen), y la puerta (pestaña de formas). */
-    private static final int ZOOM_U = 0, ZOOM_V = 100, CENTER_U = 40, CENTER_V = 80;
+    private static final int ZOOM_U = 0, ZOOM_V = 100;
+    /** Celda de icons.png del botón «Mis habilidades» (tools/gen_skills_mine_icon.py deja un marcador donde dibujarlo). */
+    private static final int MINE_U = 140, MINE_V = 80;
 
     // ── Colores ──
 
@@ -155,13 +161,23 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
 
     // ── Nodos ──
 
-    private enum Kind { MASTER, SKILL, GATE }
+    private enum Kind { MASTER, SKILL, GATE, HEAD, JOIN }
 
     /** Un nodo del lienzo. {@code key} es único (una skill compartida se repite con otra clave por rama). */
     private record Node(String key, Kind kind, int branch, @Nullable String skillId, float x, float y) {}
 
     // ── Estado que sobrevive entre visitas a la pestaña ──
 
+    /**
+     * Vista «Mis habilidades» (botón junto al de centrar): tu cabeza en el centro y, en círculos desde ella, SOLO lo
+     * que ya tienes. Las armas de ki cuelgan de Ki Infuse + Ki Fist (las dos líneas que se unen son la receta).
+     * Estática por lo mismo que el pan: la pantalla se reconstruye en cada visita a la pestaña.
+     */
+    private static boolean mineMode;
+    private static final float MINE_R1 = 74f, MINE_RING_STEP = 62f, MINE_NODE_SPACING = 44f;
+    /** Armas: radio del abanico, paso entre centros (el letrero mide ~85 px, así que se escalonan en dos radios) y cuánto sube el escalón. */
+    private static final float MINE_WEAPON_R = 178f, MINE_WEAPON_SPACING = 58f, MINE_WEAPON_STAGGER = 44f, MINE_JOIN_LIFT = 34f;
+    private static final int MINE_FIRST_RING = 6;
     private static int zoomIdx = DEFAULT_ZOOM;
     private static float panX, panY;
     private static boolean centeredOnce;
@@ -173,6 +189,9 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     // ── Estado de la instancia ──
 
     private final List<Node> nodes = new ArrayList<>();
+    /** Aristas de la vista «Mis habilidades» (claves de nodo origen → destino); la vista de maestros no las usa. */
+    private final List<String[]> edges = new ArrayList<>();
+    private @Nullable AtlasIconButton modeButton;
     private int defSignature = -1;
     private @Nullable String hoverKey;
     private @Nullable Sky hoverSky;
@@ -185,6 +204,14 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     private @Nullable TutorialOverlay tutorial;
     /** Destino de la cámara (mundo) mientras el tutorial la lleva a un nodo; null = quieta. */
     private float @Nullable [] camGoal;
+
+    /** Solo SkillTreeShots (modo perf): apagan una parte del dibujo para repartir el coste por capas. */
+    public static boolean devSkipEdges, devSkipBg;
+
+    /** Solo SkillTreeShots (modo perf): cambia a la vista pedida como lo haría el botón. */
+    public void devSetMine(boolean mine) {
+        if (mineMode != mine) onModePressed();
+    }
 
     /** Solo para la herramienta de desarrollo SkillTreeShots: ratón simulado (null = el real). */
     public static int @Nullable [] devMouse;
@@ -220,9 +247,9 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
                 () -> zoomIdx = DEFAULT_ZOOM);
         zoomReset.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.skill_tree.reset_zoom")));
         addRenderableWidget(zoomReset);
-        AtlasIconButton center = new AtlasIconButton(centerBtnX(), btnY(), CENTER_U, CENTER_V, this::onCenterPressed);
-        center.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.skills_tree.center")));
-        addRenderableWidget(center);
+        modeButton = new AtlasIconButton(modeBtnX(), btnY(), MINE_U, MINE_V, this::onModePressed);
+        modeButton.setTooltip(modeTooltip());
+        addRenderableWidget(modeButton);
         HelpIconButton help = new HelpIconButton(helpX(), helpY(), HELP_BTN, () -> { if (tutorial != null) tutorial.start(); });
         help.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.tutorial.replay")));
         addRenderableWidget(help);
@@ -237,9 +264,108 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         return d.hasMaster() && !SkillTreeNodes.isTreeSkill(id) && !"god_ki".equals(id) && !"namek_giant".equals(id);
     }
 
+    /** Cambia si cambia el catálogo o, en «Mis habilidades», lo que el jugador tiene (compra, olvido). */
+    private int signature() {
+        int sig = SkillDef.all().size() * 2 + (mineMode ? 1 : 0);
+        PlayerStatsAttachment st = stats();
+        if (mineMode && st != null) {
+            for (SkillDef d : SkillDef.all()) sig = sig * 31 + (st.skills().level(d.id()) > 0 ? 1 : 0);
+        }
+        return sig;
+    }
+
     private void build() {
         nodes.clear();
-        defSignature = SkillDef.all().size();
+        edges.clear();
+        defSignature = signature();
+        if (mineMode) buildMine(); else buildMasters();
+    }
+
+    private static boolean isWeapon(@Nullable String id) {
+        return id != null && (SkillToggles.KI_MAIN_WEAPONS.contains(id) || SkillEffects.KI_SHIELD.equals(id));
+    }
+
+    /** Rama de color de una skill en la vista propia: la de su primer maestro, o -1 (cielo neutro). */
+    private static int branchOf(SkillDef d) {
+        for (int b = 0; b < MASTERS.length; b++) if (d.masters().contains(MASTERS[b])) return b;
+        return -1;
+    }
+
+    /**
+     * «Mis habilidades»: cabeza en (0,0); las skills que se tienen en anillos concéntricos (6, luego 6 más por anillo);
+     * Ki Infuse y Ki Fist abren el primer anillo y las armas de ki, que solo salen si se tienen las dos, forman un arco
+     * hacia fuera justo detrás de ellas, cada una unida a las dos.
+     */
+    private void buildMine() {
+        PlayerStatsAttachment st = stats();
+        nodes.add(new Node("head", Kind.HEAD, -1, null, 0, 0));
+        if (st == null) return;
+        List<SkillDef> mine = new ArrayList<>();
+        for (SkillDef d : SkillDef.all()) {
+            if (listed(d) && !isWeapon(d.id()) && st.skills().level(d.id()) > 0) mine.add(d);
+        }
+        SkillDef infuse = SkillDef.get(SkillEffects.KI_INFUSE), fist = SkillDef.get(SkillEffects.KI_FIST);
+        boolean recipe = infuse != null && fist != null && mine.contains(infuse) && mine.contains(fist);
+        List<SkillDef> weapons = new ArrayList<>();
+        if (recipe) {
+            for (String id : SkillToggles.KI_MAIN_WEAPONS) {
+                SkillDef d = SkillDef.get(id);
+                if (d != null) weapons.add(d);
+            }
+            SkillDef shield = SkillDef.get(SkillEffects.KI_SHIELD);
+            if (shield != null) weapons.add(shield);
+            mine.remove(infuse);
+            mine.remove(fist);
+        }
+        // Con las armas, arriba (-90°) queda reservado un sector: Infuse y Fist en el primer anillo, a los lados de
+        // ese eje, y las armas en abanico al fondo, pegadas a sus dos padres. El resto de skills se reparte UNIFORME
+        // por el arco que queda libre; cada anillo mete tantas como caben a MINE_NODE_SPACING px entre centros.
+        double secHalf = recipe ? Math.toRadians(52) : 0.0;
+        double from = -Math.PI / 2 + secHalf, span = 2 * Math.PI - 2 * secHalf;
+        if (recipe) {
+            double d = MINE_NODE_SPACING / 2.0 / MINE_R1;
+            for (int k = 0; k < 2; k++) {
+                SkillDef sd = k == 0 ? infuse : fist;
+                double ang = -Math.PI / 2 + (k == 0 ? -d : d);
+                String key = sd.id() + "@mine";
+                nodes.add(new Node(key, Kind.SKILL, branchOf(sd), sd.id(), (float) (Math.cos(ang) * MINE_R1), (float) (Math.sin(ang) * MINE_R1)));
+                edges.add(new String[]{"head", key});
+            }
+            // Nodo de fusión: Infuse y Fist confluyen en un punto y de ahí sale UNA línea a cada arma (2 + 6 líneas
+            // en vez de 12 cruzadas). Sube hacia las armas por el eje del sector reservado.
+            float jy = -(float) (Math.cos(Math.asin(MINE_NODE_SPACING / 2.0 / MINE_R1)) * MINE_R1) - MINE_JOIN_LIFT;
+            nodes.add(new Node("join", Kind.JOIN, -1, null, 0f, jy));
+            edges.add(new String[]{SkillEffects.KI_INFUSE + "@mine", "join"});
+            edges.add(new String[]{SkillEffects.KI_FIST + "@mine", "join"});
+            double step = MINE_WEAPON_SPACING / MINE_WEAPON_R;
+            for (int i = 0; i < weapons.size(); i++) {
+                double ang = -Math.PI / 2 + (i - (weapons.size() - 1) / 2.0) * step;
+                float rw = MINE_WEAPON_R + (i % 2 == 1 ? MINE_WEAPON_STAGGER : 0f);
+                SkillDef wd = weapons.get(i);
+                String key = wd.id() + "@mine";
+                nodes.add(new Node(key, Kind.SKILL, branchOf(wd), wd.id(), (float) (Math.cos(ang) * rw), (float) (Math.sin(ang) * rw)));
+                edges.add(new String[]{"join", key});
+            }
+        }
+        int placed = 0, ring = 0;
+        while (placed < mine.size()) {
+            float r = MINE_R1 + ring * MINE_RING_STEP;
+            int cap = Math.max(1, (int) Math.floor(span * r / MINE_NODE_SPACING));
+            int take = Math.min(cap, mine.size() - placed);
+            for (int i = 0; i < take; i++) {
+                // Los anillos pares e impares se desfasan medio paso para que las líneas al centro no se tapen.
+                double ang = from + span * (i + 0.5 + (ring % 2 == 1 ? 0.5 : 0.0)) / (take + (ring % 2 == 1 ? 0.5 : 0.0));
+                SkillDef d = mine.get(placed + i);
+                String key = d.id() + "@mine";
+                nodes.add(new Node(key, Kind.SKILL, branchOf(d), d.id(), (float) (Math.cos(ang) * r), (float) (Math.sin(ang) * r)));
+                edges.add(new String[]{"head", key});
+            }
+            placed += take;
+            ring++;
+        }
+    }
+
+    private void buildMasters() {
         for (int b = 0; b < MASTERS.length; b++) {
             float cx = CENTERS[b][0], cy = CENTERS[b][1];
             nodes.add(new Node("m:" + MASTERS[b], Kind.MASTER, b, null, cx, cy));
@@ -287,9 +413,10 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         SkillDef def = n.skillId() == null ? null : SkillDef.get(n.skillId());
         if (st == null || def == null || mc.player == null) return new View(true, 0, 0, 0, 0, false, false, false, false);
         int level = st.skills().level(def.id());
-        boolean silhouette = level <= 0 && !st.hasMetMaster(MASTERS[n.branch()]);
+        boolean silhouette = !mineMode && level <= 0 && !st.hasMetMaster(MASTERS[n.branch()]);
         int max = FormDrivenSkills.maxLevel(def, mc.player);
-        boolean canLevel = def.purchasable() && level >= 1 && level < max;
+        // Sin maestro (las armas de ki) el nivel 1 también se compra aquí, con TP.
+        boolean canLevel = def.purchasable() && (level >= 1 || !def.hasMaster()) && level < max;
         int cost = canLevel ? FormDrivenSkills.tpCostForLevel(def, mc.player, level + 1) : 0;
         int mindDelta = canLevel ? def.mindReqFor(level + 1) - def.mindReqFor(level) : 0;
         boolean canForget = def.purchasable() && level > 0 && st.skills().boughtLevels(def.id()) > 0;
@@ -313,9 +440,9 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     private int vpBottom() { return py(VP_BOTTOM); }
     private int btnY()     { return vpTop() + 4; }
     private int zoomBtnX() { return vpRight() - 4 - BTN_PLATE + (BTN_PLATE - ICON_BTN) / 2; }
-    private int centerBtnX() { return zoomBtnX() - BTN_PLATE - 2; }
-    private int helpX()    { return centerBtnX() - BTN_PLATE / 2 - HELP_BTN - 2; }
-    private int helpY()    { return btnY() + (ICON_BTN - HELP_BTN) / 2; }
+    private int modeBtnX() { return zoomBtnX() - BTN_PLATE - 2; }
+    private int helpX()    { return zoomBtnX() + (ICON_BTN - HELP_BTN) / 2; }
+    private int helpY()    { return btnY() + BTN_PLATE + 2; }
     private float zoom()   { return ZOOMS[zoomIdx]; }
     private float vpCx()   { return (vpLeft() + vpRight()) / 2f; }
     private float vpCy()   { return (vpTop() + vpBottom()) / 2f; }
@@ -333,8 +460,9 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
 
     /** Placas de TP/MND y botones de la franja superior: ahí no se elige nodo. */
     private boolean overHud(double x, double y) {
+        if (y >= helpY() - 2 && y < helpY() + HELP_BTN + 2 && x >= helpX() - 3) return true;
         if (y >= vpTop() + 2 && y < vpTop() + 6 + BTN_PLATE) {
-            if (x >= helpX() - 3) return true;
+            if (x >= modeBtnX() - 3) return true;
             if (x < vpLeft() + 6 + plateWidth(tpText()) + 4 + plateWidth(mindText())) return true;
         }
         return false;
@@ -377,12 +505,28 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         clampPan();
     }
 
-    /** El botón de centrar recorre los maestros: el lienzo es una cruz y no hay una «forma actual». */
-    private void onCenterPressed() {
+    private Tooltip modeTooltip() {
+        return Tooltip.create(Component.translatable(mineMode ? "screen.zenkai.skills_tree.mode_masters"
+                : "screen.zenkai.skills_tree.mode_mine"));
+    }
+
+    /** Alterna entre el árbol por maestros y «Mis habilidades»; la cámara va al centro de la vista que entra. */
+    private void onModePressed() {
+        mineMode = !mineMode;
+        confirming = null;
+        forgetArmed = null;
         camGoal = null;
-        centerCycle = (centerCycle + 1) % MASTERS.length;
-        centerOnBranch(centerCycle);
-        setSky(Sky.ofBranch(centerCycle));
+        centerCycle = -1;
+        build();
+        if (mineMode) {
+            panX = 0;
+            panY = 0;
+        } else {
+            centerOnBranch(0);
+        }
+        resetSky(Sky.NEUTRAL);
+        clampPan();
+        if (modeButton != null) modeButton.setTooltip(modeTooltip());
     }
 
     // ── Fondo ────────────────────────────────────────────────────────────────
@@ -535,6 +679,7 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         if (!inViewport(mx, my) || overHud(mx, my)) return null;
         float wx = toWorldX(mx), wy = toWorldY(my), half = NODE / 2f;
         for (Node n : nodes) {
+            if (n.kind() == Kind.JOIN) continue;
             if (Math.abs(wx - n.x()) <= half && Math.abs(wy - n.y()) <= half) return n;
         }
         return null;
@@ -556,6 +701,12 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         }
         if (n.kind() != Kind.SKILL) { confirming = null; return; }
         View v = view(n);
+        // Un arma de ki ya comprada se ENCIENDE y APAGA con un clic (no gasta nada; olvidarla es el clic derecho).
+        if (mineMode && isWeapon(n.skillId()) && v.owned()) {
+            confirming = null;
+            PacketDistributor.sendToServer(new SkillTogglePacket(n.skillId()));
+            return;
+        }
         long now = Util.getMillis();
         if (v.affordable() && n.key().equals(confirming)) {
             if (now - armedAt < CONFIRM_MIN_MS) return;
@@ -594,12 +745,12 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     @Override
     public void render(@NotNull GuiGraphics g, int mx, int my, float pt) {
         if (devMouse != null) { mx = devMouse[0]; my = devMouse[1]; }
-        if (att != null && att.isRaceChosen() && defSignature != SkillDef.all().size()) build();
+        if (att != null && att.isRaceChosen() && defSignature != signature()) build();
         stepCamera();
         clampPan();
         Node hover = dragging ? null : nodeAt(mx, my);
         hoverKey = hover == null ? null : hover.key();
-        if (hover != null) {
+        if (hover != null && !mineMode) {
             Sky hs = Sky.ofBranch(hover.branch());
             long now = Util.getMillis();
             if (hs != hoverSky) { hoverSky = hs; hoverSince = now; }
@@ -648,20 +799,13 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         if (nodes.isEmpty()) return;
         int x1 = vpLeft(), y1 = vpTop(), x2 = vpRight(), y2 = vpBottom();
         g.enableScissor(x1, y1, x2, y2);
-        drawBackground(g, x1, y1, x2, y2);
+        if (!devSkipBg) drawBackground(g, x1, y1, x2, y2);
 
         var pose = g.pose();
         pose.pushPose();
         pose.translate(originX(), originY(), 0);
         pose.scale(zoom(), zoom(), 1f);
-        Node master = null;
-        for (Node n : nodes) {
-            if (n.kind() == Kind.MASTER) { master = n; continue; }
-            if (master == null) continue;
-            View v = n.kind() == Kind.SKILL ? view(n) : null;
-            boolean lit = v != null && v.owned();
-            drawEdge(g, master, n, lit, Sky.ofBranch(n.branch()).accent);
-        }
+        if (!devSkipEdges) drawEdges(g);
         labels.clear();
         for (Node n : nodes) drawNode(g, n, n.key().equals(hoverKey));
         pose.popPose();
@@ -670,15 +814,118 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         g.disableScissor();
     }
 
-    /** Línea recta maestro → skill en bloques de 2 px, con un halo oscuro para leerse sobre cualquier cielo. */
-    private void drawEdge(GuiGraphics g, Node a, Node b, boolean lit, int accent) {
-        float dx = b.x() - a.x(), dy = b.y() - a.y();
-        int steps = Math.max(1, (int) (Math.max(Math.abs(dx), Math.abs(dy)) / 2f));
-        for (int pass = 0; pass < (lit ? 2 : 1); pass++) {
-            for (int i = 0; i <= steps; i++) {
-                int x = Math.round(a.x() + dx * i / steps) - 1, y = Math.round(a.y() + dy * i / steps) - 1;
-                if (lit && pass == 0) g.fill(x - 1, y - 1, x + 3, y + 3, EDGE_HALO);
-                else if (pass == (lit ? 1 : 0)) g.fill(x, y, x + 2, y + 2, lit ? accent : EDGE_OFF);
+    /** Una arista ya resuelta (coordenadas de mundo redondeadas, encendida o no, color de la rama). */
+    private record EdgeSpec(int ax, int ay, int bx, int by, boolean lit, int accent) {}
+
+    private @Nullable net.minecraft.client.renderer.texture.DynamicTexture edgeTex;
+    private @Nullable ResourceLocation edgeId;
+    private int edgeOx, edgeOy, edgeW, edgeH;
+    private List<EdgeSpec> edgeCache = List.of();
+
+    /** Las aristas de la vista actual. Una se enciende cuando lo que une está TENIDO (la de un arma, solo con el arma comprada). */
+    private List<EdgeSpec> collectEdges() {
+        List<EdgeSpec> out = new ArrayList<>();
+        if (mineMode) {
+            boolean anyWeapon = false;
+            for (Node n : nodes) {
+                if (n.kind() == Kind.SKILL && isWeapon(n.skillId()) && view(n).owned()) anyWeapon = true;
+            }
+            for (String[] e : edges) {
+                Node a = byKey(e[0]), b = byKey(e[1]);
+                if (a == null || b == null) continue;
+                // Las dos que llegan al nodo de fusión se encienden en cuanto hay alguna arma.
+                boolean lit = b.kind() == Kind.JOIN ? anyWeapon : b.kind() == Kind.SKILL && view(b).owned();
+                out.add(new EdgeSpec(Math.round(a.x()), Math.round(a.y()), Math.round(b.x()), Math.round(b.y()), lit, Sky.NEUTRAL.accent));
+            }
+        } else {
+            Node master = null;
+            for (Node n : nodes) {
+                if (n.kind() == Kind.MASTER) { master = n; continue; }
+                if (master == null) continue;
+                boolean lit = n.kind() == Kind.SKILL && view(n).owned();
+                out.add(new EdgeSpec(Math.round(master.x()), Math.round(master.y()), Math.round(n.x()), Math.round(n.y()),
+                        lit, Sky.ofBranch(n.branch()).accent));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Las aristas se pintan UNA vez en una textura dinámica (coordenadas de mundo, 1 texel = 1 px) y cada fotograma es un
+     * único blit; solo se vuelve a rasterizar si cambia alguna arista (compra, olvido, cambio de vista). Medido el
+     * 2026-10-29 con el modo perf de SkillTreeShots: dibujarlas con g.fill (unos 3 500 por fotograma) costaba ~2,5 ms de
+     * screen.render y bajaba el menú de ~128 a ~66 FPS; y antes con un fill por píxel era peor.
+     */
+    private void drawEdges(GuiGraphics g) {
+        List<EdgeSpec> list = collectEdges();
+        if (edgeTex == null && !list.isEmpty() || !list.equals(edgeCache)) rebuildEdgeTexture(list);
+        if (edgeTex != null && edgeId != null) {
+            g.blit(edgeId, edgeOx, edgeOy, 0, 0, edgeW, edgeH, edgeW, edgeH);
+        }
+    }
+
+    private void rebuildEdgeTexture(List<EdgeSpec> list) {
+        edgeCache = list;
+        releaseEdgeTexture();
+        if (list.isEmpty()) return;
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        for (EdgeSpec e : list) {
+            minX = Math.min(minX, Math.min(e.ax(), e.bx())); maxX = Math.max(maxX, Math.max(e.ax(), e.bx()));
+            minY = Math.min(minY, Math.min(e.ay(), e.by())); maxY = Math.max(maxY, Math.max(e.ay(), e.by()));
+        }
+        edgeOx = minX - 3;
+        edgeOy = minY - 3;
+        edgeW = maxX - minX + 6;
+        edgeH = maxY - minY + 6;
+        var img = new com.mojang.blaze3d.platform.NativeImage(edgeW, edgeH, true);
+        for (EdgeSpec e : list) rasterEdge(img, e);
+        edgeId = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "dynamic/skills_edges_" + System.identityHashCode(this));
+        edgeTex = new net.minecraft.client.renderer.texture.DynamicTexture(img);
+        edgeTex.setFilter(false, false);
+        mc.getTextureManager().register(edgeId, edgeTex);
+    }
+
+    private void releaseEdgeTexture() {
+        if (edgeTex != null && edgeId != null) mc.getTextureManager().release(edgeId);
+        edgeTex = null;
+    }
+
+    @Override
+    public void removed() {
+        releaseEdgeTexture();
+        super.removed();
+    }
+
+    /**
+     * Línea recta a PÍXEL EXACTO sobre la textura (Bresenham), todo opaco: contorno oscuro de 1 px, cuerpo de 2 px y,
+     * encendida, un filete claro de 1 px por el centro (aspecto de tubo). Apagada: cuerpo apagado sin filete. Las
+     * primeras versiones (cuadros de 2 px con halo translúcido, luego un g.fill por píxel) manchaban la línea o
+     * tiraban los FPS; ver {@link #drawEdges}.
+     */
+    private void rasterEdge(com.mojang.blaze3d.platform.NativeImage img, EdgeSpec e) {
+        int x0 = e.ax() - edgeOx, y0 = e.ay() - edgeOy, x1 = e.bx() - edgeOx, y1 = e.by() - edgeOy;
+        int dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+        int[] px = new int[Math.max(dx, dy) + 1], py = new int[px.length];
+        int n = 0, err = dx - dy, x = x0, y = y0;
+        while (true) {
+            px[n] = x; py[n] = y; n++;
+            if (x == x1 && y == y1) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x += sx; }
+            if (e2 < dx) { err += dx; y += sy; }
+        }
+        int[] cols = {e.lit() ? 0xFF05080F : 0xFF0A0E18, e.lit() ? 0xFF000000 | darken(e.accent(), 0.62f) : 0xFF283048, 0xFF000000 | e.accent()};
+        int[] lo = {-2, -1, 0}, hi = {1, 0, 0};   // por capa (contorno, cuerpo, filete): desplazamientos desde el punto de la línea
+        for (int layer = 0; layer < (e.lit() ? 3 : 2); layer++) {
+            int c = cols[layer];
+            int abgr = (c & 0xFF00FF00) | ((c >> 16) & 0xFF) | ((c & 0xFF) << 16);
+            for (int i = 0; i < n; i++) {
+                for (int ox = lo[layer]; ox <= hi[layer]; ox++) {
+                    for (int oy = lo[layer]; oy <= hi[layer]; oy++) {
+                        int tx = px[i] + ox, ty = py[i] + oy;
+                        if (tx >= 0 && ty >= 0 && tx < edgeW && ty < edgeH) img.setPixelRGBA(tx, ty, abgr);
+                    }
+                }
             }
         }
     }
@@ -689,6 +936,29 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         boolean fx = !ClientConfig.skillTreeReducedFx();
         PlayerStatsAttachment st = stats();
         if (st == null) return;
+
+        if (n.kind() == Kind.JOIN) {
+            int cx = Math.round(n.x()), cy = Math.round(n.y());
+            boolean on = false;
+            for (Node o : nodes) {
+                if (o.kind() == Kind.SKILL && isWeapon(o.skillId()) && view(o).owned()) { on = true; break; }
+            }
+            int c = on ? sky.accent | 0xFF000000 : EDGE_OFF;
+            for (int r = 0; r <= 5; r++) {
+                g.fill(cx - (5 - r), cy - r, cx + (5 - r) + 1, cy - r + 1, r == 5 ? 0xFF000000 : (r == 4 ? EDGE_HALO : c));
+                g.fill(cx - (5 - r), cy + r, cx + (5 - r) + 1, cy + r + 1, r == 5 ? 0xFF000000 : (r == 4 ? EDGE_HALO : c));
+            }
+            return;
+        }
+
+        if (n.kind() == Kind.HEAD) {
+            // La cabeza del jugador (cara de su skin, capa de sombrero incluida) en un marco más grande que el de un nodo.
+            int head = NODE + 8, hx = Math.round(n.x() - head / 2f), hy = Math.round(n.y() - head / 2f);
+            g.fill(hx - 2, hy - 2, hx + head + 2, hy + head + 2, 0xFF000000 | darken(sky.accent, 0.6f));
+            g.fill(hx - 1, hy - 1, hx + head + 1, hy + head + 1, 0xFF101828);
+            if (mc.player != null) PlayerFaceRenderer.draw(g, mc.player.getSkin(), hx, hy, head);
+            return;
+        }
 
         if (n.kind() == Kind.MASTER) {
             boolean known = st.hasMetMaster(MASTERS[n.branch()]);
@@ -739,8 +1009,11 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         } else if (v.affordable()) {
             ring(g, x - 2, y - 2, NODE + 4, fx ? pulse(ZenkaiPalette.OK, 1200L) : ZenkaiPalette.OK);
         }
-        frame(g, x, y, v.maxed(), v.owned() ? 1f : 0.55f);
-        float ib = v.silhouette() ? 0.2f : v.owned() ? 1f : 0.6f;
+        boolean weaponOff = mineMode && isWeapon(def.id()) && v.owned() && mc.player != null && !SkillToggles.isOn(mc.player, def.id());
+        boolean weaponOn = mineMode && isWeapon(def.id()) && v.owned() && !weaponOff;
+        if (weaponOn) ring(g, x - 2, y - 2, NODE + 4, fx ? pulse(ZenkaiPalette.OK, 1400L) : ZenkaiPalette.OK);
+        frame(g, x, y, v.maxed() && !isWeapon(def.id()), v.owned() ? (weaponOff ? 0.5f : 1f) : 0.55f);
+        float ib = v.silhouette() ? 0.2f : weaponOff ? 0.35f : v.owned() ? 1f : 0.6f;
         tintedIcon(g, x, y, v.silhouette() ? 0xFF303850 : sky.accent, ib);
         if (hovered) g.fill(x + 4, y + 4, x + NODE - 4, y + NODE - 4, ZenkaiPalette.HOVER_VEIL);
         if (v.silhouette()) {
@@ -749,8 +1022,10 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         } else if (v.max() > 1) {
             levelRing(g, x, y, v.max(), v.level(), v.maxed() ? ZenkaiPalette.GOLD : sky.accent);
         }
-        labels.add(new Label(n.x(), labelY, v.silhouette() ? Component.translatable("screen.zenkai.skills_tree.unknown")
-                : Component.translatable(def.nameKey()), sky.accent, v.owned(), 1f));
+        Component label = v.silhouette() ? Component.translatable("screen.zenkai.skills_tree.unknown")
+                : Component.translatable(def.nameKey());
+        if (weaponOff) label = label.copy().append(Component.translatable("screen.zenkai.skills_tree.weapon_off_suffix"));
+        labels.add(new Label(n.x(), labelY, label, sky.accent, v.owned() && !weaponOff, 1f));
     }
 
     private static final ResourceLocation ICON_ATLAS =
@@ -791,7 +1066,7 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     private static void softGlow(GuiGraphics g, int x, int y, int rgb, int alpha) {
         if (alpha <= 0) return;
         for (int i = 3; i >= 1; i--) {
-            int a = Math.max(0, Math.min(255, alpha * (4 - i) / 4));
+            int a = Math.clamp((long) alpha * (4 - i) / 4, 0, 255);
             int c = (a << 24) | (rgb & 0xFFFFFF);
             int x1 = x - i, y1 = y - i, x2 = x + NODE + i, y2 = y + NODE + i;
             g.fill(x1 + i + 1, y1, x2 - i - 1, y1 + 1, c);
@@ -862,7 +1137,7 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     }
 
     private Component mindText() {
-        return att == null ? Component.empty() : Component.translatable("screen.zenkai.physical.mnd_free",
+        return att == null ? Component.empty() : Component.translatable("screen.zenkai.skills_tree.mnd",
                 MindBudget.free(att), MindBudget.total(att));
     }
 
@@ -872,7 +1147,7 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         int x = vpLeft() + 4, y = vpTop() + 5;
         x += drawPlate(g, x, y, tpText(), ZenkaiPalette.TP_ON_DARK) + 4;
         drawPlate(g, x, y, mindText(), MindBudget.free(att) < 0 ? ZenkaiPalette.DENIED : ZenkaiPalette.MIND_ON_DARK);
-        for (int bx : new int[]{zoomBtnX(), centerBtnX()}) {
+        for (int bx : new int[]{zoomBtnX(), modeBtnX()}) {
             SkillTreeArt.blit(g, SkillTreeArt.HUD, bx - (BTN_PLATE - ICON_BTN) / 2f, btnY() - (BTN_PLATE - ICON_BTN) / 2f,
                     SkillTreeArt.BUTTON_U, SkillTreeArt.BUTTON_V, SkillTreeArt.BUTTON_TEX, SkillTreeArt.BUTTON_TEX,
                     SkillTreeArt.HUD_W, SkillTreeArt.HUD_H);
@@ -901,8 +1176,9 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
 
     private void drawTooltip(GuiGraphics g, Node n, int mx, int my) {
         List<TipLine> lines = new ArrayList<>();
-        String master = MASTERS[n.branch()];
+        String master = n.branch() >= 0 ? MASTERS[n.branch()] : "";
         switch (n.kind()) {
+            case HEAD, JOIN -> { return; }
             case MASTER -> masterLines(lines, master);
             case GATE -> {
                 lines.add(new TipLine(Component.translatable("screen.zenkai.tab.transformations"), TIP_NAME));
@@ -946,7 +1222,11 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         if (v.max() > 1) title = title.copy().append("  ")
                 .append(Component.translatable("screen.zenkai.skill_tree.level", v.level(), v.max()));
         lines.add(new TipLine(title, TIP_NAME));
-        if (!v.owned()) {
+        if (!v.owned() && !def.hasMaster()) {
+            lines.add(new TipLine(Component.translatable("screen.zenkai.skills_tree.next",
+                    ZenkaiNumbers.format(v.cost()), v.mindDelta()),
+                    v.affordable() ? ZenkaiPalette.VALUE : ZenkaiPalette.ERROR));
+        } else if (!v.owned()) {
             lines.add(new TipLine(Component.translatable("screen.zenkai.skills_tree.learn",
                     Component.translatable("master.zenkai." + master)), TIP_SPECIAL));
         } else if (v.maxed()) {
@@ -967,6 +1247,12 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
                 names.append(Component.translatable("master.zenkai." + others.get(i)));
             }
             lines.add(new TipLine(Component.translatable("screen.zenkai.skills_tree.also_taught", names), TIP_MUTED));
+        }
+        if (mineMode && isWeapon(def.id()) && v.owned()) {
+            boolean on = mc.player != null && SkillToggles.isOn(mc.player, def.id());
+            lines.add(new TipLine(Component.translatable(on ? "screen.zenkai.skills_tree.weapon_on" : "screen.zenkai.skills_tree.weapon_off"),
+                    on ? ZenkaiPalette.OK : TIP_MUTED));
+            lines.add(new TipLine(Component.translatable("screen.zenkai.skills_tree.weapon_toggle_hint"), TIP_HINT));
         }
         if (n.key().equals(confirming)) {
             lines.add(new TipLine(Component.translatable("screen.zenkai.skills_tree.confirm"), ZenkaiPalette.GOLD));
@@ -1110,7 +1396,7 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         out.add(step(4, this::skillRect, () -> focusNode(tutorialSkill())));
         out.add(step(5, this::skillRect, () -> focusNode(tutorialSkill())));
         out.add(step(6, () -> nodeRect("gate"), () -> focusNode(byKey("gate"))));
-        out.add(step(7, () -> new int[]{helpX() - 3, btnY() - 3, zoomBtnX() + ICON_BTN + 3 - (helpX() - 3), ICON_BTN + 6}, null));
+        out.add(step(7, () -> new int[]{modeBtnX() - 3, btnY() - 3, zoomBtnX() + ICON_BTN + 3 - (modeBtnX() - 3), helpY() + HELP_BTN + 3 - (btnY() - 3)}, null));
         return out;
     }
 

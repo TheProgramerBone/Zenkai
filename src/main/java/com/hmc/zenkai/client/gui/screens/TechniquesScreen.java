@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -82,6 +83,9 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         KI(40, 20, "screen.zenkai.techniques.category.ki"),
         PHYSICAL(120, 20, "screen.zenkai.techniques.category.physical"),
         MASTER(0, 80, "screen.zenkai.techniques.category.master"),
+        /** Lo que no es un golpe ni un ataque de ki al uso: evasiva, agarre y las innatas de raza
+         *  (absorción del Majin). Sitio previsto también para Fake Moon, sellado, Hakai... */
+        SPECIAL(60, 100, "screen.zenkai.techniques.category.special"),
         /** Maestría de técnicas (ki, físicas y Kaioken). Vivía en la pestaña MASTERY, que
          *  desapareció con el skill tree de transformaciones (0.6.0): la maestría de FORMAS
          *  pasó al panel de cada nodo del árbol, y la de técnicas vino aquí con el icono del
@@ -92,6 +96,19 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         final String labelKey;
 
         Category(int u, int v, String labelKey) { this.u = u; this.v = v; this.labelKey = labelKey; }
+    }
+
+    /** Orden de la lista. Se recuerda POR categoría (static, como la categoría): Mastery arranca
+     *  alfabética y Ki en «reciente», porque es el único orden en que sus flechas de subir/bajar
+     *  tienen sentido (ver moveKi). */
+    private enum Sort {
+        ALPHA("screen.zenkai.techniques.sort.alpha_full"),
+        MASTERY("screen.zenkai.techniques.sort.mastery_full"),
+        RECENT("screen.zenkai.techniques.sort.recent_full");
+
+        final String fullKey;
+
+        Sort(String fullKey) { this.fullKey = fullKey; }
     }
 
     /** Una fila de la lista. MasterKi lleva el índice de su instancia, o -1 si no existe
@@ -195,6 +212,11 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     // ── Estado ───────────────────────────────────────────────────────────────
 
     private static Category category = Category.KI;
+    private static final java.util.EnumMap<Category, Sort> SORTS = new java.util.EnumMap<>(Category.class);
+
+    private static Sort sort() {
+        return SORTS.getOrDefault(category, category == Category.KI ? Sort.RECENT : Sort.ALPHA);
+    }
 
     /** Índice de la técnica ki armada para asignar; -1 = ninguna. */
     private int armedKi = -1;
@@ -339,19 +361,31 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             case PHYSICAL -> {
                 for (PhysicalTechnique t : PhysicalTechnique.values()) {
                     // Una técnica INNATA de otra raza ni se enseña (TechniqueDef.innateRace).
-                    if (t.enabled() && InnateTechniques.availableTo(t, att.getRace())) rows.add(new Row.Phys(t, false));
+                    // Las de maestro (espada de Tori-Bot incluidas) viven en SU categoría y las
+                    // especiales en la suya: antes salían también aquí y la misma técnica se
+                    // leía en dos listas.
+                    if (t.enabled() && InnateTechniques.availableTo(t, att.getRace())
+                            && t.master().isEmpty() && !t.special()) rows.add(new Row.Phys(t, false));
+                }
+            }
+            case SPECIAL -> {
+                for (PhysicalTechnique t : PhysicalTechnique.values()) {
+                    if (t.enabled() && InnateTechniques.availableTo(t, att.getRace()) && t.special()) {
+                        rows.add(new Row.Phys(t, false));
+                    }
                 }
             }
             case MASTER -> {
-                // Cualquier técnica firma, de cualquier maestro (ver TechniqueDef.master).
-                // Hoy la única con 'master' puesto en el datapack es SPIRIT_BOMB
-                // (zenkai_techniques/ki/spirit_bomb.json, "master": "kaio"), así que esta
-                // categoría sale con una sola fila, no vacía.
+                // Solo lo que el jugador YA TIENE: olvidar una técnica de maestro la hace
+                // desaparecer de aquí y solo el maestro puede volver a enseñarla (antes la
+                // papelera solo borraba la instancia y [ Create ] la recuperaba gratis).
                 for (KiTechniqueType t : KiTechniqueType.values()) {
-                    if (!t.master().isEmpty()) rows.add(new Row.MasterKi(t, instanceIndexOf(t)));
+                    int idx = instanceIndexOf(t);
+                    if (!t.master().isEmpty() && tech.isUnlocked(t) && idx >= 0) rows.add(new Row.MasterKi(t, idx));
                 }
                 for (PhysicalTechnique t : PhysicalTechnique.values()) {
-                    if (!t.master().isEmpty()) rows.add(new Row.Phys(t, true));
+                    if (!t.master().isEmpty() && !t.special() && tech.isUnlocked(t)
+                            && InnateTechniques.availableTo(t, att.getRace())) rows.add(new Row.Phys(t, true));
                 }
             }
             case MASTERY -> {
@@ -364,10 +398,69 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                     if (t.enabled()) rows.add(new Row.Mastery(t, null));
                 }
                 for (PhysicalTechnique t : tech.unlockedPhysicalOrdered()) {
-                    if (t.enabled()) rows.add(new Row.Mastery(null, t));
+                    // Una innata de otra raza (absorción sin ser Majin) no se puede aprender: no
+                    // tiene sentido enseñar su maestría.
+                    if (t.enabled() && InnateTechniques.availableTo(t, att.getRace())) rows.add(new Row.Mastery(null, t));
                 }
             }
         }
+        sortRows(tech);
+    }
+
+    /** Ordena {@link #rows} según el orden de la categoría. Alfabético por el nombre TRADUCIDO (con
+     *  Collator: la Á y la A van juntas); maestría, de mayor a menor; reciente, lo último
+     *  desbloqueado/creado primero y lo bloqueado al final. Los empates caen al nombre. */
+    private void sortRows(PlayerTechniques tech) {
+        java.text.Collator coll = java.text.Collator.getInstance();
+        Comparator<Row> byName = (a, b) -> coll.compare(rowName(a), rowName(b));
+        switch (sort()) {
+            case ALPHA -> rows.sort(byName);
+            case MASTERY -> rows.sort(Comparator.<Row>comparingDouble(r -> -rowMastery(r)).thenComparing(byName));
+            case RECENT -> rows.sort(Comparator.<Row>comparingInt(r -> -rowRecency(r, tech)).thenComparing(byName));
+        }
+    }
+
+    private String rowName(Row r) {
+        return switch (r) {
+            case Row.Ki k -> k.tech().displayName().getString();
+            case Row.MasterKi m -> Component.translatable(m.type().nameKey()).getString();
+            case Row.Phys p -> Component.translatable(p.tech().nameKey()).getString();
+            case Row.Mastery m -> m.ki() != null ? Component.translatable(m.ki().nameKey()).getString()
+                    : m.phys() != null ? Component.translatable(m.phys().nameKey()).getString()
+                    : Component.translatable("screen.zenkai.mastery.kaioken_row").getString();
+        };
+    }
+
+    private float rowMastery(Row r) {
+        return switch (r) {
+            case Row.Ki k -> att.getTechniqueMastery(k.tech().type().name());
+            case Row.MasterKi m -> att.getTechniqueMastery(m.type().name());
+            case Row.Phys p -> att.getTechniqueMastery(p.tech().name());
+            case Row.Mastery m -> m.ki() != null ? att.getTechniqueMastery(m.ki().name())
+                    : m.phys() != null ? att.getTechniqueMastery(m.phys().name())
+                    : mc.player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).getKaiokenMastery();
+        };
+    }
+
+    /** Mayor = más reciente; -1 = bloqueada (sin fecha). La instancia de ki va por su posición en la
+     *  lista, que crece con cada una nueva. */
+    private int rowRecency(Row r, PlayerTechniques tech) {
+        return switch (r) {
+            case Row.Ki k -> k.index();
+            case Row.MasterKi m -> indexIn(tech.unlockedTypesOrdered(), m.type());
+            case Row.Phys p -> indexIn(tech.unlockedPhysicalOrdered(), p.tech());
+            case Row.Mastery m -> m.ki() != null ? indexIn(tech.unlockedTypesOrdered(), m.ki())
+                    : m.phys() != null ? indexIn(tech.unlockedPhysicalOrdered(), m.phys()) : 0;
+        };
+    }
+
+    private static <T> int indexIn(java.util.Collection<T> ordered, T item) {
+        int i = 0;
+        for (T t : ordered) {
+            if (t == item) return i;
+            i++;
+        }
+        return -1;
     }
 
     /** Primera instancia creada de ese tipo, o -1. Una técnica firma se crea sola al
@@ -391,6 +484,27 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                 Component.empty(), () -> cycleCategory(1)));
         addRenderableWidget(new ArrowIconButton(cx + CAT_HALF, y + (CAT_H - ARROW) / 2,
                 ArrowIconButton.Dir.RIGHT, () -> cycleCategory(1)));
+        // Orden de la lista: un chip centrado SOBRE la regla que separa el selector de la lista (así
+        // el selector queda simétrico, que con el botón a un lado no lo estaba). El texto se pinta
+        // en drawSortChip; esto es solo su caja clicable.
+        int w = sortChipW() + 8;
+        addRenderableWidget(new TextOnlyButton(cx - w / 2, sepY() - 5, w, 10, Component.empty(), this::cycleSort));
+    }
+
+    /** Y de la regla bajo el selector (la lista empieza 2 px más abajo). */
+    private int sepY() { return panelTop + CAT_Y_OFF + CAT_H + 4; }
+
+    private Component sortChipText() {
+        return Component.translatable("screen.zenkai.techniques.sort.chip", Component.translatable(sort().fullKey));
+    }
+
+    private int sortChipW() { return this.font.width(sortChipText()); }
+
+    private void cycleSort() {
+        Sort[] all = Sort.values();
+        SORTS.put(category, all[(sort().ordinal() + 1) % all.length]);
+        scrollRow = 0;
+        rebuildWidgets();
     }
 
     private void cycleCategory(int dir) {
@@ -423,34 +537,20 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                     () -> moveKi(index, slot, 1));
             down.setTooltip(Tooltip.create(
                     Component.translatable("screen.zenkai.technique.reorder_down")));
-            addRow(bucket, up, DY_ACTION, index > 0);
-            addRow(bucket, down, DY_ICONS, index < rows.size() - 1);
+            // Las flechas mueven la técnica en la lista REAL; solo se corresponden con lo que se ve
+            // en «reciente» (ver moveKi), en los otros órdenes subir/bajar no significaría nada.
+            boolean arrows = sort() == Sort.RECENT;
+            addRow(bucket, up, DY_ACTION, arrows && index > 0);
+            addRow(bucket, down, DY_ICONS, arrows && index < rows.size() - 1);
 
-            buildKiIcons(bucket, slot, tech, true);
+            buildKiIcons(bucket, slot, tech, true, null);
 
         } else if (row instanceof Row.MasterKi(KiTechniqueType type, int slot)) {
-            if (!tech.isUnlocked(type)) {
-                buildKiUnlockButton(bucket, type);
-                return;
-            }
-
-            if (slot < 0) {
-                // Instancia borrada con la papelera: se puede recrear gratis (el tipo sigue
-                // desbloqueado). Una técnica de maestro NO cuenta contra el límite de 12 slots
-                // de ki (ver PlayerTechniques.customSlotCount()), así que aquí siempre hay
-                // hueco — a diferencia de "Nueva técnica" en la categoría Ki, este botón nunca
-                // se apaga.
-                TextOnlyButton create = actionButton(
-                        Component.translatable("screen.zenkai.master_techniques.create"),
-                        () -> createSignature(type));
-                addRow(bucket, create, DY_ACTION, true);
-                return;
-            }
-
             addRow(bucket, actionButton(assignLabel(armedKi == slot), () -> toggleKi(slot)),
                     DY_ACTION, true);
-            // Sin lápiz: una técnica firma no se edita (ver buildKiIcons).
-            buildKiIcons(bucket, slot, tech, false);
+            // Sin lápiz: una técnica firma no se edita (ver buildKiIcons). Y su papelera OLVIDA
+            // el tipo entero, no solo la instancia.
+            buildKiIcons(bucket, slot, tech, false, type);
 
         } else if (row instanceof Row.Phys(PhysicalTechnique t, boolean ignored)) {
             if (!tech.isUnlocked(t)) {
@@ -487,7 +587,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * vecinas — que es justo el defecto que este layout ya arregló una vez.
      */
     private void buildKiIcons(List<RowWidget> bucket, int slot, PlayerTechniques tech,
-                              boolean editable) {
+                              boolean editable, @Nullable KiTechniqueType forgetType) {
         if (editable) {
             addRow(bucket, iconButton(xEdit(), TEX_PENCIL, TEX_PENCIL_HL, ICON_BTN,
                     "screen.zenkai.technique.edit",
@@ -497,6 +597,16 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         if (tech.positionOf(slot) >= 0) {
             addRow(bucket, iconButton(xUnassign(), TEX_X, TEX_X_HL, ICON_BTN,
                     "screen.zenkai.technique.unassign", () -> unbindKi(slot)), DY_ICONS, true);
+        }
+        if (forgetType != null) {
+            // Técnica de maestro: la papelera es OLVIDAR (reembolso, y desaparece hasta que el maestro
+            // la enseñe otra vez). Borrar solo la instancia dejaba el tipo desbloqueado y [ Create ]
+            // la devolvía gratis.
+            addRow(bucket, trashButton(
+                    Component.translatable("screen.zenkai.physical.forget", forgetType.tpCost()),
+                    Component.translatable("screen.zenkai.physical.forget_confirm"),
+                    () -> forgetKi(forgetType)), DY_TRASH, true);
+            return;
         }
         addRow(bucket, trashButton("screen.zenkai.technique.delete",
                 "screen.zenkai.technique.delete_confirm", () -> deleteKi(slot)), DY_TRASH, true);
@@ -513,23 +623,6 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                 && att.getTP() >= t.tpCost() && MindBudget.canUnlock(att, t);
         addUnlockButton(bucket, afford,
                 () -> PacketDistributor.sendToServer(PhysicalTechniquePacket.unlock(t)),
-                () -> unlockTip(Component.translatable(t.nameKey()), t.master(),
-                        t.tpCost(), t.mindReq(), MindBudget.costOf(t)));
-    }
-
-    /**
-     * El mismo botón para un TIPO de ki bloqueado. Solo lo usa la categoría de maestro (en la
-     * de ki no hay filas de tipo, sino de instancia: el desbloqueo genérico vive en el editor),
-     * así que en la práctica sale siempre apagado — que es justo el punto: la fila de una
-     * técnica firma de ki tiene que leerse igual que la de una física bloqueada, con el mismo
-     * botón en el mismo sitio diciendo por qué no se puede pulsar, en vez de quedarse sin
-     * ningún control y romper la simetría de la lista.
-     */
-    private void buildKiUnlockButton(List<RowWidget> bucket, KiTechniqueType t) {
-        boolean afford = t.master().isEmpty()
-                && att.getTP() >= t.tpCost() && MindBudget.canUnlock(att, t);
-        addUnlockButton(bucket, afford,
-                () -> PacketDistributor.sendToServer(TechniquePacket.unlock(t)),
                 () -> unlockTip(Component.translatable(t.nameKey()), t.master(),
                         t.tpCost(), t.mindReq(), MindBudget.costOf(t)));
     }
@@ -672,11 +765,11 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         if (armedPhys == t) armedPhys = null;
     }
 
-    private void createSignature(KiTechniqueType type) {
-        // Mismos valores de partida que usa el servidor al enseñarla (ver
-        // TechniquePacket.handleUnlock): el color se fuerza igualmente en handleSave.
-        PacketDistributor.sendToServer(TechniquePacket.save(-1, type, "", type.defaultRgb(), 3,
-                TechniqueEffect.NONE, null, null, 1, type.defaultRgb2()));
+    private void forgetKi(KiTechniqueType type) {
+        // Sin optimista, igual que forgetPhys: el reembolso lo calcula el servidor y el sync de vuelta
+        // reconstruye la lista (la fila desaparece sola).
+        clearArmed();
+        PacketDistributor.sendToServer(TechniquePacket.forget(type));
     }
 
     /**
@@ -684,7 +777,9 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * reescribe los bindings), así que subir una técnica no le cambia la tecla.
      */
     private void moveKi(int rowIndex, int slot, int dir) {
-        int dest = neighbourKiSlot(slot, dir);
+        // La lista va en «reciente» (la creada última, arriba), o sea AL REVÉS que los slots: subir en
+        // pantalla es ir al slot siguiente. Las flechas solo están activas en ese orden.
+        int dest = neighbourKiSlot(slot, -dir);
         if (dest < 0) return;
         if (!att.techniques().swapSlots(slot, dest)) return;             // optimista
         PacketDistributor.sendToServer(TechniquePacket.move(slot, dest - slot));
@@ -754,6 +849,12 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         s = s * 31 + tech.unlockedPhysicalOrdered().size();
         s = s * 31 + att.getTP();
         s = s * 31 + MindBudget.free(att);
+        // Las asignaciones también: se desasigna desde la barra de arriba y la fila (su aspa) tiene
+        // que enterarse, o se queda un botón de desasignar para algo que ya no lo está.
+        for (int pos = 0; pos < PlayerTechniques.BIND_POSITIONS; pos++) {
+            PhysicalTechnique ph = tech.physicalBinding(pos);
+            s = s * 31 + tech.binding(pos) * 17 + (ph == null ? 0 : ph.ordinal() + 1);
+        }
         return s;
     }
 
@@ -849,9 +950,14 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         if (bindBar != null) {
             bindBar.refreshIcons(att);
             bindBar.renderFrame(g, this.font, null);
+            // La placa es OPACA y super.render() ya pintó las casillas: la placa las tapaba, con sus
+            // iconos. Se vuelven a pintar encima (y no la placa antes de super, porque super dibuja
+            // primero el fondo del panel y la taparía a ella).
+            for (var cell : bindBar.cells()) cell.render(g, mouseX, mouseY, partialTick);
         }
 
         Component hovered = drawRows(g, mouseX, mouseY);
+        drawSortChip(g, mouseX, mouseY);
         drawScrollbar(g);
 
         if (armedKi >= 0 || armedPhys != null) {
@@ -932,7 +1038,20 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         PanelText.onPanel(g, this.font, label, x + CAT_ICON + 4, y + (CAT_H - 8) / 2,
                 hover ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL);
-        g.fill(panelLeft + 14, y + CAT_H + 2, rightEdge(), y + CAT_H + 3, ZenkaiPalette.SEPARATOR);
+        // La regla se parte alrededor del chip de orden (drawSortChip), que va centrado sobre ella.
+        int half = sortChipW() / 2 + 5;
+        g.fill(panelLeft + 14, sepY(), cx - half, sepY() + 1, ZenkaiPalette.SEPARATOR);
+        g.fill(cx + half, sepY(), rightEdge(), sepY() + 1, ZenkaiPalette.SEPARATOR);
+    }
+
+    /** El chip «Orden: …» sobre la regla. Va DESPUÉS de la lista: su mitad inferior cae en el margen
+     *  vacío de arriba de la primera fila y el velo de una fila armada no debe taparlo. */
+    private void drawSortChip(GuiGraphics g, int mouseX, int mouseY) {
+        int cx = panelLeft + BG_W / 2, w = sortChipW() + 8;
+        boolean hover = mouseX >= cx - w / 2 && mouseX < cx + w / 2
+                && mouseY >= sepY() - 5 && mouseY < sepY() + 5;
+        PanelText.centeredOnPanel(g, this.font, sortChipText(), cx, sepY() - 4,
+                hover ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.MUTED_ON_PANEL);
     }
 
     /**
@@ -950,6 +1069,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                         case KI -> "screen.zenkai.technique.empty";
                         case PHYSICAL -> "screen.zenkai.physical.empty";
                         case MASTER -> "screen.zenkai.master_techniques.empty";
+                        case SPECIAL -> "screen.zenkai.special.empty";
                         case MASTERY -> "screen.zenkai.mastery.empty";
                     }),
                     panelLeft + BG_W / 2, listTop() + viewHeight() / 2 - 4,
@@ -1089,6 +1209,8 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             mastery = att.getTechniqueMastery(row.phys().name());
             detail = techMasteryDetail(mastery, false);
         } else {
+            // El icono de la habilidad Kaioken (icons.png, celda 200,0), a 20x20 y sin escalar.
+            g.blit(ICONS, x - 1, y + 4, 200, 0, 20, 20, 256, 256);
             var form = mc.player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get());
             mastery = form.getKaiokenMastery();
             name = Component.translatable("screen.zenkai.mastery.kaioken_row");
@@ -1101,15 +1223,15 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         boolean maxed = mastery >= 100f;
         String pct = String.format(Locale.ROOT, "%.1f%%", mastery);
         int right = rightEdge();
-        PanelText.rightOnPanel(g, this.font, Component.literal(pct), right, y + 3,
+        PanelText.rightOnPanel(g, this.font, Component.literal(pct), right, y + 2,
                 maxed ? ZenkaiPalette.MAXED_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL);
         int nameX = xText();
         PanelText.onPanel(g, this.font,
                 PanelText.fit(this.font, name, right - this.font.width(pct) - 6 - nameX),
-                nameX, y + 3, ZenkaiPalette.OWNED_ON_PANEL);
+                nameX, y + 2, ZenkaiPalette.OWNED_ON_PANEL);
         PanelText.onPanel(g, this.font, PanelText.fit(this.font, detail, right - nameX),
-                nameX, y + 14, ZenkaiPalette.BODY_ON_PANEL);
-        com.hmc.zenkai.client.gui.StatBar.draw(g, nameX, y + 24, right - nameX, 3, mastery, 100.0,
+                nameX, y + 12, ZenkaiPalette.BODY_ON_PANEL);
+        com.hmc.zenkai.client.gui.StatBar.draw(g, nameX, y + 22, right - nameX, 3, mastery, 100.0,
                 maxed ? ZenkaiPalette.MAXED_ON_PANEL : ZenkaiPalette.BAR_MASTERY);
     }
 

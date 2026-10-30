@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
@@ -60,8 +61,8 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     // El beige real de common_screen.png va de x=12 a x=244 (muestreado píxel a píxel) — 10/245
     // se metían 2px dentro del marco naranja por cada lado, la causa real del "solapamiento con
     // los bordes de la GUI" reportado por el usuario. 243, no 244, deja 1px de aire de sobra.
-    private static final int IN_X1 = 12;
-    private static final int IN_X2 = 243;
+    private static final int IN_X1 = CommonPanel.IN_X1;
+    private static final int IN_X2 = CommonPanel.IN_X2;
     private static final int HUB_ROW_H = 32;
     private static final int HUB_GAP = 6;
     private static final int ROW1_Y = CONTENT_TOP + 8;

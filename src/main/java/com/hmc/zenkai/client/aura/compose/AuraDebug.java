@@ -45,11 +45,12 @@ public final class AuraDebug {
      * compuesta, no solo la propia (es un uniform global de los cuatro programas de cuerpo).
      * {@code lookFps} = fotogramas por segundo del movimiento a saltos (0 = continuo);
      * {@code lookBands3} = tres bandas duras (borde, cuerpo, núcleo); {@code lookWhiteCap} = blanco
-     * máximo del borde, con saturación conservada (0 = el de siempre).
+     * máximo del borde, con saturación conservada (0 = el de siempre). Por DEFECTO está el look APROBADO por
+     * el usuario el 2026-10-29 (8 fps, 3 bandas, tope 0,10); {@code /zenkaiaura look reset} vuelve a él.
      */
-    public static float lookFps;
-    public static boolean lookBands3;
-    public static float lookWhiteCap;
+    public static float lookFps = 8f;
+    public static boolean lookBands3 = true;
+    public static float lookWhiteCap = 0.10f;
     /** Relleno de la parte alta de la llama (0..1, 0 = solo fresnel): aura_4/aura_11 son densas arriba. */
     public static float lookTopFill;
     /** Calibración contra referencias (AuraShots modo tune): valores del CUERPO que se imponen después

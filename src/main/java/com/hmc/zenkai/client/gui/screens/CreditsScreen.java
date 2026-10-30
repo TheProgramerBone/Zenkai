@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class CreditsScreen extends ZenkaiMenuScreen {
 
-    private static final int MARGIN = 20;
+    private static final int MARGIN = 15; // = StatsScreen/PartyScreen (era 20: el contenido quedaba más metido que en las demás pestañas)
     private static final int CAT_BTN_H = 20;
     private static final int ROW_H = 26;
     private static final int ICON_SIZE = 16;
@@ -100,10 +100,19 @@ public class CreditsScreen extends ZenkaiMenuScreen {
     private void addCategoryButtons() {
         Category[] cats = Category.values();
         int totalW = BG_W - 2 * MARGIN;
-        int w = totalW / cats.length;
+        // Ancho PROPORCIONAL al texto: con el mismo ancho para las cinco, "Animations" (la más larga) no
+        // cabía en su quinto y se pegaba a "Icons" y "Compat" (visto con ScreenShots, 2026-10-29).
+        int[] widths = new int[cats.length];
+        int textSum = 0;
+        for (int i = 0; i < cats.length; i++) {
+            widths[i] = this.font.width(Component.translatable(cats[i].titleKey())) + 12;
+            textSum += widths[i];
+        }
         int y = panelTop + CONTENT_TOP;
         int x = panelLeft + MARGIN;
-        for (Category c : cats) {
+        for (int i = 0; i < cats.length; i++) {
+            Category c = cats[i];
+            int w = i == cats.length - 1 ? panelLeft + MARGIN + totalW - x : widths[i] * totalW / textSum;
             TextOnlyButton b = new TextOnlyButton(x, y, w, CAT_BTN_H,
                     Component.translatable(c.titleKey()), () -> selectCategory(c));
             b.onPanel();

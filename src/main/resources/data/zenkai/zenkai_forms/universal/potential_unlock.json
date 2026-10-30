@@ -8,6 +8,7 @@
   "stat_percent_mastered": 1.5,
   "ki_drain_untrained": 0.0,
   "ki_drain_mastered": 0.0,
+  "spi_req": 0,
   "hair_items": {},
   "body_items": {},
   "aura_type": "mystic",

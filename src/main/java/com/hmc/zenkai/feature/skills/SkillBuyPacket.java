@@ -76,6 +76,14 @@ public record SkillBuyPacket(String skillId, String masterId) implements CustomP
 
         int current = att.skills().level(def.id());
         if (current >= max) return false;                        // ya al máximo
+        // Las que dependen de otras (las armas de ki piden Ki Infuse + Ki Fist) lo declaran en su Toggle.
+        // Sin esto se podrían comprar con el paquete a mano sin tener las dos.
+        var toggle = SkillToggles.get(def.id());
+        if (toggle != null) {
+            for (String req : toggle.requires()) {
+                if (att.skills().level(req) <= 0) return false;
+            }
+        }
         // Doctrinas de los dioses (UI/UE): exigen God Ki también ante el maestro (skill tree F5).
         // Antes Tori-Bot vendía su nivel 1 sin él: el árbol lo pedía, pero esta vía no.
         if ((SkillEffects.ULTRA_INSTINCT.equals(def.id()) || SkillEffects.ULTRA_EGO.equals(def.id()))

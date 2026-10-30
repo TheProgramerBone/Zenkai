@@ -475,11 +475,11 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue EVADE_WAVE_RADIUS_RAW =
             BUILDER.comment("Evade: radius (blocks) of the shockwave that pushes everything away from the user. 0 = no wave")
-                    .defineInRange("evade.wave_radius", 6.0D, 0.0D, 24.0D);
+                    .defineInRange("evade.wave_radius", 9.0D, 0.0D, 24.0D);
 
     private static final ModConfigSpec.DoubleValue EVADE_WAVE_KNOCK_RAW =
             BUILDER.comment("Evade: horizontal knockback of the shockwave (it deals no damage)")
-                    .defineInRange("evade.wave_knockback", 1.8D, 0.0D, 10.0D);
+                    .defineInRange("evade.wave_knockback", 3.2D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.IntValue EVADE_WAVE_STUN_RAW =
             BUILDER.comment("Evade: ticks the shockwave stuns whoever it hits (stun rules apply: bosses, immunity and diminishing returns). 0 = no stun")
@@ -1421,7 +1421,7 @@ public class ServerConfig {
 
     private static final ModConfigSpec.DoubleValue FORM_DRAIN_SPI_MAX_RAW =
             BUILDER.comment("Upper clamp of the SPI drain multiplier sqrt(spi_req / SPI). Reached when SPI is far below the form's requirement; 1.0 disables the penalty.")
-                    .defineInRange("forms.drain_spi_max", 1.5D, 1.0D, 100.0D);
+                    .defineInRange("forms.drain_spi_max", 6.0D, 1.0D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue FORM_DRAIN_FLOOR_RAW =
             BUILDER.comment("Minimum form ki drain, as a fraction of the ki pool (energyMax) multiplied by the form's ki_drain percent: floor/s = ki_drain / 100 * this * energyMax. Stops a huge pool from making a form free. 0 disables the floor.")
@@ -1663,8 +1663,8 @@ public class ServerConfig {
     private static volatile int GRAB_NEEDLE = 18;
     private static volatile int GRAB_FAIL = 20;
     private static volatile int GRAB_GAP = 12;
-    private static volatile double EVADE_WAVE_RADIUS = 6.0D;
-    private static volatile double EVADE_WAVE_KNOCK = 1.8D;
+    private static volatile double EVADE_WAVE_RADIUS = 9.0D;
+    private static volatile double EVADE_WAVE_KNOCK = 3.2D;
     private static volatile int EVADE_WAVE_STUN = 0;
     private static volatile int COMBO_FINISHER_EVERY = 4;
     private static volatile double COMBO_FINISHER_KNOCK = 1.4D;

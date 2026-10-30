@@ -237,10 +237,11 @@ public record TechniquePacket(byte op, int slot, String typeName, String name,
         // identidad visual) y el resto seguía siendo editable; desde 2026-09-06 el trato es
         // "desbloquear o equipar, y ya", así que el editor no ofrece siquiera abrirla y esta
         // línea es el respaldo del servidor para un cliente que lo intente igualmente.
-        // Se rechaza SOLO en modo edición: la creación (slot < 0) es como el jugador RECUPERA
-        // la instancia que borró con la papelera (TechniquesScreen.createSignature) y también
-        // el camino por el que se crea sola al aprenderla.
-        if (pkt.slot() >= 0 && !type.master().isEmpty()) return false;
+        // Se rechaza TAMBIÉN la creación (slot < 0): antes era como el jugador recuperaba, gratis,
+        // la instancia que borraba con la papelera, y eso era un bug — la papelera de una técnica
+        // de maestro ahora la OLVIDA (OP_FORGET) y solo el maestro puede volver a enseñarla. La
+        // instancia se crea sola al aprenderla (grant), que no pasa por aquí.
+        if (!type.master().isEmpty()) return false;
 
         String name = KiTechnique.sanitizeName(pkt.name());
         int size = KiTechnique.clampSize(pkt.size());

@@ -45,6 +45,7 @@ public final class SkillTreeShots {
     private static boolean absorbOnly;
     private static boolean legendaryOnly;
     private static boolean mastersOnly;
+    private static boolean perfOnly;
     private static boolean opened;
     private static int ticks, step, wait;
     private static final List<Runnable> PLAN = new ArrayList<>();
@@ -63,6 +64,7 @@ public final class SkillTreeShots {
                     absorbOnly = lines.size() > 1 && lines.get(1).trim().equals("absorb"); // solo la absorción del Majin
                     legendaryOnly = lines.size() > 1 && lines.get(1).trim().equals("legendary"); // solo la línea del Legendario
                     mastersOnly = lines.size() > 1 && lines.get(1).trim().equals("masters"); // solo los retratos de los maestros
+                    perfOnly = lines.size() > 1 && lines.get(1).trim().equals("perf"); // tiempos de fotograma de SkillsTreeScreen
                     enabled = !world.isEmpty();
                 } catch (Exception ignored) {}
             }
@@ -133,6 +135,7 @@ public final class SkillTreeShots {
         if (absorbOnly) { absorbPlan(mc); return; }
         if (legendaryOnly) { legendaryPlan(mc); return; }
         if (mastersOnly) { mastersPlan(mc); return; }
+        if (perfOnly) { perfPlan(mc); return; }
         // Tutorial (F7): la primera apertura lo enseña; se captura y se cierra con Esc.
         PLAN.add(() -> {
             setup(mc, Race.SAIYAN, 3, false, false, false, sp -> {});
@@ -184,6 +187,94 @@ public final class SkillTreeShots {
      * (la primera espera el fundido del cielo), skill compartida, maestro desconocido con su pista, la
      * puerta y una subida de nivel real por SkillBuyPacket.
      */
+    // ── Rendimiento de SkillsTreeScreen ─────────────────────────────────────────
+
+    private static boolean perfMeasuring;
+    private static long perfPre, perfLastPre;
+    private static final java.util.ArrayList<Double> PERF_RENDER = new java.util.ArrayList<>(), PERF_FRAME = new java.util.ArrayList<>();
+    private static final StringBuilder PERF_OUT = new StringBuilder();
+
+    @SubscribeEvent
+    public static void onScreenPre(net.neoforged.neoforge.client.event.ScreenEvent.Render.Pre e) {
+        if (!perfMeasuring || !(e.getScreen() instanceof SkillsTreeScreen)) return;
+        perfPre = System.nanoTime();
+        if (perfLastPre != 0) PERF_FRAME.add((perfPre - perfLastPre) / 1e6);
+        perfLastPre = perfPre;
+    }
+
+    @SubscribeEvent
+    public static void onScreenPost(net.neoforged.neoforge.client.event.ScreenEvent.Render.Post e) {
+        if (!perfMeasuring || !(e.getScreen() instanceof SkillsTreeScreen)) return;
+        PERF_RENDER.add((System.nanoTime() - perfPre) / 1e6);
+    }
+
+    private static String stats(java.util.List<Double> v) {
+        if (v.isEmpty()) return "sin datos";
+        var sorted = new ArrayList<>(v);
+        java.util.Collections.sort(sorted);
+        double sum = 0;
+        for (double d : sorted) sum += d;
+        return String.format(java.util.Locale.ROOT, "media %.2f ms, p95 %.2f, max %.2f (%d fotogramas)",
+                sum / sorted.size(), sorted.get((int) (sorted.size() * 0.95)), sorted.get(sorted.size() - 1), sorted.size());
+    }
+
+    private static void perfCase(Minecraft mc, String label, boolean mine, boolean skipEdges, boolean skipBg, int zoomSteps) {
+        PLAN.add(() -> {
+            SkillsTreeScreen.devSkipEdges = skipEdges;
+            SkillsTreeScreen.devSkipBg = skipBg;
+            if (mc.screen instanceof SkillsTreeScreen s) {
+                s.devSetMine(mine);
+                // zoomSteps: rueda sobre el centro (positivo = acerca); el zoom persiste entre casos, se compensa abajo.
+                for (int i = 0; i < Math.abs(zoomSteps); i++) s.mouseScrolled(s.width / 2.0, s.height / 2.0, 0, zoomSteps > 0 ? 1 : -1);
+            }
+            wait = 30; // calentar
+        });
+        PLAN.add(() -> { PERF_RENDER.clear(); PERF_FRAME.clear(); perfLastPre = 0; perfMeasuring = true; wait = 120; });
+        PLAN.add(() -> {
+            perfMeasuring = false;
+            PERF_OUT.append(label).append("\n  screen.render: ").append(stats(PERF_RENDER))
+                    .append("\n  intervalo entre fotogramas: ").append(stats(PERF_FRAME)).append("\n");
+            if (mc.screen instanceof SkillsTreeScreen s && zoomSteps != 0) {
+                for (int i = 0; i < Math.abs(zoomSteps); i++) s.mouseScrolled(s.width / 2.0, s.height / 2.0, 0, zoomSteps > 0 ? -1 : 1);
+            }
+        });
+    }
+
+    private static void perfPlan(Minecraft mc) {
+        PLAN.add(() -> {
+            mc.options.enableVsync().set(false);
+            mc.options.framerateLimit().set(260);
+            setup(mc, Race.SAIYAN, 3, false, false, false, sp -> {
+                var att = PlayerStatsAttachment.get(sp);
+                for (String id : new String[]{"ki_sense", "fly", "run", "meditation", "parry_mastery", "ki_infuse", "ki_fist",
+                        "ki_control", "ki_block", "instant_transmission"}) att.skills().setLevel(id, 3);
+                for (String w : new String[]{"ki_sword", "ki_axe", "ki_mace", "ki_scythe", "ki_hammer", "ki_shield"}) att.skills().setLevel(w, 1);
+                for (String m : new String[]{"kami", "korin", "kaio", "toribot"}) att.markMasterMet(m);
+            });
+            wait = WAIT;
+        });
+        PLAN.add(() -> { forgetTutorial(); mc.setScreen(new SkillsTreeScreen()); wait = WAIT; });
+        PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); wait = 5; });
+        PLAN.add(() -> { mc.setScreen(new SkillsTreeScreen()); wait = WAIT; });
+        perfCase(mc, "maestros, completo", false, false, false, 0);
+        PLAN.add(() -> capture(mc, "perf_masters"));
+        perfCase(mc, "maestros, sin aristas", false, true, false, 0);
+        perfCase(mc, "maestros, sin fondo", false, false, true, 0);
+        perfCase(mc, "maestros, sin aristas ni fondo", false, true, true, 0);
+        perfCase(mc, "mis habilidades, completo", true, false, false, 0);
+        PLAN.add(() -> capture(mc, "perf_mine"));
+        perfCase(mc, "mis habilidades, sin aristas", true, true, false, 0);
+        perfCase(mc, "mis habilidades, sin fondo", true, false, true, 0);
+        perfCase(mc, "mis habilidades, sin aristas ni fondo", true, true, true, 0);
+        perfCase(mc, "mis habilidades, completo, zoom 2x", true, false, false, 1);
+        perfCase(mc, "mis habilidades, completo, zoom 0,5x", true, false, false, -1);
+        PLAN.add(() -> {
+            SkillsTreeScreen.devSkipEdges = false;
+            SkillsTreeScreen.devSkipBg = false;
+            try { Files.writeString(out(mc).toPath().resolve("perf.txt"), PERF_OUT.toString()); } catch (Exception ignored) {}
+        });
+    }
+
     private static void skillsPlan(Minecraft mc) {
         PLAN.add(() -> {
             setup(mc, Race.SAIYAN, 3, false, false, false, sp -> {

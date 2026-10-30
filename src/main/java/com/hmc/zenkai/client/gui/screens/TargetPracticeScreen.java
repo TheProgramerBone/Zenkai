@@ -78,8 +78,8 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
 
     // El beige real de common_screen.png va de x=12 a x=244 (muestreado píxel a píxel, ver
     // TrainingHubScreen) — 10/245 se metían 2px dentro del marco por cada lado.
-    private static final int IN_X1 = 12;
-    private static final int IN_X2 = 243;
+    private static final int IN_X1 = CommonPanel.IN_X1;
+    private static final int IN_X2 = CommonPanel.IN_X2;
 
     private record Orb(int x, int y, long spawnMs, boolean bomb) {}
 
@@ -119,13 +119,16 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
     @Override
     protected void init() {
         var w = CommonPanel.fitAxis(this.width, CommonPanel.MARGIN, CommonPanel.MARGIN);
-        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, CommonPanel.MARGIN);
+        // Misma reserva inferior que ZenkaiMenuScreen (TrainingHub y Shadow): con CommonPanel.MARGIN el panel
+        // quedaba 5 px de GUI más abajo y saltaba al entrar desde el hub (medido con ScreenShots, 2026-10-29).
+        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, ZenkaiMenuScreen.TAB_RESERVE);
         panelW = w.size();
         panelH = h.size();
         panelLeft = w.pos();
         panelTop = h.pos();
+        // 4 px de aire por lado: partido a panelW - 24 (232 px) el texto centrado llegaba a los dos bordes del beige (231 px).
         introLines = this.font.split(
-                Component.translatable("screen.zenkai.target_practice.intro"), panelW - 24);
+                Component.translatable("screen.zenkai.target_practice.intro"), (IN_X2 - IN_X1) - 8);
         stepperY = 30 + introLines.size() * 10 + 4 + 20 + 4;
         buildIntroWidgets();
         requestInfo();

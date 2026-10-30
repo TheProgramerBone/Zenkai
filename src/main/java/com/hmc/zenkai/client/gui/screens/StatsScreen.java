@@ -352,7 +352,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         drawField(g, col2, panelTop + HEADER_Y, "screen.zenkai.stats_screen.style",
                 styleName(), ZenkaiPalette.OK_ON_PANEL);
         drawField(g, left, panelTop + HEADER_Y2, "screen.zenkai.stats_screen.form",
-                formName(form.getFormId()), ZenkaiPalette.SPECIAL_ON_PANEL);
+                formNameShort(form.getFormId(), col2 - left - 4), ZenkaiPalette.SPECIAL_ON_PANEL);
         // Compacto en la cabecera ("982.1M"), exacto en el tooltip al pasar el ratón — mismo
         // reparto que ya usa el Power Level (renderPowerTooltip) para números grandes.
         Component tpLabel = Component.translatable("screen.zenkai.stats_screen.tp");
@@ -580,6 +580,21 @@ public class StatsScreen extends ZenkaiMenuScreen {
     private Component styleName() {
         return Component.translatable("screen.zenkai.style." + att.getStyle().name().toLowerCase(Locale.ROOT));
     }
+    /**
+     * Nombre de la forma para la cabecera, que es estrecha: usa la clave {@code form.<ns>.<id>.short} si el
+     * idioma la trae (los nombres canon largos, "Súper Saiyajin Blue Evolución", no caben) y si no el
+     * nombre completo; si aun así se pasa del ancho, lo recorta con puntos suspensivos.
+     */
+    private Component formNameShort(ResourceLocation formId, int maxWidth) {
+        String key = "form." + formId.getNamespace() + "." + formId.getPath().replace('/', '.') + ".short";
+        Component name = net.minecraft.client.resources.language.I18n.exists(key)
+                ? Component.translatable(key) : formName(formId);
+        int avail = maxWidth - this.font.width(Component.translatable("screen.zenkai.stats_screen.form"));
+        String text = name.getString();
+        if (this.font.width(text) <= avail) return name;
+        return Component.literal(this.font.plainSubstrByWidth(text, avail - this.font.width("…")) + "…");
+    }
+
     private static Component formName(ResourceLocation formId) {
         String key = "form." + formId.getNamespace() + "." + formId.getPath().replace('/', '.');
         String last = formId.getPath();

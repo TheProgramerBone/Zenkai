@@ -10,7 +10,7 @@
   "stat_percent_mastered": 1.2,
   "ki_drain_untrained": 0.0,
   "ki_drain_mastered": 0.0,
-  "spi_req": 55,
+  "spi_req": 60,
   "parent": "zenkai:second_form",
   "body_items": {
     "head": "zenkai:arcosian_third_form_helmet",

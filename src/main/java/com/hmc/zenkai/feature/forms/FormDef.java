@@ -36,7 +36,7 @@ import java.util.Map;
  * kiDrainPerSecond. Antes era un número fijo de ki por tick sin relación con el jugador, así que con
  * miles de puntos el pool crecía y el coste no: cualquier forma salía gratis en late game.
  * SPI_REQ no es un candado: la forma se puede activar con cualquier SPI, pero el drenaje se
- * multiplica por drainMultiplier(spi) (por defecto solo encarece: 1.0-1.5; el SPI alto no abarata, ya paga con un pool y regen mayores). spi_req = 0 desactiva
+ * multiplica por drainMultiplier(spi) (por defecto solo encarece: 1.0-6.0; el SPI alto no abarata, ya paga con un pool y regen mayores). spi_req = 0 desactiva
  * el multiplicador (queda en 1.0 siempre), para no romper datapacks viejos.
  *
  * Los 4 campos antes de wheelSelectable son del sistema de "forzar" (powerPercent por encima
@@ -233,7 +233,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
     /**
      * Multiplicador de drenaje según cuánto SPI tenga el jugador respecto al requisito de la
      * forma: sqrt(spi_req / SPI), acotado a [forms.drain_spi_min, forms.drain_spi_max] (1.0 y
-     * 1.5 por defecto: el SPI alto ya no abarata, solo el bajo encarece). spi_req = 0 -> 1.0 siempre (forma sin requisito, o dato de un datapack
+     * 6.0 por defecto, antes 1.5: con ese tope un personaje recién creado aguantaba un SSJ3 casi como uno entrenado; el SPI alto ya no abarata, solo el bajo encarece). spi_req = 0 -> 1.0 siempre (forma sin requisito, o dato de un datapack
      * viejo). El rango es corto a propósito: el SPI ya paga su aguante por otro lado (sube el pool
      * de ki y con él la regen), así que aquí solo mueve el coste un poco; antes llegaba a 0.5x-3x y
      * en late game (SPI de miles contra un requisito de decenas) dejaba cualquier forma gratis.

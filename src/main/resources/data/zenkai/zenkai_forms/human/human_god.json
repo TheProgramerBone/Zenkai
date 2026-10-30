@@ -10,7 +10,7 @@
   "stat_percent_mastered": 16.0,
   "ki_drain_untrained": 1.66,
   "ki_drain_mastered": 0.6,
-  "spi_req": 85,
+  "spi_req": 150,
   "parent": "zenkai:human_ultra",
   "body_items": {},
   "aura_type": "god",

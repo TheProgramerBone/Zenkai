@@ -39,6 +39,14 @@ public final class CommonPanel {
      *  real del PNG. El panel nunca crece más allá de esto — solo encoge cuando no cabe. */
     public static final int IDEAL = 256;
 
+    /** Beige real de common_screen.png en el eje X: el marco ocupa 0..11 y 244..255 (el beige va de x=12 a x=244, no de
+     *  10 a 245; con esos dos valores los textos pegados al borde pisaban el marco, ver gui.md). Antes cada pantalla
+     *  declaraba su propia copia (IN_X1/IN_X2 en nueve). */
+    public static final int IN_X1 = 12;
+    public static final int IN_X2 = 243;
+    /** Ancho de los botones de pie de pantalla (Back/Next/Confirm) de las pantallas de creación, el editor y Weight. */
+    public static final int FOOTER_BTN_W = 60;
+
     /** Hueco lateral fijo para que el panel no toque los bordes de la ventana. */
     public static final int MARGIN = 8;
     /** Alto que hay que reservar por ENCIMA del panel para el título (ScreenTitle.drawAbovePanel

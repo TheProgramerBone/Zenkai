@@ -105,9 +105,15 @@ public record AuraFlameParams(
         return Mth.lerp(mix, 1f, Mth.clamp(powerF, 0.8f, 3.5f));
     }
 
-    /** Escala de la llama entera para un poder dado ({@code size} × crecimiento por poder). */
+    /**
+     * Escala de la llama entera para un poder dado ({@code size} × crecimiento por poder). El factor
+     * del jugador ({@code aura.power_growth_percent}, mínimo 1) solo actúa por ENCIMA del poder base:
+     * por debajo se mantiene el diseño de siempre, así un factor alto no encoge a un personaje débil.
+     */
     public static float sizeScale(float powerF) {
-        return t(AuraFlameTuning.Param.SIZE) * (1f + t(AuraFlameTuning.Param.POWER_GROWTH) * (powerF - 1f));
+        float growth = t(AuraFlameTuning.Param.POWER_GROWTH);
+        if (powerF > 1f) growth *= com.hmc.zenkai.config.ClientConfig.auraPowerGrowthFactor();
+        return t(AuraFlameTuning.Param.SIZE) * (1f + growth * (powerF - 1f));
     }
 
     /**

@@ -10,7 +10,7 @@
   "stat_percent_mastered": 16.0,
   "ki_drain_untrained": 1.55,
   "ki_drain_mastered": 0.52,
-  "spi_req": 90,
+  "spi_req": 150,
   "parent": "zenkai:namek_orange",
   "body_items": {},
   "aura_type": "god",

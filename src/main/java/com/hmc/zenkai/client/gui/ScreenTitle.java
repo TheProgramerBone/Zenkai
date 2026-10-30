@@ -21,7 +21,7 @@ import java.util.Locale;
 public final class ScreenTitle {
 
     /** Dorado cálido del mod. */
-    public static final int COLOR = 0xFFFFC94A;
+    public static final int COLOR = ZenkaiPalette.GOLD;
 
     /** Píxeles por encima del borde superior del panel. 14 = ~5 de aire con lineHeight 9. */
     public static final int ABOVE = 14;

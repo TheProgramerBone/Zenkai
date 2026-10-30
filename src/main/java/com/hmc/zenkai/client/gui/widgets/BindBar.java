@@ -13,6 +13,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
@@ -247,14 +248,42 @@ public final class BindBar {
      * combate, así que aquí tiene que parecerse a aquello.
      */
     public void renderFrame(GuiGraphics g, Font font, Component label) {
-        g.fill(x - 4, y - 4, x + WIDTH + 4, y + HEIGHT + 4, ZenkaiPalette.INSET_BG);
-        g.fill(x - 4, y - 4, x + WIDTH + 4, y - 3, ZenkaiPalette.SEPARATOR);
-        g.fill(x - 4, y + HEIGHT + 3, x + WIDTH + 4, y + HEIGHT + 4, ZenkaiPalette.SEPARATOR);
+        drawPlate(g, x - 4, y - 4, WIDTH + 8, HEIGHT + 8);
         if (label != null) {
             g.drawString(font, label, x, y - 4 - font.lineHeight - 2,
                     ZenkaiPalette.MUTED_ON_PANEL, false);
         }
     }
+
+    /**
+     * La placa de TP/MND del skill tree (hud.png, 8x4 texeles de borde, a 2 texeles por píxel de GUI)
+     * estirada a la fila. Es de 9 trozos y no la de tres del árbol porque aquella es de 14 px de alto
+     * y la fila mide 28: el interior es liso, así que el centro se estira en vertical sin deformar nada
+     * y solo se repite en horizontal.
+     */
+    private void drawPlate(GuiGraphics g, int px, int py, int w, int h) {
+        final int edgeU = 8, edgeV = 4, texH = 28;
+        int w2 = w * 2, h2 = h * 2;
+        var pose = g.pose();
+        pose.pushPose();
+        pose.translate(px, py, 0);
+        pose.scale(0.5f, 0.5f, 1f);
+        int midH = h2 - 2 * edgeV;
+        for (int dx = 0; dx < w2; ) {
+            int u, cw;
+            if (dx == 0) { u = 0; cw = edgeU; }
+            else if (dx + edgeU >= w2) { u = 2 * edgeU; cw = edgeU; }
+            else { u = edgeU; cw = Math.min(edgeU, w2 - edgeU - dx); }
+            g.blit(PLATE_TEX, dx, 0, cw, edgeV, u, 0, cw, edgeV, 256, 128);
+            g.blit(PLATE_TEX, dx, edgeV, cw, midH, u, edgeV, cw, texH - 2 * edgeV, 256, 128);
+            g.blit(PLATE_TEX, dx, h2 - edgeV, cw, edgeV, u, texH - edgeV, cw, edgeV, 256, 128);
+            dx += cw;
+        }
+        pose.popPose();
+    }
+
+    private static final ResourceLocation PLATE_TEX = ResourceLocation.fromNamespaceAndPath(
+            com.hmc.zenkai.Zenkai.MOD_ID, "textures/gui/skill_tree/hud.png");
 
     /** Icono flotante bajo el cursor mientras se arrastra. Va DESPUÉS de lo demás. */
     public void renderDragGhost(GuiGraphics g, int mouseX, int mouseY) {

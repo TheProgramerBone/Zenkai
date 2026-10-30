@@ -10,7 +10,7 @@
   "stat_percent_mastered": 9.47,
   "ki_drain_untrained": 2.22,
   "ki_drain_mastered": 0.74,
-  "spi_req": 134,
+  "spi_req": 145,
   "parent": "zenkai:final_form",
   "body_items": {
     "head": "zenkai:arcosian_golden_form_helmet",

@@ -180,8 +180,8 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     // El beige real de common_screen.png va de x=12 a x=244 (muestreado píxel a píxel, ver
     // TrainingHubScreen) — 10/245 se metían 2px dentro del marco por cada lado.
-    private static final int IN_X1 = 12;
-    private static final int IN_X2 = 243;
+    private static final int IN_X1 = CommonPanel.IN_X1;
+    private static final int IN_X2 = CommonPanel.IN_X2;
     private static final int SONG_ROW_H = 24;
     private static final int SONG_ROW_GAP = 6;
 
@@ -314,7 +314,9 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     @Override
     protected void init() {
         var w = CommonPanel.fitAxis(this.width, CommonPanel.MARGIN, CommonPanel.MARGIN);
-        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, CommonPanel.MARGIN);
+        // Misma reserva inferior que ZenkaiMenuScreen (TrainingHub y Shadow): con CommonPanel.MARGIN el panel
+        // quedaba 5 px de GUI más abajo y saltaba al entrar desde el hub (medido con ScreenShots, 2026-10-29).
+        var h = CommonPanel.fitAxis(this.height, CommonPanel.TITLE_RESERVE, ZenkaiMenuScreen.TAB_RESERVE);
         panelW = w.size();
         panelH = h.size();
         panelLeft = w.pos();
@@ -334,7 +336,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         selectedSong = null; // Free Practice, la selección por defecto al entrar
 
         overviewDescLines = this.font.split(
-                Component.translatable("screen.zenkai.meditation.overview"), panelW - 24);
+                Component.translatable("screen.zenkai.meditation.overview"), (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
         descY = 26;
         songRowY = descY + overviewDescLines.size() * 10 + 8;
         stepperY = songRowY + SONG_ROW_H + 10;

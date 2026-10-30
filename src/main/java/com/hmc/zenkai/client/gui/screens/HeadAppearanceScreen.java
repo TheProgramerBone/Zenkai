@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.player.PlayerVisualAttachment;
@@ -80,16 +81,16 @@ public class HeadAppearanceScreen extends Screen {
     private static final ResourceLocation TEX_BTN =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_wide.png");
 
-    private static final int BG_W = 256;
-    private static final int BG_H = 256;
+    private static final int BG_W = CommonPanel.IDEAL;
+    private static final int BG_H = CommonPanel.IDEAL;
     // Beige real de common_screen.png: x=12..243 (el marco ocupa 0..11 y 244..255). Antes era
     // 10/245, copiado de las pantallas viejas, y las flechas/botones pisaban el borde. Ver gui.md.
-    private static final int IN_X1 = 12;
+    private static final int IN_X1 = CommonPanel.IN_X1;
     private static final int IN_Y1 = 10;
-    private static final int IN_X2 = 243;
+    private static final int IN_X2 = CommonPanel.IN_X2;
     private static final int IN_Y2 = 240;
     private static final int BTN_BAR_Y = 260;
-    private static final int BTN_W     = 60;
+    private static final int BTN_W     = CommonPanel.FOOTER_BTN_W;
     private static final int PAD       = 6;
 
     // ── Pestañas ──
@@ -867,7 +868,7 @@ public class HeadAppearanceScreen extends Screen {
             if (hairStatus != null && hairHasColors && selectedCustom() != null && !importOpen) {
                 // Sin hueco abajo (casilla de colores + Borrar/Exportar): el aviso va en la línea
                 // del nombre, que sigue en el tooltip de la casilla.
-                text(g, fitBetweenArrows(hairStatus), leftCx, pt + NAME_Y, hairStatusError ? 0xFFB03A2E : COLOR_VALUE);
+                text(g, fitBetweenArrows(hairStatus), leftCx, pt + NAME_Y, hairStatusError ? ZenkaiPalette.DENIED_ON_PANEL : COLOR_VALUE);
             } else if (hairStatus != null) {
                 // Hasta dos líneas al ancho de la columna: en el panel de importar, bajo sus botones;
                 // si no, en el hueco de debajo del color de pelo (sin pisar Borrar/Exportar).
@@ -876,7 +877,7 @@ public class HeadAppearanceScreen extends Screen {
                 int max = importOpen ? 2 : 1;
                 for (int i = 0; i < Math.min(max, lines.size()); i++) {
                     g.drawString(this.font, lines.get(i), leftCx - this.font.width(lines.get(i)) / 2,
-                            y + i * 10, hairStatusError ? 0xFFB03A2E : COLOR_VALUE, false);
+                            y + i * 10, hairStatusError ? ZenkaiPalette.DENIED_ON_PANEL : COLOR_VALUE, false);
                 }
             }
         } else {
