@@ -1,6 +1,6 @@
 {
-  "_comment": "Rosé (canon): lágrima alta de llama (pedido del usuario 2026-10-26, antes divine) con destellos; sin rayos. Humo momentáneo sobre la silueta (al cargar/turbo), como el resto de formas divinas; vale también para Rosé Evolución.",
-  "family": "flame",
+  "_comment": "Rosé (Goku Black), referencia GokuBlackRoseGemini.jpg: TRES capas (violeta-negro fuera, magenta en medio, carmesí pegada al cuerpo), cubitos magenta y oscuros, rocas que levitan. Rosé Evolución tiene su estilo aparte.",
+  "family": "divine_radiance",
   "silhouette": {
     "inner": "hot",
     "outer": "outer",
@@ -10,12 +10,152 @@
     "alpha": 0.95,
     "while_charging": true
   },
-  "extra_components": [
+  "components": [
+    {
+      "type": "sheets",
+      "count": 12,
+      "radius": [
+        0.42,
+        0.7
+      ],
+      "width": [
+        0.7,
+        1.0
+      ],
+      "height": [
+        3.6,
+        4.5
+      ],
+      "base": -0.3,
+      "life": [
+        5.0,
+        8.0
+      ],
+      "front": 0.15,
+      "mode": "flame",
+      "color": "#3A12A0",
+      "shadow_color": "#07020F",
+      "alpha": 0.8,
+      "bloom": 0.0,
+      "white": 0.0
+    },
+    {
+      "type": "sheets",
+      "count": 16,
+      "radius": [
+        0.3,
+        0.55
+      ],
+      "width": [
+        0.65,
+        1.0
+      ],
+      "height": [
+        3.0,
+        3.8
+      ],
+      "base": -0.4,
+      "life": [
+        5.0,
+        8.0
+      ],
+      "front": 0.25,
+      "mode": "flame",
+      "color": "inner",
+      "shadow_color": "#D8104A",
+      "alpha": 0.9,
+      "bloom": 0.5,
+      "white": 0.0
+    },
+    {
+      "type": "sheets",
+      "count": 14,
+      "radius": [
+        0.14,
+        0.32
+      ],
+      "width": [
+        0.7,
+        1.05
+      ],
+      "height": [
+        2.5,
+        3.2
+      ],
+      "base": -0.4,
+      "life": [
+        4.0,
+        6.0
+      ],
+      "front": 0.2,
+      "mode": "flame",
+      "color": "#FF2A50",
+      "shadow_color": "#D0103C",
+      "alpha": 1.0,
+      "bloom": 0.5,
+      "white": 0.0
+    },
+    {
+      "type": "motes",
+      "behavior": "float",
+      "sprite": "cube",
+      "rate": 9,
+      "life": [
+        1.4,
+        2.4
+      ],
+      "size": [
+        0.07,
+        0.12
+      ],
+      "speed": [
+        0.25,
+        0.55
+      ],
+      "radius": [
+        0.45,
+        1.0
+      ],
+      "height": [
+        0.2,
+        2.8
+      ],
+      "color": "inner",
+      "bloom": 1.0
+    },
+    {
+      "type": "motes",
+      "behavior": "float",
+      "sprite": "cube",
+      "rate": 8,
+      "life": [
+        1.4,
+        2.4
+      ],
+      "size": [
+        0.06,
+        0.1
+      ],
+      "speed": [
+        0.25,
+        0.55
+      ],
+      "radius": [
+        0.45,
+        1.0
+      ],
+      "height": [
+        0.2,
+        2.8
+      ],
+      "color": "#1A0A2E",
+      "bloom": 0.0
+    },
     {
       "type": "motes",
       "behavior": "glint",
       "sprite": "glint",
-      "rate": 6,
+      "rate": 4,
       "life": [
         0.4,
         0.8
@@ -34,14 +174,16 @@
       ],
       "height": [
         0.2,
-        1.9
+        2.0
       ],
       "color": "white",
       "bloom": 1.0
     }
   ],
   "body": {
-    "half_height": 1.08,
-    "amp": 1.1
+    "opacity": 0.45
+  },
+  "inner": {
+    "alpha": 1.1
   }
 }

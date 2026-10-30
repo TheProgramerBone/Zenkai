@@ -85,6 +85,12 @@ vec3 keepSat(vec3 c, vec3 base) {
 // Relleno de la parte alta, solo con la cámara a los lados (2026-10-26, barrido de cámara): visto
 // desde ARRIBA, la punta densa se proyecta sobre el jugador como una columna que lo tapa. Las
 // referencias son siempre vistas laterales: el relleno se apaga al subir la cámara.
+// Cámara por DEBAJO del aura (nadir, 2026-10-28): la base abierta y fundida está pensada para vistas
+// laterales; desde abajo es lo ÚNICO que se ve y el aura casi desaparecía. 0 = de lado o arriba, 1 = debajo.
+float belowView(vec3 V) {
+    return smoothstep(0.1, 0.6, -dot(V, normalize(vUpView)));
+}
+
 float topFill(vec3 V) {
     float above = dot(V, normalize(vUpView)); // > 0 = cámara por encima del aura
     return max(ZenkaiShellTear.y, ZenkaiAuraLook.w) * (1.0 - smoothstep(0.25, 0.65, above));
@@ -136,7 +142,7 @@ void main() {
         // elipsoide y dibujaba un anillo cerrado bajo los pies — se leía como una cápsula. En DMZ
         // y en el anime la base no tiene contorno: se abre y se funde. Hacia abajo, la intensidad
         // baja (ZenkaiShellCelShape.y) y el contorno cae a bandas más tenues.
-        i *= mix(ZenkaiShellCelShape.y, 1.0, smoothstep(-0.7, -0.1, vLocalY));
+        i *= mix(ZenkaiShellCelShape.y, 1.0, max(smoothstep(-0.7, -0.1, vLocalY), belowView(V)));
         // RELLENO DE ARRIBA (prueba contra aura_4/aura_11, 2026-10-26): en las referencias la parte
         // alta de la llama es la más densa y la que brilla; con solo fresnel, la punta estrecha vista
         // de frente quedaba transparente y el aura se leía como una cápsula hasta la cabeza.
@@ -177,7 +183,7 @@ void main() {
     // encendido por el fresnel (visto en juego); en las referencias las lenguas NACEN del suelo.
     // Banda configurable desde el 2026-09-30 (ZenkaiShellBaseFade): con la base bajada bajo los
     // pies, la llama se lee entera hasta el suelo y solo se funde el último tramo.
-    alpha *= smoothstep(ZenkaiShellBaseFade.x, ZenkaiShellBaseFade.y, vLocalY);
+    alpha *= mix(smoothstep(ZenkaiShellBaseFade.x, ZenkaiShellBaseFade.y, vLocalY), 1.0, belowView(V));
     // Cámara por ENCIMA (barrido de cámara 2026-10-26): la llama alta queda entre la cámara y el
     // jugador y lo tapaba con una columna brillante (los flancos, de canto, se encienden como borde).
     // La parte de encima de la cabeza se aclara al subir la cámara; de lado no cambia nada.

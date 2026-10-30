@@ -13,12 +13,12 @@
   "spi_req": 260,
   "parent": "zenkai:ssj_blue",
   "body_items": {},
-  "aura_type": "blue",
-  "aura_rgb": "0xD8F8FF",
+  "aura_type": "blue_evolution",
+  "aura_rgb": "0x1F8CF5",
   "scale": 1.0,
   "hair_rgb": "0x1C3FE0",
   "divine_tier": true,
   "tier": "evolution",
-  "aura_outer_rgb": "0x1A3AD0",
+  "aura_outer_rgb": "0x2A2FD0",
   "eye_rgb": "0x29C4FF"
 }

@@ -15,6 +15,7 @@
   "body_items": {},
   "aura_type": "god",
   "aura_rgb": "0xFFFFFF",
+  "aura_outer_rgb": "0x3C8CFF",
   "scale": 1.0,
   "hair_rgb": "0xFFFFFF",
   "divine_tier": true,

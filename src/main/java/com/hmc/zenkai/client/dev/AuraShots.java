@@ -124,6 +124,19 @@ public final class AuraShots {
     /** Modo {@code divinas}: hojas "mod vs referencia" del rework de las auras divinas
      *  (.claude/pendiente/aura-divinas-plan.md). Tercera línea opcional: ids de forma separados por espacios. */
     private static boolean divineMode;
+    /** Modo {@code divinas_suelo}: lo que {@code divinas} no cubre (carga en el suelo con sus rocas que
+     *  levitan, primera persona) para cerrar las fases del rework de auras. Misma tercera línea de ids. */
+    private static boolean groundMode;
+    /** Modo {@code divinas_giro}: barrido lento de giro de cámara (yaw) alrededor del jugador, fotogramas
+     *  seguidos, para ver apariciones/desapariciones bruscas de partes del aura (2026-10-28). */
+    private static boolean sweepMode;
+    /** Modo {@code divinas_subida}: subida en vertical con la MIRADA y la inclinación reales del vuelo en boost
+     *  (FlightController: 90 + mirada x 0,9 grados hacia delante), desde varias cámaras (2026-10-29). */
+    private static boolean ascendMode;
+    /** Modo {@code golden}: aura sostenida y secuencia del estallido GOLDEN_BURST (F5, 2026-10-29), día y noche. */
+    private static boolean goldenMode;
+    /** Simula CARGAR ki en el cliente cada tick (el efecto de suelo exige {@code isChargingKi}). */
+    private static boolean forceCharging;
     private static final List<String> DIVINE_FORMS = new ArrayList<>();
     /** Beast forzando: % de poder que se impone cada tick en el cliente (0 = no se toca). */
     private static int forcedPowerPercent;
@@ -172,7 +185,11 @@ public final class AuraShots {
                     smokeTestMode = lines.size() > 1 && lines.get(1).trim().equals("humo_prueba");
                     reviewMode = lines.size() > 1 && lines.get(1).trim().equals("revision");
                     momentaryMode = lines.size() > 1 && lines.get(1).trim().equals("humo_momentaneo");
-                    divineMode = lines.size() > 1 && lines.get(1).trim().equals("divinas");
+                    groundMode = lines.size() > 1 && lines.get(1).trim().equals("divinas_suelo");
+                    sweepMode = lines.size() > 1 && lines.get(1).trim().equals("divinas_giro");
+                    goldenMode = lines.size() > 1 && lines.get(1).trim().equals("golden");
+                    ascendMode = lines.size() > 1 && lines.get(1).trim().equals("divinas_subida");
+                    divineMode = lines.size() > 1 && (lines.get(1).trim().equals("divinas") || groundMode || sweepMode || ascendMode);
                     if (divineMode && lines.size() > 2) {
                         for (String id : lines.get(2).trim().split("\\s+")) if (!id.isEmpty()) DIVINE_FORMS.add(id);
                     }
@@ -232,6 +249,7 @@ public final class AuraShots {
         form.setFormId(s.form());
         form.setKaioken(s.kaioken());
         AuraClientState.localTurbo = !auraOff;
+        if (forceCharging) com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(p).setChargingKi(true);
         if (s.flying()) AuraDebug.FORCED.put(AuraDynamics.State.FLYING, true);
         else AuraDebug.FORCED.remove(AuraDynamics.State.FLYING);
         AuraDebug.solo = s.bodyOnly() ? "body" : null;
@@ -299,6 +317,8 @@ public final class AuraShots {
         if (smokeTestMode) { smokeTestPlan(mc); return; }
         if (reviewMode) { reviewPlan(mc); return; }
         if (momentaryMode) { momentaryPlan(mc); return; }
+        if (goldenMode) { goldenPlan(mc); return; }
+        if (groundMode) { groundPlan(mc); return; }
         if (divineMode) { divinePlan(mc); return; }
         if (smokeMode) { smokePlan(mc); return; }
         setTime(mc, DAY);
@@ -737,6 +757,76 @@ public final class AuraShots {
         PLAN.add(() -> { var sp = mc.level.getSharedSpawnPos();
                 command(mc, "spreadplayers " + sp.getX() + " " + sp.getZ() + " 0 1 false @s"); wait = 40; });
         PLAN.add(() -> { command(mc, "fill ~-6 ~ ~-6 ~6 ~8 ~6 minecraft:air"); moveY = mc.player.getY() + 4.0; airborne = true; });
+        if (ascendMode) {
+            PLAN.add(() -> { command(mc, "zenkai attr maxall"); wait = WAIT_TIME; });
+            setTime(mc, DAY);
+            for (String id : ids) {
+                Scene s = form(id, true);
+                String dir = (com.hmc.zenkai.compat.IrisCompat.shaderPackActive() ? "subida_pack/" : "subida/") + id;
+                PLAN.add(() -> { active = s; auraOff = false; yawOverride = 0F; pitchOverride = 10F; moveStep = 0; moveStepZ = 0;
+                        mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); wait = 60; });
+                // Referencia: quieto en el aire, de frente.
+                PLAN.add(() -> capture(mc, s, dir, "quieto"));
+                // {nombre, cámara, mirada (xRot, negativo = arriba)}. Inclinación del aura = la del boost real:
+                // 90 + mirada x 0,9 grados hacia delante (+Z con giro 0).
+                // {nombre, cámara, mirada (xRot: negativo = arriba), crucero?}. Inclinación del aura = la del
+                // FlightController: boost = 90 + mirada x 0,9; crucero = mirada x 0,25 (hacia delante = +Z).
+                Object[][] ups = {
+                        {"detras_m80", CameraType.THIRD_PERSON_BACK, -80F, false},
+                        {"frente_m80", CameraType.THIRD_PERSON_FRONT, -80F, false},
+                        {"cruce_frente_m60", CameraType.THIRD_PERSON_FRONT, -60F, true},
+                        {"cruce_frente_m30", CameraType.THIRD_PERSON_FRONT, -30F, true},
+                        {"cruce_frente_0", CameraType.THIRD_PERSON_FRONT, 0F, true},
+                        {"cruce_frente_p30", CameraType.THIRD_PERSON_FRONT, 30F, true},
+                        {"cruce_detras_m30", CameraType.THIRD_PERSON_BACK, -30F, true},
+                        {"cruce_detras_0", CameraType.THIRD_PERSON_BACK, 0F, true},
+                        {"fp_cruce_m60", CameraType.FIRST_PERSON, -60F, true},
+                        {"fp_boost_m80", CameraType.FIRST_PERSON, -80F, false},
+                };
+                for (Object[] u : ups) {
+                    final float look = (Float) u[2];
+                    final double pitch = Math.toRadians((Boolean) u[3] ? look * 0.25 : 90.0 + look * 0.9);
+                    PLAN.add(() -> { yawOverride = 0F; pitchOverride = look; moveStep = 0; moveStepZ = 0;
+                            moveStepY = 0.8; moveYStart = moveY;
+                            com.hmc.zenkai.client.aura.AuraTiltController.debugAxis =
+                                    new org.joml.Vector3f(0f, (float) Math.cos(pitch), (float) Math.sin(pitch));
+                            mc.options.setCameraType((CameraType) u[1]); wait = 30; });
+                    for (int fr = 0; fr < 3; fr++) {
+                        final int frame = fr;
+                        PLAN.add(() -> { wait = 2; });
+                        PLAN.add(() -> capture(mc, s, dir, String.format("%s_f%02d", u[0], frame)));
+                    }
+                    PLAN.add(() -> { moveStepY = 0; moveY = moveYStart;
+                            com.hmc.zenkai.client.aura.AuraTiltController.debugAxis = null; wait = 30; });
+                }
+            }
+            PLAN.add(() -> { active = null; pitchOverride = null; yawOverride = null; airborne = false;
+                    mc.options.fov().set(savedFov); mc.options.hideGui = false;
+                    mc.options.setCameraType(CameraType.FIRST_PERSON); });
+            return;
+        }
+        if (sweepMode) {
+            PLAN.add(() -> { command(mc, "zenkai attr maxall"); wait = WAIT_TIME; });
+            setTime(mc, DAY);
+            for (String id : ids) {
+                Scene s = form(id, true);
+                String dir = "giro/" + id;
+                PLAN.add(() -> { active = s; auraOff = false; yawOverride = 0F; pitchOverride = 10F; moveStep = 0; moveStepZ = 0;
+                        mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); wait = 60; });
+                // Dos pasadas: cámara a 10° (normal) y a 70° (casi cenital, donde cambia la mezcla delante/detrás).
+                for (float pitch : new float[]{10F, 70F}) {
+                    for (int deg = 0; deg < 360; deg += 10) {
+                        final float yaw = deg, pt = pitch;
+                        PLAN.add(() -> { yawOverride = yaw; pitchOverride = pt; wait = 3; });
+                        PLAN.add(() -> capture(mc, s, dir, String.format("p%02d_y%03d", (int) pt, (int) yaw)));
+                    }
+                }
+            }
+            PLAN.add(() -> { active = null; pitchOverride = null; yawOverride = null; airborne = false;
+                    mc.options.fov().set(savedFov); mc.options.hideGui = false;
+                    mc.options.setCameraType(CameraType.FIRST_PERSON); });
+            return;
+        }
         for (String power : new String[]{"base", "max"}) {
             if (power.equals("max")) PLAN.add(() -> { command(mc, "zenkai attr maxall"); wait = WAIT_TIME; });
             setTime(mc, DAY);
@@ -785,9 +875,12 @@ public final class AuraShots {
                         // (2026-10-27). Y subiendo en vertical: se aplastaba.
                         {"rapido_detras", 0.0, 1.0, CameraType.THIRD_PERSON_BACK, 6, new org.joml.Vector3f(0f, 0.17f, 0.98f)},
                         {"subiendo", 0.0, 0.0, CameraType.THIRD_PERSON_FRONT, 6, new org.joml.Vector3f(0f, 1f, 0f), 0.4},
+                        // Subida real: cámara detrás Y POR DEBAJO (el jugador mira arriba) con un cabeceo pequeño del
+                        // aura; el aura se aplastaba (2026-10-28). Ultimo valor = cabeceo de la cámara.
+                        {"subiendo_mirando_arriba", 0.0, 0.0, CameraType.THIRD_PERSON_BACK, 6, new org.joml.Vector3f(0f, 0.97f, 0.26f), 0.4, -50F},
                 };
                 for (Object[] mv : moves) {
-                    PLAN.add(() -> { yawOverride = 0F; pitchOverride = 10F; moveStep = (Double) mv[1]; moveStepZ = (Double) mv[2];
+                    PLAN.add(() -> { yawOverride = 0F; pitchOverride = mv.length > 7 ? (Float) mv[7] : 10F; moveStep = (Double) mv[1]; moveStepZ = (Double) mv[2];
                             moveStepY = mv.length > 6 ? (Double) mv[6] : 0; moveYStart = moveY;
                             com.hmc.zenkai.client.aura.AuraTiltController.debugAxis = (org.joml.Vector3f) mv[5];
                             mc.options.setCameraType((CameraType) mv[3]); wait = 30; });
@@ -814,6 +907,116 @@ public final class AuraShots {
         PLAN.add(() -> {
             active = null; pitchOverride = null; yawOverride = null; auraOff = false;
             moveStep = 0; moveStepZ = 0; airborne = false;
+            AuraClientState.localTurbo = false;
+            mc.options.fov().set(savedFov);
+            mc.options.hideGui = false;
+            mc.options.setCameraType(CameraType.FIRST_PERSON);
+        });
+    }
+
+    /**
+     * F5 Golden (2026-10-29): en el SUELO (el estallido levanta polvo, rocas y anillo solo pisando), la forma
+     * golden con el aura sostenida tenue (fotogramas de frente y espaldas) y la secuencia {@code burstRequested}
+     * (la misma de {@code /zenkaiaura transform}) en 14 fotogramas cada 2 ticks (~1,4 s, la secuencia dura 1,1 s).
+     * De día y de noche. Carpeta {@code golden/<dia|noche>/}.
+     */
+    private static void goldenPlan(Minecraft mc) {
+        Scene s = form(DIVINE_FORMS.isEmpty() ? "golden_form" : DIVINE_FORMS.get(0), false);
+        PLAN.add(() -> { var sp = mc.level.getSharedSpawnPos();
+                command(mc, "spreadplayers " + sp.getX() + " " + sp.getZ() + " 0 1 false @s"); wait = 40; });
+        PLAN.add(() -> { command(mc, "fill ~-6 ~ ~-6 ~6 ~8 ~6 minecraft:air"); command(mc, "zenkai attr maxall");
+                // La forma golden es de Arcosian: se prueba con su cuerpo, no con el de la raza del mundo.
+                command(mc, "zenkai race set arcosian"); wait = WAIT_TIME; });
+        for (String when : new String[]{"dia", "noche"}) {
+            setTime(mc, when.equals("dia") ? DAY : NIGHT);
+            String dir = "golden/" + when;
+            PLAN.add(() -> { active = s; auraOff = false; airborne = false; yawOverride = 0F; pitchOverride = 10F;
+                    mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); wait = 80; });
+            for (int fr = 0; fr < 3; fr++) {
+                final int frame = fr;
+                PLAN.add(() -> { wait = 4; });
+                PLAN.add(() -> capture(mc, s, dir, String.format("sostenida_f%02d", frame)));
+            }
+            PLAN.add(() -> { mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); wait = 20; });
+            PLAN.add(() -> capture(mc, s, dir, "sostenida_espaldas"));
+            PLAN.add(() -> { mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); wait = 20; });
+            PLAN.add(() -> { com.hmc.zenkai.client.aura.compose.AuraDebug.burstRequested = true; wait = 1; });
+            for (int fr = 0; fr < 14; fr++) {
+                final int frame = fr;
+                PLAN.add(() -> capture(mc, s, dir, String.format("estallido_f%02d", frame)));
+                PLAN.add(() -> { wait = 1; });
+            }
+            PLAN.add(() -> { wait = 40; });
+        }
+        PLAN.add(() -> {
+            active = null; pitchOverride = null; yawOverride = null; auraOff = false;
+            AuraClientState.localTurbo = false;
+            mc.options.fov().set(savedFov);
+            mc.options.hideGui = false;
+            mc.options.setCameraType(CameraType.FIRST_PERSON);
+        });
+    }
+
+    /**
+     * Fase de cierre de las auras divinas (2026-10-27): en el SUELO cargando (rocas que levitan del suelo
+     * {@code levitate}, sin polvo) y en PRIMERA persona, en el suelo y en vuelo, más un par de tomas de
+     * vuelo en tercera. Se ejecuta con y sin shaderpack ({@code enableShaders} en iris.properties); la
+     * carpeta lleva {@code _pack} si hay pack en uso. Carpeta {@code suelo[_pack]/<forma>/}.
+     */
+    private static void groundPlan(Minecraft mc) {
+        List<String> ids = DIVINE_FORMS.isEmpty() ? List.of("ssj_blue", "ssj_rose") : DIVINE_FORMS;
+        boolean pack = com.hmc.zenkai.compat.IrisCompat.shaderPackActive();
+        PLAN.add(() -> Zenkai.LOGGER.info("AuraShots divinas_suelo: shaderpack en uso = {}", pack));
+        PLAN.add(() -> { var sp = mc.level.getSharedSpawnPos();
+                command(mc, "spreadplayers " + sp.getX() + " " + sp.getZ() + " 0 1 false @s"); wait = 40; });
+        PLAN.add(() -> { command(mc, "fill ~-6 ~ ~-6 ~6 ~8 ~6 minecraft:air"); command(mc, "zenkai attr maxall"); wait = WAIT_TIME; });
+        setTime(mc, DAY);
+        for (String id : ids) {
+            Scene ground = form(id, false), fly = form(id, true);
+            String dir = (pack ? "suelo_pack/" : "suelo/") + id;
+            PLAN.add(() -> { active = ground; auraOff = false; airborne = false; forceCharging = true; yawOverride = 0F; pitchOverride = 10F;
+                    mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); wait = 80; });
+            // Las rocas nacen y suben: varios fotogramas espaciados. La carga simulada no se sostiene tick a tick
+            // (se vio con un log: el modo levitate corría ~8 ticks de ~250), así que se lanzan con la misma
+            // ráfaga de las transformaciones; lo que se comprueba es cómo se VEN las rocas que levitan.
+            for (int fr = 0; fr < 6; fr++) {
+                final int frame = fr;
+                PLAN.add(() -> {
+                    var g = com.hmc.zenkai.client.aura.AuraChargeGroundFx.findGround(mc.level, mc.player,
+                            mc.player.getX(), mc.player.getY(), mc.player.getZ());
+                    if (g != null) com.hmc.zenkai.client.aura.AuraChargeGroundFx.burst(mc.level, mc.player, g, 0, 4, true);
+                    wait = 12;
+                });
+                PLAN.add(() -> capture(mc, ground, dir, String.format("suelo_frente_f%02d", frame)));
+            }
+            PLAN.add(() -> { mc.options.setCameraType(CameraType.THIRD_PERSON_BACK); wait = 20; });
+            PLAN.add(() -> capture(mc, ground, dir, "suelo_espaldas"));
+            PLAN.add(() -> { mc.options.setCameraType(CameraType.FIRST_PERSON); pitchOverride = 10F; wait = 30; });
+            for (int fr = 0; fr < 3; fr++) {
+                final int frame = fr;
+                PLAN.add(() -> { wait = 8; });
+                PLAN.add(() -> capture(mc, ground, dir, String.format("fp_suelo_f%02d", frame)));
+            }
+            // En vuelo, a 4 bloques del suelo: primera persona y tercera de frente.
+            PLAN.add(() -> { active = fly; forceCharging = false; com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(mc.player).setChargingKi(false); moveY = mc.player.getY() + 4.0; airborne = true; wait = 40; });
+            for (int fr = 0; fr < 3; fr++) {
+                final int frame = fr;
+                PLAN.add(() -> { wait = 6; });
+                PLAN.add(() -> capture(mc, fly, dir, String.format("fp_vuelo_f%02d", frame)));
+            }
+            PLAN.add(() -> { mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT); pitchOverride = 10F; wait = 30; });
+            for (int fr = 0; fr < 2; fr++) {
+                final int frame = fr;
+                PLAN.add(() -> { wait = 6; });
+                PLAN.add(() -> capture(mc, fly, dir, String.format("vuelo_frente_f%02d", frame)));
+            }
+            // De vuelta al suelo antes de la siguiente forma.
+            PLAN.add(() -> { airborne = false; active = ground; wait = 80; });
+        }
+        PLAN.add(() -> {
+            active = null; pitchOverride = null; yawOverride = null; auraOff = false;
+            moveStep = 0; moveStepZ = 0; airborne = false; forceCharging = false;
+            com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(mc.player).setChargingKi(false);
             AuraClientState.localTurbo = false;
             mc.options.fov().set(savedFov);
             mc.options.hideGui = false;

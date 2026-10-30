@@ -130,6 +130,29 @@ public final class AuraFamilies {
             new AuraTrailSpec(0.55f, 0.3f, 0.55f, 0.4f, 0.5f, false, 18)));
 
     /**
+     * DIVINE_RADIANCE — el aura de Super Saiyan Blue (rework 2026-10-27, fase F3 de
+     * .claude/pendiente/aura-divinas-plan.md; referencia {@code aura vfx/ReferenciaGeminiAuraGokuSSJBlue.jpg}).
+     * Una lágrima COMPACTA y alta de lenguas finas que ondulan pegadas al cuerpo: cian casi blanco junto al
+     * personaje y azul marino en el borde y en los valles. Distinta de SSG a propósito: más estrecha, de
+     * vida más larga (llama fría y serena), con el cuerpo de DIVINE como brillo tenue de fondo, cubitos de
+     * píxel cian y blancos flotando alrededor y rocas que levitan sin polvo.
+     */
+    public static final AuraFamily DIVINE_RADIANCE = register(new AuraFamily("divine_radiance", AuraBodyKind.SOFT,
+            DIVINE.inner(),
+            b -> {
+                DIVINE.shape().accept(b);
+                // Brillo de fondo: las láminas son lo que se ve, el volumen solo rellena junto al cuerpo.
+                b.mul(Key.OPACITY, 0.55f);
+                b.mul(Key.RADIUS, 0.9f);
+                // Más bajo: su punta asomaba como dos cuernos translúcidos sobre la cabeza (como en SSG).
+                b.mul(Key.HALF_HEIGHT, 0.6f);
+            },
+            List.of(radianceSheets(16), cubes(11f, MoteComponent.Tint.HOT), cubes(6f, MoteComponent.Tint.WHITE),
+                    glints()),
+            "levitate", "radiant",
+            new AuraTrailSpec(0.55f, 0.3f, 0.55f, 0.4f, 0.5f, false, 18)));
+
+    /**
      * DARK_DENSE — energía oscura y PESADA (aura_5, Ultra Ego, majin malvado). Masa ancha y
      * redondeada que se retuerce, casi sin estrecharse arriba, interior profundo con vetas y borde
      * fino; respira despacio. Motas grandes que se alejan y caen, sin bloom.
@@ -382,7 +405,29 @@ public final class AuraFamilies {
                 // Base 0,6 bajo los pies y 0,6 más de alto: la lágrima EMPIEZA bajo el jugador y lo
                 // rodea entero en vez de nacer en los pies (pedido del usuario sobre la v22, 2026-10-27).
                 new float[]{3.0f, 3.8f}, -0.6f, new float[]{4.0f, 7.0f}, 0.12f, FlameSheetComponent.Mode.FLAME,
-                TintSpec.INNER, TintSpec.OUTER, 0.9f, 0.5f, false);
+                TintSpec.INNER, TintSpec.OUTER, 0.9f, 0.5f, 0.6f, 0.82f, false);
+    }
+
+    /** Láminas de Blue: más estrechas y cercanas al cuerpo que las de SSG, y de vida larga (llama serena). */
+    private static AuraComponentConfig radianceSheets(int count) {
+        return new FlameSheetComponent.Config(count, new float[]{0.28f, 0.5f}, new float[]{0.6f, 0.95f},
+                new float[]{2.6f, 3.3f}, -0.4f, new float[]{5.0f, 8.0f}, 0.25f, FlameSheetComponent.Mode.FLAME,
+                TintSpec.INNER, TintSpec.OUTER, 0.9f, 0.6f, 0.6f, 0.82f, false);
+    }
+
+    /** Cubitos de píxel que flotan alrededor del cuerpo (arte de referencia de Blue). */
+    private static AuraComponentConfig cubes(float rate, MoteComponent.Tint tint) {
+        return new MoteComponent.Config(MoteComponent.Behavior.FLOAT, MoteComponent.Sprite.CUBE, rate,
+                new float[]{1.4f, 2.4f}, new float[]{0.07f, 0.12f}, new float[]{0.25f, 0.55f},
+                new float[]{0.45f, 1.0f}, new float[]{0.2f, 2.8f}, tint, new float[]{1f, 1f, 1f},
+                1f, 1f, 0.9f);
+    }
+
+    private static AuraComponentConfig glints() {
+        return new MoteComponent.Config(MoteComponent.Behavior.GLINT, MoteComponent.Sprite.GLINT, 5f,
+                new float[]{0.4f, 0.8f}, new float[]{0.07f, 0.11f}, new float[]{0.1f, 0.2f},
+                new float[]{0.3f, 0.8f}, new float[]{0.2f, 2.2f}, MoteComponent.Tint.WHITE, new float[]{1f, 1f, 1f},
+                1f, 1f, 0.9f);
     }
 
     private static AuraComponentConfig sparks(float rate) {

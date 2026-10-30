@@ -112,6 +112,8 @@ public final class AuraChargeGroundFx {
                     spawnDust(level, rng, p, g, Math.min(1f, k * 1.5f));
                     spawnRocks(level, rng, p, g, Math.min(1f, k * 1.6f), false);
                 }
+                // Blue (divine_radiance): sin polvo, solo unas pocas rocas que se quedan flotando.
+                case "levitate" -> spawnRocks(level, rng, p, g, k * 0.45f, true);
                 case "pressure" -> {
                     spawnDust(level, rng, p, g, k);
                     spawnRocks(level, rng, p, g, Math.min(1f, k * 1.4f), true);

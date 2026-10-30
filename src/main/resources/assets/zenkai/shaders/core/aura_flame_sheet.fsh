@@ -32,7 +32,11 @@ vec4 smoothNoise(vec2 uv) {
 
 void main() {
     float t = GameTime * 1200.0; // segundos de juego
-    float seed = floor(vUV.x);
+    // Parte entera de UV.x = semilla (0..63) + 64 * nivel de blanqueo del perfil (0..7, clave "white").
+    float seedRaw = floor(vUV.x);
+    float whiteQ = floor(seedRaw / 64.0);
+    float seed = seedRaw - whiteQ * 64.0;
+    float rimWhite = whiteQ / 7.0;
     bool light = vUV.y >= 1.5;
     float y = light ? vUV.y - 2.0 : vUV.y;
     // Ondulado lento de lado, más arriba que abajo: fuego LÍQUIDO y calmado (descripción del usuario
@@ -85,7 +89,7 @@ void main() {
         // *_god de otras razas conservan los suyos.
         vec3 crimson = clamp(vShadow, 0.0, 1.0);
         vec3 orange = mix(crimson, body, 0.7);
-        vec3 yellow = body + (vec3(1.0) - body) * 0.6;
+        vec3 yellow = body + (vec3(1.0) - body) * rimWhite;
         float rimB = smoothstep(0.10, 0.13, i);
         float bodyB = smoothstep(0.25, 0.29, i);
         color = mix(yellow, orange, bodyB);

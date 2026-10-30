@@ -1,15 +1,48 @@
 {
-  "_comment": "Ultra Instinct Sign: la misma familia, incompleta: menos cuerpo, menos lenguas, sin columna.",
+  "_comment": "Ultra Instinct Sign: hermana INCOMPLETA de ultra_instinct (pedido del usuario, 2026-10-27): mismo recurso (sin cajas, humo de silueta muy fino de un solo color, lenguas finas, cubitos, destellos, rocas que levitan) pero más tenue y escaso, en gris azulado. Se mantiene la clave del color de la forma (aura_rgb gris). Tamaño corregido (2026-10-27): láminas de abajo (bajo los pies) a arriba (sobre la cabeza), que recubren al personaje como el resto de auras.",
   "family": "flowing",
-  "body": {
-    "inflate": 0.75,
-    "alpha_edge": 0.8
+  "ground": "levitate",
+  "silhouette": {
+    "inner": "#B8C4DC",
+    "outer": "#B8C4DC",
+    "thickness": 0.2,
+    "reach": 0.2,
+    "speed": 0.7,
+    "alpha": 0.7,
+    "while_charging": false
   },
-  "body_set": {
-    "flecks": 0.3,
-    "licks": 0.6
+  "body": {
+    "opacity": 0.0
   },
   "components": [
+    {
+      "type": "sheets",
+      "count": 12,
+      "radius": [
+        0.3,
+        0.55
+      ],
+      "width": [
+        0.4,
+        0.62
+      ],
+      "height": [
+        2.5,
+        3.1
+      ],
+      "base": -0.4,
+      "life": [
+        5.0,
+        8.0
+      ],
+      "front": 0.2,
+      "mode": "flame",
+      "color": "#8CA4E8",
+      "shadow_color": "#5A3CC0",
+      "alpha": 0.7,
+      "bloom": 0.3,
+      "white": 0.1
+    },
     {
       "type": "wisps",
       "behavior": "flow",
@@ -30,6 +63,34 @@
       "color": "inner",
       "alpha": 0.6,
       "bloom": 0.6
+    },
+    {
+      "type": "motes",
+      "behavior": "float",
+      "sprite": "cube",
+      "rate": 4,
+      "life": [
+        1.4,
+        2.4
+      ],
+      "size": [
+        0.05,
+        0.09
+      ],
+      "speed": [
+        0.25,
+        0.55
+      ],
+      "radius": [
+        0.45,
+        1.0
+      ],
+      "height": [
+        0.2,
+        2.4
+      ],
+      "color": "white",
+      "bloom": 0.8
     },
     {
       "type": "motes",

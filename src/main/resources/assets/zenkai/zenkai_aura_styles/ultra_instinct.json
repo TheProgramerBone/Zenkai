@@ -1,4 +1,180 @@
 {
-  "_comment": "Ultra Instinct: energía ceñida al contorno que fluye hacia arriba, borde plateado, destellos (aura_12/aura_13/aura_14).",
-  "family": "flowing"
+  "_comment": "Ultra Instinct (Maestría), referencia ReferenciaGokuUIGemini.jpg (2026-10-27, F4 de aura-divinas-plan.md). Pedido del usuario: SIN el efecto de cajas (cuerpo FLOW de cápsulas apagado con body.opacity 0) y en su lugar un humo de silueta MUY fino de un solo color (plateado, siempre encendido). Alrededor, lenguas finas azul-violeta y magenta-azul, cubitos, destellos y rocas que levitan. Ultra Instinct Sign sigue con la familia flowing sin tocar.",
+  "family": "flowing",
+  "ground": "levitate",
+  "silhouette": {
+    "inner": "#E4ECFF",
+    "outer": "#E4ECFF",
+    "thickness": 0.2,
+    "reach": 0.3,
+    "speed": 0.8,
+    "alpha": 0.9,
+    "while_charging": false
+  },
+  "body": {
+    "opacity": 0.0
+  },
+  "components": [
+    {
+      "type": "sheets",
+      "count": 20,
+      "radius": [
+        0.4,
+        0.7
+      ],
+      "width": [
+        0.55,
+        0.85
+      ],
+      "height": [
+        3.0,
+        3.9
+      ],
+      "base": -0.45,
+      "life": [
+        5.0,
+        8.0
+      ],
+      "front": 0.2,
+      "mode": "flame",
+      "color": "#5C84FF",
+      "shadow_color": "#7A2CE0",
+      "alpha": 0.85,
+      "bloom": 0.3,
+      "white": 0.05
+    },
+    {
+      "type": "sheets",
+      "count": 14,
+      "radius": [
+        0.35,
+        0.65
+      ],
+      "width": [
+        0.5,
+        0.8
+      ],
+      "height": [
+        2.7,
+        3.5
+      ],
+      "base": -0.4,
+      "life": [
+        5.0,
+        8.0
+      ],
+      "front": 0.2,
+      "mode": "flame",
+      "color": "#D44CFF",
+      "shadow_color": "#2A48F0",
+      "alpha": 0.8,
+      "bloom": 0.3,
+      "white": 0.0
+    },
+    {
+      "type": "wisps",
+      "behavior": "flow",
+      "rate": 5,
+      "life": [
+        0.6,
+        1.0
+      ],
+      "width": [
+        0.03,
+        0.05
+      ],
+      "speed": [
+        0.9,
+        1.4
+      ],
+      "curl": 3,
+      "color": "inner",
+      "alpha": 0.7,
+      "bloom": 0.8
+    },
+    {
+      "type": "motes",
+      "behavior": "float",
+      "sprite": "cube",
+      "rate": 10,
+      "life": [
+        1.4,
+        2.4
+      ],
+      "size": [
+        0.05,
+        0.1
+      ],
+      "speed": [
+        0.25,
+        0.55
+      ],
+      "radius": [
+        0.45,
+        1.0
+      ],
+      "height": [
+        0.2,
+        2.8
+      ],
+      "color": "white",
+      "bloom": 1.0
+    },
+    {
+      "type": "motes",
+      "behavior": "float",
+      "sprite": "cube",
+      "rate": 7,
+      "life": [
+        1.4,
+        2.4
+      ],
+      "size": [
+        0.05,
+        0.09
+      ],
+      "speed": [
+        0.25,
+        0.55
+      ],
+      "radius": [
+        0.45,
+        1.0
+      ],
+      "height": [
+        0.2,
+        2.8
+      ],
+      "color": "#7FD8FF",
+      "bloom": 1.0
+    },
+    {
+      "type": "motes",
+      "behavior": "glint",
+      "sprite": "glint",
+      "rate": 8,
+      "life": [
+        0.4,
+        0.8
+      ],
+      "size": [
+        0.08,
+        0.13
+      ],
+      "speed": [
+        0.1,
+        0.2
+      ],
+      "radius": [
+        0.3,
+        0.8
+      ],
+      "height": [
+        0.2,
+        1.9
+      ],
+      "color": "white",
+      "bloom": 1.0
+    }
+  ]
 }

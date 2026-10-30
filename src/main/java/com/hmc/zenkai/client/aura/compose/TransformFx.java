@@ -37,7 +37,11 @@ final class TransformFx {
         RADIANT(0.3f, 0.2f, 0, 0, false, 0.8f),
         VIOLENT(0.6f, 0.4f, 32, 12, true, 0.8f),
         HEAVY(0.25f, 0.2f, 28, 6, true, 0.5f),
-        CALM_SHIFT(0.15f, 0.1f, 0, 0, false, 0.5f);
+        CALM_SHIFT(0.15f, 0.1f, 0, 0, false, 0.5f),
+        // Golden: el aura sostenida es tenue (body.opacity 0,4), así que el estallido sube el alfa
+        // mucho (×2,5 en el pico = opaca) y el pico de tamaño es el más alto; escombros que caen
+        // (levitate=false) y todos los rayos del componente electricity de un solo disparo.
+        GOLDEN_BURST(0.7f, 1.5f, 16, 10, false, 1f);
 
         final float peak, alphaBoost;
         final int dust, rocks;

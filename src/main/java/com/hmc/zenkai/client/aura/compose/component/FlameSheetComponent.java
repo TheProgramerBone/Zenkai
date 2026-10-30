@@ -31,7 +31,7 @@ import java.util.Set;
  * <pre>
  * { "type": "sheets", "count": 12, "radius": [0.35, 0.6], "width": [0.8, 1.2], "height": [2.4, 3.4],
  *   "base": -0.15, "life": [0.9, 1.6], "front": 0.2, "mode": "flame", "color": "inner",
- *   "shadow_color": "outer", "alpha": 0.9, "bloom": 0.5, "charging_only": false }
+ *   "shadow_color": "outer", "alpha": 0.9, "bloom": 0.5, "white": 0.6, "open_from": 0.82, "charging_only": false }
  * </pre>
  * <ul>
  *   <li>Las láminas que quedan ENTRE la cámara y el jugador salen más bajas y con {@code front} de
@@ -54,10 +54,10 @@ public final class FlameSheetComponent implements AuraComponent {
 
     public record Config(int count, float[] radius, float[] width, float[] height, float base, float[] life,
                          float front, Mode mode, TintSpec color, TintSpec shadow, float alpha, float bloom,
-                         boolean chargingOnly) implements AuraComponentConfig {
+                         float white, float openFrom, boolean chargingOnly) implements AuraComponentConfig {
 
         private static final Set<String> KEYS = Set.of("count", "radius", "width", "height", "base", "life",
-                "front", "mode", "color", "shadow_color", "alpha", "bloom", "charging_only");
+                "front", "mode", "color", "shadow_color", "alpha", "bloom", "white", "open_from", "charging_only");
 
         @Override public String type() { return TYPE; }
 
@@ -85,6 +85,8 @@ public final class FlameSheetComponent implements AuraComponent {
                     TintSpec.parse(AuraComponentTypes.s(o, "shadow_color", "outer")),
                     Mth.clamp(AuraComponentTypes.f(o, "alpha", 0.9f), 0f, 1f),
                     Math.max(0f, AuraComponentTypes.f(o, "bloom", 0.5f)),
+                    Mth.clamp(AuraComponentTypes.f(o, "white", 0.6f), 0f, 1f),
+                    Mth.clamp(AuraComponentTypes.f(o, "open_from", 0.82f), 0.5f, 0.97f),
                     o.has("charging_only") && o.get("charging_only").getAsBoolean());
         }
     }
@@ -194,15 +196,26 @@ public final class FlameSheetComponent implements AuraComponent {
 
         // "Delante" = hacia la cámara en horizontal; con la cámara encima del jugador (1ª persona), hacia
         // donde mira.
+        // Mezcla CONTINUA entre "hacia la cámara" y "hacia donde mira": antes era un salto duro a 0,5 bloques
+        // de distancia horizontal y, con la cámara en el cenit/nadir (±90°), toda la pared se desplazaba y
+        // cambiaba de lado de golpe (2026-10-28). Con la cámara justo encima no hay "delante" ni
+        // desplazamiento: el aura queda centrada en el jugador. En 1ª persona sí (la cámara está dentro).
         float fx = -ox, fz = -oz;
         float fl = Mth.sqrt(fx * fx + fz * fz);
-        if (fl < 0.5f) {
-            Vector3f look = Minecraft.getInstance().gameRenderer.getMainCamera().getLookVector();
-            fx = look.x(); fz = look.z();
-            fl = Mth.sqrt(fx * fx + fz * fz);
-        }
-        if (fl < 1.0e-4f) { fx = 0f; fz = 1f; fl = 1f; }
+        float camW = f.selfFirstPerson ? 0f : Mth.clamp((fl - 0.4f) / 1.6f, 0f, 1f);
+        camW = camW * camW * (3f - 2f * camW);
+        Vector3f look = Minecraft.getInstance().gameRenderer.getMainCamera().getLookVector();
+        float lx = look.x(), lz = look.z(), ll = Mth.sqrt(lx * lx + lz * lz);
+        if (ll < 1.0e-4f) { lx = 0f; lz = 1f; ll = 1f; }
+        lx /= ll; lz /= ll;
+        if (fl > 1.0e-4f) { fx /= fl; fz /= fl; } else { fx = lx; fz = lz; }
+        fx = fx * camW + lx * (1f - camW);
+        fz = fz * camW + lz * (1f - camW);
+        fl = Mth.sqrt(fx * fx + fz * fz);
+        if (fl < 1.0e-4f) { fx = lx; fz = lz; fl = 1f; }
         fx /= fl; fz /= fl;
+        // En 3ª persona la influencia de "delante" y el desplazamiento hacia atrás se apagan con la vista cenital.
+        final float frontW = f.selfFirstPerson ? 1f : camW;
 
         // Orden de atrás hacia delante: la mezcla es translúcida y sin depth entre láminas.
         int n = 0;
@@ -245,7 +258,7 @@ public final class FlameSheetComponent implements AuraComponent {
                 // 1 = justo entre la cámara y el jugador, 0 = de lado o detrás. Solo las de delante de
                 // verdad: si se apagan ya en los flancos, la pared queda DETRÁS del jugador y se lee como
                 // columnas sueltas; el usuario prefirió la llama que envuelve el cuerpo (2026-10-26).
-                float front = Mth.clamp((ca * ffx + sa * ffz - 0.15f) / 0.6f, 0f, 1f);
+                float front = Mth.clamp((ca * ffx + sa * ffz - 0.15f) / 0.6f, 0f, 1f) * frontW;
                 float h = hei[i] * breath(i) * Mth.lerp(front, 1f, 0.55f);
                 float al = a * e * Mth.lerp(front, 1f, cfg.front());
                 // Volando HACIA la cámara el aura se tumba y las láminas apuntan a la pantalla: crecían
@@ -260,22 +273,26 @@ public final class FlameSheetComponent implements AuraComponent {
                     // Solo en vuelo inclinado: con el aura recta, una cámara normal algo elevada ya daba
                     // "punta hacia la cámara" y encogía el aura sin motivo (medido en la v28, 2026-10-27).
                     if (tilt != null) {
-                        float toward = Mth.clamp((facing - 0.15f) / 0.5f, 0f, 1f);
+                        // Solo lo que la INCLINACIÓN añade a "punta hacia la cámara" (2026-10-29): con la cámara
+                        // encima del aura (delantera mirando arriba al subir) la punta recta ya apunta a ella y
+                        // cualquier inclinación mínima encogía el aura al 40 % (vídeo del usuario: SSG quedaba a
+                        // la altura de la cintura). Volando de verdad hacia la cámara, la vertical da ~0.
+                        float upright = Math.max(0f, -oy / cl);
+                        float toward = Mth.clamp((facing - upright - 0.15f) / 0.5f, 0f, 1f);
                         h *= Mth.lerp(toward, 1f, 0.4f);
                         al *= Mth.lerp(toward, 1f, 0.55f);
                     }
-                    // Y al revés: puntas que se ALEJAN de la cámara (vuelo rápido visto desde detrás, cámara
-                    // a -90°). La base queda en el lado de la cámara y, abiertas en corona, las láminas
-                    // llenaban media pantalla (2026-10-27): más cortas y con la base subida a los pies.
-                    // Con la cámara normal (facing > 0) no se activa nunca.
-                    away = Mth.clamp((-facing - 0.3f) / 0.5f, 0f, 1f);
-                    h *= Mth.lerp(away, 1f, 0.5f);
+                    // Puntas que se ALEJAN de la cámara: ya NO se acortan (2026-10-29). Se recortaban a la mitad
+                    // y con la base a los pies porque, abiertas en corona, llenaban media pantalla (2026-10-27);
+                    // desde que las láminas ya no se abren (ver más abajo) solo servía para colapsar el aura en
+                    // una cúpula baja: cámara delantera y jugador mirando arriba al subir (vídeo del usuario,
+                    // 2026-10-29: SSG quedaba a la altura de la cintura).
                 }
                 if (al <= 0.01f) continue;
                 // Algo DETRÁS del jugador visto desde la cámara: el cuerpo tapa la llama por depth y queda
                 // delante de ella, como en la referencia (GokuGod.jpg); centradas en el anillo, las de los
                 // flancos le cruzaban medio cuerpo (v18, 2026-10-27).
-                b.set(ca * rad[i] - ffx * 0.3f * s, cfg.base() * s * (1f - away) + lift[i], sa * rad[i] - ffz * 0.3f * s);
+                b.set(ca * rad[i] - ffx * 0.3f * s * frontW, cfg.base() * s * (1f - away) + lift[i], sa * rad[i] - ffz * 0.3f * s * frontW);
                 top.set(b.x + leanX[i] * h, b.y + h, b.z + leanZ[i] * h);
                 if (tilt != null) {
                     AuraTiltController.rotateAboutPivot(tilt, b);
@@ -298,38 +315,34 @@ public final class FlameSheetComponent implements AuraComponent {
                 // lo de punta que se vea: desde arriba, abajo o detrás queda una corona de llamas alrededor
                 // del jugador, y la lámina vuelve a tener cara hacia la cámara.
                 float along = Math.abs(ax * mx + ay * my + az * mz) / (al2 * ml);
-                // Desde 0.6: con 0.4 una cámara normal elevada (+50°) ya abría las láminas y el aura se leía como
+                // Desde 0.82 (2026-10-28: subiendo mirando arriba, cámara detrás y por debajo a ~40° del eje, con 0.6 ya
+                // abría las láminas en dos alas planas; solo hace falta casi de punta). Antes 0.6: con 0.4 una cámara normal elevada (+50°) ya abría las láminas y el aura se leía como
                 // una flor; solo hace falta cerca de ±90° o con el cuerpo tumbado (v29, 2026-10-27).
-                float spread = Mth.clamp((along - 0.6f) / 0.3f, 0f, 1f);
-                if (spread > 0f) {
-                    radial.set(ca, 0f, sa);
-                    if (tilt != null) tilt.transform(radial);
-                    // Casi horizontales (radiales) con la vista justo a lo largo del eje: abiertas a medias (keep 0.4)
-                    // seguían casi de punta desde abajo y el fundido de abajo las dejaba pálidas (v25-v26).
-                    float keep = 1f - 0.85f * spread, open = spread * al2;
-                    ax = ax * keep + radial.x * open;
-                    ay = ay * keep + radial.y * open;
-                    az = az * keep + radial.z * open;
-                    float nl = Mth.sqrt(ax * ax + ay * ay + az * az);
-                    if (nl < 1.0e-5f) continue;
-                    // Y más cortas: abiertas a su largo entero, en vuelo rápido visto desde detrás eran
-                    // dos alas que llenaban media pantalla (2026-10-27).
-                    float sc = al2 * (1f - 0.45f * spread) / nl;
-                    ax *= sc; ay *= sc; az *= sc;
-                    tx = bx + ax; ty = by + ay; tz = bz + az;
-                    mx = (bx + tx) * 0.5f; my = (by + ty) * 0.5f; mz = (bz + tz) * 0.5f;
-                    al2 = Mth.sqrt(ax * ax + ay * ay + az * az);
-                    ml = Mth.sqrt(mx * mx + my * my + mz * mz);
-                    if (ml < 1.0e-5f) continue;
-                    along = Math.abs(ax * mx + ay * my + az * mz) / (al2 * ml);
-                }
-                // Solo lo que queda casi de punta aun abierto (la lámina justo bajo la cámara).
-                al *= 1f - Mth.clamp((along - 0.85f) / 0.12f, 0f, 1f);
-                if (al <= 0.01f) continue;
+                float spread = Mth.clamp((along - cfg.openFrom()) / (0.97f - cfg.openFrom()), 0f, 1f);
+                // La lámina conserva su dirección y su largo aun de punta (2026-10-29): antes se ABRÍA hacia
+                // fuera en una corona radial y, subiendo con la mirada real (cámara detrás y casi debajo, a
+                // 10-20° del eje), el aura se leía como una flor plana contra la cámara; en perspectiva real
+                // las puntas CONVERGEN hacia el centro. Lo que se degenera de punta es solo el ANCHO (la cinta
+                // se orienta con eje × visual y esa visual se vuelve paralela al eje): ahí el ancho pasa a la
+                // tangente del anillo (como una veleta fija) y la lámina sigue teniendo cara hacia la cámara.
                 float rx = ay * mz - az * my, ry = az * mx - ax * mz, rz = ax * my - ay * mx;
                 float rl = Mth.sqrt(rx * rx + ry * ry + rz * rz);
-                if (rl < 1.0e-5f) continue;
-                rx /= rl; ry /= rl; rz /= rl;
+                if (rl > 1.0e-5f) { rx /= rl; ry /= rl; rz /= rl; } else { rx = 0f; ry = 0f; rz = 0f; }
+                if (spread > 0f) {
+                    radial.set(-sa, 0f, ca);
+                    if (tilt != null) tilt.transform(radial);
+                    if (radial.x * rx + radial.y * ry + radial.z * rz < 0f) radial.negate();
+                    float k2 = rl > 1.0e-5f ? spread : 1f;
+                    rx = rx * (1f - k2) + radial.x * k2;
+                    ry = ry * (1f - k2) + radial.y * k2;
+                    rz = rz * (1f - k2) + radial.z * k2;
+                    float wl = Mth.sqrt(rx * rx + ry * ry + rz * rz);
+                    if (wl < 1.0e-5f) continue;
+                    rx /= wl; ry /= wl; rz /= wl;
+                }
+                // Solo lo que queda EXACTAMENTE de punta (la lámina justo bajo la cámara).
+                al *= 1f - Mth.clamp((along - 0.985f) / 0.015f, 0f, 1f);
+                if (al <= 0.01f) continue;
                 // Arrastre SIN la parte que empuja la punta contra su propia base: subiendo, "donde estaba
                 // el jugador" queda debajo y la llama se aplastaba contra sí misma (bug del usuario,
                 // 2026-10-27). Se quita esa componente; lo que queda dobla la llama de lado como un cometa.
@@ -337,7 +350,10 @@ public final class FlameSheetComponent implements AuraComponent {
                 float pull = Math.min(dot, 0f) / al2;
                 float sdx = dragX - ax * pull, sdy = dragY - ay * pull, sdz = dragZ - az * pull;
                 float hw = wid[i] * 0.5f;
-                float u0 = seed[i], u1 = seed[i] + 0.999f;
+                // Cuánto se blanquea el perfil de cada lengua (clave "white", 0..1), en 8 niveles: va empaquetado en
+                // la parte entera de la semilla (seed + 64 * nivel) para no cambiar el formato de vértice.
+                float packed = seed[i] + 64f * Math.round(cfg.white() * 7f);
+                float u0 = packed, u1 = packed + 0.999f;
                 // La lámina va en SEG tramos y cada fila se desplaza: la llama se dobla y ondula como fuego
                 // líquido en vez de ser un quad rígido (pedido del usuario, 2026-10-27: "picos sólidos").
                 // El ondulado (dos senos lentos desfasados por lámina) crece con la altura: la base queda

@@ -42,7 +42,7 @@ public final class MoteComponent implements AuraComponent {
 
     public enum Behavior { RISE, FLOAT, DRIFT, GLINT, EMBER }
 
-    public enum Sprite { SPARK, EMBER, MOTE, GLINT }
+    public enum Sprite { SPARK, EMBER, MOTE, GLINT, CUBE }
 
     public enum Tint { INNER, OUTER, HOT, WHITE, FIXED }
 
@@ -257,7 +257,7 @@ public final class MoteComponent implements AuraComponent {
             float weight = bloom ? cfg.bloom() : 1f;
             VertexConsumer vc = buf.getBuffer(AuraComposeShaders.motes());
             Matrix4f m = ps.last().pose();
-            float u0 = cfg.sprite().ordinal() / 4f, u1 = (cfg.sprite().ordinal() + 1) / 4f;
+            float u0 = cfg.sprite().ordinal() / 5f, u1 = (cfg.sprite().ordinal() + 1) / 5f;
             for (int i = 0; i < count; i++) {
                 float a = Mth.clamp(cfg.alpha() * fade(i) * fp * weight, 0f, 1f);
                 if (a <= 0.01f) continue;

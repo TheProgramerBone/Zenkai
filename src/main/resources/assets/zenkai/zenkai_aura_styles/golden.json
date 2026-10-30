@@ -1,7 +1,47 @@
 {
-  "_comment": "Golden: la llama clásica con destellos dorados.",
+  "_comment": "Golden: la forma es metálica y casi no lleva aura sostenida (GoldenFreezer 18-26 s); el protagonismo es el estallido de llama con rayos y escombros al transformarse (GOLDEN_BURST). El cuerpo sostenido va a ×0,4: tenue pero legible.",
   "family": "flame",
+  "transform": "golden_burst",
+  "body": {
+    "opacity": 0.4
+  },
+  "inner": {
+    "alpha": 0.9
+  },
+  "components": [
+    {
+      "type": "strands",
+      "count": 14,
+      "length": [
+        0.4,
+        0.9
+      ],
+      "width": 0.05,
+      "ground_count": 4,
+      "alpha": 0.4,
+      "bloom": 0.4
+    }
+  ],
   "extra_components": [
+    {
+      "type": "electricity",
+      "rate": 0,
+      "max": 10,
+      "branches": 1,
+      "length": [
+        0.9,
+        1.8
+      ],
+      "thickness": 0.045,
+      "life": [
+        0.12,
+        0.3
+      ],
+      "attach": "body_to_shell",
+      "color": "hot",
+      "core_color": "white",
+      "bloom": 1.0
+    },
     {
       "type": "motes",
       "behavior": "glint",
