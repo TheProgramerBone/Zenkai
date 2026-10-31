@@ -57,8 +57,8 @@ touch your game. Once you have one, melee stays vanilla until you switch Combat 
 | GeckoLib | 4.8.4+ |
 | Player Animation Library (zigythebird fork) | 1.1.5+ |
 | TerraBlender | 4.1.0.8+ |
-| Curios API | 9.5.1+ |
 | Create + Ponder | optional — in-game 3D tutorials |
+| Curios API | optional (9.5.1+) — extra slots for weighted gear and scouter |
 
 ---
 
@@ -201,8 +201,8 @@ activas el Modo Combate.
 | GeckoLib | 4.8.4+ |
 | Player Animation Library (fork de zigythebird) | 1.1.5+ |
 | TerraBlender | 4.1.0.8+ |
-| Curios API | 9.5.1+ |
 | Create + Ponder | opcional — tutoriales 3D dentro del juego |
+| Curios API | opcional (9.5.1+) — slots extra para pesas y scouter |
 
 ---
 
