@@ -48,9 +48,13 @@ public final class CommonPanel {
     public static final int IN_Y1 = 13;
     public static final int IN_Y2 = 242;
     /** Iconos de esquina (Atrás abajo-izquierda, Aceptar/Start abajo-derecha, Ayuda arriba-derecha): MISMO tamaño y
-     *  MISMA separación del borde del beige en las cuatro esquinas, para que queden alineados entre sí. */
-    public static final int ICON = 18;
-    public static final int ICON_INSET = 5;
+     *  MISMA separación del borde del beige en las cuatro esquinas, para que queden alineados entre sí.
+     *  REGLA: todo icono salido de icons.png se pinta a 20 px, el tamaño de su celda. A 18 el blit
+     *  escalaba 20→18 sin suavizado, perdía filas y columnas de píxeles y el badge se veía recortado
+     *  al lado del de Crear party (20 px, 1:1). El inset baja a 4 para que, con 2 px más de icono,
+     *  la distancia al marco naranja siga siendo holgada. */
+    public static final int ICON = 20;
+    public static final int ICON_INSET = 4;
 
     public static int iconLeft(int panelLeft)            { return panelLeft + IN_X1 + ICON_INSET; }
     public static int iconRight(int panelLeft)           { return panelLeft + IN_X2 + 1 - ICON_INSET - ICON; }

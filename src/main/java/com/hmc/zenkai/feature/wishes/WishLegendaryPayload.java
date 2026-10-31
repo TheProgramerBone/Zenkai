@@ -29,6 +29,7 @@ public record WishLegendaryPayload() implements CustomPacketPayload {
         public static void handle(WishLegendaryPayload payload, IPayloadContext ctx) {
             ctx.enqueueWork(() -> {
                 ServerPlayer player = (ServerPlayer) ctx.player();
+                if (!WishSessions.validate(player)) return;
                 if (!ServerConfig.isEnabled(ServerConfig.WishType.LEGENDARY)) {
                     player.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
                     return;

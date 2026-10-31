@@ -53,6 +53,7 @@ public record ConfirmVillagerWishPayload(ResourceLocation enchantmentId) impleme
                 if (!(ctx.player() instanceof ServerPlayer player)) return;
                 if (!(player.level() instanceof ServerLevel level)) return;
 
+                if (!WishSessions.validate(player)) return;
                 // Toggle de config (seguridad server-side).
                 if (!ServerConfig.isEnabled(ServerConfig.WishType.ENCHANT_VILLAGER)) {
                     player.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);

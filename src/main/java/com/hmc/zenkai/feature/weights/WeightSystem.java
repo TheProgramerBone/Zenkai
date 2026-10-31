@@ -25,7 +25,7 @@ import net.minecraft.world.item.ItemStack;
  * un bucle que converge a cualquier cosa.
  *
  * "Toneladas ambientales" ({@link #ambientTons}) es la gravedad natural de un SITIO (el planeta
- * de Kaiosama, la dimensión de la HTC — ver .claude/pendiente/gravedad-planeta-kaiosama.md): un
+ * de Kaiosama, la dimensión de la HTC — ver .claude/docs/pesas-y-gravedad.md): un
  * jugador ahí SUMA esa carga a la de su equipo, en vez de tener una curva de penalización propia
  * — un jugador con pesas físicas puestas y de pie en uno de esos sitios sufre las dos a la vez,
  * como en el canon.

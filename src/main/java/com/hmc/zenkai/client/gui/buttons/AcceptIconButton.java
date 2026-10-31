@@ -20,7 +20,8 @@ import java.util.Objects;
  */
 public class AcceptIconButton extends AbstractButton {
 
-    public static final int SIZE = 16;
+    /** = la celda de icons.png (20): cualquier otro escala sin suavizado y come píxeles. */
+    public static final int SIZE = 20;
 
     private static final ResourceLocation ATLAS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");

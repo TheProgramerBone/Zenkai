@@ -7,7 +7,6 @@ import com.hmc.zenkai.feature.aura.AuraColors;
 import com.hmc.zenkai.feature.forms.KaiokenTier;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.skills.OverlayStateSystem;
 import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -372,8 +371,7 @@ public final class ModernStatsHud {
         if (!ClientConfig.hudFrameFollowsForm()) {
             formColor = baseColor;
         } else {
-            boolean base = form.activeDef() == null && !tier.isOn()
-                    && OverlayStateSystem.highestPriorityAuraOverlay(p) == null;
+            boolean base = form.activeDef() == null && !tier.isOn();
             formColor = transformingTowards(p, form, base ? baseColor : (AuraColors.resolve(p) & 0xFFFFFF));
         }
         int target = strained ? (ClientZenkaiHooks.C_BODY_STRAIN & 0xFFFFFF)

@@ -86,12 +86,10 @@ import java.util.Set;
  * Pan, zoom, selección y fondo son STATIC (mismo motivo que TechniquesScreen.category):
  * ZenkaiMenuScreen.createScreen() construye una pantalla nueva en cada visita a la pestaña.
  */
-public class SkillTreeScreen extends ZenkaiMenuScreen {
+public class SkillTreeScreen extends TreeCanvasScreen {
 
     // ── Geometría (píxeles de un panel de 256; el beige real va de x=12 a x=243, y de 13 a 242) ──
 
-    private static final int VP_LEFT = 12, VP_RIGHT = 244, VP_TOP = 13, VP_BOTTOM = 243;
-    private static final int ICON_BTN = 20, BTN_PLATE = 24;
     private static final int PLATE_H = 14;
 
     /** Medidas en coordenadas de MUNDO (zoom 1 = px de GUI). */
@@ -99,8 +97,6 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
     private static final int ICON = 16;
     private static final int COL = 46;
     private static final int ROW = 40;
-    private static final float[] ZOOMS = {0.5f, 1f, 2f};
-    private static final int DEFAULT_ZOOM = 1;
     private static final long DOUBLE_CLICK_MS = 300L;
     private static final long CONFIRM_MIN_MS = 250L;
     /** Duración de cada fundido entre fondos: lento y continuo, como un difuminado (petición del usuario). */
@@ -110,7 +106,6 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
     private static final long FADE_MS = 3200L;
     /** Capas de fondo apiladas como máximo (cambios de rama muy seguidos). */
     private static final int MAX_LAYERS = 6;
-    private static final double DRAG_SLOP = 3.0;
     private static final float MID_ALPHA = 0.7f;
     /** Media anchura de la cadena en px de GUI: ahí empieza su zona de muro. */
     private static final int CHAIN_HALF = 6;
@@ -147,6 +142,13 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
 
     private static int zoomIdx = DEFAULT_ZOOM;
     private static float panX, panY;
+
+    // Lo que pide TreeCanvasScreen: el pan y el zoom son static de ESTA pantalla (la vista sobrevive entre visitas a la pestaña).
+    @Override protected float panX() { return panX; }
+    @Override protected float panY() { return panY; }
+    @Override protected void setPan(float x, float y) { panX = x; panY = y; }
+    @Override protected int zoomIndex() { return zoomIdx; }
+    @Override protected void onCanvasClick(double mx, double my) { onNodeClicked(nodeAt(mx, my)); }
     private static @Nullable Race viewRace;
     private static @Nullable ResourceLocation selected;
     /**
@@ -187,14 +189,10 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
     private boolean sealed;
     /** Audiencia concedida sin God Ki todavía: la cadena sigue, pero God Ki asoma delante. */
     private boolean chainEnabled;
-    private boolean pressedInViewport, dragging;
-    private double pressX, pressY;
     private long lastCenterClick;
     /** Tutorial de la pantalla (F7): sale la primera vez y con el botón «?». */
-    private @Nullable TutorialOverlay tutorial;
     /** Destino de la cámara (mundo) mientras el tutorial la lleva a un nodo; null = quieta. */
-    private float @Nullable [] camGoal;
-    private static final int HELP_BTN = 16;
+    private static final int HELP_BTN = 20;
 
     /** Solo para la herramienta de desarrollo SkillTreeShots: ratón simulado (null = el real). */
     public static int @Nullable [] devMouse;
@@ -274,7 +272,8 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
 
     /** El «?» vive en la franja de arriba, junto a los botones de centrar y zoom (donde ya no hay nodos que se le
      *  solapen): abajo a la izquierda los letreros de los nodos pasaban por debajo al hacer pan. */
-    private int helpX() { return centerBtnX() - BTN_PLATE / 2 - HELP_BTN - 2; }
+    /** A 6 px del botón de centrar: la misma separación que hay entre centrar y zoom (placa 24 + 2 − icono 20). */
+    private int helpX() { return centerBtnX() - HELP_BTN - 6; }
     private int helpY() { return btnY() + (ICON_BTN - HELP_BTN) / 2; }
 
     /** Pasos del tutorial (F7). Las zonas se recalculan en cada frame: el panel puede moverse. */
@@ -322,20 +321,6 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
         camGoal = new float[]{sealed ? chainWorldX() - CHAIN_STOP / zoom() : p[0], p[1]};
     }
 
-    /** Avanza la cámara hacia su destino (fracción por frame, suave) y la suelta al llegar. */
-    private void stepCamera() {
-        if (camGoal == null) return;
-        float dx = camGoal[0] - panX, dy = camGoal[1] - panY;
-        if (Math.abs(dx) < 0.6f && Math.abs(dy) < 0.6f) {
-            panX = camGoal[0];
-            panY = camGoal[1];
-            camGoal = null;
-        } else {
-            panX += dx * 0.22f;
-            panY += dy * 0.22f;
-        }
-        clampPan();
-    }
 
     /** Rectángulo en pantalla de un nodo visible, o null. */
     private int @Nullable [] nodeRect(ResourceLocation id) {
@@ -460,31 +445,8 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
 
     // ── Geometría derivada ───────────────────────────────────────────────────
 
-    /** El panel puede encoger en ventanas pequeñas (CommonPanel): el lienzo encoge con él. */
-    private int px(int v) { return panelLeft + v * BG_W / 256; }
-    private int py(int v) { return panelTop + v * BG_H / 256; }
-    private int vpLeft()   { return px(VP_LEFT); }
-    private int vpRight()  { return px(VP_RIGHT); }
-    private int vpTop()    { return py(VP_TOP); }
-    private int vpBottom() { return py(VP_BOTTOM); }
-    private int btnY()     { return vpTop() + 4; }
-    private int zoomBtnX() { return vpRight() - 4 - BTN_PLATE + (BTN_PLATE - ICON_BTN) / 2; }
     private int centerBtnX() { return zoomBtnX() - BTN_PLATE - 2; }
-    private float zoom()   { return ZOOMS[zoomIdx]; }
-    private float vpCx()   { return (vpLeft() + vpRight()) / 2f; }
-    private float vpCy()   { return (vpTop() + vpBottom()) / 2f; }
-    /** Origen del mundo en pantalla, REDONDEADO: un desplazamiento fraccionario reparte mal
-     *  los texeles del arte al pan (filas que se duplican y otras que se pierden). */
-    private float originX() { return Math.round(vpCx() - panX * zoom()); }
-    private float originY() { return Math.round(vpCy() - panY * zoom()); }
-    private float toScreenX(float wx) { return originX() + wx * zoom(); }
-    private float toScreenY(float wy) { return originY() + wy * zoom(); }
-    private float toWorldX(double sx) { return (float) ((sx - originX()) / zoom()); }
-    private float toWorldY(double sy) { return (float) ((sy - originY()) / zoom()); }
 
-    private boolean inViewport(double x, double y) {
-        return x >= vpLeft() && x < vpRight() && y >= vpTop() && y < vpBottom();
-    }
 
     /** Zona de las placas de TP/MND y de los botones de la esquina: ahí no se elige nodo. */
     private boolean overHud(double x, double y) {
@@ -649,37 +611,8 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
         return false;
     }
 
-    @Override
-    public boolean keyPressed(int key, int scan, int mods) {
-        if (tutorial != null && tutorial.keyPressed(key)) return true;
-        return super.keyPressed(key, scan, mods);
-    }
 
-    @Override
-    public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
-        if (pressedInViewport && button == 0) {
-            if (!dragging && Math.hypot(mx - pressX, my - pressY) > DRAG_SLOP) dragging = true;
-            if (dragging) {
-                camGoal = null;
-                panX -= (float) (dx / zoom());
-                panY -= (float) (dy / zoom());
-                clampPan();
-            }
-            return true;
-        }
-        return super.mouseDragged(mx, my, button, dx, dy);
-    }
 
-    @Override
-    public boolean mouseReleased(double mx, double my, int button) {
-        if (pressedInViewport && button == 0) {
-            pressedInViewport = false;
-            if (!dragging) onNodeClicked(nodeAt(mx, my));
-            dragging = false;
-            return true;
-        }
-        return super.mouseReleased(mx, my, button);
-    }
 
     @Override
     public boolean mouseScrolled(double mx, double my, double sx, double sy) {
@@ -794,10 +727,6 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
         return p == null ? null : new int[]{Math.round(toScreenX(p[0])), Math.round(toScreenY(p[1]))};
     }
 
-    private boolean isOverWidget(double mx, double my) {
-        for (var c : children()) if (c.isMouseOver(mx, my)) return true;
-        return false;
-    }
 
     // ── Lienzo ───────────────────────────────────────────────────────────────
 
@@ -933,7 +862,7 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
         int startX = x1 + Math.floorMod(-sx, tile) - tile;
         int startY = y1 + Math.floorMod(-sy, tile) - tile;
         // Alfa por COLOR DE VÉRTICE y no con g.setColor + g.blit: con eso el fundido entre fondos no se
-        // mezclaba (el color cambiaba de golpe; medido con SkillTreeShots «fade»). Ver docs/gui.md.
+        // mezclaba (el color cambiaba de golpe; medido con SkillTreeShots «fade»). Ver docs/gui-skill-trees.md.
         if (alpha <= 0.003f) return;
         g.flush();
         RenderSystem.enableBlend();
@@ -1118,10 +1047,6 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
         };
     }
 
-    private static int pulseAlpha(long periodMs, int min, int max) {
-        double t = (Util.getMillis() % periodMs) / (double) periodMs;
-        return (int) (min + (max - min) * (0.5 + 0.5 * Math.sin(t * Math.PI * 2)));
-    }
 
     /** Letrero pendiente de dibujar, con su ancla en coordenadas de mundo. */
     private record Label(float wx, float wy, Component name, int accent, boolean owned) {}
@@ -1145,23 +1070,8 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
         labels.clear();
     }
 
-    private static void ring(GuiGraphics g, int x, int y, int size, int color) {
-        g.fill(x, y, x + size, y + 1, color);
-        g.fill(x, y + size - 1, x + size, y + size, color);
-        g.fill(x, y + 1, x + 1, y + size - 1, color);
-        g.fill(x + size - 1, y + 1, x + size, y + size - 1, color);
-    }
 
-    private static int pulse(int rgb, long periodMs) {
-        double t = (Util.getMillis() % periodMs) / (double) periodMs;
-        int a = (int) (110 + 145 * (0.5 + 0.5 * Math.sin(t * Math.PI * 2)));
-        return (a << 24) | (rgb & 0xFFFFFF);
-    }
 
-    private static int darken(int argb, float f) {
-        int r = (int) (((argb >> 16) & 0xFF) * f), gr = (int) (((argb >> 8) & 0xFF) * f), b = (int) ((argb & 0xFF) * f);
-        return (r << 16) | (gr << 8) | b;
-    }
 
     // ── Cadena de God Ki ─────────────────────────────────────────────────────
 
@@ -1209,7 +1119,8 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
 
     /** Con la cadena puesta el lienzo no se lleva más allá de ella: se queda, como mucho, un
      *  poco a la derecha del centro. */
-    private void clampPan() {
+    @Override
+    protected void clampPan() {
         if (!sealed) return;
         float max = chainWorldX() - CHAIN_STOP / zoom();
         if (panX > max) panX = max;
@@ -1277,19 +1188,12 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
 
     // ── Placas de TP/MND y botones (dentro del lienzo) ───────────────────────
 
-    /** Con el NOMBRE delante ("TP: 400K", "MND 210/300"): con solo un glifo el jugador no sabía
-     *  qué número era cuál (petición del usuario). */
-    private Component tpText() {
-        return Component.translatable("screen.zenkai.technique.tp",
-                ZenkaiNumbers.format(att == null ? 0 : att.getTP()));
-    }
 
     private Component mindText() {
         return att == null ? Component.empty() : Component.translatable("screen.zenkai.physical.mnd_free",
                 MindBudget.free(att), MindBudget.total(att));
     }
 
-    private int plateWidth(Component text) { return 5 + this.font.width(text) + 5; }
 
     private void drawHeader(GuiGraphics g) {
         int x = vpLeft() + 4, y = vpTop() + 5;
@@ -1323,7 +1227,6 @@ public class SkillTreeScreen extends ZenkaiMenuScreen {
 
     // ── Tooltip del nodo ─────────────────────────────────────────────────────
 
-    private record TipLine(Component text, int color) {}
 
     /**
      * Tooltip propio (no el vanilla): lleva la barra de maestría. Contiene lo que antes iba en

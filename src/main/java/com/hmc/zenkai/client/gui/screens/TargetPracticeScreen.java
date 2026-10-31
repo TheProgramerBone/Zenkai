@@ -66,6 +66,8 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
      *  que el idioma visual del stepper sea idéntico entre los dos minijuegos con duración
      *  configurable. 30s (durationIndex por defecto) es la duración fija que tenía antes. */
     private static final int[] DURATION_STEPS_SEC = {15, 30, 45, 60, 90, 120};
+    /** Y de la primera línea del texto de intro: el «?» de la esquina (20 px) acaba en y=37. */
+    private static final int INTRO_Y = 40;
     private int durationIndex = 1; // arranca en 30s
     private long sessionDurationMs() { return DURATION_STEPS_SEC[durationIndex] * 1000L; }
 
@@ -129,7 +131,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         // 4 px de aire por lado: partido a panelW - 24 (232 px) el texto centrado llegaba a los dos bordes del beige (231 px).
         introLines = this.font.split(
                 Component.translatable("screen.zenkai.target_practice.intro.short"), (IN_X2 - IN_X1) - 8);
-        stepperY = 30 + introLines.size() * 10 + 4 + 20 + 4;
+        stepperY = INTRO_Y + introLines.size() * 10 + 4 + 20 + 4;
         buildIntroWidgets();
         requestInfo();
     }
@@ -229,7 +231,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         // enseñar el TP conseguido) — mismo BackIconButton que Back/Meditation, esquina superior
         // izquierda: el HUD de juego usa (20,8) para "Popped: N" (desplazado, ver renderPlaying())
         // y el lado derecho para el tiempo restante, así que la esquina queda libre de sobra.
-        BackIconButton finishBtn = new BackIconButton(8, 8, 16, this::finishSessionEarly);
+        BackIconButton finishBtn = new BackIconButton(8, 8, 20, this::finishSessionEarly);
         finishBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.finish")));
         addRenderableWidget(finishBtn);
     }
@@ -365,7 +367,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
     private void renderIntro(GuiGraphics g) {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + panelW / 2, panelTop);
         int cx = panelLeft + panelW / 2;
-        int ty = panelTop + 30;
+        int ty = panelTop + INTRO_Y;
         for (var line : introLines) {
             PanelText.onPanel(g, this.font, line, cx - this.font.width(line) / 2, ty, ZenkaiPalette.MUTED_ON_PANEL);
             ty += 10;

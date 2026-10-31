@@ -248,7 +248,17 @@ public final class BindBar {
      * combate, así que aquí tiene que parecerse a aquello.
      */
     public void renderFrame(GuiGraphics g, Font font, Component label) {
-        drawPlate(g, x - 4, y - 4, WIDTH + 8, HEIGHT + 8);
+        renderFrame(g, font, label, x - 4, x + WIDTH + 4);
+    }
+
+    /**
+     * Igual, pero con la placa estirada a [plateLeft, plateRight): la pantalla la alinea con las
+     * reglas y la lista, que son más anchas que las nueve casillas (la placa de 204 px quedaba
+     * visiblemente más estrecha que los 224 del resto del contenido). Las casillas no se estiran:
+     * siguen centradas dentro, que es donde las pone quien llama a create().
+     */
+    public void renderFrame(GuiGraphics g, Font font, Component label, int plateLeft, int plateRight) {
+        drawPlate(g, plateLeft, y - 4, plateRight - plateLeft, HEIGHT + 8);
         if (label != null) {
             g.drawString(font, label, x, y - 4 - font.lineHeight - 2,
                     ZenkaiPalette.MUTED_ON_PANEL, false);

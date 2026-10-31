@@ -21,6 +21,8 @@ public final class WishFinalizer {
 
     /** wishDesc = qué pidió el jugador; se difunde a los jugadores cercanos. */
     public static void finalizeWish(ServerPlayer player, Component wishDesc) {
+        // Un deseo por interacción: para pedir otro hay que volver a hablar con el dragón (ver WishSessions).
+        WishSessions.close(player);
         player.closeContainer();
         player.playNotifySound(ModSounds.WISH_GRANTED.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
 

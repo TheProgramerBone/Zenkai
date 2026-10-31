@@ -25,6 +25,7 @@ public record WishImmortalPayload() implements CustomPacketPayload {
         public static void handle(WishImmortalPayload payload, IPayloadContext ctx) {
             ctx.enqueueWork(() -> {
                 ServerPlayer player = (ServerPlayer) ctx.player();
+                if (!WishSessions.validate(player)) return;
                 if (!ServerConfig.isEnabled(ServerConfig.WishType.IMMORTAL)) {
                     player.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
                     return;

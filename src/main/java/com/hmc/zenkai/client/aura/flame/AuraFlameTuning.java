@@ -126,7 +126,7 @@ public final class AuraFlameTuning {
         FRESNEL_DIVIS("fresnel_divis", 0.8f),
         // Fase 4 (bloom real vía KiVfxBloomPipeline). Salida premultiplicada vec4(c*a, a*(1-emit)):
         // emit 0 = tapa como un translúcido, 1 = suma luz. Nunca aditivo puro en el cuerpo: las
-        // capas superpuestas lavarían a blanco (rechazado en juego, ver tecnicas-y-vfx.md).
+        // capas superpuestas lavarían a blanco (rechazado en juego, ver auras.md).
         // Bajados el 2026-09-30 (antes 0.3 / 0.7 / 0.8): en el vídeo comparado con DMZ la llama de
         // Base salía casi BLANCA — emisión + bloom sumaban luz hasta borrar el tinte. Con el
         // cel-shading el borde se lee por su banda clara, no por la luz que suma.

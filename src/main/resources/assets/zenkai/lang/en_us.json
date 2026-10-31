@@ -1499,6 +1499,7 @@
   "messages.zenkai.blocked_by_shenlong": "§2§lShenron§6 is preventing you from doing this!",
   "messages.zenkai.invalid_wish": "§2§lShenron:§6 That wish is not available",
   "messages.zenkai.no_open_wish": "§2§lShenron:§6 The wish is not available",
+  "messages.zenkai.shenron_busy": "§2§lShenron:§6 Another mortal is making a wish. Wait your turn.",
   "messages.zenkai.no_chosen_item": "§2§lShenron:§6 You haven't chosen an item",
   "messages.zenkai.item_banned": "§2§lShenron:§6 Sorry, that item is forbidden",
   "messages.zenkai.immortal": "You feel immortal!",

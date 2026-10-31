@@ -1514,6 +1514,7 @@
   "messages.zenkai.blocked_by_shenlong": "§2§lShenlong§6 ¡te impide realizar esta acción!",
   "messages.zenkai.invalid_wish": "§2§lShenlong:§6 Ese deseo no está disponible",
   "messages.zenkai.no_open_wish": "§2§lShenlong:§6 El deseo no se encuentra disponible",
+  "messages.zenkai.shenron_busy": "§2§lShenlong:§6 Otro mortal está pidiendo un deseo. Espera tu turno.",
   "messages.zenkai.no_chosen_item": "§2§lShenlong:§6 No has elegido ningún objeto",
   "messages.zenkai.item_banned": "§2§lShenlong:§6 Lo siento, ese objeto está prohibido",
   "messages.zenkai.immortal": "¡Sientes el poder de la vida eterna!",

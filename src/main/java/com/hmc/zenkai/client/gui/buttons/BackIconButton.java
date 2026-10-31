@@ -23,8 +23,9 @@ import java.util.Objects;
  */
 public class BackIconButton extends AbstractButton {
 
-    /** Tamaño por defecto — el que ya usaba XIconButton para sus usos pequeños (stepper -). */
-    public static final int SIZE = 12;
+    /** Tamaño por defecto = la celda de icons.png (20): cualquier otro escala sin suavizado y
+     *  come píxeles del badge. */
+    public static final int SIZE = 20;
 
     private static final ResourceLocation ATLAS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");

@@ -91,7 +91,7 @@ public final class SkillToggles {
         // Potential Unlock YA NO es un interruptor: Mystic es una forma propia que se elige en la
         // rueda y se carga con la tecla de transformar, como cualquier otra (ver PotentialUnlock).
 
-        // Overlay genérico (0.3.0, ver OverlayStateSystem): puede convivir con Kaioken y con
+        // Overlay (0.3.0): puede convivir con Kaioken y con
         // cualquier Transformación primaria — vendidos por Tori-Bot como habilidad aparte de su
         // propia Transformación completa (FormDef ultra_instinct_sign/ultra_ego, sin relación
         // de código con este interruptor). Entre SÍ son mutuamente excluyentes (decisión de

@@ -42,6 +42,7 @@ public record WishRevivePetPayload(int index) implements CustomPacketPayload {
         public static void handle(WishRevivePetPayload payload, IPayloadContext ctx) {
             ctx.enqueueWork(() -> {
                 if (!(ctx.player() instanceof ServerPlayer player)) return;
+                if (!WishSessions.validate(player)) return;
                 if (!(player.level() instanceof ServerLevel level)) return;
 
                 PlayerStatsAttachment stats = PlayerStatsAttachment.get(player);

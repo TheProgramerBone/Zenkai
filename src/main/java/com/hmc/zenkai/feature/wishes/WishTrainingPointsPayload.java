@@ -27,6 +27,7 @@ public record WishTrainingPointsPayload() implements CustomPacketPayload {
             ctx.enqueueWork(() -> {
                 ServerPlayer player = (ServerPlayer) ctx.player();
 
+                if (!WishSessions.validate(player)) return;
                 if (!ServerConfig.isEnabled(ServerConfig.WishType.TRAINING_POINTS)) {
                     player.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
                     return;

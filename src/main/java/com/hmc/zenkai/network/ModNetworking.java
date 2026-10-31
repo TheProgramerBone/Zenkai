@@ -17,7 +17,6 @@ import com.hmc.zenkai.feature.combat.CombatModeSyncPacket;
 import com.hmc.zenkai.feature.kiweapon.KiWeaponSyncPacket;
 import com.hmc.zenkai.feature.forms.FormSyncPacket;
 import com.hmc.zenkai.feature.ki.*;
-import com.hmc.zenkai.feature.skills.OverlayStateSyncPacket;
 import com.hmc.zenkai.feature.player.SyncPlayerFormPacket;
 import com.hmc.zenkai.feature.player.SyncPlayerStatsPacket;
 import com.hmc.zenkai.feature.player.SyncPlayerVisualPacket;
@@ -83,11 +82,19 @@ public class ModNetworking {
                 OpenStackWishPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     ServerPlayer sp = (ServerPlayer) context.player();
+                    // Sin sesión de deseo (Shenlong cerca y con deseos) no se abre el menú: ver WishSessions.
+                    if (!com.hmc.zenkai.feature.wishes.WishSessions.validate(sp)) return;
                     sp.openMenu(new SimpleMenuProvider(
                             (id, inv, ply) -> new StackWishMenu(id, inv),
                             Component.translatable("screen.zenkai.option.stack")
                     ));
                 })
+        );
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.wishes.WishScreenClosedPayload.TYPE,
+                com.hmc.zenkai.feature.wishes.WishScreenClosedPayload.STREAM_CODEC,
+                com.hmc.zenkai.feature.wishes.WishScreenClosedPayload::handle
         );
 
         registrar.playToServer(
@@ -494,11 +501,6 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.race.hair.CustomHairLibrarySyncPacket.TYPE,
                 com.hmc.zenkai.feature.race.hair.CustomHairLibrarySyncPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.race.hair.CustomHairLibrarySyncPacket::handle);
-
-        registrar.playToClient(
-                OverlayStateSyncPacket.TYPE,
-                OverlayStateSyncPacket.STREAM_CODEC,
-                OverlayStateSyncPacket::handle);
 
         registrar.playToClient(
                 AuraSignatureSyncPacket.TYPE,

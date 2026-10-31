@@ -253,6 +253,11 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * filas visibles). Con el contenido acabando en 238 la barra cabe entera sobre beige.
      */
     private int rightEdge()  { return panelLeft + BG_W - 18; }
+    /** Borde izquierdo de las reglas y de la placa de la barra: el mismo que usa drawHeader. */
+    private int contentLeft()  { return panelLeft + 14; }
+    /** Las nueve casillas centradas en el ANCHO DEL CONTENIDO (reglas y lista), no en el panel: el
+     *  canalón del scroll deja el contenido 2 px a la izquierda del centro del panel. */
+    private int barLeft()      { return (contentLeft() + rightEdge() - BindBar.WIDTH) / 2; }
     /** Esquina del "+" de nueva técnica: centrado y pegado al último píxel de beige. */
     private int xPlus()      { return panelLeft + (BG_W - PLUS) / 2; }
     /** Con la lista de ki vacía el "+" sube bajo el mensaje, que es donde se mira; con técnicas vuelve al pie. */
@@ -263,7 +268,10 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     }
     /** X de la barra de scroll: pegada al borde del contenido, sobre el beige. */
     private int scrollbarX() { return rightEdge() + 1; }
-    private int listTop()    { return panelTop + LIST_Y_OFF; }
+    /** +2 de aire entre el chip «Orden» (sobre la regla) y el nombre de la primera fila. NO toca
+     *  listHeight/visibleRows: siguen siendo 5 filas exactas; solo la lista baja 2 px. */
+    private static final int LIST_PAD = 2;
+    private int listTop()    { return panelTop + LIST_Y_OFF + LIST_PAD; }
     private int listHeight() { return BG_H - LIST_Y_OFF - LIST_BOTTOM; }
     private int visibleRows(){ return Math.max(1, listHeight() / ROW_H); }
     private int viewHeight() { return visibleRows() * ROW_H; }
@@ -271,7 +279,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     /** Y del aviso de asignación, lo único que queda en la banda de pie. Pegado a la lista y
      *  no centrado en la banda: los 9 px útiles no dan para centrar 8 px de texto sin que los
      *  trazos de abajo (la 'p' de "press") se coman el marco. */
-    private int footerY()    { return listTop() + viewHeight() + 1; }
+    private int footerY()    { return listTop() - LIST_PAD + viewHeight() + 1; }
     private int maxScroll()  { return Math.max(0, rows.size() - visibleRows()); }
     private boolean onScreen(int i) { int r = i - scrollRow; return r >= 0 && r < visibleRows(); }
 
@@ -317,7 +325,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         scrollRow = Mth.clamp(scrollRow, 0, maxScroll());
 
         bindBar = BindBar.create(
-                panelLeft + (BG_W - BindBar.WIDTH) / 2, panelTop + BAR_Y_OFF,
+                barLeft(), panelTop + BAR_Y_OFF,
                 att,
                 () -> armedKi >= 0 || armedPhys != null,
                 this::onPositionClicked,
@@ -955,7 +963,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
 
         if (bindBar != null) {
             bindBar.refreshIcons(att);
-            bindBar.renderFrame(g, this.font, null);
+            bindBar.renderFrame(g, this.font, null, contentLeft(), rightEdge());
             // La placa es OPACA y super.render() ya pintó las casillas: la placa las tapaba, con sus
             // iconos. Se vuelven a pintar encima (y no la placa antes de super, porque super dibuja
             // primero el fondo del panel y la taparía a ella).

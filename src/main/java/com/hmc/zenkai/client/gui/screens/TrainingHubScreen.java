@@ -104,7 +104,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
 
     /** Mini tutorial del hub (reporte #3), el mismo widget que el del skill tree. */
     private com.hmc.zenkai.client.gui.widgets.TutorialOverlay tutorial;
-    private static final int HELP_BTN = 12;
+    private static final int HELP_BTN = 20;
 
     public TrainingHubScreen() {
         super(Component.translatable(ZenkaiTab.TRAINING.titleKey()));
@@ -138,7 +138,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     /** Botón «?» (repite el tutorial) a la derecha del título del panel de modificadores, donde
      *  no tapa ninguna fila. */
     private void initTutorial() {
-        int hx = panelLeft + IN_X2 - HELP_BTN - 2, hy = panelTop + PANEL_Y - 2;
+        int hx = panelLeft + IN_X2 - HELP_BTN - 2, hy = panelTop + PANEL_Y - 7; // 20 px: sube 5 más para no tapar la fila de gravedad
         var help = new com.hmc.zenkai.client.gui.buttons.HelpIconButton(hx, hy, HELP_BTN, () -> tutorial.start());
         help.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.tutorial.replay")));
         addRenderableWidget(help);

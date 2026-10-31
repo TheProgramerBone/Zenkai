@@ -37,7 +37,7 @@ public final class SkillEffects {
     public static final String KI_HAMMER = "ki_hammer";
     /** Mano SECUNDARIA: convive con cualquier arma de una mano. */
     public static final String KI_SHIELD = "ki_shield";
-    /** Overlay genérico (0.3.0, ver OverlayStateSystem): interruptor ON/OFF que se puede usar
+    /** Overlay (0.3.0): interruptor ON/OFF que se puede usar
      *  sobre CUALQUIER Transformación primaria (Base, SSJ, SSB...) — distinto de la
      *  Transformación completa "Ultra Instinct" (FormDef ultra_instinct_sign/ultra_instinct),
      *  que es un sistema totalmente aparte sin relación de código con este interruptor. */

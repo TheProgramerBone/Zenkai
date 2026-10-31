@@ -20,7 +20,7 @@ import java.util.Objects;
  */
 public class HelpIconButton extends AbstractButton {
 
-    public static final int SIZE = 16;
+    public static final int SIZE = 20;
 
     private static final ResourceLocation ATLAS =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/icons.png");

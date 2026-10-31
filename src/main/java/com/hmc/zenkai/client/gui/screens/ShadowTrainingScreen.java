@@ -93,7 +93,8 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
     protected void initContent() {
         Component desc = Component.translatable("screen.zenkai.training_hub.row.shadow.short");
         descLines = this.font.split(desc, (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
-        descY = CONTENT_TOP + 20;
+        // 40: el «?» de la esquina (20 px, acaba en y=37) ya no se pega a la primera línea del texto
+        descY = 40;
         stepperY = descY + descLines.size() * 10 + 14;
         formLabelY = stepperY + 16;
         formValueY = formLabelY + 12;

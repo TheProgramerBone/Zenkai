@@ -6,7 +6,6 @@ import com.hmc.zenkai.event.tick.ArcosianPowerSystem;
 import com.hmc.zenkai.event.tick.OverlayMetersSystem;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.skills.OverlayStateSystem;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.world.entity.player.Player;
 
@@ -66,9 +65,8 @@ public final class MasteryEffects {
     }
 
     /**
-     * Multiplicador total de stats. ADITIVO entre capas: 1 + %forma + %kaioken + %overlays
-     * genéricos (cualquier estado del mismo tipo, ver {@link OverlayStateSystem} — término
-     * independiente, hoy siempre 0.0 en cualquier partida real) + PP arcosiano + overdrive de
+     * Multiplicador total de stats. ADITIVO entre capas: 1 + %forma + %kaioken
+     * + PP arcosiano + overdrive de
      * Beast + barra de daño de Ultra Ego, con el bonus de Majin multiplicando encima.
      * YA NO se llama desde los sitios de combate: lo consume TickHandlers.tickForms, que lo
      * guarda en PlayerStatsAttachment.setStatMultiplier(). Así el PL, la pantalla de stats se actualiza sola.
@@ -82,7 +80,6 @@ public final class MasteryEffects {
     public static double formStatFactor(Player p) {
         PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         double f = 1.0 + form.totalStatPercent(com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(p).getRace())
-                + OverlayStateSystem.statPercent(p)
                 + ArcosianPowerSystem.statBonus(p) + beastOverdriveBonus(p, form)
                 + OverlayMetersSystem.ueStatBonus(p)
                 + namekGiantBonus(p)

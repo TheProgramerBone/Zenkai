@@ -33,7 +33,7 @@ import java.util.Set;
  * desarrollo, recuerda que se lee {@code build/}: {@code ./gradlew processResources} antes de
  * recargar (ver .claude/docs/build-reload-y-datapacks.md).
  * <p>
- * Formato (ver el detalle y ejemplos en .claude/docs/tecnicas-y-vfx.md, "Aura compuesta"):
+ * Formato (ver el detalle y ejemplos en .claude/docs/auras.md, "Aura compuesta"):
  * <pre>
  * {
  *   "family": "divine",                       // flame | divine | dark_dense

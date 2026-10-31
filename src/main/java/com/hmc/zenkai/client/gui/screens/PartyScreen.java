@@ -1,6 +1,7 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.StatBar;
@@ -339,7 +340,9 @@ public class PartyScreen extends ZenkaiMenuScreen {
 
         // Cancelar: la MISMA X roja de FriendlyFireIconButton (ON), no btn_x.png — ver el
         // comentario de CANCEL_U/CHECK_U más arriba.
-        AtlasIconButton cancel = new AtlasIconButton(cx - 12 - 16, py + POPUP_H - 26, CANCEL_U, CANCEL_V,
+        // Simétricos respecto al centro (10 px a cada lado, 20 px de icono) y a la misma Y que el popup
+        // de teclas de MeditationScreen: antes iban en cx-28 / cx+16, descentrados 6 px.
+        AtlasIconButton cancel = new AtlasIconButton(cx - 10 - 20, py + POPUP_H - 26, CANCEL_U, CANCEL_V,
                 () -> {
                     configOpen = false;
                     this.rebuildWidgets();
@@ -347,7 +350,7 @@ public class PartyScreen extends ZenkaiMenuScreen {
         cancel.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.gui.cancel")));
         addRenderableWidget(cancel);
 
-        AtlasIconButton confirm = new AtlasIconButton(cx + 16, py + POPUP_H - 26, CHECK_U, CHECK_V,
+        AtlasIconButton confirm = new AtlasIconButton(cx + 10, py + POPUP_H - 26, CHECK_U, CHECK_V,
                 () -> {
                     runCommand("zparty maxsize " + pendingMaxSize);
                     configOpen = false;
@@ -624,16 +627,21 @@ public class PartyScreen extends ZenkaiMenuScreen {
 
         int min = state.members().size();
         int ceiling = Math.max(min, state.maxSizeCeiling());
-        int trackX0 = x0 + 14;
-        int trackX1 = x0 + POPUP_W - 14;
-        int trackY = py + 44;
-        // "Barra de scroll" del picker: no se arrastra (igual que la de la lista, ver
-        // drawListScrollbar/SkillsScreen), pero enseña de un vistazo dónde cae el valor
-        // propuesto entre el tamaño actual del grupo y el tope del servidor.
-        g.fill(trackX0, trackY, trackX1, trackY + 4, ZenkaiPalette.BAR_BG_DARK);
+        int trackX0 = sliderX0();
+        int trackX1 = sliderX1();
+        int trackY = sliderY();
+        // Deslizador ARRASTRABLE (clic y arrastre, ver mouseClicked/mouseDragged) entre el tamaño actual del
+        // grupo y el tope del servidor. BAR_BG_DARK (alfa 0x80) desaparecía sobre el interior opaco de la
+        // placa: ahora riel con contorno claro, tramo relleno hasta el valor y tirador grande.
+        g.fill(trackX0 - 1, trackY - 1, trackX1 + 1, trackY + SLIDER_H + 1, 0xFF6B5A48);
+        g.fill(trackX0, trackY, trackX1, trackY + SLIDER_H, 0xFF0C0A10);
         float ratio = ceiling <= min ? 0f : (float) (pendingMaxSize - min) / (ceiling - min);
-        int thumbX = trackX0 + Math.round((trackX1 - trackX0 - 4) * ratio);
-        g.fill(thumbX, trackY - 1, thumbX + 4, trackY + 5, ZenkaiPalette.GOLD);
+        int thumbW = 6;
+        int thumbX = trackX0 + Math.round((trackX1 - trackX0 - thumbW) * ratio);
+        g.fill(trackX0, trackY, thumbX, trackY + SLIDER_H, ZenkaiPalette.BAR_CONTROL);
+        boolean hot = sliderDragging;
+        g.fill(thumbX - 1, trackY - 3, thumbX + thumbW + 1, trackY + SLIDER_H + 3, 0xFF3A2A12);
+        g.fill(thumbX, trackY - 2, thumbX + thumbW, trackY + SLIDER_H + 2, hot ? 0xFFFFFFFF : ZenkaiPalette.GOLD);
 
         PanelText.centeredOnDark(g, this.font,
                 Component.literal(min + "–" + ceiling), cx, py + 52, ZenkaiPalette.TEXT_DIM);
@@ -652,11 +660,51 @@ public class PartyScreen extends ZenkaiMenuScreen {
 
         int x0 = popupLeft();
         int y0 = popupTop();
-        // Marco de tres anillos, igual que el popup lateral de StatsScreen: misma familia
-        // visual que el panel principal aunque este popup viva fuera de su contorno.
-        g.fill(x0 - 2, y0 - 2, x0 + POPUP_W + 2, y0 + POPUP_H + 2, ZenkaiPalette.BORDER_IN);
-        g.fill(x0 - 1, y0 - 1, x0 + POPUP_W + 1, y0 + POPUP_H + 1, ZenkaiPalette.BORDER_MID);
-        g.fill(x0, y0, x0 + POPUP_W, y0 + POPUP_H, ZenkaiPalette.POPUP_BG);
+        // Placa del skill tree (NineSlice.plateFrame), la misma de los popups de StatsScreen y del hub
+        // de Training: antes eran tres anillos de g.fill naranja con POPUP_BG, que ya no coinciden con ellos.
+        NineSlice.plateFrame(g, x0, y0, POPUP_W, POPUP_H);
+    }
+
+    // ── Barra de tamaño máximo (popup de PartyConfig) ─────────────────────────────────────────
+    private static final int SLIDER_H = 6;
+    /** Mientras el botón izquierdo sigue pulsado sobre la barra. */
+    private boolean sliderDragging = false;
+
+    private int sliderX0() { return popupLeft() + 14; }
+    private int sliderX1() { return popupLeft() + POPUP_W - 14; }
+    private int sliderY()  { return popupTop() + 42; }
+
+    /** Traduce la X del ratón a un valor entero entre [miembros actuales, tope] y reconstruye solo si cambió
+     *  (rebuildWidgets reinicia el foco y el hover: hacerlo en cada píxel del arrastre parpadearía). */
+    private void setPendingFromMouse(double mouseX) {
+        var state = ClientPartyState.current();
+        if (state == null) return;
+        int min = state.members().size();
+        int ceiling = Math.max(min, state.maxSizeCeiling());
+        double t = Mth.clamp((mouseX - sliderX0()) / (double) (sliderX1() - sliderX0()), 0.0, 1.0);
+        int value = Mth.clamp(min + (int) Math.round(t * (ceiling - min)), min, ceiling);
+        if (value != pendingMaxSize) {
+            pendingMaxSize = value;
+            this.rebuildWidgets();
+        }
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+        if (sliderDragging && configOpen) {
+            setPendingFromMouse(mouseX);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (sliderDragging) {
+            sliderDragging = false;
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     /** El clic de expulsar vive aquí y no en un widget: el punto de clic es la cabeza del
@@ -683,6 +731,13 @@ public class PartyScreen extends ZenkaiMenuScreen {
             if (!inside) {
                 configOpen = false;
                 this.rebuildWidgets();
+                return true;
+            }
+            // Barra de tamaño máximo: clic = salta ahí y deja el arrastre armado (mouseDragged).
+            if (mouseX >= sliderX0() - 3 && mouseX < sliderX1() + 3
+                    && mouseY >= sliderY() - 5 && mouseY < sliderY() + SLIDER_H + 5) {
+                sliderDragging = true;
+                setPendingFromMouse(mouseX);
                 return true;
             }
             return false;

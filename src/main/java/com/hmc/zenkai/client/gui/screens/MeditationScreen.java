@@ -2,6 +2,7 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.CommonPanel;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -337,7 +338,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
         overviewDescLines = this.font.split(
                 Component.translatable("screen.zenkai.meditation.overview.short"), (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
-        descY = 26;
+        descY = 40; // el «?» de la esquina (20 px) acaba en y=37: margen con la primera línea
         songRowY = descY + overviewDescLines.size() * 10 + 8;
         stepperY = songRowY + SONG_ROW_H + 10;
         // TRES líneas SIEMPRE reservadas aquí (difficulty + etiqueta "Session length" + su valor
@@ -462,12 +463,12 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         int cx = keybindPopupLeft() + KEYBIND_POPUP_W / 2;
         int py = keybindPopupTop();
 
-        BackIconButton cancel = new BackIconButton(cx - 12 - 18, py + KEYBIND_POPUP_H - 26, 16,
+        BackIconButton cancel = new BackIconButton(cx - 10 - 20, py + KEYBIND_POPUP_H - 26, 20,
                 () -> { keybindPopupOpen = false; buildOverviewWidgets(); });
         cancel.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.gui.cancel")));
         addRenderableWidget(cancel);
 
-        AcceptIconButton confirm = new AcceptIconButton(cx + 18, py + KEYBIND_POPUP_H - 26, 16,
+        AcceptIconButton confirm = new AcceptIconButton(cx + 10, py + KEYBIND_POPUP_H - 26, 20,
                 () -> {
                     System.arraycopy(pendingKeys, 0, keys, 0, LANES);
                     ClientConfig.setMeditationLaneKeys(keys[0], keys[1], keys[2], keys[3]);
@@ -623,7 +624,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         // izquierda: lanesLeft() deja ese hueco libre de sobra en cualquier resolución razonable
         // (ver su fórmula), combo/accuracy se dibujan pegados a la izquierda de los carriles, no
         // del borde de la pantalla.
-        BackIconButton finishBtn = new BackIconButton(8, 8, 16, this::finishSessionEarly);
+        BackIconButton finishBtn = new BackIconButton(8, 8, 20, this::finishSessionEarly);
         finishBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.finish")));
         addRenderableWidget(finishBtn);
     }
@@ -934,15 +935,12 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             CommonPanel.blit(g, panelLeft, panelTop, panelW, panelH);
         }
         if (state == State.OVERVIEW && keybindPopupOpen) {
-            // Marco de tres anillos + relleno POPUP_BG, mismo idioma que el popup lateral de
-            // PartyConfig/StatsScreen — pintado ANTES de super.render() (bueno, de los widgets:
-            // esto corre en renderBackground(), que sí es ANTES) para que Confirmar/Cancelar
-            // queden encima de la caja y no al revés.
+            // Placa del skill tree (NineSlice.plateFrame), la misma de los popups de StatsScreen, del
+            // hub de Training y de PartyConfig — pintada en renderBackground(), que corre ANTES que
+            // los widgets, para que Confirmar/Cancelar queden encima de la caja y no al revés.
             int x0 = keybindPopupLeft();
             int y0 = keybindPopupTop();
-            g.fill(x0 - 2, y0 - 2, x0 + KEYBIND_POPUP_W + 2, y0 + KEYBIND_POPUP_H + 2, ZenkaiPalette.BORDER_IN);
-            g.fill(x0 - 1, y0 - 1, x0 + KEYBIND_POPUP_W + 1, y0 + KEYBIND_POPUP_H + 1, ZenkaiPalette.BORDER_MID);
-            g.fill(x0, y0, x0 + KEYBIND_POPUP_W, y0 + KEYBIND_POPUP_H, ZenkaiPalette.POPUP_BG);
+            NineSlice.plateFrame(g, x0, y0, KEYBIND_POPUP_W, KEYBIND_POPUP_H);
         }
     }
 
@@ -993,7 +991,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
         PanelText.centeredOnDark(g, this.font,
                 Component.translatable("screen.zenkai.meditation.keybinds.hint"),
-                cx, py + KEYBIND_POPUP_H - 40, ZenkaiPalette.TEXT_DIM);
+                cx, py + KEYBIND_POPUP_H - 42, ZenkaiPalette.TEXT_DIM); // 2 px más arriba: los iconos miden 20 y quedaban pegados
     }
 
     /** Párrafo + fila-resumen de la canción (clicable, abre SONG_LIST) + steppers/valores fijos +

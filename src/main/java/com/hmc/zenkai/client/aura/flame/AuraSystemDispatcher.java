@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Punto de despacho ÚNICO entre los dos sistemas de aura: el CLÁSICO ({@code client.aura}, faldones
  * legacy) y el NUEVO compuesto por familias ({@code client.aura.compose}). Ver
- * .claude/docs/tecnicas-y-vfx.md, "Aura COMPUESTA por familias".
+ * .claude/docs/auras.md, "Aura COMPUESTA por familias".
  * <p>
  * En cualquier frame el aura la dibuja un sistema o el otro, nunca los dos. Los archivos legacy
  * solo LEEN {@link #useFlame()} / {@link #useComposed()} en guardas de una línea; la decisión vive

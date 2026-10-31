@@ -59,7 +59,7 @@ import java.util.List;
  * medía ~22 px — los cinco ojos apenas se distinguían entre sí (medido con render en
  * .claude/workbench/auditoria-2026-10-01/). Ahora:
  *  · una pestaña por categoría (subrayado = activa, TextOnlyButton.selected — no asAction(),
- *    que ensancha el texto, ver gui.md);
+ *    que ensancha el texto, ver gui-apariencia.md);
  *  · una cuadrícula de MINIATURAS: cada casilla es la cara del propio jugador con esa opción
  *    puesta y el resto de sus rasgos (FaceThumbnails, compuesta en vivo — sin assets que
  *    mantener); nombre traducido bajo la cuadrícula y en el tooltip;
@@ -72,7 +72,7 @@ import java.util.List;
  * directo en PlayerVisualAttachment (applyPreview) para que preview y miniaturas lo vean al
  * instante; "Back" vuelve al MISMO hub marcando goingToHub, "Next" va a StyleSelectionScreen
  * marcando goingNext, y removed() solo revierte al snapshot si no se marcó ninguno — mismo
- * contrato que RaceSelectionScreen/StyleSelectionScreen (ver gui.md, entrada de AppearanceScreen).
+ * contrato que RaceSelectionScreen/StyleSelectionScreen (ver gui-apariencia.md, entrada de AppearanceScreen).
  */
 public class HeadAppearanceScreen extends Screen {
 
@@ -357,7 +357,7 @@ public class HeadAppearanceScreen extends Screen {
         if (mc.player == null) return;
         if (!stateLoaded) { loadState(); stateLoaded = true; }
 
-        // clearWidgets() se lleva por delante un picker abierto sin avisar (gui.md, lección de
+        // clearWidgets() se lleva por delante un picker abierto sin avisar (gui-apariencia.md, lección de
         // BodyColorsScreen): cerrarlo de forma explícita para no dejar el campo colgando.
         picker = null;
         activeChannel = null;

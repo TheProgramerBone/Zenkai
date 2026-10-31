@@ -50,7 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Pestaña HABILIDADES: el árbol de skills POR MAESTRO (diseño cerrado: {@code .claude/archivo/2026-10-25-skill-tree-cerrado/skill-tree.md} §5; guía: docs/gui.md).
+ * Pestaña HABILIDADES: el árbol de skills POR MAESTRO (diseño cerrado: {@code .claude/archivo/2026-10-25-skill-tree-cerrado/skill-tree.md} §5; guía: docs/gui-skill-trees.md).
  * Sustituye a la lista de texto con «+» (SkillsScreen) y NO comparte código con
  * {@link SkillTreeScreen}: aquella pantalla está atada a formas, God Ki y secretos y el usuario
  * aprobó su aspecto, así que aquí solo se copia lo genérico (pan/zoom en escalones, tooltip,
@@ -77,18 +77,14 @@ import java.util.Map;
  * Pan, zoom y fondo son STATIC por la misma razón que en SkillTreeScreen: createScreen() construye
  * una pantalla nueva en cada visita a la pestaña.
  */
-public class SkillsTreeScreen extends ZenkaiMenuScreen {
+public class SkillsTreeScreen extends TreeCanvasScreen {
 
     // ── Geometría (px de un panel de 256; el beige real va de x=12 a x=243, y de 13 a 242) ──
 
-    private static final int VP_LEFT = 12, VP_RIGHT = 244, VP_TOP = 13, VP_BOTTOM = 243;
-    private static final int ICON_BTN = 20, BTN_PLATE = 24, PLATE_H = 14, HELP_BTN = 16;
+    private static final int PLATE_H = 14, HELP_BTN = 20;
 
     /** Medidas en coordenadas de MUNDO (zoom 1 = px de GUI). */
     private static final int NODE = 24, ICON = 16;
-    private static final float[] ZOOMS = {0.5f, 1f, 2f};
-    private static final int DEFAULT_ZOOM = 1;
-    private static final double DRAG_SLOP = 3.0;
     private static final long CONFIRM_MIN_MS = 250L;
     private static final long HOVER_THEME_MS = 100L;
     private static final long FADE_MS = 3200L;
@@ -180,6 +176,13 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     private static final int MINE_FIRST_RING = 6;
     private static int zoomIdx = DEFAULT_ZOOM;
     private static float panX, panY;
+
+    // Lo que pide TreeCanvasScreen: el pan y el zoom son static de ESTA pantalla (la vista sobrevive entre visitas a la pestaña).
+    @Override protected float panX() { return panX; }
+    @Override protected float panY() { return panY; }
+    @Override protected void setPan(float x, float y) { panX = x; panY = y; }
+    @Override protected int zoomIndex() { return zoomIdx; }
+    @Override protected void onCanvasClick(double mx, double my) { onNodeClicked(nodeAt(mx, my)); }
     private static boolean centeredOnce;
     private static int centerCycle = -1;
     private static final List<Sky> layerSky = new ArrayList<>(List.of(Sky.NEUTRAL));
@@ -199,11 +202,7 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
     private @Nullable String confirming;
     private @Nullable String forgetArmed;
     private long armedAt;
-    private boolean pressedInViewport, dragging;
-    private double pressX, pressY;
-    private @Nullable TutorialOverlay tutorial;
     /** Destino de la cámara (mundo) mientras el tutorial la lleva a un nodo; null = quieta. */
-    private float @Nullable [] camGoal;
 
     /** Solo SkillTreeShots (modo perf): apagan una parte del dibujo para repartir el coste por capas. */
     public static boolean devSkipEdges, devSkipBg;
@@ -432,31 +431,11 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
 
     // ── Geometría derivada ───────────────────────────────────────────────────
 
-    private int px(int v) { return panelLeft + v * BG_W / 256; }
-    private int py(int v) { return panelTop + v * BG_H / 256; }
-    private int vpLeft()   { return px(VP_LEFT); }
-    private int vpRight()  { return px(VP_RIGHT); }
-    private int vpTop()    { return py(VP_TOP); }
-    private int vpBottom() { return py(VP_BOTTOM); }
-    private int btnY()     { return vpTop() + 4; }
-    private int zoomBtnX() { return vpRight() - 4 - BTN_PLATE + (BTN_PLATE - ICON_BTN) / 2; }
     private int modeBtnX() { return zoomBtnX() - BTN_PLATE - 2; }
-    private int helpX()    { return zoomBtnX() + (ICON_BTN - HELP_BTN) / 2; }
-    private int helpY()    { return btnY() + BTN_PLATE + 2; }
-    private float zoom()   { return ZOOMS[zoomIdx]; }
-    private float vpCx()   { return (vpLeft() + vpRight()) / 2f; }
-    private float vpCy()   { return (vpTop() + vpBottom()) / 2f; }
-    /** Origen del mundo en pantalla, REDONDEADO (un pan fraccionario reparte mal los texeles del arte). */
-    private float originX() { return Math.round(vpCx() - panX * zoom()); }
-    private float originY() { return Math.round(vpCy() - panY * zoom()); }
-    private float toScreenX(float wx) { return originX() + wx * zoom(); }
-    private float toScreenY(float wy) { return originY() + wy * zoom(); }
-    private float toWorldX(double sx) { return (float) ((sx - originX()) / zoom()); }
-    private float toWorldY(double sy) { return (float) ((sy - originY()) / zoom()); }
+    /** Igual que en SkillTreeScreen: en la fila de los botones, a 6 px del de modo (la misma separación que modo-zoom). */
+    private int helpX()    { return modeBtnX() - HELP_BTN - 6; }
+    private int helpY()    { return btnY(); }
 
-    private boolean inViewport(double x, double y) {
-        return x >= vpLeft() && x < vpRight() && y >= vpTop() && y < vpBottom();
-    }
 
     /** Placas de TP/MND y botones de la franja superior: ahí no se elige nodo. */
     private boolean overHud(double x, double y) {
@@ -468,7 +447,8 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         return false;
     }
 
-    private void clampPan() {
+    @Override
+    protected void clampPan() {
         float lo = Float.MAX_VALUE, hi = -Float.MAX_VALUE, top = Float.MAX_VALUE, bot = -Float.MAX_VALUE;
         for (Node n : nodes) {
             lo = Math.min(lo, n.x()); hi = Math.max(hi, n.x());
@@ -483,20 +463,6 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         camGoal = new float[]{wx, wy};
     }
 
-    /** Avanza la cámara hacia su destino (fracción por frame, suave) y la suelta al llegar. */
-    private void stepCamera() {
-        if (camGoal == null) return;
-        float dx = camGoal[0] - panX, dy = camGoal[1] - panY;
-        if (Math.abs(dx) < 0.6f && Math.abs(dy) < 0.6f) {
-            panX = camGoal[0];
-            panY = camGoal[1];
-            camGoal = null;
-        } else {
-            panX += dx * 0.22f;
-            panY += dy * 0.22f;
-        }
-        clampPan();
-    }
 
     /** Centra la rama entera, no solo al maestro: sus skills salen hacia fuera y quedarían bajo las placas de arriba. */
     private void centerOnBranch(int b) {
@@ -586,7 +552,7 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
 
     /**
      * Textura entera estirada a un rectángulo, con alfa por COLOR DE VÉRTICE (no g.setColor + blit:
-     * con eso el fundido entre fondos no se mezclaba; ver docs/gui.md). Pinta DENTRO del scissor del lienzo.
+     * con eso el fundido entre fondos no se mezclaba; ver docs/gui-skill-trees.md). Pinta DENTRO del scissor del lienzo.
      */
     private static void quad(GuiGraphics g, ResourceLocation tex, int x, int y, int w, int h, float alpha) {
         if (alpha <= 0.003f) return;
@@ -625,37 +591,8 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         return false;
     }
 
-    @Override
-    public boolean keyPressed(int key, int scan, int mods) {
-        if (tutorial != null && tutorial.keyPressed(key)) return true;
-        return super.keyPressed(key, scan, mods);
-    }
 
-    @Override
-    public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
-        if (pressedInViewport && button == 0) {
-            if (!dragging && Math.hypot(mx - pressX, my - pressY) > DRAG_SLOP) dragging = true;
-            if (dragging) {
-                camGoal = null;
-                panX -= (float) (dx / zoom());
-                panY -= (float) (dy / zoom());
-                clampPan();
-            }
-            return true;
-        }
-        return super.mouseDragged(mx, my, button, dx, dy);
-    }
 
-    @Override
-    public boolean mouseReleased(double mx, double my, int button) {
-        if (pressedInViewport && button == 0) {
-            pressedInViewport = false;
-            if (!dragging) onNodeClicked(nodeAt(mx, my));
-            dragging = false;
-            return true;
-        }
-        return super.mouseReleased(mx, my, button);
-    }
 
     @Override
     public boolean mouseScrolled(double mx, double my, double sx, double sy) {
@@ -783,10 +720,6 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         if (tutorial != null) tutorial.start();
     }
 
-    private boolean isOverWidget(double mx, double my) {
-        for (var c : children()) if (c.isMouseOver(mx, my)) return true;
-        return false;
-    }
 
     /** Solo SkillTreeShots: centra el lienzo en una rama y devuelve el centro en pantalla de un nodo (o null). */
     public int @Nullable [] devFocus(int branch, @Nullable String key) {
@@ -1077,23 +1010,8 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         g.fill(x, y, x + NODE, y + NODE, ((Math.min(255, alpha) / 2) << 24) | (rgb & 0xFFFFFF));
     }
 
-    private static void ring(GuiGraphics g, int x, int y, int size, int color) {
-        g.fill(x, y, x + size, y + 1, color);
-        g.fill(x, y + size - 1, x + size, y + size, color);
-        g.fill(x, y + 1, x + 1, y + size - 1, color);
-        g.fill(x + size - 1, y + 1, x + size, y + size - 1, color);
-    }
 
-    private static int pulse(int rgb, long periodMs) {
-        double t = (Util.getMillis() % periodMs) / (double) periodMs;
-        int a = (int) (110 + 145 * (0.5 + 0.5 * Math.sin(t * Math.PI * 2)));
-        return (a << 24) | (rgb & 0xFFFFFF);
-    }
 
-    private static int pulseAlpha(long periodMs, int min, int max) {
-        double t = (Util.getMillis() % periodMs) / (double) periodMs;
-        return (int) (min + (max - min) * (0.5 + 0.5 * Math.sin(t * Math.PI * 2)));
-    }
 
     /** Letrero pendiente de dibujar, con su ancla en coordenadas de mundo y su escala de letra. */
     private record Label(float wx, float wy, Component name, int accent, boolean owned, float scale) {}
@@ -1125,23 +1043,15 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         labels.clear();
     }
 
-    private static int darken(int argb, float f) {
-        int r = (int) (((argb >> 16) & 0xFF) * f), gr = (int) (((argb >> 8) & 0xFF) * f), b = (int) ((argb & 0xFF) * f);
-        return (r << 16) | (gr << 8) | b;
-    }
 
     // ── Placas de TP/MND ─────────────────────────────────────────────────────
 
-    private Component tpText() {
-        return Component.translatable("screen.zenkai.technique.tp", ZenkaiNumbers.format(att == null ? 0 : att.getTP()));
-    }
 
     private Component mindText() {
         return att == null ? Component.empty() : Component.translatable("screen.zenkai.skills_tree.mnd",
                 MindBudget.free(att), MindBudget.total(att));
     }
 
-    private int plateWidth(Component text) { return 5 + this.font.width(text) + 5; }
 
     private void drawHeader(GuiGraphics g) {
         int x = vpLeft() + 4, y = vpTop() + 5;
@@ -1172,7 +1082,6 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
 
     // ── Tooltip ──────────────────────────────────────────────────────────────
 
-    private record TipLine(Component text, int color) {}
 
     private void drawTooltip(GuiGraphics g, Node n, int mx, int my) {
         List<TipLine> lines = new ArrayList<>();
@@ -1396,7 +1305,8 @@ public class SkillsTreeScreen extends ZenkaiMenuScreen {
         out.add(step(4, this::skillRect, () -> focusNode(tutorialSkill())));
         out.add(step(5, this::skillRect, () -> focusNode(tutorialSkill())));
         out.add(step(6, () -> nodeRect("gate"), () -> focusNode(byKey("gate"))));
-        out.add(step(7, () -> new int[]{modeBtnX() - 3, btnY() - 3, zoomBtnX() + ICON_BTN + 3 - (modeBtnX() - 3), helpY() + HELP_BTN + 3 - (btnY() - 3)}, null));
+        // «?», modo y zoom van ahora en la MISMA fila: un solo recuadro de ancho a ancho.
+        out.add(step(7, () -> new int[]{helpX() - 3, btnY() - 3, zoomBtnX() + ICON_BTN + 3 - (helpX() - 3), ICON_BTN + 6}, null));
         return out;
     }
 

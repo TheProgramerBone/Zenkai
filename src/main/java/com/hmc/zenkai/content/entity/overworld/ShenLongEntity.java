@@ -56,6 +56,11 @@ public class ShenLongEntity extends ZenkaiDefaultNPC {
     @Override
     protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
         if (player instanceof ServerPlayer sp) {
+            // Un dragón atiende a UN jugador a la vez (ver WishSessions): a los demás les avisa por el chat.
+            if (!com.hmc.zenkai.feature.wishes.WishSessions.tryOpen(sp, this)) {
+                sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("messages.zenkai.shenron_busy"), false);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
+            }
             PacketDistributor.sendToPlayer(sp, SyncWishTogglesPayload.current());
             PacketDistributor.sendToPlayer(sp, new OpenWishScreenPayload());
         }

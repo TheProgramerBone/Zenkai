@@ -86,16 +86,14 @@ public class TechniqueEditScreen extends Screen {
     private static final int Y_TABS  = Y_NAME + 20;
     private static final int Y_ROWS  = Y_TABS + 22;
     private static final int Y_BLOCK = 148;   // previews de combate
-    // STYLE: color(58) → charge(76) → play-charge(94) → release(109) → play-release(127) →
-    // animación(142, 14 alto, acaba en 156). Y_PREVIEW/Y_UNLOCK bajaron +10 (140→150 pasó a
-    // 150→160 y 214→224) para dejarle sitio a los dos PlayIconButton sin pisar la caja de
-    // animación del jugador ni el candado — el hueco vacío que había antes entre la fila de
-    // animación y la caja de preview (24px sin usar) es justo lo que se gastó aquí.
-    private static final int PLAY_SIZE = 12;
-    private static final int PLAY_ROW_H = PLAY_SIZE + 3; // icono + 3px de aire hasta la fila siguiente
-    private static final int Y_PREVIEW = 160; // caja de animación (STYLE)
+    // STYLE: color(58) → charge(76, con su ▶ de 20 px al final) → release(98, ídem) →
+    // animación(120, 14 alto, acaba en 134). Los ▶ vivían en filas propias de 12 px y empujaron
+    // Y_PREVIEW/Y_UNLOCK +10; al pasar a 20 px (regla: iconos de icons.png a su celda) van en la
+    // fila del selector y esos dos vuelven a sus valores originales (140 y 214).
+    private static final int PLAY_SIZE = 20;
+    private static final int Y_PREVIEW = 140; // caja de animación (STYLE)
     private static final int PREVIEW_H = 58;
-    private static final int Y_UNLOCK = 224;
+    private static final int Y_UNLOCK = 214;
     private static final int Y_BUTTONS = BG_H + 4; // FUERA del panel
     private static final int TRASH_SIZE = 16;  // 32px de textura / 2 → reducción limpia
 
@@ -366,23 +364,25 @@ public class TechniqueEditScreen extends Screen {
         }
         y += ROW_H;
 
+        // El ▶ (20 px, la celda entera) va AL FINAL DE LA PROPIA FILA del selector y no en una fila
+        // aparte: a 20 px no cabe una fila extra sin pisar la caja de animación, y así la lista de
+        // sonidos se queda en dos filas en vez de cuatro.
+        int cyclerW = contentW - PLAY_SIZE - 4;
         List<ResourceLocation> charges = soundList(true);
-        cyclerRow(x, y, contentW,
+        cyclerRow(x, y, cyclerW,
                 Component.translatable("screen.zenkai.technique.sound_charge").append(": ")
                         .append(soundLabel(charges.get(Math.floorMod(chargeIdx, charges.size())))),
                 dir -> { chargeIdx = Math.floorMod(chargeIdx + dir, charges.size()); rebuildWidgets(); });
-        y += ROW_H;
-        playRow(x, y, contentW, charges.get(Math.floorMod(chargeIdx, charges.size())));
-        y += PLAY_ROW_H;
+        playButton(x + contentW - PLAY_SIZE, y, charges.get(Math.floorMod(chargeIdx, charges.size())));
+        y += ROW_H + 4;
 
         List<ResourceLocation> releases = soundList(false);
-        cyclerRow(x, y, contentW,
+        cyclerRow(x, y, cyclerW,
                 Component.translatable("screen.zenkai.technique.sound_release").append(": ")
                         .append(soundLabel(releases.get(Math.floorMod(releaseIdx, releases.size())))),
                 dir -> { releaseIdx = Math.floorMod(releaseIdx + dir, releases.size()); rebuildWidgets(); });
-        y += ROW_H;
-        playRow(x, y, contentW, releases.get(Math.floorMod(releaseIdx, releases.size())));
-        y += PLAY_ROW_H;
+        playButton(x + contentW - PLAY_SIZE, y, releases.get(Math.floorMod(releaseIdx, releases.size())));
+        y += ROW_H + 4;
 
         List<Integer> sets = TechniqueAnimSets.available();
 
@@ -582,18 +582,16 @@ public class TechniqueEditScreen extends Screen {
     }
 
     /**
-     * Triángulo "▶" centrado, debajo de una fila de sonido (Charge/Fire) — separa visualmente
-     * una fila de la siguiente de paso, que era el otro motivo por el que se pidió (además de
-     * poder escuchar el sonido sin salir del editor). Se apaga (gris, sin acción) cuando la
-     * opción elegida es "sin sonido" (id == null): no hay nada que reproducir, y una fila
-     * activa que no hace nada al pulsarla es peor que una apagada que explica por qué.
+     * Triángulo "▶" al final de una fila de sonido (Charge/Fire), para poder escuchar el sonido
+     * sin salir del editor. Se apaga (gris, sin acción) cuando la opción elegida es "sin sonido"
+     * (id == null): no hay nada que reproducir, y un botón activo que no hace nada al pulsarlo
+     * es peor que uno apagado que explica por qué. Centrado en vertical contra la fila (14 px
+     * de botón de texto) y a PLAY_SIZE = 20, la celda de icons.png: cualquier otro tamaño escala
+     * sin suavizado y se come píxeles del badge.
      */
-    private void playRow(int x, int y, int w, ResourceLocation soundId) {
-        // Tamaño EXPLÍCITO: el constructor corto usa PlayIconButton.SIZE (20), que creció para
-        // los botones Start/Back de Training. Aquí el hueco es de PLAY_SIZE + 3 px de aire
-        // (PLAY_ROW_H), y a 20 px el badge invadía la fila de texto siguiente.
+    private void playButton(int x, int y, ResourceLocation soundId) {
         PlayIconButton play = new PlayIconButton(
-                x + (w - PLAY_SIZE) / 2, y, PLAY_SIZE, () -> previewSound(soundId));
+                x, y - (PLAY_SIZE - 14) / 2, PLAY_SIZE, () -> previewSound(soundId));
         play.active = soundId != null;
         play.setTooltip(Tooltip.create(Component.translatable(soundId != null
                 ? "screen.zenkai.technique.sound_preview"

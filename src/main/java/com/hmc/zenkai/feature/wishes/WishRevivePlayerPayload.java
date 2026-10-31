@@ -30,6 +30,7 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
         public static void handle(WishRevivePlayerPayload payload, IPayloadContext ctx) {
             ctx.enqueueWork(() -> {
                 ServerPlayer invoker = (ServerPlayer) ctx.player();
+                if (!WishSessions.validate(invoker)) return;
                 if (!ServerConfig.isEnabled(ServerConfig.WishType.REVIVE_PLAYER)) {
                     invoker.displayClientMessage(Component.translatable("messages.zenkai.wish_disabled"), false);
                     return;

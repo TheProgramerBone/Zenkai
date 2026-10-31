@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Coste de UN nivel de UNA mejora. Es lo ÚNICO que el datapack controla (más el coste de
- * energía, que hoy se parsea y se enseña pero no se cobra: no hay sistema de energía todavía).
+ * Coste de UN nivel de UNA mejora. Es lo ÚNICO que el datapack controla: materiales y energía (FE;
+ * el banco la cobra en proporción al progreso, ver ScouterBenchBlockEntity.serverTick).
  *
  * No se usa Ingredient de vanilla: aquí hace falta cantidad, comprobación contra el inventario
  * y una lista de items para pintar el tooltip, y las tres cosas salen más limpias con un

@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * Registro de FAMILIAS de aura. Cada una dice qué PROGRAMA dibuja el cuerpo, cómo se moldea sobre la
  * llama calibrada y qué componentes lleva por defecto. Referencias de cada una en
- * .claude/imagenes_videos_referencias/aura vfx/ (ver también .claude/docs/tecnicas-y-vfx.md).
+ * .claude/imagenes_videos_referencias/aura vfx/ (ver también .claude/docs/auras.md).
  * <p>
  * Crear una familia nueva: una entrada aquí (y, si su geometría no la da ninguno de los programas
  * existentes, un {@link AuraBodyKind} con su shader). Crear una VARIANTE de una familia existente

@@ -18,7 +18,7 @@ public final class ModGameRules {
             GameRules.register("zenkai_allowRaceSelection", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
-    /** Si false, CombatHooks no se activa aunque el jugador tenga raza. */
+    /** Si false, CombatZenkaiHooks no se activa aunque el jugador tenga raza. */
     public static final GameRules.Key<GameRules.BooleanValue> ENABLE_RACE_BOOSTS =
             GameRules.register("zenkai_enableRaceBoosts", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));

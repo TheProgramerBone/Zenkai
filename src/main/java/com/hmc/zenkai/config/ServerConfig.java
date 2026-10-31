@@ -1492,12 +1492,12 @@ public class ServerConfig {
                     .defineInRange("ultra_ego.charge_decay_per_second", 1.0D, 0.0D, 100.0D);
 
     private static final ModConfigSpec.DoubleValue UE_STAT_LV5_RAW =
-            BUILDER.comment("Ultra Ego: stat bonus (added, 1.0 = +100%) granted by a FULL damage bar at skill level 5 (the level the transformation unlocks). The bar only acts from level 5. It is added to the form's own percent (16-22), so it has to be in whole numbers to matter (it was 0.2, under 2% of the total).")
-                    .defineInRange("ultra_ego.max_stat_bonus_level5", 1.0D, 0.0D, 10.0D);
+            BUILDER.comment("Ultra Ego: stat bonus (added to the stat factor) granted by a FULL damage bar at skill level 5 (the level the transformation unlocks). The bar only acts from level 5. It is added to the form's own percent (16-22), so it has to be in whole numbers to matter: 3.0 = about +13% on a ~x23 form (level 5 full bar = Ultra Instinct), 7.0 = about +30% (level 10). Was 1.0/3.0 until 2026-10-31 (+4%/+13%, not noticeable). See tools/forms_sim_all.py.")
+                    .defineInRange("ultra_ego.max_stat_bonus_level5", 3.0D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue UE_STAT_LV10_RAW =
             BUILDER.comment("Ultra Ego: stat bonus (added) granted by a FULL damage bar at skill level 10. Levels 6-9 interpolate linearly between the level 5 and level 10 values.")
-                    .defineInRange("ultra_ego.max_stat_bonus_level10", 3.0D, 0.0D, 10.0D);
+                    .defineInRange("ultra_ego.max_stat_bonus_level10", 7.0D, 0.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue UE_PEN_RAW =
             BUILDER.comment("Ultra Ego: fraction of the target's defense ignored by PHYSICAL techniques at skill level 10 (0.2 = 20%). Scales linearly from level 1 (1/10 of this value). Applies while the Ultra Ego technique is on or the Ultra Ego form is worn.")
