@@ -42,6 +42,16 @@ public class HelpIconButton extends AbstractButton {
         this.onClick = Objects.requireNonNull(onClick);
     }
 
+    /**
+     * Un «?» que solo despliega un texto largo al pasar el ratón (sin acción al pulsarlo). Lo usan las pantallas de
+     * Training para dejar la descripción corta a la vista y el detalle de las reglas a un gesto de distancia.
+     */
+    public static HelpIconButton hint(int x, int y, int size, Component fullText) {
+        HelpIconButton b = new HelpIconButton(x, y, size, () -> {});
+        b.setTooltip(net.minecraft.client.gui.components.Tooltip.create(fullText));
+        return b;
+    }
+
     @Override
     public void onPress() { onClick.run(); }
 

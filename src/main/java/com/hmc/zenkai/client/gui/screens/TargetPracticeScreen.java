@@ -128,7 +128,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         panelTop = h.pos();
         // 4 px de aire por lado: partido a panelW - 24 (232 px) el texto centrado llegaba a los dos bordes del beige (231 px).
         introLines = this.font.split(
-                Component.translatable("screen.zenkai.target_practice.intro"), (IN_X2 - IN_X1) - 8);
+                Component.translatable("screen.zenkai.target_practice.intro.short"), (IN_X2 - IN_X1) - 8);
         stepperY = 30 + introLines.size() * 10 + 4 + 20 + 4;
         buildIntroWidgets();
         requestInfo();
@@ -154,14 +154,16 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         // ShadowTrainingScreen/MeditationScreen, con tooltip (pedido explícito del usuario) para
         // que el icono solo no tenga que explicarse por sí mismo.
         BackIconButton backBtn = new BackIconButton(
-                panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::onClose);
+                CommonPanel.iconLeft(panelLeft), CommonPanel.iconBottom(panelTop, panelH), CommonPanel.ICON, this::onClose);
         backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
         addRenderableWidget(backBtn);
 
         PlayIconButton startBtn = new PlayIconButton(
-                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 20, this::startSession);
+                CommonPanel.iconRight(panelLeft), CommonPanel.iconBottom(panelTop, panelH), CommonPanel.ICON, this::startSession);
         startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
         addRenderableWidget(startBtn);
+        addRenderableWidget(com.hmc.zenkai.client.gui.buttons.HelpIconButton.hint(
+                CommonPanel.iconRight(panelLeft), CommonPanel.iconTop(panelTop), CommonPanel.ICON, Component.translatable("screen.zenkai.target_practice.intro")));
 
         int cx = panelLeft + panelW / 2;
         addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decrease));
@@ -179,12 +181,12 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         this.clearWidgets();
         int y = panelTop + panelH - 12 - PanelButton.H;
         BackIconButton backBtn = new BackIconButton(
-                panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::onClose);
+                CommonPanel.iconLeft(panelLeft), CommonPanel.iconBottom(panelTop, panelH), CommonPanel.ICON, this::onClose);
         backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
         addRenderableWidget(backBtn);
 
         PlayIconButton retryBtn = new PlayIconButton(
-                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 20, this::startSession);
+                CommonPanel.iconRight(panelLeft), CommonPanel.iconBottom(panelTop, panelH), CommonPanel.ICON, this::startSession);
         retryBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.meditation.retry")));
         addRenderableWidget(retryBtn);
     }

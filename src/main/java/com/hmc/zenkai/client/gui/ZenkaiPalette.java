@@ -227,6 +227,27 @@ public final class ZenkaiPalette {
     public static final int TRANSMISSION_DIALOG_BG    = 0xFF0A0E1E;
     public static final int TRANSMISSION_DIALOG_PANEL = 0xFF141230;
 
+    // ── Paleta divina del deseo (shenron_screen.png) ─────────────────────────
+    // Familia propia para las pantallas de Shenlong/Porunga: VERDE DRAGÓN sobre negro-noche, con una
+    // serpiente de dragón de marca de agua. Un deseo no es un menú del jugador (beige) ni un NPC
+    // (ciruela) ni una máquina (cian): es lo divino. El verde reutiliza SHENLONG, el color que ya
+    // tiñe el título de estas pantallas. La textura sale de tools/gen_shenron_screen.py, que repite
+    // a mano los valores del marco (no puede leer Java): si cambian aquí, regenerar.
+    public static final int SHENRON_BORDER_IN  = 0xFF0B2E1A;
+    public static final int SHENRON_BORDER_MID = 0xFF1F9E48;
+    public static final int SHENRON_BORDER_OUT = 0xFF7FDC9E;
+    public static final int SHENRON_BORDER_HI  = 0xFFE6FFEE;
+    public static final int SHENRON_BG    = 0xFF0A1410;
+    public static final int SHENRON_PANEL = 0xFF0F211A;
+    /** Texto principal sobre el fondo oscuro de las pantallas de deseo (con sombra, ver ShenronPanelScreen). */
+    public static final int SHENRON_TEXT  = 0xFFE6F2E8;
+    public static final int SHENRON_MUTED = 0xFF8FB39A;
+    /** El límite o el coste de un deseo: el rojo claro que se lee sobre verde casi negro. */
+    public static final int SHENRON_WARN  = 0xFFFF8A7A;
+    public static final int SHENRON_DIVIDER   = 0x558FE0A8;
+    public static final int SHENRON_ROW       = 0x3023B14C;
+    public static final int SHENRON_ROW_HOVER = 0x5523B14C;
+
     // ── Fondos de zona ───────────────────────────────────────────────────────
     // Los últimos literales sueltos del barrido. No son colores de texto, pero se repetían con
     // valores casi iguales en sitios distintos (0x18AC421B, 0x22AC421B) y son exactamente el

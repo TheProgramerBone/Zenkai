@@ -83,6 +83,15 @@ public abstract class ZenkaiPanelScreen extends Screen {
     /** Color del título. Los deseos lo tiñen de verde dragón sin meter §2 en el lang. */
     protected int titleColor() { return ScreenTitle.COLOR; }
 
+    /** Fondo del panel. Por defecto el beige común; ShenronPanelScreen lo cambia por el de la familia divina. */
+    protected void drawPanel(GuiGraphics g) { CommonPanel.blit(g, panelLeft, panelTop, BG_W, BG_H); }
+
+    /** true si el fondo es OSCURO: el texto de los helpers lleva sombra (sobre beige nunca, ver PanelText). */
+    protected boolean darkPanel() { return false; }
+
+    /** Color de la regla de drawDivider. */
+    protected int dividerColor() { return ZenkaiPalette.SEPARATOR; }
+
     // ── Layout ───────────────────────────────────────────────────────────────
 
     protected int contentLeft()   { return panelLeft + PAD; }
@@ -121,7 +130,7 @@ public abstract class ZenkaiPanelScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(g, mouseX, mouseY, partialTick);
-        CommonPanel.blit(g, panelLeft, panelTop, BG_W, BG_H);
+        drawPanel(g);
 
         ScreenTitle.drawAbovePanel(g, this.font, this.title, centerX(), panelTop, titleColor());
 
@@ -140,7 +149,7 @@ public abstract class ZenkaiPanelScreen extends Screen {
 
     /** Texto centrado SIN sombra: el estándar para lo que va sobre el beige del panel. */
     protected void drawCenteredOnPanel(GuiGraphics g, Component text, int y, int color) {
-        g.drawString(this.font, text, centerX() - this.font.width(text) / 2, y, color, false);
+        g.drawString(this.font, text, centerX() - this.font.width(text) / 2, y, color, darkPanel());
     }
 
     /**
@@ -150,7 +159,7 @@ public abstract class ZenkaiPanelScreen extends Screen {
      */
     protected int drawWrappedOnPanel(GuiGraphics g, Component text, int y, int color) {
         for (var line : this.font.split(text, contentWidth())) {
-            g.drawString(this.font, line, centerX() - this.font.width(line) / 2, y, color, false);
+            g.drawString(this.font, line, centerX() - this.font.width(line) / 2, y, color, darkPanel());
             y += this.font.lineHeight + 1;
         }
         return y;
@@ -158,7 +167,7 @@ public abstract class ZenkaiPanelScreen extends Screen {
 
     /** Divisor horizontal del ancho del contenido. Un solo estilo para el mod. */
     protected void drawDivider(GuiGraphics g, int y) {
-        g.fill(contentLeft(), y, contentRight(), y + 1, ZenkaiPalette.SEPARATOR);
+        g.fill(contentLeft(), y, contentRight(), y + 1, dividerColor());
     }
 
     @Override

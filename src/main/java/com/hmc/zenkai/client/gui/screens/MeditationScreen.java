@@ -336,7 +336,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         selectedSong = null; // Free Practice, la selección por defecto al entrar
 
         overviewDescLines = this.font.split(
-                Component.translatable("screen.zenkai.meditation.overview"), (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
+                Component.translatable("screen.zenkai.meditation.overview.short"), (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
         descY = 26;
         songRowY = descY + overviewDescLines.size() * 10 + 8;
         stepperY = songRowY + SONG_ROW_H + 10;
@@ -400,14 +400,16 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         }
 
         BackIconButton backBtn = new BackIconButton(
-                panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::onClose);
+                CommonPanel.iconLeft(panelLeft), CommonPanel.iconBottom(panelTop, panelH), CommonPanel.ICON, this::onClose);
         backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
         addRenderableWidget(backBtn);
 
         PlayIconButton startBtn = new PlayIconButton(
-                panelLeft + IN_X2 - 24, y + (PanelButton.H - 24) / 2, 20, this::beginSelected);
+                CommonPanel.iconRight(panelLeft), CommonPanel.iconBottom(panelTop, panelH), CommonPanel.ICON, this::beginSelected);
         startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
         addRenderableWidget(startBtn);
+        addRenderableWidget(com.hmc.zenkai.client.gui.buttons.HelpIconButton.hint(
+                CommonPanel.iconRight(panelLeft), CommonPanel.iconTop(panelTop), CommonPanel.ICON, Component.translatable("screen.zenkai.meditation.overview")));
 
         if (selectedSong == null) {
             int cx = panelLeft + panelW / 2;
@@ -504,7 +506,7 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         this.clearWidgets();
         int y = panelTop + panelH - 12 - PanelButton.H;
         BackIconButton backBtn = new BackIconButton(
-                panelLeft + IN_X1, y + (PanelButton.H - 20) / 2, 20, this::buildOverviewWidgets);
+                CommonPanel.iconLeft(panelLeft), CommonPanel.iconBottom(panelTop, panelH), CommonPanel.ICON, this::buildOverviewWidgets);
         backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
         addRenderableWidget(backBtn);
     }

@@ -3,7 +3,8 @@ package com.hmc.zenkai.client.gui.screens.wishes;
 import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
-import com.hmc.zenkai.client.gui.screens.ZenkaiPanelScreen;
+import com.hmc.zenkai.client.gui.screens.ShenronPanelScreen;
+import com.hmc.zenkai.client.gui.screens.WishIcons;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.wishes.WishRevivePetPayload;
 import net.minecraft.client.Minecraft;
@@ -28,7 +29,7 @@ import java.util.List;
  * El marco del retrato es lo que le faltaba visualmente: la entidad se dibujaba flotando sobre
  * el beige, y con la marca de agua 悟 detrás no se leía como un objeto seleccionable.
  */
-public class RevivePetWishScreen extends ZenkaiPanelScreen {
+public class RevivePetWishScreen extends ShenronPanelScreen {
 
     private static final int FRAME_W = 96, FRAME_H = 96;
 
@@ -42,7 +43,6 @@ public class RevivePetWishScreen extends ZenkaiPanelScreen {
         super(Component.translatable("screen.zenkai.wish.revive_pet"), parent);
     }
 
-    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
 
     @Override
     protected void initContent() {
@@ -102,7 +102,7 @@ public class RevivePetWishScreen extends ZenkaiPanelScreen {
     protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         if (pets.isEmpty()) {
             drawCenteredOnPanel(g, Component.translatable("screen.zenkai.wish.no_pets"),
-                    panelTop + CONTENT_TOP + 60, ZenkaiPalette.MUTED_ON_PANEL);
+                    panelTop + CONTENT_TOP + 60, ZenkaiPalette.SHENRON_MUTED);
             return;
         }
 
@@ -113,15 +113,15 @@ public class RevivePetWishScreen extends ZenkaiPanelScreen {
 
         // Nombre + posición en la lista.
         Component name = pet.hasCustomName() ? pet.getCustomName() : pet.getType().getDescription();
-        drawCenteredOnPanel(g, name, panelTop + CONTENT_TOP + 8, ZenkaiPalette.LABEL_ON_PANEL);
+        drawCenteredOnPanel(g, name, panelTop + CONTENT_TOP + 8, ZenkaiPalette.SHENRON_TEXT);
         if (pets.size() > 1) {
             drawCenteredOnPanel(g,
                     Component.translatable("screen.zenkai.wish.pet_index", index + 1, pets.size()),
-                    fy + FRAME_H + 6, ZenkaiPalette.MUTED_ON_PANEL);
+                    fy + FRAME_H + 6, ZenkaiPalette.SHENRON_MUTED);
         }
 
         // Marco del retrato.
-        g.fill(fx, fy, fx + FRAME_W, fy + FRAME_H, ZenkaiPalette.BEIGE_DEEP);
+        g.fill(fx, fy, fx + FRAME_W, fy + FRAME_H, ZenkaiPalette.SHENRON_BG);
         NineSlice.plateBorder(g, fx - 2, fy - 2, FRAME_W + 4, FRAME_H + 4);
 
         // El recorte impide que una mascota grande (un caballo) se salga del marco.

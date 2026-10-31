@@ -1,0 +1,8 @@
+{
+  "max_level": 1,
+  "tp_cost": 120,
+  "mind_req": [2],
+  "purchasable": true,
+  "masters": [],
+  "values": {}
+}

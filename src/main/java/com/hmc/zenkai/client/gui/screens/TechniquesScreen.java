@@ -255,7 +255,12 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     private int rightEdge()  { return panelLeft + BG_W - 18; }
     /** Esquina del "+" de nueva técnica: centrado y pegado al último píxel de beige. */
     private int xPlus()      { return panelLeft + (BG_W - PLUS) / 2; }
-    private int yPlus()      { return panelTop + PANEL_BEIGE_BOTTOM - PLUS; }
+    /** Con la lista de ki vacía el "+" sube bajo el mensaje, que es donde se mira; con técnicas vuelve al pie. */
+    private int yPlus() {
+        return category == Category.KI && rows.isEmpty()
+                ? listTop() + viewHeight() / 2 + 10
+                : panelTop + PANEL_BEIGE_BOTTOM - PLUS;
+    }
     /** X de la barra de scroll: pegada al borde del contenido, sobre el beige. */
     private int scrollbarX() { return rightEdge() + 1; }
     private int listTop()    { return panelTop + LIST_Y_OFF; }
@@ -492,7 +497,8 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     }
 
     /** Y de la regla bajo el selector (la lista empieza 2 px más abajo). */
-    private int sepY() { return panelTop + CAT_Y_OFF + CAT_H + 4; }
+    // +2 de aire sobre el chip de orden: pegado al selector de categoría se leía como un solapamiento (2026-10-29).
+    private int sepY() { return panelTop + CAT_Y_OFF + CAT_H + 6; }
 
     private Component sortChipText() {
         return Component.translatable("screen.zenkai.techniques.sort.chip", Component.translatable(sort().fullKey));
@@ -1073,7 +1079,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                         case MASTERY -> "screen.zenkai.mastery.empty";
                     }),
                     panelLeft + BG_W / 2, listTop() + viewHeight() / 2 - 4,
-                    ZenkaiPalette.MUTED_ON_PANEL);
+                    ZenkaiPalette.BODY_ON_PANEL); // MUTED era casi invisible sobre el beige
             return null;
         }
 

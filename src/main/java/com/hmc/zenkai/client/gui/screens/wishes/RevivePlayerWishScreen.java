@@ -1,7 +1,8 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
-import com.hmc.zenkai.client.gui.screens.ZenkaiPanelScreen;
+import com.hmc.zenkai.client.gui.screens.ShenronPanelScreen;
+import com.hmc.zenkai.client.gui.screens.WishIcons;
 import com.hmc.zenkai.feature.wishes.WishRevivePlayerPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,7 +24,7 @@ import java.util.Locale;
  *      serlo. Se filtra por prefijo y se rellena al pulsar.
  *   3. Enter confirma, que es lo que hace cualquiera tras escribir un nombre.
  */
-public class RevivePlayerWishScreen extends ZenkaiPanelScreen {
+public class RevivePlayerWishScreen extends ShenronPanelScreen {
 
     private static final int BOX_W = 180, BOX_H = 20;
     private static final int MAX_SUGGESTIONS = 5;
@@ -34,7 +35,6 @@ public class RevivePlayerWishScreen extends ZenkaiPanelScreen {
         super(Component.translatable("screen.zenkai.wish.revive_player"), parent);
     }
 
-    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
 
     @Override
     protected void initContent() {
@@ -74,14 +74,14 @@ public class RevivePlayerWishScreen extends ZenkaiPanelScreen {
     @Override
     protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         drawWrappedOnPanel(g, Component.translatable("screen.zenkai.wish.revive_player.desc"),
-                panelTop + CONTENT_TOP + 12, ZenkaiPalette.LABEL_ON_PANEL);
+                panelTop + CONTENT_TOP + 12, ZenkaiPalette.SHENRON_TEXT);
 
         List<String> matches = suggestions();
         if (matches.isEmpty()) return;
 
         int y = nameBox.getY() + BOX_H + 8;
         drawCenteredOnPanel(g, Component.translatable("screen.zenkai.wish.revive_player.online"),
-                y, ZenkaiPalette.MUTED_ON_PANEL);
+                y, ZenkaiPalette.SHENRON_MUTED);
         y += this.font.lineHeight + 3;
 
         for (String name : matches) {
@@ -90,7 +90,7 @@ public class RevivePlayerWishScreen extends ZenkaiPanelScreen {
             boolean hovered = mouseX >= x && mouseX < x + w
                     && mouseY >= y && mouseY < y + this.font.lineHeight;
             g.drawString(this.font, name, x, y,
-                    hovered ? ZenkaiPalette.TEXT_HOVER : ZenkaiPalette.BODY_ON_PANEL, false);
+                    hovered ? ZenkaiPalette.TEXT_HOVER : ZenkaiPalette.SHENRON_TEXT, false);
             y += this.font.lineHeight + 2;
         }
     }

@@ -2,7 +2,8 @@ package com.hmc.zenkai.client.gui.screens.wishes;
 
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
-import com.hmc.zenkai.client.gui.screens.ZenkaiPanelScreen;
+import com.hmc.zenkai.client.gui.screens.ShenronPanelScreen;
+import com.hmc.zenkai.client.gui.screens.WishIcons;
 import com.hmc.zenkai.feature.wishes.ConfirmVillagerWishPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,7 +30,7 @@ import java.util.Locale;
  * "minecraft:sharpness", y con el orden por id los encantamientos del mismo mod salían juntos
  * pero alfabéticamente desordenados en pantalla.
  */
-public class EnchantVillagerWishScreen extends ZenkaiPanelScreen {
+public class EnchantVillagerWishScreen extends ShenronPanelScreen {
 
     private static final int BOX_W = 150, BOX_H = 18;
 
@@ -44,7 +45,6 @@ public class EnchantVillagerWishScreen extends ZenkaiPanelScreen {
         super(Component.translatable("screen.zenkai.wish.enchant_villager"), parent);
     }
 
-    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
 
     @Override
     protected void initContent() {
@@ -105,25 +105,25 @@ public class EnchantVillagerWishScreen extends ZenkaiPanelScreen {
 
         if (!any) {
             drawCenteredOnPanel(g, Component.translatable("screen.zenkai.no_enchantments"),
-                    y, ZenkaiPalette.MUTED_ON_PANEL);
+                    y, ZenkaiPalette.SHENRON_MUTED);
             return;
         }
 
         Holder.Reference<Enchantment> h = filtered.get(index);
 
-        drawCenteredOnPanel(g, h.value().description(), y, ZenkaiPalette.LABEL_ON_PANEL);
+        drawCenteredOnPanel(g, h.value().description(), y, ZenkaiPalette.SHENRON_TEXT);
         y += this.font.lineHeight + 6;
         drawCenteredOnPanel(g, Component.translatable("screen.zenkai.enchant.max_level",
-                h.value().getMaxLevel()), y, ZenkaiPalette.BODY_ON_PANEL);
+                h.value().getMaxLevel()), y, ZenkaiPalette.SHENRON_TEXT);
         y += this.font.lineHeight + 4;
 
         // El id completo, atenuado. Con varios mods hay nombres traducidos idénticos y esto es
         // lo único que distingue "Fortuna" de un mod de la de otro.
         drawCenteredOnPanel(g, Component.literal(h.key().location().toString()),
-                y, ZenkaiPalette.MUTED_ON_PANEL);
+                y, ZenkaiPalette.SHENRON_MUTED);
 
         drawCenteredOnPanel(g,
                 Component.translatable("screen.zenkai.enchant.index", index + 1, filtered.size()),
-                contentBottom() - this.font.lineHeight - 4, ZenkaiPalette.MUTED_ON_PANEL);
+                contentBottom() - this.font.lineHeight - 4, ZenkaiPalette.SHENRON_MUTED);
     }
 }

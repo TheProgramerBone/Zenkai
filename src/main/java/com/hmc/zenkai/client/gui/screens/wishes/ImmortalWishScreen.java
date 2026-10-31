@@ -1,7 +1,8 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
-import com.hmc.zenkai.client.gui.screens.ZenkaiPanelScreen;
+import com.hmc.zenkai.client.gui.screens.ShenronPanelScreen;
+import com.hmc.zenkai.client.gui.screens.WishIcons;
 import com.hmc.zenkai.feature.wishes.WishImmortalPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,13 +18,14 @@ import net.minecraft.network.chat.Component;
  * separados — lo que concede y lo que NO — porque un deseo irreversible que el jugador
  * malinterpreta es peor que uno que no entiende.
  */
-public class ImmortalWishScreen extends ZenkaiPanelScreen {
+public class ImmortalWishScreen extends ShenronPanelScreen {
 
     public ImmortalWishScreen(Screen parent) {
         super(Component.translatable("screen.zenkai.wish.immortal"), parent);
     }
 
-    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
+
+    @Override protected net.minecraft.world.item.ItemStack wishIcon() { return WishIcons.immortal(); }
 
     @Override
     protected void initContent() { /* solo el pie de página estándar */ }
@@ -37,10 +39,10 @@ public class ImmortalWishScreen extends ZenkaiPanelScreen {
 
     @Override
     protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        int y = panelTop + CONTENT_TOP + 24;
+        int y = drawWishHeader(g, panelTop + CONTENT_TOP + 2);
 
         y = drawWrappedOnPanel(g, Component.translatable("screen.zenkai.wish.immortal.desc"),
-                y, ZenkaiPalette.LABEL_ON_PANEL);
+                y, ZenkaiPalette.SHENRON_TEXT);
 
         y += 10;
         drawDivider(g, y);
@@ -49,6 +51,6 @@ public class ImmortalWishScreen extends ZenkaiPanelScreen {
         // El límite del deseo, aparte y en rojo. Es la parte que el jugador recordará mal si se
         // le cuenta en la misma frase que el beneficio.
         drawWrappedOnPanel(g, Component.translatable("screen.zenkai.wish.immortal.warning"),
-                y, ZenkaiPalette.DENIED);
+                y, ZenkaiPalette.SHENRON_WARN);
     }
 }

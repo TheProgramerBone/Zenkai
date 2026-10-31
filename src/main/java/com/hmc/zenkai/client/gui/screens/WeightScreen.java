@@ -6,7 +6,8 @@ import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
-import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
+import com.hmc.zenkai.client.gui.buttons.AcceptIconButton;
+import com.hmc.zenkai.client.gui.buttons.BackIconButton;
 import com.hmc.zenkai.content.item.WeightArmorItem;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.weights.SetWeightPacket;
@@ -15,6 +16,7 @@ import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -29,8 +31,9 @@ import java.util.Locale;
  *   renderBackground() -> dim + blit del panel.
  *   render() -> super.render() PRIMERO (fondo + widgets) y el texto DESPUÉS.
  * Al revés, los widgets se pintan encima del texto y el título sale lavado por el dim.
- * Los botones de acción van FUERA del panel (Y_BUTTONS = BG_H + 4), como el resto de
- * pantallas: dentro chocarían con el bloque de previsualización.
+ * Atrás/Aceptar son iconos de esquina DENTRO del panel (CommonPanel.iconLeft/iconRight), como en Training. La carga se ve en una barra con tres zonas
+ * (cómodo / exigente / sobrecarga) en vez de un porcentaje suelto, y las cuatro cifras
+ * derivadas en una rejilla de dos columnas.
  * Pantalla de cliente pura + un packet al aceptar: no hay inventario que sincronizar, así
  * que un AbstractContainerMenu sería el doble de código para lo mismo.
  * Ninguna cifra se calcula aquí: cada una sale de WeightSystem, el mismo sitio que las aplica
@@ -41,25 +44,26 @@ public class WeightScreen extends Screen {
 
     private static final ResourceLocation BG =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/screens/common_screen.png");
-    private static final ResourceLocation TEX_BTN =
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/buttons/btn_wide.png");
 
     private static final int BG_W = CommonPanel.IDEAL;
     private static final int BG_H = CommonPanel.IDEAL;
     private static final int MARGIN = 16;
     private static final int Y_LABEL  = ScreenTitle.CONTENT_TOP;
     private static final int Y_FIELD  = Y_LABEL + 14;
-    private static final int Y_INFO   = Y_FIELD + 36;
+    private static final int Y_BAR    = Y_FIELD + 34;
+    private static final int BAR_H    = 10;
+    private static final int Y_LOAD   = Y_BAR + BAR_H + 5;
+    private static final int Y_INFO   = Y_LOAD + 24;
     private static final int LINE_H   = 13;
-    private static final int Y_WARN   = Y_INFO + LINE_H * 6 + 6;
+    private static final int Y_PL     = Y_INFO + LINE_H * 2 + 12;
+    private static final int Y_WARN   = Y_PL + LINE_H + 4;
+    /** Fracción del umbral de sobrecarga hasta la que la carga se considera cómoda (zona verde de la barra). */
+    private static final double COMFORT = 0.6;
 
     private static final int FIELD_W  = 90;
     private static final int FIELD_H  = 16;
     private static final int ARROW    = 12;
 
-    private static final int BTN_W = CommonPanel.FOOTER_BTN_W;
-    private static final int BTN_H = 25;
-    private static final int Y_BUTTONS = BG_H + 4; // FUERA del panel
 
     private final Minecraft mc = Minecraft.getInstance();
     private final InteractionHand hand;
@@ -102,15 +106,15 @@ public class WeightScreen extends Screen {
                 topPos + Y_FIELD + 2, ArrowIconButton.Dir.RIGHT,
                 () -> nudge(WeightArmorItem.STEP_TONS)));
 
-        addRenderableWidget(new TextOnlyButton(
-                leftPos + MARGIN, topPos + Y_BUTTONS, BTN_W, BTN_H,
-                Component.translatable("screen.zenkai.gui.back"),
-                TEX_BTN, null, this::onClose));
-
-        addRenderableWidget(new TextOnlyButton(
-                leftPos + BG_W - MARGIN - BTN_W, topPos + Y_BUTTONS, BTN_W, BTN_H,
-                Component.translatable("screen.zenkai.gui.confirm"),
-                TEX_BTN, null, this::confirm));
+        // Iconos de esquina (mismo sitio que en Training): Atrás abajo-izquierda, Aceptar abajo-derecha.
+        BackIconButton back = new BackIconButton(CommonPanel.iconLeft(leftPos),
+                CommonPanel.iconBottom(topPos, BG_H), CommonPanel.ICON, this::onClose);
+        back.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.gui.back")));
+        addRenderableWidget(back);
+        AcceptIconButton accept = new AcceptIconButton(CommonPanel.iconRight(leftPos),
+                CommonPanel.iconBottom(topPos, BG_H), CommonPanel.ICON, this::confirm);
+        accept.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.gui.confirm")));
+        addRenderableWidget(accept);
     }
 
     private void onTyped(String raw) {
@@ -156,36 +160,57 @@ public class WeightScreen extends Screen {
         double r = cap <= 0 ? 0 : tons / cap;
         boolean over = WeightSystem.isOverloaded(r);
 
-        int x = leftPos + MARGIN + 8;
-        int y = topPos + Y_INFO;
+        drawLoadBar(g, r);
+        PanelText.centeredOnPanel(g, this.font,
+                Component.translatable("screen.zenkai.weight.load", fmt(tons), fmt(cap), (int) Math.round(r * 100)),
+                cx, topPos + Y_LOAD, over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL);
 
-        line(g, x, y, "screen.zenkai.weight.load",
-                over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL,
-                fmt(tons), fmt(cap), (int) Math.round(r * 100));
+        // Rejilla 2x2 de lo que cambia al llevar esta carga.
+        int xl = leftPos + CommonPanel.IN_X1 + 14, xr = cx + 6, y = topPos + Y_INFO;
+        line(g, xl, y, "screen.zenkai.weight.speed", ZenkaiPalette.BODY_ON_PANEL, pct(WeightSystem.moveFactor(r)));
+        line(g, xr, y, "screen.zenkai.weight.jump", ZenkaiPalette.BODY_ON_PANEL, pct(WeightSystem.jumpFactor(r)));
         y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.speed", ZenkaiPalette.BODY_ON_PANEL,
-                pct(WeightSystem.moveFactor(r)));
-        y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.jump", ZenkaiPalette.BODY_ON_PANEL,
-                pct(WeightSystem.jumpFactor(r)));
-        y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.stats", ZenkaiPalette.BODY_ON_PANEL,
-                pct(WeightSystem.statFactor(r)));
-        y += LINE_H;
+        line(g, xl, y, "screen.zenkai.weight.stats", ZenkaiPalette.BODY_ON_PANEL, pct(WeightSystem.statFactor(r)));
         // El bono de TP es la recompensa de llevar lastre: verde cuando cuenta, rojo cuando te
         // has pasado y deja de contar.
-        line(g, x, y, "screen.zenkai.weight.tp",
-                over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.OK_ON_PANEL,
-                fmt(WeightSystem.tpFactor(r)));
-        y += LINE_H;
-        line(g, x, y, "screen.zenkai.weight.pl_needed", ZenkaiPalette.MUTED_ON_PANEL,
-                ZenkaiNumbers.format(WeightSystem.plForTons(tons)));
+        line(g, xr, y, "screen.zenkai.weight.tp",
+                over ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.OK_ON_PANEL, fmt(WeightSystem.tpFactor(r)));
+
+        PanelText.centeredOnPanel(g, this.font, Component.translatable("screen.zenkai.weight.pl_needed",
+                ZenkaiNumbers.format(WeightSystem.plForTons(tons))), cx, topPos + Y_PL, ZenkaiPalette.MUTED_ON_PANEL);
 
         if (over) {
             PanelText.centeredOnPanel(g, this.font,
                     Component.translatable("screen.zenkai.weight.overloaded"),
                     cx, topPos + Y_WARN, ZenkaiPalette.DENIED_ON_PANEL);
         }
+    }
+
+    /**
+     * Barra de carga con tres zonas: cómodo (verde), exigente (ámbar) y sobrecarga (rojo). El dominio llega a un 25 %
+     * más allá del umbral de sobrecarga, o a la carga actual si lo pasa. Las zonas se pintan apagadas y lo relleno
+     * hasta la carga actual, con un marcador, en el color pleno. Los colores son los de texto sobre beige.
+     */
+    private void drawLoadBar(GuiGraphics g, double r) {
+        double thr = com.hmc.zenkai.config.ServerConfig.weightOverloadThreshold();
+        double domain = Math.max(thr * 1.25, r);
+        int x0 = leftPos + CommonPanel.IN_X1 + 14, x1 = leftPos + CommonPanel.IN_X2 - 14;
+        int y0 = topPos + Y_BAR, y1 = y0 + BAR_H, w = x1 - x0;
+        int comfortX = x0 + (int) Math.round(w * (thr * COMFORT) / domain);
+        int overX = x0 + (int) Math.round(w * thr / domain);
+        int[] edges = {x0, comfortX, overX, x1};
+        int[] full = {ZenkaiPalette.OK_ON_PANEL, ZenkaiPalette.VALUE_ON_PANEL, ZenkaiPalette.DENIED_ON_PANEL};
+        int fillX = x0 + (int) Math.round(w * Math.min(r, domain) / domain);
+        g.fill(x0 - 1, y0 - 1, x1 + 1, y1 + 1, ZenkaiPalette.BAR_FRAME);
+        g.fill(x0, y0, x1, y1, ZenkaiPalette.BAR_BG); // fondo beige: las zonas apagadas llevan alfa y sobre el marco se teñían de rojo
+        for (int z = 0; z < 3; z++) {
+            g.fill(edges[z], y0, edges[z + 1], y1, ZenkaiPalette.withAlpha(full[z], 0x55));
+            // Solo si la carga llega a esta zona: GuiGraphics.fill INVIERTE el rectángulo si el ancho es negativo,
+            // y las zonas por delante de la carga se pintaban hacia atrás (visto en capturas, 2026-10-29).
+            if (fillX > edges[z]) g.fill(edges[z], y0, Math.min(edges[z + 1], fillX), y1, full[z]);
+        }
+        int mx = Math.min(fillX, x1 - 1);
+        g.fill(mx, y0 - 3, mx + 1, y1 + 3, ZenkaiPalette.LABEL_ON_PANEL);
     }
 
     /** Fila de la ficha. Va SIN sombra: esto se dibuja sobre el beige del panel. */

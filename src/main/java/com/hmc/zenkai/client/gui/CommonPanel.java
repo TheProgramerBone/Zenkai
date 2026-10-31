@@ -44,6 +44,18 @@ public final class CommonPanel {
      *  declaraba su propia copia (IN_X1/IN_X2 en nueve). */
     public static final int IN_X1 = 12;
     public static final int IN_X2 = 243;
+    /** Beige real en el eje Y (13..242): el marco ocupa 0..12 y 243..255. */
+    public static final int IN_Y1 = 13;
+    public static final int IN_Y2 = 242;
+    /** Iconos de esquina (Atrás abajo-izquierda, Aceptar/Start abajo-derecha, Ayuda arriba-derecha): MISMO tamaño y
+     *  MISMA separación del borde del beige en las cuatro esquinas, para que queden alineados entre sí. */
+    public static final int ICON = 18;
+    public static final int ICON_INSET = 5;
+
+    public static int iconLeft(int panelLeft)            { return panelLeft + IN_X1 + ICON_INSET; }
+    public static int iconRight(int panelLeft)           { return panelLeft + IN_X2 + 1 - ICON_INSET - ICON; }
+    public static int iconTop(int panelTop)              { return panelTop + IN_Y1 + ICON_INSET; }
+    public static int iconBottom(int panelTop, int panelH) { return panelTop + IN_Y2 + 1 - ICON_INSET - ICON - (IDEAL - panelH); }
     /** Ancho de los botones de pie de pantalla (Back/Next/Confirm) de las pantallas de creación, el editor y Weight. */
     public static final int FOOTER_BTN_W = 60;
 

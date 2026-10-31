@@ -114,15 +114,25 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
                 this.leftPos + PANEL_W / 2, this.topPos, ZenkaiPalette.SHENLONG);
 
         // Pista sobre el slot fantasma: sin ella nadie adivina que hay que soltar un objeto ahí.
-        if (this.menu.getChosenItem().isEmpty()) {
-            Component hint = Component.translatable("screen.zenkai.wish.stack.hint");
-            g.drawString(this.font, hint,
-                    this.leftPos + PANEL_W / 2 - this.font.width(hint) / 2,
-                    this.topPos + 8, ZenkaiPalette.LABEL_ON_PANEL, false);
-        }
+        ItemStack chosen = this.menu.getChosenItem();
+        ItemStack resolved = chosen.isEmpty() ? ItemStack.EMPTY : ServerConfig.resolveWishStack(chosen);
+        // Vacío: pista de qué hacer. Con objeto: cuánto se va a recibir (misma resolución que el servidor, ver
+        // StackWishPayload); si está prohibido, resolved queda vacío y se sigue viendo la pista.
+        Component hint = resolved.isEmpty()
+                ? Component.translatable("screen.zenkai.wish.stack.hint")
+                : Component.translatable("screen.zenkai.wish.stack.receive", resolved.getCount(), resolved.getHoverName());
+        // Un nombre largo no debe salirse del cuadro: se recorta con puntos suspensivos.
+        int maxW = PANEL_W - 16;
+        var shown = this.font.width(hint) <= maxW ? hint.getVisualOrderText()
+                : net.minecraft.util.FormattedCharSequence.composite(
+                        this.font.split(this.font.substrByWidth(hint, maxW - this.font.width("...")), maxW).get(0),
+                        Component.literal("...").getVisualOrderText());
+        g.drawString(this.font, shown,
+                this.leftPos + PANEL_W / 2 - this.font.width(shown) / 2,
+                this.topPos + 8, ZenkaiPalette.SHENRON_TEXT, true); // fondo oscuro: con sombra (ver tools/gen_stack_wish_screen.py)
 
         if (this.confirmButton != null) {
-            this.confirmButton.active = !this.menu.getChosenItem().isEmpty();
+            this.confirmButton.active = !resolved.isEmpty();
         }
 
         this.renderTooltip(g, mouseX, mouseY);

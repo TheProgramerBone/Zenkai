@@ -1,7 +1,8 @@
 package com.hmc.zenkai.client.gui.screens.wishes;
 
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
-import com.hmc.zenkai.client.gui.screens.ZenkaiPanelScreen;
+import com.hmc.zenkai.client.gui.screens.ShenronPanelScreen;
+import com.hmc.zenkai.client.gui.screens.WishIcons;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.wishes.WishTrainingPointsPayload;
 import net.minecraft.client.Minecraft;
@@ -20,13 +21,14 @@ import net.minecraft.network.chat.Component;
  * hace). Poner un valor de config en pantalla sin sincronizarlo mentiría en cualquier servidor
  * que lo hubiera cambiado.
  */
-public class TrainingPointsWishScreen extends ZenkaiPanelScreen {
+public class TrainingPointsWishScreen extends ShenronPanelScreen {
 
     public TrainingPointsWishScreen(Screen parent) {
         super(Component.translatable("screen.zenkai.wish.training_points"), parent);
     }
 
-    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
+
+    @Override protected net.minecraft.world.item.ItemStack wishIcon() { return WishIcons.trainingPoints(); }
 
     @Override
     protected void initContent() { /* solo el pie de página estándar */ }
@@ -40,10 +42,10 @@ public class TrainingPointsWishScreen extends ZenkaiPanelScreen {
 
     @Override
     protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        int y = panelTop + CONTENT_TOP + 24;
+        int y = drawWishHeader(g, panelTop + CONTENT_TOP + 2);
 
         y = drawWrappedOnPanel(g, Component.translatable("screen.zenkai.wish.training_points.desc"),
-                y, ZenkaiPalette.LABEL_ON_PANEL);
+                y, ZenkaiPalette.SHENRON_TEXT);
 
         y += 12;
         drawDivider(g, y);
@@ -53,7 +55,7 @@ public class TrainingPointsWishScreen extends ZenkaiPanelScreen {
             PlayerStatsAttachment st = PlayerStatsAttachment.get(mc.player);
             drawCenteredOnPanel(g,
                     Component.translatable("screen.zenkai.wish.training_points.current", st.getTP()),
-                    y, ZenkaiPalette.BODY_ON_PANEL);
+                    y, ZenkaiPalette.SHENRON_TEXT);
         }
     }
 }

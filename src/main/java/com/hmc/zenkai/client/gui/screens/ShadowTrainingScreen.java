@@ -91,7 +91,7 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
 
     @Override
     protected void initContent() {
-        Component desc = Component.translatable("screen.zenkai.training_hub.row.shadow.tooltip");
+        Component desc = Component.translatable("screen.zenkai.training_hub.row.shadow.short");
         descLines = this.font.split(desc, (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
         descY = CONTENT_TOP + 20;
         stepperY = descY + descLines.size() * 10 + 14;
@@ -121,16 +121,19 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
         // tooltip (pedido explícito del usuario: "que se entienda que son start y back" sin
         // tener que adivinarlo por el icono solo).
         BackIconButton backBtn = new BackIconButton(
-                panelLeft + IN_X1, panelTop + startY + (PanelButton.H - 20) / 2, 20,
+                CommonPanel.iconLeft(panelLeft), CommonPanel.iconBottom(panelTop, BG_H), CommonPanel.ICON,
                 () -> mc.setScreen(new TrainingHubScreen()));
         backBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.back")));
         addRenderableWidget(backBtn);
 
         PlayIconButton startBtn = new PlayIconButton(
-                panelLeft + IN_X2 - 24, panelTop + startY + (PanelButton.H - 24) / 2, 20,
+                CommonPanel.iconRight(panelLeft), CommonPanel.iconBottom(panelTop, BG_H), CommonPanel.ICON,
                 this::onStart);
         startBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.training_hub.shadow.start")));
         addRenderableWidget(startBtn);
+        // Descripción corta a la vista; las reglas completas, en el «?» (antes eran 8 líneas de texto fijo).
+        addRenderableWidget(com.hmc.zenkai.client.gui.buttons.HelpIconButton.hint(
+                CommonPanel.iconRight(panelLeft), CommonPanel.iconTop(panelTop), CommonPanel.ICON, Component.translatable("screen.zenkai.training_hub.row.shadow.tooltip")));
 
         record = null;
         requestPotential();

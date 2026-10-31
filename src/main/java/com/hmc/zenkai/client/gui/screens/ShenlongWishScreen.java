@@ -37,14 +37,14 @@ import java.util.List;
  * los códigos de formato en el lang sobrevivían al toUpperCase de ScreenTitle y hacían que el
  * color del título dependiera de la traducción.
  */
-public class ShenlongWishScreen extends ZenkaiPanelScreen {
+public class ShenlongWishScreen extends ShenronPanelScreen {
 
     private static final int ROW_H = 22;
     private static final int ROW_GAP = 4;
     private static final int LIST_TOP = CONTENT_TOP + 24;
 
     /** Una entrada del menú. El registro existe para poder pintar la fila y el botón juntos. */
-    private record WishRow(TextOnlyButton button, Component label) {}
+    private record WishRow(TextOnlyButton button, Component label, net.minecraft.world.item.ItemStack icon) {}
 
     private final List<WishRow> rows = new ArrayList<>();
     private TextOnlyButton stackWishButton;
@@ -54,7 +54,6 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
     }
 
     @Override protected boolean hasFooter() { return false; }
-    @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
 
     @Override
     protected void initContent() {
@@ -67,24 +66,24 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
 
         // Solo se crean los deseos habilitados; el cursor avanza sin dejar huecos.
         if (ClientWishToggles.isEnabled(WishType.STACK)) {
-            stackWishButton = addWish(x, y, w, "screen.zenkai.option.stack", () -> {
+            stackWishButton = addWish(x, y, w, "screen.zenkai.option.stack", WishIcons.stack(), () -> {
                 var conn = Minecraft.getInstance().getConnection();
                 if (conn != null) conn.send(new OpenStackWishPayload());
             });
             y += ROW_H + ROW_GAP;
         }
         if (ClientWishToggles.isEnabled(WishType.REVIVE_PLAYER)) {
-            addWish(x, y, w, "screen.zenkai.wish.revive_player",
+            addWish(x, y, w, "screen.zenkai.wish.revive_player", WishIcons.revivePlayer(),
                     () -> mc.setScreen(new RevivePlayerWishScreen(this)));
             y += ROW_H + ROW_GAP;
         }
         if (ClientWishToggles.isEnabled(WishType.ENCHANT_VILLAGER)) {
-            addWish(x, y, w, "screen.zenkai.wish.enchant_villager",
+            addWish(x, y, w, "screen.zenkai.wish.enchant_villager", WishIcons.enchantVillager(),
                     () -> mc.setScreen(new EnchantVillagerWishScreen(this)));
             y += ROW_H + ROW_GAP;
         }
         if (ClientWishToggles.isEnabled(WishType.IMMORTAL)) {
-            addWish(x, y, w, "screen.zenkai.wish.immortal",
+            addWish(x, y, w, "screen.zenkai.wish.immortal", WishIcons.immortal(),
                     () -> mc.setScreen(new ImmortalWishScreen(this)));
             y += ROW_H + ROW_GAP;
         }
@@ -96,26 +95,28 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
             boolean majinBlocks = com.hmc.zenkai.config.ServerConfig.majinLegendaryExclusive()
                     && mc.player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_VISUAL.get()).isMajinControlled();
             if (canAsk && !stats.isLegendary() && !majinBlocks) {
-                addWish(x, y, w, "screen.zenkai.wish.legendary",
+                addWish(x, y, w, "screen.zenkai.wish.legendary", WishIcons.legendary(),
                         () -> mc.setScreen(new com.hmc.zenkai.client.gui.screens.wishes.LegendaryWishScreen(this)));
                 y += ROW_H + ROW_GAP;
             }
         }
         if (ClientWishToggles.isEnabled(WishType.TRAINING_POINTS)) {
-            addWish(x, y, w, "screen.zenkai.wish.training_points",
+            addWish(x, y, w, "screen.zenkai.wish.training_points", WishIcons.trainingPoints(),
                     () -> mc.setScreen(new TrainingPointsWishScreen(this)));
             y += ROW_H + ROW_GAP;
         }
         // Revivir mascota no tiene toggle de configuración: siempre disponible.
-        addWish(x, y, w, "screen.zenkai.wish.revive_pet",
+        addWish(x, y, w, "screen.zenkai.wish.revive_pet", WishIcons.revivePet(),
                 () -> mc.setScreen(new RevivePetWishScreen(this)));
     }
 
-    private TextOnlyButton addWish(int x, int y, int w, String langKey, Runnable onClick) {
+    private TextOnlyButton addWish(int x, int y, int w, String langKey, net.minecraft.world.item.ItemStack icon,
+                                   Runnable onClick) {
         Component label = Component.translatable(langKey);
-        TextOnlyButton b = addRenderableWidget(new TextOnlyButton(x, y, w, ROW_H, label, onClick)
-                .onPanel());
-        rows.add(new WishRow(b, label));
+        // El botón no pinta nada: la fila entera (icono, texto, fondo) la dibuja renderContent, alineada a la izquierda.
+        TextOnlyButton b = addRenderableWidget(new TextOnlyButton(x, y, w, ROW_H, Component.empty(), onClick)
+                .onDark());
+        rows.add(new WishRow(b, label, icon));
         return b;
     }
 
@@ -138,7 +139,7 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
         if (remaining >= 0) {
             drawCenteredOnPanel(g,
                     Component.translatable("screen.zenkai.shenlong_wish.remaining", remaining),
-                    panelTop + CONTENT_TOP, ZenkaiPalette.LABEL_ON_PANEL);
+                    panelTop + CONTENT_TOP, ZenkaiPalette.SHENRON_TEXT);
         }
         drawDivider(g, panelTop + CONTENT_TOP + 14);
 
@@ -150,13 +151,19 @@ public class ShenlongWishScreen extends ZenkaiPanelScreen {
                     && mouseY >= b.getY() && mouseY < b.getY() + b.getHeight();
 
             g.fill(b.getX(), b.getY(), b.getX() + b.getWidth(), b.getY() + b.getHeight(),
-                    hovered ? ZenkaiPalette.ROW_HOVER : ZenkaiPalette.INSET_BG);
+                    hovered ? ZenkaiPalette.SHENRON_ROW_HOVER : ZenkaiPalette.SHENRON_ROW);
             // Cinta izquierda: ancla la vista y da a la fila un lado "fuerte".
             g.fill(b.getX(), b.getY(), b.getX() + 2, b.getY() + b.getHeight(),
-                    hovered ? ZenkaiPalette.BORDER_OUT : ZenkaiPalette.BORDER_IN);
+                    hovered ? ZenkaiPalette.SHENRON_BORDER_OUT : ZenkaiPalette.SHENRON_BORDER_MID);
 
-            PanelText.onPanel(g, this.font, String.valueOf(i + 1), b.getX() + 6,
-                    b.getY() + (ROW_H - 8) / 2, ZenkaiPalette.MUTED_ON_PANEL);
+            // Icono del deseo (un ítem vanilla, ver WishIcons) y su nombre, alineados a la izquierda.
+            WishRow r = rows.get(i);
+            int iconY = b.getY() + (ROW_H - 16) / 2;
+            if (!b.active) g.setColor(1f, 1f, 1f, 0.45f);
+            g.renderFakeItem(r.icon(), b.getX() + 7, iconY);
+            g.setColor(1f, 1f, 1f, 1f);
+            PanelText.onDark(g, this.font, r.label(), b.getX() + 7 + 16 + 7, b.getY() + (ROW_H - 8) / 2,
+                    !b.active ? ZenkaiPalette.SHENRON_MUTED : hovered ? ZenkaiPalette.TEXT_HOVER : ZenkaiPalette.SHENRON_TEXT);
         }
     }
 
