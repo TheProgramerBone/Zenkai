@@ -1,9 +1,11 @@
 # Construir un addon sobre Zenkai
 
 > 🇬🇧 [English version below](#english)
+>
+> 💬 ¿Dudas o quieres enseñar tu addon? Únete al [Discord de Zenkai](https://discord.com/invite/mKD2RCqqsP).
 
 Este documento describe el contrato de extensibilidad de Zenkai para Minecraft 1.21.1 (NeoForge
-`21.1.233`+) desde la versión **0.3.0**. Es un contrato *soportado*: lo que aquí se describe no
+`21.1.233`+) desde la versión **0.3.0** (al día con la 0.6.0). Es un contrato *soportado*: lo que aquí se describe no
 cambia sin un bump de versión mayor. Lo que no aparece aquí (cualquier clase `public` que no sea
 uno de los puntos listados) es detalle interno y puede cambiar en cualquier versión, aunque
 compile contra ella hoy.
@@ -33,6 +35,14 @@ solos, sin que el addon toque ninguna clase de Zenkai:
 | `zenkai_hair_styles/<nombre>.json` | Un peinado nuevo (geo de cubos o textura plana), razas, variante por transformación | `HairStyleDef`/`HairCatalog` |
 | `zenkai_hair_packs/<pack>.json` | Una CARPETA de la biblioteca de pelo con sus peinados en un solo archivo: nombre, ícono, formato DMZ/DBC por peinado, razas, variantes. Ver §1b | `HairPacks`/`HairFolderDef` |
 | `zenkai_skill_tree/<archivo>.json` | Datos de un nodo del skill tree de transformaciones (`"node"`: el id de la forma o `zenkai:node/...`): requisitos extra (`pl`, `stat`, `mastery`, `alignment`, `flag`, `skill`, `node`, `any_of`), pista (`hint`), nodo secreto con `reveal`, vías de adquisición (`acquisition`: `tp`, `ritual`…; cualquier vía distinta de `tp` regala el nodo) y, para nodos con niveles propios como las pasivas de raza, `max_level`/`tp_cost`/`mind_req`/`values`. Ver §1c | `SkillTreeData`/`SkillTreeRequirement` |
+| `zenkai_ki_weapons/<id>.json` | Definición de un arma de ki | `KiWeaponDef` |
+| `zenkai_ki_projectiles/<id>.json` | Qué proyectiles aceptan Ki Infuse y cómo | ver javadoc del cargador |
+| `zenkai_aura_signatures/<tipo>.json` | Forma visual del aura por tipo (shader) | ver javadoc del cargador |
+| `zenkai_vfx_effects/<id>.json` | Efectos visuales de técnicas (p. ej. impactos físicos) | ver javadoc del cargador |
+| `zenkai_alignment/` | Umbrales y efectos de alineamiento | ver javadoc del cargador |
+| `zenkai_instant_transmission_blocklist/` | Objetivos a los que la Transmisión Instantánea no puede fijarse | ver javadoc del cargador |
+| `zenkai_scouter_upgrades/`, `zenkai_generator_fuels/` | Costes de mejora del scouter y combustibles del generador | ver javadoc del cargador |
+| `zenkai_body_options/` | Opciones de cuerpo y cabeza de la pantalla de Apariencia | ver javadoc del cargador |
 
 En todos los casos: el `id` del archivo tiene que coincidir con un valor **ya existente** del
 enum/cadena correspondiente (excepto `zenkai_forms`, `zenkai_archetypes`, `zenkai_masters`,
@@ -173,8 +183,10 @@ fusión estándar de tags) para que el Majin lo trate como energía — cero Jav
 
 # Building an addon on top of Zenkai (English)
 
+> 💬 Questions, or want to show off your addon? Join the [Zenkai Discord](https://discord.com/invite/mKD2RCqqsP).
+
 This document describes Zenkai's extensibility contract for Minecraft 1.21.1 (NeoForge
-`21.1.233`+) since version **0.3.0**. It is a *supported* contract: what is described here does
+`21.1.233`+) since version **0.3.0** (up to date with 0.6.0). It is a *supported* contract: what is described here does
 not change without a major version bump. Anything not listed here (any `public` class that is not
 one of the points below) is an internal detail and may change in any version, even if it compiles
 against it today.
@@ -204,6 +216,14 @@ them up by itself, without the addon touching any Zenkai class:
 | `zenkai_hair_styles/<name>.json` | A new hairstyle (cube geo or flat texture), races, per-transformation variant | `HairStyleDef`/`HairCatalog` |
 | `zenkai_hair_packs/<pack>.json` | A hair-library FOLDER with its hairstyles in a single file: name, icon, per-style DMZ/DBC format, races, variants. See §1b | `HairPacks`/`HairFolderDef` |
 | `zenkai_skill_tree/<file>.json` | Data for a transformation skill-tree node (`"node"`: the form id or `zenkai:node/...`): extra requirements (`pl`, `stat`, `mastery`, `alignment`, `flag`, `skill`, `node`, `any_of`), a hint, secret nodes with `reveal`, acquisition routes (`acquisition`: `tp`, `ritual`…; any route other than `tp` grants the node for free) and, for nodes with their own levels such as racial passives, `max_level`/`tp_cost`/`mind_req`/`values` | `SkillTreeData`/`SkillTreeRequirement` |
+| `zenkai_ki_weapons/<id>.json` | A ki weapon definition | `KiWeaponDef` |
+| `zenkai_ki_projectiles/<id>.json` | Which projectiles accept Ki Infuse and how | see the loader's javadoc |
+| `zenkai_aura_signatures/<type>.json` | Per-type visual aura shape (shader) | see the loader's javadoc |
+| `zenkai_vfx_effects/<id>.json` | Technique visual effects (e.g. physical impacts) | see the loader's javadoc |
+| `zenkai_alignment/` | Alignment thresholds and effects | see the loader's javadoc |
+| `zenkai_instant_transmission_blocklist/` | Targets Instant Transmission cannot lock onto | see the loader's javadoc |
+| `zenkai_scouter_upgrades/`, `zenkai_generator_fuels/` | Scouter upgrade costs and generator fuel values | see the loader's javadoc |
+| `zenkai_body_options/` | Body and head options of the Appearance screen | see the loader's javadoc |
 
 In every case the file's `id` must match an **already existing** value of the corresponding
 enum/chain (except `zenkai_forms`, `zenkai_archetypes`, `zenkai_masters`, `zenkai_face_parts`
