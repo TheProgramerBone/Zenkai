@@ -3,6 +3,7 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
+import com.hmc.zenkai.client.gui.buttons.VArrowButton;
 import com.hmc.zenkai.client.gui.screens.wishes.EnchantVillagerWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.ImmortalWishScreen;
 import com.hmc.zenkai.client.gui.screens.wishes.RevivePetWishScreen;
@@ -46,8 +47,26 @@ public class ShenlongWishScreen extends ShenronPanelScreen {
     /** Una entrada del menú. El registro existe para poder pintar la fila y el botón juntos. */
     private record WishRow(TextOnlyButton button, Component label, net.minecraft.world.item.ItemStack icon) {}
 
+    /** Alto de las flechas de desplazamiento y aire sobre ellas. */
+    private static final int ARROW_H = 12;
+    private static final int ARROW_W = 12;
+    /**
+     * Posición de las flechas respecto al centro del panel (x del borde izquierdo de cada una). Cada una queda a
+     * mitad de camino entre dos esferas del fondo (la 3ª y la 4ª, la 4ª y la 5ª): a 20,5 px del eje de las esferas,
+     * que está en x=128,5 y no en 128,0 como el panel (la esfera mide 15 px, impar; el panel 256, par).
+     */
+    private static final int ARROW_UP_X = -26;
+    private static final int ARROW_DOWN_X = 15;
+    /** Distancia del borde inferior del panel al borde superior de las flechas: su centro cae en el punto medio de las dos alturas de las esferas. */
+    private static final int ARROW_FROM_BOTTOM = 30;
+
     private final List<WishRow> rows = new ArrayList<>();
     private TextOnlyButton stackWishButton;
+    private VArrowButton upArrow;
+    private VArrowButton downArrow;
+    /** Índice de la primera fila visible. Sobrevive a un redimensionado (se acota en layoutRows). */
+    private int scroll = 0;
+    private int visibleRows = 0;
 
     public ShenlongWishScreen() {
         super(Component.translatable("screen.zenkai.shenlong_wish"), null);
@@ -108,6 +127,47 @@ public class ShenlongWishScreen extends ShenronPanelScreen {
         // Revivir mascota no tiene toggle de configuración: siempre disponible.
         addWish(x, y, w, "screen.zenkai.wish.revive_pet", WishIcons.revivePet(),
                 () -> mc.setScreen(new RevivePetWishScreen(this)));
+
+        // Flechas de desplazamiento: botones aparte, no parte de la textura del panel. Abajo y centradas.
+        int ay = panelTop + BG_H - ARROW_FROM_BOTTOM;
+        upArrow = addRenderableWidget(new VArrowButton(centerX() + ARROW_UP_X, ay, VArrowButton.Dir.UP, () -> scrollBy(-1)));
+        downArrow = addRenderableWidget(new VArrowButton(centerX() + ARROW_DOWN_X, ay, VArrowButton.Dir.DOWN, () -> scrollBy(1)));
+        layoutRows();
+    }
+
+    /** Recoloca las filas según el desplazamiento: solo las de la ventana son visibles y clicables. */
+    private void layoutRows() {
+        int top = panelTop + LIST_TOP;
+        int bottom = panelTop + BG_H - ARROW_FROM_BOTTOM - 4;
+        // Si todo cabe no hacen falta flechas y se aprovecha ese hueco para filas.
+        int fitAll = (panelTop + BG_H - PAD - top + ROW_GAP) / (ROW_H + ROW_GAP);
+        boolean overflow = rows.size() > fitAll;
+        if (overflow) fitAll = Math.max(1, (bottom - top + ROW_GAP) / (ROW_H + ROW_GAP));
+        visibleRows = Math.min(rows.size(), fitAll);
+        scroll = Math.max(0, Math.min(scroll, rows.size() - visibleRows));
+        for (int i = 0; i < rows.size(); i++) {
+            TextOnlyButton b = rows.get(i).button();
+            boolean shown = i >= scroll && i < scroll + visibleRows;
+            b.visible = shown;
+            b.setY(top + (i - scroll) * (ROW_H + ROW_GAP));
+        }
+        upArrow.visible = downArrow.visible = overflow;
+        upArrow.active = scroll > 0;
+        downArrow.active = scroll + visibleRows < rows.size();
+    }
+
+    private void scrollBy(int rowsDelta) {
+        scroll += rowsDelta;
+        layoutRows();
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (upArrow != null && upArrow.visible && scrollY != 0) {
+            scrollBy(scrollY > 0 ? -1 : 1);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private TextOnlyButton addWish(int x, int y, int w, String langKey, net.minecraft.world.item.ItemStack icon,
@@ -145,7 +205,7 @@ public class ShenlongWishScreen extends ShenronPanelScreen {
 
         // Fondo de cada fila: hundido en reposo, iluminado bajo el cursor. Es lo que convierte
         // una lista de texto en una lista de opciones.
-        for (int i = 0; i < rows.size(); i++) {
+        for (int i = scroll; i < scroll + visibleRows && i < rows.size(); i++) {
             TextOnlyButton b = rows.get(i).button();
             boolean hovered = b.active && mouseX >= b.getX() && mouseX < b.getX() + b.getWidth()
                     && mouseY >= b.getY() && mouseY < b.getY() + b.getHeight();
