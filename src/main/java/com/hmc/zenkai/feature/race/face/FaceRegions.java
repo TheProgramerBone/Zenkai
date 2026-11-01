@@ -59,7 +59,7 @@ public final class FaceRegions {
         // quad NORTH en (16,16)-(31,31) del PNG de 256, la región canónica; antes estaba en uv [0,14] →
         // (0,28), y la tabla se quedó con ese valor viejo: los rasgos caían fuera de la cara). El casco
         // (head#1) tapa las columnas 2-13 de las filas 0-6.
-        put("geo/races/arcosian_final_form_player.geo.json", 16, 16, 31, 31);
+        put("geo/races/arcosian_final_form_player.geo.json", 16, 18, 31, 31);
         // La cara de la forma final está pintada con el blanco de la armadura (capa 2), no con la piel:
         // su boca y su nariz se tiñen con ese color.
         putSkinLayer("geo/races/arcosian_final_form_player.geo.json", 2);

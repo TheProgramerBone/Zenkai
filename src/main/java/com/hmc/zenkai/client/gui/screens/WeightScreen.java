@@ -2,6 +2,7 @@ package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -15,12 +16,12 @@ import com.hmc.zenkai.feature.weights.WeightSystem;
 import com.hmc.zenkai.util.ZenkaiNumbers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -60,8 +61,9 @@ public class WeightScreen extends Screen {
     /** Fracción del umbral de sobrecarga hasta la que la carga se considera cómoda (zona verde de la barra). */
     private static final double COMFORT = 0.6;
 
-    private static final int FIELD_W  = 90;
-    private static final int FIELD_H  = 16;
+    /** Placa del valor: interior de PLATE_W x PLATE_H (el marco queda 2 px por fuera). */
+    private static final int PLATE_W  = 130;
+    private static final int PLATE_H  = 24;
     private static final int ARROW    = 12;
 
 
@@ -70,7 +72,9 @@ public class WeightScreen extends Screen {
     private final WeightArmorItem item;
     private double tons;
 
-    private EditBox field;
+    /** Mientras se escribe, el valor es esta cadena (sin reformatear a cada tecla); si no, se enseña fmt(tons). */
+    private boolean editing;
+    private String buffer = "";
     private int leftPos, topPos;
 
     private WeightScreen(InteractionHand hand, WeightArmorItem item, double tons) {
@@ -92,19 +96,12 @@ public class WeightScreen extends Screen {
 
         int cx = leftPos + BG_W / 2;
 
-        this.field = new EditBox(this.font, cx - FIELD_W / 2, topPos + Y_FIELD,
-                FIELD_W, FIELD_H, Component.translatable("screen.zenkai.weight.field"));
-        this.field.setMaxLength(12);
-        this.field.setValue(fmt(tons));
-        this.field.setResponder(this::onTyped);
-        addRenderableWidget(this.field);
-
-        addRenderableWidget(new ArrowIconButton(cx - FIELD_W / 2 - ARROW - 6,
-                topPos + Y_FIELD + 2, ArrowIconButton.Dir.LEFT,
-                () -> nudge(-WeightArmorItem.STEP_TONS)));
-        addRenderableWidget(new ArrowIconButton(cx + FIELD_W / 2 + 6,
-                topPos + Y_FIELD + 2, ArrowIconButton.Dir.RIGHT,
-                () -> nudge(WeightArmorItem.STEP_TONS)));
+        // El valor ya no es la caja de texto de vanilla: una placa con el icono de la prenda y la cifra en grande.
+        // Se escribe pulsando sobre ella (charTyped/keyPressed), o con las flechas y la rueda.
+        addRenderableWidget(new ArrowIconButton(plateX() - ARROW - 6, plateY() + (PLATE_H - ARROW) / 2,
+                ArrowIconButton.Dir.LEFT, () -> nudge(-WeightArmorItem.STEP_TONS)));
+        addRenderableWidget(new ArrowIconButton(plateX() + PLATE_W + 6, plateY() + (PLATE_H - ARROW) / 2,
+                ArrowIconButton.Dir.RIGHT, () -> nudge(WeightArmorItem.STEP_TONS)));
 
         // Iconos de esquina (mismo sitio que en Training): Atrás abajo-izquierda, Aceptar abajo-derecha.
         BackIconButton back = new BackIconButton(CommonPanel.iconLeft(leftPos),
@@ -117,17 +114,72 @@ public class WeightScreen extends Screen {
         addRenderableWidget(accept);
     }
 
-    private void onTyped(String raw) {
+    private int plateX() { return leftPos + BG_W / 2 - PLATE_W / 2; }
+    private int plateY() { return topPos + Y_FIELD + 2; }
+
+    private boolean overPlate(double mx, double my) {
+        return mx >= plateX() && mx < plateX() + PLATE_W && my >= plateY() && my < plateY() + PLATE_H;
+    }
+
+    /** Re-lee el texto escrito; una cadena a medio escribir ("", ".") conserva el último valor válido. */
+    private void onTyped() {
         try {
-            tons = item.clampTons(Double.parseDouble(raw.replace(',', '.')));
+            tons = item.clampTons(Double.parseDouble(buffer.replace(',', '.')));
         } catch (NumberFormatException ignored) {
             // Campo a medio escribir: se conserva el último valor válido.
         }
     }
 
     private void nudge(double delta) {
+        editing = false;
         tons = item.clampTons(tons + delta);
-        this.field.setValue(fmt(tons)); // dispara el responder, que revalida
+    }
+
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (button == 0 && overPlate(mx, my)) {
+            editing = true;
+            buffer = "";
+            return true;
+        }
+        editing = false;
+        return super.mouseClicked(mx, my, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mx, double my, double dx, double dy) {
+        if (overPlate(mx, my) && dy != 0) {
+            nudge(dy > 0 ? WeightArmorItem.STEP_TONS : -WeightArmorItem.STEP_TONS);
+            return true;
+        }
+        return super.mouseScrolled(mx, my, dx, dy);
+    }
+
+    @Override
+    public boolean charTyped(char c, int mods) {
+        if (editing && (Character.isDigit(c) || c == '.' || c == ',') && buffer.length() < 8) {
+            buffer += c;
+            onTyped();
+            return true;
+        }
+        return super.charTyped(c, mods);
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scan, int mods) {
+        if (editing) {
+            if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE) {
+                if (!buffer.isEmpty()) buffer = buffer.substring(0, buffer.length() - 1);
+                onTyped();
+                return true;
+            }
+            if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || key == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER
+                    || key == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+                editing = false; // Esc deja de escribir; otro Esc cierra la pantalla
+                return true;
+            }
+        }
+        return super.keyPressed(key, scan, mods);
     }
 
     private void confirm() {
@@ -160,6 +212,7 @@ public class WeightScreen extends Screen {
         double r = cap <= 0 ? 0 : tons / cap;
         boolean over = WeightSystem.isOverloaded(r);
 
+        drawValuePlate(g, mouseX, mouseY, over);
         drawLoadBar(g, r);
         PanelText.centeredOnPanel(g, this.font,
                 Component.translatable("screen.zenkai.weight.load", fmt(tons), fmt(cap), (int) Math.round(r * 100)),
@@ -183,6 +236,34 @@ public class WeightScreen extends Screen {
             PanelText.centeredOnPanel(g, this.font,
                     Component.translatable("screen.zenkai.weight.overloaded"),
                     cx, topPos + Y_WARN, ZenkaiPalette.DENIED_ON_PANEL);
+        }
+    }
+
+    /** Placa oscura (la del skill tree) con el icono de la prenda a la izquierda y la cifra en grande. */
+    private void drawValuePlate(GuiGraphics g, int mouseX, int mouseY, boolean over) {
+        int x = plateX(), y = plateY();
+        NineSlice.plateFrame(g, x, y, PLATE_W, PLATE_H);
+        boolean hover = overPlate(mouseX, mouseY);
+        if (hover || editing) g.fill(x, y, x + PLATE_W, y + PLATE_H, editing ? 0x33FFD966 : 0x22FFD966);
+        // Las texturas de las pesas son casi negras: sobre la placa oscura no se verían, así que llevan un
+        // recuadro beige detrás (el mismo tono del panel).
+        int sx = x + 3, sy = y + (PLATE_H - 20) / 2;
+        g.fill(sx, sy, sx + 20, sy + 20, ZenkaiPalette.BEIGE_DEEP);
+        g.fill(sx + 1, sy + 1, sx + 19, sy + 19, ZenkaiPalette.BEIGE);
+        g.renderItem(new ItemStack(item), sx + 2, sy + 2);
+        String text = editing ? buffer + ((System.currentTimeMillis() / 500) % 2 == 0 ? "_" : "") : fmt(tons);
+        int color = over ? ZenkaiPalette.DENIED : ZenkaiPalette.TP_ON_DARK;
+        // Cifra a doble tamaño, centrada en el hueco entre el icono y la unidad.
+        int areaL = x + 28, areaR = x + PLATE_W - 14;
+        var pose = g.pose();
+        pose.pushPose();
+        pose.translate((areaL + areaR) / 2.0f - this.font.width(text), y + (PLATE_H - 16) / 2.0f + 1, 0);
+        pose.scale(2f, 2f, 1f);
+        g.drawString(this.font, text, 0, 0, color, true);
+        pose.popPose();
+        g.drawString(this.font, "t", x + PLATE_W - 10, y + PLATE_H - 12, ZenkaiPalette.TEXT_DIM, true);
+        if (hover && !editing) {
+            g.renderTooltip(this.font, Component.translatable("screen.zenkai.weight.field.hint"), mouseX, mouseY);
         }
     }
 

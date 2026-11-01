@@ -808,6 +808,11 @@ public class ModBlocks {
     public static final DeferredBlock<Block> NPC_MARKER = registerBlock("npc_marker",
             () -> new NpcMarkerBlock(NpcMarkerBlock.markerProperties()));
 
+    /** Escalera invisible para estructuras (ver InvisibleLadderBlock); va en el tag minecraft:climbable. */
+    public static final DeferredBlock<Block> INVISIBLE_LADDER = registerBlock("invisible_ladder",
+            () -> new com.hmc.zenkai.content.block.InvisibleLadderBlock(
+                    com.hmc.zenkai.content.block.InvisibleLadderBlock.ladderProperties()));
+
     /** El "jigsaw" propio — ver el javadoc de PieceConnectorBlock y worldgen.piecegraph. */
     public static final DeferredBlock<Block> PIECE_CONNECTOR = registerBlock("piece_connector",
             () -> new PieceConnectorBlock(PieceConnectorBlock.connectorProperties()));

@@ -63,21 +63,21 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     // los bordes de la GUI" reportado por el usuario. 243, no 244, deja 1px de aire de sobra.
     private static final int IN_X1 = CommonPanel.IN_X1;
     private static final int IN_X2 = CommonPanel.IN_X2;
-    private static final int HUB_ROW_H = 32;
-    private static final int HUB_GAP = 6;
-    private static final int ROW1_Y = CONTENT_TOP + 8;
-    private static final int ROW2_Y = ROW1_Y + HUB_ROW_H + HUB_GAP;
-    private static final int ROW3_Y = ROW2_Y + HUB_ROW_H + HUB_GAP;
-
-    private static final int PANEL_Y = ROW3_Y + HUB_ROW_H + 10;
+    // Tres TARJETAS (placa del skill tree, NineSlice.plateFrame) en una fila, y debajo la franja plegable
+    // de «TP Modifiers». Las medidas son del borde EXTERIOR de cada placa (el marco son 2 px por fuera).
+    private static final int CARD_GAP = 4;
+    private static final int CARD_W = (IN_X2 - IN_X1 - 2 * CARD_GAP) / 3;
+    private static final int CARD_H = 78;
+    private static final int CARD_Y = CONTENT_TOP + 8;
+    private static final int STRIP_Y = CARD_Y + CARD_H + 6;
+    private static final int STRIP_H = 14;
     private static final int PANEL_ROW_H = 12;
-    /** Y de la fila "Gravity" dentro del panel — 2ª línea, justo debajo del título. Constante
-     *  propia (no recalculada dentro de renderModifiersPanel) porque clickHub necesita el MISMO
-     *  número para el hit-test del botón sin duplicar el cálculo en dos sitios que puedan
-     *  desincronizarse. +3 y no +2 (como el resto de filas) porque el botón dibuja un borde 1px
-     *  por ENCIMA de su texto (y-1): con el mismo hueco que una fila normal, ese borde quedaba a
-     *  un pixel de la línea de abajo de "TP Modifiers" — feedback de imagen 2026-09-10. */
-    private static final int GRAVITY_ROW_Y = PANEL_Y + PANEL_ROW_H + 3;
+    /** La franja arranca plegada y recuerda su estado entre visitas (static: ZenkaiMenuScreen crea una
+     *  Screen nueva en cada visita a la pestaña, ver StatsScreen.showStats). */
+    private static boolean modsOpen = false;
+    /** Y de la fila "Gravity" cuando la franja está abierta. Constante propia (no recalculada) porque
+     *  clickHub necesita el MISMO número para el hit-test del botón. */
+    private static final int GRAVITY_ROW_Y = STRIP_Y + STRIP_H + 7;
     /** Alto del botón "Gravity" — más que PANEL_ROW_H (12) porque lleva marco propio (1px
      *  arriba/abajo) y sin aire extra ese marco tocaba la fila siguiente ("TP bonus"),
      *  feedback de imagen 2026-09-10: "solapamiento de textos" era en realidad el borde
@@ -96,6 +96,8 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     private Double combatFatigueEfficiency;
     private Double meditationFatigueEfficiency;
     private Double targetPracticeFatigueEfficiency;
+    /** Récord de TP de cada minijuego; null hasta que responde el servidor (viaja con la fatiga). */
+    private Integer shadowRecord, meditationRecord, targetPracticeRecord;
 
     /** Popup de detalle de la fila "Gravity" — pedido explícito del usuario (2026-09-10): un
      *  solo texto de gravedad en el panel, con el desglose (equipo/ambiental/fuente/total)
@@ -120,6 +122,7 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         combatFatigueEfficiency = null;
         meditationFatigueEfficiency = null;
         targetPracticeFatigueEfficiency = null;
+        shadowRecord = meditationRecord = targetPracticeRecord = null;
         showGravityPopup = false;
         PacketDistributor.sendToServer(new TrainingFatigueRequestPacket());
     }
@@ -129,7 +132,11 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
      *  pero este hub no implementa esa interfaz (no es un minijuego), así que es un método
      *  público normal en vez de una sobrescritura. */
     public void onFatigueReceived(double combatEfficiency, double meditationEfficiency,
-                                   double targetPracticeEfficiency) {
+                                   double targetPracticeEfficiency,
+                                   int shadowRecord, int meditationRecord, int targetPracticeRecord) {
+        this.shadowRecord = shadowRecord;
+        this.meditationRecord = meditationRecord;
+        this.targetPracticeRecord = targetPracticeRecord;
         combatFatigueEfficiency = combatEfficiency;
         meditationFatigueEfficiency = meditationEfficiency;
         targetPracticeFatigueEfficiency = targetPracticeEfficiency;
@@ -138,17 +145,20 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
     /** Botón «?» (repite el tutorial) a la derecha del título del panel de modificadores, donde
      *  no tapa ninguna fila. */
     private void initTutorial() {
-        int hx = panelLeft + IN_X2 - HELP_BTN - 2, hy = panelTop + PANEL_Y - 7; // 20 px: sube 5 más para no tapar la fila de gravedad
+        int hx = CommonPanel.iconRight(panelLeft), hy = CommonPanel.iconBottom(panelTop, BG_H);
         var help = new com.hmc.zenkai.client.gui.buttons.HelpIconButton(hx, hy, HELP_BTN, () -> tutorial.start());
         help.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.tutorial.replay")));
         addRenderableWidget(help);
-        int x = panelLeft + IN_X1, w = IN_X2 - IN_X1;
         List<com.hmc.zenkai.client.gui.widgets.TutorialOverlay.Step> steps = new ArrayList<>();
-        steps.add(tutorialStep(1, () -> new int[]{x, panelTop + ROW1_Y, w, HUB_ROW_H}));
-        steps.add(tutorialStep(2, () -> new int[]{x, panelTop + ROW2_Y, w, HUB_ROW_H}));
-        steps.add(tutorialStep(3, () -> new int[]{x, panelTop + ROW3_Y, w, HUB_ROW_H}));
-        steps.add(tutorialStep(4, () -> new int[]{x, panelTop + PANEL_Y - 2, w, panelTop + IN_Y2_HUB - (panelTop + PANEL_Y - 2)}));
-        steps.add(tutorialStep(5, () -> new int[]{x, panelTop + GRAVITY_ROW_Y - 1, w, GRAVITY_ROW_H + 1}));
+        for (int i = 0; i < 3; i++) {
+            final int col = i;
+            steps.add(tutorialStep(i + 1, () -> new int[]{cardX(col), panelTop + CARD_Y, CARD_W, CARD_H}));
+        }
+        steps.add(tutorialStep(4, () -> new int[]{panelLeft + IN_X1, panelTop + STRIP_Y, IN_X2 - IN_X1,
+                modsOpen ? IN_Y2_HUB - STRIP_Y : STRIP_H}));
+        steps.add(tutorialStep(5, () -> modsOpen
+                ? new int[]{panelLeft + IN_X1, panelTop + GRAVITY_ROW_Y - 1, IN_X2 - IN_X1, GRAVITY_ROW_H + 1}
+                : new int[]{panelLeft + IN_X1, panelTop + STRIP_Y, IN_X2 - IN_X1, STRIP_H}));
         steps.add(tutorialStep(6, () -> new int[]{hx - 2, hy - 2, HELP_BTN + 4, HELP_BTN + 4}));
         tutorial = new com.hmc.zenkai.client.gui.widgets.TutorialOverlay("training_hub", steps);
         tutorial.startIfFirstTime();
@@ -179,45 +189,76 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         int x = panelLeft + IN_X1;
         int w = IN_X2 - IN_X1;
 
-        // Sin tooltip propio (pedido explícito del usuario): ese mismo párrafo ya se enseña
-        // dentro de ShadowTrainingScreen al entrar, así que un tooltip aquí en el hub solo
-        // duplicaba el texto un paso antes de que hiciera falta.
-        renderHubOption(g, x, panelTop + ROW1_Y, w, HUB_ROW_H, ICON_SHADOW_U, ICON_SHADOW_V,
-                Component.translatable("screen.zenkai.training_hub.row.shadow"), mouseX, mouseY, null);
-        renderHubOption(g, x, panelTop + ROW2_Y, w, HUB_ROW_H, ICON_MEDITATION_U, ICON_MEDITATION_V,
-                Component.translatable("screen.zenkai.training_hub.row.meditation"), mouseX, mouseY, null);
-        renderHubOption(g, x, panelTop + ROW3_Y, w, HUB_ROW_H,
-                ICON_TARGET_PRACTICE_U, ICON_TARGET_PRACTICE_V,
-                Component.translatable("screen.zenkai.training_hub.row.target_practice"), mouseX, mouseY, null);
+        renderCard(g, 0, ICON_SHADOW_U, ICON_SHADOW_V,
+                Component.translatable("screen.zenkai.training_hub.row.shadow"), shadowRecord, mouseX, mouseY);
+        renderCard(g, 1, ICON_MEDITATION_U, ICON_MEDITATION_V,
+                Component.translatable("screen.zenkai.training_hub.row.meditation"), meditationRecord, mouseX, mouseY);
+        renderCard(g, 2, ICON_TARGET_PRACTICE_U, ICON_TARGET_PRACTICE_V,
+                Component.translatable("screen.zenkai.training_hub.row.target_practice"), targetPracticeRecord,
+                mouseX, mouseY);
 
-        renderModifiersPanel(g, x, panelTop + PANEL_Y, w, mouseX, mouseY);
+        renderStrip(g, x, panelTop + STRIP_Y, w, mouseX, mouseY);
+        if (modsOpen) renderModifiersPanel(g, x, panelTop + GRAVITY_ROW_Y, w, mouseX, mouseY);
 
         if (showGravityPopup) renderGravityPopup(g, mouseX, mouseY);
         if (tutorial != null) tutorial.render(g, this.font, this.width, this.height);
     }
 
-    /** Botón grande horizontal (ícono izq + etiqueta der), mismo idioma que
-     *  AppearanceScreen. `tooltip` opcional: el pedido explícito de "Train
-     *  with your shadow" es enseñar un resumen ANTES de entrar (qué es, para qué sirve). */
-    private void renderHubOption(GuiGraphics g, int x, int y, int w, int h, int iconU, int iconV,
-                                  Component label, int mouseX, int mouseY, Component tooltip) {
-        boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+    private int cardX(int col) { return panelLeft + IN_X1 + col * (CARD_W + CARD_GAP); }
 
-        g.fill(x, y, x + w, y + h, hovered ? ZenkaiPalette.ROW_HOVER : ZenkaiPalette.INSET_BG);
-        g.fill(x, y, x + w, y + 1, ZenkaiPalette.BORDER_IN);
-        g.fill(x, y + h - 1, x + w, y + h, ZenkaiPalette.BORDER_IN);
-        g.fill(x, y, x + 1, y + h, ZenkaiPalette.BORDER_IN);
-        g.fill(x + w - 1, y, x + w, y + h, ZenkaiPalette.BORDER_IN);
+    /**
+     * Tarjeta de un minijuego: placa oscura de la familia del skill tree, icono de 20 px (sin escalar),
+     * nombre y récord. La tarjeta entera es el botón; al pasar el cursor se aclara el interior. El récord
+     * es null hasta que responde el servidor: entonces se enseña un guion en vez de un 0 falso.
+     */
+    private void renderCard(GuiGraphics g, int col, int iconU, int iconV, Component name, Integer record,
+                            int mouseX, int mouseY) {
+        int x = cardX(col), y = panelTop + CARD_Y;
+        boolean hovered = mouseX >= x && mouseX < x + CARD_W && mouseY >= y && mouseY < y + CARD_H;
+        int ix = x + 2, iy = y + 2, iw = CARD_W - 4, ih = CARD_H - 4;
+        NineSlice.plateFrame(g, ix, iy, iw, ih);
+        if (hovered) g.fill(ix, iy, ix + iw, iy + ih, 0x22FFD966);
+        int cx = ix + iw / 2;
+        g.blit(ICONS_TEX, cx - ICON_CELL / 2, iy + 5, iconU, iconV, ICON_CELL, ICON_CELL, ICONS_ATLAS, ICONS_ATLAS);
+        // El nombre se parte en hasta dos líneas (66 px no dan para «Train with your shadow»).
+        List<net.minecraft.util.FormattedCharSequence> lines = this.font.split(name, iw - 6);
+        int n = Math.min(2, lines.size());
+        int ny = iy + 28 + (n == 1 ? 5 : 0);
+        for (int i = 0; i < n; i++) {
+            g.drawString(this.font, lines.get(i), cx - this.font.width(lines.get(i)) / 2, ny + i * 10,
+                    ZenkaiPalette.TEXT, true);
+        }
+        g.fill(ix + 6, iy + 50, ix + iw - 6, iy + 51, 0xFF46405A);
+        g.drawString(this.font, Component.translatable("screen.zenkai.training_hub.card.record"),
+                ix + 6, iy + 54, ZenkaiPalette.TEXT_DIM, true);
+        String value = record == null ? "-" : record >= 20_000 ? ZenkaiNumbers.format((long) record) : Integer.toString(record);
+        g.drawString(this.font, value, ix + iw - 6 - this.font.width(value), iy + 63,
+                ZenkaiPalette.TP_ON_DARK, true);
+        if (record != null && record >= 20_000 && hovered) {
+            g.renderTooltip(this.font, Component.literal(ZenkaiNumbers.exact((long) record) + " TP"), mouseX, mouseY);
+        }
+    }
 
-        int iconX = x + 10;
-        int iconY = y + (h - ICON_CELL) / 2;
-        g.blit(ICONS_TEX, iconX, iconY, iconU, iconV, ICON_CELL, ICON_CELL, ICONS_ATLAS, ICONS_ATLAS);
-
-        PanelText.onPanel(g, this.font, label, iconX + ICON_CELL + 8, y + (h - 8) / 2,
-                ZenkaiPalette.LABEL_ON_PANEL);
-
-        if (tooltip != null && hovered) {
-            g.renderTooltip(this.font, this.font.split(tooltip, 200), mouseX, mouseY);
+    /** Cabecera de la franja «TP Modifiers»: título, multiplicador de pesas y HTC (solo plegada) y un
+     *  triángulo que dice si está abierta. Pulsarla pliega/despliega las filas de debajo. */
+    private void renderStrip(GuiGraphics g, int x, int y, int w, int mouseX, int mouseY) {
+        boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + STRIP_H;
+        int ix = x + 2, iy = y + 2, iw = w - 4, ih = STRIP_H - 4;
+        NineSlice.plateFrame(g, ix, iy, iw, ih);
+        if (hovered) g.fill(ix, iy, ix + iw, iy + ih, 0x22FFD966);
+        g.drawString(this.font, Component.translatable("screen.zenkai.training_hub.panel.title"),
+                ix + 4, iy + 1, ZenkaiPalette.TEXT, true);
+        // Triángulo a mano (sin glifo de fuente): 7 px de ancho, apunta abajo si está plegada y arriba si abierta.
+        int tx = ix + iw - 4 - 7, ty = iy + 3;
+        for (int r = 0; r < 4; r++) {
+            int row = modsOpen ? 3 - r : r;
+            g.fill(tx + row, ty + r, tx + 7 - row, ty + r + 1, ZenkaiPalette.TP_ON_DARK);
+        }
+        if (!modsOpen && mc.player != null) {
+            double mult = WeightSystem.tpFactor(att.getWeightLoad())
+                    * (mc.player.level().dimension() == ModDimensions.HTC_LEVEL ? ServerConfig.trainingHtcMultiplier() : 1.0);
+            String txt = "x" + ZenkaiNumbers.fmt2(mult);
+            g.drawString(this.font, txt, tx - 6 - this.font.width(txt), iy + 1, ZenkaiPalette.OK, true);
         }
     }
 
@@ -248,12 +289,6 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         double baseMult = weightMult * (inHtc ? htcMult : 1.0);
 
         int ty = y;
-        PanelText.onPanel(g, this.font,
-                Component.translatable("screen.zenkai.training_hub.panel.title")
-                        .copy().withStyle(net.minecraft.ChatFormatting.BOLD),
-                x, ty, ZenkaiPalette.LABEL_ON_PANEL);
-        ty += PANEL_ROW_H + 3;
-
         renderGravityRow(g, x, ty, w, player, mouseX, mouseY);
         ty += GRAVITY_ROW_H + 2;
 
@@ -469,20 +504,26 @@ public class TrainingHubScreen extends ZenkaiMenuScreen {
         int w = IN_X2 - IN_X1;
         if (mouseX < x || mouseX >= x + w) return false;
 
-        if (mouseY >= panelTop + ROW1_Y && mouseY < panelTop + ROW1_Y + HUB_ROW_H) {
-            mc.setScreen(new ShadowTrainingScreen());
-            return true;
+        if (mouseY >= panelTop + CARD_Y && mouseY < panelTop + CARD_Y + CARD_H) {
+            for (int col = 0; col < 3; col++) {
+                if (mouseX >= cardX(col) && mouseX < cardX(col) + CARD_W) {
+                    mc.setScreen(switch (col) {
+                        case 0 -> new ShadowTrainingScreen();
+                        case 1 -> new MeditationScreen();
+                        default -> new TargetPracticeScreen();
+                    });
+                    return true;
+                }
+            }
+            return false;
         }
-        if (mouseY >= panelTop + ROW2_Y && mouseY < panelTop + ROW2_Y + HUB_ROW_H) {
-            mc.setScreen(new MeditationScreen());
-            return true;
-        }
-        if (mouseY >= panelTop + ROW3_Y && mouseY < panelTop + ROW3_Y + HUB_ROW_H) {
-            mc.setScreen(new TargetPracticeScreen());
+        if (mouseY >= panelTop + STRIP_Y && mouseY < panelTop + STRIP_Y + STRIP_H) {
+            modsOpen = !modsOpen;
+            if (!modsOpen) showGravityPopup = false;
             return true;
         }
         int gravityY = panelTop + GRAVITY_ROW_Y;
-        if (mouseY >= gravityY && mouseY < gravityY + GRAVITY_ROW_H) {
+        if (modsOpen && mouseY >= gravityY && mouseY < gravityY + GRAVITY_ROW_H) {
             showGravityPopup = !showGravityPopup;
             return true;
         }

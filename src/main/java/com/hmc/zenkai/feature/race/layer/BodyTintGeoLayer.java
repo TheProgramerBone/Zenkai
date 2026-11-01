@@ -50,21 +50,44 @@ public class BodyTintGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         Entity wearer = ((GeoLayerArmorRenderer) this.getRenderer()).getCurrentEntity();
         if (!(wearer instanceof Player player)) return;
 
-        // Pelaje del Saiyan (SSJ4...): va aunque el cuerpo no traiga capas de tinte propias.
-        drawFur(poseStack, bakedModel, animatable, bufferSource, partialTick, packedLight, packedOverlay, player);
-
-        if (!animatable.hasBodyTint()) return;
-
         // Capas numeradas descubiertas por convención (<base>_layer_0, _1, ...), en orden.
         // Cada una se pinta sobre la base con su canal de color (o color fijo del JSON).
-        for (RaceLayerDiscovery.Layer layer : RaceLayerDiscovery.layersFor(animatable)) {
-            // La capa 0 = piel/base: ya la tiñe el pase base del renderer (canal SKIN).
-            // Repintarla aquí multiplicaría el color dos veces (piel más oscura). La omitimos.
-            if (layer.index() == 0) continue;
-            if (!layer.visibleFor(player, animatable)) continue;
-            drawPass(layer.texture(), layer.argb(player), poseStack, bakedModel, animatable,
-                    bufferSource, partialTick, packedLight, packedOverlay);
+        //
+        // ORDEN DEL PELAJE DEL SAIYAN (SSJ4...), medido con capturas en el mundo (2026-11-01): el pelaje
+        // va ENTRE las capas de piel y las del pelo pintado, ni antes ni después de todas.
+        //  · Antes de las capas de piel (human_player_layer_1..4, solo en el cuerpo teñible): las sombras de
+        //    piel lo tapaban a manchas y se veía "cortado".
+        //  · Después de la capa de pelo pintado (human_player_layer_5, la única del cuerpo natural): el
+        //    pelaje desaparecía por completo en el cuerpo natural.
+        // El pelo pintado va sobre la cabeza y no pisa el torso ni los brazos, así que dibujarlo tras el
+        // pelaje no cambia nada visible. Si se añade otra capa nueva al cuerpo humano, repetir la captura
+        // (tools/FurShots, ver docs/herramientas-de-desarrollo.md) con cuerpo natural y teñible, ♂ y ♀.
+        boolean tint = animatable.hasBodyTint();
+        if (tint) {
+            for (RaceLayerDiscovery.Layer layer : RaceLayerDiscovery.layersFor(animatable)) {
+                if (layer.follows() == RaceLayerDiscovery.Follow.HAIR) continue;
+                drawLayer(layer, player, poseStack, bakedModel, animatable, bufferSource, partialTick, packedLight, packedOverlay);
+            }
         }
+        // Va aunque el cuerpo no traiga capas de tinte propias.
+        drawFur(poseStack, bakedModel, animatable, bufferSource, partialTick, packedLight, packedOverlay, player);
+        if (tint) {
+            for (RaceLayerDiscovery.Layer layer : RaceLayerDiscovery.layersFor(animatable)) {
+                if (layer.follows() != RaceLayerDiscovery.Follow.HAIR) continue;
+                drawLayer(layer, player, poseStack, bakedModel, animatable, bufferSource, partialTick, packedLight, packedOverlay);
+            }
+        }
+    }
+
+    private void drawLayer(RaceLayerDiscovery.Layer layer, Player player, PoseStack poseStack, BakedGeoModel bakedModel,
+                           GeoLayerArmorItem animatable, MultiBufferSource bufferSource,
+                           float partialTick, int packedLight, int packedOverlay) {
+        // La capa 0 = piel/base: ya la tiñe el pase base del renderer (canal SKIN).
+        // Repintarla aquí multiplicaría el color dos veces (piel más oscura). La omitimos.
+        if (layer.index() == 0) return;
+        if (!layer.visibleFor(player, animatable)) return;
+        drawPass(layer.texture(), layer.argb(player), poseStack, bakedModel, animatable,
+                bufferSource, partialTick, packedLight, packedOverlay);
     }
 
     /** Textura gris del pelaje (mismo UV que el cuerpo humano); generada por tools/gen_saiyan_fur.py. */

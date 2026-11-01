@@ -9,7 +9,7 @@
   "infiniburn": "#minecraft:infiniburn_overworld",
   "respawn_anchor_works": false,
   "bed_works": false,
-  "effects": "minecraft:overworld",
+  "effects": "zenkai:otherworld",
   "min_y": -64,
   "height": 384,
   "logical_height": 384,

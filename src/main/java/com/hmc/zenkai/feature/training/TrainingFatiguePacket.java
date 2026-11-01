@@ -11,11 +11,15 @@ import net.minecraft.resources.ResourceLocation;
  * (0..1, ver TrainingHooks.currentEfficiency) de CADA categoría (ver TrainingCategory), para que
  * el panel "TP Modifiers" del hub muestre hasta 3 filas de fatiga independientes en vez de una
  * sola compartida (2026-09-09, pedido explícito del usuario — las fatigas ya NO se comparten
- * entre categorías). El handler vive en ClientPayloadHandlers (nunca inline aquí), mismo patrón
+ * entre categorías). Desde 2026-11-01 lleva también el RÉCORD de los tres minijuegos, para las
+ * tarjetas del hub (viaja aquí y no en tres TrainingInfoRequestPacket: el hub ya pide este mismo
+ * packet al abrirse, así que no suma ningún viaje). El handler vive en ClientPayloadHandlers (nunca inline aquí), mismo patrón
  * que TrainingSessionRewardPacket.
  */
 public record TrainingFatiguePacket(double combatEfficiency, double meditationEfficiency,
-                                    double targetPracticeEfficiency) implements CustomPacketPayload {
+                                    double targetPracticeEfficiency,
+                                    int shadowRecord, int meditationRecord, int targetPracticeRecord)
+        implements CustomPacketPayload {
 
     public static final Type<TrainingFatiguePacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "training_fatigue"));
@@ -25,8 +29,12 @@ public record TrainingFatiguePacket(double combatEfficiency, double meditationEf
                         buf.writeDouble(pkt.combatEfficiency());
                         buf.writeDouble(pkt.meditationEfficiency());
                         buf.writeDouble(pkt.targetPracticeEfficiency());
+                        buf.writeVarInt(pkt.shadowRecord());
+                        buf.writeVarInt(pkt.meditationRecord());
+                        buf.writeVarInt(pkt.targetPracticeRecord());
                     },
-                    buf -> new TrainingFatiguePacket(buf.readDouble(), buf.readDouble(), buf.readDouble()));
+                    buf -> new TrainingFatiguePacket(buf.readDouble(), buf.readDouble(), buf.readDouble(),
+                            buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }

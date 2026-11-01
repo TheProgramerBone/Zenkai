@@ -44,6 +44,7 @@ public final class SkillTreeShots {
     private static boolean skillsOnly;
     private static boolean absorbOnly;
     private static boolean legendaryOnly;
+    private static boolean godKiLostOnly;
     private static boolean mastersOnly;
     private static boolean perfOnly;
     private static boolean opened;
@@ -62,6 +63,7 @@ public final class SkillTreeShots {
                     fadeOnly = lines.size() > 1 && lines.get(1).trim().equals("fade"); // solo la prueba del fundido de fondos
                     skillsOnly = lines.size() > 1 && lines.get(1).trim().equals("skills"); // solo el árbol de skills por maestro
                     absorbOnly = lines.size() > 1 && lines.get(1).trim().equals("absorb"); // solo la absorción del Majin
+                    godKiLostOnly = lines.size() > 1 && lines.get(1).trim().equals("godkilost"); // God Ki perdido con formas divinas compradas
                     legendaryOnly = lines.size() > 1 && lines.get(1).trim().equals("legendary"); // solo la línea del Legendario
                     mastersOnly = lines.size() > 1 && lines.get(1).trim().equals("masters"); // solo los retratos de los maestros
                     perfOnly = lines.size() > 1 && lines.get(1).trim().equals("perf"); // tiempos de fotograma de SkillsTreeScreen
@@ -129,11 +131,41 @@ public final class SkillTreeShots {
         }
     }
 
+    /** Jugador que tuvo God Ki y SSJ God y luego pierde la skill: la cadena debe volver a taparlo. */
+    private static void godKiLostPlan(Minecraft mc) {
+        PLAN.add(() -> {
+            setup(mc, Race.SAIYAN, 4, true, true, false, sp -> {
+                // God Ki como lo concede el juego (con suelo), no con setLevel.
+                com.hmc.zenkai.feature.skilltree.SkillTree.grant(sp, com.hmc.zenkai.feature.skilltree.SkillTreeMigration.NODE_GOD_KI, 1,
+                        com.hmc.zenkai.feature.skilltree.SkillTree.Via.RITUAL);
+                PlayerStatsAttachment a = PlayerStatsAttachment.get(sp);
+                a.skillTree().setOwned(ResourceLocation.parse("zenkai:ssj_god"), 1);
+            });
+            wait = WAIT;
+        });
+        PLAN.add(() -> { forgetTutorial(); mc.setScreen(new SkillTreeScreen()); wait = 60; });
+        PLAN.add(() -> capture(mc, "lost_0_with"));
+        PLAN.add(() -> {
+            mc.setScreen(null);
+            var server = mc.getSingleplayerServer();
+            if (server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                // Por el comando real, como lo hizo el usuario.
+                server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withPermission(4),
+                        "zenkai skill revoke " + sp.getGameProfile().getName() + " god_ki");
+            });
+            wait = WAIT;
+        });
+        PLAN.add(() -> { mc.setScreen(new SkillTreeScreen()); wait = 60; });
+        PLAN.add(() -> capture(mc, "lost_1_after"));
+    }
+
     private static void buildPlan(Minecraft mc) {
         if (fadeOnly) { fadePlan(mc); return; }
         if (skillsOnly) { skillsPlan(mc); return; }
         if (absorbOnly) { absorbPlan(mc); return; }
         if (legendaryOnly) { legendaryPlan(mc); return; }
+        if (godKiLostOnly) { godKiLostPlan(mc); return; }
         if (mastersOnly) { mastersPlan(mc); return; }
         if (perfOnly) { perfPlan(mc); return; }
         // Tutorial (F7): la primera apertura lo enseña; se captura y se cierra con Esc.

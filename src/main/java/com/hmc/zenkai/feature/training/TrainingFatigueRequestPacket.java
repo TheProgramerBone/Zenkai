@@ -30,10 +30,12 @@ public record TrainingFatigueRequestPacket() implements CustomPacketPayload {
     public static void handle(TrainingFatigueRequestPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer sp)) return;
+            TrainingData td = sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.TRAINING.get());
             PacketDistributor.sendToPlayer(sp, new TrainingFatiguePacket(
                     TrainingHooks.currentEfficiency(sp, TrainingCategory.COMBAT),
                     TrainingHooks.currentEfficiency(sp, TrainingCategory.MEDITATION),
-                    TrainingHooks.currentEfficiency(sp, TrainingCategory.TARGET_PRACTICE)));
+                    TrainingHooks.currentEfficiency(sp, TrainingCategory.TARGET_PRACTICE),
+                    td.getBestShadowTp(), td.getBestMeditationTp(), td.getBestTargetPracticeTp()));
         });
     }
 }

@@ -4,10 +4,12 @@ import com.hmc.zenkai.feature.technique.InnateTechniques;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.PhysicalIcons;
 import com.hmc.zenkai.client.TechniqueIcons;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.ArrowIconButton;
+import com.hmc.zenkai.client.gui.buttons.AtlasIconButton;
 import com.hmc.zenkai.client.gui.buttons.ConfirmIconButton;
 import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.client.gui.buttons.TextOnlyButton;
@@ -15,6 +17,7 @@ import com.hmc.zenkai.client.gui.buttons.VArrowButton;
 import com.hmc.zenkai.client.gui.widgets.BindBar;
 import com.hmc.zenkai.client.gui.widgets.SlotCell;
 import com.hmc.zenkai.config.ServerConfig;
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerTechniques;
 import com.hmc.zenkai.feature.technique.KiCombatServer;
@@ -134,11 +137,16 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
 
     // ── Geometría ────────────────────────────────────────────────────────────
 
-    private static final int ROW_H = 30;
-    private static final int BAR_Y_OFF = CONTENT_TOP + 18;
-    private static final int CAT_Y_OFF = BAR_Y_OFF + SlotCell.SIZE + 4;
+    /** 34 y no 30: con 4 técnicas sobraba un hueco abajo y las flechas y la papelera se leían pegadas a las reglas. */
+    private static final int ROW_H = 34;
+    /** Aire que se suma arriba de cada fila: el diseño de los renglones sigue medido para 28 px útiles
+     *  y así queda CENTRADO en los 32 que hay entre regla y regla (ROW_H - 2). */
+    private static final int ROW_PAD = 2;
+    private static final int BAR_Y_OFF = CONTENT_TOP + 19; // 2 px entre la cabecera y la placa de casillas = los 2 px de la cabecera al marco
+    // 7 = 4 de la placa de casillas + 3 de aire (el círculo de orden, de 20 px, tocaba la placa: solapamiento)
+    private static final int CAT_Y_OFF = BAR_Y_OFF + SlotCell.SIZE + 7;
     private static final int CAT_H = 20;
-    private static final int LIST_Y_OFF = CAT_Y_OFF + CAT_H + 6;
+    private static final int LIST_Y_OFF = CAT_Y_OFF + CAT_H + 3; // 3 arriba + 3 abajo: la lista no se mueve
     /**
      * Banda de pie, IGUAL en las tres categorías. Antes ki reservaba 34 px para un
      * PanelButton "New technique" a lo ancho y las otras dos solo 16, así que ki enseñaba una
@@ -183,7 +191,11 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      */
     private static final int DY_ACTION = 2;
     private static final int DY_ICONS = 16;
-    private static final int DY_TRASH = (ROW_H - TRASH) / 2;
+    /** Papelera, lápiz y aspa comparten LÍNEA CENTRAL: la del centro útil de la fila (14 con ROW_PAD ya sumado). */
+    private static final int DY_TRASH = 14 - TRASH / 2;
+    private static final int DY_MID = 14 - ICON_BTN / 2;
+    /** Flechas de subir/bajar: 12 px cada una con 2 de hueco, centradas en la misma línea. */
+    private static final int DY_UP = 1, DY_DOWN = 15;
     private static final int ACTION_H = 14;
     /** Aire real entre botones. La versión anterior los pegaba (los corchetes de [ Assign ] y
      *  [ Edit ] se tocaban) y metía el aspa encima del borde del panel. */
@@ -252,12 +264,20 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * aquellas listas llegaba a scrollear en la práctica, y aquí sí (12 técnicas de ki y 5
      * filas visibles). Con el contenido acabando en 238 la barra cabe entera sobre beige.
      */
-    private int rightEdge()  { return panelLeft + BG_W - 18; }
+    private int rightEdge()  { return frameR() - SCROLLBAR_W - 2; }
     /** Borde izquierdo de las reglas y de la placa de la barra: el mismo que usa drawHeader. */
-    private int contentLeft()  { return panelLeft + 14; }
+    private int contentLeft()  { return frameL(); }
+    /**
+     * Cajas SIMÉTRICAS de las placas y la regla (cabecera, barra de casillas, regla bajo el selector, botón de
+     * orden): el beige va de 12 a 243 (se mide: 4 px de aire a cada lado = 16..239, borde derecho exclusivo en
+     * 240). El contenido de la lista (14..238) lleva el canalón del scroll a la derecha y por eso queda 3 px
+     * más a la izquierda del centro: las placas NO deben heredarlo (se leía como márgenes desiguales).
+     */
+    private int frameL() { return panelLeft + 16; }
+    private int frameR() { return panelLeft + 240; }
     /** Las nueve casillas centradas en el ANCHO DEL CONTENIDO (reglas y lista), no en el panel: el
      *  canalón del scroll deja el contenido 2 px a la izquierda del centro del panel. */
-    private int barLeft()      { return (contentLeft() + rightEdge() - BindBar.WIDTH) / 2; }
+    private int barLeft()      { return (frameL() + frameR() - BindBar.WIDTH) / 2; }
     /** Esquina del "+" de nueva técnica: centrado y pegado al último píxel de beige. */
     private int xPlus()      { return panelLeft + (BG_W - PLUS) / 2; }
     /** Con la lista de ki vacía el "+" sube bajo el mensaje, que es donde se mira; con técnicas vuelve al pie. */
@@ -267,8 +287,8 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                 : panelTop + PANEL_BEIGE_BOTTOM - PLUS;
     }
     /** X de la barra de scroll: pegada al borde del contenido, sobre el beige. */
-    private int scrollbarX() { return rightEdge() + 1; }
-    /** +2 de aire entre el chip «Orden» (sobre la regla) y el nombre de la primera fila. NO toca
+    private int scrollbarX() { return frameR() - SCROLLBAR_W; }
+    /** +2 de aire entre la regla y el nombre de la primera fila. NO toca
      *  listHeight/visibleRows: siguen siendo 5 filas exactas; solo la lista baja 2 px. */
     private static final int LIST_PAD = 2;
     private int listTop()    { return panelTop + LIST_Y_OFF + LIST_PAD; }
@@ -291,7 +311,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * fuera de la zona de contenido. 14 es la misma sangría que ya usan la regla de la cabecera
      * y rightEdge() por el otro lado (256-242).
      */
-    private static final int CONTENT_INSET = 15;
+    private static final int CONTENT_INSET = 16; // = frameL: flechas y barra de scroll caen DENTRO de las placas, mismo margen a los dos lados
     private int gutter()  { return category == Category.KI ? ARROW + 3 : 0; }
     private int xArrows() { return panelLeft + CONTENT_INSET; }
     private int xIcon()   { return panelLeft + CONTENT_INSET + 1 + gutter(); }
@@ -487,7 +507,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     }
 
     private void buildCategorySelector() {
-        int cx = panelLeft + BG_W / 2;
+        int cx = catCx();
         int y = panelTop + CAT_Y_OFF;
         addRenderableWidget(new ArrowIconButton(cx - CAT_HALF - ARROW, y + (CAT_H - ARROW) / 2,
                 ArrowIconButton.Dir.LEFT, () -> cycleCategory(-1)));
@@ -497,22 +517,30 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                 Component.empty(), () -> cycleCategory(1)));
         addRenderableWidget(new ArrowIconButton(cx + CAT_HALF, y + (CAT_H - ARROW) / 2,
                 ArrowIconButton.Dir.RIGHT, () -> cycleCategory(1)));
-        // Orden de la lista: un chip centrado SOBRE la regla que separa el selector de la lista (así
-        // el selector queda simétrico, que con el botón a un lado no lo estaba). El texto se pinta
-        // en drawSortChip; esto es solo su caja clicable.
-        int w = sortChipW() + 8;
-        addRenderableWidget(new TextOnlyButton(cx - w / 2, sepY() - 5, w, 10, Component.empty(), this::cycleSort));
+        // Orden de la lista: botón de icono (20 px, celda de icons.png) al final de la fila del selector;
+        // el tooltip dice el orden actual y la pulsación pasa al siguiente.
+        AtlasIconButton sortBtn = new AtlasIconButton(frameR() - SORT_ICON + 2, y, // +2: la celda de 20 px lleva ~2 px transparentes a cada lado; así el círculo visible llega al borde de las placas
+                
+                SORT_U, SORT_V, this::cycleSort);
+        sortBtn.setTooltip(Tooltip.create(sortChipText()));
+        addRenderableWidget(sortBtn);
     }
 
     /** Y de la regla bajo el selector (la lista empieza 2 px más abajo). */
     // +2 de aire sobre el chip de orden: pegado al selector de categoría se leía como un solapamiento (2026-10-29).
-    private int sepY() { return panelTop + CAT_Y_OFF + CAT_H + 6; }
+    private int sepY() { return panelTop + CAT_Y_OFF + CAT_H + 3; }
+
+    /** Centro del selector de categoría: el del hueco entre el borde izquierdo y el círculo de orden, así las
+     *  flechas quedan a la MISMA distancia del borde y del círculo (antes estaba centrado en el panel y el
+     *  círculo solo cargaba el lado derecho). */
+    private int catCx() { return (frameL() + frameR() - SORT_ICON) / 2; }
 
     private Component sortChipText() {
         return Component.translatable("screen.zenkai.techniques.sort.chip", Component.translatable(sort().fullKey));
     }
 
-    private int sortChipW() { return this.font.width(sortChipText()); }
+    /** Celda del icono de orden en icons.png (tools/gen_sort_icon.py); siempre a 20 px. */
+    private static final int SORT_U = 20, SORT_V = 180, SORT_ICON = 20;
 
     private void cycleSort() {
         Sort[] all = Sort.values();
@@ -554,8 +582,8 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             // Las flechas mueven la técnica en la lista REAL; solo se corresponden con lo que se ve
             // en «reciente» (ver moveKi), en los otros órdenes subir/bajar no significaría nada.
             boolean arrows = sort() == Sort.RECENT;
-            addRow(bucket, up, DY_ACTION, arrows && index > 0);
-            addRow(bucket, down, DY_ICONS, arrows && index < rows.size() - 1);
+            addRow(bucket, up, DY_UP, arrows && index > 0);
+            addRow(bucket, down, DY_DOWN, arrows && index < rows.size() - 1);
 
             buildKiIcons(bucket, slot, tech, true, null);
 
@@ -575,7 +603,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                     DY_ACTION, true);
             if (tech.positionOf(t) >= 0) {
                 addRow(bucket, iconButton(xUnassign(), TEX_X, TEX_X_HL, ICON_BTN,
-                        "screen.zenkai.technique.unassign", () -> unbindPhys(t)), DY_ICONS, true);
+                        "screen.zenkai.technique.unassign", () -> unbindPhys(t)), DY_MID, true);
             }
             // Olvidar una física DEVUELVE el TP (PhysicalTechniquePacket.forget), a diferencia
             // de borrar una instancia de ki, que solo la destruye: el tipo de ki ya se pagó
@@ -605,12 +633,12 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         if (editable) {
             addRow(bucket, iconButton(xEdit(), TEX_PENCIL, TEX_PENCIL_HL, ICON_BTN,
                     "screen.zenkai.technique.edit",
-                    () -> mc.setScreen(new TechniqueEditScreen(slot))), DY_ICONS, true);
+                    () -> mc.setScreen(new TechniqueEditScreen(slot))), DY_MID, true);
         }
 
         if (tech.positionOf(slot) >= 0) {
             addRow(bucket, iconButton(xUnassign(), TEX_X, TEX_X_HL, ICON_BTN,
-                    "screen.zenkai.technique.unassign", () -> unbindKi(slot)), DY_ICONS, true);
+                    "screen.zenkai.technique.unassign", () -> unbindKi(slot)), DY_MID, true);
         }
         if (forgetType != null) {
             // Técnica de maestro: la papelera es OLVIDAR (reembolso, y desaparece hasta que el maestro
@@ -943,7 +971,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             boolean vis = onScreen(i);
             int top = rowTop(i);
             for (RowWidget rw : rowWidgets.get(i)) {
-                rw.widget().setY(top + rw.dy());
+                rw.widget().setY(top + ROW_PAD + rw.dy());
                 rw.widget().visible = vis;
                 rw.widget().active = vis && rw.enabled();
             }
@@ -958,12 +986,12 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + BG_W / 2, panelTop);
         if (att == null) return;
 
-        drawHeader(g);
+        drawHeader(g, mouseX, mouseY);
         drawCategorySelector(g, mouseX, mouseY);
 
         if (bindBar != null) {
             bindBar.refreshIcons(att);
-            bindBar.renderFrame(g, this.font, null, contentLeft(), rightEdge());
+            bindBar.renderFrame(g, this.font, null, frameL(), frameR());
             // La placa es OPACA y super.render() ya pintó las casillas: la placa las tapaba, con sus
             // iconos. Se vuelven a pintar encima (y no la placa antes de super, porque super dibuja
             // primero el fondo del panel y la taparía a ella).
@@ -971,7 +999,6 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         }
 
         Component hovered = drawRows(g, mouseX, mouseY);
-        drawSortChip(g, mouseX, mouseY);
         drawScrollbar(g);
 
         if (armedKi >= 0 || armedPhys != null) {
@@ -988,6 +1015,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         }
 
         // Los tooltips van FUERA del scissor o se recortarían con la lista.
+        if (headerTip != null) g.renderTooltip(this.font, Component.literal(headerTip), mouseX, mouseY);
         Component barTip = (bindBar != null) ? bindBar.tooltipAt(att, mouseX, mouseY) : null;
         if (barTip != null) {
             g.renderTooltip(this.font, barTip, mouseX, mouseY);
@@ -1001,33 +1029,82 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         if (bindBar != null) bindBar.renderDragGhost(g, mouseX, mouseY);
     }
 
-    private void drawHeader(GuiGraphics g) {
-        int y = panelTop + CONTENT_TOP;
-        PanelText.onPanel(g, this.font,
-                Component.translatable("screen.zenkai.technique.tp", att.getTP()),
-                panelLeft + 16, y, ZenkaiPalette.TP_ON_PANEL);
+    /** Glifos de la cabecera: están en hud.png del skill tree (pesa = TP, llama azul = MND,
+     *  orbe = Ki; la misma tira que usa tools/gen_skill_tree_art.py). 16 texeles pintados a 8 px. */
+    private static final ResourceLocation HUD_GLYPHS =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/gui/skill_tree/hud.png");
+    private static final int GLYPH_V = 32, GLYPH_TP_V = 48, GLYPH_TP_U = 184, GLYPH_MND_U = 200, GLYPH_KI_U = 232;
+    private static final int GLYPH_TEX = 16, GLYPH_PX = 8;
+    private static final int CHIP_GAP = 4, CHIP_H = 10, MND_W = 92;
 
-        // Los DOS contadores siempre, en las tres categorías: ki y físicas comparten las nueve
-        // casillas, así que ocultar uno al cambiar de categoría escondería justo la mitad del
-        // presupuesto que el jugador está repartiendo.
-        // Libre / total en MND, no solo el total: con MIND finito el número que decide una
-        // compra es lo que queda, y obligar a restar de cabeza es pedirle la cuenta que ya
-        // hace el servidor.
-        int free = MindBudget.free(att);
-        Component mnd = Component.translatable("screen.zenkai.physical.mnd_free",
-                free, MindBudget.total(att));
-        Component sep = Component.literal(" · ");
-        Component ki = Component.translatable("screen.zenkai.technique.count_ki",
-                att.techniques().customSlotCount(), ServerConfig.techniqueMaxSlots());
+    /**
+     * Cabecera en tres placas iguales (la placa de TP/MND del skill tree, NineSlice.plateFrame): glifo,
+     * etiqueta tenue y valor. Solo el valor lleva color de recurso, así que la jerarquía la da la
+     * posición y no tres tintas sin relación. Ki y físicas comparten las nueve casillas, por eso los
+     * tres contadores van siempre, en las tres categorías. MND enseña libre/total: con MIND finito lo
+     * que decide una compra es lo que queda, y restar de cabeza es pedirle la cuenta que ya hace el
+     * servidor. Las placas son OPACAS y van tras super.render() (no hay widgets debajo).
+     */
+    private void drawHeader(GuiGraphics g, int mouseX, int mouseY) {
+        // MND sin icono y con la etiqueta siempre: pide más sitio ("3159/5000" mide 54 px), así que su placa es la ancha.
+        int sideW = (frameR() - frameL() - 2 * CHIP_GAP - MND_W) / 2;
+        int y = panelTop + CONTENT_TOP + 1; // alto interior de la placa; el marco queda 2 px por fuera
+        int free = MindBudget.free(att), total = MindBudget.total(att);
+        headerTip = null;
+        drawChip(g, frameL(), y, sideW, GLYPH_TP_U, GLYPH_TP_V, "TP:", compact(att.getTP()),
+                ZenkaiPalette.TP_ON_DARK, ZenkaiNumbers.exact(att.getTP()), mouseX, mouseY);
+        drawChip(g, frameL() + sideW + CHIP_GAP, y, MND_W, -1, 0, "MND:",
+                compact(free) + "/" + compact(total),
+                free < 0 ? ZenkaiPalette.DENIED : ZenkaiPalette.MIND_ON_DARK,
+                ZenkaiNumbers.exact(free) + " / " + ZenkaiNumbers.exact(total), mouseX, mouseY);
+        drawChip(g, frameR() - sideW, y, sideW, GLYPH_KI_U, GLYPH_V, "Ki:",
+                att.techniques().customSlotCount() + "/" + ServerConfig.techniqueMaxSlots(),
+                0xFFFFFFFF, null, mouseX, mouseY);
+    }
 
-        int wMnd = this.font.width(mnd), wSep = this.font.width(sep), wKi = this.font.width(ki);
-        int x = rightEdge() - wMnd - wSep - wKi;
-        PanelText.onPanel(g, this.font, ki, x, y, ZenkaiPalette.MUTED_ON_PANEL);
-        PanelText.onPanel(g, this.font, sep, x + wKi, y, ZenkaiPalette.MUTED_ON_PANEL);
-        PanelText.onPanel(g, this.font, mnd, x + wKi + wSep, y,
-                free < 0 ? ZenkaiPalette.DENIED_ON_PANEL : ZenkaiPalette.MIND_ON_PANEL);
+    /** Convención del mod (ver ZenkaiNumbers): exacto por debajo de 20 000, compacto por encima. */
+    private static String compact(long v) {
+        return Math.abs(v) < 20_000 ? Long.toString(v) : ZenkaiNumbers.format(v);
+    }
 
-        g.fill(panelLeft + 14, y + 12, rightEdge(), y + 13, ZenkaiPalette.SEPARATOR);
+    /** Valor exacto de la placa bajo el cursor, si su cifra se enseña compactada. */
+    private @Nullable String headerTip;
+
+    /** Una placa: x es su borde exterior; el interior (opaco) mide outerW-4 x CHIP_H. */
+    private void drawChip(GuiGraphics g, int x, int y, int outerW, int glyphU, int glyphV, String label, String value,
+                          int valueColor, @Nullable String exact, int mouseX, int mouseY) {
+        int ix = x + 2, iw = outerW - 4;
+        NineSlice.plateFrame(g, ix, y, iw, CHIP_H);
+        var pose = g.pose();
+        boolean glyph = glyphU >= 0;
+        // Cada glifo ocupa su celda de 16 texeles entera, pero el CUERPO visible no empieza en el mismo texel
+        // (la gota arranca en 2, el orbe tiene rayos finos hasta 3): se compensa para que los tres queden con el
+        // mismo margen respecto a su placa, medido sobre el cuerpo y no sobre la celda.
+        float shift = glyphU == GLYPH_MND_U ? -1.0F : glyphU == GLYPH_KI_U ? -1.5F : 0F;
+        if (glyph) {
+            pose.pushPose();
+            pose.translate(ix + 4 + shift, y + 1, 0);
+            pose.scale(0.5F, 0.5F, 1F);
+            g.blit(HUD_GLYPHS, 0, 0, glyphU, glyphV, GLYPH_TEX, GLYPH_TEX, 256, 128);
+            pose.popPose();
+        }
+        int ty = y + (CHIP_H - 8) / 2 + 1;
+        int lx = glyph ? ix + 4 + GLYPH_PX + 3 : ix + 4;
+        int vx = ix + iw - 3 - this.font.width(value);
+        // Si la cifra entera pisaría el glifo (MND con cuatro cifras a cada lado), se compacta: 3,2K/5K.
+        if (vx < lx + this.font.width(label) + 3 && value.contains("/")) {
+            String[] parts = value.split("/");
+            try {
+                value = ZenkaiNumbers.format(Long.parseLong(parts[0])) + "/" + ZenkaiNumbers.format(Long.parseLong(parts[1]));
+                vx = ix + iw - 3 - this.font.width(value);
+            } catch (NumberFormatException ignored) { }
+        }
+        g.drawString(this.font, label, lx, ty, valueColor, true);
+        g.drawString(this.font, value, vx, ty, valueColor, true);
+        if (exact != null && !exact.equals(value) && mouseX >= x && mouseX < x + outerW
+                && mouseY >= y - 2 && mouseY < y + CHIP_H + 2) {
+            headerTip = exact;
+        }
     }
 
     /**
@@ -1039,7 +1116,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * como "el centro no hace nada".
      */
     private void drawCategorySelector(GuiGraphics g, int mouseX, int mouseY) {
-        int cx = panelLeft + BG_W / 2;
+        int cx = catCx();
         int y = panelTop + CAT_Y_OFF;
         Component label = PanelText.fit(this.font, Component.translatable(category.labelKey),
                 CAT_HALF * 2 - CAT_ICON - 10);
@@ -1052,20 +1129,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         PanelText.onPanel(g, this.font, label, x + CAT_ICON + 4, y + (CAT_H - 8) / 2,
                 hover ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.LABEL_ON_PANEL);
-        // La regla se parte alrededor del chip de orden (drawSortChip), que va centrado sobre ella.
-        int half = sortChipW() / 2 + 5;
-        g.fill(panelLeft + 14, sepY(), cx - half, sepY() + 1, ZenkaiPalette.SEPARATOR);
-        g.fill(cx + half, sepY(), rightEdge(), sepY() + 1, ZenkaiPalette.SEPARATOR);
-    }
-
-    /** El chip «Orden: …» sobre la regla. Va DESPUÉS de la lista: su mitad inferior cae en el margen
-     *  vacío de arriba de la primera fila y el velo de una fila armada no debe taparlo. */
-    private void drawSortChip(GuiGraphics g, int mouseX, int mouseY) {
-        int cx = panelLeft + BG_W / 2, w = sortChipW() + 8;
-        boolean hover = mouseX >= cx - w / 2 && mouseX < cx + w / 2
-                && mouseY >= sepY() - 5 && mouseY < sepY() + 5;
-        PanelText.centeredOnPanel(g, this.font, sortChipText(), cx, sepY() - 4,
-                hover ? ZenkaiPalette.VALUE_ON_PANEL : ZenkaiPalette.MUTED_ON_PANEL);
+        g.fill(frameL(), sepY(), frameR(), sepY() + 1, ZenkaiPalette.SEPARATOR);
     }
 
     /**
@@ -1079,15 +1143,30 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     private @Nullable Component drawRows(GuiGraphics g, int mouseX, int mouseY) {
         rowTooltip = null;
         if (rows.isEmpty()) {
-            PanelText.centeredOnPanel(g, this.font, Component.translatable(switch (category) {
-                        case KI -> "screen.zenkai.technique.empty";
-                        case PHYSICAL -> "screen.zenkai.physical.empty";
-                        case MASTER -> "screen.zenkai.master_techniques.empty";
-                        case SPECIAL -> "screen.zenkai.special.empty";
-                        case MASTERY -> "screen.zenkai.mastery.empty";
-                    }),
-                    panelLeft + BG_W / 2, listTop() + viewHeight() / 2 - 4,
-                    ZenkaiPalette.BODY_ON_PANEL); // MUTED era casi invisible sobre el beige
+            // Icono de la categoría, atenuado, sobre el mensaje: dice DÓNDE estás aunque la lista esté vacía.
+            int iconY = listTop() + viewHeight() / 2 - 4 - CAT_ICON - 8;
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            g.setColor(1.0F, 1.0F, 1.0F, 0.4F);
+            g.blit(ICONS, panelLeft + (BG_W - CAT_ICON) / 2, iconY, category.u, category.v,
+                    CAT_ICON, CAT_ICON, 256, 256);
+            g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            // Se parte en renglones al ancho de las placas: la frase de maestro medía más que el panel y se
+            // salía por los dos lados. El bloque sube medio renglón por cada línea extra para seguir centrado.
+            Component msg = Component.translatable(switch (category) {
+                case KI -> "screen.zenkai.technique.empty";
+                case PHYSICAL -> "screen.zenkai.physical.empty";
+                case MASTER -> "screen.zenkai.master_techniques.empty";
+                case SPECIAL -> "screen.zenkai.special.empty";
+                case MASTERY -> "screen.zenkai.mastery.empty";
+            });
+            List<net.minecraft.network.chat.FormattedText> lines = this.font.getSplitter()
+                    .splitLines(msg, frameR() - frameL() - 8, net.minecraft.network.chat.Style.EMPTY);
+            int ly = listTop() + viewHeight() / 2 - 4 - (lines.size() - 1) * 5;
+            for (net.minecraft.network.chat.FormattedText line : lines) {
+                PanelText.centeredOnPanel(g, this.font, Component.literal(line.getString()),
+                        panelLeft + BG_W / 2, ly, ZenkaiPalette.BODY_ON_PANEL); // MUTED era casi invisible sobre el beige
+                ly += 10;
+            }
             return null;
         }
 
@@ -1097,7 +1176,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
         int last = Math.min(rows.size(), scrollRow + visibleRows());
         for (int i = scrollRow; i < last; i++) {
             int y = rowTop(i);
-            Component tip = drawRow(g, i, rows.get(i), y);
+            Component tip = drawRow(g, i, rows.get(i), y + ROW_PAD);
 
             // El tooltip de la fila solo se ofrece sobre la ZONA DE TEXTO, no sobre el cluster
             // de botones: cada botón tiene ya su propio Tooltip, y como este se pinta después
@@ -1389,7 +1468,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
     /** Realce de la fila armada. Se ciñe a la zona de beige (ver rightEdge): a panelLeft+10,
      *  como estaba heredado, el velo dorado se derramaba sobre el marco naranja del panel. */
     private void veil(GuiGraphics g, int y) {
-        g.fill(panelLeft + CONTENT_INSET - 3, y, scrollbarX() + SCROLLBAR_W, y + ROW_H - 2,
+        g.fill(panelLeft + CONTENT_INSET - 3, y - ROW_PAD, scrollbarX() + SCROLLBAR_W, y - ROW_PAD + ROW_H - 2,
                 ZenkaiPalette.SELECT_VEIL);
     }
 

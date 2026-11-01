@@ -17,7 +17,7 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 /**
- * Korin. Enseña las habilidades de puño (ki_fist, ki_infuse), la agilidad de subir su torre
+ * Korin. Enseña el vuelo (fly, desde 2026-11-01: es lo que permite llegar hasta Kami), las habilidades de puño (ki_fist, ki_infuse), la agilidad de subir su torre
  * (run) y meditation (compartida con Kami y King Kai, ver zenkai_skills/meditation.json), y
  * reparte semillas del ermitaño: es la razón real por la que un jugador sube su torre.
  * El reparto de senzu NO vive aquí. Vive en KorinSenzuManager (tanda 2), por la misma razón

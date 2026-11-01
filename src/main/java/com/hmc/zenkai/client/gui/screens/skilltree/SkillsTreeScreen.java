@@ -909,7 +909,7 @@ public class SkillsTreeScreen extends TreeCanvasScreen {
                         SkillTreeArt.MASTER_PORTRAITS_W, SkillTreeArt.MASTER_PORTRAITS_H);
             } else {
                 g.fill(x + 4, y + 4, x + NODE - 4, y + NODE - 4, 0xFF1A2236);
-                labels.add(new Label(n.x(), n.y() - 4, Component.literal("?"), 0xFFFFFFFF, true, 2f));
+                labels.add(new Label(n.x(), n.y(), Component.literal("?"), 0xFFFFFFFF, true, 2f));
             }
             if (hovered) g.fill(x + 4, y + 4, x + NODE - 4, y + NODE - 4, ZenkaiPalette.HOVER_VEIL);
             labels.add(new Label(n.x(), y + NODE + 3, known
@@ -1028,7 +1028,10 @@ public class SkillsTreeScreen extends TreeCanvasScreen {
                 pose.pushPose();
                 pose.translate(toScreenX(l.wx()), toScreenY(l.wy()), 0);
                 pose.scale(l.scale() * zoom(), l.scale() * zoom(), 1f);
-                g.drawString(this.font, l.name(), -this.font.width(l.name()) / 2, -3, l.accent(), true);
+                // Centrado por la TINTA del glifo (no por font.width, que cuenta 1 px de separación a la derecha):
+                // 5 de ancho x 7 de alto, de ahí -2,5 / -3,5. Antes iba 3 px por encima del centro del marco.
+                pose.translate(-(this.font.width(l.name()) - 1) / 2.0F, -3.5F, 0);
+                g.drawString(this.font, l.name(), 0, 0, l.accent(), false); // sin sombra: con ella la caja de tinta+sombra quedaba 1 px (x2) abajo-derecha
                 pose.popPose();
                 continue;
             }

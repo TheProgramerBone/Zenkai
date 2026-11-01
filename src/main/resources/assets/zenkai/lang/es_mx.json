@@ -214,6 +214,7 @@
   "block.zenkai.scouter_bench": "Banco de Rastreadores",
   "block.zenkai.energy_generator": "Generador de Energía",
   "block.zenkai.npc_marker": "Marcador de NPC",
+  "block.zenkai.invisible_ladder": "Escalera invisible",
   "block.zenkai.piece_connector": "Conector de Pieza",
   "block.zenkai.namekian_grass_block": "Pasto Namekuseijin",
   "block.zenkai.namekian_dirt": "Tierra Namekuseijin",
@@ -981,6 +982,7 @@
   "screen.zenkai.training_hub.row.meditation": "Meditación",
   "screen.zenkai.training_hub.row.target_practice": "Práctica de Puntería Ki",
   "screen.zenkai.training_hub.panel.title": "Modificadores de TP",
+  "screen.zenkai.training_hub.card.record": "Récord",
   "screen.zenkai.training_hub.panel.htc_mult": "Habitación del Tiempo",
   "screen.zenkai.training_hub.panel.effective_combat": "Eficiencia de combate",
   "screen.zenkai.training_hub.panel.effective_meditation": "Eficiencia de Meditación",
@@ -1442,6 +1444,7 @@
   "--- GUI: TRAINING WEIGHTS ---": "--- INTERFAZ: PESOS DE ENTRENAMIENTO ---",
   "screen.zenkai.weight.title": "Pesos de Entrenamiento",
   "screen.zenkai.weight.field": "Peso en toneladas",
+  "screen.zenkai.weight.field.hint": "Pulsa para escribir un valor, o usa la rueda para ajustar",
   "screen.zenkai.weight.load": "Carga: %s / %s t (%s%%)",
   "screen.zenkai.weight.speed": "Velocidad: %s",
   "screen.zenkai.weight.jump": "Salto: %s",
@@ -2091,5 +2094,9 @@
   "messages.zenkai.wish.legendary_majin_exclusive": "No puedes ser Legendario mientras llevas la marca Majin.",
   "messages.zenkai.arcosian_legendary.collapse": "La contención se rompe del todo: tu cuerpo colapsa.",
   "skill_tree.zenkai.pp.tank": "Power Points: %s / %s (%s %%)",
-  "skill_tree.zenkai.pp.how": "Se cargan con el poder por debajo del 50 % (más rápido en Base que en Segunda y Tercera forma, y peleando en estas). Se gastan con el poder en 100 % o más desde la Forma Final."
+  "skill_tree.zenkai.pp.how": "Se cargan con el poder por debajo del 50 % (más rápido en Base que en Segunda y Tercera forma, y peleando en estas). Se gastan con el poder en 100 % o más desde la Forma Final.",
+  "form.zenkai.namek_unity": "Unidad Namekiana",
+  "form.zenkai.arcosian_tyrant": "Arcosiano Tirano",
+  "skill_tree.zenkai.namek_unity.hint": "Todos los namekianos que han existido responden dentro de ti. Evolución mortal de la forma Naranja: más poder que el escalón divino, a cambio de ki sostenido.",
+  "skill_tree.zenkai.arcosian_tyrant.hint": "Dominio frío y absoluto sobre tu propio cuerpo. Evolución mortal de la Forma Final: más poder bruto que el escalón divino, pero quema el ki rápido."
 }

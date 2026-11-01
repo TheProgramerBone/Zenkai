@@ -1286,8 +1286,10 @@ public class ServerConfig {
             BUILDER.comment("Weights: ambient tons added by Kaiosama's planet natural gravity " +
                     "(stacks with equipped weighted gear -- see .claude/pendiente/gravedad-planeta-kaiosama.md). " +
                     "200 -> 100 (2026-09-10): confirmed in-game by the user at PL ~20k, still needs more " +
-                    "playtesting at other PL ranges")
-                    .defineInRange("training.weight_kaiosama_ambient_tons", 100.0D, 0.0D, 1.0E7D);
+                    "playtesting at other PL ranges. 100 -> 40 (2026-11-01, user report: too punishing for " +
+                    "the PL at which the planet is reached; 40 t is comfortable from PL ~1.6k and overloads " +
+                    "below ~1.9k, instead of ~5.4k). Key renamed to _v2 on 2026-11-01 so stale 100/200 values in old serverconfig files stop overriding it")
+                    .defineInRange("training.weight_kaiosama_ambient_tons_v2", 40.0D, 0.0D, 1.0E7D);
 
     private static final ModConfigSpec.DoubleValue WEIGHT_KAIOSAMA_GRAVITY_MULT_RAW =
             BUILDER.comment("Weights: DISPLAY-ONLY gravity multiplier shown for Kaiosama's planet " +
@@ -1826,7 +1828,7 @@ public class ServerConfig {
             WEIGHT_STAT_PEN = 0.25D, WEIGHT_MOVE_PEN = 0.60D, WEIGHT_JUMP_PEN = 0.40D,
             WEIGHT_GRAVITY_JUMP_FACTOR = 0.25D,
             WEIGHT_TP_BONUS = 1.5D, WEIGHT_OVER_THRESH = 1.2D, WEIGHT_OVER_MOVE = 0.15D,
-            WEIGHT_KAIOSAMA_TONS = 100.0D, WEIGHT_KAIOSAMA_GRAVITY_MULT = 10.0D,
+            WEIGHT_KAIOSAMA_TONS = 40.0D, WEIGHT_KAIOSAMA_GRAVITY_MULT = 10.0D,
             WEIGHT_HTC_TONS = 3.0D, WEIGHT_HTC_GRAVITY_MULT = 2.0D;
     private static volatile double PU_TP_MULT = 0.50D;
     private static volatile int    PU_ALIGNMENT_REQ = 50;

@@ -349,6 +349,7 @@ public class PlayerFormAttachment {
             // conceder (raza sin SSJ4 en su cadena, datapack raro), FormSystem lo echaría al tick
             // siguiente con un parpadeo de SSJ4: se vuelve a Base aquí, limpio.
             if (!SuperForms.unlocked(p, FormIds.SSJ4) && !grantSsj4(p)) {
+                selectedForm = null; // no se pudo conceder: que no reintente el mismo destino en bucle
                 forceBase();
                 return true;
             }
@@ -719,9 +720,17 @@ public class PlayerFormAttachment {
         oozaruForced = false;
     }
 
-    /** Vuelta forzada a base (ki agotado, forma inválida). Deja cooldown para no reencadenar. */
+    /**
+     * Vuelta forzada a base (ki agotado, forma inválida, destransformar a mano, Descender). Deja cooldown para
+     * no reencadenar. CONSERVA la forma elegida en la rueda: destransformarse no es cambiar de idea, y al volver
+     * a mantener la tecla el jugador espera ir de nuevo a la forma que había escogido en vez de reempezar la
+     * escalera desde el primer peldaño (reporte del usuario, 2026-11-01). La selección solo se pierde con
+     * resetAll() (muerte, respec, cambio de raza) o si deja de ser válida (validateOrReset).
+     */
     public void forceBase() {
+        ResourceLocation keepSelected = selectedForm;
         resetAll();
+        selectedForm = keepSelected;
         cooldownTicks = 10;
     }
 

@@ -214,6 +214,7 @@
   "block.zenkai.scouter_bench": "Scouter Bench",
   "block.zenkai.energy_generator": "Energy Generator",
   "block.zenkai.npc_marker": "NPC Marker",
+  "block.zenkai.invisible_ladder": "Invisible Ladder",
   "block.zenkai.piece_connector": "Piece Connector",
   "block.zenkai.namekian_grass_block": "Namekian Grass Block",
   "block.zenkai.namekian_dirt": "Namekian Dirt",
@@ -966,6 +967,7 @@
   "screen.zenkai.training_hub.row.meditation": "Meditation",
   "screen.zenkai.training_hub.row.target_practice": "Ki Target Practice",
   "screen.zenkai.training_hub.panel.title": "TP Modifiers",
+  "screen.zenkai.training_hub.card.record": "Record",
   "screen.zenkai.training_hub.panel.htc_mult": "Hyperbolic Time Chamber",
   "screen.zenkai.training_hub.panel.effective_combat": "Combat efficiency",
   "screen.zenkai.training_hub.panel.effective_meditation": "Meditation efficiency",
@@ -1298,7 +1300,7 @@
   "screen.zenkai.physical.unlock_action": "Unlock",
   "screen.zenkai.physical.forget": "Forget (refund %s TP)",
   "screen.zenkai.physical.forget_confirm": "Forget it? Click again to confirm",
-  "screen.zenkai.physical.mnd_free": "MND %s/%s",
+  "screen.zenkai.physical.mnd_free": "MND: %s/%s",
   "screen.zenkai.technique.origin": "Fires from: %s",
   "screen.zenkai.technique.masterOnly": "Only taught by %s",
 
@@ -1427,6 +1429,7 @@
   "--- GUI: TRAINING WEIGHTS ---": "--- GUI: TRAINING WEIGHTS ---",
   "screen.zenkai.weight.title": "Training Weights",
   "screen.zenkai.weight.field": "Weight in tons",
+  "screen.zenkai.weight.field.hint": "Click to type a value, or scroll to adjust",
   "screen.zenkai.weight.load": "Load: %s / %s t (%s%%)",
   "screen.zenkai.weight.speed": "Speed: %s",
   "screen.zenkai.weight.jump": "Jump: %s",
@@ -2078,5 +2081,9 @@
   "messages.zenkai.wish.legendary_majin_exclusive": "You cannot become Legendary while bearing the Majin mark.",
   "messages.zenkai.arcosian_legendary.collapse": "The restraint breaks completely: your body collapses.",
   "skill_tree.zenkai.pp.tank": "Power Points: %s / %s (%s %%)",
-  "skill_tree.zenkai.pp.how": "They charge with your power below 50% (faster in Base than in the Second and Third forms, and by fighting in those). They are spent at 100% power or more from the Final Form."
+  "skill_tree.zenkai.pp.how": "They charge with your power below 50% (faster in Base than in the Second and Third forms, and by fighting in those). They are spent at 100% power or more from the Final Form.",
+  "form.zenkai.namek_unity": "Namekian Unity",
+  "form.zenkai.arcosian_tyrant": "Arcosian Tyrant",
+  "skill_tree.zenkai.namek_unity.hint": "Every Namekian who ever lived answers inside you. Mortal evolution of the Orange form: more power than the divine step, at the price of sustained ki.",
+  "skill_tree.zenkai.arcosian_tyrant.hint": "Cold, absolute rule over your own body. Mortal evolution of the Final Form: more raw power than the divine step, but it burns ki fast."
 }

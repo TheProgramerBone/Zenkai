@@ -319,7 +319,9 @@ public class ModNetworking {
                 TrainingFatiguePacket.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
                         () -> ClientPayloadHandlers.onTrainingFatigue(payload.combatEfficiency(),
-                                payload.meditationEfficiency(), payload.targetPracticeEfficiency())));
+                                payload.meditationEfficiency(), payload.targetPracticeEfficiency(),
+                                payload.shadowRecord(), payload.meditationRecord(),
+                                payload.targetPracticeRecord())));
 
         registrar.playToServer(
                 FlyAnimPacket.TYPE,
