@@ -39,7 +39,7 @@ public class RevivePlayerWishScreen extends ShenronPanelScreen {
     @Override
     protected void initContent() {
         int y = panelTop + CONTENT_TOP + 40;
-        nameBox = new EditBox(this.font, centerX() - BOX_W / 2, y, BOX_W, BOX_H,
+        nameBox = new ShenronEditBox(this.font, centerX() - BOX_W / 2, y, BOX_W, BOX_H,
                 Component.translatable("screen.zenkai.wish.revive_player.hint"));
         nameBox.setMaxLength(32);
         nameBox.setHint(Component.translatable("screen.zenkai.wish.revive_player.hint"));

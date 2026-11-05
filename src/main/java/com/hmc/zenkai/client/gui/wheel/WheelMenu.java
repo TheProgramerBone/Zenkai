@@ -101,6 +101,9 @@ public final class WheelMenu {
         Map<String, List<WheelNode>> categories = new LinkedHashMap<>();
         for (SkillToggles.Toggle t : SkillToggles.all()) {
             if (SkillEffects.ULTRA_INSTINCT.equals(t.id()) || SkillEffects.ULTRA_EGO.equals(t.id())) continue;
+            // Las armas de ki solo salen en la rueda si están ENCENDIDAS (el usuario, 2026-11-01): encenderlas y
+            // apagarlas se hace desde el árbol («Mis habilidades»); aquí servirían para cambiar o apagar la activa.
+            if (SkillToggles.CAT_KI_WEAPONS.equals(t.category()) && !SkillToggles.isOn(p, t.id())) continue;
             WheelNode n = toggleNode(p, t.id());
             if (n == null) continue;
             if (t.category() == null) roots.add(n);
@@ -180,7 +183,7 @@ public final class WheelMenu {
         FormDef def = FormDef.get(id);
         int color = def == null ? COL_FORMS : (0xFF000000 | def.auraRgb());
         WheelNode leaf = WheelNode.leaf(WheelNode.Kind.FORM, id.toString(),
-                Component.translatable("form.zenkai." + id.getPath()), color,
+                Component.translatable(FormDef.nameKey(id)), color,
                 true, id.equals(selected));
         switch (tierOf(def)) {
             case DIVINE -> divine.add(leaf);
@@ -258,7 +261,7 @@ public final class WheelMenu {
             FormDef def = FormDef.get(mystic);
             ResourceLocation selected = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getSelectedForm();
             kids.add(WheelNode.leaf(WheelNode.Kind.FORM, mystic.toString(),
-                    Component.translatable("form.zenkai." + mystic.getPath()),
+                    Component.translatable(FormDef.nameKey(mystic)),
                     0xFF000000 | def.auraRgb(), true, mystic.equals(selected)));
         }
         // Beast: evolución de Mystic, aparece cuando la furia lo desbloquea (EndgamePaths.unlocked).
@@ -283,7 +286,7 @@ public final class WheelMenu {
                 FormDef def = FormDef.get(id);
                 int color = def == null ? COL_FORMS : (0xFF000000 | def.auraRgb());
                 out.add(WheelNode.leaf(WheelNode.Kind.FORM, id.toString(),
-                        Component.translatable("form.zenkai." + id.getPath()), color,
+                        Component.translatable(FormDef.nameKey(id)), color,
                         true, id.equals(selected)));
             }
             for (ResourceLocation child : FormRegistry.childrenOf(id)) {

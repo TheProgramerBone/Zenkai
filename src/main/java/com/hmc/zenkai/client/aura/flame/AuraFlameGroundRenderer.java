@@ -80,7 +80,7 @@ public final class AuraFlameGroundRenderer {
 
         Vec3 camPos = mc.gameRenderer.getMainCamera().getPosition();
         float pt = e.getPartialTick().getGameTimeDeltaPartialTick(true);
-        double ticks = mc.level.getGameTime() + pt;
+        double ticks = com.hmc.zenkai.client.aura.AuraClock.ticks() + pt;
         float seconds = (float) (ticks / 20.0);
         int step = (int) Math.floor(ticks / STEP_TICKS);
         long now = System.nanoTime();

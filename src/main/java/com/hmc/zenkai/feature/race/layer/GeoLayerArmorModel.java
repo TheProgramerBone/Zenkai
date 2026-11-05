@@ -18,6 +18,9 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
      */
     static boolean wearerHasRealHeadwear = false;
 
+    /** El portador lleva un objeto de #zenkai:covers_ear (scouter) en la cabeza o en Curios. Lo fija RaceSkinGeoArmorLayer. */
+    static boolean wearerHasEarGear = false;
+
     /**
      * Opciones de cuerpo EFECTIVAS (categoría -> nombre, ya resueltas con el catálogo) del jugador que se
      * renderiza AHORA. Lo fija RaceSkinGeoArmorLayer junto a wearerHasRealHeadwear y lo lee
@@ -37,14 +40,24 @@ public class GeoLayerArmorModel extends GeoModel<GeoLayerArmorItem> {
         if (animatable == com.hmc.zenkai.registry.ModItems.HAIR.get()) {
             com.hmc.zenkai.client.hair.HairMotion.apply(this);
         }
-        String[] bones = animatable.getHideOnHelmetBones();
-        if (bones.length == 0) return;
-        for (String name : bones) {
-            getBone(name).ifPresent(b -> {
-                b.setHidden(wearerHasRealHeadwear);
-                b.setChildrenHidden(wearerHasRealHeadwear);
-            });
+        // Un hueso puede estar en hideOnHelmet Y en hideOnEarGear (la oreja del Namekiano: se oculta con un casco real o con el
+        // scouter). Cada bucle por separado se pisaba: el de casco (false con un scouter, que es keeps_hair) corría después del
+        // de la oreja y la devolvía a visible (pendiente #14, medido 2026-11-02). La decisión es una sola, por hueso, y en la
+        // misma forma que GeoLayerArmorRenderer.preRender: se oculta si CUALQUIERA de las dos causas aplica.
+        boolean hideHelmet = wearerHasRealHeadwear;
+        boolean hideEar = wearerHasEarGear || wearerHasRealHeadwear;
+        for (String name : animatable.getHideOnHelmetBones()) {
+            boolean hide = hideHelmet || (hideEar && isEarBone(animatable, name));
+            getBone(name).ifPresent(b -> { b.setHidden(hide); b.setChildrenHidden(hide); });
         }
+        for (String name : animatable.getHideOnEarGearBones()) {
+            getBone(name).ifPresent(b -> { b.setHidden(hideEar); b.setChildrenHidden(hideEar); });
+        }
+    }
+
+    private static boolean isEarBone(GeoLayerArmorItem item, String bone) {
+        for (String n : item.getHideOnEarGearBones()) if (n.equals(bone)) return true;
+        return false;
     }
 
     /**

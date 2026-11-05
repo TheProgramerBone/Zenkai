@@ -19,7 +19,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /**
- * Biblioteca de peinados importados (pestaña Pelo, .claude/docs/customizacion-cara-y-pelo.md
+ * Biblioteca de peinados importados (pestaña Pelo, .claude/docs/customizacion-pelo.md
  * §10.1): reglas de añadir/quitar, qué viaja a quién, qué acepta el servidor del cliente y qué
  * variante se ve con cada forma. Solo códigos SINTÉTICOS generados aquí (licencias, §6).
  */

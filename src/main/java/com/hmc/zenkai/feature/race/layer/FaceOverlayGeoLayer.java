@@ -135,11 +135,46 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         FormDef blendFrom = blend.blending() ? FormDef.get(blend.from()) : null;
         FormDef blendTo = blend.blending() ? FormDef.get(blend.to()) : null;
 
+        // Expresión (parpadeo, daño, cansancio, sueño, muerte, carga de ki): se calcula en el cliente, sin red, y solo
+        // elige QUÉ CAPAS se pintan de ojos y boca. Quieta durante el cambio de forma (ahí manda la mezcla de
+        // colores) y con los ojos forzados (Legendario, Ultra Instinto activo); apagable en la config del cliente.
+        // La BOCA sí cambia durante el cambio de forma (es justo el grito de la transformación; la mezcla de colores solo
+        // toca ojos y cejas): se calcula siempre y solo los ojos se quedan quietos.
+        com.hmc.zenkai.client.face.FaceExpression.State expr = com.hmc.zenkai.client.face.FaceExpression.State.NEUTRAL;
+        if (com.hmc.zenkai.config.ClientConfig.faceExpressions()) {
+            expr = com.hmc.zenkai.client.face.FaceExpression.current(player, partialTick);
+            if (blend.blending() || eyeOverride >= 0) {
+                expr = new com.hmc.zenkai.client.face.FaceExpression.State(
+                        com.hmc.zenkai.client.face.FaceExpression.Expression.NEUTRAL, expr.mouth());
+            }
+        }
+        net.minecraft.resources.ResourceLocation formId = form.getFormId();
+
+        // Marcas faciales (fase 4): cicatrices, pinturas... elegidas por el jugador (hasta 3), pintadas ya en color
+        // DEBAJO de los rasgos (ojos, cejas, nariz y boca quedan encima; pedido del usuario, 2026-11-01) y recolocadas a la región de cara de cada modelo como cualquier rasgo.
+        for (net.minecraft.resources.ResourceLocation mark : vis.getMarkings()) {
+            ResourceLocation src = markingTexture(mark);
+            if (!resourceExists(src)) continue;
+            ResourceLocation tex = FaceRemapTextures.remap(src, region);
+            if (tex == null) continue;
+            drawPass(tex, 0xFFFFFFFF, poseStack, bakedModel,
+                    animatable, bufferSource, partialTick, packedLight, packedOverlay);
+        }
+
         for (FaceCategory category : FaceCategory.values()) {
             FacePartDef part = FaceCatalog.get(vis.getFacePart(category));
             if (part == null) continue;
-            // Capas de la RAZA si el rasgo trae una variante dibujada para ella (race_layers).
-            for (FaceLayer layer : part.layersFor(race)) {
+            // Cara POR FORMA (fase 3): la forma activa puede imponer un rasgo (assets/zenkai/zenkai_form_faces/).
+            part = com.hmc.zenkai.client.face.FormFaces.override(formId, category, part, race);
+            // Capas de la RAZA si el rasgo trae una variante dibujada para ella (race_layers); con una expresión
+            // activa, las de esa expresión (FaceExpression.layersFor).
+            java.util.List<FaceLayer> partLayers =
+                    com.hmc.zenkai.client.face.FaceExpression.layersFor(expr, category, part, race);
+            // Emisivo (fase 5): a pleno brillo, ignorando la luz del mundo. Solo la categoría que la forma declara.
+            int light = (com.hmc.zenkai.config.ClientConfig.faceEmissive()
+                    && com.hmc.zenkai.client.face.FormFaces.emissive(formId, category))
+                    ? net.minecraft.client.renderer.LightTexture.FULL_BRIGHT : packedLight;
+            for (FaceLayer layer : partLayers) {
                 // Namek/Arcosiano/Majin no tienen cejas: ni la categoría ni el trazo-ceja del ojo.
                 if (!RaceFaceTraits.shows(race, category, layer)) continue;
                 // Formas sin cejas (SSJ3): fuera el trazo de ceja del ojo y la categoría de cejas.
@@ -158,28 +193,104 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
                     rgb = RaceFaceTraits.shadeSkin(race, FaceRemapTextures.skinFeatureRgb(animatable, player, rgb));
                 }
                 drawPass(tex, 0xFF000000 | rgb, poseStack, bakedModel,
-                        animatable, bufferSource, partialTick, packedLight, packedOverlay);
+                        animatable, bufferSource, partialTick, light, packedOverlay);
             }
-        }
-
-        // «M» de Babidi en la frente mientras dura la marca Majin: una capa extra, pintada en la cara
-        // canónica y recolocada a la región de cada modelo como cualquier rasgo (FaceRegions).
-        if (vis.isMajinControlled() && resourceExists(MAJIN_MARK)) {
-            drawPass(FaceRemapTextures.remap(MAJIN_MARK, region), 0xFFFFFFFF, poseStack, bakedModel,
-                    animatable, bufferSource, partialTick, packedLight, packedOverlay);
         }
 
         poseStack.popPose();
     }
 
-    /** La «M» de la marca Majin (tools/gen_majin_mark.py). Lleva su propio color: no se tiñe. */
+    /** Textura de una marca facial: {@code <ns>:textures/customization/face/markings/<id>.png}. */
+    public static ResourceLocation markingTexture(ResourceLocation id) {
+        return ResourceLocation.fromNamespaceAndPath(id.getNamespace(),
+                "textures/customization/face/markings/" + id.getPath() + ".png");
+    }
+
+    /** Emblema Majin de icons.png tal cual, 18x15 (tools/gen_majin_mark.py). Lleva su propio color: no se tiñe. */
     private static final ResourceLocation MAJIN_MARK = ResourceLocation.fromNamespaceAndPath(
-            "zenkai", "textures/customization/face/majin_mark.png");
+            "zenkai", "textures/customization/face/majin_mark_icon.png");
+
+    // ── «M» de Babidi como CALCOMANÍA (2026-11-01) ──
+    // A 2 texels por píxel de MC el icono (18x15) mide más que la cara entera (16x16), así que no cabe en la textura de
+    // la cara sin reducirlo. Se dibuja aparte: un cuadrito pegado al hueso de la cabeza, delante de la frente, con el
+    // PNG intacto; lo pequeño es el cuadrito, no los píxeles. Medidas en TEXELS de la cara (16x16; la frente son las
+    // filas 0-3 y los ojos empiezan en la 4), centrado en horizontal y pegado al borde superior.
+    private static final float DECAL_W = 5.4f, DECAL_H = 4.5f;   // proporción 18:15 del icono
+    private static final float DECAL_CENTER_X = 8.0f, DECAL_TOP_Y = 2.5f;
+    /**
+     * Separación hacia fuera de la cara, en bloques: mínima (0,002 = 0,03 px), PEGADA a la cabeza. Con 0,08 se sacaba
+     * por delante del flequillo pero de perfil se veía despegada (2026-11-01). Quien evita el z-fighting es el
+     * RenderType (RaceRenderTypes.viewOffset: empuja hacia la cámara en view space, como los ojos y la boca), no la distancia.
+     */
+    private static final float DECAL_LIFT = 0.002f;
+
+    @Override
+    public void renderForBone(PoseStack poseStack, GeoLayerArmorItem animatable, software.bernie.geckolib.cache.object.GeoBone bone,
+                              RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
+                              float partialTick, int packedLight, int packedOverlay) {
+        if (!"head".equals(bone.getName()) || bone.isHidden() || bone.getCubes().isEmpty()) return;
+        if (!animatable.hasFaceOverlays()) return;
+        GeoLayerArmorRenderer armorRenderer = (GeoLayerArmorRenderer) this.getRenderer();
+        if (armorRenderer.getCurrentSlot() != EquipmentSlot.HEAD) return;
+        if (!(armorRenderer.getCurrentEntity() instanceof Player player)) return;
+        if (!PlayerVisualAttachment.get(player).isMajinControlled() || !resourceExists(MAJIN_MARK)) return;
+        var formId = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId();
+        if (com.hmc.zenkai.feature.forms.FormIds.OOZARU.equals(formId)
+                || com.hmc.zenkai.feature.forms.FormIds.SUPER_OOZARU.equals(formId)) return;
+
+        // La cara del modelo: el quad NORTE de la primera caja de la cabeza (el mismo que FaceRemapTextures usa para saber
+        // dónde está la cara en la textura). Sus esquinas se sitúan por su UV: arriba-izquierda = (u, v) mínimos.
+        software.bernie.geckolib.cache.object.GeoQuad face = null;
+        for (var q : bone.getCubes().get(0).quads()) {
+            if (q != null && q.direction() == net.minecraft.core.Direction.NORTH) { face = q; break; }
+        }
+        if (face == null) return;
+        org.joml.Vector3f tl = null, tr = null, bl = null;
+        float minU = Float.MAX_VALUE, maxU = -Float.MAX_VALUE, minV = Float.MAX_VALUE, maxV = -Float.MAX_VALUE;
+        for (var v : face.vertices()) {
+            minU = Math.min(minU, v.texU()); maxU = Math.max(maxU, v.texU());
+            minV = Math.min(minV, v.texV()); maxV = Math.max(maxV, v.texV());
+        }
+        for (var v : face.vertices()) {
+            boolean left = Math.abs(v.texU() - minU) < 1.0e-5f, top = Math.abs(v.texV() - minV) < 1.0e-5f;
+            if (left && top) tl = v.position();
+            else if (!left && top) tr = v.position();
+            else if (left) bl = v.position();
+        }
+        if (tl == null || tr == null || bl == null) return;
+
+        // Punto de la cara en texels (tx a la derecha, ty hacia abajo) → posición en el espacio del hueso.
+        org.joml.Vector3f right = new org.joml.Vector3f(tr).sub(tl), down = new org.joml.Vector3f(bl).sub(tl);
+        org.joml.Vector3f out = new org.joml.Vector3f(face.normal()).normalize().mul(DECAL_LIFT);
+        float x0 = DECAL_CENTER_X - DECAL_W / 2f, x1 = DECAL_CENTER_X + DECAL_W / 2f;
+        float y0 = DECAL_TOP_Y, y1 = DECAL_TOP_Y + DECAL_H;
+        org.joml.Vector3f[] c = {at(tl, right, down, out, x0, y0), at(tl, right, down, out, x0, y1),
+                at(tl, right, down, out, x1, y1), at(tl, right, down, out, x1, y0)};
+        float[] us = {0f, 0f, 1f, 1f}, vs = {0f, 1f, 1f, 0f};
+
+        // El mismo RenderType de los rasgos de la cara (armorCutoutNoCull: sin culling y con view-offset hacia la cámara).
+        RenderType rt = RaceRenderTypes.viewOffset(MAJIN_MARK);
+        VertexConsumer vc = bufferSource.getBuffer(rt);
+        PoseStack.Pose pose = poseStack.last();
+        org.joml.Vector3f n = new org.joml.Vector3f(face.normal()).normalize();
+        for (int i = 0; i < 4; i++) {
+            vc.addVertex(pose.pose(), c[i].x, c[i].y, c[i].z).setColor(255, 255, 255, 255).setUv(us[i], vs[i])
+                    .setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(packedLight)
+                    .setNormal(pose, n.x, n.y, n.z);
+        }
+        // Se devuelve el buffer del modelo: el resto de cubos del hueso y los hijos siguen en su RenderType.
+        bufferSource.getBuffer(renderType);
+    }
+
+    private static org.joml.Vector3f at(org.joml.Vector3f tl, org.joml.Vector3f right, org.joml.Vector3f down,
+                                        org.joml.Vector3f out, float tx, float ty) {
+        return new org.joml.Vector3f(tl).fma(tx / 16f, right).fma(ty / 16f, down).add(out);
+    }
 
     /**
      * Textura de una capa, o null si este cliente no la tiene. Punto ÚNICO de elección de
-     * textura: las expresiones (parpadeo, daño...) entrarán aquí eligiendo una variante de la
-     * capa, sin tocar el resto de la clase. Devuelve la textura YA recolocada a la región de
+     * textura. Las expresiones eligen QUÉ CAPAS se pintan en el bucle de render (ver
+     * {@code FaceExpression}); las variantes por rasgo (blink.png propio de cada ojo) entrarán allí. Devuelve la textura YA recolocada a la región de
      * cara del modelo (la misma si la región es la canónica).
      */
     @Nullable

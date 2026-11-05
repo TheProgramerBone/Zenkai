@@ -135,7 +135,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       boolean wheelSelectable, boolean divineTier, int auraOuterRgb, int eyeRgb,
                       int browRgb, Tier tier, boolean endgamePath, AlignBranch alignmentBranch,
                       Map<ResourceLocation, Double> masteryReqs, String category,
-                      Map<Integer, Integer> layerColors, int furRgb, boolean noBrows) {
+                      Map<Integer, Integer> layerColors, int furRgb, boolean noBrows, String iconDefault, String hairStyle) {
 
     /**
      * Rango de balance de una forma (campo "tier" del JSON, default NONE), con significado fijo
@@ -193,6 +193,22 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
     }
 
     /** null si esa forma no está definida en ningún datapack. */
+    /**
+     * Clave de lang del nombre de una forma: {@code form.<namespace>.<ruta con puntos>}. Antes se escribía a mano
+     * {@code "form.zenkai." + path} en ocho sitios, así que la forma de un addon (otro namespace) salía con la clave cruda.
+     */
+    public static String nameKey(ResourceLocation id) {
+        return "form." + id.getNamespace() + "." + id.getPath().replace('/', '.');
+    }
+
+    /**
+     * Textura del icono PROPIO de una forma, si el autor la trae: {@code assets/<ns>/textures/gui/form_icons/<ruta>.png}
+     * (32x32). Sin ella se usa {@link #iconDefault()}: el id de una forma cuyo icono se presta («zenkai:ssj1»).
+     */
+    public static ResourceLocation iconTexture(ResourceLocation id) {
+        return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/gui/form_icons/" + id.getPath() + ".png");
+    }
+
     public static FormDef get(ResourceLocation id) { return id == null ? null : REGISTRY.get(id); }
 
     public static java.util.Collection<FormDef> all() { return REGISTRY.values(); }
@@ -387,6 +403,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 }
                 buf.writeInt(d.furRgb());
                 buf.writeBoolean(d.noBrows());
+                buf.writeUtf(d.iconDefault(), 128);
+                buf.writeUtf(d.hairStyle(), 128);
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -410,7 +428,7 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(),
                         readTier(buf), buf.readBoolean(), readAlign(buf), readReqs(buf),
-                        buf.readUtf(32), readLayerColors(buf), buf.readInt(), buf.readBoolean());
+                        buf.readUtf(32), readLayerColors(buf), buf.readInt(), buf.readBoolean(), buf.readUtf(128), buf.readUtf(128));
             });
 
     private static Map<Integer, Integer> readLayerColors(FriendlyByteBuf buf) {

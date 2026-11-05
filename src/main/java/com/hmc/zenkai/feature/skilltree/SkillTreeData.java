@@ -136,7 +136,7 @@ public record SkillTreeData(ResourceLocation node,
 
     /** Nombre visible de un nodo (forma, skill o nodo propio), para requisitos y textos. */
     public static Component displayName(ResourceLocation node) {
-        if (FormDef.get(node) != null) return Component.translatable("form.zenkai." + node.getPath());
+        if (FormDef.get(node) != null) return Component.translatable(FormDef.nameKey(node));
         String path = node.getPath().replace("node/", "");
         SkillDef def = SkillDef.get(path);
         if (def != null) return Component.translatable(def.nameKey());

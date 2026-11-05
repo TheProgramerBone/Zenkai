@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * Qué variante de un juego de DMZ (base / SSJ / SSJ2 / SSJ3) se ve con cada forma de Zenkai
- * (.claude/docs/customizacion-cara-y-pelo.md, sección "Pelo importado: formatos…", tabla de formas). La que el código no traiga cae a la
+ * (.claude/docs/customizacion-pelo.md, sección "Pelo importado: formatos…", tabla de formas). La que el código no traiga cae a la
  * anterior: SSJ3 -&gt; SSJ2 -&gt; SSJ -&gt; base (SSJ4 -&gt; SSJ). Las formas sin entrada usan la base,
  * teñida por la forma si esta declara hair_rgb.
  *
@@ -43,7 +43,25 @@ public final class HairFormVariants {
             Map.entry("zenkai:ssj_green_max", Variant.SSJ));
 
     public static Variant wanted(@Nullable ResourceLocation formId) {
-        return formId == null ? Variant.BASE : FORMS.getOrDefault(formId.toString(), Variant.BASE);
+        return wanted(formId, 0);
+    }
+
+    /**
+     * Los peinados por código (DMZ, importados) llevan VARIANTES (base, SSJ, SSJ2, SSJ3, SSJ4) elegidas por esta tabla de formas
+     * del mod. Una forma de un addon no está en ella y salía siempre con la base (bug del SSJ Blue 3 con el peinado de Goku,
+     * 2026-11-02): ahora hereda la variante de la forma que declara en su {@code hair_style} (el id de otra forma, hasta 3
+     * saltos), p. ej. {@code "zenkai:ssj3"} = la variante de SSJ3.
+     */
+    private static Variant wanted(@Nullable ResourceLocation formId, int depth) {
+        if (formId == null) return Variant.BASE;
+        Variant v = FORMS.get(formId.toString());
+        if (v != null) return v;
+        com.hmc.zenkai.feature.forms.FormDef d = com.hmc.zenkai.feature.forms.FormDef.get(formId);
+        if (d != null && !d.hairStyle().isEmpty() && depth < 3) {
+            ResourceLocation ref = ResourceLocation.tryParse(d.hairStyle());
+            if (ref != null && !ref.equals(formId)) return wanted(ref, depth + 1);
+        }
+        return Variant.BASE;
     }
 
     /**

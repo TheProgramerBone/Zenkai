@@ -36,6 +36,20 @@ public abstract class ShenronPanelScreen extends ZenkaiPanelScreen {
 
     @Override protected int titleColor() { return ZenkaiPalette.SHENLONG; }
     @Override protected boolean darkPanel() { return true; }
+    // Pie propio: botones planos de la familia divina, POR ENCIMA de la banda de esferas (y>=220 del arte, ver
+    // tools/import_shenron_screen.py): nunca las tapan. Ancho par y hueco par = simétricos respecto al eje del panel.
+    private static final int BTN_W = 80, BTN_H = 16, BTN_GAP = 12, BTN_BOTTOM = 216;
+    @Override protected int footerH()       { return BG_H - (BTN_BOTTOM - BTN_H) + 4; }
+    @Override protected int footerButtonY() { return panelTop + BTN_BOTTOM - BTN_H; }
+    @Override protected int footerButtonW() { return BTN_W; }
+    @Override protected int footerGap()     { return BTN_GAP; }
+
+    @Override
+    protected com.hmc.zenkai.client.gui.buttons.PanelButton createFooterButton(int x, int y, Component label,
+            com.hmc.zenkai.client.gui.buttons.PanelButton.Kind kind, Runnable action) {
+        return new com.hmc.zenkai.client.gui.buttons.ShenronButton(x, y, BTN_W, BTN_H, label, kind, action);
+    }
+
     @Override protected int dividerColor() { return ZenkaiPalette.SHENRON_DIVIDER; }
 
     @Override

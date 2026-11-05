@@ -57,7 +57,7 @@ public class EnchantVillagerWishScreen extends ShenronPanelScreen {
         this.filtered = all;
 
         int y = panelTop + CONTENT_TOP + 10;
-        searchBox = new EditBox(this.font, centerX() - BOX_W / 2, y, BOX_W, BOX_H,
+        searchBox = new ShenronEditBox(this.font, centerX() - BOX_W / 2, y, BOX_W, BOX_H,
                 Component.translatable("screen.zenkai.enchant.search"));
         searchBox.setHint(Component.translatable("screen.zenkai.enchant.search"));
         searchBox.setResponder(this::applyFilter);

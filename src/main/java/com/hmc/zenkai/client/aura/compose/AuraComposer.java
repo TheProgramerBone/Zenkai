@@ -151,7 +151,8 @@ public final class AuraComposer {
         Vec3 camPos = cam.getPosition();
         Vector3f left = cam.getLeftVector(), up = cam.getUpVector();
         float pt = e.getPartialTick().getGameTimeDeltaPartialTick(true);
-        float seconds = (float) ((mc.level.getGameTime() + pt) / 20.0);
+        float seconds = (float) ((com.hmc.zenkai.client.aura.AuraClock.ticks() + pt) / 20.0);
+        com.hmc.zenkai.client.aura.AuraClock.bindShaderTime(pt); // los shaders de cuerpo leen GameTime: que usen el mismo reloj
         // Prueba de movimiento A SALTOS (AuraDebug.lookFps): el mismo reloj cuantizado que los shaders de
         // cuerpo, para que agujas, rayos y vaivén salten a la vez. Las partículas simuladas (dt) no.
         if (AuraDebug.lookFps > 0f) seconds = (float) Math.floor(seconds * AuraDebug.lookFps) / AuraDebug.lookFps;
@@ -197,6 +198,7 @@ public final class AuraComposer {
         } else {
             ghost = null;
         }
+        com.hmc.zenkai.client.aura.AuraClock.restoreShaderTime(pt);
     }
 
     /** Formas cuyo contorno se ve siempre, sin cargar (Ultra Instinct y su signo). */

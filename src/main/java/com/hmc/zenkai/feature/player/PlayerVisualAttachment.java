@@ -249,6 +249,20 @@ public class PlayerVisualAttachment {
     public void   setTailStyleId(String id)    { if (id != null && !id.isEmpty()) this.tailStyleId = id; }
 
     // ── Marca Majin (controlado por Babidi): aura roja + badge. La fija el efecto. ──
+    // ── Marcas faciales (cicatrices, pinturas...): hasta MAX_MARKINGS, aparte del mapa categoría→rasgo ──
+    public static final int MAX_MARKINGS = 3;
+    private final java.util.List<ResourceLocation> markings = new java.util.ArrayList<>();
+
+    public java.util.List<ResourceLocation> getMarkings() { return java.util.List.copyOf(markings); }
+
+    /** Añade una marca (sin repetir, hasta el máximo). @return true si cambió algo. */
+    public boolean addMarking(ResourceLocation id) {
+        if (markings.contains(id) || markings.size() >= MAX_MARKINGS) return false;
+        return markings.add(id);
+    }
+    public boolean removeMarking(ResourceLocation id) { return markings.remove(id); }
+    public void clearMarkings() { markings.clear(); }
+
     private boolean majinControlled = false;
 
     public boolean isMajinControlled()        { return majinControlled; }
@@ -278,6 +292,9 @@ public class PlayerVisualAttachment {
         tag.putString("gender", gender.name());
         tag.put("bodyOptions", saveBodyOptions());
         tag.putBoolean("majinControlled", majinControlled);
+        net.minecraft.nbt.ListTag marks = new net.minecraft.nbt.ListTag();
+        for (ResourceLocation m : markings) marks.add(net.minecraft.nbt.StringTag.valueOf(m.toString()));
+        tag.put("markings", marks);
 
         int[] lc = new int[layerColors.size()];
         for (int i = 0; i < lc.length; i++) lc[i] = layerColors.get(i);
@@ -325,6 +342,13 @@ public class PlayerVisualAttachment {
         if (tag.contains("tailStyleId")) this.tailStyleId = tag.getString("tailStyleId");
 
         this.majinControlled = tag.contains("majinControlled") && tag.getBoolean("majinControlled");
+        if (tag.contains("markings", Tag.TAG_LIST)) {
+            markings.clear();
+            for (net.minecraft.nbt.Tag t : tag.getList("markings", Tag.TAG_STRING)) {
+                ResourceLocation id = ResourceLocation.tryParse(t.getAsString());
+                if (id != null && markings.size() < MAX_MARKINGS && !markings.contains(id)) markings.add(id);
+            }
+        }
 
         if (tag.contains("customSkinColor")) this.customSkinColor = tag.getBoolean("customSkinColor");
         if (tag.contains("customAuraColor")) this.customAuraColor = tag.getBoolean("customAuraColor");
@@ -381,6 +405,18 @@ public class PlayerVisualAttachment {
             // Un peinado importado solo si está en la biblioteca que guarda el SERVIDOR (la del
             // cliente no viaja en este paquete); si el mundo no los permite lo corrige reconcile.
             else if (findCustomHair(CustomHairLibrary.idFromStyle(id)) != null) this.hairStyleId = id;
+        }
+
+        // Marcas faciales (pestaña «Marcas» de Apariencia): el servidor no ve los PNG, así que solo exige ids bien
+        // formados (minúsculas, cifras y _ . : / -), de largo razonable y en tope; la textura que falte no se pinta.
+        if (tag.contains("markings", Tag.TAG_LIST)) {
+            markings.clear();
+            for (net.minecraft.nbt.Tag t : tag.getList("markings", Tag.TAG_STRING)) {
+                String raw = t.getAsString();
+                if (raw.length() > MAX_FACE_ID_LENGTH || !raw.matches("[a-z0-9_.:/-]+")) continue;
+                ResourceLocation id = ResourceLocation.tryParse(raw);
+                if (id != null && markings.size() < MAX_MARKINGS && !markings.contains(id)) markings.add(id);
+            }
         }
 
         if (tag.contains("customSkinColor")) setCustomSkinColor(tag.getBoolean("customSkinColor"));

@@ -115,6 +115,43 @@ Banderas disponibles en `flag`: `ssj4_ritual`, `reached_super_oozaru`, `beast_fu
 `skill_tree.<ns>.<ruta>.hint` (o de la clave que diga `"hint"`). Las formas baneadas en
 `banned_forms.json` no tienen nodo. Un archivo roto se ignora con un error en el log.
 
+**Ramas de addon (varios datapacks, mismo padre).** Una forma de TU namespace (no `zenkai`) que cuelga de otra y no tiene
+`mastery_reqs` se compra como **nodo propio e independiente**: paga su `tp_cost`, exige tener el padre y los requisitos del
+JSON, y NUNCA entra en la cadena lineal de `super_forms`. Dos datapacks de autores distintos pueden colgar formas del mismo
+padre (p. ej. «SSJ5» y «SSJ4 Full Power» de SSJ4): son hermanas, se poseen por separado y no se excluyen. Una forma colgada de
+OTRA de tu pack (SSJ6 de SSJ5) forma su propia cadena. Las formas con `divine_tier` de un addon igual: su grupo de empate es
+su namespace, así que no empatan con la pareja Blue/Rosé del mod (pero cuelgan de Blue: un jugador Rosé no las ve). Nombres:
+`form.<tu_namespace>.<id>` (lang) y pista `skill_tree.<tu_namespace>.<id>.hint`; el tooltip del nodo muestra de qué pack viene.
+Un padre inexistente o un ciclo se avisan en el log (`Zenkai-Forms`) y la forma no tendrá nodo.
+
+**Icono, pelo y aspecto de una forma (campos del JSON de `zenkai_forms`).**
+- `icon_default`: id de una forma cuyo icono se presta (`"zenkai:ssj1"`). El icono se busca en este orden: (1) tu propia textura
+  `assets/<tu_ns>/textures/gui/form_icons/<id>.png` (32x32; también la HUD la usa, y un resource pack puede cambiar con ella un
+  icono del mod), (2) la celda del atlas si la forma es del mod, (3) `icon_default` (se sigue hasta 2 saltos), (4) el «?» teñido
+  con el color del aura.
+  **Cómo organizar un icono propio (sin tocar el JSON):** el PNG se llama como la forma y va en tu pack, en
+  `assets/<tu_ns>/textures/gui/form_icons/<id>.png` (la forma `mi_pack:ssj7` → `assets/mi_pack/textures/gui/form_icons/ssj7.png`).
+  Cuadrado, 32x32 recomendado (vale 16, 64... se escala a 16 px de GUI), fondo transparente y sin halo, como los del mod; un
+  archivo no cuadrado se avisa en el log. Con él puesto, `icon_default` ni se mira; sin él, vuelve a `icon_default`. Para
+  verlo: F3+T tras copiarlo. Plantilla: `zenkai_builtin_packs/af_saiyan_transformations/.../form_icons/ssj6.png`.
+- `hair_style`: o bien un peinado (`"zenkai:classic_ssj"`) o bien el id de OTRA FORMA (`"zenkai:ssj3"` = «el pelo que SSJ3 le da a
+  quien lleve este peinado»: sirve con classic y con los peinados DMZ). Solo vale si el peinado base no tiene ya un override para
+  tu forma; el color sale de `hair_rgb`. Sin este campo habría que reescribir el JSON del peinado base (`form_overrides`), que dos
+  datapacks no pueden tocar a la vez.
+- Ya existentes: `aura_type` (estilo en `assets/<ns>/zenkai_aura_styles/<tipo>.json`, con su bloque `silhouette` = el humo, y firma
+  en `data/<ns>/zenkai_aura_signatures/<tipo>.json`), `aura_rgb`/`aura_outer_rgb`, `hair_rgb`, `eye_rgb`, `brow_rgb`, `fur_rgb`,
+  `tail_rgb`, `layer_colors`, `scale`, `body_items`; poder y gasto: `stat_percent_*`, `ki_drain_*`, `mastery_gain`, `mastery_reqs`,
+  `spi_req`, `hold_ticks`, `overdrive_*`; exclusividad de raza: `races` (sin lista = todas; una forma universal solo para los
+  namekianos lleva `"races": ["namekian"]`).
+
+**Packs de ejemplo integrados.** El jar lleva dos datapacks DESACTIVADOS por defecto, copiables como plantilla:
+`zenkai_builtin_packs/extra_transformations` (SSJ Blue 2, SSJ Blue 3, SSJ4 Full Power) y
+`zenkai_builtin_packs/af_saiyan_transformations` (SSJ5, SSJ6). Al crear un mundo, actívalos en la pantalla de datapacks
+(«Zenkai Example: …»); en un mundo existente: `/datapack enable "mod/zenkai:zenkai_builtin_packs/extra_transformations"`.
+Para llevar un datapack así en tu propio mod: carpeta con `pack.mcmeta` en tus recursos y
+`AddPackFindersEvent#addPackFinders(ResourceLocation, PackType.SERVER_DATA, nombre, PackSource.BUILT_IN, false, Pack.Position.TOP)`
+(`alwaysActive=false` = aparece apagado; el pack de assets con lang va aparte, `true`). Ver `BuiltinExamplePacks`.
+
 ## 2. Bus de eventos (`com.hmc.zenkai.api.event`)
 
 Nuevo en 0.3.0. Cinco eventos NeoForge estándar (`NeoForge.EVENT_BUS`), pensados para que un

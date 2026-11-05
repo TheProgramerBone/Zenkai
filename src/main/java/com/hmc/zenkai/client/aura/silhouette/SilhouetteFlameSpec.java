@@ -47,7 +47,7 @@ public record SilhouetteFlameSpec(TintSpec inner, TintSpec outer, float thicknes
         return new SilhouetteFlameSpec(
                 TintSpec.parse(AuraComponentTypes.s(o, "inner", "hot")),
                 TintSpec.parse(AuraComponentTypes.s(o, "outer", "outer")),
-                Mth.clamp(AuraComponentTypes.f(o, "thickness", 1f), 0.2f, 4f),
+                Mth.clamp(AuraComponentTypes.f(o, "thickness", 1f), 0.05f, 4f),
                 Mth.clamp(AuraComponentTypes.f(o, "reach", 1f), 0f, 4f),
                 Mth.clamp(AuraComponentTypes.f(o, "speed", 1f), 0f, 5f),
                 Mth.clamp(AuraComponentTypes.f(o, "alpha", 0.95f), 0f, 1f),

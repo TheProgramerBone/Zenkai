@@ -30,6 +30,11 @@ public final class ZenkaiPalLayers {
     public static final ResourceLocation TRANSMISSION_LAYER =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "transmission");
 
+    /** Brazos extendidos de quien lleva un cuerpo en brazos (estilo CarryOn). Prioridad 1600: la MÁS alta de gameplay, para
+     *  que la pose se vea siempre (volando, bloqueando, cargando...). Ver {@code client/CarryAnimClient}. */
+    public static final ResourceLocation CARRY_LAYER =
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "carry");
+
     /** Preview de los editores (técnicas, y lo que venga). NO es una capa de gameplay:
      *  la escribe únicamente TechniqueAnimPreview y su controlador va en FirstPersonMode.NONE,
      *  así que la animación no entra en la pasada de 1ª persona.
@@ -41,6 +46,6 @@ public final class ZenkaiPalLayers {
     /** El conjunto de capas del mod, para aplicarles políticas comunes de una pasada. */
     public static final ResourceLocation[] ALL = {
             TRANSFORM_LAYER, FLY_LAYER, BLOCK_LAYER, COMBAT_LAYER, PHYS_LAYER, KI_LAYER,
-            TRANSMISSION_LAYER
+            TRANSMISSION_LAYER, CARRY_LAYER
     };
 }

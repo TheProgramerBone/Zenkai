@@ -3,16 +3,16 @@ package com.hmc.zenkai.client.gui.screens;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.client.gui.NineSlice;
+import com.hmc.zenkai.client.gui.widgets.TrainingWidgets;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.AcceptIconButton;
 import com.hmc.zenkai.client.gui.buttons.AtlasIconButton;
 import com.hmc.zenkai.client.gui.buttons.BackIconButton;
-import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.PlayIconButton;
-import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
 import com.hmc.zenkai.client.training.CuratedSong;
 import com.hmc.zenkai.client.training.MeditationChart;
 import com.hmc.zenkai.client.training.MeditationChartLoader;
@@ -284,6 +284,8 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
     private int songRowY;
     private int stepperY;
     private int infoY;
+    /** Alto interior de la ficha de canción (icono de 18 px + 2 de aire por lado). */
+    private static final int SONG_CHIP_H = 22;
 
     /** SONG_LIST: primera fila visible (0 = Free Practice, 1..N = songRows). */
     private int scrollRow = 0;
@@ -339,13 +341,9 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         overviewDescLines = this.font.split(
                 Component.translatable("screen.zenkai.meditation.overview.short"), (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
         descY = 40; // el «?» de la esquina (20 px) acaba en y=37: margen con la primera línea
-        songRowY = descY + overviewDescLines.size() * 10 + 8;
-        stepperY = songRowY + SONG_ROW_H + 10;
-        // TRES líneas SIEMPRE reservadas aquí (difficulty + etiqueta "Session length" + su valor
-        // en Free Practice, o dos líneas de solo lectura + una vacía con una canción elegida —
-        // ver renderOverview()) — el mismo total en los dos casos para que "TP potencial"/
-        // "Record" no salten de sitio al cambiar de selección.
-        infoY = stepperY + 48;
+        songRowY = descY + overviewDescLines.size() * 10 + 6;
+        stepperY = songRowY + SONG_CHIP_H + 6;
+        infoY = panelH - 62; // insignias fijas sobre los iconos de esquina (plantilla de Training)
 
         buildOverviewWidgets();
         requestInfo();
@@ -389,8 +387,9 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
         this.clearWidgets();
         int y = panelTop + panelH - 12 - PanelButton.H;
 
+        // El engranaje va en la misma fila que la X y el ▶ (antes quedaba ~5 px de GUI más abajo).
         AtlasIconButton keysBtn = new AtlasIconButton(
-                panelLeft + panelW / 2 - 10, y + (PanelButton.H - 20) / 2, 80, 60,
+                panelLeft + panelW / 2 - 10, CommonPanel.iconBottom(panelTop, panelH), 80, 60,
                 this::toggleKeybindPopup);
         keysBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.meditation.keybinds.tooltip")));
         addRenderableWidget(keysBtn);
@@ -413,17 +412,16 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
                 CommonPanel.iconRight(panelLeft), CommonPanel.iconTop(panelTop), CommonPanel.ICON, Component.translatable("screen.zenkai.meditation.overview")));
 
         if (selectedSong == null) {
-            int cx = panelLeft + panelW / 2;
-            addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decreaseDifficulty));
-            addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increaseDifficulty));
-            // Duración de la sesión de Práctica libre (no aplica a modo Canción, ver
-            // DURATION_STEPS_SEC) — SU PROPIA línea de etiqueta arriba (sin botones, renderOverview())
-            // y los botones en la línea de abajo (+32, no +20): "Session length: 30s" combinado en
-            // una sola línea centrada se montaba con el botón + (bug real, captura del usuario;
-            // "Difficulty: 100%" es más corto y cabía, "Session length: 30s" no) — mismo arreglo
-            // que "Opponent form" en ShadowTrainingScreen, ver su javadoc de clase.
-            addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY + 32, this::decreaseDuration));
-            addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY + 32, this::increaseDuration));
+            // Dificultad y duración de Práctica libre como fichas (plantilla de Training).
+            int chipY = panelTop + stepperY;
+            addRenderableWidget(new TrainingWidgets.OptionChip(panelLeft + TrainingWidgets.CHIP_X, chipY,
+                    Component.translatable("screen.zenkai.training.difficulty"),
+                    () -> Component.literal(STEPS_PCT[stepIndex] + "%"), this::decreaseDifficulty, this::increaseDifficulty));
+            addRenderableWidget(new TrainingWidgets.OptionChip(panelLeft + TrainingWidgets.CHIP_X,
+                    chipY + TrainingWidgets.CHIP_H + TrainingWidgets.CHIP_GAP,
+                    Component.translatable("screen.zenkai.training.length"),
+                    () -> Component.translatable("screen.zenkai.meditation.session_length_value", DURATION_STEPS_SEC[durationIndex]),
+                    this::decreaseDuration, this::increaseDuration));
         }
     }
 
@@ -1006,60 +1004,42 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
             ty += 10;
         }
 
-        int x = panelLeft + IN_X1;
-        int w = IN_X2 - IN_X1;
-        int y = panelTop + songRowY;
-        Component songLabel = selectedSong != null
+        // Ficha de la canción (abre SONG_LIST): icono + «Song» + nombre + «›».
+        int sx = panelLeft + TrainingWidgets.CHIP_X;
+        int sy = panelTop + songRowY;
+        boolean songHover = mouseX >= sx && mouseX < sx + TrainingWidgets.CHIP_W
+                && mouseY >= sy && mouseY < sy + SONG_CHIP_H;
+        NineSlice.plateFrame(g, sx, sy, TrainingWidgets.CHIP_W, SONG_CHIP_H);
+        if (selectedSong != null) {
+            g.renderItem(new ItemStack(selectedSong.item), sx + 3, sy + (SONG_CHIP_H - 16) / 2);
+        } else {
+            g.blit(ICONS_TEX, sx + 1, sy + (SONG_CHIP_H - ICON_CELL) / 2, ICON_FREE_PRACTICE_U, ICON_FREE_PRACTICE_V,
+                    ICON_CELL, ICON_CELL, ICONS_ATLAS, ICONS_ATLAS);
+        }
+        int sty = sy + (SONG_CHIP_H - 8) / 2 + 1;
+        PanelText.onDark(g, this.font, Component.translatable("screen.zenkai.training.song"), sx + 24, sty,
+                ZenkaiPalette.TEXT_DIM);
+        Component songName = selectedSong != null
                 ? Component.translatable(selectedSong.nameKey())
                 : Component.translatable("screen.zenkai.meditation.free_practice");
-        Component rightLabel = selectedSong != null
-                ? Component.translatable(selectedSong.difficulty.translationKey) : null;
-        renderSelectableRow(g, x, y, w, mouseX, mouseY, false,
-                ICON_FREE_PRACTICE_U, ICON_FREE_PRACTICE_V, selectedSong != null ? selectedSong.item : null,
-                Component.translatable("screen.zenkai.meditation.song_label", songLabel), rightLabel);
+        PanelText.rightOnDark(g, this.font, songName, sx + TrainingWidgets.CHIP_W - 16, sty, ZenkaiPalette.TEXT);
+        PanelText.onDark(g, this.font, Component.literal("›"), sx + TrainingWidgets.CHIP_W - 12, sty,
+                songHover ? ZenkaiPalette.VALUE : ZenkaiPalette.GOLD);
 
-        if (selectedSong == null) {
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.shadow.difficulty", STEPS_PCT[stepIndex]),
-                    cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
-            // "Session length" en SU PROPIA línea (sin botones, puede ser tan ancha como haga
-            // falta) + el VALOR SOLO ("30s") en la línea de los botones — bug real de captura del
-            // usuario: combinado en una sola línea ("Session length: 30s") se montaba con el
-            // botón +, a diferencia de "Difficulty: 100%" que sí cabía. Mismo arreglo que
-            // "Opponent form" en ShadowTrainingScreen, ver su javadoc de clase.
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.meditation.session_length_label"),
-                    cx, panelTop + stepperY + 20, ZenkaiPalette.LABEL_ON_PANEL);
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.meditation.session_length_value", DURATION_STEPS_SEC[durationIndex]),
-                    cx, panelTop + stepperY + 34, ZenkaiPalette.LABEL_ON_PANEL);
-        } else {
-            // Una canción trae su propia dificultad/duración fijas — sin steppers, solo lo que
-            // hay (pedido explícito del usuario: "la dificultad seleccionada, la duración de la
-            // sesión"). Sin botones en esta rama, así que el texto combinado no tiene nada con lo
-            // que solapar — se salta la línea de etiqueta y va directo a la Y del VALOR de la
-            // rama de arriba, para que "TP potencial"/"Record" no salten de sitio al cambiar.
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.meditation.song_difficulty",
-                            Component.translatable(selectedSong.difficulty.translationKey)),
-                    cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
+        if (selectedSong != null) {
+            // Una canción trae su propia dificultad y duración fijas: fichas de solo lectura.
+            int cy = panelTop + stepperY;
+            TrainingWidgets.staticChip(g, this.font, sx, cy,
+                    Component.translatable("screen.zenkai.training.difficulty"),
+                    Component.translatable(selectedSong.difficulty.translationKey));
             long songSeconds = songCharts.containsKey(selectedSong.discId)
                     ? songCharts.get(selectedSong.discId).durationMs() / 1000L : 0L;
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.meditation.fixed_duration", songSeconds),
-                    cx, panelTop + stepperY + 34, ZenkaiPalette.LABEL_ON_PANEL);
+            TrainingWidgets.staticChip(g, this.font, sx, cy + TrainingWidgets.CHIP_H + TrainingWidgets.CHIP_GAP,
+                    Component.translatable("screen.zenkai.training.length"),
+                    Component.translatable("screen.zenkai.meditation.session_length_value", songSeconds));
         }
 
-        if (introPotential != null) {
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.potential", introPotential),
-                    cx, panelTop + infoY, ZenkaiPalette.VALUE_ON_PANEL);
-        }
-        if (introRecord != null) {
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.record", introRecord),
-                    cx, panelTop + infoY + 12, ZenkaiPalette.MUTED_ON_PANEL);
-        }
+        TrainingWidgets.footer(g, this.font, panelLeft, panelTop, panelH, introPotential, introRecord);
     }
 
     private int visibleRows() {
@@ -1208,10 +1188,9 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     /** Hit-test de la fila-resumen clicable de OVERVIEW — misma disposición que renderOverview(). */
     private boolean clickSongSummaryRow(double mouseX, double mouseY) {
-        int x = panelLeft + IN_X1;
-        int w = IN_X2 - IN_X1;
+        int x = panelLeft + TrainingWidgets.CHIP_X;
         int y = panelTop + songRowY;
-        return mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + SONG_ROW_H;
+        return mouseX >= x && mouseX < x + TrainingWidgets.CHIP_W && mouseY >= y && mouseY < y + SONG_CHIP_H;
     }
 
     /** Hit-test de clic en SONG_LIST: misma disposición por coordenadas que renderSongList(),
@@ -1320,42 +1299,8 @@ public class MeditationScreen extends Screen implements TrainingMinigameScreen {
 
     private void renderResults(GuiGraphics g) {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + panelW / 2, panelTop);
-        int cx = panelLeft + panelW / 2;
-        int ty = panelTop + 50;
-
-        // LABEL_ON_PANEL + negrita, NO GOLD: GOLD es dorado pensado para fondo OSCURO (ver
-        // ZenkaiPalette), y sobre el beige del panel se leía casi invisible (feedback de imagen).
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.meditation.result.title")
-                        .copy().withStyle(ChatFormatting.BOLD),
-                cx, ty, ZenkaiPalette.LABEL_ON_PANEL);
-        ty += 16;
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.meditation.result.notes_hit", notesHit, maxCombo),
-                cx, ty, ZenkaiPalette.LABEL_ON_PANEL);
-        ty += 16;
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.meditation.accuracy", accuracyPercent()),
-                cx, ty, ZenkaiPalette.LABEL_ON_PANEL);
-        ty += 16;
-        Component reward = resultReward == null
-                ? Component.translatable("screen.zenkai.meditation.result.calculating")
-                : Component.translatable("screen.zenkai.meditation.result.tp_earned", resultReward);
-        PanelText.centeredOnPanel(g, this.font, reward, cx, ty, ZenkaiPalette.OK_ON_PANEL);
-
-        if (resultRecord != null) {
-            ty += 16;
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.record", resultRecord),
-                    cx, ty, ZenkaiPalette.MUTED_ON_PANEL);
-            if (resultReward != null && resultReward > 0 && resultReward.equals(resultRecord)) {
-                ty += 12;
-                PanelText.centeredOnPanel(g, this.font,
-                        Component.translatable("screen.zenkai.training_hub.new_record")
-                                .copy().withStyle(ChatFormatting.BOLD),
-                        cx, ty, ZenkaiPalette.VALUE_ON_PANEL);
-            }
-        }
+        Component detail = Component.translatable("screen.zenkai.meditation.result.notes_hit", notesHit, maxCombo);
+        TrainingWidgets.result(g, this.font, panelLeft, panelTop, panelW, panelH, resultReward, resultRecord, detail);
     }
 
     @Override public boolean isPauseScreen() { return false; }

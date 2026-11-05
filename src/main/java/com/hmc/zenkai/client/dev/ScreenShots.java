@@ -46,6 +46,8 @@ public final class ScreenShots {
 
     private static Boolean enabled;
     private static String world;
+    /** 2ª línea del trigger: «wishes» = solo las pantallas de deseos de Shenlong. */
+    private static String mode = "";
     private static boolean opened;
     private static int ticks, step, wait;
     private static final List<Runnable> PLAN = new ArrayList<>();
@@ -58,6 +60,8 @@ public final class ScreenShots {
             if (trigger.isFile()) {
                 try {
                     world = Files.readAllLines(trigger.toPath()).get(0).trim();
+                    var lines = Files.readAllLines(trigger.toPath());
+                    if (lines.size() > 1) mode = lines.get(1).trim();
                     enabled = !world.isEmpty();
                 } catch (Exception ignored) {}
             }
@@ -191,9 +195,31 @@ public final class ScreenShots {
         PLAN.add(() -> { capture(mc, name); mc.setScreen(null); wait = 5; });
     }
 
+    private static void wishesPlan(Minecraft mc) {
+        shot(mc, "70_wish_main", ShenlongWishScreen::new);
+        shot(mc, "71_wish_immortal", () -> new ImmortalWishScreen(null));
+        shot(mc, "72_wish_legendary", () -> new LegendaryWishScreen(null));
+        shot(mc, "73_wish_revive_player", () -> new RevivePlayerWishScreen(null));
+        shot(mc, "74_wish_revive_pet", () -> new RevivePetWishScreen(null));
+        shot(mc, "75_wish_enchant_villager", () -> new EnchantVillagerWishScreen(null));
+        shot(mc, "76_wish_training_points", () -> new TrainingPointsWishScreen(null));
+    }
+
+    /** Solo el hub y los minijuegos de Training (rediseño de la plantilla de minijuegos). */
+    private static void trainingPlan(Minecraft mc) {
+        shot(mc, "12_tab_training", TrainingHubScreen::new);
+        shot(mc, "30_training_shadow", ShadowTrainingScreen::new);
+        shot(mc, "31_training_meditation", MeditationScreen::new);
+        shot(mc, "32_training_target", TargetPracticeScreen::new);
+        shot(mc, "33_training_shadow_result", () -> new ShadowResultScreen(120, 340));
+        shot(mc, "34_training_shadow_result_record", () -> new ShadowResultScreen(120, 120));
+    }
+
     private static void buildPlan(Minecraft mc) {
         if (world.startsWith("new:")) { containersPlan(mc); return; }
         PLAN.add(() -> { setup(mc, Race.SAIYAN); wait = WAIT * 2; });
+        if ("wishes".equals(mode)) { wishesPlan(mc); return; }
+        if ("training".equals(mode)) { trainingPlan(mc); return; }
         // HUD en juego, sin pantalla.
         PLAN.add(() -> { mc.setScreen(null); wait = 20; });
         PLAN.add(() -> { capture(mc, "01_hud_ingame"); });

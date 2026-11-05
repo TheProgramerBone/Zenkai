@@ -47,6 +47,7 @@ public final class SkillTreeShots {
     private static boolean godKiLostOnly;
     private static boolean mastersOnly;
     private static boolean perfOnly;
+    private static boolean addonsOnly;
     private static boolean opened;
     private static int ticks, step, wait;
     private static final List<Runnable> PLAN = new ArrayList<>();
@@ -66,6 +67,7 @@ public final class SkillTreeShots {
                     godKiLostOnly = lines.size() > 1 && lines.get(1).trim().equals("godkilost"); // God Ki perdido con formas divinas compradas
                     legendaryOnly = lines.size() > 1 && lines.get(1).trim().equals("legendary"); // solo la línea del Legendario
                     mastersOnly = lines.size() > 1 && lines.get(1).trim().equals("masters"); // solo los retratos de los maestros
+                    addonsOnly = lines.size() > 1 && lines.get(1).trim().equals("addons"); // packs integrados de ejemplo: ramas hermanas de dos autores
                     perfOnly = lines.size() > 1 && lines.get(1).trim().equals("perf"); // tiempos de fotograma de SkillsTreeScreen
                     enabled = !world.isEmpty();
                 } catch (Exception ignored) {}
@@ -160,6 +162,131 @@ public final class SkillTreeShots {
         PLAN.add(() -> capture(mc, "lost_1_after"));
     }
 
+    /**
+     * Packs integrados de ejemplo (BuiltinExamplePacks): «Extra Transformations» y «AF Saiyan Transformations» cuelgan
+     * formas del MISMO padre (SSJ4) desde dos namespaces. Activa ambos con /datapack enable + reload, compra por el
+     * paquete real y vuelca por log qué posee y qué puede usar el jugador: las hermanas deben ser INDEPENDIENTES.
+     */
+    private static void addonsPlan(Minecraft mc) {
+        PLAN.add(() -> {
+            var server = mc.getSingleplayerServer();
+            if (server == null) return;
+            server.execute(() -> {
+                var src = server.createCommandSourceStack().withPermission(4);
+                for (String id : server.getPackRepository().getAvailableIds()) {
+                    Zenkai.LOGGER.info("[ADDONS] pack disponible: {}", id);
+                    if (id.contains("transformations") && !id.endsWith("(lang)")) {
+                        server.getCommands().performPrefixedCommand(src, "datapack enable \"" + id + "\"");
+                    }
+                }
+                server.getCommands().performPrefixedCommand(src, "reload");
+            });
+            wait = 160;
+        });
+        PLAN.add(() -> { setup(mc, Race.SAIYAN, 5, true, true, true, sp -> {
+            PlayerStatsAttachment a = PlayerStatsAttachment.get(sp);
+            a.addTP(3_000_000);
+            a.skillTree().setOwned(ResourceLocation.parse("zenkai:ssj_god"), 1);
+            a.skillTree().setOwned(ResourceLocation.parse("zenkai:ssj_blue"), 1);
+            var vis = com.hmc.zenkai.feature.player.PlayerVisualAttachment.get(sp);   // Saiyan con pelo clásico negro, piel natural
+            vis.setHairStyle(ResourceLocation.parse("zenkai_dmz:goku"));   // peinado de DMZ (por código, con variantes por forma)
+            vis.setHairColorRgb(0x1A1A1A);
+            vis.setCustomSkinColor(false);   // piel natural del Saiyan (el mundo de prueba trae la verde del Namekiano)
+        }); wait = WAIT; });
+        PLAN.add(() -> { addonLog(mc, "A) tras setup (nada comprado)"); wait = 5; });
+        PLAN.add(() -> { mc.setScreen(new SkillTreeScreen()); wait = 60; });
+        PLAN.add(() -> capture(mc, "addons_1_open"));
+        PLAN.add(() -> { buy(mc, "af_saiyan_transformations:ssj5"); wait = 20; });
+        PLAN.add(() -> { addonLog(mc, "B) tras comprar SSJ5 (Full Power NO debe estar poseída)"); wait = 5; });
+        PLAN.add(() -> { buy(mc, "af_saiyan_transformations:ssj6"); wait = 20; });
+        PLAN.add(() -> { buy(mc, "extra_transformations:ssj_blue_2"); wait = 20; });
+        PLAN.add(() -> { buy(mc, "extra_transformations:ssj_blue_3"); wait = 20; });
+        PLAN.add(() -> { addonLog(mc, "C) tras SSJ6, Blue 2 y Blue 3 (Full Power sigue sin comprar)"); wait = 5; });
+        PLAN.add(() -> capture(mc, "addons_2_bought"));
+        PLAN.add(() -> { buy(mc, "extra_transformations:ssj4_full_power"); wait = 20; });
+        PLAN.add(() -> { addonLog(mc, "D) con las dos hermanas de SSJ4 compradas"); wait = 5; });
+        PLAN.add(() -> { mc.setScreen(new SkillTreeScreen()); wait = 40; });
+        PLAN.add(() -> capture(mc, "addons_3_all"));
+        PLAN.add(() -> {   // alejar el lienzo para ver las ramas hermanas de SSJ4 y Blue
+            if (mc.screen != null) for (int i = 0; i < 5; i++) mc.screen.mouseScrolled(mc.screen.width / 2.0, mc.screen.height / 2.0, 0, -1);
+            wait = 30;
+        });
+        PLAN.add(() -> capture(mc, "addons_4_zoomout"));
+        PLAN.add(() -> {   // tooltip de la forma de otro pack
+            if (mc.screen instanceof SkillTreeScreen s) {
+                int[] p = s.devFocus(ResourceLocation.parse("af_saiyan_transformations:ssj5"));
+                SkillTreeScreen.devMouse = p == null ? null : new int[]{p[0] + 3, p[1] + 3};
+            }
+            wait = 20;
+        });
+        PLAN.add(() -> capture(mc, "addons_5_tooltip"));
+        // Las formas de ejemplo puestas: pelo (hair_style del JSON de la forma), aura y humo (aura_type), ojos y color de pelo.
+        for (String f : new String[]{"zenkai:ssj3", "zenkai:ssj4", "af_saiyan_transformations:ssj5", "af_saiyan_transformations:ssj6", "extra_transformations:ssj_blue_2", "extra_transformations:ssj_blue_3", "extra_transformations:ssj4_full_power"}) {
+            PLAN.add(() -> {
+                mc.setScreen(null);
+                var server = mc.getSingleplayerServer();
+                if (server == null) return;
+                server.execute(() -> {
+                    var sp = server.getPlayerList().getPlayers().get(0);
+                    sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get()).setFormId(sp, ResourceLocation.parse(f));
+                    PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
+                });
+                mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+                wait = 50;
+            });
+            PLAN.add(() -> capture(mc, "addons_form_" + f.substring(f.indexOf(':') + 1)));
+        }
+    }
+
+    private static void buy(Minecraft mc, String node) {
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(
+                new com.hmc.zenkai.feature.skilltree.SkillTreeBuyPacket(ResourceLocation.parse(node)));
+    }
+
+    private static void addonLog(Minecraft mc, String title) {
+        var server = mc.getSingleplayerServer();
+        if (server == null) return;
+        server.execute(() -> {
+            var sp = server.getPlayerList().getPlayers().get(0);
+            PlayerStatsAttachment a = PlayerStatsAttachment.get(sp);
+            StringBuilder sb = new StringBuilder("[ADDONS] ").append(title).append(" | TP=").append(a.getTP());
+            for (String id : new String[]{"zenkai:ssj4", "af_saiyan_transformations:ssj5", "af_saiyan_transformations:ssj6",
+                    "extra_transformations:ssj4_full_power", "extra_transformations:ssj_blue_2", "extra_transformations:ssj_blue_3"}) {
+                ResourceLocation rl = ResourceLocation.parse(id);
+                var node = com.hmc.zenkai.feature.skilltree.SkillTreeNodes.find(Race.SAIYAN, rl);
+                String state = node == null ? "SIN-NODO" : com.hmc.zenkai.feature.skilltree.SkillTreeNodes.evaluate(sp, node).state().name();
+                sb.append("\n   ").append(id).append(": owned=").append(a.skillTree().owns(rl))
+                        .append(" unlocked=").append(com.hmc.zenkai.feature.skills.SuperForms.unlocked(sp, rl))
+                        .append(" estado=").append(state)
+                        .append(" enCadena=").append(com.hmc.zenkai.feature.skills.SuperForms.depthOf(Race.SAIYAN, rl) > 0);
+            }
+            for (String base : new String[]{"zenkai:classic", "zenkai_dmz:goku", "zenkai_dmz:vegeta"}) {
+                for (String id : new String[]{"zenkai:ssj3", "zenkai:ssj4", "af_saiyan_transformations:ssj5", "af_saiyan_transformations:ssj6",
+                        "extra_transformations:ssj_blue_2", "extra_transformations:ssj_blue_3", "extra_transformations:ssj4_full_power"}) {
+                    var hs = com.hmc.zenkai.feature.race.hair.HairCatalog.effectiveStyle(ResourceLocation.parse(base),
+                            ResourceLocation.parse(id), Race.SAIYAN);
+                    sb.append("\n   pelo ").append(base).append(" con ").append(id).append(" -> ").append(hs == null ? null : hs.id());
+                }
+            }
+            for (String id : new String[]{"zenkai:ssj3", "zenkai:ssj4", "af_saiyan_transformations:ssj5", "af_saiyan_transformations:ssj6",
+                    "extra_transformations:ssj_blue_2", "extra_transformations:ssj_blue_3", "extra_transformations:ssj4_full_power"}) {
+                sb.append("\n   variante de pelo DMZ en ").append(id).append(" = ")
+                        .append(com.hmc.zenkai.feature.race.hair.strand.HairFormVariants.wanted(ResourceLocation.parse(id)));
+            }
+            for (String cur : new String[]{"zenkai:ssj3", "zenkai:ssj4", "af_saiyan_transformations:ssj5", "af_saiyan_transformations:ssj6",
+                    "zenkai:ssj_blue", "extra_transformations:ssj_blue_2", "extra_transformations:ssj_blue_3"}) {
+                sb.append("\n   tecla de transformar desde ").append(cur).append(" -> ")
+                        .append(com.hmc.zenkai.feature.player.PlayerFormAttachment.resolveNextForm(sp, Race.SAIYAN, ResourceLocation.parse(cur)));
+            }
+            var visLog = com.hmc.zenkai.feature.player.PlayerVisualAttachment.get(sp);
+            sb.append("\n   estilo de pelo guardado=").append(visLog.getHairStyleId()).append(" existe=")
+                    .append(com.hmc.zenkai.feature.race.hair.HairCatalog.get(visLog.getHairStyle()) != null);
+            sb.append("\n   super_forms nivel=").append(a.skills().level("super_forms"))
+                    .append(" max=").append(com.hmc.zenkai.feature.skills.SuperForms.maxLevel(Race.SAIYAN));
+            Zenkai.LOGGER.info(sb.toString());
+        });
+    }
+
     private static void buildPlan(Minecraft mc) {
         if (fadeOnly) { fadePlan(mc); return; }
         if (skillsOnly) { skillsPlan(mc); return; }
@@ -168,6 +295,7 @@ public final class SkillTreeShots {
         if (godKiLostOnly) { godKiLostPlan(mc); return; }
         if (mastersOnly) { mastersPlan(mc); return; }
         if (perfOnly) { perfPlan(mc); return; }
+        if (addonsOnly) { addonsPlan(mc); return; }
         // Tutorial (F7): la primera apertura lo enseña; se captura y se cierra con Esc.
         PLAN.add(() -> {
             setup(mc, Race.SAIYAN, 3, false, false, false, sp -> {});

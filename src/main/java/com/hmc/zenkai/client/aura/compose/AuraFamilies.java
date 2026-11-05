@@ -100,7 +100,7 @@ public final class AuraFamilies {
 
     /**
      * DIVINE_FLAME — el fuego divino de SSG y las formas *_god (rework 2026-10-26,
-     * .claude/pendiente/aura-divinas-plan.md). En los fotogramas (ReferenciaAuraGokuGod2,
+     * .claude/archivo/2026-11-02-auras-cerradas/aura-divinas-plan.md). En los fotogramas (ReferenciaAuraGokuGod2,
      * VideoSinRecortarGokuGOD2) no hay volumen con contorno: es una PARED de láminas verticales de llama
      * con núcleos casi blancos y sombras rojas entre las lenguas, mucho más alta que la cabeza. Lo dan las
      * láminas ({@code sheets}); la lágrima de FLAME sigue en la familia pero con opacidad 0 (se leía como
@@ -131,7 +131,7 @@ public final class AuraFamilies {
 
     /**
      * DIVINE_RADIANCE — el aura de Super Saiyan Blue (rework 2026-10-27, fase F3 de
-     * .claude/pendiente/aura-divinas-plan.md; referencia {@code aura vfx/ReferenciaGeminiAuraGokuSSJBlue.jpg}).
+     * .claude/archivo/2026-11-02-auras-cerradas/aura-divinas-plan.md; referencia {@code aura vfx/ReferenciaGeminiAuraGokuSSJBlue.jpg}).
      * Una lágrima COMPACTA y alta de lenguas finas que ondulan pegadas al cuerpo: cian casi blanco junto al
      * personaje y azul marino en el borde y en los valles. Distinta de SSG a propósito: más estrecha, de
      * vida más larga (llama fría y serena), con el cuerpo de DIVINE como brillo tenue de fondo, cubitos de

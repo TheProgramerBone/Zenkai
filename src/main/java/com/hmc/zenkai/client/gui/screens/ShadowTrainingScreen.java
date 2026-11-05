@@ -5,10 +5,9 @@ import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.BackIconButton;
-import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
-import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.PlayIconButton;
-import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
+import com.hmc.zenkai.client.gui.widgets.TrainingWidgets;
+import com.hmc.zenkai.feature.forms.FormDef;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.skills.SuperForms;
@@ -58,14 +57,8 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
 
     private List<FormattedCharSequence> descLines;
     private int descY;
-    private int stepperY;
-    /** Y de la etiqueta estática "Opponent form" (sin botones, puede ser ancha). */
-    private int formLabelY;
-    /** Y de los botones +/- del selector de forma + el NOMBRE solo (sin prefijo) entre ellos. */
-    private int formValueY;
-    private int potentialY;
-    private int recordY;
-    private int startY;
+    private int chipY;
+    private int badgeY;
 
     /** null hasta que responde ShadowPotentialRequestPacket — récord Y "TP potencial: hasta X"
      *  de matar a la sombra AHORA MISMO con la dificultad/forma elegidas (pedido explícito del
@@ -95,16 +88,8 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
         descLines = this.font.split(desc, (IN_X2 - IN_X1) - 8); // aire por lado: ver TargetPracticeScreen
         // 40: el «?» de la esquina (20 px, acaba en y=37) ya no se pega a la primera línea del texto
         descY = 40;
-        stepperY = descY + descLines.size() * 10 + 14;
-        formLabelY = stepperY + 16;
-        formValueY = formLabelY + 12;
-        potentialY = formValueY + 16;
-        recordY = potentialY + 12;
-        startY = BG_H - 12 - PanelButton.H;
-
-        int cx = panelLeft + BG_W / 2;
-        addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decrease));
-        addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increase));
+        chipY = descY + descLines.size() * 10 + 6;
+        badgeY = BG_H - 62;
 
         // mc.player debería estar siempre presente al abrir esta pantalla (viene de un clic en
         // TrainingHubScreen, que ya requiere att != null) — el fallback a solo BASE es defensivo,
@@ -115,8 +100,17 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
             PlayerFormAttachment formAtt = mc.player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
             formIndex = Math.max(0, formOptions.indexOf(formAtt.getFormId()));
         }
-        addRenderableWidget(new MinusIconButton(cx - 60, panelTop + formValueY, this::decreaseForm));
-        addRenderableWidget(new PlusIconButton(cx + 48, panelTop + formValueY, this::increaseForm));
+        // Dos fichas de opción (plantilla de Training): dificultad y forma del oponente.
+        addRenderableWidget(new TrainingWidgets.OptionChip(
+                panelLeft + TrainingWidgets.CHIP_X, panelTop + chipY,
+                Component.translatable("screen.zenkai.training.difficulty"),
+                () -> Component.literal(STEPS_PCT[stepIndex] + "%"), this::decrease, this::increase));
+        addRenderableWidget(new TrainingWidgets.OptionChip(
+                panelLeft + TrainingWidgets.CHIP_X,
+                panelTop + chipY + TrainingWidgets.CHIP_H + TrainingWidgets.CHIP_GAP,
+                Component.translatable("screen.zenkai.training.opponent"),
+                () -> Component.translatable(FormDef.nameKey(formOptions.get(formIndex))),
+                this::decreaseForm, this::increaseForm));
 
         // Back en icono atlas / Start en ▶ — mismo lenguaje que Meditation/Target Practice, con
         // tooltip (pedido explícito del usuario: "que se entienda que son start y back" sin
@@ -184,31 +178,6 @@ public class ShadowTrainingScreen extends ZenkaiMenuScreen implements TrainingMi
             ty += 10;
         }
 
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.training_hub.shadow.difficulty",
-                        STEPS_PCT[stepIndex]),
-                cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
-
-        // "Opponent form": etiqueta SIN valor en su propia línea (puede ser tan ancha como haga
-        // falta, sin botones que limiten el hueco) + el NOMBRE SOLO (sin prefijo) en la línea de
-        // los botones — ver el javadoc de clase para el bug que esto arregla.
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.training_hub.shadow.form"),
-                cx, panelTop + formLabelY, ZenkaiPalette.MUTED_ON_PANEL);
-        ResourceLocation selectedFormId = formOptions.get(formIndex);
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("form.zenkai." + selectedFormId.getPath()),
-                cx, panelTop + formValueY + 2, ZenkaiPalette.LABEL_ON_PANEL);
-
-        if (potential != null) {
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.potential", potential),
-                    cx, panelTop + potentialY, ZenkaiPalette.VALUE_ON_PANEL);
-        }
-        if (record != null) {
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.record", record),
-                    cx, panelTop + recordY, ZenkaiPalette.MUTED_ON_PANEL);
-        }
+        TrainingWidgets.footer(g, this.font, panelLeft, panelTop, BG_H, potential, record);
     }
 }

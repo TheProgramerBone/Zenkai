@@ -1,0 +1,3 @@
+{
+  "_comment": "Cara de esta forma: vacío = se usan los rasgos que eligió el jugador. Claves: eyes, eyebrows, nose, mouth (id de rasgo del catálogo, p. ej. \"zenkai:mouth/stoic\") y emissive (lista de categorías a pleno brillo, p. ej. [\"eyes\"])."
+}

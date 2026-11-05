@@ -58,7 +58,7 @@ public final class AuraRenderer {
         Vec3 camPos = cam.getPosition();
         PoseStack pose = e.getPoseStack();
         float pt = e.getPartialTick().getGameTimeDeltaPartialTick(true);
-        long t = mc.level.getGameTime();
+        long t = AuraClock.ticks(); // reloj del cliente, no el del servidor (ver AuraClock)
         double ticks = t + pt;
         float seconds = (float) (ticks / 20.0);
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();

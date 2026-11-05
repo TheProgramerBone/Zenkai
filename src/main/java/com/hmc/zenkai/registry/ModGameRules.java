@@ -50,6 +50,15 @@ public final class ModGameRules {
             GameRules.register("zenkai_enableKiGriefing", GameRules.Category.MISC,
                     GameRules.BooleanValue.create(true));
 
+    /**
+     * Si false NO hay cuerpos de jugador: los objetos y la XP quedan como en vanilla (o en manos de un mod de tumbas). Excepción:
+     * con la muerte permanente encendida (ServerConfig permadeath.enabled) los cuerpos se crean igual, porque sus salidas (el deseo
+     * que reabsorbe el cuerpo, la visita de Uranai Baba) los necesitan; entonces qué guardan lo decide permadeath.body_items_mode.
+     */
+    public static final GameRules.Key<GameRules.BooleanValue> ENABLE_PLAYER_BODIES =
+            GameRules.register("zenkai_enablePlayerBodies", GameRules.Category.MISC,
+                    GameRules.BooleanValue.create(true));
+
     // ── Init ─────────────────────────────────────────────────────────────────
     public static void init() {
         // Fuerza la carga estática de las claves antes de arrancar el servidor.

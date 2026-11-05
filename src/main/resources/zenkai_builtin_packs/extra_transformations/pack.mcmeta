@@ -1,0 +1,10 @@
+{
+  "pack": {
+    "description": "Zenkai example: SSJ Blue 2, SSJ Blue 3 and SSJ4 Full Power",
+    "pack_format": 34,
+    "supported_formats": {
+      "min_inclusive": 34,
+      "max_inclusive": 48
+    }
+  }
+}

@@ -1,4 +1,5 @@
 package com.hmc.zenkai.feature.skilltree;
+import com.hmc.zenkai.feature.forms.FormDef;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -64,7 +65,7 @@ public sealed interface SkillTreeRequirement {
         }
         public Component describe() {
             return Component.translatable("skill_tree.zenkai.req.mastery",
-                    Component.translatable("form.zenkai." + form.getPath()), Math.round(min));
+                    Component.translatable(FormDef.nameKey(form)), Math.round(min));
         }
     }
 

@@ -25,6 +25,7 @@ import com.hmc.zenkai.client.gui.widgets.ColorBoxButton;
 import com.hmc.zenkai.client.gui.widgets.ColorPickerWidget;
 import com.hmc.zenkai.client.gui.widgets.FacePartTile;
 import com.hmc.zenkai.client.gui.widgets.HairTile;
+import com.hmc.zenkai.client.gui.widgets.MarkingTile;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.race.FaceBans;
 import com.hmc.zenkai.feature.race.face.FaceCatalog;
@@ -54,7 +55,7 @@ import java.util.List;
  * catálogo FaceCatalog) y pelo (catálogo HairCatalog + biblioteca de peinados importados de
  * códigos DMZ/DBC, que se pegan en la propia pestaña Pelo; ver CustomHairLibrary).
  *
- * REDISEÑO S3 (2026-10-01, .claude/docs/customizacion-cara-y-pelo.md (decisiones cerradas)): antes eran
+ * REDISEÑO S3 (2026-10-01, .claude/docs/customizacion-cara.md (decisiones cerradas)): antes eran
  * cuatro filas de flechas con etiquetas "Eyes N", y con el preview del cuerpo entero la cabeza
  * medía ~22 px — los cinco ojos apenas se distinguían entre sí (medido con render en
  * .claude/workbench/auditoria-2026-10-01/). Ahora:
@@ -142,7 +143,7 @@ public class HeadAppearanceScreen extends Screen {
     /** Pestañas: las cuatro categorías del catálogo + el pelo (aún fuera del catálogo). */
     private enum Tab {
         EYES(FaceCategory.EYES), EYEBROWS(FaceCategory.EYEBROWS), NOSE(FaceCategory.NOSE),
-        MOUTH(FaceCategory.MOUTH), HAIR(null);
+        MOUTH(FaceCategory.MOUTH), MARKS(null), HAIR(null);
         @Nullable final FaceCategory category;
         Tab(@Nullable FaceCategory category) { this.category = category; }
         String key() { return "screen.zenkai.head.tab." + name().toLowerCase(java.util.Locale.ROOT); }
@@ -212,6 +213,8 @@ public class HeadAppearanceScreen extends Screen {
                             Component name) {}
     /** Rasgo elegido por categoría (id del FaceCatalog); sin entrada = ninguno. */
     private final EnumMap<FaceCategory, ResourceLocation> faceParts = new EnumMap<>(FaceCategory.class);
+    /** Marcas faciales puestas (FaceCommands.SHIPPED u otras de un pack), hasta MAX_MARKINGS. */
+    private final List<ResourceLocation> markings = new ArrayList<>();
     private int eyeColor = 0xFF2E86C1, hairColor = 0xFF1A1A1A;
     /** Colores propios de los mechones (StrandColors) encendidos; ver PlayerVisualAttachment. */
     private boolean hairStrandColors = true;
@@ -277,6 +280,8 @@ public class HeadAppearanceScreen extends Screen {
             ResourceLocation id = visual.getFacePart(c);
             if (id != null) faceParts.put(c, id);
         }
+        markings.clear();
+        markings.addAll(visual.getMarkings());
         // Después de reconcile (que también corrige el pelo): ya es válido para la raza.
         hairSel = visual.getHairStyleId();
 
@@ -295,6 +300,7 @@ public class HeadAppearanceScreen extends Screen {
     private boolean isTabVisible(Tab t) {
         if (hairOnly) return t == Tab.HAIR;
         if (t == Tab.HAIR) return hasHair();
+        if (t == Tab.MARKS) return !marksChoices().isEmpty();
         if (t == Tab.EYEBROWS) return !FaceCatalog.options(FaceCategory.EYEBROWS, race).isEmpty();
         return true;
     }
@@ -341,6 +347,49 @@ public class HeadAppearanceScreen extends Screen {
         return out;
     }
 
+    /** Marcas que se ofrecen: las que trae el mod. */
+    private static List<ResourceLocation> marksChoices() {
+        List<ResourceLocation> out = new ArrayList<>();
+        for (String id : com.hmc.zenkai.registry.commands.FaceCommands.SHIPPED) {
+            out.add(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, id));
+        }
+        return out;
+    }
+
+    private static Component markName(ResourceLocation id) {
+        return Component.translatable("marking." + id.getNamespace() + "." + id.getPath().replace('/', '.'));
+    }
+
+    private void toggleMark(ResourceLocation id) {
+        if (!markings.remove(id)) {
+            if (markings.size() >= PlayerVisualAttachment.MAX_MARKINGS) markings.remove(0); // la más antigua cede el sitio
+            markings.add(id);
+        }
+        applyPreview();
+    }
+
+    private void buildMarks(int pl, int pt) {
+        List<ResourceLocation> options = marksChoices();
+        int pages = Math.max(1, (options.size() + PER_PAGE - 1) / PER_PAGE);
+        page = Mth.clamp(page, 0, pages - 1);
+        int from = page * PER_PAGE;
+        for (int i = from; i < Math.min(options.size(), from + PER_PAGE); i++) {
+            ResourceLocation id = options.get(i);
+            int slot = i - from;
+            int x = pl + LEFT_X + (slot % GRID_COLS) * (FacePartTile.SIZE + GRID_GAP);
+            int y = pt + GRID_Y + (slot / GRID_COLS) * (FacePartTile.SIZE + GRID_GAP);
+            var tile = new MarkingTile(x, y, id, markName(id), () -> markings.contains(id), () -> toggleMark(id));
+            tile.setTooltip(Tooltip.create(markName(id)));
+            addRenderableWidget(tile);
+        }
+        if (pages > 1) {
+            addRenderableWidget(new ArrowIconButton(pl + LEFT_X, pt + NAME_Y - 2,
+                    ArrowIconButton.Dir.LEFT, () -> { page = Math.floorMod(page - 1, pages); rebuildWidgets(); }));
+            addRenderableWidget(new ArrowIconButton(pl + LEFT_R - ARROW_W, pt + NAME_Y - 2,
+                    ArrowIconButton.Dir.RIGHT, () -> { page = Math.floorMod(page + 1, pages); rebuildWidgets(); }));
+        }
+    }
+
     private int pageCount() { return Math.max(1, (choices().size() + PER_PAGE - 1) / PER_PAGE); }
 
     private int pageOfSelection() {
@@ -371,6 +420,7 @@ public class HeadAppearanceScreen extends Screen {
         // (calcularlo después, en buildColorRows, dejaba la casilla encima de los botones).
         hairHasColors = tab == Tab.HAIR && !importOpen && selectedHairHasColors();
         if (tab == Tab.HAIR) buildHairLibrary(pl, pt);
+        else if (tab == Tab.MARKS) buildMarks(pl, pt);
         else buildGrid(pl, pt);
         buildColorRows(pl, pt);
         buildViewToggle(pl, pt);
@@ -880,6 +930,9 @@ public class HeadAppearanceScreen extends Screen {
                             y + i * 10, hairStatusError ? ZenkaiPalette.DENIED_ON_PANEL : COLOR_VALUE, false);
                 }
             }
+        } else if (tab == Tab.MARKS) {
+            text(g, fitBetweenArrows(Component.translatable("screen.zenkai.head.marks_count",
+                    markings.size(), PlayerVisualAttachment.MAX_MARKINGS)), leftCx, pt + NAME_Y, COLOR_VALUE);
         } else {
             Component name = nameOf(faceParts.get(tab.category));
             if (pageCount() > 1) name = Component.literal((page + 1) + "/" + pageCount() + "  ").append(name);
@@ -935,6 +988,8 @@ public class HeadAppearanceScreen extends Screen {
                     if (hairStrandColors) g.fill(cx + 2, cy + 2, cx + CHECK_W - 4, cy + CHECK_W - 4, COLOR_VALUE);
                 }
             }
+            case MARKS -> g.drawString(font, Component.translatable("screen.zenkai.head.marks_hint"),
+                    x, pt + ROW1_Y + 1, COLOR_MUTED, false);
             case EYEBROWS -> g.drawString(font, Component.translatable("screen.zenkai.head.color_follows_hair"),
                     x, pt + ROW1_Y + 1, COLOR_MUTED, false);
             case NOSE, MOUTH -> g.drawString(font, Component.translatable("screen.zenkai.head.color_follows_skin"),
@@ -1003,6 +1058,8 @@ public class HeadAppearanceScreen extends Screen {
         visual.setHairStrandColors(hairStrandColors);
         for (FaceCategory c : FaceCategory.values()) visual.setFacePart(c, faceParts.get(c));
         visual.setHairStyleId(hairSel);
+        visual.clearMarkings();
+        for (ResourceLocation m : markings) visual.addMarking(m);
     }
 
     /** "Back": retrocede a la pestaña anterior visible y solo desde la primera vuelve al hub. */

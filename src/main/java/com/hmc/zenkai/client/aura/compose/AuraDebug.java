@@ -41,14 +41,15 @@ public final class AuraDebug {
     public static @Nullable String compareType;
     /**
      * Prueba de DIRECCIÓN DE ARTE (2026-10-26, {@code /zenkaiaura look}, ver
-     * .claude/pendiente/aura-direccion-de-arte.md): a diferencia del resto, vale para CUALQUIER aura
+     * .claude/archivo/2026-11-02-auras-cerradas/aura-direccion-de-arte.md): a diferencia del resto, vale para CUALQUIER aura
      * compuesta, no solo la propia (es un uniform global de los cuatro programas de cuerpo).
      * {@code lookFps} = fotogramas por segundo del movimiento a saltos (0 = continuo);
      * {@code lookBands3} = tres bandas duras (borde, cuerpo, núcleo); {@code lookWhiteCap} = blanco
-     * máximo del borde, con saturación conservada (0 = el de siempre). Por DEFECTO está el look APROBADO por
-     * el usuario el 2026-10-29 (8 fps, 3 bandas, tope 0,10); {@code /zenkaiaura look reset} vuelve a él.
+     * máximo del borde, con saturación conservada (0 = el de siempre). Por DEFECTO está el look del usuario:
+     * 3 bandas, tope 0,10 y 60 fps (2026-11-01: a 8 fps, el aprobado el 2026-10-29, se leía robótico; probó 60 y le gustaron
+     * todas las formas). {@code /zenkaiaura look reset} vuelve a él; {@code look fps 8} al movimiento a saltos de antes.
      */
-    public static float lookFps = 8f;
+    public static float lookFps = 60f;
     public static boolean lookBands3 = true;
     public static float lookWhiteCap = 0.10f;
     /** Relleno de la parte alta de la llama (0..1, 0 = solo fresnel): aura_4/aura_11 son densas arriba. */

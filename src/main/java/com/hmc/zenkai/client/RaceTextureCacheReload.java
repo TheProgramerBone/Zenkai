@@ -21,7 +21,10 @@ public final class RaceTextureCacheReload {
     public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener((ResourceManagerReloadListener) rm -> {
             RaceTextureUtil.clearCache();
+            com.hmc.zenkai.client.gui.screens.skilltree.FormIcons.clearCache();
             FaceRemapTextures.clear();
+            com.hmc.zenkai.client.face.BloodTextures.clear();
+            com.hmc.zenkai.client.face.FaceExpression.clear();
             com.hmc.zenkai.feature.race.layer.TailWaistPose.clear();
         });
     }

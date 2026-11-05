@@ -26,6 +26,9 @@ import org.jetbrains.annotations.NotNull;
  */
 public class HaloGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
+    /** Píxeles de modelo que sube y se adelanta el halo sobre la cabeza del Oozaru (ver render). */
+    private static final double OOZARU_HALO_RAISE = 4.0, OOZARU_HALO_FORWARD = 2.75;
+
     private final HumanoidArmorLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>,
             HumanoidModel<AbstractClientPlayer>> armorLayer;
 
@@ -63,9 +66,22 @@ public class HaloGeoLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<
         inv.armor.set(1, ItemStack.EMPTY);
         inv.armor.set(0, ItemStack.EMPTY);
 
+        // El halo NO lleva el humo de silueta: se saca de la máscara (ver SilhouetteFlameRenderer.suspendCapture).
+        com.hmc.zenkai.client.aura.silhouette.SilhouetteFlameRenderer.suspendCapture();
+        // La cabeza del Oozaru (geo propio) sube a y=36 y está centrada en z=-2,75, mientras la humanoide vanilla
+        // acaba en y=32 y se centra en 0: el aro del halo (y=35, centrado en 0) quedaba CLAVADO en el cráneo. Se
+        // sube 4 px (36 - 32: el aro queda a los mismos 3 px de siempre sobre la cabeza) y se adelanta a su centro. El espacio
+        // de las capas va con Y invertida (de ahí el signo) y el frente en -Z. La escala x3 la pone ya la pose.
+        var form = player.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId();
+        boolean oozaru = com.hmc.zenkai.feature.forms.FormIds.OOZARU.equals(form)
+                || com.hmc.zenkai.feature.forms.FormIds.SUPER_OOZARU.equals(form);
+        poseStack.pushPose();
+        if (oozaru) poseStack.translate(0.0, -OOZARU_HALO_RAISE / 16.0, -OOZARU_HALO_FORWARD / 16.0);
         armorLayer.render(poseStack, buffer, packedLight, player,
                 limbSwing, limbSwingAmount, partialTick, ageInTicks, netHeadYaw, headPitch);
+        poseStack.popPose();
 
+        com.hmc.zenkai.client.aura.silhouette.SilhouetteFlameRenderer.resumeCapture();
         inv.armor.set(3, oldHead);
         inv.armor.set(2, oldChest);
         inv.armor.set(1, oldLegs);

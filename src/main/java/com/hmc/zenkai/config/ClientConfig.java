@@ -232,6 +232,22 @@ public final class ClientConfig {
                             + "ki techniques but has its own switch. Disabled with a shader pack",
                     true);
 
+    // ── Cara y cuerpo (2026-11-01) ──
+    private static final ModConfigSpec.BooleanValue FACE_EXPRESSIONS =
+            defineBool("face.expressions", "face_expressions",
+                    "Facial expressions: blinking, pain, tiredness, sleeping, dying and ki charging", true);
+    private static final ModConfigSpec.IntValue FACE_PAIN_THRESHOLD =
+            defineInt("face.pain_threshold_percent", "face_pain_threshold",
+                    "A single hit makes a body show the pain expression when it takes at least this percent of its "
+                            + "max health. 0 = any damage",
+                    15, 0, 100, 5);
+    private static final ModConfigSpec.BooleanValue FACE_EMISSIVE =
+            defineBool("face.emissive", "face_emissive",
+                    "Glowing eyes on forms that declare them (Ultra Instinct, gods...): drawn at full brightness", true);
+    private static final ModConfigSpec.BooleanValue BLOOD_EFFECTS =
+            defineBool("face.blood_effects", "blood_effects",
+                    "Blood stains on the body as health drops (client only). Off by default: turn it on to see blood", false);
+
     /** Qué aura ve el jugador (ver AuraSystemDispatcher): la NUEVA compuesta por familias
      *  (client/aura/compose, también con shaderpack) o la CLÁSICA (faldones legacy, más ligera).
      *  Solo dos opciones a propósito (pedido del usuario, 2026-09-30): si la nueva da lag en un
@@ -508,6 +524,10 @@ public final class ClientConfig {
     public static boolean kiBloomEnabled() { return KI_BLOOM_ENABLED.get(); }
     public static boolean kiFirstPersonAnimations() { return KI_FP_ANIMATIONS.get(); }
     public static boolean auraBloomEnabled() { return AURA_BLOOM_ENABLED.get(); }
+    public static boolean faceExpressions() { return FACE_EXPRESSIONS.get(); }
+    public static boolean faceEmissive()    { return FACE_EMISSIVE.get(); }
+    public static int facePainThresholdPercent() { return FACE_PAIN_THRESHOLD.get(); }
+    public static boolean bloodEffects()    { return BLOOD_EFFECTS.get(); }
     public static AuraEngine auraEngine() { return AURA_SYSTEM.get(); }
     public static AuraClassicQuality auraClassicQuality() { return AURA_CLASSIC_QUALITY.get(); }
     public static float hudBarsScaleFrac() { return HUD_BARS_SCALE.get() / 100f; }

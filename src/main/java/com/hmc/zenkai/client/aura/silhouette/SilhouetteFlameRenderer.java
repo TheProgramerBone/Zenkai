@@ -29,6 +29,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.RenderNameTagEvent;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -91,7 +92,7 @@ public final class SilhouetteFlameRenderer {
     private static final int MAX_SLOTS = 8;
     /** Grosor del contorno respecto al alto del jugador EN PANTALLA (referencia smoke.png). */
     private static final float THICKNESS_PER_HEIGHT = 0.045f;
-    private static final float THICKNESS_MIN_PX = 2f, THICKNESS_MAX_PX = 36f;
+    private static final float THICKNESS_MIN_PX = 1f, THICKNESS_MAX_PX = 36f;
     private static final double MAX_DIST = 64.0;
     private static final ResourceLocation NOISE =
             ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "textures/entity/aura_noise.png");
@@ -109,6 +110,9 @@ public final class SilhouetteFlameRenderer {
     private static boolean inLevel;
     /** Jugador cuya pasada se está copiando a la máscara (entre su Pre y su Post); null = ninguno. */
     private static @Nullable Slot pending;
+    /** Captura SUSPENDIDA (halo del Otherworld, nombre): ya marcado lo anterior en la máscara; lo que se dibuje
+     *  mientras tanto no cuenta como silueta. Se vuelve a abrir con {@link #resumeCapture} o se cierra en el Post. */
+    private static @Nullable Slot suspended;
 
     // ── Depuración (AuraShots) ──────────────────────────────────────────────
 
@@ -310,6 +314,7 @@ public final class SilhouetteFlameRenderer {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onRenderPlayerPre(RenderPlayerEvent.Pre e) {
         pending = null;
+        suspended = null;
         if (!inLevel || debugNoCapture || e.isCanceled() || SLOTS.size() >= MAX_SLOTS) return;
         // Iris vuelve a dibujar a cada jugador en su pase de SOMBRAS, desde la luz: ahí no hay contorno.
         if (IrisCompat.renderingShadowPass()) return;
@@ -370,9 +375,16 @@ public final class SilhouetteFlameRenderer {
     /** Cierra la captura: dibuja ya al jugador y marca en la máscara los píxeles cuyo depth se acercó. */
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onRenderPlayerPost(RenderPlayerEvent.Post e) {
-        Slot s = pending;
+        Slot open = pending, closed = suspended;
         pending = null;
-        if (s == null) return;
+        suspended = null;
+        if (open != null) markNow(open);
+        Slot s = open != null ? open : closed;
+        if (s != null) SLOTS.add(s);
+    }
+
+    /** Marca en la máscara lo que se ha dibujado desde el último depth de «antes». */
+    private static void markNow(Slot s) {
         Minecraft mc = Minecraft.getInstance();
         RenderTarget main = mc.getMainRenderTarget();
         mc.renderBuffers().bufferSource().endBatch();
@@ -382,7 +394,41 @@ public final class SilhouetteFlameRenderer {
         markShader.safeGetUniform("ProjParams").set(projM22, projM32);
         fullscreen(markShader, main.getDepthTextureId(), before.getColorTextureId());
         restoreFramebuffer(fbo, main);
-        SLOTS.add(s);
+    }
+
+    /**
+     * Deja de contar como silueta lo que se dibuje a partir de AHORA (halo del Otherworld). La máscara sale de
+     * comparar el depth de antes y de después del jugador, así que todo lo que pinte entre su Pre y su Post
+     * (el halo, la placa del nombre) recibía contorno de humo. Se marca lo ya dibujado y se suspende; el que
+     * llame decide si reabre ({@link #resumeCapture}) o no (la placa del nombre va la última).
+     */
+    public static void suspendCapture() {
+        Slot s = pending;
+        if (s == null) return;
+        markNow(s);
+        suspended = s;
+        pending = null;
+    }
+
+    /** Reabre la captura tras {@link #suspendCapture}: vuelca lo suspendido al depth y lo toma como el nuevo «antes». */
+    public static void resumeCapture() {
+        Slot s = suspended;
+        if (s == null) return;
+        Minecraft mc = Minecraft.getInstance();
+        RenderTarget main = mc.getMainRenderTarget();
+        mc.renderBuffers().bufferSource().endBatch();
+        int fbo = boundFramebuffer();
+        before.bindWrite(true);
+        fullscreen(depthShader, main.getDepthTextureId(), 0);
+        restoreFramebuffer(fbo, main);
+        pending = s;
+        suspended = null;
+    }
+
+    /** La placa del nombre (otros jugadores) se dibuja DENTRO del render del jugador: sin esto salía con humo. */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onNameTag(RenderNameTagEvent event) {
+        suspendCapture();
     }
 
     /** Quad a pantalla completa con un shader de una o dos texturas, sin blend ni depth. */
@@ -413,7 +459,7 @@ public final class SilhouetteFlameRenderer {
         Minecraft mc = Minecraft.getInstance();
         RenderTarget main = mc.getMainRenderTarget();
         float time = mc.level == null ? 0f
-                : (float) ((mc.level.getGameTime() % 24000L + event.getPartialTick().getGameTimeDeltaPartialTick(true)) / 20.0);
+                : (float) ((com.hmc.zenkai.client.aura.AuraClock.ticks() % 24000L + event.getPartialTick().getGameTimeDeltaPartialTick(true)) / 20.0);
         for (Slot s : SLOTS) {
             // Campo de esta ranura, a media resolución.
             field.clear(Minecraft.ON_OSX);

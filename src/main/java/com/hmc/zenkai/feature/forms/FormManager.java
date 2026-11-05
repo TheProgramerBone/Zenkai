@@ -223,7 +223,9 @@ public final class FormManager {
                             category,
                             readLayerColors(o),
                             readRgb(o, "fur_rgb", -1),
-                            GsonHelper.getAsBoolean(o, "no_brows", false)));
+                            GsonHelper.getAsBoolean(o, "no_brows", false),
+                            GsonHelper.getAsString(o, "icon_default", ""),
+                            GsonHelper.getAsString(o, "hair_style", "")));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }

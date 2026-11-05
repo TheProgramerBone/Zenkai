@@ -31,7 +31,7 @@ import java.util.Map;
 
 /**
  * HERRAMIENTA DE DESARROLLO: capturas automáticas del aura para la prueba lado a lado de la DIRECCIÓN DE
- * ARTE (Fase 0.3 de .claude/pendiente/aura-direccion-de-arte.md, 2026-10-26). Mismo patrón que
+ * ARTE (Fase 0.3 de .claude/archivo/2026-11-02-auras-cerradas/aura-direccion-de-arte.md, 2026-10-26). Mismo patrón que
  * FpWeaponShots: solo se activa si existe {@code <run>/zenkai_aurashots.txt}, cuya primera línea es la
  * CARPETA del mundo (usar una COPIA: cambia la hora). Al terminar escribe {@code zenkai_aurashots/done.txt}
  * y cierra el juego.
@@ -122,7 +122,7 @@ public final class AuraShots {
     /** Modo {@code humo_momentaneo}: el humo de las formas divinas aparece al cargar y se va al soltar. */
     private static boolean momentaryMode;
     /** Modo {@code divinas}: hojas "mod vs referencia" del rework de las auras divinas
-     *  (.claude/pendiente/aura-divinas-plan.md). Tercera línea opcional: ids de forma separados por espacios. */
+     *  (.claude/archivo/2026-11-02-auras-cerradas/aura-divinas-plan.md). Tercera línea opcional: ids de forma separados por espacios. */
     private static boolean divineMode;
     /** Modo {@code divinas_suelo}: lo que {@code divinas} no cubre (carga en el suelo con sus rocas que
      *  levitan, primera persona) para cerrar las fases del rework de auras. Misma tercera línea de ids. */
@@ -732,7 +732,7 @@ public final class AuraShots {
 
     /**
      * Hojas "mod vs referencia" del rework de las auras divinas (2026-10-26,
-     * .claude/pendiente/aura-divinas-plan.md, fase F0 y verificación de cada fase). SIEMPRE EN VUELO
+     * .claude/archivo/2026-11-02-auras-cerradas/aura-divinas-plan.md, fase F0 y verificación de cada fase). SIEMPRE EN VUELO
      * (pedido del usuario, 2026-10-26: "que no se vean planas o cuadradas"), a 4 bloques del suelo, con el
      * poder del mundo y después con {@code /zenkai attr maxall}:
      * <ul>

@@ -1,0 +1,18 @@
+{
+  "_comment": "SSJ4 Full Power: el aura del SSJ4 (llama controlada) con un humo rojizo suave pegado a la silueta, siempre que esté en la forma.",
+  "family": "flame",
+  "body": {
+    "radius": 1.06,
+    "speed": 0.85,
+    "detail": 0.85
+  },
+  "silhouette": {
+    "inner": "#E0563C",
+    "outer": "#B22A1E",
+    "thickness": 0.6,
+    "reach": 0.8,
+    "speed": 0.7,
+    "alpha": 0.55,
+    "while_charging": false
+  }
+}

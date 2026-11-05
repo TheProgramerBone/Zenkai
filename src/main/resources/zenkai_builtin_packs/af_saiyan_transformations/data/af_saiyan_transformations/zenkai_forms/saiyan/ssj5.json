@@ -1,0 +1,24 @@
+{
+  "races": [
+    "saiyan"
+  ],
+  "kind": "extension",
+  "tp_cost": 140000,
+  "hold_ticks": 60,
+  "mastery_gain": 0.25,
+  "stat_percent_untrained": 11.6,
+  "stat_percent_mastered": 15.4,
+  "ki_drain_untrained": 3.9,
+  "ki_drain_mastered": 1.4,
+  "spi_req": 185,
+  "parent": "zenkai:ssj4",
+  "body_items": {},
+  "aura_type": "ssj3",
+  "aura_rgb": "0xD5DAE6",
+  "scale": 1.0,
+  "hair_rgb": "0xBFC3CC",
+  "eye_rgb": "0xBFC3CC",
+  "fur_rgb": "0xE4E6EA",
+  "icon_default": "zenkai:ssj4",
+  "hair_style": "zenkai:ssj3"
+}

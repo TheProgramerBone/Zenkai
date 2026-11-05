@@ -17,7 +17,7 @@ import java.util.Locale;
  * lo último, así que las cejas van después de los ojos para poder pisar el párpado.
  *
  * Las cicatrices/tatuajes/maquillaje/marcas NO van aquí: serán "decals" aparte (varios a la vez,
- * con color propio), decisión C5 de .claude/docs/customizacion-cara-y-pelo.md (decisiones cerradas).
+ * con color propio), decisión C5 de .claude/docs/customizacion-cara.md (decisiones cerradas).
  */
 public enum FaceCategory {
     /** Sin "ninguno": no existe una cara sin ojos. */

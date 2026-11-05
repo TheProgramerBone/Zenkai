@@ -15,13 +15,23 @@ import org.jetbrains.annotations.Nullable;
 public final class FormIcons {
     private FormIcons() {}
 
+    /** Olvida qué formas tienen icono propio (al recargar recursos). */
+    public static void clearCache() { SkillTreeArt.clearCustomIcons(); }
+
     /**
      * Dibuja el icono de {@code form} en un cuadrado de {@code size} px de GUI con la esquina en (x, y).
      * @param fallbackTint color RGB del icono genérico si la forma no tiene celda (se ignora si la tiene); -1 = blanco
      */
     public static void draw(GuiGraphics g, @Nullable ResourceLocation form, int x, int y, int size, int fallbackTint) {
-        int index = SkillTreeArt.iconIndexOf(form);
-        boolean generic = index == SkillTreeArt.UNKNOWN_ICON;
+        SkillTreeArt.FormIcon icon = SkillTreeArt.formIcon(form);
+        if (icon.texture() != null) {   // icono propio de la forma (textura de 32x32 de su datapack)
+            RenderSystem.enableBlend();
+            int side = Math.min(icon.texW(), icon.texH());
+            g.blit(icon.texture(), x, y, size, size, 0, 0, side, side, icon.texW(), icon.texH());
+            return;
+        }
+        int index = icon.cell();
+        boolean generic = icon.generic();
         int u = (index % 8) * SkillTreeArt.ICON_TEX, v = (index / 8) * SkillTreeArt.ICON_TEX;
         RenderSystem.enableBlend();
         if (generic && fallbackTint >= 0) {

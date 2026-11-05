@@ -34,7 +34,7 @@ public class LegendaryWishScreen extends ShenronPanelScreen {
 
     @Override
     protected void renderContent(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        int y = drawWishHeader(g, panelTop + CONTENT_TOP + 2);
+        int y = drawWishHeader(g, panelTop + CONTENT_TOP - 2);
         // El Saiyan conserva sus textos de siempre; las demás razas tienen su descripción y un aviso común.
         var race = Minecraft.getInstance().player == null ? null
                 : com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(Minecraft.getInstance().player).getRace();
@@ -42,9 +42,10 @@ public class LegendaryWishScreen extends ShenronPanelScreen {
         String descKey = saiyan ? "screen.zenkai.wish.legendary.desc"
                 : "screen.zenkai.wish.legendary.desc." + race.name().toLowerCase(java.util.Locale.ROOT);
         y = drawWrappedOnPanel(g, Component.translatable(descKey), y, ZenkaiPalette.SHENRON_TEXT);
-        y += 10;
+        // Huecos de 5 px (no 10): el pie de los deseos subió sobre la banda de esferas y este es el texto más largo.
+        y += 5;
         drawDivider(g, y);
-        y += 10;
+        y += 6;
         drawWrappedOnPanel(g, Component.translatable(saiyan ? "screen.zenkai.wish.legendary.warning"
                 : "screen.zenkai.wish.legendary.warning.other"), y, ZenkaiPalette.SHENRON_WARN);
     }

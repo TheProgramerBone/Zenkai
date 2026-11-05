@@ -4,7 +4,7 @@
   "silhouette": {
     "inner": "outer",
     "outer": "outer",
-    "thickness": 0.75,
+    "thickness": 0.5,
     "reach": 0.85,
     "speed": 0.7,
     "alpha": 0.95,

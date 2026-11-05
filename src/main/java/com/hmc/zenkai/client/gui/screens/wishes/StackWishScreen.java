@@ -4,6 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
+import com.hmc.zenkai.client.gui.buttons.ShenronButton;
 import com.hmc.zenkai.client.gui.menu.StackWishMenu;
 import com.hmc.zenkai.client.gui.screens.ShenlongWishScreen;
 import com.hmc.zenkai.config.ServerConfig;
@@ -44,7 +45,6 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
 
     /** Zona útil de la textura (el PNG es 256x256 por potencia de dos). */
     private static final int PANEL_W = 176, PANEL_H = 133;
-    private static final int FOOTER_GAP = 6;
 
     private PanelButton confirmButton;
 
@@ -62,14 +62,14 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
     protected void init() {
         super.init();
 
-        int x = this.leftPos;
-        int y = this.topPos + PANEL_H + FOOTER_GAP;
-        int gap = 8;
-        int totalW = PanelButton.W * 2 + gap;
-        int bx = x + (PANEL_W - totalW) / 2;
+        // DENTRO del cuadro (antes colgaban fuera, en estilo beige): uno a cada lado del slot fantasma (x 80-96,
+        // centrado en 88 = PANEL_W/2), en la franja libre bajo la pista (y 8) y sobre el divisor (y ~44). Mismo margen
+        // lateral (10 px) y mismo hueco al slot (12 px) a ambos lados: simétrico.
+        int by = this.topPos + 20;
+        int bw = 58, bh = 16, side = 10;
 
-        this.addRenderableWidget(PanelButton.secondary(bx, y,
-                Component.translatable("screen.zenkai.gui.back"),
+        this.addRenderableWidget(new ShenronButton(this.leftPos + side, by, bw, bh,
+                Component.translatable("screen.zenkai.gui.back"), PanelButton.Kind.SECONDARY,
                 () -> {
                     if (this.minecraft != null && this.minecraft.player != null) {
                         this.minecraft.player.closeContainer();
@@ -77,9 +77,8 @@ public class StackWishScreen extends AbstractContainerScreen<StackWishMenu> {
                     Minecraft.getInstance().setScreen(new ShenlongWishScreen());
                 }));
 
-        this.confirmButton = PanelButton.primary(bx + PanelButton.W + gap, y,
-                Component.translatable("screen.zenkai.gui.confirm"),
-                this::confirm);
+        this.confirmButton = new ShenronButton(this.leftPos + PANEL_W - side - bw, by, bw, bh,
+                Component.translatable("screen.zenkai.gui.confirm"), PanelButton.Kind.PRIMARY, this::confirm);
         this.addRenderableWidget(this.confirmButton);
     }
 

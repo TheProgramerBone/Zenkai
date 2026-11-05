@@ -950,9 +950,11 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             default -> 0.35f;
         };
         if (dimmed) ib *= 0.45f;
-        int icon = SkillTreeArt.iconIndex(n, att.getRace());
+        // Formas: textura propia > celda del atlas > icon_default del JSON > «?» (SkillTreeArt.formIcon). El resto de nodos, igual que siempre.
+        SkillTreeArt.FormIcon formIcon = n.form() != null && n.kind() != Kind.ROOT ? SkillTreeArt.formIcon(n.form()) : null;
+        int icon = formIcon != null ? formIcon.cell() : SkillTreeArt.iconIndex(n, att.getRace());
         float ir = ib, ig = ib, ibl = ib;
-        if (icon == SkillTreeArt.UNKNOWN_ICON) {
+        if (icon == SkillTreeArt.UNKNOWN_ICON && (formIcon == null || formIcon.texture() == null)) {
             int tint = n.kind() == Kind.PASSIVE ? accent : SkillTreeArt.unknownTint(n);
             ir *= ((tint >> 16) & 0xFF) / 255f;
             ig *= ((tint >> 8) & 0xFF) / 255f;
@@ -963,7 +965,8 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             // La Base es la cara de la SKIN del jugador (no la del modelo de su raza), pedido del usuario.
             net.minecraft.client.gui.components.PlayerFaceRenderer.draw(g, mc.player.getSkin(), x + inset, y + inset, ICON);
         } else {
-            SkillTreeArt.icon(g, icon, x + inset, y + inset, ir, ig, ibl);
+            if (formIcon != null && formIcon.texture() != null) SkillTreeArt.customIcon(g, formIcon, x + inset, y + inset, ir, ig, ibl);
+            else SkillTreeArt.icon(g, icon, x + inset, y + inset, ir, ig, ibl);
         }
         if (hovered) g.fill(x + inset, y + inset, x + inset + ICON, y + inset + ICON, ZenkaiPalette.HOVER_VEIL);
 
@@ -1241,6 +1244,10 @@ public class SkillTreeScreen extends TreeCanvasScreen {
                 : null;
         lines.add(new TipLine(level == null ? nameOf(n) : nameOf(n).copy().append("  ").append(level), TIP_NAME));
         lines.add(new TipLine(stateLine(n, e), stateColor(e.state())));
+        // Forma de un datapack de addon: de qué pack viene (dos autores pueden colgar ramas del mismo padre).
+        if (n.form() != null && !com.hmc.zenkai.Zenkai.MOD_ID.equals(n.form().getNamespace())) {
+            lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.source", n.form().getNamespace()), TIP_HINT));
+        }
         if (n.kind() == Kind.PASSIVE) addPassiveLines(lines, e);
         if (SkillTreeMigration.NODE_ARCOSIAN_POWER.equals(n.id()) && e.level() > 0) addPowerPointLines(lines);
 
@@ -1445,7 +1452,7 @@ public class SkillTreeScreen extends TreeCanvasScreen {
                     Component.translatable("screen.zenkai.race." + r.name().toLowerCase(Locale.ROOT)));
         }
         if (n.kind() == Kind.PASSIVE) return Component.translatable(RacePassives.nameKey(att.getRace()));
-        if (n.form() != null) return Component.translatable("form.zenkai." + n.form().getPath());
+        if (n.form() != null) return Component.translatable(FormDef.nameKey(n.form()));
         SkillDef def = n.skill() == null ? null : SkillDef.get(n.skill());
         return def == null ? Component.literal(n.id().toString()) : Component.translatable(def.nameKey());
     }

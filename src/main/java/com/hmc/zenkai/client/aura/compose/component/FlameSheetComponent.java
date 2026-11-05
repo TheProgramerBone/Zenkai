@@ -22,7 +22,7 @@ import java.util.Set;
 
 /**
  * LÁMINAS VERTICALES de llama (2026-10-26, rework de las auras divinas,
- * .claude/pendiente/aura-divinas-plan.md). En los fotogramas de SSG (ReferenciaAuraGokuGod2,
+ * .claude/archivo/2026-11-02-auras-cerradas/aura-divinas-plan.md). En los fotogramas de SSG (ReferenciaAuraGokuGod2,
  * VideoSinRecortarGokuGOD2) el aura no es un volumen con contorno: es una pared de lenguas verticales
  * que suben muy por encima de la cabeza, con núcleos casi blancos y sombras rojas entre ellas. Una
  * cáscara cerrada no puede dar eso (siempre se lee "huevo"); esto son quads planos orientados a
@@ -132,7 +132,14 @@ public final class FlameSheetComponent implements AuraComponent {
         any = false;
         for (int i = 0; i < CAP; i++) {
             if (live[i]) {
-                age[i] += f.dt;
+                if (on) {
+                    age[i] += f.dt;
+                } else {
+                    // Aura apagada: se salta el tramo de aguante y se funde x4 más rápido. Con vidas de 5-8 s
+                    // (Ultra Instinct) las láminas seguían en pantalla hasta 8 s tras soltar el aura (2026-11-01).
+                    if (age[i] >= 0.25f * life[i] && age[i] < 0.75f * life[i]) age[i] = 0.75f * life[i];
+                    age[i] += f.dt * 4f;
+                }
                 if (age[i] >= life[i]) live[i] = false;
             }
             if (!live[i] && i < want) spawn(f, i, want);

@@ -34,6 +34,8 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
         // Cara (ojos/cejas/nariz/boca) solo para items de cuerpo (no pelo). Una sola capa que
         // recorre las categorías del catálogo, ver FaceOverlayGeoLayer. Siempre por encima del tinte.
         if (item.hasFaceOverlays()) {
+            // Sangre por vida baja (opción de cliente): ANTES que la cara para que ojos y boca queden encima.
+            addRenderLayer(new BloodGeoLayer(this));
             addRenderLayer(new FaceOverlayGeoLayer(this));
         }
         if (item.hasDyeTint()) {
@@ -97,7 +99,10 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
         }
         ItemStack current = getCurrentStack();
         if (current != null && com.hmc.zenkai.feature.race.hair.HairStacks.isStrandHair(current)) return Color.WHITE;
-        if (current != null && current.has(DataComponents.DYED_COLOR)) {
+        // OJO: un ítem con capa de tinte propia (dyeTint, p. ej. el scouter: solo el CRISTAL se tiñe, por su máscara _tint.png)
+        // NO debe teñir aquí la pasada base con el DYED_COLOR: pintaba el aparato entero del color del tinte (2026-11-02).
+        // Su tinte lo pone DyedTintGeoLayer. Esta rama es solo para los ítems virtuales de color fijo por forma (pelo, cola).
+        if (current != null && !animatable.hasDyeTint() && current.has(DataComponents.DYED_COLOR)) {
             return Color.ofOpaque(DyedItemColor.getOrDefault(current, 0xFFFFFF));
         }
 
@@ -143,6 +148,14 @@ public class GeoLayerArmorRenderer extends GeoArmorRenderer<GeoLayerArmorItem> {
             model.getBone(name).ifPresent(b -> {
                 b.setHidden(hide);
                 b.setChildrenHidden(hide);
+            });
+        }
+        // Oreja que tapa el scouter (#zenkai:covers_ear): se oculta con el scouter o con un casco real.
+        boolean hideEar = GeoLayerArmorModel.wearerHasEarGear || hide;
+        for (String name : animatable.getHideOnEarGearBones()) {
+            model.getBone(name).ifPresent(b -> {
+                b.setHidden(hideEar);
+                b.setChildrenHidden(hideEar);
             });
         }
         // Opciones de cuerpo del catálogo: solo se ven los huesos de la opción elegida en cada categoría (y

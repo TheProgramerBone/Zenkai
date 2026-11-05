@@ -283,6 +283,13 @@ public final class SkillTreeNodes {
             if (fd != null && fd.divineTier() && !fd.endgamePath()
                     && !n.form().equals(DivineForms.resolveForPlayer(p, n.form()))) return false;
         }
+        // Hija de una forma divina que no es la suya (el Rosé no ve lo que cuelga de Blue): sin padre visible no hay nodo.
+        if (n.kind() == Kind.FORM && n.form() != null) {
+            FormDef fd = FormDef.get(n.form());
+            FormDef pd = fd == null || fd.parent() == null ? null : FormDef.get(fd.parent());
+            if (pd != null && pd.divineTier() && !pd.endgamePath()
+                    && !fd.parent().equals(DivineForms.resolveForPlayer(p, fd.parent()))) return false;
+        }
         SkillTreeData d = SkillTreeData.get(n.id());
         if (d == null || !d.secret()) return true;
         if (PlayerStatsAttachment.get(p).skillTree().owns(n.id())) return true;
@@ -309,6 +316,7 @@ public final class SkillTreeNodes {
             if (d == null) return false;
             // Forma divina: nodo propio; la hermana empatada (Blue/Rosé) comparte peldaño.
             if (d.divineTier() && !d.endgamePath()) return DivineForms.ownsDepth(p, att.getRace(), d.id());
+            if (FormRegistry.isAddonBranch(d)) return false;   // rama de addon: solo la posee quien la compró (arriba, skillTree().owns)
             if (SkillTreeMigration.ownedByPurchase(att.skills(), att.getRace(), d) == null) {
                 return SuperForms.unlocked(p, n.form());
             }
@@ -361,6 +369,14 @@ public final class SkillTreeNodes {
         if (d.divineTier() && !d.endgamePath()) {
             if (d.parent() != null && !ownedParent(p, race, d.parent())) return info(State.LOCKED, 0, 1);
             if (att.skills().level(DivineForms.SKILL) <= 0) return info(State.LOCKED, 0, 1);
+            if (data != null && !data.purchasableWithTp()) return info(State.CONDITION, 0, 1);
+            if (!requirementsMet(p, data)) return info(State.NEED_REQS, 0, 1);
+            return purchaseForm(att, d.tpCost());
+        }
+
+        // Rama de addon: nodo propio e independiente (tp_cost, padre poseído, requisitos del JSON). Ver FormRegistry.isAddonBranch.
+        if (FormRegistry.isAddonBranch(d)) {
+            if (d.parent() != null && !ownedParent(p, race, d.parent())) return info(State.LOCKED, 0, 1);
             if (data != null && !data.purchasableWithTp()) return info(State.CONDITION, 0, 1);
             if (!requirementsMet(p, data)) return info(State.NEED_REQS, 0, 1);
             return purchaseForm(att, d.tpCost());
@@ -508,7 +524,7 @@ public final class SkillTreeNodes {
                     FormDef d = FormDef.get(n.form());
                     if (d == null || d.endgamePath() || (data != null && !data.purchasableWithTp())) continue;
                     if (SkillTreeMigration.ownedByPurchase(att.skills(), race, d) == null
-                            && !(d.divineTier())) continue;
+                            && !(d.divineTier()) && !FormRegistry.isAddonBranch(d)) continue;
                     total += Math.max(0, d.tpCost());
                 }
                 case PASSIVE -> {

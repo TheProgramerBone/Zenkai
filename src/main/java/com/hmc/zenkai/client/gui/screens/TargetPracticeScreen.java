@@ -6,10 +6,9 @@ import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
 import com.hmc.zenkai.client.gui.buttons.BackIconButton;
-import com.hmc.zenkai.client.gui.buttons.MinusIconButton;
 import com.hmc.zenkai.client.gui.buttons.PanelButton;
 import com.hmc.zenkai.client.gui.buttons.PlayIconButton;
-import com.hmc.zenkai.client.gui.buttons.PlusIconButton;
+import com.hmc.zenkai.client.gui.widgets.TrainingWidgets;
 import com.hmc.zenkai.feature.training.TargetPracticeSessionPacket;
 import com.hmc.zenkai.feature.training.TrainingInfoRequestPacket;
 import net.minecraft.ChatFormatting;
@@ -131,7 +130,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         // 4 px de aire por lado: partido a panelW - 24 (232 px) el texto centrado llegaba a los dos bordes del beige (231 px).
         introLines = this.font.split(
                 Component.translatable("screen.zenkai.target_practice.intro.short"), (IN_X2 - IN_X1) - 8);
-        stepperY = INTRO_Y + introLines.size() * 10 + 4 + 20 + 4;
+        stepperY = INTRO_Y + introLines.size() * 10 + 6;
         buildIntroWidgets();
         requestInfo();
     }
@@ -167,16 +166,16 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
         addRenderableWidget(com.hmc.zenkai.client.gui.buttons.HelpIconButton.hint(
                 CommonPanel.iconRight(panelLeft), CommonPanel.iconTop(panelTop), CommonPanel.ICON, Component.translatable("screen.zenkai.target_practice.intro")));
 
-        int cx = panelLeft + panelW / 2;
-        addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY, this::decrease));
-        addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY, this::increase));
-        // Duración de sesión (pedido explícito del usuario, ver DURATION_STEPS_SEC) — SU PROPIA
-        // línea de etiqueta arriba (+20, sin botones) y los botones en la línea de abajo (+32,
-        // no +20): "Session length: 30s" combinado en una sola línea se montaba con el botón +
-        // (mismo bug real que MeditationScreen, "Difficulty: 100%" es más corto y sí cabía) — ver
-        // el javadoc de clase de ShadowTrainingScreen para el mismo arreglo.
-        addRenderableWidget(new MinusIconButton(cx - 60, panelTop + stepperY + 32, this::decreaseDuration));
-        addRenderableWidget(new PlusIconButton(cx + 48, panelTop + stepperY + 32, this::increaseDuration));
+        // Dos fichas de opción (plantilla de Training): dificultad y duración de sesión.
+        int chipY = panelTop + stepperY;
+        addRenderableWidget(new TrainingWidgets.OptionChip(panelLeft + TrainingWidgets.CHIP_X, chipY,
+                Component.translatable("screen.zenkai.training.difficulty"),
+                () -> Component.literal(STEPS_PCT[stepIndex] + "%"), this::decrease, this::increase));
+        addRenderableWidget(new TrainingWidgets.OptionChip(panelLeft + TrainingWidgets.CHIP_X,
+                chipY + TrainingWidgets.CHIP_H + TrainingWidgets.CHIP_GAP,
+                Component.translatable("screen.zenkai.training.length"),
+                () -> Component.translatable("screen.zenkai.meditation.session_length_value", DURATION_STEPS_SEC[durationIndex]),
+                this::decreaseDuration, this::increaseDuration));
     }
 
     private void buildResultsWidgets() {
@@ -372,30 +371,7 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
             PanelText.onPanel(g, this.font, line, cx - this.font.width(line) / 2, ty, ZenkaiPalette.MUTED_ON_PANEL);
             ty += 10;
         }
-        ty += 4;
-        if (introPotential != null) {
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.potential", introPotential),
-                    cx, ty, ZenkaiPalette.VALUE_ON_PANEL);
-        }
-        ty += 10;
-        if (introRecord != null) {
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.record", introRecord),
-                    cx, ty, ZenkaiPalette.MUTED_ON_PANEL);
-        }
-
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.training_hub.shadow.difficulty", STEPS_PCT[stepIndex]),
-                cx, panelTop + stepperY + 2, ZenkaiPalette.LABEL_ON_PANEL);
-        // Etiqueta + valor separados — ver el javadoc de buildIntroWidgets() para el bug real que
-        // esto arregla (mismo que MeditationScreen).
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.meditation.session_length_label"),
-                cx, panelTop + stepperY + 20, ZenkaiPalette.LABEL_ON_PANEL);
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.meditation.session_length_value", DURATION_STEPS_SEC[durationIndex]),
-                cx, panelTop + stepperY + 34, ZenkaiPalette.LABEL_ON_PANEL);
+        TrainingWidgets.footer(g, this.font, panelLeft, panelTop, panelH, introPotential, introRecord);
     }
 
     private void renderPlaying(GuiGraphics g) {
@@ -426,38 +402,10 @@ public class TargetPracticeScreen extends Screen implements TrainingMinigameScre
 
     private void renderResults(GuiGraphics g) {
         ScreenTitle.drawAbovePanel(g, this.font, this.title, panelLeft + panelW / 2, panelTop);
-        int cx = panelLeft + panelW / 2;
-        int ty = panelTop + 50;
-
-        // LABEL_ON_PANEL + negrita, NO GOLD: ver el comentario equivalente en MeditationScreen.
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.meditation.result.title")
-                        .copy().withStyle(net.minecraft.ChatFormatting.BOLD),
-                cx, ty, ZenkaiPalette.LABEL_ON_PANEL);
-        ty += 16;
-        Component result = lost
+        Component detail = lost
                 ? Component.translatable("screen.zenkai.target_practice.result.lost")
                 : Component.translatable("screen.zenkai.target_practice.result.orbs_popped", orbsPopped);
-        PanelText.centeredOnPanel(g, this.font, result, cx, ty, ZenkaiPalette.LABEL_ON_PANEL);
-        ty += 16;
-        Component reward = resultReward == null
-                ? Component.translatable("screen.zenkai.meditation.result.calculating")
-                : Component.translatable("screen.zenkai.meditation.result.tp_earned", resultReward);
-        PanelText.centeredOnPanel(g, this.font, reward, cx, ty, ZenkaiPalette.OK_ON_PANEL);
-
-        if (resultRecord != null) {
-            ty += 16;
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.record", resultRecord),
-                    cx, ty, ZenkaiPalette.MUTED_ON_PANEL);
-            if (resultReward != null && resultReward > 0 && resultReward.equals(resultRecord)) {
-                ty += 12;
-                PanelText.centeredOnPanel(g, this.font,
-                        Component.translatable("screen.zenkai.training_hub.new_record")
-                                .copy().withStyle(ChatFormatting.BOLD),
-                        cx, ty, ZenkaiPalette.VALUE_ON_PANEL);
-            }
-        }
+        TrainingWidgets.result(g, this.font, panelLeft, panelTop, panelW, panelH, resultReward, resultRecord, detail);
     }
 
     @Override public boolean isPauseScreen() { return false; }

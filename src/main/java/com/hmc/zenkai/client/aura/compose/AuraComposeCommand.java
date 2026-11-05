@@ -46,6 +46,8 @@ import java.util.TreeSet;
  *   <li>{@code look fps <n>} / {@code look bands3 on|off} / {@code look whitecap <0..1>} / {@code look topfill <0..1>} /
  *       {@code look reset} — prueba de dirección de arte (2026-10-26): movimiento a saltos, tres
  *       bandas duras y tope de blanco del borde, para CUALQUIER aura compuesta.</li>
+ *   <li>{@code dummies <legendary|divine|ssj|formas...>|clear} — jugadores falsos en fila, cada uno en una forma y
+ *       cargando ki (ver {@link AuraDummies}): comparar auras y humo de silueta de varias formas a la vez.</li>
  *   <li>{@code compare <aura_type>|off} — dibuja un aura fantasma con otro aura_type a tu derecha,
  *       con tu misma pose y tu mismo poder: dos auras lado a lado sin reiniciar.</li>
  * </ul>
@@ -95,7 +97,7 @@ public final class AuraComposeCommand {
                                 .then(Commands.literal("auto").executes(c -> state(c.getSource(), StringArgumentType.getString(c, "state"), null)))))
                 .then(Commands.literal("transform").executes(c -> transform(c.getSource())))
                 .then(Commands.literal("look")
-                        .then(Commands.literal("reset").executes(c -> { AuraDebug.lookTopFill = 0f; return look(c.getSource(), 8f, true, 0.10f); }))
+                        .then(Commands.literal("reset").executes(c -> { AuraDebug.lookTopFill = 0f; return look(c.getSource(), 60f, true, 0.10f); }))
                         .then(Commands.literal("topfill")
                                 .then(Commands.argument("fill", FloatArgumentType.floatArg(0f, 1f))
                                         .executes(c -> {
@@ -113,6 +115,13 @@ public final class AuraComposeCommand {
                                 .then(Commands.argument("cap", FloatArgumentType.floatArg(0f, 1f))
                                         .executes(c -> look(c.getSource(), AuraDebug.lookFps, AuraDebug.lookBands3,
                                                 FloatArgumentType.getFloat(c, "cap"))))))
+                .then(Commands.literal("dummies")
+                        .then(Commands.literal("clear").executes(c -> dummies(c.getSource(), null)))
+                        .then(Commands.argument("forms", StringArgumentType.greedyString())
+                                .suggests((c, b) -> SharedSuggestionProvider.suggest(
+                                        java.util.stream.Stream.concat(AuraDummies.PRESETS.keySet().stream(),
+                                                java.util.stream.Stream.of("ssj2", "ssj_god", "ssj_blue", "ultra_instinct")), b))
+                                .executes(c -> dummies(c.getSource(), StringArgumentType.getString(c, "forms")))))
                 .then(Commands.literal("compare")
                         .then(Commands.literal("off").executes(c -> compare(c.getSource(), null)))
                         .then(Commands.argument("aura_type", StringArgumentType.word())
@@ -231,6 +240,24 @@ public final class AuraComposeCommand {
                 + ", " + (whiteCap > 0f ? "tope de blanco " + whiteCap : "blanco de siempre")
                 + (AuraDebug.lookTopFill > 0f ? ", relleno arriba " + AuraDebug.lookTopFill : "")), false);
         return 1;
+    }
+
+    /** {@code /zenkaiaura dummies <preset|formas...>}: muñecos cargando ki en fila (ver {@link AuraDummies}). */
+    private static int dummies(CommandSourceStack src, @Nullable String forms) {
+        if (forms == null) {
+            AuraDummies.clear();
+            src.sendSuccess(() -> Component.literal("[Aura] muñecos de aura borrados"), false);
+            return 1;
+        }
+        java.util.List<String> unknown = new java.util.ArrayList<>();
+        int n = AuraDummies.spawn(java.util.Arrays.asList(forms.trim().split("\\s+")), unknown);
+        if (n < 0) {
+            src.sendFailure(Component.literal("[Aura] hace falta estar dentro de un mundo"));
+            return 0;
+        }
+        src.sendSuccess(() -> Component.literal("[Aura] " + n + " muñeco(s) cargando ki delante de ti"
+                + (unknown.isEmpty() ? "" : " (formas desconocidas: " + unknown + ")")), false);
+        return n;
     }
 
     private static int compare(CommandSourceStack src, @Nullable String t) {

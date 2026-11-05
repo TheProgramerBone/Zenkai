@@ -77,13 +77,21 @@ public final class DebugCommands {
                 if (!s.isEmpty()) items.add(s.copy());
             }
         }
-        var body = com.hmc.zenkai.feature.player.death.PlayerBodyManager.spawnFor(sp, sp.serverLevel(), items);
+        var body = com.hmc.zenkai.feature.player.death.PlayerBodyManager.spawnFor(sp, sp.serverLevel(), items,
+                fill ? com.hmc.zenkai.feature.player.death.PlayerBodyManager.Snapshot.capture(sp) : null);
         if (body == null) {
             c.getSource().sendFailure(Component.literal("No se pudo crear el cuerpo."));
             return 0;
         }
         c.getSource().sendSuccess(() -> Component.literal("Cuerpo creado" + (fill ? " con una copia de tu inventario." : " vacío.")), false);
         return 1;
+    }
+
+    /** {@code /zenkai body killall [spill]}: elimina cada cuerpo del mundo (y SOLO cuerpos). Con {@code spill} suelta antes su contenido. */
+    public static int bodyKillAll(CommandContext<CommandSourceStack> c, boolean spill) {
+        int n = com.hmc.zenkai.feature.player.death.PlayerBodyManager.killAll(c.getSource().getServer(), spill);
+        c.getSource().sendSuccess(() -> Component.translatable("zenkai.body.kill_all", n), true);
+        return n;
     }
 
     public static int debugBodyClear(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
@@ -435,130 +443,5 @@ public final class DebugCommands {
         ctx.getSource().sendSuccess(() -> Component.literal("[Zenkai] " + n
                 + " muñeco(s) borrado(s)"), false);
         return n;
-    }
-
-    public static int debugSpawnKiVfx(CommandContext<CommandSourceStack> ctx, String typeId, int size)
-            throws CommandSyntaxException {
-        ServerPlayer sp = ctx.getSource().getPlayerOrException();
-        KiTechniqueType type = KiTechniqueType.byName(typeId);
-        if (type == null) {
-            ctx.getSource().sendFailure(Component.literal(
-                    "[Zenkai] Tipo de técnica desconocido: " + typeId));
-            return 0;
-        }
-        if (!(sp.level() instanceof ServerLevel sl)) return 0;
-
-        Vec3 look = sp.getLookAngle();
-        Vec3 spawnPos = sp.getEyePosition().add(look.scale(DEBUG_KIVFX_DISTANCE));
-
-        KiProjectileEntity proj = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sl);
-        proj.configure(sp, type, type.defaultRgb(), size, 0.0, Integer.MAX_VALUE, TechniqueEffect.NONE);
-        proj.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
-        proj.freeze(look);
-        sl.addFreshEntity(proj);
-
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[Zenkai] " + type.id() + " (tamaño " + size + ") congelado a "
-                        + (int) DEBUG_KIVFX_DISTANCE + " bloques. \"/zenkai debug kivfx clear\" para quitarlos."),
-                false);
-        return 1;
-    }
-
-    /**
-     * "/zenkai debug kivfx spawnall [size]": las 16 técnicas de golpe, congeladas en fila
-     * horizontal delante de quien ejecuta, todas al mismo tamaño — la comparativa completa que
-     * "spawn" uno a uno solo da tras 16 comandos. La fila se centra en la mirada (no arranca
-     * pegada a un lado) y cada hueco usa {@link KiTechniqueType#visualDiameter(int)} — el
-     * diámetro REAL en pantalla, no {@code projectileSize()} a secas — así que un Death Ball
-     * enorme no atropella a su vecino aunque un Death Beam finísimo sí quede muy junto al suyo.
-     * PRIMER INTENTO usaba {@code projectileSize()} directo y las técnicas se solapaban un 50%
-     * (confirmado con capturas): el renderer agranda la malla un 50% más allá del hitbox
-     * (ver KiVfxProjectileRenderer.render()) y la fila no lo tenía en cuenta.
-     * La mirada se APLANA (se ignora el pitch): con la fila orientada a una mirada inclinada
-     * hacia arriba/abajo saldría en diagonal en vez de una línea horizontal legible.
-     */
-    public static int debugSpawnAllKiVfx(CommandContext<CommandSourceStack> ctx, int size)
-            throws CommandSyntaxException {
-        ServerPlayer sp = ctx.getSource().getPlayerOrException();
-        if (!(sp.level() instanceof ServerLevel sl)) return 0;
-
-        Vec3 look = sp.getLookAngle();
-        Vec3 flatLook = new Vec3(look.x, 0.0, look.z);
-        flatLook = flatLook.lengthSqr() > 1.0e-4 ? flatLook.normalize() : new Vec3(0, 0, 1);
-        Vec3 right = new Vec3(-flatLook.z, 0.0, flatLook.x);
-        Vec3 rowCenter = sp.getEyePosition().add(flatLook.scale(DEBUG_KIVFX_DISTANCE));
-
-        KiTechniqueType[] all = KiTechniqueType.values();
-        double[] slot = new double[all.length];
-        double total = 0.0;
-        for (int i = 0; i < all.length; i++) {
-            slot[i] = Math.max(0.5, all[i].visualDiameter(size)) + DEBUG_KIVFX_ROW_GAP;
-            total += slot[i];
-        }
-
-        double x = -total / 2.0;
-        for (KiTechniqueType type : all) {
-            double half = Math.max(0.5, type.visualDiameter(size)) / 2.0 + DEBUG_KIVFX_ROW_GAP / 2.0;
-            x += half;
-            Vec3 pos = rowCenter.add(right.scale(x));
-
-            KiProjectileEntity proj = new KiProjectileEntity(ModEntities.KI_PROJECTILE.get(), sl);
-            proj.configure(sp, type, type.defaultRgb(), size, 0.0, Integer.MAX_VALUE, TechniqueEffect.NONE);
-            proj.setPos(pos.x, pos.y, pos.z);
-            proj.freeze(flatLook);
-            sl.addFreshEntity(proj);
-
-            x += half;
-        }
-
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[Zenkai] " + all.length + " técnicas congeladas en fila (tamaño " + size
-                        + "). \"/zenkai debug kivfx clear\" para quitarlas."), false);
-        return all.length;
-    }
-
-    /** "/zenkai debug kivfx clear": borra solo las entidades marcadas por freeze() (ver
-     *  KiProjectileEntity.DEBUG_TAG), nunca un proyectil de combate real aunque comparta
-     *  clase. Radio generoso (500 bloques) porque es una sesión de comparación manual, no algo
-     *  que se dispare cerca de otros jugadores por accidente. */
-    public static int debugClearKiVfx(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        ServerPlayer sp = ctx.getSource().getPlayerOrException();
-        AABB area = sp.getBoundingBox().inflate(500.0);
-        List<KiProjectileEntity> found = sp.level().getEntitiesOfClass(KiProjectileEntity.class, area,
-                e -> e.getTags().contains(KiProjectileEntity.DEBUG_TAG));
-        for (KiProjectileEntity e : found) e.discard();
-
-        int n = found.size();
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[Zenkai] " + n + " ataque(s) congelado(s) eliminado(s)."), false);
-        return n;
-    }
-
-    /** "/zenkai debug sequence": caso SINTÉTICO del andamiaje TechniqueSequence, sin ninguna
-     *  técnica real de por medio — ver el comentario de la rama "sequence" más arriba y el
-     *  javadoc de {@link com.hmc.zenkai.feature.technique.sequence.TechniqueSequence}.
-     *  2 destellos (heavy_blow, luego kiai) con 1s de diferencia, delante de quien ejecuta,
-     *  reutilizando los MISMOS JSON de {@code zenkai_vfx_effects/physical_impact/} que ya
-     *  migró el paso 1 — no hace falta un efecto nuevo solo para esta prueba. */
-    public static int debugRunSequence(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        ServerPlayer sp = ctx.getSource().getPlayerOrException();
-        if (!(sp.level() instanceof ServerLevel sl)) return 0;
-
-        Vec3 spawnPos = sp.getEyePosition().add(sp.getLookAngle().scale(DEBUG_KIVFX_DISTANCE));
-        int rgb = com.hmc.zenkai.feature.aura.AuraColors.resolve(sp);
-        SequenceContext seqCtx = new SequenceContext(sl, spawnPos, rgb, sp);
-
-        TechniqueSequence sequence = new TechniqueSequence(List.of(
-                new VfxStep(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
-                        "physical_impact/heavy_blow"), 0.4),
-                new PauseStep(20),
-                new VfxStep(ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID,
-                        "physical_impact/kiai"), 0.6)
-        ));
-        sequence.run(seqCtx);
-
-        ctx.getSource().sendSuccess(() -> Component.literal(
-                "[Zenkai] Secuencia sintética lanzada: 2 destellos con 1s de diferencia."), false);
-        return 1;
     }
 }

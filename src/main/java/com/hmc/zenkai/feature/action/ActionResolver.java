@@ -234,6 +234,7 @@ public final class ActionResolver {
             return reject(sp, ActionType.BLOCK, ActionReject.NOT_COMBAT_MODE, -1);
         }
         if (ctx.stunned()) return reject(sp, ActionType.BLOCK, ActionReject.STUNNED, -1);
+        if (ctx.carryingBody()) return reject(sp, ActionType.BLOCK, ActionReject.HANDS_BUSY, -1);
         if (cur.type() == ActionType.BLOCK) return ActionResult.ok(cur); // ya defendía
         // Guardia rota por un kiai: no se puede volver a levantar hasta que caduque.
         if (com.hmc.zenkai.feature.combat.GuardBreak.isBroken(sp)) {
@@ -275,6 +276,8 @@ public final class ActionResolver {
         }
 
         if (att.flags().isDowned()) return reject(sp, ActionType.TRANSFORM, ActionReject.DOWNED, -1);
+        if (com.hmc.zenkai.feature.player.death.PlayerBodyCarry.restricted(sp))
+            return reject(sp, ActionType.TRANSFORM, ActionReject.HANDS_BUSY, -1);
         if (com.hmc.zenkai.feature.combat.StunState.isStunned(sp)) {
             return reject(sp, ActionType.TRANSFORM, ActionReject.STUNNED, -1);
         }

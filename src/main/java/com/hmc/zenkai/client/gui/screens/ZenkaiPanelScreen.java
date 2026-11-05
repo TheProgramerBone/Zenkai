@@ -99,7 +99,18 @@ public abstract class ZenkaiPanelScreen extends Screen {
     protected int contentWidth()  { return BG_W - PAD * 2; }
     protected int centerX()       { return panelLeft + BG_W / 2; }
     /** Último Y utilizable antes del pie de página. */
-    protected int contentBottom() { return panelTop + BG_H - (hasFooter() ? FOOTER_H : PAD); }
+    protected int contentBottom() { return panelTop + BG_H - (hasFooter() ? footerH() : PAD); }
+
+    // Geometría del pie: las familias con arte propio (Shenlong, con las esferas en la banda baja) la sobreescriben.
+    protected int footerH()        { return FOOTER_H; }
+    protected int footerButtonY()  { return panelTop + BG_H - PAD - PanelButton.H; }
+    protected int footerButtonW()  { return PanelButton.W; }
+    protected int footerGap()      { return 10; }
+
+    protected PanelButton createFooterButton(int x, int y, Component label, PanelButton.Kind kind, Runnable action) {
+        return kind == PanelButton.Kind.PRIMARY ? PanelButton.primary(x, y, label, action)
+                                                : PanelButton.secondary(x, y, label, action);
+    }
 
     @Override
     protected final void init() {
@@ -115,13 +126,14 @@ public abstract class ZenkaiPanelScreen extends Screen {
         if (hasFooter()) {
             // Volver a la izquierda y Confirmar a la derecha, no al revés: la acción positiva
             // cae bajo la mano derecha del ratón, como en el resto de diálogos del juego.
-            int y = panelTop + BG_H - PAD - PanelButton.H;
-            int gap = 10;
-            int totalW = PanelButton.W * 2 + gap;
+            int y = footerButtonY();
+            int gap = footerGap();
+            int bw = footerButtonW();
+            int totalW = bw * 2 + gap;
             int x = centerX() - totalW / 2;
 
-            backButton = PanelButton.secondary(x, y, backLabel(), this::onClose);
-            confirmButton = PanelButton.primary(x + PanelButton.W + gap, y, confirmLabel(), this::onConfirm);
+            backButton = createFooterButton(x, y, backLabel(), PanelButton.Kind.SECONDARY, this::onClose);
+            confirmButton = createFooterButton(x + bw + gap, y, confirmLabel(), PanelButton.Kind.PRIMARY, this::onConfirm);
             addRenderableWidget(backButton);
             addRenderableWidget(confirmButton);
         }

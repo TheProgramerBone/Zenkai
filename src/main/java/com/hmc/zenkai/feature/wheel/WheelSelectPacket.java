@@ -98,7 +98,7 @@ public record WheelSelectPacket(String kind, String value) implements CustomPack
 
         Component name = FormIds.BASE.equals(target)
                 ? Component.translatable("wheel.zenkai.base")
-                : Component.translatable("form.zenkai." + target.getPath());
+                : Component.translatable(FormDef.nameKey(target));
         sp.displayClientMessage(
                 Component.translatable("message.zenkai.form_selected", name), true);
         return true;

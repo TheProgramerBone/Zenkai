@@ -33,6 +33,10 @@ import java.util.function.Consumer;
  * @param races      razas que pueden elegirlo (el JSON sin "races" = cualquiera)
  * @param defaultFor razas para las que es la opción inicial al reconciliar
  * @param layers     capas en orden de pintado (la última queda encima), ver {@link FaceLayer}
+ * @param variants   capas de EXPRESIÓN (2026-11-01): para cada expresión ({@code blink}, {@code hurt}, {@code tired},
+ *                   {@code sleep}, {@code dead}) las capas con que se dibuja ESTE rasgo en lugar de las normales
+ *                   (p. ej. un ojo con su {@code blink.png}). Sin variante, {@code FaceExpression} usa un rasgo
+ *                   genérico (ojo cerrado, boca de grito...). Mismas reglas de capas que {@link #layers}.
  * @param raceLayers capas ALTERNATIVAS por raza: el mismo rasgo dibujado distinto en una raza
  *                   (mismo id y nombre: el jugador no pierde su elección al cambiar de raza ni
  *                   ve duplicados en la lista). Raza ausente = {@link #layers}. Como cualquier
@@ -42,7 +46,18 @@ import java.util.function.Consumer;
  */
 public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
                           Set<Race> races, Set<Race> defaultFor, List<FaceLayer> layers,
-                          Map<Race, List<FaceLayer>> raceLayers) {
+                          Map<Race, List<FaceLayer>> raceLayers, Map<String, List<FaceLayer>> variants) {
+
+    /** Constructor sin variantes (rasgos de siempre). */
+    public FacePartDef(ResourceLocation id, FaceCategory category, int sort, Set<Race> races, Set<Race> defaultFor,
+                       List<FaceLayer> layers, Map<Race, List<FaceLayer>> raceLayers) {
+        this(id, category, sort, races, defaultFor, layers, raceLayers, Map.of());
+    }
+
+    /** Capas de la expresión {@code key} de este rasgo, o null si no trae variante propia. */
+    public List<FaceLayer> variant(String key) {
+        return variants.get(key);
+    }
 
     /** Capas con las que se dibuja este rasgo en esta raza. */
     public List<FaceLayer> layersFor(Race race) {
@@ -120,8 +135,17 @@ public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
                 raceLayers.put(race, alt);
             }
         }
+        // "variants": {"blink": [ ...capas... ], "hurt": [...]} — ver el javadoc del record.
+        Map<String, List<FaceLayer>> variants = new java.util.LinkedHashMap<>();
+        if (o.has("variants")) {
+            JsonObject vo = GsonHelper.getAsJsonObject(o, "variants");
+            for (String key : vo.keySet()) {
+                List<FaceLayer> v = readLayers(GsonHelper.getAsJsonArray(vo, key), category, id, warn);
+                if (!v.isEmpty()) variants.put(key, v);
+            }
+        }
         return new FacePartDef(id, category, GsonHelper.getAsInt(o, "sort", 1000),
-                races, defaultFor, layers, Map.copyOf(raceLayers));
+                races, defaultFor, layers, Map.copyOf(raceLayers), Map.copyOf(variants));
     }
 
     private static List<FaceLayer> readLayers(JsonArray arr, FaceCategory category, ResourceLocation id,
@@ -176,6 +200,11 @@ public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
             buf.writeEnum(e.getKey());
             LAYERS_CODEC.encode(buf, e.getValue());
         }
+        buf.writeVarInt(d.variants.size());
+        for (var e : d.variants.entrySet()) {
+            buf.writeUtf(e.getKey(), 32);
+            LAYERS_CODEC.encode(buf, e.getValue());
+        }
     }
 
     private static FacePartDef read(FriendlyByteBuf buf) {
@@ -192,7 +221,14 @@ public record FacePartDef(ResourceLocation id, FaceCategory category, int sort,
             Race race = buf.readEnum(Race.class);
             raceLayers.put(race, List.copyOf(LAYERS_CODEC.decode(buf)));
         }
-        return new FacePartDef(id, category, sort, races, defaultFor, layers, Map.copyOf(raceLayers));
+        int nv = buf.readVarInt();
+        if (nv > 16) throw new IllegalArgumentException("variants: " + nv + " entradas");
+        Map<String, List<FaceLayer>> variants = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < nv; i++) {
+            String key = buf.readUtf(32);
+            variants.put(key, List.copyOf(LAYERS_CODEC.decode(buf)));
+        }
+        return new FacePartDef(id, category, sort, races, defaultFor, layers, Map.copyOf(raceLayers), Map.copyOf(variants));
     }
 
     /** Bitmask por ordinal: 5 razas caben de sobra en un varint. */

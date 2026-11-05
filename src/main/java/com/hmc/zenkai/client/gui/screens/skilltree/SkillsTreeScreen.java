@@ -947,7 +947,14 @@ public class SkillsTreeScreen extends TreeCanvasScreen {
         if (weaponOn) ring(g, x - 2, y - 2, NODE + 4, fx ? pulse(ZenkaiPalette.OK, 1400L) : ZenkaiPalette.OK);
         frame(g, x, y, v.maxed() && !isWeapon(def.id()), v.owned() ? (weaponOff ? 0.5f : 1f) : 0.55f);
         float ib = v.silhouette() ? 0.2f : weaponOff ? 0.35f : v.owned() ? 1f : 0.6f;
-        tintedIcon(g, x, y, v.silhouette() ? 0xFF303850 : sky.accent, ib);
+        int skillIcon = v.silhouette() ? -1 : SkillTreeArt.skillIconIndex(def.id());
+        if (skillIcon >= 0) {
+            // Icono propio de la skill (skill_icons.png), a todo color y 1:1; la silueta (aún no conocida) y las
+            // skills sin icono siguen con el «?» tintado.
+            SkillTreeArt.skillIcon(g, skillIcon, x + (NODE - ICON) / 2f, y + (NODE - ICON) / 2f, ib);
+        } else {
+            tintedIcon(g, x, y, v.silhouette() ? 0xFF303850 : sky.accent, ib);
+        }
         if (hovered) g.fill(x + 4, y + 4, x + NODE - 4, y + NODE - 4, ZenkaiPalette.HOVER_VEIL);
         if (v.silhouette()) {
             SkillTreeArt.blit(g, SkillTreeArt.HUD, x + NODE - 8, y + NODE - 9, SkillTreeArt.LOCK_U, SkillTreeArt.LOCK_V,

@@ -18,7 +18,7 @@ import java.util.List;
 
 /**
  * Biblioteca personal de peinados importados (códigos de DragonMineZ y cadenas de Dragon Block C)
- * desde la pestaña Pelo. Detalle: .claude/docs/customizacion-cara-y-pelo.md §10.1.
+ * desde la pestaña Pelo. Detalle: .claude/docs/customizacion-pelo.md §10.1.
  *
  * Se guarda el CÓDIGO ORIGINAL, no la geometría: es la forma más compacta que existe (un juego de
  * 4 formas de DMZ ocupa 3-6 KB; su .geo.json, decenas) y cada cliente lo convierte al vuelo

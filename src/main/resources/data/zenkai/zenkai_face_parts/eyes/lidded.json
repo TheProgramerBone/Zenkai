@@ -1,9 +1,15 @@
 {
+  "exclude_races": ["arcosian"],
   "sort": 200,
   "layers": [
     { "texture": "zenkai:textures/customization/face/eyes/lidded/base.png", "color": "none" },
     { "texture": "zenkai:textures/customization/face/eyes/lidded/brow.png", "color": "hair" },
     { "texture": "zenkai:textures/customization/face/eyes/lidded/iris_l.png", "color": "eye_left" },
     { "texture": "zenkai:textures/customization/face/eyes/lidded/iris_r.png", "color": "eye_right" }
-  ]
+  ],
+  "variants": {
+    "blink": [
+      { "texture": "zenkai:textures/customization/face/eyes/lidded/blink.png", "color": "hair" }
+    ]
+  }
 }

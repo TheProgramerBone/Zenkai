@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 /**
  * Carga sola cada subcarpeta de {@code <juego>/zenkai/hair_packs/} como pack de recursos Y de
  * datos (peinados exportados desde la pestaña Pelo por autores de modpacks, plan
- * .claude/docs/customizacion-cara-y-pelo.md §10.1). Obligatorios: no hay que activarlos a mano ni en la lista de packs ni por mundo.
+ * .claude/docs/customizacion-pelo.md §10.1). Obligatorios: no hay que activarlos a mano ni en la lista de packs ni por mundo.
  *
  * Un peinado tiene dos mitades: el .geo.json es un asset (cliente) y la entrada del catálogo es un
  * dato (servidor, que la sincroniza). En un modpack la misma carpeta va a los dos lados. Si a un

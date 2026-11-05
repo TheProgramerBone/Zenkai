@@ -31,7 +31,9 @@ public record ActionContext(
         // Está atrapado en un choque de haces (inmóvil, sin poder actuar).
         boolean clash,
         // Aturdido (StunState): no puede actuar mientras dure.
-        boolean stunned
+        boolean stunned,
+        // Lleva un cuerpo en brazos (estilo CarryOn): las manos están ocupadas y no puede pelear ni transformarse.
+        boolean carryingBody
 ) {
     public boolean chargingTechnique() { return chargingSlot >= 0; }
 
@@ -39,6 +41,6 @@ public record ActionContext(
      *  pero zafarse con una evasiva es la excepción que el diseño le deja. */
     public ActionContext withStunned(boolean stunned) {
         return new ActionContext(raceChosen, combatMode, blocking, downed, handsFree, kiHandsFree, swordHeld,
-                physBusy, chargingSlot, chargeElapsedTicks, clash, stunned);
+                physBusy, chargingSlot, chargeElapsedTicks, clash, stunned, carryingBody);
     }
 }

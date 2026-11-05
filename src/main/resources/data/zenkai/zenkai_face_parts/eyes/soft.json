@@ -6,5 +6,10 @@
     { "texture": "zenkai:textures/customization/face/eyes/soft/iris_l.png", "color": "eye_left" },
     { "texture": "zenkai:textures/customization/face/eyes/soft/iris_r.png", "color": "eye_right" },
     { "texture": "zenkai:textures/customization/face/eyes/soft/shine.png", "color": "none" }
-  ]
+  ],
+  "variants": {
+    "blink": [
+      { "texture": "zenkai:textures/customization/face/eyes/soft/blink.png", "color": "hair" }
+    ]
+  }
 }

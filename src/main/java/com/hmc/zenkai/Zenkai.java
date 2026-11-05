@@ -208,6 +208,7 @@ public class Zenkai {
             event.register(ModMenuTypes.STACK_WISH.get(), StackWishScreen::new);
             event.register(ModMenuTypes.SCOUTER_BENCH.get(), ScouterBenchScreen::new);
             event.register(ModMenuTypes.ENERGY_GENERATOR.get(), EnergyGeneratorScreen::new);
+            event.register(ModMenuTypes.PLAYER_BODY.get(), com.hmc.zenkai.client.gui.screens.PlayerBodyScreen::new);
         }
 
         @SubscribeEvent
@@ -382,6 +383,11 @@ public class Zenkai {
                 // debe estar siempre por encima de lo demás).
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.TRANSMISSION_LAYER, 1250,
+                        ZenkaiPalAnimations::newFirstPersonController);
+
+                // Prioridad 1600: brazos de quien lleva un cuerpo en brazos; la más alta de gameplay (pedido del usuario).
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.CARRY_LAYER, 1600,
                         ZenkaiPalAnimations::newFirstPersonController);
 
                 // Prioridad 1500: por encima de TRANSMISSION_LAYER (1250), ahora la más alta de

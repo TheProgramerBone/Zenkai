@@ -43,6 +43,8 @@ public class ModCommands {
     @SubscribeEvent
     public static void register(RegisterCommandsEvent e) {
         var root = e.getDispatcher();
+        // Marcas faciales del propio jugador: personalización, sin permiso de operador.
+        root.register(com.hmc.zenkai.registry.commands.FaceCommands.build());
 
         // ── /zenkai tp ───────────────────────────────────────────────────────
         // Añade TP de entrenamiento al jugador.
@@ -288,6 +290,12 @@ public class ModCommands {
                 // ── /zenkai debug entity ─────────────────────────────────────────
                 // Vuelca vida vanilla + pool zenkai de la entidad en el punto de mira.
                 //
+                // ── /zenkai body killall [spill] ──────────────────────────────
+                // Elimina todos los cuerpos de jugador (solo cuerpos). Con "spill" sueltan sus objetos al suelo.
+                .then(Commands.literal("body")
+                        .then(Commands.literal("killall")
+                                .executes(c -> DebugCommands.bodyKillAll(c, false))
+                                .then(Commands.literal("spill").executes(c -> DebugCommands.bodyKillAll(c, true)))))
                 .then(Commands.literal("debug")
                         .then(Commands.literal("entity")
                                 .executes(DebugCommands::debugEntity))
@@ -404,50 +412,6 @@ public class ModCommands {
                                         .then(Commands.argument("socket", ResourceLocationArgument.id())
                                                 .executes(ctx -> DebugCommands.debugSetConnectorSocket(ctx,
                                                         ResourceLocationArgument.getId(ctx, "socket"))))))
-                        // ── /zenkai debug kivfx spawn <type> [size] ───────────────────
-                        // Ataque de ki CONGELADO en el aire, a 6 bloques de donde mira quien
-                        // ejecuta — pensado para comparar el aspecto real contra las referencias
-                        // de .claude/imagenes/ sin tener que dispararlo de verdad ni perseguirlo
-                        // en vuelo. No se mueve, no hace daño (KiProjectileEntity.freeze) y NO
-                        // expira solo: hay que borrarlo con "kivfx clear". Tamaño por defecto 3
-                        // (mitad de la escala normal 1-5); tope en 10, NO en 100 como en un
-                        // primer intento — casi todos los números de este sistema (radio de
-                        // rayos, escala de chispas/arcos, envolvente...) se calibraron pensando
-                        // en la escala 1-5 y algunos directamente escalan por `size()` en vez de
-                        // por el diámetro real; 10 da margen para ver una técnica más grande de
-                        // lo jugable sin salirse tanto del rango calibrado como para que el
-                        // resultado deje de leerse como la propia técnica (confirmado con
-                        // capturas: a tamaños mucho mayores, partículas y rayos pensados para
-                        // motas pequeñas se leen como bloques sueltos "sin seguir" la malla).
-                        .then(Commands.literal("kivfx")
-                                .then(Commands.literal("spawn")
-                                        .then(Commands.argument("type", StringArgumentType.word())
-                                                .suggests(KI_TYPE_IDS)
-                                                .executes(ctx -> DebugCommands.debugSpawnKiVfx(ctx,
-                                                        StringArgumentType.getString(ctx, "type"), 3))
-                                                .then(Commands.argument("size", IntegerArgumentType.integer(1, 10))
-                                                        .executes(ctx -> DebugCommands.debugSpawnKiVfx(ctx,
-                                                                StringArgumentType.getString(ctx, "type"),
-                                                                IntegerArgumentType.getInteger(ctx, "size"))))))
-                                // "spawnall" hace en un solo comando lo que "spawn" repetido 16
-                                // veces: toda la familia en fila, mismo tamaño, para una
-                                // comparativa de un vistazo en vez de ir una por una.
-                                .then(Commands.literal("spawnall")
-                                        .executes(ctx -> DebugCommands.debugSpawnAllKiVfx(ctx, 3))
-                                        .then(Commands.argument("size", IntegerArgumentType.integer(1, 10))
-                                                .executes(ctx -> DebugCommands.debugSpawnAllKiVfx(ctx,
-                                                        IntegerArgumentType.getInteger(ctx, "size")))))
-                                .then(Commands.literal("clear")
-                                        .executes(DebugCommands::debugClearKiVfx)))
-                        // ── /zenkai debug sequence ────────────────────────────────────
-                        // Caso SINTÉTICO del andamiaje de TechniqueSequence (paso 3 del roadmap,
-                        // ver .claude/pendiente/cobblemon-audit-vfx-animaciones.md §20): NINGUNA
-                        // técnica real llama a TechniqueSequence todavía (ninguna lo necesita hoy,
-                        // ver el javadoc de TechniqueSequence) — esto solo prueba que el andamiaje
-                        // en sí encadena, espera y dibuja en el orden correcto. 2 destellos con 1s
-                        // de diferencia, delante de quien ejecuta, tintados con SU color de aura.
-                        .then(Commands.literal("sequence")
-                                .executes(DebugCommands::debugRunSequence))
                         // ── /zenkai debug stun [ticks] ────────────────────────────────
                         // Aturde a quien ejecuta y a los muñecos cercanos (StunState.apply, con
                         // sus frenos: tope, rendimientos decrecientes e inmunidad).

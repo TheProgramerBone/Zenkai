@@ -81,10 +81,12 @@ public final class DivineForms {
      * hoy: Rosé (FormIds.SSJ_ROSE) si el jugador es divino, cualquier otra hermana (Blue) si no
      * — ver el javadoc de clase. null si esa profundidad no tiene ninguna forma para la raza.
      */
-    private static ResourceLocation resolveTie(Race race, int depth, Player p) {
+    private static ResourceLocation resolveTie(Race race, int depth, Player p, String ns) {
         List<ResourceLocation> atDepth = new ArrayList<>();
         for (ResourceLocation id : divineFormsFor(race)) {
-            if (depthOf(race, id) == depth) atDepth.add(id);
+            // Grupo de empate = mismo namespace: la pareja Blue/Rosé es de Zenkai; la forma divina de un addon colgada del
+            // mismo padre es una hermana INDEPENDIENTE y no debe empatar con ellas (2026-11-02).
+            if (depthOf(race, id) == depth && id.getNamespace().equals(ns)) atDepth.add(id);
         }
         if (atDepth.isEmpty()) return null;
         if (atDepth.size() == 1) return atDepth.get(0);
@@ -105,7 +107,7 @@ public final class DivineForms {
         Race race = SuperForms.raceOf(p);
         int depth = depthOf(race, form);
         if (depth <= 0) return form;
-        ResourceLocation resolved = resolveTie(race, depth, p);
+        ResourceLocation resolved = resolveTie(race, depth, p, form.getNamespace());
         return resolved == null ? form : resolved;
     }
 
@@ -162,7 +164,7 @@ public final class DivineForms {
         if (depth <= 0) return false;
         var tree = PlayerStatsAttachment.get(p).skillTree();
         for (ResourceLocation id : divineFormsFor(race)) {
-            if (depthOf(race, id) == depth && tree.owns(id)) return true;
+            if (depthOf(race, id) == depth && id.getNamespace().equals(form.getNamespace()) && tree.owns(id)) return true;
         }
         return false;
     }
@@ -181,6 +183,10 @@ public final class DivineForms {
         if (SuperForms.level(p) < SuperForms.mortalLevelNeededForDivine(race, form)) return false;
         if (SkillEffects.level(p, SKILL) <= 0) return false;
         if (!ownsDepth(p, race, form)) return false;
-        return form.equals(resolveTie(race, depth, p));
+        // Forma divina de un addon: además exige que su padre esté desbloqueado (en las del mod lo garantiza la compra por peldaño).
+        FormDef fd = FormDef.get(form);
+        if (fd != null && fd.parent() != null && !com.hmc.zenkai.Zenkai.MOD_ID.equals(form.getNamespace())
+                && !SuperForms.unlocked(p, fd.parent())) return false;
+        return form.equals(resolveTie(race, depth, p, form.getNamespace()));
     }
 }

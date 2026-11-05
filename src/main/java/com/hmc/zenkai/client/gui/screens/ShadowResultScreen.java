@@ -1,11 +1,13 @@
 package com.hmc.zenkai.client.gui.screens;
 
 import com.hmc.zenkai.client.gui.CommonPanel;
+import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ScreenTitle;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
-import com.hmc.zenkai.client.gui.buttons.PanelButton;
-import net.minecraft.ChatFormatting;
+import com.hmc.zenkai.client.gui.buttons.BackIconButton;
+import com.hmc.zenkai.client.gui.widgets.TrainingWidgets;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -49,10 +51,12 @@ public class ShadowResultScreen extends Screen {
         panelLeft = w.pos();
         panelTop = h.pos();
 
-        int y = panelTop + panelH - 12 - PanelButton.H;
-        addRenderableWidget(PanelButton.primary(
-                panelLeft + (panelW - PanelButton.W) / 2, y,
-                Component.translatable("screen.zenkai.close"), () -> this.onClose()));
+        // Solo «Atrás» (icono, como el resto de la plantilla de Training): la sombra no se reintenta desde aquí.
+        BackIconButton back = new BackIconButton(
+                CommonPanel.iconLeft(panelLeft), CommonPanel.iconBottom(panelTop, panelH), CommonPanel.ICON,
+                () -> this.onClose());
+        back.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.close")));
+        addRenderableWidget(back);
     }
 
     @Override
@@ -71,27 +75,10 @@ public class ShadowResultScreen extends Screen {
         super.render(g, mouseX, mouseY, partialTick);
 
         int cx = panelLeft + panelW / 2;
-        int ty = panelTop + 50;
 
         ScreenTitle.drawAbovePanel(g, this.font, this.title, cx, panelTop);
 
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.shadow_result.earned", earnedTp)
-                        .copy().withStyle(ChatFormatting.BOLD),
-                cx, ty, ZenkaiPalette.OK_ON_PANEL);
-        ty += 16;
-
-        PanelText.centeredOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.training_hub.record", record),
-                cx, ty, ZenkaiPalette.LABEL_ON_PANEL);
-        ty += 16;
-
-        if (earnedTp > 0 && earnedTp == record) {
-            PanelText.centeredOnPanel(g, this.font,
-                    Component.translatable("screen.zenkai.training_hub.new_record")
-                            .copy().withStyle(ChatFormatting.BOLD),
-                    cx, ty, ZenkaiPalette.VALUE_ON_PANEL);
-        }
+        TrainingWidgets.result(g, this.font, panelLeft, panelTop, panelW, panelH, earnedTp, record, null);
     }
 
     @Override public boolean isPauseScreen() { return false; }

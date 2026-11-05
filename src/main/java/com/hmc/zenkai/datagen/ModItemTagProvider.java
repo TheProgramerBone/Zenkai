@@ -60,6 +60,19 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 ModItems.HALO.get()
         );
 
+        // El scouter se apoya en la oreja izquierda: la raza que la tenga (Namekiano) la oculta mientras lo lleva.
+        tag(ModTags.Items.COVERS_EAR).add(
+                ModItems.SCOUTER.get()
+        );
+
+        // «Llevarse todo» de un cuerpo nunca retira estos de quien los lleva (ver ArmorCompare).
+        tag(ModTags.Items.NO_ARMOR_SWAP).add(
+                ModItems.SCOUTER.get(),
+                ModItems.HALO.get(),
+                ModItems.WEIGHTED_STRAPS.get(),
+                ModItems.WEIGHTED_CAPE.get()
+        );
+
         // ==========================================
         // 3. SET DE MADERA DE AJISA Y VEGETACIÓN
         // ==========================================

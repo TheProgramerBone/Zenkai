@@ -69,6 +69,14 @@ public class ZenkaiDataAttachments {
                             .copyOnDeath()
                             .build());
 
+    /** Cuerpo que el jugador lleva en brazos. Sincronizado con un códec ligero (sin el NBT); NO copyOnDeath: al morir se suelta. */
+    public static final Supplier<AttachmentType<com.hmc.zenkai.feature.player.death.CarriedBody>> CARRIED_BODY =
+            REGISTER.register("carried_body", () ->
+                    AttachmentType.builder(() -> com.hmc.zenkai.feature.player.death.CarriedBody.NONE)
+                            .serialize(com.hmc.zenkai.feature.player.death.CarriedBody.CODEC)
+                            .sync(com.hmc.zenkai.feature.player.death.CarriedBody.SYNC)
+                            .build());
+
     /** Datos de infusión pegados a un proyectil. Default NONE: nunca hay que comprobar null. */
     public static final Supplier<AttachmentType<KiInfusedShot>> KI_SHOT =
                 REGISTER.register("ki_shot", () ->

@@ -29,6 +29,10 @@ public class ModMenuTypes {
             MENUS.register("energy_generator",
                     () -> IMenuTypeExtension.create(EnergyGeneratorMenu::new));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<PlayerBodyMenu>> PLAYER_BODY =
+            MENUS.register("player_body",
+                    () -> IMenuTypeExtension.create(PlayerBodyMenu::new));
+
     public static void register(IEventBus bus) {
         MENUS.register(bus);
     }

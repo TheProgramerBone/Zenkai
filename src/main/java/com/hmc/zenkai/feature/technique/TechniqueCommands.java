@@ -40,7 +40,7 @@ import java.util.Set;
  *
  * VIVE FUERA DE ModCommands a propósito y se cuelga del mismo literal {@code /zenkai}:
  * Brigadier fusiona los hijos cuando dos registros comparten raíz (precedente:
- * ZenkaiArmCalibrationCommand). El requisito de permiso se repite aquí porque el nodo raíz que
+ * un comando de calibración de brazo, eliminado el 2026-11-01). El requisito de permiso se repite aquí porque el nodo raíz que
  * gana la fusión es el primero en registrarse, y no puedo depender de ese orden.
  *
  * NO PARSEA NI VALIDA NADA POR SU CUENTA: los tipos, rangos y defaults son de

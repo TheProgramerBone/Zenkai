@@ -73,7 +73,15 @@ public class RaceSkinGeoArmorLayer extends RenderLayer<AbstractClientPlayer, Pla
         // Capturado ANTES del swap: aquí oldHead todavía es el casco/objeto REAL del jugador
         // (si lo hay), no la pieza racial virtual que estamos a punto de meter en su lugar.
         // GeoLayerArmorModel.setCustomAnimations lo lee para ocultar cuernos/antenas/cresta.
-        GeoLayerArmorModel.wearerHasRealHeadwear = !oldHead.isEmpty();
+        // Un objeto de la cabeza que NO cubre el cráneo (#zenkai:keeps_hair: scouter, halo) no cuenta como casco: no oculta cuernos,
+        // antenas ni crestas. Antes se miraba solo !isEmpty() y el scouter en la ranura de casco dejaba la cabeza de la raza lisa
+        // (el tag solo lo consultaba HairGeoLayer para el pelo; ocultar huesos se añadió después sin mirarlo).
+        GeoLayerArmorModel.wearerHasRealHeadwear = !oldHead.isEmpty()
+                && !oldHead.is(com.hmc.zenkai.registry.ModTags.Items.KEEPS_HAIR);
+        // Scouter (en el casco o en Curios): tapa una oreja (#zenkai:covers_ear), que la raza oculta por separado.
+        GeoLayerArmorModel.wearerHasEarGear = oldHead.is(com.hmc.zenkai.registry.ModTags.Items.COVERS_EAR)
+                || com.hmc.zenkai.compat.CuriosCompat.findEquipped(player, "scouter")
+                        .is(com.hmc.zenkai.registry.ModTags.Items.COVERS_EAR);
         GeoLayerArmorModel.wearerBodyOptions = com.hmc.zenkai.feature.race.body.BodyCatalog.resolveAll(
                 com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(player).getRace(),
                 com.hmc.zenkai.feature.player.PlayerVisualAttachment.get(player).getBodyOptions());

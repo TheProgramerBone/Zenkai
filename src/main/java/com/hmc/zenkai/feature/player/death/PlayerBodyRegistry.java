@@ -15,7 +15,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,6 +36,8 @@ public class PlayerBodyRegistry extends SavedData {
     public record Entry(UUID bodyId, UUID owner, ResourceKey<Level> dimension, BlockPos pos, long createdAt) {}
 
     private final List<Entry> entries = new ArrayList<>();
+    /** Cuerpos ya sacados del índice cuyo chunk estaba descargado: se eliminan solos al volver a cargar. */
+    private final Map<UUID, Boolean> condemned = new HashMap<>();   // id -> soltar objetos al eliminarlo
 
     public static final SavedData.Factory<PlayerBodyRegistry> FACTORY =
             new SavedData.Factory<>(PlayerBodyRegistry::new, PlayerBodyRegistry::load, null);
@@ -65,6 +69,24 @@ public class PlayerBodyRegistry extends SavedData {
         if (entries.removeIf(o -> o.bodyId.equals(bodyId))) setDirty();
     }
 
+    /** Marca un cuerpo para eliminarlo en cuanto exista de nuevo (sale ya del índice). {@code spill}: soltar sus objetos. */
+    public void condemn(UUID bodyId, boolean spill) {
+        remove(bodyId);
+        condemned.put(bodyId, spill);
+        setDirty();
+    }
+
+    /** null si no estaba condenado; si lo estaba, lo olvida y devuelve si hay que soltar sus objetos. */
+    @Nullable
+    public Boolean takeCondemned(UUID bodyId) {
+        if (condemned.isEmpty()) return null;
+        Boolean spill = condemned.remove(bodyId);
+        if (spill != null) setDirty();
+        return spill;
+    }
+
+    public List<Entry> all() { return new ArrayList<>(entries); }
+
     /** Cuerpos de un dueño, del más antiguo al más reciente. */
     public List<Entry> of(UUID owner) {
         List<Entry> out = new ArrayList<>();
@@ -94,6 +116,14 @@ public class PlayerBodyRegistry extends SavedData {
             list.add(t);
         }
         tag.put("bodies", list);
+        ListTag dead = new ListTag();
+        for (var en : condemned.entrySet()) {
+            CompoundTag t = new CompoundTag();
+            t.put("id", NbtUtils.createUUID(en.getKey()));
+            t.putBoolean("spill", en.getValue());
+            dead.add(t);
+        }
+        tag.put("condemned", dead);
         return tag;
     }
 
@@ -106,6 +136,10 @@ public class PlayerBodyRegistry extends SavedData {
             r.entries.add(new Entry(NbtUtils.loadUUID(t.get("body")), NbtUtils.loadUUID(t.get("owner")),
                     ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, dim),
                     BlockPos.of(t.getLong("pos")), t.getLong("at")));
+        }
+        for (Tag raw : tag.getList("condemned", Tag.TAG_COMPOUND)) {
+            CompoundTag t = (CompoundTag) raw;
+            r.condemned.put(NbtUtils.loadUUID(t.get("id")), t.getBoolean("spill"));
         }
         return r;
     }

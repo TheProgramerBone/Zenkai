@@ -95,6 +95,24 @@ public final class HairCatalog {
         HairStyleDef base = get(selected);
         if (base == null || !base.allows(race)) return null;
         HairStyleDef shown = get(base.styleForForm(formId));
+        // Peinado que declara la PROPIA forma (campo hair_style de su JSON): vale cuando el peinado base no tiene un
+        // override para ella. Así una forma de un addon (SSJ5...) trae su pelo sin tener que reescribir classic.json,
+        // que dos datapacks no podrían tocar a la vez (el override del peinado base manda si existe).
+        if ((shown == null || shown == base) && formId != null) {
+            com.hmc.zenkai.feature.forms.FormDef fd = com.hmc.zenkai.feature.forms.FormDef.get(formId);
+            if (fd != null && !fd.hairStyle().isEmpty()) {
+                ResourceLocation rl = ResourceLocation.tryParse(fd.hairStyle());
+                HairStyleDef forced = rl == null ? null : get(rl);
+                if (forced != null) return forced;
+                // «hair_style» puede ser también el id de OTRA FORMA: el pelo que esa forma le da a ESTE peinado base
+                // («zenkai:ssj3» = el pelo de SSJ3 de quien lleve classic, de un peinado DMZ, etc.). Es lo más cómodo para
+                // un addon: copia el pelo de una forma existente y solo cambia el color con hair_rgb.
+                if (rl != null && !rl.equals(formId)) {
+                    HairStyleDef like = get(base.styleForForm(rl));
+                    if (like != null && like != base) return like;
+                }
+            }
+        }
         return shown != null ? shown : base;
     }
 

@@ -33,6 +33,8 @@ final class SkillTreeArt {
     /** Retratos de los maestros (tools/gen_master_portraits.py): celdas de 32 en el orden de SkillsTreeScreen.MASTERS. */
     static final ResourceLocation MASTER_PORTRAITS = tex("master_portraits.png");
     static final int MASTER_PORTRAITS_W = 128, MASTER_PORTRAITS_H = 32;
+    /** Iconos de las skills del árbol por maestro (tools/gen_skill_icons_atlas.py): 256x256, celdas de 32. */
+    static final ResourceLocation SKILL_ICONS = tex("skill_icons.png");
 
     static final int ICONS_SIZE = 256;
     static final int FRAMES_W = 384, FRAMES_H = 96;
@@ -48,7 +50,7 @@ final class SkillTreeArt {
     static final int LINK_SIDE_U = 120, LINK_SIDE_W = 8;
     static final int SEAL_U = 128, SEAL_V = 32, SEAL_W = 40, SEAL_H = 44;
     static final int LOCK_U = 168, LOCK_V = 32, LOCK_W = 14, LOCK_H = 16;
-    // (184,32) y (200,32): glifos de TP y MND, hoy sin usar (las placas llevan el nombre escrito).
+    // (184,32) está VACÍO a propósito (antes la bola de dragón, retirada); (200,32) es la llama de MND.
     static final int QUESTION_U = 216, QUESTION_V = 32, QUESTION_W = 14, QUESTION_H = 16;
 
     private static ResourceLocation tex(String path) {
@@ -158,7 +160,7 @@ final class SkillTreeArt {
             "majin_pure_chaos", "majin_god", "potential_unlock", "beast", "ultra_instinct_sign",
             "ultra_instinct", "ultra_ego", "node_god_ki",
             "node_arcosian_power", "node_ultra_instinct", "node_ultra_ego", "unknown", "arcosian_god",
-            "ssj_blue_evolution", "ssj_rose_evolution");
+            "ssj_blue_evolution", "ssj_rose_evolution", "human_flow");
 
     static final int UNKNOWN_ICON = ICON_ORDER.indexOf("unknown");
 
@@ -191,10 +193,96 @@ final class SkillTreeArt {
         return i < 0 ? UNKNOWN_ICON : i;
     }
 
+    /** Icono resuelto de una forma: una textura PROPIA (32x32, {@code texture != null}) o una celda del atlas. */
+    public record FormIcon(@org.jetbrains.annotations.Nullable ResourceLocation texture, int cell, int texW, int texH) {
+        FormIcon(@org.jetbrains.annotations.Nullable ResourceLocation texture, int cell) { this(texture, cell, ICON_TEX, ICON_TEX); }
+        public boolean generic() { return texture == null && cell == UNKNOWN_ICON; }
+    }
+
+    /** Tamaño {ancho, alto} del icono propio de una forma, o {0, 0} si no lo tiene. */
+    private static final java.util.Map<ResourceLocation, int[]> CUSTOM_ICON = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Lee una vez el PNG de icono propio: cualquier tamaño cuadrado vale (16, 32, 64...); uno no cuadrado se avisa y se recorta. */
+    private static int[] readCustomIcon(ResourceLocation tex) {
+        var res = net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(tex);
+        if (res.isEmpty()) return new int[]{0, 0};
+        try (var in = res.get().open(); var img = com.mojang.blaze3d.platform.NativeImage.read(in)) {
+            if (img.getWidth() != img.getHeight()) {
+                Zenkai.LOGGER.warn("[Zenkai] El icono de forma {} mide {}x{}: tiene que ser cuadrado (32x32 recomendado); se recorta a la esquina.",
+                        tex, img.getWidth(), img.getHeight());
+            }
+            return new int[]{img.getWidth(), img.getHeight()};
+        } catch (Exception ex) {
+            Zenkai.LOGGER.warn("[Zenkai] No se pudo leer el icono de forma {}: {}", tex, ex.toString());
+            return new int[]{0, 0};
+        }
+    }
+
+    /** Vacía la caché de «¿existe el icono propio de esta forma?» (se llama al recargar recursos, F3+T). */
+    public static void clearCustomIcons() { CUSTOM_ICON.clear(); }
+
+    /**
+     * Icono de una forma, en este orden: (1) la textura propia {@code assets/<ns>/textures/gui/form_icons/<ruta>.png} si
+     * el autor la trae (también sirve para que un resource pack cambie un icono del mod), (2) la celda del atlas si es una
+     * forma del mod, (3) el {@code icon_default} del JSON de la forma (el id de otra forma de la que se presta el icono; se
+     * sigue hasta 2 saltos), (4) el icono genérico «?» teñido con el aura. Lo usan el árbol y la HUD.
+     */
+    public static FormIcon formIcon(@org.jetbrains.annotations.Nullable ResourceLocation form) {
+        return resolveIcon(form, 0);
+    }
+
+    private static FormIcon resolveIcon(@org.jetbrains.annotations.Nullable ResourceLocation form, int depth) {
+        if (form == null) return new FormIcon(null, UNKNOWN_ICON);
+        ResourceLocation tex = FormDef.iconTexture(form);
+        int[] size = CUSTOM_ICON.computeIfAbsent(form, k -> readCustomIcon(tex));
+        if (size[0] > 0) return new FormIcon(tex, UNKNOWN_ICON, size[0], size[1]);
+        int cell = iconIndexOf(form);
+        if (cell != UNKNOWN_ICON) return new FormIcon(null, cell);
+        FormDef d = FormDef.get(form);
+        if (d != null && !d.iconDefault().isEmpty() && depth < 2) {
+            ResourceLocation ref = ResourceLocation.tryParse(d.iconDefault());
+            if (ref != null && !ref.equals(form)) return resolveIcon(ref, depth + 1);
+        }
+        return new FormIcon(null, UNKNOWN_ICON);
+    }
+
+    /** Dibuja el icono propio de una forma (textura suelta de 32x32), con el mismo tinte/brillo que las celdas del atlas. */
+    static void customIcon(GuiGraphics g, FormIcon icon, float x, float y, float r, float gr, float b) {
+        int side = Math.min(icon.texW(), icon.texH());   // cuadrado: el lado menor; el icono ocupa lo mismo que una celda (16 px de GUI)
+        var pose = g.pose();
+        pose.pushPose();
+        pose.translate(x, y, 0);
+        float k = (ICON_TEX * 0.5f) / side;
+        pose.scale(k, k, 1f);
+        RenderSystem.enableBlend();
+        g.setColor(r, gr, b, 1f);
+        g.blit(icon.texture(), 0, 0, 0, 0, side, side, icon.texW(), icon.texH());
+        g.setColor(1f, 1f, 1f, 1f);
+        pose.popPose();
+    }
+
     /** Tinte del icono genérico: el color de aura de la forma (blanco si no tiene). */
     static int unknownTint(Node n) {
         FormDef d = n.form() == null ? null : FormDef.get(n.form());
         return d != null && d.auraRgb() >= 0 ? d.auraRgb() : 0xFFFFFF;
+    }
+
+    /** Orden de celdas de skill_icons.png (== CELLS de gen_skill_icons_atlas.py), por id de skill. */
+    private static final List<String> SKILL_ICON_ORDER = List.of(
+            "run", "fly", "quick_step", "instant_transmission", "ki_sense", "ki_control", "meditation", "ki_block",
+            "ki_fist", "ki_infuse", "parry_mastery", "kaioken", "god_ki", "master_unknown", "zenkai_passive",
+            "regen_passive", "coldblood_passive", "ki_sword", "ki_axe", "ki_mace", "ki_hammer", "ki_scythe",
+            "ki_shield");
+
+    /** Celda del icono de una skill por su id, o -1 si todavía no tiene (usa entonces el «?» tintado). */
+    static int skillIconIndex(String skillId) {
+        return skillId == null ? -1 : SKILL_ICON_ORDER.indexOf(skillId);
+    }
+
+    /** Dibuja el icono propio de una skill (a todo color, sin tinte salvo el brillo {@code b}). */
+    static void skillIcon(GuiGraphics g, int index, float x, float y, float b) {
+        int u = (index % 8) * ICON_TEX, v = (index / 8) * ICON_TEX;
+        blitTinted(g, SKILL_ICONS, x, y, u, v, ICON_TEX, ICON_TEX, ICONS_SIZE, ICONS_SIZE, b, b, b, 1f);
     }
 
     static void icon(GuiGraphics g, int index, float x, float y, float r, float gr, float b) {

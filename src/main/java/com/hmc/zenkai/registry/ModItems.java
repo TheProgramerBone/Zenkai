@@ -185,7 +185,8 @@ public class ModItems {
                             "textures/models/races/namekian/namekian_player.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.NONE).faceOverlays().bodyTint()
-                            .hideOnHelmet("antena1", "antena2", "oreja", "oreja2"));
+                            .hideOnHelmet("antena1", "antena2", "orejaiz", "orejade")
+                            .hideOnEarGear("orejaiz"));
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE =
             ITEMS.register("namekian_race_chestplate", () ->
@@ -222,7 +223,8 @@ public class ModItems {
                             "textures/models/races/namekian/namekian_player_layer_0.png",
                             ""
                     ).channel(GeoLayerArmorItem.ColorChannel.SKIN).faceOverlays().bodyTint()
-                            .hideOnHelmet("antena1", "antena2", "oreja", "oreja2"));
+                            .hideOnHelmet("antena1", "antena2", "orejaiz", "orejade")
+                            .hideOnEarGear("orejaiz"));
 
     public static final Supplier<GeoLayerArmorItem> NAMEKIAN_RACE_CHESTPLATE_COLORABLE =
             ITEMS.register("namekian_race_chestplate_colorable", () ->

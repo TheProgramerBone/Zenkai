@@ -89,6 +89,7 @@ public final class ActionRules {
     /** Guardas que comparte el conjunto de acciones de combate. */
     private static ActionReject common(ActionContext ctx) {
         if (!ctx.raceChosen()) return ActionReject.NO_RACE;
+        if (ctx.carryingBody()) return ActionReject.HANDS_BUSY;   // un cuerpo en brazos ocupa las manos
         if (ctx.downed())      return ActionReject.DOWNED;
         if (ctx.clash())       return ActionReject.IN_CLASH;
         if (ctx.stunned())     return ActionReject.STUNNED;

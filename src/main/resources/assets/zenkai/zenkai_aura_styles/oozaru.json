@@ -1,45 +1,10 @@
 {
-  "_comment": "Oozaru: sin llama de energía en el anime; presión animal — masa pesada y baja, suelo que tiembla.",
-  "family": "dark_dense",
+  "_comment": "Oozaru (2026-11-01): la llama de vela de siempre, igual que SSJ1/Super Oozaru (aura_1/aura_3), a la escala del cuerpo (x3, la pone la pose). Antes era dark_dense con radio 0,85 y media altura 0,75 en bloques de cuerpo: a x3 no pasaba de la cintura. Se conserva el suelo que tiembla y la transformación pesada.",
+  "family": "flame",
   "body": {
-    "radius": 0.85,
-    "half_height": 0.75
+    "streak": 1.35,
+    "peaks": 1.1
   },
-  "body_set": {
-    "depth": 0.4,
-    "breathe": 0.05
-  },
-  "components": [
-    {
-      "type": "motes",
-      "behavior": "drift",
-      "sprite": "mote",
-      "rate": 4,
-      "life": [
-        1.4,
-        2.2
-      ],
-      "size": [
-        0.12,
-        0.2
-      ],
-      "speed": [
-        0.2,
-        0.4
-      ],
-      "radius": [
-        0.5,
-        1.0
-      ],
-      "height": [
-        0.1,
-        1.2
-      ],
-      "color": "outer",
-      "alpha": 0.5,
-      "bloom": 0.0
-    }
-  ],
   "ground": "pressure",
   "transform": "heavy"
 }

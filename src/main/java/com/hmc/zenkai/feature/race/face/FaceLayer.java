@@ -17,7 +17,7 @@ import java.util.Locale;
  * Esclerótica, iris izquierdo/derecho, pupila, brillo, párpado, pestañas, dientes... no son
  * tipos de capa: son capas con la fuente de color que les toque. Así un ojo simple tiene 2
  * capas y uno expresivo 4-5 sin que el código cambie (decisión C2 de
- * .claude/docs/customizacion-cara-y-pelo.md (decisiones cerradas)).
+ * .claude/docs/customizacion-cara.md (decisiones cerradas)).
  *
  * @param fixedRgb solo para {@link Color#FIXED}; ignorado en el resto.
  * @param eyebrow  la capa es una CEJA dentro de otro rasgo (el trazo de encima de un ojo,

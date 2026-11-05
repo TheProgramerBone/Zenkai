@@ -62,6 +62,9 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     // nada. Ver GeoLayerArmorModel.setCustomAnimations, que es quien lo consume.
     private static final String[] NO_HIDE_BONES = new String[0];
     private String[] hideOnHelmetBones = NO_HIDE_BONES;
+    // Huesos que se ocultan cuando el portador lleva algo en la OREJA (#zenkai:covers_ear, el scouter), p. ej. la oreja izquierda
+    // del Namekiano. Va aparte de hideOnHelmet: no depende de que haya un casco real.
+    private String[] hideOnEarGearBones = NO_HIDE_BONES;
 
     public GeoLayerArmorItem(Holder<ArmorMaterial> material, Type type, Properties properties,
                              String modelPath, String texturePath, String animationPath) {
@@ -156,6 +159,14 @@ public class GeoLayerArmorItem extends ArmorItem implements GeoItem {
     }
 
     public String[] getHideOnHelmetBones() { return hideOnHelmetBones; }
+
+    /** Huesos de la oreja que tapa el scouter u otro objeto de #zenkai:covers_ear. Encadenable. */
+    public GeoLayerArmorItem hideOnEarGear(String... boneNames) {
+        this.hideOnEarGearBones = (boneNames == null || boneNames.length == 0) ? NO_HIDE_BONES : boneNames;
+        return this;
+    }
+
+    public String[] getHideOnEarGearBones() { return hideOnEarGearBones; }
 
     // ── Getters ───────────────────────────────────────────────────────────────
 

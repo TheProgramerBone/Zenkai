@@ -216,6 +216,11 @@ public final class SuperForms {
         if (FormIds.POTENTIAL_UNLOCK.equals(form)) {
             return SkillEffects.level(p, SkillEffects.POTENTIAL_UNLOCK) > 0;
         }
+        // Rama de addon (ver FormRegistry.isAddonBranch): nodo propio comprado y con su padre desbloqueado; independiente de
+        // sus hermanas (que pueden venir de otro datapack). Antes caía en «depth 0 → true» y la tenía cualquiera.
+        if (FormRegistry.isAddonBranch(def)) {
+            return def.allows(race) && PlayerStatsAttachment.get(p).skillTree().owns(form) && unlocked(p, def.parent());
+        }
         if (def != null && def.endgamePath()) return EndgamePaths.unlocked(p, form);
         if (def != null && def.divineTier()) return DivineForms.unlocked(p, form);
         // Línea del Legendario: solo un Saiyan al que Shenlong se lo concedió (isLegendary). El resto del desbloqueo

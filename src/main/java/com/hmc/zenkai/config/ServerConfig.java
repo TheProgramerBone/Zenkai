@@ -1568,12 +1568,72 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PERMADEATH_BODY_CAP =
             BUILDER.comment("Maximum bodies one player can have in the world. When exceeded, the oldest one is emptied onto the ground and removed.")
                     .defineInRange("permadeath.body_cap_per_player", 3, 1, 32);
-    public static final ModConfigSpec.BooleanValue PERMADEATH_KI_DISINTEGRATES =
-            BUILDER.comment("Ki techniques that hit a body disintegrate it (its items fall to the ground).")
-                    .define("permadeath.ki_disintegrates_bodies", false);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_BODY_GRIEFING =
+            BUILDER.comment("Body griefing. When true, ANY player can open and loot another player's body, and ki techniques that hit a body disintegrate it (its items fall to the ground). When false (default) only the owner and, if permadeath.body_open_party is on, their party can touch the body, and ki cannot destroy it.")
+                    .define("permadeath.body_griefing", false);
+    public static final ModConfigSpec.IntValue PERMADEATH_BURY_ALIGNMENT =
+            BUILDER.comment("Alignment gained by burying ANOTHER player's empty body. Burying your own body gives nothing (otherwise dying on purpose would farm alignment).")
+                    .defineInRange("permadeath.bury_alignment", 2, 0, 100);
     public static final ModConfigSpec.BooleanValue PERMADEATH_BODY_OPEN_PARTY =
             BUILDER.comment("Party members of the owner can open the body too. When false only the owner can.")
                     .define("permadeath.body_open_party", true);
+
+    /** Qué hace el cuerpo con los objetos del jugador. AUTO = los guarda, salvo que haya un mod de tumbas cargado (ver TOMB_MOD_IDS). */
+    public enum BodyItemsMode { AUTO, ALWAYS, NEVER }
+
+    public static final ModConfigSpec.EnumValue<BodyItemsMode> PERMADEATH_BODY_ITEMS_MODE =
+            BUILDER.comment("What the body does with the player's items. AUTO (default): the body keeps them, unless a grave mod from permadeath.tomb_mod_ids is loaded; then the body is only an ANCHOR (rage forms, Uranai Baba, wishes) and the grave mod keeps the items and the XP. ALWAYS: the body always keeps items. NEVER: the body never keeps items (they drop as in vanilla or go to whatever other mod handles them).")
+                    .defineEnum("permadeath.body_items_mode", BodyItemsMode.AUTO);
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> PERMADEATH_TOMB_MODS =
+            BUILDER.comment("Mod ids of grave/tombstone mods. If any is loaded and body_items_mode is AUTO, the body stops keeping the inventory (the grave mod does).")
+                    .defineListAllowEmpty("permadeath.tomb_mod_ids",
+                            List.of("tombstone", "gravestone", "yigd"),   // tombstone (Corail) y gravestone CONFIRMADOS con sus jars; yigd sin confirmar
+                            () -> "", obj -> obj instanceof String);
+    public static final ModConfigSpec.IntValue PERMADEATH_XP_RETENTION =
+            BUILDER.comment("Percent of the player's experience points the body keeps when the player dies (the vanilla orbs are replaced). Only the owner can claim it. 0 disables.")
+                    .defineInRange("permadeath.xp_retention_percent", 50, 0, 100);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_XP_PARTY_CAN_TAKE =
+            BUILDER.comment("Party members can also claim the experience stored in a body. When false (default) only the owner can.")
+                    .define("permadeath.xp_party_can_take", false);
+    public static final ModConfigSpec.IntValue PERMADEATH_BODY_LIFETIME_DAYS =
+            BUILDER.comment("Minecraft days (24000 ticks) a body lasts before it is emptied on the ground and removed. 0 = never.")
+                    .defineInRange("permadeath.body_lifetime_days", 0, 0, 3650);
+    public static final ModConfigSpec.IntValue PERMADEATH_OWNER_GRACE_SECONDS =
+            BUILDER.comment("Seconds after death during which ONLY the owner can touch the body (even with body_griefing on, and not the party). 0 = no protection window.")
+                    .defineInRange("permadeath.owner_grace_seconds", 0, 0, 86400);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_CARRY_ENABLED =
+            BUILDER.comment("Players can pick up a body (Shift + right click) and carry it in their arms.")
+                    .define("permadeath.carry_enabled", true);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_CARRY_RESTRICTIONS =
+            BUILDER.comment("While carrying a body the player's hands are busy: no attacking, mining, placing, using items or interacting, and no combat actions, ki charge or transformations (CarryOn-like). Flying, jumping, turbo and instant transmission stay allowed. Turn off to carry freely.")
+                    .define("permadeath.carry_restrictions", true);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_TAKE_ALL_SWAP_ARMOR =
+            BUILDER.comment("Take all on a body swaps the armor the player wears for the body piece when that piece is clearly better (armor + toughness + knockback resistance, then durability, then enchantments) and the old piece fits in the inventory. Items in the zenkai:no_armor_swap tag (scouter, halo, weights) are never removed. When false, a worn slot is never touched: the body piece goes to the inventory.")
+                    .define("permadeath.take_all_swap_armor", true);
+    public static final ModConfigSpec.IntValue PERMADEATH_CARRY_SLOWNESS =
+            BUILDER.comment("Slowness level applied while carrying a body. 0 = none.")
+                    .defineInRange("permadeath.carry_slowness_level", 2, 0, 5);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_NOTIFY_PARTY =
+            BUILDER.comment("Tell the owner's party when a body is created.")
+                    .define("permadeath.notify_party", true);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_NOTIFY_COORDS =
+            BUILDER.comment("Include coordinates and dimension in the party notice. Hardcore servers may want this off.")
+                    .define("permadeath.notify_show_coords", true);
+    public static final ModConfigSpec.IntValue PERMADEATH_ITEM_LOSS_PERCENT =
+            BUILDER.comment("Chance (percent) that each item stack is LOST on death instead of going to the body. 0 = nothing is lost.")
+                    .defineInRange("permadeath.item_loss_percent", 0, 0, 100);
+    public static final ModConfigSpec.IntValue PERMADEATH_DURABILITY_LOSS_PERCENT =
+            BUILDER.comment("Percent of its max durability every damageable item loses on death (never breaks it: it keeps at least 1). 0 = none.")
+                    .defineInRange("permadeath.durability_loss_percent", 0, 0, 100);
+    public static final ModConfigSpec.IntValue PERMADEATH_BURY_TICKS =
+            BUILDER.comment("Ticks it takes to bury a body (progress shown on the action bar; moving away or dropping the shovel cancels). 0 = instant.")
+                    .defineInRange("permadeath.bury_duration_ticks", 0, 0, 1200);
+    public static final ModConfigSpec.BooleanValue PERMADEATH_BURY_NEEDS_SHOVEL =
+            BUILDER.comment("A shovel in the main hand is required to bury a body.")
+                    .define("permadeath.bury_requires_shovel", false);
+    public static final ModConfigSpec.IntValue PERMADEATH_WORLD_BODY_CAP =
+            BUILDER.comment("Maximum bodies in the whole world (each one stores its inventory as NBT). Over the cap the oldest ones are emptied on the ground and removed. 0 = unlimited.")
+                    .defineInRange("permadeath.world_body_cap", 256, 0, 100000);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 

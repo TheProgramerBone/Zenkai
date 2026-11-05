@@ -83,7 +83,7 @@ public final class AuraPreviewRenderer {
         int rgb = colorOverrideActive
                 ? AuraColors.resolve(p, colorOverrideCustom, colorOverrideRgb)
                 : AuraClientState.resolveColor(p);
-        double ticks = mc.level.getGameTime() + e.getPartialTick();
+        double ticks = AuraClock.ticks() + e.getPartialTick();
 
         // AURA NUEVA (2026-09-30): la vista previa muestra la misma aura que el juego, la compuesta
         // de la familia de la forma, en vez de los faldones legacy. Solo con el aura clásica

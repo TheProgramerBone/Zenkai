@@ -51,9 +51,55 @@ public final class FormRegistry {
                 children.computeIfAbsent(d.parent(), k -> new ArrayList<>()).add(d.id());
             }
         }
+        validateTree(children);
         FIRST_BY_RACE = Collections.unmodifiableMap(first);
         CHILDREN = Collections.unmodifiableMap(children);
         AuraCeiling.invalidate();
+    }
+
+    /**
+     * ¿Es una RAMA DE ADDON? Forma mortal de un namespace que no es el del mod, sin {@code mastery_reqs}, colgada de otra
+     * forma. Se compra como NODO PROPIO e independiente (tp_cost, padre poseído) y NUNCA entra en la cadena lineal de
+     * {@code super_forms}. Motivo (2026-11-02): con dos datapacks de dos autores que cuelgan formas del mismo padre (p. ej.
+     * «SSJ5» y «SSJ4 Full Power» de SSJ4), la cadena elegía una por orden de carga y la otra caía en «depth 0 → desbloqueada
+     * para todos». Así cada una es hermana independiente y la poseen o no por separado. Las divinas se independizan en
+     * {@code DivineForms} (grupo de empate por namespace); las de maestría (mastery_reqs) siguen desbloqueándose por condición.
+     */
+    public static boolean isAddonBranch(FormDef d) {
+        return d != null && d.parent() != null && !com.hmc.zenkai.Zenkai.MOD_ID.equals(d.id().getNamespace())
+                && !d.divineTier() && !d.endgamePath() && d.masteryReqs().isEmpty();
+    }
+
+    /**
+     * Avisos de un árbol roto (solo log, nunca crashea): padre inexistente (la forma no tendría nodo: el BFS del árbol
+     * no llega a ella), ciclos de padres y hermanas de distintos packs colgadas del mismo padre (informativo).
+     */
+    private static void validateTree(Map<ResourceLocation, List<ResourceLocation>> children) {
+        for (FormDef d : FormDef.all()) {
+            ResourceLocation par = d.parent();
+            if (par == null) continue;
+            if (!FormIds.BASE.equals(par) && FormDef.get(par) == null) {
+                LOGGER.warn("[Zenkai] La forma {} cuelga de {}, que no existe (¿falta ese datapack o está baneada?): no tendrá nodo en el árbol.",
+                        d.id(), par);
+                continue;
+            }
+            ResourceLocation cur = par;
+            for (int i = 0; i < 64 && cur != null; i++) {
+                FormDef cd = FormDef.get(cur);
+                cur = cd == null ? null : cd.parent();
+                if (d.id().equals(cur)) {
+                    LOGGER.warn("[Zenkai] Ciclo de padres en la forma {}: nunca será alcanzable en el árbol.", d.id());
+                    break;
+                }
+            }
+        }
+        for (var e : children.entrySet()) {
+            java.util.Set<String> packs = new java.util.TreeSet<>();
+            for (ResourceLocation k : e.getValue()) packs.add(k.getNamespace());
+            if (packs.size() > 1) {
+                LOGGER.info("[Zenkai] Hermanas de packs distintos bajo {}: {} (se tratan como ramas independientes).", e.getKey(), e.getValue());
+            }
+        }
     }
 
     /** Datos de una forma. null en BASE o si no está definida (BASE es el estado neutro). */
@@ -84,6 +130,7 @@ public final class FormRegistry {
         for (ResourceLocation k : kids) {
             FormDef d = FormDef.get(k);
             if (d == null || !d.allows(race)) continue;
+            if (isAddonBranch(d)) continue;   // las ramas de addon no son peldaños de la cadena lineal
             if (fallback == null) fallback = k;
             if (d.divineTier() || d.endgamePath() || !d.masteryReqs().isEmpty()) continue;
             if (mortal == null) { mortal = k; continue; }

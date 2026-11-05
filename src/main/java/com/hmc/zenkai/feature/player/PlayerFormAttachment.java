@@ -365,13 +365,11 @@ public class PlayerFormAttachment {
             }
             hintHiddenPath(p);
         }
-        // La selección de la rueda es un ATAJO de un solo uso, no un techo permanente: al
-        // alcanzarla se consume (selectedForm vuelve a null) para que targetForm() caiga en
-        // resolveNextForm() en el siguiente hold. Sin esto, seleccionar SSJ2 y llegar a SSJ2
-        // dejaba selectedForm apuntando ahí para siempre — target.equals(formId) hacía que
-        // canAdvance() devolviera false en cuanto se llegaba, y mantener la tecla pulsada ya
-        // no subía más escalones sin volver a la rueda a elegir SSJ3 a mano.
-        if (target.equals(selectedForm)) selectedForm = null;
+        // La forma elegida se RECUERDA (2026-11-01, el usuario: «solo se pierde al morir»): al alcanzar el destino la
+        // selección pasa a ser esa forma, así que tras destransformarse (forceBase) la tecla vuelve directo a ella. Antes
+        // se consumía aquí y el fix de forceBase no servía de nada, porque ya no quedaba selección que conservar. Con la
+        // forma actual == la seleccionada, targetForm() sigue subiendo un escalón (ver ahí), como antes.
+        selectedForm = target;
         finishHold();
         return true;
     }
@@ -456,7 +454,7 @@ public class PlayerFormAttachment {
     /** Destino de la escalera de formas: la selección de la rueda, o el siguiente escalón.
      *  null si no hay nada que hacer (ya está ahí, o el destino es volver a base). */
     private ResourceLocation targetForm(Player p, Race race) {
-        ResourceLocation target = (selectedForm != null)
+        ResourceLocation target = (selectedForm != null && !selectedForm.equals(formId))
                 ? selectedForm
                 : resolveNextForm(p, race, formId);
 
@@ -476,7 +474,7 @@ public class PlayerFormAttachment {
      * reconstruye FormRegistry a partir de los 'parent' del datapack.
      * ÚNICO gate de compra: sin el nivel de super_forms esa forma no existe para él.
      */
-    private static ResourceLocation resolveNextForm(Player p, Race race, ResourceLocation current) {
+    public static ResourceLocation resolveNextForm(Player p, Race race, ResourceLocation current) {
         if (race == null) return null;
 
         // Último tramo del ritual de Oozaru: Super Oozaru no declara 'parent' hacia SSJ4 en el
@@ -502,7 +500,7 @@ public class PlayerFormAttachment {
 
         ResourceLocation next = FormRegistry.nextFrom(
                 current == null ? FormIds.BASE : current, race);
-        if (next == null || !FormRegistry.isAllowed(race, next)) return null;
+        if (next == null || !FormRegistry.isAllowed(race, next)) return branchStep(p, race, current);
         // Oozaru -> Super Oozaru exige tener SSJ1 (SuperForms.readyForSuperOozaru):
         // SuperForms.unlocked() por sí solo daría true de oficio (super_oozaru está fuera de la
         // cadena, depthOf <= 0), así que sin este chequeo cualquier saiyan que llegara a Oozaru
@@ -522,13 +520,32 @@ public class PlayerFormAttachment {
         // a SSJ4 (camino oculto, no tiene por qué tenerse) y a SSJ God (decisión del usuario,
         // 2026-10-21: lo divino sale de SSJ3, SSJ4 no condiciona el avance). Sin esto, mantener
         // la tecla en SSJ3 se paraba ahí aunque SSJ God estuviera comprado.
+        return branchStep(p, race, current);
+    }
+
+    /**
+     * Siguiente escalón entre las HIJAS que no son «el siguiente de la cadena»: las divinas y las ramas de DATAPACK de addon
+     * (FormRegistry.isAddonBranch: SSJ5, SSJ6...), que no son peldaños de la cadena lineal y por eso nextFrom no las sigue.
+     * Sin esto no se podía pasar del SSJ5 al SSJ6 con la tecla (bug 2026-11-02). Entre varias candidatas que el jugador ya
+     * puede usar gana la más barata y, a igual precio, el id: determinista aunque dos datapacks cuelguen del mismo padre
+     * (la rueda sigue permitiendo elegir una concreta).
+     */
+    private static ResourceLocation branchStep(Player p, Race race, ResourceLocation current) {
+        java.util.List<ResourceLocation> candidates = new java.util.ArrayList<>();
         for (ResourceLocation child : FormRegistry.childrenOf(current == null ? FormIds.BASE : current)) {
             FormDef d = FormRegistry.get(child);
-            if (d == null || !d.divineTier() || !d.allows(race)) continue;
-            ResourceLocation divine = DivineForms.resolveForPlayer(p, child);
-            if (SuperForms.usable(p, divine)) return divine;
+            if (d == null || !d.allows(race)) continue;
+            if (d.divineTier()) {
+                ResourceLocation divine = DivineForms.resolveForPlayer(p, child);
+                if (SuperForms.usable(p, divine)) candidates.add(divine);
+            } else if (FormRegistry.isAddonBranch(d) && SuperForms.usable(p, child)) {
+                candidates.add(child);
+            }
         }
-        return null;
+        candidates.sort(java.util.Comparator
+                .comparingInt((ResourceLocation id) -> { FormDef fd = FormRegistry.get(id); return fd == null ? Integer.MAX_VALUE : fd.tpCost(); })
+                .thenComparing(ResourceLocation::toString));
+        return candidates.isEmpty() ? null : candidates.get(0);
     }
 
     /**

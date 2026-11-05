@@ -65,6 +65,7 @@ public final class ActionStateClient {
                 st.chargingSlot(),
                 st.elapsed(now),
                 st.inClash(),
-                com.hmc.zenkai.client.combat.StunClientState.isStunned(p.getId()));
+                com.hmc.zenkai.client.combat.StunClientState.isStunned(p.getId()),
+                com.hmc.zenkai.feature.player.death.PlayerBodyCarry.restricted(p));
     }
 }
