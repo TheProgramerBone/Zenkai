@@ -40,8 +40,8 @@ public final class CharacterReset {
             "player_stats", "player_visual", "player_form", "instant_transmission");
 
     /** No se reinician: el cuerpo en brazos se suelta al morir, ki_shot/entity_stats no son del jugador y training es del
-     *  jugador (récords y fatiga). */
-    public static final Set<String> KEPT = Set.of("carried_body", "ki_shot", "entity_stats", "training");
+     *  jugador (récords y fatiga); rage_chronicle es la HISTORIA de las vidas (no concede nada al personaje nuevo). */
+    public static final Set<String> KEPT = Set.of("carried_body", "ki_shot", "entity_stats", "training", "rage_chronicle");
 
     /** Solo los datos: sin mundo ni red, para poder comprobarlos en un gametest. */
     public static void resetData(ServerPlayer sp) {

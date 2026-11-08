@@ -25,7 +25,7 @@ import net.minecraft.world.entity.player.Player;
  *    F5 del skill tree (2026-10-21), God Ki — sin ninguna evolución de raza: las 5 razas llegan
  *    igual. Las 5th forms del Arcosiano son un camino secreto aparte.
  *  - Beast (evolución de Mystic): tener la habilidad de Mystic y haber sentido la furia
- *    ({@link com.hmc.zenkai.feature.forms.BeastFury}: muerte de una mascota propia o de un
+ *    ({@link com.hmc.zenkai.feature.rage.RageSystem}: muerte de una mascota propia o de un
  *    miembro de la party cerca, con la maestría de Mystic al mínimo configurado).
  * Las 5 formas de endgame llevan {@code endgame_path:true} y NO {@code divine_tier}, para no
  * contarse como rama divina de cada raza.
@@ -53,7 +53,7 @@ public final class EndgamePaths {
         int uiLevel = requiredUiLevel(form);
         if (uiLevel > 0) return hasGodKi(p) && SkillEffects.level(p, SkillEffects.ULTRA_INSTINCT) >= uiLevel;
         // Beast: evolución de Mystic. Hace falta tener la habilidad de Mystic y que la furia ya
-        // se haya disparado (BeastFury, que a su vez exigió la maestría de Mystic en ese momento).
+        // se haya disparado (Rage Forms, que a su vez exigió la maestría de Mystic en ese momento).
         if (FormIds.BEAST.equals(form)) {
             return SkillEffects.level(p, SkillEffects.POTENTIAL_UNLOCK) > 0
                     && PlayerStatsAttachment.get(p).hasBeastFury();

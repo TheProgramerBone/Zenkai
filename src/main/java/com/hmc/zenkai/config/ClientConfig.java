@@ -140,6 +140,13 @@ public final class ClientConfig {
             defineBool("combat.sword_technique_fx", "sword_technique_fx",
                     "Draw slash arcs, shockwaves and streaks for the sword techniques", true);
 
+    private static final ModConfigSpec.EnumValue<com.hmc.zenkai.client.aura.compose.LongTransformMode> LONG_TRANSFORM_MODE =
+            defineEnum("transformation.long_sequence", "long_transform_mode",
+                    "Long sequence the FIRST time a form is used (any route): FULL = long aura plus camera shake and zoom, "
+                            + "REDUCED = long aura without touching the camera, OFF = always the short one. Presentation only.",
+                    com.hmc.zenkai.client.aura.compose.LongTransformMode.FULL,
+                    com.hmc.zenkai.client.aura.compose.LongTransformMode.class);
+
     private static final ModConfigSpec.BooleanValue KI_SENSE_CAMERA_SHAKE =
             defineBool("sense.ki_sense_camera_shake", "ki_sense_camera_shake",
                     "Shake the camera when your ki sense warns you of a nearby threat", true);
@@ -499,6 +506,7 @@ public final class ClientConfig {
     public static boolean kiInfuseGlow() { return KI_INFUSE_GLOW.get(); }
     public static boolean swordTechniqueFx() { return SWORD_TECH_FX.get(); }
     public static boolean kiSenseCameraShake() { return KI_SENSE_CAMERA_SHAKE.get(); }
+    public static com.hmc.zenkai.client.aura.compose.LongTransformMode longTransformMode() { return LONG_TRANSFORM_MODE.get(); }
     public static boolean flightFxDust() { return FLIGHT_FX_DUST.get(); }
     public static boolean flightFxSonicBoom() { return FLIGHT_FX_SONIC_BOOM.get(); }
     public static boolean flightFxLanding() { return FLIGHT_FX_LANDING.get(); }

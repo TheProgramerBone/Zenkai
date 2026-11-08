@@ -1,0 +1,9 @@
+{
+  "form": "zenkai:beast",
+  "race": "majin",
+  "triggers": [
+    "ally_death",
+    "ally_dies_while_downed",
+    "pet_death"
+  ]
+}

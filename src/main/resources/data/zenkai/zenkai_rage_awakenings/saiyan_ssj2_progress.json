@@ -1,0 +1,11 @@
+{
+  "form": "zenkai:ssj2",
+  "race": "saiyan",
+  "triggers": [
+    "ally_downed",
+    "ally_rescued",
+    "body_gesture",
+    "pet_death"
+  ],
+  "awakens": false
+}

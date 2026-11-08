@@ -1,0 +1,11 @@
+{
+  "form": "zenkai:ssj2",
+  "race": "saiyan",
+  "triggers": [
+    "ally_death",
+    "ally_dies_while_downed",
+    "critical_survival"
+  ],
+  "min_intensity": "high",
+  "min_parent_mastery": 50
+}

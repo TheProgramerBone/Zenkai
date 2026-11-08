@@ -1,0 +1,9 @@
+{
+  "form": "zenkai:beast",
+  "race": "arcosian",
+  "triggers": [
+    "ally_death",
+    "ally_dies_while_downed",
+    "pet_death"
+  ]
+}

@@ -660,6 +660,23 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.combat.DashAnimPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.combat.DashAnimPacket::handle);
 
+        // Rage Forms: la pestaña de Crónica pide su historia (C2S) y el servidor responde con la del propio jugador (S2C).
+        registrar.playToServer(
+                com.hmc.zenkai.feature.rage.RageChronicleRequestPacket.TYPE,
+                com.hmc.zenkai.feature.rage.RageChronicleRequestPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.rage.RageChronicleRequestPacket::handle);
+
+        // Rage Forms: primera transformación de una forma -> el aura de ese jugador reproduce la secuencia larga (solo presentación).
+        registrar.playToClient(
+                com.hmc.zenkai.feature.rage.LongTransformPacket.TYPE,
+                com.hmc.zenkai.feature.rage.LongTransformPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.rage.LongTransformPacket::handle);
+
+        registrar.playToClient(
+                com.hmc.zenkai.feature.rage.RageChronicleSyncPacket.TYPE,
+                com.hmc.zenkai.feature.rage.RageChronicleSyncPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.rage.RageChronicleSyncPacket::handle);
+
         registrar.playToServer(
                 com.hmc.zenkai.feature.combat.ParryPacket.TYPE,
                 com.hmc.zenkai.feature.combat.ParryPacket.STREAM_CODEC,

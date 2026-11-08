@@ -127,4 +127,23 @@ public class ZenkaiDataAttachments {
                             .copyOnDeath()
                             .build());
 
+
+    /** Crónica de Rage Forms: historia del jugador, sobrevive a la muerte y a la reencarnación (ver CharacterReset.KEPT). */
+    public static final Codec<com.hmc.zenkai.feature.rage.RageChronicle> RAGE_CHRONICLE_CODEC =
+            CompoundTag.CODEC.xmap(
+                    tag -> {
+                        var c = new com.hmc.zenkai.feature.rage.RageChronicle();
+                        c.load(tag);
+                        return c;
+                    },
+                    com.hmc.zenkai.feature.rage.RageChronicle::save
+            );
+
+    public static final Supplier<AttachmentType<com.hmc.zenkai.feature.rage.RageChronicle>> RAGE_CHRONICLE =
+            REGISTER.register("rage_chronicle", () ->
+                    AttachmentType.builder(com.hmc.zenkai.feature.rage.RageChronicle::new)
+                            .serialize(RAGE_CHRONICLE_CODEC)
+                            .copyOnDeath()
+                            .build());
+
 }

@@ -1,0 +1,12 @@
+{
+  "form": "zenkai:human_ultra",
+  "race": "human",
+  "triggers": [
+    "ally_death",
+    "ally_dies_while_downed",
+    "ally_rescued",
+    "critical_survival"
+  ],
+  "min_intensity": "high",
+  "min_parent_mastery": 50
+}

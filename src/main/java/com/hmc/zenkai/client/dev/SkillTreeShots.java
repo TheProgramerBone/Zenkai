@@ -47,6 +47,8 @@ public final class SkillTreeShots {
     private static boolean godKiLostOnly;
     private static boolean mastersOnly;
     private static boolean perfOnly;
+    private static boolean chronicleOnly;
+    private static boolean longOnly;
     private static boolean addonsOnly;
     private static boolean opened;
     private static int ticks, step, wait;
@@ -69,6 +71,8 @@ public final class SkillTreeShots {
                     mastersOnly = lines.size() > 1 && lines.get(1).trim().equals("masters"); // solo los retratos de los maestros
                     addonsOnly = lines.size() > 1 && lines.get(1).trim().equals("addons"); // packs integrados de ejemplo: ramas hermanas de dos autores
                     perfOnly = lines.size() > 1 && lines.get(1).trim().equals("perf"); // tiempos de fotograma de SkillsTreeScreen
+                    longOnly = lines.size() > 1 && lines.get(1).trim().equals("longtransform"); // secuencia larga de la primera transformación (3.ª persona, fotogramas)
+                    chronicleOnly = lines.size() > 1 && lines.get(1).trim().equals("chronicle"); // la Crónica de Rage Forms (despertares reales por el servidor)
                     enabled = !world.isEmpty();
                 } catch (Exception ignored) {}
             }
@@ -295,6 +299,8 @@ public final class SkillTreeShots {
         if (godKiLostOnly) { godKiLostPlan(mc); return; }
         if (mastersOnly) { mastersPlan(mc); return; }
         if (perfOnly) { perfPlan(mc); return; }
+        if (chronicleOnly) { chroniclePlan(mc); return; }
+        if (longOnly) { longPlan(mc); return; }
         if (addonsOnly) { addonsPlan(mc); return; }
         // Tutorial (F7): la primera apertura lo enseña; se captura y se cierra con Esc.
         PLAN.add(() -> {
@@ -767,6 +773,146 @@ public final class SkillTreeShots {
         });
         PLAN.add(() -> capture(mc, "legendary_tree"));
         PLAN.add(() -> { SkillTreeScreen.devMouse = null; });
+    }
+
+    /**
+     * Crónica de Rage Forms: genera hechos REALES con RageSystem en el servidor integrado (despertar, progreso, un hecho ignorado por
+     * el enfriamiento, mascotas hasta que salga la barra de desplazamiento), abre la pestaña con el botón de verdad (petición por
+     * packet) y captura: árbol con el botón, lista, tooltip de una fila, lista desplazada y crónica vacía.
+     */
+    private static void chroniclePlan(Minecraft mc) {
+        PLAN.add(() -> {
+            setup(mc, Race.SAIYAN, 1, false, false, false, sp -> {});
+            wait = WAIT;
+        });
+        PLAN.add(() -> {
+            var server = mc.getSingleplayerServer();
+            if (server == null) return;
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                com.hmc.zenkai.feature.rage.RageChronicle.get(sp).load(null);
+                PlayerStatsAttachment.get(sp).flags().setRageAllyEventTick(-1L);
+                int prev = com.hmc.zenkai.config.ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.get();
+                com.hmc.zenkai.config.ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(0);
+                try {
+                    com.hmc.zenkai.feature.rage.RageSystem.handle(sp, com.hmc.zenkai.feature.rage.RageTrigger.ALLY_DEATH, "dev-1", "Krillin");
+                    com.hmc.zenkai.feature.rage.RageSystem.handle(sp, com.hmc.zenkai.feature.rage.RageTrigger.ALLY_DOWNED, "dev-2", "Yamcha");
+                    com.hmc.zenkai.feature.rage.RageSystem.handle(sp, com.hmc.zenkai.feature.rage.RageTrigger.ALLY_RESCUED, "dev-3", "Piccolo");
+                    for (int i = 0; i < 9; i++) {
+                        com.hmc.zenkai.feature.rage.RageSystem.handle(sp, com.hmc.zenkai.feature.rage.RageTrigger.PET_DEATH, "dev-pet-" + i, "Rex " + i);
+                    }
+                } finally {
+                    com.hmc.zenkai.config.ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+                }
+                // Un hecho dentro del enfriamiento (acaba de gastarse): queda anotado como ignorado.
+                com.hmc.zenkai.config.ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(36000);
+                com.hmc.zenkai.feature.rage.RageSystem.handle(sp, com.hmc.zenkai.feature.rage.RageTrigger.ALLY_DEATH, "dev-late", "Gohan");
+                com.hmc.zenkai.config.ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+            });
+            wait = WAIT;
+        });
+        PLAN.add(() -> { forgetTutorial(); mc.setScreen(new SkillTreeScreen()); wait = 40; });
+        PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); mc.setScreen(new SkillTreeScreen()); wait = 40; });
+        PLAN.add(() -> { SkillTreeScreen.devMouse = new int[]{5, 5}; wait = 5; });   // el ratón fuera del visor: un tooltip de nodo tapaba el botón
+        PLAN.add(() -> capture(mc, "chronicle_0_tree"));
+        PLAN.add(() -> { if (mc.screen instanceof SkillTreeScreen s) s.devOpenChronicle(); SkillTreeScreen.devMouse = new int[]{5, 5}; wait = 30; });
+        PLAN.add(() -> capture(mc, "chronicle_1_list"));
+        PLAN.add(() -> {
+            if (mc.screen instanceof SkillTreeScreen s) SkillTreeScreen.devMouse = s.devChronicleRow(1);
+            wait = 5;
+        });
+        PLAN.add(() -> capture(mc, "chronicle_2_tooltip"));
+        PLAN.add(() -> {
+            SkillTreeScreen.devMouse = null;
+            if (mc.screen instanceof SkillTreeScreen s) {
+                int[] c = s.devChronicleRow(2);
+                s.mouseScrolled(c[0], c[1], 0, -4);
+                SkillTreeScreen.devMouse = s.devChronicleRow(1);
+            }
+            wait = 5;
+        });
+        PLAN.add(() -> capture(mc, "chronicle_3_scrolled"));
+        PLAN.add(() -> {
+            SkillTreeScreen.devMouse = null;
+            var server = mc.getSingleplayerServer();
+            if (server != null) server.execute(() ->
+                    com.hmc.zenkai.feature.rage.RageChronicle.get(server.getPlayerList().getPlayers().get(0)).load(null));
+            if (mc.screen != null) mc.screen.keyPressed(256, 0, 0);   // Esc vuelve al árbol
+            wait = 10;
+        });
+        PLAN.add(() -> { SkillTreeScreen.devMouse = new int[]{5, 5}; wait = 5; });
+        PLAN.add(() -> capture(mc, "chronicle_4_back_to_tree"));
+        PLAN.add(() -> { if (mc.screen instanceof SkillTreeScreen s) s.devOpenChronicle(); wait = 30; });
+        PLAN.add(() -> capture(mc, "chronicle_5_empty"));
+        PLAN.add(() -> SkillTreeScreen.devMouse = null);
+    }
+
+    /**
+     * Secuencia LARGA de la primera transformación: despierta SSJ1 por RageSystem (la vía real: FormChangedEvent avisa por packet y el
+     * compositor la consume al detectar el cambio) con la cámara en tercera persona, y captura un fotograma cada 6 ticks durante 4 s.
+     * Después repite el mismo cambio (base y de nuevo SSJ1): ya no es la primera vez, así que sale la CORTA, para compararlas.
+     */
+    private static void longPlan(Minecraft mc) {
+        PLAN.add(() -> {
+            setup(mc, Race.SAIYAN, 1, false, false, false, sp -> {});
+            wait = WAIT;
+        });
+        PLAN.add(() -> {
+            mc.setScreen(null);
+            mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK);
+            var server = mc.getSingleplayerServer();
+            if (server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                var att = PlayerStatsAttachment.get(sp);
+                att.flags().setRageAllyEventTick(-1L);
+                // Poder alto: con los atributos de partida el aura apenas se dibuja y no se vería el estallido.
+                for (var a : com.hmc.zenkai.feature.ZenkaiAttributes.values()) att.setAttribute(a, 3000);
+                att.addEnergy(att.getEnergyMax());
+                PlayerLifeCycle.sync(sp);
+                var forms = sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get());
+                forms.setFormId(sp, com.hmc.zenkai.feature.forms.FormIds.BASE);
+            });
+            mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+            wait = 60;
+        });
+        PLAN.add(() -> capture(mc, "long_before"));
+        PLAN.add(() -> {
+            var server = mc.getSingleplayerServer();
+            if (server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                com.hmc.zenkai.feature.rage.RageSystem.handle(sp, com.hmc.zenkai.feature.rage.RageTrigger.ALLY_DEATH, "long-1", "Krillin");
+            });
+            wait = 4;
+        });
+        for (int i = 0; i < 14; i++) {
+            final int k = i;
+            PLAN.add(() -> { capture(mc, String.format("long_%02d", k)); wait = 5; });
+        }
+        // Segunda vez: volver a base y a SSJ1 (la forma ya está vista: secuencia corta).
+        PLAN.add(() -> {
+            var server = mc.getSingleplayerServer();
+            if (server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                var forms = sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get());
+                forms.setFormId(sp, com.hmc.zenkai.feature.forms.FormIds.BASE);
+                com.hmc.zenkai.feature.player.PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
+            });
+            wait = 60;
+        });
+        PLAN.add(() -> {
+            var server = mc.getSingleplayerServer();
+            if (server != null) server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                var forms = sp.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get());
+                forms.setFormId(sp, com.hmc.zenkai.feature.forms.FormIds.SSJ1);
+                com.hmc.zenkai.feature.player.PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
+            });
+            wait = 4;
+        });
+        for (int i = 0; i < 6; i++) {
+            final int k = i;
+            PLAN.add(() -> { capture(mc, String.format("short_%02d", k)); wait = 5; });
+        }
     }
 
     private static void forgetTutorial() {

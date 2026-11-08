@@ -194,6 +194,42 @@ public class SkillTreeScreen extends TreeCanvasScreen {
     /** Destino de la cámara (mundo) mientras el tutorial la lleva a un nodo; null = quieta. */
     private static final int HELP_BTN = 20;
 
+    // ── Crónica de Rage Forms (vista alternativa del mismo visor; ver RageChroniclePanel) ──
+    /** Celda del pergamino en icons.png: la escribe tools/gen_chronicle_icon.py (mismos valores). */
+    private static final int CHRONICLE_U = 0, CHRONICLE_V = 200;
+    private final RageChroniclePanel chronicle = new RageChroniclePanel();
+    /** Instancia, no static: cada visita a la pestaña vuelve al árbol. */
+    private boolean chronicleOpen;
+    private @Nullable AtlasIconButton chronicleBtn;
+    private @Nullable com.hmc.zenkai.client.gui.buttons.BackIconButton chronicleBack;
+    private @Nullable AtlasIconButton zoomBtn, centerBtn;
+    private @Nullable com.hmc.zenkai.client.gui.buttons.HelpIconButton helpBtn;
+
+    /** Y del icono del botón de la crónica: abajo a la derecha del visor, espejo de la lupa de arriba. */
+    private int chronicleBtnY() { return vpBottom() - 4 - ICON_BTN; }
+
+    private void openChronicle() {
+        chronicleOpen = true;
+        chronicle.resetScroll();
+        com.hmc.zenkai.feature.rage.RageChronicleClientState.reset();   // que no se vea la del mundo anterior mientras llega
+        PacketDistributor.sendToServer(new com.hmc.zenkai.feature.rage.RageChronicleRequestPacket());
+        applyChronicleState();
+    }
+
+    private void closeChronicle() {
+        chronicleOpen = false;
+        applyChronicleState();
+    }
+
+    /** Qué botones se ven y cuáles están activos según la vista: en la crónica el árbol no se toca (lupa, centrar y «?» apagados). */
+    private void applyChronicleState() {
+        if (chronicleBtn != null) chronicleBtn.visible = !chronicleOpen;
+        if (chronicleBack != null) chronicleBack.visible = chronicleOpen;
+        if (zoomBtn != null) zoomBtn.active = !chronicleOpen;
+        if (centerBtn != null) centerBtn.active = !chronicleOpen;
+        if (helpBtn != null) helpBtn.active = !chronicleOpen;
+    }
+
     /** Solo para la herramienta de desarrollo SkillTreeShots: ratón simulado (null = el real). */
     public static int @Nullable [] devMouse;
 
@@ -257,15 +293,27 @@ public class SkillTreeScreen extends TreeCanvasScreen {
                 () -> setZoom(DEFAULT_ZOOM));
         zoomReset.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.skill_tree.reset_zoom")));
         addRenderableWidget(zoomReset);
+        zoomBtn = zoomReset;
         AtlasIconButton center = new AtlasIconButton(centerBtnX(), btnY(), CENTER_U, CENTER_V,
                 this::onCenterPressed);
         center.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.skill_tree.center")));
         addRenderableWidget(center);
+        centerBtn = center;
 
         var help = new com.hmc.zenkai.client.gui.buttons.HelpIconButton(helpX(), helpY(), HELP_BTN,
                 () -> { if (tutorial != null) tutorial.start(); });
         help.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.tutorial.replay")));
         addRenderableWidget(help);
+        helpBtn = help;
+
+        // Crónica de Rage Forms: abajo a la derecha, y en su lugar la flecha de volver mientras está abierta.
+        chronicleBtn = new AtlasIconButton(zoomBtnX(), chronicleBtnY(), CHRONICLE_U, CHRONICLE_V, this::openChronicle);
+        chronicleBtn.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.rage.open")));
+        addRenderableWidget(chronicleBtn);
+        chronicleBack = new com.hmc.zenkai.client.gui.buttons.BackIconButton(zoomBtnX(), chronicleBtnY(), this::closeChronicle);
+        chronicleBack.setTooltip(Tooltip.create(Component.translatable("screen.zenkai.rage.back")));
+        addRenderableWidget(chronicleBack);
+        applyChronicleState();
         tutorial = new TutorialOverlay("skill_tree", tutorialSteps());
         tutorial.startIfFirstTime();
     }
@@ -597,6 +645,8 @@ public class SkillTreeScreen extends TreeCanvasScreen {
     public boolean mouseClicked(double mx, double my, int button) {
         if (tutorial != null && tutorial.mouseClicked()) return true;
         if (super.mouseClicked(mx, my, button)) return true;
+        // En la crónica el visor es solo lectura: se traga el clic (sin arrastre, sin rutas, sin compra).
+        if (chronicleOpen) return inViewport(mx, my);
         if (button == 1 && inViewport(mx, my) && !overHud(mx, my)) {
             toggleRoute(nodeAt(mx, my));
             return true;
@@ -616,6 +666,10 @@ public class SkillTreeScreen extends TreeCanvasScreen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double sx, double sy) {
+        if (chronicleOpen) {
+            if (sy != 0 && chronicle.inList(mx, my)) chronicle.scrollBy(sy);   // la rueda desplaza la lista, no hace zoom
+            return inViewport(mx, my);
+        }
         if (sy != 0 && inViewport(mx, my)) {
             // Zoom alrededor del cursor: el punto de mundo bajo el ratón se queda donde estaba.
             camGoal = null;
@@ -633,7 +687,7 @@ public class SkillTreeScreen extends TreeCanvasScreen {
     }
 
     private @Nullable ResourceLocation nodeAt(double mx, double my) {
-        if (!inViewport(mx, my) || overHud(mx, my) || pastChain(mx)) return null;
+        if (chronicleOpen || !inViewport(mx, my) || overHud(mx, my) || pastChain(mx)) return null;
         float wx = toWorldX(mx), wy = toWorldY(my);
         float half = NODE / 2f;
         for (var e : pos.entrySet()) {
@@ -711,6 +765,12 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             tutorial.render(g, this.font, this.width, this.height);
             return;
         }
+        if (chronicleOpen) {
+            // La lista va DESPUÉS de los widgets (super.render) para que su tooltip tape también los botones.
+            chronicle.layout(vpLeft(), vpTop(), vpRight(), vpBottom());
+            chronicle.render(g, this.font, mx, my, this.width, this.height, Math.round(vpCx()), vpTop());
+            return;
+        }
         if (hover != null && !isOverWidget(mx, my)) {
             Node hn = byId.get(hover);
             if (hn != null) drawTooltip(g, hn, mx, my);
@@ -718,6 +778,12 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             drawSealTooltip(g, mx, my);
         }
     }
+
+    /** Solo SkillTreeShots: abre la crónica como el botón (con la petición real al servidor). */
+    public void devOpenChronicle() { openChronicle(); }
+
+    /** Solo SkillTreeShots: centro en pantalla de la fila {@code i} de la crónica, para simular el ratón. */
+    public int[] devChronicleRow(int i) { return chronicle.devRowCenter(i); }
 
     /** Solo SkillTreeShots: centra el lienzo en un nodo visible y devuelve su centro en
      *  pantalla (para simular hover sobre él), o null si no está a la vista. */
@@ -735,6 +801,12 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         int x1 = vpLeft(), y1 = vpTop(), x2 = vpRight(), y2 = vpBottom();
         g.enableScissor(x1, y1, x2, y2);
         drawBackground(g, x1, y1, x2, y2);
+        if (chronicleOpen) {
+            // Crónica: el mismo cielo de fondo y la cabecera (TP/MIND), sin nodos ni hilos.
+            drawHeader(g);
+            g.disableScissor();
+            return;
+        }
 
         var pose = g.pose();
         pose.pushPose();
@@ -1209,6 +1281,21 @@ public class SkillTreeScreen extends TreeCanvasScreen {
                     SkillTreeArt.BUTTON_U, SkillTreeArt.BUTTON_V, SkillTreeArt.BUTTON_TEX, SkillTreeArt.BUTTON_TEX,
                     SkillTreeArt.HUD_W, SkillTreeArt.HUD_H);
         }
+        // Y el de la crónica / volver, abajo a la derecha (espejo de la lupa).
+        SkillTreeArt.blit(g, SkillTreeArt.HUD, zoomBtnX() - (BTN_PLATE - ICON_BTN) / 2f,
+                chronicleBtnY() - (BTN_PLATE - ICON_BTN) / 2f,
+                SkillTreeArt.BUTTON_U, SkillTreeArt.BUTTON_V, SkillTreeArt.BUTTON_TEX, SkillTreeArt.BUTTON_TEX,
+                SkillTreeArt.HUD_W, SkillTreeArt.HUD_H);
+    }
+
+    /** Escape en la crónica vuelve al árbol en vez de cerrar la pantalla. */
+    @Override
+    public boolean keyPressed(int key, int scan, int mods) {
+        if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE && chronicleOpen && !(tutorial != null && tutorial.active())) {
+            closeChronicle();
+            return true;
+        }
+        return super.keyPressed(key, scan, mods);
     }
 
     /** Placa de tres trozos (izquierda, centro repetido, derecha) con su texto. */

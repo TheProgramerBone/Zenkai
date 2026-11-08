@@ -1526,12 +1526,8 @@ public class ServerConfig {
                     .defineInRange("legendary.divine_resonance_mult", 1.45D, 1.0D, 10.0D);
 
     private static final ModConfigSpec.DoubleValue BEAST_MASTERY_REQ_RAW =
-            BUILDER.comment("Beast unlock, requirement 1: minimum Mystic mastery (0-100, in percent) the player must have when the fury trigger happens. Requirement 2 is the trigger itself: a tamed pet or a party member dying near the player (see beast.fury_radius).")
+            BUILDER.comment("Beast unlock, requirement 1: minimum Mystic mastery (0-100, in percent) the player must have when the fury trigger happens. Requirement 2 is the trigger itself: a tamed pet or a party member dying near the player (within permadeath.witness_radius; handled by Rage Forms).")
                     .defineInRange("beast.unlock_mystic_mastery_percent", 50.0D, 0.0D, 100.0D);
-
-    private static final ModConfigSpec.DoubleValue BEAST_FURY_RADIUS_RAW =
-            BUILDER.comment("Beast unlock: radius in blocks within which the death of a tamed pet (owned by the player) or of a party member counts as the fury trigger.")
-                    .defineInRange("beast.fury_radius", 32.0D, 1.0D, 256.0D);
 
     // God Ki (skill tree F5): prueba del maestro y ritual de N jugadores. Sustituye a la vieja
     // arcosian.god_ki_levels (niveles placeholder sin forma): desde F5 las cinco razas tienen forma divina.
@@ -1641,6 +1637,32 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PERMADEATH_WITNESS_RADIUS =
             BUILDER.comment("Blocks around a dying player within which party members count as witnesses of the death (PartyMemberDiedEvent, the hook for rage forms). 0 = no witnesses.")
                     .defineInRange("permadeath.witness_radius", 24, 0, 512);
+
+    // ── Rage Forms (despertares por acontecimientos emocionales) ─────────────
+    public static final ModConfigSpec.BooleanValue RAGE_ENABLED =
+            BUILDER.comment("Rage Forms: unlock or advance transformations through emotional events (an ally dying, being downed, being saved in time, surviving the edge). false = the system does nothing.")
+                    .define("rage.enabled", true);
+
+    public static final ModConfigSpec.DoubleValue RAGE_MINUTES_LOW =
+            BUILDER.comment("Rage Forms: form mastery granted by a LOW intensity event, in minutes of transformed time (the form's own mastery_gain still applies, so the same event is worth less percent in a slow form).")
+                    .defineInRange("rage.minutes_low", 5.0D, 0.0D, 1000.0D);
+    public static final ModConfigSpec.DoubleValue RAGE_MINUTES_MEDIUM =
+            BUILDER.comment("Rage Forms: mastery minutes for a MEDIUM intensity event (an ally goes down near you).")
+                    .defineInRange("rage.minutes_medium", 15.0D, 0.0D, 1000.0D);
+    public static final ModConfigSpec.DoubleValue RAGE_MINUTES_HIGH =
+            BUILDER.comment("Rage Forms: mastery minutes for a HIGH intensity event (an ally dies, or you save one inside the 5 s downed window).")
+                    .defineInRange("rage.minutes_high", 30.0D, 0.0D, 1000.0D);
+    public static final ModConfigSpec.DoubleValue RAGE_MINUTES_EXCEPTIONAL =
+            BUILDER.comment("Rage Forms: mastery minutes for an EXCEPTIONAL intensity event (you survive the edge with a fallen ally nearby, or an ally dies while you are downed).")
+                    .defineInRange("rage.minutes_exceptional", 60.0D, 0.0D, 1000.0D);
+
+    public static final ModConfigSpec.IntValue RAGE_AWAKENING_PROTECTION_TICKS =
+            BUILDER.comment("Rage Forms: ticks of invulnerability and no actions/movement during the LONG sequence, the first time a player turns into each form (any route). 60 = 3 s, the length of the sequence. 0 = no protection. /kill and the void still work.")
+                    .defineInRange("rage.awakening_protection_ticks", 60, 0, 600);
+
+    public static final ModConfigSpec.IntValue RAGE_ALLY_EVENT_COOLDOWN =
+            BUILDER.comment("Rage Forms: server ticks between two rewards (awakening or progress) from the death/rescue/survival of an ally, per player. 36000 = 30 minutes. Counted in server game time whether the player is online or not. Pet deaths and body gestures never consume it.")
+                    .defineInRange("rage.ally_event_cooldown", 36000, 0, 24 * 60 * 60 * 20);
 
     // Reencarnación (renunciar a la vida muerta): lo que el alma recuerda. El TP, las skills, las formas, el God Ki, el Legendario,
     // el inventario, la cama y la XP se pierden siempre; el aspecto se elige de nuevo.
@@ -1924,7 +1946,6 @@ public class ServerConfig {
     private static volatile double LEGENDARY_CEILING = 12.5D;
     private static volatile double LEGENDARY_RESONANCE = 1.45D;
     private static volatile double BEAST_MASTERY_REQ = 50.0D;
-    private static volatile double BEAST_FURY_RADIUS = 32.0D;
     private static volatile double ARC_PP_GAIN = 4.0D;
     private static volatile double ARC_PP_DRAIN = 4.0D;
     private static volatile double ARC_PP_COMBAT_DEALT = 2.0D;
@@ -2214,7 +2235,6 @@ public class ServerConfig {
         LEGENDARY_CEILING = LEGENDARY_CEILING_RAW.get();
         LEGENDARY_RESONANCE = LEGENDARY_RESONANCE_RAW.get();
         BEAST_MASTERY_REQ = BEAST_MASTERY_REQ_RAW.get();
-        BEAST_FURY_RADIUS = BEAST_FURY_RADIUS_RAW.get();
         ARC_PP_GAIN = ARC_PP_GAIN_RAW.get();
         ARC_PP_DRAIN = ARC_PP_DRAIN_RAW.get();
         ARC_PP_COMBAT_DEALT = ARC_PP_COMBAT_DEALT_RAW.get();
@@ -2618,7 +2638,6 @@ public class ServerConfig {
     public static double legendaryCeilingPercent() { return LEGENDARY_CEILING; }
     public static double legendaryResonanceMult() { return LEGENDARY_RESONANCE; }
     public static double beastUnlockMysticMastery() { return BEAST_MASTERY_REQ; }
-    public static double beastFuryRadius() { return BEAST_FURY_RADIUS; }
     public static double arcPpGain() { return ARC_PP_GAIN; }
     public static double arcPpDrain() { return ARC_PP_DRAIN; }
     public static double arcPpCombatDealt() { return ARC_PP_COMBAT_DEALT; }

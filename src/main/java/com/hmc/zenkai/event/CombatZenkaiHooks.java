@@ -107,6 +107,8 @@ public class CombatZenkaiHooks {
             return;
         }
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+        // Escena de la primera transformación (Rage Forms): invulnerable. Se cancela aquí y no a 0 en Pre para que no haya animación de daño.
+        if (com.hmc.zenkai.feature.rage.AwakeningProtection.isProtected(sp)) { e.setCanceled(true); return; }
         if (e.getSource().getEntity() instanceof ServerPlayer attacker
                 && PartyService.friendlyFireBlocked(attacker, sp)) return;
         if (PhysicalCombatServer.hasIFrames(sp.getUUID()) || DashServer.hasIFrames(sp)) return;
@@ -127,6 +129,9 @@ public class CombatZenkaiHooks {
         // Sin esto, /kill entraba al pool como un golpe más y dejaba al jugador derribado en
         // vez de muerto — y a un inmortal ni eso.
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+
+        // Escena de la primera transformación: por si el golpe llegó hasta aquí sin pasar por onIncomingDamage (daño aplicado directo).
+        if (com.hmc.zenkai.feature.rage.AwakeningProtection.isProtected(e.getEntity())) { e.setNewDamage(0.0F); return; }
 
         // FUEGO AMIGO DE PARTY: antes que cualquier otra cosa, incluidos los i-frames de
         // abajo — un golpe bloqueado aquí no debe consumir el dash de nadie ni contar como

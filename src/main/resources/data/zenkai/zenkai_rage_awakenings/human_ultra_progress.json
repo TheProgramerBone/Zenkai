@@ -1,0 +1,10 @@
+{
+  "form": "zenkai:human_ultra",
+  "race": "human",
+  "triggers": [
+    "ally_downed",
+    "body_gesture",
+    "pet_death"
+  ],
+  "awakens": false
+}

@@ -81,10 +81,19 @@ public class PlayerStateFlags {
 
     /**
      * Beast desbloqueado por furia: una mascota propia o un miembro de la party murió cerca del
-     * jugador teniendo él la maestría de Mystic requerida (ver BeastFury). Persistente, igual que
+     * jugador teniendo él la maestría de Mystic requerida (ver RageSystem). Persistente, igual que
      * hasSsj4Ritual, y viaja al cliente por este mismo save()/load() para que la rueda lo sepa.
      */
     private boolean beastFury = false;
+    /** Rage Forms: gameTime del servidor del último despertar o progreso por un aliado (-1 = nunca). Ver RageSystem. */
+    private long rageAllyEventTick = -1L;
+    /** Rage Forms: ids de los últimos hechos recompensados (anillo), contra recompensar dos veces lo mismo. */
+    private final java.util.ArrayDeque<String> rageEventIds = new java.util.ArrayDeque<>();
+    public static final int RAGE_EVENT_IDS_CAP = 64;
+    /** Formas cuya secuencia larga (primera transformación) ya se vio. Del PERSONAJE: la reencarnación lo reinicia. */
+    private final java.util.LinkedHashSet<String> longCinematicSeen = new java.util.LinkedHashSet<>();
+    /** false SOLO en partidas anteriores a Rage Forms (la clave no existe): RageMigration las pone al día al entrar. */
+    private boolean rageMigrated = true;
 
     /**
      * Audiencia divina concedida por un maestro (Tori-Bot hoy; ver GodKiAudiencePacket): la
@@ -201,6 +210,23 @@ public class PlayerStateFlags {
     public void setReachedSuperOozaru(boolean v) { this.reachedSuperOozaru = v; }
     public boolean hasBeastFury() { return beastFury; }
     public void setBeastFury(boolean v) { this.beastFury = v; }
+
+    public boolean hasSeenLongCinematic(String form) { return longCinematicSeen.contains(form); }
+    /** @return true si es la primera vez (no estaba) */
+    public boolean markLongCinematicSeen(String form) { return longCinematicSeen.add(form); }
+    public java.util.Set<String> longCinematicSeen() { return java.util.Collections.unmodifiableSet(longCinematicSeen); }
+    public boolean isRageMigrated() { return rageMigrated; }
+    public void setRageMigrated(boolean v) { this.rageMigrated = v; }
+
+    public long getRageAllyEventTick() { return rageAllyEventTick; }
+    public void setRageAllyEventTick(long t) { this.rageAllyEventTick = t; }
+    public boolean hasRageEvent(String id) { return rageEventIds.contains(id); }
+    /** Anota un hecho ya recompensado; el anillo descarta el más antiguo al pasar de RAGE_EVENT_IDS_CAP. */
+    public void addRageEvent(String id) {
+        if (rageEventIds.contains(id)) return;
+        rageEventIds.addLast(id);
+        while (rageEventIds.size() > RAGE_EVENT_IDS_CAP) rageEventIds.removeFirst();
+    }
     public boolean hasGodKiAudience() { return godKiAudience; }
     public void setGodKiAudience(boolean v) { this.godKiAudience = v; }
     public boolean hasReceivedKaioWeights() { return receivedKaioWeights; }
@@ -250,6 +276,14 @@ public class PlayerStateFlags {
         tag.putBoolean("hasSsj4Ritual", hasSsj4Ritual);
         tag.putBoolean("reachedSuperOozaru", reachedSuperOozaru);
         tag.putBoolean("beastFury", beastFury);
+        tag.putLong("rageAllyEventTick", rageAllyEventTick);
+        tag.putBoolean("rageMigrated", rageMigrated);
+        net.minecraft.nbt.ListTag seen = new net.minecraft.nbt.ListTag();
+        for (String f : longCinematicSeen) seen.add(net.minecraft.nbt.StringTag.valueOf(f));
+        tag.put("longCinematicSeen", seen);
+        net.minecraft.nbt.ListTag rage = new net.minecraft.nbt.ListTag();
+        for (String id : rageEventIds) rage.add(net.minecraft.nbt.StringTag.valueOf(id));
+        tag.put("rageEventIds", rage);
         tag.putBoolean("godKiAudience", godKiAudience);
         tag.putDouble("arcosianPp", arcosianPp);
         tag.putInt("absorbMass", absorbMass);
@@ -270,6 +304,15 @@ public class PlayerStateFlags {
         this.hasSsj4Ritual = tag.getBoolean("hasSsj4Ritual");
         this.reachedSuperOozaru = tag.getBoolean("reachedSuperOozaru");
         this.beastFury = tag.getBoolean("beastFury");
+        this.rageAllyEventTick = tag.contains("rageAllyEventTick") ? tag.getLong("rageAllyEventTick") : -1L;
+        // Sin la clave = partida anterior a Rage Forms: pendiente de migrar (ver RageMigration).
+        this.rageMigrated = tag.getBoolean("rageMigrated");
+        longCinematicSeen.clear();
+        net.minecraft.nbt.ListTag seen = tag.getList("longCinematicSeen", net.minecraft.nbt.Tag.TAG_STRING);
+        for (int i = 0; i < seen.size(); i++) longCinematicSeen.add(seen.getString(i));
+        rageEventIds.clear();
+        net.minecraft.nbt.ListTag rage = tag.getList("rageEventIds", net.minecraft.nbt.Tag.TAG_STRING);
+        for (int i = 0; i < rage.size(); i++) rageEventIds.add(rage.getString(i));
         this.godKiAudience = tag.getBoolean("godKiAudience");
         this.arcosianPp = tag.getDouble("arcosianPp");
         this.absorbMass = tag.getInt("absorbMass");

@@ -1,0 +1,11 @@
+{
+  "form": "zenkai:ssj1",
+  "race": "saiyan",
+  "triggers": [
+    "ally_downed",
+    "ally_rescued",
+    "body_gesture",
+    "critical_survival"
+  ],
+  "awakens": false
+}

@@ -1,0 +1,10 @@
+{
+  "form": "zenkai:human_super",
+  "race": "human",
+  "triggers": [
+    "ally_death",
+    "ally_dies_while_downed",
+    "ally_rescued"
+  ],
+  "min_intensity": "high"
+}

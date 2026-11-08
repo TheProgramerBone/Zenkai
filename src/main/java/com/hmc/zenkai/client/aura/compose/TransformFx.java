@@ -27,6 +27,11 @@ import java.util.Locale;
  * <p>
  * Primera persona propia: la escala del estallido se acota (±10%) y no hay pico de alfa — un
  * destello que llena la pantalla no se debe comer la vista.
+ * <p>
+ * SECUENCIA LARGA (Rage Forms: la PRIMERA vez que cada jugador se transforma en cada forma, sea cual sea la vía): el mismo tipo de
+ * estilo, pero en TRES pulsos — el golpe inicial (más fuerte), un segundo golpe a los 0,9 s y la intensificación final a los 1,9 s,
+ * cada uno con su onda de suelo (la final, más ancha), su ráfaga de polvo/rocas y su tanda de componentes —, y 3 s en total. La
+ * corta sigue siendo la de siempre. Lo decide el compositor con el aviso del servidor ({@code LongTransformPacket}).
  */
 final class TransformFx {
 
@@ -67,20 +72,37 @@ final class TransformFx {
     }
 
     private static final float DURATION = 1.1f;
+    /** Secuencia larga: tres pulsos (inicio, segundo golpe, intensificación final) y el último se apaga hasta ~3 s. */
+    private static final float LONG_DURATION = 3.0f;
+    private static final float[] LONG_BEAT_AT = {0f, 0.9f, 1.9f};
+    private static final float[] LONG_BEAT_GAIN = {1.5f, 1.2f, 1.7f};
+    private static final float[] LONG_RING_RADIUS = {1f, 1.25f, 1.6f};
     private static final int RING_SEGMENTS = 48;
 
     private Type type = Type.NONE;
     private float t = -1f;
+    private boolean longSeq;
+    private float duration = DURATION;
+    /** Pulsos de la secuencia larga que ya se dispararon (el 0 va en trigger). */
+    private boolean beat2Done, beat3Done;
+    private List<AuraComponent> comps = List.of();
+    private AuraChargeGroundFx.Ground ground;
     private boolean hasGround;
     private double groundY;
     private final float[] ringColor = new float[3];
 
     boolean running() { return t >= 0f; }
 
-    void trigger(Type type, AuraFrame f, List<AuraComponent> components) {
+    void trigger(Type type, AuraFrame f, List<AuraComponent> components) { trigger(type, f, components, false); }
+
+    void trigger(Type type, AuraFrame f, List<AuraComponent> components, boolean longSeq) {
         if (type == Type.NONE) return;
         this.type = type;
         this.t = 0f;
+        this.longSeq = longSeq;
+        this.duration = longSeq ? LONG_DURATION : DURATION;
+        this.beat2Done = this.beat3Done = false;
+        this.comps = components;
         Minecraft mc = Minecraft.getInstance();
         AuraChargeGroundFx.Ground g = mc.level == null ? null
                 : AuraChargeGroundFx.findGround(mc.level, f.player, f.x, f.y, f.z);
@@ -88,6 +110,7 @@ final class TransformFx {
         // ni dibuja un anillo bajo los pies (pedido del usuario, 2026-09-30).
         if (!f.player.onGround()) g = null;
         hasGround = g != null;
+        this.ground = g;
         if (g != null) {
             groundY = g.surfaceY();
             if (type.dust > 0 || type.rocks > 0) {
@@ -103,13 +126,24 @@ final class TransformFx {
         f.burstAlpha = 1f;
         if (t < 0f) return;
         t += f.dt;
-        if (t > DURATION) {
+        if (t > duration) {
             t = -1f;
             return;
         }
         float scale;
         float decay;
-        if (type == Type.HEAVY) {
+        if (longSeq) {
+            // Tres pulsos sumados: cada uno sube rápido y se apaga como el estallido corto.
+            float sum = 0f, strongest = 0f;
+            for (int i = 0; i < LONG_BEAT_AT.length; i++) {
+                float p = pulse(t - LONG_BEAT_AT[i]) * LONG_BEAT_GAIN[i];
+                sum += p;
+                strongest = Math.max(strongest, p);
+            }
+            scale = 1f + type.peak * sum;
+            decay = Math.min(1f, strongest / LONG_BEAT_GAIN[2]);
+            fireLongBeats(f);
+        } else if (type == Type.HEAVY) {
             // Implosión y luego expansión lenta con un rebote.
             if (t < 0.2f) {
                 scale = 1f - 0.3f * (t / 0.2f);
@@ -138,6 +172,34 @@ final class TransformFx {
         ringColor[2] = c[2];
     }
 
+    /** Forma de UN pulso: sube en 0,12 s y se apaga exponencialmente; 0 antes de empezar. */
+    private static float pulse(float tt) {
+        if (tt < 0f) return 0f;
+        if (tt < 0.12f) return tt / 0.12f;
+        return (float) Math.exp(-(tt - 0.12f) * 5.0);
+    }
+
+    /** Al cruzar el segundo y el tercer pulso: otra ráfaga de suelo y otra tanda de componentes, la final más grande. */
+    private void fireLongBeats(AuraFrame f) {
+        Minecraft mc = Minecraft.getInstance();
+        if (!beat2Done && t >= LONG_BEAT_AT[1]) {
+            beat2Done = true;
+            beat(f, mc, 1.0f, 1.2f);
+        }
+        if (!beat3Done && t >= LONG_BEAT_AT[2]) {
+            beat3Done = true;
+            beat(f, mc, 1.6f, 1.6f);
+        }
+    }
+
+    private void beat(AuraFrame f, Minecraft mc, float groundMul, float componentMul) {
+        if (ground != null && mc.level != null && (type.dust > 0 || type.rocks > 0)) {
+            AuraChargeGroundFx.burst(mc.level, f.player, ground, Math.round(type.dust * groundMul),
+                    Math.round(type.rocks * groundMul), type.levitate);
+        }
+        for (AuraComponent c : comps) c.onBurst(f, type.componentBurst * componentMul);
+    }
+
     /** Onda expansiva en el suelo: uno o dos anillos planos que se abren y se apagan. */
     void submit(AuraFrame f, PoseStack pose) {
         if (t < 0f || !hasGround || type == Type.NONE) return;
@@ -148,11 +210,19 @@ final class TransformFx {
         final float r = ringColor[0], g = ringColor[1], b = ringColor[2];
         final float maxR = (ty == Type.VIOLENT ? 9f : ty == Type.CALM_SHIFT ? 4f : 7f) * Mth.lerp(0.5f, 1f, f.powerScale);
         final boolean bloomOk = f.bloomAllowed;
+        final boolean lng = longSeq;
         KiVfxFrameQueue.submitAura(pose, new Vec3(ox, oy, oz), (ps, buf) -> {
             boolean bloom = KiVfxFrameQueue.bloomPass();
             if (bloom && !bloomOk) return;
             VertexConsumer vc = buf.getBuffer(AuraComposeShaders.ribbons());
             Matrix4f m = ps.last().pose();
+            if (lng) {
+                // Una onda por pulso, cada una más ancha que la anterior.
+                for (int i = 0; i < LONG_BEAT_AT.length; i++) {
+                    ring(vc, m, ox, oy, oz, tt - LONG_BEAT_AT[i], maxR * LONG_RING_RADIUS[i], ty, r, g, b, bloom ? 0.6f : 1f);
+                }
+                return;
+            }
             float start = ty == Type.HEAVY ? 0.2f : 0f;
             ring(vc, m, ox, oy, oz, tt - start, maxR, ty, r, g, b, bloom ? 0.6f : 1f);
             if (ty == Type.VIOLENT) ring(vc, m, ox, oy, oz, tt - 0.18f, maxR * 0.75f, ty, r, g, b, bloom ? 0.6f : 1f);

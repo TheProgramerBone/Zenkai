@@ -1,0 +1,11 @@
+{
+  "form": "zenkai:human_super",
+  "race": "human",
+  "triggers": [
+    "ally_downed",
+    "body_gesture",
+    "pet_death",
+    "critical_survival"
+  ],
+  "awakens": false
+}

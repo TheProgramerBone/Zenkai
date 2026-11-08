@@ -174,7 +174,9 @@ public final class AuraComposer {
             // mantener vivo.
             boolean alwaysOn = composed && alwaysOnAura(p)
                     && !(self && mc.options.getCameraType().isFirstPerson());
-            boolean active = charging || alwaysOn;
+            // Un aviso de primera transformación vigente mantiene el aura viva: el despertar de Rage Forms es automático (nadie carga)
+            // y sin runtime previo el cambio de forma no se detectaba, así que no habría ni estallido.
+            boolean active = charging || alwaysOn || com.hmc.zenkai.feature.rage.LongTransformState.pending(p.getUUID());
             if (rt == null) {
                 if (!active) continue;
                 rt = new Runtime();
@@ -216,6 +218,9 @@ public final class AuraComposer {
     private static boolean process(Runtime rt, AbstractClientPlayer p, boolean self, boolean isGhost, String auraType,
                                    boolean active, boolean alwaysOn, boolean charging, float pt, float seconds,
                                    long now, Vec3 camPos, Vector3f left, Vector3f up, PoseStack pose, Minecraft mc) {
+        // Una secuencia de transformación en curso mantiene el aura ENCENDIDA aunque nadie esté cargando: el despertar de Rage Forms es
+        // automático (sin hold) y sin esto el estallido no tenía cuerpo al que hincharse; solo se veía el polvo del suelo.
+        if (!isGhost && rt.transform.running()) active = true;
         // Rampa en tiempo REAL (el render corre por frame, no por tick).
         float dt = rt.lastNanos == 0L ? 0f : Math.min(0.1f, (now - rt.lastNanos) / 1.0e9f);
         rt.lastNanos = now;
@@ -307,7 +312,14 @@ public final class AuraComposer {
         }
         if (!fire) return;
         String t = style.transform() != null ? style.transform() : style.family().transform();
-        rt.transform.trigger(TransformFx.Type.of(t), f, rt.components);
+        // Primera vez de esa forma para este jugador: el servidor lo avisó con LongTransformPacket. El aviso se gasta SIEMPRE (aunque
+        // la preferencia lo apague) para que no quede armado para una transformación posterior.
+        boolean pendingLong = !isGhost && com.hmc.zenkai.feature.rage.LongTransformState.consume(p.getUUID());
+        LongTransformMode mode = com.hmc.zenkai.config.ClientConfig.longTransformMode();
+        boolean longSeq = pendingLong && mode != LongTransformMode.OFF;
+        rt.transform.trigger(TransformFx.Type.of(t), f, rt.components, longSeq);
+        // La cámara solo la toca la secuencia larga PROPIA y solo con la preferencia completa.
+        if (longSeq && self && mode == LongTransformMode.FULL) TransformCameraFx.start();
     }
 
     private static void fill(AuraFrame f, AbstractClientPlayer p, float pt, float seconds, float dt, Vec3 camPos,

@@ -150,6 +150,16 @@ public final class ZenkaiPalette {
      *  ninguna otra sección usa un tono tan poco saturado. */
     public static final int SECTION_STATUS     = 0xFFE8E8FF;
 
+    // ── Crónica de Rage Forms (sobre la placa oscura del skill tree, con sombra) ──
+    /** Un despertar: la forma se desbloqueó. Dorado del mod. */
+    public static final int CHRONICLE_AWAKENING = GOLD;
+    /** Maestría que subió sin despertar. Celeste de «lo ganado». */
+    public static final int CHRONICLE_PROGRESS  = SECTION_INVESTMENT;
+    /** Hecho anotado sin recompensa (incluido el ignorado por enfriamiento). */
+    public static final int CHRONICLE_RECORDED  = TEXT_DIM;
+    /** Nombre de la forma de una primera transformación. */
+    public static final int CHRONICLE_FORM      = SECTION_FORM;
+
     // ── Alineamiento ─────────────────────────────────────────────────────────
     // Tres colores planos, no un degradado. El número ya tiene el degradado de AlignmentPalette;
     // el NOMBRE necesita ser uno de tres estados reconocibles, y un verde-azulado a medio camino

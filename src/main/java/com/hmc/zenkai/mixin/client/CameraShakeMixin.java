@@ -35,5 +35,8 @@ public abstract class CameraShakeMixin {
                                    boolean mirrored, float partialTick, CallbackInfo ci) {
         float[] off = SenseKiWarnings.shakeOffset(partialTick);
         if (off != null) move(off[0], off[1], off[2]);
+        // Secuencia larga de la primera transformación (solo la propia, solo con la preferencia completa).
+        float[] fx = com.hmc.zenkai.client.aura.compose.TransformCameraFx.shakeOffset(partialTick);
+        if (fx != null) move(fx[0], fx[1], fx[2]);
     }
 }
