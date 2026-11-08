@@ -1,0 +1,30 @@
+{
+  "parent": "zenkai:otherworld",
+  "criteria": {
+    "visit": {
+      "conditions": {
+        "kind": "earth_visit"
+      },
+      "trigger": "zenkai:milestone"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.zenkai.earth_visit.description"
+    },
+    "hidden": true,
+    "icon": {
+      "count": 1,
+      "id": "minecraft:grass_block"
+    },
+    "title": {
+      "translate": "advancements.zenkai.earth_visit.title"
+    }
+  },
+  "requirements": [
+    [
+      "visit"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

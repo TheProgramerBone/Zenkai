@@ -7,6 +7,7 @@ import com.hmc.zenkai.feature.combat.DownedDeathGuard;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.feature.player.death.PlayerDownedEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.sounds.SoundEvents;
@@ -224,6 +225,13 @@ public final class DownedSystem {
         } else {
             att.flags().setDowned(true);
             att.flags().setDownedUntil(p.level().getGameTime() + CombatZenkaiHooks.DOWNED_TICKS);
+            // Una vez por caída: handleDowned corta el tick mientras dure, así que no se repite. Fuera del
+            // Otherworld (allí no hay muerte que dar). Enganche de las rage forms (aliado derribado cerca).
+            // ANTES del sync: si un oyente toca el estado, viaja en el mismo paquete.
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new PlayerDownedEvent(sp,
+                    com.hmc.zenkai.feature.player.death.PlayerBodyManager.partyWitnesses(sp),
+                    att.flags().getDownedUntil()));
+            com.hmc.zenkai.feature.rage.CriticalSurvival.armDowned(sp);
             PlayerLifeCycle.syncIfServer(p);
         }
         return true;

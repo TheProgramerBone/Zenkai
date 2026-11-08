@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-21T20:03:42.1234178	Advancements
+// 1.21.1	2026-11-07T19:01:06.7171932	Advancements
 f9a5c0de397f24c185f402bcbc5d5ecb1b6aafa8 data/zenkai/advancement/all_skills.json
 1e4b0aa0238e933eb91f3567c473703ef287a782 data/zenkai/advancement/all_skills_max.json
 5c11b5aaa82f4098d857b7a660bd16cebe7f2b0a data/zenkai/advancement/all_wishes.json
@@ -12,6 +12,7 @@ b746e7a731a6deecda5091c777867021ccfe0dda data/zenkai/advancement/combat_stance.j
 5731005bd12307f4034b3649e46fc252bd680f67 data/zenkai/advancement/dash.json
 08f3f4ee0171b345934e5023718338a6a3c05b26 data/zenkai/advancement/dragon_h.json
 50dcc7029af7db76561227169d2417efc7a716b3 data/zenkai/advancement/dragon_h_namek.json
+afa40e4cfdb786d0c7f537620abbfa838006ff85 data/zenkai/advancement/earth_visit.json
 e3c3b1f212ab3425cf53261a3aecdb1a93596e01 data/zenkai/advancement/first_ball.json
 e58b44fe8e725095c057b4ed44303f1520f54c36 data/zenkai/advancement/first_technique.json
 04e1731a8150b1508615b97efaf1fe02ea7430b4 data/zenkai/advancement/first_tp.json

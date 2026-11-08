@@ -54,7 +54,8 @@ public class TrainingPointsWishScreen extends ShenronPanelScreen {
         if (mc.player != null) {
             PlayerStatsAttachment st = PlayerStatsAttachment.get(mc.player);
             drawCenteredOnPanel(g,
-                    Component.translatable("screen.zenkai.wish.training_points.current", st.getTP()),
+                    Component.translatable("screen.zenkai.wish.training_points.current",
+                            com.hmc.zenkai.util.ZenkaiNumbers.screen(st.getTP())),
                     y, ZenkaiPalette.SHENRON_TEXT);
         }
     }

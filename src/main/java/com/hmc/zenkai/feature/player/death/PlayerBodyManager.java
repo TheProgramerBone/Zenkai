@@ -181,14 +181,52 @@ public final class PlayerBodyManager {
         body.setXp(xp);
         if (hold && !e.isCanceled()) e.getDrops().clear();
 
+        registerCreated(sp, body);
+    }
+
+    /**
+     * Lo que sigue a CUALQUIER cuerpo nuevo de una muerte: aviso a la party, evento para las rage forms y topes. Lo comparten
+     * la muerte normal ({@link #onDrops}) y la muerte durante la visita de Uranai Baba (que no pasa por los drops).
+     */
+    public static void registerCreated(ServerPlayer sp, PlayerBodyEntity body) {
         if (ServerConfig.PERMADEATH_NOTIFY_PARTY.get()) notifyParty(sp, body);
         NeoForge.EVENT_BUS.post(new PlayerBodyCreatedEvent(sp, body, ServerConfig.PERMADEATH_ENABLED.get()));
+        announceWitnesses(sp);
         enforceCap(sp.server, sp.getUUID(), body.getUUID());
         enforceWorldCap(sp.server, body.getUUID());
     }
 
+    /** Miembros de la party del muerto que lo vieron caer (misma dimensión, dentro del radio): se avisa a los enganches. */
+    private static void announceWitnesses(ServerPlayer dead) {
+        List<ServerPlayer> witnesses = partyWitnesses(dead);
+        if (!witnesses.isEmpty()) NeoForge.EVENT_BUS.post(new PartyMemberDiedEvent(dead, witnesses, ServerConfig.PERMADEATH_ENABLED.get()));
+    }
+
+    /**
+     * Miembros de la party de {@code subject}, vivos, en su misma dimensión y a menos de {@code permadeath.witness_radius}
+     * bloques: el único criterio de «testigo» (muerte y derribo). Vacía sin party o con radio 0.
+     */
+    public static List<ServerPlayer> partyWitnesses(ServerPlayer subject) {
+        List<ServerPlayer> witnesses = new java.util.ArrayList<>();
+        int radius = ServerConfig.PERMADEATH_WITNESS_RADIUS.get();
+        if (radius <= 0) return witnesses;
+        com.hmc.zenkai.feature.party.PartyManager.Party party = com.hmc.zenkai.feature.party.PartyManager.get(subject.server).partyOf(subject.getUUID());
+        if (party == null) return witnesses;
+        for (java.util.UUID id : party.members) {
+            if (id.equals(subject.getUUID())) continue;
+            ServerPlayer w = subject.server.getPlayerList().getPlayer(id);
+            if (w != null && w.isAlive() && w.level() == subject.level() && w.distanceToSqr(subject) <= (double) radius * radius) witnesses.add(w);
+        }
+        return witnesses;
+    }
+
+    /** Porcentaje de la XP que guarda el cuerpo (config); lo usa la muerte durante la visita. */
+    public static int xpShare(int totalXp) {
+        return totalXp * ServerConfig.PERMADEATH_XP_RETENTION.get() / 100;
+    }
+
     /** Riesgo de morir: cada pila puede perderse y los objetos con durabilidad pierden un porcentaje (sin llegar a romperse). */
-    private static void applyDeathLoss(List<ItemStack> items, ServerPlayer sp) {
+    public static void applyDeathLoss(List<ItemStack> items, ServerPlayer sp) {
         int loss = ServerConfig.PERMADEATH_ITEM_LOSS_PERCENT.get();
         int dur = ServerConfig.PERMADEATH_DURABILITY_LOSS_PERCENT.get();
         if (loss <= 0 && dur <= 0) return;
@@ -307,6 +345,16 @@ public final class PlayerBodyManager {
         }
     }
 
+    /**
+     * Retira los cuerpos de la vida anterior de un jugador que reencarna: vacían su contenido en el suelo (como con el tope)
+     * y desaparecen. Sin esto el alma nueva podía abrir su propio cuerpo viejo y recuperar el inventario que la reencarnación
+     * le quita; en el suelo queda al alcance de cualquiera, así que recuperarlo ya no es gratis.
+     */
+    public static void retireAllOf(MinecraftServer server, UUID owner) {
+        PlayerBodyRegistry reg = PlayerBodyRegistry.get(server);
+        for (PlayerBodyRegistry.Entry e : reg.of(owner)) retire(server, reg, e);
+    }
+
     /** Tope por jugador: el más antiguo se vacía en el suelo y desaparece. */
     private static void enforceCap(MinecraftServer server, UUID owner, UUID keep) {
         int cap = ServerConfig.PERMADEATH_BODY_CAP.get();
@@ -333,6 +381,28 @@ public final class PlayerBodyManager {
             retire(server, reg, all.get(i));
             excess--;
         }
+    }
+
+    /**
+     * Reabsorbe los cuerpos de un jugador revivido por el deseo: lo que guardan vuelve a su inventario (y su XP) y lo que no
+     * cabe cae al suelo junto al cuerpo. Un cuerpo en un chunk descargado no se puede leer en el acto (las entidades cargan
+     * DESPUÉS del chunk): se condena y suelta su contenido al suelo cuando el chunk vuelva a cargar. Devuelve cuántos tocó.
+     */
+    public static int reabsorb(ServerPlayer sp) {
+        MinecraftServer server = sp.server;
+        PlayerBodyRegistry reg = PlayerBodyRegistry.get(server);
+        int n = 0;
+        for (PlayerBodyRegistry.Entry e : new ArrayList<>(reg.of(sp.getUUID()))) {
+            n++;
+            ServerLevel lvl = server.getLevel(e.dimension());
+            if (lvl != null && lvl.getEntity(e.bodyId()) instanceof PlayerBodyEntity b) {
+                PlayerBodyLoot.takeAll(sp, b);
+                b.retire(true);
+            } else {
+                reg.condemn(e.bodyId(), true);
+            }
+        }
+        return n;
     }
 
     /**

@@ -1064,7 +1064,7 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
 
     /** Convención del mod (ver ZenkaiNumbers): exacto por debajo de 20 000, compacto por encima. */
     private static String compact(long v) {
-        return Math.abs(v) < 20_000 ? Long.toString(v) : ZenkaiNumbers.format(v);
+        return ZenkaiNumbers.screen(v);
     }
 
     /** Valor exacto de la placa bajo el cursor, si su cifra se enseña compactada. */
@@ -1366,24 +1366,46 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
      * type.defensive().
      */
     private Component kiRowStats(KiTechnique t) {
+        return kiRowStats(t, false);
+    }
+
+    /** {@code exact}: cifras completas con separador de miles, para el tooltip de una fila compactada. */
+    private Component kiRowStats(KiTechnique t, boolean exact) {
         double kiPower = att.computeKiPowerFinal();
         int cost = KiCombatServer.computeCost(att, t.type(), t.size(), t.effect());
         if (t.type().defensive()) {
             return Component.translatable("screen.zenkai.technique.row_ki_barrier",
-                    fmt(KiCombatServer.barrierPool(kiPower, t.size(), 1.0)), cost);
+                    num(KiCombatServer.barrierPool(kiPower, t.size(), 1.0), exact), num(cost, exact));
         }
         double dmg = KiCombatServer.computePlayerDamage(kiPower, t.type(), t.size())
                 * Math.max(1, t.type().count());
-        return Component.translatable("screen.zenkai.technique.row_ki", fmt(dmg), cost);
+        return Component.translatable("screen.zenkai.technique.row_ki", num(dmg, exact), num(cost, exact));
+    }
+
+    /** Cifra de una fila: convención del mod (ZenkaiNumbers.screen) o, para el tooltip, el valor exacto. */
+    private static String num(double v, boolean exact) {
+        return exact ? ZenkaiNumbers.exact(Math.round(v)) : ZenkaiNumbers.screen(v);
+    }
+
+    /** Línea de tooltip con las cifras exactas de la sub-línea, solo si alguna se enseña compactada. */
+    private static void addExactLine(List<Component> lines, boolean compacted, Component exactRow) {
+        if (compacted) {
+            lines.add(Component.translatable("screen.zenkai.technique.tip_exact", exactRow)
+                    .withStyle(ChatFormatting.GRAY));
+        }
     }
 
     /** Sub-línea de una física: daño y estamina REALES del jugador, no los multiplicadores del
      *  datapack. "x1.2 dmg · 220% stam" no dice nada sin saber contra qué se multiplican; los
      *  multiplicadores pasan al tooltip, que es donde sirven para comparar entre técnicas. */
     private Component physRowStats(PhysicalTechnique t) {
+        return physRowStats(t, false);
+    }
+
+    private Component physRowStats(PhysicalTechnique t, boolean exact) {
         return Component.translatable("screen.zenkai.technique.row_phys",
-                fmt(PhysicalCombatServer.previewDamage(att, t)),
-                PhysicalCombatServer.staminaCost(att, t));
+                num(PhysicalCombatServer.previewDamage(att, t), exact),
+                num(PhysicalCombatServer.staminaCost(att, t), exact));
     }
 
     /**
@@ -1441,6 +1463,13 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
                         fmt(KiCombatServer.chargeTicksFor(t.type(), t.size()) / 20.0),
                         fmt(KiCombatServer.cooldownTicksFor(t.type(), t.size()) / 20.0))
                 .withStyle(ChatFormatting.GRAY));
+        double kiPower = att.computeKiPowerFinal();
+        double shown = t.type().defensive()
+                ? KiCombatServer.barrierPool(kiPower, t.size(), 1.0)
+                : KiCombatServer.computePlayerDamage(kiPower, t.type(), t.size()) * Math.max(1, t.type().count());
+        addExactLine(lines, ZenkaiNumbers.isCompacted(shown)
+                        || ZenkaiNumbers.isCompacted(KiCombatServer.computeCost(att, t.type(), t.size(), t.effect())),
+                kiRowStats(t, true));
         return lines;
     }
 
@@ -1462,6 +1491,10 @@ public class TechniquesScreen extends ZenkaiMenuScreen {
             lines.add(Component.translatable("screen.zenkai.technique.tip_hits", hits)
                     .withStyle(ChatFormatting.GRAY));
         }
+        addExactLine(lines,
+                ZenkaiNumbers.isCompacted(PhysicalCombatServer.previewDamage(att, t))
+                        || ZenkaiNumbers.isCompacted(PhysicalCombatServer.staminaCost(att, t)),
+                physRowStats(t, true));
         return lines;
     }
 

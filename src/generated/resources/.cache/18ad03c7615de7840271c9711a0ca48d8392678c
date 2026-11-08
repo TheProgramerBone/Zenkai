@@ -1,4 +1,4 @@
-// 1.21.1	2026-10-18T12:35:41.4407431	Item Models: zenkai
+// 1.21.1	2026-11-07T19:01:06.7088688	Item Models: zenkai
 77eb047ab78af2a8197da88c4f68b7af9a3c4ba6 assets/zenkai/models/item/advanced_circuit.json
 ee6db3233b9bed1a5f064eed54c02de7959a2dd5 assets/zenkai/models/item/ajisa_button.json
 f88a5033436e79ec96a2dbd591295ac243e764a8 assets/zenkai/models/item/ajisa_door.json
@@ -219,4 +219,5 @@ d7981ec156b0d8cacad4e2c051686b1841ce4bda assets/zenkai/models/item/structural_co
 a367e6abbb7ef46c639a944b3edad7aa35c1af96 assets/zenkai/models/item/structural_concrete_yellow_wall.json
 124e3c1adc981c85365f4cee0ce3a6b77652da5c assets/zenkai/models/item/tail_loose.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/toribot_spawn_egg.json
+63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/uranai_baba_spawn_egg.json
 63ec6c618a3a23eab4cab9c52d7d3250de9b516e assets/zenkai/models/item/yemma_spawn_egg.json

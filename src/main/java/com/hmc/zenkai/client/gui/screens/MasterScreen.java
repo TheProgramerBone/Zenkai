@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.PhysicalIcons;
 import com.hmc.zenkai.client.TechniqueIcons;
@@ -331,7 +332,7 @@ public class MasterScreen extends Screen {
         if (st != null) {
             // TP y MIND separados y con SUS colores de rol, igual que en SkillsScreen: aquí
             // salían los dos en el mismo gris malva y había que leerlos para distinguirlos.
-            Component tp = Component.translatable("screen.zenkai.skills.tp", st.getTP());
+            Component tp = Component.translatable("screen.zenkai.skills.tp", ZenkaiNumbers.screen(st.getTP()));
             PanelText.onDark(g, this.font, tp, listLeft(), top + PADDING + 11,
                     ZenkaiPalette.TP_ON_DARK);
             int free = st.mindFree();
@@ -466,7 +467,7 @@ public class MasterScreen extends Screen {
             int tpCost = (minecraft != null && minecraft.player != null)
                     ? FormDrivenSkills.tpCostForLevel(def, minecraft.player, 1) : def.tpCost();
             right = Component.translatable("screen.zenkai.master.cost",
-                    tpCost, def.mindReqFor(1));
+                    ZenkaiNumbers.screen(tpCost), def.mindReqFor(1));
             color = canAfford(st, def) ? ZenkaiPalette.TP_ON_DARK : ZenkaiPalette.DENIED;
         }
         PanelText.rightOnDark(g, this.font, right, listRight(), nameY, color);
@@ -536,7 +537,7 @@ public class MasterScreen extends Screen {
             right = Component.translatable("screen.zenkai.master.learned");
             color = ZenkaiPalette.TEXT_OFF;
         } else {
-            right = Component.translatable("screen.zenkai.master.cost", entry.tpCost(), entry.mindReq());
+            right = Component.translatable("screen.zenkai.master.cost", ZenkaiNumbers.screen(entry.tpCost()), entry.mindReq());
             color = entry.canAfford(st) ? ZenkaiPalette.TP_ON_DARK : ZenkaiPalette.DENIED;
         }
         PanelText.rightOnDark(g, this.font, right, listRight(), nameY, color);

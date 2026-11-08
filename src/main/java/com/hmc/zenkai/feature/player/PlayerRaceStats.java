@@ -88,7 +88,24 @@ public class PlayerRaceStats {
                 base[ZenkaiAttributes.WILLPOWER.ordinal()],
                 base[ZenkaiAttributes.SPIRIT.ordinal()],
                 base[ZenkaiAttributes.MIND.ordinal()]);
+        // Los puntos invertidos se suman a la base de la raza (antes cambiar de raza los dejaba contados en `invested`
+        // pero fuera del atributo). Con respec() ya están a 0, y la reencarnación los trae como puntos conservados.
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) {
+            attributes.merge(a, invested.getOrDefault(a, 0), Integer::sum);
+        }
         capAll();
+    }
+
+    /**
+     * Reencarnación: la nueva vida arranca con estos puntos ya invertidos. NO se anota TP gastado ({@code tpSpent} queda a 0):
+     * son un regalo del alma, no se pueden devolver por TP con el respec. Sí cuentan en {@link #totalInvested()}, o sea en la
+     * curva de coste de los siguientes.
+     */
+    public void carryOverInvested(java.util.Map<ZenkaiAttributes, Integer> points) {
+        for (ZenkaiAttributes a : ZenkaiAttributes.values()) {
+            invested.put(a, Math.max(0, points.getOrDefault(a, 0)));
+        }
+        applyRaceBaseAttributes();
     }
 
     private void capAll() {

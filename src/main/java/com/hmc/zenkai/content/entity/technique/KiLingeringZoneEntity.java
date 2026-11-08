@@ -82,6 +82,12 @@ public class KiLingeringZoneEntity extends Entity {
                 // gratis con esto.
                 target.setRemainingFireTicks(Math.max(target.getRemainingFireTicks(), HIT_INTERVAL));
             }
+            for (com.hmc.zenkai.content.entity.misc.PlayerBodyEntity body : sl.getEntitiesOfClass(
+                    com.hmc.zenkai.content.entity.misc.PlayerBodyEntity.class,
+                    AABB.ofSize(position(), radius * 2, radius * 2, radius * 2))) {
+                if (position().distanceTo(body.position()) <= radius)
+                    body.hurt(damageSources().source(ModDamageTypes.KI_FIRE, owner), (float) damagePerHit);
+            }
         }
 
         if (--life <= 0) discard();

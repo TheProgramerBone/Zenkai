@@ -32,7 +32,7 @@ public final class BodyShots {
     private static final int WAIT_LOAD = 160, WAIT = 40;
     private static Boolean enabled;
     private static String world;
-    private static boolean opened, earOnly;
+    private static boolean opened, earOnly, visitOnly;
     private static int ticks, step, wait;
     private static final List<Runnable> PLAN = new ArrayList<>();
 
@@ -46,6 +46,7 @@ public final class BodyShots {
                     var lines = Files.readAllLines(trigger.toPath());
                     world = lines.get(0).trim();
                     earOnly = lines.size() > 1 && "ear".equals(lines.get(1).trim());
+                    visitOnly = lines.size() > 1 && "visit".equals(lines.get(1).trim());
                     enabled = !world.isEmpty();
                 } catch (Exception ignored) {}
             }
@@ -68,7 +69,7 @@ public final class BodyShots {
         mc.options.pauseOnLostFocus = false;
         if (mc.screen instanceof net.minecraft.client.gui.screens.PauseScreen) mc.setScreen(null);
         if (++ticks < WAIT_LOAD) return;
-        if (PLAN.isEmpty() && step == 0) { if (earOnly) buildEarPlan(mc); else buildPlan(mc); }
+        if (PLAN.isEmpty() && step == 0) { if (earOnly) buildEarPlan(mc); else if (visitOnly) buildVisitPlan(mc); else buildPlan(mc); }
         if (wait > 0) { wait--; return; }
         if (step < PLAN.size()) {
             try { PLAN.get(step++).run(); }
@@ -331,6 +332,41 @@ public final class BodyShots {
         }
         for (int i = 0; i < body.curioCount(); i++) sb.append(NL).append("   cuerpo[").append(i).append("]=").append(body.curioId(i));
         Zenkai.LOGGER.info(sb.toString());
+    }
+
+    /**
+     * Insignia de la visita a la Tierra en el HUD real (segunda línea del .txt = "visit"): con varios días, con horas y en el
+     * tramo final, donde la cifra parpadea (dos fotogramas a medio periodo de distancia para verlos los dos colores).
+     */
+    private static void buildVisitPlan(Minecraft mc) {
+        PLAN.add(() -> {
+            var server = mc.getSingleplayerServer();
+            if (server == null) return;
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                server.getCommands().performPrefixedCommand(sp.createCommandSourceStack().withPermission(4), "zenkai race set human");
+                com.hmc.zenkai.feature.player.EarthVisit.forceStart(sp, 7L * 24000L);
+            });
+            mc.options.setCameraType(CameraType.FIRST_PERSON);
+            wait = 60;
+        });
+        PLAN.add(() -> capture(mc, "visit_days"));
+        PLAN.add(() -> { visitTicks(mc, 12000L); wait = 40; });
+        PLAN.add(() -> capture(mc, "visit_hours"));
+        PLAN.add(() -> { visitTicks(mc, 1500L); wait = 40; });
+        PLAN.add(() -> capture(mc, "visit_warn_a"));
+        PLAN.add(() -> { wait = 9; });
+        PLAN.add(() -> capture(mc, "visit_warn_b"));
+    }
+
+    private static void visitTicks(Minecraft mc, long ticks) {
+        var server = mc.getSingleplayerServer();
+        if (server == null) return;
+        server.execute(() -> {
+            var sp = server.getPlayerList().getPlayers().get(0);
+            com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(sp).flags().setEarthVisitTicksLeft(ticks);
+            com.hmc.zenkai.feature.player.PlayerLifeCycle.sync(sp);
+        });
     }
 
     private static void capture(Minecraft mc, String name) {

@@ -310,8 +310,35 @@ public class PlayerBodyEntity extends Entity {
     @Override
     public boolean fireImmune() { return true; }
 
+    /**
+     * Solo una técnica de ki puede destruir un cuerpo, y solo con {@code permadeath.body_griefing}: es la contrapartida de
+     * que cualquiera pueda saquearlo. Se desintegra y suelta su contenido al suelo. La ventana de protección del dueño
+     * ({@code owner_grace_seconds}) también lo cubre, para que el ki que mató al jugador no borre su cuerpo en el acto.
+     * Cualquier otro daño sigue sin hacerle nada.
+     */
     @Override
-    public boolean hurt(DamageSource source, float amount) { return false; }
+    public boolean hurt(DamageSource source, float amount) {
+        if (level().isClientSide || isRemoved() || !source.is(com.hmc.zenkai.registry.ModDamageTypes.KI_DAMAGE_TAG)) return false;
+        if (!com.hmc.zenkai.config.ServerConfig.PERMADEATH_BODY_GRIEFING.get()) return false;
+        int grace = com.hmc.zenkai.config.ServerConfig.PERMADEATH_OWNER_GRACE_SECONDS.get();
+        if (grace > 0 && level().getGameTime() - createdAt < grace * 20L) return false;
+        disintegrate(source);
+        return true;
+    }
+
+    /** Efecto y retirada del cuerpo por un impacto de ki. Los objetos y la XP caen donde estaba. */
+    private void disintegrate(DamageSource source) {
+        if (level() instanceof ServerLevel sl) {
+            sl.sendParticles(net.minecraft.core.particles.ParticleTypes.ASH, getX(), getY() + 0.5, getZ(), 40, 0.4, 0.5, 0.4, 0.05);
+            sl.sendParticles(net.minecraft.core.particles.ParticleTypes.SOUL_FIRE_FLAME, getX(), getY() + 0.5, getZ(), 12, 0.3, 0.4, 0.3, 0.02);
+            sl.playSound(null, getX(), getY(), getZ(), net.minecraft.sounds.SoundEvents.GENERIC_BURN,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 0.7f);
+            com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.fire(
+                    source.getEntity() instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
+                    this, com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.Kind.DISINTEGRATE);
+        }
+        retire(true);
+    }
 
     /**
      * {@code /kill} llama a {@code kill()}, que retira la entidad SIN pasar por {@code hurt}: se llevaría el
@@ -338,8 +365,13 @@ public class PlayerBodyEntity extends Entity {
         if (sp.isShiftKeyDown()) {
             // Shift + clic derecho: cargarlo en brazos (como CarryOn).
             PlayerBodyCarry.pickUp(sp, this);
+            if (isRemoved())   // si no lo cargó (desactivado, ya lleva uno) no hay interacción que avisar
+                com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.fire(sp, this,
+                        com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.Kind.CARRY);
             return InteractionResult.CONSUME;
         }
+        com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.fire(sp, this,
+                com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.Kind.OPEN);
         sp.openMenu(new SimpleMenuProvider(
                 (id, inv, p) -> new PlayerBodyMenu(id, inv, this),
                 Component.translatable("zenkai.body.title", ownerName())),

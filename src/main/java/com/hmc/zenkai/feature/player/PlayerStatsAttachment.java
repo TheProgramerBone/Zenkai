@@ -404,6 +404,28 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         techMastery.computeIfPresent(key, (k, v) -> Math.min(100f, v));
     }
 
+    /** Reencarnación: copia la maestría de técnica de la vida anterior, multiplicada por {@code factor} (0..1). */
+    public void carryOverTechniqueMastery(PlayerStatsAttachment previous, float factor) {
+        techMastery.clear();
+        if (factor <= 0f) return;
+        for (var e : previous.techMastery.entrySet()) {
+            float v = Math.min(100f, e.getValue() * factor);
+            if (v > 0f) techMastery.put(e.getKey(), v);
+        }
+    }
+
+    /**
+     * Reencarnación a medias: el alma ya renació pero todavía no terminó de elegir raza, aspecto y estilo. Lo enciende
+     * CharacterReset y lo apaga ChooseStylePacket. Va en save()/load() para sobrevivir a una desconexión y llegar al cliente,
+     * que no deja cerrar la elección mientras esté encendido (ReincarnationGate).
+     */
+    private boolean reincarnating = false;
+    public boolean isReincarnating() { return reincarnating; }
+    public void setReincarnating(boolean v) { this.reincarnating = v; }
+
+    /** Maestros que el jugador ya conoce (copia). */
+    public java.util.Set<String> getMetMasters() { return new java.util.LinkedHashSet<>(metMasters); }
+
     /** Reset full: la maestría de técnica se pierde igual que la de forma/kaioken
      *  (PlayerFormAttachment.clearProgression()). No hay equivalente en el respec de stats:
      *  ese solo devuelve TP, no borra progreso de uso. */
@@ -428,6 +450,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
         for (var e : techMastery.entrySet()) tm.putFloat(e.getKey(), e.getValue());
         tag.put("techMastery", tm);
         tag.putInt("powerPercent", powerPercent);
+        tag.putBoolean("reincarnating", reincarnating);
         ListTag met = new ListTag();
         for (String m : metMasters) met.add(net.minecraft.nbt.StringTag.valueOf(m));
         tag.put("metMasters", met);
@@ -460,6 +483,7 @@ public class PlayerStatsAttachment implements ZenkaiCombatStats {
             for (int i = 0; i < pets.size(); i++) deadPets.add(pets.getCompound(i));
         }
         powerPercent = tag.contains("powerPercent") ? Math.max(0, tag.getInt("powerPercent")) : 50;
+        reincarnating = tag.getBoolean("reincarnating");
         metMasters.clear();
         if (tag.contains("metMasters")) {
             ListTag met = tag.getList("metMasters", Tag.TAG_STRING);

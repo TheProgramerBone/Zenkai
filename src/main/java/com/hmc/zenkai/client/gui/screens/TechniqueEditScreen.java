@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.hmc.zenkai.client.gui.CommonPanel;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.render_and_model_entities.entity.KiVfxProjectileRenderer;
@@ -635,6 +636,7 @@ public class TechniqueEditScreen extends Screen {
     public void render(@NotNull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
         refreshButtons();
+        infoTips.clear();
 
         ScreenTitle.drawAbovePanel(g, this.font, this.title, leftPos + BG_W / 2, topPos);
         PanelText.onPanel(g, this.font,
@@ -648,6 +650,13 @@ public class TechniqueEditScreen extends Screen {
             PanelText.centeredOnDark(g, this.font,
                     Component.translatable("screen.zenkai.technique.delete_confirm"),
                     leftPos + BG_W / 2, topPos + Y_BUTTONS - 11, ZenkaiPalette.ERROR);
+        }
+
+        for (InfoTip t : infoTips) {
+            if (mouseX >= t.x() && mouseX < t.x() + t.w() && mouseY >= t.y() && mouseY < t.y() + this.font.lineHeight) {
+                g.renderTooltip(this.font, Component.translatable("screen.zenkai.technique.tip_exact_value", t.exact()),
+                        mouseX, mouseY);
+            }
         }
 
         // Un widget INACTIVO no muestra su Tooltip.create() propio (mismo hallazgo que
@@ -718,18 +727,25 @@ public class TechniqueEditScreen extends Screen {
 
         int iy = topPos + Y_BLOCK;
         info(g, iy, "screen.zenkai.technique.speed", speedLabel());
+        double shown = isBarrier ? life : dmg;
         info(g, iy += 11,
                 isBarrier ? "screen.zenkai.technique.life" : "screen.zenkai.technique.damage",
-                Component.literal(fmt(isBarrier ? life : dmg)));
-        info(g, iy += 11, "screen.zenkai.technique.cost", Component.literal(String.valueOf(cost)));
+                Component.literal(ZenkaiNumbers.screen(shown)),
+                ZenkaiNumbers.isCompacted(shown) ? ZenkaiNumbers.exact(Math.round(shown)) : null);
+        info(g, iy += 11, "screen.zenkai.technique.cost", Component.literal(ZenkaiNumbers.screen(cost)),
+                ZenkaiNumbers.isCompacted(cost) ? ZenkaiNumbers.exact((long) cost) : null);
         info(g, iy += 11, "screen.zenkai.technique.casttime",
                 Component.literal(fmt(KiCombatServer.chargeTicksFor(type, size) / 20.0) + " sec"));
         info(g, iy += 11, "screen.zenkai.technique.cooldown",
                 Component.literal(fmt(KiCombatServer.cooldownTicksFor(type, size) / 20.0) + " sec"));
 
         PanelText.rightOnPanel(g, this.font,
-                Component.translatable("screen.zenkai.technique.tp", att.getTP()),
+                Component.translatable("screen.zenkai.technique.tp", ZenkaiNumbers.screen(att.getTP())),
                 leftPos + BG_W - MARGIN, topPos + Y_UNLOCK - 14, ZenkaiPalette.TP_ON_PANEL);
+        if (ZenkaiNumbers.isCompacted(att.getTP())) {
+            infoTips.add(new InfoTip(leftPos + BG_W - MARGIN - 80, topPos + Y_UNLOCK - 14, 80,
+                    ZenkaiNumbers.exact((long) att.getTP())));
+        }
 
         renderTechniquePreview(g, partialTick);
     }
@@ -761,11 +777,23 @@ public class TechniqueEditScreen extends Screen {
     /** Etiqueta marrón + valor destacado: mismo par que drawField() en StatsScreen (Race, Style,
      *  TP...), en vez de dos tonos de marrón casi indistinguibles entre sí. */
     private void info(GuiGraphics g, int y, String key, Component value) {
+        info(g, y, key, value, null);
+    }
+
+    /** {@code exactTip}: valor exacto para el tooltip cuando la cifra se enseña compactada (ver ZenkaiNumbers). */
+    private void info(GuiGraphics g, int y, String key, Component value, @Nullable String exactTip) {
         Component label = Component.translatable(key).append(": ");
         PanelText.onPanel(g, this.font, label, leftPos + MARGIN, y, ZenkaiPalette.LABEL_ON_PANEL);
         PanelText.onPanel(g, this.font, value,
                 leftPos + MARGIN + this.font.width(label), y, ZenkaiPalette.VALUE_ON_PANEL);
+        if (exactTip != null) {
+            infoTips.add(new InfoTip(leftPos + MARGIN, y, this.font.width(label) + this.font.width(value), exactTip));
+        }
     }
+
+    /** Zona de una cifra compactada y su valor exacto; se rellena en cada fotograma al pintar. */
+    private record InfoTip(int x, int y, int w, String exact) {}
+    private final List<InfoTip> infoTips = new ArrayList<>();
 
     private Component speedLabel() {
         String k = type.defensive() ? "screen.zenkai.technique.speed.none"

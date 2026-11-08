@@ -138,6 +138,18 @@ public class PlayerStateFlags {
     private boolean inOtherworld = false;
     /** gameTime en que fue enviado al otro mundo (para el contador de Yemma). */
     private long otherworldSince = 0L;
+    /**
+     * Visita a la Tierra por Uranai Baba: ticks que le quedan (0 = sin visita). Se guarda como ticks restantes y no como
+     * instante de fin porque el reloj solo corre con el jugador conectado. Durante la visita {@code inOtherworld} sigue
+     * puesto (sigue muerto: halo, Esferas, Yemma al volver); este campo es lo que dice que está en la Tierra.
+     */
+    private long earthVisitTicksLeft = 0L;
+    /**
+     * Espera hasta poder pedir otra visita a Baba (0 = libre). Empieza al TERMINAR una visita y, como el reloj de la visita,
+     * solo avanza con el jugador conectado. Sin ella se encadenarían visitas sin coste. Se borra al revivir y con
+     * {@code /zenkai reset visit}.
+     */
+    private long earthVisitCooldownTicks = 0L;
 
     /** gameTime en que expira el estado "en combate". Ver InCombatState: es un instante
      *  futuro y no un contador para no tener que decrementarlo cada tick. */
@@ -208,6 +220,10 @@ public class PlayerStateFlags {
     public void setHasBrokenOverdriveOnce(boolean v) { this.hasBrokenOverdriveOnce = v; }
     public void setInOtherworld(boolean v) { this.inOtherworld = v; }
     public void setOtherworldSince(long t) { this.otherworldSince = t; }
+    public long getEarthVisitTicksLeft() { return earthVisitTicksLeft; }
+    public void setEarthVisitTicksLeft(long t) { this.earthVisitTicksLeft = Math.max(0L, t); }
+    public long getEarthVisitCooldownTicks() { return earthVisitCooldownTicks; }
+    public void setEarthVisitCooldownTicks(long t) { this.earthVisitCooldownTicks = Math.max(0L, t); }
     public void setDowned(boolean v)     { this.downed = v; }
     public void setDownedUntil(long t)   { this.downedUntil = t; }
 
@@ -221,6 +237,8 @@ public class PlayerStateFlags {
         tag.putBoolean("chargingKi",  chargingKi);
         tag.putBoolean("inOtherworld", inOtherworld);
         tag.putLong("otherworldSince", otherworldSince);
+        tag.putLong("earthVisitTicksLeft", earthVisitTicksLeft);
+        tag.putLong("earthVisitCooldownTicks", earthVisitCooldownTicks);
         tag.putBoolean("downed", downed);
         tag.putLong("downedUntil", downedUntil);
         tag.putLong("inCombatUntil", inCombatUntil);
@@ -268,6 +286,8 @@ public class PlayerStateFlags {
         this.chargingKi  = tag.getBoolean("chargingKi");
         this.inOtherworld = tag.getBoolean("inOtherworld");
         this.otherworldSince = tag.getLong("otherworldSince");
+        this.earthVisitTicksLeft = tag.getLong("earthVisitTicksLeft");
+        this.earthVisitCooldownTicks = tag.getLong("earthVisitCooldownTicks");
         this.downed = tag.getBoolean("downed");
         this.downedUntil = tag.getLong("downedUntil");
         this.inCombatUntil = tag.getLong("inCombatUntil");

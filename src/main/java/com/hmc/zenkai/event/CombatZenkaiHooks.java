@@ -870,6 +870,11 @@ public class CombatZenkaiHooks {
             food.setFoodLevel(Math.max(0, food.getFoodLevel() - REVIVE_HUNGER_COST));
         }
 
+        // Rescate a tiempo: se publica con el derribo todavía en pie (enganche de las rage forms).
+        if (healer instanceof ServerPlayer rescuer) {
+            com.hmc.zenkai.feature.player.death.PlayerRescuedEvent.fire(rescuer, target,
+                    com.hmc.zenkai.feature.player.death.PlayerRescuedEvent.Method.REVIVE);
+        }
         // Levanta al aliado con el 20% del body.
         tAtt.setBody(downedReviveBody(tAtt));
         ZenkaiTriggers.MILESTONE.get().trigger(target, ZenkaiTriggers.Kinds.REVIVED);

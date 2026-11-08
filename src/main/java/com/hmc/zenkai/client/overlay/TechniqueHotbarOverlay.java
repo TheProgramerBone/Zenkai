@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.overlay;
 
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.client.CombatModeClientState;
 import com.hmc.zenkai.client.PhysicalIcons;
@@ -256,7 +257,7 @@ public final class TechniqueHotbarOverlay {
             double value = isBarrier
                     ? KiCombatServer.barrierPool(att.computeKiPowerFinal(), t.size(), ratio)
                     : previewDamage(mc, att, t, ratio);
-            String txt = String.format("%.1f", value);
+            String txt = ZenkaiNumbers.screen(value);
             if (!isBarrier && t.type().count() > 1) txt = txt + " x" + t.type().count();
             g.drawCenteredString(mc.font, Component.literal(txt),
                     g.guiWidth() / 2, by + CHARGE_H + 13,
@@ -271,7 +272,7 @@ public final class TechniqueHotbarOverlay {
                     fullCost * KiCombatServer.chargeCostFactor(ratio) * att.powerFraction()
                             * KiCombatServer.ueImbueCostMult(mc.player)));
             boolean affordable = att.getEnergy() >= cost;
-            g.drawCenteredString(mc.font, Component.literal("◆ " + cost),
+            g.drawCenteredString(mc.font, Component.literal("◆ " + ZenkaiNumbers.screen(cost)),
                     g.guiWidth() / 2, by + CHARGE_H + 23,
                     affordable ? 0xFF40A0FF : 0xFFFF5050);        // azul ki / rojo si no llega
         }

@@ -127,6 +127,12 @@ public class ModEntities {
             ENTITY_TYPES.register("yemma", () -> EntityType.Builder.of(YemmaEntity::new, MobCategory.MISC)
                     .sized(4, 10.0f).build("yemma"));
 
+    /** Uranai Baba: visita a la Tierra de los muertos (muerte permanente). Alto hasta la punta del sombrero (tools/gen_uranai_baba.py). */
+    public static final Supplier<EntityType<com.hmc.zenkai.content.entity.otherworld.UranaiBabaEntity>> URANAI_BABA =
+            ENTITY_TYPES.register("uranai_baba", () -> EntityType.Builder
+                    .of(com.hmc.zenkai.content.entity.otherworld.UranaiBabaEntity::new, MobCategory.MISC)
+                    .sized(0.8f, 2.0f).build("uranai_baba"));
+
     public static final Supplier<EntityType<KamiEntity>> KAMI =
             ENTITY_TYPES.register("kami", () -> EntityType.Builder.of(KamiEntity::new, MobCategory.MISC)
                     .sized(0.6f, 1.9f).build("kami"));

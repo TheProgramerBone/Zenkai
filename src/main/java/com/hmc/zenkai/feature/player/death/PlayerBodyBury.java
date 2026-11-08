@@ -64,6 +64,7 @@ public final class PlayerBodyBury {
                 PlayerLifeCycle.sync(sp);
             }
         }
+        PlayerBodyInteractEvent.fire(sp, body, PlayerBodyInteractEvent.Kind.BURY);
         sp.displayClientMessage(Component.translatable("zenkai.body.buried", body.ownerName()), true);
         body.retire(false);
     }

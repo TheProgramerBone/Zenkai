@@ -63,6 +63,11 @@ public record WishRevivePlayerPayload(String targetName) implements CustomPacket
                     OtherworldManager.revive(target);
                 }
 
+                // Muerte permanente: el deseo reabsorbe el cuerpo y devuelve su inventario y su XP.
+                if (ServerConfig.PERMADEATH_ENABLED.get()) {
+                    com.hmc.zenkai.feature.player.death.PlayerBodyManager.reabsorb(target);
+                }
+
                 target.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
                 invoker.displayClientMessage(Component.translatable("messages.zenkai.player_revived"), false);
                 ZenkaiTriggers.WISH_GRANTED.get().trigger(invoker, "revive_player");

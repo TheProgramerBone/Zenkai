@@ -101,7 +101,13 @@ public final class FaceCatalogGameTests {
                 "nose/dot", "nose/shadow", "nose/nostrils", "nose/bridge"}) {
             var d = FaceCatalog.get(id(p));
             helper.assertTrue(d != null, "falta en el catálogo: " + p);
-            for (Race r : Race.values()) helper.assertTrue(d.allows(r), p + " debe valer para " + r);
+            // Vetos de la auditoría de ojos (2026-11-01, exclude_races en el JSON): lidded y alert no valen en Arcosiano,
+            // slanted no vale en Namekiano. Cualquier otro caso debe valer para todas las razas.
+            for (Race r : Race.values()) {
+                boolean vetoed = r == Race.ARCOSIAN && (p.equals("eyes/lidded") || p.equals("eyes/alert"))
+                        || r == Race.NAMEKIAN && p.equals("eyes/slanted");
+                helper.assertTrue(d.allows(r) == !vetoed, p + (vetoed ? " debe estar vetado para " : " debe valer para ") + r);
+            }
         }
         helper.assertTrue(FaceCatalog.get(id("eyes/closed")).layers().stream()
                 .noneMatch(l -> l.color() == FaceLayer.Color.EYE_LEFT), "eyes/closed: sin iris");
@@ -122,11 +128,14 @@ public final class FaceCatalogGameTests {
 
         // Con la cabeza arcosiana nueva solo queda vetado wide (el usuario liberó sparkle, arched
         // —hoy fusionado con minimal—, sleepy, expressive y soft el 2026-10-10): valen para Human y Arcosiano.
-        for (String p : new String[]{"eyes/sparkle", "eyes/sleepy", "eyes/expressive", "eyes/soft"}) {
+        // Tras la auditoría de ojos (2026-11-01) el Arcosiano vuelve a vetar wide, alert, sparkle y lidded.
+        for (String p : new String[]{"eyes/sleepy", "eyes/expressive", "eyes/soft"}) {
             var d = FaceCatalog.get(id(p));
             helper.assertTrue(d != null && d.allows(Race.HUMAN) && d.allows(Race.ARCOSIAN),
                     p + ": vale para Human y Arcosiano");
         }
+        helper.assertTrue(!FaceCatalog.get(id("eyes/sparkle")).allows(Race.ARCOSIAN)
+                && FaceCatalog.get(id("eyes/sparkle")).allows(Race.HUMAN), "sparkle: vetado en Arcosiano, vale en Human");
         helper.assertTrue(FaceBans.isAllowed(Race.ARCOSIAN, FaceCategory.EYES, MINIMAL), "minimal debe valer para Arcosiano");
         // Sin "ninguno" en ojos/boca; sí en nariz.
         helper.assertTrue(!FaceBans.isAllowed(Race.HUMAN, FaceCategory.EYES, null), "ojos: ninguno no permitido");

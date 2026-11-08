@@ -26,6 +26,8 @@ public final class PlayerSkills {
     private final Map<String, Integer> levels       = new LinkedHashMap<>();
     private final Map<String, Integer> grantedFloor = new LinkedHashMap<>();
     private final Set<String> toggles = new LinkedHashSet<>();
+    /** Nivel hasta el que cada skill se regaló sin cobrar MIND (ver grantWaived). */
+    private final Map<String, Integer> mindWaivedUpTo = new LinkedHashMap<>();
 
     /** Aviso de "cambió el conjunto de niveles". Lo engancha PlayerStatsAttachment para refrescar
      *  el espejo del skill tree (SkillTreeMigration.refresh); load() NO lo dispara a propósito. */
@@ -76,6 +78,22 @@ public final class PlayerSkills {
      * nunca se pagaron — aceptable para autoprobarte cosas, no para repartir esto como
      * recompensa a jugadores si te importa que no farmeen TP gratis con ello.
      */
+    /**
+     * Igual que grant() pero el nivel se REGALA sin cobrar MIND: se recuerda en mindWaivedUpTo
+     * y mindUsed() lo resta. Es la vía de Rage Forms (el despertar regala la forma y el jugador
+     * no queda endeudado de MIND; sin esto, mindFree quedaba negativo). Solo exime hasta ese
+     * nivel: comprar el siguiente con TP cobra su MIND de siempre (el delta entre niveles no
+     * cambia). Tampoco reembolsa TP al olvidar, porque grant() ya sube el suelo.
+     */
+    public void grantWaived(String id, int lvl) {
+        if (lvl <= 0) return;
+        mindWaivedUpTo.merge(id, lvl, Math::max);
+        grant(id, lvl);
+    }
+
+    /** Nivel hasta el que la skill está exenta de MIND (0 = ninguno). */
+    public int mindWaivedUpTo(String id) { return mindWaivedUpTo.getOrDefault(id, 0); }
+
     public void grantAdmin(String id, int lvl) {
         if (lvl <= 0) return;
         grantedFloor.merge(id, 1, Math::max);
@@ -95,6 +113,7 @@ public final class PlayerSkills {
     /** Quita la habilidad venga de donde venga. true si la tenía. */
     public boolean revoke(String id) {
         grantedFloor.remove(id);
+        mindWaivedUpTo.remove(id);
         toggles.remove(id);
         boolean had = levels.remove(id) != null;
         onChange.run();
@@ -123,7 +142,7 @@ public final class PlayerSkills {
     }
 
     /** Reset full: el conjunto entero. */
-    public void clear() { levels.clear(); grantedFloor.clear(); toggles.clear(); onChange.run(); }
+    public void clear() { levels.clear(); grantedFloor.clear(); mindWaivedUpTo.clear(); toggles.clear(); onChange.run(); }
 
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
@@ -143,6 +162,9 @@ public final class PlayerSkills {
         CompoundTag gf = new CompoundTag();
         grantedFloor.forEach(gf::putInt);
         tag.put("grantedFloor", gf);
+        CompoundTag mw = new CompoundTag();
+        mindWaivedUpTo.forEach(mw::putInt);
+        tag.put("mindWaivedUpTo", mw);
         ListTag tg = new ListTag();
         for (String id : toggles) tg.add(StringTag.valueOf(id));
         tag.put("toggles", tg);
@@ -169,6 +191,11 @@ public final class PlayerSkills {
         if (tag.contains("grantedFloor")) {
             CompoundTag gf = tag.getCompound("grantedFloor");
             for (String k : gf.getAllKeys()) grantedFloor.put(k, gf.getInt(k));
+        }
+        mindWaivedUpTo.clear();
+        if (tag.contains("mindWaivedUpTo")) {
+            CompoundTag mw = tag.getCompound("mindWaivedUpTo");
+            for (String k : mw.getAllKeys()) mindWaivedUpTo.put(k, mw.getInt(k));
         }
         toggles.clear();
         if (tag.contains("toggles")) {
@@ -218,7 +245,11 @@ public final class PlayerSkills {
         for (var e : levels.entrySet()) {
             com.hmc.zenkai.feature.skills.SkillDef def =
                     com.hmc.zenkai.feature.skills.SkillDef.get(e.getKey());
-            if (def != null) total += def.mindReqFor(e.getValue());
+            if (def == null) continue;
+            int lvl = e.getValue();
+            // Lo regalado sin MIND (Rage Forms) no ocupa concentración, solo lo que se añadió encima.
+            int waived = Math.min(mindWaivedUpTo.getOrDefault(e.getKey(), 0), lvl);
+            total += def.mindReqFor(lvl) - def.mindReqFor(waived);
         }
         return total;
     }

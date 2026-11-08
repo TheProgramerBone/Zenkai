@@ -157,6 +157,8 @@ public class ModItems {
             () -> new DeferredSpawnEggItem(ModEntities.KAMI, 0xE5E5E5, 0x2DC31E, new Item.Properties()));
     public static final DeferredItem<Item> KORIN_SPAWN_EGG = ITEMS.register("korin_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.KORIN, 0xEAEEEF, 0x5C3A22, new Item.Properties()));
+    public static final DeferredItem<Item> URANAI_BABA_SPAWN_EGG = ITEMS.register("uranai_baba_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.URANAI_BABA, 0x1E1E24, 0x82F7CB, new Item.Properties()));
     public static final DeferredItem<Item> TORIBOT_SPAWN_EGG = ITEMS.register("toribot_spawn_egg",
             () -> new DeferredSpawnEggItem(ModEntities.TORIBOT, 0xC0C5E2, 0xCC2C2A, new Item.Properties()));
 

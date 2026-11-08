@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.screens;
 
+import com.hmc.zenkai.client.gui.buttons.BodyBuryButton;
 import com.hmc.zenkai.client.gui.menu.PlayerBodyMenu;
 import com.hmc.zenkai.client.gui.menu.PlayerBodyMenu.Layout;
 import net.minecraft.client.gui.GuiGraphics;
@@ -21,7 +22,8 @@ public class PlayerBodyScreen extends AbstractContainerScreen<PlayerBodyMenu> {
     private static final int PANEL = 0xFFC6C6C6, LIGHT = 0xFFFFFFFF, DARK = 0xFF555555, WELL = 0xFF8B8B8B, WELL_DARK = 0xFF373737;
     private static final int TEXT = 0xFF404040;
 
-    private Button bury, prev, next;
+    private BodyBuryButton bury;
+    private Button prev, next;
 
     public PlayerBodyScreen(PlayerBodyMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -36,11 +38,11 @@ public class PlayerBodyScreen extends AbstractContainerScreen<PlayerBodyMenu> {
     protected void init() {
         super.init();
         addRenderableWidget(Button.builder(Component.translatable("zenkai.body.take_all"), b -> press(PlayerBodyMenu.BTN_TAKE_ALL))
-                .bounds(leftPos + 8, topPos + Layout.BTN_Y, 100, 16)
+                .bounds(leftPos + 8, topPos + Layout.BTN_Y, 92, 16)
                 .tooltip(Tooltip.create(Component.translatable("zenkai.body.take_all.tooltip"))).build());
-        bury = addRenderableWidget(Button.builder(Component.translatable("zenkai.body.bury"), b -> press(PlayerBodyMenu.BTN_BURY))
-                .bounds(leftPos + 112, topPos + Layout.BTN_Y, 56, 16)
-                .tooltip(Tooltip.create(Component.translatable("zenkai.body.bury.tooltip"))).build());
+        bury = addRenderableWidget(new BodyBuryButton(leftPos + 104, topPos + Layout.BTN_Y,
+                Component.translatable("zenkai.body.bury"), () -> press(PlayerBodyMenu.BTN_BURY)));
+        bury.setTooltip(Tooltip.create(Component.translatable("zenkai.body.bury.tooltip")));
         if (menu.curioCount() > PlayerBodyMenu.PAGE) {   // más ranuras de Curios de las que caben en una fila: flechas de página
             int y = topPos + Layout.CURIO_Y;
             prev = addRenderableWidget(Button.builder(Component.literal("<"), b -> press(PlayerBodyMenu.BTN_PREV))

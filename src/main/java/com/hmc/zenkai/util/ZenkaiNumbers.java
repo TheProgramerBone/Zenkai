@@ -55,6 +55,25 @@ public final class ZenkaiNumbers {
         return String.format(Locale.ROOT, "%,d", v);
     }
 
+    /** Umbral de la convención: por debajo el número se enseña exacto, desde aquí compacto (con tooltip del exacto). */
+    public static final long COMPACT_FROM = 20_000;
+
+    /** Número entero de una screen según la convención: exacto por debajo de {@link #COMPACT_FROM}, compacto desde ahí. */
+    public static String screen(long v) {
+        return Math.abs(v) < COMPACT_FROM ? Long.toString(v) : format(v);
+    }
+
+    /** Igual que {@link #screen(long)} para un valor con decimales (daño, absorción): un decimal solo si no es entero. */
+    public static String screen(double v) {
+        if (Math.abs(v) >= COMPACT_FROM) return format(Math.round(v));
+        return String.format(Locale.ROOT, v == Math.floor(v) ? "%.0f" : "%.1f", v);
+    }
+
+    /** ¿Se enseñaría compactado? Quien lo use añade el tooltip con {@link #exact(long)}. */
+    public static boolean isCompacted(double v) {
+        return Math.abs(v) >= COMPACT_FROM;
+    }
+
     /** Multiplicador con 2 decimales (p. ej. "2.50"), sin el "x" delante — quien lo llame lo
      *  antepone. Antes vivía duplicado como método privado en StatsScreen; TrainingHubScreen
      *  también lo necesita para el panel TP Modifiers, así que se movió aquí. */

@@ -36,10 +36,12 @@ public class ModEvents {
         event.put(ModEntities.SHADOW_KINTOUN.get(), ShadowKintounEntity.createAttributes().build());
         event.put(ModEntities.ISAAC.get(), IsaacEntity.createAttributes().build());
         event.put(ModEntities.YEMMA.get(), YemmaEntity.createAttributes().build());
+        event.put(ModEntities.URANAI_BABA.get(),
+                com.hmc.zenkai.content.entity.otherworld.UranaiBabaEntity.createAttributes().build());
         event.put(ModEntities.KAMI.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.KAIO.get(), ZenkaiMasterEntity.createAttributes().build());
         event.put(ModEntities.KORIN.get(), ZenkaiMasterEntity.createAttributes().build());
-        event.put(ModEntities.TORIBOT.get(), ZenkaiMasterEntity.createAttributes().build());
+        event.put(ModEntities.TORIBOT.get(), com.hmc.zenkai.content.entity.master.ToriBotEntity.createAttributes().build());
         event.put(ModEntities.SHADOW_CLONE.get(), ShadowCloneEntity.createAttributes().build());
         event.put(ModEntities.RED_OGRE.get(), OgreEntity.createAttributes().build());
         event.put(ModEntities.BLUE_OGRE.get(), OgreEntity.createAttributes().build());

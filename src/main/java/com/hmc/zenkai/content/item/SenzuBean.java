@@ -122,6 +122,12 @@ public class SenzuBean extends Item {
         boolean needsHelp = att.flags().isDowned() || att.getBody() < att.getBodyMax();
         if (!needsHelp) return InteractionResult.PASS;
 
+        // Rescate a tiempo si estaba derribado (antes de curar: el evento lee el derribo y su ventana).
+        if (user instanceof net.minecraft.server.level.ServerPlayer rescuer
+                && targetPlayer instanceof net.minecraft.server.level.ServerPlayer rescued) {
+            com.hmc.zenkai.feature.player.death.PlayerRescuedEvent.fire(rescuer, rescued,
+                    com.hmc.zenkai.feature.player.death.PlayerRescuedEvent.Method.SENZU);
+        }
         int bodyMissing = att.getBodyMax() - att.getBody();
         if (bodyMissing > 0) att.addBody(bodyMissing);
         if (!att.isRaceChosen()) targetPlayer.setHealth(targetPlayer.getMaxHealth());

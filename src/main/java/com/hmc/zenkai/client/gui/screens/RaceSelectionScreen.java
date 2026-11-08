@@ -159,11 +159,14 @@ public class RaceSelectionScreen extends Screen {
         addRenderableWidget(skinLeft);
         addRenderableWidget(skinRight);
 
-        addRenderableWidget(new TextOnlyButton(
-                pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
-                Component.translatable("screen.zenkai.cancel"),
-                TEX_BTN, null,
-                () -> { confirmed = false; goingNext = false; restoreSnapshots(); mc.setScreen(null); }));
+        // Reencarnando no hay vuelta atrás: sin Cancelar (y Escape no cierra, ver shouldCloseOnEsc).
+        if (!com.hmc.zenkai.client.ReincarnationGate.active()) {
+            addRenderableWidget(new TextOnlyButton(
+                    pl + IN_X1, pt + BTN_BAR_Y, BTN_W, 20,
+                    Component.translatable("screen.zenkai.cancel"),
+                    TEX_BTN, null,
+                    () -> { confirmed = false; goingNext = false; restoreSnapshots(); mc.setScreen(null); }));
+        }
 
         addRenderableWidget(new TextOnlyButton(
                 pl + IN_X2 - BTN_W, pt + BTN_BAR_Y, BTN_W, 20,
@@ -269,6 +272,7 @@ public class RaceSelectionScreen extends Screen {
     }
 
     @Override public void renderBackground(@NotNull GuiGraphics g, int mx, int my, float pt) {}
+    @Override public boolean shouldCloseOnEsc() { return !com.hmc.zenkai.client.ReincarnationGate.active(); }
     public void markConfirmed() { this.confirmed = true; }
 
     /** Delega en PanelText: la regla de sombra vive en un solo sitio. */

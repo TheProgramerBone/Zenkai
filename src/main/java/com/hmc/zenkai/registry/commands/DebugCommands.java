@@ -94,6 +94,23 @@ public final class DebugCommands {
         return n;
     }
 
+    /** {@code /zenkai debug visit <ticks>} empieza una visita a la Tierra; con 0 ({@code end}) la termina. */
+    public static int debugVisit(CommandContext<CommandSourceStack> c, int ticks) throws CommandSyntaxException {
+        ServerPlayer sp = c.getSource().getPlayerOrException();
+        if (ticks <= 0) {
+            if (!com.hmc.zenkai.feature.player.EarthVisit.isOnVisit(sp)) {
+                c.getSource().sendFailure(Component.literal("No estás en una visita."));
+                return 0;
+            }
+            com.hmc.zenkai.feature.player.EarthVisit.end(sp, false);
+            return 1;
+        }
+        com.hmc.zenkai.feature.player.EarthVisit.forceStart(sp, ticks);
+        c.getSource().sendSuccess(() -> Component.literal("Visita a la Tierra: " + ticks + " ticks ("
+                + com.hmc.zenkai.feature.player.EarthVisit.remainingLabel(ticks) + ")."), false);
+        return 1;
+    }
+
     public static int debugBodyClear(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
         ServerPlayer sp = c.getSource().getPlayerOrException();
         var reg = com.hmc.zenkai.feature.player.death.PlayerBodyRegistry.get(c.getSource().getServer());

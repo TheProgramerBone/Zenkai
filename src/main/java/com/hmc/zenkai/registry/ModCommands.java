@@ -139,6 +139,7 @@ public class ModCommands {
                 // /zenkai reset stats [objetivos] → devuelve los TP invertidos (respec)
                 // /zenkai reset full  [objetivos] → borra raza, estilo, stats, TP y apariencia
                 // /zenkai reset summon [objetivos] → quita el cooldown de invocar al dragón
+                // /zenkai reset visit  [objetivos] → quita la espera entre visitas a la Tierra (Uranai Baba)
                 .then(Commands.literal("reset")
                         .then(Commands.literal("stats")
                                 .executes(ctx -> PlayerCommands.resetStats(ctx, ctx.getSource().getPlayerOrException()))
@@ -155,7 +156,11 @@ public class ModCommands {
                         .then(Commands.literal("summon")
                                 .executes(ctx -> PlayerCommands.resetSummon(ctx, ctx.getSource().getPlayerOrException()))
                                 .then(Commands.argument("player", EntityArgument.players())
-                                        .executes(ctx -> forEach(ctx, targets(ctx), PlayerCommands::resetSummon)))))
+                                        .executes(ctx -> forEach(ctx, targets(ctx), PlayerCommands::resetSummon))))
+                        .then(Commands.literal("visit")
+                                .executes(ctx -> PlayerCommands.resetVisit(ctx, ctx.getSource().getPlayerOrException()))
+                                .then(Commands.argument("player", EntityArgument.players())
+                                        .executes(ctx -> forEach(ctx, targets(ctx), PlayerCommands::resetVisit)))))
 
                 .then(Commands.literal("revive")
                         .then(Commands.argument("player", EntityArgument.players())
@@ -435,6 +440,13 @@ public class ModCommands {
                                 .then(Commands.literal("spawn").executes(c -> DebugCommands.debugBody(c, false)))
                                 .then(Commands.literal("fill").executes(c -> DebugCommands.debugBody(c, true)))
                                 .then(Commands.literal("clear").executes(DebugCommands::debugBodyClear)))
+                        // ── /zenkai debug visit <ticks> | end ─────────────────────────
+                        // Visita a la Tierra (fase 5): empieza una con esos ticks aunque no estés muerto (te marca como
+                        // muerto) o la termina ya. Sin esperar los 7 días de la config.
+                        .then(Commands.literal("visit")
+                                .then(Commands.argument("ticks", IntegerArgumentType.integer(1))
+                                        .executes(c -> DebugCommands.debugVisit(c, IntegerArgumentType.getInteger(c, "ticks"))))
+                                .then(Commands.literal("end").executes(c -> DebugCommands.debugVisit(c, 0))))
                         // ── /zenkai debug dummy ───────────────────────────────────────
                         // Muñeco de pruebas: una Sombra con guion que hace UNA sola cosa
                         // (spamear ki, quedarse quieta, guardia...), para probar el choque de

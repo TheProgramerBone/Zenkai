@@ -396,7 +396,7 @@ public class ScouterBenchScreen extends TechPanelScreen<ScouterBenchMenu> {
         int capLvl = up.level(ScouterUpgrade.PL_CAP);
         String cap = capLvl >= ScouterUpgrade.PL_CAP.maxLevel()
                 ? "∞"
-                : String.format(Locale.ROOT, "%,d", ScouterUpgrade.plCapFor(capLvl));
+                : com.hmc.zenkai.util.ZenkaiNumbers.screen((long) ScouterUpgrade.plCapFor(capLvl));
         PanelText.onPanel(g, font,
                 Component.translatable("screen.zenkai.scouter_bench.pl", cap),
                 SUM_X, y, ZenkaiTechPalette.LABEL_ON_CHASSIS);

@@ -379,6 +379,11 @@ public class ModAdvancementProvider extends AdvancementProvider {
                             .changedDimensionTo(ModDimensions.OTHERWORLD_LEVEL))
                     .save(saver, id("otherworld"), efh);
 
+            // Visita a la Tierra (muerte permanente): se otorga al EMPEZAR la visita con Uranai Baba.
+            child(saver, efh, otherworld, "earth_visit",
+                    Items.GRASS_BLOCK, AdvancementType.TASK, true,
+                    "visit", milestone(ZenkaiTriggers.Kinds.EARTH_VISIT));
+
             // Un criterio por bioma y ninguna llamada a requirements(): el default de vanilla es
             // AND (mismo patrón que all_wishes arriba), o sea que hacen falta TODOS los biomas
             // del HFIL — desde 2026-10-02 son cuatro, con el lago helado, y cinco desde 2026-10-04 con el

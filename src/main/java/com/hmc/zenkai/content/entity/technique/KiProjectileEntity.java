@@ -607,6 +607,13 @@ public class KiProjectileEntity extends Projectile {
                 target.hurt(damageSources().source(ModDamageTypes.KI_EXPLOSION, this, owner),
                         (float) (damage * aoe * falloff));
             }
+            // Los cuerpos de jugador no son seres vivos: el área los alcanza aparte (solo con body_griefing, lo decide el cuerpo).
+            for (com.hmc.zenkai.content.entity.misc.PlayerBodyEntity body : sl.getEntitiesOfClass(
+                    com.hmc.zenkai.content.entity.misc.PlayerBodyEntity.class,
+                    AABB.ofSize(center, radius * 2, radius * 2, radius * 2), b -> b != directHit)) {
+                if (body.position().add(0, 0.5, 0).distanceTo(center) <= radius)
+                    body.hurt(damageSources().source(ModDamageTypes.KI_EXPLOSION, this, owner), (float) damage);
+            }
         }
 
         // Destello teñido del color de LA TÉCNICA, siempre — sea cual sea el efecto y pase lo

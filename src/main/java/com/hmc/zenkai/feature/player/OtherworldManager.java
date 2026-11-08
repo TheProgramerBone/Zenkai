@@ -128,6 +128,17 @@ public final class OtherworldManager {
      * lo cura y lo reposiciona, SIN reiniciar el temporizador de Yemma ni el flag.
      */
     public static void keepInOtherworld(ServerPlayer player) {
+        // Morir en mitad de una visita a la Tierra: cuerpo NUEVO con lo que lleve y la visita termina. Es el único embudo de
+        // «murió estando muerto» (OtherworldHandler, DownedSystem), así que aquí basta con una comprobación.
+        if (EarthVisit.isOnVisit(player)) {
+            EarthVisit.end(player, true);
+            return;
+        }
+        anchorInOtherworld(player);
+    }
+
+    /** El re-anclaje en sí: cura, limpia el derribado y coloca en la entrada. Lo usa también el final de la visita. */
+    static void anchorInOtherworld(ServerPlayer player) {
         fullHeal(player);
         player.setInvulnerable(false);
         // Limpia cualquier derribado residual: en el más allá no aplica el estado.
@@ -171,6 +182,9 @@ public final class OtherworldManager {
 
         stats.setInOtherworld(false);
         stats.setOtherworldSince(0L);
+        // Revivir en mitad de una visita la cierra (el cuerpo ya no existe como tal) y devuelve el derecho a una visita futura.
+        stats.flags().setEarthVisitTicksLeft(0L);
+        stats.flags().setEarthVisitCooldownTicks(0L);
         // Las esferas SÍ deshacen la muerte hardcore. Es el único camino de vuelta y por eso
         // vale la pena buscarlas.
         stats.setHardcoreDeath(false);

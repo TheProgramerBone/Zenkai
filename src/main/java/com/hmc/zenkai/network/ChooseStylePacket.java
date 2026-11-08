@@ -50,6 +50,8 @@ public record ChooseStylePacket(Style style) implements CustomPacketPayload {
             PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
             att.setStyle(pkt.style());
             att.setStyleChosen(true);
+            // Termina una reencarnación: ya hay raza (ChooseRacePacket llega antes) y estilo.
+            if (att.isRaceChosen()) att.setReincarnating(false);
             ZenkaiTriggers.RACE_CHOSEN.get().trigger(sp,
                     att.getRace().name().toLowerCase(Locale.ROOT),
                     pkt.style().name().toLowerCase(Locale.ROOT));

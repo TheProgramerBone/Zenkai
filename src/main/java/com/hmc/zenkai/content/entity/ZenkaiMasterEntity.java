@@ -1,8 +1,12 @@
 package com.hmc.zenkai.content.entity;
 
+import com.hmc.zenkai.feature.dialogue.DialogueService;
+import com.hmc.zenkai.feature.dialogue.DialogueSpeaker;
+import com.hmc.zenkai.feature.dialogue.OpenDialoguePayload;
 import com.hmc.zenkai.feature.master.MasterManager;
 import com.hmc.zenkai.feature.master.MasterService;
 import com.hmc.zenkai.network.OpenMasterPayload;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -16,6 +20,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,7 +37,7 @@ import java.util.List;
  * Los datos (PL requerido, alineamiento) NO viven aquí: viven en el datapack y los resuelve
  * MasterManager por {@link #masterId()}.
  */
-public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC {
+public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC implements DialogueSpeaker {
 
     /** Rango en el que mira al jugador. Independiente del rango de interacción. */
     protected static final float LOOK_RANGE = 8.0f;
@@ -62,23 +67,55 @@ public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC {
 
     @Override
     protected @NotNull InteractionResult mobInteract(@NotNull Player player, @NotNull InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;   // una sola réplica por clic
         if (!this.level().isClientSide && player instanceof ServerPlayer sp) {
-            MasterManager.meet(sp, masterId());
+            boolean firstMeeting = MasterManager.meet(sp, masterId());
             MasterManager.Result r = MasterManager.check(sp, masterId(), this);
-            if (!r.ok()) {
-                MasterManager.tell(sp, masterId(), r);
+            if (r == MasterManager.Result.TOO_FAR) return InteractionResult.sidedSuccess(this.level().isClientSide);
+
+            // Agachado = el favor del maestro (Korin y sus semillas); de pie = hablar con él. Separados porque son dos
+            // cosas distintas y mezclarlas en un clic hace que el jugador nunca sepa cuál va a pasar.
+            if (r.ok() && !firstMeeting && player.isShiftKeyDown() && offerFavor(sp)) {
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
-            // Agachado = el favor del maestro (Korin y sus semillas); de pie = su tienda.
-            // Separados porque son dos cosas distintas y mezclarlas en un clic hace que el
-            // jugador nunca sepa cuál va a pasar.
-            if (player.isShiftKeyDown() && offerFavor(sp)) {
-                return InteractionResult.sidedSuccess(this.level().isClientSide);
+
+            // El maestro SIEMPRE habla primero: la tienda solo se abre si el jugador elige «Quiero aprender»
+            // (onDialogueChoice). Cerrar la charla sin elegir no abre nada.
+            List<Component> pages = new ArrayList<>();
+            if (firstMeeting) {
+                pages.add(Component.translatable("dialogue.zenkai.master." + masterId() + ".first_meeting"));
             }
-            PacketDistributor.sendToPlayer(sp, new OpenMasterPayload(masterId(), this.getId(),
-                    serviceEntries(sp)));
+            if (r.ok()) {
+                if (!firstMeeting) {
+                    pages.add(Component.translatable("dialogue.zenkai.master." + masterId() + ".greeting."
+                            + this.random.nextInt(2)));
+                }
+            } else {
+                Component no = MasterManager.rejection(sp, masterId(), r);
+                if (no != null) pages.add(no);
+            }
+            if (pages.isEmpty()) return InteractionResult.sidedSuccess(this.level().isClientSide);
+            List<OpenDialoguePayload.Choice> choices = new ArrayList<>();
+            if (r.ok()) {
+                choices.add(new OpenDialoguePayload.Choice("learn",
+                        Component.translatable("dialogue.zenkai.choice.learn")));
+            }
+            choices.add(DialogueService.leave());
+            DialogueService.open(sp, this, pages, choices);
         }
         return InteractionResult.sidedSuccess(this.level().isClientSide);
+    }
+
+    private void openShop(ServerPlayer sp) {
+        PacketDistributor.sendToPlayer(sp, new OpenMasterPayload(masterId(), this.getId(), serviceEntries(sp)));
+    }
+
+    /** «Quiero aprender»: el cliente lo pide desde el diálogo; se revalida la admisión como en cualquier compra. */
+    @Override
+    public void onDialogueChoice(ServerPlayer sp, String choiceId) {
+        if (!"learn".equals(choiceId)) return;
+        if (!MasterManager.check(sp, masterId(), this).ok()) return;
+        openShop(sp);
     }
 
     /** Lo que este maestro da además de enseñar. Por defecto nada: devolver false hace que

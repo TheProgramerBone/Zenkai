@@ -250,6 +250,16 @@ public final class PlayerCommands {
         return 1;
     }
 
+    /** {@code /zenkai reset visit}: quita la espera entre visitas a la Tierra (no toca una visita en curso). */
+    public static int resetVisit(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        var flags = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).flags();
+        flags.setEarthVisitCooldownTicks(0L);
+        PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Earth visit cooldown reset → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
     public static int clearPets(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
         var att = sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
         int n = att.getDeadPets().size();

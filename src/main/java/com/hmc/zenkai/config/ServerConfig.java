@@ -1565,6 +1565,9 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PERMADEATH_VISIT_DAYS =
             BUILDER.comment("Days (24000 ticks each) a dead player may visit the Earth through Uranai Baba. The clock only runs while the player is online.")
                     .defineInRange("permadeath.visit_days", 7, 1, 365);
+    public static final ModConfigSpec.IntValue PERMADEATH_VISIT_COOLDOWN_DAYS =
+            BUILDER.comment("Days (24000 ticks each) a dead player must wait after a visit to the Earth ends before Uranai Baba grants another one. Like the visit itself, the wait only runs while the player is online. 0 = no wait. Reviving (Dragon Balls) or /zenkai reset visit clears it.")
+                    .defineInRange("permadeath.visit_cooldown_days", 2, 0, 365);
     public static final ModConfigSpec.IntValue PERMADEATH_BODY_CAP =
             BUILDER.comment("Maximum bodies one player can have in the world. When exceeded, the oldest one is emptied onto the ground and removed.")
                     .defineInRange("permadeath.body_cap_per_player", 3, 1, 32);
@@ -1634,6 +1637,22 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PERMADEATH_WORLD_BODY_CAP =
             BUILDER.comment("Maximum bodies in the whole world (each one stores its inventory as NBT). Over the cap the oldest ones are emptied on the ground and removed. 0 = unlimited.")
                     .defineInRange("permadeath.world_body_cap", 256, 0, 100000);
+
+    public static final ModConfigSpec.IntValue PERMADEATH_WITNESS_RADIUS =
+            BUILDER.comment("Blocks around a dying player within which party members count as witnesses of the death (PartyMemberDiedEvent, the hook for rage forms). 0 = no witnesses.")
+                    .defineInRange("permadeath.witness_radius", 24, 0, 512);
+
+    // Reencarnación (renunciar a la vida muerta): lo que el alma recuerda. El TP, las skills, las formas, el God Ki, el Legendario,
+    // el inventario, la cama y la XP se pierden siempre; el aspecto se elige de nuevo.
+    public static final ModConfigSpec.IntValue PERMADEATH_REINC_ATTRIBUTE_PERCENT =
+            BUILDER.comment("Reincarnation: percent of the points invested in each attribute that the new life keeps (rounded down). Kept points are free: they are not refundable and they still count toward the cost of the next ones.")
+                    .defineInRange("permadeath.reincarnation_attribute_percent", 20, 0, 100);
+    public static final ModConfigSpec.IntValue PERMADEATH_REINC_MASTERY_PERCENT =
+            BUILDER.comment("Reincarnation: percent of each ki/physical technique mastery that the new life keeps. Form mastery is always lost with the forms.")
+                    .defineInRange("permadeath.reincarnation_mastery_percent", 20, 0, 100);
+    public static final ModConfigSpec.IntValue PERMADEATH_REINC_ALIGNMENT_PERCENT =
+            BUILDER.comment("Reincarnation: percent of the alignment (karma) that the new life keeps, pulled toward neutral. 100 = keeps it all.")
+                    .defineInRange("permadeath.reincarnation_alignment_percent", 50, 0, 100);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 

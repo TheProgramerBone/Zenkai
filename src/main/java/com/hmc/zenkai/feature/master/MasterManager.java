@@ -121,20 +121,27 @@ public final class MasterManager {
                 Component.translatable(def.nameKey())).withStyle(ChatFormatting.GRAY));
     }
 
-    /**
-     * Primer clic derecho del jugador sobre este maestro: lo marca como conocido y le da la bienvenida.
-     * Va ANTES de la admisión (check) a propósito: conocerlo no depende de que te enseñe, así que un
-     * maestro que te rechaza por alineamiento también queda en el árbol de skills con su retrato.
-     */
-    public static void meet(ServerPlayer sp, String masterId) {
-        var att = com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(sp);
-        if (!att.markMasterMet(masterId)) return;
+    /** Texto con el que el maestro rechaza (sin el nombre delante: lo pone la pantalla de diálogo), o null si no dice nada. */
+    public static Component rejection(ServerPlayer sp, String masterId, Result result) {
+        if (result.ok() || result.key == null) return null;
         MasterDef def = get(masterId);
-        if (def != null) {
-            sp.sendSystemMessage(Component.translatable("messages.zenkai.master." + masterId + ".first_meeting",
-                    Component.translatable(def.nameKey())).withStyle(ChatFormatting.YELLOW));
+        String key = "dialogue.zenkai." + result.key.substring("messages.zenkai.".length());
+        if (result == Result.NO_RACE && def.noRaceLines() > 0) {
+            key = "dialogue.zenkai.master." + masterId + ".no_race." + sp.getRandom().nextInt(def.noRaceLines());
         }
+        return Component.translatable(key);
+    }
+
+    /**
+     * Primer clic derecho del jugador sobre este maestro: lo marca como conocido. Devuelve true solo la primera vez, para que
+     * el maestro se presente (su diálogo de bienvenida). Va ANTES de la admisión (check) a propósito: conocerlo no depende de
+     * que te enseñe, así que un maestro que te rechaza por alineamiento también queda en el árbol de skills con su retrato.
+     */
+    public static boolean meet(ServerPlayer sp, String masterId) {
+        var att = com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(sp);
+        if (!att.markMasterMet(masterId)) return false;
         com.hmc.zenkai.feature.player.PlayerLifeCycle.sync(sp);
+        return true;
     }
 
     // ── Carga ────────────────────────────────────────────────────────────────

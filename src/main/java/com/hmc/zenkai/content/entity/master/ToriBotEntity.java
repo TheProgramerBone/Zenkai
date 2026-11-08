@@ -19,6 +19,22 @@ public class ToriBotEntity extends ZenkaiMasterEntity {
         super(type, level);
     }
 
+    /** Mitad de tamaño (atributo SCALE, no el modelo): también encoge su hitbox y su retrato. */
+    public static final double SCALE = 0.5;
+
+    public static net.minecraft.world.entity.ai.attributes.AttributeSupplier.Builder createAttributes() {
+        return ZenkaiMasterEntity.createAttributes()
+                .add(net.minecraft.world.entity.ai.attributes.Attributes.SCALE, SCALE);
+    }
+
+    /** Un Tori-Bot guardado antes del cambio trae SCALE 1.0 en su NBT y pisaría el valor del registro. */
+    @Override
+    public void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        var scale = this.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+        if (scale != null) scale.setBaseValue(SCALE);
+    }
+
     @Override
     public String masterId() { return "toribot"; }
 

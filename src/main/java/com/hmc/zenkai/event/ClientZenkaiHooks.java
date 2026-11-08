@@ -148,6 +148,10 @@ public final class ClientZenkaiHooks {
     private static final IconUV ICON_STUNNED = IconUV.grid(2, 8);
     /** Inmune al aturdimiento (celda 3 de la misma fila): escudo con estrella, con la cuenta atrás. */
     private static final IconUV ICON_STUN_IMMUNE = IconUV.grid(3, 8);
+    /** Alma con aureola (tools/gen_visit_soul_icon.py): la visita temporal a la Tierra de un jugador muerto. */
+    private static final IconUV ICON_EARTH_VISIT = IconUV.grid(4, 8);
+    /** Por debajo de este margen (2 h de Minecraft) la cifra de la visita parpadea en rojo. */
+    private static final long EARTH_VISIT_WARN_TICKS = 2000L;
     private static final IconUV ICON_INSTANT_TRANSMISSION = IconUV.grid(1, 5);
     private static final IconUV ICON_INSTANT_TRANSMISSION_CHARGED = IconUV.grid(2, 5);
 
@@ -331,6 +335,15 @@ public final class ClientZenkaiHooks {
             out.add(Badge.of(ICON_MAJIN));
         }
         if (AuraClientState.localTurbo) out.add(Badge.of(ICON_TURBO));
+
+        // Visita a la Tierra (muerte permanente): el tiempo que queda, en días y, con menos de uno, en horas de
+        // Minecraft. El último tramo parpadea en rojo para que el regreso al Otherworld no pille por sorpresa.
+        long visitLeft = stats.flags().getEarthVisitTicksLeft();
+        if (visitLeft > 0L && stats.flags().isInOtherworld()) {
+            boolean warn = visitLeft <= EARTH_VISIT_WARN_TICKS;
+            int color = !warn ? 0xFFC8EBFF : (System.currentTimeMillis() / 350 % 2 == 0 ? 0xFFFF4040 : 0xFF9A1E1E);
+            out.add(new Badge(ICON_EARTH_VISIT, com.hmc.zenkai.feature.player.EarthVisit.remainingLabel(visitLeft), color));
+        }
 
         // Excluyentes por construcción: el strain nace en el instante en que el kaioken se
         // apaga por agotamiento, así que nunca coinciden y comparten hueco en la fila.

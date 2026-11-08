@@ -1,5 +1,6 @@
 package com.hmc.zenkai.client.gui.widgets;
 
+import com.hmc.zenkai.util.ZenkaiNumbers;
 import com.hmc.zenkai.client.gui.NineSlice;
 import com.hmc.zenkai.client.gui.PanelText;
 import com.hmc.zenkai.client.gui.ZenkaiPalette;
@@ -148,7 +149,7 @@ public final class TrainingWidgets {
         }
         badge(g, font, panelLeft + BADGE_SOLO_X, panelTop + panelH - 62, BADGE_SOLO_W, GLYPH_RECORD_U, GLYPH_RECORD_V,
                 Component.translatable("screen.zenkai.training.record"),
-                record == null ? Component.literal("…") : Component.translatable("screen.zenkai.training.tp", record),
+                record == null ? Component.literal("…") : Component.translatable("screen.zenkai.training.tp", ZenkaiNumbers.screen(record)),
                 ZenkaiPalette.TEXT);
     }
 
@@ -175,7 +176,7 @@ public final class TrainingWidgets {
                 ZenkaiPalette.VALUE);
         badge(g, font, x, yRecord, BADGE_W, GLYPH_RECORD_U, GLYPH_RECORD_V,
                 Component.translatable("screen.zenkai.training.record"),
-                Component.translatable("screen.zenkai.training.tp", record != null ? record : "…"),
+                Component.translatable("screen.zenkai.training.tp", record != null ? ZenkaiNumbers.screen(record) : "…"),
                 ZenkaiPalette.TEXT);
     }
 }

@@ -34,6 +34,14 @@ public final class ClientPayloadHandlers {
         Minecraft.getInstance().setScreen(new MasterScreen(p.masterId(), p.entityId(), p.services()));
     }
 
+    public static void openRaceSelection() {
+        Minecraft.getInstance().setScreen(new com.hmc.zenkai.client.gui.screens.RaceSelectionScreen());
+    }
+
+    public static void openDialogue(com.hmc.zenkai.feature.dialogue.OpenDialoguePayload p) {
+        Minecraft.getInstance().setScreen(new com.hmc.zenkai.client.gui.screens.DialogueScreen(p));
+    }
+
     /** Tras un claim exitoso: refresca la lista de servicios de la pantalla YA abierta, sin
      *  reabrirla (ver MasterServicesUpdatePayload). No hace nada si la pantalla actual no es
      *  MasterScreen (se cerró entre medias) — el packet llega igual, solo se ignora. */

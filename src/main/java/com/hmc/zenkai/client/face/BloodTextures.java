@@ -38,6 +38,9 @@ public final class BloodTextures {
     private static final int[] RED = {0x9B1212, 0x7A0C0C, 0xB61C1C};
     private static final int[] PURPLE = {0x7B2D9B, 0x5E2078, 0x9444B8};
 
+    /** Canal más alto por debajo del cual un píxel cuenta como «negro» (ropa) y no recibe sangre. */
+    private static final int DARK_CUTOFF = 70;
+
     private record Key(ResourceLocation base, int stage, boolean purple) {}
 
     private static final Map<Key, ResourceLocation> CACHE = new HashMap<>();
@@ -76,7 +79,11 @@ public final class BloodTextures {
             float scale = img.getWidth() / 256f; // las manchas miden lo mismo en una textura a 512
             for (int y = 0; y < img.getHeight(); y++) {
                 for (int x = 0; x < img.getWidth(); x++) {
-                    if (((img.getPixelRGBA(x, y) >>> 24) & 0xFF) == 0) continue;
+                    int px = img.getPixelRGBA(x, y); // ABGR
+                    if (((px >>> 24) & 0xFF) == 0) continue;
+                    // Ropa negra (Saiyan/Humano): la sangre roja sobre negro se ve como un parche pintado encima de la
+                    // tela. Los píxeles muy oscuros se saltan, así que las manchas quedan solo en piel y tela clara.
+                    if (Math.max(px & 0xFF, Math.max((px >> 8) & 0xFF, (px >> 16) & 0xFF)) < DARK_CUTOFF) continue;
                     float v = 0.7f * valueNoise(x / (3f * scale), y / (3f * scale), seed)
                             + 0.3f * hash01(x, y, seed + 11);
                     if (v >= thr) continue;

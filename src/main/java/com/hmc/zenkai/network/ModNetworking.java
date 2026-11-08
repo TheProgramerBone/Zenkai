@@ -603,6 +603,17 @@ public class ModNetworking {
         registrar.playToServer(MasterServicePacket.TYPE, MasterServicePacket.STREAM_CODEC,
                 MasterServicePacket::handle);
 
+        registrar.playToClient(OpenRaceSelectionPayload.TYPE, OpenRaceSelectionPayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(ClientPayloadHandlers::openRaceSelection));
+
+        // Diálogo con un NPC (Yemma, maestros): abrir (S2C) y elegir opción (C2S).
+        registrar.playToClient(com.hmc.zenkai.feature.dialogue.OpenDialoguePayload.TYPE,
+                com.hmc.zenkai.feature.dialogue.OpenDialoguePayload.STREAM_CODEC,
+                (payload, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandlers.openDialogue(payload)));
+        registrar.playToServer(com.hmc.zenkai.feature.dialogue.DialogueChoicePayload.TYPE,
+                com.hmc.zenkai.feature.dialogue.DialogueChoicePayload.STREAM_CODEC,
+                com.hmc.zenkai.feature.dialogue.DialogueChoicePayload::handle);
+
         registrar.playToClient(MasterServicesUpdatePayload.TYPE, MasterServicesUpdatePayload.STREAM_CODEC,
                 (payload, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandlers.updateMasterServices(payload)));
 

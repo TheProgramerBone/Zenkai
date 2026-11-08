@@ -502,6 +502,10 @@ public class StyleSelectionScreen extends Screen {
         PacketDistributor.sendToServer(UpdatePlayerVisualPacket.from(visual));
         PacketDistributor.sendToServer(new ChooseStylePacket(styles[styleIndex]));
         confirmed = true;
+        // Reencarnación: el servidor apaga el flag al recibir el estilo; en local se apaga ya y la puerta espera, para que un
+        // sync anterior no reabra la elección de raza justo al confirmar.
+        stats.setReincarnating(false);
+        com.hmc.zenkai.client.ReincarnationGate.suppress(100);
         if (appearanceScreen != null) appearanceScreen.markConfirmed();
         mc.setScreen(null);
     }

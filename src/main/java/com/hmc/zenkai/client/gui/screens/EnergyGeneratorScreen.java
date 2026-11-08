@@ -190,9 +190,7 @@ public class EnergyGeneratorScreen extends TechPanelScreen<EnergyGeneratorMenu> 
 
     /** 1.600 -> "1.6k". Los números de FE llegan a seis cifras y el panel tiene 110 px. */
     private static String fmtFe(int fe) {
-        if (fe < 1000) return fe + " FE";
-        if (fe < 1_000_000) return String.format(Locale.ROOT, "%.1fk FE", fe / 1000.0);
-        return String.format(Locale.ROOT, "%.2fM FE", fe / 1_000_000.0);
+        return com.hmc.zenkai.util.ZenkaiNumbers.screen((long) fe) + " FE";
     }
 
     /** Ticks a mm:ss. Por debajo de un minuto, solo segundos. */

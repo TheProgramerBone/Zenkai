@@ -908,11 +908,11 @@ public class StatsScreen extends ZenkaiMenuScreen {
 
         List<Component> lines = new ArrayList<>();
         lines.add(Component.translatable("screen.zenkai.stats_screen.pl.raw",
-                String.valueOf(att.getPowerLevelRaw())));
+                ZenkaiNumbers.exact((long) att.getPowerLevelRaw())));
         lines.add(Component.translatable("screen.zenkai.stats_screen.pl.releasable",
-                String.valueOf(att.getReleasablePowerLevel())));
+                ZenkaiNumbers.exact((long) att.getReleasablePowerLevel())));
         lines.add(Component.translatable("screen.zenkai.stats_screen.pl.apparent",
-                String.valueOf(att.getApparentPowerLevel())));
+                ZenkaiNumbers.exact((long) att.getApparentPowerLevel())));
         g.renderComponentTooltip(this.font, lines, mouseX, mouseY);
     }
 
@@ -920,7 +920,7 @@ public class StatsScreen extends ZenkaiMenuScreen {
         if (mouseX < tpFieldX || mouseX >= tpFieldX + tpFieldW
                 || mouseY < tpFieldY || mouseY >= tpFieldY + this.font.lineHeight) return;
         g.renderTooltip(this.font, Component.translatable(
-                "screen.zenkai.stats_screen.exact_tp", att.getTP()), mouseX, mouseY);
+                "screen.zenkai.stats_screen.exact_tp", ZenkaiNumbers.exact((long) att.getTP())), mouseX, mouseY);
     }
 
     private void renderKiBarTooltip(GuiGraphics g, int mouseX, int mouseY) {

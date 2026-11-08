@@ -47,7 +47,10 @@ public final class RacePassiveSystem {
         return STATES.computeIfAbsent(id, k -> new ZenkaiState());
     }
 
-    public static void forget(UUID id) { STATES.remove(id); }
+    public static void forget(UUID id) {
+        STATES.remove(id);
+        com.hmc.zenkai.feature.rage.CriticalSurvival.forget(id);
+    }
 
     /** ¿Tiene el zenkai activo ahora mismo? Lo consulta FormSystem para el multiplicador. */
     public static boolean zenkaiActive(Player p) {
@@ -70,6 +73,9 @@ public final class RacePassiveSystem {
         Player p = c.p();
         PlayerStatsAttachment att = c.att();
         if (att == null || !att.isRaceChosen()) return;
+
+        // Detector común de supervivencia crítica (rage forms): las cinco razas, con los umbrales del zenkai.
+        com.hmc.zenkai.feature.rage.CriticalSurvival.tick(p, att);
 
         ZenkaiState s = state(p.getUUID());
 

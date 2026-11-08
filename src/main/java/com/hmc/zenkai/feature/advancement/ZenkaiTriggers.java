@@ -91,6 +91,8 @@ public final class ZenkaiTriggers {
         // Skill tree F5: God Ki por el ritual de los guerreros o por la prueba del maestro
         public static final String GOD_KI_RITUAL = "god_ki_ritual";
         public static final String GOD_KI_TRIAL  = "god_ki_trial";
+        // Muerte permanente: empezar una visita temporal a la Tierra con Uranai Baba
+        public static final String EARTH_VISIT   = "earth_visit";
     }
 
     // =====================================================================

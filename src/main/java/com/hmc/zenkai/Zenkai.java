@@ -325,6 +325,9 @@ public class Zenkai {
             EntityRenderers.register(ModEntities.YEMMA.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("yemma", true), 4f));
 
+            EntityRenderers.register(ModEntities.URANAI_BABA.get(),
+                    ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("uranai_baba", true), 0.5f));
+
             EntityRenderers.register(ModEntities.KAMI.get(),
                     ctx -> new GenericGeoRenderer<>(ctx, new GenericGeoModel<>("kami", true), 0.5f));
 
