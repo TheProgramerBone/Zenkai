@@ -28,9 +28,9 @@ public final class ArmorCompare {
         double[] sum = new double[1];
         stack.forEachModifier(slot, (attr, mod) -> {
             if (mod.operation() != AttributeModifier.Operation.ADD_VALUE) return;
-            if (attr.is(Attributes.ARMOR)) sum[0] += mod.amount();
-            else if (attr.is(Attributes.ARMOR_TOUGHNESS)) sum[0] += mod.amount() * TOUGHNESS_WEIGHT;
-            else if (attr.is(Attributes.KNOCKBACK_RESISTANCE)) sum[0] += mod.amount() * KNOCKBACK_WEIGHT;
+            if (attr.equals(Attributes.ARMOR)) sum[0] += mod.amount();
+            else if (attr.equals(Attributes.ARMOR_TOUGHNESS)) sum[0] += mod.amount() * TOUGHNESS_WEIGHT;
+            else if (attr.equals(Attributes.KNOCKBACK_RESISTANCE)) sum[0] += mod.amount() * KNOCKBACK_WEIGHT;
         });
         return sum[0];
     }
@@ -51,6 +51,7 @@ public final class ArmorCompare {
         if (Math.abs(ds) > EPS) return ds > 0;
         double dd = durabilityLeft(candidate) - durabilityLeft(worn);
         if (Math.abs(dd) > 0.001) return dd > 0;
-        return candidate.getEnchantments().size() > worn.getEnchantments().size();
+        return candidate.getOrDefault(net.minecraft.core.component.DataComponents.ENCHANTMENTS, net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY).size()
+                > worn.getOrDefault(net.minecraft.core.component.DataComponents.ENCHANTMENTS, net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY).size();
     }
 }

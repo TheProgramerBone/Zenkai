@@ -19,6 +19,7 @@ import java.util.WeakHashMap;
  *
  *  · Cargando una transformación (tecla mantenida): sigue el hold. Con la mitad de la barra, el
  *    pelo está a medio camino; el destino lo manda el servidor (PlayerFormAttachment.holdTargetForm).
+ *  · Secuencia larga (Rage, primera vez, «siempre larga»): manda la escalada de la escena (AwakeningScene.buildup).
  *  · Al completarse, la forma ya es la de destino y el pelo está casi entero: termina solo.
  *  · Soltar a medias: vuelve a la forma actual a {@link #RATE} por tick.
  *  · Cambio sin hold (comando, Potential Unlock, destransformarse, quedarse sin ki): transición
@@ -51,6 +52,17 @@ public final class HairTransition {
         if (s.from == null) {
             s.from = s.to = form;
             s.t = 1f;
+        }
+
+        // Secuencia larga: el color de pelo, ojos, cejas y cola sigue la ESCALADA de la escena (0 -> estallido), no el hold ni un
+        // salto en el estallido. La forma mostrada sigue siendo la anterior hasta el estallido (ClientFormDelay).
+        var scene = com.hmc.zenkai.client.rage.AwakeningScene.buildup(player, partialTick);
+        if (scene != null && !scene.form().equals(form)) {
+            s.from = form;
+            s.to = scene.form();
+            s.t = scene.progress();
+            s.last = new HairResolver.FormBlend(s.from, s.to, s.t);
+            return s.last;
         }
 
         ResourceLocation target = att.getHoldTargetForm();

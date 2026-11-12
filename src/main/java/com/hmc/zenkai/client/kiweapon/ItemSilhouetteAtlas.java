@@ -25,7 +25,7 @@ import org.lwjgl.opengl.GL11;
  * Se lee del atlas de la GPU la primera vez que hace falta y se rehace cuando el atlas se vuelve a coser (recarga de
  * recursos), porque las UV de cada sprite cambian.
  */
-@EventBusSubscriber(modid = Zenkai.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Zenkai.MOD_ID, value = Dist.CLIENT)
 public final class ItemSilhouetteAtlas {
     private ItemSilhouetteAtlas() {}
 

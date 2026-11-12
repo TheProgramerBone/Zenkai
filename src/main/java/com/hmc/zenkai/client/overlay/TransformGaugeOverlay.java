@@ -50,6 +50,8 @@ public final class TransformGaugeOverlay {
 
         PlayerFormAttachment form = mc.player.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         if (!form.isTransforming()) return;
+        // En una transformación larga la escena sustituye a la carga: sin anillo.
+        if (com.hmc.zenkai.client.ClientZenkaiPalTick.longWillReplaceHold(form, PlayerStatsAttachment.get(mc.player))) return;
 
         Race race = PlayerStatsAttachment.get(mc.player).getRace();
         PlayerFormAttachment.HoldTarget target = form.currentHoldTarget(mc.player, race);

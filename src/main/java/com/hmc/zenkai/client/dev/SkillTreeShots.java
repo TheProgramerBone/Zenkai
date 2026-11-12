@@ -865,6 +865,7 @@ public final class SkillTreeShots {
                 var sp = server.getPlayerList().getPlayers().get(0);
                 var att = PlayerStatsAttachment.get(sp);
                 att.flags().setRageAllyEventTick(-1L);
+                att.flags().forgetLongCinematicSeen("zenkai:ssj1");   // la migración de la copia lo marca como visto
                 // Poder alto: con los atributos de partida el aura apenas se dibuja y no se vería el estallido.
                 for (var a : com.hmc.zenkai.feature.ZenkaiAttributes.values()) att.setAttribute(a, 3000);
                 att.addEnergy(att.getEnergyMax());
@@ -884,9 +885,10 @@ public final class SkillTreeShots {
             });
             wait = 4;
         });
-        for (int i = 0; i < 14; i++) {
+        // Escena de despertar (60 ticks): un fotograma cada 3 ticks para ver pose, viñeta, destello, título y grietas.
+        for (int i = 0; i < 26; i++) {
             final int k = i;
-            PLAN.add(() -> { capture(mc, String.format("long_%02d", k)); wait = 5; });
+            PLAN.add(() -> { capture(mc, String.format("long_%02d", k)); wait = 2; });
         }
         // Segunda vez: volver a base y a SSJ1 (la forma ya está vista: secuencia corta).
         PLAN.add(() -> {

@@ -116,6 +116,7 @@ public class ZenkaiTickHandlers {
         PlayerTickState.forget(e.getEntity().getUUID());
         RacePassiveSystem.forget(e.getEntity().getUUID());
         com.hmc.zenkai.feature.rage.RageChronicleRequestPacket.forget(e.getEntity().getUUID());
+        com.hmc.zenkai.feature.rage.AlwaysLongPrefPacket.forget(e.getEntity().getUUID());
         WeightLoadSystem.forget(e.getEntity().getUUID());
         OverlayMetersSystem.forget(e.getEntity().getUUID());
         if (e.getEntity() instanceof ServerPlayer sp) ScouterOverload.forget(sp);

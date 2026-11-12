@@ -671,6 +671,16 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.rage.LongTransformPacket.TYPE,
                 com.hmc.zenkai.feature.rage.LongTransformPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.rage.LongTransformPacket::handle);
+        registrar.playToClient(
+                com.hmc.zenkai.feature.rage.LongTransformCancelPacket.TYPE,
+                com.hmc.zenkai.feature.rage.LongTransformCancelPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.rage.LongTransformCancelPacket::handle);
+
+        // Rage Forms: la opción «siempre la secuencia larga» del jugador (C2S): el servidor avisa a quienes lo ven en cada transformación suya.
+        registrar.playToServer(
+                com.hmc.zenkai.feature.rage.AlwaysLongPrefPacket.TYPE,
+                com.hmc.zenkai.feature.rage.AlwaysLongPrefPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.rage.AlwaysLongPrefPacket::handle);
 
         registrar.playToClient(
                 com.hmc.zenkai.feature.rage.RageChronicleSyncPacket.TYPE,

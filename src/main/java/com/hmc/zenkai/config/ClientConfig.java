@@ -147,6 +147,16 @@ public final class ClientConfig {
                     com.hmc.zenkai.client.aura.compose.LongTransformMode.FULL,
                     com.hmc.zenkai.client.aura.compose.LongTransformMode.class);
 
+    private static final ModConfigSpec.BooleanValue ALWAYS_LONG_TRANSFORM =
+            defineBool("transformation.always_long_sequence", "always_long_transform",
+                    "Play the long sequence on EVERY transformation of yours, not only the first time a form is used. "
+                            + "Presentation only: no invulnerability and no lock, those stay exclusive to the first time", false);
+
+    /** Formas que el jugador oculta de la rueda (clic derecho con Mayús en el árbol). Preferencia de este cliente, no de la partida. */
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> HIDDEN_WHEEL_FORMS =
+            BUILDER.comment("Forms hidden from the power wheel (Shift + right click on the form in the transformation tree)")
+                    .defineListAllowEmpty("transformation.hidden_wheel_forms", List.of(), () -> "", o -> o instanceof String);
+
     private static final ModConfigSpec.BooleanValue KI_SENSE_CAMERA_SHAKE =
             defineBool("sense.ki_sense_camera_shake", "ki_sense_camera_shake",
                     "Shake the camera when your ki sense warns you of a nearby threat", true);
@@ -507,6 +517,25 @@ public final class ClientConfig {
     public static boolean swordTechniqueFx() { return SWORD_TECH_FX.get(); }
     public static boolean kiSenseCameraShake() { return KI_SENSE_CAMERA_SHAKE.get(); }
     public static com.hmc.zenkai.client.aura.compose.LongTransformMode longTransformMode() { return LONG_TRANSFORM_MODE.get(); }
+
+    public static boolean alwaysLongTransform() { return ALWAYS_LONG_TRANSFORM.get(); }
+
+    public static void setAlwaysLongTransform(boolean on) {
+        ALWAYS_LONG_TRANSFORM.set(on);
+        SPEC.save();
+    }
+
+    public static boolean wheelFormHidden(String formId) { return HIDDEN_WHEEL_FORMS.get().contains(formId); }
+
+    /** @return true si la forma queda OCULTA tras la llamada. */
+    public static boolean toggleWheelFormHidden(String formId) {
+        List<String> l = new ArrayList<>(HIDDEN_WHEEL_FORMS.get());
+        boolean hidden = !l.remove(formId);
+        if (hidden) l.add(formId);
+        HIDDEN_WHEEL_FORMS.set(l);
+        SPEC.save();
+        return hidden;
+    }
     public static boolean flightFxDust() { return FLIGHT_FX_DUST.get(); }
     public static boolean flightFxSonicBoom() { return FLIGHT_FX_SONIC_BOOM.get(); }
     public static boolean flightFxLanding() { return FLIGHT_FX_LANDING.get(); }

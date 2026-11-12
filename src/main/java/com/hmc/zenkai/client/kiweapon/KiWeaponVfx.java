@@ -389,7 +389,7 @@ public final class KiWeaponVfx {
         if (st.isEmpty()) return false;
         final double[] dmg = {0.0};
         st.forEachModifier(net.minecraft.world.entity.EquipmentSlot.MAINHAND, (attr, mod) -> {
-            if (attr.is(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)
+            if (attr.equals(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)
                     && mod.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE) {
                 dmg[0] += mod.amount();
             }

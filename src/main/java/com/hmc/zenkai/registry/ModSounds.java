@@ -89,6 +89,20 @@ public class ModSounds {
     /** Golpe del aterrizaje a gran velocidad (FlightFx). Mismo criterio que FLIGHT_SONIC_BOOM. */
     public static final Supplier<SoundEvent> FLIGHT_LANDING = registerSoundEvent("flight_landing");
 
+    // ── Escena de despertar de Rage Forms (client/rage/AwakeningScene). Placeholders de tools/gen_rage_scene_sfx.py ──
+    /** Latido grave del quiebre (0-0,9 s). */
+    public static final Supplier<SoundEvent> RAGE_HEARTBEAT = registerSoundEvent("rage_heartbeat");
+    /** Viento y zumbido que suben durante la escalada (0,9-1,9 s). */
+    public static final Supplier<SoundEvent> RAGE_RISE = registerSoundEvent("rage_rise");
+    /** Estallido con cola reverberada (tercer pulso, 1,9 s). Se oye a unos 48 bloques. */
+    public static final Supplier<SoundEvent> RAGE_BURST = registerSoundEvent("rage_burst");
+    /** Nota grave y lenta: pérdida de un aliado. */
+    public static final Supplier<SoundEvent> RAGE_NOTE_LOSS = registerSoundEvent("rage_note_loss");
+    /** La misma nota, más corta y aguda: muerte de una mascota. */
+    public static final Supplier<SoundEvent> RAGE_NOTE_PET = registerSoundEvent("rage_note_pet");
+    /** Nota limpia: rescate de un aliado. */
+    public static final Supplier<SoundEvent> RAGE_NOTE_RESCUE = registerSoundEvent("rage_note_rescue");
+
     private static Supplier<SoundEvent> registerSoundEvent(String name) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, name);
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(id));

@@ -250,7 +250,7 @@ public class PlayerBodyEntity extends Entity {
 
         // Caída y rozamiento simples: no es un ser vivo, pero tampoco debe flotar en el aire.
         Vec3 v = getDeltaMovement();
-        if (isInLava() || isEyeInFluid(FluidTags.WATER) || isInWater()) {
+        if (isInLava() || isInWater()) {
             // Los cuerpos flotan como los objetos: nada de hundirse en lava y perderse.
             setDeltaMovement(v.x * 0.9, Math.min(v.y + 0.04, 0.12), v.z * 0.9);
         } else if (!onGround()) {

@@ -23,13 +23,15 @@ public final class TransformCameraFx {
     private TransformCameraFx() {}
 
     private static final long NEVER = Long.MIN_VALUE;
-    /** Duración total en ticks (3 s, como TransformFx.LONG_DURATION). */
-    private static final float TOTAL_TICKS = 60f;
+    /** Duración total en ticks (6,3 s, como TransformFx.LONG_DURATION). */
+    private static final float TOTAL_TICKS = 126f;
     /** Los tres pulsos, en ticks desde el inicio: 0, 0,9 s y 1,9 s (== TransformFx.LONG_BEAT_AT). */
-    private static final float[] BEATS = {0f, 18f, 38f};
-    private static final float[] BEAT_GAIN = {1.0f, 0.8f, 1.2f};
+    private static final float[] BEATS = {0f, 26f, 54f, 80f};
+    private static final float[] BEAT_GAIN = {1.0f, 0.7f, 0.9f, 1.2f};
     private static final float SHAKE_AMP = 0.045f;   // bloques de Camera.move: un temblor, no un terremoto
     private static final float FOV_PULL = 0.07f;     // máx. 7 % de acercamiento
+    private static final float LIFT_FROM = 42f;      // el contrapicado empieza a los 20 ticks...
+    private static final float LIFT_MAX = 0.28f;     // ...y llega a 0,28 bloques arriba hacia el estallido
 
     private static long start = NEVER;
 
@@ -37,6 +39,9 @@ public final class TransformCameraFx {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level != null) start = mc.level.getGameTime();
     }
+
+    /** Corta la capa de cámara (secuencia cancelada). */
+    public static void cancel() { start = NEVER; }
 
     private static float elapsed(float partialTick) {
         Minecraft mc = Minecraft.getInstance();
@@ -60,11 +65,13 @@ public final class TransformCameraFx {
     public static float[] shakeOffset(float partialTick) {
         float e = elapsed(partialTick);
         if (e < 0f) return null;
-        float amp = SHAKE_AMP * (beat(e, 0) + beat(e, 1) + beat(e, 2));
+        float amp = SHAKE_AMP * (beat(e, 0) + beat(e, 1) + beat(e, 2) + beat(e, 3));
         // Tres frecuencias inconmensurables entre sí, como en Ki Sense: que no se lea como una vibración mecánica.
+        // Contrapicado: la cámara sube despacio hacia el estallido y vuelve a su sitio al acabar (sin rotar: no quita la puntería).
+        float lift = e < LIFT_FROM ? 0f : LIFT_MAX * Mth.sin(Mth.PI * (e - LIFT_FROM) / (TOTAL_TICKS - LIFT_FROM));
         return new float[]{
                 amp * Mth.sin(e * 1.71f + 2.3f) * 0.4f,
-                amp * Mth.sin(e * 3.13f + 0.9f) * 0.8f,
+                amp * Mth.sin(e * 3.13f + 0.9f) * 0.8f + lift,
                 amp * Mth.sin(e * 2.27f)
         };
     }
@@ -74,7 +81,7 @@ public final class TransformCameraFx {
         float el = elapsed(0f);
         if (el < 0f) return;
         // Se aprieta mientras se acumula (los primeros 18 ticks se mantiene), y se suelta con la intensificación final.
-        float pull = FOV_PULL * (Math.max(beat(el, 0), Math.max(beat(el, 1), beat(el, 2))));
+        float pull = FOV_PULL * (Math.max(Math.max(beat(el, 0), beat(el, 1)), Math.max(beat(el, 2), beat(el, 3))));
         e.setNewFovModifier(e.getNewFovModifier() * (1f - pull));
     }
 }

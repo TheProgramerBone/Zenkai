@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>Sin acciones: se reutiliza {@link StunState#hold}, que ya corta lo que hiciera, rompe la guardia, inmoviliza y manda el estado al
  *       cliente (su input se anula). Si el servidor apagó {@code stun.affect_players}, el hold no se aplica y solo queda la invulnerabilidad.</li>
  * </ul>
+ * Si la causa es una muerte (aliado o mascota) cubre la escena entera (~6,3 s); en cualquier otra primera vez, solo los ticks de la config.
  * Solo se activa en la PRIMERA transformación de cada forma (la misma que dispara la secuencia larga: no se puede repetir a voluntad ni
  * usarla de escudo), con la duración de {@code rage.awakening_protection_ticks} (0 = sin protección). Estado en memoria: un reinicio
  * del servidor la corta, que es el error barato.
@@ -35,9 +36,16 @@ public final class AwakeningProtection {
     private static final Map<UUID, Long> UNTIL = new ConcurrentHashMap<>();
 
     /** Empieza la protección (si la config no la apaga). @return los ticks aplicados (0 = ninguno). */
-    public static int start(ServerPlayer sp) {
+    public static int start(ServerPlayer sp) { return start(sp, 0); }
+
+    /**
+     * @param minTicks mínimo de ticks (si la config no la apaga): el despertar por una MUERTE cubre la escena entera, que arranca en
+     *                 el mismo instante que la protección porque ese despertar es automático (sin carga previa)
+     */
+    public static int start(ServerPlayer sp, int minTicks) {
         int ticks = ServerConfig.RAGE_AWAKENING_PROTECTION_TICKS.get();
         if (ticks <= 0) return 0;
+        ticks = Math.max(ticks, minTicks);
         UNTIL.put(sp.getUUID(), sp.level().getGameTime() + ticks);
         try {
             StunState.hold(sp, ticks);

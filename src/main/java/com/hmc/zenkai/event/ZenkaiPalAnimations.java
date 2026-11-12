@@ -362,6 +362,38 @@ public final class ZenkaiPalAnimations {
         if (player == net.minecraft.client.Minecraft.getInstance().player) applyFirstPersonModes(player);
     }
 
+    // ── Escena de despertar de Rage Forms: cuatro clips de 3 s (tools/gen_rage_scene_animations.py) ──
+    private static final String[] RAGE_SCENE_CLIPS = {"rage_kneel", "rage_roar", "rage_clutch", "rage_resolve"};
+    private static final ResourceLocation[] RAGE_SCENE_ANIMS = new ResourceLocation[RAGE_SCENE_CLIPS.length];
+    static {
+        for (int i = 0; i < RAGE_SCENE_CLIPS.length; i++) {
+            RAGE_SCENE_ANIMS[i] = ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai." + RAGE_SCENE_CLIPS[i]);
+        }
+        // El cuerpo entero se mueve (de rodillas, encorvado): en 1ª persona el brazo pegado a la cámara tapa la vista.
+        Collections.addAll(THIRD_PERSON_ONLY, RAGE_SCENE_ANIMS);
+    }
+
+    /** @param variant 0 de rodillas, 1 rugido, 2 agarrarse el pecho, 3 levantarse en calma (== {@code AwakeningScene.Kind}) */
+    public static void playRageScene(AbstractClientPlayer player, int variant) {
+        if (variant < 0 || variant >= RAGE_SCENE_ANIMS.length) return;
+        var c = (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
+        if (c == null) return;
+        ZenkaiTransitions.play(c, RAGE_SCENE_ANIMS[variant], ZenkaiTransitions.TRANSFORM);
+        if (player == net.minecraft.client.Minecraft.getInstance().player) applyFirstPersonModes(player);
+    }
+
+    /** Corta la escena de despertar (p. ej. si la forma ya no es la del despertar o el jugador sale del mundo). */
+    public static void stopRageScene(AbstractClientPlayer player) {
+        var c = (PlayerAnimationController) PlayerAnimationAccess
+                .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
+        if (c == null) return;
+        ResourceLocation cur = ZenkaiTransitions.currentClip(c);
+        for (ResourceLocation r : RAGE_SCENE_ANIMS) {
+            if (r.equals(cur)) { ZenkaiTransitions.stop(c, ZenkaiTransitions.PHYS); return; }
+        }
+    }
+
     // ── Técnicas de ki ───────────────────────────────────────────────────────
 
     public static PlayerAnimationController kiController(AbstractClientPlayer player) {

@@ -104,6 +104,8 @@ public final class AuraComposer {
         @Nullable AuraStyle style;
         @Nullable ResourceLocation lastFormId;
         boolean seenForm;
+        /** Forma cuyo cambio (retrasado por ClientFormDelay) no debe disparar otra transformación: la escena ya arrancó con el aviso. */
+        @Nullable ResourceLocation skipChangeTo;
         final List<AuraComponent> components = new ArrayList<>();
 
         boolean componentsAlive() {
@@ -292,6 +294,14 @@ public final class AuraComposer {
         return true;
     }
 
+    /** Corta la secuencia de transformación en curso de esa entidad (carga cancelada antes de completarse). */
+    public static void cancelTransform(int entityId) {
+        Runtime rt = RUNTIMES.get(entityId);
+        if (rt == null) return;
+        rt.transform.cancel();
+        rt.skipChangeTo = null;
+    }
+
     private static boolean layerOn(boolean self, boolean ghost, String layer) {
         return !(self || ghost) || AuraDebug.layerOn(layer);
     }
@@ -299,6 +309,7 @@ public final class AuraComposer {
     private static void detectTransform(Runtime rt, AuraFrame f, AbstractClientPlayer p, boolean self, boolean isGhost,
                                         AuraStyle style) {
         boolean fire = false;
+        boolean fromNotice = false;
         // /zenkaiaura transform: el aura propia y, si la hay, la fantasma a la vez (para comparar).
         if (self && AuraDebug.burstRequested) fire = true;
         if (!isGhost) {
@@ -306,7 +317,15 @@ public final class AuraComposer {
             ResourceLocation id = form.getFormId();
             // Solo al ENTRAR en una forma (no al volver a base) y nunca la primera vez que se ve al
             // jugador: un jugador que aparece ya transformado no "explota" al entrar en pantalla.
-            if (rt.seenForm && !Objects.equals(id, rt.lastFormId) && form.activeDef() != null) fire = true;
+            if (rt.seenForm && !Objects.equals(id, rt.lastFormId) && form.activeDef() != null) {
+                // El cambio que el cliente retrasó hasta el estallido de una escena que YA arrancó con el aviso no vuelve a disparar.
+                if (id.equals(rt.skipChangeTo)) rt.skipChangeTo = null;
+                else fire = true;
+            }
+            // Un aviso de secuencia larga vigente arranca la escena YA, sin esperar al cambio de forma: el cliente lo retrasa hasta el
+            // estallido (ClientFormDelay) para que la forma transicione conforme avanza la secuencia. También cubre que el runtime nazca
+            // con el aviso y la forma en el mismo tick.
+            if (com.hmc.zenkai.feature.rage.LongTransformState.pending(p.getUUID())) { fire = true; fromNotice = true; }
             rt.lastFormId = id;
             rt.seenForm = true;
         }
@@ -314,10 +333,15 @@ public final class AuraComposer {
         String t = style.transform() != null ? style.transform() : style.family().transform();
         // Primera vez de esa forma para este jugador: el servidor lo avisó con LongTransformPacket. El aviso se gasta SIEMPRE (aunque
         // la preferencia lo apague) para que no quede armado para una transformación posterior.
-        boolean pendingLong = !isGhost && com.hmc.zenkai.feature.rage.LongTransformState.consume(p.getUUID());
+        var pendingInfo = isGhost ? null : com.hmc.zenkai.feature.rage.LongTransformState.consumeInfo(p.getUUID());
         LongTransformMode mode = com.hmc.zenkai.config.ClientConfig.longTransformMode();
-        boolean longSeq = pendingLong && mode != LongTransformMode.OFF;
-        rt.transform.trigger(TransformFx.Type.of(t), f, rt.components, longSeq);
+        boolean longSeq = pendingInfo != null && mode != LongTransformMode.OFF;
+        if (fromNotice && pendingInfo != null && pendingInfo.form() != null
+                && !pendingInfo.form().equals(p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId())) {
+            rt.skipChangeTo = pendingInfo.form();   // la forma aún no ha cambiado: su cambio (en el estallido) no es otra transformación
+        }        rt.transform.trigger(TransformFx.Type.of(t), f, rt.components, longSeq);
+        // La escena que rodea al aura (pose, sonido, viñeta, título) arranca en el mismo instante que el estallido.
+        if (longSeq) com.hmc.zenkai.client.rage.AwakeningScene.start(p, self, pendingInfo, f.outer, mode);
         // La cámara solo la toca la secuencia larga PROPIA y solo con la preferencia completa.
         if (longSeq && self && mode == LongTransformMode.FULL) TransformCameraFx.start();
     }
@@ -410,7 +434,8 @@ public final class AuraComposer {
     }
 
     private static String formAuraType(AbstractClientPlayer p) {
-        FormDef def = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).activeDef();
+        // Con un cambio retrasado en curso (secuencia larga) el aura ya es la de la forma de DESTINO (auraDef).
+        FormDef def = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).auraDef();
         return def == null ? "default" : def.auraType();
     }
 

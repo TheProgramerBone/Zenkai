@@ -118,6 +118,9 @@ public final class CuriosCompat {
             return out;
         }
 
+        // Curios 9.5.1 marca el helper de iconos como obsoleto (a retirar) y no publica un reemplazo en esa versión: se silencia
+        // solo aquí y se revisa al subir de Curios.
+        @SuppressWarnings({"deprecation", "removal"})
         static net.minecraft.resources.ResourceLocation slotIcon(String slotId) {
             return top.theillusivec4.curios.api.CuriosApi.getSlotIcon(slotId);
         }

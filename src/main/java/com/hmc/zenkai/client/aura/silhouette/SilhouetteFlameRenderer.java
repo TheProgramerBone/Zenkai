@@ -237,7 +237,7 @@ public final class SilhouetteFlameRenderer {
             SilhouetteFlameSpec fury = AuraStyleManager.silhouette("beast_fury");
             if (fury != null) return fury;
         }
-        FormDef def = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).activeDef();
+        FormDef def = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).auraDef();
         return AuraStyleManager.silhouette(def == null ? "default" : def.auraType());
     }
 

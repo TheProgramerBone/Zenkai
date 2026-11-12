@@ -270,6 +270,32 @@ public final class PlayerCommands {
         return 1;
     }
 
+    /** Borra la crónica de Rage Forms y manda la lista vacía al cliente para que la pantalla no muestre datos viejos. */
+    public static int clearRageChronicle(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        var chronicle = com.hmc.zenkai.feature.rage.RageChronicle.get(sp);
+        int n = chronicle.size();
+        chronicle.clear();
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp,
+                new com.hmc.zenkai.feature.rage.RageChronicleSyncPacket(chronicle.entries()));
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Cleared " + n + " rage chronicle entr" + (n == 1 ? "y" : "ies") + " → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
+    /**
+     * Olvida las formas «ya vistas»: la próxima vez que te transformes en cada una vuelve la secuencia larga con su escena. Sirve para
+     * probarla en una partida antigua, donde la migración marcó como vista cada forma que ya tenías.
+     */
+    public static int resetRageScene(CommandContext<CommandSourceStack> ctx, ServerPlayer sp) {
+        var flags = com.hmc.zenkai.feature.player.PlayerStatsAttachment.get(sp).flags();
+        int n = flags.longCinematicSeen().size();
+        flags.clearLongCinematicSeen();
+        com.hmc.zenkai.feature.player.PlayerLifeCycle.sync(sp);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "[Zenkai] Forgot " + n + " seen form(s): the next transformation into each plays the long scene → " + sp.getGameProfile().getName()), true);
+        return 1;
+    }
+
     public static int revivePlayer(CommandContext<CommandSourceStack> ctx, ServerPlayer target) {
         boolean ok = com.hmc.zenkai.feature.player.OtherworldManager.revive(target);
         if (!ok) {

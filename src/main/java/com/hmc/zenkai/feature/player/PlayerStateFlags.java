@@ -214,6 +214,10 @@ public class PlayerStateFlags {
     public boolean hasSeenLongCinematic(String form) { return longCinematicSeen.contains(form); }
     /** @return true si es la primera vez (no estaba) */
     public boolean markLongCinematicSeen(String form) { return longCinematicSeen.add(form); }
+    /** Solo para los arneses de capturas: vuelve a dejar la forma como «no vista» para repetir su primera secuencia larga. */
+    public void forgetLongCinematicSeen(String form) { longCinematicSeen.remove(form); }
+    /** Vuelve a armar la secuencia larga de cada forma (comando de pruebas {@code /zenkai rage scene reset}). */
+    public void clearLongCinematicSeen() { longCinematicSeen.clear(); }
     public java.util.Set<String> longCinematicSeen() { return java.util.Collections.unmodifiableSet(longCinematicSeen); }
     public boolean isRageMigrated() { return rageMigrated; }
     public void setRageMigrated(boolean v) { this.rageMigrated = v; }

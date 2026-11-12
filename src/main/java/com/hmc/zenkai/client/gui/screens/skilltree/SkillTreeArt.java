@@ -160,7 +160,9 @@ final class SkillTreeArt {
             "majin_pure_chaos", "majin_god", "potential_unlock", "beast", "ultra_instinct_sign",
             "ultra_instinct", "ultra_ego", "node_god_ki",
             "node_arcosian_power", "node_ultra_instinct", "node_ultra_ego", "unknown", "arcosian_god",
-            "ssj_blue_evolution", "ssj_rose_evolution", "human_flow");
+            "ssj_blue_evolution", "ssj_rose_evolution", "human_flow",
+            "ikari", "ssj_green", "ssj_green_max", "human_legendary", "namek_legendary", "arcosian_legendary",
+            "majin_legendary");
 
     static final int UNKNOWN_ICON = ICON_ORDER.indexOf("unknown");
 
@@ -272,7 +274,7 @@ final class SkillTreeArt {
             "run", "fly", "quick_step", "instant_transmission", "ki_sense", "ki_control", "meditation", "ki_block",
             "ki_fist", "ki_infuse", "parry_mastery", "kaioken", "god_ki", "master_unknown", "zenkai_passive",
             "regen_passive", "coldblood_passive", "ki_sword", "ki_axe", "ki_mace", "ki_hammer", "ki_scythe",
-            "ki_shield");
+            "ki_shield", "potential_passive", "elastic_passive");
 
     /** Celda del icono de una skill por su id, o -1 si todavía no tiene (usa entonces el «?» tintado). */
     static int skillIconIndex(String skillId) {

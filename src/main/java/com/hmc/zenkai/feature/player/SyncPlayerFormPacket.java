@@ -41,7 +41,10 @@ public record SyncPlayerFormPacket(int entityId, CompoundTag data) implements Cu
             if (!(e instanceof Player p)) return;
 
             var att = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
+            ResourceLocation before = att.getFormId();
             att.load(msg.data());
+            // Durante una secuencia larga la forma nueva se muestra en el estallido (ver ClientFormDelay).
+            com.hmc.zenkai.client.rage.ClientFormDelay.afterLoad(p, att, before);
         });
     }
 }

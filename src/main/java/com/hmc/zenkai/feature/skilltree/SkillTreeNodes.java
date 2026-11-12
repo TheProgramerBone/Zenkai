@@ -504,54 +504,6 @@ public final class SkillTreeNodes {
         return out;
     }
 
-    // ── Coste de una ruta («marcar ruta», F3) ────────────────────────────────
-
-    /**
-     * TP que falta para llegar a {@code target} desde lo que ya posee: suma el coste de cada
-     * nodo de la ruta (padres en el dibujo) que no tenga, contando los niveles de doctrina que
-     * pide una forma (UI 9, UE 5) y el siguiente nivel de cualquier otro nodo con niveles. God Ki
-     * no suma (no se compra con TP); tampoco las formas que solo da una vía especial.
-     */
-    public static long routeCost(Player p, Race race, List<Node> route) {
-        PlayerStatsAttachment att = PlayerStatsAttachment.get(p);
-        long total = 0;
-        for (int i = 0; i < route.size(); i++) {
-            Node n = route.get(i);
-            if (owned(p, n) && n.kind() != Kind.LEVELED) continue;
-            SkillTreeData data = SkillTreeData.get(n.id());
-            switch (n.kind()) {
-                case FORM -> {
-                    FormDef d = FormDef.get(n.form());
-                    if (d == null || d.endgamePath() || (data != null && !data.purchasableWithTp())) continue;
-                    if (SkillTreeMigration.ownedByPurchase(att.skills(), race, d) == null
-                            && !(d.divineTier()) && !FormRegistry.isAddonBranch(d)) continue;
-                    total += Math.max(0, d.tpCost());
-                }
-                case PASSIVE -> {
-                    int c = data == null ? -1 : data.tpCostFor(passiveLevel(att) + 1);
-                    if (c > 0) total += c;
-                }
-                case LEVELED -> {
-                    SkillDef def = SkillDef.get(n.skill());
-                    if (def == null || DivineForms.SKILL.equals(def.id())) continue;
-                    int have = att.skills().level(def.id());
-                    int want = have + 1;
-                    if (i + 1 < route.size() && route.get(i + 1).form() != null) {
-                        int need = doctrineLevelFor(route.get(i + 1).form());
-                        want = Math.max(need, have > 0 ? have : 1);
-                    }
-                    if (i == route.size() - 1) want = have + 1;
-                    for (int l = have + 1; l <= want; l++) {
-                        int c = FormDrivenSkills.tpCostForLevel(def, race, l);
-                        if (c != Integer.MAX_VALUE) total += c;
-                    }
-                }
-                default -> { }
-            }
-        }
-        return total;
-    }
-
     private static boolean hasDivineForms(Race race) {
         for (FormDef d : FormDef.all()) {
             if (d.divineTier() && d.allows(race) && !d.endgamePath()) return true;

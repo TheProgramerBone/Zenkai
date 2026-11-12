@@ -72,11 +72,13 @@ final class TransformFx {
     }
 
     private static final float DURATION = 1.1f;
-    /** Secuencia larga: tres pulsos (inicio, segundo golpe, intensificación final) y el último se apaga hasta ~3 s. */
-    private static final float LONG_DURATION = 3.0f;
-    private static final float[] LONG_BEAT_AT = {0f, 0.9f, 1.9f};
-    private static final float[] LONG_BEAT_GAIN = {1.5f, 1.2f, 1.7f};
-    private static final float[] LONG_RING_RADIUS = {1f, 1.25f, 1.6f};
+    /** Secuencia larga (~6,3 s, el estallido a los 4 s): cuatro pulsos (inicio, dos golpes intermedios, intensificación final). */
+    private static final float LONG_DURATION = 6.3f;
+    /** Cuánto se estiró la secuencia respecto a la original de 3 s (estallido de 1,9 s a 4 s): grietas y rayos usan el tiempo normalizado. */
+    private static final float LONG_STRETCH = 4.0f / 1.9f;
+    private static final float[] LONG_BEAT_AT = {0f, 1.3f, 2.7f, 4.0f};
+    private static final float[] LONG_BEAT_GAIN = {1.5f, 1.1f, 1.3f, 1.7f};
+    private static final float[] LONG_RING_RADIUS = {1f, 1.15f, 1.35f, 1.7f};
     private static final int RING_SEGMENTS = 48;
 
     private Type type = Type.NONE;
@@ -84,7 +86,7 @@ final class TransformFx {
     private boolean longSeq;
     private float duration = DURATION;
     /** Pulsos de la secuencia larga que ya se dispararon (el 0 va en trigger). */
-    private boolean beat2Done, beat3Done;
+    private int beatsFired;
     private List<AuraComponent> comps = List.of();
     private AuraChargeGroundFx.Ground ground;
     private boolean hasGround;
@@ -92,6 +94,9 @@ final class TransformFx {
     private final float[] ringColor = new float[3];
 
     boolean running() { return t >= 0f; }
+
+    /** Corta la secuencia en curso (el jugador soltó la tecla de transformar antes de completarse). */
+    void cancel() { t = -1f; }
 
     void trigger(Type type, AuraFrame f, List<AuraComponent> components) { trigger(type, f, components, false); }
 
@@ -101,7 +106,7 @@ final class TransformFx {
         this.t = 0f;
         this.longSeq = longSeq;
         this.duration = longSeq ? LONG_DURATION : DURATION;
-        this.beat2Done = this.beat3Done = false;
+        this.beatsFired = 1;
         this.comps = components;
         Minecraft mc = Minecraft.getInstance();
         AuraChargeGroundFx.Ground g = mc.level == null ? null
@@ -111,6 +116,8 @@ final class TransformFx {
         if (!f.player.onGround()) g = null;
         hasGround = g != null;
         this.ground = g;
+        this.seed = f.player.getId();
+        if (longSeq && g != null) buildCracks(f.player.getId(), f.powerScale);
         if (g != null) {
             groundY = g.surfaceY();
             if (type.dust > 0 || type.rocks > 0) {
@@ -141,7 +148,7 @@ final class TransformFx {
                 strongest = Math.max(strongest, p);
             }
             scale = 1f + type.peak * sum;
-            decay = Math.min(1f, strongest / LONG_BEAT_GAIN[2]);
+            decay = Math.min(1f, strongest / LONG_BEAT_GAIN[LONG_BEAT_GAIN.length - 1]);
             fireLongBeats(f);
         } else if (type == Type.HEAVY) {
             // Implosión y luego expansión lenta con un rebote.
@@ -170,6 +177,9 @@ final class TransformFx {
         ringColor[0] = c[0];
         ringColor[1] = c[1];
         ringColor[2] = c[2];
+        hotColor[0] = f.hot[0];
+        hotColor[1] = f.hot[1];
+        hotColor[2] = f.hot[2];
     }
 
     /** Forma de UN pulso: sube en 0,12 s y se apaga exponencialmente; 0 antes de empezar. */
@@ -182,13 +192,10 @@ final class TransformFx {
     /** Al cruzar el segundo y el tercer pulso: otra ráfaga de suelo y otra tanda de componentes, la final más grande. */
     private void fireLongBeats(AuraFrame f) {
         Minecraft mc = Minecraft.getInstance();
-        if (!beat2Done && t >= LONG_BEAT_AT[1]) {
-            beat2Done = true;
-            beat(f, mc, 1.0f, 1.2f);
-        }
-        if (!beat3Done && t >= LONG_BEAT_AT[2]) {
-            beat3Done = true;
-            beat(f, mc, 1.6f, 1.6f);
+        while (beatsFired < LONG_BEAT_AT.length && t >= LONG_BEAT_AT[beatsFired]) {
+            boolean last = beatsFired == LONG_BEAT_AT.length - 1;
+            beatsFired++;
+            if (last) beat(f, mc, 1.6f, 1.6f); else beat(f, mc, 1.0f, 1.2f);
         }
     }
 
@@ -200,9 +207,114 @@ final class TransformFx {
         for (AuraComponent c : comps) c.onBurst(f, type.componentBurst * componentMul);
     }
 
+    // ── Secuencia larga: grietas de suelo y rayos finos (Rage Forms) ─────────────────────────────
+
+    private static final int CRACKS = 9, CRACK_SEGS = 8;
+    /** Puntos {x, z} (relativos al jugador) de cada grieta, generados al disparar la secuencia larga. */
+    private float[][] crackPts = new float[0][];
+    private int seed;
+    private final float[] hotColor = new float[3];
+
+    /** Grietas radiales y dentadas, deterministas por jugador (no parpadean). */
+    private void buildCracks(int playerId, float powerScale) {
+        java.util.Random r = new java.util.Random(playerId * 7919L + 17L);
+        crackPts = new float[CRACKS][];
+        float reach = 3.2f + 2.6f * Mth.clamp(powerScale, 0f, 1.5f);
+        for (int k = 0; k < CRACKS; k++) {
+            float a = (k + r.nextFloat() * 0.6f) * Mth.TWO_PI / CRACKS;
+            float len = reach * (0.55f + 0.45f * r.nextFloat());
+            float[] pts = new float[(CRACK_SEGS + 1) * 2];
+            float x = 0f, z = 0f, dir = a;
+            for (int s = 0; s <= CRACK_SEGS; s++) {
+                pts[s * 2] = x;
+                pts[s * 2 + 1] = z;
+                dir += (r.nextFloat() - 0.5f) * 0.9f;   // quiebros: así se leen como grieta y no como rayo recto
+                float step = len / CRACK_SEGS;
+                x += Mth.cos(dir) * step;
+                z += Mth.sin(dir) * step;
+                // se mantiene cerca del rumbo original para que no se enrosque
+                dir = Mth.lerp(0.35f, dir, a);
+            }
+            crackPts[k] = pts;
+        }
+    }
+
+    private void drawCracks(VertexConsumer vc, Matrix4f m, float ox, float oy, float oz, float tt, float r, float g, float b, float weight) {
+        if (tt < 0.12f) return;
+        float reveal = Mth.clamp((tt - 0.12f) / 1.9f, 0f, 1f);
+        reveal = 1f - (1f - reveal) * (1f - reveal);   // abre rápido y se asienta
+        float fade = tt < 2.3f ? 1f : Math.max(0f, (3.0f - tt) / 0.7f);
+        if (fade <= 0f) return;
+        float pulse = 0.75f + 0.25f * Mth.sin(tt * 9f);   // el brillo de dentro respira
+        for (float[] pts : crackPts) {
+            int last = Math.max(1, Math.round(CRACK_SEGS * reveal));
+            for (int s = 0; s < last; s++) {
+                float w0 = (0.16f * (1f - s / (float) CRACK_SEGS) + 0.04f), w1 = (0.16f * (1f - (s + 1) / (float) CRACK_SEGS) + 0.04f);
+                float x0 = pts[s * 2], z0 = pts[s * 2 + 1], x1 = pts[s * 2 + 2], z1 = pts[s * 2 + 3];
+                float dx = x1 - x0, dz = z1 - z0;
+                float inv = 1f / Math.max(1e-4f, Mth.sqrt(dx * dx + dz * dz));
+                float nx = -dz * inv, nz = dx * inv;
+                float a = 0.9f * fade * pulse * weight;
+                vc.addVertex(m, ox + x0 - nx * w0, oy, oz + z0 - nz * w0).setColor(r, g, b, a);
+                vc.addVertex(m, ox + x0 + nx * w0, oy, oz + z0 + nz * w0).setColor(r, g, b, a);
+                vc.addVertex(m, ox + x1 + nx * w1, oy, oz + z1 + nz * w1).setColor(r, g, b, a * 0.8f);
+                vc.addVertex(m, ox + x1 - nx * w1, oy, oz + z1 - nz * w1).setColor(r, g, b, a * 0.8f);
+            }
+        }
+    }
+
+    /** Rayos finos que saltan del cuerpo hacia fuera: más cada vez, más a partir del estallido. Cambian cada 0,1 s (chisporroteo). */
+    private void drawBolts(VertexConsumer vc, Matrix4f m, float ox, float oy, float oz, float tt, float r, float g, float b, float weight) {
+        if (tt < 0.9f) return;
+        float k = Mth.clamp((tt - 0.9f) / 2.1f, 0f, 1f);
+        int count = 3 + Math.round(6f * k) + (tt >= 1.9f ? 2 : 0);
+        float fade = tt < 2.5f ? 1f : Math.max(0f, (3.0f - tt) / 0.5f);
+        if (fade <= 0f) return;
+        java.util.Random rnd = new java.util.Random(seed * 31L + (long) (tt * 10f));
+        // Vector de visión aproximado (la cámara está en el origen): el rayo se dibuja de cara a ella.
+        float vx = ox, vy = oy + 1f, vz = oz;
+        float vl = Math.max(1e-3f, Mth.sqrt(vx * vx + vy * vy + vz * vz));
+        vx /= vl; vy /= vl; vz /= vl;
+        for (int i = 0; i < count; i++) {
+            float th = rnd.nextFloat() * Mth.TWO_PI;
+            float px = Mth.cos(th) * 0.45f, pz = Mth.sin(th) * 0.45f, py = 0.1f + rnd.nextFloat() * 1.7f;
+            float dx = Mth.cos(th) * 0.8f, dy = 0.3f + rnd.nextFloat() * 0.6f, dz = Mth.sin(th) * 0.8f;
+            float len = 1.0f + rnd.nextFloat() * 1.3f;
+            int segs = 5;
+            for (int s = 0; s < segs; s++) {
+                float jx = (rnd.nextFloat() - 0.5f) * 0.36f, jy = (rnd.nextFloat() - 0.5f) * 0.36f, jz = (rnd.nextFloat() - 0.5f) * 0.36f;
+                float sx = dx * len / segs + jx, sy = dy * len / segs + jy, sz = dz * len / segs + jz;
+                // ancho = producto vectorial (segmento × visión)
+                float wx = sy * vz - sz * vy, wy = sz * vx - sx * vz, wz = sx * vy - sy * vx;
+                float wl = Math.max(1e-4f, Mth.sqrt(wx * wx + wy * wy + wz * wz));
+                float hw = 0.035f * (1f - s / (float) segs) + 0.012f;
+                wx = wx / wl * hw; wy = wy / wl * hw; wz = wz / wl * hw;
+                float a = (0.95f - 0.12f * s) * fade * weight;
+                vc.addVertex(m, ox + px - wx, oy + py - wy, oz + pz - wz).setColor(r, g, b, a);
+                vc.addVertex(m, ox + px + wx, oy + py + wy, oz + pz + wz).setColor(r, g, b, a);
+                px += sx; py += sy; pz += sz;
+                vc.addVertex(m, ox + px + wx, oy + py + wy, oz + pz + wz).setColor(r, g, b, a * 0.8f);
+                vc.addVertex(m, ox + px - wx, oy + py - wy, oz + pz - wz).setColor(r, g, b, a * 0.8f);
+            }
+        }
+    }
+
     /** Onda expansiva en el suelo: uno o dos anillos planos que se abren y se apagan. */
     void submit(AuraFrame f, PoseStack pose) {
-        if (t < 0f || !hasGround || type == Type.NONE) return;
+        if (t < 0f || type == Type.NONE) return;
+        // Rayos del cuerpo (no hace falta suelo: transformarse en el aire también los saca). En 1ª persona propia taparían la vista.
+        if (longSeq && !f.selfFirstPerson && t >= 0.9f * LONG_STRETCH) {
+            final float bt = t;
+            final float bx = (float) (f.x - f.camX), by = (float) (f.y - f.camY), bz = (float) (f.z - f.camZ);
+            final float br = hotColor[0], bg = hotColor[1], bb = hotColor[2];
+            final boolean bOk = f.bloomAllowed;
+            KiVfxFrameQueue.submitAura(pose, new Vec3(bx, by, bz), (ps, buf) -> {
+                boolean bloom = KiVfxFrameQueue.bloomPass();
+                if (bloom && !bOk) return;
+                drawBolts(buf.getBuffer(AuraComposeShaders.ribbons()), ps.last().pose(), bx, by, bz, bt / LONG_STRETCH, br, bg, bb, bloom ? 0.6f : 1f);
+            });
+        }
+        if (!hasGround) return;
         final float tt = t;
         final Type ty = type;
         final float ox = (float) (f.x - f.camX), oz = (float) (f.z - f.camZ);
@@ -217,6 +329,7 @@ final class TransformFx {
             VertexConsumer vc = buf.getBuffer(AuraComposeShaders.ribbons());
             Matrix4f m = ps.last().pose();
             if (lng) {
+                drawCracks(vc, m, ox, oy, oz, tt / LONG_STRETCH, r, g, b, bloom ? 0.6f : 1f);
                 // Una onda por pulso, cada una más ancha que la anterior.
                 for (int i = 0; i < LONG_BEAT_AT.length; i++) {
                     ring(vc, m, ox, oy, oz, tt - LONG_BEAT_AT[i], maxR * LONG_RING_RADIUS[i], ty, r, g, b, bloom ? 0.6f : 1f);

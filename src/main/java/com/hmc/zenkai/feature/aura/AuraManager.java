@@ -63,7 +63,7 @@ public final class AuraManager {
         AuraModifier out = RaceSignature.of(race);
 
         PlayerFormAttachment form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
-        FormDef def = form.activeDef();
+        FormDef def = form.auraDef();
         if (def != null) out = out.plus(formModifier(def));
         return out;
     }

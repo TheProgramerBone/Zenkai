@@ -94,6 +94,15 @@ public final class ClientZenkaiPalTick {
      *    la caja y la altura de ojos (dispara EntityEvent.Size).
      * NO toca la pose -> no frena el vuelo ni inclina el modelo (eso lo hace la animación PAL).
      */
+    /** ¿La carga en curso terminará en una secuencia larga (primera vez de la forma, o «siempre larga»)? Solo formas con destino de hold. */
+    public static boolean longWillReplaceHold(PlayerFormAttachment form, PlayerStatsAttachment stats) {
+        if (com.hmc.zenkai.config.ClientConfig.longTransformMode() == com.hmc.zenkai.client.aura.compose.LongTransformMode.OFF) return false;
+        net.minecraft.resources.ResourceLocation target = form.getHoldTargetForm();
+        if (target == null) return false;
+        return com.hmc.zenkai.config.ClientConfig.alwaysLongTransform()
+                || !stats.flags().hasSeenLongCinematic(target.toString());
+    }
+
     private static void applyLocalBoost(AbstractClientPlayer p, boolean boosting) {
         if (boosting != lastFlyBoostSent) {
             lastFlyBoostSent = boosting;
@@ -227,19 +236,24 @@ public final class ClientZenkaiPalTick {
                 mc.player.setSprinting(false);
             }
 
-            if (heldNow && !st.lastHeld) {
+            // Si esta transformación va a ser la secuencia LARGA, la pose normal de mantener la tecla no se reproduce: la larga es
+            // lo primero que se ve (la escena arranca al completarse la carga). Solo para el jugador propio, que es quien tiene
+            // la preferencia y el estado de «forma ya vista».
+            boolean animHeld = heldNow && !(p == mc.player && longWillReplaceHold(form, stats));
+
+            if (animHeld && !st.lastHeld) {
                 st.lastHeld = true;
                 ZenkaiPalAnimations.playTransformStart(p);
                 st.chainTicks = 10; // 0.5s
             }
 
-            if (!heldNow && st.lastHeld) {
+            if (!animHeld && st.lastHeld) {
                 st.lastHeld = false;
                 st.chainTicks = 0;
                 ZenkaiPalAnimations.stopTransform(p);
             }
 
-            if (heldNow && st.chainTicks > 0) {
+            if (animHeld && st.chainTicks > 0) {
                 st.chainTicks--;
                 if (st.chainTicks == 0) {
                     ZenkaiPalAnimations.playTransformLoop(p);

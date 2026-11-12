@@ -213,6 +213,15 @@ public class PlayerFormAttachment {
     /** Def de la forma activa, o null en BASE / si el datapack ya no la define. */
     public FormDef activeDef() { return FormRegistry.get(formId); }
 
+    /** SOLO CLIENTE, no se guarda ni se sincroniza: forma cuyo ASPECTO DE AURA se pinta mientras el cliente retrasa el cambio visible de
+     *  forma hasta el estallido de una secuencia larga (ClientFormDelay). null = la activa. */
+    private transient ResourceLocation auraFormOverride;
+
+    public void setAuraFormOverride(ResourceLocation id) { this.auraFormOverride = id; }
+
+    /** Definición con la que se pinta el aura (colores, firma, silueta): la de destino durante un cambio retrasado, si no la activa. */
+    public FormDef auraDef() { return auraFormOverride != null ? FormRegistry.get(auraFormOverride) : activeDef(); }
+
     /** Maestría de la forma activa (0..100). */
     public float activeMastery() { return getFormMastery(formId); }
 
@@ -283,6 +292,15 @@ public class PlayerFormAttachment {
      * @return dirty si cambió algo y conviene sync inmediato.
      */
     public boolean serverTick(Player p, PlayerStatsAttachment stats, PlayerVisualAttachment visual) {
+        boolean dirty = serverTickInner(p, stats, visual);
+        // Sin carga en marcha y con una secuencia larga avisada al empezarla: la carga se cortó (soltó la tecla…) y se cancela la escena.
+        if (!transforming && p instanceof net.minecraft.server.level.ServerPlayer sp) {
+            com.hmc.zenkai.feature.rage.FirstTransformations.cancelIfAnnounced(sp);
+        }
+        return dirty;
+    }
+
+    private boolean serverTickInner(Player p, PlayerStatsAttachment stats, PlayerVisualAttachment visual) {
         if (cooldownTicks > 0) cooldownTicks--;
 
         // Oozaru tiene prioridad ABSOLUTA sobre cualquier otra escalera y NO depende de
@@ -336,6 +354,14 @@ public class PlayerFormAttachment {
 
         boolean was = transforming;
         if (!target.equals(holdTargetForm)) was = false; // otro destino: sync ya
+        // Al pulsar la tecla, si la transformación va a ser larga, la escena arranca YA y la carga dura EXACTAMENTE lo que ella hasta el estallido (el cambio cae en
+        // el estallido). Sin esto la secuencia larga solo empezaba al completarse la carga, tras la pose normal.
+        if (p instanceof net.minecraft.server.level.ServerPlayer sp) {
+            if (!was) com.hmc.zenkai.feature.rage.FirstTransformations.announceAtHoldStart(sp, target);
+            if (com.hmc.zenkai.feature.rage.FirstTransformations.longAnnounced(sp, target)) {
+                required = com.hmc.zenkai.feature.rage.FirstTransformations.LONG_SCENE_TICKS;   // exacto: el cambio cae en el estallido
+            }
+        }
         holdTargetForm = target;
         if (advanceHold(required)) return progressDirty(was); // aún cargando
 

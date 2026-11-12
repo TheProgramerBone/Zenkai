@@ -83,6 +83,9 @@ public final class RageChronicle {
 
     public int size() { return entries.size(); }
 
+    /** Vacía la crónica (herramienta de prueba/administración: la historia normal nunca se borra sola). */
+    public void clear() { entries.clear(); }
+
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         ListTag list = new ListTag();

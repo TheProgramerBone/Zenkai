@@ -114,5 +114,29 @@
   "flight_landing": {
     "subtitle": "sounds.zenkai.flight_landing",
     "sounds": ["minecraft:random/explode1", "minecraft:random/explode2"]
+  },
+  "rage_heartbeat": {
+    "subtitle": "sounds.zenkai.rage_heartbeat",
+    "sounds": ["zenkai:rage_heartbeat"]
+  },
+  "rage_rise": {
+    "subtitle": "sounds.zenkai.rage_rise",
+    "sounds": ["zenkai:rage_rise"]
+  },
+  "rage_burst": {
+    "subtitle": "sounds.zenkai.rage_burst",
+    "sounds": ["zenkai:rage_burst"]
+  },
+  "rage_note_loss": {
+    "subtitle": "sounds.zenkai.rage_note_loss",
+    "sounds": ["zenkai:rage_note_loss"]
+  },
+  "rage_note_pet": {
+    "subtitle": "sounds.zenkai.rage_note_pet",
+    "sounds": ["zenkai:rage_note_pet"]
+  },
+  "rage_note_rescue": {
+    "subtitle": "sounds.zenkai.rage_note_rescue",
+    "sounds": ["zenkai:rage_note_rescue"]
   }
 }

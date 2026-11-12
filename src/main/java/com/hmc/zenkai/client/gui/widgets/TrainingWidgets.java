@@ -93,7 +93,7 @@ public final class TrainingWidgets {
         private int splitX() { return getX() + width - 50; }
 
         @Override
-        public void onClick(double mouseX, double mouseY) {
+        public void onClick(double mouseX, double mouseY, int button) {
             if (prev != null && mouseX < splitX()) prev.run();
             else next.run();
         }

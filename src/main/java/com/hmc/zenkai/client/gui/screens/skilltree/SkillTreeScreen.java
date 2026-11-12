@@ -17,6 +17,7 @@ import com.hmc.zenkai.feature.player.MindBudget;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.skills.SkillDef;
 import com.hmc.zenkai.config.ClientConfig;
+import com.hmc.zenkai.feature.skills.SuperForms;
 import com.hmc.zenkai.feature.race.RacePassives;
 import com.hmc.zenkai.feature.skilltree.SkillTreeBuyPacket;
 import com.hmc.zenkai.feature.skilltree.SkillTreeData;
@@ -71,8 +72,8 @@ import java.util.Set;
  *    de God Ki y lo tapa. HABILITADA (audiencia del maestro, F5): God Ki asoma delante de la
  *    cadena, que tiembla rompible; lo divino sigue detrás hasta conseguirlo.
  *  - Tooltip tipo advancement (F3): requisitos en verde/rojo y la pista con humor de la forma.
- *  - Clic derecho en un nodo = «marcar ruta» (F3): se iluminan los nodos que faltan hasta él, se
- *    atenúa el resto y su tooltip suma el TP total. Clic derecho en vacío lo quita.
+ *  - Clic derecho en una forma que ya se puede usar: la oculta o muestra en la rueda de poder (sustituyó al antiguo
+ *    «marcar ruta», retirado el 2026-11-08 por poco útil: las cadenas por raza son casi lineales).
  *  - Efectos animados (F6): resplandor suave de los nodos, deriva y titileo del fondo, pulso de
  *    los marcos según FormDef.Tier; ClientConfig.skillTreeReducedFx los apaga.
  *  - Tutorial (F7): la primera vez, y con el botón «?» de abajo a la izquierda.
@@ -127,7 +128,6 @@ public class SkillTreeScreen extends TreeCanvasScreen {
     private static final int LABEL_BG = 0xD0100C1C;
     private static final int VEIL = 0xA8080410;
     /** Ruta marcada con clic derecho (F3): cian, ajeno a los acentos de raza. */
-    private static final int ROUTE_COLOR = 0xFF40E0FF;
     private static final int TIP_BG = 0xF0100C1C;
     private static final int TIP_BORDER = 0xFFE8901C;
     private static final int TIP_NAME = 0xFFFFE070;
@@ -161,8 +161,6 @@ public class SkillTreeScreen extends TreeCanvasScreen {
     private static long layerClock;
     private Theme hoverTheme;
     private long hoverSince;
-    /** Destino de «marcar ruta» (clic derecho), o null. */
-    private static @Nullable ResourceLocation routeTarget;
     /** Animaciones de revelado en curso: nodo → instante de inicio. */
     private static final Map<ResourceLocation, Long> REVEALS = new HashMap<>();
     private static final long REVEAL_MS = 1600L;
@@ -181,8 +179,6 @@ public class SkillTreeScreen extends TreeCanvasScreen {
     /** Nodos que cuelgan de God Ki: la parte divina que tapa la cadena. */
     private final Set<ResourceLocation> divine = new HashSet<>();
     /** Nodos que faltan en la ruta marcada (destino incluido); vacío sin ruta. */
-    private final Set<ResourceLocation> route = new HashSet<>();
-    private long routeCost;
     private @Nullable ResourceLocation confirming;
     private long armedAt;
     /** God Ki sin conseguir: la cadena hace de muro (se recalcula al construir y en cada frame). */
@@ -274,8 +270,6 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         layout();
         sealed = computeSealed();
         startReveals();
-        if (routeTarget != null && !byId.containsKey(routeTarget)) routeTarget = null;
-        computeRoute();
 
         if (viewRace != race || selected == null || !byId.containsKey(selected)) {
             viewRace = race;
@@ -502,6 +496,10 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             if (x >= helpX() - 3) return true;
             if (x < vpLeft() + 6 + plateWidth(tpText()) + 4 + plateWidth(mindText())) return true;
         }
+        if (!chronicleOpen) {
+            int[] r = longPlateRect();
+            if (x >= r[0] - 2 && x < r[0] + r[2] + 2 && y >= r[1] - 2 && y < r[1] + r[3] + 2) return true;
+        }
         return false;
     }
 
@@ -567,26 +565,18 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         return p;
     }
 
-    /** Nodos que faltan desde lo poseído hasta el destino, por los padres del dibujo. */
-    private void computeRoute() {
-        route.clear();
-        routeCost = 0;
-        if (routeTarget == null || mc.player == null) return;
-        List<Node> path = new ArrayList<>();
-        Node n = byId.get(routeTarget);
-        while (n != null) {
-            boolean owned = SkillTreeNodes.evaluate(mc.player, n).state() == State.OWNED;
-            if (owned && n.kind() != Kind.PASSIVE) break;
-            if (!owned) path.add(0, n);
-            n = n.parent() == null ? null : byId.get(n.parent());
-        }
-        for (Node r : path) route.add(r.id());
-        routeCost = SkillTreeNodes.routeCost(mc.player, att.getRace(), path);
+    /** @return true si el nodo era una forma usable y se alternó su visibilidad en la rueda. */
+    private boolean toggleWheelHidden(@Nullable ResourceLocation id) {
+        Node n = id == null ? null : byId.get(id);
+        if (n == null || n.form() == null || mc.player == null || !SuperForms.usable(mc.player, n.form())) return false;
+        boolean hidden = ClientConfig.toggleWheelFormHidden(n.form().toString());
+        mc.player.displayClientMessage(Component.translatable(hidden ? "screen.zenkai.skill_tree.wheel_hidden"
+                : "screen.zenkai.skill_tree.wheel_shown", nameOf(n)), true);
+        return true;
     }
 
-    private void toggleRoute(@Nullable ResourceLocation id) {
-        routeTarget = id == null || id.equals(routeTarget) ? null : id;
-        computeRoute();
+    private boolean wheelHidden(Node n) {
+        return n.form() != null && ClientConfig.wheelFormHidden(n.form().toString());
     }
 
     private void onCenterPressed() {
@@ -647,8 +637,13 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         if (super.mouseClicked(mx, my, button)) return true;
         // En la crónica el visor es solo lectura: se traga el clic (sin arrastre, sin rutas, sin compra).
         if (chronicleOpen) return inViewport(mx, my);
+        if (button == 0 && overLongPlate(mx, my)) {
+            ClientConfig.setAlwaysLongTransform(!ClientConfig.alwaysLongTransform());
+            return true;
+        }
         if (button == 1 && inViewport(mx, my) && !overHud(mx, my)) {
-            toggleRoute(nodeAt(mx, my));
+            // Clic derecho en una forma que ya se puede usar: la oculta o muestra en la rueda (sustituyó al antiguo «marcar ruta»).
+            toggleWheelHidden(nodeAt(mx, my));
             return true;
         }
         if (button == 0 && inViewport(mx, my) && !overHud(mx, my)) {
@@ -737,7 +732,6 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             my = devMouse[1];
         }
         sealed = computeSealed();
-        if (routeTarget != null) computeRoute(); // tras una compra la ruta encoge sola
         stepCamera();
         clampPan();
         ResourceLocation hover = dragging ? null : nodeAt(mx, my);
@@ -776,6 +770,9 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             if (hn != null) drawTooltip(g, hn, mx, my);
         } else if (overSeal(mx, my)) {
             drawSealTooltip(g, mx, my);
+        } else if (overLongPlate(mx, my)) {
+            drawTipBox(g, List.of(new TipLine(Component.translatable("screen.zenkai.skill_tree.always_long"), TIP_NAME),
+                    new TipLine(Component.translatable("screen.zenkai.skill_tree.always_long_tip"), TIP_HINT)), -1f, -1, mx, my);
         }
     }
 
@@ -986,7 +983,6 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         int x = Math.round(p[0] - NODE / 2f), y = Math.round(p[1] - NODE / 2f);
         boolean fx = !ClientConfig.skillTreeReducedFx();
         float reveal = revealProgress(n.id());
-        boolean dimmed = !route.isEmpty() && !route.contains(n.id());
 
         // Resplandor suave (F6, «difuminar los cuadrados»): capas de alfa decreciente con las
         // esquinas recortadas en vez de un cuadrado plano detrás del marco.
@@ -998,21 +994,17 @@ public class SkillTreeScreen extends TreeCanvasScreen {
                     : 0x30 + tier * 0x0C;
             softGlow(g, x - 1, y - 1, accent, a);
         }
-        if (route.contains(n.id())) softGlow(g, x, y, ROUTE_COLOR, fx ? pulseAlpha(1000L, 0x40, 0x90) : 0x70);
 
         if (n.id().equals(confirming)) {
             ring(g, x - 2, y - 2, NODE + 4, pulse(CONFIRM_RING, 500L));
         } else if (n.id().equals(selected)) {
             ring(g, x - 2, y - 2, NODE + 4, SELECT_RING);
-        } else if (route.contains(n.id())) {
-            ring(g, x - 2, y - 2, NODE + 4, ROUTE_COLOR);
         } else if (e.state() == State.AVAILABLE) {
             ring(g, x - 2, y - 2, NODE + 4, pulse(AVAILABLE_RING, 1200L));
         }
 
         // Marco (oscurecido si no se posee) e icono (más oscuro cuanto más lejos esté).
         float fb = owned ? 1f : 0.55f;
-        if (dimmed) fb *= 0.45f;
         SkillTreeArt.blitTinted(g, SkillTreeArt.FRAMES, x, y, frame.ordinal() * SkillTreeArt.FRAME_TEX,
                 ornate(n) ? SkillTreeArt.FRAME_TEX : 0, SkillTreeArt.FRAME_TEX, SkillTreeArt.FRAME_TEX,
                 SkillTreeArt.FRAMES_W, SkillTreeArt.FRAMES_H, fb, fb, fb * 1.05f, reveal);
@@ -1021,7 +1013,6 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             case CONDITION, NEED_REQS -> 0.55f;
             default -> 0.35f;
         };
-        if (dimmed) ib *= 0.45f;
         // Formas: textura propia > celda del atlas > icon_default del JSON > «?» (SkillTreeArt.formIcon). El resto de nodos, igual que siempre.
         SkillTreeArt.FormIcon formIcon = n.form() != null && n.kind() != Kind.ROOT ? SkillTreeArt.formIcon(n.form()) : null;
         int icon = formIcon != null ? formIcon.cell() : SkillTreeArt.iconIndex(n, att.getRace());
@@ -1064,6 +1055,15 @@ public class SkillTreeScreen extends TreeCanvasScreen {
                     SkillTreeArt.HUD_W, SkillTreeArt.HUD_H);
         }
 
+        // Forma oculta de la rueda: una barra diagonal roja en la esquina superior derecha.
+        if (wheelHidden(n)) {
+            for (int i = 0; i < 9; i++) {
+                int px = x + NODE - 11 + i, py = y + 2 + i;
+                g.fill(px - 1, py - 1, px + 2, py + 2, 0xCC000000);
+            }
+            for (int i = 0; i < 9; i++) g.fill(x + NODE - 11 + i, y + 2 + i, x + NODE - 10 + i, y + 3 + i, 0xFFE05050);
+        }
+
         // Progreso de un nodo con niveles (doctrinas, pasiva): barrita bajo el marco.
         int labelY = y + NODE + 2;
         if ((n.kind() == Kind.LEVELED || n.kind() == Kind.PASSIVE) && e.maxLevel() > 1) {
@@ -1074,7 +1074,7 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             labelY += 3;
         }
 
-        if (zoom() >= 1f) labels.add(new Label(p[0], labelY, shortName(n), accent, owned && !dimmed));
+        if (zoom() >= 1f) labels.add(new Label(p[0], labelY, shortName(n), accent, owned));
     }
 
     /** Resplandor sin esquinas duras: tres marcos concéntricos de alfa decreciente, cada uno con
@@ -1264,6 +1264,21 @@ public class SkillTreeScreen extends TreeCanvasScreen {
     // ── Placas de TP/MND y botones (dentro del lienzo) ───────────────────────
 
 
+    private Component longPlateText() {
+        return Component.translatable(ClientConfig.alwaysLongTransform() ? "screen.zenkai.skill_tree.always_long_on"
+                : "screen.zenkai.skill_tree.always_long_off");
+    }
+
+    /** Rectángulo {x, y, ancho, alto} de la placa de la secuencia larga: abajo a la izquierda del visor. */
+    private int[] longPlateRect() {
+        return new int[]{vpLeft() + 4, vpBottom() - 4 - PLATE_H, plateWidth(longPlateText()), PLATE_H};
+    }
+
+    private boolean overLongPlate(double mx, double my) {
+        int[] r = longPlateRect();
+        return !chronicleOpen && mx >= r[0] && mx < r[0] + r[2] && my >= r[1] && my < r[1] + r[3];
+    }
+
     private Component mindText() {
         return att == null ? Component.empty() : Component.translatable("screen.zenkai.physical.mnd_free",
                 MindBudget.free(att), MindBudget.total(att));
@@ -1275,6 +1290,11 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         x += drawPlate(g, x, y, tpText(), ZenkaiPalette.TP_ON_DARK) + 4;
         int free = MindBudget.free(att);
         drawPlate(g, x, y, mindText(), free < 0 ? ZenkaiPalette.DENIED : ZenkaiPalette.MIND_ON_DARK);
+        // Interruptor de la secuencia larga (preferencia de este cliente), abajo a la izquierda: la cabecera no tiene sitio.
+        if (!chronicleOpen) {
+            int[] r = longPlateRect();
+            drawPlate(g, r[0], r[1], longPlateText(), ClientConfig.alwaysLongTransform() ? ZenkaiPalette.OK : TIP_MUTED);
+        }
         // Platos redondos detrás de la lupa y del botón de centrar (los widgets van encima).
         for (int bx : new int[]{zoomBtnX(), centerBtnX()}) {
             SkillTreeArt.blit(g, SkillTreeArt.HUD, bx - (BTN_PLATE - ICON_BTN) / 2f, btnY() - (BTN_PLATE - ICON_BTN) / 2f,
@@ -1358,18 +1378,15 @@ public class SkillTreeScreen extends TreeCanvasScreen {
                 lines.add(new TipLine(seqToComponent(seq), TIP_HINT));
             }
         }
-        if (n.id().equals(routeTarget) && !route.isEmpty()) {
-            lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.route_cost",
-                    ZenkaiNumbers.format(routeCost), route.size()), ROUTE_COLOR));
-        }
 
         if (n.id().equals(confirming)) {
             lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.confirm"), CONFIRM_RING));
         } else if (e.purchasable()) {
             lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.buy"), ZenkaiPalette.OK));
         }
-        if (routeTarget == null || !routeTarget.equals(n.id())) {
-            lines.add(new TipLine(Component.translatable("screen.zenkai.skill_tree.route_hint"), TIP_MUTED));
+        if (n.form() != null && mc.player != null && SuperForms.usable(mc.player, n.form())) {
+            lines.add(new TipLine(Component.translatable(wheelHidden(n) ? "screen.zenkai.skill_tree.wheel_hint_hidden"
+                    : "screen.zenkai.skill_tree.wheel_hint"), TIP_MUTED));
         }
         drawTipBox(g, lines, mastery, barAfter, mx, my);
     }

@@ -46,6 +46,8 @@ public final class RageSystem {
 
     /** Lo pone awaken() mientras cambia de forma, para que el oyente de «primera transformación» sepa que la vía es Rage. */
     static final ThreadLocal<Boolean> AWAKENING_IN_PROGRESS = new ThreadLocal<>();
+    /** El trigger que causa el despertar en curso: la escena (pose, nota de sonido) cambia según cuál fue. Vacío fuera de Rage. */
+    static final ThreadLocal<RageTrigger> AWAKENING_TRIGGER = new ThreadLocal<>();
 
     public static RageResult handle(ServerPlayer sp, RageTrigger trigger, String eventId) {
         return handle(sp, trigger, trigger.intensity(), eventId, null);
@@ -133,7 +135,7 @@ public final class RageSystem {
                 result = progress(forms, parent, intensity, trace);   // falta maestría del padre: suma a la del padre
                 break;
             }
-            if (awaken(sp, att, forms, a, trace)) {
+            if (awaken(sp, att, forms, a, trace, trigger)) {
                 result = RageResult.AWAKENING;
                 break;
             }
@@ -180,7 +182,7 @@ public final class RageSystem {
 
     /** Concede la forma por el mecanismo que la posee y la activa en el acto. false si no se sabe concederla. */
     private static boolean awaken(ServerPlayer sp, PlayerStatsAttachment att, PlayerFormAttachment forms, RageAwakening a,
-                                  Trace trace) {
+                                  Trace trace, RageTrigger trigger) {
         ResourceLocation form = a.form();
         Race race = att.getRace();
         int depth = SuperForms.depthOf(race, form);
@@ -203,10 +205,12 @@ public final class RageSystem {
         // «Primera vez» se decide ANTES de cambiar de forma: el oyente de FormChangedEvent la marca como vista.
         trace.cinematic = !att.flags().hasSeenLongCinematic(form.toString());
         AWAKENING_IN_PROGRESS.set(Boolean.TRUE);
+        AWAKENING_TRIGGER.set(trigger);
         try {
             forms.setFormId(sp, form);   // el despertar transforma en el acto; FormChangedEvent puede vetarlo, el desbloqueo queda
         } finally {
             AWAKENING_IN_PROGRESS.remove();
+            AWAKENING_TRIGGER.remove();
         }
         sp.displayClientMessage(Component.translatable("message.zenkai.rage_awakening",
                 Component.translatable(FormDef.nameKey(form))).withStyle(ChatFormatting.RED, ChatFormatting.BOLD), true);

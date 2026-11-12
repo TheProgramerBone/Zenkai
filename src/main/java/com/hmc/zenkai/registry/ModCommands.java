@@ -175,6 +175,21 @@ public class ModCommands {
                                 .then(Commands.argument("player", EntityArgument.players())
                                         .executes(ctx -> forEach(ctx, targets(ctx), PlayerCommands::clearPets)))))
 
+                // ── /zenkai rage chronicle clear [objetivos] ──────────────────────
+                // Vacía la crónica de Rage Forms (solo pruebas; la crónica normal es historia y no se borra).
+                .then(Commands.literal("rage")
+                        .then(Commands.literal("chronicle")
+                                .then(Commands.literal("clear")
+                                        .executes(ctx -> PlayerCommands.clearRageChronicle(ctx, ctx.getSource().getPlayerOrException()))
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .executes(ctx -> forEach(ctx, targets(ctx), PlayerCommands::clearRageChronicle)))))
+                        // /zenkai rage scene reset [objetivos]: olvida qué formas ya se vieron y vuelve a armar la secuencia larga (pruebas).
+                        .then(Commands.literal("scene")
+                                .then(Commands.literal("reset")
+                                        .executes(ctx -> PlayerCommands.resetRageScene(ctx, ctx.getSource().getPlayerOrException()))
+                                        .then(Commands.argument("player", EntityArgument.players())
+                                                .executes(ctx -> forEach(ctx, targets(ctx), PlayerCommands::resetRageScene))))))
+
                 .then(Commands.literal("struct")
                         .then(Commands.literal("place")
                                 .then(Commands.argument("which", StringArgumentType.word())

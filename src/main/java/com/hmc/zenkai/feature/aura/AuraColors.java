@@ -49,7 +49,7 @@ public final class AuraColors {
     public static Layers resolveLayers(Player p, boolean overrideActive, boolean overrideCustom, int overrideRgb) {
         var visual = p.getData(ZenkaiDataAttachments.PLAYER_VISUAL.get());
         var form = p.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
-        FormDef def = form.activeDef();
+        FormDef def = form.auraDef();
         boolean kaio = form.getKaioken().isOn();
         // Kaioken SOBRE una forma: rojo por FUERA envolviendo el color de la forma, siempre
         // ganando sobre la capa exterior propia de la forma (si tuviera una) — un jugador
