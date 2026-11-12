@@ -183,7 +183,7 @@
 				{
 					"name": "antenaiz",
 					"parent": "head",
-					"pivot": [0, 0, 0],
+					"pivot": [0, 24, 0.5],
 					"cubes": [
 						{"origin": [-13, 24, 0.5], "size": [13, 11, 0], "uv": [0, 0]}
 					]
@@ -191,7 +191,7 @@
 				{
 					"name": "antenader",
 					"parent": "head",
-					"pivot": [0, 0, 0],
+					"pivot": [0, 24, 0.5],
 					"cubes": [
 						{"origin": [0, 24, 0.5], "size": [13, 11, 0], "uv": [0, 12]}
 					]

@@ -325,7 +325,17 @@ public final class AuraComposer {
             // Un aviso de secuencia larga vigente arranca la escena YA, sin esperar al cambio de forma: el cliente lo retrasa hasta el
             // estallido (ClientFormDelay) para que la forma transicione conforme avanza la secuencia. También cubre que el runtime nazca
             // con el aviso y la forma en el mismo tick.
-            if (com.hmc.zenkai.feature.rage.LongTransformState.pending(p.getUUID())) { fire = true; fromNotice = true; }
+            // Con la preferencia en «Apagada» el aviso NO arranca nada: se gasta y la transformación corta sale, como siempre, con el
+            // cambio de forma. Sin esto el estallido corto se disparaba al PULSAR la tecla (el aviso llega al empezar la carga) y el
+            // cambio real, segundos después, ya no explotaba (skipChangeTo).
+            if (com.hmc.zenkai.feature.rage.LongTransformState.pending(p.getUUID())) {
+                if (com.hmc.zenkai.config.ClientConfig.longTransformMode() == LongTransformMode.OFF) {
+                    com.hmc.zenkai.feature.rage.LongTransformState.consumeInfo(p.getUUID());
+                } else {
+                    fire = true;
+                    fromNotice = true;
+                }
+            }
             rt.lastFormId = id;
             rt.seenForm = true;
         }
@@ -339,7 +349,8 @@ public final class AuraComposer {
         if (fromNotice && pendingInfo != null && pendingInfo.form() != null
                 && !pendingInfo.form().equals(p.getData(ZenkaiDataAttachments.PLAYER_FORM.get()).getFormId())) {
             rt.skipChangeTo = pendingInfo.form();   // la forma aún no ha cambiado: su cambio (en el estallido) no es otra transformación
-        }        rt.transform.trigger(TransformFx.Type.of(t), f, rt.components, longSeq);
+        }
+        rt.transform.trigger(TransformFx.Type.of(t), f, rt.components, longSeq);
         // La escena que rodea al aura (pose, sonido, viñeta, título) arranca en el mismo instante que el estallido.
         if (longSeq) com.hmc.zenkai.client.rage.AwakeningScene.start(p, self, pendingInfo, f.outer, mode);
         // La cámara solo la toca la secuencia larga PROPIA y solo con la preferencia completa.

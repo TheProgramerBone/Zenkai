@@ -168,6 +168,17 @@ public final class PlayerCommands {
         // punto único que usará la reencarnación (SkillTree.resetTree).
         com.hmc.zenkai.feature.skilltree.SkillTree.resetTree(sp);
         att.setHasTail(true);
+        // Muerte (pedido del usuario, 2026-11-12): un personaje nuevo nace VIVO. Antes el reset dejaba inOtherworld y la visita a la
+        // Tierra puestos, así que el personaje recién creado seguía muerto con halo y temporizador. Se usa la misma resurrección
+        // que Yemma, /zenkai revive y el deseo (limpia muerte, visita y su espera, muerte hardcore, espectador residual): si está
+        // en el Otherworld vuelve a su punto de respawn; si está de visita en la Tierra se queda donde está.
+        if (att.isInOtherworld()) {
+            if (sp.level().dimension().equals(com.hmc.zenkai.registry.ModDimensions.OTHERWORLD_LEVEL)) {
+                com.hmc.zenkai.feature.player.OtherworldManager.revive(sp);
+            } else {
+                com.hmc.zenkai.feature.player.OtherworldManager.reviveAt(sp, sp.serverLevel(), sp.getX(), sp.getY(), sp.getZ());
+            }
+        }
         // Servicio de Kaiosama: un reset "full" también devuelve el derecho a pedir las
         // pesas de nuevo, igual que borra lo demás — no sería full si dejara este
         // regalo de una sola vez "ya gastado" para una vida completamente nueva.

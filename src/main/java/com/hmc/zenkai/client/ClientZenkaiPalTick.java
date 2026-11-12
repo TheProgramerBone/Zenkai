@@ -99,8 +99,12 @@ public final class ClientZenkaiPalTick {
         if (com.hmc.zenkai.config.ClientConfig.longTransformMode() == com.hmc.zenkai.client.aura.compose.LongTransformMode.OFF) return false;
         net.minecraft.resources.ResourceLocation target = form.getHoldTargetForm();
         if (target == null) return false;
+        if (!stats.flags().hasSeenLongCinematic(target.toString())) return true;
+        // Misma regla que FirstTransformations.announceAtHoldStart: «siempre la larga» solo arranca al pulsar si la carga normal no es
+        // más larga que la escena; si no, se ve la pose normal y la escena sale al completarse.
         return com.hmc.zenkai.config.ClientConfig.alwaysLongTransform()
-                || !stats.flags().hasSeenLongCinematic(target.toString());
+                && form.holdTicksFor(com.hmc.zenkai.feature.forms.FormRegistry.get(target))
+                        <= com.hmc.zenkai.feature.rage.FirstTransformations.LONG_SCENE_TICKS;
     }
 
     private static void applyLocalBoost(AbstractClientPlayer p, boolean boosting) {
@@ -237,7 +241,7 @@ public final class ClientZenkaiPalTick {
             }
 
             // Si esta transformación va a ser la secuencia LARGA, la pose normal de mantener la tecla no se reproduce: la larga es
-            // lo primero que se ve (la escena arranca al completarse la carga). Solo para el jugador propio, que es quien tiene
+            // lo primero que se ve (la escena arranca al pulsar la tecla). Solo para el jugador propio, que es quien tiene
             // la preferencia y el estado de «forma ya vista».
             boolean animHeld = heldNow && !(p == mc.player && longWillReplaceHold(form, stats));
 

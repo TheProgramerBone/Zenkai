@@ -39,10 +39,13 @@ public final class FirstTransformations {
      * La carga de transformación de {@code target} acaba de empezar (el jugador pulsó la tecla). Si va a ser larga (primera vez de la
      * forma o «siempre larga»), se avisa YA: la escena arranca al pulsar, en vez de la pose normal de carga, y no tras completarse.
      */
-    public static void announceAtHoldStart(ServerPlayer sp, ResourceLocation target) {
+    public static void announceAtHoldStart(ServerPlayer sp, ResourceLocation target, int normalHoldTicks) {
         if (FormIds.BASE.equals(target)) return;
-        boolean wants = AlwaysLongPrefPacket.wants(sp.getUUID())
-                || !PlayerStatsAttachment.get(sp).flags().hasSeenLongCinematic(target.toString());
+        boolean first = !PlayerStatsAttachment.get(sp).flags().hasSeenLongCinematic(target.toString());
+        // «Siempre la larga» es solo presentación: anunciarla al pulsar fija la carga en LONG_SCENE_TICKS, y si la carga normal de esa
+        // forma es MÁS larga (Potencial Desatado: 100 sin maestría) la opción la acortaría, una ventaja de combate. En ese caso no se
+        // anuncia aquí y la escena sale al completarse la carga normal (onFormChanged), como antes de arrancar al pulsar.
+        boolean wants = first || (AlwaysLongPrefPacket.wants(sp.getUUID()) && normalHoldTicks <= LONG_SCENE_TICKS);
         if (!wants) return;
         ANNOUNCED.put(sp.getUUID(), new Announced(target, sp.level().getGameTime()));
         try {

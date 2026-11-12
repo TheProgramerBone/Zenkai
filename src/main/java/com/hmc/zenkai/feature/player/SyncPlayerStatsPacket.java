@@ -1,6 +1,7 @@
 package com.hmc.zenkai.feature.player;
 
 import com.hmc.zenkai.Zenkai;
+import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.client.gui.screens.RaceSelectionScreen;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.client.Minecraft;
@@ -45,17 +46,35 @@ public record SyncPlayerStatsPacket(int entityId, CompoundTag data) implements C
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || msg.data() == null) return;
 
-        // No pisar el preview del propio jugador mientras está creando personaje.
-        if (mc.player != null
-                && mc.player.getId() == msg.entityId()
-                && mc.screen instanceof RaceSelectionScreen) {
-            return;
-        }
-
         Entity e = mc.level.getEntity(msg.entityId());
         if (!(e instanceof Player p)) return;
 
         PlayerStatsAttachment att = p.getData(ZenkaiDataAttachments.PLAYER_STATS.get());
+        // Creación de personaje: la raza elegida es un PREVIEW que solo vive en el cliente hasta Confirmar (StyleSelectionScreen
+        // la manda con ChooseRacePacket leyendo este attachment). Un sync a mitad del flujo la pisaba con la del servidor (sin
+        // raza, Humano) y el personaje salía Humano: «confirmaba pero no quedaba» (2026-11-12, reproducido con RaceFlowShots;
+        // en el mundo del usuario el jugador estaba de visita en la Tierra y EarthVisit sincroniza cada segundo). Antes había
+        // un guard que descartaba el sync ENTERO, y solo en la pantalla de raza: las de apariencia, cabeza, cuerpo y estilo
+        // quedaban sin proteger. Ahora el sync se aplica (TP, temporizadores…) y solo se conserva el preview de raza mientras el
+        // servidor aún no tenga una elegida.
+        boolean ownCreation = mc.player != null && mc.player.getId() == msg.entityId() && inCreationFlow(mc);
+        Race previewRace = att.getRace();
+        boolean previewChosen = att.isRaceChosen();
         att.load(msg.data());
+        if (ownCreation && !att.isRaceChosen()) {
+            att.setRace(previewRace);
+            att.setRaceChosen(previewChosen);
+        }
+    }
+
+    /** ¿Está abierta alguna pantalla del flujo de creación (raza → apariencia → cabeza → cuerpo → estilo)? */
+    @OnlyIn(Dist.CLIENT)
+    private static boolean inCreationFlow(Minecraft mc) {
+        var s = mc.screen;
+        return s instanceof RaceSelectionScreen
+                || s instanceof com.hmc.zenkai.client.gui.screens.AppearanceScreen
+                || s instanceof com.hmc.zenkai.client.gui.screens.HeadAppearanceScreen
+                || s instanceof com.hmc.zenkai.client.gui.screens.BodyColorsScreen
+                || s instanceof com.hmc.zenkai.client.gui.screens.StyleSelectionScreen;
     }
 }

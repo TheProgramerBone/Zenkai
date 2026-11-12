@@ -31,13 +31,14 @@ import java.util.List;
 
 /**
  * ESCENA de la primera transformación (Rage Forms y cualquier otra vía): lo que rodea al aura larga y la cámara. Cada cliente que
- * recibe el aviso ({@code LongTransformPacket}) arranca su copia de la escena en el mismo instante en que el compositor de auras
- * dispara el estallido, así que todo comparte reloj con {@code TransformFx} (tres tiempos de 3 s):
+ * recibe el aviso ({@code LongTransformPacket}) arranca su copia de la escena en el mismo instante que el compositor de auras dispara
+ * la secuencia larga (al PULSAR la tecla, o en el acto en un despertar por muerte), así que todo comparte reloj con {@code TransformFx}:
  * <pre>
- *   QUIEBRE   0 - 0,9 s   latido grave; el jugador cae / se encorva (clip PAL); el mundo se oscurece y la viñeta de color sube.
- *   ESCALADA  0,9 - 1,9 s sube el viento y el zumbido; el temblor aumenta.
- *   ESTALLIDO 1,9 s       golpe + cola reverberada, la nota del acontecimiento, destello, y (rugido / Beast) un rayo solo visual.
- *   REMATE    2,2 - 4,5 s el nombre de la forma aparece grande y se desvanece.
+ *   QUIEBRE   0 - 1,9 s   latido grave; el jugador cae / se encorva (clip PAL); el mundo se oscurece y la viñeta de color sube.
+ *   ESCALADA  1,9 - 4 s   sube el viento y el zumbido; el temblor aumenta; pelo y ojos viran hacia la forma (buildup).
+ *   ESTALLIDO 4 s         golpe + cola reverberada, la nota del acontecimiento, destello, (rugido / Beast) un rayo solo visual;
+ *                         ClientFormDelay aplica aquí la forma nueva y el servidor completa la carga en el mismo tick.
+ *   REMATE    4,3 - 6,9 s el nombre de la forma aparece grande y se desvanece.
  * </pre>
  * La POSE depende del acontecimiento: rescate = levantarse en calma; Beast = agarrarse el pecho; SSJ2 / Humano ultra = rugido;
  * el resto de duelo = de rodillas; otras vías (entrenamiento, ritual…) usan el rugido. La NOTA de sonido, igual: pérdida de un
@@ -259,7 +260,7 @@ public final class AwakeningScene {
         fill(g, 0, 0, w, h, mix(0xFFFFFF, rgb(s.rgb), 0.3f), 0.32f * near * f);
     }
 
-    /** Nombre de la forma, grande, con el color del aura; entra a los 44 ticks y se va hacia el 90. */
+    /** Nombre de la forma, grande, con el color del aura; entra a los 86 ticks y se va hacia el 136. */
     private static void title(GuiGraphics g, Minecraft mc, Scene s, float age, int w, int h) {
         if (s.form == null || age < 86f || age > OVERLAY_TICKS - 2) return;
         float a = age < 96f ? (age - 86f) / 10f : age < 122f ? 1f : Math.max(0f, 1f - (age - 122f) / 14f);

@@ -458,13 +458,16 @@ public final class SkillTreeShots {
         // Tutorial con la cámara LEJOS (rama de Tori-Bot): cada paso debe traerla al nodo que resalta.
         PLAN.add(() -> { forgetTutorial(); mc.setScreen(new SkillsTreeScreen()); wait = WAIT; });
         PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); wait = 5; });
-        PLAN.add(() -> { if (mc.screen instanceof SkillsTreeScreen s) { s.devFocus(3, null); s.devStartTutorial(); } wait = 40; });
+        // Si el tutorial no llegó a abrirse solo, el Escape de arriba cerró la PANTALLA y cada captura siguiente salía sobre el
+        // mundo (2026-11-12): se reabre antes de seguir.
+        PLAN.add(() -> { reopenSkills(mc); if (mc.screen instanceof SkillsTreeScreen s) { s.devFocus(3, null); s.devStartTutorial(); } wait = 40; });
         for (int i = 1; i <= 7; i++) {
             final int n = i;
             PLAN.add(() -> capture(mc, "skills_tutorial_" + n));
             PLAN.add(() -> { if (mc.screen != null) mc.screen.mouseClicked(10, 10, 0); wait = 40; });
         }
         PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); wait = 5; });
+        PLAN.add(() -> { reopenSkills(mc); wait = WAIT; });
         String[][] hovers = {
                 {"0", "m:kami", "kami_master"}, {"0", "ki_sense@kami", "kami_kisense"}, {"0", "meditation@kami", "kami_meditation"},
                 {"1", "m:korin", "korin_master"}, {"1", "run@korin", "korin_run"}, {"1", "ki_fist@korin", "korin_fist_unlearned"},
@@ -1016,6 +1019,11 @@ public final class SkillTreeShots {
         });
         PLAN.add(() -> capture(mc, tag + "_3_bought"));
         PLAN.add(() -> { SkillTreeScreen.devMouse = null; });
+    }
+
+    /** Reabre el árbol de skills si un Escape del plan lo cerró (en vez de cerrar solo el tutorial). */
+    private static void reopenSkills(Minecraft mc) {
+        if (!(mc.screen instanceof SkillsTreeScreen)) mc.setScreen(new SkillsTreeScreen());
     }
 
     private static void capture(Minecraft mc, String name) {

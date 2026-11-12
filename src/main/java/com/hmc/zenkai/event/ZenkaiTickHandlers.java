@@ -117,6 +117,8 @@ public class ZenkaiTickHandlers {
         RacePassiveSystem.forget(e.getEntity().getUUID());
         com.hmc.zenkai.feature.rage.RageChronicleRequestPacket.forget(e.getEntity().getUUID());
         com.hmc.zenkai.feature.rage.AlwaysLongPrefPacket.forget(e.getEntity().getUUID());
+        // Una carga larga a medias al salir: sin esto el aviso quedaba en el mapa y al volver se mandaba una cancelación huérfana.
+        com.hmc.zenkai.feature.rage.FirstTransformations.forget(e.getEntity().getUUID());
         WeightLoadSystem.forget(e.getEntity().getUUID());
         OverlayMetersSystem.forget(e.getEntity().getUUID());
         if (e.getEntity() instanceof ServerPlayer sp) ScouterOverload.forget(sp);

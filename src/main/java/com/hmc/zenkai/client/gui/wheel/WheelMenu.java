@@ -180,7 +180,7 @@ public final class WheelMenu {
 
     private static void addTieredLeaf(List<WheelNode> race, List<WheelNode> superForms,
                                       List<WheelNode> divine, ResourceLocation id, ResourceLocation selected) {
-        // Oculta por el jugador (clic derecho con Mayús en el árbol de transformaciones). La seleccionada se ve siempre.
+        // Oculta por el jugador (clic derecho en el árbol de transformaciones). La seleccionada se ve siempre.
         if (!id.equals(selected) && com.hmc.zenkai.config.ClientConfig.wheelFormHidden(id.toString())) return;
         FormDef def = FormDef.get(id);
         int color = def == null ? COL_FORMS : (0xFF000000 | def.auraRgb());

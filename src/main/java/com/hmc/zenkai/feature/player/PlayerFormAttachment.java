@@ -357,7 +357,7 @@ public class PlayerFormAttachment {
         // Al pulsar la tecla, si la transformación va a ser larga, la escena arranca YA y la carga dura EXACTAMENTE lo que ella hasta el estallido (el cambio cae en
         // el estallido). Sin esto la secuencia larga solo empezaba al completarse la carga, tras la pose normal.
         if (p instanceof net.minecraft.server.level.ServerPlayer sp) {
-            if (!was) com.hmc.zenkai.feature.rage.FirstTransformations.announceAtHoldStart(sp, target);
+            if (!was) com.hmc.zenkai.feature.rage.FirstTransformations.announceAtHoldStart(sp, target, required);
             if (com.hmc.zenkai.feature.rage.FirstTransformations.longAnnounced(sp, target)) {
                 required = com.hmc.zenkai.feature.rage.FirstTransformations.LONG_SCENE_TICKS;   // exacto: el cambio cae en el estallido
             }

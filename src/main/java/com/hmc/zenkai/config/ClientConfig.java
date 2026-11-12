@@ -152,9 +152,9 @@ public final class ClientConfig {
                     "Play the long sequence on EVERY transformation of yours, not only the first time a form is used. "
                             + "Presentation only: no invulnerability and no lock, those stay exclusive to the first time", false);
 
-    /** Formas que el jugador oculta de la rueda (clic derecho con Mayús en el árbol). Preferencia de este cliente, no de la partida. */
+    /** Formas que el jugador oculta de la rueda (clic derecho en el árbol). Preferencia de este cliente, no de la partida. */
     private static final ModConfigSpec.ConfigValue<List<? extends String>> HIDDEN_WHEEL_FORMS =
-            BUILDER.comment("Forms hidden from the power wheel (Shift + right click on the form in the transformation tree)")
+            BUILDER.comment("Forms hidden from the power wheel (right click on the form in the transformation tree)")
                     .defineListAllowEmpty("transformation.hidden_wheel_forms", List.of(), () -> "", o -> o instanceof String);
 
     private static final ModConfigSpec.BooleanValue KI_SENSE_CAMERA_SHAKE =
