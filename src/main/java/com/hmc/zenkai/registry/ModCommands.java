@@ -191,6 +191,33 @@ public class ModCommands {
                                                 .executes(ctx -> forEach(ctx, targets(ctx), PlayerCommands::resetRageScene))))))
 
                 .then(Commands.literal("struct")
+                        // /zenkai struct status: ¿están marcadas como colocadas las estructuras fijas (palacio de Yemma,
+                        // Kaiosama, Habitación del Tiempo)? La marca vive en los datos de cada dimensión.
+                        .then(Commands.literal("status")
+                                .executes(ctx -> {
+                                    var lines = com.hmc.zenkai.worldgen.ZenkaiStructurePlacement.status(ctx.getSource().getServer());
+                                    for (var l : lines) ctx.getSource().sendSuccess(() -> l, false);
+                                    return lines.size();
+                                }))
+                        // /zenkai struct restore <otherworld|kaiosama|htc|all> [force]: sin «force» solo coloca lo que NO esté
+                        // marcado; con «force» recoloca la estructura ENTERA, pisando lo que haya (úsalo en mundos que perdieron
+                        // la dimensión antes del arreglo, o para revertir una reconstrucción).
+                        .then(Commands.literal("restore")
+                                .then(Commands.argument("which", StringArgumentType.word())
+                                        .suggests((c, b) -> SharedSuggestionProvider.suggest(java.util.List.of("all", "otherworld", "kaiosama", "htc"), b))
+                                        .executes(ctx -> {
+                                            var lines = com.hmc.zenkai.worldgen.ZenkaiStructurePlacement.restore(ctx.getSource().getServer(),
+                                                    StringArgumentType.getString(ctx, "which"), false);
+                                            for (var l : lines) ctx.getSource().sendSuccess(() -> l, true);
+                                            return lines.size();
+                                        })
+                                        .then(Commands.literal("force")
+                                                .executes(ctx -> {
+                                                    var lines = com.hmc.zenkai.worldgen.ZenkaiStructurePlacement.restore(ctx.getSource().getServer(),
+                                                            StringArgumentType.getString(ctx, "which"), true);
+                                                    for (var l : lines) ctx.getSource().sendSuccess(() -> l, true);
+                                                    return lines.size();
+                                                }))))
                         .then(Commands.literal("place")
                                 .then(Commands.argument("which", StringArgumentType.word())
                                         .then(Commands.argument("pos", BlockPosArgument.blockPos())

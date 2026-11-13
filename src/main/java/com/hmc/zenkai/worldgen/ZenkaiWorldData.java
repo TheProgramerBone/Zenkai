@@ -34,6 +34,8 @@ public class ZenkaiWorldData extends SavedData {
 
     public boolean isPlaced(String key) { return placed.contains(key); }
     public void markPlaced(String key) { if (placed.add(key)) setDirty(); }
+    /** Quita la marca antigua una vez migrada a la dimensión (ver ZenkaiStructurePlacement#isPlaced). */
+    public void unmarkPlaced(String key) { if (placed.remove(key)) setDirty(); }
 
     public BlockPos getPos(String key) { return positions.get(key); }
     public void setPos(String key, BlockPos pos) { positions.put(key, pos); setDirty(); }

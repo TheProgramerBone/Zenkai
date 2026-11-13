@@ -447,25 +447,6 @@ public final class HfilSpringsGameTests {
         helper.succeed();
     }
 
-    /** La torre de Janemba (landmark): fuste alto de piedra del vacío con anillos de masa azul. */
-    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty", timeoutTicks = 200)
-    public static void janembaTowerPlaces(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
-        int pad = 22;
-        BlockPos ground = chunkCenteredSlab(helper, ModBlocks.HFIL_VOID_STONE.get().defaultBlockState(), pad,
-                new BlockPos(1, 225, 1), 75);
-        var piece = new com.hmc.zenkai.worldgen.structure.JanembaTowerPiece(ground.above(), 5L);
-        piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(),
-                RandomSource.create(5L), piece.getBoundingBox(), new net.minecraft.world.level.ChunkPos(ground), ground);
-        Block stone = ModBlocks.HFIL_VOID_STONE.get();
-        Block blue = ModBlocks.HFIL_JANEMBA_BLUE_MASS.get();
-        int high = countBox(level, ground, pad, 30, 64, s -> s.is(stone) || s.is(blue));
-        int rings = countBox(level, ground, pad, 1, 64, s -> s.is(blue));
-        helper.assertTrue(high > 20, "la torre pasa de 30 bloques de alto (" + high + ")");
-        helper.assertTrue(rings > 20, "anillos de masa azul (" + rings + ")");
-        helper.succeed();
-    }
-
     /**
      * Gelatina tintable (2026-10-05): un tinte sobre el bloque cambia su color y gasta el tinte, y
      * el color viaja en el ítem (componente BLOCK_STATE) de ida y vuelta: clic central → ítem del

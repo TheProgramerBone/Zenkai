@@ -454,8 +454,7 @@ public final class ModBiomeGen {
      *   (JanembaSpineRidgeFeature), lomos y olas azules (JanembaDomeFeature);</li>
      *   <li>mediano: arcos retorcidos (JanembaRibFeature);</li>
      *   <li>aire: grupos de esferas de gelatina de colores (JanembaOrbFeature);</li>
-     *   <li>micro: protuberancias y burbujas diminutas (JanembaNubFeature);</li>
-     *   <li>landmark: la torre con corona, como estructura (JanembaTowerStructure).</li>
+     *   <li>micro: protuberancias y burbujas diminutas (JanembaNubFeature).</li>
      * </ul>
      * Los montículos van primero porque son terreno: el resto se apoya encima. Cada una es
      * exclusiva de este bioma, así que su orden no puede chocar con el de ningún otro.

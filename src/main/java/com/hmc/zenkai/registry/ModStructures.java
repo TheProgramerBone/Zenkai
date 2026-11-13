@@ -46,14 +46,6 @@ public final class ModStructures {
     public static final DeferredHolder<StructurePieceType, StructurePieceType> FRIEZA_COCOON_PIECE =
             PIECES.register("frieza_cocoon", () -> FriezaCocoonPiece::new);
 
-    // La torre de Janemba (landmark del Janemba Rift; sustituye a la Compuerta el 2026-10-05).
-    // Pieza a mano, como las dos de arriba.
-    public static final DeferredHolder<StructureType<?>, StructureType<com.hmc.zenkai.worldgen.structure.JanembaTowerStructure>> JANEMBA_TOWER =
-            TYPES.register("janemba_tower", () -> () -> com.hmc.zenkai.worldgen.structure.JanembaTowerStructure.CODEC);
-
-    public static final DeferredHolder<StructurePieceType, StructurePieceType> JANEMBA_TOWER_PIECE =
-            PIECES.register("janemba_tower", () -> com.hmc.zenkai.worldgen.structure.JanembaTowerPiece::new);
-
     public static void register(IEventBus bus) {
         TYPES.register(bus);
         PIECES.register(bus);

@@ -10,8 +10,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 
 /**
  * Agujas orgánicas del Janemba Rift: la escala "grande" de las torres de la referencia (las del
- * fondo, más bajas y sin corona). La torre landmark con corona es la estructura
- * (JanembaTowerStructure); esta da escala alrededor. Geometría en {@link JanembaTowerShape}.
+ * fondo, más bajas y sin corona). Geometría en {@link JanembaTowerShape}.
  *
  * Exige suelo parejo bajo el pie (una aguja colgando de una ladera se ve rota) y suelo propio del
  * bioma: no nace encima de otra formación.

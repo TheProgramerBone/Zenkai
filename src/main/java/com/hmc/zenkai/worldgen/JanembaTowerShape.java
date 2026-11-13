@@ -9,10 +9,9 @@ import net.minecraft.world.level.block.state.BlockState;
  * (.claude/pendiente/referencia_janemba.png), un fuste violeta que se curva y se estrecha, con
  * anillos abultados, punta afilada y, en la torre grande, una corona de picos y pinchos en la base.
  *
- * Una sola forma para dos escalas: la aguja de paisaje ({@link JanembaSpireFeature}, sin corona) y
- * el landmark ({@code JanembaTowerPiece}, con corona). La variación entera sale de {@code seed} y de
- * hashes de posición, nunca de un RandomSource compartido: la pieza de estructura se dibuja una vez
- * por chunk que la toca y cada pasada tiene que producir exactamente la misma torre.
+ * Hoy la usa la aguja de paisaje ({@link JanembaSpireFeature}, sin corona). La torre landmark con corona
+ * (estructura y pieza) se borró el 2026-11-12, pero el parámetro {@code crown} sigue disponible. La variación
+ * entera sale de {@code seed} y de hashes de posición, nunca de un RandomSource compartido.
  */
 public final class JanembaTowerShape {
     private JanembaTowerShape() {}

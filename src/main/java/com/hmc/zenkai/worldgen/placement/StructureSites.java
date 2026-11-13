@@ -29,15 +29,13 @@ public final class StructureSites {
      *  estructura (13) más margen para la feature más grande de su bioma (la terraza, ~10). */
     private static final Site FRIEZA_COCOON = new Site(
             new RandomSpreadStructurePlacement(40, 16, RandomSpreadType.LINEAR, 20261002), 40, 30);
-    /** Torre de Janemba: spacing 20, separation 8, salt 20261004 (los de la antigua Compuerta).
-     *  Despeje mayor: el pie de la torre con sus pinchos mide ~14 de radio y las features del
-     *  Janemba Rift se recentran en su chunk (hasta ~11 del punto de colocación) y alcanzan ~20.
-     *  Además deja un claro alrededor del landmark, que la referencia pide (zonas abiertas). */
-    private static final Site JANEMBA_TOWER = new Site(
-            new RandomSpreadStructurePlacement(20, 8, RandomSpreadType.LINEAR, 20261004), 20, 45);
 
+    /**
+     * La torre de Janemba se BORRÓ del mod el 2026-11-12 (Janemba no tiene torre en el anime): ya no hay sitio que
+     * reservar, solo el del capullo de Freezer.
+     */
     public static boolean isNearStructureSite(long seed, BlockPos pos) {
-        return near(FRIEZA_COCOON, seed, pos) || near(JANEMBA_TOWER, seed, pos);
+        return near(FRIEZA_COCOON, seed, pos);
     }
 
     private static boolean near(Site site, long seed, BlockPos pos) {

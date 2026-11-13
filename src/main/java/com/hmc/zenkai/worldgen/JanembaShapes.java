@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
  *
  * Las formas escriben a través de un {@link Sink} y no directamente al nivel: la misma torre la
  * dibuja una feature (que escribe sin más) y una StructurePiece (que filtra por el chunk que se
- * está generando y no puede usar el RandomSource del chunk, ver JanembaTowerPiece).
+ * está generando y no puede usar el RandomSource del chunk).
  */
 public final class JanembaShapes {
     private JanembaShapes() {}
