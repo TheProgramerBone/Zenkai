@@ -1,5 +1,7 @@
 package com.hmc.zenkai.feature.rage;
 
+import com.hmc.zenkai.api.event.CriticalSurvivalEvent;
+
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.race.RacePassives;
 import net.minecraft.server.level.ServerPlayer;

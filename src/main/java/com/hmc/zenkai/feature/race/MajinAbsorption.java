@@ -223,6 +223,11 @@ public final class MajinAbsorption {
             impactFx(owner.serverLevel(), target, massColor(owner), false);
             return false;
         }
+        // Gancho de addons: cancelable, antes de matar al objetivo (ver MajinAbsorbEvent).
+        if (net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new com.hmc.zenkai.api.event.MajinAbsorbEvent(owner, target)).isCanceled()) {
+            impactFx(owner.serverLevel(), target, massColor(owner), false);
+            return false;
+        }
         PlayerStatsAttachment att = PlayerStatsAttachment.get(owner);
         long now = owner.level().getGameTime();
         // PL del objetivo ANTES de matarlo: lo que «Majin Devorador» le roba depende de cuánto pesa frente al Majin.

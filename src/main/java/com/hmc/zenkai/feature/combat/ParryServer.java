@@ -189,6 +189,9 @@ public final class ParryServer {
         if (!(src.getEntity() instanceof LivingEntity attacker) || attacker == defender) return false;
         if (src.getDirectEntity() instanceof KiProjectileEntity) return false;
         if (src.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) return false;
+        // Gancho de addons: cancelable, antes de resolver el parry (ver PlayerParryEvent).
+        if (net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new com.hmc.zenkai.api.event.PlayerParryEvent(defender, attacker, false,
+                isPerfectNow(defender.getUUID(), defender.level().getGameTime()))).isCanceled()) return false;
         succeed(defender, attacker, false);
         return true;
     }
@@ -247,6 +250,9 @@ public final class ParryServer {
     public static boolean tryParryProjectile(ServerPlayer defender, KiProjectileEntity proj) {
         if (!windowOpen(defender) || !proj.canBeDeflected()) return false;
         if (proj.getOwner() == defender) return false;
+        if (net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new com.hmc.zenkai.api.event.PlayerParryEvent(defender,
+                proj.getOwner() instanceof LivingEntity owner ? owner : null, true,
+                isPerfectNow(defender.getUUID(), defender.level().getGameTime()))).isCanceled()) return false;
         if (isPerfectNow(defender.getUUID(), defender.level().getGameTime())) {
             Entity origin = proj.getOwner();
             double speed = proj.getDeltaMovement().length();

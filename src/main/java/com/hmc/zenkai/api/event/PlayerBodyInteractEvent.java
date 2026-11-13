@@ -1,4 +1,4 @@
-package com.hmc.zenkai.feature.player.death;
+package com.hmc.zenkai.api.event;
 
 import com.hmc.zenkai.content.entity.misc.PlayerBodyEntity;
 import com.hmc.zenkai.feature.party.PartyManager;

@@ -74,8 +74,21 @@ public final class AlignmentManager {
         Integer delta = KILL_DELTAS.get(key);
         if (delta == null || delta == 0) return;
 
-        att.addAlignment(delta);
-        PlayerLifeCycle.sync(killer);
+        change(killer, delta, "kill");
+    }
+
+    /**
+     * Cambia el alineamiento de un jugador por una acción del juego: antes avisa a los addons con
+     * {@code AlignmentChangeEvent} (que pueden alterar el delta o cancelarlo) y después sincroniza. Es la ruta que usan
+     * matar y enterrar cuerpos, y la que debe usar un addon para que sus cambios sean visibles a los demás. Los
+     * comandos y la reencarnación fijan el valor directamente y no pasan por aquí.
+     */
+    public static void change(ServerPlayer sp, int delta, String reason) {
+        if (delta == 0) return;
+        var event = new com.hmc.zenkai.api.event.AlignmentChangeEvent(sp, delta, reason);
+        if (net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(event).isCanceled() || event.delta() == 0) return;
+        PlayerStatsAttachment.get(sp).addAlignment(event.delta());
+        PlayerLifeCycle.sync(sp);
     }
 
     private static final class Loader extends SimplePreparableReloadListener<Map<String, Integer>> {

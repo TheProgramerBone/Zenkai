@@ -333,9 +333,9 @@ public class PlayerBodyEntity extends Entity {
             sl.sendParticles(net.minecraft.core.particles.ParticleTypes.SOUL_FIRE_FLAME, getX(), getY() + 0.5, getZ(), 12, 0.3, 0.4, 0.3, 0.02);
             sl.playSound(null, getX(), getY(), getZ(), net.minecraft.sounds.SoundEvents.GENERIC_BURN,
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 0.7f);
-            com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.fire(
+            com.hmc.zenkai.api.event.PlayerBodyInteractEvent.fire(
                     source.getEntity() instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
-                    this, com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.Kind.DISINTEGRATE);
+                    this, com.hmc.zenkai.api.event.PlayerBodyInteractEvent.Kind.DISINTEGRATE);
         }
         retire(true);
     }
@@ -366,12 +366,12 @@ public class PlayerBodyEntity extends Entity {
             // Shift + clic derecho: cargarlo en brazos (como CarryOn).
             PlayerBodyCarry.pickUp(sp, this);
             if (isRemoved())   // si no lo cargó (desactivado, ya lleva uno) no hay interacción que avisar
-                com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.fire(sp, this,
-                        com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.Kind.CARRY);
+                com.hmc.zenkai.api.event.PlayerBodyInteractEvent.fire(sp, this,
+                        com.hmc.zenkai.api.event.PlayerBodyInteractEvent.Kind.CARRY);
             return InteractionResult.CONSUME;
         }
-        com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.fire(sp, this,
-                com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent.Kind.OPEN);
+        com.hmc.zenkai.api.event.PlayerBodyInteractEvent.fire(sp, this,
+                com.hmc.zenkai.api.event.PlayerBodyInteractEvent.Kind.OPEN);
         sp.openMenu(new SimpleMenuProvider(
                 (id, inv, p) -> new PlayerBodyMenu(id, inv, this),
                 Component.translatable("zenkai.body.title", ownerName())),

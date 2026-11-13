@@ -6,7 +6,7 @@ import com.hmc.zenkai.event.tick.DownedSystem;
 import com.hmc.zenkai.event.tick.TickCtx;
 import com.hmc.zenkai.feature.party.PartyManager;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.player.death.PlayerDownedEvent;
+import com.hmc.zenkai.api.event.PlayerDownedEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;

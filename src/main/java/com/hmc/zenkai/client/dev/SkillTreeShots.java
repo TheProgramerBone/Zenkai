@@ -50,6 +50,8 @@ public final class SkillTreeShots {
     private static boolean chronicleOnly;
     private static boolean longOnly;
     private static boolean addonsOnly;
+    private static boolean iconsOnly;
+    private static boolean majinOnly;
     private static boolean opened;
     private static int ticks, step, wait;
     private static final List<Runnable> PLAN = new ArrayList<>();
@@ -70,6 +72,8 @@ public final class SkillTreeShots {
                     legendaryOnly = lines.size() > 1 && lines.get(1).trim().equals("legendary"); // solo la línea del Legendario
                     mastersOnly = lines.size() > 1 && lines.get(1).trim().equals("masters"); // solo los retratos de los maestros
                     addonsOnly = lines.size() > 1 && lines.get(1).trim().equals("addons"); // packs integrados de ejemplo: ramas hermanas de dos autores
+                    majinOnly = lines.size() > 1 && lines.get(1).trim().equals("majin"); // árbol de transformaciones del Majin (centrado de iconos)
+                    iconsOnly = lines.size() > 1 && lines.get(1).trim().equals("icons"); // pasivas de cada raza + icono de la técnica Absorción
                     perfOnly = lines.size() > 1 && lines.get(1).trim().equals("perf"); // tiempos de fotograma de SkillsTreeScreen
                     longOnly = lines.size() > 1 && lines.get(1).trim().equals("longtransform"); // secuencia larga de la primera transformación (3.ª persona, fotogramas)
                     chronicleOnly = lines.size() > 1 && lines.get(1).trim().equals("chronicle"); // la Crónica de Rage Forms (despertares reales por el servidor)
@@ -242,6 +246,71 @@ public final class SkillTreeShots {
         }
     }
 
+
+    /** Pasiva de cada raza (hover en su nodo) y la pantalla de Técnicas como Majin (icono de Absorción). */
+    private static void iconsPlan(Minecraft mc) {
+        for (Race race : new Race[]{Race.HUMAN, Race.SAIYAN, Race.NAMEKIAN, Race.ARCOSIAN}) {
+            final String tag = "passive_" + race.name().toLowerCase(java.util.Locale.ROOT);
+            PLAN.add(() -> { setup(mc, race, 2, false, false, false, sp -> {}); wait = WAIT; });
+            PLAN.add(() -> { forgetTutorial(); mc.setScreen(new SkillTreeScreen()); wait = 30; });
+            PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); mc.setScreen(new SkillTreeScreen()); wait = 10; });
+            PLAN.add(() -> {
+                if (mc.screen instanceof SkillTreeScreen s) {
+                    int[] p = s.devFocus(com.hmc.zenkai.feature.skilltree.SkillTreeNodes.passiveNode(race));
+                    SkillTreeScreen.devMouse = p == null ? null : new int[]{p[0] + 3, p[1] + 3};
+                }
+                wait = 40;
+            });
+            PLAN.add(() -> capture(mc, tag));
+            PLAN.add(() -> { SkillTreeScreen.devMouse = null; });
+        }
+        // Ruta universal Potencial Desatado (su icono es una celda del atlas de formas): hover sobre su nodo, con un Saiyan.
+        PLAN.add(() -> { setup(mc, Race.SAIYAN, 4, true, true, false, sp -> PlayerStatsAttachment.get(sp).skills().setLevel("potential_unlock", 1)); wait = WAIT; });  // comprada: el nodo sale en color, no apagado
+        PLAN.add(() -> { forgetTutorial(); mc.setScreen(new SkillTreeScreen()); wait = 30; });
+        PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); mc.setScreen(new SkillTreeScreen()); wait = 10; });
+        PLAN.add(() -> {
+            if (mc.screen instanceof SkillTreeScreen s) {
+                int[] p = s.devFocus(com.hmc.zenkai.feature.skilltree.SkillTreeMigration.NODE_POTENTIAL_UNLOCK);
+                SkillTreeScreen.devMouse = p == null ? null : new int[]{p[0] + 3, p[1] + 3};
+            }
+            wait = 40;
+        });
+        PLAN.add(() -> capture(mc, "potential_unlock"));
+        PLAN.add(() -> { SkillTreeScreen.devMouse = null; });
+        PLAN.add(() -> { setup(mc, Race.MAJIN, 2, false, false, false, sp ->
+                com.hmc.zenkai.feature.technique.InnateTechniques.ensure(sp, PlayerStatsAttachment.get(sp))); wait = WAIT; });
+        PLAN.add(() -> { mc.setScreen(new com.hmc.zenkai.client.gui.screens.TechniquesScreen()); wait = 30; });
+        // Flecha derecha del selector (923,328 en píxeles de ventana): KI -> PHYSICAL -> MASTER -> SPECIAL, donde vive
+        // Absorción (innata de raza = special()). Tres clics, uno por paso del plan para que la pantalla se reconstruya.
+        for (int i = 0; i < 3; i++) {
+            PLAN.add(() -> {
+                double g = mc.getWindow().getGuiScale();
+                if (mc.screen != null) { mc.screen.mouseClicked(923 / g, 328 / g, 0); mc.screen.mouseReleased(923 / g, 328 / g, 0); }
+                wait = 15;
+            });
+        }
+        PLAN.add(() -> capture(mc, "technique_absorb_majin"));
+    }
+
+    /** Árbol del Majin: vista general y un zoom por forma, para comprobar que cada icono queda centrado en su marco. */
+    private static void majinPlan(Minecraft mc) {
+        PLAN.add(() -> { setup(mc, Race.MAJIN, 6, false, false, true, sp -> {}); wait = WAIT; });
+        PLAN.add(() -> { forgetTutorial(); mc.setScreen(new SkillTreeScreen()); wait = 30; });
+        PLAN.add(() -> { if (mc.screen != null) mc.screen.keyPressed(256, 0, 0); mc.setScreen(new SkillTreeScreen()); wait = 10; });
+        PLAN.add(() -> capture(mc, "majin_0_open"));
+        for (String f : new String[]{"majin_pure_evil", "majin_super", "majin_harmony", "majin_pure_chaos", "majin_god", "majin_legendary"}) {
+            PLAN.add(() -> {
+                if (mc.screen instanceof SkillTreeScreen s) {
+                    int[] p = s.devFocus(ResourceLocation.parse("zenkai:" + f));
+                    SkillTreeScreen.devMouse = p == null ? null : new int[]{p[0] + 3, p[1] + 3};
+                    if (p == null) Zenkai.LOGGER.info("[TREESHOTS] majin sin nodo: {}", f);
+                }
+                wait = 30;
+            });
+            PLAN.add(() -> capture(mc, "majin_" + f));
+        }
+    }
+
     private static void buy(Minecraft mc, String node) {
         net.neoforged.neoforge.network.PacketDistributor.sendToServer(
                 new com.hmc.zenkai.feature.skilltree.SkillTreeBuyPacket(ResourceLocation.parse(node)));
@@ -292,6 +361,8 @@ public final class SkillTreeShots {
     }
 
     private static void buildPlan(Minecraft mc) {
+        if (majinOnly) { majinPlan(mc); return; }
+        if (iconsOnly) { iconsPlan(mc); return; }
         if (fadeOnly) { fadePlan(mc); return; }
         if (skillsOnly) { skillsPlan(mc); return; }
         if (absorbOnly) { absorbPlan(mc); return; }

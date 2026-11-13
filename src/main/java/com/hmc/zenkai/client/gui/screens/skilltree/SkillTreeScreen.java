@@ -1016,8 +1016,10 @@ public class SkillTreeScreen extends TreeCanvasScreen {
         // Formas: textura propia > celda del atlas > icon_default del JSON > «?» (SkillTreeArt.formIcon). El resto de nodos, igual que siempre.
         SkillTreeArt.FormIcon formIcon = n.form() != null && n.kind() != Kind.ROOT ? SkillTreeArt.formIcon(n.form()) : null;
         int icon = formIcon != null ? formIcon.cell() : SkillTreeArt.iconIndex(n, att.getRace());
+        // Pasiva de la raza: su icono vive en skill_icons.png (a todo color, solo con el brillo del estado).
+        int passiveIcon = n.kind() == Kind.PASSIVE ? SkillTreeArt.passiveIconIndex(att.getRace()) : -1;
         float ir = ib, ig = ib, ibl = ib;
-        if (icon == SkillTreeArt.UNKNOWN_ICON && (formIcon == null || formIcon.texture() == null)) {
+        if (passiveIcon < 0 && icon == SkillTreeArt.UNKNOWN_ICON && (formIcon == null || formIcon.texture() == null)) {
             int tint = n.kind() == Kind.PASSIVE ? accent : SkillTreeArt.unknownTint(n);
             ir *= ((tint >> 16) & 0xFF) / 255f;
             ig *= ((tint >> 8) & 0xFF) / 255f;
@@ -1028,7 +1030,8 @@ public class SkillTreeScreen extends TreeCanvasScreen {
             // La Base es la cara de la SKIN del jugador (no la del modelo de su raza), pedido del usuario.
             net.minecraft.client.gui.components.PlayerFaceRenderer.draw(g, mc.player.getSkin(), x + inset, y + inset, ICON);
         } else {
-            if (formIcon != null && formIcon.texture() != null) SkillTreeArt.customIcon(g, formIcon, x + inset, y + inset, ir, ig, ibl);
+            if (passiveIcon >= 0) SkillTreeArt.skillIcon(g, passiveIcon, x + inset, y + inset, ib);
+            else if (formIcon != null && formIcon.texture() != null) SkillTreeArt.customIcon(g, formIcon, x + inset, y + inset, ir, ig, ibl);
             else SkillTreeArt.icon(g, icon, x + inset, y + inset, ir, ig, ibl);
         }
         if (hovered) g.fill(x + inset, y + inset, x + inset + ICON, y + inset + ICON, ZenkaiPalette.HOVER_VEIL);

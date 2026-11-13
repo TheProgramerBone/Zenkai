@@ -1,5 +1,7 @@
 package com.hmc.zenkai.config;
 
+import com.hmc.zenkai.api.event.PartyMemberDiedEvent;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;

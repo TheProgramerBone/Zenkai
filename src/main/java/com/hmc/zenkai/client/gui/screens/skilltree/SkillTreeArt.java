@@ -150,12 +150,12 @@ final class SkillTreeArt {
 
     /** Orden de celdas de node_icons.png (== CELLS de gen_skill_tree_icons.py). */
     private static final List<String> ICON_ORDER = List.of(
-            "saiyan_base", "ssj1", "ssj2", "ssj3", "ssj4", "ssj_god", "ssj_blue", "ssj_rose",
-            "oozaru", "super_oozaru", "human_base", "human_super", "human_ultra", "human_indomitable_spirit",
-            "human_god", "namekian_base",
-            "namek_giant", "namek_orange", "namek_god", "arcosian_base", "second_form", "third_form",
+            "ssj1", "ssj2", "ssj3", "ssj4", "ssj_god", "ssj_blue", "ssj_rose",
+            "oozaru", "super_oozaru", "human_super", "human_ultra", "human_indomitable_spirit",
+            "human_god",
+            "namek_giant", "namek_orange", "namek_god", "second_form", "third_form",
             "final_form", "golden_form",
-            "black_form", "fifth_form", "golden_fifth_form", "black_fifth_form", "majin_base",
+            "black_form", "fifth_form", "golden_fifth_form", "black_fifth_form",
             "majin_pure_evil", "majin_super", "majin_harmony",
             "majin_pure_chaos", "majin_god", "potential_unlock", "beast", "ultra_instinct_sign",
             "ultra_instinct", "ultra_ego", "node_god_ki",
@@ -163,6 +163,7 @@ final class SkillTreeArt {
             "ssj_blue_evolution", "ssj_rose_evolution", "human_flow",
             "ikari", "ssj_green", "ssj_green_max", "human_legendary", "namek_legendary", "arcosian_legendary",
             "majin_legendary");
+    // Sin cabezas *_base (borradas 2026-11-12): el nodo raíz dibuja la cara de la skin del jugador.
 
     static final int UNKNOWN_ICON = ICON_ORDER.indexOf("unknown");
 
@@ -170,11 +171,9 @@ final class SkillTreeArt {
     static int iconIndex(Node n, Race race) {
         String key;
         if (n.kind() == Kind.ROOT) {
-            key = race == null ? "unknown" : race.name().toLowerCase(Locale.ROOT) + "_base";
+            key = "unknown"; // la Base dibuja la cara de la skin (SkillTreeScreen); esto solo es la reserva
         } else if (n.form() != null && Zenkai.MOD_ID.equals(n.form().getNamespace())) {
             key = n.form().getPath();
-        } else if (SkillTreeMigration.NODE_NAMEK_GIANT.equals(n.id())) {
-            key = "namek_giant"; // el icono de la antigua forma
         } else if (SkillTreeMigration.NODE_NAMEK_GIANT.equals(n.id())) {
             key = "namek_giant"; // el icono de la antigua forma
         } else if (SkillTreeMigration.NODE_POTENTIAL_UNLOCK.equals(n.id())) {
@@ -275,6 +274,22 @@ final class SkillTreeArt {
             "ki_fist", "ki_infuse", "parry_mastery", "kaioken", "god_ki", "master_unknown", "zenkai_passive",
             "regen_passive", "coldblood_passive", "ki_sword", "ki_axe", "ki_mace", "ki_hammer", "ki_scythe",
             "ki_shield", "potential_passive", "elastic_passive");
+
+    /**
+     * Celda de {@code skill_icons.png} del nodo de la pasiva de cada raza. Esas celdas no son skills de
+     * {@code zenkai_skills} (la pasiva es un nodo del árbol, {@code node/race_<raza>}), así que hasta el
+     * 2026-11-12 no las pintaba nadie y el nodo salía con el «?» teñido.
+     */
+    static int passiveIconIndex(Race race) {
+        if (race == null) return -1;
+        return skillIconIndex(switch (race) {
+            case SAIYAN -> "zenkai_passive";
+            case NAMEKIAN -> "regen_passive";
+            case ARCOSIAN -> "coldblood_passive";
+            case HUMAN -> "potential_passive";
+            case MAJIN -> "elastic_passive";
+        });
+    }
 
     /** Celda del icono de una skill por su id, o -1 si todavía no tiene (usa entonces el «?» tintado). */
     static int skillIconIndex(String skillId) {

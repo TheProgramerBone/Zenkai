@@ -6,7 +6,7 @@ import com.hmc.zenkai.event.tick.TickCtx;
 import com.hmc.zenkai.feature.Race;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.rage.CriticalSurvival;
-import com.hmc.zenkai.feature.rage.CriticalSurvivalEvent;
+import com.hmc.zenkai.api.event.CriticalSurvivalEvent;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;

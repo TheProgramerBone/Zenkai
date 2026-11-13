@@ -7,7 +7,7 @@ import com.hmc.zenkai.feature.combat.DownedDeathGuard;
 import com.hmc.zenkai.feature.player.OtherworldManager;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.player.death.PlayerDownedEvent;
+import com.hmc.zenkai.api.event.PlayerDownedEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.sounds.SoundEvents;

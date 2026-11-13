@@ -26,6 +26,8 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 public class ShenLongEntity extends ZenkaiDefaultNPC {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
+    private static final EntityDataAccessor<Integer> DRAGON_KIND =
+            SynchedEntityData.defineId(ShenLongEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> WISHES_REMAINING =
             SynchedEntityData.defineId(ShenLongEntity.class, EntityDataSerializers.INT);
 
@@ -45,6 +47,7 @@ public class ShenLongEntity extends ZenkaiDefaultNPC {
     protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
         super.defineSynchedData(builder);
         builder.define(WISHES_REMAINING, 1);
+        builder.define(DRAGON_KIND, 0);
     }
 
     @Override
@@ -62,6 +65,10 @@ public class ShenLongEntity extends ZenkaiDefaultNPC {
                 return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
             PacketDistributor.sendToPlayer(sp, SyncWishTogglesPayload.current());
+            // Deseos de addons que este jugador puede pedir a ESTE dragón (ver api/wish).
+            PacketDistributor.sendToPlayer(sp, new com.hmc.zenkai.feature.wishes.CustomWishListPayload(
+                    com.hmc.zenkai.api.wish.WishRegistry.availableFor(sp, getDragonKind()).stream()
+                            .map(com.hmc.zenkai.feature.wishes.CustomWishListPayload.Entry::of).toList()));
             PacketDistributor.sendToPlayer(sp, new OpenWishScreenPayload());
         }
         return InteractionResult.sidedSuccess(this.level().isClientSide);
@@ -74,6 +81,13 @@ public class ShenLongEntity extends ZenkaiDefaultNPC {
     }
 
     // ── Pool de deseos ────────────────────────────────────────────────────────
+    /** Qué dragón es (lo fija el bloque que lo invoca). Hoy los dos comparten modelo. */
+    public com.hmc.zenkai.api.wish.DragonKind getDragonKind() {
+        var all = com.hmc.zenkai.api.wish.DragonKind.values();
+        return all[Math.max(0, Math.min(all.length - 1, this.entityData.get(DRAGON_KIND)))];
+    }
+    public void setDragonKind(com.hmc.zenkai.api.wish.DragonKind k) { this.entityData.set(DRAGON_KIND, k.ordinal()); }
+
     public int getWishesRemaining()       { return this.entityData.get(WISHES_REMAINING); }
     public void setWishesRemaining(int n) { this.entityData.set(WISHES_REMAINING, n); }
 
@@ -91,11 +105,16 @@ public class ShenLongEntity extends ZenkaiDefaultNPC {
     public void addAdditionalSaveData(@NotNull CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putInt("wishesRemaining", getWishesRemaining());
+        tag.putString("dragonKind", getDragonKind().name());
     }
 
     @Override
     public void readAdditionalSaveData(@NotNull CompoundTag tag) {
         super.readAdditionalSaveData(tag);
+        if (tag.contains("dragonKind")) {
+            try { setDragonKind(com.hmc.zenkai.api.wish.DragonKind.valueOf(tag.getString("dragonKind"))); }
+            catch (IllegalArgumentException ignored) {}
+        }
         if (tag.contains("wishesRemaining")) {
             setWishesRemaining(tag.getInt("wishesRemaining"));
         }

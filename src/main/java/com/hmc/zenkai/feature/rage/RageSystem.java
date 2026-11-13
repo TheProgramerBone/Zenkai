@@ -65,6 +65,8 @@ public final class RageSystem {
         if (r != RageResult.RECORDED) PlayerLifeCycle.syncIfServer(sp);
         // El despertar cambia la forma activa: el propio jugador y quien lo mira deben verla (sin esto el cliente seguía en base).
         if (r == RageResult.AWAKENING) PlayerLifeCycle.syncFormToTrackersAndSelf(sp);
+        // Aviso a los addons con el resultado YA aplicado (informativo; la forma despertada llega por FormChangedEvent).
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new com.hmc.zenkai.api.event.RageResolvedEvent(sp, trigger.name(), intensity.name(), r.name(), eventId));
         return r;
     }
 

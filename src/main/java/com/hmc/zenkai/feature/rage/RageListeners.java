@@ -1,13 +1,17 @@
 package com.hmc.zenkai.feature.rage;
 
+import com.hmc.zenkai.api.event.CriticalSurvivalEvent;
+
+import com.hmc.zenkai.api.event.PartyMemberDiedEvent;
+
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.feature.party.PartyManager;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent;
+import com.hmc.zenkai.api.event.PlayerBodyInteractEvent;
 import com.hmc.zenkai.feature.player.death.PlayerBodyManager;
-import com.hmc.zenkai.feature.player.death.PlayerDownedEvent;
-import com.hmc.zenkai.feature.player.death.PlayerRescuedEvent;
+import com.hmc.zenkai.api.event.PlayerDownedEvent;
+import com.hmc.zenkai.api.event.PlayerRescuedEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;

@@ -877,8 +877,8 @@ public class CombatZenkaiHooks {
 
         // Rescate a tiempo: se publica con el derribo todavía en pie (enganche de las rage forms).
         if (healer instanceof ServerPlayer rescuer) {
-            com.hmc.zenkai.feature.player.death.PlayerRescuedEvent.fire(rescuer, target,
-                    com.hmc.zenkai.feature.player.death.PlayerRescuedEvent.Method.REVIVE);
+            com.hmc.zenkai.api.event.PlayerRescuedEvent.fire(rescuer, target,
+                    com.hmc.zenkai.api.event.PlayerRescuedEvent.Method.REVIVE);
         }
         // Levanta al aliado con el 20% del body.
         tAtt.setBody(downedReviveBody(tAtt));

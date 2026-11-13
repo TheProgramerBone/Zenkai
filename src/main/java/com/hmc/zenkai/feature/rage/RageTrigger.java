@@ -19,7 +19,9 @@ public enum RageTrigger {
     /** Sobrevivir al borde con un aliado caído cerca. */
     CRITICAL_SURVIVAL(RageIntensity.EXCEPTIONAL, true),
     /** Un aliado muere mientras el beneficiario está derribado. */
-    ALLY_DIES_WHILE_DOWNED(RageIntensity.EXCEPTIONAL, true);
+    ALLY_DIES_WHILE_DOWNED(RageIntensity.EXCEPTIONAL, true),
+    /** Un hecho que dispara un addon con {@code RageApi.trigger}; gasta el enfriamiento para que no encadene despertares. */
+    ADDON(RageIntensity.MEDIUM, true);
 
     private final RageIntensity intensity;
     private final boolean consumesCooldown;

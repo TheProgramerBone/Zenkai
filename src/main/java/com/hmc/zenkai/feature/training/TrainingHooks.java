@@ -135,6 +135,11 @@ public final class TrainingHooks {
         return grant(sp, rawTp, 0L, TrainingCategory.MEDITATION);
     }
 
+    /** Actividad de un addon (ver {@code api/training/TrainingApi}): categoría ADDON, sin rival (victimPl 0). */
+    public static int grantFromAddon(ServerPlayer sp, double rawTp) {
+        return grant(sp, rawTp, 0L, TrainingCategory.ADDON);
+    }
+
     public static int grantFromTargetPractice(ServerPlayer sp, double rawTp) {
         return grant(sp, rawTp, 0L, TrainingCategory.TARGET_PRACTICE);
     }
@@ -218,6 +223,12 @@ public final class TrainingHooks {
         td.setCarry(cat, total - whole);
         td.setFatigue(cat, td.getFatigue(cat) + base / pl); // fatiga sobre la cantidad BASE
 
+        if (whole > 0) {
+            // Gancho de addons (TPGainedEvent): puede bonificar, recortar o anular; fatiga y carry ya van con el valor original.
+            var tpEvent = new com.hmc.zenkai.api.event.TPGainedEvent(sp, cat.name().toLowerCase(java.util.Locale.ROOT), whole);
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(tpEvent);
+            whole = tpEvent.isCanceled() ? 0 : Math.max(0, tpEvent.amount());
+        }
         if (whole > 0) {
             att.addTP(whole);
             PlayerLifeCycle.syncIfServer(sp);

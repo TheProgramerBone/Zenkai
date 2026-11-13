@@ -1,5 +1,9 @@
 package com.hmc.zenkai.feature.player.death;
 
+import com.hmc.zenkai.api.event.PlayerBodyCreatedEvent;
+
+import com.hmc.zenkai.api.event.PartyMemberDiedEvent;
+
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.compat.CuriosCompat;
 import com.hmc.zenkai.config.ServerConfig;

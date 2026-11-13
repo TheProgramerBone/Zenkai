@@ -224,6 +224,19 @@ public class ModNetworking {
                         ClientWishToggles.apply(payload))
         );
 
+        registrar.playToClient(
+                com.hmc.zenkai.feature.wishes.CustomWishListPayload.TYPE,
+                com.hmc.zenkai.feature.wishes.CustomWishListPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() ->
+                        com.hmc.zenkai.feature.wishes.ClientCustomWishes.apply(payload))
+        );
+
+        registrar.playToServer(
+                com.hmc.zenkai.feature.wishes.CustomWishPayload.TYPE,
+                com.hmc.zenkai.feature.wishes.CustomWishPayload.STREAM_CODEC,
+                com.hmc.zenkai.feature.wishes.CustomWishPayload::handle
+        );
+
         registrar.playToServer(
                 WishRevivePetPayload.TYPE,
                 WishRevivePetPayload.STREAM_CODEC,

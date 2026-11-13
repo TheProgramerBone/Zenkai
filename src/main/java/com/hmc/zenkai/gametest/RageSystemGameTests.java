@@ -9,7 +9,7 @@ import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.party.PartyManager;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.player.death.PlayerRescuedEvent;
+import com.hmc.zenkai.api.event.PlayerRescuedEvent;
 import com.hmc.zenkai.feature.rage.RageListeners;
 import com.hmc.zenkai.feature.rage.RageResult;
 import com.hmc.zenkai.feature.rage.RageSystem;

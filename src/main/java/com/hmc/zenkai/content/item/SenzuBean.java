@@ -125,8 +125,8 @@ public class SenzuBean extends Item {
         // Rescate a tiempo si estaba derribado (antes de curar: el evento lee el derribo y su ventana).
         if (user instanceof net.minecraft.server.level.ServerPlayer rescuer
                 && targetPlayer instanceof net.minecraft.server.level.ServerPlayer rescued) {
-            com.hmc.zenkai.feature.player.death.PlayerRescuedEvent.fire(rescuer, rescued,
-                    com.hmc.zenkai.feature.player.death.PlayerRescuedEvent.Method.SENZU);
+            com.hmc.zenkai.api.event.PlayerRescuedEvent.fire(rescuer, rescued,
+                    com.hmc.zenkai.api.event.PlayerRescuedEvent.Method.SENZU);
         }
         int bodyMissing = att.getBodyMax() - att.getBody();
         if (bodyMissing > 0) att.addBody(bodyMissing);

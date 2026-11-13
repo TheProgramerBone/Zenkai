@@ -154,7 +154,7 @@ Para llevar un datapack así en tu propio mod: carpeta con `pack.mcmeta` en tus 
 
 ## 2. Bus de eventos (`com.hmc.zenkai.api.event`)
 
-Nuevo en 0.3.0. Cinco eventos NeoForge estándar (`NeoForge.EVENT_BUS`), pensados para que un
+Nuevo en 0.3.0 (ampliado en la 0.6.0 hasta diecinueve). Eventos NeoForge estándar (`NeoForge.EVENT_BUS`), pensados para que un
 addon reaccione a — o vete — algo que pasa dentro de Zenkai sin polling por tick ni Mixin:
 
 | Evento | Se postea en | Cancelable | Qué significa cancelarlo |
@@ -164,11 +164,77 @@ addon reaccione a — o vete — algo que pasa dentro de Zenkai sin polling por 
 | `TechniqueFiredEvent` | Antes de que una técnica (ki o física) surta efecto | Sí | La técnica entera se aborta (sin coste, sin daño) |
 | `KiConsumedEvent` | Antes de cobrar el ki de un disparo | Sí (y mutable: `setAmount`) | El disparo sale gratis, sin abortar la técnica |
 | `MasterPurchaseEvent` | Antes de cobrar TP por una compra en persona ante un maestro | Sí | La compra se rechaza |
+| `SkillTreeNodePurchaseEvent` | Con un nodo del skill tree ya confirmado como comprable, antes de cobrar | Sí | La compra se rechaza sin coste |
+| `TPGainedEvent` | Al ganar TP entrenando (golpes, kills, Meditación, Target Practice), antes de sumarlo | Sí (y mutable: `setAmount`) | No se suma nada. NO salta al gastar TP, devolverlo, comandos ni deseos |
+| `WishGrantedEvent` | Cuando Shenlong concede un deseo (efecto ya aplicado) | No | — (informativo; trae el texto del deseo) |
+| `PlayerDownedEvent` | Un jugador cae derribado (aún no ha muerto), una vez por caída | No | — (trae testigos de su party y cuándo expira la ventana) |
+| `PlayerRescuedEvent` | Otro jugador levanta (revivir o senzu) a uno derribado dentro de su ventana | No | — (trae quién, a quién, método y ticks restantes) |
+| `PlayerBodyCreatedEvent` | Nace el cuerpo de un jugador muerto | No | — (indica si la muerte permanente estaba activa) |
+| `PlayerBodyInteractEvent` | Alguien abre, carga, entierra o desintegra un cuerpo | No | — (`Kind`: `OPEN`/`CARRY`/`BURY`/`DISINTEGRATE`; si es propio o de un aliado) |
+| `PartyMemberDiedEvent` | Muere un jugador y su party lo presencia (al menos un testigo) | No | — |
+| `CriticalSurvivalEvent` | Un jugador sobrevive al borde (<20 % de body) y se recupera (≥60 %) | No | — |
+| `PlayerParryEvent` | Un jugador con la ventana de parry abierta va a parar un golpe o un proyectil, antes de resolverlo | Sí | No hay parry: el golpe o el proyectil sigue su curso (no salta con los parrys de NPC) |
+| `AlignmentChangeEvent` | Antes de cambiar el alineamiento por matar o enterrar un cuerpo (y por `AlignmentManager.change`) | Sí (y mutable: `setDelta`) | No cambia nada. NO salta al fijarlo con comandos o reencarnación |
+| `GodKiGrantedEvent` | Un jugador recibe God Ki (prueba, ritual o `GodKi.grantFromAddon`) | No | — (trae la vía: `master_trial`, `ritual`, `event`…) |
+| `RageResolvedEvent` | El sistema de Rage Forms termina de evaluar un hecho | No | — (trae detector, intensidad y resultado `AWAKENING`/`PROGRESS`/`RECORDED`) |
+| `MajinAbsorbEvent` | La masa de un Majin alcanza a un objetivo absorbible, antes de matarlo (la raza se estrena en la 0.7.0) | Sí | La absorción no ocurre |
 
 Cada evento lleva el `Player`/`ServerPlayer` implicado y los datos mínimos de la acción
 (`ResourceLocation` de forma, id de técnica en minúsculas, id de maestro...). Suscribirse es
 NeoForge estándar: `@SubscribeEvent` sobre un método que reciba el tipo de evento, registrado en
 tu propio mod event bus o vía `NeoForge.EVENT_BUS.addListener(...)`.
+
+### 2b. Deseos propios para Shenlong y Porunga (`com.hmc.zenkai.api.wish`)
+
+Un addon puede añadir deseos a la lista del dragón sin tocar Zenkai: implementa `CustomWish` y regístralo con
+`WishRegistry.register(...)` en `FMLCommonSetupEvent` (dentro de `event.enqueueWork`). Aparece al final de la lista,
+tras «Revivir mascota». Ejemplo mínimo:
+
+```java
+public final class RichesWish implements CustomWish {
+    public ResourceLocation id() { return ResourceLocation.fromNamespaceAndPath("mi_addon", "riquezas"); }
+    public Component name() { return Component.translatable("mi_addon.wish.riquezas"); }   // clave de TU lang
+    public ResourceLocation iconItem() { return ResourceLocation.withDefaultNamespace("emerald"); }
+    // Opcional: solo con las esferas de Namek, y solo si el jugador cumple algo.
+    public Set<DragonKind> dragons() { return EnumSet.of(DragonKind.PORUNGA); }
+    public boolean availableTo(ServerPlayer p, DragonKind d) { return p.experienceLevel >= 5; }
+    public Optional<Component> grant(ServerPlayer p, DragonKind d) {
+        p.getInventory().add(new ItemStack(Items.EMERALD, 64));
+        return Optional.of(Component.translatable("mi_addon.wish.riquezas.desc"));   // texto que se difunde
+    }
+}
+```
+
+- **Shenlong o Porunga:** `dragons()` filtra por `DragonKind.SHENLONG` (esferas de la Tierra) o `DragonKind.PORUNGA`
+  (esferas de Namek). Hoy los dos usan el modelo de Shenlong, pero el tipo ya viaja con la entidad: cuando Porunga
+  tenga su propia entidad, tu deseo seguirá funcionando sin cambios. Por defecto vale para los dos.
+- **La validación es del servidor.** `grant` solo se llama con una sesión de deseo abierta (dragón vivo, con deseos en
+  el pool y a menos de 32 bloques), con el deseo registrado, el dragón adecuado y `availableTo` en verdadero. La
+  pantalla solo muestra el botón; un cliente modificado no se salta nada.
+- **Resultado:** `Optional.of(descripción)` = concedido (Zenkai cierra la sesión, descuenta un deseo del pool, avisa a
+  los cercanos y dispara el logro `WISH_GRANTED` con tu id como nombre del deseo). `Optional.empty()` = rechazado: no
+  se gasta nada y tú avisas al jugador. Una excepción cuenta como rechazo y queda en el log.
+- **Un clic, sin confirmación:** el botón envía la petición al pulsarlo. Si tu deseo es irreversible o caro,
+  comprueba tú las condiciones en `availableTo`/`grant`.
+- Para reaccionar a CUALQUIER deseo concedido (los de Zenkai incluidos) usa `WishGrantedEvent`.
+
+### 2c. Más puertas de entrada para addons
+
+Todas viven en `com.hmc.zenkai.api.*`, se usan solo en servidor y revalidan por su cuenta.
+
+- **Servicios de maestro** (`MasterServiceRegistry.register(masterId, servicio)`): añade una fila a la pestaña «Servicios» de un maestro
+  (`kami`, `korin`, `kaio`, `toribot` o el de un maestro de otro addon). Implementas `MasterService` (`id`, `label`, `available`,
+  `tooltip`, `claim`); `claim` revalida siempre. Usa un id con tu namespace: si el id ya existe en ese maestro, se ignora el nuevo.
+- **Rage Forms** (`RageApi.trigger(jugador, intensidad, eventId, related)`): dispara el detector `addon`. Qué despierta lo deciden los
+  datos, con un JSON en `zenkai_rage_awakenings/` que lleve `"triggers": ["addon"]`. Se aplican las reglas de siempre: sin saltos en la
+  cadena, una recompensa por `eventId` y gasta el enfriamiento de rage, así que un addon no puede encadenar despertares. El texto
+  `related` sale en la Crónica del jugador.
+- **TP de entrenamiento** (`TrainingApi.award(jugador, tpBruto)`): pasa por la misma fatiga, pesas, HTC y bonos que los minijuegos,
+  con su propia categoría `addon`, y salta `TPGainedEvent`. La cifra la decide tu addon: ponle un techo por sesión.
+- **God Ki** (`GodKi.grantFromAddon(jugador)`): lo concede por la vía `event` si aún no lo tiene (no comprueba cadena mortal ni
+  alineamiento: eso lo decides tú) y salta `GodKiGrantedEvent`.
+- **Alineamiento** (`AlignmentManager.change(jugador, delta, motivo)`): la ruta que usan matar y enterrar; los cambios de tu addon
+  pasan por `AlignmentChangeEvent` como los de Zenkai.
 
 ## 3. Técnicas: números y forma en datapack, identidad en Java (a propósito)
 
@@ -310,7 +376,7 @@ but it is now logged instead of failing silently.
 
 ## 2. Event bus (`com.hmc.zenkai.api.event`)
 
-New in 0.3.0. Five standard NeoForge events (`NeoForge.EVENT_BUS`), meant for an addon to react
+New in 0.3.0 (grown to nineteen in 0.6.0). Standard NeoForge events (`NeoForge.EVENT_BUS`), meant for an addon to react
 to — or veto — something happening inside Zenkai without per-tick polling or Mixin:
 
 | Event | Posted | Cancelable | What cancelling it means |
@@ -320,11 +386,77 @@ to — or veto — something happening inside Zenkai without per-tick polling or
 | `TechniqueFiredEvent` | Before a technique (ki or physical) takes effect | Yes | The whole technique is aborted (no cost, no damage) |
 | `KiConsumedEvent` | Before the ki cost of a shot is charged | Yes (and mutable: `setAmount`) | The shot is free, without aborting the technique |
 | `MasterPurchaseEvent` | Before TP is charged for an in-person purchase from a master | Yes | The purchase is rejected |
+| `SkillTreeNodePurchaseEvent` | With a skill tree node already confirmed purchasable, before charging | Yes | The purchase is rejected at no cost |
+| `TPGainedEvent` | When TP is earned by training (hits, kills, Meditation, Target Practice), before it is added | Yes (and mutable: `setAmount`) | Nothing is added. Does NOT fire on spending, refunds, commands or wishes |
+| `WishGrantedEvent` | When Shenlong grants a wish (effect already applied) | No | — (informational; carries the wish text) |
+| `PlayerDownedEvent` | A player falls downed (not dead yet), once per fall | No | — (carries party witnesses and when the window expires) |
+| `PlayerRescuedEvent` | Another player lifts a downed one (revive or senzu) inside its window | No | — (carries who, whom, method and ticks left) |
+| `PlayerBodyCreatedEvent` | A dead player's body is created | No | — (says whether permanent death was on) |
+| `PlayerBodyInteractEvent` | Someone opens, carries, buries or disintegrates a body | No | — (`Kind`: `OPEN`/`CARRY`/`BURY`/`DISINTEGRATE`; own or ally) |
+| `PartyMemberDiedEvent` | A player dies and their party witnesses it (at least one witness) | No | — |
+| `CriticalSurvivalEvent` | A player survives the brink (<20 % body) and recovers (≥60 %) | No | — |
+| `PlayerParryEvent` | A player with the parry window open is about to parry a hit or projectile, before it resolves | Yes | No parry: the hit or projectile goes on (does not fire for NPC parries) |
+| `AlignmentChangeEvent` | Before alignment changes from a kill or burying a body (and from `AlignmentManager.change`) | Yes (and mutable: `setDelta`) | Nothing changes. Does NOT fire when set by commands or reincarnation |
+| `GodKiGrantedEvent` | A player receives God Ki (trial, ritual or `GodKi.grantFromAddon`) | No | — (carries the route: `master_trial`, `ritual`, `event`…) |
+| `RageResolvedEvent` | The Rage Forms system finishes evaluating a fact | No | — (carries detector, intensity and result `AWAKENING`/`PROGRESS`/`RECORDED`) |
+| `MajinAbsorbEvent` | A Majin's mass hits an absorbable target, before killing it (the race debuts in 0.7.0) | Yes | The absorption does not happen |
 
 Each event carries the `Player`/`ServerPlayer` involved and the minimal data of the action
 (form `ResourceLocation`, lowercase technique id, master id...). Subscribing is standard
 NeoForge: `@SubscribeEvent` on a method that takes the event type, registered on your own mod
 event bus or via `NeoForge.EVENT_BUS.addListener(...)`.
+
+### 2b. Custom wishes for Shenron and Porunga (`com.hmc.zenkai.api.wish`)
+
+An addon can add wishes to the dragon's list without touching Zenkai: implement `CustomWish` and register it with
+`WishRegistry.register(...)` in `FMLCommonSetupEvent` (inside `event.enqueueWork`). It shows up at the end of the list,
+after "Revive pet". Minimal example:
+
+```java
+public final class RichesWish implements CustomWish {
+    public ResourceLocation id() { return ResourceLocation.fromNamespaceAndPath("my_addon", "riches"); }
+    public Component name() { return Component.translatable("my_addon.wish.riches"); }   // key from YOUR lang
+    public ResourceLocation iconItem() { return ResourceLocation.withDefaultNamespace("emerald"); }
+    // Optional: only with the Namek balls, and only if the player meets some condition.
+    public Set<DragonKind> dragons() { return EnumSet.of(DragonKind.PORUNGA); }
+    public boolean availableTo(ServerPlayer p, DragonKind d) { return p.experienceLevel >= 5; }
+    public Optional<Component> grant(ServerPlayer p, DragonKind d) {
+        p.getInventory().add(new ItemStack(Items.EMERALD, 64));
+        return Optional.of(Component.translatable("my_addon.wish.riches.desc"));   // text broadcast to nearby players
+    }
+}
+```
+
+- **Shenron or Porunga:** `dragons()` filters by `DragonKind.SHENLONG` (Earth balls) or `DragonKind.PORUNGA` (Namek
+  balls). Today both use Shenron's model, but the kind already travels with the entity: once Porunga gets its own
+  entity your wish keeps working unchanged. Both by default.
+- **Everything is validated on the server.** `grant` is only called with an open wish session (live dragon with wishes
+  left in the pool, within 32 blocks), the wish registered, the right dragon and `availableTo` true. The screen only
+  shows the button; a modified client skips nothing.
+- **Result:** `Optional.of(description)` = granted (Zenkai closes the session, takes one wish from the pool, tells
+  nearby players and fires the `WISH_GRANTED` advancement trigger with your id as the wish name). `Optional.empty()` =
+  refused: nothing is spent and you tell the player. An exception counts as a refusal and is logged.
+- **One click, no confirmation:** the button sends the request when pressed. If your wish is irreversible or
+  expensive, check conditions yourself in `availableTo`/`grant`.
+- To react to ANY granted wish (Zenkai's own included) use `WishGrantedEvent`.
+
+### 2c. More entry points for addons
+
+All live in `com.hmc.zenkai.api.*`, are server-only and re-validate on their own.
+
+- **Master services** (`MasterServiceRegistry.register(masterId, service)`): adds a row to a master's "Services" tab (`kami`, `korin`,
+  `kaio`, `toribot` or another addon's master). You implement `MasterService` (`id`, `label`, `available`, `tooltip`, `claim`);
+  `claim` always re-validates. Use an id with your namespace: if the id already exists on that master, the new one is ignored.
+- **Rage Forms** (`RageApi.trigger(player, intensity, eventId, related)`): fires the `addon` detector. What it awakens is decided by
+  data, with a JSON in `zenkai_rage_awakenings/` carrying `"triggers": ["addon"]`. The usual rules apply: no skipping the chain, one
+  reward per `eventId`, and it spends the rage cooldown, so an addon cannot chain awakenings. The `related` text shows in the
+  player's Chronicle.
+- **Training TP** (`TrainingApi.award(player, rawTp)`): goes through the same fatigue, weights, HTC and bonuses as the minigames,
+  with its own `addon` category, and fires `TPGainedEvent`. The number is your addon's call: cap it per session.
+- **God Ki** (`GodKi.grantFromAddon(player)`): grants it through the `event` route if the player does not have it yet (it checks
+  neither the mortal chain nor alignment: that is up to you) and fires `GodKiGrantedEvent`.
+- **Alignment** (`AlignmentManager.change(player, delta, reason)`): the route killing and burying use; your addon's changes go through
+  `AlignmentChangeEvent` like Zenkai's.
 
 ## 3. Techniques: numbers and shape in datapacks, identity in Java (on purpose)
 

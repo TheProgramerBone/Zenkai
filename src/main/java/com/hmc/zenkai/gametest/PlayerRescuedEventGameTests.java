@@ -4,7 +4,7 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.content.item.SenzuBean;
 import com.hmc.zenkai.event.CombatZenkaiHooks;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
-import com.hmc.zenkai.feature.player.death.PlayerRescuedEvent;
+import com.hmc.zenkai.api.event.PlayerRescuedEvent;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;

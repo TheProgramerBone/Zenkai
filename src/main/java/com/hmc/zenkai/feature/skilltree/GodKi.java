@@ -82,8 +82,22 @@ public final class GodKi {
     }
 
     /** Concede God Ki y avisa (prueba o ritual). */
+    /**
+     * Concede God Ki desde un addon (su propia prueba, ritual o misión), por la vía {@code EVENT}. No hace nada si el
+     * jugador ya lo tiene. NO comprueba la cadena mortal ni el alineamiento: eso es decisión del addon. Dispara
+     * {@code GodKiGrantedEvent} igual que la prueba y el ritual de Zenkai.
+     * @return true si se concedió ahora
+     */
+    public static boolean grantFromAddon(ServerPlayer sp) {
+        if (SkillTree.hasGodKi(sp)) return false;
+        grantGodKi(sp, SkillTree.Via.EVENT);
+        PlayerLifeCycle.sync(sp);
+        return true;
+    }
+
     private static void grantGodKi(ServerPlayer sp, SkillTree.Via via) {
         SkillTree.grant(sp, SkillTreeMigration.NODE_GOD_KI, 1, via);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new com.hmc.zenkai.api.event.GodKiGrantedEvent(sp, via.name().toLowerCase(java.util.Locale.ROOT)));
         sp.displayClientMessage(Component.translatable("message.zenkai.god_ki.granted")
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), true);
         sp.serverLevel().playSound(null, sp.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1f, 1.4f);

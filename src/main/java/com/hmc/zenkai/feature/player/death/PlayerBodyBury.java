@@ -1,5 +1,7 @@
 package com.hmc.zenkai.feature.player.death;
 
+import com.hmc.zenkai.api.event.PlayerBodyInteractEvent;
+
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.entity.misc.PlayerBodyEntity;
@@ -60,8 +62,7 @@ public final class PlayerBodyBury {
         if (!own) {
             int delta = ServerConfig.PERMADEATH_BURY_ALIGNMENT.get();
             if (delta != 0) {
-                PlayerStatsAttachment.get(sp).addAlignment(delta);
-                PlayerLifeCycle.sync(sp);
+                com.hmc.zenkai.feature.alignment.AlignmentManager.change(sp, delta, "bury");
             }
         }
         PlayerBodyInteractEvent.fire(sp, body, PlayerBodyInteractEvent.Kind.BURY);

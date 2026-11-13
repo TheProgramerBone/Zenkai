@@ -43,6 +43,9 @@ public record SkillTreeBuyPacket(ResourceLocation node) implements CustomPacketP
             if (node == null) return;                       // no es un nodo de SU árbol
             SkillTreeNodes.Eval e = SkillTreeNodes.evaluate(sp, node);
             if (!e.purchasable()) return;
+            // Gancho de addons: cancelable, antes de cobrar nada (ver SkillTreeNodePurchaseEvent).
+            if (net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(
+                    new com.hmc.zenkai.api.event.SkillTreeNodePurchaseEvent(sp, node.id())).isCanceled()) return;
             // Nodo propio (pasiva de raza, forma divina): sin skill detrás, lo cobra SkillTree.
             if (e.ownNode()) {
                 SkillTree.buyOwned(sp, node, e);

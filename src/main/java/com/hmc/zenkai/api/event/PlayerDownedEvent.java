@@ -1,4 +1,4 @@
-package com.hmc.zenkai.feature.player.death;
+package com.hmc.zenkai.api.event;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.Event;

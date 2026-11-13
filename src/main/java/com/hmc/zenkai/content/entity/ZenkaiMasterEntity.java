@@ -130,8 +130,17 @@ public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC implements Dia
     /** Resuelve services() a lo que de verdad viaja por red — la etiqueta ya calculada para
      *  ESTE jugador (ver MasterService.label). También la usa MasterServicePacket tras un
      *  claim exitoso, para refrescar la pantalla sin reabrirla. */
+    /** Los propios del maestro más los que registran los addons (api/master/MasterServiceRegistry), en ese orden. */
+    private List<MasterService> allServices() {
+        List<MasterService> extra = com.hmc.zenkai.api.master.MasterServiceRegistry.forMaster(masterId());
+        if (extra.isEmpty()) return services();
+        List<MasterService> all = new java.util.ArrayList<>(services());
+        all.addAll(extra);
+        return all;
+    }
+
     public List<OpenMasterPayload.ServiceEntry> serviceEntries(ServerPlayer sp) {
-        return services().stream()
+        return allServices().stream()
                 .map(s -> new OpenMasterPayload.ServiceEntry(s.id(), s.label(sp).getString(),
                         s.available(sp), s.tooltip(sp).getString()))
                 .toList();
@@ -140,7 +149,7 @@ public abstract class ZenkaiMasterEntity extends ZenkaiDefaultNPC implements Dia
     /** El servicio con ese id, o null si este maestro no lo tiene. Usado por MasterServicePacket
      *  para resolver un clic del cliente sin que el paquete tenga que llevar más que el id. */
     public MasterService service(String id) {
-        for (MasterService s : services()) {
+        for (MasterService s : allServices()) {
             if (s.id().equals(id)) return s;
         }
         return null;

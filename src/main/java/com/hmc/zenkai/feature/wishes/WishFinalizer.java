@@ -23,6 +23,7 @@ public final class WishFinalizer {
     public static void finalizeWish(ServerPlayer player, Component wishDesc) {
         // Un deseo por interacción: para pedir otro hay que volver a hablar con el dragón (ver WishSessions).
         WishSessions.close(player);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new com.hmc.zenkai.api.event.WishGrantedEvent(player, wishDesc));
         player.closeContainer();
         player.playNotifySound(ModSounds.WISH_GRANTED.get(), SoundSource.PLAYERS, 0.8F, 1.0F);
 

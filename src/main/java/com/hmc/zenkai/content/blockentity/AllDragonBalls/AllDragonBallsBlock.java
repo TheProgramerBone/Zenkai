@@ -47,6 +47,9 @@ public class AllDragonBallsBlock extends BaseEntityBlock implements SimpleWaterl
     /** Deseos de la invocación (la variante de Namek da los suyos). */
     protected int wishCount() { return ServerConfig.shenlongWishCount(); }
 
+    /** Qué dragón concede los deseos de ESTE bloque (filtra los deseos de addons, ver api/wish). */
+    protected com.hmc.zenkai.api.wish.DragonKind dragonKind() { return com.hmc.zenkai.api.wish.DragonKind.SHENLONG; }
+
     /** Mensaje de la invocación, visto por los jugadores cercanos. */
     protected void announceSummon(Player player) {
         WishBroadcast.nearby(player, Component.translatable("messages.zenkai.shenron_summon"), true);
@@ -171,6 +174,7 @@ public class AllDragonBallsBlock extends BaseEntityBlock implements SimpleWaterl
             entity.rotate(Rotation.CLOCKWISE_180);
             if (entity instanceof ShenLongEntity shenlong) {
                 shenlong.setWishesRemaining(wishCount()); // (2) pool por invocación
+                shenlong.setDragonKind(dragonKind());
             }
             level.addFreshEntity(entity);
         }

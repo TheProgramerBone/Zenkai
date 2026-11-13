@@ -28,4 +28,6 @@ public enum TrainingCategory {
     COMBAT,
     MEDITATION,
     TARGET_PRACTICE,
+    /** TP de actividades de addons ({@code TrainingApi.award}): fatiga propia, separada de las tres de Zenkai. */
+    ADDON,
 }

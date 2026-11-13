@@ -127,6 +127,19 @@ public class ShenlongWishScreen extends ShenronPanelScreen {
         // Revivir mascota no tiene toggle de configuración: siempre disponible.
         addWish(x, y, w, "screen.zenkai.wish.revive_pet", WishIcons.revivePet(),
                 () -> mc.setScreen(new RevivePetWishScreen(this)));
+        // Deseos de addons (api/wish): el servidor ya filtró por jugador y dragón; al pulsar solo se envía el id y
+        // el servidor decide.
+        for (var cw : com.hmc.zenkai.feature.wishes.ClientCustomWishes.current()) {
+            y += ROW_H + ROW_GAP;
+            var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(cw.iconItem())
+                    .orElse(net.minecraft.world.item.Items.BARRIER);
+            TextOnlyButton cb = addRenderableWidget(new TextOnlyButton(x, y, w, ROW_H, Component.empty(), () -> {
+                var conn = Minecraft.getInstance().getConnection();
+                if (conn != null) conn.send(new com.hmc.zenkai.feature.wishes.CustomWishPayload(cw.id()));
+                mc.setScreen(null);
+            }).onDark());
+            rows.add(new WishRow(cb, cw.name(), new net.minecraft.world.item.ItemStack(item)));
+        }
 
         // Flechas de desplazamiento: botones aparte, no parte de la textura del panel. Abajo y centradas.
         int ay = panelTop + BG_H - ARROW_FROM_BOTTOM;

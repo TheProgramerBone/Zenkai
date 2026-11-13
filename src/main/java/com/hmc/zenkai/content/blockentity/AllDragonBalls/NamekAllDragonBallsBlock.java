@@ -43,6 +43,9 @@ public class NamekAllDragonBallsBlock extends AllDragonBallsBlock {
     }
 
     @Override
+    protected com.hmc.zenkai.api.wish.DragonKind dragonKind() { return com.hmc.zenkai.api.wish.DragonKind.PORUNGA; }
+
+    @Override
     protected int wishCount() {
         return ServerConfig.namekDragonWishCount();
     }

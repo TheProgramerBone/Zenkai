@@ -72,6 +72,14 @@ public final class WishSessions {
                 && dragon.distanceToSqr(player) <= MAX_DIST * MAX_DIST;
     }
 
+    /** El dragón con el que habla el jugador, o null si no tiene sesión abierta (llamar tras {@link #validate}). */
+    @org.jetbrains.annotations.Nullable
+    public static ShenLongEntity dragonOf(ServerPlayer player) {
+        Session s = OPEN.get(player.getUUID());
+        return s != null && player.level() instanceof ServerLevel level
+                && level.getEntity(s.dragon()) instanceof ShenLongEntity d ? d : null;
+    }
+
     public static void close(ServerPlayer player) {
         OPEN.remove(player.getUUID());
     }

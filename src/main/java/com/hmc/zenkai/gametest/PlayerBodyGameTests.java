@@ -3,7 +3,7 @@ package com.hmc.zenkai.gametest;
 import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.config.ServerConfig;
 import com.hmc.zenkai.content.entity.misc.PlayerBodyEntity;
-import com.hmc.zenkai.feature.player.death.PlayerBodyInteractEvent;
+import com.hmc.zenkai.api.event.PlayerBodyInteractEvent;
 import com.hmc.zenkai.registry.ModDamageTypes;
 import com.hmc.zenkai.registry.ModEntities;
 import net.minecraft.core.BlockPos;
