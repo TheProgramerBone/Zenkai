@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Expresiones de la cara, calculadas en el CLIENTE desde la entidad, sin red (fases 1-3: parpadeo, daño, cansancio,
- * sueño, muerte y carga de ki). Diseño en {@code .claude/pendiente/pendientes-0.6.0.md} §A. El único punto que las
+ * sueño, muerte y carga de ki). Cómo funciona: {@code .claude/docs/customizacion-cara.md}, «Expresiones y variants». El único punto que las
  * consume es {@code FaceOverlayGeoLayer}, que pide {@link #current} y luego {@link #layersFor} por categoría.
  *
  * OJOS y BOCA tienen su propia expresión (así el parpadeo no apaga la boca de dolor ni al revés):
@@ -55,11 +55,35 @@ public final class FaceExpression {
     public static State current(Player p, float partialTick) {
         boolean dead = p.isDeadOrDying(), sleep = p.isSleeping(), hurt = pain(p);
         boolean tired = tired(p);
+        // Forma hacia la que se transforma (carga o escena larga): el Ultra Instinto no grita (transform_face, ver FormDef).
+        com.hmc.zenkai.feature.forms.FormDef target = transformTarget(p);
+        boolean calm = target != null && target.calmTransformFace();
+        boolean eyesShut = target != null && target.closesEyesWhileTransforming();
         Expression eyes = dead ? Expression.DEAD : sleep ? Expression.SLEEP : hurt ? Expression.HURT
-                : blinking(p, partialTick) ? Expression.BLINK : tired ? Expression.TIRED : Expression.NEUTRAL;
+                : eyesShut || blinking(p, partialTick) ? Expression.BLINK : tired ? Expression.TIRED : Expression.NEUTRAL;
         Expression mouth = (dead || sleep) ? Expression.NEUTRAL : hurt ? Expression.HURT
-                : charging(p) ? Expression.CHARGING : tired ? Expression.TIRED : Expression.NEUTRAL;
+                : charging(p) && !calm ? Expression.CHARGING : tired ? Expression.TIRED : Expression.NEUTRAL;
         return new State(eyes, mouth);
+    }
+
+    /**
+     * ¿Cierra los ojos por transformarse hacia una forma serena (UI Señal)? FaceOverlayGeoLayer lo respeta aunque la mezcla de colores
+     * del cambio de forma congele el resto de expresiones de los ojos: sin esto la escena los dejaba abiertos (capturas 2026-11-13).
+     */
+    public static boolean eyesShutForTransform(Player p) {
+        com.hmc.zenkai.feature.forms.FormDef target = transformTarget(p);
+        return target != null && target.closesEyesWhileTransforming() && !p.isDeadOrDying();
+    }
+
+    /**
+     * Forma de destino de la transformación en curso: la de la carga ({@code getHoldTargetForm}) o, si no hay carga, la de la
+     * escena larga que aún dura (la del Oozaru llega sin carga y la escena sigue tras el cambio). null = no se está transformando.
+     */
+    private static com.hmc.zenkai.feature.forms.FormDef transformTarget(Player p) {
+        var att = p.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_FORM.get());
+        ResourceLocation id = att.getHoldTargetForm();
+        if (id == null) id = com.hmc.zenkai.client.rage.AwakeningScene.activeForm(p.getId());
+        return com.hmc.zenkai.feature.forms.FormDef.get(id);
     }
 
     /** Cuántos ticks se queda la cara de dolor tras un golpe fuerte. */

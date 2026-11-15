@@ -1,4 +1,6 @@
 {
+  "long_scene": { "pose": "ui_sign" },
+  "transform_face": "serene",
   "races": [
     "saiyan", "human", "namekian", "arcosian", "majin"
   ],

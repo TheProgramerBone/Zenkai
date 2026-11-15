@@ -135,7 +135,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                       boolean wheelSelectable, boolean divineTier, int auraOuterRgb, int eyeRgb,
                       int browRgb, Tier tier, boolean endgamePath, AlignBranch alignmentBranch,
                       Map<ResourceLocation, Double> masteryReqs, String category,
-                      Map<Integer, Integer> layerColors, int furRgb, boolean noBrows, String iconDefault, String hairStyle) {
+                      Map<Integer, Integer> layerColors, int furRgb, boolean noBrows, String iconDefault, String hairStyle,
+                      String longScenePose, String transformFace) {
 
     /**
      * Rango de balance de una forma (campo "tier" del JSON, default NONE), con significado fijo
@@ -348,6 +349,25 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
      *  -1 = siguen al pelo como siempre. Ultra Ego las pone moradas sin teñir el pelo. */
     public boolean tintsBrows() { return browRgb >= 0; }
 
+    /**
+     * Pose de la secuencia larga de la primera transformación (campo {@code "long_scene": {"pose": ...}}, 0.6.1). Vacío = la
+     * elige {@code AwakeningScene.pick} por el motivo del despertar (rodillas por duelo, rugido si no). Un nombre corto
+     * ({@code "serene"}) es un clip de Zenkai ({@code zenkai.rage_<nombre>}, ver {@code tools/gen_rage_scene_animations.py});
+     * con namespace ({@code "miaddon:mi_clip"}) es el id PAL de un clip propio del addon. El rescate de un aliado manda
+     * sobre esto (decisión del usuario, 2026-11-13).
+     */
+    public boolean hasLongScenePose() { return longScenePose != null && !longScenePose.isEmpty(); }
+
+    /**
+     * Cara mientras se transforma HACIA esta forma (campo {@code "transform_face"}, 0.6.1). Vacío = el grito de siempre (boca abierta).
+     * {@code "calm"} = boca cerrada (Ultra Instinto Dominado); {@code "serene"} = boca cerrada y ojos cerrados (Ultra Instinto Señal).
+     * Pedido del usuario (2026-11-13): el Ultra Instinto es divino y tranquilo, no grita.
+     */
+    public boolean calmTransformFace() { return "calm".equals(transformFace) || "serene".equals(transformFace); }
+
+    /** Ver {@link #calmTransformFace()}: además de no gritar, cierra los ojos mientras se transforma. */
+    public boolean closesEyesWhileTransforming() { return "serene".equals(transformFace); }
+
     /** Item de cuerpo para un slot ("head", "chest", "legs", "feet"). null = no lo cambia. */
     public ResourceLocation bodyItem(String slot) {
         return slot == null ? null : bodyItems.get(slot.toLowerCase(Locale.ROOT));
@@ -405,6 +425,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                 buf.writeBoolean(d.noBrows());
                 buf.writeUtf(d.iconDefault(), 128);
                 buf.writeUtf(d.hairStyle(), 128);
+                buf.writeUtf(d.longScenePose(), 128);
+                buf.writeUtf(d.transformFace(), 32);
             },
             buf -> {
                 ResourceLocation id = buf.readResourceLocation();
@@ -428,7 +450,8 @@ public record FormDef(ResourceLocation id, EnumSet<Race> races, Kind kind,
                         buf.readBoolean(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
                         buf.readBoolean(), buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(),
                         readTier(buf), buf.readBoolean(), readAlign(buf), readReqs(buf),
-                        buf.readUtf(32), readLayerColors(buf), buf.readInt(), buf.readBoolean(), buf.readUtf(128), buf.readUtf(128));
+                        buf.readUtf(32), readLayerColors(buf), buf.readInt(), buf.readBoolean(), buf.readUtf(128), buf.readUtf(128),
+                        buf.readUtf(128), buf.readUtf(32));
             });
 
     private static Map<Integer, Integer> readLayerColors(FriendlyByteBuf buf) {

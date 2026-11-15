@@ -31,17 +31,23 @@ public final class StunClientState {
     /** Id de entidad -> tick en que acaba la inmunidad posterior al aturdimiento (para el icono). */
     private static final Map<Integer, Long> IMMUNE_UNTIL = new ConcurrentHashMap<>();
 
-    public static void accept(int entityId, int ticks, int immunityTicks) {
+    /** Aturdidos sin visual (StunSyncPacket.visible = false): input anulado, sin estrellas ni icono. */
+    private static final java.util.Set<Integer> HIDDEN = ConcurrentHashMap.newKeySet();
+
+    public static void accept(int entityId, int ticks, int immunityTicks, boolean visible) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return;
         if (ticks <= 0) {
             UNTIL.remove(entityId);
+            HIDDEN.remove(entityId);
             // Corte anticipado (StunState.release): la inmunidad empieza ya.
             if (immunityTicks > 0) IMMUNE_UNTIL.put(entityId, level.getGameTime() + immunityTicks);
             return;
         }
         UNTIL.put(entityId, level.getGameTime() + ticks);
         if (immunityTicks > 0) IMMUNE_UNTIL.put(entityId, level.getGameTime() + ticks + immunityTicks);
+        if (!visible) { HIDDEN.add(entityId); return; }
+        HIDDEN.remove(entityId);
         // Tres estrellas repartidas en círculo; cada una se ata a la entidad y vive lo que dure el stun
         // (ver StunStarParticle: xd = id, yd = fase, zd = ticks).
         var opts = com.hmc.zenkai.registry.ModParticles.stunStar(0xFFFFFF, 1.0f);
@@ -67,6 +73,9 @@ public final class StunClientState {
         if (until == null || level == null) return 0;
         return (int) Math.max(0L, until - level.getGameTime());
     }
+
+    /** ¿Está aturdido de forma VISIBLE (con estrellas e icono)? La inmovilidad de la escena de transformación no lo es. */
+    public static boolean showsStun(int entityId) { return !HIDDEN.contains(entityId) && isStunned(entityId); }
 
     public static boolean isStunned(int entityId) {
         Long until = UNTIL.get(entityId);

@@ -116,6 +116,10 @@ public class PlayerFormAttachment {
      */
     private ResourceLocation holdTargetForm = null;
 
+    /** Ticks que pide la carga de formas en curso (solo servidor, sin guardar ni sincronizar): con la secuencia larga anunciada
+     *  NO coincide con holdTicksFor(destino), y FormSystem lo necesita para encoger el cuerpo al ritmo de la carga. */
+    private int holdRequired = 0;
+
     /** Forma OBJETIVO elegida en la rueda: ATAJO de un solo uso, no un techo. null = sin
      *  límite, la tecla sube un escalón por vez como antes. Ponlo a FormIds.BASE si quieres
      *  que pasar por la rueda sea obligatorio. Al ALCANZAR la forma elegida se consume sola
@@ -155,6 +159,12 @@ public class PlayerFormAttachment {
     public ResourceLocation getHoldTargetForm() { return transforming ? holdTargetForm : null; }
     public boolean isKaiokenSwitch()      { return kaiokenSwitch; }
     public boolean isOozaruForced()       { return oozaruForced; }
+
+    /** Avance 0..1 de la carga de formas en curso (solo servidor); 0 sin carga o en la escalera del kaioken. */
+    public float formHoldProgress() {
+        if (!transforming || holdTargetForm == null || holdRequired <= 0) return 0f;
+        return Math.min(1f, holdTicks / (float) holdRequired);
+    }
 
     /**
      * Nunca null: es el embudo por el que pasa el mod (TickHandlers, aura, stats).
@@ -331,6 +341,7 @@ public class PlayerFormAttachment {
 
         boolean was = transforming;
         holdTargetForm = FormIds.OOZARU;
+        holdRequired = required;
         if (advanceHold(required)) return progressDirty(was);
 
         setFormId(p, FormIds.OOZARU);
@@ -363,6 +374,7 @@ public class PlayerFormAttachment {
             }
         }
         holdTargetForm = target;
+        holdRequired = required;
         if (advanceHold(required)) return progressDirty(was); // aún cargando
 
         // Último tramo del ritual de Oozaru: llegar aquí ES lo que desbloquea SSJ4 para
@@ -480,7 +492,11 @@ public class PlayerFormAttachment {
     /** Destino de la escalera de formas: la selección de la rueda, o el siguiente escalón.
      *  null si no hay nada que hacer (ya está ahí, o el destino es volver a base). */
     private ResourceLocation targetForm(Player p, Race race) {
-        ResourceLocation target = (selectedForm != null && !selectedForm.equals(formId))
+        // De Oozaru o Súper Oozaru la tecla SIEMPRE sigue su cadena (Oozaru -> Súper Oozaru -> SSJ4), sin mirar la rueda: con SSJ1
+        // seleccionado, desde Oozaru intentaba transformarse en SSJ1 y nunca llegaba a Súper Oozaru (reportado el 2026-11-13). La
+        // selección no se borra: vale otra vez al volver a la base.
+        boolean apeLadder = FormIds.OOZARU.equals(formId) || FormIds.SUPER_OOZARU.equals(formId);
+        ResourceLocation target = (!apeLadder && selectedForm != null && !selectedForm.equals(formId))
                 ? selectedForm
                 : resolveNextForm(p, race, formId);
 

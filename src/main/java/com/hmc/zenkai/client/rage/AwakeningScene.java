@@ -40,8 +40,9 @@ import java.util.List;
  *                         ClientFormDelay aplica aquí la forma nueva y el servidor completa la carga en el mismo tick.
  *   REMATE    4,3 - 6,9 s el nombre de la forma aparece grande y se desvanece.
  * </pre>
- * La POSE depende del acontecimiento: rescate = levantarse en calma; Beast = agarrarse el pecho; SSJ2 / Humano ultra = rugido;
- * el resto de duelo = de rodillas; otras vías (entrenamiento, ritual…) usan el rugido. La NOTA de sonido, igual: pérdida de un
+ * La POSE la declara la FORMA (campo {@code long_scene.pose} de su JSON, 0.6.1: familias como {@code serene} para las divinas,
+ * {@code skyward} para los Legendarios, {@code flex} para el Arcosiano…), salvo el rescate de un aliado, que siempre es levantarse en
+ * calma. Sin pose declarada: de rodillas por duelo y rugido por cualquier otra vía (entrenamiento, ritual…). La NOTA de sonido, igual: pérdida de un
  * aliado, mascota o rescate. No hay grito (decidido: se hará aparte). Todo es presentación: nada de esto toca el estado.
  * <p>
  * MODOS ({@link LongTransformMode}): FULL todo; REDUCED sin destello, oscurecimiento, rayo ni cámara (apto para quien teme los
@@ -56,8 +57,9 @@ import java.util.List;
 public final class AwakeningScene {
     private AwakeningScene() {}
 
-    /** Orden == índices de {@code ZenkaiPalAnimations.playRageScene}. */
-    public enum Kind { KNEEL, ROAR, CLUTCH, RESOLVE }
+    /** Poses de Zenkai con rayo vanilla solo visual en el estallido (FULL): las violentas. */
+    private static final java.util.Set<String> LIGHTNING_POSES = java.util.Set.of("roar", "clutch", "ssj3_long", "skyward",
+            "ultra_ego", "beast", "oozaru", "super_oozaru", "ikari");
 
     public static final int LENGTH_TICKS = 126;
     /** Cuánto vive el título después del estallido (el overlay dura más que la secuencia del aura). */
@@ -69,7 +71,8 @@ public final class AwakeningScene {
     private static final class Scene {
         int entityId;
         boolean self;
-        Kind kind;
+        /** Pose elegida: nombre corto de Zenkai ("roar") o id con namespace de un clip de addon. */
+        String pose;
         String trigger;
         ResourceLocation form;
         float[] rgb;
@@ -81,13 +84,18 @@ public final class AwakeningScene {
 
     private static final List<Scene> ACTIVE = new ArrayList<>();
 
-    /** Elige la pose según la forma y lo que la despertó. Público para las pruebas. */
-    public static Kind pick(ResourceLocation form, String trigger) {
-        if ("ALLY_RESCUED".equals(trigger)) return Kind.RESOLVE;
-        if (form != null && FormIds.BEAST.equals(form)) return Kind.CLUTCH;
-        if (form != null && (FormIds.SSJ2.equals(form) || form.getPath().equals("human_ultra"))) return Kind.ROAR;
-        if (trigger != null && !trigger.isEmpty()) return Kind.KNEEL;   // duelo: SSJ1 y Humano super por pérdida
-        return Kind.ROAR;
+    /**
+     * Elige la pose según la forma y lo que la despertó. Público para las pruebas. Orden (decidido por el usuario, 2026-11-13): el
+     * rescate de un aliado manda siempre (es una escena con significado propio); después, la pose que declare la forma; sin ella,
+     * de rodillas por duelo (SSJ1 y Humano super por pérdida) y rugido por cualquier otra vía.
+     */
+    public static String pick(ResourceLocation form, String trigger) {
+        if ("ALLY_RESCUED".equals(trigger)) return "resolve";
+        FormDef def = FormDef.get(form);
+        if (def != null && def.hasLongScenePose()) return def.longScenePose();
+        if (form != null && FormIds.BEAST.equals(form)) return "clutch";   // respaldo si un datapack quita el campo
+        if (trigger != null && !trigger.isEmpty()) return "kneel";
+        return "roar";
     }
 
     /** Lo llama el compositor de auras al disparar la secuencia larga. {@code rgb} es el color exterior del aura. */
@@ -101,7 +109,7 @@ public final class AwakeningScene {
         s.self = self;
         s.form = info.form();
         s.trigger = info.trigger();
-        s.kind = pick(info.form(), info.trigger());
+        s.pose = pick(info.form(), info.trigger());
         s.rgb = new float[]{rgb[0], rgb[1], rgb[2]};
         s.mode = mode;
         s.start = mc.level.getGameTime();
@@ -109,13 +117,23 @@ public final class AwakeningScene {
         s.y = p.getY();
         s.z = p.getZ();
         ACTIVE.add(s);
-        ZenkaiPalAnimations.playRageScene(p, s.kind.ordinal());
+        ZenkaiPalAnimations.playRageScene(p, s.pose);
     }
 
     /** Corta la escena de ese jugador (carga cancelada antes de completarse): pose, viñeta, título y sonidos aún sin disparar. */
     public static void cancel(AbstractClientPlayer p) {
         ACTIVE.removeIf(s -> s.entityId == p.getId());
         ZenkaiPalAnimations.stopRageScene(p);
+    }
+
+    /** Forma de la escena en curso de ese jugador (de principio a fin, también tras el estallido), o null si no tiene escena. */
+    public static ResourceLocation activeForm(int entityId) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return null;
+        for (Scene s : ACTIVE) {
+            if (s.entityId == entityId && mc.level.getGameTime() - s.start < LENGTH_TICKS) return s.form;
+        }
+        return null;
     }
 
     /** Hacia qué forma y cuánto (0..1) va la ESCALADA de la escena de este jugador, o null si no hay escena o ya estalló. */
@@ -134,12 +152,6 @@ public final class AwakeningScene {
             if (age >= T_BURST) return null;
             return new Buildup(s.form, Mth.clamp(age / T_BURST, 0f, 1f));
         }
-        return null;
-    }
-
-    /** Tipo de pose de la escena propia en curso (para que el aura pueda ajustarse), o null si no hay. */
-    public static Kind currentSelfKind() {
-        for (Scene s : ACTIVE) if (s.self) return s.kind;
         return null;
     }
 
@@ -171,7 +183,7 @@ public final class AwakeningScene {
         sound(mc, s, ModSounds.RAGE_BURST.get(), 3.0f, 1.0f);
         SoundEvent note = noteFor(s);
         if (note != null) sound(mc, s, note, s.self ? 1.0f : 1.6f, 1.0f);
-        if (s.mode == LongTransformMode.FULL && (s.kind == Kind.ROAR || s.kind == Kind.CLUTCH)) lightning(mc, s);
+        if (s.mode == LongTransformMode.FULL && LIGHTNING_POSES.contains(s.pose)) lightning(mc, s);
     }
 
     private static SoundEvent noteFor(Scene s) {

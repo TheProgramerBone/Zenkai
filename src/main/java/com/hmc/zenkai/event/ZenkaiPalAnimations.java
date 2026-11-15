@@ -53,6 +53,18 @@ public final class ZenkaiPalAnimations {
     }
 
     /**
+     * Capas cuya pose se sostiene mientras el jugador puede andar (ki, bloqueo, pose de combate): mismo controlador que
+     * {@link #newFirstPersonController}, pero las piernas vuelven a la caminata vanilla al moverse (ver LegReleaseController).
+     */
+    public static PlayerAnimationController newLegReleaseController(AbstractClientPlayer player) {
+        PlayerAnimationController c = new com.hmc.zenkai.client.LegReleaseController(
+                player, (controller, state, animSetter) -> PlayState.STOP);
+        c.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
+        c.setFirstPersonConfiguration(FP_VANILLA); // se corrige en el primer tick
+        return c;
+    }
+
+    /**
      * La capa de vuelo usa un controlador propio que aplica la orientación dinámica encima de
      * la animación. Misma política de 1ª persona que las demás: applyFirstPersonPolicy itera
      * ZenkaiPalLayers.ALL, así que esta capa también recibe la configuración al cambiar.
@@ -146,6 +158,8 @@ public final class ZenkaiPalAnimations {
             if (c == null) continue;
             ResourceLocation clip = ZenkaiTransitions.currentClip(c);
             boolean fp = !fastFlight && (clip == null || !THIRD_PERSON_ONLY.contains(clip));
+            // Derribado: el cuerpo está tumbado (pose de nado) y la pasada corporal de PAL se rompe así; en 1ª persona, manos vanilla.
+            if (layer.equals(ZenkaiPalLayers.DOWNED_LAYER)) fp = false;
             if (layer.equals(ZenkaiPalLayers.KI_LAYER)) fp &= kiFp;
             FirstPersonMode mode = fp ? FirstPersonMode.THIRD_PERSON_MODEL : FirstPersonMode.NONE;
             if (LAST_FP_MODE.put(c, mode) != mode) c.setFirstPersonMode(mode);
@@ -362,8 +376,12 @@ public final class ZenkaiPalAnimations {
         if (player == net.minecraft.client.Minecraft.getInstance().player) applyFirstPersonModes(player);
     }
 
-    // ── Escena de despertar de Rage Forms: cuatro clips de 3 s (tools/gen_rage_scene_animations.py) ──
-    private static final String[] RAGE_SCENE_CLIPS = {"rage_kneel", "rage_roar", "rage_clutch", "rage_resolve"};
+    // ── Escena de la secuencia larga: clips de ~6,3 s por familia de forma (tools/gen_rage_scene_animations.py) ──
+    // Los nombres son los valores válidos de "long_scene.pose" en el JSON de una forma (FormDef#longScenePose).
+    private static final String[] RAGE_SCENE_CLIPS = {"rage_kneel", "rage_roar", "rage_clutch", "rage_resolve",
+            "rage_ssj3_long", "rage_serene", "rage_guard_charge", "rage_pride", "rage_skyward", "rage_flex", "rage_crossed",
+            "rage_ultra_ego", "rage_ui_sign", "rage_ui_mastered", "rage_potential", "rage_beast", "rage_oozaru",
+            "rage_super_oozaru", "rage_ssj4", "rage_ikari", "rage_rose", "rage_cocoon", "rage_black", "rage_kata"};
     private static final ResourceLocation[] RAGE_SCENE_ANIMS = new ResourceLocation[RAGE_SCENE_CLIPS.length];
     static {
         for (int i = 0; i < RAGE_SCENE_CLIPS.length; i++) {
@@ -373,13 +391,25 @@ public final class ZenkaiPalAnimations {
         Collections.addAll(THIRD_PERSON_ONLY, RAGE_SCENE_ANIMS);
     }
 
-    /** @param variant 0 de rodillas, 1 rugido, 2 agarrarse el pecho, 3 levantarse en calma (== {@code AwakeningScene.Kind}) */
-    public static void playRageScene(AbstractClientPlayer player, int variant) {
-        if (variant < 0 || variant >= RAGE_SCENE_ANIMS.length) return;
+    /** Clips de escena puestos alguna vez (los de Zenkai y los de addons), para que stopRageScene los reconozca. */
+    private static final java.util.Set<ResourceLocation> RAGE_SCENE_PLAYED = new java.util.HashSet<>();
+
+    /**
+     * @param pose nombre corto de un clip de Zenkai ("serene" → {@code zenkai:zenkai.rage_serene}) o id PAL con namespace de un clip
+     *             propio de un addon ("miaddon:mi_clip"), tal como viene de {@code AwakeningScene.pick}.
+     */
+    public static void playRageScene(AbstractClientPlayer player, String pose) {
+        if (pose == null || pose.isEmpty()) return;
+        ResourceLocation anim = pose.indexOf(':') >= 0 ? ResourceLocation.tryParse(pose)
+                : ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.rage_" + pose);
+        if (anim == null) return;
         var c = (PlayerAnimationController) PlayerAnimationAccess
                 .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
         if (c == null) return;
-        ZenkaiTransitions.play(c, RAGE_SCENE_ANIMS[variant], ZenkaiTransitions.TRANSFORM);
+        // El de un addon también mueve el cuerpo entero: solo en 3ª persona, como los de Zenkai.
+        THIRD_PERSON_ONLY.add(anim);
+        RAGE_SCENE_PLAYED.add(anim);
+        ZenkaiTransitions.play(c, anim, ZenkaiTransitions.TRANSFORM);
         if (player == net.minecraft.client.Minecraft.getInstance().player) applyFirstPersonModes(player);
     }
 
@@ -389,8 +419,8 @@ public final class ZenkaiPalAnimations {
                 .getPlayerAnimationLayer(player, ZenkaiPalLayers.PHYS_LAYER);
         if (c == null) return;
         ResourceLocation cur = ZenkaiTransitions.currentClip(c);
-        for (ResourceLocation r : RAGE_SCENE_ANIMS) {
-            if (r.equals(cur)) { ZenkaiTransitions.stop(c, ZenkaiTransitions.PHYS); return; }
+        if (cur != null && (RAGE_SCENE_PLAYED.contains(cur) || java.util.Arrays.asList(RAGE_SCENE_ANIMS).contains(cur))) {
+            ZenkaiTransitions.stop(c, ZenkaiTransitions.PHYS);
         }
     }
 

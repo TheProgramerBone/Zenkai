@@ -125,6 +125,28 @@ public final class RageSystemGameTests {
         helper.succeed();
     }
 
+    /** Un hecho que no puede sumar nada (SSJ1 y SSJ2 ya al 100 %) queda RECORDED y NO gasta el enfriamiento de 30 min. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void progressWithNothingToAddDoesNotSpendTheCooldown(GameTestHelper helper) {
+        ServerPlayer sp = player(helper, Race.SAIYAN);
+        int prev = withCooldown(0);
+        try {
+            helper.assertTrue(fire(sp, RageTrigger.ALLY_DEATH, "a") == RageResult.AWAKENING, "SSJ1 por la primera muerte");
+            setMastery(sp, SSJ1, 60);
+            helper.assertTrue(fire(sp, RageTrigger.ALLY_DEATH, "b") == RageResult.AWAKENING, "SSJ2 con SSJ1 al 60 %");
+            setMastery(sp, SSJ1, 100);
+            setMastery(sp, SSJ2, 100);
+            PlayerStatsAttachment.get(sp).flags().setRageAllyEventTick(-1L);
+            RageResult r = fire(sp, RageTrigger.ALLY_DEATH, "c");
+            helper.assertTrue(r == RageResult.RECORDED, "Sin nada que sumar: RECORDED; resultado=" + r);
+            helper.assertTrue(PlayerStatsAttachment.get(sp).flags().getRageAllyEventTick() == -1L,
+                    "El enfriamiento no se gasta");
+        } finally {
+            ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+        }
+        helper.succeed();
+    }
+
     @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
     public static void ssj2NeedsParentMasteryElseProgressToParent(GameTestHelper helper) {
         ServerPlayer sp = player(helper, Race.SAIYAN);
@@ -184,6 +206,61 @@ public final class RageSystemGameTests {
         setMastery(sp, FormIds.POTENTIAL_UNLOCK, 60);
         RageResult hi = fire(sp, RageTrigger.PET_DEATH, "perro-2");
         helper.assertTrue(hi == RageResult.AWAKENING && att.hasBeastFury(), "Con Místico >= 50 % despierta Beast; r=" + hi);
+        helper.succeed();
+    }
+
+    // ── Despertares añadidos el 2026-11-14 ───────────────────────────────────
+
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void criticalSurvivalAwakensBlueEvolution(GameTestHelper helper) {
+        ServerPlayer sp = player(helper, Race.SAIYAN);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        ResourceLocation god = ResourceLocation.parse("zenkai:ssj_god");
+        ResourceLocation blue = ResourceLocation.parse("zenkai:ssj_blue");
+        ResourceLocation evo = ResourceLocation.parse("zenkai:ssj_blue_evolution");
+        att.setAlignment(50);   // alineamiento bueno: la rama del Blue (el Rosé es la del malvado)
+        att.setAttribute(com.hmc.zenkai.feature.ZenkaiAttributes.MIND, 1000);
+        att.skills().grantAdmin(SuperForms.SKILL, SuperForms.maxLevel(Race.SAIYAN));
+        // Una llamada por concesión: el sync de cada una lanza con un jugador simulado y cortaría las siguientes.
+        var tree = com.hmc.zenkai.feature.skilltree.SkillTree.Via.EVENT;
+        ZenkaiGameTestHelpers.invokeHandler(() -> com.hmc.zenkai.feature.skilltree.SkillTree.grant(sp,
+                com.hmc.zenkai.feature.skilltree.SkillTreeMigration.NODE_GOD_KI, 1, com.hmc.zenkai.feature.skilltree.SkillTree.Via.MASTER_TRIAL));
+        ZenkaiGameTestHelpers.invokeHandler(() -> com.hmc.zenkai.feature.skilltree.SkillTree.grant(sp, god, 1, tree));
+        ZenkaiGameTestHelpers.invokeHandler(() -> com.hmc.zenkai.feature.skilltree.SkillTree.grant(sp, blue, 1, tree));
+        helper.assertTrue(SuperForms.unlocked(sp, blue) && !SuperForms.unlocked(sp, evo), "Parte con Blue y sin Evolution; blue="
+                + SuperForms.unlocked(sp, blue) + " evo=" + SuperForms.unlocked(sp, evo));
+        int prev = withCooldown(0);
+        try {
+            setMastery(sp, blue, 50.01);
+            RageResult[] r = new RageResult[1];
+            ZenkaiGameTestHelpers.invokeHandler(() -> r[0] = fire(sp, RageTrigger.CRITICAL_SURVIVAL, "limite"));
+            helper.assertTrue(SuperForms.unlocked(sp, evo), "Romper el límite con Blue >= 50 % despierta Blue Evolution; r=" + r[0]);
+            helper.assertTrue(forms(sp).getFormId().equals(evo), "Y se transforma; forma=" + forms(sp).getFormId());
+        } finally {
+            ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+        }
+        helper.succeed();
+    }
+
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void legendarySkipsSsj2AndFeedsItsOwnLine(GameTestHelper helper) {
+        ServerPlayer sp = player(helper, Race.SAIYAN);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        ResourceLocation green = ResourceLocation.parse("zenkai:ssj_green");
+        att.setLegendary(true);
+        int prev = withCooldown(0);
+        try {
+            helper.assertTrue(fire(sp, RageTrigger.ALLY_DEATH, "padre") == RageResult.AWAKENING && SuperForms.unlocked(sp, SSJ1),
+                    "La muerte de un aliado despierta el SSJ1 del Legendario");
+            setMastery(sp, SSJ1, 60);
+            float before = forms(sp).getFormMastery(green);
+            RageResult r = fire(sp, RageTrigger.ALLY_DEATH, "otro");
+            helper.assertTrue(!SuperForms.unlocked(sp, SSJ2), "Un Legendario no despierta el SSJ2 que no puede llevar; r=" + r);
+            helper.assertTrue(r == RageResult.PROGRESS && forms(sp).getFormMastery(green) > before,
+                    "El hecho suma a su línea (Legendario): " + before + " -> " + forms(sp).getFormMastery(green) + "; r=" + r);
+        } finally {
+            ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+        }
         helper.succeed();
     }
 

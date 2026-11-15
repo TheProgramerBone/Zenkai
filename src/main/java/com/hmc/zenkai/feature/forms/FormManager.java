@@ -225,7 +225,9 @@ public final class FormManager {
                             readRgb(o, "fur_rgb", -1),
                             GsonHelper.getAsBoolean(o, "no_brows", false),
                             GsonHelper.getAsString(o, "icon_default", ""),
-                            GsonHelper.getAsString(o, "hair_style", "")));
+                            GsonHelper.getAsString(o, "hair_style", ""),
+                            longScenePose(o),
+                            GsonHelper.getAsString(o, "transform_face", "").trim()));
                 } catch (Exception ex) {
                     LOGGER.error("[Zenkai] No se pudo leer la forma en {}: {}", file, ex.toString());
                 }
@@ -262,5 +264,11 @@ public final class FormManager {
             FormRegistry.rebuild();
             LOGGER.info("[Zenkai] Formas cargadas: {}.", defs.size());
         }
+    }
+
+    /** {@code "long_scene": {"pose": "serene"}} → "serene"; sin bloque, vacío (ver FormDef#hasLongScenePose). */
+    private static String longScenePose(JsonObject o) {
+        if (!o.has("long_scene") || !o.get("long_scene").isJsonObject()) return "";
+        return GsonHelper.getAsString(o.getAsJsonObject("long_scene"), "pose", "").trim();
     }
 }

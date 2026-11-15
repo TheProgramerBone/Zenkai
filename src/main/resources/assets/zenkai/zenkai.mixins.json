@@ -9,6 +9,7 @@
     "client.MouseHandlerMixin",
     "client.CameraShakeMixin",
     "client.ItemInHandGlowMixin",
+    "client.ItemInHandFormAnchorMixin",
     "client.DamageEventMarkMixin",
     "client.SyncHurtFlashMixin"
   ],

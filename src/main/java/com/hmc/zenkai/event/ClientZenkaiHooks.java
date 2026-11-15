@@ -383,7 +383,9 @@ public final class ClientZenkaiHooks {
         }
 
         // Aturdido (StunState): estrellas con los segundos que faltan, con un decimal.
-        int stunLeft = com.hmc.zenkai.client.combat.StunClientState.remainingTicks(mc.player.getId());
+        // La inmovilidad de la escena de transformación (stun sin visual) no enseña el icono.
+        int stunLeft = com.hmc.zenkai.client.combat.StunClientState.showsStun(mc.player.getId())
+                ? com.hmc.zenkai.client.combat.StunClientState.remainingTicks(mc.player.getId()) : 0;
         if (stunLeft > 0) {
             out.add(new Badge(ICON_STUNNED,
                     String.format(java.util.Locale.ROOT, "%.1f", stunLeft / 20.0f), 0xFFFFE066));

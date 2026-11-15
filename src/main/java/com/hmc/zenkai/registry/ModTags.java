@@ -34,7 +34,7 @@ public class ModTags {
         public static final TagKey<Item> KEEPS_HAIR = createTag("keeps_hair");
         /** Objetos que ocupan la OREJA IZQUIERDA del portador (el scouter se apoya en ella): hacen desaparecer esa oreja del cuerpo
          *  de la raza que la tenga (Namekiano), declarada por el ítem de raza con {@code hideOnEarGear}. Distinto de keeps_hair
-         *  (que dice «no cubro el cráneo»): el halo no toca ninguna oreja. Se lee en la ranura de casco y en la de Curios (la oreja aún se sigue dibujando: ver pendientes-0.6.0 #14). */
+         *  (que dice «no cubro el cráneo»): el halo no toca ninguna oreja. Se lee en la ranura de casco y en la de Curios. */
         public static final TagKey<Item> COVERS_EAR = createTag("covers_ear");
         /** Objetos que «Llevarse todo» NUNCA retira del jugador al intercambiar armadura: el scouter, el halo y las pesas son
          *  armaduras de verdad que ocupan ranuras de armadura. Data-driven: un datapack o mod puede ampliarlo. */

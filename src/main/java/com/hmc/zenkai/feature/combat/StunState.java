@@ -84,16 +84,27 @@ public final class StunState {
      * guardia y corta lo que hiciera, como cualquier aturdimiento. Un jugador con {@code stun.affect_players}
      * apagado no queda aturdido (el cliente le anula el input por su propio estado de agarre).
      */
-    public static void hold(LivingEntity target, int ticks) {
+    public static void hold(LivingEntity target, int ticks) { hold(target, ticks, true); }
+
+    /**
+     * Como {@link #hold(LivingEntity, int)}; con {@code visible = false} el cliente bloquea igual el input pero NO dibuja las estrellas
+     * ni el icono de aturdido. Lo usa AwakeningProtection: la escena de la primera transformación inmoviliza con este mismo mecanismo
+     * y las estrellas de stun salían sobre la cabeza en mitad de la escena (God y Blue, reportado por el usuario el 2026-11-13).
+     */
+    public static void hold(LivingEntity target, int ticks, boolean visible) {
         if (target.level().isClientSide() || ticks <= 0) return;
         if (target instanceof ServerPlayer && !ServerConfig.stunAffectsPlayers()) return;
         UUID id = target.getUUID();
+        if (visible) HIDDEN.remove(id); else HIDDEN.add(id);
         STUNNED_UNTIL.put(id, target.level().getGameTime() + ticks);
         GuardBreak.breakGuard(target, ticks);
         if (target instanceof Mob mob) mob.getNavigation().stop();
         if (target instanceof ServerPlayer sp) com.hmc.zenkai.feature.action.ActionResolver.interruptByStun(sp);
         broadcast(target, ticks, 0);
     }
+
+    /** Aturdidos SIN visual (ver hold con visible = false): quien empiece a verlos tampoco debe ver estrellas. */
+    private static final java.util.Set<UUID> HIDDEN = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     /**
      * Corta el aturdimiento antes de tiempo (el agarrado que se zafa o al que sueltan).
@@ -131,7 +142,7 @@ public final class StunState {
     }
 
     private static void broadcast(LivingEntity target, int ticks, int immunityTicks) {
-        StunSyncPacket pkt = new StunSyncPacket(target.getId(), ticks, immunityTicks);
+        StunSyncPacket pkt = new StunSyncPacket(target.getId(), ticks, immunityTicks, !HIDDEN.contains(target.getUUID()));
         if (target instanceof ServerPlayer sp) PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, pkt);
         else PacketDistributor.sendToPlayersTrackingEntity(target, pkt);
     }
@@ -141,6 +152,7 @@ public final class StunState {
         IMMUNE_UNTIL.remove(id);
         CHAIN_UNTIL.remove(id);
         CHAIN.remove(id);
+        HIDDEN.remove(id);
     }
 
     /** Un mob aturdido se queda clavado: sin navegación y sin deslizar horizontalmente. */
@@ -175,6 +187,6 @@ public final class StunState {
         if (!(e.getEntity() instanceof ServerPlayer viewer)) return;
         if (!(e.getTarget() instanceof LivingEntity t)) return;
         int left = remaining(t);
-        if (left > 0) PacketDistributor.sendToPlayer(viewer, new StunSyncPacket(t.getId(), left, 0));
+        if (left > 0) PacketDistributor.sendToPlayer(viewer, new StunSyncPacket(t.getId(), left, 0, !HIDDEN.contains(t.getUUID())));
     }
 }

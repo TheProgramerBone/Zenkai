@@ -1,0 +1,12 @@
+{
+  "form": "zenkai:ikari",
+  "race": "saiyan",
+  "triggers": [
+    "ally_death",
+    "ally_dies_while_downed",
+    "pet_death",
+    "ally_downed",
+    "critical_survival"
+  ],
+  "awakens": false
+}

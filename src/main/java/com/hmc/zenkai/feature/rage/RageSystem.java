@@ -121,13 +121,25 @@ public final class RageSystem {
         List<RageAwakening> matching = new ArrayList<>();
         for (RageAwakening a : RageAwakeningManager.forRace(race)) if (a.matches(trigger, intensity)) matching.add(a);
         if (matching.isEmpty()) return RageResult.RECORDED;
-        // La cadena en orden: la menos profunda primero (sin profundidad, por último).
-        matching.sort(Comparator.comparingInt((RageAwakening a) -> depth(race, a.form())));
+        // La cadena en orden: la menos profunda primero (sin profundidad, por último). Entre las que no están en la cadena (ramas,
+        // Legendarios, Beast) manda el número de antepasados: así «la más alta que posee» es de verdad la última de su línea
+        // (Ikari, Legendario, Pleno) y no depende del orden en que se cargaron los archivos.
+        matching.sort(Comparator.comparingInt((RageAwakening a) -> depth(race, a.form()))
+                .thenComparingInt(a -> ancestors(a.form())));
 
         RageResult result = RageResult.RECORDED;
         RageAwakening lastOwned = null;
         for (RageAwakening a : matching) {
-            if (SuperForms.unlocked(sp, a.form())) { lastOwned = a; continue; }   // ya la tiene: candidata a PROGRESS
+            // Sangre legendaria: SSJ2 y SSJ3 no se pueden LLEVAR puestas. Sin este salto, la muerte de un aliado le despertaba a un
+            // Legendario un SSJ2 que no puede usar (o sumaba maestría a uno comprado); ahora el hecho sigue hacia su propia línea.
+            if (SuperForms.legendaryBlocked(sp, a.form())) continue;
+            if (SuperForms.unlocked(sp, a.form())) {
+                // Ya la tiene: candidata a PROGRESS, salvo que su maestría esté al tope. Antes un hecho que no sumaba NADA (todas las
+                // formas del acontecimiento al 100 %) se devolvía como PROGRESS y gastaba igualmente el enfriamiento de 30 min,
+                // bloqueando después un despertar de verdad. Ahora, sin nada que sumar, queda RECORDED y el enfriamiento intacto.
+                if (forms.getFormMastery(a.form()) < 100f) lastOwned = a;
+                continue;
+            }
             ResourceLocation parent = parentOf(a.form());
             if (parent != null && !FormIds.BASE.equals(parent) && !SuperForms.unlocked(sp, parent)) continue;   // sin saltos
 
@@ -165,6 +177,17 @@ public final class RageSystem {
     private static int depth(Race race, ResourceLocation form) {
         int d = SuperForms.depthOf(race, form);
         return d <= 0 ? Integer.MAX_VALUE : d;
+    }
+
+    /** Cuántos antepasados tiene la forma hasta la base (desempate de las que no están en la cadena comprable). */
+    private static int ancestors(ResourceLocation form) {
+        int n = 0;
+        ResourceLocation p = parentOf(form);
+        while (p != null && !FormIds.BASE.equals(p) && n < 32) {
+            n++;
+            p = parentOf(p);
+        }
+        return n;
     }
 
     private static @Nullable ResourceLocation parentOf(ResourceLocation form) {

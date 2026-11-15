@@ -362,11 +362,11 @@ public class Zenkai {
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.BLOCK_LAYER, 1200,
-                        ZenkaiPalAnimations::newFirstPersonController);
+                        ZenkaiPalAnimations::newLegReleaseController);
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.COMBAT_LAYER, 900,
-                        ZenkaiPalAnimations::newFirstPersonController);
+                        ZenkaiPalAnimations::newLegReleaseController);
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.PHYS_LAYER, 950,
@@ -374,7 +374,7 @@ public class Zenkai {
 
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.KI_LAYER, 960,
-                        ZenkaiPalAnimations::newFirstPersonController);
+                        ZenkaiPalAnimations::newLegReleaseController);
 
                 // Prioridad 1250, por encima de BLOCK_LAYER (1200) — pedido explícito del
                 // usuario: quiere que la pose de carga se vea SIEMPRE, incluso volando (FLY_LAYER,
@@ -386,6 +386,11 @@ public class Zenkai {
                 // debe estar siempre por encima de lo demás).
                 PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
                         ZenkaiPalLayers.TRANSMISSION_LAYER, 1250,
+                        ZenkaiPalAnimations::newFirstPersonController);
+
+                // Prioridad 1300: pose de derribado propia, por encima de bloqueo (1200), transmisión (1250) y vuelo (800).
+                PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(
+                        ZenkaiPalLayers.DOWNED_LAYER, 1300,
                         ZenkaiPalAnimations::newFirstPersonController);
 
                 // Prioridad 1600: brazos de quien lleva un cuerpo en brazos; la más alta de gameplay (pedido del usuario).

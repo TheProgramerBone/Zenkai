@@ -18,6 +18,8 @@ import org.jetbrains.annotations.NotNull;
  * es exactamente el patrón de la casa.
  * Reparto: la animación pone la POSTURA (brazos, piernas, capa), esto pone la ORIENTACIÓN
  * (cabeceo, alabeo). Ninguna de las dos invade a la otra.
+ * NO hereda de LegReleaseController: las piernas del vuelo son las del clip de vuelo, nunca la caminata vanilla (corrección del
+ * usuario, 2026-11-14). Son las capas de ki, bloqueo y combate las que ceden sus piernas a esta mientras se vuela.
  */
 public class FlyAnimationController extends PlayerAnimationController {
 

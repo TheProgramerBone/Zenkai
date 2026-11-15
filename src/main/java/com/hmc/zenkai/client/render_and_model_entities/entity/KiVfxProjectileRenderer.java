@@ -163,6 +163,11 @@ public class KiVfxProjectileRenderer extends EntityRenderer<KiProjectileEntity> 
         float popT = Mth.clamp((entity.tickCount + partialTick) / POP_TICKS, 0f, 1f);
         float popScale = popT * popT * (3f - 2f * popT);
         float size = (float) entity.techniqueType().visualDiameter(entity.size()) * breathe * popScale;
+        // La mecha de la EXPLOSION sigue donde acabó la esfera de carga (mismo radio, sin el «pop» de nacimiento): antes
+        // encogía de golpe al soltar, justo antes de la detonación.
+        if (entity.techniqueType() == com.hmc.zenkai.feature.technique.KiTechniqueType.EXPLOSION) {
+            size = 2f * com.hmc.zenkai.client.KiVfxChargeRenderer.explosionRadius(entity.size(), 1f) * breathe;
+        }
 
         if (columnPts != null && (dbg.showsShell() || dbg.showsCore())) {
             renderColumn(v, pose, buffer, columnPts,

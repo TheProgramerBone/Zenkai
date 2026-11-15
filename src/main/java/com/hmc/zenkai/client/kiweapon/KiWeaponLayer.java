@@ -45,7 +45,7 @@ public class KiWeaponLayer extends PlayerItemInHandLayer<AbstractClientPlayer, P
         for (HumanoidArm arm : HumanoidArm.values()) {
             if (KiWeaponState.variantForArm(player, arm) == null) continue;
             pose.pushPose();
-            getParentModel().translateToHand(arm, pose);
+            toHand(player, arm, pose);
             // Marco de ítem de vanilla (ItemInHandLayer.renderArmWithItem).
             pose.mulPose(Axis.XP.rotationDegrees(-90.0F));
             pose.mulPose(Axis.YP.rotationDegrees(180.0F));
@@ -60,12 +60,19 @@ public class KiWeaponLayer extends PlayerItemInHandLayer<AbstractClientPlayer, P
         if (KiWeaponState.variantForArm(player, main) == null && !player.getMainHandItem().isEmpty()
                 && (KiWeaponVfx.infuseGlowActive(player) || KiWeaponVfx.destructionLayerActive(player))) {
             pose.pushPose();
-            getParentModel().translateToHand(main, pose);
+            toHand(player, main, pose);
             pose.mulPose(Axis.XP.rotationDegrees(-90.0F));
             pose.mulPose(Axis.YP.rotationDegrees(180.0F));
             pose.translate((main == HumanoidArm.LEFT ? -1 : 1) / 16.0F, 0.125F, -0.625F);
             KiWeaponVfx.queueItemGlow(pose, player, partialTick);
             pose.popPose();
+        }
+    }
+
+    /** Mano del brazo vanilla o, con un cuerpo de forma de brazos propios (Oozaru), su puño: ver FormHandAnchor. */
+    private void toHand(AbstractClientPlayer player, HumanoidArm arm, PoseStack pose) {
+        if (!com.hmc.zenkai.client.FormHandAnchor.translateToHand(player, getParentModel(), arm, pose)) {
+            getParentModel().translateToHand(arm, pose);
         }
     }
 

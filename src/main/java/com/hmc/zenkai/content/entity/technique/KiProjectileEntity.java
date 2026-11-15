@@ -631,6 +631,13 @@ public class KiProjectileEntity extends Projectile {
         // anillo de choque que se expande), que aguantan la ampliación; el tope sigue existiendo
         // para que un EXPLOSION enorme no tape la pantalla con un solo quad. Una cifra más alta
         // solo se justifica mirando un impacto grande en juego, no por la fórmula.
+        // La técnica EXPLOSION (la explosión final) dibuja además su detonación a tamaño REAL en el cliente: cúpula de luz, ondas
+        // de suelo, polvo y lo que queda después (ExplosionBlastFx). El destello de abajo, con su tope, hace de fogonazo central.
+        if (techniqueType() == KiTechniqueType.EXPLOSION) {
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(sl, null, center.x, center.y, center.z,
+                    Math.max(96.0, radius * 6.0),
+                    new com.hmc.zenkai.feature.technique.KiExplosionFxPacket(center.x, center.y, center.z, (float) radius, rgb()));
+        }
         float flashScale = Math.min(4.5f, 1.0f + (float) radius * 0.18f);
         sl.sendParticles(ModParticles.impact(rgb(), flashScale),
                 center.x, center.y, center.z, 1, 0.0, 0.0, 0.0, 0.0);

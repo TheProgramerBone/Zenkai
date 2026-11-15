@@ -143,7 +143,9 @@ public class FaceOverlayGeoLayer extends GeoRenderLayer<GeoLayerArmorItem> {
         com.hmc.zenkai.client.face.FaceExpression.State expr = com.hmc.zenkai.client.face.FaceExpression.State.NEUTRAL;
         if (com.hmc.zenkai.config.ClientConfig.faceExpressions()) {
             expr = com.hmc.zenkai.client.face.FaceExpression.current(player, partialTick);
-            if (blend.blending() || eyeOverride >= 0) {
+            // Excepción: la transformación serena (UI Señal) cierra los ojos también durante la mezcla (transform_face "serene").
+            if ((blend.blending() || eyeOverride >= 0)
+                    && !com.hmc.zenkai.client.face.FaceExpression.eyesShutForTransform(player)) {
                 expr = new com.hmc.zenkai.client.face.FaceExpression.State(
                         com.hmc.zenkai.client.face.FaceExpression.Expression.NEUTRAL, expr.mouth());
             }

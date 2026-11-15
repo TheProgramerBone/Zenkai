@@ -138,6 +138,13 @@ Un padre inexistente o un ciclo se avisan en el log (`Zenkai-Forms`) y la forma 
   quien lleve este peinado»: sirve con classic y con los peinados DMZ). Solo vale si el peinado base no tiene ya un override para
   tu forma; el color sale de `hair_rgb`. Sin este campo habría que reescribir el JSON del peinado base (`form_overrides`), que dos
   datapacks no pueden tocar a la vez.
+- `long_scene` (0.6.1): `{"pose": "serene"}` elige la pose de la secuencia larga de la primera transformación. Valores de Zenkai:
+  `kneel`, `roar`, `clutch`, `resolve`, `ssj3_long`, `ssj4`, `ikari`, `serene`, `guard_charge`, `rose`, `pride`, `skyward`, `flex`,
+  `cocoon`, `crossed`, `black`, `kata`; con namespace
+  (`"mi_pack:mi_clip"`) es el id PAL de un clip tuyo en `assets/<ns>/player_animations/` (unos 6,3 s, estallido a los 4 s). Sin el
+  campo: de rodillas si la despertó un duelo y rugido si no. El rescate de un aliado siempre usa `resolve`.
+- `transform_face` (0.6.1): cara mientras alguien se transforma HACIA tu forma. Sin el campo, grita (boca abierta); `"calm"` = boca
+  cerrada; `"serene"` = boca y ojos cerrados (los usa el Ultra Instinto).
 - Ya existentes: `aura_type` (estilo en `assets/<ns>/zenkai_aura_styles/<tipo>.json`, con su bloque `silhouette` = el humo, y firma
   en `data/<ns>/zenkai_aura_signatures/<tipo>.json`), `aura_rgb`/`aura_outer_rgb`, `hair_rgb`, `eye_rgb`, `brow_rgb`, `fur_rgb`,
   `tail_rgb`, `layer_colors`, `scale`, `body_items`; poder y gasto: `stat_percent_*`, `ki_drain_*`, `mastery_gain`, `mastery_reqs`,
@@ -313,7 +320,7 @@ them up by itself, without the addon touching any Zenkai class:
 | `zenkai_techniques/physical/<id>.json` | Numbers of an existing `PhysicalTechnique` | same |
 | `zenkai_entities/<entity_type_id>.json` | Moveset/stats of a combat NPC | `EntityStatsManager` |
 | `zenkai_race_stats/<race>.json` | Stat curves of a race | `RaceStatTable` |
-| `zenkai_forms/<id>.json` | A new transformation hanging off an existing chain (`parent`). `fur_rgb` (Saiyan only) turns on the torso/arm fur layer in that color: a custom grey SSJ4-like form needs no new textures. `no_brows: true` hides the eyebrows while the form is active (SSJ3 uses it) | `FormDef`/`FormRegistry` |
+| `zenkai_forms/<id>.json` | A new transformation hanging off an existing chain (`parent`). `fur_rgb` (Saiyan only) turns on the torso/arm fur layer in that color: a custom grey SSJ4-like form needs no new textures. `no_brows: true` hides the eyebrows while the form is active (SSJ3 uses it). `long_scene: {"pose": "serene"}` (0.6.1) picks the pose of the first-transformation long sequence (`kneel`, `roar`, `clutch`, `resolve`, `ssj3_long`, `ssj4`, `ikari`, `serene`, `guard_charge`, `rose`, `pride`, `skyward`, `flex`, `cocoon`, `crossed`, `black`, `kata`, or a namespaced id of your own PAL clip, ~6.3 s with the burst at 4 s); an ally rescue always uses `resolve`. `transform_face` (0.6.1): face while transforming INTO the form: none = scream, `"calm"` = closed mouth, `"serene"` = closed mouth and eyes (Ultra Instinct uses them) | `FormDef`/`FormRegistry` |
 | `zenkai_archetypes/<name>.json` | A new entity archetype (attribute shape + multipliers) | `EntityArchetype`/`EntityArchetypeManager` |
 | `zenkai_face_parts/<category>/<name>.json` | A new face feature (eyes, eyebrows, nose, mouth): PNG layers with their color source, races, per-race variant | `FacePartDef`/`FaceCatalog` |
 | `zenkai_hair_styles/<name>.json` | A new hairstyle (cube geo or flat texture), races, per-transformation variant | `HairStyleDef`/`HairCatalog` |

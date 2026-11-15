@@ -1,4 +1,5 @@
 {
+  "long_scene": { "pose": "potential" },
   "races": ["saiyan", "human", "namekian", "arcosian", "majin"],
   "kind": "divine",
   "tp_cost": 0,

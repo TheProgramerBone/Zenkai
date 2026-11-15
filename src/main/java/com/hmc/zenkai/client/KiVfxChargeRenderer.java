@@ -80,11 +80,27 @@ public final class KiVfxChargeRenderer {
         return BASE_RADIUS + SIZE_RADIUS * c.size();
     }
 
+    /** Radio con el que la esfera de la EXPLOSION envuelve al jugador nada más empezar a cargar. */
+    private static final float EXPLOSION_START_RADIUS = 1.35f;
+
+    /**
+     * Radio de la esfera de la EXPLOSION según el avance de la carga (0..1). Queja del usuario (2026-11-14): «la esfera que al
+     * inicio sale del jugador no recubre el cuerpo entero, es chiquita, y conforme carga no aumenta de manera considerable».
+     * Antes iba de 0,90 (justo media altura de jugador: la cabeza y los pies asomaban) al radio de la mecha, que en tamaño 1
+     * era ese mismo 0,90: no crecía nada. Ahora arranca en 1,35 (cubre el cuerpo con margen) y casi se duplica al completarse
+     * (2,5 en tamaño 1; 3,2 en tamaño 4-5). El tope de 3,2 no es estético: la cámara de tercera persona está a 4 bloques y
+     * una esfera que la envuelve deja de verse (culling de cara trasera, ver «Técnicas pegadas al dueño»).
+     * La mecha ya disparada (KiVfxProjectileRenderer) usa este mismo radio a carga completa, para que al soltar no encoja.
+     */
+    public static float explosionRadius(int size, float progress) {
+        float full = Math.min(3.2f, 2.3f + 0.2f * Math.max(1, size));
+        float k = Mth.clamp(progress, 0f, 1f);
+        return Mth.lerp(k * k * (3f - 2f * k), EXPLOSION_START_RADIUS, full);
+    }
+
     private static float chargeRadius(KiChargeClientState.Charge c, float progress) {
         float target = targetRadius(c);
-        if (c.type() == KiTechniqueType.EXPLOSION) {
-            return Mth.lerp(progress, PLAYER_RADIUS, Math.max(PLAYER_RADIUS, target));
-        }
+        if (c.type() == KiTechniqueType.EXPLOSION) return explosionRadius(c.size(), progress);
         float start = Math.min(target * START_SCALE, Math.min(START_RADIUS_CAP, target));
         return Mth.lerp(progress, start, target);
     }

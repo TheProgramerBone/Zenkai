@@ -147,8 +147,10 @@ public final class FormSystem {
                 }
             }
         }
+        ResourceLocation holdTarget = form.getHoldTargetForm();
         applyFormScale(p, att.getRace(), activeDef,
-                com.hmc.zenkai.feature.skills.SkillToggles.isOn(p, com.hmc.zenkai.feature.skills.SkillEffects.NAMEK_GIANT));
+                com.hmc.zenkai.feature.skills.SkillToggles.isOn(p, com.hmc.zenkai.feature.skills.SkillEffects.NAMEK_GIANT),
+                holdTarget == null ? null : FormRegistry.get(holdTarget), form.formHoldProgress());
 
         // Banda de forzar (powerPercent > 100%): genérica, drena ki aparte del de la forma.
         // Va AQUÍ y no puede esperar al siguiente tick sin cortar: form.isTransforming() puede
@@ -165,17 +167,52 @@ public final class FormSystem {
         return false;
     }
 
+    /**
+     * Cuánto cambia la escala por tick al crecer / al encoger. Antes el tamaño de la forma se aplicaba de golpe y el Oozaru pasaba de
+     * 1 a 3 en un tick, ANTES incluso de que su cuerpo apareciera (la escena larga lo retrasa al estallido): un Saiyan gigante
+     * durante 4 s (reportado por el usuario el 2026-11-13). 0,025 lleva de 1 a 3 en 80 ticks, justo la escena hasta el estallido,
+     * así que crece mientras se transforma y el mono aparece ya a su tamaño. Encoger va al doble.
+     */
+    private static final double SCALE_GROW_PER_TICK = 0.025, SCALE_SHRINK_PER_TICK = 0.05;
+
+    /**
+     * Fracción de la carga a partir de la cual el cuerpo empieza a encogerse hacia una forma destino MÁS PEQUEÑA. 0,3 es el segundo
+     * pulso de la secuencia larga (tick 26 de 80), donde el clip {@code rage_ssj4} empieza a recogerse sobre sí mismo.
+     */
+    private static final float HOLD_SHRINK_FROM = 0.3f;
+
     /** Escala de la forma (render + hitbox + ojos) vía minecraft:generic.scale.
-     *  Sin forma cae a la escala base de la RAZA. Syncable: los clientes la ven sin packet. */
-    private static void applyFormScale(Player p, Race race, FormDef def, boolean giant) {
+     *  Sin forma cae a la escala base de la RAZA. Syncable: los clientes la ven sin packet. Progresiva, ver SCALE_GROW_PER_TICK.
+     *  {@code holdTarget}/{@code holdProgress}: forma hacia la que avanza la carga en curso y su avance 0..1 (null/0 sin carga). */
+    private static void applyFormScale(Player p, Race race, FormDef def, boolean giant, FormDef holdTarget, float holdProgress) {
         AttributeInstance scaleAttr = p.getAttribute(Attributes.SCALE);
         if (scaleAttr == null) return;
         double base = (race == null) ? 1.0 : race.baseScale();
         double target = (def != null && def.scale() > 0.0) ? def.scale() : base;
+        // Encoger DURANTE la carga (pedido del usuario, 2026-11-14, por Súper Oozaru -> SSJ4): antes el tamaño solo bajaba al
+        // completarse la carga, así que en el estallido aparecía un SSJ4 de 3,3 bloques que se encogía en 2 s. Ahora el cuerpo
+        // actual (el mono) se va haciendo pequeño conforme avanza la carga y llega al tamaño del destino justo cuando cambia la
+        // forma. Solo al encoger: crecer sigue ocurriendo después del cambio (el Oozaru, que no tiene carga con tecla, crece
+        // durante su escena por SCALE_GROW_PER_TICK). Si la carga se corta, el paso normal lo devuelve a su tamaño.
+        boolean holdShrink = false;
+        if (holdTarget != null && holdTarget.scale() > 0.0 && holdTarget.scale() < target && holdProgress > HOLD_SHRINK_FROM) {
+            double k = (holdProgress - HOLD_SHRINK_FROM) / (1.0 - HOLD_SHRINK_FROM);
+            k = k * k * (3.0 - 2.0 * k);   // arranca y acaba suave
+            target += (holdTarget.scale() - target) * k;
+            holdShrink = true;
+        }
         // Gigante Namekiano (interruptor): tamaño de Oozaru, encima de la forma que lleve (nunca menor que ella).
         if (giant && race == Race.NAMEKIAN) target = Math.max(target, com.hmc.zenkai.feature.skills.SkillEffects.NAMEK_GIANT_SCALE);
-        double amount = target - 1.0;
+        double goal = target - 1.0;
         AttributeModifier current = scaleAttr.getModifier(FORM_SCALE_MOD_ID);
+        double now = current == null ? 0.0 : current.amount();
+        double amount = goal;
+        // Al entrar al mundo (modificador transitorio, aún sin aplicar) va directo: nadie debe verte crecer al conectarte.
+        // Encogiendo con la carga también va directo: la curva de arriba ya es progresiva.
+        if (p.tickCount > 20 && !holdShrink) {
+            double step = goal > now ? SCALE_GROW_PER_TICK : SCALE_SHRINK_PER_TICK;
+            amount = Math.abs(goal - now) <= step ? goal : now + Math.signum(goal - now) * step;
+        }
         if (amount == 0.0) {
             if (current != null) scaleAttr.removeModifier(FORM_SCALE_MOD_ID);
             return;

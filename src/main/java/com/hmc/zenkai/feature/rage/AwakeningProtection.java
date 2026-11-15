@@ -48,7 +48,8 @@ public final class AwakeningProtection {
         ticks = Math.max(ticks, minTicks);
         UNTIL.put(sp.getUUID(), sp.level().getGameTime() + ticks);
         try {
-            StunState.hold(sp, ticks);
+            // Sin visual: inmoviliza igual, pero sin las estrellas de stun sobre la cabeza en mitad de la escena.
+            StunState.hold(sp, ticks, false);
         } catch (RuntimeException ignored) {
             // El hold manda un packet de estado: un fallo de red no debe quitar la invulnerabilidad ni abortar el cambio de forma.
         }

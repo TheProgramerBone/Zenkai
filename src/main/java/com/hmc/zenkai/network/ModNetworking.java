@@ -751,6 +751,11 @@ public class ModNetworking {
                 com.hmc.zenkai.feature.technique.SwordFxPacket::handle);
 
         registrar.playToClient(
+                com.hmc.zenkai.feature.technique.KiExplosionFxPacket.TYPE,
+                com.hmc.zenkai.feature.technique.KiExplosionFxPacket.STREAM_CODEC,
+                com.hmc.zenkai.feature.technique.KiExplosionFxPacket::handle);
+
+        registrar.playToClient(
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.TYPE,
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket.STREAM_CODEC,
                 com.hmc.zenkai.feature.skills.UiDodgeAnimPacket::handle);

@@ -196,7 +196,7 @@ public final class AuraChargeGroundFx {
 
     /** MapColor del bloque, empujado hacia un beige de polvo: la arena da polvo claro y la piedra
      *  gris, pero la hierba no da polvo verde chillón. */
-    private static int dustColor(ClientLevel level, Ground g) {
+    public static int dustColor(ClientLevel level, Ground g) {
         MapColor mc = g.state().getMapColor(level, g.pos());
         int c = (mc == null || mc == MapColor.NONE) ? DUST_BASE_RGB : mc.col;
         int r = Math.round(Mth.lerp(DUST_BASE_MIX, (c >> 16) & 0xFF, (DUST_BASE_RGB >> 16) & 0xFF));
