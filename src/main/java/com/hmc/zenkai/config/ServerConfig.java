@@ -44,7 +44,7 @@ public class ServerConfig {
     private ServerConfig() {}
 
     /** Tipos de deseo, para habilitar/deshabilitar y cualquier lógica genérica. */
-    public enum WishType { STACK, REVIVE_PLAYER, ENCHANT_VILLAGER, IMMORTAL, TRAINING_POINTS, LEGENDARY }
+    public enum WishType { STACK, REVIVE_PLAYER, ENCHANT_VILLAGER, IMMORTAL, TRAINING_POINTS, LEGENDARY, AWAKEN_POTENTIAL }
 
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
@@ -55,6 +55,7 @@ public class ServerConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_IMMORTAL;
     public static final ModConfigSpec.BooleanValue ENABLE_TRAINING_POINTS;
     public static final ModConfigSpec.BooleanValue ENABLE_LEGENDARY;
+    public static final ModConfigSpec.BooleanValue ENABLE_AWAKEN_POTENTIAL;
 
     // ── Stack wish ─────────────────────────────────────────────────────────────
     public static final ModConfigSpec.ConfigValue<List<? extends String>> STACK_OVERRIDES_RAW;
@@ -72,6 +73,7 @@ public class ServerConfig {
 
     // ── Training points (3) ─────────────────────────────────────────────────────
     public static final ModConfigSpec.IntValue TRAINING_POINTS_AMOUNT;
+    public static final ModConfigSpec.IntValue AWAKEN_POTENTIAL_KI_CONTROL_LEVELS;
 
     // ── Invocación: cooldown por jugador (1) + deseos por entidad (2) ───────────
     public static final ModConfigSpec.IntValue SUMMON_COOLDOWN_DAYS;
@@ -107,6 +109,7 @@ public class ServerConfig {
         ENABLE_IMMORTAL         = BUILDER.comment("Wish: immortality.").define("immortal", true);
         ENABLE_TRAINING_POINTS  = BUILDER.comment("Wish: training points (TP).").define("training_points", true);
         ENABLE_LEGENDARY        = BUILDER.comment("Wish: become Legendary (any race: unlocks the Saiyan Legendary line or the race's own Legendary form).").define("legendary", true);
+        ENABLE_AWAKEN_POTENTIAL = BUILDER.comment("Wish: awaken your potential (raises Ki Control a few levels per wish, see awaken_potential_wish; Namekians also get their first transformation).").define("awaken_potential", true);
         BUILDER.pop();
 
         BUILDER.push("stack_wish");
@@ -160,6 +163,13 @@ public class ServerConfig {
         TRAINING_POINTS_AMOUNT = BUILDER
                 .comment("Amount of Training Points granted by the wish.")
                 .defineInRange("amount", 1000, 0, Integer.MAX_VALUE);
+        BUILDER.pop();
+
+        BUILDER.push("awaken_potential_wish");
+        AWAKEN_POTENTIAL_KI_CONTROL_LEVELS = BUILDER
+                .comment("Ki Control levels granted by EACH Awaken my potential wish (capped at the max level of the skill).",
+                         "Namekians also get their first transformation with the first wish.")
+                .defineInRange("ki_control_levels", 3, 1, 10);
         BUILDER.pop();
 
         BUILDER.push("summoning");
@@ -1566,6 +1576,9 @@ public class ServerConfig {
     public static final ModConfigSpec.IntValue PERMADEATH_VISIT_COOLDOWN_DAYS =
             BUILDER.comment("Days (24000 ticks each) a dead player must wait after a visit to the Earth ends before Uranai Baba grants another one. Like the visit itself, the wait only runs while the player is online. 0 = no wait. Reviving (Dragon Balls) or /zenkai reset visit clears it.")
                     .defineInRange("permadeath.visit_cooldown_days", 2, 0, 365);
+    public static final ModConfigSpec.IntValue PERMADEATH_VISIT_SOUL_COST =
+            BUILDER.comment("Souls (dropped by the HFIL ogres) Uranai Baba charges for each visit to the Earth. 0 = free. The souls are taken from the player's inventory when the visit starts.")
+                    .defineInRange("permadeath.visit_soul_cost", 1, 0, 64);
     public static final ModConfigSpec.IntValue PERMADEATH_BODY_CAP =
             BUILDER.comment("Maximum bodies one player can have in the world. When exceeded, the oldest one is emptied onto the ground and removed.")
                     .defineInRange("permadeath.body_cap_per_player", 3, 1, 32);
@@ -1666,6 +1679,10 @@ public class ServerConfig {
             BUILDER.comment("Rage Forms: server ticks between two rewards (awakening or progress) from the death/rescue/survival of an ally, per player. 36000 = 30 minutes. Counted in server game time whether the player is online or not. Pet deaths and body gestures never consume it.")
                     .defineInRange("rage.ally_event_cooldown", 36000, 0, 24 * 60 * 60 * 20);
 
+    public static final ModConfigSpec.IntValue RAGE_MINOR_EVENT_COOLDOWN =
+            BUILDER.comment("Rage Forms: server ticks between two rewards from a MINOR event (your pet dies, an ally goes down near you), per player. 6000 = 5 minutes. Stops farming low-intensity mastery by killing your own pets or by two party members downing each other in turns. 0 = no cooldown.")
+                    .defineInRange("rage.minor_event_cooldown", 6000, 0, 24 * 60 * 60 * 20);
+
     // Reencarnación (renunciar a la vida muerta): lo que el alma recuerda. El TP, las skills, las formas, el God Ki, el Legendario,
     // el inventario, la cama y la XP se pierden siempre; el aspecto se elige de nuevo.
     public static final ModConfigSpec.IntValue PERMADEATH_REINC_ATTRIBUTE_PERCENT =
@@ -1689,6 +1706,7 @@ public class ServerConfig {
             case IMMORTAL         -> ENABLE_IMMORTAL.get();
             case TRAINING_POINTS  -> ENABLE_TRAINING_POINTS.get();
             case LEGENDARY        -> ENABLE_LEGENDARY.get();
+            case AWAKEN_POTENTIAL -> ENABLE_AWAKEN_POTENTIAL.get();
         };
     }
 
@@ -2400,6 +2418,7 @@ public class ServerConfig {
 
     // ── Helpers de balance ──────────────────────────────────────────────────────
     public static int trainingPointsAmount()    { return TRAINING_POINTS_AMOUNT.get(); }
+    public static int awakenPotentialKiControlLevels() { return AWAKEN_POTENTIAL_KI_CONTROL_LEVELS.get(); }
     public static long summonCooldownTicks()     { return (long) SUMMON_COOLDOWN_DAYS.get() * 24000L; }
     public static int shenlongWishCount()        { return SHENLONG_WISHES.get(); }
     public static int namekDragonWishCount()     { return NAMEK_DRAGON_WISHES.get(); }

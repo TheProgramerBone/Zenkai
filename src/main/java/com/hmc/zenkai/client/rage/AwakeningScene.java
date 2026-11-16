@@ -74,6 +74,8 @@ public final class AwakeningScene {
         /** Pose elegida: nombre corto de Zenkai ("roar") o id con namespace de un clip de addon. */
         String pose;
         String trigger;
+        /** Primera vez de esa forma: solo entonces sale el título con su nombre. */
+        boolean first;
         ResourceLocation form;
         float[] rgb;
         LongTransformMode mode;
@@ -109,6 +111,7 @@ public final class AwakeningScene {
         s.self = self;
         s.form = info.form();
         s.trigger = info.trigger();
+        s.first = info.first();
         s.pose = pick(info.form(), info.trigger());
         s.rgb = new float[]{rgb[0], rgb[1], rgb[2]};
         s.mode = mode;
@@ -274,7 +277,7 @@ public final class AwakeningScene {
 
     /** Nombre de la forma, grande, con el color del aura; entra a los 86 ticks y se va hacia el 136. */
     private static void title(GuiGraphics g, Minecraft mc, Scene s, float age, int w, int h) {
-        if (s.form == null || age < 86f || age > OVERLAY_TICKS - 2) return;
+        if (!s.first || s.form == null || age < 86f || age > OVERLAY_TICKS - 2) return;
         float a = age < 96f ? (age - 86f) / 10f : age < 122f ? 1f : Math.max(0f, 1f - (age - 122f) / 14f);
         if (a <= 0.02f) return;
         int alpha = (int) (255 * a);

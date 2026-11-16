@@ -1,11 +1,11 @@
-// 1.21.1	2026-10-05T22:06:21.930362	Registries
+// 1.21.1	2026-11-15T22:34:37.4861854	Registries
 bd6f2330be43a5be1fb54ce493e83bbd2148fe7e data/zenkai/neoforge/biome_modifier/add_katchin_ore.json
 017292215ebf76ee49087a29e74d2a2ed4ff7b48 data/zenkai/neoforge/biome_modifier/add_katchin_ore_rocky.json
-db2d252da6fbc2125895e6dc6c161eb006d86e40 data/zenkai/worldgen/biome/hfil_blood_shore.json
-4b2ba3a337c990bc5142da7f6b2bd0783f184a79 data/zenkai/worldgen/biome/hfil_cinder_dunes.json
-76e1386f556f4f75ab62fcdfaf2025dd5fc8ea94 data/zenkai/worldgen/biome/hfil_frozen_lake.json
-6bbe16358d35b0befbef16b0a5b2a9955c96edea data/zenkai/worldgen/biome/hfil_janemba_rift.json
-1c48b70ad2a330112f4fc4edc42dad5d8d9ff231 data/zenkai/worldgen/biome/hfil_needle_wastes.json
+355bf9df15d84d1e5236f7bbe3ce85cbf9e7529b data/zenkai/worldgen/biome/hfil_blood_shore.json
+bdfa955eb88f08e52c1fd4234ecc62964c93074c data/zenkai/worldgen/biome/hfil_cinder_dunes.json
+5b2f74e1ca0a304702e8e5152165230bfc102d9a data/zenkai/worldgen/biome/hfil_frozen_lake.json
+ecc18f7f98dcf6410e2aaa8a2ba1dabba786dd4f data/zenkai/worldgen/biome/hfil_janemba_rift.json
+7156ee7411c716d16a2c9d5a86cb53068bca2d76 data/zenkai/worldgen/biome/hfil_needle_wastes.json
 fa53bab04fe9b15b0dfb048683291be1ba5abf51 data/zenkai/worldgen/biome/namek_forest.json
 12dd6e892aae93555fcb94f67ca33e04e559f098 data/zenkai/worldgen/biome/namek_hills.json
 a7b5d160c77bb626353fbf1cc2c3c2d12c9506f1 data/zenkai/worldgen/biome/namek_ocean.json

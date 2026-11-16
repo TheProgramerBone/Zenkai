@@ -46,7 +46,9 @@ public final class RageListeners {
             int radius = ServerConfig.PERMADEATH_WITNESS_RADIUS.get();
             ServerPlayer owner = dead.getServer().getPlayerList().getPlayer(pet.getOwnerUUID());
             if (radius > 0 && owner != null && owner != dead && owner.isAlive() && owner.level() == dead.level()
-                    && owner.distanceToSqr(dead) <= (double) radius * radius && !killedBy(e.getSource(), owner)) {
+                    && owner.distanceToSqr(dead) <= (double) radius * radius && !killedBy(e.getSource(), owner)
+                    // Sin causante (lava, caída, ahogo...): la muerte de una mascota por el entorno no es un acontecimiento, es farmeable.
+                    && e.getSource().getEntity() != null) {
                 RageSystem.handle(owner, RageTrigger.PET_DEATH, dead.getUUID() + ":" + now, dead.getName().getString());
             }
             return;

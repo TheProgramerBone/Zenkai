@@ -44,6 +44,8 @@ public record BasicStrikePacket(int variant) implements CustomPacketPayload {
             long now = sp.level().getGameTime();
             Long prev = LAST.put(sp.getUUID(), now);
             if (prev != null && now - prev < MIN_GAP_TICKS) return;
+            // El esquive de Ultra Instinto del rival se coordina con el miembro que golpea.
+            com.hmc.zenkai.feature.skills.UiDodgeChoice.noteBasicStrike(sp, pkt.variant());
             PacketDistributor.sendToPlayersTrackingEntity(sp, new BasicStrikeAnimPacket(sp.getId(), pkt.variant()));
         });
     }

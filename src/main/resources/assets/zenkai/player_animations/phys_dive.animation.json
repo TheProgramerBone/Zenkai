@@ -7,7 +7,7 @@
             "bones": {
                 "body": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
@@ -19,13 +19,14 @@
                                 72,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 },
                 "head": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
@@ -37,49 +38,68 @@
                                 -50,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 },
                 "right_arm": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
                                 0
                             ]
+                        },
+                        "0.08": {
+                            "vector": [
+                                20,
+                                0,
+                                10
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.25": {
                             "vector": [
                                 -150,
                                 0,
                                 6
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 },
                 "left_arm": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
                                 0
                             ]
+                        },
+                        "0.08": {
+                            "vector": [
+                                20,
+                                0,
+                                -10
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.25": {
                             "vector": [
                                 -150,
                                 0,
                                 -6
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 },
                 "right_leg": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
@@ -88,16 +108,17 @@
                         },
                         "0.25": {
                             "vector": [
-                                6,
+                                4,
                                 0,
-                                2
-                            ]
+                                3
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 },
                 "left_leg": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
@@ -106,10 +127,11 @@
                         },
                         "0.25": {
                             "vector": [
-                                10,
+                                14,
                                 0,
-                                -2
-                            ]
+                                -3
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 }

@@ -359,12 +359,15 @@ public final class ZenkaiPalAnimations {
                 "zenkai.parry"), 1);
     }
 
-    // ── Esquive automático de Ultra Instinct: dos clips one-shot, el servidor sortea cuál ──
+    // ── Esquive automático de Ultra Instinct: seis clips one-shot (tools/gen_ui_dodge_animations.py). El servidor elige cuál
+    //    según el golpe que llega; el ORDEN es el de las constantes de feature/skills/UiDodgeChoice. ──
     private static final ResourceLocation[] UI_DODGE_ANIMS = {
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_1"),
-            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_2")};
-    /** Cuántas variantes de esquive existen (el servidor sortea 0..N-1, ver UiDodgeAnimPacket). */
-    public static final int UI_DODGE_VARIANTS = UI_DODGE_ANIMS.length;
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_lean_left"),
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_lean_right"),
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_back"),
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_duck"),
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_turn_left"),
+            ResourceLocation.fromNamespaceAndPath(Zenkai.MOD_ID, "zenkai.ui_dodge_turn_right")};
 
     public static void playUiDodge(AbstractClientPlayer player, int variant) {
         if (variant < 0 || variant >= UI_DODGE_ANIMS.length) return;

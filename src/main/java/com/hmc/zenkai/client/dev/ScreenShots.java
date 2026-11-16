@@ -203,6 +203,7 @@ public final class ScreenShots {
         shot(mc, "74_wish_revive_pet", () -> new RevivePetWishScreen(null));
         shot(mc, "75_wish_enchant_villager", () -> new EnchantVillagerWishScreen(null));
         shot(mc, "76_wish_training_points", () -> new TrainingPointsWishScreen(null));
+        shot(mc, "77_wish_potential", () -> new PotentialWishScreen(null));
     }
 
     /** Solo el hub y los minijuegos de Training (rediseño de la plantilla de minijuegos). */
@@ -274,5 +275,6 @@ public final class ScreenShots {
         shot(mc, "74_wish_revive_pet", () -> new RevivePetWishScreen(null));
         shot(mc, "75_wish_enchant_villager", () -> new EnchantVillagerWishScreen(null));
         shot(mc, "76_wish_training_points", () -> new TrainingPointsWishScreen(null));
+        shot(mc, "77_wish_potential", () -> new PotentialWishScreen(null));
     }
 }

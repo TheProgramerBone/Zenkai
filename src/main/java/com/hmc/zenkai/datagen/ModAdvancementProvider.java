@@ -400,6 +400,21 @@ public class ModAdvancementProvider extends AdvancementProvider {
                     .addCriterion("frozen_lake", inBiome(biomes, ModBiomes.HFIL_FROZEN_LAKE))
                     .addCriterion("janemba_rift", inBiome(biomes, ModBiomes.HFIL_JANEMBA_RIFT))
                     .save(saver, id("hfil_biomes"), efh);
+
+            // Chiste de las nubes sólidas (2026-11-15): las nubes del Otherworld se pisan, así que
+            // «caer al infierno» pasa si uno se agacha en el borde (shift). Se otorga al pisar CUALQUIER
+            // bioma del HFIL (estrategia OR, a diferencia de hfil_biomes, que exige todos). Oculto,
+            // para que el título no avise de la caída.
+            Advancement.Builder.advancement().parent(otherworld)
+                    .display(Items.FEATHER, title("hfil_first"), desc("hfil_first"),
+                            null, AdvancementType.TASK, true, true, true)
+                    .addCriterion("blood_shore", inBiome(biomes, ModBiomes.HFIL_BLOOD_SHORE))
+                    .addCriterion("needle_wastes", inBiome(biomes, ModBiomes.HFIL_NEEDLE_WASTES))
+                    .addCriterion("cinder_dunes", inBiome(biomes, ModBiomes.HFIL_CINDER_DUNES))
+                    .addCriterion("frozen_lake", inBiome(biomes, ModBiomes.HFIL_FROZEN_LAKE))
+                    .addCriterion("janemba_rift", inBiome(biomes, ModBiomes.HFIL_JANEMBA_RIFT))
+                    .requirements(net.minecraft.advancements.AdvancementRequirements.Strategy.OR)
+                    .save(saver, id("hfil_first"), efh);
         }
 
         // =================================================================

@@ -26,7 +26,8 @@ import java.util.List;
 
 /**
  * Uranai Baba, junto a Yemma en el palacio del Otherworld. Con la muerte permanente encendida y el jugador muerto, le ofrece
- * una visita temporal a la Tierra ({@link EarthVisit}). El resto del tiempo hace de adivina: despacha con una frase.
+ * una visita temporal a la Tierra ({@link EarthVisit}) a cambio de almas (las que sueltan los ogros del HFIL); sin ellas
+ * da una pista de dónde conseguirlas. El resto del tiempo hace de adivina: despacha con una frase.
  * Todo el estado (muerto, espera, hardcore) se lee del servidor en cada clic y se vuelve a comprobar al elegir.
  */
 public class UranaiBabaEntity extends ZenkaiDefaultNPC implements DialogueSpeaker {
@@ -63,21 +64,37 @@ public class UranaiBabaEntity extends ZenkaiDefaultNPC implements DialogueSpeake
             List<OpenDialoguePayload.Choice> choices = new ArrayList<>();
             List<Component> pages = new ArrayList<>();
 
-            switch (EarthVisit.check(sp)) {
+            int cost = EarthVisit.soulCost();
+            switch (EarthVisit.checkWithSouls(sp)) {
                 case OK -> {
                     // Dos páginas: lo que ofrece y lo que cuesta. La opción solo sale tras la última.
                     pages.add(line("offer", 2, name));
-                    pages.add(Component.translatable("dialogue.zenkai.baba.terms",
+                    pages.add(Component.translatable(cost > 0 ? "dialogue.zenkai.baba.terms_soul" : "dialogue.zenkai.baba.terms",
                             ServerConfig.PERMADEATH_VISIT_DAYS.get(),
-                            ServerConfig.PERMADEATH_VISIT_COOLDOWN_DAYS.get()));
+                            ServerConfig.PERMADEATH_VISIT_COOLDOWN_DAYS.get(),
+                            cost));
                     choices.add(new OpenDialoguePayload.Choice("visit",
                             Component.translatable("dialogue.zenkai.baba.choice.visit")));
+                }
+                // Muerto y sin las almas que cobra: una pista de dónde conseguirlas (los ogros del HFIL).
+                case NEEDS_SOUL -> {
+                    pages.add(line("nosoul", 2, name, cost));
+                    pages.add(Component.translatable("dialogue.zenkai.baba.nosoul.hint", cost));
                 }
                 case COOLDOWN -> pages.add(line("cooldown", 2, name, EarthVisit.remainingLabel(EarthVisit.cooldownLeft(sp))));
                 case HARDCORE -> pages.add(line("hardcore", 2, name));
                 case DISABLED -> pages.add(line("disabled", 2, name));
                 // Vivo (o, de forma anómala, ya de visita): lee la fortuna y lo despacha.
-                case NOT_DEAD, ALREADY_ON_VISIT -> pages.add(line("alive", 3, name));
+                // Si además lleva almas, le dice que le servirán para otra cosa o cuando le llegue la hora.
+                // Si no lleva ninguna (y la visita cuesta algo), añade la misma pista de dónde conseguirlas.
+                case NOT_DEAD, ALREADY_ON_VISIT -> {
+                    if (EarthVisit.soulsHeld(sp) > 0) {
+                        pages.add(line("alive_souls", 2, name));
+                    } else {
+                        pages.add(line("alive", 3, name));
+                        if (cost > 0) pages.add(Component.translatable("dialogue.zenkai.baba.nosoul.hint", cost));
+                    }
+                }
             }
             choices.add(DialogueService.leave());
             DialogueService.open(sp, this, pages, choices);
@@ -102,7 +119,7 @@ public class UranaiBabaEntity extends ZenkaiDefaultNPC implements DialogueSpeake
     public void onDialogueChoice(ServerPlayer sp, String choiceId) {
         if (!"visit".equals(choiceId)) return;
         if (sp.distanceTo(this) > TALK_RANGE) return;
-        // tryStart repite check(): muerto, permadeath encendida, sin hardcore, sin visita ni espera.
+        // tryStart repite la comprobación (muerto, permadeath encendida, sin hardcore, sin visita ni espera) y cobra las almas.
         if (EarthVisit.tryStart(sp) != EarthVisit.Check.OK) return;
         this.level().playSound(null, this.getX(), this.getEyeY(), this.getZ(),
                 SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.NEUTRAL, 1.0f, 0.8f);

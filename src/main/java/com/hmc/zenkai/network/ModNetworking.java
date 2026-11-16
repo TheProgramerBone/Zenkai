@@ -104,6 +104,12 @@ public class ModNetworking {
         );
 
         registrar.playToServer(
+                com.hmc.zenkai.feature.wishes.WishPotentialPayload.TYPE,
+                com.hmc.zenkai.feature.wishes.WishPotentialPayload.STREAM_CODEC,
+                com.hmc.zenkai.feature.wishes.WishPotentialPayload.Handler::handle
+        );
+
+        registrar.playToServer(
                 com.hmc.zenkai.feature.wishes.WishLegendaryPayload.TYPE,
                 com.hmc.zenkai.feature.wishes.WishLegendaryPayload.STREAM_CODEC,
                 com.hmc.zenkai.feature.wishes.WishLegendaryPayload.Handler::handle

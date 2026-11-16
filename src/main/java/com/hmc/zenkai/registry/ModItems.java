@@ -45,7 +45,14 @@ public class ModItems {
     public static final DeferredItem<Item> SCISSORS = ITEMS.registerItem("scissors",
             com.hmc.zenkai.content.item.ScissorsItem::new, new Item.Properties().stacksTo(1));
 
-    public static final DeferredItem<Item> BASIC_CIRCUIT = ITEMS.registerItem("basic_circuit",
+    /**
+     * Alma: la sueltan los ogros del HFIL (25 % por tabla de botín, con Looting) y Uranai Baba cobra
+     * {@code permadeath.visit_soul_cost} por cada visita a la Tierra. Textura animada 16x16 (tools/gen_soul_item.py).
+     */
+    public static final DeferredItem<Item> SOUL = ITEMS.registerItem("soul",
+            Item::new, new Item.Properties().rarity(Rarity.UNCOMMON));
+
+    public static final DeferredItem<Item> BASIC_CIRCUIT =ITEMS.registerItem("basic_circuit",
             Item::new, new Item.Properties());
 
     public static final DeferredItem<Item> ADVANCED_CIRCUIT = ITEMS.registerItem("advanced_circuit",

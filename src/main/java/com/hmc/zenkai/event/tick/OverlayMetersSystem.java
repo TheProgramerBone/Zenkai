@@ -1,7 +1,6 @@
 package com.hmc.zenkai.event.tick;
 
 import com.hmc.zenkai.config.ServerConfig;
-import com.hmc.zenkai.event.ZenkaiPalAnimations;
 import com.hmc.zenkai.feature.forms.FormIds;
 import com.hmc.zenkai.feature.player.PlayerFormAttachment;
 import com.hmc.zenkai.feature.player.PlayerLifeCycle;
@@ -9,6 +8,7 @@ import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
 import com.hmc.zenkai.feature.skills.SkillEffects;
 import com.hmc.zenkai.feature.skills.SkillToggles;
 import com.hmc.zenkai.feature.skills.UiDodgeAnimPacket;
+import com.hmc.zenkai.feature.skills.UiDodgeChoice;
 import com.hmc.zenkai.registry.ZenkaiDataAttachments;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -38,8 +38,11 @@ public final class OverlayMetersSystem {
 
     private static final Map<UUID, Long> DODGE_COOLDOWN = new HashMap<>();
     private static final long DODGE_COOLDOWN_TICKS = 10L;
-    /** Contador de esquives por jugador: el clip que toca es contador % variantes. */
+    /** Contador de esquives por jugador: reparte la secuencia cuando no se sabe con qué golpean (UiDodgeChoice). */
     private static final Map<UUID, Integer> DODGE_NEXT = new HashMap<>();
+    /** Último tick en que cada jugador animó un esquive, y separación mínima entre dos animaciones seguidas. */
+    private static final Map<UUID, Long> DODGE_ANIM_TICK = new HashMap<>();
+    private static final long DODGE_ANIM_GAP_TICKS = 3L;
     /** Jugadores en forma UI con la barra de calor agotada (sin esquive hasta enfriarse). */
     private static final java.util.Set<UUID> EXHAUSTED = new java.util.HashSet<>();
 
@@ -155,7 +158,7 @@ public final class OverlayMetersSystem {
     }
 
     /** Esquive automático de UI. true = golpe anulado (el llamador pone el daño a 0). */
-    public static boolean tryDodge(ServerPlayer sp) {
+    public static boolean tryDodge(ServerPlayer sp, net.minecraft.world.damagesource.DamageSource source) {
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
         if (!uiActive(sp, formOf(sp))) return false;
         int lvl = SkillEffects.level(sp, SkillEffects.ULTRA_INSTINCT);
@@ -164,7 +167,13 @@ public final class OverlayMetersSystem {
         if (EXHAUSTED.contains(sp.getUUID()) || att.getUiHeat() >= 100.0) return false;
         long now = sp.level().getGameTime();
         Long until = DODGE_COOLDOWN.get(sp.getUUID());
-        if (until != null && now < until) return true; // golpe en ráfaga: cubierto por el mismo esquive
+        if (until != null && now < until) {
+            // Golpe en ráfaga: cubierto por el mismo esquive (ni sorteo ni coste), pero cada golpe se esquiva a la vista
+            // con su propio gesto. El tope evita reanimar por varios impactos del mismo tick.
+            Long anim = DODGE_ANIM_TICK.get(sp.getUUID());
+            if (anim == null || now - anim >= DODGE_ANIM_GAP_TICKS) playDodge(sp, source, now);
+            return true;
+        }
         // No siempre esquiva: probabilidad por nivel de la skill (se sortea una vez por golpe
         // suelto; las ráfagas ya quedan cubiertas por el cooldown de arriba).
         double chance = Math.min(ServerConfig.uiDodgeChanceMax(),
@@ -183,13 +192,17 @@ public final class OverlayMetersSystem {
         if (heatNow >= 100.0 && isUiForm(formOf(sp)) && EXHAUSTED.add(sp.getUUID())) {
             sp.displayClientMessage(Component.translatable("message.zenkai.ui_overheat"), true);
         }
-        // Dos clips de esquive, alternados en ciclo por jugador (1, 2, 1, 2...); el servidor decide
-        // para que todos vean el mismo.
-        int variant = DODGE_NEXT.merge(sp.getUUID(), 1, (old, one) -> old + 1) - 1;
-        variant %= ZenkaiPalAnimations.UI_DODGE_VARIANTS;
-        PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp, new UiDodgeAnimPacket(sp.getId(), variant));
+        playDodge(sp, source, now);
         PlayerLifeCycle.syncIfServer(sp);
         return true;
+    }
+
+    /** El servidor elige el gesto según el golpe que llega (UiDodgeChoice) y lo manda, para que todos vean el mismo. */
+    private static void playDodge(ServerPlayer sp, net.minecraft.world.damagesource.DamageSource source, long now) {
+        int seq = DODGE_NEXT.merge(sp.getUUID(), 1, (old, one) -> old + 1) - 1;
+        DODGE_ANIM_TICK.put(sp.getUUID(), now);
+        PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp,
+                new UiDodgeAnimPacket(sp.getId(), UiDodgeChoice.pick(sp, source, seq)));
     }
 
     /** Alimenta la barra de Ultra Ego con el daño recibido (fracción del cuerpo perdido). No
@@ -201,5 +214,8 @@ public final class OverlayMetersSystem {
         att.setUeCharge(att.getUeCharge() + bodyLost / bodyMax * 100.0 * ServerConfig.ueCharge());
     }
 
-    public static void forget(UUID id) { DODGE_COOLDOWN.remove(id); EXHAUSTED.remove(id); DODGE_NEXT.remove(id); }
+    public static void forget(UUID id) {
+        DODGE_COOLDOWN.remove(id); EXHAUSTED.remove(id); DODGE_NEXT.remove(id); DODGE_ANIM_TICK.remove(id);
+        UiDodgeChoice.forget(id);
+    }
 }

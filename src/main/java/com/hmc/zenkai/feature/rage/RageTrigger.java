@@ -34,6 +34,12 @@ public enum RageTrigger {
     public RageIntensity intensity() { return intensity; }
     public boolean consumesCooldown() { return consumesCooldown; }
 
+    /**
+     * Hechos MENORES que gastan un enfriamiento corto propio ({@code rage.minor_event_cooldown}) y no el de aliados: sin él, matar
+     * mascotas propias o derribarse por turnos entre dos jugadores de una party era maestría ilimitada de baja intensidad.
+     */
+    public boolean consumesMinorCooldown() { return this == PET_DEATH || this == ALLY_DOWNED; }
+
     public static RageTrigger parse(String s) {
         if (s == null) return null;
         try { return valueOf(s.trim().toUpperCase(java.util.Locale.ROOT)); } catch (IllegalArgumentException e) { return null; }

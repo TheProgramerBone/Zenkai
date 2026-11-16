@@ -1,0 +1,12 @@
+{
+  "form": "zenkai:ssj_rose_evolution",
+  "race": "saiyan",
+  "triggers": [
+    "ally_death",
+    "ally_rescued",
+    "ally_downed",
+    "body_gesture",
+    "pet_death"
+  ],
+  "awakens": false
+}

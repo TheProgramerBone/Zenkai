@@ -4,9 +4,11 @@ import com.hmc.zenkai.Zenkai;
 import com.hmc.zenkai.feature.player.EarthVisit;
 import com.hmc.zenkai.feature.player.PlayerStateFlags;
 import com.hmc.zenkai.feature.player.PlayerStatsAttachment;
+import com.hmc.zenkai.registry.ModItems;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -113,6 +115,27 @@ public final class EarthVisitGameTests {
             String got = EarthVisit.remainingLabel(Long.parseLong(c[0]));
             helper.assertTrue(got.equals(c[1]), c[0] + " ticks deben decir '" + c[1] + "' y dicen '" + got + "'");
         }
+        helper.succeed();
+    }
+
+    /** Las almas se cuentan sumando pilas y se cobran sin quitar de más; sin las suficientes no se cobra nada. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void soulsAreCountedAndPaidAcrossStacks(GameTestHelper helper) {
+        ServerPlayer sp = ZenkaiGameTestHelpers.raceChosenPlayer(helper);
+        sp.getInventory().clearContent();
+        helper.assertTrue(EarthVisit.soulsHeld(sp) == 0, "Sin almas al empezar");
+        helper.assertTrue(!EarthVisit.paySouls(sp, 1), "Sin almas no se puede pagar");
+
+        sp.getInventory().add(new ItemStack(ModItems.SOUL.get(), 3));
+        sp.getInventory().add(new ItemStack(ModItems.SOUL.get(), 2));
+        helper.assertTrue(EarthVisit.soulsHeld(sp) == 5, "5 almas; hay " + EarthVisit.soulsHeld(sp));
+
+        helper.assertTrue(!EarthVisit.paySouls(sp, 6), "6 no llegan: no cobra");
+        helper.assertTrue(EarthVisit.soulsHeld(sp) == 5, "Un cobro fallido no quita nada");
+        helper.assertTrue(EarthVisit.paySouls(sp, 4), "Cobra 4 de 5");
+        helper.assertTrue(EarthVisit.soulsHeld(sp) == 1, "Queda 1; hay " + EarthVisit.soulsHeld(sp));
+        helper.assertTrue(EarthVisit.paySouls(sp, 0), "Coste 0 siempre se puede");
+        sp.getInventory().clearContent();
         helper.succeed();
     }
 

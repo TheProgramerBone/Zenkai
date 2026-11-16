@@ -87,6 +87,8 @@ public class PlayerStateFlags {
     private boolean beastFury = false;
     /** Rage Forms: gameTime del servidor del último despertar o progreso por un aliado (-1 = nunca). Ver RageSystem. */
     private long rageAllyEventTick = -1L;
+    /** Rage Forms: gameTime del último despertar o progreso por un hecho MENOR (mascota, aliado derribado); enfriamiento corto aparte. */
+    private long rageMinorEventTick = -1L;
     /** Rage Forms: ids de los últimos hechos recompensados (anillo), contra recompensar dos veces lo mismo. */
     private final java.util.ArrayDeque<String> rageEventIds = new java.util.ArrayDeque<>();
     public static final int RAGE_EVENT_IDS_CAP = 64;
@@ -224,6 +226,8 @@ public class PlayerStateFlags {
 
     public long getRageAllyEventTick() { return rageAllyEventTick; }
     public void setRageAllyEventTick(long t) { this.rageAllyEventTick = t; }
+    public long getRageMinorEventTick() { return rageMinorEventTick; }
+    public void setRageMinorEventTick(long t) { this.rageMinorEventTick = t; }
     public boolean hasRageEvent(String id) { return rageEventIds.contains(id); }
     /** Anota un hecho ya recompensado; el anillo descarta el más antiguo al pasar de RAGE_EVENT_IDS_CAP. */
     public void addRageEvent(String id) {
@@ -281,6 +285,7 @@ public class PlayerStateFlags {
         tag.putBoolean("reachedSuperOozaru", reachedSuperOozaru);
         tag.putBoolean("beastFury", beastFury);
         tag.putLong("rageAllyEventTick", rageAllyEventTick);
+        tag.putLong("rageMinorEventTick", rageMinorEventTick);
         tag.putBoolean("rageMigrated", rageMigrated);
         net.minecraft.nbt.ListTag seen = new net.minecraft.nbt.ListTag();
         for (String f : longCinematicSeen) seen.add(net.minecraft.nbt.StringTag.valueOf(f));
@@ -309,6 +314,7 @@ public class PlayerStateFlags {
         this.reachedSuperOozaru = tag.getBoolean("reachedSuperOozaru");
         this.beastFury = tag.getBoolean("beastFury");
         this.rageAllyEventTick = tag.contains("rageAllyEventTick") ? tag.getLong("rageAllyEventTick") : -1L;
+        this.rageMinorEventTick = tag.contains("rageMinorEventTick") ? tag.getLong("rageMinorEventTick") : -1L;
         // Sin la clave = partida anterior a Rage Forms: pendiente de migrar (ver RageMigration).
         this.rageMigrated = tag.getBoolean("rageMigrated");
         longCinematicSeen.clear();

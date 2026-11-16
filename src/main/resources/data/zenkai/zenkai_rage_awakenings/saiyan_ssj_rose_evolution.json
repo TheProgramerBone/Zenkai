@@ -1,0 +1,10 @@
+{
+  "form": "zenkai:ssj_rose_evolution",
+  "race": "saiyan",
+  "triggers": [
+    "critical_survival",
+    "ally_dies_while_downed"
+  ],
+  "min_intensity": "high",
+  "min_parent_mastery": 50
+}

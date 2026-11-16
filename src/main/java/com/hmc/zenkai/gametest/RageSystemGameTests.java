@@ -204,6 +204,7 @@ public final class RageSystemGameTests {
         helper.assertTrue(low == RageResult.PROGRESS && !att.hasBeastFury(),
                 "Con Místico al 10 % la furia no se consume: suma a su maestría; r=" + low);
         setMastery(sp, FormIds.POTENTIAL_UNLOCK, 60);
+        att.flags().setRageMinorEventTick(-1L);   // la mascota anterior gastó el enfriamiento corto
         RageResult hi = fire(sp, RageTrigger.PET_DEATH, "perro-2");
         helper.assertTrue(hi == RageResult.AWAKENING && att.hasBeastFury(), "Con Místico >= 50 % despierta Beast; r=" + hi);
         helper.succeed();
@@ -327,6 +328,232 @@ public final class RageSystemGameTests {
                     "Salvar a quien no es de tu party no cuenta");
         } finally {
             pm.disband(party);
+        }
+        helper.succeed();
+    }
+
+    /**
+     * Voluntad Inquebrantable es el peldaño de la cadena del Humano y Flujo una rama lateral por maestría (decisión del usuario,
+     * 2026-11-15). Antes Flujo ocupaba el peldaño y Voluntad figuraba desbloqueada para cualquier Humano con nivel 3.
+     */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void humanVoluntadIsTheStepAndFlujoIsASideBranch(GameTestHelper helper) {
+        ResourceLocation ultra = ResourceLocation.parse("zenkai:human_ultra");
+        ResourceLocation voluntad = ResourceLocation.parse("zenkai:human_indomitable_spirit");
+        ResourceLocation flujo = ResourceLocation.parse("zenkai:human_flow");
+        ServerPlayer sp = player(helper, Race.HUMAN);
+        sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).skills().grantAdmin(SuperForms.SKILL, 3);
+        helper.assertTrue(SuperForms.depthOf(Race.HUMAN, voluntad) == 3, "Voluntad es el 3er peldaño; depth=" + SuperForms.depthOf(Race.HUMAN, voluntad));
+        helper.assertTrue(SuperForms.depthOf(Race.HUMAN, flujo) == 0, "Flujo queda fuera de la cadena");
+        helper.assertTrue(SuperForms.unlocked(sp, ultra), "Nivel 3 desbloquea Mente de Cristal");
+        helper.assertTrue(!SuperForms.unlocked(sp, voluntad), "Con nivel 3 Voluntad NO figura desbloqueada");
+        helper.assertTrue(!SuperForms.unlocked(sp, flujo), "Flujo exige maestría de Mente de Cristal");
+        setMastery(sp, ultra, 100);
+        helper.assertTrue(SuperForms.unlocked(sp, flujo), "Con Mente de Cristal al 100 % se abre Flujo");
+        helper.assertTrue(!SuperForms.unlocked(sp, voluntad), "...pero Voluntad sigue pidiendo su nivel");
+        sp.getData(ZenkaiDataAttachments.PLAYER_STATS.get()).skills().grantAdmin(SuperForms.SKILL, 4);
+        helper.assertTrue(SuperForms.unlocked(sp, voluntad), "Con nivel 4 Voluntad se desbloquea");
+        helper.succeed();
+    }
+
+    /** Voluntad Inquebrantable despierta rompiendo el límite (o viendo caer a un aliado ya derribado) con Mente de Cristal >= 50 %; Flujo no. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void criticalSurvivalAwakensVoluntadInquebrantable(GameTestHelper helper) {
+        ResourceLocation ultra = ResourceLocation.parse("zenkai:human_ultra");
+        ResourceLocation voluntad = ResourceLocation.parse("zenkai:human_indomitable_spirit");
+        ResourceLocation flujo = ResourceLocation.parse("zenkai:human_flow");
+        ServerPlayer sp = player(helper, Race.HUMAN);
+        PlayerStatsAttachment.get(sp).setAttribute(com.hmc.zenkai.feature.ZenkaiAttributes.MIND, 1000);
+        PlayerStatsAttachment.get(sp).skills().grantAdmin(SuperForms.SKILL, 3);   // Mente de Cristal
+        int prev = withCooldown(0);
+        try {
+            setMastery(sp, ultra, 20);
+            RageResult[] r = new RageResult[1];
+            ZenkaiGameTestHelpers.invokeHandler(() -> r[0] = fire(sp, RageTrigger.CRITICAL_SURVIVAL, "limite-1"));
+            helper.assertTrue(!SuperForms.unlocked(sp, voluntad), "Con Mente de Cristal al 20 % no despierta; r=" + r[0]);
+            setMastery(sp, ultra, 40);   // 60 % en total
+            ZenkaiGameTestHelpers.invokeHandler(() -> r[0] = fire(sp, RageTrigger.CRITICAL_SURVIVAL, "limite-2"));
+            helper.assertTrue(r[0] == RageResult.AWAKENING, "Con Mente de Cristal >= 50 % despierta Voluntad; r=" + r[0]);
+            helper.assertTrue(SuperForms.unlocked(sp, voluntad), "Voluntad desbloqueada");
+            helper.assertTrue(forms(sp).getFormId().equals(voluntad), "Se transforma en el acto; forma=" + forms(sp).getFormId());
+            helper.assertTrue(!SuperForms.unlocked(sp, flujo), "Flujo no se abre por furia (mastery_reqs: Mente de Cristal al 100 %)");
+        } finally {
+            ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+        }
+        helper.succeed();
+    }
+
+    /** Deseo «Despertar el potencial»: Ki Control al máximo para todos; el Namekiano además Naranja; sin gastarse si no da nada. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void potentialWishGrantsKiControlAndNamekOrange(GameTestHelper helper) {
+        int max = com.hmc.zenkai.feature.wishes.WishPotentialPayload.kiControlMax();
+        helper.assertTrue(max > 0, "Ki Control existe en el datapack; max=" + max);
+        ResourceLocation orange = ResourceLocation.parse("zenkai:namek_orange");
+
+        ServerPlayer human = player(helper, Race.HUMAN);
+        PlayerStatsAttachment h = PlayerStatsAttachment.get(human);
+        helper.assertTrue(!com.hmc.zenkai.feature.wishes.WishPotentialPayload.isComplete(h), "Antes del deseo queda algo por dar");
+        helper.assertTrue(com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(h), "Se concede");
+        int step = Math.min(max, ServerConfig.awakenPotentialKiControlLevels());
+        helper.assertTrue(h.skills().level(SkillEffects.KI_CONTROL) == step, "Un deseo da solo " + step + " niveles; nivel=" + h.skills().level(SkillEffects.KI_CONTROL));
+        for (int i = 0; i < max; i++) com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(h);
+        helper.assertTrue(h.skills().level(SkillEffects.KI_CONTROL) == max, "Con deseos suficientes llega al tope y no pasa; nivel=" + h.skills().level(SkillEffects.KI_CONTROL));
+        helper.assertTrue(h.skills().level(SuperForms.SKILL) == 1, "Un Humano no recibe ninguna forma; super_forms=" + h.skills().level(SuperForms.SKILL));
+        helper.assertTrue(!com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(h), "Con el tope alcanzado no concede nada (el deseo no se gasta)");
+
+        ServerPlayer nam = player(helper, Race.NAMEKIAN);
+        PlayerStatsAttachment n = PlayerStatsAttachment.get(nam);
+        helper.assertTrue(!SuperForms.unlocked(nam, orange), "Antes no tiene Naranja");
+        helper.assertTrue(com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(n), "Se concede al Namekiano");
+        helper.assertTrue(n.skills().level(SkillEffects.KI_CONTROL) == step, "Ki Control sube " + step + " niveles");
+        helper.assertTrue(SuperForms.unlocked(nam, orange), "Y Naranja desbloqueada");
+
+        // Con Naranja ya dada, los siguientes deseos solo suben Ki Control y al llegar al tope no se gastan.
+        for (int i = 0; i < max; i++) com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(n);
+        helper.assertTrue(!com.hmc.zenkai.feature.wishes.WishPotentialPayload.apply(n), "Completo: no se gasta");
+        helper.succeed();
+    }
+
+    // ── Análisis de cobertura del 2026-11-15 ─────────────────────────────────
+
+    /** Un despertar estando derribado (un aliado muere con el jugador en el suelo) lo levanta: antes moría por timeout en su propia escena. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void awakeningWhileDownedStandsThePlayerUp(GameTestHelper helper) {
+        ServerPlayer sp = player(helper, Race.SAIYAN);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        att.setBody(0);
+        att.flags().setDowned(true);
+        att.flags().setDownedUntil(sp.level().getGameTime() + 100);
+        int prev = withCooldown(0);
+        try {
+            RageResult r = fire(sp, RageTrigger.ALLY_DIES_WHILE_DOWNED, "muere-con-el-en-el-suelo");
+            helper.assertTrue(r == RageResult.AWAKENING, "Despierta SSJ1; r=" + r);
+            helper.assertTrue(!att.flags().isDowned(), "Ya no está derribado");
+            helper.assertTrue(att.getBody() > 0, "Y tiene body para seguir vivo; body=" + att.getBody());
+        } finally {
+            ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+        }
+        helper.succeed();
+    }
+
+    /** Sumar maestría estando derribado NO levanta a nadie: solo el despertar lo hace. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void progressWhileDownedDoesNotStandUp(GameTestHelper helper) {
+        ServerPlayer sp = player(helper, Race.SAIYAN);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        int prev = withCooldown(0);
+        try {
+            helper.assertTrue(fire(sp, RageTrigger.ALLY_DEATH, "a") == RageResult.AWAKENING, "SSJ1 por la primera muerte");
+            att.setBody(0);
+            att.flags().setDowned(true);
+            RageResult r = fire(sp, RageTrigger.ALLY_DEATH, "b");
+            helper.assertTrue(r == RageResult.PROGRESS, "Suma maestría a SSJ1; r=" + r);
+            helper.assertTrue(att.flags().isDowned(), "Pero sigue derribado");
+        } finally {
+            ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+        }
+        helper.succeed();
+    }
+
+    /** Mascota y aliado derribado comparten un enfriamiento CORTO propio, y no gastan el de 30 min de los aliados. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void minorEventsShareAShortCooldown(GameTestHelper helper) {
+        ServerPlayer sp = player(helper, Race.SAIYAN);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        int prevAlly = withCooldown(36000);
+        int prevMinor = ServerConfig.RAGE_MINOR_EVENT_COOLDOWN.get();
+        ServerConfig.RAGE_MINOR_EVENT_COOLDOWN.set(6000);
+        try {
+            helper.assertTrue(fire(sp, RageTrigger.PET_DEATH, "p1") == RageResult.AWAKENING, "SSJ1 por la primera mascota");
+            float m = forms(sp).getFormMastery(SSJ1);
+            helper.assertTrue(fire(sp, RageTrigger.PET_DEATH, "p2") == RageResult.RECORDED, "Otra mascota enseguida: solo anotada");
+            helper.assertTrue(fire(sp, RageTrigger.ALLY_DOWNED, "d1") == RageResult.RECORDED, "Un aliado derribado enseguida: tampoco");
+            helper.assertTrue(forms(sp).getFormMastery(SSJ1) == m, "Sin maestría extra");
+            helper.assertTrue(att.flags().getRageAllyEventTick() == -1L, "El enfriamiento de aliados sigue intacto");
+            // Pasado el enfriamiento corto vuelve a sumar.
+            att.flags().setRageMinorEventTick(sp.level().getGameTime() - 6001);
+            helper.assertTrue(fire(sp, RageTrigger.ALLY_DOWNED, "d2") == RageResult.PROGRESS, "Con el enfriamiento cumplido suma");
+            // Con 0 se apaga.
+            ServerConfig.RAGE_MINOR_EVENT_COOLDOWN.set(0);
+            helper.assertTrue(fire(sp, RageTrigger.PET_DEATH, "p3") == RageResult.PROGRESS, "Con 0 no hay enfriamiento");
+        } finally {
+            ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prevAlly);
+            ServerConfig.RAGE_MINOR_EVENT_COOLDOWN.set(prevMinor);
+        }
+        helper.succeed();
+    }
+
+    /** La mascota que muere por el entorno (sin causante) no es un acontecimiento; si la mata un enemigo, sí. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void petKilledByTheEnvironmentIsNotAnEvent(GameTestHelper helper) throws ReflectiveOperationException {
+        MinecraftServer server = helper.getLevel().getServer();
+        ServerPlayer owner = player(helper, Race.SAIYAN);
+        ServerPlayer foe = player(helper, Race.SAIYAN);
+        net.minecraft.core.BlockPos at = helper.absolutePos(new net.minecraft.core.BlockPos(1, 2, 1));
+        owner.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5);
+        net.minecraft.world.entity.animal.Wolf wolf = net.minecraft.world.entity.EntityType.WOLF.create(helper.getLevel());
+        wolf.moveTo(at.getX() + 1.5, at.getY(), at.getZ() + 0.5);
+        wolf.tame(owner);
+        Map<UUID, ServerPlayer> map = byUuid(server);
+        int prevRadius = ServerConfig.PERMADEATH_WITNESS_RADIUS.get();
+        int prevMinor = ServerConfig.RAGE_MINOR_EVENT_COOLDOWN.get();
+        try {
+            map.put(owner.getUUID(), owner);
+            ServerConfig.PERMADEATH_WITNESS_RADIUS.set(24);
+            ServerConfig.RAGE_MINOR_EVENT_COOLDOWN.set(0);
+            ZenkaiGameTestHelpers.invokeHandler(() -> RageListeners.onDeath(new LivingDeathEvent(wolf, wolf.damageSources().lava())));
+            helper.assertTrue(!SuperForms.unlocked(owner, SSJ1), "La lava no despierta nada");
+            ZenkaiGameTestHelpers.invokeHandler(() -> RageListeners.onDeath(new LivingDeathEvent(wolf, wolf.damageSources().playerAttack(foe))));
+            helper.assertTrue(SuperForms.unlocked(owner, SSJ1), "Un enemigo que la mata sí despierta SSJ1");
+        } finally {
+            ServerConfig.PERMADEATH_WITNESS_RADIUS.set(prevRadius);
+            ServerConfig.RAGE_MINOR_EVENT_COOLDOWN.set(prevMinor);
+            map.remove(owner.getUUID());
+        }
+        helper.succeed();
+    }
+
+    /** Rosé Evolution, espejo de Blue Evolution: rompe el límite con Rosé >= 50 %. */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void criticalSurvivalAwakensRoseEvolution(GameTestHelper helper) {
+        ServerPlayer sp = player(helper, Race.SAIYAN);
+        PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
+        ResourceLocation god = ResourceLocation.parse("zenkai:ssj_god");
+        ResourceLocation rose = ResourceLocation.parse("zenkai:ssj_rose");
+        ResourceLocation evo = ResourceLocation.parse("zenkai:ssj_rose_evolution");
+        att.setDivine(true);   // el flag divino elige Rosé en vez de Blue
+        att.setAttribute(com.hmc.zenkai.feature.ZenkaiAttributes.MIND, 1000);
+        att.skills().grantAdmin(SuperForms.SKILL, SuperForms.maxLevel(Race.SAIYAN));
+        var tree = com.hmc.zenkai.feature.skilltree.SkillTree.Via.EVENT;
+        ZenkaiGameTestHelpers.invokeHandler(() -> com.hmc.zenkai.feature.skilltree.SkillTree.grant(sp,
+                com.hmc.zenkai.feature.skilltree.SkillTreeMigration.NODE_GOD_KI, 1, com.hmc.zenkai.feature.skilltree.SkillTree.Via.MASTER_TRIAL));
+        ZenkaiGameTestHelpers.invokeHandler(() -> com.hmc.zenkai.feature.skilltree.SkillTree.grant(sp, god, 1, tree));
+        ZenkaiGameTestHelpers.invokeHandler(() -> com.hmc.zenkai.feature.skilltree.SkillTree.grant(sp, rose, 1, tree));
+        helper.assertTrue(SuperForms.unlocked(sp, rose) && !SuperForms.unlocked(sp, evo), "Parte con Rosé y sin Evolution");
+        int prev = withCooldown(0);
+        try {
+            setMastery(sp, rose, 50.01);
+            RageResult[] r = new RageResult[1];
+            ZenkaiGameTestHelpers.invokeHandler(() -> r[0] = fire(sp, RageTrigger.CRITICAL_SURVIVAL, "limite"));
+            helper.assertTrue(SuperForms.unlocked(sp, evo), "Romper el límite con Rosé >= 50 % despierta Rosé Evolution; r=" + r[0]);
+            helper.assertTrue(forms(sp).getFormId().equals(evo), "Y se transforma; forma=" + forms(sp).getFormId());
+        } finally {
+            ServerConfig.RAGE_ALLY_EVENT_COOLDOWN.set(prev);
+        }
+        helper.succeed();
+    }
+
+    /** Los Legendarios de las cuatro razas que no son Saiyan tienen su entrada de progreso (solo suman, nunca despiertan). */
+    @GameTest(templateNamespace = Zenkai.MOD_ID, template = "empty")
+    public static void legendariesOfEveryRaceHaveProgressEntries(GameTestHelper helper) {
+        Object[][] expected = {{Race.HUMAN, "human_legendary"}, {Race.NAMEKIAN, "namek_legendary"},
+                {Race.ARCOSIAN, "arcosian_legendary"}, {Race.MAJIN, "majin_legendary"}};
+        for (Object[] e : expected) {
+            ResourceLocation form = ResourceLocation.parse("zenkai:" + e[1]);
+            var entry = com.hmc.zenkai.feature.rage.RageAwakeningManager.forRace((Race) e[0]).stream()
+                    .filter(a -> a.form().equals(form)).findFirst().orElse(null);
+            helper.assertTrue(entry != null, "Hay entrada de furia para " + e[1]);
+            helper.assertTrue(!entry.awakens(), e[1] + " solo suma maestría (se posee por el deseo)");
         }
         helper.succeed();
     }

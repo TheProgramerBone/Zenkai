@@ -1,13 +1,28 @@
 {
     "format_version": "1.8.0",
+    "model": {
+        "waist": {
+            "pivot": [
+                0,
+                12,
+                0
+            ]
+        }
+    },
+    "parents": {
+        "torso": "waist",
+        "head": "waist",
+        "right_arm": "waist",
+        "left_arm": "waist"
+    },
     "animations": {
         "zenkai.phys_grab": {
             "loop": "hold_on_last_frame",
             "animation_length": 0.12,
             "bones": {
-                "body": {
+                "waist": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
@@ -16,16 +31,17 @@
                         },
                         "0.12": {
                             "vector": [
-                                0,
+                                6,
                                 38,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 },
                 "head": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
@@ -34,16 +50,17 @@
                         },
                         "0.12": {
                             "vector": [
-                                0,
+                                -4,
                                 -38,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 },
                 "left_arm": {
                     "rotation": {
-                        "0.0": {
+                        "0": {
                             "vector": [
                                 0,
                                 0,
@@ -55,7 +72,27 @@
                                 -93,
                                 -30,
                                 0
+                            ],
+                            "easing": "easeOutCubic"
+                        }
+                    }
+                },
+                "right_arm": {
+                    "rotation": {
+                        "0": {
+                            "vector": [
+                                0,
+                                0,
+                                0
                             ]
+                        },
+                        "0.12": {
+                            "vector": [
+                                22,
+                                0,
+                                10
+                            ],
+                            "easing": "easeOutCubic"
                         }
                     }
                 }

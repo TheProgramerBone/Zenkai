@@ -50,7 +50,7 @@ public final class FirstTransformations {
         ANNOUNCED.put(sp.getUUID(), new Announced(target, sp.level().getGameTime()));
         try {
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp,
-                    new LongTransformPacket(sp.getUUID(), target, ""));
+                    new LongTransformPacket(sp.getUUID(), target, "", first));
         } catch (RuntimeException ignored) {
             ANNOUNCED.remove(sp.getUUID());   // sin aviso se verá la corta
         }
@@ -87,7 +87,7 @@ public final class FirstTransformations {
         boolean first = att.flags().markLongCinematicSeen(e.to().toString());
         if (!first) {
             // «Siempre la larga» (opción del propio jugador): el aviso se manda igual, SIN la protección de la escena ni la crónica.
-            if (!alreadyAnnounced && AlwaysLongPrefPacket.wants(sp.getUUID())) sendLong(sp, e);
+            if (!alreadyAnnounced && AlwaysLongPrefPacket.wants(sp.getUUID())) sendLong(sp, e, false);
             return;
         }
         // Escena: invulnerable y sin acciones mientras dura la secuencia larga (ver AwakeningProtection).
@@ -99,18 +99,18 @@ public final class FirstTransformations {
         // La secuencia larga la ve quien se transforma y quien lo mira. Va ANTES de que el cambio llegue por el sync de forma.
         // Es solo presentación: un fallo al enviarla (jugador sin canal negociado, sin conexión) no debe abortar el cambio de forma
         // ni dejar sin anotar la entrada de la crónica, que van después.
-        if (!alreadyAnnounced) sendLong(sp, e);
+        if (!alreadyAnnounced) sendLong(sp, e, true);
         if (Boolean.TRUE.equals(RageSystem.AWAKENING_IN_PROGRESS.get())) return;   // la entrada de la crónica la escribe RageSystem
         RageChronicle.get(sp).add(new RageChronicle.Entry("", RageChronicle.FORM_FIRST, e.to().toString(),
                 RageResult.RECORDED.name(), "other", "", sp.level().getGameTime(), -1f, -1f, true, false, false));
     }
 
     /** Avisa de la secuencia larga a quien se transforma y a quienes lo ven. Solo presentación: un fallo se traga (sin aviso, se ve la corta). */
-    private static void sendLong(net.minecraft.server.level.ServerPlayer sp, FormChangedEvent e) {
+    private static void sendLong(net.minecraft.server.level.ServerPlayer sp, FormChangedEvent e, boolean first) {
         try {
             RageTrigger cause = RageSystem.AWAKENING_TRIGGER.get();   // null si la vía no es Rage: la escena usa su variante neutra
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayersTrackingEntityAndSelf(sp,
-                    new LongTransformPacket(sp.getUUID(), e.to(), cause == null ? "" : cause.name()));
+                    new LongTransformPacket(sp.getUUID(), e.to(), cause == null ? "" : cause.name(), first));
         } catch (RuntimeException ignored) {
             // sin aviso, la transformación se ve con la secuencia corta
         }

@@ -119,6 +119,14 @@ public class ShenlongWishScreen extends ShenronPanelScreen {
                 y += ROW_H + ROW_GAP;
             }
         }
+        // Despertar el potencial: se esconde a quien ya no ganaría nada (el servidor lo vuelve a comprobar y no gasta el deseo).
+        if (ClientWishToggles.isEnabled(WishType.AWAKEN_POTENTIAL) && mc.player != null
+                && !com.hmc.zenkai.feature.wishes.WishPotentialPayload.isComplete(
+                        mc.player.getData(com.hmc.zenkai.registry.ZenkaiDataAttachments.PLAYER_STATS.get()))) {
+            addWish(x, y, w, "screen.zenkai.wish.potential", WishIcons.potential(),
+                    () -> mc.setScreen(new com.hmc.zenkai.client.gui.screens.wishes.PotentialWishScreen(this)));
+            y += ROW_H + ROW_GAP;
+        }
         if (ClientWishToggles.isEnabled(WishType.TRAINING_POINTS)) {
             addWish(x, y, w, "screen.zenkai.wish.training_points", WishIcons.trainingPoints(),
                     () -> mc.setScreen(new TrainingPointsWishScreen(this)));

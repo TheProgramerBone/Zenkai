@@ -57,6 +57,11 @@ public final class HandShots {
                     world = lines.get(0).trim();
                     if (lines.size() > 1) mode = lines.get(1).trim();
                     if (lines.size() > 2) sceneOnly = lines.get(2).trim();
+                    // 4.ª línea opcional del modo scene: ticks de captura (p. ej. "1,3,4,6" para clips de 0,3 s). Con ella la
+                    // 3.ª línea admite ids PAL completos ("zenkai:zenkai.phys_punch_r") además de poses de la escena.
+                    if (lines.size() > 3 && !lines.get(3).isBlank())
+                        SCENE_TICKS = java.util.Arrays.stream(lines.get(3).trim().split(","))
+                                .mapToInt(v -> Integer.parseInt(v.trim())).toArray();
                     enabled = !world.isEmpty();
                 } catch (Exception ignored) {}
             }
@@ -212,7 +217,7 @@ public final class HandShots {
     private static final java.util.Map<String, String> SCENE_FORM = java.util.Map.of(
             "oozaru", "zenkai:oozaru", "super_oozaru", "zenkai:super_oozaru", "ssj4", "zenkai:super_oozaru");
     /** Ticks de la escena estirada (estallido en 80): quiebre, escalada, estallido, remate. */
-    private static final int[] SCENE_TICKS = {24, 64, 84, 100};
+    private static int[] SCENE_TICKS = {24, 64, 84, 100};
 
     private static void scenePoses(Minecraft mc) {
         PLAN.add(() -> {
@@ -240,6 +245,8 @@ public final class HandShots {
                     var server = mc.getSingleplayerServer();
                     if (server != null) server.execute(() -> {
                         var sp = server.getPlayerList().getPlayers().get(0);
+                        // La tanda dura minutos: sin esto las últimas poses salían de noche.
+                        sp.level().getServer().overworld().setDayTime(6000);
                         var f = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
                         if (f.getFormId().toString().equals(form)) return;
                         f.setFormId(sp, ResourceLocation.parse(form));
@@ -263,7 +270,7 @@ public final class HandShots {
                     final int k = i;
                     PLAN.add(() -> {
                         if (view.equals("side")) { mc.player.yBodyRot = 75F; mc.player.yBodyRotO = 75F; }
-                        capture(mc, "scene_" + pose + "_" + view + "_" + k);
+                        capture(mc, "scene_" + pose.substring(pose.lastIndexOf('.') + 1).replace(':', '_') + "_" + view + "_" + k);
                         wait = k + 1 < SCENE_TICKS.length ? SCENE_TICKS[k + 1] - SCENE_TICKS[k] - 1 : 0;
                     });
                 }

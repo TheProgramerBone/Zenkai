@@ -158,16 +158,19 @@ public class ModEntities {
                     .sized(0.6f, 1.8f).build("shadow_clone"));
 
     /** Ogros del HFIL (propuesta I): misma clase, dos texturas (Goz rojo y Mez azul).
-     *  CREATURE y no MONSTER a propósito: en el HFIL serían el ÚNICO monstruo, y el spawner
-     *  llenaría con ellos el cupo entero de monstruos (~70 alrededor del jugador). CREATURE tiene
-     *  cupo de ~10, reaparece despacio y no desaparece: pueblan el sitio como trabajadores, no
-     *  como plaga. Tamaño de jugador: el atributo SCALE (1.2) los agranda. */
+     *  AMBIENT (decisión del usuario, 2026-11-15; antes CREATURE y luego MONSTER). La categoría solo decide
+     *  CÓMO los spawnea el servidor, no la IA: CREATURE solo los generaba con el chunk y no los reponía
+     *  (el HFIL explorado quedaba vacío); MONSTER los repone cada tick, pero en dificultad pacífica el
+     *  servidor apaga el spawn de TODA la categoría (probado: no salían). AMBIENT se intenta cada tick, se
+     *  repone y NO se apaga en pacífico (es la de los murciélagos). Cupo ~15 alrededor del jugador, por eso
+     *  los grupos de ModBiomeGen.hfilBuild son de 2 a 4. Los AMBIENT también se borran al alejarse el
+     *  jugador, y se reponen. Tamaño de jugador: el atributo SCALE (1.2) los agranda. */
     public static final Supplier<EntityType<OgreEntity>> RED_OGRE =
-            ENTITY_TYPES.register("red_ogre", () -> EntityType.Builder.of(OgreEntity::new, MobCategory.CREATURE)
+            ENTITY_TYPES.register("red_ogre", () -> EntityType.Builder.of(OgreEntity::new, MobCategory.AMBIENT)
                     .sized(0.6f, 1.8f).build("red_ogre"));
 
     public static final Supplier<EntityType<OgreEntity>> BLUE_OGRE =
-            ENTITY_TYPES.register("blue_ogre", () -> EntityType.Builder.of(OgreEntity::new, MobCategory.CREATURE)
+            ENTITY_TYPES.register("blue_ogre", () -> EntityType.Builder.of(OgreEntity::new, MobCategory.AMBIENT)
                     .sized(0.6f, 1.8f).build("blue_ogre"));
 
     /** Ángeles del capullo de Freezer: tamaño de jugador en el tipo, el atributo SCALE (0.45) los

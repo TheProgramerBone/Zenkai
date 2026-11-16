@@ -16,6 +16,7 @@ public final class WishIcons {
     public static ItemStack enchantVillager() { return new ItemStack(Items.ENCHANTED_BOOK); }
     public static ItemStack immortal()        { return new ItemStack(Items.ENCHANTED_GOLDEN_APPLE); }
     public static ItemStack legendary()       { return new ItemStack(Items.NETHER_STAR); }
+    public static ItemStack potential()       { return new ItemStack(Items.AMETHYST_SHARD); }
     public static ItemStack trainingPoints()  { return new ItemStack(Items.EXPERIENCE_BOTTLE); }
     public static ItemStack revivePet()       { return new ItemStack(Items.POPPY); }
     /** Para un deseo sin icono propio todavía. */

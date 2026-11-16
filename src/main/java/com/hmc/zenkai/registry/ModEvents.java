@@ -51,8 +51,8 @@ public class ModEvents {
     /**
      * Reglas de spawn natural de los ogros (las primeras del mod): sobre suelo firme, nunca en el
      * aire ni dentro de un líquido. Sin esto, un tipo sin registrar spawnea sin restricción de
-     * posición. Mob::checkMobSpawnRules y no la de Monster: el HFIL no es oscuro, y el ogro no es
-     * un monstruo nocturno.
+     * posición. Mob::checkMobSpawnRules y no la de Monster: el HFIL no es oscuro y la de Monster
+     * exige dificultad no pacífica; el ogro es MONSTER solo para que el spawner lo reponga cada tick.
      */
     @SubscribeEvent
     public static void onRegisterSpawnPlacements(net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent event) {

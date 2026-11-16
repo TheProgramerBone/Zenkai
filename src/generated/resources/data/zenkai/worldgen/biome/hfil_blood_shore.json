@@ -73,22 +73,16 @@
   "has_precipitation": false,
   "spawn_costs": {},
   "spawners": {
-    "ambient": [],
-    "axolotls": [],
-    "creature": [
+    "ambient": [
       {
         "type": "zenkai:red_ogre",
-        "maxCount": 2,
-        "minCount": 1,
-        "weight": 10
-      },
-      {
-        "type": "zenkai:blue_ogre",
-        "maxCount": 2,
-        "minCount": 1,
+        "maxCount": 4,
+        "minCount": 2,
         "weight": 10
       }
     ],
+    "axolotls": [],
+    "creature": [],
     "misc": [],
     "monster": [],
     "underground_water_creature": [],

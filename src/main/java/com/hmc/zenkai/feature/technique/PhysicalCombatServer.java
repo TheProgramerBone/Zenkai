@@ -388,6 +388,8 @@ public final class PhysicalCombatServer {
                 t.name().toLowerCase(java.util.Locale.ROOT), true, -1);
         NeoForge.EVENT_BUS.post(firedEvent);
         if (firedEvent.isCanceled()) return;
+        // El esquive de Ultra Instinto del rival se coordina con la técnica que llega.
+        com.hmc.zenkai.feature.skills.UiDodgeChoice.notePhysical(sp, t);
 
         PlayerStatsAttachment att = PlayerStatsAttachment.get(sp);
 

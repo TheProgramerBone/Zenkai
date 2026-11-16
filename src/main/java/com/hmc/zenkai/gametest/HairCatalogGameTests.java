@@ -53,10 +53,15 @@ public final class HairCatalogGameTests {
         helper.assertTrue(HairCatalog.choices(Race.SAIYAN).get(0) == null, "calvo es la primera opción");
 
         // Las formas SSJ usan classic_ssj; SSJ God lleva el pelo de la base (decisión del usuario, 2026-10-12).
-        for (String f : new String[]{"ssj1", "ssj2", "ssj3", "ssj4", "ssj_blue", "ssj_rose"}) {
+        for (String f : new String[]{"ssj1", "ssj2", "ssj4", "ssj_blue", "ssj_rose"}) {
             HairStyleDef shown = HairCatalog.effectiveStyle(BASE, id(f), Race.SAIYAN);
             helper.assertTrue(shown != null && shown.id().equals(SSJ), f + ": debe verse classic_ssj");
         }
+        // SSJ3 de classic = el peinado SSJ3 de DMZ (decisión del usuario, 2026-11-15): override a zenkai_dmz:goku,
+        // cuyo juego DMZF trae la variante SSJ3.
+        HairStyleDef ssj3 = HairCatalog.effectiveStyle(BASE, id("ssj3"), Race.SAIYAN);
+        helper.assertTrue(ssj3 != null && ssj3.id().equals(ResourceLocation.fromNamespaceAndPath("zenkai_dmz", "goku")),
+                "ssj3: debe verse el SSJ3 de DMZ (zenkai_dmz:goku)");
         HairStyleDef god = HairCatalog.effectiveStyle(BASE, id("ssj_god"), Race.SAIYAN);
         helper.assertTrue(god != null && god.id().equals(BASE), "ssj_god: pelo de la base");
         HairStyleDef inBase = HairCatalog.effectiveStyle(BASE, null, Race.SAIYAN);

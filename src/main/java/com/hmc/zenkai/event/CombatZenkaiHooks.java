@@ -116,7 +116,7 @@ public class CombatZenkaiHooks {
         // daño: el golpe parreado no «duele». Los proyectiles de ki se desvían en
         // KiProjectileEntity.onHitEntity, antes de llegar a hacer daño.
         if (ParryServer.tryParry(sp, e.getSource())) { e.setCanceled(true); return; }
-        if (OverlayMetersSystem.tryDodge(sp)) e.setCanceled(true);
+        if (OverlayMetersSystem.tryDodge(sp, e.getSource())) e.setCanceled(true);
     }
 
     @SubscribeEvent

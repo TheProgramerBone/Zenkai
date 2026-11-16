@@ -1,10 +1,25 @@
 {
     "format_version": "1.8.0",
+    "model": {
+        "waist": {
+            "pivot": [
+                0,
+                12,
+                0
+            ]
+        }
+    },
+    "parents": {
+        "torso": "waist",
+        "head": "waist",
+        "right_arm": "waist",
+        "left_arm": "waist"
+    },
     "animations": {
         "zenkai.phys_piercing_thrust": {
             "animation_length": 0.5,
             "bones": {
-                "body": {
+                "waist": {
                     "rotation": {
                         "0": {
                             "vector": [
@@ -18,14 +33,16 @@
                                 8,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.14": {
                             "vector": [
                                 35,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         },
                         "0.32": {
                             "vector": [
@@ -39,7 +56,8 @@
                                 0,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         }
                     }
                 },
@@ -57,14 +75,16 @@
                                 0,
                                 50,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.14": {
                             "vector": [
                                 0,
                                 -15,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         },
                         "0.32": {
                             "vector": [
@@ -78,7 +98,8 @@
                                 0,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         }
                     }
                 },
@@ -96,14 +117,16 @@
                                 0,
                                 -45,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.14": {
                             "vector": [
                                 -30,
                                 15,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         },
                         "0.32": {
                             "vector": [
@@ -117,7 +140,8 @@
                                 0,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         }
                     }
                 },
@@ -135,14 +159,16 @@
                                 25,
                                 15,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.14": {
                             "vector": [
                                 -125,
                                 -3,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         },
                         "0.32": {
                             "vector": [
@@ -156,7 +182,8 @@
                                 0,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         }
                     }
                 },
@@ -174,14 +201,16 @@
                                 -35,
                                 -20,
                                 -20
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.14": {
                             "vector": [
                                 55,
                                 0,
                                 -8
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         },
                         "0.32": {
                             "vector": [
@@ -195,7 +224,8 @@
                                 0,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         }
                     }
                 },
@@ -213,18 +243,20 @@
                                 20,
                                 0,
                                 4
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.14": {
                             "vector": [
-                                40,
+                                34,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         },
                         "0.32": {
                             "vector": [
-                                40,
+                                34,
                                 0,
                                 0
                             ]
@@ -234,7 +266,8 @@
                                 0,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         }
                     }
                 },
@@ -252,18 +285,20 @@
                                 -20,
                                 0,
                                 -4
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         },
                         "0.14": {
                             "vector": [
-                                -45,
+                                -38,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeOutCubic"
                         },
                         "0.32": {
                             "vector": [
-                                -45,
+                                -38,
                                 0,
                                 0
                             ]
@@ -273,7 +308,8 @@
                                 0,
                                 0,
                                 0
-                            ]
+                            ],
+                            "easing": "easeInOutSine"
                         }
                     }
                 }

@@ -17,5 +17,8 @@
   "body_items": {},
   "aura_type": "spirit",
   "aura_rgb": "0x6FE0C8",
-  "scale": 1.0
+  "scale": 1.0,
+  "mastery_reqs": {
+    "zenkai:human_ultra": 100
+  }
 }

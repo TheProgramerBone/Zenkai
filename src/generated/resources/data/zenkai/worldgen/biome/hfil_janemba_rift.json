@@ -76,20 +76,7 @@
   "spawners": {
     "ambient": [],
     "axolotls": [],
-    "creature": [
-      {
-        "type": "zenkai:red_ogre",
-        "maxCount": 2,
-        "minCount": 1,
-        "weight": 10
-      },
-      {
-        "type": "zenkai:blue_ogre",
-        "maxCount": 2,
-        "minCount": 1,
-        "weight": 10
-      }
-    ],
+    "creature": [],
     "misc": [],
     "monster": [],
     "underground_water_creature": [],

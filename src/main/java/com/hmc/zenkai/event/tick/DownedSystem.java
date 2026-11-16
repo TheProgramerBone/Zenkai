@@ -237,6 +237,12 @@ public final class DownedSystem {
         return true;
     }
 
+    /** Levanta a un derribado por un efecto del mod (el despertar de Rage): body de revivir y fuera del derribo. */
+    public static void standUp(ServerPlayer sp, PlayerStatsAttachment att) {
+        if (att.getBody() <= 0) att.setBody(CombatZenkaiHooks.downedReviveBody(att));
+        clearDowned(sp, att);
+    }
+
     /** Sale del estado derribado: limpio flag, libera el lock y restaura la pose. */
     private static void clearDowned(Player p, PlayerStatsAttachment att) {
         att.flags().setDowned(false);

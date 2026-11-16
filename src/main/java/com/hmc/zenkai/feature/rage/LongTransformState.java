@@ -23,14 +23,18 @@ public final class LongTransformState {
     static final long TTL_MS = 6000L;
 
     /** @param trigger nombre de {@link RageTrigger}, o vacío si la vía no es Rage */
-    public record Pending(long until, @Nullable ResourceLocation form, String trigger) {}
+    public record Pending(long until, @Nullable ResourceLocation form, String trigger, boolean first) {
+        public Pending(long until, @Nullable ResourceLocation form, String trigger) { this(until, form, trigger, true); }
+    }
 
     private static final Map<UUID, Pending> PENDING = new ConcurrentHashMap<>();
 
     public static void mark(UUID player) { mark(player, null, ""); }
 
-    public static void mark(UUID player, @Nullable ResourceLocation form, String trigger) {
-        PENDING.put(player, new Pending(System.currentTimeMillis() + TTL_MS, form, trigger == null ? "" : trigger));
+    public static void mark(UUID player, @Nullable ResourceLocation form, String trigger) { mark(player, form, trigger, true); }
+
+    public static void mark(UUID player, @Nullable ResourceLocation form, String trigger, boolean first) {
+        PENDING.put(player, new Pending(System.currentTimeMillis() + TTL_MS, form, trigger == null ? "" : trigger, first));
     }
 
     /** ¿Hay un aviso vigente para este jugador? NO lo gasta (lo mira el compositor para tener el aura viva cuando llegue el cambio). */

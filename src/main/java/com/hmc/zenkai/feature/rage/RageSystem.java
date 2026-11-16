@@ -116,6 +116,14 @@ public final class RageSystem {
             }
         }
 
+        if (trigger.consumesMinorCooldown()) {
+            long last = att.flags().getRageMinorEventTick();
+            if (last >= 0 && now - last < ServerConfig.RAGE_MINOR_EVENT_COOLDOWN.get()) {
+                trace.cooldownIgnored = true;
+                return RageResult.RECORDED;   // ignorado por el enfriamiento corto de hechos menores
+            }
+        }
+
         Race race = att.getRace();
         PlayerFormAttachment forms = sp.getData(ZenkaiDataAttachments.PLAYER_FORM.get());
         List<RageAwakening> matching = new ArrayList<>();
@@ -158,6 +166,7 @@ public final class RageSystem {
         if (result == RageResult.RECORDED && lastOwned != null) result = progress(forms, lastOwned.form(), intensity, trace);
 
         if (result != RageResult.RECORDED && trigger.consumesCooldown()) att.flags().setRageAllyEventTick(now);
+        if (result != RageResult.RECORDED && trigger.consumesMinorCooldown()) att.flags().setRageMinorEventTick(now);
         return result;
     }
 
@@ -227,6 +236,9 @@ public final class RageSystem {
         }
         trace.form = form;
         trace.before = trace.after = forms.getFormMastery(form);
+        // Despertar estando derribado (ally_dies_while_downed): la escena dura 6,3 s y la ventana de derribo solo 5 s, así que sin esto
+        // el jugador moría por timeout en mitad de su propio despertar. Se levanta con el body de revivir de siempre.
+        if (att.flags().isDowned()) com.hmc.zenkai.event.tick.DownedSystem.standUp(sp, att);
         // «Primera vez» se decide ANTES de cambiar de forma: el oyente de FormChangedEvent la marca como vista.
         trace.cinematic = !att.flags().hasSeenLongCinematic(form.toString());
         AWAKENING_IN_PROGRESS.set(Boolean.TRUE);

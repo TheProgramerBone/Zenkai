@@ -219,18 +219,24 @@ public final class ModBiomeGen {
                 .ambientMoodSound(AmbientMoodSettings.LEGACY_CAVE_SETTINGS);
     }
 
-    private static Biome hfilBuild(BiomeSpecialEffects effects, BiomeGenerationSettings.Builder gen) {
-        return hfilBuild(effects, gen, 2.0F);
+    private static Biome hfilBuild(BiomeSpecialEffects effects, BiomeGenerationSettings.Builder gen,
+                                   java.util.function.Supplier<? extends net.minecraft.world.entity.EntityType<?>> ogre) {
+        return hfilBuild(effects, gen, 2.0F, ogre);
     }
 
-    private static Biome hfilBuild(BiomeSpecialEffects effects, BiomeGenerationSettings.Builder gen, float temperature) {
-        // Ogros (propuesta I) en cualquier bioma del HFIL, sueltos o en pareja, rojo y azul por
-        // igual. Además, el caldero de los oni genera su propia pareja de guardia.
-        MobSpawnSettings.Builder spawns = new MobSpawnSettings.Builder()
-                .addSpawn(net.minecraft.world.entity.MobCategory.CREATURE,
-                        new MobSpawnSettings.SpawnerData(ModEntities.RED_OGRE.get(), 10, 1, 2))
-                .addSpawn(net.minecraft.world.entity.MobCategory.CREATURE,
-                        new MobSpawnSettings.SpawnerData(ModEntities.BLUE_OGRE.get(), 10, 1, 2));
+    private static Biome hfilBuild(BiomeSpecialEffects effects, BiomeGenerationSettings.Builder gen, float temperature,
+                                   java.util.function.Supplier<? extends net.minecraft.world.entity.EntityType<?>> ogre) {
+        // Ogros (propuesta I): cada bioma del HFIL tiene UN color, sueltos o en pareja (dunas y orilla
+        // de sangre = rojos, lago helado y agujas = azules; decisión del usuario, 2026-11-15). El
+        // caldero de los oni genera además su propia pareja de guardia. Categoría AMBIENT (ver
+        // ModEntities.RED_OGRE): salen y se reponen en cada tick, también en pacífico; grupos de 2 a 4
+        // porque el cupo de la categoría es chico (~15). El peso no importa: hay un solo tipo por bioma.
+        // ogre == null = bioma sin mobs (Janemba, por ahora).
+        MobSpawnSettings.Builder spawns = new MobSpawnSettings.Builder();
+        if (ogre != null) {
+            spawns.addSpawn(net.minecraft.world.entity.MobCategory.AMBIENT,
+                            new MobSpawnSettings.SpawnerData(ogre.get(), 10, 2, 4));
+        }
         return new Biome.BiomeBuilder()
                 .hasPrecipitation(false)
                 .temperature(temperature)
@@ -291,7 +297,7 @@ public final class ModBiomeGen {
         BiomeSpecialEffects effects = hfilEffects(0x6E1414)
                 .ambientParticle(HFIL_ASH_PARTICLES_LIGHT)
                 .build();
-        return hfilBuild(effects, gen);
+        return hfilBuild(effects, gen, ModEntities.RED_OGRE);
     }
 
     /**
@@ -345,7 +351,7 @@ public final class ModBiomeGen {
         BiomeSpecialEffects effects = hfilEffects(0x7A2E5A, 0xB8708F)
                 .ambientParticle(HFIL_ASH_PARTICLES)
                 .build();
-        return hfilBuild(effects, gen);
+        return hfilBuild(effects, gen, ModEntities.BLUE_OGRE);
     }
 
     /**
@@ -405,7 +411,7 @@ public final class ModBiomeGen {
         BiomeSpecialEffects effects = hfilEffects(0x4A2410, 0x8A5530)
                 .ambientParticle(HFIL_ASH_PARTICLES_DENSE)
                 .build();
-        return hfilBuild(effects, gen);
+        return hfilBuild(effects, gen, ModEntities.RED_OGRE);
     }
 
     /**
@@ -433,7 +439,7 @@ public final class ModBiomeGen {
                 .ambientParticle(new AmbientParticleSettings(ParticleTypes.SNOWFLAKE, 0.012F))
                 .build();
         // Bajo cero: el agua que se deje aquí se hiela, coherente con el bioma.
-        return hfilBuild(effects, gen, -0.7F);
+        return hfilBuild(effects, gen, -0.7F, ModEntities.BLUE_OGRE);
     }
 
     /**
@@ -485,7 +491,7 @@ public final class ModBiomeGen {
                 .ambientParticle(new AmbientParticleSettings(
                         new DustParticleOptions(new Vector3f(0.69F, 0.31F, 0.86F), 0.6F), 0.003F))
                 .build();
-        return hfilBuild(effects, gen);
+        return hfilBuild(effects, gen, 2.0F, null);
     }
 
     /**

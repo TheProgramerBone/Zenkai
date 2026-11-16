@@ -7,6 +7,7 @@ import com.hmc.zenkai.content.entity.misc.PlayerBodyEntity;
 import com.hmc.zenkai.feature.player.death.PlayerBodyLoot;
 import com.hmc.zenkai.feature.player.death.PlayerBodyManager;
 import com.hmc.zenkai.feature.player.death.PlayerBodyRegistry;
+import com.hmc.zenkai.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -45,7 +46,47 @@ public final class EarthVisit {
     private EarthVisit() {}
 
     /** Por qué se puede o no empezar una visita. La consulta Baba para elegir su diálogo. */
-    public enum Check { OK, DISABLED, NOT_DEAD, HARDCORE, ALREADY_ON_VISIT, COOLDOWN }
+    public enum Check { OK, DISABLED, NOT_DEAD, HARDCORE, ALREADY_ON_VISIT, COOLDOWN, NEEDS_SOUL }
+
+    /** Almas que cobra Baba por visita ({@code permadeath.visit_soul_cost}; 0 = gratis). */
+    public static int soulCost() {
+        return ServerConfig.PERMADEATH_VISIT_SOUL_COST.get();
+    }
+
+    /** Almas que lleva el jugador en el inventario (los Curios no cuentan: el alma no es equipo). */
+    public static int soulsHeld(ServerPlayer sp) {
+        int n = 0;
+        for (int i = 0; i < sp.getInventory().getContainerSize(); i++) {
+            ItemStack s = sp.getInventory().getItem(i);
+            if (s.is(ModItems.SOUL.get())) n += s.getCount();
+        }
+        return n;
+    }
+
+    /** Quita {@code n} almas del inventario. false (sin quitar nada) si no llegan. */
+    public static boolean paySouls(ServerPlayer sp, int n) {
+        if (n <= 0) return true;
+        if (soulsHeld(sp) < n) return false;
+        int left = n;
+        for (int i = 0; i < sp.getInventory().getContainerSize() && left > 0; i++) {
+            ItemStack s = sp.getInventory().getItem(i);
+            if (!s.is(ModItems.SOUL.get())) continue;
+            int take = Math.min(left, s.getCount());
+            s.shrink(take);
+            left -= take;
+        }
+        return true;
+    }
+
+    /**
+     * {@link #check} más el alma: lo que decide Baba. Con {@code OK} pero sin las almas que cobra devuelve
+     * {@code NEEDS_SOUL}. {@link #check} se queda puro (sin inventario) para poder probarlo en gametest.
+     */
+    public static Check checkWithSouls(ServerPlayer sp) {
+        Check c = check(sp);
+        if (c == Check.OK && soulsHeld(sp) < soulCost()) return Check.NEEDS_SOUL;
+        return c;
+    }
 
     /** Un cuerpo cuyo contenido aún no se pudo recoger: su chunk acababa de cargar y las entidades cargan DESPUÉS. */
     private record PendingLoot(UUID bodyId, ResourceKey<Level> dim, BlockPos pos, int tries) {}
@@ -78,10 +119,16 @@ public final class EarthVisit {
         return ServerConfig.PERMADEATH_VISIT_DAYS.get() * 24000L;
     }
 
-    /** Empieza la visita si {@link #check} lo permite. Devuelve el resultado de la comprobación. */
+    /**
+     * Empieza la visita si {@link #checkWithSouls} lo permite y cobra las almas (se cobran justo antes de empezar, no al
+     * abrir el diálogo). Devuelve el resultado de la comprobación; {@code OK} = la visita empezó.
+     */
     public static Check tryStart(ServerPlayer sp) {
-        Check c = check(sp);
-        if (c == Check.OK) start(sp, configuredTicks());
+        Check c = checkWithSouls(sp);
+        if (c == Check.OK) {
+            paySouls(sp, soulCost());
+            start(sp, configuredTicks());
+        }
         return c;
     }
 

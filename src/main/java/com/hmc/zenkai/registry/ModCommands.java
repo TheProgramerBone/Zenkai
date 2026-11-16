@@ -344,6 +344,8 @@ public class ModCommands {
                                 .executes(c -> DebugCommands.bodyKillAll(c, false))
                                 .then(Commands.literal("spill").executes(c -> DebugCommands.bodyKillAll(c, true)))))
                 .then(Commands.literal("debug")
+                        // /zenkai debug rage fire|down|reset|status|pet: pruebas de Rage Forms en un solo jugador.
+                        .then(com.hmc.zenkai.registry.commands.RageDebugCommands.node())
                         .then(Commands.literal("entity")
                                 .executes(DebugCommands::debugEntity))
                         // Skill tree de transformaciones (F1): verify (por defecto) compara el espejo

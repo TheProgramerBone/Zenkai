@@ -13,9 +13,9 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * S2C, al propio jugador Y a quien lo rastrea: el servidor decide el esquive automático de
- * Ultra Instinct (OverlayMetersSystem.tryDodge) y sortea cuál de los dos clips ui_dodge_N
- * reproducir, así todos ven la misma variante. PAL no replica animaciones custom por sí solo
- * (mismo motivo que InstantTransmissionAnimPacket).
+ * Ultra Instinct (OverlayMetersSystem.tryDodge) y elige el gesto según el golpe que llega
+ * (UiDodgeChoice; variant = una de sus constantes), así todos ven el mismo. PAL no replica
+ * animaciones custom por sí solo (mismo motivo que InstantTransmissionAnimPacket).
  */
 public record UiDodgeAnimPacket(int entityId, int variant) implements CustomPacketPayload {
 

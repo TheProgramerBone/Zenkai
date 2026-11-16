@@ -17,7 +17,8 @@ public record SyncWishTogglesPayload(
         boolean enchantVillager,
         boolean immortal,
         boolean trainingPoints,
-        boolean legendary
+        boolean legendary,
+        boolean awakenPotential
 ) implements CustomPacketPayload {
 
     public static final Type<SyncWishTogglesPayload> TYPE =
@@ -32,10 +33,12 @@ public record SyncWishTogglesPayload(
                         buf.writeBoolean(p.immortal);
                         buf.writeBoolean(p.trainingPoints);
                         buf.writeBoolean(p.legendary);
+                        buf.writeBoolean(p.awakenPotential);
                     },
                     buf -> new SyncWishTogglesPayload(
                             buf.readBoolean(), buf.readBoolean(), buf.readBoolean(),
-                            buf.readBoolean(), buf.readBoolean(), buf.readBoolean()
+                            buf.readBoolean(), buf.readBoolean(), buf.readBoolean(),
+                            buf.readBoolean()
                     )
             );
 
@@ -49,7 +52,8 @@ public record SyncWishTogglesPayload(
                 ServerConfig.isEnabled(ServerConfig.WishType.ENCHANT_VILLAGER),
                 ServerConfig.isEnabled(ServerConfig.WishType.IMMORTAL),
                 ServerConfig.isEnabled(ServerConfig.WishType.TRAINING_POINTS),
-                ServerConfig.isEnabled(ServerConfig.WishType.LEGENDARY)
+                ServerConfig.isEnabled(ServerConfig.WishType.LEGENDARY),
+                ServerConfig.isEnabled(ServerConfig.WishType.AWAKEN_POTENTIAL)
         );
     }
 
@@ -61,6 +65,7 @@ public record SyncWishTogglesPayload(
             case IMMORTAL         -> immortal;
             case TRAINING_POINTS  -> trainingPoints;
             case LEGENDARY        -> legendary;
+            case AWAKEN_POTENTIAL -> awakenPotential;
         };
     }
 }
